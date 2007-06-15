@@ -1,0 +1,400 @@
+rem glm - Bank Reconciliation, Detail Listing
+rem Program glr_bankmaster v8.0.0 19Jun2006 (glm_rf)
+rem Created by adx_progconv.bbx v1.0.3 (06/19/2006 05:53:33)
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=4,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="glm-01"
+    files$[2]="glm-05"
+    files$[3]="glt-05"
+    files$[4]="glt-15"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    glm01_dev=channels[1]
+    glm05_dev=channels[2]
+    glt05_dev=channels[3]
+    glt15_dev=channels[4]
+
+rem --- Dimension string templates
+
+    dim glm01a$:templates$[1],glm05a$:templates$[2],
+:       glt05a$:templates$[3],glt15a$:templates$[4]
+
+rem --- Retrieve miscellaneous templates
+
+    files=1,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="gls-01A"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim gls01a$:templates$[1]
+
+rem --- Assign input values to local variables
+
+    gl_account$=rd_rec_data$[1,0]
+
+rem --- Retrieve parameter records
+
+    gls01a_key$=firm_id$+"GL00"
+    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    acctlen=num(gls01a.acct_length$)
+    m0$=gls01a.acct_output$
+    m1$=gls01a.amount_mask$
+    m9$="####0"
+    m0=len(m0$)
+    m1=len(m1$)
+    m9=len(m4$)
+    headings=7
+
+rem --- Initializations
+
+    dim headings$[headings],h$(width)
+    dim o[5]
+    dim bar$(width,"-")
+    headings$[0]=cvs(sysinfo.firm_name$,2)
+    headings$[1]=cvs(sysinfo.task_desc$,2)
+    more=1
+    page=0
+    l9=59
+    l=l9+1
+    number=0
+    width=132
+    clock$=""
+    when$=sysinfo.system_date$
+    checkopen=0
+    otheropen=0
+    checkpaid=0
+    otherpaid=0
+    opencheck=0
+    openother=0
+    paidcheck=0
+    paidother=0
+    longest=0
+
+rem --- Calculate print positions
+
+    o[0]=0
+    o[1]=o[0]+9
+    o[2]=o[1]+7
+    o[3]=o[2]+12
+    o[5]=width-m9
+    o[6]=o[5]-m1-1
+
+rem --- Load GL Account (glm-01) and Bank Master (glm-05) records
+
+    glm01a.firm_id$=firm_id$
+    glm01a.gl_account$=gl_account$
+    glm05a.firm_id$=firm_id$
+    glm05a.gl_account$=gl_account$
+    glm01_key$=glm01a.firm_id$+glm01a.gl_account$
+    glm05_key$=glm05a.firm_id$+glm05a.gl_account$
+    find record (glm01_dev,key=glm01_key$,dom=*next) glm01a$
+    find record (glm05_dev,key=glm05_key$,dom=*next) glm05a$
+
+rem --- Build remaining headings
+
+    headings$[3]="     Bank Name: "+cvs(glm05a.name$,2)
+    headings$[4]="Account Number: "+cvs(glm05a.bnk_acct_no$,2)
+    headings$[5]="  Account Name: "+cvs(glm05a.description$,2)
+    headings$[6]="    GL Account: "+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
+    headings$[7]="   Description: "+cvs(glm01a.gl_acct_desc$,2)
+    for x=3 to 7
+        n=len(headings$[x])
+        if n>longest longest=n
+    next x
+    p=int((width-longest)/2)
+    for x=3 to 7
+        dim h$(width)
+        n=len(headings$[x])
+        h$(p,n)=headings$[x]
+        headings$[x]=h$
+    next x
+
+rem --- Does the user only want to print outstanding items?
+
+    prompt$="Do you want to only print outstanding items?"
+    call pgmdir$+"adc_yesno.aon",1,prompt$,1,v$,v3
+    if v3=4 goto std_exit
+    if v$="Y" print_outstanding=1 
+:        else print_outstanding=0
+    if print_outstanding headings$[1]=headings$[1]+" (Outstanding Items Only)"
+
+rem --- Open printer, start progress meter and position files
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,glt05_dev,1,meter_num,status
+    read (glt05_dev,key=glm05_key$,dom=*next)
+
+rem --- This section prints the checks. Get the next check transaction (glt-05) record.
+
+    while more
+          k$=key(glt05_dev,end=*break)
+          if pos(glm05_key$=k$)<>1 break
+          read record (glt05_dev) glt05a$
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
+
+          rem --- If we're printing only outstanding items, is this one outstanding?
+
+          if print_outstanding and glt05a.paid_code$<>"O" continue
+
+          rem --- Skip future transactions
+
+          if glt05a.bnk_chk_date$>glm05a.curstm_date$ continue
+
+          rem --- Print this check transaction (glt-05) record
+
+          if glt05a.paid_code$<>"O" checkpaid=checkpaid+glt05a.check_amount,paidcheck=paidcheck+1
+:                              else checkopen=checkopen+glt05a.check_amount,opencheck=opencheck+1
+          endif
+          if l+1>l9 
+             gosub report_heading
+             gosub check_heading
+          endif
+          print (printer_dev)@(o[0]),glt05a.check_no$,@(o[1]),glt05a.check_type$,
+:                            @(o[2]),fndate$(glt05a.bnk_chk_date$),@(o[3]),glt05a.description$,
+:                            @(o[4]),glt05a.check_amount:m1$,@(o[5]),glt05a.paid_code$
+          l=l+1
+
+          rem --- Loop back for next check transaction record
+
+    wend
+
+rem --- Print message if there weren't any checks to print
+
+    if opencheck+paidcheck goto other_transactions
+    if l+1>l9 
+       gosub report_heading
+       gosub check_heading
+    endif
+    print (printer_dev) @(o[0]),"No check transactions found" 
+    l=l+1
+
+other_transactions: rem --- Print any other transactions
+
+rem --- Start progress meter and position files
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,glt15_dev,1,meter_num,status
+    gosub other_heading
+    read (glt15_dev,key=glm05_key$,dom=*next)
+
+rem --- This section prints the other transactions. 
+rem --- Get the next other transaction (glt-15) record.
+
+    while more
+          k$=key(glt15_dev,end=*break)
+          if pos(glm05_key$=k$)<>1 break
+          read record (glt15_dev) glt15a$
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
+
+          rem --- If we're printing only outstanding items, is this one outstanding?
+
+          if print_outstanding and glt15a.posted_code$<>"O" continue
+
+          rem --- Skip future transactions
+
+          if glt15a.trns_date$>glm05a.curstm_date$ continue
+
+          rem --- Print this other transaction (glt-15) record
+
+          if glt15a.posted_code$<>"O" otherpaid=otherpaid+glt15a.trans_amt,paidother=paidother+1
+:                                else otheropen=otheropen+glt15a.trans_amt,openother=openother+1
+          endif
+          if l+1>l9 
+             gosub report_heading
+             gosub check_heading
+          endif
+          print (printer_dev)@(o[0]),glt15a.trans_no$,@(o[1]),glt05a.trans_type$,
+:                            @(o[2]),fndate$(glt15a.trns_date$),@(o[3]),glt15a.description$,
+:                            @(o[4]),glt15a.trans_amount:m1$,@(o[5]),glt15a.posted_code$
+          l=l+1
+
+          rem --- Loop back for next transaction record
+
+    wend
+
+rem --- Print message if there weren't any other transactions to print
+
+    if openother+paidother goto balance
+    if l+1>l9 
+       gosub report_heading
+       gosub check_heading
+    endif
+    print (printer_dev) @(o[0]),"No other transactions found" 
+    l=l+1
+
+balance: rem --- Print the balance information
+
+    balance=glm05a.cur_stmt_amt-checkopen+otheropen
+    gosub balance_heading
+    print (printer_dev) @(o[1]),"Statement Balance: ",@(o[4]),glm05a.cur_stmt_amt:m1$
+    print (printer_dev) @(o[1]),"Checks Outstanding: ",@(o[4]),checkopen:m1$,@(o[5]),opencheck:m9$
+    print (printer_dev) @(o[1]),"Transactions Outstanding: ",@(o[4]),otheropen:m1$,@(o[5]),openother:m9$
+    print (printer_dev) @(o[4]),fill(m1,"-")
+    print (printer_dev) @(o[1]),"Ending Balance:",@(o[4]),balance:m1$
+    print (printer_dev) ""
+    print (printer_dev) @(o[1]),"Check Book Balance as of ",fndate$(glm05a.curstm_date),
+:                       @(o[4]),glm05a.book_balance:m1$
+    difference=glm05a.book_balance-balance
+    if difference>0 message$="Short"
+    if difference<0 message$="Over"
+    if difference<>0
+       print (printer_dev) ""
+       print (printer_dev) @(o[1]),"This Account Is ",message$," By ",@(o[4]),difference:m1$
+    endif
+    if print_outstanding=0
+       print (printer_dev) ""
+       print (printer_dev) @(o[1]),"Paid Checks:",@(o[4]),checkpaid:m1$,@(o[5]),paidcheck:m9$
+       print (printer_dev) @(o[1]),"Paid Transactions:",@(o[4]),otherpaid:m1$,@(o[5]),paidother:m9$
+    endif
+
+rem --- All Done
+
+    goto std_exit
+
+report_heading: rem --- Report Heading
+
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status exitto std_exit
+    l=headings+1
+    return
+
+check_heading: rem --- Check transaction subheading
+
+    print (printer_dev) ""
+    print (printer_dev) bar$,@(o[1])," Checks "
+    print (printer_dev) @(o[0]),"Number",@(o[1]),"Type",@(o[2]),"Check Date",@(o[3]),"Description",
+:                       @(o[4]),"Amount",@(o[5]),"Paid?"
+    print (printer_dev) bar$
+    l=l+4
+    return
+
+other_heading: rem --- Other transaction subheading
+
+    if l>l9-4 gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) bar$,@(o[1])," Other Transactions "
+    print (printer_dev) @(o[0]),"Number",@(o[1]),"Type",@(o[2]),"Trans Date",@(o[3]),"Description",
+:                       @(o[4]),"Amount",@(o[5]),"Paid?"
+    print (printer_dev) bar$
+    l=l+4
+    return
+
+balance_heading: rem --- Account balance subheading
+
+    if l5>l9-18 gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) bar$,@(o[1])," Balance Information "
+    print (printer_dev) @(o[4]),"Amount",@(o[5]),"Items"
+    print (printer_dev) bar$
+    return
+
+rem --- Functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        if pos("E"=cvs(q1$,4)) goto alpha_mask
+:          else return str(-num(q1$,err=alpha_mask):q2$,err=alpha_mask)
+        alpha_mask:
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+    
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+    
+std_missing_params_release:
+
+    status=999
+    if pgm(-1)<>pgm(-2) exit 
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end

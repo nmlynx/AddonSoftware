@@ -1,0 +1,201 @@
+rem --- Recurring Invoice Update
+rem --- Program apu_fa v8.0.0 11Feb2007 (apu_fa)
+rem --- Created by adx_codeport.bbx v1.1.5 (02/11/2007 10:45:45)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Close printer and destroy current progress meter (if one exists)
+
+    close (printer_dev,err=*next)
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+
+rem --- Initializations
+
+rem --- Get user approval to update
+
+    prompt$="UPDATE_AP_REC_INV_REG"
+    call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
+    if answer$<>"YES" goto std_exit
+
+rem --- Start progress meter and position header file
+
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,ape03_dev,1,meter_num,status
+    read (ape03_dev,key=firm_id$,dom=*next)
+
+rem --- Read next Recurring Invoice Header (ape-03) record
+
+    while moreheaders
+          read record (ape03_dev,end=*break) ape03a$
+          if ape03a.firm_id$<>firm_id$ break
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+          rem --- Retrieve terms code for this invoice
+
+          dim apm10c$:fattr(apm10c$)
+          apm10c.firm_id$=ape03a.firm_id$
+          apm10c.record_id_c$="C"
+          apm10c.terms_code$=ape03a.ap_terms_code$
+          apm10c.code_desc$=nf$
+          k$=apm10c.firm_id$+apm10c.record_id_a$+apm10c.ap_dist_code$
+          find record (apm10_dev,key=k$,dom=*next) apm10c$
+
+          rem --- Recalculate dates for this recurring invoice
+
+          wrong=1
+          calculating=1
+          d=num(ape03a.invoice_date$(7,2))
+          while calculating
+                while wrong
+                      x=jul(year,month,d,err=*break)
+                      invoice_date$=date(0:"%Yl%Mz%Dz")
+                      wrong=0
+                wend
+                if wrong=0 break
+                d=d-1
+          wend
+          ape03a.invoice_date$=invoice_date$
+          ape03a.accting_date$=invoice_date$
+          call pgmdir$+"adc_duedate.aon",apm10c.prox_or_days$,ape03a.invoice_date$,
+:                                        apm10c.due_days,ape03a.inv_due_date$,status
+          call pgmdir$+"adc_duedate.aon",apm10c.prox_or_days$,ape03a.invoice_date$,
+:                                        apm10c_disc_days,ape03a.disc_date$,status
+
+          rem --- Generate unique invoice number for this recurring invoice
+
+          wrong=1
+          calculating=1
+          d=num(ape03a.invoice_date$(7,2))+1
+          invoice$=""
+          while calculating
+                while wrong        
+                      d=d-1
+                      x=jul(year,month,d,err=*continue)
+                      wrong=0
+                wend
+                x$=str(x:"0000000")
+                invoice$=ape03a.ap_inv_no$(1,6)+x$
+                k$=ape03a.firm_id$+ape03a.ap_type$+ape03a.vendor_id$+invoice$+"00"
+                find record (apt01_dev,key=k$,dom=*break)
+          wend 
+          ape03a.ap_inv_no$=invoice$
+
+          rem --- Copy the invoice header to the entry file and write the record
+
+          dim oldrec$:fattr(ape03a$),newrec$:fattr(ape01a$)
+          oldrec$=ape03a$
+          gosub copy_record
+          ape01a$=newrec$
+          k$=ape01a.firm_id$+ape01a.ap_type$+ape01a.vendor_id$+ape01a.ap_inv_no$+
+:            ape01a.sequence_00$
+          write record (ape01_dev,key=k$) ape01a$
+
+          rem --- Position the Recurring Invoice Detail (ape-13) file
+
+          invoice$=ape03a.firm_id$+ape03a.ap_type$+ape03a.vendor_id$+
+:                  ape03a.ap_inv_no$
+          read (ape13_dev,key=invoice$,dom=*next)
+
+          rem --- Read the next Recurring Invoice Detail (ape-13) record and
+          rem --- copy it to the entry file
+
+          while moredetail
+                k$=key(ape13_dev,end=*break)
+                if pos(invoice$=k$)<>1 break
+                read record (ape13_dev) ape13a$
+                dim oldrec$:fattr(ape13a$),newrec$:fattr(ape11a$)
+                oldrec$=ape13a$
+                gosub copy_record
+                ape11a$=newrec$
+                k$=ape11a.firm_id$+ape11a.ap_type$+ape11a.vendor_id$+ape11a.ap_inv_no$+
+:                                  ape11a.sequence_num$
+                write record (ape11_dev,key=k$) ape11a$
+          wend
+          
+          rem --- Loop back for next Recurring Invoice Header
+
+    wend
+
+rem --- All done
+
+    goto std_exit
+
+copy_record: rem --- Copy fields from one template to another
+
+    fields$=oldtemplate$
+    while fields$<>""
+          p=pos(":"=fields$)
+          if p=0 then p=len(fields$)
+          fieldname$=fields$(1,p-1)
+          fields$=fields$(p+1)
+          p=pos(","=fields$)
+          if p=0 then p=len(fields$)
+          fields$=fields$(p+1)
+          newfield$=fieldname$
+          p=pos(fieldname$=oldnames$,16)
+          if p then newfield$=cvs(newnames$(p,16),2)
+          field newrec$,newfield$=field(oldrec$,fieldname$),err=*continue
+    wend
+    return
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end

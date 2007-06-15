@@ -1,0 +1,626 @@
+rem apm - Vendor Detail Listing
+rem Program apr_detail v8.0.0 17Aug2006 (apm_mg)
+rem Created by adx_progconv.bbx v1.0.3 (08/17/2006 11:12:14)
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=9,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ads-01"
+    files$[2]="apm-01"
+    files$[3]="apm-02"
+    files$[4]="apm-05"
+    files$[5]="apm-08"
+    files$[6]="apm-09"
+    files$[7]="apm-10"
+    files$[8]="apt-01"
+    files$[9]="apt-11"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ads01_dev=channels[1]
+    apm01_dev=channels[2]
+    apm02_dev=channels[3]
+    apm05_dev=channels[4]
+    apm08_dev=channels[5]
+    apm09_dev=channels[6]
+    apm10_dev=channels[7]
+    apt01_dev=channels[8]
+    apt11_dev=channels[9]
+
+rem --- Dimension string templates
+
+    dim apm01a$:templates$[2],apm02a$:templates$[3],apm05a$:templates$[4],apm08a$:templates$[5],
+:       apm09a$:templates$[6],apm10a$:templates$[7],apt01a$:templates$[8],apt11a$:templates$[9]
+
+rem --- Retrieve miscellaneous templates
+
+    files=6,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="aps-01A"
+    ids$[2]="apm-10A"
+    ids$[3]="apm-10B"
+    ids$[4]="apm-10C"
+    ids$[5]="apm-10D"
+    ids$[6]="gls-01A"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim aps01a$:templates$[1],apm10a$:templates$[2],apm10b$:templates$[3],
+:       apm10c$:templates$[4],apm10d$:templates$[5],gls01a$:templates$[6]
+
+rem --- Assign form input values to local variables
+
+    table$=fnget_table$("")
+    begvendor$=fnget_fld_data$(table$,"vendor_id_1")
+    endvendor$=fnget_fld_data$(table$,"vendor_id_2")
+    comments$=fnget_fld_data$(table$,"pick_check")
+
+rem --- Is General Ledger installed and in use?
+
+    dim info$[20]
+    call pgmdir$+"adc_application.aon","AP",info$[all]
+    gl$=info$[9]
+
+rem --- Retrieve parameter records
+
+    aps01a_key$=firm_id$+"AP00"
+    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    call pgmdir$+"adc_sizemask.aon",aps01a.amount_mask$,m1,9,15
+    vendor_size=num(aps01a.vendor_size$)
+    multiple_types$=aps01a.multi_types$
+    multiple_distributions$=aps01a.multi_dist$
+    retention$=aps01a.ret_flag$
+    m0$=aps01a.vendor_output$
+    m1$=aps01a.amount_mask$
+    m8$="(###)-###-####"
+    m0=len(m0$)
+    m1=len(m1$)
+
+rem --- Faking it for now since AP Parameters are screwed up (23Dec2006) escape
+
+    vendor_size=6
+    multiple_types$="Y"
+    multiple_distributions$="Y"
+    retention$="Y"
+    m0$="00-0000"
+    m1$="###,##0.00-"
+    m0=len(m0$)
+    m1=len(m1$)
+
+rem --- Remove once parameter record is fixed ----------------------------------
+
+    gls01a_key$=firm_id$+"GL00"
+    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    acct_length=num(gls01a.acct_length$)
+    g0$=gls01a.acct_output$
+
+rem --- Initializations
+
+    headings=2
+    dim headings$[headings],o[7]
+    more=1
+    page=0
+    width=80
+    maxlines=59
+    lines=maxlines+1
+    morevendors=1
+    moreheaders=1
+    moredetail=1
+    morecomments=1
+    if comments$="N" morecomments=0
+    nf$="(Not on file)"
+    when$=sysinfo.system_date$
+    clock$=""
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$
+
+rem --- Define print positions for the invoice history listing
+
+    o[0]=0
+    o[1]=11
+    o[2]=20
+    o[3]=29
+    o[4]=32
+    o[7]=width-1
+    if retention$="Y" o[7]=width-m1
+    o[6]=o[7]-m1
+    o[5]=o[6]-m1 
+
+rem --- Additional file opens
+
+    files=1,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    if gl$="Y" 
+       files$[1]="glm-01"
+       call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                      ids$[all],templates$[all],channels[all],batch,status
+    endif
+    if status goto std_exit
+    glm01_dev=channels[1]
+
+rem --- Dimension string templates
+
+    if gl$="Y" dim glm01a$:templates$[1]
+
+rem --- Open printer, start progress meter and position Vendor Master file
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,apm01_dev,1,meter_num,status
+    while begvendor$<>""
+          read (apm01_dev,key=firm_id$+begvendor$)
+          read (apm01_dev,dir=-1,err=*next)
+          begvendor$=""
+    wend
+
+rem --- Read next Vendor Master (apm-01) record
+
+    while morevendors
+          apm01_key$=key(apm01_dev,end=*break)
+          if pos(firm_id$=apm01_key$)<>1 break
+          read record (apm01_dev,key=apm01_key$) apm01a$
+          if endvendor$<>"" if apm01a.vendor_id$>endvendor$ break
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status 
+
+          rem --- Print vendor master information
+ 
+          gosub report_heading
+          print (printer_dev) @(4),"Address: ",apm01a.addr_line_1$,@(45),"Account ID: ",apm01a.vendor_acct$
+          print (printer_dev) @(15),apm01a.addr_line_2$,@(43),"Alt Sequence: ",apm01a.alt_sequence$
+          print (printer_dev) @(7),"City: ",apm01a.city$,@(42),"Hold Invoices? ",apm01a.hold_flag$
+          print (printer_dev) @(6),"State: ",apm01a.state_code$,@(17),"Zip/Postal: ",fnzipcode$(apm01a.zip_code$),
+:                             @(44),"Date Opened: ",fndate$(apm01a.opened_date$)
+          print (printer_dev) @(2),"Telephone: ",fnmask$(apm01a.phone_no$,m8$),@(28),"Ext: ",apm01a.phone_exten$,
+:                             @(45),"Federal ID: ",apm01a.federal_id$
+          print (printer_dev) @(2),"Fax Phone: ",fnmask$(apm01a.fax_no$,m8$),@(49),"F.O.B.: ",apm01a.fob$
+          print (printer_dev) @(4),"Contact: ",apm01a.contact_name$,@(47),"Ship Via: ",apm01a.ap_ship_via$
+          print (printer_dev) @(51),"1099? ",apm01a.vendor_1099$
+          lines=lines+8
+
+          rem --- Print vendor comments
+
+          while morecomments
+                gosub comments_heading
+                read (apm09_dev,key=apm01_key$,dom=*next)
+                while moredetail
+                      k$=key(apm09_dev,end=*break)
+                      if pos(apm01_key$=k$)<>1 break
+                      read record (apm09_dev,key=k$) apm09a$
+                      if lines+1>maxlines 
+                         gosub report_heading
+                         gosub comments_heading
+                      endif
+                      print (printer_dev) @(0),apm09a.sequence_num$," ",apm09a.std_comments$
+                      lines=lines+1
+                wend
+                break
+          wend
+
+          rem --- Print pay-to information
+
+          while moredetail
+                find record (apm08_dev,key=apm01_key$,dom=*break) apm08a$
+                if lines+7>maxlines gosub report_heading
+                gosub payto_heading  
+                print (printer_dev) @(2),"Pay-To Name: ",apm08a.pay_to_name$,
+:                                   @(46),"Telephone: ",fnmask$(apm08a.phone_number$,m8$),
+:                                   " Ex: ",apm08a.phone_exten$
+                print (printer_dev) @(6),"Address: ",apm08a.addr_line_1$,
+:                                   @(46),"Fax Phone: ",fnmask$(apm08a.fax_number$,m8$)
+                print (printer_dev) @(15),apm08a.addr_line_2$,@(48),"Contact: ",apm08a.contact_name$
+                print (printer_dev) @(9),"City: ",apm08a.city$
+                print (printer_dev) @(8),"State: ",apm08a.state_code$,
+:                                   @(19),"Zip/Postal: ",fnzipcode$(apm08a.zip_code$)
+                lines=lines+5
+                break
+          wend
+
+          rem --- Print purchase addresses
+
+          first=1
+          read (apm05_dev,key=apm01_key$,dom=*next)
+          while moredetail
+                k$=key(apm05_dev,end=*break)
+                if pos(apm01_key$=k$)<>1 break
+                read record (apm05_dev,key=k$) apm05a$
+                if lines+8>maxlines gosub report_heading
+                if first gosub purchases_heading
+:                   else print (printer_dev) "";
+:                        lines=lines+1
+                print (printer_dev) @(2),"Purchase ID: ",apm05a.purch_addr$
+                print (printer_dev) @(0),"Purchase Name: ",apm05a.name$,
+:                                   @(46),"Telephone: ",fnmask$(apm05a.phone_no$,m8$),
+:                                   " Ext: ",apm05a.phone_exten$
+                print (printer_dev) @(6),"Address: ",apm05a.addr_line_1$,
+:                                   @(46),"Fax Phone: ",fnmask$(apm05a.fax_no$,m8$)
+                print (printer_dev) @(15),apm05a.addr_line_2$,@(48),"Contact: ",apm05a.contact_name$
+                print (printer_dev) @(9),"City: ",apm05a.city$,@(49),"F.O.B.: ",apm05a.fob$
+                print (printer_dev) @(8),"State: ",apm05a.state_code$,
+:                                   @(19),"Zip/Postal: ",fnzipcode$(apm05a.zip_code$),
+:                                   @(47),"Ship Via: ",apm05a.ap_ship_via$
+                lines=lines+6
+                first=0
+          wend
+
+          rem --- Print vendor detail records
+
+          first=1
+          read (apm02_dev,key=apm01_key$,dom=*next)
+          while more
+                k$=key(apm02_dev,end=*break)
+                if pos(apm01_key$=k$)<>1 break
+                read record (apm02_dev) apm02a$
+                if lines+6>maxlines gosub report_heading
+                if first gosub detail_heading
+:                   else print (printer_dev) "";
+:                        lines=lines+1
+
+                rem --- Retrieve AP Type code and description
+
+                aptype$=fill(6)+"AP Type: Not applicable"
+                if multiple_types$="Y"
+                   dim apm10a$:fattr(apm10a$)
+                   apm10a.firm_id$=firm_id$
+                   apm10a.ap_type$=apm02a.ap_type$
+                   apm10a.code_desc$=nf$
+                   apm10_key$=apm10a.firm_id$+"A"+apm10a.ap_type$
+                   find record (apm10_dev,key=apm10_key$,dom=*proceed) apm10a$
+                   aptype$=fill(6)+"AP Type: "+apm10a.ap_type$+" "+apm10a.code_desc$
+                endif
+
+                rem --- Retrieve distribution code and description
+
+                distribution$=" Distribution: Not applicable"
+                if multiple_distributions$="Y"
+                   dim apm10b$:fattr(apm10b$)
+                   apm10b.firm_id$=firm_id$
+                   apm10b.ap_dist_code$=apm02a.ap_dist_code$
+                   apm10b.code_desc$=nf$
+                   apm10_key$=apm10b.firm_id$+"B"+apm10b.ap_dist_code$
+                   find record (apm10_dev,key=apm10_key$,dom=*proceed) apm10b$
+                   distribution$=" Distribution: "+apm10b.ap_dist_code$+" "+apm10b.code_desc$
+                endif
+
+                rem --- Retrieve terms code and description
+
+                dim apm10c$:fattr(apm10c$)
+                apm10c.firm_id$=firm_id$
+                apm10c.terms_code$=apm02a.ap_terms_code$
+                apm10c.code_desc$=nf$
+                apm10_key$=apm10c.firm_id$+"C"+apm10c.terms_code$
+                find record (apm10_dev,key=apm10_key$,dom=*next) apm10c$
+
+                rem --- Retrieve payment group and description
+
+                dim apm10d$:fattr(apm10d$)
+                apm10d.firm_id$=firm_id$
+                apm10d.payment_grp$=apm02a.payment_grp$
+                apm10d.code_desc$=nf$
+                apm10_key$=apm10d.firm_id$+"D"+apm10d.payment_grp$
+                find record (apm10_dev,key=apm10_key$,dom=*next) apm10d$
+
+                rem --- Print codes and descriptions
+
+                print (printer_dev) @(0),aptype$,@(42),"Payment Group: ",apm10d.payment_grp$,
+:                                   " ",apm10d.code_desc$
+                print (printer_dev) @(0),distribution$,@(45),"Terms Code: ",apm10c.terms_code$,
+:                                   " ",apm10c.code_desc$
+
+                rem --- Retrieve print GL account information if GL is in use
+
+                if gl$="Y"
+                   dim glm01a$:fattr(glm01a$)
+                   glm01a.firm_id$=firm_id$
+                   glm01a.gl_account$=apm02a.gl_account$
+                   glm01a.gl_acct_desc$=nf$
+                   glm01_key$=glm01a.firm_id$+glm01a.gl_account$
+                   find record (glm01_dev,key=glm01_key$,dom=*proceed) glm01a$
+                   print (printer_dev) @(3),"GL Account: ",fnmask$(apm02a.gl_account$(1,acct_length),g0$),
+:                                      " ",glm01a.gl_acct_desc$
+                   lines=lines+1
+                endif
+                print (printer_dev) ""
+                lines=lines+1
+
+                rem --- Print amounts and dates
+
+                x$=""
+                if retention$="Y" x$="Open Retention: "+str(apm02a.open_ret:m1$)
+                if lines+8>maxlines gosub report_heading
+                print (printer_dev) @(0),"Open Invoices: ",apm02a.open_invs:m1$,@(41),x$
+                print (printer_dev) ""
+                print (printer_dev) @(1),"Last Invoice: ",fndate$(apm02a.lstinv_date$),
+:                                   @(43),"Last Payment: ",fndate$(apm02a.lstpay_date$)
+                print (printer_dev) ""
+                print (printer_dev) @((15+m1)-10),"Purchases",@((30+m1)-10),"Discounts",
+:                                   @((45+m1)-9),"Payments",@((60+m1)-14),"Calendar Year"
+                print (printer_dev) @(2),"Current YTD: ",apm02a.ytd_purch:m1$,@(30),apm02a.ytd_discs:m1$,
+:                                   @(45),apm02a.ytd_payments:m1$,@(60),apm02a.cur_cal_pmts:m1$
+                print (printer_dev) @(3),"Prior Year: ",apm02a.pyr_purch:m1$,@(30),apm02a.pri_yr_discs:m1$,
+:                                   @(45),apm02a.pyr_payments:m1$,@(60),apm02a.pri_cal_pmt:m1$
+                print (printer_dev) @(4),"Next Year: ",apm02a.nyr_purch:m1$,@(30),apm02a.nyr_disc:m1$,
+:                                   @(45),apm02a.nyr_payments:m1$,@(60),apm02a.nxt_cyr_pmts:m1$
+                lines=lines+8
+          
+                rem --- Print invoices
+
+                balance=0
+                x$=""
+                if retention$="Y" x$="Retention"
+                if lines+4>maxlines gosub report_heading
+                gosub invoice_heading
+                vendor$=apm02a.firm_id$+apm02a.ap_type$+apm02a.vendor_id$
+                read (apt01_dev,key=vendor$,dom=*next)
+
+                rem --- Read next invoice header record
+
+                while moreheaders
+                      apt01_key$=key(apt01_dev,end=*break)
+                      if pos(vendor$=apt01_key$)<>1 break
+                      read record (apt01_dev) apt01a$
+                      amount$=""
+                      if retention$="Y" amount$=str(apt01a.retention:m1$)
+                      if lines+1>maxlines 
+                         gosub report_heading
+                         gosub invoice_heading
+                      endif
+                      print (printer_dev) @(o[0]),apt01a.ap_inv_no$,@(o[1]),fndate$(apt01a.invoice_date$),
+:                                         @(o[2]),fndate$(apt01a.inv_due_date$),@(o[3]),apt01a.payment_grp$,
+:                                         @(o[4]),apt01a.hold_flag$,@(o[5]),apt01a.invoice_amt:m1$,
+:                                         @(o[6]),apt01a.discount_amt:m1$,@(o[7]),amount$
+                      lines=lines+1
+                      amount=apt01a.invoice_amt
+                      discount=apt01a.discount_amt
+                      retention=apt01a.retention
+                      balance=balance+apt01a.invoice_amt
+                      detail=0
+                      apt01_key$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+
+:                                apt01a.ap_inv_no$
+                      read (apt11_dev,key=apt01_key$,dom=*next)
+
+                      rem --- Read next invoice detail record
+
+                      while moredetail
+                            k$=key(apt11_dev,end=*break)
+                            if pos(apt01_key$=k$)<>1 break
+                            read record (apt11_dev) apt11a$
+                            detail=1
+                            type$=apt11a.trans_type$
+                            amount$=""
+                            if retention$="Y" amount$=str(apt11a.trans_ret:m1$)
+                            if apt11a.trans_type$="S" type$="M" 
+                            if lines+1>maxlines 
+                               gosub report_heading
+                               gosub invoice_heading
+                            endif
+                            print (printer_dev) @(o[0]+1),type$," ",apt11a.trans_ref$,
+:                                               @(o[1]),fndate$(apt11a.trans_date$),
+:                                               @(o[5]),apt11a.trans_amt:m1$,
+:                                               @(o[6]),apt11a.trans_disc:m1$,
+:                                               @(o[7]),amount$
+                            lines=lines+1
+                            amount=amount+apt11a.trans_amt
+                            discount=discount+apt11a.trans_disc
+                            retention=retention+apt11a.trans_ret
+                            balance=balance+apt11a.trans_amt
+                      wend
+
+                      rem --- Print invoice total if there were any detail transactions
+
+                      if detail=0 continue
+                      amount$=""
+                      if retention$="Y" amount$=str(retention:m1$)
+                      if lines+1>maxlines 
+                         gosub report_heading
+                         gosub invoice_heading
+                      endif
+                      print (printer_dev) @(o[4]-1),"Total",@(o[5]),amount:m1$,
+:                                         @(o[6]),discount:m1$,@(o[7]),amount$
+                      lines=lines+1
+
+                      rem --- Loop back for next invoice header
+
+                wend
+
+                rem --- Print vendor balance for this AP Type
+
+                if lines+1>maxlines 
+                   gosub report_heading
+                   gosub invoice_heading
+                endif
+                print (printer_dev) @(o[4]-3),"Balance",@(o[5]),balance:m1$
+                lines=lines+1
+                
+                rem --- Loop back for next Vendor Detail
+
+          wend
+
+          rem --- Loop back for next Vendor Master
+
+    wend
+
+rem --- All done
+
+    goto std_exit
+
+report_heading: rem --- Report heading
+
+    lines=heading+1
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status exitto done
+    print (printer_dev) @(5),"Vendor: ",fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)," ",apm01a.vendor_name$
+    print (printer_dev) ""
+    lines=lines+2
+    first=1
+    return
+
+comments_heading: rem --- Comments subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Comments",width)
+    lines=lines+2
+    return
+
+payto_heading: rem --- Pay-to subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Pay-To Information",width)
+    lines=lines+2
+    return
+
+purchases_heading: rem --- Purchases subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Purchase Address Information",width)
+    lines=lines+2
+    return
+
+detail_heading: rem --- Vendor detail subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Vendor Detail Information",width)
+    lines=lines+2
+    return
+
+invoice_heading: rem --- Invoice history subheading
+
+    if lines+3>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Invoice History",width)
+    print (printer_dev) @(o[0]),"Invoice",@(o[1]),"Date",@(o[2]),"Due Date",@(o[3]),"Pg",@(o[4]),"H",
+:                       @(o[5]+m1-7),"Amount",@(o[6]+m1-9),"Discount",@(o[7]+m1-10),x$
+    lines=lines+3
+    return
+
+rem --- Functions
+
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Assemble and return subheading
+
+    def fnheader$(q$,q)
+        dim q1$(q,"-")
+        q1=len(q$)+2
+        q1$(15,q1)=" "+q$+" "
+        return q1$
+    fnend
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end

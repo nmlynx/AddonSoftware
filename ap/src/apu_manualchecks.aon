@@ -1,0 +1,166 @@
+rem --- Manual Check Register Update
+rem --- Program apr_manualcheck v8.0.0 11Feb2007 (apu_ca)
+rem --- Created by adx_codeport.bbx v1.1.5 (02/11/2007 03:09:35)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+rem --- Currently just an incomplete stub which clears the entry files
+
+    seterr std_error
+    setesc std_error
+
+	next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
+	if OutVect!<>null() OutVect!=null()
+
+rem --- Close printer and destroy current progress meter (if one exists)
+
+    close (printer_dev,err=*next)
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+
+rem --- Skip update if errors were encountered
+
+    if errors goto std_exit
+
+rem --- Initializations
+
+rem --- Get user approval to update
+
+    prompt$="UPDATE_AP_MAN_CHECK_REG"
+    call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
+    if answer$<>"YES" goto std_exit
+
+rem --- Start progress meter and position header file
+
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,ape02_dev,1,meter_num,status
+    read (ape02_dev,key=firm_id$,dom=*next)
+
+rem --- Read next Check Header (ape-02) record
+
+    while moreheaders
+          k$=key(ape02_dev,end=*break)
+          if pos(firm_id$=k$)<>1 break
+          read record (ape02_dev,key=k$) ape02a$
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+          rem --- Initializations for this invoice
+
+          ape02a_key$=k$
+          check$=ape02a.firm_id$+ape02a.ap_type$+ape02a.check_no$+ape02a.vendor_id$
+
+          rem --- Retrieve Vendor Master (apm-01) record
+
+          dim apm01a$:fattr(apm01a$)
+          apm01a.firm_id$=firm_id$
+          apm01a.vendor_id$=ape02a.vendor_id$
+          apm01a.vendor_name$=nf$
+          k$=apm01a.firm_id$+apm01a.vendor_id$ 
+          find record (apm01_dev,key=k$,dom=*next) apm01a$
+
+          rem --- Position the Invoice Detail (ape-22) file
+
+          read (ape22_dev,key=check$,dom=*next)
+
+          rem --- Read the next Invoice Detail (ape-22) record
+
+          while moredetail
+                ape22a_keyk$=key(ape22_dev,end=*break)
+                if pos(check$=ape22a_key$)<>1 break
+                read record (ape22_dev) ape22a$
+
+                rem --- Position GL distribution detail (ape-12) file
+
+                detail$=ape22a.firm_id$+ape22a.ap_type$+ape22a.check_no$+
+:                       ape22a.vendor_id$+ape22a.ap_inv_no$
+
+                rem --- Process miscellaneous GL entries
+
+                read (ape12_dev,key=detail$,dom=*next)
+                while moredetail
+                      ape12a_key$=key(ape12_dev,end=*break)
+                      if pos(detail$=ape12a_key$)<>1 break
+                      read record (ape12_dev) ape12a$
+
+                      rem --- Delete GL Distribution Detail (ape-12) record 
+                      rem --- and loop back for the next one
+
+                      remove (ape12_dev,key=ape12a_key$)
+                wend
+
+                rem --- Delete Invoice Detail (ape-22) record and loop back for the next one
+
+                remove (ape22_dev,key=ape22a_key$)
+          wend
+
+          rem --- Delete Check Header (ape-02) record and loop back for the next one
+
+          remove (ape02_dev,key=ape02a_key$)
+    wend
+
+rem --- All done
+
+    if gl$="Y"
+       call pgmdir$+"glc_update.aon",glm01_dev,glt04_dev,glw11_dev,status
+       call pgmdir$+"glc_ctlupdate.aon",status
+    endif
+    call pgmdir$+"adc_batchdelete.aon",err=*next,status
+    goto std_exit
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end

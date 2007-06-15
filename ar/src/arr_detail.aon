@@ -1,0 +1,749 @@
+rem arm - Customer Detail Listing
+rem Program arr_detail v8.0.0 25Dec2006 (arm_mg)
+rem Created by adx_progconv.bbx v1.0.3 (12/25/2006 11:12:14)
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=10,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ads-01"
+    files$[2]="arm-01"
+    files$[3]="arm-02"
+    files$[4]="arm-03"
+    files$[5]="arm-05"
+    files$[6]="arm-06"
+    files$[7]="arm-08"
+    files$[8]="arm-10"
+    files$[9]="art-01"
+    files$[10]="art-11"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ads01_dev=channels[1]
+    arm01_dev=channels[2]
+    arm02_dev=channels[3]
+    arm03_dev=channels[4]
+    arm05_dev=channels[5]
+    arm06_dev=channels[6]
+    arm08_dev=channels[7]
+    arm10_dev=channels[8]
+    art01_dev=channels[9]
+    art11_dev=channels[10]
+
+rem --- Dimension string templates
+
+    dim arm01a$:templates$[2],arm02a$:templates$[3],arm03a$:templates$[4],arm05a$:templates$[5],
+:       arm06a$:templates$[6],arm08a$:templates$[7],arm10a$:templates$[8],art01a$:templates$[9],
+:       art11a$:templates$[10]
+
+rem --- Retrieve miscellaneous templates
+
+    files=6,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="ars-01A"
+    ids$[2]="ars-01C"
+    ids$[3]="arm-10D"
+    ids$[4]="arm-10F"
+    ids$[5]="arm-10H"
+    ids$[6]="arm-10L"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim ars01a$:templates$[1],ars01c$:templates$[2],arm10d$:templates$[3],
+:       arm10f$:templates$[4],arm10h$:templates$[5],arm10l$:templates$[6]
+
+rem --- Assign form input values to local variables
+
+    table$=fnget_table$("")
+    begcustomer$=fnget_fld_data$(table$,"customer_id_1")
+    endcustomer$=fnget_fld_data$(table$,"customer_id_2")
+    comments$=fnget_fld_data$(table$,"pick_check")
+
+rem --- Retrieve parameter records
+
+    ars01a_key$=firm_id$+"AR00"
+    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    cm$="N"
+    ars01c_key$=firm_id$+"AR01"
+    find record (ads01_dev,key=ars01c_key$,err=*next) ars01c$
+    if ars01c.sys_install$="Y" cm$="Y"
+    customer_size=num(ars01a.customer_size$)
+    m0$=ars01a.customer_output$
+    m1$=ars01a.amount_mask$
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,9,11
+    m8$="(###)-###-####"
+    m0=len(m0$)
+    m1=len(m1$)
+    dim m5$(m1,"#"),m6$(m1+1,"#")
+    m5$(len(m5$)-1)="0-"
+    m6$(len(m6$)-5)="0.00%"
+    m6$(1,1)="-"
+
+rem --- Is Sales Order Processing and/or Sales Analysis installed?
+
+    dim info$[20]
+    application$="OP"
+    call pgmdir$+"adc_application.aon",application$,info$[all]
+    op$=info$[20]
+    if op$<>"Y" cm$="N"
+    application$="SA"
+    call pgmdir$+"adc_application.aon",application$,info$[all]
+    sa$=info$[20]
+
+rem --- Initializations
+
+    headings=2
+    dim headings$[headings],o[9],a[6],s[3]
+    more=1
+    page=0
+    width=80
+    maxlines=59
+    lines=maxlines+1
+    morecustomers=1
+    moreheaders=1
+    moredetail=1
+    morecomments=1
+    if comments$="N" morecomments=0
+    morejobs=1
+    if ars01a.job_nos$<>"Y" morejobs=0
+    if op$<>"Y" morejobs=0
+    nf$="(Not on file)"
+    na$="(Not applicable)"
+    artype$=fill(2)
+    when$=sysinfo.system_date$
+    clock$=""
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$
+
+rem --- Define print positions for the invoice history listing
+
+    o[0]=0
+    o[1]=2
+    o[2]=10
+    o[3]=19
+    o[4]=28
+    o[5]=31
+    o[9]=width-m1
+    o[8]=o[9]-m1
+    o[7]=o[8]-m1
+    o[6]=o[7]-m1
+
+rem --- Define print positions for the aging and sales summary
+
+    x=m1*7
+    x=int((width-x)/2)
+    a[0]=x
+    for x=1 to 6
+        a[x]=a[x-1]+m1
+    next x
+    s[0]=31-m1
+    s[1]=46-m1
+    s[2]=61-m1
+    s[3]=76-m1
+ 
+rem --- Additional file opens
+
+    files=6,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="opm-03"
+    files$[2]="opm-04"
+    files$[3]="opm-05"
+    files$[4]="opm-06"
+    files$[5]="opm-07"
+    files$[6]="opm-09"
+    if op$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                              ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    opm03_dev=channels[1]
+    opm04_dev=channels[2]
+    opm05_dev=channels[3]
+    opm06_dev=channels[4]
+    opm07_dev=channels[5]
+    opm09_dev=channels[6]
+
+rem --- Dimension string templates
+
+    if op$="Y" dim opm03a$:templates$[1],opm04a$:templates$[2],opm05a$:templates$[3],
+:                  opm06a$:templates$[4],opm07a$:templates$[5],opm09a$:templates$[6]
+
+rem --- Open printer, start progress meter and position Customer Master file
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
+    while begcustomer$<>""
+          read (arm01_dev,key=firm_id$+begcustomer$)
+          read (arm01_dev,dir=-1,err=*next)
+          begcustomer$=""
+    wend
+
+rem --- Read next Customer Master (arm-01) record
+
+    while morecustomers
+          arm01_key$=key(arm01_dev,end=*break)
+          if pos(firm_id$=arm01_key$)<>1 break
+          read record (arm01_dev,key=arm01_key$) arm01a$
+          if endcustomer$<>"" if arm01a.customer_id$>endcustomer$ break
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status 
+
+          rem --- Print customer master information
+
+          extension$=""
+          if cvs(arm01a.phone_exten$,2)<>"" extension$="Ext "+arm01a.phone_exten$
+          gosub report_heading
+          print (printer_dev) ""
+          print (printer_dev) @(1),"Address: ",arm01a.addr_line_1$,@(46),"Telephone: ",fnmask$(arm01a.phone_no$,m8$),
+:                             " ",extension$
+          print (printer_dev) @(10),arm01a.addr_line_2$,@(46),"Fax Phone: ",fnmask$(arm01a.fax_no$,m8$)
+          print (printer_dev) @(10),arm01a.addr_line_3$,@(48),"Contact: ",arm01a.contact_name$
+          print (printer_dev) @(10),arm01a.addr_line_4$,@(37),"Alternate Sequence: ",arm01a.alt_sequence$
+          print (printer_dev) @(4),"City: ",arm01a.city$,@(44),"Date Opened: ",fndate$(arm01a.opened_date$)
+          print (printer_dev) @(3),"State: ",arm01a.state_code$,@(17),"Zip/Postal: ",fnzipcode$(arm01a.zip_code$),
+:                             @(47),"Ship Via: ",arm01a.ar_ship_via$
+          print (printer_dev) @(1),"Country: ",arm01a.country$,@(49),"F.O.B.: ",arm01a.fob$
+          print (printer_dev) @(5),"SIC: ",arm01a.sic_code$,@(42),"Resale Number: ",arm01a.resale_no$
+          print (printer_dev) @(2),"Retain? ",fnyn$(arm01a.retain_cust$),@(45),"D&B Number: ",arm01a.db_no$
+          lines=lines+10
+
+          rem --- Retrieve customer detail record
+
+          dim arm02a$:fattr(arm02a$)
+          arm02a.firm_id$=arm01a.firm_id$
+          arm02a.customer_id$=arm01a.customer_id$
+          arm02a.ar_type$=artype$
+          arm02_key$=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$
+          find record (arm02_dev,key=arm02_key$,dom=*next) arm02a$
+
+          rem --- Get AR code descriptions
+
+          channel=arm10_dev
+          termsdesc$=fncode$(arm10_dev,firm_id$+"A"+arm02a.ar_terms_code$,fattr(arm10a$))
+          distdesc$=fncode$(arm10_dev,firm_id$+"D"+arm02a.ar_dist_code$,fattr(arm10d$))
+          terrdesc$=fncode$(arm10_dev,firm_id$+"H"+arm02a.territory$,fattr(arm10h$))
+          salesdesc$=fncode$(arm10_dev,firm_id$+"F"+arm02a.slspsn_code$,fattr(arm10f$))
+          typedesc$=fncode$(arm10_dev,firm_id$+"L"+arm02a.customer_type$,fattr(arm10l$))
+          cycledesc$=fncode$(arm08_dev,firm_id$+arm02a.cycle_code$,fattr(arm08a$))
+          if cvs(arm02a.cycle_code$,2)="" cycledesc$=""
+
+          rem --- Get OP code descriptions (if installed)
+
+          discdesc$=na$
+          msgdesc$=na$
+          pricedesc$=na$
+          taxdesc$=na$
+          frtdesc$=na$
+          if op$="Y"
+             discdesc$=fncode$(opm03_dev,firm_id$+arm02a.disc_code$,fattr(opm03a$))
+             msgdesc$=fncode$(opm04_dev,firm_id$+arm02a.message_code$,fattr(opm04a$))
+             pricedesc$=fncode$(opm05_dev,firm_id$+arm02a.pricing_code$,fattr(opm05a$))
+             taxdesc$=fncode$(opm06_dev,firm_id$+arm02a.tax_code$,fattr(opm06a$))
+             k$=firm_id$+arm02a.frt_terms$
+             dim opm07a$:fattr(opm07a$)
+             opm07a.description$=nf$
+             find record (opm07_dev,key=k$,dom=*next) opm07a$
+             frtdesc$=opm07a.description$
+          endif
+          if op$="Y" if cvs(arm02a.frt_terms$,2)="" frtdesc$=""
+
+          rem --- Print profile information
+
+          hold$=na$
+          limit$=na$
+          if cm$="Y"
+             limit$=cvs(str(arm02a.credit_limit:m1$),1+2)
+             hold$=fnyn$(arm02a.cred_hold$)
+          endif
+          if cm$="Y" if arm02a.cred_hold$="E" hold$="Exempt"
+          sales_analysis$="None"
+          if sa$<>"Y" arm02a.sa_flag$="N"
+          if arm02a.sa_flag$="I" sales_analysis$="By Item"
+          if arm02a.sa_flag$="P" sales_analysis$="By Product"
+          if lines+12>maxlines gosub report_heading
+          gosub profile_heading
+          print (printer_dev) @(0),"Customer Type: ",arm02a.customer_type$,@(19),typedesc$,
+:                             @(41),"Sales Discount: ",arm02a.disc_code$," ",discdesc$
+          print (printer_dev) @(2),"Salesperson: ",arm02a.slspsn_code$,@(19),salesdesc$,
+:                             @(45),"Label Code: ",arm02a.label_code$
+          print (printer_dev) @(3),"Terms Code: ",arm02a.ar_terms_code$,@(19),termsdesc$,
+:                             @(41),"Finance Charge? ",fnyn$(arm02a.finance_chg$)
+          print (printer_dev) @(5),"Tax Code: ",arm02a.tax_code$,@(19),taxdesc$,
+:                             @(45),"Statements? ",fnyn$(arm02a.statements$)
+          print (printer_dev) @(0),"Freight Terms: ",arm02a.frt_terms$,@(19),frtdesc$,
+:                             @(45),"Cycle Code: ",arm02a.cycle_code$," ",cycledesc$
+          print (printer_dev) @(4),"Territory: ",arm02a.territory$,@(19),terrdesc$,
+:                             @(41),"Sales Analysis: ",sales_analysis$
+          print (printer_dev) @(1),"Distribution: ",arm02a.ar_dist_code$,@(19),distdesc$
+          print (printer_dev) @(1),"Message Code: ",arm02a.message_code$,@(19),msgdesc$,
+:                             @(43),"Credit Limit: ",limit$
+          print (printer_dev) @(1),"Pricing Code: ",arm02a.pricing_code$,@(19),pricedesc$,
+:                             @(44),"Credit Hold: ",hold$
+          lines=lines+10
+
+          rem --- Print customer comments
+
+          while morecomments
+                gosub comments_heading
+                read (arm05_dev,key=arm01_key$,dom=*next)
+                while moredetail
+                      k$=key(arm05_dev,end=*break)
+                      if pos(arm01_key$=k$)<>1 break
+                      read record (arm05_dev,key=k$) arm05a$
+                      if lines+1>maxlines 
+                         gosub report_heading
+                         gosub comments_heading
+                      endif
+                      print (printer_dev) @(0),arm05a.sequence_num$," ",arm05a.std_comments$
+                      lines=lines+1
+                wend
+                break
+          wend
+
+          rem --- Process customer ship-to records
+
+          first=1
+          read (arm03_dev,key=arm01_key$,dom=*next)
+          while moredetail
+                k$=key(arm03_dev,end=*break)
+                if pos(arm01_key$=k$)<>1 break
+                read record (arm03_dev,key=k$) arm03a$
+
+                rem --- Get AR code descriptions
+
+                terrdesc$=fncode$(arm10_dev,firm_id$+"H"+arm03a.territory$,fattr(arm10h$))
+                salesdesc$=fncode$(arm10_dev,firm_id$+"F"+arm03a.slspsn_code$,fattr(arm10f$))
+
+                rem --- Get OP code descriptions (if installed)
+
+                taxdesc$=na$
+                if op$="Y" taxdesc$=fncode$(opm06_dev,firm_id$+arm03a.tax_code$,fattr(opm06a$))
+
+                rem --- Print the customer ship-to record
+
+                extension$=""
+                if cvs(arm03a.phone_exten$,2)<>"" extension$="Ext "+arm03a.phone_exten$
+                if len(taxdesc$)>19 taxdesc$=taxdesc$(1,19)
+                if len(terrdesc$)>19 terrdesc$=terrdesc$(1,19)
+                if len(salesdesc$)>19 salesdesc$=salesdesc$(1,19)
+                arm03a.country$=arm03a.country$(1,23)
+                if lines+9>maxlines gosub report_heading
+                if first gosub shipto_heading
+:                   else print (printer_dev) "" 
+                print (printer_dev) @(0),"Ship To: ",arm03a.shipto_no$,
+:                                   @(46),"Telephone: ",fnmask$(arm03a.phone_no$,m8$)," ",extension$
+                print (printer_dev) @(3),"Name: ",arm03a.name$,
+:                                   @(48),"Contact: ",arm03a.contact_name$
+                print (printer_dev) @(0),"Address: ",arm03a.addr_line_1$,
+:                                   @(44),"Salesperson: ",arm03a.slspsn_code$," ",salesdesc$
+                print (printer_dev) @(9),arm03a.addr_line_2$,
+:                                   @(46),"Territory: ",arm03a.territory$," ",terrdesc$
+                print (printer_dev) @(9),arm03a.addr_line_3$,
+:                                   @(47),"Tax Code: ",arm03a.tax_code$,"  ",taxdesc$
+                print (printer_dev) @(9),arm03a.addr_line_4$,@(51),"SIC: ",arm03a.sic_code$
+                print (printer_dev) @(3),"City: ",arm03a.city$,@(45),"D&B Number: ",arm03a.db_no$
+                print (printer_dev) @(2),"State: ",arm03a.state_code$,
+:                                   @(13),"Zip/Postal: ",fnzipcode$(arm03a.zip_code$),
+:                                   @(48),"Country: ",arm03a.country$
+                lines=lines+9
+
+                rem --- Loop back for next ship-to record
+
+          wend
+
+          rem --- Process customer job number records (if job numbers are being used)
+
+          while morejobs
+                first=1
+                read (opm09_dev,key=arm01_key$,dom=*next)
+                while moredetail
+                      k$=key(opm09_dev,end=*break)
+                      if pos(arm01_key$=k$)<>1 break
+                      read record (opm09_dev,key=k$) opm09a$
+                      extension$=""
+                      if cvs(opm09a.phone_exten$,2)<>"" extension$="Ext "+opm09a.phone_exten$
+                      if lines+9>maxlines gosub report_heading
+                      if first gosub job_heading
+:                         else print (printer_dev) "" 
+                      print (printer_dev) @(3),"Job ID: ",opm09a.job_no$
+                      print (printer_dev) @(1),"Job Name: ",opm09a.customer_name$,
+:                                         @(44),"Preliminary Lien Information"
+                      print (printer_dev) @(2),"Address: ",opm09a.addr_line_1$
+                      print (printer_dev) @(11),opm09a.addr_line_2$,
+:                                         @(46),"Lien Date: ",fndate$(opm09a.lien_date$)
+                      print (printer_dev) @(5),"City: ",opm09a.city$,
+:                                         @(48),"Lien ID: ",opm09a.lien_no$
+                      print (printer_dev) @(2),"State: ",opm09a.state_code$,
+:                                         @(13),"Zip/Postal: ",fnzipcode$(arm01a.zip_code$),
+:                                         @(49),"Amount: ",opm09a.lien_amount:m1$
+                      print (printer_dev) @(0),"Telephone: ",fnmask$(arm03a.phone_no$,m8$)," ",extension$,
+:                                         @(41),"First Shipment: ",fndate$(opm09a.fst_shp_date$)
+                      print (printer_dev) @(2),"Contact: ",opm09a.contact_name$,
+:                                         @(36),"Total Sales to Date: ",opm09a.total_sales:m1$
+                      print (printer_dev) @(3),"Retain? ",fnyn$(opm09a.retain_cust$),
+:                                         @(38),"Last Invoice Date: ",fndate$(opm09a.lstinv_date$)
+                      lines=lines+9
+
+                      rem --- Loop back for next customer job record
+
+                wend
+                break
+
+                rem --- Done with customer job records
+
+          wend
+
+          rem --- Print aging and sales summary
+
+          mtd_percent=0
+          ytd_percent=0
+          pytd_percent=0
+          nmtd_percent=0
+          mtd_profit=arm06a.mtd_sales-arm06a.mtd_cost
+          ytd_profit=arm06a.ytd_sales-arm06a.ytd_cost
+          pytd_profit=arm06a.pyr_sales-arm06a.pri_ytd_cost
+          nmtd_profit=arm06a.nmtd_sales-arm06a.nxt_mtd_cost
+          if arm06a.mtd_sales<>0 mtd_percent=(mtd_profit*100)/arm06a.mtd_sales
+          if arm06a.ytd_sales<>0 ytd_percent=(ytd_profit*100)/arm06a.ytd_sales
+          if arm06a.pyr_sales<>0 pytd_percent=(pytd_profit*100)/arm06a.pyr_sales
+          if arm06a.nmtd_sales<>0 nmtd_percent=(nmtd_profi*100)/arm06a.nmtd_sales
+          balance=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+
+:                 arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+          if lines+15>maxlines gosub report_heading
+          gosub detail_heading
+          print (printer_dev) @(a[0]+m1-7),"Future",@(a[1]+m1-8),"Current",@(a[2]+m1-8),"30 Days",
+:                             @(a[3]+m1-8),"60 Days",@(a[4]+m1-8),"90 Days",@(a[5]+m1-9),"120 Days",
+:                             @(a[6]+m1-8),"Balance"
+          print (printer_dev) @(a[0]),arm02a.aging_future:m1$,@(a[1]),arm02a.aging_cur:m1$,
+:                             @(a[2]),arm02a.aging_30:m1$,@(a[3]),arm02a.aging_60:m1$,
+:                             @(a[4]),arm02a.aging_90:m1$,@(a[5]),arm02a.aging_120:m1$,
+:                             @(a[6]),balance:m1$
+          print (printer_dev) ""
+          print (printer_dev) @(2),"Last Invoice: ",fndate$(arm02a.lstinv_date$),
+:                             @(40),"Avg Days to Pay: ",cvs(str(arm06a.avg_days:m5$),1+2)
+          print (printer_dev) @(2),"Last Payment: ",fndate$(arm02a.lstpay_date$)
+          print (printer_dev) @(s[2]+m1-6),"Prior",@(s[3]+m1-6),"Next"
+          print (printer_dev) @(s[0]+m1-4),"MTD",@(s[1]+m1-4),"YTD",@(s[2]+m1-6),"Year",
+:                             @(s[3]+m1-6),"Month"
+          print (printer_dev) @(10),"Sales: ",@(s[0]),arm06a.mtd_sales:m1$,@(s[1]),arm06a.ytd_sales:m1$,
+:                             @(s[2]),arm06a.pyr_sales:m1$,@(s[3]),arm06a.nmtd_sales:m1$
+          print (printer_dev) @(11),"Cost: ",@(s[0]),arm06a.mtd_cost:m1$,@(s[1]),arm06a.ytd_cost:m1$,
+:                             @(s[2]),arm06a.pri_ytd_cost:m1$,@(s[3]),arm06a.nxt_mtd_cost:m1$
+          print (printer_dev) @(3),"Gross Profit: ",@(s[0]),mtd_profit:m1$,@(s[1]),ytd_profit:m1$,
+:                             @(s[2]),pytd_profit:m1$,@(s[3]),nmtd_profit:m1$
+          print (printer_dev) @(1),"Gross Profit %: ",@(s[0]),mtd_percent:m6$,@(s[1]),ytd_percent:m6$,
+:                             @(s[2]),pytd_percent:m6$,@(s[3]),nmtd_percent:m6$
+          print (printer_dev) @(0),"Avg Days to Pay: ",@(s[0]),arm06a.avg_days_mtd:m5$,@(s[1]),arm06a.avg_days_ytd:m5$,
+:                             @(s[2]),arm06a.avg_dtp_pytd:m5$,@(s[3]),arm06a.avg_dtp_nmtd:m5$
+          print (printer_dev) @(4),"High Credit: ",@(s[0]),arm06a.mtd_high_crd:m1$,@(s[1]),arm06a.ytd_hi_cred:m1$,
+:                             @(s[2]),arm06a.pyr_hi_crd:m1$,@(s[3]),arm06a.nmtd_high_cr:m1$
+          lines=lines+15
+
+          rem --- Print invoice history
+
+          if lines+3>maxlines gosub report_heading
+
+          rem --- Read customer detail records
+
+          first=1
+          printed=0
+          custinv=0
+          custapp=0
+          custdis=0
+          customer$=arm01a.firm_id$+artype$+arm01a.customer_id$
+          read (art01_dev,key=customer$,dom=*next)
+
+          rem --- Read next invoice header record
+
+          while moreheaders
+                art01_key$=key(art01_dev,end=*break)
+                if pos(customer$=art01_key$)<>1 break
+                read record (art01_dev) art01a$
+                type$=fntype$(art01a.invoice_type$)
+                if lines+1>maxlines gosub report_heading
+                if first gosub invoice_heading
+                print (printer_dev) @(o[1]),art01a.ar_inv_no$,@(o[2]),fndate$(art01a.invoice_date$),
+:                                   @(o[3]),fndate$(art01a.inv_due_date$),@(o[4]),art01a.ar_terms_code$,
+:                                   @(o[5]),type$,@(o[6]),art01a.invoice_amt:m1$,@(o[9]),art01a.disc_allowed:m1$
+                lines=lines+1
+                printed=1
+                custinv=custinv+art01a.invoice_amt
+                custdis=custdis+art01a.disc_allowed
+                applied=0
+                detail=0
+                art01_key$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$
+                read (art11_dev,key=art01_key$,dom=*next)
+
+                rem --- Read next invoice detail record
+
+                while moredetail
+                      k$=key(art11_dev,end=*break)
+                      if pos(art01_key$=k$)<>1 break
+                      read record (art11_dev) art11a$
+                      detail=1
+                      type$=fntype$(art11a.trans_type$)
+                      if lines+1>maxlines gosub report_heading
+                      if first gosub invoice_heading
+                      print (printer_dev) @(o[2]),fndate$(art11a.trans_date$),@(o[3]),art11a.refchk_no$,
+:                                         @(o[5]),type$,@(o[7]),art11a.trans_amt:m1$,@(o[9]),art11a.adjdisc_amt:m1$
+                      lines=lines+1
+                      applied=applied+art11a.trans_amt
+                      custapp=custapp+art11a.trans_amt
+                      custdis=custdis+art11a.adjdisc_amt
+                wend
+
+                rem --- Print invoice total and loop back for next invoice header
+
+                if detail=0 continue
+                balance=art01a.invoice_amt+applied
+                if lines+1>maxlines gosub report_heading
+                if first gosub invoice_heading
+                print (printer_dev) @(o[6]-6),"Total",@(o[8]),balance:m1$
+                lines=lines+1
+
+          wend
+                
+          rem --- Print customer total
+
+          if printed=0 continue
+          balance=custinv+custapp
+          if lines+1>maxlines gosub report_heading
+          print (printer_dev) @(o[6]-15),"Customer Total",@(o[6]),custinv:m1$,@(o[7]),custapp:m1$,
+:                             @(o[8]),balance:m1$,@(o[9]),custdis:m1$
+          lines=lines+1
+          reportinv=reportinv+custinv
+          reportapp=reportapp+custapp
+          reportdis=reportdis+custdis
+
+          rem --- Loop back for next Customer Master
+
+    wend
+
+rem --- All done
+
+    goto std_exit
+
+report_heading: rem --- Report heading
+
+    lines=heading+1
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status exitto done
+    print (printer_dev) @(0),"Customer: ",fnmask$(arm01a.customer_id$(1,customer_size),m0$)," ",arm01a.customer_name$
+    lines=lines+1
+    first=1
+    return
+
+profile_heading: rem --- Profile subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Profile Information",width)
+    lines=lines+2
+    return
+
+comments_heading: rem --- Comments subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Comments",width)
+    lines=lines+2
+    return
+
+shipto_heading: rem --- Ship-to subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Ship-To Address Information",width)
+    lines=lines+2
+    first=0
+    return
+
+job_heading: rem --- Job number subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Customer Job Information",width)
+    lines=lines+2
+    first=0
+    return
+
+detail_heading: rem --- Aging and Sales Summary subheading
+
+    if lines+2>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Aging and Sales Summary",width)
+    lines=lines+2
+    return
+
+invoice_heading: rem --- Invoice history subheading
+
+    if lines+3>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),fnheader$("Invoice History",width)
+    print (printer_dev) @(o[0]),"Cust/Inv",@(o[2]),"Date",@(o[3]),"Due/Ref",@(o[4]),"TC",
+:                       @(o[5]),"Type",@(o[6]+m1-8),"Invoice",@(o[7]+m1-8),"Applied",
+:                       @(o[8]+m1-8),"Balance",@(o[9]+m1-9),"Discount"
+    lines=lines+3
+    first=0
+    return
+
+rem --- Functions
+
+rem --- fnyn$: Return Yes/No
+
+    def fnyn$(q$)
+        q1$="No"
+        if q$="Y" q1$="Yes"
+        return q1$
+    fnend
+
+rem --- fntype$: Return type description based on code value
+
+    def fntype$(q$)
+        q1$=q$
+        if q$="S" q1$="Sale"
+        if q$="C" q1$="Cash"
+        if q$="F" q1$="Fin"
+        if q$="A" q1$="Adj"
+        if q$="V" q1$="Void"
+        if q$="I" q1$="Inv"
+        return q1$
+    fnend
+
+rem --- fncode$: Retrieve code record and return code description
+
+    def fncode$(q,q$,q1$)
+        dim q2$:q1$
+        q2.code_desc$="(Not on File)"
+        find record (q,key=q$,dom=*next) q2$
+        q3$=q2.code_desc$
+        return q3$
+    fnend
+
+rem --- Assemble and return subheading
+
+    def fnheader$(q$,q)
+        dim q1$(q,"-")
+        q1=len(q$)+2
+        q1$(15,q1)=" "+q$+" "
+        return q1$
+    fnend
+
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)
+        q1$=""
+        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))),err=*next)
+        return q1$
+    fnend
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end
