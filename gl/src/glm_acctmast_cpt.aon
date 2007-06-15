@@ -1,0 +1,77 @@
+rem GLE_JEHDR Callpoint Program
+rem Proprietary Software.  AddonSoftware
+rem Program ID: gle_jehdr_cpt.aon  <Apr 28, 2006>
+
+	if stbl("+USE_SETERR")="YES" seterr error_proc
+
+rem --- Enter Arguments
+
+	enter
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp1)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp1)+rd_tmp1-1)/rd_tmp1)
+	def fngett_attr$(rd_att0$)=rd_attr_tbl$[fnstr_pos(rd_att0$,rd_attr_def_tbl$,5)]
+	def fngetc_attr$(rd_att0,rd_att0$)=rd_attr_col$[rd_att0,fnstr_pos(rd_att0$,rd_attr_def_col$,5)]
+	def fngetv_attr$(rd_att0$,rd_att1$)=rd_attr_col$[fnstr_pos(rd_att0$,rd_attr_col$[0,1],16),fnstr_pos(rd_att1$,rd_attr_def_col$,5)]
+	def fnget_rec$(rd_att0$)=rd_rec_data$[fnstr_pos(rd_att0$,rd_attr_col$[0,1],16),0]
+
+route_callpoint:rem --- Route Callpoint to Correct Subroutine
+
+	cp_callpoint_str$="AOPT;"
+	switch fnstr_pos(rd_callpoint$(1,4),cp_callpoint_str$,5)
+		case fnstr_pos("AOPT",cp_callpoint_str$,5)
+			if rd_callpoint$(6)="SUMM"
+				cp_acct_id$=fnget_rec$("GL_ACCOUNT")
+				call stbl("+DIR_PGM")+"glc_summact.aon",
+:					rd_gui_dev,
+:					rdMaintWin!,
+:					cp_acct_id$,
+:					rd_table_chans$[all]
+			endif
+			if rd_callpoint$(6)="TRAN"
+				cp_acct_id$=fnget_rec$("GL_ACCOUNT")
+				call stbl("+DIR_PGM")+"rdm_inquiry.aon",
+:					rd_gui_dev,
+:					rdMaintWin!,
+:					"GLT_TRANSDET",
+:					"VIEW",
+:					rd_table_chans$[all],
+:					stbl("+FIRM_ID")+cp_acct_id$,
+:					"",
+:					"",
+:					"",
+:					"",
+:					"",
+:					""
+			endif
+		break
+		case default
+			goto exit_prog
+		break
+	swend
+
+	goto exit_prog
+
+disp_msg:rem --- Display Messages
+
+	call rd_dir_pgm$+"rdm_message.aon",rd_gui_dev,rd_msg_dialog_title$,rd_msg_text$,rd_msg_defs$,rd_msg_opt$
+	rd_msg_title$=""
+	rd_msg_text$=""
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Exit Program
+
+	exit

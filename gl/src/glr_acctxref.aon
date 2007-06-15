@@ -1,0 +1,277 @@
+rem glr - Account/Financial Report Xref
+rem Program glr_acctxref v8.0.0 20May2006 (glr_gb)
+rem Created by adx_progconv.bbx v1.0.3 (05/20/2006 03:26:07)
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+rem --- This program produces the Account/Report cross-reference report.
+rem --- It's run by two different front ends, gle_acctxref for the regular
+rem --- Account/Report xref and by gle_consacctxref for the consolidated
+rem --- report.
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=5,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ads-01"
+    files$[2]="glm-01"
+    files$[3]="glm-10"
+    files$[4]="glm-11"
+    files$[5]="glm-21"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ads01_dev=channels[1]
+    glm01_dev=channels[2]
+    glm10_dev=channels[3]
+    glm11_dev=channels[4]
+    glm21_dev=channels[5]
+
+rem --- Dimension string templates
+
+    dim glm01a$:templates$[2],glm11a$:templates$[4],glm21a$:templates$[5]
+
+rem --- Retrieve miscellaneous templates
+
+    files=1,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="gls-01A"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim gls01a$:templates$[1]
+
+rem --- Retrieve parameter records
+
+    gls01a_key$=sysinfo.firm_id$+"GL00"
+    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    acctlen=num(gls01a.acct_length$)
+    headings=1
+    call pgmdir$+"glc_regroup.aon",glm10_dev,firm_id$,break$,desc$
+
+rem --- Initializations
+
+    dim headings$[headings],o[6]
+    m=max(8,m0)
+    h0=132
+    when$=sysinfo.system_date$
+    clock$=""
+    page=0
+    l9=59
+    l=l9+1
+    more=1
+    moredetail=1
+    headings$[0]=cvs(sysinfo.firm_name$,2)
+    headings$[1]=cvs(sysinfo.task_desc$,2)
+
+rem --- Print positions
+
+    o[0]=5
+    o[1]=o[0]+m+1
+    o[6]=h0-13
+    for x=5 to 2 step -1
+        o[x]=o[x+1]-15
+    next x
+    width=o[2]-o[1]
+    if width>35 width=35
+
+rem --- Run the report?
+
+    title$=cvs(sysinfo.task_desc$,2)
+    message$="Do you want to produce the "+title$+"?"
+    x=msgbox(message$,4+32,title$)
+    if x<>6 goto std_exit
+
+rem --- Open printer, start progress meter and position files
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,glm01_dev,1,0,ignore_status
+    read (glm01_dev,key=firm_id$,dom=*next)
+
+rem --- Read next glm-01 record
+
+    while more
+          glm01_key$=key(glm01_dev,end=*break)
+          if pos(firm_id$=glm01_key$)<>1 break
+          read record (glm01_dev)glm01a$
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+          account_break: rem --- Chart of Account Break?
+
+          if break$<>"" if glm01a.gl_account$<break$(1,10) goto format
+          if break$="" goto format
+
+          rem --- Print subtotal and new heading
+
+          title$=cvs(desc$(1,20),2)
+          if l+4>l9 gosub report_heading
+:              else gosub subheading
+
+          new_heading: rem --- Strip current heading
+
+          if len(break$)>10 break$=break$(10+1),desc$=desc$(21)
+          if len(break$)<=10 break$="",desc$=""
+          if break$<>"" if pos(" "<>break$(1,10))=0 goto new_heading
+          goto account_break
+
+          format: rem --- Format print line: Regular
+
+          dim buf$[10]
+          cnt=1
+          if consolidated$="Y" goto consolidated
+          read (glm11_dev,key=glm01_key$,dom=*next)
+          while moredetail
+                k$=key(glm11_dev,end=*break)
+                if pos(glm01_key$=k$(1,12))<>1 or cnt>10 break
+                read record (glm11_dev,key=k$)glm11a$
+                check$=glm11a.gl_rpt_no$+glm11a.gl_rpt_line$
+                if cvs(check$,2)<>"" buf$[cnt]=glm11a.gl_rpt_no$+"-"+glm11a.gl_rpt_line$
+                cnt=cnt+1
+          wend
+          goto print_detail
+
+          consolidated: rem --- Format print line: Consolidated
+
+          read (glm21_dev,key=glm01_key$,dom=*next)
+          while moredetail
+                k$=key(glm21_dev,end=*break)
+                if pos(glm01_key$=k$(1,12))<>1 or cnt>10 break
+                read record (glm21_dev,key=k$)glm21a$
+                check$=glm21a.gl_rpt_no$+glm21a.gl_rpt_line$
+                if cvs(check$,2)<>"" buf$[cnt]=glm21a.gl_rpt_no$+"-"+glm21a.gl_rpt_line$
+                cnt=cnt+1
+          wend
+
+          print_detail: rem --- Print detail lines
+
+          if l+2>l9 gosub report_heading
+          print (printer_dev)@(o[0]),fnmask$(glm01a.gl_account$(1,acctlen),m0$),
+:                            @(o[1]),glm01a.gl_acct_desc$(1,width),@(o[2]),buf$[1],@(o[3]),buf$[2],
+:                            @(o[4]),buf$[3],@(o[5]),buf$[4],@(o[6]),buf$[5]
+          print (printer_dev)@(o[2]),buf$[6],@(o[3]),buf$[7],@(o[4]),buf$[8],@(o[5]),buf$[9],
+:                            @(o[6]),buf$[10]
+          l=l+2
+    wend
+
+rem --- All done
+
+    goto std_exit
+
+report_heading: rem --- Report Heading
+
+    l=headings+1
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,h0,when$,clock$,status
+    if status exitto std_exit
+    print (printer_dev)""
+    print (printer_dev)@(o[2]),"Assignment 1",@(o[3]),"Assignment 2",@(o[4]),"Assignment 3",
+:                      @(o[5]),"Assignment 4",@(o[6]),"Assignment 5"
+    print (printer_dev)@(o[0]),"Account",@(o[1]),"Description",@(o[2]),"Assignment 6",
+:                      @(o[3]),"Assignment 7",@(o[4]),"Assignment 8",@(o[5]),"Assignment 9",
+:                      @(o[6]),"Assignment 10"
+    l=l+3
+
+subheading: rem --- Subheading
+
+    print (printer_dev)""
+    print (printer_dev)title$
+    print (printer_dev)""
+    l=l+3
+    return
+
+rem --- Functions
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        if pos("E"=cvs(q1$,4)) goto alpha_mask
+:          else return str(-num(q1$,err=alpha_mask):q2$,err=alpha_mask)
+        alpha_mask:
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end

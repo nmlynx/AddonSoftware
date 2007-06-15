@@ -1,0 +1,262 @@
+rem Vendor Name & Address Listing
+rem Program apr_namelist v8.0.0 31May2006 (apr_pb)
+rem Created by adx_progconv.bbx v1.0.3 (05/31/2006 10:53:02)
+
+rem AddonSoftware Version 8.0.0 - 01Oct2006
+rem Copyright (c) 1981-2006 AddonSoftware
+rem All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+    milestone=num(stbl("+MILESTONE"))
+
+rem --- Open/Lock files
+
+    files=2,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ads-01"
+    files$[2]="apm-01"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:						ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ads01_dev=channels[1]
+    apm01_dev=channels[2]
+
+rem --- Dimension string templates
+
+    dim apm01a$:templates$[2]
+
+rem --- Retrieve miscellaneous templates
+
+    files=1,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="aps-01A"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim aps01a$:templates$[1]
+
+rem --- Retrieve parameter records
+
+    aps01a_key$=firm_id$+"AP00"
+    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    vendlen=num(aps01a.vendor_size$)
+    m0$=aps01a.vendor_output$
+    m0=len(m0$)
+    headings=1
+
+rem --- Assign form input values to local variables
+
+    table$=fnget_table$("")
+    begvendor$=fnget_fld_data$(table$,"vendor_id_1")
+    endvendor$=fnget_fld_data$(table$,"vendor_id_2")
+
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+	  rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+	  rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+rem --- Initializations
+
+    dim headings$[headings],o[3]
+    headings$[0]=cvs(sysinfo.firm_name$,2)
+    headings$[1]=cvs(sysinfo.task_desc$,2)
+    m8$="(###) ###-####"
+    more=1
+    record_count=0
+
+rem --- Document columns
+
+    dim columns$[3,3]
+    columns$[0,0]="ID",columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]="Name/Address",columns$[1,1]="C",columns$[1,2]="35"
+    columns$[2,0]="Contact",columns$[2,1]="C",columns$[2,2]="25"
+    columns$[3,0]="Telephone/Fax",columns$[3,1]="C",columns$[3,2]="15"
+
+rem --- Start progress meter and position file
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,apm01_dev,1,meter_num,status
+    k$=firm_id$+begvend$
+    if cvs(begvend$,2)<>"" k$=k$(1,len(k$)-1)+$FF$
+    find (apm01_dev,key=k$,dom=*next)
+
+rem --- Get next key
+
+    while more
+	    read record (apm01_dev,end=*break)apm01a$
+          if firm_id$<> apm01a.firm_id$ break
+	    if endvend$<>"" if apm01a.vendor_id$(1,vendlen)>endvend$ break
+	    record_count=record_count+1
+	    if mod(record_count,milestone)=0 
+:            call pgmdir$+"adc_progress.aon","S","","","","",0,apm01_dev,1,meter_num,status
+
+	    rem --- Format output fields
+
+	    phone$=""
+	    fax$=""
+	    if cvs(apm01a.phone_no$,2)<>"" phone$=fnmask$(apm01a.phone_no$,m8$)
+	    if cvs(apm01a.fax_no$,2)<>"" fax$=fnmask$(apm01a.fax_no$,m8$)
+	    address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
+	    call pgmdir$+"adc_address.aon",address$,24,3,9,30
+
+	    rem --- Print vendor
+
+	    x=2+len(address$)/30
+	    address=len(cvs(address$,2))
+	    if address=0 if fax$<>"" x=x+1
+
+	    for blank_col=1 to 4
+              OutVect!.addItem("")
+          next blank_col
+
+	    OutVect!.addItem(fnmask$(apm01a.vendor_id$(1,vendlen),m0$))
+	    OutVect!.addItem(apm01a.vendor_name$)
+	    OutVect!.addItem(apm01a.contact_name$)
+	    OutVect!.addItem(phone$)
+
+	    rem --- Print address
+
+	    if address
+	       for x=1 to address step 30
+		     if x=1 x$=fax$
+		     OutVect!.addItem("")
+		     OutVect!.addItem(address$(x,30))
+		     OutVect!.addItem("")
+		     OutVect!.addItem(x$)
+		     x$=""
+		 next x
+	    endif
+	    if address=0 and fax$<>""
+	       OutVect!.addItem("")
+		 OutVect!.addItem("")
+		 OutVect!.addItem("")
+		 OutVect!.addItem(fax$)
+	    endif
+
+	    rem --- Loop back for next record
+
+    wend
+
+rem --- All done
+
+    x$="No"
+    if record_count x$=str(record_count)
+
+    for blank_col=1 to 4
+        OutVect!.addItem("")
+    next blank_col
+
+    OutVect!.addItem("")
+    OutVect!.addItem(x$+" Vendor(s) Listed")
+    OutVect!.addItem("")
+    OutVect!.addItem("")
+
+    goto std_exit
+
+rem --- Functions
+
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+  	  if q2$="" q2$=fill(len(q1$),"0")
+	  if pos("E"=cvs(q1$,4)) goto alpha_mask
+:	     else return str(-num(q1$,err=alpha_mask):q2$,err=alpha_mask)
+	  alpha_mask:
+	  q=1
+	  q0=0
+	  while len(q2$(q))
+		  if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+		  q=q+1
+	  wend
+	  if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+	  return str(q1$:q2$)
+   fnend
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+	pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+	call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:								str(err:"000"),rd_err_text$,rd_err_act$
+	if pos("EXIT"=rd_err_act$) goto std_error_exit
+	if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+	status=999
+	if pgm(-1)<>pgm(-2) exit
+	release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+	pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+	call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:								str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+	
+	master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ escape
+	
+std_missing_params_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) exit 
+	release
+
+rem #endinclude std_missing_params.src
+
+rem #endinclude std_functions.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+	run pgmdir$+"ads_process_end.aon",err=*next
+	release
+
+rem #endinclude std_end.src
+
+	end

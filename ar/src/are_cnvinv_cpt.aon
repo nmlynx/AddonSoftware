@@ -1,0 +1,632 @@
+rem Callpoint program for are_cnvinv
+rem Program are_cnvinv_cpt.aon v8.0.0 25Apr2006
+
+rem AddonSoftware Version 8.0.0 - 01Oct2006
+rem Copyright (c) 1981-2006 AddonSoftware
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	enter callpoint$,
+:		aon_tpl$,
+:		AONObj!,
+:		user_tpl$,
+:		rdUserObj!,
+:		gui_dev,
+:		rdSysGUI!,
+:		rdForm!,
+:		attr_tbl$[all],
+:		attr_col$[all],
+:		attr_def_tbl$[all],
+:		attr_def_col$[all],
+:		rec_data$,
+:		rec_data$[all],
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		rdGridVect!,
+:		err=*next
+
+rem --- Initializations
+
+	dim cp_data$:fattr(callpoint$)
+	cp_data$=callpoint$
+
+	callpoint_alias$=cp_data.callpoint_alias$
+	callpoint_type$=cp_data.callpoint_type$
+	callpoint_id$=cp_data.callpoint_id$(1,4)
+	callpoint_ctl$=cp_data.callpoint_ctl$
+	callpoint_var$=cp_data.callpoint_dvar$
+	callpoint_data$=cp_data.callpoint_data$
+	callpoint_key$=cp_data.callpoint_key$
+	callpoint_pfx$=cp_data.callpoint_pfx$
+
+rem --- Local variables
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_id_str$=
+:		"ACAL;ADEL;ADEQ;ADIS;AENA;AGCL;AGDS;AGRD;AKEY;AOPT;AOVE;APRA;APRT;ARAR;ARCO;AREA;AREC;AREM;ASHO;ASIZ;AWRI;"+
+:		"BDEL;BDEQ;BENA;BEND;BGRD;BNEK;BNEX;BOVE;BPRI;BPRK;BRCO;BREA;BREC;BREM;BSAV;BSHO;BWAR;BWRI;"+
+:		"AINP;AINQ;AVAL;BINP;BINQ;"
+
+	callpoint_var_str$=
+:		pad("ARE_CNVINV.AR_DIST_CODE",40)+
+:		pad("ARE_CNVINV.AR_INV_NO",40)+
+:		pad("ARE_CNVINV.AR_TERMS_CODE",40)+
+:		pad("ARE_CNVINV.AR_TYPE",40)+
+:		pad("ARE_CNVINV.CUSTOMER_ID",40)+
+:		pad("ARE_CNVINV.DISCOUNT_AMT",40)+
+:		pad("ARE_CNVINV.DISC_DATE",40)+
+:		pad("ARE_CNVINV.FIRM_ID",40)+
+:		pad("ARE_CNVINV.INVOICE_AMT",40)+
+:		pad("ARE_CNVINV.INVOICE_DATE",40)+
+:		pad("ARE_CNVINV.INVOICE_TP",40)+
+:		pad("ARE_CNVINV.INV_DUE_DATE",40)+
+:		pad("ARE_CNVINV.RESERVED_STR",40)+
+:		pad("ARE_CNVINV.RESERVED_STR",40)
+
+rem	callpoint_opt_str$="OPT1;OPT2;OPT3;" Sample option string for AOPT callpoints
+
+rem --- Route table callpoint to correct subroutine (Table callpoint if callpoint_var$=null)
+
+	if cvs(callpoint_var$,2)=""
+		switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+			case fnstr_pos("ACAL",callpoint_id_str$,5);rem After Form Callbacks
+			break
+			case fnstr_pos("ADEL",callpoint_id_str$,5);rem After Record Delete
+			break
+			case fnstr_pos("ADEQ",callpoint_id_str$,5);rem After Delete Query
+			break
+			case fnstr_pos("ADIS",callpoint_id_str$,5);rem After Record Display
+			break
+			case fnstr_pos("AENA",callpoint_id_str$,5);rem After Enable Map
+			break
+			case fnstr_pos("AGCL",callpoint_id_str$,5);rem After Grid Clear
+			break
+			case fnstr_pos("AGDS",callpoint_id_str$,5);rem After Grid Display
+			break
+			case fnstr_pos("AGRD",callpoint_id_str$,5);rem After Grid Exit
+			break
+			case fnstr_pos("AKEY",callpoint_id_str$,5);rem After Key Build
+			break
+			case fnstr_pos("AOPT",callpoint_id_str$,5);rem After Option Select
+rem				switch fnstr_pos(callpoint_tpl.callpoint_id$(6),callpoint_opt_str$,5)
+rem					case fnstr_pos("OPT1",callpoint_opt_str$,5);rem Option 1 Select Sample
+rem					break
+rem					case fnstr_pos("OPT2",callpoint_opt_str$,5);rem Option 2 Select Sample
+rem					break
+rem					case fnstr_pos("OPT3",callpoint_opt_str$,5);rem Option 3 Select Sample
+rem					break
+rem					case default
+rem					break
+rem				swend
+			break
+			case fnstr_pos("AOVE",callpoint_id_str$,5);rem After Table Overview
+			break
+			case fnstr_pos("APRA",callpoint_id_str$,5);rem After Print All Select
+			break
+			case fnstr_pos("APRT",callpoint_id_str$,5);rem After Print Rec Select
+			break
+			case fnstr_pos("ARAR",callpoint_id_str$,5);rem After Array Transfer
+			break
+			case fnstr_pos("ARCO",callpoint_id_str$,5);rem After Record Copy
+			break
+			case fnstr_pos("AREA",callpoint_id_str$,5);rem After Record Read
+			break
+			case fnstr_pos("AREC",callpoint_id_str$,5);rem After New Record
+			break
+			case fnstr_pos("AREM",callpoint_id_str$,5);rem After Record Removal
+			break
+			case fnstr_pos("ASHO",callpoint_id_str$,5);rem After Window Show
+			break
+			case fnstr_pos("ASIZ",callpoint_id_str$,5);rem After Window Resize
+			break
+			case fnstr_pos("AWRI",callpoint_id_str$,5);rem After Record Write
+			break
+			case fnstr_pos("BDEL",callpoint_id_str$,5);rem Before Record Delete
+			break
+			case fnstr_pos("BDEQ",callpoint_id_str$,5);rem Before Delete Query
+			break
+			case fnstr_pos("BENA",callpoint_id_str$,5);rem Before Enable Map
+			break
+			case fnstr_pos("BEND",callpoint_id_str$,5);rem Before Table Exit
+			break
+			case fnstr_pos("BGRD",callpoint_id_str$,5);rem Before Grid Entry
+			break
+			case fnstr_pos("BNEK",callpoint_id_str$,5);rem Before Next Record Key
+			break
+			case fnstr_pos("BNEX",callpoint_id_str$,5);rem Before Next Record
+			break
+			case fnstr_pos("BOVE",callpoint_id_str$,5);rem Before Table Overview
+			break
+			case fnstr_pos("BPRI",callpoint_id_str$,5);rem Before Previous Record
+			break
+			case fnstr_pos("BPRK",callpoint_id_str$,5);rem Before Prev Record Key
+			break
+			case fnstr_pos("BRCO",callpoint_id_str$,5);rem Before Record Copy
+			break
+			case fnstr_pos("BREA",callpoint_id_str$,5);rem Before Record Read
+			break
+			case fnstr_pos("BREC",callpoint_id_str$,5);rem Before New Record
+			break
+			case fnstr_pos("BREM",callpoint_id_str$,5);rem Before Record Removal
+			break
+			case fnstr_pos("BSAV",callpoint_id_str$,5);rem Before Detail Save
+			break
+			case fnstr_pos("BSHO",callpoint_id_str$,5);rem Before Window Show
+
+            rem --- Open/Lock files
+
+                files=6,begfile=1,endfile=6
+                dim files$[files],options$[files],chans$[files],templates$[files]
+                files$[1]="ARS_PARAMS";rem --- "ARS_PARAMS"..."ads-01"
+                files$[2]="ARM_CUSTMAST";rem --- "arm-01"
+                files$[3]="ARM_CUSTDET";rem --- "arm-02"
+                files$[4]="ARC_TERMCODE";rem --- "arm-10" (A)
+                files$[5]="ARC_DISTCODE";rem --- "arm-10 (D)
+                files$[6]="ART_INVHDR";rem --- "art-01"
+
+                for wkx=begfile to endfile
+                    options$[wkx]="OTA"
+                next wkx
+
+                call pgmdir$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+:                                   chans$[all],templates$[all],table_chans$[all],batch,status$
+
+                if status$<>"" goto std_exit
+                ads01_dev=num(chans$[1])
+
+            rem --- Retrieve miscellaneous templates
+
+                files=2,begfile=1,endfile=files
+                dim ids$[files],templates$[files]
+                ids$[1]="ars-01A"
+                ids$[2]="gls-01A"
+                call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+                if status goto std_exit
+
+            rem --- Dimension miscellaneous string templates
+
+                dim ars01a$:templates$[1],gls01a$:templates$[2]
+                dim aon_tpl$:"firm_id:c(2),op_installed:C(1),glyr:C(4),glper:C(2),no_glpers:C(2),
+:                   disc_pct:C(7),inv_days_due:C(7),disc_days:C(7),prox_days:C(1)";rem --- used to pass 'stuff' to/from cpt
+                aon_tpl.firm_id$=firm_id$
+
+            rem --- Retrieve parameter data/see if OP is installed
+
+                call pgmdir$+"adc_application.aon","OP",info$[all]
+                op$=info$[20]
+                aon_tpl.op_installed$=op$
+               
+                ars01a_key$=firm_id$+"AR00"
+                find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+
+                gls01a_key$=firm_id$+"GL00"
+                find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
+                aon_tpl.glyr$=gls01a.current_year$
+                aon_tpl.glper$=gls01a.current_per$
+                aon_tpl.no_glpers$=gls01a.total_pers$            
+
+			break
+			case fnstr_pos("BWAR",callpoint_id_str$,5);rem Before Write Array
+			break
+			case fnstr_pos("BWRI",callpoint_id_str$,5);rem Before Record Write
+			break
+			case default
+			break
+		swend
+	endif
+
+rem --- Route column callpoint to correct subroutine (Column callpoint if callpoint_var$<>null)
+rem		Column Events:
+rem			AINP-After Column Input
+rem			AINQ-After Column Inquiry
+rem			AVAL-After Column Validation
+rem			BINP-Before Column Input
+rem			BINQ-Before Column Inquiry
+
+	if cvs(callpoint_var$,2)<>""
+		switch fnstr_pos(callpoint_var$,callpoint_var_str$,40)
+			case fnstr_pos("ARE_CNVINV.AR_DIST_CODE",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.AR_INV_NO",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+
+                    rem --- check art-01 and be sure invoice# they've entered isn't in use for this cust.
+                    rem --- otherwise, display the selected invoice...
+                    rem --- note: this means it's possible to have same inv# assigned to diff customers
+
+                    tablepos=pos("ART_INVHDR"=table_chans$[0,0],20)
+                    art_invhdr_dev=num(table_chans$[0,0](tablepos+17,3))
+                    dim art01a$:table_chans$[int(tablepos/20)+1,0]
+                    invhdr_key$=firm_id$+"  "+fnget_rec$("ARE_CNVINV.CUSTOMER_ID")+callpoint_data$
+                    read(art_invhdr_dev,key=invhdr_key$,dom=*next)
+                    readrecord(art_invhdr_dev,end=*next)art01a$
+                    if art01a.firm_id$=firm_id$ and art01a.customer_id$=fnget_rec$("ARE_CNVINV.CUSTOMER_ID") and
+:                       art01a.ar_inv_no$=callpoint_data$
+                            rd_msg_id$="AR_INV_USED"
+                            dim rd_msg_tokens$[1]
+                            gosub disp_message
+                            rec_data$[fnstr_pos("ARE_CNVINV.AR_INV_NO",rec_data$[0,0],40),0]=""                            
+                            callpoint.callpoint_stat$="REFRESH-ABORT"
+                    endif
+ 
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.AR_TERMS_CODE",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+
+                        tablepos=pos("ARC_TERMCODE"=table_chans$[0,0],20)
+                        arc_termcode_dev=num(table_chans$[0,0](tablepos+17,3))
+                        dim arm10a$:table_chans$[int(tablepos/20)+1,0]
+                        read record(arc_termcode_dev,key=firm_id$+"A"+callpoint_data$,dom=*next)arm10a$
+                        aon_tpl.disc_pct$=str(arm10a.disc_percent$)
+                        aon_tpl.inv_days_due$=str(arm10a.inv_days_due$)
+                        aon_tpl.disc_days$=str(arm10a.disc_days$)
+                        aon_tpl.prox_days$=arm10a.prox_or_days$
+                        
+                        if num(fnget_rec$("ARE_CNVINV.INVOICE_AMT"))<>0
+                            wk_amt=num(fnget_rec$("ARE_CNVINV.INVOICE_AMT"))*num(aon_tpl.disc_pct$)/100
+                            rec_data$[fnstr_pos("ARE_CNVINV.DISCOUNT_AMT",rec_data$[0,0],40),0]=str(wk_amt)
+                            rec_data$[fnstr_pos("ARE_CNVINV.DISCOUNT_AMT",rec_data$[0,0],40),1]=str(wk_amt)
+                            callpoint.callpoint_stat$="REFRESH"
+                        endif
+
+                        if cvs(fnget_rec$("ARE_CNVINV.INVOICE_DATE"),2)<>""
+                            call pgmdir$+"adc_duedate.aon",aon_tpl.prox_days$,fnget_rec$("ARE_CNVINV.INVOICE_DATE"),
+:                              num(aon_tpl.inv_days_due$),wk_date_out$,status
+                            if status then callpoint_stat$="ABORT"
+                            rec_data$[fnstr_pos("ARE_CNVINV.INV_DUE_DATE",rec_data$[0,0],40),0]=wk_date_out$
+                            rec_data$[fnstr_pos("ARE_CNVINV.INV_DUE_DATE",rec_data$[0,0],40),1]=wk_date_out$
+                            call pgmdir$+"adc_duedate.aon",aon_tpl.prox_days$,fnget_rec$("ARE_CNVINV.INVOICE_DATE"),
+:                               num(aon_tpl.disc_days$),wk_date_out$,status
+                            if status then callpoint_stat$="ABORT"
+                            rec_data$[fnstr_pos("ARE_CNVINV.DISC_DATE",rec_data$[0,0],40),0]=wk_date_out$
+                            rec_data$[fnstr_pos("ARE_CNVINV.DISC_DATE",rec_data$[0,0],40),1]=wk_date_out$
+                            callpoint.callpoint_stat$="REFRESH" 
+                        endif
+                        
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.AR_TYPE",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.CUSTOMER_ID",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+
+                    rem --- if on new rec, check are-02 and set default inv# to first one for this customer, if there is one.
+                    if cvs(fnget_rec$("ARE_CNVINV.AR_INV_NO"),2)=""
+                        tablepos=pos("ARM_CUSTDET"=table_chans$[0,0],20)
+                        arm_custdet_dev=num(table_chans$[0,0](tablepos+17,3))
+                        dim arm02a$:table_chans$[int(tablepos/20)+1,0]  
+                        readrecord(arm_custdet_dev,key=firm_id$+callpoint_data$+"  ",dom=*next)arm02a$
+                        if arm02a.firm_id$=firm_id$ and arm02a.customer_id$=callpoint_data$
+                            rec_data$[fnstr_pos("ARE_CNVINV.AR_DIST_CODE",rec_data$[0,0],40),0]=arm02a.ar_dist_code$
+                            rec_data$[fnstr_pos("ARE_CNVINV.AR_DIST_CODE",rec_data$[0,0],40),1]=arm02a.ar_dist_code$
+                            rec_data$[fnstr_pos("ARE_CNVINV.AR_TERMS_CODE",rec_data$[0,0],40),0]=arm02a.ar_terms_code$
+                            rec_data$[fnstr_pos("ARE_CNVINV.AR_TERMS_CODE",rec_data$[0,0],40),1]=arm02a.ar_terms_code$
+                            callpoint.callpoint_stat$="REFRESH"
+                        endif
+                    endif
+
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.DISCOUNT_AMT",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.DISC_DATE",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.FIRM_ID",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.INVOICE_AMT",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+
+                        wk_amt=num(callpoint_data$)*num(aon_tpl.disc_pct$)/100
+                        rec_data$[fnstr_pos("ARE_CNVINV.DISCOUNT_AMT",rec_data$[0,0],40),0]=str(wk_amt)
+                        rec_data$[fnstr_pos("ARE_CNVINV.DISCOUNT_AMT",rec_data$[0,0],40),1]=str(wk_amt)
+                        callpoint.callpoint_stat$="REFRESH"
+
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.INVOICE_DATE",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+
+                        call pgmdir$+"adc_duedate.aon",aon_tpl.prox_days$,callpoint_data$,num(aon_tpl.inv_days_due$),
+:                           wk_date_out$,status
+                        if status then callpoint_stat$="ABORT"
+                        rec_data$[fnstr_pos("ARE_CNVINV.INV_DUE_DATE",rec_data$[0,0],40),0]=wk_date_out$
+                        rec_data$[fnstr_pos("ARE_CNVINV.INV_DUE_DATE",rec_data$[0,0],40),1]=wk_date_out$
+                        call pgmdir$+"adc_duedate.aon",aon_tpl.prox_days$,callpoint_data$,num(aon_tpl.disc_days$),
+:                           wk_date_out$,status
+                        if status then callpoint_stat$="ABORT"
+                        rec_data$[fnstr_pos("ARE_CNVINV.DISC_DATE",rec_data$[0,0],40),0]=wk_date_out$
+                        rec_data$[fnstr_pos("ARE_CNVINV.DISC_DATE",rec_data$[0,0],40),1]=wk_date_out$
+                        callpoint.callpoint_stat$="REFRESH"  
+                   
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.INVOICE_TP",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.INV_DUE_DATE",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.RESERVED_STR",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+			case fnstr_pos("ARE_CNVINV.RESERVED_STR",callpoint_var_str$,40)
+				switch fnstr_pos(callpoint_id$,callpoint_id_str$,5)
+					case fnstr_pos("AINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AINQ",callpoint_id_str$,5)
+					break
+					case fnstr_pos("AVAL",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINP",callpoint_id_str$,5)
+					break
+					case fnstr_pos("BINQ",callpoint_id_str$,5)
+					break
+				swend
+			break
+
+			case default
+			break
+		swend
+	endif
+
+rem --- All done
+
+	goto std_exit
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_PGM")+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="ENTRY_OPEN_ERROR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto std_exit
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_PGM")+"adc_message.aon",rd_msg_id$,rd_msg_tokens$[all],rd_msg_opt$,rd_table_chans$[all]
+
+	return
+
+rem --- Functions
+
+    def fnstr_pos(tmp0$,tmp1$,tmp1)=int((pos(tmp0$=tmp1$,tmp1)+tmp1-1)/tmp1)
+	def fngett_attr$(att0$)=attr_tbl$[fnstr_pos(att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(att0,att0$)=attr_col$[att0,fnstr_pos(att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(att0$,att1$)=attr_col$[fnstr_pos(att0$,attr_col$[0,1],40),fnstr_pos(att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(att0$)=rec_data$[fnstr_pos(att0$,rec_data$[0,0],40),0]
+	def fndate$(att0$)=date(jul(num(att0$(1,4)),num(att0$(5,2)),num(att0$(7,2))):stbl("+DATE_MASK"))
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+	pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+	call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+	if pos("EXIT"=rd_err_act$) goto std_error_exit
+	if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$) retry
+
+std_error_exit:
+	
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ escape
+	
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) exit 
+	release
+
+rem #endinclude std_error.src
+
+rem #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+
+rem #endinclude std_exit.src
+
+	end
+

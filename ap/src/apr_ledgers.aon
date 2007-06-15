@@ -1,0 +1,377 @@
+rem apr - Vendor Ledger Cards
+rem Program apr_ledgers v8.0.0 15Aug2006 (apr_lb)
+rem Created by adx_progconv.bbx v1.0.3 (08/15/2006 01:07:03)
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=6,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ads-01"
+    files$[2]="apm-01"
+    files$[3]="apm-02"
+    files$[4]="apm-10"
+    files$[5]="apt-01"
+    files$[6]="apt-11"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ads01_dev=channels[1]
+    apm01_dev=channels[2]
+    apm02_dev=channels[3]
+    apm10_dev=channels[4]
+    apt01_dev=channels[5]
+    apt11_dev=channels[6]
+
+rem --- Dimension string templates
+
+    dim apm01a$:templates$[2],apm02a$:templates$[3],apm10a$:templates$[4],
+:       apt01a$:templates$[5],apt11a$:templates$[6]
+
+rem --- Retrieve miscellaneous templates
+
+    files=1,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="aps-01A"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim aps01a$:templates$[1]
+
+rem --- Assign form input values to local variables
+
+    table$=fnget_table$("")
+    begvendor$=fnget_fld_data$(table$,"vendor_id_1")
+    endvendor$=fnget_fld_data$(table$,"vendor_id_2")
+    thrudate$=fnget_fld_data$(table$,"report_date")
+
+rem --- Retrieve parameter records
+
+    aps01a_key$=firm_id$+"AP00"
+    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    call pgmdir$+"adc_sizemask.aon",aps01a.amount_mask$,m1,9,15
+    vendor_size=num(aps01a.vendor_size$)
+    multiple_types$=aps01a.multi_types$
+    retention$=aps01a.ret_flag$
+    m0$=aps01a.vendor_output$
+    m1$=aps01a.amount_mask$
+    m0=len(m0$)
+    m1=len(m1$)
+
+rem --- Faking it for now since AP Parameters are screwed up (23Dec2006) escape
+
+    vendor_size=6
+    multiple_types$="Y"
+    multiple_distributions$="Y"
+    retention$="Y"
+    m0$="00-0000"
+    m1$="###,##0.00-"
+    m0=len(m0$)
+    m1=len(m1$)
+
+rem --- Remove once parameter record is fixed ----------------------------------
+
+rem --- Initializations
+
+    headings=4
+    dim headings$[headings],o[8]
+    more=1
+    page=0
+    width=80
+    total=0
+    maxlines=59
+    lines=maxlines+1
+    morevendors=1
+    moreheaders=1
+    moredetail=1
+    nf$="(Not on file)"
+    when$=sysinfo.system_date$
+    clock$=""
+    if begvendor$="" x$="From the First Vendor" 
+:               else x$="From Vendor "+fnmask$(begvendor$(1,vendor_size),m0$)
+    x$=x$+" Through "
+    if endvendor$="" x$=x$+"the Last Vendor"
+:               else x$=x$+"Vendor "+fnmask$(endvendor$(1,vendor_size),m0$)
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$
+    headings$[2]=x$
+    headings$[3]="Includes Transactions Through "+fndate$(thrudate$)
+    x$=""
+    if retention$="Y" x$="Retention"
+
+rem --- Define print positions
+
+    o[0]=0
+    o[1]=m0+1
+    o[2]=m0+11
+    o[3]=m0+20
+    o[4]=m0+29
+    o[5]=m0+32
+    o[8]=width-1
+    if retention$="Y" o[8]=width-m1
+    o[7]=o[8]-m1
+    o[6]=o[7]-m1 
+
+rem --- Open printer, start progress meter and position Vendor Master file
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,apm01_dev,1,meter_num,status
+    while begvendor$<>""
+          read (apm01_dev,key=firm_id$+begvendor$)
+          read (apm01_dev,dir=-1,err=*next)
+          begvendor$=""
+    wend
+
+rem --- Read next Vendor Master (apm-01) record
+
+    while morevendors
+          apm01_key$=key(apm01_dev,end=*break)
+          if pos(firm_id$=apm01_key$)<>1 break
+          read record (apm01_dev,key=apm01_key$) apm01a$
+          if endvendor$<>"" if apm01a.vendor_id$>endvendor$ break
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status 
+
+          rem --- Read vendor detail records
+
+          first=1
+          printed=0
+          read (apm02_dev,key=apm01_key$,dom=*next)
+          while more
+                k$=key(apm02_dev,end=*break)
+                if pos(apm01_key$=k$)<>1 break
+                read record (apm02_dev) apm02a$
+
+                rem --- Retrieve AP Type code and description
+
+                typetotal=0
+                aptype$=""
+                if multiple_types$="Y"
+                   dim apm10a$:fattr(apm10a$)
+                   apm10a.firm_id$=firm_id$
+                   apm10a.ap_type$=apm02a.ap_type$
+                   apm10a.code_desc$=nf$
+                   apm10_key$=apm10a.firm_id$+"A"+apm10a.ap_type$
+                   find record (apm10_dev,key=apm10_key$,dom=*proceed) apm10a$
+                   aptype$="Total for AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
+                endif
+
+                rem --- Print invoices
+
+                balance=0
+                x$=""
+                if retention$="Y" x$="Retention"
+                if lines+4>maxlines gosub report_heading
+                vendor$=apm02a.firm_id$+apm02a.ap_type$+apm02a.vendor_id$
+                read (apt01_dev,key=vendor$,dom=*next)
+
+                rem --- Read next invoice header record
+
+                while moreheaders
+                      apt01_key$=key(apt01_dev,end=*break)
+                      if pos(vendor$=apt01_key$)<>1 break
+                      read record (apt01_dev) apt01a$
+                      if apt01a.invoice_date$>thrudate$ continue
+                      amount$=""
+                      if retention$="Y" amount$=str(apt01a.retention:m1$)
+                      if first gosub vendor_heading
+                      if lines+1>maxlines gosub report_heading
+                      print (printer_dev) @(o[1]),apt01a.ap_inv_no$,@(o[2]),fndate$(apt01a.invoice_date$),
+:                                         @(o[3]),fndate$(apt01a.inv_due_date$),@(o[4]),apt01a.payment_grp$,
+:                                         @(o[5]),apt01a.hold_flag$,@(o[6]),apt01a.invoice_amt:m1$,
+:                                         @(o[7]),apt01a.discount_amt:m1$,@(o[8]),amount$
+                      lines=lines+1
+                      printed=1
+                      amount=apt01a.invoice_amt
+                      discount=apt01a.discount_amt
+                      retention=apt01a.retention
+                      balance=balance+apt01a.invoice_amt
+                      typetotal=typetotal+apt01a.invoice_amt
+                      detail=0
+                      apt01_key$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+
+:                                apt01a.ap_inv_no$
+                      read (apt11_dev,key=apt01_key$,dom=*next)
+
+                      rem --- Read next invoice detail record
+
+                      while moredetail
+                            k$=key(apt11_dev,end=*break)
+                            if pos(apt01_key$=k$)<>1 break
+                            read record (apt11_dev) apt11a$
+                            if apt11a.trans_date$>thrudate$ continue
+                            detail=1
+                            type$=apt11a.trans_type$
+                            amount$=""
+                            if retention$="Y" amount$=str(apt11a.trans_ret:m1$)
+                            if apt11a.trans_type$="S" type$="M" 
+                            if lines+1>maxlines gosub report_heading
+                            print (printer_dev) @(o[1]+1),type$," ",apt11a.trans_ref$,
+:                                               @(o[2]),fndate$(apt11a.trans_date$),
+:                                               @(o[6]),apt11a.trans_amt:m1$,
+:                                               @(o[7]),apt11a.trans_disc:m1$,
+:                                               @(o[8]),amount$
+                            lines=lines+1
+                            amount=amount+apt11a.trans_amt
+                            discount=discount+apt11a.trans_disc
+                            retention=retention+apt11a.trans_ret
+                            balance=balance+apt11a.trans_amt
+                            typetotal=typetotal+apt11a.trans_amt
+                      wend
+
+                      rem --- Print type total and loop back for next invoice header
+
+                wend
+                if multiple_types$<>"Y" continue
+                if lines+1>maxlines gosub report_heading
+                print (printer_dev) @(o[6]-len(aptype$)-1),aptype$,@(o[6]),typetotal:m1$
+                lines=lines+1
+                
+                rem --- Loop back for next Vendor Detail
+
+          wend
+
+          rem --- Print vendor total and loop back for next Vendor Master
+
+          if printed=0 continue
+          if lines+1>maxlines gosub report_heading
+          print (printer_dev) @(o[6]-13),"Vendor Total",@(o[6]),balance:m1$
+          lines=lines+1
+          total=total+balance
+    wend
+
+rem --- All done
+
+    if lines+1>maxlines gosub report_heading
+    print (printer_dev) @(o[6]-13),"Report Total",@(o[6]),total:m1$
+    goto std_exit
+
+report_heading: rem --- Report heading
+
+    lines=heading+1
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status exitto done
+    print (printer_dev) @(o[0]),"Vendor",@(o[1]),"Invoice",@(o[2]),"Date",@(o[3]),"Due Date",@(o[4]),"Pg",
+:                       @(o[5]),"H",@(o[6]+m1-7),"Amount",@(o[7]+m1-9),"Discount",@(o[8]+m1-10),x$
+    lines=lines+1
+    return
+
+vendor_heading: rem --- Print vendor heading
+
+    if lines+3>maxlines gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(o[0]),apm01a.vendor_id$(1,vendor_size)," ",apm01a.vendor_name$
+    lines=lines+2
+    first=0
+    return
+
+rem --- Functions
+
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end

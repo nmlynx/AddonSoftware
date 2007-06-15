@@ -1,0 +1,347 @@
+rem glr - Beginning Balances Register (Report Overlay)
+rem Program glr_beginbalance v8.0.0 09May2006 (glr_hb)
+rem Created by adx_progconv.bbx v1.0.2 (05/09/2006 11:30:25)
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+rem --- This program is run from two different menu options:
+
+rem --- gle_beginbalance - Update Beginning Balances
+rem --- gle_yearend      - Year End Update
+
+rem --- The following arguments are supplied by these front-end programs:
+
+rem --- PROGRAM$: Overlay to be run after the beginning balances program
+rem ---         : (glu_beginbalance) finishes. Not used in this program.
+rem ---         : The Update Beginning Balances task passes ads_process_end.aon
+rem ---         : The Year End Update program passes glu_yearend.aon
+rem --- PROMPT$ : Y=Update Beginning Balances (prompt for permission to update
+rem ---         :   the register).
+rem ---         : N=Year End Update (don't prompt for permission to update the
+rem ---         :   register, update is automatically performed).
+rem --- UPDATE$ : Y=Year End Update (user prompted for permission to close year).
+rem ---         : N=Update Beginning Balances (user prompted for approval to
+rem ---         :   produce the register).
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=4,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ads-01"
+    files$[2]="glm-01"
+    files$[3]="glm-02"
+    files$[4]="glw-03"
+    options$[4]="LC"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ads01_dev=channels[1]
+    glm01_dev=channels[2]
+    glm02_dev=channels[3]
+    glw03_dev=channels[4]
+
+rem --- Dimension string templates
+
+    dim glm01a$:templates$[2],glm02a$:templates$[3],glw03a$:templates$[4]
+
+rem --- Retrieve miscellaneous templates
+
+    files=2,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="gls-01A"
+    ids$[2]="gls-01B"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim gls01a$:templates$[1],gls01b$:templates$[2]
+
+rem --- Retrieve parameter records
+
+    gls01a_key$=firm_id$+"GL00"
+    gls01b_key$=firm_id$+"GL01"
+    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (ads01_dev,key=gls01b_key$,err=std_missing_params) gls01b$
+
+rem --- Parameters
+
+    m0$=gls01a.acct_output$
+    m1$=gls01a.amount_mask$
+    m2$=gls01a.unit_mask$
+    total_pers=num(gls01a.total_pers$)
+    period=num(gls01a.current_per$)
+    year=num(gls01a.current_year$)
+    acctlen=num(gls01a.acct_length$)
+    if len(gls01b.gl_account$)>10 then gls01b.gl_account$=gls01b.gl_account$(1,10)
+    m0=len(m0$)
+    m1=len(m1$)
+    m2=len(m2$)
+    mp=13
+    headings=2
+    prior$=str(year-1)
+
+rem --- Initializations
+
+    dim headings$[headings],o[4],totals[1],a[mp],u[mp]
+    h0=80
+    h=0
+    l9=59
+    l=l9+1
+    more=1
+    record$="0"
+    action$="R"
+    h1$=n1$
+    h2$=n4$
+    when$=sysinfo.system_date$
+    clock$=""
+    unithdr$=""
+    headings$[0]=cvs(sysinfo.firm_name$,2)
+    headings$[1]=cvs(sysinfo.task_desc$,2)
+
+rem --- Print positions
+
+    x=m0+1
+    if x<9 x=9
+    o[0]=0
+    o[1]=o[0]+x
+    o[4]=h0
+    if gls01a.units_flag$="Y" o[4]=h0-m2,unithdr$="Units"
+    o[3]=o[4]-m1-1
+    o[2]=o[3]-m1
+    w=o[2]-o[1]-1
+    if w>35 w=35
+
+rem --- Options are based on the lead in program
+rem --- Prompt user for permission to continue for update beginning balances
+
+    if update$="Y" goto closing_year
+    msg$="Do you want to produce the Beginning Balances Register?"
+    call pgmdir$+"adc_yesno.aon",1,msg$,1,v$,v3
+    if v$<>"Y" goto std_exit
+    goto position_file
+
+closing_year: rem --- Get confirmation from user when closing the fiscal year
+
+    v4$="OK to close fiscal "+prior$
+    call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
+    if v$<>"YES" goto std_exit
+
+position_file: rem --- Open printer, start progress meter and position File
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","NC","","","","",m0,glm01_dev,1,meter_num,status
+    read (glm01_dev,key=firm_id$,dom=*next)
+
+rem --- Read next account master
+
+    while more
+          k$=key(glm01_dev,end=*break)
+          if pos(firm_id$=k$)<>1 break
+          read record (glm01_dev)glm01a$
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+          rem --- Retrieve account summary record
+
+          glm02_key$=firm_id$+glm01a.gl_account$+record$
+          find record (glm02_dev,key=glm02_key$,dom=*continue)glm02a$
+          call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status
+
+          rem --- Calculate beginning balance
+
+          amount=0
+          units=0
+          for x=1 to total_pers
+              amount=amount+a[x]
+              if gls01a.units_flag$="Y" units=units+u[x]
+          next x
+
+          rem --- Don't create a beginning balance record for asset, liability,
+          rem --- capital or retained earnings account.
+
+          if pos(glm01a.gl_acct_type$="ALC")=0 goto totals
+          if glm01a.gl_account$=gls01b.gl_account$ goto totals
+
+          rem --- Update glw-03 work file
+
+          gosub update_file
+
+          rem --- Print detail line
+
+          gosub format_fields
+          if l+1>l9 gosub report_heading
+          gosub print_detail
+          l=l+1
+          continue
+
+          totals: rem --- Accumulate totals
+
+          totals[0]=totals[0]+amount
+          totals[1]=totals[1]+units
+
+          rem --- Loop back for next record
+
+    wend
+
+rem --- All done
+
+    dim bar$(h0,"-")
+    x$=" Retained Earnings "
+    bar$(fncenter(x$,h0),len(x$))=x$
+    glm01a.gl_account$=gls01b.gl_account$
+    glm01a.gl_acct_desc$="(Account Not Found)"
+    glm01_key$=firm_id$+gls01b.gl_account$
+    find record (glm01_dev,key=glm01_key$,dom=*next)glm01a$
+    amount=totals[0]
+    units=totals[1]
+    gosub format_fields
+    if l+3>l9 gosub report_heading
+    print (printer_dev)""
+    print (printer_dev)bar$
+    gosub print_detail
+
+rem --- Update retained earnings account in the work file
+
+    gosub update_file
+
+rem --- Run update overlay
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    close (printer_dev,err=*next)
+    goto std_exit
+    run pgmdir$+"glu_beginbalance.aon"
+
+report_heading: rem --- Report Heading
+
+    let l=headings+1
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
+    if status exitto std_exit
+    print (printer_dev)@(o[0]),"Account",@(o[1]),"Description",@(o[2]+m1-7),"Debits",
+:                      @(o[3]+m1-8),"Credits",@(o[4]+m2-(len(unithdr$)+1)),unithdr$
+    print (printer_dev)""
+    let l=l+2
+    return
+
+print_detail: rem --- Print detail line
+
+    print (printer_dev)@(o[0]),fnmask$(glm01a.gl_account$(1,acctlen),m0$),@(o[1]),glm01a.gl_acct_desc$(1,w),
+:                      @(o[2]),debits$,@(o[3]),credits$,@(o[4]),units$
+    return
+
+format_fields: rem --- Format detail line fields
+
+    debits$=""
+    credits$=""
+    units$=""
+    if gls01a.units_flag$="Y" units$=str(units:m2$)
+    if amount>0 debits$=str(amount:m1$)
+    if amount<0 credits$=str(-amount:m1$)
+    return
+
+update_file: rem --- Update work file with account totals
+
+    glw03a.firm_id$=glm01a.firm_id$
+    glw03a.gl_account$=glm01a.gl_account$
+    glw03a.begin_amt=amount
+    glw03a.begin_units=units
+    glw03_key$=glw03a.firm_id$+glw03a.gl_account$
+    write record (glw03_dev,key=glw03_key$)glw03a$
+    return
+
+rem --- Functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        if pos("E"=cvs(q1$,4)) goto alpha_mask
+:          else return str(-num(q1$,err=alpha_mask):q2$,err=alpha_mask)
+        alpha_mask:
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end
