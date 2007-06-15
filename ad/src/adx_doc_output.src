@@ -1,0 +1,612 @@
+rem Document Output Window
+rem Proprietary Software. AddonSoftware
+rem Program ID: adx_doc_output.aon  <Oct 19, 2006>
+
+	enter
+:		rdForm!,
+:		rd_alias_id$,
+:		rep_date$,
+:		rep_date_stamp$,
+:		rep_time$,
+:		rep_time_stamp$,
+:		headings$[all],
+:		columns$[all],
+:		OutVect!,
+:		BrkVect!,
+:		HdrVect!,
+:		out_types$,
+:		out_action$,
+:		out_status$,
+:		rd_table_chans$[all]
+
+rem	if stbl("+USE_SETERR")="YES" seterr error_proc
+
+rem out_action$ may contian one or more of the following:
+rem		PRT - Direct to Printer
+rem		PDF - Direct to .pdf Doc
+rem		XML - Direct to .xml Doc
+rem		HTM - Direct to .htm Doc
+rem		CSV - Direct to .csv Doc
+rem		TAB - Direct to .txt Doc
+rem		LST - Use single column grid w/ non proportional font
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp0)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp0)+rd_tmp0-1)/rd_tmp0)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(fill(50,rd_tmp1$)=rd_tmp0$+fill(50,rd_tmp1$))-1)
+	def fngett_attr$(rd_att0$)=rd_output_attr_tbl$[fnstr_pos(rd_att0$,rd_attr_def_tbl$,5)]
+	def fngetv_attr$(rd_att0$,rd_att1$)=rd_output_attr_col$[fnstr_pos(rd_att0$,rd_output_attr_col$[0,1],40),fnstr_pos(rd_att1$,rd_attr_def_col$[0,0],5)]
+	def fngetc_attr$(rd_att0,rd_att0$)=rd_output_attr_col$[rd_att0,fnstr_pos(rd_att0$,rd_attr_def_col$,5)]
+	def fndate$(rd_att0$)=date(jul(num(rd_att0$(1,4)),num(rd_att0$(5,2)),num(rd_att0$(7,2))):stbl("+DATE_MASK"))
+
+rem --- Directory STBLs
+
+	rd_gui_dev$=stbl("+GUI_DEVICE")
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_img$=stbl("+DIR_IMG")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"aon_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
+	rd_file_set$=stbl("+FILE_SET")
+
+rem --- Get Array Sizes
+
+	rd_dims_tpl$="dimen:i(1),d0elem:i(4),d0base:i(4),d1elem:i(4),d1base:i(4),d2elem:i(4),d2base:i(4)"
+
+	dim rd_headings_array$:rd_dims_tpl$
+	rd_headings_array$=dims(headings$[all])
+	rd_no_headings=rd_headings_array.d0elem
+
+	dim rd_columns_array$:rd_dims_tpl$
+	rd_columns_array$=dims(columns$[all])
+	rd_no_columns=rd_columns_array.d0elem
+	rd_no_col_elems=rd_columns_array.d1elem
+
+rem --- Retrieve sysinfo data
+
+    rd_sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
+    dim rd_sysinfo$:rd_sysinfo_tpl$
+    rd_sysinfo$=stbl("+SYSINFO",err=*next)
+	rd_user_id$=rd_sysinfo.user_id$
+	rd_proc_date$=fndate$(rd_sysinfo.system_date$)
+
+file_opens:rem --- Open File(s)
+
+	rd_num_files=7
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]=stbl("+GUI_DEVICE"),rd_open_opts$[1]="O"
+	rd_open_tables$[2]="ADS_SEQUENCES",rd_open_opts$[2]="OTA"
+	rd_open_tables$[3]="ADM_USER",rd_open_opts$[3]="OTA"
+	rd_open_tables$[4]="ADS_DOC_GROUP",rd_open_opts$[4]="OTA"
+	rd_open_tables$[5]="ADS_DOCUMENTS",rd_open_opts$[5]="OTA"
+	rd_open_tables$[6]="ADS_DOC_SETTINGS",rd_open_opts$[6]="OTA"
+	rd_open_tables$[7]="DDM_ELEMENT_LDAT",rd_open_opts$[7]="OTA"
+
+	gosub open_tables
+
+	rd_gui_dev=num(rd_open_chans$[1])
+	rd_ads_sequences=num(rd_open_chans$[2]);dim rd_ads_sequences$:rd_open_tpls$[2]
+	rd_adm_user=num(rd_open_chans$[3]);dim rd_adm_user$:rd_open_tpls$[3]
+	rd_ads_doc_group=num(rd_open_chans$[4]);dim rd_ads_doc_group$:rd_open_tpls$[4]
+	rd_ads_documents=num(rd_open_chans$[5]);dim rd_ads_documents$:rd_open_tpls$[5]
+	rd_ads_doc_settings=num(rd_open_chans$[6]);dim rd_ads_doc_settings$:rd_open_tpls$[6]
+	rd_ddm_element_ldat=num(rd_open_chans$[7]);dim rd_ddm_element_ldat$:rd_open_tpls$[7]
+
+rem --- Get SysGUI Object
+
+	rdSysGUI!=bbjAPI().getSysGui()
+
+    dim rd_gui_event$:tmpl(rd_gui_dev)
+    dim rd_notify_base$:noticetpl(0,0)
+
+rem --- Get Attributes
+
+	call rd_dir_pgm$+"rdm_attr_init.aon",rd_attr_def_tbl$[all],rd_attr_def_col$[all]
+		rd_attr_def_col$=rd_attr_def_col$[0,0]
+		rd_attr_def_tbl$=rd_attr_def_tbl$[0,0]
+
+rem --- Main Process
+
+	gosub get_user_settings
+	gosub get_ini_settings
+	gosub disp_win
+	gosub get_next_doc
+	gosub get_doc_settings
+	gosub batch_audit
+	gosub def_headings
+	gosub output_types
+	gosub def_grids
+	gosub set_calc_size
+	gosub resize_win
+	if rd_disp_archive$="Y" gosub archive_display
+
+	if rdForm!<>null() rdForm!.destroy()
+	rdWindow!.setVisible(1)
+
+event_ctl:rem --- Event Control
+
+	rdWindow!.setCallback(rdWindow!.ON_CLOSE,"exit_prog")
+	rdWindow!.setCallback(rdWindow!.ON_RESIZE,"resize_win")
+
+	rdBtnCreate!.setCallback(rdBtnCreate!.ON_BUTTON_PUSH,"func_create")
+	rdBtnSettings!.setCallback(rdBtnSettings!.ON_BUTTON_PUSH,"func_settings")
+	rdBtnExit!.setCallback(rdBtnExit!.ON_BUTTON_PUSH,"exit_prog")
+
+	rdSysGUI!.flushEvents()
+
+	process_events,err=*same
+
+func_create:rem --- Create Output to Selected Devices/Files
+
+	gosub update_defs
+	for rd_curr_create=1 to len(rd_out_options$[0,0])/3
+
+		rdTempCtl!=rdTypeChild!.getControl(3100+rd_curr_create)
+		if rdTempCtl!.isSelected()=1
+			rd_call_prog$=""
+			switch fnstr_pos(rd_out_options$[0,0](rd_curr_create*3-2,3),"PRT;PDF;HTM;XML;CSV;TXT",4)
+				case 1
+					rd_call_prog$="adx_doc_prt.aon"
+				break
+				case 2
+					rd_call_prog$="adx_doc_pdf.aon"
+				break
+				case 3
+rem					rd_call_prog$="adx_doc_htm.aon"
+				break
+				case 4
+rem					rd_call_prog$="adx_doc_xml.aon"
+				break
+				case 5
+					rd_call_prog$="adx_doc_csv.aon"
+				break
+				case 6
+					rd_call_prog$="adx_doc_txt.aon"
+				break
+				case default
+				break
+			swend
+
+			if rd_call_prog$<>""
+:				call rd_dir_pgm$+rd_call_prog$,
+:					rdSysGUI!,
+:					rdOutGrid!,
+:					OutVect!,
+:					BrkVect!,
+:					HdrVect!,
+:					rd_doc_no$,
+:					rd_ads_doc_settings$,
+:					rep_date$,
+:					rep_date_stamp$,
+:					rep_time$,
+:					rep_time_stamp$,
+:					headings$[all],
+:					columns$[all],
+:					rd_attr_def_col$[all],
+:					rd_attr_output_col$[all],
+:					rd_out_options$[all],
+:					rd_out_action$,
+:					rd_out_status$
+
+		endif
+
+	next rd_curr_create
+
+	return
+
+func_options:rem --- Get Options For Output
+
+	call rd_dir_pgm$+"adx_doc_opts.aon",
+:		rd_gui_dev,
+:		rdSysGUI!,
+:		rd_out_options$[all],
+:		rd_opt_action$
+
+	return
+
+func_settings:rem --- Get Page Settings For Output
+
+	call rd_dir_pgm$+"rdm_run_prog.aon","ADS_DOC_SETTINGS",rd_user_id$,"MNT",pad(rd_alias_id$,16),rd_table_chans$[all]
+	gosub get_doc_settings
+	gosub set_grid_font
+
+	return
+
+get_next_doc:rem --- Get Next Document Number
+
+	call rd_dir_pgm$+"ads_sequences.aon",
+:		"DOC_NO",
+:		rd_doc_no$,
+:		rd_table_chans$[all]
+
+	return
+
+get_doc_settings:rem --- Get Document Format Settings
+
+	dim rd_ads_doc_settings$:fattr(rd_ads_doc_settings$)
+	rd_ads_doc_settings.doc_font_size$="08"
+	rd_ads_doc_settings.doc_font_size$=stbl("+DOC_FONT_SIZE",err=*next)
+	readrecord(rd_ads_doc_settings,key=pad(rd_alias_id$,16),dom=*next)rd_ads_doc_settings$
+
+	return
+
+batch_audit:rem --- Get Batch & Audit Data
+
+	rd_process$=pad(stbl("+PROCESS",err=*next),15)
+	if cvs(rd_process$,2)<>"" rd_process_hdr$=rd_output_batch$+" "+str(num(rd_process$(13,3)):"000")
+
+	rd_audit$=""
+	rd_glcontrol_tpl$=stbl("+GLCONTROL_TPL",err=*return)
+	dim rd_glcontrol$:rd_glcontrol_tpl$
+	rd_glcontrol$=stbl("+GLCONTROL",err=*return)
+	rd_audit$=cvs(rd_glcontrol.gl_adt_no$,2)
+	if rd_audit$<>"" rd_audit_hdr$=rd_output_audit$+" "+rd_audit$
+
+	return
+
+def_headings:rem --- Define Report Headings
+
+	rd_document_text$=
+:		rd_output_doc$+" "+rd_doc_no$+$0a$+
+:		rd_output_date$+" "+rep_date$+"  "+rep_time$+$0a$+
+:		rd_output_asof$+" "+rd_proc_date$
+
+	if rd_process_hdr$<>"" rd_document_text$=rd_document_text$+$0a$+rd_process_hdr$
+	if rd_audit_hdr$<>"" rd_document_text$=rd_document_text$+$0a$+rd_audit_hdr$
+
+	rd_doc_lines=pos($0a$=rd_document_text$,1,0)+1
+
+	rdDocInfo!.setText(rd_document_text$)
+
+rem --- Title & Headings
+
+	rd_heading_text$=""
+
+	for rd_curr_heading=0 to rd_no_headings-1
+		if headings$[rd_curr_heading]<>"" and headings$[rd_curr_heading]<>"[HEADER]"
+			if rd_heading_text$<>"" rd_heading_text$=rd_heading_text$+$0a$
+			rd_temp_heading$=headings$[rd_curr_heading]
+			if pos(">>"=rd_temp_heading$)<>0 gosub parse_heading
+			rd_heading_text$=rd_heading_text$+rd_temp_heading$
+		endif
+	next rd_curr_heading
+
+	rd_heading_lines=pos($0a$=rd_heading_text$,1,0)+1
+
+	rdHdrInfo!.setText(rd_heading_text$)
+
+	return
+
+parse_heading:rem --- Parse Heading and Get Message
+
+	rd_temp_msg_opt$="<<TEXT>>"
+	rd_temp_msg_id$=rd_temp_heading$(1,pos(">>"=rd_temp_heading$)-1)
+	dim rd_temp_tokens$[1]
+		rd_temp_tokens$[1]=rd_temp_heading$(pos(">>"=rd_temp_heading$)+2)
+
+	call rd_dir_pgm$+"adc_message.aon",rd_temp_msg_id$,rd_temp_tokens$[all],rd_temp_msg_opt$,rd_table_chans$[all]
+	rd_temp_heading$=rd_temp_msg_opt$
+
+	return
+
+output_types:rem --- Parse Output Into Vector
+
+	rd_output_types$=""
+
+	readrecord(rd_ddm_element_ldat,key=pad("DOC_TYPE",16),dom=*next)
+	while rd_read_more=0
+		readrecord(rd_ddm_element_ldat,end=*break)rd_ddm_element_ldat$
+		if rd_ddm_element_ldat.dd_data_name$<>pad("DOC_TYPE",16) break
+		if cvs(rd_ddm_element_ldat.dd_attr_ldat$,2)<>"" and cvs(rd_ddm_element_ldat.dd_attr_ldat$,2)<>"DSP"
+			rd_output_types$=rd_output_types$+rd_ddm_element_ldat.dd_attr_ldat$(1,3)+":"+rd_ddm_element_ldat.dd_attr_ldat_ds$+";"
+		endif
+	wend
+
+	readrecord(rd_adm_user,key=pad(stbl("+USER_ID"),16))rd_adm_user$
+
+	rd_group_types$=""
+	dim rd_ads_doc_group$:fattr(rd_ads_doc_group$)
+	readrecord(rd_ads_doc_group,key=rd_adm_user.doc_group$,dom=*next)rd_ads_doc_group$
+	for rd_curr_type=1 to 6
+		rd_group_types$=rd_group_types$+pad(field(rd_ads_doc_group$,"DOC_TYPE_"+str(rd_curr_type:"00")),3)
+		if field(rd_ads_doc_group$,"DOC_TYPE_"+str(rd_curr_type:"00"))="DSP" and field(rd_ads_doc_group$,"DOC_ARCHIVE_"+str(rd_curr_type:"00"))="Y"
+			rd_disp_archive$="Y"
+		endif
+	next rd_curr_type
+
+	if rd_output_types$<>""
+		rd_output_types=pos(";"=";"+rd_output_types$,1,0)-1
+		dim rd_out_options$[rd_output_types,9]
+rem							[0,0]=String of 3 character output types
+rem							[x,0]=3 character output type
+rem							[x,1]=Output type description
+rem							[x,2]=Output type path
+rem							[x,3]=Archive
+rem							[x,4-9]=TBD
+		rd_new_code=0
+
+		for rd_curr_code=1 to rd_output_types
+			rd_start_pos=pos(";"=";"+rd_output_types$,1,rd_curr_code)
+			rd_end_pos=pos(";"=";"+rd_output_types$,1,rd_curr_code+1)
+			rd_temp_val$=rd_output_types$(rd_start_pos,rd_end_pos-(rd_start_pos+1))
+				rd_temp_sep=pos(":"=rd_temp_val$)
+				rd_temp_type$=pad(rd_temp_val$(1,rd_temp_sep-1),3)
+				rd_temp_pos=fnstr_pos(rd_temp_type$,rd_group_types$,3)
+				if rd_temp_pos<>0
+					rd_new_code=rd_new_code+1
+					rd_out_options$[0,0]=rd_out_options$[0,0]+pad(rd_temp_val$(1,rd_temp_sep-1),3)
+					rd_out_options$[rd_new_code,0]=rd_temp_type$
+					rd_out_options$[rd_new_code,1]=rd_temp_val$(rd_temp_sep+1)
+					rd_out_options$[rd_new_code,2]=cvs(field(rd_ads_doc_group$,"DOC_PATH_"+str(rd_temp_pos:"00")),2)
+					rd_out_options$[rd_new_code,3]=field(rd_ads_doc_group$,"DOC_ARCHIVE_"+str(rd_temp_pos:"00"))
+					rdTempCtl!=rdTypeChild!.addCheckBox(3100+rd_new_code,10,rd_new_code*17,180,15,rd_out_options$[rd_new_code,1],$$)
+				endif
+		next rd_curr_code
+	endif
+
+	return
+
+archive_display:rem --- Archive Displayed Documents?
+
+	rd_doc_source$="I"
+	rd_doc_ext$="DSP"
+
+	rd_archive_action$=rd_out_status$+"-NOREPRINT"
+
+	call rd_dir_pgm$+"adc_documents.aon",
+:		rd_doc_no$,
+:		rep_date_stamp$,
+:		rep_time_stamp$,
+:		rd_doc_source$,
+:		rd_doc_ext$,
+:		rd_doc_path$,
+:		rd_table_chans$[all],
+:		rd_archive_action$
+
+	return
+
+def_grids:rem --- Define Grid
+
+	rd_def_output_cols=rd_no_columns
+	rd_num_output_rows=int(OutVect!.size()/rd_def_output_cols)
+	dim rd_attr_output_col$[rd_def_output_cols,len(rd_attr_def_col$[0,0])/5]
+	rd_calc_width=0
+
+	for rd_curr_column=0 to rd_no_columns-1
+		rd_attr_output_col$[rd_curr_column+1,fnstr_pos("DVAR",rd_attr_def_col$[0,0],5)]="COL_"+str(rd_curr_column+1:"000")
+		rd_attr_output_col$[rd_curr_column+1,fnstr_pos("LABS",rd_attr_def_col$[0,0],5)]=columns$[rd_curr_column,0]
+		rd_attr_output_col$[rd_curr_column+1,fnstr_pos("DTYP",rd_attr_def_col$[0,0],5)]=columns$[rd_curr_column,1]
+		if columns$[rd_curr_column,2]="1"
+			rd_attr_output_col$[rd_curr_column+1,fnstr_pos("MAXL",rd_attr_def_col$[0,0],5)]=columns$[rd_curr_column,2]
+		endif
+		rd_attr_output_col$[rd_curr_column+1,fnstr_pos("CTLW",rd_attr_def_col$[0,0],5)]=str(num(columns$[rd_curr_column,2])*6)
+		if rd_no_col_elems>3
+			rd_attr_output_col$[rd_curr_column+1,fnstr_pos("CTYP",rd_attr_def_col$[0,0],5)]=columns$[rd_curr_column,3]
+		endif
+		if rd_no_col_elems>4
+			rd_attr_output_col$[rd_curr_column+1,fnstr_pos("MSKO",rd_attr_def_col$[0,0],5)]=columns$[rd_curr_column,4]
+		endif
+		rd_attr_output_col$[0,1]=rd_attr_output_col$[0,1]+pad("OUTPUT."+rd_attr_output_col$[rd_curr_column+1,fnstr_pos("DVAR",rd_attr_def_col$[0,0],5)],40)
+		rd_calc_width=rd_calc_width+num(columns$[rd_curr_column,2])*6
+	next rd_curr_column
+
+	call rd_dir_pgm$+"rdm_grid_init.aon",rd_gui_dev,rdOutGrid!,"COLH-TIGHT-DOCV-MULTI",rd_num_output_rows,rd_attr_def_col$[all],rd_attr_output_col$[0,1],rd_attr_output_col$[all]
+
+	gosub set_grid_font
+
+	rdOutGrid!.setCellText(0,0,OutVect!)
+
+	return
+
+set_grid_font:rem --- Set Output Font For Grid
+
+	if rd_ads_doc_settings.doc_out_fixed$="Y"
+		rd_text_font$="Courier New"
+		rd_text_font$=stbl("+DOC_FONT_FIXED",err=*next)
+		else
+		rd_text_font$="Arial"
+		rd_text_font$=stbl("+DOC_FONT_PROP",err=*next)
+	endif
+
+	rdHeaderFont!=rdSysGUI!.makeFont(rd_text_font$,num(rd_ads_doc_settings.doc_font_size$),1)
+	rdOutGrid!.setColumnHeaderFont(rdHeaderFont!)
+	rdTextFont!=rdSysGUI!.makeFont(rd_text_font$,num(rd_ads_doc_settings.doc_font_size$),0)
+	rdOutGrid!.setMainGridFont(rdTextFont!)
+
+	return
+
+update_defs:rem --- Update Definition Arrays w/ New Widths
+
+	rd_def_output_cols=rd_no_columns
+	for rd_curr_column=0 to rd_no_columns-1
+		rd_attr_output_col$[rd_curr_column+1,fnstr_pos("CTLW",rd_attr_def_col$[0,0],5)]=str(rdOutGrid!.getColumnWidth(rd_curr_column))
+	next rd_curr_column
+
+	return
+
+get_user_settings:rem --- Get User Settings
+
+	rd_save_win_desc$=pad("OUT_"+rd_alias_id$,20)
+	rd_attr_desc$=rd_save_win_desc$
+
+	dim rd_set_data$[len(rd_attr_desc$)/20]
+		rd_set_data$[0]=rd_attr_desc$
+
+	call rd_dir_pgm$+"rdm_config.aon",rd_file_usr$,"USR","READ",rd_set_data$[all]
+
+	rd_win_coord$=rd_set_data$[fnstr_pos(rd_save_win_desc$,rd_set_data$[0],20)]
+	if rd_win_coord$="" rd_win_coord$="0,0,0,0"
+
+	dim rd_win_coord[1:4]
+		for rd_curr_coord=1 to 4
+			rd_temp_spos=pos(","=","+rd_win_coord$+",",1,rd_curr_coord)
+			rd_temp_epos=pos(","=","+rd_win_coord$+",",1,rd_curr_coord+1)-1
+			rd_win_coord[rd_curr_coord]=num(rd_win_coord$(rd_temp_spos,rd_temp_epos-rd_temp_spos))
+		next rd_curr_coord
+
+	return
+
+save_win_coords:rem --- Save Windows Coordinates
+
+	if rdWindow!.getWidth()=0 return
+
+	rd_curr_win_coords$=str(rdWindow!.getX())+","+str(rdWindow!.getY())+","+str(rdWindow!.getWidth())+","+str(rdWindow!.getHeight())
+	rd_attr_desc$=rd_save_win_desc$
+
+	dim rd_usr_data$[len(rd_attr_desc$)/20]
+		rd_usr_data$[0]=rd_attr_desc$
+		rd_usr_data$[fnstr_pos(rd_save_win_desc$,rd_usr_data$[0],20)]=rd_curr_win_coords$
+
+	call rd_dir_pgm$+"rdm_config.aon",rd_file_usr$,"USR","WRITE",rd_usr_data$[all]
+
+	return
+
+get_ini_settings:rem --- Create Attribute Description String
+
+	rd_attr_desc$=
+:		"DEBUG_MODE          "+
+:		"OUTPUT_DOC          "+
+:		"OUTPUT_DATE         "+
+:		"OUTPUT_ASOF         "+
+:		"OUTPUT_BATCH        "+
+:		"OUTPUT_AUDIT        "
+
+	dim rd_set_data$[len(rd_attr_desc$)/20]
+		rd_set_data$[0]=rd_attr_desc$
+
+	call rd_dir_pgm$+"rdm_config.aon",rd_file_set$,"INI","READ",rd_set_data$[all]
+
+	rd_debug_mode$=rd_set_data$[fnstr_pos("DEBUG_MODE",rd_set_data$[0],20)]
+	rd_output_doc$=rd_set_data$[fnstr_pos("OUTPUT_DOC",rd_set_data$[0],20)]
+	rd_output_date$=rd_set_data$[fnstr_pos("OUTPUT_DATE",rd_set_data$[0],20)]
+	rd_output_asof$=rd_set_data$[fnstr_pos("OUTPUT_ASOF",rd_set_data$[0],20)]
+	rd_output_batch$=rd_set_data$[fnstr_pos("OUTPUT_BATCH",rd_set_data$[0],20)]
+	rd_output_audit$=rd_set_data$[fnstr_pos("OUTPUT_AUDIT",rd_set_data$[0],20)]
+
+	return
+
+open_tables:rem -----<Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="ENTRY_OPEN_ERROR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call rd_dir_pgm$+"adc_message.aon",
+:		rd_msg_id$,
+:		rd_msg_tokens$[all],
+:		rd_msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+
+disp_win:rem --- Display Window
+
+	dim rd_ctl_misc$[20]
+
+	rd_form_id$=rd_dir_sys$+"adx_doc_output.arc"
+
+	call rd_dir_pgm$+"rdm_controls.aon",
+:		rd_gui_dev,
+:		rdSysGUI!,
+:		rd_form_id$,
+:		rd_win_coord[all],
+:		rdWindow!,
+:		"DISPLAY",
+:		rd_open_chan$[all],
+:		rd_ctl_misc$[all]
+
+	rdDocGrp!=rdWindow!.getControl(11001)
+		rdDocInfo!=rdWindow!.getControl(2001)
+
+	rdHdrGrp!=rdWindow!.getControl(11002)
+		rdHdrInfo!=rdWindow!.getControl(2002)
+
+	rdOutGrid!=rdWindow!.getControl(5000)
+
+	rdTypeChild!=rdWindow!.getControl(1001)
+		rdTypeGrp!=rdTypeChild!.getControl(11003)
+
+	rdOutChild!=rdWindow!.getControl(1002)
+		rdBtnCreate!=rdOutChild!.getControl(10)
+		rdBtnSettings!=rdOutChild!.getControl(11)
+		rdBtnExit!=rdOutChild!.getControl(2)
+
+	rd_win_disp$="YES"
+
+	return
+
+set_calc_size:rem --- Set Calculated Size
+
+	if rd_win_coord[1]+rd_win_coord[2]+rd_win_coord[3]+rd_win_coord[4]=0
+
+		rd_client_width=bbjAPI().getMDI().getClientWidth()
+		rd_form_width=max(500,min(rd_calc_width+30,rd_client_width-100))
+
+		rd_client_height=bbjAPI().getMDI().getClientHeight()
+		rd_form_height=rd_client_height-200
+
+		rdWindow!.setLocation(int(rd_client_width/2)-int(rd_form_width/2),int(rd_client_height/2)-int(rd_form_height/2))
+		rdWindow!.setSize(rd_form_width,rd_form_height)
+
+	endif
+
+	return
+
+resize_win:rem --- Resize Window Contents
+
+	rd_height_adj=max(rd_new_code*17+20,rd_heading_lines*17,rd_doc_lines*17,75)
+
+	rdDocGrp!.setSize(rdDocGrp!.getWidth(),rd_height_adj)
+	rdDocInfo!.setSize(rdDocGrp!.getWidth()-15,rdDocGrp!.getHeight()-25)
+
+	rdHdrGrp!.setSize(rdWindow!.getWidth()-485,rd_height_adj)
+	rdHdrInfo!.setSize(rdHdrGrp!.getWidth()-15,rdDocGrp!.getHeight()-25)
+
+	rdTypeChild!.setLocation(rdWindow!.getWidth()-280,rdTypeChild!.getY())
+	rdTypeChild!.setSize(rdTypeChild!.getWidth(),rdDocGrp!.getHeight())
+		rdTypeGrp!.setSize(rdTypeGrp!.getWidth(),rd_height_adj)
+
+	rdOutChild!.setLocation(rdWindow!.getWidth()-75,rdOutChild!.getY())
+
+	rdOutGrid!.setLocation(rdOutGrid!.getX(),rdDocGrp!.getHeight()+5)
+	rdOutGrid!.setSize(rdWindow!.getWidth()-10,rdWindow!.getHeight()-(rdOutGrid!.getY()+5))
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5),err=*next)
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Exit Program
+
+	gosub save_win_coords
+
+	rdWindow!.destroy()
+
+	exit

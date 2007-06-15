@@ -1,0 +1,166 @@
+rem Launch Selected Program
+rem Proprietary Software. AddonSoftware
+rem Program ID: adx_launch_program.aon  <Dec 06, 2006>
+
+	begin
+
+rem	if stbl("+USE_SETERR")="YES" seterr error_proc
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp0)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp0)+rd_tmp0-1)/rd_tmp0)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(fill(50,rd_tmp1$)=rd_tmp0$+fill(50,rd_tmp1$))-1)
+
+rem --- Directory STBLs
+
+	rd_gui_dev$=stbl("+GUI_DEVICE")
+	rd_dir_ddb$=stbl("+DIR_DDB")
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_img$=stbl("+DIR_IMG")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"aon_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
+	rd_file_set$=stbl("+FILE_SET")
+
+file_opens:rem --- Open File(s)
+
+	rd_num_files=1
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+	rd_open_tables$[1]=stbl("+GUI_DEVICE"),rd_open_opts$[1]="O"
+	gosub open_tables
+	rd_gui_dev=num(rd_open_chans$[1])
+
+rem --- Get SysGUI Object
+
+	rdBBjAPI!=bbjAPI()
+	rdSysGUI!=rdBBjAPI!.getSysGui()
+
+rem --- Main Process
+
+	gosub disp_win
+
+	rdWindow!.setVisible(1)
+	rdProgram!.focus()
+
+event_ctl:rem --- Event Control
+
+	rdWindow!.setCallback(rdWindow!.ON_CLOSE,"exit_prog")
+	rdWindow!.setCallback(rdWindow!.ON_RESIZE,"resize_win")
+
+	rdProgram!.setCallback(rdProgram!.ON_EDIT_MODIFY,"prog_edit")
+
+	rdBtnBrowse!.setCallback(rdBtnBrowse!.ON_BUTTON_PUSH,"prog_find")
+	rdBtnRun!.setCallback(rdBtnRun!.ON_BUTTON_PUSH,"run_prog")
+	rdBtnExit!.setCallback(rdBtnExit!.ON_BUTTON_PUSH,"exit_prog")
+
+	rdSysGUI!.flushEvents()
+
+	process_events
+
+prog_edit:rem --- Program Directory Edited
+
+	rd_temp_prog$=rdProgram!.getText()
+	if rd_temp_prog$=""
+		rdBtnRun!.setEnabled(0)
+		else
+		rdBtnRun!.setEnabled(1)
+	endif
+
+	return
+
+prog_find:rem --- Call Open Directory Dialog
+
+	rd_temp_prog$=fileopen("Find Program",rd_dir_pgm$,"","","",0)
+	if pos(rd_temp_prog$="::BAD:: ::CANCEL::")=0
+		rdProgram!.setText(rd_temp_prog$)
+		gosub prog_edit
+	endif
+
+	return
+
+run_prog:rem --- Run Program In New BBj Session
+
+	rd_temp_prog$=rdProgram!.getText()
+	rdCommand!=rdBBjAPI!.getConfig().getCurrentCommandLineObject()
+	rdCommand!.setProgramName(rd_temp_prog$)
+	rd_scall_result=rdBBjAPI!.newBBjSession(rdCommand!)
+
+	if rd_scall_result<>0
+		rd_msg_id$="LAUNCH_FILE_NOF"
+		gosub disp_message
+	endif
+
+	return
+
+open_tables:rem -----<Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="ENTRY_OPEN_ERROR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call rd_dir_pgm$+"adc_message.aon",
+:		rd_msg_id$,
+:		rd_msg_tokens$[all],
+:		rd_msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+
+disp_win:rem --- Display Window
+
+	dim rd_ctl_misc$[20]
+
+	rd_form_id$=rd_dir_sys$+"adx_launch_program.arc"
+
+	call rd_dir_pgm$+"rdm_controls.aon",
+:		rd_gui_dev,
+:		rdSysGUI!,
+:		rd_form_id$,
+:		rd_win_coord[all],
+:		rdWindow!,
+:		"DISPLAY",
+:		rd_open_chan$[all],
+:		rd_ctl_misc$[all]
+
+	rdProgram!=rdWindow!.getControl(3001)
+	rdBtnBrowse!=rdWindow!.getControl(3002)
+	rdBtnRun!=rdWindow!.getControl(1)
+		rdBtnRun!.setEnabled(0)
+	rdBtnExit!=rdWindow!.getControl(2)
+
+	rd_win_disp$="YES"
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Exit Program
+
+	release

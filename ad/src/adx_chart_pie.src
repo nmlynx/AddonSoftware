@@ -1,0 +1,16 @@
+rem  an empty Business BASIC program
+
+	gui_dev=unt
+	open(unt)"X0"
+	rdSysGUI!=bbjapi().getSysGui()
+
+	rd_form_id$="c:/aon800/rdforms/arc/enu/test_charts.arc"
+	rdWindow!=rdSysGUI!.createTopLevelWindow(rdSysGUI!.resOpen(rd_form_id$),101)
+
+	rdChart!=rdWindow!.getControl(100)
+
+escape
+
+
+
+

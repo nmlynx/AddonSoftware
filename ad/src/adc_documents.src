@@ -1,0 +1,171 @@
+rem Document Warehouse Assignment
+rem Proprietary Software.  AddonSoftware
+rem Program ID: adc_documents.aon  <Oct 18,2006>
+
+	if stbl("+USE_SETERR")="YES" seterr error_proc
+
+	enter
+:		rd_doc_no$,
+:		rd_doc_date$,
+:		rd_doc_time$,
+:		rd_doc_source$,
+:		rd_doc_ext$,
+:		rd_doc_path$,
+:		rd_table_chans$[all],
+:		rd_archive_action$
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp0)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp0)+rd_tmp0-1)/rd_tmp0)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(fill(50,rd_tmp1$)=rd_tmp0$+fill(50,rd_tmp1$))-1)
+
+rem --- Retrieve sysinfo data
+
+    rd_sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
+    dim rd_sysinfo$:rd_sysinfo_tpl$
+    rd_sysinfo$=stbl("+SYSINFO",err=*next)
+
+misc_setup:rem --- Constants
+
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_user_id$=stbl("+USER_ID")
+
+	if rd_doc_date$="" rd_doc_date$=date(0:"%Yd%Mz%Dz")
+	if rd_doc_time$="" rd_doc_time$=date(0:"%Hz%mz%sz")
+
+rem --- Open Tables
+
+	rd_num_files=4
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]="ADS_DOCUMENTS",rd_open_opts$[1]="OTA"
+	rd_open_tables$[2]="ADS_DOC_GROUP",rd_open_opts$[2]="OTA"
+	rd_open_tables$[3]="ADS_SEQUENCES",rd_open_opts$[3]="OTA"
+	rd_open_tables$[4]="ADM_USER",rd_open_opts$[4]="OTA"
+	gosub open_tables
+	rd_ads_documents=num(rd_open_chans$[1]);dim rd_ads_documents$:rd_open_tpls$[1]
+	rd_ads_doc_group=num(rd_open_chans$[2]);dim rd_ads_doc_group$:rd_open_tpls$[2]
+	rd_ads_sequences=num(rd_open_chans$[3]);dim rd_ads_sequences$:rd_open_tpls$[3]
+	rd_adm_user=num(rd_open_chans$[4]);dim rd_adm_user$:rd_open_tpls$[4]
+
+prog_setup:rem --- Program Setup
+
+	readrecord(rd_adm_user,key=pad(rd_user_id$,16))rd_adm_user$
+
+	if pos("DOC_PATH"=rd_archive_action$)<>0 gosub get_user_info
+	if pos("DOC_ID"=rd_archive_action$)<>0 gosub get_next_doc
+
+	gosub write_doc_rec
+
+	goto exit_prog
+
+get_user_info:rem --- Get User Information
+
+	readrecord(rd_ads_doc_group,key=rd_adm_user.doc_group$)rd_ads_doc_group$
+	rd_temp_path$=rd_ads_doc_group.doc_path$
+
+	while pos("["=rd_temp_path$)<>0
+
+		rd_temp_spos=pos("["=rd_temp_path$)+1
+		rd_temp_epos=pos("]"=rd_temp_path$)
+		rd_temp_varid$=rd_temp_path$(rd_temp_spos,rd_temp_epos-rd_temp_spos)
+		
+		if pos("+"=rd_temp_varid$)=1 rd_temp_val$=$22$+stbl(rd_temp_varid$)+$22$
+
+		if rd_temp_epos=len(rd_temp_path$)
+			rd_temp_path$=rd_temp_path$(1,rd_temp_spos-2)+rd_temp_val$
+			else
+			rd_temp_path$=rd_temp_path$(1,rd_temp_spos-2)+rd_temp_val$+rd_temp_path$(rd_temp_epos+1)
+		endif
+
+	wend
+
+	if rd_temp_path$="" rd_temp_path$=stbl("+DIR_DOC",err=*next)
+
+	rd_doc_path$=rd_temp_path$
+
+	return
+
+get_next_doc:rem --- Get Next Document Number
+
+	extractrecord(rd_ads_sequences,key=rd_sysinfo.firm_id$+pad("DOCUMENTS",10))rd_ads_sequences$
+	rd_ads_sequences.seq_last_used=rd_ads_sequences.seq_last_used+1
+	rd_ads_sequences$=field(rd_ads_sequences$)
+	writerecord(rd_ads_sequences)rd_ads_sequences$
+
+	rd_doc_no$=str(rd_ads_sequences.seq_last_used:"0000000000")
+
+	return
+
+write_doc_rec:rem --- Write Document Record
+
+	dim rd_ads_documents$:fattr(rd_ads_documents$)
+		rd_ads_documents$.firm_id$=rd_sysinfo.firm_id$
+		rd_ads_documents$.doc_no$=rd_doc_no$
+		rd_ads_documents$.doc_extension$=rd_doc_ext$
+		rd_ads_documents$.doc_desc$=rd_sysinfo.task_desc$
+		rd_ads_documents$.doc_date$=rd_doc_date$
+		rd_ads_documents$.doc_time$=rd_doc_time$
+		rd_ads_documents$.user_id$=rd_sysinfo.user_id$
+		rd_ads_documents$.dd_attr_slev$=rd_sysinfo.dd_attr_slev$
+		rd_ads_documents$.allow_reprint$="Y"
+			if pos("NOREPRINT"=rd_archive_action$)<>0 rd_ads_documents$.allow_reprint$="N"
+		rd_ads_documents$.doc_source$=rd_doc_source$
+		rd_ads_documents$.doc_group$=rd_adm_user.doc_group$
+		rd_ads_documents$.doc_path$=rd_doc_path$
+		rd_ads_documents$.doc_status$="C"
+			if pos("INCOMPLETE"=rd_archive_action$)<>0 rd_ads_documents$.doc_status$="I"
+
+	rd_ads_documents$=field(rd_ads_documents$)
+	writerecord(rd_ads_documents)rd_ads_documents$
+
+	return
+
+open_tables:rem -----<Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="ENTRY_OPEN_ERROR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call rd_dir_pgm$+"adc_message.aon",
+:		rd_msg_id$,
+:		rd_msg_tokens$[all],
+:		rd_msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Close Files & Exit
+
+	exit

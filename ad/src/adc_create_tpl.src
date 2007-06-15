@@ -1,0 +1,150 @@
+rem Create Table Template
+rem Proprietary Software. AddonSoftware Corp.
+rem Program ID: adc_create_tpl.aon  <Dec 14, 2005>
+
+rem --- Enter Arguments
+
+	enter
+:		rd_gen_table_id$,
+:		rd_gen_table_tpl$,
+:		rd_table_chans$[all],
+:		rd_status$
+
+rem --- Constants
+
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_temp_table_id$=pad(rd_gen_table_id$,16)
+	rd_col_occurs_mask$="00"
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp0)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp0)+rd_tmp0-1)/rd_tmp0)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(fill(50,rd_tmp1$)=rd_tmp0$+fill(50,rd_tmp1$))-1)
+
+rem --- Open Dictionary Files
+
+	rd_num_files=2
+	dim rd_open_tables$[1:rd_num_files]
+	dim rd_open_opts$[1:rd_num_files]
+	dim rd_open_chans$[1:rd_num_files]
+	dim rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]="DDM_TABLE_COLS",rd_open_opts$[1]="OTA"
+	rd_open_tables$[2]="DDM_ELEMENTS",rd_open_opts$[2]="OTA"
+
+	gosub open_tables
+
+	rd_ddm_table_cols=num(rd_open_chans$[1]);dim rd_ddm_table_cols$:rd_open_tpls$[1]
+	rd_ddm_elements=num(rd_open_chans$[2]);dim rd_ddm_elements$:rd_open_tpls$[2]
+
+rem --- Build Templates
+
+	rd_gen_table_tpl$=""
+	data_seq_str$=""
+	
+	read(rd_ddm_table_cols,key=rd_temp_table_id$,knum=0,dom=*next)
+
+get_next_col:rem --- Get Next Column Record
+
+	readrecord(rd_ddm_table_cols,end=end_build)rd_ddm_table_cols$
+	if rd_ddm_table_cols.dd_table_alias$<>rd_temp_table_id$ goto end_build
+
+	if cvs(rd_ddm_table_cols.dd_dvar_name$,3)="" rd_ddm_table_cols.dd_dvar_name$=rd_ddm_table_cols.dd_data_name$
+	readrecord(rd_ddm_elements,key=pad(rd_ddm_table_cols.dd_data_name$,16))rd_ddm_elements$
+
+		rd_col_length=rd_ddm_elements.dd_data_length
+		if rd_ddm_table_cols.dd_col_repeats>1 rd_col_length=rd_ddm_elements.dd_data_length*rd_ddm_table_cols.dd_col_repeats
+
+		rd_col_occurs_sfx$=""
+		rd_col_occurs$=""
+		rd_col_occurs=1
+		if rd_ddm_table_cols.dd_col_occurs>1
+			rd_col_occurs$="YES"
+			rd_col_occurs=rd_ddm_table_cols.dd_col_occurs
+		endif
+
+			data_seq_pos=pos(pad(rd_ddm_table_cols.dd_dvar_name$,16)=data_seq_str$,20)
+			if data_seq_pos<>0 
+				rd_occur_adj=num(data_seq_str$(data_seq_pos+17,2))
+				else
+				rd_occur_adj=0
+				data_seq_str$=data_seq_str$+pad(rd_ddm_table_cols.dd_dvar_name$,16)+"-00;"
+			endif
+
+		for rd_curr_occur=1 to rd_col_occurs
+
+			data_seq_pos=pos(pad(rd_ddm_table_cols.dd_dvar_name$,16)=data_seq_str$,20)
+			data_seq_str$(data_seq_pos+17,2)=str(num(data_seq_str$(data_seq_pos+17,2))+1:"00")
+
+			if rd_col_occurs$="YES" or rd_occur_adj>0 rd_col_occurs_sfx$="_"+str(rd_curr_occur+rd_occur_adj:rd_col_occurs_mask$)
+			rd_temp_seg$=cvs(rd_ddm_table_cols.dd_dvar_name$,3)+rd_col_occurs_sfx$+":"
+			rd_temp_seg$=rd_temp_seg$+rd_ddm_elements.dd_data_type$+"("
+			rd_temp_seg$=rd_temp_seg$+str(rd_col_length)
+			if rd_ddm_table_cols.dd_field_delim$="Y" rd_temp_seg$=rd_temp_seg$+"*"
+			if rd_ddm_table_cols.dd_field_delim$="E" and rd_curr_occur=rd_col_occurs rd_temp_seg$=rd_temp_seg$+"*"
+			rd_temp_seg$=rd_temp_seg$+")"
+
+			if rd_gen_table_tpl$<>"" rd_gen_table_tpl$=rd_gen_table_tpl$+","
+			rd_gen_table_tpl$=rd_gen_table_tpl$+rd_temp_seg$
+
+		next rd_curr_occur
+
+	goto get_next_col
+
+end_build:rem --- Wrap Up Template Build
+
+	rd_gen_table_tpl$=cvs(rd_gen_table_tpl$,8)
+
+	goto exit_prog
+
+open_tables:rem -----<Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_title$="Table Access Error"
+		rd_msg_text$=rd_open_status$
+		rd_msg_defs$="O  ;F;O"
+		gosub disp_msg
+		goto exit_prog
+	endif
+
+	return
+
+disp_msg:rem --- Display Messages
+
+	call rd_dir_pgm$+"rdm_message.aon",
+:		rd_gui_dev,
+:		"AddonSoftware",
+:		rd_msg_text$,
+:		rd_msg_defs$,
+:		rd_msg_opt$
+
+	rd_msg_title$=""
+	rd_msg_text$=""
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Exit Program
+
+	exit

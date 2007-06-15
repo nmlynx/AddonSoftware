@@ -1,0 +1,254 @@
+rem Display Message Dialog Window
+rem Proprietary Software.  AddonSoftware
+rem Program ID: adc_message.aon  <Jun 06, 2006>
+
+rem	seterr error_proc
+
+rem --- Enter Arguments
+
+	enter
+:		rd_msg_id$,
+:		rd_msg_tokens$[all],
+:		rd_msg_opt$,
+:		rd_table_chans$[all]
+
+rem --- Location STBLs
+
+	rd_gui_dev$=stbl("+GUI_DEVICE")
+	rd_dir_def$=stbl("+DIR_DEF")
+	rd_dir_frm$=stbl("+DIR_FRM")
+	rd_dir_img$=stbl("+DIR_IMG")
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_file_set$=stbl("+FILE_SET")
+	rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"aon_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
+	rd_file_tpm$=stbl("+FILE_TPM")
+	rd_file_hlp$=stbl("+FILE_HLP")
+
+rem --- Constants
+
+	rd_msg_vals$="O  :0;OC :1;ARI:2;YNC:3;YN :4;RC :5;"
+	rd_icon_vals$="F:16;Q:32;W:48;I:64"
+	rd_default_vals$="1:000;2:256;3:512"
+	rd_option_vals$="OCARIYN"
+	rd_canc_pri$="CNAO"
+	dim rd_msg_array$[1:7,1]
+		for rd_curr_elem=1 to 7
+			rd_msg_array$[rd_curr_elem,1]=str(rd_curr_elem)
+		next rd_curr_elem
+
+	rd_msg_opt$=""
+
+get_array:rem --- Get File Channel Array Data
+
+	rd_dims_tpl$="dimen:i(1),d0elem:i(4),d0base:i(4),d1elem:i(4),d1base:i(4),d2elem:i(4),d2base:i(4)"
+	dim rd_temp_array$:rd_dims_tpl$
+	rd_temp_array$=dims(rd_msg_tokens$[all],err=setup_tables)
+	rd_msg_tokens=rd_temp_array.d0elem
+	rd_msg_tokens$="YES"
+
+setup_tables:rem --- Open Tables
+
+	rd_num_files=2
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]=rd_gui_dev$,rd_open_opts$[1]="O"
+	rd_open_tables$[2]="ADS_MESSAGES",rd_open_opts$[2]="OTA"
+		gosub open_tables
+	rd_gui_dev=num(rd_open_chans$[1])
+	rd_ads_messages=num(rd_open_chans$[2]);dim rd_ads_messages$:rd_open_tpls$[2]
+
+rem --- Get SysGUI Object
+
+	rdSysGUI!=BBjAPI().getSysGui()
+		rdCodeVect!=rdSysGUI!.makeVector()
+		rdBtnVect!=rdSysGUI!.makeVector()
+
+route_proc:rem --- Route Process
+
+	gosub get_message_rec
+	if rd_msg_tokens$="YES" gosub add_tokens
+	gosub add_linefeeds
+	gosub set_buttons
+	gosub set_return_codes
+	gosub disp_message
+
+	goto exit_prog
+
+get_message_rec:rem --- Get Message Record
+
+	readrecord(rd_ads_messages,key=stbl("+LANGUAGE_ID")+pad(rd_msg_id$,20),dom=message_nof)rd_ads_messages$
+
+	rd_msg_title$=rd_ads_messages.msg_title$
+		if rd_msg_title$="" rd_msg_title$="Processing Message"
+	rd_msg_text$=cvs(rd_ads_messages.msg_text$,3)
+	rd_msg_disp$=rd_ads_messages.msg_display$
+		if rd_msg_disp$<>"" and rd_msg_disp$(len(rd_msg_disp$),1)<>";" rd_msg_disp$=rd_msg_disp$+";"
+	rd_msg_codes$=rd_ads_messages.msg_codes$
+		if rd_msg_codes$<>"" and rd_msg_codes$(len(rd_msg_codes$),1)<>";" rd_msg_codes$=rd_msg_codes$+";"
+	rd_msg_type=num(rd_ads_messages.msg_type$)
+	rd_msg_icon=num(rd_ads_messages.msg_icon$)
+	rd_msg_dflt=num(rd_ads_messages.msg_default_but$)
+
+	return
+
+message_nof:rem --- Message ID Not On File
+
+	rd_msg_title$="System Message Error"
+	rd_msg_text$="System message record not found."+$0a$+"Message ID: "+rd_msg_id$+$0a$+"Please contact system administrator."
+
+	rd_msg_type=0
+	rd_msg_icon=48
+	rd_msg_dflt=0
+
+	return
+
+set_buttons:rem --- Set Customized Buttons Into Array
+
+	if rd_msg_disp$<>""
+		for rd_curr_code=1 to pos(";"=";"+rd_msg_disp$,1,0)-1
+			rd_start_pos=pos(";"=";"+rd_msg_disp$,1,rd_curr_code)
+			rd_end_pos=pos(";"=";"+rd_msg_disp$,1,rd_curr_code+1)
+			rdBtnVect!.addItem(rd_msg_disp$(rd_start_pos,rd_end_pos-(rd_start_pos+1)))
+		next rd_curr_code
+	endif
+
+	return
+
+set_return_codes:rem --- Setup Return Codes Based on Type or Custom
+
+	if rd_msg_codes$<>""
+		for rd_curr_code=1 to pos(";"=";"+rd_msg_codes$,1,0)-1
+			rd_start_pos=pos(";"=";"+rd_msg_codes$,1,rd_curr_code)
+			rd_end_pos=pos(";"=";"+rd_msg_codes$,1,rd_curr_code+1)
+			rdCodeVect!.addItem(rd_msg_codes$(rd_start_pos,rd_end_pos-(rd_start_pos+1)))
+		next rd_curr_code
+	endif
+
+	rd_option_vals$="OCARIYN"
+
+	switch rd_msg_type
+		case 0 ;rem OK
+			rd_fill_opts$="01"
+		break
+		case 1 ;rem OK and Cancel
+			rd_fill_opts$="0102"
+		break
+		case 2 ;rem Abort, Retry, and Ignore
+			rd_fill_opts$="030405"
+		break
+		case 3 ;rem Yes, No, and Cancel
+			rd_fill_opts$="060702"
+		break
+		case 4 ;rem Yes and No
+			rd_fill_opts$="0607"
+		break
+		case 5 ;rem Retry and Cancel
+			rd_fill_opts$="0402"
+		break
+		case 7 ;rem Custom
+			rd_fill_opts$="010203"
+		break
+	swend
+
+	for rd_curr_fill=1 to len(rd_fill_opts$)/2
+		rd_fill_seg=num(rd_fill_opts$(rd_curr_fill*2-1,2))
+		if rdBtnVect!.size()>=rd_curr_fill rd_msg_array$[rd_fill_seg,0]=rdBtnVect!.getItem(rd_curr_fill-1)
+		if rdCodeVect!.size()>=rd_curr_fill rd_msg_array$[rd_fill_seg,1]=rdCodeVect!.getItem(rd_curr_fill-1)
+	next rd_curr_fill
+
+	return
+
+add_tokens:rem --- Add Tokens Into Message String
+
+	while pos("%"=rd_msg_text$)<>0
+		rd_temp_pos=pos("%"=rd_msg_text$)
+		rd_temp_len=len(rd_msg_text$)
+		rd_temp_char=rd_temp_pos+1
+		while rd_temp_char<=rd_temp_len and pos(rd_msg_text$(rd_temp_char,1)="0123456789")
+			rd_temp_char=rd_temp_char+1
+		wend
+		rd_valid_char=rd_temp_char-1
+		rd_rep_num=num(rd_msg_text$(rd_temp_pos+1,rd_valid_char-rd_temp_pos))
+
+		switch rd_valid_char
+			case len(rd_msg_text$)
+				rd_msg_text$=rd_msg_text$(1,rd_temp_pos-1)+rd_msg_tokens$[rd_rep_num]
+			break
+			case default
+				rd_msg_text$=rd_msg_text$(1,rd_temp_pos-1)+rd_msg_tokens$[rd_rep_num]+rd_msg_text$(rd_valid_char+1)
+			break
+		swend
+
+	wend
+
+	return
+
+add_linefeeds:rem --- Replace Pipes w/ Linefeeds
+
+	while pos("|"=rd_msg_text$)<>0
+		rd_temp_pos=pos("|"=rd_msg_text$)
+		switch rd_temp_pos
+			case len(rd_msg_text$)
+				rd_msg_text$=rd_msg_text$(1,len(rd_msg_text$)-1)+$0a$
+			break
+			case default
+				rd_msg_text$=rd_msg_text$(1,rd_temp_pos-1)+$0a$+rd_msg_text$(rd_temp_pos+1)
+			break
+		swend
+	wend
+
+	return
+
+disp_message:rem --- Display msgs
+
+	rd_msg_expr=rd_msg_type+rd_msg_icon+rd_msg_dflt
+
+	switch rdBtnVect!.size()
+		case 1
+			rd_msg_opt=msgbox(rd_msg_text$,rd_msg_expr,rd_msg_title$,rd_msg_array$[1,0])
+		break
+		case 2
+			rd_msg_opt=msgbox(rd_msg_text$,rd_msg_expr,rd_msg_title$,rd_msg_array$[1,0],rd_msg_array$[2,0])
+		break
+		case 3
+			rd_msg_opt=msgbox(rd_msg_text$,rd_msg_expr,rd_msg_title$,rd_msg_array$[1,0],rd_msg_array$[2,0],rd_msg_array$[3,0])
+		break
+		case default
+			rd_msg_opt=msgbox(rd_msg_text$,rd_msg_expr,rd_msg_title$)
+		break
+	swend
+	
+	if rd_msg_opt<>0 rd_msg_opt$=rd_msg_array$[rd_msg_opt,1]
+
+	return
+
+open_tables:rem --- Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Exit Program
+
+	exit

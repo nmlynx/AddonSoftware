@@ -1,0 +1,143 @@
+rem Set Process Variables
+rem Proprietary Software. AddonSoftware
+rem Program ID: ads_process_beg.aon  <Apr 03, 2006>
+
+	if stbl("+USE_SETERR")="YES" seterr error_proc
+
+	if pgm(-2)=pgm(-1)
+		rd_user_id$=argv(1)
+		rd_run_prog$=argv(2)
+		gosub resolve_path
+		else
+		enter rd_user_id$,rd_table_chans$[all]
+	endif
+
+rem --- Constants
+
+	rd_dir_dda$=stbl("+DDDATA")
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_file_set$=stbl("+FILE_SET")
+	rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"aon_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
+	rd_file_hlp$=stbl("+FILE_HLP")
+
+pgm_fncs:rem --- Functions - Main
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp1)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp1)+rd_tmp1-1)/rd_tmp1)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(rd_tmp1$=rd_tmp0$+rd_tmp1$)-1)
+
+rem --- Open Tables
+
+	rd_num_files=4
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]="ADS_SYSINFO",rd_open_opts$[1]="OTA"
+	rd_open_tables$[2]="ADS_USERLOG",rd_open_opts$[2]="OTA"
+	rd_open_tables$[3]="ADM_USER",rd_open_opts$[3]="OTA"
+	rd_open_tables$[4]=stbl("+GUI_DEVICE"),rd_open_opts$[4]="O"
+
+	gosub open_tables
+
+	rd_ads_sysinfo=num(rd_open_chans$[1]);dim rd_ads_sysinfo$:rd_open_tpls$[1]
+	rd_ads_userlog=num(rd_open_chans$[2]);dim rd_ads_userlog$:rd_open_tpls$[2]
+	rd_adm_user=num(rd_open_chans$[3]);dim rd_adm_user$:rd_open_tpls$[3]
+	rd_gui_dev=num(rd_open_chans$[4])
+
+rem --- Main Process
+
+	gosub get_sysinfo
+	gosub write_user_log
+
+	goto exit_prog
+
+get_sysinfo:rem --- Get SYSINFO Record
+
+	readrecord(rd_ads_sysinfo,key=pad(rd_user_id$,16))rd_ads_sysinfo$
+		rd_task_hold$=rd_ads_sysinfo.task_id$
+		rd_ads_sysinfo.task_id$=rd_ads_sysinfo.task_id$+str(dec(info(3,0)):"0000")
+			rd_ads_sysinfo.task_id$=rd_ads_sysinfo.task_id$(1,min(20,len(rd_ads_sysinfo.task_id$)))
+		rd_ads_sysinfo$=field(rd_ads_sysinfo$)
+	writerecord(rd_ads_sysinfo)rd_ads_sysinfo$
+
+		rd_temp_stbl$=stbl("+SYSINFO",rd_ads_sysinfo$)
+		rd_temp_stbl$=stbl("+SYSINFO_TPL",fattr(rd_ads_sysinfo$))
+		rd_temp_stbl$=stbl("+LANGUAGE_ID",rd_ads_sysinfo.language_id$)
+		rd_temp_stbl$=stbl("+USER_ID",rd_ads_sysinfo.user_id$)
+		rd_temp_stbl$=stbl("+FIRM_ID",rd_ads_sysinfo.firm_id$)
+		rd_temp_stbl$=stbl("+SYSTEM_DATE",rd_ads_sysinfo.system_date$)
+
+	readrecord(rd_ads_sysinfo,key=pad(rd_user_id$,16))rd_ads_sysinfo$
+		rd_temp_stbl$=stbl("+USER_SLEV",rd_adm_user.security_level$)
+
+	return
+
+write_user_log:rem --- Write User Transaction Log
+
+	dim rd_ads_userlog$:fattr(rd_ads_userlog$)
+		rd_ads_userlog.user_id$=rd_ads_sysinfo.user_id$
+		rd_ads_userlog.trans_date_start$=date(0:"%Yd%Mz%Dz")
+		rd_ads_userlog.trans_time_start$=date(0:"%Hz%mz%sz")
+		rd_ads_userlog.company_id$=rd_ads_sysinfo.firm_id$
+		rd_ads_userlog.task_id$=rd_task_hold$
+		rd_ads_userlog.task_desc$=rd_ads_sysinfo.task_desc$
+		rd_ads_userlog.process_no$=str(dec(info(3,0)):"0000000000")
+		rd_ads_userlog$=field(rd_ads_userlog$)
+		writerecord(rd_ads_userlog)rd_ads_userlog$
+
+	rd_temp_stbl$=stbl("+USERLOG",rd_ads_userlog$)
+	rd_temp_stbl$=stbl("+USERLOG_TPL",fattr(rd_ads_userlog$))
+	rd_temp_stbl$=stbl("+USERLOG_CHN",str(rd_ads_userlog))
+
+	return
+
+resolve_path:rem --- Resolve Program Path
+
+	rd_prog_path$=rd_run_prog$
+
+	while pos("["=rd_prog_path$)<>0
+		rd_stbl_from=pos("["=rd_prog_path$)+1
+		rd_stbl_thru=pos("]"=rd_prog_path$)
+		rd_proc_mssg$="Undefined global directory value"
+		rd_temp_stbl$=stbl(rd_prog_path$(rd_stbl_from,rd_stbl_thru-rd_stbl_from),err=*return)
+		rd_proc_mssg$=""
+		if rd_stbl_thru=len(rd_prog_path$)
+			rd_prog_path$=rd_prog_path$(1,rd_stbl_from-2)+rd_temp_stbl$
+			else
+			rd_prog_path$=rd_prog_path$(1,rd_stbl_from-2)+rd_temp_stbl$+rd_prog_path$(rd_stbl_thru+1)
+		endif
+	wend
+
+	rd_run_prog$=rd_prog_path$
+
+	return
+
+open_tables:rem --- Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Exit Program
+
+	if pgm(-2)<>pgm(-1) exit
+	run rd_run_prog$

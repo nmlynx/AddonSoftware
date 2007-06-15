@@ -1,0 +1,1173 @@
+rem Document Archive
+rem Proprietary Software.  AddonSoftware
+rem Program ID: adx_inq_arch.aon  <Oct 22,2006>
+
+	if stbl("+USE_SETERR")="YES" seterr error_proc
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp0)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp0)+rd_tmp0-1)/rd_tmp0)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(fill(50,rd_tmp1$)=rd_tmp0$+fill(50,rd_tmp1$))-1)
+	def fngett_attr$(rd_att0$)=rd_attr_tbl$[fnstr_pos(rd_att0$,rd_attr_def_tbl$,5)]
+	def fngetc_attr$(rd_att0,rd_att0$)=rd_attr_col$[rd_att0,fnstr_pos(rd_att0$,rd_attr_def_col$,5)]
+	def fngetg_attr$(rd_att0,rd_att0$)=rd_attr_grd$[rd_att0,fnstr_pos(rd_att0$,rd_attr_def_col$,5)]
+	def fngetv_attr$(rd_att0$,rd_att1$)=rd_attr_col$[fnstr_pos(pad(rd_att0$,40),rd_attr_col$,40),fnstr_pos(rd_att1$,rd_attr_def_col$,5)]
+	def fngetd_attr$(rd_att0$,rd_att1$)=rd_attr_col$[fnstr_pos(pad(rd_att0$,40),rd_attr_col$,40),fnstr_pos(rd_att1$,rd_attr_def_col$,5)]
+
+misc_setup:rem --- Constants
+	
+	rd_gui_dev$=stbl("+GUI_DEVICE")
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_dir_img$=stbl("+DIR_IMG")
+	rd_file_set$=stbl("+FILE_SET")
+	rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"aon_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
+	rd_file_cfg$=stbl("+FILE_CFG")
+
+	rd_user_id$=stbl("+USER_ID")
+	rd_user_slev$=stbl("+USER_SLEV")
+
+	rd_date_format$=stbl("+DATE_FORMAT")
+	rd_date_mask$=stbl("+DATE_MASK")
+
+	rd_able_ind$="X"
+	rd_status_ind$="*"
+	rd_status_ind$=chr(num(stbl("+STATUS_IND_CHAR",err=*next),err=*next),err=*next)
+	
+	gosub set_enable_str
+
+	rd_read_block_size=100
+	rd_show_start$="YES"
+	rd_alias_id$="ADS_DOCUMENTS"
+
+get_alias_info:rem --- Get Information for Alias and Build
+
+	gosub get_usr_settings
+	gosub get_table_info
+
+rem --- File Opens
+
+	rd_num_files=4
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]=rd_gui_dev$,rd_open_opts$[1]="O"
+	rd_open_tables$[2]="ADS_DOCUMENTS",rd_open_opts$[2]="OTA"
+	rd_open_tables$[3]="DDM_KEYS",rd_open_opts$[3]="OTA"
+	rd_open_tables$[4]="DDM_KEY_SEGS",rd_open_opts$[4]="OTA"
+
+	gosub open_tables
+
+	rd_gui_dev=num(rd_open_chans$[1])
+	rd_inq_tbl=num(rd_open_chans$[2]);dim rd_file_rec$:rd_open_tpls$[2]
+	rd_ddm_keys=num(rd_open_chans$[3]);dim rd_ddm_keys$:rd_open_tpls$[3]
+	rd_ddm_key_segs=num(rd_open_chans$[4]);dim rd_ddm_key_segs$:rd_open_tpls$[4]
+
+	rd_filefin$=fin(rd_inq_tbl)
+	rd_num_recs=dec(rd_filefin$(77,4))
+	rd_filefid$=fid(rd_inq_tbl)
+	rd_sql_table$=rd_filefid$(9)
+
+	rd_use_kgen$="YES"
+
+rem --- Misc Setup
+	
+	BBjAPI!=BBjAPI()
+    rdSysGUI!=BBjAPI!.getSysGui()
+
+	rdInqVect!=rdSysGUI!.makeVector()
+	rdKeyVect!=rdSysGUI!.makeVector()
+
+	rdStatusSpace!=BBjAPI!.getGroupNamespace()
+	rdFuncSpace!=BBjAPI!.getGroupNamespace()
+	rdFuncSpace!.setValue("+build_task","ON")
+	rd_task_val$="DOC_ARCHIVE_INQ"+str(dec(info(3,0)):"0000")
+	rd_add_attrs$=rd_add_attrs$+"-MULTI"
+	rd_able_disp_set$="MDI"
+
+    dim rd_gui_event$:tmpl(rd_gui_dev)
+    dim rd_notify_base$:noticetpl(0,0)
+
+rem --- Get Key Length
+
+	rd_temp_fid$=fid(rd_inq_tbl)
+	rd_temp_fin$=fin(rd_inq_tbl)
+	rd_temp_pos=86
+	rd_key_len=0
+
+	rd_key_type$="MULTI"
+
+	while rd_temp_fin$(rd_temp_pos,1)=$00$
+		rd_key_len=rd_key_len+dec(rd_temp_fin$(rd_temp_pos+4,1))
+		rd_temp_pos=rd_temp_pos+8
+	wend
+
+prog_setup:rem --- Program Setup
+
+	if rd_prog_slev$="" rd_prog_slev$="0000"
+	if rd_user_slev$="" rd_user_slev$="zzzz"
+	if rd_user_slev$(1,1)<rd_prog_slev$(1,1)
+		rd_msg_id$="INQRY_INV_SEC_LEV"
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	gosub get_file_keys
+	gosub disp_win
+	gosub gen_inq_cols
+	gosub display_grid
+
+rem --- Disable Necessary Buttons
+
+	if pos("I"=fngett_attr$("OPTS"))<>0
+		rd_inq_change$="NO"
+		rd_able_ctls$="31053M;"
+		gosub disable_ctls
+	endif
+
+rem --- Window Wrap Up
+
+	rd_sql_table$=rd_par_alias_id$
+
+	rdWindow!.focus()
+	rdStartVal!.focus()
+
+	rd_curr_sort_col$=rd_inq_disp_col$(1,40)
+	if rd_inq_types$="YES"
+		if rd_type_sort_col$<>"" rd_curr_sort_col$=pad(rd_type_sort_col$,40)
+		rd_last_sort_col$=rd_curr_sort_col$
+		rd_curr_sort_order$="DESC"
+	endif
+
+	gosub start_button
+	if rd_type_switch$="" gosub resize_win
+	if rd_type_switch$="" rdWindow!.setVisible(1)
+	if rd_show_start$=""
+		if rdInqGrid!.getNumRows()>0 rdInqGrid!.setSelectedRow(0)
+		rdInqGrid!.focus()
+		else
+		rdStartVal!.focus()
+	endif
+
+	rdSysGUI!.flushEvents()
+	if rd_type_switch$=""
+		rdFuncSpace!.setValue("+build_task","OFF")
+		gosub set_active_task
+	endif
+
+event_ctl:rem --- Event Control
+
+	rdWindow!.setCallback(rdWindow!.ON_CLOSE,"exit_prog")
+	rdWindow!.setCallback(rdWindow!.ON_RESIZE,"resize_win")
+	rdWindow!.setCallback(rdWindow!.ON_ACTIVATE,"set_active_task")
+
+	rdInqGridHdr!.setCallback(rdInqGridHdr!.ON_GRID_RIGHT_MOUSE_UP,"grid_select")
+	rdInqGridHdr!.setCallback(rdInqGridHdr!.ON_GRID_MOUSE_UP,"grid_select")
+	rdInqGrid!.setCallback(rdInqGridHdr!.ON_GRID_RIGHT_MOUSE_UP,"grid_select")
+
+	rdInqGrid!.setCallback(rdInqGrid!.ON_GRID_KEY_PRESS,"grid_keypress")
+	rdInqGrid!.setCallback(rdInqGrid!.ON_GRID_SELECT_ROW,"grid_select")
+	rdInqGrid!.setCallback(rdInqGrid!.ON_GRID_COLUMN_SIZE,"grid_select")
+	rdInqGrid!.setCallback(rdInqGrid!.ON_GRID_TOP_ROW_CHANGE,"grid_select")
+
+	if pos("VIEW"=rd_inq_mode$)=0 rdInqGrid!.setCallback(rdInqGrid!.ON_GRID_ENTER_KEY,"item_select")
+	if pos("VIEW"=rd_inq_mode$)=0 rdInqGrid!.setCallback(rdInqGrid!.ON_GRID_DOUBLE_CLICK,"item_select")
+
+	rdStartVal!.setCallback(rdStartVal!.ON_INPUT_KEYPRESS,"start_keypress")
+	rdStartVal!.setCallback(rdStartVal!.ON_EDIT_MODIFY,"start_edit")
+	rdBtnStart!.setCallback(rdBtnStart!.ON_BUTTON_PUSH,"start_button")
+
+	rdInqType!.setCallback(rdInqType!.ON_LIST_SELECT,"inquiry_type")
+
+	rdFuncSpace!.setCallbackForVariable("+"+rd_task_val$+".func","get_active_func")
+
+event_queue:rem --- Process Events
+
+	process_events,err=*same
+
+set_active_task:rem --- Set Active Task
+
+	rdFuncSpace!.setValue("+active_task",rd_task_val$)
+
+	gosub update_able_map
+
+	return
+
+get_active_func:rem --- Get Function Value From Namespace
+
+	rd_active_func$=rdFuncSpace!.getValue("+"+rd_task_val$+".func",err=*return)
+
+	rd_func_str$="COP;FLT;"
+	switch fnstr_pos(rd_active_func$,rd_func_str$,4)
+		case fnstr_pos("COP",rd_func_str$,4)
+			gosub copy_to_clipboard
+		break
+		case fnstr_pos("FLT",rd_func_str$,4)
+			rd_curr_inq_col$=""
+			gosub filter_config
+		break
+		case default
+		break
+	swend
+
+	return
+
+start_edit:rem --- Start Value Edited
+
+	rd_change_sort$="NO"
+	rd_set_to_top$="YES"
+
+	gosub start_button
+	
+	return
+
+start_keypress:rem --- Start Value Keypress
+
+    rd_gui_event$=rdSysGUI!.getLastEventString()
+    rd_notify_base$=notice(rd_gui_dev,rd_gui_event.x%)
+    dim rd_notice$:noticetpl(rd_notify_base.objtype%,rd_gui_event.flags%)
+	rd_notice$=rd_notify_base$
+
+	switch rd_notice.key
+		case 13;rem <enter>
+			gosub item_select
+		break
+		case 27;rem <escape>
+			goto exit_prog
+		break
+		case 301;rem <ArrowUp>
+			rdInqGrid!.setSelectedRow(max(0,rdInqGrid!.getSelectedRow()-1))
+		break
+		case 302;rem <ArrowDn>
+			rdInqGrid!.setSelectedRow(rdInqGrid!.getSelectedRow()+1)
+		break
+		case 305;rem <PageUp>
+			rdInqGrid!.setSelectedRow(max(0,rdInqGrid!.getSelectedRow()-rd_visible_rows))
+rem			rdInqGrid!.setRowVisible(rdInqGrid!.getSelectedRow())
+		break
+		case 306;rem <PageDn>
+			rdInqGrid!.setSelectedRow(rdInqGrid!.getSelectedRow()+rd_visible_rows)
+rem			rdInqGrid!.setRowVisible(rdInqGrid!.getSelectedRow())
+		break
+		case 16687;rem Alt + -->
+			rd_temp_sort_col=fnstr_pos(rd_curr_hdr_col$,rd_inq_disp_col$,40)
+			rd_temp_sort_col=rd_temp_sort_col+1
+			if rd_temp_sort_col>len(rd_inq_disp_col$)/40 rd_temp_sort_col=1
+			rd_curr_hdr_col$=rd_inq_disp_col$((rd_temp_sort_col)*40-39,40)
+			gosub adjust_hdr_color
+		break
+		case 16688;rem Alt + <--
+			rd_temp_sort_col=fnstr_pos(rd_curr_hdr_col$,rd_inq_disp_col$,40)
+			rd_temp_sort_col=rd_temp_sort_col-1
+			if rd_temp_sort_col<1 rd_temp_sort_col=len(rd_inq_disp_col$)/40
+			rd_curr_hdr_col$=rd_inq_disp_col$((rd_temp_sort_col)*40-39,40)
+			gosub adjust_hdr_color
+		break
+		case default
+		break
+	swend
+
+	return
+
+start_button:rem --- Start Button
+
+	if rd_curr_hdr_col$<>"" and rd_curr_hdr_col$<>rd_curr_sort_col$
+		rd_curr_sort_col$=rd_curr_hdr_col$
+		gosub adjust_hdr_color
+	endif
+
+	rd_set_to_top$="YES"
+	gosub calc_sort_order
+	gosub generate_sql_exec
+	gosub get_table_data
+	gosub start_mask
+
+	rdStartVal!.focus()
+
+	return
+
+start_mask:rem --- Set Start Value Mask
+
+	rd_temp_start_mask$=cvs(fngetv_attr$(rd_curr_sort_col$,"MSKI"),3)
+	if rd_temp_start_mask$=""
+		rdStartVal!.setMask("XXXXXXXXXXXXXXXXXXXX")
+		else
+		rdStartVal!.setMask(rd_temp_start_mask$)
+	endif
+
+	return
+
+grid_select:rem --- Grid Cell Selected
+
+    rd_gui_event$=rdSysGUI!.getLastEventString()
+    rd_notify_base$=notice(rd_gui_dev,rd_gui_event.x%)
+    dim rd_notice$:noticetpl(rd_notify_base.objtype%,rd_gui_event.flags%)
+    rd_notice$=rd_notify_base$
+
+    switch rd_notice.code
+        case 14;rem LCLICKED
+			rd_set_to_top$="YES"
+			rd_curr_sort_col$=rd_inq_disp_col$((rd_notice.col+1)*40-39,40)
+			gosub calc_sort_order
+			gosub generate_sql_exec
+			gosub get_table_data
+			gosub start_mask
+        break
+        case 21;rem TOP_ROW_CHANGE
+			if rd_read_active$="YES" gosub set_up_read
+        break
+        case 18;rem RCLICKED
+			switch rd_notice.id
+				case 5000
+					rd_curr_inq_col$=rd_inq_disp_col$((rd_notice.col+1)*40-39,40)
+					gosub filter_config
+				break
+				case 5001
+					if rd_inq_change$=""
+						rd_curr_inq_col$=rd_inq_disp_col$((rd_notice.col+1)*40-39,40)
+						gosub column_config
+					endif
+				break
+			swend
+        break
+        case default
+        break
+    swend
+
+	return
+
+grid_keypress:rem --- Grid Key Pressed
+
+    rd_gui_event$=rdSysGUI!.getLastEventString()
+    rd_notify_base$=notice(rd_gui_dev,rd_gui_event.x%)
+    dim rd_notice$:noticetpl(rd_notify_base.objtype%,rd_gui_event.flags%)
+    rd_notice$=rd_notify_base$
+
+    switch rd_notice.wparam
+		case 13;rem <enter>
+			gosub item_select
+		break
+		case 27;rem <escape>
+			goto exit_prog
+		break
+		case 8202
+			rd_last_sel_hdr=rd_curr_sel_hdr
+			rd_curr_sel_hdr=rd_curr_sel_hdr+1
+			if rd_curr_sel_hdr>len(rd_inq_disp_col$)/40 rd_curr_sel_hdr=1
+			rdInqGridHdr!.setCellBackColor(fnstr_pos(rd_last_sort_col$,rd_inq_disp_col$,40)-1,rdWindowBackColor!)
+		break
+        case default
+        break
+    swend
+
+	return
+
+item_select:rem --- Select Record
+
+	rd_selected_row=rdInqGrid!.getSelectedRow()
+	rd_selected_key$=rdKeyVect!.getItem(rd_selected_row)
+
+	rd_apply_key_str$=""
+
+	goto exit_prog
+
+filter_config:rem --- Filter Configuration
+
+	call rd_dir_pgm$+"rdm_inquiry_filt.aon",
+:		rd_gui_dev,
+:		rdSysGUI!,
+:		rd_curr_inq_col$,
+:		rd_inq_col_str$,
+:		rd_attr_col$[all],
+:		rd_attr_def_col$[all],
+:		rd_filter_status$
+
+	if rd_filter_status$="CANCEL" return
+	gosub set_filter_ind
+	gosub start_edit
+
+	return
+
+set_filter_ind:rem --- Set Filter Indicators in Headings
+
+	for rd_curr_col=1 to len(rd_inq_col_str$)/40
+		rd_temp_header$=fngetv_attr$(rd_inq_col_str$(rd_curr_col*40-39,40),"LABS")
+		if fngetv_attr$(rd_inq_col_str$(rd_curr_col*40-39,40),"CTLN")<>""
+			rdInqGrid!.setColumnHeaderCellText(rd_curr_col-1,"*"+rd_temp_header$)
+			else
+			rdInqGrid!.setColumnHeaderCellText(rd_curr_col-1,rd_temp_header$)
+		endif
+	next rd_curr_col
+
+	return
+
+file_exit:rem --- File - End/Exit
+
+	goto exit_prog
+
+get_file_keys:rem --- Get File Keys From INDEX
+
+	rd_pri_key_str$=""
+	rd_ret_key_str$=""
+	rd_last_ret_key$=""
+	rd_col_key_str$=""
+	dim rd_col_keys$[16]
+    rd_col_key_str$=fill(40*40)
+	rd_col_key_high=0
+	rd_key_id_no=0
+
+	read(rd_ddm_key_segs,key=pad(rd_par_alias_id$,16),dir=0,dom=gen_key_str)
+
+gen_key_str:rem --- Generate Key Field String
+
+	read record (rd_ddm_key_segs,end=gen_key_str_end)rd_ddm_key_segs$
+	if rd_ddm_key_segs.dd_table_alias$<>pad(rd_par_alias_id$,16) goto gen_key_str_end
+
+	if rd_key_id$<>"" and rd_ddm_key_segs.dd_table_alias$+rd_ddm_key_segs.dd_key_number$<>rd_last_ret_key$
+		readrecord(rd_ddm_keys,key=rd_ddm_key_segs.dd_table_alias$+rd_ddm_key_segs.dd_key_number$,knum=0)rd_ddm_keys$
+		if rd_key_id$<>"" and pad(rd_key_id$,16)=pad(rd_ddm_keys.dd_key_id$,16) rd_key_id_no=num(rd_ddm_keys.dd_key_number$)
+	endif
+
+	if rd_key_id$<>"" and pad(rd_ddm_keys.dd_key_id$,16)=pad(rd_key_id$,16)
+		rd_ret_key_str$=rd_ret_key_str$+pad(cvs(rd_ddm_key_segs.dd_table_alias$,2)+"."+rd_ddm_key_segs.dd_segment_col$,40)
+	endif
+
+	if rd_ddm_key_segs.dd_key_number$="00"
+		rd_pri_key_str$=rd_pri_key_str$+pad(cvs(rd_ddm_key_segs.dd_table_alias$,2)+"."+rd_ddm_key_segs.dd_segment_col$,40)
+	endif
+
+	if rd_ddm_key_segs.dd_segment_seq$="01"
+		rd_col_key_str$(num(rd_ddm_key_segs.dd_key_number$)*40+1,40)=cvs(rd_ddm_key_segs.dd_table_alias$,2)+"."+rd_ddm_key_segs.dd_segment_col$
+	endif
+
+	rd_col_keys$[num(rd_ddm_key_segs.dd_key_number$)]=rd_col_keys$[num(rd_ddm_key_segs.dd_key_number$)]+pad(cvs(rd_ddm_key_segs.dd_table_alias$,2)+"."+rd_ddm_key_segs.dd_segment_col$,40)
+	rd_col_key_high=max(rd_col_key_high,num(rd_ddm_key_segs.dd_key_number$)+1)
+
+	rd_last_ret_key$=rd_ddm_key_segs.dd_table_alias$+rd_ddm_key_segs.dd_key_number$
+
+	goto gen_key_str
+
+gen_key_str_end:rem --- Wrap Up Key Field String
+
+	rd_col_key_str$=rd_col_key_str$(1,rd_col_key_high*40)
+
+	return
+
+generate_sql_exec:rem --- Generate SQL Attributes
+
+	rd_file_name$=rd_sql_table$
+
+rem --- Generate SORTBY Clause
+
+	rd_sql_sort$=""
+	rd_sort_type$="COL"
+
+	rd_sort_dbvars$=rd_curr_sort_col$
+	if pos(rd_curr_sort_col$=rd_col_key_str$,40)<>0 rd_sort_dbvars$=rd_col_keys$[(pos(rd_curr_sort_col$=rd_col_key_str$,40)+39)/40-1]
+
+	for rd_sort_key=1 to len(rd_sort_dbvars$) step 40
+		if rd_sql_sort$<>"" rd_sql_sort$=rd_sql_sort$+"+"
+rem		rd_sql_sort$=rd_sql_sort$+fngetd_attr$(rd_sort_dbvars$(rd_sort_key,40),"DVAR")
+		rd_sql_sort$=rd_sql_sort$+cvs(rd_sort_dbvars$(rd_sort_key,40),2)
+	next rd_sort_key
+
+	if rd_curr_sort_order$="DESC" rd_sql_sort$=rd_sql_sort$+" DESC"
+
+gen_where_pfx:rem --- Generate WHERE Clause For File Prefix
+
+	rd_sql_where$=""
+
+	if rd_pval_key_str$<>""
+		for rd_curr_where=1 to len(rd_pval_key_str$)/40
+			rd_where_dvar$=cvs(rd_pval_key_str$(rd_curr_where*40-39,40),2)
+			rd_where_pval$=seval(fngetv_attr$(rd_where_dvar$,"PVAL"))
+			if rd_sql_where$<>"" rd_sql_where$=rd_sql_where$+" and "
+			rd_sql_where$=rd_sql_where$+rd_where_dvar$+"='"+rd_where_pval$+"'"
+		next rd_curr_where
+	endif
+
+	rd_filter_present$=""
+	for rd_curr_filter=1 to len(rd_inq_col_str$)/40
+		rd_temp_filter$=fngetv_attr$(rd_inq_col_str$(rd_curr_filter*40-39,40),"CTLN")
+		rd_temp_filter_dvar$=cvs(rd_inq_col_str$(rd_curr_filter*40-39,40),3)
+		if rd_temp_filter$<>""
+			if rd_sql_where$<>"" rd_sql_where$=rd_sql_where$+" AND "
+			rd_sql_where$=rd_sql_where$+rd_temp_filter_dvar$+" "+rd_temp_filter$
+			rd_filter_present$="YES"
+		endif
+	next rd_curr_filter
+
+gen_start_pfx:rem --- Generate WHERE Clause For Start Entry
+
+	rd_start_val$=rdStartVal!.getText()
+	rd_temp_attr_dtyp$=fngetv_attr$(rd_curr_sort_col$,"DTYP")
+	if rd_start_val$<>"" and rd_temp_attr_dtyp$="N" rd_start_val$=str(num(rd_start_val$,err=*return))
+	if rd_start_val$<>"" and rd_temp_attr_dtyp$="C" rd_start_val$="'"+rd_start_val$+"'"
+
+	if rd_start_val$<>""
+		if rd_sql_where$<>"" rd_sql_where$=rd_sql_where$+" and "
+		rd_sql_where$=rd_sql_where$+cvs(rd_curr_sort_col$,3)+">="+rd_start_val$
+	endif
+
+	return
+
+calc_sort_order:rem --- Calculate Sort Order
+
+	rd_curr_hdr_col$=rd_curr_sort_col$
+
+	if rd_change_sort$="NO"
+		rd_change_sort$=""
+		return
+	endif
+
+	if rd_last_sort_col$<>rd_curr_sort_col$
+		rd_curr_sort_order$=""
+		rd_image_index=2
+		else
+		if rd_curr_sort_order$=""
+			rd_curr_sort_order$="DESC"
+			rd_image_index=1
+			else
+			rd_curr_sort_order$=""
+			rd_image_index=2
+		endif
+	endif
+
+adjust_col_color:rem --- Adjust Column Backcolor
+
+	if rd_last_sort_col$<>"" and rd_curr_sort_col$<>rd_last_sort_col$
+		rdInqGrid!.setColumnBackColor(fnstr_pos(rd_last_sort_col$,rd_inq_disp_col$,40)-1,rdWindowBackColor!)
+		rdInqGrid!.setColumnHeaderCellIcon(10000,-1,fnstr_pos(rd_last_sort_col$,rd_inq_disp_col$,40)-1)
+        rdStartVal!.setText("")
+	endif
+
+	rdInqGrid!.setColumnBackColor(fnstr_pos(rd_curr_sort_col$,rd_inq_disp_col$,40)-1,rdSortedBackColor!)
+	rdInqGrid!.setColumnHeaderCellIcon(10000,rd_image_index,fnstr_pos(rd_curr_sort_col$,rd_inq_disp_col$,40)-1)
+	rd_last_sort_col=rd_sort_col
+
+	rd_last_sort_col$=rd_curr_sort_col$
+	rd_last_sort_order$=rd_curr_sort_order$
+
+	return
+
+adjust_hdr_color:rem --- Adjust Header Backcolor
+
+	if rd_last_hdr_col$<>"" rdInqGridHdr!.setCellBackColor(fnstr_pos(rd_last_hdr_col$,rd_inq_disp_col$,40)-1,rdColHdrColor!)
+	if rd_curr_hdr_col$<>"" and rd_curr_hdr_col$<>rd_curr_sort_col$ rdInqGridHdr!.setCellBackColor(fnstr_pos(rd_curr_hdr_col$,rd_inq_disp_col$,40)-1,rdColSelColor!)
+
+	rd_last_hdr_col$=rd_curr_hdr_col$
+
+	return
+
+get_table_data:rem --- Get Data From Table
+
+	rdWindow!.setCursor(3)
+
+	if rd_sql_where$<>"" and rd_sql_sort$<>"" rd_sql_prep$="select * from "+rd_sql_table$+" where "+rd_sql_where$+" order by "+rd_sql_sort$
+	if rd_sql_where$<>"" and rd_sql_sort$="" rd_sql_prep$="select * from "+rd_sql_table$+" where "+rd_sql_where$
+	if rd_sql_where$="" and rd_sql_sort$<>"" rd_sql_prep$="select * from "+rd_sql_table$+" order by "+rd_sql_sort$
+	if rd_sql_where$="" and rd_sql_sort$="" rd_sql_prep$="select * from "+rd_sql_table$
+
+	rd_sql_chan=unt
+	sqlopen(rd_sql_chan,err=*next)stbl("+DBNAME")
+	sqlprep(rd_sql_chan,err=sqlprep_err)rd_sql_prep$
+	dim rd_grid_read_tmpl$:sqltmpl(rd_sql_chan)
+	sqlexec(rd_sql_chan)
+
+	rd_grid_read_rows=0
+	rd_last_set_row=0
+	rdInqVect!.clear()
+	rdKeyVect!.clear()
+	rd_exist_rows=rdInqGrid!.getNumRows()
+
+	rd_sql_exec$="YES"
+
+	goto set_up_read
+
+sqlprep_err:rem --- Error Preparing SQL Statement
+
+	rdWindow!.setCursor(0)
+
+	rd_msg_id$="INQRY_SQL_ERROR"
+	dim rd_msg_tokens$[1]
+		rd_msg_tokens$[1]=rd_sql_prep$
+	gosub disp_message
+
+	rdSysGUI!.flushEvents()
+
+	return
+
+set_up_read:rem --- Set Up Row Counts For Read
+
+	if rdInqGrid!.getNumRows()<rd_rows_max rdInqGrid!.setNumRows(rd_rows_max)
+
+	rdWindow!.setCursor(3)
+	rd_last_visible_row=rdInqGrid!.getTopRow()+rdInqGrid!.getVisibleRowCount()+20
+	if rd_grid_read_rows>rd_last_visible_row
+		rdWindow!.setCursor(0)
+		return
+	endif
+
+process_read:rem --- Process Read Record
+
+	rd_grid_read_tmpl$=sqlfetch(rd_sql_chan,err=table_rec_end)
+	if rd_grid_read_tmpl$=""
+		rd_read_active$=""
+		goto grid_rec_wrap
+		else
+		rd_read_active$="YES"
+	endif
+
+	if rd_set_to_top$="YES"
+		rdInqGrid!.setTopRow(0)
+		rdInqGrid!.setSelectedRow(0)
+		rd_set_to_top$=""
+	endif
+
+	gosub get_column_data
+	rd_grid_read_rows=rd_grid_read_rows+1
+	if rd_grid_read_rows>rd_last_visible_row goto grid_rec_wrap
+
+	goto process_read
+
+table_rec_end:rem --- End of File Reached on Table
+
+	if rd_grid_read_mode$="" close (rd_sql_chan,err=*next)
+	rd_top_row=rdInqGrid!.getTopRow()
+	rdInqGrid!.setNumRows(rd_grid_read_rows)
+	rdInqGrid!.setTopRow(rd_top_row)
+
+	rd_read_active$=""
+
+grid_rec_wrap:rem --- Wrap Up Grid Display - End Of Record
+
+	if rd_grid_read_rows>rd_rows_max rdInqGrid!.setNumRows(rd_grid_read_rows)
+	rdInqGrid!.setCellText(rd_last_set_row,0,rdInqVect!)
+	rd_last_set_row=rd_grid_read_rows
+	rdInqVect!.clear()
+
+	rdWindow!.setCursor(0)
+
+	if rd_grid_read_rows=0 gosub none_found_disp
+
+	return
+
+get_column_data:rem --- Get/Format Column Data
+
+	for rd_read_col=1 to len(rd_inq_disp_col$)/40
+		rd_temp_col$=cvs(rd_inq_disp_col$(rd_read_col*40-39,40),3)
+		rd_read_attr_dtyp$=fngetv_attr$(rd_temp_col$,"DTYP")
+		rd_read_attr_ctyp$=fngetv_attr$(rd_temp_col$,"CTYP")
+		rd_read_attr_styp$=fngetv_attr$(rd_temp_col$,"STYP")
+		rd_read_col$=cvs(rd_temp_col$(pos("."=rd_temp_col$)+1),3)
+		rd_temp_data$=cvs(field(rd_grid_read_tmpl$,rd_read_col$),3)
+		switch pos(rd_read_attr_dtyp$="N")
+			case 1;rem Number
+			break
+			case default;rem
+				switch pos(rd_read_attr_styp$="1234567ABCS")
+					case 1;rem 1 Date (YYYYMMDD)
+					case 6;rem 6 Date (YYYYMMDD)
+					case 7;rem 7 Date (YYYYMMDD)
+						if len(rd_temp_data$)=8
+							switch fnstr_pos(rd_date_format$,"MDY;DMY;",4)
+								case 1; rd_temp_data$=rd_temp_data$(5,2)+rd_temp_data$(7,2)+rd_temp_data$(1,4);break
+								case 2; rd_temp_data$=rd_temp_data$(7,2)+rd_temp_data$(5,2)+rd_temp_data$(1,4);break
+								case default;break
+							swend
+							rd_temp_data$=date(jul(rd_temp_data$,rd_date_mask$,err=*next):rd_date_mask$,err=*next)
+						endif
+					break
+					case 2;rem 2 Date (YYYYMM)
+						if len(rd_temp_data$)=6
+							switch fnstr_pos(rd_date_format$,"MDY;DMY;",4)
+								case 1; rd_temp_data$=rd_temp_data$(1,4)+rd_temp_data$(5,2)
+								case 2; rd_temp_data$=rd_temp_data$(5,2)+rd_temp_data$(1,4);break
+								case default;break
+							swend
+						endif
+					break
+					case 3;rem 3 Date (YYYY)
+					break
+					case 4;rem 4 Date (YYMMDD)
+						if len(rd_temp_data$)=6 rd_temp_data$=rd_temp_data$(3,2)+"/"+rd_temp_data$(5,2)+"/"+rd_temp_data$(1,2)
+					break
+					case 5;rem 5 Date (MMDD)
+						if len(rd_temp_data$)=4 rd_temp_data$=rd_temp_data$(1,2)+"/"+rd_temp_data$(3,4)
+					break
+					case 8;rem A Time (HHMMSS)
+						if len(rd_temp_data$)=6 rd_temp_data$=rd_temp_data$(1,2)+":"+rd_temp_data$(3,2)+":"+rd_temp_data$(5,2)
+					break
+					case 9;rem B Time (HHMM)
+						if len(rd_temp_data$)=4 rd_temp_data$=rd_temp_data$(1,2)+":"+rd_temp_data$(3,2)
+					break
+					case 10;rem C Time (MMSS)
+						if len(rd_temp_data$)=4 rd_temp_data$=rd_temp_data$(1,2)+":"+rd_temp_data$(3,2)
+					break
+					case 11;rem S Sequence Counter
+					break
+					case default
+						switch pos(fngetv_attr$(rd_temp_col$,"CTYP")="CL")
+							case 1;rem Checkbox
+								rd_read_attr_cdat$=fngetv_attr$(rd_temp_col$,"CDAT")
+								rd_temp_pos=pos(rd_temp_data$=rd_read_attr_cdat$)
+								if rd_temp_pos=1
+									rd_temp_data$=rd_status_ind$
+									else
+									rd_temp_data$=""
+								endif
+							break
+							case 2;rem ListButton
+								rd_read_attr_ldat$=fngetv_attr$(rd_temp_col$,"LDAT")
+								if rd_read_attr_ldat$<>""
+									rd_temp_pos=fnstr_pos(rd_temp_data$,rd_read_attr_ldat$(32),36)
+									if rd_temp_pos<>0 rd_temp_data$=cvs(rd_read_attr_ldat$(rd_temp_pos*36-35,30),3)
+								endif
+							break
+							case default
+							break
+						swend
+					break
+				swend
+			break
+		swend
+
+		rdInqVect!.addItem(rd_temp_data$)
+	next rd_read_col
+
+	rd_pri_key_data$=""
+	if rd_key_id$=""
+		if rd_use_kgen$="YES"
+			rd_pri_key_data$=kgen(rd_grid_read_tmpl$,rd_filefin$(86),0)
+			else
+			for rd_read_col=1 to len(rd_pri_key_str$)/40
+				rd_temp_pri_key$=cvs(rd_pri_key_str$(rd_read_col*40-39,40),3)
+				rd_temp_pri_key_col$=cvs(rd_temp_pri_key$(pos("."=rd_temp_pri_key$)+1),3)
+				rd_temp_data$=field(rd_grid_read_tmpl$,rd_temp_pri_key_col$)
+				rd_pri_key_data$=rd_pri_key_data$+rd_temp_data$
+			next rd_read_col
+		endif
+		else
+		for rd_read_col=1 to len(rd_ret_key_str$)/40
+			rd_temp_ret_key$=cvs(rd_ret_key_str$(rd_read_col*40-39,40),3)
+			rd_temp_ret_key_col$=cvs(rd_temp_ret_key$(pos("."=rd_temp_ret_key$)+1),3)
+			rd_temp_data$=field(rd_grid_read_tmpl$,rd_temp_ret_key_col$)
+			rd_pri_key_data$=rd_pri_key_data$+rd_temp_data$
+		next rd_read_col
+	endif
+
+	rdKeyVect!.addItem(rd_pri_key_data$)
+
+	return
+
+copy_to_clipboard:rem --- Copy Grid Contents to Clipboard
+
+	rdClipSelect!=rdInqGrid!.getSelectedRows()
+	rd_clip_data$=$$
+
+	for rd_clip_col=1 to len(rd_inq_disp_col$)/40
+		rd_clip_data$=rd_clip_data$+cvs(rd_inq_disp_col$(rd_clip_col*40-39,40),3)
+		if rd_clip_col<len(rd_inq_disp_col$)/40 rd_clip_data$=rd_clip_data$+$09$
+	next rd_clip_col
+	rd_clip_data$=rd_clip_data$+$0d0a$
+
+	if rdClipSelect!.size()<>0
+		rdWindow!.setCursor(3)
+		for rd_clip_row=1 to rdClipSelect!.size()
+			rd_clip_row_index=rdClipSelect!.getItem(rd_clip_row-1)
+			for rd_clip_col=1 to len(rd_inq_disp_col$)/40
+				rd_clip_data$=rd_clip_data$+rdInqGrid!.getCellText(rd_clip_row_index,rd_clip_col-1)
+				if rd_clip_col<len(rd_inq_disp_col$)/40 rd_clip_data$=rd_clip_data$+$09$
+			next rd_clip_col
+			rd_clip_data$=rd_clip_data$+$0d0a$
+		next rd_clip_row
+
+		cliplock
+		clipfromstr 1,rd_clip_data$
+		clipunlock
+
+		rd_clip_data$=""
+		rdClipSelect!.clear()
+		rdWindow!.setCursor(0)
+
+	endif
+
+  return
+
+disp_message:rem --- Display Message Dialog
+
+	call rd_dir_pgm$+"adc_message.aon",rd_msg_id$,rd_msg_tokens$[all],rd_msg_opt$,rd_table_chans$[all]
+
+	return
+
+open_tables:rem --- Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="TABLE_OPEN_ERR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	return
+
+get_usr_settings:rem --- Get User/Windows Settings
+
+	rd_win_coord_desc$=pad("INQ_"+cvs(rd_alias_id$,4),20)
+	rd_col_coord_desc$=pad("INC_"+cvs(rd_alias_id$,4),20)
+	rd_inq_def_col_desc$=pad("COL_"+cvs(rd_alias_id$,4),20)
+	rd_inq_def_hdr_desc$=pad("HDR_"+cvs(rd_alias_id$,4),20)
+	rd_inq_def_wid_desc$=pad("WID_"+cvs(rd_alias_id$,4),20)
+
+	rd_attr_desc$=
+:		rd_win_coord_desc$+
+:		rd_col_coord_desc$+
+:		rd_inq_def_col_desc$+
+:		rd_inq_def_hdr_desc$+
+:		rd_inq_def_wid_desc$
+
+	dim rd_usr_data$[len(rd_attr_desc$)/20]
+		rd_usr_data$[0]=rd_attr_desc$
+
+	call rd_dir_pgm$+"rdm_config.aon",rd_file_usr$,"USR","READ",rd_usr_data$[all]
+
+get_win_coords:rem --- Get Windows Coordinates
+
+	rd_win_coord$=rd_usr_data$[fnstr_pos(rd_win_coord_desc$,rd_usr_data$[0],20)]
+	dim rd_win_coord[1:4]
+
+	if rd_win_coord$="" rd_win_coord$="30,30,600,400"
+
+	for rd_curr_coord=1 to 4
+		rd_temp_spos=pos(","=","+rd_win_coord$+",",1,rd_curr_coord)
+		rd_temp_epos=pos(","=","+rd_win_coord$+",",1,rd_curr_coord+1)-1
+		rd_win_coord[rd_curr_coord]=num(rd_win_coord$(rd_temp_spos,rd_temp_epos-rd_temp_spos))
+	next rd_curr_coord
+
+	rd_save_win_col=rd_win_coord[1]
+	rd_save_win_row=rd_win_coord[2]
+	rd_save_win_wid=rd_win_coord[3]
+	rd_save_win_hgt=rd_win_coord[4]
+
+get_inq_defs:rem --- Get Inquiry Definitions
+
+	rd_inq_def_dvar$=rd_usr_data$[fnstr_pos(rd_inq_def_col_desc$,rd_usr_data$[0],20)]
+	rd_inq_def_labs$=rd_usr_data$[fnstr_pos(rd_inq_def_hdr_desc$,rd_usr_data$[0],20)]
+	rd_inq_def_ctlw$=rd_usr_data$[fnstr_pos(rd_inq_def_wid_desc$,rd_usr_data$[0],20)]
+
+	if pos("."=rd_inq_def_dvar$)=0
+		rd_inq_def_dvar$=""
+		rd_inq_def_labs$=""
+		rd_inq_def_ctlw$=""
+	endif
+
+	return
+
+get_table_info:rem --- Get Table Information
+
+	call rd_dir_pgm$+"rdm_attr_init.aon",rd_attr_def_tbl$[all],rd_attr_def_col$[all]
+		rd_attr_def_tbl$=rd_attr_def_tbl$[0,0]
+		rd_attr_def_col$=rd_attr_def_col$[0,0]
+
+	call rd_dir_pgm$+"rdm_attr_def.aon",
+:		rd_alias_id$,
+:		rd_attr_def_tbl$[all],
+:		rd_attr_def_col$[all],
+:		rd_attr_tbl$[all],
+:		rd_attr_col$[all],
+:		rd_attr_key$[all],
+:		"",
+:		rd_status$
+
+	rd_attr_col$=rd_attr_col$[0,1]
+	rd_prog_desc$=fngett_attr$("DESC")
+	rd_prog_slev$=fngett_attr$("SLEV")
+	rd_ikey_sort$=fngett_attr$("IKEY")
+	rd_avail_cols$=""
+	rd_par_alias_id$=rd_alias_id$
+	if cvs(fngett_attr$("ATAB"),3)<>"" rd_par_alias_id$=cvs(fngett_attr$("ATAB"),3)
+
+	if rd_inq_def_dvar$<>""
+		for rd_curr_def=1 to pos(","=rd_inq_def_dvar$,1,0)
+			rd_temp_spos=pos(","=","+rd_inq_def_dvar$+",",1,rd_curr_def)
+			rd_temp_epos=pos(","=","+rd_inq_def_dvar$+",",1,rd_curr_def+1)-1
+			rd_temp_dvar$=rd_inq_def_dvar$(rd_temp_spos,rd_temp_epos-rd_temp_spos)
+			rd_curr_dbvar=fnstr_pos(rd_temp_dvar$,rd_attr_col$,40)
+
+			rd_temp_spos=pos(","=","+rd_inq_def_labs$+",",1,rd_curr_def)
+			rd_temp_epos=pos(","=","+rd_inq_def_labs$+",",1,rd_curr_def+1)-1
+			rd_attr_col$[rd_curr_dbvar,fnstr_pos("LABS",rd_attr_def_col$,5)]=rd_inq_def_labs$(rd_temp_spos,rd_temp_epos-rd_temp_spos)
+
+			rd_temp_spos=pos(","=","+rd_inq_def_ctlw$+",",1,rd_curr_def)
+			rd_temp_epos=pos(","=","+rd_inq_def_ctlw$+",",1,rd_curr_def+1)-1
+			rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLW",rd_attr_def_col$,5)]=rd_inq_def_ctlw$(rd_temp_spos,rd_temp_epos-rd_temp_spos)
+
+			rd_attr_opts$=fngetc_attr$(rd_curr_dbvar,"OPTS")
+			rd_attr_slev$=fngetc_attr$(rd_curr_dbvar,"SLEV")
+				if rd_attr_slev$="" rd_attr_slev$="zzzz"
+			if pos("O"=rd_temp_opts$)+pos("I"=rd_temp_opts$)=0 and rd_user_slev$(1,1)>=rd_attr_slev$(1,1)
+				rd_attr_col$[rd_curr_dbvar,fnstr_pos("TIND",rd_attr_def_col$,5)]=str(1000+rd_curr_def)
+				rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLC",rd_attr_def_col$,5)]="1"
+				else
+				rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLC",rd_attr_def_col$,5)]="X"
+			endif
+		next rd_curr_def
+	endif
+
+	if rd_inq_def_dvar$=""
+		rd_inq_show_ind$="1"
+		else
+		rd_inq_show_ind$="0"
+	endif
+
+	rd_pval_key_str$=""
+	rd_gen_mask_str$=""
+
+	for rd_curr_dbvar=1 to len(rd_attr_col$)/40
+		rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLN",rd_attr_def_col$,5)]=""
+		rd_attr_pval$=fngetc_attr$(rd_curr_dbvar,"PVAL")
+		rd_attr_rkey$=fngetc_attr$(rd_curr_dbvar,"RKEY")
+		rd_attr_opts$=fngetc_attr$(rd_curr_dbvar,"OPTS")
+		rd_attr_slev$=fngetc_attr$(rd_curr_dbvar,"SLEV")
+			if rd_attr_slev$="" rd_attr_slev$="zzzz"
+		if num(fngetc_attr$(rd_curr_dbvar,"TIND"))<1000
+			rd_attr_col$[rd_curr_dbvar,fnstr_pos("TIND",rd_attr_def_col$,5)]=str(2000+rd_curr_dbvar)
+			if pos("O"=rd_attr_opts$)+pos("I"=rd_attr_opts$)=0 and rd_user_slev$(1,1)>=rd_attr_slev$(1,1) and fngetc_attr$(rd_curr_dbvar,"VTYP")="C"
+				rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLC",rd_attr_def_col$,5)]=rd_inq_show_ind$
+				else
+				rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLC",rd_attr_def_col$,5)]="X"
+			endif
+		endif
+
+		if pos("O"=rd_attr_opts$)+pos("I"=rd_attr_opts$)=0 and rd_user_slev$(1,1)>=rd_attr_slev$(1,1) and rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLC",rd_attr_def_col$,5)]<>"X"
+			rd_avail_cols$=rd_avail_cols$+str(num(fngetc_attr$(rd_curr_dbvar,"TIND")):"0000")+rd_attr_col$(rd_curr_dbvar*40-39,40)+rd_attr_col$[rd_curr_dbvar,fnstr_pos("CTLC",rd_attr_def_col$,5)]
+		endif
+
+		if rd_attr_rkey$="Y" and rd_attr_pval$<>""
+			rd_pval_key_str$=rd_pval_key_str$+rd_attr_col$(rd_curr_dbvar*40-39,40)
+		endif
+
+		if fngetc_attr$(rd_curr_dbvar,"MSKS")<>"" and fngetc_attr$(rd_curr_dbvar,"MSKT")<>""
+			rd_gen_mask_str$=rd_gen_mask_str$+rd_attr_col$(rd_curr_dbvar*40-39,40)
+		endif
+
+	next rd_curr_dbvar
+
+	rd_avail_cols$=ssort(rd_avail_cols$,45)
+
+	dim rd_work_dim$:"arr_dimen:i(1),arr_0_elems:i(4),arr_0_base:i(4),arr_1_elems:i(4),arr_1_base:i(4),arr_2_elems:i(4),arr_2_base:i(4)"
+	rd_work_dim$=dims(rd_filter_defs$[all],err=*return)
+
+	for rd_curr_filter=0 to rd_work_dim.arr_1_elems
+		if rd_filter_defs$[rd_curr_filter,0]<>""
+			rd_attr_col$[fnstr_pos(pad(rd_filter_defs$[rd_curr_filter,0],40),rd_attr_col$,40),fnstr_pos("CTLN",rd_attr_def_col$,5)]=rd_filter_defs$[rd_curr_filter,1]
+			rd_filter_defs$="YES"
+		endif
+	next rd_curr_filter
+
+	return
+
+gen_inq_cols:rem --- Generate Inquiry Column String From All Available Items
+
+	rd_inq_disp_col$=""
+	rd_inq_col_str$=""
+
+	for rd_avail_col=1 to len(rd_avail_cols$)/45
+		if rd_avail_cols$(rd_avail_col*45,1)="1" rd_inq_disp_col$=rd_inq_disp_col$+rd_avail_cols$(rd_avail_col*45-40,40)
+		rd_inq_col_str$=rd_inq_col_str$+rd_avail_cols$(rd_avail_col*45-40,40)
+	next rd_avail_col
+	return
+
+gen_col_masks:rem --- Generate Column Masks
+
+	for rd_mask_col=1 to len(rd_gen_mask_str$)/40
+		rd_mask_dbvar$=rd_gen_mask_str$(rd_mask_col*40-39,40)
+			rd_mask_msks$=fngetd_attr$(rd_mask_dbvar$,"MSKS")
+			rd_mask_mskt$=fngetd_attr$(rd_mask_dbvar$,"MSKT")
+			dim rd_ads_masks$:fattr(rd_ads_masks$)
+			readrecord(rd_ads_masks,key=stbl("+FIRM_ID")+rd_mask_msks$+rd_mask_mskt$,dom=*next)rd_ads_masks$
+			if rd_ads_masks.dd_mask_def$<>""
+				rd_attr_col$[fnstr_pos(rd_mask_dbvar$,rd_attr_col$,40),fnstr_pos("MSKI",rd_attr_def_col$,5)]=rd_ads_masks.dd_mask_def$
+				rd_attr_col$[fnstr_pos(rd_mask_dbvar$,rd_attr_col$,40),fnstr_pos("MSKO",rd_attr_def_col$,5)]=rd_ads_masks.dd_mask_def$
+			endif
+		endif
+
+	next rd_mask_col
+
+	return
+
+disp_win:rem --- Display Screen
+
+	dim rd_ctl_misc$[20]
+
+	rd_form_id$=rd_dir_sys$+"rdm_inquiry.arc"
+	call rd_dir_pgm$+"rdm_controls.aon",
+:		rd_gui_dev,
+:		rdSysGUI!,
+:		rd_form_id$,
+:		rd_win_coord[all],
+:		rdWindow!,
+:		"INQRY-DISPLAY",
+:		rd_open_chan$[all],
+:		rd_ctl_misc$[all]
+
+	rd_tbutton_list$=rd_ctl_misc$[0]
+	rd_able_ctx$=rd_ctl_misc$[1]
+
+	rdStartValLbl!=rdWindow!.getControl(2001)
+	rdStartVal!=rdWindow!.getControl(3001)
+	rdBtnStart!=rdWindow!.addButton(3002,rdStartVal!.getX()+rdStartVal!.getWidth()+2,rdStartVal!.getY(),20,20,"BITMAP="+rd_dir_img$+"im_go.png")
+
+	rdInqGrid!=rdWindow!.getControl(5000)
+	rdInqGridHdr!=rdWindow!.getControl(5001)
+		rd_header_height=rdInqGridHdr!.getHeight()
+	rdInqGridHdrColor!=rdInqGridHdr!.getCellBackColor(0)
+
+	rd_win_disp$="YES"
+	rd_temp_title$=rdWindow!.getTitle()
+	rdWindow!.setTitle(rd_prog_desc$+" "+rd_temp_title$)
+
+	return
+
+resize_win:rem --- Resize Window/Grid
+
+	rd_win_width=rdWindow!.getWidth()
+	rd_win_height=rdWindow!.getHeight()
+
+	if rd_win_width>150 rdInqGrid!.setSize(rd_win_width-(rdInqGrid!.getX()*2),rd_win_height-(rdInqGrid!.getY()+rdInqGrid!.getX()))
+	
+	rd_visible_rows=int((rdInqGrid!.getHeight()-rd_header_height)/18)-1
+
+	return
+
+misc_returns:rem --- All Returns
+
+	return
+
+def_grid_tmpl:rem --- Define Grid Templates
+
+	call rd_dir_pgm$+"rdm_grid_def_tpl.aon",
+:		rd_inq_col_list$,
+:		rd_attr_tmpl$,
+:		rd_tmpl_attr$[all]
+
+	return
+
+display_grid:rem --- Display Grid
+
+	rd_rows_max=min(2000,rd_num_recs)
+	call rd_dir_pgm$+"rdm_grid_init.aon",rd_gui_dev,rdInqGrid!,"MULTI-COLH-SORT-LINES-LIGHT-"+rd_add_attrs$,rd_rows_max,rd_attr_def_col$[all],rd_inq_disp_col$,rd_attr_col$[all]
+
+	rdSortedBackColor!=rdSysGUI!.makeColor(240,240,250)
+	rdWindowBackColor!=rdInqGrid!.getBackColor()
+
+	rdColHdrColor!=rdInqGridHdr!.getCellBackColor(0)
+	rdColSelColor!=rdSysGUI!.makeColor(255,199,60)
+
+	return
+
+set_enable_str:rem --- Set Control Enable/Disable String
+
+	call rd_dir_pgm$+"rdc_mdi_ctls.aon"
+
+	call rd_dir_pgm$+"rdm_enable.aon",rd_gui_dev,"CREATE","IDLE-INIT-MDI",rd_sys_mdi_ctls$,rd_able_map$,"",0
+
+	rd_sys_act_ctls$=
+:		rd_sys_cop_ctls$+
+:		rd_sys_hdr_ctls$+
+:		rd_sys_flt_ctls$
+
+	call rd_dir_pgm$+"rdm_enable.aon",rd_gui_dev,"ACTIVE-UPDATE","MDI",rd_sys_act_ctls$,rd_able_map$,"",0
+
+	return
+
+update_able_map:rem --- Update Controls Based On Enable/Disable Control Map
+
+	call rd_dir_pgm$+"rdm_enable.aon",rd_gui_dev,"MDI-UPDATE",rd_able_disp_set$,rd_able_ctls$,rd_able_map$,rd_able_ctx$,rd_curr_win_ctx
+
+	return
+
+disable_ctls:rem --- Disable Controls
+
+	if rd_able_ctls$<>"" call rd_dir_pgm$+"rdm_enable.aon",rd_gui_dev,"DISABLE",rd_able_disp_set$,rd_able_ctls$,rd_able_map$,rd_able_ctx$,rd_curr_win_ctx
+
+	return
+
+enable_ctls:rem --- Enable Controls
+
+	if rd_able_ctls$<>"" call rd_dir_pgm$+"rdm_enable.aon",rd_gui_dev,"ENABLE",rd_able_disp_set$,rd_able_ctls$,rd_able_map$,rd_able_ctx$,rd_curr_win_ctx
+
+	return
+
+save_usr_settings:rem --- Save Windows/Column Sizes
+
+	rd_win_coord$=
+:		str(rdWindow!.getX())+","+
+:		str(rdWIndow!.getY())+","+
+:		str(rdWindow!.getWidth())+","+
+:		str(rdWindow!.getHeight())
+
+	rd_inq_def_col$=""
+	rd_inq_def_hdr$=""
+	rd_inq_def_wid$=""
+
+	for rd_curr_col=1 to len(rd_inq_disp_col$)/40
+		rd_inq_def_col$=rd_inq_def_col$+cvs(rd_inq_disp_col$(rd_curr_col*40-39,40),2)+","
+		rd_temp_header$=rdInqGrid!.getColumnHeaderCellText(rd_curr_col-1)
+			if pos("*"=rd_temp_header$)=1
+				if len(rd_temp_header$)=1
+					rd_temp_header$=""
+					else
+					rd_temp_header$=rd_temp_header$(2)
+				endif
+			endif
+		rd_inq_def_hdr$=rd_inq_def_hdr$+rd_temp_header$+","
+		rd_inq_def_wid$=rd_inq_def_wid$+str(rdInqGrid!.getColumnWidth(rd_curr_col-1))+","
+	next rd_curr_col
+
+	rd_attr_desc$=
+:		rd_win_coord_desc$+
+:		rd_inq_def_col_desc$+
+:		rd_inq_def_hdr_desc$+
+:		rd_inq_def_wid_desc$
+
+	dim rd_usr_data$[len(rd_attr_desc$)/20]
+		rd_usr_data$[0]=rd_attr_desc$
+
+	rd_usr_data$[fnstr_pos(rd_win_coord_desc$,rd_usr_data$[0],20)]=rd_win_coord$
+	rd_usr_data$[fnstr_pos(rd_inq_def_col_desc$,rd_usr_data$[0],20)]=rd_inq_def_col$
+	rd_usr_data$[fnstr_pos(rd_inq_def_hdr_desc$,rd_usr_data$[0],20)]=rd_inq_def_hdr$
+	rd_usr_data$[fnstr_pos(rd_inq_def_wid_desc$,rd_usr_data$[0],20)]=rd_inq_def_wid$
+
+	call rd_dir_pgm$+"rdm_config.aon",rd_file_usr$,"USR","WRITE",rd_usr_data$[all]
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Close Files & Exit
+
+	rdFuncSpace!.setValue("+build_task","OFF")
+	if rd_win_disp$="YES" gosub save_usr_settings
+
+	release

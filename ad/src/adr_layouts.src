@@ -1,0 +1,255 @@
+rem adr - Table Layouts Report
+rem Program adr_layouts v8.0.0 01Apr2006
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+    seterr std_error
+    setesc std_error
+
+rem --- Get program path
+
+    pgmdir$=fnglobal$("+PGM_DIR","")
+
+rem --- Open/Lock files
+
+    files=1,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ddm-10"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],
+:                           templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ddm10_dev=channels[1]
+
+rem --- Dimension string templates
+
+    dim ddm10a$:templates$[1]
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=fnglobal$("+SYSINFO_TPL","")
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=fnglobal$("+SYSINFO","")
+
+rem --- Assign input values to local variables
+
+    begtable$=rd_rec_data$[1,0]
+    endtable$=rd_rec_data$[2,0]
+
+rem --- Initializations
+
+    applications=14
+    dim headings$[2],applications$[applications],descriptions$[applications]
+    headings$[0]="AddonSoftware - Version "+fnglobal$("+AON_VERSION","8.0.0")
+    task_desc$=cvs(sysinfo.task_desc$,2)
+    descriptions$[1]="Administrator"
+    descriptions$[2]="Accounts Payable"
+    descriptions$[3]="Accounts Receivable"
+    descriptions$[4]="Bill of Materials"
+    descriptions$[5]="Data Dictionary"
+    descriptions$[6]="General Ledger"
+    descriptions$[7]="Inventory Control"
+    descriptions$[8]="Sales Order Processing"
+    descriptions$[9]="Material Requirements Planning"
+    descriptions$[10]="Purchase Order Processing"
+    descriptions$[11]="Payroll"
+    descriptions$[12]="Sales Analysis"
+    descriptions$[13]="Shop Floor Control"
+    descriptions$[14]="Rapid Development Environment"
+    applications$="ADAPARBMDDGLIVOPMPPOPRSASFRD"
+    alias_types$="Ser  Dir  Ind  Mkey Xkey Vkey SMkeyChildPick Ref  Sort Text View SQL  "
+    when$=sysinfo.system_date$
+    clock$=""
+    width=80
+    page=0
+    l9=59
+    headings=2
+    m$="####0"
+ 
+rem --- Position files
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",16,ddm10_dev,1,0,ignore_status
+    read record (ddm10_dev,key=begtable$,dom=next_ddm10)ddm10a$
+    goto progress_meter
+
+next_ddm10: rem --- Next table
+
+    k$=key(ddm10_dev,end=done)
+    if endtable$<>"" if k$>endtable$ goto done
+    read record (ddm10_dev)ddm10a$
+
+progress_meter: rem --- Update progress meter
+
+    call pgmdir$+"adc_progress.aon","S","","","",ddm10a.dd_table_alias$,0,0,1,0,ignore_status
+
+rem --- Print table header
+
+    x=fnindex(ddm10a.dd_table_alias$(1,2),applications$)
+    headings$[1]=descriptions$[x]+" "+task_desc$
+    filename$=ddm10a.dd_aon_name$
+    if cvs(filename$,2)="" filename$="(None)"
+    gosub report_heading
+
+rem --- Print table definition
+
+    bar$=fnbar$("Definition",width)
+    system_rec$="No"
+    if ddm10a.dd_system_rec$="Y" system_rec$="Yes"
+    p=((pos(ddm10a.dd_alias_type$="CDIKXVMOPRSTWQ")-1)*5)+1
+    print (printer_dev) ""
+    print (printer_dev) @(0),bar$
+    print (printer_dev) @(0),"Parent Data Table: ",ddm10a.dd_attr_atab$,
+:                       @(60),"   Alias Type: ",alias_types$(p,5)
+    print (printer_dev) @(0),"  Entry Form Type: ",ddm10a.dd_attr_ftyp$,
+:                       @(60),"   Key Length: ",ddm10a.dd_key_length:m$
+    print (printer_dev) @(0),"   Security Level: ",ddm10a.dd_attr_slev$,
+:                       @(60),"Record Length: ",ddm10a.dd_record_len:m$
+    print (printer_dev) @(0),"    System Record? ",system_rec$,
+:                       @(60)," # of Records: ",ddm10a.dd_nbr_record:m$
+    print (printer_dev) @(0),"       Table Path: ",ddm10a.dd_table_path$
+    l=l+7
+
+rem --- Print table attributes
+
+    bar$=fnbar$("Attributes",width)
+    attr_ikey$="No"
+    export_data$="No"
+    if ddm10a.dd_attr_ikey$="Y" attr_ikey$="Yes"
+    if ddm10a.dd_export_data$="Y" export_data$="Yes"
+    print (printer_dev) ""
+    print (printer_dev) @(0),bar$
+    print (printer_dev) @(0),"    Primary Table: ",ddm10a.dd_attr_ptab$,
+:                       @(57),"Inquiry Restricted? ",attr_ikey$
+    print (printer_dev) @(0),"       Note Table: ",ddm10a.dd_attr_note$,
+:                       @(57),"Export to BASIS DD? ",export_data$
+    print (printer_dev) @(0),"     Call Program: ",ddm10a.dd_attr_pcal$
+    print (printer_dev) @(0),"      Run Program: ",ddm10a.dd_attr_prun$
+    print (printer_dev) @(0),"Callpoint Program: ",ddm10a.dd_attr_cpgm$
+    l=l+7
+
+rem --- Print key definitions
+
+    dim bar$(width,"-")
+    gosub key_heading
+
+rem --- Print table columns
+
+    dim bar$(width,"-")
+    gosub column_heading
+
+ddm10_loop: rem --- Loop back for next record
+
+    goto next_ddm10
+
+done: rem --- All done
+
+    goto std_exit
+
+report_heading: rem --- Report Heading
+
+    l=headings+1
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status exitto std_exit
+    print (printer_dev) @(0),"       Table: ",ddm10a.dd_table_alias$,
+:                       @(58)," File/Record: ",filename$
+    print (printer_dev) @(0)," Description: ",ddm10a.dd_alias_desc$,
+:                       @(58),"     Created: ",fndate$(ddm10a.dd_create_date$)
+    print (printer_dev) @(0),"Window Title: ",ddm10a.dd_attr_wint$,
+:                       @(58),"Last Revised: ",fndate$(ddm10a.dd_lstrev_date$)
+    l=l+3
+    return
+
+key_heading: rem --- Key definition subheading
+
+    if l+5>l9 then gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),bar$
+    print (printer_dev) @(0),"Key",@(5),"Description"
+    print (printer_dev) @(0),bar$
+    l=l+4
+    return
+
+column_heading: rem --- Columns subheading
+
+    if l+5>l9 then gosub report_heading
+    print (printer_dev) ""
+    print (printer_dev) @(0),bar$
+    print (printer_dev) @(0),"Data Name",@(17),"Description"
+    print (printer_dev) @(0),bar$
+    l=l+4
+    return
+
+rem --- Functions
+
+rem --- Date/time functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+rem --- fnindex: Return array index based on position in a string
+
+    def fnindex(q$,q1$)
+        q=pos(cvs(q$,4)=q1$,2)
+        if q then q=int(q/2)+1
+        return q
+    fnend
+
+rem --- fnbar$: Return bar with imbedded title
+
+    def fnbar$(q$,q)
+        dim q1$(q,"-")
+        q1$(20,len(q$)+2)=" "+q$+" "
+        return q1$
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=globalstr_exit)
+        globalstr_exit:
+        return q1$
+    fnend
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+
+std_error_exit:
+    
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+    
+std_error_release:
+
+    status=999
+    if pgm(-1)<>pgm(-2) exit 
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run "ads_process_end.aon",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end

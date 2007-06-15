@@ -1,0 +1,535 @@
+rem Rebuild Table
+rem Proprietary Software. AddonSoftware
+rem Program ID: adc_rebuild.aon  <Mar 07, 2006>
+
+	if stbl("+USE_SETERR")="YES" seterr error_proc
+
+rem -----<Enter Arguments
+
+	enter
+:		rd_gui_dev,
+:		rdParentWin!,
+:		rdMeterWin!,
+:		rd_alias_id$,
+:		rd_new_tpl$,
+:		rd_old_tpl$,
+:		rd_rebuild_comp$,
+:		rd_rebuild_msg$,
+:		rd_open_chan$[all]
+
+rem	rd_gui_dev=unt;open(rd_gui_dev)"X0"
+rem	rd_alias_id$="ORD_DETNEW"
+
+rem	rd_total_recs=1000
+rem	rd_proc_recs=300
+
+rem	rd_curr_gui$=fin(rd_gui_dev)
+rem	rd_new_cont=dec(rd_curr_gui$(3,2))
+
+rem	print (rd_gui_dev)'context'(rd_new_cont)
+
+rem	rd_win_col=20
+rem	rd_win_row=20
+rem	rd_win_wid=310
+rem	rd_win_hgt=285
+
+rem	print (rd_gui_dev)
+:		'window'(rd_win_col,rd_win_row,rd_win_wid,rd_win_hgt,"About Virtual Application Manager. . .",$04090012$,$40000000$),
+:		'show'(0)
+
+rem	rd_base_ctx=rd_new_cont
+rem	rd_meter_ctx=0
+rem	rd_meter_title$="Rebuilding Table"
+rem	rd_disp_act$="WIN;MTR"
+rem	rd_curr_data$="Now Processing ORD_DETNEW"
+
+rem -----<Constants
+
+	rd_rebuild_comp$="YES"
+	rd_rebuild_msg$=""
+
+	dim rd_old_rec$:rd_old_tpl$
+	dim rd_new_rec$:rd_new_tpl$
+
+set_base_dir:rem -----<Set Base Directory
+
+	rd_prog_id$=pgm(-2)
+	rd_pathpos=max(pos("/"=rd_prog_id$,-1),pos("\"=rd_prog_id$,-1))
+		if rd_pathpos<>0 rd_base_dir$=rd_prog_id$(1,rd_pathpos),rd_prog_id$=rd_prog_id$(rd_pathpos+1)
+
+	if rd_base_dir$<>"" chdir rd_base_dir$
+
+get_stbls:rem -----<Get Necessary STBLs
+
+	rd_dir_dda$=stbl("+DDDATA")
+
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_file_set$=stbl("+FILE_SET")
+	rd_file_usr$=stbl("+FILE_USR")
+	rd_file_hlp$=stbl("+FILE_HLP")
+
+pgm_fncs:rem -----<Functions - Main
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp1)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp1)+rd_tmp1-1)/rd_tmp1)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(rd_tmp1$=rd_tmp0$+rd_tmp1$)-1)
+
+rem -----<Open Tables
+
+	rd_num_files=3
+	dim rd_open_tables$[1:rd_num_files]
+	dim rd_open_opts$[1:rd_num_files]
+	dim rd_open_chans$[1:rd_num_files]
+	dim rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]="DDM_KEYS",rd_open_options$[1]="OTA"
+	rd_open_tables$[2]="DDM_KEY_SEGS",rd_open_options$[2]="OTA"
+	rd_open_tables$[3]=rd_alias_id$,rd_open_options$[3]="OA"
+
+	gosub open_tables
+
+	rd_ddm_keys=num(rd_open_chans$[1]);dim rd_ddm_keys$:rd_open_tpls$[1]
+	rd_ddm_key_segs=num(rd_open_chans$[2]);dim rd_ddm_key_segs$:rd_open_tpls$[2]
+	rd_build_table=num(rd_open_chans$[3])
+
+	rd_old_file=rd_file_chan
+	rd_temp_fid$=fid(rd_old_file)
+	rd_old_file_id$=rd_temp_fid$(9)
+	rd_temp_fin$=fin(rd_old_file)
+	rd_old_recs=dec(rd_temp_fin$(77,4))
+
+proc_setup:rem -----<Processing Set Up
+
+rem	gosub disp_meter;rem ----------------------------------<Remove
+
+rem	rd_disp_act$="LST"
+rem	rd_curr_data$="Test message line 1";gosub disp_meter
+rem	rd_curr_data$="Test message line 2";gosub disp_meter
+rem	rd_curr_data$="Test message line 3";gosub disp_meter
+rem	rd_curr_data$="Test message line 4";gosub disp_meter
+
+rem	rd_total_recs=0
+rem	rd_proc_recs=0
+
+	rd_disp_act$="LST"
+	rd_curr_data$="Generating rebuild parameters for "+rd_alias_id$
+	gosub disp_meter
+
+	gosub attr_arrays
+	gosub gen_key_str
+	gosub get_rec_len
+
+	rd_erase_file$=rd_old_file_id$+".new"
+		gosub erase_file
+	rd_erase_file$=rd_old_file_id$+".old"
+		gosub erase_file
+
+	gosub create_file
+	gosub transfer_recs
+	gosub rename_files
+
+	rd_disp_act$="LST"
+	rd_curr_data$="Rebuild completed for "+rd_alias_id$
+	gosub disp_meter
+
+	goto exit_prog
+
+gen_key_str:rem -----<Generate Key String
+
+	dim rd_hex_keys$(384,$00$)
+
+	read(rd_dd_index,key=pad(rd_alias_id$,16),knum=1,dir=0,dom=get_next_key)
+
+get_next_key:rem -----<Get Next Record Key
+
+	rd_temp_key$=key(rd_dd_index,end=key_wrap_up)
+	if rd_temp_key$(1,16)<>pad(rd_alias_id$,16) goto key_wrap_up
+
+	readrecord(rd_dd_index)rd_dd_index$
+	readrecord(rd_dd_locat,key=rd_dd_index.file_id$+rd_dd_index.field_id$)rd_dd_locat$
+
+	dim rd_key_seg$(8,$00$)
+	rd_key_seg$(1,1)=rd_dd_index.knum$
+	rd_key_seg$(2,1)=bin(dec($00$+rd_dd_index.fldnum$),1)
+	rd_key_seg$(3,2)=rd_dd_index.offset$
+	rd_key_seg$(5,1)=bin(dec($00$+rd_dd_index.length$),1)
+	rd_key_seg$(6,1)=rd_dd_index.attr$
+
+	if rd_key_seg$(2,4)=$00000000$
+:		rd_key_seg$(2,1)=bin(dec($00$+rd_dd_locat.fldnum$),1),
+:		rd_key_seg$(3,2)=rd_dd_locat.offset$,
+:		rd_key_seg$(5,1)=bin(dec($00$+rd_dd_locat.length$),1)
+
+	rd_key_def$=rd_key_def$+rd_key_seg$
+
+	goto get_next_key
+
+key_wrap_up:rem -----<Wrap Up Key Generation
+
+	rd_key_def$=rd_key_def$+$FF$
+	rd_hex_keys$(1,len(rd_key_def$))=rd_key_def$
+
+	return
+
+get_rec_len:rem -----<Get File Record Lengths
+
+	dim rd_work_tpl$:fattr(rd_old_rec$)
+		gosub parse_template
+		rd_old_flds$=rd_work_flds$
+		rd_old_len=rd_work_len
+
+	dim rd_work_tpl$:fattr(rd_new_rec$)
+		gosub parse_template
+		rd_new_flds$=rd_work_flds$
+		rd_new_len=rd_work_len
+
+	return
+
+parse_template:rem -----<Parse Template to Get Fields and Length
+
+	rd_work_flds$=""
+	rd_work_len=0
+
+	rd_tpl_fattr$=FATTR(rd_work_tpl$,"")
+
+	for	rd_curr_fld=1 TO POS($0A$=rd_tpl_fattr$,1,0)
+
+		rd_curr_beg=POS($0A$=$0A$+rd_tpl_fattr$,1,rd_curr_fld)
+		rd_curr_end=POS($0A$=$0A$+rd_tpl_fattr$,1,rd_curr_fld+1)
+		rd_curr_var$=rd_tpl_fattr$(rd_curr_beg,rd_curr_end-rd_curr_beg-1)
+
+		rd_curr_fattr$=FATTR(rd_work_tpl$,rd_curr_var$)
+
+		rd_work_len=rd_work_len+dec(rd_curr_fattr$(10,2))
+		if rd_curr_fattr$(2,1)=ior(rd_curr_fattr$(2,1),$40$)
+:			rd_work_len=rd_work_len+1
+
+		rd_work_flds$=rd_work_flds$+PAD(rd_curr_var$,16)
+
+	next rd_curr_fld
+
+	return
+
+erase_file:rem -----<Erase Existing New Output File
+
+	erase rd_erase_file$,err=*next
+
+	return
+
+create_file:rem -----<Create New Output File
+
+	readrecord(rd_dd_file,key=pad(rd_alias_id$,16))rd_dd_file$
+		rd_file_type$=hta(rd_dd_file.type$)
+
+	dim rd_file_def$(8,$00$)
+
+	switch pos(rd_file_type$(2,1)="56")
+		case 0
+		break
+
+		case 1;rem Direct
+			rd_file_def$(1,1)=$05$
+			rd_file_def$(2,1)=rd_dd_file.keysiz$
+		break
+
+		case 2;rem MKeyed
+			rd_file_def$(1,1)=$06$
+		break
+	swend
+
+	rd_file_def$(7,2)=BIN(rd_new_len,2)
+	rd_file_def$=rd_file_def$+rd_old_file_id$+".new"
+
+	file rd_file_def$,rd_hex_keys$
+
+	rd_new_file=unt
+	open(rd_new_file)rd_old_file_id$+".new"
+
+	return
+
+
+transfer_recs:rem -----<Transfer Records
+
+	rd_disp_freq=min(1000,max(int(rd_old_recs/10),100))
+
+	rd_disp_act$="LST"
+	rd_curr_data$="Transferring. . ."
+
+	gosub disp_meter
+
+get_next_rec:rem -----<Get Next Record
+
+	readrecord(rd_old_file,end=transfer_wrap)rd_old_rec$
+
+	dim rd_new_rec$:fattr(rd_new_rec$)
+
+	for rd_curr_fld=1 to len(rd_dbvar_str$)/16
+
+		rd_temp_var$=cvs(rd_dbvar_str$(rd_curr_fld*16-15,16),2)
+		rd_temp_maxl=num(rd_dbvar_attr$[rd_curr_fld,rd_attr_maxl])
+
+		if pos(rd_dbvar_str$(rd_curr_fld*16-15,16)=rd_old_flds$,16)<>0
+			rd_temp_data$=field(rd_old_rec$,rd_temp_var$)
+			else
+			rd_temp_data$=""
+		endif
+
+		rd_temp_data$=rd_temp_data$(1,min(len(rd_temp_data$),rd_temp_maxl))
+
+		if rd_dbvar_attr$[rd_curr_fld,rd_attr_dflt]<>"" and cvs(rd_temp_data$,3)=""
+:			rd_temp_data$=rd_dbvar_attr$[rd_curr_fld,rd_attr_dflt]
+
+		if rd_dbvar_attr$[rd_curr_fld,rd_attr_padc]+rd_dbvar_attr$[rd_curr_fld,rd_attr_padj]<>""
+:			gosub transfer_pad
+
+		field rd_new_rec$,rd_temp_var$=rd_temp_data$
+
+	next rd_curr_fld
+
+	rd_new_rec$=field(rd_new_rec$)
+	writerecord(rd_new_file)rd_new_rec$
+
+	rd_xfer_recs=rd_xfer_recs+1
+	if mod(rd_xfer_recs,rd_disp_freq)=0 gosub update_display
+
+	goto get_next_rec
+
+transfer_pad:rem -----<Transfer - Pad Field
+
+	rd_attr_padc$=rd_dbvar_attr$[rd_curr_fld,rd_attr_padc]
+	if rd_attr_padc$="" rd_attr_padc$="20"
+
+	rd_attr_padj$=rd_dbvar_attr$[rd_curr_fld,rd_attr_padj]
+	if rd_attr_padj$="" rd_attr_padj$="L"
+
+	if rd_attr_padj$="L" rd_temp_data$=pad(rd_temp_data$,rd_temp_maxl,ath(rd_attr_padc$))
+
+	if rd_attr_padj$="R" rd_temp_data$=fill(rd_temp_maxl-len(rd_temp_data$),ath(rd_attr_padc$))+rd_temp_data$
+
+	return
+
+transfer_wrap:rem -----<Transfer - Wrap It Up
+
+	rd_disp_act$="LSR"
+	rd_curr_data$=str(rd_xfer_recs)+" records successfully transferred."
+	gosub disp_meter
+
+	return
+
+update_display:rem -----<Display to Progress Meter
+
+
+	rd_disp_act$="LSR"
+	rd_curr_data$=str(rd_xfer_recs)+" of "+str(rd_old_recs)+" records. ("+str(rd_xfer_recs/rd_old_recs*100)+"%) transferred."
+	gosub disp_meter
+
+	return
+
+rename_files:rem -----<Rename New and Old Files
+
+	rd_proc_type$="C"
+	rd_file_id$=rd_alias_id$
+		gosub open_file
+
+	close(rd_new_file)
+	rd_new_chan=0
+
+	rename rd_old_file_id$,rd_old_file_id$+".old"
+	rename rd_old_file_id$+".new",rd_old_file_id$
+
+	rd_curr_data$="Data table renaming completed."
+	rd_disp_act$="LSR"
+	gosub disp_meter
+
+	return
+
+attr_arrays:rem -----<Compile Attributes Into Arrays
+
+	dim rd_rep_chars$[1:3]
+		rd_rep_chars$[1]=rd_space_char$
+		rd_rep_chars$[2]=rd_colon_char$
+
+	call rd_dir_pgm$+"rd_attrr.bbx",
+:		rd_alias_id$,
+:		rd_dbvar_str$,
+:		rd_dbvar_key_str$,
+:		rd_dbvar_attr$[all],
+:		rd_open_chan$[all],
+:		rd_rep_chars$[all]
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call rd_dir_pgm$+"rdm_prog_bar.aon",
+:		rdSysGUI!,
+:		rdParentWin!,
+:		rdMeterWin!,
+:		rd_meter_title$,
+:		rd_total_recs,
+:		rd_proc_recs,
+:		rd_curr_data$,
+:		rd_action$
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call rd_dir_pgm$+"adc_message.aon",rd_msg_id$,rd_tokens$[all],rd_msg_opt$,rd_table_chans$[all]
+
+	return
+
+open_tables:rem -----<Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="TABLE_OPEN_ERR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	return
+
+error_proc:rem -----<Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem -----<Exit Program
+
+	if rd_new_chan<>0 close(rd_new_chan)
+
+	exit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rebuild_table:rem --- Rebuild Table/Update Table Contents
+
+	cp_table_id$=pad(fnget_rec$("DD_TABLE_ALIAS"),16)
+
+get_templates:rem --- Get Old and New Templates
+
+	cp_table_id$=fnget_rec$("DD_TABLE_ALIAS")
+
+	dim cp_old_table_tpls$:fattr(cp_ddm_table_tpls$)
+	readrecord(cp_ddm_table_tpls,key=cp_table_id$)cp_old_table_tpls$
+	dim cp_src_data$:cp_old_table_tpls.dd_table_tpl$
+
+	call stbl("+DIR_PGM")+"adc_create_tpl.aon",cp_table_id$,cp_new_table_tpl$,rd_table_chans$[all],rd_status$
+	if rd_status$<>""
+		rd_msg_text$=rd_status$
+		rd_msg_defs$="O  ;F;O"
+		gosub disp_msg
+		goto exit_prog
+	endif
+
+	dim cp_trg_data$:cp_new_table_tpl$
+
+parse_new_tpl:rem --- Parse Fields From New Template
+
+	cp_src_list$=fattr(cp_src_data$,"")
+
+	for cp_curr_var=1 to pos($0a$=cp_src_list$,1,0)
+		cp_start_pos=pos($0a$=$0a$+cp_src_list$,1,cp_curr_var)
+		cp_end_pos=pos($0a$=$0a$+cp_src_list$,1,cp_curr_var+1)
+		cp_curr_var$=cp_src_list$(cp_start_pos,cp_end_pos-cp_start_pos-1)
+		cp_var_list$=cp_var_list$+pad(cp_curr_var$,16)
+	next cp_curr_var
+
+open_src_trg:rem --- Open Source and Target Files
+
+	cp_wrk_table_id$=stbl("+DDDATA")+date(0:"%Hz%mz%sz")+".tmp"
+
+	call stbl("+DIR_PGM")+"adc_create_table.aon",cp_table_id$,cp_wrk_table_id$,rd_table_chans$[all],"ERASE",rd_status$
+	if rd_status$<>""
+		rd_msg_text$=rd_status$
+		rd_msg_defs$="O  ;F;O"
+		gosub disp_msg
+		goto exit_prog
+	endif
+
+	rd_num_files=2
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+	rd_open_tables$[1]=cp_table_id$,rd_open_opts$[1]="OTA"
+	rd_open_tables$[2]=cp_wrk_table_id$,rd_open_opts$[2]="O"
+		gosub open_tables
+
+	cp_src_chan=num(rd_open_chans$[1]);dim cp_src_data$:rd_open_tpls$[1]
+		cp_src_name$=xfid(cp_src_chan)(14)
+	cp_trg_chan=num(rd_open_chans$[2])
+		cp_trg_name$=xfid(cp_trg_chan)(14)
+
+	read(cp_src_chan,key="",dom=*next)
+
+read_rec:rem --- Transfer Records
+
+	readrecord(cp_src_chan,end=table_renames)cp_src_data$
+	dim trg_data$:fattr(cp_trg_data$)
+
+	for cp_curr_var=1 to len(cp_var_list$)/16
+		cp_curr_var$=cvs(cp_var_list$(cp_curr_var*16-15,16),2)
+		field cp_trg_data$,cp_curr_var$=field(cp_src_data$,cp_curr_var$,err=*next),err=*next
+	next cp_curr_var
+
+	writerecord(cp_trg_chan)cp_trg_data$
+
+	goto read_rec
+
+table_renames:rem --- Rename Production > .old and Work > Production
+
+	rd_num_files=2
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+	rd_open_tables$[1]=cp_table_id$,rd_open_opts$[1]="C"
+	rd_open_tables$[2]=cp_wrk_table_id$,rd_open_opts$[2]="C"
+		gosub open_tables
+
+	erase cp_src_name$+".old",err=*next
+	rename cp_src_name$,cp_src_name$+".old"
+	rename cp_trg_name$,cp_src_name$
+
+write_tpl_rec:rem --- Write New Template Record
+
+	dim cp_ddm_table_tpls$:fattr(cp_ddm_table_tpls$)
+		cp_ddm_table_tpls.dd_table_alias$=pad(cp_table_id$,16)
+
+		readrecord(cp_ddm_table_tpls,key=cp_ddm_table_tpls.dd_table_alias$,dom=*next)cp_ddm_table_tpls$
+		if cvs(cp_ddm_table_tpls.dd_aon_name$,3)="" cp_ddm_table_tpls.dd_aon_name$=pad(fnget_rec$("DD_AON_NAME"),7)
+		cp_ddm_table_tpls.dd_table_tpl$=cp_new_table_tpl$
+		cp_ddm_table_tpls$=field(cp_ddm_table_tpls$)
+		writerecord(cp_ddm_table_tpls)cp_ddm_table_tpls$
+
+	return
+
+

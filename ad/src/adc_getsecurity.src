@@ -1,0 +1,154 @@
+rem Get Security Levels For Create Template For Selected Key
+rem Proprietary Software. AddonSoftware Corp.
+rem Program ID: rdm_key_tamplate.aon  <Nov 02, 2006>
+
+rem --- Enter Arguments
+
+	enter
+:		rd_user_id$,
+:		rd_table_id$,
+:		rd_attr_col$[all],
+:		rd_security$[all],
+:		rd_table_chans$[all],
+:		rd_role_status$
+
+rem --- Constants
+
+	rd_dir_pgm$=stbl("+DIR_PGM")
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp0)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp0)+rd_tmp0-1)/rd_tmp0)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(fill(50,rd_tmp1$)=rd_tmp0$+fill(50,rd_tmp1$))-1)
+
+rem --- Open Dictionary Files
+
+	rd_num_files=4
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+	rd_open_tables$[1]="ADM_USERROLES",rd_open_opts$[1]="OTA"
+	rd_open_tables$[2]="ADM_ROLEALIAS",rd_open_opts$[2]="OTA"
+	rd_open_tables$[3]="ADM_ROLEALIASCOL",rd_open_opts$[3]="OTA"
+	rd_open_tables$[4]="ADM_ROLE",rd_open_opts$[4]="OTA"
+
+	gosub open_tables
+
+	rd_adm_userroles=num(rd_open_chans$[1]);dim rd_adm_userroles$:rd_open_tpls$[1]
+	rd_adm_rolealias=num(rd_open_chans$[2]);dim rd_adm_rolealias$:rd_open_tpls$[2]
+	rd_adm_rolealiascol=num(rd_open_chans$[3]);dim rd_adm_rolealiascol$:rd_open_tpls$[3]
+	rd_adm_role=num(rd_open_chans$[4]);dim rd_adm_role$:rd_open_tpls$[4]
+
+rem --- Get User Roles
+
+	dim rd_security$[len(rd_attr_col$[0,1])/40]
+	rd_roles$=""
+	rd_role_admin$=""
+	read(rd_adm_userroles,key=pad(rd_user_id$,16),dom=*next)
+
+	while rd_read=0
+		readrecord(rd_adm_userroles,end=*break)rd_adm_userroles$
+		if rd_adm_userroles.user_id$<>pad(rd_user_id$,16) break
+		rd_roles$=rd_roles$+rd_adm_userroles.sec_role_id$
+		readrecord(rd_adm_role,key=rd_adm_userroles.sec_role_id$)rd_adm_role$
+		if rd_adm_role.sec_role_admin$="Y" rd_role_admin$="YES"
+		readrecord(rd_adm_rolealias,key=rd_adm_userroles.sec_role_id$+pad(rd_table_id$,16),err=*continue)rd_adm_role_alias$
+		rd_security_loc=0
+		rd_security_str$=
+:			pad(rd_adm_rolealias.sec_lev_view$,1)+
+:			pad(rd_adm_rolealias.sec_lev_insert$,1)+
+:			pad(rd_adm_rolealias.sec_lev_update$,1)+
+:			pad(rd_adm_rolealias.sec_lev_delete$,1)
+		gosub add_security
+	wend
+
+	if rd_roles$=""
+		rd_msg_id$="ADMIN_INV_ROLES"
+		gosub disp_message
+		rd_role_status$="INVALID"
+		goto exit_prog
+	endif
+
+rem --- Get Role Columns
+
+	for rd_curr_role=1 to len(rd_roles$)/8
+		rd_role_key$=rd_roles$(rd_curr_role*8-7,8)+pad(rd_table_id$,16)
+		read(rd_adm_rolealiascol,key=rd_role_key$,dom=*next)
+		while rd_read=0
+			readrecord(rd_adm_rolealiascol,end=*break)rd_adm_rolealiascol$
+			if rd_adm_rolealiascol.sec_role_id$+rd_adm_rolealiascol.dd_table_alias$<>rd_role_key$ break
+			rd_security_loc=fnstr_pos(rd_adm_rolealiascol.dd_tvar_name$,rd_attr_col$[0,1],40)
+			rd_security_str$=
+:				pad(rd_adm_rolealiascol.sec_lev_view$,1)+
+:				pad(rd_adm_rolealiascol.sec_lev_update$,1)+
+:				pad(rd_adm_rolealiascol.sec_audit_insert$,1)+
+:				pad(rd_adm_rolealiascol.sec_audit_update$,1)
+			gosub add_security
+		wend
+	next rd_curr_role
+
+	if rd_role_admin$="YES"
+	rd_security$[0]="YYYY"
+	for rd_security_loc=1 to len(rd_attr_col$[0,1])/40
+		if rd_security$[rd_security_loc]="" rd_security$[rd_security_loc]="    "
+		rd_security$[rd_security_loc](1,2)="YY"
+	next rd_security_loc
+
+	goto exit_prog
+
+add_security:rem --- Add to Security Array
+
+	if rd_security$[rd_security_loc]="" rd_security$[rd_security_loc]="    "
+
+	for rd_curr_sec=1 to 4
+		if pos(rd_security$[rd_security_loc](rd_curr_sec,1)="YX")=0 rd_security$[rd_security_loc](rd_curr_sec,1)=rd_security_str$(rd_curr_sec,1)
+		if rd_security_str$(rd_curr_sec,1)="X" rd_security$[rd_security_loc](rd_curr_sec,1)=rd_security_str$(rd_curr_sec,1)
+	next rd_curr_sec
+
+	return
+
+open_tables:rem -----<Open Tables
+
+	call rd_dir_pgm$+"rdc_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="ENTRY_OPEN_ERROR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call rd_dir_pgm$+"adc_message.aon",
+:		rd_msg_id$,
+:		rd_msg_tokens$[all],
+:		rd_msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+
+error_proc:rem --- Error Processing Routine
+
+	rd_err_text$=""
+	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+
+	call stbl("+DIR_PGM")+"adc_error.aon",pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+
+	if pos("EXIT"=rd_err_act$)<>0 goto exit_prog
+	if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+	if pos("RETRY"=rd_err_act$)<>0 retry
+
+exit_prog:rem --- Exit Program
+
+	exit
