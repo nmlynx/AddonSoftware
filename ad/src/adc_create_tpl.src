@@ -80,8 +80,12 @@ get_next_col:rem --- Get Next Column Record
 			rd_temp_seg$=cvs(rd_ddm_table_cols.dd_dvar_name$,3)+rd_col_occurs_sfx$+":"
 			rd_temp_seg$=rd_temp_seg$+rd_ddm_elements.dd_data_type$+"("
 			rd_temp_seg$=rd_temp_seg$+str(rd_col_length)
-			if rd_ddm_table_cols.dd_field_delim$="Y" rd_temp_seg$=rd_temp_seg$+"*"
-			if rd_ddm_table_cols.dd_field_delim$="E" and rd_curr_occur=rd_col_occurs rd_temp_seg$=rd_temp_seg$+"*"
+			if rd_ddm_table_cols.dd_field_delim$="Y"
+				gosub create_delim
+			endif
+			if rd_ddm_table_cols.dd_field_delim$="E" and rd_curr_occur=rd_col_occurs
+				gosub create_delim
+			endif
 			rd_temp_seg$=rd_temp_seg$+")"
 
 			if rd_gen_table_tpl$<>"" rd_gen_table_tpl$=rd_gen_table_tpl$+","
@@ -96,6 +100,15 @@ end_build:rem --- Wrap Up Template Build
 	rd_gen_table_tpl$=cvs(rd_gen_table_tpl$,8)
 
 	goto exit_prog
+
+create_delim:rem --- Create Delimiter
+
+	rd_temp_seg$=rd_temp_seg$+"*"
+	if cvs(rd_ddm_table_cols.dd_delim_char$,2)<>"" and rd_ddm_table_cols.dd_delim_char$<>"0A"
+		rd_temp_seg$=rd_temp_seg$+"="+str(asc(seval("$"+rd_ddm_table_cols.dd_delim_char$+"$")))
+	endif
+
+	return
 
 open_tables:rem -----<Open Tables
 
