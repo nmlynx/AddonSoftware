@@ -289,7 +289,7 @@ ADM_USERPRNT    	002	PRINTER_ID      	PRINTER_ID      	0	0	Y	0A	AON	AON				20060
 ADM_USERROLES   	001	USER_ID         	USER_ID         			Y	0A						20070508	20070508						150									16							1												
 ADM_USERROLES   	002	SEC_ROLE_ID     	SEC_ROLE_ID     			Y	0A						20070508	20070508						80	0								8							2												
 ADR_LAYOUTS     	001	DD_TABLE_ALIAS  	DD_TABLE_ALIAS  		2			AON	AON				20060331	20060331						160	0								16							1												
-ADR_LAYOUTS     	002	LAYOUTS_ONLY    	LAYOUTS_ONLY    					AON	AON				20060331	20060331															1							2												
+ADR_LAYOUTS     	002	LAYOUTS_ONLY    	LAYOUTS_ONLY    					AON	AON				20060331	20060331						30									1							2												
 ADR_PROCESSES   	001	PROCESS_ID      	PROCESS_ID      		2	Y	0A													128									10							1												
 ADS_CALENDAR    	001	FIRM_ID         	FIRM_ID         	0	0	N		AON	AON				20060119	20060119															2			Firm ID				1												
 ADS_CALENDAR    	002	GL              	GL              	0	0	N		AON	AON				20060119	20060119															2			"GL"				2												
@@ -1065,6 +1065,12 @@ ARC_SALECODE    	003	SLSPSN_CODE     	SLSPSN_CODE     	1	0	N		AON	AON				2006011
 ARC_SALECODE    	004	CODE_DESC       	CODE_DESC       	0	0	N		AON	AON				20060119	20060119						160									20			Code Description				4												
 ARC_SALECODE    	005	RESERVED_STR    	RESERVED_STR    	5	0	Y	0A	AON	AON				20060119	20060119																		Reserved For Addon Use																
 ARC_SALECODE    	006	COMM_RATE       	COMM_RATE       	1	0	Y	0A	AON	AON				20060119	20060119						56				Additional					7			Commission Rate				5												
+ARC_SALESDISC   	001	FIRM_ID         	FIRM_ID         			N							20070702	20070702															2							1												
+ARC_SALESDISC   	002	RECORD_ID_I     	RECORD_ID_I     			N							20070702	20070702						35									1							2												
+ARC_SALESDISC   	003	SLS_DISC_CD     	SLS_DISC_CD     			N							20070702	20070702						35						Sales Disc Code			2							3												
+ARC_SALESDISC   	004	SLS_DISC_DESC   	SLS_DISC_DESC   			N							20070702	20070702						160					Description				20							4												
+ARC_SALESDISC   	005	RESERVED_STR    	RESERVED_STR    			Y	0A						20070702	20070702																																		
+ARC_SALESDISC   	006	SLS_DISC_PRCNT  	SLS_DISC_PRCNT  			Y	0A						20070702	20070702						42	0								5							5												
 ARC_TERMCODE    	001	FIRM_ID         	FIRM_ID         	0	0	N		AON	AON				20060119	20060119															2			Firm ID				1												
 ARC_TERMCODE    	002	RECORD_ID_A     	RECORD_ID_A     	0	0	N		AON	AON				20060119	20060119															1			"A"				2												
 ARC_TERMCODE    	003	AR_TERMS_CODE   	AR_TERMS_CODE   	0	0	N		AON	AON				20060119	20060119						35									2			Terms Code				3												
@@ -1341,16 +1347,16 @@ ARR_AGINGREPORT 	011	PICK_CHECK      	FIXED_PERIODS   			Y	0A	AON	AON				2006041
 ARR_AGINGREPORT 	012	PICK_CHECK      	AGE_CREDITS     			Y	0A													30					Age Credits				1							10												
 ARR_AGINGREPORT 	013	DAYS_IN_PER     	DAYS_IN_PER     					AON	AON				20060419	20060419	ARR_AGINGREPORT.FIXED_PERIODS	Y	[+DIR_PGM]arr_agingreport_cpt.aon			56		30			Aging Period Size	Age Prd Size			7		199					14												
 ARR_AGINGREPORT 	014	REPORT_SUMM_DET 	REPORT_SUMM_DET 					AON	AON				20060419	20060419					+1	74		D							1							4												
-ARR_AGINGREPORT 	015	PICK_DATE       	AGEDATE_FUT_FROM			Y	0A										[+DIR_PGM]arr_agingreport_cpt.aon		+2	70	0								8							15												
-ARR_AGINGREPORT 	016	PICK_DATE       	AGEDATE_CUR_FROM			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N	[+DIR_PGM]arr_agingreport_cpt.aon	+10	-1	70	0								8							16												
-ARR_AGINGREPORT 	017	PICK_DATE       	AGEDATE_CUR_THRU			Y	0A										[+DIR_PGM]arr_agingreport_cpt.aon			70	0								8							17												
-ARR_AGINGREPORT 	018	PICK_DATE       	AGEDATE_30_FROM 			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N	[+DIR_PGM]arr_agingreport_cpt.aon	+10	-2	70	0								8							18												
-ARR_AGINGREPORT 	019	PICK_DATE       	AGEDATE_30_THRU 			Y	0A										[+DIR_PGM]arr_agingreport_cpt.aon			70	0								8							19												
-ARR_AGINGREPORT 	020	PICK_DATE       	AGEDATE_60_FROM 			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N	[+DIR_PGM]arr_agingreport_cpt.aon	+10	-2	70	0								8							20												
-ARR_AGINGREPORT 	021	PICK_DATE       	AGEDATE_60_THRU 			Y	0A										[+DIR_PGM]arr_agingreport_cpt.aon			70	0								8							21												
-ARR_AGINGREPORT 	022	PICK_DATE       	AGEDATE_90_FROM 			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N	[+DIR_PGM]arr_agingreport_cpt.aon	+10	-2	70	0								8							22												
-ARR_AGINGREPORT 	023	PICK_DATE       	AGEDATE_90_THRU 			Y	0A										[+DIR_PGM]arr_agingreport_cpt.aon			70	0								8							23												
-ARR_AGINGREPORT 	024	PICK_DATE       	AGEDATE_120_THRU			Y	0A										[+DIR_PGM]arr_agingreport_cpt.aon	+10	-1	70	0								8							24												
+ARR_AGINGREPORT 	015	PICK_DATE       	AGEDATE_FUT_FROM			Y	0A												+2	70	0								8							15												
+ARR_AGINGREPORT 	016	PICK_DATE       	AGEDATE_CUR_FROM			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N		+10	-1	70	0								8							16												
+ARR_AGINGREPORT 	017	PICK_DATE       	AGEDATE_CUR_THRU			Y	0A													70	0								8							17												
+ARR_AGINGREPORT 	018	PICK_DATE       	AGEDATE_30_FROM 			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N		+10	-2	70	0								8							18												
+ARR_AGINGREPORT 	019	PICK_DATE       	AGEDATE_30_THRU 			Y	0A													70	0								8							19												
+ARR_AGINGREPORT 	020	PICK_DATE       	AGEDATE_60_FROM 			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N		+10	-2	70	0								8							20												
+ARR_AGINGREPORT 	021	PICK_DATE       	AGEDATE_60_THRU 			Y	0A													70	0								8							21												
+ARR_AGINGREPORT 	022	PICK_DATE       	AGEDATE_90_FROM 			Y	0A								ARR_AGINGREPORT.FIXED_PERIODS	N		+10	-2	70	0								8							22												
+ARR_AGINGREPORT 	023	PICK_DATE       	AGEDATE_90_THRU 			Y	0A													70	0								8							23												
+ARR_AGINGREPORT 	024	PICK_DATE       	AGEDATE_120_THRU			Y	0A											+10	-1	70	0								8							24												
 ARR_AGINGREPORTX	001	FIRM_ID         	FIRM_ID         	0	0	Y	0A	AON	AON				20060421	20060421															2							1												
 ARR_AGINGREPORTX	002	REPORT_TYPE     	REPORT_TYPE     	0	1			AON	AON				20060417	20060417						91		I			Age by	Aging Basis			1							3												
 ARR_AGINGREPORTX	003	REPORT_OPTION   	REPORT_OPTION   	0	1			AON	AON				20060417	20060417						88		C			Report Sequence	Cust or Slsprsn Orde			1							5												
@@ -3130,6 +3136,10 @@ IVM_LSACT       	016	QTY_XFER_OUT    	QTY_XFER_OUT    	0	0	Y	0A	AON	AON				20060
 IVM_LSACT       	017	QTY_RETURNED    	QTY_RETURNED    	0	0	Y	0A	AON	AON				20060119	20060119						56									7			Quantity Returned				15												
 IVM_LSACT       	018	RESERVED_NUM    	RESERVED_NUM    	0	2	Y	0A	AON	AON				20060119	20060119																		Reserved For Addon Use																
 IVM_LSACT       	019	DEALER_NUM      	DEALER_NUM      	0	2	Y	0A	AON	AON				20060119	20060119																		Reserved For Dealer Use																
+IVM_LSITEMHIST  	001	FIRM_ID         	FIRM_ID         			Y	0A						20070707	20070707															2							1												
+IVM_LSITEMHIST  	002	ITEM_ID         	ITEM_ID         			Y	0A						20070707	20070707			[+DIR_PGM]ivm_lsitemhist_cpt.aon			160									20							2												
+IVM_LSITEMHIST  	003	WAREHOUSE_ID    	WAREHOUSE_ID    			Y	0A						20070707	20070707						35									2							3												
+IVM_LSITEMHIST  	004	LOTSER_NO       	LOTSER_NO       			Y	0A						20070707	20070707						160									20							4												
 IVM_LSMASTER    	001	FIRM_ID         	FIRM_ID         	1	0	N		AON	AON				20060119	20060119															2			Firm ID				1												
 IVM_LSMASTER    	002	WAREHOUSE_ID    	WAREHOUSE_ID    	1	0	N		AON	AON				20060119	20060119						35									2			Warehouse ID				3												
 IVM_LSMASTER    	003	ITEM_ID         	ITEM_ID         	1	0	N		AON	AON				20060119	20060119						200						Inventory			20			Inventory Item Number				2												
@@ -3175,7 +3185,7 @@ IVR_LIFOFIFO    	002	WAREHOUSE_ID    	WAREHOUSE_ID    		2	Y	0A													35			
 IVR_LIFOFIFO    	003	PRODUCT_TYPE    	PRODUCT_TYPE    		2	Y	0A													35									3							3												
 IVR_LIFOFIFO    	004	ITEM_ID         	ITEM_ID         		2	Y	0A													160					Item ID				20							4												
 IVR_LIFOFIFO    	005	ITEM_TYPE       	ITEM_TYPE       			Y	0A													35									3							5												
-IVR_LSTRANHIST  	001	PICK_DATE       	PICK_DATE       		2	Y	0A													80									8							1												
+IVR_LSTRANHIST  	001	PICK_DATE       	PICK_DATE       		2	Y	0A													70									8							1												
 IVR_LSTRANHIST  	002	WAREHOUSE_ID    	WAREHOUSE_ID    		2	Y	0A													35					Warehouse				2							2												
 IVR_LSTRANHIST  	003	PRODUCT_TYPE    	PRODUCT_TYPE    		2	Y	0A													35									3							3												
 IVR_LSTRANHIST  	004	ITEM_ID         	ITEM_ID         		2	Y	0A													160					Item ID				20							4												
@@ -3190,8 +3200,8 @@ IVR_LSTRANHIST  	012	TRAN_HST_TO     	TRAN_HST_TO     			Y	0A								IVR_LSTRANH
 IVR_LSTRANHIST  	013	TRAN_HST_WI     	TRAN_HST_WI     			Y	0A								IVR_LSTRANHIST.TRAN_HST_ALL	N		+16	-3	30					Work Orders Issued				1							16												
 IVR_LSTRANHIST  	014	TRAN_HST_WO     	TRAN_HST_WO     			Y	0A								IVR_LSTRANHIST.TRAN_HST_ALL	N				30					Work Orders Received				1							17												
 IVR_LSTRANHIST  	015	TRAN_HST_BM     	TRAN_HST_BM     			Y	0A								IVR_LSTRANHIST.TRAN_HST_ALL	N				30					Bill of Materials Prod				1							18												
-IVR_LSTRANHIST  	016	OP_CL_BOTH      	OP_CL_BOTH      			Y	0A													69		B							1							7												
-IVR_LSTRANHIST  	017	TOT_ITEM_LOT    	TOT_ITEM_LOT    			Y	0A													145		Y							1							8												
+IVR_LSTRANHIST  	016	OP_CL_BOTH      	OP_CL_BOTH      			Y	0A													62		B							1							7												
+IVR_LSTRANHIST  	017	TOT_ITEM_LOT    	TOT_ITEM_LOT    			Y	0A													115		Y							1							8												
 IVR_LSTRANHIST  	018	LOTSER_NO       	LOTSER_NO       																	160									20							6												
 IVR_OPENPO      	001	PICK_DATE       	PICK_DATE       		2	Y	0A													80									8							1												
 IVR_OPENPO      	002	WAREHOUSE_ID    	WAREHOUSE_ID    		1	Y	0A													35					Warehouse			2	2							2												
@@ -3874,17 +3884,17 @@ OPC_DISCCODE    	003	CODE_DESC       	CODE_DESC       	0	0	N		AON	AON				2006011
 OPC_DISCCODE    	004	RESERVED_STR    	RESERVED_STR    	6	0	Y	0A	AON	AON				20060119	20060119																		Reserved For Addon Use																
 OPC_DISCCODE    	005	DISC_PERCENT    	DISC_PERCENT    	1	0	Y	0A	AON	AON				20060119	20060119															7			Discount Percent				3												
 OPC_LINECODE    	001	FIRM_ID         	FIRM_ID         	1	0	N		AON	AON				20060119	20060119															2			Firm ID				1												
-OPC_LINECODE    	002	LINE_CODE       	LINE_CODE       	0	0	N		AON	AON				20060119	20060119															1			Line Code				2												
+OPC_LINECODE    	002	LINE_CODE       	LINE_CODE       	0	0	N		AON	AON				20060119	20060119						35									1			Line Code				2												
 OPC_LINECODE    	003	RESERVED_STR    	RESERVED_STR    	1	0	N		AON	AON				20060119	20060119																		Reserved For Addon Use																
-OPC_LINECODE    	004	CODE_DESC       	CODE_DESC       	0	0	N		AON	AON				20060119	20060119															20			Code Description				3												
-OPC_LINECODE    	005	LINE_TYPE       	LINE_TYPE       	0	0	N		AON	AON				20060119	20060119															1			Line Type				4												
-OPC_LINECODE    	006	TAXABLE_FLAG    	TAXABLE_FLAG    	0	0	N		AON	AON				20060119	20060119															1			Taxable [Y/N]?				7												
-OPC_LINECODE    	007	DROPSHIP        	DROPSHIP        	0	0	N		AON	AON				20060119	20060119															1			Drop Ship [Y/N]?				8												
-OPC_LINECODE    	008	MESSAGE_TYPE    	MESSAGE_TYPE    	1	0	N		AON	AON				20060119	20060119															1			Message Type				5												
-OPC_LINECODE    	009	PRODUCT_TYPE    	PRODUCT_TYPE    	1	0	N		AON	AON				20060119	20060119											Default Product Type				3			Product Type				10												
-OPC_LINECODE    	010	PROD_TYPE_PR    	PROD_TYPE_PR    	0	0	Y	0A	AON	AON				20060119	20060119															1			Product Type Processing [EDN]				9												
-OPC_LINECODE    	011	GL_REV_ACCT     	GL_REV_ACCT     	0	0	N		AON	AON				20060119	20060119						0	0				GL Sales Account	Sales Acct			10			GL Revenue Account				6												
-OPC_LINECODE    	012	DIST_CODE       	DIST_CODE       	0	0	Y	0A	AON	AON				20060119	20060119															2			Distribution Code				11												
+OPC_LINECODE    	004	CODE_DESC       	CODE_DESC       	0	0	N		AON	AON				20060119	20060119						160									20			Code Description				3												
+OPC_LINECODE    	005	LINE_TYPE       	LINE_TYPE       	0	0	N		AON	AON				20060119	20060119						210									1			Line Type				4												
+OPC_LINECODE    	006	TAXABLE_FLAG    	TAXABLE_FLAG    	0	0	N		AON	AON				20060119	20060119						30									1			Taxable [Y/N]?				7												
+OPC_LINECODE    	007	DROPSHIP        	DROPSHIP        	0	0	N		AON	AON				20060119	20060119						30									1			Drop Ship [Y/N]?				8												
+OPC_LINECODE    	008	MESSAGE_TYPE    	MESSAGE_TYPE    	1	0	N		AON	AON				20060119	20060119						35									1			Message Type				5												
+OPC_LINECODE    	009	PRODUCT_TYPE    	PRODUCT_TYPE    	1	0	N		AON	AON				20060119	20060119						35					Default Product Type				3			Product Type				10												
+OPC_LINECODE    	010	PROD_TYPE_PR    	PROD_TYPE_PR    	0	0	Y	0A	AON	AON				20060119	20060119						35									1			Product Type Processing [EDN]				9												
+OPC_LINECODE    	011	GL_REV_ACCT     	GL_REV_ACCT     	0	0	N		AON	AON				20060119	20060119						80	0				GL Sales Account	Sales Acct			10			GL Revenue Account				6												
+OPC_LINECODE    	012	DIST_CODE       	DIST_CODE       	0	0	Y	0A	AON	AON				20060119	20060119						35									2			Distribution Code				11												
 OPC_MSG_DET     	001	FIRM_ID         	FIRM_ID         	1	0	N		AON	AON				20060119	20060119																		Firm ID																
 OPC_MSG_DET     	002	MESSAGE_CODE    	MESSAGE_CODE    	0	0	N		AON	AON				20060119	20060119																		Standard Message Code																
 OPC_MSG_DET     	003	MESSAGE_SEQ     	MESSAGE_SEQ     	0	0	Y	0A	AON	AON				20060119	20060119																		Messages Sequence Number																
@@ -4444,22 +4454,22 @@ OPW_TERRSUMM    	001	FIRM_ID         	FIRM_ID         	1	0	N		AON	AON				2006011
 OPW_TERRSUMM    	002	AR_TYPE         	AR_TYPE         	0	0	N		AON	AON				20060119	20060119												AR Type [N						AR Type [Not Used]																
 OPW_TERRSUMM    	003	TERRITORY       	TERRITORY       	0	0	Y	0A	AON	AON				20060119	20060119																		Territory Code																
 OPW_TERRSUMM    	004	INVOICE_AMT     	INVOICE_AMT     	0	0	Y	0A	AON	AON				20060119	20060119																		Invoice Amount																
-POC_LINECODE    	001	FIRM_ID         	FIRM_ID         	0	0	N		AON	AON				20060119	20060119																		Firm ID				1												
-POC_LINECODE    	002	PO_LINE_CODE    	PO_LINE_CODE    	0	0	Y	0A	AON	AON				20060119	20060119											Line Code	Cd						Purchase Order Line Code				2												
-POC_LINECODE    	003	CODE_DESC       	CODE_DESC       	0	0	N		AON	AON				20060119	20060119																		Code Description				3												
-POC_LINECODE    	004	LINE_TYPE       	LINE_TYPE       	0	0	N		AON	AON				20060119	20060119																		Line Type				4												
-POC_LINECODE    	005	DROPSHIP        	DROPSHIP        	0	0	N		AON	AON				20060119	20060119											Drop Ship?							Drop Ship [Y/N]?				5												
-POC_LINECODE    	006	LEAD_TIM_FLG    	LEAD_TIM_FLG    	0	0	N		AON	AON				20060119	20060119																		Use Line for Lead Time Calc?				6												
-POC_LINECODE    	007	LAND_CST_FLG    	LAND_CST_FLG    	0	0	N		AON	AON				20060119	20060119											Use for Landed Cost?							Use for Landed Cost [Y/N]?				7												
-POC_LINECODE    	008	ADD_OPTIONS     	ADD_OPTIONS     	0	0	N		AON	AON				20060119	20060119												Opts?						Additional Options [Y/N]?				8												
+POC_LINECODE    	001	FIRM_ID         	FIRM_ID         	0	0	N		AON	AON				20060119	20060119															2			Firm ID				1												
+POC_LINECODE    	002	PO_LINE_CODE    	PO_LINE_CODE    	0	0	Y	0A	AON	AON				20060119	20060119						35					Line Code	Cd			2			Purchase Order Line Code				2												
+POC_LINECODE    	003	CODE_DESC       	CODE_DESC       	0	0	N		AON	AON				20060119	20060119						160									20			Code Description				3												
+POC_LINECODE    	004	LINE_TYPE       	LINE_TYPE       	0	0	N		AON	AON				20060119	20060119						210									1			Line Type				4												
+POC_LINECODE    	005	DROPSHIP        	DROPSHIP        	0	0	N		AON	AON				20060119	20060119						30					Drop Ship?				1			Drop Ship [Y/N]?				5												
+POC_LINECODE    	006	LEAD_TIM_FLG    	LEAD_TIM_FLG    	0	0	N		AON	AON				20060119	20060119						30									1			Use Line for Lead Time Calc?				6												
+POC_LINECODE    	007	LAND_CST_FLG    	LAND_CST_FLG    	0	0	N		AON	AON				20060119	20060119						30					Use for Landed Cost?				1			Use for Landed Cost [Y/N]?				7												
+POC_LINECODE    	008	ADD_OPTIONS     	ADD_OPTIONS     	0	0	N		AON	AON				20060119	20060119						30						Opts?			1			Additional Options [Y/N]?				8												
 POC_LINECODE    	009	RESERVED_STR    	RESERVED_STR    	7	0	Y	0A	AON	AON				20060119	20060119																		Reserved For Addon Use																
-POC_LINECODE    	010	GL_EXP_ACCT     	GL_EXP_ACCT     	0	0	Y	0A	AON	AON				20060119	20060119																		GL Expense Account				9												
-POC_LINECODE    	011	GL_PPV_ACCT     	GL_PPV_ACCT     	0	0	Y	0A	AON	AON	N			20060306	20060306																																		
-POC_MSGCODE     	001	FIRM_ID         	FIRM_ID         	0	0	N		AON	AON				20060119	20060119																		Firm ID																
-POC_MSGCODE     	002	PO_MSG_CODE     	PO_MSG_CODE     	0	0	Y	0A	AON	AON				20060119	20060119																		PO Standard Message Code																
-POC_MSGCODE     	003	CODE_DESC       	CODE_DESC       	0	0	N		AON	AON				20060119	20060119																		Code Description																
-POC_MSGCODE     	004	MESSAGE_TYPE    	MESSAGE_TYPE    	0	0	N		AON	AON				20060119	20060119																		Message Type																
-POC_MSGCODE     	005	RESERVED_STR    	RESERVED_STR    	11	0	Y	0A	AON	AON				20060119	20060119																		Reserved For Addon Use																
+POC_LINECODE    	010	GL_EXP_ACCT     	GL_EXP_ACCT     	0	0	Y	0A	AON	AON				20060119	20060119						80	0								10			GL Expense Account				9												
+POC_LINECODE    	011	GL_PPV_ACCT     	GL_PPV_ACCT     	0	0	Y	0A	AON	AON	N			20060306	20060306						80	0								10							10												
+POC_MSGCODE     	001	FIRM_ID         	FIRM_ID         			N							20070707	20070707															2							1												
+POC_MSGCODE     	002	PO_MSG_CODE     	PO_MSG_CODE     			Y	0A						20070707	20070707						35					Standard Message				3							2												
+POC_MSGCODE     	003	CODE_DESC       	CODE_DESC       			N							20070707	20070707						160									20							3												
+POC_MSGCODE     	004	MESSAGE_TYPE    	MESSAGE_TYPE    			N							20070707	20070707						210									1							4												
+POC_MSGCODE     	005	RESERVED_STR    	RESERVED_STR    			Y	0A						20070707	20070707																																		
 POC_MSGLINE     	001	FIRM_ID         	FIRM_ID         	0	0	N		AON	AON				20060119	20060119																		Firm ID																
 POC_MSGLINE     	002	PO_MSG_CODE     	PO_MSG_CODE     	0	0	N		AON	AON				20060119	20060119																		PO Standard Message Code																
 POC_MSGLINE     	003	SEQUENCE_NUM    	SEQUENCE_NUM    	0	0	Y	0A	AON	AON				20060119	20060119																		Sequence Number																
@@ -6086,7 +6096,7 @@ PRX_W2WORK      	003	EMPLOYEE_NO     	EMPLOYEE_NO     	0	0	N		AON	AON				2006011
 PRX_W2WORK      	004	YEAR            	YEAR            	0	0	N		AON	AON				20060119	20060119																		Year																
 PRX_W2WORK      	005	STATE_CODE      	STATE_CODE      	0	0	N		AON	AON				20060119	20060119																		State Code																
 PRX_W2WORK      	006	LOC_TAX_CODE    	LOC_TAX_CODE    	0	0	Y	0A	AON	AON				20060119	20060119																		Local Tax Code																
-RDE             	20070628	150614	20070628	150624	0000000083	01	APP_PROG	Export to ODBC Dictionary																																								
+RDE             	20070629	100250	20070629	100252	0000000188	01	APP_PROG	Export to ODBC Dictionary																																								
 SAM_CUSTOMER    	001	FIRM_ID         	FIRM_ID         	0	0	N		AON	AON				20060119	20060119																		Firm ID				1												
 SAM_CUSTOMER    	002	YEAR            	YEAR            	0	0	N		AON	AON				20060119	20060119																		Year				2												
 SAM_CUSTOMER    	003	CUSTOMER_ID     	CUSTOMER_ID     	0	0	N		AON	AON				20060119	20060119												Customer N						Customer Number				3												

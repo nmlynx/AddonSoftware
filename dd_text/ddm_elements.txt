@@ -263,12 +263,22 @@ COUNTRY         	Country	C	24	  	 	               		AON	AON	20060119	20060315			
 COUNT_STRING    	Count String                  	C	50	  	 	               		AON	AON	20060119	20060119				E		            	            					Count String	Count String																										
 CREATED_DATE    	Date Created                  	C	8	  	 	YYYYMMDD       		AON	AON	20060119	20060119				D		            	            					Date Created	Date Created															1											
 CREATE_DATE     	Creation Date                 	C	8	  	 	YYYYMMDD       		AON	AON	20060119	20060119				D		            	            					Creation Date	Creation Date															1											
+CREDITMGR_ACTIVE	Credit Management Sys Installd	C	1	AR				MAS	AON	20070704	20070704	Y;N	0	0	C								Credit Mgr Active	cr mgr 				0							Should Credit Management System Be Used?															
 CREDIT_AMT      	Credit Posting Amount	N	7	GL	A		N	AON	AON	20060501	20061019				N		            	            					Credit Amount	Credit																										
 CREDIT_CARD_NO  	Credit Card Number	C	40				N	AON	AON	20060718	20060718		0	0	E								Credit Card Number	Credit Card No	16	0		0		0000 0000 0000 0000																				
 CREDIT_FLAG     	Credit Hold Status            	C	1	  	 	               		AON	AON	20060119	20060119				E		            	            					Credit Hold Status	Cred Hold Stat																										
 CREDIT_LIMIT    	Credit Limit                  	N	7	AR	A	               		AON	AON	20060119	20060119				N		            	            					Credit Limit	Cred Lim																										
 CRED_HOLD       	Credit Hold [Y/N/E]           	C	1	  	 	               		AON	AON	20060119	20060119				E		            	            					Credit Hold	Cred Hold																										
 CRED_PASSWD     	Credit Password               	C	6	  	 	               		AON	AON	20060119	20060119				E		            	            					Credit Password	Cred Password																										
+CR_AGETOHOLD    	Auto Hold Aging Column	C	1	AR				MAS	AON	20070704	20070704				B								Aging To Hold	Hold Age																										
+CR_AUTOHOLD     	Hold Orders > Credit Limit 	C	1	AR				MAS	AON	20070704	20070704	Y;N			C								Hold Over Limit	Hold																										
+CR_DISPLAY      	How To Display In Order Entry	C	1	AR				MAS	AON	20070704	20070704				L								Display	Display											A=Automatically Display,  R=Display on Req, N=No Display															
+CR_MANUALHOLD   	Allow manual Holds?	C	1	AR				MAS	AON	20070704	20070704	Y;N			C								Manual Holds	Manual Hold																										
+CR_MAXORDER     	Maximum Order Not Held	C	9	AR				MAS	AON	20070704	20070704				E								Max Order	Max Ord	9			1	0	ZZZZZZ.ZZ		20	R		Orders Over This Amount Will Automatically Be Held															
+CR_MINBAL       	Minimum $ To Place On Hold	C	7	AR				MAS	AON	20070704	20070704				E								Min $ To Hold	Min $ Hold					0	ZZZ.ZZ		20	R		Hold Past Due Balances Which Exceed This Amount	0														
+CR_NEWCUST      	Automatic Hold On New Customer	C	1	AR				MAS	AON	20070704	20070704	Y;N			C								Hold New	Hold New				0							Hold All Orders For New Customers For Approval?															
+CR_PASSWD       	Password For Credit Release	C	6	AR				MAS	AON	20070704	20070704				E								Password	Password 	6			6							Password For Credit Release															
+CR_PICKLIST     	Pick List For Held Cust	C	1	AR				MAS	AON	20070704	20070704	Y;N			C								Pick List	Pick List											Print Pick List If Customer Is On Hold?															
 CURRENT_DATE    	Current System Date           	C	8	  	 	YYYYMMDD       		AON	AON	20060119	20060119				D		            	            					Current System Date	Curr Sys Date															1											
 CURRENT_PER     	Current Period	C	2	  	 	               		AON	AON	20060119	20060501				E		            	            					Current Period	Curr Prd						00	00	30	R																	
 CURRENT_YEAR    	Current Year	C	4				N	AON	AON	20060119	20061204		0	0	E		            						Current Year	Curr Yr	0	0		0		0000									3											
@@ -740,7 +750,7 @@ LINE_CODE       	Line Code                     	C	1	  	 	               		AON	AO
 LINE_NO         	Detail Line Item Number	C	3	  	 	               		AON	AON	20060119	20060504				E		            	            					Detail Line Item Number	Dtl Line Item No						000	000	30	R						S											
 LINE_NO_2       	Detail Line Item Number	C	3	  	 	               		AON	AON	20061004	20061004				E		            	            					Detail Line Item Number	Dtl Line Item No						000	000	30	R						S											
 LINE_POINT      	Line Point [Calculated]       	N	7	IV	U	               		AON	AON	20060119	20060119				N		            	            					Line Point [Calculated]	Line Point																										
-LINE_TYPE       	Line Type                     	C	1	  	 	               		AON	AON	20060119	20060119				E		            	            					Line Type	Line Type																										
+LINE_TYPE       	Line Type	C	1	  		               		AON	AON	20060119	20070707				L		            	            					Line Type	Line Type																										
 LOCATION        	Warehouse Location            	C	10	  	 	               		AON	AON	20060119	20060119				E		            	            					Warehouse Location	Whse Loc																										
 LOCKED_DATE     	Date Locked                   	C	8	  	 	YYYYMMDD       		AON	AON	20060119	20060119				D		            	            					Date Locked	Date Locked															1											
 LOCKED_FLAG     	Locked [Y/N]?                 	C	1	  	 	               		AON	AON	20060119	20060119	Y;N			C		            	            					Locked?	Locked?																										
@@ -748,7 +758,7 @@ LOCK_STATUS     	Lock Status                   	C	1	  	 	               		AON	AO
 LOC_TAX_CODE    	Local Tax Code                	C	2	  	 	               		AON	AON	20060119	20060119				E		            	            					Local Tax Code	Local Tax Cd																										
 LOTSER_FLAG     	Lotted/Serialized [LSN]       	C	1	  	 	               		AON	AON	20060119	20060119				E		            	            					Lotted/Serialized	Lot/Ser [LSN]																										
 LOTSER_ITEM     	Lotted or Serialized Item?    	C	1	  	 	               		AON	AON	20060119	20060119	Y;N			C		            	            					Lotted or Serialized Item?	Lot/Ser Item?																										
-LOTSER_NO       	Lot/Serial Number             	C	20	  	 	               		AON	AON	20060119	20060119				E		            	            					Lot/Serial Number	Lot/Serial No																										
+LOTSER_NO       	Lot/Serial Number	C	20	IV	 	               		AON	AON	20060119	20070709				E		            	            			[+FIRM_ID]+[WAREHOUSE_ID]+[ITEM_ID]+@	IVM_LSMASTER    	Lot/Serial Number	Lot/Serial No	20							20	L		Enter a Valid Serial Number or Lot Number															
 LOW_INC_LIM     	Low Income Limit	N	7	PR	A	               		AON	AON	20060119	20060328				N		            	            					Low Income Limit	Low Income Lim																										
 LSTACT_DATE     	Last Activity Date            	C	8	  	 	YYYYMMDD       		AON	AON	20060119	20060119				D		            	            					Last Activity Date	Last Act Date															1											
 LSTADJ_DATE     	Last Adjustment Date          	C	8	  	 	YYYYMMDD       		AON	AON	20060119	20060119				D		            	            					Last Adjustment Date	Last Adj Date															1											
@@ -802,7 +812,7 @@ MENU_JUMP       	Allow Menu Jumping [Y/N]?     	C	1	  	 	               		AON	AO
 MESSAGE_CODE    	Standard Message Code         	C	2	  	 	               		AON	AON	20060119	20060119				E		            	            					Standard Message Code	Std Msg Cd																										
 MESSAGE_SEQ     	Messages Sequence Number      	C	2	  	 	               		AON	AON	20060119	20060119				E		            	            					Messages Sequence Number	Msgs Seq No																										
 MESSAGE_TEXT    	Message Text                  	C	40	  	 	               		AON	AON	20060119	20060119				E		            	            					Message Text	Msg Text																										
-MESSAGE_TYPE    	Message Type                  	C	1	  	 	               		AON	AON	20060119	20060119				E		            	            					Message Type	Msg Type																										
+MESSAGE_TYPE    	Message Type	C	1	  		               		AON	AON	20060119	20070709				L		            						Message Type	Msg Type																										
 MESSENGER_ID    	Instant Messenger ID	C	20					AON	AON	20060424	20060424				E								Instant Messenger ID	IM ID																										
 MINIMUM_AMT     	Minimum Amount	N	7	AR	A			AON	AON	20070118	20070118				N		            	            					Minimum Amount	Min Amt   																										
 MIN_CSH_SALE    	Minimum Cash Sale             	C	5	  	 	               		AON	AON	20060119	20060119				E		            	            					Minimum Cash Sale	Min Cash Sale																										
@@ -1354,6 +1364,9 @@ SIM_INV_TYPE    	Simple Invoice Type	C	1	AR			N	AON	AON	20061121	20061121				L		
 SKIP_LN_CODE    	Skip Line Code Entry?         	C	1	  	 	               		AON	AON	20060119	20060119				E		            	            					Skip Line Code Entry?	Skip Line Cd Entry?																										
 SKIP_WHSE       	Skip Warehouse Entry?         	C	1	  	 	               		AON	AON	20060119	20060119				E		            	            					Skip Warehouse Entry?	Skip Whse Entry?																										
 SLSPSN_CODE     	Salesperson Code	C	3	  	 	               		AON	AON	20060119	20061009				E	CODE_DESC       	            	            			[+FIRM_ID]+"F"+@	ARC_SALECODE    	Salesperson Code	Salespsn Cd						UUU				0																
+SLS_DISC_CD     	Sales Discount Code	C	2	AR				MAS	AR	20070702	20070702				E								Sales Discount Code	Sales Discount Code								20	L																	
+SLS_DISC_DESC   	Sales Discount Description	C	20	AR				MAS	AR	20070702	20070702				E								Sales Discount Description	Description	20			0																						
+SLS_DISC_PRCNT  	Sales Discount Percent	N	5	AR	%			MAS	AR	20070702	20070702			0	N								Sales Discount Percent	Percent	5			0																						
 SLS_INV_BYDT    	Sales by Invoice Date         	N	7	AR	A	               		AON	AON	20060119	20060119				N		            	            					Sales by Invoice Date	Sales by Inv Date																										
 SOC_SEC_NO      	Social Security Number        	C	9	  	 	000-00-0000    		AON	AON	20060119	20060119				E		            	            					Social Security Number	Social Security No																										
 SORT_AMOUNT     	Sales Analysis Sort Amount    	C	16	  	 	               		AON	AON	20060119	20060119				E		            	            					Sales Analysis Sort Amount	SA Sort Amt						0000000000000000	0000000000000000	30	R																	

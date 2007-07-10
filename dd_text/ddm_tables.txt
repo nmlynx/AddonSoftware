@@ -33,7 +33,7 @@ ADM_USER        	User Record	adm-02A	[+SYDATA]	X		0		Y	AD		AON	AD 	C966E3B652E8D
 ADM_USERFIRM    	Operator/Firm Record	adm-12A	[+SYDATA]	X	0	0	6	N	AD		AON	AD 	CFBBC6DCEAF8222889EA27DA40A3947B	Y	20060404	20060404					T							zzzz	Operator/Firm Record											
 ADM_USERPRNT    	Operator/Printer Record	adm-22A	[+SYDATA]	X	0	0	8	N	AD		AON	AD 	9D11C2C2CE7AD87F2D2C7737572AF37A	Y	20060404	20060404					T							zzzz	Operator/Printer Record											
 ADM_USERROLES   	User Security Roles		[+ADDATA]	X		0	28	Y	AD	N	AON	AD		Y	20070508	20070509					G		N						User Security Roles											
-ADR_LAYOUTS     	Table Layouts Report			P					AD		AON	AD 	1D3355E5D89D5BD5A7DFE83573E1B8F3		20060331	20060331					S					s:/development/programs/adr_layouts.aon			Table Layouts Report											
+ADR_LAYOUTS     	Table Layouts Report			P					AD		AON	AD 	1D3355E5D89D5BD5A7DFE83573E1B8F3		20060331	20070706					S					[+DIR_PGM]adr_layouts.aon			Table Layouts Report											
 ADR_PROCESSES   	Process Listing			P				N	AD	N	AON	AD		N	20070306	20070606					S		N			[+DIR_PGM]apr_processes.aon			Process Listing											
 ADS_CALENDAR    	GL Parameters	ads-01	[+GLDATA]	R	6	0	1024	N	GL		AON	GL 		Y	20060119	20070119		[+DIR_PGM]gla_params.aon			T							zzzz	GL Parameters											
 ADS_DOCUMENTS   	Documents		[+ADDATA]	X			375	N	AD		AON	AD 	FD35A4BE7D1942CFB12DA43FFB849F63	Y	20060421	20070620					T		N						Documents											
@@ -119,6 +119,7 @@ ARC_CASHCODE    	Cash Receipts Code	arm-10C	[+ARDATA]	M	7	0	256	N	AR		AON	AR 	56
 ARC_CUSTTYPE    	Customer Type Code	arm-10L	[+ARDATA]	M	7	0	256	N	AR		AON	AR 	C6815B4643D36796AE265D7E75C10AF8	Y	20060119	20061110					G							zzzz	Customer Type Code											
 ARC_DISTCODE    	Distribution Code	arm-10D	[+ARDATA]	M	7	0	256	N	AR		AON	AR 	B65D43259FF4A567977C4109620B43BD	Y	20060119	20061129					T							zzzz	Distribution Code											
 ARC_SALECODE    	Salesperson Code	arm-10F	[+ARDATA]	M	7	0	256	N	AR		AON	AR 	B6CC9DC228B4B81DCF549C365EB05D6C	Y	20060119	20061110					G							zzzz	Salesperson Code											
+ARC_SALESDISC   	Sales Discount Code Mx	arm-10i	[+ARDATA]	X			36		AR		MAS	AR		Y	20070702	20070702					G								Sales Discount Code 											
 ARC_TERMCODE    	Terms Code	arm-10A	[+ARDATA]	M	7	0	256	N	AR		AON	AR 	0D48EF96A4E33C72B6BBE8276BE80FDA	Y	20060119	20061129					G							zzzz	Terms Code											
 ARC_TERRCODE    	Territory Code	arm-10H	[+ARDATA]	M	7	0	256	N	AR		AON	AR 	A00D1BE0C76179FDC971B7855537B1B0	Y	20060119	20061110					G							zzzz	Territory Code											
 ARE_CASHBAL     	Cash Receipts Entry Balance	are-31A	[+ARDATA]	K	0	0	38	N	AR		AON	AR 	E1EA6B55602E2141F64AF68292B6C4BB	Y	20060119	20060119					T							zzzz	Cash Receipts Entry Balance											
@@ -327,6 +328,7 @@ IVM_ITEMTIER    	LIFO/FIFO Tier Detail	ivm-04A	[+IVDATA]	X	0	0	86	N	IV		AON	IV 	
 IVM_ITEMVEND    	Item Vendor Detail     	ivm-05A	[+IVDATA]	X	0	0	183	N	IV		AON	IV 	08FF66D967A0B73B197C8E836C20285E	Y	20060119	20070608			ALT_KEY_01		T							zzzz	Vendor Detail											
 IVM_ITEMWHSE    	Warehouse Master	ivm-02A	[+IVDATA]	X		0	338	N	IV		AON	IV 	749B5ED1E0D40561AAF99DD6CC478A62	Y	20060119	20070607		[+DIR_PGM]ivm_itemwhse_cpt.aon	ALT_KEY_02		T							zzzz	Warehouse Master											
 IVM_LSACT       	Lot/Serial Period History	ivm-17A	[+IVDATA]	X	0	0	148	N	IV		AON	IV 	657A6F3FEC3143563DAF5EAF4E2D40C4	Y	20060119	20061018			ALT_KEY_01		G							zzzz	Lot/Serial Period History											
+IVM_LSITEMHIST  	Lot/Ser Item History Inquiry			P					IV		MAS	AON		Y	20070707	20070707					S								Lot/Serial Item History Inquiry											
 IVM_LSMASTER    	Lot/Serial Number Master	ivm-07A	[+IVDATA]	X	0	0	322	N	IV		AON	IV 	4FD00637DCD83C83243D5014476C0CDA	Y	20060119	20070608		[+DIR_PGM]ivm_lsmaster_cpt.aon	ALT_KEY_03		T							zzzz	Lot/Serial Number Master											
 IVR_ITEMACT     	Inventory Item Activity			P				N	IV	N	AON	IV 			20061027	20061103					S					[+DIR_PGM]ivr_itemact.aon                      			Inventory Item Activity											
 IVR_ITEMDESC    	Inventory Description Listing			P					IV		AON	IV 			20060331	20060420					S					[+DIR_PGM]ivr_itemdesc.aon			Inventory Description Listing											
@@ -392,7 +394,7 @@ MPW_REQPURCH    	Purchases Reqs By Item & Date	mpw-06A	[+MPDATA]	M	30	0	128	N	MP
 MPW_REQVEND     	Item Requirements By Vendor	mpw-04A	[+MPDATA]	M	39	0	128	N	MP		AON	MP 		Y	20060119	20060119					X							zzzz	Item Requirements By Vendor											
 MPX_REQVEND     	Requirements By Vendor Xref	mpw-03A	[+MPDATA]	M	45	0	46	N	MP		AON	MP 		Y	20060119	20060119					X							zzzz	Requirements By Vendor Xref											
 OPC_DISCCODE    	Sale Discount Code	opm-03A	[+OPDATA]	X	0	0	48	N	OP		AON	OP 		Y	20060119	20060119					T							zzzz	Sale Discount Code											
-OPC_LINECODE    	Order Processing Line Codes	opm-02A	[+OPDATA]	X	0	0	96	N	OP		AON	OP 		Y	20060119	20060119					T							zzzz	Order Processing Line Codes											
+OPC_LINECODE    	Order Processing Line Codes	opm-02A	[+OPDATA]	X	0	0	50	N	OP		AON	OP 		Y	20060119	20070707					T							zzzz	Order Processing Line Codes											
 OPC_MSG_DET     	Standard Message Detail	opm-14A	[+OPDATA]	X	0	0	64	N	OP		AON	OP 		Y	20060119	20060119					T							zzzz	Standard Message Detail											
 OPC_MSG_HDR     	Standard Message Header	opm-04A	[+OPDATA]	X	0	0	64	N	OP		AON	OP 		Y	20060119	20060119					T							zzzz	Standard Message Header											
 OPC_PRICECDS    	Customer Price Code	opm-05A	[+OPDATA]	X	0	0	64	N	OP		AON	OP 		Y	20060119	20060119					T							zzzz	Customer Price Code											
@@ -445,8 +447,8 @@ OPW_MTDGLJRN    	GL Recap	opw-04A	[+OPDATA]	M	30	0	48	N	OP		AON	OP 		Y	20060119	
 OPW_SALESUMM    	Salesperson Summary	opw-31A	[+OPDATA]	M	8	0	32	N	OP		AON	OP 		Y	20060119	20060119					X							zzzz	Salesperson Summary											
 OPW_SCHEDULE    	Shipping Schedule Work	opw-02A	[+OPDATA]	M	54	0	128	N	OP		AON	OP 		Y	20060119	20060119					X							zzzz	Shipping Schedule Work											
 OPW_TERRSUMM    	Territory Summary	opw-11A	[+OPDATA]	M	8	0	32	N	OP		AON	OP 		Y	20060119	20060119					X							zzzz	Territory Summary											
-POC_LINECODE    	Purchase Order Line Codes	pom-02A	[+PODATA]	X	0	0	64	N	PO		AON	PO 		Y	20060119	20060119					T							zzzz	Purchase Order Line Codes											
-POC_MSGCODE     	Purchase Order Message Codes	pom-04A	[+PODATA]	X	0	0	48	N	PO		AON	PO 		Y	20060119	20060119					T							zzzz	Purchase Order Message Codes											
+POC_LINECODE    	Purchase Order Line Codes	pom-02A	[+PODATA]	X	0	0	64	N	PO		AON	PO 		Y	20060119	20070707					T							zzzz	Purchase Order Line Codes											
+POC_MSGCODE     	PO Message Code	pom-04a	[+PODATA]	X			31		PO		MAS	PO		Y	20070707	20070709					T								PO Message Code											
 POC_MSGLINE     	Purchase Order Message Lines	pom-14A	[+PODATA]	X	0	0	64	N	PO		AON	PO 		Y	20060119	20060119					T							zzzz	Purchase Order Message Lines											
 POC_REJCTCMT    	QA Receipt Rejection Comments	pom-13A	[+PODATA]	X	0	0	64	N	PO		AON	PO 		Y	20060119	20060119					T							zzzz	QA Receipt Rejection Comments											
 POC_REJCTCOD    	QA Receipt Rejection Codes	pom-03A	[+PODATA]	X	0	0	58	N	PO		AON	PO 		Y	20060119	20060119					T							zzzz	QA Receipt Rejection Codes											
