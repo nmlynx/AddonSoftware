@@ -51,7 +51,7 @@ rem --- v7.x Administrator reference ["syc_rs.bbx"] (Line 0698)
 rem --- BBx reference ["syc_rs.bbx"] (Line 0698)
 rem --- v7.x Administrator reference ["syc_rs.bbx"] (Line 0707)
 rem --- BBx reference ["syc_rs.bbx"] (Line 0707)
-rem --- v7.x Administrator reference ["syc_rs.bbx"] (Line 0715)
+rem --- vxsds7.x Administrator reference ["syc_rs.bbx"] (Line 0715)
 rem --- BBx reference ["syc_rs.bbx"] (Line 0715)
 rem --- v7.x Administrator reference ["syc_rs.bbx"] (Line 0718)
 rem --- BBx reference ["syc_rs.bbx"] (Line 0718)
@@ -139,7 +139,7 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+rem change  milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -199,7 +199,7 @@ rem --- Open/Lock files
     sfe01_dev=channels[23]
     sfe22_dev=channels[24]
     sfe32_dev=channels[25]
-
+rem  add file_dev=arm01_dev
 rem --- Dimension string templates
 
     dim apm01a$:templates$[2],arm01a$:templates$[3],ivm01a$:templates$[4],
@@ -231,20 +231,47 @@ rem --- Dimension miscellaneous string templates
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
+  rem add filename$=fnget_fld_data$(tables$,"file_name")
+  rem add description$=fnget_fld_data$(tables$,"descript")
+  rem add help$=fnget_fld_data$(tables$,"help")
+  rem add writeprotect$=fnget_fld_data$(tables$,"write_protect")
+  rem add recordid$=fnget_fld_data$(tables$,"record_id")
+  rem add filesize$=fnget_fld_data$(tables$,"file_size")
+  rem add keysize$=fnget_fld_data$(tables$,"key_size")
+  rem add recordlength$=fnget_fld_data$(tables$,"record_length")
+  rem add numberofrecords$=fnget_fld_data$(tables$,"number_of_records")
+  rem add lastrevision1$=fnget_fld_data$(tables$,"last_revision1")
+  rem add lastrevision2$=fnget_fld_data$(tables$,"last_revision2"")
+
     value_01$=fnget_fld_data$(table$,"dataname_01")
 
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+rem add customer_size=num(aps01a.customer_size$)
+rem m0$=aps01a.customer_output$
+rem m0=len(m0$)
     ars01a_key$=firm_id$+"AR00"
     find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+rem add customer_size=num(ars01a.customer_size$)
+rem m1$=ars01a.customer_output$
+rem m1=len(m1$)
     ivs01a_key$=firm_id$+"IV00"
     find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+rem add customer_size=num(ivs01a.customer_size$)
+rem m2$=ivs01aivs01a.customer_output$
+rem m2=len(m2$)
     pos01a_key$=firm_id$+"PO00"
     find record (ads01_dev,key=pos01a_key$,err=std_missing_params) pos01a$
+rem add customer_size=num(pos01a.customer_size$)
+rem m3$=pos01a.customer_output$
+rem m3=len(m3$)
     sys01a_key$=firm_id$+"SY00"
     find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
+rem add customer_size=num(sys01a.customer_size$)
+rem m4$=sys01a.customer_output$
+rem m4=len(m4$)
 
 rem --- Open/Lock Files
 
@@ -867,3 +894,12 @@ std_exit: rem --- Standard program end (01Mar2006)
 rem #endinclude std_end.src
 
     end
+rem subroutine 
+flow_initializations:
+return
+rem subroutine
+std_input:
+return
+rem subroutine
+clear_text:
+return
