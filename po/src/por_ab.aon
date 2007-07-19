@@ -45,51 +45,6 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
-
-    files=9,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="arm-01"
-    files$[4]="ivm-01"
-    files$[5]="ivm-02"
-    files$[6]="poe-01"
-    files$[7]="poe-11"
-    files$[8]="pom-02"
-    files$[9]="pow-07"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ads01_dev=channels[1]
-    apm01_dev=channels[2]
-    arm01_dev=channels[3]
-    ivm01_dev=channels[4]
-    ivm02_dev=channels[5]
-    poe01_dev=channels[6]
-    poe11_dev=channels[7]
-    pom02_dev=channels[8]
-    pow07_dev=channels[9]
-
-rem --- Dimension string templates
-
-    dim apm01a$:templates$[2],arm01a$:templates$[3],ivm01a$:templates$[4],
-:       ivm02a$:templates$[5],poe01a$:templates$[6],poe11a$:templates$[7],
-:       pom02a$:templates$[8],pow07a$:templates$[9]
-
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="ivs-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1],ivs01a$:templates$[2]
-
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
@@ -111,16 +66,9 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01") //cc code
 rem i3$,m1$,m2$,m3$
 rem ************************************************************************
 
-rem --- Retrieve parameter records
-
-    aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
 rem --- Initializations
 
-    precision i[1]
+    precision num(ivs01a.precision$);rem was i[1].CAH
     dim headings$[5],o[14],vendor[1],req[1],report[1],totals[1]
     dim c0$(22),c1$(60),d0$(24),d1$(64),d[20],description$(40),r0$(8),r1$(30)
     dim w0$(18),w1$(48),w2$(32),w3$(22),w4$(40),w[12],y0$(4),y1$(32)
@@ -140,8 +88,8 @@ rem --- Initializations
     if sequence$="A" headings$[1]=sysinfo.task_desc$+" By Vendor Alternate Sequence"
     if sequence$="V" headings$[1]=sysinfo.task_desc$+" By Vendor"
     if sequence$="R" headings$[1]=sysinfo.task_desc$+" By Requisition Number"
-    if i3$(8,1)="S" cost$="Std"
-    if i3$(8,1)="R" cost$="Rep"
+    if ivs01a.cost_method$="S" cost$="Std"; rem was i3$(8,1).CAH
+    if ivs01a.cost_method$="R" cost$="Rep";rem was i3$(8,1).CAH
 
 rem ************************************************************************
 rem post cc edit on 16th July 2007
@@ -152,7 +100,9 @@ rem end post cc edit on 16th July 2007
 rem ************************************************************************
 
 rem --- Print positions
-
+    m1$=ivs01a.amount_mask$
+    m2$=ivs01a.unit_mask$
+    m3$=ivs01a.cost_mask$;rem ivs01a$ is parameter record from opr_aa.CAH
     call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
     call pgmdir$+"adc_sizemask.aon",m2$,m2,9,12
     call pgmdir$+"adc_sizemask.aon",m3$,m3,7,12
@@ -209,171 +159,120 @@ no_end_vendor:
 
 rem --- Position files
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",18,pow07_dev,1,0,ignore_status
     call pgmdir$+"adc_progress.aon","N","","","","",0,pow07_dev,1,meter_num,status
-rem end post cc edit on 16th July 2007
-rem ************************************************************************
-
     read (pow07_dev,key=firm_id$,dom=*next)
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem
-rem l1000: rem --- Get next sort record //cc code
-    while more
-rem end post cc edit on 16th July 2007
-rem ************************************************************************
+while more
 
-    k$=key(pow07_dev,end=done)
-    if pos(firm_id$=k$)<>1 goto done
+    k$=key(pow07_dev,end=*break)
+    if pos(firm_id$=k$)<>1 break
     read (pow07_dev)
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem 
-rem on pos(sequence$="AVR") goto l3900,l1100,l1200,l1300
-    if pos(sequence$="") *continue
-    else if pos(sequence$="A")
-rem l1100: rem --- Alpha sequence
-        a0$(1)=k$(1,2)+k$(13)
-        x$=k$(3,10)+" "+k$(19,7)
-rem     if t0$<>k$(3,16) gosub l6000
-        if t0$<>k$(3,16) gosub ven_break
-rem     if t1$<>k$(19,7) gosub l6200
-        if t1$<>k$(19,7) gosub req_break
+    switch pos(sequence$="AVR");rem "switch/case replaces compound if/else.CAH
+        case 1; rem sequence$="A" - alpha sequence
+            a0$(1)=k$(1,2)+k$(13)
+            x$=k$(3,10)+" "+k$(19,7)
+            if t0$<>k$(3,16) gosub ven_break
+            if t1$<>k$(19,7) gosub req_break
+        break
 
-rem     goto l1500
-rem l1200: rem --- Vendor sequence
-    else if pos(sequence$="V")
-        a0$(1)=k$(1,2)+k$(13)
-        x$=fnmask$(k$(13,vendlen),m0$)+" "+k$(19,7)
-rem     if t0$<>k$(13,6) gosub l6000
-        if t0$<>k$(13,6) gosub ven_break
-rem     if t1$<>k$(19,7) gosub l6200
-        if t1$<>k$(19,7) gosub req_break
-rem     goto l1500
-rem l1300: rem --- Requisition sequence
-    else if pos(sequence$="R")
-        a0$(1)=k$(1,2)+k$(20,6)+k$(13,7)
-        x$=k$(19,7)
-rem     if t1$<>k$(13,7) gosub l6400
-        if t1$<>k$(13,7) gosub ret_vendor
+        case 2; rem sequence$="V" - vendor sequence
+            a0$(1)=k$(1,2)+k$(13)
+            x$=fnmask$(k$(13,vendlen),m0$)+" "+k$(19,7)
+            if t0$<>k$(13,6) gosub ven_break
+            if t1$<>k$(19,7) gosub req_break
+        break
 
-rem     goto l1500
-    fi
+        case 3; rem sequence="R" - requisition number sequence
+            a0$(1)=k$(1,2)+k$(20,6)+k$(13,7)
+            x$=k$(19,7)
+            if t1$<>k$(13,7) gosub ret_vendor
+        break
 
-rem l1500: rem --- Read requisition and vendor
+        case default
+            *continue
+        break
+    swend
 
-rem call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-rem end post cc edit on 16th July 2007
-rem ************************************************************************
 
     b0$(1)=k$(1,2)+k$(13,6)
     b1$(1)=""
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem 
-rem find record (poe01_dev,key=a0$,dom=l3900) poe01a$
     find record (poe01_dev,key=a0$,dom=*continue) poe01a$
-rem end post cc edit on 16th July 2007
-rem ************************************************************************
-
     find record (apm01_dev,key=b0$,dom=*next) apm01a$
 
-rem --- Requisition subheading
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem 
-rem if l+5>l9 gosub report_heading else gosub l5200
     if l+5>l9 gosub report_heading else gosub req_subheading
-
-rem end post cc edit on 16th July 2007
-rem ************************************************************************
 
 rem --- Position detail file
 
     read (poe11_dev,key=a0$,dom=*next)
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem
-rem l2000: rem --- Read next detail record  //cc code
     while more
 
-rem k$=key(poe11_dev,end=l3900)
-rem if pos(a0$=k$)<>1 goto l3900
-    k$=key(poe11_dev,end=*continue)
-    if pos(a0$=k$)<>1 *continue
-rem end post cc edit on 16th July 2007
-rem ************************************************************************
-    read record (poe11_dev) poe11a$
-    if y0$(1,4)=firm_id$+w1$(1,2) goto init_detail_line
-    y0$(1,4)=firm_id$+w1$(1,2)
-    y1$(1)=""
-rem find record (pom02_dev,key=y0$,dom=l2900) pom02a$
-    find record (pom02_dev,key=y0$,dom=other_type_line) pom02a$
+    k$=key(poe11_dev,end=*break);rem using break here to break from detail loop rather than continue.CAH
+    if pos(a0$=k$)<>1 *break
 
-rem l2100: rem --- Initialize detail line fields
-    init_detail_line: rem --- Initialize detail line fields
+    read record (poe11_dev) poe11a$
+    if pom02a.firm_id$+pom02a.po_line_code$=firm_id$+poe11a.po_line_code$ goto init_detail_line
+rem if y0$(1,4)=firm_id$+w1$(1,2) goto init_detail_line... see above.CAH
+    pom02a$(1)="";rem clear templated record w/o losing template
+    pom02a.firm_id$=firm_id$,pom02a.po_line_code$=poe11a.po_line_code$
+rem y0$(1,4)=firm_id$+w1$(1,2)...see above.CAH
+rem y1$(1)=""
+    find record (pom02_dev,key=pom02a.firm_id$+pom02a.po_line_code$,dom=other_type_line) pom02a$
+
+init_detail_line: rem --- Initialize detail line fields
 
     needed=2
     source$="Entry"
     wo$=""
-    before$=cvs(a1$(17,6),2)
-    promised$=cvs(a1$(11,6),2)
-    if y1$(22,1)="Y" needed=3
-    if w1$(34,1)="R" source$="Replen"
-    if w1$(34,1)="W" source$="WO"
-    if w1$(34,1)="M" source$="MRP"
-    if cvs(w1$(9,6),2)<>"" promised$=w1$(9,6)
-    if cvs(w1$(15,6),2)<>"" before$=w1$(15,6)
+    before$=cvs(poe01a.not_b4_date$,2);rem was a1$(17,6),2).CAH
+    promised$=cvs(poe01a.promise_date$,2);rem was a1$(11,6),2).CAH
+    if pom02a.dropship$="Y" needed=3;rem was y1$(22,1)
+    if poe11a.source_code$="R" source$="Replen";rem was w1$(34,1).CAH
+    if poe11a.source_code$="W" source$="WO";rem was w1$(34,1).CAH
+    if poe11a.source_code$="M" source$="MRP";rem was w1$(34,1).CAH
+    if cvs(poe11a.promise_date$,2)<>"" promised$=poe11a.promise_date$;rem was w1$(9,6).CAH
+    if cvs(poe11a.not_b4_date$,2)<>"" before$=poe11a.not_b4_date$;rem was w1$(15,6).CAH
     if cvs(before$,2)<>"" before$=fndate$(before$)
     if cvs(promised$,2)<>"" promised$=fndate$(promised$)
 
 rem --- Work order?
 
-rem if sf$="N" goto l2300
     if sf$="N" goto ret_inv_items
-rem if cvs(w2$(1,10),2)="" goto l2300
-    if cvs(w2$(1,10),2)="" goto ret_inv_items
-    wo$=" WO: "+w2$(1,7)
-    if cvs(w2$(8,3),2)<>"" wo$=wo$+"-"+w2$(8,3)
+    if cvs(poe11a.wo_no$+poe11a.sequence_no$,2)="" goto ret_inv_items;rem was w2$(1,10).CAH
+    wo$=" WO: "+poe11a.wo_no$;rem was w2$(1,7).CAH
+    if cvs(poe11a.sequence_no$,2)<>"" wo$=wo$+"-"+poe11a.sequence_no$;rem was w2$(8,3).CAH
 
-rem l2300: rem --- Retrieve inventory item for S lines
 ret_inv_items: rem --- Retrieve inventory item for S lines
 
-    c0$(1)=firm_id$+w3$(3)
-    c1$(1)=""
+    ivm01a_key$=firm_id$+poe11a.item_no$;rem was c0$(1)=firm_id$+w3$(3).CAH
+    ivm01a$(1)="";rem was c1$(1)="".CAH
     description$(1)="(Not On File)"
-    d0$(1)=firm_id$+w3$
-    d1$(1)=""
-    d[11]=0
-rem if y1$(21,1)<>"S" goto l2400
-    if y1$(21,1)<>"S" goto calc_ext_branch
-    find record (ivm01_dev,key=c0$,dom=*next) ivm01a$
-    find record (ivm02_dev,key=d0$,dom=l3800) ivm02a$
-    description$(1)=fnitem$(c1$,i[3],i[4],i[5])
+    ivm02a_key$=firm_id$+poe11a.warehouse_id$+poe11a.item_no$;rem was d0$(1)=firm_id$+w3$.CAH
+    ivm02a$(1)="";rem was d1$(1)="".CAH
+    rem don't need d[11]=0
+    if pom02a.line_type$<>"S" goto calc_ext_branch;rem was y1$(21,1).CAH
+    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    find record (ivm02_dev,key=ivm02a_key$,dom=l3800) ivm02a$
+    description$(1)=ivm01a.description$
+    rem not using parameterized description lengths...description$(1)=fnitem$(c1$,i[3],i[4],i[5]).CAH
 
-rem l2400: rem --- Calculate extensions and branch based on line type
 calc_ext_branch: rem --- Calculate extensions and branch based on line type
 
-    qty=w[2]
+    qty=num(poe11a.req_qty$);rem was w[2].CAH
     iv_extension=0
-    if y1$(21,1)="O" qty=1
+    if pom02a.line_type$="O" qty=1;rem was y1$(21,1).CAH
     precision 2
-    po_extension=w[1]*qty
-    if y1$(21,1)="S" iv_extension=d[11]*qty*w[0]
-    precision i[1]
+    po_extension=num(poe11a.unit_cost$)*qty;rem was w[1].CAH
+    if pom02a.line_type$="S" iv_extension=num(ivm02a.unit_cost$)*qty*num(poe11a.conv_factor$);rem was y1$(21,1),d[11],and w[0].CAH
+    precision num(ivs01a.precision$);rem was i[1].CAH
+
+rem the following on/goto should be converted to a switch/case.CAH
+rem make sure the colon for continued lines (:) is at left margin.CAH
+rem ********************* .CAH stopped review here ************************
+
 rem on pos(y1$(21,1)="SNVMO") goto l3800,l2500,l2600,l2700,l2800,l2900
 rem on pos(y1$(21,1)="SNVMO") goto l3800,std_line,non_stock_line,ven_part_num_line,msg_line,other_type_line
     if pos(y1$(21,1)="") *continue
@@ -455,7 +354,7 @@ rem     goto l3000
 
     else if pos(y1$(21,1)="O")
 
-rem l2900: rem --- Other type line
+other_type_line:
         if l+needed>l9 gosub report_heading
         print (printer_dev) @(o[0]),w0$(16,3),
         :                   @(o[1]),w1$(1,2),
@@ -494,16 +393,8 @@ acc_totals: rem --- Accumulate totals
     report[0]=report[0]+iv_extension
     report[1]=report[1]+po_extension
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem
-rem l3800: rem --- Loop back for next header    //cc code
-rem goto l2000                                  //cc code
-rem l3900: rem --- Loop back for next header    //cc code
-rem goto l1000                                  //cc code
-    wend
-    wend
+    wend;rem next detail.CAH
+wend;rem next header.CAH
 rem ************************************************************************
 
 done: rem --- All done
