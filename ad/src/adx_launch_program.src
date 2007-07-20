@@ -52,6 +52,8 @@ event_ctl:rem --- Event Control
 	rdBtnRun!.setCallback(rdBtnRun!.ON_BUTTON_PUSH,"run_prog")
 	rdBtnExit!.setCallback(rdBtnExit!.ON_BUTTON_PUSH,"exit_prog")
 
+	BBjAPI().getMDI().registerMDIClosingCallback("exit_prog")
+
 	rdSysGUI!.flushEvents()
 
 	process_events
