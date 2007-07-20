@@ -48,12 +48,6 @@ rem --- Retrieve sysinfo data
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem
-rem value_01$=fnget_fld_data$(table$,"dataname_01") //cc code
     begreq$=fnget_fld_data$(table$,"req_no_1")
     endreq$=fnget_fld_data$(table$,"req_no_2")
     sequence$=fnget_fld_data$(table$,"print_sequence")
@@ -63,8 +57,6 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01") //cc code
     begdate$=fnget_fld_data$(table$,"date_1")
     enddate$=fnget_fld_data$(table$,"date_2")
     pagebrk$=fnget_fld_data$(table$,"page_brk_btw_vendor")
-rem i3$,m1$,m2$,m3$
-rem ************************************************************************
 
 rem --- Initializations
 
@@ -90,14 +82,7 @@ rem --- Initializations
     if sequence$="R" headings$[1]=sysinfo.task_desc$+" By Requisition Number"
     if ivs01a.cost_method$="S" cost$="Std"; rem was i3$(8,1).CAH
     if ivs01a.cost_method$="R" cost$="Rep";rem was i3$(8,1).CAH
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem
-rem more=1
-rem end post cc edit on 16th July 2007
-rem ************************************************************************
+    more=1
 
 rem --- Print positions
     m1$=ivs01a.amount_mask$
@@ -130,11 +115,13 @@ rem --- Report headings
     v$=begvend$
     gosub ret_vendor
     x1$=vendor$
+
 no_beg_vendor:
     if endvend$="" goto no_end_vendor
     v$=endvend$
     gosub ret_vendor
     x2$=vendor$
+
 no_end_vendor:
     h1$(1)="From Vendor: "+x1$
     h2$(1)="  To Vendor: "+x2$
@@ -159,371 +146,428 @@ no_end_vendor:
 
 rem --- Position files
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,pow07_dev,1,meter_num,status
+    call pgmdir$ + "adc_progress.aon","N","","","","",0,pow07_dev,1,meter_num,status
     read (pow07_dev,key=firm_id$,dom=*next)
+
+rem --- Begin loop for header file
 
 while more
 
-    k$=key(pow07_dev,end=*break)
-    if pos(firm_id$=k$)<>1 break
+rem k$=key(pow07_dev,end=*break)
+rem if pos(firm_id$=k$)<>1 break
+    pow07a_key$=key(pow07_dev,end=*break)
+    if pos(firm_id$=pow07a_key$)<>1 break
     read (pow07_dev)
 
-    switch pos(sequence$="AVR");rem "switch/case replaces compound if/else.CAH
-        case 1; rem sequence$="A" - alpha sequence
-            a0$(1)=k$(1,2)+k$(13)
-            x$=k$(3,10)+" "+k$(19,7)
-            if t0$<>k$(3,16) gosub ven_break
-            if t1$<>k$(19,7) gosub req_break
-        break
+    action=pos(sequence$="AVR")
+    alpha_sequence=1
+    vendor_sequence=2
+    requisition_number_sequence=3
 
-        case 2; rem sequence$="V" - vendor sequence
-            a0$(1)=k$(1,2)+k$(13)
-            x$=fnmask$(k$(13,vendlen),m0$)+" "+k$(19,7)
-            if t0$<>k$(13,6) gosub ven_break
-            if t1$<>k$(19,7) gosub req_break
-        break
+    switch action
+        case alpha_sequence
 
-        case 3; rem sequence="R" - requisition number sequence
-            a0$(1)=k$(1,2)+k$(20,6)+k$(13,7)
-            x$=k$(19,7)
-            if t1$<>k$(13,7) gosub ret_vendor
-        break
+rem             a0$(1)=k$(1,2)+k$(13)
+rem             x$=k$(3,10)+" "+k$(19,7)
+rem             if t0$<>k$(3,16) gosub vend_break
+rem             if t1$<>k$(19,7) gosub req_break
+
+                poe01a_key$(1) = pow07a_key.firm_id$ + pow07a_key.req_number$
+                x$=pow07a_key.reserved_str$ + " " + pow07a_key.req_number$
+                if t0$<>pow07a_key.vendor_nbr$ gosub vend_break
+                if t1$<>pow07a_key.req_number$ gosub req_break
+                break
+
+        case vendor_sequence
+                
+rem             a0$(1)=k$(1,2)+k$(13)
+rem             x$=fnmask$(k$(13,vendlen),m0$)+" "+k$(19,7)
+rem             if t0$<>k$(13,6) gosub vend_break
+rem             if t1$<>k$(19,7) gosub req_break
+
+                poe01a_key$(1) = pow07a_key.firm_id$ + pow07a_key.req_number$
+                x$=fnmask$(pow07a_key.vendor_nbr$,m0$)+" "+pow07a_key.req_number$
+                if t0$<>pow07a_key.vendor_nbr$ gosub vend_break
+                if t1$<>pow07a_key.req_number$ gosub req_break
+                break
+
+        case requisition_number_sequence
+                
+rem             a0$(1)=k$(1,2)+k$(20,6)+k$(13,7)
+rem             x$=k$(19,7)
+rem             if t1$<>k$(13,7) gosub ret_vendor
+
+                poe01a_key$(1) = pow07a_key.firm_id$ + pow07a_key.vendor_nbr$ + pow07a_key.req_number$
+                x$=pow07a_key.req_number$
+                if t1$<>pow07a_key.req_number$ gosub ret_vendor
+                break
 
         case default
-            *continue
-        break
+        
+                continue
+                break
     swend
 
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-    b0$(1)=k$(1,2)+k$(13,6)
-    b1$(1)=""
+rem    b0$(1)=k$(1,2)+k$(13,6)
+rem    b1$(1)=""
 
-    find record (poe01_dev,key=a0$,dom=*continue) poe01a$
-    find record (apm01_dev,key=b0$,dom=*next) apm01a$
+       apm01a_key$(1)=apm01a.firm_id$ + apm01a.vendor_nbr$
+       apm01a$(1)=""
+
+rem find record (poe01_dev,key=a0$,dom=*continue) poe01a$;  rem requisition header
+rem find record (apm01_dev,key=b0$,dom=*next) apm01a$;      rem vendor master
+
+    find record (poe01_dev,key=poe01a_key$,dom=*continue) poe01a$;  rem requisition header
+    find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$;      rem vendor master
 
     if l+5>l9 gosub report_heading else gosub req_subheading
 
 rem --- Position detail file
 
-    read (poe11_dev,key=a0$,dom=*next)
+rem read (poe11_dev,key=a0$,dom=*next); rem requisition detail
+    read (poe11_dev,key=poe01a_key$,dom=*next); rem requisition detail
 
-    while more
+rem --- Begin loop for detail file
 
-    k$=key(poe11_dev,end=*break);rem using break here to break from detail loop rather than continue.CAH
-    if pos(a0$=k$)<>1 *break
+    while more  
 
-    read record (poe11_dev) poe11a$
-    if pom02a.firm_id$+pom02a.po_line_code$=firm_id$+poe11a.po_line_code$ goto init_detail_line
-rem if y0$(1,4)=firm_id$+w1$(1,2) goto init_detail_line... see above.CAH
-    pom02a$(1)="";rem clear templated record w/o losing template
-    pom02a.firm_id$=firm_id$,pom02a.po_line_code$=poe11a.po_line_code$
-rem y0$(1,4)=firm_id$+w1$(1,2)...see above.CAH
-rem y1$(1)=""
-    find record (pom02_dev,key=pom02a.firm_id$+pom02a.po_line_code$,dom=other_type_line) pom02a$
+rem     $=key(poe11_dev,end=*break);rem using break here to break from detail loop rather than continue.CAH
+rem     if pos(a0$=k$)<>1 *break
+        if pos(poe01a_key$=pow07a_key$)<>1 *break
+
+rem --- Read record from detail file
+
+        read record (poe11_dev) poe11a$
+        if pom02a.firm_id$ + pom02a.po_line_code$   =   firm_id$ + poe11a.po_line_code$ 
+            goto init_detail_line
+
+rem --- Clear templated record w/o losing template
+        pom02a$(1)=""
+        pom02a.firm_id$ = firm_id$,pom02a.po_line_code$=poe11a.po_line_code$
+        find record (pom02_dev, key=pom02a.firm_id$ + pom02a.po_line_code$, dom=other_line) pom02a$
 
 init_detail_line: rem --- Initialize detail line fields
 
-    needed=2
-    source$="Entry"
-    wo$=""
-    before$=cvs(poe01a.not_b4_date$,2);rem was a1$(17,6),2).CAH
-    promised$=cvs(poe01a.promise_date$,2);rem was a1$(11,6),2).CAH
-    if pom02a.dropship$="Y" needed=3;rem was y1$(22,1)
-    if poe11a.source_code$="R" source$="Replen";rem was w1$(34,1).CAH
-    if poe11a.source_code$="W" source$="WO";rem was w1$(34,1).CAH
-    if poe11a.source_code$="M" source$="MRP";rem was w1$(34,1).CAH
-    if cvs(poe11a.promise_date$,2)<>"" promised$=poe11a.promise_date$;rem was w1$(9,6).CAH
-    if cvs(poe11a.not_b4_date$,2)<>"" before$=poe11a.not_b4_date$;rem was w1$(15,6).CAH
-    if cvs(before$,2)<>"" before$=fndate$(before$)
-    if cvs(promised$,2)<>"" promised$=fndate$(promised$)
+        needed=2
+        source$="Entry"
+        wo$=""
+        before$=cvs(poe01a.not_b4_date$,2);         rem was cvs(a1$(17,6),2).CAH
+        promised$=cvs(poe01a.promise_date$,2);      rem was cvs(a1$(11,6),2).CAH
+        if pom02a.dropship$="Y" needed=3;           rem was cvs(y1$(22,1)
+        if poe11a.source_code$="R" source$="Replen";rem was cvs(w1$(34,1).CAH
+        if poe11a.source_code$="W" source$="WO";    rem was cvs(w1$(34,1).CAH
+        if poe11a.source_code$="M" source$="MRP";   rem was cvs(w1$(34,1).CAH
+        if cvs(poe11a.promise_date$,2)<>"" promised$=poe11a.promise_date$;  rem was w1$(9,6).CAH
+        if cvs(poe11a.not_b4_date$,2)<>"" before$=poe11a.not_b4_date$;      rem was w1$(15,6).CAH
+        if cvs(before$,2)<>"" before$=fndate$(before$)
+        if cvs(promised$,2)<>"" promised$=fndate$(promised$)
 
 rem --- Work order?
 
-    if sf$="N" goto ret_inv_items
-    if cvs(poe11a.wo_no$+poe11a.sequence_no$,2)="" goto ret_inv_items;rem was w2$(1,10).CAH
-    wo$=" WO: "+poe11a.wo_no$;rem was w2$(1,7).CAH
-    if cvs(poe11a.sequence_no$,2)<>"" wo$=wo$+"-"+poe11a.sequence_no$;rem was w2$(8,3).CAH
+        if sf$="N" goto ret_inv_items
+        if cvs(poe11a.wo_no$+poe11a.sequence_no$,2)=""
+            goto ret_inv_items;                          rem was w2$(1,10).CAH
+        wo$=" WO: "+poe11a.wo_no$;                       rem was w2$(1,7).CAH
+        if cvs(poe11a.sequence_no$,2)<>"" 
+            wo$=wo$+"-"+poe11a.sequence_no$;             rem was w2$(8,3).CAH
 
 ret_inv_items: rem --- Retrieve inventory item for S lines
 
-    ivm01a_key$=firm_id$+poe11a.item_no$;rem was c0$(1)=firm_id$+w3$(3).CAH
-    ivm01a$(1)="";rem was c1$(1)="".CAH
-    description$(1)="(Not On File)"
-    ivm02a_key$=firm_id$+poe11a.warehouse_id$+poe11a.item_no$;rem was d0$(1)=firm_id$+w3$.CAH
-    ivm02a$(1)="";rem was d1$(1)="".CAH
-    rem don't need d[11]=0
-    if pom02a.line_type$<>"S" goto calc_ext_branch;rem was y1$(21,1).CAH
-    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    find record (ivm02_dev,key=ivm02a_key$,dom=l3800) ivm02a$
-    description$(1)=ivm01a.description$
-    rem not using parameterized description lengths...description$(1)=fnitem$(c1$,i[3],i[4],i[5]).CAH
+        ivm01a_key$ = firm_id$ + poe11a.item_no$;           rem was c0$(1)=firm_id$ + w3$(3).CAH
+        ivm01a$(1) = "";                                    rem was c1$(1)="".CAH
+        description$(1) = "(Not On File)"
+        ivm02a_key$ = firm_id$ + poe11a.warehouse_id$ 
+:                               + poe11a.item_no$;          rem was d0$(1)=firm_id$ + w3$.CAH
+        ivm02a$(1)="";                                      rem was d1$(1)="".CAH
+rem don't need d[11]=0
+        if pom02a.line_type$<>"S" 
+            goto calc_ext_branch;                           rem was y1$(21,1).CAH
+
+        find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+        find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$;   rem clarify
+
+rem not using parameterized description lengths...
+rem description$(1)=fnitem$(c1$,i[3],i[4],i[5]).CAH
+        description$(1)=ivm01a.description$
 
 calc_ext_branch: rem --- Calculate extensions and branch based on line type
 
-    qty=num(poe11a.req_qty$);rem was w[2].CAH
-    iv_extension=0
-    if pom02a.line_type$="O" qty=1;rem was y1$(21,1).CAH
-    precision 2
-    po_extension=num(poe11a.unit_cost$)*qty;rem was w[1].CAH
-    if pom02a.line_type$="S" iv_extension=num(ivm02a.unit_cost$)*qty*num(poe11a.conv_factor$);rem was y1$(21,1),d[11],and w[0].CAH
-    precision num(ivs01a.precision$);rem was i[1].CAH
+        qty = num(poe11a.req_qty$);                             rem was w[2].CAH
+        iv_extension = 0
+        if pom02a.line_type$ = "O" qty=1;                       rem was y1$(21,1).CAH
+        precision 2
+        po_extension = num(poe11a.unit_cost$) * qty;            rem was w[1].CAH
+        if pom02a.line_type$ = "S"
+            iv_extension = num(ivm02a.unit_cost$)
+:                           * qty * num(poe11a.conv_factor$);   rem was y1$(21,1),d[11],and w[0].CAH
+        precision num(ivs01a.precision$);                       rem was i[1].CAH
 
 rem the following on/goto should be converted to a switch/case.CAH
 rem make sure the colon for continued lines (:) is at left margin.CAH
 rem ********************* .CAH stopped review here ************************
 
-rem on pos(y1$(21,1)="SNVMO") goto l3800,l2500,l2600,l2700,l2800,l2900
-rem on pos(y1$(21,1)="SNVMO") goto l3800,std_line,non_stock_line,ven_part_num_line,msg_line,other_type_line
-    if pos(y1$(21,1)="") *continue
-    else if pos(y1$(21,1)="S")
+        action=pos(y1$(21,1)="SNVMO")
+        standard_line=1
+        non_stock_line=2
+        vend_part_no_line=3
+        message_line=4
+        other_type_line=5
 
-rem l2500: rem --- Standard line
-        if l+needed>l9 gosub report_heading
-        print (printer_dev) @(o[0]),w0$(16,3),
-        :                   @(o[1]),w1$(1,2),
-        :                   @(o[2]),w3$(1,2),
-        :                   @(o[3]),w3$(3,i[0]),
-        :                   @(o[4]),before$,
-        :                   @(o[5]),fndate$(w1$(3,6)),
-        :                   @(o[6]),promised$,
-        :                   @(o[7]),w1$(22,2),
-        :                   @(o[8]),w[2]:m2$,
-        :                   @(o[9]),d[11]:m3$,
-        :                   @(o[10]),iv_extension:m1$,
-        :                   @(o[11]),w[1]:m3$,
-        :                   @(o[12]),po_extension:m1$,
-        :                   @(o[13]),source$
-        print (printer_dev) @(o[3]),description$,
-        :                   @(o[14]),wo$
-        l=l+needed
-rem     goto l3000
+        switch action
+            case standard_line
 
-    else if pos(y1$(21,1)="N")
+                    if l+needed>l9 gosub report_heading
+                    print (printer_dev) @(o[0]),poe11a.po_line_nbr$,;   rem w0$(16,3),
+:                                       @(o[1]),poe11a.po_line_code$,;   rem w1$(1,2),
+:                                       @(o[2]),poe11a.warehouse_id$,;   rem w3$(1,2),
+:                                       @(o[3]),poe11a.item_number$,;   rem w3$(3,i[0]),
+:                                       @(o[4]),before$,
+:                                       @(o[5]),fndate$(poe11a.reqd_date$),;  rem (w1$(3,6)),
+:                                       @(o[6]),promised$,
+:                                       @(o[7]),poe11a.unit_measure$,;   rem w1$(22,2),
+:                                       @(o[8]),w[2]:m2$,
+:                                       @(o[9]),d[11]:m3$,
+:                                       @(o[10]),iv_extension:m1$,
+:                                       @(o[11]),w[1]:m3$,
+:                                       @(o[12]),po_extension:m1$,
+:                                       @(o[13]),source$
+                    print (printer_dev) @(o[3]),description$,
+:                                       @(o[14]),wo$
+                    l=l+needed
+                    break
 
-rem l2600: rem --- Non-stock line
-        if l+needed>l9 gosub report_heading
-        print (printer_dev) @(o[0]),w0$(16,3),
-        :                   @(o[1]),w1$(1,2),
-        :                   @(o[2]),w3$(1,2),
-        :                   @(o[3]),w3$(3,i[0]),
-        :                   @(o[4]),before$,
-        :                   @(o[5]),fndate$(w1$(3,6)),
-        :                   @(o[6]),promised$,
-        :                   @(o[7]),w1$(22,2),
-        :                   @(o[8]),w[2]:m2$,
-        :                   @(o[11]),w[1]:m3$,
-        :                   @(o[12]),po_extension:m1$,
-        :                   @(o[13]),source$
-        print (printer_dev) @(o[3]),w4$,
-        :                   @(o[14]),wo$
-        l=l+needed
-rem     goto l3000
+            case non_stock_line
 
-    else if pos(y1$(21,1)="V")
+                    if l+needed>l9 gosub report_heading
+                    print (printer_dev) @(o[0]),poe11a.po_line_nbr$,;   rem w0$(16,3),
+:                                       @(o[1]),poe11a.po_line_code$,;   rem w1$(1,2),
+:                                       @(o[2]),poe11a.warehouse_id$,;   rem w3$(1,2),
+:                                       @(o[3]),poe11a.item_number$,;   rem w3$(3,i[0]),
+:                                       @(o[4]),before$,
+:                                       @(o[5]),fndate$(poe11a.reqd_date$),;  rem (w1$(3,6)),
+:                                       @(o[6]),promised$,
+:                                       @(o[7]),poe11a.unit_measure$,;   rem w1$(22,2),
+:                                       @(o[8]),w[2]:m2$,
+:                                       @(o[11]),w[1]:m3$,
+:                                       @(o[12]),po_extension:m1$,
+:                                       @(o[13]),source$
+                    print (printer_dev) @(o[3]),poe11a.order_memo$,;   rem w4$,
+:                                       @(o[14]),wo$
+                    l=l+needed
+                    break
 
-rem l2700: rem --- Vendor part number line
-        if l+needed>l9 gosub report_heading
-        print (printer_dev) @(o[0]),w0$(16,3),
-        :                   @(o[1]),w1$(1,2),
-        :                   @(o[2]),w3$(1,2),
-        :                   @(o[3]),w3$(3),
-        :                   @(o[4]),before$,
-        :                   @(o[5]),fndate$(w1$(3,6)),
-        :                   @(o[6]),promised$,
-        :                   @(o[13]),source$
-        print (printer_dev) @(o[14]),wo$
-        l=l+needed
-rem     goto l3000
+            case vend_part_no_line
 
-    else if pos(y1$(21,1)="M")
+                    if l+needed>l9 gosub report_heading
+                    print (printer_dev) @(o[0]),poe11a.po_line_nbr$,;   rem w0$(16,3),
+:                                       @(o[1]),poe11a.po_line_code$,;   rem w1$(1,2),
+:                                       @(o[2]),poe11a.warehouse_id$,;   rem w3$(1,2),
+:                                       @(o[3]),poe11a.item_number$,;   rem w3$(3),
+:                                       @(o[4]),before$,
+:                                       @(o[5]),fndate$(poe11a.reqd_date$),;  rem (w1$(3,6)),
+:                                       @(o[6]),promised$,
+:                                       @(o[13]),source$
+                    print (printer_dev) @(o[14]),wo$
+                    l=l+needed
+                    break
 
-rem l2800: rem --- Message line
-        if l+needed>l9 gosub report_heading
-        print (printer_dev) @(o[0]),w0$(16,3),
-        :                   @(o[1]),w1$(1,2),
-        :                   @(o[2]),w3$(1,2),
-        :                   @(o[4]),before$,
-        :                   @(o[5]),fndate$(w1$(3,6)),
-        :                   @(o[6]),promised$,
-        :                   @(o[13]),source$
-        print (printer_dev) @(o[3]),w4$,
-        :                   @(o[14]),wo$
-        l=l+needed
-rem     goto l3000
+            case message_line
 
-    else if pos(y1$(21,1)="O")
+                    if l+needed>l9 gosub report_heading
+                    print (printer_dev) @(o[0]),poe11a.po_line_nbr$,;   rem w0$(16,3),
+:                                       @(o[1]),poe11a.po_line_code$,;   rem w1$(1,2),
+:                                       @(o[2]),poe11a.warehouse_id$,;   rem w3$(1,2),
+:                                       @(o[4]),before$,
+:                                       @(o[5]),fndate$(poe11a.reqd_date$),;  rem (w1$(3,6)),
+:                                       @(o[6]),promised$,
+:                                       @(o[13]),source$
+                    print (printer_dev) @(o[3]),poe11a.order_memo$,;   rem w4$,
+:                                       @(o[14]),wo$
+                    l=l+needed
+                    break
 
-other_type_line:
-        if l+needed>l9 gosub report_heading
-        print (printer_dev) @(o[0]),w0$(16,3),
-        :                   @(o[1]),w1$(1,2),
-        :                   @(o[2]),w3$(1,2),
-        :                   @(o[4]),before$,
-        :                   @(o[5]),fndate$(w1$(3,6)),
-        :                   @(o[6]),promised$,
-        :                   @(o[11]),w[1]:m3$,
-        :                   @(o[12]),po_extension:m1$,
-        :                   @(o[13]),source$
-        print (printer_dev) @(o[3]),w4$,
-        :                   @(o[14]),wo$
-        l=l+needed
-    fi
+            case other_type_line
 
-rem l3000: rem --- Drop ship?
+                    gosub other_line
+                    break
 
-rem if y1$(22,1)<>"Y" goto l3500
-    if y1$(22,1)<>"Y" goto acc_totals
-    dim customer$(o[8]-o[3]+1)
-    r0$(1)=firm_id$+w2$(11,6)
-    r1$(1)="(Not On File)"
-    find record (arm01_dev,key=r0$,dom=*next) arm01a$
-    customer$(1)="Customer "+fnmask$(r0$(3,custlen),p7$)+" "+r1$
-    if cvs(w2$(17,7),2)<>"" customer$(len(customer$)-16)=" (Order "+w2$(17,7)+")"
-    print (printer_dev)@(o[3]),customer$
+            case default
 
-rem l3500: rem --- Accumulate totals
+                    continue
+                    break
+
+        swend
+
+rem --- Drop ship?
+
+rem     if y1$(22,1)<>"Y" goto acc_totals
+rem     dim customer$(o[8]-o[3]+1)
+rem     r0$(1)=firm_id$+w2$(11,6)
+rem     r1$(1)="(Not On File)"
+rem     find record (arm01_dev,key=r0$,dom=*next) arm01a$
+rem     customer$(1)="Customer "+fnmask$(r0$(3,custlen),p7$)+" "+r1$
+rem     if cvs(w2$(17,7),2)<>"" customer$(len(customer$)-16)=" (Order "+w2$(17,7)+")"
+rem     print (printer_dev)@(o[3]),customer$
+
+        if pom02a.dropship$<>"Y" goto acc_totals
+        dim customer$(o[8]-o[3]+1)
+        arm01a_key$(1)=firm_id$+poe11a.customer_nbr$
+        arm01a$(1)=arm01a.cust_name$
+        find record (arm01_dev,key=r0$,dom=*next) arm01a$
+        customer$(1)="Customer "+fnmask$(arm01a_key$(3,custlen),p7$)+" "+arm01a$
+        if cvs(poe11a.order_number$,2)<>""
+            customer$(len(customer$)-16)=" (Order " + poe11a.order_number$ + ")"
+        print (printer_dev)@(o[3]),customer$
+
 acc_totals: rem --- Accumulate totals
 
-    req[0]=req[0]+iv_extension
-    req[1]=req[1]+po_extension
-    number=number+1
-    vendor[0]=vendor[0]+iv_extension
-    vendor[1]=vendor[1]+po_extension
-    report[0]=report[0]+iv_extension
-    report[1]=report[1]+po_extension
+        req[0]=req[0]+iv_extension
+        req[1]=req[1]+po_extension
+        number=number+1
+        vendor[0]=vendor[0]+iv_extension
+        vendor[1]=vendor[1]+po_extension
+        report[0]=report[0]+iv_extension
+        report[1]=report[1]+po_extension
 
-    wend;rem next detail.CAH
-wend;rem next header.CAH
-rem ************************************************************************
+    wend;   rem next detail.CAH
+wend;       rem next header.CAH
 
 done: rem --- All done
-
     done=1
-rem if sequence$="A" gosub l6000
-    if sequence$="A" gosub ven_break
-rem if sequence$="V" gosub l6000
-    if sequence$="V" gosub ven_break
-rem if sequence$="R" gosub l6200
-    if sequence$="R" gosub req_break
+    action=pos(sequence$="AVR")
+    alt_vend_sequence=1
+    vend_sequence=2
+    req_sequence=3
+
+    switch action
+        case alt_vend_sequence
+        case vend_sequence
+            gosub vend_break
+            break
+        case req_sequence
+            gosub req_break
+            break
+    swend
+
     totals$="Total For Register"
     totals[0]=report[0]
     totals[1]=report[1]
-rem gosub l6900
-gosub print_totals
+
+    gosub print_totals
     if number=0 goto std_exit
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
 rem call pgmdir$+"adc_progress.aon","D","","","","",0,0,1,0,status
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,1,meter_num,status
-rem ************************************************************************
-
-    run pgmdir$+"pou_aa.bbx"
+    call pgmdir$ +"adc_progress.aon","D","","","","",0,0,1,meter_num,status
+    run pgmdir$ +"pou_aa.bbx"
 
 report_heading: rem --- Report Heading
-
     l=headings+3
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    call pgmdir$ +"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
     if status exitto std_exit
     print (printer_dev) @(o[4]),"Not",
-    :                   @(o[5]),"Date",
-    :                   @(o[6]),"Date",
-    :                   @(o[9]+m3-5),cost$,
-    :                   @(o[10]+m1-10),cost$," Cost",
-    :                   @(o[11]+m3-5),"PO",
-    :                   @(o[12]+m1-10),"PO Cost"
+:                       @(o[5]),"Date",
+:                       @(o[6]),"Date",
+:                       @(o[9]+m3-5),cost$,
+:                       @(o[10]+m1-10),cost$," Cost",
+:                       @(o[11]+m3-5),"PO",
+:                       @(o[12]+m1-10),"PO Cost"
     print (printer_dev) @(o[0]),"Seq",
-    :                   @(o[1]),"Cd",
-    :                   @(o[2]),"Wh",
-    :                   @(o[3]),"Item",
-    :                   @(o[4]),"Before",
-    :                   @(o[5]),"Required",
-    :                   @(o[6]),"Promised",
-    :                   @(o[7]),"UM",
-    :                   @(o[8]+m2-9),"Quantity",
-    :                   @(o[9]+m3-5),"Cost",
-    :                   @(o[10]+m1-10),"Extension",
-    :                   @(o[11]+m3-5),"Cost",
-    :                   @(o[12]+m1-10),"Extension",
-    :                   @(o[13]),"Source"
+:                       @(o[1]),"Cd",
+:                       @(o[2]),"Wh",
+:                       @(o[3]),"Item",
+:                       @(o[4]),"Before",
+:                       @(o[5]),"Required",
+:                       @(o[6]),"Promised",
+:                       @(o[7]),"UM",
+:                       @(o[8]+m2-9),"Quantity",
+:                       @(o[9]+m3-5),"Cost",
+:                       @(o[10]+m1-10),"Extension",
+:                       @(o[11]+m3-5),"Cost",
+:                       @(o[12]+m1-10),"Extension",
+:                       @(o[13]),"Source"
     gosub req_subheading
     return
 
 req_subheading: rem --- Requisition subheading
-
     print (printer_dev)""
+rem    print (printer_dev) @(o[0]),vendor$,
+rem :                       @(55),"Requisition #: ",a0$(9,7),
+rem :                       @(106),"Requisition Date: ",fndate$(a1$(5,6))
     print (printer_dev) @(o[0]),vendor$,
-    :                   @(55),"Requisition #: ",a0$(9,7),
-    :                   @(106),"Requisition Date: ",
-    :   fndate$(a1$(5,6))
+:                       @(55),"Requisition #: ",poe01a.req_number$,
+:                       @(106),"Requisition Date: ",fndate$(poe01a.ord_date$)
     print (printer_dev)""
     l=l+3
     return
 
-rem l6000: rem --- Vendor break
-ven_break: rem --- Vendor break
-
-rem if t0$="" goto l6100
+vend_break: rem --- Vendor break
     if t0$="" goto t0_null
-rem gosub l6200
     gosub req_break
     totals$="Total For "+cvs(vendor$,2)
     totals[0]=vendor[0]
     totals[1]=vendor[1]
+    gosub print_totals
 
-rem gosub l6900
-gosub print_totals
-
-rem l6100:
 t0_null:
-rem if done goto l6390
     if done return
     dim vendor[1]
-    t0$=a0$(3,6)
+rem    t0$=a0$(3,6)
+    t0$=poe01a.vendor_nbr$
     v$=t0$
-    if sequence$="A" t0$=k$(3,16)
+rem if sequence$="A" t0$ = k$(3,16)
+    if sequence$="A" t0$ = pow07a_key.alt_sequence$ + pow07a_key.vendor_nbr$
     gosub ret_vendor
     if pagebreak$="Y" l=l9+1
     return
 
-rem l6200: rem --- Requisition break
 req_break: rem --- Requisition break
-
-rem if t1$="" goto l6300
-if t1$="" goto t1_null
-    let totals$="Total For Requisition "+t1$
+    if t1$="" goto t1_null
+    let totals$="Total For Requisition " + t1$
     let totals[0]=req[0],totals[1]=req[1]
-
-rem gosub l6900
-gosub print_totals
+    gosub print_totals
 
 t1_null:
-rem if done goto l6390
-if done return
+    if done return
     dim req[1]
-    let t1$=a0$(9,7)
+rem    let t1$=a0$(9,7)
+    let t1$=poe01a.req_number$
     if sequence$="R" if pagebreak$="Y" l=l9+1
+    return
 
-rem l6390:
+ret_vendor: rem --- Retrieve vendor
+rem let b0$(1)=firm_id$+v$,b1$(1)="(Not On File)"
+rem find record (apm01_dev,key=b0$,dom=*next) apm01a$
+rem let vendor$=fnmask$(b0$(3,vendlen),m0$)+" "+b1$(1,30)
 rem return
 
-rem l6400:
-rem --- Retrieve vendor
-ret_vendor:
-    let b0$(1)=firm_id$+v$,b1$(1)="(Not On File)"
-    find record (apm01_dev,key=b0$,dom=*next) apm01a$
-    let vendor$=fnmask$(b0$(3,vendlen),m0$)+" "+b1$(1,30)
-    return
-rem --- Print totals
-rem l6900:
-print_totals:
+    let apm01a_key$(1) = firm_id$ + v$, apm01a$(1)="(Not On File)"
+    find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+    let vendor$=fnmask$(apm01a_key$.vendor_nbr$,m0$) + " " + apm01a$.vendor_name$
+
+print_totals:   rem --- Print totals
     if l+1>l9 gosub report_heading
     print (printer_dev) @(o[10]-len(totals$)),totals$,
-    :                   @(o[10]),totals[0]:m1$,
-    :                   @(o[12]),totals[1]:m1$
+:                       @(o[10]),totals[0]:m1$,
+:                       @(o[12]),totals[1]:m1$
     let l=l+1
+    return
+
+other_line:
+    if l+needed>l9 gosub report_heading
+        print (printer_dev) @(o[0]),poe11a.po_line_nbr$,;   rem w0$(16,3),
+:                           @(o[1]),poe11a.po_line_code$,;   rem w1$(1,2),
+:                           @(o[2]),poe11a.warehouse_id$,;   rem w3$(1,2),
+:                           @(o[4]),before$,
+:                           @(o[5]),fndate$(poe11a.reqd_date$),;  rem (w1$(3,6)),
+:                           @(o[6]),promised$,
+:                           @(o[11]),w[1]:m3$,
+:                           @(o[12]),po_extension:m1$,
+:                           @(o[13]),source$
+        print (printer_dev) @(o[3]),poe11a.order_memo$,;   rem w4$,
+:                           @(o[14]),wo$
+        l=l+needed
     return
 
 rem #include std_functions.src
@@ -531,51 +575,17 @@ rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
 
     def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-rem :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]    //func not used
-rem ************************************************************************
-
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
     def fnget_table$(q0$)=rd_alias_id$
-
-rem --- Miscellaneous functions
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem def fncenter(q$,q)=int((q-len(q$))/2)   //func not used
-rem ************************************************************************
 
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
 
-rem --- Format zip/postal code
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-rem :                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-rem :                      q$(6,4)+fill(10),16))    //func not used
-rem ************************************************************************
-
 rem --- Date/time handling functions
 
     def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem def fnyy$(q$)=q$(3,2)                   //func not used
-rem def fnclock$(q$)=date(0:"%hz:%mz %p")   //func not used
-rem def fntime$(q$)=date(0:"%Hz%mz")        //func not used
-rem ************************************************************************
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
@@ -591,40 +601,6 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
         return str(q1$:q2$)
     fnend
-
-rem --- fnbasename$: Strip path and optionally the suffix from a file name
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem def fnbasename$(q$,q0$)
-rem     q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
-rem     if q then q$=q$(q+1)
-rem     if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
-rem return q$
-rem ************************************************************************
-
-rem --- fnglobal: Return numeric value of passed stbl variable
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem def fnglobal(q$,q1)
-rem     q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
-rem     return q1
-rem fnend
-rem ************************************************************************
-
-rem --- fnglobal$: Return string value of passed STBL variable
-
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem def fnglobal$(q$,q1$)
-rem     q1$=stbl(q$,err=*next)
-rem     return q1$
-rem fnend
-rem ************************************************************************
 
 rem #endinclude std_functions.src
 
