@@ -37,6 +37,10 @@ rem --- Open Dictionary Files
 	rd_ddm_table_cols=num(rd_open_chans$[1]);dim rd_ddm_table_cols$:rd_open_tpls$[1]
 	rd_ddm_elements=num(rd_open_chans$[2]);dim rd_ddm_elements$:rd_open_tpls$[2]
 
+rem --- Get Element Location
+
+	rd_elem_key$=key(rd_ddm_elements,end=*next)
+
 rem --- Build Templates
 
 	rd_gen_table_tpl$=""
@@ -98,6 +102,8 @@ get_next_col:rem --- Get Next Column Record
 end_build:rem --- Wrap Up Template Build
 
 	rd_gen_table_tpl$=cvs(rd_gen_table_tpl$,8)
+
+	if rd_elem_key$<>"" read(rd_ddm_elements,key=rd_elem_key$,dir=0,dom=*next)
 
 	goto exit_prog
 
