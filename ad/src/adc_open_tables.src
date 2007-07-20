@@ -168,7 +168,7 @@ get_actual_file:rem --- Get Actual File Name
 			rd_open_table_id$=rd_atab_rec.dd_table_alias$
 	endif
 
-	if len(rd_aon_name$)>6 rd_aon_name$=rd_aon_name$(1,6)
+	if len(rd_aon_name$)=7 rd_aon_name$=rd_aon_name$(1,6)
 	if cvs(rd_aon_name$,3)="" rd_aon_name$=cvs(rd_open_table_id$,11)
 
 	while pos("["=rd_table_path$)<>0
