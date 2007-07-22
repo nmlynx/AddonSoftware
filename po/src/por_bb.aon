@@ -79,92 +79,14 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
-
-    files=19,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="apm-05"
-    files$[4]="apm-10"
-    files$[5]="arm-01"
-    files$[6]="arm-03"
-    files$[7]="ivm-01"
-    files$[8]="ivm-05"
-    files$[9]="ivm-10"
-    files$[10]="ope-31"
-    files$[11]="poe-02"
-    files$[12]="poe-12"
-    files$[13]="poe-22"
-    files$[14]="poe-32"
-    files$[15]="pom-02"
-    files$[16]="pom-04"
-    files$[17]="pom-14"
-    files$[18]="pow-02"
-    files$[19]="pow-12"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ads01_dev=channels[1]
-    apm01_dev=channels[2]
-    apm05_dev=channels[3]
-    apm10_dev=channels[4]
-    arm01_dev=channels[5]
-    arm03_dev=channels[6]
-    ivm01_dev=channels[7]
-    ivm05_dev=channels[8]
-    ivm10_dev=channels[9]
-    ope31_dev=channels[10]
-    poe02_dev=channels[11]
-    poe12_dev=channels[12]
-    poe22_dev=channels[13]
-    poe32_dev=channels[14]
-    pom02_dev=channels[15]
-    pom04_dev=channels[16]
-    pom14_dev=channels[17]
-    pow02_dev=channels[18]
-    pow12_dev=channels[19]
-
-rem --- Dimension string templates
-
-    dim apm01a$:templates$[2],apm05a$:templates$[3],apm10a$:templates$[4],
-:       arm01a$:templates$[5],arm03a$:templates$[6],ivm01a$:templates$[7],
-:       ivm05a$:templates$[8],ivm10a$:templates$[9],ope31a$:templates$[10],
-:       poe02a$:templates$[11],poe12a$:templates$[12],poe22a$:templates$[13],
-:       poe32a$:templates$[14],pom02a$:templates$[15],pom04a$:templates$[16],
-:       pom14a$:templates$[17],pow02a$:templates$[18],pow12a$:templates$[19]
-
-rem --- Retrieve miscellaneous templates
-
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="aps-01B"
-    ids$[3]="ivs-01A"
-    ids$[4]="sys-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1],aps01b$:templates$[2],ivs01a$:templates$[3],
-:       sys01a$:templates$[4]
-
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
 
-rem ************************************************************************
-rem post cc edit on 17th July 2007
-rem ************************************************************************
-rem
-rem value_01$=fnget_fld_data$(table$,"dataname_01")
     sequence$=fnget_fld_data$(table$,"print_sequence")
     msg$=fnget_fld_data$(table$,"opt_message")
     restart$=fnget_fld_data$(table$,"res_printing")
     vendor$=fnget_fld_data$(table$,"vendor_id")
-rem ************************************************************************
-
 
 rem --- Retrieve parameter records
 
@@ -177,40 +99,9 @@ rem --- Retrieve parameter records
     sys01a_key$=firm_id$+"SY00"
     find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
 
-rem --- Open/Lock Files
-
-    dim m$[3]
-    files=2
-    m$[1]=m1$
-    m$[2]=m2$
-    m$[3]=m3$
-    dim files$[files],options$[files],channels[files]
-    files$[1]=sortfile$
-    files$[2]=workfile$
-    options$[1]="C"
-    options$[2]="C"
-    call pgmdir$+"adc_fileopen.aon",1,1,files,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    pow02_dev=channels[1]
-    pow12_dev=channels[2]
-
-rem --- Parameters
-rem --- ESCAPE FIND (SYS01_DEV,KEY=N0$+"AR03",DOM=0406)*,PHONE$
-rem --- ESCAPE LET PHONE$=PHONE$+FILL(20),PHONEMASK$="(000)000-0000
-
-    dim name$(30)
-    find record (sys01_dev,key=firm_id$+"AP02",dom=*next) aps01b$
-    line=l
-    m1$=i6$
-    m2$=i7$
-    m3$=i8$
-    m0=len(m0$)
-    width=80
-    k$=a0$
-
 rem --- Initializations
 
-    precision i[1]
+    precision num(ivs01a.precision$)
     dim heading$[1],buf$(width),bar$(width,"-")
     dim a0$(15,"9"),a1$(160,"X"),a[8],y0$(4),y1$(32),h0$(5),h1$(32)
     dim w0$(18,"9"),w1$(48,"X"),w2$(32),w3$(22,"X"),w4$(40,"X"),w[12]
@@ -219,7 +110,7 @@ rem --- Initializations
     batch=1
     nf$="(Not On File)"
     shipflen=35
-    dim more=1
+    more=1
 
 rem --- ESCAPE IF PLAIN$="Y" THEN LET SHIPFLEN$="Y
 
@@ -231,7 +122,7 @@ rem --- ESCAPE IF PLAIN$="Y" THEN LET SHIPFLEN$="Y
     return_l9=l9
     if o0 batch=0
     if plain$="Y" qtymaskmax=10,qtymaskmin=10,maxfooters=40,l9=59 else qtymaskmax=9,
-    :   qtymaskmin=9,maxfooters=10,l9=50
+:   qtymaskmin=9,maxfooters=10,l9=50
     dim footer$[maxfooters]
     title=len(title$)
     label=len(label$)
@@ -241,6 +132,9 @@ rem --- ESCAPE IF PLAIN$="Y" THEN LET SHIPFLEN$="Y
 
 rem --- Resize masks
 
+    m1$=ivs01a.amount_mask$
+    m2$=ivs01a.unit_mask$
+    m3$=ivs01a.cost_mask$
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,10
     call pgmdir$+"adc_sizemask.aon",m2$,m2,qtymaskmin,qtymaskmax
     call pgmdir$+"adc_sizemask.aon",m3$,m3,10,10
@@ -251,11 +145,11 @@ rem --- Test pattern initializations
     qty=999999
     extension=999999.99
     total=extension
-    w1$(3,6)=f0$(18,6)
-    w1$(22,2)="EA"
-    a1$(5,6)=f0$(18,6)
-    y1$(21,1)="N"
-    w1$(9,12)=a1$(5,6)+w1$(5,6)
+    poe12a.reqd_date$ = f0$(18,6)
+    poe12a.unit_measure$ = "EA"
+    poe02a.ord_date$ = f0$(18,6)
+    pom02a.line_type$ = "N"
+    poe12a.promise_date$ = poe02a.ord_date$ 
     shipfrom$="99 "+fill(30,"X")
 
 rem --- Open Printer
@@ -265,114 +159,122 @@ rem --- Open Printer
     if fnunform_printer(fid(printer_dev)) goto position_files
     another$="a"
 
-test_pattern: rem --- Print Test Pattern?
+rem --- Print Test Pattern?
 
-    call pgmdir$+"adc_yesno.aon",0,"Do you want to print "+another$+" test pattern",3,v$,v3
-    if v3=4 goto std_exit
+    while more
+        call pgmdir$+"adc_yesno.aon",0,"Do you want to print "+another$+" test pattern",3,v$,v3
+        if v3=4 goto std_exit
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem 
-rem on pos(v$="YN") goto test_pattern,l840,position_files
-    if(pos(v$="") goto test_pattern
-    else if(pos(v$="Y")
-rem l840:
+        action = pos(v$="YN")
+        yes=1
+        no=2
 
-        gosub report_heading
-        if plain$="Y" testmax=8 else testmax=6
-        for i=1 to testmax
-            gosub print_detail_line
-        next i
-        dim footer$[maxfooters]
-        footcnt=0
-        another$="another"
-        if cvs(pomessage$,2)<>"" footcnt=2
-        gosub print_total
-        goto test_pattern
+        switch action
+            case yes
 
-    else if(pos(v$="N")
-rem position_files: rem --- Position files
+                gosub report_heading
+                if plain$="Y" testmax=8 else testmax=6
+                for i=1 to testmax
+                    gosub print_detail_line
+                next i
+                dim footer$[maxfooters]
+                footcnt=0
+                another$="another"
+                if cvs(pomessage$,2)<>"" footcnt=2
+                gosub print_total
+                continue
+                break
 
-        dim a0$(15),a1$(160),a[8],y0$(4),y1$(32),c0$(8),c1$(195)
-        dim w0$(18),w1$(48),w2$(32),w3$(22),w4$(40),w[12],z0$(32)
-        if pos(sequence$="AW") gosub sort_file
-        x$=firm_id$
-        if restart$="Y" x$=firm_id$+vendor$
-        if batch call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing",
-        :   "",m0+8,0,1,0,ignore_status
-        read (pow02_dev,key=firm_id$,dom=*next)
-        read (poe22_dev,key=x$,dom=*next)
-        read (poe32_dev,key=firm_id$,dom=*next)
-        
-    fi
+            case no;    rem --- Position files 
 
+                dim a0$(15),a1$(160),a[8],y0$(4),y1$(32),c0$(8),c1$(195)
+                dim w0$(18),w1$(48),w2$(32),w3$(22),w4$(40),w[12],z0$(32)
+                if pos(sequence$="AW") gosub sort_file
+                x$=firm_id$
+                if restart$="Y" x$=firm_id$+vendor$
+                if batch call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing",
+:               "",m0+8,0,1,0,ignore_status
+                read (pow02_dev,key=firm_id$,dom=*next)
+                read (poe22_dev,key=x$,dom=*next)
+                read (poe32_dev,key=firm_id$,dom=*next)
+                break
+
+            case default
+                continue
+                break
+        swend
+    wend
+    
 rem branch: rem --- Branch based on SEQUENCE$
     while more
 
-rem on pos(sequence$="NRPAW") goto done,vend_seq,po_seq,po_seq,alt_wh_seq,alt_wh_seq
-    if(pos(sequence$="")) goto done
-    else if(pos(sequence$=""))
-rem vend_seq: rem --- Vendor number sequence
+    action=pos(sequence$="NRPAW")
+    vend_seq=1
+    req_seq=2
+    po_seq=3
+    alt_seq=4
+    whse_seq=5
 
-        k$=key(poe22_dev,end=done)
-        if pos(firm_id$=k$)<>1 goto done
-        read (poe22_dev)
-        if batch=0 k$=vendor_po$
-rem     goto l1400
-goto read_header_rec
+    switch action
+        case vend_seq
 
-po_seq: rem --- Req/PO number sequence
+            poe22a_key$=key(poe22_dev,end=done)
+            if pos(firm_id$=poe22a_key$)<>1 goto done
+            read (poe22_dev)
+            if batch=0 poe22a_key$=vendor_po$
+            break
 
-    k$=key(poe32_dev,end=done)
-    if pos(firm_id$=k$)<>1 goto done
-    read (poe32_dev)
-    k$=k$(1,2)+k$(10)+k$(3,7)
-    read (poe22_dev,key=k$,dom=po_seq)
-rem goto l1400
-goto read_header_rec
+        case req_seq
+        case po_seq
 
-alt_wh_seq: rem --- Alternate sort or warehouse sequence
+                while more
+                    poe32a_key$=key(poe32_dev,end=done)
+                    if pos(firm_id$=poe32a_key$)<>1 goto done
+                    read (poe32_dev)
+                    poe32a_key$=poe32a.firm_id$ + poe32a.vendor_id$ + poe32a.po_no$
+                    read (poe22_dev,key=poe32a_key$,dom=*continue)
+                wend
+                break
 
-    k$=key(pow02_dev,end=done)
-    if pos(firm_id$=k$)<>1 goto done
-    read (pow02_dev)
-    whse$=k$(3,2)
-    k$=k$(1,2)+k$(13)
-rem goto l1400
+        case alt_seq
+        case whse_seq
 
-rem l1400: rem --- Read header record
-read_header_rec: rem --- Read header record
+                pow02a_key$=key(pow02_dev,end=done)
+                if pos(firm_id$=pow02a_key$)<>1 goto done
+                read (pow02_dev)
+                whse$ = pow02a_key.warehouse_id$
+                pow02a_key$ = pow02a_key.firm_id$ + pow02a_key.vendor_id$
+                break
 
-    find record (poe02_dev,key=k$,dom=l3900) poe02a$
-    if batch call pgmdir$+"adc_progress.aon","S","","","",fnmask$(a0$(3,vendlen),m0$)+
-    :   ""+a0$(9,7),0,0,1,0,ignore_status
+        case default
+                goto done
+                break
+
+    swend
+
+rem --- Read header record
+
+    find record (poe02_dev,key=poe02a_key$,dom=*continue) poe02a$
+    if batch call pgmdir$+"adc_progress.aon","S","","","",fnmask$(poe02a_key.vendor_id$,m0$)+
+:                   ""+poe02a.po_no$,0,0,1,0,ignore_status
 
 rem --- Level breaks?
 
-    if a0$(3,6)<>t0$ gosub vendor_break
-    if a0$(3,6)+a1$(3,2)<>t1$ gosub shipfrom_break
-    if a1$(38,2)<>t2$ gosub terms_break
-    read (poe12_dev,key=a0$,dom=*next)
+    if poe02a_key.vendor_id$ <> t0$ gosub vendor_break
+    if poe02a_key.vendor_id$ + poe02a_key.purch_addr$ <> t1$ gosub shipfrom_break
+    if poe02a_key.terms_code$ <> t2$ gosub terms_break
+    read (poe12_dev,key=poe02a_key$,dom=*next)
 
 sort_lines: rem --- Sort line items by ship-to warehouse
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem ************************************************************************
-rem 
-rem if sequence$="W" goto l1900
-rem k$=key(poe12_dev,end=l1900)
-rem if pos(a0$=k$)<>1 goto l1900
-    k$=key(poe12_dev,end=warehouse_seq)
-    if (sequence$="W") or if (pos(a0$=k$)<>1) goto warehouse_seq
-
+    if (sequence$="W") goto warehouse_seq
+    poe12a_key$=key(poe12_dev,end=warehouse_seq)
+    if (pos(poe02a_key$ =poe12a_key$) <> 1) goto warehouse_seq
     read record (poe12_dev) poe12a$
-    x9$(1)=firm_id$+w3$(1,2)+w0$(3)
-    write record (pow12_dev,key=x9$) pow12a$
+    pow12a.firm_id$ = firm_id$ + poe12a.warehouse_id$ + poe12a_key.vendor_id$
+    write record (pow12_dev,key=pow12a_key$) pow12a$
     goto sort_lines
 
-rem l1900: rem --- Position sort file
 warehouse_seq: rem --- Position sort file
 
     l=l9+1
@@ -381,207 +283,156 @@ warehouse_seq: rem --- Position sort file
     page=0
     read (pow12_dev,key=firm_id$,dom=*next)
 
-rem ************************************************************************
-rem post cc edit on 17th July 2007
-rem ************************************************************************
-rem
-rem next_sort: rem --- Read next sort record
-    while more
+rem --- Read next sort record
 
-rem if sequence$="W" goto l2100
-    if sequence$="W" goto read_next
-rem k$=key(pow12_dev,end=l3000)
-    k$=key(pow12_dev,end=print_tot)
-rem if pos(firm_id$=k$)<>1 goto l3000
-    if pos(firm_id$=k$)<>1 goto print_tot
-    remove (pow12_dev,key=k$)
-rem end post cc edit on 17th July 2007
-rem ************************************************************************
+        while more
 
-    w0$(1)=firm_id$+k$(5)
-rem find record (poe12_dev,key=w0$,dom=l2900) poe12a$
-    find record (poe12_dev,key=w0$,dom=*continue) poe12a$
-rem goto l2200
-goto level_brk
+            if sequence$="W" goto read_next
+            pow12a_key$=key(pow12_dev,end=print_tot)
+            if pos(firm_id$ = pow12a_key$) <> 1 goto print_tot
+            remove (pow12_dev,key = pow12a_key$)
+            poe12a.firm_id$ = firm_id$ + pow12a_key.vendor_id$
+            find record (poe12_dev,key=poe12a_key$,dom=*continue) poe12a$
+            goto level_break
 
-rem l2100: rem --- Read next detail record
 read_next: rem --- Read next detail record
 
-rem k$=key(poe12_dev,end=l3000)
-rem if pos(a0$=k$)<>1 goto l3000
-    k$=key(poe12_dev,end=print_tot)
-    if pos(a0$=k$)<>1 goto print_tot
-    read record (poe12_dev) poe12a$
-rem if w3$(1,2)<>whse$ goto l2100
-    if w3$(1,2)<>whse$ goto read_next
+            poe12a_key$=key(poe12_dev,end=print_tot)
+            if pos(poe02a_key$ = poe12a_key$) <>1 goto print_tot
+            read record (poe12_dev) poe12a$
+            if poe12a.warehouse_id$ <> whse$ goto read_next
 
-rem l2200: rem --- Level breaks?
-level_brk: rem --- Level breaks?
+level_break: rem --- Level breaks?
 
-    if w3$(1,2)<>t3$ gosub shipto_break
-    if w1$(1,2)<>t4$ gosub line_code_break
+            if poe12a.warehouse_id$ <> t3$ gosub shipto_break
+            if poe12a.po_line_code$ <> t4$ gosub line_code_break
 
 rem --- Print detail
 
-    gosub calc_ext
-    total=total+extension
-    gosub print_detail_line
+            gosub calc_ext
+            total=total+extension
+            gosub print_detail_line
 
 rem --- Print any associated message
 
-rem if cvs(w1$(38,3),2)="" goto l2500
-    if cvs(w1$(38,3),2)="" goto print_done
-    msg$=h0$(3,3)
-    h0$(1)=firm_id$+w1$(38,3)
-rem find record (pom04_dev,key=h0$,dom=l2500) pom04a$
-rem if pos(h1$(21,1)="B"+type$)=0 goto l2500
-    find record (pom04_dev,key=h0$,dom=print_done) pom04a$
-    if pos(h1$(21,1)="B"+type$)=0 goto print_done
-    read (pom14_dev,key=h0$,dom=*next)
+            if cvs(poe12a.po_msg_code$,2)="" goto print_done
+            msg$ = pom04a_key.po_msg_code$
+            pom04a_key.firm_id$ = firm_id$ + poe12a.po_msg_code$
+            find record (pom04_dev,key = pom04a_key$,dom=print_done) pom04a$
+            if pos(pom04a.message_type$ = "B" + type$) = 0 goto print_done
+            read (pom14_dev,key=pom04a_key$,dom=*next)
 
 read_msg: rem --- Read next message line
 
-rem k$=key(pom14_dev,end=l2500)
-rem if pos(h0$=k$)<>1 goto l2500
-    k$=key(pom14_dev,end=print_done)
-    if pos(h0$=k$)<>1 goto print_done
-    read record (pom14_dev) pom14a$
-    x$=l1$(1,40)
-    gosub text_only
-    goto read_msg
+            pom14a_key$ = key(pom14_dev,end=print_done)
+            if pos(pom04a_key$ = pom14a_key$) <> 1 goto print_done
+            read record (pom14_dev) pom14a$
+            aps01b_key$ = pom14a.message_text$
+            gosub text_only
+            goto read_msg
 
-rem l2500: rem --- Done printing line message
 print_done: rem --- Done printing line message
 
-    h0$(3)=msg$
-    d$=""
-rem if y1$(22,1)<>"Y" goto l2900
-    if y1$(22,1)<>"Y" *continue
+            pom04a_key.po_msg_code$ = msg$
+            d$=""
+            if pom02a.dropship$ <> "Y" continue
 
 rem --- Retrieve drop ship address
 
-rem if op$="N" goto l2600
-    if op$="N" goto opEqN
-    dim s0$(15),s1$(130)
-    s0$(1)=firm_id$+w2$(11,13)
-rem find record (ope31_dev,key=s0$,dom=l2600) ope31a$
-    find record (ope31_dev,key=s0$,dom=opEqN) ope31a$
-    d$=s1$(31,72)+s1$(103,48)+s1$(151,9)
-rem goto l2700
-    goto print_info
-rem l2600:
+            if op$="N" goto opEqN
+            dim s0$(15),s1$(130)
+            ope31a_key.firm_id$ = firm_id$ + poe12a.customer_id$ + poe12a.order_no$
+            find record (ope31_dev,key=ope31a_key$,dom=opEqN) ope31a$
+            d$ = ope31a.addr_line_1$ + ope31a.addr_line_2$ + ope31a.addr_line_3$
+:           + ope31a.addr_line_4$ + ope31a.city$
+
+            goto print_info
+
 opEqN:
-    dim s0$(14),s1$(174)
-    s0$(1)=firm_id$+w2$(11,6)+w2$(27,6)
-rem find record (arm03_dev,key=s0$,dom=l2650) arm03a$
-    find record (arm03_dev,key=s0$,dom=eor) arm03a$
-    d$=s1$(31,72)+s1$(103,48)+s1$(151,9)
-rem goto l2700
-    goto print_info
-rem l2650:
+
+            dim s0$(14),s1$(174)
+            ope31a_key.firm_id$ = firm_id$ + poe12a.customer_id$ + poe12a.shipto_no$
+            find record (arm03_dev,key = arm03a_key$,dom=eor) arm03a$
+            d$ = ope31a.addr_line_1$ + ope31a.addr_line_2$ + ope31a.addr_line_3$
+:               + ope31a.addr_line_4$ + ope31a.city$
+            goto print_info
+
 eor:
-    dim s0$(8),s1$(280)
-    s0$(1)=firm_id$+w2$(11,6)
-rem find record (arm01_dev,key=s0$,dom=l2900) arm01a$
-    find record (arm01_dev,key=s0$,dom=*continue) arm01a$
-    d$=s1$(31,72)+s1$(179,48)+s1$(103,9)
+            dim s0$(8),s1$(280)
+            ope31a_key.firm_id$ = firm_id$ + wpoe12a.customer_id$
+            find record (arm01_dev,key=arm01a_key$,dom=*continue) arm01a$
+            d$ = ope31a.addr_line_1$ + ope31a.addr_line_2$ + ope31a.addr_line_3$
+:           + ope31a.addr_line_4$ + ope31a.city$
 
-rem l2700: rem --- Format address and print drop ship information
-print_info: rem --- Format address and print drop ship information
+rem --- Format address and print drop ship information
 
-    dim x$(40)
-rem if d$="" goto l2900
-    if d$="" *continue
-    call pgmdir$+"adc_address.aon",d$,24,5,9,40
-    needed=4
-    for x=1 to 200 step 40
-        if cvs(d$(x,40),2)<>"" needed=needed+1
-    next x
-    if l+needed>l9-2 gosub print_continued
-    gosub text_only
-    x$(1)="Please Ship Line "+w0$(16,3)+" To:"
-    gosub text_only
-    x$(1)=""
-    gosub text_only
-    x$(1)=s1$(1,30)
-    gosub text_only
-    for x=1 to 200 step 40
-        x$(1)=d$(x,40)
-        if cvs(x$,2)<>"" gosub text_only
-    next x
+print_info:
+            dim x$(40)
+            if d$="" continue
+            call pgmdir$+"adc_address.aon",d$,24,5,9,40
+            needed=4
+            for x=1 to 200 step 40
+                if cvs(d$(x,40),2)<>"" needed=needed+1
+            next x
+            if l+needed>l9-2 gosub print_continued
+            gosub text_only
+            aps01b$(1) = "Please Ship Line "+ poe12a_key.po_line_no$ +" To:"
+            gosub text_only
+            aps01b$(1)=""
+            gosub text_only
+            aps01b$(1) = ope31a.name$
+            gosub text_only
+            for x=1 to 200 step 40
+                aps01b$(1) = d$(x,40)
+                if cvs(aps01b$,2)<>"" gosub text_only
+            next x
 
-rem ************************************************************************
-rem post cc edit on 17th July 2007
-rem ************************************************************************
-rem
-rem l2900: rem --- Loop back for next detail
-rem goto next_sort
-    wend
-rem ************************************************************************
+        wend;   rem loop back for next sort record
 
-rem l3000: rem --- Print total
 print_tot: rem --- Print total
 
-    msg$=defaultmsg$
-    if cvs(a1$(109,3),2)<>"" msg$=a1$(109,3)
-rem if cvs(msg$,2)="" goto l3300
-    if cvs(msg$,2)="" goto nomsg
-rem if msg$=h0$(3,3) goto l3500
-    if msg$=h0$(3,3) goto prn_tot
+        msg$=defaultmsg$
+        if cvs(poe02a.po_msg_code$,2) <> "" msg$ = poe02a.po_msg_code$
+        if cvs(msg$,2)="" goto nomsg
+        if msg$ = pom04a.po_msg_code$ goto prn_tot
 
 rem --- Load current message
 
-    dim footer$[maxfooters]
-    h0$(1)=firm_id$+msg$
-    footcnt=0
-    if cvs(pomessage$,2)<>"" footcnt=2
-rem find record (pom04_dev,key=h0$,dom=l3300) pom04a$
-    find record (pom04_dev,key=h0$,dom=nomsg) pom04a$
-rem if pos(h1$(21,1)="B"+type$)=0 goto l3300
-    if pos(h1$(21,1)="B"+type$)=0 goto nomsg
-    read (pom14_dev,key=h0$,dom=*next)
+        dim footer$[maxfooters]
+        pom04a_key$(1) = firm_id$ + msg$
+        footcnt=0
+        if cvs(pomessage$,2)<>"" footcnt=2
+        find record (pom04_dev,key=pom04a_key$,dom=nomsg) pom04a$
+        if pos(pom04a.message_type$="B"+type$)=0 goto nomsg
+        read (pom14_dev,key=pom04a_key$,dom=*next)
 
 load_msg: rem --- Load message lines
 
-rem k$=key(pom14_dev,end=l3500)
-rem if pos(h0$=k$)<>1 goto l3500
-    k$=key(pom14_dev,end=prn_tot)
-    if pos(h0$=k$)<>1 goto prn_tot
-    read record (pom14_dev) pom14a$
-rem if footcnt>maxfooters-2 goto l3500
-    if footcnt>maxfooters-2 goto prn_tot
-    footcnt=footcnt+1
-    footer$[footcnt]=l1$
-    goto load_msg
+        pom14a_key$=key(pom14_dev,end=prn_tot)
+        if pos(pom04a_key$=pom14a_key$)<>1 goto prn_tot
+        read record (pom14_dev) pom14a$
+        if footcnt>maxfooters-2 goto prn_tot
+        footcnt=footcnt+1
+        footer$[footcnt]=pom14a.message_text$
+        goto load_msg
 
-rem l3300: rem --- No message
 nomsg: rem --- No message
 
-    dim footer$[maxfooters]
-    footcnt=0
+        dim footer$[maxfooters]
+        footcnt=0
 
-rem l3500: rem --- Print total
 prn_tot: rem --- Print total
 
-    gosub print_total
+        gosub print_total
+        if (batch = 0) *break
 
-rem ************************************************************************
-rem post cc edit on 17th July 2007
-rem ************************************************************************
-rem
-rem l3900: rem --- Loop back for next header
-
-rem if batch goto branch
-    if (batch = 0) *break
-    wend
-rem ************************************************************************
+    wend;   rem loop back for next header
 
 done: rem --- All requisitions printed
 
     close (printer_dev,err=*next)
     if batch goto update
-remove (poe22_dev,key=a0$,dom=l4090)
-
+    remove (poe22_dev,key=poe02a_key$,dom=l4090)
     goto std_exit
 
 update: rem --- Update print file?
@@ -589,28 +440,28 @@ update: rem --- Update print file?
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,1,0,ignore_status
     v4$="Are you ready to update the "+label$+" Print File"
     call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-rem on v3 goto l4140,update,update,update,l4900,l4140,l4900
+
     on v3 goto brnch1,update,update,update,all_done,l4140,all_done
+
 brnch1:
+
     if v$<>"YES" goto std_exit
     call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Updating",
-    :   "",16,poe22_dev,1,0,ignore_status
+:   "",16,poe22_dev,1,0,ignore_status
     read (poe22_dev,key=firm_id$,dom=*next)
 
-l4200: rem --- Update the print file
+rem --- Update the print file
 
-rem k$=key(poe22_dev,end=l4900)
-    k$=key(poe22_dev,end=all_done)
-rem if pos(firm_id$=k$)<>1 goto l4900
-    if pos(firm_id$=k$)<>1 goto all_done
-    call pgmdir$+"adc_progress.aon","S","","","",fnmask$(k$(3,vendlen),m0$)+" "+
-    :   k$(9),0,0,1,0,ignore_status
-rem remove (poe22_dev,key=k$,dom=l4900)
-    remove (poe22_dev,key=k$,dom=all_done)
+update_print_file:
 
-    goto l4200
+    while more
+        poe22a_key$=key(poe22_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        call pgmdir$+"adc_progress.aon","S","","","",fnmask$(k$(3,vendlen),m0$)+" "+
+:       poe22a.po_no$,0,0,1,0,ignore_status
+        remove (poe22_dev,key=poe22a_key$,dom=*break)
+    wend
 
-rem l4900: rem --- All done
 all_done: rem --- All done
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
@@ -625,15 +476,15 @@ report_heading: rem --- Report Heading
     if page=1 if fnglobal$("+FF","Y")="N" ff$='CR' fi; let junk$=stbl("!CLEAR","+FF",err=*next)
     print (printer_dev)ff$
     print (printer_dev)name$,@(width-title),title$
-rem if plain$="Y" goto l5055
     if plain$="Y" goto brnch2
     print (printer_dev)""
     print (printer_dev)""
-rem l5055:
+
 brnch2:
     print (printer_dev)a$(1,35)
-    print (printer_dev)a$(36,35),@(63-label),label$," Number: ",a0$(9)
-    print (printer_dev)a$(71,35),@(65-label),label$," Date: ",fndate$(a1$(5,6))
+rem print (printer_dev)a$(36,35),@(63-label),label$," Number: ",a0$(9)
+    print (printer_dev)a$(36,35),@(63-label),label$," Number: ",poe02a_key.po_no$
+    print (printer_dev)a$(71,35),@(65-label),label$," Date: ",fndate$(poe02a_key.ord_date$)
     print (printer_dev)a$(106,35),@(66),"Page:",page
 
 rem --- ESCAPE IF PLAIN$="Y" THEN PRINT (PRINTER_DEV)@(0),"Phone #:",PHONE$(1,10):PHONEMASK$," Fax #:",PHONE$(11,10):PHONEMASK$; LET L=L+1
@@ -645,39 +496,43 @@ rem --- ESCAPE IF PLAIN$="Y" THEN PRINT (PRINTER_DEV)@(0),"Phone #:",PHONE$(1,10
 rem --- ESCAPE LET SHIPFROM$=NAME$,S$=A$
 rem --- ESCAPE IF A1$(37,1)="Y" THEN CALL "jap_rz.bbx",N0$+"  "+A1$(135,13)+"000",SX$,CUSTNAME$; LET SHIPFROM$=CUSTNAME$,S$(1,35)=SX$(1,30),S$(36,35)=SX$(31,30),S$(71,35)=SX$(61,30),S$(106,35)=SX$(91,30)
 
-    print (printer_dev)fnmask$(c0$(3,vendlen),m0$),@(m0+1),c1$(1,30),@(77-shipflen+3),shipfrom$
+    print (printer_dev) fnmask$(apm01a_key.vendor_id$,m0$),
+:                       @(m0+1),apm01a.vendor_name$,
+:                       @(77-shipflen+3),shipfrom$
     if plain$<>"Y" print (printer_dev)""
-    print (printer_dev)@(m0+1),n$(1,35),@(80-shipflen),s$(1,shipflen)
-    print (printer_dev)@(m0+1),n$(36,35),@(80-shipflen),s$(36,shipflen)
-    print (printer_dev)@(m0+1),n$(71,35),@(80-shipflen),s$(71,shipflen)
+    print (printer_dev) @(m0+1),n$(1,35),
+:                       @(80-shipflen),s$(1,shipflen)
+    print (printer_dev) @(m0+1),n$(36,35),
+:                       @(80-shipflen),s$(36,shipflen)
+    print (printer_dev) @(m0+1),n$(71,35),
+:                       @(80-shipflen),s$(71,shipflen)
 
 rem --- ESCAPE IF CVS(S$(106,35),2)<>"" THEN PRINT (PRINTER_DEV)@(80-SHIPFLEN),S$(106,SHIPFLEN); LET L=L+1
 
-rem if plain$="Y" goto l5140
     if plain$="Y" goto brnch3
     for cnt=1 to 3
         print (printer_dev)""
     next cnt
-rem l5140:
+
 brnch3:
     if plain$="Y" print (printer_dev)bar$ else print (printer_dev)""
-    print (printer_dev)"Terms: ",z0$(6,20),"    Ship Via: ",a1$(59,15),"   FOB: ",a1$(94,15)
-    print (printer_dev)bar$
-    print (printer_dev)"Acknowledged By Vendor Contact: ",a1$(74,20)
+    print (printer_dev) "Terms: ",apm10c_key.code_desc$,
+:                       "    Ship Via: ",poe02a.ap_ship_via$,"   FOB: ",poe02a.fob$
+    print (printer_dev) bar$
+    print (printer_dev) "Acknowledged By Vendor Contact: ",poe02a.acknowledge$
 
 rem --- ESCAPE PRINT (PRINTER_DEV)"Ordered By: ",A1$(151,10); LET L=L+1
 
-rem if plain$<>"Y" goto l5175
     if plain$<>"Y" goto brnch4
     print (printer_dev)bar$
     print (printer_dev)"Seq| Quantity |Item And Description",@(45),"Date Req'd|     Cost |UM|Extension"
-rem l5175:
+
 brnch4:
-rem if plain$="Y" goto l5190
+
     if plain$="Y" goto brnch5
     print (printer_dev)""
     print (printer_dev)"Seq Quantity Item And Description",@(44),"Date Req'd       Cost |UM|Extension"
-rem l5190:
+
 brnch5:
     print (printer_dev)bar$
     return
@@ -686,94 +541,162 @@ print_detail_line: rem --- Print Detail Line
 
     dim x$(40)
     needed=2
-    if pos(y1$(21,1)="SN") needed=3
-    if cvs(w1$(9,12),2)<>"" needed=needed+1
+    if pos(pom02a.line_type$="SN") needed=3
+    if cvs(po312a.promise_date$+po312a.not_b4_date$,2)<>"" needed=needed+1
+
     if l+needed>l9-2 gosub print_continued
-    if plain$="Y" print (printer_dev)@(3),"|",@(14),"|",@(55),"|",@(66),"|  |" else print (printer_dev)@(66),"|  |"
+    if plain$="Y" print (printer_dev)   @(3),"|",
+:                                       @(14),"|",
+:                                       @(55),"|",
+:                                       @(66),"|  |" else print (printer_dev)@(66),"|  |"
     l=l+1
-rem on pos(y1$(21,1)="SNVMO") goto l5490,std_line,nonstock_line,other_line,other_line,other_line
-    if pos(y1$(21,1)="") return
-    else if pos(y1$(21,1)="S")
-rem std_line: rem --- Print Standard Line
 
-        dim b0$(22),b1$(60),r0$(28),r1$(32),r2$(20),x$(40)
-        b0$(1)=firm_id$+w3$(3)
-        b1$(1)=nf$
-        r0$(1)=c0$+w3$(3)
-        find record (ivm01_dev,key=b0$,dom=*next) ivm01a$
-        if p3$(58,1)="Y" find record (ivm05_dev,key=r0$,dom=*next) ivm05a$
-        if cvs(r2$,2)<>"" needed=needed+1
-        if l+needed>l9-2 gosub print_continued
-        if plain$="Y" print (printer_dev)w0$(16,3),"|",qty:m2$,"|",w3$(3,i[0]),@(46),fndate$(w1$(3,6)),@(55),"|",w[1]:m3$,"|",w1$(22,2),"|",extension:m1$
-        if plain$<>"Y" print (printer_dev)w0$(16,3)," ",qty:m2$,@(13),w3$(3,i[0]),@(45),fndate$(w1$(3,6)),@(56),w[1]:m3$,"|",w1$(22,2),"|",extension:m1$
-        l=l+1
-        x$(1)=fnitem$(b1$,i[3],i[4],i[5])
-        gosub text_only
-
-rem --- ESCAPE IF POS(Y1$(21,1)="SN")>0 THEN IF FAXPGM$<>"FAX" THEN IF CVS(W1$(24,10),2)<>"" THEN PRINT (PRINTER_DEV)@(3),"|",@(14),"|","REF: ",W1$(24,10),@(55),"|",@(66),"|  |"; LET L=L+1
+    action=pos(pom02a.line_type$="SNVMO")
+    std_line=1
+    nonstock_line=2
+    vend_part_num=3
+    message_line=4
+    other_line=5
     
-rem     if cvs(r2$,2)="" goto l5450
-rem     if cvs(r2$,2)="" goto date_promised
-        if cvs(r2$,2)<>""
-            x$(1)="Your Item Number "+r2$
+    switch action
+        case std_line;   rem --- Print Standard Line
+
+            dim b0$(22),b1$(60),r0$(28),r1$(32),r2$(20),x$(40)
+            ivm01a_key$(1)=firm_id$+poe12a.item_id$
+            b1$(1)=nf$
+            ivm05a_key$(1)=apm01a.vendor_id$+poe12a.item_id$
+            find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+            if p3$(58,1)="Y" find record (ivm05_dev,key=ivm05a_key$,dom=*next) ivm05a$
+            if cvs(r2$,2)<>"" needed=needed+1
+            if l+needed>l9-2 gosub print_continued
+
+            if plain$="Y" print (printer_dev) poe12a.po_line_no$,"|",
+:                                               qty:m2$,"|",
+:                                               poe12a.item_id$,
+:                                               @(46),fndate$(poe12a.reqd_date$),
+:                                               @(55),"|",w[1]:m3$,"|",
+:                                               poe12a.unit_measure$,"|",extension:m1$
+:           else if plain$<>"Y" print (printer_dev) poe12a.po_line_no$," ",
+:                                               qty:m2$,
+:                                               @(13),poe12a.item_id$,
+:                                               @(45),fndate$(poe12a.reqd_date$),
+:                                               @(56),w[1]:m3$,"|",
+:                                               poe12a.unit_measure$,"|",extension:m1$
+            fi
+
+            l=l+1
+            x$(1)=fnitem$(b1$,i[3],i[4],i[5])
             gosub text_only
-        endif
-rem     goto l5450
-rem     goto date_promised
+            if cvs(r2$,2)<>""
+                x$(1)="Your Item Number "+r2$
+                gosub text_only
+            endif
+            break
 
-    else if pos(y1$(21,1)="N")
-rem nonstock_line: rem --- Print Non-Stock Line
+        case nonstock_line; rem --- Print Non-Stock Line
 
-        if plain$="Y" print (printer_dev)w0$(16,3),"|",qty:m2$,"|",w3$(3,i[0]),@(46),fndate$(w1$(3,6)),@(55),"|",w[1]:m3$,"|",w1$(22,2),"|",extension:m1$
-        if plain$<>"Y" print (printer_dev)w0$(16,3)," ",qty:m2$,@(13),w3$(3,i[0]),@(45),fndate$(w1$(3,6)),@(56),w[1]:m3$,"|",w1$(22,2),"|",extension:m1$
-        l=l+1
-        x$(1)=w4$
+            if plain$="Y" print (printer_dev) poe12a.po_line_no$,"|",
+:                                               qty:m2$,"|",
+:                                               poe12a.item_id$,
+:                                               @(46),fndate$(poe12a.reqd_date$),
+:                                               @(55),"|",w[1]:m3$,"|",
+:                                               poe12a.unit_measure$,"|",extension:m1$
+:           else if plain$<>"Y" print (printer_dev) poe12a.po_line_no$," ",
+:                                               qty:m2$,
+:                                               @(13),poe12a.item_id$,
+:                                               @(45),fndate$(poe12a.reqd_date$),
+:                                               @(56),w[1]:m3$,"|",
+:                                               poe12a.unit_measure$,"|",extension:m1$
+            fi
+
+            l=l+1
+            x$(1)=poe12a.order_memo$
+            gosub text_only
+            break
+
+        case vend_part_num; rem --- Print Vendor Part Number, Message or Other Line
+        case message_line
+        case other_line
+
+            if plain$="Y"
+                switch (pom02a.line_type$="VMO")
+                    case 1
+                        print (printer_dev) poe12a.po_line_no$,"|",
+:                       @(14),"|Your Item Number ",poe12a.order_memo$,
+:                       @(55),"|",
+:                       @(66),"|  |" 
+                        break
+                    case 2
+                        print (printer_dev) poe12a.po_line_no$,"|",
+:                       @(14),"|",poe12a.order_memo$,
+:                       @(55),"|",
+:                       @(66),"|  |"
+                        break
+                    case 3
+                        print (printer_dev) poe12a.po_line_no$,"|",
+:                       @(14),"|",poe12a.order_memo$,
+:                       @(55),"|",w[1]:m3$,
+:                       @(66),"|  |",extension:m1$
+                    case default
+                        break
+                swend
+             endif
+             if plain$<>"Y"
+                switch(pom02a.line_type$="VMO")
+                    case 1
+                        print (printer_dev) poe12a.po_line_no$,
+:                       @(13),"Your Item Number ",poe12a.order_memo$,
+:                       @(66),"|  |"
+                        break
+                    case 2
+                        print (printer_dev) poe12a.po_line_no$,
+:                       @(13),poe12a.order_memo$,
+:                       @(66),"|  |"
+                        break
+                    case 3
+                        print (printer_dev) poe12a.po_line_no$,
+:                       @(13),poe12a.order_memo$,
+:                       @(56),w[1]:m3$,
+:                       @(66),"|  |",extension:m1$
+                    case default
+                        break
+                swend
+             endif
+
+            l=l+1
+            break
+
+        case default
+            return
+            break
+
+    swend
+
+date_promised: rem --- Date Promised or Not Before Date?
+
+    while more
+        if pos(pom02a.line_type$="VM") break
+        if cvs(poe12a.promise_date$,2)="" break else if cvs(poe12a.not_b4_date$,2)="" break
+        v=1
+        if cvs(poe12a.promise_date$,2)<>"" x$(1)="Promised By "+fndate$(poe12a.promise_date$),v=22
+        if cvs(poe12a.not_b4_date$,2)<>"" x$(v)="Not Before "+fndate$(poe12a.not_b4_date$)
         gosub text_only
+    wend
 
-rem --- ESCAPE IF POS(Y1$(21,1)="SN")>0 THEN IF FAXPGM$<>"FAX" THEN IF CVS(W1$(24,10),2)<>"" THEN PRINT (PRINTER_DEV)@(3),"|",@(14),"|","REF: ",W1$(24,10),@(55),"|",@(66),"|  |"; LET L=L+1
-
-rem     goto l5450
-rem     goto date_promised
-
-    else if pos(y1$(21,1)="V") or if pos(y1$(21,1)="M") or if pos(y1$(21,1)="O")
-rem other_line: rem --- Print Vendor Part Number, Message or Other Line
-
-rem     if plain$<>"Y" goto l5380
-        if plain$<>"Y" goto brnch6
-        if y1$(21,1)="V" print (printer_dev)w0$(16,3),"|",@(14),"|Your Item Number ",w4$(1,i[6]),@(55),"|",@(66),"|  |"
-        if y1$(21,1)="M" print (printer_dev)w0$(16,3),"|",@(14),"|",w4$,@(55),"|",@(66),"|  |"
-        if y1$(21,1)="O" print (printer_dev)w0$(16,3),"|",@(14),"|",w4$,@(55),"|",w[1]:m3$,@(66),"|  |",extension:m1$
-rem l5380:
-brnch6:
-rem     if plain$="Y" goto l5400
-        if plain$="Y" goto brnch7
-        if y1$(21,1)="V" print (printer_dev)w0$(16,3),@(13),"Your Item Number ",w4$(1,i[6]),@(66),"|  |"
-        if y1$(21,1)="M" print (printer_dev)w0$(16,3),@(13),w4$,@(66),"|  |"
-        if y1$(21,1)="O" print (printer_dev)w0$(16,3),@(13),w4$,@(56),w[1]:m3$,@(66),"|  |",extension:m1$
-rem l5400:
-brnch7:
-        l=l+1
-rem     goto date_promised
-    fi
-
-rem l5450: rem --- Date Promised or Not Before Date?
-rem date_promised: rem --- Date Promised or Not Before Date?
-
-    if pos(y1$(21,1)="VM") goto l5490
-    if cvs(w1$(9,12),2)="" goto l5490
-    v=1
-    if cvs(w1$(9,6),2)<>"" x$(1)="Promised By "+fndate$(w1$(9,6)),v=22
-    if cvs(w1$(15,6),2)<>"" x$(v)="Not Before "+fndate$(w1$(15,6))
-    gosub text_only
-rem l5490:
     return
 
 text_only: rem --- Print text only
 
     if l+1>l9-2 gosub print_continued
-    if plain$="Y" print (printer_dev)@(3),"|",@(14),"|",x$,@(55),"|",@(66),"|  |"
-    if plain$<>"Y" print (printer_dev)@(13),x$,@(66),"|  |"
+    if plain$="Y" print (printer_dev)   @(3),"|",
+:                                       @(14),"|",x$,
+:                                       @(55),"|",
+:                                       @(66),"|  |"
+:    else if plain$<>"Y" print (printer_dev)  @(13),x$,
+:                                       @(66),"|  |"
+    fi
     l=l+1
+
     return
 
 print_total: rem --- Total
@@ -790,45 +713,37 @@ print_total: rem --- Total
     buf$(56)="Purchasing Agent"
     footer$[footcnt]=buf$
     barcnt=1; rem "One line count for the printing of BAR$
-rem if plain$<>"Y" goto l5705
-    if plain$<>"Y" goto brnch8
-    if l+footcnt+barcnt>l9 gosub print_continued
-    skip=l9-footcnt-barcnt-l
-rem l5705:
-brnch8:
-rem if plain$="Y" goto l5730
-    if plain$="Y" goto brnch9
-    if l>l9 gosub print_continued
-    skip=l9-l
-rem l5730:
-brnch9:
+
+    if plain$="Y" 
+        if l+footcnt+barcnt>l9 gosub print_continued
+        skip=l9-footcnt-barcnt-l
+    else 
+        if l>l9 gosub print_continued
+        skip=l9-l
+    endif
+
     if skip>0 gosub skip_lines
     if plain$="Y" print (printer_dev)bar$ else print (printer_dev)""
     for ii=1 to footcnt
         print (printer_dev)footer$[ii]
     next ii
+
     return
 
 print_continued: rem --- Continued
 
-rem if first goto l5880
-    if first goto brnch12
-rem if plain$="Y" goto l5860
-    if plain$="Y" goto brnch10
-    for cnt=l to l9-1
-        print (printer_dev)@(66),"|  |"
-    next cnt
-    print (printer_dev)""
-rem goto l5870
-    goto brnch11
-rem l5860:
-brnch10:
-    print (printer_dev)bar$
-rem l5870:
-brnch11:
-    if plain$="Y" print (printer_dev)@(61),"(Continued)" else print (printer_dev)@(59),"(Continued)"; rem "Unform needs these differentprint positions
-rem l5880:
-brnch12:
+    if !first 
+        if plain$<>"Y" 
+            for cnt=l to l9-1
+                print (printer_dev)@(66),"|  |"
+            next cnt
+            print (printer_dev)""
+        else print (printer_dev)bar$ fi
+    endif
+    if plain$="Y" print (printer_dev) @(61),"(Continued)" 
+    else print (printer_dev)@(59),"(Continued)"; rem "Unform needs these differentprint positions
+    endif
+
     gosub shipto_break; gosub report_heading
     first=0
     return
@@ -836,19 +751,27 @@ brnch12:
 skip_lines: rem --- Skip lines
 
     for ii=1 to skip
-        if plain$="Y" print (printer_dev)@(3),"|",@(14),"|",@(55),"|",@(66),"|  |"
-        if plain$<>"Y" print (printer_dev)@(66),"|  |"
+        if plain$="Y" print (printer_dev)   @(3),"|",
+:                                           @(14),"|",
+:                                           @(55),"|",
+:                                           @(66),"|  |"
+        else print (printer_dev)  @(66),"|  |"
     next ii
+
     return
 
 vendor_break: rem --- Vendor Break
 
     dim c0$(8),c1$(195)
-    c0$(1)=a0$
+    apm01a_key$(1)=poe02a.po_no$
     c1$(1)=nf$
-    t0$=c0$(3)
-    find record (apm01_dev,key=c0$,dom=*next) apm01a$
-    n$=c1$(31,72)+c1$(103,9)
+    t0$=apm01a_vendor_id$
+    find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+    n$= apm01a.addr_line_1$ + 
+:       apm01a.addr_line_2$ + 
+:       apm01a.city$ + 
+:       apm01a.state_code$ + 
+:       apm01a.zip_code$
 
 rem --- ESCAPE LET SHIPNAME$=C1$(1,30)
 
@@ -858,18 +781,21 @@ rem --- ESCAPE LET SHIPNAME$=C1$(1,30)
 shipfrom_break: rem --- Ship-From Break
 
     dim d0$(10),d1$(160),s$(140)
-    d0$(1)=a0$(1,8)+a1$(3,2)
-    t1$=d0$(3)
+    apm05a_key$(1)=poe02a.firm_id$ + poe02a.vendor_id$ + poe02a.purch_addr$
+    t1$=apm05a.vendor_id$
     shipfrom$="SAME"
-rem if cvs(a1$(3,2),2)="" goto l6190
-    if cvs(a1$(3,2),2)="" return
+    if cvs(poe02a.purch_addr$,2)="" return
     d1$(1)=nf$
-    find record (apm05_dev,key=d0$,dom=*next) apm05a$
+    find record (apm05_dev,key=apm05a_key$,dom=*next) apm05a$
 
 rem --- ESCAPE LET SHIPNAME$=D1$(1,30)
 
-    s$=d1$(31,72)+d1$(103,9)
-    shipfrom$=a1$(3,2)+" "+d1$(1,30)
+    s$= apm05a.addr_line_1$ + 
+:       apm05a.addr_line_2$ + 
+:       apm05a.city$ + 
+:       apm05a.state_code$ + 
+:       apm05a.zip_code$
+    shipfrom$=poe02a.purch_addr$+" "+apm05a.name$
 
 rem --- ESCAPE LET N$=S$
 
@@ -877,75 +803,91 @@ rem --- ESCAPE LET N$=S$
 
 rem --- ESCAPE LET N$=S$
 
-    shipflen=max(len(cvs(d1$(1,30),2)),len(cvs(s$(1,35),2)),len(cvs(s$(36,35),2)),
+    shipflen=max(len(cvs(apm05a.name$,2)),len(cvs(s$(1,35),2)),len(cvs(s$(36,35),2)),
     :   len(cvs(s$(71,35),2))); rem "Max len of ship from addr block
     if plain$="Y" shipflen=35; rem "Only move block to fit preprinted forms
-rem l6190:
+
     return
 
 terms_break: rem --- Terms Break
 
     dim z0$(32)
-    z0$(1)=firm_id$+"C"+a1$(38,2)+nf$
-    t2$=a1$(38,2)
-    find record (apm10_dev,key=z0$(1,5),dom=*next) apm10c$
+    apm10c_key$(1)=firm_id$+"C"+poe02a.terms_code$+nf$
+    t2$=poe02a.terms_code$
+    find record (apm10_dev,key=apm10c_key$(1,5),dom=*next) apm10c$
     return
 
 shipto_break: rem --- Ship-To Break
 
     dim x0$(160)
-    x0$(1)=firm_id$+"C"+w3$(1,2)+nf$
-    t3$=w3$(1,2)
-    if x0$(4,2)="  " x0$(4,2)=a1$(1,2),t3$=a1$(1,2); rem ESCAPE
-    find record (ivm10_dev,key=x0$(1,5),dom=*next) ivm10c$
-    a$=x0$(30,96)+x0$(136,9)
+    ivm10c_key$(1)=firm_id$+"C"+poe12a.warehouse_id$+nf$
+    t3$=poe12a.warehouse_id$
+    if ivm10c_key.warehouse_id$="  " 
+        ivm10c_key.warehouse_id$=poe02a.warehouse_id$
+        t3$=poe02a.warehouse_id$; rem ESCAPE
+    endif
+    find record (ivm10_dev,key=ivm10c_key$,dom=*next) ivm10c$
+
+    a$= ivm10c.addr_line_1$ + 
+:       ivm10c.addr_line_2$ + 
+:       ivm10c.addr_line_3$ + 
+:       ivm10c.city$ + 
+:       ivm10c.state_code$ + 
+:       ivm10c.zip_code$
+
     call pgmdir$+"adc_address.aon",a$,24,4,9,35
     return
 
 line_code_break: rem --- Line Code Break
 
     dim y0$(4),y1$(32)
-    y0$(1)=firm_id$+w1$(1,2)
-    t4$=w1$(1,2)
-    find record (pom02_dev,key=y0$,dom=*next) pom02a$
+    pom02a_key$(1)=firm_id$+poe12a.po_line_code$
+    t4$=poe12a.po_line_code$
+    find record (pom02_dev,key=pom02a_key$,dom=*next) pom02a$
     return
 
 rem --- Sort print file by alternate sort or warehouse
 sort_file:
-    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,""," Sorting","",m0+8,poe22_dev,1,0,ignore_status
-    read (poe22_dev,key=firm_id$,dom=next_print_rec)
+    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,""," Sorting","",m0+8,poe22_dev,
+:   1,0,ignore_status
+    read (poe22_dev,key=firm_id$,dom=*next)
+
 rem --- Read next print record
-next_print_rec:
-    k$=key(poe22_dev,end=done_sorting)
-    if pos(firm_id$=k$)<>1 goto done_sorting
-    call pgmdir$+"adc_progress.aon","S","","","",fnmask$(k$(3,vendlen),m0$)+" "+k$(9),0,0,1,0,ignore_status
-    read (poe22_dev)
-rem if sequence$="W" goto l6680
-    if sequence$="W" goto seqEqW
-    c0$(1)=firm_id$+k$(3)
-    find record (apm01_dev,key=c0$,dom=next_print_rec) apm01a$
-    let x8$(1)=firm_id$+c1$(146,10)+k$(3)
-    write record (pow02_dev,key=x8$) pow02a$
-    goto next_print_rec
-rem l6680:
-seqEqW:
-    let a0$(1)=k$
-    read (poe12_dev,key=a0$,dom=read_all_detail)
-rem --- Must read all detail records when printing by warehouse
-read_all_detail:
-    let k$=key(poe12_dev,end=next_print_rec)
-    if pos(a0$=k$)<>1 goto next_print_rec
-    read record (poe12_dev,key=k$,dom=next_print_rec) poe12a$
-    let x8$(1)=firm_id$+w3$(1,2)+fill(8)+a0$(3)
-    write record (pow02_dev,key=x8$) pow02a$
-    goto read_all_detail
+    while more
+        poe22a_key$=key(poe22_dev,end=done_sorting)
+        if pos(firm_id$=poe22a_key$)<>1 goto done_sorting
+        call pgmdir$+"adc_progress.aon","S","","","",fnmask$(poe22a.vendor_id$,m0$)+" "+poe22a.po_no$,
+:       0,0,1,0,ignore_status
+        read (poe22_dev)
+
+        if sequence$<>"W"
+            apm01a_key$(1)=firm_id$+poe22a_key.vendor_id$
+            find record (apm01_dev,key=apm01a_key$,dom=*continue) apm01a$
+            let pow02a_key$(1)=firm_id$+apm01a.alt_sequence$+poe22a_key.vendor_id$
+            write record (pow02_dev,key=pow02a_key$) pow02a$
+        else 
+            let poe01a_key$(1)=poe22a_key$
+            read (poe12_dev,key=poe01a_key$,dom=*next)
+        fi
+    
+    rem --- Must read all detail records when printing by warehouse
+        while more
+            let poe12a_key$=key(poe12_dev,end=*break)
+            if pos(poe01a_key$=poe12a_key$)<>1 break
+            read record (poe12_dev,key=poe12a_key$,dom=*break) poe12a$
+            let pow02a_key$(1)=firm_id$+poe12a.warehouse_id+fill(8)+poe02a.vendor_id$
+            write record (pow02_dev,key=pow02a_key$) pow02a$
+        wend
+    wend
+
 done_sorting: rem " --- Done sorting"
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     return
+
 calc_ext: rem " --- Calculate Extension"
     let qty=w[2]-w[3]
     if type$="P" qty=w[3]-w[7]
-    if y1$(21,1)="O" qty=1
+    if pom02a.line_type$="O" qty=1
     precision 2
     let extension=w[1]*qty
     precision i[1]
@@ -955,38 +897,18 @@ rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
 
-rem ************************************************************************
-rem post cc edit on 16th July 2007
-rem comment functions not used
-rem ************************************************************************
-rem
     def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-rem def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-rem :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]    
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+:   cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
     def fnget_table$(q0$)=rd_alias_id$
-
-rem --- Miscellaneous functions
-
-rem def fncenter(q$,q)=int((q-len(q$))/2)
 
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
 
-rem --- Format zip/postal code
-
-rem def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
-
 rem --- Date/time handling functions
 
     def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
-rem def fnyy$(q$)=q$(3,2)
-rem def fnclock$(q$)=date(0:"%hz:%mz %p")
-rem def fntime$(q$)=date(0:"%Hz%mz")
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
@@ -1002,21 +924,6 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
         return str(q1$:q2$)
     fnend
-
-rem --- fnbasename$: Strip path and optionally the suffix from a file name
-
-rem    def fnbasename$(q$,q0$)
-rem        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
-rem        if q then q$=q$(q+1)
-rem        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
-rem    return q$
-
-rem --- fnglobal: Return numeric value of passed stbl variable
-
-rem    def fnglobal(q$,q1)
-rem        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
-rem        return q1
-rem    fnend
 
 rem --- fnglobal$: Return string value of passed STBL variable
 
