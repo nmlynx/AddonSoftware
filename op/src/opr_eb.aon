@@ -31,30 +31,30 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01")
 
 rem --- Initializations
 
-    rem dim a0$(200),a[13],t0$(28),t1$(28),x[1],t[8],u[8]
-    x0$="First Date"
-    x1$="Last Date"
-    page=0
-    width=132
-    l9=59
-    l=l9+1
-    headings=3
-    dim headings$[headings]
-    if p8$<>"" x0$=fndate$(p8$)
-    if p9$<>"" x1$=fndate$(p9$)
-    h3$="From "+x0$+" Thru "+x1$
-    clock$=""
-    when$=sysinfo.system_date$
-    headings$[0]=n1$
-    headings$[1]=n3$
-    headings$[2]=h3$
-    m4$="-##0.00%"
-    m0=len(m0$)
-    m2=len(m2$)
-    m3=len(m3$)
-    m4=len(m4$)
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,8,13
-    more=1
+            rem dim a0$(200),a[13],t0$(28),t1$(28),x[1],t[8],u[8]
+            x0$="First Date"
+            x1$="Last Date"
+            page=0
+            width=132
+            l9=59
+            l=l9+1
+            headings=3
+            dim headings$[headings]
+            if p8$<>"" x0$=fndate$(p8$)
+            if p9$<>"" x1$=fndate$(p9$)
+            h3$="From "+x0$+" Thru "+x1$
+            clock$=""
+            when$=sysinfo.system_date$
+            headings$[0]=n1$
+            headings$[1]=n3$
+            headings$[2]=h3$
+            m4$="-##0.00%"
+            m0=len(m0$)
+            m2=len(m2$)
+            m3=len(m3$)
+            m4=len(m4$)
+            call pgmdir$+"adc_sizemask.aon",m1$,m1,8,13
+            more=1
 rem --- Background
 
   rem  call pgmdir$+"adc_progress.aon","CN",sysinfo.task_desc$,"","Printing","",7,opt61_dev,1,0,ignore_status
@@ -64,109 +64,146 @@ rem --- Initial File Read
     read (opt61_dev,key=firm_id$+"  "+p8$,dom=*next)
 
 rem Invoice_Read: rem --- Invoice Read
+
  while more
-        k$=key(opt61_dev,end=*break)
-        read (opt61_dev,key=k$)
-        if p8$<>"" then 
-            if k$(5,3)<p8$ then
-                continue
-            endif
-        endif
-        if p9$<>"" then
-           if k$(5,3)>p9$ then 
-             break
-           endif
-        endif   
-        find record (opt01_dev,key=k$(1,4)+k$(15,6)+k$(8,7)+"000",dom=*continue) opt01a$
-        if opt01a.FIRM_ID$<>firm_id$ then 
-           break
-        endif
-        rem call pgmdir$+"adc_progress.aon","S","","","",opt01a_key$(5,7),0,0,1,meter_num,status
+                k$=key(opt61_dev,end=*break)
+                read (opt61_dev,key=k$)
+                if p8$<>"" then 
+                    if k$(5,3)<p8$ then
+                        continue
+                    endif
+                endif
+                if p9$<>"" then
+                   if k$(5,3)>p9$ then 
+                     break
+                   endif
+                endif   
+                find record (opt01_dev,key=k$(1,4)+k$(15,6)+k$(8,7)+"000",dom=*continue) opt01a$
+                if opt01a.FIRM_ID$<>firm_id$ then 
+                   break
+                endif
+                rem call pgmdir$+"adc_progress.aon","S","","","",opt01a_key$(5,7),0,0,1,meter_num,status
 
 rem --- Void
 
-        if opt01a.ORDINV_FLAG$<>"V" gosub Find_Record
-        if l+1>l9 gosub report_heading
-        print (printer_dev)@(0),opt01a.AR_INV_NO$,@(8),"Void"
-        l=l+1
-        continue
+                if opt01a.ORDINV_FLAG$="V" then
+                    if l+1>l9 gosub report_heading
+                    print (printer_dev)@(0),opt01a.AR_INV_NO$,@(8),"Void"
+                    l=l+1
+                    continue
+                else
+                    gosub Find_Record
+                fi
 
 
 rem --- Print
 
-        if l+2>l9 gosub report_heading
-        x0=0
-        if a[6]<>0 x0=100*(a[6]-a[7])/a[6]
-        print (printer_dev)@(0),opt01a.AR_INV_NO$,@(8),fnmask$(a0$(5,p[0]),m0$),@(9+m0),fndate$(opt01a.INVOICE_DATE$),@(18+m0),a[6]:m1$,a[0]:m1$,a[1]:m1$,a[2]:m1$,a[6]+a[0]+a[1]-a[2]:m1$,a[7]:m1$,a[6]-a[7]:m1$,x0:m4$
-        print (printer_dev)@(10),arm01a.customer_name$(1,30)
-        l=l+2
+                if l+2>l9 gosub report_heading
+                x0=0
+                if a[6]<>0 x0=100*(a[6]-a[7])/a[6]
+                print (printer_dev)
+:                               @(0),opt01a.AR_INV_NO$,
+:                               @(8),fnmask$(opt01a_key$(5,p[0]),m0$),
+:                               @(9+m0),fndate$(opt01a.INVOICE_DATE$),
+:                               @(18+m0),a[6]:m1$,a[0]:m1$,a[1]:m1$,a[2]:m1$,a[6]+a[0]+a[1]-a[2]:m1$,a[7]:m1$,a[6]-a[7]:m1$,x0:m4$
+                print (printer_dev)@(10),arm01a.customer_name$(1,30)
+                l=l+2
 
 rem --- Totals
 
-        t0=t0+1
-        for x=0 to 7
-            t[x]=t[x]+a[x]
-        next x
+                t0=t0+1
+                for x=0 to 7
+                    t[x]=t[x]+a[x]
+                next x
  wend
 
 Report_Head:
-    if h=0 or l+4>l9 gosub report_heading
-    x0=0
-    if t[6]<>0 x0=100*(t[6]-t[7])/t[6]
-    print (printer_dev)'LF',@(2),"Total Invoices:",t0
-    print (printer_dev)@(2),"Totals:",@(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
+                if h=0 or l+4>l9 gosub report_heading
+                x0=0
+                if t[6]<>0 x0=100*(t[6]-t[7])/t[6]
+                     print (printer_dev)'LF',
+:                                       @(2),"Total Invoices:",t0
+                     print (printer_dev)
+:                                       @(2),"Totals:",
+:                                       @(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
 
 rem --- Averages
 
-    if t0=0 goto std_exit
-    for x=0 to 7
-        t[x]=t[x]/t0
-    next x
-    x0=0
-    if t[6]<>0 x0=100*(t[6]-t[7])/t[6]
-    print (printer_dev)@(2),"Averages:",@(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
-    goto std_exit
+                if t0=0 goto std_exit
+                for x=0 to 7
+                    t[x]=t[x]/t0
+                next x
+                x0=0
+                if t[6]<>0 x0=100*(t[6]-t[7])/t[6]
+                print (printer_dev)@(2),"Averages:",@(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
+                goto std_exit
 
 report_heading: rem --- Report Heading
 
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)"Invoice",@(8),"Customer",@(18+m0+7*m1-6),"Gross"
-    print (printer_dev)"Number",@(8),"No.",@(m0+11),"Date",@(18+m0+m1-6),"Sales",@(18+m0+2*m1-4),"Tax",@(18+m0+3*m1-8),"Freight",@(18+m0+4*m1-9),"Discount",@(18+m0+5*m1-6),"Total",@(18+m0+6*m1-5),"Cost",@(18+m0+7*m1-7),"Profit",@(18+m0+7*m1+m4-5),"GP %"
-    print (printer_dev)""
-    l=l+3
-    return
+                 l=headings+1
+                 call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+                 if status exitto std_exit
+    print (printer_dev)"Invoice",
+:                               @(8),"Customer",
+:                               @(18+m0+7*m1-6),"Gross"
+    print (printer_dev)"Number",
+:                               @(8),"No.",
+:                               @(m0+11),"Date",
+:                               @(18+m0+m1-6),"Sales",
+:                               @(18+m0+2*m1-4),"Tax",
+:                               @(18+m0+3*m1-8),"Freight",
+:                               @(18+m0+4*m1-9),"Discount",
+:                               @(18+m0+5*m1-6),"Total",
+:                               @(18+m0+6*m1-5),"Cost",
+:                               @(18+m0+7*m1-7),"Profit",
+:                               @(18+m0+7*m1+m4-5),"GP %"
+             print (printer_dev)""
+             l=l+3
+             return
 
 rem --- Detail
 
-    if l+3>l9 gosub report_heading
-    if opt01a.TOTAL_COST>999 opt01a.TOTAL_COST=999.99
-    if opt01a.ORDINV_FLAG$="V" gosub Print_Void
-    print (printer_dev)@(0),opt01a_key$(5,7),@(15),fnmask$(opt01a_key$(12,p[0]),m0$),@(23),fndate$(opt01a$.SEQUENCE_000$),@(33+12-m1),a[0]:m1$,@(46+12-m1),a[1]:m1$,@(59+12-m1),a[2]:m1$,@(72+12-m1),a[3]:m1$,@(85+12-m1),a[4]:m1$,@(98+12-m1),a[0]+a[2]+a[1]-a[3]+a[4]:m1$,@(111+12-m1),a[6]:m1$,@(124),a[7]:"-##0.00%"
-    print (printer_dev)@(0),arm01a.customer_name$(1,30),'LF'
-    l=l+3
-    u[0]=u[0]+opt01a.tax_amt
-    u[1]=u[1]+t[1]
-    u[2]=u[2]+opt01a.discount_amt
-    u[5]=u[5]+opt01a.comm_percent
-    u[3]=u[3]+opt01a.taxable_amt
-    u1=u1+opt01a.TOTAL_SALES
-    u=u+opt01a.TOTAL_COST
-    return
+            if l+3>l9 gosub report_heading
+            if opt01a.TOTAL_COST>999 opt01a.TOTAL_COST=999.99
+            if opt01a.ORDINV_FLAG$="V" gosub Print_Void
+            print (printer_dev)
+:                               @(0),opt01a_key$(5,7),
+:                               @(15),fnmask$(opt01a_key$(12,p[0]),m0$),
+:                               @(23),fndate$(opt01a.SEQUENCE_000$),
+:                               @(33+12-m1),a[0]:m1$,@(46+12-m1),a[1]:m1$,
+:                               @(59+12-m1),a[2]:m1$,
+:                               @(72+12-m1),a[3]:m1$,
+:                               @(85+12-m1),a[4]:m1$,
+:                               @(98+12-m1),a[0]+a[2]+a[1]-a[3]+a[4]:m1$,
+:                               @(111+12-m1),a[6]:m1$,
+:                               @(124),a[7]:"-##0.00%"
+             print (printer_dev)
+:                               @(0),arm01a.customer_name$(1,30),'LF'
+            l=l+3
+            u[0]=u[0]+opt01a.tax_amt
+            u[1]=u[1]+t[1]
+            u[2]=u[2]+opt01a.discount_amt
+            u[5]=u[5]+opt01a.comm_percent
+            u[3]=u[3]+opt01a.taxable_amt
+            u1=u1+opt01a.TOTAL_SALES
+            u=u+opt01a.TOTAL_COST
+            return
 
 Print_Void: rem --- Print VOID
 
-    if l+2>l9 gosub report_heading
-    print (printer_dev)@(0),opt01a_key$(5,7),@(15),fnmask$(opt01a_key$(12,p[0]),m0$),@(23),fndate$(opt01a$.SEQUENCE_000$),"   ****Void****",'LF'
-    l=l+2
-    return
+            if l+2>l9 gosub report_heading
+                print (printer_dev)
+:                               @(0),opt01a_key$(5,7),
+:                               @(15),fnmask$(opt01a_key$(12,p[0]),m0$),
+:                               @(23),fndate$(opt01a.SEQUENCE_000$),"   ****Void****",'LF'
+            l=l+2
+            return
 
 Find_Record: rem --- Find Customer
-    rem dim b1$(30)
-    let arm01a.customer_name$(1)="Not On File"
-    find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
-    return
+            rem dim b1$(30)
+            let arm01a.customer_name$(1)="Not On File"
+            find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
+            return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
