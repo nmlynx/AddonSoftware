@@ -120,7 +120,7 @@ rem --- Next Item
 
 Retrieve_Item: rem --- Retrieve item
 
-        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         ivm01a_key$(1)=firm_id$+item$
         find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if begprod$<>"" then
@@ -222,6 +222,8 @@ Init_Heading: rem --- Initialize HEADINGS$
     headings$[3]=h1$
     headings$[4]=h2$
     headings$[6]=h6$
+    return
+
 Position: rem --- Print positions
 
     m1$=ivs01a.amount_mask$
@@ -233,8 +235,7 @@ Position: rem --- Print positions
     o[0]=1
     if sequence$="S" o[1]=22,o[2]=o[1]+p[0]+1,o[3]=width-3
     if sequence$="I" o[1]=p[0]+2,o[3]=width-20,o[2]=o[3]-4
-
-return
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
