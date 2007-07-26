@@ -52,7 +52,7 @@ rem --- Position files
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",7+p[0],ivm03_dev,1,0,ignore_status
-     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
     first$=firm_id$+"C"
     ivm03a_key$=first$+begwhse$
     if begwhse$<>"" ivm03a_key$=ivm03a_key$+begprod$
@@ -68,7 +68,9 @@ rem ---- Loop Starting
         whse$=ivm03a_key$(4,2)
         product$=ivm03a_key$(6,3)
         item$=ivm03a_key$(9)
+
 rem --- Valid Warehouse/Product/Item?
+
         if endwhse$<>"" then
             if whse$>endwhse$ break
         endif
