@@ -17,8 +17,9 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    more=1
 
 
 rem --- Assign form input values to local variables
@@ -29,21 +30,19 @@ rem --- Assign form input values to local variables
     begyear$=fnget_fld_data$(table$,"year_1") 
     endperiod$=fnget_fld_data$(table$,"period_2") 
     endyear$=fnget_fld_data$(table$,"year_2")   
-    Detailed_Level$=fnget_fld_data$(table$,"Detailed_Level")
+    level$=fnget_fld_data$(table$,"Detailed_Level")
     begwhse$=fnget_fld_data$(table$,"whse_id_1")
     endwhse$=fnget_fld_data$(table$,"whse_id_2")
     begprod$=fnget_fld_data$(table$,"prod_id_1")
     endprod$=fnget_fld_data$(table$,"prod_id_2")
     begitem$=fnget_fld_data$(table$,"item_1")
     enditem$=fnget_fld_data$(table$,"item_2")
-    itemtype$=fnget_fld_data$(table$,"item_type")
-
+    type$=fnget_fld_data$(table$,"item_type")
+    
 
 rem --- Initializations
 
-    rem precision p[1]
     precision num(ivs01a.precision$)
-    rem dim ivm03a_key$(22),a1$(60),a2$(64),headings$[6],o[9]
     dim headings$[6],o[9]
     dim files[3],items$[2],periods$[1],activity[12]
     dim whse[1],report[1]
@@ -67,21 +66,13 @@ rem --- Initializations
     x$="Sales"
     h7$="Sold"
     h8$="Sales"
-    begwhse$=options$[1]
-    endwhse$=options$[2]
-    begprod$=options$[3]
-    endprod$=options$[4]
-    begitem$=options$[5]
-    enditem$=options$[6]
-    type$=options$[7]
-    level$=options$[0]
     done=0
     action$="T"
     periods$[0]=begyear$+begper$
     periods$[1]=endyear$+endper$
     if base$="U" x$="Usage",h7$="Used",h8$="Usage"
     headings$[2]="Based On Total "+x$+" For Period "+begper$+" "+fnyy$(begyear$)+" Through Period "+endper$+" "+fnyy$(endyear$)
-    more=1
+    
 
 rem --- Print positions
 
@@ -90,7 +81,6 @@ rem --- Print positions
 
 rem --- Background
 
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"Sorting","","",7+p[0],ivm03_dev,1,0,ignore_status
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
 
 rem --- Report headings
@@ -121,110 +111,118 @@ rem --- Report headings
 rem --- Position files
 
     first$=firm_id$+"A"
+    dim ivm03a_key$:ivm03_key_tpl$
     ivm03a_key$=first$+begprod$
     p=0
     if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
     read (ivm03_dev,key=ivm03a_key$,dom=*next)
 
 rem --- Get next sort record
+
 Rem ----Loop Starting
 
-while more
+    while more
 
-    ivm03a_key$=key(ivm03_dev,end=*break)
-    if pos(first$=ivm03a_key$)<>1 break
-    whse$=ivm03a_key$(4,2)
-    product$=ivm03a_key$(4+p,3)
-    item$=ivm03a_key$(7+p)
-    if level$<>"W"then 
+        ivm03a_key$=key(ivm03_dev,end=*break)
+        if pos(first$=ivm03a_key$)<>1 break
+        whse$=ivm03a_key.warehouse_id$
+        product$=ivm03a_key.product_type$
+        item$=ivm03a_key.item_id$
+        if level$<>"W"then 
 
 rem --- By Item: Valid Product/Item?
-        if endprod$<>"" if product$>endprod$ break
-        if begitem$<>"" then
-            if item$<begitem$ then
-                read (ivm03_dev,key=ivm03a_key$(1,6+p)+begitem$,dir=0,dom=*continue)
-                continue
+            if endprod$<>"" if product$>endprod$ break
+            if begitem$<>"" then
+                if item$<begitem$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.product_type$+begitem$,dir=0,dom=*Continue)
+                    Continue
+                
+                endif
             endif
-        endif
-        if enditem$<>"" then
-            if item$>enditem$ 
-                read (ivm03_dev,key=ivm03a_key$(1,6+p)+$FF$,dom=*continue)
-                continue
+            if enditem$<>"" then
+                if item$>enditem$ 
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.product_type$+$FF$,dom=*Continue)
+                    continue
+                endif
             endif
-        endif
-        x$=product$+" "+item$(1,p[0])
-    else
+            x$=product$+" "+item$(1,p[0])
+        else
 rem --- By Warehouse: Valid Warehouse/Product/Item?
 
-        if endwhse$<>"" if whse$>endwhse$ break
-        if begprod$<>"" then
-            if product$<begprod$ then
-                read (ivm03_dev,key=ivm03a_key$(1,5)+begprod$,dom=*continue)
-                continue
+            if endwhse$<>"" if whse$>endwhse$ break
+            if begprod$<>"" then
+                if product$<begprod$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.WAREHOUSE_ID$+begprod$,dom=*Continue)
+                    continue
+                endif
             endif
-        endif
 
-        if endprod$<>"" then
-            if product$>endprod$ then
-                read (ivm03_dev,key=ivm03a_key$(1,5)+$FF$,dom=*continue)
-                continue
+            if endprod$<>"" then
+                if product$>endprod$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.WAREHOUSE_ID$+$FF$,dom=*Continue)
+                    continue
+                endif
             endif
-        endif
-        if begitem$<>"" then
-            if item$<begitem$ then
-                read (ivm03_dev,key=ivm03a_key$(1,6+p)+begitem$,dir=0,dom=*continue)
-                continue
+            if begitem$<>"" then
+                if item$<begitem$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dir=0,dom=*continue)
+                    continue
+                endif
             endif
-        endif
-        if enditem$<>"" then 
-            if item$>enditem$ then
-                read (ivm03_dev,key=ivm03a_key$(1,6+p)+$FF$,dom=*continue)
-                continue
+            if enditem$<>"" then 
+                if item$>enditem$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+    :               ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dom=*continue)
+                    continue
+                endif
             endif
+            x$=whse$+" "+product$+" "+item$(1,p[0])
         endif
-        x$=whse$+" "+product$+" "+item$(1,p[0])
-    endif
 
 rem --- Accumulate totals
 
-    call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
-    read (ivm03_dev)
-    if type$<>"" then
-        ivm03a_key$(1)=firm_id$+item$
-        find record (ivm01_dev,key=ivm03a_key$,dom=*continue) ivm01a$
-        if ivm03a.Item_Type<>type$ then
-            continue
+        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
+        read (ivm03_dev)
+        if type$<>"" then
+            ivm03a_key$(1)=firm_id$+item$
+            find record (ivm01_dev,key=ivm03a_key$,dom=*continue) ivm01a$
+            if ivm03a.Item_Type<>type$ then
+                continue
+            endif
         endif
-    endif
-    if level$="W" gosub Accum_Total_Whse
-    if level$="I" gosub Item_Total_Accum
+        if level$="W" gosub Accum_Total_Whse
+        if level$="I" gosub Item_Total_Accum
 
 rem --- Write ivw-01 item record
-
-    ivw01a_key$(1)=firm_id$+whse$
-    ivw01a_key$(5)=sign$
-    ivw01a_key$(6)=amount$
-    ivw01a_key$(23)=item$
-    ivw01a.unit_cost=cost
-    ivw01a.usuage_qty=usage
-    ivw01a.qty_on_hand=onhand
-    write record (ivw01_dev,key=ivw01a_key$) ivw01a$
+        dim ivw01a_key$:ivw01a_key_tpl$
+        ivw01a_key$=firm_id$+whse$
+        ivw01a_key.recip_sign$=sign$
+        ivw01a_key.recip_amount$=amount$
+        ivw01a_key.item_number$=item$
+        ivw01a.unit_cost=cost
+        ivw01a.usuage_qty=usage
+        ivw01a.qty_on_hand=onhand
+        write record (ivw01_dev,key=ivw01a_key$) ivw01a$
 
 rem --- Write ivw-02 totals record
+        dim ivw02a_key$:ivw02a_key_tpl$
+        ivw02a_key$=firm_id$+whse$
+        find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
+        ivw02a.total_usuage=ivw02a.total_usuage+cost*usage
+        ivw02a.total_value=ivw02a.total_value+cost*onhand
+        write record (ivw02_dev,key=ivw02a_key$) ivw02a$
 
-    dim ivw02a_key$(4)
-    ivw02a_key$(1)=firm_id$+whse$
-    find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
-    ivw02a.total_usuage=ivw02a.total_usuage+cost*usage
-    ivw02a.total_value=ivw02a.total_value+cost*onhand
-    write record (ivw02_dev,key=ivw02a_key$) ivw02a$
-
-wend ;Rem ----Loop Ending
+    wend ;Rem ----Loop Ending
 
 rem --- Position file
 
-    dim bar$(width,"-"),ivw02a_key$(4)
-    ivw02a_key$(1)=firm_id$
+    dim bar$(width,"-")
+    ivw02a_key$=firm_id$
     if level$="I" find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
     total_usage=ivw02a.total_usuage
     total_value=ivw02a.total_value
@@ -244,14 +242,14 @@ rem --- Read next work record
 
 rem --- Level break?
 
-        if level$="W" if ivw01a.warehouse_id$(3,2)<>t0$ gosub WhseBreak
+        if level$="W" if ivw01a.warehouse_id$<>t0$ gosub WhseBreak
 
 rem --- Additional reads
 
-        dim ivm01a_key$(22),description$(dw)
-        ivm01a_key$(1)=firm_id$+ivw01a_key$(23)
+        dim description$(dw)
+        ivm01a_key$=firm_id$+ivw01a_key$
         find record (ivm01_dev,key=ivm01a_key$) ivm01a$
-        description$(1)=fnitem$(a1$,p[3],p[4],p[5])
+        description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
         product$=ivm01a.product_type$
         um$=ivm01a.unit_of_sale$
 
@@ -273,7 +271,7 @@ rem --- Perform detail line calculations
 rem --- Print detail line
 
         if l+2>l9 gosub report_heading
-        print (printer_dev)@(o[0]),ivm03a_key$(3,p[0]),@(o[1]),product$,@(o[2]),um$,@(o[3]),usage:m2$,@(o[4]),cost$,@(o[5]),item_usage:m1$,@(o[6]),percent$,@(o[7]),onhand:m2$,@(o[8]),item_value:m1$,@(o[9]),value_percent:m7$
+        print (printer_dev)@(o[0]),ivm03a_key.product_type$,@(o[1]),product$,@(o[2]),um$,@(o[3]),usage:m2$,@(o[4]),cost$,@(o[5]),item_usage:m1$,@(o[6]),percent$,@(o[7]),onhand:m2$,@(o[8]),item_value:m1$,@(o[9]),value_percent:m7$
         print (printer_dev)@(o[0]+3),description$
         l=l+2
         total_percent=total_percent+item_usage_percent
@@ -304,59 +302,59 @@ rem --- Reached 100% of usage yet?
 
 done: rem --- All done
 
-        done=1
-        if level$="W" gosub WhseBreak
-        if l+2>l9 gosub report_heading
-        print (printer_dev)""
-        print (printer_dev)@(o[5]-16),"Total For Report",@(o[5]),report[0]:m1$,@(o[8]),report[1]:m1$
-        goto std_exit
+    done=1
+    if level$="W" gosub WhseBreak
+    if l+2>l9 gosub report_heading
+    print (printer_dev)""
+    print (printer_dev)@(o[5]-16),"Total For Report",@(o[5]),report[0]:m1$,@(o[8]),report[1]:m1$
+    goto std_exit
 report_heading: rem --- Report Heading
 
-        l=headings+4
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-        if status exitto std_exit
-        print (printer_dev)@(o[1]),"Prod",@(o[6]+m7-10),"Cumulative",@(o[7]+m2-9),"Quantity",@(o[9]+m7-10),"Cumulative"
-        print (printer_dev)@(o[0]),"Item/Description",@(o[1]),"Type",@(o[2]),"UM",@(o[3]+m2-10),"Units ",h7$,@(o[4]+m3-(len(ch$)+1)),ch$,@(o[5]+m1-12),"Total ",h8$,@(o[6]+m7-10),"% Of ",h8$,@(o[7]+m2-9),"On Hand",@(o[8]+m1-12),"Total Value",@(o[9]+m7-10),"% Of Value"
-        print (printer_dev)""
-        return
+    l=headings+4
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status exitto std_exit
+    print (printer_dev)@(o[1]),"Prod",@(o[6]+m7-10),"Cumulative",@(o[7]+m2-9),"Quantity",@(o[9]+m7-10),"Cumulative"
+    print (printer_dev)@(o[0]),"Item/Description",@(o[1]),"Type",@(o[2]),"UM",@(o[3]+m2-10),"Units ",h7$,@(o[4]+m3-(len(ch$)+1)),ch$,@(o[5]+m1-12),"Total ",h8$,@(o[6]+m7-10),"% Of ",h8$,@(o[7]+m2-9),"On Hand",@(o[8]+m1-12),"Total Value",@(o[9]+m7-10),"% Of Value"
+    print (printer_dev)""
+    return
 
 WhseBreak: rem --- Warehouse Break
 
-        if t0$<>"" then
-            x$="Total For "+h9$
-            if l+2>l9 gosub report_heading
-            print (printer_dev)""
-            print (printer_dev)@(o[5]-len(x$)),x$,@(o[5]),whse[0]:m1$,@(o[8]),whse[1]:m1$
-            l=l+2
-        endif
-        whseBreakdom:
-            if done return
-            dim description$(32),ivw02a_key$(4)
-            t0$=ivw01a.warehouse_id$
-            description$(6,24)="(Not on File)"
-            l=l9+1
-            ivw02a_key$(1)=firm_id$+t0$
-            find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-            let h9$="Warehouse "+t0$+" "+cvs(description$(6,24),2),bar=0
-            let headings$[4]=h1$,headings$[4](fncenter(h9$,width),len(h9$))=h9$
-            find record (ivw02_dev,key=ivw02a_key$,dom=whseBreakdom) ivw02a$
-            let total_usage=ivw02a.total_usuage,total_value=ivw02a.total_value,total_percent=0
-            let cum_usage=0,cum_value=0
-        return
+    if t0$<>"" then
+       x$="Total For "+h9$
+       if l+2>l9 gosub report_heading
+       print (printer_dev)""
+       print (printer_dev)@(o[5]-len(x$)),x$,@(o[5]),whse[0]:m1$,@(o[8]),whse[1]:m1$
+       l=l+2
+    endif
+whseBreakdom:
+    if done return
+    dim description$(32)
+     t0$=ivw01a.warehouse_id$
+     ivm10c.SHORT_NAME$="(Not on File)"
+     l=l9+1
+    ivw02a_key$=firm_id$+t0$
+    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    let h9$="Warehouse "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2),bar=0
+    let headings$[4]=h1$,headings$[4](fncenter(h9$,width),len(h9$))=h9$
+    find record (ivw02_dev,key=ivw02a_key$,dom=whseBreakdom) ivw02a$
+    let total_usage=ivw02a.total_usuage,total_value=ivw02a.total_value,total_percent=0
+    let cum_usage=0,cum_value=0
+    return
 
-Item_Toatal_Accum:rem --- Accumulate totals for item
+Item_Total_Accum:rem --- Accumulate totals for item
 
         dim i[2]
         let x$=firm_id$+"G"+item$
         read (ivm03_dev2,key=x$,dom=*next)
-
+        dim ivm03g_key$:ivm03_key_tpl$
 rem --- Read next item/warehouse xref
 
         while more ;Rem ----Loop Starting
-            let k$=key(ivm03_dev2,end=*break)
-            if pos(x$=ivm03a_key$)=1 then
+            let ivm03g_key$=key(ivm03_dev2,end=*break)
+            if pos(x$=ivm03g_key$)=1 then
                 read (ivm03_dev2)
-                let whse$=ivm03a_key$(24)
+                let whse$=ivm03g_key.warehouse_id$(24)
                 gosub Accum_Total_Whse
                 let amount=(i[0]*i[2])+(cost*onhand),number=i[2]+onhand
                 if number>0 i[0]=amount/number
@@ -370,8 +368,8 @@ rem --- Read next item/warehouse xref
 
 Accum_Total_Whse: rem --- Accumulate warehouse totals
 
-        dim ivm02a_key$(24),activity[12]
-        let ivm02a_key$(1)=firm_id$+whse$+item$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
+        dim activity[12]
+        let ivm02a_key$=firm_id$+whse$+item$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
         let cost=0,usage=0,onhand=0
         find record (ivm02_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
         let onhand=ivm02a.qty_on_hand,cost=ivm02a.unti_cost
