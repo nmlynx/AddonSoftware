@@ -18,18 +18,6 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
     More=1
 
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    include$=fnget_fld_data$(table$,"unit_cost_margin")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
-    begprod$=fnget_fld_data$(table$,"prod_id_1")
-    endprod$=fnget_fld_data$(table$,"prod_id_2")
-    begitem$=fnget_fld_data$(table$,"item_1")
-    enditem$=fnget_fld_data$(table$,"item_2")
-    itemtype$=fnget_fld_data$(table$,"item_type")
-
 rem --- Print positions and headings
 
     gosub Position
