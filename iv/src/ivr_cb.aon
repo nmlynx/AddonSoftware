@@ -6,9 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    seterr std_error
-    setesc std_error
-
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -18,15 +15,16 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    more=1
 
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
     period$=fnget_fld_data$(table$,"Period")
     year$=fnget_fld_data$(table$,"Year")
-    DetailLevel$=fnget_fld_data$(table$,"Detail_Level")
+    level$=fnget_fld_data$(table$,"Detail_Level")
     begwhse$=fnget_fld_data$(table$,"whse_id_1")
     endwhse$=fnget_fld_data$(table$,"whse_id_2")
     begprod$=fnget_fld_data$(table$,"prod_id_1")
@@ -38,7 +36,6 @@ rem --- Assign form input values to local variables
 
 rem --- Initializations
 
-    rem precision p[1]
     precision num(ivs01a.precision$)
     headings=7
     when$=sysinfo.system_date$
@@ -71,10 +68,8 @@ rem --- Position files
 
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",7+p[0],ivm03_dev,1,0,ignore_status
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
-    files[2]=ivm02_dev
-    files[3]=ivm03_dev2
+    dim ivm03a_key$:ivm03_key_tpl$
     first$=firm_id$+"A"
     ivm03a_key$=first$+begprod$
     p=0
@@ -84,9 +79,9 @@ rem --- Position files
 
         ivm03a_key$=key(ivm03_dev,end=*break)
         if pos(first$=ivm03a_key$)<>1 break
-        whse$=ivm03a_key$(4,2)
-        product$=ivm03a_key$(4+p,3)
-        item$=ivm03a_key$(7+p)
+        whse$=ivm03a_key.warehouse_id$
+        product$=ivm03a_key.product_type$
+        item$=ivm03a_key.item_id$
         if level$<>"W" then
 
 rem --- By Item: Valid Product/Item?
@@ -94,14 +89,16 @@ rem --- By Item: Valid Product/Item?
             if endprod$<>"" if product$>endprod$ break
             if begitem$<>"" then
                 if item$<begitem$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,6+p)+begitem$,dir=0,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.prod_type$+begitem$,dir=0,dom=*Continue)
                     continue
                 endif
             endif
             if enditem$<>"" then
                 if item$>enditem$ then
-                     read (ivm03_dev,key=ivm03a_key$(1,6+p)+$FF$,dom=*continue)
-                     continue
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.prod_type$+$FF$,dir=0,dom=*Continue)
+                    continue
                 endif
             endif
             x$=product$+" "+item$(1,p[0])
@@ -110,31 +107,34 @@ rem --- By Item: Valid Product/Item?
             if endwhse$<>"" if whse$>endwhse$ break
             if begprod$<>"" then
                 if product$<begprod$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,5)+begprod$,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.warehouse_id$+begprod$,dom=*continue)
                     continue
                 endif
             endif
             if endprod$<>"" then
                 if product$>endprod$ then
-                     read (ivm03_dev,key=ivm03a_key$(1,5)+$FF$,dom=*continue)
+                     read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                    ivm03a_key.warehouse_id$+$FF$,dom=*continue)
                      continue
                 endif
             endif
             if begitem$<>"" then
                 if item$<begitem$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,6+p)+begitem$,dir=0,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.warehouse_id$+ivm03a_key.prod_type$+begitem$,dir=0,dom=*continue)
                     continue
                 endif
             endif
             if enditem$<>"" then
                 if item$>enditem$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,6+p)+$FF$,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.warehouse_id$+ivm03a_key.prod_type$+$FF$,dom=*continue)
                     continue
                 endif
             endif
             x$=whse$+" "+product$+" "+item$(1,p[0])
         endif
-
         call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,meter_num,status
         if level$="W" if whse$<>t0$ gosub BreakWhse
         if product$<>t1$ gosub BreakProd
@@ -143,8 +143,8 @@ rem --- By Item: Valid Product/Item?
 rem --- Retrieve item
 
         dim item$[2],whse$[2],w[20],activity[12]
-        ivm01a_key$(1)=firm_id$+item$
-        find record (ivm01_dev,key=a0$,dom=*continue) ivm01a$
+        ivm01a_key$=firm_id$+item$
+        find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if type$<>"" then
             if ivm01a.item_type$<>type$ then
                 continue
@@ -290,7 +290,7 @@ BreakProd: rem --- Product break
         next x
     endif
     if done return
-    dim ivm10a_key$(32),prod_tot[5]
+    dim prod_tot[5]
     let t1$=product$,ivm10a.code_desc$="(Not on File)",product=0
     find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product Type "+t1$+" "+ivm10a.code_desc$
