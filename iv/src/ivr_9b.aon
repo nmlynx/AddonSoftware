@@ -17,24 +17,8 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    beg_cust$=fnget_fld_data$(table$,"cust_id_1")
-    end_cust$=fnget_fld_data$(table$,"cust_id_2")
-    beg_date$=fnget_fld_data$(table$,"date_1")
-    end_date$=fnget_fld_data$(table$,"date_2")
-    beg_whse$=fnget_fld_data$(table$,"whse_id_1")
-    end_whse$=fnget_fld_data$(table$,"whse_id_2")
-    beg_prod$=fnget_fld_data$(table$,"prod_id_1")
-    end_prod$=fnget_fld_data$(table$,"prod_id_2")
-    beg_item$=fnget_fld_data$(table$,"item_1")
-    end_item$=fnget_fld_data$(table$,"item_2")
-    item_type$=fnget_fld_data$(table$,"item_type")
-    open_closed_both$=fnget_fld_data$(table$,"open_closed_both")
 
 rem --- Initializations
 
@@ -44,7 +28,6 @@ rem --- Initializations
     when$=sysinfo.system_date$
     clock$=""
     h9$=""
-    REM dim headings$[headings],o[10],a[4],b[12],l[4]
     dim headings$[headings],o[10],l[4]
     dim files[4],params[6],masks$[3],report[1]
     if item_type$="" x0$="All" else x0$=item_type$
@@ -79,71 +62,84 @@ rem --- Position files
 
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",8+p[0]+p[3],ivt02_dev,1,meter_num,status
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivt02_dev,1,meter_num,status
+
+    dim ivm03a_key$:ivm03_key_tpl$
     read (ivt02_dev,key=firm_id$+beg_cust$,dom=*next)
 
 rem --- Get next record
 
     while more
+
         ivt02a_key$=key(ivt02_dev,end=*break)
         if pos(firm_id$=ivt02a_key$)<>1 break
-        cust$=ivt02a.customer_nbr$
-        product$=ivt02a.product_type$
-        tran_date$=ivt02a.trans_date$
-        whse$=ivt02a.warehouse_id$
-        item$=ivt02a.item_number$
+        cust$=ivt02a_key.customer_id$
+        product$=ivt02a_key.product_type$
+        tran_date$=ivt02a_key.trans_date$
+        whse$=ivt02a_key.warehouse_id$
+        item$=ivt02a_key.item_id$
         read (ivt02_dev)
 
 rem --- Valid Customer/Product/Date/Warehouse/Item?
 
-        if end_cust$<>"" if cust$>end_cust$ goto done
-        if beg_prod$<>"" if product$<beg_prod$ read (ivt02_dev,key=ivt02a_key$(1,8)+beg_prod$,dom=*continue)
-        if end_prod$<>"" if product$>end_prod$ read (ivt02_dev,key=ivt02a_key$(1,8)+$FF$,dom=*continue)
-        if beg_date$<>"" if tran_date$<beg_date$ read (ivt02_dev,key=ivt02a_key$(1,31)+beg_date$,dom=*continue)
-        if end_date$<>"" if tran_date$>end_date$ read (ivt02_dev,key=ivt02a_key$(1,31)+$FF$,dom=*continue)
-        if beg_whse$<>"" if whse$<beg_whse$ read (ivt02_dev,key=ivt02a_key$(1,34)+beg_whse$,dom=*continue)
-        if end_whse$<>"" if whse$>end_whse$ read (ivt02_dev,key=ivt02a_key$(1,34)+$FF$,dom=*continue)
-        if beg_item$<>"" if item$<beg_item$ read (ivt02_dev,key=ivt02a_key$(1,36)+beg_item$,dom=*continue)
-        if end_item$<>"" if item$>end_item$ read (ivt02_dev,key=ivt02a_key$(1,36)+$FF$,dom=*continue)
+        if end_cust$<>"" if cust$>end_cust$ break
+        if beg_prod$<>"" if product$<beg_prod$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+beg_prod$,dom=*continue)
+        if end_prod$<>"" if product$>end_prod$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+$FF$,dom=*continue)
+        if beg_date$<>"" if tran_date$<beg_date$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+
+:       ivt02a_key.lotser_no$+beg_date$,dom=*continue)
+        if end_date$<>"" if tran_date$>end_date$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+
+:       ivt02a_key.lotser_no$+$FF$,dom=*continue)
+        if beg_whse$<>"" if whse$<beg_whse$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+
+:       ivt02a_key.lotser_no$+ivt02a_key.trans_date$+beg_whse$,dom=*continue)
+        if end_whse$<>"" if whse$>end_whse$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+
+:       ivt02a_key.lotser_no$+ivt02a_key.trans_date$+$FF$,dom=*continue)
+        if beg_item$<>"" if item$<beg_item$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+
+:       ivt02a_key.lotser_no$+ivt02a_key.trans_date$+ivt02a_key.warehouse_id$+beg_item$,dom=*continue)
+        if end_item$<>"" if item$>end_item$ read (ivt02_dev,key=ivt02a_key.firm_id$+ivt02a_key.customer_id$+
+:       ivt02a_key.lotser_no$+ivt02a_key.trans_date$+ivt02a_key.warehouse_id$+$FF$,dom=*continue)
 
 rem --- Open or Closed Lots?
 
         if ocb$<>"B" then
             d0=0
-            find record (ivm07_dev,key=firm_id$+ivt02a.warehouse_id$+ivt02a.item_number$+ivt02a.lotser_nbr$,dom=*next) ivm07a$
+            find record (ivm07_dev,key=firm_id$+ivt02a_key.warehouse_id$+ivt02a_key.item_id$+ivt02a_key.lotser_nbr$,dom=*next) ivm07a$
             if (ocb$="O" and d0=0) or (ocb$="C" and d0) then
                 continue
             endif
         endif
-        read record (ivt01_dev,key=ivt02a_key$(1,2)+ivt02a_key$(35,22)+ivt02a_key$(12,23)+ivt02a_key$(57,5),dom=*continue) ivt01a$
+        read record (ivt01_dev,key=ivt02a_key.firm_id$+ivt02a_key.warehouse_id$+
+:       ivt02a_key.item_id$+ivt02a_key.lotser_no$+ivt02a_key.trans_date$+ivt02a_key.iv_hist_seq$,dom=*continue) ivt01a$
         find record (ivm01_dev,key=firm_id$+item$,dom=*continue) ivm01a$
         if item_type$<>"" then
             if ivm01a.item_type$<>item_type$ then
                 continue
             endif
         endif
-        if beg_date$<>"" if ivt01a.trans_date$<beg_date$ read (ivt01_dev,key=ivt01a_key$(1,44)+beg_date$,dom=*continue)
-        if end_date$<>"" if ivt01a.trans_date$>end_date$ read (ivt01_dev,key=ivt01a_key$(1,44)+$FF$,dom=*continue)
+        if beg_date$<>"" if ivt01a_key.trans_date$<beg_date$ read (ivt01_dev,key=ivt01a_key.firm_id$+ivt01a_key.warehouse_id$+
+:       ivt01a_key.item_id$+ivt01a_key.lotser_no$+beg_date$,dom=*continue)
+        if end_date$<>"" if ivt01a_key.trans_date$>end_date$ read (ivt01_dev,key=ivt01a_key.firm_id$+ivt01a_key.warehouse_id$+
+:       ivt01a_key.item_id$+ivt01a_key.lotser_no$+beg_date$+$FF$,dom=*continue)
 
 rem --- Level breaks?
 
-        call pgmdir$+"adc_progress.aon","S","","","",ivt02a.customer_nbr$+" "+ivt02a.item_number$+" "+ivt02a.lotser_nbr$,0,0,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","S","","","",ivt02a_key.customer_id$+" "+ivt02a_key.item_id$+" "+ivt02a_key.lotser_nbr$,0,0,1,meter_num,status
         if cust$<>t1$ gosub Customer_Break
-        if ivt02a_key$(9,23)<>t2$ first$="Y" else first$="N",t2$=ivt02a_key$(9,23)
-
+        if ivt02a_key.product_type$+ivt02a_key.lotser_no$<>t2$ first$="Y" else first$="N",t2$=ivt02a_key.product_type$+ivt02a_key.lotser_no$
 rem --- Get Reference Block
 
         dim desc$[2]
-        call pgmdir$+"ivc_td.bbx",a1$,files[all],params[all],masks$[all],type$,desc$[all]
+        ivt01a_a1$=ivt01a.TRANS_SOURCE$+ivt01a.TRANS_REF_1$+ivt01a.TRANS_REF_2$+ivt01a.TRANS_REF_3$+ivt01a.TRANS_REF_4$+ivt01a.TRANS_SEQ$+ivt01a.LINE_CODE$+
+:       ivt01a.UNIT_MEASURE$+ivt01a.TRANS_CMT$+ivt01a.FINISH_ITEM$+ivt01a.GL_ACCOUNT+ivt01a.LOCATION$+
+:       ivt01a.PO_LINE_CODE$+ivt01a.RESERVED_STR$
+        call pgmdir$+"ivc_td.bbx",ivt01a_a1$,files[all],params[all],masks$[all],type$,desc$[all]
 
 rem --- Print detail line
 
         needed=1
         if first$="Y" needed=needed+1
         if l+needed>l9 gosub report_heading
-        if first$="Y" print (printer_dev)@(o[1]),product$,@(o[2]),ivt02a.lotser_nbr$,@(o[5]),ivt02a.wharehouse_id$,@(o[6]),ivt02a.item_number$," ",fnitem$(ivm01a.item_desc$,p[5],p[6],p[7]); let l=l+1
-        print (printer_dev)@(o[3]),fndate$(ivt02a.trans_date$),@(o[4]),type$,@(o[5]),desc$[1],@(o[7]),ivt01a.trans_qty:m2$,@(o[8]),ivt01a.unit_cost:m3$,@(o[9]),round(ivt01a.trans_qty*ivt01a.unit_cost,2):m1$,@(o[10]),ivt01a.unit_price:m4$
+        if first$="Y" print (printer_dev)@(o[1]),product$,@(o[2]),ivt02a_key.lotser_nbr$,@(o[5]),ivt02a_key.wharehouse_id$,@(o[6]),ivt02a_key.item_id$," ",fnitem$(ivm01a.item_desc$,p[5],p[6],p[7]); let l=l+1
+        print (printer_dev)@(o[3]),fndate$(ivt02a_key.trans_date$),@(o[4]),type$,@(o[5]),desc$[1],@(o[7]),ivt01a.trans_qty:m2$,@(o[8]),ivt01a.unit_cost:m3$,@(o[9]),round(ivt01a.trans_qty*ivt01a.unit_cost,2):m1$,@(o[10]),ivt01a.unit_price:m4$
         l=l+1
         l1=l1+1
         customer[0]=customer[0]+ivt01a.trans_qty
@@ -230,9 +226,9 @@ Init_Customer: rem --- Initialize Next Customer
     if t9$<>"END" then 
     if l+1>l9 gosub report_heading
     dim customer[1]
-    let arm01a.cust_name$(1)="Invalid Customer"
+    let arm01a.cust_name$="Invalid Customer"
     find record (arm01_dev,key=firm_id$+cust$,dom=*next) arm01a$
-    print (printer_dev)@(0),fnmask$(k$(3,custlen),custmask$)," ",arm01a.cust_name$
+    print (printer_dev)@(0),fnmask$(ivt02_key.customer_id$,custmask$)," ",arm01a.cust_name$
     let l=l+1,l1=0
     let t1$=cust$,first$="Y"
     return

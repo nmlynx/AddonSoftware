@@ -17,27 +17,13 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    sequence$=fnget_fld_data$(table$,"Sequence")
-    begsyn$=fnget_fld_data$(table$,"synonym_1")
-    endsyn$=fnget_fld_data$(table$,"synonym_2")
-    begprod$=fnget_fld_data$(table$,"prod_id_1")
-    endprod$=fnget_fld_data$(table$,"prod_id_2")
-    begitem$=fnget_fld_data$(table$,"item_1")
-    enditem$=fnget_fld_data$(table$,"item_2")
-    type$=fnget_fld_data$(table$,"item_type")
-
 
 rem --- Initializations
 
     rem precision p[1]
     precision num(ivs01a.precision$)
-    rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],headings$[7],o[3]
     dim headings$[7],o[3]
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
@@ -57,8 +43,8 @@ rem --- Print positions
     gosub Position
 
 rem --- Background
-
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",20,ivm14_dev,1,0,ignore_status
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm14_dev,1,meter_num,status
 
 rem --- Report headings
@@ -67,8 +53,17 @@ rem --- Report headings
 
 rem --- Position files
 
-    read (ivm14_dev,key=firm_id$+begsyn$,dom=*next)
-    read (ivm24_dev,key=firm_id$+begitem$,dom=*next)
+    if sequence$<>"I"
+        key_num=0
+        call pgmdir$+"adc_key_template.aon","IVM_ITEMSYN","PRIMARY",ivm14_key_tpl$,table_chans$[all],status$
+        dim ivm14a_key$:ivm14_key_tpl$
+        read(ivm14_dev,key=firm_id$+cvs(begsyn$,3),knum=key_num,dom=*next)
+    else 
+        key_num=1
+        call pgmdir$+"adc_key_template.aon","IVM_ITEMSYN","ALT_KEY_01",ivm14_key_tpl$,table_chans$[all],status$        
+        dim ivm14a_key$:ivm14_key_tpl$
+        read(ivm14_dev,key=firm_id$+cvs(begitem$,3),knum=key_num,dom=*next)
+    endif
 
 rem --- Next Synonym
 rem --- Loop starting
@@ -76,52 +71,56 @@ rem --- Loop starting
         if sequence$<>"I" then 
             ivm14a_key$=key(ivm14_dev,end=*break)
             if pos(firm_id$=ivm14a_key$)<>1 break
-            if endsyn$<>"" if ivm14a_key$(3,len(endsyn$))>endsyn$ break
+            if endsyn$<>"" if ivm14a_key.item_synonym$>endsyn$ break
             read (ivm14_dev)
             if begitem$<>"" then
-                if ivm14a_key$(23,len(begitem$))<begitem$ then
-                     read (ivm14_dev,key=ivm14a_key$(1,22)+begitem$(1,len(begitem$)-1)+$FF$,dom=*continue)
+                if ivm14a_key.item_id$<begitem$ then
+                     read (ivm14_dev,key=ivm14a_key.firm_id$+
+:                       ivm14a_key.item_synonym$+begitem$(1,len(begitem$)-1)+$FF$,dom=*continue)
                      continue
                 endif
             endif
             if enditem$<>"" then
-                if ivm14a_key$(23,len(enditem$))>enditem$ then
-                    read (ivm14_dev,key=ivm14a_key$(1,22)+$FF$,dom=*continue)
+                if ivm14a_key.item_id$>enditem$ then
+                    read (ivm14_dev,key=ivm14a_key.firm_id$+
+:                        ivm14a_key.item_synonym$+$FF$,dom=*continue)
                     continue
                 endif
             endif
-            synonym$=ivm14a_key$(3,20)
-            item$=ivm14a_key$(23)
+            synonym$=ivm14a_key.item_synonym$
+            item$=ivm14a_key.item_id$
             x$=synonym$
            
         else
 rem --- Next Item
-
-            ivm24a_key$=key(ivm24_dev,end=*break)
+            ivm14a_key$=key(ivm14_dev,end=*break)
             if pos(firm_id$=ivm14a_key$)<>1 break
-            if enditem$<>"" if ivm24a_key$(3,len(enditem$))>enditem$ break
-            read (ivm24_dev)
+            if enditem$<>"" if ivm14a_key.item_id$>enditem$ break
+            read (ivm14_dev)
             if begsyn$<>"" then
-                if ivm14a_key$(23,len(begsyn$))<begsyn$ then
-                    read (ivm24_dev,key=ivm14a_key$(1,22)+begsyn$(1,len(begsyn$)-1)+$FF$,dom=*continue)
+                if ivm14a_key.item_synonym$<begsyn$ then
+                    read (ivm14_dev,key=ivm14a_key.firm_id$+
+:                       ivm14a_key.item_id$+begsyn$(1,len(begsyn$)-1)+$FF$,dom=*continue)
                     continue
                 endif
             endif
             if endsyn$<>"" then
-                if ivm24a_key$(23,len(endsyn$))>endsyn$ then
-                    read (ivm24_dev,key=ivm24a_key$(1,22)+$FF$,dom=*continue)
+                if ivm14a_key.item_synonym$>endsyn$ then
+                    read (ivm24_dev,key=ivm24a_key.firm_id$+
+:                       ivm14a_key.item_id$+$FF$,dom=*continue)
                     continue
                 endif
             endif
-            synonym$=ivm24a_key$(23,20)
-            item$=ivm24a_key$(3,20)
+            synonym$=ivm14a_key.item_synonym$
+            item$=ivm14a_key.item_id$
             x$=item$
+            
         endif
 
 Retrieve_Item: rem --- Retrieve item
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        ivm01a_key$(1)=firm_id$+item$
+        ivm01a_key$=firm_id$+item$
         find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if begprod$<>"" then
             if ivm01a.product_type$<begprod$ then
