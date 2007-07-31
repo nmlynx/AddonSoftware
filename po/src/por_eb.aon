@@ -105,7 +105,8 @@ rem --- Position poe-25 PO Detail
         additional=0
         invamt=0
         invqty=0
-        read (poe25_dev,key=a0$,dom=*next)
+        p05_key$=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$
+        read (poe25_dev,key=p05_key$,dom=*next)
 
         while more; rem --- Read next PO Detail record
 
@@ -120,11 +121,11 @@ rem --- Retrieve line code
 
 rem --- Calculate variance
 
-            qty=w[1]
+            qty=poe25a.qty_received
             if pom02a.line_type$="O" qty=1
             precision 2
-            po_extension=w[2]*qty
-            iv_extension=w[0]*qty
+            po_extension=poe25a.receipt_cost*qty
+            iv_extension=poe25a.unit_cost*qty
             precision num(ivs01a.precision$)
             variance=iv_extension-po_extension
 
@@ -151,14 +152,14 @@ rem --- Accumulate totals needed for landed cost
 
 rem --- Retrieve receipt detail record
 
-            if w[0]=w[2] continue
+            if poe25a.unit_cost=poe25a.receipt_cost continue
             dim l0$(25),l1$(64),l2$(32),l3$(22),l4$(40),l[12],description$(dw)
-            pot14a_key$(1)=firm_id$+poe25a.vendor_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$
+            pot14a_key$=firm_id$+poe25a.vendor_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$
             received$=""
             find record (pot14_dev,key=pot14a_key$,dom=ret_inv_item) pot14a$
             if pot14a_key$<>firm_id$+pot04a.firm_id$+pot04a.vendor_id$+pot04a.po_no$+pot04a.receiver_no$
 
-                pot04a_key$(1)=pot14a_key$
+                pot04a_key$=pot14a_key$
                 find record (pot04_dev,key=pot04a_key$,dom=ret_inv_item) pot04a$
                 if cvs(pot04a.recpt_date$,2)<>"" received$=fndate$(pot04a.recpt_date$)
 
@@ -171,7 +172,7 @@ ret_inv_item: rem --- Retrieve inventory item
 
             if pom02a.line_type$<>"S"
 
-                ivm01a_key$(1)=firm_id$+pot14a.item_id$
+                ivm01a_key$=firm_id$+pot14a.item_id$
                 ivm01a.code_desc$=nf$
                 ivm01a.gl_exp_acct$=""
                 find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
@@ -188,7 +189,7 @@ rem --- Level breaks?
             vendor=vendor+variance
             report=report+variance
 
-            action=pos(y1$(21,1)="SNO")
+            action=pos(pom02a.line_type$="SNO")
             std_line=1
             non_stock_line=2
             other_line=3
@@ -202,10 +203,10 @@ rem --- Level breaks?
 :                                       @(o[2]),poe25a.receiver_no$,
 :                                       @(o[3]),ivm01a.item_id$,
 :                                       @(o[5]),received$,
-:                                       @(o[6]),w[1]:m2$," ",pot14a.unit_measure$,
-:                                       @(o[7]),w[2]:m3$,
+:                                       @(o[6]),poe25a.qty_received:m2$," ",pot14a.unit_measure$,
+:                                       @(o[7]),poe25a.receipt_cost:m3$,
 :                                       @(o[8]),po_extension:m1$,
-:                                       @(o[9]),w[0]:m3$,
+:                                       @(o[9]),poe25a.unit_cost:m3$,
 :                                       @(o[10]),iv_extension:m1$,
 :                                       @(o[11]),variance:m1$
 
@@ -217,9 +218,9 @@ rem --- Level breaks?
                     print (printer_dev) @(o[1]),poe25a.po_no$,"-",poe25a.po_line_no$,
 :                                       @(o[2]),poe25a.receiver_no$,
 :                                       @(o[5]),received$,
-:                                       @(o[7]),w[2]:m3$,
+:                                       @(o[7]),poe25a.receipt_cost:m3$,
 :                                       @(o[8]),po_extension:m1$,
-:                                       @(o[9]),w[0]:m3$,
+:                                       @(o[9]),poe25a.unit_cost:m3$,
 :                                       @(o[10]),iv_extension:m1$,
 :                                       @(o[11]),variance:m1$
 
@@ -241,12 +242,12 @@ rem --- Done with price variances. Update landed cost?
 rem --- Postion detail file for landed cost pass
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        read (poe25_dev,key=poe05a_key$,dom=*next)
+        read (poe25_dev,key=p05_key$,dom=*next)
 
         while more; rem --- Read next detail
 
             poe25a_key$=key(poe25_dev,end=*break)
-            if pos(poe05a_key$=poe25a_key$)<>1 break
+            if pos(p05_key$=poe25a_key$)<>1 break
             read record (poe25_dev) poe25a$
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
@@ -260,14 +261,14 @@ rem --- Retrieve line code
 rem --- Retrieve detail record
 
             dim l0$(25),l1$(64),l2$(32),l3$(22),l4$(40),l[12]
-            pot14a_key$(1)=firm_id$+poe25a.vendor_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$
+            pot14a_key$=firm_id$+poe25a.vendor_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$
             find record (pot14_dev,key=pot14a_key$,dom=*continue) pot14a$
-            if l[0]=0 if pos(pom02a.line_type$="ON") l[0]=1 else continue
+            if pot14a.conv_factor=0 if pos(pom02a.line_type$="ON") pot14a.conv_factor=1 else continue
 
 rem --- Calculate allocation
 
-            cost=w[0]
-            qty=w[1]
+            cost=poe25a.unit_cost
+            qty=poe25a.qty_received
             if qty=0 if pom02a.line_type$="O" qty=1 else continue
             precision 2
             iv_extension=qty*cost
@@ -280,9 +281,9 @@ rem --- Calculate allocation
 rem --- Write work file record
 
             dim u0$(24),u[1]
-            u0$(1)=firm_id$+l3$
-            u[0]=landed/l[0]
-            write record (pow17_dev,key=u0$) pow17a$
+            pow17a_key$=firm_id$+pot14a.item_id$
+            pow17a.landed_cost=landed/pot14a.conv_factor
+            write record (pow17_dev,key=pow17a_key$) pow17a$
 
         wend;   rem --- Loop back for next detail
 
@@ -336,7 +337,7 @@ vend_brk: rem --- Vendor Break
     dim b0$(8),b1$(30),vendor$(31+m0)
     t0$=poe25a.vendor_id$
     apm01a_key$=firm_id$+t0$
-    apm01a$(1)=nf$
+    apm01a$=nf$
     vendor=0
     find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
     vendor$(1)=fnmask$(apm01a.vendor_id$,m0$)+" "+apm01a.vendor_name$
@@ -354,9 +355,9 @@ inv_brk: rem --- Invoice Break
 
 ret_line_code: rem --- Retrieve line code
 
-    if firm_id$+w1$(18,2)<>y0$ return
-    let y0$(1)=firm_id$+w1$(18,2),y1$(1)=""
-    find record (pom02_dev,key=y0$,dom=*next) pom02a$
+    if firm_id$+poe25a.po_line_code$<>y0$ return
+    let pom02a_key$=firm_id$+poe25a.po_no$,pom02a.code_desc$=""
+    find record (pom02_dev,key=pom02a_key$,dom=*next) pom02a$
     return
 
 rem --- Print total line
