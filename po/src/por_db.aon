@@ -87,9 +87,9 @@ rem --- Read receipt header and detail
 rem --- Calculate extension
 
         precision 2
-        po_extension=w[1]*w[7]
-        iv_extension=d[11]*w[7]*w[0]
-        precision i[1]
+        po_extension=poe14a.unit_cost*poe14a.qty_received
+        iv_extension=ivm02a.unit_cost*poe14a.qty_received*poe14a.conv_factor
+        precision=num(ivs01a.precision$)
 
 rem --- Print detail line
 
@@ -97,10 +97,10 @@ rem --- Print detail line
         print (printer_dev) @(o[0]),poe14a.item_id$,
 :                           @(o[1]),code$,
 :                           @(o[2]),poe14a.unit_measure$,
-:                           @(o[3]),w[7]:m2$,
-:                           @(o[4]),d[11]*w[0]:m3$,
+:                           @(o[3]),poe14a.qty_received:m2$,
+:                           @(o[4]),ivm02a.unit_cost*poe14a.conv_factor:m3$,
 :                           @(o[5]),iv_extension:m1$,
-:                           @(o[6]),w[1]:m3$,
+:                           @(o[6]),poe14a.unit_cost:m3$,
 :                           @(o[7]),po_extension:m1$,
 :                           @(o[8]),poe14a.location$,
 :                           @(o[9]),fnmask$(poe04a.vendor_id$,m0$),
@@ -191,10 +191,10 @@ rem --- Set remaining fields
 
 rem --- Calculate extensions
 
-        qty=w[7]
+        qty=poe14a.qty_received
         if pom02a.line_type$="O" qty=1
         precision 2
-        po_extension=w[1]*qty
+        po_extension=poe14a.unit_cost*qty
         precision num(ivs01a.precision$)
 
 rem --- Print non-stock detail line
@@ -204,8 +204,8 @@ rem --- Print non-stock detail line
 
             print (printer_dev) @(o[0]),poe14a.item_id$,
 :                               @(o[1]),poe14a.unit_measure$,
-:                               @(o[2]),w[7]:m2$,
-:                               @(o[3]),w[1]:m3$,
+:                               @(o[2]),poe14a.qty_received:m2$,
+:                               @(o[3]),poe14a.unit_cost:m3$,
 :                               @(o[4]),po_extension:m1$,
 :                               @(o[5]),poe14a.location$,
 :                               @(o[6]),fnmask$(poe04a.vendor_id$,m0$),
@@ -217,7 +217,7 @@ rem --- Print non-stock detail line
         else
 
 rem --- Print other charge detail line
-            print (printer_dev) @(o[3]),w[1]:m3$,
+            print (printer_dev) @(o[3]),poe14a.unit_cost:m3$,
 :                               @(o[4]),po_extension:m1$,
 :                               @(o[5]),poe14a.location$,
 :                               @(o[6]),fnmask$(poe04a.vendor_id$,m0$),
@@ -348,7 +348,7 @@ warehouse_brk: rem --- Warehouse break
 
 recpt_date_brk: rem --- Receipt date break
 
-    if t1$=""
+    if t1$<>""
     
         totals$="Total For "+fndate$(t1$)
         totals[all]=receipt[all]
@@ -368,8 +368,10 @@ recpt_date_brk: rem --- Receipt date break
 read_recpt_header: rem --- Read receipt header and detail
 
     status=11
-    find record (poe04_dev,key=poe04a_key$,dom=goback) poe04a$
-    find record (poe14_dev,key=poe14a_key$,dom=goback) poe14a$
+    p04_key$=poe04a.firm_id$+poe04a.vendor_id$+poe04a.receiver_no$+poe04a.po_no$
+    p14_key$=poe14a.firm_id$+poe14a.vendor_id$+poe14a.receiver_no$+poe14a.po_no$+poe14a.po_line_no$
+    find record (poe04_dev,key=p04_key$,dom=goback) poe04a$
+    find record (poe14_dev,key=p14_key$,dom=goback) poe14a$
     if pom02a.firm_id$<>firm_id$ if pom02a.po_line_code$<>poe14a.po_line_code$
 
         pom02a_key$=firm_id$+poe14a.po_line_code$
@@ -384,7 +386,7 @@ rem --- Retrieve inventory item and warehouse
     description$(1)=poe14a.order_memo$
     ivm02a_key$=firm_id$+poe14a.warehouse_id$
     ivm02a.firm_id$=""
-    d[11]=0
+    ivm02a.unit_cost=0
     code$=""
     if pom02a.line_type$="S"
 
@@ -397,7 +399,7 @@ rem --- Retrieve inventory item and warehouse
 
 rem --- Format detail line fields
 
-    x=w[3]-w[4]-w[7]
+    x=poe14a.qty_ordered-poe14a.qty_prev_rec-poe14a.qty_received
     complete$="No"
     status=0
     if poe04a.rec_complete$="Y" complete$="Yes"
