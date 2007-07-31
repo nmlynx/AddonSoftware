@@ -203,7 +203,7 @@ rem --- Read next detail record
 
 rem --- Read line code
 
-            if pom02a_key.firm_id$<>firm_id$ and pom02a_key.po_line_code$<>poe13a.po_line_code$
+            if pom02a_key.firm_id$<>firm_id$ if pom02a_key.po_line_code$<>poe13a.po_line_code$
 
                 pom02a_key.firm_id$=firm_id$, pom02a_key.po_line_code$=poe13a.po_line_code$
                 pom02a.code_desc$=""
@@ -214,16 +214,16 @@ rem --- Read line code
 
 rem --- Calculate extension
 
-            qty=w[5]
+            qty=poe13a.qa_rec_qty
             extension=0
             if pom02a.line_type$="O" qty=1
             precision 2
-            extension=w[1]*qty
-            precision i[1]
-            line[0]=w[3]
-            line[1]=w[4]
-            line[2]=w[5]
-            line[3]=w[6]
+            extension=poe13a.unit_cost*qty
+            precision num(ivs01a.precision$)
+            line[0]=poe13a.qty_ordered
+            line[1]=poe13a.qa_wip_qty
+            line[2]=poe13a.qa_rec_qty
+            line[3]=poe13a.qa_rej_qty
             line[4]=extension
 
 rem --- Format remaining fields
@@ -232,11 +232,11 @@ rem --- Format remaining fields
             required$=""
             promised$=""
             wo$=""
-            if poe13a.reqd_date$ <>"" required$=fndate$(poe13a.reqd_date$)
+            if cvs(poe13a.reqd_date$,2) <>"" required$=fndate$(poe13a.reqd_date$)
             if cvs(poe13a.promise_date$,2)<>"" promised$=fndate$(poe13a.promise_date$)
-            if cvs(poe13a.promise_date$,2)<>"" before$=fndate$(poe13a.promise_date$)
+            if cvs(poe13a.not_b4_date$,2)<>"" before$=fndate$(poe13a.not_b4_date$)
             if cvs(poe13a.wo_no$+poe13a.sequence_no$,2)<>"" wo$=poe13a.wo_no$+"-"+poe13a.sequence_no$
-            pow13a_key$(1)=poe13a_key.firm_id$
+            pow13a_key$=poe13a_key.firm_id$
             write record (pow13_dev,key=pow13a_key$) pow13a$
 
 rem --- Branch based on line code
@@ -252,11 +252,11 @@ rem --- Branch based on line code
 
                 case std_line;   rem --- Standard line
 
-                    ivm01a_key$(1)=firm_id$+w3$(3)
-                    ivm01a$(1)=""
+                    ivm01a_key$=firm_id$+w3$(3)
+                    ivm01a$=""
                     description$(1)=nf$
                     find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-                    description$(1)=fnitem$(c1$,i[3],i[4],i[5])
+                    description$(1)=ivm01a.description$
                     if l+2>l9 gosub report_heading
                     print (printer_dev) @(o[0]),poe13a_key.po_line_no$,
 :                                       @(o[1]),poe13a.po_line_code$,
@@ -267,11 +267,11 @@ rem --- Branch based on line code
 :                                       @(o[6]),promised$,
 :                                       @(o[7]),wo$,
 :                                       @(o[8]),poe13a.unit_measure$,
-:                                       @(o[9]),w[3]:m2$,
-:                                       @(o[10]),w[4]:m2$,
-:                                       @(o[11]),w[5]:m2$,
-:                                       @(o[12]),w[6]:m2$,
-:                                       @(o[13]),w[1]:m3$,
+:                                       @(o[9]),poe13a.qty_ordered:m2$,
+:                                       @(o[10]),poe13a.qty_ordered:m2$,
+:                                       @(o[11]),poe13a.qa_rec_qty:m2$,
+:                                       @(o[12]),poe13a.qa_rej_qty:m2$,
+:                                       @(o[13]),poe13a.unit_cost:m3$,
 :                                       @(o[14]),extension:m1$
                     print (printer_dev) @(o[3]),description$
                     l=l+2
@@ -286,11 +286,11 @@ rem --- Branch based on line code
 :                                       @(o[3]),poe13a.item_id$,
 :                                       @(o[4]),code$,
 :                                       @(o[8]),poe13a.unit_measure$,
-:                                       @(o[9]),w[3]:m2$,
-:                                       @(o[10]),w[4]:m2$,
-:                                       @(o[11]),w[5]:m2$,
-:                                       @(o[12]),w[6]:m2$,
-:                                       @(o[13]),w[1]:m3$,
+:                                       @(o[9]),poe13a.qty_ordered:m2$,
+:                                       @(o[10]),poe13a.qty_ordered:m2$,
+:                                       @(o[11]),poe13a.qa_rec_qty:m2$,
+:                                       @(o[12]),poe13a.qa_rej_qty:m2$,
+:                                       @(o[13]),poe13a.unit_cost:m3$,
 :                                       @(o[14]),extension:m1$
                     print (printer_dev) @(o[3]),poe13a.order_memo$
                     l=l+2
@@ -322,7 +322,7 @@ rem --- Branch based on line code
                     print (printer_dev) @(o[0]),poe13a_key.po_line_no$,
 :                                       @(o[1]),poe13a.po_line_code$,
 :                                       @(o[2]),poe13a.warehouse_id$,
-:                                       @(o[13]),w[1]:m3$,
+:                                       @(o[13]),poe13a.unit_cost:m3$,
 :                                       @(o[14]),extension:m1$
                     print (printer_dev) @(o[3]),poe13a.order_memo$
                     l=l+2
@@ -343,42 +343,44 @@ rem --- Lotted/Serialized?
                    
                         needed=0
                         lastseq=0
-                        read (poe23_dev,key=poe13a_key$,dom=*next)
+                        p13_key$=poe13a.firm_id$+poe13a.vendor_id$+poe13a.receiver_no$+
+:                               poe13a.po_no$+poe13a.po_line_no$
+                        read (poe23_dev,key=p13_key,dom=*next)
 
 rem --- Read next lot/serial detail record
 
                         while more
 
                             poe23a_key$=key(poe23_dev,end=*break)
-                            if pos(poe13a_key$=poe23a_key$)<>1 break
+                            if pos(p13_key$=poe23a_key$)<>1 break
                             read record (poe23_dev) poe23a$
                             precision 2
-                            extension=l[0]*l[1]
-                            precision i[1]
+                            extension=poe23a.qty_received*poe23a.unit_cost
+                            precision num(poe23a.precision$)
 
 rem --- Print detail line
 
                             if l+1>l9 gosub report_heading
                             print (printer_dev) @(o[3]),lsdesc$," ",poe23a.sequence_no$," ",poe23a.lotser_no$,
-:                                               @(o[10]),l[0]:m2$,
-:                                               @(o[11]),l[0]:m2$,
-:                                               @(o[13]),l[1]:m3$,
+:                                               @(o[10]),poe23a.qty_received:m2$,
+:                                               @(o[11]),poe23a.qty_received:m2$,
+:                                               @(o[13]),poe23a.unit_cost:m3$,
 :                                               @(o[14]),extension:m1$
                             l=l+1
-                            needed=needed+l[0]
+                            needed=needed+poe23a.qty_received
                             lastseq=num(poe23a.sequence_no$)
 
                         wend
 
 rem --- Enough lot/serial numbers?
 
-                        if needed<>w[5]
+                        if needed<>poe13a.qa_rec_qty
 
                             type$="L"
-                            qty=w[5]-needed
-                            if needed<w[5] xlimit=qty
+                            qty=poe13a.qa_rec_qty-needed
+                            if needed<poe13a.qa_rec_qty xlimit=qty
                             if ivs01a.lotser_flag$="L" xlimit=1
-                            if needed>w[5] xlimit=0
+                            if needed>poe13a.qa_rec_qty xlimit=0
                             gosub store_diff
 
                         endif
@@ -394,29 +396,31 @@ pos_rej_det: rem --- Position rejection detail file
             needed=0
             lastseq=0
 
-            if w[6]=0
+            if poe13a.qa_rej_qty=0
 
                 gosub set_variables
                 continue
 
             endif
 
-            read (poe63_dev,key=poe13a_key$,dom=*next)
+            p13_key$=poe13a.firm_id$+poe13a.vendor_id$+poe13a.receiver_no$+
+:                               poe13a.po_no$+poe13a.po_line_no$
+            read (poe63_dev,key=p13_key$,dom=*next)
 
 read_next: rem --- Read next rejection detail
 
             while more
 
                 poe63a_key$=key(poe63_dev,end=*break)
-                if pos(poe13a_key$=poe63a_key$)<>1 break
+                if pos(p13_key$=poe63a_key$)<>1 break
                 read record (poe63_dev) poe63a$
-                pom03a_key$(1)=firm_id$+poe63a.reject_code$
-                pom03a$(1)=nf$
+                pom03a_key$=firm_id$+poe63a.reject_code$
+                pom03a$=nf$
                 lastseq=num(poe63a_key.sequence_no$)
                 find record (pom03_dev,key=pom03a_key$,dom=*next) pom03a$
                 precision 2
-                extension=d[0]*w[1]
-                precision i[1]
+                extension=d[0]*poe13a.unit_cost
+                precision num(poe13a.precision$)
 
 rem --- Print rejection detail
 
@@ -428,17 +432,17 @@ rem --- Print rejection detail
 :                                   " ",pom03a.reject_code$," ",
 :                                   pom03a.description$," ",ra$,
 :                                   " ",inspector$,
-:                                   @(o[12]),d[0]:m2$,
-:                                   @(o[13]),w[1]:m3$,
+:                                   @(o[12]),poe63a.qty_reject:m2$,
+:                                   @(o[13]),poe13a.unit_cost:m3$,
 :                                   @(o[14]),extension:m1$
                 l=l+1
-                needed=needed+d[0]
+                needed=needed+poe63a.qty_reject
 
             wend
 
 rem --- Loop back for next detail record
 
-            if needed=w[6]
+            if needed=poe13a.qa_rej_qty
 
                 gosub set_variables
                 continue
@@ -448,7 +452,7 @@ rem --- Loop back for next detail record
             type$="R"
             qty=1
             xlimit=1
-            if needed>w[6] xlimit=0
+            if needed>poe13a.qa_rej_qty xlimit=0
             gosub store_diff
 
             gosub set_variables
@@ -488,8 +492,8 @@ rem --- Print list of lines with lot/serial number differences
 
             k$=difkey$[x]
             qty=difqty[x]
-            apm01a_key$(1)=k$(1,8)
-            apm01a$(1)=nf$
+            apm01a_key$=k$(1,8)
+            apm01a$=nf$
             find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
             x$="Is Missing "+str(qty)
             lsdesc$=" Lot/Serial Number(s)"
@@ -556,8 +560,8 @@ recpt_subhead: rem --- Receipt subheading
 
     print (printer_dev) ""
     print (printer_dev) "Vendor: ",vendor$,@(48),"Rec #: ",poe03a_key$,
-:   "  PO #:",a0$(16,7),@(78),packlist$,@(100),
-:   "Receipt Date: ",fndate$(a1$(29,6))
+:   "  PO #:",poe03a.po_no$,@(78),packlist$,@(100),
+:   "Receipt Date: ",fndate$(poe03a.recpt_date$)
     print (printer_dev) ""
     let l=l+3
     return
@@ -587,7 +591,7 @@ store_diff:
 
     let dif=dif+1
     if dif>99 return
-    let difkey$[dif]=poe13a_key$,diftype$[dif]=type$,difqty[dif]=qty
+    let difkey$[dif]=poe13a.firm_id$+poe13a.vendor_id$+poe13a.receiver_no$+poe13a.po_no$+poe13a.po_line_no$,diftype$[dif]=type$,difqty[dif]=qty
     if xlimit=0 return
     for x=1 to xlimit
         if l+1>l9 gosub report_heading
