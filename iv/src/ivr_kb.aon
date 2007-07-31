@@ -18,34 +18,15 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    period$=fnget_fld_data$(table$,"Period")
-    year$=fnget_fld_data$(table$,"Year")
-    Sequence$=fnget_fld_data$(table$,"sequence$")
-    ItemLimit$=fnget_fld_data$(table$,"Item_Limit$")
-    DetailLevel$=fnget_fld_data$(table$,"Detail_Level")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
-    begprod$=fnget_fld_data$(table$,"prod_id_1")
-    endprod$=fnget_fld_data$(table$,"prod_id_2")
-    begitem$=fnget_fld_data$(table$,"item_1")
-    enditem$=fnget_fld_data$(table$,"item_2")
-    itemtype$=fnget_fld_data$(table$,"item_type")
 
 rem --- Initializations
 
     rem precision p[1]
     precision num(ivs01a.precision$)
-    rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],item[3],totals[1]
     dim item[3],totals[1]
     dim period$[1],headings$[6],o[8],product[1],warehouse[1],report[1]
-    rem dim w0$(45),w1$(64),w[5]
     files[2]=ivm12_dev
     files[3]=ivm03_dev2
     ch1$=""
@@ -66,14 +47,6 @@ rem --- Initializations
     dh$="Description"
     m9$="00"
     m8$="-##0.00"
-    begwhse$=options$[1]
-    endwhse$=options$[2]
-    begprod$=options$[3]
-    endprod$=options$[4]
-    begitem$=options$[5]
-    enditem$=options$[6]
-    type$=options$[7]
-    level$=options$[0]
     m9=len(m9$)
     m8=len(m8$)
     p=num(period$)-(g[0]-1)
@@ -90,8 +63,8 @@ rem --- Print positions
     gosub Position
    
 Background: rem --- Background
-
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"Sorting","","",16+p[0],ivm03_dev,1,0,ignore_status
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
 
 rem --- Report headings
@@ -101,32 +74,37 @@ rem --- Report headings
 rem --- Position files
 
     first$=firm_id$+"A"
+    dim ivm03a_key$:ivm03_key_tpl$
     ivm03a_key$=first$+begprod$
     p=0
     if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
     read (ivm03_dev,key=ivm03a_key$,dom=*next)
 
 rem --- Get next sort record
+
 rem --- Main Loop starting
 
     while more 
+
         ivm03a_key$=key(ivm03_dev,end=*break)
         if pos(first$=ivm03a_key$)<>1 break
-        whse$=ivm03a_key$(4,2)
-        product$=ivm03a_key$(4+p,3)
-        item$=ivm03a_key$(7+p)
+        whse$=ivm03a_key.warehouse_id$
+        product$=ivm03a_key.product_type$
+        item$=ivm03a_key.item_id$
         if level$<>"W" then
 rem --- By Item: Valid Product/Item?
             if endprod$<>"" if product$>endprod$ break
             if begitem$<>"" then
                 if item$<begitem$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,6+p)+begitem$,dir=0,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.product_type$+begitem$,dir=0,dom=*Continue)
                     continue
                 endif 
             endif      
             if enditem$<>"" then
                 if item$>enditem$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,6+p)+$FF$,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.product_type$+$FF$,dom=*Continue)
                     continue
                 endif 
             endif 
@@ -139,24 +117,30 @@ rem --- By Warehouse: Valid Warehouse/Product/Item?
             if begprod$<>"" then
                 if product$<begprod$ then
                     read (ivm03_dev,key=ivm03a_key$(1,5)+begprod$,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.WAREHOUSE_ID$+begprod$,dom=*Continue) 
                     continue
                 endif
             endif    
             if endprod$<>"" then
                 if product$>endprod$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,5)+$FF$,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.WAREHOUSE_ID$+$FF$,dom=*continue)
                     continue
                 endif
             endif 
             if begitem$<>"" then
                 if item$<begitem$ then
-                    read (ivm03_dev,key=ivm03a_key$(1,6+p)+begitem$,dir=0,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dir=0,dom=*continue)
                     continue
                 endif
             endif
             if enditem$<>"" then
                 if item$>enditem$ then
                     read (ivm03_dev,key=ivm03a_key$(1,6+p)+$FF$,dom=*continue)
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+$FF$,dom=*continue)
                     continue
                 endif
             endif
@@ -167,29 +151,29 @@ rem --- Retrieve item
 
         dim description$(dw)
         call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
-        ivm01a_key$(1)=firm_id$+item$
+        ivm01a_key$=firm_id$+item$
         read (ivm03_dev)
-        find record (ivm01_dev,key=ivm01a_key$(1),dom=*continue) ivm01a$
+        find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if type$<>"" then
             if ivm01a.Item_type$<>type$ then
                 continue
             endif
         endif
         description$(1)=fnitem$(ivm01a.Item_desc$,p[3],p[4],p[5])
-        rem if level$="I" goto Item_Position
+        
         if level$<>"I" then
             gosub Whse_Turns
-       
         else
 rem --- Position xref for item level report
 
             dim item[3]
-            x$=firm_id$+"G"+ivm01a_key$(1)
+            x$=firm_id$+"G"+ivm01a_key$
             read (ivm03_dev2,key=x$,dom=*next)
 
 rem --- Get next warehouse xref
 rem --- InnerLoop Starting
             while more 
+
                 ivm03a_key$=key(ivm03_dev2,end=*break)
                 if pos(x$=ivm03a_key$)<>1 break
                 read (ivm03_dev2)
@@ -242,12 +226,13 @@ rem --- Generate reciprocal amount
 
 rem --- Write sort record
 
-        rem dim w0$(45),w1$(64),w[5]
-        ivw03a_key$(1)=firm_id$+whse$
-        ivw03a_key$(5)=product$
-        ivw03a_key$(8)=sign$
-        ivw03a_key$(9)=amount$
-        ivw03a_key$(26)=ivm01a.item_number$
+        dim ivw03a_key$:ivw03_key_tpl$
+        ivw03a_key.firmid$=firm_id$
+        ivw03a_key.warehouse_id$=whse$
+        ivw03a_key.product_type$ =product$
+        ivw03a_key.recip_sign$=sign$
+        ivw03a_key.recip_amount$=amount$
+        ivw03a_key.item_id$=ivm01a_key.item_id$
         ivw03a.item_desc$=description$
         ivw03a.unit_measure$=ivm01a.unit_sale$
         ivw03a.total_usage=usage
@@ -256,7 +241,7 @@ rem --- Write sort record
         ivw03a.oty_on_hand=balance
         ivw03a.total_value=average
         ivw03a.item_turns=turns
-        if level$="I" ivw03a.warehouse_id$=""
+        if level$="I" ivw03a_key.warehouse_id$=""
         write record (ivw03_dev,key=ivw03a_key$) ivw03a$
 
     wend; rem --- Main Loop Ending
@@ -269,10 +254,11 @@ rem --- Report initializations
 rem --- Read next work record
 rem ---  Loop Starting
     while more
+
         read record (ivw03_dev,end=done) ivw03a$
-        whse$=ivw03a.warehouse_id$
-        product$=ivw03a.product_type$
-        item$=ivw03a.item_number$
+        whse$=ivw03a_key.warehouse_id$
+        product$=ivw03a_key.product_type$
+        item$=ivw03a_key.item_id$
         call pgmdir$+"adc_progress.aon","S","","Printing","",whse$+" "+product$+" "+item$(1,p[0]),ive03_dev,0,1,0,ignore_status
 
 rem --- Level breaks?
@@ -282,7 +268,7 @@ rem --- Level breaks?
 
 rem --- Format print fields
 
-        description$(1)=ivw03a.item_desc$
+        description$=ivw03a.item_desc$
         um$=ivw03a.unit_measure$
         cost$=""
         if level$="W" cost$=str(ivw03a.unit_cost:m3$)
@@ -390,7 +376,7 @@ WhseBreak: rem --- Warehouse Break
             gosub PrintTotal
         endif
     endif
-    if done  return
+    if done  break
     rem dim x0$(32),warehouse[1]
     let t0$=whse$,ivm10c.short_name$="(Not on File)",l=l9+1,l0=0
     find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
@@ -400,14 +386,12 @@ WhseBreak: rem --- Warehouse Break
 
 Prod_Break: rem --- Product break
 
-    if t1$<>"" or l1>=1 then 
-        rem if l1<1 goto Flow_Prod_Break
+    if t1$<>"" and l1>=1 then 
         let totals$="Totals For Product "+t1$
         let totals[0]=product[0],totals[1]=product[1]
         gosub PrintTotal
     endif
     if done return
-    rem dim x0$(32),product[1]
     let t1$=product$,ivm10a.code_desc$="(Not on File)",l1=0
     find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product Type "+t1$+" "+ivm10a.code_desc$
@@ -416,9 +400,9 @@ Prod_Break: rem --- Product break
 rem --- Retrieve warehouse info and calculate turns
 
 WhseTurns:
-    rem dim b0$(24),b1$(64),b[20],item$[2],activity[12]
+    dim item$[2],activity[12]
     let usage=0,cost=0,cost$="",total=0,balance=0,average=0,turns=0
-    let ivm02a_key$(1)=firm_id$+whse$+item$,item$[0]=firm_id$,item$[1]=whse$,item$[2]=ivm01a.item_number$
+    let ivm02a_key$=firm_id$+whse$+item$,item$[0]=firm_id$,item$[1]=whse$,item$[2]=ivm01a.item_number$
     find record (ivm02_dev,key=ivm02a_key$,dom=Whse_Turns) ivm02a$
     let cost=ivm02a.unti_cost,cost$=str(cost:m3$),action$="T"
     call pgmdir$+"ivc_wb.bbx",action$,files[all],item$[all],period$[all],activity[all],status
@@ -461,8 +445,7 @@ Position: rem --- Print positions
     split=1
     ih$="Item/Description"
     dh$=""
-
-return
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)

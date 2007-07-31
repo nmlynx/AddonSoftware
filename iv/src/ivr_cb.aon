@@ -17,23 +17,7 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-    more=1
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    period$=fnget_fld_data$(table$,"Period")
-    year$=fnget_fld_data$(table$,"Year")
-    level$=fnget_fld_data$(table$,"Detail_Level")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
-    begprod$=fnget_fld_data$(table$,"prod_id_1")
-    endprod$=fnget_fld_data$(table$,"prod_id_2")
-    begitem$=fnget_fld_data$(table$,"item_1")
-    enditem$=fnget_fld_data$(table$,"item_2")
-    itemtype$=fnget_fld_data$(table$,"item_type")
-    subtotal$=fnget_fld_data$(table$,"sub_total")
-
+    
 rem --- Initializations
 
     precision num(ivs01a.precision$)
@@ -69,6 +53,7 @@ rem --- Position files
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+
     dim ivm03a_key$:ivm03_key_tpl$
     first$=firm_id$+"A"
     ivm03a_key$=first$+begprod$
@@ -155,7 +140,7 @@ rem --- Retrieve item
         item$[2]=item$
         if level$="W" item$[1]=whse$,action$=""
         call pgmdir$+"ivc_wa.bbx",action$,files[all],item$[all],whse$[all],w[all],value,status
-        call pgmdir$+"ivc_au.bbx",level$,files[all],item$[all],factors[all],day_of_mth,period$+year$,i4$(1,4),g[0],p[1],usage,estimated,flag$,status
+        call pgmdir$+"ivc_au.bbx",level$,files[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
         if flag$<>"" usage=estimated
         avg_usage=usage/g[0]
         if level$="W" action$="" else action$="A"
