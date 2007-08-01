@@ -18,31 +18,12 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    Sequence$=fnget_fld_data$(table$,"sequence")
-    lotser$=fnget_fld_data$(table$,"lotser")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
-    begprod$=fnget_fld_data$(table$,"prod_id_1")
-    endprod$=fnget_fld_data$(table$,"prod_id_2")
-    begitem$=fnget_fld_data$(table$,"item_1")
-    enditem$=fnget_fld_data$(table$,"item_2")
-    itemtype$=fnget_fld_data$(table$,"item_type")
-    beglot$=fnget_fld_data$(table$,"lot_1")
-    endlot$=fnget_fld_data$(table$,"lot_2")
-
 
 rem --- Initializations
 
-    rem precision p[1]
     precision num(ivs01a.precision$)
-    rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],headings$[9],o[12]
-    rem dim b0$(44),b1$(96),b[12],warehouse[4],item[4],report[4],total[4]
     dim headings$[9],o[12]
     dim warehouse[4],item[4],report[4],total[4]
     p8$="Serial #"
@@ -56,7 +37,7 @@ rem --- Initializations
     headings=9
     done=0
     if sequence$="L" headings=8
-    if i3$(17,1)="L" p8$="Lot #"
+    if ivs01a.LOTSER_FLAG$="L" p8$="Lot #"
     more=1
 
 rem --- Resize masks
@@ -68,8 +49,8 @@ rem --- Resize masks
     call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
 
 rem --- Background
-
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",4+p[0]+p[2],ivm07_dev,1,0,ignore_status
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm07_dev,1,meter_num,status
 
 rem --- Print positions
@@ -78,15 +59,17 @@ rem --- Print positions
    
 
 rem --- Position file
-
     if sequence$<>"L" then
+        dim ivm07a_key$:ivm07_key_tpl$
         ivm07a_key$=firm_id$+begwhse$
         if begwhse$<>"" if begitem$<>"" ivm07a_key$=ivm07a_key$+begitem$+beglot$
         read record (ivm07_dev,key=ivm07a_key$,dom=Next_Record) ivm07a$
+    else
+        dim ivm083a_key$:ivm8_key_tpl$
+        ivm08a_key$=firm_id$+beglot$
+        if beglot$<>"" if begwhse$<>"" ivm08a_key$=ivm08a_key$+begwhse$+begitem$
+        read (ivm08_dev,key=ivm08a_key$,dom=*next)
     endif
-    ivm07a_key$=firm_id$+beglot$
-    if beglot$<>"" if begwhse$<>"" ivm07a_key$=ivm07a_key$+begwhse$+begitem$
-    read (ivm08_dev,key=ivm07a_key$,dom=*next)
 
 Next_Record: rem --- Next record
 
@@ -94,66 +77,68 @@ Next_Record: rem --- Next record
         if sequence$ <>"L" then
             ivm07a_key$=key(ivm07_dev,end=*break)
             if pos(firm_id$=ivm07a_key$)<>1 break
-            if endwhse$<>"" if ivm07a.warehouse_id$>endwhse$ break
+            if endwhse$<>"" if ivm07a_key.warehouse_id$>endwhse$ break
             if begitem$<>"" then
                 if ivm07a_key$(5,20)<begitem$ then
-                    read (ivm07_dev,key=ivm07a_key$(1,4)+begitem$,dom=*continue)
+                    read (ivm07_dev,key=ivm07a_key.firm_id$+ivm07a_key.warehouse_id$+begitem$,dom=*continue)
                     continue
                 endif
             endif
             if enditem$<>""then
                 if ivm07a_key$(5,20)>enditem$ then
-                    read (ivm07_dev,key=ivm07a_key$(1,4)+$FF$,dom=*continue)
+                    read (ivm07_dev,key=ivm07a_key.firm_id$+ivm07a_key.warehouse_id$+$FF$,dom=*continue)
                     continue
                 endif
             endif
             if beglot$<>"" then
                 if ivm07a_key$(25,20)<beglot$ then
-                    read (ivm07_dev,key=ivm07a_key$(1,24)+beglot$,dom=*continue)
+                    read (ivm07_dev,key=ivm07a_key.firm_id$+ivm07a_key.warehouse_id$+ivm07a_key.item_id$+beglot$,dom=*continue)
                     continue
                 endif
             endif
             if endlot$<>"" then
                 if ivm07a_key$(25,20)>endlot$ then
-                    read (ivm07_dev,key=ivm07a_key$(1,24)+$FF$,dom=*continue)
+                    read (ivm07_dev,key=ivm07a_key.firm_id$+ivm07a_key.warehouse_id$+ivm07a_key.item_id$+$FF$,dom=*continue)
                     continue
                 endif
             endif
-            x$=ivm07a.warehouse_id$+" "+ivm07a.Item_number$+" "+ivm07a.Lotser_nbr$
+            x$=ivm07a_key.warehouse_id$+" "+ivm07a_key.Item_Id$+" "+ivm07a_key.Lotser_nbr$
     
         else
 
             ivm08a_key$=key(ivm08_dev,end=*break)
             if pos(firm_id$=ivm08a_key$)<>1 break
-            if endlot$<>"" if ivm08a.Lotser_nbr$>endlot$ break
+            if endlot$<>"" if ivm08a_key.Lotser_nbr$>endlot$ break
             if begwhse$<>"" then
                 if ivm08a.Warehouse_Id$<begwhse$ then
-                     read (ivm08_dev,key=ivm08a_key$(1,22)+begwhse$,dom=*continue)
+                     read (ivm08_dev,key=ivm08a_key.Firm_id$+ivm08a_key.Lotser_nbr$+begwhse$,dom=*continue)
                      continue
                 endif
             endif
             if endwhse$<>"" then 
                 if ivm08a.Warehouse_Id$>endwhse$ then
-                    read (ivm08_dev,key=ivm08a_key$(1,22)+$FF$,dom=*continue)
+                    read (ivm08_dev,key=ivm08a_key.Firm_id$+ivm08a_key.Lotser_nbr$+$FF$,dom=*continue)
                     continue
                 endif
             endif
             if begitem$<>"" then
                 if ivm08a.Item_Number$<begitem$ then
-                    read (ivm08_dev,key=ivm08a_key$(1,24)+begitem$,dom=*continue)
+                    read (ivm08_dev,key=ivm08a_key.Firm_id$+ivm08a_key.Lotser_nbr$+ivm08a_key.Warehouse_Id$+begitem$,dom=*continue)
                     continue
                 endif
             endif
             if enditem$<>"" then
                 if ivm08a.Item_Number$>enditem$ then
-                    read (ivm08_dev,key=ivm08a_key$(1,24)+$FF$,dom=*continue)
+                    read (ivm08_dev,key=ivm08a_key.Firm_id$+ivm08a_key.Lotser_nbr$+ivm08a_key.Warehouse_Id$+$FF$,dom=*continue)
                     continue
                 endif
             endif
             read (ivm08_dev)
-            ivm08a_key$=ivm08a.Firm_id$+ivm08a.Warehouse_id$+ivm08a.Lotser_nbr$
-            x$=ivm08a.Item_Number$+" "+ivm08a.Warehouse_Id$+" "+ivm07a.Lotser_nbr$
+            ivm08a_key$=ivm08a_key.Firm_id$+ivm08a_key.Warehouse_id$+ivm08a_key.Lotser_nbr$
+            x$=ivm08a_key.Item_Id$+" "+ivm08a_key.Warehouse_Id$+" "+ivm07a_key.Lotser_nbr$
         endif
+rem --- Read ivm-07 Lot/Serial Master
+
         call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,meter_num,status
         read record (ivm07_dev,key=ivm07a_key$,dom=*continue) ivm07a$
         if status$="O" if ivm07a.qty_on_hand=0 continue
@@ -162,9 +147,9 @@ Next_Record: rem --- Next record
 rem --- Format output fields
 
         dim amount[4]
-        whse$=ivm07a.warehouse_id$
-        item$=ivm07a.Item_number$
-        lotser$=ivm07a.Lotser_nbr$
+        whse$=ivm07a_key.warehouse_id$
+        item$=ivm07a_key.Item_number$
+        lotser$=ivm07a_key.Lotser_nbr$
         amount[0]=ivm07a.qty_on_hand
         amount[1]=ivm07a.qty_commit
         amount[2]=ivm07a.qty_on_hand-ivm07a.qty_commit
@@ -309,7 +294,6 @@ Whse_Break: rem --- Warehouse Break
         next x
         gosub Print_Total_Line
     endif
-    rem dim x0$(32),warehouse[4]
     dim warehouse[4]
     t0$=whse$
     ivm10c.short_name$="(Not on File)"
@@ -330,7 +314,7 @@ Item_Break: rem --- Item break
         gosub Print_Total_Line
     endif
     dim x0$(32),h9$(width-3),description$(dw),item[4]
-    let t1$=item$,ivm01a_key$(1)=firm_id$+item$,ivm01a.Item_desc$(1)="(Not on File)",a2$(1)=""
+    let t1$=item$,ivm01a_key$=firm_id$+item$,ivm01a.Item_desc$(1)="(Not on File)",a2$(1)=""
     find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
     if type$<>"" then
         if ivm01a.Item_type$<>type$ then

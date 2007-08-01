@@ -18,24 +18,12 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    abc_analysis$=fnget_fld_data$(table$,"abc_analysis")
-    calculate_total_value$=fnget_fld_data$(table$,"calculate_total")
-    Detailed_Level$=fnget_fld_data$(table$,"Detailed_Level")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
 
 rem --- Initializations
 
-    rem precision p[1]
     precision num(ivs01a.precision$)
-    rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],d0$(42),d1$(16),d[6]
-    rem dim r0$(24),r1$(16),r[6],s0$(3),s1$(16),s[3],headings$[6],o[9]
     dim headings$[6],o[9]
     dim count[25],value[25]
     headings$[0]=sysinfo.firm_name$
@@ -68,11 +56,10 @@ rem --- Print positions
     
 rem --- Background
 
-    rem call pgmdir$+"adc_progress.aon","S","","Printing","","",0,ivw07_dev,1,0,ignore_status
     call pgmdir$+"adc_progress.aon","S","","","","",0,ivw07_dev,1,meter_num,status
 rem --- Retrieve item totals
 
-    ivs10i_key$(1)=firm_id$+"I"
+    ivs10i_key$=firm_id$+"I"
     find record (ivs10_dev,key=ivs10i_key$,dom=*next) ivs10i$
     headings$[1]=sysinfo.task_desc$+" By Item"
     x$=fndate$(ivs10i.run_date$)
@@ -84,7 +71,6 @@ rem --- Retrieve item totals
 
 rem --- Position file
 
-    rem if level$="W" goto l2000
     if level$<>"W" then 
         number=0
         channel=ive07_dev
@@ -96,7 +82,7 @@ rem --- Read next ivw-07 record
         while more
             ivw07a_key$=key(ivw07_dev,end=*break)
             if pos(firm_id$=ivw07a_key$)<>1 break
-            call pgmdir$+"adc_progress.aon","S","","","",ivw07a.Item_Number$,0,0,1,0,ignore_status
+            call pgmdir$+"adc_progress.aon","S","","","",ivw07a.Item_Id$,0,0,1,0,ignore_status
             read record (ivw07_dev) ivw07a$
 
 rem --- Process work file record
@@ -187,8 +173,8 @@ rem --- Read next ivw-17 record
     while more
         ivw17a_key$=key(ivw17_dev,end=*break)
         if pos(firm_id$=ivw17a_key$)<>1 break
-        if endwhse$<>"" if ivw17a.warehouse_id$>endwhse$ break
-        call pgmdir$+"adc_progress.aon","S","","","",ivw17a.warehouse_id$+" "+ivw17a.item_number$,0,0,1,0,ignore_status
+        if endwhse$<>"" if ivw17a_key.warehouse_id$>endwhse$ break
+        call pgmdir$+"adc_progress.aon","S","","","",ivw17a_key.warehouse_id$+" "+ivw17a_key.item_Id$,0,0,1,0,ignore_status
         read record (ivw17_dev) ivw17a$
 
 rem --- Level break?
@@ -256,10 +242,10 @@ Whse_Break: rem --- Warehouse Break
         if done gosub l6900
         gosub Print_Total
     endif
-    if done return
-    rem dim x0$(32),s0$(5),s1$(16),s[3],count[25],value[25]
+    if done break
+    dim count[25],value[25]
     let class=0,totalpct=0,xlimit=percents[class],sequence=0,number=0
-    let t0$=k$(3,2),ivm10c.whse_name$="(Not on File)",l=l9+1,l1=0,warehouse=0
+    let t0$=ivw17a_key.warehouse_id$,ivm10c.whse_name$="(Not on File)",l=l9+1,l1=0,warehouse=0
     find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let h9$="Warehouse "+t0$+" "+cvs(ivm10c.whse_name$,2),headings$[1]=sysinfo.task_desc$+"For "+h9$
     find record (ivs10_dev,key=firm_id$+"W"+t0$,dom=*next) ivs10w$
@@ -271,9 +257,9 @@ Whse_Break: rem --- Warehouse Break
 Work_File: rem --- Process work file record
 
     dim description$(dw)
-    let ivm01a_key$(1)=firm_id$+ivw07a.Item_number$,ivm01a.item_number$="(Not On File)",a2$(1)=""
+    let ivm01a_key$=firm_id$+ivw07a.Item_Id$,ivm01a.item_Id$="(Not On File)",ivm01a.product_type$=""
     find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    let description$(1)=fnitem$(ivm01a.item_number$,p[3],p[4],p[5]),oldabc$=ivw07a.abc_code$
+    let description$=fnitem$(ivm01a.item_Id$,p[3],p[4],p[5]),oldabc$=ivw07a.abc_code$
 
 rem --- Calculate percentage
 
@@ -297,9 +283,14 @@ rem --- New class?
 
 rem --- Update IVE-07/IVE-17
 
-    rem dim r0$(24),r1$(16),r[6]
-    let ive07a_key$=ivw07a_key$,ive07a.item_number$=ivw07a.item_number$
-    let ive07a.abc_code$=oldabc$,ive07a.reserved_str$=newabc$,r[all]=d[all]
+    let ive07a_key$=ivw07a_key$,ive07a.item_Id$=ivw07a.item_Id$
+    let ive07a.abc_code$=oldabc$,ive07a.reserved_str$=newabc$
+    rem r[all]=d[all]
+    ive07a.ANNUAL_USAGE=ivw07a.ANNUAL_USAGE
+    ive07a.QTY_ON_HAND=ivw07a.QTY_ON_HAND
+    ive07a.END_BALANCE=ivw07a.END_BALANCE
+    ive07a.RESERVED_NUM=ivw07a.UNIT_COST
+    ive07a.Total_Value=ivw07a.Total_Value
     write record (channel,key=ive07a_key$) ive07a$
     return
 rem --- Print totals

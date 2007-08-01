@@ -19,27 +19,7 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-    more=1
-
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    analysis_on_sales_or_usage$=fnget_fld_data$(table$,"analysis_on_sales_or_usage")
-    begperiod$=fnget_fld_data$(table$,"period_1") 
-    begyear$=fnget_fld_data$(table$,"year_1") 
-    endperiod$=fnget_fld_data$(table$,"period_2") 
-    endyear$=fnget_fld_data$(table$,"year_2")   
-    level$=fnget_fld_data$(table$,"Detailed_Level")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
-    begprod$=fnget_fld_data$(table$,"prod_id_1")
-    endprod$=fnget_fld_data$(table$,"prod_id_2")
-    begitem$=fnget_fld_data$(table$,"item_1")
-    enditem$=fnget_fld_data$(table$,"item_2")
-    type$=fnget_fld_data$(table$,"item_type")
-    
-
+ 
 rem --- Initializations
 
     precision num(ivs01a.precision$)
@@ -72,7 +52,7 @@ rem --- Initializations
     periods$[1]=endyear$+endper$
     if base$="U" x$="Usage",h7$="Used",h8$="Usage"
     headings$[2]="Based On Total "+x$+" For Period "+begper$+" "+fnyy$(begyear$)+" Through Period "+endper$+" "+fnyy$(endyear$)
-    
+    more=1
 
 rem --- Print positions
 
@@ -80,7 +60,8 @@ rem --- Print positions
     
 
 rem --- Background
-
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
 
 rem --- Report headings
@@ -177,7 +158,7 @@ rem --- By Warehouse: Valid Warehouse/Product/Item?
             if enditem$<>"" then 
                 if item$>enditem$ then
                     read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
-    :               ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dom=*continue)
+:                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dom=*continue)
                     continue
                 endif
             endif

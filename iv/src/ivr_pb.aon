@@ -18,23 +18,12 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    abc_analysis$=fnget_fld_data$(table$,"abc_analysis")
-    calculate_total_value$=fnget_fld_data$(table$,"calculate_total")
-    Detailed_Level$=fnget_fld_data$(table$,"Detailed_Level")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
 
 rem --- Initializations
 
-    rem precision p[1]
     precision num(ivs01a.precision$)
-    rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],b0$(24),b1$(64),b[20]
     dim files[12],item$[2],when$(16)
     m7$="###########.0000-"
     rem when$(1)=i4$+sysinfo.system_date$
@@ -49,12 +38,12 @@ rem --- Initializations
     items=0
     baseperiod$=ivs01a.current_per+ivs01a.current_year
     curperiod$=ivs01a.current_per+ivs01a.current_year
-    day_of_mth=num(f0$(22,2))
+    rem day_of_mth=num(f0$(22,2))
+    day_of_mth=num(sysinfo.current_date$)
     more=1
 
 rem --- Background
 
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"Processing","","",3+p[0],ivm01_dev,1,0,ignore_status
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm01_dev,1,meter_num,status
 
 rem --- Rebuild IVW-07/IVW-17 for reprint
@@ -84,12 +73,12 @@ rem --- Main Loop starting
         ivm01a_key$=key(ivm01_dev,end=*break)
         if pos(firm_id$=ivm01a_key$)<>1 break
         read record (ivm01_dev) ivm01a$
-        call pgmdir$+"adc_progress.aon","S","","","",ivm01a.Item_number$,0,0,1,0,ignore_status
+        call pgmdir$+"adc_progress.aon","S","","","",ivm01a.Item_Id$,0,0,1,0,ignore_status
 
 rem --- Position warehouse xref
 
         
-        first$=firm_id$+"G"+ivm01a.Item_number$
+        first$=firm_id$+"G"+ivm01a.Item_Id$
         read (ivm03_dev,key=first$,dom=*next)
 
 rem --- Inner Loop starting
@@ -102,7 +91,7 @@ rem --- Inner Loop starting
 
 rem --- Retrieve warehouse records
 
-            ivm02a_key$(1)=firm_id$+ivm03a_key$+ivm01a.item_number$
+            ivm02a_key$=firm_id$+ivm03a_key$+ivm01a.item_Id$
             ivm12a_key$=ivm02a_key$+ivs01a.current_year+ivs01a.current_per
             find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
             cost=ivm02a.unit_cost
@@ -115,7 +104,7 @@ rem --- Retrieve warehouse records
 Estimate_annual_usage: rem --- Calculate estimated annual usage
 
             item$[1]=ivm02a.warehouse_id$
-            item$[2]=ivm02a.item_number$
+            item$[2]=ivm02a.item_Id$
             call pgmdir$+"ivc_au.bbx",action$,files[all],item$[all],factors[all],day_of_mth,baseperiod$,curperiod$,g[0],p[1],x,usage,flag$,status
 
 rem --- Calculate total value for warehouse
@@ -131,10 +120,10 @@ rem --- Calculate total value for warehouse
             onhand=ivw17a.qty_adjust
             balance=ivw17a.qty_xfer_in
             gosub Reciprocal_Amt
-            ivw17a_key$(1)=ivm02a_key$(1,4)
+            ivw17a_key$=ivm02a.firm_id$+ivm02a.warehouse_id$
             ivw17a.recip_sign$=sign$
             ivw17a.recip_amount$=amount$
-            ivw17a.item_number$=ivm02a.item_number$
+            ivw17a.item_number$=ivm02a.item_Id$
             ivw17a.abc_code$=ivm02a.abc_code$
             ivs10w_key$=firm_id$+"W"+ivm02a.warehouse_id$
             ive17a_key$=ivm02a_key$
@@ -144,7 +133,7 @@ rem --- Update totals for warehouse/item
             if level$<>"I" then
                 write record (ivw17_dev,key=ivw17a_key$) ivw17a$
                 find record (ivs10_dev,key=ivs10w_key$,dom=*next) ivs10w$
-                rem let ivs10w.period$+ivs10w.year$+ivs10w.run_date$=when$
+                rem ivs10w.period$+ivs10w.year$+ivs10w.run_date$==when$
                 ivs10w.period$=when$
                 ivs10w.total_value=ivs10w.total_value+ivw17a.qty_issued
                 ivs10w.total_value=ivs10w.total_value+ivw17a.qty_adjust
@@ -171,14 +160,14 @@ rem --- Done with warehouses
         ivw07a.firm_id$=firm_id$
         ivw01a.abc_code$=ivm01a.abc_code$
         gosub Reciprocal_Amt
-        ive07a_key$(1)=ivm01a.firmid$
-        ive07a.item_number$=ivm01a.item_number$
-        ivs10i_key$(1)=firm_id$+"I"
+        ive07a_key$=ivm01a.firmid$
+        ive07a.item_Id$=ivm01a.item_Id$
+        ivs10i_key$=firm_id$+"I"
         ivw01a.abc_code$=ivm01a.abc_code$
         ivw07a.firm_id$=firm_id$
         ivw07a.recip_sign$=sign$
         ivw07a.recip_amount$=amount$
-        ivw07a.item_number$=ivm02a.item_number$
+        ivw07a.item_number$=ivm02a.item_Id$
 
 rem --- Update item totals
 
@@ -237,7 +226,6 @@ rem --- Loop Starting
         k$=key(source,end=*break)
         if pos(firm_id$=k$)<>1 break
         remove (source,key=k$)
-
     wend; rem --- Loop Ending
     return
 
@@ -248,6 +236,7 @@ Generate_Records: rem --- Generate IVW-07/IVW-17 records using IVE-07/IVE-17
 rem --- Loop Starting
 
     while more
+
         let k$=key(source,end=*break)
         if pos(firm_id$=k$)<>1 break
         read record (source) ive07a$
@@ -261,11 +250,17 @@ rem --- Loop Starting
         call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
         let usage=ive07a.total_amount,onhand=ive07a.total_amount,balance=ive07a.total_amount
         gosub Reciprocal_Amt
-        let ivw07a_key$(1)=ive07a_key$(1,4),ivw07a.recip_sign$=sign$,ivw07a.recip_amount$=amount$
-        let ivw07a.item_number$=ive07a.item_number$,ivw07a.abc_code$(1)=ive07a.abc_code$
+        let ivw07a_key$=ive07a.firmid$+ive07a.reserved_str$,ivw07a.recip_sign$=sign$,ivw07a.recip_amount$=amount$
+        let ivw07a.item_number$=ive07a.Item_Id$,ivw07a.abc_code$=ive07a.abc_code$
         rem d[all]=r[all]
-        rem let ivw07a.ANNUAL_USAGE+ivw07a.QTY_ON_HAND+ivw07a.END_BALANCE+ivw07a.UNIT_COST+ivw07a.Total Value = ive07a.ANNUAL_USAGE+ive07a.QTY_ON_HAND+ive07a.END_BALANCE+ive07a.RESERVED_NUM+ive07a.Total Value
+        rem let ivw07a.ANNUAL_USAGE+ivw07a.QTY_ON_HAND+ivw07a.END_BALANCE+ivw07a.UNIT_COST+ivw07a.Total_Value = ive07a.ANNUAL_USAGE+ive07a.QTY_ON_HAND+ive07a.END_BALANCE+ive07a.RESERVED_NUM+ive07a.Total_Value
+        ivw07a.ANNUAL_USAGE=ive07a.ANNUAL_USAGE
+        ivw07a.QTY_ON_HAND=ive07a.QTY_ON_HAND
+        ivw07a.END_BALANCE=ive07a.END_BALANCE
+        ivw07a.UNIT_COST=ive07a.RESERVED_NUM
+        ivw07a.Total_Value=ive07a.Total_Value
         write record (target,key=ivw07a_key$) ivw07a$
+
     wend; rem --- Loop Ending
     return
 
