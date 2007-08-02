@@ -132,7 +132,7 @@ rem --- Init detail ptr
 
 rem --- Skip whse detail if NOT INCLUDEWHS$
 
-                if includewhse$="Y"
+                if includewhse$<>"Y"
 
                     gosub newitem
                     read (poe16_dev,key=p16_key$+$FF$,dom=*continue)
@@ -162,38 +162,39 @@ rem --- Accum amts to subtract from total line for sugg=0 'W' items
                 weight$=str(poe16a.weight:m6$)
                 cost$=str(poe16a.est_unit_cst:m3$)
                 extension$=str(poe16a.extended_amt:m1$)
-                goto testnewitem
                    
-            endif
+            else
 
 rem --- Check suggested qty of total for stocked by 'I'
 
-            dim c[16]
-            minusannuse=0
-            minusavguse=0
-            minusavail=0
-            minusonord=0
-            prevminusannuse=0
-            prevminusavguse=0
-            prevminusavail=0
-            prevminusonord=0
-            find record (poe26_dev,key=p06_key$+prodtype$+itemnum$+"  ",dom=testinclude) poe26a$
-            sugg=poe26a.sugg_ord_qty
+                dim c[16]
+                minusannuse=0
+                minusavguse=0
+                minusavail=0
+                minusonord=0
+                prevminusannuse=0
+                prevminusavguse=0
+                prevminusavail=0
+                prevminusonord=0
+                find record (poe26_dev,key=p06_key$+prodtype$+itemnum$+"  ",dom=testinclude) poe26a$
+                sugg=poe26a.sugg_ord_qty
 
 testinclude:
 
-            if includewhse$<>"Y"
-                gosub newitem
-                read (poe16_dev,key=p16_key$+$FF$,dom=*continue)
-            endif
+                if includewhse$<>"Y"
+                    gosub newitem
+                    read (poe16_dev,key=p16_key$+$FF$,dom=*continue)
+                endif
 
 rem --- Skip all whses for items by 'I' w/no sugg qty
 
-            if suggonly$="Y" if sugg=0 
-                read (poe16_dev,key=p16_key$+$FF$,dom=*continue)
+                if suggonly$="Y" if sugg=0 
+                    read (poe16_dev,key=p16_key$+$FF$,dom=*continue)
+                endif
+
             endif
 
-testnewitem: rem --- Test for new item
+rem --- Test for new item
 
             if itemnum$<>previtem$ gosub newitem
 
@@ -394,7 +395,7 @@ useapm01addr:
 newprodtype: rem --- New Product Type
 
     if printptot$="Y" gosub prodtotals
-    dim prodtots[2],prod$(30)
+    dim prodtots[2]
     ivm10a.code_desc$="**Not On File**"
     iv10_key$=firm_id$+"A"+prodtype$
     find record (ivm10_dev,key=iv10_key$,dom=brnch3) ivm10a$
@@ -416,11 +417,11 @@ newitem: rem --- New Item
     prevminusavguse=0
     prevminusavail=0
     prevminusonord=0
-    dim itemdesc$(desclen)
-    itemdesc$(1)="** Not on File **"
+rem dim itemdesc$(desclen)
+rem ivm01a.item_desc$="** Not on File **"
     iv01_key$=firm_id$+itemnum$
     find record (ivm01_dev,key=iv01_key$,dom=*next) ivm01a$
-    itemdesc$=fnitem$(itemdesc$,desc[1],desc[2],desc[3])
+    ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
 
     if suggonly$<>"Y" or sugg<>0 or csugg<>0
     
@@ -431,8 +432,6 @@ newitem: rem --- New Item
         printtotline$="Y"
 
     endif
-
-brnch2:
 
     previtem$=itemnum$
     return
