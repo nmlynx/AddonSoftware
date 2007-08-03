@@ -19,7 +19,7 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Assign form input values to local variables
@@ -54,35 +54,37 @@ rem --- Initial Read
 while more
 
 
-        k$=key(opm09_dev,end=*break)
-        if pos(firm_id$=k$)<>1 break
+        opm09a_key$=key(opm09_dev,end=*break)
+        if pos(firm_id$=opm09a_key$)<>1 break
         read record (opm09_dev,end=*break) opm09a$
 
 rem --- Control Breaks
 
         if p9$<>"" then 
-           if opm09a.CUSTOMER_ID$<p9$ then 
+           if opm09a_key.CUSTOMER_ID$<p9$ then 
              continue 
            endif
         endif
 
         if p8$<>""then
-          if opm09a.CUSTOMER_ID$>p8$ then
+          if opm09a_key.CUSTOMER_ID$>p8$ then
             continue
           endif
         endif 
 
 rem --- Break
 
-        if opm09a.CUSTOMER_ID$<>t0$ gosub Customer_Break
+        if opm09a_key.CUSTOMER_ID$<>t0$ gosub Customer_Break
 
 rem --- Print
 
         rem call pgmdir$+"adc_progress.aon","S","","","",fnmask$(opm09a_key$(3,p[0]),m0$)+" "+opm09a.JOB_NO$,0,0,1,0,ignore_status
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
+        
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         if l>l9 gosub Sub_Head
         print (printer_dev)
-:                           @(32+m0),opm09a.JOB_NO$,
+:                           @(32+m0),opm09a_key.JOB_NO$,
 :                           @(43+m0),opm09a.CUSTOMER_NAME$,
 :                           @(74+m0),opm09a.LIEN_NO$,
 :                           @(87+m0),fndate$(opm09a.LIEN_DATE$),
@@ -127,7 +129,7 @@ Sub_Head: rem --- Subhead
 
         if l>l9-2 gosub report_heading
         print (printer_dev)""
-        print (printer_dev)fnmask$(t0$(1,p[0]),m0$),@(m0+1),arm01a.customer_name$(1,30),
+        print (printer_dev)fnmask$(t0$(1,p[0]),m0$),@(m0+1),arm01a.CUSTOMER_NAME$,
         l=l+1
         return
 
@@ -135,9 +137,9 @@ Customer_Break: rem --- Customer Break
 
         if t9$=""  
            rem dim b1$(30)
-             t0$=opm09a_key$(3,6)
-             arm01a.customer_name$(1)="(Not On File)"
-            find record (arm01_dev,key=opm09a.firm_id$+t0$,dom=*break) arm01a$
+             t0$=opm09a_key.CUSTOMER_ID$
+             arm01a.CUSTOMER_NAME$(1)="(Not On File)"
+            find record (arm01_dev,key=opm09a_key.firm_id$+t0$,dom=*break) arm01a$
           gosub Sub_Head
       return
 
