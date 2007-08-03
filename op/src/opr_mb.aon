@@ -20,7 +20,7 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 
@@ -115,19 +115,19 @@ rem --- Position File Pointer
 
 while more
 
-                k$=key(opt71_dev,end=*break)
+                opt71a_key$=key(opt71_dev,end=*break)
                 read record (opt71_dev,end=Control_Breaks) opt71a$
-                call pgmdir$+"adc_progress.aon","S","","","",t0$,0,0,1,0,ignore_status
+                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
                 if pos(firm_id$=a0$)<>1 break
                 if p7$="B" if p8$<>"" if opt71a.INVOICE_DATE$<p8$ continue
                 if p7$="B" if p9$<>"" if opt71a.INVOICE_DATE$>p9$ continue
-                if s0$<>"" if opt71a.SLSPSN_CODE$<s0$  continue
-                if s1$<>"" if opt71a.SLSPSN_CODE$>s1$  continue
+                if s0$<>"" if opt71a_key.SLSPSN_CODE$<s0$  continue
+                if s1$<>"" if opt71a_key.SLSPSN_CODE$>s1$  continue
                 if a0$(21,1)="V" continue
 
 Control_Breaks: rem --- Control Breaks
 
-                if opt71a.SLSPSN_CODE$<>t0$ gosub Salesperson_Break
+                if opt71a_key.SLSPSN_CODE$<>t0$ gosub Salesperson_Break
                 if p7$<>"B" then
 rem --- Calculate commission due
 
@@ -155,9 +155,9 @@ rem --- Print
                 if s2$="P" a[8]=(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)*opt71a.COMM_PERCENT/100
                 if p7$="P" due$=str(a[9]:m1$)
                 print (printer_dev)
-:                                @(o[0]),opt71a.AR_INV_NO$,
-:                                @(o[1]),fnmask$(opt71a_key$(15,p[0]),m0$),
-:                                @(o[2]),arm01a_key$,
+:                                @(o[0]),opt71a_key.AR_INV_NO$,
+:                                @(o[1]),fnmask$(opt71a.CUSTOMER_ID$,m0$),
+:                                @(o[2]),arm01a$,
 :                                @(o[3]),fndate$(opt71a.INVOICE_DATE$),
 :                                @(o[4]),opt71a.TOTAL_SALES:m1$,
 :                                @(o[5]),opt71a.COMM_AMT:m1$,
@@ -242,7 +242,12 @@ rem --- Averages
 report_heading: rem --- Report Heading
 
     l=9
-    headings$[5]=arm10f_key$
+
+
+rem doubt    h5$=arm10f_key.FIRM_ID$+arm10f_key.RECORD_ID_F$+arm10f_key.SLSPSN_CODE$+arm10f.CODE_DESC$
+
+
+    headings$[5]=h5$
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],6,h,h0,when$,clock$,status
     if status exitto std_exit
              print (printer_dev)
@@ -270,7 +275,7 @@ Salesperson_Break: rem --- Salesperson Break
     if t0$<>"" then
           if l1<>0 then   
                 x0=0
-                 x$="Total For "+arm10f_key$
+                 x$="Total For "+h5$
                 if len(x$)>o[4] x$=x$(1,o[4]-1)
                 if t[6]<>0 x0=100*(t[6]-t[7])/t[6]
                 if p7$="P" due$=str(t[9]:m1$)
@@ -283,35 +288,35 @@ Find_Record:
     if t9$<>"" return
 rem dim h5$(32),
     dim t[9]
-    t0$=k$(5,3)
+    t0$=opt71a_key.SLSPSN_CODE$
     arm10f.SLSPSN_CODE$="(Not On File)"
     l=l9+1
     l1=0
     find record (arm10_dev,key=firm_id$+"F"+t0$,dom=*next) arm10f$
-    let arm10f_key$="Salesperson"+t0$+" "+cvs(arm10f.CODE_DESC$,2)
+    let h5$="Salesperson"+t0$+" "+cvs(arm10f.CODE_DESC$,2)
     return
 
 Search_Invoice: rem --- Search Invoice Transactions
 
     let paid=0,sold=0
-    read record (art01_dev,key=opt71a_key$(1,4)+opt71a.CUSTOMER_ID$+opt71a.AR_INV_NO$+"00",dom=Invoice_Balance) art01a$
+    read record (art01_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$+"00",dom=Invoice_Balance) art01a$
     let sold=w[0]
-    read record (art11_dev,key=opt71a_key$(1,4)+opt71a.CUSTOMER_ID$+opt71a.AR_INV_NO$,dom=*next) art11a$
+    read record (art11_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$,dom=*next) art11a$
 
 
     while more
-        let k$=key(art11_dev,end=Return4)
-        if k$(1,17)<>opt71a_key$+opt71a.CUSTOMER_ID$+opt71a.AR_INV_NO$ return
-        read record (art11_dev,key=k$) art11a$
+        let art11a_key$=key(art11_dev,end=Return4)
+        if art11a_key.FIRM_ID$+art11a_key.AR_TYPE$+art11a_key.CUSTOMER_ID$+art11a_key.AR_INV_NO$<>opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$ return
+        read record (art11_dev,key=art11a_key$) art11a$
         if p8$<>"" if art11a.TRANS_DATE$<p8$ continue
         if p9$<>"" if art11a.TRANS_DATE$>p9$ continue
-        if art11a_key$(1,1)="C" paid=paid+art11a.TRANS_AMT+art11a.ADJDISC_AMT else sold=sold+art11a.TRANS_AMT+art11a.ADJDISC_AMT
+        if art11a_key.FRIM_ID$(1,1)="C" paid=paid+art11a.TRANS_AMT+art11a.ADJDISC_AMT else sold=sold+art11a.TRANS_AMT+art11a.ADJDISC_AMT
     wend
 
 
 Invoice_Balance: rem --- Zero Balance Cash Invoice ?
 
-    read record (opt41_dev,key=opt71a_key$(1,4)+CUSTOMER_ID$+opt71a.AR_INV_NO$,dom=Return4) opt41a$
+    read record (opt41_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+CUSTOMER_ID$+opt71a_key.AR_INV_NO$,dom=Return4) opt41a$
     if p8$<>"" if opt41a.INVOICE_DATE$<p8$ return
     if p9$<>"" if opt41a.INVOICE_DATE$>p9$ return
     let sold=-d[0],paid=d[1]
