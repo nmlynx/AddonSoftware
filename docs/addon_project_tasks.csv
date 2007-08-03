@@ -195,9 +195,9 @@ Period End Processing,IVMENU_PEND,G,,,,,,,,
 A B C Analysis Report,IVR_PA,T,,ivr_pa.aon,IVR.PA,BJ-BP,P,Y,Y,"IVR.PB,IVR.PC"
 "EOQ, Order Point & Safety Stock Report",IVR_OA,T,,ivr_oa.aon,IVR.OA,BJ-BP,,Y,Y,"IVR.OB,IVR.OC"
 Inventory Valuation Report,IVR_NA,T,,ivr_na.aon,IVR.NA,BJ-BP,,Y,Y,IVR.NB
-Purge Inventory Transaction History,IVU_TA,T,,ivu_ta.aon,IVU.TA,BJ-BP,,Y,,
-Purge Inventory Activity,IVU_BA,T,,ivu_ba.aon,IVU.BA,BJ-BP,,Y,,
-Purge Closed Lot/Serial Numbers,IVU_EA,T,,ivu_ea.aon,IVU.EA,BJ-BP,,Y,,
+Purge Inventory Transaction History,IVU_TA,T,,ivu_ta.aon,IVU.TA,BJ-BP,P,Y,,
+Purge Inventory Activity,IVU_BA,T,,ivu_ba.aon,IVU.BA,BJ-BP,P,Y,,
+Purge Closed Lot/Serial Numbers,IVU_EA,T,,ivu_ea.aon,IVU.EA,BJ-BP,P,Y,,
 Purge Lot/Serial Transaction History,IVU_HA,T,,ivu_ha.aon,IVU.HA,BJ-BP,,Y,,
 Purge Lot/Serial Activity,IVU_IA,T,,ivu_ia.aon,IVU.IA,BJ-BP,,Y,,
 Period End Update,IVU_CA,T,,ivu_ca.aon,IVU.CA,BJ-BP,,Y,,
@@ -245,10 +245,10 @@ Requisitions By Item Report,POR_HA,T,,por_ha.aon,POR.HA,PPT-BP,P,Y,Y,POR.HB
 Open Purchase Order Report,POR_IA,T,,por_ia.aon,POR.IA,PPT-BP,P,Y,Y,POR.IB
 Purchase Orders By Item Report,POR_JA,T,,por_ja.aon,POR.JA,PPT-BP,P,Y,Y,POR.JB
 Purchase Order Expediting Report,POR_KA,T,,por_ka.aon,POR.KA,PPT-BP,P,Y,Y,POR.KB
-Purchase Order Status Report,POR_LA,T,,por_la.aon,POR.LA,PPT-BP,,Y,Y,POR.LB
-PO Cash Requirements Report,POR_MA,T,,por_ma.aon,POR.MA,PPT-BP,,Y,Y,POR.MB
+Purchase Order Status Report,POR_LA,T,,por_la.aon,POR.LA,PPT-BP,P,Y,Y,POR.LB
+PO Cash Requirements Report,POR_MA,T,,por_ma.aon,POR.MA,PPT-BP,P,Y,Y,POR.MB
 Billed/Unbilled PO Receipts Report,POR_TA,T,,por_ta.aon,POR.TA,PPT-BP,,Y,Y,POR.TB
-PO Receipt Variance Report,POR_NA,T,,por_na.aon,POR.NA,PPT-BP,,Y,Y,POR.NB
+PO Receipt Variance Report,POR_NA,T,,por_na.aon,POR.NA,PPT-BP,P,Y,Y,POR.NB
 PO Receipt Cost Variance Report,POR_OA,T,,por_oa.aon,POR.OA,PPT-BP,,Y,Y,POR.OB
 PO Receipt History By Vendor Report,POR_PA,T,,por_pa.aon,POR.PA,PPT-BP,,Y,Y,"POR.PB, POR.PC"
 PO Receipt History By Item Report,POR_QA,T,,por_qa.aon,POR.QA,PPT-BP,,Y,Y,POR.QB
@@ -308,32 +308,32 @@ Rebuild Cross References,SAX_CROSSREF,A,SAX_CROSSREF,,SAX.AA,,,,,
 Rebuild Sales Analysis from Invoice History,SAX_INVHIST,T,SAX_INVHIST,,SAX.BA,,,Y,,
 Sales Order Processing,OPMENU,M,,,,,,,,
 Order Entry,OPE_ORDHDR,T,OPE_ORDHDR,,OPE.DA,,,,,
-Order Picking Listing,OPR_NA,T,,opr_na.aon,OPR.NA,SS-BP,,Y,Y,OPR.PA
+Order Picking Listing,OPR_NA,T,,opr_na.aon,OPR.NA,SS-BP,P,Y,Y,OPR.PA
 Commit and Release Future Orders,OPU_EA,T,,opu_ea.aon,OPU.EA,SS-BP,,Y,,
 Invoice Entry,OPE_CA,T,,ope_ca.aon,OPE.CA,,,,,
-Invoice Edit Report,OPR_INVEDIT,T,OPR_INVEDIT,,OPR.JA,SS-BP,P,Y,Y,OPR.JB
-Invoice Printing,OPR_INVOICE,T,OPR_INVOICE,,OPR.GA,SS-BP,,Y,,
-Sales Register,OPR_SALESREG,T,OPR_SALESREG,,OPR.HA,SS-BP,,Y,Y,OPR.HB
+Invoice Edit Report,OPR_INVEDIT,T,OPR_INVEDIT,,OPR.JA,SS-BP,,Y,Y,OPR.JB
+Invoice Printing,OPR_INVOICE,T,OPR_INVOICE,,OPR.GA,SS-BP,P,Y,,
+Sales Register,OPR_SALESREG,T,OPR_SALESREG,,OPR.HA,SS-BP,P,Y,Y,OPR.HB
 Price Quotation Inquiry,OPM_PA,T,,opm_pa.aon,OPM.PA,,,,,
 Credit Manager's Review and Release,OPM_QA,T,,opm_qa.aon,ARM.QA,,,,,
 Reports,OPMENU_REPORTS,G,,,,,,,,
 Open Order Detail Report,OPR_DETAIL,T,OPR_DETAIL,,OPR.IA,SS-BP,P,Y,Y,OPR.IB
-Order Status Report By Customer,OPR_CUSTSTATUS,T,OPR_CUSTSTATUS,,OPR.QA,SS-BP,,Y,Y,
-Order Status Report By Item,OPR_ITEMSTATUS,T,OPR_ITEMSTATUS,,OPR.OA,SS-BP,,Y,Y,OPR.OB
-Shipping Schedule Report,OPR_SHIPPING,T,OPR_SHIPPING,,OPR.AA,SS-BP,P,Y,Y,OPR.AB
+Order Status Report By Customer,OPR_CUSTSTATUS,T,OPR_CUSTSTATUS,,OPR.QA,SS-BP,P,Y,Y,
+Order Status Report By Item,OPR_ITEMSTATUS,T,OPR_ITEMSTATUS,,OPR.OA,SS-BP,P,Y,Y,OPR.OB
+Shipping Schedule Report,OPR_SHIPPING,T,OPR_SHIPPING,,OPR.AA,SS-BP,,Y,Y,OPR.AB
 Customer Job Report,OPR_CUSTJOBS,T,OPR_CUSTJOBS,,OPR.FA,SS-BP,P,Y,Y,OPR.FB
 Sales Tax Report,OPR_TA,T,,opr_ta.aon,OPR.TA,SS-BP,,Y,Y,
 Monthly Sales Report,OPR_MONTHLYSALES,T,,opr_ea.aon,OPR.EA,SS-BP,P,Y,Y,OPR.EB
-Invoice History Report,OPR_KA,T,,opr_ka.aon,OPR.KA,SS-BP,P,Y,Y,OPR.KB
+Invoice History Report,OPR_KA,T,,opr_ka.aon,OPR.KA,SS-BP,,Y,Y,OPR.KB
 Period End Processing,OPMENU_PEND,G,,,,,,,,
-Sales Tax Report,OPR_SALESTAX,T,OPR_SALESTAX,,OPR.TA,,,Y,Y,
-Sales Tax History Purge,OPU_FA,T,,opu_fa.aon,OPU.FA,SS-BP,,Y,,
+Sales Tax Report,OPR_SALESTAX,T,OPR_SALESTAX,,OPR.TA,,P,Y,Y,
+Sales Tax History Purge,OPU_FA,T,,opu_fa.aon,OPU.FA,SS-BP,P,Y,,
 Salesperson Commission Report,OPR_COMMISSION,T,OPR_COMMISSION,,OPR.MA,SS-BP,P,Y,Y,OPR.MB
-Commission File Purge,OPU_AA,T,,opu_aa.aon,OPU.AA,SS-BP,,Y,,OPU.AB
+Commission File Purge,OPU_AA,T,,opu_aa.aon,OPU.AA,SS-BP,P,Y,,OPU.AB
 Monthly Sales Report,OPR_EA,T,,opr_ea.aon,OPR.EA,,,Y,Y,
 Monthly Sales Register,OPR_MONTHREG,T,OPR_MONTHREG,,OPR.ZA,SS-BP,,Y,Y,OPR.ZB
 Invoice History Report,OPR_HISTORY,T,OPR_HISTORY,,OPR.KA,,,Y,Y,
-Invoice History Purge,OPU_DA,T,,opu_da.aon,OPU.DA,SS-BP,,Y,,
+Invoice History Purge,OPU_DA,T,,opu_da.aon,OPU.DA,SS-BP,P,Y,,
 Maintenance,OPMENU_MAINT,G,,,,,
 Line Codes,OPC_LINECODE,T,OPC_LINECODE,,OPM.EA,PM,Y
 Salespersons,ARC_SALECODEOP,T,ARC_SALECODE,,ARM.FA,PM,Y
