@@ -19,7 +19,7 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Assign form input values to local variables
@@ -66,29 +66,30 @@ rem --- Initial File Read
 rem Invoice_Read: rem --- Invoice Read
 
  while more
-                k$=key(opt61_dev,end=*break)
-                read (opt61_dev,key=k$)
+                opt61a_key$=key(opt61_dev,end=*break)
+                read (opt61_dev,key=opt61a_key$)
                 if p8$<>"" then 
-                    if k$(5,3)<p8$ then
+                    if opt61a_key.INVOICE_DATE$<p8$ then
                         continue
                     endif
                 endif
                 if p9$<>"" then
-                   if k$(5,3)>p9$ then 
+                   if opt61a_key.INVOICE_DATE$>p9$ then 
                      break
                    endif
                 endif   
-                find record (opt01_dev,key=k$(1,4)+k$(15,6)+k$(8,7)+"000",dom=*continue) opt01a$
-                if opt01a.FIRM_ID$<>firm_id$ then 
+                find record (opt01_dev,key=opt61a_key.FIRM_ID$+opt61a.AR_TYPE$+opt61a_key.CUSTOMER_ID$+opt61a_key.AR_INV_NO$+"000",dom=*continue) opt01a$
+                if opt01a_key.FIRM_ID$<>firm_id$ then 
                    break
                 endif
                 rem call pgmdir$+"adc_progress.aon","S","","","",opt01a_key$(5,7),0,0,1,meter_num,status
+                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Void
 
                 if opt01a.ORDINV_FLAG$="V" then
                     if l+1>l9 gosub report_heading
-                    print (printer_dev)@(0),opt01a.AR_INV_NO$,@(8),"Void"
+                    print (printer_dev)@(0),opt01a_key.AR_INV_NO$,@(8),"Void"
                     l=l+1
                     continue
                 else
@@ -102,11 +103,11 @@ rem --- Print
                 x0=0
                 if a[6]<>0 x0=100*(a[6]-a[7])/a[6]
                 print (printer_dev)
-:                               @(0),opt01a.AR_INV_NO$,
-:                               @(8),fnmask$(opt01a_key$(5,p[0]),m0$),
+:                               @(0),opt01a_key.AR_INV_NO$,
+:                               @(8),fnmask$(opt01a_key.CUSTOMER_ID$,m0$),
 :                               @(9+m0),fndate$(opt01a.INVOICE_DATE$),
 :                               @(18+m0),a[6]:m1$,a[0]:m1$,a[1]:m1$,a[2]:m1$,a[6]+a[0]+a[1]-a[2]:m1$,a[7]:m1$,a[6]-a[7]:m1$,x0:m4$
-                print (printer_dev)@(10),arm01a.customer_name$(1,30)
+                print (printer_dev)@(10),arm01a.CUSTOMER_NAME$
                 l=l+2
 
 rem --- Totals
@@ -167,9 +168,9 @@ rem --- Detail
             if opt01a.TOTAL_COST>999 opt01a.TOTAL_COST=999.99
             if opt01a.ORDINV_FLAG$="V" gosub Print_Void
             print (printer_dev)
-:                               @(0),opt01a_key$(5,7),
-:                               @(15),fnmask$(opt01a_key$(12,p[0]),m0$),
-:                               @(23),fndate$(opt01a.SEQUENCE_000$),
+:                               @(0),opt01a_key.CUSTOMER_ID$+opt01a_key.AR_INV_NO$,
+:                               @(15),fnmask$(opt01a_key.AR_INV_NO$,m0$),
+:                               @(23),fndate$(opt01a_key.SEQUENCE_000$),
 :                               @(33+12-m1),a[0]:m1$,@(46+12-m1),a[1]:m1$,
 :                               @(59+12-m1),a[2]:m1$,
 :                               @(72+12-m1),a[3]:m1$,
@@ -193,16 +194,16 @@ Print_Void: rem --- Print VOID
 
             if l+2>l9 gosub report_heading
                 print (printer_dev)
-:                               @(0),opt01a_key$(5,7),
-:                               @(15),fnmask$(opt01a_key$(12,p[0]),m0$),
-:                               @(23),fndate$(opt01a.SEQUENCE_000$),"   ****Void****",'LF'
+:                               @(0),opt01a_key.CUSTOMER_ID$+opt01a_key.AR_INV_NO$,
+:                               @(15),fnmask$(opt01a_key.AR_INV_NO$,m0$),
+:                               @(23),fndate$(opt01a_key.SEQUENCE_000$),"   ****Void****",'LF'
             l=l+2
             return
 
 Find_Record: rem --- Find Customer
             rem dim b1$(30)
-            let arm01a.customer_name$(1)="Not On File"
-            find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
+            let arm01a.CUSTOMER_NAME$(1)="Not On File"
+            find record (arm01_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$,dom=*next) arm01a$
             return
 
 rem #include std_functions.src
