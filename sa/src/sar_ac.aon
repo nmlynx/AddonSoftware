@@ -201,7 +201,7 @@ rem --- Report headings
 
 rem --- Set Sales Anaylsis Year
 
-rem jpb    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"Processing","","",2+sum_fldlen,sam_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sam_dev,1,meter_num,status
     sayear$=year$
     yr=0
     t0$=""
@@ -238,7 +238,7 @@ l1150: rem --- Check Next Segment
 
     i=i+1
     if i<=segments goto l1050; rem "End loop
-rem jpb    call pgmdir$+"adc_progress.aon","S","","","",fnyy$(sam_k$(3,2))+sam_k$(kpos[1],sum_fldlen),0,0,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","S","","","","",0,sam_dev,1,meter_num,status
 
 rem --- Detail Level Break?
 
@@ -308,7 +308,7 @@ l1750: rem --- Write Last Report Work File Record
 l1800: rem --- Sort Report Work File
 
     if pos(seq$="AD")=0 goto l1900
-rem jpb    call pgmdir$+"adc_progress.aon","S","","Sorting","","",2+sum_fldlen,saw00_dev,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","S","","","","",0,saw00_dev,1,meter_num,status
     read (saw00_dev,key="",dom=*next)
 
 l1830: rem --- Top of loop
@@ -316,7 +316,7 @@ l1830: rem --- Top of loop
     saw00_k$=key(saw00_dev,end=l1900)
     if pos(" "<>saw00_k$(3,sort_size)) goto l1900
     read (saw00_dev,key=saw00_k$) iol=saw00a
-rem jpb    call pgmdir$+"adc_progress.aon","S","","","",a0$(3+sort_size,sum_fldlen),0,0,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","S","","","","",0,saw00_dev,1,meter_num,status
     if seq$="A" if sales[sort_key]>0 a0$(3,sort_size)=str(-sales[sort_key]:sort_mask$) else a0$(3,sort_size)=str(sort_num+sales[sort_key]:sort_mask$)
     if seq$="D" if sales[sort_key]<0 a0$(3,sort_size)=str(sales[sort_key]:sort_mask$) else a0$(3,sort_size)=str(sort_num-sales[sort_key]:sort_mask$)
     if level=1 goto l1885
@@ -332,7 +332,7 @@ l1885:
 
 l1900: rem --- Position Report Work File Pointer
 
-rem jpb    call pgmdir$+"adc_progress.aon","S","","Printing","","",2+sum_fldlen,saw00_dev,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","S","","","","",0,saw00_dev,1,meter_num,status
     dim cost_tot[3],qnty_tot[3],sales_tot[3],c[3],q[3],s[3]
     done=0
     seg1_head=0
@@ -350,7 +350,7 @@ l2000: rem --- Process Report Work File
     for i=1 to level
         if literals$[i]<>"" tmp$=tmp$+a0$(wpos[i],fldlen[i])
     next i
-rem jpb    call pgmdir$+"adc_progress.aon","S","","","",tmp$,0,0,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","S","","","","",0,saw00_dev,1,meter_num,status
 
 rem --- Segment Breaks
 
