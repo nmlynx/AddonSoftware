@@ -77,7 +77,19 @@ rem --- Dimension miscellaneous string templates
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
-    value_01$=fnget_fld_data$(table$,"dataname_01")
+    perid$=fnget_fld_data$(table$,"period")
+    year$=fnget_fld_data$(table$,"year")
+    begwhse$=fnget_fld_data$(table$,"whse_id_1")
+    endwhse$=fnget_fld_data$(table$,"whse_id_2")
+    begprod$=fnget_fld_data$(table$,"prod_id_1")
+    endprod$=fnget_fld_data$(table$,"prod_id_2")
+    begitem$=fnget_fld_data$(table$,"item_1")
+    enditem$=fnget_fld_data$(table$,"item_2")
+    itemtype$=fnget_fld_data$(table$,"item_type")
+    rebuildlot$=fnget_fld_data$(table$,"rebuildlot")
+    beglot$=fnget_fld_data$(table$,"lot_1")
+    endlot$=fnget_fld_data$(table$,"lot_2")
+    
 
 rem --- Retrieve parameter records
 
