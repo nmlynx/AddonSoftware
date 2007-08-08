@@ -11,6 +11,7 @@ rem --- All Rights Reserved
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
+    syspgmdir$=stbl("+DIR_SYP",err=*next)
 
 rem --- Retrieve sysinfo data
 
@@ -56,12 +57,12 @@ rem --- Position files
 
     if sequence$<>"I"
         key_num=0
-        call pgmdir$+"adc_key_template.aon","IVM_ITEMSYN","PRIMARY",ivm14_key_tpl$,table_chans$[all],status$
+        call syspgmdir$+"bac_key_template.bbj","IVM_ITEMSYN","PRIMARY",ivm14_key_tpl$,table_chans$[all],status$
         dim ivm14a_key$:ivm14_key_tpl$
         read(ivm14_dev,key=firm_id$+cvs(begsyn$,3),knum=key_num,dom=*next)
     else 
         key_num=1
-        call pgmdir$+"adc_key_template.aon","IVM_ITEMSYN","ALT_KEY_01",ivm14_key_tpl$,table_chans$[all],status$        
+        call syspgmdir$+"bac_key_template.bbj","IVM_ITEMSYN","ALT_KEY_01",ivm14_key_tpl$,table_chans$[all],status$        
         dim ivm14a_key$:ivm14_key_tpl$
         read(ivm14_dev,key=firm_id$+cvs(begitem$,3),knum=key_num,dom=*next)
     endif
