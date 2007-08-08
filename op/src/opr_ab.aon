@@ -37,7 +37,7 @@ rem --- Assign form input values to local variables
 rem --- Initialize Data
 
     headings=4
-    dim a[1],t[6],c[5],w[16],headings$[headings]
+rem dim a[1],t[6],c[5],w[16],headings$[headings]
     h1$=n4$
     h0=132
     h=0
@@ -71,10 +71,10 @@ rem --- Initial Read
 
     while more ; rem --- Main Read
 
-        dim opw02_key$(54)
+ rem    dim opw02_key$(54)
         read record (opw02_dev,end=done) opw02a$
         if pos(opw02a.ORDER_STATUS$=p7$)=0 continue
-        if wh$<>"" if opw02a.WAREHOUSE_ID$<>wh$ continue
+        if wh$<>"" if opw02a_key.WAREHOUSE_ID$<>wh$ continue
         if opw02a_key$(1,2+i[0])<>t0$ gosub Item_Break
         rem call pgmdir$+"adc_progress.aon","S","","","",opw02a_key$(3,i[0]),0,0,1,0,ignore_status
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -82,20 +82,28 @@ rem --- Initial Read
         x=pos(opw02a.EST_SHP_DATE$>=h4$,-3)
         x=int((x+2)/3)
         c[x]=c[x]+opw02a.QTY_ORDERED
-        if p9$<>"D" then
-            for j=0 to 5; let t[j]=t[j]+c[j]; next j; let t[6]=t[6]+opw02a.EXTENDED_AMT,u0=u0+opw02a.EXTENDED_AMT
-        else
+        if p9$="D" then
+           
+       
             if l+1>l9 gosub Print_Item
             gosub All_Warehse
-            if opw02a.RESERVED_STR$="Y" print (printer_dev)@(132-m1-7*m2-30-m0),"Drop",
-            print (printer_dev)@(132-m1-7*m2-25-m0),fnmask$(opw02_key$(3,p[0]),p5$),@(132-m1-7*m2-24),opw02a.ORDER_NO$," ",opw02a.ORDER_STATUS$,@(132-m1-7*m2-14),fndate$(opw02a.EST_SHP_DATE$),"  ",opw02a.COMMIT_FLAG$,
+            if opw02a.RESERVED_STR$="Y" print (printer_dev)
+:                           @(132-m1-7*m2-30-m0),"Drop",
+            print (printer_dev)
+:                           @(132-m1-7*m2-25-m0),fnmask$(opw02_key$(3,p[0]),p5$),
+:                           @(132-m1-7*m2-24),opw02a_key.ORDER_NO$," ",opw02a.ORDER_STATUS$,
+:                           @(132-m1-7*m2-14),fndate$(opw02a.EST_SHP_DATE$),"  ",opw02a.COMMIT_FLAG$,
             for x=0 to 5; if c[x]<>0 print (printer_dev)@(132-m1-(7-x)*m2),c[x]:m2$,
             next x
             print (printer_dev)@(132-m1-m2),opw02a.QTY_ORDERED:m2$,@(132-m1),opw02a.EXTENDED_AMT:m1$
             l1=l1+1
             l2=l2+1
             l=l+1
-        fi
+
+      endif
+
+    for j=0 to 5; let t[j]=t[j]+c[j]; next j; let t[6]=t[6]+a[1],u0=u0+a[1]
+           
     wend
 
 done: rem --- End
@@ -103,7 +111,10 @@ done: rem --- End
     t9$="E"
     gosub Item_Break
     if h=0 gosub report_heading
-    print (printer_dev)@(132-m1-m2*7),j$(1,m1+m2*7),'LF',@(132-m1-16),"Report Value: ",@(132-m1),u0:m1$
+    print (printer_dev)
+:                         @(132-m1-m2*7),j$(1,m1+m2*7),'LF',
+:                         @(132-m1-16),"Report Value: ",
+:                         @(132-m1),u0:m1$
     goto std_exit
 
 report_heading: rem --- Report Heading
@@ -112,50 +123,79 @@ report_heading: rem --- Report Heading
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
     
     if status exitto std_exit
-    print (printer_dev)@(0),"Item",@(i[0]),"Whse",@(5+i[0]),"Prod",@(10+i[0]),"UM",@(15+i[0]),"Description"
-    for x=1 to 5; print (printer_dev)@(132-m1-(6-x)*m2-8),fndate$(h4$(x*3-2,3)),; next x
-    print (printer_dev)@(132-m1-6*m2-6),"Past",@(132-m1-6),"Total",@(126),"Total"
-    if p9$="D" print (printer_dev)@(132-m1-7*m2-25-m0),"Cust",@(132-m1-7*m2-24),"Order",@(132-m1-7*m2-14),"Shp-Date Com?",
-    for x=1 to 4; print (printer_dev)@(132-m1-(6-x)*m2-8),fndate$(h5$(x*3-2,3)),; next x
-    print (printer_dev)@(132-m1-m2-8)," Future",@(132-m1-6*m2-6),"Due",@(132-m1-4),"Qty",@(126),"Value"
+    print (printer_dev)
+:                       @(0),"Item",
+:                       @(i[0]),"Whse",
+:                       @(5+i[0]),"Prod",
+:                       @(10+i[0]),"UM",
+:                       @(15+i[0]),"Description"
+    for x=1 to 5; print (printer_dev)
+:                       @(132-m1-(6-x)*m2-8),fndate$(h4$(x*3-2,3)),; next x
+    print (printer_dev)
+:                       @(132-m1-6*m2-6),"Past",
+:                       @(132-m1-6),"Total",
+:                       @(126),"Total"
+    if p9$="D" print (printer_dev)
+:                       @(132-m1-7*m2-25-m0),"Cust",
+:                       @(132-m1-7*m2-24),"Order",
+:                       @(132-m1-7*m2-14),"Shp-Date Com?",
+    for x=1 to 4; print (printer_dev)
+:                       @(132-m1-(6-x)*m2-8),fndate$(h5$(x*3-2,3)),; next x
+    print (printer_dev)
+:                       @(132-m1-m2-8)," Future",
+:                       @(132-m1-6*m2-6),"Due",
+:                       @(132-m1-4),"Qty",
+:                       @(126),"Value"
     l=l+3
 return
 
 Print_Item: rem --- Print Item
     if l>l9-2 gosub report_heading
-    if wh$="" x$="ALL" else x$=opw02a.WAREHOUSE_ID$
-    print (printer_dev)'LF',@(0),a0$(3,i[0]),@(1+i[0]),x$,@(5+i[0]),a1$(9,3),@(10+i[0]),x2$(4,2),@(15+i[0]),x1$
+    if wh$="" x$="ALL" else x$=opw02a_key.WAREHOUSE_ID$
+    print (printer_dev)'LF',
+:                       @(0),a0$(3,i[0]),
+:                       @(1+i[0]),x$,
+:                       @(5+i[0]),a1$(9,3),
+:                       @(10+i[0]),x2$(4,2),
+:                       @(15+i[0]),x1$
     l=l+2
     l1=0
 return
 
 Item_Break: rem --- Item Break
 
-    if t0$<>"" goto Find_Record
-    if p9$="D" if l2<=1 gosub All_Warehse
-    if l+2>l9 gosub report_heading
-    if p9$="D" print (printer_dev)@(132-m1-7*m2),j$(1,m2*6),@(132-m1-m2),j$(1,m1+m2); let l=l+1
-    for x=0 to 5; print (printer_dev)@(132-m1-(7-x)*m2),t[x]:m2$,; next x
-    print (printer_dev)@(132-m1-m2),t[0]+t[1]+t[2]+t[3]+t[4]+t[5]:m2$,@(132-m1),t[6]:m1$
-    l=l+1
+    if t0$<>"" then
+            if p9$="D" if l2<=1 gosub All_Warehse
+            if l+2>l9 gosub report_heading
+            if p9$="D" print (printer_dev)
+:                       @(132-m1-7*m2),j$(1,m2*6),
+:                       @(132-m1-m2),j$(1,m1+m2); let l=l+1
+            for x=0 to 5; print (printer_dev)
+:                       @(132-m1-(7-x)*m2),t[x]:m2$,; next x
+            print (printer_dev)
+:                       @(132-m1-m2),t[0]+t[1]+t[2]+t[3]+t[4]+t[5]:m2$,
+:                       @(132-m1),t[6]:m1$
+            l=l+1
    
     gosub All_Warehse
-    Find_Record:
+endif
+
         if t9$<>"" return
         dim t[6]
         t0$=opw02a_key$(1,i[0]+2)
         l1=0
         l2=0
         dim ivm01a_key$(i[1]+i[2]+i[3]),x2$(50),t[6],c[5]
-        ivm01a_key$(1)="*Not on File*"
+        ivm01a.ITEM_DESC$="*Not on File*"
+        x3$=ivm01a.UPC_CODE$+ivm01a.BAR_CODE$
         x3$=""
-        find record (ivm01_dev,key=firm_id$+opw02a_key$(3,20),dom=*next) ivm01a$
+        find record (ivm01_dev,key=firm_id$+opw02a_key.ITEM_IDDES$,dom=*next) ivm01a$
         if opwO2a$.LINE_CODE$="N" x1$(1)="*Non-Stock Item*",x2$(4,2)="EA"
         gosub Print_Item
 return
 
 All_Warehse: rem --- All Warehouses
-    a3$=x3$
+    a3$=ivm01a.UPC_CODE$+ivm01a.BAR_CODE$
     dim b[16],w[16]
     if a3$="" return
     for x=1 to len(a3$) step 2
