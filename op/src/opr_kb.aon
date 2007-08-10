@@ -507,8 +507,8 @@ Check_GP:
         opt01a_key$=opt01a_key.FIRM_ID$+opt01a_key.AR_TYPE$+opt01a_key.CUSTOMER_ID$+opt01a_key.AR_INV_NO$
         read (opt11_dev,key=opt01a_key$+$FF$,dom=*next)
         m=1
-        opt11a_key$=keyp(opt11_dev,end=*break)
-        if pos(opt01a_key$=opt11a_key$)<>1 break
+        opt11a_key$=keyp(opt11_dev,end=DetailHistory)
+        if pos(opt01a_key$=opt11a_key$)=1 then
         m=num(opt11a_key.LINE_NO$)
 
 rem --- ESCAPE LET M=200
@@ -543,8 +543,9 @@ rem --- ESCAPE LET M=200
             let w9=opt11a.QTY_SHIPPED*opt11a.UNIT_PRICE*w9/100,l1[0]=l1[0]+opt11a.QTY_SHIPPED*opt11a.UNIT_PRICE-w9,l1[1]=l1[1]+opt11a.UNIT_COST*opt11a.QTY_SHIPPED
     wend
 
-rem --- No Invoice Detail History
 
+    endif
+DetailHistory:
         if s5$<>"" return
         let s[0]=opt01a.TOTAL_SALES,s[1]=opt01a.TOTAL_COST
         if s[0]<>0 then w8=(s[0]-s[1])*100/s[0] else w8=0
