@@ -91,7 +91,7 @@ rem --- Document initializations
 rem --- Open/Lock Files
 
     files=6
-    dim files$[files],options$[files],channels[files]
+rem    dim files$[files],options$[files],channels[files]
     files$[1]="ope-01"
     files$[2]="ope-11"
     files$[3]="arm-01"
@@ -109,7 +109,7 @@ rem --- Open/Lock Files
 
 rem --- Parameters
 
-    dim p[2]
+rem    dim p[2]
     find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
     firm_id$=f0$(16,2)
     n1$=sysinfo.firm_name$
@@ -117,7 +117,8 @@ rem --- Parameters
     n3$=sysinfo.task_desc$
     find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
     find record (sys01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
-    p[0]=num(p2$(1,2))
+rem p[0]=num(p2$(1,2))
+    p[0]=num(ivs01a_key.FIRM_ID$)
 
 rem --- Initializations
 
@@ -170,7 +171,7 @@ Key_Flow:
 Option_Flow:
             v$=optn$
     else
-Option1:
+
             for x=1 to len(optn$)
                 if pos(optn$(x,1)=v$)>0 x$=x$+optn$(x,1)
             next x
@@ -180,7 +181,7 @@ Option1:
                 if  v$(x,1)="O" h3$=h3$+"Open" else if v$(x,1)="Q" h3$=h3$+"Quoted" else if v$(x,1)="B" h3$=h3$+"Backordered" else if v$(x,1)="C" h3$=h3$+"Credit Held" else exitto Option
             next x
     endif
-Orders_Only:
+
     p8$=v$
     if len(p8$)<4 h3$=h3$+" Orders Only" else h3$="All Orders"
     if len(h3$)>80-v1-len(p8$)-1 x$=h3$(1,80-v1-len(p8$)-1) else x$=h3$
@@ -239,7 +240,7 @@ do_nonkey1:
 
 endif
 
-end_input: rem --- Run report overlay
+
 
 rem --- File Initializations
 
@@ -250,7 +251,7 @@ rem --- File Initializations
     read (ope01_dev,key=firm_id$,dom=*next)
 
 
-while more
+    while more
 
 rem             dim k$(20)
                 ope01a_key.FIRM_ID$=key(ope01_dev,end=Print1)
@@ -272,7 +273,7 @@ rem --- Next header
                      endif
                 
 
-Got_One_To_Print: rem --- Got One To Print
+
 
                 call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope01a_key.CUSTOMER_ID$,m0$)+" "+ope01a.ORDER_NO$,0,0,1,meter_num,status
 
@@ -300,7 +301,7 @@ Type:
                endif
 
 rem --- Add Up Order Amount
-Add_Up_Order_Amount:
+
 
                 amnt=0
                 read (ope11_dev,key=ope01a_key.FIRM_ID$+ope01a_key.AR_TYPE$+ope01a_key.CUSTOMER_ID$+ope01a_key.ORDER_NO$+"000",dom=*next)
@@ -317,7 +318,7 @@ rem             dim y0$(32)
             wend
 
 rem --- Print Status Line
-Print_Status_Line:
+
 
                 if l+1>l9 gosub report_heading
                 print (printer_dev)customer$,@(m0+1),name$,@(32+m0),ope01a_key.ORDER_NO$,@(40+m0),fndate$(ope01a.ORDER_DATE$),@(49+m0),fndate$(ope01a.SHIPMNT_DATE$),@(58+m0),ope01a.CUSTOMER_PO_NO$,@(69+m0),ope01a.AR_SHIP_VIA$,@(80+m0),ope01a.TERMS_CODE$," ",terms$,@(101+m0)," ",x9$,@(h0-m1),amnt:m1$; rem ESCAPE, Need to make room for Cust PO#, A0$(111,20)
@@ -385,7 +386,7 @@ Customer_break: rem --- Customer break
         endif
     endif
            
-Check_File:
+
     if done>0 return
 rem dim b1$(282)
     let t0$=ope01a_key.CUSTOMER_ID$,arm01a.CUSTOMER_NAME$="(Not On File)",number=0
