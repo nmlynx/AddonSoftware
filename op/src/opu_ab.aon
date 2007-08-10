@@ -20,7 +20,7 @@ rem --- Retrieve sysinfo data
         sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
         dim sysinfo$:sysinfo_template$
         sysinfo$=stbl("+SYSINFO",err=*next)
-rem     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
 
@@ -40,7 +40,7 @@ rem --- Retrieve parameter records
 
 rem --- Initialize data
 
-        dim x[2],c[2]
+ rem    dim x[2],c[2]
         more=1
 
 rem --- Background
@@ -90,7 +90,7 @@ rem --- Invoice Detail
                 t0=t0+art11a.TRANS_AMT+art11a.ADJDISC_AMT
             wend
 
- Keep_Or_Remove: rem --- Keep Or Remove?
+
 
                 if t0<>0 then 
                    continue
@@ -104,7 +104,7 @@ rem          call pgmdir$+"adc_progress.aon","S",sysinfo.task_desc$,"","",opt71a
            
 wend
 
- done: rem --- End
+ 
 
 goto std_exit
 
