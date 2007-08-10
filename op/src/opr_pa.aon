@@ -62,7 +62,7 @@ Background: rem --- Background
            
                 else
 
-Print_Prices: rem --- Print Prices?
+
 
                 read (ope01_dev,key=ope01_key.FIRM_ID$+ope01_key.AR_TYPE$+ope01_key.CUSTOMER_ID$+ope01_key.ORDER_NO$+ope01_key.SEQUENCE_000$,dom=*next)
                 p8$="Y"
@@ -72,11 +72,12 @@ Print_Prices: rem --- Print Prices?
                         if v3=4 goto std_exit
                         if p8$="NO" p8$="N" else if p8$="YES" p8$="Y"
                 endif
-Bg_On_Demand: rem --- Background for on-demand
+
 
                 call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
                 call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",len(m0$)+8,0,1,0,ignore_status
-rem  doubt      call pgmdir$+"adc_progress.aon","S","","","",fnmask$(a0$(5,p[0]),m0$)+" "+a0$(11,7),0,0,1,0,ignore_status
+rem             call pgmdir$+"adc_progress.aon","S","","","",fnmask$(a0$(5,p[0]),m0$)+" "+a0$(11,7),0,0,1,0,ignore_status
+                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
 
             rem --- Read header for on-demand printing
 
@@ -85,7 +86,6 @@ rem  doubt      call pgmdir$+"adc_progress.aon","S","","","",fnmask$(a0$(5,p[0])
                 goto On_Demand
     endif
 
-Initial_Read: rem --- Initial Read
 
     read (ope04_dev,key=firm_id$+"O"+"  "+p5$,dom=*next)
 while more
@@ -124,12 +124,12 @@ heading: rem --- Heading
             b$=""
             othwhse$=""
             dim b1$(325)
-            b1$(1)="Not On File"
+            arm01a.CUSTOMER_NAME$="Not On File"
             read record (arm01_dev,key=firm_id$+ope01a_key.CUSTOMER_ID$,dom=Assign_Value) arm01a$
-            b$=b1$(31,72)+b1$(179,48)+b1$(103,9)+b1$(265,24)
+            b$=arm01a.ADDR_LINE_1$+arm01a.ADDR_LINE_2$+arm01a.ADDR_LINE_3$+arm01a.ADDR_LINE_4$+arm01a.CITY$+arm01a.STATE_CODE$+arm01a.ZIP_CODE$+arm01a.COUNTRY$
             call pgmdir$+"adc_address.aon",b$,24,5,p[2],30
 Assign_Value:
-            b$=b1$(1,30)+b$
+            b$=arm01a.CUSTOMER_NAME$+b$
 
         rem --- Ship-To
 
@@ -138,13 +138,13 @@ rem         dim c1$(255),c$(159)
                  else
                     if ope01a.SHIPTO_NO$="000099" then
                          find record (ope31_dev,key=firm_id$+ope01_key.CUSTOMER_ID$+ope01_key.ORDER_NO$,dom=Cal_Prog) ope31a$
-                            c$=d1$(31,129)
-                             arm03a.NAME$=d1$(1,30)
+                            c$=ope31a.ADDR_LINE_1$+ope31a.ADDR_LINE_2$+ope31a.ADDR_LINE_3$+ope31a.ADDR_LINE_4$+ope31a.CITY$+ope31a.STATE_CODE$+ope31a.ZIP_CODE$
+                             arm03a.NAME$=ope31a.NAME$
         
                   
                         else
 
-Assign_Value1:
+
                              find record (arm03_dev,key=firm_id$+ope01_key.CUSTOMER_ID$+ope01a.SHIPTO_NO$,dom=Cal_Prog) arm03a$
                              c$=arm03a.ADDR_LINE_1$+arm03a.ADDR_LINE_2$+arm03a.ADDR_LINE_3$+arm03a.ADDR_LINE_4$+arm03a.CITY$+arm03a.COUNTRY$
                     endif
@@ -152,7 +152,7 @@ Cal_Prog:
                             call pgmdir$+"adc_address.aon",c$,24,5,p[2],30
            endif
 
- Call_Prog1:
+ 
             c$=arm03a.NAME$+c$
 
         rem --- Print Heading
@@ -163,13 +163,13 @@ Cal_Prog:
 
             x1$="HOUSE"
             find record (arm10_dev,key=firm_id$+"F"+ope01a.SLSPSN_CODE$,dom=Terms) arm10f$
-            x1$=x1$(7,20)
+            x1$=arm10f.CODE_DESC$
 
 Terms: rem --- Terms
 
             x3$=""
             find record (arm10_dev,key=firm_id$+"A"+ope01a.TERMS_CODE$,dom=Print_Heading) arm10a$
-            x3$=x3$(6,15)
+            x3$=arm10a.CODE_DESC$
 
 Print_Heading: rem --- Print Heading
 
@@ -197,7 +197,7 @@ rem         dim y0$(30)
 
 
 
-Check_Condn1:
+
             if whse$<>"" and ope11a.WAREHOUSE_ID$<>whse$ continue
             if pos(opm02a.LINE_TYPE$="MNO")<0 then
 
@@ -218,18 +218,18 @@ Find_Record1:
 
 
 
-Check_Condn3:
+
             if opm02a.LINE_TYPE$="M" and pos(opm02a.MESSAGE_TYPE$=" BO")=0 break
 
 
 
-            t0=t0+w[6]
+            t0=t0+ope11a.EXT_PRICE
 
         rem --- Any Serial/Lot #'s?
 
             if pos(i3$(17,1)="LS")=0 continue
             if pos(opm02a.LINE_TYPE$=" SRDP")=0 continue
-            if x7$(19,1)<>"Y" continue
+            if ivm01a.LOTSER_ITEM$<>"Y" continue
 
         rem --- OK There Are Lots
 
@@ -244,9 +244,9 @@ Check_Condn3:
             t9=t9+ope21a.QTY_SHIPPED
           wend
 
-            if t9<w[2] then
+            if t9<ope11a.QTY_ORDERED then
 rem                 dim ope21a.LOTSER_NO$(i[3],"_"),t[2]
-                    y9=w[2]-t9; if i3$(17,1)="L" y9=3
+                    y9=ope11a.QTY_ORDERED-t9; if i3$(17,1)="L" y9=3
                     for y=1 to y9
                         gosub Print4
                     next y
@@ -254,7 +254,7 @@ rem                 dim ope21a.LOTSER_NO$(i[3],"_"),t[2]
 
 
 
-Check_Condn4:
+
             if l+1>l9 continue
             print (printer_dev)""
             l=l+1
@@ -264,7 +264,7 @@ Check_Condn4:
 
 
 
-total: rem  --- Total
+
 
             gosub Total1
             if o9=2 break
@@ -276,7 +276,7 @@ total: rem  --- Total
 
 wend
 
-done: rem --- Totals
+
 
     if o9<>1 then
                 after$="YES"; gosub valid_lines
@@ -287,7 +287,7 @@ On_Demand1: rem --- Here for on-demand printing
                  else
                     if print$="YES" and allprint$="YES" ope01a.PRINT_STATUS$="Y"
                 endif
-Write_Record:
+
                 if ope01a.PRINT_STATUS$<>"Y" ope01a.PRINT_STATUS$="N"
                 ope01a.LOCK_STATUS$="N"
                 write record (ope01_dev,key=ope01_key.FIRM_ID$+ope01_key.AR_TYPE$+ope01_key.CUSTOMER_ID$+ope01_key.ORDER_NO$+ope01_key.SEQUENCE_000$) ope01a$
@@ -400,7 +400,7 @@ rem --- Item detail
                     print (printer_dev)
 :                                           @(h0+74),"______",
     endif
-Print1:
+
     if pos(opm02a.LINE_TYPE$="MO")<>0 print (printer_dev)
 :                                           @(h0+28),ope11a.ORDER_MEMO$,
     if opm02a.LINE_TYPE$="N" print (printer_dev)
@@ -417,16 +417,16 @@ Print1:
 :                                           @(h0+53),x5$,
                     
                 endif        
-            Check:
+            
                 if p8$="Y" then
    endif
-Print2:
+
                     if pos(opm02a.LINE_TYPE$=" SRDPN")<>0 print (printer_dev)
 :                                           @(h0+73-m4),w[1]:m4$,; let total=total+w[6]
                     if pos(opm02a.LINE_TYPE$="O")<>0 print (printer_dev)
 :                                           @(h0+73-m1),w[6]:m1$,;let total=total+w[6]
                 endif
-Print3:
+
     print (printer_dev)'LF',
     l=l+1
     if pos(opm02a.LINE_TYPE$=" SRDPN")<>0 if l+1>l9 gosub continue_page
@@ -443,17 +443,17 @@ Print4: rem --- Serial #'s Here
         if pos(opm02a.LINE_TYPE$=" SRDP")<>0 print (printer_dev)
 :                                           @(h0+28),ope11a.ITEM_ID$,"(Continued)"; let l=l+1
     endif
-Print5:
+
             if i3$(17,1)<>"L" then
                 print (printer_dev)
 :                                           @(h0+24),"S/N: ",ope21a.LOTSER_NO$
                   else
-Print6:
+
                     print (printer_dev)
 :                                           @(h0+24),"Lot: ",ope21a.LOTSER_NO$,"   Shipped: ",
                      if t[1]<>0 print (printer_dev)t[1]:m2$ else print (printer_dev)ope21a.LOTSER_NO$
             endif
-Back:
+
     l=l+1
     return
 
@@ -502,11 +502,11 @@ while more
                             if ope01a.REPRINT_FLAG$<>"Y" and ope11a.PICK_FLAG$="Y" continue; rem "Not a reprint and already printed for selected warehouse(s)
                             if ope01a.REPRINT_FLAG$="Y" and ope11a.PICK_FLAG$<>"Y" continue; rem "A reprint and not printed yet for selected warehouse(s)
             endif
-Write_Record1:
+
             if after$="YES" ope11a.PICK_FLAG$="Y"; write record (ope11_dev,key=ope11a_key.FIRM_ID$+ope11a_key.AR_TYPE$+ope11a_key.CUSTOMER_ID$+ope11a_key.ORDER_NO$+ope11a_key.LINE_NO$) ope11a$
             print$="YES"
    wend
-Read1:
+
     read (ope01_dev,key=ope01_key.FIRM_ID$+ope01_key.AR_TYPE$+ope01_key.CUSTOMER_ID$+ope01_key.ORDER_NO$+ope01_key.SEQUENCE_000$)
     return
 
