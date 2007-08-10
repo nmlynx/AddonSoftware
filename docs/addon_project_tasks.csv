@@ -227,9 +227,9 @@ Copy Items to Another Warehouse,IVX_COPYITEM,T,IVX_COPYITEM,,IVX.DA,,,,,
 Rebuild Unit Costs,IVX_REBUILDCOSTS,A,,ivx_rebuildcosts.aon,IVX.IA,,,,,
 Purchase Order Processing,POMENU,M,,,,,,,,
 Replenishment Selection,POE_FA,T,,poe_fa.aon,POE.FA,,,,,
-Replenishment Register,POR_FA,T,,por_fa.aon,POR.FA,PPT-BP,,Y,Y,POR.FB
+Replenishment Register,POR_FA,T,,por_fa.aon,POR.FA,PPT-BP,P,Y,Y,POR.FB
 Purchase Requisition Entry,POE_AA,T,,poe_aa.aon,POE.AA,,,,,
-Print Purchase Requisitions,POR_XA,T,,por_xa.aon,POR.XA,PPT-BP,,Y,Y,POR.BB
+Print Purchase Requisitions,POR_XA,T,,por_xa.aon,POR.XA,PPT-BP,P,Y,Y,POR.BB
 Purchase Requisition Register,POR_AA,T,,por_aa.aon,POR.AA,PPT-BP,P,Y,Y,POR.AB
 Purchase Order Entry,POE_BA,T,,poe_ba.aon,POE.BA,,,,,
 Print Purchase Orders,POR_BA,T,,por_ba.aon,POR.BA,PPT-BP,P,Y,,POR.BB
@@ -247,21 +247,21 @@ Purchase Orders By Item Report,POR_JA,T,,por_ja.aon,POR.JA,PPT-BP,P,Y,Y,POR.JB
 Purchase Order Expediting Report,POR_KA,T,,por_ka.aon,POR.KA,PPT-BP,P,Y,Y,POR.KB
 Purchase Order Status Report,POR_LA,T,,por_la.aon,POR.LA,PPT-BP,P,Y,Y,POR.LB
 PO Cash Requirements Report,POR_MA,T,,por_ma.aon,POR.MA,PPT-BP,P,Y,Y,POR.MB
-Billed/Unbilled PO Receipts Report,POR_TA,T,,por_ta.aon,POR.TA,PPT-BP,,Y,Y,POR.TB
+Billed/Unbilled PO Receipts Report,POR_TA,T,,por_ta.aon,POR.TA,PPT-BP,P,Y,Y,POR.TB
 PO Receipt Variance Report,POR_NA,T,,por_na.aon,POR.NA,PPT-BP,P,Y,Y,POR.NB
-PO Receipt Cost Variance Report,POR_OA,T,,por_oa.aon,POR.OA,PPT-BP,,Y,Y,POR.OB
-PO Receipt History By Vendor Report,POR_PA,T,,por_pa.aon,POR.PA,PPT-BP,,Y,Y,"POR.PB, POR.PC"
-PO Receipt History By Item Report,POR_QA,T,,por_qa.aon,POR.QA,PPT-BP,,Y,Y,POR.QB
-QA Work In Process Report,POR_RA,T,,por_ra.aon,POR.RA,PPT-BP,,Y,Y,POR.RB
-QA Rejection History Report,POR_SA,T,,por_sa.aon,POR.SA,PPT-BP,,Y,Y,POR.SB
+PO Receipt Cost Variance Report,POR_OA,T,,por_oa.aon,POR.OA,PPT-BP,P,Y,Y,POR.OB
+PO Receipt History By Vendor Report,POR_PA,T,,por_pa.aon,POR.PA,PPT-BP,P,Y,Y,"POR.PB, POR.PC"
+PO Receipt History By Item Report,POR_QA,T,,por_qa.aon,POR.QA,PPT-BP,P,Y,Y,POR.QB
+QA Work In Process Report,POR_RA,T,,por_ra.aon,POR.RA,PPT-BP,P,Y,Y,POR.RB
+QA Rejection History Report,POR_SA,T,,por_sa.aon,POR.SA,PPT-BP,P,Y,Y,POR.SB
 Period End Processing,POMENU_PEND,G,,,,,,,
-Purge PO Receipt History,POU_FA,T,,pou_fa.aon,POU.FA,PPT-BP,,Y,
-Purge Rejection History,POU_HA,T,,pou_ha.aon,POU.HA,PPT-BP,,Y,
+Purge PO Receipt History,POU_FA,T,,pou_fa.aon,POU.FA,PPT-BP,P,Y,
+Purge Rejection History,POU_HA,T,,pou_ha.aon,POU.HA,PPT-BP,P,Y,
 Maintenance,POMENU_MAINT,G,,,,,,,
-Create Purchase Calendar,POM_AA,T,,pom_aa.aon,POM.AA,PPT-BP,,Y,
+Create Purchase Calendar,POM_AA,T,,pom_aa.aon,POM.AA,PPT-BP,P,Y,
 Purchase Calendar Maint,POM_BA,T,,pom_ba.aon,POM.BA,,,,
-Print Purchase Calendar,POR_UA,T,,por_ua.aon,POR.UA,PPT-BP,,Y,Y
-Purge Purchase Calendar,POU_GA,T,,pou_ga.aon,POU.GA,PPT-BP,,Y,
+Print Purchase Calendar,POR_UA,T,,por_ua.aon,POR.UA,PPT-BP,P,Y,Y
+Purge Purchase Calendar,POU_GA,T,,pou_ga.aon,POU.GA,PPT-BP,P,Y,
 Line Codes,POM_CA,T,,pom_ca.aon,POM.CA,,,,
 Message Codes,POC_MSGCODE,T,POC_MSGCODE,,POM.DA,,,,
 Rejection Codes,POM_FA,T,,pom_fa.aon,POM.FA,,,,
@@ -271,7 +271,7 @@ Default Values,PO_DEFAULTVALS,T,,,POP.AA,,,,
 Utilities,POMENU_UTILITIES,G,,,,,,,
 Rebuild Cross References,POX_CROSSREF,A,POX_CROSSREF,,POX.AA,,,,
 Rebuild History Cross References,POX_HISTXREF,A,POX_HISTXREF,,POX.CA,,,
-Remove Unlinked Detail Lines,POX_UNLINKED,T,POX_UNLINKED,,POX.BA,PPT-BP,,Y
+Remove Unlinked Detail Lines,POX_UNLINKED,T,POX_UNLINKED,,POX.BA,PPT-BP,P,Y
 Sales Analysis,SAMENU,M,,,,,,
 By Customer,SAM_AA,T,,sam_aa.aon,SAM.AA,JB,Y,
 By Territory,SAM_BA,T,,sam_ba.aon,SAM.BA,JB,Y,
@@ -309,9 +309,9 @@ Rebuild Sales Analysis from Invoice History,SAX_INVHIST,T,SAX_INVHIST,,SAX.BA,,,
 Sales Order Processing,OPMENU,M,,,,,,,,
 Order Entry,OPE_ORDHDR,T,OPE_ORDHDR,,OPE.DA,,,,,
 Order Picking Listing,OPR_NA,T,,opr_na.aon,OPR.NA,SS-BP,P,Y,Y,OPR.PA
-Commit and Release Future Orders,OPU_EA,T,,opu_ea.aon,OPU.EA,SS-BP,,Y,,
+Commit and Release Future Orders,OPU_EA,T,,opu_ea.aon,OPU.EA,SS-BP,P,Y,,
 Invoice Entry,OPE_CA,T,,ope_ca.aon,OPE.CA,,,,,
-Invoice Edit Report,OPR_INVEDIT,T,OPR_INVEDIT,,OPR.JA,SS-BP,,Y,Y,OPR.JB
+Invoice Edit Report,OPR_INVEDIT,T,OPR_INVEDIT,,OPR.JA,SS-BP,P,Y,Y,OPR.JB
 Invoice Printing,OPR_INVOICE,T,OPR_INVOICE,,OPR.GA,SS-BP,P,Y,,
 Sales Register,OPR_SALESREG,T,OPR_SALESREG,,OPR.HA,SS-BP,P,Y,Y,OPR.HB
 Price Quotation Inquiry,OPM_PA,T,,opm_pa.aon,OPM.PA,,,,,
@@ -320,18 +320,18 @@ Reports,OPMENU_REPORTS,G,,,,,,,,
 Open Order Detail Report,OPR_DETAIL,T,OPR_DETAIL,,OPR.IA,SS-BP,P,Y,Y,OPR.IB
 Order Status Report By Customer,OPR_CUSTSTATUS,T,OPR_CUSTSTATUS,,OPR.QA,SS-BP,P,Y,Y,
 Order Status Report By Item,OPR_ITEMSTATUS,T,OPR_ITEMSTATUS,,OPR.OA,SS-BP,P,Y,Y,OPR.OB
-Shipping Schedule Report,OPR_SHIPPING,T,OPR_SHIPPING,,OPR.AA,SS-BP,,Y,Y,OPR.AB
+Shipping Schedule Report,OPR_SHIPPING,T,OPR_SHIPPING,,OPR.AA,SS-BP,P,Y,Y,OPR.AB
 Customer Job Report,OPR_CUSTJOBS,T,OPR_CUSTJOBS,,OPR.FA,SS-BP,P,Y,Y,OPR.FB
 Sales Tax Report,OPR_TA,T,,opr_ta.aon,OPR.TA,SS-BP,,Y,Y,
 Monthly Sales Report,OPR_MONTHLYSALES,T,,opr_ea.aon,OPR.EA,SS-BP,P,Y,Y,OPR.EB
-Invoice History Report,OPR_KA,T,,opr_ka.aon,OPR.KA,SS-BP,,Y,Y,OPR.KB
+Invoice History Report,OPR_KA,T,,opr_ka.aon,OPR.KA,SS-BP,P,Y,Y,OPR.KB
 Period End Processing,OPMENU_PEND,G,,,,,,,,
 Sales Tax Report,OPR_SALESTAX,T,OPR_SALESTAX,,OPR.TA,,P,Y,Y,
 Sales Tax History Purge,OPU_FA,T,,opu_fa.aon,OPU.FA,SS-BP,P,Y,,
 Salesperson Commission Report,OPR_COMMISSION,T,OPR_COMMISSION,,OPR.MA,SS-BP,P,Y,Y,OPR.MB
 Commission File Purge,OPU_AA,T,,opu_aa.aon,OPU.AA,SS-BP,P,Y,,OPU.AB
 Monthly Sales Report,OPR_EA,T,,opr_ea.aon,OPR.EA,,,Y,Y,
-Monthly Sales Register,OPR_MONTHREG,T,OPR_MONTHREG,,OPR.ZA,SS-BP,,Y,Y,OPR.ZB
+Monthly Sales Register,OPR_MONTHREG,T,OPR_MONTHREG,,OPR.ZA,SS-BP,P,Y,Y,OPR.ZB
 Invoice History Report,OPR_HISTORY,T,OPR_HISTORY,,OPR.KA,,,Y,Y,
 Invoice History Purge,OPU_DA,T,,opu_da.aon,OPU.DA,SS-BP,P,Y,,
 Maintenance,OPMENU_MAINT,G,,,,,
