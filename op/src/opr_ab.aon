@@ -199,10 +199,11 @@ All_Warehse: rem --- All Warehouses
     dim b[16],w[16]
     if a3$="" return
     for x=1 to len(a3$) step 2
-        find record (ivm02_dev,key=firm_id$+ivm02_key$(x,2)+t0$(3,i[0]),dom=*break) ivm02a$
+        find record (ivm02_dev,key=firm_id$+ivm02_key$(x,2)+t0$(3,i[0]),dom=Loop) ivm02a$
         for x1=0 to 16
             b[x1]=b[x1]+w[x1]
         next x1
+Loop:
     next x
 return
 
