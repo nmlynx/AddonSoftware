@@ -71,15 +71,17 @@ rem --- Sort Cash
 
 rem --- Write Record
 
-                    if seq$="C" call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope41a.CUSTOMER_ID$,p[0],m0$)+""+ope41a.AR_INV_NO$,0,0,1,meter_num,status
-                    if seq$="I" call pgmdir$+"adc_progress.aon","S","","","",ope41a.AR_INV_NO$+" "+fnmask$(ope41a.CUSTOMER_ID$,p[0],m0$),0,0,1,meter_num,status
+rem                 if seq$="C" call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope41a.CUSTOMER_ID$,p[0],m0$)+""+ope41a.AR_INV_NO$,0,0,1,meter_num,status
+rem                 if seq$="I" call pgmdir$+"adc_progress.aon","S","","","",ope41a.AR_INV_NO$+" "+fnmask$(ope41a.CUSTOMER_ID$,p[0],m0$),0,0,1,meter_num,status
+                    if seq$="C" call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+                    if seq$="I" call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
                     x0$=ope41a.FIRM_ID$+ope41a.AR_TYPE$+ope41a.INVOICE_DATE$+ope41a.AR_INV_NO$+ope41a.CUSTOMER_ID$+ope41a.ORDER_NO$
                     if seq$="C" x0$(8,7)=""
                     write record (opw41_dev,key=x0$) opw41a$
 
           wend
 
-          Print: rem --- Print
+          
 
 rem --- PRINT @(40,5),"Printing Cash Sales",'CL',@(0,10),'CL',@(0,11),'CL',@(0,12),'CL',
 
@@ -111,7 +113,8 @@ rem                     b1$=b1$(1,30)
 
 rem --- Print
 
-                        call pgmdir$+"adc_progress.aon","S","","","",fndate$(t0$)+" "+fnmask$(ope41a.CUSTOMER_ID$,m0$)+" "+ope41a.AR_INV_NO$,0,0,1,meter_num,status
+rem                        call pgmdir$+"adc_progress.aon","S","","","",fndate$(t0$)+" "+fnmask$(ope41a.CUSTOMER_ID$,m0$)+" "+ope41a.AR_INV_NO$,0,0,1,meter_num,status
+                           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
                         if l+1>l9 gosub report_heading
                         print (printer_dev)fnmask$(ope41a.CUSTOMER_ID$,m0$),
 :                                                                   @(8),arm01a.CUSTOMER_NAME$,
@@ -141,7 +144,7 @@ rem --- Totals
 
 
 rem --- Totals
-        done: 
+        
 
                         t9$="E"
                         for i=0 to 1
@@ -151,7 +154,7 @@ rem --- Totals
     endif
 
 
-Call_Prog:
+
 
                         run pgmdir$+"opr_hc.bbx"
 
@@ -203,7 +206,7 @@ Date_Break:
                                 l=l+4
 
                         endif
-Loop:
+
                         if t9$<>"" return
                         t0$=k$(5,3)
                         for x=0 to 2
