@@ -146,9 +146,8 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",ope61a_key.WAREHOUSE_ID
                     endif
              endif      
          
-        Summary: rem --- Detail or Summary?
 
-            if p9$<>"D" goto Accumulate_Totals
+if p9$="D" then
 
         rem --- Order status
 
@@ -165,15 +164,17 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",ope61a_key.WAREHOUSE_ID
 
             if item$<>"" then 
               if l+3>l9 gosub report_heading
-              print (printer_dev)@(o[0]),ivm01a_key.ITEM_ID$,@(o[1]),ivm01a.PRODUCT_TYPE$,@(o[2]),ivm01a.UNIT_OF_SALE$
+              print (printer_dev)
+:                               @(o[0]),ivm01a_key.ITEM_ID$,
+:                               @(o[1]),ivm01a.PRODUCT_TYPE$,
+:                               @(o[2]),ivm01a.UNIT_OF_SALE$
               print (printer_dev)@(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
               l=l+2
               item$=""
             endif
 
-        Print_Description: rem --- Print Description for Non-stocks
 
-            if nonstock$="Y" then
+          if nonstock$="Y" then
                 if l+1>l9 gosub report_heading
                 print (printer_dev)@(o[3]-3),ope11a.ORDER_MEMO$
                 l=l+1
@@ -181,12 +182,20 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",ope61a_key.WAREHOUSE_ID
              else
 
                 if l+1>l9 gosub report_heading
-                print (printer_dev)@(o[3]),fnmask$(ope61a_key.CUSTOMER_ID$,m0$),@(o[4]),ope01a.ORDER_NO$,ope01a.BACKORD_FLAG$,@(o[5]),fndate$(ope01a.ORDER_DATE),@(o[6]),fndate$(ship$),@(o[7]),x$,@(o[8]),amount:m1$,@(o[9]),ope11a.QTY_ORDERED:m2$,@(o[10]+1),ope11a.COMMIT_FLAG$
+                print (printer_dev)
+:                                  @(o[3]),fnmask$(ope61a_key.CUSTOMER_ID$,m0$),
+:                                  @(o[4]),ope01a.ORDER_NO$,ope01a.BACKORD_FLAG$,
+:                                  @(o[5]),fndate$(ope01a.ORDER_DATE),
+:                                  @(o[6]),fndate$(ship$),
+:                                  @(o[7]),x$,
+:                                  @(o[8]),amount:m1$,
+:                                  @(o[9]),ope11a.QTY_ORDERED:m2$,
+:                                  @(o[10]+1),ope11a.COMMIT_FLAG$
                 l=l+1
 
-             endif
-
-        Accumulate_Totals: rem --- Accumulate totals
+           endif
+endif
+        
 
             t[0]=t[0]+amount
             t[1]=t[1]+ope11a.QTY_ORDERED
@@ -204,7 +213,9 @@ done: rem --- End
     if l+2>l9 gosub report_heading
     x$="Total For Report"
     print (printer_dev)@(o[8]),j$
-    print (printer_dev)@(o[8]-len(x$)),x$,@(o[8]),total:m1$
+    print (printer_dev)
+:                               @(o[8]-len(x$)),x$,
+:                               @(o[8]),total:m1$
     goto std_exit
 
 report_heading: rem --- Report Heading
@@ -258,10 +269,9 @@ Warehouse: rem --- Warehouse break
 :                                   @(o[8]),subtotal:m1$
              endif
     endif
-Find_Record:
+
     if done>0 return
-rem dim x0$(32)
-   dim x$(h0)
+rem   dim x$(h0)
     ivm10c.SHORT_NAME$=nf$
     t0$=ope61a_key.WAREHOUSE_ID$
     l0=0
@@ -284,16 +294,31 @@ Item_Break: rem --- Item break
                      if p9$="S" then
                            if l+3>l9 gosub report_heading
                            if cvs(ivm01a_key.ITEM_ID$,2)="" ivm01a.ITEM_DESC$="Non-Stock Item(s)"
-                           print (printer_dev)@(o[0]),ivm01a_key.ITEM_ID$,@(o[1]),ivm01a.PRODUCT_TYPE$,@(o[2]),ivm01a.UNIT_OF_SALE$,@(o[8]),t[0]:m1$,@(o[9]),t[1]:m2$,@(o[11]),c[0]:m2$,@(o[12]),c[2]:m2$,@(o[13]),avail:m2$
-                           print (printer_dev)@(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
+                           print (printer_dev)
+:                                           @(o[0]),ivm01a_key.ITEM_ID$,
+:                                           @(o[1]),ivm01a.PRODUCT_TYPE$,
+:                                           @(o[2]),ivm01a.UNIT_OF_SALE$,
+:                                           @(o[8]),t[0]:m1$,
+:                                           @(o[9]),t[1]:m2$,
+:                                           @(o[11]),c[0]:m2$,
+:                                           @(o[12]),c[2]:m2$,
+:                                           @(o[13]),avail:m2$
+                           print (printer_dev)
+:                                           @(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
                            print (printer_dev)""
                            l=l+3
                            gosub Record_Find1
                     endif
-                   Report_Head:
+                   
                     if l+2>l9 gosub report_heading
                     print (printer_dev)@(o[8]),j$
-                    print (printer_dev)@(o[8]-len(x$)),x$,@(o[8]),t[0]:m1$,@(o[9]),t[1]:m2$,@(o[11]),ivm02a.QTY_ON_HAND:m2$,@(o[12]),ivm02a.QTY_COMMIT:m2$,@(o[13]),avail:m2$
+                    print (printer_dev)
+:                                   @(o[8]-len(x$)),x$,
+:                                   @(o[8]),t[0]:m1$,
+:                                   @(o[9]),t[1]:m2$,
+:                                   @(o[11]),ivm02a.QTY_ON_HAND:m2$,
+:                                   @(o[12]),ivm02a.QTY_COMMIT:m2$,
+:                                   @(o[13]),avail:m2$
               endif
            endif
         gosub Record_Find1
@@ -311,7 +336,6 @@ rem dim d1$(i[3]+i[4]+i[5]),d2$(48),d[8],c[16],t[1]
 test_code: rem --- Test line code to determine whether to print
 
     let ignoreit$="N",nonstock$="N"
-rem dim s0$(32),s1$(12)
     find record (opm02_dev,key=firm_id$+ope11a.LINE_CODE$,dom=*next) opm02a$
     if opm02a.LINE_TYPE$="M" or opm02a.LINE_TYPE$="O" ignoreit$="Y"
     if opm02a. LINE_TYPE$="N" nonstock$="Y"
