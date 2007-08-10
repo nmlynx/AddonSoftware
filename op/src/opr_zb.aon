@@ -1,0 +1,555 @@
+rem --- Monthly Sales Register
+rem --- Program opr_zb v8.0.0 17Jul2007 (opr_zb)
+rem --- Created by adx_codeport.bbx v1.1.5 (07/17/2007 09:52:10)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+
+    seterr std_error
+    setesc std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+
+rem --- Assign form input values to local variables
+
+    table$=fnget_table$("")
+    value_01$=fnget_fld_data$(table$,"dataname_01")
+
+rem --- Retrieve parameter records
+
+    ars01a_key$=firm_id$+"AR00"
+    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    ivs01a_key$=firm_id$+"IV00"
+    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+
+rem --- Open/Lock Files
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+
+rem --- Parameters
+
+    g5=len(g5$)
+    m0=len(m0$)
+    m1=len(m1$)
+
+rem --- Initializations
+
+ rem dim a[13],b[17]
+    t0$=""
+    t1$=""
+    d1=0
+    d2=0
+    d3=0
+    c1=0
+    c2=0
+    c3=0
+    if r1$="" h5$="First" else if r0$="A" h5$=r1$ else h5$=fnmask$(r1$,m0$)
+    if r2$="" h6$="Last" else if r0$="A" h6$=r2$ else leth6$=fnmask$(r2$,m0$)
+    if r3$="" h7$="First" else h7$=fndate$(r3$)
+    if r4$="" h8$="Last" else h8$=fndate$(r4$)
+    if r5$="S" h9$="*** Summary ***",x8$="",x9$="" else h9$="*** Detail ***",x8$="No.",x9$="Line"
+    when$=sysinfo.system_date$
+    clock$=""
+    page=0
+    width=132
+    l9=55
+    l=l9+1
+    headings=5
+    dim headings$[headings],j1$(width),j2$(width,"-"),j3$(width,"=")
+    headings$[0]=n1$
+    headings$[1]=n3$
+    headings$[2]=""
+    dim x$(width); let x$(1)="Beginning Customer: "+h5$,x$(int((width-len(h9$))/2))=h9$,x$(100)="Beginning Invoice Date: "+h7$
+    headings$[3]=x$
+    dim x$(width); let x$(4)="Ending Customer: "+h6$,x$(103)="Ending Invoice Date: "+h8$
+    headings$[4]=x$
+    more=1
+
+rem --- Background
+
+    call pgmdir$+"adc_progress.aon","CN",sysinfo.task_desc$,""," Sorting","",m0+9,opt01_dev,1,0,ignore_status
+
+
+rem --- Create Work File
+
+
+    if r0$="N" read (opt01_dev,key=firm_id$+"  "+r1$,dom=Read_Record)
+    read (arm04_dev,key=firm_id$+"A"+r1$,dom=*next)
+
+
+while more
+
+                    arm04_key$=key(arm04_dev,end=*break)
+                    if arm04_key.FIRM_ID$+arm04_key.RECORD_ID_A$<>firm_id$+"A" break
+                    if r2$<>"" and arm04_key.ALT_SEQUENCE$(4,len(r2$))>r2$ break
+                    read (arm04_dev)
+                    if r0$="A" read (opt01_dev,key=firm_id$+"  "+arm04_key.CUSROMER_ID$,dom=*next)
+    
+Read_Record:
+            while more
+                    if r0$="N" k$=key(opt01_dev,end=End_Of_File) else if r0$="A" k$=key(opt01_dev,end=*continue)
+                    if k$(1,2)<>firm_id$ goto End_Of_File
+                    if r0$="A" if k$(5,6)<>arm04_key.CUSROMER_ID$ continue
+                    if r0$="N" and r2$<>"" and k$(5,6)>r2$ break
+                    read record (opt01_dev,key=k$) opt01a$
+                    call pgmdir$+"adc_progress.aon","S","","","",fnmask$(opt01a.CUSTOMER_ID$,m0$)+" "+fndate$(opt01a.INVOICE_DATE$),0,0,1,meter_num,status
+                    if r3$<>"" and opt01a.INVOICE_DATE$<r3$ continue
+                    if r4$<>"" and opt01a.INVOICE_DATE$>r4$ 
+            wend
+                    d0$=opt01a.DIST_CODE$
+                    gosub Account
+
+rem --- Read Detail
+
+                            read (opt11_dev,key=opt01_key.FIRM_ID$+opt01_key.AR_TYPE$+opt01_key.CUSTOMER_ID$+opt01_key.AR_INV_NO$,dom=*next)
+        while more
+
+                            opt11a_key$=key(opt11_dev,end=Read_Record)
+                            if ope11a_key.FIRM_ID$+ope11a_key.AR_TYPE$+ope11a_key.CUSTOMER_ID$+ope11a_key.ORDER_NO$<>opt01_key.FIRM_ID$+opt01_key.AR_TYPE$+opt01_key.CUSTOMER_ID$+opt01_key.AR_INV_NO$ goto Read_Record
+                            read record (opt11_dev,key=opt11a_key$) opt11a$
+
+rem --- Line Type
+
+ rem                           dim y0$(32),y1$(12)
+                            d1$=""
+                            find record (opm02_dev,key=ope11a_key.FIRM_ID$+opt11a.LINE_CODE$,dom=Find_Revenue) opm02a$
+                            if opm02a.LINE_TYPE$="M" continue
+                            if opm02a.LINE_TYPE$<>"S" then
+
+                                if opm02a.LINE_TYPE$<>"O"  d0$=opm02a.DIST_CODE$; goto Find_Revenue
+                                find (glm01_dev,key=ope11a_key.FIRM_ID$+opm02a.GL_REV_ACCT$,dom=Find_Revenue)
+                                d1$=opm02a.GL_REV_ACCT$; goto Check_Value
+
+                            endif
+                                
+
+                                d0$=opt01a.DIST_CODE$
+                                if p3$(11,1)="Y" then
+                                    find record (ivm02_dev,key=ope11a_key.FIRM_ID$+opt11a.WAREHOUSE_ID$,dom=Find_Revenue) ivm02a$
+                                    d0$=ivm02a.AR_DIST_CODE$
+                                endif
+rem --- Find Revenue Account                            
+
+Find_Revenue: 
+
+                            if d1$="" then
+ rem                            dim d9$(80)
+                                find record (arm10_dev,key=ope11a_key.FIRM_ID$+"D"+d0$,dom=*continue) arm10d$
+                                d1$=arm10d.GL_SLS_ACCT$
+                            endif
+Check_Value:
+                            d0=-b[6]
+                            if r5$="D" z9$=ope11a_key.LINE_NO$ else z9$="   "
+                            gosub Write_To_Work_File
+        wend
+rem --- A/R Account, Cash Account
+Account: 
+
+rem                 dim d9$(80)
+                    find record (arm10_dev,key=firm_id$+"D"+opt01a.DIST_CODE$,dom=Return_Value) arm10d$
+                    if opt01a.CASH_SALE$="Y" d1$=arm10d.GL_CASH_ACCT$ else d1$=arm10d.GL_AR_ACCT$
+                    d0=opt01a.TOTAL_SALES+opt01a.TAX_AMOUNT+opt01a.FREIGHT_AMT-opt01a.DISCOUNT_AMT
+                    z9$="   "
+                    gosub Write_To_Work_File
+
+rem --- Discount Amount
+
+                    if opt01a.DISCOUNT_AMT<>0 then
+                        d1$=arm10d.GL_DISC_ACCT$
+                        d0=opt01a.DISCOUNT_AMT
+                        z9$="   "
+                        gosub Write_To_Work_File
+
+                    else
+
+                        if opt01a.FREIGHT_AMT<>0 then
+                        d1$=arm10d.GL_FRGT_ACCT$
+                        d0=-opt01a.FREIGHT_AMT
+                        z9$="   "
+                        gosub Write_To_Work_File
+                    
+                    
+
+                    else
+       
+
+                        precision 4
+ rem                    dim tax$(60),x0$(60)
+                        find record (opm06_dev,key=firm_id$+opt01a.TAX_CODE$,dom=Return_Value) opm06a$
+                        x=x0*opt01a.TAXABLE_AMT/100
+                        precision 2
+                        x=x*1
+                        if x1<>0 and abs(x)>x1 x=x1*sgn(x)
+                        y=x
+                        d1$=opm06a.GL_ACCOUNT
+                        d0=-x
+                        if d0<>0 gosub Write_To_Work_File
+                        arm01a.CUSTOMER_NAME$=opm06a$
+                        for x9=1 to 10
+                        precision 4
+                        x1$=glm01a.GL_ACCT_DESC$+glm01a.GL_ACCT_TYPE$+glm01a.DETAIL_FLAG$+glm01a.RESERVED_STR$
+                        x1$=opm06a$(26+2*(x9-1),2)
+                        if x1$<>"  " then
+                        find record (opm06_dev,key=firm_id$+x1$,dom=Goto_Next) opm06a2$
+                        x=x0*opt01a.TAXABLE_AMT/100
+                        precision 2
+                        x=x*1
+                        if x1<>0 and abs(x)>x1 x=x1*sgn(x)
+                        y=y+x
+                        d1$=arm01a$(46,g[4])
+                        d0=-x
+                        if d0<>0 gosub Write_To_Work_File
+                      fi
+                    fi
+                     
+Goto_Next:
+                    next x9
+                    precision 2
+                    if opt01a.TAX_AMOUNT<>y then 
+                            x=opt01a.TAX_AMOUNT-y
+                            d1$=arm01a$(46,g[4])
+                            d0=-x
+                            if d0<>0 gosub Write_To_Work_File
+                        rem removed and placed above-- Return_Value l2689:
+                    endif
+Return_Value:
+                return
+
+                End_Of_File: rem --- End Of File?
+
+                    if r0$="A"
+wend
+
+rem --- Initial Read From Work File
+
+
+
+    if r0$="N" then
+        read (opw04_dev,key=firm_id$,dom=Read_Heading)
+
+    endif
+    read (arm04_dev,key=firm_id$+"A"+r1$,dom=*next)
+while more
+                arm04_key$=key(arm04_dev,end=*break)
+                if arm04_key.FIRM_ID$+arm04_key.RECORD_ID_A$<>firm_id$+"A" break
+                if r2$<>"" and arm04_key.ALT_SEQUENCE$(4,len(r2$))>r2$ break
+                read (arm04_dev)
+                read (opw04_dev,key=firm_id$+"  "+arm04_key.CUSROMER_ID$,dom=*next)
+rem --- Heading Read
+Read_Heading: 
+
+            while more
+
+                if r0$="A" w0$=key(opw04_dev,end=*continue) else w0$=key(opw04_dev,end=*break)
+                if w0$(1,2)<>firm_id$ break
+                if r0$="A" if w0$(5,6)<>arm04_key.CUSROMER_ID$ continue
+                read record (opw04_dev,key=w0$) opw04a$
+
+rem --- Breaks
+
+                     if w0$(5,6)<>t0$ gosub Customer_Break
+                     if w0$(11,7)<>t1$ then
+                                if d3-abs(c3)<>0 gosub Previous_Invoice
+
+rem --- Find Invoice Date
+
+rem                            dim a0$(200)
+                                read record (opt01_dev,key=w0$(1,17)+"000",dom=*next) opt01a$
+
+rem --- Print Invoice Number & Date
+
+                                call pgmdir$+"adc_progress.aon","S","","","",fnmask$(w0$(5,p[0]),m0$)+" "+fndate$(opt01a.INVOICE_DATE$),0,0,1,meter_num,status
+                                if r5$="D" then
+                                    if l+1>l9 gosub report_heading
+                                    print (printer_dev)@(39),w0$(11,7),@(48),fndate$(opt01a.INVOICE_DATE$),
+                                else
+                                    t1$=w0$(11,7)
+                                    d3=0
+                                    c3=0
+                                endif
+
+                     else
+
+               rem          dim x1$(35)
+                            glm01a.GL_ACCT_DESC$="*** Not On File ***"
+                            find record (glm01_dev,key=firm_id$+w0$(18,10),dom=Print) glm01a$
+                            x1$=glm01a.GL_ACCT_DESC$
+                    endif
+rem --- Print
+Print: 
+
+                if r5$="D" then 
+                 if l+1>l9 gosub report_heading
+                  print (printer_dev)@(58),w0$(28,3),@(63),fnmask$(w0$(18,g[3]),g5$),@(64+g5),x1$,
+                  if w0>0 print (printer_dev)@(131-2*m1+2),w0:m1$ else print (printer_dev)@(132-m1),abs(w0):m1$
+                  l=l+1
+                else
+                      if w0>0 d1=d1+w0,d2=d2+w0,d3=d3+w0 else c1=c1+w0,c2=c2+w0,c3=c3+w0
+                endif
+          wend
+            
+
+
+
+
+                if r0$<>"A" break
+wend
+
+    t9$="E"
+    gosub Customer_Break
+    if r5$="D" then
+        if l+2>l9 gosub report_heading
+        print (printer_dev)@(132-2*m1),j3$(1,2*m1)
+        print (printer_dev)@(10),"Grand Total:",
+        if d2-abs(c2)<>0 print (printer_dev)@(131-3*m1),"***",
+        print (printer_dev)@(131-2*m1+2),d2:m1$,@(132-m1),abs(c2):m1$,
+    endif
+
+
+
+
+    retain$="YES"
+    run pgmdir$+"glr_xb.bbx"
+
+rem --- Report Heading
+report_heading: 
+
+    if r5$="D" then
+        l=0
+        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+        if status exitto std_exit
+        print (printer_dev)@(0),"Customer",@(39),"Invoice",@(49),"Invoice",@(58),x9$,@(65),"G/L"
+        print (printer_dev)@(0),"Number",@(7),"Name",@(39),"Number",@(51),"Date",@(58),x8$,@(65),"No.",@(64+g5),"Description",@(width-m1-5),"Debit",@(width-7),"Credit",'LF'
+        l=4
+    endif
+    return
+    l=l+1
+
+rem --- Customer Break
+Customer_Break: 
+
+    if t0$<>"" then
+        if d3-abs(c3)<>0 gosub Previous_Invoice
+        if l+3>l9 gosub report_heading
+        if r5$="D" then
+            print (printer_dev)@(132-2*m1),j2$(1,2*m1)
+            print (printer_dev)@(10),"Customer ",fnmask$(t0$,m0$)," Total: ",@(131-2*m1+2),d1:m1$,@(132-m1),abs(c1):m1$,'LF'
+            l=l+3
+        endif
+   endif
+
+    if t9$="E" return
+
+    arm01a.CUSTOMER_NAME$="*** Not On File ***"
+    find record (arm01_dev,key=w0$(1,2)+w0$(5,6),dom=printer_dev1) arm01a$
+    x0$=fnmask$(w0$(5,p[0]),m0$)+" "+arm01a.CUSTOMER_NAME$
+    if r5$="D" then
+
+printer_dev1:
+            if l+1>l9 gosub report_heading
+            print (printer_dev)@(0),arm01a$,
+   endif
+
+
+    t0$=w0$(5,6)
+    d1=0
+    c1=0
+    d3=0
+    c3=0
+return
+
+rem --- Previous Invoice Out Of Balance
+
+Previous_Invoice:
+
+    gosub Invoice_History
+    if d3-abs(c3)=0 return
+    if r5$<>"D" return
+    print (printer_dev)@(131-2*m1),"**",d3:m1$,@(132-m1),abs(c3):m1$,'LF'
+    l=l+2
+    return
+
+rem --- Invoice History Detail Retained?
+Invoice_History: 
+
+    read (opt11_dev,key=w0$(1,17),dom=*next)
+    opt11k$=""
+    opt11k$=key(opt11_dev,end=History_retained)
+History_retained:
+    if pos(w0$(1,17)=opt11k$)=1 
+   return
+    oob=-(d3-abs(c3))
+
+rem --- Summarize Non-Retained Postings
+
+    d1$=fill(g[4],"?")
+    d0=oob
+    gosub Update_G_L
+    if r5$<>"D" return
+    if l+1>l9 gosub report_heading
+    print (printer_dev)@(58),"???",@(63),fnmask$(d1$(1,g[3]),g5$),@(64+g5),"***Detail Not Retained***",
+    if oob>0 print (printer_dev)@(131-2*m1+2),oob:m1$ else print (printer_dev)@(132-m1),abs(oob):m1$
+    if oob>0 d1=d1+oob,d2=d2+oob,d3=d3+oob else c1=c1+oob,c2=c2+oob,c3=c3+oob
+    return
+
+Write_To_Work_File: rem --- Write To Work File
+
+
+    z0=0
+    glw04a.Firm_Id$=opt01_key.FIRM_ID$+opt01_key.AR_TYPE$+opt01_key.CUSTOMER_ID$+opt01_key.AR_INV_NO$+d1$+z9$
+    find record (opw04_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$,dom=*next) opw04a2$
+    z0=z0+d0
+    write record (opw04_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$) opw04a2$
+rem --- Update G/L Summary
+Update_G_L:
+    if d0=0 return
+    z0$=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$
+    let z0$=opt01_key.FIRM_ID$+d1$,z0=0,z1=0
+    read record (glw04_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$,dom=*next) glw04a$
+    let z0=z0+d0
+    write record (glw04_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$) glw04a$
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
+
