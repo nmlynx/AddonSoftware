@@ -166,7 +166,6 @@ wend
     o[3]=o[2]+4
     o[4]=o[3]+4
     endif
-Loop:
     for i=0 to 14
         h[i]=o[i]
     next i
@@ -206,7 +205,7 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope01a_key.CUST
                         continue
                  endif      
             endif
-       Check:
+       
             if s4$<>"N" if ope01a.ORDINV_FLAG$="P" then continue
                if pos("O"=s4$)<0 and ope01a.BACKORD_FLAG$="B" and ope01a.CREDIT_FLAG$="C" and ope01a.INVOICE_TYPE$="P" then
                  if pos("B"=s4$)=0 and ope01a.BACKORD_FLAG$<>"B" then
@@ -219,7 +218,7 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope01a_key.CUST
                endif
            endif
 
-       Heading: rem --- Heading
+      
 
             gosub get_cust
             if ope01a.INVOICE_TYPE$="V" then
@@ -229,7 +228,7 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope01a_key.CUST
                 continue
             endif
 
-        Print: rem --- Print
+        
 
             prth$="N"
             if s4$<>"N" gosub ord_header
@@ -256,7 +255,7 @@ rem                     dim d[9],d1$(i[3]+i[4]+i[5])
                                 endif
 
 
-     Cvs_Check:
+     
 
                                 if cvs(desc$,2)="" desc$=fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
                         endif
@@ -289,7 +288,7 @@ rem                     dim d[9],d1$(i[3]+i[4]+i[5])
      
      wend
 
-Invoice_Totals: rem --- Invoice Totals
+
 
                     if s0<>0 and s4$<>"N" then
                                 if s0>2 then
@@ -298,19 +297,19 @@ Invoice_Totals: rem --- Invoice Totals
                                         print (printer_dev)@(o[10]-15),"Total For Order",@(o[10]),s[0]:m1$,@(o[12]),s[1]:m1$,@(o[13]),s[0]-s[1]:m1$,@(o[14]),fnd(s[0]-s[1],s[0]):m9$
                                         l=l+2
                                 endif
-Increment:
+
 
                                 t2=t2+1
                                 u2=u2+1
                     endif
-Read_Main2:
+
 
                     dim s[2]
                     s0=0
                     continue
  wend
 
-       end_of_report: rem --- Order Totals
+       
 
         if h=0 gosub report_heading
         if l+2>l9 gosub report_heading
@@ -354,7 +353,7 @@ rem                 dim x0$(32)
                 print (printer_dev)@(30),fill(m2+m1*3+m9,"-")
                 print (printer_dev)@(4),"Totals For Report",@(30),t[3]:m2$,t[0]:m1$,t[1]:m1$,t[0]-t[1]:m1$,fnd(t[0]-t[1],t[0]):m9$
      endif
-Line_Totals: rem --- Line Totals
+
 
     dim t[1]
     l=l+12
@@ -374,7 +373,7 @@ Line_Totals: rem --- Line Totals
             gosub report_heading
     endif
 
-Line_Type_Totals:
+
     print (printer_dev)""
     print (printer_dev)"Line Type Totals"
     print (printer_dev)""
@@ -392,7 +391,7 @@ Line_Type_Totals:
                 t[0]=t[0]+r[3,0]
         endif
 
-Print_Totals:
+
     print (printer_dev)@(o[0]),fill(m2*3+m1*2,"-")
     print (printer_dev)"Totals For Report",@(o[3]),t[0]:m1$,@(o[4]),t[1]:m1$
     goto std_exit
@@ -455,14 +454,14 @@ print_detail: rem --- Print Detail
                 if pos(opm02a.LINE_TYPE$="SP") print (printer_dev)@(o[4]),ope11a.ITEM_ID$,
                 print (printer_dev)@(o[5]),ope11a.QTY_ORDERED:m2$,@(o[6]),ope11a.QTY_BACKORD:m2$,@(o[7]),ope11a.QTY_SHIPPED:m2$,
             endif
-        print_detail1:
+        
             print (printer_dev)@(o[8]),ope11a.DISC_PERCENT:m9$,@(o[9]),ope11a.UNIT_PRICE:m4$,@(o[10]),price:m1$,@(o[11]),ope11a.UNIT_COST:m3$,@(o[12]),cost:m1$,@(o[13]),price-cost:m1$,@(o[14]),fnd(price-cost,price):m9$,
             if opm02a.LINE_TYPE$<>"O" then
                     print (printer_dev)""
                     let l=l+1
             endif
     endif
-print_detail2:
+
     print (printer_dev)@(o[4]+3),desc$, 
     if ope11a.EST_SHP_DATE$<>"   " and ope11a.EST_SHP_DATE$<>ope01a.SHIPMNT_DATE$ and opm02a.LINE_TYPE$<>"M" print (printer_dev)@(o[4]+i[3]+i[4]+i[5]+3),"Sched Ship Date: ",fndate$(ope11a.EST_SHP_DATE$),
     if opm02a.LINE_TYPE$="N" print (printer_dev)@(o[4]+i[3]+i[4]+i[5]+3+26),pol$,
