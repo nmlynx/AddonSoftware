@@ -110,9 +110,9 @@ rem --- Initialize Data
     h8$=h8$(1,1)
     l9=50
     l=l9+1
-    dim j$(80,"-"),j0$(40,"0"),j1$(40," "),h9$(40,$0A$)
+ rem   dim j$(80,"-"),j0$(40,"0"),j1$(40," "),h9$(40,$0A$)
     m1$="####,###.00CR"
-    dim a[1]
+ rem  dim a[1]
     m1$="-####,###.00"
     m2$="-###,###"
     m0=len(m0$)
@@ -205,7 +205,7 @@ do_nonkey1:
             goto flow_control
     endif
 
-end_input:
+
     exit_ctl=1
     gosub Clear_Data
     goto std_exit
