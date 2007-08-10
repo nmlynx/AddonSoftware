@@ -37,19 +37,14 @@ rem --- Get info from selection form
 
 rem --- Open/Lock Files
 
-    files=2,begfile=1,endfile=files
+    files=1,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="saw-12",options$[1]="C"
-    files$[2]="sam-12"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     saw00_dev=channels[1]
-    sam00_dev=channels[2]
     
-    sam_dev=fnget_dev("SAM_CUSTTERR")
-    sam_tpl$=fnget_tpl$("SAM_CUSTTERR")
-
 rem --- Run Sales Analysis by Territory/Customer/Product/Item    
 
     action=12
