@@ -56,7 +56,6 @@ rem --- Open/Lock files
     files$[1]="ads-01"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-escape; rem jpb    
     if status goto std_exit
     ads01_dev=channels[1]
 
