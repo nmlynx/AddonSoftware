@@ -1,0 +1,603 @@
+rem --- Purge Purchase Order Receipt History
+rem --- Program pou_fa v8.0.0 09Jul2007 (pou_fa)
+rem --- Created by adx_codeport.bbx v1.1.5 (07/09/2007 10:13:12)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=10,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ads-01"
+    files$[2]="apm-01"
+    files$[3]="ivm-01"
+    files$[4]="ivm-10"
+    files$[5]="ivm-14"
+    files$[6]="pot-04"
+    files$[7]="pot-14"
+    files$[8]="pot-24"
+    files$[9]="pot-34"
+    files$[10]="pot-44"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ads01_dev=channels[1]
+    apm01_dev=channels[2]
+    ivm01_dev=channels[3]
+    ivm10_dev=channels[4]
+    ivm14_dev=channels[5]
+    pot04_dev=channels[6]
+    pot14_dev=channels[7]
+    pot24_dev=channels[8]
+    pot34_dev=channels[9]
+    pot44_dev=channels[10]
+
+rem --- Dimension string templates
+
+    dim apm01a$:templates$[2],ivm01a$:templates$[3],ivm10a$:templates$[4],
+:       ivm14a$:templates$[5],pot04a$:templates$[6],pot14a$:templates$[7],
+:       pot24a$:templates$[8],pot34a$:templates$[9],pot44a$:templates$[10]
+
+rem --- Retrieve miscellaneous templates
+
+    files=4,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="aps-01A"
+    ids$[2]="ivs-01A"
+    ids$[3]="pos-01A"
+    ids$[4]="sys-01A"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+
+rem --- Dimension miscellaneous string templates
+
+    dim aps01a$:templates$[1],ivs01a$:templates$[2],pos01a$:templates$[3],
+:       sys01a$:templates$[4]
+
+rem --- Assign form input values to local variables
+
+    table$=fnget_table$("")
+    purgedate$=fnget_fld_data$(table$,"purge_through_recpt_date")
+    vendfrom$=fnget_fld_data$(table$,"beg_vendor")
+    vendthru$=fnget_fld_data$(table$,"end_vendor")
+    itemfrom$=fnget_fld_data$(table$,"beg_item")
+    itemthru$=fnget_fld_data$(table$,"end_item")
+    whsefrom$=fnget_fld_data$(table$,"beg_warehouse")
+    whsethru$=fnget_fld_data$(table$,"end_warehouse")
+
+rem --- Retrieve parameter records
+
+    aps01a_key$=firm_id$+"AP00"
+    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    ivs01a_key$=firm_id$+"IV00"
+    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    pos01a_key$=firm_id$+"PO00"
+    find record (ads01_dev,key=pos01a_key$,err=std_missing_params) pos01a$
+
+rem --- Parameters
+
+    dim desclen[3],params[3]
+    vendlen=num(aps01a.vendor_size$)
+    ivprecision=num(ivs01a.precision$)
+    itemlen=num(ivs01a.item_no_len$)
+    for x=1 to 3
+        desclen[x]=num(i2$((x-1)*2+9,2))
+        params[x]=desclen[x]
+    next x
+    params[0]=itemlen
+
+rem --- Initializations
+
+    dim a0$(22),a1$(160),a[8]
+    dim b3$(22),b[12]
+    dim vendfname$(30),vendtname$(30)
+    dim itemfdesc$(30),itemtdesc$(30),whsefname$(30),whsetname$(30)
+    more=1
+    
+rem --- Set-up default purge through date:
+rem --- "    End up with end of prior period, 1 year ago
+
+    call pgmdir$+"adc_peryear.aon",firm_id$,sys01_dev,f0$(18,6),f_period$,f_year$; rem "Fiscal Period for today
+    call pgmdir$+"adc_perioddates.aon",sys01_dev,num(f_period$),fnyy_year(f_year$),per_beg$,per_end$,status; rem "Figure beginning of fiscal period
+    if status per_beg$=f0$(18,6); rem "If can't figure it out, usetoday's date
+    call pgmdir$+"adc_daydates.aon",per_beg$,purgedate$,-366; rem "One year and one day ago
+    purgedate$=fndate$(fndate$(purgedate$))
+
+rem --- Display Resource
+
+    dim resparams$[20],resparams[20]
+    resaction$=""
+    resparams$[0]=pgm(-2)
+    call pgmdir$+"syc_ra.bbx",resaction$,resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
+    if status goto std_exit
+    goto flow_control
+
+brnch1: rem --- Purge Through Date
+
+    while more
+
+        v0$="D"
+        v1$="6N"
+        v2$=purgedate$
+        v3$=""
+        v4$="Enter Invoice Date To Purge Through"
+        v0=6
+        v1=40
+        v2=3
+        i0=0
+        control_id=3000
+        on v3 goto brnch2,brnch2,flow_control,brnch2,std_exit,brnch2,std_exit
+brnch2:
+        if v$<>"" break
+
+    wend
+
+    purgedate$=v$
+    goto flow_control
+
+brnch3: rem --- Beginning Vendor
+
+    v0$="M"
+    v1$="KCE"
+    v2$=vendfrom$
+    v3$=vendimask$
+    v4$="Enter A Valid Vendor Number (<F1>=First/<F3>=Lookup)"
+    v0=6
+    v1=40
+    v2=4
+    control_id=3001
+    on v3 goto brnch6,brnch4,brnch7,brnch5,flow_control,brnch6,flow_control
+
+brnch4:
+
+    if v3=1 v$=""
+    if v$="" 
+        let vendfrom$=""
+        call pgmdir$+"syc_rs.bbx","",my_context,13001,"First",0,"",status
+        goto flow_control
+    endif
+
+brnch5:
+
+    call pgmdir$+"syc_lv.bbx",v$
+    if v$="" goto brnch3
+
+brnch6:
+
+    if v$="" goto brnch4
+    dim x1$(195)
+    find record (apm01_dev,key=firm_id$+v$,dom=brnch3) apm01a$
+    vendfrom$=v$
+    vendfname$(1)=apm01a.vendor_name$
+    call pgmdir$+"syc_rs.bbx","",my_context,3001,fnmask$(vendfrom$,vendomask$),0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13001,vendfname$(1,min(79-v1-vendlen-1,30)),0,"",status
+
+brnch7:
+
+    goto flow_control
+
+brnch8: rem --- Ending Vendor
+
+    v0$="M"
+    v1$="KCE"
+    v2$=vendthru$
+    v3$=vendimask$
+    v4$="Enter A Valid Vendor Number (<F1>=Last/<F3>=Lookup)"
+    v0=6
+    v1=40
+    v2=5
+    control_id=3002
+    on v3 goto brnch11,brnch9,brnch12,brnch10,flow_control,brnch11,flow_control
+
+brnch9:
+    if v3=1 v$=""
+    if v$="" 
+        let vendthru$=""
+        call pgmdir$+"syc_rs.bbx","",my_context,13002,"Last",0,"",status
+        goto flow_control
+    endif
+
+brnch10:
+    call pgmdir$+"syc_lv.bbx",v$
+    if v$="" goto brnch8
+
+brnch11:
+    if v$="" goto brnch9
+    if vendfrom$<>"" if v$<vendfrom$ goto brnch8
+    dim x1$(195)
+    find record (apm01_dev,key=firm_id$+v$,dom=brnch8) apm01a$
+    vendthru$=v$
+    vendtname$(1)=apm01a.vendor_name$
+    call pgmdir$+"syc_rs.bbx","",my_context,3002,fnmask$(vendthru$,vendomask$),0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13002,vendtname$(1,min(79-v1-vendlen-1,30)),0,"",status
+brnch12:
+    goto flow_control
+
+brnch13: rem --- Starting Item
+
+brnch14:
+    dim item$[6],item[12]
+    action$="F"
+    default$=itemfrom$
+    v1=40
+    v2=6
+    control_id=3003
+    v4$="Enter A Valid Item Number"
+    call pgmdir$+"ivc_ia.bbx",action$,v1,v2,iv_chans[all],firm_id$,default$,v4$,params[all],item$[all],item[all],v3,i0,i0_done,validate,my_context,event$
+    on v3 goto brnch15,brnch15,next_itemfrom,brnch13,flow_control,brnch15,flow_control
+
+brnch15:
+    if v3=1 item$[0]=""
+    if item$[0]="" 
+        let item$[0]="",itemfrom$=""
+        call pgmdir$+"syc_rs.bbx","",my_context,13003,"First",0,"",status
+    else
+        itemfrom$=item$[0]
+        itemfdesc$(1)=item$[1]+fill(28)
+        call pgmdir$+"syc_rs.bbx","",my_context,3003,itemfrom$(1,itemlen),0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13003,itemfdesc$(1,28),0,"",status
+    endif
+
+next_itemfrom:
+    goto flow_control
+
+brnch16: rem --- Ending Item
+
+itemthru:
+    dim item$[6],item[12]
+    action$="L"
+    default$=itemthru$
+    v1=40
+    v2=7
+    v$=""
+    control_id=3004
+    v4$="Enter A Valid Item Number"
+    call pgmdir$+"ivc_ia.bbx",action$,v1,v2,iv_chans[all],firm_id$,default$,v4$,params[all],item$[all],item[all],v3,i0,i0_done,validate,my_context,event$
+    on v3 goto brnch17,brnch17,next_itemthru,brnch16,flow_control,brnch17,flow_control
+
+brnch17:
+    if v3=1 item$[0]=""
+    if item$[0]="" 
+        let item$[0]="",itemthru$=""
+        call pgmdir$+"syc_rs.bbx","",my_context,13004,"Last",0,"",status
+        goto next_itemthru
+    endif
+    if item$[0]<itemfrom$ goto brnch16
+    itemthru$=item$[0]
+    itemtdesc$(1)=item$[1]+fill(28)
+    call pgmdir$+"syc_rs.bbx","",my_context,3004,itemthru$(1,itemlen),0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13004,itemtdesc$(1,28),0,"",status
+
+next_itemthru:
+    goto flow_control
+
+brnch18: rem --- Warehouse From
+
+    v0$="S"
+    v1$=""
+    v2$=whsefrom$
+    v3$=""
+    v4$="Enter A Valid Warehouse ID (<F1>=First/<F3>=Lookup)"
+    v0=2
+    v1=40
+    v2=8
+    control_id=3005
+    on v3 goto brnch21,brnch19,brnch22,brnch20,flow_control,brnch21,flow_control
+
+brnch19:
+    if v3=1 v$=""
+    if v$="" 
+        let whsefrom$=""
+        call pgmdir$+"syc_rs.bbx","",my_context,13005,"First",0,"",status
+        goto flow_control
+    endif
+
+brnch20:
+    call pgmdir$+"ivc_lk.bbx",3,v1,v2,v$
+    if v$="" goto brnch17
+
+brnch21:
+    if v$="" goto brnch19
+    dim x1$(160)
+    ivm10c_key$=firm_id$+"C"+v$
+    find record (ivm10_dev,key=ivm10c_key.firm_id$+"C"+ivm10c_key.warehouse_id$,dom=brnch17) ivm10c$
+    whsefrom$=ivm10c_key.warehouse_id$
+    whsefname$=ivm10c_key.short_name$
+    call pgmdir$+"syc_rs.bbx","",my_context,3005,whsefrom$,0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13005,whsefname$(1,24),0,"",status
+
+brnch22:
+    goto flow_control
+
+brnch23: rem --- Warehouse Thru
+
+    v0$="S"
+    v1$=""
+    v2$=whsethru$
+    v3$=""
+    v4$="Enter A Valid Warehouse ID (<F1>=Last/<F3>=Lookup)"
+    v0=2
+    v1=40
+    v2=9
+    control_id=3006
+    on v3 goto brnch26,brnch24,brnch27,brnch25,flow_control,brnch26,flow_control
+
+brnch24:
+    if v3=1 v$=""
+    if v$="" 
+        let whsethru$=""
+        call pgmdir$+"syc_rs.bbx","",my_context,13006,"Last",0,"",status
+        goto flow_control
+    endif
+
+brnch25:
+    call pgmdir$+"ivc_lk.bbx",3,v1,v2,v$
+    if v$="" goto brnch23
+
+brnch26:
+    if v$="" goto brnch24
+    if whsefrom$<>"" and v$<cvs(whsefrom$,2) goto brnch23
+    dim x1$(160)
+    ivm10c_key$=firm_id$+"C"+v$
+    find record (ivm10_dev,key=ivm10c_key.firm_id$+"C"+ivm10c_key.warehouse_id$,dom=brnch23) ivm10c$
+    whsethru$=ivm10c_key.warehouse_id$
+    whsetname$(1)=ivm10c_key.short_name$
+    call pgmdir$+"syc_rs.bbx","",my_context,3006,whsethru$,0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13006,whsetname$(1,24),0,"",status
+
+brnch27:
+    goto flow_control
+
+flow_control:
+
+    switch v3
+    case 0
+    case 1
+    case 3; let i0=i0+1; break
+    case 2; if i0<i0_nonkey1 i0=max(0,i0-1) else i0=max(i0_nonkey1,i0-1) fi; break
+    case 4; let i0=i0_done; break
+    case default; exitto done_v3
+    swend
+    on i0 goto brnch1,brnch3,brnch8,brnch13,brnch16,brnch17,brnch23,done_1,done_1
+
+done_1: rem --- Correct?
+
+    if validate 
+        validate=0
+    else
+        gosub display_fields
+        v0$="S"
+        v1$="KC"
+        v2$="Y"
+        v3$=""
+        v4$="ITAC=Y"
+        v0=6
+        v1=fnv(v4$)
+        v2=22
+        control_id=i0-i0_done+1
+
+done_v3:
+        on v3 goto done_test,done_1,done_1,done_1,std_exit,validate_input,std_exit,done_1
+
+done_test:
+    
+        action=pos(v$="YN")
+        val_input=1
+        do_nonkey=2
+
+        switch action
+
+            case val_input
+
+validate_input:
+                validate=1
+                old_control_id=0
+
+                v3=0
+                i0=i0_nonkey1-1
+                break
+
+            case do_nonkey
+                v3=0
+                i0=i0_nonkey1-1
+                break
+
+            case default
+                break
+        swend
+        goto flow_control
+
+    endif
+
+rem --- Run report overlay
+
+    call pgmdir$+"adc_yesno.aon",0,"Are You Ready To Begin Purging",0,v$,v3
+    if v$<>"YES" goto std_exit
+    exit_ctrl=1
+    call pgmdir$+"adc_progress.aon","NC","","","Purging","",25,pot04_dev,1,meter_num,status
+    read (pot04_dev,key=firm_id$+vendfrom$,dom=*next)
+
+rem --- Loop through pot-04 headers
+
+    while more
+
+        pot04a_key$=key(pot04_dev,end=*break)
+        if pot04a_key.firm_id$<>firm_id$ break
+        read record (pot04_dev) pot04a$
+        vendor$=pot04a.vendor_id$
+        ponum$=pot04a.po_no$
+        receiver$=pot04a.po_no$
+        rcptdate$=pot04a.recpt_date$
+
+rem --- Valid Vendor/Receipt Date?
+
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        if vendthru$<>"" if vendor$>vendthru$ break
+        if rcptdate$>purgedate$ continue
+
+rem --- Remove all passing detail
+
+        read (pot14_dev,key=pot04a_key$,dom=*next)
+
+
+        while more
+
+            let pot14a_key$=key(pot14_dev,end=*break)
+            if pot14a_key.firm_id$+pot14a_key.vendor_id$+pot14a_key.po_no$+pot14a_key.receiver_no$<>pot04a_key$ break
+            read record (pot14_dev) pot14a$
+            let whse$=pot14a_key.warehouse_id$,item$=pot14a_key.item_id$,linenum$=pot14a_key.po_line_no$
+
+rem --- Valid Whse/Item?
+
+            if whsefrom$<>"" if whse$<whsefrom$ or
+:            whsethru$<>"" if whse$>whsethru$ or
+:            itemfrom$<>"" if item$<itemfrom$ or
+:            itemthru$<>"" if item$>itemthru$
+
+rem --- Valid, so purge
+
+            remove (pot44_dev,key=firm_id$+vendor$+rcptdate$+ponum$+receiver$+linenum$,dom=*next)
+            remove (pot34_dev,key=firm_id$+item$+whse$+rcptdate$+vendor$+ponum$+receiver$+linenum$,dom=*next)
+            remove (pot24_dev,key=firm_id$+item$+whse$+vendor$+rcptdate$+ponum$+receiver$+linenum$,dom=*next)
+            remove (pot14_dev,key=firm_id$+vendor$+ponum$+receiver$+linenum$,dom=*next)
+
+rem --- Loop up for next detail
+
+        wend
+
+rem --- Done detail for header; Remove orphaned headers
+
+        read (pot14_dev,key=k$,dom=*next)
+        let pot14a_key$=key(pot14_dev,end=*continue)
+        if pot14a_key.firm_id$+pot14a_key.vendor_id$+pot14a_key.po_no$+pot14a_key.receiver_no$=pot04a_key$ continue; rem "Leave hdr if there's detail
+        remove (pot04_dev,key=pot04a_key$,dom=*next)
+
+rem --- Loop up for next header
+
+    wend
+
+rem --- All done
+
+    goto std_exit
+
+display_fields:
+    let control_id=3000,cid_cnt=0
+
+    while more
+
+        if cid_cnt=0 disp_inp$=fndate$(purgedate$),disp_desc$=""
+        if cid_cnt=1 if vendfrom$="" disp_inp$=vendfrom$,disp_desc$="First" else disp_inp$=fnmask$(vendfrom$,vendomask$),disp_desc$=vendfname$(1,min(79-v1-vendlen-1,30))
+        if cid_cnt=2 if vendthru$="" disp_inp$=vendthru$,disp_desc$="Last" else disp_inp$=fnmask$(vendthru$,vendomask$),disp_desc$=vendtname$(1,min(79-v1-vendlen-1,30))
+        if cid_cnt=3 if itemfrom$="" disp_inp$=itemfrom$,disp_desc$="First" else disp_inp$=itemfrom$(1,itemlen),disp_desc$=itemfdesc$(1,28)
+        if cid_cnt=4 if itemthru$="" disp_inp$=itemthru$,disp_desc$="Last" else disp_inp$=itemthru$(1,itemlen),disp_desc$=itemtdesc$(1,28)
+        if cid_cnt=5 if whsefrom$="" disp_inp$=whsefrom$,disp_desc$="First" else disp_inp$=whsefrom$,disp_desc$=whsefname$
+        if cid_cnt=6 if whsethru$="" disp_inp$=whsethru$,disp_desc$="Last" else disp_inp$=whsethru$,disp_desc$=whsetname$
+        call pgmdir$+"syc_rs.bbx","",my_context,control_id,disp_inp$,0,"",status
+        call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,disp_desc$,0,"",status
+        let cid_cnt=cid_cnt+1; let control_id=control_id+1
+        if cid_cnt>i0_done-1 break
+        
+    wend
+
+    let disp_inp$="",disp_desc$=""
+    return
+    call pgmdir$+"syc_rs.bbx","",my_context,control_id,"",0,"",status
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
