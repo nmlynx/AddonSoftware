@@ -25,7 +25,7 @@ rem jpb		gosub disp_message
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)    
 
 rem --- Retrieve sysinfo data
 
@@ -123,7 +123,7 @@ rem jpb call pgmdir$+"adc_peryear.aon",firm_id$,sys01_dev,sysinfo.system_date$,p
     level$=levels$[segments]
 
 rem --- Build begsegs and endsegs
-    switch mod(action,20)
+    switch action
         case 1; begsegs$[1]=from_cust$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_cust$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
         case 2; begsegs$[1]=from_terr$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_terr$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
         case 3; begsegs$[1]=from_slsmn$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_slsmn$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
@@ -132,15 +132,20 @@ rem --- Build begsegs and endsegs
         case 6; begsegs$[1]=from_sic$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_sic$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
         case 7; begsegs$[1]=from_prod$,begsegs$[2]=from_item$,endsegs$[1]=thru_prod$,endsegs$[2]=thru_item$;break
         case 8; begsegs$[1]=from_wh$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_wh$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 1; begsegs$[1]=from_vend$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_vend$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
+        case 9; begsegs$[1]=from_vend$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_vend$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
         case 10; begsegs$[1]=from_dist$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_dist$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
         case 11; begsegs$[1]=from_prod$,begsegs$[2]=from_item$,endsegs$[1]=thru_prod$,endsegs$[2]=thru_item$;break
         case 12; begsegs$[1]=from_terr$,begsegs$[2]=from_cust$,begsegs$[3]=from_prod$,begsegs$[4]=from_item$,endsegs$[2]=thru_terr$,endsegs$[2]=thru_cust$,endsegs$[3]=thru_prod$,endsegs$[4]=thru_item$;break
+        case 21; begsegs$[1]=from_prod$,begsegs$[2]=from_item$,begsegs$[3]=from_cust$,endsegs$[1]=thru_prod$,endsegs$[2]=thru_item$,endsegs$[3]=thru_cust$;break
         case default; break
     swend
 rem --- Run Report Overlay
 
-    if action=12 gosub build_sam12
+    if action=12 
+        gosub build_sam12
+        sam00_dev=sam12_dev
+        sam_dev=sam12_dev
+    endif
     if report$="Y" run pgmdir$+"sar_ad.aon"
     run pgmdir$+"sar_ac.aon"
 
@@ -178,6 +183,15 @@ l6190:
 
 build_sam12: rem --- Build sam-12 Sales By Customer In Territory
 
+rem --- get correct template for sam-12
+
+    files=1,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="sam-12A"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
+    dim sam00a$:templates$[1]
+
     sayear$=year$,priyear$=str(num(sayear$)-1:"0000"),sum_fldlen=0,t0$=""
     for x=1 to segments
         if literals$[x]<>"" sum_fldlen=sum_fldlen+fldlen[x]
@@ -190,7 +204,7 @@ l6450:
     let sam01_k$=key(sam01_dev,end=l6575)
 l6455:
     if pos(firm_id$+sayear$=sam01_k$)<>1 goto l6575
-    read record (sam01_dev,key=sam01_k$) sam00a$
+    read record (sam01_dev,key=sam01_k$) sam01a$
     let x=2; rem "Begin loop
 l6470:
     if begsegs$[x]="" goto l6495
@@ -214,7 +228,25 @@ rem jpb    call pgmdir$+"adc_progress.aon","S","","","",sam01_k$(3,4))+sam01_k$(
     if endsegs$[1]<>"" and arm02a.territory$>endsegs$[1] goto l6570
 l6560:
     let x0$=sam01_k$(kpos[0],fldlen[0])+arm02a.territory$+sam01_k$(kpos[1])
-    write record (sam12_dev,key=x0$,dom=*next) sam00a$
+
+rem --- Copy fields from sam-01 to sam-12 - set sam12a.territory$ to arm02a.territory$
+    
+    flds01$=fattr(sam01a$,"")
+    flds12$=fattr(sam12a$,"")
+copyflds:
+    if len(flds01$)=0 or pos($0a$<>flds01$)=0 goto writerec
+    if pos(flds01$(1,pos($0a$=flds01$)-1)=flds12$)>0 then
+        field sam12a$,flds01$(1,pos($0a$=flds01$)-1) = field(sam01a$,flds01$(1,pos($0a$=flds01$)-1),err=*next);goto endcopy
+        field sam12a$,flds01$(1,pos($0a$=flds01$)-1) = nfield(sam01a$,flds01$(1,pos($0a$=flds01$)-1),err=*next);goto endcopy
+    endif        
+endcopy:
+    flds01$=flds01$(pos($0a$=flds01$)+1)
+    goto copyflds
+
+rem --- write record
+writerec:
+    sam12a.territory$=arm02a.territory$
+    write record (sam12_dev,key=x0$,dom=*next) sam12a$
 l6570:
     goto l6450
 l6575:

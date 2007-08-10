@@ -10,17 +10,6 @@ rem -------------- Errors, Warnings and Conversion Information -----------------
 
 rem --- The following error(s) were encountered during the conversion:
 
-rem --- v7.x sys-01 reference [sys01_dev,fi] (Line 0086)
-rem --- v7.x Administrator reference ["sys-01A"] (Line 0127)
-rem --- v7.x sys-01 reference [sys01a$:temp] (Line 0134)
-rem --- v7.x sys-01 reference [sys01a_key$=] (Line 0153)
-rem --- v7.x sys-01 reference [sys01a_key$,] (Line 0154)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0166)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0167)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0168)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0169)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0170)
-
 rem --- The following IOLIST's were removed from this program:
 
 rem --- aps01a: iolist app0$,app1$,app2$,app3$,app4$,apm0$,apm1$,apm2$,apm3$
@@ -50,7 +39,7 @@ rem --- 9 = sam-09  Vendor        Product    Item
 rem --- 10 = sam-10  Dist Code     Product    Item
 rem --- 11 = sam-11  Product       Non-Stock
 rem --- 12 = sam-12  Territory     Customer   Product
-rem --- >20 = use cross reference file
+rem --- >20 = use alternate key
 rem --- ADS01_DEV     : ads-01 channel (Input)
 rem --- N0$           : Firm ID (Input)
 rem --- SEGMENTS      : Number of key segments to use (Returned)
@@ -85,9 +74,9 @@ rem --- STATUS        : Status Code (0 = No Errors) (Returned)
     seterr std_error
     enter action,ads01_dev,firm_id$,segments,levels$[all],literals$[all],types$[all],imasks$[all],omasks$[all],prompts$[all],inlen[all],fldlen[all],descchan[all],descrec$[all],descstr[all],descpos[all],desclen[all],sa_channels[all],keylen,xrefs[all],fy$,periods,periods$[all],iv_masks$[all],iv_desc[all],ivm14_dev,status
 
-rem --- Retrieve the program path
+rem --- Retrieve the program paths
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)    
 
 rem --- Retrieve sysinfo data
 
@@ -209,54 +198,100 @@ rem --- Which Sales Analysis?
 l1100: rem --- (Action = 1 & 21) Customer/Product/Item
 
     if mod(action,20)=1 if sas01a.by_customer$<>"Y" exitto l4500            
-    levels$[1]="C"
-    levels$[2]="P"
-    levels$[3]="I"
-    segments=pos(sas01a.customer_lev$=levels$[1]+levels$[2]+levels$[3])
-    literals$[1]="Customer"
-    literals$[2]="Product Type"
-    literals$[3]="Item"
-    types$[1]="M"
-    types$[2]="S"
-    types$[3]="S"
-    imasks$[1]=ars01a.amount_mask$
-    imasks$[2]=""
-    imasks$[3]=""
-    omasks$[1]=ars01a.customer_output$
-    omasks$[2]=""
-    omasks$[3]=""
-    for x=1 to segments
-        prompts$[x]="Enter Valid "+literals$[x]
-    next x
-    inlen[1]=NUM(ars01a.customer_size$)
-    inlen[2]=3
-    inlen[3]=iv_desc[0]
-    fldlen[1]=6
-    fldlen[2]=3
-    fldlen[3]=20
-    files$[1]="arm-01"
-    files$[2]="ivm-10"
-    files$[3]="ivm-01"; rem "Files for DESCCHAN[1, 2 & 3]
-    descrec$[1]=""
-    descrec$[2]="A"
-    descrec$[3]=""
-    descstr[1]=1
-    descstr[2]=0
-    descstr[3]=1
-    descpos[1]=1
-    descpos[2]=7
-    descpos[3]=1
-    desclen[1]=30
-    desclen[2]=20
-    desclen[3]=60
-    files$[5]="sam-01"
-    files$[6]="sam-21"; rem "Files for SA_CHANNELS[1& 2]
-    keylen=35
-    xrefs[1]=3
-    xrefs[2]=1
-    xrefs[3]=2; rem "Cross references to sam-21
-    goto done
-
+    if action=1 then
+        levels$[1]="C"
+        levels$[2]="P"
+        levels$[3]="I"
+        segments=pos(sas01a.customer_lev$=levels$[1]+levels$[2]+levels$[3])
+        literals$[1]="Customer"
+        literals$[2]="Product Type"
+        literals$[3]="Item"
+        types$[1]="M"
+        types$[2]="S"
+        types$[3]="S"
+        imasks$[1]=ars01a.amount_mask$
+        imasks$[2]=""
+        imasks$[3]=""
+        omasks$[1]=ars01a.customer_output$
+        omasks$[2]=""
+        omasks$[3]=""
+        for x=1 to segments
+            prompts$[x]="Enter Valid "+literals$[x]
+        next x
+        inlen[1]=NUM(ars01a.customer_size$)
+        inlen[2]=3
+        inlen[3]=iv_desc[0]
+        fldlen[1]=6
+        fldlen[2]=3
+        fldlen[3]=20
+        files$[1]="arm-01"
+        files$[2]="ivm-10"
+        files$[3]="ivm-01"; rem "Files for DESCCHAN[1, 2 & 3]
+        descrec$[1]=""
+        descrec$[2]="A"
+        descrec$[3]=""
+        descstr[1]=1
+        descstr[2]=0
+        descstr[3]=1
+        descpos[1]=1
+        descpos[2]=7
+        descpos[3]=1
+        desclen[1]=30
+        desclen[2]=20
+        desclen[3]=60
+        keylen=35
+        xrefs[1]=3
+        xrefs[2]=1
+        xrefs[3]=2; rem "Cross references to sam-21
+        goto done
+    else
+        levels$[1]="C"
+        levels$[2]="P"
+        levels$[3]="I"
+        segments=pos(sas01a.customer_lev$=levels$[1]+levels$[2]+levels$[3])
+        literals$[3]="Customer"
+        literals$[1]="Product Type"
+        literals$[2]="Item"
+        types$[3]="M"
+        types$[1]="S"
+        types$[2]="S"
+        imasks$[3]=ars01a.amount_mask$
+        imasks$[1]=""
+        imasks$[2]=""
+        omasks$[3]=ars01a.customer_output$
+        omasks$[1]=""
+        omasks$[2]=""
+        for x=1 to segments
+            prompts$[x]="Enter Valid "+literals$[x]
+        next x
+        inlen[3]=NUM(ars01a.customer_size$)
+        inlen[1]=3
+        inlen[2]=iv_desc[0]
+        fldlen[3]=6
+        fldlen[1]=3
+        fldlen[2]=20
+        files$[3]="arm-01"
+        files$[1]="ivm-10"
+        files$[2]="ivm-01"; rem "Files for DESCCHAN[1, 2 & 3]
+        descrec$[3]=""
+        descrec$[1]="A"
+        descrec$[2]=""
+        descstr[3]=1
+        descstr[1]=0
+        descstr[2]=1
+        descpos[3]=1
+        descpos[1]=7
+        descpos[2]=1
+        desclen[3]=30
+        desclen[1]=20
+        desclen[2]=60
+        keylen=35
+        xrefs[3]=3
+        xrefs[1]=1
+        xrefs[2]=2
+        goto done
+    endif
+    
 l1200: rem --- (Action = 2) Territory/Product/Item
 
     if mod(action,20)=2 if sas01a.by_territory$<>"Y" exitto l4500        
@@ -300,8 +335,6 @@ l1200: rem --- (Action = 2) Territory/Product/Item
     desclen[1]=20
     desclen[2]=20
     desclen[3]=60
-    files$[5]="sam-02"
-    files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     keylen=32
     goto done
 
@@ -348,8 +381,6 @@ l1300: rem --- (Action = 3) Salesperson/Product/Item
     desclen[1]=20
     desclen[2]=20
     desclen[3]=60
-    files$[5]="sam-03"
-    files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     keylen=32
     goto done
 
@@ -396,8 +427,6 @@ l1400: rem --- (Action = 4) Customer Type/Product/Item
     desclen[1]=20
     desclen[2]=20
     desclen[3]=60
-    files$[5]="sam-04"
-    files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     keylen=32
     goto done
 
@@ -444,8 +473,6 @@ l1500: rem --- (Action = 5) Customer/Ship-to/Item
     desclen[1]=30
     desclen[2]=30
     desclen[3]=60
-    files$[5]="sam-05"
-    files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     keylen=38
     goto done
 
@@ -492,8 +519,6 @@ l1600: rem --- (Action = 6) SIC/Product/Item
     desclen[1]=20
     desclen[2]=20
     desclen[3]=60
-    files$[5]="sam-06"
-    files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     keylen=37
     goto done
 
@@ -530,8 +555,6 @@ l1700: rem --- (Action = 7) Product/Item
     let descpos[2]=1
     let desclen[1]=20
     let desclen[2]=60
-    let files$[5]="sam-07"
-    let files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     let keylen=29
     goto done
 
@@ -578,8 +601,6 @@ l1800: rem --- (Action = 8) Warehouse/Product/Item
     let desclen[1]=24
     let desclen[2]=20
     let desclen[3]=60
-    let files$[5]="sam-08"
-    let files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     let keylen=31
     goto done
 
@@ -626,8 +647,6 @@ l1900: rem --- (Action = 9) Vendor/Product/Item
     let desclen[1]=30
     let desclen[2]=20
     let desclen[3]=60
-    let files$[5]="sam-09"
-    let files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     let keylen=35
     goto done
 
@@ -674,8 +693,6 @@ l2000: rem --- (Action = 10) Dist Code/Product/Item
     let desclen[1]=20
     let desclen[2]=20
     let desclen[3]=60
-    let files$[5]="sam-10"
-    let files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     let keylen=31
     goto done
 
@@ -711,8 +728,6 @@ l2100: rem --- (Action = 11) Product/Non-stock
     let descpos[2]=0
     let desclen[1]=20
     let desclen[2]=0
-    let files$[5]="sam-11"
-    let files$[6]=""; rem "Files for SA_CHANNELS[1 & 2]
     let keylen=49
     goto done
 
@@ -771,8 +786,6 @@ l2200: rem --- (Action = 12) Territory/Customer/Product/Item
     let desclen[2]=30
     let desclen[3]=20
     let desclen[4]=60
-    let files$[5]="sam-12"
-    let files$[6]="sam-01"; rem "Files for SA_CHANNELS[1& 2]
     let keylen=38
     let xrefs[1]=4
     let xrefs[2]=1
@@ -787,8 +800,6 @@ done: rem --- Open Sales Analysis File(s)
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto l4600
     let descchan[1]=channels[1],descchan[2]=channels[2],descchan[3]=channels[3],descchan[4]=channels[4]
-rem jpb    let sa_channels[1]=channels[5],sa_channels[2]=channels[6]
-rem jpb    let ivm14_dev=channels[7]
 
 rem --- All Done
 
