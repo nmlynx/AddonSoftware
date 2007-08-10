@@ -131,8 +131,8 @@ rem --- Parameters
 
 rem --- Initialize Data
 
-    dim j0$(20,"0"),j$(80,"-"),j1$(40," ")
-    dim a[13]
+rem dim j0$(20,"0"),j$(80,"-"),j1$(40," ")
+rem dim a[13]
     k0=1
     k9=20
     more=1
@@ -234,7 +234,7 @@ Begin_Custom:
             if len(v$)=0 goto Beginning_Customer
     endif
 Find_Record2:
-    dim x0$(30)
+rem    dim x0$(30)
     find record (arm01_dev,key=firm_id$+v$,dom=*next) arm01a$
     call pgmdir$+"syc_rs.bbx","",my_context,3003,fnmask$(v$(1,p[0]),m0$),0,"",status
     call pgmdir$+"syc_rs.bbx","",my_context,13003,x0$,0,"",status
@@ -272,7 +272,7 @@ Find_Record3:
             call pgmdir$+"syc_lc.bbx",v$
             if len(v$)=0 goto Ending_Customer
    endif
-Find_Record4:
+
     if v$<p6$ goto Ending_Customer
     dim x0$(30)
     find record (arm01_dev,key=firm_id$+v$,dom=*next) arm01a$
@@ -354,7 +354,7 @@ do_nonkey1:
                goto flow_control
     endif
 
-Process_History_Data: rem --- Process History Data
+
 
     for x=12 to 14 step 2
         call pgmdir$+"syc_wc.bbx",1,0,80,0,0,x,0
@@ -379,7 +379,7 @@ rem                         call pgmdir$+"adc_progress.aon","S","","","",fnmask$
                                 continue
                             endif
 
-process_by_date: rem --- Process Invoice History By Invoice Date
+
 
                             if opt01a_key.INVOICE_DATE$>p8$ continue
                             gosub delete_history
@@ -395,7 +395,7 @@ delete_history: rem --- Process History Detail Lines
              wend
 rem --- Remove Manual Ship-To
 
-delete_shipto: 
+
 
                             remove (opt31_dev,key=opt01a_key.FIRM_ID$+opt01a_key.CUSTOMER_ID$+opt01a_key.AR_INV_NO$,dom=*next)
 
@@ -408,7 +408,7 @@ rem --- Remove Serial/Lotted History Detail
                             remove (opt21_dev,key=opt21a_key$)
               wend
 
-Remove_History_Reference: rem --- Remove History Cross Reference Records
+
 
                             find (art01_dev,key=opt01a_key.FIRM_ID$+opt01a_key.AR_TYPE$+opt01a_key.CUSTOMER_ID$+opt01a_key.AR_INV_NO$+"00",dom=Remove_Next1)
                             goto Remove_History_Header
@@ -452,7 +452,7 @@ process_by_count: rem --- Purge Based On Number Of Invoices
            wend
       endif
    endif
-Return_Value:
+
     if t9$="E" return
     let t0$=opt01a_key.FIRM_ID$+opt01a_key.AR_TYPE$+opt01a_key.CUSTOMER_ID$
     let t0=0,t1=0,t2=0
