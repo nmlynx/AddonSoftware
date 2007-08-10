@@ -94,7 +94,7 @@ rem --- Parameters
 
 rem --- Initializations
 
-    dim headings$[3],a[2],t[2],g[2],o[1]
+rem dim headings$[3],a[2],t[2],g[2],o[1]
     p8$=""
     p9$=""
     h0=132
@@ -212,7 +212,7 @@ rem --- Loop back for next record
 
         wend
 
-Done_All: rem --- All done
+
 
                     if l>l9 gosub report_heading
                     t9$="E"
@@ -256,7 +256,7 @@ Tax_Code: rem --- Tax Code Breaks
                         l=l+3
                     endif
                    endif
-Check_Tax:
+
                     if t9$="" then
                             dim x0$(4),x1$(60),t[2]
                             t0$=art02a_key.TAX_CODE$
@@ -266,8 +266,8 @@ Check_Tax:
                             find record (opm06_dev,key=firm_id$+t0$,dom=*next) opm06a$
                             h3$=t0$+" "+opm06a.CODE_DESC$+str(x0:m3$)
                    endif
-Return1:
-                    return
+
+                   return
 flow_control:
                     switch v3
                     case 0
@@ -330,7 +330,7 @@ do_nonkey1:
                             goto flow_control
                     endif
 
-end_input: rem --- Run report overlay
+
 
     wend
 
