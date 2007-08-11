@@ -1,0 +1,289 @@
+rem --- Zero Balance Inventory Report (Report Overlay)
+rem --- Program ivr_zb v8.0.0 16Jul2007 (ivr_zb)
+rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 12:56:46)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    seterr std_error
+    setesc std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Init Data
+    m1$=ivs01a.amount_mask$
+    m2$=ivs01a.unit_mask$
+    m2=len(m2$)
+    p9=p[3]+p[4]+p[5]
+    if p9>132-10-m2-(4+p[0])-22 p9=132-10-m2-(4+p[0])-22
+    headings=4
+    h=0
+    width=132
+    when$=sysinfo.system_date$
+    clock$=""
+    rem l9=59
+    rem l=l9+1
+    rem dim a0$(24),a1$(30),desc$(p9),headings$[headings]
+    dim desc$(p9),headings$[headings]
+    h4$="All Zero Balance Items"
+    if p9$<>"" h4$=h4$+" Since "+fndate$(p9$)
+    headings$[0]=n1$
+    headings$[1]=n3$
+    headings$[3]=h4$
+    more=1
+rem --- Background
+
+    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",30,ivm03_dev,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+
+rem --- Init Read
+    while more
+        if p8$="I" read (ivt05_dev,key=firm_id$,dom=*break)
+        read (ivm03_dev,key=firm_id$+sort$,dom=*next)
+        more=0
+    wend
+rem --- Main Read
+    while more  
+        if p8$="I" then
+            ivm03a_key$=key(ivm03_dev,end=*break)
+            if pos(" "<>ivm03a_key.product_type$)=0 read (ivm03_dev); continue
+            if pos(firm_id$+sort$=ivm03a_key$)<>1 break
+            read (ivm03_dev)
+rem --- Breaks
+            read record (ivt05_dev,key=firm_id$+ivm03a_key.product_type$+ivm03a_key.item_id$,dom=*continue) ivt05a$
+            if ivm03a_key.product_type$<>t0$ gosub WhseBreak
+            if sub<>0 if ivm03a_key.item_id$<>t1$ gosub SubTotal
+
+        else
+Flow_Main_Read:
+            ivt05a_key$=key(ivt05_dev,end=*break)
+            if pos(" "<>ivt05a_key$.warehouse_id$)=0 read (ivt05_dev); goto Flow_Main_Read
+            if pos(firm_id$=ivm03a_key$)<>1 break
+rem --- Process Info
+            read record (ivt05_dev) ivt05a$
+            call pgmdir$+"adc_progress.aon","S","","","",ivto5a.warehouse_id$+" "+ivm03a_key.item_id$+" "+ivto5a.item_id$,0,0,1,0,ignore_status
+            if p9$<>"" if ivto5a.writtn_date$<p9$ continue
+        endif
+
+rem --- Additional Reads
+
+        rem dim b1$(30),b[20]
+        find record (ivm02_dev,key=ivt05a_key$.firm_id$+ivt05a_key$.warehouse_id$+ivt05a_key$.item_id$,dom=Remove_Record) ivm02a$
+        if ivm02a.qty_on_hand<=0 then
+            find record (ivm01_dev,key=firm_id$+ivto5a.item_id$,dom=Remove_Record) ivm01a$
+            desc$=fnzipcode$(ivm01a.item_desc$,p[3],p[4],p[5])
+            goto Vendor_Info
+        endif
+Remove_Record: rem --- Remove ivt-05 record
+
+        remove (ivt05_dev,key=aivt05a_key$.firm_id$+ivt05a_key$.warehouse_id$+ivt05a_key$.item_id$,dom=Vendor_Info)
+        continue
+
+Vendor_Info: rem --- Get vendor info
+
+        if ap$="Y" then
+            x=30
+Vendor_Info_Record:
+            if x+p9>132-10-m2-(4+p[0])-22-(9+len(apmsk$)) if x>20 x=x-5; goto Vendor_Info_Record else p9=p9-1; goto Vendor_Info_Record
+            dim vndnam$(x)
+            find record (apm01_dev,key=firm_id$+ivm02a.vendor_id$,dom=*next) apm01a$
+        endif
+Flow_Vendor:
+        if l+1>l9 gosub SubHeading
+        print (printer_dev)ivto5a.warehouse_id$," ",ivto5a.item_id$," ",desc$(1,p9),@(p[0]+p9+6),ivm01a.product_type$,"  ",ivm02a.cycle_code$,"   ",ivm02a.inv_location$,
+        if ap$="Y" print (printer_dev)@(p[0]+p9+27),buyer_code,"  ",fnmask$(ivm02a.vendor_id$,apmsk$)," ",vndnam$,
+        print (printer_dev)@(132-m2-10),fndate$(ivto5a.writtn_date$),@(132-m2),ivm02a.qty_on_hand:m2$
+        l=l+1
+        count=count+1
+    wend
+done: rem --- End
+
+    if h=0 gosub report_heading
+    print (printer_dev)""
+    print (printer_dev)str(count)," Item(s)"
+    goto std_exit
+
+report_heading: rem --- Report Heading
+
+    l=headings+1
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,width,when$,clock$,status
+    if status<>0 exitto std_exit
+    print (printer_dev)@(4),"Item",@(p[0]+p9+6),"Prod Cycle",
+    if ap$="Y" print (printer_dev)@(p[0]+p9+27),"Buyer",
+    print (printer_dev)@(132-8-m2),"Date",@(132-4),"On"
+    print (printer_dev)@(0),"Whs",@(4),"Code",@(p[0]+4),"Description",@(p[0]+p9+6),"Code Code  Location",
+    if ap$="Y" print (printer_dev)@(p[0]+p9+27),"Code Vendor",
+    print (printer_dev)@(132-9-m2),"Flagged",@(132-5),"Hand",'LF'
+    l=l+3
+    return
+
+SubHeading: rem --- Sub Heading
+
+    if l+2>l9 gosub report_heading
+    if sub<>0 then
+        print (printer_dev)'LF',@(0),head$
+        l=l+2
+    endif
+    return
+
+WhseBreak: rem --- Warehouse Break
+
+    if t9$<>"" return
+    rem dim h3$(30)
+    t0$=ivt05a_key.warehouse_id$
+    l=l9+1
+    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    ivm10c_h3$="Warehouse Code: "+t0$+" "+ivm10c.whse_name$
+    ivm10c_h3$=cvs(h3$,2)
+    headings$[2]=ivm10c_h3$
+    return
+
+SubTotal: rem --- Sort Sub Total
+
+    if t9$<>"" return
+    dim head$(30)
+    t1$=ivm03a_key.item_id$
+    find record (ivm10_dev,key=firm_id$+sub$+t1$,dom=*next) ivm10a$
+    head$=subhead$+" "+t1$+" "+ivm03a_key.item_id$
+    head$=cvs(head$,2)
+    gosub SubHeading
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
