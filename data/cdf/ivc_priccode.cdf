@@ -1,5 +1,5 @@
 [[IVC_PRICCODE.BWRI]]
-rem escape
+escape; rem "before write
 rem "need to flesh out this routine...
 rem "should make sure no intervening 0's
 rem "should also make sure each qty > previous one
@@ -98,7 +98,7 @@ rem --- Retrieve miscellaneous templates
 	dim ids$[files],templates$[files]
 	ids$[1]="ivs-01A"
 
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
