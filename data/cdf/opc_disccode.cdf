@@ -16,7 +16,7 @@ rem --- Open/Lock files
 		options$[wkx]="OTA"
 	next wkx
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit

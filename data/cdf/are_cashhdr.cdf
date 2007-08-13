@@ -13,14 +13,14 @@ if data_present$="Y"
 	endif
 
 	switch ctl_id
-		case num(aon_tpl.OA_chkbox_id$)
-			if aon_tpl.existing_chk$="Y"
+		case num(user_tpl.OA_chkbox_id$)
+			if user_tpl.existing_chk$="Y"
 rem				msg_id$="AR_CHK_EXISTS"
 rem				gosub disp_message
-rem				if Form!.getControl(num(aon_tpl.oa_chkbox_id$)).isSelected()
-rem					Form!.getControl(num(aon_tpl.oa_chkbox_id$)).setSelected(0)
+rem				if Form!.getControl(num(user_tpl.oa_chkbox_id$)).isSelected()
+rem					Form!.getControl(num(user_tpl.oa_chkbox_id$)).setSelected(0)
 rem				else
-rem					Form!.getControl(num(aon_tpl.oa_chkbox_id$)).setSelected(1)
+rem					Form!.getControl(num(user_tpl.oa_chkbox_id$)).setSelected(1)
 rem				endif
 				gosub process_OA_chkbox
 				callpoint!.setStatus("REFRESH")
@@ -29,11 +29,11 @@ rem				endif
 				callpoint!.setStatus("REFRESH")
 			endif
 		break
-		case num(aon_tpl.zbal_chkbox_id$)
-			if aon_tpl.existing_chk$="Y"
+		case num(user_tpl.zbal_chkbox_id$)
+			if user_tpl.existing_chk$="Y"
 rem				msg_id$="AR_CHK_EXISTS"
 rem				gosub disp_message
-rem				Form!.getControl(num(aon_tpl.zbal_chkbox_id$)).setSelected(0)
+rem				Form!.getControl(num(user_tpl.zbal_chkbox_id$)).setSelected(0)
 				gosub process_zbal_chkbox
 				callpoint!.setStatus("REFRESH")
 			else
@@ -41,16 +41,16 @@ rem				Form!.getControl(num(aon_tpl.zbal_chkbox_id$)).setSelected(0)
 				callpoint!.setStatus("REFRESH")
 			endif
 		break
-		case num(aon_tpl.asel_chkbox_id$)
+		case num(user_tpl.asel_chkbox_id$)
 			if num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))<0
 				msg_id$="AR_NEG_CHK"
 				gosub disp_message
-				Form!.getControl(num(aon_tpl.asel_chkbox_id$)).setSelected(0)
+				Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
 			else
-				if aon_tpl.existing_chk$="Y"
+				if user_tpl.existing_chk$="Y"
 					msg_id$="AR_CHK_EXISTS"
 					gosub disp_message
-					Form!.getControl(num(aon_tpl.asel_chkbox_id$)).setSelected(0)
+					Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
 				else
 					on_off=dec(gui_event.flags$)
 					gosub process_asel_chkbox
@@ -59,7 +59,7 @@ rem				Form!.getControl(num(aon_tpl.zbal_chkbox_id$)).setSelected(0)
 			endif
 		break
 
-		case num(aon_tpl.gridInvoice_id$)
+		case num(user_tpl.gridInvoice_id$)
 			gosub process_gridInvoice_event
 			callpoint!.setStatus("REFRESH")
 		break
@@ -72,9 +72,9 @@ gosub delete_cashdet_cashbal
 gosub get_customer_balance
 wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
 gosub get_cash_rec_cd
-Form!.getControl(num(aon_tpl.asel_chkbox_id$)).setSelected(0);rem --- force auto-select off for existing tran
+Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0);rem --- force auto-select off for existing tran
 
-rem -- Form!.getControl(num(aon_tpl.zbal_chkbox_id$)).setSelected(0);rem --- force zero-bal disp off for existing tran
+rem -- Form!.getControl(num(user_tpl.zbal_chkbox_id$)).setSelected(0);rem --- force zero-bal disp off for existing tran
 
 are_cashdet_dev=fnget_dev("ARE_CASHDET")
 are_cashgl_dev=fnget_dev("ARE_CASHGL")
@@ -83,8 +83,8 @@ dim are21a$:fnget_tpl$("ARE_CASHGL")
 
 existing_dtl$=""
 pymt_dist$=""
-aon_tpl.gl_applied$="0"
-aon_tpl.existing_chk$="Y"
+user_tpl.gl_applied$="0"
+user_tpl.existing_chk$="Y"
 
 rem --- read thru/store existing are-11 info
 more_dtl=1
@@ -117,16 +117,16 @@ while more_dtl
 wend
 
 if gl_applied
-	Form!.getControl(num(aon_tpl.GLind_id$)).setText("* includes GL distributions")
-	Form!.getControl(num(aon_tpl.GLstar_id$)).setText("*")
+	Form!.getControl(num(user_tpl.GLind_id$)).setText("* includes GL distributions")
+	Form!.getControl(num(user_tpl.GLstar_id$)).setText("*")
 else
-	Form!.getControl(num(aon_tpl.GLind_id$)).setText("")
-	Form!.getControl(num(aon_tpl.GLstar_id$)).setText("")
+	Form!.getControl(num(user_tpl.GLind_id$)).setText("")
+	Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 endif
 
-aon_tpl.gl_applied$=str(-gl_applied)
-AONObj!.setItem(num(aon_tpl.pymt_dist$),pymt_dist$)
-AONObj!.setItem(num(aon_tpl.existing_dtl$),existing_dtl$)
+user_tpl.gl_applied$=str(-gl_applied)
+AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+AONObj!.setItem(num(user_tpl.existing_dtl$),existing_dtl$)
 
 currdtl$=pymt_dist$
 gosub get_open_invoices
@@ -147,7 +147,7 @@ callpoint!.setStatus("REFRESH")
 gosub apply_on_acct
 [[ARE_CASHHDR.AOPT-GLED]]
 rem --- change below to "Y" instead of "N" for production
-if aon_tpl.glint$="Y"
+if user_tpl.glint$="Y"
 	gosub gl_distribution
 else
 	msg_id$="AR_NO_GL"
@@ -156,7 +156,7 @@ endif
 [[ARE_CASHHDR.AREC]]
 rem --- clear custom controls (grids) and AONObj! items
 
-gridInvoice!=AONObj!.getItem(num(aon_tpl.inv_grid$))                             
+gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))                             
 gridInvoice!.clearMainGrid()				
 gridInvoice!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)				
 gridInvoice!.setSelectedCell(0,0)
@@ -164,21 +164,21 @@ gridInvoice!.setSelectedCell(0,0)
 vectInvoice!=SysGUI!.makeVector()
 vectInvSel!=SysGUI!.makeVector()
 
-AONObj!.setItem(num(aon_tpl.inv_vect$),vectInvoice!)				
-AONObj!.setItem(num(aon_tpl.inv_sel_vect$),vectInvSel!)
-AONObj!.setItem(num(aon_tpl.pymt_dist$),"")
-AONObj!.setItem(num(aon_tpl.existing_dtl$),"")
+AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)				
+AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
+AONObj!.setItem(num(user_tpl.pymt_dist$),"")
+AONObj!.setItem(num(user_tpl.existing_dtl$),"")
 
-aon_tpl.existing_chk$=""
-aon_tpl.gl_applied$="0"
+user_tpl.existing_chk$=""
+user_tpl.gl_applied$="0"
 
-Form!.getControl(num(aon_tpl.GLind_id$)).setText("")
-Form!.getControl(num(aon_tpl.GLstar_id$)).setText("")
+Form!.getControl(num(user_tpl.GLind_id$)).setText("")
+Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 
 callpoint!.setStatus("REFRESH")
 [[ARE_CASHHDR.ASIZ]]
 if AONObj!<>null()
-	gridInvoice!=AONObj!.getItem(num(aon_tpl.inv_grid$))
+	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.setSize(Form!.getWidth()-(gridInvoice!.getX()*2),Form!.getHeight()-(gridInvoice!.getY()+40))
 	gridInvoice!.setFitToGrid(1)
 	gridInvoice!.setColumnWidth(0,25)
@@ -203,7 +203,7 @@ for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
 
-call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 if status$<>"" goto std_exit
@@ -215,23 +215,23 @@ files=2,begfile=1,endfile=files
 dim ids$[files],templates$[files]
 ids$[1]="ars-01A"
 ids$[2]="gls-01A"
-call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
 dim ars01a$:templates$[1],gls01a$:templates$[2]
-aon_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
-aon_tpl_str$=aon_tpl_str$+"cash_flag:c(1),disc_flag:c(1),arglboth:c(1),amt_msk:c(15),existing_chk:c(1),"
-aon_tpl_str$=aon_tpl_str$+"OA_chkbox_id:c(5),zbal_chkbox_id:c(5),asel_chkbox_id:c(5),"
-aon_tpl_str$=aon_tpl_str$+"gridCheck_id:c(5),gridInvoice_id:c(5),gridCheck_cols:c(5),gridInvoice_cols:c(5),"
-aon_tpl_str$=aon_tpl_str$+"gridCheck_rows:c(5),gridInvoice_rows:c(5),"
-aon_tpl_str$=aon_tpl_str$+"chk_grid:c(5),inv_grid:c(5),chk_vect:c(5),inv_vect:c(5),chk_sel_vect:c(5),"
-aon_tpl_str$=aon_tpl_str$+"inv_sel_vect:c(5),cur_bal_ofst:c(5),avail_disc_ofst:c(5),"
-aon_tpl_str$=aon_tpl_str$+"applied_amt_ofst:c(5),disc_taken_ofst:c(5),new_bal_ofst:c(5),pymt_dist:c(5),"
-aon_tpl_str$=aon_tpl_str$+"existing_dtl:c(5),sv_row:c(5),GLind_id:c(5),GLstar_id:c(5),gl_applied:c(10)"
-dim aon_tpl$:aon_tpl_str$
-aon_tpl.firm_id$=firm_id$
+user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
+user_tpl_str$=user_tpl_str$+"cash_flag:c(1),disc_flag:c(1),arglboth:c(1),amt_msk:c(15),existing_chk:c(1),"
+user_tpl_str$=user_tpl_str$+"OA_chkbox_id:c(5),zbal_chkbox_id:c(5),asel_chkbox_id:c(5),"
+user_tpl_str$=user_tpl_str$+"gridCheck_id:c(5),gridInvoice_id:c(5),gridCheck_cols:c(5),gridInvoice_cols:c(5),"
+user_tpl_str$=user_tpl_str$+"gridCheck_rows:c(5),gridInvoice_rows:c(5),"
+user_tpl_str$=user_tpl_str$+"chk_grid:c(5),inv_grid:c(5),chk_vect:c(5),inv_vect:c(5),chk_sel_vect:c(5),"
+user_tpl_str$=user_tpl_str$+"inv_sel_vect:c(5),cur_bal_ofst:c(5),avail_disc_ofst:c(5),"
+user_tpl_str$=user_tpl_str$+"applied_amt_ofst:c(5),disc_taken_ofst:c(5),new_bal_ofst:c(5),pymt_dist:c(5),"
+user_tpl_str$=user_tpl_str$+"existing_dtl:c(5),sv_row:c(5),GLind_id:c(5),GLstar_id:c(5),gl_applied:c(10)"
+dim user_tpl$:user_tpl_str$
+user_tpl.firm_id$=firm_id$
 
 rem --- Additional File Opens
 
@@ -241,8 +241,8 @@ source$=pgm(-2)
 call dir_pgm$+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
 if status<>0 goto std_exit
 gl$="Y";rem --- forcing to Y for now...testing
-aon_tpl.glint$=gl$
-aon_tpl.glworkfile$=glw11$
+user_tpl.glint$=gl$
+user_tpl.glworkfile$=glw11$
 
 if gl$="Y"
 	files=21,begfile=20,endfile=21
@@ -252,7 +252,7 @@ if gl$="Y"
 	rem --- will need alias name, not disk name, when opening work file
 	rem --- will also need option to lock/clear file [21]; not using in this pgm for now, so bypassing.CAH
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :	                  chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
@@ -263,7 +263,7 @@ rem --- Retrieve parameter data - not keeping any of it here, just make sure par
 
 ars01a_key$=firm_id$+"AR00"
 find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-aon_tpl.amt_msk$=ars01a.amount_mask$
+user_tpl.amt_msk$=ars01a.amount_mask$
 
 gls01a_key$=firm_id$+"GL00"
 find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
@@ -282,26 +282,26 @@ Form!.addStaticText(nxt_ctlID+4,450,140,200,20,"")
 Form!.addStaticText(nxt_ctlID+5,530,118,20,20,"")
 
 rem --- store ctl ID's of custom controls				
-aon_tpl.OA_chkbox_id$=str(nxt_ctlID)
-aon_tpl.zbal_chkbox_id$=str(nxt_ctlID+1)
-aon_tpl.asel_chkbox_id$=str(nxt_ctlID+2)				
-aon_tpl.gridInvoice_id$=str(nxt_ctlID+3)
-aon_tpl.GLind_id$=str(nxt_ctlID+4)
-aon_tpl.GLstar_id$=str(nxt_ctlID+5)
+user_tpl.OA_chkbox_id$=str(nxt_ctlID)
+user_tpl.zbal_chkbox_id$=str(nxt_ctlID+1)
+user_tpl.asel_chkbox_id$=str(nxt_ctlID+2)				
+user_tpl.gridInvoice_id$=str(nxt_ctlID+3)
+user_tpl.GLind_id$=str(nxt_ctlID+4)
+user_tpl.GLstar_id$=str(nxt_ctlID+5)
 
 rem --- set user-friendly names for controls' positions in AONObj vector, num grid cols, data pos w/in vector, etc.				
-aon_tpl.gridInvoice_cols$="12"				
-aon_tpl.gridInvoice_rows$="10"				
-aon_tpl.inv_grid$="0"				
-aon_tpl.inv_vect$="1"				
-aon_tpl.inv_sel_vect$="2"
-aon_tpl.cur_bal_ofst$="5"
-aon_tpl.avail_disc_ofst$="6"
-aon_tpl.applied_amt_ofst$="8"
-aon_tpl.disc_taken_ofst$="9"
-aon_tpl.new_bal_ofst$="10"
-aon_tpl.pymt_dist$="3"
-aon_tpl.existing_dtl$="4"
+user_tpl.gridInvoice_cols$="12"				
+user_tpl.gridInvoice_rows$="10"				
+user_tpl.inv_grid$="0"				
+user_tpl.inv_vect$="1"				
+user_tpl.inv_sel_vect$="2"
+user_tpl.cur_bal_ofst$="5"
+user_tpl.avail_disc_ofst$="6"
+user_tpl.applied_amt_ofst$="8"
+user_tpl.disc_taken_ofst$="9"
+user_tpl.new_bal_ofst$="10"
+user_tpl.pymt_dist$="3"
+user_tpl.existing_dtl$="4"
 
 gosub format_grids
 
@@ -368,13 +368,13 @@ if callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT")=callpoint!.getUserInp
 else
 	if num(callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT"))<>0 and 
 :									callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT")<>callpoint!.getUserInput()
-		pymt_dist$=AONObj!.getItem(num(aon_tpl.pymt_dist$))
+		pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
 		old_pay=num(callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT"))
 		new_pay=num(callpoint!.getUserInput())
 		pay_id$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",
 :			str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))-old_pay+new_pay))
-		if Form!.getControl(num(aon_tpl.asel_chkbox_id$)).isSelected()
+		if Form!.getControl(num(user_tpl.asel_chkbox_id$)).isSelected()
 			to_pay=new_pay-old_pay
 			gosub auto_select_on
 		endif								
@@ -391,7 +391,7 @@ else
 			if num(callpoint!.getUserInput())>0
 				gosub refresh_asel_amounts
 			else
-				Form!.getControl(num(aon_tpl.asel_chkbox_id$)).setSelected(0)
+				Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
 				on_off=0
 				gosub process_asel_chkbox
 			endif
@@ -409,7 +409,7 @@ rem --- store chk amt so if/as we come thru this routine again we know if we've 
 callpoint!.setColumnUndoData("ARE_CASHHDR.PAYMENT_AMT",callpoint!.getUserInput())
 [[ARE_CASHHDR.RECEIPT_DATE.AVAL]]
 if len(callpoint!.getUserInput())<6 or pos("9"<>callpoint!.getUserInput())=0 then callpoint!.setColumnData("ARE_CASHHDR.RECEIPT_DATE",stbl("+SYSTEM_DATE"))
-gl$=aon_tpl.glint$
+gl$=user_tpl.glint$
 rem --- gl$="N";rem --- testing
 recpt_date$=callpoint!.getUserInput()        
 if gl$="Y" 
@@ -417,8 +417,8 @@ if gl$="Y"
 	if status>99
 		callpoint!.setStatus("ABORT")
 	else
-		aon_tpl.glyr$=yr$
-		aon_tpl.glper$=per$
+		user_tpl.glyr$=yr$
+		user_tpl.glper$=per$
 	endif
 endif
 [[ARE_CASHHDR.<CUSTOM>]]
@@ -445,9 +445,9 @@ get_cash_rec_cd:
 	dim arm10c$:fnget_tpl$("ARC_CASHCODE")
 	read record(arm10_dev,key=firm_id$+"C"+wk_cash_cd$,dom=*next)arm10c$
 
-	aon_tpl.cash_flag$=arm10c.cash_flag$
-	aon_tpl.disc_flag$=arm10c.disc_flag$
-	aon_tpl.arglboth$=arm10c.arglboth$
+	user_tpl.cash_flag$=arm10c.cash_flag$
+	user_tpl.disc_flag$=arm10c.disc_flag$
+	user_tpl.arglboth$=arm10c.arglboth$
 	
 return
 
@@ -487,7 +487,7 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 	are_cashgl_dev=fnget_dev("ARE_CASHGL")
 
 
-	pymt_dist$=AONObj!.getItem(num(aon_tpl.pymt_dist$))
+	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
 	if cvs(pymt_dist$,3)<>""
 
 	for updt_loop=1 to len(pymt_dist$) step 40
@@ -558,7 +558,7 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 	next updt_loop
 	endif
 	callpoint!.setStatus("NEW")
-	gridInvoice!=AONObj!.getItem(num(aon_tpl.inv_grid$))
+	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.clearMainGrid()
 
 return
@@ -573,12 +573,12 @@ validate_before_writing:
 		validate_passed$=msg_opt$
 	endif
 
-	vectInvoice!=AONObj!.getItem(num(aon_tpl.inv_vect$))
-	cols=num(aon_tpl.gridInvoice_cols$)
+	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
+	cols=num(user_tpl.gridInvoice_cols$)
 	if vectInvoice!.size()
 		neg_bal=0
 		for check_loop=0 to vectInvoice!.size()-1 step cols
-			if num(vectInvoice!.getItem(check_loop+num(aon_tpl.new_bal_ofst$)))<0
+			if num(vectInvoice!.getItem(check_loop+num(user_tpl.new_bal_ofst$)))<0
 				neg_bal=neg_bal+1
 			endif
 		next check_loop
@@ -603,7 +603,7 @@ apply_on_acct:
 	wk$(21)=str(num((callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))))
 
 	if num(wk$(21,10))<>0
-		pymt_dist$=AONObj!.getItem(num(aon_tpl.pymt_dist$))
+		pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
 		wk=pos(wk$(1,20)=pymt_dist$)
 			if wk<>0
 				pymt_dist$(wk+20,10)=str(num(pymt_dist$(wk+20,10))+num(wk$(21,10)))
@@ -612,7 +612,7 @@ apply_on_acct:
 				pymt_dist$=pymt_dist$+wk$
 			endif
 
-		AONObj!.setItem(num(aon_tpl.pymt_dist$),pymt_dist$)
+		AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 
 		gosub update_cashhdr_cashdet_cashbal
 	endif
@@ -668,7 +668,7 @@ delete_cashdet_cashbal:
 
 	wend
 
-	gridInvoice!=AONObj!.getItem(num(aon_tpl.inv_grid$))
+	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.clearMainGrid()
 
 return
@@ -681,7 +681,7 @@ gl_distribution:
 :				callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
 :				callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
 :				callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
-	call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"ARE_CASHGL",
 :		user_id$,
 :		"MNT",
@@ -706,14 +706,14 @@ gl_distribution:
 	wend
 
 rem --- escape;rem check glapp
-	glapp=num(aon_tpl.gl_applied$)+gl_applied
-	aon_tpl.gl_applied$=str(-gl_applied);rem added 5/16/07.ch
+	glapp=num(user_tpl.gl_applied$)+gl_applied
+	user_tpl.gl_applied$=str(-gl_applied);rem added 5/16/07.ch
 rem --- escape;rem check again	
 rem used to say if glapp<>0
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))-glapp))
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_APPLIED"))+glapp))
-		Form!.getControl(num(aon_tpl.GLind_id$)).setText("* includes GL distributions")
-		Form!.getControl(num(aon_tpl.GLstar_id$)).setText("*")
+		Form!.getControl(num(user_tpl.GLind_id$)).setText("* includes GL distributions")
+		Form!.getControl(num(user_tpl.GLstar_id$)).setText("*")
 		callpoint!.setStatus("REFRESH")
 rem used to be endif
 
@@ -767,8 +767,8 @@ rem --- also uses AONObj! item containing current pay/disc amts to restore what 
 
  	vectInvSel!=SysGUI!.makeVector()
 
-	OA_chkbox!=Form!.getControl(num(aon_tpl.OA_chkbox_id$))
-	zbal_chkbox!=Form!.getControl(num(aon_tpl.zbal_chkbox_id$))
+	OA_chkbox!=Form!.getControl(num(user_tpl.OA_chkbox_id$))
+	zbal_chkbox!=Form!.getControl(num(user_tpl.zbal_chkbox_id$))
 	other_avail=0
 	chk_applied=0
 
@@ -778,7 +778,7 @@ rem --- also uses AONObj! item containing current pay/disc amts to restore what 
 		read record(art_invhdr_dev,end=*break)art01a$
 		if art01a.firm_id$+art01a.ar_type$+art01a.customer_id$=inv_key$
 			inv_amt=num(art01a.invoice_amt$),orig_inv_amt=inv_amt
-			if aon_tpl.disc_flag$="Y" and callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")<= pad(art01a.disc_date$,8) 
+			if user_tpl.disc_flag$="Y" and callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")<= pad(art01a.disc_date$,8) 
 				disc_amt=num(art01a.disc_allowed$)
 			else
 				disc_amt=0
@@ -831,9 +831,9 @@ rem --- also uses AONObj! item containing current pay/disc amts to restore what 
 	wend
 		
 
- 	AONObj!.setItem(num(aon_tpl.inv_vect$),vectInvoice!)
+ 	AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
 
-	AONObj!.setItem(num(aon_tpl.inv_sel_vect$),vectInvSel!)
+	AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
 
 return
 
@@ -844,13 +844,13 @@ applied_but_not_posted:
 	read record(are_cashbal_dev,key=art01a.firm_id$+art01a.ar_type$+are31a.reserved_str$+
 :				art01a.customer_id$+art01a.ar_inv_no$,dom=*next)are31a$
 	inv_amt=inv_amt-num(are31a.apply_amt$)-num(are31a.discount_amt$)	
-	if aon_tpl.disc_flag$="Y" disc_amt=disc_amt-num(are31a.discount_amt$)
+	if user_tpl.disc_flag$="Y" disc_amt=disc_amt-num(are31a.discount_amt$)
 	disp_bal=disp_bal-num(are31a.apply_amt$)-num(are31a.discount_amt$)
 return
 
 include_curr_tran_amts:
 
-	existing_dtl$=AONObj!.getItem(num(aon_tpl.existing_dtl$))
+	existing_dtl$=AONObj!.getItem(num(user_tpl.existing_dtl$))
 	existing_dtl=0
 	if len(existing_dtl$)<>0 existing_dtl=pos(art01a.ar_inv_no$=existing_dtl$(11),40)
 	rem --- existing_dtl$ contains info already in are-11
@@ -907,8 +907,8 @@ return
 fill_bottom_grid:
 
 	SysGUI!.setRepaintEnabled(0)
-	gridInvoice!=AONObj!.getItem(num(aon_tpl.inv_grid$))
-	minrows=num(aon_tpl.gridInvoice_rows$)
+	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
+	minrows=num(user_tpl.gridInvoice_rows$)
 	if vectInvoice!.size()
 		numrow=vectInvoice!.size()/gridInvoice!.getNumColumns()
 rem --- 		if numrow<=minrows numrow=minrows
@@ -936,22 +936,22 @@ process_OA_chkbox:
 	rem --- if checked on, read art-01/11 to build vectCheck! with OA/CM's, and add after actual check, if there is one
 
 	on_off=dec(gui_event.flags$)
-	pymt_dist$=AONObj!.getItem(num(aon_tpl.pymt_dist$))
+	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
 
 	if on_off=0		
-		vectInvoice!=AONObj!.getItem(num(aon_tpl.inv_vect$))
-		vectInvSel!=AONObj!.getItem(num(aon_tpl.inv_sel_vect$))
-		cols=num(aon_tpl.gridInvoice_cols$)
+		vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
+		vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
+		cols=num(user_tpl.gridInvoice_cols$)
 		if vectInvoice!.size()
 			voffset=0
 
 			while voffset < vectInvoice!.size()
 				rem --- test to see if this is an OA/CM line - not sure, given just test data, if I need to check both amts
 				orig_inv_amt=num(vectInvoice!.getItem(voffset+4))
-				cur_inv_amt=num(vectInvoice!.getItem(voffset+num(aon_tpl.cur_bal_ofst$)))
+				cur_inv_amt=num(vectInvoice!.getItem(voffset+num(user_tpl.cur_bal_ofst$)))
 				if orig_inv_amt<0 or cur_inv_amt<0
-					remove_amt=num(vectInvoice!.getItem(voffset+num(aon_tpl.applied_amt_ofst$)))
-					remove_disc=num(vectInvoice!.getItem(voffset+num(aon_tpl.disc_taken_ofst$)))
+					remove_amt=num(vectInvoice!.getItem(voffset+num(user_tpl.applied_amt_ofst$)))
+					remove_disc=num(vectInvoice!.getItem(voffset+num(user_tpl.disc_taken_ofst$)))
 					remove_inv$=vectInvoice!.getItem(voffset+1)
 					for wk=1 to cols
 						vectInvoice!.removeItem(voffset)						
@@ -971,7 +971,7 @@ process_OA_chkbox:
 					voffset=voffset+cols
 				endif
 			wend
-			AONObj!.setItem(num(aon_tpl.pymt_dist$),pymt_dist$)
+			AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 		endif
 	else
 		
@@ -992,7 +992,7 @@ return
 
 process_zbal_chkbox:
 
-	pymt_dist$=AONObj!.getItem(num(aon_tpl.pymt_dist$))
+	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
 	currdtl$=pymt_dist$
 	gosub get_open_invoices
 	if len(currdtl$)
@@ -1008,7 +1008,7 @@ process_asel_chkbox:
 rem --- escape;rem --- follow	
 	if on_off=0
 		gosub auto_select_off		
-		AONObj!.setItem(num(aon_tpl.pymt_dist$),"")
+		AONObj!.setItem(num(user_tpl.pymt_dist$),"")
 	else
 		gosub auto_select_off;rem --- turn off/reset amts before turning on
 		pymt_dist$=""
@@ -1023,33 +1023,33 @@ return
 
 auto_select_on:
 
-	vectInvoice!=AONObj!.getItem(num(aon_tpl.inv_vect$))
-	vectInvSel!=AONObj!.getItem(num(aon_tpl.inv_sel_vect$))
-	gridInvoice_cols=num(aon_tpl.gridInvoice_cols$)
+	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
+	vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
+	gridInvoice_cols=num(user_tpl.gridInvoice_cols$)
 	if vectInvoice!.size()
 		for payloop=0 to vectInvoice!.size()-1  step gridInvoice_cols
-				inv_bal=num(vectInvoice!.getItem(payloop+num(aon_tpl.new_bal_ofst$)))
-:					-num(vectInvoice!.getItem(payloop+num(aon_tpl.avail_disc_ofst$)))
-:					+num(vectInvoice!.getItem(payloop+num(aon_tpl.disc_taken_ofst$)))
-				disc_amt=num(vectInvoice!.getItem(payloop+num(aon_tpl.avail_disc_ofst$)))-
-:					num(vectInvoice!.getItem(payloop+num(aon_tpl.disc_taken_ofst$)))
+				inv_bal=num(vectInvoice!.getItem(payloop+num(user_tpl.new_bal_ofst$)))
+:					-num(vectInvoice!.getItem(payloop+num(user_tpl.avail_disc_ofst$)))
+:					+num(vectInvoice!.getItem(payloop+num(user_tpl.disc_taken_ofst$)))
+				disc_amt=num(vectInvoice!.getItem(payloop+num(user_tpl.avail_disc_ofst$)))-
+:					num(vectInvoice!.getItem(payloop+num(user_tpl.disc_taken_ofst$)))
 				if inv_bal>0
 					if inv_bal<=to_pay
 						pd_amt=inv_bal
-						vectInvoice!.setItem(payloop+num(aon_tpl.applied_amt_ofst$),
-:							str(num(vectInvoice!.getItem(payloop+num(aon_tpl.applied_amt_ofst$)))+inv_bal))
-						vectInvoice!.setItem(payloop+num(aon_tpl.disc_taken_ofst$),
-:							str(num(vectInvoice!.getItem(payloop+num(aon_tpl.disc_taken_ofst$)))+disc_amt))
-						vectInvoice!.setItem(payloop+num(aon_tpl.new_bal_ofst$),"0")
+						vectInvoice!.setItem(payloop+num(user_tpl.applied_amt_ofst$),
+:							str(num(vectInvoice!.getItem(payloop+num(user_tpl.applied_amt_ofst$)))+inv_bal))
+						vectInvoice!.setItem(payloop+num(user_tpl.disc_taken_ofst$),
+:							str(num(vectInvoice!.getItem(payloop+num(user_tpl.disc_taken_ofst$)))+disc_amt))
+						vectInvoice!.setItem(payloop+num(user_tpl.new_bal_ofst$),"0")
 						to_pay=to_pay-inv_bal
 						vectInvSel!.setItem(int(payloop/gridInvoice_cols),"Y")
 					else
 						pd_amt=to_pay
-						vectInvoice!.setItem(payloop+num(aon_tpl.applied_amt_ofst$),
-:							str(num(vectInvoice!.getItem(payloop+num(aon_tpl.applied_amt_ofst$)))+to_pay))
-						vectInvoice!.setItem(payloop+num(aon_tpl.disc_taken_ofst$),
-:							str(num(vectInvoice!.getItem(payloop+num(aon_tpl.disc_taken_ofst$)))+disc_amt))
-						vectInvoice!.setItem(payloop+num(aon_tpl.new_bal_ofst$),str(inv_bal-to_pay))
+						vectInvoice!.setItem(payloop+num(user_tpl.applied_amt_ofst$),
+:							str(num(vectInvoice!.getItem(payloop+num(user_tpl.applied_amt_ofst$)))+to_pay))
+						vectInvoice!.setItem(payloop+num(user_tpl.disc_taken_ofst$),
+:							str(num(vectInvoice!.getItem(payloop+num(user_tpl.disc_taken_ofst$)))+disc_amt))
+						vectInvoice!.setItem(payloop+num(user_tpl.new_bal_ofst$),str(inv_bal-to_pay))
 						to_pay=0
 						vectInvSel!.setItem(int(payloop/gridInvoice_cols),"Y")
 					endif
@@ -1073,37 +1073,37 @@ auto_select_on:
 				if to_pay=0 then break
 		next payloop
 		gosub fill_bottom_grid
-		AONObj!.setItem(num(aon_tpl.inv_vect$),vectInvoice!)
-		AONObj!.setItem(num(aon_tpl.inv_sel_vect$),vectInvSel!)
-		AONObj!.setItem(num(aon_tpl.pymt_dist$),pymt_dist$)
+		AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
+		AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
+		AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 	endif
 return
 
 auto_select_off:
 
-	vectInvoice!=AONObj!.getItem(num(aon_tpl.inv_vect$))
-	vectInvSel!=AONObj!.getItem(num(aon_tpl.inv_sel_vect$))
-	gridInvoice_cols=num(aon_tpl.gridInvoice_cols$)
+	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
+	vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
+	gridInvoice_cols=num(user_tpl.gridInvoice_cols$)
 	if vectInvoice!.size()
 		for payloop=0 to vectInvoice!.size()-1  step gridInvoice_cols		
-					vectInvoice!.setItem(payloop+num(aon_tpl.applied_amt_ofst$),"0")
-					vectInvoice!.setItem(payloop+num(aon_tpl.disc_taken_ofst$),"0")
-					vectInvoice!.setItem(payloop+num(aon_tpl.new_bal_ofst$),
-:						str(num(vectInvoice!.getItem(payloop+num(aon_tpl.cur_bal_ofst$)))))				
+					vectInvoice!.setItem(payloop+num(user_tpl.applied_amt_ofst$),"0")
+					vectInvoice!.setItem(payloop+num(user_tpl.disc_taken_ofst$),"0")
+					vectInvoice!.setItem(payloop+num(user_tpl.new_bal_ofst$),
+:						str(num(vectInvoice!.getItem(payloop+num(user_tpl.cur_bal_ofst$)))))				
 					vectInvSel!.setItem(int(payloop/gridInvoice_cols),"N")		
 		next payloop
 		gosub fill_bottom_grid
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(0))
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
-		AONObj!.setItem(num(aon_tpl.inv_vect$),vectInvoice!)
-		AONObj!.setItem(num(aon_tpl.inv_sel_vect$),vectInvSel!)
+		AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
+		AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
 	endif
 return
 
 
 refresh_asel_amounts:
 
-	asel_chkbox!=Form!.getControl(num(aon_tpl.asel_chkbox_id$))
+	asel_chkbox!=Form!.getControl(num(user_tpl.asel_chkbox_id$))
 	if asel_chkbox!.isSelected()
 		for on_off=0 to 1
 			gosub process_asel_chkbox
@@ -1115,25 +1115,25 @@ return
 
 process_gridInvoice_event:
 
-	vectInvoice!=AONObj!.getItem(num(aon_tpl.inv_vect$))
-	vectInvSel!=AONObj!.getItem(num(aon_tpl.inv_sel_vect$))
-	gridInvoice!=AONObj!.getItem(num(aon_tpl.inv_grid$))
+	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
+	vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
+	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
 	clicked_row=gridInvoice!.getSelectedRow()
-	cols=num(aon_tpl.gridInvoice_cols$)
+	cols=num(user_tpl.gridInvoice_cols$)
 
-	pymt_dist$=AONObj!.getItem(num(aon_tpl.pymt_dist$))
+	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
 
 	if vectInvoice!.size()=0 then return
 
 	switch dec(notice.code$)
 
 		case 7;rem --- edit stop
-			clicked_row=num(aon_tpl.sv_row$)
+			clicked_row=num(user_tpl.sv_row$)
 			rem --- only column 8 and 9 are enabled (except for checkbox at 0); 8=pay, 9=discount
 			rem --- don't allow discount if not paying anything
 
-			old_pay=num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))
-			old_disc=num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))
+			old_pay=num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))
+			old_disc=num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))
 
 			new_pay=0
 			new_disc=0
@@ -1146,18 +1146,18 @@ process_gridInvoice_event:
 				new_pay=old_pay
 				if new_pay=0 new_disc=0
 			endif
-			vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$),str(new_pay))
-			vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$),str(new_disc))
-			vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$),
-:					str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$)))+old_pay-new_pay+old_disc-new_disc))
-			gridInvoice!.setCellText(clicked_row,num(aon_tpl.applied_amt_ofst$),str(new_pay))
-			gridInvoice!.setCellText(clicked_row,num(aon_tpl.disc_taken_ofst$),str(new_disc))
-			gridInvoice!.setCellText(clicked_row,num(aon_tpl.new_bal_ofst$),
-:					vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$)))
+			vectInvoice!.setItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$),str(new_pay))
+			vectInvoice!.setItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$),str(new_disc))
+			vectInvoice!.setItem(clicked_row*cols+num(user_tpl.new_bal_ofst$),
+:					str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.new_bal_ofst$)))+old_pay-new_pay+old_disc-new_disc))
+			gridInvoice!.setCellText(clicked_row,num(user_tpl.applied_amt_ofst$),str(new_pay))
+			gridInvoice!.setCellText(clicked_row,num(user_tpl.disc_taken_ofst$),str(new_disc))
+			gridInvoice!.setCellText(clicked_row,num(user_tpl.new_bal_ofst$),
+:					vectInvoice!.getItem(clicked_row*cols+num(user_tpl.new_bal_ofst$)))
 
 			rem --- if this is an OA/CM line (test inv amt, curr amt), then applied amt just increases total to apply
 			if num(vectInvoice!.getItem(clicked_row*cols+4))<0
-:				or num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.cur_bal_ofst$))) <0
+:				or num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.cur_bal_ofst$))) <0
 				callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",
 :					str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))+old_pay-new_pay))
 			else
@@ -1183,7 +1183,7 @@ process_gridInvoice_event:
 				wk$(31)=str(new_disc-old_disc)
 				pymt_dist$=pymt_dist$+wk$
 			endif
-			AONObj!.setItem(num(aon_tpl.pymt_dist$),pymt_dist$)
+			AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 			callpoint!.setStatus("REFRESH")
 			
 		break
@@ -1193,7 +1193,7 @@ process_gridInvoice_event:
 			if dec(notice.col$)<>0
 				vectInvSel!.setItem(clicked_row,"Y")
 				gridInvoice!.setCellStyle(clicked_row,0,SysGUI!.GRID_STYLE_CHECKED)
-				aon_tpl.sv_row$=str(gridInvoice!.getSelectedRow())
+				user_tpl.sv_row$=str(gridInvoice!.getSelectedRow())
 			endif
 		break
 
@@ -1246,39 +1246,39 @@ invoice_chk_onoff:
 			if pd_pos<>0
 				inv_applied=num(pymt_dist$(pd_pos+20,10))
 				disc_taken=num(pymt_dist$(pd_pos+30,10))
-				vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$),
-:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))-inv_applied))
-				vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$),
-:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))-disc_taken))
-				if num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))=0
-					vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$),"0")
+				vectInvoice!.setItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$),
+:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))-inv_applied))
+				vectInvoice!.setItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$),
+:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))-disc_taken))
+				if num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))=0
+					vectInvoice!.setItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$),"0")
 					vectInvSel!.setItem(clicked_row,"N")
 					gridInvoice!.setCellStyle(clicked_row,0,SysGUI!.GRID_STYLE_UNCHECKED)
 				endif
-				vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$),
-:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.cur_bal_ofst$)))-
-:                           num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))-
-:                           num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))))	
-				gridInvoice!.setCellText(clicked_row,num(aon_tpl.applied_amt_ofst$),
-:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))))
-				gridInvoice!.setCellText(clicked_row,num(aon_tpl.disc_taken_ofst$),
-:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))))
-				gridInvoice!.setCellText(clicked_row,num(aon_tpl.new_bal_ofst$),
-:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$)))))
+				vectInvoice!.setItem(clicked_row*cols+num(user_tpl.new_bal_ofst$),
+:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.cur_bal_ofst$)))-
+:                           num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))-
+:                           num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))))	
+				gridInvoice!.setCellText(clicked_row,num(user_tpl.applied_amt_ofst$),
+:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))))
+				gridInvoice!.setCellText(clicked_row,num(user_tpl.disc_taken_ofst$),
+:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))))
+				gridInvoice!.setCellText(clicked_row,num(user_tpl.new_bal_ofst$),
+:                           str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.new_bal_ofst$)))))
 
 				pymt_dist$(pd_pos+20,10)=str(num(pymt_dist$(pd_pos+20,10))-inv_applied)
 				pymt_dist$(pd_pos+30,10)=str(num(pymt_dist$(pd_pos+30,10))-disc_taken)
 
 			endif
 
-			AONObj!.setItem(num(aon_tpl.pymt_dist$),pymt_dist$)
+			AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 
 			new_pay=0
 			old_pay=inv_applied
 
 			rem --- if this is an OA/CM line (test inv amt, curr amt), then applied amt just increases total to apply
 			if num(vectInvoice!.getItem(clicked_row*cols+4))<0
-:						or num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.cur_bal_ofst$))) <0
+:						or num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.cur_bal_ofst$))) <0
 					callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",
 :								str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))+old_pay-new_pay))
 			else
@@ -1298,43 +1298,43 @@ invoice_chk_onoff:
 
 				vectInvSel!.setItem(clicked_row,"Y")
 				gridInvoice!.setCellStyle(clicked_row,0,SysGUI!.GRID_STYLE_CHECKED)
-				inv_bal=num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$)))-
-:							num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.avail_disc_ofst$)))+
-:							num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))
-				disc_amt=num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.avail_disc_ofst$)))-
-:							num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))
+				inv_bal=num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.new_bal_ofst$)))-
+:							num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.avail_disc_ofst$)))+
+:							num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))
+				disc_amt=num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.avail_disc_ofst$)))-
+:							num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))
 
 					if (inv_bal>0 and inv_bal<=to_pay) or inv_bal<0 or to_pay<=0
 						pd_amt=inv_bal
-						vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$),
-:									str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))+inv_bal))
-						vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$),
-:									str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))+disc_amt))
-						vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$),"0")
+						vectInvoice!.setItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$),
+:									str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))+inv_bal))
+						vectInvoice!.setItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$),
+:									str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))+disc_amt))
+						vectInvoice!.setItem(clicked_row*cols+num(user_tpl.new_bal_ofst$),"0")
 						to_pay=to_pay-inv_bal					
 					else
 						pd_amt=to_pay
-						vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$),
-:									str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))+to_pay))
-						vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$),
-:									str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))+disc_amt))
-						vectInvoice!.setItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$),str(inv_bal-to_pay))
+						vectInvoice!.setItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$),
+:									str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))+to_pay))
+						vectInvoice!.setItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$),
+:									str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))+disc_amt))
+						vectInvoice!.setItem(clicked_row*cols+num(user_tpl.new_bal_ofst$),str(inv_bal-to_pay))
 						to_pay=0
 					endif
 
-					gridInvoice!.setCellText(clicked_row,num(aon_tpl.applied_amt_ofst$),
-:								str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.applied_amt_ofst$)))))
-					gridInvoice!.setCellText(clicked_row,num(aon_tpl.disc_taken_ofst$),
-:								str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.disc_taken_ofst$)))))
-					gridInvoice!.setCellText(clicked_row,num(aon_tpl.new_bal_ofst$),
-:								str(num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.new_bal_ofst$)))))
+					gridInvoice!.setCellText(clicked_row,num(user_tpl.applied_amt_ofst$),
+:								str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$)))))
+					gridInvoice!.setCellText(clicked_row,num(user_tpl.disc_taken_ofst$),
+:								str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$)))))
+					gridInvoice!.setCellText(clicked_row,num(user_tpl.new_bal_ofst$),
+:								str(num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.new_bal_ofst$)))))
 
 					new_pay=pd_amt
 					old_pay=0
 
 					rem --- if this is an OA/CM line (test inv amt, curr amt), then app amt just increases total to apply
 					if num(vectInvoice!.getItem(clicked_row*cols+4))<0
-:								or num(vectInvoice!.getItem(clicked_row*cols+num(aon_tpl.cur_bal_ofst$))) <0
+:								or num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.cur_bal_ofst$))) <0
 						callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",
 :									str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))+old_pay-new_pay))
 					else
@@ -1356,7 +1356,7 @@ invoice_chk_onoff:
 						wk$(31)=str(disc_amt)
 						pymt_dist$=pymt_dist$+wk$
 					endif
-					AONObj!.setItem(num(aon_tpl.pymt_dist$),pymt_dist$)
+					AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 		break
 	swend
 return
@@ -1371,8 +1371,8 @@ format_grids:
 	rem --- invoice grid
 	dim attr_def_col_str$[0,0]
 	attr_def_col_str$[0,0]=callpoint!.getColumnAttributeTypes()
-	def_inv_cols=num(aon_tpl.gridInvoice_cols$)
-	num_inv_rows=num(aon_tpl.gridInvoice_rows$)
+	def_inv_cols=num(user_tpl.gridInvoice_cols$)
+	num_inv_rows=num(user_tpl.gridInvoice_rows$)
 	dim attr_inv_col$[def_inv_cols,len(attr_def_col_str$[0,0])/5]
 	attr_inv_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SELECT"
 	attr_inv_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=""
@@ -1398,22 +1398,22 @@ format_grids:
 	attr_inv_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Inv Amount"
 	attr_inv_col$[5,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_inv_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
-	attr_inv_col$[5,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
-	attr_inv_col$[5,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
+	attr_inv_col$[5,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
+	attr_inv_col$[5,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
 
 	attr_inv_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="CURR_BAL"
 	attr_inv_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Opening Bal"
 	attr_inv_col$[6,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_inv_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
-	attr_inv_col$[6,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
-	attr_inv_col$[6,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
+	attr_inv_col$[6,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
+	attr_inv_col$[6,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
 
 	attr_inv_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AVAIL_DISC"
 	attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Avail Disc"
 	attr_inv_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_inv_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="70"
-	attr_inv_col$[7,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
-	attr_inv_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
+	attr_inv_col$[7,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
+	attr_inv_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
 
 	attr_inv_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DISC_DATE"
 	attr_inv_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Disc Date"
@@ -1424,22 +1424,22 @@ format_grids:
 	attr_inv_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Applied"
 	attr_inv_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_inv_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
-	attr_inv_col$[9,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
-	attr_inv_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
+	attr_inv_col$[9,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
+	attr_inv_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
 
 	attr_inv_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DISC"
 	attr_inv_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Disc Amt"
 	attr_inv_col$[10,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_inv_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
-	attr_inv_col$[10,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
-	attr_inv_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
+	attr_inv_col$[10,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
+	attr_inv_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
 
 	attr_inv_col$[11,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="BALANCE"
 	attr_inv_col$[11,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="End Balance"
 	attr_inv_col$[11,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_inv_col$[11,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
-	attr_inv_col$[11,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
-	attr_inv_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=aon_tpl.amt_msk$
+	attr_inv_col$[11,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
+	attr_inv_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=user_tpl.amt_msk$
 
 	attr_inv_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SPACER"
 	attr_inv_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=""
@@ -1454,7 +1454,7 @@ format_grids:
 
 	attr_disp_col$=attr_inv_col$[0,1]
 
-	call dir_pgm$+"rdm_grid_init.aon",gui_dev,gridInvoice!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-DATES-CHECKS",num_inv_rows,
+	call dir_pgm$+"bam_grid_init.bbj",gui_dev,gridInvoice!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-DATES-CHECKS",num_inv_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_inv_col$[all]
 
 

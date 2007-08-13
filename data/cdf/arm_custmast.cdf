@@ -5,7 +5,7 @@ user_id$=stbl("+USER_ID")
 dim dflt_data$[2,1]
 dflt_data$[1,0]="CUSTOMER_ID"
 dflt_data$[1,1]=cp_cust_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "ARR_INVDETAIL",
 :                       user_id$,
 :                   	"",
@@ -16,13 +16,13 @@ call stbl("+DIR_PGM")+"rdm_run_prog.aon",
 [[ARM_CUSTMAST.AOPT-ORIV]]
 rem Order/Invoice History Inq
 rem --- assume this should only run if OP installed...
-	if aon_tpl.op_installed$="Y"
+	if user_tpl.op_installed$="Y"
 		cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
 		user_id$=stbl("+USER_ID")
 		dim dflt_data$[2,1]
 		dflt_data$[1,0]="CUSTOMER_ID"
 		dflt_data$[1,1]=cp_cust_id$
-		call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                           "ARR_ORDINVHIST",
 :                           user_id$,
 :                   	    "",
@@ -42,8 +42,8 @@ rem --- if cm$ installed, and ars01c.hold_new$ is "Y", then default arm02a.cred_
 rem --- default arm02a.slspsn_code$,ar_terms_code$,disc_code$,ar_dist_code$,territory$,tax_code$
 rem --- and inv_hist_flg$ per defaults in ops10d
 
-dim ars10d$:aon_tpl.cust_dflt_tpl$
-ars10d$=aon_tpl.cust_dflt_rec$
+dim ars10d$:user_tpl.cust_dflt_tpl$
+ars10d$=user_tpl.cust_dflt_rec$
 callpoint!.setColumnData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
 callpoint!.setColumnData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$)
@@ -59,7 +59,7 @@ callpoint!.setColumnUndoData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
 callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG",ars10d.customer_inv_his$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG",ars10d.customer_inv_his$)
 
-if aon_tpl.cm_installed$="Y" and aon_tpl.dflt_cred_hold$="Y" 
+if user_tpl.cm_installed$="Y" and user_tpl.dflt_cred_hold$="Y" 
 	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","Y")
 	callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD","Y")
 endif              
@@ -75,7 +75,7 @@ rem --- Open/Lock files
 		options$[wkx]="OTA"
 	next wkx
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
@@ -90,7 +90,7 @@ rem --- Retrieve miscellaneous templates
 	ids$[2]="ars-01A"
 	ids$[3]="ars-01C"
 	ids$[4]="ars-10D"
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -123,12 +123,12 @@ rem --- Retrieve parameter data
 	call dir_pgm$+"adc_application.aon","SA",info$[all]
 	sa$=info$[20]
 
-	dim aon_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),"+
+	dim user_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),"+
 :		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024)"
 
-	aon_tpl.app$="AR",aon_tpl.gl_installed$=gl$,aon_tpl.op_installed$=op$,aon_tpl.iv_installed$=iv$,
-:                   aon_tpl.sa_installed$=sa$,aon_tpl.cm_installed$=cm$,aon_tpl.dflt_cred_hold$=dflt_cred_hold$,
-:                   aon_tpl.cust_dflt_tpl$=fattr(ars10d$),aon_tpl.cust_dflt_rec$=ars10d$
+	user_tpl.app$="AR",user_tpl.gl_installed$=gl$,user_tpl.op_installed$=op$,user_tpl.iv_installed$=iv$,
+:                   user_tpl.sa_installed$=sa$,user_tpl.cm_installed$=cm$,user_tpl.dflt_cred_hold$=dflt_cred_hold$,
+:                   user_tpl.cust_dflt_tpl$=fattr(ars10d$),user_tpl.cust_dflt_rec$=ars10d$
 
 	dim dctl$[10]
 

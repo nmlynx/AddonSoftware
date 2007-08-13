@@ -98,7 +98,7 @@ for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
 
-call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
 
 if status$<>""  goto std_exit
@@ -113,7 +113,7 @@ ids$[1]="ivs-01A"
 ids$[2]="gls-01A"
 ids$[3]="ars-01A"
 
-call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -188,7 +188,7 @@ if files
 		options$[wkx]="OTA"
 	next wkx
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 	chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
@@ -200,7 +200,7 @@ user_id$=stbl("+USER_ID")
 dim dflt_data$[2,1]
 dflt_data$[1,0]="ITEM_ID"
 dflt_data$[1,1]=cp_item_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_OPENPO",
 :	user_id$,
 :	"",
@@ -214,7 +214,7 @@ user_id$=stbl("+USER_ID")
 dim dflt_data$[2,1]
 dflt_data$[1,0]="ITEM_ID"
 dflt_data$[1,1]=cp_item_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_OPENSO",
 :	user_id$,
 :	"",
@@ -230,7 +230,7 @@ dflt_data$[1,0]="ITEM_ID_1"
 dflt_data$[1,1]=cp_item_id$
 dflt_data$[2,0]="ITEM_ID_2"
 dflt_data$[2,1]=cp_item_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_LSTRANHIST",
 :	user_id$,
 :	"",
@@ -246,7 +246,7 @@ dflt_data$[1,0]="ITEM_ID_1"
 dflt_data$[1,1]=cp_item_id$
 dflt_data$[2,0]="ITEM_ID_2"
 dflt_data$[2,1]=cp_item_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_TRANSHIST",
 :	user_id$,
 :	"",
@@ -262,7 +262,7 @@ dflt_data$[1,0]="ITEM_ID_1"
 dflt_data$[1,1]=cp_item_id$
 dflt_data$[2,0]="ITEM_ID_2"
 dflt_data$[2,1]=cp_item_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_LIFOFIFO",
 :	user_id$,
 :	"",

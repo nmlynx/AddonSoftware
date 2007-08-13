@@ -17,9 +17,9 @@ if cvs(callpoint!.getColumnData("SAM_CUSTTERR.YEAR"),2) <>"" then
 	endif
 endif
 
-call stbl("+DIR_PGM")+"adc_key_template.aon","SAM_CUSTTERR","PRIMARY",key_temp$,table_chans$[all],rd_stat$
+call stbl("+DIR_SYP")+"bac_key_template.bbj","SAM_CUSTTERR","PRIMARY",key_temp$,table_chans$[all],rd_stat$
 dim rd_key$:key_temp$
-call stbl("+DIR_PGM")+"rdm_inquiry.aon",
+call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :	gui_dev,
 :	Form!,
 :	"SAM_CUSTTERR",

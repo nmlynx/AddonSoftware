@@ -7,7 +7,7 @@ rem --- vendor present in ape-01 or apt-01
 can_delete$=""
 vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
 
-if aon_tpl.iv_installed$="Y"
+if user_tpl.iv_installed$="Y"
 	ivm01_dev=fnget_dev("IVM_ITEMMAST")
 	iv_key$=""
 	read(ivm01_dev,key=firm_id$+vendor_id$,knum=3,dom=*next)
@@ -85,7 +85,7 @@ rem --- Open/Lock files
 		options$[wkx]="OTA"
 	next wkx
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
@@ -100,7 +100,7 @@ rem --- Retrieve miscellaneous templates
 	ids$[1]="aps-01A"
 	ids$[2]="gls-01A"
 	ids$[3]="ivs-01A"
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -126,15 +126,15 @@ rem --- Retrieve parameter data
 	call dir_pgm$+"adc_application.aon","PO",info$[all]
 	po$=info$[20];rem --- po installed?
 
-	dim aon_tpl$:"app:c(2),gl_interface:c(1),po_installed:c(1),iv_installed:c(1),"+
+	dim user_tpl$:"app:c(2),gl_interface:c(1),po_installed:c(1),iv_installed:c(1),"+
 :		"multi_types:c(1),multi_dist:c(1),ret_flag:c(1),use_replen:c(1),"+
 :		"gl_total_pers:c(2),gl_current_per:c(2),gl_current_year:c(4),gl_acct_len:c(2),gl_max_len:c(2)"
 
-	aon_tpl.app$="AP",aon_tpl.gl_interface$=gl$,aon_tpl.po_installed$=po$,aon_tpl.iv_installed$=iv$,
-:		aon_tpl.multi_types$=aps01a.multi_types$,aon_tpl.multi_dist$=aps01a.multi_dist$,
-:		aon_tpl.ret_flag$=aps01a.ret_flag$,aon_tpl.use_replen$=aps01a.use_replen$,
-:		aon_tpl.gl_total_pers$=gls01a.total_pers$,aon_tpl.gl_current_per$=gls01a.current_per$,
-:		aon_tpl.gl_current_year$=gls01a.current_year$,aon_tpl.gl_max_len$=gls01a.max_acct_len$
+	user_tpl.app$="AP",user_tpl.gl_interface$=gl$,user_tpl.po_installed$=po$,user_tpl.iv_installed$=iv$,
+:		user_tpl.multi_types$=aps01a.multi_types$,user_tpl.multi_dist$=aps01a.multi_dist$,
+:		user_tpl.ret_flag$=aps01a.ret_flag$,user_tpl.use_replen$=aps01a.use_replen$,
+:		user_tpl.gl_total_pers$=gls01a.total_pers$,user_tpl.gl_current_per$=gls01a.current_per$,
+:		user_tpl.gl_current_year$=gls01a.current_year$,user_tpl.gl_max_len$=gls01a.max_acct_len$
 
 	rem --- used to also open ivm-03 if iv$="Y", but using alt keys on ivm-01 instead
 	rem --- knum=3 is firm/vendor/item, knum=9 is firm/buyer/vendor/item
@@ -153,7 +153,7 @@ rem --- Retrieve parameter data
 			options$[wkx]="OTA"
 		next wkx
 
-		call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+		call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :	                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 		if status$<>"" goto std_exit
@@ -161,20 +161,20 @@ rem --- Retrieve parameter data
 	endif
 rem --- set enable_str$ to list of aliases in popup to enable -- enabled by default, so only include specific enable request
 rem --- set disable_str$ to list of all aliases in popup to disable (format alias_name;alias_name;alias_name)
-if aon_tpl.use_replen$<>"Y"
+if user_tpl.use_replen$<>"Y"
 	enable_str$=""
 	disable_str$="APM_VENDREPL"
 	call dir_pgm$+"rdm_enable_pop.aon",Form!,enable_str$,disable_str$
 endif
 [[APM_VENDMAST.AOPT-RHST]]
 rem Receipt History Inquiry
-if aon_tpl.po_installed$="Y"
+if user_tpl.po_installed$="Y"
 	cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
 	user_id$=stbl("+USER_ID")
 	dim dflt_data$[2,1]
 	dflt_data$[1,0]="VENDOR_ID"
 	dflt_data$[1,1]=cp_vendor_id$
-	call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	                       "APR_RECEIPTS",
 :	                       user_id$,
 :	                   	  "",
@@ -194,7 +194,7 @@ user_id$=stbl("+USER_ID")
 dim dflt_data$[2,1]
 dflt_data$[1,0]="VENDOR_ID"
 dflt_data$[1,1]=cp_vendor_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "APR_VENDINV",
 :                       user_id$,
 :                   	  "",

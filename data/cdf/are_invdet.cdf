@@ -31,8 +31,8 @@ calc_grid_tots:
                 tamt=tamt+num(gridrec.ext_price$)
             next reccnt
 
-            aon_tpl.totqty$=str(tqty)
-	 aon_tpl.totamt$=str(tamt)
+            user_tpl.totqty$=str(tqty)
+	 user_tpl.totamt$=str(tamt)
 
         endif
     return
@@ -42,10 +42,10 @@ disp_totals:
     rem --- get context and ID of total quantity/amount display controls, and redisplay w/ amts from calc_tots
     
     tqty!=AONObj!.getItem(0)
-    tqty!.setValue(num(aon_tpl.totqty$))
+    tqty!.setValue(num(user_tpl.totqty$))
 
     tamt!=AONObj!.getItem(1)
-    tamt!.setValue(num(aon_tpl.totamt$))
+    tamt!.setValue(num(user_tpl.totamt$))
 
     return
 

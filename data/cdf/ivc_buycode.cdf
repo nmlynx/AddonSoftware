@@ -11,7 +11,7 @@ for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
 
-call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
 
 if status$<>""  goto std_exit
@@ -25,7 +25,7 @@ dim ids$[files],templates$[files]
 ids$[1]="ivs-01A"
 ids$[2]="pos-01A"
 
-call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 
 rem --- Dimension miscellaneous string templates

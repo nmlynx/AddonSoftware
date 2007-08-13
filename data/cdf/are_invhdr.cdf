@@ -68,7 +68,7 @@ rem --- Open/Lock files
 	next wkx
 	rem --- options$[11]="NA";rem --- force are-15 open on 2nd device
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 escape;rem will this get imported?
 	if status$<>"" goto std_exit
@@ -80,7 +80,7 @@ rem --- Retrieve miscellaneous templates
 	dim ids$[files],templates$[files]
 	ids$[1]="ars-01A"
 	ids$[2]="gls-01A"
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- set up AONObj! as vector
@@ -100,8 +100,8 @@ rem --- set up AONObj! as vector
 rem --- Dimension miscellaneous string templates
 
 	dim ars01a$:templates$[1],gls01a$:templates$[2]
-	dim aon_tpl$:"firm_id:c(2),glint:C(1),glyr:C(4),glper:C(2),glworkfile:C(16),totqty:C(15),totamt:C(15)";rem --- used to pass 'stuff' to/from cpt
-	aon_tpl.firm_id$=firm_id$
+	dim user_tpl$:"firm_id:c(2),glint:C(1),glyr:C(4),glper:C(2),glworkfile:C(16),totqty:C(15),totamt:C(15)";rem --- used to pass 'stuff' to/from cpt
+	user_tpl.firm_id$=firm_id$
 
 rem --- Additional File Opens
 
@@ -109,8 +109,8 @@ rem --- Additional File Opens
 	status=0
 	call dir_pgm$+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status;rem --- source$?
 	if status<>0 goto std_exit
-	aon_tpl.glint$=gl$
-	aon_tpl.glworkfile$=glw11$
+	user_tpl.glint$=gl$
+	user_tpl.glworkfile$=glw11$
 	rem --- gl$="Y";rem --- temp for testing.CAH
 	if gl$="Y"
 		files=21,begfile=20,endfile=21
@@ -121,7 +121,7 @@ rem --- Additional File Opens
 		rem --- will also need option to lock/clear file; not using in this pgm for now, so bypassing.CAH
 		rem --- old pgm set options$[11]?  doesn't make sense, s/b options$[21]="C"?
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 		if status$<>"" goto std_exit
@@ -169,15 +169,15 @@ if cvs(callpoint!.getUserInput(),2)<>"" and callpoint!.getColumnData("ARE_INVHDR
 endif
 
 [[ARE_INVHDR.INV_DATE.AVAL]]
-gl$=aon_tpl.glint$
+gl$=user_tpl.glint$
 invdate$=callpoint!.getUserInput()        
 if gl$="Y" 
 	call dir_pgm$+"glc_datecheck.aon",invdate$,"Y",per$,yr$,status
 	if status>99
 		callpoint!.setStatus("ABORT")
 	else
-		aon_tpl.glyr$=yr$
-		aon_tpl.glper$=per$
+		user_tpl.glyr$=yr$
+		user_tpl.glper$=per$
 	endif
 endif
 
@@ -194,7 +194,7 @@ calc_grid_tots:
                 tamt=tamt+num(gridrec.ext_price$)
             next reccnt
 
-            aon_tpl.totqty$=str(tqty),aon_tpl.totamt$=str(tamt)
+            user_tpl.totqty$=str(tqty),user_tpl.totamt$=str(tamt)
         endif
     return
 

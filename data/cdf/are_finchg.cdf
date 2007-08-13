@@ -26,7 +26,7 @@ rem --- Open/Lock files
 		options$[wkx]="OTA"
 	next wkx
 
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
@@ -38,30 +38,30 @@ rem --- Retrieve miscellaneous templates
 	dim ids$[files],templates$[files]
 	ids$[1]="ars-01A"
 	ids$[2]="gls-01A"
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
 	dim ars01a$:templates$[1],gls01a$:templates$[2]
-	dim aon_tpl$:"firm_id:c(2),op_installed:C(1),glyr:C(4),glper:C(2),no_glpers:C(2),"+
+	dim user_tpl$:"firm_id:c(2),op_installed:C(1),glyr:C(4),glper:C(2),no_glpers:C(2),"+
 :	    "disc_pct:C(7),inv_days_due:C(7),disc_days:C(7),prox_days:C(1)"
-	aon_tpl.firm_id$=firm_id$
+	user_tpl.firm_id$=firm_id$
 
 rem --- Retrieve parameter data/see if OP is installed
 
 	call dir_pgm$+"adc_application.aon","OP",info$[all]
 	op$=info$[20]
-	aon_tpl.op_installed$=op$
+	user_tpl.op_installed$=op$
 
 	ars01a_key$=firm_id$+"AR00"
 	find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 
 	gls01a_key$=firm_id$+"GL00"
 	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
-	aon_tpl.glyr$=gls01a.current_year$
-	aon_tpl.glper$=gls01a.current_per$
-	aon_tpl.no_glpers$=gls01a.total_pers$
+	user_tpl.glyr$=gls01a.current_year$
+	user_tpl.glper$=gls01a.current_per$
+	user_tpl.no_glpers$=gls01a.total_pers$
 
 [[ARE_FINCHG.AR_INV_NO.AVAL]]
 rem --- check art-01 and be sure invoice# they've entered isn't in use for this cust.
@@ -85,26 +85,26 @@ endif
 arc_termcode_dev=fnget_dev("ARC_TERMCODE")
 dim arm10a$:fnget_tpl$("ARC_TERMCODE")
 read record(arc_termcode_dev,key=firm_id$+"A"+callpoint!.getUserInput(),dom=*next)arm10a$
-aon_tpl.disc_pct$=str(arm10a.disc_percent$)
-aon_tpl.inv_days_due$=str(arm10a.inv_days_due$)
-aon_tpl.disc_days$=str(arm10a.disc_days$)
-aon_tpl.prox_days$=arm10a.prox_or_days$
+user_tpl.disc_pct$=str(arm10a.disc_percent$)
+user_tpl.inv_days_due$=str(arm10a.inv_days_due$)
+user_tpl.disc_days$=str(arm10a.disc_days$)
+user_tpl.prox_days$=arm10a.prox_or_days$
 
 if num(callpoint!.getColumnData("ARE_FINCHG.INVOICE_AMT"))<>0
-	wk_amt=num(callpoint!.getColumnData("ARE_FINCHG.INVOICE_AMT"))*num(aon_tpl.disc_pct$)/100
+	wk_amt=num(callpoint!.getColumnData("ARE_FINCHG.INVOICE_AMT"))*num(user_tpl.disc_pct$)/100
 	callpoint!.setColumnData("ARE_FINCHG.DISCOUNT_AMT",str(wk_amt))
 	callpoint!.setColumnUndoData("ARE_FINCHG.DISCOUNT_AMT",str(wk_amt))
 	callpoint!.setStatus("REFRESH")
 endif
 
 if cvs(callpoint!.getColumnData("ARE_FINCHG.INVOICE_DATE"),2)<>""
-	call dir_pgm$+"adc_duedate.aon",aon_tpl.prox_days$,callpoint!.getColumnData("ARE_FINCHG.INVOICE_DATE"),
-:                              num(aon_tpl.inv_days_due$),wk_date_out$,status
+	call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getColumnData("ARE_FINCHG.INVOICE_DATE"),
+:                              num(user_tpl.inv_days_due$),wk_date_out$,status
 	if status then callpoint!.setStatus("ABORT")
 	callpoint!.setColumnData("ARE_FINCHG.INV_DUE_DATE",wk_date_out$)
 	callpoint!.setColumnUndoData("ARE_FINCHG.INV_DUE_DATE",wk_date_out$)
-	call dir_pgm$+"adc_duedate.aon",aon_tpl.prox_days$,callpoint!.getColumnData("ARE_FINCHG.INVOICE_DATE"),
-:                               num(aon_tpl.disc_days$),wk_date_out$,status
+	call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getColumnData("ARE_FINCHG.INVOICE_DATE"),
+:                               num(user_tpl.disc_days$),wk_date_out$,status
 	if status then callpoint!.setStatus("ABORT")
 	callpoint!.setColumnData("ARE_FINCHG.DISC_DATE",wk_date_out$)
 	callpoint!.setColumnUndoData("ARE_FINCHG.DISC_DATE",wk_date_out$)
@@ -124,17 +124,17 @@ if cvs(callpoint!.getColumnData("ARE_FINCHG.AR_INV_NO"),2)=""
 	endif
 endif
 [[ARE_FINCHG.INVOICE_AMT.AVAL]]
-wk_amt=num(callpoint!.getUserInput())*num(aon_tpl.disc_pct$)/100
+wk_amt=num(callpoint!.getUserInput())*num(user_tpl.disc_pct$)/100
 callpoint!.setColumnData("ARE_FINCHG.DISCOUNT_AMT",str(wk_amt))
 callpoint!.setColumnUndoData("ARE_FINCHG.DISCOUNT_AMT",str(wk_amt))
 callpoint!.setStatus("REFRESH")
 [[ARE_FINCHG.INVOICE_DATE.AVAL]]
-call dir_pgm$+"adc_duedate.aon",aon_tpl.prox_days$,callpoint!.getUserInput(),num(aon_tpl.inv_days_due$),
+call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getUserInput(),num(user_tpl.inv_days_due$),
 :                           wk_date_out$,status
 if status then callpoint!.setStatus("ABORT")
 callpoint!.setColumnData("ARE_FINCHG.INV_DUE_DATE",wk_date_out$)
 callpoint!.setColumnUndoData("ARE_FINCHG.INV_DUE_DATE",wk_date_out$)
-call dir_pgm$+"adc_duedate.aon",aon_tpl.prox_days$,callpoint!.getUserInput(),num(aon_tpl.disc_days$),
+call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getUserInput(),num(user_tpl.disc_days$),
 :                           wk_date_out$,status
 if status then callpoint!.setStatus("ABORT")
 callpoint!.setColumnData("ARE_FINCHG.DISC_DATE",wk_date_out$)

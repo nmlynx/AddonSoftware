@@ -15,8 +15,8 @@ dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
 
 ap_type$=field(apt01a$,"AP_TYPE")
 vendor_id$=field(apt01a$,"VENDOR_ID")
-ap_type$(1)=AONObj!.getItem(num(aon_tpl.ap_type_vpos$)).getText()
-vendor_id$(1)=AONObj!.getItem(num(aon_tpl.vendor_id_vpos$)).getText()
+ap_type$(1)=AONObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
+vendor_id$(1)=AONObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
 
 apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")+"00"
 readrecord(apt_invoicehdr_dev,key=apt01ak1$,dom=*next)apt01a$
@@ -28,7 +28,7 @@ if apt01a$(1,len(apt01ak1$))<>apt01ak1$
 	key_pfx$=callpoint!.getColumnData("APE_MANCHECKDET.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
 :		callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")+
 :		callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")
-	call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"APE_MANCHECKDIST",
 :	user_id$,
 :	"MNT",
@@ -57,8 +57,8 @@ callpoint!.setColumnData("APE_MANCHECKDET.NET_PAID_AMT",str(net_paid))
 
 glns!=bbjapi().getNamespace("GLNS","GL Dist",1)
 glns!.setValue("dist_amt",callpoint!.getColumnData("APE_MANCHECKDET.INVOICE_AMT"))
-glns!.setValue("dflt_dist",aon_tpl.dflt_dist_cd$)
-glns!.setValue("dflt_gl",aon_tpl.dflt_gl_account$)
+glns!.setValue("dflt_dist",user_tpl.dflt_dist_cd$)
+glns!.setValue("dflt_gl",user_tpl.dflt_gl_account$)
 
 callpoint!.setStatus("MODIFIED-REFRESH")
 [[APE_MANCHECKDET.AP_INV_NO.AVAL]]
@@ -77,8 +77,8 @@ inv_amt=0,disc_amt=0,ret_amt=0
 
 ap_type$=field(apt01a$,"AP_TYPE")
 vendor_id$=field(apt01a$,"VENDOR_ID")
-ap_type$(1)=AONObj!.getItem(num(aon_tpl.ap_type_vpos$)).getText()
-vendor_id$(1)=AONObj!.getItem(num(aon_tpl.vendor_id_vpos$)).getText()
+ap_type$(1)=AONObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
+vendor_id$(1)=AONObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
 
 apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")+"00"
 apt11ak1$=apt01ak1$(1,len(apt01ak1$)-2)
@@ -117,7 +117,7 @@ else
 	c!=w!.getControl(5900)
 	c!.setColumnEditable(1,1)
 	c!.setColumnEditable(2,1)
-	callpoint!.setColumnData("APE_MANCHECKDET.AP_DIST_CODE",aon_tpl.dflt_dist_cd$)
+	callpoint!.setColumnData("APE_MANCHECKDET.AP_DIST_CODE",user_tpl.dflt_dist_cd$)
 endif
 
 	callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_AMT",str(inv_amt))
@@ -151,16 +151,16 @@ disp_tots:
 
     rem --- get context and ID of display controls for totals, and redisplay w/ amts from calc_tots
     
-    tinv!=AONObj!.getItem(num(aon_tpl.tinv_vpos$))
+    tinv!=AONObj!.getItem(num(user_tpl.tinv_vpos$))
     tinv!.setValue(tinv)
 
-    tdisc!=AONObj!.getItem(num(aon_tpl.tdisc_vpos$))
+    tdisc!=AONObj!.getItem(num(user_tpl.tdisc_vpos$))
     tdisc!.setValue(tdisc)
 
-    tret!=AONObj!.getItem(num(aon_tpl.tret_vpos$))
+    tret!=AONObj!.getItem(num(user_tpl.tret_vpos$))
     tret!.setValue(tret)
 
-    tchk!=AONObj!.getItem(num(aon_tpl.tchk_vpos$))
+    tchk!=AONObj!.getItem(num(user_tpl.tchk_vpos$))
     tchk!.setValue(tinv-tdisc-tret)
 
 return

@@ -2,7 +2,7 @@
 key_pfx$=callpoint!.getColumnData("IVM_LSMASTER.FIRM_ID")+callpoint!.getColumnData("IVM_LSMASTER.ITEM_ID")+
 :	callpoint!.getColumnData("IVM_LSMASTER.WAREHOUSE_ID")
 selected_key$=""
-call stbl("+DIR_PGM")+"rdm_inquiry.aon",
+call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :	gui_dev,
 :	Form!,
 :	"IVM_LSMASTER",
@@ -21,7 +21,7 @@ endif
 iv_item_id$=callpoint!.getColumnData("IVM_LSMASTER.ITEM_ID")
 iv_whse_id$=callpoint!.getColumnData("IVM_LSMASTER.WAREHOUSE_ID")
 iv_lot_id$=callpoint!.getColumnData("IVM_LSMASTER.LOTSER_NO")
-rem --- call stbl("+DIR_PGM")+"ivm_itemWhseLotActivity.aon",
+rem --- call stbl("+DIR_SYP")+"ivm_itemWhseLotActivity.aon",
 :	gui_dev,
 :	Form!,
 :	iv_whse_id$,
@@ -46,7 +46,7 @@ dflt_data$[4,0]="WAREHOUSE_ID_2"
 dflt_data$[4,1]=iv_whse_id$ 
 dflt_data$[5,0]="LOTSER_NO"
 dflt_data$[5,1]=iv_lot_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_LSTRANHIST",
 :	user_id$,
 :	"",

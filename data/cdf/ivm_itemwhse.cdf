@@ -14,7 +14,7 @@ if disable_str$<>"" call dir_pgm$+"rdm_enable_pop.aon",Form!,enable_str$,disable
 [[IVM_ITEMWHSE.AOPT-HIST]]
 iv_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
 iv_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
-rem --- call stbl("+DIR_PGM")+"ivm_itemWhseActivity.aon",
+rem --- call stbl("+DIR_SYP")+"ivm_itemWhseActivity.aon",
 :	gui_dev,
 :	Form!,
 :	iv_whse_id$,
@@ -36,7 +36,7 @@ dflt_data$[3,0]="WAREHOUSE_ID_1"
 dflt_data$[3,1]=cp_whse_id$
 dflt_data$[4,0]="WAREHOUSE_ID_2"
 dflt_data$[4,1]=cp_whse_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_LIFOFIFO",
 :	user_id$,
 :	"",
@@ -57,7 +57,7 @@ dflt_data$[3,0]="WAREHOUSE_ID_1"
 dflt_data$[3,1]=cp_whse_id$
 dflt_data$[4,0]="WAREHOUSE_ID_2"
 dflt_data$[4,1]=cp_whse_id$
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"IVR_TRANSHIST",
 :	user_id$,
 :	"",

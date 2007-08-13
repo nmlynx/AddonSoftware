@@ -53,26 +53,26 @@ if gl$<>"Y"
 	gosub disable_fields
 endif
 [[APM_VENDHIST.AP_DIST_CODE.AVAL]]
-if aon_tpl.multi_dist$<>"Y"
+if user_tpl.multi_dist$<>"Y"
 
 	if cvs(callpoint!.getUserInput(),3)<>"" callpoint!.setStatus("ABORT")
 
 endif
 [[APM_VENDHIST.AP_DIST_CODE.BINP]]
-if aon_tpl$.multi_dist$<>"Y" 
+if user_tpl$.multi_dist$<>"Y" 
 
 	callpoint!.setColumnData("APM_VENDHIST.DIST_CODE","  ")
 	callpoint!.setStatus("REFRESH")
 
 endif
 [[APM_VENDHIST.AP_TYPE.AVAL]]
-if aon_tpl.multi_types$<>"Y"
+if user_tpl.multi_types$<>"Y"
 
 	if cvs(callpoint!.getUserInput(),3)<>"" callpoint!.setStatus("ABORT")
 
 endif
 [[APM_VENDHIST.AP_TYPE.BINP]]
-if aon_tpl$.multi_types$<>"Y" 
+if user_tpl$.multi_types$<>"Y" 
 
 	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE","  ")
 	callpoint!.setStatus("REFRESH")
@@ -85,7 +85,7 @@ rem --- Retrieve miscellaneous templates
 	dim ids$[files],templates$[files]
 	ids$[1]="aps-01A"
 	
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -98,10 +98,10 @@ rem --- Retrieve parameter data
 	aps01a_key$=firm_id$+"AP00"
 	find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
 
-rem -- store info needed for validation, etc., in aon_tpl$
-	dim aon_tpl$:"multi_types:c(1),multi_dist:c(1)"
-	aon_tpl.multi_types$=aps01a.multi_types$
-	aon_tpl.multi_dist$=aps01a.multi_dist$
+rem -- store info needed for validation, etc., in user_tpl$
+	dim user_tpl$:"multi_types:c(1),multi_dist:c(1)"
+	user_tpl.multi_types$=aps01a.multi_types$
+	user_tpl.multi_dist$=aps01a.multi_dist$
 	
 [[APM_VENDHIST.<CUSTOM>]]
 disable_fields:

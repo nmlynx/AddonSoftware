@@ -5,7 +5,7 @@ rem --- Retrieve miscellaneous templates
 	dim ids$[files],templates$[files]
 	ids$[1]="gls-01A"
 	ids$[2]="ars-01A"
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -30,12 +30,12 @@ rem --- Retrieve parameter data
 	call dir_pgm$+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
 
-	dim aon_tpl$:"app:c(2),gl_pers:c(2),gl_installed:c(1),"+
+	dim user_tpl$:"app:c(2),gl_pers:c(2),gl_installed:c(1),"+
 :                  "ap_installed:c(1),iv_installed:c(1),bank_rec:c(1)"
 
-	aon_tpl.app$="AR",aon_tpl.gl_pers$=gls01a.total_pers$,
-:                   aon_tpl.gl_installed$=gl$,aon_tpl.ap_installed$=ap$,aon_tpl.iv_installed$=iv$,
-:                   aon_tpl.bank_rec$=br$
+	user_tpl.app$="AR",user_tpl.gl_pers$=gls01a.total_pers$,
+:                   user_tpl.gl_installed$=gl$,user_tpl.ap_installed$=ap$,user_tpl.iv_installed$=iv$,
+:                   user_tpl.bank_rec$=br$
 
 	rem --- set some defaults (that I can't do via arde) if param doesn't yet exist
 	ars01a_key$=firm_id$+"AR00"
@@ -83,7 +83,7 @@ if callpoint!.getUserInput()="Y"
 	endif
 endif
 [[ARS_PARAMS.BR_INTERFACE.AVAL]]
-if aon_tpl.ap_installed$<>"Y" or aon_tpl.gl_installed$<>"Y" or aon_tpl.bank_rec$<>"Y"
+if user_tpl.ap_installed$<>"Y" or user_tpl.gl_installed$<>"Y" or user_tpl.bank_rec$<>"Y"
 	if callpoint!.getUserInput()<>"N"
 		msg_id$="AR_BANKREC_ERR"
 		dim msg_tokens$[1]
@@ -94,9 +94,9 @@ if aon_tpl.ap_installed$<>"Y" or aon_tpl.gl_installed$<>"Y" or aon_tpl.bank_rec$
 	endif
 endif
 [[ARS_PARAMS.CURRENT_PER.AVAL]]
-if num(callpoint!.getUserInput())<1 or num(callpoint!.getUserInput())>num(aon_tpl.gl_pers$)
+if num(callpoint!.getUserInput())<1 or num(callpoint!.getUserInput())>num(user_tpl.gl_pers$)
 	msg_id$="AR_INVALID_PER"
-	dim msg_tokens$[1];msg_tokens$[1]=aon_tpl.gl_pers$
+	dim msg_tokens$[1];msg_tokens$[1]=user_tpl.gl_pers$
 	msg_opt$=""
 	gosub disp_message
 	callpoint!.setColumnData("ARS_PARAMS.CURRENT_PER",
@@ -122,7 +122,7 @@ else
 
 endif
 [[ARS_PARAMS.DIST_BY_ITEM.AVAL]]
-if aon_tpl.iv_installed$<>"Y"
+if user_tpl.iv_installed$<>"Y"
 	if callpoint!.getUserInput()<>"N"
 		msg_id$="AR_DISTITEM_ERR"
 		dim msg_tokens$[1]

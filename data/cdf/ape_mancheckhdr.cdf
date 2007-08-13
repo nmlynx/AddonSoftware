@@ -1,7 +1,7 @@
 [[APE_MANCHECKHDR.AOPT-OINV]]
 rem -- call inquiry program to view open invoices this vendor
 key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-call stbl("+DIR_PGM")+"rdm_inquiry.aon",
+call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :	gui_dev,
 :	Form!,
 :	"APT_INVOICEHDR",
@@ -14,7 +14,7 @@ rem -- call inquiry program to view open check file; plug check#/vendor id if th
 
 key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
 selected_key$=""
-call stbl("+DIR_PGM")+"rdm_inquiry.aon",
+call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :	gui_dev,
 :	Form!,
 :	"APT_CHECKHISTORY",
@@ -66,7 +66,7 @@ display_vendor_comments:
 	readrecord(apm_vendcmts_dev,end=*next)apm09a$
 	if apm09a$(1,len(apm09ak1$))=apm09ak1$
 		key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-		call stbl("+DIR_PGM")+"rdm_inquiry.aon",
+		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :			gui_dev,
 :			Form!,
 :			"APM_VENDCMTS",
@@ -130,16 +130,16 @@ disp_tots:
 
     rem --- get context and ID of display controls for totals, and redisplay w/ amts from calc_tots
     
-    tinv!=AONObj!.getItem(num(aon_tpl.tinv_vpos$))
+    tinv!=AONObj!.getItem(num(user_tpl.tinv_vpos$))
     tinv!.setValue(tinv)
 
-    tdisc!=AONObj!.getItem(num(aon_tpl.tdisc_vpos$))
+    tdisc!=AONObj!.getItem(num(user_tpl.tdisc_vpos$))
     tdisc!.setValue(tdisc)
 
-    tret!=AONObj!.getItem(num(aon_tpl.tret_vpos$))
+    tret!=AONObj!.getItem(num(user_tpl.tret_vpos$))
     tret!.setValue(tret)
 
-    tchk!=AONObj!.getItem(num(aon_tpl.tchk_vpos$))
+    tchk!=AONObj!.getItem(num(user_tpl.tchk_vpos$))
     tchk!.setValue(tinv-tdisc-tret)
 
     return
@@ -153,8 +153,8 @@ get_vendor_history:
 :		callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE"),dom=*next)apm02a$
 	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")+
 :		callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
-		aon_tpl.dflt_dist_cd$=apm02a.ap_dist_code$
-		aon_tpl.dflt_gl_account$=apm02a.gl_account$
+		user_tpl.dflt_dist_cd$=apm02a.ap_dist_code$
+		user_tpl.dflt_gl_account$=apm02a.gl_account$
 		pfx$="GLNS",nm$="GL Dist"
 		GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
 		GLNS!.setValue("dflt_gl",apm02a.gl_account$)
@@ -178,7 +178,7 @@ if cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)<>""
 	gosub get_vendor_history
 
 	if cvs(apm02a$,3)=""
-		if aon_tpl.multi_types$="Y"
+		if user_tpl.multi_types$="Y"
 			msg_id$="AP_NOHIST"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
@@ -208,20 +208,20 @@ if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="M"
 	gosub enable_grid							
 endif
 [[APE_MANCHECKHDR.CHECK_DATE.AVAL]]
-gl$=aon_tpl.glint$
+gl$=user_tpl.glint$
 ckdate$=callpoint_data$        
 if gl$="Y" 
 	call dir_pgm$+"glc_datecheck.aon",ckdate$,"Y",per$,yr$,status
 	if status>99
 		callpoint!.setStatus("ABORT")
 	else
-		aon_tpl.glyr$=yr$
-		aon_tpl.glper$=per$
+		user_tpl.glyr$=yr$
+		user_tpl.glper$=per$
 	endif
 endif
 [[APE_MANCHECKHDR.AOPT-VCMT]]
 key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-call stbl("+DIR_PGM")+"rdm_inquiry.aon",
+call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :	gui_dev,
 :	Form!,
 :	"APM_VENDCMTS",
@@ -233,7 +233,7 @@ call stbl("+DIR_PGM")+"rdm_inquiry.aon",
 user_id$=stbl("+USER_ID")
 dim dflt_data$[1,1]
 key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-call stbl("+DIR_PGM")+"rdm_run_prog.aon",
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"APM_VENDMAST",
 :	user_id$,
 :	"MNT",
@@ -243,8 +243,8 @@ call stbl("+DIR_PGM")+"rdm_run_prog.aon",
 :	dflt_data$[all]
 [[APE_MANCHECKHDR.BSHO]]
 rem --- disable ap type control if param for multi-types is N
-rem --- aon_tpl.multi_types$="N";rem --- temp for testing.CAH
-if aon_tpl.multi_types$="N" 
+rem --- user_tpl.multi_types$="N";rem --- temp for testing.CAH
+if user_tpl.multi_types$="N" 
 	ctl_name$="APE_MANCHECKHDR.AP_TYPE"
 	ctl_stat$="I"
 	gosub disable_fields
@@ -255,7 +255,7 @@ w!=Form!.getChildWindow(1109)
 c!=w!.getControl(5900)
 c!.setColumnEditable(6,0)
 c!.setColumnEditable(7,0)
-if aon_tpl.multi_types$="N" c!.setColumnEditable(2,0)
+if user_tpl.multi_types$="N" c!.setColumnEditable(2,0)
 [[APE_MANCHECKHDR.AWIN]]
 rem --- Open/Lock files
 
@@ -277,7 +277,7 @@ for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
 
-call dir_pgm$+"adc_open_tables.aon",
+call dir_pgm$+"bac_open_tables.bbj",
 :	begfile,
 :	endfile,
 :	files$[all],
@@ -298,7 +298,7 @@ files=2,begfile=1,endfile=files
 dim ids$[files],templates$[files]
 ids$[1]="aps-01A"
 ids$[2]="gls-01A"
-call dir_pgm$+"adc_template.aon",
+call dir_pgm$+"bac_template.bbj",
 :	begfile,
 :	endfile,
 :	ids$[all],
@@ -309,16 +309,16 @@ if status goto std_exit
 rem --- Dimension miscellaneous string templates
 
 dim aps01a$:templates$[1],gls01a$:templates$[2]
-aon_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
-aon_tpl_str$=aon_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),"
-aon_tpl_str$=aon_tpl_str$+"misc_entry:c(1),post_closed:c(1),units_flag:c(1),"
-aon_tpl_str$=aon_tpl_str$+"existing_tran:c(1),open_check:c(1),existing_invoice:c(1),reuse_chk:c(1),"
-aon_tpl_str$=aon_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),"
-aon_tpl_str$=aon_tpl_str$+"tinv_vpos:c(1),tdisc_vpos:c(1),tret_vpos:c(1),tchk_vpos:c(1),"
-aon_tpl_str$=aon_tpl_str$+"ap_type_vpos:c(1),vendor_id_vpos:c(1)"
+user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
+user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),"
+user_tpl_str$=user_tpl_str$+"misc_entry:c(1),post_closed:c(1),units_flag:c(1),"
+user_tpl_str$=user_tpl_str$+"existing_tran:c(1),open_check:c(1),existing_invoice:c(1),reuse_chk:c(1),"
+user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),"
+user_tpl_str$=user_tpl_str$+"tinv_vpos:c(1),tdisc_vpos:c(1),tret_vpos:c(1),tchk_vpos:c(1),"
+user_tpl_str$=user_tpl_str$+"ap_type_vpos:c(1),vendor_id_vpos:c(1)"
 
-dim aon_tpl$:aon_tpl_str$
-aon_tpl.firm_id$=firm_id$
+dim user_tpl$:user_tpl_str$
+user_tpl.firm_id$=firm_id$
 
 rem --- set up AONObj! as vector
 	AONObj!=SysGUI!.makeVector()
@@ -348,17 +348,17 @@ rem --- set up AONObj! as vector
 	vendor_id!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 
 	AONObj!.addItem(tinv!)
-	aon_tpl.tinv_vpos$="0"
+	user_tpl.tinv_vpos$="0"
 	AONObj!.addItem(tdisc!)
-	aon_tpl.tdisc_vpos$="1"
+	user_tpl.tdisc_vpos$="1"
 	AONObj!.addItem(tret!)
-	aon_tpl.tret_vpos$="2"
+	user_tpl.tret_vpos$="2"
 	AONObj!.addItem(tchk!)
-	aon_tpl.tchk_vpos$="3"
+	user_tpl.tchk_vpos$="3"
 	AONObj!.addItem(ap_type!)
-	aon_tpl.ap_type_vpos$="4"
+	user_tpl.ap_type_vpos$="4"
 	AONObj!.addItem(vendor_id!)
-	aon_tpl.vendor_id_vpos$="5"
+	user_tpl.vendor_id_vpos$="5"
 
 rem --- Additional File Opens
 
@@ -367,8 +367,8 @@ status=0
 source$=pgm(-2)
 call dir_pgm$+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
 if status<>0 goto std_exit
-aon_tpl.glint$=gl$
-aon_tpl.glworkfile$=glw11$
+user_tpl.glint$=gl$
+user_tpl.glworkfile$=glw11$
 
 if gl$="Y"
 	files=21,begfile=20,endfile=21
@@ -378,7 +378,7 @@ if gl$="Y"
    rem --- will need alias name, not disk name, when opening work file
 	rem --- will also need option to lock/clear file [21]; not using in this pgm for now, so bypassing.CAH
 
-	call dir_pgm$+"adc_open_tables.aon",
+	call dir_pgm$+"bac_open_tables.bbj",
 :	begfile,
 :	endfile,
 :	files$[all],
@@ -397,26 +397,26 @@ rem --- Retrieve parameter data
                
 aps01a_key$=firm_id$+"AP00"
 find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-aon_tpl.amt_msk$=aps01a.amount_mask$
-aon_tpl.multi_types$=aps01a.multi_types$
-aon_tpl.multi_dist$=aps01a.multi_dist$
-aon_tpl.ret_flag$=aps01a.ret_flag$
-aon_tpl.misc_entry$=aps01a.misc_entry$
-aon_tpl.post_closed$=aps01a.post_closed$
+user_tpl.amt_msk$=aps01a.amount_mask$
+user_tpl.multi_types$=aps01a.multi_types$
+user_tpl.multi_dist$=aps01a.multi_dist$
+user_tpl.ret_flag$=aps01a.ret_flag$
+user_tpl.misc_entry$=aps01a.misc_entry$
+user_tpl.post_closed$=aps01a.post_closed$
 
 gls01a_key$=firm_id$+"GL00"
 find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-aon_tpl.units_flag$=gls01a.units_flag$
-aon_tpl.units_flag$="N";rem --- for testing
+user_tpl.units_flag$=gls01a.units_flag$
+user_tpl.units_flag$="N";rem --- for testing
 
 pfx$="GLNS",nm$="GL Dist"
 GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
-GLNS!.setValue("GLMisc",aon_tpl.misc_entry$)
-GLNS!.setValue("GLUnits",aon_tpl.units_flag$)
+GLNS!.setValue("GLMisc",user_tpl.misc_entry$)
+GLNS!.setValue("GLUnits",user_tpl.units_flag$)
 GLNS!.setValue("dist_amt","")
 GLNS!.setValue("dflt_gl","")
 [[APE_MANCHECKHDR.ARNF]]
-if aon_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R" and cvs(callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO"),3)<>""
+if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R" and cvs(callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO"),3)<>""
 	apt_checkhistory_dev=fnget_dev("APT_CHECKHISTORY")
 	dim apt05a$:fnget_tpl$("APT_CHECKHISTORY")
 	apt05k1$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")+callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
@@ -425,7 +425,7 @@ if aon_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_T
 	read (apt_checkhistory_dev,key=apt05k1$,dom=*next)
 	readrecord (apt_checkhistory_dev,end=*break)apt05a$
 	if apt05a$(1,apt05klen)=apt05k1$
-		aon_tpl.open_check$="Y"
+		user_tpl.open_check$="Y"
 		if pos(apt05a.trans_type$="CM")
 			msg_id$="AP_REVERSE"
 			msg_opt$=""
@@ -451,7 +451,7 @@ if aon_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_T
 			msg_opt$=""
 			gosub disp_message
 			if msg_opt$="Y"
-				aon_tpl.reuse_chk$="Y"
+				user_tpl.reuse_chk$="Y"
 				callpoint!.setColumnData("APE_MANCHECKHDR.TRANS_TYPE","M")
 				callpoint!.setStatus("REFRESH")
 			else
@@ -461,10 +461,10 @@ if aon_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_T
 	endif
 endif
 [[APE_MANCHECKHDR.AREC]]
-aon_tpl.reuse_chk$=""
-aon_tpl.open_check$=""
-aon_tpl.dflt_dist_cd$=""
-aon_tpl.dflt_gl_account$=""
+user_tpl.reuse_chk$=""
+user_tpl.open_check$=""
+user_tpl.dflt_dist_cd$=""
+user_tpl.dflt_gl_account$=""
 
 rem --- enable/disable grid cells
 w!=Form!.getChildWindow(1109)
@@ -473,15 +473,15 @@ c!.setColumnEditable(0,1)
 c!.setColumnEditable(1,1)
 c!.setColumnEditable(6,0)
 c!.setColumnEditable(7,0)
-if aon_tpl.multi_dist$="N" c!.setColumnEditable(2,0)
+if user_tpl.multi_dist$="N" c!.setColumnEditable(2,0)
 [[APE_MANCHECKHDR.AREA]]
-aon_tpl.existing_tran$="Y"
-aon_tpl.open_check$=""
-aon_tpl.reuse_chk$=""
+user_tpl.existing_tran$="Y"
+user_tpl.open_check$=""
+user_tpl.reuse_chk$=""
 [[APE_MANCHECKHDR.ADIS]]
-aon_tpl.existing_tran$="Y"
-aon_tpl.open_check$=""
-aon_tpl.reuse_chk$=""
+user_tpl.existing_tran$="Y"
+user_tpl.open_check$=""
+user_tpl.reuse_chk$=""
 
 ctl_name$="APE_MANCHECKHDR.TRANS_TYPE"
 ctl_stat$="D"
@@ -518,7 +518,7 @@ endif
 gosub display_vendor_address
 rem --- doing in vendor id aval...gosub get_vendor_history
 [[APE_MANCHECKHDR.ARNF]]
-				if aon_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R"
+				if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R"
 					ape_openchecks_dev=fnget_dev("APE_OPENCHECKS")
 					dim ape05a$:fnget_tpl$("APE_OPENCHECKS")
 					ape05k1$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")+callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
@@ -527,7 +527,7 @@ rem --- doing in vendor id aval...gosub get_vendor_history
 					read (ape_openchecks_dev,key=ape05k1$,dom=*next)
 					readrecord (ape_openchecks_dev,end=*break)ape05a$
 					if ape05a$(1,ape05klen)=ape05k1$
-						aon_tpl.open_check$="Y"
+						user_tpl.open_check$="Y"
 						if pos(ape05a.check_type$="CM")
 							msg_id$="AP_REVERSE"
 							msg_opt$=""
@@ -553,7 +553,7 @@ rem --- doing in vendor id aval...gosub get_vendor_history
 							msg_opt$=""
 							gosub disp_message
 							if msg_opt$="Y"
-								aon_tpl.reuse_chk$="Y"
+								user_tpl.reuse_chk$="Y"
 								callpoint!.setColumnData("APE_MANCHECKHDR.TRANS_TYPE","M")
 								callpoint!.setStatus("REFRESH")
 							else
@@ -563,16 +563,16 @@ rem --- doing in vendor id aval...gosub get_vendor_history
 					endif
 				endif
 [[APE_MANCHECKHDR.AREC]]
-				aon_tpl.reuse_chk$=""
-				aon_tpl.open_check$=""
+				user_tpl.reuse_chk$=""
+				user_tpl.open_check$=""
 [[APE_MANCHECKHDR.AREA]]
-				aon_tpl.existing_tran$="Y"
-				aon_tpl.open_check$=""
-				aon_tpl.reuse_chk$=""
+				user_tpl.existing_tran$="Y"
+				user_tpl.open_check$=""
+				user_tpl.reuse_chk$=""
 [[APE_MANCHECKHDR.ADIS]]
-				aon_tpl.existing_tran$="Y"
-				aon_tpl.open_check$=""
-				aon_tpl.reuse_chk$=""
+				user_tpl.existing_tran$="Y"
+				user_tpl.open_check$=""
+				user_tpl.reuse_chk$=""
 
 				gosub display_vendor_address
 				gosub display_vendor_comments
