@@ -110,7 +110,7 @@ rem --- Loop starting
             endif
             if endsyn$<>"" then
                 if ivm14a_key.item_synonym$>endsyn$ then
-                    read (ivm24_dev,key=ivm24a_key.firm_id$+
+                    read (ivm14_dev,key=ivm14a_key.firm_id$+
 :                       ivm14a_key.item_id$+$FF$,dom=*continue)
                     continue
                 endif
