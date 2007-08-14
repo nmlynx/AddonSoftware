@@ -1,5 +1,8 @@
 [[SAM_PRODITMCST.AOPT-SALU]]
 rem -- call inquiry program to view Sales Analysis Records
+
+syspgmdir$=stbl("+DIR_SYP",err=*next)
+
 key_pfx$=firm_id$
 if cvs(callpoint!.getColumnData("SAM_PRODITMCST.YEAR"),2) <>"" then
 	key_pfx$=key_pfx$+callpoint!.getColumnData("SAM_PRODITMCST.YEAR")
@@ -14,16 +17,16 @@ if cvs(callpoint!.getColumnData("SAM_PRODITMCST.YEAR"),2) <>"" then
 	endif
 endif
 
-call stbl("+DIR_SYP")+"bac_key_template.bbj","SAM_CUSTOMER","ALT_KEY_01",key_temp$,table_chans$[all],rd_stat$
+call syspgmdir$+"bac_key_template.bbj","SAM_CUSTOMER","Product/Item/Cust Record",key_temp$,table_chans$[all],rd_stat$
 dim rd_key$:key_temp$
-call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+call syspgmdir$+"bam_inquiry.bbj",
 :	gui_dev,
 :	Form!,
 :	"SAM_CUSTOMER",
 :	"LOOKUP",
 :	table_chans$[all],
 :	key_pfx$,
-:	"ALT_KEY_01",
+:	"Product/Item/Cust Record",
 :	rd_key$
 
 callpoint!.setColumnData("SAM_PRODITMCST.YEAR",rd_key.year$)
