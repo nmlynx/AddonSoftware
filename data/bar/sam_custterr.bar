@@ -1,11 +1,11 @@
 <<DDM_TABLES.TPL>>DD_TABLE_ALIAS:C(16*),DD_ALIAS_DESC:C(40*),DD_FILE_NAME:C(16*),DD_TABLE_PATH:C(60*),DD_ALIAS_TYPE:C(1*),DD_KEY_LENGTH:N(2*),DD_NBR_RECORD:N(5*),DD_RECORD_LEN:N(4*),DD_SYSTEM_REC:C(1*),DD_SYSTEM_ID:C(2*),RESTRICT_REBUILD:C(1*),ASC_COMP_ID:C(3*),ASC_PROD_ID:C(3*),ASC_LICENSE_ID:C(32*),DD_EXPORT_DATA:C(1*),DD_CREATE_DATE:C(8*),DD_LSTREV_DATE:C(8*),DD_LSTSYNC_DATE:C(8*),DD_LSTSYNC_TIME:C(6*),DD_ATTR_ATAB:C(16*),DD_ATTR_CPGM:C(60*),DD_ATTR_DKNM:C(16*),DD_ATTR_FIMG:C(64*),DD_ATTR_FTYP:C(1*),DD_ATTR_HELP:C(10*),DD_ATTR_IKEY:C(1*),DD_ATTR_NOTE:C(16*),DD_ATTR_PCAL:C(60*),DD_ATTR_PRUN:C(60*),DD_ATTR_PTAB:C(16*),DD_ATTR_SLEV:C(4*),DD_ATTR_WINT:C(40*),RESERVED_STR_01:C(10*),RESERVED_STR_02:C(10*),RESERVED_STR_03:C(10*),RESERVED_STR_04:C(10*),RESERVED_STR_05:C(10*),RESERVED_NUM_01:N(10*),RESERVED_NUM_02:N(10*),RESERVED_NUM_03:N(10*),RESERVED_NUM_04:N(10*),RESERVED_NUM_05:N(10*)<<DDM_TABLES.REC>>SAM_CUSTTERR    
-Customer/Product/Item Record
+Terr/Customer/Product/Item Record
 sam-12A
 [+SADATA]
 X
-0
-0
-384
+
+
+
 N
 SA
 
@@ -14,11 +14,11 @@ SA
 
 Y
 20060119
-20060119
-20070731
-134132
+20070808
+20070808
+205722
 
-
+[+DIR_PGM]sam_custterr_cpt.aon
 
 
 T
@@ -29,7 +29,7 @@ T
 
 
 zzzz
-Customer/Product/Item Record
+Terr/Customer/Product/Item Record
 
 
 
@@ -40,6 +40,15 @@ Customer/Product/Item Record
 
 
 
+<<DDM_TABLE_AOPT.TPL>>DD_TABLE_ALIAS:C(16*),DD_ATTR_SEQ:C(2*),DD_ATTR_AOPT:C(30*),DD_ATTR_AOPT_CD:C(4*),DD_ATTR_AOPT_FM:C(1*)<<DDM_TABLE_AOPT.REC>>SAM_CUSTTERR    
+01
+S/A Lookup
+SALU
+B
+<<DDM_TABLE_CPRO.TPL>>DD_TABLE_ALIAS:C(16*),DD_ATTR_CPRO:C(128*)<<DDM_TABLE_CPRO.REC>>SAM_CUSTTERR    
+AOPT
+<<DDM_TABLE_OPTS.TPL>>DD_TABLE_ALIAS:C(16*),DD_ATTR_OPTS:C(1*)<<DDM_TABLE_OPTS.REC>>SAM_CUSTTERR    
+W
 <<DDM_TABLE_TPLS.TPL>>DD_TABLE_ALIAS:C(16*),DD_FILE_NAME:C(7*),DD_TABLE_TPL:C(10240*)<<DDM_TABLE_TPLS.REC>>SAM_CUSTTERR    
 sam-12A
 firm_id:c(2),year:c(4),territory:c(3),customer_id:c(6),product_type:c(3),item_id:c(20*),qty_shipped_01:n(7*),qty_shipped_02:n(7*),qty_shipped_03:n(7*),qty_shipped_04:n(7*),qty_shipped_05:n(7*),qty_shipped_06:n(7*),qty_shipped_07:n(7*),qty_shipped_08:n(7*),qty_shipped_09:n(7*),qty_shipped_10:n(7*),qty_shipped_11:n(7*),qty_shipped_12:n(7*),qty_shipped_13:n(7*),total_cost_01:n(7*),total_cost_02:n(7*),total_cost_03:n(7*),total_cost_04:n(7*),total_cost_05:n(7*),total_cost_06:n(7*),total_cost_07:n(7*),total_cost_08:n(7*),total_cost_09:n(7*),total_cost_10:n(7*),total_cost_11:n(7*),total_cost_12:n(7*),total_cost_13:n(7*),total_sales_01:n(7*),total_sales_02:n(7*),total_sales_03:n(7*),total_sales_04:n(7*),total_sales_05:n(7*),total_sales_06:n(7*),total_sales_07:n(7*),total_sales_08:n(7*),total_sales_09:n(7*),total_sales_10:n(7*),total_sales_11:n(7*),total_sales_12:n(7*),total_sales_13:n(7*)
@@ -136,14 +145,14 @@ AON
 
 
 
-
+2
 
 
 Firm ID
 
 
 
-
+1
 
 
 
@@ -175,6 +184,7 @@ AON
 
 
 
+40
 
 
 
@@ -183,15 +193,14 @@ AON
 
 
 
-
-
+4
 
 
 Year
 
 
 
-
+2
 
 
 
@@ -223,6 +232,7 @@ AON
 
 
 
+35
 
 
 
@@ -231,15 +241,14 @@ AON
 
 
 
-
-
+3
 
 
 Territory Code
 
 
 
-
+3
 
 
 
@@ -271,7 +280,7 @@ AON
 
 
 
-
+60
 
 
 
@@ -280,14 +289,14 @@ AON
 Customer N
 
 
-
+6
 
 
 Customer Number
 
 
 
-
+4
 
 
 
@@ -319,6 +328,7 @@ AON
 
 
 
+35
 
 
 
@@ -327,15 +337,14 @@ AON
 
 
 
-
-
+3
 
 
 Product Type
 
 
 
-
+5
 
 
 
@@ -367,23 +376,23 @@ AON
 
 
 
+200
 
 
 
 
 
-
-Inventory 
-
+Inventory
 
 
+20
 
 
 Inventory Item Number
 
 
 
-
+6
 
 
 
@@ -415,6 +424,7 @@ AON
 
 
 
+80
 
 
 
@@ -423,15 +433,14 @@ AON
 
 
 
-
-
+7
 
 
 Quantity Shipped
 
 
 
-
+7
 
 
 
@@ -461,6 +470,9 @@ AON
 
 
 
++19
+-13
+80
 
 
 
@@ -469,17 +481,14 @@ AON
 
 
 
-
-
-
-
+7
 
 
 Total Cost Amount
 
 
 
-
+8
 
 
 
@@ -509,6 +518,9 @@ AON
 
 
 
++19
+-13
+80
 
 
 
@@ -517,17 +529,14 @@ AON
 
 
 
-
-
-
-
+7
 
 
 Total Sales Amount
 
 
 
-
+9
 
 
 
