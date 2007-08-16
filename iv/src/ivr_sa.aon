@@ -61,14 +61,15 @@ rem --- Dimension miscellaneous string templates
 
 rem --- Assign form input values to local variables
 
-    sequence$=option!.getOptionData("Sequence")
-    begsyn$=option!.getOptionData("synonym_1")
-    endsyn$=option!.getOptionData("synonym_2")
-    begprod$=option!.getOptionData("prod_id_1")
-    endprod$=option!.getOptionData("prod_id_2")
-    begitem$=option!.getOptionData("item_1")
-    enditem$=option!.getOptionData("item_2")
+    sequence$=option!.getOptionData("report_seq")
+    begsyn$=option!.getOptionData("item_synonym_1")
+    endsyn$=option!.getOptionData("item_synonym_2")
+    begprod$=option!.getOptionData("product_type_1")
+    endprod$=option!.getOptionData("product_type_2")
+    begitem$=option!.getOptionData("item_id_1")
+    enditem$=option!.getOptionData("item_id_2")
     type$=option!.getOptionData("item_type")
+
 
 rem --- Retrieve parameter records
 
@@ -88,10 +89,10 @@ rem --- Parameters
 
 rem --- Initializations
 
-    dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],x0$(32),y0$(5),y1$(20)
+    rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],x0$(32),y0$(5),y1$(20)
 
 rem --- Run overlay
-    run pgmdir$+"ivr_itemsyn_o1.aon"
+    run pgmdir$+"ivr_sb.bbx"
 
 rem #include std_error.src
 
