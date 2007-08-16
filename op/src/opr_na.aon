@@ -8,374 +8,158 @@ rem --- All Rights Reserved
 
 
 
-    setesc std_error
-    seterr std_error
+                setesc std_error
+                seterr std_error
 
 rem --- Retrieve the program path
-
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+                                                                                                                        
+                pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-REM STatement added BY SHAINY
-  REM  milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+                sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+                dim sysinfo$:sysinfo_template$
+                sysinfo$=stbl("+SYSINFO",err=*next)
+
+                milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+                firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
-    files=16,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-01"
-    files$[3]="arm-03"
-    files$[4]="arm-10"
-    files$[5]="ivm-01"
-    files$[6]="ivm-02"
-    files$[7]="ivm-10"
-    files$[8]="ope-01"
-    files$[9]="ope-04"
-    files$[10]="ope-11"
-    files$[11]="ope-21"
-    files$[12]="ope-31"
-    files$[13]="opm-01"
-    files$[14]="opm-02"
-    files$[15]="opm-04"
-    files$[16]="opm-14"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+                files=16,begfile=1,endfile=files
+                dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+                files$[1]="ads-01"
+                files$[2]="arm-01"
+                files$[3]="arm-03"
+                files$[4]="arm-10"
+                files$[5]="ivm-01"
+                files$[6]="ivm-02"
+                files$[7]="ivm-10"
+                files$[8]= "ope-01"
+                files$[9]="ope-04"
+                files$[10]="ope-11"
+                files$[11]="ope-21"
+                files$[12]="ope-31"
+                files$[13]="opm-01"
+                files$[14]="opm-02"
+                files$[15]="opm-04"
+                files$[16]="opm-14"
+                call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ads01_dev=channels[1]
-    arm01_dev=channels[2]
-    arm03_dev=channels[3]
-    arm10_dev=channels[4]
-    ivm01_dev=channels[5]
-    ivm02_dev=channels[6]
-    ivm10_dev=channels[7]
-    ope01_dev=channels[8]
-    ope04_dev=channels[9]
-    ope11_dev=channels[10]
-    ope21_dev=channels[11]
-    ope31_dev=channels[12]
-    opm01_dev=channels[13]
-    opm02_dev=channels[14]
-    opm04_dev=channels[15]
-    opm14_dev=channels[16]
+                if status goto std_exit
+                ads01_dev=channels[1]
+                arm01_dev=channels[2]
+                arm03_dev=channels[3]
+                arm10_dev=channels[4]
+                ivm01_dev=channels[5]
+                ivm02_dev=channels[6]
+                ivm10_dev=channels[7]
+                ope01_dev=channels[8]
+                ope04_dev=channels[9]
+                ope11_dev=channels[10]
+                ope21_dev=channels[11]
+                ope31_dev=channels[12]
+                opm01_dev=channels[13]
+                opm02_dev=channels[14]
+                opm04_dev=channels[15]
+                opm14_dev=channels[16]
 
 rem --- Dimension string templates
 
-    dim arm01a$:templates$[2],arm03a$:templates$[3],arm10a$:templates$[4],
-:       ivm01a$:templates$[5],ivm02a$:templates$[6],ivm10a$:templates$[7],
-:       ope01a$:templates$[8],ope04a$:templates$[9],ope11a$:templates$[10],
-:       ope21a$:templates$[11],ope31a$:templates$[12],opm01a$:templates$[13],
-:       opm02a$:templates$[14],opm04a$:templates$[15],opm14a$:templates$[16]
+                dim arm01a$:templates$[2],arm03a$:templates$[3],arm10a$:templates$[4],
+:               ivm01a$:templates$[5],ivm02a$:templates$[6],ivm10a$:templates$[7],
+:               ope01a$:templates$[8],ope04a$:templates$[9],ope11a$:templates$[10],
+:               ope21a$:templates$[11],ope31a$:templates$[12],opm01a$:templates$[13],
+:               opm02a$:templates$[14],opm04a$:templates$[15],opm14a$:templates$[16]
 
 rem --- Retrieve miscellaneous templates
 
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A"
-    ids$[2]="ars-01C"
-    ids$[3]="ivs-01A"
-    ids$[4]="sys-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
+                files=3,begfile=1,endfile=files
+                dim ids$[files],templates$[files]
+                ids$[1]="ars-01A"
+                ids$[2]="ars-01C"
+                ids$[3]="ivs-01A"
+                call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+                if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim ars01a$:templates$[1],ars01c$:templates$[2],ivs01a$:templates$[3],
-:       sys01a$:templates$[4]
+                dim ars01a$:templates$[1],ars01c$:templates$[2],ivs01a$:templates$[3]
+       
 
 rem --- Assign form input values to local variables
-rem added by shainy on 11/07/07
-    table$=fnget_table$("")
-rem rem statmt added by shainy on 11/07/07
-rem    value_01$=fnget_fld_data$(table$,"dataname_01")
-    Print_Prices$=fnget_data$(table$,"print price")
-    Restart$=fnget_data$(table$,"Restart")
-    Customer_Number$=fnget_data$(table$,"Customer Number")   
-    Selected_Warehouse$=fnget_data$(table$,"Selected Warehouse")
 
+                Print_Prices$      =                  option!.getOptionData("print price")
+                Restart$           =                      option!.getOptionData("Restart")
+                Customer_Number$   =              option!.getOptionData("Customer Number")   
+                Selected_Warehouse$=           option!.getOptionData("Selected Warehouse")
 
+    
+ 
 
 rem --- Retrieve parameter records
-rem added by shainy on 12/07/07
-    ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    customer_size=num(ars01a.customer_size$)
-    m0$=ars01a.customer_output$
-    ars01c_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01c_key$,err=std_missing_params) ars01c$
-    customer_size=num(ars01c.customer_size$)
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    customer_size=num( ivs01a.customer_size$)
-    m1$=ivs01a.amount_mask$,m2$=ivs01a.unit_mask$,m3$=ivs01a.cost_mask$,m4$=ivs01a.price_mask$
-    sys01a_key$=firm_id$+"SY00"
-    find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
-    customer_size=num(sys01a.customer_size$)
-                                                                                                                                                                                                                                                                                                                                                          
-rem added by shainy on 11/07/07
+
+                ars01a_key$=firm_id$+"AR00"
+                find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+                ars01c_key$=firm_id$+"AR00"
+                find record (ads01_dev,key=ars01c_key$,err=std_missing_params) ars01c$
+                ivs01a_key$=firm_id$+"IV00"
+                find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+
+    
 rem --- Document initializations
-    OutVect!=bbjAPI().getSysGui().makeVector()
-    rep_date$=date(0:"%Mz/%Dz/%Yd")
-    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-    rep_time$=date(0:"%hz:%mz %p")
-    rep_time_stamp$=date(0:"%Hz%mz%sz")
+                OutVect!=bbjAPI().getSysGui().makeVector()
+                rep_date$=date(0:"%Mz/%Dz/%Yd")
+                rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+                rep_time$=date(0:"%hz:%mz %p")
+                rep_time_stamp$=date(0:"%Hz%mz%sz")
 
-rem --- Open/Lock Files
-
-    files=16
-    dim files$[files],options$[files],channels[files]
-    files$[1]="ope-01"
-    files$[2]="ope-04"
-    files$[3]="ope-11"
-    files$[4]="ope-21"
-    files$[5]="ope-31"
-    files$[6]="arm-01"
-    files$[7]="arm-03"
-    files$[8]="opm-01"
-    files$[9]="arm-10"
-    files$[10]="ivm-01"
-    files$[11]="ivm-02"
-    files$[12]="ivm-10"
-    files$[13]="sys-01"
-    files$[14]="opm-02"
-    files$[15]="opm-04"
-    files$[16]="opm-14"
-    call pgmdir$+"adc_fileopen.aon",1,1,files,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    ope01_dev=channels[1]
-    ope04_dev=channels[2]
-    ope11_dev=channels[3]
-    ope21_dev=channels[4]
-    ope31_dev=channels[5]
-    arm01_dev=channels[6]
-    arm03_dev=channels[7]
-    opm01_dev=channels[8]
-    arm10_dev=channels[9]
-    ivm01_dev=channels[10]
-    ivm02_dev=channels[11]
-    ivm10_dev=channels[12]
-    sys01_dev=channels[13]
-    opm02_dev=channels[14]
-    opm04_dev=channels[15]
-    opm14_dev=channels[16]
 
 rem --- Parameters
 
-    find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
-    firm_id$=f0$(16,2)
-    n1$=sysinfo.firm_name$
-    n2$="AR"
-    n4$=sysinfo.task_desc$
-    dim p3$(113)
-    find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
-    find record (sys01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
-    dim c9$(55); let c9$(7,1)="N"
-    find record (sys01_dev,key=firm_id$+"AR01",dom=*next) ars01c$
-    whse$=i3$(6,2)
-    find record (opm01_dev,key=firm_id$+pad(fid(0),4),dom=Assign_data) opm01a$
-    whse$=r2$(32,2)
+   
+                n1$=sysinfo.firm_name$
+                n2$="AR"
+                n4$=sysinfo.task_desc$
+                dim p3$(113)
+                find record (ads01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
+                find record (ads01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
+                dim c9$(55); let ars01c.sys_install$="N"
+                find record (ads01_dev,key=firm_id$+"AR01",dom=*next) ars01c$
+                whse$=ivs01a.WAREHOUSE_ID$
+                find record (opm01_dev,key=firm_id$+pad(fid(0),4),dom=Assign_data) opm01a$
+                whse$=opm01a.WAREHOUSE_ID$
 Assign_data:
-    dim p[2],i[6]
-    for i=0 to 6
-        i[i]=num(i2$(i*2+1,2))
-    next i
-    desclen=i[4]+i[5]+i[6]
-    p[0]=num(p2$(1,2))
-    p[1]=num(p2$(3,2))
-    p[2]=num(p3$(4,1))
-    m0=len(m0$)
-    m2=len(m2$)
-    m3=len(m3$)
-    m4=len(m4$)
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,8,12
+                dim p[2],i[6]
+                for i=0 to 6
+                    i[i]=num(ivs01a$(i*2+1,2))
+                next i
+                desclen=i[4]+i[5]+i[6]
+                p[0]=num(ars01a.customer_size$)
+                p[1]=num(ars01a.max_customer_len$)
+                p[2]=num(ars01a.zip_length$)
+                m0=len(ars01a.customer_output$)
+                m2=len(ivs01a.unit_mask$)
+                m3=len(ivs01a.cost_mask$)
+                m4=len(ivs01a.price_mask$)
+                call pgmdir$+"adc_sizemask.aon",ivs01a.amount_mask$,m1,8,12
 
 rem --- Initialize Data 
-    p5$=""
-    p7$="N"
-    p8$="N"
-    p9$=sysinfo.system_date$
-    which_ones$="B"
-    rem dim a0$(150),a[13],w1$(64),w[14]
-    more=1
+                p5$=""
+                p7$="N"
+                p8$="N"
+                p9$=sysinfo.system_date$
+                which_ones$="B"
+                dim a0$(150),a[13],w1$(64),w[14]
+                more=1
 
-rem --- Display Resource
-
-    dim resparams$[20],resparams[20]
-    resaction$=""
-    resparams$[0]=pgm(-2)
-    call pgmdir$+"syc_ra.bbx",resaction$,resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
-    gosub display_fields
-   
-Print_Prices: rem --- Print Prices
-
-    v0$="Y"
-    v1$="R"
-    v2$=p8$
-    v0=1
-    v1=40
-    v2=3
-    i0=0
-    v3$=""
-    v4$="Print Prices (Y/N): "
-    control_id=3000
-    on v3 goto Assign_flow1,Print_Prices,flow_control,Print_Prices,flow_control,Assign_flow1,flow_control
-Assign_flow1:
-    p8$=v$
-    goto flow_control
-
-Restart: rem --- Restart
-    v0$="Y"
-    v1$="R"
-    v2$=p7$
-    v0=1
-    v1=40
-    v2=4
-    v3$=""
-    v4$="Restart (Y/N): "
-    control_id=3001
+rem --- Run overlay
+     
+                run pgmdir$+"opr_pa.bbx"
   
-    on v3 goto Assign_flow2,Restart,flow_control,Restart,flow_control,Assign_flow2,flow_control
-Assign_flow2:
-    p7$=v$
-    goto flow_control
-
-Customer: rem --- Customer
-
-    if p7$="N" call pgmdir$+"syc_rs.bbx","",my_context,3002,fill(80),0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13002,fill(80),0,"",status; goto flow_control 
-Check_Customer1:
-    v0$="M"
-    v1$="CK"
-    v2$=p5$
-    v3$=m0$
-    v0=p[1]
-    v1=40
-    v2=5
-    v4$="Enter A Valid Customer Number, <F3>=Lookup"
-    control_id=3002
-   
-    on v3 goto find_record_Cust,Customer,flow_control,Check_Customer2,flow_control,find_record_Cust,flow_control
-Check_Customer2:
-    call pgmdir$+"syc_lc.bbx",v$
-    if v$="" goto Check_Customer1
-find_record_Cust:
-    p5$=v$
-    find record (arm01_dev,key=firm_id$+p5$,dom=Customer) arm01a$
-    call pgmdir$+"syc_rs.bbx","",my_context,3002,fnmask$(p5$,m0$),0,"",status
-    call pgmdir$+"syc_rs.bbx","",my_context,13002,x0$(1,30),0,"",status
-    goto flow_control
-
-Selected_Warehouse: rem --- Selected Warehouse
-    v0$="S"
-    v1$="CK"
-    v2$=whse$
-    v3$=""
-    v4$="Print Pick Tickets for ItemsFrom This Warehouse, <F1>=All, <F3>=Lookup "
-    v0=2
-    v1=40
-    v2=6
-    control_id=3003
-  
-    on v3 goto find_record_Warehouse,All_Warehouses,flow_control,record_Warehouse,flow_control,find_record_Warehouse,flow_control
-record_Warehouse:
-    gosub Lookup_Warehouse; goto find_record_Warehouse
-All_Warehouses:
-    whse$="" 
-    call pgmdir$+"syc_rs.bbx","",my_context,13003,"All Warehouses",0,"",status
-    goto flow_control
-find_record_Warehouse:
-    v$=v$+"  "
-    v$=v$(1,2)
-    find record (ivm10_dev,key=firm_id$+"C"+v$,dom=Selected_Warehouse) ivm10c$
-    whse$=v$
-    call pgmdir$+"syc_rs.bbx","",my_context,3003,whse$,0,"",status
-    call pgmdir$+"syc_rs.bbx","",my_context,13003,x0$(6,20),0,"",status
-
-    goto flow_control
-
-Print_picking_list: rem --- Print picking list, quote, or both
-
-    v0$="S"
-    v1$="CR"
-    v2$=which_ones$
-    v3$="PQB"
-    v4$="Print only Picking Lists, only Quotes, or Both? (P/Q/B)"
-    v0=1
-    v1=40
-    v2=7
-    control_id=3004
-    rem gosub std_input
-    on v3 goto Assign_flow4,Print_picking_list,flow_control,Print_picking_list,flow_control,Assign_flow4,flow_control
-Assign_flow4:
-    which_ones$=v$
-   flow_control:
-    switch v3
-    case 0
-    case 1
-    case 3; let i0=i0+1; break
-    case 2; if i0<i0_nonkey1 i0=max(0,i0-1) else i0=max(i0_nonkey1,i0-1) fi; break
-    case 4; let i0=i0_done; break
-    case default; exitto done_v3
-    swend
-    on i0 goto Print_Prices,Restart,Customer,Selected_Warehouse,Print_picking_list,done,done
-
-done_v3:
-    on v3 goto done_test,done,done,done,std_exit,validate_input,std_exit,done
-done_test:
-    on pos(v$="YN") goto flow_control,validate_input,do_nonkey1
-validate_input:
-    let validate=1,old_control_id=0
-do_nonkey1:
-    let v3=0,i0=i0_nonkey1-1
-    goto flow_control
-
-
-done: rem --- Correct?
-
-    if validate then 
-    validate=0 
-    rem --- Run report overlay
-     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-     if status goto std_exit
-     let o9$="sys_ac.bbx",o9=1
-     run pgmdir$+"opr_pa.bbx"
-    else
-    let v0$="S",v1$="KC",v2$="Y",v3$="",v4$="ITAC=Y",v0=6,v1=fnv(v4$),v2=22,control_id=i0-i0_done+1
-   fi
-
 
    
-display_fields:
-    let control_id=3000,cid_cnt=0
-while more
-    if cid_cnt=0 disp_inp$=p8$
-    if cid_cnt=1 disp_inp$=p7$
-    if cid_cnt=2 disp_inp$="",disp_desc$=""
-    find record (ivm10_dev,key=firm_id$+"C"+whse$,dom=*next) ivm10c$
-    if cid_cnt=3 disp_inp$=whse$,disp_desc$=x0$(6,20)
-    if cid_cnt=4 disp_inp$=which_ones$
-    call pgmdir$+"syc_rs.bbx","",my_context,control_id,disp_inp$,0,"",status
-    call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,disp_desc$,0,"",status
-    let cid_cnt=cid_cnt+1; let control_id=control_id+1
-    if cid_cnt>4 break
-   wend
-    let disp_inp$="",disp_desc$=""
-    return
-    call pgmdir$+"syc_rs.bbx","",my_context,control_id,"",0,"",status
-    return
 
-Lookup_Warehouse: rem --- Lookup Warehouse
-
-    let nmbr=1
-    dim descript$[nmbr],field[nmbr],position[nmbr],length[nmbr]
-    let descript$[0]="Code",field[0]=1,position[0]=4,length[0]=2
-    let descript$[1]="Warehouse",field[1]=1,position[1]=6,length[1]=20
-    call pgmdir$+"syc_lk.bbx",ivm10_dev,"C",nmbr,"Warehouse Lookup",descript$[all],field[all],position[all],length[all],v1,v2,v$
-    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
