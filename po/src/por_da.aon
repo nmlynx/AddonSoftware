@@ -192,8 +192,8 @@ rem --- Initializations
     dim y0$(4),y1$(32),y2$(g[4]),z0$(32),z1$(11*g[4]),r0$(24),r[1]
     dim l0$(28),l1$(20),l[1],dif$[99],lineqty[99],lsqty[99],factor[99]
     dim glfiles[20],glparams$[20],glparams[20],w$[10]
-    if pos(i3$(17,1)="LS")>0 ls$="Y"
-    if pos(i3$(3,1)="LF")>0 lf$="Y"
+    if pos(ivs01a.lotser_flag$="LS")>0 ls$="Y"
+    if pos(ivs01a.lifofifo$="LF")>0 lf$="Y"
     m0=len(m0$)
     m1$=i6$
     m2$=i7$
@@ -212,13 +212,13 @@ rem --- Initializations
     headings$[1]=sysinfo.task_desc$
     number=0
     nf$="(Not On File)"
-    if i3$(8,1)="S" cost$="Std"
-    if i3$(8,1)="R" cost$="Rep"
+    if ivs01a.cost_method$="S" cost$="Std"
+    if ivs01a.cost_method$="R" cost$="Rep"
     bw=max(m0+16,32)
     dh1$="Dist"
     dh2$="Code"
     lsdesc$="Serial Nbr"
-    if i3$(17,1)="L" lsdesc$="Lot Nbr"
+    if ivs01a.lotser_flag$="L" lsdesc$="Lot Nbr"
     xref_dev=0
     lotser=0
     errors=0
