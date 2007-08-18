@@ -19,8 +19,8 @@ rem --- Check for valid MYP variable
 
     if myp$ = "P" 	
 		MSG_ID$="SA_PRIOR_INVALID"
-rem jpb		gosub disp_message
-		bye
+		gosub disp_message
+		goto std_exit
 	endif
 
 rem --- Retrieve the program path
@@ -76,13 +76,6 @@ rem --- Assign form input values to local variables
     table$=fnget_table$("")
     value_01$=fnget_fld_data$(table$,"dataname_01")
 
-rem --- Retrieve parameter records
-
-    sas01a_key$=firm_id$+"SA00"
-rem jpb    find record (ads01_dev,key=sas01a_key$,err=std_missing_params) sas01a$
-    sys01a_key$=firm_id$+"SY00"
-rem jpb    find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
-
 rem --- Parameters
 
     nmbr=4
@@ -115,12 +108,15 @@ rem --- Initializations
     for i=1 to segments
         levels$=levels$+levels$[i]
     next i
+    if action=21
+        if segments=1 levels$=levels$[2]
+        if segments=2 levels$=levels$[2]+levels$[3]
+        if segments=3 levels$=levels$[2]+levels$[3]+levels$[1]
+    endif
     dim seqs$[3]; let seqs$[1]="Ascending",seqs$[2]="Descending",seqs$[3]="Unsorted",seqs$="ADU"
     dim sus$[2]; let sus$[1]="Sales",sus$[2]="Units",sus$="SU"
     dim myps$[3]; let myps$[1]="MTD",myps$[2]="YTD",myps$[3]="Prior",myps$="MYP"
     dim begsegs$[segments],endsegs$[segments]
-rem jpb call pgmdir$+"adc_peryear.aon",firm_id$,sys01_dev,sysinfo.system_date$,period$,year$
-    level$=levels$[segments]
 
 rem --- Build begsegs and endsegs
     switch action
@@ -196,7 +192,6 @@ rem --- get correct template for sam-12
     for x=1 to segments
         if literals$[x]<>"" sum_fldlen=sum_fldlen+fldlen[x]
     next x
-rem jpb    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","  Building","",2+sum_fldlen,sam01_dev,1,meter_num,status
     call pgmdir$+"adc_clearfile.aon",sam12_dev
 l6440:
     read (sam01_dev,key=firm_id$+sayear$,dom=*next)
@@ -220,7 +215,6 @@ l6495:
 l6515:
     let x=x+1
     if x<=segments goto l6470; rem "End loop
-rem jpb    call pgmdir$+"adc_progress.aon","S","","","",sam01_k$(3,4))+sam01_k$(kpos[1],sum_fldlen-fldlen[1]),0,0,1,meter_num,status
     if sam01_k$(kpos[1],fldlen[2])=t0$ goto l6560
     let t0$=sam01_k$(kpos[1],fldlen[2])    
     read record (arm02_dev,key=firm_id$+t0$+"  ",dom=*next) arm02a$
@@ -254,7 +248,6 @@ l6575:
     let sayear$=priyear$
     goto l6440
 l6590:
-rem jpb    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     return
 
 rem #include std_functions.src
@@ -374,6 +367,12 @@ std_missing_params_release:
     release
 
 rem #endinclude std_missing_params.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
 
 rem #include std_end.src
 
