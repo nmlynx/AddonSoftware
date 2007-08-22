@@ -45,7 +45,7 @@ rem --- Retrieve miscellaneous templates
 
     files=1,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="ivm-02A"
+    ids$[1]="ivm-02A:IVM_ITEMWHSE"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -55,7 +55,7 @@ rem --- Dimension miscellaneous string templates
 
     rem --- Retrieve key template
 
-    call pgmdir$+"adc_key_template.aon","IVX_ITEMWHSE","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR+SYP")+"bac_key_template.bbj","IVX_ITEMWHSE","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
 
 rem --- Initializations
 
@@ -138,8 +138,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0

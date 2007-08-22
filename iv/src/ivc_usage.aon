@@ -49,10 +49,10 @@ rem --- Retrieve miscellaneous templates
 
     files=4,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="ivm-01A"
-    ids$[2]="ivm-02A"
-    ids$[3]="ivm-03G"
-    ids$[4]="ivm-12A"
+    ids$[1]="ivm-01A:IVM_ITEMMAST"
+    ids$[2]="ivm-02A:IVM_ITEMWHSE"
+    ids$[3]="ivm-03G:IVX_ITEMWHSE"
+    ids$[4]="ivm-12A:IVM_ITEMACT"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -178,8 +178,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
