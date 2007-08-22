@@ -86,7 +86,7 @@ rem --- display the error message and exit.
     filename$=ids$[file]
     description$="(Unknown Table)"    
     read (ddm_table_tpls_dev,key="DDM_TABLES",dom=*next)
-    ddm_table_tpls_key$=key(ddm_table_tpls_dev,err=*return);read(ddm21_dev)*,*,template$
+    ddm_table_tpls_key$=key(ddm_table_tpls_dev,err=*return);read(ddm_table_tpls_dev)*,*,template$
     if pos("DDM_TABLES"=ddm_table_tpls_key$)<>1 return
     ddm_tables_key$=ddm_table_tpls.dd_table_alias$
     ddm_tables_dev=unt
