@@ -17,14 +17,22 @@ rem    seterr std_error
     setesc std_error
     enter begfile,endfile,ids$[all],templates$[all],status
 
-rem --- Define ddm-21 Template File template and open it
+rem --- open ddm21 (template file); get its own template (i.e. template for the template file)
 
-	dim ddm_table_tpls$:"table_alias:c(16*),table_name:c(7*),record_template:c(10240*)"
 	datadir$=stbl("+DIR_DAT",err=*next)
+    sysdatadir$=stbl("+DIR_BRD",err=*next)
 	status=999
 	ddm_table_tpls_dev=unt
-	basename$="ddm_table_tpls"
-	open (ddm_table_tpls_dev)datadir$+basename$
+	basename$="ddm_table_tpls.dat"
+	open (ddm_table_tpls_dev)sysdatadir$+basename$
+    read(ddm_table_tpls_dev,key="DDM_TABLE_TPLS",dom=*next)
+    ddm21_key$=key(ddm_table_tpls_dev,end=template_error)
+    if pos("DDM_TABLE_TPLS"=ddm21_key$)<>1
+        goto template_error
+    else
+        read (ddm_table_tpls_dev)*,*,ddm21_tpl$
+    endif
+    dim ddm_table_tpls$:ddm21_tpl$
 
 rem --- Initializations
 
@@ -42,13 +50,19 @@ rem --- Open requested files
 
         if cvs(ids$[x],2)="" continue
         ddm_table_tpls_key$=ids$[x]
+        rem --- allow for disk:alias format, strip off disk name
+        wpos = pos(":"=ddm_table_tpls_key$)
+        if wpos
+            ddm_table_tpls_key$=ddm_table_tpls_key$(wpos+1)
+        endif
 
 rem --- Standard AddonSoftware file name or table alias?
 
-        keynum=1
-        if pos("-"=ddm_table_tpls_key$)<>4 keynum=0,ddm_table_tpls_key$=pad(ddm_table_tpls_key$,16)
-        find record (ddm_table_tpls_dev,key=ddm_table_tpls_key$,knum=keynum,err=template_error)ddm_table_tpls$
-        templates$[x]=cvs(ddm_table_tpls.record_template$,2)
+        wk$=fattr(ddm_table_tpls$,"dd_table_alias")
+        plen=dec(wk$(10,2))
+        ddm_table_tpls_key$=pad(ddm_table_tpls_key$,plen)
+        find record (ddm_table_tpls_dev,key=ddm_table_tpls_key$,err=template_error)ddm_table_tpls$
+        templates$[x]=cvs(ddm_table_tpls.dd_table_tpl$,2)
         continue
 
     template_error: rem --- Error encountered attempting to retrieve the template
@@ -70,15 +84,13 @@ rem --- An error was encountered. Retrieve the table description,
 rem --- display the error message and exit.
 
     filename$=ids$[file]
-    id$=""
-    if keynum=1 id$=filename$(7,1),filename$=filename$(1,6)
-    description$="(Unknown Table)"
-    ddm_table_tpls_key$="ddm_tables"
-    find record (ddm_table_tpls_dev,key=ddm_table_tpls_key$,knum=0,err=error_message)template$
-    template$=ddm_table_tpls.record_template$
-    ddm_tables_key$=ddm_table_tpls.table_alias$
+    description$="(Unknown Table)"    
+    read (ddm_table_tpls_dev,key="DDM_TABLES",dom=*next)
+    ddm_table_tpls_key$=key(ddm_table_tpls_dev,err=*return);read(ddm21_dev)*,*,template$
+    if pos("DDM_TABLES"=ddm_table_tpls_key$)<>1 return
+    ddm_tables_key$=ddm_table_tpls.dd_table_alias$
     ddm_tables_dev=unt
-    open (ddm_tables_dev,err=error_message) datadir$+"ddm_tables"
+    open (ddm_tables_dev,err=error_message) sysdatadir$+"ddm_tables.dat"
     dim ddm_tables$:template$
     find record (ddm_tables_dev,key=ddm_tables_key$,err=error_message)ddm_tables$
     description$=cvs(ddm_tables.dd_alias_desc$,2)
@@ -111,8 +123,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0

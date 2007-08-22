@@ -42,24 +42,29 @@ rem --- Open/Lock files
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="adm-04"
     options$[1]="R"
-    options$[2]="R"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ads01_dev=channels[1]
-    adm04_dev=channels[2]
+    
+
+    num_files=1
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
+    gosub open_tables
+    adm04_dev=num(open_chans$[1]),adm04a_tpl$=open_tpls$[1]
+
 
 rem --- Dimension string templates
 
-    dim adm04a$:templates$[2]
+    dim adm04a$:adm04a_tpl$
 
 rem --- Retrieve miscellaneous templates
 
     templates=1,begtemp=1,endtemp=templates
     dim tempkeys$[files],records$[templates]
-    tempkeys$[1]="gls-01A"
+    tempkeys$[1]="gls-01A:GLS_PARAMS"
     call pgmdir$+"adc_template.aon",begtemp,endtemp,tempkeys$[all],records$[all],status
     if status goto std_exit
 
@@ -136,14 +141,43 @@ rem --- fnglobal$: Return string value of passed STBL variable
         return q1$
     fnend
 
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>""
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+			msg_tokens$[1]=open_status$
+		gosub disp_message
+		goto std_exit
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0

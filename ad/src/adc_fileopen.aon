@@ -44,15 +44,21 @@ rem --- STATUS       : Status code/0=No error (Returned)
 
 rem --- Define ddm-21 Template File template and open it
 
-    dim ddm21a$:"table_alias:c(16*),"+
-:	          "table_name:c(7*),"+
-:  	          "record_template:c(10240*)"
     datadir$=fnglobal$("+DIR_DAT","")
     pgmdir$=fnglobal$("+DIR_PGM","")
+    sysdatadir$=fnglobal$("+DIR_BRD","")
     status=999
     ddm21_dev=unt
-    basename$="ddm_table_tpls"
-    open (ddm21_dev)datadir$+basename$
+    basename$="ddm_table_tpls.dat"
+    open (ddm21_dev)sysdatadir$+basename$
+    read(ddm21_dev,key="DDM_TABLE_TPLS",dom=*next)
+    ddm21_key$=key(ddm21_dev,end=template_error)
+    if pos("DDM_TABLE_TPLS"=ddm21_key$)<>1
+        goto template_error
+    else
+        read (ddm21_dev)*,*,ddm21_tpl$
+    endif
+    dim ddm21a$:ddm21_tpl$
 
 rem --- Initializations
 
@@ -71,30 +77,32 @@ rem --- Open requested files
         basename$=cvs(files$[x],2)
         pathname$=basename$
         basepath$=pathname$
-        if basename$="" then continue
+        if basename$<>""
     
-        rem --- Attempt to open file
-    
-        channel=unt
-        open_mode$=""
-  
-        rem --- Actual open
-    
-        open (channel,mode=open_mode$,err=open_error)datadir$+pathname$
+            rem --- Attempt to open file
 
-        rem --- Set arrays values to be returned
-    
-        channels[x]=channel
-        files$[x]=basename$
+            channel=unt
+            open_mode$=""
+
+            rem --- Actual open
+
+            open (channel,mode=open_mode$,err=open_error)datadir$+pathname$
+
+            rem --- Set arrays values to be returned
+
+            channels[x]=channel
+            files$[x]=basename$
+        endif
 
         rem --- Retrieve template for opened file
 
-        if files$[x]="ads-01" then continue
         id$=ids$[x]
-        if cvs(id$,2)="" then id$="A"
-        ddm21_key$=files$[x]+id$
-        find record (ddm21_dev,key=ddm21_key$,knum=1,err=template_error) ddm21a$
-        templates$[x]=cvs(ddm21a.record_template$,2)
+        if cvs(id$,2)="" then continue
+        wk$=fattr(ddm21a$,"dd_table_alias")
+        plen=dec(wk$(10,2))
+        ddm21a.dd_table_alias$=pad(id$,plen)
+        find record (ddm21_dev,key=ddm21a.dd_table_alias$,err=template_error) ddm21a$
+        templates$[x]=cvs(ddm21a.dd_table_tpl$,2)
         continue
     
     open_error: rem --- Error encountered attempting to open the file
@@ -186,12 +194,12 @@ error_message: rem --- An error was encountered. Display error message and exit.
 get_file_description: rem --- Return file description
 
     description$=$22$+files$[x]+" - (Unknown Table)"+$22$
-    ddm21_key$="ddm-10a"
-    find record (ddm21_dev,key=ddm21_key$,knum=1,err=*return) template$
-    template$=ddm21a.record_template$
-    ddm10_key$=ddm21a.table_alias$
+    read (ddm21_dev,key="DDM_TABLES",dom=*next)
+    ddm21_key$=key(ddm21_dev,err=*return);read(ddm21_dev)*,*,template$
+    if pos("DDM_TABLES"=ddm21_key$)<>1 return
+    ddm10_key$=ddm21a.dd_table_alias$
     ddm10_dev=unt
-    open (ddm10_dev,err=*return) datadir$+"ddm-10"
+    open (ddm10_dev,err=*return) sysdatadir$+"ddm_tables.dat"
     dim ddm10a$:template$
     find record (ddm10_dev,key=ddm10_key$,err=*return) ddm10a$
     description$=$22$+files$[x]+" - "+cvs(ddm10a.dd_alias_desc$,2)+$22$
@@ -213,8 +221,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
