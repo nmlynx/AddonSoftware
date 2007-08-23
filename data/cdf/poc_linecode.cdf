@@ -18,14 +18,14 @@ rem - some line types don't used landed cost flag
 
 if pos(callpoint!.getUserInput()="MV")>0 then
 	callpoint!.setColumnData("POC_LINECODE.LAND_CST_FLG","N")
-	ctl_name$=POC_LINECODE.LAND_CST_FLG
+	ctl_name$="POC_LINECODE.LAND_CST_FLG"
 	ctl_stat$="D"
 	gosub disable_fields
 else
 	escape; rem print callpoint!.getRecordTemplate()
 
-	ctl_name$=POC_LINECODE.LAND_CST_FLG
-	ctl_stat$=""
+	ctl_name$="POC_LINECODE.LAND_CST_FLG"
+	ctl_stat$=" "
 	gosub disable_fields
 endif
 
@@ -33,12 +33,12 @@ rem - line types that don't use lead time flag
 
 if pos(callpoint!.getUserInput()="ONMV")>0 then
 	callpoint!.setColumnData("POC_LINECODE.LEAD_TIM_FLG","N")
-	ctl_name$=POC_LINECODE.LEAD_TIM_FLG
+	ctl_name$="POC_LINECODE.LEAD_TIM_FLG"
 	ctl_stat$="D"
 	gosub disable_fields
 else
-	ctl_name$=POC_LINECODE.LEAD_TIM_FLG
-	ctl_stat$=""
+	ctl_name$="POC_LINECODE.LEAD_TIM_FLG"
+	ctl_stat$=" "
 	gosub disable_fields
 endif
 
@@ -47,16 +47,17 @@ rem - line types that don't use gl accounts
 if pos(callpoint!.getUserInput()="MSV")>0 then
 	callpoint!.setColumnData("POC_LINECODE.GL_EXP_ACCT","")
 	callpoint!.setColumnData("POC_LINECODE.GL_PPV_ACCT","")
-	ctl_name$=POC_LINECODE.GL_EXP_ACCT
+	ctl_name$="POC_LINECODE.GL_EXP_ACCT"
 	ctl_stat$="D"
 	gosub disable_fields
-	ctl_name$=POC_LINECODE.GL_PPV_ACCT
+	ctl_name$="POC_LINECODE.GL_PPV_ACCT"
 	gosub disable_fields
 else
-	ctl_name$=POC_LINECODE.GL_EXP_ACCT
-	ctl_stat$=""
+	escape
+	ctl_name$="POC_LINECODE.GL_EXP_ACCT"
+	ctl_stat$=" "
 	gosub disable_fields
-	ctl_name$=POC_LINECODE.GL_PPV_ACCT
+	ctl_name$="POC_LINECODE.GL_PPV_ACCT"
 	gosub disable_fields
 endif
 
@@ -65,10 +66,10 @@ rem - don't use gl accounts if GL not installed
 if gl$<>"Y"  then
 	callpoint!.setColumnData("POC_LINECODE.GL_EXP_ACCT","")
 	callpoint!.setColumnData("POC_LINECODE.GL_PPV_ACCT","")
-	ctl_name$=POC_LINECODE.GL_EXP_ACCT
+	ctl_name$="POC_LINECODE.GL_EXP_ACCT"
 	ctl_stat$="D"
 	gosub disable_fields
-	ctl_name$=POC_LINECODE.GL_PPV_ACCT
+	ctl_name$="POC_LINECODE.GL_PPV_ACCT"
 	gosub disable_fields
 endif
 [[POC_LINECODE.<CUSTOM>]]
@@ -97,7 +98,7 @@ for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
 
-call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
 
 if status$<>""  goto std_exit
@@ -108,9 +109,9 @@ rem --- Retrieve miscellaneous templates
 
 files=1,begfile=1,endfile=files
 dim ids$[files],templates$[files]
-ids$[1]="pos-01A"
+ids$[1]="pos-01A:POS_PARAMS"
 
-call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -124,5 +125,5 @@ find record (ads01_dev,key=pos01a_key$,err=std_missing_params) pos01a$
 
 dim info$[20]
 
-call dir_pgm$+"adc_application.aon","GL",info$[all]
+call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
 gl$=info$[20]
