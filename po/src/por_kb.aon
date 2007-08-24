@@ -22,6 +22,17 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- Assign form input values to local variables
+
+    table$=fnget_table$("")
+    pofrom$=fnget_fld_data$(table$,"begin_purchase_order")
+    pothru$=fnget_fld_data$(table$,"end_purchase_order")
+    vendfrom$=fnget_fld_data$(table$,"beginning_vendor")
+    vendthru$=fnget_fld_data$(table$,"ending_vendor")
+    pofrom$=fnget_fld_data$(table$,"begin_purchase_order")
+    datethru$=fnget_fld_data$(table$,"expedite_thru_date")
+    whse$=fnget_fld_data$(table$,"warehouse")
+
 rem --- Init Data
 
     precision ivprecision
