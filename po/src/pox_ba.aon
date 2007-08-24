@@ -26,16 +26,16 @@ rem --- Open/Lock files
     files=11,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="poe-01"
-    files$[3]="poe-02"
-    files$[4]="poe-03"
-    files$[5]="poe-04"
-    files$[6]="poe-11"
-    files$[7]="poe-12"
-    files$[8]="poe-13"
-    files$[9]="poe-14"
-    files$[10]="poe-23"
-    files$[11]="poe-24"
+    files$[2]="poe-01",ids$[2]="POE_REQHDR"
+    files$[3]="poe-02",ids$[3]="POE_POHDR"
+    files$[4]="poe-03",ids$[4]="POE_QAHDR"
+    files$[5]="poe-04",ids$[5]="POE_RECHDR"
+    files$[6]="poe-11",ids$[6]="POE_REQDET"
+    files$[7]="poe-12",ids$[7]="POE_PODET"
+    files$[8]="poe-13",ids$[8]="POE_QADET"
+    files$[9]="poe-14",ids$[9]="POE_RECDET"
+    files$[10]="poe-23",ids$[10]="POE_QALSDET"
+    files$[11]="poe-24",ids$[11]="POE_RECLSDET"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -60,17 +60,16 @@ rem --- Dimension string templates
 
 rem --- Retrieve miscellaneous templates
 
-    files=3,begfile=1,endfile=files
+    files=2,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="ivs-01A"
-    ids$[3]="sys-01A"
+    ids$[1]="aps-01A:APS_PARAMS"
+    ids$[2]="ivs-01A:IVS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim aps01a$:templates$[1],ivs01a$:templates$[2],sys01a$:templates$[3]
+    dim aps01a$:templates$[1],ivs01a$:templates$[2]
 
 rem --- Assign form input values to local variables
 
@@ -83,35 +82,6 @@ rem --- Retrieve parameter records
     find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     ivs01a_key$=firm_id$+"IV00"
     find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
-rem --- Open/Lock Files
-
-    files=11
-    dim files$[files],options$[files],channels[files]
-    files$[1]="sys-01"
-    files$[2]="poe-01"
-    files$[3]="poe-02"
-    files$[4]="poe-03"
-    files$[5]="poe-04"
-    files$[6]="poe-11"
-    files$[7]="poe-12"
-    files$[8]="poe-13"
-    files$[9]="poe-14"
-    files$[10]="poe-23"
-    files$[11]="poe-24"
-    call pgmdir$+"adc_fileopen.aon",1,1,10,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    sys01_dev=channels[1]
-    poe01_dev=channels[2]
-    poe02_dev=channels[3]
-    poe03_dev=channels[4]
-    poe04_dev=channels[5]
-    poe11_dev=channels[6]
-    poe12_dev=channels[7]
-    poe13_dev=channels[8]
-    poe14_dev=channels[9]
-    poe23_dev=channels[10]
-    poe24_dev=channels[11]
 
 rem --- Background
 
@@ -228,8 +198,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -273,7 +243,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
