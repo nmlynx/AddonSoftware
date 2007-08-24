@@ -28,15 +28,15 @@ rem --- Open/Lock files
     files=10,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="arm-01"
-    files$[3]="art-01"
-    files$[4]="art-63"
-    files$[5]="opt-01"
-    files$[6]="opt-11"
-    files$[7]="opt-21"
-    files$[8]="opt-31"
-    files$[9]="opt-51"
-    files$[10]="opt-61"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="art-01",ids$[3]="ART_INVHDR"
+    files$[4]="art-63",ids$[4]=""
+    files$[5]="opt-01",ids$[5]="OPT_ORDHDR"
+    files$[6]="opt-11",ids$[6]="OPT_ORDDET"
+    files$[7]="opt-21",ids$[7]="OPT_INVLSDET"
+    files$[8]="opt-31",ids$[8]="OPT_INVSHIP"
+    files$[9]="opt-51",ids$[9]="OPT_INVBYINVNO"
+    files$[10]="opt-61",ids$[10]="OPT_INVBYDATE"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -59,11 +59,10 @@ rem --- Dimension string templates
 
 rem --- Retrieve miscellaneous templates
 
-    files=3,begfile=1,endfile=files
+    files=2,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="ars-01A"
-    ids$[2]="ivs-01A"
-    ids$[3]="sys-01A"
+    ids$[1]="ars-01A:ARS_PARAMS"
+    ids$[2]="ivs-01A:IVS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -87,47 +86,18 @@ rem --- Retrieve parameter records
     find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
     find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sys01a_key$=firm_id$+"SY00"
-    find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
-
-rem --- Open/Lock Files
-
-    files=9
-    dim files$[files],options$[files],channels[files]
-    files$[1]="opt-01"
-    files$[2]="opt-11"
-    files$[3]="opt-31"
-    files$[4]="opt-21"
-    files$[5]="opt-51"
-    files$[6]="opt-61"
-    files$[7]="arm-01"
-    files$[8]="art-01"
-    files$[9]="sys-01"; rem ESCAPE 
-    FILES$[10]="ART-63"
-    call pgmdir$+"adc_fileopen.aon",1,1,files,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    opt01_dev=channels[1]
-    opt11_dev=channels[2]
-    opt31_dev=channels[3]
-    opt21_dev=channels[4]
-    opt51_dev=channels[5]
-    opt61_dev=channels[6]
-    arm01_dev=channels[7]
-    art01_dev=channels[8]
-    sys01_dev=channels[9]; rem ESCAPE 
-    ART63_DEV=CHANNELS[10]
+    
 
 rem --- Parameters
 
-    find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
-    firm_id$=f0$(16,2)
+    
     n1$=sysinfo.firm_name$
     n2$="AR"
     n4$=sysinfo.task_desc$
-    find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
+    find record (ads01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
     dim p[1]
-    p[0]=num(p2$(1,2))
-    p[1]=num(p2$(3,2))
+    p[0]=num(ars01a.customer_size$)
+    p[1]=num(ars01a.max_customer_len$)
 
 rem --- Initialize Data
 
@@ -258,10 +228,10 @@ Call_Pgm3:
    let p5$=""; call pgmdir$+"syc_rs.bbx","",my_context,3004,j1$(1,p[0]),0,"",status; goto flow_control
 Find_Record3:
     if v$="" then
-        Call_Pgm4:
+Call_Pgm4:
            let v3=1,p5$=""; call pgmdir$+"syc_rs.bbx","",my_context,13004,"Last",0,"",status; goto flow_control
 
-        Call_Pgm5:
+Call_Pgm5:
             v4=2
             v5=5
             v6=13
@@ -514,8 +484,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -559,7 +529,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+rem    run pgmdir$+"ads_process_end.aon",err=*next
+       run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
