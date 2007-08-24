@@ -26,25 +26,25 @@ rem --- Open/Lock files
     files=20,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="ivm-01"
-    files$[4]="poe-03"
-    files$[5]="poe-04"
-    files$[6]="poe-13"
-    files$[7]="poe-14"
-    files$[8]="poe-23"
-    files$[9]="poe-24"
-    files$[10]="poe-33"
-    files$[11]="poe-34"
-    files$[12]="poe-43"
-    files$[13]="poe-44"
-    files$[14]="poe-53"
-    files$[15]="poe-54"
-    files$[16]="poe-63"
-    files$[17]="pom-02"
-    files$[18]="pom-03"
-    files$[19]="pot-03"
-    files$[20]="pow-13"
+    files$[2]="apm-01",ids$[2]="APM_PARAMS"
+    files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
+    files$[4]="poe-03",ids$[4]="POE_QAHDR"
+    files$[5]="poe-04",ids$[5]="POE_RECHDR"
+    files$[6]="poe-13",ids$[6]="POE_QADET"
+    files$[7]="poe-14",ids$[7]="POE_RECDET"
+    files$[8]="poe-23",ids$[8]="POE_QALSDET"
+    files$[9]="poe-24",ids$[9]="POE_RECLSDET"
+    files$[10]="poe-33",ids$[10]="POE_QABYPO"
+    files$[11]="poe-34",ids$[11]="POE_RECBYPO"
+    files$[12]="poe-43",ids$[12]="POE_QABYITEM"
+    files$[13]="poe-44",ids$[13]="POE_RECBYITM"
+    files$[14]="poe-53",ids$[14]="POE_POBYQA"
+    files$[15]="poe-54",ids$[15]="POE_POBYREC"
+    files$[16]="poe-63",ids$[16]="POE_QAREJDET"
+    files$[17]="pom-02",ids$[17]="POC_LINECODE"
+    files$[18]="pom-03",ids$[18]="POC_REJCTCOD"
+    files$[19]="pot-03",ids$[19]="POT_QAREJHST"
+    files$[20]="pow-13",ids$[20]="POW_QABYVEN"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -83,9 +83,9 @@ rem --- Retrieve miscellaneous templates
 
     files=3,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="ivs-01A"
-    ids$[3]="pos-01A"
+    ids$[1]="aps-01A:APS_PARAMS"
+    ids$[2]="ivs-01A:IVS_PARAMS"
+    ids$[3]="pos-01A:POS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -231,8 +231,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -276,7 +276,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
