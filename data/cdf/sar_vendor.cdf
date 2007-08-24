@@ -1,11 +1,3 @@
-[[SAR_VENDOR.PRIOR.AVAL]]
-if callpoint!.getColumnData("SAR_CUSTOMER.PRIOR") = "Y" 
-	if callpoint!.getColumnData("SAR_VENDOR.MTD") <> "Y" and
-:	   callpoint!.getColumnData("SAR_VENDOR.YTD") <> "Y"
-		MSG_ID$="SA_PRIOR_INVALID"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
 [[SAR_VENDOR.12_PER_REPORT.AVAL]]
 x$=callpoint!.getColumnData("SAR_VENDOR.12_PER_REPORT")
 if x$="N" then

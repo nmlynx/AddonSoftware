@@ -1,11 +1,3 @@
-[[SAR_CUSTOMER.PRIOR.AVAL]]
-if callpoint!.getColumnData("SAR_CUSTOMER.PRIOR") = "Y" 
-	if callpoint!.getColumnData("SAR_CUSTOMER.MTD") <> "Y" and
-:	   callpoint!.getColumnData("SAR_CUSTOMER.YTD") <> "Y"
-		MSG_ID$="SA_PRIOR_INVALID"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
 [[SAR_CUSTOMER.BSHO]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -31,10 +23,19 @@ if x$="N" then
 	callpoint!.setColumnData("SAR_CUSTOMER.YTD","Y")
 	callpoint!.setColumnData("SAR_CUSTOMER.PRIOR","Y")
 	callpoint!.setColumnData("SAR_CUSTOMER.SALES_UNITS","")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.MTD","ABLC","Y")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.YTD","ABLV","Y")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.PRIOR","ABLV","Y")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.SALES_UNITS","ABLV","N")
 else
 	callpoint!.setColumnData("SAR_CUSTOMER.MTD","N")
 	callpoint!.setColumnData("SAR_CUSTOMER.YTD","N")
 	callpoint!.setColumnData("SAR_CUSTOMER.PRIOR","N")
 	callpoint!.setColumnData("SAR_CUSTOMER.SALES_UNITS","S")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.MTD","ABLV","SAR_CUSTOMER.12_PER_REPORT")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.MTD","ABLC","N")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.YTD","ABLV","N")
+rem 	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.PRIOR","ABLV","N")
+rem	callpoint!.setTableColumnAttribute("SAR_CUSTOMER.SALES_UNITS","ABLV","Y")
 endif
 callpoint!.setStatus("REFRESH")

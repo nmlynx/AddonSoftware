@@ -1,11 +1,3 @@
-[[SAR_CUSTSHIP.PRIOR.AVAL]]
-if callpoint!.getColumnData("SAR_CUSTSHIP.PRIOR") = "Y" 
-	if callpoint!.getColumnData("SAR_CUSTSHIP.MTD") <> "Y" and
-:	   callpoint!.getColumnData("SAR_CUSTSHIP.YTD") <> "Y"
-		MSG_ID$="SA_PRIOR_INVALID"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
 [[SAR_CUSTSHIP.BSHO]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]

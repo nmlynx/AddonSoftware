@@ -30,11 +30,3 @@ else
 	callpoint!.setColumnData("SAR_CUSTTERR.SALES_UNITS","S")
 endif
 callpoint!.setStatus("REFRESH")
-[[SAR_CUSTTERR.PRIOR.AVAL]]
-if callpoint!.getColumnData("SAR_CUSTTERR.PRIOR") = "Y" 
-	if callpoint!.getColumnData("SAR_CUSTTERR.MTD") <> "Y" and
-:	   callpoint!.getColumnData("SAR_CUSTTERR.YTD") <> "Y"
-		MSG_ID$="SA_PRIOR_INVALID"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif

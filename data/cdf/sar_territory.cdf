@@ -1,11 +1,3 @@
-[[SAR_TERRITORY.PRIOR.AVAL]]
-if callpoint!.getColumnData("SAR_TERRITORY.PRIOR") = "Y" 
-	if callpoint!.getColumnData("SAR_TERRITORY.MTD") <> "Y" and
-:	   callpoint!.getColumnData("SAR_TERRITORY.YTD") <> "Y"
-		MSG_ID$="SA_PRIOR_INVALID"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
 [[SAR_TERRITORY.ARAR]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
