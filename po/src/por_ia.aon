@@ -26,19 +26,19 @@ rem --- Open/Lock files
     files=14,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="apm-04"
-    files$[4]="apm-05"
-    files$[5]="apm-10"
-    files$[6]="arm-01"
-    files$[7]="arm-03"
-    files$[8]="ivm-01"
-    files$[9]="ivm-05"
-    files$[10]="ivm-10"
-    files$[11]="poe-02"
-    files$[12]="poe-12"
-    files$[13]="poe-32"
-    files$[14]="pom-02"
+    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+    files$[3]="apm-04",ids$[3]="APX_VENDZIP"
+    files$[4]="apm-05",ids$[4]="APM_VENDADDR"
+    files$[5]="apm-10",ids$[5]="APC_TYPECODE"
+    files$[6]="arm-01",ids$[6]="ARM_CUSTMAST"
+    files$[7]="arm-03",ids$[7]="ARM_CUSTSHIP"
+    files$[8]="ivm-01",ids$[8]="IVM_ITEMMAST"
+    files$[9]="ivm-05",ids$[9]="IVM_ITEMVEND"
+    files$[10]="ivm-10",ids$[10]="IVC_PRODCODE"
+    files$[11]="poe-02",ids$[11]="POE_POHDR"
+    files$[12]="poe-12",ids$[12]="POE_PODET"
+    files$[13]="poe-32",ids$[13]="POE_POBYPO"
+    files$[14]="pom-02",ids$[14]="POC_LINECODE"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -69,10 +69,10 @@ rem --- Retrieve miscellaneous templates
 
     files=4,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="ars-01A"
-    ids$[3]="ivs-01A"
-    ids$[4]="pos-01A"
+    ids$[1]="aps-01A:APS_PARAMS"
+    ids$[2]="ars-01A:ARS_PARAMS"
+    ids$[3]="ivs-01A:IVS_PARAMS"
+    ids$[4]="pos-01A:POS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -136,16 +136,6 @@ rem --- Init Data
     call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
     call pgmdir$+"adc_sizemask.aon",m3$,m3,4,12
     call pgmdir$+"adc_sizemask.aon",m5$,m5,6,9
-
-rem --- Additional File Opens
-
-    if ar$<>"Y" goto display_resource
-    find record (ads01_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-    custlen=num(ars01a.cust_size$)
-    call pgmdir$+"adc_fileopen.aon",1,13,14,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    arm01_dev=channels[13]
-    arm03_dev=channels[14]
 
 rem --- Run report overlay
 
@@ -228,8 +218,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -273,7 +263,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
