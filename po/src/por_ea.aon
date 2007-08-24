@@ -26,37 +26,37 @@ rem --- Open/Lock files
     files=32,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="apm-02"
-    files$[4]="apm-09"
-    files$[5]="apm-10"
-    files$[6]="apt-01"
-    files$[7]="apt-02"
-    files$[8]="apt-03"
-    files$[9]="apt-11"
-    files$[10]="arm-10"
-    files$[11]="glm-01"
-    files$[12]="glt-04"
-    files$[13]="glt-14"
-    files$[14]="glw-11"
-    files$[15]="ivm-01"
-    files$[16]="ivm-02"
-    files$[17]="poe-02"
-    files$[18]="poe-05"
-    files$[19]="poe-12"
-    files$[20]="poe-15"
-    files$[21]="poe-25"
-    files$[22]="poe-35"
-    files$[23]="pom-02"
-    files$[24]="pot-04"
-    files$[25]="pot-05"
-    files$[26]="pot-14"
-    files$[27]="pot-15"
-    files$[28]="pot-25"
-    files$[29]="pot-35"
-    files$[30]="pow-17"
-    files$[31]="sfe-01"
-    files$[32]="sfm-10"
+    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+    files$[3]="apm-02",ids$[3]="ARM_CUSTMAST"
+    files$[4]="apm-09",ids$[4]="APM_VENDCMTS"
+    files$[5]="apm-10",ids$[5]="APC_TYPECODE"
+    files$[6]="apt-01",ids$[6]="APT_INVOICEHDR"
+    files$[7]="apt-02",ids$[7]="APT_INVOICEDIST"
+    files$[8]="apt-03",ids$[8]="APT_INVOICEDATE"
+    files$[9]="apt-11",ids$[9]="APT_INVDET"
+    files$[10]="arm-10",ids$[10]="ARC_TERMCODE"
+    files$[11]="glm-01",ids$[11]="GLM_ACCT"
+    files$[12]="glt-04",ids$[12]="GLE_DAILYDETAIL"
+    files$[13]="glt-14",ids$[13]="GLX_DAILYXRF"
+    files$[14]="glw-11",ids$[14]="GLW_TRANSDET"
+    files$[15]="ivm-01",ids$[15]="IVM_ITEMMAST"
+    files$[16]="ivm-02",ids$[16]="IVM_ITEMWHSE"
+    files$[17]="poe-02",ids$[17]="POE_POHDR"
+    files$[18]="poe-05",ids$[18]="POE_INVHDR"
+    files$[19]="poe-12",ids$[19]="POE_PODET"
+    files$[20]="poe-15",ids$[20]="POE_INVSEL"
+    files$[21]="poe-25",ids$[21]="POE_INVDET"
+    files$[22]="poe-35",ids$[22]="POE_INVGL"
+    files$[23]="pom-02",ids$[23]="POC_LINECODE"
+    files$[24]="pot-04",ids$[24]="POT_RECHDR"
+    files$[25]="pot-05",ids$[25]="POT_INVHDR"
+    files$[26]="pot-14",ids$[26]="POT_RECDET"
+    files$[27]="pot-15",ids$[27]="POT_INVSEL"
+    files$[28]="pot-25",ids$[28]="POT_INVDET"
+    files$[29]="pot-35",ids$[29]="POT_INVBYPO"
+    files$[30]="pow-17",ids$[30]="POW_INVLAND"
+    files$[31]="sfe-01",ids$[31]="SFE_WOMASTR"
+    files$[32]="sfm-10",ids$[32]="SFC_WOTYPECD"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -111,13 +111,13 @@ rem --- Retrieve miscellaneous templates
 
     files=7,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="apm-10B"
-    ids$[2]="apm-10C"
-    ids$[3]="aps-01A"
-    ids$[4]="ars-01A"
-    ids$[5]="gls-01A"
-    ids$[6]="ivs-01A"
-    ids$[7]="pos-01A"
+    ids$[1]="apm-10B:APC_DISTRIBUTION"
+    ids$[2]="apm-10C:APC_TERMSCODE"
+    ids$[3]="aps-01A:APS_PARAMS"
+    ids$[4]="ars-01A:ARS_PARAMS"
+    ids$[5]="gls-01A:GLS_PARAMS"
+    ids$[6]="ivs-01A:IVS_PARAMS"
+    ids$[7]="pos-01A:POS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -266,8 +266,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -311,7 +311,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
