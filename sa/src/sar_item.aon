@@ -36,8 +36,8 @@ rem --- Open/Lock Files
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="saw-07",options$[1]="C"
-    files$[2]="sam-07"
+    files$[1]="saw-07",options$[1]="C",ids$[1]="SAW_ITEM"
+    files$[2]="sam-07",ids$[2]="SAM_ITEM"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -91,7 +91,7 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("DIR_SYP")+"bac_noparams.bbj",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
 :                                   str(err:"000"),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
