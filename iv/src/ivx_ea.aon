@@ -26,12 +26,12 @@ rem --- Open/Lock files
     files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="ivm-02"
-    files$[3]="poe-12"
-    files$[4]="poe-42"
-    files$[5]="sfe-01"
+    files$[2]="ivm-02",ids$[2]="IVM_ITEMWHSE"
+    files$[3]="poe-12",ids$[3]="POE_PODET"
+    files$[4]="poe-42",ids$[3]="POE_POBYITEM"
+    files$[5]="sfe-01",ids$[3]="SFE_WOMASTR"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
+:   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ads01_dev=channels[1]
     ivm02_dev=channels[2]
@@ -46,16 +46,15 @@ rem --- Dimension string templates
 
 rem --- Retrieve miscellaneous templates
 
-    files=2,begfile=1,endfile=files
+    files=1,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="ivs-01A"
-    ids$[2]="sys-01A"
+    ids$[1]="ivs-01A:IVS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim ivs01a$:templates$[1],sys01a$:templates$[2]
+    dim ivs01a$:templates$[1]
 
 rem --- Assign form input values to local variables
 
@@ -92,22 +91,13 @@ rem --- Parameters
     po$=info$[20]
     call pgmdir$+"adc_application.aon","SF",info$[all]
     sf$=info$[20]
-    if po$="N" or if sf$="N" then
+    
  
 rem --- Initializations
 
         precision num(ivs01a.precision$)
         more=1
-rem --- Additional file opens
 
-        if sf$="Y" files$[3]="sfe-01"
-        if po$="Y" files$[4]="poe-12",files$[5]="poe-42"
-        call pgmdir$+"adc_fileopen.aon",1,2,files,files$[all],options$[all],channels[all],batch,status
-        if status goto std_exit
-        ivm02_dev=channels[2]
-        sfe01_dev=channels[3]
-        poe12_dev=channels[4]
-        poe42_dev=channels[5]
 
 rem --- Options
 
@@ -151,7 +141,7 @@ rem --- Read next PO sort record
             ivm02a_key$=ivmo2a.firm_id$+poe12a.warehouse_id$+poe12a.item_id$
             extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
             ivm02a.qty_on_order=ivm02a.qty_on_order+((poe12a.qty_ordered-poe12a.qty_received)*poe12a.conv_factor)
-            write record (ivm02_dev,key=ivmo2a.firmid$+ivm02a.warehouse_id$++ivm02a.item_id$) ivm02a$
+            write record (ivm02_dev,key=ivm02a.firmid$+ivm02a.warehouse_id$+ivm02a.item_id$) ivm02a$
         wend
 
 rem --- Work Orders
@@ -207,9 +197,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -252,7 +242,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    rem run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

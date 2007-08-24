@@ -12,8 +12,7 @@ rem --- All Rights Reserved
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
-    on o0 goto l70,l500
-
+    
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -27,20 +26,20 @@ rem --- Open/Lock files
     files=15,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="arm-10"
-    files$[4]="glm-01"
-    files$[5]="ivm-01"
-    files$[6]="ivm-02"
-    files$[7]="ivm-03"
-    files$[8]="ivm-05"
-    files$[9]="ivm-09"
-    files$[10]="ivm-10"
-    files$[11]="ivm-12"
-    files$[12]="ivm-13"
-    files$[13]="ivm-14"
-    files$[14]="ivm-15"
-    files$[15]="ivm-24"
+    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+    files$[3]="arm-10",ids$[3]="APC_TYPECODE"
+    files$[4]="glm-01",ids$[4]="GLM_ACCT"
+    files$[5]="ivm-01",ids$[5]="IVM_ITEMMAST"
+    files$[6]="ivm-02",ids$[6]="IVM_ITEMWHSE"
+    files$[7]="ivm-03",ids$[7]="IVX_ITEMPROD"
+    files$[8]="ivm-05",ids$[8]="IVM_ITEMVEND"
+    files$[9]="ivm-09",ids$[9]="IVM_ITEMCMTS"
+    files$[10]="ivm-10",ids$[10]="IVC_PRODCODE"
+    files$[11]="ivm-12",ids$[11]="IVM_ITEMACT"
+    files$[12]="ivm-13",ids$[12]="IVC_CLASCODE"
+    files$[13]="ivm-14",ids$[13]="IVM_ITEMSYN"
+    files$[14]="ivm-15",ids$[14]="IVC_TYPECODE"
+    files$[15]="ivm-24",ids$[15]="IVC_TYPECODE"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -72,12 +71,12 @@ rem --- Retrieve miscellaneous templates
 
     files=6,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="ars-01A"
-    ids$[3]="gls-01A"
-    ids$[4]="ivm-10C"
-    ids$[5]="ivm-10F"
-    ids$[6]="ivs-01A"
+    ids$[1]="aps-01A:APS_PARAMS"
+    ids$[2]="ars-01A:ARS_PARAMS"
+    ids$[3]="gls-01A:GLS_PARAMS"
+    ids$[4]="ivm-10C:IVS_ABCPARAM"
+    ids$[5]="ivm-10F:IVC_BUYCODE"
+    ids$[6]="ivs-01A:IVS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -277,9 +276,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -322,7 +321,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    rem run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
 

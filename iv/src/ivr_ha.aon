@@ -26,15 +26,15 @@ rem --- Open/Lock files
     files=10,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="ivm-01"
-    files$[3]="ivm-02"
-    files$[4]="ivm-03"
-    files$[5]="ivm-10"
-    files$[6]="ivm-12"
-    files$[7]="ivm-14"
-    files$[8]="ivm-15"
-    files$[9]="ivw-01"
-    files$[10]="ivw-02"
+    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
+    files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
+    files$[4]="ivm-03",ids$[4]="IVX_ITEMPROD"
+    files$[5]="ivm-10",ids$[5]="IVC_PRODCODE"
+    files$[6]="ivm-12",ids$[6]="IVM_ITEMACT"
+    files$[7]="ivm-14",ids$[7]="IVM_ITEMSYN"
+    files$[8]="ivm-15",ids$[8]="IVC_TYPECODE"
+    files$[9]="ivw-01",ids$[9]="IVW_ITEMTOTS"
+    files$[10]="ivw-02",ids$[10]="IVW_WHSETOTS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -59,15 +59,15 @@ rem --- Retrieve miscellaneous templates
 
     files=3,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="gls-01A"
-    ids$[2]="ivm-10C"
-    ids$[3]="ivs-01A"
+    ids$[1]="gls-01A:GLS_PARAMS"
+    ids$[2]="ivm-10C:IVC_WHSECODE"
+    ids$[3]="ivs-01A:IVS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim gls01a$:templates$[1],ivm10c$:templates$[2],ivs01a$:templates$[3],
+    dim gls01a$:templates$[1],ivm10c$:templates$[2],ivs01a$:templates$[3]
 
 
 rem --- Assign form input values to local variables
@@ -161,9 +161,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+   pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -186,9 +186,9 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -205,8 +205,8 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    rem run pgmdir$+"ads_process_end.aon",err=*next
     release
 
 rem #endinclude std_end.src

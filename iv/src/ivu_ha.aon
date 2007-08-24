@@ -26,11 +26,11 @@ rem --- Open/Lock files
     files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="ivm-01"
-    files$[3]="ivm-07"
-    files$[4]="ivt-01"
-    files$[5]="ivt-02"
-    files$[6]="ivt-03"
+    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
+    files$[3]="ivm-07",ids$[3]="IVM_LSMASTER"
+    files$[4]="ivt-01",ids$[4]="IVT_LSTRANS"
+    files$[5]="ivt-02",ids$[5]="IVX_LSCUST"
+    files$[6]="ivt-03",ids$[6]="IVX_LSVEND"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -48,16 +48,15 @@ rem --- Dimension string templates
 
 rem --- Retrieve miscellaneous templates
 
-    files=2,begfile=1,endfile=files
+    files=1,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="ivs-01A"
-    ids$[2]="sys-01A"
+    ids$[1]="ivs-01A:IVS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim ivs01a$:templates$[1],sys01a$:templates$[2]
+    dim ivs01a$:templates$[1]
 
 rem --- Assign form input values to local variables
 
@@ -71,27 +70,9 @@ rem --- Retrieve parameter records
     rem sys01a_key$=firm_id$+"SY00"
     rem find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
 
-rem --- Open/Lock Files
-
-    files=6
-    dim files$[files],options$[files],channels[files]
-    files$[1]="ivm-01"
-    files$[2]="ivt-01"
-    files$[3]="sys-01"
-    files$[4]="ivt-02"
-    files$[5]="ivt-03"
-    files$[6]="ivm-07"
-    options$[2]="LF"
-    call pgmdir$+"adc_fileopen.aon",1,1,3,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    if channels[2]=0 goto std_exit
-    ivm01_dev=channels[1]
-    ivt01_dev=channels[2]
-    sys01_dev=channels[3]
-
 rem --- Parameters
 
-    find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
+    rem find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
     firm_id$=sysinfo.firm_Id$
     n1$=sysinfo.firm_name$
     n2$="IV"
@@ -114,11 +95,11 @@ rem --- Init Data
 
 rem --- Additional Opens
 
-    call pgmdir$+"adc_fileopen.aon",1,4,6,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    ivt02_dev=channels[4]
-    ivt03_dev=channels[5]
-    ivm07_dev=channels[6]
+    rem call pgmdir$+"adc_fileopen.aon",1,4,6,files$[all],options$[all],channels[all],batch,status
+    rem if status goto std_exit
+    rem ivt02_dev=channels[4]
+    rem ivt03_dev=channels[5]
+    rem ivm07_dev=channels[6]
 
 rem --- Display Resource
 
@@ -328,9 +309,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -373,7 +354,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    rem run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
