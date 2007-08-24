@@ -26,34 +26,34 @@ rem --- Open/Lock files
     files=29,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="arm-01"
-    files$[4]="arm-10"
-    files$[5]="glm-01"
-    files$[6]="glw-11"
-    files$[7]="ivm-01"
-    files$[8]="ivm-02"
-    files$[9]="ivm-03"
-    files$[10]="ivm-04"
-    files$[11]="ivm-10"
-    files$[12]="ivw-04"
-    files$[13]="ope-01"
-    files$[14]="ope-11"
-    files$[15]="ope-51"
-    files$[16]="ope-61"
-    files$[17]="opm-02"
-    files$[18]="poe-04"
-    files$[19]="poe-14"
-    files$[20]="poe-24"
-    files$[21]="pom-02"
-    files$[22]="pow-03"
-    files$[23]="pow-04"
-    files$[24]="pow-05"
-    files$[25]="pow-08"
-    files$[26]="pow-09"
-    files$[27]="sfe-01"
-    files$[28]="sfe-04"
-    files$[29]="sfm-10"
+    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+    files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
+    files$[4]="arm-10",ids$[4]="ARC_TERMCODE"
+    files$[5]="glm-01",ids$[5]="GLM_ACCT"
+    files$[6]="glw-11",ids$[6]="GLW_TRANSDET"
+    files$[7]="ivm-01",ids$[7]="IVM_ITEMMAST"
+    files$[8]="ivm-02",ids$[8]="IVM_ITEMWHSE"
+    files$[9]="ivm-03",ids$[9]="IVX_ITEMPROD"
+    files$[10]="ivm-04",ids$[10]="IVM_ITEMTIER"
+    files$[11]="ivm-10",ids$[11]="IVC_PRODCODE"
+    files$[12]="ivw-04",ids$[12]="IVW_LFDET"
+    files$[13]="ope-01",ids$[13]="OPE_ORDHDR"
+    files$[14]="ope-11",ids$[14]="OPE_ORDDET"
+    files$[15]="ope-51",ids$[15]="OPE_ORDXREF"
+    files$[16]="ope-61",ids$[16]="OPE_ORDITEM"
+    files$[17]="opm-02",ids$[17]="OPC_LINECODE"
+    files$[18]="poe-04",ids$[18]="POE_RECHDR"
+    files$[19]="poe-14",ids$[19]="POE_RECDET"
+    files$[20]="poe-24",ids$[20]="POE_RECLSDET"
+    files$[21]="pom-02",ids$[21]="POC_LINECODE"
+    files$[22]="pow-03",ids$[22]="POW_BOFILL"
+    files$[23]="pow-04",ids$[23]="POW_RECSTOCK"
+    files$[24]="pow-05",ids$[24]="POW_RECNSTCK"
+    files$[25]="pow-08",ids$[25]="POW_RECBYWO"
+    files$[26]="pow-09",ids$[26]="POE_RECBYORD"
+    files$[27]="sfe-01",ids$[27]="SFE_WOMASTR"
+    files$[28]="sfe-04",ids$[28]="SFE_WOTRANS"
+    files$[29]="sfm-10",ids$[29]="SFC_WOTYPECD"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -104,11 +104,11 @@ rem --- Retrieve miscellaneous templates
 
     files=5,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="ars-01A"
-    ids$[3]="gls-01A"
-    ids$[4]="ivs-01A"
-    ids$[5]="pos-01A"
+    ids$[1]="aps-01A:APS_PARAMS"
+    ids$[2]="ars-01A:ARS_PARAMS"
+    ids$[3]="gls-01A:GLS_PARAMS"
+    ids$[4]="ivs-01A:IVS_PARAMS"
+    ids$[5]="pos-01A:POS_PARAMS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -306,8 +306,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -351,7 +351,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
