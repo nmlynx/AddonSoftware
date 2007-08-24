@@ -28,28 +28,28 @@ rem --- Open/Lock files
                 files=23,begfile=1,endfile=files
                 dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
                 files$[1]="ads-01"
-                files$[2]="arm-01"
-                files$[3]="arm-10"
-                files$[4]="glm-01"
-                files$[5]="glw-11"
-                files$[6]="ivm-01"
-                files$[7]="ivm-02"
-                files$[8]="ivm-04"
-                files$[9]="ivw-04"
-                files$[10]="ivw-05"
-                files$[11]="ope-01"
-                files$[12]="ope-04"
-                files$[13]="ope-11"
-                files$[14]="ope-21"
-                files$[15]="ope-41"
-                files$[16]="opm-02"
-                files$[17]="opm-06"
-                files$[18]="ops-10"
-                files$[19]="opw-01"
-                files$[20]="opw-11"
-                files$[21]="opw-21"
-                files$[22]="opw-31"
-                files$[23]="opw-41"
+                files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+                files$[3]="arm-10",ids$[3]="ARC_TERMCODE"
+                files$[4]="glm-01",ids$[4]="GLM_ACCT"
+                files$[5]="glw-11",ids$[5]="GLW_TRANSDET"
+                files$[6]="ivm-01",ids$[6]="IVM_ITEMMAST"
+                files$[7]="ivm-02",ids$[7]="IVM_ITEMWHSE"
+                files$[8]="ivm-04",ids$[8]="IVM_ITEMTIER"
+                files$[9]="ivw-04",ids$[9]="IVW_LFDET"
+                files$[10]="ivw-05",ids$[10]="IVW_LFCOST"
+                files$[11]="ope-01",ids$[11]="OPE_ORDHDR"
+                files$[12]="ope-04",ids$[12]="OPE_PRNTLIST"
+                files$[13]="ope-11",ids$[13]="OPE_ORDDET"
+                files$[14]="ope-21",ids$[14]="OPE_ORDLSDET"
+                files$[15]="ope-41",ids$[15]="OPE_INVCASH"
+                files$[16]="opm-02",ids$[16]="OPC_LINECODE"
+                files$[17]="opm-06",ids$[17]="OPC_TAXCODE"
+                files$[18]="ops-10",ids$[18]="OPS_CUSTDFLT"
+                files$[19]="opw-01",ids$[19]="OPW_INVREG"
+                files$[20]="opw-11",ids$[20]="OPW_TERRSUMM"
+                files$[21]="opw-21",ids$[21]="OPW_LINESUMM"
+                files$[22]="opw-31",ids$[22]="OPW_SALESUMM"
+                files$[23]="opw-41",ids$[23]="OPW_INVCASH"
                 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
                 if status goto std_exit
@@ -92,11 +92,11 @@ rem --- Retrieve miscellaneous templates
 
                 files=5,begfile=1,endfile=files
                 dim ids$[files],templates$[files]
-                ids$[1]="arm-10D"
-                ids$[2]="ars-01A"
-                ids$[3]="gls-01A"
-                ids$[4]="ivs-01A"
-                ids$[5]="sas-01A"
+                ids$[1]="arm-10D:ARC_DISTCODE"
+                ids$[2]="ars-01A:ARS_PARAMS"
+                ids$[3]="gls-01A:GLS_PARAMS"
+                ids$[4]="ivs-01A:IVS_PARAMS"
+                ids$[5]="sas-01A:SAS_PARAMS"
                 call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
                 if status goto std_exit
 
@@ -277,8 +277,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -322,7 +322,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+ rem   run pgmdir$+"ads_process_end.aon",err=*next
+       run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
