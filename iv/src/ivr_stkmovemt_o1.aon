@@ -139,12 +139,12 @@ rem --- Retrieve item
         item$[0]=firm_id$
         item$[2]=item$
         if level$="W" item$[1]=whse$,action$=""
-        call pgmdir$+"ivc_wa.bbx",action$,files[all],item$[all],whse$[all],w[all],value,status
-        call pgmdir$+"ivc_au.bbx",level$,files[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
+        call pgmdir$+"ivc_whseinfo.aon",action$,files[all],item$[all],whse$[all],w[all],value,status
+        call pgmdir$+"ivc_usage.aon",level$,files[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
         if flag$<>"" usage=estimated
         avg_usage=usage/g[0]
         if level$="W" action$="" else action$="A"
-        call pgmdir$+"ivc_wb.bbx",action$,channs[all],item$[all],period$[all],activity[all],status
+        call pgmdir$+"ivc_whseact.aon",action$,channs[all],item$[all],period$[all],activity[all],status
         cur_usage=activity[3]+activity[4]-activity[8]
         prior_usage=usage-cur_usage
         cur_recpts=activity[1]+activity[2]
@@ -381,7 +381,7 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -425,7 +425,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
 
