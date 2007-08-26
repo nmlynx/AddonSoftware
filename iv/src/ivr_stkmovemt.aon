@@ -45,22 +45,12 @@ rem --- Open/Lock files
     ivm12_dev=channels[6]
     ivm14_dev=channels[7]
     ivm15_dev=channels[8]
-    ivm03_dev2=channels[9]
 
 rem --- Dimension string templates
 
     dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03a$:templates$[4],
 :       ivm10a$:templates$[5],ivm12a$:templates$[6],ivm14a$:templates$[7],
 :       ivm15a$:templates$[8]
-
-rem --- check application settings
-
-    call pgmdir$+"adc_application.aon","IV",info$[all]
-    gl$=info$[9];rem --- post to GL?
-    call pgmdir$+"adc_application.aon","AR",info$[all]
-    ar$=info$[20]; rem --- AR installed?
-    call pgmdir$+"adc_application.aon","AP",info$[all]
-    ap$=info$[20]; rem --- AP installed?
 
 
 rem --- Retrieve miscellaneous templates
