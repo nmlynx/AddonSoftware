@@ -38,7 +38,7 @@ rem --- Initializations
     report=0
     dim channs[3],period$[1]
     channs[2]=ivm12_dev
-    channs[3]=ivm03_dev2
+    channs[3]=ivm03_dev
     day_of_mth=num(when$(7,2))
     period$[0]=year$+period$
     period$[1]=year$+period$
@@ -129,6 +129,7 @@ rem --- Retrieve item
 
         dim item$[2],whse$[2],w[20],activity[12]
         ivm01a_key$=firm_id$+item$
+	if level$="W" ivm02a_key$=firm_id$+whse$+item$
         find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if type$<>"" then
             if ivm01a.item_type$<>type$ then
@@ -139,6 +140,7 @@ rem --- Retrieve item
         item$[0]=firm_id$
         item$[2]=item$
         if level$="W" item$[1]=whse$,action$=""
+        if level$="W" find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
         call pgmdir$+"ivc_whseinfo.aon",action$,files[all],item$[all],whse$[all],w[all],value,status
         call pgmdir$+"ivc_usage.aon",level$,files[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
         if flag$<>"" usage=estimated
@@ -156,7 +158,7 @@ rem --- Print detail line
         issued$=""
         needed=1+split
         if h9$<>"" needed=needed+2
-        if level$="W" last_issue$=fnl$(whse$[1](34,3),whse$[1](37,3)) else last_issue$=fnl$(a2$(35,3),a2$(38,3))
+        if level$="W" last_issue$=fnl$(ivm02a.lstsal_date$,ivm02a.lstiss_date$) else last_issue$=fnl$(ivm01a.lstsal_date$,ivm01a.lstiss_date$)
         if cvs(last_issue$,2)<>"" issued$=fndate$(last_issue$)
         if split=0 x$=fnitem$(ivm01a.Item_Desc$,p[3],p[4],p[5])
         if l+needed>l9 gosub report_heading
@@ -370,6 +372,16 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem " --- Compare two dates"
+    def fnl$(q1$,q2$)
+        if CVS(q1$,2)="" THEN LET q1$="zzzzzzzz"
+        if CVS(q2$,2)="" THEN LET q2$="zzzzzzzz"
+        q$=q1$
+        if q2$>q1$ then q$=q2$
+        if q$="zzzzzzzz" then q$="        "
+        return q$
     fnend
 
 rem #endinclude std_functions.src
