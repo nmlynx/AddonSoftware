@@ -3,7 +3,6 @@ rem --- hdr/dtl have been deleted; now write back header w/ "V" flag
 are_invhdr_dev=fnget_dev("ARE_INVHDR")
 rec_data.sim_inv_type$="V"
 rec_data$=field(rec_data$); write record(are_invhdr_dev,key=rec_data.firm_id$+rec_data.ar_inv_no$)rec_data$
-
 [[ARE_INVHDR.ADIS]]
 cust_key$=callpoint!.getColumnData("ARE_INVHDR.FIRM_ID")+callpoint!.getColumnData("ARE_INVHDR.CUSTOMER_ID")
 gosub disp_cust_addr
@@ -47,7 +46,8 @@ callpoint!.setColumnData("<<DISPLAY>>.TOT_AMT",str(tamt))
 
 [[ARE_INVHDR.BSHO]]
 rem --- Open/Lock files
-
+	dir_pgm$=stbl("+DIR_PGM",err=*next)
+	sys_pgm$=stbl("+DIR_SYP",err=*next)
 	files=21,begfile=1,endfile=10
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="ARS_PARAMS";rem --- "ARS_PARAMS"..."ads-01"
@@ -68,9 +68,8 @@ rem --- Open/Lock files
 	next wkx
 	rem --- options$[11]="NA";rem --- force are-15 open on 2nd device
 
-	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+	call sys_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
-escape;rem will this get imported?
 	if status$<>"" goto std_exit
 	ads01_dev=num(chans$[1])
 
@@ -116,16 +115,14 @@ rem --- Additional File Opens
 		files=21,begfile=20,endfile=21
 		dim files$[files],options$[files],chans$[files],templates$[files]
 		files$[20]="GLM_ACCT",options$[20]="OTA";rem --- "glm-01"
-		files$[21]=glw11$,options$[21]="OTAS";rem --- s means no err if tmplt not found
+		files$[21]=glw11$,options$[21]="COTAS";rem --- s means no err if tmplt not found
 		rem --- will need alias name, not disk name, when opening work file
 		rem --- will also need option to lock/clear file; not using in this pgm for now, so bypassing.CAH
 		rem --- old pgm set options$[11]?  doesn't make sense, s/b options$[21]="C"?
 
 	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                   chans$[all],templates$[all],table_chans$[all],batch,status$
-
 		if status$<>"" goto std_exit
-
 	else
 		rem --- this logic creates/sets window object w! to child window, then creates/sets control object
 		rem --- to control w/ ID 5900, (c!.getName()should be the grd_ARE_INVDET)
@@ -133,7 +130,6 @@ rem --- Additional File Opens
 		w!=Form!.getChildWindow(1109)
 		c!=w!.getControl(5900)
 		c!.setColumnEditable(0,0)
-
 	endif
 
 rem --- Retrieve parameter data - not keeping any of it here, just make sure params exist
@@ -167,7 +163,6 @@ if cvs(callpoint!.getUserInput(),2)<>"" and callpoint!.getColumnData("ARE_INVHDR
 			endif
 		endif                            
 endif
-
 [[ARE_INVHDR.INV_DATE.AVAL]]
 gl$=user_tpl.glint$
 invdate$=callpoint!.getUserInput()        
@@ -180,7 +175,6 @@ if gl$="Y"
 		user_tpl.glper$=per$
 	endif
 endif
-
 [[ARE_INVHDR.<CUSTOM>]]
 calc_grid_tots:
 
@@ -237,6 +231,3 @@ check_outstanding_inv:
     return
 
 #include std_missing_params.src
-
-
-
