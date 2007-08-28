@@ -3,9 +3,9 @@ rem --- Retrieve miscellaneous templates
 
 	files=2,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="ars-01A"
-	ids$[2]="ars-01C"
-	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+	ids$[1]="ars-01A:ARS_PARAMS"
+	ids$[2]="ars-01C:ARS_CREDIT"
+	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates

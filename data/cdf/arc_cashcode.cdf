@@ -29,6 +29,6 @@ wmap$=callpoint!.getAbleMap()
 wpos=pos(wctl$=wmap$,8)
 wmap$(wpos+6,1)=ctl_stat$
 callpoint!.setAbleMap(wmap$)
-callpoint!.setStatus("ABLEMAP-REFRESH")
+callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 
 return

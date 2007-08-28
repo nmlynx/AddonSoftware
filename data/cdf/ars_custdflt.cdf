@@ -1,31 +1,25 @@
 [[ARS_CUSTDFLT.ARAR]]
-rem --- Open/Lock files
-
-	files=1,begfile=1,endfile=1
-	dim files$[files],options$[files],chans$[files],templates$[files]
-	files$[1]="ARS_PARAMS";rem --- "ARS_PARAMS"..."ads-01"
-
-	for wkx=begfile to endfile
-		options$[wkx]="OTA"
-	next wkx
-
-	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
-:                                   chans$[all],templates$[all],table_chans$[all],batch,status$
-
-	if status$<>"" goto std_exit
-	ads01_dev=num(chans$[1])
-
 rem --- Retrieve miscellaneous templates
 
 	files=1,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="ars-01A"
-	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+	ids$[1]="ars-01A:ARS_PARAMS"
+	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
 	dim ars01a$:templates$[1]
+
+rem --- Open/Lock files
+
+	files=1,begfile=1,endfile=files
+	dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+	files$[1]="ads-01"
+	call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                              ids$[all],templates$[all],channels[all],batch,status
+	if status goto std_exit
+	ads01_dev=channels[1]
 
 rem --- check to see if main AR param rec (firm/AR/00) exists; if not, tell user to set it up first
 

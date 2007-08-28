@@ -3,8 +3,8 @@ rem --- Retrieve miscellaneous templates
 
 	files=1,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="ars-01A"
-	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+	ids$[1]="ars-01A:ARS_PARAMS"
+	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -13,7 +13,7 @@ rem --- Dimension miscellaneous string templates
 
 rem --- find channel on which ads-01 is open
 
-	ads01_dev=num(table_chans$[0,0](pos("ARS_REPORT"=table_chans$[0,0],20)+17,3))
+	ads01_dev=fnget_dev("ARS_REPORT")
 
 rem --- check to see if main AR param rec (firm/AR/00) exists; if not, tell user to set it up first
 

@@ -42,8 +42,15 @@ rem --- if cm$ installed, and ars01c.hold_new$ is "Y", then default arm02a.cred_
 rem --- default arm02a.slspsn_code$,ar_terms_code$,disc_code$,ar_dist_code$,territory$,tax_code$
 rem --- and inv_hist_flg$ per defaults in ops10d
 
+rem <<<<<<< arm_custmast.cdf
+escape
 dim ars10d$:user_tpl.cust_dflt_tpl$
 ars10d$=user_tpl.cust_dflt_rec$
+rem =======
+dim ars10d$:user_tpl.cust_dflt_tpl$
+ars10d$=user_tpl.cust_dflt_rec$
+rem >>>>>>> 1.2
+
 callpoint!.setColumnData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
 callpoint!.setColumnData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$)
@@ -65,32 +72,32 @@ if user_tpl.cm_installed$="Y" and user_tpl.dflt_cred_hold$="Y"
 endif              
 [[ARM_CUSTMAST.BSHO]]
 rem --- Open/Lock files
+	dir_pgm$=stbl("+DIR_PGM")
+	sys_pgm$=stbl("+DIR_SYP")
 
-	files=3,begfile=1,endfile=files
-	dim files$[files],options$[files],chans$[files],templates$[files]
-	files$[1]="ARS_PARAMS";rem --- "ARS_PARAMS"..."ads-01"
-	files$[2]="ARS_CUSTDFLT";rem --- ars-10d
-	files$[3]="ARC_TERMCODE";rem --- arm10A
-	for wkx=begfile to endfile
-		options$[wkx]="OTA"
-	next wkx
-
-	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
-:                                   chans$[all],templates$[all],table_chans$[all],batch,status$
-
-	if status$<>"" goto std_exit
-	ads01_dev=num(chans$[1])
-	ars10_dev=num(chans$[2])
+	num_files=4
+	dim files$[num_files],options$[num_files],ids$[num_files],templates$[num_files],channels[num_files]
+	files$[1]="ads-01",options$[1]="OTA"
+	files$[2]="ars-10",options$[2]="OTA"
+	files$[3]="arm-10",options$[3]="OTA"
+	files$[4]="arm-02",options$[4]="OTA",ids$[4]="ARM_CUSTDET"
+	call stbl("+DIR_PGM")+"adc_fileopen.aon",action,1,num_files,files$[all],options$[all],
+:                              ids$[all],templates$[all],channels[all],batch,status
+	if status goto std_exit
+	ads01_dev=channels[1]
+	ars10_dev=channels[2]
+	arm10_dev=channels[3]
+	arm02_dev=channels[4],arm02_tpl$=templates$[4]
 
 rem --- Retrieve miscellaneous templates
 
 	files=4,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="gls-01A"
-	ids$[2]="ars-01A"
-	ids$[3]="ars-01C"
-	ids$[4]="ars-10D"
-	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+	ids$[1]="gls-01A:GLS_PARAMS"
+	ids$[2]="ars-01A:ARS_PARAMS"
+	ids$[3]="ars-01C:ARS_CREDIT"
+	ids$[4]="ars-10D:ARS_CUSTDFLT"
+	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -111,40 +118,46 @@ rem --- Retrieve parameter data
 
 	gls01a_key$=firm_id$+"GL00"
 	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
-
 	find record (ars10_dev,key=firm_id$+"D",err=std_missing_params) ars10d$
 
-	call dir_pgm$+"adc_application.aon","GL",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
 	gl$=info$[20]
-	call dir_pgm$+"adc_application.aon","OP",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
 	op$=info$[20]
-	call dir_pgm$+"adc_application.aon","IV",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
-	call dir_pgm$+"adc_application.aon","SA",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","SA",info$[all]
 	sa$=info$[20]
 
 	dim user_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),"+
 :		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024)"
 
-	user_tpl.app$="AR",user_tpl.gl_installed$=gl$,user_tpl.op_installed$=op$,user_tpl.iv_installed$=iv$,
-:                   user_tpl.sa_installed$=sa$,user_tpl.cm_installed$=cm$,user_tpl.dflt_cred_hold$=dflt_cred_hold$,
-:                   user_tpl.cust_dflt_tpl$=fattr(ars10d$),user_tpl.cust_dflt_rec$=ars10d$
+	user_tpl.app$="AR"
+	user_tpl.gl_installed$=gl$
+	user_tpl.op_installed$=op$
+	user_tpl.iv_installed$=iv$
+	user_tpl.sa_installed$=sa$
+	user_tpl.cm_installed$=cm$
+	user_tpl.dflt_cred_hold$=dflt_cred_hold$
+	user_tpl.cust_dflt_tpl$=fattr(ars10d$)
+	user_tpl.cust_dflt_rec$=ars10d$
 
+rem >>>>>>> 1.2
 	dim dctl$[10]
 
-	dctl$[1]="ARM_CUSTDET.CRED_HOLD"; rem --- looks like this should only be set in CM                
+ 	dctl$[1]="ARM_CUSTDET.CRED_HOLD"; rem --- looks like this should only be set in CM                
 
-	if sa$<>"Y"
-		dctl$[2]="ARM_CUSTDET.SA_FLAG"
+	if user_tpl.sa_installed$<>"Y"
+ 		dctl$[2]="ARM_CUSTDET.SA_FLAG"
 	else
-		dctl$[2]="ARM_CUSTDET.CRED_LIMIT"
+		dctl$[2]="ARM_CUSTDET.CREDIT_LIMIT"
 	endif
 
 	if ars01a.inv_hist_flg$="N"
 		dctl$[3]="ARM_CUSTDET.INV_HIST_FLG"
 	endif
 
-	if op$<>"Y"
+	if user_tpl.op_installed$<>"Y"
 		dctl$[3]="ARM_CUSTDET.INV_HIST_FLG"
 		dctl$[4]="ARM_CUSTDET.TAX_CODE"
 		dctl$[5]="ARM_CUSTDET.FRT_TERMS"

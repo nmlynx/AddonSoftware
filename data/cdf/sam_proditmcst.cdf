@@ -17,7 +17,7 @@ if cvs(callpoint!.getColumnData("SAM_PRODITMCST.YEAR"),2) <>"" then
 	endif
 endif
 
-call syspgmdir$+"bac_key_template.bbj","SAM_CUSTOMER","Product/Item/Cust Record",key_temp$,table_chans$[all],rd_stat$
+call syspgmdir$+"bac_key_template.bbj","SAM_CUSTOMER","ALT_KEY_01",key_temp$,table_chans$[all],rd_stat$
 dim rd_key$:key_temp$
 call syspgmdir$+"bam_inquiry.bbj",
 :	gui_dev,
@@ -26,7 +26,7 @@ call syspgmdir$+"bam_inquiry.bbj",
 :	"LOOKUP",
 :	table_chans$[all],
 :	key_pfx$,
-:	"Product/Item/Cust Record",
+:	"ALT_KEY_01",
 :	rd_key$
 
 callpoint!.setColumnData("SAM_PRODITMCST.YEAR",rd_key.year$)

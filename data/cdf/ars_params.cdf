@@ -1,11 +1,14 @@
 [[ARS_PARAMS.ARAR]]
 rem --- Retrieve miscellaneous templates
 
+	dir_pgm$=stbl("+DIR_PGM")
+	sys_pgm$=stbl("+DIR_SYP")
+
 	files=2,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="gls-01A"
-	ids$[2]="ars-01A"
-	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+	ids$[1]="gls-01A:GLS_PARAMS"
+	ids$[2]="ars-01A:ARS_PARAMS"
+	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -14,7 +17,7 @@ rem --- Dimension miscellaneous string templates
 
 rem --- find channel on which ads-01 is open
 
-	ads01_dev=num(table_chans$[0,0](pos("ARS_PARAMS"=table_chans$[0,0],20)+17,3))
+	ads01_dev=fnget_dev("ARS_PARAMS")
 
 rem --- Retrieve parameter data
 
@@ -22,20 +25,25 @@ rem --- Retrieve parameter data
 
 	gls01a_key$=firm_id$+"GL00"
 	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$  
-
-	call dir_pgm$+"adc_application.aon","GL",info$[all]
+goto bypass_apps;rem jpb undo this after Sam fixes application.aon
+	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
 	gl$=info$[20]
-	call dir_pgm$+"adc_application.aon","AP",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
 	ap$=info$[20],br$=info$[9]
-	call dir_pgm$+"adc_application.aon","IV",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
+bypass_apps:
+gl$="Y",ap$="Y",iv$="Y"
 
 	dim user_tpl$:"app:c(2),gl_pers:c(2),gl_installed:c(1),"+
 :                  "ap_installed:c(1),iv_installed:c(1),bank_rec:c(1)"
 
-	user_tpl.app$="AR",user_tpl.gl_pers$=gls01a.total_pers$,
-:                   user_tpl.gl_installed$=gl$,user_tpl.ap_installed$=ap$,user_tpl.iv_installed$=iv$,
-:                   user_tpl.bank_rec$=br$
+	user_tpl.app$="AR"
+	user_tpl.gl_pers$=gls01a.total_pers$
+	user_tpl.gl_installed$=gl$
+	user_tpl.ap_installed$=ap$
+	user_tpl.iv_installed$=iv$
+	user_tpl.bank_rec$=br$
 
 	rem --- set some defaults (that I can't do via arde) if param doesn't yet exist
 	ars01a_key$=firm_id$+"AR00"
