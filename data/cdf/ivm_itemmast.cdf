@@ -51,16 +51,26 @@ callpoint!.setStatus("REFRESH")
 [[IVM_ITEMMAST.WEIGHT.AVAL]]
 if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.AENA]]
-call dir_pgm$+"adc_application.aon","GL",info$[all]
+rem --- Retrieve miscellaneous templates
+
+files=1,begfile=1,endfile=files
+dim ids$[files],templates$[files]
+ids$[1]="ars-01A"
+
+call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+if status goto std_exit
+dim ars01a$:templates$[1]
+
+call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
 gl$=info$[20]
 
 if gl$="Y" 
-	call dir_pgm$+"adc_application.aon","IV",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	gl$=info$[9]; rem --- if gl installed, does it interface to inventory?
 endif
 
 di$="N"
-dim ars01a$:fnget_tpl$("ARS_PARAMS")
+
 if ar$="Y"
 	ars01a_key$=firm_id$+"AR00"
 	find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
@@ -132,21 +142,22 @@ find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 gls01a_key$=firm_id$+"GL00"
 find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 
-call dir_pgm$+"adc_application.aon","AR",info$[all]
+dir_pgm1$=stbl("+DIR_PGM",err=*next)
+call dir_pgm1$+"adc_application.aon","AR",info$[all]
 ar$=info$[20]
-call dir_pgm$+"adc_application.aon","AP",info$[all]
+call dir_pgm1$+"adc_application.aon","AP",info$[all]
 ap$=info$[20]
-call dir_pgm$+"adc_application.aon","BM",info$[all]
+call dir_pgm1$+"adc_application.aon","BM",info$[all]
 bm$=info$[20]
-call dir_pgm$+"adc_application.aon","GL",info$[all]
+call dir_pgm1$+"adc_application.aon","GL",info$[all]
 gl$=info$[20]
-call dir_pgm$+"adc_application.aon","OP",info$[all]
+call dir_pgm1$+"adc_application.aon","OP",info$[all]
 op$=info$[20]
-call dir_pgm$+"adc_application.aon","PO",info$[all]
+call dir_pgm1$+"adc_application.aon","PO",info$[all]
 po$=info$[20]
-call dir_pgm$+"adc_application.aon","SF",info$[all]
+call dir_pgm1$+"adc_application.aon","SF",info$[all]
 wo$=info$[20]
-call dir_pgm$+"adc_application.aon","SA",info$[all]
+call dir_pgm1$+"adc_application.aon","SA",info$[all]
 sa$=info$[20]
 
 
