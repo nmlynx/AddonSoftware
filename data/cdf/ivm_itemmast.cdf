@@ -55,9 +55,9 @@ rem --- Retrieve miscellaneous templates
 
 files=1,begfile=1,endfile=files
 dim ids$[files],templates$[files]
-ids$[1]="ars-01A"
+ids$[1]="ars-01A:ARS_PARAMS"
 
-call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 dim ars01a$:templates$[1]
 
@@ -119,11 +119,11 @@ rem --- Retrieve miscellaneous templates
 
 files=4,begfile=1,endfile=files
 dim ids$[files],templates$[files]
-ids$[1]="ivs-01A"
-ids$[2]="gls-01A"
-ids$[3]="ars-01A"
+ids$[1]="ivs-01A:IVS_PARAMS"
+ids$[2]="gls-01A:GLS_PARAMS"
+ids$[3]="ars-01A:ARS_PARAMS"
 
-call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -167,7 +167,7 @@ if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"LTRN;"
 if op$<>"Y" disable_str$=disable_str$+"SORD;"
 if po$<>"Y" disable_str$=disable_str$+"PORD;"
 				
-if disable_str$<>"" call dir_pgm$+"rdm_enable_pop.aon",Form!,enable_str$,disable_str$
+if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
 
 rem --- additional file opens, depending on which apps are installed, param values, etc.
 
