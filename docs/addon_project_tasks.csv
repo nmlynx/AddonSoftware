@@ -46,22 +46,22 @@ Cash Receipts Register,ARR_CASHRECEIPTS,T,ARR_CASHRECEIPTS,,ARR.AA,JL,P,,,,
 Aging Report,ARR_AGINGREPORT,T,ARR_AGINGREPORT,,ARR.4A,SV,P,,,,
 Aging Analysis Report,ARR_ANALYSIS,T,ARR_ANALYSIS,,ARR.5A,SV,Y,,,,
 Age Transactions,ARU_AGINGUPDATE,T,ARU_AGINGUPDATE,,ARU.EA,JL?,P,Y,,,
-Credit Managers Review & Release,,,,,,,,,,,
-Reports,ARMENU_REPORTS,G,,,,,,,,,
-Customer Cross Reference Listing,ARR_CUSTOMERXREF,A,,arr_customerxref.aon,ARR.IA,JL,Y,,,,
-Customer Label Printing,ARR_LABELS,T,ARR_LABELS,,ARR.EA,JL,Y,,,,
-Customer Name Listing,ARR_NAMELIST,T,ARR_NAMELIST,,ARR.RA,JL,Y,,,,
-Customer Detail Listing,ARR_DETAIL,T,ARR_DETAIL,,ARM.WA,JL,Y,,,,
-Customer Comments Listing,ARR_COMMENTS,T,ARR_COMMENTS,,ARR.RC,JL,Y,,,,
-Customer Name & Address Listing,ARR_NAMEADDRESS,T,ARR_NAMEADDRESS,,ARR.DA,SV,Y,,,,
-Customer Ledger Cards,ARR_LEDGERS,T,ARR_LEDGERS,,ARR.9A,SV,Y,,,,
-Period End Processing,ARMENU_PEND,G,,,,,,,,,
-Aging Report,ARR_AGINGREPORTPE,A,ARR_AGINGREPORT,arr_agingreport.aon,ARR.4A,SV,P,,,,
-Generate Finance Charges,ARU_FINANCECHARG,T,ARU_FINANCECHARG,,ARU.HA,JL,P,,,,
-Finance Charge Entry,ARE_FINCHG,T,ARE_FINCHG,,ARE.BA,CH,Y,,,,
-Purge Finance Charge Entries,ARU_FINANCEPURGE,A,,aru_financepurge.aon,,JL,P,,,,
-Finance Charge Register,ARR_OTHERENTRY,A,,arr_otherentry.aon,ARR.JA,JL,Y,,,,
-Customer Statements,ARR_STATEMENTS,T,ARR_STATEMENTS,,ARR.CA,JL,P,,,,
+Credit Managers Review & Release,,,,,,,
+Reports,ARMENU_REPORTS,G,,,,,
+Customer Cross Reference Listing,ARR_CUSTOMERXREF,A,,arr_customerxref.aon,ARR.IA,JL,Y
+Customer Label Printing,ARR_LABELS,T,ARR_LABELS,,ARR.EA,JL,Y
+Customer Name Listing,ARR_NAMELIST,T,ARR_NAMELIST,,ARR.RA,JL,Y
+Customer Detail Listing,ARR_DETAIL,T,ARR_DETAIL,,ARM.WA,JL,Y
+Customer Comments Listing,ARR_COMMENTS,T,ARR_COMMENTS,,ARR.RC,JL,Y
+Customer Name & Address Listing,ARR_NAMEADDRESS,T,ARR_NAMEADDRESS,,ARR.DA,SV,Y
+Customer Ledger Cards,ARR_LEDGERS,T,ARR_LEDGERS,,ARR.9A,SV,Y
+Period End Processing,ARMENU_PEND,G,,,,,
+Aging Report,ARR_AGINGREPORTPE,A,ARR_AGINGREPORT,arr_agingreport.aon,ARR.4A,SV,P
+Generate Finance Charges,ARU_FINANCECHARG,T,ARU_FINANCECHARG,,ARU.HA,JL,P
+Finance Charge Entry,ARE_FINCHG,T,ARE_FINCHG,,ARE.BA,CH,Y
+Purge Finance Charge Entries,ARU_FINANCEPURGE,A,,aru_financepurge.aon,,JL,P
+Finance Charge Register,ARR_OTHERENTRY,A,,arr_otherentry.aon,ARR.JA,JL,Y
+Customer Statements,ARR_STATEMENTS,T,ARR_STATEMENTS,,ARR.CA,JL,P
 Monthly Cash Receipts Journal,ARR_CASHJOURNAL,T,ARR_CASHJOURNAL,,ARR.GA,JL,Y,,,,
 Monthly Cash Receipts Journal Purge,ARU_CASHJOURNAL,T,ARU_CASHJOURNAL,,ARU.XA,JL,P,,Y,,
 Customer Ranking Report,ARR_RANKING,T,ARR_RANKING,,ARR.KA,SV,Y,,,,
@@ -78,38 +78,38 @@ Distribution Codes,ARC_DISTCODE,T,ARC_DISTCODE,,ARM.DA,SV,Y,,,,
 Cycle Codes,ARM_CYCLECOD,T,ARM_CYCLECOD,,v7,,,,,,
 Parameters,ARMENU_PARAMS,G,ARS_PARAMS,,,,,,,,
 Application Parameters,ARS_PARAMS,T,ARS_PARAMS,,ARP.AA,CH,Y,,,,
-Report Parameters,ARS_REPORT,T,ARS_REPORT,,ARP.AA,CH,Y,,,,
-New Customer Defaults,ARS_CUSTDFLT,T,ARS_CUSTDFLT,,ARP.AA,CH,Y,,,,
-Utilities,ARMENU_UTILITIES,G,,,,,,,,,
-Conversion Invoice Entry,ARE_CNVINV,T,ARE_CNVINV,,ARE.BA,CH,Y,,,,
-Conversion Invoice Register,ARR_CONVREGISTER,A,ARR_CONVREGISTER,arr_otherentry.aon,ARR.JA,JL,P,,Y,,
-Invoice Date Modification Entry,ARE_DATECHANGE,T,ARE_DATECHANGE,,ARE.EA,SV,P,,,,
-Invoice Date Modification Register,ARR_DATEREGISTER,A,ARR_DATEREGISTER,arr_dateregister.aon,ARR.PA,JL,P,,Y,,
-Change Sales Analysis Flag,ARX_CHANGESAFLAG,T,ARX_CHANGESAFLAG,,v7,,,,,,
-General Ledger,GLMENU,M,,,,,,,,,
-Journal Entry,GLE_JRNLHDR,T,GLE_JRNLHDR,,GLE.CA,SV,P,,,,
-Journal Entry Register,GLR_JOURNAL,A,,glr_journal.aon,GLR.MA,JL,P,,Y,,
-Daily Detail Register,GLR_DAILYDETAIL,T,GLR_DAILYDETAIL,,GLR.DA,JL,P,,Y,,
-Account Allocation Entry,GLE_ALLOCHDR,T,GLE_ALLOCHDR,,GLE.EA,SV,P,,,,
-Account Allocation Register,GLR_ALLOCATE,T,GLR_ALLOCATE,,GLR.QA,JL,P,,Y,,
-Bank Reconciliation,GLM_BANKMASTER,T,GLM_BANKMASTER,,APM.EA,SV,P,,,,
-Reports,GLMENU_REPORTS,G,,,,,,,,,
-Chart Of Accounts Listing,GLR_ACCTLIST,T,GLR_ACCTLIST,,GLR.KA,SV,Y,,,,
-Daily Detail Register,GLR_DAILYDETAIL_RP,T,GLR_DAILYDETAIL,,GLR.DA,JL,P,,Y,,
-Transaction History Report,GLR_TRANSHISTORY,T,GLR_TRANSHISTORY,,GLR.CA,SV,P,,,,
-Summary Activity Report,GLR_SUMMARY,T,GLR_SUMMARY,,GLR.IA,JL,P,,Y,,
-General Ledger Trial Balance,GLR_TRIALBALANCE,T,GLR_TRIALBALANCE,,GLR.BA,JL?,P,Y,Y,,
-Profit and Loss Statement,GLR_PROFITLOSS,T,GLR_PROFITLOSS,,GLR.PA,SV,P,,,,
-Balance Sheet,GLR_BALANCE,T,GLR_BALANCE,,GLR.EA,JL,P,,Y,,
-Financial Report Printing,GLR_FINANCIALSRP,T,GLR_FINANCIALS,,GLE.AA,JL?,P,Y,Y,,
-13 Period Financial Report Printing,GLR_13PERIODRP,T,GLR_13PERIOD,,GLE.BA,JL?,P,Y,Y,,
-Budgeting,GLMENU_BUDGETS,G,,,,,,,,,
-Revision Codes,GLM_BUDGETMASTER,T,GLM_BUDGETMASTER,,GLM.MA,,P,,,,
-Create Budget Revision,GLU_CREATEBUDGET,T,GLU_CREATEBUDGET,,GLU.FA,,P,,,,
-Budget Revision Maintenance,GLM_EA,T,,glm_ea.aon,GLM.EA,,,,,,
-Budget Revision Report,GLR_BUDGETREPORT,T,GLR_BUDGETREPORT,,GLR.LA,JL,P,,,,
-Budget Revision Register,GLR_BUDGETUPDATE,T,GLR_BUDGETUPDATE,,GLR.RA,JL,P,,,,
-Custom Financials,GLMENU_CUSTOM,G,,,,,,,,,
+Report Parameters,ARS_REPORT,T,ARS_REPORT,,ARP.AA,CH,Y,,
+New Customer Defaults,ARS_CUSTDFLT,T,ARS_CUSTDFLT,,ARP.AA,CH,Y,,
+Utilities,ARMENU_UTILITIES,G,,,,,,,
+Conversion Invoice Entry,ARE_CNVINV,T,ARE_CNVINV,,ARE.BA,CH,Y,,
+Conversion Invoice Register,ARR_CONVREGISTER,A,ARR_CONVREGISTER,arr_otherentry.aon,ARR.JA,JL,P,,Y
+Invoice Date Modification Entry,ARE_DATECHANGE,T,ARE_DATECHANGE,,ARE.EA,SV,P,,
+Invoice Date Modification Register,ARR_DATEREGISTER,A,ARR_DATEREGISTER,arr_dateregister.aon,ARR.PA,JL,P,,Y
+Change Sales Analysis Flag,ARX_CHANGESAFLAG,T,ARX_CHANGESAFLAG,,v7,,,,
+General Ledger,GLMENU,M,,,,,,,
+Journal Entry,GLE_JRNLHDR,T,GLE_JRNLHDR,,GLE.CA,SV,P,,
+Journal Entry Register,GLR_JOURNAL,A,,glr_journal.aon,GLR.MA,JL,P,,Y
+Daily Detail Register,GLR_DAILYDETAIL,T,GLR_DAILYDETAIL,,GLR.DA,JL,P,,Y
+Account Allocation Entry,GLE_ALLOCHDR,T,GLE_ALLOCHDR,,GLE.EA,SV,P,,
+Account Allocation Register,GLR_ALLOCATE,T,GLR_ALLOCATE,,GLR.QA,JL,P,,Y
+Bank Reconciliation,GLM_BANKMASTER,T,GLM_BANKMASTER,,APM.EA,SV,P,,
+Reports,GLMENU_REPORTS,G,,,,,,,
+Chart Of Accounts Listing,GLR_ACCTLIST,T,GLR_ACCTLIST,,GLR.KA,SV,Y,,
+Daily Detail Register,GLR_DAILYDETAIL_RP,T,GLR_DAILYDETAIL,,GLR.DA,JL,P,,Y
+Transaction History Report,GLR_TRANSHISTORY,T,GLR_TRANSHISTORY,,GLR.CA,SV,P,,
+Summary Activity Report,GLR_SUMMARY,T,GLR_SUMMARY,,GLR.IA,JL,P,,Y
+General Ledger Trial Balance,GLR_TRIALBALANCE,T,GLR_TRIALBALANCE,,GLR.BA,JL?,P,Y,Y
+Profit and Loss Statement,GLR_PROFITLOSS,T,GLR_PROFITLOSS,,GLR.PA,SV,P,,
+Balance Sheet,GLR_BALANCE,T,GLR_BALANCE,,GLR.EA,JL,P,,Y
+Financial Report Printing,GLR_FINANCIALSRP,T,GLR_FINANCIALS,,GLE.AA,JL?,P,Y,Y
+13 Period Financial Report Printing,GLR_13PERIODRP,T,GLR_13PERIOD,,GLE.BA,JL?,P,Y,Y
+Budgeting,GLMENU_BUDGETS,G,,,,,,,
+Revision Codes,GLM_BUDGETMASTER,T,GLM_BUDGETMASTER,,GLM.MA,,P,,
+Create Budget Revision,GLU_CREATEBUDGET,T,GLU_CREATEBUDGET,,GLU.FA,,P,,
+Budget Revision Maintenance,GLM_EA,T,,glm_ea.aon,GLM.EA,,,,
+Budget Revision Report,GLR_BUDGETREPORT,T,GLR_BUDGETREPORT,,GLR.LA,JL,P,,
+Budget Revision Register,GLR_BUDGETUPDATE,T,GLR_BUDGETUPDATE,,GLR.RA,JL,P,,
+Custom Financials,GLMENU_CUSTOM,G,,,,,,,
 Financial Report Master,GLM_FINMASTER,T,GLM_FINMASTER,,GLM.DA,,P,,,,New - Detail FS Setup (GLM_FINDETAIL) - runs from GLM_FINMASTER
 Report Heading,GLM_FINHEADING,T,GLM_FINHEADING,,GLM.KA,,,Y,,,
 Reports by Account,GLM_FA,T,,glm_fa.aon,GLM.FA,,,,,,
@@ -126,22 +126,22 @@ Period End Processing,GLMENU_PEND,G,,,,,,,,,
 Period End Update,GLU_PERIODEND,T,GLU_PERIODEND,,GLU.CA,,P,,,,
 Update Beginning Balances,GLR_BEGBAL,A,,glr_begbal.aon,GLR.HA,,P,,,,
 Year End Update,GLE_YEAREND,A,,gle_yearend.aon,GLU.DA,,P,,,,
-Purge Transaction History,GLU_PURGETRANS,T,GLU_PURGETRANS,,GLU.AA,,P,,,,
-Maintenance,GLMENU_MAINT,G,,,,,,,,,
-Account Master,GLM_ACCT,T,GLM_ACCT,,GLM.AA,SV/CLT,Y,Y,,,
-Journal ID Codes,GLC_JOURNALCODE,T,GLC_JOURNALCODE,,GLM.CA,SV/CLT,Y,Y,,,
-Posting Control,GLM_AUDITCONTROL,T,GLM_AUDITCONTROL,,GLM.BA,,,,,,
-Cycle Codes,GLC_CYCLECODE,T,GLC_CYCLECODE,,GLM.LA,SV/CLT,Y,,,,
-Recurring Journal Entry Header,GLE_RECJEHDR,T,GLE_RECJEHDR,,GLE.DA,,,,,,
-Recurring Journal Entry Register,GLR_RECURRING,T,GLR_RECURRING,,GLR.NA,,,Y,Y,,
-Parameters,GLMENU_PARAMS,G,ARS_PARAMS,,,,,,,,
-Application Parameters,GLS_PARAMS,T,GLS_PARAMS,,GLP.AA,JL,Y,,,,
-Fiscal Calendar,GLS_CALENDAR,T,GLS_CALENDAR,,GLP.AA,JL,Y,,,,
-Suspense Account,GLS_SUSPENSE,T,GLS_SUSPENSE,,GLP.AA,JL,Y,,,,
-Retained Earnings,GLS_EARNINGS,T,GLS_EARNINGS,,GLP.AA,JL,P,,,,
-Chart of Account Breaks,GLM_ACCTBREAKS,T,GLM_ACCTBREAKS,,GLP.AA,JL/CLT,Y,Y,,,
-Default Display Columns,GLS_COLUMNS,T,GLS_COLUMNS,,GLP.AA,JL,Y,,,,
-Utilities,GLMENU_UTILITIES,G,,,,,,,,,
+Purge Transaction History,GLU_PURGETRANS,T,GLU_PURGETRANS,,GLU.AA,,P,,
+Maintenance,GLMENU_MAINT,G,,,,,,,
+Account Master,GLM_ACCT,T,GLM_ACCT,,GLM.AA,SV/CLT,Y,Y,
+Journal ID Codes,GLC_JOURNALCODE,T,GLC_JOURNALCODE,,GLM.CA,SV/CLT,Y,Y,
+Posting Control,GLM_AUDITCONTROL,T,GLM_AUDITCONTROL,,GLM.BA,,,,
+Cycle Codes,GLC_CYCLECODE,T,GLC_CYCLECODE,,GLM.LA,SV/CLT,Y,,
+Recurring Journal Entry Header,GLE_RECJEHDR,T,GLE_RECJEHDR,,GLE.DA,,,,
+Recurring Journal Entry Register,GLR_RECURRING,T,GLR_RECURRING,,GLR.NA,,,Y,Y
+Parameters,GLMENU_PARAMS,G,ARS_PARAMS,,,,,,
+Application Parameters,GLS_PARAMS,T,GLS_PARAMS,,GLP.AA,JL,Y,,
+Fiscal Calendar,GLS_CALENDAR,T,GLS_CALENDAR,,GLP.AA,JL,Y,,
+Suspense Account,GLS_SUSPENSE,T,GLS_SUSPENSE,,GLP.AA,JL,Y,,
+Retained Earnings,GLS_EARNINGS,T,GLS_EARNINGS,,GLP.AA,JL,P,,
+Chart of Account Breaks,GLM_ACCTBREAKS,T,GLM_ACCTBREAKS,,GLP.AA,JL/CLT,Y,Y,
+Default Display Columns,GLS_COLUMNS,T,GLS_COLUMNS,,GLP.AA,JL,Y,,
+Utilities,GLMENU_UTILITIES,G,,,,,,,
 Copy Chart of Accounts,GLX_COPYCHART,T,GLX_COPYCHART,,v7,,,,,,
 Inventory Control,IVMENU,M,,,,,,,,,
 Inventory Transaction Entry,IVE_TRANSHDR,T,IVE_TRANSHDR,,IVE.AA,,,,,,
@@ -165,8 +165,8 @@ Print Count Sheets,IVR_UA,T,,ivr_ua.aon,IVR.UA,BJ-BP,P,Y,Y,,20Aug mods
 Count Sheet Entry,IVE_RA,T,,ive_ra.aon,IVE.RA,,,,,,
 Physical Inventory Register,IVR_VA,T,,ivr_va.aon,IVR.VA,BJ-BP,P,Y,Y,,20Aug mods
 Reports,IVMENU_REPORTS,G,,,,,,,,,
-Price Listing,IVR_FA,T,,ivr_fa.aon,IVR.FA,BJ-BP,P(A/B),Y,Y,,IVR.FB; fa and fb converted to ivr_pricelist and ivr_pricelist_o1. Select Form built. CH.20Aug mods
-Vendor Listing,IVR_IA,T,,ivr_ia.aon,IVR.IA,BJ-BP,P(A/B),Y,Y,,"IVR.IB; ia/ib converted to ivr_vendlist and ivr_vendlist_o1. Also converted two publics, ivc_au/wa, now ivc_usage and ivc_whseinfo. Select Form built.CH.20Aug mods"
+Price Listing,IVR_PRICELIST,T,,ivr_fa.aon,IVR.FA,BJ-BP,P(A/B),Y,Y,READY-CH,IVR.FB; fa and fb converted to ivr_pricelist and ivr_pricelist_o1. Select Form built. CH.20Aug mods
+Vendor Listing,IVR_VENDLIST,T,,ivr_ia.aon,IVR.IA,BJ-BP,P(A/B),Y,Y,,"IVR.IB; ia/ib converted to ivr_vendlist and ivr_vendlist_o1. Also converted two publics, ivc_au/wa, now ivc_usage and ivc_whseinfo. Select Form built.CH.20Aug mods"
 Requirements Report,IVR_MA,T,,ivr_ma.aon,IVR.MA,BJ-BP,P(A/B),Y,Y,,IVR.MB 20Aug mods
 Analysis Report,IVR_HA,T,,ivr_ha.aon,IVR.HA,BJ-BP,P(A/B),Y,Y,,IVR.HB 20Aug mods
 Stock Status Report,IVR_BA,T,,ivr_ba.aon,IVR.BA,BJ-BP,P(A/B),Y,Y,,IVR.BB 20Aug mods
@@ -177,11 +177,11 @@ Turns Report,IVR_KA,T,,ivr_ka.aon,IVR.KA,BJ-BP,P(A/B),Y,Y,,IVR.KB
 Yesterday's Zero Balance Report,IVR_ZA,T,,ivr_za.aon,IVR.ZA,BJ-BP,P(A/B),Y,Y,,IVR.ZB 20Aug mods
 Transaction History Listing,IVR_TRANSHIST,T,IVR_TRANSHIST,,IVR.QA,,,,,,
 LIFO/FIFO Tier Report,IVR_LIFOFIFO,T,IVR_LIFOFIFO,,IVR.XA,,,,,,
-Synonyms Listing,IVR_SYNONYMS,T,IVR_SYNONYMS,,IVR.SA,BJ-BP,P(A/B),Y,Y,,IVR.SB;sa/sb converted to ivr_itemsyn and ivr_itemsyn_o1; modified to use alt key on ivm-14 rather than ivm-24 xref. Select Form built.CH 20Aug mods
+Synonyms Listing,IVR_ITEMSYN,T,,,IVR.SA,BJ-BP,P(A/B),Y,Y,READY-CH,IVR.SB;sa/sb converted to ivr_itemsyn and ivr_itemsyn_o1; modified to use alt key on ivm-14 rather than ivm-24 xref. Select Form built.CH 20Aug mods
 Alternate/Superceded Items Listing,IVR_2A,T,,ivr_2a.aon,IVR.2A,BJ-BP,P(A/B),Y,Y,,IVR.2B 20Aug mods
-Inventory Description Listing,IVR_ITEMDESC,T,IVR_ITEMDESC,,IVR.TA,BJ-BP,P(A/B),Y,Y,,"IVR.TB; found select screen, so maybe someone did this in the past; I created ivr_itemdesc from ivr_ta, and ivr_itemdesc_o1 from ivr_tb. CH.20Aug mods"
+Inventory Description Listing,IVR_ITEMDESC,T,IVR_ITEMDESC,,IVR.TA,BJ-BP,P(A/B),Y,Y,READY-CH,"IVR.TB; found select screen, so maybe someone did this in the past; I created ivr_itemdesc from ivr_ta, and ivr_itemdesc_o1 from ivr_tb. CH.20Aug mods"
 Item Detail Listing,IVR_RA,T,,ivr_ra.aon,IVR.RA,BJ-BP,P(A/B),Y,Y,,IVR.RB 20Aug mods
-Item Labels,IVR_1A,T,,ivr_1a.aon,IVR.1A,BJ-BP,P(A/B),Y,,,IVR.1B;1a/1b converted to ivr_itemlabels and ivr_itemlabels_o1; Select Form built. CH. 20Aug mods
+Item Labels,IVR_ITEMLABELS,T,,ivr_1a.aon,IVR.1A,BJ-BP,Y-CH,Y,,,IVR.1B;1a/1b converted to ivr_itemlabels and ivr_itemlabels_o1; Select Form built. CH. 20Aug mods
 Lotted/Serialized Inventory,IVMENU_LOTS,G,,,,,,,,,
 History By Item Inquiry,IVM_FA,T,,ivm_fa.aon,IVM.FA,,,,,,
 History By Customer Inquiry,IVM_IA,T,,ivm_ia.aon,IVM.IA,,,,,,
@@ -286,22 +286,22 @@ By Distribution Code,SAM_JA,T,,sam_ja.aon,SAM.JA,JB,Y,,,,Done - JB
 By Non-Stock Item,SAM_KA,T,,sam_ka.aon,SAM.KA,JB,P,,,,
 By Product/Item/Cust,SAM_LA,T,,sam_la.aon,SAM.LA,JB,P,,,,
 Reports,SAMENU_REPORTS,G,,,,,,,,,
-By Customer,SAR_CUSTOMER,T,SAR_CUSTOMER,,SAR.AA,JB,Y,,Y,Done-JB,
-By Territory,SAR_TERRITRY,T,SAR_TERRITRY,,SAR.BA,JB,Y,,Y,Done-JB,
-By Salesperson,SAR_SALESPSN,T,SAR_SALESPSN,,SAR.CA,JB,Y,,Y,Done-JB,
-By Customer Type,SAR_CUSTTYPE,T,SAR_CUSTTYPE,,SAR.DA,JB,Y,,Y,Done-JB,
-By Customer Ship-To,SAR_CUSTSHIP,T,SAR_CUSTSHIP,,SAR.EA,JB,Y,,Y,Done-JB,
-By SIC,SAR_CUSTSIC,T,SAR_CUSTSIC,,SAR.FA,JB,Y,,Y,Done-JB,
-By Product,SAR_ITEM,T,SAR_ITEM,,SAR.GA,JB,Y,,Y,Done-JB,
-By Warehouse,SAR_WAREHSE,T,SAR_WAREHSE,,SAR.HA,JB,Y,,Y,Done-JB,
-By Stocking Vendor,SAR_VENDOR,T,SAR_VENDOR,,SAR.IA,JB,Y,,Y,Done-JB,
-By Distribution Code,SAR_DISTCODE,T,SAR_DISTCODE,,SAR.JA,JB,Y,,Y,Done-JB,
-By Non-Stock Item,SAR_NONSTOCK,T,SAR_NONSTOCK,,SAR.KA,JB,Y,,Y,Done-JB,
-By Product/Item/Cust,SAR_PRODITEMCUST,T,SAR_PRODITMCST,,SAR.LA,JB,Y,,Y,Done-JB,
-By Territory/Cust,SAR_TA,T,SAR_CUSTTERR,sar_ta.aon,SAR.TA,JB,Y,,Y,Done-JB,
-Period End Processing,SAMENU_PEND,G,,,,,,,,,
-Purge Zero Balance Records,SAU_AA,T,,sau_aa.aon,SAU.AA,,,Y,,,
-Maintenance,SAMENU_MAINT,G,,,,,,,,,
+By Customer,SAR_CUSTOMER,T,SAR_CUSTOMER,,SAR.AA,JB,Y,,Y,Done-JB
+By Territory,SAR_TERRITRY,T,SAR_TERRITRY,,SAR.BA,JB,Y,,Y,Done-JB
+By Salesperson,SAR_SALESPSN,T,SAR_SALESPSN,,SAR.CA,JB,Y,,Y,Done-JB
+By Customer Type,SAR_CUSTTYPE,T,SAR_CUSTTYPE,,SAR.DA,JB,Y,,Y,Done-JB
+By Customer Ship-To,SAR_CUSTSHIP,T,SAR_CUSTSHIP,,SAR.EA,JB,Y,,Y,Done-JB
+By SIC,SAR_CUSTSIC,T,SAR_CUSTSIC,,SAR.FA,JB,Y,,Y,Done-JB
+By Product,SAR_ITEM,T,SAR_ITEM,,SAR.GA,JB,Y,,Y,Done-JB
+By Warehouse,SAR_WAREHSE,T,SAR_WAREHSE,,SAR.HA,JB,Y,,Y,Done-JB
+By Stocking Vendor,SAR_VENDOR,T,SAR_VENDOR,,SAR.IA,JB,Y,,Y,Done-JB
+By Distribution Code,SAR_DISTCODE,T,SAR_DISTCODE,,SAR.JA,JB,Y,,Y,Done-JB
+By Non-Stock Item,SAR_NONSTOCK,T,SAR_NONSTOCK,,SAR.KA,JB,Y,,Y,Done-JB
+By Product/Item/Cust,SAR_PRODITEMCUST,T,SAR_PRODITMCST,,SAR.LA,JB,Y,,Y,Done-JB
+By Territory/Cust,SAR_TA,T,SAR_CUSTTERR,sar_ta.aon,SAR.TA,JB,Y,,Y,Done-JB
+Period End Processing,SAMENU_PEND,G,,,,,,,,
+Purge Zero Balance Records,SAU_AA,T,,sau_aa.aon,SAU.AA,,,Y,,
+Maintenance,SAMENU_MAINT,G,,,,,,,,
 Application Parameters,SAP_AA,T,,sap_aa.aon,SAP.AA,,,,,,
 Utilities,SAMENU_UTILITIES,G,,,,,,,,,
 Rebuild Cross References,SAX_CROSSREF,A,SAX_CROSSREF,,SAX.AA,,,,,,
@@ -350,48 +350,48 @@ Application Parameters,OP_APPPARAMS,T,,,OPP.AA,,,,,,
 Credit Management Parameters,OPS_CREDIT,T,OPS_CREDIT,,OPP.AA,,,,,,
 New Customer Defaults,OP_CUSTDEFAULTS,T,,,OPP.AA,,,,,,
 Utilities,OPMENU_UTILITIES,G,,,,,,,,,
-Rebuild Open Order Cross References,OPX_CROSSREF,T,OPX_CROSSREF,,OPX.DA,,,,,,
-Rebuild Invoice History Cross References,OPX_HISTXREF,T,OPX_HISTXREF,,OPX.GA,,,,,,
-Remove Unlinked Detail Lines,OPX_UNLINKED,T,OPX_UNLINKED,,OPX.EA,,,,,,
-Rebuild Order/Invoice Print File,OPX_PRNTFILE,T,OPX_PRNTFILE,,OPX.FA,,,,,,
-Reset MTD and Next Month Totals,OPX_MTDNMTD,T,OPX_MTDNMTD,,OPX.AA,,,,,,
-Administration,ADMENU,M,,,,,,,,,
-Maintenance,ADMENU_MAINT,G,,,,,,,,,
-Menus,MENU_MAINT,A,,rdm_menu_maint.aon,,SV,P,,,,
-Firms,ADM_FIRMS,T,ADM_FIRMS,,,SV,Y,,,,
-Applications,ADM_MODULES,T,ADM_MODULES,,,SV,Y,,,,
-System Messages,ADS_MESSAGES,T,ADS_MESSAGES,,,SV,Y,,,,
-Input/Display Masks,ADS_MASKS,T,ADS_MASKS,,,SV,Y,,,,
-Sequence Numbers,ADS_SEQUENCES,T,ADS_SEQUENCES,,,SV,Y,,,,
-Languages,ADC_LANGUAGE,T,ADC_LANGUAGE,,,SV,Y,,,,
-Security,ADMENU_SECURITY,G,,,,,,,,,
-Users,ADM_USER,T,ADM_USER,,,SV,Y,,,,
-Security Roles,ADM_ROLE,T,ADM_ROLE,,,SV,Y,,,,
-Security Processes,ADM_SECPROCS,T,ADM_SECPROCS,,,SV,Y,,,,
-Security Administration,RDM_SECURITY,A,,rdm_security.aon,,SV,P,,,,
-Document Management,ADMENU_DOCMGT,G,,,,,,,,,
-Document Groups,ADS_DOC_GROUP,T,ADS_DOC_GROUP,,,SV,Y,,,,
-Document Print Settings,ADS_DOC_SETTINGS,T,ADS_DOC_SETTINGS,,,SV,Y,,,,
-Development,DEVMENU,M,,,,,,,,,
-Maintenance,DEVMENU_MAINT,G,,,,,,,,,
-Data Elements,DEVMENU_DDELEMS,G,,,,,,,,,
-Data Elements,DDM_ELEMENTS,T,DDM_ELEMENTS,,,SV,Y,,,,
-Compression Codes,DDM_COMP_CODES,T,DDM_COMP_CODES,,,SV,Y,,,,
-Expansion Codes,DDM_EXP_CODES,T,DDM_EXP_CODES,,,SV,Y,,,,
-Drilldown Definitions,DDM_DRILL_DEFS,T,DDM_DRILL_DEFS,,,SV,Y,,,,
-Tables,DEVMENU_DDTABLES,G,,,,,,,,,
-Tables,DDM_TABLES,T,DDM_TABLES,,,SV,Y,,,,
-Table Layout Inquiry,RDX_TABLE_LAYOUT,A,,rdx_table_layout.aon,,SV,Y,,,,
-Table Data Inquiry,RDX_TABLE_INQ,A,,rdx_table_inq.aon,,SV,Y,,,,
-Form Designer,FORM_DESIGNER,A,,rdm_rde_main.aon,,SV,Y,,,,
-Utilities,DEVMENU_UTILITIES,G,,,,,,,,,
-Database Record Import,RDX_DD_IMPORT,A,,rdx_dd_import.aon,,SV,Y,,,,
-Export to ODBC Dictionary,RDM_DD_EXPORT,A,,rdm_dd_export.aon,,SV,Y,,,,
-Remove Applications,RDX_REMOVE_APPS,A,,rdx_remove_apps.aon,,SV,Y,,,,
-Clear A Table,ADX_CLEARTABLE,A,,adx_cleartable.aon,,SV,Y,,,,
-Utilities,DEV_UTILITIES,M,,,,,,,,,
-Launch Custom Program,ADX_LAUNCH_PROGRAM,A,,adx_launch_program.aon,,SV,Y,,,,
-Launch Custom Form,ADX_LAUNCH_FORM,A,,adx_launch_form.aon,,SV,Y,,,,
-Display Program Information,ADX_DISPLAYPROG,A,,adx_displayprog.aon,,SV,Y,,,,
-Application Syswindow,ADX_SYSWINDOW,A,,adx_syswindow.aon,,SV,Y,,,,
-Default Syswindow,RDM_SYSWINDOW,A,,rdm_syswindow.aon,,SV,Y,,,,
+Rebuild Open Order Cross References,OPX_CROSSREF,T,OPX_CROSSREF,,OPX.DA,,
+Rebuild Invoice History Cross References,OPX_HISTXREF,T,OPX_HISTXREF,,OPX.GA,,
+Remove Unlinked Detail Lines,OPX_UNLINKED,T,OPX_UNLINKED,,OPX.EA,,
+Rebuild Order/Invoice Print File,OPX_PRNTFILE,T,OPX_PRNTFILE,,OPX.FA,,
+Reset MTD and Next Month Totals,OPX_MTDNMTD,T,OPX_MTDNMTD,,OPX.AA,,
+Administration,ADMENU,M,,,,,
+Maintenance,ADMENU_MAINT,G,,,,,
+Menus,MENU_MAINT,A,,rdm_menu_maint.aon,,SV,P
+Firms,ADM_FIRMS,T,ADM_FIRMS,,,SV,Y
+Applications,ADM_MODULES,T,ADM_MODULES,,,SV,Y
+System Messages,ADS_MESSAGES,T,ADS_MESSAGES,,,SV,Y
+Input/Display Masks,ADS_MASKS,T,ADS_MASKS,,,SV,Y
+Sequence Numbers,ADS_SEQUENCES,T,ADS_SEQUENCES,,,SV,Y
+Languages,ADC_LANGUAGE,T,ADC_LANGUAGE,,,SV,Y
+Security,ADMENU_SECURITY,G,,,,,
+Users,ADM_USER,T,ADM_USER,,,SV,Y
+Security Roles,ADM_ROLE,T,ADM_ROLE,,,SV,Y
+Security Processes,ADM_SECPROCS,T,ADM_SECPROCS,,,SV,Y
+Security Administration,RDM_SECURITY,A,,rdm_security.aon,,SV,P
+Document Management,ADMENU_DOCMGT,G,,,,,
+Document Groups,ADS_DOC_GROUP,T,ADS_DOC_GROUP,,,SV,Y
+Document Print Settings,ADS_DOC_SETTINGS,T,ADS_DOC_SETTINGS,,,SV,Y
+Development,DEVMENU,M,,,,,
+Maintenance,DEVMENU_MAINT,G,,,,,
+Data Elements,DEVMENU_DDELEMS,G,,,,,
+Data Elements,DDM_ELEMENTS,T,DDM_ELEMENTS,,,SV,Y
+Compression Codes,DDM_COMP_CODES,T,DDM_COMP_CODES,,,SV,Y
+Expansion Codes,DDM_EXP_CODES,T,DDM_EXP_CODES,,,SV,Y
+Drilldown Definitions,DDM_DRILL_DEFS,T,DDM_DRILL_DEFS,,,SV,Y
+Tables,DEVMENU_DDTABLES,G,,,,,
+Tables,DDM_TABLES,T,DDM_TABLES,,,SV,Y
+Table Layout Inquiry,RDX_TABLE_LAYOUT,A,,rdx_table_layout.aon,,SV,Y
+Table Data Inquiry,RDX_TABLE_INQ,A,,rdx_table_inq.aon,,SV,Y
+Form Designer,FORM_DESIGNER,A,,rdm_rde_main.aon,,SV,Y
+Utilities,DEVMENU_UTILITIES,G,,,,,
+Database Record Import,RDX_DD_IMPORT,A,,rdx_dd_import.aon,,SV,Y
+Export to ODBC Dictionary,RDM_DD_EXPORT,A,,rdm_dd_export.aon,,SV,Y
+Remove Applications,RDX_REMOVE_APPS,A,,rdx_remove_apps.aon,,SV,Y
+Clear A Table,ADX_CLEARTABLE,A,,adx_cleartable.aon,,SV,Y
+Utilities,DEV_UTILITIES,M,,,,,
+Launch Custom Program,ADX_LAUNCH_PROGRAM,A,,adx_launch_program.aon,,SV,Y
+Launch Custom Form,ADX_LAUNCH_FORM,A,,adx_launch_form.aon,,SV,Y
+Display Program Information,ADX_DISPLAYPROG,A,,adx_displayprog.aon,,SV,Y
+Application Syswindow,ADX_SYSWINDOW,A,,adx_syswindow.aon,,SV,Y
+Default Syswindow,RDM_SYSWINDOW,A,,rdm_syswindow.aon,,SV,Y
