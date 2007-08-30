@@ -27,11 +27,11 @@ rem --- Open/Lock files
     files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ads-01"
-    files$[2]="glm-01"
-    files$[3]="glm-02"
-    files$[4]="glm-03"
-    files$[5]="glt-06"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+    files$[2]="glm-01",ids$[2]="GLM_ACCT"
+    files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
+    files$[4]="glm-03",ids$[4]="GLC_JOURNALCODE"
+    files$[5]="glt-06",ids$[5]="GLT_TRANSDETAIL"
+    call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ads01_dev=channels[1]
@@ -48,13 +48,25 @@ rem --- Retrieve miscellaneous templates
 
     files=1,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    ids$[1]="gls-01A:GLS_PARAMS"
+    call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
     dim gls01a$:templates$[1]
+
+rem --- Assign input values to local variables
+
+    begper$=Option!.getOptionData("BEG_GL_PER")
+    begyear$=Option!.getOptionData("BEG_YEAR")
+    endper$=Option!.getOptionData("END_GL_PER")
+    endyear$=Option!.getOptionData("END_YEAR")
+    begacct$=Option!.getOptionData("PICK_ACCOUNT_1")
+    endacct$=Option!.getOptionData("PICK_ACCOUNT_2")
+    wildcard$=Option!.getOptionData("GL_WILDCARD")
+    journal$=Option!.getOptionData("PICK_JOURNAL_ID")
+    detail$=Option!.getOptionData("PICK_LISTBUTTON")
 
 rem --- Retrieve parameter records
 
@@ -150,9 +162,9 @@ rem --- Determine which years for GL summary (glm-02) records
 
 rem --- Open printer, start progress meter and position file
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    call stbl("+DIR_PGM")+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glt06_dev,1,meter_num,status
+    call stbl("+DIR_PGM")+"adc_progress.aon","NC","","","","",0,glt06_dev,1,meter_num,status
     if cvs(begacct$,2)<>"" then glt06_key$=glt06_key$+begyear$
     read (glt06_dev,key=glt06_key$,dom=*next)
 
@@ -162,8 +174,8 @@ rem --- Read next transaction history (glt-06) record
           k$=key(glt06_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
           read record (glt06_dev,key=k$)glt06a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-          transdate$=gl06a.posting_year$+glt06a.posting_per$
+          call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          transdate$=glt06a.posting_year$+glt06a.posting_per$
           if endacct$<>"" if glt06a.gl_account$>endacct$ break
           if transdate$<starting$ continue
           if transdate$>ending$ continue
@@ -203,7 +215,7 @@ rem --- Read next transaction history (glt-06) record
           if detail$="D" 
              if l+1>l9 gosub report_heading
              print (printer_dev)@(o[1]),fndate$(glt06a.trns_date$),@(o[2]),glt06a.journal_id$,
-:                               @(o[3]),glt06a.gl_adt_nbr$,@(o[4]),glt06a.description$,
+:                               @(o[3]),glt06a.gl_adt_no$,@(o[4]),glt06a.description$,
 :                               @(o[5]),glt06a.reference_01$,@(o[6]),glt06a.reference_02$,
 :                               @(o[7]),glt06a.reference_03$,@(o[8]),debit$,@(o[9]),credit$,
 :                               @(o[10]),unit$
@@ -240,7 +252,7 @@ rem --- All Done
 report_heading: rem --- Report Heading
 
     l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    call stbl("+DIR_PGM")+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
     if status exitto std_exit
 
 rem --- Summary Report Heading
@@ -332,7 +344,7 @@ rem --- Load summary activity for account
         y=(x-1)*mp+(x-1)*1
         glm02_key$=glm01a.firm_id$+glm01a.gl_account$+records$(x,1)
         find record (glm02_dev,key=glm02_key$,dom=*continue) glm02a$
-        call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
+        call stbl("+DIR_PGM")+"glc_summary.aon","R",glm02a$,a[all],u[all],status
         for p=0 to mp
             as[y+p]=a[p]
             us[y+p]=u[p]
@@ -366,7 +378,7 @@ period_break: rem --- Period break
     if t1$="" goto new_period
     if detail$="D" and l1<1 goto period_balance
     gosub journal_break
-    x$=field(gls0a$,"abbr_name_"+str(period:"00"))
+    x$=field(gls01a$,"abbr_name_"+str(period:"00"))
     total$="Total For "+x$+" "+y$
     debits=pt[0]
     credits=pt[1]
@@ -387,10 +399,10 @@ new_period: rem --- New period
 
     if done return
     dim pt[2]
-    m$=glt06a.gl_posting_per$
+    m$=glt06a.posting_per$
     period=num(m$)
-    x$=field(gls0a$,"abbr_name_"+str(period:"00"))
-    y$=glt06a.gl_posting_year$
+    x$=field(gls01a$,"abbr_name_"+str(period:"00"))
+    y$=glt06a.posting_year$
     t1$=y$+m$
     h1$=x$+" "+y$
     l1=0
@@ -474,8 +486,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -522,15 +534,15 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    call stbl("+DIR_PGM")+"adc_progress.aon","D","","","","",0,0,0,0,status
     close (ads01_dev,err=*next)
     close (glm01_dev,err=*next)
     close (glm02_dev,err=*next)
     close (glm03_dev,err=*next)
     close (glt06_dev,err=*next)
     close (printer_dev,err=*next)
-    run pgmdir$+menu$,err=*next
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_PGM")+menu$,err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
