@@ -9,6 +9,8 @@ rem  +-----------------------------------------+
 
 rem --- element_id$  : Element name
 rem --- app_id$      : Application ID (in)
+rem --- The following values of mask_type were the valid ones as of 9/1/2007
+rem --- Actual valid types will be built dynamically when this call is run
 rem --- mask_type$   : A = Amount
 rem                    I = ID
 rem                    U = Units
@@ -55,22 +57,51 @@ misc_vars:rem --- Misc Variables
 
 rem --- Open Tables
 
-	rd_num_files=2
+	rd_num_files=4
 	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
 
 	rd_open_tables$[1]="DDM_ELEMENTS",rd_open_opts$[1]="OTA"
 	rd_open_tables$[2]="ADS_MASKS",rd_open_opts$[2]="OTA"
+	rd_open_tables$[3]="DDM_ELEMENT_LDAT",rd_open_opts$[3]="OTA"
+	rd_open_tables$[4]="DDM_COLUMN_LDAT",rd_open_opts$[4]="OTA"
 
 	gosub open_tables
 
 	ddm_elements_dev=num(rd_open_chans$[1]);dim ddm_elementsa$:rd_open_tpls$[1]
 	ads_mask_dev=num(rd_open_chans$[2]);dim ads_masksa$:rd_open_tpls$[2]
+    ddm_element_ldat_dev=num(rd_open_chans$[3]);dim ddm_element_ldat$:rd_open_tpls$[3]
+    ddm_column_ldat_dev=num(rd_open_chans$[4]);dim ddm_column_ldat$:rd_open_tpls$[4]
 
-initializations: rem --- Initializations
+initializations:
 
-    valid_type$="AIU%REQCPVMOHZT"
+    valid_type$=""
     i_mask$=""
     o_mask$=""
+
+rem ---Build string of valid mask types
+
+    read(ddm_column_ldat_dev,key=pad("ADS_MASKS",16)+pad("DD_MASK_TYPE",16),dom=*next)
+    k$=key(ddm_column_ldat_dev,end=get_elements)
+    if pos(pad("ADS_MASKS",16)+pad("DD_MASK_TYPE",16)=k$)<>1 goto get_elements
+next_col_ldat:
+    readrecord(ddm_column_ldat_dev,end=validate_input)ddm_column_ldat$
+    if ddm_column_ldat.dd_table_alias$<>pad("ADS_MASKS",16) goto validate_input
+    if ddm_column_ldat.dd_dvar_name$<>pad("DD_MASK_TYPE",16) goto validate_input
+    if cvs(ddm_column_ldat.dd_attr_ldat$,2)<>"" valid_type$=valid_type$+ddm_column_ldat.dd_attr_ldat$
+    goto next_col_ldat
+
+get_elements:
+
+    read(ddm_element_ldat_dev,key=pad("DD_MASK_TYPE",16),dom=*next)
+    k$=key(ddm_element_ldat_dev,end=validate_input)
+    if pos(pad("DD_MASK_TYPE",16)=k$)<>1 goto validate_input
+next_ele_ldat:
+    readrecord(ddm_element_ldat_dev,end=validate_input)ddm_element_ldat$
+    if ddm_element_ldat.dd_data_name$<>pad("DD_MASK_TYPE",16) goto validate_input
+    if cvs(ddm_element_ldat.dd_attr_ldat$,2)<>"" valid_type$=valid_type$+ddm_element_ldat.dd_attr_ldat$
+    goto next_ele_ldat
+
+validate_input:
 
 rem --- Verify valid input
 
