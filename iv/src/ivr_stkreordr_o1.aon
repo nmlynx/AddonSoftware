@@ -31,7 +31,7 @@ rem --- Position files
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
-
+escape
     first$=firm_id$+"A"
     dim ivm03a_key$:ivm03_key_tpl$
     ivm03a_key$=first$+begprod$
