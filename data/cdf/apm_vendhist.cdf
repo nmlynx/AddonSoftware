@@ -106,7 +106,6 @@ rem -- store info needed for validation, etc., in user_tpl$
 	user_tpl.multi_types$=aps01a.multi_types$
 	user_tpl.multi_dist$=aps01a.multi_dist$
 	
-ESCAPE;REM  END OF BSHO
 [[APM_VENDHIST.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings

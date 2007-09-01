@@ -120,7 +120,7 @@ rem --- Retrieve parameter data
 	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
 	if iv$<>"Y" aps01a.use_replen$="N"
-
+	
 	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
 	gl$=info$[9];rem --- gl interface?
 	
