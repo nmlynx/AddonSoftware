@@ -72,7 +72,7 @@ if cvs(callpoint!.getColumnData("APM_VENDMAST.ALT_SEQUENCE"),3)=""
 callpoint!.setStatus("REFRESH")
 [[APM_VENDMAST.BSHO]]
 rem --- Open/Lock files
-
+ 
 	files=5,begfile=1,endfile=files
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="APE_INVOICEHDR";rem --- ape-01
@@ -85,7 +85,7 @@ rem --- Open/Lock files
 		options$[wkx]="OTA"
 	next wkx
 
-	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
@@ -97,10 +97,10 @@ rem --- Retrieve miscellaneous templates
 
 	files=3,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="aps-01A"
-	ids$[2]="gls-01A"
-	ids$[3]="ivs-01A"
-	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+	ids$[1]="aps-01A:APS_PARAMS"
+	ids$[2]="gls-01A:GLS_PARAMS"
+	ids$[3]="ivs-01A:IVS_PARAMS"
+	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -117,14 +117,16 @@ rem --- Retrieve parameter data
 	gls01a_key$=firm_id$+"GL00"
 	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
 
-	call dir_pgm$+"adc_application.aon","IV",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
 	if iv$<>"Y" aps01a.use_replen$="N"
 
-	call dir_pgm$+"adc_application.aon","AP",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
 	gl$=info$[9];rem --- gl interface?
-	call dir_pgm$+"adc_application.aon","PO",info$[all]
+	
+	call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
 	po$=info$[20];rem --- po installed?
+	if po$="N" aps01a.use_replen$="N"
 
 	dim user_tpl$:"app:c(2),gl_interface:c(1),po_installed:c(1),iv_installed:c(1),"+
 :		"multi_types:c(1),multi_dist:c(1),ret_flag:c(1),use_replen:c(1),"+
@@ -153,7 +155,7 @@ rem --- Retrieve parameter data
 			options$[wkx]="OTA"
 		next wkx
 
-		call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+		call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :	                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 		if status$<>"" goto std_exit
@@ -164,7 +166,7 @@ rem --- set disable_str$ to list of all aliases in popup to disable (format alia
 if user_tpl.use_replen$<>"Y"
 	enable_str$=""
 	disable_str$="APM_VENDREPL"
-	call dir_pgm$+"rdm_enable_pop.aon",Form!,enable_str$,disable_str$
+	call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
 endif
 [[APM_VENDMAST.AOPT-RHST]]
 rem Receipt History Inquiry

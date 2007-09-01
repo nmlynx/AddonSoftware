@@ -44,7 +44,7 @@ if can_delete$="N"
 endif
 [[APM_VENDHIST.AENA]]
 rem --- see if interfacing to GL
-	call dir_pgm$+"adc_application.aon","AP",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
 	gl$=info$[9];rem --- gl interface?
 
 if gl$<>"Y"
@@ -52,6 +52,8 @@ if gl$<>"Y"
 	ctl_stat$="I"
 	gosub disable_fields
 endif
+
+
 [[APM_VENDHIST.AP_DIST_CODE.AVAL]]
 if user_tpl.multi_dist$<>"Y"
 
@@ -81,12 +83,13 @@ endif
 [[APM_VENDHIST.BSHO]]
 rem --- Retrieve miscellaneous templates
 
+
 	files=1,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="aps-01A"
+	ids$[1]="aps-01A:APS_PARAMS";rem  ads-01
 	
-	call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
-	if status goto std_exit
+	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+        if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
@@ -103,6 +106,7 @@ rem -- store info needed for validation, etc., in user_tpl$
 	user_tpl.multi_types$=aps01a.multi_types$
 	user_tpl.multi_dist$=aps01a.multi_dist$
 	
+ESCAPE;REM  END OF BSHO
 [[APM_VENDHIST.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
@@ -113,7 +117,7 @@ disable_fields:
 	wpos=pos(wctl$=wmap$,8)
 	wmap$(wpos+6,1)=ctl_stat$
 	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP-REFRESH")
+	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 
 return
 
