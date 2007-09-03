@@ -37,8 +37,8 @@ rem --- Initializations
     warehouse=0
     report=0
     dim channs[3],period$[1]
-    channs[2]=ivm12_dev
-    channs[3]=ivm03_dev
+    channs[2]=ivm03_dev
+    channs[3]=ivm12_dev
     day_of_mth=num(when$(7,2))
     period$[0]=year$+period$
     period$[1]=year$+period$
@@ -75,14 +75,14 @@ rem --- By Item: Valid Product/Item?
             if begitem$<>"" then
                 if item$<begitem$ then
                     read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
-:                   ivm03a_key.prod_type$+begitem$,dir=0,dom=*Continue)
+:                   ivm03a_key.product_type$+begitem$,dir=0,dom=*Continue)
                     continue
                 endif
             endif
             if enditem$<>"" then
                 if item$>enditem$ then
                     read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
-:                   ivm03a_key.prod_type$+$FF$,dir=0,dom=*Continue)
+:                   ivm03a_key.product_type$+$FF$,dir=0,dom=*Continue)
                     continue
                 endif
             endif
@@ -107,14 +107,14 @@ rem --- By Item: Valid Product/Item?
             if begitem$<>"" then
                 if item$<begitem$ then
                     read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
-:                   ivm03a_key.warehouse_id$+ivm03a_key.prod_type$+begitem$,dir=0,dom=*continue)
+:                   ivm03a_key.warehouse_id$+ivm03a_key.product_type$+begitem$,dir=0,dom=*continue)
                     continue
                 endif
             endif
             if enditem$<>"" then
                 if item$>enditem$ then
                     read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
-:                   ivm03a_key.warehouse_id$+ivm03a_key.prod_type$+$FF$,dom=*continue)
+:                   ivm03a_key.warehouse_id$+ivm03a_key.product_type$+$FF$,dom=*continue)
                     continue
                 endif
             endif
@@ -127,7 +127,7 @@ rem --- By Item: Valid Product/Item?
 
 rem --- Retrieve item
 
-        dim item$[2],whse$[2],w[20],activity[12]
+        dim item$[2],whse$[2],whse[20],activity[12]
         ivm01a_key$=firm_id$+item$
 	if level$="W" ivm02a_key$=firm_id$+whse$+item$
         find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
@@ -141,12 +141,12 @@ rem --- Retrieve item
         item$[2]=item$
         if level$="W" item$[1]=whse$,action$=""
         if level$="W" find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
-        call pgmdir$+"ivc_whseinfo.aon",action$,files[all],item$[all],whse$[all],w[all],value,status
-        call pgmdir$+"ivc_usage.aon",level$,files[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
+        call pgmdir$+"ivc_whseinfo.aon",action$,ivchannels[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
+        call pgmdir$+"ivc_usage.aon",level$,ivchannels[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
         if flag$<>"" usage=estimated
         avg_usage=usage/g[0]
         if level$="W" action$="" else action$="A"
-        call pgmdir$+"ivc_whseact.aon",action$,channs[all],item$[all],period$[all],activity[all],status
+        call pgmdir$+"ivc_whseact.aon",action$,channs[all],item$[all],period$[all],activity[all],status$
         cur_usage=activity[3]+activity[4]-activity[8]
         prior_usage=usage-cur_usage
         cur_recpts=activity[1]+activity[2]
@@ -209,7 +209,7 @@ InitHead: rem --- Initialize HEADINGS$
     dim h1$(width),h2$(width),h6$(width),h7$(width)
     if level$="I" headings$[1]=headings$[1]+" By Item"
     if level$="W" headings$[1]=headings$[1]+" By Warehouse"
-    headings$[1]=headings$[1]+" For Period "+period$+" "+fnyy$(year$)+" "+g3$(11+num(period$)*16,16)
+    headings$[1]=headings$[1]+" For Period "+period$+" "+year$+" "+per_name$[num(period$)]
     x1$="First"
     x2$="First"
     x2=5
@@ -252,12 +252,14 @@ InitHead: rem --- Initialize HEADINGS$
 
 BreakWhse: rem --- Warehouse Break
 
-    if t0$<>"" or subtotals$<>"N" then
+    if t0$="" then goto new_whse
+    if t0$<>"" then rem or subtotals$<>"N"
         gosub BreakProd
         if l+2>l9 gosub report_heading
         print (printer_dev)@(o[4]),fill(m2*6+1,"-"),'LF',@(o[4]-24),"Total For Warehouse ",t0$,@(o[4]),whse_tot[0]:m2$,@(o[5]),whse_tot[1]:m2$,@(o[6]),whse_tot[2]:m2$,@(o[7]),whse_tot[3]:m2$,@(o[8]),whse_tot[4]:m2$,@(o[9]),whse_tot[5]:m2$
         let l=l+2
     endif
+new_whse:
     if done return
     dim whse_tot[5]
     let t0$=whse$, ivm10c.short_name$="(Not on File)",l=l9+1,warehouse=0
@@ -268,7 +270,8 @@ BreakWhse: rem --- Warehouse Break
 
 BreakProd: rem --- Product break
 
-    if t1$<>"" or subtotals$<>"N" then
+    if t1$="" then goto new_prodtype
+    if t1$<>"" then rem or subtotals$<>"N"
         if l+2>l9 gosub report_heading
         print (printer_dev)@(o[4]),fill(m2*6+1,"-"),'LF',@(o[4]-22),"Total For Product ",t1$,@(o[4]),prod_tot[0]:m2$,@(o[5]),prod_tot[1]:m2$,@(o[6]),prod_tot[2]:m2$,@(o[7]),prod_tot[3]:m2$,@(o[8]),prod_tot[4]:m2$,@(o[9]),prod_tot[5]:m2$
         let l=l+2
@@ -276,6 +279,7 @@ BreakProd: rem --- Product break
             let grand_tot[x]=grand_tot[x]+prod_tot[x],whse_tot[x]=whse_tot[x]+prod_tot[x]
         next x
     endif
+new_prodtype:
     if done return
     dim prod_tot[5]
     let t1$=product$,ivm10a.code_desc$="(Not on File)",product=0

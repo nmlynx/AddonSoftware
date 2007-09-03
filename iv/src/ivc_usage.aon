@@ -47,12 +47,12 @@ rem --- Retrieve sysinfo data
 
 rem --- Retrieve miscellaneous templates
 
-    files=4,begfile=1,endfile=files
+    files=12,begfile=1,endfile=files
     dim ids$[files],templates$[files]
     ids$[1]="ivm-01A:IVM_ITEMMAST"
     ids$[2]="ivm-02A:IVM_ITEMWHSE"
     ids$[3]="ivm-03G:IVX_ITEMWHSE"
-    ids$[4]="ivm-12A:IVM_ITEMACT"
+    ids$[12]="ivm-12A:IVM_ITEMACT"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -61,7 +61,7 @@ rem --- Dimension miscellaneous string templates
     dim ivm01a$:templates$[1]
     dim ivm02a$:templates$[2]
     dim ivm03g$:templates$[3]
-    dim ivm12a$:templates$[4]
+    dim ivm12a$:templates$[12]
 
 rem --- Initializations
 

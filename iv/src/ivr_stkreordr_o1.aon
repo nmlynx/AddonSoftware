@@ -9,17 +9,11 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
-rem --- Retrieve the program path
+    rem --- Retrieve key template
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
-    
-rem --- Retrieve sysinfo data
-
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+    if level$="I" call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPROD","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
+    if level$<>"I" call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPRWH","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
+    dim ivm03a_key$:ivm03_key_tpl$
 
 rem --- Initializations
 
@@ -31,9 +25,8 @@ rem --- Position files
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
-escape
+
     first$=firm_id$+"A"
-    dim ivm03a_key$:ivm03_key_tpl$
     ivm03a_key$=first$+begprod$
     p=0
     if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
@@ -74,28 +67,28 @@ rem --- By Warehouse: Valid Warehouse/Product/Item?
             if endwhse$<>"" if whse$>endwhse$ break
             if begprod$<>"" then
                 if product$<begprod$ then
-                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
 :                   ivm03a_key.WAREHOUSE_ID$+begprod$,dom=*Continue)                    
                     continue
                 endif
             endif    
             if endprod$<>"" then
                 if product$>endprod$ then
-                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
 :                   ivm03a_key.WAREHOUSE_ID$+$FF$,dom=*Continue)
                     continue
                 endif
             endif 
             if begitem$<>"" then
                 if item$<begitem$ then
-                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
 :                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dir=0,dom=*continue)
                     continue
                 endif
             endif
             if enditem$<>"" then
                 if item$>enditem$ then
-                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
 :                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+$FF$,dom=*continue)
                     continue
                 endif
@@ -131,7 +124,8 @@ rem --- Retrieve item
         item$[2]=item$
         if level$="W" item$[1]=whse$,action$=""
         if level$="W" find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
-        call pgmdir$+"ivc_wa.bbx",action$,files[all],item$[all],whse$[all],w[all],value,status
+
+        call pgmdir$+"ivc_whseinfo.aon",action$,ivchannels[all],item$[all],whse$[all],w[all],value,status,rd_table_chans$[all]
         if ivm01a.stock_level$="I" w[4]=ivm01a.ORDER_POINT,w[5]=ivm01a.SAFETY_STOCK,w[6]=ivm01a.EOQ
         if report$="R" and w[0]+w[1]-w[2]>w[4] then
             continue
@@ -139,7 +133,7 @@ rem --- Retrieve item
         if report$="S" and w[0]+w[1]-w[2]>=w[5] then
             continue
         endif
-        call pgmdir$+"ivc_au.bbx",level$,files[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
+	call pgmdir$+"ivc_usage.aon",level$,ivchannels[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
         if flag$<>"" usage=estimated
         avg_usage=usage/g[0]
         if level$="I" op_code$=ivm01a.ord_pnt_code$,eoq_code$=ivm01a.eoq_code$,safe_code$=ivm01a.saf_stk_code$
