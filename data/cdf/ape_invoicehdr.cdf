@@ -1,3 +1,8 @@
+[[APE_INVOICEHDR.INVOICE_AMT.AVAL]]
+rem  if num("APE_INVOICEHDR.NET_INV_AMT") = 0
+rem	callpoint!.setColumnData("APE_INVOICEHDR.NET_INV_AMT",
+rem  :	"APE_INVOICEHDR.INVOICE_AMT")
+rem  endif
 [[APE_INVOICEHDR.<CUSTOM>]]
 #include std_missing_params.src
 

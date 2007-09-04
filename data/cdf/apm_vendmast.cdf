@@ -1,3 +1,5 @@
+[[APM_VENDMAST.VENDOR_ID.AINP]]
+if num(APM_VENDMAST.VENDOR_ID)=0 callpoint!.setStatus("ABORT")
 [[APM_VENDMAST.BDEL]]
 rem --- can delete vendor and assoc recs (apm01/02/05/06/08/09/14/15) unless
 rem --- vendor referenced in inventory, or
