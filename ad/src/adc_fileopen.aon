@@ -107,9 +107,9 @@ rem --- Open requested files
     
     open_error: rem --- Error encountered attempting to open the file
 
-        errors=1
+        errors=1,sverr=err
         gosub get_file_description
-        error$="Error "+str(err)+" encountered while trying to open "+description$
+        error$="Error "+str(sverr)+" encountered while trying to open "+description$
         if err=0 goto file_locked
         if err=12 goto not_found
         break
@@ -129,9 +129,9 @@ rem --- Open requested files
 
     template_error: rem --- Error encountered attempting to retrieve the template
 
-        errors=1
+        errors=1,sverr=err
         gosub get_file_description
-        error$="Error "+str(err)+" encountered while attempting to retrieve the template for "+description$
+        error$="Error "+str(sverr)+" encountered while attempting to retrieve the template for "+description$
         break
     
         rem --- End of open loop
@@ -163,9 +163,9 @@ rem --- Process options by file
     
     options_error: rem --- Error 0 - Can't lock or clear file
     
-        errors=1   
+        errors=1,sverr=err   
         gosub get_file_description
-        error$="Error "+str(err)+" encountered while trying to open "+description$
+        error$="Error "+str(sverr)+" encountered while trying to open "+description$
         if err=0 error$=description$+" is in use by another user and cannot be locked or cleared"
         break
     

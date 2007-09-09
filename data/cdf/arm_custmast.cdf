@@ -42,14 +42,8 @@ rem --- if cm$ installed, and ars01c.hold_new$ is "Y", then default arm02a.cred_
 rem --- default arm02a.slspsn_code$,ar_terms_code$,disc_code$,ar_dist_code$,territory$,tax_code$
 rem --- and inv_hist_flg$ per defaults in ops10d
 
-rem <<<<<<< arm_custmast.cdf
-escape
 dim ars10d$:user_tpl.cust_dflt_tpl$
 ars10d$=user_tpl.cust_dflt_rec$
-rem =======
-dim ars10d$:user_tpl.cust_dflt_tpl$
-ars10d$=user_tpl.cust_dflt_rec$
-rem >>>>>>> 1.2
 
 callpoint!.setColumnData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
