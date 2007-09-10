@@ -39,31 +39,16 @@ rem --- Open/Lock files
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
+    files$[1]="ars_params",id$[1]="ARS_PARAMS",options$[1]="OPT"
     files$[2]="art-01"
     files$[3]="art-11"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
-    art01_dev=channels[2]
-    art11_dev=channels[3]
+    ars01_dev=channels[1];dim ars01a$:template$[1]
+    art01_dev=channels[2];dim art01a$:template$[2]
+    art11_dev=channels[3];dim art11a$:template$[3]
 
-rem --- Dimension string templates
-
-    dim art01a$:templates$[2],art11a$:templates$[3]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ars01a$:templates$[1]
 
 rem --- Assign form input values to local variables
 
@@ -75,7 +60,7 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 
 rem --- Initializations
 
