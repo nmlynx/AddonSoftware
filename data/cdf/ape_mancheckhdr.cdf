@@ -298,7 +298,7 @@ files=2,begfile=1,endfile=files
 dim ids$[files],templates$[files]
 ids$[1]="aps-01A"
 ids$[2]="gls-01A"
-call dir_pgm$+"bac_template.bbj",
+call dir_pgm$+"adc_template.aon",
 :	begfile,
 :	endfile,
 :	ids$[all],

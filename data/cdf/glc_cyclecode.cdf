@@ -47,7 +47,7 @@ files=1,begfile=1,endfile=files
 dim ids$[files],templates$[files]
 ids$[1]="gls-01A"
 
-call dir_pgm$+"bac_template.bbj",begfile,endfile,ids$[all],templates$[all],status
+call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
