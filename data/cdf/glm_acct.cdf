@@ -24,7 +24,7 @@ files=1,begfile=1,endfile=files
 dim ids$[files],templates$[files]
 ids$[1]="gls-01A"
 
-call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+call "adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
 if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
@@ -35,4 +35,3 @@ rem --- init/parameters
 
 gls01a_key$=firm_id$+"GL00"
 find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-
