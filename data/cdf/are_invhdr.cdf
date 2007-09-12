@@ -48,7 +48,7 @@ callpoint!.setColumnData("<<DISPLAY>>.TOT_AMT",str(tamt))
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM",err=*next)
 	sys_pgm$=stbl("+DIR_SYP",err=*next)
-	files=21,begfile=1,endfile=10
+	files=21,begfile=1,endfile=11
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="ARS_PARAMS";rem --- "ARS_PARAMS"..."ads-01"
 	files$[2]="ARE_INVHDR";rem --- "are-05"
@@ -60,6 +60,7 @@ rem --- Open/Lock files
 	files$[8]="ARS_MTDCASH";rem --- "ars-10",ids$[7]="C"
 	files$[9]="ART_INVHDR";rem --- "art-01"
 	files$[10]="ART_INVDET";rem --- "art-11"
+	files$[11]="GLS_PARAMS"
 	rem --- are-15 used to get open on 2 channels, but looks like it won't be necessary in v8.CAH
 	rem --- files$[11]="ARE_INVDET";rem --- "are-15" -- open on 2 channels
 
@@ -72,15 +73,16 @@ rem --- Open/Lock files
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 	if status$<>"" goto std_exit
 	ads01_dev=num(chans$[1])
+	gls01_dev=num(chans$[11])
 
 rem --- Retrieve miscellaneous templates
 
-	files=2,begfile=1,endfile=files
-	dim ids$[files],templates$[files]
-	ids$[1]="ars-01A"
-	ids$[2]="gls-01A"
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-	if status goto std_exit
+rem 	files=2,begfile=1,endfile=files
+rem 	dim ids$[files],templates$[files]
+rem 	ids$[1]="ars-01A"
+rem 	ids$[2]="gls-01A"
+rem 	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+rem 	if status goto std_exit
 
 rem --- set up AONObj! as vector
 	AONObj!=SysGUI!.makeVector()
@@ -98,7 +100,7 @@ rem --- set up AONObj! as vector
 
 rem --- Dimension miscellaneous string templates
 
-	dim ars01a$:templates$[1],gls01a$:templates$[2]
+	dim ars01a$:templates$[1],gls01a$:templates$[11]
 	dim user_tpl$:"firm_id:c(2),glint:C(1),glyr:C(4),glper:C(2),glworkfile:C(16),totqty:C(15),totamt:C(15)";rem --- used to pass 'stuff' to/from cpt
 	user_tpl.firm_id$=firm_id$
 
@@ -138,7 +140,7 @@ rem --- Retrieve parameter data - not keeping any of it here, just make sure par
 	find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 
 	gls01a_key$=firm_id$+"GL00"
-	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
+	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
 [[ARE_INVHDR.CUSTOMER_ID.AVAL]]
 if cvs(callpoint!.getUserInput(),2)<>"" and callpoint!.getColumnData("ARE_INVHDR.CUSTOMER_ID")<>
 :							callpoint!.getColumnUndoData("ARE_INVHDR.CUSTOMER_ID")

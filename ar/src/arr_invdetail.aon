@@ -39,15 +39,15 @@ rem --- Open/Lock files
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ars_params",id$[1]="ARS_PARAMS",options$[1]="OPT"
-    files$[2]="art-01"
-    files$[3]="art-11"
+    files$[1]="ars_params",options$[1]="OPT",ids$[1]="ARS_PARAMS"
+    files$[2]="art-01",options$[2]="OPT",ids$[2]="ART_INVHDR"
+    files$[3]="art-11",options$[3]="OPT",ids$[3]="ART_INVDET"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ars01_dev=channels[1];dim ars01a$:template$[1]
-    art01_dev=channels[2];dim art01a$:template$[2]
-    art11_dev=channels[3];dim art11a$:template$[3]
+    ars01_dev=channels[1];dim ars01a$:templates$[1]
+    art01_dev=channels[2];dim art01a$:templates$[2]
+    art11_dev=channels[3];dim art11a$:templates$[3]
 
 
 rem --- Assign form input values to local variables
@@ -215,6 +215,7 @@ disp_last_page: rem --- Display last page
 
 finished: rem --- All done
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     goto std_exit
 
 cust_total: rem --- Customer Total
@@ -404,7 +405,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
