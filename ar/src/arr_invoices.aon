@@ -64,14 +64,12 @@ rem --- Retrieve parameter records
     find record (ars_report_dev,key=ars01b_key$,err=std_missing_params) ars01b$
     remit$=ars01b.addr_line_1$+ars01b.addr_line_2$+ars01b.city$+ars01b.state_code$+ars01b.zip_code$
     call pgmdir$+"adc_address.aon",remit$,24,3,9,address
-    customer_size=num(ars01a.customer_size$)
 
-    call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","",imask$,m0$
-    gosub cust_mask_len
-    call pgmdir$+"adc_getmask.aon","","AR","A",imask$,m1$
+    call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","",imask$,m0$,0,customer_size
+    call pgmdir$+"adc_getmask.aon","","AR","A",imask$,m1$,0,0
     call pgmdir$+"adc_sizemask.aon",ars01a.amount_mask$,m1,8,13
-    call pgmdir$+"adc_getmask.aon","","AR","U",imask$,m2$
-    call pgmdir$+"adc_getmask.aon","","AR","R",imask$,m3$
+    call pgmdir$+"adc_getmask.aon","","AR","U",imask$,m2$,0,0
+    call pgmdir$+"adc_getmask.aon","","AR","R",imask$,m3$,0,0
     m0=len(m0$)
     m1=len(m1$)
     m2=len(m2$)
@@ -313,14 +311,6 @@ overflow: rem --- Multi-page invoice
     print (printer_dev) ""
     print (printer_dev) @(o[5]),"Continued"
     gosub heading
-    return
-
-cust_mask_len:
-
-    customer_size=0
-    for x=1 to len(m0$)
-        if pos(m0$(x,1)="#0")>0 customer_size=customer_size+1
-    next x
     return
 
 rem --- Functions
