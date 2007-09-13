@@ -17,19 +17,8 @@ call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 if status$<>""  goto std_exit
 
 ads01_dev=num(chans$[1])
-
-rem --- Retrieve miscellaneous templates
-
-files=1,begfile=1,endfile=files
-dim ids$[files],templates$[files]
-ids$[1]="gls-01A"
-
-call "adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
 dim gls01a$:templates$[1]
+
 
 rem --- init/parameters
 
