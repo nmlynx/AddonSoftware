@@ -60,7 +60,7 @@ rem --- Open/Lock files
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
+    files$[1]="IVS_PARAMS",ids$[2]="IVS_PARAMS"
     files$[2]="ivm-03",ids$[2]="IVX_ITEMWHSE"
     if pos(action$="L")=0 files$[3]="ivm-12",ids$[3]="IVM_ITEMACT"
     if pos(action$="L")<>0 files$[3]="ivm-17",ids$[3]="IVM_LSITEMACT"
@@ -69,30 +69,18 @@ rem --- Open/Lock files
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
 
-    ads01_dev=channels[1]
+    ivs01_dev=channels[1]
     ivm03_dev=channels[2]
     ivm12_dev=channels[3]
 
 rem --- Dimension string templates
 
-    dim ivm03a$:templates$[2],ivm12a$:templates$[3]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivs01a$:templates$[1]
+    dim ivs01a$:templates$[1],ivm03a$:templates$[2],ivm12a$:templates$[3]
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Parameters
 
@@ -219,7 +207,7 @@ rem #include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
 
-    close (ads01_dev)
+    close (ivs01_dev)
     close (ivm03_dev)
     close (ivm12_dev)
 
