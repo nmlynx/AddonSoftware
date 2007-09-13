@@ -141,6 +141,19 @@ rem --- Retrieve parameter data - not keeping any of it here, just make sure par
 
 	gls01a_key$=firm_id$+"GL00"
 	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
+
+rem --- Disable display only columns
+
+	dim dctl$[8]
+	dctl$[1]="<<DISPLAY>>.CUST_ADDR1"
+	dctl$[2]="<<DISPLAY>>.CUST_ADDR2"
+	dctl$[3]="<<DISPLAY>>.CUST_ADDR3"
+	dctl$[4]="<<DISPLAY>>.CUST_ADDR4"
+	dctl$[5]="<<DISPLAY>>.CUST_CTST"
+	dctl$[6]="<<DISPLAY>>.CUST_ZIP"
+	dctl$[7]="<<DISPLAY>>.TOT_QTY"
+	dctl$[8]="<<DISPLAY>>.TOT_AMT"
+	gosub disable_ctls
 [[ARE_INVHDR.CUSTOMER_ID.AVAL]]
 if cvs(callpoint!.getUserInput(),2)<>"" and callpoint!.getColumnData("ARE_INVHDR.CUSTOMER_ID")<>
 :							callpoint!.getColumnUndoData("ARE_INVHDR.CUSTOMER_ID")
@@ -231,5 +244,20 @@ check_outstanding_inv:
     readrecord(art_invhdr_dev,key=firm_id$+"  "+callpoint!.getColumnData("ARE_INVHDR.CUSTOMER_ID")+
 :       callpoint!.getColumnData("ARE_INVHDR.AR_INV_NO")+"00",err=*next)art01a$;os_inv$="Y"
     return
+
+disable_ctls:rem --- disable selected control
+
+	for dctl=1 to 8
+		dctl$=dctl$[dctl]
+		if dctl$<>""
+			wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
+			wmap$=callpoint!.getAbleMap()
+			wpos=pos(wctl$=wmap$,8)
+			wmap$(wpos+6,1)="I"
+			callpoint!.setAbleMap(wmap$)
+			callpoint!.setStatus("ABLEMAP")
+		endif
+	next dctl
+	return
 
 #include std_missing_params.src
