@@ -78,7 +78,7 @@ rem Invoice_Read: rem --- Invoice Read
                      break
                    endif
                 endif   
-                find record (opt01_dev,key=opt61a_key.FIRM_ID$+opt61a.AR_TYPE$+opt61a_key.CUSTOMER_ID$+opt61a_key.AR_INV_NO$+"000",dom=*continue) opt01a$
+                find record (opt01a_dev,key=opt61a_key.FIRM_ID$+opt61a.AR_TYPE$+opt61a_key.CUSTOMER_ID$+opt61a_key.AR_INV_NO$+"000",dom=*continue) opt01a$
                 if opt01a_key.FIRM_ID$<>firm_id$ then 
                    break
                 endif
@@ -203,7 +203,7 @@ Print_Void: rem --- Print VOID
 Find_Record: rem --- Find Customer
             rem dim b1$(30)
             let arm01a.CUSTOMER_NAME$(1)="Not On File"
-            find record (arm01_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$,dom=*next) arm01a$
+            find record (arm01a_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$,dom=*next) arm01a$
             return
 
 rem #include std_functions.src
@@ -327,8 +327,10 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
+    
+    
     release
 rem #endinclude std_end.src
 
