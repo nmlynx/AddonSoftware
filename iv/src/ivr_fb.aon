@@ -86,7 +86,7 @@ rem --- Level breaks?
 
 rem --- Retrieve item
         ivm01a_key$(1)=firm_id$+item$
-        find record (ivm01_dev,key=ivm01a_key$,dom=*Continue) ivm01a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*Continue) ivm01a$
         if type$<>""  then
             rem if a2$(53,3)<>type$ then
             if ivm01a.ItemType$<>type$ then
@@ -100,7 +100,7 @@ rem --- Retrieve warehouse
         dim item[3]
         ivm02a_key$(1)=firm_id$+whse$+item$
         x$=""
-        find record (ivm02_dev,key=ivm02a_key$,dom=*Continue) ivm02a$
+        find record (ivm02a_dev,key=ivm02a_key$,dom=*Continue) ivm02a$
         item[0]=1
         item[1]=ivm02a.pri_price
         item[2]=ivm02a.cur_price
@@ -253,7 +253,7 @@ WhseBreak: rem --- Warehouse Break
     t0$=whse$
     description$(6,24)="(Not on File)"
     if done=0 l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     x$="Warehouse "+t0$+" "+cvs(description$(6,24),2)
     headings$[3]=h1$
     headings$[3](fncenter(x$,width),len(x$))=x$
@@ -268,7 +268,7 @@ ProdBreak: rem --- Product break
     endif
     dim description$(32),product[3]
     let t1$=product$,description$(7,20)="(Not on File)"
-    find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product Type "+t1$+" "+description$(7,20)
     return
 
@@ -409,7 +409,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
