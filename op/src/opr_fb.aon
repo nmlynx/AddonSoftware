@@ -139,7 +139,7 @@ Customer_Break: rem --- Customer Break
            rem dim b1$(30)
              t0$=opm09a_key.CUSTOMER_ID$
              arm01a.CUSTOMER_NAME$(1)="(Not On File)"
-            find record (arm01_dev,key=opm09a_key.firm_id$+t0$,dom=*break) arm01a$
+            find record (arm01a_dev,key=opm09a_key.firm_id$+t0$,dom=*break) arm01a$
           gosub Sub_Head
       return
 
@@ -264,7 +264,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
