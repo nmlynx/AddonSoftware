@@ -228,29 +228,6 @@ rem --- Read next Invoice Header (are-05) record
           arm06a$=field(arm06a$)
           write record (arm06_dev,key=arm06a.firm_id$+arm06a.customer_id$) arm06a$
 
-          rem --- If order processing is installed write invoice cross-reference records
-rem jpb * thi section is probably not needed anymore - art-01 has multiple keys
-          if op$="Y"
-             dim opt51a$:fattr(opt51a$),opt61a$:fattr(opt61a$)
-             opt51a.firm_id$=firm_id$
-             opt51a.ar_type$=art01a.ar_type$
-             opt51a.ar_inv_no$=are05a.ar_inv_no$
-             opt51a.customer_id$=are05a.customer_id$
-             opt51a_key$=opt51a.firm_id$+opt51a.ar_type$+opt51a.ar_inv_no$+
-:                        opt51a.customer_id$
-             opt51a$=field(opt51a$)
-             write record (opt51_dev,key=opt51a_key$) opt51a$
-             opt61a.firm_id$=firm_id$
-             opt61a.ar_type$=art01a.ar_type$
-             opt61a.invoice_date$=are05a.inv_date$
-             opt61a.ar_inv_no$=are05a.ar_inv_no$
-             opt61a.customer_id$=are05a.customer_id$
-             opt61a_key$=opt61a.firm_id$+opt61a.ar_type$+opt61a.invoice_date$+
-:                        opt61a.ar_inv_no$+opt61a.customer_id$
-             opt61a$=field(opt61a$)
-             write record (opt61_dev,key=opt61a_key$) opt61a$
-          endif
-
           rem --- Delete Invoice Header (are-05) record and loop back for the next one
 
           remove (are05_dev,key=are05a_key$)
