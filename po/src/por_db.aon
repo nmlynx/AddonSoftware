@@ -338,7 +338,7 @@ warehouse_brk: rem --- Warehouse break
         dim whse[1]
         t0$=k$(3,2)
         ivm10c_key$=firm_id$+"C"+t0$+nf$
-        find record (ivm10_dev,key=ivm10c_key$,dom=*next) ivm10c$
+        find record (ivm10c_dev,key=ivm10c_key$,dom=*next) ivm10c$
         whse$=ivm10c.warehouse_id$+" "+ivm10c.short_name$
         if t1$="" gosub recpt_date_brk
         subhead$="Warehouse "+cvs(whse$,2)+" - Receipt Date "+fndate$(t1$)
@@ -370,12 +370,12 @@ read_recpt_header: rem --- Read receipt header and detail
     status=11
     p04_key$=poe04a.firm_id$+poe04a.vendor_id$+poe04a.receiver_no$+poe04a.po_no$
     p14_key$=poe14a.firm_id$+poe14a.vendor_id$+poe14a.receiver_no$+poe14a.po_no$+poe14a.po_line_no$
-    find record (poe04_dev,key=p04_key$,dom=goback) poe04a$
-    find record (poe14_dev,key=p14_key$,dom=goback) poe14a$
+    find record (poe04a_dev,key=p04_key$,dom=goback) poe04a$
+    find record (poe14a_dev,key=p14_key$,dom=goback) poe14a$
     if pom02a.firm_id$<>firm_id$ if pom02a.po_line_code$<>poe14a.po_line_code$
 
         pom02a_key$=firm_id$+poe14a.po_line_code$
-        find record (pom02_dev,key=pom02a_key$,dom=goback) pom02a$
+        find record (pom02a_dev,key=pom02a_key$,dom=goback) pom02a$
 
     endif
 
@@ -390,8 +390,8 @@ rem --- Retrieve inventory item and warehouse
     code$=""
     if pom02a.line_type$="S"
 
-        find record (ivm01_dev,key=ivm01a_key$,dom=goback) ivm01a$
-        find record (ivm02_dev,key=ivm02a_key$,dom=goback) ivm02a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=goback) ivm01a$
+        find record (ivm02a_dev,key=ivm02a_key$,dom=goback) ivm02a$
         description$(1)=ivm01a.description$
         code$=ivm02a.ar_dist_code$
 
@@ -529,6 +529,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
