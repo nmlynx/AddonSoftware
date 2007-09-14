@@ -34,6 +34,14 @@ rem --- Assign form input values to local variables
     enddate$=fnget_fld_data$(table$,"date_2")
     pagebrk$=fnget_fld_data$(table$,"page_brk_btw_vendor")
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd/%Mz/%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Initializations
 
     precision num(ivs01a.precision$)
@@ -173,8 +181,8 @@ rem --- Position files
 
         apm01a_key$=pow07a.firm_id$ + pow07a.vendor_id$
         apm01a.vendor_name$=""
-        find record (poe01_dev,key=poe01a_key$,dom=*continue) poe01a$;  rem requisition header
-        find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$;      rem vendor master
+        find record (poe01a_dev,key=poe01a_key$,dom=*continue) poe01a$;  rem requisition header
+        find record (apm01a_dev,key=apm01a_key$,dom=*next) apm01a$;      rem vendor master
         if l+5>l9 gosub report_heading else gosub req_subheading
 
 rem --- Position detail file
@@ -196,7 +204,7 @@ rem --- Clear templated record w/o losing template
 
             pom02a.code_desc$=""
             pom02a_key.firm_id$ = firm_id$,pom02a_key.po_line_code$=poe11a.po_line_code$
-            find record (pom02_dev, key=pom02a_key$, dom=other_line) pom02a$
+            find record (pom02a_dev, key=pom02a_key$, dom=other_line) pom02a$
 
 init_detail_line: rem --- Initialize detail line fields
 
@@ -232,8 +240,8 @@ ret_inv_items: rem --- Retrieve inventory item for S lines
             ivm02a.location$=""
             if pom02a.line_type$<>"S" 
                 goto calc_ext_branch
-            find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-            find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+            find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
+            find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
 
 rem not using parameterized description lengths...rem description$(1)=fnitem$(c1$,i[3],i[4],i[5]).CAH
             description$(1)=ivm01a.description$
@@ -350,7 +358,7 @@ rem --- Drop ship?
             dim customer$(o[8]-o[3]+1)
             arm01a_key$=firm_id$+poe11a.customer_id$
             arm01a.cust_name$="(Not On File)"
-            find record (arm01_dev,key=arm01a_key$,dom=*next) arm01a$
+            find record (arm01a_dev,key=arm01a_key$,dom=*next) arm01a$
             customer$(1)="Customer "+fnmask$(arm01a_key.customer_id$,p7$)+" "+arm01a.cust_name$
             if cvs(poe11a.order_number$,2)<>""
                 customer$(len(customer$)-16)=" (Order " + poe11a.order_number$ + ")"
@@ -397,6 +405,32 @@ done: rem --- All done
 
     call pgmdir$ +"adc_progress.aon","D","","","","",0,0,1,meter_num,status
     run pgmdir$ +"pou_aa.bbx"
+
+rem --- Document columns
+
+    dim columns$[21,3]
+    columns$[0,0]="Customer",columns$[0,1]="C",columns$[0,2]=str(m0+1)
+    columns$[1,0]="Customer",columns$[1,1]="C",columns$[1,2]=str(m0+1)
+    columns$[2,0]="Customer",columns$[2,1]="C",columns$[2,2]=str(m0+1)
+    columns$[3,0]="Customer",columns$[3,1]="C",columns$[3,2]=str(m0+1)
+    columns$[4,0]="Customer",columns$[4,1]="C",columns$[4,2]=str(m0+1)
+    columns$[5,0]="Customer",columns$[5,1]="C",columns$[5,2]=str(m0+1)
+    columns$[6,0]="Customer",columns$[6,1]="C",columns$[6,2]=str(m0+1)
+    columns$[7,0]="Customer",columns$[7,1]="C",columns$[7,2]=str(m0+1)
+    columns$[8,0]="Customer",columns$[8,1]="C",columns$[8,2]=str(m0+1)
+    columns$[9,0]="Customer",columns$[9,1]="C",columns$[9,2]=str(m0+1)
+    columns$[10,0]="Customer",columns$[10,1]="C",columns$[10,2]=str(m0+1)
+    columns$[11,0]="Customer",columns$[11,1]="C",columns$[11,2]=str(m0+1)
+    columns$[12,0]="Customer",columns$[12,1]="C",columns$[12,2]=str(m0+1)
+    columns$[13,0]="Customer",columns$[13,1]="C",columns$[13,2]=str(m0+1)
+    columns$[14,0]="Customer",columns$[14,1]="C",columns$[14,2]=str(m0+1)
+    columns$[15,0]="Customer",columns$[15,1]="C",columns$[15,2]=str(m0+1)
+    columns$[16,0]="Customer",columns$[16,1]="C",columns$[16,2]=str(m0+1)
+    columns$[17,0]="Customer",columns$[17,1]="C",columns$[17,2]=str(m0+1)
+    columns$[18,0]="Customer",columns$[18,1]="C",columns$[18,2]=str(m0+1)
+    columns$[19,0]="Customer",columns$[19,1]="C",columns$[19,2]=str(m0+1)
+    columns$[20,0]="Customer",columns$[20,1]="C",columns$[20,2]=str(m0+1)
+
 
 report_heading: rem --- Report Heading
 
@@ -475,7 +509,7 @@ t1_null:
 ret_vendor: rem --- Retrieve vendor
 
     let apm01a_key$ = firm_id$ + v$, apm01a$(1)="(Not On File)"
-    find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+    find record (apm01a_dev,key=apm01a_key$,dom=*next) apm01a$
     let vendor$=fnmask$(apm01a_key.vendor_id$,m0$) + " " + apm01a.vendor_name$
 
 print_totals:   rem --- Print totals
@@ -588,6 +622,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
