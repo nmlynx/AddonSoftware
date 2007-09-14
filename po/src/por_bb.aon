@@ -201,7 +201,7 @@ rem branch: rem --- Branch based on SEQUENCE$
 
 rem --- Read header record
 
-        find record (poe02_dev,key=k$,dom=check_batch) poe02a$
+        find record (poe02a_dev,key=k$,dom=check_batch) poe02a$
         if batch call pgmdir$+"adc_progress.aon","S","","","",fnmask$(poe02a_key.vendor_id$,m0$)+
 :       ""+poe02a.po_no$,0,0,1,0,ignore_status
 
@@ -244,7 +244,7 @@ rem --- Read next sort record
                 if pos(firm_id$ = k$) <> 1 break
                 remove (pow12_dev,key = k$)
                 poe12a_key$ = firm_id$ + pow12a_key.vendor_id$
-                find record (poe12_dev,key=poe12a_key$,dom=*continue) poe12a$
+                find record (poe12a_dev,key=poe12a_key$,dom=*continue) poe12a$
                 
             else
 
@@ -276,7 +276,7 @@ rem --- Print any associated message
 
                 msg$ = pom04a_key.po_msg_code$
                 pom04a_key$ = firm_id$ + poe12a.po_msg_code$
-                find record (pom04_dev,key = pom04a_key$,dom=*break) pom04a$
+                find record (pom04a_dev,key = pom04a_key$,dom=*break) pom04a$
                 if pos(pom04a.message_type$ = "B" + type$) = 0 break
                 read (pom14_dev,key=pom04a_key$,dom=*next)
 
@@ -306,7 +306,7 @@ rem --- Retrieve drop ship address
 
                 dim s0$(15),s1$(130)
                 poe12a_key$ = firm_id$ + poe12a.customer_id$ + poe12a.order_no$
-                find record (ope31_dev,key=poe12a_key$,dom=opEqN) ope31a$
+                find record (ope31a_dev,key=poe12a_key$,dom=opEqN) ope31a$
                 d$ = ope31a.addr_line_1$ + ope31a.addr_line_2$ + ope31a.addr_line_3$
 :               + ope31a.addr_line_4$ + ope31a.city$ + ope31a.state_code$ + ope31a.zip_code$
 
@@ -315,7 +315,7 @@ opEqN:
                 dim s0$(14),s1$(174)
                 poe12a_key$ = firm_id$ + poe12a.customer_id$ + poe12a.shipto_no$
                 eor_flg=1
-                find record (arm03_dev,key = poe12a_key$,dom=eor) arm03a$
+                find record (arm03a_dev,key = poe12a_key$,dom=eor) arm03a$
                 d$ = arm03a.addr_line_1$ + arm03a.addr_line_2$ + arm03a.addr_line_3$
 :               + arm03a.addr_line_4$ + arm03a.city$ + arm03a.state_code$ + arm03a.zip_code$
                 eor_flg=0
@@ -325,7 +325,7 @@ eor:
 
                     dim s0$(8),s1$(280)
                     poe12a_key$ = firm_id$ + poe12a.customer_id$
-                    find record (arm01_dev,key=poe12a_key$,dom=*continue) arm01a$
+                    find record (arm01a_dev,key=poe12a_key$,dom=*continue) arm01a$
                     d$ = arm01a.addr_line_1$ + arm01a.addr_line_2$ + arm01a.addr_line_3$
 :                   + arm01a.addr_line_4$ + arm01a.city$
 
@@ -375,7 +375,7 @@ rem --- Load current message
                 pom04a_key$ = firm_id$ + msg$
                 footcnt=0
                 if cvs(pomessage$,2)<>"" footcnt=2
-                find record (pom04_dev,key=pom04a_key$,dom=nomsg) pom04a$
+                find record (pom04a_dev,key=pom04a_key$,dom=nomsg) pom04a$
 
                 nomsg_flg=1
                 if pos(pom04a.message_type$="B"+type$)<>0
@@ -559,8 +559,8 @@ print_detail_line: rem --- Print Detail Line
             ivm01a_key$=firm_id$+poe12a.item_id$
             ivm01a.item_desc$=nf$
             ivm05a_key$=apm01a.vendor_id$+poe12a.item_id$
-            find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-            if p3$(58,1)="Y" find record (ivm05_dev,key=ivm05a_key$,dom=*next) ivm05a$
+            find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
+            if p3$(58,1)="Y" find record (ivm05a_dev,key=ivm05a_key$,dom=*next) ivm05a$
             if cvs(ivm05a.vendor_item$,2)<>"" needed=needed+1
             if l+needed>l9-2 gosub print_continued
 
@@ -769,7 +769,7 @@ vendor_break: rem --- Vendor Break
     apm01a_key$(1)=poe02a.po_no$
     apm01a.vendor_name$=nf$
     t0$=apm01a_vendor_id$
-    find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+    find record (apm01a_dev,key=apm01a_key$,dom=*next) apm01a$
     n$= apm01a.addr_line_1$ + 
 :       apm01a.addr_line_2$ + 
 :       apm01a.city$ + 
@@ -789,7 +789,7 @@ shipfrom_break: rem --- Ship-From Break
     shipfrom$="SAME"
     if cvs(poe02a.purch_addr$,2)="" return
     apm05a.name$=nf$
-    find record (apm05_dev,key=apm05a_key$,dom=*next) apm05a$
+    find record (apm05a_dev,key=apm05a_key$,dom=*next) apm05a$
 
 rem --- ESCAPE LET SHIPNAME$=D1$(1,30)
 
@@ -817,7 +817,7 @@ terms_break: rem --- Terms Break
     dim z0$(32)
     apm10c_key$=firm_id$+"C"+poe02a.terms_code$+nf$
     t2$=poe02a.terms_code$
-    find record (apm10_dev,key=apm10c_key$(1,5),dom=*next) apm10c$
+    find record (apm10c_dev,key=apm10c_key$(1,5),dom=*next) apm10c$
     return
 
 shipto_break: rem --- Ship-To Break
@@ -829,7 +829,7 @@ shipto_break: rem --- Ship-To Break
         ivm10c_key.warehouse_id$=poe02a.warehouse_id$
         t3$=poe02a.warehouse_id$; rem ESCAPE
     endif
-    find record (ivm10_dev,key=ivm10c_key$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=ivm10c_key$,dom=*next) ivm10c$
 
     a$= ivm10c.addr_line_1$ + 
 :       ivm10c.addr_line_2$ + 
@@ -846,7 +846,7 @@ line_code_break: rem --- Line Code Break
     dim y0$(4),y1$(32)
     pom02a_key$=firm_id$+poe12a.po_line_code$
     t4$=poe12a.po_line_code$
-    find record (pom02_dev,key=pom02a_key$,dom=*next) pom02a$
+    find record (pom02a_dev,key=pom02a_key$,dom=*next) pom02a$
     return
 
 rem --- Sort print file by alternate sort or warehouse
@@ -867,7 +867,7 @@ rem --- Read next print record
         if sequence$<>"W"
 
             apm01a_key$=firm_id$+poe22a_key.vendor_id$
-            find record (apm01_dev,key=apm01a_key$,dom=*continue) apm01a$
+            find record (apm01a_dev,key=apm01a_key$,dom=*continue) apm01a$
             let pow02a_key$=firm_id$+apm01a.alt_sequence$+poe22a_key.vendor_id$
             write record (pow02_dev,key=pow02a_key$) pow02a$
 
@@ -998,6 +998,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
