@@ -8,7 +8,6 @@ rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-    begin
     setesc std_error
     seterr std_error
 
@@ -25,14 +24,17 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=6,begfile=1,endfile=files
+    files=7,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01"
-    files$[2]="glm-01"
-    files$[3]="glm-11"
-    files$[4]="glm-11"
-    files$[5]="glm-21"
-    files$[6]="glm-21"
+    files$[1]="glm-01",ids$[1]="GLM_ACCT";rem "glm-01"
+    files$[2]="glm-01",ids$[2]="GLM_ACCT";rem "glm-01"
+    files$[3]="glm-11",ids$[3]="GLM_FINASSIGN";rem "glm-11"
+    files$[4]="glm-11",ids$[4]="GLM_FINASSIGN";rem "glm-11"
+    files$[5]="glm-21",ids$[5]="GLM_COFINASSIGN";rem "glm-21"
+    files$[6]="glm-21",ids$[6]="GLM_COFINASSIGN";rem "glm-21"
+    files$[7]="GLS_PARAMS",ids$[7]=files$[7]; rem "gls-01
+
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -42,37 +44,26 @@ rem --- Open/Lock files
     glm11_dev2=channels[4]
     glm21_dev1=channels[5]
     glm21_dev2=channels[6]
+    gls01_dev=channels[7]
 
 rem --- Dimension string templates
 
-    dim glm01a$:templates$[1],glm11a$:templates$[3],glm21a$:templates$[5]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim gls01a$:templates$[1]
+    dim glm01a$:templates$[1],glm11a$:templates$[3],glm21a$:templates$[5],gls01a$:templates$[7]
 
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     acctlen=num(gls01a.acct_length$)
 
 rem --- Assign input values to local variables
 
-    begfirm$=rd_rec_data$[1,0]
-    endfirm$=rd_rec_data$[2,0]
-    begacct$=rd_rec_data$[3,0]
-    endacct$=rd_rec_data$[4,0]
-    wildcard$=rd_rec_data$[5,0]
-    overwrite$=rd_rec_data$[6,0]
+    begfirm$=Option!.getOptionData("COMPANY_ID_FROM")
+    endfirm$=Option!.getOptionData("COMPANY_ID_TO")
+    begacct$=Option!.getOptionData("GL_ACCOUNT_1")
+    endacct$=Option!.getOptionData("GL_ACCOUNT_2")
+    wildcard$=Option!.getOptionData("GL_WILDCARD")
+    overwrite$=Option!.getOptionData("YN_PROMPT")
 
 rem --- Initializations
 
@@ -104,8 +95,11 @@ rem --- Copy accounts
                 if pos(k11$=k$)<>1 break
                 read record (glm11_dev1,key=k11$)glm11a$
                 glm11a.firm_id$=endfirm$
-                if overwrite$="Y" write record (glm11_dev2,key=r0$)glm11a$
-                             else write record (glm11_dev2,key=r0$,dom=*next)glm11a$
+                if overwrite$="Y" 
+                    write record (glm11_dev2,key=r0$)glm11a$
+                else 
+                    write record (glm11_dev2,key=r0$,dom=*next)glm11a$
+                endif
           wend
 
           rem --- Copy Consolidated Financial Report Assignments
@@ -116,8 +110,11 @@ rem --- Copy accounts
                 if pos(k21$=k$)<>1 break
                 read record (glm21_dev1,key=k11$)glm21a$
                 glm21a.firm_id$=endfirm$
-                if overwrite$="Y" write record (glm21_dev2,key=r0$)glm21a$
-                             else write record (glm21_dev2,key=r0$,dom=*next)glm21a$
+                if overwrite$="Y" 
+                    write record (glm21_dev2,key=r0$)glm21a$
+                else 
+                    write record (glm21_dev2,key=r0$,dom=*next)glm21a$
+                endif
           wend
 
           rem --- Copy account master
@@ -168,8 +165,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -213,7 +209,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call stbl("+DIR_PGM")+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
