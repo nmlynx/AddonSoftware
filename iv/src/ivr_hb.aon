@@ -171,7 +171,7 @@ rem --- Accumulate totals
         read (ivm03_dev)
         if type$<>"" then
             ivm03a_key$(1)=firm_id$+item$
-            find record (ivm01_dev,key=ivm03a_key$,dom=*continue) ivm01a$
+            find record (ivm01a_dev,key=ivm03a_key$,dom=*continue) ivm01a$
             if ivm03a.Item_Type<>type$ then
                 continue
             endif
@@ -193,7 +193,7 @@ rem --- Write ivw-01 item record
 rem --- Write ivw-02 totals record
         dim ivw02a_key$:ivw02a_key_tpl$
         ivw02a_key$=firm_id$+whse$
-        find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
+        find record (ivw02a_dev,key=ivw02a_key$,dom=*next) ivw02a$
         ivw02a.total_usuage=ivw02a.total_usuage+cost*usage
         ivw02a.total_value=ivw02a.total_value+cost*onhand
         write record (ivw02_dev,key=ivw02a_key$) ivw02a$
@@ -204,7 +204,7 @@ rem --- Position file
 
     dim bar$(width,"-")
     ivw02a_key$=firm_id$
-    if level$="I" find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
+    if level$="I" find record (ivw02a_dev,key=ivw02a_key$,dom=*next) ivw02a$
     total_usage=ivw02a.total_usuage
     total_value=ivw02a.total_value
     total_percent=0
@@ -229,7 +229,7 @@ rem --- Additional reads
 
         dim description$(dw)
         ivm01a_key$=firm_id$+ivw01a_key$
-        find record (ivm01_dev,key=ivm01a_key$) ivm01a$
+        find record (ivm01a_dev,key=ivm01a_key$) ivm01a$
         description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
         product$=ivm01a.product_type$
         um$=ivm01a.unit_of_sale$
@@ -315,10 +315,10 @@ whseBreakdom:
      ivm10c.SHORT_NAME$="(Not on File)"
      l=l9+1
     ivw02a_key$=firm_id$+t0$
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let h9$="Warehouse "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2),bar=0
     let headings$[4]=h1$,headings$[4](fncenter(h9$,width),len(h9$))=h9$
-    find record (ivw02_dev,key=ivw02a_key$,dom=whseBreakdom) ivw02a$
+    find record (ivw02a_dev,key=ivw02a_key$,dom=whseBreakdom) ivw02a$
     let total_usage=ivw02a.total_usuage,total_value=ivw02a.total_value,total_percent=0
     let cum_usage=0,cum_value=0
     return
@@ -352,7 +352,7 @@ Accum_Total_Whse: rem --- Accumulate warehouse totals
         dim activity[12]
         let ivm02a_key$=firm_id$+whse$+item$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
         let cost=0,usage=0,onhand=0
-        find record (ivm02_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
+        find record (ivm02a_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
         let onhand=ivm02a.qty_on_hand,cost=ivm02a.unti_cost
         Call_Accum_Total_Whse:
             call pgmdir$+"ivc_wb.bbx",action$,files[all],items$[all],periods$[all],activity[all],status
@@ -507,7 +507,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
