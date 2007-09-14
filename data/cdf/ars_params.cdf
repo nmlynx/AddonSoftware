@@ -1,39 +1,35 @@
 [[ARS_PARAMS.ARAR]]
-rem --- Retrieve miscellaneous templates
+	pgmdir$=stbl("+DIR_PGM")
 
-	dir_pgm$=stbl("+DIR_PGM")
-	sys_pgm$=stbl("+DIR_SYP")
+rem --- Open/Lock files
 
 	files=2,begfile=1,endfile=files
-	dim ids$[files],templates$[files]
-	ids$[1]="gls-01A:GLS_PARAMS"
-	ids$[2]="ars-01A:ARS_PARAMS"
-	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+	dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+	files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+	files$[2]="gls_params",ids$[2]="GLS_PARAMS"
+	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
 	if status goto std_exit
+	ars01_dev=channels[1]
+	gls01_dev=channels[2]
 
-rem --- Dimension miscellaneous string templates
+rem --- Dimension string templates
 
-	dim gls01a$:templates$[1],ars01a$:templates$[2]
-
-rem --- find channel on which ads-01 is open
-
-	ads01_dev=fnget_dev("ARS_PARAMS")
+	dim ars01a$:templates$[1],gls01a$:templates$[2]
 
 rem --- Retrieve parameter data
 
 	dim info$[20]
 
 	gls01a_key$=firm_id$+"GL00"
-	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$  
-goto bypass_apps;rem jpb undo this after Sam fixes application.aon
+	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$  
+
 	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
 	gl$=info$[20]
 	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
 	ap$=info$[20],br$=info$[9]
 	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
-bypass_apps:
-gl$="Y",ap$="Y",iv$="Y"
 
 	dim user_tpl$:"app:c(2),gl_pers:c(2),gl_installed:c(1),"+
 :                  "ap_installed:c(1),iv_installed:c(1),bank_rec:c(1)"
@@ -47,7 +43,7 @@ gl$="Y",ap$="Y",iv$="Y"
 
 	rem --- set some defaults (that I can't do via arde) if param doesn't yet exist
 	ars01a_key$=firm_id$+"AR00"
-	find record (ads01_dev,key=ars01a_key$,err=*next) ars01a$
+	find record (ars01_dev,key=ars01a_key$,err=*next) ars01a$
 	if cvs(ars01a.current_per$,2)=""
 		escape;rem --- current_per$ should only be null if param rec didn't exist
 		callpoint!.setColumnData("ARS_PARAMS.CURRENT_PER",gls01a.current_per$)

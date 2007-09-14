@@ -8,7 +8,7 @@ rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-rem --- ADS01_DEV : Channel that ads-01 is open on (Input)
+rem --- GLS01_DEV : Channel that ads-01 is open on (Input)
 rem --- PERIOD    : Current fiscal period (Input)
 rem --- YEAR      : Current fiscal year (Input)
 rem --- BEGDATE$  : Period beginning date in YYYYMMDD format (Returned)
@@ -17,7 +17,7 @@ rem --- STATUS    : Zero=No Error/Not Zero=Error (Returned)
 
     setesc std_error
     seterr std_error
-    enter ads01_dev,period,year,begdate$,enddate$,status
+    enter gls01_dev,period,year,begdate$,enddate$,status
 
 rem --- Retrieve the program path
 
@@ -46,7 +46,7 @@ rem --- Retrieve parameter records
 
     status=0
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     total_periods=num(gls01a.total_pers$)
 
 rem --- Determine End Of Period

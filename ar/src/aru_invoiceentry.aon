@@ -22,7 +22,7 @@ rem --- Initializations
 
 rem --- Get the beginning and ending dates for the current AR period
 
-    call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
 
 rem --- Get user approval to update
 
@@ -69,7 +69,7 @@ rem --- Read next Invoice Header (are-05) record
           arm10a.ar_terms_code$=are05a.ar_terms_code$
           arm10a.code_desc$=nf$
           k$=arm10a.firm_id$+arm10a.record_id_a$+arm10a.ar_terms_code$ 
-          find record (arm10_dev,key=k$,dom=*next) arm10a$
+          find record (arc_termcode_dev,key=k$,dom=*next) arm10a$
 
           rem --- Retrieve Distribution Code (arm-10d) record
 
@@ -79,7 +79,7 @@ rem --- Read next Invoice Header (are-05) record
           arm10d.ar_dist_code$=are05a.ar_dist_code$
           arm10d.code_desc$=nf$
           k$=arm10d.firm_id$+arm10d.record_id_d$+arm10d.ar_dist_code$ 
-          find record (arm10_dev,key=k$,dom=*next) arm10d$
+          find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
 
           rem --- Position the Invoice Detail (are-15) file
 		  rem --- err 46 here...was using key=invoice$; changed to are05a_key$.CAH
@@ -224,12 +224,12 @@ rem --- Read next Invoice Header (are-05) record
           if art01a.invoice_date$<=enddate$ 
 :            if arm06a.ytd_hi_cred<balance arm06a.ytd_hi_cred=balance
           if art01a.invoice_date$>enddate$ 
-:            if arm06a.nmtd_high_crd<balance arm06a.nmtd_high_crd=balance
+:            if arm06a.nmtd_high_cr<balance arm06a.nmtd_high_cr=balance
           arm06a$=field(arm06a$)
           write record (arm06_dev,key=arm06a.firm_id$+arm06a.customer_id$) arm06a$
 
           rem --- If order processing is installed write invoice cross-reference records
-
+rem jpb * thi section is probably not needed anymore - art-01 has multiple keys
           if op$="Y"
              dim opt51a$:fattr(opt51a$),opt61a$:fattr(opt61a$)
              opt51a.firm_id$=firm_id$
@@ -282,9 +282,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -327,7 +326,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
