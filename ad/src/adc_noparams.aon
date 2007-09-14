@@ -40,8 +40,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -67,7 +66,8 @@ rem #include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
 
-    exit
+    release;rem changed to release Sept07.CH
+    rem exit
 
 rem #endinclude std_exit.src
 
