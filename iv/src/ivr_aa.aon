@@ -26,10 +26,10 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=20,begfile=1,endfile=files
+    files=23,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-10",ids$[2]="ARC_TERMCODE"
+
+    files$[2]="ARC_TERMCODE",ids$[2]=files$[2]
     files$[3]="glm-01",ids$[3]="GLM_ACCT"
     files$[4]="glt-14",ids$[4]="GLX_DAILYXRF"
     files$[5]="glw-11",ids$[5]="GLW_TRANSDET"
@@ -40,7 +40,7 @@ rem --- Open/Lock files
     files$[10]="ivm-04",ids$[10]="IVM_ITEMTIER"
     files$[11]="ivm-07",ids$[11]="IVM_LSMASTER"
     files$[12]="ivm-08",ids$[12]="IVX_LSXREF"
-    files$[13]="ivm-10",ids$[10]="IVM_ITEMTIER"
+    files$[13]="IVC_PRODCODE",ids$[10]=files$[13]
     files$[14]="ivm-12",ids$[14]="IVM_ITEMACT"
     files$[15]="ivm-17",ids$[15]="IVM_LSACT"
     files$[16]="ivt-01",ids$[16]="IVT_LSTRANS"
@@ -48,11 +48,16 @@ rem --- Open/Lock files
     files$[18]="ivt-03",ids$[18]="IVX_LSVEND"
     files$[19]="ivt-04",ids$[19]="IVT_ITEMTRAN"
     files$[20]="ivw-04",ids$[20]="IVW_LFDET"
+    files$[21]="ARS_PARAMS",ids$[21]=files$[21]
+    files$[22]="GLS_PARAMS",ids$[22]=files$[22]
+    files$[23]="IVS_PARAMS",ids$[22]=files$[23]
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
-    arm10_dev=channels[2]
+
+    arm10a_dev=channels[2]
+
     glm01_dev=channels[3]
     glt14_dev=channels[4]
     glw11_dev=channels[5]
@@ -63,7 +68,7 @@ rem --- Open/Lock files
     ivm04_dev=channels[10]
     ivm07_dev=channels[11]
     ivm08_dev=channels[12]
-    ivm10_dev=channels[13]
+    ivm10a_dev=channels[13]
     ivm12_dev=channels[14]
     ivm17_dev=channels[15]
     ivt01_dev=channels[16]
@@ -71,6 +76,10 @@ rem --- Open/Lock files
     ivt03_dev=channels[18]
     ivt04_dev=channels[19]
     ivw04_dev=channels[20]
+    ars01a_dev=channels[21]
+    gls01a_dev=channels[22]
+    ivs01a_dev=channels[23]
+
 
 rem --- Dimension string templates
 
@@ -80,22 +89,8 @@ rem --- Dimension string templates
 :       ivm07a$:templates$[11],ivm08a$:templates$[12],ivm10a$:templates$[13],
 :       ivm12a$:templates$[14],ivm17a$:templates$[15],ivt01a$:templates$[16],
 :       ivt02a$:templates$[17],ivt03a$:templates$[18],ivt04a$:templates$[19],
-:       ivw04a$:templates$[20]
-
-rem --- Retrieve miscellaneous templates
-
-    files=3,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A:ARS_PARAMS"
-    ids$[2]="gls-01A:GLS_PARAMS"
-    ids$[3]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ars01a$:templates$[1],gls01a$:templates$[2],ivs01a$:templates$[3]
-
+:       ivw04a$:templates$[20],ars01a$:templates$[21],gls01a$:templates$[22],
+:       ivs01a$:templates$[23]
 
 rem --- Assign form input values to local variables
 
@@ -105,11 +100,11 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     rem sys01a_key$=firm_id$+"SY00"
     rem find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
 
@@ -127,8 +122,8 @@ rem --- Parameters
     lf$="N"
     source$=pgm(-2)
     when$=sysinfo.system_date$
-    find record (ads01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-    find record (ads01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
+    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
     g[0]=num(gls01a.total_pers$)
     g[3]=num(gls01a.acct_length$)
     g[4]=num(gls01.max_acct_length$)
@@ -337,8 +332,8 @@ rem --- Distribute by Item?
                 if ivm10b_post_gl$="N"  continue
                 if a9$="Y" then
                     rem dim d1$(40)
-                    find record (ivm02_dev,key=firm_id$+ive11a.warehouse_id$+ive11a.item_id$,dom=post_summary) ivm02a$
-                    find record (arm10_dev,key=firm_id$+"D"+ivm02a.dist_code$,dom=post_summary) arm10d$
+                    find record (ivm02a_dev,key=firm_id$+ive11a.warehouse_id$+ive11a.item_id$,dom=post_summary) ivm02a$
+                    find record (arm10d_dev,key=firm_id$+"D"+ivm02a.dist_code$,dom=post_summary) arm10d$
                     arm10d_key$=arm10d.gl_inv_acct$
                 endif
 
@@ -407,7 +402,7 @@ rem --- New reference
     if t9$="" then
         rem dim x0$(32),x1$(g[4])
         let t0$=ive01a.iv_trans_no$,ivm10b.code_desc$="(Not On File)",t0=0
-        find record (ivm10_dev,key=firm_id$+"B"+ive01a.trans_code$,dom=*next) ivm10b$
+        find record (ivm10b_dev,key=firm_id$+"B"+ive01a.trans_code$,dom=*next) ivm10b$
         gosub trans_heading
     endif
     return
@@ -541,6 +536,7 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     rem run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
