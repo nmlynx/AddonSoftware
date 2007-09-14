@@ -23,16 +23,15 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=16,begfile=1,endfile=files
+    files=18,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="ive-03",ids$[2]="IVE_PHYSICAL"
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
     files$[5]="ivm-04",ids$[5]="IVM_ITEMTIER"
     files$[6]="ivm-07",ids$[6]="IVM_LSMASTER"
     files$[7]="ivm-08",ids$[7]="IVX_LSXREF"
-    files$[8]="ivm-10",ids$[8]="IVC_PRODCODE"
+    files$[8]="IVC_PRODCODE",ids$[8]=files$[8]
     files$[9]="ivm-12",ids$[9]="IVM_ITEMACT"
     files$[10]="ivm-17",ids$[10]="IIVM_LSACT"
     files$[11]="ivt-01",ids$[11]="IVT_LSTRANS"
@@ -41,17 +40,19 @@ rem --- Open/Lock files
     files$[14]="ivt-04",ids$[14]="IVT_ITEMTRAN"
     files$[15]="ivw-04",ids$[15]="IVW_LFDET"
     files$[16]="ivw-10",ids$[16]="IVW_PHYSICAL"
+    files$[17]="IVC_PHYSCODE",ids$[17]=files$[17]
+    files$[18]="IVS_PARAMS",ids$[18]=files$[18]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+
     ive03_dev=channels[2]
     ivm01_dev=channels[3]
     ivm02_dev=channels[4]
     ivm04_dev=channels[5]
     ivm07_dev=channels[6]
     ivm08_dev=channels[7]
-    ivm10_dev=channels[8]
+    ivm10a_dev=channels[8]
     ivm12_dev=channels[9]
     ivm17_dev=channels[10]
     ivt01_dev=channels[11]
@@ -60,6 +61,8 @@ rem --- Open/Lock files
     ivt04_dev=channels[14]
     ivw04_dev=channels[15]
     ivw10_dev=channels[16]
+    ivm10p_dev=channels[17]
+    ivs01a_dev=channels[18]
 
 rem --- Dimension string templates
 
@@ -67,20 +70,9 @@ rem --- Dimension string templates
 :       ivm04a$:templates$[5],ivm07a$:templates$[6],ivm08a$:templates$[7],
 :       ivm10a$:templates$[8],ivm12a$:templates$[9],ivm17a$:templates$[10],
 :       ivt01a$:templates$[11],ivt02a$:templates$[12],ivt03a$:templates$[13],
-:       ivt04a$:templates$[14],ivw04a$:templates$[15],ivw10a$:templates$[16]
+:       ivt04a$:templates$[14],ivw04a$:templates$[15],ivw10a$:templates$[16],
+:       ivm10p$:templates$[17],ivs01a$:templates$[18]
 
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivm-10P:IVC_PHYSCODE"
-    ids$[2]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivm10p$:templates$[1],ivs01a$:templates$[2],sys01a$:templates$[3]
 
 rem --- Assign form input values to local variables
 
@@ -94,9 +86,8 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    rem sys01a_key$=firm_id$+"SY00"
-    rem find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    
 
 rem --- Parameters
 
@@ -104,7 +95,7 @@ rem --- Parameters
     firm_id$=sysinfo.firm_id$
     n2$="IV"
     ls$="N"
-    find record (ivs01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
     p[0]=num(ivs01a.item_id_len$)
     p[1]=num(ivs01a.precision$)
     p[2]=num(ivs01a.ls_no_len$)
@@ -189,7 +180,7 @@ rem --- Process input
 
 rem --- Retrieve warehouse and build HEADINGS$
 
-    find record (ivm10_dev,key=firm_id$+"C"+whse$,dom=std_exit) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+whse$,dom=std_exit) ivm10c$
     headings$[1]=sysinfo.task_desc$+" For Warehouse "+x0$(4,2)+" "+cvs(x0$(6,24),2)
     if quantity$="Y" sqh$="Quantity"
 
@@ -254,7 +245,7 @@ rem --- Retrieve lot/serial master
                     if ive03a.ACT_PHYS_CNT=0 and ive03a.freeze_qty<ive03a.ACT_PHYS_CNT ive03a.lotser_no$="Extra"
                     if pos("Blank"=ive03a.lotser_no$)<>1 ivm07a.inv_location$=".........."
                 endif
-                find record (ivm07_dev,key=ivm07a_key$,dom=Total_Value) ivm07a$
+                find record (ivm07a_dev,key=ivm07a_key$,dom=Total_Value) ivm07a$
                 cost=ivm07a.unit_cost
             endif
 Total_Value: rem --- Calculate total value and variance
@@ -354,7 +345,7 @@ Cycle_Break: rem --- Cycle Break
     t0$=ive03a.cycle_code$
     ivm10p_key$=firm_id$+"P"+whse$+t0$
     ivm10p.cutoff_date$=sysinfo.system_date$
-    find record (ivm10_dev,key=ivm10p_key.firm_id$+ivm10p_key.record_id_p$+ivm10p_key.warehouse_id$+ivm10p_key.cycle_code$,dom=*next) ivm10p$
+    find record (ivm10p_dev,key=ivm10p_key.firm_id$+ivm10p_key.record_id_p$+ivm10p_key.warehouse_id$+ivm10p_key.cycle_code$,dom=*next) ivm10p$
     ivm10p.phys_ivn_sts$="3"
     l=l9+1
     headings=3
@@ -376,8 +367,8 @@ Item_Break: rem --- Item Break
     dim description$(dw),item[6]
     let ivm01a_key$=firm_id$+ive03a.item_id$,ivm01a.item_desc$="(Not On File)",t1$=ive03a.item_id$
     let ivm02a_key$=firm_id$+ive03a.warehouse_id$+ive03a.item_id$,ivm02a.unit_cost=0,l1=0
-    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    find record (ivm02_dev,key=ivm02a_key$,dom=*next) ivm02a$
+    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    find record (ivm02a_dev,key=ivm02a_key$,dom=*next) ivm02a$
     let description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5]),continued$="",cost=ivm02a.unit_cost
 
 rem --- Get LIFO/FIFO Cost As Necessary
@@ -528,7 +519,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
