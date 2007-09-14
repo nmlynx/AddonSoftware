@@ -207,7 +207,7 @@ rem --- Read line code
 
                 pom02a_key.firm_id$=firm_id$, pom02a_key.po_line_code$=poe13a.po_line_code$
                 pom02a.code_desc$=""
-                find record (pom02_dev,key=pom02a_key$,dom=set_variables) pom02a$
+                find record (pom02a_dev,key=pom02a_key$,dom=set_variables) pom02a$
                 if dom_flag=1 continue else dom_flag=0
 
             endif
@@ -255,7 +255,7 @@ rem --- Branch based on line code
                     ivm01a_key$=firm_id$+w3$(3)
                     ivm01a$=""
                     description$(1)=nf$
-                    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+                    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
                     description$(1)=ivm01a.description$
                     if l+2>l9 gosub report_heading
                     print (printer_dev) @(o[0]),poe13a_key.po_line_no$,
@@ -344,8 +344,8 @@ rem --- Lotted/Serialized?
                         needed=0
                         lastseq=0
                         p13_key$=poe13a.firm_id$+poe13a.vendor_id$+poe13a.receiver_no$+
-:                               poe13a.po_no$+poe13a.po_line_no$
-                        read (poe23_dev,key=p13_key,dom=*next)
+:                       poe13a.po_no$+poe13a.po_line_no$
+                        read (poe23_dev,key=p13_key$,dom=*next)
 
 rem --- Read next lot/serial detail record
 
@@ -417,7 +417,7 @@ read_next: rem --- Read next rejection detail
                 pom03a_key$=firm_id$+poe63a.reject_code$
                 pom03a$=nf$
                 lastseq=num(poe63a_key.sequence_no$)
-                find record (pom03_dev,key=pom03a_key$,dom=*next) pom03a$
+                find record (pom03a_dev,key=pom03a_key$,dom=*next) pom03a$
                 precision 2
                 extension=d[0]*poe13a.unit_cost
                 precision num(poe13a.precision$)
@@ -494,7 +494,7 @@ rem --- Print list of lines with lot/serial number differences
             qty=difqty[x]
             apm01a_key$=k$(1,8)
             apm01a$=nf$
-            find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+            find record (apm01a_dev,key=apm01a_key$,dom=*next) apm01a$
             x$="Is Missing "+str(qty)
             lsdesc$=" Lot/Serial Number(s)"
             if qty<0 x$="Has "+str(abs(qty))+" Too Many"
@@ -580,7 +580,7 @@ brnch1:
     if done return
     dim vendor[4]
     let t0$=poe03a_key.vendor_id$,apm01a_key.firm_id$=firm_id$+t0$,apm01a.vendor_name$=nf$
-    find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+    find record (apm01a_dev,key=apm01a_key$,dom=*next) apm01a$
     let vendor$=fnmask$(apm01a_key.vendor_id$,m0$)+" "+cvs(apm01a.vendor_name$,2)
     if pagebreak$="Y" l=l9+1
     return
@@ -715,6 +715,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
