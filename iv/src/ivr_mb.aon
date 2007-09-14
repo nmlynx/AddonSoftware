@@ -185,7 +185,7 @@ rem --- Additional reads
                 lastdate$=""
                 lastcost$=""
                 venditem$=""
-                find record (ivm05_dev,key=ivm05a_key$,dom=*next) ivm05a$
+                find record (ivm05a_dev,key=ivm05a_key$,dom=*next) ivm05a$
                 if cvs(ivm05a.vend_item$,2)<>"" venditem$="Vendor Item "+ivm05a.vend_item$
                 if cvs(ivm05a.last_po_date$,2)<>"" then
                 lastdate$=fndate$(ivm05a.last_po_date$)
@@ -404,7 +404,7 @@ Buyer_Break: rem --- Buyer break
     t0$=buyer$
     ivm10f.code_desc$=nf$
     l=l9+1
-    find record (ivm10_dev,key=firm_id$+"F"+t0$,dom=*next) ivm10f$
+    find record (ivm10f_dev,key=firm_id$+"F"+t0$,dom=*next) ivm10f$
     x$="Buyer: "+t0$+" "+ivm10f.code_desc$
     headings$[3](1,len(x$))=x$
     return
@@ -415,7 +415,7 @@ Vendor_Break: rem --- Vendor break
     if sequence$="B" gosub Product_Break
     if sequence$="V" gosub Item_Break
     let t1$=vendor$,apm01a_key$=firm_id$+vendor$,apm01a.vendor_name$=nf$,l=l9+1
-    find record (apm01_dev,key=ivm10f.code_desc$,dom=*next) apm01a$
+    find record (apm01a_dev,key=ivm10f.code_desc$,dom=*next) apm01a$
     let x$="Vendor: "+fnmask$(apm01a.vendor_id$,m0$)+" "+cvs(apm01a.vendor_name$,2)
 if cvs(vendor$,2)="" x$="Vendor: None"
     if sequence$="B" headings$[3](78)="",headings$[3](width-len(x$)+1)=x$
@@ -427,7 +427,7 @@ Product_Break: rem --- Product break
     if sequence$="B" gosub Item_Break
     rem dim x0$(32)
     let t2$=product$,ivm10a.code_desc$=nf$
-    find record (ivm10_dev,key=firm_id$+"A"+t2$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t2$,dom=*next) ivm10a$
     let h9$="Product Type "+t2$+" "+ivm10a.code_desc$
     return
 
@@ -445,7 +445,7 @@ Item_Break: rem --- Item break
     if !done then
         rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],description$(dw),total[6]
         let t3$=item$,ivm01a_key$=firm_id$+t3$,ivm01a.item_desc$=nf$,ivm01a.product_type$="",l1=0
-        find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
         let description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
         if sequence$="V" gosub Product_Break
     endif
@@ -454,7 +454,7 @@ Item_Break: rem --- Item break
 Retrieve_whse:rem --- Retrieve warehouse record
     rem dim b0$(24),b1$(64),b[20]
     let ivm02a_key$=firm_id$+whse$+item$,items$[1]=whse$,items$[2]=item$
-    find record (ivm02_dev,key=ivm02a_key$,dom=*next) ivm02a$
+    find record (ivm02a_dev,key=ivm02a_key$,dom=*next) ivm02a$
     let location$=ivm02a.inv_location$,onhand=inv02a.qty_on_hand,committed=inv02a.qty_commit,ordered=inv02a.qty_on_order
     let available=onhand-committed,point=ivm02a.order_point,eoq=ivm02a.eoq
     call pgmdir$+"ivc_au.bbx",action$,channels[all],items$[all],factors[all],day_of_month,base$,ivs01a_current_year$,g[0],p[1],usage,estimated,flag$,status
@@ -583,7 +583,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
