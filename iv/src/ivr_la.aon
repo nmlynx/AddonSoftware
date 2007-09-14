@@ -23,46 +23,36 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=8,begfile=1,endfile=files
+    files=10,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="ive-05",ids$[2]="IVE_PRICECHG"
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
     files$[5]="ivm-03",ids$[5]="IVX_ITEMPROD"
-    files$[6]="ivm-10",ids$[6]="IVM_ITEMTIER"
+    files$[6]="IVC_PRODCODE",ids$[6]=files$[6]
     files$[7]="ivm-14",ids$[7]="IVM_ITEMSYN"
     files$[8]="ivw-08",ids$[8]="IVX_PRICXREF"
+    files$[9]="IVC_WHSECODE",ids$[9]=files$[9]
+    files$[10]="IVS_PARAMS",ids$[10]=files$[10]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
     ive05_dev=channels[2]
     ivm01_dev=channels[3]
     ivm02_dev=channels[4]
     ivm03_dev=channels[5]
-    ivm10_dev=channels[6]
+    ivm10a_dev=channels[6]
     ivm14_dev=channels[7]
     ivw08_dev=channels[8]
+    ivm10c_dev=channels[9]
+    ivs01a_dev=channels[10]
 
 rem --- Dimension string templates
 
     dim ive05a$:templates$[2],ivm01a$:templates$[3],ivm02a$:templates$[4],
 :       ivm03a$:templates$[5],ivm10a$:templates$[6],ivm14a$:templates$[7],
-:       ivw08a$:templates$[8]
+:       ivw08a$:templates$[8],ivm10c$:templates$[9],ivs01a$:templates$[10] 
 
-rem --- Retrieve miscellaneous templates
-
-    files=3,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivm-10C:IVC_WHSECODE"
-    ids$[2]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivm10c$:templates$[1],ivs01a$:templates$[2]
 
 rem --- Assign form input values to local variables
 
@@ -72,19 +62,15 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    rem sys01a_key$=firm_id$+"SY00"
-    rem find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
-
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+   
 
 
 rem --- Parameters
 
     dim p[5]
-    find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
-    firm_id$=sysinfo.firm_id$
     n2$="IV"
-    find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
     p[0]=num(ivs01a.item_id_len$)
     p[1]=num(ivs01a.precision$)
     whse$=ivs01a.warehouse_id$
@@ -190,8 +176,8 @@ rem --- Additional reads
         rem dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],b0$(24),b1$(64),b[20]
         ivm01a_key$=firm_id$+ive05a.product_type$
         ivm02a_key$=firm_id$+ive05a.warehouse_Id$
-        find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-        find record (ivm02_dev,key=ivm02a_key$,dom=*next) ivm02a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
+        find record (ivm02a_dev,key=ivm02a_key$,dom=*next) ivm02a$
         description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
 
 rem --- New Product Type?
@@ -274,14 +260,14 @@ Whse_Break: rem --- Warehouse Break
     ivm10c.whse_name$="(Not on File)"
     l=l9+1
     find record (ivm10_dev,key=firm_id$+"C"+t1$,dom=*next) ivm10c$
-    let headings$[2]="Warehouse "+t1$+" "+cvs(ivm10c.whse_name$,2)
+    let headings$[2]="Warehouse"+t1$+" "+cvs(ivm10c.whse_name$,2)
     return
 
 Product_Break: rem --- Product Break
 
     rem dim x0$(32)
     let t2$=ive05a.product_type$,ivm10a.code_desc$="(Not on File)"
-    find record (ivm10_dev,key=firm_id$+"A"+t2$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t2$,dom=*next) ivm10a$
     let h0$="Product "+t2$+" "+ivm10a.code_desc$
     return
 
@@ -299,7 +285,7 @@ Next_ive05: rem --- Read next entry record
             read (ive05_dev)
             call pgmdir$+"adc_progress.aon","S","","","",k$(3,2)+" "+k$(5,2)+" "+k$(7,p[0]),0,0,1,0,ignore_status
             let ivm01a_key$=ive05a_key.firm_id$+ive05a_key.item_id$
-            find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
+            find record (ivm01a_dev,key=ivm01a_key$,dom=*continue) ivm01a$
 
 rem --- Write sort record
 
@@ -431,7 +417,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
