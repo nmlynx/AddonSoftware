@@ -1,5 +1,5 @@
 rem --- Inventory Turns Report (Report Overlay)
-rem --- Program ivr_kb v8.0.0 16Jul2007 (ivr_kb)
+rem --- Program ivr_itemturns_o1.aon v8.0.0 16Jul2007 (ivr_kb)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 12:55:47)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -152,15 +152,15 @@ rem --- Position xref for item level report
 
             dim item[3]
             x$=firm_id$+"G"+ivm01a_key.item_id$
-            read (ivm03_dev2,key=x$,dom=*next)
+            read (ivm03g_dev,key=x$,dom=*next)
 
 rem --- Get next warehouse xref
 rem --- InnerLoop Starting
             while more 
 
-                ivm03g_key$=key(ivm03_dev2,end=*break)
+                ivm03g_key$=key(ivm03g_dev,end=*break)
                 if pos(x$=ivm03g_key$)<>1 break
-                read (ivm03_dev2)
+                read (ivm03g_dev)
                 whse$=ivm03g.warehouse_id$
                 gosub Whse_Turns
 
@@ -555,6 +555,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

@@ -1,5 +1,5 @@
 rem --- Return Warehouse Information
-rem --- Program ivc_wa v8.0.0 26Jul2007 (ivc_wa)
+rem --- Program ivc_whseinfo.aon v8.0.0 26Jul2007 (ivc_wa)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/26/2007 09:54:15)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -46,7 +46,7 @@ rem --- Retrieve miscellaneous templates
 
     files=2,begfile=2,endfile=files
     dim ids$[files],templates$[files]
-    ids$[2]="ivm-02A:IVM_ITEMWHSE"
+    ids$[2]="IVM_ITEMWHSE"; rem ivm-02A:
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
@@ -114,7 +114,6 @@ get_whse_info: rem --- Read warehouse record and accumulate totals
     ivm02a_key$=firm_id$+warehouse$+item_no$,status=11
     more=1
     while more
-rem escape
         find record (ivm02_dev,key=ivm02a_key$,dom=*break) ivm02a$
         more=0
         rem use whse_bal_fields$ to parse/accum names of fields corres. to pre-template b[x] array in iolist
