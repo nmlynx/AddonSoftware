@@ -25,16 +25,15 @@ rem --- Open/Lock files
 
     files=32,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="apm-02",ids$[3]="ARM_CUSTMAST"
     files$[4]="apm-09",ids$[4]="APM_VENDCMTS"
-    files$[5]="apm-10",ids$[5]="APC_TYPECODE"
+    files$[5]="APC_TYPECODE",ids$[5]=files$[5];rem "apm-10A"
     files$[6]="apt-01",ids$[6]="APT_INVOICEHDR"
     files$[7]="apt-02",ids$[7]="APT_INVOICEDIST"
     files$[8]="apt-03",ids$[8]="APT_INVOICEDATE"
     files$[9]="apt-11",ids$[9]="APT_INVDET"
-    files$[10]="arm-10",ids$[10]="ARC_TERMCODE"
+    files$[10]="ARC_TERMCODE",ids$[10]=files$[10];rem "arm-10A"
     files$[11]="glm-01",ids$[11]="GLM_ACCT"
     files$[12]="glt-04",ids$[12]="GLE_DAILYDETAIL"
     files$[13]="glt-14",ids$[13]="GLX_DAILYXRF"
@@ -57,6 +56,14 @@ rem --- Open/Lock files
     files$[30]="pow-17",ids$[30]="POW_INVLAND"
     files$[31]="sfe-01",ids$[31]="SFE_WOMASTR"
     files$[32]="sfm-10",ids$[32]="SFC_WOTYPECD"
+    files$[33]="APC_DISTRIBUTION",ids$[33]=files$[33];rem "apm-10B"
+    files$[34]="APC_TERMSCODE",ids$[34]=files$[34];rem "apm-10C"
+    files$[35]="APS_PARAMS",ids$[35]=files$[35];rem "aps-01A"
+    files$[36]="ARS_PARAMS",ids$[36]=files$[36];rem "ars-01A"
+    files$[37]="GLS_PARAMS",ids$[37]=files$[37];rem "gls-01A"
+    files$[38]="IVS_PARAMS",ids$[38]=files$[38];rem "ivs-01A"
+    files$[39]="POS_PARAMS",ids$[39]=files$[39];rem "pos-01A"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -92,6 +99,13 @@ rem --- Open/Lock files
     pow17_dev=channels[30]
     sfe01_dev=channels[31]
     sfm10_dev=channels[32]
+    apm10b_dev=channels[33]
+    apm10c_dev=channels[34]
+    aps01a_dev=channels[35]
+    ars01a_dev=channels[36]
+    gls01a_dev=channels[37]
+    ivs01a_dev=channels[38]
+    pos01a_dev=channels[39]
 
 rem --- Dimension string templates
 
@@ -105,27 +119,9 @@ rem --- Dimension string templates
 :       pom02a$:templates$[23],pot04a$:templates$[24],pot05a$:templates$[25],
 :       pot14a$:templates$[26],pot15a$:templates$[27],pot25a$:templates$[28],
 :       pot35a$:templates$[29],pow17a$:templates$[30],sfe01a$:templates$[31],
-:       sfm10a$:templates$[32]
-
-rem --- Retrieve miscellaneous templates
-
-    files=7,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="apm-10B:APC_DISTRIBUTION"
-    ids$[2]="apm-10C:APC_TERMSCODE"
-    ids$[3]="aps-01A:APS_PARAMS"
-    ids$[4]="ars-01A:ARS_PARAMS"
-    ids$[5]="gls-01A:GLS_PARAMS"
-    ids$[6]="ivs-01A:IVS_PARAMS"
-    ids$[7]="pos-01A:POS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim apm10b$:templates$[1],apm10c$:templates$[2],aps01a$:templates$[3],
-:       ars01a$:templates$[4],gls01a$:templates$[5],ivs01a$:templates$[6],
-:       pos01a$:templates$[7]
+:       sfm10a$:templates$[32],apm10b$:templates$[33],apm10c$:templates$[34],
+:       aps01a$:templates$[35],ars01a$:templates$[36],gls01a$:templates$[37],
+:       ivs01a$:templates$[38],pos01a$:templates$[39]
 
 rem --- Assign form input values to local variables
 
@@ -135,15 +131,15 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     pos01a_key$=firm_id$+"PO00"
-    find record (ads01_dev,key=pos01a_key$,err=std_missing_params) pos01a$
+    find record (pos01a_dev,key=pos01a_key$,err=std_missing_params) pos01a$
 
 rem --- Initializations
 
