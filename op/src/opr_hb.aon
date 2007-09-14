@@ -33,9 +33,9 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01")
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Initialize Data
 
@@ -66,7 +66,7 @@ rem --- Sort Cash
 
                     read record (ope41_dev,end=*break) ope41a$
                     if pos(firm_id$=ope41a.FIRM_ID$)<>1 break
-                    find record (ope01_dev,key=ope41a.FIRM_ID$+ope41a.AR_TYPE$+ope41a.CUSTOMER_ID$+ope41a.ORDER_NO$+"000",dom=*continue) ope01a$
+                    find record (ope01a_dev,key=ope41a.FIRM_ID$+ope41a.AR_TYPE$+ope41a.CUSTOMER_ID$+ope41a.ORDER_NO$+"000",dom=*continue) ope01a$
                     if ope01a.PRINT_STATUS$+ope01a.LOCK_STATUS$<>"YS" continue
 
 rem --- Write Record
@@ -100,13 +100,13 @@ rem --- Breaks
 rem                     if k$(5,3)<>t0$ i=0; gosub l6000
 
                         if opw41a_key.INVOICE_DATE$<>t0$ i=0; gosub Date_Break
-                        find record (ope41_dev,key=opw41a_key.FIRM_ID$+opw41a_key.AR_TYPE$+opw41a_key.CUSTOMER_ID$,dom=*continue) ope41a$
+                        find record (ope41a_dev,key=opw41a_key.FIRM_ID$+opw41a_key.AR_TYPE$+opw41a_key.CUSTOMER_ID$,dom=*continue) ope41a$
 rem                     dim x1$(30)
-                        find record (arm10_dev,key=firm_id$+"C"+ope41a.CASH_REC_CD$,dom=*next) arm10c$
+                        find record (arm10c_dev,key=firm_id$+"C"+ope41a.CASH_REC_CD$,dom=*next) arm10c$
 
 rem --- Get Customer
 
-                        find record (arm01_dev,key=firm_id$+ope41a.CUSTOMER_ID$,dom=Check_Value1) arm01a$
+                        find record (arm01a_dev,key=firm_id$+ope41a.CUSTOMER_ID$,dom=Check_Value1) arm01a$
 rem                     b1$=b1$(1,30)
         Check_Value1:
                         if p3$(15,1)="Y" if ope41a.CUSTOMER_ID$=p3$(16,6) if cvs(d1$,2)<>"" arm01a.CUSTOMER_NAME$=d1$
@@ -338,7 +338,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
