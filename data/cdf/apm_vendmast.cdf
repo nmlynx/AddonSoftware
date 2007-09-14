@@ -1,5 +1,6 @@
 [[APM_VENDMAST.VENDOR_ID.AINP]]
-if num(APM_VENDMAST.VENDOR_ID)=0 callpoint!.setStatus("ABORT")
+
+if num(callpoint!.getUserInput())=0 callpoint!.setStatus("ABORT")
 [[APM_VENDMAST.BDEL]]
 rem --- can delete vendor and assoc recs (apm01/02/05/06/08/09/14/15) unless
 rem --- vendor referenced in inventory, or
@@ -9,47 +10,49 @@ rem --- vendor present in ape-01 or apt-01
 can_delete$=""
 vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
 
-if user_tpl.iv_installed$="Y"
-	ivm01_dev=fnget_dev("IVM_ITEMMAST")
-	iv_key$=""
-	read(ivm01_dev,key=firm_id$+vendor_id$,knum=3,dom=*next)
-	iv_key$=key(ivm01_dev,end=*next)
-	if pos(firm_id$+vendor_id$=iv_key$)=1 can_delete$="N"
-endif
+if cvs(vendor_id$,3)<>""
+	if user_tpl.iv_installed$="Y"
+		ivm01_dev=fnget_dev("IVM_ITEMMAST")
+		iv_key$=""
+		read(ivm01_dev,key=firm_id$+vendor_id$,knum=3,dom=*next)
+		iv_key$=key(ivm01_dev,end=*next)
+		if pos(firm_id$+vendor_id$=iv_key$)=1 can_delete$="N"
+	endif
 
-if can_delete$=""
-	apm02_dev=fnget_dev("APM_VENDHIST")
-	ape01_dev=fnget_dev("APE_INVOICEHDR")
-	apt01_dev=fnget_dev("APT_INVOICEHDR")
-	morehist=1
+	if can_delete$=""
+		apm02_dev=fnget_dev("APM_VENDHIST")
+		ape01_dev=fnget_dev("APE_INVOICEHDR")
+		apt01_dev=fnget_dev("APT_INVOICEHDR")
+		morehist=1
 
-	dim apm02a$:fnget_tpl$("APM_VENDHIST")
-	read(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
+		dim apm02a$:fnget_tpl$("APM_VENDHIST")
+		read(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
 
-	while morehist
+		while morehist
 
-		readrecord(apm02_dev,end=*break)apm02a$
-		if apm02a.firm_id$+apm02a.vendor_id$=firm_id$+vendor_id$
-			if num(apm02a.open_invs$)<>0 or num(apm02a.open_ret$)<>0 can_delete$="N"
-			wk$=""
-			read(ape01_dev,key=firm_id$+apm02a.ap_type$+vendor_id$,dom=*next)
-			wk$=key(ape01_dev,end=*next)
-			if pos(firm_id$+apm02a.ap_type$+vendor_id$=wk$)=1 can_delete$="N"
-			wk$=""
-			read(apt01_dev,key=firm_id$+apm02a.ap_type$+vendor_id$,dom=*next)
-			wk$=key(apt01_dev,end=*next)
-			if pos(firm_id$+apm02a.ap_type$+vendor_id$=wk$)=1 can_delete$="N"
-		else
-			morehist=0
-		endif
+			readrecord(apm02_dev,end=*break)apm02a$
+			if apm02a.firm_id$+apm02a.vendor_id$=firm_id$+vendor_id$
+				if num(apm02a.open_invs$)<>0 or num(apm02a.open_ret$)<>0 can_delete$="N"
+				wk$=""
+				read(ape01_dev,key=firm_id$+apm02a.ap_type$+vendor_id$,dom=*next)
+				wk$=key(ape01_dev,end=*next)
+				if pos(firm_id$+apm02a.ap_type$+vendor_id$=wk$)=1 can_delete$="N"
+				wk$=""
+				read(apt01_dev,key=firm_id$+apm02a.ap_type$+vendor_id$,dom=*next)
+				wk$=key(apt01_dev,end=*next)
+				if pos(firm_id$+apm02a.ap_type$+vendor_id$=wk$)=1 can_delete$="N"
+			else
+				morehist=0
+			endif
 
-	wend
-endif
+		wend
+	endif
 
-if can_delete$="N"
-	msg_id$="AP_VEND_ACTIVE"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
+	if can_delete$="N"
+		msg_id$="AP_VEND_ACTIVE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 endif
 [[APM_VENDMAST.<CUSTOM>]]
 disable_fields:
@@ -75,13 +78,15 @@ callpoint!.setStatus("REFRESH")
 [[APM_VENDMAST.BSHO]]
 rem --- Open/Lock files
  
-	files=5,begfile=1,endfile=files
+	files=7,begfile=1,endfile=files
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="APE_INVOICEHDR";rem --- ape-01
 	files$[2]="APT_INVOICEHDR";rem --- apt-01
 	files$[3]="APT_INVOICEDET";rem --- apt-11
-	files$[4]="APS_PARAMS";rem --- ads-01
+	files$[4]="APS_PARAMS";rem --- aps-01
 	files$[5]="IVM_ITEMMAST";rem --- ivm-01
+	files$[6]="GLS_PARAMS";rem --- gls-01
+	files$[7]="IVS_PARAMS";rem --- ivs-01
 
 	for wkx=begfile to endfile
 		options$[wkx]="OTA"
@@ -92,32 +97,26 @@ rem --- Open/Lock files
 
 	if status$<>"" goto std_exit
 
-	ads01_dev=num(chans$[4])
+	aps01_dev=num(chans$[4])	
+	gls01_dev=num(chans$[6])
+	ivs01_dev=num(chans$[7])
 
+	ivm01_dev=num(chans$[5])
 
-rem --- Retrieve miscellaneous templates
-
-	files=3,begfile=1,endfile=files
-	dim ids$[files],templates$[files]
-	ids$[1]="aps-01A:APS_PARAMS"
-	ids$[2]="gls-01A:GLS_PARAMS"
-	ids$[3]="ivs-01A:IVS_PARAMS"
-	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-	dim aps01a$:templates$[1],gls01a$:templates$[2],ivs01c$:templates$[3]
+	dim aps01a$:templates$[4],gls01a$:templates$[6],ivs01c$:templates$[7]
 
 rem --- Retrieve parameter data
 
 	dim info$[20]
 
 	aps01a_key$=firm_id$+"AP00"
-	find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
+	find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
 
 	gls01a_key$=firm_id$+"GL00"
-	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
+	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
 
 	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]

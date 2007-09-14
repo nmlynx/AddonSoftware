@@ -23,17 +23,18 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=9,begfile=1,endfile=files
+    files=10,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="apm-03"
-    files$[4]="apt-01"
-    files$[5]="apt-02"
-    files$[6]="apt-05"
-    files$[7]="apt-11"
+    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01A
+    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+rem    files$[3]="apm-03"
+    files$[4]="apt-01",ids$[4]="APT_INVOICEHDR"
+    files$[5]="apt-02",ids$[5]="APT_INVOICEDIST"
+    files$[6]="apt-05",ids$[6]="APT_CHECKHISTORY"
+    files$[7]="apt-11",ids$[7]="APT_INVOICEDET"
     files$[8]="apw-06"
     files$[9]="apw-16"
+    files$[10]="GLS_PARAMS",ids$[10]=files$[10]
     options$[4]="L"
     options$[7]="L"
     options$[8]="CL"
@@ -41,7 +42,7 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    aps01_dev=channels[1]
     apm01_dev=channels[2]
     apm03_dev=channels[3]
     apt01_dev=channels[4]
@@ -50,25 +51,14 @@ rem --- Open/Lock files
     apt11_dev=channels[7]
     apw06_dev=channels[8]
     apw16_dev=channels[9]
+    gls01_dev=channels[10]
 
 rem --- Dimension string templates
 
+    dim aps01a$:templates$[1]
     dim apm01a$:templates$[2],apm03a$:templates$[3],apt01a$:templates$[4],
 :       apt02a$:templates$[5],apt05a$:templates$[6],apt11a$:templates$[7],
-:       apw06a$:templates$[8],apw16a$:templates$[9]
-
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1],gls01a$:templates$[2]
+:       apw06a$:templates$[8],apw16a$:templates$[9],gls01a$:templates$[10]
 
 rem --- Assign form input values to local variables
 
@@ -78,9 +68,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     vendor_size=num(aps01a.vendor_size$)
     retention=aps01a.ret_flag$="Y"
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
@@ -357,6 +347,7 @@ rem --- All done
     print (printer_dev) ""
     print (printer_dev) invoices$," Invoices will be purged"
     print (printer_dev) checks$," Checks will be purged"
+    escape
     run pgmdir$+"apu_zerobalance.aon",err=std_exit
 
 report_heading: rem --- Report Heading

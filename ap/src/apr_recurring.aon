@@ -23,52 +23,47 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=9,begfile=1,endfile=files
+    files=12,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="ape-01"
-    files$[3]="ape-03"
-    files$[4]="ape-11"
-    files$[5]="ape-13"
-    files$[6]="apm-01"
-    files$[7]="apm-03"
+    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01A
+    files$[2]="ape-01",ids$[2]="APE_INVOICEHDR"
+    files$[3]="ape-03",ids$[3]="APE_RECURRINGHDR"
+    files$[4]="ape-11",ids$[4]="APE_INVOICEDET"
+    files$[5]="ape-13",ids$[5]="APE_RECURRINGDET"
+    files$[6]="apm-01",ids$[6]="APM_VENDMAST"
+rem    files$[7]="apm-03"
     files$[8]="apm-10"
-    files$[9]="apt-01"
+    files$[9]="apt-01",ids$[9]="APT_INVOICEHDR"
+    files$[10]="APC_DISTRIBUTION",ids$[10]=files$[10];rem "apm-10B
+    files$[11]="APC_TERMSCODE",ids$[11]=files$[11];rem "apm-10C
+    files$[12]="GLS_PARAMS",ids$[12]=files$[12];rem "gls-01
     options$[3]="L"
     options$[5]="L"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    aps01_dev=channels[1]
     ape01_dev=channels[2]
     ape03_dev=channels[3]
     ape11_dev=channels[4]
     ape13_dev=channels[5]
     apm01_dev=channels[6]
     apm03_dev=channels[7]
-    apm10_dev=channels[8]
+    apm10a_dev=channels[8]
     apt01_dev=channels[9]
+    apm10b_dev=channels[10]
+    apm10c_dev=channels[11]
+    gls01_dev=channels[12]
+    
 
 rem --- Dimension string templates
 
+    dim aps01a$:templates$[1]
     dim ape01a$:templates$[2],ape03a$:templates$[3],ape11a$:templates$[4],
 :       ape13a$:templates$[5],apm01a$:templates$[6],apm03a$:templates$[7],
-:       apm10a$:templates$[8],apt01a$:templates$[9]
+:       apm10a$:templates$[8],apt01a$:templates$[9],apm10b$:templates$[10],
+:       apm10c$:templates$[11],gls01a$:templates$[12]
 
-rem --- Retrieve miscellaneous templates
-
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="apm-10B"
-    ids$[2]="apm-10C"
-    ids$[3]="aps-01A"
-    ids$[4]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim apm10b$:templates$[1],apm10c$:templates$[2],aps01a$:templates$[3],gls01a$:templates$[4]
 
 rem --- Assign form input values to local variables
 
@@ -81,9 +76,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     vendor_size=num(aps01a.vendor_size$)
     multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"
@@ -180,7 +175,7 @@ rem --- Additional file opens
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01"
+    files$[1]="glm-01",ids$[1]="GLM_ACCT"
     files$[2]=glw11$
     options$[2]="CL"
     if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -247,7 +242,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           apm10c.terms_code$=ape03a.ap_terms_code$
           apm10c.code_desc$=nf$
           k$=apm10c.firm_id$+apm10c.record_id_a$+apm10c.ap_dist_code$
-          find record (apm10_dev,key=k$,dom=*next) apm10c$
+          find record (apm10c_dev,key=k$,dom=*next) apm10c$
           errors=errors+(pos(nf$=apm10c.code_desc$)=1)
 
           rem --- Recalculate dates for this recurring invoice
@@ -306,7 +301,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
                       apm10b.ap_dist_code$=ape03a.ap_dist_code$
                       apm10b.code_desc$=nf$
                       k$=apm10b.firm_id$+apm10b.record_id_a$+apm10b.ap_dist_code$
-                      find record (apm10_dev,key=k$,dom=*break) apm10b$
+                      find record (apm10b_dev,key=k$,dom=*break) apm10b$
                       account$=apm10b.gl_ap_acct$
                       gldate$=ape03a.accting_date$
                       ref1$=vendorref$

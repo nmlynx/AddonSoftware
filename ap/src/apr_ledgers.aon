@@ -26,16 +26,16 @@ rem --- Open/Lock files
 
     files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="apm-02"
-    files$[4]="apm-10"
-    files$[5]="apt-01"
-    files$[6]="apt-11"
+    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
+    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+    files$[3]="apm-02",ids$[3]="APM_VENDHIST"
+    files$[4]="APC_TYPECODE",ids$[4]=files$[4];rem "apm-10A
+    files$[5]="apt-01",ids$[5]="APT_INVOICEHDR"
+    files$[6]="apt-11",ids$[6]="APT_INVOICEDET"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    aps01_dev=channels[1]
     apm01_dev=channels[2]
     apm02_dev=channels[3]
     apm10_dev=channels[4]
@@ -45,19 +45,7 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
     dim apm01a$:templates$[2],apm02a$:templates$[3],apm10a$:templates$[4],
-:       apt01a$:templates$[5],apt11a$:templates$[6]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1]
+:       apt01a$:templates$[5],apt11a$:templates$[6],aps01a$:templates$[1]
 
 rem --- Assign form input values to local variables
 
@@ -69,7 +57,7 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     call pgmdir$+"adc_sizemask.aon",aps01a.amount_mask$,m1,9,15
     vendor_size=num(aps01a.vendor_size$)
     multiple_types$=aps01a.multi_types$
@@ -81,14 +69,14 @@ rem --- Retrieve parameter records
 
 rem --- Faking it for now since AP Parameters are screwed up (23Dec2006) escape
 
-    vendor_size=6
-    multiple_types$="Y"
-    multiple_distributions$="Y"
-    retention$="Y"
-    m0$="00-0000"
-    m1$="###,##0.00-"
-    m0=len(m0$)
-    m1=len(m1$)
+rem    vendor_size=6
+rem multiple_types$="Y"
+rem    multiple_distributions$="Y"
+rem    retention$="Y"
+rem    m0$="00-0000"
+rem    m1$="###,##0.00-"
+rem    m0=len(m0$)
+rem    m1=len(m1$)
 
 rem --- Remove once parameter record is fixed ----------------------------------
 
@@ -124,10 +112,10 @@ rem --- Define print positions
 
     o[0]=0
     o[1]=m0+1
-    o[2]=m0+11
-    o[3]=m0+20
-    o[4]=m0+29
-    o[5]=m0+32
+    o[2]=m0+12
+    o[3]=m0+21
+    o[4]=m0+30
+    o[5]=m0+33
     o[8]=width-1
     if retention$="Y" o[8]=width-m1
     o[7]=o[8]-m1
@@ -374,4 +362,5 @@ std_exit: rem --- Standard program end (01Mar2006)
 
 rem #endinclude std_end.src
 
+    done:
     end

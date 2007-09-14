@@ -25,17 +25,18 @@ rem --- Open/Lock files
 
     files=8,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="apm-01"
-    files$[3]="apm-10"
-    files$[4]="apt-02"
-    files$[5]="apt-05"
+    files$[1]="APS_PARAMS",ids$[1]=files$[1]; rem  aps-01
+    files$[2]="apm-01",ids$="APM_VENDMAST"
+    files$[3]="APC_TYPECODE",ids$=files$[3]; rem apm-10
+    files$[4]="apt-02",ids$="APT_INVOICEDIST"
+    files$[5]="apt-05",ids$="APT_CHECKHISTORY"
     files$[6]="apw-05"
     options$[6]="C"
+    files$[7]="GLS_PARAMS",ids$=files$[7]; rem gls-01
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    aps01_dev=channels[1]
     apm01_dev=channels[2]
     apm10_dev=channels[3]
     apt02_dev=channels[4]
@@ -45,20 +46,10 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
     dim apm01a$:templates$[2],apm10a$:templates$[3],apt02a$:templates$[4],
-:       apt05a$:templates$[5],apw05a$:templates$[6]
+:       apt05a$:templates$[5],apw05a$:templates$[6],aps01a$:templates$[1],
+:       gls01a$:templates$[7]
 
-rem --- Retrieve miscellaneous templates
 
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-    ids$[2]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1],gls01a$:templates$[2]
 
 rem --- Assign form input values to local variables
 
@@ -72,9 +63,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     vendor_size=num(aps01a.vendor_size$)
     multitypes=aps01a.multi_types$="Y"
     m0$=aps01a.vendor_output$
@@ -198,7 +189,7 @@ rem --- Additional file opens
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     if gl$="Y"
-       files$[1]="glm-01"
+       files$[1]="GLM_ACCT",ids$=files$[1]; rem glm-01
        files$[2]="glw-04"
        options$[2]="CL"
     endif

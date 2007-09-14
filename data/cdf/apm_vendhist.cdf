@@ -91,7 +91,7 @@ rem --- Retrieve miscellaneous templates
 
 	files=1,begfile=1,endfile=files
 	dim ids$[files],templates$[files]
-	ids$[1]="aps-01A:APS_PARAMS";rem  ads-01
+	ids$[1]="aps-01A:APS_PARAMS";rem  aps-01
 	
 	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
         if status goto std_exit
@@ -102,9 +102,9 @@ rem --- Dimension miscellaneous string templates
 
 rem --- Retrieve parameter data
 
-	ads01_dev=fnget_dev("APS_PARAMS")
+	aps01_dev=fnget_dev("APS_PARAMS")
 	aps01a_key$=firm_id$+"AP00"
-	find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
+	find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
 
 rem -- store info needed for validation, etc., in user_tpl$
 	dim user_tpl$:"multi_types:c(1),multi_dist:c(1).ret_flag:c(1)"
