@@ -189,7 +189,7 @@ endif
         ivm01a.ITEM_DESC$="*Not on File*"
         x3$=ivm01a.UPC_CODE$+ivm01a.BAR_CODE$
         x3$=""
-        find record (ivm01_dev,key=firm_id$+opw02a_key.ITEM_IDDES$,dom=*next) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+opw02a_key.ITEM_IDDES$,dom=*next) ivm01a$
         if opwO2a$.LINE_CODE$="N" x1$(1)="*Non-Stock Item*",x2$(4,2)="EA"
         gosub Print_Item
 return
@@ -199,7 +199,7 @@ All_Warehse: rem --- All Warehouses
     dim b[16],w[16]
     if a3$="" return
     for x=1 to len(a3$) step 2
-        find record (ivm02_dev,key=firm_id$+ivm02_key$(x,2)+t0$(3,i[0]),dom=Loop) ivm02a$
+        find record (ivm02a_dev,key=firm_id$+ivm02_key$(x,2)+t0$(3,i[0]),dom=Loop) ivm02a$
         for x1=0 to 16
             b[x1]=b[x1]+w[x1]
         next x1
@@ -329,6 +329,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
