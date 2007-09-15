@@ -292,7 +292,7 @@ rem --- Get Line Type
 
     linetype$="N"
     p02_key$=poe12a.firm_id$+poe12a.po_line_code$
-    find record (pom02_dev,key=p02_key$,dom=brnch2) pom02a$
+    find record (pom02a_dev,key=p02_key$,dom=brnch2) pom02a$
     linetype$=pom02a.line_type$
 
 brnch2: rem --- Get Item Desc for S and N type lines
@@ -303,7 +303,7 @@ brnch2: rem --- Get Item Desc for S and N type lines
         dim itemdesc$(60),x1$(60)
         ivm01a.item_desc$="Not On File"
         i01_key$=firm_id$+poe12a.item_id$
-        find record (ivm01_dev,key=i01_key$,dom=brnch3) ivm01a$
+        find record (ivm01a_dev,key=i01_key$,dom=brnch3) ivm01a$
         ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
     endif
 
@@ -428,7 +428,7 @@ newvendor: rem --- New Vendor
     vendor$=poe02a.vendor_id$
     printvtot$="Y"
     a01_key$=firm_id$+vendor$
-    find record (apm01_dev,key=a01_key$,dom=brnch4) apm01a$
+    find record (apm01a_dev,key=a01_key$,dom=brnch4) apm01a$
     vendname$=apm01a.vendor_name$
     contact$=apm01a.contact_name$
     phone$=fnmask$(apm01a.phone_no$,mphone$)
@@ -442,7 +442,7 @@ newpo: rem --- New PO
     ponum$=poe02a.po_no$
     apm10c.code_desc$="Not On File"
     a10_key$=firm_id$+"C"+poe02a.terms_code$
-    find record (apm10_dev,key=a10_key$,dom=brnch5) apm10c$
+    find record (apm10c_dev,key=a10_key$,dom=brnch5) apm10c$
     termsdesc$=apm10c.code_desc$
 
 brnch5:
@@ -596,6 +596,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
