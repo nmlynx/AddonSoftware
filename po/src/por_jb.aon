@@ -100,7 +100,7 @@ rem --- Init Sort File
 
 rem --- Find corresponding detail line
 
-        find record (poe12_dev,key=sortkey$,dom=*next) poe12a$
+        find record (poe12a_dev,key=sortkey$,dom=*next) poe12a$
         if poe12a.firm_id$+poe12a.vendor_id$+poe12a.po_no$+poe12a.po_line_no$=sortkey$
 
 rem --- Test PO Detail ranges
@@ -122,7 +122,7 @@ rem --- Get Line Type
 
         linetype$="N"
         p02_key$=poe12a.firm_id$+poe12a.po_line_code$
-        find record (pom02_dev,key=p02_key$,dom=*next) pom02a$
+        find record (pom02a_dev,key=p02_key$,dom=*next) pom02a$
         linetype$=pom02a.line_type$
         if linetype$="S"
 
@@ -308,7 +308,7 @@ newwhse: rem --- New Warehouse
     printwtot$="Y"
     printitot$="N"
     i10_key$=firm_id$+"C"+whse$
-    find record (ivm10_dev,key=i10_key$,dom=brnch1) ivm10c$
+    find record (ivm10c_dev,key=i10_key$,dom=brnch1) ivm10c$
     whsename$=ivm10c.short_name$
 
 brnch1:
@@ -327,14 +327,14 @@ newitem: rem --- New Item
     ivm01a.item_desc$="Not On File"
     itemnum$=poe12a.item_id$
     i01_key$=firm_id$+poe12a.item_id$
-    find record (ivm01_dev,key=i01_key$,dom=brnch2) ivm01a$
+    find record (ivm01a_dev,key=i01_key$,dom=brnch2) ivm01a$
     ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
 brnch2:
 
     qtyonorder=0
     i02_key$=firm_id$+b3$
-    find record (ivm02_dev,key=i02_key$,dom=*next) ivm02a$
+    find record (ivm02a_dev,key=i02_key$,dom=*next) ivm02a$
     if l+3>l9 gosub report_heading
     print (printer_dev) @(0),itemnum$(1,itemlen)," ",itemdesc$,
 :                       @(o[14]),qtyonorder:m2$
@@ -457,6 +457,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
