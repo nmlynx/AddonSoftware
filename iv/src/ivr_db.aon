@@ -113,7 +113,7 @@ rem --- Retrieve item
 
         dim item$[2],whse$[2],w[20]
         ivm01a_key$=firm_id$+item$
-        find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if level$="W" and ivm01a.stock_level$<>"W" then
             continue
         endif
@@ -235,7 +235,7 @@ WhseBreak: rem --- Warehouse Break
             gosub ProdBreak
         endif
         let t0$=whse$,ivm10c.short_name$="(Not on File)",l=l9+1
-        find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+        find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
         let x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
         let headings$[3]=h1$,headings$[3](fncenter(x$,width),len(x$))=x$
         return
@@ -243,7 +243,7 @@ WhseBreak: rem --- Warehouse Break
 ProdBreak: rem --- Product break
 
         let t1$=product$,ivm10a.code_desc$="(Not on File)"
-        find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+        find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
         let h9$="Product Type "+t1$+" "+ivm10a.code_desc$
         return
 
@@ -368,7 +368,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
