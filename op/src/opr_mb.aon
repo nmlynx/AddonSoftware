@@ -39,9 +39,9 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01")
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 
 rem --- Initializations
@@ -142,7 +142,7 @@ rem --- Calculate commission due
 rem             dim b1$(width)
 rem             b1$(1)="(Not On File)"
                 arm01a.CUSTOMER_NAME$="(Not On File)"
-                find record (arm01_dev,key=firm_id$+opt71a.CUSTOMER_ID$,dom=*next) arm01a$
+                find record (arm01a_dev,key=firm_id$+opt71a.CUSTOMER_ID$,dom=*next) arm01a$
               
 
 rem --- Print
@@ -292,7 +292,7 @@ rem dim h5$(32),
     arm10f.SLSPSN_CODE$="(Not On File)"
     l=l9+1
     l1=0
-    find record (arm10_dev,key=firm_id$+"F"+t0$,dom=*next) arm10f$
+    find record (arm10f_dev,key=firm_id$+"F"+t0$,dom=*next) arm10f$
     let h5$="Salesperson"+t0$+" "+cvs(arm10f.CODE_DESC$,2)
     return
 
@@ -444,7 +444,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
