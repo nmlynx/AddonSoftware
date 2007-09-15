@@ -70,13 +70,13 @@ rem --- ivm-01 Master Info
     class$=nf$
     type_desc$=nf$
     gosub Heading
-    find record (ivm15_dev,key=firm_id$+ivm01a.Item_type$,dom=Product) ivm15a$
+    find record (ivm15a_dev,key=firm_id$+ivm01a.Item_type$,dom=Product) ivm15a$
     type_desc$=ivm15a.code_desc$
 Product:
-    find record (ivm10_dev,key=firm_id$+"A"+ivm01a.product_type$,dom=Class) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+ivm01a.product_type$,dom=Class) ivm10a$
     product$=ivm10a.code_desc$
 Class:
-    find record (ivm13_dev,key=firm_id$+ivm01a.Item_Class$,dom=Print) ivm13a$
+    find record (ivm13a_dev,key=firm_id$+ivm01a.Item_Class$,dom=Print) ivm13a$
     class$=ivm13a.code_desc$
 Print:
     print (printer_dev)"Product Type: ",ivm01a.product_type$," ",product$,@(44),"Sale UM: ",ivm01a.UNIT_OF_SALE$,@(62),"Sales Analysis: ",ivm01a.SA_LEVEL$
@@ -90,7 +90,7 @@ Print:
     gosub Heading
     if cvs(ivm01a.alt_sup_item$,2)<>"" then 
         ivm01a.itemId$=ivm01a.alt_sup_item$
-        find record (ivm01_dev,key=ivm01a.FirmId$+ivm01a.ItemId$,dom=PrintCode) ivm01a$
+        find record (ivm01a_dev,key=ivm01a.FirmId$+ivm01a.ItemId$,dom=PrintCode) ivm01a$
         altsup$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
         read record (ivm01_dev,key=k$) ivm01a$
     endif
@@ -135,7 +135,7 @@ rem --- GL accounts
                 rem b0$(1)=firm_id$+a6$((x-1)*g[4]+1)
                 glm01a_key$=firm_id$+ivm01a$((x-1)*g[4]+1)
                 glm01a.gl_acct_desc$=nf$
-                find record (glm01_dev,key=glm01a_key$,dom=*next) glm01a$
+                find record (glm01a_dev,key=glm01a_key$,dom=*next) glm01a$
                 buffer$[x](1)=fnmask$(glm01a.gl_account$,glm01a.ACCT_OUTPUT$)+" "+glm01a.gl_acct_desc$
             endif
         next x
@@ -210,8 +210,8 @@ rem --- Next warehouse record
         ivm10c_key$=ivm02a.firm_id$+"C"+ivm02a.warehouse_id$
         ivm10c.short_name$=nf$
         if ivm01a.stock_level$="W" needed=needed+6
-        find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
-        find record (ivm10_dev,key=ivm10c_key$,dom=*next) ivm10c$
+        find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+        find record (ivm10c_dev,key=ivm10c_key$,dom=*next) ivm10c$
         x$="Warehouse "+ivm10c.Warehouse_id$+" "+cvs(ivm10c.short_name$,2)
         if l+needed>l9 gosub report_heading
 rem --- Warehouse fields
@@ -221,7 +221,7 @@ rem --- Warehouse fields
         if di$<>"N" or ar$<>"N" then
             arm10d_key$=firm_id$+"D"+ivm02a.dist_code$
             arm10d.code_desc$=nf$
-            find record (arm10_dev,key=arm10d_key$,dom=*next) arm10d$
+            find record (arm10d_dev,key=arm10d_key$,dom=*next) arm10d$
             dv$="Distribution Code: "+ivm02a.dist_code$+" "+arm10d.code_desc$
         endif
         gosub Heading
@@ -269,7 +269,7 @@ rem --- Retrieve period records
             ivm12a_key$=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$+fnyear_yy21$(y)+str(p:"00")
             p=p-1
             if p<1 p=g[0],y=y-1
-            find record (ivm12_dev,key=ivm12a_key$,dom=*next) ivm12a$
+            find record (ivm12a_dev,key=ivm12a_key$,dom=*next) ivm12a$
             qty[x,1]=ivm12a.BEG_BALANCE 
             qty[x,2]=ivm12a.QTY_RECEIVED 
             qty[x,3]=ivm12a.QTY_BUILT
@@ -333,8 +333,8 @@ rem --- Next vendor xref
         ivm05a_key$=ivm03h_key.firm_id$+ivm03h_key.vendor_id$+ivm03h_key.item_id$
         apm01a_key$=ivm03h_key.firm_id$+ivm03h_key.vendor_id$
         apm01a.vend_name$=nf$
-        find record (ivm05_dev,key=ivm05a_key$,dom=*continue) ivm05a$
-        find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+        find record (ivm05a_dev,key=ivm05a_key$,dom=*continue) ivm05a$
+        find record (apm01a_dev,key=apm01a_key$,dom=*next) apm01a$
         x$="Vendor "+fnmask$(apm01a.vendor_id$,vendmask$)+" "+cvs(apm01a.vendor_name$,2)
         if l+15>l9 gosub report_heading
         gosub Heading
@@ -409,11 +409,11 @@ Print_Stock_Info: rem --- Print stocking information
     gosub Heading
     rem dim c0$(8),c1$(30)
     let ivm10f_key$=firm_id$+"F"+buyer$
-    find record (ivm10_dev,key=ivm10_key$,dom=*next) ivm10f$
+    find record (ivm10f_dev,key=ivm10_key$,dom=*next) ivm10f$
     let buyer$=ivm10f.buyer_code$+" "+ivm10f.code_desc$
     if cvs(vendor$,2)<> "" then
         let apm01a_key$=firm_id$+vendor$,c1$(1)=nf$
-        find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+        find record (apm01a_dev,key=apm01a_key$,dom=*next) apm01a$
         let vendor$=fnmask$(apm01a.vendor_id$,vendmask$)+" "+apm01a.vendor_name$
     endif
     print (printer_dev)@(8),"Buyer Code: ",buyer$,@(o-19)," Maximum Quantity: ",maxqty:m2$
@@ -544,7 +544,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
