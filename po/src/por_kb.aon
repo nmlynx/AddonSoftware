@@ -93,7 +93,7 @@ rem --- Read through sort file
         k$=poe32a_key.firm_id$+poe32a_key.vendor_id$+poe32a_key.po_no$
         read (poe32_dev)
         if poe32a_key.firm_id$<>firm_id$ break
-        find record (poe02_dev,key=k$,dom=*continue) poe02a$
+        find record (poe02a_dev,key=k$,dom=*continue) poe02a$
 
 rem --- Test Ranges
 
@@ -182,7 +182,7 @@ rem --- Get Drop Ship flag & Line Type
 
         linetype$="N"
         dropship$="N"
-        find record (pom02_dev,key=poe12a.firm_id$+poe12a.po_line_code$,dom=brnch1) pom02a$
+        find record (pom02a_dev,key=poe12a.firm_id$+poe12a.po_line_code$,dom=brnch1) pom02a$
         linetype$=pom02a.line_type$
         dropship$=pom02a.dropship$
 
@@ -194,7 +194,7 @@ brnch1: rem --- Get Item Desc for S and N type lines
             dim itemdesc$(60),x1$(60)
             ivm01a.item_desc$="Not On File"
             i01_key$=firm_id$+poe12a.item_id$
-            find record (ivm01_dev,key=i01_key$,dom=brnch2) ivm01a$
+            find record (ivm01a_dev,key=i01_key$,dom=brnch2) ivm01a$
             ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
         endif
@@ -245,7 +245,7 @@ dropship: rem --- Print drop ship info if applicable
                     dim custinfo$(321),shipinfo$(173),custaddr$(120),shipaddr$(120)
                     custname$="Not On File"
                     shipname$="Not On File"
-                    find record (arm01_dev,key=poe12a.firm_id$+poe12a.customer_id$,dom=brnch3) arm01a$
+                    find record (arm01a_dev,key=poe12a.firm_id$+poe12a.customer_id$,dom=brnch3) arm01a$
                     custname$=arm01a.customer_name$
                     custaddr$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+
 :                               arm01a.city$+arm01a.state_code$+arm01a.zip_code$
@@ -253,7 +253,7 @@ dropship: rem --- Print drop ship info if applicable
 
 brnch3:
 
-                    find record (arm03_dev,key=poe12a.firm_id$+poe12a.customer_id$+poe12a.shipto_no$,dom=brnch4) arm03a$
+                    find record (arm03a_dev,key=poe12a.firm_id$+poe12a.customer_id$+poe12a.shipto_no$,dom=brnch4) arm03a$
                     shipname$=arm03a.name$
                     shipaddr$=arm03a.addr_line_1$+arm03a.addr_line_2$+arm03a.addr_line_3$+
 :                               arm03a.city$+arm03a.state_code$+arm03a.zip_code$
@@ -360,14 +360,14 @@ newpo: rem --- New PO
     vendor$=poe02a.vendor_id$
     termsdesc$="Not On File"
     vendname$="Not On File"
-    find record (apm01_dev,key=firm_id$+vendor$,dom=brnch5) apm01a$
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=brnch5) apm01a$
     vendname$=apm01a.vendor_name$
     contact$=apm01a.contact_name$
     phone$=fnmask$(apm01a.phone_no$,"(###) ###-####")
 
 brnch5:
 
-    find record (apm10_dev,key=firm_id$+"C"+poe02a.terms_code$,dom=brnch6) apm10c$
+    find record (apm10c_dev,key=firm_id$+"C"+poe02a.terms_code$,dom=brnch6) apm10c$
     termsdesc$=apm10c.code_desc$(6,18)
 
 brnch6:
@@ -531,6 +531,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
