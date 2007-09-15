@@ -137,7 +137,7 @@ rem --- Read through req headers
 
             if pot44a_key.firm_id$<>firm_id$ more=0;break
             read (pot44_dev); rem "Move ptr
-            find record (pot04_dev,key=pot44a_key.firm_id$+pot44a_key.vendor_id$+pot44a_key.po_no$+pot44a_key.receiver_no$,dom=nextheader) pot04a$
+            find record (pot04a_dev,key=pot44a_key.firm_id$+pot44a_key.vendor_id$+pot44a_key.po_no$+pot44a_key.receiver_no$,dom=nextheader) pot04a$
             dim rcptdate$(8)
             if pot04a.recpt_date$<>fill(6) rcptdate$=fndate$(pot04a.recpt_date$)
 
@@ -236,7 +236,7 @@ rem --- Get Drop Ship flag & Line Type
 
     linetype$="N"
     dropship$="N"
-    find record (pom02_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch1) pom02a$
+    find record (pom02a_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch1) pom02a$
     linetype$=pot14a.dropship$
     dropship$=pot14a.dropship$
 
@@ -247,7 +247,7 @@ brnch1: rem --- Get Item Desc for S and N type lines
     else
         dim itemdesc$(60),x1$(60)
         itemdesc$(1)="Not On File"
-        find record (ivm01_dev,key=firm_id$+pot14a.item_id$,dom=brnch2) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+pot14a.item_id$,dom=brnch2) ivm01a$
         itemdesc$(1)=fnitem$(x1$,desclen[1],desclen[2],desclen[3])
     endif
 
@@ -258,7 +258,7 @@ brnch2: rem --- Get extension
 rem --- Get Vendor's Part #
 
     dim vpartnum$(20)
-    find record (ivm05_dev,key=pot14a.firm_id$+pot14a.vendor_id$+itemnum$,dom=*next) ivm05a$
+    find record (ivm05a_dev,key=pot14a.firm_id$+pot14a.vendor_id$+itemnum$,dom=*next) ivm05a$
 
 rem --- Format common part of print line
 
@@ -304,12 +304,12 @@ rem --- Print drop ship info if applicable
                 dim custinfo$(321),dropinfo$(173),custaddr$(120),dropaddr$(120)
                 custname$="Not On File"
                 dropname$="Not On File"
-                find record (arm01_dev,key=pot14a.firm_id$+pot14a.customer_id$,dom=brnch3) arm01a$
+                find record (arm01a_dev,key=pot14a.firm_id$+pot14a.customer_id$,dom=brnch3) arm01a$
                 custname$=arm01a.customer_name$
                 custaddr$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$
                 call pgmdir$+"adc_address.aon",custaddr$,24,4,9,30
 brnch3:
-                find record (arm03_dev,key=pot14a.firm_id$+pot14a.customer_id$+pot14a.shipto_no$,dom=brnch4) arm03a$
+                find record (arm03a_dev,key=pot14a.firm_id$+pot14a.customer_id$+pot14a.shipto_no$,dom=brnch4) arm03a$
                 dropname$=arm03a.name$
                 dropaddr$=arm03a.addr_line_1$+arm03a.addr_line_2$+arm03a.addr_line_3$+arm03a.city$+arm03a.state_code$+arm03a.zip_code$
                 call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
@@ -422,7 +422,7 @@ newvendor: rem --- New Vendor
     vendname$="Not On File"
     vendor$=pot04a.vendor_id$
     printvtot$="Y"
-    find record (apm01_dev,key=firm_id$+vendor$,dom=brnch5) apm01a$
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=brnch5) apm01a$
     vendname$=apm01a.vendor_name$
 brnch5:
     if l+2>l9 gosub report_heading
@@ -440,16 +440,16 @@ newpo: rem --- New PO
     termsdesc$="Not On File"
     paddrdesc$=""
     shpwhsdesc$="Not On File"
-    find record (apm10_dev,key=firm_id$+"C"+pot04a.terms_code$,dom=brnch6) apm10c$
+    find record (apm10c_dev,key=firm_id$+"C"+pot04a.terms_code$,dom=brnch6) apm10c$
     termsdesc$=apm10c.code_desc$
 
 brnch6:
 
-    find record (apm05_dev,key=firm_id$+vendor$+pot04a.purch_addr$,dom=brnch7) apm05a$
+    find record (apm05a_dev,key=firm_id$+vendor$+pot04a.purch_addr$,dom=brnch7) apm05a$
     paddrdesc$=apm05a.name$(1,24)
 
 brnch7:
-    find record (ivm10_dev,key=firm_id$+"C"+pot04a.warehouse_id$,dom=brnch8) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+pot04a.warehouse_id$,dom=brnch8) ivm10c$
     shpwhsdesc$=ivm10c.short_name$
 
 brnch8:
@@ -602,6 +602,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
