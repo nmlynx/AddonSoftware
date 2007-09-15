@@ -157,13 +157,13 @@ while more ; rem --- Main Read
         read record (ope11_dev) ope11a$
         desc$=ope11a.ORDER_MEMO$
         dim x0$(32)
-        find record (opm02_dev,key=firm_id$+ope11a_key.LINE_NO$,dom=*next) opm02a$
+        find record (opm02a_dev,key=firm_id$+ope11a_key.LINE_NO$,dom=*next) opm02a$
             if pos(opm02a.LINE_TYPE="SP")<>0 then
                 dim d1$(60),d2$(62),d[20]
-                find record (ivm01_dev,key=firm_id$+ope11a.ITEM_ID$,dom=Assign_Value) ivm01a$
+                find record (ivm01a_dev,key=firm_id$+ope11a.ITEM_ID$,dom=Assign_Value) ivm01a$
                 if opm02a.DROPSHIP<>"Y" and p3$(28,1)<>"Y" then
                  if cvs(desc$,2)="" desc$=fnzipcode$(ivm01a.ITEM_DESC,i[3],i[4],i[5])
-                    find record (ivm02_dev,key=firm_id$+ope11a.WAREHOUSE_ID$+ope11a.ITEM_ID$,dom=Assign_Value) ivm02a$
+                    find record (ivm02a_dev,key=firm_id$+ope11a.WAREHOUSE_ID$+ope11a.ITEM_ID$,dom=Assign_Value) ivm02a$
                     if ivm02a.UNIT_COST<>0 ope11a.UNIT_COST=ivm02a.UNIT_COST
                      if i3$(3,1)<>"N" then
                             gosub LIFO_FIFO
@@ -264,7 +264,7 @@ rem --- Totals By Product
             x0=int(x/3)
             dim x0$(32)
             x0$(7)=nf$
-            find record (ivm10_dev,key=firm_id$+"A"+t9$(x,3),dom=*next) ivm10a$
+            find record (ivm10a_dev,key=firm_id$+"A"+t9$(x,3),dom=*next) ivm10a$
             if t9[x0,0]<>0 and t9[x0,1]<>0 then
                 print (printer_dev)t9$(x,3)," ",opm02a.CODE_DESC$,
 :                       @(30),t9[x0,3]:m2$,t9[x0,0]:m1$,t9[x0,1]:m1$,t9[x0,0]-t9[x0,1]:m1$,fnd(t9[x0,0]-t9[x0,1],t9[x0,0]):m1$
@@ -510,8 +510,8 @@ Find_Customer: rem --- Find Customer
   rem  dim b1$(30),arm02a.CREDIT_LIMIT
     arm01a_key$=firm_id$+ope01a_key.CUSTOMER_ID$
     arm01a.CUSTOMER_NAME$=nf$
-    find record (arm01_dev,key=arm01a_key$,dom=*next) arm01a$
-    find record (arm02_dev,key=arm01a_key$+"  ",dom=*next) arm02a$
+    find record (arm01a_dev,key=arm01a_key$,dom=*next) arm01a$
+    find record (arm02a_dev,key=arm01a_key$+"  ",dom=*next) arm02a$
 return
 
 LIFO_FIFO: rem --- LIFO/FIFO
@@ -541,7 +541,7 @@ return
 Terms_Code: rem --- Terms Code
     dim w$(30)
     let w$(6)=nf$
-    find record (arm10_dev,key=firm_id$+"A"+ope01a.TERMS_CODE$,dom=*next) arm10a$
+    find record (arm10a_dev,key=firm_id$+"A"+ope01a.TERMS_CODE$,dom=*next) arm10a$
     let w$=w$(6,15)
 return
 
@@ -665,7 +665,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
