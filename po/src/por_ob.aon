@@ -127,7 +127,7 @@ rem --- Get Header & assign variables
 
             prevk$(1)=pot44a_key$
             p04_key$=firm_id$+vendor$+ponum$+recnum$
-            find record (pot04_dev,key=p04_key$,dom=*continue) pot04a$
+            find record (pot04a_dev,key=p04_key$,dom=*continue) pot04a$
             dim rcptdate$(8),orddate$(8)
             if pot04a.recpt_date$<>fill(6) rcptdate$=fndate$(pot04a.recpt_date$)
             if pot04a.ord_date$<>fill(6) orddate$=fndate$(pot04a.ord_date$)
@@ -137,7 +137,7 @@ rem --- Get Header & assign variables
 rem --- Get detail
 
         p14_key$=a0$+linenum$
-        find record (pot14_dev,key=p14_key$,dom=*continue) pot14a$
+        find record (pot14a_dev,key=p14_key$,dom=*continue) pot14a$
         whse$=pot14a.warehouse_id$
         item$=pot14a.item_id$
 
@@ -181,7 +181,7 @@ rem --- Get Item Desc
         if linetype$="N"
 
             itemdesc$(1)="(Not On File)"
-            find record (ivm01_dev,key=firm_id$+b3$(3,20),dom=brnch1) ivm01a$
+            find record (ivm01a_dev,key=firm_id$+b3$(3,20),dom=brnch1) ivm01a$
             itemdesc$(1)=fnitem$(x1$,desclen[1],desclen[2],desclen[3])
 
         else
@@ -317,7 +317,7 @@ newvendor: rem --- New Vendor
     vendrval=0
     vendvari=0
     vendvpcnt=0
-    find record (apm01_dev,key=firm_id$+vendor$,dom=brnch2) apm01a$
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=brnch2) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch2:
@@ -430,7 +430,7 @@ getlinetype: rem --- Get Line Type
 
     let linetype$="N"
     p02_key$=pot14a.firm_id$+pot14a.po_line_code$
-    find record (pom02_dev,key=p02_key$,dom=brnch4) pom02a$
+    find record (pom02a_dev,key=p02_key$,dom=brnch4) pom02a$
     let linetype$=pom02a.line_type$
 
 brnch4:
@@ -579,6 +579,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
