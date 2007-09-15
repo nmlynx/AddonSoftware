@@ -23,7 +23,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=32,begfile=1,endfile=files
+    files=39,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="apm-02",ids$[3]="ARM_CUSTMAST"
@@ -67,7 +67,6 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
     apm01_dev=channels[2]
     apm02_dev=channels[3]
     apm09_dev=channels[4]
