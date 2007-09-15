@@ -71,7 +71,7 @@ rem --- Get next sort record
         receiver$=pot24a_key.receiver_no$
         linenum$=pot24a_key.po_line_no$
         product$=""
-        find record (ivm01_dev,key=firm_id$+item$,dom=brnch1) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+item$,dom=brnch1) ivm01a$
         product$=ivm01a.product_type$
 
 brnch1: rem --- Valid Item/Wh/Product/Type?
@@ -111,7 +111,7 @@ rem --- Breaks?
 rem --- Retrieve history detail
 
         pot14a_key$=firm_id$+vendor$+ponum$+receiver$+linenum$
-        find record (pot14_dev,key=pot14a_key$,dom=*continue) pot14a$
+        find record (pot14a_dev,key=pot14a_key$,dom=*continue) pot14a$
         required$=pot14a.reqd_date$
         unitmeas$=pot14a.unit_measure$
         qtyord=pot14a.qty_ordered
@@ -245,7 +245,7 @@ itembreak: rem --- Item Break
         dim c0$(22),c1$(60),itemtot[4]
         lastitem$=item$
         ivm01a.item_desc$="(Not on File)"
-        find record (ivm01_dev,key=firm_id$+lastitem$,dom=*next) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+lastitem$,dom=*next) ivm01a$
         h9$=lastitem$(1,itemlen)+" "+fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
         let totaledpo$=""
     return
@@ -255,7 +255,7 @@ vendbreak: rem --- Vendor break
     if !done
         dim vendname$(30)
         let lastvend$=vendor$,apm01a.vendor_name$="(Not on File)"
-        find record (apm01_dev,key=firm_id$+lastvend$,dom=*next) apm01a$
+        find record (apm01a_dev,key=firm_id$+lastvend$,dom=*next) apm01a$
         let vendname$=apm01a.vendor_name$(1,vendnamelen)
     endif
 
@@ -363,6 +363,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
