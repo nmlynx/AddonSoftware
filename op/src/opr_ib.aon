@@ -41,9 +41,9 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01")
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Open printer
 
@@ -240,7 +240,7 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope01a_key.CUST
                         ope11a_key$=key(ope11_dev,end=*break)
                         if ope11a_key.FIRM_ID$+ope11a_key.AR_TYPE$+ope11a_key.CUSTOMER_ID$+ope11a_key.ORDER_NO$<>ope01a_key.FIRM_ID$+ope01a_key.AR_TYPE$+ope01a_key.CUSTOMER_ID$+ope01a_key.ORDER_NO$ break
                         read record (ope11_dev) ope11a$
-                        find record (opm02_dev,key=firm_id$+ope11a.MAN_PRICE$,dom=*continue) opm02a$
+                        find record (opm02a_dev,key=firm_id$+ope11a.MAN_PRICE$,dom=*continue) opm02a$
                         if s4$="N" and opm02a.LINE_TYPE$<>"N" continue
                         gosub pos_for_nonstock
                         if s4$="N" and pof$<>"Y" continue
@@ -248,9 +248,9 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ope01a_key.CUST
                         desc$=ORDER_MEMO$
                         if pos(opm02a.LINE_TYPE$="SP")<>0 then
 rem                     dim d[9],d1$(i[3]+i[4]+i[5])
-                                find record (ivm01_dev,key=firm_id$+ope11a.ITEM_ID$,dom=Print_Price) ivm01a$
+                                find record (ivm01a_dev,key=firm_id$+ope11a.ITEM_ID$,dom=Print_Price) ivm01a$
                                 if opm02a.DROPSHIP$<>"Y" and p3$(28,1)<>"Y" then
-                                      find record (ivm02_dev,key=firm_id$+ope11a.WAREHOUSE_ID$,dom=*next) ivm02a$
+                                      find record (ivm02a_dev,key=firm_id$+ope11a.WAREHOUSE_ID$,dom=*next) ivm02a$
                                          ope11a.UNIT_COST=ivm02a.UNIT_COST
                                 endif
 
@@ -336,7 +336,7 @@ rem --- Product Totals
                     x0=int(i/3)
 rem                 dim x0$(32)
                     ivm10a.CODE_DESC$="Unknown Product Type"
-                    find record (ivm10_dev,key=firm_id$+"A"+t9$(i,3),dom=*next) ivm10a$
+                    find record (ivm10a_dev,key=firm_id$+"A"+t9$(i,3),dom=*next) ivm10a$
                rem   // l4241:
                     if t9[x0,0]=0 and t9[x0,1]=0 and t9[x0,2]=0 continue
                     if l+1>l9 gosub report_heading; gosub prod_subtotals
@@ -475,8 +475,8 @@ get_cust: rem --- Find Customer
 rem dim (30)
 rem dim c[6]
     let arm01a.CUSTOMER_NAME$(1)="Not On File"
-    find record (arm01_dev,key=firm_id$+ope01a_key.CUSTOMER_ID$,dom=*next) arm01a$
-    find record (arm02_dev,key=firm_id$+ope01a_key.CUSTOMER_ID$+"  ",dom=*next) arm02a$
+    find record (arm01a_dev,key=firm_id$+ope01a_key.CUSTOMER_ID$,dom=*next) arm01a$
+    find record (arm02a_dev,key=firm_id$+ope01a_key.CUSTOMER_ID$+"  ",dom=*next) arm02a$
     return
 
 pos_for_nonstock: rem --- P/Os for non-stock items
@@ -493,7 +493,7 @@ get_terms_code: rem --- Terms Code
 
 rem dim w$(30)
     let arm10a_key.FIRM_ID$="* Not On File *"
-    find record (arm10_dev,key=firm_id$+"A"+ope01a.DIST_CODE$,dom=*next) arm10a$
+    find record (arm10a_dev,key=firm_id$+"A"+ope01a.DIST_CODE$,dom=*next) arm10a$
     let w$=arm10a.CODE_DESC$
     return
 
@@ -618,7 +618,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
