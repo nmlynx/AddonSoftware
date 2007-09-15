@@ -34,9 +34,9 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01")
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Open/Lock Files
 
@@ -126,13 +126,13 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",ope61a_key.WAREHOUSE_ID
 
             ope01a_key.FIRM_ID$=ope61a_key.FIRM_ID$+ope61a_key.AR_TYPE$+ope61a_key.CUSTOMER_ID$+ope61a_key.ORDER_NO$+"000"
             w0$=ope01a_key.FIRM_ID$+ope01a_key.AR_TYPE$+ope01a_key.CUSTOMER_ID$+ope01a_key.ORDER_NO$+ope61a_key.LINE_NO$
-            find record (ope01_dev,key=ope01a_key.FIRM_ID$+ope01a_key.AR_TYPE$+ope01a_key.CUSTOMER_ID$+ope01a_key.ORDER_NO$+ope01a_key.SEQUENCE_000$,dom=*continue) ope01a$
+            find record (ope01a_dev,key=ope01a_key.FIRM_ID$+ope01a_key.AR_TYPE$+ope01a_key.CUSTOMER_ID$+ope01a_key.ORDER_NO$+ope01a_key.SEQUENCE_000$,dom=*continue) ope01a$
             if ope01a.ORDINV_FLAG$="V" continue
             if ope01a.ORDINV_FLAG$="I" continue
 
         rem --- Order line item
 
-            find record (ope11_dev,key=ope11a_key.FIRM_ID$+ope11a_key.AR_TYPE$+ope11a_key.CUSTOMER_ID$+ope11a_key.ORDER_NO$+ope11a_key.LINE_NO$,dom=*continue) ope11a$
+            find record (ope11a_dev,key=ope11a_key.FIRM_ID$+ope11a_key.AR_TYPE$+ope11a_key.CUSTOMER_ID$+ope11a_key.ORDER_NO$+ope11a_key.LINE_NO$,dom=*continue) ope11a$
             gosub test_code
             if ignoreit$="Y" continue
             amount=ope11a.UNIT_PRICE*ope11a.QTY_ORDERED
@@ -277,7 +277,7 @@ rem   dim x$(h0)
     l0=0
     l=l9+1
     subtotal=0
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     h5$="Warehouse: "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2)
     x$(1)=h4$
     x$(fncenter(h3$,h0))=h3$
@@ -329,14 +329,14 @@ Record_Find1:
 rem dim d1$(i[3]+i[4]+i[5]),d2$(48),d[8],c[16],t[1]
     let t1$=ope61a_key.ITEM_ID$,ivm01a_key.FIRM_ID$=ope61a_key.FIRM_ID$+t1$,ivm01a.ITEM_DESC$=nf$
     let ivm02a_key$=ope61a_key.FIRM_ID$+ope61a_key.WAREHOUSE_ID$+ope61a_key.ITEM_ID$,item$=t1$,l1=0,l=l+2
-    find record (ivm01_dev,key=ivm01a_key.FIRM_ID$+ivm01a_key.ITEM_ID$,dom=*next) ivm01a$
-    find record (ivm02_dev,key=ivm02a_key$,dom=*next) ivm02a$
+    find record (ivm01a_dev,key=ivm01a_key.FIRM_ID$+ivm01a_key.ITEM_ID$,dom=*next) ivm01a$
+    find record (ivm02a_dev,key=ivm02a_key$,dom=*next) ivm02a$
     return
 
 test_code: rem --- Test line code to determine whether to print
 
     let ignoreit$="N",nonstock$="N"
-    find record (opm02_dev,key=firm_id$+ope11a.LINE_CODE$,dom=*next) opm02a$
+    find record (opm02a_dev,key=firm_id$+ope11a.LINE_CODE$,dom=*next) opm02a$
     if opm02a.LINE_TYPE$="M" or opm02a.LINE_TYPE$="O" ignoreit$="Y"
     if opm02a. LINE_TYPE$="N" nonstock$="Y"
     return
@@ -462,7 +462,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
