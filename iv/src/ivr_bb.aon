@@ -92,7 +92,7 @@ rem --- By Warehouse: Valid Warehouse/Product/Item?
             endif
             if enditem$<>"" then 
                 if item$>enditem$ then
-                    read (ivm03_dev,key=key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$ +
 :                   ivm03a_key.warehouse_id$+ivm03a_key.prod_type$+$FF$,dom=*Continue)
                     Continue
                 endif
@@ -109,7 +109,7 @@ rem --- Level breaks?
         read (ivm03_dev)
         dim item$[2],whse$[2],w[20]
         ivm01a_key$=firm_id$+item$
-        find record (ivm01_dev,key=ivm01a_key$,dom=*Continue) ivm01a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*Continue) ivm01a$
         if type$<>"" then
             if ivm01a.Item_type$<>type$ then
                 Continue
@@ -224,7 +224,7 @@ Whse: rem --- Warehouse Break
     ivm10c.short_name$="(Not on File)"
     l=l9+1
     warehouse=0
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
     headings$[3]=h1$ 
     headings$[3](fncenter(x$,width),len(x$))=x$
@@ -237,7 +237,7 @@ Product: rem --- Product break
     gosub PrintTotalLine
     if done return
     let t1$=product$,ivm10a.code_desc$="(Not on File)",product=0
-    find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product Type "+t1$+" "+ivm10a.code_desc$
     return
 
@@ -393,7 +393,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
