@@ -61,7 +61,7 @@ rem --- Store source item information
 rem --- Retrieve alternate/substitute item
 
     ivm01a.item_Id$=ivm01a.alt_sup_item$
-    find record (ivm01_dev2,key=ivm01a.firm_id$+ivm01a.item_id$,dom=ivm01_loop ) ivm01a$
+    find record (ivm01a_dev2,key=ivm01a.firm_id$+ivm01a.item_id$,dom=ivm01_loop ) ivm01a$
 
 rem --- Format detail line
 
@@ -254,7 +254,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
