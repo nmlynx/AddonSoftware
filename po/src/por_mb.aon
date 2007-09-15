@@ -307,7 +307,7 @@ newvendor: rem --- New Vendor
     vendor$=poe02a.vendor_id$
     printvtot$="Y"
     a01_key$=firm_id$+vendor$
-    find record (apm01_dev,key=a01_key$,dom=brnch1) apm01a$
+    find record (apm01a_dev,key=a01_key$,dom=brnch1) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch1:
@@ -325,7 +325,7 @@ newpo: rem --- New PO
     apm10c.prox_or_days$="D"
     apm10c.due_days=0
     a10_key$=firm_id$+"C"+poe02a.terms_code$
-    find record (apm10_dev,key=a10_key$,dom=brnch2) apm10c$
+    find record (apm10c_dev,key=a10_key$,dom=brnch2) apm10c$
     termsdesc$=apm10c.item_desc$
 
 brnch2:
@@ -362,7 +362,7 @@ getlinetype: rem --- Get Line Type
 
     linetype$="N"
     p02_key$=poe12a.firm_id$+poe12a.po_line_code$
-    find record (pom02_dev,key=p02_key$,dom=brnch3) pom02a$
+    find record (pom02a_dev,key=p02_key$,dom=brnch3) pom02a$
     let linetype$=pom02a.line_type$
 
 brnch3:
@@ -466,6 +466,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
