@@ -25,9 +25,9 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-                files=10,begfile=1,endfile=files
+                files=12,begfile=1,endfile=files
                 dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-                files$[1]="ads-01"
+                rem files$[1]="ads-01"
                 files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
                 files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
                 files$[4]="arm-10",ids$[4]="ARC_TERMCODE"
@@ -37,10 +37,13 @@ rem --- Open/Lock files
                 files$[8]="opt-01",ids$[8]="OPT_ORDHDR"
                 files$[9]="opt-11",ids$[9]="OPT_ORDDET"
                 files$[10]="opt-21",ids$[10]="OPT_INVLSDET"
+                files$[11]="ARS_PARAMS",ids$[11]=files$[11]
+                files$[12]="IVS_PARAMS",ids$[12]=files$[12]
+
                 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
                 if status goto std_exit
-                ads01_dev=channels[1]
+                rem ads01_dev=channels[1]
                 arm01_dev=channels[2]
                 arm02_dev=channels[3]
                 arm10_dev=channels[4]
@@ -50,25 +53,17 @@ rem --- Open/Lock files
                 opt01_dev=channels[8]
                 opt11_dev=channels[9]
                 opt21_dev=channels[10]
+                ars01a_dev=channels[11]
+                ivs01a_dev=channels[12]
 
 rem --- Dimension string templates
 
                 dim arm01a$:templates$[2],arm02a$:templates$[3],arm10a$:templates$[4],
 :               ivm01a$:templates$[5],ivm10a$:templates$[6],opm02a$:templates$[7],
-:               opt01a$:templates$[8],opt11a$:templates$[9],opt21a$:templates$[10]
+:               opt01a$:templates$[8],opt11a$:templates$[9],opt21a$:templates$[10],
+:               ars01a$:templates$[11],ivs01a$:templates$[12]
 
-rem --- Retrieve miscellaneous templates
 
-                files=2,begfile=1,endfile=files
-                dim ids$[files],templates$[files]
-                ids$[1]="ars-01A:ARS_PARAMS"
-                ids$[2]="ivs-01A:IVS_PARAMS"
-                call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-                if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-                dim ars01a$:templates$[1],ivs01a$:templates$[2]
 
 rem --- Assign form input values to local variables
 
@@ -83,9 +78,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
                 ars01a_key$=firm_id$+"AR00"
-                find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+                find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
                 ivs01a_key$=firm_id$+"IV00"
-                find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+                find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 
 
@@ -95,8 +90,8 @@ rem --- Parameters
                 n2$="AR"
                 n4$=sysinfo.task_desc$
                 n9$=firm_id$
-                find record (ads01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
-                find record (ads01_dev,key=n9$+"IV00",dom=std_missing_params) ivs01a$
+                find record (ars01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
+                find record (ivs01a_dev,key=n9$+"IV00",dom=std_missing_params) ivs01a$
                 dim p[2],i[4]
                 for x=0 to 3
                     i[x]=num(ivs01a$(x*2+1,2))
