@@ -79,9 +79,9 @@ rem --- Process Info
 rem --- Additional Reads
 
         rem dim b1$(30),b[20]
-        find record (ivm02_dev,key=ivt05a_key$.firm_id$+ivt05a_key$.warehouse_id$+ivt05a_key$.item_id$,dom=Remove_Record) ivm02a$
+        find record (ivm02a_dev,key=ivt05a_key$.firm_id$+ivt05a_key$.warehouse_id$+ivt05a_key$.item_id$,dom=Remove_Record) ivm02a$
         if ivm02a.qty_on_hand<=0 then
-            find record (ivm01_dev,key=firm_id$+ivto5a.item_id$,dom=Remove_Record) ivm01a$
+            find record (ivm01a_dev,key=firm_id$+ivto5a.item_id$,dom=Remove_Record) ivm01a$
             desc$=fnzipcode$(ivm01a.item_desc$,p[3],p[4],p[5])
             goto Vendor_Info
         endif
@@ -97,7 +97,7 @@ Vendor_Info: rem --- Get vendor info
 Vendor_Info_Record:
             if x+p9>132-10-m2-(4+p[0])-22-(9+len(apmsk$)) if x>20 x=x-5; goto Vendor_Info_Record else p9=p9-1; goto Vendor_Info_Record
             dim vndnam$(x)
-            find record (apm01_dev,key=firm_id$+ivm02a.vendor_id$,dom=*next) apm01a$
+            find record (apm01a_dev,key=firm_id$+ivm02a.vendor_id$,dom=*next) apm01a$
         endif
 Flow_Vendor:
         if l+1>l9 gosub SubHeading
@@ -143,7 +143,7 @@ WhseBreak: rem --- Warehouse Break
     rem dim h3$(30)
     t0$=ivt05a_key.warehouse_id$
     l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     ivm10c_h3$="Warehouse Code: "+t0$+" "+ivm10c.whse_name$
     ivm10c_h3$=cvs(h3$,2)
     headings$[2]=ivm10c_h3$
@@ -154,7 +154,7 @@ SubTotal: rem --- Sort Sub Total
     if t9$<>"" return
     dim head$(30)
     t1$=ivm03a_key.item_id$
-    find record (ivm10_dev,key=firm_id$+sub$+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+sub$+t1$,dom=*next) ivm10a$
     head$=subhead$+" "+t1$+" "+ivm03a_key.item_id$
     head$=cvs(head$,2)
     gosub SubHeading
@@ -281,7 +281,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
