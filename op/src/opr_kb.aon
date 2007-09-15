@@ -131,9 +131,9 @@ Detail:
                     w0=opt11a.UNIT_COST
                     desc$=opt11a.ORDER_MEMO$
                     if opt11a.MAN_PRICE$<>ivm10a_key$(4,1) dim x0$(32)
-                    find record (opm02_dev,key=firm_id$+opt11a.MAN_PRICE$,dom=*next) opm02a$
+                    find record (opm02a_dev,key=firm_id$+opt11a.MAN_PRICE$,dom=*next) opm02a$
                     if pos(opm02a.LINE_TYPE$="SP")<>0 then
-                        dim d2$(19),d[10]; find record (ivm01_dev,key=firm_id$+opt11a.ITEM_ID,dom=Assign_Value) ivm01a$
+                        dim d2$(19),d[10]; find record (ivm01a_dev,key=firm_id$+opt11a.ITEM_ID,dom=Assign_Value) ivm01a$
                         if pos(" "<>desc$)=0 desc$=d1$
                         opt11a.DISC_PERCENT=0
                         opt11a.DISC_PERCENT=num(opt11a.RESERVED_STR$,err=*next)
@@ -225,7 +225,7 @@ rem --- Totals By Product
             for x=1 to len(t9$) step 3
                 x0=int(x/3)
                 dim x0$(30); let ivm10a.CODE_DESC$="***Not On File***"
-                find record (ivm10_dev,key=firm_id$+"A"+t9$(x,3),dom=*next) ivm10a$
+                find record (ivm10a_dev,key=firm_id$+"A"+t9$(x,3),dom=*next) ivm10a$
 
                 if !(t9[x0,0]=0 and t9[x0,1]=0)
                     print (printer_dev)t9$(x,3)," ",ivm10a.CODE_DESC$,@(30),t9[x0,3]:m2$,t9[x0,0]:m1$,t9[x0,1]:m1$,t9[x0,0]-t9[x0,1]:m1$,fnd(t9[x0,0]-t9[x0,1],t9[x0,0]):m8$
@@ -484,8 +484,8 @@ rem --- Find Customer
 Find_Customer: 
  rem dim b1$(30),c[6]
     arm01a.CUSTOMER_NAME$="Not On File"
-    find record (arm01_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$,dom=*next) arm01a$
-    find record (arm02_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$+"  ",dom=*next) arm02a$
+    find record (arm01a_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$,dom=*next) arm01a$
+    find record (arm02a_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$+"  ",dom=*next) arm02a$
 return
 
 rem --- Too Many Pcodes For T9[] Array
@@ -518,14 +518,14 @@ rem --- ESCAPE LET M=200
     while more
         opt11a_key$=key(opt11_dev,end=Invoice_End)
         if opt11a_key.FIRM_ID$+opt11a_key.AR_TYPE$+opt11a_key.CUSTOMER_ID$+opt11a_key.ORDER_NO$<>opt01a_key$ goto Invoice_End
-        find record (opt11_dev,key=opt11a_key$) opt11a$
+        find record (opt11a_dev,key=opt11a_key$) opt11a$
         l2=l2+1
         l0$[l2,0]=opt11a_key.FIRM_ID$+opt11a_key.AR_TYPE$+opt11a_key.CUSTOMER_ID$+opt11a_key.ORDER_NO$+opt11a_key.LINE_NO$
         l0$[l2,1]=cvs(opt11a.ORDER_MEMO$,2)
         for i=0 to 7; let l0[l2,i]=w[i]; next i
         if opt11a.LINE_CODE$<>opm02a_key.LINE_CODE$ then
             dim y0$(32)
-            find record (opm02_dev,key=firm_id$+opt11a.LINE_CODE$,dom=*next) opm02a$
+            find record (opm02a_dev,key=firm_id$+opt11a.LINE_CODE$,dom=*next) opm02a$
         endif
             if pos(opm02a.LINE_TYPE$="SNPO")=0 continue
             if s5$="" then l$="PRINT"
@@ -568,7 +568,7 @@ rem --- Terms Code
 Terms_Code:  
 rem  -dim w$(30)
     let arm10a_key.Firm_ID$="* Not On File *"
-    find record (arm10_dev,key=firm_id$+"A"+opt01a.TERMS_CODE$,dom=*next) arm10a$
+    find record (arm10a_dev,key=firm_id$+"A"+opt01a.TERMS_CODE$,dom=*next) arm10a$
     let w$=arm10a.CODE_DESC$
 return
 
@@ -693,7 +693,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
