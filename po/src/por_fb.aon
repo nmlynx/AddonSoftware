@@ -113,7 +113,7 @@ rem --- Init detail ptr
                     csugg=0
                     dim c0$(36),c1$(20),c[16]
                     p16_key$=poe16a_key.firm_id$+poe16a_key.buyer_code$+poe16a_key.vendor_id$+poe16a_key.product_type$+poe16a_key.item_id$
-                    find record (poe26_dev,key=p16_key$+"  ",dom=*continue) poe26a$
+                    find record (poe26a_dev,key=p16_key$+"  ",dom=*continue) poe26a$
                     if poe26a.sugg_ord_qty=0 continue
                     csugg=poe26a.sugg_ord_qty
                     prevminusannuse=minusannuse
@@ -176,7 +176,7 @@ rem --- Check suggested qty of total for stocked by 'I'
                 prevminusavguse=0
                 prevminusavail=0
                 prevminusonord=0
-                find record (poe26_dev,key=p06_key$+prodtype$+itemnum$+"  ",dom=testinclude) poe26a$
+                find record (poe26a_dev,key=p06_key$+prodtype$+itemnum$+"  ",dom=testinclude) poe26a$
                 sugg=poe26a.sugg_ord_qty
 
 testinclude:
@@ -398,7 +398,7 @@ newprodtype: rem --- New Product Type
     dim prodtots[2]
     ivm10a.code_desc$="**Not On File**"
     iv10_key$=firm_id$+"A"+prodtype$
-    find record (ivm10_dev,key=iv10_key$,dom=brnch3) ivm10a$
+    find record (ivm10a_dev,key=iv10_key$,dom=brnch3) ivm10a$
     proddesc$=ivm10a.code_desc$
 
 brnch3:
@@ -420,7 +420,7 @@ newitem: rem --- New Item
 rem dim itemdesc$(desclen)
 rem ivm01a.item_desc$="** Not on File **"
     iv01_key$=firm_id$+itemnum$
-    find record (ivm01_dev,key=iv01_key$,dom=*next) ivm01a$
+    find record (ivm01a_dev,key=iv01_key$,dom=*next) ivm01a$
     ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
 
     if suggonly$<>"Y" or sugg<>0 or csugg<>0
@@ -478,7 +478,7 @@ newbuyer: rem --- New Buyer
 
     dim buyertots[2],buyerhead$(30),r0$(30)
     iv10_key$=firm_id$+"F"+buyer$
-    find record (ivm10_dev,key=iv10_key$,dom=*next) ivm10f$
+    find record (ivm10f_dev,key=iv10_key$,dom=*next) ivm10f$
     buyerhead$="Buyer Code: "+buyer$+" "+r0$(7,20)
     buyerhead$=buyerhead$(1,pos(" "<>buyerhead$,-1))
     gosub report_heading
@@ -669,7 +669,7 @@ totalline: rem --- Print total line
     dim textension$(0)
 
     p26a_key$=firm_id$+prevbuyer$+prevvend$+prevprodtype$+previtem$+" "
-    find record (poe26_dev,key=p26a_key$,dom=nototal) poe26a$
+    find record (poe26a_dev,key=p26a_key$,dom=nototal) poe26a$
     let tstocklevel$=poe26a.stock_level$,adjustcodes$=poe26a.adjust_code$,textension$=str(poe26a.extended_amt:m1$)
     let tavail$=str(poe26a.qty_avail-prevminusavail:m2$),tweight$=str(poe26a.weight:m6$)
     let tonorder$=str(poe26a.qty_on_order-prevminusonord:m2$),tsugg$=str(poe26a.sugg_ord_qty:m2$)
@@ -812,6 +812,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
