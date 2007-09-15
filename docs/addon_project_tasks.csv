@@ -39,36 +39,36 @@ Application Parameters,APS_PARAMS,T,APS_PARAMS,,APP.PA,JL,P,,,,,
 Report Parameters,APS_REPORT,T,APS_REPORT,,APP.PA,JL,P,,,,,
 Accounts Receivable,ARMENU,M,,,,,,,,,,
 Invoice Entry,ARE_INVHDR,T,ARE_INVHDR,,ARE.FA,CH,Y,,,,,
-Invoice Printing,ARR_INVOICES,T,ARR_INVOICES,,ARR.UA,JL,P,,,,,
-Invoice Register,ARR_INVOICEENTRY,A,,arr_invoiceentry.aon,ARR.VA,JL,P,,,,,
-Cash Receipts Entry,ARE_CASHHDR,T,ARE_CASHHDR,,ARE.AA,CH,Y,,,,,
-Cash Receipts Register,ARR_CASHRECEIPTS,T,ARR_CASHRECEIPTS,,ARR.AA,JL,P,,,,,
-Aging Report,ARR_AGINGREPORT,T,ARR_AGINGREPORT,,ARR.4A,SV,P,,,,,
-Aging Analysis Report,ARR_ANALYSIS,T,ARR_ANALYSIS,,ARR.5A,SV,Y,,,,,
-Age Transactions,ARU_AGINGUPDATE,T,ARU_AGINGUPDATE,,ARU.EA,JL?,P,Y,,,,
+Invoice Printing,ARR_INVOICES,T,ARR_INVOICES,,ARR.UA,JL,Y,,,,,
+Invoice Register,ARR_INVOICEENTRY,A,,arr_invoiceentry.aon,ARR.VA,JL,Y,,,,,
+Cash Receipts Entry,ARE_CASHHDR,T,ARE_CASHHDR,,ARE.AA,JB,P,,,,,
+Cash Receipts Register,ARR_CASHRECEIPTS,T,ARR_CASHRECEIPTS,,ARR.AA,JB,P,,,,,
+Aging Report,ARR_AGINGREPORT,T,ARR_AGINGREPORT,,ARR.4A,JB,P,,,,,
+Aging Analysis Report,ARR_ANALYSIS,T,ARR_ANALYSIS,,ARR.5A,JB,P,,,,,
+Age Transactions,ARU_AGINGUPDATE,T,ARU_AGINGUPDATE,,ARU.EA,JB,P,Y,,,,
 Credit Managers Review & Release,,,,,,,
 Reports,ARMENU_REPORTS,G,,,,,
-Customer Cross Reference Listing,ARR_CUSTOMERXREF,A,,arr_customerxref.aon,ARR.IA,JL,Y
-Customer Label Printing,ARR_LABELS,T,ARR_LABELS,,ARR.EA,JL,Y
-Customer Name Listing,ARR_NAMELIST,T,ARR_NAMELIST,,ARR.RA,JL,Y
-Customer Detail Listing,ARR_DETAIL,T,ARR_DETAIL,,ARM.WA,JL,Y
-Customer Comments Listing,ARR_COMMENTS,T,ARR_COMMENTS,,ARR.RC,JL,Y
-Customer Name & Address Listing,ARR_NAMEADDRESS,T,ARR_NAMEADDRESS,,ARR.DA,SV,Y
-Customer Ledger Cards,ARR_LEDGERS,T,ARR_LEDGERS,,ARR.9A,SV,Y
+Customer Cross Reference Listing,ARR_CUSTOMERXREF,A,,arr_customerxref.aon,ARR.IA,JB,P
+Customer Label Printing,ARR_LABELS,T,ARR_LABELS,,ARR.EA,JB,P
+Customer Name Listing,ARR_NAMELIST,T,ARR_NAMELIST,,ARR.RA,JB,P
+Customer Detail Listing,ARR_DETAIL,T,ARR_DETAIL,,ARM.WA,JB,P
+Customer Comments Listing,ARR_COMMENTS,T,ARR_COMMENTS,,ARR.RC,JB,P
+Customer Name & Address Listing,ARR_NAMEADDRESS,T,ARR_NAMEADDRESS,,ARR.DA,JB,P
+Customer Ledger Cards,ARR_LEDGERS,T,ARR_LEDGERS,,ARR.9A,JB,P
 Period End Processing,ARMENU_PEND,G,,,,,
 Aging Report,ARR_AGINGREPORTPE,A,ARR_AGINGREPORT,arr_agingreport.aon,ARR.4A,SV,P
 Generate Finance Charges,ARU_FINANCECHARG,T,ARU_FINANCECHARG,,ARU.HA,JL,P
-Finance Charge Entry,ARE_FINCHG,T,ARE_FINCHG,,ARE.BA,CH,Y
+Finance Charge Entry,ARE_FINCHG,T,ARE_FINCHG,,ARE.BA,CH,P
 Purge Finance Charge Entries,ARU_FINANCEPURGE,A,,aru_financepurge.aon,,JL,P
-Finance Charge Register,ARR_OTHERENTRY,A,,arr_otherentry.aon,ARR.JA,JL,Y
+Finance Charge Register,ARR_OTHERENTRY,A,,arr_otherentry.aon,ARR.JA,JL,P
 Customer Statements,ARR_STATEMENTS,T,ARR_STATEMENTS,,ARR.CA,JL,P
-Monthly Cash Receipts Journal,ARR_CASHJOURNAL,T,ARR_CASHJOURNAL,,ARR.GA,JL,Y,,,,,
+Monthly Cash Receipts Journal,ARR_CASHJOURNAL,T,ARR_CASHJOURNAL,,ARR.GA,JL,P,,,,,
 Monthly Cash Receipts Journal Purge,ARU_CASHJOURNAL,T,ARU_CASHJOURNAL,,ARU.XA,JL,P,,Y,,,
-Customer Ranking Report,ARR_RANKING,T,ARR_RANKING,,ARR.KA,SV,Y,,,,,
+Customer Ranking Report,ARR_RANKING,T,ARR_RANKING,,ARR.KA,SV,P,,,,,
 Zero Balance Invoice Report & Purge,ARR_ZEROBALANCE,T,ARR_ZEROBALANCE,,ARR.8A,JL,P,,Y,,,
 Period End Update,ARU_PERIODEND,A,ARU_PERIODEND,aru_periodend.aon,ARU.BA,JL,P,,,,,
 Maintenance,ARMENU_MAINT,G,,,,,,,,,,
-Customers,ARM_CUSTMAST,T,ARM_CUSTMAST,,ARM.MA,JB,P,,,,,
+Customers,ARM_CUSTMAST,T,ARM_CUSTMAST,,ARM.MA,JB,Y,,,,,
 Customer Types,ARC_CUSTTYPE,T,ARC_CUSTTYPE,,ARM.LA,SV,Y,,,,,JCM
 Salespersons,ARC_SALECODE,T,ARC_SALECODE,,ARM.FA,SV,Y,,,,,JCM
 Terms Codes,ARC_TERMCODE,T,ARC_TERMCODE,,ARM.AA,SV,Y,,,,,JCM
@@ -82,7 +82,7 @@ Credit Management Parameters,ARS_CREDIT,T,ARS_CREDIT,,ARP.AA,JB,Y,,
 Report Parameters,ARS_REPORT,T,ARS_REPORT,,ARP.AA,CH,Y,,
 New Customer Defaults,ARS_CUSTDFLT,T,ARS_CUSTDFLT,,ARP.AA,CH,Y,,
 Utilities,ARMENU_UTILITIES,G,,,,,,,
-Conversion Invoice Entry,ARE_CNVINV,T,ARE_CNVINV,,ARE.BA,CH,Y,,
+Conversion Invoice Entry,ARE_CNVINV,T,ARE_CNVINV,,ARE.BA,CH,P,,
 Conversion Invoice Register,ARR_CONVREGISTER,A,ARR_CONVREGISTER,arr_otherentry.aon,ARR.JA,JL,P,,Y
 Invoice Date Modification Entry,ARE_DATECHANGE,T,ARE_DATECHANGE,,ARE.EA,SV,P,,
 Invoice Date Modification Register,ARR_DATEREGISTER,A,ARR_DATEREGISTER,arr_dateregister.aon,ARR.PA,JL,P,,Y
