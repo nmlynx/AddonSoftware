@@ -140,7 +140,7 @@ rem --- Read through req headers
 
             if k$(1,2)<>firm_id$ continue
             read (pot44_dev); rem "Move ptr
-            find record (pot04_dev,key=k$(1,8)+k$(15,14),dom=nextheader) pot04a$
+            find record (pot04a_dev,key=k$(1,8)+k$(15,14),dom=nextheader) pot04a$
 
 rem --- Test Ranges
 
@@ -311,7 +311,7 @@ newvendor: rem --- New Vendor
     vendoval=0
     vendrval=0
     vendratio=0
-    find record (apm01_dev,key=firm_id$+vendor$,dom=brnch1) apm01a$
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=brnch1) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch1:
@@ -336,7 +336,7 @@ vendtotals: rem --- Print Vendor total
 getlinetype: rem --- Get Line Type
 
     linetype$="N"
-    find record (pom02_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch2) pom02a$
+    find record (pom02a_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch2) pom02a$
     linetype$=pom02a.line_type$
 
 brnch2:
@@ -450,6 +450,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
