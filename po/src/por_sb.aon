@@ -141,7 +141,7 @@ rem --- Assign pot-14 data
 rem --- Get Item Desc
 
             ivm01a.item_desc$="Not On File"
-            find record (ivm01_dev,key=firm_id$+item$,dom=brnch1) ivm01a$
+            find record (ivm01a_dev,key=firm_id$+item$,dom=brnch1) ivm01a$
             ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
 brnch1: rem --- Test breaks
@@ -270,7 +270,7 @@ newvendor: rem --- New Vendor
 
     apm01a.vendor_name$="Not On File"
     prevvendor$=vendor$
-    find record (apm01_dev,key=firm_id$+prevvendor$,dom=brnch2) apm01a$
+    find record (apm01a_dev,key=firm_id$+prevvendor$,dom=brnch2) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch2:
@@ -351,7 +351,7 @@ rem --- Get rejection desc
         dim rejdesc$(30)
         rejdesc$(1)="Not On File"
         p03_key$=pot04a.firm_id$+pot04a.reject_code$
-        find record (pom03_dev,key=p03_key$,dom=*next) pom03a$
+        find record (pom03a_dev,key=p03_key$,dom=*next) pom03a$
         if l+1>l9 gosub report_heading
         print (printer_dev) @(o[4]),rejseq$, 
 :                           @(o[5]),rejcode$,
@@ -472,6 +472,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
