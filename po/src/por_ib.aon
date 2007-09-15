@@ -37,9 +37,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Init Data
 
@@ -297,7 +297,7 @@ rem --- Get Drop Ship flag & Line Type
     linetype$="N"
     dropship$="N"
     p02_key$=poe12a.firm_id$+poe12a.po_line_code$
-    find record (pom02_dev,key=p02_key$,dom=get_item_desc) pom02a$
+    find record (pom02a_dev,key=p02_key$,dom=get_item_desc) pom02a$
     linetype$=pom02a.line_type$
     dropship$=pom02a.dropship$
 
@@ -308,7 +308,7 @@ get_item_desc: rem --- Get Item Desc for S and N type lines
         dim itemdesc$(60),x1$(60)
         ivm01a.item_desc$="Not On File"
         i01_key$=firm_id$+poe12a.item_id$
-        find record (ivm01_dev,key=i01_key$,dom=get_ext) ivm01a$
+        find record (ivm01a_dev,key=i01_key$,dom=get_ext) ivm01a$
         ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
     endif
@@ -321,7 +321,7 @@ rem --- Get Vendor's Part #
 
     dim vpartnum$(20)
     i05_key$=poe12a.firm_id$+poe12a.vendor_id$+itemnum$
-    find record (ivm05_dev,key=i05_key$,dom=*next) ivm05a$
+    find record (ivm05a_dev,key=i05_key$,dom=*next) ivm05a$
 
 rem --- Format common part of print line
 
@@ -375,7 +375,7 @@ rem --- Print drop ship info if applicable
         custname$="Not On File"
         dropname$="Not On File"
         a01_key$=poe12a.firm_id$+poe12a.customer_id$
-        find record (arm01_dev,key=a01_key$,dom=brnch1) arm01a$
+        find record (arm01a_dev,key=a01_key$,dom=brnch1) arm01a$
         custname$=arm01a.cust_name$
         custaddr$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$
         call pgmdir$+"adc_address.aon",custaddr$,24,4,9,30
@@ -383,7 +383,7 @@ rem --- Print drop ship info if applicable
 brnch1:    
 
         a03_key$=poe12a.firm_id$+poe12a.customer_id$+poe12a.shipto_no$
-        find record (arm03_dev,key=a03_key$,dom=brnch2) arm03a$
+        find record (arm03a_dev,key=a03_key$,dom=brnch2) arm03a$
         dropname$=arm03a.name$
         dropaddr$=arm03a.addr_line_1$+arm03a.addr_line_2$+arm03a.addr_line_3$+arm03a.city$+arm03a.state_code$+arm03a.zip_code$
         call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
@@ -575,7 +575,7 @@ newvendor: rem --- New Vendor
     vendor$=poe02a.vendor_id$
     printvtot$="Y"
     a01_key$=firm_id$+vendor$
-    find record (apm01_dev,key=a01_key$,dom=brnch5) apm01a$
+    find record (apm01a_dev,key=a01_key$,dom=brnch5) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch5:
@@ -593,18 +593,18 @@ newpo: rem --- New PO
     paddrdesc$=""
     shpwhsdesc$="Not On File"
     a10_key$=firm_id$+"C"+poe02a.terms_code$
-    find record (apm10_dev,key=a10_key$,dom=brnch6) apm10c$
+    find record (apm10c_dev,key=a10_key$,dom=brnch6) apm10c$
     termsdesc$=apm10c.code_desc$
 
 brnch6:
 
-    find record (apm05_dev,key=firm_id$+vendor$+poe02a.purch_addr$,dom=brnch7) apm05a$
+    find record (apm05a_dev,key=firm_id$+vendor$+poe02a.purch_addr$,dom=brnch7) apm05a$
     paddrdesc$=apm05a.name(1,24)
 
 brnch7:
 
     i10_key$=firm_id$+"C"+poe02a.warehouse_id$
-    find record (ivm10_dev,key=i10_key$,dom=brnch8) ivm10c$
+    find record (ivm10c_dev,key=i10_key$,dom=brnch8) ivm10c$
     shpwhsdesc$=ivm10c.short_name$
 
 brnch8:
@@ -747,6 +747,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
