@@ -153,7 +153,7 @@ rem --- Retrieve item
         call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
         ivm01a_key$=firm_id$+item$
         read (ivm03_dev)
-        find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if type$<>"" then
             if ivm01a.Item_type$<>type$ then
                 continue
@@ -379,7 +379,7 @@ WhseBreak: rem --- Warehouse Break
     if done  break
     rem dim x0$(32),warehouse[1]
     let t0$=whse$,ivm10c.short_name$="(Not on File)",l=l9+1,l0=0
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2),headings$[headings-2]=h1$
     let headings$[headings-2](fncenter(x$,width),len(x$))=x$
     return
@@ -393,7 +393,7 @@ Prod_Break: rem --- Product break
     endif
     if done return
     let t1$=product$,ivm10a.code_desc$="(Not on File)",l1=0
-    find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product Type "+t1$+" "+ivm10a.code_desc$
     return
 
@@ -403,7 +403,7 @@ WhseTurns:
     dim item$[2],activity[12]
     let usage=0,cost=0,cost$="",total=0,balance=0,average=0,turns=0
     let ivm02a_key$=firm_id$+whse$+item$,item$[0]=firm_id$,item$[1]=whse$,item$[2]=ivm01a.item_number$
-    find record (ivm02_dev,key=ivm02a_key$,dom=Whse_Turns) ivm02a$
+    find record (ivm02a_dev,key=ivm02a_key$,dom=Whse_Turns) ivm02a$
     let cost=ivm02a.unti_cost,cost$=str(cost:m3$),action$="T"
     call pgmdir$+"ivc_wb.bbx",action$,files[all],item$[all],period$[all],activity[all],status
     let usage=(activity[3]+activity[4])-activity[8],balance=activity[0]/g[0]
@@ -568,7 +568,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
