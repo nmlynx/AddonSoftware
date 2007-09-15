@@ -75,17 +75,8 @@ rem --- Open/Lock files
 	ads01_dev=num(chans$[1])
 	gls01_dev=num(chans$[11])
 
-rem --- Retrieve miscellaneous templates
-
-rem 	files=2,begfile=1,endfile=files
-rem 	dim ids$[files],templates$[files]
-rem 	ids$[1]="ars-01A"
-rem 	ids$[2]="gls-01A"
-rem 	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-rem 	if status goto std_exit
-
-rem --- set up AONObj! as vector
-	AONObj!=SysGUI!.makeVector()
+rem --- set up UserObj! as vector
+	UserObj!=SysGUI!.makeVector()
 	
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.TOT_QTY","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.TOT_QTY","CTLI"))
@@ -95,8 +86,8 @@ rem --- set up AONObj! as vector
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.TOT_AMT","CTLI"))
 	tamt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 
-	AONObj!.addItem(tqty!)
-	AONObj!.addItem(tamt!)
+	UserObj!.addItem(tqty!)
+	UserObj!.addItem(tamt!)
 
 rem --- Dimension miscellaneous string templates
 
@@ -112,7 +103,7 @@ rem --- Additional File Opens
 	if status<>0 goto std_exit
 	user_tpl.glint$=gl$
 	user_tpl.glworkfile$=glw11$
-	rem --- gl$="Y";rem --- temp for testing.CAH
+escape;rem gl$
 	if gl$="Y"
 		files=21,begfile=20,endfile=21
 		dim files$[files],options$[files],chans$[files],templates$[files]

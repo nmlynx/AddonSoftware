@@ -41,10 +41,10 @@ disp_totals:
 
     rem --- get context and ID of total quantity/amount display controls, and redisplay w/ amts from calc_tots
     
-    tqty!=AONObj!.getItem(0)
+    tqty!=UserObj!.getItem(0)
     tqty!.setValue(num(user_tpl.totqty$))
 
-    tamt!=AONObj!.getItem(1)
+    tamt!=UserObj!.getItem(1)
     tamt!.setValue(num(user_tpl.totamt$))
 
     return

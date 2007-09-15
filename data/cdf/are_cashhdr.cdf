@@ -1,3 +1,12 @@
+[[ARE_CASHHDR.BSHO]]
+rem --- disable display fields
+
+	dim dctl$[3]
+
+ 	dctl$[1]="<<DISPLAY>>.DISP_CUST_BAL"
+	dctl$[2]="<<DISPLAY>>.DISP_BAL"
+	dctl$[3]="<<DISPLAY>>.DISP_APPLIED"
+	gosub disable_ctls
 [[ARE_CASHHDR.ACUS]]
 data_present$="N"
 gosub check_required_fields
@@ -67,7 +76,6 @@ rem				Form!.getControl(num(user_tpl.zbal_chkbox_id$)).setSelected(0)
 endif
 [[ARE_CASHHDR.ADEL]]
 gosub delete_cashdet_cashbal
-
 [[ARE_CASHHDR.ADIS]]
 gosub get_customer_balance
 wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
@@ -125,8 +133,8 @@ else
 endif
 
 user_tpl.gl_applied$=str(-gl_applied)
-AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
-AONObj!.setItem(num(user_tpl.existing_dtl$),existing_dtl$)
+UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+UserObj!.setItem(num(user_tpl.existing_dtl$),existing_dtl$)
 
 currdtl$=pymt_dist$
 gosub get_open_invoices
@@ -154,9 +162,9 @@ else
 	gosub disp_message							
 endif
 [[ARE_CASHHDR.AREC]]
-rem --- clear custom controls (grids) and AONObj! items
+rem --- clear custom controls (grids) and UserObj! items
 
-gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))                             
+gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))                             
 gridInvoice!.clearMainGrid()				
 gridInvoice!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)				
 gridInvoice!.setSelectedCell(0,0)
@@ -164,10 +172,10 @@ gridInvoice!.setSelectedCell(0,0)
 vectInvoice!=SysGUI!.makeVector()
 vectInvSel!=SysGUI!.makeVector()
 
-AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)				
-AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
-AONObj!.setItem(num(user_tpl.pymt_dist$),"")
-AONObj!.setItem(num(user_tpl.existing_dtl$),"")
+UserObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)				
+UserObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
+UserObj!.setItem(num(user_tpl.pymt_dist$),"")
+UserObj!.setItem(num(user_tpl.existing_dtl$),"")
 
 user_tpl.existing_chk$=""
 user_tpl.gl_applied$="0"
@@ -177,8 +185,8 @@ Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 
 callpoint!.setStatus("REFRESH")
 [[ARE_CASHHDR.ASIZ]]
-if AONObj!<>null()
-	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
+if UserObj!<>null()
+	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.setSize(Form!.getWidth()-(gridInvoice!.getX()*2),Form!.getHeight()-(gridInvoice!.getY()+40))
 	gridInvoice!.setFitToGrid(1)
 	gridInvoice!.setColumnWidth(0,25)
@@ -186,7 +194,7 @@ endif
 [[ARE_CASHHDR.AWIN]]
 rem --- Open/Lock files
 
-files=30,begfile=1,endfile=10
+files=30,begfile=1,endfile=11
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="ARE_CASHHDR";rem --- "are-01"
 files$[2]="ARE_CASHDET";rem --- "are-11"
@@ -197,7 +205,8 @@ files$[6]="ART_INVDET";rem --- "art-11"
 files$[7]="ARM_CUSTMAST";rem --- "arm-01"
 files$[8]="ARM_CUSTDET";rem --- "arm-02
 files$[9]="ARC_CASHCODE";rem --- "arm-10C"
-files$[10]="ARS_PARAMS";rem --- "ads-01"
+files$[10]="ARS_PARAMS";rem --- "ars-01"
+files$[11]="GLS_PARAMS";rem --- gls-01"
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
@@ -207,20 +216,12 @@ call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 if status$<>"" goto std_exit
-ads01_dev=num(chans$[10])
-
-rem --- Retrieve miscellaneous templates
-
-files=2,begfile=1,endfile=files
-dim ids$[files],templates$[files]
-ids$[1]="ars-01A"
-ids$[2]="gls-01A"
-call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-if status goto std_exit
+ars01_dev=num(chans$[10])
+gls01_dev=num(chans$[11])
 
 rem --- Dimension miscellaneous string templates
 
-dim ars01a$:templates$[1],gls01a$:templates$[2]
+dim ars01a$:templates$[10],gls01a$:templates$[11]
 user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
 user_tpl_str$=user_tpl_str$+"cash_flag:c(1),disc_flag:c(1),arglboth:c(1),amt_msk:c(15),existing_chk:c(1),"
 user_tpl_str$=user_tpl_str$+"OA_chkbox_id:c(5),zbal_chkbox_id:c(5),asel_chkbox_id:c(5),"
@@ -262,19 +263,19 @@ endif
 rem --- Retrieve parameter data - not keeping any of it here, just make sure params exist
 
 ars01a_key$=firm_id$+"AR00"
-find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 user_tpl.amt_msk$=ars01a.amount_mask$
 
 gls01a_key$=firm_id$+"GL00"
-find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 
 rem --- add custom controls, checkboxes and grids
-AONObj!=SysGUI!.makeVector()
+UserObj!=SysGUI!.makeVector()
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 
-OA_chkbox!=Form!.addCheckBox(nxt_ctlID,555,72,200,20,"Show On-Account and Credits?",$04$)
-zbal_chkbox!=Form!.addCheckBox(nxt_ctlID+1,555,92,200,20,"Show zero-balance invoices?",$$)
-asel_chkbox!=Form!.addCheckBox(nxt_ctlID+2,555,112,200,20,"Auto-select by Invoice?",$$)
+OA_chkbox!=Form!.addCheckBox(nxt_ctlID,555,52,200,20,"Show On-Account and Credits?",$04$)
+zbal_chkbox!=Form!.addCheckBox(nxt_ctlID+1,555,72,200,20,"Show zero-balance invoices?",$$)
+asel_chkbox!=Form!.addCheckBox(nxt_ctlID+2,555,92,200,20,"Auto-select by Invoice?",$$)
 
 gridInvoice!=Form!.addGrid(nxt_ctlID+3,5,160,700,210)
 
@@ -289,7 +290,7 @@ user_tpl.gridInvoice_id$=str(nxt_ctlID+3)
 user_tpl.GLind_id$=str(nxt_ctlID+4)
 user_tpl.GLstar_id$=str(nxt_ctlID+5)
 
-rem --- set user-friendly names for controls' positions in AONObj vector, num grid cols, data pos w/in vector, etc.				
+rem --- set user-friendly names for controls' positions in UserObj vector, num grid cols, data pos w/in vector, etc.				
 user_tpl.gridInvoice_cols$="12"				
 user_tpl.gridInvoice_rows$="10"				
 user_tpl.inv_grid$="0"				
@@ -305,12 +306,12 @@ user_tpl.existing_dtl$="4"
 
 gosub format_grids
 
-rem --- store grid, vectors, and existing/newly posted detail strings in AONObj!				
-AONObj!.addItem(gridInvoice!)				
-AONObj!.addItem(SysGUI!.makeVector());rem --- vector for open (and maybe closed) invoices				
-AONObj!.addItem(SysGUI!.makeVector());rem --- vector for open invoice grid's checkbox values
-AONObj!.addItem("");rem --- string for pymt_dist$, containing chk#/inv#/pd/disc, 10 char ea
-AONObj!.addItem("");rem --- string for existing_dtl$;same format as pymt_dist$,but corres to existing are-11's
+rem --- store grid, vectors, and existing/newly posted detail strings in UserObj!				
+UserObj!.addItem(gridInvoice!)				
+UserObj!.addItem(SysGUI!.makeVector());rem --- vector for open (and maybe closed) invoices				
+UserObj!.addItem(SysGUI!.makeVector());rem --- vector for open invoice grid's checkbox values
+UserObj!.addItem("");rem --- string for pymt_dist$, containing chk#/inv#/pd/disc, 10 char ea
+UserObj!.addItem("");rem --- string for existing_dtl$;same format as pymt_dist$,but corres to existing are-11's
 
 rem --- set callbacks - processed in ACUS callpoint
 gridInvoice!.setCallback(gridInvoice!.ON_GRID_EDIT_START,"custom_event")
@@ -355,7 +356,6 @@ endif
 [[ARE_CASHHDR.CASH_REC_CD.AVAL]]
 wk_cash_cd$=callpoint!.getUserInput()
 gosub get_cash_rec_cd
-
 [[ARE_CASHHDR.CUSTOMER_ID.AVAL]]
 gosub get_customer_balance
 callpoint!.setStatus("REFRESH")
@@ -368,7 +368,7 @@ if callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT")=callpoint!.getUserInp
 else
 	if num(callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT"))<>0 and 
 :									callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT")<>callpoint!.getUserInput()
-		pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
+		pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 		old_pay=num(callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT"))
 		new_pay=num(callpoint!.getUserInput())
 		pay_id$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
@@ -487,7 +487,7 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 	are_cashgl_dev=fnget_dev("ARE_CASHGL")
 
 
-	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
+	pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 	if cvs(pymt_dist$,3)<>""
 
 	for updt_loop=1 to len(pymt_dist$) step 40
@@ -558,7 +558,7 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 	next updt_loop
 	endif
 	callpoint!.setStatus("NEW")
-	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
+	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.clearMainGrid()
 
 return
@@ -573,7 +573,7 @@ validate_before_writing:
 		validate_passed$=msg_opt$
 	endif
 
-	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
+	vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
 	cols=num(user_tpl.gridInvoice_cols$)
 	if vectInvoice!.size()
 		neg_bal=0
@@ -603,7 +603,7 @@ apply_on_acct:
 	wk$(21)=str(num((callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))))
 
 	if num(wk$(21,10))<>0
-		pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
+		pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 		wk=pos(wk$(1,20)=pymt_dist$)
 			if wk<>0
 				pymt_dist$(wk+20,10)=str(num(pymt_dist$(wk+20,10))+num(wk$(21,10)))
@@ -612,7 +612,7 @@ apply_on_acct:
 				pymt_dist$=pymt_dist$+wk$
 			endif
 
-		AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+		UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 
 		gosub update_cashhdr_cashdet_cashbal
 	endif
@@ -668,7 +668,7 @@ delete_cashdet_cashbal:
 
 	wend
 
-	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
+	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.clearMainGrid()
 
 return
@@ -754,8 +754,8 @@ return
 get_open_invoices:
 
 rem --- use this routine both for new checks, and existing (already present in are-01/11)
-rem --- diff is, for existing, will set applied/discount amounts according to are-11 (using AONObj! item containing existing dtl)
-rem --- also uses AONObj! item containing current pay/disc amts to restore what you've currently paid if re-executing this routine
+rem --- diff is, for existing, will set applied/discount amounts according to are-11 (using UserObj! item containing existing dtl)
+rem --- also uses UserObj! item containing current pay/disc amts to restore what you've currently paid if re-executing this routine
 	inv_key$=firm_id$+"  "+callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
 	art_invhdr_dev=fnget_dev("ART_INVHDR")
 	art_invdet_dev=fnget_dev("ART_INVDET")
@@ -831,9 +831,9 @@ rem --- also uses AONObj! item containing current pay/disc amts to restore what 
 	wend
 		
 
- 	AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
+ 	UserObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
 
-	AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
+	UserObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
 
 return
 
@@ -850,7 +850,7 @@ return
 
 include_curr_tran_amts:
 
-	existing_dtl$=AONObj!.getItem(num(user_tpl.existing_dtl$))
+	existing_dtl$=UserObj!.getItem(num(user_tpl.existing_dtl$))
 	existing_dtl=0
 	if len(existing_dtl$)<>0 existing_dtl=pos(art01a.ar_inv_no$=existing_dtl$(11),40)
 	rem --- existing_dtl$ contains info already in are-11
@@ -907,7 +907,7 @@ return
 fill_bottom_grid:
 
 	SysGUI!.setRepaintEnabled(0)
-	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
+	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	minrows=num(user_tpl.gridInvoice_rows$)
 	if vectInvoice!.size()
 		numrow=vectInvoice!.size()/gridInvoice!.getNumColumns()
@@ -936,11 +936,11 @@ process_OA_chkbox:
 	rem --- if checked on, read art-01/11 to build vectCheck! with OA/CM's, and add after actual check, if there is one
 
 	on_off=dec(gui_event.flags$)
-	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
+	pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 
 	if on_off=0		
-		vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
-		vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
+		vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
+		vectInvSel!=UserObj!.getItem(num(user_tpl.inv_sel_vect$))
 		cols=num(user_tpl.gridInvoice_cols$)
 		if vectInvoice!.size()
 			voffset=0
@@ -971,7 +971,7 @@ process_OA_chkbox:
 					voffset=voffset+cols
 				endif
 			wend
-			AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+			UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 		endif
 	else
 		
@@ -992,7 +992,7 @@ return
 
 process_zbal_chkbox:
 
-	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
+	pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 	currdtl$=pymt_dist$
 	gosub get_open_invoices
 	if len(currdtl$)
@@ -1008,7 +1008,7 @@ process_asel_chkbox:
 rem --- escape;rem --- follow	
 	if on_off=0
 		gosub auto_select_off		
-		AONObj!.setItem(num(user_tpl.pymt_dist$),"")
+		UserObj!.setItem(num(user_tpl.pymt_dist$),"")
 	else
 		gosub auto_select_off;rem --- turn off/reset amts before turning on
 		pymt_dist$=""
@@ -1023,8 +1023,8 @@ return
 
 auto_select_on:
 
-	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
-	vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
+	vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
+	vectInvSel!=UserObj!.getItem(num(user_tpl.inv_sel_vect$))
 	gridInvoice_cols=num(user_tpl.gridInvoice_cols$)
 	if vectInvoice!.size()
 		for payloop=0 to vectInvoice!.size()-1  step gridInvoice_cols
@@ -1073,16 +1073,16 @@ auto_select_on:
 				if to_pay=0 then break
 		next payloop
 		gosub fill_bottom_grid
-		AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
-		AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
-		AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+		UserObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
+		UserObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
+		UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 	endif
 return
 
 auto_select_off:
 
-	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
-	vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
+	vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
+	vectInvSel!=UserObj!.getItem(num(user_tpl.inv_sel_vect$))
 	gridInvoice_cols=num(user_tpl.gridInvoice_cols$)
 	if vectInvoice!.size()
 		for payloop=0 to vectInvoice!.size()-1  step gridInvoice_cols		
@@ -1095,8 +1095,8 @@ auto_select_off:
 		gosub fill_bottom_grid
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(0))
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
-		AONObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
-		AONObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
+		UserObj!.setItem(num(user_tpl.inv_vect$),vectInvoice!)
+		UserObj!.setItem(num(user_tpl.inv_sel_vect$),vectInvSel!)
 	endif
 return
 
@@ -1115,13 +1115,13 @@ return
 
 process_gridInvoice_event:
 
-	vectInvoice!=AONObj!.getItem(num(user_tpl.inv_vect$))
-	vectInvSel!=AONObj!.getItem(num(user_tpl.inv_sel_vect$))
-	gridInvoice!=AONObj!.getItem(num(user_tpl.inv_grid$))
+	vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
+	vectInvSel!=UserObj!.getItem(num(user_tpl.inv_sel_vect$))
+	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	clicked_row=gridInvoice!.getSelectedRow()
 	cols=num(user_tpl.gridInvoice_cols$)
 
-	pymt_dist$=AONObj!.getItem(num(user_tpl.pymt_dist$))
+	pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 
 	if vectInvoice!.size()=0 then return
 
@@ -1183,7 +1183,7 @@ process_gridInvoice_event:
 				wk$(31)=str(new_disc-old_disc)
 				pymt_dist$=pymt_dist$+wk$
 			endif
-			AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+			UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 			callpoint!.setStatus("REFRESH")
 			
 		break
@@ -1271,7 +1271,7 @@ invoice_chk_onoff:
 
 			endif
 
-			AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+			UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 
 			new_pay=0
 			old_pay=inv_applied
@@ -1356,7 +1356,7 @@ invoice_chk_onoff:
 						wk$(31)=str(disc_amt)
 						pymt_dist$=pymt_dist$+wk$
 					endif
-					AONObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
+					UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 		break
 	swend
 return
@@ -1459,5 +1459,21 @@ format_grids:
 
 
 return
+
+disable_ctls:rem --- disable selected controls
+
+	for dctl=1 to 3
+		dctl$=dctl$[dctl]
+		if dctl$<>""
+			wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
+			wmap$=callpoint!.getAbleMap()
+			wpos=pos(wctl$=wmap$,8)
+			wmap$(wpos+6,1)="I"
+			callpoint!.setAbleMap(wmap$)
+			callpoint!.setStatus("ABLEMAP")
+		endif
+	next dctl
+	return
+
 
 #include std_missing_params.src

@@ -30,7 +30,7 @@ set_date_seq:rem --- Set Sequence of Date Columns
 	return
 
 calc_dates:rem --- Calculate Aging Dates
-
+escape
 	fixed_periods$=fnget_rec$("ARR_AGINGREPORT.FIXED_PERIODS")
 	days_in_per=num(fnget_rec$("ARR_AGINGREPORT.DAYS_IN_PER"))
 	if days_in_per=0 days_in_per=30
