@@ -121,7 +121,7 @@ rem --- Get Header & assign variables
         if pot44a_key.firm_id$+pot44a_key.vendor_id$+pot44a_key.recpt_date$+pot44a_key.po_no$+pot44a_key.receiver_no$<>prevk$(1,28)
             prevk$(1)=pot44a_key$
             p04_key$=firm_id$+vendor$+ponum$+receiver$
-            find record (pot04_dev,key=p04_key$,dom=*break) pot04a$
+            find record (pot04a_dev,key=p04_key$,dom=*break) pot04a$
             dim rcptdate$(6),orddate$(6)
             if pot04a.recpt_date$<>fill(6) rcptdate$=pot04a.recpt_date$
             if pot04a.ord_date$<>fill(6) orddate$=pot04a.ord_date$
@@ -130,7 +130,7 @@ rem --- Get Header & assign variables
 rem --- Get detail
 
         p14a_key$=pot04a.firm_id$+pot04a.vendor_id$+pot04a.po_no$+pot04a.receiver_no$+linenum$
-        find record (pot14_dev,key=p14a_key$,dom=*break) pot14a$
+        find record (pot14a_dev,key=p14a_key$,dom=*break) pot14a$
         whse$=pot14a.warehouse_id$
         item$=pot14a.item_id$
 
@@ -205,7 +205,7 @@ rem --- Get Item Desc
     if linetype$<>"N"
 
         ivm01a.item_desc$="(Not On File)"
-        find record (ivm01_dev,key=firm_id$+b3$(3,20),dom=brnch1) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+b3$(3,20),dom=brnch1) ivm01a$
         ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
     else
@@ -297,7 +297,7 @@ newvendor: rem --- New Vendor
     printvtot$="Y"
     vendreqvar=0
     vendpromvar=0
-    find record (apm01_dev,key=firm_id$+vendor$,dom=brnch2) apm01a$
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=brnch2) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch2:
@@ -343,7 +343,7 @@ pototals: rem --- Print PO total
 getlinetype: rem --- Get Line Type
 
     let linetype$="N"
-    find record (pom02_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch3) pom02a$
+    find record (pom02a_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch3) pom02a$
     let linetype$=pom02a.line_type$
 
 brnch3:
@@ -461,6 +461,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
