@@ -183,7 +183,7 @@ rem --- Read line code
             if pom02a.firm_id$+pom02po_line_code$>firm_id$+poe13a.po_line_code$
                 pom02a.firm_id$=firm_id$, pom02a.po_line_code$=poe13a.po_line_code$
                 pom02a.code_desc$=""
-                find record (pom02_dev,key=pom02a.firm_id$+pom02po_line_code$,dom=brnch1) pom02a$
+                find record (pom02a_dev,key=pom02a.firm_id$+pom02po_line_code$,dom=brnch1) pom02a$
             endif
 
 rem --- Calculate extension
@@ -227,7 +227,7 @@ rem --- Branch based on line code
                     ivm01a.firm_id$=firm_id$+poe13a.item_id$
                     ivm01a.firm_id$=""
                     ivm01a.item_desc$=nf$
-                    find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=*next) ivm01a$
+                    find record (ivm01a_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=*next) ivm01a$
                     ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
                     if l+2>l9 gosub report_heading
                     print (printer_dev) @(o[0]),poe13a.po_line_no$,
@@ -356,7 +356,7 @@ rem --- Read next rejection detail
                     pom03a.firm_id$=firm_id$,pom03a.reject_code$=poe63a.reject_code$
                     pom03a.descripiton$=nf$
                     lastseq=num(poe63a.sequence_no$)
-                    find record (pom03_dev,key=pom03a.firm_id$+pom03a.reject_code$,dom=*next) pom03a$
+                    find record (pom03a_dev,key=pom03a.firm_id$+pom03a.reject_code$,dom=*next) pom03a$
                     precision 2
                     extension=poe63a.qty_reject*poe13a.unit_cost
                     precision num(ivs01a.precision$)
@@ -459,7 +459,7 @@ vend_brk: rem --- Vendor break
     if !done
         dim vendor[4]
         let t0$=poe03a.vendor_id$,apm01a.firm_id$=firm_id$+t0$,apm01a.vendor_name$=nf$
-        find record (apm01_dev,key=apm01a.firm_id$+apm01a.vendor_id$,dom=*next) apm01a$
+        find record (apm01a_dev,key=apm01a.firm_id$+apm01a.vendor_id$,dom=*next) apm01a$
         let vendor$=fnmask$(apm01a.vendor_id$,m0$)+" "+cvs(apm01a.vendor_name$,2)
         if pagebreak$="Y" l=l9+1
     endif
@@ -571,6 +571,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
