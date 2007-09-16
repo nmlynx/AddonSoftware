@@ -3,7 +3,6 @@ num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 gosub open_tables
-rem dim user_tpl$:"ivs01a_tpl:c("+str(len(open_tpls$[1]))+"*),ivs01a_chn:n(3*)"
 ivs01a_chn=num(open_chans$[1])
 ivs01a_tpl$=open_tpls$[1]
 
@@ -13,4 +12,4 @@ readrecord(ivs01a_chn,key=firm_id$+"IV00")ivs_params$
 callpoint!.setColumnData("PERIOD",ivs_params.current_per$)
 callpoint!.setColumnData("PICK_YEAR",ivs_params.current_year$)
 callpoint!.setColumnData("STOCK_LEVEL","W")
-callpoint!setStatus("REFRESH")
+callpoint!.setStatus("REFRESH")
