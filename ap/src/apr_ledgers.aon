@@ -49,10 +49,9 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    begvendor$=fnget_fld_data$(table$,"vendor_id_1")
-    endvendor$=fnget_fld_data$(table$,"vendor_id_2")
-    thrudate$=fnget_fld_data$(table$,"report_date")
+    begvendor$=Option!.getOptionData("VENDOR_ID_1")
+    endvendor$=Option!.getOptionData("VENDOR_ID_2")
+    thrudate$=Option!.getOptionData("REPORT_DATE")
 
 rem --- Retrieve parameter records
 
@@ -335,7 +334,7 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -357,7 +356,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

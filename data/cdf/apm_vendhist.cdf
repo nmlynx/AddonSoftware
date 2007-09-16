@@ -53,12 +53,12 @@ if gl$<>"Y"
 	gosub disable_fields
 endif
 
-escape; rem  before disable reten
-if user_tpl.ret_flag$="N" 
-	ctl_name$="APM_VENDHIST.OPEN_RET"
-	ctl_stat$="I"
-	gosub disable_fields
-endif
+rem escape; rem  before disable reten
+rem if user_tpl.ret_flag$="N" 
+rem	ctl_name$="APM_VENDHIST.OPEN_RET"
+rem	ctl_stat$="I"
+rem	gosub disable_fields
+rem endif
 [[APM_VENDHIST.AP_DIST_CODE.AVAL]]
 if user_tpl.multi_dist$<>"Y"
 
@@ -107,12 +107,11 @@ rem --- Retrieve parameter data
 	find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
 
 rem -- store info needed for validation, etc., in user_tpl$
-	dim user_tpl$:"multi_types:c(1),multi_dist:c(1).ret_flag:c(1)"
+	dim user_tpl$:"multi_types:c(1),multi_dist:c(1),ret_flag:c(1)"
 	user_tpl.multi_types$=aps01a.multi_types$
 	user_tpl.multi_dist$=aps01a.multi_dist$
 	user_tpl.ret_flag$=aps01a.ret_flag$
 
-escape; rem  check on user_tpl.ret_flag$
 [[APM_VENDHIST.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings

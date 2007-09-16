@@ -54,15 +54,14 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    agingdate$=fnget_fld_data$(table$,"aging_date")
-    option$=fnget_fld_data$(table$,"report_option")
-    future$=fnget_fld_data$(table$,"pick_check_1")
-    sequence$=fnget_fld_data$(table$,"report_sequence")
-    level$=fnget_fld_data$(table$,"report_summ_det")
-    method$=fnget_fld_data$(table$,"report_type")
-    days$=fnget_fld_data$(table$,"pick_integer")
-    discounts$=fnget_fld_data$(table$,"pick_check_2")
+    agingdate$=Option!.getOptionData("AGING_DATE")
+    option$=Option!.getOptionData("REPORT_OPTION")
+    future$=Option!.getOptionData("PICK_CHECK_1")
+    sequence$=Option!.getOptionData("REPORT_SEQUENCE")
+    level$=Option!.getOptionData("REPORT_SUM_DET")
+    method$=Option!.getOptionData("REPORT_TYPE")
+    days$=Option!.getOptionData("PICK_INTEGER")
+    discounts$=Option!.getOptionData("PICK_CHECK_2")
     days=num(days$,err=*next)
     method=pos(method$="PD")
     sorting=sequence$="A"
@@ -620,7 +619,7 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_noparams.bbj",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
 :                                   str(err:"000"),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
@@ -639,7 +638,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
