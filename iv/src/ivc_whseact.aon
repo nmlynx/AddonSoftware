@@ -51,7 +51,7 @@ rem --- Retrieve the program path
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_nTPL",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
@@ -61,7 +61,8 @@ rem --- Open/Lock files
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
-    files$[2]="ivx_itemwhse",ids$[10]="IVX_ITEMWHSE"; rem ivm-03
+    files$[2]="ivm-03",ids$[2]="IVX_ITEMWHSE"; rem ivm-03
+rem    files$[2]="ivx_itemwhse",ids$[2]="IVX_ITEMWHSE"; rem ivm-03
     if pos(action$="L")=0 files$[3]="ivm-12",ids$[3]="IVM_ITEMACT"
     if pos(action$="L")<>0 files$[3]="ivm-17",ids$[3]="IVM_LSITEMACT"
     
