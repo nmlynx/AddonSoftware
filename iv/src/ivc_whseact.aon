@@ -1,5 +1,5 @@
 rem ivc - Return Warehouse Activity
-rem Program ivc_whseact v8.0.0 26Oct2006 (ivc_wb)
+rem Program ivc_whseact.aon v8.0.0 26Oct2006 (ivc_wb)
 rem Created by adx_codeport.bbx v1.1.1 (10/26/2006 11:47:22)
 
 rem  +-----------------------------------------+
@@ -60,8 +60,8 @@ rem --- Open/Lock files
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="IVS_PARAMS",ids$[2]="IVS_PARAMS"
-    files$[2]="ivm-03",ids$[2]="IVX_ITEMWHSE"
+    files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
+    files$[2]="ivx_itemwhse",ids$[10]="IVX_ITEMWHSE"; rem ivm-03
     if pos(action$="L")=0 files$[3]="ivm-12",ids$[3]="IVM_ITEMACT"
     if pos(action$="L")<>0 files$[3]="ivm-17",ids$[3]="IVM_LSITEMACT"
     
@@ -84,9 +84,9 @@ rem --- Retrieve parameter records
 
 rem --- Parameters
 
-    keylen=28
+    keylen=30
     period=25
-    if pos("L"=action$)>0 keylen=48,period=45
+    if pos("L"=action$)>0 keylen=50,period=45
 
 rem --- Initializations
 
@@ -136,8 +136,8 @@ l6000: rem --- Position activity file to beginning period/year
 l6100: rem --- Read activity record(s) and accumulate totals
 
     k$=key(ivm12_dev,end=l6190)
-    if pos(b0$(1,keylen-4)=k$)<>1 goto l6190
-    if k$(keylen-3)>period$[1] goto l6190
+    if pos(b0$(1,keylen-6)=k$)<>1 goto l6190
+    if k$(keylen-5)>period$[1] goto l6190
     read record (ivm12_dev) ivm12a$
 l6150:
 

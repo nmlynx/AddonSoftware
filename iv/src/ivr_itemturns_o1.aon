@@ -74,7 +74,7 @@ rem --- Main Loop starting
 
         ivm03a_key$=key(ivm03_dev,end=*break)
         if pos(first$=ivm03a_key$)<>1 break
-        whse$=ivm03a_key.warehouse_id$
+        if level$="W" whse$=ivm03a_key.warehouse_id$
         product$=ivm03a_key.product_type$
         item$=ivm03a_key.item_id$
         if level$<>"W" then

@@ -1,5 +1,5 @@
 rem ivr - Inventory Activity Report (Report Overlay)
-rem Program ivr_eb v8.0.0 26Oct2006 (ivr_eb)
+rem Program ivr_itemact.aon v8.0.0 26Oct2006 (ivr_ea/eb)
 rem Created by adx_codeport.bbx v1.1.1 (10/26/2006 11:47:41)
 
 rem  +-----------------------------------------+
@@ -7,12 +7,6 @@ rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
 rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
-
-rem --- The following IOLIST's were removed from this program:
-
-rem --- ivm01a: iolist a0$(1),a1$(1),a2$(1),a3$(1),a4$,a5$,a6$,a[all]
-rem --- ivm10a: iolist x0$(1)
-rem --- ivm10c: iolist x0$(1)
 
     seterr std_error
     setesc std_error
@@ -31,66 +25,78 @@ rem --- Retrieve sysinfo data
     task_desc$=sysinfo.task_desc$
     sys_date$=sysinfo.system_date$
 
-rem --- Open/Lock files
+rem --- Open files
 
-    files=5,begfile=1,endfile=files
+    files=13,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="ivm-01"
-    files$[3]="ivm-03"
-    files$[4]="ivm-10"
-    files$[5]="ivm-12"
+    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
+    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
+    files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
+    files$[4]="ivm-03",ids$[4]="IVX_ITEMPROD"; rem ivm-03
+rem    files$[4]="ivx_itemprod",ids$[4]="IVX_ITEMPROD"; rem ivm-03
+    files$[5]="ivc_prodcode",ids$[5]="IVC_PRODCODE"
+    files$[6]="ivm-12",ids$[6]="IVM_ITEMACT"
+    files$[7]="ivm-14",ids$[7]="IVM_ITEMSYN"
+    files$[8]="ivm-15",ids$[8]="IVC_TYPECODE"
+    files$[10]="ivm-03",ids$[10]="IVX_ITEMWHSE"; rem ivm-03
+rem    files$[10]="ivx_itemwhse",ids$[10]="IVX_ITEMWHSE"; rem ivm-03
+    files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
+    files$[12]="ivc_whsecode",ids$[12]="IVC_WHSECODE"
+    files$[13]="ivm-03",ids$[13]="IVX_ITEMPRWH"; rem ivm-03
+rem    files$[13]="ivx_itemprwh",ids$[13]="IVX_ITEMPRWH"; rem ivm-03
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    gls01_dev=channels[1]
     ivm01_dev=channels[2]
-    ivm03_dev=channels[3]
-    ivm10_dev=channels[4]
-    ivm12_dev=channels[5]
+    ivm02_dev=channels[3]
+    ivm03a_dev=channels[4]
+    ivm10a_dev=channels[5]
+    ivm12_dev=channels[6]
+    ivm14_dev=channels[7]
+    ivm15_dev=channels[8]
+    ivm03g_dev=channels[10]
+    ivs01_dev=channels[11]
+    ivm10c_dev=channels[12]
+    ivm03c_dev=channels[13]
 
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[2],ivm10a$:templates$[4],
-:       ivm12a$:templates$[5]
+    dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03a$:templates$[4],
+:       ivm10a$:templates$[5],ivm12a$:templates$[6],ivm14a$:templates$[7],
+:       ivm15a$:templates$[8],ivm03g$:templates$[10]
+    dim gls01a$:templates$[1],ivs01a$:templates$[11],ivm10c$:templates$[12],
+:	ivm03c$:templates$[13]
 
-rem --- Retrieve miscellaneous templates
-
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivm-10C"
-    ids$[2]="ivs-01A"
-    ids$[3]="ivm-03C"
-    ids$[4]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivm10c$:templates$[1],ivs01a$:templates$[2],ivm03c$:templates$[3],gls01a$:templates$[4]
-
+      
 rem --- Assign form input values to local variables
-    
-    table$=fnget_table$("")
-    begper$=fnget_fld_data$(table$,"PERIOD_YEAR_1")
-    begyear$=begper$(3),begper$=begper$(1,2)
-    endper$=fnget_fld_data$(table$,"PERIOD_YEAR_2")
-    endyear$=endper$(3),endper$=endper$(1,2)
-    begwhse$=fnget_fld_data$(table$,"WAREHOUSE_ID_1")
-    endwhse$=fnget_fld_data$(table$,"WAREHOUSE_ID_2")
-    begprod$=fnget_fld_data$(table$,"PRODUCT_TYPE_1")
-    endprod$=fnget_fld_data$(table$,"PRODUCT_TYPE_2")
-    begitem$=fnget_fld_data$(table$,"ITEM_ID_1")
-    enditem$=fnget_fld_data$(table$,"ITEM_ID_2")
-    type$=fnget_fld_data$(table$,"ITEM_TYPE")
-    level$=fnget_fld_data$(table$,"RPT_LEVEL")
+
+    period1$=option!.getOptionData("period_year_1")
+    begyear$=period1$(3),begper$=period1$(1,2)
+    period2$=option!.getOptionData("period_year_2")
+    endyear$=period2$(3),endper$=period2$(1,2)
+    begwhse$=option!.getOptionData("warehouse_id_1")
+    endwhse$=option!.getOptionData("warehouse_id_2")
+    begprod$=option!.getOptionData("product_type_1")
+    endprod$=option!.getOptionData("product_type_2")
+    begitem$=option!.getOptionData("item_id_1")
+    enditem$=option!.getOptionData("item_id_2")
+    type$=option!.getOptionData("item_type")
+    level$=option!.getOptionData("rpt_level")
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+
+rem --- Retrieve key template
+
+    if level$="I" ivm03_dev=ivm03a_dev; call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPROD","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
+    if level$<>"I" ivm03_dev=ivm03c_dev; call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPRWH","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
+    dim ivm03_key$:ivm03_key_tpl$
 
 rem --- Open printer
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
@@ -104,7 +110,8 @@ rem --- Initializations
     p[3]=num(ivs01a.desc_len_01$)
     p[4]=num(ivs01a.desc_len_02$)
     p[5]=num(ivs01a.desc_len_03$)
-    m2$=ivs01a.unit_mask$
+    call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
+    call pgmdir$+"adc_sizemask.aon",m2$,m2,12,15
 
     precision p[1]
     dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12]
@@ -125,13 +132,12 @@ rem --- Initializations
     dh$="Description"
     m9$="00"
     number=0
-    period$[0]=begyear$+begper$
-    period$[1]=endyear$+endper$
-    headings$[2]="From Period "+begper$+" "+fnyy$(begyear$)+" Through Period "+endper$+" "+fnyy$(endyear$)
+    period$[0]=period1$
+    period$[1]=period2$
+    headings$[2]="From Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
 
 rem --- Print positions
 
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,12,15
     o[8]=width-m2
     for x=7 to 3 step -1
         o[x]=o[x+1]-m2
@@ -186,49 +192,50 @@ rem --- Position files
 
 l1000: rem --- Get next sort record
 
-    k$=key(ivm03_dev,end=done)
-    if pos(first$=k$)<>1 goto done
-    whse$=k$(4,2)
-    product$=k$(4+p,3)
-    item$=k$(7+p)
+    ivm03_key$=key(ivm03_dev,end=done)
+    if pos(first$=ivm03_key$)<>1 goto done
+    if level$="W" whse$=ivm03_key.warehouse_id$
+    product$=ivm03_key.product_type$
+    item$=ivm03_key.item_id$
+
     if level$="W" goto l1200
 
 rem --- By Item: Valid Product/Item?
 
-    if endprod$<>"" if cvs(product$,3)>endprod$ goto done
-    if begitem$<>"" if cvs(item$,3)<begitem$ goto l1400
-    if enditem$<>"" if cvs(item$,3)>enditem$ goto l1450
+    if endprod$<>"" if product$>endprod$ goto done
+    if begitem$<>"" if item$<begitem$ goto l1400
+    if enditem$<>"" if item$>enditem$ goto l1450
     x$=product$+" "+item$(1,p[0])
     goto l1500
 
 l1200: rem --- By Warehouse: Valid Warehouse/Product/Item?
 
-    if endwhse$<>"" if cvs(whse$,3)>endwhse$ goto done
-    if begprod$<>"" if cvs(product$,3)<begprod$ goto l1300
-    if endprod$<>"" if cvs(product$,3)>endprod$ goto l1350
-    if begitem$<>"" if cvs(item$,3)<begitem$ goto l1400
-    if enditem$<>"" if cvs(item$,3)>enditem$ goto l1450
+    if endwhse$<>"" if whse$>endwhse$ goto done
+    if begprod$<>"" if product$<begprod$ goto l1300
+    if endprod$<>"" if product$>endprod$ goto l1350
+    if begitem$<>"" if item$<begitem$ goto l1400
+    if enditem$<>"" if item$>enditem$ goto l1450
     x$=whse$+" "+product$+" "+item$(1,p[0])
     goto l1500
 
 l1300: rem --- Skip to beginning product for this warehouse'
 
-    read (ivm03_dev,key=k$(1,5)+begprod$,dom=l3900)
+    read (ivm03_dev,key=ivm03_key$(1,5)+begprod$,dom=l3900)
     goto l3900
 
 l1350: rem --- Skip to next warehouse
 
-    read (ivm03_dev,key=k$(1,5)+$FF$,dom=l3900)
+    read (ivm03_dev,key=ivm03_key$(1,5)+$FF$,dom=l3900)
     goto l3900
 
 l1400: rem --- Skip to beginning item
 
-    read (ivm03_dev,key=k$(1,6+p)+begitem$,dir=0,dom=l3900)
+    read (ivm03_dev,key=ivm03_key$(1,6+p)+begitem$,dir=0,dom=l3900)
     goto l3900
 
 l1450: rem --- Skip to next product
 
-    read (ivm03_dev,key=k$(1,6+p)+$FF$,dom=l3900)
+    read (ivm03_dev,key=ivm03_key$(1,6+p)+$FF$,dom=l3900)
     goto l3900
 
 l1500: rem --- Level breaks?
@@ -245,7 +252,6 @@ rem --- Retrieve item and activity
     find record (ivm01_dev,key=a0$,dom=l3900) ivm01a$
     if type$<>"" if ivm01a.item_type$<>type$ goto l3900
     description$(1)=cvs(ivm01a.item_desc$,3)
-rem --- old format using params: description$(1)=fnitem$(a1$,p[3],p[4],p[5])
     action$="A"
     item$[0]=firm_id$
     item$[2]=item$
@@ -310,7 +316,7 @@ l6000: rem --- Warehouse Break
 l6100:
     dim x0$(32)
     let t0$=whse$,x0$(6,24)="(Not on File)",l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     x0$(6,24)=ivm10c.short_name$
     let x$="Warehouse "+t0$+" "+cvs(x0$(6,24),2)
     let headings$[4]=h1$,headings$[4](fncenter(x$,width),len(x$))=x$
@@ -319,9 +325,9 @@ rem --- Product break
 l6200:
     dim x0$(32)
     let t1$=product$,x0$(7,20)="(Not on File)"
-    find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     x0$(7,20)=ivm10a.code_desc$
-    let h9$="Product Type "+t1$+" "+x0$(7,20)
+    let h9$="Product Type "+t1$+" "+cvs(x0$(7,20),2)
     return
 
 rem #include std_functions.src
@@ -402,8 +408,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -447,7 +452,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 

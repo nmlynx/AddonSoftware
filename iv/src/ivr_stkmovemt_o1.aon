@@ -60,11 +60,12 @@ rem --- Position files
     p=0
     if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
     read (ivm03_dev,key=ivm03a_key$,dom=*next)
+
     While more
 
         ivm03a_key$=key(ivm03_dev,end=*break)
         if pos(first$=ivm03a_key$)<>1 break
-        whse$=ivm03a_key.warehouse_id$
+        if level$="W" whse$=ivm03a_key.warehouse_id$
         product$=ivm03a_key.product_type$
         item$=ivm03a_key.item_id$
         if level$<>"W" then
