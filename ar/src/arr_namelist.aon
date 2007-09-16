@@ -24,59 +24,45 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=4,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-01"
-    files$[3]="arm-02"
-    files$[4]="arm-10"
+    files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
+    files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
+    files$[3]="arc_termcode",ids$[3]="ARC_TERMCODE"
+    files$[4]="arc_salecode",ids$[4]="ARC_SALECODE"
+    files$[5]="arc_terrcode",ids$[5]="ARC_TERRCODE"
+    files$[6]="arc_custtype",ids$[6]="ARC_CUSTTYPE"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
-    arm01_dev=channels[2]
-    arm02_dev=channels[3]
-    arm10_dev=channels[4]
+    arm01_dev=channels[1]
+    arm02_dev=channels[2]
+    arc_termcode_dev=channels[3]
+    arc_salecode_dev=channels[4]
+    arc_terrcode_dev=channels[5]
+    arc_custtype_dev=channels[6]
 
 rem --- Dimension string templates
 
-    dim arm01a$:templates$[2],arm02a$:templates$[3],arm10a$:templates$[4]
-
-rem --- Retrieve miscellaneous templates
-
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A"
-    ids$[2]="arm-10F"
-    ids$[3]="arm-10H"
-    ids$[4]="arm-10L"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ars01a$:templates$[1],arm10f$:templates$[2],arm10h$:templates$[3],arm10l$:templates$[4]
+    dim arm01a$:templates$[1],arm02a$:templates$[2],arm10a$:templates$[3]
+    dim arm10f$:templates$[4],arm10h$:templates$[5],arm10l$:templates$[6]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    sequence$=fnget_fld_data$(table$,"report_seq_msty")
-    begterms$=fnget_fld_data$(table$,"ar_terms_code_1")
-    endterms$=fnget_fld_data$(table$,"ar_terms_code_2")
-    begsales$=fnget_fld_data$(table$,"salesperson_1")
-    endsales$=fnget_fld_data$(table$,"salesperson_2")
-    begterr$=fnget_fld_data$(table$,"territory_1")
-    endterr$=fnget_fld_data$(table$,"territory_2")
-    begtype$=fnget_fld_data$(table$,"customer_type_1")
-    endtype$=fnget_fld_data$(table$,"customer_type_2")
+    sequence$=option!.getOptionData("REPORT_SEQ_MSTY")
+    begterms$=option!.getOptionData("AR_TERMS_CODE_1")
+    endterms$=option!.getOptionData("AR_TERMS_CODE_2")
+    begsales$=option!.getOptionData("SALESPERSON_1")
+    endsales$=option!.getOptionData("SALESPERSON_2")
+    begterr$=option!.getOptionData("TERRITORY_1")
+    endterr$=option!.getOptionData("TERRITORY_2")
+    begtype$=option!.getOptionData("CUSTOMER_TYPE_1")
+    endtype$=option!.getOptionData("CUSTOMER_TYPE_2")
 
 rem --- Retrieve parameter records
 
-    dim p[5],m0$(9)
-    ars01a_key$=sysinfo.firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    customer_size=num(ars01a.customer_size$)
-    m0$=ars01a.customer_output$
+    dim p[5]
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,cust_size
     m9$="(###)-000-0000"
     m0=len(m0$)
     m9=len(m9$)
@@ -146,7 +132,6 @@ rem --- Open printer, start progress meter and position header file
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm02_dev,1,meter_num,status
-    read (arm02_dev,knum=keynum,key=firm_id$,dom=*next)
 
 rem --- Initial Read
 
@@ -191,7 +176,7 @@ rem --- Read next Customer Detail (arm-02) record
           rem --- Print the detail line
 
           if lines+1>maxlines gosub subheading          
-          print (printer_dev) @(o[0]),fnmask$(arm01a.customer_id$(1,p[0]),m0$),@(o[1]),arm01a.customer_name$,
+          print (printer_dev) @(o[0]),fnmask$(arm01a.customer_id$(1,cust_size),m0$),@(o[1]),arm01a.customer_name$,
 :                             @(o[2]),address$,@(o[3]),fnzipcode$(arm01a.zip_code$),@(o[4]),fnmask$(arm01a.phone_no$,m9$)
           lines=lines+1
           total=total+1
@@ -230,28 +215,28 @@ code_break: rem --- Code sequence break
                 dim arm10a$:fattr(arm10a$)
                 arm10a.code_desc$=nf$
                 k$=firm_id$+"A"+value$
-                find record (arm10_dev,key=k$,dom=*next) arm10a$  
+                find record (arc_termcode_dev,key=k$,dom=*next) arm10a$  
                 buffer$(1)="Terms "+arm10a.ar_terms_code$+" - "+arm10a.code_desc$
            break
            case salesperson
                 dim arm10f$:fattr(arm10f$)
                 arm10f.code_desc$=nf$
                 k$=firm_id$+"F"+value$
-                find record (arm10_dev,key=k$,dom=*next) arm10f$
+                find record (arc_salecode_dev,key=k$,dom=*next) arm10f$
                 buffer$(1)="Salesperson "+arm10f.slspsn_code$+" - "+arm10f.code_desc$
            break
            case territory
                 dim arm10h$:fattr(arm10h$)
                 arm10h.code_desc$=nf$
                 k$=firm_id$+"H"+value$
-                find record (arm10_dev,key=k$,dom=*next) arm10h$  
+                find record (arc_terrcode_dev,key=k$,dom=*next) arm10h$  
                 buffer$(1)="Territory "+arm10h.territory$+" - "+arm10h.code_desc$
            break
            case type
                 dim arm10l$:fattr(arm10l$)
                 arm10l.code_desc$=nf$
                 k$=firm_id$+"L"+value$
-                find record (arm10_dev,key=k$,dom=*next) arm10l$  
+                find record (arc_custtype_dev,key=k$,dom=*next) arm10l$  
                 buffer$(1)="Customer Type "+arm10l.customer_type$+" - "+arm10l.code_desc$
            break
            case default
@@ -270,7 +255,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Format zip/postal code
 
@@ -302,8 +286,8 @@ std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -326,9 +310,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -349,7 +332,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

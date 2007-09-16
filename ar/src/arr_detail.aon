@@ -24,74 +24,65 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=10,begfile=1,endfile=files
+    files=15,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-01"
-    files$[3]="arm-02"
-    files$[4]="arm-03"
-    files$[5]="arm-05"
-    files$[6]="arm-06"
-    files$[7]="arm-08"
-    files$[8]="arm-10"
-    files$[9]="art-01"
-    files$[10]="art-11"
+    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
+    files$[4]="arm-03",ids$[4]="ARM_CUSTSHIP"
+    files$[5]="arm-05",ids$[5]="ARM_CUSTCMTS"
+    files$[6]="arm-06",ids$[6]="ARM_CUSTPMTS"
+    files$[7]="arm-08",ids$[7]="ARM_CYCLECOD"
+    files$[8]="arc_distcode",ids$[8]="ARC_DISTCODE"
+    files$[9]="art-01",ids$[9]="ART_INVHDR"
+    files$[10]="art-11",ids$[10]="ART_INVDET"
+    files$[11]="arc_salecode",ids$[11]="ARC_SALECODE"
+    files$[12]="arc_terrcode",ids$[12]="ARC_TERRCODE"
+    files$[13]="arc_custtype",ids$[13]="ARC_CUSTTYPE"
+    files$[14]="arc_termcode",ids$[14]="ARC_TERMCODE"
+    files$[15]="ars_credit",ids$[15]="ARS_CREDIT"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    ars01_dev=channels[1]
     arm01_dev=channels[2]
     arm02_dev=channels[3]
     arm03_dev=channels[4]
     arm05_dev=channels[5]
     arm06_dev=channels[6]
     arm08_dev=channels[7]
-    arm10_dev=channels[8]
+    arc_distcode_dev=channels[8]
     art01_dev=channels[9]
     art11_dev=channels[10]
+    arc_salecode_dev=channels[11]
+    arc_terrcode_dev=channels[12]
+    arc_custtype_dev=channels[13]
+    arc_termcode_dev=channels[14]
+    ars_credit_dev=channels[15]
 
 rem --- Dimension string templates
 
-    dim arm01a$:templates$[2],arm02a$:templates$[3],arm03a$:templates$[4],arm05a$:templates$[5],
-:       arm06a$:templates$[6],arm08a$:templates$[7],arm10a$:templates$[8],art01a$:templates$[9],
-:       art11a$:templates$[10]
-
-rem --- Retrieve miscellaneous templates
-
-    files=6,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A"
-    ids$[2]="ars-01C"
-    ids$[3]="arm-10D"
-    ids$[4]="arm-10F"
-    ids$[5]="arm-10H"
-    ids$[6]="arm-10L"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ars01a$:templates$[1],ars01c$:templates$[2],arm10d$:templates$[3],
-:       arm10f$:templates$[4],arm10h$:templates$[5],arm10l$:templates$[6]
+    dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3],arm03a$:templates$[4]
+    dim arm05a$:templates$[5],arm06a$:templates$[6],arm08a$:templates$[7],arm10d$:templates$[8]
+    dim art01a$:templates$[9],art11a$:templates$[10],arm10f$:templates$[11],arm10h$:templates$[12]
+    dim arm10l$:templates$[13],arm10a$:templates$[14],ars01c$:templates$[15]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    begcustomer$=fnget_fld_data$(table$,"customer_id_1")
-    endcustomer$=fnget_fld_data$(table$,"customer_id_2")
-    comments$=fnget_fld_data$(table$,"pick_check")
+    begcustomer$=option!.getOptionData("CUSTOMER_ID_1")
+    endcustomer$=option!.getOptionData("CUSTOMER_ID_2")
+    comments$=option!.getOptionData("PICK_CHECK")
 
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     cm$="N"
     ars01c_key$=firm_id$+"AR01"
-    find record (ads01_dev,key=ars01c_key$,err=*next) ars01c$
+    find record (ars_credit_dev,key=ars01c_key$,err=*next) ars01c$
     if ars01c.sys_install$="Y" cm$="Y"
-    customer_size=num(ars01a.customer_size$)
-    m0$=ars01a.customer_output$
-    m1$=ars01a.amount_mask$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,11
     m8$="(###)-###-####"
     m0=len(m0$)
@@ -165,28 +156,31 @@ rem --- Define print positions for the aging and sales summary
  
 rem --- Additional file opens
 
-    files=6,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="opm-03"
-    files$[2]="opm-04"
-    files$[3]="opm-05"
-    files$[4]="opm-06"
-    files$[5]="opm-07"
-    files$[6]="opm-09"
-    if op$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                              ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    opm03_dev=channels[1]
-    opm04_dev=channels[2]
-    opm05_dev=channels[3]
-    opm06_dev=channels[4]
-    opm07_dev=channels[5]
-    opm09_dev=channels[6]
+    if op$="Y"
+        files=6,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="opm-03",ids$[1]="OPC_DISCCODE"
+        files$[2]="opm-04",ids$[2]="OPC_MSG_HDR"
+        files$[3]="opm-05",ids$[3]="OPC_PRICECDS"
+        files$[4]="opm-06",ids$[4]="OPC_TAXCODE"
+        files$[5]="opm-07",ids$[5]="OPM_FRTTERMS"
+        files$[6]="opm-09",ids$[6]="OPM_CUSTJOBS"
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                       ids$[all],templates$[all],channels[all],batch,status
+        if status goto std_exit
+        opm03_dev=channels[1]
+        opm04_dev=channels[2]
+        opm05_dev=channels[3]
+        opm06_dev=channels[4]
+        opm07_dev=channels[5]
+        opm09_dev=channels[6]
 
 rem --- Dimension string templates
 
-    if op$="Y" dim opm03a$:templates$[1],opm04a$:templates$[2],opm05a$:templates$[3],
-:                  opm06a$:templates$[4],opm07a$:templates$[5],opm09a$:templates$[6]
+        dim opm03a$:templates$[1],opm04a$:templates$[2],opm05a$:templates$[3],
+:           opm06a$:templates$[4],opm07a$:templates$[5],opm09a$:templates$[6]
+
+    endif
 
 rem --- Open printer, start progress meter and position Customer Master file
 
@@ -238,12 +232,11 @@ rem --- Read next Customer Master (arm-01) record
 
           rem --- Get AR code descriptions
 
-          channel=arm10_dev
-          termsdesc$=fncode$(arm10_dev,firm_id$+"A"+arm02a.ar_terms_code$,fattr(arm10a$))
-          distdesc$=fncode$(arm10_dev,firm_id$+"D"+arm02a.ar_dist_code$,fattr(arm10d$))
-          terrdesc$=fncode$(arm10_dev,firm_id$+"H"+arm02a.territory$,fattr(arm10h$))
-          salesdesc$=fncode$(arm10_dev,firm_id$+"F"+arm02a.slspsn_code$,fattr(arm10f$))
-          typedesc$=fncode$(arm10_dev,firm_id$+"L"+arm02a.customer_type$,fattr(arm10l$))
+          termsdesc$=fncode$(arc_termcode_dev,firm_id$+"A"+arm02a.ar_terms_code$,fattr(arm10a$))
+          distdesc$=fncode$(arc_distcode_dev,firm_id$+"D"+arm02a.ar_dist_code$,fattr(arm10d$))
+          terrdesc$=fncode$(arc_terrcode_dev,firm_id$+"H"+arm02a.territory$,fattr(arm10h$))
+          salesdesc$=fncode$(arc_salecode_dev,firm_id$+"F"+arm02a.slspsn_code$,fattr(arm10f$))
+          typedesc$=fncode$(arc_custtype_dev,firm_id$+"L"+arm02a.customer_type$,fattr(arm10l$))
           cycledesc$=fncode$(arm08_dev,firm_id$+arm02a.cycle_code$,fattr(arm08a$))
           if cvs(arm02a.cycle_code$,2)="" cycledesc$=""
 
@@ -331,8 +324,8 @@ rem --- Read next Customer Master (arm-01) record
 
                 rem --- Get AR code descriptions
 
-                terrdesc$=fncode$(arm10_dev,firm_id$+"H"+arm03a.territory$,fattr(arm10h$))
-                salesdesc$=fncode$(arm10_dev,firm_id$+"F"+arm03a.slspsn_code$,fattr(arm10f$))
+                terrdesc$=fncode$(arc_terrcode_dev,firm_id$+"H"+arm03a.territory$,fattr(arm10h$))
+                salesdesc$=fncode$(arc_salecode_dev,firm_id$+"F"+arm03a.slspsn_code$,fattr(arm10f$))
 
                 rem --- Get OP code descriptions (if installed)
 
@@ -656,7 +649,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Format zip/postal code
 
@@ -694,8 +686,8 @@ std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -718,9 +710,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -741,7 +732,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
