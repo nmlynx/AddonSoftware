@@ -51,8 +51,7 @@ rem --- Dimension miscellaneous string templates
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    sequence$=fnget_fld_data$(table$,"report_type")
+    sequence$=Option!.getOptionData("REPORT_TYPE"); REM  *** CAPS FOR ALL!!
     labels$=fnget_fld_data$(table$,"pick_integer")
     restart$=fnget_fld_data$(table$,"pick_check")
     begvendor$=fnget_fld_data$(table$,"vendor_id_1")

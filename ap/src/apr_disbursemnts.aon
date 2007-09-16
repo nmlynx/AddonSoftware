@@ -30,7 +30,7 @@ rem --- Open/Lock files
     files$[3]="APC_TYPECODE",ids$=files$[3]; rem apm-10
     files$[4]="apt-02",ids$="APT_INVOICEDIST"
     files$[5]="apt-05",ids$="APT_CHECKHISTORY"
-    files$[6]="apw-05"
+    files$[6]="apw-05",ids$=files$
     options$[6]="C"
     files$[7]="GLS_PARAMS",ids$=files$[7]; rem gls-01
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -42,11 +42,13 @@ rem --- Open/Lock files
     apt02_dev=channels[4]
     apt05_dev=channels[5]
     apw05_dev=channels[6]
+    gls01_dev=channels[7]
 
 rem --- Dimension string templates
 
+    dim aps01a$:templates$[1]
     dim apm01a$:templates$[2],apm10a$:templates$[3],apt02a$:templates$[4],
-:       apt05a$:templates$[5],apw05a$:templates$[6],aps01a$:templates$[1],
+:       apt05a$:templates$[5],apw05a$:templates$[6],
 :       gls01a$:templates$[7]
 
 
@@ -650,7 +652,7 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -694,7 +696,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
