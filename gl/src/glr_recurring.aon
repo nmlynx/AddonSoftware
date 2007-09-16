@@ -17,14 +17,14 @@ rem --- Retrieve the program path
 
 rem --- Assign input values to local variables
 
-    cycle_code$=rd_rec_data$[1,0]
+    cycle_code$=Option!.getOptionData("CYCLE_CODE")
 rem    cycle_date$=rd_rec_data$[2,0]
 rem    cycle_reversal$=rd_rec_data$[3,0]
 
 rem --- Initializations
 
-    gle01$="gle-02"
-    gle11$="gle-12"
+    gle01$="gle-02",gle01_alias$="GLE_RECJEHDR"
+    gle11$="gle-12",gle11_alias$="GLE_RECJEDET"
     update$="glu_recurring.aon"
     cycles$="Y"
     je$="N"
@@ -39,8 +39,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -62,7 +61,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
