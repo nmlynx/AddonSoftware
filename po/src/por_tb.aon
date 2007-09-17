@@ -200,7 +200,7 @@ rem --- Accumulate receipt total
 :                   (pot14a.po_no$=ponum$ and pot14a.receiver_no$=pot04a.receiver_no$)
 
                     read record (pot14_dev) pot14a$
-                    find record (pom02_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch1) pom02a$
+                    find record (pom02a_dev,key=pot14a.firm_id$+pot14a.po_line_code$,dom=brnch1) pom02a$
                     if stk$="S" if pom02a.line_type$<>"S" continue
                     if stk$="N" if pom02a.line_type$<>"N" continue
 brnch1:
@@ -253,7 +253,7 @@ rem ---
 
 rem --- Get pot-05 data
 
-                        find record (pot05_dev,key=pot25a.firm_id$+pot25a.ap_type$+pot25a.vendor_id$+pot25a.ap_inv_no$+pot25a.sequence_no$,dom=nextxref) pot05a$
+                        find record (pot05a_dev,key=pot25a.firm_id$+pot25a.ap_type$+pot25a.vendor_id$+pot25a.ap_inv_no$+pot25a.sequence_no$,dom=nextxref) pot05a$
 
 rem --- LET INVAMT=C[0],INVAMT$=STR(INVAMT:M1$)
 
@@ -264,8 +264,8 @@ rem --- LET INVAMT=C[0],INVAMT$=STR(INVAMT:M1$)
 
 rem --- Get pot-25 Data
 
-                        find record (pot25_dev,key=pot25a.firm_id$+pot25a.ap_type$+pot25a.vendor_id$+pot25a.ap_inv_no$+pot25a.sequence_no$,dom=nextxref) pot25a$
-                        find record (pom02_dev,key=pot25a.firm_id$+pot25a.po_line_code$,dom=brnch2) pom02a$
+                        find record (pot25a_dev,key=pot25a.firm_id$+pot25a.ap_type$+pot25a.vendor_id$+pot25a.ap_inv_no$+pot25a.sequence_no$,dom=nextxref) pot25a$
+                        find record (pom02a_dev,key=pot25a.firm_id$+pot25a.po_line_code$,dom=brnch2) pom02a$
                         if stk$="S" if pom02a.line_type$<>"S" read (pot35_dev);continue
                         if stk$="N" if pom02a.line_type$<>"N" read (pot35_dev);continue
 
@@ -407,7 +407,7 @@ newvendor: rem --- New Vendor
     vendrcptamt=0
     vendinvamt=0
     vendrcptamt_iv=0
-    find record (apm01_dev,key=firm_id$+vendor$,dom=brnch3) apm01a$
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=brnch3) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch3:
@@ -548,6 +548,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
