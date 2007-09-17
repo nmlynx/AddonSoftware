@@ -1,5 +1,5 @@
 rem ivc - Inventory Item Update (ATAMO Routine)
-rem Program ivc_itemupdt v8.0.0 08Nov2006 (ivc_ua)
+rem Program ivc_itemupdt.aon v8.0.0 08Nov2006 (ivc_ua)
 rem Created by adx_codeport.bbx v1.1.2 (11/08/2006 12:22:14)
 
 rem  +-----------------------------------------+
@@ -87,77 +87,57 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
-
-    files=14,begfile=1,endfile=files
-    dim files$[files],options$[files],chans$[files],templates$[files]
-    files$[1]="IVS_PARAMS"; rem --- "ads-01"
-    files$[2]="IVM_ITEMMAST"; rem --- "ivm-01"
-    files$[3]="IVM_ITEMWHSE"; rem --- "ivm-02"
-    files$[4]="IVX_ITEMVEND"; rem --- "ivm-03"
-    files$[5]="IVM_ITEMTIER"; rem --- "ivm-04"
-    files$[6]="IVM_ITEMVEND"; rem --- "ivm-05"
-    files$[7]="IVM_LSMASTER"; rem --- "ivm-07"
-    files$[8]="IVM_LSXREF"; rem --- "ivm-08"
-    files$[9]="IVM_ITEMACT"; rem --- "ivm-12"
-    files$[10]="IVM_LSACT"; rem --- "ivm-17"
-    files$[11]="IVT_LSTRANS"; rem --- "ivt-01"
-    files$[12]="IVX_LSCUST"; rem --- "ivt-02"
-    files$[13]="IVX_LSVEND"; rem --- "ivt-03"
-    files$[14]="IVT_ITEMTRAN"; rem --- "ivt-04"
-
-    for wkx=begfile to endfile
-        options$[wkx]="OTA"
-    next wkx
-
-    call pgmdir$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
-:                                   chans$[all],templates$[all],tblchans$[all],batch,status$
-
-rem ---     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-rem --- :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ads01_dev=num(chans$[1])
-    ivm01_dev=num(chans$[2])
-    ivm02_dev=num(chans$[3])
-    ivm03_dev=num(chans$[4])
-    ivm04_dev=num(chans$[5])
-    ivm05_dev=num(chans$[6])
-    ivm07_dev=num(chans$[7])
-    ivm08_dev=num(chans$[8])
-    ivm12_dev=num(chans$[9])
-    ivm17_dev=num(chans$[10])
-    ivt01_dev=num(chans$[11])
-    ivt02_dev=num(chans$[12])
-    ivt03_dev=num(chans$[13])
-    ivt04_dev=num(chans$[14])
-
-rem --- Dimension string templates
-
-    dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03h$:templates$[4],
-:       ivm04a$:templates$[5],ivm05a$:templates$[6],ivm07a$:templates$[7],
-:       ivm08a$:templates$[8],ivm12a$:templates$[9],ivm17a$:templates$[10],
-:       ivt01a$:templates$[11],ivt02a$:templates$[12],ivt03a$:templates$[13],
-:       ivt04a$:templates$[14]
+    ivs01_dev=tblchans[0]
+    ivm01_dev=tblchans[1]
+    ivm02_dev=tblchans[2]
+    ivm03_dev=tblchans[3]
+    ivm04_dev=tblchans[4]
+    ivm05_dev=tblchans[5]
+    ivm07_dev=tblchans[7]
+    ivm08_dev=tblchans[8]
+    ivm12_dev=tblchans[12]
+    ivm17_dev=tblchans[17]
+    ivt01_dev=tblchans[41]
+    ivt02_dev=tblchans[42]
+    ivt03_dev=tblchans[43]
+    ivt04_dev=tblchans[44]
+    gls01_dev=tblchans[50]
 
 rem --- Retrieve miscellaneous templates
 
-    files=2,begfile=1,endfile=files
+    files=15,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="ivs-01A"
-    ids$[2]="sys-01A"
+    ids$[1]="IVM_ITEMMAST"
+    ids$[2]="IVM_ITEMWHSE"
+    ids$[3]="IVX_ITEMVEND"
+    ids$[4]="IVM_ITEMTIER"
+    ids$[5]="IVM_ITEMVEND"
+    ids$[6]="IVM_LSMASTER"
+    ids$[7]="IVX_LSXREF"
+    ids$[8]="IVM_ITEMACT"
+    ids$[9]="IVM_LSACT"
+    ids$[10]="IVT_LSTRANS"
+    ids$[11]="IVX_LSCUST"
+    ids$[12]="IVX_LSVEND"
+    ids$[13]="IVT_ITEMTRANS"
+    ids$[14]="GLS_PARAMS"
+    ids$[15]="IVS_PARAMS"
+
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
-rem --- Dimension miscellaneous string templates
+rem --- Dimension string templates
 
-    dim ivs01a$:templates$[1],sys01a$:templates$[2]
+    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm03h$:templates$[3],
+:       ivm04a$:templates$[4],ivm05a$:templates$[5],ivm07a$:templates$[6],
+:       ivm08a$:templates$[7],ivm12a$:templates$[8],ivm17a$:templates$[9],
+:       ivt01a$:templates$[10],ivt02a$:templates$[11],ivt03a$:templates$[12],
+:       ivt04a$:templates$[13],gls01a$:templates$[14],ivs01a$:templates$[15]
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sys01a_key$=firm_id$+"SY00"
-    find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Parameters
 
@@ -194,7 +174,7 @@ rem --- Validate arguments
     clock$=""
     ymd$=fndate$(when$)
     if pos(action$="ICPOOECOUCTAOOPI",2) goto l900
-    call pgmdir$+"adc_peryear.aon",firm_id$,sys01_dev,ymd$,period$,year$
+rem progrm missing    call pgmdir$+"adc_peryear.aon",firm_id$,gls01_dev,ymd$,period$,year$
     if period$="" period$=p4$(1,2),year$=p4$(3)
     clock$=fntime$(clock$)
 l900:
