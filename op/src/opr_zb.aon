@@ -32,9 +32,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Open/Lock Files
 
@@ -127,7 +127,7 @@ rem --- Line Type
 
  rem                           dim y0$(32),y1$(12)
                             d1$=""
-                            find record (opm02_dev,key=ope11a_key.FIRM_ID$+opt11a.LINE_CODE$,dom=Find_Revenue) opm02a$
+                            find record (opm02a_dev,key=ope11a_key.FIRM_ID$+opt11a.LINE_CODE$,dom=Find_Revenue) opm02a$
                             if opm02a.LINE_TYPE$="M" continue
                             if opm02a.LINE_TYPE$<>"S" then
 
@@ -140,7 +140,7 @@ rem --- Line Type
 
                                 d0$=opt01a.DIST_CODE$
                                 if p3$(11,1)="Y" then
-                                    find record (ivm02_dev,key=ope11a_key.FIRM_ID$+opt11a.WAREHOUSE_ID$,dom=Find_Revenue) ivm02a$
+                                    find record (ivm02a_dev,key=ope11a_key.FIRM_ID$+opt11a.WAREHOUSE_ID$,dom=Find_Revenue) ivm02a$
                                     d0$=ivm02a.AR_DIST_CODE$
                                 endif
 rem --- Find Revenue Account                            
@@ -149,7 +149,7 @@ Find_Revenue:
 
                             if d1$="" then
  rem                            dim d9$(80)
-                                find record (arm10_dev,key=ope11a_key.FIRM_ID$+"D"+d0$,dom=*continue) arm10d$
+                                find record (arm10a_dev,key=ope11a_key.FIRM_ID$+"D"+d0$,dom=*continue) arm10d$
                                 d1$=arm10d.GL_SLS_ACCT$
                             endif
 Check_Value:
@@ -161,7 +161,7 @@ rem --- A/R Account, Cash Account
 Account: 
 
 rem                 dim d9$(80)
-                    find record (arm10_dev,key=firm_id$+"D"+opt01a.DIST_CODE$,dom=Return_Value) arm10d$
+                    find record (arm10d_dev,key=firm_id$+"D"+opt01a.DIST_CODE$,dom=Return_Value) arm10d$
                     if opt01a.CASH_SALE$="Y" d1$=arm10d.GL_CASH_ACCT$ else d1$=arm10d.GL_AR_ACCT$
                     d0=opt01a.TOTAL_SALES+opt01a.TAX_AMOUNT+opt01a.FREIGHT_AMT-opt01a.DISCOUNT_AMT
                     z9$="   "
@@ -190,7 +190,7 @@ rem --- Discount Amount
 
                         precision 4
  rem                    dim tax$(60),x0$(60)
-                        find record (opm06_dev,key=firm_id$+opt01a.TAX_CODE$,dom=Return_Value) opm06a$
+                        find record (opm06a_dev,key=firm_id$+opt01a.TAX_CODE$,dom=Return_Value) opm06a$
                         x=x0*opt01a.TAXABLE_AMT/100
                         precision 2
                         x=x*1
@@ -205,7 +205,7 @@ rem --- Discount Amount
                         x1$=glm01a.GL_ACCT_DESC$+glm01a.GL_ACCT_TYPE$+glm01a.DETAIL_FLAG$+glm01a.RESERVED_STR$
                         x1$=opm06a$(26+2*(x9-1),2)
                         if x1$<>"  " then
-                        find record (opm06_dev,key=firm_id$+x1$,dom=Goto_Next) opm06a2$
+                        find record (opm06a_dev,key=firm_id$+x1$,dom=Goto_Next) opm06a$
                         x=x0*opt01a.TAXABLE_AMT/100
                         precision 2
                         x=x*1
@@ -287,7 +287,7 @@ rem --- Print Invoice Number & Date
 
                rem          dim x1$(35)
                             glm01a.GL_ACCT_DESC$="*** Not On File ***"
-                            find record (glm01_dev,key=firm_id$+w0$(18,10),dom=Print) glm01a$
+                            find record (glm01a_dev,key=firm_id$+w0$(18,10),dom=Print) glm01a$
                             x1$=glm01a.GL_ACCT_DESC$
                     endif
 rem --- Print
@@ -356,7 +356,7 @@ Customer_Break:
     if t9$="E" return
 
     arm01a.CUSTOMER_NAME$="*** Not On File ***"
-    find record (arm01_dev,key=w0$(1,2)+w0$(5,6),dom=printer_dev1) arm01a$
+    find record (arm01a_dev,key=w0$(1,2)+w0$(5,6),dom=printer_dev1) arm01a$
     x0$=fnmask$(w0$(5,p[0]),m0$)+" "+arm01a.CUSTOMER_NAME$
     if r5$="D" then
 
@@ -412,9 +412,9 @@ Write_To_Work_File: rem --- Write To Work File
 
     z0=0
     glw04a.Firm_Id$=opt01_key.FIRM_ID$+opt01_key.AR_TYPE$+opt01_key.CUSTOMER_ID$+opt01_key.AR_INV_NO$+d1$+z9$
-    find record (opw04_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$,dom=*next) opw04a2$
+    find record (opw04a_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$,dom=*next) opw04a$
     z0=z0+d0
-    write record (opw04_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$) opw04a2$
+    write record (opw04_dev,key=glw04a.FIRM_ID$+glw04a_key.GL_ACCOUNT$) opw04a$
 rem --- Update G/L Summary
 Update_G_L:
     if d0=0 return
@@ -546,7 +546,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
