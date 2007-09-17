@@ -198,6 +198,7 @@ get_file_description: rem --- Return file description
     ddm21_key$=key(ddm21_dev,err=*return);read(ddm21_dev)*,*,template$
     if pos("DDM_TABLES"=ddm21_key$)<>1 return
     ddm10_key$=ddm21a.dd_table_alias$
+    if ddm10_key$<>files$[x] return
     ddm10_dev=unt
     open (ddm10_dev,err=*return) sysdatadir$+"ddm_tables.dat"
     dim ddm10a$:template$

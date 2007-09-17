@@ -36,73 +36,61 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=7,begfile=1,endfile=files
+    files=8,begfile=1,endfile=files
     dim files$[files],options$[files],chans$[files],templates$[files]
-    files$[1]="APS_PARAMS";rem --- ads-01"
+    files$[1]="APS_PARAMS";rem --- aps-01"
     files$[2]="IVM_ITEMMAST";rem --- ivm-01"
     files$[3]="POC_LINECODE";rem --- pom-02"
     files$[4]="POT_RECHDR";rem --- pot-04"
     files$[5]="POT_INVHDR";rem --- pot-05"
     files$[6]="POT_RECDET";rem --- pot-14"
     files$[7]="POT_INVDET";rem --- pot-25"
-
+    files$[8]="IVS_PARAMS";rem --- ivs-01
 	for wkx=begfile to endfile
 		options$[wkx]="OTA"
 	next wkx
-	call dir_pgm$+"adc_open_tables.aon",begfile,endfile,files$[all],options$[all],
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :			                            chans$[all],templates$[all],rd_table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
-    ads01_dev=num(chans$[1])
+    aps01_dev=num(chans$[1])
     ivm01_dev=num(chans$[2])
     pom02_dev=num(chans$[3])
     pot04_dev=num(chans$[4])
     pot05_dev=num(chans$[5])
     pot14_dev=num(chans$[6])
     pot25_dev=num(chans$[7])
-
+    ivs01_dev=num(chans$[8])
 
 rem --- Dimension string templates
 
+    dim aps01a$:templates$[1],ivs01a$:templates$[8]
     dim ivm01a$:templates$[2],pom02a$:templates$[3],pot04a$:templates$[4],
 :       pot05a$:templates$[5],pot14a$:templates$[6],pot25a$:templates$[7]
 
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A"
-	ids$[2]="ivs-01A"
-    call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1]
-	dim ivs01a$:templates$[2]
 
 rem --- retrieve key template
 
-	call dir_pgm$+"adc_key_template.aon","POT_RECHDR","PRIMARY",pot04a_key0$,rd_table_chans$[all],status$
-	call dir_pgm$+"adc_key_template.aon","POT_INVDET","INVBYPO",invbypo_key$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECHDR","PRIMARY",pot04a_key0$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_INVDET","INVBYPO",invbypo_key$,rd_table_chans$[all],status$
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-	vendor_id$=fnget_fld_data$(table$,"VENDOR_ID")
-    level$=fnget_fld_data$(table$,"SUMM_DTL")
-    startpo$=fnget_fld_data$(table$,"PO_NO")
+    
+    vendor_id$=Option!.getOptionData("VENDOR_ID")
+    level$=Option!.getOptionData("SUMM_DTL")
+    startpo$=Option!.getOptionData("PO_NO")
 
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
 
 	call dir_pgm$+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
 	if iv$="Y"
 		ivs01a_key$=firm_id$+"IV00"
-		find record (ads01_dev,key=ivs01a_key$,err=*next) ivs01a$
+		find record (ivs01_dev,key=ivs01a_key$,err=*next) ivs01a$
 	endif
 
 rem --- Initializations
@@ -197,7 +185,7 @@ rem --- Position pot-04
     read record (pot04_dev,key=pot04ak0$,dom=*next) pot04a$
 
 readpot04: rem --- Read next PO
-escape
+
     k$=key(pot04_dev,end=no_more_receipts)
     if pos(firm_id$=k$)<>1 goto no_more_receipts
     if k.vendor_id$<>vendor_id$ goto no_more_receipts
@@ -329,7 +317,7 @@ nextpot04: rem --- Loop up for next PO/Receiver
     goto readpot04
 
 no_more_receipts: rem --- No more Receipts
-escape
+
 	if po_found
 		if polines>1 gosub pototal
 		gosub reporttotal
@@ -530,7 +518,7 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     dir_pgm$=stbl("+DIR_PGM",err=std_error_exit)
-    call dir_pgm$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -574,7 +562,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run dir_pgm$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 

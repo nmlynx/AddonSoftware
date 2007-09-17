@@ -23,13 +23,14 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="APS_PARAMS",ids$=files$[1]; rem "aps-01"
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="apm-03"
     files$[4]="APC_TYPECODE",ids$[4]=files$[4]
     files$[5]="apt-05",ids$[5]="APT_CHECKHISTORY"
+    files$[6]="GLS_PARAMS",ids$[6]=files$[6]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -38,26 +39,26 @@ rem --- Open/Lock files
     apm03_dev=channels[3]
     apm10_dev=channels[4]
     apt05_dev=channels[5]
+    gls01_dev=channels[6]
 
 rem --- Dimension string templates
-
-    dim aps01a$:templates$[1]
       
-    dim apm01a$:templates$[2],apm03a$:templates$[3],apm10a$:templates$[4],
+    dim aps01a$:templates$[1],apm01a$:templates$[2],apm03a$:templates$[3],apm10a$:templates$[4],
 :       apt05a$:templates$[5]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    period$=fnget_fld_data$(table$,"period_year")
-    year=num(period$(3,4))
-    period=num(period$(1,2))
-    call pgmdir$+"adc_perioddates.aon",aps01_dev,period,year,begdate$,enddate$,status
+    period$=Option!.getOptionData("PERIOD")
+    year$=Option!.getOptionData("YEAR")
+    year=num(year$)
+    period=num(period$)
+    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
 
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    
     vendor_size=num(aps01a.vendor_size$)
     multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"

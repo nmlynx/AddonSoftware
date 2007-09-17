@@ -55,12 +55,11 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    period$=fnget_fld_data$(table$,"period_year")
-    sequence$=fnget_fld_data$(table$,"report_sequence")
-    year=num(period$(3,4))
-    period=num(period$(1,2))
-    call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+    period$=Option!.getOptionData("PERIOD")
+    sequence$=Option!.getOptionData("REPORT_SEQUENCE")
+    year=num(year$)
+    period=num(period$)
+    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
 
 rem --- Retrieve parameter records
 
