@@ -23,9 +23,8 @@ rem --- Retrieve sysinfo data
     more=1
 rem --- Open/Lock files
 
-    files=9,begfile=1,endfile=files
+    files=12,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="apm-06",ids$[2]="APM_VENDREPL"
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
@@ -34,10 +33,12 @@ rem --- Open/Lock files
     files$[7]="ivm-17",ids$[7]="IVM_ITEMACT"
     files$[8]="ivt-01",ids$[8]="IVT_LSTRANS"
     files$[9]="ivt-04",ids$[9]="IVT_ITEMTRAN"
+    files$[10]="APS_PARAMS",ids$[10]=files$[10]
+    files$[11]="GLS_PARAMS",ids$[11]=files$[11]
+    files$[12]="IVS_PARAMS",ids$[12]=files$[12]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
     apm06_dev=channels[2]
     ivm01_dev=channels[3]
     ivm02_dev=channels[4]
@@ -46,26 +47,17 @@ rem --- Open/Lock files
     ivm17_dev=channels[7]
     ivt01_dev=channels[8]
     ivt04_dev=channels[9]
+    aps01a_dev=channels[10]
+    gls01a_dev=channels[11]
+    ivs01a_dev=channels[12]
 
 rem --- Dimension string templates
 
     dim apm06a$:templates$[2],ivm01a$:templates$[3],ivm02a$:templates$[4],
 :       ivm07a$:templates$[5],ivm12a$:templates$[6],ivm17a$:templates$[7],
-:       ivt01a$:templates$[8],ivt04a$:templates$[9]
+:       ivt01a$:templates$[8],ivt04a$:templates$[9],aps01a$:templates$[10],
+:       gls01a$:templates$[11],ivs01a$:templates$[12]
 
-rem --- Retrieve miscellaneous templates
-
-    files=3,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A:APS_PARAMS"
-    ids$[2]="gls-01A:GLS_PARAMS"
-    ids$[3]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1],gls01a$:templates$[2],ivs01a$:templates$[3]
 
 
 rem --- Assign form input values to local variables
@@ -78,27 +70,25 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
   
 rem --- Parameters
 
     dim info$[20],ap$(21)
-    rem find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
-    firm_id$=sysinfo.firm_Id$
     n1$=sysinfo.firm_name$
     n2$="IV"
     n3$=sysinfo.task_desc$
     apflag$="N"
-    find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-    find record (sys01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
+    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
     call pgmdir$+"adc_application.aon","AP",info$[all]
     apflag$=info$[20]
     if apflag$="N" then
-        find record (sys01_dev,key=firm_id$+"AP00",dom=Init) aps01a$
+        find record (aps01a_dev,key=firm_id$+"AP00",dom=Init) aps01a$
         apflag$=aps01a.use_replen$
         if apflag$=" " apflag$="N"
     endif
@@ -233,7 +223,7 @@ rem --- Check for Serial Numbers
 
 Check_SlNo_Call:
 
-        find record (ivm12_dev,key=ivm02a_key.firm_id$+ivm02_key.warehouse_id$+ivm02a_key.item_id$+ivs01a.CURRENT_PER$+ivs01a.CURRENT_year$,dom=*continue) ivm12a$
+        find record (ivm12a_dev,key=ivm02a_key.firm_id$+ivm02_key.warehouse_id$+ivm02a_key.item_id$+ivs01a.CURRENT_PER$+ivs01a.CURRENT_year$,dom=*continue) ivm12a$
         call pgmdir$+"ivc_pa.bbx","END",b[all],balance
         item$[0]=ivm02.firm_id$
         item$[1]=ivm02.warehouse_id$
@@ -394,7 +384,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
