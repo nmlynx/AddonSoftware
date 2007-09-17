@@ -221,7 +221,7 @@ Warehouse_Break: rem --- Warehouse Break
     gosub Product_Break
 rem dim x0$(32)
     let t0$=ivww21a.warehouse_id$,ivm10c.short_name$="(Not On File)",l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let headings$[1]=sysinfo.task_desc$+" For Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)+h8$
     return
 
@@ -229,7 +229,7 @@ Product_Break: rem --- Product Break
 
 rem dim x0$(32)
     let t1$=ivww21.product_type$,ivm10a.code_desc$="(Not On File)"
-    find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product "+t1$+" "+ivm10a.code_desc$
     return
 
@@ -354,7 +354,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
