@@ -33,9 +33,9 @@ rem     value_01$=fnget_fld_data$(table$,"dataname_01")
 rem --- Retrieve parameter records
 
         ars01a_key$=firm_id$+"AR00"
-        find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+        find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
         ivs01a_key$=firm_id$+"IV00"
-        find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+        find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 
 rem --- Initialize data
@@ -74,7 +74,7 @@ rem --- Initialize Totals
 
 rem --- Open Invoice ?
 
-                find record (art01_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$+"00",dom=Remove_Invoice) art01a$
+                find record (art01a_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$+"00",dom=Remove_Invoice) art01a$
                 if art01a.INVOICE_DATE$>p9$  then
                         continue
                 endif
@@ -229,7 +229,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
