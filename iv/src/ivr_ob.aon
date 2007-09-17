@@ -60,7 +60,7 @@ rem --- Level breaks?
 rem --- Retrieve item
 
         ivm01a_key$=firm_id$+ivm03a_key.item_id$
-        find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*continue) ivm01a$
         if ivm01a.eoq_code$=" " ivm01a.eoq_code$="D"
         if ivm01a.ord_pnt_code$=" " ivm01a.ord_pnt_code$="D"
         if ivm01a.saf_stk_code$=" " ivm01a.saf_stk_code$="D"
@@ -91,7 +91,7 @@ rem --- Read next warehouse record
 rem --- Retrieve warehouse record
 
             ivm02a_key$=firm_id$+ivm03a_key$+ivm01a.item_id$
-            find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+            find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
             if ivm02a.eoq_code$=" " ivm02a.eoq_code$="D"
             if ivm02a.ord_pnt_code$=" " ivm02a.ord_pnt_code$="D"
             if ivm02a.saf_stk_code$=" " ivm02a.saf_stk_code$="D"
@@ -325,6 +325,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
