@@ -101,7 +101,7 @@ rem --- Open or Closed Lots?
 
         if ocb$<>"B" then
             d0=0
-            find record (ivm07_dev,key=firm_id$+ivt03a_key.wharehouse_id$+ivt03a_key.item_id$+ivt03a_key.lotser_nbr$,dom=*next) ivm07a$
+            find record (ivm07a_dev,key=firm_id$+ivt03a_key.wharehouse_id$+ivt03a_key.item_id$+ivt03a_key.lotser_nbr$,dom=*next) ivm07a$
             if (ocb$="O" and d0=0) or (ocb$="C" and d0)then
                 continue
             endif
@@ -109,7 +109,7 @@ rem --- Open or Closed Lots?
 
         read record (ivt01_dev,key=ivt03a_key.firm_id$+ivt03a_key.warehouse_id$+
 :       ivt03a_key.item_id$+ivt03a_key.lotser_no$+ivt03a_key.trans_date$+ivt03a_key.iv_hist_seq$,dom=*continue) ivt01a$
-        find record (ivm01_dev,key=firm_id$+item$,dom=*continue) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+item$,dom=*continue) ivm01a$
         if item_type$<>"" if  ivm01a.item_type$<>item_type$ then
             continue
         endif
@@ -201,7 +201,7 @@ Vendor_Break: rem --- Vendor Break
     if l+1>l9 gosub report_heading
     rem dim c1$(30)
     let apm01a.vendor_name$="Invalid Vendor"
-    find record (apm01_dev,key=firm_id$+vendor$,dom=*next) apm01a$
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=*next) apm01a$
     print (printer_dev)@(0),fnmask$(ivt03_key.vendor_id$,vendmask$)," ",apm01a.vendor_name$
     let l=l+1
     let t1$=vendor$,first$="Y"
@@ -351,7 +351,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
