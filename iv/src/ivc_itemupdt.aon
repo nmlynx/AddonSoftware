@@ -41,7 +41,7 @@ rem --- WI/WO    = Work Orders (WI=Issue/WO=Receipt)
 rem --- CO/UC/OO = Commit/Uncommit/Adjust On Order
 rem --- CHANNELS[n]: Channel Numbers (input)
 rem --- changed to tblchans$[all] for file open pgm adc_open_tables.aon.CAH
-rem --- [0] = sys-01      [7] = ivm-07    [42] = ivt-02
+rem --- [0] = gls-01 (was sys-01)      [7] = ivm-07    [42] = ivt-02
 rem --- [1] = ivm-01      [8] = ivm-08    [43] = ivt-03
 rem --- [2] = ivm-02     [12] = ivm-12    [44] = ivt-04
 rem --- [4] = ivm-04     [17] = ivm-17    [40] = ivw-04
@@ -87,7 +87,7 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
-    ivs01_dev=tblchans[0]
+    gls01_dev=tblchans[0]
     ivm01_dev=tblchans[1]
     ivm02_dev=tblchans[2]
     ivm03_dev=tblchans[3]
@@ -101,11 +101,10 @@ rem --- Retrieve sysinfo data
     ivt02_dev=tblchans[42]
     ivt03_dev=tblchans[43]
     ivt04_dev=tblchans[44]
-    gls01_dev=tblchans[50]
 
 rem --- Retrieve miscellaneous templates
 
-    files=15,begfile=1,endfile=files
+    files=13,begfile=1,endfile=files
     dim ids$[files],templates$[files]
     ids$[1]="IVM_ITEMMAST"
     ids$[2]="IVM_ITEMWHSE"
@@ -120,8 +119,6 @@ rem --- Retrieve miscellaneous templates
     ids$[11]="IVX_LSCUST"
     ids$[12]="IVX_LSVEND"
     ids$[13]="IVT_ITEMTRANS"
-    ids$[14]="GLS_PARAMS"
-    ids$[15]="IVS_PARAMS"
 
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
@@ -132,12 +129,7 @@ rem --- Dimension string templates
 :       ivm04a$:templates$[4],ivm05a$:templates$[5],ivm07a$:templates$[6],
 :       ivm08a$:templates$[7],ivm12a$:templates$[8],ivm17a$:templates$[9],
 :       ivt01a$:templates$[10],ivt02a$:templates$[11],ivt03a$:templates$[12],
-:       ivt04a$:templates$[13],gls01a$:templates$[14],ivs01a$:templates$[15]
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+:       ivt04a$:templates$[13]
 
 rem --- Parameters
 

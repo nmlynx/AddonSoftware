@@ -264,7 +264,7 @@ new_whse:
     if done return
     dim whse_tot[5]
     let t0$=whse$, ivm10c.short_name$="(Not on File)",l=l9+1,warehouse=0
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
     let headings$[3]=h1$,headings$[3](fncenter(x$,width),len(x$))=x$
     return
@@ -284,7 +284,7 @@ new_prodtype:
     if done return
     dim prod_tot[5]
     let t1$=product$,ivm10a.code_desc$="(Not on File)",product=0
-    find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product Type "+t1$+" "+ivm10a.code_desc$
     return
 

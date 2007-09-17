@@ -45,29 +45,32 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- File channels
+
+    ivm01_dev=channels[1]
+    ivm02_dev=channels[2]
+    ivm03_dev=channels[3]
+    ivm12_dev=channels[12]
+
 rem --- Retrieve miscellaneous templates
 
-    files=12,begfile=1,endfile=files
+    files=4,begfile=1,endfile=files
     dim ids$[files],templates$[files]
     ids$[1]="IVM_ITEMMAST"; rem ivm-01A:
     ids$[2]="IVM_ITEMWHSE"; rem ivm-02A:
     ids$[3]="IVX_ITEMWHSE"; rem ivm-03G:
-    ids$[12]="IVM_ITEMACT"; rem ivm-12A:
+    ids$[4]="IVM_ITEMACT"; rem ivm-12A:
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm03g$:templates$[3],ivm12a$:templates$[12]
+    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm03g$:templates$[3],ivm12a$:templates$[4]
 
 rem --- Initializations
 
     precision places
     dim b[20],w[12],periods$[13]
-    ivm01_dev=channels[1]
-    ivm02_dev=channels[2]
-    ivm03_dev=channels[3]
-    ivm12_dev=channels[12]
     flag$=""
     status=1
     periods$[1]=base_peryr$(3,4)+base_peryr$(1,2)
