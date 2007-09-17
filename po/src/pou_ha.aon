@@ -23,34 +23,24 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=3,begfile=1,endfile=files
+    files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="pot-03",ids$[3]="POT_QAREJHST"
+    files$[4]="APS_PARAMS",ids$[4]=files$[4]
+    files$[5]="IVS_PARAMS",ids$[5]=files$[5]
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
     apm01_dev=channels[2]
     pot03_dev=channels[3]
+    aps01a_dev=channels[4]
+    ivs01a_dev=channels[5]
 
 rem --- Dimension string templates
 
-    dim apm01a$:templates$[2],pot03a$:templates$[3]
-
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="aps-01A:APS_PARAMS"
-    ids$[2]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim aps01a$:templates$[1],ivs01a$:templates$[2]
+    dim apm01a$:templates$[2],pot03a$:templates$[3],aps01a$:templates$[4],ivs01a$:templates$[5]
 
 rem --- Assign form input values to local variables
 
@@ -64,9 +54,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     
 rem --- Parameters
 
@@ -114,7 +104,7 @@ brnch3:
 brnch4:
     if v$="" goto brnch2
     dim x1$(195)
-    find record (apm01_dev,key=firm_id$+v$,dom=brnch1) apm01a$
+    find record (apm01a_dev,key=firm_id$+v$,dom=brnch1) apm01a$
     vendfrom$=v$
     vendfname$=apm01a.vendor_name$
     call pgmdir$+"syc_rs.bbx","",my_context,3000,fnmask$(vendfrom$,vendomask$),0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13000,vendfname$(1,min(79-v1-vendlen-1,30)),0,"",status
@@ -149,7 +139,7 @@ brnch9:
     if v$="" goto brnch7
     if vendfrom$<>"" if v$<vendfrom$ goto brnch6
     dim x1$(195)
-    find record (apm01_dev,key=firm_id$+v$,dom=brnch6) apm01a$
+    find record (apm01a_dev,key=firm_id$+v$,dom=brnch6) apm01a$
     vendthru$=v$
     vendtname$=apm01a.vendor_name$
     call pgmdir$+"syc_rs.bbx","",my_context,3001,fnmask$(vendthru$,vendomask$),0,"",status; call pgmdir$+"syc_rs.bbx","",my_context,13001,vendtname$(1,min(79-v1-vendlen-1,30)),0,"",status
@@ -482,6 +472,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
