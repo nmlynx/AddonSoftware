@@ -93,12 +93,12 @@ rem --- Retrieve warehouse records
 
             ivm02a_key$=firm_id$+ivm03a_key$+ivm01a.item_Id$
             ivm12a_key$=ivm02a_key$+ivs01a.current_year+ivs01a.current_per
-            find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+            find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
             cost=ivm02a.unit_cost
             onhand=ivm02a.qty_on_hand
             usage=0
             balance=0
-            find record (ivm12_dev,key=ivm12a_key$,dom=Estimate_annual_usage) ivm12a$
+            find record (ivm12a_dev,key=ivm12a_key$,dom=Estimate_annual_usage) ivm12a$
             call pgmdir$+"ivc_pa.bbx",selection$,c[all],balance
 
 Estimate_annual_usage: rem --- Calculate estimated annual usage
@@ -132,7 +132,7 @@ rem --- Update totals for warehouse/item
 
             if level$<>"I" then
                 write record (ivw17_dev,key=ivw17a_key$) ivw17a$
-                find record (ivs10_dev,key=ivs10w_key$,dom=*next) ivs10w$
+                find record (ivs10w_dev,key=ivs10w_key$,dom=*next) ivs10w$
                 rem ivs10w.period$+ivs10w.year$+ivs10w.run_date$==when$
                 ivs10w.period$=when$
                 ivs10w.total_value=ivs10w.total_value+ivw17a.qty_issued
@@ -172,7 +172,7 @@ rem --- Done with warehouses
 rem --- Update item totals
 
         write record (ivw07_dev,key=ivw071a_key$) ivw07a$
-        find record (ivs10_dev,key=ivs10i_key$,dom=*next) ivs10i$
+        find record (ivs10i_dev,key=ivs10i_key$,dom=*next) ivs10i$
         ivs10i.period$=when$
         ivs10i.total_value=ivs10i.total_value+ivw07a.avg_cost
         ivs10i.total_value=ivs10i.total_value+ivw07a.std_cost
@@ -386,6 +386,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
