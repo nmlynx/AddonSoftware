@@ -299,7 +299,7 @@ Whse_Break: rem --- Warehouse Break
     ivm10c.short_name$="(Not on File)"
     l=l9+1
     if done=0 l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     headings$[2]="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
     return
 
@@ -315,7 +315,7 @@ Item_Break: rem --- Item break
     endif
     dim x0$(32),h9$(width-3),description$(dw),item[4]
     let t1$=item$,ivm01a_key$=firm_id$+item$,ivm01a.Item_desc$(1)="(Not on File)",a2$(1)=""
-    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
     if type$<>"" then
         if ivm01a.Item_type$<>type$ then
             let skip=1
@@ -501,6 +501,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
