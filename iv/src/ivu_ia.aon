@@ -23,31 +23,20 @@ rem --- Retrieve sysinfo data
     more=1
 rem --- Open/Lock files
 
-    files=2,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="ivm-17",ids$[2]="IVM_LSACT"
+    files$[3]="IVS_PARAMS",ids$[3]=files$[3]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
     ivm17_dev=channels[2]
+    ivs01a_dev=channels[3]
 
 rem --- Dimension string templates
 
-    dim ivm17a$:templates$[2]
+    dim ivm17a$:templates$[2],ivs01a$:templates$[3]
 
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivs01a$:templates$[1]
 
 rem --- Assign form input values to local variables
 
@@ -58,13 +47,12 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
   
 
 rem --- Parameters
 
-    rem find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
-    firm_id$=sysinfo.firm_id$
+    
     n1$=sysinfo.firm_name$
     n2$="IV"
     n3$=sysinfo.task_desc$
@@ -337,6 +325,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
