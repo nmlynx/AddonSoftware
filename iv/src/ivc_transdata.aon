@@ -1,5 +1,5 @@
 rem ivc - Format Standard Transaction References
-rem Program ivc_td v8.0.0 26Oct2006 (ivc_td)
+rem Program ivc_transdata.aon v8.0.0 26Oct2006 (ivc_td)
 rem Created by adx_codeport.bbx v1.1.1 (10/26/2006 01:10:51)
 
 rem  +-----------------------------------------+
@@ -57,44 +57,34 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
-
-    files=5,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ivm-01"
-    files$[2]="ivm-10"
-    files$[3]="arm-01"
-    files$[4]="apm-01"
-    files$[5]="glm-01"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ivm01_dev=channels[1]
-    ivm10_dev=channels[2]
-    arm01_dev=channels[3]
-    apm01_dev=channels[4]
-    glm01_dev=channels[5]
-
-
-
-rem --- Dimension string templates
-
-    dim ivm01a$:templates$[1],ivm10a$:templates$[2],arm01a$:templates$[3],apm01a$:templates$[4],
-:       glm01a$:templates$[5]
+    ivm01_dev=channels[0]
+    ivm10a_dev=channels[1]
+    arm01_dev=channels[2]
+    apm01_dev=channels[3]
+    glm01_dev=channels[4]
+    ivm10b_dev=channels[6]
+    ivm10c_dev=channels[7]
 
 rem --- Retrieve miscellaneous templates
 
-    files=3,begfile=1,endfile=files
+    files=7,begfile=1,endfile=files
     dim ids$[files],templates$[files]
-    ids$[1]="ivm-10B"
-    ids$[2]="ivm-10C"
-    ids$[3]="ivt-04A"
+    ids$[1]="IVM_ITEMMAST"
+    ids$[2]="ARM_CUSTMAST"
+    ids$[3]="APM_VENDMAST"
+    ids$[4]="GLM_ACCT"
+    ids$[5]="IVC_TRANCODE"
+    ids$[6]="IVC_WHSECODE"
+    ids$[7]="IVT_ITEMTRAN"
+
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
-rem --- Dimension miscellaneous string templates
+rem --- Dimension string templates
 
-    dim ivm10b$:templates$[1],ivm10c$:templates$[2],ivt04a$:templates$[3]
+    dim ivm01a$:templates$[1],
+:       arm01a$:templates$[2],apm01a$:templates$[3],glm01a$:templates$[4]
+    dim ivm10b$:templates$[5],ivm10c$:templates$[6],ivt04a$:templates$[7]
 
 
 l96: rem --- Initializations
@@ -113,7 +103,6 @@ l96: rem --- Initializations
     seq$=ivt04a.trans_seq$
     desc$=""
     item$=cvs(ivt04a.finish_item$,2)
-    firm_id$=masks$[0]
     type$=""
     types$="Beg BOM TranSalePhysP.O.XferXferW.O.W.O."
 
@@ -124,7 +113,6 @@ rem --- Retrieve finished item
     desc$=""
     find record (ivm01_dev,key=a0$,dom=l1100) ivm01a$
     desc$=fnitem$(ivm01a.item_desc$)
-rem -- old format using params: desc$=fnitem$(desc$,params[4],params[5],params[6])
 
 l1100: rem --- Retrieve customer name
 
@@ -312,8 +300,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
