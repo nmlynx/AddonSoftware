@@ -24,41 +24,32 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=6,begfile=1,endfile=files
+    files=8,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
     files$[3]="arm-10",ids$[3]="ARC_TERMCODE"
     files$[4]="ope-01",ids$[4]="OPE_ORDHDR"
     files$[5]="ope-11",ids$[5]="OPE_ORDDET"
     files$[6]="opm-02",ids$[6]="OPC_LINECODE"
+    files$[7]="ARS_PARAMS",ids$[7]=files$[7]
+    files$[8]="IVS_PARAMS",ids$[8]=files$[8]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
     arm01_dev=channels[2]
     arm10_dev=channels[3]
     ope01_dev=channels[4]
     ope11_dev=channels[5]
     opm02_dev=channels[6]
-
+    ars01a_dev=channels[7]
+    ivs01a_dev=channels[8]
 rem --- Dimension string templates
 
     dim arm01a$:templates$[2],arm10a$:templates$[3],ope01a$:templates$[4],
-:       ope11a$:templates$[5],opm02a$:templates$[6]
+:       ope11a$:templates$[5],opm02a$:templates$[6],ars01a$:templates$[7],
+:       ivs01a$:templates$[8]
 
-rem --- Retrieve miscellaneous templates
 
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A:ARS_PARAMS"
-    ids$[2]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ars01a$:templates$[1],ivs01a$:templates$[2]
 
 rem --- Assign form input values to local variables
 
@@ -68,9 +59,9 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     
 
 rem --- Document initializations
@@ -90,8 +81,8 @@ rem    dim p[2]
     n1$=sysinfo.firm_name$
     n2$="AR"
     n3$=sysinfo.task_desc$
-    find record (ads01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
-    find record (ads01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
+    find record (ars01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
+    find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
 rem p[0]=num(p2$(1,2))
     p[0]=num(ivs01a_key.FIRM_ID$)
 
@@ -260,7 +251,7 @@ rem --- Retrieve terms
 
                 if  ope01a.TERMS_CODE$<>arm10a_key.AR_TERMS_CODE$ then
                     dim x0$(32)
-                    find record (arm10_dev,key=firm_id$+"A"+ope01a.TERMS_CODE$,dom=Type) arm10a$
+                    find record (arm10a_dev,key=firm_id$+"A"+ope01a.TERMS_CODE$,dom=Type) arm10a$
                     terms$=arm10a_key.CODE_DESC$
                 endif
 
@@ -287,7 +278,7 @@ rem --- Add Up Order Amount
                 read record (ope11_dev) ope11a$
                 price=ope11a.UNIT_PRICE*ope11a.QTY_ORDERED
 rem             dim y0$(32) 
-                find record (opm02_dev,key=firm_id$+ope11a.MAN_PRICE$,dom=*next) opm02a$
+                find record (opm02a_dev,key=firm_id$+ope11a.MAN_PRICE$,dom=*next) opm02a$
                 if opm02a.LINE_TYPE$="O" if ope11a.COMMIT_FLAG$="Y" price=ope11a.EXT_PRICE else price=ope11a.UNIT_PRICE
                 amnt=amnt+price
             wend
@@ -365,7 +356,7 @@ Customer_break: rem --- Customer break
     if done>0 return
 rem dim b1$(282)
     let t0$=ope01a_key.CUSTOMER_ID$,arm01a.CUSTOMER_NAME$="(Not On File)",number=0
-    find record (arm01_dev,key=ope01a_key.FIRM_ID$+ope01a_key.CUSTOMER_ID$,dom=*next) arm01a$
+    find record (arm01a_dev,key=ope01a_key.FIRM_ID$+ope01a_key.CUSTOMER_ID$,dom=*next) arm01a$
     let customer$=fnmask$(ope01a_ket.CUSTOMER_ID$,m0$),name$=arm01a.CUSTOMER_NAME$
     let phone$=fnmask$(arm01a.PHONE_NO$,m8$)
     if l+2>l9 gosub report_heading
@@ -451,6 +442,7 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
 rem    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
