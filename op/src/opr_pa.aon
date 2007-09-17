@@ -35,9 +35,10 @@ rem value_01$=fnget_fld_data$(table$,"dataname_01")
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+
 
 rem --- Initialize Data
 
@@ -97,7 +98,7 @@ while more
             ope04a_key$=key(ope04_dev,end=*break)
             read (ope04_dev)
             if ope04a_key.FIRM_ID$+ope04a_key.ORDINV_FLAG$<>firm_id$+"O" break
-            find record (ope01_dev,key=ope04a_key.FIRM_ID$+ope04a_key.AR_TYPE+"000",dom=Remove_bad) ope01a$
+            find record (ope01a_dev,key=ope04a_key.FIRM_ID$+ope04a_key.AR_TYPE+"000",dom=Remove_bad) ope01a$
             if (which_ones$="P" and ope01a.INVOICE_TYPE$<>"S") or (which_ones$="Q" and ope01a.INVOICE_TYPE$<>"P") continue
 
 On_Demand: rem --- Here for on-demand printing
@@ -137,7 +138,7 @@ rem         dim c1$(255),c$(159)
             if cvs(ope01a.SHIPTO_NO$,2)="" then arm03a.NAME$(1,4)="SAME",c$(1,81)=""
                  else
                     if ope01a.SHIPTO_NO$="000099" then
-                         find record (ope31_dev,key=firm_id$+ope01_key.CUSTOMER_ID$+ope01_key.ORDER_NO$,dom=Cal_Prog) ope31a$
+                         find record (ope31a_dev,key=firm_id$+ope01_key.CUSTOMER_ID$+ope01_key.ORDER_NO$,dom=Cal_Prog) ope31a$
                             c$=ope31a.ADDR_LINE_1$+ope31a.ADDR_LINE_2$+ope31a.ADDR_LINE_3$+ope31a.ADDR_LINE_4$+ope31a.CITY$+ope31a.STATE_CODE$+ope31a.ZIP_CODE$
                              arm03a.NAME$=ope31a.NAME$
         
@@ -145,7 +146,7 @@ rem         dim c1$(255),c$(159)
                         else
 
 
-                             find record (arm03_dev,key=firm_id$+ope01_key.CUSTOMER_ID$+ope01a.SHIPTO_NO$,dom=Cal_Prog) arm03a$
+                             find record (arm03a_dev,key=firm_id$+ope01_key.CUSTOMER_ID$+ope01a.SHIPTO_NO$,dom=Cal_Prog) arm03a$
                              c$=arm03a.ADDR_LINE_1$+arm03a.ADDR_LINE_2$+arm03a.ADDR_LINE_3$+arm03a.ADDR_LINE_4$+arm03a.CITY$+arm03a.COUNTRY$
                     endif
 Cal_Prog:
@@ -162,13 +163,13 @@ Cal_Prog:
         rem --- Salesperson
 
             x1$="HOUSE"
-            find record (arm10_dev,key=firm_id$+"F"+ope01a.SLSPSN_CODE$,dom=Terms) arm10f$
+            find record (arm10f_dev,key=firm_id$+"F"+ope01a.SLSPSN_CODE$,dom=Terms) arm10f$
             x1$=arm10f.CODE_DESC$
 
 Terms: rem --- Terms
 
             x3$=""
-            find record (arm10_dev,key=firm_id$+"A"+ope01a.TERMS_CODE$,dom=Print_Heading) arm10a$
+            find record (arm10a_dev,key=firm_id$+"A"+ope01a.TERMS_CODE$,dom=Print_Heading) arm10a$
             x3$=arm10a.CODE_DESC$
 
 Print_Heading: rem --- Print Heading
@@ -190,7 +191,7 @@ Print_Heading: rem --- Print Heading
 rem --- Type
 
 rem         dim y0$(30)
-            find record (opm02_dev,key=firm_id$+ope11a.LINE_CODE$,dom=Check_Condn2) opm02a$
+            find record (opm02a_dev,key=firm_id$+ope11a.LINE_CODE$,dom=Check_Condn2) opm02a$
             if pos(ope01a.INVOICE_TYPE$="P")<>0 and ope11a.COMMIT_FLAG$<>"N" then
                     if pos(ope11a.WAREHOUSE_ID$=othwhse$)=0 othwhse$=othwhse$+ope11a.WAREHOUSE_ID$
             endif
@@ -205,14 +206,14 @@ rem         dim y0$(30)
 Check_Condn2:
                             dim x2$(60),x7$(62); let x2$(1)="**Not On File**"
                             if pos(opm02a.LINE_TYPE$=" SRDP")<>0 then
-                                 find record (ivm01_dev,key=firm_id$+ope11a.ITEM_ID$,dom=Find_Record1) ivm01a$
+                                 find record (ivm01a_dev,key=firm_id$+ope11a.ITEM_ID$,dom=Find_Record1) ivm01a$
                                  gosub Compress_Description
 
 
 
 Find_Record1:
                                  dim x5$(10)
-                                 find record (ivm02_dev,key=firm_id$+ope11a.WAREHOUSE_ID$+ope11a.ITEM_ID$,dom=*next) ivm02a$
+                                 find record (ivm02a_dev,key=firm_id$+ope11a.WAREHOUSE_ID$+ope11a.ITEM_ID$,dom=*next) ivm02a$
                             endif
             endif
 
@@ -495,7 +496,7 @@ while more
             ope11a_key$=key(ope11_dev,end=*break)
             if pos(ope01_key.FIRM_ID$+ope01_key.AR_TYPE$+ope01_key.CUSTOMER_ID$+ope01_key.ORDER_NO$=ope11a_key$)<>1 break
             read record (ope11_dev) ope11a$
-            find record (opm02_dev,key=firm_id$+ope11a.LINE_CODE$,dom=*continue) opm02a$
+            find record (opm02a_dev,key=firm_id$+ope11a.LINE_CODE$,dom=*continue) opm02a$
             if ope01a.INVOICE_TYPE$<>"P" then
                             if ope11a.COMMIT_FLAG$="N" 
                             if whse$<>"" and ope11a.WAREHOUSE_ID$<>whse$ if ope11a.PICK_FLAG$<>"Y" allprint$="NO"; continue else continue
@@ -606,7 +607,7 @@ rem --- arm-10 G records for backwards compatibility
     status=11
     ml=0
     opm14a_key$=firm_id$+ope01a.MESSAGE_CODE$
-    find record (opm04_dev,key=opm14a_key$,dom=Return4) opm04a$
+    find record (opm04a_dev,key=opm14a_key$,dom=Return4) opm04a$
     status=0
     read (opm14_dev,key=opm14a_key$,dom=*next)
 
@@ -748,7 +749,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
