@@ -60,7 +60,7 @@ rem --- Background
 rem --- Retrieve item totals
 
     ivs10i_key$=firm_id$+"I"
-    find record (ivs10_dev,key=ivs10i_key$,dom=*next) ivs10i$
+    find record (ivs10i_dev,key=ivs10i_key$,dom=*next) ivs10i$
     headings$[1]=sysinfo.task_desc$+" By Item"
     x$=fndate$(ivs10i.run_date$)
     if pos(value$="UB")>0 x$="Period "+ivs10i.period$+" "+fnyy$(ivs10i.year$)
@@ -246,9 +246,9 @@ Whse_Break: rem --- Warehouse Break
     dim count[25],value[25]
     let class=0,totalpct=0,xlimit=percents[class],sequence=0,number=0
     let t0$=ivw17a_key.warehouse_id$,ivm10c.whse_name$="(Not on File)",l=l9+1,l1=0,warehouse=0
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let h9$="Warehouse "+t0$+" "+cvs(ivm10c.whse_name$,2),headings$[1]=sysinfo.task_desc$+"For "+h9$
-    find record (ivs10_dev,key=firm_id$+"W"+t0$,dom=*next) ivs10w$
+    find record (ivs10w_dev,key=firm_id$+"W"+t0$,dom=*next) ivs10w$
     let x$=fndate$(ivs10w.run_date$)
     if pos(value$="UB")>0 x$="Period "+ivs10w.period$+" "+fnyy$(ivs10w.year$)
     let headings$[2]="Valued By "+x1$+" "+x2$+" As Of "+x$
@@ -258,7 +258,7 @@ Work_File: rem --- Process work file record
 
     dim description$(dw)
     let ivm01a_key$=firm_id$+ivw07a.Item_Id$,ivm01a.item_Id$="(Not On File)",ivm01a.product_type$=""
-    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
     let description$=fnitem$(ivm01a.item_Id$,p[3],p[4],p[5]),oldabc$=ivw07a.abc_code$
 
 rem --- Calculate percentage
@@ -469,7 +469,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
