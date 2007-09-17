@@ -204,10 +204,10 @@ rem --- Read next lot/serial xref
             ivm01a_key$=firm_id$+ivm08a_key.item_id$
             ivm01a.item_desc$="(Not On File)"
             ivm01a.product_type$=""
-            find record (ivm07_dev,key=ivm08a_key$,dom=*continue) ivm07a$
+            find record (ivm07a_dev,key=ivm08a_key$,dom=*continue) ivm07a$
             if status$="O" if ivm07a.qty_on_hand=0 continue
             if status$="C" if ivm07a.qty_on_hand<>0 continue
-            find record (ivm01_dev,key=ivm01a_key$,dom=Activity) ivm01a$
+            find record (ivm01a_dev,key=ivm01a_key$,dom=Activity) ivm01a$
             if type$<>"" if ivm01a.item_type$<>type$ continue
             if begprod$<>"" if ivm01a.product_type$<begprod$ continue
             if endprod$<>"" if ivm01a.product_type$>endprod$ continue
@@ -233,7 +233,7 @@ rem --- Format detail line fields
         if cvs(issued$,2)<>"" issued$=fndate$(issued$)
         if ap$<>"N" then
             apm01a_key$=firm_id$+ivm07a.vendor_id$
-            find record (apm01_dev,key=apm01a_key$,dom=Print_Item) apm01a$
+            find record (apm01a_dev,key=apm01a_key$,dom=Print_Item) apm01a$
             vendor$=fnmask$(apm01a.vender_Id$,m0$)+" "+apm01a.vender_name$
         endif
 
@@ -313,7 +313,7 @@ whse_break: rem --- Warehouse Break
     endif
     rem dim x0$(32)
     let t0$=ivm07a_key.warehouse_id$,ivm10c.whse_name$="(Not on File)",l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let headings$[2]="Warehouse "+t0$+" "+cvs(ivm10c.whse_name$,2)+" For "+h8$
     return
 
@@ -326,7 +326,7 @@ Item_break: rem --- Item Break
     endif
     dim h9$(o[7]+3),description$(dw),item[12]
     let t1$=ivm07a_key.item_id$,ivm01a_key$=firm_id$+t1$,ivm01a.item_desc$="(Not On File)",ivm01a.product_type$="",l1=0
-    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
     let description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
     let h9$(1)=ivm01a.item_id$,h9$(o[2]+1)=description$,h9$(o[7]+1)=ivm01a.product_type$
     call pgmdir$+"adc_progress.aon","S","","","",ivm07a_key.warehouse_id$+" "+ivm07a_key.item_id$,0,0,1,meter_num,status
@@ -483,7 +483,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+   call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
