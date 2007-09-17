@@ -190,10 +190,10 @@ rem --- Retrieve item, warehouse and activity
     ivm01a_key$=firm_id$+item$
     ivm02a_key$=firm_id$+whse$+item$
     ivm12a_key$=ivm02a_key$+period$
-    find record (ivm01_dev,key=ivm01a_key$,dom=Loop_Back) ivm01a$
+    find record (ivm01a_dev,key=ivm01a_key$,dom=Loop_Back) ivm01a$
     if type$<>"" if ivm01a.item_type$<>type$ goto Loop_Back
-    find record (ivm02_dev,key=ivm02a_key$,dom=Loop_Back) ivm02a$
-    find record (ivm12_dev,key=ivm12a_key$,dom=*next) ivm12a$
+    find record (ivm02a_dev,key=ivm02a_key$,dom=Loop_Back) ivm02a$
+    find record (ivm12a_dev,key=ivm12a_key$,dom=*next) ivm12a$
     description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
     um$=ivm01a.product_type$
     printed=0
@@ -213,7 +213,7 @@ rem --- Retrieve GL account if distribute by item
     if di$<>"N" then
     rem dim y0$(32),y1$(7*g[4],"0")
         arm10d_key$=firm_id$+"D"+ivm02a.dist_code$
-        find record (arm10_dev,key=arm10d_key.firm_id$+arm10d_key.record_id_d$+arm10d_key.dist_code$,dom=*next) arm10d$
+        find record (arm10d_dev,key=arm10d_key.firm_id$+arm10d_key.record_id_d$+arm10d_key.dist_code$,dom=*next) arm10d$
         account$=arm01a.gl_ar_acct
     endif
 rem --- Product total or summary report?
@@ -426,7 +426,7 @@ whse_break: rem --- Warehouse Break
         l2=0
         t2$=""
         warehouse=0
-        find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+        find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
         h5$=cvs(t0$+" "+ivm10c.whse_name$,2)
         x$="Warehouse "+h5$
         h6$=h5$
@@ -462,7 +462,7 @@ product_Break_Flow:
         dim t[2]
         let t1$=product$,ivm10a.code_desc$="(Not on File)",t2$=""
         let l1=0,l2=0,l3=0,product=0,totonhand=0
-        find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+        find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
         let h7$=cvs(t1$+" "+ivm10a.code_desc$,2),h9$="Product Type "+h7$
         if pagebreak$="Y" l=l9+1
     endif
@@ -512,7 +512,7 @@ Update_GL: rem --- Update G/L Summary
     if gl$="Y" and amount<>0 then
         rem dim z0$(2+g[4]),z[1]
         let glw04a_key$=firm_id$+account$
-        find record (glw04_dev,key=glw04a_key$,dom=*next) glw04a$
+        find record (glw04a_dev,key=glw04a_key$,dom=*next) glw04a$
         let glw04a.gl_post_amt=glw04a.gl_post_amt+amount
         write record (glw04_dev,key=glw04a_key$) glw04a$
     endif
@@ -653,6 +653,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
