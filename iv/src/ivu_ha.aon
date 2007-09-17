@@ -23,40 +23,30 @@ rem --- Retrieve sysinfo data
     more=1
 rem --- Open/Lock files
 
-    files=6,begfile=1,endfile=files
+    files=7,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
     files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
     files$[3]="ivm-07",ids$[3]="IVM_LSMASTER"
     files$[4]="ivt-01",ids$[4]="IVT_LSTRANS"
     files$[5]="ivt-02",ids$[5]="IVX_LSCUST"
     files$[6]="ivt-03",ids$[6]="IVX_LSVEND"
+    files$[7]="IVS_PARAMS",ids$[7]=files$[7]
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
     ivm01_dev=channels[2]
     ivm07_dev=channels[3]
     ivt01_dev=channels[4]
     ivt02_dev=channels[5]
     ivt03_dev=channels[6]
+    ivs01a_dev=channels[7]
 
 rem --- Dimension string templates
 
     dim ivm01a$:templates$[2],ivm07a$:templates$[3],ivt01a$:templates$[4],
-:       ivt02a$:templates$[5],ivt03a$:templates$[6]
+:       ivt02a$:templates$[5],ivt03a$:templates$[6],ivs01a$:templates$[7]
 
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivs01a$:templates$[1]
 
 rem --- Assign form input values to local variables
 
@@ -66,18 +56,16 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    rem sys01a_key$=firm_id$+"SY00"
-    rem find record (ads01_dev,key=sys01a_key$,err=std_missing_params) sys01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+   
 
 rem --- Parameters
 
-    rem find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
-    firm_id$=sysinfo.firm_Id$
+   
     n1$=sysinfo.firm_name$
     n2$="IV"
     n3$=sysinfo.task_desc$
-    find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
     if pos(ivs01a.lotser_flag$="SL")=0 then
         call pgmdir$+"ivc_warnings.aon","L",status
         goto std_exit
@@ -205,14 +193,14 @@ rem --- Main Read
 rem --- Purges Here
 
         if pos(ivt01a.trans_source$="POOP",2)<>0 then
-            find record (ivm01_dev,key=ivt01a.firm_id$+ivt01a.item_Id$,dom=Purge_ivt01) ivm01a$
+            find record (ivm01a_dev,key=ivt01a.firm_id$+ivt01a.item_Id$,dom=Purge_ivt01) ivm01a$
             x$=ivt01a.firm_id$+ivt01a.trans_ref_1$+ivm01a.product_type$+ivt01a.lotser_nbr$+ivt01a.trans_date$+ivt01a.warehouse_Id$+ivt01a.item_Id$+ivt01a.iv_hist_seq$
 
 rem --- Purge ivt-02
 
             if ivt01a.trans_source$="OP" then
                 remove (ivt02_dev,key=x$,dom=Lotted_Inventory)
-                find record (ivm07_dev,key=ivt01a.firm_id$+ivt01a.warehouse_Id$+ivt01a.item_Id$,dom=Purge_ivt01) ivm07a$
+                find record (ivm07a_dev,key=ivt01a.firm_id$+ivt01a.warehouse_Id$+ivt01a.item_Id$,dom=Purge_ivt01) ivm07a$
                 x$(3,6)=ivm07a.vendor_id$
             endif
 
@@ -353,7 +341,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
