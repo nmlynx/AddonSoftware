@@ -1,3 +1,39 @@
+[[GLM_ACCT.AOPT-TRAN]]
+rem Transaction History Inquiry
+
+cp_acct$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="GL_ACCOUNT_1"
+dflt_data$[1,1]=cp_acct$
+dflt_data$[2,0]="GL_ACCOUNT_2"
+dflt_data$[2,1]=cp_acct$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:                       "GLR_TRANSHISTORY",
+:                       user_id$,
+:                   	  "",
+:                       "",
+:                       table_chans$[all],
+:                       "",
+:                       dflt_data$[all]
+[[GLM_ACCT.AOPT-SUMM]]
+rem Summary Activity Inquiry
+
+cp_acct$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="GL_ACCOUNT_1"
+dflt_data$[1,1]=cp_acct$
+dflt_data$[2,0]="GL_ACCOUNT_2"
+dflt_data$[2,1]=cp_acct$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:                       "GLR_SUMMARY",
+:                       user_id$,
+:                   	  "",
+:                       "",
+:                       table_chans$[all],
+:                       "",
+:                       dflt_data$[all]
 [[GLM_ACCT.<CUSTOM>]]
 #include std_missing_params.src
 [[GLM_ACCT.BSHO]]

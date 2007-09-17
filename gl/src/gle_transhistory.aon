@@ -7,6 +7,9 @@ rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
+rem ************don't think this is used...looks like all functionality
+rem ************was incorporated into glr_transhistory.aon. CAH 
+
     setesc std_error
     seterr std_error
 
@@ -53,15 +56,15 @@ rem --- Retrieve parameter records
 
 rem --- Assign input values to local variables
 
-    begper$=rd_rec_data$[1,0]
-    begyear$=rd_rec_data$[2,0]
-    endper$=rd_rec_data$[3,0]
-    endyear$=rd_rec_data$[4,0]
-    begacct$=rd_rec_data$[5,0]
-    endacct$=rd_rec_data$[6,0]
-    wildcard$=rd_rec_data$[7,0]
-    journal$=rd_rec_data$[8,0]
-    detail$=rd_rec_data$[9,0]
+    begper$=Option!.getOptionData("BEG_GL_PER")
+    begyear$=Option!.getOptionData("BEG_YEAR")
+    endper$=Option!.getOptionData("END_GL_PER")
+    endyear$=Option!.getOptionData("END_YEAR")
+    begacct$=Option!.getOptionData("GL_ACCOUNT_1")
+    endacct$=Option!.getOptionData("GL_ACCOUNT_2")
+    wildcard$=Option!.getOptionData("GL_WILDCARD")
+    journal$=Option!.getOptionData("PICK_JOURNAL_ID")
+    detail$=Option!.getOptionData("PICK_LISTBUTTON")
     if cvs(begper$,2)="" begper$=gls01a.current_per$
     if cvs(endper$,2)="" endper$=gls01a.current_per$
     if cvs(begyear$,2)="" begyear$=gls01a.current_year$
