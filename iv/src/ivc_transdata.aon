@@ -163,7 +163,7 @@ l2200: rem --- IT Inventory Transactions
 
     x0$(6,20)="(Undefined Code)"
     x2$(1)="Ref "+ref2$
-    find record (ivm10_dev,key=firm_id$+"B"+ref4$,dom=*next) ivm10b$
+    find record (ivm10b_dev,key=firm_id$+"B"+ref4$,dom=*next) ivm10b$
     x0$(6,20)=ivm10b.code_desc$
     x1$(1)="Code "+ref4$+" "+x0$(6,20)+ivt04a.trans_cmt$
     if cvs(seq$,2)<>"" x2$(12)="-"+seq$
@@ -191,7 +191,7 @@ l2600: rem --- TI/TO Transfer In/Out
 
     x0$(6,24)="(Undefined Warehouse)"
     x2$(1)="Ref "+ref2$
-    find record (ivm10_dev,key=firm_id$+"C"+ref4$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+ref4$,dom=*next) ivm10c$
     x0$(6,24)=ivm10c.short_name$
     if source$="TO" x1$(1)="To "+ref4$+" "+x0$(6,24)
     if source$="TI" x1$(1)="From "+ref4$+" "+x0$(6,24)
