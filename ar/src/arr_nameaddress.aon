@@ -26,46 +26,33 @@ rem --- Open/Lock files
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-01"
+    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    ars01_dev=channels[1]
     arm01_dev=channels[2]
     file_dev=arm01_dev
 
 rem --- Dimension string templates
 
-    dim arm01a$:templates$[2]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ars01a$:templates$[1]
+    dim ars01a$:templates$[1],arm01a$:templates$[2]
 
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
-    sequence$=fnget_fld_data$(table$,"dreport_sequence")
-    begcust$=fnget_fld_data$(table$,"customer_id_1")
-    endcust$=fnget_fld_data$(table$,"customer_id_2")
-    begalt$=fnget_fld_data$(table$,"alt_sequence_1")
-    endalt$=fnget_fld_data$(table$,"alt_sequence_2")
+    sequence$=option!.getOptionData("DREPORT_SEQUENCE")
+    begcust$=option!.getOptionData("CUSTOMER_ID_1")
+    endcust$=option!.getOptionData("CUSTOMER_ID_2")
+    begalt$=option!.getOptionData("alt_SEQUENCE_1")
+    endalt$=option!.getOptionData("ALT_SEQUENCE_2")
 
 rem --- Retrieve parameter records
 
     ars01a_key$=sysinfo.firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    customer_size=num(ars01a.customer_size$)
-    m0$=ars01a.customer_output$
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     m0=len(m0$)
 
 rem --- Document initializations
@@ -177,9 +164,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -203,8 +189,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -222,7 +208,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

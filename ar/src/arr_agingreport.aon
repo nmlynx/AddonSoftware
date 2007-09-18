@@ -49,18 +49,18 @@ rem --- Open/Lock files
 
     files=7,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-01"
-    files$[3]="arm-02"
-    files$[4]="arm-05"
-    files$[5]="arm-10"
-    files$[6]="art-01"
-    files$[7]="art-11"
+    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
+    files$[4]="arm-05",ids$[4]="ARM_CUSTCMTS"
+    files$[5]="arc_salecode",ids$[5]="ARC_SALECODE"
+    files$[6]="art-01",ids$[6]="ART_INVHDR"
+    files$[7]="art-11",ids$[7]="ART_INVDET"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    ars01_dev=channels[1]
     arm01_dev=channels[2]
     arm02_dev=channels[3]
     arm05_dev=channels[4]
@@ -70,95 +70,46 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-    dim arm01a$:templates$[2],arm02a$:templates$[3],arm05a$:templates$[4],
-:       arm10a$:templates$[5],art01a$:templates$[6],art11a$:templates$[7]
-
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="arm-10F"
-    ids$[2]="ars-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim arm10f$:templates$[1],ars01a$:templates$[2]
+    dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
+    dim arm05a$:templates$[4],arm10f$:templates$[5],art01a$:templates$[6]
+    dim art11a$:templates$[7]
 
 rem --- Assign form input values to local variables
 
     maxperiods=5
     dim begperiods$[maxperiods],endperiods$[maxperiods]
-    useform=0
-    if useform
-    table$=fnget_table$("")
-    agingdate$=fnget_fld_data$(table$,"dataname_01")
-    basis$=fnget_fld_data$(table$,"dataname_02")
-    future$=fnget_fld_data$(table$,"dataname_03")
-    option$=fnget_fld_data$(table$,"dataname_04")
-    sequence$=fnget_fld_data$(table$,"dataname_05")
-    begcust$=fnget_fld_data$(table$,"dataname_06")
-    endcust$=fnget_fld_data$(table$,"dataname_07")
-    begsales$=fnget_fld_data$(table$,"dataname_08")
-    endsales$=fnget_fld_data$(table$,"dataname_09")
-    update$=fnget_fld_data$(table$,"dataname_10")
-    type$=fnget_fld_data$(table$,"dataname_11")
-    comments$=fnget_fld_data$(table$,"dataname_12")
-    begperiods$[0]=fnget_fld_data$(table$,"dataname_13")
-    begperiods$[1]=fnget_fld_data$(table$,"dataname_14")
-    begperiods$[2]=fnget_fld_data$(table$,"dataname_15")
-    begperiods$[3]=fnget_fld_data$(table$,"dataname_16")
-    begperiods$[4]=fnget_fld_data$(table$,"dataname_17")
-    begperiods$[5]=fnget_fld_data$(table$,"dataname_18")
-    endperiods$[0]=fnget_fld_data$(table$,"dataname_19")
-    endperiods$[1]=fnget_fld_data$(table$,"dataname_20")
-    endperiods$[2]=fnget_fld_data$(table$,"dataname_21")
-    endperiods$[3]=fnget_fld_data$(table$,"dataname_22")
-    endperiods$[4]=fnget_fld_data$(table$,"dataname_23")
-    endperiods$[5]=fnget_fld_data$(table$,"dataname_24")
-    endif
-
-rem --- Faking the input for testing purposes until the form is completed
-
-    agingdate$="20040331"
-    basis$="I"
-    future$="Y"
-    option$="C"
-    sequence$="C"
-    begcust$=""
-    endcust$=""
-    begsales$=""
-    endsales$=""
-    update$="N"
-    type$="D"
-    comments$="N"
-    begperiods$[0]="20040401"
-    begperiods$[1]="20040301"
-    begperiods$[2]="20040201"
-    begperiods$[3]="20040101"
-    begperiods$[4]="20031201"
-    begperiods$[5]=""
-    endperiods$[0]=""
-    endperiods$[1]="20040331"
-    endperiods$[2]="20040229"
-    endperiods$[3]="20040131"
-    endperiods$[4]="20031231"
-    endperiods$[5]="20031130"
-
-    future=future$="Y"
-    nocredits=credits$<>"Y"
-    comments=comments$="Y"
+    agingdate$=option!.getOptionData("REPORT_DATE")
+    credits$=option!.getOptionData("AGE_CREDITS")
+    basis$=option!.getOptionData("REPORT_TYPE")
+    future$=option!.getOptionData("FUTURE_AGING")
+    option$=option!.getOptionData("REPORT_OPTION")
+    sequence$=option!.getOptionData("REPORT_SEQUENCE")
+    begcust$=option!.getOptionData("CUSTOMER_ID_01")
+    endcust$=option!.getOptionData("CUSTOMER_ID_02")
+    begsales$=option!.getOptionData("SALESPERSON_01")
+    endsales$=option!.getOptionData("SALESPERSON_02")
+    update$=option!.getOptionData("UPDATE_AGING")
+    type$=option!.getOptionData("REPORT_SUMM_DET")
+    comments$=option!.getOptionData("CUST_COMMENTS")
+    begperiods$[0]=option!.getOptionData("AGEDATE_FUT_FROM")
+    begperiods$[1]=option!.getOptionData("AGEDATE_CUR_FROM")
+    begperiods$[2]=option!.getOptionData("AGEDATE_30_FROM")
+    begperiods$[3]=option!.getOptionData("AGEDATE_60_FROM")
+    begperiods$[4]=option!.getOptionData("AGEDATE_90_FROM")
+    endperiods$[1]=option!.getOptionData("AGEDATE_CUR_THRU")
+    endperiods$[2]=option!.getOptionData("AGEDATE_30_THRU")
+    endperiods$[3]=option!.getOptionData("AGEDATE_60_THRU")
+    endperiods$[4]=option!.getOptionData("AGEDATE_90_THRU")
+    endperiods$[5]=option!.getOptionData("AGEDATE_120_THRU")
 
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    customer_size=num(ars01a.customer_size$)
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     history$=ars01a.inv_hist_flg$
     jn$=ars01a.job_nos$
-    m0$=ars01a.customer_output$
-    m1$=ars01a.amount_mask$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     m8$="(###)-###-####"
     call pgmdir$+"adc_sizemask.aon",m1$,m1,8,12
     m0=len(m0$)
@@ -335,8 +286,8 @@ rem --- Additional file opens
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    if jn$="Y" files$[1]="opm-09"
-    if op$="Y" files$[2]="opt-01"
+    if jn$="Y" files$[1]="opm-09",ids$[1]="OPM_CUSTJOBS"
+    if op$="Y" files$[2]="opt-01",ids$[2]="OPT_ORDHDR"
     if op$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                              ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -711,7 +662,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
 
@@ -746,8 +696,8 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -771,8 +721,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -790,7 +740,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
