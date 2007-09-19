@@ -13,7 +13,7 @@ filter_defs$[0,1]="='F'"
 [[ARE_FINCHG.BSHO]]
 rem --- Open/Lock files
 
-	files=6,begfile=1,endfile=6
+	files=7,begfile=1,endfile=7
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="ARS_PARAMS";rem --- "ARS_PARAMS"..."ads-01"
 	files$[2]="ARM_CUSTMAST";rem --- "arm-01"
@@ -21,6 +21,7 @@ rem --- Open/Lock files
 	files$[4]="ARC_TERMCODE";rem --- "arm-10" (A)
 	files$[5]="ARC_DISTCODE";rem --- "arm-10 (D)
 	files$[6]="ART_INVHDR";rem --- "art-01"
+	files$[7]="GLS_PARAMS"
 
 	for wkx=begfile to endfile
 		options$[wkx]="OTA"
@@ -30,39 +31,31 @@ rem --- Open/Lock files
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
-	ads01_dev=num(chans$[1])
+	ars01_dev=num(chans$[1])
+	gls01_dev=num(chans$[7])
 
-rem --- Retrieve miscellaneous templates
-
-	files=2,begfile=1,endfile=files
-	dim ids$[files],templates$[files]
-	ids$[1]="ars-01A"
-	ids$[2]="gls-01A"
-	call dir_pgm$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-	if status goto std_exit
+	dim ars01a$:templates$[1],gls01a$:templates$[7]
 
 rem --- Dimension miscellaneous string templates
 
-	dim ars01a$:templates$[1],gls01a$:templates$[2]
 	dim user_tpl$:"firm_id:c(2),op_installed:C(1),glyr:C(4),glper:C(2),no_glpers:C(2),"+
 :	    "disc_pct:C(7),inv_days_due:C(7),disc_days:C(7),prox_days:C(1)"
 	user_tpl.firm_id$=firm_id$
 
 rem --- Retrieve parameter data/see if OP is installed
 
-	call dir_pgm$+"adc_application.aon","OP",info$[all]
+	call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
 	op$=info$[20]
 	user_tpl.op_installed$=op$
 
 	ars01a_key$=firm_id$+"AR00"
-	find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 
 	gls01a_key$=firm_id$+"GL00"
-	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
+	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
 	user_tpl.glyr$=gls01a.current_year$
 	user_tpl.glper$=gls01a.current_per$
 	user_tpl.no_glpers$=gls01a.total_pers$
-
 [[ARE_FINCHG.AR_INV_NO.AVAL]]
 rem --- check art-01 and be sure invoice# they've entered isn't in use for this cust.
 rem --- otherwise, display the selected invoice...
