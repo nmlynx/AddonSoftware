@@ -70,7 +70,7 @@ rem				Form!.getControl(num(user_tpl.zbal_chkbox_id$)).setSelected(0)
 
 		case num(user_tpl.gridInvoice_id$)
 			gosub process_gridInvoice_event
-			callpoint!.setStatus("REFRESH")
+			callpoint!.setStatus("REFRESH-MODIFIED")
 		break
 	swend
 endif
@@ -239,7 +239,7 @@ rem --- Additional File Opens
 gl$="N"
 status=0
 source$=pgm(-2)
-call dir_pgm$+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
+call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
 if status<>0 goto std_exit
 gl$="Y";rem --- forcing to Y for now...testing
 user_tpl.glint$=gl$
@@ -331,11 +331,15 @@ gridInvoice!.setColumnEditable(8,1)
 gridInvoice!.setColumnEditable(9,1)
 gridInvoice!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 [[ARE_CASHHDR.AWRI]]
+escape;rem AWRI -- getting here?
 gosub update_cashhdr_cashdet_cashbal
 [[ARE_CASHHDR.BWRI]]
 gosub validate_before_writing
+
 if validate_passed$<>"Y"
 	callpoint!.setStatus("ABORT")
+else
+	gosub update_cashhdr_cashdet_cashbal
 endif
 [[ARE_CASHHDR.CASH_CHECK.AVAL]]
 if callpoint!.getUserInput()="$"
@@ -413,7 +417,7 @@ gl$=user_tpl.glint$
 rem --- gl$="N";rem --- testing
 recpt_date$=callpoint!.getUserInput()        
 if gl$="Y" 
-	call dir_pgm$+"glc_datecheck.aon",recpt_date$,"Y",per$,yr$,status
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",recpt_date$,"Y",per$,yr$,status
 	if status>99
 		callpoint!.setStatus("ABORT")
 	else
@@ -480,6 +484,7 @@ check_required_fields:
 return
 
 update_cashhdr_cashdet_cashbal:
+
 rem --- need logic to put out two trans for application of OA funds (and CM) -- a negative to the OA, and positive on the invoice
 	are_cashhdr_dev=fnget_dev("ARE_CASHHDR")
 	are_cashdet_dev=fnget_dev("ARE_CASHDET")
@@ -565,8 +570,9 @@ return
 
 
 validate_before_writing:
-	
+
 	validate_passed$="Y"
+
 	if num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))<>0
 		msg_id$="AR_NOT_DIST"
 		gosub disp_message
@@ -1184,7 +1190,7 @@ process_gridInvoice_event:
 				pymt_dist$=pymt_dist$+wk$
 			endif
 			UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
-			callpoint!.setStatus("REFRESH")
+			callpoint!.setStatus("REFRESH-MODIFIED"); rem "added MODIFIED 19sept07.CH, as events in dtl grid no longer 'turning on' save icon
 			
 		break
 
@@ -1228,7 +1234,7 @@ process_gridInvoice_event:
 		case default
 		break
 
-		
+	
 	swend
 
 return
