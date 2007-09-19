@@ -100,7 +100,9 @@ rem --- Open printer
     if status goto std_exit
 
 rem --- Initializations
-    dim p[5],g[1]
+    dim p[5],g[1],files[3]
+    files[3]=ivm03g_dev
+    files[2]=ivm12_dev
     p[0]=num(ivs01a.item_id_len$)
     p[1]=num(ivs01a.precision$)
     g[0]=num(gls01a.total_pers$)
