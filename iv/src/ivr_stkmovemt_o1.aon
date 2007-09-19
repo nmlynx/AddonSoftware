@@ -147,7 +147,7 @@ rem --- Retrieve item
         if flag$<>"" usage=estimated
         avg_usage=usage/g[0]
         if level$="W" action$="" else action$="A"
-        call pgmdir$+"ivc_whseact.aon",action$,channs[all],item$[all],period$[all],activity[all],status$
+        call pgmdir$+"ivc_whseact.aon",action$,channs[all],item$[all],period$[all],activity[all],status
         cur_usage=activity[3]+activity[4]-activity[8]
         prior_usage=usage-cur_usage
         cur_recpts=activity[1]+activity[2]
@@ -160,6 +160,7 @@ rem --- Print detail line
         needed=1+split
         if h9$<>"" needed=needed+2
         if level$="W" last_issue$=fnl$(ivm02a.lstsal_date$,ivm02a.lstiss_date$) else last_issue$=fnl$(ivm01a.lstsal_date$,ivm01a.lstiss_date$)
+	if num(last_issue$(1,4))>0 if last_issue$(5,2)="00" last_issue$(5,4)="0101"
         if cvs(last_issue$,2)<>"" issued$=fndate$(last_issue$)
         if split=0 x$=fnitem$(ivm01a.Item_Desc$,p[3],p[4],p[5])
         if l+needed>l9 gosub report_heading
