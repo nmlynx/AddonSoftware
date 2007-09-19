@@ -12,10 +12,10 @@ rem --- All Rights Reserved
 rem --- Initializations
 
     precision p[1]
-    dim item[3],totals[1]
+    dim item[3],totals[1],files[3]
     dim period$[1],headings$[6],o[8],product[1],warehouse[1],report[1]
-    files[2]=ivm03_dev
-    files[3]=ivm12_dev
+    files[3]=ivm03_dev
+    files[2]=ivm12_dev
     ch1$=""
     ch2$=""
     headings$[0]=sysinfo.firm_name$
@@ -65,8 +65,6 @@ rem --- Position files
     p=0
     if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
     read (ivm03_dev,key=ivm03a_key$,dom=*next)
-
-rem --- Get next sort record
 
 rem --- Main Loop starting
 
@@ -210,7 +208,6 @@ rem --- Generate reciprocal amount
 
 rem --- Write sort record
 
-        dim ivw03a_key$:ivw03_key_tpl$
         ivw03a_key.firm_id$=firm_id$
         ivw03a_key.warehouse_id$=whse$
         ivw03a_key.product_type$ =product$
@@ -218,7 +215,7 @@ rem --- Write sort record
         ivw03a_key.recip_amount$=amount$
         ivw03a_key.item_id$=ivm01a_key.item_id$
         ivw03a.item_desc$=description$
-        ivw03a.unit_measure$=ivm01a.unit_sale$
+        ivw03a.unit_measure$=ivm01a.unit_of_sale$
         ivw03a.total_usage=usage
         ivw03a.unit_cost=cost
         ivw03a.total_cost=total
@@ -236,7 +233,6 @@ rem --- Report initializations
     read (ivw03_dev,key=firm_id$,dom=*next)
 
 rem --- Read next work record
-rem ---  Loop Starting
     while more
 
         read record (ivw03_dev,end=done) ivw03a$
@@ -353,6 +349,7 @@ Init_Heading: rem --- Initialize HEADINGS$
     return
 
 WhseBreak: rem --- Warehouse Break
+
     if t0$<>"" then 
         gosub Prod_Break
         if l0>=1 then
@@ -361,7 +358,7 @@ WhseBreak: rem --- Warehouse Break
             gosub PrintTotal
         endif
     endif
-    if done  break
+    if done return
     dim warehouse[1]
     let t0$=whse$,ivm10c.short_name$="(Not on File)",l=l9+1,l0=0
     find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
