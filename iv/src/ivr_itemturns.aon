@@ -21,23 +21,23 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
+rem --- Open files
 
     files=13,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
     files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-    files$[4]="ivx_itemprod",ids$[4]="IVX_ITEMPROD"; rem ivm-03
+    files$[4]="ivm-03",ids$[4]="IVX_ITEMPROD"
     files$[5]="ivc_prodcode",ids$[5]="IVC_PRODCODE"
     files$[6]="ivm-12",ids$[6]="IVM_ITEMACT"
     files$[7]="ivm-14",ids$[7]="IVM_ITEMSYN"
     files$[8]="ivm-15",ids$[8]="IVC_TYPECODE"
     files$[9]="ivw-03",ids$[9]="IVW_TURNXREF"
-    files$[10]="ivx_itemwhse",ids$[10]="IVX_ITEMWHSE"; rem ivm-03
+    files$[10]="ivm-03",ids$[10]="IVX_ITEMWHSE"
     files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
     files$[12]="ivc_whsecode",ids$[12]="IVC_WHSECODE"
-    files$[13]="ivx_itemprwh",ids$[13]="IVX_ITEMPRWH"; rem ivm-03
+    files$[13]="ivm-03",ids$[13]="IVX_ITEMPRWH"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -60,9 +60,9 @@ rem --- Dimension string templates
 
     dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03a$:templates$[4],
 :       ivm10a$:templates$[5],ivm12a$:templates$[6],ivm14a$:templates$[7],
-:       ivm15a$:templates$[8],ivw03a$:templates$[9],ivm03g$:templates$[10]
-    dim gls01a$:templates$[1],ivs01a$:templates$[11],ivm10c$:templates$[12],
-	ivm03c$:templates$[13]
+:       ivm15a$:templates$[8],ivw03a$:templates$[9],ivm03g$:templates$[10],
+:       gls01a$:templates$[1],ivs01a$:templates$[11],ivm10c$:templates$[12],
+:	ivm03c$:templates$[13]
 
       
 rem --- Assign form input values to local variables
@@ -181,7 +181,6 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 

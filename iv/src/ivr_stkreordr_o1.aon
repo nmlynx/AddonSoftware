@@ -1,5 +1,5 @@
 rem --- Inventory Shortage & Reorder Report
-rem --- Program ivr_stkreordr_o1 v8.0.0 16Jul2007 (ivr_db)
+rem --- Program ivr_stkreordr_o1.aon v8.0.0 16Jul2007 (ivr_db)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 12:55:05)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -231,7 +231,7 @@ WhseBreak: rem --- Warehouse Break
             gosub ProdBreak
         endif
         let t0$=whse$,ivm10c.short_name$="(Not on File)",l=l9+1
-        find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+        find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
         let x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
         let headings$[3]=h1$,headings$[3](fncenter(x$,width),len(x$))=x$
         return
@@ -239,7 +239,7 @@ WhseBreak: rem --- Warehouse Break
 ProdBreak: rem --- Product break
 
         let t1$=product$,ivm10a.code_desc$="(Not on File)"
-        find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+        find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
         let h9$="Product Type "+t1$+" "+ivm10a.code_desc$
         return
 
@@ -374,6 +374,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

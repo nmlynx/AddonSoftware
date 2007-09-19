@@ -1,24 +1,10 @@
-rem --- Program ivr_pricelist v8.0.0 16Jul2007 (ivr_fb)
+rem --- ivr - Inventory Price List Report (Report Overlay)
+rem --- Program ivr_pricelist_o1.aon v8.0.0 16Jul2007 (ivr_fb)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 12:42:27)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
-
-rem --- Retrieve the program path
-
-    pgmdir$=stbl("+DIR_PGM",err=*next)
-rem --- Inventory Price List
-
-rem --- Retrieve sysinfo data
-
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
-
-    More=1
 
 rem --- Print positions and headings
 
@@ -29,7 +15,8 @@ rem --- Position files
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
-    first$=firm_id$+"C"
+
+    first$=firm_id$+"C",More=1
     dim ivm03a_key$:ivm03_key_tpl$
     ivm03a_key$=first$+begwhse$
     if begwhse$<>"" ivm03a_key$=ivm03a_key$+begprod$
@@ -88,18 +75,15 @@ rem --- Retrieve item
     ivm01a_key$=firm_id$+item$
     find record (ivm01_dev,key=ivm01a_key$,dom=*Continue) ivm01a$
     if type$<>""  then
-        rem if a2$(53,3)<>type$ then
         if ivm01a.ItemType$<>type$ then
             Continue
         endif
     endif
-    rem description$=fnitem$(a1$,p[3],p[4],p[5])
     description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
 
 rem --- Retrieve warehouse
 
     dim item[3]
-    rem b0$(1)=firm_id$+whse$+item$
     ivm02a_key$=firm_id$+whse$+item$
     x$=""
 
@@ -253,7 +237,7 @@ WhseBreak: rem --- Warehouse Break
     t0$=whse$
     ivm10c.short_name$="(Not on File)"
     if done=0 l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
     headings$[3]=h1$
     headings$[3](fncenter(x$,width),len(x$))=x$
@@ -268,7 +252,7 @@ ProdBreak: rem --- Product break
     endif
     dim description$(32),product[3]
     let t1$=product$,description$(7,20)="(Not on File)"
-    find record (ivm10_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
+    find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
     let h9$="Product Type "+t1$+" "+description$(7,20)
     return
 
@@ -410,6 +394,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

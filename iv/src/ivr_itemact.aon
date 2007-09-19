@@ -1,4 +1,4 @@
-rem ivr - Inventory Activity Report (Report Overlay)
+rem ivr - Inventory Activity Report
 rem Program ivr_itemact.aon v8.0.0 26Oct2006 (ivr_ea/eb)
 rem Created by adx_codeport.bbx v1.1.1 (10/26/2006 11:47:41)
 
@@ -32,18 +32,15 @@ rem --- Open files
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
     files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-    files$[4]="ivm-03",ids$[4]="IVX_ITEMPROD"; rem ivm-03
-rem    files$[4]="ivx_itemprod",ids$[4]="IVX_ITEMPROD"; rem ivm-03
+    files$[4]="ivm-03",ids$[4]="IVX_ITEMPROD"
     files$[5]="ivc_prodcode",ids$[5]="IVC_PRODCODE"
     files$[6]="ivm-12",ids$[6]="IVM_ITEMACT"
     files$[7]="ivm-14",ids$[7]="IVM_ITEMSYN"
     files$[8]="ivm-15",ids$[8]="IVC_TYPECODE"
-    files$[10]="ivm-03",ids$[10]="IVX_ITEMWHSE"; rem ivm-03
-rem    files$[10]="ivx_itemwhse",ids$[10]="IVX_ITEMWHSE"; rem ivm-03
+    files$[10]="ivm-03",ids$[10]="IVX_ITEMWHSE"
     files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
     files$[12]="ivc_whsecode",ids$[12]="IVC_WHSECODE"
-    files$[13]="ivm-03",ids$[13]="IVX_ITEMPRWH"; rem ivm-03
-rem    files$[13]="ivx_itemprwh",ids$[13]="IVX_ITEMPRWH"; rem ivm-03
+    files$[13]="ivm-03",ids$[13]="IVX_ITEMPRWH"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -65,8 +62,8 @@ rem --- Dimension string templates
 
     dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03a$:templates$[4],
 :       ivm10a$:templates$[5],ivm12a$:templates$[6],ivm14a$:templates$[7],
-:       ivm15a$:templates$[8],ivm03g$:templates$[10]
-    dim gls01a$:templates$[1],ivs01a$:templates$[11],ivm10c$:templates$[12],
+:       ivm15a$:templates$[8],ivm03g$:templates$[10],
+:       gls01a$:templates$[1],ivs01a$:templates$[11],ivm10c$:templates$[12],
 :	ivm03c$:templates$[13]
 
       
@@ -256,6 +253,7 @@ rem --- Retrieve item and activity
     item$[0]=firm_id$
     item$[2]=item$
     if level$="W" action$="",item$[1]=whse$
+
 rem --- old call pgms were ivc_wb.bbx and ivc_pa.bbx
 
     call pgmdir$+"ivc_whseact.aon",action$,files[all],item$[all],period$[all],activity[all],status

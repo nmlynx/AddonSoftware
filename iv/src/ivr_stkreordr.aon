@@ -1,5 +1,5 @@
 rem --- Inventory Shortage & Reorder Report
-rem --- Program ivr_stkreordr v8.0.0 09Jul2007 (ivr_da)
+rem --- Program ivr_stkreordr.aon v8.0.0 09Jul2007 (ivr_da)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/09/2007 11:48:08)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -21,51 +21,43 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
+rem --- Open files
 
-    files=8,begfile=1,endfile=files
+    files=11,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
+    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
     files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
     files$[4]="ivm-03",ids$[4]="IVX_ITEMPROD"
-    files$[5]="ivm-10",ids$[5]="IVC_PRODCODE"
+    files$[5]="ivc_prodcode",ids$[5]="IVC_PRODCODE"
     files$[6]="ivm-12",ids$[6]="IVM_ITEMACT"
     files$[7]="ivm-14",ids$[7]="IVM_ITEMSYN"
     files$[8]="ivm-15",ids$[8]="IVC_TYPECODE"
+    files$[9]="ivs_params",ids$[9]="IVS_PARAMS"
+    files$[10]="ivs_abcparam",ids$[10]="IVS_ABCPARAM"
+    files$[11]="ivc_whsecode",ids$[11]="IVC_WHSECODE"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    gls01_dev=channels[1]
     ivm01_dev=channels[2]
     ivm02_dev=channels[3]
     ivm03_dev=channels[4]
-    ivm10_dev=channels[5]
+    ivm10a_dev=channels[5]
     ivm12_dev=channels[6]
     ivm14_dev=channels[7]
     ivm15_dev=channels[8]
+    ivs01a_dev=channels[9]
+    ivs01c_dev=channels[10]
+    ivm10c_dev=channels[11]
 
 rem --- Dimension string templates
 
     dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03a$:templates$[4],
 :       ivm10a$:templates$[5],ivm12a$:templates$[6],ivm14a$:templates$[7],
-:       ivm15a$:templates$[8]
-
-rem --- Retrieve miscellaneous templates
-
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="gls-01A:GLS_PARAMS"
-    ids$[2]="ivm-10C:IVC_WHSECODE"
-    ids$[3]="ivs-01A:IVS_PARAMS"
-    ids$[4]="ivs-01C:IVS_ABCPARAM"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim gls01a$:templates$[1],ivm10c$:templates$[2],ivs01a$:templates$[3],
-:       ivs01c$:templates$[4]
+:       ivm15a$:templates$[8],gls01a$:templates$[1],ivs01a$:templates$[9],
+:	ivs01c$:templates$[10],ivm10c$:templates$[11]
 
 rem --- Assign form input values to local variables
    
@@ -83,11 +75,11 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     ivs01c_key$=firm_id$+"IV02"
-    find record (ads01_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
+    find record (ivs01c_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
 
 rem --- Parameters
 
@@ -282,7 +274,6 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

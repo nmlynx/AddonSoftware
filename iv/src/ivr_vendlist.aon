@@ -1,5 +1,5 @@
 rem --- Inventory Vendor Listing (Report Initialization)
-rem --- Program ivr_vendlist v8.0.0 16Jul2007 (ivr_ia)
+rem --- Program ivr_vendlist.aon v8.0.0 16Jul2007 (ivr_ia)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 12:43:01)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -21,7 +21,7 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
+rem --- Open files
 
     files=13,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
@@ -29,7 +29,7 @@ rem --- Open/Lock files
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
-    files$[5]="ivm-03"
+    files$[5]="ivm-03",ids$[5]="IVX_ITEMVEND"
     files$[6]="ivm-05",ids$[6]="IVM_ITEMVEND"
     files$[7]="IVC_WHSECODE",ids$[7]=files$[7]
     files$[8]="ivm-12",ids$[8]="IVM_ITEMACT"
@@ -38,22 +38,23 @@ rem --- Open/Lock files
     files$[11]="APS_PARAMS",ids$[11]=files$[11]
     files$[12]="GLS_PARAMS",ids$[12]=files$[12]
     files$[13]="IVS_ABCPARAM",ids$[13]=files$[13]
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ivs_params_dev=channels[1]
+    ivs01a_dev=channels[1]
     apm01_dev=channels[2]
     ivm01_dev=channels[3]
     ivm02_dev=channels[4]
     ivm03_dev=channels[5]
     ivm05_dev=channels[6]
-    ivm10_dev=channels[7]
+    ivm10c_dev=channels[7]
     ivm12_dev=channels[8]
     ivm14_dev=channels[9]
     ivm15_dev=channels[10]
-    aps_params_dev=channels[11]
-    gls_params_dev=channels[12]
-    ivs_abcparam_dev=channels[13]
+    aps01a_dev=channels[11]
+    gls01a_dev=channels[12]
+    ivs01c_dev=channels[13]
 
 rem --- Dimension string templates
 
@@ -74,13 +75,13 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (aps_params_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (gls_params_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs_params_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     ivs01c_key$=firm_id$+"IV02"
-    find record (ivs_abcparam_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
+    find record (ivs01c_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
     
 rem --- Parameters
 
