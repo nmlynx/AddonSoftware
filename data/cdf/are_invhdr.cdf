@@ -99,11 +99,12 @@ rem --- Additional File Opens
 
 	gl$="N"
 	status=0
+
 	call dir_pgm$+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status;rem --- source$?
 	if status<>0 goto std_exit
 	user_tpl.glint$=gl$
 	user_tpl.glworkfile$=glw11$
-escape;rem gl$
+
 	if gl$="Y"
 		files=21,begfile=20,endfile=21
 		dim files$[files],options$[files],chans$[files],templates$[files]

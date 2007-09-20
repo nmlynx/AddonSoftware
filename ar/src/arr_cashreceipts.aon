@@ -25,33 +25,32 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=16,begfile=1,endfile=files
+    files=17,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="are-01"
-    files$[3]="are-11"
-    files$[4]="are-21"
-    files$[5]="are-31"
-    files$[6]="arm-01"
-    files$[7]="arm-02"
-    files$[8]="arm-06"
-    files$[9]="arm-10"
-    files$[10]="ars-10"
-    files$[11]="art-01"
-    files$[12]="art-06"
-    files$[13]="art-11"
-    files$[14]="art-16"
-    files$[15]="art-26"
-    files$[16]="arw-05"
+    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[2]="are-01",ids$[2]="ARE_CASHHDR"
+    files$[3]="are-11",ids$[3]="ARE_CASHDET"
+    files$[4]="are-21",ids$[4]="ARE_CASHGL"
+    files$[5]="are-31",ids$[5]="ARE_CASHBAL"
+    files$[6]="arm-01",ids$[6]="ARM_CUSTMAST"
+    files$[7]="arm-02",ids$[7]="ARM_CUSTDET"
+    files$[8]="arm-06",ids$[8]="ARM_CUSTPMTS"
+    files$[9]="arc_cashcode",ids$[9]="ARC_CASHCODE"
+    files$[10]="ars_mtdcash",ids$[10]="ARS_MTDCASH"
+    files$[11]="art-01",ids$[11]="ART_INVHDR"
+    files$[12]="art-06",ids$[12]="ART_CASHHDR"
+    files$[13]="art-11",ids$[13]="ART_INVDET"
+    files$[14]="art-16",ids$[14]="ART_CASHDET"
+    files$[15]="art-26",ids$[15]="ART_CASHGL"
+    files$[16]="gls_params",ids$[16]="GLS_PARAMS"
+    files$[17]="arc_distcode",ids$[17]="ARC_DISTCODE"
     for x=2 to 5
         options$[x]="L"
     next x
-    options$[endfile]="CL"
-    ids$[10]="C"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    ars01_dev=channels[1]
     are01_dev=channels[2]
     are11_dev=channels[3]
     are21_dev=channels[4]
@@ -59,60 +58,43 @@ rem --- Open/Lock files
     arm01_dev=channels[6]
     arm02_dev=channels[7]
     arm06_dev=channels[8]
-    arm10_dev=channels[9]
+    arc_cashcode_dev=channels[9]
     ars10_dev=channels[10]
     art01_dev=channels[11]
     art06_dev=channels[12]
     art11_dev=channels[13]
     art16_dev=channels[14]
     art26_dev=channels[15]
-    arw05_dev=channels[16]
+    gls01_dev=channels[16]
+    arc_distcode_dev=channels[17]
 
 rem --- Dimension string templates
 
-    dim are01a$:templates$[2],are11a$:templates$[3],are21a$:templates$[4],
-:       are31a$:templates$[5],arm01a$:templates$[6],arm02a$:templates$[7],
-:       arm06a$:templates$[8],arm10a$:templates$[9],ars10c$:templates$[10],
-:       art01a$:templates$[11],art06a$:templates$[12],art11a$:templates$[13],
-:       art16a$:templates$[14],art26a$:templates$[15],arw05a$:templates$[16]
-
-rem --- Retrieve miscellaneous templates
-
-    files=5,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="arm-10C"
-    ids$[2]="arm-10D"
-    ids$[3]="ars-01A"
-    ids$[4]="ars-10C"
-    ids$[5]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim arm10c$:templates$[1],arm10d$:templates$[2],ars01a$:templates$[3],
-:       ars10c$:templates$[4],gls01a$:templates$[5]
+    dim ars01a$:templates$[1],are01a$:templates$[2],are11a$:templates$[3]
+    dim are21a$:templates$[4],are31a$:templates$[5],arm01a$:templates$[6]
+    dim arm02a$:templates$[7],arm06a$:templates$[8],arm10c$:templates$[9]
+    dim ars10c$:templates$[10],art01a$:templates$[11],art06a$:templates$[12]
+    dim art11a$:templates$[13],art16a$:templates$[14],art26a$:templates$[15]
+    dim gls01a$:templates$[16],arm10d$:templates$[17]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    sequence$=fnget_fld_data$(table$,"pick_listbutton")
+    sequence$=option!.getOptionData("PICK_LISTBUTTON")
 
 rem --- Retrieve parameter records
 
     dim ars10c$:fattr(ars10c$)
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ars10c_key$=firm_id$+"C"
     find record (ars10_dev,key=ars10c_key$,dom=*next) ars10c$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     br$=ars01a.br_interface$
-    customer_size=num(ars01a.customer_size$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     period=num(ars01a.current_per$)
     year=num(ars01a.current_year$)
-    m0$=ars01a.customer_output$
-    m1$=ars01a.amount_mask$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     m0=len(m0$)
     m1=len(m1$)
     acct_length=num(gls01a.acct_length$)
@@ -127,8 +109,6 @@ rem --- Retrieve parameter records
     if gl$<>"Y" br$="N"
     gl=gl$="Y"
     br=br$="Y"
-
-rem --- Initializations
 
 rem --- OutVect! for DocOut, date/time 
 
@@ -177,11 +157,11 @@ rem --- column headings
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     if sequence$="D"
-       channel=are01_dev
+rem        channel=are01_dev
        headings$[1]=headings$[1]+" By Receipt Date"
     endif
     if sequence$="C"
-       channel=arw05_dev
+rem        channel=arw05_dev
        headings$[1]=headings$[1]+" By Receipt Code"
     endif
 	headings$[2]="[HEADER]"
@@ -228,17 +208,17 @@ rem --- Miscellaneous and deposit headers are based on the extension mask length
 
 rem --- Get the beginning and ending dates for the current AR period
 
-    call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begperiod$,endperiod$,status
+    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begperiod$,endperiod$,status
 
 rem --- Additional file opens
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01"
-    files$[2]="glt-04"
-    if br files$[3]="glt-15"
+    files$[1]="glm-01",ids$[1]="GLM_ACCT"
+    files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
+    if br files$[3]="glt-15",ids$[3]="GLM_BANKOTHER"
     files$[4]=glw11$
-    options$[endfile]="CL"
+    options$[4]="CL"
     if gl call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                         ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -260,48 +240,18 @@ rem ---     if status goto std_exit
 
 rem --- Sort the cash receipts if the register is by receipt code
 
-    if sequence$="C"
-       dim arw05a$:fattr(arw05a$)
-       read (are01_dev,key=firm_id$,dom=*next)
-       while moreheaders
-             k$=key(are01_dev,end=*break)
-             if pos(firm_id$=k$)<>1 break
-             read record (are01_dev,key=k$) are01a$
-             rem --- call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-             arw05a.firm_id$=are01a.firm_id$
-             arw05a.cash_rec_cd$=are01a.cash_rec_cd$
-             arw05a.ar_type$=are01a.ar_type$
-             arw05a.receipt_date$=are01a.receipt_date$
-             arw05a.customer_id$=are01a.customer_id$
-             arw05a.ar_check_no$=are01a.ar_check_no$
-             k$=arw05a.firm_id$+arw05a.cash_rec_cd$+arw05a.ar_type$+arw05a.reserved_key_01$+
-:               arw05a.receipt_date$+arw05a.customer_id$+arw05a.ar_check_no$+arw05a.reserved_key_02$
-             write record (arw05_dev,key=k$) arw05a$
-       wend
-       call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-       call pgmdir$+"adc_progress.aon","NC","","","","",0,are01_dev,1,meter_num,status
-    endif
+    if sequence$="C" key_no=1 else key_no=0
 
 rem --- Position the driver file
 
-    read (are01_dev,key=firm_id$,dom=*next)
-    read (arw05_dev,key=firm_id$,dom=*next)
+    read (are01_dev,key=firm_id$,knum=key_no,dom=*next)
 
 rem --- Read the next Cash Receipt Header (are-01) record
 
     while moreheaders
 
-          k$=key(channel,end=*break)
+          k$=key(are01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
-
-          rem --- By receipt code
-
-          if sequence$="C"
-             read record (arw05_dev,key=k$) arw05a$
-             k$=arw05a.firm_id$+arw05a.ar_type$+arw05a.reserved_key_01$+arw05a.receipt_date$+
-:               arw05a.customer_id$+arw05a.cash_rec_cd$+arw05a.ar_check_no$+
-:               arw05a.reserved_key_02$
-          endif
 
           rem --- Read transaction header record
 
@@ -345,7 +295,6 @@ rem --- Read the next Cash Receipt Header (are-01) record
              dt[5]=dt[5]+payment
           endif
 
-		  rem --- added by CH.03/26/07
 		  ct[6]=ct[6]+payment
 		  dt[6]=dt[6]+payment
 		  rt[4]=rt[4]+payment
@@ -354,13 +303,6 @@ rem --- Read the next Cash Receipt Header (are-01) record
 		  else
 			nt[4]=nt[4]+payment
 		  endif
-		  rem --- end of CH add
-
-rem ---           if lines+3>maxlines gosub report_heading
-rem ---           print (printer_dev) ""
-rem ---           print (printer_dev) @(o[0]),customer$,@(o[1]),are01a.cash_rec_cd$
-
-rem ---          lines=lines+2
 
 		  if first_tran>0 
 			xwk=fnblank(11)
@@ -591,7 +533,7 @@ rem ---     print (printer_dev) ""
 
 rem --- Destroy the progress meter and run the next overlay
 
-rem ---     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+rem     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     update$=pgmdir$+"aru_cashreceipts.aon"
     overlay$=update$
     if gl overlay$=pgmdir$+"glr_recap.aon"
@@ -745,7 +687,7 @@ receipt_code: rem --- Retrieve Cash Receipts Code (arm-10c) record
     arm10c.cash_rec_cd$=are01a.cash_rec_cd$
     arm10c.code_desc$=nf$
     k$=arm10c.firm_id$+arm10c.record_id_c$+arm10c.cash_rec_cd$ 
-    find record (arm10_dev,key=k$,dom=*next) arm10c$
+    find record (arc_cashcode_dev,key=k$,dom=*next) arm10c$
     return
 
 distribution_code: rem --- Retrieve Distribution Code (arm-10d) record
@@ -777,7 +719,7 @@ distribution_code: rem --- Retrieve Distribution Code (arm-10d) record
     arm10d.ar_dist_code$=ar_dist_code$
     arm10d.code_desc$=nf$
     k$=arm10d.firm_id$+arm10d.record_id_d$+arm10d.ar_dist_code$ 
-    find record (arm10_dev,key=k$,dom=*next) arm10d$
+    find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
     return
 
 glrecap: rem --- Standard GL Recap Routine
@@ -795,7 +737,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
 
@@ -871,8 +812,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_SYP",err=std_missing_params_exit)
-    call pgmdir$+"bac_noparams.bbj",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"bac_noparams.bbj",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -890,6 +831,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 

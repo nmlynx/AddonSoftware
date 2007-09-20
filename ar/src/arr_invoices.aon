@@ -65,11 +65,11 @@ rem --- Retrieve parameter records
     remit$=ars01b.addr_line_1$+ars01b.addr_line_2$+ars01b.city$+ars01b.state_code$+ars01b.zip_code$
     call pgmdir$+"adc_address.aon",remit$,24,3,9,address
 
-    call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","",imask$,m0$,0,customer_size
-    call pgmdir$+"adc_getmask.aon","","AR","A",imask$,m1$,0,0
+    call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
+    call pgmdir$+"adc_getmask.aon","","AR","A","",m1$,0,0
     call pgmdir$+"adc_sizemask.aon",ars01a.amount_mask$,m1,8,13
-    call pgmdir$+"adc_getmask.aon","","AR","U",imask$,m2$,0,0
-    call pgmdir$+"adc_getmask.aon","","AR","R",imask$,m3$,0,0
+    call pgmdir$+"adc_getmask.aon","","AR","U","",m2$,0,0
+    call pgmdir$+"adc_getmask.aon","","AR","R","",m3$,0,0
     m0=len(m0$)
     m1=len(m1$)
     m2=len(m2$)
