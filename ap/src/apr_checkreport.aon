@@ -25,9 +25,9 @@ rem --- Open/Lock files
 
     files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$=files$[1]; rem "aps-01"
+    files$[1]="APS_PARAMS",ids$[1]=files$[1]; rem "aps-01"
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-    files$[3]="apm-03"
+rem   files$[3]="apm-03"
     files$[4]="APC_TYPECODE",ids$[4]=files$[4]
     files$[5]="apt-05",ids$[5]="APT_CHECKHISTORY"
     files$[6]="GLS_PARAMS",ids$[6]=files$[6]
@@ -36,14 +36,14 @@ rem --- Open/Lock files
     if status goto std_exit
     aps01_dev=channels[1]
     apm01_dev=channels[2]
-    apm03_dev=channels[3]
+ 
     apm10_dev=channels[4]
     apt05_dev=channels[5]
     gls01_dev=channels[6]
 
 rem --- Dimension string templates
       
-    dim aps01a$:templates$[1],apm01a$:templates$[2],apm03a$:templates$[3],apm10a$:templates$[4],
+    dim aps01a$:templates$[1],apm01a$:templates$[2],apm10a$:templates$[4],
 :       apt05a$:templates$[5]
 
 rem --- Assign form input values to local variables
