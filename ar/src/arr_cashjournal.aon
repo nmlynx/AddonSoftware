@@ -23,76 +23,64 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=10,begfile=1,endfile=files
+    files=12,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-01"
-    files$[3]="arm-02"
-    files$[4]="arm-10"
-    files$[5]="art-01"
-    files$[6]="art-06"
-    files$[7]="art-11"
-    files$[8]="art-16"
-    files$[9]="art-26"
-    files$[10]="arw-07"
-    options$[files]="CL"
+    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
+    files$[4]="arc_cashcode",ids$[4]="ARC_CASHCODE"
+    files$[5]="art-01",ids$[5]="ART_INVHDR"
+    files$[6]="art-06",ids$[6]="ART_CASHHDR"
+    files$[7]="art-11",ids$[7]="ART_INVDET"
+    files$[8]="art-16",ids$[8]="ART_CASHDET"
+    files$[9]="art-26",ids$[9]="ART_CASHGL"
+    files$[10]="arw-07",IDS$[10]="ARW_CASHJOURNAL"
+    files$[11]="gls_params",ids$[11]="GLS_PARAMS"
+    files$[12]="arc_distcode",ids$[12]="ARC_DISTCODE"
+    options$[10]="CL"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    ars01_dev=channels[1]
     arm01_dev=channels[2]
     arm02_dev=channels[3]
-    arm10_dev=channels[4]
+    arc_cashcode_dev=channels[4]
     art01_dev=channels[5]
     art06_dev=channels[6]
     art11_dev=channels[7]
     art16_dev=channels[8]
     art26_dev=channels[9]
     arw07_dev=channels[10]
+    gls01_dev=channels[11]
+    arc_distcode_dev=channels[12]
 
 rem --- Dimension string templates
 
-    dim arm01a$:templates$[2],arm02a$:templates$[3],arm10a$:templates$[4],art01a$:templates$[5],
-:       art06a$:templates$[6],art11a$:templates$[7],art16a$:templates$[8],art26a$:templates$[9],
-:       arw07a$:templates$[10]
-
-rem --- Retrieve miscellaneous templates
-
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="arm-10C"
-    ids$[2]="arm-10D"
-    ids$[3]="ars-01A"
-    ids$[4]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim arm10c$:templates$[1],arm10d$:templates$[2],ars01a$:templates$[3],gls01a$:templates$[4]
+    dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
+    dim arm10c$:templates$[4],art01a$:templates$[5],art06a$:templates$[6]
+    dim art11a$:templates$[7],art16a$:templates$[8],art26a$:templates$[9]
+    dim arw07a$:templates$[10],gls01a$:templates$[11],arm10d$:templates$[12]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    sequence$=fnget_fld_data$(table$,"report_sequence")
-    begcust$=fnget_fld_data$(table$,"customer_id_1")
-    endcust$=fnget_fld_data$(table$,"customer_id_2")
-    begalt$=fnget_fld_data$(table$,"alt_sequence_1")
-    endalt$=fnget_fld_data$(table$,"alt_sequence_2")
-    begdate$=fnget_fld_data$(table$,"receipt_date_1")
-    enddate$=fnget_fld_data$(table$,"receipt_date_2")
-    cashcode$=fnget_fld_data$(table$,"cash_rec_cd")
-    include$=fnget_fld_data$(table$,"pick_check")
+    sequence$=option!.getOptionData("REPORT_SEQUENCE")
+    begcust$=option!.getOptionData("CUSTOMER_ID_1")
+    endcust$=option!.getOptionData("CUSTOMER_ID_2")
+    begalt$=option!.getOptionData("ALT_SEQUENCE_1")
+    endalt$=option!.getOptionData("ALT_SEQUENCE_2")
+    begdate$=option!.getOptionData("RECEIPT_DATE_1")
+    enddate$=option!.getOptionData("RECEIPT_DATE_2")
+    cashcode$=option!.getOptionData("CASH_REC_CD")
+    include$=option!.getOptionData("PICK_CHECK")
 
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    customer_size=num(ars01a.customer_size$)
-    m0$=ars01a.customer_output$
-    m1$=ars01a.amount_mask$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,12
     m0=len(m0$)
     m1=len(m1$)
@@ -629,7 +617,7 @@ receipt_code: rem --- Retrieve the Cash Receipts Code record
     arm10c.cash_rec_cd$=receiptcode$
     arm10c.code_desc$=nf$
     k$=arm10c.firm_id$+arm10c.record_id_c$+arm10c.cash_rec_cd$
-    find record (arm10_dev,key=k$,dom=*next) arm10c$
+    find record (arc_cashcode_dev,key=k$,dom=*next) arm10c$
     cashaccount$=arm10c.gl_cash_acct$
     discaccount$=arm10c.gl_disc_acct$
     return
@@ -640,7 +628,7 @@ invoice_distribution: rem --- Get the Distribution Code based on the invoice
     k$=art16a.firm_id$+artype$+art16a.customer_id$+art16a.ar_inv_no$+"00"
     find record (art01_dev,key=k$,dom=*next) art01a$
     k$=art16a.firm_id$+"D"+art01a.ar_dist_code$
-    find record (arm10_dev,key=k$,dom=*next) arm10d$
+    find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
     araccount$=arm10d.gl_ar_acct$
     return
 
@@ -650,7 +638,7 @@ customer_distribution: rem --- Get the Distribution Code based on the customer
     k$=art16a.firm_id$+art16a.customer_id$+artype$
     find record (arm02_dev,key=k$,dom=*next) arm02a$
     k$=art16a.firm_id$+"D"+arm02a.ar_dist_code$
-    find record (arm10_dev,key=k$,dom=*next) arm10d$
+    find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
     araccount$=arm10d.gl_ar_acct$
     return
 
@@ -691,7 +679,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
 
@@ -723,8 +710,8 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -748,8 +735,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -767,7 +754,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 

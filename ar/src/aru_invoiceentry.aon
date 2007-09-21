@@ -26,7 +26,7 @@ rem --- Get the beginning and ending dates for the current AR period
 
 rem --- Get user approval to update
 
-    prompt$="UPDATE_INVOICE_REG"
+    prompt$="Do you wish to update the Simple Invoice Register?"
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
     if answer$<>"YES" goto std_exit
 
@@ -240,6 +240,7 @@ rem --- All done
        call pgmdir$+"glc_ctlupdate.aon",status
     endif
     call pgmdir$+"adc_batchdelete.aon",status
+
     goto std_exit
 
 update_detail: rem --- Create or update an invoice detail record
@@ -252,6 +253,12 @@ update_detail: rem --- Create or update an invoice detail record
     art11a$=field(art11a$)
     write record (art11_dev,key=art11a_key$) art11a$
     return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+	return
+
 
 rem #include std_error.src
 
@@ -303,6 +310,10 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+	msg_id$="UPDATE_COMPLETE"
+	dim msg_tokens$[1]
+	msg_opt$=""
+	gosub disp_message
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release

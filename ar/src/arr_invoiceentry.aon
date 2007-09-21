@@ -136,37 +136,27 @@ rem --- Initialize print positions
 
 rem --- Additional file opens
 
-    files=5,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    if op$="Y"
-       files$[1]="opt-51",ids$[1]="OPT_INVBYINVNO"
-       files$[2]="opt-61",ids$[2]="OPT_INVBYDATE"
-    endif
     if gl$="Y"
-       files$[3]="glm-01"
-       files$[4]="glt-04"
-       files$[5]=glw11$
-       options$[5]="CL"
+       files$[1]="glm-01",ids$[1]="GLM_ACCT"
+       files$[2]="glt-04",ids$[2]="GLT_DAILYDETAIL"
+       files$[3]=glw11$
+       options$[3]="CL"
     endif
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    opt51_dev=channels[1]
-    opt61_dev=channels[2]
-    glm01_dev=channels[3]
-    glt04_dev=channels[4]
-    glw11_dev=channels[5]
-
-rem --- Dimension string templates
-
-    if op$="Y" dim opt51a$:templates$[1],opt61a$:templates$[2]
+    glm01_dev=channels[1]
+    glt04_dev=channels[2]
+    glw11_dev=channels[3]
 
 rem --- Get user approval to proceed
 
-    prompt$="RUN_AR_INVOICE_REG"
+    prompt$="Do you want to run the Simple Invoice Register?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" goto std_exit
+    if fkey=4 goto std_exit_noreport
+    if answer$<>"Y" goto std_exit_noreport
 
 rem --- Open printer, start progress meter and position header file
 
@@ -458,6 +448,9 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_noreport:
+
     release
 
 rem #endinclude std_end.src

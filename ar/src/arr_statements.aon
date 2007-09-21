@@ -88,13 +88,13 @@ rem --- Initializations
     page=0
     width=80
     lines=0
-    maxlines=24
+    maxlines=36
     morecustomers=1
     moreheaders=1
     moredetail=1
     artype$=fill(2)
     answer$="Y"
-    prompt$="PRINT_TEST_PATTERN"
+    prompt$="Do you want to print a test pattern?"
     nf$="(Not on file)"
     when$=sysinfo.system_date$
     clock$=""
@@ -106,6 +106,7 @@ rem --- Initializations
        begvalue$=begalt$
        endvalue$=endalt$
     endif
+    first_page=1
 
 rem --- Initialize print positions
 
@@ -181,7 +182,7 @@ rem --- Print test patterns until the user is satisfied
                 gosub detail
           wend
           gosub footer
-          prompt$="PRINT_ANOTHER_PATTERN"
+          prompt$="Do you want to print another test pattern?"
     wend
     if fkey=4 goto std_exit
     message$=original$
@@ -330,6 +331,8 @@ rem --- All done
 
 header: rem --- Print the statement header
 
+    if first_page=0 print (printer_dev)'ff',
+    first_page=0
     lines=0
     page=page+1
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
