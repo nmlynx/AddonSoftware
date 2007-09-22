@@ -48,7 +48,6 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
     restart$=option!.getOptionData("PICK_CHECK")
     invoice$=option!.getOptionData("AR_INV_NO")
     message$=option!.getOptionData("PICK_TEXT")
@@ -91,7 +90,7 @@ rem --- Initializations
     when$=sysinfo.system_date$
     clock$=""
     answer$="Y"
-    prompt$="PRINT_TEST_PATTERN"
+    msg_id$="PRINT_TEST_PATTERN"
     nf$="(Not on file)"
 
 rem --- Initialize print positions
@@ -136,22 +135,22 @@ rem --- Open the printer
 rem --- Print test patterns until the user is satisfied
 
     while answer$="Y"
-          call pgmdir$+"adc_yesno.aon",1,prompt$,1,answer$,fkey
-          if fkey=4 break
-          if answer$="N" break
+        dim msg_tokens$[1]
+        msg_opt$=""
+        gosub disp_message
+        if msg_opt$="N" break
 
-          rem --- Print test pattern
+        rem --- Print test pattern
 
-          page=0
-          lines=0
-          gosub heading
-          while lines<limit
-                gosub detail
-          wend
-          gosub totals
-          prompt$="PRINT_ANOTHER_PATTERN"
+        page=0
+        lines=0
+        gosub heading
+        while lines<limit
+              gosub detail
+        wend
+        gosub totals
+        msg_id$="ANOTHER_PATTERN"
     wend
-    if fkey=4 goto std_exit
     message$=original$
 
 rem --- Start progress meter and position header file
@@ -313,6 +312,11 @@ overflow: rem --- Multi-page invoice
     gosub heading
     return
 
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- Functions
 
 rem --- fntestvalue: Return maximum numeric value for a given mask
@@ -334,7 +338,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Format zip/postal code
 

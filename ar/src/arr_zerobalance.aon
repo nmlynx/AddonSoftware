@@ -25,46 +25,32 @@ rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-01"
-    files$[3]="art-01"
-    files$[4]="art-11"
+    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="art-01",ids$[3]="ART_INVHDR"
+    files$[4]="art-11",ids$[4]="ART_INVDET"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    ars01_dev=channels[1]
     arm01_dev=channels[2]
     art01_dev=channels[3]
     art11_dev=channels[4]
 
 rem --- Dimension string templates
 
-    dim arm01a$:templates$[2],art01a$:templates$[3],art11a$:templates$[4]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ars-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ars01a$:templates$[1]
+    dim ars01a$:templates$[1],arm01a$:templates$[2],art01a$:templates$[3],art11a$:templates$[4]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    thrudate$=fnget_fld_data$(table$,"report_date")
+    thrudate$=option!.getOptionData("REPORT_DATE")
 
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
-    find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    customer_size=num(ars01a.customer_size$)
-    m0$=ars01a.customer_output$
-    m1$=ars01a.amount_mask$
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,11
     m0=len(m0$)
     m1=len(m1$)
@@ -109,21 +95,17 @@ rem --- Define print positions
 
 rem --- Additional file opens
 
-    files=3,begfile=1,endfile=files
+    files=1,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="opt-01"
-    files$[2]="opt-51"
-    files$[3]="opt-61"
+    files$[1]="opt-01",ids$[1]="OPT_ORDHDR"
     if op$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                              ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     opt01_dev=channels[1]
-    opt51_dev=channels[2]
-    opt61_dev=channels[3]
 
 rem --- Dimension string templates
 
-    if op$="Y" dim opt01a$:templates$[1],opt51a$:templates$[2],opt61a$:templates$[3]
+    if op$="Y" dim opt01a$:templates$[1]
 
 rem --- Open printer, start progress meter and position Customer Master file
 
@@ -247,6 +229,7 @@ rem --- Read next Customer Master (arm-01) record
     wend
 
 rem --- All done
+done:
 
     balance=reportinv+reportapp
     if lines+2>maxlines gosub report_heading
@@ -300,7 +283,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Date/time handling functions
 
@@ -327,9 +309,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -353,8 +334,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -372,7 +353,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
