@@ -58,7 +58,7 @@ rem --- Z: 0=Amount/1=Units
 rem --- Get Report Columns (glm-32) information for this report
 
     col=0
-    gle04_key$=gle04.firm_id$+gle04.gl_rpt_no$
+    gle04_key$=gle04a.firm_id$+gle04a.gl_rpt_no$
     read (glm32_dev,key=glm32_key$,dom=*next)
     while moredetail
           glm32_key$=key(glm32_dev,end=*break)
@@ -413,8 +413,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -436,7 +435,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

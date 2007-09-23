@@ -39,16 +39,17 @@ rem --- Initializations
     closed=1
     notclosed=0
     status=gls01a.gl_yr_closed$="Y"
+    curr_year=num(gls01a.current_year$)
     switch status
            case notclosed
-                if year=p[2] records$="4501"
-                if year=p[2]-1 records$="0123"
-                if year=p[2]-2 records$="23"
+                if year=curr_year records$="4501"
+                if year=curr_year-1 records$="0123"
+                if year=curr_year-2 records$="23"
            break
            case closed
-                if year=p[2] records$="0123"
-                if year=p[2]-1 records$="23"
-                if year=p[2]+1 records$="4501"
+                if year=curr_year records$="0123"
+                if year=curr_year-1 records$="23"
+                if year=curr_year+1 records$="4501"
            break
     swend
 
@@ -222,6 +223,7 @@ rem --- Read next GL Account Master (glm-01) record
                     gle06a.budget_units=y[3]
                     gle06_key$=gle06a.firm_id$+gle06a.gl_rpt_no$+gle06a.gl_rpt_line$+
 :                              gle06a.gl_pcn_flag$+gle06a.gl_pqy_flag$
+                    gle06a$=field(gle06a$)
                     write record (gle06_dev,key=gle06_key$) gle06a$
                 next x
 
@@ -236,8 +238,8 @@ rem --- Read next GL Account Master (glm-01) record
                 dim d[mt]
                 gle07a.firm_id$=firm_id$
                 gle07a.tot_type_cde$="P"
-                gle07a.total_number$=glm22a.input_percnt$
-                k$=gle07a.firm_id$+gle07a.tot_type_cde$+gle07a.total_number$
+                gle07a.total_no$=glm22a.input_percnt$
+                k$=gle07a.firm_id$+gle07a.tot_type_cde$+gle07a.total_no$
                 read (gle07_dev,key=k$,dom=*next)
                 while morepercent
                       gle07_key$=key(gle07_dev,end=*break)
@@ -271,7 +273,7 @@ rem --- Read next GL Account Master (glm-01) record
                 last$=""
                 gle07a.firm_id$=firm_id$
                 gle07a.tot_type_cde$="P"
-                gle07a.total_number$=glm22a.input_percnt$
+                gle07a.total_no$=glm22a.input_percnt$
                 for x=0 to mx
                     n=0
                     gle07a.gl_pcn_flag$=cpn$(int(x/mt)+1,1)
@@ -286,8 +288,9 @@ rem --- Read next GL Account Master (glm-01) record
                     gle07a.actual_units=d[1]
                     gle07a.budget_amt=d[2]
                     gle07a.budget_units=d[3]
-                    gle07_key$=gle07a.firm_id$+gle07a.gl_rpt_no$+gle07a.gl_rpt_line$+
+                    gle07_key$=gle07a.firm_id$+gle07a.tot_type_cde$+gle07a.total_no$+
 :                              gle07a.gl_pcn_flag$+gle07a.gl_pqy_flag$
+                    gle07a$=field(gle07a$)
                     write record (gle07_dev,key=gle07_key$) gle07a$
                 next x
 
@@ -324,8 +327,8 @@ rem --- Retrieve Financial Report Amounts (gle-06) for this report and line
     k$=glm22a.firm_id$+glm22a.gl_rpt_no$+glm22a.gl_rpt_line$
     read (gle06_dev,key=k$,dom=*next)
     while moreamounts
-          gle06_key$=key(gle06_dev,end=sum_matrix)
-          if pos(k$=gle06_key$)<>1 goto sum_matrix
+          gle06_key$=key(gle06_dev,end=*break)
+          if pos(k$=gle06_key$)<>1 break
           read record (gle06_dev) gle06a$
           n=0
           y[0]=gle06a.actual_amt
@@ -367,8 +370,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -390,7 +392,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
