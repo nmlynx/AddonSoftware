@@ -155,7 +155,7 @@ rem --- Accumulate totals
         read (ivm03_dev)
         if type$<>"" then
             ivm03a_key$(1)=firm_id$+item$
-            find record (ivm01a_dev,key=ivm03a_key$,dom=*continue) ivm01a$
+            find record (ivm01_dev,key=ivm03a_key$,dom=*continue) ivm01a$
             if ivm01a.item_type<>type$ then
                 continue
             endif
@@ -175,7 +175,7 @@ rem --- Write ivw-01 item record
 
 rem --- Write ivw-02 totals record
         ivw02a_key$=firm_id$+whse$
-        find record (ivw02a_dev,key=ivw02a_key$,dom=*next) ivw02a$
+        find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
         ivw02a.total_usage=ivw02a.total_usage+cost*usage
         ivw02a.total_value=ivw02a.total_value+cost*onhand
         write record (ivw02_dev,key=ivw02a_key$) ivw02a$
@@ -211,7 +211,7 @@ rem --- Additional reads
 
         dim description$(dw)
         ivm01a_key$=firm_id$+ivw01a.item_id$
-        find record (ivm01a_dev,key=ivm01a_key$) ivm01a$
+        find record (ivm01_dev,key=ivm01a_key$) ivm01a$
         description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
         product$=ivm01a.product_type$
         um$=ivm01a.unit_of_sale$
@@ -334,7 +334,7 @@ Accum_Total_Whse: rem --- Accumulate warehouse totals
         dim activity[12]
         let ivm02a_key$=firm_id$+whse$+item$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
         let cost=0,usage=0,onhand=0
-        find record (ivm02a_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
+        find record (ivm02_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
         let onhand=ivm02a.qty_on_hand,cost=ivm02a.unit_cost
         Call_Accum_Total_Whse:
             call pgmdir$+"ivc_whseact.aon",action$,files[all],items$[all],periods$[all],activity[all],status
