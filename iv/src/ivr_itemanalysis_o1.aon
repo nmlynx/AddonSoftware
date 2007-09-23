@@ -1,0 +1,498 @@
+rem --- Inventory Analysis Report (Report Overlay)
+rem --- Program ivr_itemanalysis_o1.aon v8.0.0 18Jul2007 (ivr_hb)
+rem --- Created by adx_codeport.bbx v1.1.5 (07/18/2007 11:58:52)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    seterr std_error
+    setesc std_error
+
+rem --- Initializations
+
+    precision p[1]
+    dim headings$[6],o[9]
+    dim files[3],items$[2],periods$[1],activity[12]
+    dim whse[1],report[1]
+    m7$="-###0.0000%"
+    m8$="###########.0000-"
+    m7=len(m7$)
+    m8=len(m8$)
+    files[2]=ivm12_dev
+    files[3]=ivm03g_dev
+    headings=6
+    t0$=""
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$
+    when$=sysinfo.system_date$
+    clock$=""
+    h9$=""
+    width=132
+    page=0
+    l9=59
+    l=l9+1
+    x$="Sales"
+    h7$="Sold"
+    h8$="Sales"
+    done=0
+    action$="T"
+    periods$[0]=period1$
+    periods$[1]=period2$
+    if base$="U" x$="Usage",h7$="Used",h8$="Usage"
+    headings$[2]="Based On Total "+x$+" For Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
+    more=1
+
+rem --- Print positions
+
+    gosub Position    
+
+rem --- Background
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+
+rem --- Report headings
+
+    dim h1$(width),h2$(width)
+    if level$="I" headings$[1]=headings$[1]+" By Item"
+    if level$="W" headings$[1]=headings$[1]+" By Warehouse"
+    x1$="First"
+    x2$="First"
+    x2=5
+    if begitem$<>"" x1$=begitem$
+    if begprod$<>"" x2$=begprod$,x2=3
+    if endprod$="" if x2=3 x2=4
+    h1$(1)="From Item: "+x1$
+    h1$(width-x2-13)="From Product: "+x2$
+    x1$="Last"
+    x2$="Last"
+    x3$="All Item Types"
+    if enditem$<>"" x1$=enditem$
+    if endprod$<>"" x2$=endprod$
+    if type$<>"" x3$="Item Type "+type$
+    h2$(1)="  To Item: "+x1$
+    h2$(fncenter(x3$,width))=x3$
+    h2$(width-x2-13)="  To Product: "+x2$
+    headings$[4]=h1$
+    headings$[5]=h2$
+
+rem --- Position files
+
+    first$=firm_id$+"A"
+    ivm03a_key$=first$+begprod$
+    p=0
+    if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
+    read (ivm03_dev,key=ivm03a_key$,dom=*next)
+
+Rem ----Loop Starting
+
+    while more
+
+        ivm03a_key$=key(ivm03_dev,end=*break)
+        if pos(first$=ivm03a_key$)<>1 break
+        if level$="W" whse$=ivm03a_key.warehouse_id$
+        product$=ivm03a_key.product_type$
+        item$=ivm03a_key.item_id$
+        if level$<>"W"then 
+
+rem --- By Item: Valid Product/Item?
+            if endprod$<>"" if product$>endprod$ break
+            if begitem$<>"" then
+                if item$<begitem$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.product_type$+begitem$,dir=0,dom=*Continue)
+                    Continue
+                endif
+            endif
+            if enditem$<>"" then
+                if item$>enditem$ 
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_a$+
+:                   ivm03a_key.product_type$+$FF$,dom=*Continue)
+                    continue
+                endif
+            endif
+            x$=product$+" "+item$(1,p[0])
+        else
+rem --- By Warehouse: Valid Warehouse/Product/Item?
+
+            if endwhse$<>"" if whse$>endwhse$ break
+            if begprod$<>"" then
+                if product$<begprod$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.WAREHOUSE_ID$+begprod$,dom=*Continue)
+                    continue
+                endif
+            endif
+
+            if endprod$<>"" then
+                if product$>endprod$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.WAREHOUSE_ID$+$FF$,dom=*Continue)
+                    continue
+                endif
+            endif
+            if begitem$<>"" then
+                if item$<begitem$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dir=0,dom=*continue)
+                    continue
+                endif
+            endif
+            if enditem$<>"" then 
+                if item$>enditem$ then
+                    read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
+:                   ivm03a_key.WAREHOUSE_ID$+ivm03a_key.product_type$+begitem$,dom=*continue)
+                    continue
+                endif
+            endif
+            x$=whse$+" "+product$+" "+item$(1,p[0])
+        endif
+
+rem --- Accumulate totals
+
+        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
+        read (ivm03_dev)
+        if type$<>"" then
+            ivm03a_key$(1)=firm_id$+item$
+            find record (ivm01a_dev,key=ivm03a_key$,dom=*continue) ivm01a$
+            if ivm01a.item_type<>type$ then
+                continue
+            endif
+        endif
+        if level$="W" gosub Accum_Total_Whse
+        if level$="I" gosub Item_Total_Accum
+
+rem --- Write ivw-01 item record
+        ivw01a_key$=firm_id$+whse$
+        ivw01a_key.recip_sign$=sign$
+        ivw01a_key.recip_amount$=amount$
+        ivw01a_key.item_id$=item$
+        ivw01a.unit_cost=cost
+        ivw01a.usage_qty=usage
+        ivw01a.qty_on_hand=onhand
+        write record (ivw01_dev,key=ivw01a_key$) ivw01a$
+
+rem --- Write ivw-02 totals record
+        ivw02a_key$=firm_id$+whse$
+        find record (ivw02a_dev,key=ivw02a_key$,dom=*next) ivw02a$
+        ivw02a.total_usage=ivw02a.total_usage+cost*usage
+        ivw02a.total_value=ivw02a.total_value+cost*onhand
+        write record (ivw02_dev,key=ivw02a_key$) ivw02a$
+
+    wend ;Rem ----Loop Ending
+
+rem --- Position file
+
+    dim bar$(width,"-")
+    ivw02a_key$=firm_id$
+    if level$="I" find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
+    total_usage=ivw02a.total_usage
+    total_value=ivw02a.total_value
+    total_percent=0
+    bar=0
+    read (ivw01_dev,key="",dom=*next)
+
+rem --- Read next work record
+
+    while more ; Rem ----Loop Starting
+        read record (ivw01_dev,end=done) ivw01a$
+        call pgmdir$+"adc_progress.aon","S","","Printing","",ivw01a.warehouse_id$+" "+ivw01a.item_id$,ivw01_dev,0,1,0,ignore_status
+        cost$=""
+        cost=ivw01a.unit_cost
+        usage=ivw01a.usage_qty
+        onhand=ivw01a.qty_on_hand
+
+rem --- Level break?
+
+        if level$="W" if ivw01a.warehouse_id$<>t0$ gosub WhseBreak
+
+rem --- Additional reads
+
+        dim description$(dw)
+        ivm01a_key$=firm_id$+ivw01a.item_id$
+        find record (ivm01a_dev,key=ivm01a_key$) ivm01a$
+        description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+        product$=ivm01a.product_type$
+        um$=ivm01a.unit_of_sale$
+
+rem --- Perform detail line calculations
+
+        item_usage=cost*usage
+        item_value=onhand*cost
+        cum_usage=cum_usage+item_usage
+        cum_value=cum_value+item_value
+        if level$="W" cost$=str(cost:m3$)
+        usage_percent=0
+        value_percent=0
+        percent$=""
+        if total_usage<>0 item_usage_percent=(item_usage*100)/total_usage
+        if total_usage<>0 usage_percent=(cum_usage*100)/total_usage
+        if total_value<>0 value_percent=(cum_value*100)/total_value
+        if total_percent<100 percent$=str(usage_percent:m7$)
+
+rem --- Print detail line
+
+        if l+2>l9 gosub report_heading
+        print (printer_dev)@(o[0]),ivm01a.item_id$,@(o[1]),product$,@(o[2]),um$,@(o[3]),usage:m2$,@(o[4]),cost$,@(o[5]),item_usage:m1$,@(o[6]),percent$,@(o[7]),onhand:m2$,@(o[8]),item_value:m1$,@(o[9]),value_percent:m7$
+        print (printer_dev)@(o[0]+3),description$
+        l=l+2
+        total_percent=total_percent+item_usage_percent
+
+rem --- Accumulate totals
+
+        whse[0]=whse[0]+item_usage
+        whse[1]=whse[1]+item_value
+        report[0]=report[0]+item_usage
+        report[1]=report[1]+item_value
+
+rem --- Reached 100% of usage yet?
+
+        if total_percent<100 then
+            continue
+        endif
+        if bar then 
+            continue
+        endif    
+        if l+3>l9 gosub report_heading
+        print (printer_dev)""
+        print (printer_dev)bar$
+        print (printer_dev)""
+        l=l+3
+        bar=1
+
+    wend ; Rem ----Loop Ending
+
+done: rem --- All done
+
+    done=1
+    if level$="W" gosub WhseBreak
+    if l+2>l9 gosub report_heading
+    print (printer_dev)""
+    print (printer_dev)@(o[5]-16),"Total For Report",@(o[5]),report[0]:m1$,@(o[8]),report[1]:m1$
+    goto std_exit
+report_heading: rem --- Report Heading
+
+    l=headings+4
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status exitto std_exit
+    print (printer_dev)@(o[1]),"Prod",@(o[6]+m7-10),"Cumulative",@(o[7]+m2-9),"Quantity",@(o[9]+m7-10),"Cumulative"
+    print (printer_dev)@(o[0]),"Item/Description",@(o[1]),"Type",@(o[2]),"UM",@(o[3]+m2-10),"Units ",h7$,@(o[4]+m3-(len(ch$)+1)),ch$,@(o[5]+m1-12),"Total ",h8$,@(o[6]+m7-10),"% Of ",h8$,@(o[7]+m2-9),"On Hand",@(o[8]+m1-12),"Total Value",@(o[9]+m7-10),"% Of Value"
+    print (printer_dev)""
+    return
+
+WhseBreak: rem --- Warehouse Break
+
+    if t0$<>"" then
+       x$="Total For "+h9$
+       if l+2>l9 gosub report_heading
+       print (printer_dev)""
+       print (printer_dev)@(o[5]-len(x$)),x$,@(o[5]),whse[0]:m1$,@(o[8]),whse[1]:m1$
+       l=l+2
+    endif
+whseBreakdom:
+    if done return
+    dim description$(32)
+     t0$=ivw01a.warehouse_id$
+     ivm10c.SHORT_NAME$="(Not on File)"
+     l=l9+1
+    ivw02a_key$=firm_id$+t0$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    let h9$="Warehouse "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2),bar=0
+    let headings$[4]=h1$,headings$[4](fncenter(h9$,width),len(h9$))=h9$
+    find record (ivw02_dev,key=ivw02a_key$,dom=whseBreakdom) ivw02a$
+    let total_usage=ivw02a.total_usage,total_value=ivw02a.total_value,total_percent=0
+    let cum_usage=0,cum_value=0
+    return
+
+Item_Total_Accum:rem --- Accumulate totals for item
+
+        dim i[2]
+        let x$=firm_id$+"G"+item$
+        read (ivm03g_dev,key=x$,dom=*next)
+
+rem --- Read next item/warehouse xref
+
+        while more ;Rem ----Loop Starting
+            let ivm03gk$=key(ivm03g_dev,end=*break)
+            if pos(x$=ivm03gk$)=1 then
+                read (ivm03g_dev)
+                let whse$=ivm03gk$(24)
+                gosub Accum_Total_Whse
+                let amount=(i[0]*i[2])+(cost*onhand),number=i[2]+onhand
+                if number>0 i[0]=amount/number
+                let i[1]=i[1]+usage,i[2]=i[2]+onhand
+            endif
+            rem goto Read_Next_Item
+        wend ;Rem ----Loop Ending
+        let cost=i[0],usage=i[1],onhand=i[2],whse$="  "
+        gosub Total_Usage
+        return
+
+Accum_Total_Whse: rem --- Accumulate warehouse totals
+
+        dim activity[12]
+        let ivm02a_key$=firm_id$+whse$+item$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
+        let cost=0,usage=0,onhand=0
+        find record (ivm02a_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
+        let onhand=ivm02a.qty_on_hand,cost=ivm02a.unit_cost
+        Call_Accum_Total_Whse:
+            call pgmdir$+"ivc_whseact.aon",action$,files[all],items$[all],periods$[all],activity[all],status
+            if base$="S" usage=activity[3]-activity[8]
+            if base$="U" usage=(activity[3]+activity[4])-activity[8]
+        return
+
+Total_Usage: rem --- Calculate total amount of usage
+        let amount=usage*cost,sign$="",amount$=str(100000000000-amount:m8$)
+        if amount<=0 sign$="-",amount$=str(amount:m8$)
+        return
+
+Position: rem --- Print positions
+        call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
+        call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
+        call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
+        call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
+        call pgmdir$+"adc_sizemask.aon",m2$,m2,11,15
+        call pgmdir$+"adc_sizemask.aon",m3$,m3,11,15
+        o[9]=width-m7
+        o[8]=o[9]-m1
+        o[7]=o[8]-m2
+        o[6]=o[7]-m7
+        o[5]=o[6]-m1
+        o[4]=o[5]
+        ch$=""
+        if level$="W" o[4]=o[5]-m3,ch$="Unit Cost"
+        o[3]=o[4]-m2
+        o[2]=o[3]-3
+        o[1]=o[2]-6
+        dw=o[3]-3
+        return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end
