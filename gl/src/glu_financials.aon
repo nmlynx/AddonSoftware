@@ -75,6 +75,11 @@ rem --- Start progress meter
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,glm01_dev,1,0,status
 
+rem --- Clear out gle-06
+
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",gle06_dev
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",gle07_dev
+
 rem --- Position GL Account Master (glm-01)
 
     k$=""

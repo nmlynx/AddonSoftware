@@ -104,6 +104,10 @@ next_report: rem --- Read next Report Selections (gle-04/gle-05) record
           glm12a.gl_rpt_line$="0000"
           glm12_key$=glm12a.firm_id$+glm12a.gl_rpt_no$+glm12a.gl_rpt_line$
           find record (glm12_dev,key=glm12_key$,dom=*continue) glm12a$
+          m1$=glm12a.amount_mask$
+          m2$=glm12a.unit_mask$
+          m3$=glm12a.ratio_mask$
+          m4$=glm12a.percent_mask$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
 
           rem --- Retrieve Financial Report Headings (glm-13) record for this report

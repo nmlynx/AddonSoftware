@@ -57,11 +57,11 @@ rem --- Z: 0=Amount/1=Units
 
 rem --- Get Report Columns (glm-32) information for this report
     col=0
-    gle04_key$=gle04a.firm_id$+gle04a.gl_rpt_no$
+    glm32_key$=gle04a.firm_id$+gle04a.gl_rpt_no$
     read (glm32_dev,key=glm32_key$,dom=*next)
     while moredetail
           glm32_key$=key(glm32_dev,end=*break)
-          if pos(gle04_key$=glm32_key$)<>1 break
+          if pos(gle04a.firm_id$+gle04a.gl_rpt_no$=glm32_key$)<>1 break
           read record (glm32_dev,key=glm32_key$) glm32a$
           if col>=colmax break
           colinfo$(col*mc+1,mc)=glm32a.per_type_cde$+glm32a.actbud$+glm32a.amt_or_units$+
@@ -71,13 +71,13 @@ rem --- Get Report Columns (glm-32) information for this report
 
 rem --- Position Financial Report Detail (glm-22) file
 
-    read record (glm22_dev,key=gle04_key$,dom=*next) glm22a$
+    read record (glm22_dev,key=gle04a.firm_id$+gle04a.gl_rpt_no$,dom=*next) glm22a$
 
 rem --- Read next Financial Report Detail (glm-22) record
 
     while more
           glm22_key$=key(glm22_dev,end=*break)
-          if pos(gle04_key$=glm22_key$)<>1 break
+          if pos(gle04a.firm_id$+gle04a.gl_rpt_no$=glm22_key$)<>1 break
           read record (glm22_dev) glm22a$
           line_type$=glm22a.line_type$
           editing_code$=glm22a.editing_code$
@@ -96,7 +96,6 @@ rem --- Read next Financial Report Detail (glm-22) record
           dim s[mx,my,mz]
           read (gle06_dev,key=glm22_key$,dom=*next)
           while moredetail
-escape;rem gle-06?
                 k$=key(gle06_dev,end=*break)
                 if pos(glm22_key$=k$)<>1 break
                 read record (gle06_dev) gle06a$
@@ -105,7 +104,6 @@ escape;rem gle-06?
                 s[x,0,1]=gle06a.actual_units
                 s[x,1,0]=gle06a.budget_amt
                 s[x,1,1]=gle06a.budget_units
-print 'show',s[x,0,0],s[x,0,1];input "s array", *
 
           wend
 
@@ -151,7 +149,6 @@ print 'show',s[x,0,0],s[x,0,1];input "s array", *
               rem --- Variance?
 
               if y=2 values[n]=s[x,1,z]-s[x,0,z]
-print 'show',x,y,z,values[n];input *
      
           next n
 
@@ -239,14 +236,15 @@ print 'show',x,y,z,values[n];input *
                   gle07a.actual_units=t[x,0,1]
                   gle07a.budget_amt=t[x,1,0]
                   gle07a.budget_units=t[x,1,1]
-                  gle07_key$=gle07a.firm_id$+gle07a.tot_type_code$+
+                  gle07_key$=gle07a.firm_id$+gle07a.tot_type_cde$+
 :                            gle07a.total_no$+gle07a.gl_pcn_flag$+
 :                            gle07a.gl_pqy_flag$
+                  gle07a$=field(gle07a$)
                   write record (gle07_dev,key=gle07_key$) gle07a$
               next x
           next w
 
-          print_line: rem --- Perform any required editing and print the line
+print_line: rem --- Perform any required editing and print the line
 
           rem --- Editing code definitions:
 
@@ -263,7 +261,6 @@ print 'show',x,y,z,values[n];input *
 
           if pos("P"=editing_code$) gosub report_heading
           if l>l9 gosub report_heading
-
           rem --- Blank line?
 
           if pos("S"=editing_code$)
@@ -316,7 +313,7 @@ print 'show',x,y,z,values[n];input *
           rem --- If this isn't a heading line, print amounts
 
           if line_type$<>"H"
-escape;rem "here? 
+
              for x=0 to 7
                  if values[x]=0 or a[x,0]=9 or a[x,3]=0 continue
                  p=x*mc
@@ -324,8 +321,9 @@ escape;rem "here?
                  ratiopct$=colinfo$(p+4,1)
                  if a[x,1]>1 and pos("F"=editing_code$) values[x]=-values[x]
                  if pos(ratiopct$="BC$%")=0
-                 if (ratiopct$<>" " and pos(input_percnt$="   000",3)) or
-:                    values[x]=0 or a[x,0]=9 or a[x,3]=0 continue
+                     if (ratiopct$<>" " and pos(input_percnt$="   000",3)) or
+:                        values[x]=0 or a[x,0]=9 or a[x,3]=0 continue
+                 endif
                  if amtunit$="A" mask$=m1$
                  if amtunit$="U" mask$=m2$
                  if ratiopct$="R" mask$=m3$
@@ -365,17 +363,17 @@ get_totals: rem --- Retrieve Report Totals (gle-07) record
     if totalnumber$=last$ return
     notfound=1
     gle07a.firm_id$=firm_id$
-    gle07a.tot_type_code$=typecode$
+    gle07a.tot_type_cde$=typecode$
     gle07a.total_no$=totalnumber$
-    gle07_key$=gle07a.firm_id$+gle07a.tot_type_code$+gle07a.total_no$
-    read (gle07_dev,key=d0$(1,6),dom=*next)
+    gle07_key$=gle07a.firm_id$+gle07a.tot_type_cde$+gle07a.total_no$
+    read (gle07_dev,key=firm_id$+typecode$+totalnumber$,dom=*next)
     while moretotals
           k$=key(gle07_dev,end=*break)
           if pos(gle07_key$=k$)<>1 break
-          read record (gle07_dev,key=k07$)gle07a$
+          read record (gle07_dev,key=k$)gle07a$
           if gle07a.gl_updt_seq$<>update_sequence$ continue
           notfound=0
-          x=(pos(d0$(7,1)=cpn$)*mt-mt)+(pos(d0$(8,1)=pqy$)-1)
+          x=(pos(gle07a.gl_pcn_flag$=cpn$)*mt-mt)+(pos(gle07a.gl_pqy_flag$=pqy$)-1)
           t[x,0,0]=gle07a.actual_amt
           t[x,0,1]=gle07a.actual_units
           t[x,1,0]=gle07a.budget_amt

@@ -100,10 +100,11 @@ rem --- Retrieve parameter records
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     total_pers=num(gls01a.total_pers$)
     acctlen=num(gls01a.acct_length$)
-    m0$=gls01a.acct_output$
-    m1$=gls01a.amount_mask$
-    m2$=gls01a.unit_mask$
-    m3$=gls01a.percent_mask$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","R","",m3$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","P","",m4$,0,0
     mp=13
 
 rem --- Assign input values to local variables
