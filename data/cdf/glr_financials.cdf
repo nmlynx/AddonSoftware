@@ -1,3 +1,34 @@
+[[GLR_FINANCIALS.ASVA]]
+rem "update GLE_FINANCIALRPT (gle-04) -- remove/write -- based on what's checked in the grid
+rem "also update GLS_FINANCIALS w/ period/year from form, first updt sequence "9", first print flag "N"
+
+gle04_dev=fnget_dev("GLE_FINANCIALRPT")
+dim gle04a$:fnget_tpl$("GLE_FINANCIALRPT")
+
+gridReports!=UserObj!.getItem(num(user_tpl.gridReportsOfst$))
+gridRows=gridReports!.getNumRows()
+if gridRows
+	for row=0 to gridRows-1
+		if gridReports!.getCellState(row,0)=0
+			remove(gle04_dev,key=firm_id$+gridReports!.getCellText(row,1),dom=*next)
+		else
+			gle04a.firm_id$=firm_id$,gle04a.gl_rpt_no$=gridReports!.getCellText(row,1)
+			write record(gle04_dev,key=firm_id$+gle04a.gl_rpt_no$)gle04a$
+		endif
+	next row
+
+endif
+
+close (gle04_dev);rem "will re-open and lock in gle_financials (pgm run from here)
+[[GLR_FINANCIALS.ARAR]]
+gls01_dev=fnget_dev("GLS_PARAMS")
+gls01_tpl$=fnget_tpl$("GLS_PARAMS")
+dim gls01a$:gls01_tpl$
+
+read record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
+callpoint!.setColumnData("GLR_FINANCIALS.PERIOD",gls01a.current_per$)
+callpoint!.setColumnData("GLR_FINANCIALS.YEAR",gls01a.current_year$)
+callpoint!.setStatus("REFRESH")
 [[GLR_FINANCIALS.ACUS]]
 rem process custom event -- used in this pgm to select/de-select checkboxes in grid
 rem see basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
@@ -133,13 +164,29 @@ switch_value:rem --- Switch Check Values
 
 	return
 		
+#include std_missing_params.src
 [[GLR_FINANCIALS.AWIN]]
-num_files=1
+rem --- Open/Lock files
+
+num_files=4
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-open_tables$[1]="GLM_FINMASTER",open_opts$[1]="OTA"
+open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+open_tables$[2]="GLM_FINMASTER",open_opts$[2]="OTA"
+open_tables$[3]="GLE_FINANCIALRPT",open_opts$[3]="OTA"
+open_tables$[4]="GLS_FINANCIALS",open_opts$[4]="OTA"
+
 gosub open_tables
-glm12_dev=num(open_chans$[1]),glm12_tpl$=open_tpls$[1]
-dim glm12a$:glm12_tpl$
+
+gls01_dev=num(open_chans$[1]),gls01_tpl$=open_tpls$[1]
+glm12_dev=num(open_chans$[2]),glm12_tpl$=open_tpls$[2]
+gle04_dev=num(open_chans$[3]),gle04_tpl$=open_tpls$[3]
+gls01c_dev=num(open_chans$[4]),gls01c_tpl$=open_tpls$[4]
+
+rem --- Dimension string templates
+
+    dim gls01a$:gls01_tpl$,glm12a$:glm12_tpl$,gle04a$:gle04_tpl$
+
+call stbl("+DIR_PGM")+"adc_clearfile.aon",gle04_dev
 
 rem --- add grid to store report master records, with checkboxes for user to select one or more reports
 
