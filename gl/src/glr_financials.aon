@@ -56,7 +56,6 @@ rem --- Z: 0=Amount/1=Units
     dim s[mx,my,mz],t[mx,my,mz]
 
 rem --- Get Report Columns (glm-32) information for this report
-
     col=0
     gle04_key$=gle04a.firm_id$+gle04a.gl_rpt_no$
     read (glm32_dev,key=glm32_key$,dom=*next)
@@ -97,6 +96,7 @@ rem --- Read next Financial Report Detail (glm-22) record
           dim s[mx,my,mz]
           read (gle06_dev,key=glm22_key$,dom=*next)
           while moredetail
+escape;rem gle-06?
                 k$=key(gle06_dev,end=*break)
                 if pos(glm22_key$=k$)<>1 break
                 read record (gle06_dev) gle06a$
@@ -105,6 +105,8 @@ rem --- Read next Financial Report Detail (glm-22) record
                 s[x,0,1]=gle06a.actual_units
                 s[x,1,0]=gle06a.budget_amt
                 s[x,1,1]=gle06a.budget_units
+print 'show',s[x,0,0],s[x,0,1];input "s array", *
+
           wend
 
           rem --- If it's a heading line just go print it
@@ -129,7 +131,7 @@ rem --- Read next Financial Report Detail (glm-22) record
           rem ---               :      3 for default position
 
           for n=0 to 7
-              a[n,3]=nfield(glm22a$,"gl_rpt_col_"+str(n+1:"00"))
+              a[n,3]=num(field(glm22a$,"gl_rpt_col_"+str(n+1:"00")))
 
               rem --- Totals line?
 
@@ -149,6 +151,7 @@ rem --- Read next Financial Report Detail (glm-22) record
               rem --- Variance?
 
               if y=2 values[n]=s[x,1,z]-s[x,0,z]
+print 'show',x,y,z,values[n];input *
      
           next n
 
@@ -312,7 +315,8 @@ rem --- Read next Financial Report Detail (glm-22) record
 
           rem --- If this isn't a heading line, print amounts
 
-          if line_type$<>"H" 
+          if line_type$<>"H"
+escape;rem "here? 
              for x=0 to 7
                  if values[x]=0 or a[x,0]=9 or a[x,3]=0 continue
                  p=x*mc
