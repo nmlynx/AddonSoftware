@@ -20,7 +20,7 @@ rem --- Get user approval to update
 
     prompt$="UPDATE_CASH_RECEIPTS_REG"
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
-    if answer$<>"YES" goto std_exit
+    if answer$<>"YES" goto std_exit_no_update
 
 rem --- Start progress meter and position header file
 
@@ -68,7 +68,7 @@ rem --- Read next Cash Receipts Header (are-01) record
           art06a.receipt_date$=are01a.receipt_date$
           art06a.cash_rec_cd$=are01a.cash_rec_cd$
           art06a.ar_check_no$=are01a.ar_check_no$
-          art06a.trans_type$=are01a.cash_check$
+          art06a.cash_check$=are01a.cash_check$
           art06a.aba_no$=are01a.aba_no$
           art06a$=field(art06a$)
           k$=art06a.firm_id$+art06a.ar_type$+art06a.reserved_str$+
@@ -89,7 +89,7 @@ rem --- Read next Cash Receipts Header (are-01) record
                 arm10c.record_id_c$="C"
                 arm10c.cash_rec_cd$=are01a.cash_rec_cd$
                 k$=arm10c.firm_id$+arm10c.record_id_c$+arm10c.cash_rec_cd$ 
-                find record (arm10_dev,key=k$,dom=*next) arm10c$
+                find record (arc_cashcode_dev,key=k$,dom=*next) arm10c$
 
                 rem --- Post this Bank Reconciliation (glt-15) record
 
@@ -136,7 +136,7 @@ rem --- Read next Cash Receipts Header (are-01) record
                 art16a$=field(art16a$)
                 k$=art16a.firm_id$+art16a.ar_type$+art16a.reserved_str$+art16a.customer_id$+
 :                  art16a.receipt_date$+art16a.cash_rec_cd$+art16a.ar_check_no$+
-:                  art16a.reserved_str_02$+art16.ar_inv_no$
+:                  art16a.reserved_str_02$+art16a.ar_inv_no$
                 find record (art16_dev,key=k$,dom=*next) art16a$
                 art16a.apply_amt=art16a.apply_amt+are11a.apply_amt
                 art16a.discount_amt=art16a.discount_amt+are11a.discount_amt
@@ -157,9 +157,9 @@ rem --- Read next Cash Receipts Header (are-01) record
                 art01a.ar_dist_code$=arm02a.ar_dist_code$
                 art01a.ar_terms_code$=arm02a.ar_terms_code$
                 art01a.invoice_type$="S"
-                art01a.invoice_date$=are11a.invoice_date$
-                art01a.inv_due_date$=are11a.invoice_date$
-                art01a.disc_date$=are11a.invoice_date$
+                art01a.invoice_date$=are11a.receipt_date$
+                art01a.inv_due_date$=are11a.receipt_date$
+                art01a.disc_date$=are11a.receipt_date$
                 art01a.invoice_amt=-(are11a.apply_amt+are11a.discount_amt)
                 k$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+
 :                  art01a.ar_inv_no$+art01a.sequence_00$
@@ -184,7 +184,7 @@ rem --- Read next Cash Receipts Header (are-01) record
                 exists=notfound=0
                 while exists
                       invoice$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+
-:                              art01.ar_inv_no$
+:                              art01a.ar_inv_no$
                       read (art11_dev,key=invoice$,dom=*next)
                       while moredetail
                             k$=key(art11_dev,end=*break)
@@ -288,7 +288,7 @@ rem --- Read next Cash Receipts Header (are-01) record
                 while moredetail
                       dim are31a$:fattr(are31a$)
                       k$=are11a.firm_id$+are11a.ar_type$+are11a.reserved_str$+
-:                        are11a.customer_id$+are11.ar_inv_no$
+:                        are11a.customer_id$+are11a.ar_inv_no$
                          find record (are31_dev,key=k$,dom=*break) are31a$
                          are31a.apply_amt=are31a.apply_amt-are11a.apply_amt
                          are31a.discount_amt=are31a.discount_amt-are11a.discount_amt
@@ -407,6 +407,11 @@ invoice_detail: rem --- Create or update an Invoice Detail (art-11) record
     write record (art11_dev,key=k$) art11a$
     return
 
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- Functions
 
 rem --- fnavgday$: Calculate average days to pay
@@ -425,9 +430,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -451,8 +455,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -470,7 +474,15 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

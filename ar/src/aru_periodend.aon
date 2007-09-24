@@ -114,7 +114,6 @@ rem --- Retrieve parameter records
     current_period=num(ars01a.current_per$)
     current_year=num(ars01a.current_year$)
     total_periods=num(gls01a.total_pers$)
-escape
     call pgmdir$+"adc_perioddates.aon",gls01_dev,current_period,current_year,begdate$,
 :                                      enddate$,status
     period=current_period
@@ -137,7 +136,7 @@ rem --- Get user approval to proceed
     prompt$="Are you ready to close Period "+str(current_period)+" ("+fndate$(begdate$)+
 :           " through "+fndate$(enddate$)+")?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit
+    if fkey=4 goto std_exit_no_update
     if answer$<>"Y" goto std_exit_no_update
 
 rem --- Calculate Date For Retaining Job Numbers
@@ -256,7 +255,7 @@ rem --- Read next Customer Master (arm-01) record
 
           rem --- If this isn't a temporary customer we're done
 
-          if arm01a.retain_cust$<>"N" break
+          if arm01a.retain_cust$<>"N" continue
 
           rem --- Perform checks to see if this temporary customer can be deleted
           rem --- Start with the Invoice Header (art-01) file
@@ -264,7 +263,7 @@ rem --- Read next Customer Master (arm-01) record
           keyprefix$=firm_id$+artype$+arm01a.customer_id$
           read (art01_dev,key=keyprefix$,dom=*next)
           k$=key(art01_dev,end=*next)
-          if pos(keyprefix$=k$)=1 break
+          if pos(keyprefix$=k$)=1 continue
 
           rem --- Check the Customer Sales Analysis (sam-01) file if sales analysis is installed
 
@@ -282,7 +281,7 @@ rem --- Read next Customer Master (arm-01) record
                 year$=str(num(sam01_key$(3,4))+1:"0000")
                 k$=firm_id$+year$+arm01a.customer_id$
           wend 
-          if found break
+          if found continue
 
           rem --- Check Open Order (ope-01) file if Sales Order Processing is installed
 
@@ -292,7 +291,7 @@ rem --- Read next Customer Master (arm-01) record
              read (ope01_dev,key=keyprefix$,dom=*proceed)
              k$=key(ope01_dev,end=*proceed)
           endif
-          if pos(keyprefix$=k$)=1 break
+          if pos(keyprefix$=k$)=1 continue
 
           rem --- Check Invoice History (ope-01) file if Sales Order Processing is installed
 
@@ -302,7 +301,7 @@ rem --- Read next Customer Master (arm-01) record
              read (opt01_dev,key=keyprefix$,dom=*proceed)
              k$=key(opt01_dev,end=*proceed)
           endif
-          if pos(keyprefix$=k$)=1 break
+          if pos(keyprefix$=k$)=1 continue
 
           rem --- Remove temporary customer
 

@@ -24,15 +24,17 @@ rem --- Get user approval to proceed
 
     prompt$="Are you ready to update the "+cvs(sysinfo.task_desc$,2)+"?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" goto std_exit
+    if fkey=4 goto std_exit_no_update
+    if answer$<>"Y" goto std_exit_no_update
 
 rem --- Should GL be updated (if it's being used)?
 
-    prompt$="Do you want to post to the General Ledger when this register is updated?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" gl$="N"
+    if gl$="Y"
+        prompt$="Do you want to post to the General Ledger when this register is updated?"
+        call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
+        if fkey=4 goto std_exit_no_update
+        if answer$<>"Y" gl$="N"
+    endif
 
 rem --- Start progress meter and position invoice file
 
@@ -68,28 +70,6 @@ rem --- Read next Invoice (are-02) record
           art01a$=field(art01a$)
           write record (art01_dev,key=k$) art01a$
 
-          rem --- If order processing is installed write invoice cross-reference records
-
-          if op$="Y"
-             dim opt51a$:fattr(opt51a$),opt61a$:fattr(opt61a$)
-             opt51a.firm_id$=firm_id$
-             opt51a.ar_type$=art01a.ar_type$
-             opt51a.ar_inv_no$=art01a.ar_inv_no$
-             opt51a.customer_id$=art01a.customer_id$
-             k$=opt51a.firm_id$+opt51a.ar_type$+opt51a.ar_inv_no$+opt51a.customer_id$
-             opt51a$=field(opt51a$)
-             write record (opt51_dev,key=k$) opt51a$
-             opt61a.firm_id$=firm_id$
-             opt61a.ar_type$=art01a.ar_type$
-             opt61a.invoice_date$=art01a.inv_date$
-             opt61a.ar_inv_no$=art01a.ar_inv_no$
-             opt61a.customer_id$=art01a.customer_id$
-             k$=opt61a.firm_id$+opt61a.ar_type$+opt61a.invoice_date$+
-:               opt61a.ar_inv_no$+opt61a.customer_id$
-             opt61a$=field(opt61a$)
-             write record (opt61_dev,key=k$) opt61a$
-          endif
-
           rem --- Delete Invoice (are-02) record and loop back for the next one
 
           remove (are02_dev,key=are02_key$)
@@ -105,15 +85,19 @@ rem --- All done
     call pgmdir$+"adc_batchdelete.aon",status
     goto std_exit
 
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -134,7 +118,15 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

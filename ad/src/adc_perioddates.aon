@@ -61,7 +61,7 @@ rem --- Determine Start Of Period
 
     if period>1 begdate$=field(gls01a$,"per_ending_"+str(period-1:"00")),calendar_year=year
 :          else begdate$=field(gls01a$,"per_ending_"+str(total_periods:"00")),calendar_year=year-1
-    if begdate$(1,2)<gls01a.per_ending_01$ calendar_year=calendar_year+1
+    if begdate$(1,4)<gls01a.per_ending_01$ calendar_year=calendar_year+1
     if begdate$(1,4)="0229"
 :      if mod(calendar_year,4) then begdate$="0228"
     julian=jul(calendar_year,num(begdate$(1,2)),num(begdate$(3,2)))+1
