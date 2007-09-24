@@ -154,9 +154,10 @@ rem --- Accumulate totals
         call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
         read (ivm03_dev)
         if type$<>"" then
-            ivm03a_key$(1)=firm_id$+item$
+            ivm03a_key.firm_id$=firm_id$
+            ivm03a_key.item_id$=item$
             find record (ivm01_dev,key=ivm03a_key$,dom=*continue) ivm01a$
-            if ivm01a.item_type<>type$ then
+            if ivm01a.item_type$<>type$ then
                 continue
             endif
         endif
@@ -164,28 +165,47 @@ rem --- Accumulate totals
         if level$="I" gosub Item_Total_Accum
 
 rem --- Write ivw-01 item record
-        ivw01a_key$=firm_id$+whse$
+	ivw01a_key.firm_id$=firm_id$
+	ivw01a_key.warehouse_id$=whse$
         ivw01a_key.recip_sign$=sign$
         ivw01a_key.recip_amount$=amount$
         ivw01a_key.item_id$=item$
+	ivw01a.firm_id$=firm_id$
+	ivw01a.warehouse_id$=whse$
+        ivw01a.recip_sign$=sign$
+        ivw01a.recip_amount$=amount$
+        ivw01a.item_id$=item$
         ivw01a.unit_cost=cost
         ivw01a.usage_qty=usage
         ivw01a.qty_on_hand=onhand
         write record (ivw01_dev,key=ivw01a_key$) ivw01a$
 
 rem --- Write ivw-02 totals record
-        ivw02a_key$=firm_id$+whse$
+        ivw02a_key.firm_id$=firm_id$
+        ivw02a_key.warehouse_id$=whse$
+        ivw02a.firm_id$=firm_id$
+        ivw02a.warehouse_id$=whse$
+        ivw02a.total_usage=0
+        ivw02a.total_value=0
         find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
         ivw02a.total_usage=ivw02a.total_usage+cost*usage
         ivw02a.total_value=ivw02a.total_value+cost*onhand
-        write record (ivw02_dev,key=ivw02a_key$) ivw02a$
-
+        write record (ivw02_dev,key=ivw02a_key$,err=ivw02_reg_write) ivw02a$
+	goto check_for_another_record
+ivw02_reg_write:
+        write (ivw02_dev,key=ivw02a_key$) ivw02a_key$,ivw02a.total_usage,ivw02a.total_value
+check_for_another_record:
     wend ;Rem ----Loop Ending
 
 rem --- Position file
 
     dim bar$(width,"-")
-    ivw02a_key$=firm_id$
+    ivw02a_key.firm_id$=firm_id$
+    ivw02a_key.warehouse_id$=""
+    ivw02a.firm_id$=firm_id$
+    ivw02a.warehouse_id$=""
+    ivw02a.total_usage=0
+    ivw02a.total_value=0
     if level$="I" find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
     total_usage=ivw02a.total_usage
     total_value=ivw02a.total_value
@@ -290,17 +310,22 @@ WhseBreak: rem --- Warehouse Break
        print (printer_dev)@(o[5]-len(x$)),x$,@(o[5]),whse[0]:m1$,@(o[8]),whse[1]:m1$
        l=l+2
     endif
-whseBreakdom:
+
     if done return
     dim description$(32)
-     t0$=ivw01a.warehouse_id$
-     ivm10c.SHORT_NAME$="(Not on File)"
-     l=l9+1
-    ivw02a_key$=firm_id$+t0$
+    t0$=ivw01a.warehouse_id$
+    ivm10c.SHORT_NAME$="(Not on File)"
+    l=l9+1
+    ivw02a_key.firm_id$=firm_id$
+    ivw02a_key.warehouse_id$=t0$
+    ivw02a.firm_id$=firm_id$
+    ivw02a.warehouse_id$=t0$
+    ivw02a.total_usage=0
+    ivw02a.total_value=0
     find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let h9$="Warehouse "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2),bar=0
     let headings$[4]=h1$,headings$[4](fncenter(h9$,width),len(h9$))=h9$
-    find record (ivw02_dev,key=ivw02a_key$,dom=whseBreakdom) ivw02a$
+    find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
     let total_usage=ivw02a.total_usage,total_value=ivw02a.total_value,total_percent=0
     let cum_usage=0,cum_value=0
     return

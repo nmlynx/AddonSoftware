@@ -83,11 +83,6 @@ rem --- Assign form input values to local variables
     enditem$=option!.getOptionData("item_id_02")
     type$=option!.getOptionData("item_type")
 
-rem    begprod$=option!.getOptionData("product_type_01")
-rem    endprod$=option!.getOptionData("product_type_02")
-rem    begitem$=option!.getOptionData("item_id_01")
-rem    enditem$=option!.getOptionData("item_id_02")
-
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
@@ -117,7 +112,12 @@ rem --- Parameters
    
 rem --- Initializations
 
-    precision p[1]
+    if cvs(begwhse$,2)="" begwhse$=""
+    if cvs(endwhse$,2)="" endwhse$=""
+    if cvs(begprod$,2)="" begprod$=""
+    if cvs(endprod$,2)="" endprod$=""
+    if cvs(begitem$,2)="" begitem$=""
+    if cvs(enditem$,2)="" enditem$=""
 
 rem --- Run overlay
     run pgmdir$+"ivr_itemanalysis_o1.aon"
