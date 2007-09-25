@@ -19,7 +19,7 @@ rem --- assembles the custom headings for the financial reports.
 
 rem --- Initializations
 
-    dim a0$(2+p[4]),a1$(40),a2$(6),d0$(8),d1$(1)
+    dim a0$(2+num(gls01a.max_acct_len$)),a1$(40),a2$(6),d0$(8),d1$(1)
     records$=""
     currec$=""
     prirec$=""
@@ -31,16 +31,17 @@ rem --- Initializations
     closed=1
     notclosed=0
     status=gls01a.gl_yr_closed$="Y"
+    curr_year=num(gls01a.current_year$)
     switch status
            case notclosed
-                if year=p[2] records$="40"
-                if year=p[2]-1 records$="02"
-                if year=p[2]-2 records$="2 "
+                if year=curr_year records$="40"
+                if year=curr_year-1 records$="02"
+                if year=curr_year-2 records$="2 "
            break
            case closed
-                if year=p[2] records$="02"
-                if year=p[2]-1 records$="2 "
-                if year=p[2]+1 records$="40"
+                if year=curr_year records$="02"
+                if year=curr_year-1 records$="2 "
+                if year=curr_year+1 records$="40"
            break
     swend
     if records$<>""
@@ -51,6 +52,11 @@ rem --- Initializations
 rem --- Start progress meter
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,glm01_dev,1,0,status
+
+rem --- Clear out gle-08
+
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",gle08_dev
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",gle09_dev
 
 rem --- Position GL Account Master (glm-01)
 
@@ -82,12 +88,12 @@ rem --- Read next GL Account Master (glm-01) record
               amount=amount+a[x]
               units=units+u[x]
           next x
-          for x=period to p[0]
+          for x=period to num(gls01a.total_pers$)
               ta[number]=a[x]
               tu[number]=u[x]
               number=number+1
           next x
-
+escape;rem anything from glm-02?
           rem --- Retrieve current year Summary Activity (glm-02) record
 
           record_id$=currec$
@@ -107,13 +113,13 @@ rem --- Read next GL Account Master (glm-01) record
           if pos(glm01a.gl_acct_type$="LCI") sign=-1
 
           rem --- Update 13 Period Financial Report Amount (gle-08) records
-
-          if firm_id$="99" read (glm21_dev,key=a0$,dom=*next) 
-:                     else read (glm11_dev,key=a0$,dom=*next)
+escape;rem getting here?
+          if firm_id$="99" read (glm21_dev,key=glm01_key$,dom=*next) 
+:                     else read (glm11_dev,key=glm01_key$,dom=*next)
           while moredetail
                 if firm_id$="99" k$=key(glm21_dev,end=*break) 
 :                           else k$=key(glm11_dev,end=*break)
-                if pos(glm01_key$=k1$)<>1 break
+                if pos(glm01_key$=k$)<>1 break
                 if firm_id$="99" read record (glm21_dev,key=k$) glm21a$
 :                           else read record (glm11_dev,key=k$) glm11a$
                 if firm_id$="99" x$=glm21a.gl_rpt_no$+glm21a.gl_rpt_line$
@@ -160,7 +166,7 @@ report_amounts: rem --- Retrieve 13 Period Financial Report Amount (gle-08) reco
     if x$<>last$ 
        dim pa[mp],pu[mp]
        last$=x$
-       gle08.gl_updt_seq$=""
+       gle08a.gl_updt_seq$=""
        gle08_key$=firm_id$+x$
        glm22_key$=gle08_key$
        find record (glm22_dev,key=glm22_key$,dom=*return) glm22a$
@@ -169,9 +175,9 @@ report_amounts: rem --- Retrieve 13 Period Financial Report Amount (gle-08) reco
            pa[x]=nfield(gle08a$,"period_amt_"+str(x:"00"))
            pu[x]=nfield(gle08a$,"period_units_"+str(x:"00"))
        next x
-       if gle08.gl_updt_seq$<>sequence$
+       if gle08a.gl_updt_seq$<>sequence$
           dim pa[mp],pu[mp]
-          gle08.gl_updt_seq$=sequence$
+          gle08a.gl_updt_seq$=sequence$
        endif
     endif
     begamt=amount*sign
@@ -190,8 +196,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -213,7 +218,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
