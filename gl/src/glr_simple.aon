@@ -31,16 +31,16 @@ rem --- Open/Lock files
 
     files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"  
+    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
     files$[4]="glm-10",ids$[4]="GLM_ACCTBREAKS"
-    files$[endfile]="glw-02",ids$[endfile]="GLW_FINSORT"
-    options$[endfile]="LC"
+    files$[5]="glw-02",ids$[5]="GLW_FINSORT"
+    options$[5]="LC"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    gls01_dev=channels[1]
     glm01_dev=channels[2]
     glm02_dev=channels[3]
     glm10_dev=channels[4]
@@ -48,24 +48,13 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-    dim glm01a$:templates$[2],glm02a$:templates$[3],glw02a$:templates$[endfile]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="gls-01A:GLS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim gls01a$:templates$[1]
+    dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3]
+    dim glw02a$:templates$[5]
 
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"   
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     m0$=gls01a.acct_output$
     m1$=gls01a.amount_mask$
     acctlen=num(gls01a.acct_length$)
@@ -82,9 +71,6 @@ rem --- Assign input values to local variables
     begper$=Option!.getOptionData("PICK_GL_PER")
     begyear$=Option!.getOptionData("PICK_YEAR")
     include$=Option!.getOptionData("YN_PROMPT")
-    if cvs(begper$,2)="" begper$="03"
-    if cvs(begyear$,2)="" begyear$="2004"
-    if cvs(include$,2)="" include$="Y"
 
 rem --- Initializations
 
@@ -108,7 +94,7 @@ rem --- Initializations
     if bs$="Y" j1$="",width=o[1]-1
     mtdhdr=o[0]+m1-len(mtdhdr$)
     ytdhdr=o[1]+m1-len(ytdhdr$)
-    call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
     headings$[2]="For "+cvs(field(gls01a$,"period_name_"+str(period:"00")),2)+" "+begyear$+" (Period "+
@@ -163,6 +149,7 @@ rem --- and chart of accounts breaks.
           glw02a.gl_acct_type$=str(x)
           glw02a.gl_account$=glm01a.gl_account$
           glw02_key$=glw02a.firm_id$+glw02a.gl_acct_type$+glw02a.acct_no_brk$+glw02a.gl_account$
+          glw02a$=field(glw02a$)
           write record (glw02_dev,key=glw02_key$) glw02a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
     wend
@@ -383,8 +370,8 @@ std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -407,8 +394,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry

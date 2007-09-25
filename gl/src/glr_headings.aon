@@ -77,7 +77,7 @@ rem --- Initializations
 
 rem --- Custom financials or 13 period reports?
 
-    if financials=0 gle04_dev=gle05_dev
+    if financials=0 gle04_dev=gle05_dev;dim gle04a$:fattr(gle05a$)
 
 rem --- Determine starting/ending dates for report period
 
@@ -124,7 +124,7 @@ next_report: rem --- Read next Report Selections (gle-04/gle-05) record
                 read record (glm13_dev)glm13a$
                 n=num(glm13a.sequence_no$,err=*continue)
                 if n>=headmax break
-                rpt_head$(n*width+1,width)=h1$
+                rpt_head$(n*width+1,width)=glm13a.rpt_heading$
           wend
 
           rem --- Generate standard heading elements
