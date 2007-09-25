@@ -27,21 +27,23 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-rem    files$[3]="apm-03"
+
     files$[4]="APC_TYPECODE";ids$[4]=files$[4];rem "apm-10A
     files$[5]="apt-02",ids$[5]="APT_INVOICEDIST"
     files$[6]="apt-05",ids$[6]="APT_CHECKHISTORY"
-    files$[7]="apw-04"
-    files$[8]="apw-14"
+    files$[7]="apw-04",ids$[7]="APW_PURCHASEGL"
+    files$[8]="apw-14",ids$[8]="APW_PURCHASENAME"
     options$[7]="C"
     options$[8]="C"
     files$[9]="GLS_PARAMS";ids$[9]=files$;rem "gls-01
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
+    
+escape
     aps01_dev=channels[1]
     apm01_dev=channels[2]
-    apm03_dev=channels[3]
+  
     apm10_dev=channels[4]
     apt02_dev=channels[5]
     apt05_dev=channels[6]
@@ -51,17 +53,17 @@ rem    files$[3]="apm-03"
 
 rem --- Dimension string templates
 
-    dim apm01a$:templates$[2],apm03a$:templates$[3],apm10a$:templates$[4],
+    dim apm01a$:templates$[2],apm10a$:templates$[4],
 :       apt02a$:templates$[5],apt05a$:templates$[6],apw04a$:templates$[7],
 :       apw14a$:templates$[8],aps01a$:templates$[1],gls01a$:templates$[9]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    period$=fnget_fld_data$(table$,"period_year")
-    sequence$=fnget_fld_data$(table$,"report_sequence")
-    year=num(period$(3,4))
-    period=num(period$(1,2))
+    period$=Option!.getOptionData("PERIOD")
+    year$=Option!.getOptionData("YEAR")
+    sequence$=Option!.getOptionData("REPORT_SEQUENCE")
+    year=num(year$)
+    period=num(period$)
     call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
 
 rem --- Retrieve parameter records

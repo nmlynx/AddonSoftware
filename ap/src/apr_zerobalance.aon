@@ -5,7 +5,7 @@ rem --- Created by adx_codeport.bbx v1.1.5 (02/05/2007 04:01:05)
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
-
+ESCAPE ;  REM  need file layouts for apw-06 and apw-16
     setesc std_error
     seterr std_error
 
@@ -27,14 +27,13 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01A
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-rem    files$[3]="apm-03"
     files$[4]="apt-01",ids$[4]="APT_INVOICEHDR"
     files$[5]="apt-02",ids$[5]="APT_INVOICEDIST"
     files$[6]="apt-05",ids$[6]="APT_CHECKHISTORY"
     files$[7]="apt-11",ids$[7]="APT_INVOICEDET"
-    files$[8]="apw-06"
-    files$[9]="apw-16"
-    files$[10]="GLS_PARAMS",ids$[10]=files$[10]
+    files$[8]="apw-06",ids$[8]="APW_WHATEVER"
+    files$[9]="apw-16",ids$[9]="APW_INVOICEPURGE"
+    files$[10]="gls_params",ids$[10]="GLS_PARAMS";rem "gls-01
     options$[4]="L"
     options$[7]="L"
     options$[8]="CL"
@@ -44,7 +43,6 @@ rem    files$[3]="apm-03"
     if status goto std_exit
     aps01_dev=channels[1]
     apm01_dev=channels[2]
-    apm03_dev=channels[3]
     apt01_dev=channels[4]
     apt02_dev=channels[5]
     apt05_dev=channels[6]
@@ -56,14 +54,13 @@ rem    files$[3]="apm-03"
 rem --- Dimension string templates
 
     dim aps01a$:templates$[1]
-    dim apm01a$:templates$[2],apm03a$:templates$[3],apt01a$:templates$[4],
+    dim apm01a$:templates$[2],apt01a$:templates$[4],
 :       apt02a$:templates$[5],apt05a$:templates$[6],apt11a$:templates$[7],
 :       apw06a$:templates$[8],apw16a$:templates$[9],gls01a$:templates$[10]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    purgedate$=fnget_fld_data$(table$,"report_date")
+    purgedate$=Option!.getOptionData("REPORT_DATE")
 
 rem --- Retrieve parameter records
 
@@ -448,7 +445,7 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -492,7 +489,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run STBL("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

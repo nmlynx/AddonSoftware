@@ -42,9 +42,11 @@ rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    vendlen=num(aps01a.vendor_size$)
-    m0$=aps01a.vendor_output$
+    
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
     m0=len(m0$)
+    vendlen=m0
+    
     headings=1
 
 rem --- Assign form input values to local variables

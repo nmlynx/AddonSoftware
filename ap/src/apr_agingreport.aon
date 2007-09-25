@@ -27,19 +27,17 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01A
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-    files$[3]="apm-03"
     files$[4]="APC_TYPECODE",ids$[4]=files$[4]; rem apm-10A
     files$[5]="apt-01",ids$[5]="APT_INVOICEHDR"
     files$[6]="apt-11",ids$[6]="APT_INVOICEDET"
-    files$[7]="apw-02"
+    files$[7]="apw-02",ids$[7]="APW_INVOICENAME"
     options$[7]="C"
-    files$[8]="GLS_PARAMS",ids$[8]=files$[8]
+    files$[8]="gls_params",ids$[8]="GLS_PARAMS";rem "gls-01
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     aps01_dev=channels[1]
     apm01_dev=channels[2]
-    apm03_dev=channels[3]
     apm10_dev=channels[4] ; rem TYPE CODE only
     apt01_dev=channels[5]
     apt11_dev=channels[6]
