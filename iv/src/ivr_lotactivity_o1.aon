@@ -41,8 +41,11 @@ rem --- Print positions
 
     gosub Position
 
-rem --- Background  
+rem --- Open printer  
  
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm07_dev,1,meter_num,status
 
 rem --- Report headings
@@ -198,11 +201,14 @@ rem --- Read next lot/serial xref
         if begprod$<>"" if ivm01a.product_type$<begprod$ continue
         if endprod$<>"" if ivm01a.product_type$>endprod$ continue
 
+        if sequence$<>"L" if ivm07a_key.warehouse_id$<>t0$ gosub whse_break
+        if sequence$<>"L" if ivm07a_key.item_id$<>t1$ gosub Item_break
+
 Activity: rem --- Retrieve item and activity
 
         call pgmdir$+"adc_progress.aon","S","","","",ivm07a_key.lotser_no$,0,0,1,meter_num,status
 
-        dim item$[3],activity[12]
+        dim item$[3],activity[12],item[12]
         action$="L"
         item$[0]=firm_id$
         item$[1]=ivm07a_key.warehouse_id$
@@ -264,21 +270,29 @@ rem --- Accumulate item totals
         endif
 rem --- Print detail line by lot/serial number
 
-        dim description$(dw)
-        if l+2>l9 gosub report_heading
-        l=l+2
-        description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
-        number=number+1
-        print (printer_dev)@(o[0]),ivm07a.lotser_no$,@(o[3]),receipt$,@(o[5]),issued$,@(o[6]),vendor$,@(o[8]),activity[0]:m2$,@(o[9]),activity[1]:m2$,@(o[10]),activity[3]:m2$,@(o[11]),activity[5]:m2$,@(o[12]),activity[6]:m2$,@(o[13]),balance:m2$
-        print (printer_dev)@(o[1]),ivm07a.warehouse_id$,@(o[2]),ivm01a.item_id$,@(o[4]),description$,@(o[7]),ivm01a.product_type$,@(o[9]),activity[2]:m2$,@(o[10]),activity[4]:m2$,@(o[11]),activity[8]:m2$,@(o[12]),activity[7]:m2$
-
+        if sequence$="L"then
+            dim description$(dw)
+            if l+2>l9 gosub report_heading
+            l=l+2
+            description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+            number=number+1
+            print (printer_dev)@(o[0]),ivm07a.lotser_no$,@(o[3]),receipt$,@(o[5]),issued$,@(o[6]),vendor$,@(o[8]),activity[0]:m2$,@(o[9]),activity[1]:m2$,@(o[10]),activity[3]:m2$,@(o[11]),activity[5]:m2$,@(o[12]),activity[6]:m2$,@(o[13]),balance:m2$
+            print (printer_dev)@(o[1]),ivm07a.warehouse_id$,@(o[2]),ivm01a.item_id$,@(o[4]),description$,@(o[7]),ivm01a.product_type$,@(o[9]),activity[2]:m2$,@(o[10]),activity[4]:m2$,@(o[11]),activity[8]:m2$,@(o[12]),activity[7]:m2$
+	endif
     wend
 
 done: rem --- All done
 
-    if number>0 goto std_exit
+    if number=0 goto Nothing_To_Report
+    done=1
+    if sequence$<>"L" gosub Item_break
+    goto Report_Done
+
+Nothing_To_Report:
     gosub report_heading
     print (printer_dev)"No Lot/Serial Number Activity Found"
+
+Report_Done:    
     goto std_exit
 
 report_heading: rem --- Report Heading
@@ -293,13 +307,15 @@ rem --- Subheading by item
         print (printer_dev)@(o[3]),"Received",@(o[4]),"Sold Or",@(o[8]+m2-10),"Beginning",@(o[9]+m2-9),"Received",@(o[10]+m2-7),"Sold &",@(o[11]+m2-11),"Adjustments",@(o[12]+m2-9),"Transfers",@(o[13]+m2-8),"Ending"
         print (printer_dev)@(o[0]),"Item",@(o[1]),"Lot/Serial #",@(o[3]),"Or Built",@(o[4]),"Issued",@(o[5]),vh$,@(o[7]),"Prod",@(o[8]+m2-10),"Balance",@(o[9]+m2-9),"& Built",@(o[10]+m2-7),"Issued",@(o[11]+m2-11),"& Returns",@(o[12]+m2-9),"In & Out",@(o[13]+m2-8),"Balance"
         print (printer_dev)""
-        break
     endif
-rem --- Subheading by lot/serial number
 
-    print (printer_dev)@(o[0]),"Lot/Serial #",@(o[3]),"Received",@(o[5]),"Sold Or",@(o[8]+m2-10),"Beginning",@(o[9]+m2-9),"Received",@(o[10]+m2-7),"Sold &",@(o[11]+m2-11),"Adjustments",@(o[12]+m2-9),"Transfers",@(o[13]+m2-8),"Ending"
-    print (printer_dev)@(o[1]),"Wh",@(o[2]),"Item",@(o[3]),"Or Built",@(o[5]),"Issued",@(o[6]),vh$,@(o[7]),"Prod",@(o[8]+m2-10),"Balance",@(o[9]+m2-9),"& Built",@(o[10]+m2-7),"Issued",@(o[11]+m2-11),"& Returns",@(o[12]+m2-9),"In & Out",@(o[13]+m2-8),"Balance"
-    print (printer_dev)""
+rem --- Subheading by lot/serial number
+    if sequence$="L" then
+        print (printer_dev)@(o[0]),"Lot/Serial #",@(o[3]),"Received",@(o[5]),"Sold Or",@(o[8]+m2-10),"Beginning",@(o[9]+m2-9),"Received",@(o[10]+m2-7),"Sold &",@(o[11]+m2-11),"Adjustments",@(o[12]+m2-9),"Transfers",@(o[13]+m2-8),"Ending"
+        print (printer_dev)@(o[1]),"Wh",@(o[2]),"Item",@(o[3]),"Or Built",@(o[5]),"Issued",@(o[6]),vh$,@(o[7]),"Prod",@(o[8]+m2-10),"Balance",@(o[9]+m2-9),"& Built",@(o[10]+m2-7),"Issued",@(o[11]+m2-11),"& Returns",@(o[12]+m2-9),"In & Out",@(o[13]+m2-8),"Balance"
+        print (printer_dev)""
+    endif
+    if h9$="" h9$=h9save$
     return
 
 Item_subheading: rem --- Item subheading
@@ -307,7 +323,7 @@ Item_subheading: rem --- Item subheading
     if l+2>l9 gosub report_heading
     print (printer_dev)h9$
     print (printer_dev)""
-    let l=l+2,h9$=""
+    let l=l+2,h9save$=h9$,h9$=""
     return
 
 whse_break: rem --- Warehouse Break
@@ -316,23 +332,27 @@ whse_break: rem --- Warehouse Break
         gosub Item_break
     endif
     rem dim x0$(32)
-    let t0$=ivm07a_key.warehouse_id$,ivm10c.whse_name$="(Not on File)",l=l9+1
+    let t0$=ivm07a_key.warehouse_id$,ivm10c.short_name$="(Not on File)",l=l9+1
     find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    let headings$[2]="Warehouse "+t0$+" "+cvs(ivm10c.whse_name$,2)+" For "+h8$
+    let headings$[2]="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)+" For "+h8$
     return
 
 Item_break: rem --- Item Break
-    if t1$<>"" or l1>=1 then
-        if l+2>l9 gosub report_heading
-        let x$="Total For Item "+t1$,l=l+2
-        print (printer_dev)@(o[8]-len(x$)),x$,@(o[8]),item[0]:m2$,@(o[9]),item[1]:m2$,@(o[10]),item[3]:m2$,@(o[11]),item[5]:m2$,@(o[12]),item[7]:m2$,@(o[13]),item[12]:m2$
-        print (printer_dev)@(o[9]),item[2]:m2$,@(o[10]),item[4]:m2$,@(o[11]),item[6]:m2$,@(o[12]),item[8]:m2$
-    endif
+    if t1$="" goto Read_New_Item
+    if l1<1 goto Read_New_Item
+    if l+2>l9 gosub report_heading
+    let x$="Total For Item "+t1$,l=l+2
+    print (printer_dev)@(o[8]-len(x$)),x$,@(o[8]),item[0]:m2$,@(o[9]),item[1]:m2$,@(o[10]),item[3]:m2$,@(o[11]),item[5]:m2$,@(o[12]),item[7]:m2$,@(o[13]),item[12]:m2$
+    print (printer_dev)@(o[9]),item[2]:m2$,@(o[10]),item[4]:m2$,@(o[11]),item[6]:m2$,@(o[12]),item[8]:m2$
+
+Read_New_Item:
+    if done return
     dim h9$(o[7]+3),description$(dw),item[12]
     let t1$=ivm07a_key.item_id$,ivm01a_key$=firm_id$+t1$,ivm01a.item_desc$="(Not On File)",ivm01a.product_type$="",l1=0
     find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
     let description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
     let h9$(1)=ivm01a.item_id$,h9$(o[2]+1)=description$,h9$(o[7]+1)=ivm01a.product_type$
+
     call pgmdir$+"adc_progress.aon","S","","","",ivm07a_key.warehouse_id$+" "+ivm07a_key.item_id$,0,0,1,meter_num,status
     return
 

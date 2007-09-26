@@ -61,7 +61,6 @@ rem --- Get output device type
 rem --- Check max printer width
 
     if page or sysinfo.printer_id$="PF" goto cancel_check
-rem goto current_width
     if width<=asc(fin$(3)) goto current_width
     msg$[0]="This output device ("+sysinfo.printer_id$+") has a maximum width of "+str(asc(fin$(3)))+
 :           ". This report requires a width of at least "+str(width)+
