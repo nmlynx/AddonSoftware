@@ -93,7 +93,7 @@ rem --- Read next GL Account Master (glm-01) record
               tu[number]=u[x]
               number=number+1
           next x
-escape;rem anything from glm-02?
+
           rem --- Retrieve current year Summary Activity (glm-02) record
 
           record_id$=currec$
@@ -113,7 +113,7 @@ escape;rem anything from glm-02?
           if pos(glm01a.gl_acct_type$="LCI") sign=-1
 
           rem --- Update 13 Period Financial Report Amount (gle-08) records
-escape;rem getting here?
+
           if firm_id$="99" read (glm21_dev,key=glm01_key$,dom=*next) 
 :                     else read (glm11_dev,key=glm01_key$,dom=*next)
           while moredetail
@@ -135,6 +135,8 @@ escape;rem getting here?
                 rem --- record for this report
 
                 gosub report_amounts
+
+                gle08a$=field(gle08a$)
                 write record (gle08_dev,key=gle08_key$) gle08a$
 
                 rem --- End of report update loop
@@ -166,6 +168,7 @@ report_amounts: rem --- Retrieve 13 Period Financial Report Amount (gle-08) reco
     if x$<>last$ 
        dim pa[mp],pu[mp]
        last$=x$
+       dim gle08a$:fattr(gle08a$)
        gle08a.gl_updt_seq$=""
        gle08_key$=firm_id$+x$
        glm22_key$=gle08_key$
@@ -188,6 +191,14 @@ report_amounts: rem --- Retrieve 13 Period Financial Report Amount (gle-08) reco
         pa[x]=pa[x]+ta[x]*sign
         pu[x]=pu[x]+tu[x]*sign
     next x
+    for X=1 TO mp
+        field gle08a$,"period_amt_"+str(x:"00")=str(pa[x])
+        field gle08a$,"period_units_"+str(x:"00")=str(pu[x])
+    next x
+    gle08a.firm_id$=firm_id$
+    if firm_id$="99" gle08a.gl_rpt_no$=glm21a.gl_rpt_no, gle08a.gl_rpt_line$=glm21a.gl_rpt_line$
+:      else gle08a.gl_rpt_no$=glm11a.gl_rpt_no$, gle08a.gl_rpt_line$=glm11a.gl_rpt_line$
+
     return
 
 rem #include std_error.src

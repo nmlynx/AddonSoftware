@@ -45,7 +45,7 @@ rem --- Build 13 period headings
 
 rem --- Position Financial Report Detail (glm-22) file
 
-    glm22_key$=gle05a.firm_id$+gle05a.gl_rpt_no$
+    glm22_key$=gle04a.firm_id$+gle04a.gl_rpt_no$
     read record (glm22_dev,key=glm22_key$,dom=*next) glm22a$
 
 rem --- Read next Financial Report Detail (glm-22) record
@@ -83,6 +83,7 @@ rem --- Read next Financial Report Detail (glm-22) record
              gle08a.gl_rpt_no$=glm22a.gl_rpt_no$
              gle08a.gl_rpt_line$=glm22a.gl_rpt_line$
              gle08a.gl_updt_seq$=sequence$
+             gle08a$=field(gle08a$)
              write record (gle08_dev,key=gle08_key$) gle08a$
           endif
 
@@ -144,6 +145,7 @@ rem --- Read next Financial Report Detail (glm-22) record
                   field gle09a$,"period_amt_"+str(y:"00")=ta[y]
                   field gle09a$,"period_units_"+str(y:"00")=tu[y]
               next y
+              gle09a$=field(gle09a$)
               write record (gle09_dev,key=gle09_key$) gle09a$
           next x
 
@@ -286,8 +288,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
