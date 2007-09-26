@@ -214,13 +214,30 @@ Activity: rem --- Retrieve item and activity
 rem --- Format detail line fields
 
         dim vendor$(vw)
-        receipt$=fnl$(ivm07a.LSTREC_DATE$,ivm07a.LSTBLT_DATE$)
-        issued$=fnl$(ivm07a.LSTSAL_DATE$,ivm07a.LSTISS_DATE$)
+        receipt$=ivm07a.lstrec_date$
+        issued$=ivm07a.lstsal_date$
+        if ivm07a.lstblt_date$>receipt$ receipt$=ivm07a.lstblt_date$
+        if ivm07a.lstiss_date$>issued$ issued$=ivm07a.lstiss_date$
+	if num(receipt$)=0 receipt$="        "
+	if num(issued$)=0 issued$="        "
+	if num(receipt$(1,4))<>0
+	    if num(receipt$(5,4))=0
+		receipt$(5,4)="0101"
+	    endif
+	endif
+	if num(issued$(1,4))<>0
+	    if num(issued$(5,4))=0
+		issued$(5,4)="0101"
+	    endif
+	endif
+
+	if num(issued$)=0 issued$="        "
         if cvs(receipt$,2)<>"" receipt$=fndate$(receipt$)
         if cvs(issued$,2)<>"" issued$=fndate$(issued$)
+
         if ap$<>"N" then
             apm01a_key$=firm_id$+ivm07a.vendor_id$
-            find record (apm01a_dev,key=apm01a_key$,dom=Print_Item) apm01a$
+            find record (apm01_dev,key=apm01a_key$,dom=Print_Item) apm01a$
             vendor$=fnmask$(apm01a.vendor_id$,m0$)+" "+apm01a.vendor_name$
         endif
 

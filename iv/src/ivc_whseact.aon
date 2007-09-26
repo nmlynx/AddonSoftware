@@ -52,7 +52,7 @@ rem --- Retrieve miscellaneous templates
     dim ids$[files],templates$[files]
     ids$[1]="IVX_ITEMWHSE"; rem ivm-03g
     if pos(action$="L")=0 ids$[2]="IVM_ITEMACT"; rem ivm-12
-    if pos(action$="L")<>0 ids$[2]="IVM_LSITEMACT"; rem ivm-17
+    if pos(action$="L")<>0 ids$[2]="IVM_LSACT"; rem ivm-17
 
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
