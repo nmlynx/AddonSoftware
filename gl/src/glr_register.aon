@@ -110,7 +110,7 @@ rem --- Print positions
     dw=min(dw,o[4]-o[3]-7)
 
 rem --- Additional file opens (for journal entry register)
-
+goto open_printer; rem temp until glw11 stuff works. CAH
     gl$="N"
     status=0
     if je$<>"Y" goto open_printer
@@ -121,6 +121,7 @@ rem --- Additional file opens (for journal entry register)
     files$[endfile]=glw11$
     ids$[endfile]="A"
     options$[endfile]="CL"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
