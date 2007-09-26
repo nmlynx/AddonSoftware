@@ -6,33 +6,97 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+rem --- Retrieve the program path
+
+                pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+                sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+                dim sysinfo$:sysinfo_template$
+                sysinfo$=stbl("+SYSINFO",err=*next)
+                milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+                firm_id$=sysinfo.firm_id$
+                More=1
+
+
+rem --- Document initializations
+                OutVect!=bbjAPI().getSysGui().makeVector()
+                rep_date$=date(0:"%Mz/%Dz/%Yd")
+                rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+                rep_time$=date(0:"%hz:%mz %p")
+                rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+ rem ---  HEADINGS$
+
+             dim h1$(width),h2$(width),h6$(width),h7$(width)
+                x1$="First"
+                x2$="First"
+                x2=5
+                x3$="All Item Types"
+                if begitem$<>"" x1$=begitem$
+                if begprod$<>"" x2$=begprod$,x2=3
+                if endprod$="" if x2=3 x2=4
+                h1$(1)="From Item: "+x1$
+                h1$(width-x2-13)="From Product: "+x2$
+                if type$<>"" x3$="Item Type "+type$
+                x1$="Last"
+                x2$="Last"
+                if enditem$<>"" x1$=enditem$
+                if endprod$<>"" x2$=endprod$
+                h2$(1)="  To Item: "+x1$
+                h2$(fncenter(x3$,width))=x3$
+                h2$(width-x2-13)="  To Product: "+x2$
+                h6$(o[3]+m4-10)="----- Prior -----"
+                h6$(o[5]+m4-10)="---- Current ----"
+                h6$(o[7]+m3-4)="Unit"
+                headings$[3]=h1$
+                headings$[4]=h2$
+                headings$[6]=h6$
+                headings$[7]=h7$
+
+rem ----Column Heading
+                dim columns$[6,10]
+                    columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]=str(o[0]+1)
+                    columns$[1,0]="Description",           columns$[1,1]="C",columns$[1,2]=str(o[1]+1)
+                    columns$[2,0]="UM",                    columns$[2,1]="C",columns$[2,2]=str(o[2]+1)
+                    columns$[3,0]="List Price / Code",     columns$[3,1]="C",columns$[3,2]=str(o[3]+m3-10)
+                    columns$[4,0]="List Price / Code",     columns$[4,1]="C",columns$[4,2]=str(o[5]+m3-10)
+
+    if include$="Y" 
+
+                    columns$[5,0]="Cost",columns$[5,1]="C",columns$[5,2]=str(o[7]+m3-4)
+                    columns$[6,0]="Margin",columns$[6,1]="C",columns$[6,2]=str(o[8]+3)
+                   
+
+
 rem --- Print positions and headings
 
     gosub Position
 
 rem --- Position files
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
-
-    first$=firm_id$+"C",More=1
-    dim ivm03a_key$:ivm03_key_tpl$
-    ivm03a_key$=first$+begwhse$
-    if begwhse$<>"" ivm03a_key$=ivm03a_key$+begprod$
-    if ivm03a_key$<>first$ ivm03a_key$=ivm03a_key$+begitem$
-    read (ivm03_dev,key=ivm03a_key$,dir=0,dom=*next)
+                   
+                    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+                    first$=firm_id$+"C"
+                    dim ivm03a_key$:ivm03_key_tpl$
+                    ivm03a_key$=first$+begwhse$
+                    if begwhse$<>"" ivm03a_key$=ivm03a_key$+begprod$
+                    if ivm03a_key$<>first$ ivm03a_key$=ivm03a_key$+begitem$
+                    read (ivm03_dev,key=ivm03a_key$,dir=0,dom=*next)
 
 rem ---- Loop Starting
 
-    While More 
+            While More 
 
-        ivm03a_key$=key(ivm03_dev,end=*break)
-        if pos(first$=ivm03a_key$)<>1  break
-        whse$=ivm03a_key.warehouse_id$
-        product$=ivm03a_key.product_type$
-        item$=ivm03a_key.item_id$
+                ivm03a_key$=key(ivm03_dev,end=*break)
+                if pos(first$=ivm03a_key$)<>1  break
+                whse$=ivm03a_key.warehouse_id$
+                product$=ivm03a_key.product_type$
+                item$=ivm03a_key.item_id$
+
 rem --- Valid Warehouse/Product/Item?
+
         if endwhse$<>"" then
             if whse$>endwhse$ break
         endif
@@ -66,97 +130,99 @@ rem --- Valid Warehouse/Product/Item?
         endif
     
 rem --- Level breaks?
-    read (ivm03_dev)
-    call pgmdir$+"adc_progress.aon","S","","","",whse$+" "+product$+" "+item$(1,p[0]),0,0,1,meter_num,status
-    if whse$<>t0$ gosub WhseBreak
-    if product$<>t1$ gosub ProdBreak
+        read (ivm03_dev)
+        call pgmdir$+"adc_progress.aon","S","","","",whse$+" "+product$+" "+item$(1,p[0]),0,0,1,meter_num,status
+        if whse$<>t0$ gosub WhseBreak
+        if product$<>t1$ gosub ProdBreak
 
 rem --- Retrieve item
-    ivm01a_key$=firm_id$+item$
-    find record (ivm01_dev,key=ivm01a_key$,dom=*Continue) ivm01a$
-    if type$<>""  then
-        if ivm01a.ItemType$<>type$ then
-            Continue
+        ivm01a_key$(1)=firm_id$+item$
+        find record (ivm01a_dev,key=ivm01a_key$,dom=*Continue) ivm01a$
+        if type$<>""  then
+            rem if a2$(53,3)<>type$ then
+            if ivm01a.ItemType$<>type$ then
+                Continue
+            endif
         endif
-    endif
-    description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+        description$=fnitem$(ivm01a.Item_Desc$,p[3],p[4],p[5])
 
 rem --- Retrieve warehouse
 
-    dim item[3]
-    ivm02a_key$=firm_id$+whse$+item$
-    x$=""
-
-    find record (ivm02_dev,key=ivm02a_key$,dom=*Continue) ivm02a$
-    item[0]=1
-    item[1]=ivm02a.pri_price
-    item[2]=ivm02a.cur_price
-    item[3]=ivm02a.unit_cost
-    if include$<>"N" then
-        margin=0
-        if ivm02a.cur_price<>0 margin=100-((ivm02a.unit_cost*100)/ivm02a.cur_price)
-        margin=min(999.99,max(-999.99,margin))
-        x$=str(ivm02a.unit_cost:m3$)+" "+str(margin:m9$)
-    endif
+        dim item[3]
+        ivm02a_key$(1)=firm_id$+whse$+item$
+        x$=""
+        find record (ivm02a_dev,key=ivm02a_key$,dom=*Continue) ivm02a$
+        item[0]=1
+        item[1]=ivm02a.pri_price
+        item[2]=ivm02a.cur_price
+        item[3]=ivm02a.unit_cost
+        if include$="Y" then
+            margin=0
+            if ivm02a.cur_price<>0 margin=100-((ivm02a.unit_cost*100)/ivm02a.cur_price)
+            margin=min(999.99,max(-999.99,margin))
+            x$=str(ivm02a.unit_cost:m3$)+" "+str(margin:m9$)
+        endif
 
  rem --- Print detail line
 
-    if l+1+split>l9 gosub report_heading
-    if h9$<>"" gosub ProdHead
-    d$=description$
-    l=l+1+split
-    if split>0 d$=""
-    print (printer_dev)@(o[0]),ivm01a.item_id$,@(o[1]),d$,@(o[2]),ivm01a.unit_of_sale$,
-:       @(o[3]),item[1]:m4$,@(o[4]),ivm02a.pri_price_cd$,@(o[5]),item[2]:m4$,@(o[6]),
-:       ivm02a.cur_price_cd$,@(o[7]),x$
-    if split>0 print (printer_dev)@(o[0]+3),description$
+        if h9$<>"" 
+                gosub ProdHead
+        d$=description$
+        if split>0 d$=""
+ 
+
+                         OutVect!.addItem(ivm01a.item_id$)
+                         OutVect!.addItem(str(d$))
+                         OutVect!.addItem(ivm01a.unit_of_sale$)
+                         OutVect!.addItem(str(item[1])+m4$)
+                         OutVect!.addItem(ivm02a.pri_price_cd$)
+                         OutVect!.addItem(str(item[2])+m4$)
+                         OutVect!.addItem(ivm02a.cur_price_cd$)
+                         OutVect!.addItem(x$)
+
+
+
+        if split>0 
+                         OutVect!.addItem(description$)
+
 
 rem --- Accumulate totals
 
-    for x=0 to 3
-        product[x]=product[x]+item[x]
-        warehouse[x]=warehouse[x]+item[x]
-        report[x]=report[x]+item[x]
-    next x
+                    for x=0 to 3
+                        product[x]=product[x]+item[x]
+                        warehouse[x]=warehouse[x]+item[x]
+                        report[x]=report[x]+item[x]
+                    next x
 rem ---- Loop Ending
-wend 
+    wend 
 
 done: rem --- All done
 
-    done=1
-    gosub WhseBreak
-    total$="Report"
-    total[0]=report[0]
-    total[1]=report[1]
-    total[2]=report[2]
-    total[3]=report[3]
-    gosub TotalLine
-    goto std_exit
+                    done=1
+                    gosub WhseBreak
+                    total$="Report"
+                    total[0]=report[0]
+                    total[1]=report[1]
+                    total[2]=report[2]
+                    total[3]=report[3]
+                    gosub TotalLine
+                    goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    return
 
 ProdHead: rem --- Product subheading
 
-    if l+3<l9 then 
-        print (printer_dev)""
-        l=l+1
-    else
-        gosub report_heading
-    endif
-    print (printer_dev)h9$
-    print (printer_dev)""
-    l=l+2
-    h9$=""
-    return
+        xwk=fnblank(5)
+        OutVect!.addItem(h9$)
+        OutVect!.addItem("")
+        h9$=""
+        return
 
 Position: rem --- Print positions
 
-
+    m1$=ivs01a.amount_mask$
+    m2$=ivs01a.unit_mask$
+    m3$=ivs01a.cost_mask$
+    m4$=ivs01a.price_mask$
     dim o[8]
     o[1]=p[0]+1
     o[2]=o[1]+p[3]+p[4]+p[5]+1
@@ -167,46 +233,13 @@ Position: rem --- Print positions
     o[7]=o[6]+2
     o[8]=o[7]
     split=0
-    if include$<>"N" 
+    if include$="Y" 
         o[7]=o[6]+5
         o[8]=o[7]+m3+1
     endif
     if o[8]+m9>=width gosub split_detail
 
-Heading: rem --- Initialize HEADINGS$
-
-    dim h1$(width),h2$(width),h6$(width),h7$(width)
-    x1$="First"
-    x2$="First"
-    x2=5
-    x3$="All Item Types"
-    if begitem$<>"" x1$=begitem$
-    if begprod$<>"" x2$=begprod$,x2=3
-    if endprod$="" if x2=3 x2=4
-    h1$(1)="From Item: "+x1$
-    h1$(width-x2-13)="From Product: "+x2$
-    if type$<>"" x3$="Item Type "+type$
-    x1$="Last"
-    x2$="Last"
-    if enditem$<>"" x1$=enditem$
-    if endprod$<>"" x2$=endprod$
-    h2$(1)="  To Item: "+x1$
-    h2$(fncenter(x3$,width))=x3$
-    h2$(width-x2-13)="  To Product: "+x2$
-    h6$(o[3]+m4-10)="----- Prior -----"
-    h6$(o[5]+m4-10)="---- Current ----"
-    h6$(o[7]+m3-4)="Unit"
-    h7$(o[0]+1)="Item"
-    h7$(o[1]+1)="Description"
-    h7$(o[2]+1)="UM"
-    h7$(o[3]+m3-10)="List Price / Code"
-    h7$(o[5]+m3-10)="List Price / Code"
-    if include$="Y" h7$(o[7]+m3-4)="Cost",h7$(o[8]+3)="Margin"
-    headings$[3]=h1$
-    headings$[4]=h2$
-    headings$[6]=h6$
-    headings$[7]=h7$
-    return
+ 
 
 split_detail: rem --- Must split detail line
 
@@ -235,10 +268,10 @@ WhseBreak: rem --- Warehouse Break
     endif
     dim description$(32),warehouse[3]
     t0$=whse$
-    ivm10c.short_name$="(Not on File)"
+    description$(6,24)="(Not on File)"
     if done=0 l=l9+1
     find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
+    x$="Warehouse "+t0$+" "+cvs(description$(6,24),2)
     headings$[3]=h1$
     headings$[3](fncenter(x$,width),len(x$))=x$
     return
@@ -258,7 +291,7 @@ ProdBreak: rem --- Product break
 
 TotalLine: rem --- Print total line
 
-    if l+2>l9 gosub report_heading
+
     let l=l+2,x$="",cost=0,priprice=0,curprice=0,margin=0
     let total$="Averages For "+cvs(total$,2)
     if total[0]<>0 then
@@ -268,8 +301,12 @@ TotalLine: rem --- Print total line
     endif
     let x$=str(cost:m3$)+" "+str(margin:m9$)
     if include$="N" x$=""
-    print (printer_dev)""
-    print (printer_dev)@(o[3]-2-len(total$)),total$,@(o[3]),priprice:m4$,@(o[5]),curprice:m4$,@(o[7]),x$
+    
+                       OutVect!.addItem("")
+                       OutVect!.addItem(total$)
+                       OutVect!.addItem(str(priprice)+m4$)
+                       OutVect!.addItem(str(curprice)+m4$)
+                       OutVect!.addItem(x$)
     return
 
 rem #include std_functions.src
@@ -303,6 +340,16 @@ rem --- Date/time handling functions
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- Create blank line in OutVect! (no return value wanted or needed)
+
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
@@ -349,8 +396,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -393,9 +440,8 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    run pgmdir$+"ads_process_end.aon",err=*next
     release
 rem #endinclude std_end.src
 
