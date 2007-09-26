@@ -1,0 +1,207 @@
+rem --- General Ledger Copy Financial Statements
+rem --- Program glm_copyfin v8.0.0 01Jan2007 (glm_ja)
+rem --- Created by adx_codeport.bbx v1.1.5 (01/01/2007 11:07:44)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=9,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="glm-12",ids$[1]="GLM_FINMASTER"
+    files$[2]="glm-22",ids$[2]="GLM_FINDETAIL"
+    files$[3]="glm-32",ids$[3]="GLM_FINCOLUMNS"
+    files$[4]="gle-06",ids$[4]="GLM_FINANCIALAMT"
+    files$[5]="glm-12",ids$[5]="GLM_FINMASTER"
+    files$[6]="glm-22",ids$[6]="GLM_FINDETAIL"
+    files$[7]="glm-32",ids$[7]="GLM_FINCOLUMNS"
+    files$[8]="gle-06",ids$[8]="GLE_FINANCIALAMT"
+    files$[9]="gls_params",ids$[9]="GLS_PARAMS"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+
+    glm12_dev=channels[1]
+    glm22_dev=channels[2]
+    glm32_dev=channels[3]
+    gle06_dev=channels[4]
+    glm12_dev2=channels[5]
+    glm22_dev2=channels[6]
+    glm32_dev2=channels[7]
+    gle06_dev2=channels[8]
+    gls01_dev=channels[9]
+
+rem --- Dimension string templates
+
+    dim glm12a$:templates$[1],glm22a$:templates$[2],glm32a$:templates$[3]
+    dim gle06a$:templates$[4],gls01a$:templates$[9]
+
+rem --- Retrieve parameter records
+
+    gls01a_key$=firm_id$+"GL00"
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+
+rem --- Retrieve data from Options screen
+
+    fromfirm$=option!.getOptionData("FROM_FIRM_ID")
+    fromreport$=option!.getOptionData("FROM_GL_RPT_NO")
+    tofirm$=option!.getOptionData("TO_FIRM_ID")
+    toreport$=option!.getOptionData("TO_GL_RPT_NO")
+    more=1
+
+rem --- Get user approval to proceed
+
+    prompt$="Are you ready to copy Firm/Report "+fromfirm$+"/"+fromreport$+
+:           " to Firm/Report "+tofirm$+"/"+toreport$+"?"
+    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
+    if fkey=4 goto std_exit_no_update
+    if answer$<>"Y" goto std_exit_no_update
+
+rem --- Start progress meter
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,glm12_dev,1,0,status
+
+rem  --- Copy Header"
+escape;rem jpb - left it here...
+LET A0$(1)=FROMFIRM$,A0$(3)=FROMREPORT$,A0$(5)="0000"
+READ (GLM12_DEV,KEY=A0$(1,K9),DOM=4800)IOL=GLM12A
+LET A0$(1,2)=TOFIRM$,A0$(3,2)=TOREPORT$
+WRITE (GLM12_DEV2,KEY=A0$(1,K9))IOL=GLM12A
+READ (GLM22_DEV,KEY=FROMFIRM$+FROMREPORT$,DOM=4300)
+
+REM " --- Read next detail record"
+LET K$=KEY(GLM22_DEV,END=4400)
+IF POS(FROMFIRM$+FROMREPORT$=K$)<>1 THEN GOTO 4400
+READ (GLM22_DEV)IOL=GLM22A
+PRINT @(COLUMN,11),B0$(5,4),
+LET B0$(1,2)=TOFIRM$,B0$(3,2)=TOREPORT$
+WRITE (GLM22_DEV2,KEY=B0$(1,8))IOL=GLM22A
+GOTO 4300
+
+rem --- Copy Column Info
+    read (glm32_dev,key=fromfirm$+fromreport$,dom=*next)
+    while more
+        k32$=key(glm32_dev,end=*break)
+        if pos(fromfirm$+fromreport$=k32$)<>1 THEN break
+        read record (glm32_dev,key=k32$)glm32a$
+        LET D0$(1,2)=TOFIRM$,D0$(3,2)=TOREPORT$
+        write record (glm32_dev2,key=D0$(1,7))glm32a$
+    wend
+
+rem --- Copy Numerics
+
+    read (gle06_dev,key=A0$(1,4),dom=*next)
+    k06$=key(gle06_dev,end=done)
+    if pos(fromfirm$+fromreport$=k06$)<>1 goto done
+    read record (gle06_dev,key=k06$)gle06a$
+PRINT @(COLUMN,11),S0$(5,4),
+LET S0$(1,2)=TOFIRM$,S0$(3,2)=TOREPORT$
+WRITE (GLE06_DEV2,KEY=S0$)IOL=GLE06A
+GOTO 4520
+
+
+done: rem --- Done processing
+
+    goto std_exit
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
+rem --- Functions
+
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end
