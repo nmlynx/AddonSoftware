@@ -1,14 +1,18 @@
-rem glc - Audit Control (Set +GLCONTROL Update Flag)
-rem Program glc_ctlupdate v8.0.0 13Apr2006 (glc_ca)
-rem Created by adx_progconv.bbx v1.0.0 (04/13/2006 10:02:08)
+rem --- GL Audit Control (Set +GLCONTROL Update Flag)
+rem --- Program glc_ctlupdate v8.0.0 16Apr2006 (glc_ca)
+rem --- Created by adx_progconv.bbx v1.0.0 (04/16/2006 01:05:36)
 
-rem  +-----------------------------------------+
-rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
-rem  |  Copyright (c) 1981-2006 AddonSoftware  |
-rem  |          All Rights Reserved            |
-rem  +-----------------------------------------+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
 
-rem --- STATUS: 0=No error (returned)
+rem --- This program is called at the end of an update to indicate
+rem --- that the update has been completed and the GL Audit Control
+rem --- table needs updating as well. It simply sets the appropriate
+rem --- flag in the +GLCONTROL global variable. The actual update is
+rem --- performed by the glc_ctldelete program.
+
+rem --- status: 0=No error (returned)
 
     seterr std_error
     setesc std_exit
@@ -17,17 +21,20 @@ rem --- STATUS: 0=No error (returned)
 rem --- Initializations
 
     status=0
-    glcontrol_template$=stbl("+GLCONTROL_TPL",err=done)
-    dim glcontrol$:glcontrol_template$
-    status=0
+    updating=1
 
-rem --- Set Update Flag in +GLCONTROL
+rem --- Set update flag in +GLCONTROL
 
-    glcontrol$=stbl("+GLCONTROL",err=done)
-    glcontrol.update_flag$="Y"
-    x$=stbl("+GLCONTROL",glcontrol$,err=done)
+    while updating
+          glcontrol_template$=stbl("+GLCONTROL_TPL",err=*break)
+          dim glcontrol$:glcontrol_template$
+          glcontrol$=stbl("+GLCONTROL",err=*next)
+          glcontrol.update_flag$="Y"
+          x$=stbl("+GLCONTROL",glcontrol$,err=*next)
+          break
+    wend
 
-done: rem --- All Done
+rem --- All Done
 
     goto std_exit
 

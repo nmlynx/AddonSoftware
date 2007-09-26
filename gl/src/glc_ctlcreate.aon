@@ -1,31 +1,25 @@
-rem glc - Audit Control (Create +GLCONTROL)
-rem Program glc_ctlcreate v8.0.0 16Apr2006 (glc_ba)
-rem Created by adx_progconv.bbx v1.0.0 (04/16/2006 01:05:36)
+rem --- GL Posting Control (Create +GLCONTROL)
+rem --- Program glc_ctlcreate v8.0.0 16Apr2006 (glc_ba)
+rem --- Created by adx_progconv.bbx v1.0.0 (04/16/2006 01:05:36)
 
-rem  +-----------------------------------------+
-rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
-rem  |  Copyright (c) 1981-2006 AddonSoftware  |
-rem  |          All Rights Reserved            |
-rem  +-----------------------------------------+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
 
-rem --- NOTE: glw-11 is hardcoded as that file name for now (29Apr2006)
+rem --- This program determines whether or not GL is installed and being 
+rem --- used, creates the +GLCONTROL global variable (used to control
+rem --- GL postings and opens/defines the GL transaction work table if
+rem --- one is necessary.
 
-rem --- CALLER$      : Calling register program (Input)
-rem --- APPLICATION$ : Calling application module (Input)
-rem --- GLW11$       : glw-11 file name (Returned)
-rem --- GL$          : Post to GL (Y/N)? (Returned)
-rem --- STATUS       : 0=No Error (Returned)
+rem --- caller$     : Calling program or current table (Input)
+rem --- application$: Calling application (Input/Returned)
+rem --- table$      : Transaction work table AON (glw-11) name (Returned)
+rem --- gl$         : Post to GL (Y/N)? (Returned)
+rem --- status      : 0=No Error (Returned)
 
     seterr std_error
     setesc std_error
-    enter caller$,application$,glw11$,gl$,status
-
-rem --- Temporary stub (20Feb2007)
-
-    gl$="N"
-    glw11$=""
-    status=0
-    goto std_exit
+    enter caller$,application$,table$,gl$,status
 
 rem --- Retrieve the program path
 
@@ -37,338 +31,489 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
-    status=99
-
-rem --- Open/Lock files
-
-    files=6,begfile=1,endfile=files-1
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="adm-04"
-    files$[3]="adm-19"
-    files$[4]="glm-03"
-    files$[5]="glm-06"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ads01_dev=channels[1]
-    adm04_dev=channels[2]
-    adm19_dev=channels[3]
-    glm03_dev=channels[4]
-    glm06_dev=channels[5]
-
-rem --- Dimension string templates
-
-    dim adm04a$:templates$[2],adm19a$:templates$[3]
-    dim glm03a$:templates$[4],glm06a$:templates$[5]
-
-rem --- Retrieve miscellaneous templates
-
-    files=4,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="gls-01A"
-    ids$[2]="gls-01D"
-    ids$[3]="+GLCONTROL"
-    ids$[4]="ars-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim gls01a$:templates$[1],gls01d$:templates$[2],glcontrol$:templates$[3],ars01a$:templates$[4]
-    glcontrol_tpl$=templates$[3]
-
-rem --- Retrieve parameter records
-
-    gls01_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01_key$,err=std_missing_params) gls01a$
-    gls01_key$=firm_id$+"GL03"
-    find record (ads01_dev,key=gls01_key$,err=std_missing_params) gls01d$
-
-rem --- Retrieve current period/year for the calling application
-
-    dim msg$[0]
-    application$=cvs(application$,4)
-    module$=application$
-    if application$="BM" module$="IV"
-    if application$="PO" module$="IV"
-    if application$="OP" module$="AR"
-    ads01_key$=firm_id$+module$+"00"
-    application=pos(application$="AP AR GL IV PR SF ",3)
-    if application=0 goto std_exit
-    application=int(application/3)+1
-    message$="Missing "+application$+" parameter record."
-    switch application
-           case 1
-                find record (ads01_dev,key=ads01_key$,err=error_handling) aps01a$
-                period$=aps01a.current_per$
-                year$=aps01a.current_year$
-           break
-           case 2
-                find record (ads01_dev,key=ads01_key$,err=error_handling) ars01a$
-                period$=ars01a.current_per$
-                year$=ars01a.current_year$
-           break
-           case 3
-                find record (ads01_dev,key=ads01_key$,err=error_handling) gls01a$
-                period$=gls01a.current_per$
-                year$=gls01a.current_year$
-           break
-           case 4
-                find record (ads01_dev,key=ads01_key$,err=error_handling) ivs01a$
-                period$=ivs01a.current_per$
-                year$=ivs01a.current_year$
-           break
-           case 5
-                find record (ads01_dev,key=ads01_key$,err=error_handling) prs01a$
-                period$=prs01a.current_per$
-                year$=prs01a.current_year$
-           break
-           case 6
-                find record (ads01_dev,key=ads01_key$,err=error_handling) sfs01a$
-                period$=sfs01a.current_per$
-                year$=sfs01a.current_year$
-           break
-    swend
-    message$="Missing application record for "+application$+"."
-    adm04_key$=application$
-    find record (adm04_dev,key=adm04_key$,dom=error_handling)adm04a$
-    call pgmdir$+"adc_application.aon",application$,info$[all]
-    gl$=info$[9]
-    if gl$<>"Y" goto done
-    pgmlen=24
-
-rem --- Initializations
-
-    dim process_id$(10),pgmname$(pgmlen),msg$[1]
-    pgmname$(1)=fnbasename$(caller$,"")
-    found=0
-    lines=0
-    action=0
-    glw11_dev=0
-
-rem --- Store current period/year for application
-
-    sysperiod$=period$
-    sysyear$=year$
 
 rem --- Clear +GLCONTROL and +GLCONTROL_TPL (if they exist)
 
     x$=stbl("!CLEAR","+GLCONTROL",err=*next)
     x$=stbl("!CLEAR","+GLCONTROL_TPL",err=*next)
 
-rem --- Check for batch processing
+rem --- This section performs the checks and initializations necessary to complete
+rem --- the process of setting up the GL posting control global variable and returning
+rem --- the transaction work table AON (glw-11) name. It checks that General Ledger is
+rem --- installed and in use, verifies that the application, opens the required files
+rem --- and reads the correct parameters for the calling application.
 
-    read (adm19_dev,key=pgmname$,knum=1,dom=*next)
-    adm19_key$=key(adm19_dev,end=initialize_glcontrol)
-    if pos(pgmname$=adm19_key$)<>1 goto initialize_glcontrol
-    find record (adm19_dev,key=adm19_key$) adm19a$
-    process_id$(1)=adm19_key$(pgmlen+1)
+rem --- Initialize arguments in case of an early exit
 
-rem --- Retrieve glm-06 record
+    table$=""
+    gl$="N"
+    status=0
+    glw11_dev=0
 
-    glm06_key$=firm_id$+process_id$+pgmname$
-    find record (glm06_dev,key=glm06_key$,dom=missing_glm06)glm06a$
-    found=1
+rem --- Remaining initializations
 
-initialize_glcontrol: rem --- Initialize +GLCONTROL
+    dim msg$[1]
+    more=1
+    action=0
+    message$=""
 
-    glcontrol.firm_id$=gls01a.firm_id$
-    glcontrol.system_id$=application$
-    glcontrol.post_gl$=adm04a.post_gl$
-    glcontrol.current_per$=sysperiod$
-    glcontrol.current_year$=sysyear$
-    glcontrol.journal_id$=glm06a.journal_id$
-    glcontrol.update_flag$="N"
-    glcontrol.total_pers$=gls01a.total_pers$
-    glcontrol.gl_period$=gls01a.current_per$
-    glcontrol.gl_year$=gls01a.current_year$
-    glcontrol.acct_length$=gls01a.acct_length$
-    glcontrol.max_acct_len$=gls01a.max_acct_len$
-    glcontrol.detail_flag$=gls01a.detail_flag$
-    glcontrol.budget_flag$=gls01a.budget_flag$
-    glcontrol.units_flag$=gls01a.units_flag$
-    glcontrol.retain_det$=gls01a.retain_det$
-    glcontrol.gl_yr_closed$=gls01a.gl_yr_closed$
-    glcontrol.gl_post_code$=gls01a.gl_post_code$
-    glcontrol.locked_flag_01$=gls01a.locked_flag_01$
-    glcontrol.locked_flag_02$=gls01a.locked_flag_02$
-    glcontrol.locked_flag_03$=gls01a.locked_flag_03$
-    glcontrol.locked_flag_04$=gls01a.locked_flag_04$
-    glcontrol.locked_flag_05$=gls01a.locked_flag_05$
-    glcontrol.locked_flag_06$=gls01a.locked_flag_06$
-    glcontrol.locked_flag_07$=gls01a.locked_flag_07$
-    glcontrol.locked_flag_08$=gls01a.locked_flag_08$
-    glcontrol.locked_flag_09$=gls01a.locked_flag_09$
-    glcontrol.locked_flag_10$=gls01a.locked_flag_10$
-    glcontrol.locked_flag_11$=gls01a.locked_flag_11$
-    glcontrol.locked_flag_12$=gls01a.locked_flag_12$
-    glcontrol.locked_flag_13$=gls01a.locked_flag_13$
-    glcontrol.process_id$=process_id$
-    glcontrol.program_name$=pgmname$
-    glcontrol.use_suspense$=gls01d.use_suspense$
-    glcontrol.gl_account$=gls01d.gl_account$
-    glcontrol.max_lim_str$=str(gls01d.max_limit)
-    glcontrol.max_bal_str$=str(gls01d.max_balance)
-    glcontrol.acct_output$=gls01a.acct_output$
-    glcontrol.amount_mask$=gls01a.amount_mask$
-    glcontrol.unit_mask$=gls01a.unit_mask$
-    glcontrol.percent_mask$=gls01a.percent_mask$
+    while more
 
-rem --- Set fields based on glm-06 record
+          rem --- Is General Ledger installed and being used by this application?
 
-    if found=0 goto no_posting_control
-    glcontrol.gl_audit$=glm06a.gl_audit$
-    glcontrol.gl_work_file$=glm06a.gl_work_file$
-    glcontrol.prt_gl_sum$=glm06a.prt_gl_sum$
-    glcontrol.description$=adm19a.description$
-    if glcontrol.detail_flag$="Y" glcontrol.detail_flag$=glm06a.detail_level$
+          gl$="N"
+          call pgmdir$+"adc_application.aon",application$,info$[all]
+          gl$=info$[9]
+          if gl$<>"Y" break
+          module$="GL"
+          call pgmdir$+"adc_application.aon",module$,info$[all]
+          gl$=info$[20]
+          if gl$<>"Y" break
 
-rem --- Update Audit Control
+          rem --- Open files
 
-    glm06a.cur_adt_no=glm06a.cur_adt_no+1
-    if glm06a.cur_adt_no>9999999 glm06a.cur_adt_no=1
-    if glm06a.gl_audit$="Y" glcontrol.gl_adt_no$=str(glm06a.cur_adt_no:"0000000")
+          files=5,begfile=1,endfile=files
+          dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+          files$[1]="ads-01"
+          files$[2]="adm-04"
+          files$[3]="adm-19"
+          files$[4]="glm-03"
+          files$[5]="glm-06"
+          call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                         ids$[all],templates$[all],channels[all],batch,status
+          if status break
+          ads01_dev=channels[1]
+          adm04_dev=channels[2]
+          adm19_dev=channels[3]
+          glm03_dev=channels[4]
+          glm06_dev=channels[5]
 
-rem --- Update glm-06 Record
+          rem --- Dimension string templates
 
-    glm06a.lstuse_date$=sysinfo.system_date$
-    glm06a.lstuse_time$=fntime$(q$)
-    write record (glm06_dev)glm06a$
-    goto journal_initializations
+          dim adm04a$:templates$[2],adm19a$:templates$[3],glm03a$:templates$[4],
+:             glm06a$:templates$[5]
 
-no_posting_control: rem --- Missing glm-06 record
+          rem --- Retrieve miscellaneous templates
 
-    glcontrol.gl_audit$="N"
-    glcontrol.gl_work_file$="Y"
-    glcontrol.prt_gl_sum$="N"
-    glcontrol.description$="Summarized GL Posting"
+          files=9,begfile=1,endfile=files
+          dim ids$[files],templates$[files]
+          ids$[1]="aps-01A"
+          ids$[2]="ars-01A"
+          ids$[3]="gls-01A"
+          ids$[4]="gls-01D"
+          ids$[5]="ivs-01A"
+          ids$[6]="prs-01A"
+          ids$[7]="sfs-01A"
+          ids$[8]="+GLCONTROL"
+          ids$[9]="+PROCESS"
+          call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+          if status break
 
-journal_initializations: rem --- Set fields based on Journal ID Code
+          rem --- Dimension miscellaneous string templates
 
-    glm03_key$=firm_id$+glm06a.journal_id$
-    glcontrol.permit_je$="N"
-    glcontrol.post_yr_end$="N"
-    glcontrol.post_locked$="N"
-    find record (glm03_dev,key=glm03_key$,dom=period_dates)glm03a$
-    glcontrol.post_yr_end$=glm03a.post_yr_end$
-    glcontrol.post_locked$=glm03a.post_locked$
+          dim aps01a$:templates$[1],ars01a$:templates$[2],gls01a$:templates$[3],
+:             gls01d$:templates$[4],ivs01a$:templates$[5],prs01a$:templates$[6],
+:             sfs01a$:templates$[7],glcontrol$:templates$[8],process$:templates$[9]
+          glcontrol_tpl$=templates$[8]
 
-period_dates: rem --- Determine fiscal year limits (prior and next)
+          rem --- Retrieve GL parameter records
 
-    total_periods=num(glcontrol.total_pers$)
-    endyear=num(glcontrol.gl_year$)
-    begyear=endyear-2
-    if glcontrol.gl_yr_closed$="Y" begyear=endyear-1,endyear=endyear+1
+          action=1
+          status=999
+          message$="The GL parameter record is missing for this firm."
+          k$=firm_id$+"GL00"
+          find record (ads01_dev,key=k$,err=*break) gls01a$
+          message$="The GL suspense account record is missing for this firm."
+          k$=firm_id$+"GL03"
+          find record (ads01_dev,key=k$,err=*break) gls01d$
 
-rem --- Calculate period beginning/ending dates
-rem --- First for all three years: prior, current and next
+          rem --- Which application parameter record do we need to retrieve to
+          rem --- get the current period and year?
 
-    dim dates$[total_periods,6]
-    for y=begyear to endyear
-        x=3
-        if y=begyear x=1
-        if y=endyear x=5
+          application$=cvs(application$,4)
+          module$=application$
+          if application$="BM" module$="IV"
+          if application$="PO" module$="IV"
+          if application$="OP" module$="AR"
 
-rem --- Then for each period in that year
+          rem --- Retrieve application (adm-04) record for the calling application
 
-        for p=1 to total_periods
-            xp=p
-            xy=y
-            call pgmdir$+"adc_perioddates.aon",ads01_dev,xp,xy,begdate$,enddate$,status
-            if status=0 dates$[p,x]=begdate$, dates$[p,x+1]=enddate$
-        next p
-    next y
+          message$="Missing application record for "+application$+"."
+          find record (adm04_dev,key=application$,dom=*break) adm04a$
 
-rem --- Store period beginning and ending dates for all three years
+          rem --- Retrieve the current period and year for the calling application
 
-    for p=1 to total_periods
-        field glcontrol$,"PRI_PER_BEG_"+str(p:"00")=dates$[p,1]
-        field glcontrol$,"PRI_PER_END_"+str(p:"00")=dates$[p,2]
-        field glcontrol$,"CUR_PER_BEG_"+str(p:"00")=dates$[p,3]
-        field glcontrol$,"CUR_PER_END_"+str(p:"00")=dates$[p,4]
-        field glcontrol$,"NXT_PER_BEG_"+str(p:"00")=dates$[p,5]
-        field glcontrol$,"NXT_PER_END_"+str(p:"00")=dates$[p,6]
-    next p
+          rec$=""
+          message$="No parameter record exists for the "+module$+" application."
+          if module$="AP" dim rec$:fattr(aps01a$)
+          if module$="AR" dim rec$:fattr(ars01a$)
+          if module$="GL" dim rec$:fattr(gls01a$)
+          if module$="IV" dim rec$:fattr(ivs01a$)
+          if module$="PR" dim rec$:fattr(prs01a$)
+          if module$="SF" dim rec$:fattr(sfs01a$)
+          if cvs(rec$,2)="" break
+          k$=firm_id$+module$+"00"
+          find record (ads01_dev,key=k$,dom=*break) rec$
+          period$=rec.current_per$
+          year$=rec.current_year$
 
-rem --- Store application & GL period beginning/ending dates
+          rem --- Initial processing completed and no errors were encountered
 
-    xp=num(glcontrol.current_per$)
-    xy=num(glcontrol.current_year$)
-    call pgmdir$+"adc_perioddates.aon",ads01_dev,xp,xy,begdate$,enddate$,status
-    if status=0 glcontrol.app_per_beg$=begdate$,glcontrol.app_per_end$=enddate$
-    xp=num(glcontrol.gl_period$)
-    xy=num(glcontrol.gl_year$)
-    call pgmdir$+"adc_perioddates.aon",ads01_dev,xp,xy,begdate$,enddate$,status
-    if status=0 glcontrol.gl_per_beg$=begdate$,glcontrol.gl_per_end$=enddate$
+          action=0
+          status=0
+          message$=""
+          break
+    wend
 
-rem --- Create +GLCONTROL and +GLCONTROL_TPL
+rem --- If there were any errors, we're done
 
-    x$=stbl("+GLCONTROL",glcontrol$)
-    x$=stbl("+GLCONTROL_TPL",glcontrol_tpl$)
+    if cvs(message$,2)<>"" gosub error_message
+    if status goto std_exit
+    if gl$<>"Y" goto std_exit
 
-open_workfile: rem --- Open summary work file
+rem --- This section builds the posting control global variable (+GLCONTROL) and 
+rem --- opens/defines and returns the transaction work table AON (glw-11) name if
+rem --- one is being used by this process.
 
-    if found=0 goto done
-    if glm06a.gl_work_file$<>"Y" goto done
-    glw11$=cvs(glm06a.file_name$,2)
+rem --- Field length parameters
+
+    audit=7
+    tablelen=16
+    sequence=2
+    process_id=16
+    program_name=24
+
+rem --- Initializations
+
+    dim process_id$(process_id),process_table$(tablelen),program_name$(program_name)
+    dim audit_mask$(audit,"0")
+    program_name$(1)=fnbasename$(caller$,"")
+    process_table$(1)=cvs(caller$,4)
     glw11$="glw-11"
-    if glw11$="" glw11$="glw-11"
-    endfile=files
-    begfile=files
-    files$[endfile]=glw11$
-    ids$[endfile]="A"
-    options$[endfile]="F"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto create_workfile
-    glw11_dev=channels[endfile]
-    if glw11_dev=0 goto create_workfile
-    goto done
-
-create_workfile: rem --- Create work file
-
+    sysperiod$=period$
+    sysyear$=year$
     batch$=""
-    process$=stbl("+PROCESS",err=no_process)
-    batch$="."+process$(13,3)
-no_process: call pgmdir$+"syc_ml.bbx",glw11$+batch$,"glw-11",status
-    if status=0 goto open_workfile
+    action=0
+    status=0
+    message$=""
 
-rem --- Unable to define summary work file
+rem --- Generate all the posting control information that needs to be created
+rem --- or returned.
 
-    message$="Unable to creat GL summary work file ("+$22$+glw11$+batch$+$22$+")"
-    action=1
-    lines=1
-    goto error_message
+    while more
 
-missing_glm06: rem --- Missing glm-06 control record
+          rem --- Is this table/program part of a process? Note that keynum is
+          rem --- set here and used below when retrieving the posting control 
+          rem --- record which also has table/program alternate keys.
 
-    message$="The GL Posting Control record for this task is missing. "+
-:            "Use the GL Posting Control Maintenance task to define the "+
-:            "parameters for this task."
-    action=2
-    lines=1
-    status=11
-    goto error_message
+          escape
+          notprocess=1
+          keynum=1
+          value$=process_table$
+          gosub get_process
+          if notprocess
+             keynum=2
+             value$=program_name$
+             gosub get_process
+          endif
 
-done: rem --- All done
+          rem --- The variables process and notprocess are boolean values
+          rem --- If this table/program is a process    : process=1/notprocess=0
+          rem --- If this table/program is NOT a process: process=0/notprocess=1
 
-    let status=0
+          process=notprocess=0
+
+          rem --- Retrieve posting control (glm-06) record for this table or program
+
+          while process
+                action=1
+                status=12
+                message$="The Posting Control record for this task is missing. Use the"+$0A$+
+:                        "Process Maintenance task to define the parameters for this task."
+                value$=""
+                if keynum=1 value$=process_table$
+                if keynum=2 value$=program_name$
+                value$=value$+process_id$+firm_id$
+                read (glm06_dev,key=k$,knum=keynum,dom=*next)
+                k$=key(glm06_dev,knum=keynum,err=*break)
+                if pos(value$=k$)<>1 break
+                find record (glm06_dev,key=k$) glm06a$
+                action=0
+                status=0
+                message$=""
+                break
+          wend
+          if status break
+
+          rem --- Initialize posting control global variable (+GLCONTROL) with
+          rem --- values from the parameter records
+
+          dim glcontrol$:glcontrol_tpl$
+          glcontrol.firm_id$=firm_id$
+          glcontrol.system_id$=application$
+          glcontrol.post_gl$=adm04a.post_gl$
+          glcontrol.current_per$=sysperiod$
+          glcontrol.current_year$=sysyear$
+          glcontrol.update_flag$="N"
+          glcontrol.total_pers$=gls01a.total_pers$
+          glcontrol.gl_period$=gls01a.current_per$
+          glcontrol.gl_year$=gls01a.current_year$
+          glcontrol.acct_length$=gls01a.acct_length$
+          glcontrol.max_acct_len$=gls01a.max_acct_len$
+          glcontrol.detail_flag$=gls01a.detail_flag$
+          glcontrol.budget_flag$=gls01a.budget_flag$
+          glcontrol.units_flag$=gls01a.units_flag$
+          glcontrol.retain_det$=gls01a.retain_det$
+          glcontrol.gl_yr_closed$=gls01a.gl_yr_closed$
+          glcontrol.gl_post_code$=gls01a.gl_post_code$
+          glcontrol.locked_flag_01$=gls01a.locked_flag_01$
+          glcontrol.locked_flag_02$=gls01a.locked_flag_02$
+          glcontrol.locked_flag_03$=gls01a.locked_flag_03$
+          glcontrol.locked_flag_04$=gls01a.locked_flag_04$
+          glcontrol.locked_flag_05$=gls01a.locked_flag_05$
+          glcontrol.locked_flag_06$=gls01a.locked_flag_06$
+          glcontrol.locked_flag_07$=gls01a.locked_flag_07$
+          glcontrol.locked_flag_08$=gls01a.locked_flag_08$
+          glcontrol.locked_flag_09$=gls01a.locked_flag_09$
+          glcontrol.locked_flag_10$=gls01a.locked_flag_10$
+          glcontrol.locked_flag_11$=gls01a.locked_flag_11$
+          glcontrol.locked_flag_12$=gls01a.locked_flag_12$
+          glcontrol.locked_flag_13$=gls01a.locked_flag_13$
+          glcontrol.process_id$=process_id$
+          glcontrol.program_name$=program_name$
+          glcontrol.use_suspense$=gls01d.use_suspense$
+          glcontrol.gl_account$=gls01d.gl_account$
+          glcontrol.max_lim_str$=str(gls01d.max_limit)
+          glcontrol.max_bal_str$=str(gls01d.max_balance)
+          glcontrol.acct_output$=gls01a.acct_output$
+          glcontrol.amount_mask$=gls01a.amount_mask$
+          glcontrol.unit_mask$=gls01a.unit_mask$
+          glcontrol.percent_mask$=gls01a.percent_mask$
+
+          rem --- Set posting control global variable (+GLCONTROL) fields based 
+          rem --- on posting control (glm-06) record and update the record.
+
+          while process
+                glcontrol.journal_id$=glm06a.journal_id$
+                glcontrol.gl_audit$=glm06a.gl_audit$
+                glcontrol.gl_work_file$=glm06a.gl_work_file$
+                glcontrol.prt_gl_sum$=glm06a.prt_gl_sum$
+                glcontrol.description$=adm19a.description$
+                if glcontrol.detail_flag$="Y" glcontrol.detail_flag$=glm06a.detail_level$
+
+                rem --- Update the last audit number
+
+                glm06a.audit_number=glm06a.audit_number+1
+                if glm06a.audit_number>9999999 glm06a.audit_number=1
+                if glm06a.gl_audit$="Y" glcontrol.gl_adt_no$=str(glm06a.audit_number:audit_mask$)
+
+                rem --- Update posting control (glm-06) record
+
+                glm06a.lstuse_date$=sysinfo.system_date$
+                glm06a.lstuse_time$=fntime$(q$)
+                glm06a$=field(glm06a$)
+                write record (glm06_dev) glm06a$
+
+                rem --- If this is a batched process we'll need the batch number 
+                rem --- to define the transaction work table (if necessary)
+
+                if glm06a.gl_work_file$="Y"
+                   process$=stbl("+PROCESS",err=*next)
+                   batch$="."+process.batch_no$
+                endif
+                break
+          wend
+
+          rem --- If the calling table/program is NOT part of a process fields need to
+          rem --- be set to hardcoded values.
+
+          if notprocess
+             glcontrol.gl_audit$="N"
+             glcontrol.gl_work_file$="Y"
+             glcontrol.prt_gl_sum$="N"
+             glcontrol.description$="Summarized GL Posting"
+          endif
+
+          rem --- Some fields should be overriden by Journal ID code (glm-03) values
+
+          glcontrol.permit_je$="N"
+          glcontrol.post_yr_end$="N"
+          glcontrol.post_locked$="N"
+          while more
+                k$=firm_id$+glm06a.journal_id$
+                find record (glm03_dev,key=k$,dom=*break) glm03a$
+                glcontrol.post_yr_end$=glm03a.post_yr_end$
+                glcontrol.post_locked$=glm03a.post_locked$
+                break
+          wend
+
+          rem --- GL postings are currently restricted to the prior, current or
+          rem --- next fiscal year. In order to verify posting dates, +GLCONTROL
+          rem --- contains the beginning and ending dates for each fiscal period
+          rem --- in that three year range. The first step is to calculate what 
+          rem --- that three year date range is based on the current GL fiscal year.
+
+          total_periods=num(glcontrol.total_pers$)
+          endyear=num(glcontrol.gl_year$)
+          begyear=endyear-2
+          if glcontrol.gl_yr_closed$="Y" 
+             begyear=endyear-1
+             endyear=endyear+1
+          endif
+
+          rem --- The next step is to calculate the period beginning and ending dates
+          rem --- for each of the three years and store them in the dates$ matrix. Index
+          rem --- values for the period beginning dates are 1 (prior), 3 (current) and
+          rem --- 5 (next). Index values 2, 4 and 6 are the period ending dates for the
+          rem --- same fiscal year (prior, current and next)
+
+          dim dates$[total_periods,6]
+          index=1
+          for year=begyear to endyear
+              for period=1 to total_periods
+                  call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+                  if status=0 
+                     dates$[period,index]=begdate$
+                     dates$[period,index+1]=enddate$
+                  endif
+              next period
+              index=index+2
+          next year
+
+          rem --- Store the period beginning and ending dates for all three 
+          rem --- fiscal years in +GLCONTROL
+
+          for period=1 to total_periods
+              field glcontrol$,"PRI_PER_BEG_"+str(period:"00")=dates$[period,1]
+              field glcontrol$,"PRI_PER_END_"+str(period:"00")=dates$[period,2]
+              field glcontrol$,"CUR_PER_BEG_"+str(period:"00")=dates$[period,3]
+              field glcontrol$,"CUR_PER_END_"+str(period:"00")=dates$[period,4]
+              field glcontrol$,"NXT_PER_BEG_"+str(period:"00")=dates$[period,5]
+              field glcontrol$,"NXT_PER_END_"+str(period:"00")=dates$[period,6]
+          next period
+
+          rem --- Calculate and store application and GL period beginning/ending dates
+          rem --- in +GLCONTROL so that we can determine whether a post falls into the
+          rem --- current or next period, or is a post for a prior or future period.
+
+          period=num(glcontrol.current_per$)
+          year=num(glcontrol.current_year$)
+          call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+          if status=0 
+             glcontrol.app_per_beg$=begdate$
+             glcontrol.app_per_end$=enddate$
+          endif
+          period=num(glcontrol.gl_period$)
+          year=num(glcontrol.gl_year$)
+          call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+          if status=0 
+             glcontrol.gl_per_beg$=begdate$
+             glcontrol.gl_per_end$=enddate$
+          endif
+
+          rem --- Create +GLCONTROL and +GLCONTROL_TPL stbl variables
+
+          x$=stbl("+GLCONTROL",glcontrol$)
+          x$=stbl("+GLCONTROL_TPL",glcontrol_tpl$)
+
+          rem --- If the caller is part of a process and a transaction work table 
+          rem --- is required then we need to verify that the table exists and
+          rem --- create it if it doesn't.
+
+          attempts=0
+          while process
+                if glm06a.gl_work_file$<>"Y" break
+                table$=cvs(glm06a.file_name$,2)
+                if table$="" table$=glw11$
+
+                rem --- Attempt to open the transaction work table. Note that the
+                rem --- template returned is glw-11 regardless of the actual table
+                rem --- name
+
+                files=1,begfile=1,endfile=files,found=1
+                dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+                files$[1]=table$
+                options$[1]="F"
+                ids$[1]=glw11$+"A"
+                escape
+                call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                               ids$[all],templates$[all],channels[all],batch,status
+                if status found=0
+                glw11_dev=channels[1]
+                if glw11_dev=0 found=0
+                if found break
+
+                rem --- Have we already tried to create/open it?
+
+                if attempts break
+                attempts=attempts+1
+
+                rem --- Create a table that mirrors the definition of glw-11
+
+                escape; call pgmdir$+"syc_ml.bbx",table$+batch$,glw11$,status
+                if status break
+          wend
+                
+          rem --- Was the transaction work table successfully opened/created?
+
+          escape
+          if found=0
+             action=1
+             status=12
+             message$="Unable to creat GL summary table ("+$22$+table$+batch$+$22$+")"
+             break
+          endif
+
+          rem --- Posting control is in place and no errors were encountered
+
+          message$=""
+          status=0
+          break
+    wend
+
+rem --- Any errors setting up GL posting control for this process?
+
+    if cvs(message$,2)<>"" gosub error_message
+
+rem --- All done
+
     goto std_exit
 
-error_handling: rem --- Handle errors
+error_message: rem --- Disable GL if an error was encountered and display any message
 
-    let lines=0
+    gl$="N"
+    debug=pos("YES"=stbl("+DEV_MODE",err=*next))
+    if debug message$=message$+$0A$+$0A$+" Note: Debug mode is active. Retry will remove "+
+:                     "error trapping "+$0A$+"and place the program into console mode."
 
-error_message: rem --- Disable GL if error and return requested
+    rem --- Display the error message
 
-    let gl$="N"
-    if status=0 status=e0
-    if status=0 status=err
-    if status=0 status=256
-    msg$[0]=message$
-    if lines call pgmdir$+"adc_stdmessage.aon",action,msg$[all],0,y,x,v$,v3
-    goto std_exit
+    icon=16
+    buttons=5
+    default=256
+    title$="Error Processing"
+    x=msgbox(message$,buttons+icon+default,title$,err=*return)
+    if x<>4 return
+    if debug
+       print "Error ",err,"/Line ",tcb(5)
+       escape
+    endif
+    return
+
+
+get_process: rem --- Using the firm id and the table/program name, attempt to retrieve the
+             rem --- process id and sequence number from the process detail (adm-19) file.
+
+    k$=value$
+    read (adm19_dev,key=k$,knum=keynum,dom=*next)
+    k$=key(adm19_dev,end=*next)
+    if pos(value$=k$)=1 
+       process_id$=k$(len(value$)+1,process_id)
+       sequence$=k$((len(k$)-sequence)+1)
+       process$=stbl("+PROCESS",err=*proceed)
+       notprocess=0
+    endif
+    return
 
 rem --- Functions
 
