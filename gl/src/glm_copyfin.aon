@@ -28,7 +28,7 @@ rem --- Open/Lock files
     files$[1]="glm-12",ids$[1]="GLM_FINMASTER"
     files$[2]="glm-22",ids$[2]="GLM_FINDETAIL"
     files$[3]="glm-32",ids$[3]="GLM_FINCOLUMNS"
-    files$[4]="gle-06",ids$[4]="GLM_FINANCIALAMT"
+    files$[4]="gle-06",ids$[4]="GLE_FINANCIALAMT"
     files$[5]="glm-12",ids$[5]="GLM_FINMASTER"
     files$[6]="glm-22",ids$[6]="GLM_FINDETAIL"
     files$[7]="glm-32",ids$[7]="GLM_FINCOLUMNS"
@@ -65,57 +65,64 @@ rem --- Retrieve data from Options screen
     tofirm$=option!.getOptionData("TO_FIRM_ID")
     toreport$=option!.getOptionData("TO_GL_RPT_NO")
     more=1
-
+escape
 rem --- Get user approval to proceed
 
     prompt$="Are you ready to copy Firm/Report "+fromfirm$+"/"+fromreport$+
 :           " to Firm/Report "+tofirm$+"/"+toreport$+"?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit_no_update
-    if answer$<>"Y" goto std_exit_no_update
+    if fkey=4 goto std_exit_no_copy
+    if answer$<>"Y" goto std_exit_no_copy
 
 rem --- Start progress meter
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,glm12_dev,1,0,status
 
 rem  --- Copy Header"
-escape;rem jpb - left it here...
-LET A0$(1)=FROMFIRM$,A0$(3)=FROMREPORT$,A0$(5)="0000"
-READ (GLM12_DEV,KEY=A0$(1,K9),DOM=4800)IOL=GLM12A
-LET A0$(1,2)=TOFIRM$,A0$(3,2)=TOREPORT$
-WRITE (GLM12_DEV2,KEY=A0$(1,K9))IOL=GLM12A
-READ (GLM22_DEV,KEY=FROMFIRM$+FROMREPORT$,DOM=4300)
 
-REM " --- Read next detail record"
-LET K$=KEY(GLM22_DEV,END=4400)
-IF POS(FROMFIRM$+FROMREPORT$=K$)<>1 THEN GOTO 4400
-READ (GLM22_DEV)IOL=GLM22A
-PRINT @(COLUMN,11),B0$(5,4),
-LET B0$(1,2)=TOFIRM$,B0$(3,2)=TOREPORT$
-WRITE (GLM22_DEV2,KEY=B0$(1,8))IOL=GLM22A
-GOTO 4300
+    call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-rem --- Copy Column Info
+    glm12_key$=fromfirm$+fromreport$+"0000"
+    read record (glm12_dev,key=glm12_key$,dom=done)glm12a$
+    glm12a.firm_id$=tofirm$,glm12a.gl_rpt_no$=toreport$
+    glm12_key$=glm12a.firm_id$+glm12a.gl_rpt_no$+glm12a.gl_rpt_line$
+    write record (glm12_dev2,key=glm12_key$)glm12a$
+
+rem --- COpy detail records
+    
+    read (glm22_dev,key=fromfirm$+fromreport$,dom=*next)
+    while more
+        glm22_key$=key(glm22_dev,end=*break)
+        if pos(fromfirm$+fromreport$=glm22_key$)<>1 break
+        read record (glm22_dev)glm22a$
+        glm22a.firm_id$=tofirm$,glm22a.gl_rpt_no$=toreport$
+        glm22_key$=glm22a.firm_id$+glm22a.gl_rpt_no$+glm22a.gl_rpt_line$
+        write record (glm22_dev2,key=glm22_key$)glm22a$
+    wend
+
+rem --- Copy Column records
+
     read (glm32_dev,key=fromfirm$+fromreport$,dom=*next)
     while more
-        k32$=key(glm32_dev,end=*break)
-        if pos(fromfirm$+fromreport$=k32$)<>1 THEN break
-        read record (glm32_dev,key=k32$)glm32a$
-        LET D0$(1,2)=TOFIRM$,D0$(3,2)=TOREPORT$
-        write record (glm32_dev2,key=D0$(1,7))glm32a$
+        glm32_key$=key(glm32_dev,end=*break)
+        if pos(fromfirm$+fromreport$=glm32_key$)<>1 break
+        read record (glm32_dev,key=glm32_key$)glm32a$
+        glm32a.firm_id$=tofirm$,glm32a.gl_rpt_no$=toreport$
+        glm32a_key$=glm32a.firm_id$+glm32a.gl_rpt_no$+glm32a.sequence_no$
+        write record (glm32_dev2,key=glm32_key$)glm32a$
     wend
 
 rem --- Copy Numerics
 
-    read (gle06_dev,key=A0$(1,4),dom=*next)
-    k06$=key(gle06_dev,end=done)
-    if pos(fromfirm$+fromreport$=k06$)<>1 goto done
-    read record (gle06_dev,key=k06$)gle06a$
-PRINT @(COLUMN,11),S0$(5,4),
-LET S0$(1,2)=TOFIRM$,S0$(3,2)=TOREPORT$
-WRITE (GLE06_DEV2,KEY=S0$)IOL=GLE06A
-GOTO 4520
-
+    read (gle06_dev,key=fromfirm$+fromreport$,dom=*next)
+    while more
+        gle06_key$=key(gle06_dev,end=*break)
+        if pos(fromfirm$+fromreport$=gle06_key$)<>1 break
+        read record (gle06_dev,key=gle06_key$)gle06a$
+        gle06a.firm_id$=tofirm$,gle06a.gl_rpt_no$=toreport$
+        gle06_key$=gle06a.firm_id$+gle06a.gl_rpt_no$+gle06a.gl_rpt_line$+gle06a.gl_pcn_flag$+gle06a.gl_pqy_flag$
+        write record (gle06_dev2,key=gle06_key$)gle06a$
+    wend
 
 done: rem --- Done processing
 
@@ -196,11 +203,11 @@ std_exit: rem --- Standard program end (01Mar2006)
     msg_opt$=""
     gosub disp_message
 
-std_exit_no_update:
+std_exit_no_copy:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-    release
+    exit
 
 rem #endinclude std_end.src
 
