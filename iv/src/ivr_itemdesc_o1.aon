@@ -15,81 +15,87 @@ rem --- Get program path
 
     pgmdir$=fnglobal$("+DIR_PGM","")
 
+rem --- Document initializations
+                OutVect!=bbjAPI().getSysGui().makeVector()
+                rep_date$=date(0:"%Mz/%Dz/%Yd")
+                rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+                rep_time$=date(0:"%hz:%mz %p")
+                rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Initialize HEADINGS$
 
-    dim h3$(width),h4$(width),h6$(width)
-    x1$="First"
-    x2$="First"
-    x2=5
-    if begitem$<>"" x1$=begitem$
-    if begprod$<>"" x2$=begprod$,x2=3
-    if endprod$="" if x2=3 x2=4
-    h3$(1)="From Item: "+x1$
-    h3$(width-x2-13)="From Product: "+x2$
-    x1$="Last"
-    x2$="Last"
-    x3$="All Item Types"
-    if enditem$<>"" x1$=enditem$
-    if endprod$<>"" x2$=endprod$
-    if type$<>"" x3$="Item Type "+type$
-    h4$(1)="  To Item: "+x1$
-    h4$(fncenter(x3$,width))=x3$
-    h4$(width-x2-13)="  To Product: "+x2$
-    h6$(1)="Item",h6$(p[0]+2)=segment1$
-    if p[4]>0 h6$(p[0]+segment1+2)=segment2$
-    if p[5]>0 h6$(p[0]+segment1+segment2+3)=segment3$
-    headings$[3]=h3$
-    headings$[4]=h4$
-    headings$[6]=h6$
+                dim h3$(width),h4$(width),h6$(width)
+                x1$="First"
+                x2$="First"
+                x2=5
+                if begitem$<>"" x1$=begitem$
+                if begprod$<>"" x2$=begprod$,x2=3
+                if endprod$="" if x2=3 x2=4
+                h3$(1)="From Item: "+x1$
+                h3$(width-x2-13)="From Product: "+x2$
+                x1$="Last"
+                x2$="Last"
+                x3$="All Item Types"
+                if enditem$<>"" x1$=enditem$
+                if endprod$<>"" x2$=endprod$
+                if type$<>"" x3$="Item Type "+type$
+                h4$(1)="     To Item:"+x1$
+                h4$(fncenter(x3$,width))=x3$
+                h4$(width-x2-16)="To Product: "+x2$
+                if p[4]>0 h6$(p[0]+segment1+2)=segment2$
+                if p[5]>0 h6$(p[0]+segment1+segment2+3)=segment3$
+                headings$[3]=h3$
+                headings$[4]=h4$
+                headings$[6]=h6$
+
+rem ----Column Heading
+
+                dim columns$[1,10]
+                    columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]="8"
+                    columns$[1,0]="Description",           columns$[1,1]="C",columns$[1,2]="25"
 
 rem --- Position files
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    call pgmdir$+"adc_progress.aon","NC",sysinfo.task_desc$,"","Printing","",p[0],ivm01_dev,1,0,ignore_status
-    read record (ivm01_dev,key=sysinfo.firm_id$+begitem$,dom=next_ivm01)ivm01a$
-    goto range_checks
+
+                call pgmdir$+"adc_progress.aon","NC",sysinfo.task_desc$,"","Printing","",p[0],ivm01_dev,1,0,ignore_status
+                read record (ivm01_dev,key=sysinfo.firm_id$+begitem$,dom=next_ivm01)ivm01a$
+                goto range_checks
 
 next_ivm01: rem --- Next Item
 
-    k$=key(ivm01_dev,end=done)
-    if pos(sysinfo.firm_id$=k$)<>1 goto done
-    if enditem$<>"" if k$(3)>enditem$ goto done
-    read record (ivm01_dev)ivm01a$
+                k$=key(ivm01_dev,end=done)
+                if pos(sysinfo.firm_id$=k$)<>1 goto done
+                if enditem$<>"" if k$(3)>enditem$ goto done
+                read record (ivm01_dev)ivm01a$
 
 range_checks: rem --- Update progress meter and perform range checks
 
-    call pgmdir$+"adc_progress.aon","S","","","",ivm01a.item_id$(1,p[0]),0,0,1,0,ignore_status
-    if begprod$<>"" if ivm01a.product_type$<begprod$ goto ivm01_loop
-    if endprod$<>"" if ivm01a.product_type$>endprod$ goto ivm01_loop
-    if type$<>"" if ivm01a.item_class$<>type$ goto ivm01_loop
+                call pgmdir$+"adc_progress.aon","S","","","",ivm01a.item_id$(1,p[0]),0,0,1,0,ignore_status
+                if begprod$<>"" if ivm01a.product_type$<begprod$ goto ivm01_loop
+                if endprod$<>"" if ivm01a.product_type$>endprod$ goto ivm01_loop
+                if type$<>"" if ivm01a.item_class$<>type$ goto ivm01_loop
 
 rem --- Print detail line
 
-    if l+1>l9 gosub report_heading
-    print (printer_dev)@(0),ivm01a.item_id$(1,p[0]),@(p[0]+1),ivm01a.item_desc$(1,p[3]),
-:                      @(p[0]+segment1+1),ivm01a.item_desc$(p[3]+1,p[4]),
-:                      @(p[0]+segment1+segment2+2),ivm01a.item_desc$(p[3]+p[4]+1,p[5])
-    l=l+1
-    number=number+1
+
+                        OutVect!.addItem(ivm01a.item_id$(1,p[0]))
+                        OutVect!.addItem(ivm01a.item_desc$(1,p[3]))
+                        OutVect!.addItem(ivm01a.item_desc$(p[3]+1,p[4]))
+                        OutVect!.addItem(ivm01a.item_desc$(p[3]+p[4]+1,p[5]))                
+                        number=number+1
 
 ivm01_loop: rem --- Loop back for next record
 
-    goto next_ivm01
+                        goto next_ivm01
 
 done: rem --- All done
 
-    if l+2>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)number," Item(s) Listed"
-    goto std_exit
 
-report_heading: rem --- Report Heading
+                        OutVect!.addItem("")
+                        OutVect!.addItem(str(number)+"Item(s) Listed")
+                        goto std_exit
 
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    return
+
 
 rem --- Functions
 
