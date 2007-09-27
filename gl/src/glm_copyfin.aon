@@ -64,10 +64,27 @@ rem --- Retrieve data from Options screen
     fromreport$=option!.getOptionData("FROM_GL_RPT_NO")
     tofirm$=option!.getOptionData("TO_FIRM_ID")
     toreport$=option!.getOptionData("TO_GL_RPT_NO")
-    more=1
-escape
-rem --- Get user approval to proceed
 
+rem --- validate options
+
+    if cvs(fromfirm$,2)="" or cvs(fromreport$,2)="" or cvs(tofirm$,2)="" or cvs(toreport$,2)=""
+        dim msg$[1]
+        msg$[0]="Invalid selection criteria. All fields must have a value."
+        call pgmdir$+"adc_stdmessage.aon",0,msg$[all],1,0,0,x$,0
+        release
+    endif
+
+    find(glm12_dev,key=tofirm$+toreport$+"0000",dom=approve)
+        dim msg$[1]
+        msg$[0]="You cannot copy to an existing report."
+        call pgmdir$+"adc_stdmessage.aon",0,msg$[all],1,0,0,x$,0
+        release
+    endif
+
+rem --- Get user approval to proceed
+approve:
+
+    more=1
     prompt$="Are you ready to copy Firm/Report "+fromfirm$+"/"+fromreport$+
 :           " to Firm/Report "+tofirm$+"/"+toreport$+"?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
