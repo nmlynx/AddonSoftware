@@ -7,6 +7,12 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
+rem --- Document initializations
+            OutVect!=bbjAPI().getSysGui().makeVector()
+            rep_date$=date(0:"%Mz/%Dz/%Yd")
+            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+            rep_time$=date(0:"%hz:%mz %p")
+            rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Retrieve the program path
 
@@ -45,8 +51,6 @@ rem --- Print positions
 
 rem --- Background
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm14_dev,1,meter_num,status
 
 rem --- Report headings
@@ -67,8 +71,8 @@ rem --- Position files
         read(ivm14_dev,key=firm_id$+cvs(begitem$,3),knum=key_num,dom=*next)
     endif
 
-rem --- Next Synonym
 rem --- Loop starting
+rem --- Next Synonym
 
     While more
 
@@ -144,29 +148,28 @@ Retrieve_Item: rem --- Retrieve item
 
 rem --- Format detail line
 
-        dim buffer$(width)
+        
         description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
         if sequence$="S" then
-            buffer$(o[0])=synonym$
-            buffer$(o[1])=item$
             char$=synonym$(1,1)
-            buffer$(o[2])=description$
-            buffer$(o[3])=ivm01a.product_type$
+            OutVect!.addItem(synonym$)
+            OutVect!.addItem(item$)
+            OutVect!.addItem(description$)
+            OutVect!.addItem(ivm01a.product_type$)
         endif
-        if sequence$<>"S" then
-            buffer$(o[0])=item$
-            buffer$(o[1])=description$
+        if sequence$="I" then
             char$=item$(1,1)
-            buffer$(o[2])=ivm01a.product_type$
-            buffer$(o[3])=synonym$
+            OutVect!.addItem(item$)
+            OutVect!.addItem(description$)
+            OutVect!.addItem(ivm01a.product_type$)
+            OutVect!.addItem(synonym$)
         endif
         if char$<>last$ and l+1<l9
-            print (printer_dev)""
+             OutVect!.addItem("")
             l=l+1
             last$=char$ 
         endif
-            if l+1>l9 gosub report_heading
-            print (printer_dev)buffer$
+
             l=l+1
             number=number+1
 
@@ -174,18 +177,10 @@ rem --- Format detail line
 
 done: rem --- All done
 
-    if l+2>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)number," Synonyms Listed"
+    OutVect!.addItem("")
+    OutVect!.addItem(str(number)+" Synonyms Listed")
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    let l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    if char$<>"" last$=char$
-    return
 
 Init_Heading: rem --- Initialize HEADINGS$
 
@@ -199,7 +194,7 @@ Init_Heading: rem --- Initialize HEADINGS$
     if begprod$<>"" x2$=begprod$,x2=3
     if endprod$="" if x2=3 x2=4
     h1$(1)="From Item: "+x1$
-    h1$(width-x2-13)="From Product: "+x2$
+    h1$(width-x2-15)="From Product: "+x2$
     x1$="Last"
     x2$="Last"
     x3$="All Item Types"
@@ -207,23 +202,27 @@ Init_Heading: rem --- Initialize HEADINGS$
     if endprod$<>"" x2$=endprod$
     if type$<>"" x3$="Item Type "+type$
     headings$[1]=headings$[1]+" For "+x3$
-    h2$(1)="  To Item: "+x1$
-    h2$(width-x2-13)="  To Product: "+x2$
-    if sequence$="S" then
-        h6$(o[0])="Synonym"
-        h6$(o[1])="Item"
-        h6$(o[2])="Description"
-        h6$(o[3])="Prd"
-    endif
-    if sequence$<>"S" then
-        h6$(o[0])="Item"
-        h6$(o[1])="Description"
-        h6$(o[2])="Prd"
-        h6$(o[3])="Synonym"
-    endif
+    h2$(1)="    To Item: "+x1$
+    h2$(width-x2-15)="     To Product: "+x2$
     headings$[3]=h1$
     headings$[4]=h2$
     headings$[6]=h6$
+rem --- Column heading
+    dim columns$[3,10]
+            if sequence$="S" then
+            
+                    columns$[0,0]="Synonym",         columns$[0,1]="C",columns$[0,2]="15"
+                    columns$[1,0]="Item",            columns$[1,1]="C",columns$[1,2]="10"
+                    columns$[2,0]="Description",     columns$[2,1]="C",columns$[2,2]="35"
+                    columns$[3,0]="Prd",             columns$[3,1]="C",columns$[3,2]="10"
+
+            else
+                  
+                    columns$[0,0]="Item",           columns$[0,1]="C",columns$[0,2]="10"
+                    columns$[1,0]="Description",    columns$[1,1]="C",columns$[1,2]="35"
+                    columns$[2,0]="Prd",            columns$[2,1]="C",columns$[2,2]="10"
+                    columns$[3,0]="Synonym",        columns$[3,1]="C",columns$[3,2]="15"
+            endif
     return
 
 Position: rem --- Print positions
@@ -234,9 +233,7 @@ Position: rem --- Print positions
     call pgmdir$+"adc_sizemask.aon",m1$,m1,8,15
     call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
     call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
-    o[0]=1
-    if sequence$="S" o[1]=22,o[2]=o[1]+p[0]+1,o[3]=width-3
-    if sequence$="I" o[1]=p[0]+2,o[3]=width-20,o[2]=o[3]-4
+    
     return
 
 rem #include std_functions.src
