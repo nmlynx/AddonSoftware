@@ -44,8 +44,8 @@ rem --- Retrieve templates
     dim ids$[files],templates$[files]
     templates$[1]=fnglobal$("+GLM01A_TPL","")
     templates$[2]=fnglobal$("+GLT04A_TPL","")
-    ids$[1]="glm-01A"
-    ids$[2]="glt-04A"
+    ids$[1]="glm-01:GLM_ACCT"
+    ids$[2]="glt-04:GLT_DAILYDETAIL"
     needed=cvs(templates$[1],2)="" or cvs(templates$[2],2)=""
     if needed call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto done
