@@ -110,22 +110,22 @@ rem --- Print positions
     dw=min(dw,o[4]-o[3]-7)
 
 rem --- Additional file opens (for journal entry register)
-goto open_printer; rem temp until glw11 stuff works. CAH
+
     gl$="N"
     status=0
     if je$<>"Y" goto open_printer
     call pgmdir$+"glc_ctlcreate.aon",err=std_exit,source$,"GL",glw11$,gl$,status
     if status goto std_exit
-    endfile=endfile+1
-    begfile=endfile
-    files$[endfile]=glw11$
-    ids$[endfile]="A"
+    files=1,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]=glw11$,ids$[1]="GLE_DAILYDETAIL"
     options$[endfile]="CL"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    glw11_dev=channels[endfile]
+    glw11_dev=channels[1]
+escape
 
 open_printer: rem --- Open printer, initialize the progress meter and position the file
 
