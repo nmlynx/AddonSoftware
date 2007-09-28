@@ -80,7 +80,6 @@ rem --- Parameters
     total_pers=num(gls01a.total_pers$)
     period=num(gls01a.current_per$)
     year=num(gls01a.current_year$)
-rem     acctlen=num(gls01a.acct_length$)
     if len(gls01b.gl_account$)>10 then gls01b.gl_account$=gls01b.gl_account$(1,10)
     m0=len(m0$)
     m1=len(m1$)
@@ -217,7 +216,6 @@ rem --- Run update overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     close (printer_dev,err=*next)
-    goto std_exit
     run pgmdir$+"glu_beginbalance.aon"
 
 report_heading: rem --- Report Heading
@@ -328,6 +326,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 

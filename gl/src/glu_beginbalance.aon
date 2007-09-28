@@ -16,7 +16,7 @@ rem --- gle_yearend      - Year End Update
 rem --- The following arguments are supplied by these front-end programs:
 
 rem --- PROGRAM$: Overlay to be run after the beginning balances program
-rem ---         : (glu_beginbalance) finishes. Not used in this program.
+rem ---         : (glu_beginbalance) finishes.
 rem ---         : The Update Beginning Balances task passes ads_process_end.aon
 rem ---         : The Year End Update program passes glu_yearend.aon
 rem --- PROMPT$ : Y=Update Beginning Balances (prompt for permission to update
@@ -38,7 +38,7 @@ rem --- Options
 
     if prompt$="Y" 
        call pgmdir$+"adc_yesno.aon",0,"Are you ready to update Account Beginning Balances",0,v$,v3
-       if v$<>"YES" goto std_exit
+       if v$<>"YES" goto std_exit_no_update
     endif
 
 rem --- Position File
@@ -60,12 +60,25 @@ rem --- Read next glw-03 record
           find record (glm02_dev,key=b0$,dom=*next)glm02a$
           glm02a.begin_amt=glw03a.begin_amt
           glm02a.begin_units=glw03a.begin_units
+          glm02a$=field(glm02a$)
           write record (glm02_dev)glm02a$
     wend
 
 rem --- All done
 
+    if prompt$="Y"
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+        msg_id$="UPDATE_COMPLETE"
+        dim msg_tokens$[1]
+        msg_opt$=""
+        gosub disp_message
+        endif
     run program$,err=std_exit
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 
@@ -95,6 +108,13 @@ rem #endinclude std_error.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
