@@ -26,30 +26,41 @@ rem call glc_datecheck
 
 	callpoint!.setColumnData("GLE_JRNLHDR.TRANS_DATE",sysinfo.system_date$)
 	gosub display_dates
-	
+	callpoint!.setStatus("REFRESH")
 [[GLE_JRNLHDR.JOURNAL_ID.AVAL]]
 rem "read glm03 -- make sure PERMIT_JE is "Y",
 rem " and update +GLCONTROL with POST_YR_END and POST_LOCKED flags, plus PERMIT_JE, if "Y"
+if user_tpl.glint$="Y"
+	status=1
+	more=1
+	glm03_dev=fnget_dev("GLC_JOURNALCODE")
+	dim glm03a$:fnget_tpl$("GLC_JOURNALCODE")
 
-rem 6500 REM " --- Verify Journal ID Code"
-rem 6510 LET STATUS=0
-rem 6520 FIND (GLM03_DEV,KEY=D0$(1,4),DOM=6680)IOL=GLM03A
-rem 6530 PRINT @(V1,V2),D0$(3,2)," ",D0$(5,20),
-rem 6535 IF GL$<>"Y" THEN GOTO 6690
-rem 6540 IF D0$(25,1)<>"Y" THEN GOTO 6600
-rem 6550 DIM GLCONTROL$(640)
-rem 6560 LET GLCONTROL$(1)=STBL("!GLCONTROL",ERR=6600)
-rem 6570 LET GLCONTROL$(18,2)=D0$(3,2),GLCONTROL$(46,2)=D0$(26,2)
-rem 6575 IF JE$="Y" THEN LET GLCONTROL$(45,1)=JE$
-rem 6580 LET GLCONTROL$(1)=STBL("!GLCONTROL",GLCONTROL$)
-rem 6590 GOTO 6690
-rem 6600 REM
-rem 6610 DIM MESSAGE$[1]
-rem 6620 LET MESSAGE$[0]="This Journal ID May Not Be Used For Entry (<Enter>=Continu
-rem e)"
-rem 6630 CALL "SYC.XA",2,MESSAGE$[ALL],0,22,-1,V$,V3
-rem 6680 LET STATUS=1
-rem 6690 RETURN
+	while more
+		find(glm03_dev,key=firm_id$+callpoint!.getColumnData("GLE_JRNLHDR.JOURNAL_ID"),dom=*break)glm03a$
+		status=0
+		if glm03a.permit_je$="Y"
+			dim glcontrol$:stbl("+GLCONTROL_TPL")
+			glcontrol$=stbl("+GLCONTROL")
+			glcontrol.journal_id$=glm03a.journal_id$
+			glcontrol.post_yr_end$=glm03a.post_yr_end$
+			glcontrol.post_locked$=glm03a.post_locked$
+			if user_tpl.je$="Y"
+				glcontrol.permit_je$="Y"
+			endif
+			glcontrol$=stbl("!GLCONTROL",glcontrol$)
+		else
+			msg_id$="GL_JID"
+			gosub disp_message
+			status=1
+		endif
+	
+		break
+	wend
+
+	if status<>0 callpoint!.setStatus("ABORT")
+	
+endif
 [[GLE_JRNLHDR.<CUSTOM>]]
 display_dates:
 
@@ -94,7 +105,7 @@ calc_grid_tots:
         if numrecs>0
             for reccnt=0 to numrecs-1
                 gridrec$=recVect!.getItem(reccnt)
-                tdb=tddb+num(gridrec.debit_amt$)
+                tdb=tdb+num(gridrec.debit_amt$)
                 tcr=tcr+num(gridrec.credit_amt$)
 	        tunits=tunits+num(gridrec.units$)
 
