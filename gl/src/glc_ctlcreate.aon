@@ -115,7 +115,8 @@ rem --- Remaining initializations
 
           rem --- Dimension miscellaneous string templates
 
-          dim process$:templates$[2],glcontrol_tpl$:templates$[1]
+          dim process$:templates$[2]
+          glcontrol_tpl$=templates$[1]
 
           num_files=1
           dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -187,7 +188,7 @@ rem --- Field length parameters
 
     audit=7
     tablelen=16
-    sequence=2
+    sequence=3
     process_id=16
     program_name=24
 
@@ -195,8 +196,8 @@ rem --- Initializations
 
     dim process_id$(process_id),process_table$(tablelen),program_name$(program_name)
     dim audit_mask$(audit,"0")
-    program_name$(1)=fnbasename$(caller$,"")
-    process_table$(1)=cvs(caller$,4)
+    program_name$(1)=fnbasename$(caller$,"_cpt.bbj")
+    process_table$(1)=cvs(program_name$,4)
     glw11$="glw-11"
     sysperiod$=period$
     sysyear$=year$
@@ -214,7 +215,6 @@ rem --- or returned.
           rem --- set here and used below when retrieving the posting control 
           rem --- record which also has table/program alternate keys.
 
-          escape
           notprocess=1
           keynum=1
           value$=process_table$
@@ -241,8 +241,8 @@ rem --- or returned.
                 value$=""
                 if keynum=1 value$=process_table$
                 if keynum=2 value$=program_name$
-                value$=value$+process_id$+firm_id$
-                read (glm06_dev,key=k$,knum=keynum,dom=*next)
+                value$=value$+firm_id$+process_id$
+                read (glm06_dev,key=value$,knum=keynum,dom=*next)
                 k$=key(glm06_dev,knum=keynum,err=*break)
                 if pos(value$=k$)<>1 break
                 find record (glm06_dev,key=k$) glm06a$
@@ -379,7 +379,7 @@ rem --- or returned.
           index=1
           for year=begyear to endyear
               for period=1 to total_periods
-                  call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+                  call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
                   if status=0 
                      dates$[period,index]=begdate$
                      dates$[period,index+1]=enddate$
@@ -406,14 +406,14 @@ rem --- or returned.
 
           period=num(glcontrol.current_per$)
           year=num(glcontrol.current_year$)
-          call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+          call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
           if status=0 
              glcontrol.app_per_beg$=begdate$
              glcontrol.app_per_end$=enddate$
           endif
           period=num(glcontrol.gl_period$)
           year=num(glcontrol.gl_year$)
-          call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+          call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
           if status=0 
              glcontrol.gl_per_beg$=begdate$
              glcontrol.gl_per_end$=enddate$
@@ -440,10 +440,9 @@ rem --- or returned.
 
                 files=1,begfile=1,endfile=files,found=1
                 dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-                files$[1]=table$,ids$[1]=table$
+                files$[1]=table$,ids$[1]="GLE_DAILYDETAIL"
                 options$[1]="F"
-                rem ids$[1]=glw11$+"A"
-                escape
+                escape; rem opening work file
                 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                               ids$[all],templates$[all],channels[all],batch,status
                 if status found=0
@@ -461,16 +460,17 @@ rem --- or returned.
                 escape; call pgmdir$+"syc_ml.bbx",table$+batch$,glw11$,status
                 if status break
           wend
-                
-          rem --- Was the transaction work table successfully opened/created?
+               
+              rem --- Was the transaction work table successfully opened/created?
 
-          escape
-          if found=0
-             action=1
-             status=12
-             message$="Unable to creat GL summary table ("+$22$+table$+batch$+$22$+")"
-             break
-          endif
+              if glm06a.gl_work_file$="Y" and found=0
+                 action=1
+                 status=12
+                 message$="Unable to creat GL summary table ("+$22$+table$+batch$+$22$+")"
+                 break
+              endif
+
+          
 
           rem --- Posting control is in place and no errors were encountered
 
@@ -570,8 +570,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -613,7 +612,10 @@ rem #endinclude std_missing_params.src
 
 std_exit: rem --- Exit program
 
-    close (ads01_dev,err=*next)
+    close (gls01_dev,err=*next)
+    close (aps01_dev,err=*next)
+    close (ars01_dev,err=*next)
+    close (gls01d_dev,err=*next)
     close (adm04_dev,err=*next)
     close (adm19_dev,err=*next)
     close (glm03_dev,err=*next)
