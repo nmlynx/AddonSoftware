@@ -71,7 +71,7 @@ rem --- Read through the work file and post the records to the daily detail file
     while more
           k$=key(gle01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
-          read record(ge011_dev) gle01a$
+          read record(gle01_dev) gle01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
 
           rem --- Set Journal ID in +GLCONTROL
