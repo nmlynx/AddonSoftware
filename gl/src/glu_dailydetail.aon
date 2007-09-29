@@ -43,6 +43,12 @@ rem --- Dimension string templates
 
     dim glm01a$:templates$[1],glm02a$:templates$[2],glt04a$:templates$[3],glt06a$:templates$[4]
 
+rem --- get key template for glt-06
+escape;rem check rd_table_chans?    
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","GLT_TRANSDETAIL","PRIMARY",key_tpl$,rd_table_chans$[all],rd_stat$
+    glt06_key_tpl$=key_tpl$
+    dim glt06_key$:glt06_key_tpl$
+
 rem --- Initializations
 
     more=1
@@ -119,8 +125,8 @@ rem --- Get next glt-04 record
           call pgmdir$+"glc_summary.aon","U",glm02a$,a[all],u[all],status
 
           write_summary: rem --- Write updated GL account summary record
-
-          write record (glm02_dev,key=b0$)glm02a$
+          glm02a$=field(glm02a$)
+          write record (glm02_dev,key=glm02_key$)glm02a$
 
           rem --- Move detail transaction from daily detail to transaction history
 
@@ -145,15 +151,17 @@ rem --- Get next glt-04 record
           glt06a.dealer_num_01=glt04a.dealer_num_01
           glt06a.dealer_num_02=glt04a.dealer_num_02
           glt06a.dealer_num_03=glt04a.dealer_num_03
-          glt06_key$=glt06a.firm_id$+glt06a.journal_id$+glt06a.gl_adt_no$+glt06a.posting_year$+
-:                    glt06a.posting_per$+glt06a.trns_date$+glt06a.gl_account$+$FF$
+          glt06_key$=glt06a.firm_id$+glt06a.gl_account$+glt06a.posting_year$+
+:                    glt06a.posting_per$+glt06a.trns_date$+glt06a.journal_id$+glt06a.gl_adt_no$+$FF$
 
           rem --- Get the next sequence number
 
+          dim k$:glt06_key_tpl$
           read (glt06_dev,key=glt06_key$,dom=*next)
           k$=keyp(glt06_dev,err=update_detail)
-          if k$(1,35)=glt06_key$(1,35) glt06a.seq_no$=k$(36)
-
+          if k$(1,len(k$)-len(k.seq_no$))=glt06_key$(1,len(glt06_key$)-1)
+            glt06a.seq_no$=k.seq_no$
+          endif
           update_detail: rem --- Write transaction history detail record
 
           sequence=num(glt06a.seq_no$)+1
