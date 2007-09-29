@@ -301,7 +301,7 @@ register_errors: rem --- Register errors
     if v$<>"SPECIAL" goto std_exit
 
 next_overlay: rem --- Run update overlay
-escape;rem ready to run update overlay from glr_recap
+
     close (printer_dev,err=*next)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     run update$,err=std_exit

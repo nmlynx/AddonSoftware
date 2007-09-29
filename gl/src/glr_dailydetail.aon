@@ -332,7 +332,7 @@ balanced: rem --- No update if any ranges were selected
 
 rem --- Run update overlay
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     close (printer_dev,err=*next)
     run pgmdir$+"glu_dailydetail.aon"
 
