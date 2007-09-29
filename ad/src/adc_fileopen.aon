@@ -108,10 +108,10 @@ rem --- Open requested files
     open_error: rem --- Error encountered attempting to open the file
 
         errors=1,sverr=err
+        if err=12 goto not_found
         gosub get_file_description
         error$="Error "+str(sverr)+" encountered while trying to open "+description$
         if err=0 goto file_locked
-        if err=12 goto not_found
         break
 
     file_locked: rem --- Error 0 - File locked by another user

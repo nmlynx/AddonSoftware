@@ -39,13 +39,13 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
 
 rem --- Retrieve templates
-
+escape;rem in glc_glpost... dot thru!
     files=2,begfile=1,endfile=files,status=0
     dim ids$[files],templates$[files]
     templates$[1]=fnglobal$("+GLM01A_TPL","")
     templates$[2]=fnglobal$("+GLT04A_TPL","")
     ids$[1]="glm-01:GLM_ACCT"
-    ids$[2]="glt-04:GLT_DAILYDETAIL"
+    ids$[2]="glt-04:GLE_DAILYDETAIL"
     needed=cvs(templates$[1],2)="" or cvs(templates$[2],2)=""
     if needed call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto done

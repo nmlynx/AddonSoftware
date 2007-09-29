@@ -327,7 +327,7 @@ rem --- or returned.
 
                 if glm06a.gl_work_file$="Y"
                    process$=stbl("+PROCESS",err=*next)
-                   batch$="."+process.batch_no$
+                   if cvs(process.batch_no$,3)<>"" batch$="."+process.batch_no$
                 endif
                 break
           wend
@@ -442,7 +442,6 @@ rem --- or returned.
                 dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
                 files$[1]=table$,ids$[1]="GLE_DAILYDETAIL"
                 options$[1]="F"
-                escape; rem opening work file
                 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                               ids$[all],templates$[all],channels[all],batch,status
                 if status found=0
@@ -457,7 +456,7 @@ rem --- or returned.
 
                 rem --- Create a table that mirrors the definition of glw-11
 
-                escape; call pgmdir$+"syc_ml.bbx",table$+batch$,glw11$,status
+                call pgmdir$+"adc_makelike.aon",table$+batch$,glw11$,status
                 if status break
           wend
                
@@ -512,8 +511,8 @@ error_message: rem --- Disable GL if an error was encountered and display any me
 get_process: rem --- Using the firm id and the table/program name, attempt to retrieve the
              rem --- process id and sequence number from the process detail (adm-19) file.
 
-    k$=value$
-    read (adm19_dev,key=k$,knum=keynum,dom=*next)
+    k$=""
+    read (adm19_dev,key=value$,knum=keynum,dom=*next)
     k$=key(adm19_dev,end=*next)
     if pos(value$=k$)=1 
        process_id$=k$(len(value$)+1,process_id)

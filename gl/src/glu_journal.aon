@@ -23,6 +23,18 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
     task$=cvs(sysinfo.task_desc$,2)
 
+rem --- Open/Lock files
+
+    files=1,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="glt-04",ids$[1]="GLE_DAILYDETAIL"
+
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+
+    glt04_dev=channels[1]
+ 
 rem --- Retrieve templates
 
     glcontrol_template$=stbl("+GLCONTROL_TPL",err=*next)
@@ -50,56 +62,70 @@ rem --- Start up progress meter
 
     call pgmdir$+"adc_progress.aon","N","","","Updating","",13,glw11_dev,1,meter_num,status
 
-rem --- Position File
-
-    read (glw11_dev,key=firm_id$,dom=*next)
+rem --- Position gle-01
+escape;rem in glu_journal... about to call glc_post
+    read (gle01_dev,key=firm_id$,dom=*next)
 
 rem --- Read through the work file and post the records to the daily detail file
 
     while more
-          k$=key(glw11_dev,end=*break)
+          k$=key(gle01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
-          read record(glw11_dev) glw11a$
+          read record(ge011_dev) gle01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
 
           rem --- Set Journal ID in +GLCONTROL
 
-          if glw11a.journal_id$<>last$ last$=glw11a.journal_id$
-                                       glm03_key$=firm_id$+glw11a.journal_id$
-                                       find record (glm03_dev,key=glm03_key$,dom=*next)glm03a$
-                                       glcontrol$=stbl("+GLCONTROL",err=*next)
-                                       glcontrol.journal_id$=glm03a.journal_id$
-                                       glcontrol.permit_je$="Y"
-                                       glcontrol.post_yr_end$=glm03a.post_yr_end$
-                                       glcontrol.post_locked$=glm03a.post_locked$
-                                       x$=stbl("+GLCONTROL",glcontrol$)
+          if gle01a.journal_id$<>last$ last$=gle01a.journal_id$
+               glm03_key$=firm_id$+gle01a.journal_id$
+               find record (glm03_dev,key=glm03_key$,dom=*next)glm03a$
+               glcontrol$=stbl("+GLCONTROL",err=*next)
+               glcontrol.journal_id$=glm03a.journal_id$
+               glcontrol.permit_je$="Y"
+               glcontrol.post_yr_end$=glm03a.post_yr_end$
+               glcontrol.post_locked$=glm03a.post_locked$
+               x$=stbl("+GLCONTROL",glcontrol$)
           endif
 
-          rem --- Post record in the daily detail file
+          rem --- Position gle-11
+          
+          read(gle11_dev,key=gle01a.firm_id$+gle01a.journal_id$+gle01a.je_trans_id$,dom=*next)
 
-          call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,notused,glw11a.gl_account$,glw11a.trns_date$,
-:                                       glw11a.reference_01$,glw11a.reference_02$,glw11a.reference_03$,
-:                                       glw11a.description$,glw11a.trans_amt,glw11a.units,status
+          rem --- Loop through gle-11
 
-          rem --- Reversal?
+          while more
+                        
+              k1$=key(gle11_dev,end=*break)
+              if pos(k$=k1$)<>1 break
+              read record(gle11_dev) gle11a$    
+              if cvs(gle01a.cycle_code$,3)<>"" 
+                ref3$="Cycle "+gle01a.cycle_code$
+              else
+                ref3$=""
+              endif
+              post_amt=gle11a.debit_amt-gle11a.credit_amt
 
-          if cvs(glw11a.reverse_date$,2)<>"" glw11a.trans_amt=-glw11a.trans_amt
-                                             glw11a.units=-glw11a.units
-                                             call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,notused,
-:                                                                          glw11a.gl_account$,glw11a.reverse_date$,
-:                                                                          glw11a.reference_01$,glw11a.reference_02$,
-:                                                                          glw11a.reference_03$,glw11a.description$,
-:                                                                          glw11a.trans_amt,glw11a.units,status
-          endif
+              rem --- Post record in the daily detail file
+
+              call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,notused,gle11a.gl_account$,gle01a.trans_date$,
+:               gle01a.je_trans_id$,gle11a.line_no$,ref3$,
+:               gle11a.gl_post_memo$,post_amt,gle11a.units,status
+
+              rem --- Reversal?
+
+              if cvs(gle01a.reverse_date$,2)<>"" 
+                post_amt=-post_amt
+                gle11a.units=-gle11a.units
+                call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,notused,
+:                   gle11a.gl_account$,gle01a.reverse_date$,
+:                   gle01a.je_trans_id$,gle11a.line_no$,
+:                   ref3$,gle11a.gl_post_memo$,
+:                   post_amt,gle11a.units,status
+              endif
+              remove(gle11_dev,key=k1$)
+          wend
+          remove(gle01_dev,key=k$)
     wend
-
-rem --- Remove journal entry detail records
-
-    call pgmdir$+"adc_clearpartial.aon",action$,gle11_dev,firm_id$,status
-
-rem --- Remove journal entry header records
-
-    call pgmdir$+"adc_clearpartial.aon",action$,gle01_dev,firm_id$,status
 
 rem --- All done
 
@@ -113,8 +139,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -136,7 +161,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
