@@ -229,13 +229,13 @@ rem --- Additional file opens
 
 rem --- Dimension string templates
 
-    if gl dim glm01a$:templates$[1],glt04a$:templates$[2],glw11a$:templates$[4]
+    if gl dim glm01a$:templates$[1],glt04a$:templates$[2]
     if br dim glt15a$:templates$[3]
 
 rem --- Open printer and start progress meter
 
-rem ---     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-rem ---     if status goto std_exit
+rem ---    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+rem ---    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,are01_dev,1,meter_num,status
 
 rem --- Sort the cash receipts if the register is by receipt code
@@ -534,10 +534,11 @@ rem ---     print (printer_dev) ""
 rem --- Destroy the progress meter and run the next overlay
 
 rem     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+
     update$=pgmdir$+"aru_cashreceipts.aon"
     overlay$=update$
     if gl overlay$=pgmdir$+"glr_recap.aon"
-rem ---     run overlay$,err=std_exit
+    run overlay$,err=std_exit
 	
 	next_overlay$=overlay$
 	out_action$="PRT"
