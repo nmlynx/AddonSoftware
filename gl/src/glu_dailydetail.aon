@@ -57,7 +57,7 @@ rem --- Request user approval to update the daily detail
 
     prompt$="Are you ready to update the "+task$
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,v$,v3
-    if v$<>"YES" goto std_exit 
+    if v$<>"YES" goto std_exit_1 
 
 rem --- Start progress meter and position files
 
@@ -217,7 +217,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     msg_id$="UPDATE_COMPLETE"
     gosub disp_message
-
+std_exit_1: rem --- from adc_yes_no if user says "No"
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
