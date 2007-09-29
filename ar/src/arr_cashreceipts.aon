@@ -359,9 +359,15 @@ rem ---                 lines=lines+1
                 check$=""
                 aba$=""
                 payment$=""
-
+                
                 if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
 :                                                           glstatus,lines,errors,status
+                rem --- CAH.09/29/07
+                err_msg$=stbl("+DTWARN_MSG",err=*next)
+                if err_msg$<>""
+                    OutVect!.addItem(err_msg$)
+                    xwk=fnblank(10)
+                endif
 
 				rem --- added by CH.3/26/07
 				ct[0]=ct[0]+applied
@@ -394,7 +400,7 @@ rem ---                 lines=lines+1
                       gosub distribution_code
                       ref1$=customer$
                       ref2$=are01a.ar_check_no$
-                      ref3$=are01a.ar_inv_no$
+                      ref3$=are11a.ar_inv_no$
                       memo$=arm01a.customer_name$
                       gldate$=are01a.receipt_date$
 
@@ -458,6 +464,13 @@ rem ---                 lines=lines+1
 
                 if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
 :                                                           glstatus,lines,errors,status
+                rem --- CAH.09/29/07
+                err_msg$=stbl("+DTWARN_MSG",err=*next)
+                if err_msg$<>""
+                    OutVect!.addItem(err_msg$)
+                    xwk=fnblank(10)
+                endif
+
 				rem --- added by CH.3/26/07
 				ct[3]=ct[3]+amount
 				dt[3]=dt[3]+amount
@@ -538,10 +551,11 @@ rem     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     update$=pgmdir$+"aru_cashreceipts.aon"
     overlay$=update$
     if gl overlay$=pgmdir$+"glr_recap.aon"
-    run overlay$,err=std_exit
-	
+ 	
 	next_overlay$=overlay$
 	out_action$="PRT"
+rem --- run overlay$,err=std_exit; CAH.09/29/07 don't run directly... let DocOut do it
+
 	goto std_exit
 
 report_heading: rem --- Report heading --- not used in DocOut versin
@@ -787,8 +801,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0

@@ -34,6 +34,7 @@ rem --- Initializations
        warning=number<100
        error=number>100
     endif
+    x$=stbl("!CLEAR","+DTWARN_MSG",err=*next)
 
 rem --- Initialize warning message based on number
 
@@ -84,8 +85,11 @@ rem --- Print warning/error message
 
     while cvs(message$,2)<>""
           message$="---> "+prefix$+transaction$+" "+message$+"."
-          print (printer_dev) message$
-          lines=lines+1
+          if printer_dev > 0
+              print (printer_dev) message$
+              lines=lines+1
+          else
+              x$=stbl("+DTWARN_MSG",message$)
           break
     wend
 
