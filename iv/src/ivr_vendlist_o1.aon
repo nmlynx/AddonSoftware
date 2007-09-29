@@ -9,187 +9,199 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+                OutVect!=bbjAPI().getSysGui().makeVector()
+                rep_date$=date(0:"%Mz/%Dz/%Yd")
+                rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+                rep_time$=date(0:"%hz:%mz %p")
+                rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Init Data
 
-    precision p[1]
-    width=132
-    headings=5
-    dim d[12],o[13],headings$[headings]
-    h=0
-    l9=59
-    l=l9+1
-    when$=sysinfo.system_date$
-    clock$=""
-    x$=fndate$(when$)
-    headings$[0]=n1$
-    headings$[1]=n3$
-    day_of_mth=num(x$(4,2))
-    headings3$=fill(width)
-    headings$[4]=fill(width)
-    m9=len(m9$)
-    if beg_item$="" headings3$(1)="From Item: First" else headings3$(1)="From Item: "+beg_item$
-    if beg_prod$="" headings3$(113)="From Product: First" else headings3$(113)="From Product: "+beg_prod$
-    if end_item$="" headings$[4](3)="To Item: Last" else headings$[4](3)="To Item: "+end_item$
-    if end_prod$="" headings$[4](115)="To Product: Last" else headings$[4](115)="To Product: "+end_prod$
-    if item_type$="" headings$[4](59,14)="Item Type: All" else headings$[4](60,14)="Item Type: "+item_type$
-    base_peryr$=ivs01a.current_per$+ivs01a.current_year$
+                precision p[1]
+                width=132
+                headings=5
+                dim d[12],o[13],headings$[headings]
+                h=0
+                l9=59
+                l=l9+1
+                when$=sysinfo.system_date$
+                clock$=""
+                x$=fndate$(when$)
+                headings$[0]=n1$
+                headings$[1]=n3$
+                day_of_mth=num(x$(4,2))
+                headings3$=fill(width)
+                headings$[4]=fill(width)
+                m9=len(m9$)
+                if beg_item$="" headings3$(1)="From Item: First" else headings3$(1)="From Item: "+beg_item$
+                if beg_prod$="" headings3$(113)="From Product: First" else headings3$(113)="From Product: "+beg_prod$
+                if end_item$="" headings$[4](3)="To Item: Last" else headings$[4](3)="To Item: "+end_item$
+                if end_prod$="" headings$[4](115)="To Product: Last" else headings$[4](115)="To Product: "+end_prod$
+                if item_type$="" headings$[4](59,14)="Item Type: All" else headings$[4](60,14)="Item Type: "+item_type$
+                base_peryr$=ivs01a.current_per$+ivs01a.current_year$
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMVEND","PRIMARY",ivm05_key_tpl$,rd_table_chans$[all],status$
-    dim ivm05a_key$:ivm05_key_tpl$
-    More=1
+                call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMVEND","PRIMARY",ivm05_key_tpl$,rd_table_chans$[all],status$
+                dim ivm05a_key$:ivm05_key_tpl$
+                More=1
+
+rem ---  column heading
+
+ dim columns$[12,10]
+               columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]="12"
+               columns$[1,0]="Prod Tp",               columns$[1,1]="C",columns$[1,2]="7"
+               columns$[2,0]="UM",                    columns$[2,1]="C",columns$[2,2]="10"
+               columns$[3,0]="Stk Lev",               columns$[3,1]="C",columns$[3,2]="7"
+               columns$[4,0]="P/S",                   columns$[4,1]="C",columns$[4,2]="8"
+               columns$[5,0]="Vendor Item",           columns$[5,1]="C",columns$[5,2]="8"
+               columns$[6,0]="Lst Purch Date ",       columns$[6,1]="C",columns$[6,2]="10"
+               columns$[7,0]="Lst Purch Lead",        columns$[7,1]="C",columns$[7,2]="7"
+               columns$[8,0]="Lst Purch Unit Cost",   columns$[8,1]="C",columns$[8,2]="10"
+               columns$[9,0]="EOQ",                   columns$[9,1]="C",columns$[9,2]="13"
+               columns$[10,0]="Annual Usage",         columns$[10,1]="C",columns$[10,2]="10"
+               columns$[11,0]="Quantity Break",       columns$[11,1]="C",columns$[11,2]="10"
+               columns$[12,0]="Cost Break",           columns$[12,1]="C",columns$[12,2]="10"
+
 
 rem --- Print positions and headings
 
-    gosub Position
+               gosub Position
 
 rem --- Background
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm05_dev,1,meter_num,status
+            call pgmdir$+"adc_progress.aon","N","","","","",0,ivm05_dev,1,meter_num,status
 
 rem --- Initial Read
 
-    read (ivm05_dev,key=firm_id$+beg_vend$,dom=*next)
+            read (ivm05_dev,key=firm_id$+beg_vend$,dom=*next)
 
 rem ----  Loop Starting
 
-    While More  
-        ivm05a_key$=key(ivm05_dev,end=*break)
-        if pos(firm_id$=ivm05a_key$)<>1 break
-        if end_vend$<>"" 
-            if ivm05a_key.vendor_id$>end_vend$  break
-        endif
-        if beg_item$ <>"" then
-            if ivm05a_key.item_id$< beg_item$
+            While More  
+                ivm05a_key$=key(ivm05_dev,end=*break)
+                if pos(firm_id$=ivm05a_key$)<>1 break
+                if end_vend$<>"" 
+                    if ivm05a_key.vendor_id$>end_vend$  break
+                endif
+                if beg_item$ <>"" then
+                    if ivm05a_key.item_id$< beg_item$
 :               ivm05a_key$=ivm05a_key.firm_id$+ivm05a_key.vendor_id$+beg_item$
-        else 
-        if end_item$<>"" then
-           if ivm05a_key.item_id$>end_item$ 
+            else 
+            if end_item$<>"" then
+               if ivm05a_key.item_id$>end_item$ 
 :               ivm05a_key$=ivm05a_key.firm_id$+ivm05a_key.vendor_id$+$FF$
-        endif
+            endif
 
 rem --- Position ivm-05
-        read record (ivm05_dev,key=ivm05a_key$,dom=*Continue) ivm05a$
+            read record (ivm05_dev,key=ivm05a_key$,dom=*Continue) ivm05a$
 
 rem --- Additional Reads
 
-        find record (ivm01_dev,key=firm_id$+ivm05a_key.item_id$,dom=*Continue) ivm01a$
-        if beg_prod$<>"" then
-              if ivm01a.product_type$<beg_prod$ Continue
-        endif
-        if end_prod$<>"" then
-             if ivm01a.product_type$>end_prod$ Continue
-        endif
-        if item_type$<>"" then
-             if ivm01a.item_type$>end_prod$ Continue  
-        endif
+            find record (ivm01_dev,key=firm_id$+ivm05a_key.item_id$,dom=*Continue) ivm01a$
+            if beg_prod$<>"" then
+                  if ivm01a.product_type$<beg_prod$ Continue
+            endif
+            if end_prod$<>"" then
+                 if ivm01a.product_type$>end_prod$ Continue
+            endif
+            if item_type$<>"" then
+                 if ivm01a.item_type$>end_prod$ Continue  
+            endif
 rem --- Breaks
 
-        if ivm05a.firm_id$<>firm_id$  break
-        if ivm05a.vendor_id$<>t0$ gosub Vendor
-        call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ivm05a.vendor_id$,m9$)+" "+ivm05a.item_id$,0,0,1,meter_num,status
+            if ivm05a.firm_id$<>firm_id$  break
+            if ivm05a.vendor_id$<>t0$ gosub Vendor
+            call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ivm05a.vendor_id$,m9$)+" "+ivm05a.item_id$,0,0,1,meter_num,status
 
 rem --- Get Actual Annual Usage & EOQ
 
-        dim channs[12],item$[2],whse$[2],whse[20]
-        channs[1]=ivm01_dev
-        channs[2]=ivm02_dev
-        channs[3]=ivm03_dev
-        channs[12]=ivm12_dev
-        item$[0]=firm_id$
-        item$[1]=""
-        item$[2]=ivm01a.item_id$
+            dim channs[12],item$[2],whse$[2],whse[20]
+            channs[1]=ivm01_dev
+            channs[2]=ivm02_dev
+            channs[3]=ivm03_dev
+            channs[12]=ivm12_dev
+            item$[0]=firm_id$
+            item$[1]=""
+            item$[2]=ivm01a.item_id$
         call pgmdir$+"ivc_usage.aon","I",channs[all],item$[all],abcf[all],day_of_mth,base_peryr$,
 :           ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],w0,estimated,flag$,status
-        if flag$<>"" w0=estimated
-        if status<>0 usage$=fill(m2,"*") else usage$=str(w0:m2$)
-        if ivm01a.stock_level$="I" then
-            eoq_code$=ivm01a.eoq_code$
-            eoq_qty$=str(ivm01a.eoq:m2$) 
-        else
+            if flag$<>"" w0=estimated
+            if status<>0 usage$=fill(m2,"*") else usage$=str(w0:m2$)
+            if ivm01a.stock_level$="I" then
+                eoq_code$=ivm01a.eoq_code$
+                eoq_qty$=str(ivm01a.eoq:m2$) 
+            else
             call pgmdir$+"ivc_whseinfo.aon","A",channs[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
             if status<>0 eoq_code$="*",eoq_qty$=fill(m2,"*") else eoq_code$=whse$[1](57,1),eoq_qty$=str(whse[6]:m2$)
         endif
+                    d9$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+                    OutVect!.addItem(ivm01a.item_id$+d9$)
+                    OutVect!.addItem(ivm01a.product_type$)
+                    OutVect!.addItem(ivm01a.purchase_um$)
+                    OutVect!.addItem(ivm01a.stock_level$)
+                    OutVect!.addItem(ivm05a.prisec_flag$)
+                    OutVect!.addItem(ivm05a.vendor_item$)
+                    OutVect!.addItem(fndate$(pad(ivm05a.last_po_date$,8)))
+                    OutVect!.addItem(str(ivm05a.last_po_lead :"##0"))
+                    OutVect!.addItem(str(ivm05a.last_po_cost:m3$))
+                    OutVect!.addItem(eoq_qty$+eoq_code$)
+                    OutVect!.addItem(usage$+flag$)
+      
+            if ivm05a.unit_cost_01<>0 then 
+                    OutVect!.addItem(str(ivm05a.break_qty_01:m2$))
+                    OutVect!.addItem(str(ivm05a.unit_cost_01:m3$))
+                   else
+                    xwk=fnblank(2)
+           endif
+            if ivm05a.unit_cost_02<>0 then
+                    xwk=fnblank(11)
+                    OutVect!.addItem(str(ivm05a.break_qty_02:m2$))
+                    OutVect!.addItem(str(ivm05a.unit_cost_02:m3$)) 
+                    else
+                    xwk=fnblank(13)
 
-rem --- Print
-
-         if l+2>l9 gosub report_heading
-         print (printer_dev)@(o[0]),ivm01a.item_id$,@(o[1]),ivm01a.product_type$,
-:           @(o[2]),ivm01a.purchase_um$,@(o[3]),ivm01a.stock_level$,@(o[4]),ivm05a.prisec_flag$,
-:           @(o[5]),ivm05a.vendor_item$,@(o[6]),fndate$(pad(ivm05a.last_po_date$,8)),@(o[7]),ivm05a.last_po_lead:"##0",
-:           @(o[8]),ivm05a.last_po_cost:m3$,@(o[9]),eoq_qty$,@(o[10]),eoq_code$,@(o[11]),usage$,flag$,
-         if ivm05a.unit_cost_01<>0 print (printer_dev)@(o[12]),ivm05a.break_qty_01:m2$,@(o[13]),ivm05a.unit_cost_01:m3$,
-         print (printer_dev)""
-         d9$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
-         print (printer_dev)@(o[0]+3),d9$,
-         if ivm05a.unit_cost_02<>0 print (printer_dev)@(o[12]),ivm05a.break_qty_02:m2$,@(o[13]),ivm05a.unit_cost_02:m3$,
-         print (printer_dev)""
-         l=l+2
-         t0=t0+1
-         if ivm05a.unit_cost_03=0 continue
-         if l+1>l9 gosub report_heading
-         print (printer_dev)@(o[12]),ivm05a.break_qty_03:m2$,@(o[13]),ivm05a.unit_cost_03:m3$
-         l=l+1
-
+                    
+            endif
+            if ivm05a.unit_cost_03<>0 then 
+                    xwk=fnblank(11)
+                    OutVect!.addItem(str(ivm05a.break_qty_03:m2$))
+                    OutVect!.addItem(str(ivm05a.unit_cost_03:m3$))
+                    else          
+                    xwk=fnblank(13)
+         endif  
+         t0=t0+1         
     wend ; Rem ----  Loop ending
 
 done: rem --- All done
 
-    t9$="E"
-    gosub Vendor
-    goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,width,when$,clock$,status
-    if status<>0 exitto std_exit
-    print (printer_dev)@(o[1]),"Prod",@(o[3]-1),"Stk",@(o[4]),"P",@(o[5]),"Vendor",@(o[6]),
-:           fill(m3+13,"-"),@(o[6]+fncenter("Last Purchase",m3+13)),"LastPurchase",@(o[12]-7),
-:           "Annual",@(o[12]),fill(m2+m3,"-"),@(o[12]+fncenter("Price Breaks",m2+m3)),"Price Breaks"
-    print (printer_dev)@(o[0]),"Item",@(o[1]),"Type",@(o[2]),"UM",@(o[3]-1),"Lev",@(o[4]),
-:           "S",@(o[5]),"Item Number",@(o[6]+2),"Date",@(o[7]-1),"Lead",@(o[9]-10),"Unit Cost",
-:           @(o[10]-5),"EOQ",@(o[12]-7),"Usage",@(o[13]-9),"Quantity",@(width-10),"Unit Cost",'LF'
-    l=l+3
-    return
+            t9$="E"
+            gosub Vendor
+            goto std_exit
 
 Vendor: rem --- Vendor
-    if t0$<>"" then
-        if l+2 >l9 gosub report_heading
-        print (printer_dev)'LF',@(0),t0:"###,##0"," Items For ",h3$
-        let l=l9+1,t1$=""
-    endif
-    if t9$<>"" return
-    let headings$[3]=headings3$
-    let t0$=ivm05a.vendor_id$,h3$="Vendor: Not On File",t0=0
-    find record (apm01_dev,key=firm_id$+ivm05a.vendor_id$,dom=VendorInit) apm01a$
-    let h3$=cvs("Vendor: "+fnmask$(apm01a.vendor_id$,m9$)+" "+apm01a.vendor_name$,2)
+        if t0$<>"" then
+            xwk=fnblank(13)   
+            OutVect!.addItem(str(t0:"###,##0")+"  Items For"+h3$);xwk=fnblank(12)
+            xwk=fnblank(13)
+            let l=l9+1,t1$=""
+            endif
+        if t9$<>"" return
+        let headings$[3]=headings3$
+        let t0$=ivm05a.vendor_id$,h3$="Vendor: Not On File",t0=0
+        find record (apm01_dev,key=firm_id$+ivm05a.vendor_id$,dom=VendorInit) apm01a$
+        let h3$=cvs("Vendor: "+fnmask$(apm01a.vendor_id$,m9$)+" "+apm01a.vendor_name$,2)
 VendorInit:
-    let headings$[3](fncenter(h3$,width),len(h3$))=h3$
-    return
+        let headings$[3](fncenter(h3$,width),len(h3$))=h3$
+        return
 
 Position: rem --- Print positions
 
-    m1$=ivs01a.amount_mask$
-    m2$=ivs01a.unit_mask$
-    m3$=ivs01a.cost_mask$
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
-    call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
-    o[0]=0
-    o[1]=o[0]+p[0]+1
-    o[2]=o[1]+5
-    o[3]=o[2]+4
-    o[4]=o[3]+3
-    o[5]=o[4]+2
-    o[6]=width-m2*3-m3*2-17
-    o[7]=o[6]+9
-    o[8]=o[7]+4
-    o[9]=o[8]+m3
-    o[10]=o[9]+m2+1
-    o[11]=o[10]+2
-    o[12]=o[11]+m2+1
-    o[13]=o[12]+m2
+        m1$=ivs01a.amount_mask$
+        m2$=ivs01a.unit_mask$
+        m3$=ivs01a.cost_mask$
+        call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
+        call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
+
 return
 
 rem #include std_functions.src
@@ -259,6 +271,14 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
