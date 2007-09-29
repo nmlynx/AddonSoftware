@@ -81,7 +81,7 @@ rem --- Retrieve parameter records
     status=0
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
     if status goto std_exit
-    gl$="N"
+    rem "was this for testing? gl$="N"
     application$="OP"
     call pgmdir$+"adc_application.aon",application$,info$[all]
     op$=info$[20]
@@ -140,7 +140,7 @@ rem --- Additional file opens
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     if gl$="Y"
        files$[1]="glm-01",ids$[1]="GLM_ACCT"
-       files$[2]="glt-04",ids$[2]="GLT_DAILYDETAIL"
+       files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
        files$[3]=glw11$
        options$[3]="CL"
     endif
@@ -273,6 +273,13 @@ rem ---           print (printer_dev) @(o[1]),adjustment$,@(o[4]),arm10a.ar_term
           call pgmdir$+"glc_datecheck.aon",are05a.inv_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are05a.inv_date$,glstatus,lines,errors,status
 
+          rem --- CAH.09/29/07
+          err_msg$=stbl("+DTWARN_MSG",err=*next)
+          if err_msg$<>""
+              OutVect!.addItem(err_msg$)
+              xwk=fnblank(5)
+          endif
+
     rem --- Loop back for next Invoice Header
 
     wend
@@ -289,10 +296,11 @@ rem ---     print (printer_dev) @(width-m1-12),"Report Total",@(width-m1),total:
 
 rem --- Destroy progress meter and run next overlay
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
     update$=pgmdir$+"aru_invoiceentry.aon"
     overlay$=update$
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
+
+    if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
     rem --- run overlay$,err=std_exit
 
 	out_action$="PRT-PDF"
