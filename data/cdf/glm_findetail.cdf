@@ -1,6 +1,10 @@
+[[GLM_FINDETAIL.EDITING_CODE.AVAL]]
+if len(callpoint!.getColumnData("GLM_FINDETAIL.EDITING_CODE"))>5 
+	MSG_ID$="GL_FIN_EDIT"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
 [[GLM_FINDETAIL.BWRI]]
-
-
 if len(callpoint!.getColumnData("GLM_FINDETAIL.EDITING_CODE"))>5 
 	MSG_ID$="GL_FIN_EDIT"
 	gosub disp_message
