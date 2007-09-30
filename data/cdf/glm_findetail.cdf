@@ -1,9 +1,51 @@
+[[GLM_FINDETAIL.OUTPUT_OPER_01.AVAL]]
+if pos(callpoint!.getUserInput()="+- ")=0 callpoint!.setStatus("ABORT-REFRESH")
+[[GLM_FINDETAIL.INPUT_PERCNT.AVAL]]
+if num(callpoint!.getUserInput())=0 
+	callpoint!.setColumnData("GLM_FINDETAIL.ACCUM_PCT","N")
+
+ctl_name$="GLM_FINDETAIL.ACCUM_PCT"
+ctl_stat$="D"
+	gosub disable_fields
+[[GLM_FINDETAIL.<CUSTOM>]]
+disable_fields:
+ rem --- used to disable/enable controls depending on parameter settings
+ rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+ 
+ wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+ wmap$=callpoint!.getAbleMap()
+ wpos=pos(wctl$=wmap$,8)
+ wmap$(wpos+6,1)=ctl_stat$
+ callpoint!.setAbleMap(wmap$)
+
+callpoint!.setStatus("ABLEMAP-REFRESH")
+
+return
+[[GLM_FINDETAIL.ACCUM_PCT.BINP]]
+if num(callpoint!.getColumnData("GLM_FINDETAIL.INPUT_PERCNT"))=0 
+	callpoint!.setColumnData("GLM_FINDETAIL.ACCUM_PCT","")
+
+ctl_name$="GLM_FINDETAIL.ACCUM_PCT"
+ctl_stat$="D"
+	gosub disable_fields
+[[GLM_FINDETAIL.LINE_TYPE_LIST.AVAL]]
+if pos(callpoint!.getUserInput()="HDTNBC")=0  then callpoint!.setStatus("ABORT-REFRESH")
 [[GLM_FINDETAIL.EDITING_CODE.AVAL]]
-if len(callpoint!.getColumnData("GLM_FINDETAIL.EDITING_CODE"))>5 
+edits$=callpoint!.getColumnData("GLM_FINDETAIL.EDITING_CODE")
+edlen=len(edits$), reject$=""
+if edlen >5 
 	MSG_ID$="GL_FIN_EDIT"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
+  else
+	for x = 1 to edlen
+		if pos(edits$(x,1)="SUDP-CF$")=0
+		reject$="Y"
+	next x
 endif
+
+if reject$<>"" callpoint!.SetStatus("ABORT")
+
 [[GLM_FINDETAIL.BWRI]]
 if len(callpoint!.getColumnData("GLM_FINDETAIL.EDITING_CODE"))>5 
 	MSG_ID$="GL_FIN_EDIT"
