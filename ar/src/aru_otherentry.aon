@@ -24,6 +24,7 @@ rem --- Get user approval to proceed
 
     prompt$="Are you ready to update the "+cvs(sysinfo.task_desc$,2)+"?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
+    goto std_exit_no_update;rem temp until update tested.CAH
     if fkey=4 goto std_exit_no_update
     if answer$<>"Y" goto std_exit_no_update
 

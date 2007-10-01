@@ -28,6 +28,7 @@ rem --- Get user approval to update
 
     prompt$="Do you wish to update the Simple Invoice Register?"
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
+    goto std_exit_1;rem temp until update tested.CAH
     if answer$<>"YES" goto std_exit_1
 
 rem --- Start progress meter and position header file
