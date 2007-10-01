@@ -93,7 +93,7 @@ rem --- Read next Financial Report Master (glm-12) record
 
           while moredetail
                 k$=key(glm22_dev,end=*break)
-                if k$(1,5)<>glm12_key$(1,5) break
+                if k$(1,len(glm12_key$))<>glm12_key$ break
                 read record (glm22_dev) glm22a$
 
                 rem --- Write sort record
@@ -147,7 +147,7 @@ rem --- Read next sort record
 
           rem --- Additional reads
 
-          glm12_key$=firm_id$+glw01a.gl_rpt_no$+"0000"
+          glm12_key$=firm_id$+glw01a.gl_rpt_no$
           glm22_key$=firm_id$+glw01a.gl_rpt_no$+glw01a.gl_rpt_line$
           find record (glm12_dev,key=glm12_key$,dom=*next) glm12a$
           find record (glm22_dev,key=glm22_key$,dom=level_break) glm22a$
