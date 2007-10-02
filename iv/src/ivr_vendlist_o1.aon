@@ -11,6 +11,8 @@ rem --- All Rights Reserved
 
 rem --- Document initializations
                 OutVect!=bbjAPI().getSysGui().makeVector()
+                HdrVect!=bbjAPI().getSysGui().makeVector()
+                BrkVect!=bbjAPI().getSysGui().makeVector()
                 rep_date$=date(0:"%Mz/%Dz/%Yd")
                 rep_date_stamp$=date(0:"%Yd%Mz%Dz")
                 rep_time$=date(0:"%hz:%mz %p")
@@ -21,7 +23,7 @@ rem --- Init Data
                 precision p[1]
                 width=132
                 headings=5
-                dim d[12],o[13],headings$[headings]
+                dim d[12],o[13],headings$[headings+1]
                 h=0
                 l9=59
                 l=l9+1
@@ -31,14 +33,13 @@ rem --- Init Data
                 headings$[0]=n1$
                 headings$[1]=n3$
                 day_of_mth=num(x$(4,2))
-                headings3$=fill(width)
-                headings$[4]=fill(width)
+                headings$[6]="[HEADER]"
                 m9=len(m9$)
-                if beg_item$="" headings3$(1)="From Item: First" else headings3$(1)="From Item: "+beg_item$
-                if beg_prod$="" headings3$(113)="From Product: First" else headings3$(113)="From Product: "+beg_prod$
-                if end_item$="" headings$[4](3)="To Item: Last" else headings$[4](3)="To Item: "+end_item$
-                if end_prod$="" headings$[4](115)="To Product: Last" else headings$[4](115)="To Product: "+end_prod$
-                if item_type$="" headings$[4](59,14)="Item Type: All" else headings$[4](60,14)="Item Type: "+item_type$
+                if beg_item$="" headings$[3]="From Item: First" else headings$[3]="From Item: "+beg_item$
+                if end_item$="" headings$[3]=headings$[3]+" -- To Item: Last" else headings$[3]=headings$[3]+" -- To Item: "+end_item$
+                if beg_prod$="" headings$[4]="From Product: First" else headings$[4]="From Product: "+beg_prod$                
+                if end_prod$="" headings$[4]=headings$[4]+" -- To Product: Last" else headings$[4]=headings$[4]+" -- To Product: "+end_prod$
+                if item_type$="" headings$[5]="Item Type: All" else headings$[5]="Item Type: "+item_type$
                 base_peryr$=ivs01a.current_per$+ivs01a.current_year$
 
                 call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMVEND","PRIMARY",ivm05_key_tpl$,rd_table_chans$[all],status$
@@ -48,6 +49,7 @@ rem --- Init Data
 rem ---  column heading
 
  dim columns$[12,10]
+ columns=12
                columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]="12"
                columns$[1,0]="Prod Tp",               columns$[1,1]="C",columns$[1,2]="7"
                columns$[2,0]="UM",                    columns$[2,1]="C",columns$[2,2]="10"
@@ -56,11 +58,11 @@ rem ---  column heading
                columns$[5,0]="Vendor Item",           columns$[5,1]="C",columns$[5,2]="8"
                columns$[6,0]="Lst Purch Date ",       columns$[6,1]="C",columns$[6,2]="10"
                columns$[7,0]="Lst Purch Lead",        columns$[7,1]="C",columns$[7,2]="7"
-               columns$[8,0]="Lst Purch Unit Cost",   columns$[8,1]="C",columns$[8,2]="10"
-               columns$[9,0]="EOQ",                   columns$[9,1]="C",columns$[9,2]="13"
-               columns$[10,0]="Annual Usage",         columns$[10,1]="C",columns$[10,2]="10"
-               columns$[11,0]="Quantity Break",       columns$[11,1]="C",columns$[11,2]="10"
-               columns$[12,0]="Cost Break",           columns$[12,1]="C",columns$[12,2]="10"
+               columns$[8,0]="Lst Purch Unit Cost",   columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]="#00"
+               columns$[9,0]="  EOQ",                 columns$[9,1]="C",columns$[9,2]="13"
+               columns$[10,0]="Annual Usage",         columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m3$
+               columns$[11,0]="Quantity Break",       columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m2$
+               columns$[12,0]="Cost Break",           columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m3$
 
 
 rem --- Print positions and headings
@@ -186,12 +188,12 @@ Vendor: rem --- Vendor
             let l=l9+1,t1$=""
             endif
         if t9$<>"" return
-        let headings$[3]=headings3$
         let t0$=ivm05a.vendor_id$,h3$="Vendor: Not On File",t0=0
         find record (apm01_dev,key=firm_id$+ivm05a.vendor_id$,dom=VendorInit) apm01a$
         let h3$=cvs("Vendor: "+fnmask$(apm01a.vendor_id$,m9$)+" "+apm01a.vendor_name$,2)
 VendorInit:
-        let headings$[3](fncenter(h3$,width),len(h3$))=h3$
+        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+        HdrVect!.addItem(h3$)
         return
 
 Position: rem --- Print positions
@@ -289,8 +291,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
