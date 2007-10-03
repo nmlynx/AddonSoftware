@@ -114,7 +114,7 @@ rem --- Additional File Opens
 		rem --- will also need option to lock/clear file; not using in this pgm for now, so bypassing.CAH
 		rem --- old pgm set options$[11]?  doesn't make sense, s/b options$[21]="C"?
 
-	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+	call sys_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                   chans$[all],templates$[all],table_chans$[all],batch,status$
 		if status$<>"" goto std_exit
 	else
