@@ -129,7 +129,7 @@ rem --- Print detail line
         if split=0 x$=fnitem$(ivm01a.Item_Desc$,p[3],p[4],p[5])
         if l+needed>l9 gosub report_heading
         if h9$<>"" gosub ProdHeading
-        print (printer_dev)@(o[0]),ivm01a_key$(3),@(o[1]),x$,@(o[2]),location$,@(o[3]),ivm01a.unit_of_sale$,@(o[4]),w[0]:m2$,@(o[5]),w[2]:m2$,@(o[6]),available:m2$,@(o[7]),w[1]:m2$,@(o[8]),cost$,@(o[9]),fnmask$(value,m1$)
+        print (printer_dev)@(o[0]),ivm01a_key$(3),@(o[1]),x$,@(o[2]),location$,@(o[3]),ivm01a.unit_of_sale$,@(o[4]),w[0]:m2$,@(o[5]),w[2]:m2$,@(o[6]),available:m2$,@(o[7]),w[1]:m2$,@(o[8]),cost$,@(o[9]),value:m1$
         l=l+1+split
         if split<>0 then
             x$=fnitem$(ivm01a.Item_Desc$,p[3],p[4],p[5])
@@ -247,7 +247,7 @@ PrintTotalLine: rem --- Print total line
     if l+2>l9 gosub report_heading
     let l=l+2,total$="Total For "+cvs(total$,2)
     print (printer_dev)""
-    print (printer_dev)@(o[9]-len(total$)),total$,@(o[9]),fnmask$(total,m1$)
+    print (printer_dev)@(o[9]-len(total$)),total$,@(o[9]),total:m1$
     return
 
 Position: rem --- Print positions

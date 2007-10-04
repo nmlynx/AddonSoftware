@@ -63,12 +63,12 @@ rem --- Dimension string templates
 rem --- Assign form input values to local variables
 
     level$=option!.getOptionData("stock_level")
-    begwhse$=option!.getOptionData("warehouse_id_01")
-    endwhse$=option!.getOptionData("warehouse_id_02")
-    begprod$=option!.getOptionData("product_type_01")
-    endprod$=option!.getOptionData("product_type_02")
-    begitem$=option!.getOptionData("item_id_01")
-    enditem$=option!.getOptionData("item_id_02")
+    begwhse$=option!.getOptionData("warehouse_id_1")
+    endwhse$=option!.getOptionData("warehouse_id_2")
+    begprod$=option!.getOptionData("product_type_1")
+    endprod$=option!.getOptionData("product_type_2")
+    begitem$=option!.getOptionData("item_id_1")
+    enditem$=option!.getOptionData("item_id_2")
     type$=option!.getOptionData("item_type")
 
 rem --- Retrieve parameter records
@@ -115,6 +115,7 @@ rem --- Resize masks
     call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
     call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
     call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
+    m1$="##,###,###.00-",m1=len(m1$)
 
 rem --- Run overlay
 
