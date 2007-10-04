@@ -102,7 +102,7 @@ next_report: rem --- Read next Report Selections (gle-04/gle-05) record
           glm12a.firm_id$=gle04a.firm_id$
           glm12a.gl_rpt_no$=gle04a.gl_rpt_no$
           glm12a.gl_rpt_line$="0000"
-          glm12_key$=glm12a.firm_id$+glm12a.gl_rpt_no$+glm12a.gl_rpt_line$
+          glm12_key$=glm12a.firm_id$+glm12a.gl_rpt_no$;rem not incl in key...+glm12a.gl_rpt_line$
           find record (glm12_dev,key=glm12_key$,dom=*continue) glm12a$
           m1$=glm12a.amount_mask$
           m2$=glm12a.unit_mask$
@@ -244,7 +244,7 @@ next_report: rem --- Read next Report Selections (gle-04/gle-05) record
           wend
 
           rem --- Found a report and the headings are completed
-  
+
           break
 
           rem --- Missing the Financial Report Master for the selected report.
