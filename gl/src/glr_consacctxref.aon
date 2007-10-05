@@ -142,7 +142,7 @@ rem --- Read next glm-01 record
           goto print_detail
 
           consolidated: rem --- Format print line: Consolidated
-escape;rem follow
+
           read (glm21_dev,key=glm01_key$,dom=*next)
           while moredetail
                 k$=key(glm21_dev,end=*break)
