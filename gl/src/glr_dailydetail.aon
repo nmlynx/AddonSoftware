@@ -26,7 +26,7 @@ rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="GLS_PARAMS",ids$[1]=files$[1]
+    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-03",ids$[3]="GLC_JOURNALCODE"
     files$[4]="glt-04",ids$[4]="GLE_DAILYDETAIL"
@@ -79,6 +79,14 @@ rem --- Retrieve parameter records
     glm03_key$=glm03a.firm_id$+glm03a.journal_id$
     if cvs(journal$,2)<>"" find record (glm03_dev,key=glm03_key$,dom=*next) glm03a$
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Initializations
 
     dim headings$[headings],buffer$(width),o[12],at[2],dt[2],jt[2],rt[2],xt[2]
@@ -95,6 +103,38 @@ rem --- Initializations
     h0$=""
     h1$=""
     h2$=""
+
+rem --- Document columns
+
+    if sequence$="A"
+
+        columns=6
+        dim columns$[6,4]
+        columns$[0,0]="Date",columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="Account",columns$[1,1]="C",columns$[1,2]=str(acctlen),columns$[1,3]=m0$
+        columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="40"
+        columns$[3,0]="Memo/Reference",columns$[3,1]="C",columns$[3,2]="50"
+        columns$[4,0]="Debits",columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$
+        columns$[5,0]="Credits",columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
+        columns$[6,0]="Units",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m2$
+
+    endif
+
+    if sequence$="D"
+
+        columns=8
+        dim columns$[8,4]
+        columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(acctlen),columns$[0,3]=m0$
+        columns$[1,0]="Description",columns$[1,1]="C",columns$[1,2]="40"
+        columns$[2,0]="Memo/Reference",columns$[2,1]="C",columns$[2,2]="30"
+        columns$[3,0]="Per",columns$[3,1]="C",columns$[3,2]="5"
+        columns$[4,0]="Yr",columns$[4,1]="C",columns$[4,2]="5"
+        columns$[5,0]="Audit #",columns$[5,1]="C",columns$[5,2]="10"
+        columns$[6,0]="Debits",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
+        columns$[7,0]="Credits",columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
+        columns$[8,0]="Units",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m2$
+
+    endif
 
 rem --- Build report headings
 
@@ -132,52 +172,28 @@ rem --- Build report headings
     buffer$(1)=acct1$
     buffer$(fncenter(jrnl$,width),len(jrnl$))=jrnl$
     buffer$(width-m)=val1$
-    headings$[3]=buffer$
+    headings$[2]=buffer$
     buffer$(1)=acct2$
     if wild$<>"" buffer$(fncenter(wild$,width),len(wild$))=wild$
     buffer$(width-m)=val2$
-    headings$[4]=buffer$
+    headings$[3]=buffer$
 
-rem --- Initialize print positions
+rem --- Start the progress meter
 
-    o[9]=width-1
-    unithdr=width-1
-    unithdr$=""
-    x=max(m0,8)
-    if gls01a.units_flag$="Y" o[9]=width-m2,unithdr=width-6,unithdr$="Units"
-    o[8]=o[9]-m1
-    o[7]=o[8]-m1
-    o[6]=o[7]-8
-    o[5]=o[6]-3
-    o[4]=o[5]-4
-    if sequence$="A" o[4]=o[7]
-    o[3]=o[4]-48
-    o[2]=o[3]-36
-    o[1]=o[2]-x-1
-    if sequence$="A" o[0]=o[1]-9;
-:                    if o[0]<0 o[0]=0,o[1]=o[0]+9,o[2]=o[1]+x+1
-    if sequence$="D" if o[1]<0 o[1]=0,o[2]=o[1]+x+1
-
-rem --- Determine how much of the account description will fit
-
-    w=o[3]-o[2]-2
-    if w>35 w=35
-
-rem --- Open printer, start the progress meter and position files
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glt04_dev,1,meter_num,status
     k$=firm_id$+journal$
     if sequence$="D" k$=firm_id$+begdate$
     read (glt04_dev,key=k$,knum=keynum,dom=*next)
 
 rem --- Read next daily detail record
-
+            
     while more
+
           k$=key(glt04_dev,end=*break)
+
           if pos(firm_id$=k$)<>1 break
           read record (glt04_dev,key=k$)glt04a$
+
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
           rem --- Range tests
@@ -197,20 +213,17 @@ rem --- Read next daily detail record
           if glt04a.trns_date$<>t0$ gosub date_break
           if glt04a.journal_id$<>t1$ gosub journal_break
           if glt04a.gl_adt_no$+glt04a.posting_year$+glt04a.posting_per$<>t2$ gosub audit_break
-          if glt04a.gl_account$(1,acctlen)<>t3$ gosub account_break;
-:                                 if l+1>l9 gosub report_heading
-:                                      else print (printer_dev)"";
-:                                           l=l+1
+          if glt04a.gl_account$(1,acctlen)<>t3$ gosub account_break
 
           rem --- Print subheadings
 
-          if h0$<>"" gosub date_heading
-          if h1$<>"" gosub journal_heading
-          if h2$<>"" gosub audit_heading
+          rem if h0$<>"" gosub date_heading
+          rem if h1$<>"" gosub journal_heading
+          rem if h2$<>"" gosub audit_heading
 
           rem --- Retrieve the account master
 
-          dim description$(w)
+          dim description$(35)
           glm01a.firm_id$=glt04a.firm_id$
           glm01a.gl_account$=glt04a.gl_account$
           glm01a.gl_acct_desc$="(Not On File)"
@@ -231,40 +244,53 @@ rem --- Read next daily detail record
           if glt04a.trans_amt<0 credits=glt04a.trans_amt,
 :                               credit$=str(abs(glt04a.trans_amt):m1$)
           if gls01a.units_flag$="Y" 
-:            if units unit$=str(units:m2$)
+:            if units<>0 unit$=str(units:m2$)
           while len(unit$)>m2
                 unit$=unit$(2)
           wend
 
-          rem --- Detail line by audit number
+rem --- Detail line by audit number
 
-          if l+2>l9 gosub report_heading
-          if sequence$="A" print (printer_dev)@(o[0]),fndate$(glt04a.trns_date$),
-:                                             @(o[1]),fnmask$(glt04a.gl_account$(1,acctlen),m0$),@(o[2]),description$,
-:                                             @(o[3]),glt04a.description$,@(o[7]),debit$,@(o[8]),credit$,@(o[9]),unit$
+          if sequence$="A"
 
-          rem --- Detail line by date
+            OutVect!.addItem(fndate$(glt04a.trns_date$))
+            OutVect!.addItem(fnmask$(glt04a.gl_account$(1,acctlen),m0$))
+            OutVect!.addItem(description$)
+            OutVect!.addItem(glt04a.description$)
+            OutVect!.addItem(debit$)
+            OutVect!.addItem(credit$)
+            OutVect!.addItem(unit$)
 
-          if sequence$="D" m$=""
-                           m=num(glt04a.posting_per$,err=*proceed)
-                           if m then m$=field(gls01a$,"abbr_name_"+str(m:"00"))
-                           print (printer_dev)@(o[1]),fnmask$(glt04a.gl_account$(1,acctlen),m0$),
-:                                             @(o[2]),description$,@(o[3]),glt04a.description$,
-:                                             @(o[4]),m$,@(o[5]),glt04a.posting_year$(3,2),@(o[6]),glt04a.gl_adt_no$,
-:                                             @(o[7]),debit$,@(o[8]),credit$,@(o[9]),unit$
-          endif
+ rem --- Detail line by date
+
+          endif 
+
+            if sequence$="D"
+
+                m$=""
+                m=num(glt04a.posting_per$,err=*proceed)
+                if m then m$=field(gls01a$,"abbr_name_"+str(m:"00"))
+
+                OutVect!.addItem(fnmask$(glt04a.gl_account$(1,acctlen),m0$))
+                OutVect!.addItem(description$)
+                OutVect!.addItem(glt04a.description$)
+                OutVect!.addItem(m$)
+                OutVect!.addItem(glt04a.posting_year$(3,2))
+                OutVect!.addItem(glt04a.gl_adt_no$)
+                OutVect!.addItem(debit$)
+                OutVect!.addItem(credit$)
+                OutVect!.addItem(unit$)
+
+            endif
 
           rem --- Any reference fields?
 
           ref$=""
-          l=l+1
           number=number+1
           if cvs(glt04a.reference_01$,2)<>"" ref$=ref$+"Ref 1 "+glt04a.reference_01$+" "
           if cvs(glt04a.reference_02$,2)<>"" ref$=ref$+"Ref 2 "+glt04a.reference_02$+" "
           if cvs(glt04a.reference_03$,2)<>"" ref$=ref$+"Ref 3 "+glt04a.reference_03$
-          if ref$="" print (printer_dev)@(o[3]),ref$
-                     l=l+1
-          endif
+          if ref$="" then OutVect!.addItem(ref$)
 
           rem --- Accumulate totals
 
@@ -288,6 +314,7 @@ rem --- Read next daily detail record
 
     wend
 
+
 rem --- All done
 
     done=1
@@ -297,16 +324,16 @@ rem --- All done
     debits=rt[0]
     credits=rt[1]
     units=rt[2]
-    if l+2>l9 gosub report_heading
     gosub print_totals
 
 rem --- In balance?
+
+
 
     balance=rt[0]+rt[1]
     debits=0
     credits=0
     if balance=0 goto balanced
-    if l+2>l9 gosub report_heading
     if balance>0 debits=balance
     if balance<0 credits=balance
     total$="This Report Is Out Of Balance By"
@@ -321,6 +348,7 @@ rem --- In balance?
 balanced: rem --- No update if any ranges were selected
 
     if number=0 goto std_exit
+
     if begacct$<>"" goto std_exit
     if endacct$<>"" goto std_exit
     if journal$<>"" goto std_exit
@@ -332,62 +360,25 @@ balanced: rem --- No update if any ranges were selected
 
 rem --- Run update overlay
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    close (printer_dev,err=*next)
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"glu_dailydetail.aon"
-
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-
-rem --- By Audit Number
-
-    if sequence$="A"
-       print (printer_dev)""
-       print (printer_dev)@(o[0]+2),"Date",@(o[1]),"Account",@(o[2]),"Description",@(o[3]),"Memo/Reference",
-:                         @(o[7]+m1-7),"Debits",@(o[8]+m1-8),"Credits",@(unithdr),unithdr$
-       l=l+2
-    endif
-
-rem --- By Date
-
-    if sequence$="D"
-       print (printer_dev)""
-       print (printer_dev)@(o[1]),"Account",@(o[2]),"Description",@(o[3]),"Memo/Reference",@(o[4]),"Per",
-:                         @(o[5]),"Yr",@(o[6]),"Audit #",@(o[7]+m1-7),"Debits",@(o[8]+m1-8),"Credits",
-:                         @(unithdr),unithdr$
-       l=l+2
-    endif
-    return
 
 date_heading: rem --- Date Heading
 
-    if l+7>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)h0$
-    l=l+2
+    OutVect!.addItem(h0$)
     h0$=""
     gosub journal_heading
     return
 
 journal_heading: rem --- Journal Heading
 
-    if l+6>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)h1$
-    print (printer_dev)""
-    l=l+3
+    OutVect!.addItem(h1$)
     h1$=""
     return
 
 audit_heading: rem --- Audit Number Heading
 
-    if l+4>l9 gosub report_heading
-    print (printer_dev)h2$
-    print (printer_dev)""
-    l=l+2
+    OutVect!.addItem(h2$)
     h2$=""
     return
 
@@ -402,7 +393,7 @@ date_break: rem --- Date break
     credits=dt[1]
     units=dt[2]
     gosub print_totals
-    if pagebreak$="Y" l=l9+1
+rem    if pagebreak$="Y" l=l9+1
 
 new_date: rem --- New date
 
@@ -413,6 +404,7 @@ new_date: rem --- New date
     return
 
 journal_break: rem --- Journal break
+
 
     if t1$="" goto new_journal
     if sequence$="A" gosub audit_break
@@ -437,6 +429,7 @@ new_journal: rem --- New Journal ID
 
 audit_break: rem --- Audit number break
 
+
     if sequence$="D" return
     if t2$="" goto new_audit
     gosub account_break
@@ -450,10 +443,11 @@ audit_break: rem --- Audit number break
     units=at[2]
     gosub print_totals
     if pagebreak$="N" goto new_audit
-    l=l9+1
+rem    l=l9+1
     gosub journal_subheading
 
 new_audit: rem --- New audit number
+
 
     if done return
     dim at[2]
@@ -467,6 +461,7 @@ new_audit: rem --- New audit number
 
 account_break: rem --- Account number break
 
+
     if t3$="" goto new_account
     total$="Total for Account Number "+fnmask$(t3$,m0$)
     debits=xt[0]
@@ -476,12 +471,14 @@ account_break: rem --- Account number break
 
 new_account: rem --- New account
 
+
     if done return
     dim xt[2]
     let t3$=glt04a.gl_account$(1,acctlen)
     return
 
 journal_subheading: rem --- Build journal subheading
+
 
     h1$="Journal "+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
     return
@@ -500,6 +497,7 @@ wildcard: rem --- Test account number against specified wildcard mask
 
 print_totals: rem --- Print totals line
 
+
     debit$=str(debits:m1$)
     credit$=str(abs(credits):m1$)
     unit$=""
@@ -507,10 +505,29 @@ print_totals: rem --- Print totals line
     while len(unit$)>m2
           unit$=unit$(2)
     wend
-    if l+2>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(o[7]-len(total$)-1),total$,@(o[7]),debit$,@(o[8]),credit$,@(o[9]),unit$
-    let l=l+2
+
+    if sequence$="A"
+        OutVect!.addItem("")
+        OutVect!.addItem("")
+        OutVect!.addItem("")
+        OutVect!.addItem(total$)
+        OutVect!.addItem(debit$)
+        OutVect!.addItem(credit$)
+        OutVect!.addItem(unit$)
+    endif
+
+    if sequence$="D"
+        OutVect!.addItem("")
+        OutVect!.addItem("")
+        OutVect!.addItem(total$)
+        OutVect!.addItem("")
+        OutVect!.addItem("")
+        OutVect!.addItem("")
+        OutVect!.addItem(debit$)
+        OutVect!.addItem(credit$)
+        OutVect!.addItem(unit$)
+    endif
+
     return
 
 rem --- Functions
@@ -589,6 +606,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
