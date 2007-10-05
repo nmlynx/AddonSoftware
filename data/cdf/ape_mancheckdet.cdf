@@ -15,8 +15,8 @@ dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
 
 ap_type$=field(apt01a$,"AP_TYPE")
 vendor_id$=field(apt01a$,"VENDOR_ID")
-ap_type$(1)=AONObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
-vendor_id$(1)=AONObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
+ap_type$(1)=UserObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
+vendor_id$(1)=UserObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
 
 apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")+"00"
 readrecord(apt_invoicehdr_dev,key=apt01ak1$,dom=*next)apt01a$
@@ -77,8 +77,8 @@ inv_amt=0,disc_amt=0,ret_amt=0
 
 ap_type$=field(apt01a$,"AP_TYPE")
 vendor_id$=field(apt01a$,"VENDOR_ID")
-ap_type$(1)=AONObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
-vendor_id$(1)=AONObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
+ap_type$(1)=UserObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
+vendor_id$(1)=UserObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
 
 apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")+"00"
 apt11ak1$=apt01ak1$(1,len(apt01ak1$)-2)
@@ -151,16 +151,16 @@ disp_tots:
 
     rem --- get context and ID of display controls for totals, and redisplay w/ amts from calc_tots
     
-    tinv!=AONObj!.getItem(num(user_tpl.tinv_vpos$))
+    tinv!=UserObj!.getItem(num(user_tpl.tinv_vpos$))
     tinv!.setValue(tinv)
 
-    tdisc!=AONObj!.getItem(num(user_tpl.tdisc_vpos$))
+    tdisc!=UserObj!.getItem(num(user_tpl.tdisc_vpos$))
     tdisc!.setValue(tdisc)
 
-    tret!=AONObj!.getItem(num(user_tpl.tret_vpos$))
+    tret!=UserObj!.getItem(num(user_tpl.tret_vpos$))
     tret!.setValue(tret)
 
-    tchk!=AONObj!.getItem(num(user_tpl.tchk_vpos$))
+    tchk!=UserObj!.getItem(num(user_tpl.tchk_vpos$))
     tchk!.setValue(tinv-tdisc-tret)
 
 return

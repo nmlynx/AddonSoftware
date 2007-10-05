@@ -130,16 +130,16 @@ disp_tots:
 
     rem --- get context and ID of display controls for totals, and redisplay w/ amts from calc_tots
     
-    tinv!=AONObj!.getItem(num(user_tpl.tinv_vpos$))
+    tinv!=UserObj!.getItem(num(user_tpl.tinv_vpos$))
     tinv!.setValue(tinv)
 
-    tdisc!=AONObj!.getItem(num(user_tpl.tdisc_vpos$))
+    tdisc!=UserObj!.getItem(num(user_tpl.tdisc_vpos$))
     tdisc!.setValue(tdisc)
 
-    tret!=AONObj!.getItem(num(user_tpl.tret_vpos$))
+    tret!=UserObj!.getItem(num(user_tpl.tret_vpos$))
     tret!.setValue(tret)
 
-    tchk!=AONObj!.getItem(num(user_tpl.tchk_vpos$))
+    tchk!=UserObj!.getItem(num(user_tpl.tchk_vpos$))
     tchk!.setValue(tinv-tdisc-tret)
 
     return
@@ -167,7 +167,7 @@ if cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)<>""
 :	and callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")<>
 :	callpoint!.getColumnUndoData("APE_MANCHECKHDR.VENDOR_ID")	
 
-	gosub display_vendor_address					
+	rem - gosub display_vendor_address					
 	gosub display_vendor_comments
 
 	callpoint!.setColumnUndoData("APE_MANCHECKHDR.VENDOR_ID",
@@ -211,7 +211,7 @@ endif
 gl$=user_tpl.glint$
 ckdate$=callpoint_data$        
 if gl$="Y" 
-	call dir_pgm$+"glc_datecheck.aon",ckdate$,"Y",per$,yr$,status
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",ckdate$,"Y",per$,yr$,status
 	if status>99
 		callpoint!.setStatus("ABORT")
 	else
@@ -243,7 +243,7 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	dflt_data$[all]
 [[APE_MANCHECKHDR.BSHO]]
 rem --- disable ap type control if param for multi-types is N
-rem --- user_tpl.multi_types$="N";rem --- temp for testing.CAH
+
 if user_tpl.multi_types$="N" 
 	ctl_name$="APE_MANCHECKHDR.AP_TYPE"
 	ctl_stat$="I"
@@ -259,7 +259,7 @@ if user_tpl.multi_types$="N" c!.setColumnEditable(2,0)
 [[APE_MANCHECKHDR.AWIN]]
 rem --- Open/Lock files
 
-files=30,begfile=1,endfile=11
+files=30,begfile=1,endfile=12
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="APE_MANCHECKHDR";rem --- "ape-02"
 files$[2]="APE_MANCHECKDIST";rem --- "ape-12"
@@ -272,12 +272,13 @@ files$[8]="APT_CHECKHISTORY";rem --- "apt-05
 files$[9]="APC_TYPECODE";rem --- "apm-10A"
 files$[10]="APM_VENDCMTS";rem --- "apm-09
 files$[11]="APS_PARAMS";rem --- "ads-01"
+files$[12]="GLS_PARAMS"
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
 
-call dir_pgm$+"bac_open_tables.bbj",
+call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	begfile,
 :	endfile,
 :	files$[all],
@@ -289,26 +290,11 @@ call dir_pgm$+"bac_open_tables.bbj",
 :	status$
 
 if status$<>"" goto std_exit
-ads01_dev=num(chans$[11])
+aps01_dev=num(chans$[11])
+gls01_dev=num(chans$[12])
 
+dim aps01a$:templates$[11],gls01a$:templates$[12]
 
-rem -- Retrieve miscellaneous templates
-
-files=2,begfile=1,endfile=files
-dim ids$[files],templates$[files]
-ids$[1]="aps-01A"
-ids$[2]="gls-01A"
-call dir_pgm$+"adc_template.aon",
-:	begfile,
-:	endfile,
-:	ids$[all],
-:	templates$[all],
-:	status
-if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-dim aps01a$:templates$[1],gls01a$:templates$[2]
 user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
 user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"misc_entry:c(1),post_closed:c(1),units_flag:c(1),"
@@ -320,8 +306,8 @@ user_tpl_str$=user_tpl_str$+"ap_type_vpos:c(1),vendor_id_vpos:c(1)"
 dim user_tpl$:user_tpl_str$
 user_tpl.firm_id$=firm_id$
 
-rem --- set up AONObj! as vector
-	AONObj!=SysGUI!.makeVector()
+rem --- set up UserObj! as vector
+	UserObj!=SysGUI!.makeVector()
 	
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_INV","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_INV","CTLI"))
@@ -347,17 +333,17 @@ rem --- set up AONObj! as vector
 	ctlID=num(callpoint!.getTableColumnAttribute("APE_MANCHECKHDR.VENDOR_ID","CTLI"))
 	vendor_id!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 
-	AONObj!.addItem(tinv!)
+	UserObj!.addItem(tinv!)
 	user_tpl.tinv_vpos$="0"
-	AONObj!.addItem(tdisc!)
+	UserObj!.addItem(tdisc!)
 	user_tpl.tdisc_vpos$="1"
-	AONObj!.addItem(tret!)
+	UserObj!.addItem(tret!)
 	user_tpl.tret_vpos$="2"
-	AONObj!.addItem(tchk!)
+	UserObj!.addItem(tchk!)
 	user_tpl.tchk_vpos$="3"
-	AONObj!.addItem(ap_type!)
+	UserObj!.addItem(ap_type!)
 	user_tpl.ap_type_vpos$="4"
-	AONObj!.addItem(vendor_id!)
+	UserObj!.addItem(vendor_id!)
 	user_tpl.vendor_id_vpos$="5"
 
 rem --- Additional File Opens
@@ -365,7 +351,7 @@ rem --- Additional File Opens
 gl$="N"
 status=0
 source$=pgm(-2)
-call dir_pgm$+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
+call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
 if status<>0 goto std_exit
 user_tpl.glint$=gl$
 user_tpl.glworkfile$=glw11$
@@ -378,7 +364,7 @@ if gl$="Y"
    rem --- will need alias name, not disk name, when opening work file
 	rem --- will also need option to lock/clear file [21]; not using in this pgm for now, so bypassing.CAH
 
-	call dir_pgm$+"bac_open_tables.bbj",
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	begfile,
 :	endfile,
 :	files$[all],
@@ -396,7 +382,7 @@ endif
 rem --- Retrieve parameter data
                
 aps01a_key$=firm_id$+"AP00"
-find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
 user_tpl.amt_msk$=aps01a.amount_mask$
 user_tpl.multi_types$=aps01a.multi_types$
 user_tpl.multi_dist$=aps01a.multi_dist$
@@ -405,7 +391,7 @@ user_tpl.misc_entry$=aps01a.misc_entry$
 user_tpl.post_closed$=aps01a.post_closed$
 
 gls01a_key$=firm_id$+"GL00"
-find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 user_tpl.units_flag$=gls01a.units_flag$
 user_tpl.units_flag$="N";rem --- for testing
 
@@ -440,7 +426,7 @@ if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_
 				gosub disable_fields
 				callpoint!.setColumnData("APE_MANCHECKHDR.CHECK_DATE",apt05a.check_date$)
 				callpoint!.setColumnData("APE_MANCHECKHDR.VENDOR_ID",apt05a.vendor_id$)
-				gosub display_vendor_address
+				rem - gosub display_vendor_address
 				gosub display_vendor_comments
 				gosub disable_grid
 			else
@@ -515,7 +501,7 @@ dtlGrid!=Form!.getChildWindow(1109).getControl(5900)
 	next wk
 endif
 
-gosub display_vendor_address
+rem - gosub display_vendor_address
 rem --- doing in vendor id aval...gosub get_vendor_history
 [[APE_MANCHECKHDR.ARNF]]
 				if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R"
