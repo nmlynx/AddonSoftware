@@ -174,7 +174,7 @@ endif
 gl$=user_tpl.glint$
 invdate$=callpoint!.getUserInput()        
 if gl$="Y" 
-	call dir_pgm$+"glc_datecheck.aon",invdate$,"Y",per$,yr$,status
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",invdate$,"Y",per$,yr$,status
 	if status>99
 		callpoint!.setStatus("ABORT")
 	else
