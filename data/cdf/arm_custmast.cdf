@@ -69,49 +69,41 @@ rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
 	sys_pgm$=stbl("+DIR_SYP")
 
-	num_files=4
+	num_files=5
 	dim files$[num_files],options$[num_files],ids$[num_files],templates$[num_files],channels[num_files]
-	files$[1]="ads-01",options$[1]="OTA"
-	files$[2]="ars-10",options$[2]="OTA"
-	files$[3]="arm-10",options$[3]="OTA"
-	files$[4]="arm-02",options$[4]="OTA",ids$[4]="ARM_CUSTDET"
+	files$[1]="gls_params",ids$[1]="GLS_PARAMS",options$[1]="OTA"
+	files$[2]="ars_params",ids$[2]="ARS_PARAMS",options$[2]="OTA"
+	files$[3]="ars_custdflt",ids$[3]="ARS_CUSTDFLT",options$[3]="OTA"; rem ars-10D
+	files$[4]="ars_credit",ids$[4]="ARS_CREDIT",options$[4]="OTA"; rem ars-01C
+	files$[5]="arm-02",ids$[5]="ARM_CUSTDET",options$[5]="OTA"
 	call stbl("+DIR_PGM")+"adc_fileopen.aon",action,1,num_files,files$[all],options$[all],
 :                              ids$[all],templates$[all],channels[all],batch,status
 	if status goto std_exit
-	ads01_dev=channels[1]
-	ars10_dev=channels[2]
-	arm10_dev=channels[3]
-	arm02_dev=channels[4],arm02_tpl$=templates$[4]
+	gls01_dev=channels[1]
+	ars01_dev=channels[2]
+	ars10_dev=channels[3]
+	ars01c_dev=channels[4]
+	arm02_dev=channels[5],arm02_tpl$=templates$[5]
 
-rem --- Retrieve miscellaneous templates
-
-	files=4,begfile=1,endfile=files
-	dim ids$[files],templates$[files]
-	ids$[1]="gls-01A:GLS_PARAMS"
-	ids$[2]="ars-01A:ARS_PARAMS"
-	ids$[3]="ars-01C:ARS_CREDIT"
-	ids$[4]="ars-10D:ARS_CUSTDFLT"
-	call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-	if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-	dim gls01a$:templates$[1],ars01a$:templates$[2],ars01c$:templates$[3],ars10d$:templates$[4]
+	dim gls01a$:templates$[1],ars01a$:templates$[2],ars10d$:templates$[3],ars01c$:templates$[4]
 
 rem --- Retrieve parameter data
 
 	dim info$[20]
 
 	ars01a_key$=firm_id$+"AR00"
-	find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$ 
+	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$ 
 
 	ars01c_key$=firm_id$+"AR01"
-	find record (ads01_dev,key=ars01c_key$,err=std_missing_params) ars01c$                
+	find record (ars01c_dev,key=ars01c_key$,err=std_missing_params) ars01c$                
 	cm$=ars01c.sys_install$
 	dflt_cred_hold$=ars01c.hold_new$
 
 	gls01a_key$=firm_id$+"GL00"
-	find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
+	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
 	find record (ars10_dev,key=firm_id$+"D",err=std_missing_params) ars10d$
 
 	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
@@ -136,7 +128,7 @@ rem --- Retrieve parameter data
 	user_tpl.cust_dflt_tpl$=fattr(ars10d$)
 	user_tpl.cust_dflt_rec$=ars10d$
 
-rem >>>>>>> 1.2
+
 	dim dctl$[15]
 
  	dctl$[1]="ARM_CUSTDET.CRED_HOLD"; rem --- looks like this should only be set in CM                
