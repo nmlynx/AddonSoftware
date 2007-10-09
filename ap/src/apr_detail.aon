@@ -26,18 +26,18 @@ rem --- Open/Lock files
 
     files=13,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="apm-02",ids$[3]="APM_VENDHIST"
     files$[4]="apm-05",ids$[4]="APM_VENDADDR"
     files$[6]="apm-09",ids$[6]="APM_VENDCMTS"
-    files$[7]="GLS_PARAMS",ids$[7]=files$[7];rem "gls-01A
+    files$[7]="gls_params",ids$[7]="GLS_PARAMS";rem "gls-01A
     files$[8]="apt-01",ids$[8]="APT_INVOICEHDR"
     files$[9]="apt-11",ids$[9]="APT_INVOICEDET"
-    files$[10]="APC_TYPECODE",ids$[10]=files$[10];rem "apm-10A
-    files$[11]="APC_DISTRIBUTION",ids$[11]=files$[11];rem "apm-10B
-    files$[12]="APC_TERMSCODE",ids$[12]=files$[12];rem "apm-10C
-    files$[13]="APC_PAYMENTGROUP",ids$[13]=files$[13];rem "apm-10B
+    files$[10]="apc_typecode",ids$[10]="APC_TYPECODE";rem "apm-10A
+    files$[11]="apc_distribution",ids$[11]="APC_DISTRIBUTION";rem "apm-10B
+    files$[12]="apc_termscode",ids$[12]="APC_TERMSCODE";rem "apm-10C
+    files$[13]="apc_paymentgroup",ids$[13]="APC_PAYMENTGROUP";rem "apm-10B
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -66,10 +66,9 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    begvendor$=fnget_fld_data$(table$,"vendor_id_1")
-    endvendor$=fnget_fld_data$(table$,"vendor_id_2")
-    comments$=fnget_fld_data$(table$,"pick_check")
+    begvendor$=option!.getOptionData("VENDOR_ID_1")
+    endvendor$=option!.getOptionData("VENDOR_ID_2")
+    comments$=option!.getOptionData("PICK_CHECK")
 
 rem --- Is General Ledger installed and in use?
 
@@ -81,35 +80,19 @@ rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    call pgmdir$+"adc_sizemask.aon",aps01a.amount_mask$,m1,9,15
-    vendor_size=num(aps01a.vendor_size$)
+    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call pgmdir$+"adc_getmask.aon","","AP","A","",m1$,0,0
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,9,15
     multiple_types$=aps01a.multi_types$
     multiple_distributions$=aps01a.multi_dist$
     retention$=aps01a.ret_flag$
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     m8$="(###)-###-####"
     m0=len(m0$)
     m1=len(m1$)
 
-rem --- Faking it for now since AP Parameters are screwed up (23Dec2006) escape
-
-rem   vendor_size=6
-rem    multiple_types$="Y"
-rem    multiple_distributions$="Y"
-rem    retention$="Y"
-rem    m0$="00-0000"
-rem    m1$="###,##0.00-"
-rem    m0=len(m0$)
-rem    m1=len(m1$)
-
-rem --- Remove once parameter record is fixed ----------------------------------
-
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    acct_length=num(gls01a.acct_length$)
-    g0$=gls01a.acct_output$
-
+    call pgmdir$+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
 
 rem --- Initializations
 
@@ -148,7 +131,7 @@ rem --- Additional file opens
     files=1,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     if gl$="Y" 
-       files$[1]="glm-01"
+       files$[1]="glm-01",ids$[1]="GLM_ACCT"
        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                      ids$[all],templates$[all],channels[all],batch,status
     endif
@@ -281,7 +264,7 @@ rem  skipped:  ;rem "can I do that??
                    apm10a.ap_type$=apm02a.ap_type$
                    apm10a.code_desc$=nf$
                    apm10_key$=apm10a.firm_id$+"A"+apm10a.ap_type$
-                   find record (apm10_dev,key=apm10_key$,dom=*proceed) apm10a$
+                   find record (apm10a_dev,key=apm10_key$,dom=*proceed) apm10a$
                    aptype$=fill(6)+"AP Type: "+apm10a.ap_type$+" "+apm10a.code_desc$
                 endif
 
@@ -294,7 +277,7 @@ rem  skipped:  ;rem "can I do that??
                    apm10b.ap_dist_code$=apm02a.ap_dist_code$
                    apm10b.code_desc$=nf$
                    apm10_key$=apm10b.firm_id$+"B"+apm10b.ap_dist_code$
-                   find record (apm10_dev,key=apm10_key$,dom=*proceed) apm10b$
+                   find record (apm10b_dev,key=apm10_key$,dom=*proceed) apm10b$
                    distribution$=" Distribution: "+apm10b.ap_dist_code$+" "+apm10b.code_desc$
                 endif
 
@@ -302,10 +285,10 @@ rem  skipped:  ;rem "can I do that??
 
                 dim apm10c$:fattr(apm10c$)
                 apm10c.firm_id$=firm_id$
-                apm10c.terms_code$=apm02a.ap_terms_code$
+                apm10c.terms_codeap$=apm02a.ap_terms_code$
                 apm10c.code_desc$=nf$
-                apm10_key$=apm10c.firm_id$+"C"+apm10c.terms_code$
-                find record (apm10_dev,key=apm10_key$,dom=*next) apm10c$
+                apm10_key$=apm10c.firm_id$+"C"+apm10c.terms_codeap$
+                find record (apm10c_dev,key=apm10_key$,dom=*next) apm10c$
 
                 rem --- Retrieve payment group and description
 
@@ -314,13 +297,13 @@ rem  skipped:  ;rem "can I do that??
                 apm10d.payment_grp$=apm02a.payment_grp$
                 apm10d.code_desc$=nf$
                 apm10_key$=apm10d.firm_id$+"D"+apm10d.payment_grp$
-                find record (apm10_dev,key=apm10_key$,dom=*next) apm10d$
+                find record (apm10d_dev,key=apm10_key$,dom=*next) apm10d$
 
                 rem --- Print codes and descriptions
 
                 print (printer_dev) @(0),aptype$,@(42),"Payment Group: ",apm10d.payment_grp$,
 :                                   " ",apm10d.code_desc$
-                print (printer_dev) @(0),distribution$,@(45),"Terms Code: ",apm10c.terms_code$,
+                print (printer_dev) @(0),distribution$,@(45),"Terms Code: ",apm10c.terms_codeap$,
 :                                   " ",apm10c.code_desc$
 
                 rem --- Retrieve print GL account information if GL is in use
@@ -522,7 +505,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Assemble and return subheading
 
@@ -541,7 +523,14 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fndate$(q$)
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if testdate$<>"" 
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        endif
+        return testdate$
+    fnend    
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
@@ -565,8 +554,8 @@ std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -589,9 +578,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -612,7 +601,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

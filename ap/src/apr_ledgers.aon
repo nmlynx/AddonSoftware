@@ -26,10 +26,10 @@ rem --- Open/Lock files
 
     files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="apm-02",ids$[3]="APM_VENDHIST"
-    files$[4]="APC_TYPECODE",ids$[4]=files$[4];rem "apm-10A
+    files$[4]="apc_typecode",ids$[4]="APC_TYPECODE";rem "apm-10A
     files$[5]="apt-01",ids$[5]="APT_INVOICEHDR"
     files$[6]="apt-11",ids$[6]="APT_INVOICEDET"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -57,27 +57,13 @@ rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    call pgmdir$+"adc_sizemask.aon",aps01a.amount_mask$,m1,9,15
-    vendor_size=num(aps01a.vendor_size$)
+    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call pgmdir$+"adc_getmask.aon","","AP","A","",m1$,0,0
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,9,15
     multiple_types$=aps01a.multi_types$
     retention$=aps01a.ret_flag$
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     m0=len(m0$)
     m1=len(m1$)
-
-rem --- Faking it for now since AP Parameters are screwed up (23Dec2006) escape
-
-rem    vendor_size=6
-rem multiple_types$="Y"
-rem    multiple_distributions$="Y"
-rem    retention$="Y"
-rem    m0$="00-0000"
-rem    m1$="###,##0.00-"
-rem    m0=len(m0$)
-rem    m1=len(m1$)
-
-rem --- Remove once parameter record is fixed ----------------------------------
 
 rem --- Initializations
 
@@ -103,7 +89,8 @@ rem --- Initializations
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     headings$[2]=x$
-    headings$[3]="Includes Transactions Through "+fndate$(thrudate$)
+    if cvs(thrudate$,2)="" headings$[3]="Includes All Transactions"
+:       else headings$[3]="Includes Transactions Through "+fndate$(thrudate$)
     x$=""
     if retention$="Y" x$="Retention"
 
@@ -179,7 +166,9 @@ rem --- Read next Vendor Master (apm-01) record
                       apt01_key$=key(apt01_dev,end=*break)
                       if pos(vendor$=apt01_key$)<>1 break
                       read record (apt01_dev) apt01a$
-                      if apt01a.invoice_date$>thrudate$ continue
+                      if cvs(thrudate$,2)<>""
+                        if apt01a.invoice_date$>thrudate$ continue
+                      endif
                       amount$=""
                       if retention$="Y" amount$=str(apt01a.retention:m1$)
                       if first gosub vendor_heading
@@ -206,7 +195,9 @@ rem --- Read next Vendor Master (apm-01) record
                             k$=key(apt11_dev,end=*break)
                             if pos(apt01_key$=k$)<>1 break
                             read record (apt11_dev) apt11a$
-                            if apt11a.trans_date$>thrudate$ continue
+                            if cvs(thrudate$,2)<>"" 
+                                if apt11a.trans_date$>thrudate$ continue
+                            endif    
                             detail=1
                             type$=apt11a.trans_type$
                             amount$=""
@@ -309,8 +300,8 @@ std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -333,9 +324,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -356,6 +346,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 

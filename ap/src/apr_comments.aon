@@ -26,7 +26,7 @@ rem --- Open/Lock files
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="apm-09",ids$[3]="APM_VENDCMTS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -42,19 +42,17 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    begvendor$=fnget_fld_data$(table$,"vendor_id_1")
-    endvendor$=fnget_fld_data$(table$,"vendor_id_2")
+    begvendor$=option!.getOptionData("VENDOR_ID_1")
+    endvendor$=option!.getOptionData("VENDOR_ID_2")
 
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    m0$=aps01a.vendor_output$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
     m8$="(###)-###-####"
     m0=len(m0$)
     m8=len(m8$)
-    vendor_size=num(aps01a.vendor_size$)
 
 rem --- Initializations
 
@@ -85,8 +83,11 @@ rem --- Open printer, start progress meter and position Vendor Master file
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,apm01_dev,1,meter_num,status
-    if begvendor$<>"" begvendor$=begvendor$(1,len(begvendor$)-1)+$FF$
-    read (apm01_dev,key=firm_id$+begvendor$,dom=*next)
+    while begvendor$<>""
+          read (apm01_dev,key=firm_id$+begvendor$)
+          read (apm01_dev,dir=-1,err=*next)
+          begvendor$=""
+    wend
 
 rem --- Read next Vendor Master (apm-01) record
 
@@ -180,7 +181,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
@@ -205,9 +205,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -231,8 +231,8 @@ std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -251,7 +251,8 @@ rem #endinclude std_missing_params.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

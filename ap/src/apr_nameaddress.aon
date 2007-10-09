@@ -25,7 +25,7 @@ rem --- Open/Lock files
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
    
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -51,8 +51,8 @@ rem --- Retrieve parameter records
 
 rem --- Assign form input values to local variables
 
-    begvendor$=Option!.getOptionData("VENDOR_ID_1")
-    endvendor$=Option!.getOptionData("VENDOR_ID_2")
+    begvend$=Option!.getOptionData("VENDOR_ID_1")
+    endvend$=Option!.getOptionData("VENDOR_ID_2")
 
 rem --- Document initializations
 
@@ -82,9 +82,11 @@ rem --- Document columns
 rem --- Start progress meter and position file
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,apm01_dev,1,meter_num,status
-    k$=firm_id$+begvend$
-    if cvs(begvend$,2)<>"" k$=k$(1,len(k$)-1)+$FF$
-    find (apm01_dev,key=k$,dom=*next)
+    while begvend$<>""
+          read (apm01_dev,key=firm_id$+begvend$)
+          read (apm01_dev,dir=-1,err=*next)
+          begvend$=""
+    wend
 
 rem --- Get next key
 
@@ -193,9 +195,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
 	rd_err_text$=""
 	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-	pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-	call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:								str(err:"000"),rd_err_text$,rd_err_act$
+	call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:								str(err),rd_err_text$,rd_err_act$
 	if pos("EXIT"=rd_err_act$) goto std_error_exit
 	if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
 	if pos("RETRY"=rd_err_act$) retry
@@ -219,8 +220,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
 	rd_err_text$=""
 	if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
 	pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-	call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:								str(err:"000"),rd_err_text$,rd_err_act$
+	call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:								str(err),rd_err_text$,rd_err_act$
 
 std_missing_params_exit:
 	
@@ -244,6 +245,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 	run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 	release
 
