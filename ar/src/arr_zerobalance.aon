@@ -13,6 +13,16 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
+
+            OutVect!=bbjAPI().getSysGui().makeVector()
+            HdrVect!=bbjAPI().getSysGui().makeVector()
+            BrkVect!=bbjAPI().getSysGui().makeVector()
+            rep_date$=date(0:"%Mz/%Dz/%Yd")
+            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+            rep_time$=date(0:"%hz:%mz %p")
+            rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -62,6 +72,19 @@ rem --- Is Sales Order Processing installed?
     call pgmdir$+"adc_application.aon",application$,info$[all]
     op$=info$[20]
 
+rem --- Column Headings
+    dim columns$[8,10]
+    columns=8
+        columns$[0,0]="Cust/Inv", columns$[0,1]="C",columns$[0,2]="25"
+        columns$[1,0]="Date",     columns$[1,1]="C",columns$[1,2]="10"
+        columns$[2,0]="Due/Ref",  columns$[2,1]="C",columns$[2,2]="10"
+        columns$[3,0]="TC",       columns$[3,1]="C",columns$[3,2]="5"
+        columns$[4,0]="Type",     columns$[4,1]="C",columns$[4,2]="10"
+        columns$[5,0]="Invoice",  columns$[5,1]="N",columns$[5,2]="12";columns$[5,3]=m1$
+        columns$[6,0]="Applied",  columns$[6,1]="N",columns$[6,2]="12";columns$[6,3]=m1$
+        columns$[7,0]="Balance",  columns$[7,1]="N",columns$[7,2]="12";columns$[7,3]=m1$
+        columns$[8,0]="Discount", columns$[8,1]="N",columns$[8,2]="12";columns$[8,3]=m1$
+
 rem --- Initializations
 
     headings=3
@@ -107,10 +130,8 @@ rem --- Dimension string templates
 
     if op$="Y" dim opt01a$:templates$[1]
 
-rem --- Open printer, start progress meter and position Customer Master file
+rem --- Start progress meter and position Customer Master file
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
     while begcustomer$<>""
           read (arm01_dev,key=firm_id$+begcustomer$)
@@ -174,11 +195,16 @@ rem --- Read next Customer Master (arm-01) record
 
                 type$=fntype$(art01a.invoice_type$)
                 if first gosub customer_heading
-                if lines+1>maxlines gosub report_heading
-                print (printer_dev) @(o[1]),art01a.ar_inv_no$,@(o[2]),fndate$(art01a.invoice_date$),
-:                                   @(o[3]),fndate$(art01a.inv_due_date$),@(o[4]),art01a.ar_terms_code$,
-:                                   @(o[5]),type$,@(o[6]),art01a.invoice_amt:m1$,@(o[9]),art01a.disc_allowed:m1$
-                lines=lines+1
+               
+                OutVect!.addItem("   "+art01a.ar_inv_no$)
+                OutVect!.addItem(fndate$(art01a.invoice_date$))
+                OutVect!.addItem(fndate$(art01a.inv_due_date$))
+                OutVect!.addItem(art01a.ar_terms_code$)
+                OutVect!.addItem(type$)
+                OutVect!.addItem(str(art01a.invoice_amt:m1$))
+                xwk=fnblank(2)
+                OutVect!.addItem(str(art01a.disc_allowed:m1$))
+                
                 printed=1
                 custinv=custinv+art01a.invoice_amt
                 custdis=custdis+art01a.disc_allowed
@@ -196,10 +222,16 @@ rem --- Read next Customer Master (arm-01) record
                       if art11a.trans_date$>thrudate$ continue
                       detail=1
                       type$=fntype$(art11a.trans_type$)
-                      if lines+1>maxlines gosub report_heading
-                      print (printer_dev) @(o[2]),fndate$(art11a.trans_date$),@(o[3]),art11a.refchk_no$,
-:                                         @(o[5]),type$,@(o[7]),art11a.trans_amt:m1$,@(o[9]),art11a.adjdisc_amt:m1$
-                      lines=lines+1
+                      OutVect!.addItem("")
+                      OutVect!.addItem(fndate$(art11a.trans_date$))
+                      OutVect!.addItem(art11a.refchk_no$)
+                      OutVect!.addItem("")
+                      OutVect!.addItem(type$)
+                      OutVect!.addItem("")
+                      OutVect!.addItem(str(art11a.trans_amt:m1$))
+                      OutVect!.addItem("")
+                      OutVect!.addItem(str(art11a.adjdisc_amt:m1$))
+
                       applied=applied+art11a.trans_amt
                       custapp=custapp+art11a.trans_amt
                       custdis=custdis+art11a.adjdisc_amt
@@ -209,8 +241,11 @@ rem --- Read next Customer Master (arm-01) record
 
                 if detail=0 continue
                 balance=art01a.invoice_amt+applied
-                if lines+1>maxlines gosub report_heading
-                print (printer_dev) @(o[6]-6),"Total",@(o[8]),balance:m1$
+                xwk=fnblank(4)
+                OutVect!.addItem("Total")
+                xwk=fnblank(2)
+                OutVect!.addItem(str(balance:m1$))
+                OutVect!.addItem("")
                 lines=lines+1
 
           wend
@@ -219,9 +254,13 @@ rem --- Read next Customer Master (arm-01) record
 
           if printed=0 continue
           balance=custinv+custapp
-          if lines+1>maxlines gosub report_heading
-          print (printer_dev) @(o[6]-15),"Customer Total",@(o[6]),custinv:m1$,@(o[7]),custapp:m1$,
-:                             @(o[8]),balance:m1$,@(o[9]),custdis:m1$
+
+          OutVect!.addItem("        "+"Customer Total")
+          xwk=fnblank(4)
+          OutVect!.addItem(str(custinv:m1$))
+          OutVect!.addItem(str(custapp:m1$))
+          OutVect!.addItem(str(balance:m1$))
+          OutVect!.addItem(str(custdis:m1$))
           lines=lines+1
           reportinv=reportinv+custinv
           reportapp=reportapp+custapp
@@ -232,31 +271,22 @@ rem --- All done
 done:
 
     balance=reportinv+reportapp
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(o[6]-13),"Report Total",@(o[6]),reportinv:m1$,@(o[7]),reportapp:m1$,
-:                       @(o[8]),balance:m1$,@(o[9]),reportdis:m1$
-    close (printer_dev,err=*next)
+    xwk=fnblank(9)
+    OutVect!.addItem("        "+"Report Total")
+    xwk=fnblank(4)
+    OutVect!.addItem(str(reportinv:m1$))
+    OutVect!.addItem(str(reportapp:m1$))
+    OutVect!.addItem(str(balance:m1$))
+    OutVect!.addItem(str(reportdis:m1$))
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     run pgmdir$+"aru_zerobalance.aon",err=*next
     goto std_exit
 
-report_heading: rem --- Report heading
-
-    lines=heading+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto done
-    print (printer_dev) @(o[0]),"Cust/Inv",@(o[2]),"Date",@(o[3]),"Due/Ref",@(o[4]),"TC",
-:                       @(o[5]),"Type",@(o[6]+m1-8),"Invoice",@(o[7]+m1-8),"Applied",
-:                       @(o[8]+m1-8),"Balance",@(o[9]+m1-9),"Discount"
-    lines=lines+1
-    return
-
 customer_heading: rem --- Print customer heading
 
-    if lines+3>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(o[0]),arm01a.customer_id$(1,customer_size)," ",arm01a.customer_name$
+    xwk=fnblank(9)
+    OutVect!.addItem(arm01a.customer_id$(1,customer_size)+" "+arm01a.customer_name$)
+    xwk=fnblank(8)
     lines=lines+2
     first=0
     return
@@ -302,7 +332,14 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
         return str(q1$:q2$)
     fnend
-
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
