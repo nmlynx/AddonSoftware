@@ -116,11 +116,15 @@ rem --- Open requested files
 
     file_locked: rem --- Error 0 - File locked by another user
 
+        gosub get_file_description
+
         error$=description$+" is locked by another user"
         break
 
     not_found: rem --- Error 12 - File not found
     
+        gosub get_file_description
+
         errors=0
         if pos("F"=options$[x]) continue
         errors=1
@@ -129,6 +133,7 @@ rem --- Open requested files
 
     template_error: rem --- Error encountered attempting to retrieve the template
 
+  
         errors=1,sverr=err
         gosub get_file_description
         error$="Error "+str(sverr)+" encountered while attempting to retrieve the template for "+description$
