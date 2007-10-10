@@ -16,11 +16,12 @@ rem --- Initializations
     dim files[3],items$[2],periods$[1],activity[12]
     dim whse[1],report[1]
     m7$="-###0.0000%"
-    m8$="###########.0000-"
+    m8$="############.0000"
+rem    m8$="###########.0000-"
     m7=len(m7$)
     m8=len(m8$)
     files[2]=ivm12_dev
-    files[3]=ivm03g_dev
+    files[3]=ivm03g_dev2
     headings=6
     t0$=""
     headings$[0]=sysinfo.firm_name$
@@ -37,8 +38,8 @@ rem --- Initializations
     h8$="Sales"
     done=0
     action$="T"
-    periods$[0]=period1$
-    periods$[1]=period2$
+    periods$[0]=begyear$+begper$; rem period1$
+    periods$[1]=endyear$+endper$; rem period2$
     if base$="U" x$="Usage",h7$="Used",h8$="Usage"
     headings$[2]="Based On Total "+x$+" For Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
     more=1
@@ -151,12 +152,12 @@ rem --- By Warehouse: Valid Warehouse/Product/Item?
 
 rem --- Accumulate totals
 
-        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
+rem        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
         read (ivm03_dev)
         if type$<>"" then
-            ivm03a_key.firm_id$=firm_id$
-            ivm03a_key.item_id$=item$
-            find record (ivm01_dev,key=ivm03a_key$,dom=*continue) ivm01a$
+            ivm01a_key.firm_id$=firm_id$
+            ivm01a_key.item_id$=item$
+            find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
             if ivm01a.item_type$<>type$ then
                 continue
             endif
@@ -268,12 +269,8 @@ rem --- Accumulate totals
 
 rem --- Reached 100% of usage yet?
 
-        if total_percent<100 then
-            continue
-        endif
-        if bar then 
-            continue
-        endif    
+        if total_percent<100 then continue
+        if bar then continue
         if l+3>l9 gosub report_heading
         print (printer_dev)""
         print (printer_dev)bar$
@@ -330,26 +327,26 @@ WhseBreak: rem --- Warehouse Break
     let cum_usage=0,cum_value=0
     return
 
-Item_Total_Accum:rem --- Accumulate totals for item
+Item_Total_Accum: rem --- Accumulate totals for item
 
         dim i[2]
         let x$=firm_id$+"G"+item$
         read (ivm03g_dev,key=x$,dom=*next)
 
 rem --- Read next item/warehouse xref
-
-        while more ;Rem ----Loop Starting
-            let ivm03gk$=key(ivm03g_dev,end=*break)
-            if pos(x$=ivm03gk$)=1 then
-                read (ivm03g_dev)
-                let whse$=ivm03gk$(24)
-                gosub Accum_Total_Whse
-                let amount=(i[0]*i[2])+(cost*onhand),number=i[2]+onhand
-                if number>0 i[0]=amount/number
-                let i[1]=i[1]+usage,i[2]=i[2]+onhand
-            endif
-            rem goto Read_Next_Item
-        wend ;Rem ----Loop Ending
+Read_Next_Item:
+rem        while more ;Rem ----Loop Starting
+        let ivm03gk$=key(ivm03g_dev,end=Item_Whse_Done)
+        if pos(x$=ivm03gk$)<>1 then goto Item_Whse_Done
+        read (ivm03g_dev)
+        let whse$=ivm03gk$(24)
+        gosub Accum_Total_Whse
+        amount=(i[0]*i[2])+(cost*onhand),number=i[2]+onhand
+        if number>0 i[0]=amount/number
+        i[1]=i[1]+usage,i[2]=i[2]+onhand
+        goto Read_Next_Item
+rem        wend ;Rem ----Loop Ending
+Item_Whse_Done:
         let cost=i[0],usage=i[1],onhand=i[2],whse$="  "
         gosub Total_Usage
         return
@@ -361,14 +358,14 @@ Accum_Total_Whse: rem --- Accumulate warehouse totals
         let cost=0,usage=0,onhand=0
         find record (ivm02_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
         let onhand=ivm02a.qty_on_hand,cost=ivm02a.unit_cost
-        Call_Accum_Total_Whse:
-            call pgmdir$+"ivc_whseact.aon",action$,files[all],items$[all],periods$[all],activity[all],status
-            if base$="S" usage=activity[3]-activity[8]
-            if base$="U" usage=(activity[3]+activity[4])-activity[8]
+Call_Accum_Total_Whse:
+        call pgmdir$+"ivc_whseact.aon",action$,files[all],items$[all],periods$[all],activity[all],status
+        if base$="S" usage=activity[3]-activity[8]
+        if base$="U" usage=(activity[3]+activity[4])-activity[8]
         return
 
 Total_Usage: rem --- Calculate total amount of usage
-        let amount=usage*cost,sign$="",amount$=str(100000000000-amount:m8$)
+        let amount=usage*cost,sign$=" ",amount$=str(100000000000-amount:m8$)
         if amount<=0 sign$="-",amount$=str(amount:m8$)
         return
 
