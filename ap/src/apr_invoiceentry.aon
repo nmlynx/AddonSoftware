@@ -23,21 +23,21 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=11,begfile=1,endfile=files
+    files=13,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
-    files$[2]="APE_INVOICEHDR",ids$[2]=files$[2];rem "ape-01
-    files$[3]="APE_INVOICEDET",ids$[3]=files$[3];rem "ape-11
-    files$[4]="APM_VENDMAST",ids$[4]=files$[4];rem "apm-01
-    files$[5]="APM_VENDHIST",ids$[5]=files$[5];rem "apm-02
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
+    files$[2]="ape-01",ids$[2]="APE_INVOICEHDR";rem "ape-01
+    files$[3]="ape-11",ids$[3]="APE_INVOICEDET";rem "ape-11
+    files$[4]="apm-01",ids$[4]="APM_VENDMAST";rem "apm-01
+    files$[5]="apm-02",ids$[5]="APM_VENDHIST";rem "apm-02
     files$[6]="apm-03"
-    files$[7]="APC_TYPECODE",ids$[7]=files$[7];rem "apm-10A
-    files$[8]="APT_INVOICEHDR",ids$[8]=files$[8];rem "apt-01
-    files$[9]="APT_INVOICEDIST",ids$[9]=files$[9];rem "apt-02
+    files$[7]="apc_typecode",ids$[7]="APC_TYPECODE";rem "apm-10A
+    files$[8]="apt-01",ids$[8]="APT_INVOICEHDR";rem "apt-01
+    files$[9]="apt-02",ids$[9]="APT_INVOICEDIST";rem "apt-02
     files$[10]="apt-03"
-    files$[11]="APT_INVOICEDET",ids$[11]=files$[11];rem "apt-11
-    files$[12]="GLS_PARAMS",ids$[12]=files$[12];rem "gls-01
-    files$[13]="APC_DISTRIBUTION",ids$[13]=files$[13];rem "apm-10B
+    files$[11]="apt-11",ids$[11]="APT_INVOICEDET";rem "apt-11
+    files$[12]="gls_params",ids$[12]="GLS_PARAMS";rem "gls-01
+    files$[13]="apc_distribution",ids$[13]="APC_DISTRIBUTION";rem "apm-10B
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -57,31 +57,28 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-    dim ape01a$:templates$[2],ape11a$:templates$[3],apm01a$:templates$[4],
-:       apm02a$:templates$[5],apm03a$:templates$[6],apm10a$:templates$[7],
-:       apt01a$:templates$[8],apt02a$:templates$[9],apt03a$:templates$[10],
-:       apt11a$:templates$[11],aps01a$:templates$[1],gls01a$:templates$[12],
-:       apm10b$:templates$[13]
+    dim ape01a$:templates$[2],ape11a$:templates$[3],apm01a$:templates$[4]
+    dim apm02a$:templates$[5],apm10a$:templates$[7],apt01a$:templates$[8]
+    dim apt02a$:templates$[9],apt11a$:templates$[11],aps01a$:templates$[1]
+    dim gls01a$:templates$[12],apm10b$:templates$[13]
 
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (aps01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    vendor_size=num(aps01a.vendor_size$)
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call pgmdir$+"adc_getmask.aon","","AP","A","",m1$,0,0
     multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"
     cashbasis=aps01a.cash_basis$="Y"
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,13
     m0=len(m0$)
     m1=len(m1$)
+    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",g0$,0,acct_length
+    call pgmdir$+"adc_getmask.aon","","GL","A","",g1$,0,0
     max_acct_len=num(gls01a.max_acct_len$)
-    acct_length=num(gls01a.acct_length$)
-    g0$=gls01a.acct_output$
-    g1$=gls01a.amount_mask$
     g0=len(g0$)
     g1=len(g1$)
 
@@ -160,8 +157,8 @@ rem --- Additional file opens
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01"
-    files$[2]="glt-04"
+    files$[1]="glm-01",ids$[1]="GLM_ACCT"
+    files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
     files$[3]=glw11$
     options$[3]="CL"
     if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -177,7 +174,7 @@ rem --- Dimension string templates
 
 rem --- Get user approval to proceed
 
-    prompt$="RUN_AP_INVOICE_REG"
+    prompt$="Do you want to run the Invoice Register?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
     if fkey=4 goto std_exit
     if answer$<>"Y" goto std_exit
@@ -531,9 +528,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -557,8 +554,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -576,7 +573,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src

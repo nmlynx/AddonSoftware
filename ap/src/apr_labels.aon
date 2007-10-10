@@ -25,9 +25,9 @@ rem --- Open/Lock files
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-    files$[3]="APC_TYPECODE",ids$[3]=files$[3];rem apm-10A
+    files$[3]="apc_typecode",ids$[3]="APC_TYPECODE";rem apm-10A
 
    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -44,8 +44,7 @@ rem --- Dimension string templates
 rem --- Assign form input values to local variables
 
     sequence$=Option!.getOptionData("REPORT_TYPE")
-    labels$=Option!.getOptionData("PICK_NO")
-    restart$=Option!.getOptionData("PICK_CHECK")
+    labels$=Option!.getOptionData("PICK_INTEGER")
     begvendor$=Option!.getOptionData("VENDOR_ID_1")
     endvendor$=Option!.getOptionData("VENDOR_ID_2")
     begalt$=Option!.getOptionData("ALT_SEQUENCE_1")
@@ -58,7 +57,6 @@ rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    vendor_size=num(aps01a.vendor_size$)
     across=num(aps01a.label_across$)
     length=num(aps01a.label_length$)
     width=num(aps01a.label_width$)
@@ -67,7 +65,7 @@ rem --- Initializations
 
     dim label$(across*width*4),linefeeds$(length,$0A$)
     answer$="Y"
-    prompt$="PRINT_TEST_PATTERN"
+    msg_id$="PRINT_TEST_PATTERN"
     more=1
     first=1
     lines=4
@@ -86,7 +84,6 @@ rem --- Initializations
        begvalue$=begzip$
        endvalue$=endzip$
     endif
-    if begvalue$<>"" begvalue$=begvalue$(1,len(begvalue$)-1)+$FF$
     endvalue=len(endvalue$)
 
 rem --- Open the printer
@@ -97,23 +94,30 @@ rem --- Open the printer
 rem --- Print test patterns until the user is satisfied
 
     while answer$="Y"
-          call pgmdir$+"adc_yesno.aon",1,prompt$,1,answer$,fkey
-          if fkey=4 break
-          if answer$="N" break
+        dim msg_tokens$[1]
+        msg_opt$=""
+        gosub disp_message
+        if msg_opt$="N" break
 
-          rem --- Print test pattern
+        rem --- Print test pattern
 
-          dim label$(across*width*length,"X")
-          printed_across=1
-          gosub label
-          prompt$="PRINT_ANOTHER_PATTERN"
+        dim label$(across*width*length,"X")
+        printed_across=1
+        gosub label
+        msg_id$="ANOTHER_PATTERN"
     wend
     if fkey=4 goto std_exit
 
 rem --- Start the progress meter and position the file
 
+    read(apm01_dev,key=firm_id$,knum=keynum,dom=*next)
     call pgmdir$+"adc_progress.aon","NC","","","","",0,apm01_dev,1,meter_num,status
-    read (apm01_dev,knum=keynum,key=firm_id$+begvalue$,dom=*next)
+    while begvalue$<>""
+          read (apm01_dev,key=firm_id$+begvalue$,knum=keynum,dom=*continue)
+          read (apm01_dev,dir=-1,err=*next)
+          begvalue$=""
+    wend
+
 
 rem --- Read next Vendor Master (apm-01) record
 
@@ -166,6 +170,11 @@ label: rem --- Print the label(s)
     label$(1)=""
     return
 
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- Functions
 
 rem --- Functions used to retrieve form values
@@ -175,7 +184,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem #include std_error.src
 
@@ -184,8 +192,8 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -209,8 +217,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -228,6 +236,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
