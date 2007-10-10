@@ -218,14 +218,14 @@ rem --- Read next Customer Master (arm-01) record
           outVect!.addItem(fndate$(arm06a.lstpay_date$))
           outVect!.addItem(str(arm06a.avg_days))
           outVect!.addItem(arm02a.ar_terms_code$+"  "+arm10a.code_desc$(1,tw))
-          outVect!.addItem(str(arm02a.aging_future))
-          outVect!.addItem(str(arm02a.aging_cur))
-          outVect!.addItem(str(arm02a.aging_30))
-          outVect!.addItem(str(arm02a.aging_60))
-          outVect!.addItem(str(arm02a.aging_90))
-          outVect!.addItem(str(arm02a.aging_120))
-          outVect!.addItem(str(arm06a.mtd_sales))
-          outVect!.addItem(str(arm06a.ytd_sales))
+          outVect!.addItem(str(arm02a.aging_future:m1$))
+          outVect!.addItem(str(arm02a.aging_cur:m1$))
+          outVect!.addItem(str(arm02a.aging_30:m1$))
+          outVect!.addItem(str(arm02a.aging_60:m1$))
+          outVect!.addItem(str(arm02a.aging_90:m1$))
+          outVect!.addItem(str(arm02a.aging_120:m1$))
+          outVect!.addItem(str(arm06a.mtd_sales:m1$))
+          outVect!.addItem(str(arm06a.ytd_sales:m1$))
           outVect!.addItem(phone$+" "+extension$+" "+arm01a.contact_name$)
           xwk=fnblank(12)
           
@@ -250,28 +250,16 @@ rem --- All done
     xwk=fnblank(13)
     outVect!.addItem(x$)
     xwk=fnblank(4)
-    outVect!.addItem(str(totals[1]))
-    outVect!.addItem(str(totals[2]))
-    outVect!.addItem(str(totals[3]))
-    outVect!.addItem(str(totals[4]))
-    outVect!.addItem(str(totals[5]))
-    outVect!.addItem(str(totals[6]))
-    outVect!.addItem(str(totals[7]))
-    outVect!.addItem(str(totals[8]))
+    outVect!.addItem(str(totals[1]:m1$))
+    outVect!.addItem(str(totals[2]:m1$))
+    outVect!.addItem(str(totals[3]:m1$))
+    outVect!.addItem(str(totals[4]:m1$))
+    outVect!.addItem(str(totals[5]:m1$))
+    outVect!.addItem(str(totals[6]:m1$))
+    outVect!.addItem(str(totals[7]:m1$))
+    outVect!.addItem(str(totals[8]:m1$))
     goto std_exit
 
-rem report_heading: rem --- Report Heading
-
-    rem lines=headings+2
-    rem call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-rem    print (printer_dev) @(h[1]),"Last Inv",@(h[2]),"Days",@(h[4])," Future",@(h[5]),"30 Days",
-rem :                       @(h[6])," 90 Days",@(h[7]),"MTD Sales"
-rem     print (printer_dev) @(h[0]),"Customer, Phone and Contact",@(h[1]),"Last Pay",@(h[2]),"Pay",
-rem :                       @(h[3]),"Terms",@(h[4]),"Current",@(h[5]),"60 Days",@(h[6]),"120 Days",
-rem :                       @(h[7]),"YTD Sales"
-rem     if status exitto std_exit
-rem    lines=lines+2
-rem     return
 
 rem --- Functions
 
