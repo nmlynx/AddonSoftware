@@ -71,7 +71,7 @@ rem --- Retrieve parameter records
     m1=len(m1$)
     m2=len(m2$)
     call pgmdir$+"adc_sizemask.aon",m2$,m2,6,10
-    headings=4
+    headings=5
     width=132
     glm03a.firm_id$=firm_id$
     glm03a.journal_id$=journal$
@@ -91,8 +91,6 @@ rem --- Initializations
 
     dim headings$[headings],buffer$(width),o[12],at[2],dt[2],jt[2],rt[2],xt[2]
     number=0
-    l9=59
-    l=l9+1
     more=1
     keynum=0
     if sequence$="D" keynum=1
@@ -147,36 +145,50 @@ rem --- Build report headings
     date2$="   Ending Date: "
     jrnl$="For All Journals"
     wild$=""
-    if cvs(begacct$,2)="" acct1$=acct1$+"First"
+
+    if cvs(begacct$,2)="" acct1$=acct1$+"First --"
 :                    else acct1$=acct1$+fnmask$(begacct$(1,acctlen),m0$)
     if cvs(endacct$,2)="" acct2$=acct2$+"Last"
 :                    else acct2$=acct2$+fnmask$(endacct$(1,acctlen),m0$)
-    if cvs(begdate$,2)="" date1$=date1$+"First"
+    acct$=acct1$+acct2$
+
+    if cvs(begdate$,2)="" date1$=date1$+"First --"
 :                    else date1$=date1$+fndate$(begdate$)
     if cvs(enddate$,2)="" date2$=date2$+"Last"
 :                    else date2$=date2$+fndate$(enddate$)
-    if cvs(begaudit$,2)="" aud1$=aud1$+"First"
+    dates$=date1$+date2$
+
+    if cvs(begaudit$,2)="" aud1$=aud1$+"First --"
 :                     else aud1$=aud1$+begaudit$
     if cvs(endaudit$,2)="" aud2$=aud2$+"Last"
 :                     else aud2$=aud2$+endaudit$
+    aud$=aud1$+aud2$
+
     if cvs(journal$,2)<>"" jrnl$="For Journal "+glm03a.journal_id$+" "+cvs(glm03.code_desc$,2)
     if cvs(wildcard$,2)<>"" wild$="Wildcard "+$22$+cvs(wildcard$,2)+$22$
-    val1$=aud1$
-    val2$=aud2$
+    val$=aud$
+
     if sequence$="D" seqdesc$="Transaction Date",
-:                    val1$=date1$,
-:                    val2$=date2$
+:   val$=dates$
+
     m=max(len(val1$),len(val2$))-1
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)+" By "+seqdesc$
-    buffer$(1)=acct1$
-    buffer$(fncenter(jrnl$,width),len(jrnl$))=jrnl$
-    buffer$(width-m)=val1$
+    buffer$(1)=jrnl$
     headings$[2]=buffer$
-    buffer$(1)=acct2$
-    if wild$<>"" buffer$(fncenter(wild$,width),len(wild$))=wild$
-    buffer$(width-m)=val2$
-    headings$[3]=buffer$
+    if wild$<>""
+        buffer$(1)=wild$
+        headings$[3]=buffer$
+        buffer$(1)=acct$
+        headings$[4]=buffer$
+        buffer$(1)=val$
+        headings$[5]=buffer$
+    else
+        buffer$(1)=acct$
+        headings$[3]=buffer$
+        buffer$(1)=val$
+        headings$[4]=buffer$
+    fi
 
 rem --- Start the progress meter
 
@@ -214,12 +226,6 @@ rem --- Read next daily detail record
           if glt04a.journal_id$<>t1$ gosub journal_break
           if glt04a.gl_adt_no$+glt04a.posting_year$+glt04a.posting_per$<>t2$ gosub audit_break
           if glt04a.gl_account$(1,acctlen)<>t3$ gosub account_break
-
-          rem --- Print subheadings
-
-          rem if h0$<>"" gosub date_heading
-          rem if h1$<>"" gosub journal_heading
-          rem if h2$<>"" gosub audit_heading
 
           rem --- Retrieve the account master
 
@@ -314,7 +320,6 @@ rem --- Detail line by audit number
 
     wend
 
-
 rem --- All done
 
     done=1
@@ -327,8 +332,6 @@ rem --- All done
     gosub print_totals
 
 rem --- In balance?
-
-
 
     balance=rt[0]+rt[1]
     debits=0
@@ -363,25 +366,6 @@ rem --- Run update overlay
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"glu_dailydetail.aon"
 
-date_heading: rem --- Date Heading
-
-    OutVect!.addItem(h0$)
-    h0$=""
-    gosub journal_heading
-    return
-
-journal_heading: rem --- Journal Heading
-
-    OutVect!.addItem(h1$)
-    h1$=""
-    return
-
-audit_heading: rem --- Audit Number Heading
-
-    OutVect!.addItem(h2$)
-    h2$=""
-    return
-
 date_break: rem --- Date break
 
     if sequence$="A" return
@@ -393,7 +377,6 @@ date_break: rem --- Date break
     credits=dt[1]
     units=dt[2]
     gosub print_totals
-rem    if pagebreak$="Y" l=l9+1
 
 new_date: rem --- New date
 
@@ -404,7 +387,6 @@ new_date: rem --- New date
     return
 
 journal_break: rem --- Journal break
-
 
     if t1$="" goto new_journal
     if sequence$="A" gosub audit_break
@@ -429,7 +411,6 @@ new_journal: rem --- New Journal ID
 
 audit_break: rem --- Audit number break
 
-
     if sequence$="D" return
     if t2$="" goto new_audit
     gosub account_break
@@ -443,11 +424,9 @@ audit_break: rem --- Audit number break
     units=at[2]
     gosub print_totals
     if pagebreak$="N" goto new_audit
-rem    l=l9+1
     gosub journal_subheading
 
 new_audit: rem --- New audit number
-
 
     if done return
     dim at[2]
@@ -461,7 +440,6 @@ new_audit: rem --- New audit number
 
 account_break: rem --- Account number break
 
-
     if t3$="" goto new_account
     total$="Total for Account Number "+fnmask$(t3$,m0$)
     debits=xt[0]
@@ -471,14 +449,12 @@ account_break: rem --- Account number break
 
 new_account: rem --- New account
 
-
     if done return
     dim xt[2]
     let t3$=glt04a.gl_account$(1,acctlen)
     return
 
 journal_subheading: rem --- Build journal subheading
-
 
     h1$="Journal "+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
     return
@@ -496,7 +472,6 @@ wildcard: rem --- Test account number against specified wildcard mask
     return
 
 print_totals: rem --- Print totals line
-
 
     debit$=str(debits:m1$)
     credit$=str(abs(credits):m1$)
