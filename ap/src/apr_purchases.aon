@@ -25,37 +25,31 @@ rem --- Open/Lock files
 
     files=9,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-
-    files$[4]="APC_TYPECODE";ids$[4]=files$[4];rem "apm-10A
+    files$[4]="apc_typecode";ids$[4]="APC_TYPECODE";rem "apm-10A
     files$[5]="apt-02",ids$[5]="APT_INVOICEDIST"
     files$[6]="apt-05",ids$[6]="APT_CHECKHISTORY"
-    files$[7]="apw-04",ids$[7]="APW_PURCHASEGL"
     files$[8]="apw-14",ids$[8]="APW_PURCHASENAME"
-    options$[7]="C"
     options$[8]="C"
-    files$[9]="GLS_PARAMS";ids$[9]=files$;rem "gls-01
+    files$[9]="gls_params";ids$[9]="GLS_PARAMS";rem "gls-01
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     
-escape
     aps01_dev=channels[1]
     apm01_dev=channels[2]
-  
     apm10_dev=channels[4]
     apt02_dev=channels[5]
     apt05_dev=channels[6]
-    apw04_dev=channels[7]
     apw14_dev=channels[8]
     gls01_dev=channels[9]
 
 rem --- Dimension string templates
 
-    dim apm01a$:templates$[2],apm10a$:templates$[4],
-:       apt02a$:templates$[5],apt05a$:templates$[6],apw04a$:templates$[7],
-:       apw14a$:templates$[8],aps01a$:templates$[1],gls01a$:templates$[9]
+    dim apm01a$:templates$[2],apm10a$:templates$[4],apt02a$:templates$[5]
+    dim apt05a$:templates$[6],apw14a$:templates$[8]
+    dim aps01a$:templates$[1],gls01a$:templates$[9]
 
 rem --- Assign form input values to local variables
 
@@ -64,22 +58,20 @@ rem --- Assign form input values to local variables
     sequence$=Option!.getOptionData("REPORT_SEQUENCE")
     year=num(year$)
     period=num(period$)
-    call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,begdate$,enddate$,status
+    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
 
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (aps01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    vendor_size=num(aps01a.vendor_size$)
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",g0$,0,vendor_size
     multitypes=aps01a.multi_types$="Y"
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     m0=len(m0$)
     m1=len(m1$)
-    acct_length=num(gls01a.acct_length$)
-    g0$=gls01a.acct_output$
+    call pgmdir$+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
+    call pgmdir$+"adc_getmask.aon","","GL","A","",g1$,0,0
     g0=len(g0$)
     headings=3
     if multitypes headings=4
@@ -137,18 +129,20 @@ rem --- Initializations
     headings$[1]=sysinfo.task_desc$
     headings$[2]="For Period "+str(period)+" From "+fndate$(begdate$)+" Through "+fndate$(enddate$)
     if sequence$="D"
-       channel=apw04_dev 
+       channel=apt02_dev 
        headings$[1]=headings$[1]+" By Distribution Account"
+       keynum=1
     endif
     if sequence$="V" 
        channel=apt02_dev
        headings$[1]=headings$[1]+" By Vendor"
+       keynum=0
     endif
     if sequence$="A"
        channel=apw14_dev
        headings$[1]=headings$[1]+" By Alternate Sequence"
     endif
-    sorting=pos(sequence$="AD")
+    sorting=pos(sequence$="A")
     alternate=1
     distribution=2
     vendor=3
@@ -189,7 +183,7 @@ rem --- Additional file opens
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     if gl$="Y"
        files$[1]="glm-01",ids$[1]="GLM_ACCT"
-       files$[2]="glw-04",ids$[2]=files$[2]
+       files$[2]="glw-04",ids$[2]="GLW_ACCTTOTALS"
        options$[2]="CL"
     endif
     if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -207,10 +201,10 @@ rem --- Open printer
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
 
-rem --- Sort Invoice History (apt-02) by distribution account or alternate sequence
+rem --- Sort Invoice History (apt-02) by alternate sequence
 
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,apt02_dev,1,meter_num,status
     while sorting
-          call pgmdir$+"adc_progress.aon","NC","","","","",0,apt02_dev,1,meter_num,status
           read (apt02_dev,key=firm_id$,dom=*next)
 
           rem --- Read next history record
@@ -225,71 +219,49 @@ rem --- Sort Invoice History (apt-02) by distribution account or alternate seque
 
                 rem --- Initialize and write sort record
 
-                switch sorting
-                       case alternate
-                            dim apm01a$:fattr(apm01a$),apw14a$:fattr(apw14a$)
-                            apm01a.firm_id$=apt02a.firm_id$
-                            apm01a.vendor_id$=apt02a.vendor_id$
-                            k$=apm01a.firm_id$+apm01a.vendor_id$
-                            find record (apm01_dev,key=k$,dom=*break) apm01a$
-                            apw14a.firm_id$=apt02a.firm_id$
-                            apw14a.ap_type$=apt02a.ap_type$
-                            apw14a.alt_sequence$=apm01a.alt_sequence$
-                            apw14a.vendor_id$=apt02a.vendor_id$
-                            apw14a.invoice_type$=apt02a.invoice_type$
-                            apw14a.reference$=apt02a.reference$
-                            apw14a.gl_account$=apt02a.gl_account$
-                            apw14a.accting_date$=apt02a.accting_date$
-                            apw14a$=field(apw14a$)
-                            k$=apw14a.firm_id$+apw14a.ap_type$+apw14a.alt_sequence$+
-:                              apw14a.vendor_id$+apw14a.invoice_type$+apw14a.reference$+
-:                              apw14a.gl_account$+apw14a.accting_date$
-                            write record (apw14_dev,key=k$) apw14a$
-                       break
-                       case distribution
-                            dim apw04a$:fattr(apw04a$)
-                            apw04a.firm_id$=apt02a.firm_id$
-                            apw04a.ap_type$=apt02a.ap_type$
-                            apw04a.gl_account$=apt02a.gl_account$
-                            apw04a.vendor_id$=apt02a.vendor_id$
-                            apw04a.invoice_type$=apt02a.invoice_type$
-                            apw04a.reference$=apt02a.reference$
-                            apw04a.accting_date$=apt02a.accting_date$
-                            apw04a$=field(apw04a$)
-                            k$=apw04a.firm_id$+apw04a.ap_type$+apw04a.gl_account$+
-:                              apw04a.vendor_id$+apw04a.invoice_type$+apw04a.reference$+
-:                              apw04a.accting_date$
-                            write record (apw04_dev,key=k$) apw04a$
-                       break
-                       case default
-                       break
-                swend
-
+                dim apm01a$:fattr(apm01a$),apw14a$:fattr(apw14a$)
+                apm01a.firm_id$=apt02a.firm_id$
+                apm01a.vendor_id$=apt02a.vendor_id$
+                k$=apm01a.firm_id$+apm01a.vendor_id$
+                find record (apm01_dev,key=k$,dom=*break) apm01a$
+                apw14a.firm_id$=apt02a.firm_id$
+                apw14a.ap_type$=apt02a.ap_type$
+                apw14a.alt_sequence$=apm01a.alt_sequence$
+                apw14a.vendor_id$=apt02a.vendor_id$
+                apw14a.invoice_type$=apt02a.invoice_type$
+                apw14a.reference$=apt02a.reference$
+                apw14a.gl_account$=apt02a.gl_account$
+                apw14a.accting_date$=apt02a.accting_date$
+                apw14a$=field(apw14a$)
+                k$=apw14a.firm_id$+apw14a.ap_type$+apw14a.alt_sequence$+
+:                  apw14a.vendor_id$+apw14a.invoice_type$+apw14a.reference$+
+:                  apw14a.gl_account$+apw14a.accting_date$
+                write record (apw14_dev,key=k$) apw14a$
+ 
                 rem --- Loop back for next invoice record
 
           wend
 
           rem --- Sorting completed
 
-          call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
           sorting=0
           break
     wend  
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
 rem --- Start progress meter and position the driver file
 
     sequence=pos(sequence$="ADV")
     call pgmdir$+"adc_progress.aon","NC","","","","",0,channel,1,meter_num,status
-    read (apw04_dev,key=firm_id$,dom=*next)
     read (apw14_dev,key=firm_id$,dom=*next)
-    read (apt02_dev,key=firm_id$,dom=*next)
-
+    read (apt02_dev,key=firm_id$,knum=keynum,dom=*next)
+escape
 rem --- Read next invoice history or sort record
 
     while more
           k$=key(channel,end=*break)
           if pos(firm_id$=k$)<>1 break
-          if sequence$="V" read record (apt02_dev,key=k$) apt02a$
+          if pos(sequence$="VD") read record (apt02_dev,key=k$) apt02a$
           if sequence$="A"
              read record (apw14_dev,key=k$) apw14a$
              apt02a.firm_id$=apw14a.firm_id$
@@ -300,18 +272,8 @@ rem --- Read next invoice history or sort record
              apt02a.gl_account$=apw14a.gl_account$
              apt02a.accting_date$=apw14a.accting_date$
           endif
-          if sequence$="D"
-             read record (apw04_dev,key=k$) apw04a$
-             apt02a.firm_id$=apw04a.firm_id$
-             apt02a.ap_type$=apw04a.ap_type$
-             apt02a.vendor_id$=apw04a.vendor_id$
-             apt02a.invoice_type$=apw04a.invoice_type$
-             apt02a.reference$=apw04a.reference$
-             apt02a.gl_account$=apw04a.gl_account$
-             apt02a.accting_date$=apw04a.accting_date$
-          endif
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-          if pos(sequence$="AD")
+          if pos(sequence$="A")
               k$=apt02a.firm_id$+apt02a.ap_type$+apt02a.vendor_id$+apt02a.invoice_type$+
 :                apt02a.reference$+apt02a.gl_account$+apt02a.accting_date$
               find record (apt02_dev,key=k$,dom=*continue) apt02a$
@@ -413,6 +375,7 @@ rem --- All done
     total$="Total For Report"
     total=rtotal
     gosub print_total
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
 rem --- Run next overlay
 
@@ -517,7 +480,6 @@ detail_break: rem --- Invoice type/reference (Invoice/Check) break
     invoice$=apt02a.reference$
     invdate$=fndate$(apt02a.accting_date$)
     lastdetail$=apt02a.invoice_type$+apt02a.reference$
-    if apt02a.invoice_type$="I" goto temp_vendor
 
     rem --- Read the Check History (apt-05) record
 
@@ -535,20 +497,6 @@ detail_break: rem --- Invoice type/reference (Invoice/Check) break
     if pos(apt05_key$=k$)=1 read record (apt05_dev) apt05a$
     vendor$=apt05a.vendor_id$
     name$=apt05a.vendor_name$
-    return
-
-temp_vendor: rem --- Retrieve Temporary Vendor (apm-03) record
-
-    if pos("TEMP"=apt02a.vendor_id$)<>1 return
-    dim apm03a$:fattr(apm03a$)
-    apm03a.firm_id$=apt02a.firm_id$
-    apm03a.ap_type$=apt02a.ap_type$
-    apm03a.ap_inv_no$=apt02a.reference$
-    apm03a.vendor_name$=nf$
-    k$=apm03a.firm_id$+apm03a.ap_type$+apm03a.ap_inv_no$
-    find record (apm03_dev,key=k$,dom=*next) apm03a$
-    vendor$=apt02a.vendor_id$
-    name$=apm03a.vendor_name$
     return
 
 gl_account: rem --- Retrieve the GL account master
@@ -614,9 +562,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -640,8 +588,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call stbl("+DIR_SYP")+"bac_noparams.bbj",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -659,6 +607,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 

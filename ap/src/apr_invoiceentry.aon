@@ -30,11 +30,9 @@ rem --- Open/Lock files
     files$[3]="ape-11",ids$[3]="APE_INVOICEDET";rem "ape-11
     files$[4]="apm-01",ids$[4]="APM_VENDMAST";rem "apm-01
     files$[5]="apm-02",ids$[5]="APM_VENDHIST";rem "apm-02
-    files$[6]="apm-03"
     files$[7]="apc_typecode",ids$[7]="APC_TYPECODE";rem "apm-10A
     files$[8]="apt-01",ids$[8]="APT_INVOICEHDR";rem "apt-01
     files$[9]="apt-02",ids$[9]="APT_INVOICEDIST";rem "apt-02
-    files$[10]="apt-03"
     files$[11]="apt-11",ids$[11]="APT_INVOICEDET";rem "apt-11
     files$[12]="gls_params",ids$[12]="GLS_PARAMS";rem "gls-01
     files$[13]="apc_distribution",ids$[13]="APC_DISTRIBUTION";rem "apm-10B
@@ -46,11 +44,9 @@ rem --- Open/Lock files
     ape11_dev=channels[3]
     apm01_dev=channels[4]
     apm02_dev=channels[5]
-    apm03_dev=channels[6]
     apm10_dev=channels[7]
     apt01_dev=channels[8]
     apt02_dev=channels[9]
-    apt03_dev=channels[10]
     apt11_dev=channels[11]
     gls01_dev=channels[12]
     apm10b_dev=channels[13]
@@ -76,7 +72,7 @@ rem --- Retrieve parameter records
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,13
     m0=len(m0$)
     m1=len(m1$)
-    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",g0$,0,acct_length
+    call pgmdir$+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
     call pgmdir$+"adc_getmask.aon","","GL","A","",g1$,0,0
     max_acct_len=num(gls01a.max_acct_len$)
     g0=len(g0$)
@@ -201,27 +197,14 @@ rem --- Read next Invoice Header (ape-01) record
           rem --- Retrieve vendor name
 
           dim vendor$(m0),name$(30),vendorref$(10)
-          if pos("TEMP"=ape01a.vendor_id$)<>1
-             dim apm01a$:fattr(apm01a$)
-             apm01a.firm_id$=ape01a.firm_id$
-             apm01a.vendor_id$=ape01a.vendor_id$
-             apm01a.vendor_name$=nf$
-             k$=apm01a.firm_id$+apm01a.vendor_id$
-             find record (apm01_dev,key=k$,dom=*proceed) apm01a$
-             vendor$(1)=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-             name$(1)=apm01a.vendor_name$
-          endif
-          if pos("TEMP"=ape01a.vendor_id$)=1
-             dim apm03a$:fattr(apm03a$)
-             apm03a.firm_id$=ape01a.firm_id$
-             apm03a.ap_type$=ape01a.ap_type$
-             apm03a.ap_inv_no$=ape01a.ap_inv_no$
-             apm03a.vendor_name$=nf$
-             k$=apm03a.firm_id$+apm03a.ap_type$+apm03a.ap_inv_no$
-             find record (apm03_dev,key=k$,dom=*proceed) apm03a$
-             vendor$(1)=ape01a.vendor_id$
-             name$(1)=apm03a.vendor_name$
-          endif
+          dim apm01a$:fattr(apm01a$)
+          apm01a.firm_id$=ape01a.firm_id$
+          apm01a.vendor_id$=ape01a.vendor_id$
+          apm01a.vendor_name$=nf$
+          k$=apm01a.firm_id$+apm01a.vendor_id$
+          find record (apm01_dev,key=k$,dom=*next) apm01a$
+          vendor$(1)=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+          name$(1)=apm01a.vendor_name$
           vendorref$(1)=vendor$
           errors=errors+(pos(nf$=name$)=1)
 

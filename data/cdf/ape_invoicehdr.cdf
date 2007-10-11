@@ -1,3 +1,43 @@
+[[APE_INVOICEHDR.ADIS]]
+vend_key$=callpoint!.getColumnData("APE_INVOICEHDR.FIRM_ID")+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
+rem gosub disp_vend_addr
+callpoint!.setColumnData("<<DISPLAY>>.TOT_QTY",str(tqty))
+callpoint!.setColumnData("<<DISPLAY>>.TOT_AMT",str(tamt))
+callpoint!.setStatus("REFRESH")
+
+if callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_TYPE")="V"
+rem 	gosub check_outstanding_inv
+	if os_inv$="N"
+		msg_id$="AP_VOID_INV"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+		if msg_opt$="Y"
+			callpoint!.setColumnData("APE_INVOICEHDR.INVOICE_TYPE","I")
+			callpoint!.setColumnUndoData("APE_INVOICEHDR.INVOICE_TYPE","I")
+			callpoint!.setStatus("MODIFIED-REFRESH")
+		else
+			callpoint!.setStatus("ABORT")
+		endif
+	else
+		msg_id$="AP_INV_ADJ"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+		if msg_opt$="Y"
+			callpoint!.setColumnData("APE_INVHDR.INVOICE_TYPE","A")
+			callpoint!.setColumnUndoData("APE_INVHDR.INVOICE_TYPE","A")
+			callpoint!.setStatus("MODIFIED-REFRESH")
+		else
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+endif
+[[APE_INVOICEHDR.ADEL]]
+rem --- hdr/dtl have been deleted; now write back header w/ "V" flag
+ape_invhdr_dev=fnget_dev("APE_INVOICEHDR")
+rec_data.invoice_type$="V"
+rec_data$=field(rec_data$); write record(ape_invhdr_dev,key=rec_data.firm_id$+rec_data.ap_inv_no$)rec_data$
 [[APE_INVOICEHDR.AP_TERMS_CODE.AVAL]]
 escape
 if cvs(callpoint!.getColumnData("APE_INVOICEHDR.INV_DUE_DATE"),2)="" and
@@ -17,7 +57,6 @@ if cvs(callpoint!.getColumnData("APE_INVOICEHDR.INV_DUE_DATE"),2)="" and
 	callpoint!.setStatus("REFRESH","ACTIVATE")
 
 endif
-
 [[APE_INVOICEHDR.NET_INV_AMT.BINP]]
 if num(callpoint!.getColumnData("APE_INVOICEHDR.DISCOUNT_AMT"))=0
 	discamt=discpercent*num(callpoint!.getUserInput())
@@ -37,7 +76,7 @@ rem --- Open/Lock files
 
 files=1,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
-files$[1]="APS_PARAMS";rem --- aps-01
+files$[1]="aps_params";rem --- aps-01
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
