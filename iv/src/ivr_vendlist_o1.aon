@@ -79,27 +79,23 @@ rem --- Initial Read
 
 rem ----  Loop Starting
 
-            While More  
-                ivm05a_key$=key(ivm05_dev,end=*break)
-                if pos(firm_id$=ivm05a_key$)<>1 break
-                if end_vend$<>"" 
-                    if ivm05a_key.vendor_id$>end_vend$  break
-                endif
-                if beg_item$ <>"" then
-                    if ivm05a_key.item_id$< beg_item$
-:               ivm05a_key$=ivm05a_key.firm_id$+ivm05a_key.vendor_id$+beg_item$
-            else 
-            if end_item$<>"" then
-               if ivm05a_key.item_id$>end_item$ 
-:               ivm05a_key$=ivm05a_key.firm_id$+ivm05a_key.vendor_id$+$FF$
-            endif
+    While More  
+            ivm05a_key$=key(ivm05_dev,end=*break)
+            if pos(firm_id$=ivm05a_key$)<>1 break
+            if end_vend$<>"" if ivm05a_key.vendor_id$>end_vend$ break
+            if beg_item$<>"" then if ivm05a_key.item_id$<beg_item$ then ivm05a_key$=ivm05a_key.firm_id$+ivm05a_key.vendor_id$+beg_item$
+            if end_item$<>"" then if ivm05a_key.item_id$>end_item$ then ivm05a_key$=ivm05a_key.firm_id$+ivm05a_key.vendor_id$+$FF$
 
 rem --- Position ivm-05
             read record (ivm05_dev,key=ivm05a_key$,dom=*Continue) ivm05a$
+            if ivm05a.firm_id$<>firm_id$ break
 
 rem --- Additional Reads
 
             find record (ivm01_dev,key=firm_id$+ivm05a_key.item_id$,dom=*Continue) ivm01a$
+
+            find record (apm01_dev,key=firm_id$+ivm05a.vendor_id$,dom=*Continue)
+
             if beg_prod$<>"" then
                   if ivm01a.product_type$<beg_prod$ Continue
             endif
@@ -107,13 +103,13 @@ rem --- Additional Reads
                  if ivm01a.product_type$>end_prod$ Continue
             endif
             if item_type$<>"" then
-                 if ivm01a.item_type$>end_prod$ Continue  
+                 if ivm01a.item_type$<>item_type$ Continue  
             endif
 rem --- Breaks
 
-            if ivm05a.firm_id$<>firm_id$  break
             if ivm05a.vendor_id$<>t0$ gosub Vendor
-            call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ivm05a.vendor_id$,m9$)+" "+ivm05a.item_id$,0,0,1,meter_num,status
+
+            call pgmdir$+"adc_progress.aon","S","","","",fnmask$(ivm05a.vendor_id$(1,vendlen),m9$)+" "+ivm05a.item_id$,0,0,1,meter_num,status
 
 rem --- Get Actual Annual Usage & EOQ
 
@@ -125,18 +121,19 @@ rem --- Get Actual Annual Usage & EOQ
             item$[0]=firm_id$
             item$[1]=""
             item$[2]=ivm01a.item_id$
-        call pgmdir$+"ivc_usage.aon","I",channs[all],item$[all],abcf[all],day_of_mth,base_peryr$,
-:           ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],w0,estimated,flag$,status
+            call pgmdir$+"ivc_usage.aon","I",channs[all],item$[all],abcf[all],day_of_mth,base_peryr$,
+:	        ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],w0,estimated,flag$,status
             if flag$<>"" w0=estimated
             if status<>0 usage$=fill(m2,"*") else usage$=str(w0:m2$)
             if ivm01a.stock_level$="I" then
                 eoq_code$=ivm01a.eoq_code$
                 eoq_qty$=str(ivm01a.eoq:m2$) 
             else
-            call pgmdir$+"ivc_whseinfo.aon","A",channs[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
-            if status<>0 eoq_code$="*",eoq_qty$=fill(m2,"*") else eoq_code$=whse$[1](57,1),eoq_qty$=str(whse[6]:m2$)
-        endif
-                    d9$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+		call pgmdir$+"ivc_whseinfo.aon","A",channs[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
+		if status<>0 eoq_code$="*",eoq_qty$=fill(m2,"*") else eoq_code$=whse$[1](57,1),eoq_qty$=str(whse[6]:m2$)
+	    endif
+            d9$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+
                     OutVect!.addItem(ivm01a.item_id$+d9$)
                     OutVect!.addItem(ivm01a.product_type$)
                     OutVect!.addItem(ivm01a.purchase_um$)
@@ -152,26 +149,24 @@ rem --- Get Actual Annual Usage & EOQ
             if ivm05a.unit_cost_01<>0 then 
                     OutVect!.addItem(str(ivm05a.break_qty_01:m2$))
                     OutVect!.addItem(str(ivm05a.unit_cost_01:m3$))
-                   else
+            else
                     xwk=fnblank(2)
-           endif
+            endif
             if ivm05a.unit_cost_02<>0 then
                     xwk=fnblank(11)
                     OutVect!.addItem(str(ivm05a.break_qty_02:m2$))
                     OutVect!.addItem(str(ivm05a.unit_cost_02:m3$)) 
-                    else
+            else
                     xwk=fnblank(13)
-
-                    
             endif
             if ivm05a.unit_cost_03<>0 then 
                     xwk=fnblank(11)
                     OutVect!.addItem(str(ivm05a.break_qty_03:m2$))
                     OutVect!.addItem(str(ivm05a.unit_cost_03:m3$))
-                    else          
+            else          
                     xwk=fnblank(13)
-         endif  
-         t0=t0+1         
+            endif  
+            t0=t0+1         
     wend ; Rem ----  Loop ending
 
 done: rem --- All done
@@ -185,12 +180,12 @@ Vendor: rem --- Vendor
             xwk=fnblank(13)   
             OutVect!.addItem(str(t0:"###,##0")+"  Items For"+h3$);xwk=fnblank(12)
             xwk=fnblank(13)
-            let l=l9+1,t1$=""
-            endif
+            l=l9+1,t1$=""
+        endif
         if t9$<>"" return
-        let t0$=ivm05a.vendor_id$,h3$="Vendor: Not On File",t0=0
+        let t0$=ivm05a.vendor_id$,h3$="Vendor: "+t0$+" Not On File",t0=0
         find record (apm01_dev,key=firm_id$+ivm05a.vendor_id$,dom=VendorInit) apm01a$
-        let h3$=cvs("Vendor: "+fnmask$(apm01a.vendor_id$,m9$)+" "+apm01a.vendor_name$,2)
+        let h3$=cvs("Vendor: "+fnmask$(apm01a.vendor_id$(1,vendlen),m9$)+" "+apm01a.vendor_name$,2)
 VendorInit:
         BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
         HdrVect!.addItem(h3$)

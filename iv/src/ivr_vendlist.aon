@@ -93,6 +93,7 @@ rem --- Parameters
     endif
     n1$=sysinfo.firm_name$
     n3$=sysinfo.task_desc$
+    m9$=aps01a.vendor_output$
     vendlen=num(aps01a.vendor_size$)
     g[0]=num(gls01a.total_pers$);rem gls01a, 3rd element
     p[0]=num(ivs01a.item_id_len$);rem ivs01a, 3rd element
@@ -103,8 +104,41 @@ rem --- Parameters
 
 rem --- Init Data
 
-    dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12]
-    dim x0$(32),y0$(5),y1$(20)
+    precision p[1]
+
+   seterr initializations
+
+    abcf[0]=ivs01c.abc_factors_01
+    abcf[1]=ivs01c.abc_factors_02
+    abcf[2]=ivs01c.abc_factors_03
+    abcf[3]=ivs01c.abc_factors_04
+    abcf[4]=ivs01c.abc_factors_05
+    abcf[5]=ivs01c.abc_factors_06
+    abcf[6]=ivs01c.abc_factors_07
+    abcf[7]=ivs01c.abc_factors_08
+    abcf[8]=ivs01c.abc_factors_09
+    abcf[9]=ivs01c.abc_factors_10
+    abcf[10]=ivs01c.abc_factors_11
+    abcf[11]=ivs01c.abc_factors_12
+    abcf[12]=ivs01c.abc_factors_13
+    abcf[13]=ivs01c.abc_factors_14
+    abcf[14]=ivs01c.abc_factors_15
+    abcf[15]=ivs01c.abc_factors_16
+    abcf[16]=ivs01c.abc_factors_17
+    abcf[17]=ivs01c.abc_factors_18
+    abcf[18]=ivs01c.abc_factors_19
+    abcf[19]=ivs01c.abc_factors_20
+    abcf[20]=ivs01c.abc_factors_21
+    abcf[21]=ivs01c.abc_factors_22
+    abcf[22]=ivs01c.abc_factors_23
+    abcf[23]=ivs01c.abc_factors_24
+    abcf[24]=ivs01c.abc_factors_25
+    abcf[25]=ivs01c.abc_factors_26
+
+initializations:
+
+    seterr std_error
+
 
 rem --- run overlay
 
