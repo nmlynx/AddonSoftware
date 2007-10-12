@@ -66,7 +66,7 @@ rem --- Retrieve parameter records
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",g0$,0,vendor_size
+    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
     multitypes=aps01a.multi_types$="Y"
     m0=len(m0$)
     m1=len(m1$)
