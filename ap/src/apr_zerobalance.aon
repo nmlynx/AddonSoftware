@@ -5,7 +5,7 @@ rem --- Created by adx_codeport.bbx v1.1.5 (02/05/2007 04:01:05)
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
-ESCAPE ;  REM  need file layouts for apw-06 and apw-16
+
     setesc std_error
     seterr std_error
 
@@ -25,14 +25,14 @@ rem --- Open/Lock files
 
     files=10,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01A
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01A
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[4]="apt-01",ids$[4]="APT_INVOICEHDR"
     files$[5]="apt-02",ids$[5]="APT_INVOICEDIST"
     files$[6]="apt-05",ids$[6]="APT_CHECKHISTORY"
     files$[7]="apt-11",ids$[7]="APT_INVOICEDET"
-    files$[8]="apw-06",ids$[8]="APW_WHATEVER"
-    files$[9]="apw-16",ids$[9]="APW_INVOICEPURGE"
+    files$[8]="apw-06",ids$[8]="APW_INVOICEPURGE"
+    files$[9]="apw-16",ids$[9]="APW_CHECKPURGE"
     files$[10]="gls_params",ids$[10]="GLS_PARAMS";rem "gls-01
     options$[4]="L"
     options$[7]="L"
@@ -62,17 +62,25 @@ rem --- Assign form input values to local variables
 
     purgedate$=Option!.getOptionData("REPORT_DATE")
 
+rem --- Validate date
+
+    if len(cvs(purgedate$,2))=0 
+        dim msg$[1]
+        msg$[0]="Invalid date entered."
+        call stbl("+DIR_PGM")+"adc_stdmessage.aon",1,msg$[all],0,-1,-1,v$,v3
+        goto std_exit
+    endif
+
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    vendor_size=num(aps01a.vendor_size$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
     retention=aps01a.ret_flag$="Y"
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     m0=len(m0$)
     m1=len(m1$)
     headings=3
@@ -344,7 +352,6 @@ rem --- All done
     print (printer_dev) ""
     print (printer_dev) invoices$," Invoices will be purged"
     print (printer_dev) checks$," Checks will be purged"
-    escape
     run pgmdir$+"apu_zerobalance.aon",err=std_exit
 
 report_heading: rem --- Report Heading
@@ -361,29 +368,15 @@ report_heading: rem --- Report Heading
 vendor_break: rem --- Vendor break
 
     dim name$(30)
-    if pos("TEMP"=apt01a.vendor_id$)<>1
-       dim apm01a$:fattr(apm01a$)
-       apm01a.firm_id$=apt01a.firm_id$
-       apm01a.vendor_id$=apt01a.vendor_id$
-       apm01a.vendor_name$=nf$
-       k$=apm01a.firm_id$+apm01a.vendor_id$
-       find record (apm01_dev,key=k$,dom=*proceed) apm01a$
-       vendor$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-       name$(1)=apm01a.vendor_name$
-       lastvendor$=apm01a.vendor_id$
-    endif
-    if pos("TEMP"=apt01a.vendor_id$)=1
-       dim apm03a$:fattr(apm03a$)
-       apm03a.firm_id$=apt01a.firm_id$
-       apm03a.ap_type$=apt01a.ap_type$
-       apm03a.ap_inv_no$=apt01a.ap_inv_no$
-       apm03a.vendor_name$=nf$
-       k$=apm03a.firm_id$+apm03a.ap_type$+apm03a.ap_inv_no$
-       find record (apm03_dev,key=k$,dom=*proceed) apm03a$
-       vendor$=apt01a.vendor_id$
-       name$(1)=apm03a.vendor_name$
-       lastvendor$=apm03a.vendor_name$
-    endif
+    dim apm01a$:fattr(apm01a$)
+    apm01a.firm_id$=apt01a.firm_id$
+    apm01a.vendor_id$=apt01a.vendor_id$
+    apm01a.vendor_name$=nf$
+    k$=apm01a.firm_id$+apm01a.vendor_id$
+    find record (apm01_dev,key=k$,dom=*proceed) apm01a$
+    vendor$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+    name$(1)=apm01a.vendor_name$
+    lastvendor$=apm01a.vendor_id$
     if lines+4>maxlines gosub report_heading
     print (printer_dev) ""
     print (printer_dev) @(o[0]),vendor$,@(o[0]+m0+1),name$
@@ -445,8 +438,8 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -470,8 +463,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -489,7 +482,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run STBL("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
