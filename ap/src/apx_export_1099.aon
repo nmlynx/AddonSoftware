@@ -96,14 +96,14 @@ start_export:
 
 rem --- Initialize the text export files
 
-    erase ten99file$,err=*next
-    erase clientfile$,err=*next; rem "'Client' equates to Employer
+    erase apdata$+ten99file$,err=*next
+    erase apdata$+clientfile$,err=*next; rem "'Client' equates to Employer
     string apdata$+ten99file$
     string apdata$+clientfile$
     ten99_dev=unt
-    open (ten99_dev,isz=-1,err=open_error)stbl("+APDATA")+ten99file$
+    open (ten99_dev,isz=-1,err=open_error)apdata$+ten99file$
     client_dev=unt
-    open (client_dev,isz=-1,err=open_error)stbl("+APDATA")+clientfile$
+    open (client_dev,isz=-1,err=open_error)apdata$+clientfile$
     goto fix_fed
 
 open_error: rem --- Error on open of text files
@@ -127,7 +127,7 @@ fix_fed: rem --- Fix Up Fed ID Number (Strip out all but the 9 digits)
 
 rem --- Client (ie Employer) data
 
-    client_id$=fndequote$(sysyear$+"ap"+firm_id$)
+    client_id$=fndequote$(sysyear$+"AP"+firm_id$)
     name1$=fndequote$(aps01b.name$)
     if cvs(aps01b.phone_no$,2)<>"" phone$=str(aps01b.phone_no$:phonem$)
     address1$=fndequote$(aps01b.addr_line_1$)
@@ -215,7 +215,7 @@ rem --- Get vendor detail
             curr_calendar_paymts=curr_calendar_paymts+apm02a.cur_cal_pmts
         wend    
 
-l1400: rem --- Assign export variables
+rem --- Assign export variables
 
         if curr_calendar_paymts<minimum continue
         nonemployee_compensation=curr_calendar_paymts
