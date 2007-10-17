@@ -153,11 +153,12 @@ get_vendor_history:
 :		callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE"),dom=*next)apm02a$
 	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")+
 :		callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
-		user_tpl.dflt_dist_cd$=apm02a.ap_dist_code$
-		user_tpl.dflt_gl_account$=apm02a.gl_account$
-		pfx$="GLNS",nm$="GL Dist"
-		GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
-		GLNS!.setValue("dflt_gl",apm02a.gl_account$)
+			user_tpl.dflt_dist_cd$=apm02a.ap_dist_code$
+			user_tpl.dflt_gl_account$=apm02a.gl_account$
+			pfx$="GLNS",nm$="GL Dist"
+			GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
+			GLNS!.setValue("dflt_gl",apm02a.gl_account$)
+	endif
 
 return
 
