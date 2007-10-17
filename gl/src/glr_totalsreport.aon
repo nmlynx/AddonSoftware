@@ -50,6 +50,14 @@ rem --- Retrieve parameter records
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     headings=1
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Initializations
 
     dim headings$[headings]
@@ -65,6 +73,17 @@ rem --- Initializations
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
 
+rem --- Document columns
+
+    columns=4
+    dim columns$[4,3]
+     columns$[0,0]="Total Number",columns$[0,1]="C",columns$[0,2]="15"
+     columns$[1,0]="Report Number",columns$[1,1]="C",columns$[1,2]="15"
+     columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="25"
+     columns$[3,0]="Line Number",columns$[3,1]="C",columns$[3,2]="10"
+     columns$[4,0]="Description",columns$[4,1]="C",columns$[4,2]="15"
+     
+
 rem --- Run the report?
 
     title$=cvs(sysinfo.task_desc$,2)
@@ -72,10 +91,8 @@ rem --- Run the report?
     x=msgbox(message$,4+32,title$)
     if x<>6 goto std_exit
 
-rem --- Open printer, start progress meter and position files
+rem --- Start progress meter and position files
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_clearfile.aon",glw01_dev
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glm12_dev,1,0,ignore_status
     read (glm12_dev,key=firm_id$,dom=*next)
@@ -154,15 +171,16 @@ rem --- Read next sort record
 
           rem --- Print detail line
 
-          if l+2>l9 gosub report_heading
-          if h0$<>"" 
-             print (printer_dev)""
-             l=l+1
-          endif
-          print (printer_dev)h0$,@(10),glm12a.gl_rpt_no$,@(15),glm12a.gl_rpt_desc$,
-:                            @(37),glm22a.gl_rpt_line$,@(45),glm22a.gl_line_desc$
-          l=l+1
-          h0$=""
+         
+            if h0$<>""  abc=fnblank(5)
+
+            OutVect!.addItem(h0$)
+            OutVect!.addItem(glm12a.gl_rpt_no$)
+            OutVect!.addItem(glm12a.gl_rpt_desc$)
+            OutVect!.addItem(glm22a.gl_rpt_line$)
+            OutVect!.addItem(glm22a.gl_line_desc$)
+            h0$=""
+            
 
           rem --- Loop back for next sort record
 
@@ -172,17 +190,18 @@ rem --- All done
 
     goto std_exit
 
-report_heading: rem --- Report Heading
 
-    l=headings+1
-    h0$=t0$
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)""
-    print (printer_dev)"Total",@(8),"Report",@(37),"Line"
-    print (printer_dev)"Number",@(8),"Number",@(15),"Description",@(36),"Number",@(45),"Description"
-    l=l+3
-    return
+rem --- Functions
+
+rem --- Create blank line in OutVect! (no return value wanted or needed)
+
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
 
 rem #include std_error.src
 
