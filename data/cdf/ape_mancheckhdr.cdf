@@ -357,12 +357,11 @@ user_tpl.glint$=gl$
 user_tpl.glworkfile$=glw11$
 
 if gl$="Y"
-	files=21,begfile=20,endfile=21
+   files=21,begfile=20,endfile=21
    dim files$[files],options$[files],chans$[files],templates$[files]
    files$[20]="GLM_ACCT",options$[20]="OTA";rem --- "glm-01"
    files$[21]=glw11$,options$[21]="OTAS";rem --- s means no err if tmplt not found
-   rem --- will need alias name, not disk name, when opening work file
-	rem --- will also need option to lock/clear file [21]; not using in this pgm for now, so bypassing.CAH
+
 
 	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	begfile,
@@ -393,7 +392,7 @@ user_tpl.post_closed$=aps01a.post_closed$
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 user_tpl.units_flag$=gls01a.units_flag$
-user_tpl.units_flag$="N";rem --- for testing
+
 
 pfx$="GLNS",nm$="GL Dist"
 GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
