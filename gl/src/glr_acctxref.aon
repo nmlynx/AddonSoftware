@@ -58,6 +58,15 @@ rem --- Retrieve parameter records
     headings=1
     call pgmdir$+"glc_regroup.aon",glm10_dev,firm_id$,break$,desc$
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+
 rem --- Initializations
 
     dim headings$[headings],o[6]
@@ -73,16 +82,18 @@ rem --- Initializations
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
 
-rem --- Print positions
+rem --- Document columns
 
-    o[0]=5
-    o[1]=o[0]+m+1
-    o[6]=h0-13
-    for x=5 to 2 step -1
-        o[x]=o[x+1]-15
-    next x
-    width=o[2]-o[1]
-    if width>35 width=35
+    columns=7
+    dim columns$[7,4]
+     columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="18"
+     columns$[1,0]="Account",columns$[1,1]="N",columns$[1,2]=str(acctlen),columns$[1,3]=m0$
+     columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="40"
+     columns$[3,0]="Assignment 1,6",columns$[3,1]="C",columns$[3,2]="15"
+     columns$[4,0]="Assignment 2,7",columns$[4,1]="C",columns$[4,2]="15"
+     columns$[5,0]="Assignment 3,8",columns$[5,1]="C",columns$[5,2]="15"
+     columns$[6,0]="Assignment 4,9",columns$[6,1]="C",columns$[6,2]="15"
+     columns$[7,0]="Assignment 5,10",columns$[7,1]="C",columns$[7,2]="15"
 
 rem --- Run the report?
 
@@ -91,11 +102,9 @@ rem --- Run the report?
     x=msgbox(message$,4+32,title$)
     if x<>6 goto std_exit
 
-rem --- Open printer, start progress meter and position files
+rem --- Start progress meter and position files
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glm01_dev,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,glm01_dev,1,meter_num,status
     read (glm01_dev,key=firm_id$,dom=*next)
 
 rem --- Read next glm-01 record
@@ -106,6 +115,7 @@ rem --- Read next glm-01 record
           read record (glm01_dev)glm01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
+
           account_break: rem --- Chart of Account Break?
 
           if break$<>"" if glm01a.gl_account$<break$(1,10) goto format
@@ -114,8 +124,7 @@ rem --- Read next glm-01 record
           rem --- Print subtotal and new heading
 
           title$=cvs(desc$(1,20),2)
-          if l+4>l9 gosub report_heading
-:              else gosub subheading
+          gosub subheading
 
           new_heading: rem --- Strip current heading
 
@@ -152,43 +161,46 @@ rem --- Read next glm-01 record
                 cnt=cnt+1
           wend
 
-          print_detail: rem --- Print detail lines
+print_detail: rem --- Print detail lines
 
-          if l+2>l9 gosub report_heading
-          print (printer_dev)@(o[0]),fnmask$(glm01a.gl_account$(1,acctlen),m0$),
-:                            @(o[1]),glm01a.gl_acct_desc$(1,width),@(o[2]),buf$[1],@(o[3]),buf$[2],
-:                            @(o[4]),buf$[3],@(o[5]),buf$[4],@(o[6]),buf$[5]
-          print (printer_dev)@(o[2]),buf$[6],@(o[3]),buf$[7],@(o[4]),buf$[8],@(o[5]),buf$[9],
-:                            @(o[6]),buf$[10]
-          l=l+2
+            OutVect!.addItem("")
+            OutVect!.addItem(fnmask$(glm01a.gl_account$(1,acctlen),m0$))   
+            OutVect!.addItem(glm01a.gl_acct_desc$)
+            OutVect!.addItem(buf$[1])
+            OutVect!.addItem(buf$[2])
+            OutVect!.addItem(buf$[3])
+            OutVect!.addItem(buf$[4])
+            OutVect!.addItem(buf$[5])
+            
+            abc=fnblank(3)
+            OutVect!.addItem(buf$[6])
+            OutVect!.addItem(buf$[7])
+            OutVect!.addItem(buf$[8])
+            OutVect!.addItem(buf$[9])
+            OutVect!.addItem(buf$[10])
+
     wend
 
 rem --- All done
 
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,h0,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)""
-    print (printer_dev)@(o[2]),"Assignment 1",@(o[3]),"Assignment 2",@(o[4]),"Assignment 3",
-:                      @(o[5]),"Assignment 4",@(o[6]),"Assignment 5"
-    print (printer_dev)@(o[0]),"Account",@(o[1]),"Description",@(o[2]),"Assignment 6",
-:                      @(o[3]),"Assignment 7",@(o[4]),"Assignment 8",@(o[5]),"Assignment 9",
-:                      @(o[6]),"Assignment 10"
-    l=l+3
-
 subheading: rem --- Subheading
 
-    print (printer_dev)""
-    print (printer_dev)title$
-    print (printer_dev)""
-    l=l+3
+    OutVect!.addItem(title$)
+    abc=fnblank(7)
+    abc=fnblank(8)
     return
 
 rem --- Functions
+
+rem --- Create blank line in OutVect! (no return value wanted or needed)
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
