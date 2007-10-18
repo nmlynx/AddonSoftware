@@ -25,21 +25,19 @@ rem --- Open/Lock files
 
     files=8,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem aps-01
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-rem    files$[3]="apm-03"
-    files$[4]="APC_TYPECODE";ids$[4]=files$[4];rem apm-10A
+    files$[4]="apc_typecode";ids$[4]="APC_TYPECODE";rem apm-10A
     files$[5]="apt-01",ids$[5]="APT_INVOICEHDR"
     files$[6]="apt-11",ids$[6]="APT_INVOICEDET"
-    files$[7]="apw-02"
+    files$[7]="apw-02",ids$[7]="APW_INVOICENAME"
     options$[7]="C"
-    files$[8]="GLS_PARAMS",ids$=files$[8];rem gls-01
+    files$[8]="gls_params",ids$[8]="GLS_PARAMS";rem gls-01
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     aps01_dev=channels[1]
     apm01_dev=channels[2]
-    apm03_dev=channels[3]
     apm10_dev=channels[4]
     apt01_dev=channels[5]
     apt11_dev=channels[6]
@@ -49,7 +47,7 @@ rem    files$[3]="apm-03"
 rem --- Dimension string templates
 
     dim aps01a$:templates$[1]
-    dim apm01a$:templates$[2],apm03a$:templates$[3],apm10a$:templates$[4],
+    dim apm01a$:templates$[2],apm10a$:templates$[4],
 :       apt01a$:templates$[5],apt11a$:templates$[6],apw02a$:templates$[7],
 :       gls01a$:templates$[8]
 
@@ -70,15 +68,14 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (ads01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    vendor_size=num(aps01a.vendor_size$)
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
     multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"
     apperiod=num(aps01a.current_per$)
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,13
     m0=len(m0$)
     m1=len(m1$)
@@ -154,7 +151,7 @@ rem --- Determine period beginning and ending dates based on the aging method se
                 rem --- Get current period beginning and ending dates
 
                 if agingdate$(5,2)<periodend$(1,2) year=year-1
-                call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,
+                call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,
 :                                                  begperiod$,endperiod$,status
                 begdates$=begperiod$
                 enddates$=endperiod$
@@ -583,8 +580,8 @@ std_error: rem --- Standard error handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call stbl("DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -608,8 +605,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -627,7 +624,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run STBL("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
