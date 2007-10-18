@@ -148,7 +148,7 @@ get_vendor_history:
 
 	apm02_dev=fnget_dev("APM_VENDHIST")				
 	dim apm02a$:fnget_tpl$("APM_VENDHIST")
-
+	vend_hist$=""
 	readrecord(apm02_dev,key=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")+
 :		callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE"),dom=*next)apm02a$
 	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")+
@@ -158,6 +158,7 @@ get_vendor_history:
 			pfx$="GLNS",nm$="GL Dist"
 			GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
 			GLNS!.setValue("dflt_gl",apm02a.gl_account$)
+			vend_hist$="Y"
 	endif
 
 return
@@ -178,7 +179,7 @@ if cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)<>""
 
 	gosub get_vendor_history
 
-	if cvs(apm02a$,3)=""
+	if vend_hist$=""
 		if user_tpl.multi_types$="Y"
 			msg_id$="AP_NOHIST"
 			gosub disp_message
@@ -500,9 +501,6 @@ dtlGrid!=Form!.getChildWindow(1109).getControl(5900)
 		dtlGrid!.setCellEditable(wk,2,0)
 	next wk
 endif
-
-rem - gosub display_vendor_address
-rem --- doing in vendor id aval...gosub get_vendor_history
 [[APE_MANCHECKHDR.ARNF]]
 				if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R"
 					ape_openchecks_dev=fnget_dev("APE_OPENCHECKS")
