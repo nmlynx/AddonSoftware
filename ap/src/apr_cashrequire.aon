@@ -165,7 +165,7 @@ rem --- Determine period beginning and ending dates based on the aging method se
                        period=period-maxperiods
                        year=year+1
                     endif
-                    call pgmdir$+"adc_perioddates.aon",ads01_dev,period,year,
+                    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,
 :                                                      begperiod$,endperiod$,status
                     begdates$=begdates$+begperiod$
                     enddates$=enddates$+endperiod$
