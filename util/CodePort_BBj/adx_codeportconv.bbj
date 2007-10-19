@@ -94,7 +94,6 @@ convert_linenumbers:
     let description$="Converting line number references to labels..."
     gosub display_step
     let tmpfile$=pgmdir$+basename$+tmp$
-    a=msgbox(pathname$)
     call "_label",pathname$,tmpfile$,status$,1
     gosub display_done
 return
