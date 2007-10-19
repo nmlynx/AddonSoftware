@@ -211,7 +211,8 @@ if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="M"
 endif
 [[APE_MANCHECKHDR.CHECK_DATE.AVAL]]
 gl$=user_tpl.glint$
-ckdate$=callpoint_data$        
+ckdate$=callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_DATE")
+
 if gl$="Y" 
 	call stbl("+DIR_PGM")+"glc_datecheck.aon",ckdate$,"Y",per$,yr$,status
 	if status>99

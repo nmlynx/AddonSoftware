@@ -28,20 +28,19 @@ rem --- Open/Lock files
 
     files=14,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1];rem "aps-01
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
     files$[2]="ape-02",ids$[2]="APE_MANCHECKHDR"
     files$[3]="ape-12",ids$[3]="APE_MANCHECKDIST"
     files$[4]="ape-22",ids$[4]="APE_MANCHECKDET"
     files$[5]="apm-01",ids$[5]="APM_VENDMAST"
     files$[6]="apm-02",ids$[6]="APM_VENDHIST"
-rem    files$[7]="apm-03"
-    files$[8]="APC_TYPECODE",ids$[8]=files$[8];rem "apm-10A
+    files$[8]="apc_typecode",ids$[8]="APC_TYPECODE";rem "apm-10A
     files$[9]="apt-01",ids$[9]="APT_INVOICEHDR"
     files$[10]="apt-02",ids$[10]="APT_INVOICEDIST"
     files$[11]="apt-05",ids$[11]="APT_CHECKHISTORY"
     files$[12]="apt-11",ids$[12]="APT_INVOICEDET"
-    files$[13]="GLS_PARAMS",ids$[13]=files$[13];rem "gls-01
-    files$[14]="APC_DISTRIBUTION",ids$[14]=files$[14];rem "apm-10B
+    files$[13]="gls_params",ids$[13]="GLS_PARAMS";rem "gls-01
+    files$[14]="apc_distribution",ids$[14]="APC_DISTRIBUTION";rem "apm-10B
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -52,7 +51,6 @@ rem    files$[7]="apm-03"
     ape22_dev=channels[4]
     apm01_dev=channels[5]
     apm02_dev=channels[6]
-    apm03_dev=channels[7]
     apm10a_dev=channels[8]
     apt01_dev=channels[9]
     apt02_dev=channels[10]
@@ -76,19 +74,18 @@ rem --- Retrieve parameter records
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    vendor_size=num(aps01a.vendor_size$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
     multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"
     cashbasis=aps01a.cash_basis$="Y"
     bankrec=aps01a.br_interface$="Y"
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
     m0=len(m0$)
     m1=len(m1$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",g1$,0,0
     acct_length=num(gls01a.acct_length$)
-    g0$=gls01a.acct_output$
-    g1$=gls01a.amount_mask$
     call pgmdir$+"adc_sizemask.aon",g1$,g1,10,15
     g0=len(g0$)
     g1=len(g1$)
@@ -219,9 +216,9 @@ rem --- Additional file opens
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01"
-    files$[2]="glt-04"
-    files$[3]="glt-05"
+    files$[1]="glm-01",ids$[1]="GLM_ACCT"
+    files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
+    files$[3]="glt-05",ids$[3]="GLT_BANKCHECKS"
     files$[4]=glw11$
     options$[3]="CL"
     if gl call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -377,7 +374,7 @@ rem --- Read next Manual Check Header (ape-02) record
                             apm10b.ap_dist_code$=apt05a.ap_dist_code$
                             apm10b.code_desc$=nf$
                             k$=apm10b.firm_id$+apm10b.record_id_b$+apm10b.ap_dist_code$
-                            find record (apm10_dev,key=k$,dom=*next) apm10b$
+                            find record (apm10b_dev,key=k$,dom=*next) apm10b$
                             errors=errors+(pos(nf$=apm10b.code_desc$)=1)
 
 						    k$=apt05a.firm_id$+apt05a.ap_type$+apt05a.vendor_id$+
@@ -500,7 +497,7 @@ rem --- Read next Manual Check Header (ape-02) record
                             apm10b.ap_dist_code$=ape22a.ap_dist_code$
                             apm10b.code_desc$=nf$
                             k$=apm10b.firm_id$+apm10b.record_id_b$+apm10b.ap_dist_code$
-                            find record (apm10_dev,key=k$,dom=*next) apm10b$
+                            find record (apm10b_dev,key=k$,dom=*next) apm10b$
                             errors=errors+(pos(nf$=apm10b.code_desc$)=1)
 
                             rem --- Generate GL postings for this check/invoice
@@ -765,7 +762,7 @@ rem --- used? 4/30.CAH
     apm10a.ap_type$=ape02a.ap_type$
     apm10a.code_desc$=nf$
     k$=apm10a.firm_id$+apm10a.record_id_a$+apm10a.ap_type$
-    find record (apm10_dev,key=k$,dom=*next) apm10a$
+    find record (apm10a_dev,key=k$,dom=*next) apm10a$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
     headings$[1]=taskdesc$+" - "+aptype$
     errors=errors+(pos(nf$=apm10a.code_desc$)=1)
@@ -843,9 +840,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -869,8 +866,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -888,7 +885,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
