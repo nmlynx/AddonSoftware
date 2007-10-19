@@ -63,7 +63,16 @@ rem --- Get user permission to overwrite existing file
 
 rem --- Read in next source file name from the file list being used
 filelist: 
-    goto the_end
+    readrecord(lst_dev,err=file_list_end)lstfile$
+        if pos(".bbx"=lstfile$)=0 then goto filelist
+        let pathname$=temp_pathname$+"/"+lstfile$
+        let filename$=fnbasename$(lstfile$,""),status=0
+        let pgmdir$=pathname$(1,pos(filename$=pathname$)-1)
+        let p=pos("."=filename$,-1),basename$=filename$(1,p-1)
+        goto arguments
+    file_list_end:
+        filelist=0
+        goto the_end
 
 rem --- Run next overlay
 next_overlay: 
