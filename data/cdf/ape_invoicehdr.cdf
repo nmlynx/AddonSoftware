@@ -1,3 +1,33 @@
+[[APE_INVOICEHDR.AREC]]
+Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+[[APE_INVOICEHDR.BWRI]]
+rem --- fully distributed?
+
+gl$=user_tpl.glint$
+status=0
+acctgdate$=callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE")  
+if gl$="Y" 
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
+	if status>99
+		callpoint!.setStatus("ABORT")
+		ctlContext=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.ACCTING_DATE","CTLC"))
+		ctlID=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.ACCTING_DATE","CTLI"))
+		acct_dt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+		acct_dt!.focus()
+	endif
+endif
+
+if status<=99
+	bal_amt=num(callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_AMT"))-num(user_tpl.tot_dist$)
+	if bal_amt<>0
+		msg_id$="AP_NOT_DIST"
+		gosub disp_message
+		if msg_opt$="N"
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+endif
+	
 [[APE_INVOICEHDR.NET_INV_AMT.AVAL]]
 rem re-calc discount amount based on net x disc %
 
@@ -30,22 +60,40 @@ rem reference, memo are enabled...
 
 apt01_dev=fnget_dev("APT_INVOICEHDR")
 dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
+k$=""
 
 apt01_key$=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")+
-:	callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")+
-:	callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO")+"00"
+:	callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
 
-readrecord(apt01_dev,key=apt01_key$,dom=*next)apt01a$
+read(apt01_dev,key=apt01_key$+callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO"),dom=*next)
 
-if apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$+apt01a.sequence_00$=apt01_key$
+k$=key(apt01_dev,end=*next); read record(apt01_dev)apt01a$
+if k$(1,len(apt01_key$))=apt01_key$
 
-	rem not in ape-01, but IS in apt-01
-	rem read apt-01 and set ape-01 accordingly
-	rem disable dist code, inv date, and inv amt, net amt, ret amt (leave adj and disc amts only) 
+	rem --- not in ape-01, but IS in apt-01
+	rem --- disable dist code, inv date, net amt
+	
+	callpoint!.setColumnData("APE_INVOICEHDR.FIRM_ID",apt01a.firm_id$)
+	callpoint!.setColumnData("APE_INVOICEHDR.AP_TYPE",apt01a.ap_type$)
+	callpoint!.setColumnData("APE_INVOICEHDR.VENDOR_ID",apt01a.vendor_id$)
+	callpoint!.setColumnData("APE_INVOICEHDR.AP_INV_NO",apt01a.ap_inv_no$)
 
-	ctl_name$="<<DISPLAY>>.DISP_ADJAMT"
-	ctl_stat$=" "
+	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
+	ctl_stat$="D"
 	gosub disable_fields
+
+	ctl_name$="APE_INVOICEHDR.INVOICE_DATE"
+	ctl_stat$="D"
+	gosub disable_fields
+
+	ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
+	ctl_stat$="D"
+	gosub disable_fields
+
+	Form!.getControl(num(user_tpl.open_inv_textID$)).setText("Open Invoice from: "+fndate$(apt01a.invoice_date$)+
+:		", for "+str(num(apt01a.invoice_amt$):user_tpl.amt_msk$))
+
+	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 
 else
 	rem not in ape-01 or apt-01; set up defaults
@@ -65,12 +113,8 @@ else
 	callpoint!.setColumnData("APE_INVOICEHDR.HOLD_FLAG","N")
 	user_tpl.inv_in_ape01$="N"
 	user_tpl.inv_in_apt01$="N"
-
-	ctl_name$="<<DISPLAY>>.DISP_ADJAMT"
-	ctl_stat$="D"
-	gosub disable_fields
 	
-	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+	callpoint!.setStatus("REFRESH")
 
 endif
 [[APE_INVOICEHDR.VENDOR_ID.AVAL]]
@@ -88,9 +132,9 @@ if vend_hist$=""
 endif
 [[APE_INVOICEHDR.ACCTING_DATE.AVAL]]
 gl$=user_tpl.glint$
-invdate$=callpoint!.getUserInput()        
+acctgdate$=callpoint!.getUserInput()        
 if gl$="Y" 
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",invdate$,"Y",per$,yr$,status
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
 	if status>99
 		callpoint!.setStatus("ABORT")
 	else
@@ -99,45 +143,22 @@ if gl$="Y"
 	endif
 endif
 [[APE_INVOICEHDR.ADIS]]
-vend_key$=callpoint!.getColumnData("APE_INVOICEHDR.FIRM_ID")+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
-rem gosub disp_vend_addr
-callpoint!.setColumnData("<<DISPLAY>>.TOT_QTY",str(tqty))
-callpoint!.setColumnData("<<DISPLAY>>.TOT_AMT",str(tamt))
-callpoint!.setStatus("REFRESH")
+rem --- get disc % assoc w/ terms in this rec, and disp distributed bal
 
-if callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_TYPE")="V"
-rem 	gosub check_outstanding_inv
-	if os_inv$="N"
-		msg_id$="AP_VOID_INV"
-		dim msg_tokens$[1]
-		msg_opt$=""
-		gosub disp_message
-		if msg_opt$="Y"
-			callpoint!.setColumnData("APE_INVOICEHDR.INVOICE_TYPE","I")
-			callpoint!.setColumnUndoData("APE_INVOICEHDR.INVOICE_TYPE","I")
-			callpoint!.setStatus("MODIFIED-REFRESH")
-		else
-			callpoint!.setStatus("ABORT")
-		endif
-	else
-		msg_id$="AP_INV_ADJ"
-		dim msg_tokens$[1]
-		msg_opt$=""
-		gosub disp_message
-		if msg_opt$="Y"
-			callpoint!.setColumnData("APE_INVHDR.INVOICE_TYPE","A")
-			callpoint!.setColumnUndoData("APE_INVHDR.INVOICE_TYPE","A")
-			callpoint!.setStatus("MODIFIED-REFRESH")
-		else
-			callpoint!.setStatus("ABORT")
-		endif
-	endif
-endif
-[[APE_INVOICEHDR.ADEL]]
-rem --- hdr/dtl have been deleted; now write back header w/ "V" flag
-ape_invhdr_dev=fnget_dev("APE_INVOICEHDR")
-rec_data.invoice_type$="V"
-rec_data$=field(rec_data$); write record(ape_invhdr_dev,key=rec_data.firm_id$+rec_data.ap_inv_no$)rec_data$
+apm10c_dev=fnget_dev("APC_TERMSCODE")
+dim apm10c$:fnget_tpl$("APC_TERMSCODE")
+
+readrecord(apm10c_dev,key=firm_id$+"C"+callpoint!.getColumnData("APE_INVOICEHDR.AP_TERMS_CODE"),dom=*next)apm10c$
+user_tpl.disc_pct$=apm10c.disc_percent$
+
+user_tpl.inv_amt$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_AMT")
+
+gosub calc_grid_tots
+
+dist_bal=num(user_tpl.inv_amt$)-num(user_tpl.tot_dist$)
+callpoint!.setColumnData("<<DISPLAY>>.DISP_DISTRIB_BAL",str(dist_bal))
+
+callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.AP_TERMS_CODE.AVAL]]
 rem re-calc due and discount dates based on terms code
 
@@ -151,18 +172,21 @@ rem re-calc due and discount dates based on terms code
 	callpoint!.setStatus("REFRESH")
 
 endif
-[[APE_INVOICEHDR.NET_INV_AMT.BINP]]
-if num(callpoint!.getColumnData("APE_INVOICEHDR.DISCOUNT_AMT"))=0
-	discamt=discpercent*num(callpoint!.getUserInput())
-	callpoint!.setColumnData("APE_INVOICEHDR.DISCOUNT_AMT",str(discamt))
-	callpoint!.setStatus("REFRESH")
-endif
 [[APE_INVOICEHDR.INVOICE_AMT.AVAL]]
-
 if num(callpoint!.getColumnData("APE_INVOICEHDR.NET_INV_AMT")) = 0
 	callpoint!.setColumnData("APE_INVOICEHDR.NET_INV_AMT",
 :	callpoint!.getUserInput())
 endif
+
+
+user_tpl.inv_amt$=callpoint!.getUserInput()
+
+gosub calc_grid_tots
+
+dist_bal=num(user_tpl.inv_amt$)-num(user_tpl.tot_dist$)
+callpoint!.setColumnData("<<DISPLAY>>.DISP_DISTRIB_BAL",str(dist_bal))
+
+callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
@@ -252,19 +276,6 @@ calc_grid_tots:
 	endif
 return
 
-
-disp_totals:
-
-rem --- get context and ID of display controls, and redisplay w/ amts from calc_grid_tots
-    
-	inv_amt!=UserObj!.getItem(num(user_tpl.inv_amt_ofst$))
-	escape;rem inv_amt!.getValue?
-	dist_bal!=UserObj!.getItem(num(user_tpl.dist_bal_ofst$))
-	dist_bal!.setValue(inv_amt-num(user_tpl.tot_dist$))
-
-return
-
-
 #include std_missing_params.src
 [[APE_INVOICEHDR.BSHO]]
 rem --- Open/Lock files
@@ -305,7 +316,7 @@ user_tpl_str$="glint:c(1),glyr:c(4),glper:c(2),gl_tot_pers:c(2),glworkfile:c(16)
 user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),units_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"misc_entry:c(1),inv_in_ape01:c(1),inv_in_apt01:c(1),"
 user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),dflt_terms_cd:c(2),dflt_pymt_grp:c(2),"
-user_tpl_str$=user_tpl_str$+"disc_pct:c(5),dist_bal_ofst:c(1),inv_amt_ofst:c(1),tot_dist:c(10)"
+user_tpl_str$=user_tpl_str$+"disc_pct:c(5),dist_bal_ofst:c(1),inv_amt:c(10),tot_dist:c(10),open_inv_textID:c(5)"
 
 dim user_tpl$:user_tpl_str$
 
@@ -317,14 +328,13 @@ ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_DISTRIB_BAL"
 ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_DISTRIB_BAL","CTLI"))
 dist_bal!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 
-ctlContext=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.INVOICE_AMT","CTLC"))
-ctlID=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.INVOICE_AMT","CTLI"))
-inv_amt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
 UserObj!.addItem(dist_bal!)
 user_tpl.dist_bal_ofst$="0"
-UserObj!.addItem(inv_amt!)
-user_tpl.inv_amt_ofst$="1"
+
+rem --- add static label for displaying date/amount if pulling up open invoice
+nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+Form!.addStaticText(nxt_ctlID,225,55,250,18,"")
+user_tpl.open_inv_textID$=str(nxt_ctlID)
 
 rem --- Additional File Opens
 
@@ -399,11 +409,9 @@ if user_tpl.ret_flag$="N"
 	gosub disable_fields
 endif
 
-rem -- still need code above to store this ctl id for access from dtl grid
 ctl_name$="<<DISPLAY>>.DISP_DISTRIB_BAL"
 ctl_stat$="I"
 gosub disable_fields
-
 
 rem --- disable some grid columns depending on params
 
@@ -412,8 +420,5 @@ c!=w!.getControl(5900)
 if gl$="N" c!.setColumnEditable(0,0)
 if user_tpl.misc_entry$="N" c!.setColumnEditable(2,0)
 if user_tpl.units_flag$="N" c!.setColumnEditable(4,0)
-
-
-
 
 			

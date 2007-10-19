@@ -1,3 +1,5 @@
+[[APE_INVOICEDET.UNITS.AVEC]]
+escape;rem check user_tpl.inv_amt$ and tot_dist$; also dist_bal! ?
 [[APE_INVOICEDET.GL_POST_AMT.AVEC]]
 rem --- add up dist lines and display diff between total inv amt entered and dist line total
 
@@ -22,9 +24,8 @@ return
 disp_totals:
 
 rem --- get context and ID of display controls, and redisplay w/ amts from calc_grid_tots
-    
-	inv_amt!=UserObj!.getItem(num(user_tpl.inv_amt_ofst$))
-	escape;rem inv_amt!.getValue?
+    	
+	inv_amt=num(user_tpl.inv_amt$)
 	dist_bal!=UserObj!.getItem(num(user_tpl.dist_bal_ofst$))
 	dist_bal!.setValue(inv_amt-num(user_tpl.tot_dist$))
 
