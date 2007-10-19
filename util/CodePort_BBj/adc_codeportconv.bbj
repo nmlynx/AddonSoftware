@@ -85,7 +85,7 @@ format_comments:
         if rec$(5,1)=$22$ then let rec$="rem "+cvs(rec$(6),1)
         let l=len(rec$)
         if rec$(l)=$22$ then let rec$=rec$(1,l-1)
-        if x>13 then if rec$(5,1)<>"-" then let rec$=rec$(1,4)+"--- "+cvs(rec$(5),1)
+        if x>13 and l>4 then if rec$(5,1)<>"-" then let rec$=rec$(1,4)+"--- "+cvs(rec$(5),1)
         let lines$[x]=rec$
         next_rem: 
     next x
@@ -200,7 +200,7 @@ indent_code:
     let fornext=4,whilewend=6
     for x=1 to numlines
         let rec$=lines$[x],x$=cvs(rec$,1+2),use=1
-        if pos("for "=x$)=1 then let rec$=fill(indent)+rec$,indent=indent+fornext; goto next_indent
+        if pos("for "=x$)=1 then let rec$=fill(indent)+rec$,indent=indent+fornext;if pos("; next "=x$)<>0 then let indent=indent-fornext fi; goto next_indent
         if pos("next "=x$)=1 then let indent=indent-fornext
         if pos(": next"=x$) then let indent=indent-fornext
         if pos("while "=x$)=1 then let rec$=fill(indent)+rec$,indent=indent+whilewend; goto next_indent
