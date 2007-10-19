@@ -116,8 +116,8 @@ single_program:
 rem --- Get the name of the filelist to be used
 get_filelist: 
     let title$="Select filelist to be used",STATUS=1
-    let filters$="Text files (*.txt)"+$0A$+"*.txt"+$0A$+"All files (*.*)"+$0A$+"*.*"
-    print (0)'fileopen'(title$,pgmdir$,"","",filters$)
+    let filters$="All files (*.*)"+$0A$+"*.*"
+    print (0)'fileopen'(title$,pgmdir$,"","",filters$,1)
     read (0)pathname$
     if pathname$="::BAD::" then goto get_filelist
     if pathname$="::CANCEL::" then goto single_program
@@ -125,6 +125,7 @@ get_filelist:
 
 rem --- Open filelist
     let lstfile$=pathname$
+    let temp_pathname$=pathname$
     let lst_dev=unt
     open (lst_dev,err=get_filelist)lstfile$
     let filelist=1
