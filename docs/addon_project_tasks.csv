@@ -89,7 +89,7 @@ Invoice Date Modification Register,ARR_DATEREGISTER,A,ARR_DATEREGISTER,arr_dater
 Change Sales Analysis Flag,ARX_CHANGESAFLAG,T,ARX_CHANGESAFLAG,,v7,,,,,,,
 General Ledger,GLMENU,M,,,,,,,,,,
 Journal Entry,GLE_JRNLHDR,T,GLE_JRNLHDR,,GLE.CA,SV/CH,Y,,,,,
-Journal Entry Register,GLR_JOURNAL,A,,glr_journal.aon,GLR.MA,JL/CH,Y,,Y,ready-CH,,"Note - this register runs glr_recap.  Once converted to DocOut, just change the glr_recap program name to glr_recap_DO, as there is already a DocOut version of the recap."
+Journal Entry Register,GLR_JOURNAL,A,,glr_journal.aon,GLR.MA,JL/CH,Y,,Y,Done-PPT-BP,,"Note - this register runs glr_recap.  Once converted to DocOut, just change the glr_recap program name to glr_recap_DO, as there is already a DocOut version of the recap."
 Daily Detail Register,GLR_DAILYDETAIL,T,GLR_DAILYDETAIL,,GLR.DA,JL/CH,Y,,Y,,,
 Account Allocation Entry,GLE_ALLOCHDR,T,GLE_ALLOCHDR,,GLE.EA,SV/CH,P,, ,,,
 Account Allocation Register,GLR_ALLOCATE,T,GLR_ALLOCATE,,GLR.QA,JL/CH,P,,Y,ready-CH,,
@@ -114,8 +114,8 @@ Custom Financials,GLMENU_CUSTOM,G,,,,,,,,,,
 Financial Report Master,GLM_FINMASTER,T,GLM_FINMASTER,,GLM.DA,CT/CH,Y,,,,,New - Detail FS Setup (GLM_FINDETAIL) - runs from GLM_FINMASTER
 Report Heading,GLM_FINHEADING,T,GLM_FINHEADING,,GLM.KA,,,Y,,,,
 Reports by Account,GLM_FA,T,,glm_fa.aon,GLM.FA,CH,Y,,,,,
-Acct/Report Cross Reference Report,GLR_ACCTXREF,A,,glr_acctxref.aon,GLR.GA,JL,P,,Y,ready,,
-Total/Report Cross Reference Report,GLR_TOTALSREPORT,A,,glr_totalsreport.aon,GLR.OA,JL,P,,Y,ready,,
+Acct/Report Cross Reference Report,GLR_ACCTXREF,A,,glr_acctxref.aon,GLR.GA,JL,P,,Y,Done-PPT-BP,,
+Total/Report Cross Reference Report,GLR_TOTALSREPORT,A,,glr_totalsreport.aon,GLR.OA,JL,P,,Y,Done-PPT-BP,,
 Report/Account Maintenance,GLM_GA,T,,glm_ga.aon,GLM.GA,,,,,,,
 Consolidated Acct/Rpt Maintenance,GLM_IA,T,,glm_ia.aon,GLM.IA,CH,Y,,,,,
 Consolidated Acct/Rpt Xref Report,GLR_CONSACCTXREF,A,,glr_consacctxref.aon,GLR.JA,JL,Y,Y,Y,,,
@@ -168,8 +168,8 @@ Physical Inventory Register,IVR_VA,T,,ivr_va.aon,IVR.VA,BJ-BP,P,Y,Y,,Done BJ-BP,
 Reports,IVMENU_REPORTS,G,,,,,,,,,,
 Inventory Price List,IVR_PRICELIST,T,,ivr_pricelist/ivr_pricelist_o1,IVR.FA,BJ-BP,P(A/B),Y,Y,Done SV-BP,Done BJ-BP,IVR.FB; fa and fb converted to ivr_pricelist and ivr_pricelist_o1. Select Form built. CH.20Aug mods
 Inventory Vendor Listing,IVR_VENDLIST,T,,ivr_vendlist/ivr_vendlist_o1,IVR.IA,BJ-BP,P(A/B),Y,Y,Done SS-BP,Done BJ-BP,"IVR.IB; ia/ib converted to ivr_vendlist and ivr_vendlist_o1. Also converted two publics, ivc_au/wa, now ivc_usage and ivc_whseinfo. Select Form built.CH.20Aug mods"
-Inventory Item Requirements Report,IVR_ITEMREQUIREMT,T,IVR_ITEMREQUIREMT,ivr_itemrequiremt.aon & _o1,IVR.MA,BJ-BP,P(A/B),Y,Y,ready-SL,Done BJ-BP,IVR.MB 20Aug mods; converted to ivr_itemrequiremt & _o1. Select Form built. Data tested.
-Inventory Analysis Report,IVR_ITEMANALYSIS,T,,ivr_itemanalysis.aon & _o1,IVR.HA,BJ-BP,P(A/B),Y,Y,ready-SL,Done BJ-BP,IVR.HB 20Aug mods; ha & hb converted to ivr_itemanalysis & _o1. Select Form built. Data tested.
+Inventory Item Requirements Report,IVR_ITEMREQUIREMT,T,IVR_ITEMREQUIREMT,ivr_itemrequiremt.aon & _o1,IVR.MA,BJ-BP,P(A/B),Y,Y,Done SV-BP,Done BJ-BP,IVR.MB 20Aug mods; converted to ivr_itemrequiremt & _o1. Select Form built. Data tested.
+Inventory Analysis Report,IVR_ITEMANALYSIS,T,,ivr_itemanalysis.aon & _o1,IVR.HA,BJ-BP,P(A/B),Y,Y,Done SV-BP,Done BJ-BP,IVR.HB 20Aug mods; ha & hb converted to ivr_itemanalysis & _o1. Select Form built. Data tested.
 Inventory Stock Status Report,IVR_STKSTATUS,T,IVR_STKSTATUS,ivr_stkstatus.aon & _o1,IVR.BA,BJ-BP,P(A/B),Y,Y,Done SV-BP,Done BJ-BP,IVR.BB 20Aug mods; converted to ivr_stkstatus & _o1. Select Form built. Data tested.
 Item Activity Report,IVR_ITEMACT,T,IVR_ITEMACT,ivr_itemact.aon,IVR.EA,,, ,Y,Done SV-BP,,IVR.EA/EB; converted to a single program ivr_itemact.aon. Select Form built. SL.
 Stock Movement Report,IVR_STKMOVEMT,T,IVR_STKMOVEMT,ivr_stkmovemt.aon & _o1,IVR.CA,BJ-BP,P(A/B),Y,Y,Done SV-BP,Done BJ-BP,IVR.CB;ca and cb converted to ivr_stkmovemt and ivr_stkmovemt.o1. Select Form built. SL. 20Aug mods. Data tested.
