@@ -135,14 +135,11 @@ function_errors:
         if pos("rem"=rec$)=1 then goto next_function_error
         if pos("fnend"=rec$)=1 then goto next_function_error
         if pos("def fn"=rec$) then goto next_function_error
-        if pos("_fn"=rec$) then goto next_function_error
         next_function_check: 
         let p=pos("fn"=rec$)
         if p=0 then goto next_function_error
-        let rec$=rec$(p)
-        p=pos("("=rec$)
-        x$=rec$(1,p-1)
-        rec$=rec$(p)
+        let rec$=rec$(p);p=pos("("=rec$)
+        if p=0 then goto next_function_error else x$=rec$(1,p-1),rec$=rec$(p)
         if pos(x$=functions$) then goto next_function_check
         let errors=errors+1,errors$[errors]=fnerror$("Undefined function "+x$,x)
         goto next_function_check
