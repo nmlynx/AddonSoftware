@@ -6,96 +6,121 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    seterr std_error
-    setesc std_error
+            seterr std_error
+            setesc std_error
+
+rem --- Document initializations
+            OutVect!=bbjAPI().getSysGui().makeVector()
+            HdrVect!=bbjAPI().getSysGui().makeVector()
+            BrkVect!=bbjAPI().getSysGui().makeVector()
+            rep_date$=date(0:"%Mz/%Dz/%Yd")
+            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+            rep_time$=date(0:"%hz:%mz %p")
+            rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Initializations
 
-    precision p[1]
-    dim headings$[6],o[9]
-    dim files[3],items$[2],periods$[1],activity[12]
-    dim whse[1],report[1]
-    m7$="-###0.0000%"
-    m8$="############.0000"
-rem    m8$="###########.0000-"
-    m7=len(m7$)
-    m8=len(m8$)
-    files[2]=ivm12_dev
-    files[3]=ivm03g_dev2
-    headings=6
-    t0$=""
-    headings$[0]=sysinfo.firm_name$
-    headings$[1]=sysinfo.task_desc$
-    when$=sysinfo.system_date$
-    clock$=""
-    h9$=""
-    width=132
-    page=0
-    l9=59
-    l=l9+1
-    x$="Sales"
-    h7$="Sold"
-    h8$="Sales"
-    done=0
-    action$="T"
-    periods$[0]=begyear$+begper$; rem period1$
-    periods$[1]=endyear$+endper$; rem period2$
-    if base$="U" x$="Usage",h7$="Used",h8$="Usage"
-    headings$[2]="Based On Total "+x$+" For Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
-    more=1
+            precision p[1]
+            dim headings$[6],o[9]
+            dim files[3],items$[2],periods$[1],activity[12]
+            dim whse[1],report[1]
+            m7$="-###0.0000%"
+            m8$="############.0000"
+            m7=len(m7$)
+            m8=len(m8$)
+            files[2]=ivm12_dev
+            files[3]=ivm03g_dev2
+            headings=6
+            t0$=""
+            headings$[0]=sysinfo.firm_name$
+            headings$[1]=sysinfo.task_desc$
+            when$=sysinfo.system_date$
+            clock$=""
+            h9$=""
+            width=132
+            page=0
+            l9=59
+            l=l9+1
+            x$="Sales"
+            h7$="Sold"
+            h8$="Sales"
+            done=0
+            action$="T"
+            periods$[0]=begyear$+begper$; rem period1$
+            periods$[1]=endyear$+endper$; rem period2$
+            if base$="U" x$="Usage",h7$="Used",h8$="Usage"
+            headings$[2]="Based On Total "+x$+" For Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
+            more=1
 
 rem --- Print positions
 
-    gosub Position    
+            gosub Position    
 
 rem --- Background
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+
+           call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
 
 rem --- Report headings
 
-    dim h1$(width),h2$(width)
-    if level$="I" headings$[1]=headings$[1]+" By Item"
-    if level$="W" headings$[1]=headings$[1]+" By Warehouse"
-    x1$="First"
-    x2$="First"
-    x2=5
-    if begitem$<>"" x1$=begitem$
-    if begprod$<>"" x2$=begprod$,x2=3
-    if endprod$="" if x2=3 x2=4
-    h1$(1)="From Item: "+x1$
-    h1$(width-x2-13)="From Product: "+x2$
-    x1$="Last"
-    x2$="Last"
-    x3$="All Item Types"
-    if enditem$<>"" x1$=enditem$
-    if endprod$<>"" x2$=endprod$
-    if type$<>"" x3$="Item Type "+type$
-    h2$(1)="  To Item: "+x1$
-    h2$(fncenter(x3$,width))=x3$
-    h2$(width-x2-13)="  To Product: "+x2$
-    headings$[4]=h1$
-    headings$[5]=h2$
+            dim h1$(width),h2$(width)
+            if level$="I" headings$[1]=headings$[1]+" By Item"
+            if level$="W" headings$[1]=headings$[1]+" By Warehouse"
+
+            if level$="W" then
+            headings$[3]="[HEADER]"
+            endif
+            if begitem$="" headings$[4]="From Item: First" else headings$[4]="From Item: "+begitem$
+            if enditem$="" headings$[4]=headings$[4]+" -- To Item: Last" else headings$[4]=headings$[4]+" -- To Item: "+enditem$
+            if begprod$="" headings$[5]="From Product: First" else headings$[5]="From Product: "+begprod$                
+            if endprod$="" headings$[5]=headings$[5]+" -- To Product: Last" else headings$[5]=headings$[5]+" -- To Product: "+endprod$
+            if type$="" headings$[6]="All Item Types" else headings$[6]="Item Type: "+type$
+rem --- column heading
+             if level$="W" then
+             dim columns$[9,10]
+                columns=9
+                    columns$[0,0]="Item/Description",                  columns$[0,1]="C",   columns$[0,2]="40"
+                    columns$[1,0]="Prod Type",                         columns$[1,1]="C",   columns$[1,2]="5"
+                    columns$[2,0]="UM",                                columns$[2,1]="C",   columns$[2,2]="5"
+                    columns$[3,0]="Units Used",                        columns$[3,1]="N",   columns$[3,2]="5",columns$[3,3]=m2$
+                    columns$[4,0]="Units Cost",                        columns$[4,1]="N",   columns$[4,2]="5"
+                    columns$[5,0]="Total Usage",                       columns$[5,1]="N",   columns$[5,2]="5",columns$[5,3]=m1$
+                    columns$[6,0]="Cumulative % Of Usage",             columns$[6,1]="N",   columns$[6,2]="5"
+                    columns$[7,0]="Quantity On Hand",                  columns$[7,1]="N",   columns$[7,2]="5",columns$[7,3]=m2$
+                    columns$[8,0]="Total Value",                       columns$[8,1]="N",   columns$[8,2]="5",columns$[8,3]=m1$
+                    columns$[9,0]="Cumulative % Of Value",             columns$[9,1]="N",   columns$[9,2]="5",columns$[9,3]=m7$
+             endif
+             if level$="I" then
+                dim columns$[8,10]
+                columns=8
+                    columns$[0,0]="Item/Description",                  columns$[0,1]="C",   columns$[0,2]="40"
+                    columns$[1,0]="Prod Type",                         columns$[1,1]="C",   columns$[1,2]="5"
+                    columns$[2,0]="UM",                                columns$[2,1]="C",   columns$[2,2]="5"
+                    columns$[3,0]="Units Used",                        columns$[3,1]="N",   columns$[3,2]="5",columns$[3,3]=m2$
+                    columns$[4,0]="Total Usage",                       columns$[4,1]="N",   columns$[4,2]="5",columns$[4,3]=m1$
+                    columns$[5,0]="Cumulative % Of Usage",             columns$[5,1]="N",   columns$[5,2]="5"
+                    columns$[6,0]="Quantity On Hand",                  columns$[6,1]="N",   columns$[6,2]="5",columns$[6,3]=m2$
+                    columns$[7,0]="Total Value",                       columns$[7,1]="N",   columns$[7,2]="5",columns$[7,3]=m1$
+                    columns$[8,0]="Cumulative % Of Value",             columns$[8,1]="N",   columns$[8,2]="5",columns$[8,3]=m7$
+             endif  
 
 rem --- Position files
 
-    first$=firm_id$+"A"
-    ivm03a_key$=first$+begprod$
-    p=0
-    if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
-    read (ivm03_dev,key=ivm03a_key$,dom=*next)
+                first$=firm_id$+"A"
+                ivm03a_key$=first$+begprod$
+                p=0
+                if level$="W" first$=firm_id$+"C",ivm03a_key$=first$+begwhse$,p=2
+                read (ivm03_dev,key=ivm03a_key$,dom=*next)
 
-Rem ----Loop Starting
+Rem ---- Loop Starting
 
-    while more
+        while more
 
-        ivm03a_key$=key(ivm03_dev,end=*break)
-        if pos(first$=ivm03a_key$)<>1 break
-        if level$="W" whse$=ivm03a_key.warehouse_id$
-        product$=ivm03a_key.product_type$
-        item$=ivm03a_key.item_id$
-        if level$<>"W"then 
+            ivm03a_key$=key(ivm03_dev,end=*break)
+            if pos(first$=ivm03a_key$)<>1 break
+            if level$="W" whse$=ivm03a_key.warehouse_id$
+            product$=ivm03a_key.product_type$
+            item$=ivm03a_key.item_id$
+            if level$<>"W"then 
 
 rem --- By Item: Valid Product/Item?
             if endprod$<>"" if product$>endprod$ break
@@ -152,7 +177,6 @@ rem --- By Warehouse: Valid Warehouse/Product/Item?
 
 rem --- Accumulate totals
 
-rem        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
         read (ivm03_dev)
         if type$<>"" then
             ivm01a_key.firm_id$=firm_id$
@@ -196,85 +220,109 @@ rem --- Write ivw-02 totals record
 ivw02_reg_write:
         write (ivw02_dev,key=ivw02a_key$) ivw02a_key$,ivw02a.total_usage,ivw02a.total_value
 check_for_another_record:
-    wend ;Rem ----Loop Ending
+         wend ;Rem ----Loop Ending
 
 rem --- Position file
 
-    dim bar$(width,"-")
-    ivw02a_key.firm_id$=firm_id$
-    ivw02a_key.warehouse_id$=""
-    ivw02a.firm_id$=firm_id$
-    ivw02a.warehouse_id$=""
-    ivw02a.total_usage=0
-    ivw02a.total_value=0
-    if level$="I" find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
-    total_usage=ivw02a.total_usage
-    total_value=ivw02a.total_value
-    total_percent=0
-    bar=0
-    read (ivw01_dev,key="",dom=*next)
+        dim bar$(width,"-")
+        ivw02a_key.firm_id$=firm_id$
+        ivw02a_key.warehouse_id$=""
+        ivw02a.firm_id$=firm_id$
+        ivw02a.warehouse_id$=""
+        ivw02a.total_usage=0
+        ivw02a.total_value=0
+        if level$="I" find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
+        total_usage=ivw02a.total_usage
+        total_value=ivw02a.total_value
+        total_percent=0
+        bar=0
+        read (ivw01_dev,key="",dom=*next)
 
 rem --- Read next work record
 
     while more ; Rem ----Loop Starting
-        read record (ivw01_dev,end=done) ivw01a$
-        call pgmdir$+"adc_progress.aon","S","","Printing","",ivw01a.warehouse_id$+" "+ivw01a.item_id$,ivw01_dev,0,1,0,ignore_status
-        cost$=""
-        cost=ivw01a.unit_cost
-        usage=ivw01a.usage_qty
-        onhand=ivw01a.qty_on_hand
+            read record (ivw01_dev,end=done) ivw01a$
+            call pgmdir$+"adc_progress.aon","S","","Printing","",ivw01a.warehouse_id$+" "+ivw01a.item_id$,ivw01_dev,0,1,0,ignore_status
+            cost$=""
+            cost=ivw01a.unit_cost
+            usage=ivw01a.usage_qty
+            onhand=ivw01a.qty_on_hand
 
 rem --- Level break?
 
-        if level$="W" if ivw01a.warehouse_id$<>t0$ gosub WhseBreak
+            if level$="W" if ivw01a.warehouse_id$<>t0$ gosub WhseBreak
 
 rem --- Additional reads
 
-        dim description$(dw)
-        ivm01a_key$=firm_id$+ivw01a.item_id$
-        find record (ivm01_dev,key=ivm01a_key$) ivm01a$
-        description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
-        product$=ivm01a.product_type$
-        um$=ivm01a.unit_of_sale$
+            dim description$(dw)
+            ivm01a_key$=firm_id$+ivw01a.item_id$
+            find record (ivm01_dev,key=ivm01a_key$) ivm01a$
+            description$(1)=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+            product$=ivm01a.product_type$
+            um$=ivm01a.unit_of_sale$
 
 rem --- Perform detail line calculations
 
-        item_usage=cost*usage
-        item_value=onhand*cost
-        cum_usage=cum_usage+item_usage
-        cum_value=cum_value+item_value
-        if level$="W" cost$=str(cost:m3$)
-        usage_percent=0
-        value_percent=0
-        percent$=""
-        if total_usage<>0 item_usage_percent=(item_usage*100)/total_usage
-        if total_usage<>0 usage_percent=(cum_usage*100)/total_usage
-        if total_value<>0 value_percent=(cum_value*100)/total_value
-        if total_percent<100 percent$=str(usage_percent:m7$)
+            item_usage=cost*usage
+            item_value=onhand*cost
+            cum_usage=cum_usage+item_usage
+            cum_value=cum_value+item_value
+            if level$="W" cost$=str(cost:m3$)
+            usage_percent=0
+            value_percent=0
+            percent$=""
+            if total_usage<>0 item_usage_percent=(item_usage*100)/total_usage
+            if total_usage<>0 usage_percent=(cum_usage*100)/total_usage
+            if total_value<>0 value_percent=(cum_value*100)/total_value
+            if total_percent<100 percent$=str(usage_percent:m7$)
 
 rem --- Print detail line
 
-        if l+2>l9 gosub report_heading
-        print (printer_dev)@(o[0]),ivm01a.item_id$,@(o[1]),product$,@(o[2]),um$,@(o[3]),usage:m2$,@(o[4]),cost$,@(o[5]),item_usage:m1$,@(o[6]),percent$,@(o[7]),onhand:m2$,@(o[8]),item_value:m1$,@(o[9]),value_percent:m7$
-        print (printer_dev)@(o[0]+3),description$
+        if l+2>l9 
+        if level$="W" then 
+                OutVect!.addItem(ivm01a.item_id$+""+description$)
+                OutVect!.addItem(product$)
+                OutVect!.addItem(um$)
+                OutVect!.addItem(str(usage:m2$))
+                OutVect!.addItem(str(cost$))
+                OutVect!.addItem(str(item_usage:m1$))
+                OutVect!.addItem(percent$)
+                OutVect!.addItem(str(onhand:m2$))
+                OutVect!.addItem(str(item_value:m1$))
+                OutVect!.addItem(str(value_percent:m7$))
+                xwk=fnblank(10)
+        endif
+        if level$="I" then
+                OutVect!.addItem(ivm01a.item_id$+""+description$)
+                OutVect!.addItem(product$)
+                OutVect!.addItem(um$)
+                OutVect!.addItem(str(usage:m2$))
+                OutVect!.addItem(str(item_usage:m1$))
+                OutVect!.addItem(percent$)
+                OutVect!.addItem(str(onhand:m2$))
+                OutVect!.addItem(str(item_value:m1$))
+                OutVect!.addItem(str(value_percent:m7$))
+                xwk=fnblank(9)
+        endif
         l=l+2
-        total_percent=total_percent+item_usage_percent
+                total_percent=total_percent+item_usage_percent
 
 rem --- Accumulate totals
 
-        whse[0]=whse[0]+item_usage
-        whse[1]=whse[1]+item_value
-        report[0]=report[0]+item_usage
-        report[1]=report[1]+item_value
+                whse[0]=whse[0]+item_usage
+                whse[1]=whse[1]+item_value
+                report[0]=report[0]+item_usage
+                report[1]=report[1]+item_value
 
 rem --- Reached 100% of usage yet?
 
         if total_percent<100 then continue
         if bar then continue
-        if l+3>l9 gosub report_heading
-        print (printer_dev)""
-        print (printer_dev)bar$
-        print (printer_dev)""
+        if l+3>l9
+             OutVect!.addItem("")
+             OutVect!.addItem(bar$)
+             OutVect!.addItem("")
+
         l=l+3
         bar=1
 
@@ -284,111 +332,125 @@ done: rem --- All done
 
     done=1
     if level$="W" gosub WhseBreak
-    if l+2>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(o[5]-16),"Total For Report",@(o[5]),report[0]:m1$,@(o[8]),report[1]:m1$
+            if level$="W" then
+                
+                OutVect!.addItem("Total For Report")
+                xwk=fnblank(4)
+                OutVect!.addItem(str(report[0]:m1$))
+                xwk=fnblank(2)
+                OutVect!.addItem(str(report[1]:m1$))
+                xwk=fnblank(1)
+            endif
+            if level$="I" then
+                
+                OutVect!.addItem("Total For Report")
+                xwk=fnblank(3)
+                OutVect!.addItem(str(report[0]:m1$))
+                xwk=fnblank(2)
+                OutVect!.addItem(str(report[1]:m1$))
+                xwk=fnblank(1)
+            endif
     goto std_exit
-report_heading: rem --- Report Heading
 
-    l=headings+4
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)@(o[1]),"Prod",@(o[6]+m7-10),"Cumulative",@(o[7]+m2-9),"Quantity",@(o[9]+m7-10),"Cumulative"
-    print (printer_dev)@(o[0]),"Item/Description",@(o[1]),"Type",@(o[2]),"UM",@(o[3]+m2-10),"Units ",h7$,@(o[4]+m3-(len(ch$)+1)),ch$,@(o[5]+m1-12),"Total ",h8$,@(o[6]+m7-10),"% Of ",h8$,@(o[7]+m2-9),"On Hand",@(o[8]+m1-12),"Total Value",@(o[9]+m7-10),"% Of Value"
-    print (printer_dev)""
-    return
 
 WhseBreak: rem --- Warehouse Break
 
-    if t0$<>"" then
-       x$="Total For "+h9$
-       if l+2>l9 gosub report_heading
-       print (printer_dev)""
-       print (printer_dev)@(o[5]-len(x$)),x$,@(o[5]),whse[0]:m1$,@(o[8]),whse[1]:m1$
-       l=l+2
-    endif
+            if t0$<>"" then
+               x$="Total For "+h9$
+                    xwk=fnblank(10)
+                    OutVect!.addItem(x$)
+                    xwk=fnblank(4)
+                    OutVect!.addItem(str(whse[0]:m1$))
+                    xwk=fnblank(2)
+                    OutVect!.addItem(str(whse[1]:m1$))
+                    xwk=fnblank(1)
+                    xwk=fnblank(10)
 
-    if done return
-    dim description$(32)
-    t0$=ivw01a.warehouse_id$
-    ivm10c.SHORT_NAME$="(Not on File)"
-    l=l9+1
-    ivw02a_key.firm_id$=firm_id$
-    ivw02a_key.warehouse_id$=t0$
-    ivw02a.firm_id$=firm_id$
-    ivw02a.warehouse_id$=t0$
-    ivw02a.total_usage=0
-    ivw02a.total_value=0
-    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    let h9$="Warehouse "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2),bar=0
-    let headings$[4]=h1$,headings$[4](fncenter(h9$,width),len(h9$))=h9$
-    find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
-    let total_usage=ivw02a.total_usage,total_value=ivw02a.total_value,total_percent=0
-    let cum_usage=0,cum_value=0
-    return
+               l=l+2
+            endif
+
+                if done return
+                dim description$(32)
+                t0$=ivw01a.warehouse_id$
+                ivm10c.SHORT_NAME$="(Not on File)"
+                l=l9+1
+                ivw02a_key.firm_id$=firm_id$
+                ivw02a_key.warehouse_id$=t0$
+                ivw02a.firm_id$=firm_id$
+                ivw02a.warehouse_id$=t0$
+                ivw02a.total_usage=0
+                ivw02a.total_value=0
+                find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+                let h9$="Warehouse "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2),bar=0
+                BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+                HdrVect!.addItem(h9$)
+                find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
+                let total_usage=ivw02a.total_usage,total_value=ivw02a.total_value,total_percent=0
+                let cum_usage=0,cum_value=0
+                return
 
 Item_Total_Accum: rem --- Accumulate totals for item
 
-        dim i[2]
-        let x$=firm_id$+"G"+item$
-        read (ivm03g_dev,key=x$,dom=*next)
+                dim i[2]
+                let x$=firm_id$+"G"+item$
+                read (ivm03g_dev,key=x$,dom=*next)
 
 rem --- Read next item/warehouse xref
 Read_Next_Item:
-rem        while more ;Rem ----Loop Starting
-        let ivm03gk$=key(ivm03g_dev,end=Item_Whse_Done)
-        if pos(x$=ivm03gk$)<>1 then goto Item_Whse_Done
-        read (ivm03g_dev)
-        let whse$=ivm03gk$(24)
-        gosub Accum_Total_Whse
-        amount=(i[0]*i[2])+(cost*onhand),number=i[2]+onhand
-        if number>0 i[0]=amount/number
-        i[1]=i[1]+usage,i[2]=i[2]+onhand
-        goto Read_Next_Item
-rem        wend ;Rem ----Loop Ending
+
+                let ivm03gk$=key(ivm03g_dev,end=Item_Whse_Done)
+                if pos(x$=ivm03gk$)<>1 then goto Item_Whse_Done
+                read (ivm03g_dev)
+                let whse$=ivm03gk$(24)
+                gosub Accum_Total_Whse
+                amount=(i[0]*i[2])+(cost*onhand),number=i[2]+onhand
+                if number>0 i[0]=amount/number
+                i[1]=i[1]+usage,i[2]=i[2]+onhand
+                goto Read_Next_Item
+
 Item_Whse_Done:
-        let cost=i[0],usage=i[1],onhand=i[2],whse$="  "
-        gosub Total_Usage
-        return
+                let cost=i[0],usage=i[1],onhand=i[2],whse$="  "
+                gosub Total_Usage
+                return
 
 Accum_Total_Whse: rem --- Accumulate warehouse totals
 
-        dim activity[12]
-        let ivm02a_key$=firm_id$+whse$+item$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
-        let cost=0,usage=0,onhand=0
-        find record (ivm02_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
-        let onhand=ivm02a.qty_on_hand,cost=ivm02a.unit_cost
+                dim activity[12]
+                let ivm02a_key$=firm_id$+whse$+item$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
+                let cost=0,usage=0,onhand=0
+                find record (ivm02_dev,key=ivm02a_key$,dom=Call_Accum_Total_Whse) ivm02a$
+                let onhand=ivm02a.qty_on_hand,cost=ivm02a.unit_cost
 Call_Accum_Total_Whse:
-        call pgmdir$+"ivc_whseact.aon",action$,files[all],items$[all],periods$[all],activity[all],status
-        if base$="S" usage=activity[3]-activity[8]
-        if base$="U" usage=(activity[3]+activity[4])-activity[8]
-        return
+                call pgmdir$+"ivc_whseact.aon",action$,files[all],items$[all],periods$[all],activity[all],status
+                if base$="S" usage=activity[3]-activity[8]
+                if base$="U" usage=(activity[3]+activity[4])-activity[8]
+                return
 
 Total_Usage: rem --- Calculate total amount of usage
-        let amount=usage*cost,sign$=" ",amount$=str(100000000000-amount:m8$)
-        if amount<=0 sign$="-",amount$=str(amount:m8$)
-        return
+                let amount=usage*cost,sign$=" ",amount$=str(100000000000-amount:m8$)
+                if amount<=0 sign$="-",amount$=str(amount:m8$)
+                return
 
 Position: rem --- Print positions
-        call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
-        call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
-        call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
-        call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
-        call pgmdir$+"adc_sizemask.aon",m2$,m2,11,15
-        call pgmdir$+"adc_sizemask.aon",m3$,m3,11,15
-        o[9]=width-m7
-        o[8]=o[9]-m1
-        o[7]=o[8]-m2
-        o[6]=o[7]-m7
-        o[5]=o[6]-m1
-        o[4]=o[5]
-        ch$=""
-        if level$="W" o[4]=o[5]-m3,ch$="Unit Cost"
-        o[3]=o[4]-m2
-        o[2]=o[3]-3
-        o[1]=o[2]-6
-        dw=o[3]-3
-        return
+                call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
+                call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
+                call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
+                call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
+                call pgmdir$+"adc_sizemask.aon",m2$,m2,11,15
+                call pgmdir$+"adc_sizemask.aon",m3$,m3,11,15
+                o[9]=width-m7
+                o[8]=o[9]-m1
+                o[7]=o[8]-m2
+                o[6]=o[7]-m7
+                o[5]=o[6]-m1
+                o[4]=o[5]
+                ch$=""
+                if level$="W" o[4]=o[5]-m3,ch$="Unit Cost"
+                o[3]=o[4]-m2
+                o[2]=o[3]-3
+                o[1]=o[2]-6
+                dw=o[3]-3
+                return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -400,6 +462,15 @@ rem --- Functions used to retrieve form values
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
     def fnget_table$(q0$)=rd_alias_id$
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- Miscellaneous functions
 
