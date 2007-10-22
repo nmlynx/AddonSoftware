@@ -52,6 +52,13 @@ initializations: rem --- Initializations
 
 rem --- Get output device type
 
+    if printer_dev=0
+        msg$[0]="No output device has been opened"
+        call pgmdir$+"adc_stdmessage.aon",1,msg$[all],0,-1,-1,v$,v3
+        status=999
+        goto std_exit
+    endif
+    
     fin$=fin(printer_dev)
     device_type$=fin$(33)
     p=pos($00$=device_type$)
