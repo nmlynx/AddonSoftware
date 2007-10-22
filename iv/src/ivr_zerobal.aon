@@ -1,6 +1,6 @@
-rem --- ivr - Inventory Price List Report (Report Selection)
-rem --- Program ivr_pricelist.aon v8.0.0 16Jul2007 (ivr_fa)
-rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 12:42:27)
+rem --- Zero Balance Inventory Report (Input Overlay)
+rem --- Program ivr_zerobal.aon v8.0.0 09Jul2007 (ivr_za)
+rem --- Created by adx_codeport.bbx v1.1.5 (07/09/2007 11:48:54)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
@@ -12,9 +12,6 @@ rem --- All Rights Reserved
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
-    syspgmdir$=stbl("+DIR_SYP",err=*next)
-
-rem --- Inventory Price List
 
 rem --- Retrieve sysinfo data
 
@@ -24,95 +21,126 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open files
+rem --- Open/Lock files
 
-    files=9,begfile=1,endfile=files
+    files=11,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
-    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
-    files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-    files$[4]="ivm-03",ids$[4]="IVX_ITEMPRWH"
-    files$[5]="ivc_prodcode",ids$[5]="IVC_PRODCODE"
-    files$[6]="ivm-14",ids$[6]="IVM_ITEMSYN"
-    files$[7]="ivm-15",ids$[7]="IVC_TYPECODE"
-    files$[8]="ivs_params",ids$[8]="IVS_PARAMS"
-    files$[9]="ivc_whsecode",ids$[9]="IVC_WHSECODE"
+    files$[1]="ivm-03",ids$[1]="IVX_ITEMPHYS"
+    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+    files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
+    files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
+    files$[5]="ivm-03",ids$[5]="IVX_ITEMPRWH"
+    files$[6]="ivc_prodcode",ids$[6]="IVC_PRODCODE"
+    files$[7]="ivs_zerobal",ids$[7]="IVS_ZEROBAL"
+    files$[8]="ivt-05",ids$[8]="IVT_ZEROBAL"
+    files$[9]="aps_params",ids$[9]="APS_PARAMS"
+    files$[10]="ivs_params",ids$[10]="IVS_PARAMS"
+    files$[11]="ivc_whsecode",ids$[11]="IVC_WHSECODE"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    gls01_dev=channels[1]
-    ivm01_dev=channels[2]
-    ivm02_dev=channels[3]
-    ivm03_dev=channels[4]
-    ivm10a_dev=channels[5]
-    ivm14_dev=channels[6]
-    ivm15_dev=channels[7]
-    ivs01_dev=channels[8]
-    ivm10c_dev=channels[9]
+    ivm03b_dev=channels[1]
+    apm01_dev=channels[2]
+    ivm01_dev=channels[3]
+    ivm02_dev=channels[4]
+    ivm03c_dev=channels[5]
+    ivm10a_dev=channels[6]
+    ivs10a_dev=channels[7]
+    ivt05_dev=channels[8]
+    aps01a_dev=channels[9]
+    ivs01a_dev=channels[10]
+    ivm10c_dev=channels[11]
 
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm14a$:templates$[6],
-:	ivm15a$:templates$[7],gls01a$:templates$[1],ivs01a$:templates$[8],
-:	ivm10a$:templates$[5],ivm10c$:templates$[9],ivm03a$:templates$[4]
+    dim apm01a$:templates$[2],ivm01a$:templates$[3],ivm02a$:templates$[4],
+:       ivm03a$:templates$[5],ivm10a$:templates$[6],ivs10a$:templates$[7],
+:       ivt05a$:templates$[8],aps01a$:templates$[9],ivs01a$:templates$[10],
+:	ivm03b$:templates$[1],ivm10c$:templates$[11]
 
 rem --- Assign form input values to local variables
 
-    include$=option!.getOptionData("unit_cost_marg")
-    begwhse$=option!.getOptionData("warehouse_id_1")
-    endwhse$=option!.getOptionData("warehouse_id_2")
+    include$=option!.getOptionData("pick_listbutton")
+    sequence$=option!.getOptionData("sequence")
     begprod$=option!.getOptionData("product_type_1")
     endprod$=option!.getOptionData("product_type_2")
-    begitem$=option!.getOptionData("item_id_1")
-    enditem$=option!.getOptionData("item_id_2")
-    type$=option!.getOptionData("item_type")
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
- 
-rem --- Retrieve key template
-
-    call syspgmdir$+"bac_key_template.bbj","IVX_ITEMPRWH","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    ivs10a_key$=firm_id$+"A"
+    find record (ivs10a_dev,key=ivs10a_key$,err=*next) ivs10a$
 
 rem --- Parameters
 
-    dim p[5]
+    dim p[5],info$[20],i[1]
+    firm_id$=sysinfo.firm_Id$
+    n1$=sysinfo.firm_name$
+    n3$=sysinfo.task_desc$
+    when$=sysinfo.system_date$
+    p9$=ivs10a.writtn_date$
+    more=1
     p[0]=num(ivs01a.item_id_len$)
-    p[1]=num(ivs01a.precision$)
+    p[1]=num(ivs01a.current_per$)
+    p[2]=num(ivs01a.current_year$)
     p[3]=num(ivs01a.desc_len_01$)
     p[4]=num(ivs01a.desc_len_02$)
     p[5]=num(ivs01a.desc_len_03$)
 
-rem --- Initializations
+    call pgmdir$+"adc_application.aon","AP",info$[all]
+    ap$=info$[20]
+    if ap$<>"N" then
+        find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
+        i[0]=num(aps01a.vendor_size$)
+        files=1,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="apm-01",ids$[1]="APM_VENDMAST"
 
-    precision p[1]
-    dim headings$[8],o[8]
-    dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12]
-    dim o[7],i[3],x0$(32),y0$(5),y1$(20)
-    dim b0$(24),b1$(64),b[20],total[3],warehouse[3],product[3],report[3]
-    headings$[0]=sysinfo.firm_name$
-    headings$[1]=sysinfo.task_desc$
-    when$=sysinfo.system_date$
-    clock$=""
-    width=132
-    page=0
-    l9=59
-    l=l9+1
-    headings=8
-    m9$="-##0.00%"
-    m9=len(m9$)
-    done=0
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+	if status goto std_exit
+	apm01_dev=channels[1]
+	dim apm01a$:templates$[1]
+	m0$=aps01a.vendor_output$
+        m0=i[0]
+    endif
 
-rem --- Row positions
+rem --- Resize masks
 
+    call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
+    call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
+    call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
+    call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
     call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
-    call pgmdir$+"adc_sizemask.aon",m4$,m4,11,15
+   
 
-rem --- Run overlay
-    run pgmdir$+"ivr_pricelist_o1.aon"
+rem --- Retrieve key template
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPHYS","PRIMARY",ivm03b_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPRWH","PRIMARY",ivm03c_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVT_ZEROBAL","PRIMARY",ivt05a_key_tpl$,table_chans$[all],status$
+
+    if sequence$="C" dim ivm03_key$:ivm03b_key_tpl$,ivm03_dev=ivm03b_dev,sort$="B"
+    if sequence$="P" dim ivm03_key$:ivm03c_key_tpl$,ivm03_dev=ivm03a_dev,sort$="C"
+    dim ivt05a_key$:ivt05a_key_tpl$
+
+    if num(p9$)<>0 if p9$=when$ goto run_overlay
+
+    while more
+        read (ivm02_dev,key=firm_id$,DOM=*next)
+        read (ivm02_dev)ivm02a$
+	if ivm02a.firm_id$<>firm_id$ break
+        if ivm02a.qty_on_hand-ivm02a.safety_stock>0 then remove (ivt05_dev,KEY=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*next); continue
+	ivt05a$=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$
+	ivt05a.writtn_date$=when$
+	writerecord (ivt05_dev,dom=*next)ivt05a$
+    wend
+
+run_overlay: rem --- Run overlay
+    run pgmdir$+"ivr_zerobal_o1.aon"
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -191,9 +219,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call syspgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry

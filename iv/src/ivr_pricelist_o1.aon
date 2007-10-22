@@ -56,7 +56,7 @@ rem --- Valid Warehouse/Product/Item?
                     if product$>endprod$ then
                         read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
 :                   ivm03a_key.warehouse_id$+$FF$,dom=*Continue)
-                Continue
+	                Continue
                     endif
                 endif
                 if begitem$<>"" then
@@ -70,7 +70,7 @@ rem --- Valid Warehouse/Product/Item?
                     if item$>enditem$ then
                         read (ivm03_dev,key=ivm03a_key.firm_id$+ivm03a_key.record_id_c$+
 :                   ivm03a_key.warehouse_id$+ivm03a_key.product_type$+$FF$,dom=*Continue)
-                    Continue
+                        Continue
                 endif
             endif
     
@@ -148,7 +148,7 @@ rem --- Accumulate totals
                     report[x]=report[x]+item[x]
                 next x
 rem ---- Loop Ending
-wend 
+	    wend 
 
 done: rem --- All done
 
