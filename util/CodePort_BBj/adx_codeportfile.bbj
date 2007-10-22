@@ -22,8 +22,9 @@ rem --- Get the name of the program to be converted
 get_sourcefile: 
     let title$="Select program to be converted",status=1
     let filters$="PRO/5 executables (*.bbx)"+$0A$+"*.bbx"+$0A$+"All files (*.*)"+$0A$+"*.*"
-    print (0)'fileopen'(title$,pgmdir$,"","",filters$)
-    read (0)pathname$
+    rem --- print (0)'fileopen'(title$,pgmdir$,"","",filters$)
+    rem --- read (0)pathname$
+    pathname$=fileopen(title$,pgmdir$,"","",filters$)
     if pathname$="::BAD::" then goto get_sourcefile
     if pathname$="::CANCEL::" then goto the_end
     let filename$=fnbasename$(pathname$,""),status=0
