@@ -32,12 +32,12 @@ rem --- Init Read
     read (ivm03_dev,key=firm_id$+sort$,dom=*next)
 
 Main_Read: rem --- Main Read
-    ivm03a_key$=key(ivm03_dev,end=Done)
-    if pos(firm_id$+sort$=ivm03a_key$)<>1 goto Done
-    if sequence$="C" if begprod$<>"" if ivm03a_key.product_type$<begprod read (ivm03_dev,key=ivm03a.key$(1,5)+begprod$,dom=Main_Read)
-    if sequence$="C" if endprod$<>"" if ivm03a_key.product_type$<begprod read (ivm03_dev,key=ivm03a.key$(1,5)+$FF$,dom=Main_Read)
+    ivm03_key$=key(ivm03_dev,end=Done)
+    if pos(firm_id$+sort$=ivm03_key$)<>1 goto Done
+    if sequence$="P" if begprod$<>"" if ivm03_key.product_type$<begprod$ read (ivm03_dev,key=ivm03.key$(1,5)+begprod$,dom=Main_Read)
+    if sequence$="P" if endprod$<>"" if ivm03_key.product_type$>endprod$ read (ivm03_dev,key=ivm03.key$(1,5)+$FF$,dom=Main_Read)
     read (ivm03_dev)
-    ivt05a_key$=firm_id$+ivm03a_key.warehouse_id$+ivm03a_key.item_id$
+    ivt05a_key$=firm_id$+ivm03_key.warehouse_id$+ivm03_key.item_id$
     goto Flow_Main_Read
 
 Item_Sort: rem --- ivt-05 sort - whse/item
@@ -48,7 +48,7 @@ Flow_Main_Read:
     read record (ivt05_dev,key=ivt05a_key$,dom=Next_Record) ivt05a$
     if num(p9$)<>0 if ivt05a.writtn_date$<p9$ goto Next_Record
     if ivt05a_key.warehouse_id$<>t0$ gosub WhseBreak
-    if sequence$="P" if ivm03a_key.product_type$<>t1$ gosub SubTotal
+    if sequence$="P" if ivm03_key.product_type$<>t1$ gosub SubTotal
 
 rem --- Additional Reads
     call pgmdir$+"adc_progress.aon","S","","","",ivt05a.warehouse_id$+" "+ivt05a_key.item_id$,0,0,1,0,ignore_status
@@ -125,9 +125,9 @@ WhseBreak: rem --- Warehouse Break
 SubTotal: rem --- Sort Sub Total
 
     dim head$(30)
-    t1$=ivm03a_key.item_id$
+    t1$=ivm03_key.item_id$
     find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
-    head$=subhead$+" "+t1$+" "+ivm03a_key.item_id$
+    head$=subhead$+" "+t1$+" "+ivm03_key.item_id$
     head$=cvs(head$,2)
     gosub SubHeading
     return
