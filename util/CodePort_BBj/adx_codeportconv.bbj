@@ -36,7 +36,7 @@ convert_program:
     rem --- Convert line number references to labels
     gosub convert_linenumbers
     rem --- Convert program from executable to source listing
-    gosub pro5lst
+    gosub bbjlst
     rem --- Load source listing
     gosub load_sourcecode
     rem --- Convert to lower case
@@ -100,10 +100,11 @@ return
 
 
 rem --- Convert program from executable to source listing
-pro5lst: 
+bbjlst: 
     let description$="Creating source listing from program executable..."
     gosub display_step
-    let command$=pro5lst$+" -w1024 -l "+tmpfile$
+    rem --- let command$=pro5lst$+" -w1024 -l "+tmpfile$
+    command$="bbjlst.exe -w1024 -l "+tmpfile$
     let x=scall(command$)
     let tmpfile$=pgmdir$+basename$,txtfile$=basename$+txt$
     erase pgmdir$+basename$+txt$,err=rename_tmpfile
