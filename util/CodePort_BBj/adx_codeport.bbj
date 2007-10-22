@@ -20,10 +20,10 @@ rem ---     print 'minicon'(icon$,0),'title'(title$)
     print 'show',title$
 
 rem --- Retrieve directory paths from the config file
-    let logdir$=fnglobal$("+CDP_LOG","")
-    let cfgdir$=fnglobal$("+CDP_CFG","")
+    let logdir$=fnglobal$("+CODEPORT_LOG","")
+    let filedir$=fnglobal$("+CODEPORT_FILES","")
     let pgmdir$=fnglobal$("+DIR_PGM","")
-    let libdir$=fnglobal$("+CDP_LIB","")
+    let libdir$=fnglobal$("+CODEPORT_LIB","")
 
 rem --- Create and open log file
     let logfile$=logdir$+"CodePort_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
@@ -34,7 +34,7 @@ rem --- Create and open log file
     open (log_dev)logfile$
 
 rem --- Open replacements.ini file
-    let repfile$=cfgdir$+"replacements.ini"
+    let repfile$=filedir$+"replacements.ini"
     let repfile=0
     let rep_dev=unt
     open (rep_dev,err=parameters)repfile$

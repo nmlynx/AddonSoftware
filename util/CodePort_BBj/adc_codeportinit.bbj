@@ -148,7 +148,7 @@ rem --- build file and template lists from passed iolists
         if p then if rec$(6,1)<>"a" then x$=rec$(1,3)+"-"+rec$(4,3)
         let filenames$=filenames$+x$,files=files+1,files$[files]=x$,files1$[files]=x$
         
-        let chan=unt;open(chan)"file_alias"
+        let chan=unt;open(chan)stbl("+CODEPORT_FILES")+"file_alias"
         read_xref_file:
             read(chan,end=read_complete)dat$;if dat$="" goto read_xref_file
             if len(files$[files])=6 then 
