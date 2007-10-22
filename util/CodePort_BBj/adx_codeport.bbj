@@ -15,14 +15,15 @@ begin
 rem --- Initialize title bar
     let version$="v1.1.5",utility$=PGM(-2)
     let title$="CodePort - Program Conversion Utility "+version$
-    let icon$=fnglobal$("+ADDONICON","images/addon_logo_16.ico")
-    print 'minicon'(icon$,0),'title'(title$)
+rem ---     let icon$=fnglobal$("+ADDONICON","images/addon_logo_16.ico")
+rem ---     print 'minicon'(icon$,0),'title'(title$)
+    print 'show',title$
 
 rem --- Retrieve directory paths from the config file
-    let logdir$=fnglobal$("+DIR_LOG","")
-    let cfgdir$=fnglobal$("+DIR_CFG","")
+    let logdir$=fnglobal$("+CDP_LOG","")
+    let cfgdir$=fnglobal$("+CDP_CFG","")
     let pgmdir$=fnglobal$("+DIR_PGM","")
-    let libdir$=fnglobal$("+DIR_LIB","")
+    let libdir$=fnglobal$("+CDP_LIB","")
 
 rem --- Create and open log file
     let logfile$=logdir$+"CodePort_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
@@ -164,6 +165,7 @@ rem --- Missing code replacement file
     gosub display_message
 rem --- Run next overlay
 next_overlay: 
+
     run "adx_codeportfile.bbj",err=the_end
 
 rem --- Convert xref files/records to IOLIST format
