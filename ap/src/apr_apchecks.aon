@@ -63,6 +63,7 @@ rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_length
 
 initializations: rem --- Initializations
 
@@ -71,12 +72,23 @@ initializations: rem --- Initializations
     show_progress=1
     t0$=""
     t1$=""
+    dim t[2],h9$(20,$0a$)
+    m1$="########.00CR"
+    m7$="00000"
+    if aps01a.zip_length$="9" m7$="00000-0000"
+    m8$="*#######"
+    m9$="*"+m1$(2,10)
+    l9=12
+    l=0
+    h0=0
     answer$="Y"
     prompt$="Do you want to print a test pattern?"
     more=1
 
-rem --- Display Resource
+rem --- Display Resource and open printer
 
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
     if aps01a.multi_types$="Y" and aps01a.ap_check_seq$="Y" ap_type$=fill(23) else ap_type$=""
 
 rem --- Print test patterns until the user is satisfied
@@ -87,24 +99,24 @@ rem --- Print test patterns until the user is satisfied
           if answer$="N" break
 
           rem --- Print test pattern
-
+escape
           gosub test_pattern
           prompt$="Do you want to print another test pattern?"
     wend
-
-rem --- Start progress meter and position check File (ape-04)
 escape
+rem --- Start progress meter and position check File (ape-04)
+
     call pgmdir$+"adc_progress.aon","NC","","","","",0,ape04_dev,1,meter_num,status
 
 rem --- Init Read
-
+escape
     read (ape04_dev,key=firm_id$,dom=*next)
     if restart$="Y" read (ape04_dev,key=firm_id$+ap_type$+vendor_id$,dom=*next)
 
 rem --- Main Read
 
     while more
-        k$=key(ape04_dev1,end=*break)
+        k$=key(ape04_dev,end=*break)
         if k$(1,2)<>firm_id$ break
         read record (ape04_dev) ape04a$
 
@@ -135,7 +147,7 @@ check_header: rem --- Check Stub Header
     print (printer_dev)@(h0+25),"Check Date: ",fndate$(check_date$),@(h0+50),"Account ID#: ",accntid$
     print (printer_dev)@(h0),"Inv Date",@(h0+11),"Inv Number",@(h0+23+m1-8),"Inv Amt",@(h0+23+2*m1-9),"Discount",@(h0+23+3*m1-9),"Amt Paid",
     h1=0
-    if aps01a.ap_check_memo$<>"Y" goto l5100
+    if aps01a.ap_chk_memo$<>"Y" goto l5100
     print (printer_dev)@(h0+24+3*m1),"Memo",
     h1=5
     if aps01a.ap_chk_dist$<>"Y" goto l5100
@@ -148,7 +160,8 @@ l5100:
 l5200: rem --- Invoice Detail
 
     if l>l9 gosub l5700
-    print (printer_dev)@(h0),fndate$(ape04a.invoice_date$),@(h0+11),ape04a.ap_inv_no$,@(h0+23),a[0]:m1$,a[1]:m1$,a[0]-a[2]-a[1]:m1$,
+    print (printer_dev)@(h0),fndate$(ape04a.invoice_date$),@(h0+11),ape04a.ap_inv_no$,
+:   @(h0+23),ape04a.invoice_amt:m1$,ape04a.discount_amt:m1$,ape04a.invoice_amt-ape04a.retention-ape04a.discount_amt:m1$,
     l1=0
     if pos(" "<>ape04a.ap_inv_memo$)=0 goto l5258
     if h0+24+3*m1+16>79 h3=h0+24+3*m1+16-80 else h3=0
@@ -164,7 +177,7 @@ l5270:
     if k1$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$ goto l5380
     read record (apt02_dev) apt02a$
     if l>l9 gosub l5700
-    if a[3] x0=e[0]*(a[0]-a[2])/a[3] else x0=0
+    if ape04a.orig_inv_amt x0=e[0]*(ape04a.invoice_amt-ape04a.retention)/ape04a.orig_inv_amt else x0=0
     x$=pad(fnmask$(e0$(22,g[3]),g5$),dimlen)
     y$=str(x0:m1$)
     y$=y$(pos(" "<>y$))
@@ -269,7 +282,7 @@ l6500:
     find record (apm01_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm01a$;
 :   address$(1)=apm01a.addr_line_1$+apm01a.addr_line2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$,
 :   vend_name$=apm01a.vendor_name$
-    x1$(1)=fnmask$(a0$(5,p[0]),m0$)
+    x1$(1)=fnmask$(apt04a.vendor_id$(1,vendor_length),m0$)
     t1$=k$(3,8)
     accntid$=apm01a.vendor_acct$
     find record (apm08_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm08a$;
@@ -323,37 +336,43 @@ rem --- New Checks
 
 test_pattern: rem --- Test Pattern
     
-    z0$=a0$
+    dim z0$:fattr(ape04a$)
+    z0$=ape04a$
     z1$=b1$
-    z0=a[0]
-    z1=a[1]
-    z2=a[2]
-    z3=a[3]
+    z0=ape04a.invoice_amt
+    z1=ape04a.discount_amt
+    z2=ape04a.retention
+    z3=ape04a.orig_inv_amt
     z4=t[0]
     z5=t[1]
     z6=t[2]
     show_progress=0
+    ape04a.vendor_id$="XXXXXX"
+    ape04a.ap_inv_no$="XXXXXXXXXX"
+    vend_name$=fill(30,"X")
+    accntid$="XXXXXX"
+    
     dim b1$(200,"X"),a0$(60,"X"),t[2]
-    a[0]=9999.99
-    a[1]=a[0]
-    t[0]=a[0]
-    t[1]=a[1]
+    ape04a.invoice_amt=9999.99
+    ape04a.discount_amt=9999.99
+    t[0]=9999.99
+    t[1]=9999.99
     ape04a.ap_type$=""
     ape04a.invoice_date$=check_date$
     gosub check_header
     for ii=1 to 3
         gosub l5200
     next ii
-    a0$=z0$
+    ape04a$=z0$
     b1$=z1$
     gosub l7000
 l6975:
-    a0$=z0$
+    ape04a$=z0$
     b1$=z1$
-    a[0]=z0
-    a[1]=z1
-    a[2]=z2
-    a[3]=z3
+    ape04a.invoice_amt=z0
+    ape04a.discount_amt=z1
+    ape04a.retention=z2
+    ape04a.orig_inv_amt=z3
     t[0]=z4
     t[1]=z5
     t[2]=z6
