@@ -9,19 +9,29 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
+    call "adc_printer.aon",printer_dev,message,pfdesc$,selectpr$,status
+
 rem --- Init Data
     p9=p[3]+p[4]+p[5]
     if p9>132-10-m2-(4+p[0])-22 p9=132-10-m2-(4+p[0])-22
     headings=4
-    h=0
+    h=0,l9=55
     width=132
     clock$=""
     dim desc$(p9),headings$[headings]
-    h4$="All Zero Balance Items"
+    h4$="All Below Safety Stock Items"
     if num(p9$)<>0 h4$=h4$+" Since "+fndate$(p9$)
+    prod_range$=""
+    if cvs(begprod$,2)="" and cvs(endprod$,2)="" goto Heading_Def
+    prod_range$="Product Type: "
+    if cvs(begprod$,2)<>"" prod_range$=prod_range$+begprod$ else prod_range$=prod_range$+"First"
+    prod_range$=prod_range$+" thru "
+    if cvs(endprod$,2)<>"" prod_range$=prod_range$+endprod$ else prod_range$=prod_range$+"Last"
+Heading_Def:
     headings$[0]=n1$
     headings$[1]=n3$
     headings$[3]=h4$
+    headings$[4]=prod_range$
     more=1
 rem --- Background
 
@@ -34,8 +44,8 @@ rem --- Init Read
 Main_Read: rem --- Main Read
     ivm03_key$=key(ivm03_dev,end=Done)
     if pos(firm_id$+sort$=ivm03_key$)<>1 goto Done
-    if sequence$="P" if begprod$<>"" if ivm03_key.product_type$<begprod$ read (ivm03_dev,key=ivm03.key$(1,5)+begprod$,dom=Main_Read)
-    if sequence$="P" if endprod$<>"" if ivm03_key.product_type$>endprod$ read (ivm03_dev,key=ivm03.key$(1,5)+$FF$,dom=Main_Read)
+    if sequence$="P" if begprod$<>"" if ivm03_key.product_type$<begprod$ read (ivm03_dev,key=ivm03_key$(1,5)+begprod$,dom=Main_Read)
+    if sequence$="P" if endprod$<>"" if ivm03_key.product_type$>endprod$ read (ivm03_dev,key=ivm03_key$(1,5)+$FF$,dom=Main_Read)
     read (ivm03_dev)
     ivt05a_key$=firm_id$+ivm03_key.warehouse_id$+ivm03_key.item_id$
     goto Flow_Main_Read
@@ -54,7 +64,7 @@ rem --- Additional Reads
     call pgmdir$+"adc_progress.aon","S","","","",ivt05a.warehouse_id$+" "+ivt05a_key.item_id$,0,0,1,0,ignore_status
 
     find record (ivm02_dev,key=ivt05a_key$,dom=Remove_Record) ivm02a$
-    if ivm02a.qty_on_hand>0 then goto Remove_Record
+rem    if ivm02a.qty_on_hand>0 then goto Remove_Record
     find record (ivm01_dev,key=firm_id$+ivt05a.item_id$,dom=Remove_Record) ivm01a$
     desc$=cvs(ivm01a.item_desc$,2)
 
@@ -64,14 +74,16 @@ Vendor_Info: rem --- Get vendor info
         x=30
 Vendor_Info_Record:
         if x+p9>132-10-m2-(4+p[0])-22-(9+len(apmsk$)) if x>20 x=x-5; goto Vendor_Info_Record else p9=p9-1; goto Vendor_Info_Record
-        dim vndnam$(x)
+        dim vndnam$(x);apm01a.vendor_name$="Not on file"
         find record (apm01_dev,key=firm_id$+ivm02a.vendor_id$,dom=*next) apm01a$
+        vndnam$(1)=apm01a.vendor_name$
     endif
 Flow_Vendor:
-    if l+1>l9 gosub SubHeading
-    print (printer_dev)ivto5a.warehouse_id$," ",ivto5a.item_id$," ",desc$(1,p9),@(p[0]+p9+6),ivm01a.product_type$,"  ",ivm02a.cycle_code$,"   ",ivm02a.inv_location$,
-    if ap$="Y" print (printer_dev)@(p[0]+p9+27),buyer_code,"  ",fnmask$(ivm02a.vendor_id$(1,i[0]),m0$)," ",vndnam$,
-    print (printer_dev)@(132-m2-10),fndate$(ivto5a.writtn_date$),@(132-m2),ivm02a.qty_on_hand:m2$
+    if sequence$="P" if l+1>l9 gosub SubHeading
+    if l>l9 gosub report_heading
+    print (printer_dev)ivt05a.warehouse_id$," ",ivt05a.item_id$," ",desc$,@(p[0]+p9+6),ivm01a.product_type$,"  ",ivm02a.cycle_cd$,"   ",ivm02a.location$,
+    if ap$="Y" print (printer_dev)@(p[0]+p9+27),ivm02a.buyer_code$,"  ",fnmask$(ivm02a.vendor_id$(1,i[0]),m0$)," ",vndnam$,
+    print (printer_dev)@(132-m2-10),fndate$(ivt05a.writtn_date$),@(132-m2),ivm02a.qty_on_hand:m2$
     l=l+1
     count=count+1
 
@@ -100,8 +112,12 @@ report_heading: rem --- Report Heading
     print (printer_dev)@(132-8-m2),"Date",@(132-4),"On"
     print (printer_dev)@(0),"Whs",@(4),"Code",@(p[0]+4),"Description",@(p[0]+p9+6),"Code Code  Location",
     if ap$="Y" print (printer_dev)@(p[0]+p9+27),"Code Vendor",
-    print (printer_dev)@(132-9-m2),"Flagged",@(132-5),"Hand",'LF'
-    l=l+3
+    print (printer_dev)@(132-9-m2),"Flagged",@(132-5),"Hand"
+    l=l+2
+    if sequence$<>"P" then
+        print (printer_dev)""
+        l=l+1
+    endif
     return
 
 SubHeading: rem --- Sub Heading
@@ -118,16 +134,16 @@ WhseBreak: rem --- Warehouse Break
     t0$=ivt05a_key.warehouse_id$
     l=l9+1
     find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    ivm10c_h3$="Warehouse Code: "+t0$+" "+ivm10c.whse_name$
+    ivm10c_h3$="Warehouse Code: "+t0$+" "+ivm10c.short_name$
     headings$[2]=cvs(ivm10c_h3$,2)
     return
 
 SubTotal: rem --- Sort Sub Total
 
     dim head$(30)
-    t1$=ivm03_key.item_id$
+    t1$=ivm03_key.product_type$,ivm10a.code_desc$="Not on file"
     find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
-    head$=subhead$+" "+t1$+" "+ivm03_key.item_id$
+    head$=subhead$+" "+t1$+" "+ivm10a.code_desc$
     head$=cvs(head$,2)
     gosub SubHeading
     return

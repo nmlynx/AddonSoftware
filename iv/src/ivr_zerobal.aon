@@ -61,7 +61,7 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    include$=option!.getOptionData("report_option")
+    include$=option!.getOptionData("report_date")
     sequence$=option!.getOptionData("report_seq")
     begprod$=option!.getOptionData("product_type_1")
     endprod$=option!.getOptionData("product_type_2")
@@ -124,23 +124,27 @@ rem --- Retrieve key template
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPRWH","PRIMARY",ivm03c_key_tpl$,table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVT_ZEROBAL","PRIMARY",ivt05a_key_tpl$,table_chans$[all],status$
 
-    if sequence$="C" dim ivm03_key$:ivm03b_key_tpl$,ivm03_dev=ivm03b_dev,sort$="B"
-    if sequence$="P" dim ivm03_key$:ivm03c_key_tpl$,ivm03_dev=ivm03c_dev,sort$="C"
+    if sequence$="C" dim ivm03_key$:ivm03b_key_tpl$;ivm03_dev=ivm03b_dev,sort$="B"
+    if sequence$="P" dim ivm03_key$:ivm03c_key_tpl$;ivm03_dev=ivm03c_dev,sort$="C"
     dim ivt05a_key$:ivt05a_key_tpl$
 
     if num(p9$)<>0 if p9$=prev_p9$ goto run_overlay
 
+    ivs10a.firm_id$=firm_id$
+    ivs10a.record_id_a$="A"
     ivs10a.run_date$=p9$
-    writerecord (ivs10a_dev)ivs10a$
+    write record (ivs10a_dev)ivs10a$
 
+    read (ivm02_dev,key=firm_id$,DOM=*next)
     while more
-        read (ivm02_dev,key=firm_id$,DOM=*next)
-        read (ivm02_dev)ivm02a$
+        read record (ivm02_dev)ivm02a$
 	if ivm02a.firm_id$<>firm_id$ break
-        if ivm02a.qty_on_hand-ivm02a.safety_stock>0 then remove (ivt05_dev,KEY=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*next); continue
-	ivt05a$=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$
+        if ivm02a.qty_on_hand-ivm02a.safety_stock>0 then remove (ivt05_dev,KEY=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*continue); continue
+	ivt05a.firm_id$=ivm02a.firm_id$,ivt05a_key.firm_id$=ivm02a.firm_id$
+	ivt05a.warehouse_id$=ivm02a.warehouse_id$,ivt05a_key.warehouse_id$=ivm02a.warehouse_id$
+	ivt05a.item_id$=ivm02a.item_id$,ivt05a_key.item_id$=ivm02a.item_id$
 	ivt05a.writtn_date$=when$
-	writerecord (ivt05_dev,dom=*next)ivt05a$
+	write record (ivt05_dev)ivt05a$
     wend
 
 run_overlay: rem --- Run overlay
