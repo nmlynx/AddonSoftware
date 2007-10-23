@@ -131,6 +131,14 @@ rem --- Is Sales Order Processing installed?
        jn$="N"
     endif
 
+rem --- Document initializations
+
+            OutVect!=bbjAPI().getSysGui().makeVector()
+            rep_date$=date(0:"%Mz/%Dz/%Yd")
+            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+            rep_time$=date(0:"%hz:%mz %p")
+            rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Initializations
 
     headings=3
@@ -150,6 +158,7 @@ rem --- Initializations
     artype$=fill(2)
     salesperson$=""
     lastcode$=""
+    u_line$="--------------------"
 
 rem --- Underline for subtotals and totals
 
@@ -165,75 +174,6 @@ rem --- Set table and index values based on the option and sequence specified by
     if option$="S"
        keynum=1
        channel=arm02_dev
-    endif
-
-rem --- Initialize print positions (OD[]=Detail report positions/OS[]=Summary report positions)
-
-    if type$="D"
-       od[0]=2
-       od[1]=11
-       od[2]=20
-       od[3]=31
-       od[4]=39
-       od[5]=45
-       od[12]=width-m9
-       od[11]=od[12]-m1
-       od[10]=od[11]-m1
-       od[9]=od[10]-m1
-       od[8]=od[9]-m1
-       od[7]=od[8]-m1
-       od[6]=od[7]-(m1*future)
-       w=m0+32
-       t=od[6]-2
-       j=od[6]-od[1]-1
-    endif
-    if type$="S"
-       os[0]=0
-       os[7]=width-m9
-       os[6]=os[7]-m1
-       os[5]=os[6]-m1
-       os[4]=os[5]-m1
-       os[3]=os[4]-m1
-       os[2]=os[3]-m1
-       os[1]=os[2]-(m1*future)
-       w=min(m0+32,os[1]-2)
-       t=w
-    endif
-
-rem --- Initialize heading positions (HDx[]=Detail report positions/HS[]=Summary report positions)
-
-    if type$="D"
-       hd1[0]=0
-       hd1[1]=31
-       hd1[2]=53
-       hd1[11]=od[12]-9
-       hd1[10]=od[11]-9
-       hd1[9]=od[10]-9
-       hd1[8]=od[9]-9
-       hd1[7]=od[8]-9
-       hd2[0]=2
-       hd2[1]=11
-       hd2[2]=20
-       hd2[3]=31
-       hd2[4]=39
-       hd2[5]=45
-       hd2[12]=width-8
-       hd2[11]=od[12]-9
-       hd2[10]=od[11]-9
-       hd2[9]=od[10]-9
-       hd2[8]=od[9]-9
-       hd2[7]=od[8]-9
-       hd2[6]=od[7]-7
-    endif
-    if type$="S"
-       hs[0]=0
-       hs[1]=os[2]-7
-       hs[2]=os[3]-9
-       hs[3]=os[4]-9
-       hs[4]=os[5]-9
-       hs[5]=os[6]-9
-       hs[6]=os[7]-9
-       hs[7]=os[7]+m9-8
     endif
 
 rem --- Initialize report headings
@@ -261,6 +201,7 @@ rem --- Initialize report headings
                 h3$=h3$+" From "
                 if sequence$="C" if begcust$<>"" h8$=fnmask$(begcust$(1,customer_size),m0$) 
                 if sequence$="C" if endcust$<>"" h9$=fnmask$(endcust$(1,customer_size),m0$)
+
            break
            case salesperson 
                 h3$="Customers By Salesperson"
@@ -299,10 +240,54 @@ rem --- Dimension string templates
     if jn$="Y" dim opm09a$:templates$[1]
     if op$="Y" dim opt01a$:templates$[2]
 
-rem --- Open printer, start progress meter and position customer file
+rem --- column headings
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+    if type$="D"
+
+        columns=12
+        dim columns$[12,3]
+
+        p1$=periodbeg$[1]+"-"+periodend$[1]
+        p2$=periodbeg$[2]+"-"+periodend$[2]
+        p3$=periodbeg$[3]+"-"+periodend$[3]
+        p4$=periodbeg$[4]+"-"+periodend$[4]
+        p5$=periodend$[5]
+
+        columns$[0,0]="Invoice",columns$[0,1]="C",columns$[0,2]="5"
+        columns$[1,0]="Invoiced",columns$[1,1]="C",columns$[1,2]="15"
+        columns$[2,0]="PO Number",columns$[2,1]="C",columns$[2,2]="5"
+        columns$[3,0]="Order Number",columns$[3,1]="C",columns$[3,2]="5"
+        columns$[4,0]="Terms",columns$[4,1]="C",columns$[4,2]="5"
+        columns$[5,0]="Type",columns$[5,1]="C",columns$[5,2]="30"
+        columns$[6,0]=future_heading$ ,columns$[6,1]="C",columns$[6,2]="5"
+        columns$[7,0]=p1$,columns$[7,1]="N",columns$[7,2]="5"
+        columns$[8,0]=p2$,columns$[8,1]="N",columns$[8,2]="5"
+        columns$[9,0]=p3$,columns$[9,1]="N",columns$[9,2]="5"
+        columns$[10,0]=p4$,columns$[10,1]="N",columns$[10,2]="5"
+        columns$[11,0]=p5$,columns$[11,1]="N",columns$[11,2]="5"
+        columns$[12,0]="Balance",columns$[12,1]="N",columns$[12,2]="5"
+
+    endif
+
+    if type$="S"
+
+	columns=8
+	dim columns$[8,3]
+
+        columns$[0,0]="Customer",columns$[0,1]="C",columns$[0,2]="30"
+        columns$[1,0]="",columns$[1,1]="C",columns$[1,2]="15"
+        columns$[2,0]=future_heading$ ,columns$[2,1]="C",columns$[2,2]="5"
+        columns$[3,0]=periodbeg$[1]+" - "+periodend$[1],columns$[3,1]="N",columns$[3,2]="5"
+        columns$[4,0]=periodbeg$[2]+" - "+periodend$[2],columns$[4,1]="N",columns$[4,2]="5"
+        columns$[5,0]=periodbeg$[3]+" - "+periodend$[3],columns$[5,1]="N",columns$[5,2]="5"
+        columns$[6,0]=periodbeg$[4]+" - "+periodend$[4],columns$[6,1]="N",columns$[6,2]="5"
+        columns$[7,0]=periodend$[5],columns$[7,1]="N",columns$[7,2]="15"
+        columns$[8,0]="Balance",columns$[8,1]="N",columns$[8,2]="5"
+
+    endif
+
+rem --- Start progress meter and position customer file
+
     call pgmdir$+"adc_progress.aon","NC","","","","",0,channel,1,meter_num,status
     read (channel,knum=keynum,key=firm_id$,dom=*next)
 
@@ -414,8 +399,8 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                 rem --- Format detail line
 
                 dim periods$[maxperiods+1],po$(10),order$(7)
-                periods$[period]=fnoverflow$(amount,m1$)
-                periods$[period]=fnoverflow$(amount,m9$)
+                periods$[period]=cvs(fnoverflow$(amount,m1$),3)
+                periods$[period]=cvs(fnoverflow$(amount,m9$),3)
                 po$(1)="None"
                 order$(1)="None"
 
@@ -426,6 +411,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                       first=0
                       continued$=""
                       gosub customer_heading
+
                       if comments=0 break
 
                       rem --- Print customer comments
@@ -436,22 +422,26 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                             if pos(arm01_key$=k$)<>1 break
                             read record (arm05_dev) arm05a$
                             if lines+1>maxlines gosub customer_heading
-                            print (printer_dev) @(m0+1),arm05a.sequence_num$," ",arm05a.std_comments$
+
+                            OutVect!.addItem(arm05a.sequence_num$)
+                            OutVect!.addItem(arm05a.std_comments$)
+                            abc=fnblank(11)
+
                             lines=lines+1
                             none=0
                       wend
                       if none break
                       if lines+2>maxlines gosub customer_heading
-                      print (printer_dev) ""
+                      abc=fnblank(13)
                       lines=lines+1
                       break
                 wend 
 
-                rem --- If Sales Order Processing is installed try and get the invoice history 
-                rem --- record to obtain the order and purchase order numbers. Note that only
-                rem --- the first 10 characters of the PO number are printed because of the 
-                rem --- inability to fit any more characters than are currently printed on a
-                rem --- line.
+rem --- If Sales Order Processing is installed try and get the invoice history 
+rem --- record to obtain the order and purchase order numbers. Note that only
+rem --- the first 10 characters of the PO number are printed because of the 
+rem --- inability to fit any more characters than are currently printed on a
+rem --- line.
 
                 history=history$="Y" and arm02a.inv_hist_flg$="Y"
                 if history
@@ -473,9 +463,53 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                 rem --- Print detail line
 
                 if lines+1>maxlines gosub customer_heading
-                print (printer_dev) @(od[0]),art01a.ar_inv_no$,@(od[1]),fndate$(asof$),@(od[2]),po$,
-:                                   @(od[3]),order$,@(od[4]),art01a.ar_terms_code$,@(od[5]),art01a.invoice_type$,
-:                                   @(od[period+6]),fnoverflow$(amount,m1$),@(od[12]),fnoverflow$(amount,m9$)
+
+                     OutVect!.addItem(art01a.ar_inv_no$) 
+                     OutVect!.addItem(fndate$(asof$))
+                     OutVect!.addItem(po$)
+                     OutVect!.addItem(order$)
+                     OutVect!.addItem(art01a.ar_terms_code$)
+                     OutVect!.addItem(art01a.invoice_type$)
+                     abc=fnblank(1)
+
+                if period=1
+
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(4)
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
+ 
+                endif
+
+                if period=2
+                     abc=fnblank(1)
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(3)
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
+ 
+                endif
+
+                if period=3
+                     abc=fnblank(2)
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(2)
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
+ 
+                endif
+
+                if period=4
+                     abc=fnblank(3)
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(1)
+                     OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
+ 
+                endif
+
+                if period=5
+                         abc=fnblank(4)   
+                         OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
+                endif
+ 
                 lines=lines+1
 
                 rem --- If job numbers are being used retrieve the job (if one exists) and print it
@@ -486,7 +520,9 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                       find record (opm09_dev,key=k$,dom=*break) opm09a$
                       job$(1)="Job "+opm09a.job_no$+" "+opm09a.customer_name$
                       if lines+1>maxlines gosub customer_heading
-                      print (printer_dev) @(o[1]),job$
+ 
+                      OutVect!.addItem(job$)
+                      abc=fnblank(12)
                       lines=lines+1
                       break
                 wend
@@ -502,26 +538,43 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                     c[maxperiods+1]=c[maxperiods+1]+c[x]
                 next x
                 if type$="D" if lines+2>maxlines gosub customer_heading 
-                if type$="S" if lines+2>maxlines gosub report_heading 
+                if type$="S" if lines+2>maxlines gosub increment_lines 
+                  
                 if type$="D"
                    dim x$(t)
-                   x$(1)="Total for "+customer$
+                   x$="Total for "+customer$
                    x$=cvs(x$,2)
-                   print (printer_dev) @(underline),underline$
-                   print (printer_dev) @(od[6]-len(x$)),x$,@(od[6]),fnfuture$(future$,c[0],m1$),
-:                                      @(od[7]),fnoverflow$(c[1],m1$),@(od[8]),fnoverflow$(c[2],m1$),
-:                                      @(od[9]),fnoverflow$(c[3],m1$),@(od[10]),fnoverflow$(c[4],m1$),
-:                                      @(od[11]),fnoverflow$(c[5],m1$),@(od[12]),fnoverflow$(c[6],m9$)
-                   endif
+
+                    abc=fnblank(7) 
+                    OutVect!.addItem(u_line$)  
+                    OutVect!.addItem(u_line$)  
+                    OutVect!.addItem(u_line$)  
+                    OutVect!.addItem(u_line$)  
+                    OutVect!.addItem(u_line$)  
+                    OutVect!.addItem(u_line$)
+
+                    abc=fnblank(5)
+                    OutVect!.addItem(x$)
+
+                endif 
+
                 if type$="S"
-                   print (printer_dev) ""
-                   print (printer_dev) @(os[0]),customer$,@(os[1]),fnfuture$(future$,c[0],m1$),
-:                                      @(os[2]),fnoverflow$(c[1],m1$),@(os[3]),fnoverflow$(c[2],m1$),
-:                                      @(os[4]),fnoverflow$(c[3],m1$),@(os[5]),fnoverflow$(c[4],m1$),
-:                                      @(os[6]),fnoverflow$(c[5],m1$),@(os[7]),fnoverflow$(c[6],m9$)
+                   abc=fnblank(9)
+                   OutVect!.addItem(customer$)
+                   abc=fnblank(1)
                 endif
-                lines=lines+2
+
+                OutVect!.addItem(fnfuture$(future$,c[0],m1$))
+                OutVect!.addItem(cvs(fnoverflow$(c[1],m1$),3))
+                OutVect!.addItem(cvs(fnoverflow$(c[2],m1$),3))
+                OutVect!.addItem(cvs(fnoverflow$(c[3],m1$),3))
+                OutVect!.addItem(cvs(fnoverflow$(c[4],m1$),3))
+                OutVect!.addItem(cvs(fnoverflow$(c[5],m1$),3))
+                OutVect!.addItem(cvs(fnoverflow$(c[6],m9$),3))
+
+                lines=lines+2                
                 printed=0
+
           wend  
 
           rem --- Update customer detail record (if requested)
@@ -554,51 +607,63 @@ rem --- All done
     for x=0 to maxperiods
         t[maxperiods+1]=t[maxperiods+1]+t[x]
     next x
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) @(underline),underline$
-    if type$="D" print (printer_dev) @(od[6]-len(x$)),x$,@(od[6]),fnfuture$(future$,t[0],m1$),
-:                                    @(od[7]),fnoverflow$(t[1],m1$),@(od[8]),fnoverflow$(t[2],m1$),
-:                                    @(od[9]),fnoverflow$(t[3],m1$),@(od[10]),fnoverflow$(t[4],m1$),
-:                                    @(od[11]),fnoverflow$(t[5],m1$),@(od[12]),fnoverflow$(t[6],m9$)
-    if type$="S" print (printer_dev) @(os[1]-len(x$)),x$,@(os[1]),fnfuture$(future$,t[0],m1$),
-:                                    @(os[2]),fnoverflow$(t[1],m1$),@(os[3]),fnoverflow$(t[2],m1$),
-:                                    @(os[4]),fnoverflow$(t[3],m1$),@(os[5]),fnoverflow$(t[4],m1$),
-:                                    @(os[6]),fnoverflow$(t[5],m1$),@(os[7]),fnoverflow$(t[6],m9$)
+    if lines+2>maxlines gosub increment_lines
+    if type$="D" 
+        abc=fnblank(7) 
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        abc=fnblank(5)
+    endif 
+
+    if type$="S" 
+        abc=fnblank(3) 
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        abc=fnblank(1)
+    endif 
+ 
+    OutVect!.addItem(x$)
+    OutVect!.addItem(fnfuture$(future$,t[0],m1$))
+    OutVect!.addItem(cvs(fnoverflow$(t[1],m1$),3))
+    OutVect!.addItem(cvs(fnoverflow$(t[2],m1$),3)) 
+    OutVect!.addItem(cvs(fnoverflow$(t[3],m1$),3))
+    OutVect!.addItem(cvs(fnoverflow$(t[4],m1$),3))
+    OutVect!.addItem(cvs(fnoverflow$(t[5],m1$),3))
+    OutVect!.addItem(cvs(fnoverflow$(t[6],m9$),3))
+    
     goto std_exit
 
-report_heading: rem --- Report Heading
+increment_lines: rem --- Increment lines variable
 
     lines=headings+1
     if option$="S" headings$[3]=cvs(salesperson$,2)
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    if type$="D"
-       print (printer_dev) @(hd1[1]),"Order",@(hd1[7]),periodbeg$[1],@(hd1[8]),periodbeg$[2],@(hd1[9]),periodbeg$[3],
-:                          @(hd1[10]),periodbeg$[4],@(hd1[11]),periodbeg$[5]
-       print (printer_dev) @(hd2[0]),"Invoice",@(hd2[1]),ageby$,@(hd2[2]),"PO Number",@(hd2[3]),"Number",
-:                          @(hd2[4]),"Terms",@(hd2[5]),"Type",@(hd2[6]),future_heading$,@(hd2[7]),periodend$[1],
-:                          @(hd2[8]),periodend$[2],@(hd2[9]),periodend$[3],@(hd2[10]),periodend$[4],
-:                          @(hd2[11]),periodend$[5],@(hd2[12]),"Balance"
-    endif
-    if type$="S"
-       print (printer_dev) @(hs[2]),periodbeg$[1],@(hs[3]),periodbeg$[2],@(hs[4]),periodbeg$[3],
-:                          @(hs[5]),periodbeg$[4],@(hs[6]),periodbeg$[5]
-       print (printer_dev) @(hs[0]),"Customer",@(hs[1]),future_heading$,@(hs[2]),periodend$[1],@(hs[3]),periodend$[2],
-:                          @(hs[4]),periodend$[3],@(hs[5]),periodend$[4],@(hs[6]),periodend$[5],@(hs[7]),"Balance"
-    endif
     lines=lines+2
     return
 
 customer_heading: rem --- Print customer subheading
 
     if type$="S" return
-    if lines+3>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) fnmask$(arm01a.customer_id$(1,customer_size),m0$)," ",arm01a.customer_name$," ",
-:                       phone$," ",arm01a.contact_name$," ",continued$
-    print (printer_dev) ""
-    continued$="(Continued)"
-    lines=lines+3
+    if lines+3>maxlines gosub increment_lines
+
+        abc=fnblank(13)
+        OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
+        OutVect!.addItem(arm01a.customer_name$)
+        OutVect!.addItem(phone$)
+        OutVect!.addItem(arm01a.contact_name$)
+        OutVect!.addItem(continued$)
+        abc=fnblank(8)
+        abc=fnblank(13)
+        continued$="(Continued)"
+        lines=lines+3
+
     return
 
 salesperson: rem --- Salesperson break
@@ -610,24 +675,43 @@ salesperson: rem --- Salesperson break
               s[maxperiods+1]=s[maxperiods+1]+s[x]
           next x
           if type$="D" if lines+2>maxlines gosub customer_heading 
-          if type$="S" if lines+2>maxlines gosub report_heading 
-          if type$="D"
-             print (printer_dev) @(underline),underline$
-             print (printer_dev) @(od[6]-len(x$)),x$,@(od[6]),fnfuture$(future$,s[0],m1$),
-:                                @(od[7]),fnoverflow$(s[1],m1$),@(od[8]),fnoverflow$(s[2],m1$),
-:                                @(od[9]),fnoverflow$(s[3],m1$),@(od[10]),fnoverflow$(s[4],m1$),
-:                                @(od[11]),fnoverflow$(s[5],m1$),@(od[12]),fnoverflow$(s[6],m9$)
-             endif
-          if type$="S"
-             print (printer_dev) @(underline),underline$
-             print (printer_dev) @(os[1]-len(x$)),x$,@(os[1]),fnfuture$(future$,s[0],m1$),
-:                                @(os[2]),fnoverflow$(s[1],m1$),@(os[3]),fnoverflow$(s[2],m1$),
-:                                @(os[4]),fnoverflow$(s[3],m1$),@(os[5]),fnoverflow$(s[4],m1$),
-:                                @(os[6]),fnoverflow$(s[5],m1$),@(os[7]),fnoverflow$(s[6],m9$)
-          endif
-          lines=lines+2
-          salesperson=0
-    wend
+          if type$="S" if lines+2>maxlines gosub increment_lines 
+          
+     if type$="D" 
+        abc=fnblank(7) 
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        OutVect!.addItem(u_line$)  
+        abc=fnblank(5)
+      endif 
+ 
+      if type$="S" 
+         abc=fnblank(3) 
+         OutVect!.addItem(u_line$)  
+         OutVect!.addItem(u_line$)  
+         OutVect!.addItem(u_line$)  
+         OutVect!.addItem(u_line$)  
+         OutVect!.addItem(u_line$)  
+         OutVect!.addItem(u_line$)  
+         abc=fnblank(1) 
+      endif    
+
+        OutVect!.addItem(fnfuture$(future$,s[0],m1$))
+        OutVect!.addItem(x$)
+        OutVect!.addItem(cvs(fnoverflow$(s[1],m1$),3))
+        OutVect!.addItem(cvs(fnoverflow$(s[2],m1$),3)) 
+        OutVect!.addItem(cvs(fnoverflow$(s[3],m1$),3))
+        OutVect!.addItem(cvs(fnoverflow$(s[4],m1$),3))
+        OutVect!.addItem(cvs(fnoverflow$(s[5],m1$),3))
+        OutVect!.addItem(cvs(fnoverflow$(s[6],m9$),3))
+    
+        lines=lines+2
+        salesperson=0
+    
+   wend
     if done return
     dim arm10f$:fattr(arm10f$),s[maxperiods+1]
     arm10f.firm_id$=arm02a.firm_id$
@@ -691,6 +775,15 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         wend
         if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
         return str(q1$:q2$)
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #include std_error.src
