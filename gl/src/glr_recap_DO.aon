@@ -242,7 +242,7 @@ rem --- Get next glw-11 key
 
           if glstatus goto date_message
           if pos("D"=action$)=0 goto date_message
-          call pgmdir$+"glc_checkdate.aon",glw11a.trns_date$,"N",period$,year$,glstatus
+          call pgmdir$+"glc_datecheck.aon",glw11a.trns_date$,"N",period$,year$,glstatus
 
           date_message: rem --- Print error message (if necessary)
 
