@@ -27,14 +27,14 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
-    files$[4]="ARC_TERMCODE",ids$[4]=files$[4];rem "arm-10A"
+    files$[4]="arc_termcode",ids$[4]="ARC_TERMCODE";rem "arm-10A"
     files$[5]="glm-01",ids$[5]="GLM_ACCT"
     files$[6]="glw-11",ids$[6]="GLW_TRANSDET"
     files$[7]="ivm-01",ids$[7]="IVM_ITEMMAST"
     files$[8]="ivm-02",ids$[8]="IVM_ITEMWHSE"
     files$[9]="ivm-03",ids$[9]="IVX_ITEMPROD"
     files$[10]="ivm-04",ids$[10]="IVM_ITEMTIER"
-    files$[11]="IVC_PRODCODE",ids$[11]=files$[11];rem "ivm-10A"
+    files$[11]="ivc_prodcode",ids$[11]="IVC_PRODCODE";rem "ivm-10A"
     files$[12]="ivw-04",ids$[12]="IVW_LFDET"
     files$[13]="ope-01",ids$[13]="OPE_ORDHDR"
     files$[14]="ope-11",ids$[14]="OPE_ORDDET"
@@ -53,11 +53,11 @@ rem --- Open/Lock files
     files$[27]="sfe-01",ids$[27]="SFE_WOMASTR"
     files$[28]="sfe-04",ids$[28]="SFE_WOTRANS"
     files$[29]="sfm-10",ids$[29]="SFC_WOTYPECD"
-    files$[30]="APS_PARAMS",ids$[30]=files$[30]
-    files$[31]="ARS_PARAMS",ids$[31]=files$[31]
-    files$[32]="GLS_PARAMS",ids$[32]=files$[32]
-    files$[33]="IVS_PARAMS",ids$[33]=files$[33]
-    files$[34]="POS_PARAMS",ids$[34]=files$[34]
+    files$[30]="aps_params",ids$[30]="APS_PARAMS"
+    files$[31]="ars_params",ids$[31]="ARS_PARAMS"
+    files$[32]="gls_params",ids$[32]="GLS_PARAMS"
+    files$[33]="ivs_params",ids$[33]="IVS_PARAMS"
+    files$[34]="pos_params",ids$[34]="POS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status

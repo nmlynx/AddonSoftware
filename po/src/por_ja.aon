@@ -28,14 +28,14 @@ rem --- Open/Lock files
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
-    files$[5]="IVC_PRODCODE",ids$[5]=files$[5];rem "ivm-10A"
+    files$[5]="ivc_prodcode",ids$[5]="IVC_PRODCODE";rem "ivm-10A"
     files$[6]="ivm-14",ids$[6]="IVM_ITEMSYN"
     files$[7]="poe-12",ids$[7]="POE_PODET"
     files$[8]="pom-02",ids$[8]="POC_LINECODE"
     files$[9]="pow-15",ids$[9]="POW_POBYITEM"
-    files$[10]="APS_PARAMS",ids$[10]=files$[10]
-    files$[11]="IVS_PARAMS",ids$[11]=files$[11]
-    files$[12]="POS_PARAMS",ids$[12]=files$[12]
+    files$[10]="aps_params",ids$[10]="APS_PARAMS"
+    files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
+    files$[12]="pos_params",ids$[12]="POS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -61,17 +61,17 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    whsefrom$=option!.getOptionData("beg_warehouse")
-    whsethru$=option!.getOptionData("end_warehouse")
-    itemfrom$=option!.getOptionData("beg_item")
-    itemthru$=option!.getOptionData("end_item")
-    pofrom$=option!.getOptionData("beg_purchase_order")
-    pothru$=option!.getOptionData("end_purchase_order")
-    vendfrom$=option!.getOptionData("beg_vendor")
-    vendthru$=option!.getOptionData("end_vendor")
-    whichdate$=option!.getOptionData("which_date")
-    datefrom$=option!.getOptionData("beg_date")
-    datethru$=option!.getOptionData("end_date")
+    whsefrom$=option!.getOptionData("warehouse_1")
+    whsethru$=option!.getOptionData("warehouse_2")
+    itemfrom$=option!.getOptionData("item_1")
+    itemthru$=option!.getOptionData("item_2")
+    pofrom$=option!.getOptionData("po_no_1")
+    pothru$=option!.getOptionData("po_no_2")
+    vendfrom$=option!.getOptionData("vendor_id_1")
+    vendthru$=option!.getOptionData("vendor_id_2")
+    whichdate$=option!.getOptionData("date_type")
+    datefrom$=option!.getOptionData("pick_date_1")
+    datethru$=option!.getOptionData("pick_date_2")
 
 rem --- Retrieve parameter records
 
@@ -117,7 +117,7 @@ rem --- Init Data
 
 rem --- Run report overlay
 
-    run pgmdir$+"por_jb.bbx"
+    run pgmdir$+"por_pobyitem_o1.aon"
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)

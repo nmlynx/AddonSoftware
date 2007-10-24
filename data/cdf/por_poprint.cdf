@@ -1,4 +1,36 @@
+[[POR_POPRINT.VENDOR_ID.AVAL]]
+if num(callpoint!.getUserInput())<>0
+	callpoint!.setColumnData("POR_POPRINT.RESTART","Y")
+	else
+	callpoint!.setColumnData("POR_POPRINT.RESTART","N")
+endif
+
+callpoint!.setStatus("REFRESH")
+[[POR_POPRINT.REPORT_TYPE.AVAL]]
+if callpoint!.getUserInput()="V"
+	ctl_name$="POR_POPRINT.VENDOR_ID"
+	ctl_stat$="I"
+	gosub disable_fields
+	ctl_name$="POR_POPRINT.RESTART"
+	gosub disable_fields
+else
+	ctl_name$="POR_POPRINT.VENDOR_ID"
+	ctl_stat$="D"
+	gosub disable_fields
+	ctl_name$="POR_POPRINT.RESTART"
+	gosub disable_fields
+endif
 [[POR_POPRINT.BSHO]]
+if callpoint!.getColumnData("POR_POPRINT.RESTART")<>"Y"
+	ctl_name$="POR_POPRINT.RESTART"
+	ctl_stat$="D"	
+	gosub disable_fields
+	ctl_name$="POR_POPRINT.VENDOR_ID"
+	gosub disable_fields
+endif
+
+callpoint!.setStatus("REFRESH")
+[[POR_POPRINT.ARAR]]
 rem --- set defaults
 
 callpoint!.setColumnData("POR_POPRINT.REPORT_TYPE","N")
@@ -6,22 +38,15 @@ callpoint!.setColumnData("POR_POPRINT.RESTART","N")
 callpoint!.setColumnData("POR_POPRINT.MESSAGE_TEXT","")
 callpoint!.setColumnData("POR_POPRINT.VENDOR_ID","")
 
-vendor_id$="with $"
-
-ctl_name$=VENDOR_ID$
-escape;rem need ""?  which worked?
-clt_stat$="D"
-gosub disable_fields
-
 callpoint!.setStatus("REFRESH")
 [[POR_POPRINT.RESTART.AVAL]]
-if callpoint!.getColumnData("POR_POPRINT.RESTART")="Y"
-	ctl_name$=POR_POPRINT.VENDOR_ID
-	ctl_stat$="D"
+if callpoint!.getUserInput()="Y"
+	ctl_name$="POR_POPRINT.VENDOR_ID"
+	ctl_stat$="I"
 	gosub disable_fields
 else
-	ctl_name$=POR_POPRINT.VENDOR_ID
-	ctl_stat$=" "
+	ctl_name$="POR_POPRINT.VENDOR_ID"
+	ctl_stat$="D"
 	gosub disable_fields
 endif
 [[POR_POPRINT.<CUSTOM>]]

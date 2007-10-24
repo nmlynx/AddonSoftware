@@ -28,20 +28,20 @@ rem --- Open/Lock files
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="apm-04",ids$[3]="APX_VENDZIP"
     files$[4]="apm-05",ids$[4]="APM_VENDADDR"
-    files$[5]="APC_TYPECODE",ids$[5]=files$[5];rem "apm-10A"
+    files$[5]="apc_typecode",ids$[5]="APC_TYPECODE";rem "apm-10A"
     files$[6]="arm-01",ids$[6]="ARM_CUSTMAST"
     files$[7]="arm-03",ids$[7]="ARM_CUSTSHIP"
     files$[8]="ivm-01",ids$[8]="IVM_ITEMMAST"
     files$[9]="ivm-05",ids$[9]="IVM_ITEMVEND"
-    files$[10]="IVC_PRODCODE",ids$[10]=files$[10];rem "ivm-10A"
+    files$[10]="ivc_prodcode",ids$[10]="IVC_PRODCODE";rem "ivm-10A"
     files$[11]="poe-01",ids$[11]="POE_REQHDR"
     files$[12]="poe-11",ids$[12]="POE_REQDET"
     files$[13]="poe-31",ids$[13]="POE_REQBYREQ"
     files$[14]="pom-02",ids$[14]="POC_LINECODE"
-    files$[15]="APS_PARAMS",ids$[15]=files$[15]
-    files$[16]="ARS_PARAMS",ids$[16]=files$[16]
-    files$[17]="IVS_PARAMS",ids$[17]=files$[17]
-    files$[18]="POS_PARAMS",ids$[18]=files$[18]
+    files$[15]="aps_params",ids$[15]="APS_PARAMS"
+    files$[16]="ars_params",ids$[16]="ARS_PARAMS"
+    files$[17]="ivs_params",ids$[17]="IVS_PARAMS"
+    files$[18]="pos_params",ids$[18]=POS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
