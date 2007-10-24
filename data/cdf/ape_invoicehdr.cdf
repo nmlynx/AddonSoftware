@@ -63,9 +63,9 @@ dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
 k$=""
 
 apt01_key$=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")+
-:	callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
+:	callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")+cvs(callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO"),3)
 
-read(apt01_dev,key=apt01_key$+callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO"),dom=*next)
+read(apt01_dev,key=apt01_key$,dom=*next)
 
 k$=key(apt01_dev,end=*next); read record(apt01_dev)apt01a$
 if k$(1,len(apt01_key$))=apt01_key$
