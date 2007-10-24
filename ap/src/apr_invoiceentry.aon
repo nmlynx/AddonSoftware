@@ -83,9 +83,9 @@ rem --- Is General Ledger installed and being used?
     application$="AP"
     gl$="N"
     status=0
-rem    call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
+    source$=pgm(-2)
+    call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
     if status goto std_exit
-    gl$="N"
 
 rem --- Initializations
 
@@ -226,8 +226,8 @@ rem --- Read next Invoice Header (ape-01) record
                       apm10b.record_id_b$="B"
                       apm10b.ap_dist_code$=ape01a.ap_dist_code$
                       apm10b.code_desc$=nf$
-                      k$=apm10b.firm_id$+apm10b.record_id_a$+apm10b.ap_dist_code$
-                      find record (apm10_dev,key=k$,dom=*break) apm10b$
+                      k$=apm10b.firm_id$+apm10b.record_id_b$+apm10b.ap_dist_code$
+                      find record (apm10b_dev,key=k$,dom=*break) apm10b$
                       account$=apm10b.gl_ap_acct$
                       gldate$=ape01a.accting_date$
                       ref1$=vendorref$
@@ -316,11 +316,11 @@ rem --- Read next Invoice Header (ape-01) record
                    gosub report_heading
                    gosub account_heading
                 endif
-                print (printer_dev) @(gl[0]),fnmask$(ape11a.gl_account$(1,acct_length),g0$),
+                print (printer_dev) @(gh[0]),fnmask$(ape11a.gl_account$(1,acct_length),g0$),
 :                                   @(gh[1]),description$,@(gh[2]),ape11a.gl_post_amt:g1$
                 lines=lines+1
                 gllines=gllines+1
-                total=total+ape11a.gl_post_amt
+                gltotal=gltotal+ape11a.gl_post_amt
 
                 rem --- Update the GL recap
 
@@ -330,10 +330,9 @@ rem --- Read next Invoice Header (ape-01) record
                       ref3$="Line "+ape11a.sequence_num$
                       amount=ape11a.gl_post_amt
                       units=ape11a.units
-                      gosub glrecap
-                      break
+                      gosub glrecap 
+                    break
                 wend
-
           wend
 
           rem --- Check for out of balance condition
@@ -346,7 +345,7 @@ rem --- Read next Invoice Header (ape-01) record
              gosub account_heading
           endif
           print (printer_dev) ""
-          print (printer_dev) @(gl[0]),"WARNING: This transaction is out of balance by ",
+          print (printer_dev) @(gh[0]),"WARNING: This transaction is out of balance by ",
 :                             @(gh[2]),difference:g1$
           lines=lines+2
 
