@@ -235,7 +235,7 @@ rem --- Dimension string templates
 
 rem --- Get user approval to proceed
 
-    prompt$="RUN_AP_MAN_CHECK_REG"
+    prompt$="Do you want to run the Manual Check Register?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
     if fkey=4 goto std_exit
     if answer$<>"Y" goto std_exit
@@ -255,7 +255,8 @@ rem --- Read next Manual Check Header (ape-02) record
           read record (ape02_dev) ape02a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           check$=ape02a.firm_id$+ape02a.ap_type$+ape02a.check_no$+ape02a.vendor_id$
-
+          gldate$=ape02a.check_date$
+          if gl$="Y" call pgmdir$+"glc_datecheck.aon",gldate$,"N",period$,year$,glstatus
           rem --- Determine what kind of transaction this is
 
           detail=0
@@ -378,7 +379,7 @@ rem --- Read next Manual Check Header (ape-02) record
                             errors=errors+(pos(nf$=apm10b.code_desc$)=1)
 
 						    k$=apt05a.firm_id$+apt05a.ap_type$+apt05a.vendor_id$+
-:                                      apt05a.ap_inv_no$+"00"
+:                                      apt05a.ap_inv_no$
 						    find record(apt01_dev,key=k$,dom=*next)apt01a$
 
 							rem --- A/P reverse post
@@ -545,7 +546,7 @@ rem --- Read next Manual Check Header (ape-02) record
 
                             while cashbasis=0
                                   k$=ape22a.firm_id$+ape22a.ap_type$+ape22a.vendor_id$+
-:                                    ape22a.ap_inv_no$+"00"
+:                                    ape22a.ap_inv_no$
                                   find (apt01_dev,key=k$,dom=*break) 
                                   account$=apm10b.gl_ap_acct$
                                   amount=invoice
@@ -610,7 +611,7 @@ rem --- Read next Manual Check Header (ape-02) record
 										rem --- meant not all GL dist recs got accum'd, so reported out of bal.CAH
                             wend
                             k$=ape22a.firm_id$+ape22a.ap_type$+ape22a.vendor_id$+
-:                              ape22a.ap_inv_no$+"00"
+:                              ape22a.ap_inv_no$
                             find (apt01_dev,key=k$,dom=*next);continue
 							rem --- above was find (apt01_dev,key=k$,dom=*continue);isn't that backwards? seems like
 							rem --- we want to continue if we DO find invoice, and check totals if we don't (i.e., 
@@ -672,7 +673,7 @@ rem --- Destroy the progress meter and run the next overlay
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     update$=pgmdir$+"apu_manualchecks.aon"
     overlay$=update$
-    if gl overlay$=pgmdir$+"glr_recap.aon"
+    if gl overlay$=pgmdir$+"glr_recap_DO.aon"
     rem --- run overlay$,err=std_exit
 
 	out_action$="PRT-PDF"

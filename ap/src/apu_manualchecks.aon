@@ -27,7 +27,7 @@ rem --- Initializations
 
 rem --- Get user approval to update
 
-    prompt$="UPDATE_AP_MAN_CHECK_REG"
+    prompt$="Do you want to update the Manual Check Register?"
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
     if answer$<>"YES" goto std_exit
 

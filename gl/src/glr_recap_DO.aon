@@ -290,7 +290,7 @@ rem --- Debits = Credits?
     if balance=0 goto date_errors
     if l+1>l9 gosub report_heading
     xwk=fnblank(2)
-    OutVect!.addItem("WARNING: Out of balance by ",str(balance:glm1$))
+    OutVect!.addItem("WARNING: Out of balance by "+str(balance:glm1$))
     xwk=fnblank(3)
     if use_suspense$<>"Y" goto register_errors
     if cvs(suspense_account$,2)="" goto register_errors
