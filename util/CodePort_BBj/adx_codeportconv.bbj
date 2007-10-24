@@ -155,7 +155,7 @@ lower_case:
     string txtfile$
     open (txt_dev)txtfile$
     for x=1 to numlines
-        let rec$=str(10000+x:"00000-")+lines$[x]
+        let rec$=str(100000+x:"000000-")+lines$[x]
         for i=1 to len(rec$)
             if mod(pos($22$=rec$(1,i),1,0),2)=0 rec$(i,1)=cvs(rec$(i,1),8)
         next i
@@ -166,10 +166,10 @@ lower_case:
 
     rem --- Strip line numbers from each line and store it
     for x=1 to numlines
-        let lines$[x]=lines$[x](7)
+        let lines$[x]=lines$[x](8)
     next x
     rem --- Delete the EXECUTE'd lines
-    delete 10000,19999
+    rem delete 100000,199999
     gosub display_done
 return 
 
