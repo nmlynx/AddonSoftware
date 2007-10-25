@@ -1,6 +1,8 @@
 [[APE_PAYSELECT.<CUSTOM>]]
 format_grid:
 
+call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
+
 dim attr_def_col_str$[0,0]
 attr_def_col_str$[0,0]=callpoint!.getColumnAttributeTypes()
 def_inv_cols=num(user_tpl.gridInvoicesCols$)
@@ -34,8 +36,9 @@ attr_inv_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
 attr_inv_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AMT_DUE"
 attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Amount Due"
+attr_inv_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 attr_inv_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-
+attr_inv_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 for curr_attr=1 to def_inv_cols
 
 	attr_inv_col$[0,1]=attr_inv_col$[0,1]+pad("APT_PAY."+attr_inv_col$[curr_attr,
@@ -79,7 +82,6 @@ return
 create_reports_vector:
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_len
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
 	more=1
 	read (apt01_dev,key=firm_id$,dom=*next)
 	vectInvoices!=SysGUI!.makeVector()
@@ -105,7 +107,7 @@ create_reports_vector:
 			vectInvoices!.addItem(apm01a.vendor_name$)
 			vectInvoices!.addItem(apt01a.ap_inv_no$)
 			vectInvoices!.addItem(fndate$(apt01a.inv_due_date$))
-			vectInvoices!.addItem(str(apt01a.invoice_amt:m1$))
+			vectInvoices!.addItem(apt01a.invoice_amt$)
 			if apt01a.selected_for_pay$="Y"
 				vectInvoicesSel!.addItem("Y")
 			else
@@ -173,6 +175,8 @@ if gridRows
 :						   gridInvoices!.getCellText(row,2)+
 :						   gridInvoices!.getCellText(row,4)
 		readrecord(apt01_dev,key=apt01_key$)apt01a$
+		amt_to_pay=apt01a.invoice_amt
+		disc_to_take=apt01a.discount_amt
 		if gridInvoices!.getCellState(row,0)=0
 			apt01a.selected_for_pay$="N"
 		else
@@ -182,7 +186,8 @@ if gridRows
 				readrecord(apt11_dev,end=*break)apt11a$
 				if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$=
 :					firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$) <>1 then break
-				apt01a.invoice_amt=apt01a.invoice_amt+apt11a.trans_amt+apt11a.trans_disc
+				amt_to_pay=amt_to_pay+apt11a.trans_amt
+				disc_to_take=disc_to_take+apt11a_trans_disc
 			wend
 			dim ape04a$:fattr(ape04a$)
 			ape04a.firm_id$=firm_id$
@@ -193,7 +198,7 @@ if gridRows
 			ape04a.ap_inv_memo$=apt01a.ap_inv_memo$
 			ape04a.invoice_date$=apt01a.invoice_date$
 			ape04a.disc_date$=apt01a.disc_date$
-			ape04a.invoice_amt=apt01a.invoice_amt
+			ape04a.invoice_amt=amt_to_pay
 			ape04a.discount_amt=apt01a.discount_amt
 			ape04a.retention=apt01a.retention
 			ape04a$=field(ape04a$)

@@ -24,16 +24,15 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=8,begfile=1,endfile=files
+    files=7,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$=files$[1];rem "aps-01
-    files$[2]="APE_INVOICEHDR",ids$[2]=files$[2];rem ape-01
-    files$[3]="APE_CHECKS",ids$[3]=files$[3];rem "ape-04
-    files$[4]="APE_INVOICEDET",ids$[4]=files$[4];rem ape-11
-    files$[5]="APE_SELECTIONDET",ids$[5]=files$[5];rem "ape-16
-    files$[6]="APM_VENDMAST",ids$[6]=files$[6];rem "apm-01
-    files$[7]="apm-03"
-    files$[8]="APC_TYPECODE",ids$[8]=files$[8];rem "apm-10A
+    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
+    files$[2]="ape-01",ids$[2]="APE_INVOICEHDR";rem ape-01
+    files$[3]="ape-04",ids$[3]="APE_CHECKS";rem "ape-04
+    files$[4]="ape-11",ids$[4]="APE_INVOICEDET";rem ape-11
+    files$[5]="ape-16",ids$[5]="APE_SELECTIONDET";rem "ape-16
+    files$[6]="apm-01",ids$[6]="APM_VENDMAST";rem "apm-01
+    files$[7]="apc_typecode",ids$[7]="APC_TYPECODE";rem "apm-10A
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -43,25 +42,23 @@ rem --- Open/Lock files
     ape11_dev=channels[4]
     ape16_dev=channels[5]
     apm01_dev=channels[6]
-    apm03_dev=channels[7]
-    apm10a_dev=channels[8]
+    apm10_dev=channels[7]
 
 rem --- Dimension string templates
 
-    dim ape01a$:templates$[2],ape04a$:templates$[3],ape11a$:templates$[4],
-:       ape16a$:templates$[5],apm01a$:templates$[6],apm03a$:templates$[7],
-:       apm10a$:templates$[8],aps01a$:templates$[1]
+    dim aps01a$:templates$[1],ape01a$:templates$[2],ape04a$:templates$[3]
+    dim ape11a$:templates$[4],ape16a$:templates$[5],apm01a$:templates$[6]
+    dim apm10a$:templates$[7]
 
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    vendor_size=num(aps01a.vendor_size$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
     multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,13
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     m0=len(m0$)
     m1=len(m1$)
     maxheadings=9
@@ -135,15 +132,15 @@ rem --- Open printer, start the progress meter and position payment selections f
 rem --- Read next Payment Selection (ape-16) record and store it
 rem --- in the headings$ array.
 
-    while more
-          k$=key(ape16_dev,end=*break)
-          if pos(firm_id$=k$)<>1 break
-          read record (ape16_dev) ape16a$
-          headings=headings+1
-          if headings<=maxheadings headings$[headings]=cvs(ape16a.chk_sel_desc$,1+2)
-    wend
-    if headings>maxheadings headings$[maxheadings]="Too Many Selection Options to List"
-    headings=min(headings,maxheadings)
+rem    while more
+rem          k$=key(ape16_dev,end=*break)
+rem          if pos(firm_id$=k$)<>1 break
+rem          read record (ape16_dev) ape16a$
+rem          headings=headings+1
+rem          if headings<=maxheadings headings$[headings]=cvs(ape16a.chk_sel_desc$,1+2)
+rem    wend
+rem    if headings>maxheadings headings$[maxheadings]="Too Many Selection Options to List"
+rem    headings=min(headings,maxheadings)
 
 rem --- Position the check detail file
 
@@ -300,29 +297,15 @@ vendor_break: rem --- Vendor break
     if done return
     dim vt[2]
     lastvendor$=ape04a.vendor_id$
-    endif
     if cvs(lastvendor$,2)="" return
-    if pos("TEMP"=ape04a.vendor_id$)<>1
-       dim apm01a$:fattr(apm01a$)
-       apm01a.firm_id$=ape04a.firm_id$
-       apm01a.vendor_id$=ape04a.vendor_id$
-       apm01a.vendor_name$=nf$
-       k$=apm01a.firm_id$+apm01a.vendor_id$
-       find record (apm01_dev,key=k$,dom=*proceed) apm01a$
-       vendor$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-       name$=apm01a.vendor_name$
-    endif
-    if pos("TEMP"=ape04a.vendor_id$)=1
-       dim apm03a$:fattr(apm03a$)
-       apm03a.firm_id$=ape04a.firm_id$
-       apm03a.ap_type$=ape04a.ap_type$
-       apm03a.ap_inv_no$=ape04a.ap_inv_no$
-       apm03a.vendor_name$=nf$
-       k$=apm03a.firm_id$+apm03a.ap_type$+apm03a.ap_inv_no$
-       find record (apm03_dev,key=k$,dom=*proceed) apm03a$
-       vendor$=ape04a.vendor_id$
-       name$=apm03a.vendor_name$
-    endif
+    dim apm01a$:fattr(apm01a$)
+    apm01a.firm_id$=ape04a.firm_id$
+    apm01a.vendor_id$=ape04a.vendor_id$
+    apm01a.vendor_name$=nf$
+    k$=apm01a.firm_id$+apm01a.vendor_id$
+    find record (apm01_dev,key=k$,dom=*proceed) apm01a$
+    vendor$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+    name$=apm01a.vendor_name$
     thisvendor$=vendor$
     thisname$=name$
     return
@@ -412,6 +395,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 

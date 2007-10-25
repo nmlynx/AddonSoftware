@@ -130,7 +130,7 @@ rem --- Accumulate
 
         t[0]=t[0]+ape04a.invoice_amt
         t[1]=t[1]+ape04a.discount_amt
-        t[2]=t[2]+ape04a.retension
+        t[2]=t[2]+ape04a.retention
     wend
 
 done: rem --- Totals
@@ -280,9 +280,9 @@ l6500:
     t2$=a0$
     accntid$=""
     find record (apm01_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm01a$;
-:   address$(1)=apm01a.addr_line_1$+apm01a.addr_line2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$,
+:   address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$,
 :   vend_name$=apm01a.vendor_name$
-    x1$(1)=fnmask$(apt04a.vendor_id$(1,vendor_length),m0$)
+    x1$(1)=fnmask$(ape04a.vendor_id$(1,vendor_length),m0$)
     t1$=k$(3,8)
     accntid$=apm01a.vendor_acct$
     find record (apm08_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm08a$;
