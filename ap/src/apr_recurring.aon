@@ -62,6 +62,9 @@ rem --- Dimension string templates
 :       apm10a$:templates$[7],apt01a$:templates$[8],apm10b$:templates$[9],
 :       apm10c$:templates$[10],gls01a$:templates$[11]
 
+rem --- store ape01/11 templates for update
+
+    ape01_tpl$=templates$[2],ape11_tpl$=templates$[4]
 
 rem --- Assign form input values to local variables
 
@@ -275,7 +278,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
                       break
                 wend
                 x$=str(x:"0000000")
-                invoice$=ape03a.ap_inv_no$(1,6)+x$(5)
+                invoice$=ape03a.ap_inv_no$(1,6)+x$(4)
                 k$=ape03a.firm_id$+ape03a.ap_type$+ape03a.vendor_id$+invoice$
                 find record (apt01_dev,key=k$,dom=*break)
           wend           

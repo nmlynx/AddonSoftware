@@ -275,7 +275,7 @@ rem --- Read next Invoice Header (ape-01) record
           lines=lines+3
           printed=printed+1
           if gl$="Y" call pgmdir$+"glc_datecheck.aon",ape01a.accting_date$,"N",period$,year$,glstatus
-          if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,a0$(32,3),glstatus,lines,errors,status
+          if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,ape01a.accting_date$,glstatus,lines,errors,status
 
           rem --- Accumulate totals
 

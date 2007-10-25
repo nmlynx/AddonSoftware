@@ -18,9 +18,9 @@ rem --- Initializations
 
 rem --- Get user approval to update
 
-    prompt$="UPDATE_AP_REC_INV_REG"
+    prompt$="Do you want to update the Recurring Invoice Register?"
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
-    if answer$<>"YES" goto std_exit
+    if answer$<>"YES" goto std_exit_no_update
 
 rem --- Start progress meter and position header file
 
@@ -39,10 +39,10 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           dim apm10c$:fattr(apm10c$)
           apm10c.firm_id$=ape03a.firm_id$
           apm10c.record_id_c$="C"
-          apm10c.terms_code$=ape03a.ap_terms_code$
+          apm10c.terms_codeap$=ape03a.ap_terms_code$
           apm10c.code_desc$=nf$
-          k$=apm10c.firm_id$+apm10c.record_id_a$+apm10c.ap_dist_code$
-          find record (apm10_dev,key=k$,dom=*next) apm10c$
+          k$=apm10c.firm_id$+apm10c.record_id_c$+apm10c.terms_codeap$
+          find record (apm10c_dev,key=k$,dom=*next) apm10c$
 
           rem --- Recalculate dates for this recurring invoice
 
@@ -78,20 +78,36 @@ rem --- Read next Recurring Invoice Header (ape-03) record
                       wrong=0
                 wend
                 x$=str(x:"0000000")
-                invoice$=ape03a.ap_inv_no$(1,6)+x$
-                k$=ape03a.firm_id$+ape03a.ap_type$+ape03a.vendor_id$+invoice$+"00"
+                invoice$=ape03a.ap_inv_no$(1,6)+x$(4)
+                k$=ape03a.firm_id$+ape03a.ap_type$+ape03a.vendor_id$+invoice$
                 find record (apt01_dev,key=k$,dom=*break)
           wend 
-          ape03a.ap_inv_no$=invoice$
 
           rem --- Copy the invoice header to the entry file and write the record
 
-          dim oldrec$:fattr(ape03a$),newrec$:fattr(ape01a$)
-          oldrec$=ape03a$
-          gosub copy_record
-          ape01a$=newrec$
-          k$=ape01a.firm_id$+ape01a.ap_type$+ape01a.vendor_id$+ape01a.ap_inv_no$+
-:            ape01a.sequence_00$
+          dim ape01a$:ape01_tpl$
+          ape01a.firm_id$=ape03a.firm_id$
+          ape01a.ap_type$=ape03a.ap_type$
+          ape01a.vendor_id$=ape03a.vendor_id$
+          ape01a.ap_inv_no$=invoice$
+          ape01a.sequence_00$=ape03a.sequence_00$
+          ape01a.ap_dist_code$=ape03a.ap_dist_code$
+          ape01a.payment_grp$=ape03a.payment_grp$
+          ape01a.ap_terms_code$=ape03a.ap_terms_code$
+          ape01a.invoice_date$=ape03a.invoice_date$
+          ape01a.accting_date$=ape03a.accting_date$
+          ape01a.inv_due_date$=ape03a.inv_due_date$
+          ape01a.disc_date$=ape03a.disc_date$
+          ape01a.reference$=ape03a.reference$
+          ape01a.ap_inv_memo$=ape03a.ap_inv_memo$
+          ape01a.hold_flag$=ape03a.hold_flag$
+          ape01a.invoice_type$=ape03a.invoice_type$
+          ape01a.invoice_amt=ape03a.invoice_amt
+          ape01a.discount_amt=ape03a.discount_amt
+          ape01a.retention=ape03a.retention
+          ape01a.net_inv_amt=ape03a.net_inv_amt
+
+          k$=ape01a.firm_id$+ape01a.ap_type$+ape01a.vendor_id$+ape01a.ap_inv_no$
           write record (ape01_dev,key=k$) ape01a$
 
           rem --- Position the Recurring Invoice Detail (ape-13) file
@@ -107,10 +123,16 @@ rem --- Read next Recurring Invoice Header (ape-03) record
                 k$=key(ape13_dev,end=*break)
                 if pos(invoice$=k$)<>1 break
                 read record (ape13_dev) ape13a$
-                dim oldrec$:fattr(ape13a$),newrec$:fattr(ape11a$)
-                oldrec$=ape13a$
-                gosub copy_record
-                ape11a$=newrec$
+                dim ape11a$:ape11_tpl$
+                ape11a.firm_id$=ape13a.firm_id$
+                ape11a.ap_type$=ape13a.ap_type$
+                ape11a.vendor_id$=ape13a.vendor_id$
+                ape11a.ap_inv_no$=ape01a.ap_inv_no$
+                ape11a.sequence_num$=ape13a.sequence_num$
+                ape11a.gl_account$=ape13a.gl_account$
+                ape11a.gl_post_amt=ape13a.gl_post_amt
+                ape11a.units=ape13a.units
+
                 k$=ape11a.firm_id$+ape11a.ap_type$+ape11a.vendor_id$+ape11a.ap_inv_no$+
 :                                  ape11a.sequence_num$
                 write record (ape11_dev,key=k$) ape11a$
@@ -124,23 +146,10 @@ rem --- All done
 
     goto std_exit
 
-copy_record: rem --- Copy fields from one template to another
+disp_message:rem --- Display Message Dialog
 
-    fields$=oldtemplate$
-    while fields$<>""
-          p=pos(":"=fields$)
-          if p=0 then p=len(fields$)
-          fieldname$=fields$(1,p-1)
-          fields$=fields$(p+1)
-          p=pos(","=fields$)
-          if p=0 then p=len(fields$)
-          fields$=fields$(p+1)
-          newfield$=fieldname$
-          p=pos(fieldname$=oldnames$,16)
-          if p then newfield$=cvs(newnames$(p,16),2)
-          field newrec$,newfield$=field(oldrec$,fieldname$),err=*continue
-    wend
-    return
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+	return
 
 rem #include std_error.src
 
@@ -148,9 +157,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -193,7 +201,15 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+	msg_id$="UPDATE_COMPLETE"
+	dim msg_tokens$[1]
+	msg_opt$=""
+	gosub disp_message
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
