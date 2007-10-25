@@ -1,5 +1,7 @@
 [[APE_RECURRINGHDR.AREC]]
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+user_tpl.inv_amt$=""
+user_tpl.tot_dist$=""
 [[APE_RECURRINGHDR.BWRI]]
 rem --- fully distributed?
 
