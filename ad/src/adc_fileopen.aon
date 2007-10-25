@@ -100,7 +100,7 @@ rem --- Open requested files
         if cvs(id$,2)="" then continue
         wk$=fattr(ddm21a$,"dd_table_alias")
         plen=dec(wk$(10,2))
-        ddm21a.dd_table_alias$=pad(id$,plen)
+        ddm21a.dd_table_alias$=cvs(pad(id$,plen),4)
         find record (ddm21_dev,key=ddm21a.dd_table_alias$,err=template_error) ddm21a$
         templates$[x]=cvs(ddm21a.dd_table_tpl$,2)
         continue
