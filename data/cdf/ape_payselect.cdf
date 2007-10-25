@@ -78,6 +78,8 @@ return
 
 create_reports_vector:
 
+	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_len
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
 	more=1
 	read (apt01_dev,key=firm_id$,dom=*next)
 	vectInvoices!=SysGUI!.makeVector()
@@ -99,11 +101,11 @@ create_reports_vector:
 		if apt01a.invoice_amt<>0 then
 			vectInvoices!.addItem("")
 			vectInvoices!.addItem(apt01a.ap_type$)
-			vectInvoices!.addItem(apt01a.vendor_id$)
+			vectInvoices!.addItem(fnmask$(apt01a.vendor_id$(1,vendor_len),m0$))
 			vectInvoices!.addItem(apm01a.vendor_name$)
 			vectInvoices!.addItem(apt01a.ap_inv_no$)
-			vectInvoices!.addItem(apt01a.inv_due_date$)
-			vectInvoices!.addItem(apt01a.invoice_amt$)
+			vectInvoices!.addItem(fndate$(apt01a.inv_due_date$))
+			vectInvoices!.addItem(str(apt01a.invoice_amt:m1$))
 			if apt01a.selected_for_pay$="Y"
 				vectInvoicesSel!.addItem("Y")
 			else
@@ -134,17 +136,38 @@ switch_value:rem --- Switch Check Values
 	SysGUI!.setRepaintEnabled(1)
 
 	return
-		
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+	def fnmask$(q1$,q2$)
+		if q2$="" q2$=fill(len(q1$),"0")
+		return str(-num(q1$,err=*next):q2$,err=*next)
+		q=1
+		q0=0
+		while len(q2$(q))
+			if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+			q=q+1
+		wend
+		if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+		return str(q1$:q2$)
+	fnend
+
 #include std_missing_params.src
 [[APE_PAYSELECT.ASVA]]
 rem "update apt-01) -- remove/write -- based on what's checked in the grid
 
 apt01_dev=fnget_dev("APT_INVOICEHDR")
 dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
+ape04_dev=fnget_dev("APE_CHECKS")
+dim ape04a$:fnget_tpl$("APE_CHECKS")
+apt11_dev=fnget_dev("APT_INVOICEDET")
+dim apt11a$:fnget_tpl$("APT_INVOICEDET")
+more=1
 
 gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 gridRows=gridInvoices!.getNumRows()
 if gridRows
+	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
 	for row=0 to gridRows-1
 		apt01_key$=firm_id$+gridInvoices!.getCellText(row,1)+
 :						   gridInvoices!.getCellText(row,2)+
@@ -154,6 +177,27 @@ if gridRows
 			apt01a.selected_for_pay$="N"
 		else
 			apt01a.selected_for_pay$="Y"
+			readrecord(apt11_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next)
+			while more
+				readrecord(apt11_dev,end=*break)apt11a$
+				if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$=
+:					firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$) <>1 then break
+				apt01a.invoice_amt=apt01a.invoice_amt+apt11a.trans_amt+apt11a.trans_disc
+			wend
+			dim ape04a$:fattr(ape04a$)
+			ape04a.firm_id$=firm_id$
+			ape04a.ap_type$=apt01a.ap_type$
+			ape04a.vendor_id$=apt01a.vendor_id$
+			ape04a.ap_inv_no$=apt01a.ap_inv_no$
+			ape04a.reference$=apt01a.reference$
+			ape04a.ap_inv_memo$=apt01a.ap_inv_memo$
+			ape04a.invoice_date$=apt01a.invoice_date$
+			ape04a.disc_date$=apt01a.disc_date$
+			ape04a.invoice_amt=apt01a.invoice_amt
+			ape04a.discount_amt=apt01a.discount_amt
+			ape04a.retention=apt01a.retention
+			ape04a$=field(ape04a$)
+			write record(ape04_dev,key=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$)ape04a$
 		endif
 		apt01a$=field(apt01a$)
 		write record(apt01_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$)apt01a$
@@ -163,22 +207,43 @@ endif
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
-num_files=3
+num_files=4
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
 open_tables$[2]="APT_INVOICEDET",open_opts$[2]="OTA"
 open_tables$[3]="APM_VENDMAST",open_opts$[3]="OTA"
+open_tables$[4]="APE_CHECKS",open_opts$[4]="OTA"
 
 gosub open_tables
 
 apt01_dev=num(open_chans$[1]),apt01_tpl$=open_tpls$[1]
 apt11_dev=num(open_chans$[2]),apt11_tpl$=open_tpls$[2]
 apm01_dev=num(open_chans$[3]),apm01_tpl$=open_tpls$[3]
+ape04_dev=num(open_chans$[4]),ape04_tpl$=open_tpls$[4]
 
 rem --- Dimension string templates
 
-    dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$
+    dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$,ape04a$:ape04_tpl$
+
+rem --- See if we need to clear out ape-04
+
+msg_id$="CLEAR_SEL"
+dim msg_tokens$[1]
+msg_opt$=""
+gosub disp_message
+if msg_opt$="Y"
+	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
+	read(apt01_dev,key=firm_id$,dom=*next)
+	more=1
+	while more
+		apt01_key$=key(apt01_dev,end=*break)
+		if pos(firm_id$=apt01_key$)<>1 break
+		readrecord(apt01_dev,key=apt01_key$)apt01a$
+		apt01a.selected_for_pay$="N"
+		write record(apt01_dev,key=apt01_key$)apt01a$
+	wend	
+endif
 
 rem --- add grid to store report master records, with checkboxes for user to select one or more reports
 
