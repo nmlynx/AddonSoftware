@@ -55,7 +55,7 @@ rem --- Read next Invoice Header (ape-01) record
 
         rem --- update vendor history
         x$=ape01a.accting_date$
-        call pgmdir$+"adc_peryear.aon",firm_id$,gls01_dev,x$,period$,year$
+        call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,x$,period$,year$
         extract record (apm02_dev,key=firm_id$+ape01a.vendor_id$+ape01a.ap_type$,dom=*next) apm02a$
         apm02a.open_invs=apm02a.open_invs+ape01a.invoice_amt
         apm02a.open_ret=apm02a.open_ret+ape01a.retention
@@ -75,10 +75,10 @@ rem --- Read next Invoice Header (ape-01) record
 
         open_invoice: rem --- Open Invoice
 
-        u0=0,apt01a$(1)=""
+        u0=0,apt01a.firm_id$="XX"
         extract record (apt01_dev,key=ape01a.firm_id$+ape01a.ap_type$+ape01a.vendor_id$+
 :           ape01a.ap_inv_no$,dom=*next) apt01a$
-        if apt01a.firm_id$=""
+        if apt01a.firm_id$="XX"
 
             rem --- took dom; New Invoice
             apt01a.firm_id$=ape01a.firm_id$
@@ -102,7 +102,8 @@ rem --- Read next Invoice Header (ape-01) record
             apt01a.retention=ape01a.retention
 
             u0=u0+apt01a.invoice_amt
-            write record (apt01_dev,key=c0$(1,22),dom=open_invoice) apt01a$
+            write record (apt01_dev,key=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+
+:               apt01a.ap_inv_no$+apt01a.sequence_00$,dom=open_invoice) apt01a$
 
         else
             if apt01a.mc_inv_flag$="M" apt01a.mc_inv_adj$="A"
@@ -287,8 +288,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
 :                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
