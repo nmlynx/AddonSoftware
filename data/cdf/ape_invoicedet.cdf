@@ -1,5 +1,3 @@
-[[APE_INVOICEDET.UNITS.AVEC]]
-escape;rem check user_tpl.inv_amt$ and tot_dist$; also dist_bal! ?
 [[APE_INVOICEDET.GL_POST_AMT.AVEC]]
 rem --- add up dist lines and display diff between total inv amt entered and dist line total
 
