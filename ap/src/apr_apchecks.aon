@@ -94,22 +94,22 @@ rem --- Display Resource and open printer
 rem --- Print test patterns until the user is satisfied
 
     while answer$="Y"
-          call pgmdir$+"adc_yesno.aon",1,prompt$,1,answer$,fkey
+          call stbl("+DIR_PGM")+"adc_yesno.aon",1,prompt$,1,answer$,fkey
           if fkey=4 break
           if answer$="N" break
 
           rem --- Print test pattern
-escape
+
           gosub test_pattern
           prompt$="Do you want to print another test pattern?"
     wend
-escape
+
 rem --- Start progress meter and position check File (ape-04)
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,ape04_dev,1,meter_num,status
 
 rem --- Init Read
-escape
+
     read (ape04_dev,key=firm_id$,dom=*next)
     if restart$="Y" read (ape04_dev,key=firm_id$+ap_type$+vendor_id$,dom=*next)
 
@@ -204,7 +204,7 @@ l5400: rem --- Stub Total
     print (printer_dev)@(h0+24),t[0]:m1$,t[1]:m1$,t[0]-t[2]-t[1]:m1$
     return
 
-l5600: rem --- Print Check
+check_face: rem --- Print Check
 
     call pgmdir$+"adc_address.aon",address$,24,3,9,35
     print (printer_dev)h9$(1,6)
@@ -232,10 +232,15 @@ void_check: rem --- Void check
 
 rem --- Write Void
 
-    d0$=firm_id$+ape04a.ap_type$+check_no$+"V"+check_date$+ape04a.vendor_id$+ape04a.inv_no$
-    d$=d0$(1,11)
-    if aps01a.multi_types$<>"Y" d$(3,2)=""
-    write record (apw01_dev,key=d$) apw01a$
+    apw01a.firm_id$=firm_id$
+    apw01a.ap_type$=ape04a.ap_type$
+    apw01a.check_no$=check_no$
+    apw01a.com_or_void$="V"
+    apw01a.vendor_id$=ape04a.vendor_id$
+    apw01a.check_date$=check_date$
+    apw01a.ap_inv_no$=ape04a.ap_inv_no$
+    if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
+    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
     gosub l6800
     return
 
@@ -244,29 +249,34 @@ new_vendor: rem --- New Vendor
     if t1$="" goto l6500
     if t[0]-t[2]-t[1]<0 goto l6490
     gosub l5400
-    gosub l5600
+    gosub check_face
     dim ape04b$:fattr(ape04b$)
     ape04b$=t2$
-    w$=firm_id$+ape04b.ap_type$+ape04b.vendor_id$+ape04a.ap_inv_no$
+    w$=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$
     if aps01a.multi_types$<>"Y" w$(3,2)=""
     find record (ape04_dev2,key=w$,dom=l6490) ape04b$
     if pos(" "<>ape04b.check_no$)=0 goto l6400
-    apw01b.firm_id$=firm_id$
-    apw01b.ap_type$=ape04b.ap_type$
-    apw01b.check_no$=ape04b.check_no$
-    find record (apw01_dev,key=firm_id$+apw01b.ap_type$+apw01b.check_no$,dom=l6400) apw01a$
+    apw01a.firm_id$=firm_id$
+    apw01a.ap_type$=ape04b.ap_type$
+    apw01a.check_no$=ape04b.check_no$
+    find record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$,dom=l6400) apw01a$
     if firm_id$+apw01a.ap_type$+apw01a.vendor_id$+apw01a.ap_inv_no$<>w$ goto l6400
     apw01a.comp_or_void$="V"
     apw01a.check_date$=check_date$
-    apw01a.vendor_id$=t2$(5,6);rem jpb?
-    apw01a.ap_inv_no$=t2$(11,10);rem jpb?
-    write record (apw01_dev,key=firm_id$+apw01b.ap_type$+apw01b.check_no$) apw01a$
+    apw01a.vendor_id$=t2.vendor_id$
+    apw01a.ap_inv_no$=t2.ap_inv_no$
+    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
 l6400:
-    d0$=t2$(1,4)+check_no$+"C"+check_date$+t2$(5,16);REM JPB WHAT TO DO NOW???
-    d$=d0$(1,11)
-    if aps01a.multi_types$<>"Y" d$(3,2)=""
-    if aps01a.multi_types$="Y" remove (apw01_dev,key=d$(1,2)+"  "+d$(5,7),dom=*next)
-    write record (apw01_dev,key=d$) apw01a$
+    apw01a.firm_id$=firm_id$
+    apw01a.ap_type$=t2.ap_type$
+    apw01a.check_no$=check_no$
+    apw01a.comp_or_void$="C"
+    apw01a.check_date$=check_date$
+    apw01a.vendor_id$=t2.vendor_id$
+    apw01a.ap_inv_no$=t2.ap_inv_no$
+    if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
+    if aps01a.multi_types$="Y" remove (apw01_dev,key=firm_id$+"  "+apw01a.check_no$,dom=*next)
+    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
     ape04b.check_no$=check_no$
     write record (ape04_dev2,key=w$) ape04b$
     gosub l6800
@@ -276,8 +286,9 @@ l6490:
     gosub void_check
 l6500:
     if t9$<>"" goto l6790
-    dim x1$(m0),b1$(200),t[2],address$(81)
-    t2$=a0$
+    dim x1$(m0),t[2],address$(81)
+    dim t2$:fattr(ape04b$)
+    t2$=ape04b$
     accntid$=""
     find record (apm01_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm01a$;
 :   address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$,
@@ -352,7 +363,7 @@ test_pattern: rem --- Test Pattern
     vend_name$=fill(30,"X")
     accntid$="XXXXXX"
     
-    dim b1$(200,"X"),a0$(60,"X"),t[2]
+    dim t[2]
     ape04a.invoice_amt=9999.99
     ape04a.discount_amt=9999.99
     t[0]=9999.99
@@ -456,8 +467,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
 :                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
