@@ -64,6 +64,7 @@ rem --- Retrieve parameter records
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_length
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
 
 initializations: rem --- Initializations
 
@@ -177,11 +178,11 @@ l5270:
     if k1$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$ goto l5380
     read record (apt02_dev) apt02a$
     if l>l9 gosub l5700
-    if ape04a.orig_inv_amt x0=e[0]*(ape04a.invoice_amt-ape04a.retention)/ape04a.orig_inv_amt else x0=0
-    x$=pad(fnmask$(e0$(22,g[3]),g5$),dimlen)
+    if ape04a.orig_inv_amt x0=apt02a.gl_post_amt*(ape04a.invoice_amt-ape04a.retention)/ape04a.orig_inv_amt else x0=0
+    x$=pad(fnmask$(apt02a.gl_account$(1,acct_length),g0$),dimlen)
     y$=str(x0:m1$)
     y$=y$(pos(" "<>y$))
-    if len(cvs(g5$,2)+" "+y$)<=dimlen goto l5350
+    if len(cvs(g0$,2)+" "+y$)<=dimlen goto l5350
     if l+1>l9 gosub l5700
     print (printer_dev)@(h0+24+3*m1),x$
     l1=l1+1
@@ -214,6 +215,17 @@ check_face: rem --- Print Check
     print (printer_dev)@(h0+7),"Exactly*",int(t[0]-t[2]-t[1]):m8$,"*Dollars*And*",x$,"*Cents",'LF'
     print (printer_dev)@(h0+52),fndate$(check_date$),@(80-m9),t[0]-t[1]-t[2]:m9$
     print (printer_dev)@(h0+7),vend_name$,'LF',@(h0+7),address$(1,35),'LF',@(h0+7),address$(36,35),'LF',@(h0+7),address$(71,30)," ",h9$(1,6)
+    dim apw01a$:fattr(apw01a$)
+    apw01a.firm_id$=firm_id$
+    apw01a.ap_type$=t1$(1,2)
+    apw01a.check_no$=check_no$
+    apw01a.comp_or_void$="C"
+    apw01a.check_date$=check_date$
+    apw01a.vendor_id$=t1$(3,6)
+rem    apw01a.ap_inv_no$=ape04a.ap_inv_no$
+    if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
+    if aps01a.multi_types$="Y" remove (apw01_dev,key=firm_id$+"  "+apw01a.check_no$,dom=*next)
+    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
     return
 
 l5700: rem --- Overflow
@@ -235,7 +247,7 @@ rem --- Write Void
     apw01a.firm_id$=firm_id$
     apw01a.ap_type$=ape04a.ap_type$
     apw01a.check_no$=check_no$
-    apw01a.com_or_void$="V"
+    apw01a.comp_or_void$="V"
     apw01a.vendor_id$=ape04a.vendor_id$
     apw01a.check_date$=check_date$
     apw01a.ap_inv_no$=ape04a.ap_inv_no$
@@ -247,44 +259,28 @@ rem --- Write Void
 new_vendor: rem --- New Vendor
 
     if t1$="" goto l6500
-    if t[0]-t[2]-t[1]<0 goto l6490
+    if t[0]-t[2]-t[1]<0 goto l6500
     gosub l5400
     gosub check_face
-    dim ape04b$:fattr(ape04b$)
-    ape04b$=t2$
-    w$=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$
-    if aps01a.multi_types$<>"Y" w$(3,2)=""
-    find record (ape04_dev2,key=w$,dom=l6490) ape04b$
-    if pos(" "<>ape04b.check_no$)=0 goto l6400
-    apw01a.firm_id$=firm_id$
-    apw01a.ap_type$=ape04b.ap_type$
-    apw01a.check_no$=ape04b.check_no$
-    find record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$,dom=l6400) apw01a$
-    if firm_id$+apw01a.ap_type$+apw01a.vendor_id$+apw01a.ap_inv_no$<>w$ goto l6400
-    apw01a.comp_or_void$="V"
-    apw01a.check_date$=check_date$
-    apw01a.vendor_id$=t2.vendor_id$
-    apw01a.ap_inv_no$=t2.ap_inv_no$
-    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
+rem now go back and re-write ape-04 using ape04_dev2 and ape04b$
+rem using the current check number and firm_id$ + t1$ (ap type and vendor number)
+    
+dim ape04b$:fattr(ape04b$)
+
+    read(ape04_dev2,key=firm_id$+t1$,dom=*next)
+    while more
+        readrecord(ape04_dev2,end=*break)ape04b$
+        if pos(firm_id$+t1$=ape04b$)<>1 break
+        ape04b.check_no$=check_no$
+        writerecord(ape04_dev2,key=firm_id$+ape04b.ap_type$+ape04b.vendor_id$+ape04b.ap_inv_no$)ape04b$
+    wend
+
 l6400:
-    apw01a.firm_id$=firm_id$
-    apw01a.ap_type$=t2.ap_type$
-    apw01a.check_no$=check_no$
-    apw01a.comp_or_void$="C"
-    apw01a.check_date$=check_date$
-    apw01a.vendor_id$=t2.vendor_id$
-    apw01a.ap_inv_no$=t2.ap_inv_no$
-    if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
-    if aps01a.multi_types$="Y" remove (apw01_dev,key=firm_id$+"  "+apw01a.check_no$,dom=*next)
-    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
-    ape04b.check_no$=check_no$
-    write record (ape04_dev2,key=w$) ape04b$
     gosub l6800
     goto l6500
-l6490:
-    gosub l5400
-    gosub void_check
+
 l6500:
+
     if t9$<>"" goto l6790
     dim x1$(m0),t[2],address$(81)
     dim t2$:fattr(ape04b$)
