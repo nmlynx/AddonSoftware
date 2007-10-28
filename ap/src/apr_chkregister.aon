@@ -26,33 +26,27 @@ rem --- Open/Lock files
 
     files=15,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="APS_PARAMS",ids$[1]=files$[1]; rem aps-01
-    files$[2]="ape-04",ids$[2]="APE_INVOICEHDR"
-    files$[3]="ape-06",ids$[3]="APE_SELECTIONHDR"
-    files$[4]="ape-16",ids$[4]="APE_SELECTIONDET"
+    files$[1]="aps_params",ids$[1]="APS_PARAMS"; rem aps-01
+    files$[2]="ape-04",ids$[2]="APE_CHECKS"
     files$[5]="apm-01",ids$[5]="APM_VENDMAST"
     files$[6]="apm-02",ids$[6]="APM_VENDHIST"
-    files$[7]="apm-03"
-    files$[8]="GLS_PARAMS",ids$[8]=files$[8];rem gls-01A
+    files$[8]="gls_params",ids$[8]="GLS_PARAMS";rem gls-01A
     files$[9]="apt-01",ids$[9]="APT_INVOICEHDR"
     files$[10]="apt-02",ids$[10]="APT_INVOICEDIST"
     files$[11]="apt-05",ids$[11]="APT_CHECKHISTORY"
     files$[12]="apt-11",ids$[12]="APT_INVOICEDET"
-    files$[13]="apw-01"
+    files$[13]="apw-01",ids$[13]="APW_CHECKINVOICE"
     options$[2]="L"
-    files$[14]="APC_TYPECODE",ids$[14]=files$[14];rem apm-10A
-    files$[15]="APC_DISTRIBUTION",ids$[15]=files$[15];rem apm-10B
+    files$[14]="apc_typecode",ids$[14]="APC_TYPECODE";rem apm-10A
+    files$[15]="APC_distribution",ids$[15]="APC_DISTRIBUTION";rem apm-10B
 
 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     aps01_dev=channels[1]
     ape04_dev=channels[2]
-    ape06_dev=channels[3]
-    ape16_dev=channels[4]
     apm01_dev=channels[5]
     apm02_dev=channels[6]
-    apm03_dev=channels[7]
     gls01_dev=channels[8]
     apt01_dev=channels[9]
     apt02_dev=channels[10]
@@ -60,11 +54,11 @@ call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all]
     apt11_dev=channels[12]
     apw01_dev=channels[13]
     apm10a_dev=channels[14]
-    apm10b_dev=cjannels[15]
+    apm10b_dev=channels[15]
 
 rem --- Dimension string templates
 
-    dim ape04a$:templates$[2],ape06a$:templates$[3],ape16a$:templates$[4],
+    dim ape04a$:templates$[2],
 :       apm01a$:templates$[5],apm02a$:templates$[6],
 :       gls01a$:templates$[8],apt01a$:templates$[9],apt02a$:templates$[10],
 :       apt05a$:templates$[11],apt11a$:templates$[12],apw01a$:templates$[13],       
@@ -79,13 +73,12 @@ rem --- Retrieve parameter records
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    vendor_size=num(aps01a.vendor_size$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
     multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"
     cashbasis=aps01a.cash_basis$="Y"
     bankrec=aps01a.br_interface$="Y"
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
     m0=len(m0$)
     m1=len(m1$)
@@ -96,7 +89,7 @@ rem --- Is General Ledger installed and being used?
     application$="AP"
     gl$="N"
     status=0
-rem    call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
+    call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
     if status goto std_exit
     gl$="N"
 
@@ -157,7 +150,7 @@ rem --- Additional file opens
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="glm-01",ids$[1]="GLM_ACCT"
-    files$[2]="glt-04";rem  ,ids$[2]=
+    files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
     files$[3]="glt-05",ids$[3]="GLT_BANKCHECKS"
     files$[4]=glw11$
     options$[4]="CL"
@@ -168,10 +161,6 @@ rem --- Additional file opens
     glt04_dev=channels[2]
     glt05_dev=channels[3]
     glw11_dev=channels[4]
-
-rem --- Dimension string templates
-
-    if gl$="Y" dim glm01a$:templates$[1],glt05a$:templates$[3]
 
 rem --- Make sure that the check stock has been dismounted from the printer
 
@@ -236,27 +225,14 @@ rem --- Read next Check Detail (apw-01) record
                       endif
                       notfound=0
                       lastvendor$=ape04a.firm_id$+ape04a.ap_type$+ape04a.vendor_id$
-                      if pos("TEMP"=ape04a.vendor_id$)<>1
-                         dim apm01a$:fattr(apm01a$)
-                         apm01a.firm_id$=ape04a.firm_id$
-                         apm01a.vendor_id$=ape04a.vendor_id$
-                         apm01a.vendor_name$=nf$
-                         k$=apm01a.firm_id$+apm01a.vendor_id$
-                         find record (apm01_dev,key=k$,dom=*proceed) apm01a$
-                         vendor$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-                         name$=apm01a.vendor_name$
-                      endif
-                      if pos("TEMP"=ape04a.vendor_id$)=1
-                         dim apm03a$:fattr(apm03a$)
-                         apm03a.firm_id$=ape04a.firm_id$
-                         apm03a.ap_type$=ape04a.ap_type$
-                         apm03a.ap_inv_no$=ape04a.ap_inv_no$
-                         apm03a.vendor_name$=nf$
-                         k$=apm03a.firm_id$+apm03a.ap_type$+apm03a.ap_inv_no$
-                         find record (apm03_dev,key=k$,dom=*proceed) apm03a$
-                         vendor$=ape04a.vendor_id$
-                         name$=apm03a.vendor_name$
-                      endif
+                      dim apm01a$:fattr(apm01a$)
+                      apm01a.firm_id$=ape04a.firm_id$
+                      apm01a.vendor_id$=ape04a.vendor_id$
+                      apm01a.vendor_name$=nf$
+                      k$=apm01a.firm_id$+apm01a.vendor_id$
+                      find record (apm01_dev,key=k$,dom=*proceed) apm01a$
+                      vendor$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+                      name$=apm01a.vendor_name$
                       errors=errors+(pos(nf$=name$)=1)
                       memo$=vendor$
                       ref1$=name$
@@ -329,7 +305,7 @@ rem --- Read next Check Detail (apw-01) record
                    apm10b.ap_dist_code$=apw01a.ap_dist_code$
                    apm10b.code_desc$=nf$
                    k$=apm10b.firm_id$+apm10b.record_id_b$+apm10b.ap_dist_code$
-                   find record (apm10_dev,key=k$,dom=*proceed) apm10b$
+                   find record (apm10b_dev,key=k$,dom=*proceed) apm10b$
                    errors=errors+(pos(nf$=apm10b.code_desc$)=1)
                    lastcode$=apm10b.ap_dist_code$
                 endif
@@ -490,7 +466,7 @@ type_break: rem --- AP Type break
     apm10a.ap_type$=apw01a.ap_type$
     apm10a.code_desc$=nf$
     k$=apm10a.firm_id$+apm10a.record_id_a$+apm10a.ap_type$
-    find record (apm10_dev,key=k$,dom=*next) apm10a$
+    find record (apm10a_dev,key=k$,dom=*next) apm10a$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
     headings$[1]=taskdesc$+" - "+aptype$
     errors=errors+(pos(nf$=apm10a.code_desc$)=1)
@@ -539,9 +515,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -565,8 +541,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -584,8 +560,10 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
+
 rem #endinclude std_end.src
 
     end
