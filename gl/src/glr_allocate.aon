@@ -197,9 +197,6 @@ rem --- Read next detail record
                 k$=key(gle13_dev,end=*break)
                 if pos(gle03_key$=k$)<>1 break
                 read record (gle13_dev)gle13a$
-                w[0]=gle13a.percentage
-                w[1]=gle13a.gl_post_amt
-                w[2]=gle13a.units
 
 rem --- Last detail?
 
@@ -245,14 +242,14 @@ print_detail: rem --- Print a record
 
                 rem --- Accumulate totals
 
-                for x=0 to 2
-                    totals[x]=totals[x]+w[x]
-                next x
+                totals[0]=totals[0]+gle13a.percentage
+                totals[1]=totals[1]+gle13a.gl_post_amt
+                totals[2]=totals[2]+gle13a.units
 
                 rem --- Update gle-13 record
 
                 gle13a$=field(gle13a$)
-                write record (gle13_dev,key=w0$)gle13a$
+                write record (gle13_dev,key=gle13a.firm_id$+gle13a.gl_account$+gle13a.line_no$)gle13a$
 
                 rem --- Generate recap
 

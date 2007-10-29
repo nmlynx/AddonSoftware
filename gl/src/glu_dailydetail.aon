@@ -100,7 +100,7 @@ rem --- Get next glt-04 record
           fy=num(gls01a.current_year$,err=update_summary)
           py=fy
           py=num(glt04a.posting_year$,err=*next)
-          closed=pos(gls01a.gl_yr_closed$="NY")
+          closed=pos(gls01a.gl_yr_closed$="YN");rem was NY... backwards? 10/07.CH
           switch closed
                  case 1
                       if py<fy id$="2"
