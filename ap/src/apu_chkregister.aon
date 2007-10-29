@@ -51,7 +51,7 @@ rem --- apt01a: iolist d0$,d[all]
 rem --- apt02a: iolist x0$,x[all]
 rem --- apt05a: iolist c0$(1),c1$,c[all]
 rem --- apt11a: iolist y0$,y1$,y[all]
-rem --- apw01a: iolist a0$
+
 rem --- gls01a: iolist *,*,g2$,g3$
 rem --- glt05a: iolist x0$,x1$,x[all]
 
@@ -86,7 +86,6 @@ escape;rem ape-04 is locked. this won't work yet...
     files=17,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="aps_params",ids$[1]="APS_PARAMS"
-    files$[2]="ape-04",ids$[2]="APE_CHECKS"
     files$[3]="gls_params",ids$[3]="GLS_PARAMS"
     files$[5]="apm-01",ids$[3]="APM_VENDMAST"
     files$[6]="apm-02",ids$[4]="APM_VENDHIST"
@@ -104,7 +103,6 @@ escape;rem ape-04 is locked. this won't work yet...
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ads01_dev=channels[1]
-    ape04_dev=channels[2]
     apm01_dev=channels[5]
     apm02_dev=channels[6]
     apm10b_dev=channels[8]
@@ -120,7 +118,7 @@ escape;rem ape-04 is locked. this won't work yet...
 
 rem --- Dimension string templates
 
-    dim aps01a$:templates$[1],ape04a$:templates$[2],gls01a$:templates$[3],
+    dim aps01a$:templates$[1],gls01a$:templates$[3],
 :       apm01a$:templates$[5],apm02a$:templates$[6],
 :       apm10a$:templates$[8],apt01a$:templates$[9],apt02a$:templates$[10],
 :       apt05a$:templates$[11],apt11a$:templates$[12],apw01a$:templates$[13],
@@ -142,11 +140,10 @@ rem --- Parameters
         g[x]=num(g2$(x*2+1,2),err=*next)
 l360:
     next x
-    g[2]=fnyy_year(g2$(5,2))
     p[0]=num(p2$(1,2))
     p[5]=num(p4$(1,2))
     p[6]=fnyy_year(p4$(3,2))
-    call pgmdir$+"adc_application.aon",n2$,info$[all]
+    call pgmdir$+"adc_application.aon","AP",info$[all]
     gl$=info$[9]
 
 rem --- Initializations
@@ -180,11 +177,7 @@ confirm_update: rem --- Run Update?
 
 rem --- File initializations
 
-    call pgmdir$+"adc_progress.aon","N",n3$,"","Updating","",10,apw01_dev,1,meter_num,status
-
-rem --- Disallow 'M'enu option in Error Routine
-
-    exit_ctrl=1
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,apw01_dev,1,meter_num,status
 
 rem --- Init Read
 
@@ -194,23 +187,23 @@ l1100: rem --- Main Read
 
     k0$=key(apw01_dev,end=done)
     read record (apw01_dev) apw01a$
-    if pos(firm_id$=a0$)<>1 goto done
-    call pgmdir$+"adc_progress.aon","S","","","",a0$(3,2)+" "+a0$(5,7),0,0,1,meter_num,status
-    if a0$(12,1)="V" goto l3800
+    if pos(firm_id$=apw01a_firm_id$)<>1 goto done
+    call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+    if apw01a.comp_or_void$="V" goto l3800
 
 rem --- Check Detail
 
-    k1$=k0$(1,4)+a0$(16,16)
+    k1$=k0$(1,4)+apw01a.vendor_id$+apw01a.ap_inv_no$
     read record (ape04_dev,key=k1$,dom=l3800) ape04a$
-    if len(b0$)<62 goto l3800
-    if b0$(56,7)<>a0$(5,7) goto l3800
+rem    if len(b0$)<62 goto l3800;rem jpb What's up here?
+    if ape04a.check_no$<>apw01a.check_no$ goto l3800
     goto l1400
 
 l1300: rem --- Next Invoice
 
     k1$=key(ape04_dev,end=l3900)
-    if k1$(1,10)<>k0$(1,4)+a0$(16,6) goto l3900
-    if k1$(5,4)="TEMP" goto l3900
+    if k1$(1,10)<>k0$(1,4)+apw01a.vendor_id$ goto l3900
+rem     if k1$(5,4)="TEMP" goto l3900;rem removing temporary vendors - jpb
     read record (ape04_dev) ape04a$
 
 l1400: rem --- Open Invoice
@@ -220,34 +213,34 @@ l1400: rem --- Open Invoice
 
 rem --- Vendor
 
-    if b0$(5,4)="TEMP" goto l1600
-    extract record (apm02_dev,key=firm_id$+b0$(5,6)+b0$(3,2),dom=l1600) apm02a$
-    x1$(10,3)=a0$(13,3)
-    x[0]=x[0]-b[0]+b[2]
-    if a0$(13,3)<=prior_g9$ x[6]=x[6]+b[1],x[9]=x[9]+b[0]-b[2]-b[1]
-    if a0$(13,3)>prior_g9$ and a0$(13,3)<=g9$ x[5]=x[5]+b[1],x[8]=x[8]+b[0]-b[2]-b[1]
-    if a0$(13,3)>g9$ x[7]=x[7]+b[1],x[10]=x[10]+b[0]-b[2]-b[1]
-    if a0$(13,3)<=prior_g8$ x[12]=x[12]+b[0]-b[2]-b[1]
-    if a0$(13,3)>prior_g8$ and a0$(13,3)<=g8$ x[11]=x[11]+b[0]-b[2]-b[1]
-    if a0$(13,3)>g8$ x[13]=x[13]+b[0]-b[2]-b[1]
-    write record (apm02_dev,key=firm_id$+b0$(5,6)+b0$(3,2)) apm02a$
+    extract record (apm02_dev,key=firm_id$+ape04a.vendor_id$+ape04a.ap_type$,dom=l1600) apm02a$
+escape;rem jpb x1$ needs help!
+    x1$(10,3)=apw01a.check_date$
+    x[0]=x[0]-ape04a.invoice_amt+ape04a.retention
+    if apw01a.check_date$<=prior_g9$ x[6]=x[6]+b[1],x[9]=x[9]+b[0]-b[2]-b[1]
+    if apw01a.check_date$>prior_g9$ and apw01a.check_date$<=g9$ x[5]=x[5]+b[1],x[8]=x[8]+b[0]-b[2]-b[1]
+    if apw01a.check_date$>g9$ x[7]=x[7]+b[1],x[10]=x[10]+b[0]-b[2]-b[1]
+    if apw01a.check_date$<=prior_g8$ x[12]=x[12]+b[0]-b[2]-b[1]
+    if apw01a.check_date$>prior_g8$ and apw01a.check_date$<=g8$ x[11]=x[11]+b[0]-b[2]-b[1]
+    if apw01a.check_date$>g8$ x[13]=x[13]+b[0]-b[2]-b[1]
+    write record (apm02_dev,key=firm_id$+ape04a.vendor_id$+ape04a.ap_type$) apm02a$
 
 l1600: rem --- G/L Reference Fields
 
     if gl$<>"Y" goto l1700
-    ref2$=b0$(11,10)
-    ref3$=a0$(5,7)+" "+a0$(3,2)
-    when$=a0$(13,3)
+    ref2$=ape04a.ap_inv_no$
+    ref3$=apw01a.check_no$+" "+apw01a.ap_type$
+    when$=apw01a.check_date$
     memo$="Unknown Vendor"
-    ref1$=fnmask$(b0$(5,p[0]),m0$)
-    find record (apm01_dev,key=firm_id$+b0$(5,6),dom=l1700) apm01a$
+    ref1$=fnmask$(ape04a.vendor_id$(1,vendor_size),m0$)
+    find record (apm01_dev,key=firm_id$+ape04a.vendor_id$,dom=l1700) apm01a$
     memo$=h1$
 
 l1700: rem --- Dist Code
 
     if d9$=k2$ goto l1800
     k2$=d9$
-    dim z0$(4*g[4],"0")
+    dim z0$(40,"0")
     find record (apm10b_dev,key=firm_id$+"B"+k2$,dom=*next) apm10b$
 
 l1800: rem --- Cash Basis
@@ -255,15 +248,15 @@ l1800: rem --- Cash Basis
     if p3$(4,1)<>"Y" goto l2200
     account$=""
     t9=0
-    read (apt02_dev,key=b0$(1,10)+"I"+b0$(11,10),dom=*next)
+    read (apt02_dev,key=n0$+apae04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$,dom=*next)
 l2050:
     k$=key(apt02_dev,end=l2120)
     if len(k$)<21 goto l2120
-    if k$(1,21)<>b0$(1,10)+"I"+b0$(11,10) goto l2120
+    if k$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_od$+"I"+ape04a.ap_inv_no$ goto l2120
     read record (apt02_dev) apt02a$
     if t0=0 t0=b[0]-b[2]
     if t0=0 goto l2050
-    account$=x0$(22,g[4])
+    account$=x0$(22,10)
     amount=x[0]*((b[0]-b[2])/t0)
     units=x[1]*((b[0]-b[2])/t0)
     gosub glpost
@@ -278,7 +271,7 @@ l2150:
 
 l2200: rem --- Dist Cash
 
-    account$=z0$(g[4]+1,g[4])
+    account$=z0$(11,10)
     amount=(-b[0])+b[2]+b[1]
     units=0
     gosub glpost
@@ -286,7 +279,7 @@ l2200: rem --- Dist Cash
 rem --- Payable
 
     if p3$(4,1)="Y" goto l2400
-    account$=z0$(1,g[4])
+    account$=z0$(1,10)
     amount=b[0]-b[2]
     units=0
     gosub glpost
@@ -294,19 +287,19 @@ rem --- Payable
 l2400: rem --- Discount
 
     if b[1]=0 goto l2500
-    account$=z0$(2*g[4]+1,g[4])
+    account$=z0$(21,10)
     amount=-b[1]
     units=0
     gosub glpost
 
 l2500: rem --- Open Checks
 
-    c0$=a0$(1,11)+b0$(5,16)+a0$(13,3)+"C"+k2$
+    c0$=firm_id$+apw01a.ap_type$+apw01a.check_no$+ape04a.vendor_id$+ape04a.ap_inv_no$+apw01a.check_date$+"C"+k2$
     c1$=""
     c[0]=b[0]
     c[1]=b[1]
     c[2]=b[2]
-    c$=a0$(1,4)+c0$(5,23)
+    c$=firm_id$+apw01a.ap_type$+c0$(5,23)
 l2900:
     write record (apt05_dev,key=c$,dom=l2990) apt05a$
     if br$="Y" gosub l6500
@@ -322,9 +315,9 @@ rem --- Remove Check Detail
 
 l3800: rem --- Void Check
 
-    c0$=a0$(1,11)+j1$(1,16)+a0$(13,3)+"V"
+    c0$=firm_id$+apw01a.ap_type$+apw01a.check_no$+j1$(1,16)+apw01a.check_date$+"V"
     c1$=""
-    c$=a0$(1,4)+c0$(5,23)
+    c$=firm_id$+ap201a.ap_type$+c0$(5,23)
     dim c[2]
     write record (apt05_dev,key=c$,dom=l3890) apt05a$
     if br$="Y" x9$=x9$+c$(5,7)
@@ -353,7 +346,7 @@ rem --- All done
 
 l6000: rem --- UPDATE OPEN INVOICE
 
-    y0$=b0$(1,20)+"00"
+    y0$=n0$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$+"00"
     t0=0
     find record (apt01_dev,key=y0$,dom=l6490) apt01a$
     t[0]=d[0]
@@ -366,7 +359,7 @@ l6000: rem --- UPDATE OPEN INVOICE
 l6100: rem --- Accumulate any adjustments/payments
 
     k$=key(apt11_dev,end=l6300)
-    if pos(k$(1,20)=b0$(1,20))<>1 goto l6300
+    if pos(k$(1,20)=ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$)<>1 goto l6300
     read record (apt11_dev) apt11a$
     lastseq=num(y0$(21,2))
     t[0]=t[0]+y[0]
@@ -377,12 +370,12 @@ l6100: rem --- Accumulate any adjustments/payments
 
 l6300: rem --- Initialize new detail
 
-    y0$=b0$(1,20)+str(lastseq+1:"00")
+    y0$=ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$+str(lastseq+1:"00")
     dim y1$(11),y[2]
 
 rem --- WRITE DETAIL
 
-    y1$(1)="C"+a0$(13,3)+a0$(5,7)
+    y1$(1)="C"+apw01a.check_date$+apw01a.check_no$
     y[0]=(-b[0])+b[2]
     y[1]=-b[1]
     write record (apt11_dev,key=y0$) apt11a$
@@ -398,7 +391,7 @@ l6500: rem --- UPDATE glt-05
 l6515:
     dim x1$(50),x[2]
     if x9$="" goto l6600
-    let x0$=c0$(1,2)+z0$(g[4]+1,g[4])+x9$(1,7),x1$(1,2)="AV"
+    let x0$=c0$(1,2)+z0$(11,10)+x9$(1,7),x1$(1,2)="AV"
     let x1$(3,6)=fnyy_yy21$(fndate$(fndate$(c0$(28,3)))),x1$(9,30)="VOID"
     write record (glt05_dev,key=x0$) glt05a$
     if len(x9$)>7 x9$=x9$(8) else x9$=""
@@ -406,7 +399,7 @@ l6515:
 
 l6600: rem --- Detail
 
-    let x0$=c0$(1,2)+z0$(g[4]+1,g[4])+c0$(5,7),x1$(1,2)="AO"
+    let x0$=c0$(1,2)+z0$(11,10)+c0$(5,7),x1$(1,2)="AO"
     let x1$(3,6)=fnyy_yy21$(fndate$(fndate$(c0$(28,3))))
     if c0$(12,4)="TEMP" x1$(9,30)=c1$; goto l6660
     find record (apm01_dev,key=c0$(1,2)+c0$(12,6),dom=l6660) apm01a$
