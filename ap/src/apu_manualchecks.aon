@@ -7,6 +7,7 @@ rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
 rem --- Currently just an incomplete stub which clears the entry files
+rem --- WIP to fill in missing logic 10/07.CH
 
     seterr std_error
     setesc std_error
@@ -25,11 +26,22 @@ rem --- Skip update if errors were encountered
 
 rem --- Initializations
 
+    tot_pers=gls01a.total_pers
+    curr_ap_yr=aps01a.current_year
+    curr_1099_yr=aps01a.curr_1099_yr
+    gl_per_end$=field(gls01a$,"per_ending_"+str(tot_pers:"00"))
+    if gl_per_end$<gls01a.per_ending_01$ curr_ap_yr=curr_ap_yr+1
+    gl_per_end$=str(curr_ap_yr:"0000")+gl_per_end$
+    gl_pri_per_end$=str(curr_ap_yr-1:"0000")+gl_per_end$(5)
+    gl_calendar_dt$=str(curr_1099_yr:"0000")+"1231"
+    gl_pri_calendar_dt$=str(curr_1099_yr-1:"0000")+"1231"
+
 rem --- Get user approval to update
 
     prompt$="Do you want to update the Manual Check Register?"
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
-    if answer$<>"YES" goto std_exit
+    if answer$<>"YES" goto std_exit_no_update
+    goto std_exit_no_update;rem temp until guts get put in! 10/07.CH
 
 rem --- Start progress meter and position header file
 
@@ -48,54 +60,126 @@ rem --- Read next Check Header (ape-02) record
 
           ape02a_key$=k$
           check$=ape02a.firm_id$+ape02a.ap_type$+ape02a.check_no$+ape02a.vendor_id$
+          inval_tran=0
 
-          rem --- Retrieve Vendor Master (apm-01) record
+          if ape02a.trans_type$<>"V"
+              rem --- Retrieve Vendor Master (apm-01) record
 
-          dim apm01a$:fattr(apm01a$)
-          apm01a.firm_id$=firm_id$
-          apm01a.vendor_id$=ape02a.vendor_id$
-          apm01a.vendor_name$=nf$
-          k$=apm01a.firm_id$+apm01a.vendor_id$ 
-          find record (apm01_dev,key=k$,dom=*next) apm01a$
+              dim apm01a$:fattr(apm01a$)
+              apm01a.firm_id$=firm_id$
+              apm01a.vendor_id$=ape02a.vendor_id$
+              apm01a.vendor_name$=nf$
+              k$=apm01a.firm_id$+apm01a.vendor_id$ 
+              find record (apm01_dev,key=k$,dom=*next) apm01a$
 
-          rem --- Position the Invoice Detail (ape-22) file
+              when$=ape02a.check_date$
+              ref3$=ape02a.check_no$+" "+ape02a.ap_type$
+          endif
 
-          read (ape22_dev,key=check$,dom=*next)
+          switch pos(ape02a.trans_type$="MRV")
+          
+            case 1; rem manual
 
-          rem --- Read the next Invoice Detail (ape-22) record
+              rem --- Position the Invoice Detail (ape-22) file
 
-          while moredetail
-                ape22a_keyk$=key(ape22_dev,end=*break)
-                if pos(check$=ape22a_key$)<>1 break
-                read record (ape22_dev) ape22a$
+              read (ape22_dev,key=check$,dom=*next)
 
-                rem --- Position GL distribution detail (ape-12) file
+              rem --- Read the next Invoice Detail (ape-22) record
 
-                detail$=ape22a.firm_id$+ape22a.ap_type$+ape22a.check_no$+
-:                       ape22a.vendor_id$+ape22a.ap_inv_no$
+              while moredetail
+                    ape22a_key$=key(ape22_dev,end=*break)
+                    if pos(check$=ape22a_key$)<>1 break
+                    read record (ape22_dev) ape22a$
+                    ref2$=ape22.ap_inv_no$
 
-                rem --- Process miscellaneous GL entries
+                    apt01a.firm_id$="ZZ";rem should only stay ZZ if domo is taken
+                    extract record (apt01_dev,key=ape22a.firm_id$+ape22a.ap_type$+
+:                       ape22a.vendor_id$+ape22a.ap_inv_no$,dom=*next)apt01a$
+                    v0$="M"
+                    if apt01a.firm_id$="ZZ" or
+:                       apt01a.mc_inv_flag$="M" and 
+:                       apt01a.mc_inv_adj$<>"A" and
+:                       apt01a.mc_inv_rev$<>"R"
+:                           f0$="OI";rem Outside Invoice Flag
+         
+                    gosub open_inv
 
-                read (ape12_dev,key=detail$,dom=*next)
-                while moredetail
-                      ape12a_key$=key(ape12_dev,end=*break)
-                      if pos(detail$=ape12a_key$)<>1 break
-                      read record (ape12_dev) ape12a$
+                    if f0$<>"OI
+                        o9=1
+                        gosub update_vendhist
+                    else
+                        rem --- Position GL distribution detail (ape-12) file
 
-                      rem --- Delete GL Distribution Detail (ape-12) record 
-                      rem --- and loop back for the next one
+                        detail$=ape22a.firm_id$+ape22a.ap_type$+ape22a.check_no$+
+:                         ape22a.vendor_id$+ape22a.ap_inv_no$
 
-                      remove (ape12_dev,key=ape12a_key$)
-                wend
+                        rem --- Process miscellaneous GL entries
 
-                rem --- Delete Invoice Detail (ape-22) record and loop back for the next one
+                        read (ape12_dev,key=detail$,dom=*next)
+                        while moredetail
+                              ape12a_key$=key(ape12_dev,end=*break)
+                              if pos(detail$=ape12a_key$)<>1 break
+                              read record (ape12_dev) ape12a$
 
-                remove (ape22_dev,key=ape22a_key$)
-          wend
+                              rem --- Delete GL Distribution Detail (ape-12) record 
+                              rem --- and loop back for the next one
+
+                              remove (ape12_dev,key=ape12a_key$)
+                        wend
+                        gosub update_vendhist
+                    endif
+        
+                    rem --- Open CK
+                    
+                    dim apt05a1$:fattr(apt05a$)
+                    apt05a1.firm_id$=ape22a.firm_id$
+                    apt05a1.ap_type$=ape22a.ap_type$
+                    apt05a1.check_no$=ape22a.check_no$
+                    apt05a1.vendor_id$=ape22a.vendor_id$
+                    apt05a1.ap_inv_no$=ape22a.ap_inv_no$
+                    apt05a1.check_date$=ape02a.check_date$
+                    apt05a1.trans_type$=ape02a.trans_type$
+                    apt05a1.ap_dist_code$=ape22a.ap_dist_code$
+                    
+                    apt05a1.vendor_name$=ape02a.vendor_name$
+                    apt05a1.invoice_amt=ape22a.invoice_amt
+                    apt05a1.discount_amt=ape22a.discount_amt
+                    apt05a1.retention=ape22a.retention
+
+                    multi_tp$=apt05a1.ap_type$
+                    if multitypes<>1 multi_tp$=""
+
+                    gosub remove_reversal
+                    write record (apt05_dev,key=apt05a1.firm_id$+multi_tp$+
+:                       apt05a1.check_no$+apt05a1.vendor_id$+apt05a1.ap_inv_no$) apt05a1$
+                    v0$="O"
+                    if br$="Y" gosub bank_rec
+
+                    rem --- Delete Invoice Detail (ape-22) record and loop back for the next one
+
+                    remove (ape22_dev,key=ape22a_key$)
+              wend            
+            break
+
+            case 2; rem reversal
+
+            break
+
+            case 3; rem void
+
+            break
+
+            case default
+                inval_tran=1
+            break
+
+          swend
 
           rem --- Delete Check Header (ape-02) record and loop back for the next one
-
-          remove (ape02_dev,key=ape02a_key$)
+          
+          if inval_tran<>1
+            remove (ape02_dev,key=ape02a_key$)
+          endif
     wend
 
 rem --- All done
@@ -107,15 +191,141 @@ rem --- All done
     call pgmdir$+"adc_batchdelete.aon",err=*next,status
     goto std_exit
 
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+	return
+
+open_inv:
+
+    apt11_key$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$
+    read (apt11_dev,key=apt11_key$,dom=*next)
+
+open_inv_dtl:
+    while more
+
+        k$=key(apt11_dev,end=*break)
+        if k$(1,len(apt11_key$)<>apt11_key$ break
+        read record (apt11_dev) apt11a$
+        c1=apt11a.sequence_num
+
+        rem --- Find Open Slot
+
+        if apt11a.trans_type$" " break
+        t[0]=t[0]+apt11a.trans_amt
+        t[1]=t[1]+apt11a.trans_disc
+        t[2]=t[2]+apt11a.trans_ret
+
+    wend
+
+    apt11a.firm_id$=apt01a.firm_id$
+    apt11a.ap_type$=apt01a.ap_type$
+    apt11a.vendor_id$=apt01a.vendor_id$
+    apt11a.ap_inv_no$=apt01a.ap_inv_no$
+    apt11a.trans_type$=v0$
+    apt11a.trans_date$=ape02a.check_date$
+    apt11a.trans_ref$=ape02a.check_no$
+    apt11a.trans_amt=(-ape22a.invoice_amt)+ape22a.retention
+    apt11a.disc_amt=-ape22a.discount_amt
+    if apt01.mc_inv_flag$="M" and apt01.mc_inv_adj$<>"A" 
+        gosub same_inv_vend_diff_check
+    else
+        rem --- just setting c1=c1+1 here should take care of case where it was zero, or just increment it normally
+        apt11a.sequence_num=c1+1
+        write record (apt11_dev,key=apt11_key$+apt11a.sequence_num$) apt11a$
+    endif
+
+    t[0]=t[0]+apt11a.trans_amt
+    t[1]=t[1]+apt11a.trans_disc
+    t[2]=t[2]+apt11a.trans_ret
+return
+
+same_inv_vend_diff_check: rem --- Same (Invoice#, Vendor#) Different Check#
+
+rem --- Create a Record for Each Transaction
+
+    dim cc1$(11),c[2],cc[2]
+    let apt11a.sequence_num=c1+1
+    apt11a.trans_amt=ape22a.invoice_amt-ape22a.retention
+    apt11a.trans_disc=ape22a.discount_amt
+    apt11a.trans_type$="S"
+    apt11a.trans_date$=ape02a.check_date$
+    apt11a.trans_ref$="Invoice"
+
+    rem --- the write record had a DOM= to itself ... removed for now.CH
+    write record (apt11_dev,key=apt11_key$_apt11.sequence_num$) apt11a$
+    let apt11a.sequence_num=apt11a.sequence_num+1
+    apt11a.trans_type$=v0$
+    apt11a.trans_date$=ape02a.check_date$
+    apt11a.trans_ref$=ape02a.check_no$
+    let apt11a.trans_amt=-apt11a.trans_amt,apt11a.trans_disc=-apt11a.trans_disc
+    write record (apt11_dev,key=apt11_key$+apt11a.sequence_num$) apt11a$
+    let apt11a.trans_amt=-apt11a.trans_amt,apt11a.trans_disc=-apt11a.trans_disc; rem "Change sign back cuz 6450 expects the positive value "
+return
+
+update_vendhist: rem --- Vendor
+rem ***************************left off here... need to resolve num's
+    extract record (apm02_dev,key=firm_id$+ape22a.vendor_id$+ape22a.ap_type$,dom=l6790) apm02a$
+    let apm02a.lst_pay_date$=ape02a.check_date$
+    if ape02a.check_date$<=gl_pri_per_end$ x[9]=x[9]+y[0]-y[2]-y[1],x[6]=x[6]+y[1]
+    if ape02a.check_date$>gl_pri_per_end$ and ape02a.check_date$<=gl_per_end$ x[8]=x[8]+y[0]-y[2]-y[1],x[5]=x[5]+y[1]
+    if ape02a.check_date$>gl_per_end$ x[10]=x[10]+y[0]-y[2]-y[1],x[7]=x[7]+y[1]
+    if ape02a.check_date$<=gl_pri_calendar_dt$ x[12]=x[12]+y[0]-y[2]-y[1]
+    if ape02a.check_date$>gl_pri_calendar_dt$ and ape02a.check_date$<=gl_calendar_dt$ x[11]=x[11]+y[0]-y[2]-y[1]
+    if ape02a.check_date$>gl_calendar_dt$ x[13]=x[13]+y[0]-y[2]-y[1]
+    if o9=1 x[0]=x[0]-y[0]+y[2]
+    if o9=0 and ape02a.check_date$<=gl_pri_per_end$ x[3]=x[3]+y[0]-y[2]
+    if o9=0 and ape02a.check_date$>gl_pri_per_end$ and ape02a.check_date$<=gl_per_end$ x[2]=x[2]+y[0]-y[2]
+    if o9=0 if ape02a.check_date$>gl_per_end$ x[4]=x[4]+y[0]-y[2]
+    write record (apm02_dev,key=firm_id$+y0$(12,6)+y0$(3,2)) apm02a$
+
+return
+
+remove_reversal: rem --- Remove Reversal
+
+    wkey$=apt05a1.firm_id$+multi_type$+apt05a1.check_no$
+    read (apt05_dev,key=wkey$,dom=*next)
+    while more
+        k$=key(apt05_dev,end=*break)
+        if k$(1,len(wkey$))<>wkey$ break
+        read record (apt05_dev) apt05a2$
+        if apt05a2.trans_type$="R" remove (apt05_dev,key=k$)
+    wend
+return
+
+bank_rec: rem --- Bank Rec
+
+    if gl$="Y"
+        dim apm10b$:fattr(apm10b$)
+        find record (apm10b_dev,key=apt05a1.firm_id$+"B"+apt05a1.ap_dist_code$,dom=*next) apm10b$
+        x$=apm10b.gl_cash_acct$;rem cash acct
+
+        glt05a.firm_id$=apt05a1.firm_id$
+        glt05a.gl_account$=x$
+        glt05a.check_no$=apt05a1.check_no$
+        glt05a.check_type$="A"
+        glt05a.bnk_chk_date$=apt051a.check_date$
+        glt05a.description$=ape02a.vendor_name$
+        glt05a.description$=apm01a.vendor_name$
+        find record (glt05_dev,key=glt05a.firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=*next) glt05a$
+        glt05a.check_amount=glt05a.check_amount+
+:           apt05a1.invoice_amt-
+:           apt05a1.discount_amt-
+:           apt05a1.retention
+        glt05a.paid_code$=v0$
+        write record (glt05_dev,key=glt05a.firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
+
+return
+
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -158,7 +368,14 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+	msg_id$="UPDATE_COMPLETE"
+	dim msg_tokens$[1]
+	msg_opt$=""
+	gosub disp_message
+
+std_exit_no_update:
+
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
