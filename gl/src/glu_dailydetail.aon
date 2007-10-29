@@ -11,6 +11,9 @@ rem  +-----------------------------------------+
     setesc std_error
     seterr std_error
 
+	next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
+	if OutVect!<>null() OutVect!=null()
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -152,14 +155,14 @@ rem --- Get next glt-04 record
           glt06a.dealer_num_02=glt04a.dealer_num_02
           glt06a.dealer_num_03=glt04a.dealer_num_03
           glt06_key$=glt06a.firm_id$+glt06a.gl_account$+glt06a.posting_year$+
-:                    glt06a.posting_per$+glt06a.trns_date$+glt06a.journal_id$+glt06a.gl_adt_no$+$FF$
+:                    glt06a.posting_per$+glt06a.trns_date$+glt06a.journal_id$+glt06a.gl_adt_no$+$FFFFFFFFFF$
 
           rem --- Get the next sequence number
 
           dim k$:glt06_key_tpl$
           read (glt06_dev,key=glt06_key$,dom=*next)
           k$=keyp(glt06_dev,err=update_detail)
-          if k$(1,len(k$)-len(k.seq_no$))=glt06_key$(1,len(glt06_key$)-1)
+          if k$(1,len(k$)-len(k.seq_no$))=glt06_key$(1,len(glt06_key$)-len(glt06_key.seq_no$))
             glt06a.seq_no$=k.seq_no$
           endif
           update_detail: rem --- Write transaction history detail record

@@ -209,9 +209,9 @@ rem --- Last detail?
 
 get_account: rem --- Retrieve account master for this line
 
-                glm01a.gl_account$=gle03a.gl_account$
+                glm01a.gl_account$=gle13a.gl_dest_acct$
                 glm01a.gl_acct_desc$="(Not On File)"
-                glm01_key$=firm_id$+gle03a.gl_account$
+                glm01_key$=firm_id$+gle13a.gl_dest_acct$
                 find record (glm01_dev,key=glm01_key$,dom=*next)glm01a$
 
                 rem --- Calculate amount to be allocated to this account

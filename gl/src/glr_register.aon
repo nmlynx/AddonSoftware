@@ -260,7 +260,9 @@ rem --- All done
 rem --- Run update overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    run pgmdir$+"glr_recap.aon"
+    next_overlay$="glr_recap_DO.aon"
+	out_action$="PRT-PDF"	
+	goto std_exit
 
 
 subheading: rem --- Subheading
@@ -350,10 +352,22 @@ rem --- Check dates
     gldate$=gle01a.trans_date$
     call pgmdir$+"glc_datecheck.aon",gldate$,verify$,period$,year$,glstatus
     if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,gldate$,glstatus,l,errors,status
+    rem --- CAH.09/29/07
+    err_msg$=stbl("+DTWARN_MSG",err=*next)
+    if err_msg$<>""
+      OutVect!.addItem(err_msg$)
+      xwk=fnblank(9)
+    endif
     if cvs(gle01a.reverse_date$,2)="" goto transaction_break_exit
     gldate$=gle01a.reverse_date$
     call pgmdir$+"glc_datecheck.aon",gldate$,verify$,period$,year$,glstatus
     if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,gldate$,glstatus,l,errors,status
+    rem --- CAH.09/29/07
+    err_msg$=stbl("+DTWARN_MSG",err=*next)
+    if err_msg$<>""
+      OutVect!.addItem(err_msg$)
+      xwk=fnblank(9)
+    endif
 
 transaction_break_exit:
 

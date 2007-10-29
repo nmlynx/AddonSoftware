@@ -364,7 +364,8 @@ balanced: rem --- No update if any ranges were selected
 rem --- Run update overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    run pgmdir$+"glu_dailydetail.aon"
+    next_overlay$=pgmdir$+"glu_dailydetail.aon"
+    goto std_exit
 
 date_break: rem --- Date break
 
