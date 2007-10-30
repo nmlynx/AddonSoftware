@@ -17,6 +17,7 @@ rem
 
 rem --- Single file or file list?
     if filelist then goto filelist
+    if source_version=6 then goto get_sourcefile_6
 
 rem --- Get the name of the program to be converted
 get_sourcefile: 
@@ -24,12 +25,29 @@ get_sourcefile:
     let filters$="PRO/5 executables (*.bbx)"+$0A$+"*.bbx"+$0A$+"All files (*.*)"+$0A$+"*.*"
     rem --- print (0)'fileopen'(title$,pgmdir$,"","",filters$)
     rem --- read (0)pathname$
-    pathname$=fileopen(title$,pgmdir$,"","",filters$)
+    pathname$=fileopen(title$,pgmdir1$,"","",filters$)
     if pathname$="::BAD::" then goto get_sourcefile
     if pathname$="::CANCEL::" then goto the_end
     let filename$=fnbasename$(pathname$,""),status=0
-    let pgmdir$=pathname$(1,pos(filename$=pathname$)-1)
+    let pgmdir1$=pathname$(1,pos(filename$=pathname$)-1)
     let p=pos("."=filename$,-1),basename$=filename$(1,p-1)
+    goto arguments
+
+get_sourcefile_6:
+    let title$="Select program to be converted",status=1
+    let filters$="All files (*.*)"+$0A$+"*.*"
+    pathname$=fileopen(title$,pgmdir1$,"","",filters$)
+    if pathname$="::BAD::" then goto get_sourcefile_6
+    if pathname$="::CANCEL::" then goto the_end
+    let filename$=fnbasename$(pathname$,""),status=0
+    let pgmdir1$=pathname$(1,pos(filename$=pathname$)-1)
+
+rem --- Get the new name for the program
+get_newname: 
+    p=pos("."=filename$)
+    let newname1$=filename$(1,p-1)+"_"+filename$(p+1)+".lst"
+    let newname1$=cvs(newname1$,1+2+8)
+    let p=pos("."=newname1$,-1),basename$=newname1$(1,p-1)
 
 rem --- Number of arguments?
 arguments: 
@@ -39,6 +57,15 @@ arguments:
     print (0,err=get_sourcefile)'gets'(title$,prompt$,default$)
     input arguments$
     let arguments=num(arguments$,err=arguments)
+    if filelist and target then goto get_targetfile
+
+rem --- Get the target location for the program
+get_targetlocation: 
+    let title$="Target Location"
+    outputdir$=fileopen(title$,pgmdir$,"","","",1)
+    if outputdir$="::BAD::" then goto get_targetlocation
+    if outputdir$="::CANCEL::" then outputdir$=pgmdir$;goto get_targetfile
+    let target=1;  outputdir$=outputdir$+"/";pgmdir$=outputdir$
 
 rem --- Get the new name for the program
 get_targetfile: 
@@ -49,8 +76,18 @@ get_targetfile:
     input newname$
     let newname$=cvs(newname$,1+2)
 
+rem --- Get the extension for the program
+get_targetextension: 
+    let title$="Output program extension"
+    let prompt$="Enter the extension of the program file to be created"
+    let default$="src"
+    print (0,err=get_targetextension)'gets'(title$,prompt$,default$)
+    input src$
+    if len(src$)<>3 then goto get_targetextension
+    let src$="."+cvs(src$,1+2)
+
 rem --- Does the output file already exist?
-    let srcfile$=pgmdir$+newname$+src$
+    let srcfile$=outputdir$+newname$+src$
     let src_dev=unt
     open (src_dev,err=next_overlay)srcfile$
     close (src_dev)
@@ -64,6 +101,7 @@ rem --- Get user permission to overwrite existing file
 
 rem --- Read in next source file name from the file list being used
 filelist: 
+    if source_version=6 then goto filelist6
     readrecord(lst_dev,err=file_list_end)lstfile$
         if pos(".bbx"=lstfile$)=0 then goto filelist
         let pathname$=temp_pathname$+"/"+lstfile$
@@ -72,11 +110,22 @@ filelist:
         let p=pos("."=filename$,-1),basename$=filename$(1,p-1)
         goto arguments
     file_list_end:
-        filelist=0
+        filelist=0;target=0
+        goto the_end
+filelist6: 
+    readrecord(lst_dev,err=file_list_end)lstfile$
+        if mask(lstfile$,"[A-Z][A-Z][A-Z][.][A-Z0-9][A-Z]")=0 then goto filelist6
+        let pathname$=temp_pathname$+"/"+lstfile$
+        let filename$=fnbasename$(lstfile$,""),status=0
+        let pgmdir$=pathname$(1,pos(filename$=pathname$)-1)
+        goto get_newname
+    file_list6_end:
+        filelist=0;target=0
         goto the_end
 
 rem --- Run next overlay
 next_overlay: 
+    if source_version=6 then run "adc_oldport.bbj"
     run "adx_codeportconv.bbj",err=the_end
 
 rem --- Display message
