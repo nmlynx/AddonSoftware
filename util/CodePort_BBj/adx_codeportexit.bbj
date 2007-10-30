@@ -24,6 +24,7 @@ rem --- Close any open channels
 rem --- Delete work files
 delete_files: 
     if keepfiles then goto done
+    remove_bbx: erase bbxfile$,err=remove_tmp
     remove_tmp: erase tmpfile$,err=remove_txt
     remove_txt: erase txtfile$,err=done
 
