@@ -81,12 +81,10 @@ rem --- Startup notification
     gosub display_message
 
 rem --- Which version is being converted to 8?
-get_version: 
-    rem let title$="User selections"
-    let prompt$="Which Addon version(6/7) you want to convert to Addon 8?"
+get_version:
+    let title$="Which Addon version(6/7) you want to convert to Addon 8?"
     let default$="7"
-    print (0,err=the_end)'gets'(title$,prompt$,default$)
-    input source_version$
+    call "user_selections.bbj",title$,default$,filedir$,source_version$
     let source_version=num(source_version$,err=get_version)
     if source_version<>6 then 
         if  source_version<>7 then 
