@@ -51,17 +51,15 @@ get_newname:
 
 rem --- Number of arguments?
 arguments: 
-    let title$="User selections"
-    let prompt$="Number of forms fields being passed?"
+    let title$="Number of forms fields being passed?"
     let default$="1"
-    print (0,err=get_sourcefile)'gets'(title$,prompt$,default$)
-    input arguments$
+    call "user_selections.bbj",title$,default$,filedir$,arguments$
     let arguments=num(arguments$,err=arguments)
     if filelist and target then goto get_targetfile
 
 rem --- Get the target location for the program
 get_targetlocation: 
-    let title$="Target Location"
+    let title$="Select destination directory for the converted program"
     outputdir$=fileopen(title$,pgmdir$,"","","",1)
     if outputdir$="::BAD::" then goto get_targetlocation
     if outputdir$="::CANCEL::" then outputdir$=pgmdir$;goto get_targetfile
@@ -69,20 +67,17 @@ get_targetlocation:
 
 rem --- Get the new name for the program
 get_targetfile: 
-    let title$="Output program name"
-    let prompt$="Enter the name of the program file to be created"
+    let title$="Enter the name of the program file to be created"
     let default$=basename$
-    print (0,err=arguments)'gets'(title$,prompt$,default$)
-    input newname$
+    call "user_selections.bbj",title$,default$,filedir$,newname$
     let newname$=cvs(newname$,1+2)
+    if newname$="" then goto get_targetfile
 
 rem --- Get the extension for the program
 get_targetextension: 
-    let title$="Output program extension"
-    let prompt$="Enter the extension of the program file to be created"
+    let title$="Enter the extension of the program file to be created"
     let default$="src"
-    print (0,err=get_targetextension)'gets'(title$,prompt$,default$)
-    input src$
+    call "user_selections.bbj",title$,default$,filedir$,src$
     if len(src$)<>3 then goto get_targetextension
     let src$="."+cvs(src$,1+2)
 
