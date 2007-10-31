@@ -46,8 +46,8 @@ rem --- The following IOLIST's were removed from this program:
 rem --- ape04a: iolist b0$,b[all]
 rem --- apm01a: iolist *,h1$
 rem --- apm02a: iolist x0$,x1$,x2$,x[all]
-rem --- apm10b: iolist *,z0$
-rem --- apt01a: iolist d0$,d[all]
+
+
 rem --- apt02a: iolist x0$,x[all]
 rem --- apt05a: iolist c0$(1),c1$,c[all]
 rem --- apt11a: iolist y0$,y1$,y[all]
@@ -120,7 +120,7 @@ rem --- Dimension string templates
 
     dim aps01a$:templates$[1],gls01a$:templates$[3],
 :       apm01a$:templates$[5],apm02a$:templates$[6],
-:       apm10a$:templates$[8],apt01a$:templates$[9],apt02a$:templates$[10],
+:       apm10b$:templates$[8],apt01a$:templates$[9],apt02a$:templates$[10],
 :       apt05a$:templates$[11],apt11a$:templates$[12],apw01a$:templates$[13],
 :       glm01a$:templates$[14],glt04a$:templates$[15],glt05a$:templates$[16],
 :       glt14a$:templates$[17]
@@ -144,7 +144,7 @@ rem --- Parameters
 rem --- Initializations
 escape
 rem section needs help!
-    dim d[2],x[13],t[2],y[2]
+    dim x[13],t[2],y[2]
     g9$=g3$(gls01a.tot_pers*2-1,2)
     w=ap_year
     if g9$<g3$(1,2) w=w+1
@@ -191,7 +191,6 @@ rem --- Check Detail
 
     k1$=k0$(1,4)+apw01a.vendor_id$+apw01a.ap_inv_no$
     read record (ape04_dev,key=k1$,dom=l3800) ape04a$
-rem    if len(b0$)<62 goto l3800;rem jpb What's up here?
     if ape04a.check_no$<>apw01a.check_no$ goto l3800
     goto l1400
 
@@ -234,46 +233,45 @@ l1700: rem --- Dist Code
 escape;rem Here's where I went to bed... jpb
     if d9$=k2$ goto l1800
     k2$=d9$
-    dim z0$(40,"0")
+    dim apm10b$:fattr(apm10b$)
     find record (apm10b_dev,key=firm_id$+"B"+k2$,dom=*next) apm10b$
 
 l1800: rem --- Cash Basis
 
-    if p3$(4,1)<>"Y" goto l2200
+    if aps01a.cash_basis$<>"Y" goto l2200
     account$=""
     t9=0
     read (apt02_dev,key=n0$+apae04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$,dom=*next)
 l2050:
     k$=key(apt02_dev,end=l2120)
     if len(k$)<21 goto l2120
-    if k$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_od$+"I"+ape04a.ap_inv_no$ goto l2120
+    if k$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$ goto l2120
     read record (apt02_dev) apt02a$
     if t0=0 t0=ape04a.invoice_amt-ape04a.retention
     if t0=0 goto l2050
-    account$=x0$(22,gls01a.max_acct_len)
-    amount=x[0]*((ape04a.invoice_amt-ape04a.retention)/t0)
-    units=x[1]*((ape04a.invoice_amt-ape04a.retention)/t0)
+    account$=apt02a.gl_account$(1,gls01a.max_acct_len)
+    amount=apt02a.gl_post_amt*((ape04a.invoice_amt-ape04a.retention)/t0)
+    units=apt02a.units*((ape04a.invoice_amt-ape04a.retention)/t0)
     gosub glpost
     t9=t9+amount
     goto l2050
 l2120:
-    if account$="" goto l2150
-    if t9=ape04a.invoice_amt-ape04a.retention goto l2150
+    if account$="" goto l2200
+    if t9=ape04a.invoice_amt-ape04a.retention goto l2200
     amount=ape04a.invoice_amt-ape04a.retention-t9
     gosub glpost
-l2150:
 
 l2200: rem --- Dist Cash
 
-    account$=z0$(gls01a.max_acct_len+1,gls01a.max_acct_len)
+    account$=apm10b.gl_cash_acct$(1,gls01a.max_acct_len)
     amount=(-ape04a.invoice_amt)+ape04a.retention+ape04a.discount_amt
     units=0
     gosub glpost
 
 rem --- Payable
 
-    if p3$(4,1)="Y" goto l2400
-    account$=z0$(1,gls01a.max_acct_len)
+    if aps01a.cash_basks$="Y" goto l2400
+    account$=apm10b.gl_ap_acct$(1,gls01a.max_acct_len)
     amount=ape04a.invoice_amt-ape04a.retention
     units=0
     gosub glpost
@@ -281,7 +279,7 @@ rem --- Payable
 l2400: rem --- Discount
 
     if ape04a.discount_amt=0 goto l2500
-    account$=z0$(2*gls01a.max_acct_len+1,gls01a.max_acct_len)
+    account$=apm10b.gl_disc_acct$(1,gls01a.max_acct_len)
     amount=-ape04a.discount_amt
     units=0
     gosub glpost
@@ -323,11 +321,9 @@ l3800: rem --- Void Check
     apt05a.check_date$=apw01a.check_date$
     apt05a.trans_type$="V"
     apt05_key$=firm_id$+apw01a.ap_type$+apt05a.check_no$+apt05a.vendor_id$+apt05a.ap_inv_no$
-    dim c[2]
-    write record (apt05_dev,key=apt05_key$,dom=l3890) apt05a$
+    write record (apt05_dev,key=apt05_key$,dom=l3900) apt05a$
     if br$="Y" x9$=x9$+apt05a.check_no$
     goto l3900
-l3890:
 
 l3900: rem --- Remove Check
 
@@ -349,72 +345,90 @@ rem --- All done
     if gl$="Y" call pgmdir$+"glc_ctlupdate.aon",status
     goto std_exit
 
-l6000: rem --- UPDATE OPEN INVOICE
+l6000: rem --- update open invoice
 
     y0$=n0$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$+"00"
     t0=0
     find record (apt01_dev,key=y0$,dom=l6490) apt01a$
-    t[0]=d[0]
-    t[1]=d[1]
-    t[2]=d[2]
-    d9$=d0$(23,2)
-    t0=d[0]
+    t[0]=apt01a.invoice_amt
+    t[1]=apt01a.discount_amt
+    t[2]=apt01a.retention
+    d9$=apt01a.ap_dist_code$
+    t0=apt01a.invoice_amt
     read (apt11_dev,key=y0$,dom=*next)
 
 l6100: rem --- Accumulate any adjustments/payments
 
     k$=key(apt11_dev,end=l6300)
-    if pos(k$(1,20)=ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$)<>1 goto l6300
+    if pos(k$(1,20)=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$)<>1 goto l6300
     read record (apt11_dev) apt11a$
-    lastseq=num(y0$(21,2))
-    t[0]=t[0]+y[0]
-    t[1]=t[1]+y[1]
-    t[2]=t[2]+y[2]
-    if pos(y1$(1,1)="IA") t0=t0+d[0]
+    lastseq=num(apt11a.sequence_num$)
+    t[0]=t[0]+apt11a.trans_amt
+    t[1]=t[1]+apt11a.trans_disc
+    t[2]=t[2]+apt11a.trans_ret
+    if pos(apt11a.trans_type$="IA") t0=t0+apt01a.invoice_amt
     goto l6100
 
 l6300: rem --- Initialize new detail
 
-    y0$=ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$+str(lastseq+1:"00")
-    dim y1$(11),y[2]
+    dim apt11a$:fattr(apt11a$)
+    apt11a.firm_id$=firm_id$
+    apt11a.ap_type$=ape04a.ap_type$
+    apt11a.vendor_id$=ape04a.vendor_id$
+    apt11a.ap_inv_no$=ape04a.ap_inv_no$
+    apt11a.sequence_num$=str(lastseq+1:"00")
 
 rem --- WRITE DETAIL
 
-    y1$(1)="C"+apw01a.check_date$+apw01a.check_no$
-    y[0]=(-ape04a.invoice_amt)+ape04a.retention
-    y[1]=-ape04a.discount_amt
-    write record (apt11_dev,key=y0$) apt11a$
-    t[0]=t[0]+y[0]
-    t[1]=t[1]+y[1]
-    t[2]=t[2]+y[2]
+    apt11a.trans_type$="C"
+    apt11a.trans_ref$=apw01a.check_no$
+    apt11a.trans_date$=apw01a.check_date$
+    apt11a.trans_amt=(-ape04a.invoice_amt)+ape04a.retention
+    apt11a.trans_disc=-ape04a.discount_amt
+    write record (apt11_dev,key=firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$+apt11a.sequence_num$) apt11a$
+    t[0]=t[0]+apt11a.trans_amt
+    t[1]=t[1]+apt11a.trans_disc
+    t[2]=t[2]+apt11a.trans_ret
 l6490:
     return
 
-l6500: rem --- UPDATE glt-05
+l6500: rem --- Update glt-05
 
     if gl$<>"Y" goto l6700
 l6515:
+
+    dim glt05a$:fattr(glt05a$)
     dim x1$(50),x[2]
     if x9$="" goto l6600
-    let x0$=firm_id$+z0$(gls01a.max_acct_len+1,gls01a.max_acct_len)+x9$(1,7),x1$(1,2)="AV"
-escape; rem help! date!    let x1$(3,6)=fnyy_yy21$(fndate$(fndate$(c0$(28,3)))),x1$(9,30)="VOID"
-    write record (glt05_dev,key=x0$) glt05a$
+    glt05a.firm_id$=firm_id$
+    glt05a.gl_account$=apm10b.gl_cash_acct$(1,gls01a.max_acct_len)
+    glt05a.check_no$=x9$(1,7)
+    glt05a.check_type$="A"
+    glt05a.paid_code$="V"
+    glt05a.bnk_chk_date$=apt05a.check_date$
+    glt05a.description$="VOID"
+    write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
     if len(x9$)>7 x9$=x9$(8) else x9$=""
     goto l6515
 
 l6600: rem --- Detail
 
-    let x0$=firm_id$+z0$(gls01a.max_acct_len+1,gls01a.max_acct_len)+apt05a.check_no$,x1$(1,2)="AO"
-escape;rem help! date!    let x1$(3,6)=fnyy_yy21$(fndate$(fndate$(c0$(28,3))))
+    glt05a.firm_id$=firm_id$
+    glt05a.gl_account$=apm10b.gl_cash_acct$(1,gls01a.max_acct_len)
+    glt05a.check_no$=apt05a.check_no$
+    glt05a.check_type$="A"
+    glt05a.paid_code$="O"
+    glt05a.bnk_chk_date$=apt05a.check_date$
+    dim apm01a$:fattr(apm01a$)
     find record (apm01_dev,key=firm_id$+apt05a.vendor_id$,dom=l6660) apm01a$
-    let x1$(9,30)=h1$
-    let q$=x1$(9,30)
+    let glt05a.description$=apm01a.vendor_name$
+    let q$=glt05a.description$
 l6660:
-    let x[0]=apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention
-    find record (glt05_dev,key=x0$,dom=l6690) glt05a$
-    let x[0]=x[0]+apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention,x1$(9,30)=q$
+    let glt05a.check_amt=apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention
+    find record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=l6690) glt05a$
+    let glt05a.check_amt=glt05a.check_amt+apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention,glt05a.description$=q$
 l6690:
-    write record (glt05_dev,key=x0$) glt05a$
+    write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
 l6700:
     dim x[13]
     return
