@@ -1,0 +1,112 @@
+rem --- Convert SF to 7.00
+rem --- Program sfx70a_bbj v8.0.0 25Oct2007 (sfx70a)
+rem --- Created by adx_codeport.bbj v1.1.5 (14/d/y 12:14:50)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+rem --- Need to rename v6.0 wo* files to sf*
+
+    print "Renaming Shop Floor Control Files"
+
+rem --- Rename all Shop Floor Control files
+
+    ddm02_dev=unt
+    open (ddm02_dev,err=chn_error1) dir$+"ddm-02"
+    read (ddm02_dev,key=module$,dom=*next)
+
+next_file: rem --- Read next ddm-02 record
+
+    k$=key(ddm02_dev,end=init_sys01)
+    read record (ddm02_dev,key=k$) ddm02a$
+    if pos(module$=k$)<>1 goto init_sys01
+    wofile$="wo"+ddm02a$(3)
+
+rem --- Does it exist?
+
+    channel=unt
+    open (channel,err=next_file)wofile$
+    close (channel)
+
+rem --- Rename the file
+
+    gosub display_filename
+    gosub rename_file
+    if status goto rename_err
+    goto next_file
+
+rem --- Copy existing Shop Floor parameter records
+
+init_sys01: rem --- from v6.0 WO key to new v7.0 SF key"
+
+    close (ddm02_dev)
+    print "Done"
+    print "Updating Shop Floor Parameter Records"
+
+    sys01_dev=unt
+    open (sys01_dev,err=chn_error2) dir$+"sys-01"
+    read (sys01_dev,key="",dom=*next)
+
+read_sys01: rem --- Read next sys-01 record
+
+    k$=key(sys01_dev,end=done)
+    if len(k$)<>6 goto skip_sys01
+    if pos("WO"+"00"=k$)<>3 goto skip_sys01
+    read record (sys01_dev,key=k$) sfs01a$
+    ddm02a$="Firm "+sfs01a$(1,2)
+    ddm02a$(1)=""
+    gosub display_filename
+    sfs01a$(3,2)="SF"
+    write record (sys01_dev,key=sfs01a$(1,2)) sfs01a$
+    remove (sys01_dev,key=k$)
+
+    goto read_sys01
+
+skip_sys01: rem --- Skip this sys-01 record
+
+    read (sys01_dev)
+    goto read_sys01
+
+done: rem --- All done
+
+    close (sys01_dev)
+    print "Shop Floor Control Has Been Upgraded To Version 7.00"
+
+    run "normalization.bbj"
+
+rename_err: rem --- Rename problem
+
+    dim msg$[1]
+    msg$[0]="Unable to rename "+source$[1]+" to "+target$[1]
+    msg$[1]="Press <Enter> To Continue"
+    msg=msgbox(msg$[0]+"                         "+msg$[1])
+    goto std_exit
+
+display_filename: rem --- Display file name
+
+    print ddm02a$
+    return
+
+rename_file: rem --- Rename old wo* to sf*
+
+    number=1
+    dim source$[number],target$[number],erase$[number]
+    source$[1]=wofile$
+    target$[1]=cvs(ddm02a$,8)
+rem    call "syc_rn.bbx",err=rename_err,source$[all],target$[all],erase$[all],number,status
+    return
+
+chn_error1:
+    a=msgbox( "File not found - ddm-02")
+    goto std_exit
+
+chn_error2:
+    a=msgbox( "File not found - sys-01")
+    goto std_exit
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    release
+    end

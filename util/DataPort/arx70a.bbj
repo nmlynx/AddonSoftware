@@ -1,0 +1,281 @@
+rem --- Convert AR to 7.00
+rem --- Program arx70a_ bbj v8.0.0 25Oct2007 (arx70a)
+rem --- Created by adx_codeport.bbj v1.1.5 (10/d/y 12:10:12)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+initializations: rem --- Initializations
+
+    files=5
+    dim files$[files],address$[5],address[5]
+    files$[1]=dir$+"ars-10"
+    files$[2]=dir$+"ops-10"
+    files$[3]=dir$+"arm-01"
+    files$[4]=dir$+"arm-03"
+    files$[5]=dir$+"sys-01"
+
+rem --- Initialize for ars-10 Conversion
+
+    print "Converting ars-10 AR System Records..."
+
+    ars10_dev=unt
+    ops10_dev=unt
+    open (ars10_dev,err=chn_error1) files$[1]
+rem    open (ops10_dev,err=read_ars10) files$[2]
+    read (ars10_dev,key="",dom=*next)
+
+read_ars10: rem --- Read next ars10 record
+
+    k$=key(ars10_dev,end=init_arm01)
+    if len(k$)<>3 goto skip_ars10
+    on pos(k$(3,1)="NS") goto skip_ars10,convert_ars10n,convert_ars10s
+
+skip_ars10: rem --- Skip this ars10 record
+
+    read (ars10_dev)
+    goto next_ars10
+
+convert_ars10n: rem --- Convert ars-10/ops-10 for v7.00
+
+    read record (ars10_dev,key=k$) ars10n_60$
+    filename$="File "+k$(1,2)+" "+k$(3,1)
+    gosub display_filename
+rem    write record (ops10_dev,key=ops10n$) ops10n$
+    write record (ars10_dev,key=k$) ars10n_70$
+    goto next_ars10
+
+convert_ars10s: rem --- Remove v6.x ars-10 record/create ops-10 record
+
+    read record (ars10_dev,key=k$) ars10s$
+    filename$="File "+k$(1,2)+" "+k$(3,1)
+    gosub display_filename
+   rem write record (ops10_dev,key=k$) ops10s$
+    remove (ars10_dev,key=k$)
+    goto next_ars10
+
+next_ars10: rem --- Loop back for next ars-10 record
+
+    goto read_ars10
+
+init_arm01: rem --- Initializations for converting arm-01
+
+rem    close (ars10_dev)
+    close (ops10_dev)
+
+    print "Done"
+    print "Converting arm-01 Customer Masters..."
+
+    arm01_dev=unt
+    open (arm01_dev,err=chn_error3) files$[3]
+    read (arm01_dev,key="",dom=*next)
+
+read_arm01: rem --- Read next arm-01 Customer Master
+
+    k$=key(arm01_dev,end=init_arm03)
+    read record (arm01_dev) arm01a$
+
+rem --- Extract address block from current record
+
+    l=0
+    for x=31 to 79 step 24
+        l=l+1
+        address$[l]=cvs(arm01a$(x,24),2)
+    next x
+    for x=179 to 203 step 24
+        l=l+1
+        address$[l]=cvs(arm01a$(x,24),2)
+    next x
+
+rem --- Extract city and state
+
+    gosub city_state
+
+rem --- Update address block in current record
+
+    l=0
+    for x=31 to 79 step 24
+        l=l+1
+        arm01a$(x,24)=address$[l]
+    next x
+    l=l+1
+    arm01a$(179,24)=address$[l]
+    arm01a$(203,22)=city$
+    arm01a$(225,2)=state$
+
+rem --- Update arm-01 Customer Master
+
+    write record (arm01_dev,key=k$) arm01a$
+
+rem --- Loop back for next arm-01 record
+
+    goto read_arm01
+
+init_arm03: rem --- Initializations for converting arm-03
+
+    close (arm01_dev)
+    print "Done"
+    print "Converting arm-03 Customer Ship-To's..."
+
+    arm03_dev=unt
+    open (arm03_dev,err=chn_error4) files$[4]
+    read (arm03_dev,key="",dom=*next)
+
+read_arm03: rem --- Read next arm-03 Customer Ship-To Record
+
+    k$=key(arm03_dev,end=init_ars10d)
+    read record (arm03_dev) arm03a$
+
+rem --- Move fields to allow for expanded address block
+
+    x$=arm03a$(103)
+    arm03a$(103)=""
+    arm03a$(151)=x$
+
+rem --- Extract address block from current record
+
+    l=0
+    for x=31 to 127 step 24
+        l=l+1
+        address$[l]=cvs(arm03a$(x,24),2)
+    next x
+
+rem --- Extract city and state
+
+    gosub city_state
+
+rem --- Update address block in current record
+
+    l=0
+    for x=31 to 103 step 24
+        l=l+1
+        arm03a$(x,24)=address$[l]
+    next x
+    arm03a$(127,22)=city$
+    arm03a$(149,2)=state$
+
+rem --- Update arm-03 Customer Ship-To Record
+
+    write record (arm03_dev,key=k$) arm03a$
+
+rem --- Loop back for next arm-03 record
+
+    goto read_arm03
+
+init_ars10d: rem --- Create new ars-10d New Customer Defaults record
+
+    close (arm03_dev)
+    print "Done"
+    print "Creating new ars-10d New Customer Defaults record..."
+
+    sys01_dev=unt
+    open (sys01_dev,err=chn_error5) files$[5]
+    read (sys01_dev,key="",dom=*next)
+
+read_ars10d: rem --- Read next sys-01 record
+
+    k$=key(sys01_dev,end=done)
+    if len(k$)<>6 goto skip_ars10d
+    if pos("AR00"=k$)<>3 goto skip_ars10d
+    read record (sys01_dev,key=k$) ars01a$
+
+    filename$="Firm "+ars01a$(1,2)
+    gosub display_filename
+
+    ars10d$(1)=ars01a$(1,2)+"D"+ars01a$(70,14)+ars01a$(98,1)
+rem    ars10d$(4)=ars01a$(70,14)
+rem    ars10d$(18,1)=ars01a$(98,1)
+
+    write record (ars10_dev,key=ars10d$) ars10d$
+
+rem --- Reformat existing ars-01a Parameter Record for v7.0
+
+    x$=ars01a$(71,6)
+    ars01a$(71,6)=""
+    ars01a$(94,10)=x$
+    x$=ars01a$(80,6)
+    ars01a$(80,6)=""
+    ars01a$(104,10)=x$
+    ars01a$(50,14)=""
+    ars01a$(78,1)=""
+    write record (sys01_dev,key=k$) ars01a$
+    goto read_ars10d
+
+skip_ars10d: rem --- Skip this sys-01 record
+
+    read (sys01_dev)
+    goto read_ars10d
+
+done: rem --- All done
+
+    close(sys01_dev)
+    close(ars10_dev)
+
+    run "ivx70a.bbj"
+
+display_filename: rem --- Display file name
+
+    print "Converting "+filename$+"..."
+    return
+
+city_state: rem --- Extract City and State from current address block
+
+    city$=""
+    state$=""
+    for x=1 to 5
+        address[x]=len(address$[x])
+    next x
+
+rem --- First find the state
+
+    for x=5 to 1 step -1
+        l=x
+        if state$="" if address[x]>1 gosub get_state
+    next x
+
+rem --- Now find the city
+
+    for x=5 to 1 step -1
+        if city$<>"" goto next_line
+        if address[x]=0 goto next_line
+        city$=address$[x]
+        address$[x]=""
+        address[x]=0
+    next_line:
+    next x
+    return
+
+get_state: rem --- Get State and adjust current address line
+
+    addr$=address$[l]
+    addr=address[l]
+    state$=addr$(addr-1,2)
+    addr$=cvs(addr$(1,addr-2),2)
+    addr=len(addr$)
+    if addr if addr$(addr,1)="," addr=addr-1,addr$=addr$(1,addr)
+    address$[l]=addr$
+    address[l]=addr
+    return
+
+chn_error1:
+    a=msgbox("File not found - "+files$[1])
+    goto std_exit
+chn_error2:
+    a=msgbox( "File not found - "+files$[2])
+    goto std_exit
+chn_error3:
+    a=msgbox("File not found - "+files$[3])
+    goto std_exit
+chn_error4:
+    a=msgbox( "File not found - "+files$[4])
+    goto std_exit
+chn_error5:
+    a=msgbox("File not found - "+files$[5])
+    goto std_exit
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    release
+    end

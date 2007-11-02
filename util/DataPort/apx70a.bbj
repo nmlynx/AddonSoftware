@@ -1,0 +1,306 @@
+rem --- Convert AP to 7.00
+rem --- Program apx70a_bbj v8.0.0 25Oct2007 (apx70a)
+rem --- Created by adx_codeport.bbj v1.1.5 (09/d/y 12:09:34)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+initializations: rem --- Initializations
+
+    files=5,lines=0,i=0,more=1,apfiles=4
+    dim files$[files],channels[files],lines$[999],address$[5],address[5],oldname$[apfiles],newname$[apfiles]
+    files$[1]=dir$+"apm-01"
+    files$[2]=dir$+"apm-03"
+    files$[3]=dir$+"apm-05"
+    files$[4]=dir$+"apm-08"
+    files$[5]=dir$+"sys-01"
+
+rem --- Files to be renamed
+
+    oldname$[1]=dir$+"apm-11"
+    newname$[1]=dir$+"glt-05"
+    oldname$[2]=dir$+"apm-12"
+    newname$[2]=dir$+"glt-15"
+    oldname$[3]=dir$+"apm-13"
+    newname$[3]=dir$+"glm-05"
+    oldname$[4]=dir$+"ape-05"
+    newname$[4]=dir$+"apt-05"
+
+rem --- Confirm GL Is Already Converted
+rem --- If not then Display Warning --- UPGRADE_GL_BEFORE_AP --- goto std_exit
+
+renames: rem --- Rename v6.0 AP files
+
+    print "Renaming AP Files..."
+    row=4
+    column=0
+    for x=1 to apfiles
+
+        filename$=oldname$[x]
+        former$=filename$
+        latter$=newname$[x]
+    
+        rem --- Does it exist?
+    
+        channel=unt
+        open (channel,err=chn_error)dir$+filename$
+        close (channel)
+    
+        rem --- Rename the file
+    
+        gosub display_filename
+        gosub rename_file
+
+next_rename:
+    next x
+
+    print "Done"
+
+conversion: rem --- Convert files to version 7
+
+    print "Converting AP files..."
+    while more
+
+        i=i+1
+        if i=5 break
+
+        let channel=unt
+        open (channel,err=*continue)files$[i]
+
+    rem --- Initializations for converting apm-01
+
+        read (channel,key="",dom=*next)
+
+read_file: rem --- Read next apm-01 Vendor Master
+
+        k$=key(channel,end=chn_close)
+        read record (channel,end=chn_close) apm01a$
+
+    rem --- Extract address block from current record
+
+        l=0
+        for x=31 to 79 step 24
+            l=l+1
+            address$[l]=cvs(apm01a$(x,24),2)
+        next x
+
+    rem --- Extract city and state
+
+        gosub city_state
+
+    rem --- Update address block in current record
+
+        l=0
+        for x=31 to 55 step 24
+            l=l+1
+            apm01a$(x,24)=address$[l]
+        next x
+        apm01a$(79,22)=city$
+        apm01a$(101,2)=state$
+
+    rem --- Update apm-01 Vendor Master
+
+        write record (channel,key=k$) apm01a$
+
+    rem --- Loop back for next apm-01 record
+
+        goto read_file
+
+chn_close:
+        close (channel)
+        if i<5 continue
+        break
+
+    wend
+
+    print "Done"
+
+init_sys01: rem --- Convert AP Parameter records
+
+    print "Converting AP Parameter Records..."
+    row=4
+    column=0
+    let channel=unt
+    open (channel,err=*continue)files$[5]
+    read (channel,key="",dom=*next)
+
+read_sys01: rem --- Read next sys-01 record
+
+    k$=key(channel,end=done)
+    if len(k$)<>6 goto skip_sys01
+    if pos("AP00"=k$)=3 goto convert_aps01a
+    if pos("AP02"=k$)=3 goto convert_aps01b
+
+skip_sys01: rem --- Skip this sys-01 record
+
+    read (channel)
+    goto read_sys01
+
+convert_aps01a: rem --- Update aps-01 A Check Printing program and 1099 Year
+
+    read record (channel,key=k$) aps01a$
+    filename$="Firm "+aps01a$(1,2)+" A"
+    gosub display_filename
+    aps01a$(26,10)="apr_eb.bbx"
+    aps01a$(5,2)=aps01a$(3,2)
+
+    rem --- Update aps-01 A Parameter Record
+
+    write record (channel,key=k$) aps01a$
+    goto read_sys01
+
+convert_aps01b: rem --- Update aps-01 B Report Parameters Address Block
+
+    read record (channel,key=k$) aps01b$
+    filename$="Firm "+aps01b$(1,2)+" B"
+    gosub display_filename
+
+    rem --- Extract address block from current record
+
+    l=0
+    for x=31 to 79 step 24
+        l=l+1
+        address$[l]=cvs(aps01b$(x,24),2)
+    next x
+
+    rem --- Extract zip code
+
+    gosub zipcode
+
+    rem --- Extract city and state
+
+    gosub city_state
+
+    rem --- Move phone number down to make room for new address block
+
+    x$=aps01b$(103,10)
+    aps01b$(103)=""
+    aps01b$(112)=x$
+
+    rem --- Update address block in current record
+
+    l=0
+    for x=31 to 55 step 24
+        l=l+1
+        aps01b$(x,24)=address$[l]
+    next x
+    aps01b$(79,22)=city$
+    aps01b$(101,2)=state$
+    aps01b$(103,9)=zip$
+
+    rem --- Update aps-01 B Report Parameters
+
+    write record (channel,key=k$) aps01b$
+
+    rem --- Loop back for next sys-01 record
+
+    goto read_sys01
+
+done: rem --- All done
+
+    close(channel)
+    run "arx70a.bbj"
+
+display_filename: rem --- Display file name
+
+    print "Converting "+filename$+"..."
+    return
+
+city_state: rem --- Extract City and State from current address block
+
+    city$=""
+    state$=""
+    for x=1 to 5
+        address[x]=len(address$[x])
+    next x
+
+rem --- First find the state
+
+    for x=5 to 1 step -1
+        l=x
+        if state$="" if address[x]>1 gosub get_state
+    next x
+
+rem --- Now find the city
+
+    for x=5 to 1 step -1
+        if city$<>"" goto next_line
+        if address[x]=0 goto next_line
+        city$=address$[x]
+        address$[x]=""
+        address[x]=0
+    next_line:
+    next x
+    return
+
+get_state: rem --- Get State and adjust current address line
+
+    addr$=address$[l]
+    addr=address[l]
+    state$=addr$(addr-1,2)
+    addr$=cvs(addr$(1,addr-2),2)
+    addr=len(addr$)
+    if addr if addr$(addr,1)="," addr=addr-1,addr$=addr$(1,addr)
+    address$[l]=addr$
+    address[l]=addr
+    return
+
+rem --- Extract zip code from current address block. NOTE: This
+rem --- routine only works for US Zip Codes. Canadian Postal Codes
+zipcode: rem --- will need to be changed manually for each firm running AP.
+
+    zip$=""
+    ziptest$=""
+    for x=1 to 5
+        address[x]=len(address$[x])
+    next x
+
+rem --- Find a possible zip code
+
+    for x=5 to 1 step -1
+        l=x
+        if ziptest$="" if address[x]>4 gosub get_zipcode
+    next x
+    zip$=ziptest$
+    return
+
+get_zipcode: rem --- Get zip code and adjust current address line
+
+    addr$=address$[l]
+    addr=address[l]
+    ziptest$=addr$(addr-4,5)
+    ziptest=num(ziptest$,err=get_zipcode_return)
+    addr$=cvs(addr$(1,addr-5),2)
+    addr=len(addr$)
+    if addr if addr$(addr,1)="," addr=addr-1,addr$=addr$(1,addr)
+    address$[l]=addr$
+    address[l]=addr
+get_zipcode_return:
+    return
+
+rename_file: rem --- Rename file from OLDNAME$ to NEWNAME$
+
+    number=1
+    dim source$[number],target$[number]
+    let source$[1]=former$,target$[1]=latter$
+    rename former$,latter$,err=rename_err
+    return
+
+chn_error:
+    a=msgbox( "File not found - "+filename$)
+    goto next_rename
+
+rename_err: rem --- Rename problem
+
+    dim msg$[2]
+    msg$[0]="Unable to rename "+source$[1]+" to "+target$[1]
+    msg$[1]=". Press <Enter> To Continue"
+    msg$[2]=". Target file already exists."
+    msg=msgbox(msg$[0]+msg$[2]+msg$[1])
+    return
+
+std_exit: rem --- Standard program end (26Oct2007)
+    release
+    end

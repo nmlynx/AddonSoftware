@@ -1,0 +1,370 @@
+rem --- v7.00 Administrator Upgrade (_files Overlay)
+rem --- Program syx70c_bbj v8.0.0 01Nov2007 (syx70c)
+rem --- Created manually from syx70c.bbx
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+rem " --- At this point all required v7.0 Administrator date files"
+rem " --- exist. This overlay merges any new records based on the"
+rem " --- flags in the _files records"
+rem 
+rem " --- This overlay performs the following tasks:"
+rem 
+rem " --- 1) Verifies which applications are being upgraded to v7.0"
+rem " --- 2) Verifies that all v7.0 Administrator merge files exist"
+rem " --- 3) Merges records into files based on _files data"
+rem " --- 4) Deletes all merge files after this step is completed"
+
+rem --- Initializations
+
+    modules=2
+    upgrade$=""
+
+rem --- Set up application matrix"
+
+    dim modules$[modules,4]
+    modules$[1,1]="SY"
+    modules$[1,2]="Administrator  "
+    modules$[2,1]="DD"
+    modules$[2,2]="Data Dictionary"
+
+rem --- Build UPGRADE$ string
+
+    for x=1 to modules
+        upgrade$=upgrade$+modules$[x,1]
+    next x
+
+
+rem " --- Look for files which might be overwritten"
+
+    print "Verifying Merge File(s)..."
+    found=0
+    files_dev=unt
+    open (files_dev,err=chn_error1)dir$+"_files"
+    read (files_dev,key="",dom=next_files_check)
+
+next_files_check: rem --- Read next _FILES record"
+
+    k$=key(files_dev,end=verification_complete)
+    read record (files_dev) files$
+    if pos(files$(38,2)=upgrade$,2)=0 then goto next_files_check
+    filename$=cvs(k$,2)
+
+rem --- Does this file exist?"
+
+    source_dev=unt
+    target_dev=0
+    open (source_dev,err=close_source)dir$+"_"+filename$
+    target_dev=unt
+    open (target_dev,err=close_source)dir$+filename$
+
+rem --- Existing file will be overwritten.
+
+    if found=0 print "The following files will receive merge records if installation continues..."
+    found=found+1
+    print filename$
+
+rem --- Loop back for next _FILES record
+
+close_source: 
+
+    close (source_dev,err=*next)
+    close (target_dev,err=next_files_check)
+    goto next_files_check
+
+verification_complete: rem --- Done
+
+    message$="Overwrite existing files? Press No to proceed with installation and removal of merge files."
+    title$="Dataport Utility"
+    let x=msgbox(message$,3+32+256,title$)
+    if x=6 goto installation
+    if x=7 goto removal
+    if x=2 goto std_exit
+
+installation: rem --- Install Merge Records
+
+    print "Installing Merge Record(s)..."
+    read (files_dev,key="",dom=*next)
+
+next_files_install: rem --- Read next _FILES record
+
+    k$=key(files_dev,end=removal)
+    read record (files_dev) files$
+    filename$=cvs(k$,2)
+    source_dev=unt
+    target_dev=unt       
+    
+rem --- Is the application for this file being upgraded?
+
+    upgrade=0
+
+    for x=1 to modules
+        if files$(38,2)=modules$[x,1] then if modules$[x,3]="Y" then upgrade=1
+    next x
+
+    if upgrade then goto display_file
+    goto next_files_install
+
+rem --- Records will be merged. Display file name.
+
+display_file: 
+
+    print filename$
+
+rem --- Does this file exist?"
+
+check_file: 
+
+    source_dev=unt
+    target_dev=0
+
+    open (source_dev,err=next_files_loop)dir$+"_"+filename$
+    target_dev=unt
+    open (target_dev,err=create_file)dir$+filename$
+    goto merge_records
+
+rem --- Missing target file. Create it using source file parameters."
+
+create_file:
+
+rem --- file identification
+
+rem ---  f        : Channel number (input)"
+rem ---  filename$: File name (returned)"
+rem ---  pathname$: Directory path (returned)"
+rem ---  filetype$: File Type (returned)"
+rem ---              C=CISAM and compatible"
+rem ---              K=Keyed (Direct or Sort)"
+rem ---              I=Indexed"
+rem ---              M=Multi-Keyed"
+rem ---              P=Program"
+rem ---              T=Text/String or System File"
+rem ---              S=Serial"
+rem ---  keylen   : Key size (returned)"
+rem ---  records  : Number of records (returned)"
+rem ---  reclen   : Bytes per record (returned)"
+rem ---  numrec   : Number of records used (returned)"
+rem ---  status   : 0=No Error (returned)"
+
+rem --- Initializations
+
+    filename$="",pathname$="",filetype$="",types$="ISKTPLM"
+    slash$="/",keylen=0,records=0,reclen=0,numrec=0,status=0
+
+rem --- Retrieve file information"
+
+    f$=fid(f,err=0850),fin$=fin(f,err=0850)
+    GOTO 0900
+
+rem --- Channel not open"
+
+    if err<>14 goto 9000
+    status=err
+    goto 4000
+
+rem --- Device"
+
+    if len(f$)>6 goto 1100
+    filename$=fnp$(f$)
+    goto 4000
+
+rem --- Pathname"
+
+    if pos(slash$=f$(9))=0 goto 1200
+    x$=fnp$(f$(9))
+    pathname$=pathname$+x$(1,pos(slash$=x$))
+    x$=x$(pos(slash$=x$)+1)
+    if pos(slash$=x$)<>0 goto 1130
+    if pathname$(len(pathname$))<>slash$ pathname$=pathname$+slash$
+
+rem --- File name"
+
+    filename$=fnp$(f$(9))
+    if len(pathname$)<>0 filename$=filename$(len(pathname$)+1)
+
+rem --- File type"
+
+    x=pos(f$(1,1)=$00010203040506$)
+    if x>0 filetype$=types$(x,1)
+
+rem --- Number of records, key size and record length"
+
+    records=dec(f$(3,4)),keylen=asc(f$(2)),reclen=dec(f$(7,2))
+    if pos(filetype$="STP")>0 reclen=dec(fin$(1,4))
+
+rem --- Number of records in use"
+
+    if pos(filetype$="KM")>0 numrec=dec(fin$(77,4))
+    if filetype$="I" numrec=records
+
+rem -- Create file
+
+rem --- filetype$: File Type (Input)
+rem ---              null = Use file parameters in SYM-03 (except for number
+rem ---                     of records when RECORDS is greater than zero)
+rem ---              D    = Direct File
+rem ---              I    = Indexed File
+rem ---              S    = Sort File
+rem ---              M    = Multi-Keyed File
+rem ---              T    = Text File
+rem ---              C    = Cereal (Serial) File
+rem --- filename$: File Name (Input)
+rem --- module$  : Application ID (Input)
+rem --- keylen$  : Key Size/Key Definition for MKeyed Files (Input)
+rem --- records  : Number Of Records (Input)
+rem --- reclen   : Bytes Per Record (Input)
+
+    if filetype$="K" then filetype$="D"
+    if filetype$="D" then if reclen=0 then filetype$="S"
+    module$ = files$(38,2)
+
+rem --- Set data path"
+
+    sym04_dev=unt
+    open (sym04_dev,err=chn_error2) dir$+"sym-04"
+    find (sym04_dev,key=module$,dom=dom_error)sym04a$
+    path$=cvs(sym04a$(69,50),2)
+    if path$(len(path$),1)<>"/" path$=path$+"/"
+
+rem --- Branch based on FILETYPE$
+
+    ON pos(filetype$="DISMTC") goto no_filetype,type_direct,type_indexed,type_sort,type_mkeyed,type_string,type_serial
+
+type_direct: rem --- DIRECT"
+
+    direct path$+filename$,keylen,records,reclen,err=create_err
+    goto end_file_create
+
+type_indexed: rem --- INDEXED
+
+    indexed path$+filename$,records,reclen,err=create_err
+    goto end_file_create
+
+type_sort: rem --- SORT
+
+    sort path$+filename$,keylen,records,err=create_err
+    goto end_file_create
+
+type_mkeyed: rem --- MKEYED with single key
+
+    keylen=num(keylen$,err=1700)
+    mkeyed path$+filename$,keylen,0,reclen,err=create_err
+    goto end_file_create
+
+type_mkeyed_mul: rem --- MKEYED with multiple keys"
+
+    goto end_file_create
+
+type_string: rem --- STRING
+
+    string path$+filename$,err=create_err
+    goto end_file_create
+
+type_serial: rem  --- SERIAL
+
+    serial path$+filename$,err=create_err
+
+end_file_create:
+    
+    close (source_dev,err=check_file)
+    goto check_file
+    close (sym04_dev)
+
+merge_records: rem --- Merge records from _xxx-xx into xxx-xx"
+
+    k$=key(source_dev,end=next_files_loop)
+    read record(source_dev,key=k$)r$
+    write record(target_dev,key=k$)r$
+    goto merge_records
+
+next_files_loop: rem --- Loop back for next _files record"
+
+    close (source_dev,err=*next)
+    close (target_dev,err=next_files_install)
+    goto next_files_install
+
+removal: rem --- Remove merge files"
+
+    print "Removing Merge File(s)..."
+    read (files_dev,key="",dom=next_files_delete)
+
+next_files_delete: rem --- Read next _FILES record"
+
+    k$=key(files_dev,end=uppercase_files)
+    read record (files_dev) files$
+rem    if pos(files$(38,2)=upgrade$)=0 goto next_files_delete
+    x$="_",filename$=cvs(k$,2)
+    gosub DELETE_FILE
+    goto next_files_delete
+
+rem --- For UNIX/Linux systems, erase obsolete v6.0 uppercase _FILES"
+
+uppercase_files: 
+
+rem --- Close opened files"
+
+    close (files_dev)
+
+rem    IF OS$="W" THEN GOTO DONE
+
+    x$="_",filename$="FILES",files$="v6.0 Installation File"
+    gosub delete_file
+
+rem --- Notify user and run next overlay"
+
+done: 
+
+    print "The Version 7.0 Administrator data files have been upgraded."
+
+rem --- Run next overlay"
+
+    run "syx70d.bbj"
+
+delete_file: rem --- Erase _file"
+    source_dev=UNT
+    open (source_dev,err=delete_file_exit)"C:/aon600/ADATA/"+x$+filename$
+    close (source_dev)
+    print filename$
+
+extinction: 
+    erase dir$+x$+filename$,err=delete_file_exit
+    goto extinction
+delete_file_exit: 
+    return 
+
+chn_error1:
+
+    a=msgbox( "File not found - _files")
+    goto std_exit
+
+chn_error2:
+
+    a=msgbox("File not found - sym-04")
+    goto std_exit
+
+dom_error:
+
+    print "Duplicate or Missing key while reading sym-04"
+    goto std_exit
+
+no_filetype:
+
+    print "filetype$ is null"
+    goto std_exit
+
+create_err:
+
+    print "file create error"
+    goto std_exit
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    release
+    end
+    
+
+
+

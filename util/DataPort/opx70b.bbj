@@ -1,0 +1,250 @@
+rem --- Convert OP to 7.00
+rem --- Program opx70b_bbj v8.0.0 25Oct2007 (opx70b)
+rem --- Created by adx_codeport.bbj v1.1.5 (14/d/y 12:14:16)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+initializations: rem --- Initializations
+
+    dim milestone$(9)
+
+rem --- Initializations for converting arm-10 records
+
+    print "Converting AR & OP Code Records"
+
+    arm10_dev=unt
+    open (arm10_dev,err=chn_error1) dir$+"arm-10"
+    read (arm10_dev,key="",dom=*next)
+
+read_arm10: rem --- Read next arm-10 record
+
+    k$=key(arm10_dev,end=order_header)
+    on pos(k$(3,1)="BEGIM") goto skip_arm10,convert_arm10b,convert_arm10e,convert_arm10g,convert_arm10i,convert_arm10m
+
+convert_arm10b: rem --- Move arm-10 B Tax Codes to opm-06
+
+    dim y[1],z[1]
+    milestone$(1)=k$(1,2)+" "+k$(3,1)+" "+k$(4,2)
+    print milestone$
+    read record (arm10_dev,key=k$) arm10b$
+    opm06a$(1)=arm10b$(1,2)+arm10b$(4,2)+arm10b$(6)
+    z[0]=y[0]
+    z[1]=y[1]
+    write record (opm06_dev,key=opm06a$) opm06a$
+    goto remove_arm10
+
+convert_arm10e: rem --- Move arm-10 E Line Codes to opm-02
+
+    milestone$(1)=k$(1,2)+" "+k$(3,1)+" "+k$(4,1)
+    print milestone$
+    read record (arm10_dev,key=k$) arm10e$
+    opm02a$=arm10e$(1,2)+arm10e$(4,1)+arm10e$(5)+arm10e$(1)
+rem    opm02a$(5)=y0$(5)
+rem    opm02a$(1)=arm10e$(1)
+    write record (opm02_dev,key=opm02a$(1,3)) opm02a$
+    goto remove_arm10
+
+convert_arm10g: rem --- Move arm-10 G Message Codes to opm-04/opm-14
+
+    dim lines$(400)
+    milestone$(1)=k$(1,2)+" "+k$(3,1)+" "+k$(4,2)
+    print milestone$
+    read record (arm10_dev,key=k$) arm10g$
+
+    opm04a$=arm10g$(1,2)+arm10g$(4,2)+arm10g$(7,20)
+    lines$(1)=arm10g$
+    arm10g$(6,1)="2"
+    find record (arm10_dev,key=arm10g$(1,6),dom=update_opm04) arm10g$
+    lines$(201)=arm10g$
+    remove (arm10_dev,key=arm10g$(1,6))
+
+update_opm04: rem --- Write opm-04 header and opm-14 detail records
+
+    write record (opm04_dev,key=opm04a$(1,4)) opm04a$
+    sequence=0
+    opm14a$=opm04a$(1,4)
+    for x=1 to 361 step 40
+        sequence=sequence+5
+        opm14a$(5)=str(sequence:"00")
+        opm14a$(1)=lines$(x,40)
+        if cvs(opm14a$,2)<>"" write record (opm14_dev,key=opm14a$) opm14a$
+    next x
+    goto remove_arm10
+
+convert_arm10i: rem --- Move arm-10 I Sales Discount Codes to opm-03
+
+    milestone$(1)=k$(1,2)+" "+k$(3,1)+" "+k$(4,2)
+    print milestone$
+    read record (arm10_dev,key=k$) arm10i$
+    opm03a$=arm10i$(1,2)+arm10i$(4)
+    z0=y0
+    write record (opm03_dev,key=opm03a$(1,4)) opm03a$
+    goto remove_arm10
+
+convert_arm10m: rem --- Move arm-10 M Customer Price Codes to opm-05
+
+    milestone$(1)=k$(1,2)+" "+k$(3,1)+" "+k$(4,4)
+    print milestone$
+    read record (arm10_dev,key=k$) arm10m$
+    opm05a$=arm10m$(1,2)+arm10m$(4)
+    write record (opm05_dev,key=opm05a$(1,6)) opm05a$
+
+rem --- Remove obsolete arm-10 record
+
+remove_arm10:
+
+    remove (arm10_dev,key=k$)
+    goto next_arm10
+
+skip_arm10: rem --- Skip current arm-10 record
+
+    read (arm10_dev)
+
+next_arm10: rem --- Loop back for next arm-10 record
+
+    goto read_arm10
+
+order_header: rem --- Convert order header to new format
+
+    close (arm10_dev)
+    print "Done"
+    print "Converting Order Header Records"
+
+    dim a[10],aa[13]
+    ope01_dev=unt
+    open (ope01_dev,err=chn_error2) dir$+"ope-01"
+    read (ope01_dev,key="",dom=*next)
+
+read_ope01: rem --- Top of order header
+
+    read record (ope01_dev,end=hist_header) ope01a$
+rem    print ope01a$(1,2)," ",ope01a$(5,6)," ",ope01a$(11,7),
+rem    ope01a1$=ope01a$+ope01a$(49,10)
+    ope01a1$=ope01a$
+rem    ope01a1$=""
+    ope01a1$(111,20)=ope01a$(49,10)
+    ope01a1$(49,10)=""; rem move cust po#
+    ope01a1$(132)=""
+    for i=0 to 10; let aa[i]=a[i]; next i
+    write record (ope01_dev,key= ope01a1$(1,20)) ope01a1$
+    goto read_ope01
+
+hist_header: rem --- Convert history header to new format
+
+    close (ope01_dev)
+    print "Done"
+    print"Converting History Header Records"
+
+    opt01_dev=unt
+    open (opt01_dev,err=chn_error3) dir$+"opt-01"
+    read (opt01_dev,key="",dom=*next)
+
+read_opt01: rem --- Top of history header
+
+    read record (opt01_dev,end=order_detail) opt01a$
+rem    print opt01a$(1,2)," ",opt01a$(5,6)," ",opt01a$(11,7),
+    opt01a1$=opt01a$
+rem    opt01a1$=""
+    opt01a1$(111,20)=opt01a$(49,10)
+    opt01a1$(49,10)=""; rem move cust po#
+    ope01a1$(132)=""
+    for i=0 to 10; let aa[i]=a[i]; next i
+    write record (opt01_dev,key=opt01a1$(1,20)) opt01a1$
+    goto read_opt01
+
+order_detail: rem --- Convert order detail to new format
+
+    close (opt01_dev)
+    print "Converting Order Detail Records"
+
+    dim w[14],ww[17]
+    ope11_dev=unt
+    open (ope11_dev,err=chn_error4) dir$+"ope-11"
+    read (ope11_dev,key="",dom=*next)
+
+read_ope11: rem --- Top of order detail
+
+    read record (ope11_dev,end=hist_detail) ope11a$
+rem    print ope11a$(1,2)," ",ope11a$(5,6)," ",ope11a$(11,7)," ",ope11a$(18,3),
+
+    ope11a1$=ope11a$
+    ope11a1$(114)=""
+    for i=0 to 14; let ww[i]=w[i]; next i
+    write record (ope11_dev,key=ope11a1$(1,20)) ope11a1$
+    goto read_ope11
+
+hist_detail: rem --- Convert history detail to new format
+
+    close (ope11_dev)
+    print "Converting History Detail Records"
+
+    opt11_dev=unt
+    open (opt11_dev,err=chn_error5) dir$+"opt-11"
+    read (opt11_dev,key="",dom=*next)
+
+read_opt11: rem --- Top of history detail
+
+    read record (opt11_dev,end=erase_workfiles) opt11a$
+rem    print opt11a$(1,2)," ",opt11a$(5,6)," ",opt11a$(11,7)," ",opt11a$(18,3),
+    opt11a1$=opt11a$
+    opt11a1$(114)=""
+    for i=0 to 14; let ww[i]=w[i]; next i
+    write record (opt11_dev,key=opt11a1$(1,20)) opt11a1$
+    goto read_opt11
+
+erase_workfiles: rem --- Erase obsolete AR work files
+
+    close (opt11_dev)
+    print "Removing obsolete AR Work Files"
+
+    for x=1 to workfiles
+        filename$=workfiles$[x]
+        gosub display_filename
+        gosub erase_file
+    next x
+
+rem --- All done
+
+    print"Sales Order Processing Has Been Upgraded To Version 7.00"
+    run "prx70a.bbj"
+
+display_filename: rem --- Display file name
+
+    print filename$
+    return
+
+erase_file: rem --- Erase FILENAME$ to extinction
+
+    erase filename$,err=erase_file_return
+    goto erase_file
+
+erase_file_return:
+    return
+
+chn_error1:
+    a=msgbox( "File not found - "+"arm-10")
+    goto std_exit
+
+chn_error2:
+    a=msgbox( "File not found - "+"ope-01")
+    goto std_exit
+
+chn_error3:
+    a=msgbox( "File not found - "+"opt-01")
+    goto std_exit
+
+chn_error4:
+    a=msgbox("File not found - "+"ope-11")
+    goto std_exit
+
+chn_error5:
+    a=msgbox( "File not found - "+"opt-11")
+    goto std_exit
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    release
+    end
