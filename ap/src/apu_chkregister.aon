@@ -6,35 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem -------------- Errors, Warnings and Conversion Information ---------------------
-
-rem --- The following error(s) were encountered during the conversion:
-
-rem --- Undefined function fnyy_year (Line 0218)
-rem --- Undefined function fnyy_year (Line 0221)
-rem --- Undefined function fni$ (Line 0231)
-rem --- Undefined function fni$ (Line 0232)
-rem --- Undefined function fnyear_yy21$ (Line 0234)
-rem --- Undefined function fnyy_year (Line 0234)
-rem --- Undefined function fnyy_yy21$ (Line 0497)
-rem --- Undefined function fnyy_yy21$ (Line 0505)
-rem --- v7.x Administrator reference ["sys-01A"] (Line 0143)
-rem --- v7.x sys-01 reference [sys01a$:temp] (Line 0149)
-rem --- v7.x sys-01 reference [sys01a_key$=] (Line 0162)
-rem --- v7.x sys-01 reference [sys01a_key$,] (Line 0163)
-rem --- v7.x Administrator reference ["sys-01"] (Line 0175)
-rem --- v7.x sys-01 reference [sys01_dev=ch] (Line 0195)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0207)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0211)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0213)
-
-rem --- The following reset verbs were removed from this program:
-
-rem --- BEGIN statement removed [begin]
-
-rem --- The following cross-reference files are being referenced:
-
-
     setesc std_error
     seterr std_error
 
@@ -52,26 +23,26 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=17,begfile=1,endfile=files
+    files=16,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="aps_params",ids$[1]="APS_PARAMS"
     files$[3]="gls_params",ids$[3]="GLS_PARAMS"
-    files$[5]="apm-01",ids$[3]="APM_VENDMAST"
-    files$[6]="apm-02",ids$[4]="APM_VENDHIST"
+    files$[5]="apm-01",ids$[5]="APM_VENDMAST"
+    files$[6]="apm-02",ids$[6]="APM_VENDHIST"
     files$[8]="apc_distribution",ids$[8]="APC_DISTRIBUTION"
     files$[9]="apt-01",ids$[9]="APT_INVOICEHDR"
-    files$[10]="apt-02",ids$[10]="INVOICEDIST"
+    files$[10]="apt-02",ids$[10]="APT_INVOICEDIST"
     files$[11]="apt-05",ids$[11]="APT_CHECKHISTORY"
     files$[12]="apt-11",ids$[12]="APT_INVOICEDET"
     files$[13]="apw-01",ids$[13]="APW_CHECKINVOICE"
     files$[14]="glm-01",ids$[14]="GLM_ACCT"
     files$[15]="glt-04",ids$[15]="GLE_DAILYDETAIL"
     files$[16]="glt-05",ids$[16]="GLT_BANKCHECKS"
-    files$[17]="glt-14",ids$[17]="";rem what's this? jpb
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+    call pgmdir$+"adc_fileopen.aon",action,begfile,13,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     ads01_dev=channels[1]
+    gls01_dev=channels[3]
     apm01_dev=channels[5]
     apm02_dev=channels[6]
     apm10b_dev=channels[8]
@@ -80,19 +51,13 @@ rem --- Open/Lock files
     apt05_dev=channels[11]
     apt11_dev=channels[12]
     apw01_dev=channels[13]
-    glm01_dev=channels[14]
-    glt04_dev=channels[15]
-    glt05_dev=channels[16]
-    glt14_dev=channels[17]
 
 rem --- Dimension string templates
 
     dim aps01a$:templates$[1],gls01a$:templates$[3],
 :       apm01a$:templates$[5],apm02a$:templates$[6],
 :       apm10b$:templates$[8],apt01a$:templates$[9],apt02a$:templates$[10],
-:       apt05a$:templates$[11],apt11a$:templates$[12],apw01a$:templates$[13],
-:       glm01a$:templates$[14],glt04a$:templates$[15],glt05a$:templates$[16],
-:       glt14a$:templates$[17]
+:       apt05a$:templates$[11],apt11a$:templates$[12],apw01a$:templates$[13]
 
 rem --- Retrieve parameter records
 
@@ -109,36 +74,38 @@ rem --- Parameters
     ap_year=num(aps01a.current_year$)
     call pgmdir$+"adc_application.aon","AP",info$[all]
     gl$=info$[9]
+    max_acct_len=num(gls01a.max_acct_len$)
 
 rem --- Initializations
-escape
-rem section needs help!
-    dim t[2],y[2]
-    g9$=g3$(gls01a.tot_pers*2-1,2)
+
+    dim t[2]
+    g9$=field(gls01a$,"per_ending_"+str(num(gls01a.total_pers$):"00"))
     w=ap_year
-    if g9$<g3$(1,2) w=w+1
-    g9$=fni$(w)+g9$
-    prior_g9$=fni$(w-1)+g9$(2,2)
-    g8$=fndate$("1231"+p4$(5,2))
-    prior_g8$=fndate$("1231"+fnyear_yy21$(fnyy_year(p4$(5,2))-1))
+    if g9$<gls01a.per_ending_01$ w=w+1
+    g9$=str(w)+g9$
+    prior_g9$=str(w-1)+g9$(5,4)
+    g8$=aps01a.cur_1099_yr$+"1231"
+    prior_g8$=str(num(aps01a.cur_1099_yr$)-1:"0000")+"1231"
+    more=1
 
 rem --- Additional File Opens
 
     if gl$<>"Y" goto confirm_update
-    call pgmdir$+"adc_fileopen.aon",1,14,16,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    glm01_dev=channels[14]
-    glt04_dev=channels[15]
-    glt14_dev=channels[16]
+    call pgmdir$+"adc_fileopen.aon",action,14,15,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit_no_update
+    glm01_dev=channels[14];dim glm01a$:templates$[14]
+    glt04_dev=channels[15];dim glt04a$:templates$[15]
     if br$<>"Y" goto confirm_update
-    call pgmdir$+"adc_fileopen.aon",1,17,17,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    glt05_dev=channels[17]
+    call pgmdir$+"adc_fileopen.aon",action,16,16,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit_no_update
+    glt05_dev=channels[16];dim glt05a$:templates$[16]
 
 confirm_update: rem --- Run Update?
 
     call pgmdir$+"adc_yesno.aon",0,"UPDATE_AP_CHECK_REG",0,v$,v3
-    if v$<>"YES" goto std_exit
+    if v$<>"YES" goto std_exit_no_update
 
 rem --- File initializations
 
@@ -152,7 +119,7 @@ l1100: rem --- Main Read
 
     k0$=key(apw01_dev,end=done)
     read record (apw01_dev) apw01a$
-    if pos(firm_id$=apw01a_firm_id$)<>1 goto done
+    if pos(firm_id$=apw01a.firm_id$)<>1 goto done
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
     if apw01a.comp_or_void$="V" goto l3800
 
@@ -185,6 +152,7 @@ rem --- Vendor
     if apw01a.check_date$<=prior_g8$ apm02a.pri_cal_pmt=apm02a.pri_cal_pmt+ape04a.invoice_amt-ape04a.retention-ape04a.discount_amt
     if apw01a.check_date$>prior_g8$ and apw01a.check_date$<=g8$ apm02a.cur_cal_pmts=apm02a.cur_cal_pmts+ape04a.invoice_amt-ape04a.retention-ape04a.discount_amt
     if apw01a.check_date$>g8$ apm02a.nxt_cyr_pmts=apm02a.nxt_cyr_pmts+ape04a.invoice_amt-ape04a.retention-ape04a.discount_amt
+    apm02a$=field(apm02a$)
     write record (apm02_dev,key=firm_id$+ape04a.vendor_id$+ape04a.ap_type$) apm02a$
 
 l1600: rem --- G/L Reference Fields
@@ -199,7 +167,7 @@ l1600: rem --- G/L Reference Fields
     memo$=apm01a.vendor_name$
 
 l1700: rem --- Dist Code
-escape;rem Here's where I went to bed... jpb
+
     if d9$=k2$ goto l1800
     k2$=d9$
     dim apm10b$:fattr(apm10b$)
@@ -210,7 +178,7 @@ l1800: rem --- Cash Basis
     if aps01a.cash_basis$<>"Y" goto l2200
     account$=""
     t9=0
-    read (apt02_dev,key=n0$+apae04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$,dom=*next)
+    read (apt02_dev,key=firm_id$+apae04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$,dom=*next)
 l2050:
     k$=key(apt02_dev,end=l2120)
     if len(k$)<21 goto l2120
@@ -218,7 +186,7 @@ l2050:
     read record (apt02_dev) apt02a$
     if t0=0 t0=ape04a.invoice_amt-ape04a.retention
     if t0=0 goto l2050
-    account$=apt02a.gl_account$(1,gls01a.max_acct_len)
+    account$=apt02a.gl_account$(1,max_acct_len)
     amount=apt02a.gl_post_amt*((ape04a.invoice_amt-ape04a.retention)/t0)
     units=apt02a.units*((ape04a.invoice_amt-ape04a.retention)/t0)
     gosub glpost
@@ -232,15 +200,15 @@ l2120:
 
 l2200: rem --- Dist Cash
 
-    account$=apm10b.gl_cash_acct$(1,gls01a.max_acct_len)
+    account$=apm10b.gl_cash_acct$(1,max_acct_len)
     amount=(-ape04a.invoice_amt)+ape04a.retention+ape04a.discount_amt
     units=0
     gosub glpost
 
 rem --- Payable
 
-    if aps01a.cash_basks$="Y" goto l2400
-    account$=apm10b.gl_ap_acct$(1,gls01a.max_acct_len)
+    if aps01a.cash_basis$="Y" goto l2400
+    account$=apm10b.gl_ap_acct$(1,max_acct_len)
     amount=ape04a.invoice_amt-ape04a.retention
     units=0
     gosub glpost
@@ -248,7 +216,7 @@ rem --- Payable
 l2400: rem --- Discount
 
     if ape04a.discount_amt=0 goto l2500
-    account$=apm10b.gl_disc_acct$(1,gls01a.max_acct_len)
+    account$=apm10b.gl_disc_acct$(1,max_acct_len)
     amount=-ape04a.discount_amt
     units=0
     gosub glpost
@@ -295,7 +263,7 @@ l3800: rem --- Void Check
 
 l3900: rem --- Remove Check
 
-remove (apw01_dev,key=k0$,dom=*next)
+    remove (apw01_dev,key=k0$,dom=*next)
 
     goto l1100
 
@@ -315,15 +283,17 @@ rem --- All done
 
 l6000: rem --- update open invoice
 
-    y0$=n0$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$+"00"
+    apt01_key$=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$
     t0=0
-    find record (apt01_dev,key=y0$,dom=l6490) apt01a$
+    find record (apt01_dev,key=apt01_key$,dom=l6490) apt01a$
+    apt01a.selected_for_pay$="N"
+    write record (apt01_dev,key=apt01_key$) apt01a$
     t[0]=apt01a.invoice_amt
     t[1]=apt01a.discount_amt
     t[2]=apt01a.retention
     d9$=apt01a.ap_dist_code$
     t0=apt01a.invoice_amt
-    read (apt11_dev,key=y0$,dom=*next)
+    read (apt11_dev,key=apt01_key$,dom=*next)
 
 l6100: rem --- Accumulate any adjustments/payments
 
@@ -346,7 +316,7 @@ l6300: rem --- Initialize new detail
     apt11a.ap_inv_no$=ape04a.ap_inv_no$
     apt11a.sequence_num$=str(lastseq+1:"00")
 
-rem --- WRITE DETAIL
+rem --- Write detail
 
     apt11a.trans_type$="C"
     apt11a.trans_ref$=apw01a.check_no$
@@ -368,20 +338,20 @@ l6515:
     dim glt05a$:fattr(glt05a$)
     if x9$="" goto l6600
     glt05a.firm_id$=firm_id$
-    glt05a.gl_account$=apm10b.gl_cash_acct$(1,gls01a.max_acct_len)
+    glt05a.gl_cash_acct$=apm10b.gl_cash_acct$(1,max_acct_len)
     glt05a.check_no$=x9$(1,7)
     glt05a.check_type$="A"
     glt05a.paid_code$="V"
     glt05a.bnk_chk_date$=apt05a.check_date$
     glt05a.description$="VOID"
-    write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
+    write record (glt05_dev,key=firm_id$+glt05a.gl_cash_acct$+glt05a.check_no$) glt05a$
     if len(x9$)>7 x9$=x9$(8) else x9$=""
     goto l6515
 
 l6600: rem --- Detail
 
     glt05a.firm_id$=firm_id$
-    glt05a.gl_account$=apm10b.gl_cash_acct$(1,gls01a.max_acct_len)
+    glt05a.gl_cash_acct$=apm10b.gl_cash_acct$(1,max_acct_len)
     glt05a.check_no$=apt05a.check_no$
     glt05a.check_type$="A"
     glt05a.paid_code$="O"
@@ -391,11 +361,11 @@ l6600: rem --- Detail
     let glt05a.description$=apm01a.vendor_name$
     let q$=glt05a.description$
 l6660:
-    let glt05a.check_amt=apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention
-    find record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=l6690) glt05a$
-    let glt05a.check_amt=glt05a.check_amt+apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention,glt05a.description$=q$
+    let glt05a.check_amount=apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention
+    find record (glt05_dev,key=firm_id$+glt05a.gl_cash_acct$+glt05a.check_no$,dom=l6690) glt05a$
+    let glt05a.check_amount=glt05a.check_amount+apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention,glt05a.description$=q$
 l6690:
-    write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
+    write record (glt05_dev,key=firm_id$+glt05a.gl_cash_acct$+glt05a.check_no$) glt05a$
 l6700:
 
     return
@@ -404,6 +374,11 @@ glpost:
     if gl$<>"Y" goto l6990
     call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,glt14_dev,account$,when$,ref1$,ref2$,ref3$,memo$,amount,units,status
 l6990:
+    return
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     return
 
 rem #include std_functions.src
@@ -434,7 +409,6 @@ rem --- Format zip/postal code
 rem --- Date/time handling functions
 
     def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
-    def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
 
@@ -483,9 +457,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -509,8 +483,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -528,7 +502,15 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 

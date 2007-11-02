@@ -415,11 +415,6 @@ rem --- Destroy the progress meter and run the next overlay
     update$=pgmdir$+"apu_chkregister.aon"
     overlay$=update$
     if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
-
-prompt$="Update not available yet"
-call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-goto std_exit
-
     run overlay$,err=std_exit
 
 report_heading: rem --- Report Heading
