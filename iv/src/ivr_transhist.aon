@@ -356,7 +356,7 @@ l6000: rem --- Warehouse Break
     t0$=whse$
     x0$(6,24)="(Not on File)"
     l=l9+1
-    find record (ivm10_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
     let x0$(6,24)=ivm10c.short_name$
 l6050:
     x$="Warehouse "+t0$+" "+cvs(x0$(6,24),2)
