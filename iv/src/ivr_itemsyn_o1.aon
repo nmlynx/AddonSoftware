@@ -1,5 +1,5 @@
 rem --- Inventory Synonyms Listing (Report Overlay)
-rem --- Program ivr_itemsyn_o1 v8.0.0 16Jul2007 (ivr_sb)
+rem --- Program ivr_itemsyn_o1.aon v8.0.0 16Jul2007 (ivr_sb)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 01:03:34)
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
@@ -355,6 +355,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
