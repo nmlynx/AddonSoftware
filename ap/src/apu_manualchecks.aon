@@ -6,8 +6,8 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem --- Currently just an incomplete stub which clears the entry files
 rem --- WIP to fill in missing logic 10/07.CH
+rem --- post codeport work done, but needs careful testing!.CH
 
     seterr std_error
     setesc std_error
@@ -26,9 +26,9 @@ rem --- Skip update if errors were encountered
 
 rem --- Initializations
 
-    tot_pers=gls01a.total_pers
-    curr_ap_yr=aps01a.current_year
-    curr_1099_yr=aps01a.curr_1099_yr
+    tot_pers=num(gls01a.total_pers$)
+    curr_ap_yr=num(aps01a.current_year$)
+    curr_1099_yr=num(aps01a.cur_1099_yr$)
     gl_per_end$=field(gls01a$,"per_ending_"+str(tot_pers:"00"))
     if gl_per_end$<gls01a.per_ending_01$ curr_ap_yr=curr_ap_yr+1
     gl_per_end$=str(curr_ap_yr:"0000")+gl_per_end$
@@ -36,17 +36,18 @@ rem --- Initializations
     gl_calendar_dt$=str(curr_1099_yr:"0000")+"1231"
     gl_pri_calendar_dt$=str(curr_1099_yr-1:"0000")+"1231"
 
+    dim t[2]
+
 rem --- temporary message that update isn't operational
-    prompt$="Update not yet available."
-    call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
-    goto std_exit
+rem ---     prompt$="Update not yet available."
+rem ---     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
+rem ---     goto std_exit
 
 rem --- Get user approval to update
 
     prompt$="Do you want to update the Manual Check Register?"
     call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
     if answer$<>"YES" goto std_exit_no_update
-    goto std_exit_no_update;rem temp until guts get put in! 10/07.CH
 
 rem --- Start progress meter and position header file
 
@@ -95,7 +96,7 @@ rem --- Read next Check Header (ape-02) record
                     ape22a_key$=key(ape22_dev,end=*break)
                     if pos(check$=ape22a_key$)<>1 break
                     read record (ape22_dev) ape22a$
-                    ref2$=ape22.ap_inv_no$
+                    ref2$=ape22a.ap_inv_no$
 
                     apt01a.firm_id$="ZZ";rem should only stay ZZ if domo is taken
                     extract record (apt01_dev,key=ape22a.firm_id$+ape22a.ap_type$+
@@ -325,7 +326,7 @@ open_inv_dtl:
         k$=key(apt11_dev,end=*break)
         if k$(1,len(apt11_key$))<>apt11_key$ break
         read record (apt11_dev) apt11a$
-        c1=apt11a.sequence_num
+        c1=num(apt11a.sequence_num$)
 
         rem --- Find Open Slot
 
@@ -344,13 +345,13 @@ open_inv_dtl:
     apt11a.trans_date$=ape02a.check_date$
     apt11a.trans_ref$=ape02a.check_no$
     apt11a.trans_amt=(-ape22a.invoice_amt)+ape22a.retention
-    apt11a.disc_amt=-ape22a.discount_amt
-    if apt01.mc_inv_flag$="M" and apt01.mc_inv_adj$<>"A" 
+    apt11a.trans_disc=-ape22a.discount_amt
+    if apt01a.mc_inv_flag$="M" and apt01a.mc_inv_adj$<>"A" 
         gosub same_inv_vend_diff_check
     else
         rem --- just setting c1=c1+1 here should take care of case where it was zero, or just increment it normally
-        apt11a.sequence_num=c1+1
-        write record (apt11_dev,key=apt11_key$+apt11a.sequence_num$) apt11a$
+        apt11a.sequence_num$=str(c1+1:"00")
+        apt11a$=field(apt11a$);write record (apt11_dev,key=apt11_key$+apt11a.sequence_num$) apt11a$
     endif
 
     t[0]=t[0]+apt11a.trans_amt
@@ -363,7 +364,7 @@ same_inv_vend_diff_check: rem --- Same (Invoice#, Vendor#) Different Check#
 rem --- Create a Record for Each Transaction
 
     dim cc1$(11),c[2],cc[2]
-    let apt11a.sequence_num=c1+1
+    let apt11a.sequence_num$=str(c1+1:"00")
     apt11a.trans_amt=ape22a.invoice_amt-ape22a.retention
     apt11a.trans_disc=ape22a.discount_amt
     apt11a.trans_type$="S"
@@ -384,7 +385,7 @@ return
 update_vendhist: rem --- Vendor
     while more
         extract record (apm02_dev,key=firm_id$+ape22a.vendor_id$+ape22a.ap_type$,dom=*break) apm02a$
-        let apm02a.lst_pay_date$=ape02a.check_date$
+        let apm02a.lstpay_date$=ape02a.check_date$
         if ape02a.check_date$<=gl_pri_per_end$ apm02a.pyr_payments=apm02a.pyr_payments+ape22a.invoice_amt-ape22a.retention-ape22a.discount_amt,apm02a.pri_yr_discs=apm02a.pri_yr_discs+ape22a.discount_amt
         if ape02a.check_date$>gl_pri_per_end$ and ape02a.check_date$<=gl_per_end$ apm02a.ytd_payments=apm02a.ytd_payments+ape22a.invoice_amt-ape22a.retention-ape22a.discount_amt,apm02a.ytd_discs=apm02a.ytd_discs+ape22a.discount_amt
         if ape02a.check_date$>gl_per_end$ apm02a.nyr_payments=apm02a.nyr_payments+ape22a.invoice_amt-ape22a.retention-ape22a.discount_amt,apm02a.nyr_disc=apm02a.nyr_disc+ape22a.discount_amt
@@ -395,7 +396,7 @@ update_vendhist: rem --- Vendor
         if o9=0 and ape02a.check_date$<=gl_pri_per_end$ apm02a.pyr_purch=apm02a.pyr_purch+ape22a.invoice_amt-ape22a.retention
         if o9=0 and ape02a.check_date$>gl_pri_per_end$ and ape02a.check_date$<=gl_per_end$ apm02a.ytd_purch=apm02a.ytd_purch+ape22a.invoice_amt-ape22a.retention
         if o9=0 if ape02a.check_date$>gl_per_end$ apm02a.nyr_purch=apm02a.nyr_purch+ape22a.invoice_amt-ape22a.retention
-        write record (apm02_dev,key=firm_id$+y0$(12,6)+y0$(3,2)) apm02a$
+        apm02a$=field(apm02a$);write record (apm02_dev,key=firm_id$+apm02a.vendor_id$+apm02a.ap_type$) apm02a$
         break
     wend
 return

@@ -82,7 +82,8 @@ rem --- OutVect! for DocOut, date/time
 rem --- Initializations
 
     dim hdr$(width),o[5],at[1],dt[1],rt[1],gt[1]
-    account_length=num(glcontrol.acct_length$)
+    account_length=num(glcontrol.max_acct_len$);rem "was setting to acct_length, not max 11/3/07.CH
+    if account_length=0 account_length=10; rem "added 11/3/07.CH; gl param rec doesn't have max len set?
     report$=glcontrol.prt_gl_sum$
     gl_post_code$=glcontrol.gl_post_code$
     use_suspense$=glcontrol.use_suspense$
@@ -187,7 +188,7 @@ rem --- Get next glw-11 key
           if glw11a.trns_date$<>t0$ gosub date_break
           if glw11a.journal_id$<>t1$ gosub journal_break
           if glw11a.posting_per$+glw11a.posting_year$<>t2$ gosub period_break
-          if glw11a.gl_account$<>t3$ gosub account_break
+          if glw11a.trns_date$+glw11a.gl_account$<>t3$ gosub account_break
 
           rem --- Print subheadings
 
@@ -452,7 +453,7 @@ account_break: rem --- Account break
 
     if t3$="" goto new_account
     if l1=1 goto new_account
-    total$="Subtotal for Account "+fnmask$(t3$(7,account_length),glm0$)
+    total$="Subtotal for Account "+fnmask$(t3$(len(glw11a.trns_date$)+1,account_length),glm0$)
     debits=gt[0]
     credits=gt[1]
     gosub print_totals

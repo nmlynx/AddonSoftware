@@ -220,7 +220,7 @@ rem --- Additional file opens
     files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
     files$[3]="glt-05",ids$[3]="GLT_BANKCHECKS"
     files$[4]=glw11$
-    options$[3]="CL"
+    options$[4]="CL"
     if gl call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                         ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -364,6 +364,9 @@ rem --- Read next Manual Check Header (ape-02) record
                             discount$=str(it[1]:m1$)
                             payment$=str(it[2]:m1$)
                             retention$=fnamount$(retention,it[3],m1$)
+
+                            account$=""
+                            posting$="";rem added 11/3/07.CH
 
 							gosub print_invoice
 
@@ -576,6 +579,8 @@ rem --- Read next Manual Check Header (ape-02) record
                             rem --- Position GL distribution detail (ape-12) file
 
                             total=0
+                            account$=""
+                            posting$="";rem --- 11/3/07.CH -- in wrong place below?
                             detail$=ape22a.firm_id$+ape22a.ap_type$+
 :                                   ape22a.check_no$+ape22a.vendor_id$+
 :                                   ape22a.ap_inv_no$
@@ -598,8 +603,8 @@ rem --- Read next Manual Check Header (ape-02) record
                                   endif
                                   while gl or cvs(invoice$,2)<>""
                                         gosub print_invoice
-										break
-								  wend
+                                        break
+                                  wend
                                         account$=ape12a.gl_account$
                                         amount=ape12a.gl_post_amt
                                         if gl gosub glrecap
