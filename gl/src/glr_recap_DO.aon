@@ -21,53 +21,53 @@ rem --- UPDATE$     : Name of update overlay to run (or null)
 rem --- HEADINGS$[*]: Standard report headings array
 rem --- ACTION$     : D = Perform date verification
 
-    setesc std_error
-    seterr std_error
+        setesc std_error
+        seterr std_error
 
-	next_overlay$="";rem --- clear next_var and outvect! so bas_process_end doesn't loop...i.e., don't run anything after this
-	if OutVect!<>null() OutVect!=null()
+ 	next_overlay$="";rem --- clear next_var and outvect! so bas_process_end doesn't loop...i.e., don't run anything after this
+        if OutVect!<>null() OutVect!=null()
 
 rem --- Open/Lock files
 
-    files=3,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="GLS_PARAMS",ids$[1]=files$[1]
-    files$[2]="glm-01",ids$[2]="GLM_ACCT"
-    files$[3]="glm-03",ids$[3]="GLC_JOURNALCODE"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+            files=3,begfile=1,endfile=files
+            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+            files$[1]="GLS_PARAMS",ids$[1]=files$[1]
+            files$[2]="glm-01",ids$[2]="GLM_ACCT"
+            files$[3]="glm-03",ids$[3]="GLC_JOURNALCODE"
+            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    gls01_dev=channels[1]
-    glm01_dev=channels[2]
-    glm03_dev=channels[3]
+            if status goto std_exit
+            gls01_dev=channels[1]
+            glm01_dev=channels[2]
+            glm03_dev=channels[3]
 
 rem --- Dimension string templates
 
-    dim gls01a$:templates$[1],glm01a$:templates$[2],glm03a$:templates$[3]
+           dim gls01a$:templates$[1],glm01a$:templates$[2],glm03a$:templates$[3]
 
 rem --- Retrieve miscellaneous templates
 
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="glw-11:GLW_DAILYDETAIL"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
+        files=1,begfile=1,endfile=files
+        dim ids$[files],templates$[files]
+        ids$[1]="glw-11:GLW_DAILYDETAIL"
+        call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+        if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim glw11a$:templates$[1]
+        dim glw11a$:templates$[1]
 
 rem --- Retrieve parameter records
 
-    gls01a_key$=sysinfo.firm_id$+"GL00"
-    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+        gls01a_key$=sysinfo.firm_id$+"GL00"
+        find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 
 rem --- Parameters
 
-    glcontrol_tpl$=stbl("+GLCONTROL_TPL",err=*next)
-    dim glcontrol$:glcontrol_tpl$
-    glcontrol$=stbl("+GLCONTROL",err=*next)
-    if glcontrol.gl_work_file$<>"Y" goto next_overlay
+        glcontrol_tpl$=stbl("+GLCONTROL_TPL",err=*next)
+        dim glcontrol$:glcontrol_tpl$
+        glcontrol$=stbl("+GLCONTROL",err=*next)
+        if glcontrol.gl_work_file$<>"Y" goto next_overlay
 
 rem --- OutVect! for DocOut, date/time 
 
@@ -75,9 +75,9 @@ rem --- OutVect! for DocOut, date/time
 	BrkVect!=bbjAPI().getSysGui().makeVector()
 	HdrVect!=bbjAPI().getSysGui().makeVector()
 	rep_date$=date(0:"%Mz/%Dz/%Yd")
-		rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
 	rep_time$=date(0:"%hz:%mz %p")
-		rep_time_stamp$=date(0:"%Hz%mz%sz")
+	rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Initializations
 
@@ -119,13 +119,13 @@ rem --- Initializations
 rem --- column headings
 
 	columns=5
-	dim columns$[columns,3]
-		columns$[0,0]="Date",columns$[0,1]="C",columns$[0,2]="15"
-		columns$[1,0]="Account",columns$[1,1]="C",columns$[1,2]="15"
-		columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="35"
+	dim columns$[5,10]
+		columns$[0,0]="Date",          columns$[0,1]="C",columns$[0,2]="15"
+		columns$[1,0]="Account",       columns$[1,1]="C",columns$[1,2]="15"
+		columns$[2,0]="Description",   columns$[2,1]="C",columns$[2,2]="35"
 		columns$[3,0]="Memo/Reference",columns$[3,1]="C",columns$[3,2]="35"
-		columns$[4,0]="Debits",columns$[4,1]="C",columns$[4,2]="15",columns$[4,3]=glm1$
-		columns$[5,0]="Credits",columns$[5,1]="C",columns$[5,2]="15",columns$[5,3]=glm1$
+		columns$[4,0]="Debits",        columns$[4,1]="C",columns$[4,2]="15",columns$[4,3]=glm1$
+		columns$[5,0]="Credits",       columns$[5,1]="C",columns$[5,2]="15",columns$[5,3]=glm1$
 
 rem --- Initialize Print Positions
 
@@ -142,60 +142,60 @@ rem --- Initialize Print Positions
 
 rem --- Build heading strings
 
-    if sequence$="A" hdr$(o[0]+3)="Date"
-    hdr$(o[1]+1)="Account"
-    hdr$(o[2]+1)="Description/Memo/Reference"
-    if width>80 hdr$(o[2]+1)="Description"
-    hdr$(o[3]+1)="Memo/Reference"
-    hdr$(o[4]+1+m1-7)="Debits"
-    hdr$(o[5]+1+m1-8)="Credits"
+        if sequence$="A" hdr$(o[0]+3)="Date"
+        hdr$(o[1]+1)="Account"
+        hdr$(o[2]+1)="Description/Memo/Reference"
+        if width>80 hdr$(o[2]+1)="Description"
+        hdr$(o[3]+1)="Memo/Reference"
+        hdr$(o[4]+1+m1-7)="Debits"
+        hdr$(o[5]+1+m1-8)="Credits"
 
 rem --- Display Resource
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glw11_dev,1,0,status
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+        call pgmdir$+"adc_progress.aon","NC","","","","",0,glw11_dev,1,0,status
 
 rem --- Report Headings
 
-    dim work$[1]
-    work$[0]=headings$[0]
-    work$[1]=headings$[1]
-    headings=2
-    dim headings$[headings+1]
-    headings$[0]=work$[0]
-    headings$[1]=work$[1]
-    headings$[2]="General Ledger Summary"
-    headings$[3]="[HEADER]"
+        dim work$[1]
+        work$[0]=headings$[0]
+        work$[1]=headings$[1]
+        headings=2
+        dim headings$[headings+1]
+        headings$[0]=work$[0]
+        headings$[1]=work$[1]
+        headings$[2]="General Ledger Summary"
+        headings$[3]="[HEADER]"
 
 rem --- Position File
 
-    read (glw11_dev,key=firm_id$,dom=*next)
-
+         read (glw11_dev,key=firm_id$,dom=*next)
 rem --- Get next glw-11 key
 
     while more
+          
           k$=key(glw11_dev,end=*break)
           if pos(firm_id$=k$)=0 break
           glstatus=0
 
-          rem --- Read next glw-11 record
+rem --- Read next glw-11 record
 
           read record (glw11_dev,key=k$)glw11a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
 
-          rem --- Level breaks?
+rem --- Level breaks?
 
           if glw11a.trns_date$<>t0$ gosub date_break
           if glw11a.journal_id$<>t1$ gosub journal_break
           if glw11a.posting_per$+glw11a.posting_year$<>t2$ gosub period_break
           if glw11a.trns_date$+glw11a.gl_account$<>t3$ gosub account_break
 
-          rem --- Print subheadings
+rem --- Print subheadings
 
           if h0$<>"" gosub date_heading
           if h2$<>"" gosub period_heading
 
-          rem --- Format detail line fields
+rem --- Format detail line fields
 
           debits=0
           credits=0
@@ -210,7 +210,7 @@ rem --- Get next glw-11 key
           ref2$=glw11a.reference_02$
           ref3$=glw11a.reference_03$
 
-          rem --- Print detail line
+rem --- Print detail line
 
           if report$<>"Y" goto check_date
 
@@ -230,8 +230,8 @@ rem --- Get next glw-11 key
              lf$=""
           endif
           l1=l1+1
-
-          reference: rem --- Print reference information?
+rem --- Print reference information?
+reference: 
 
           ref$=ref1$+" "+ref2$+" "+ref3$
           if cvs(ref$,2)="" goto check_date
@@ -274,50 +274,50 @@ rem --- Get next glw-11 key
 
 rem --- All Done
 
-    done=1
-    if sequence$="A" gosub journal_break
-    if sequence$="D" gosub date_break
-    total$="Total For Report"
-    debits=rt[0]
-    credits=rt[1]
-    balance=debits+credits
-    if balance<>0 report$="Y"
-    if report$<>"Y" goto date_errors
-    if l+2>l9 gosub report_heading
-    gosub print_totals
+        done=1
+        if sequence$="A" gosub journal_break
+        if sequence$="D" gosub date_break
+        total$="Total For Report"
+        debits=rt[0]
+        credits=rt[1]
+        balance=debits+credits
+        if balance<>0 report$="Y"
+        if report$<>"Y" goto date_errors
+        if l+2>l9 gosub report_heading
+        gosub print_totals
 
 rem --- Debits = Credits?
 
-    if balance=0 goto date_errors
-    if l+1>l9 gosub report_heading
-    xwk=fnblank(2)
-    OutVect!.addItem("WARNING: Out of balance by "+str(balance:glm1$))
-    xwk=fnblank(3)
-    if use_suspense$<>"Y" goto register_errors
-    if cvs(suspense_account$,2)="" goto register_errors
-    if max_limit and abs(balance)>max_limit goto register_errors
+        if balance=0 goto date_errors
+        if l+1>l9 gosub report_heading
+        xwk=fnblank(2)
+        OutVect!.addItem("WARNING: Out of balance by "+str(balance:glm1$))
+        xwk=fnblank(3)
+        if use_suspense$<>"Y" goto register_errors
+        if cvs(suspense_account$,2)="" goto register_errors
+        if max_limit and abs(balance)>max_limit goto register_errors
 
 rem --- Determine GL Suspense account balance
 
-    call pgmdir$+"glc_balance.aon",suspense_account$,suspense_balance,status
-    if status goto register_errors
-    if max_balance and abs(suspense_balance)>max_balance goto register_errors
+        call pgmdir$+"glc_balance.aon",suspense_account$,suspense_balance,status
+        if status goto register_errors
+        if max_balance and abs(suspense_balance)>max_balance goto register_errors
 
 rem --- Write to glw-11
 
-    when$=glcontrol.trns_date$
-    ref1$=glcontrol.process_id$
-    ref2$=glcontrol.gl_adt_no$
-    ref3$=""
-    memo$="Out of Balance Correction"
-    if cvs(ref1$,2)="" ref1$=glcontrol.program_name$
+        when$=glcontrol.trns_date$
+        ref1$=glcontrol.process_id$
+        ref2$=glcontrol.gl_adt_no$
+        ref3$=""
+        memo$="Out of Balance Correction"
+        if cvs(ref1$,2)="" ref1$=glcontrol.program_name$
     call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,0,suspense_account$,when$,ref1$,ref2$,ref3$,
 :                                 memo$,-balance,0,status
-    if status goto register_errors
+        if status goto register_errors
 
 date_errors: rem --- Any GL transaction date errors detected in lead overlay?
 
-    if errors=0 goto next_overlay
+        if errors=0 goto next_overlay
 
 register_errors: rem --- Register errors
 
@@ -328,14 +328,23 @@ register_errors: rem --- Register errors
 :           "rerun the report."
     call pgmdir$+"adc_stdmessage.aon",1,msg$[all],1,0,0,v$,v3
     if v$<>"SPECIAL" goto std_exit
-
+    
 next_overlay: rem --- Run update overlay
 
+    update$="glu_allocate.aon"
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    next_overlay$=update$
-    out_action$="PRT"
-    goto std_exit
-    rem --- run update$,err=std_exit -- DocOut will run next pgm for us
+      if OutVect!.size( )<>0
+      next_overlay$=update$
+      out_action$="PRT"
+      goto std_exit
+      rem --- run update$,err=std_exit -- DocOut will run next pgm for us
+    else
+      next_overlay$=""
+      OutVect!=null( )
+      out_action$=""
+      run update$,err=std_exit
+    endif
+rem --- run update$,err=std_exit -- DocOut will run next pgm for us
 
 report_heading: rem --- Report Heading
 
@@ -570,7 +579,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    rem call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
