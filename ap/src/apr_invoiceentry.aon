@@ -6,182 +6,217 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    setesc std_error
-    seterr std_error
+            setesc std_error
+            seterr std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+            pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Document initializations
+
+            OutVect!=bbjAPI().getSysGui().makeVector()
+            HdrVect!=bbjAPI().getSysGui().makeVector()
+            BrkVect!=bbjAPI().getSysGui().makeVector()
+            rep_date$=date(0:"%Mz/%Dz/%Yd")
+            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+            rep_time$=date(0:"%hz:%mz %p")
+            rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+            sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+            dim sysinfo$:sysinfo_template$
+            sysinfo$=stbl("+SYSINFO",err=*next)
+            milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+            firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
-    files=13,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
-    files$[2]="ape-01",ids$[2]="APE_INVOICEHDR";rem "ape-01
-    files$[3]="ape-11",ids$[3]="APE_INVOICEDET";rem "ape-11
-    files$[4]="apm-01",ids$[4]="APM_VENDMAST";rem "apm-01
-    files$[5]="apm-02",ids$[5]="APM_VENDHIST";rem "apm-02
-    files$[7]="apc_typecode",ids$[7]="APC_TYPECODE";rem "apm-10A
-    files$[8]="apt-01",ids$[8]="APT_INVOICEHDR";rem "apt-01
-    files$[9]="apt-02",ids$[9]="APT_INVOICEDIST";rem "apt-02
-    files$[11]="apt-11",ids$[11]="APT_INVOICEDET";rem "apt-11
-    files$[12]="gls_params",ids$[12]="GLS_PARAMS";rem "gls-01
-    files$[13]="apc_distribution",ids$[13]="APC_DISTRIBUTION";rem "apm-10B
+            files=13,begfile=1,endfile=files
+            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+            files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
+            files$[2]="ape-01",ids$[2]="APE_INVOICEHDR";rem "ape-01
+            files$[3]="ape-11",ids$[3]="APE_INVOICEDET";rem "ape-11
+            files$[4]="apm-01",ids$[4]="APM_VENDMAST";rem "apm-01
+            files$[5]="apm-02",ids$[5]="APM_VENDHIST";rem "apm-02
+            files$[7]="apc_typecode",ids$[7]="APC_TYPECODE";rem "apm-10A
+            files$[8]="apt-01",ids$[8]="APT_INVOICEHDR";rem "apt-01
+            files$[9]="apt-02",ids$[9]="APT_INVOICEDIST";rem "apt-02
+            files$[11]="apt-11",ids$[11]="APT_INVOICEDET";rem "apt-11
+            files$[12]="gls_params",ids$[12]="GLS_PARAMS";rem "gls-01
+            files$[13]="apc_distribution",ids$[13]="APC_DISTRIBUTION";rem "apm-10B
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    aps01_dev=channels[1]
-    ape01_dev=channels[2]
-    ape11_dev=channels[3]
-    apm01_dev=channels[4]
-    apm02_dev=channels[5]
-    apm10_dev=channels[7]
-    apt01_dev=channels[8]
-    apt02_dev=channels[9]
-    apt11_dev=channels[11]
-    gls01_dev=channels[12]
-    apm10b_dev=channels[13]
+            if status goto std_exit
+            aps01_dev=channels[1]
+            ape01_dev=channels[2]
+            ape11_dev=channels[3]
+            apm01_dev=channels[4]
+            apm02_dev=channels[5]
+            apm10_dev=channels[7]
+            apt01_dev=channels[8]
+            apt02_dev=channels[9]
+            apt11_dev=channels[11]
+            gls01_dev=channels[12]
+            apm10b_dev=channels[13]
 
 rem --- Dimension string templates
 
-    dim ape01a$:templates$[2],ape11a$:templates$[3],apm01a$:templates$[4]
-    dim apm02a$:templates$[5],apm10a$:templates$[7],apt01a$:templates$[8]
-    dim apt02a$:templates$[9],apt11a$:templates$[11],aps01a$:templates$[1]
-    dim gls01a$:templates$[12],apm10b$:templates$[13]
+            dim ape01a$:templates$[2],ape11a$:templates$[3],apm01a$:templates$[4]
+            dim apm02a$:templates$[5],apm10a$:templates$[7],apt01a$:templates$[8]
+            dim apt02a$:templates$[9],apt11a$:templates$[11],aps01a$:templates$[1]
+            dim gls01a$:templates$[12],apm10b$:templates$[13]
 
 rem --- Retrieve parameter records
 
-    aps01a_key$=firm_id$+"AP00"
-    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    gls01a_key$=firm_id$+"GL00"
-    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
-    call pgmdir$+"adc_getmask.aon","","AP","A","",m1$,0,0
-    multitypes=aps01a.multi_types$="Y"
-    retention=aps01a.ret_flag$="Y"
-    cashbasis=aps01a.cash_basis$="Y"
-    prior_yr$=str(num(aps01a.current_year$)-1:"0000")
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,9,13
-    m0=len(m0$)
-    m1=len(m1$)
-    call pgmdir$+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
-    call pgmdir$+"adc_getmask.aon","","GL","A","",g1$,0,0
-    max_acct_len=num(gls01a.max_acct_len$)
-    g0=len(g0$)
-    g1=len(g1$)
+        aps01a_key$=firm_id$+"AP00"
+        find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+        gls01a_key$=firm_id$+"GL00"
+        find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+        call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+        call pgmdir$+"adc_getmask.aon","","AP","A","",m1$,0,0
+        multitypes=aps01a.multi_types$="Y"
+        retention=aps01a.ret_flag$="Y"
+        cashbasis=aps01a.cash_basis$="Y"
+        prior_yr$=str(num(aps01a.current_year$)-1:"0000")
+        call pgmdir$+"adc_sizemask.aon",m1$,m1,9,13
+        m0=len(m0$)
+        m1=len(m1$)
+        call pgmdir$+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
+        call pgmdir$+"adc_getmask.aon","","GL","A","",g1$,0,0
+        max_acct_len=num(gls01a.max_acct_len$)
+        g0=len(g0$)
+        g1=len(g1$)
+
 
 rem --- Is General Ledger installed and being used?
 
-    application$="AP"
-    gl$="N"
-    status=0
-    source$=pgm(-2)
-    call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
-    if status goto std_exit
+        application$="AP"
+        gl$="N"
+        status=0
+        source$=pgm(-2)
+        call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
+        if status goto std_exit
+
+
 
 rem --- Initializations
 
-    headings=2
-    dim headings$[headings],underline$(m1*2,"-"),o[11],h[11],gd[2],gh[2]
-    dim pt[2],rt[2],at[2],vt[2]
-    units=0
-    errors=0
-    glstatus=0
-    done=0
-    page=0
-    width=132
-    printed=0
-    maxlines=59
-    lines=maxlines+1
-    moreheaders=1
-    moredetail=1
-    when$=sysinfo.system_date$
-    clock$=""
-    nf$="(Not on File)"
-    lasttype$=""
-    lastacct$=""
-    lastvendor$=""
-    headings$[0]=sysinfo.firm_name$
-    headings$[1]=sysinfo.task_desc$
-    h2$=""
-    h3$="Discount"
-    if retention 
-       h2$=h3$+"/"
-       h3$="Retention"
-    endif
+        headings=3
+        dim headings$[headings],underline$(m1*2,"-"),o[11],h[11],gd[2],gh[2]
+        dim pt[2],rt[2],at[2],vt[2]
+        units=0
+        errors=0
+        glstatus=0
+        done=0
+        page=0
+        width=132
+        printed=0
+        maxlines=59
+        lines=maxlines+1
+        moreheaders=1
+        moredetail=1
+        when$=sysinfo.system_date$
+        clock$=""
+        nf$="(Not on File)"
+        ac$="Account"
+        ds$="Description"
+        amt$="Amount"
+        lasttype$=""
+        lastacct$=""
+        lastvendor$=""
+        headings$[0]=sysinfo.firm_name$
+        headings$[1]=sysinfo.task_desc$
+        headings$[2]="[HEADER]" 
+        h2$=""
+        h3$="Discount"
+        if retention 
+         h2$=h3$+"/"
+         h3$="Retention"
+       endif
+
+rem --column heading 
+        dim columns$[11,10]
+        columns=11
+
+        columns$[0,0]="Vendor",          columns$[0,1]="C",columns$[0,2]="10"
+        columns$[1,0]="Name",            columns$[1,1]="C",columns$[1,2]="35"
+        columns$[2,0]="Invoice",         columns$[2,1]="C",columns$[2,2]="15"
+        columns$[3,0]="DC",              columns$[3,1]="C",columns$[3,2]="8"
+        columns$[4,0]="PG",              columns$[4,1]="C",columns$[4,2]="8"
+        columns$[5,0]="TC",              columns$[5,1]="C",columns$[5,2]="8"
+        columns$[6,0]="HD",              columns$[6,1]="C",columns$[6,2]="8"
+        columns$[7,0]="Invoice/Due Date",columns$[7,1]="C",columns$[7,2]="10"
+        columns$[8,0]="Acct/Disc Date",  columns$[8,1]="C",columns$[8,2]="10"
+        columns$[9,0]="Reference/Memo",  columns$[9,1]="C",columns$[9,2]="10"
+        columns$[10,0]="Invoice Amount", columns$[10,1]="C",columns$[10,2]="10",columns$[10,3]=m1$
+        columns$[11,0]="Discount Amount",columns$[11,1]="C",columns$[11,2]="8",columns$[11,3]=m1$
+        
 
 rem --- Define invoice print and header positions
 
-    o[0]=0
-    o[1]=max(7,o[0]+m0+1)
-    o[11]=width-m1
-    o[10]=o[11]-m1
-    o[9]=o[10]-17
-    o[8]=o[9]-10
-    o[7]=o[8]-10
-    o[6]=o[7]-3
-    o[5]=o[6]-3
-    o[4]=o[5]-3
-    o[3]=o[4]-3
-    o[2]=o[3]-12
-    vw=min(30,o[2]-o[1]-1)
-    for x=0 to 9
-        h[x]=o[x]
-    next x
-    h[10]=o[10]+m1-8
-    h[11]=o[11]+m1-(max(len(h2$),len(h3$))+1)
+        o[0]=0
+        o[1]=max(7,o[0]+m0+1)
+        o[11]=width-m1
+        o[10]=o[11]-m1
+        o[9]=o[10]-17
+        o[8]=o[9]-10
+        o[7]=o[8]-10
+        o[6]=o[7]-3
+        o[5]=o[6]-3
+        o[4]=o[5]-3
+        o[3]=o[4]-3
+        o[2]=o[3]-12
+        vw=min(30,o[2]-o[1]-1)
+        for x=0 to 9
+            h[x]=o[x]
+        next x
+        h[10]=o[10]+m1-8
+        h[11]=o[11]+m1-(max(len(h2$),len(h3$))+1)
 
 rem --- Define GL print and header positions
 
-    gd[0]=o[2]
-    gd[1]=gd[0]+g0+1
-    gd[2]=o[10]-g1-1
-    gh[0]=gd[0]
-    gh[1]=gd[1] 
-    gh[2]=gd[2]+g1-7
-    gw=min(35,gd[2]-gd[1]-1)
+        gd[0]=o[2]
+        gd[1]=gd[0]+g0+1
+        gd[2]=o[10]-g1-1
+        gh[0]=gd[0]
+        gh[1]=gd[1] 
+        gh[2]=gd[2]+g1-7
+        gw=min(35,gd[2]-gd[1]-1)
 
 rem --- Additional file opens
 
-    files=3,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01",ids$[1]="GLM_ACCT"
-    files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
-    files$[3]=glw11$
-    options$[3]="CL"
+        files=3,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="glm-01",ids$[1]="GLM_ACCT"
+        files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
+        files$[3]=glw11$
+        options$[3]="CL"
     if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                             ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    glm01_dev=channels[1]
-    glt04_dev=channels[2]
-    glw11_dev=channels[3]
+        if status goto std_exit
+        glm01_dev=channels[1]
+        glt04_dev=channels[2]
+        glw11_dev=channels[3]
 
 rem --- Dimension string templates
 
-    if gl$="Y" dim glm01a$:templates$[1]
+        if gl$="Y" dim glm01a$:templates$[1]
 
 rem --- Get user approval to proceed
 
-    prompt$="Do you want to run the Invoice Register?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" goto std_exit
+        prompt$="Do you want to run the Invoice Register?"
+        call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
+        if fkey=4 goto std_exit
+        if answer$<>"Y" goto std_exit
 
-rem --- Open printer, start progress meter and position header file
+rem --- Start progress meter and position header file
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,ape01_dev,1,meter_num,status
-    read (ape01_dev,key=firm_id$,dom=*next)
+        
+        call pgmdir$+"adc_progress.aon","NC","","","","",0,ape01_dev,1,meter_num,status
+        read (ape01_dev,key=firm_id$,dom=*next)
 
 rem --- Read next Invoice Header (ape-01) record
 
@@ -190,12 +225,12 @@ rem --- Read next Invoice Header (ape-01) record
           if ape01a.firm_id$<>firm_id$ break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-          rem --- Level breaks
+rem --- Level breaks
 
           if ape01a.ap_type$<>lasttype$ gosub type_break
           if ape01a.vendor_id$<>lastvendor$ gosub vendor_break
 
-          rem --- Retrieve vendor name
+rem --- Retrieve vendor name
 
           dim vendor$(m0),name$(30),vendorref$(10)
           dim apm01a$:fattr(apm01a$)
@@ -208,8 +243,9 @@ rem --- Read next Invoice Header (ape-01) record
           name$(1)=apm01a.vendor_name$
           vendorref$(1)=vendor$
           errors=errors+(pos(nf$=name$)=1)
-
-          rem --- Initializations for this invoice
+          
+        
+rem --- Initializations for this invoice
 
           dim a[2]
           a[0]=ape01a.invoice_amt
@@ -218,7 +254,7 @@ rem --- Read next Invoice Header (ape-01) record
           invoice$=ape01a.firm_id$+ape01a.ap_type$+ape01a.vendor_id$+
 :                  ape01a.ap_inv_no$
 
-          rem --- Retrieve distribution code and update GL recap
+rem --- Retrieve distribution code and update GL recap
 
           while gl$="Y"
                 while cashbasis=0
@@ -251,9 +287,10 @@ rem --- Read next Invoice Header (ape-01) record
                 break
           wend    
  
-          rem --- Print invoice header
+rem --- Print invoice header
 
-          if lines+3>maxlines gosub report_heading
+          if lines+3>maxlines 
+rem gosub report_heading
           invdate$=""
           duedate$=""
           acctdate$=""
@@ -264,20 +301,33 @@ rem --- Read next Invoice Header (ape-01) record
           if cvs(ape01a.inv_due_date$,2)<>"" duedate$=fndate$(ape01a.inv_due_date$)
           if cvs(ape01a.accting_date$,2)<>"" acctdate$=fndate$(ape01a.accting_date$)
           if cvs(ape01a.disc_date$,2)<>"" discdate$=fndate$(ape01a.disc_date$)
-          print (printer_dev) ""
-          print (printer_dev) @(o[0]),vendor$,@(o[1]),name$(1,vw),@(o[2]),ape01a.ap_inv_no$,
-:                             @(o[3]),ape01a.ap_dist_code$,@(o[4]),ape01a.payment_grp$,
-:                             @(o[5]),ape01a.ap_terms_code$,@(o[6]),ape01a.hold_flag$,
-:                             @(o[7]),invdate$,@(o[8]),acctdate$,@(o[9]),ape01a.reference$,
-:                             @(o[10]),ape01a.invoice_amt:m1$,@(o[11]),ape01a.discount_amt:m1$
-          print (printer_dev) @(o[7]),duedate$,@(o[8]),discdate$,@(o[9]),ape01a.ap_inv_memo$,
-:                             @(o[11]),retention$
-          lines=lines+3
-          printed=printed+1
+
+          OutVect!.addItem(vendor$)
+          OutVect!.addItem(name$)
+          OutVect!.addItem(ape01a.ap_inv_no$)
+          OutVect!.addItem(ape01a.ap_dist_code$)
+          OutVect!.addItem(ape01a.payment_grp$)
+          OutVect!.addItem(ape01a.ap_terms_code$)
+          OutVect!.addItem(ape01a.hold_flag$)
+          OutVect!.addItem(invdate$+""+duedate$)
+          OutVect!.addItem(acctdate$+discdate$)
+          OutVect!.addItem(ape01a.reference$+""+ape01a.ap_inv_memo$)
+          OutVect!.addItem(str(ape01a.invoice_amt:m1$))
+          OutVect!.addItem(str(ape01a.discount_amt:m1$)+retention$)
+         
+
+         xwk=fnblank(12)
+         xwk=fnblank(2)
+         OutVect!.addItem(ac$)
+         OutVect!.addItem(ds$)
+         xwk=fnblank(5)
+         OutVect!.addItem(amt$)
+         xwk=fnblank(2)
+         xwk=fnblank(12)
+
           if gl$="Y" call pgmdir$+"glc_datecheck.aon",ape01a.accting_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,ape01a.accting_date$,glstatus,lines,errors,status
 
-          rem --- Accumulate totals
 
           for x=0 to 2
               vt[x]=vt[x]+a[x]
@@ -285,21 +335,21 @@ rem --- Read next Invoice Header (ape-01) record
               rt[x]=rt[x]+a[x]
           next x
 
-          rem --- Position the Invoice Detail (ape-11) file
+rem --- Position the Invoice Detail (ape-11) file
 
           if gl$<>"Y" continue
           gllines=0
           gltotal=0
           read (ape11_dev,key=invoice$,dom=*next)
 
-          rem --- Read the next Invoice Detail (ape-11) record
+rem --- Read the next Invoice Detail (ape-11) record
 
           while moredetail
                 k$=key(ape11_dev,end=*break)
                 if pos(invoice$=k$)<>1 break
                 read record (ape11_dev) ape11a$
 
-                rem --- Retrieve GL account master
+rem --- Retrieve GL account master
 
                 dim glm01a$:fattr(glm01a$),description$(gw)
                 glm01a.firm_id$=ape11a.firm_id$
@@ -309,16 +359,21 @@ rem --- Read next Invoice Header (ape-01) record
                 find record (glm01_dev,key=k$,dom=*next) glm01a$
                 description$(1)=glm01a.gl_acct_desc$
                 errors=errors+(pos(nf$=description$)=1)
-
                 rem --- Print the detail line
 
                 if gllines=0 gosub account_heading
                 if lines+1>maxlines
-                   gosub report_heading
+                rem   gosub report_heading
                    gosub account_heading
                 endif
-                print (printer_dev) @(gh[0]),fnmask$(ape11a.gl_account$(1,acct_length),g0$),
-:                                   @(gh[1]),description$,@(gh[2]),ape11a.gl_post_amt:g1$
+
+                 xwk=fnblank(2)
+                 OutVect!.addItem(fnmask$(ape11a.gl_account$(1,acct_length),g0$))
+                 OutVect!.addItem(description$)
+                 xwk=fnblank(5)
+                 OutVect!.addItem(str(ape11a.gl_post_amt:g1$))
+                 xwk=fnblank(2)
+                
                 lines=lines+1
                 gllines=gllines+1
                 gltotal=gltotal+ape11a.gl_post_amt
@@ -342,13 +397,16 @@ rem --- Read next Invoice Header (ape-01) record
           if gltotal=ape01a.invoice_amt continue
           difference=ape01a.invoice_amt-gltotal
           if lines+2>maxlines
-             gosub report_heading
-             gosub account_heading
+          gosub account_heading
           endif
-          print (printer_dev) ""
-          print (printer_dev) @(gh[0]),"WARNING: This transaction is out of balance by ",
-:                             @(gh[2]),difference:g1$
-          lines=lines+2
+
+            xwk=fnblank(12)
+            OutVect!.addItem("WARNING: This transaction is out of balance by")
+            OutVect!.addItem("")
+            OutVect!.addItem(g1$)
+            xwk=fnblank(9)
+           
+            lines=lines+2
 
           rem --- Loop back for next Invoice Header
 
@@ -368,9 +426,11 @@ rem --- All done
 rem --- Any errors encountered?
 
     while errors
-          if lines+2>maxlines gosub report_heading
-          print (printer_dev) ""
-          print (printer_dev) @(o[1]),"WARNING: This register is out of balance or missing information"
+          if lines+2>maxlines
+            xwk=fnblank(12)
+            OutVect!.addItem("")
+            OutVect!.addItem("WARNING: This register is out of balance or missing information")
+            xwk=fnblank(10)
           lines=lines+2
           break
     wend
@@ -380,43 +440,35 @@ rem --- Destroy the progress meter and run the next overlay
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     update$=pgmdir$+"apu_invoiceentry.aon"
     overlay$=update$
-    if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
-    run overlay$,err=std_exit
-
-report_heading: rem --- Report Heading
-
-    lines=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
+    if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
+    out_action$="PRT-PDF"
+    next_overlay$=overlay$
+    goto std_exit
+  
     if cvs(aptype$,2)<>""
-       print (printer_dev) @(fncenter(aptype$,width)),aptype$
-       lines=lines+1
+    lines=lines+1
     endif
-    print (printer_dev) ""
-    print (printer_dev) @(h[7]),"Inv Date",@(h[8]),"Acct Date",@(h[9]),"Reference/",@(h[10]),"Invoice",
-:                       @(h[11]),h2$
-    print (printer_dev) @(h[0]),"Vendor",@(h[1]),"Name",@(h[2]),"Invoice",@(h[3]),"DC",@(h[4]),"PG",@(h[5]),"TC",
-:                       @(h[6]),"HD",@(h[7]),"Due Date",@(h[8]),"Disc Date",@(h[9]),"Memo",@(h[10])," Amount",
-:                       @(h[11]),h3$
-    lines=lines+3
-    return
+
+
+
 
 account_heading: rem --- Account subheading
 
-    if lines+3>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(gh[0]),"Account",@(gh[1]),"Description",@(gh[2]),"Amount"
+    if lines+3>maxlines 
     lines=lines+2
     return
 
 print_total: rem --- Print totals
 
-    if lines+3>maxlines gosub report_heading
-    print (printer_dev) @(o[10]),underline$
-    print (printer_dev) @(o[10]-len(total$)),total$,@(o[10]),pt[0]:m1$,@(o[11]),pt[1]:m1$
-    if retention print (printer_dev) @(o[11]),pt[2]:m1$
-:           else print (printer_dev) ""
-    lines=lines+3
+    if lines+3>maxlines 
+        xwk=fnblank(10)
+        OutVect!.addItem(underline$)
+        OutVect!.addItem(underline$)
+        xwk=fnblank(9)
+        OutVect!.addItem(total$)
+        OutVect!.addItem(str(pt[0]:m1$))
+        OutVect!.addItem(str(pt[1]:m1$))
+        lines=lines+3
     return
 
 type_break: rem --- AP Type break
@@ -442,6 +494,8 @@ type_break: rem --- AP Type break
     k$=apm10a.firm_id$+apm10a.record_id_a$+apm10a.ap_type$
     find record (apm10_dev,key=k$,dom=*next) apm10a$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(aptype$)
     lines=maxlines+1
     lasttype$=apm10a.ap_type$
     return
@@ -505,6 +559,16 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -556,7 +620,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+  rem  call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release
 
