@@ -14,9 +14,10 @@ rem
 begin 
 
 rem --- Initilalization
-    dir$="C:\aon600\ADATA\"
-    dictfile$="C:\Program Files\basis\barista\sys\data\"
-    filedir$="C:\Data_Conversion\"
+
+    dir$=stbl("+DIR_DATA_6",err=*next)
+    dictfile$=stbl("+DIR_BBDICT",err=*next)
+    filedir$=stbl("+DIR_FILES",err=*next)
 
 rem --- Get the Addon version
 get_version:
