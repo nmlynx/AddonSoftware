@@ -1,5 +1,5 @@
 rem --- Inventory Item Labels
-rem --- Program ivr_1b v8.0.0 16Jul2007 (ivr_1b)
+rem --- Program ivr_itemlabels_o1.aon v8.0.0 16Jul2007 (ivr_1b)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 03:02:40)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -9,21 +9,8 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
-rem --- Retrieve the program path
-
-    pgmdir$=stbl("+DIR_PGM",err=*next)
-
-rem --- Retrieve sysinfo data
-
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
-
 rem --- Init Data
 
-    dim a1$(60),b[20]
     x8$="First"
     if height<6 x9=height else x9=6
     another$="A"
@@ -53,27 +40,27 @@ Options: rem --- Options
         swend
     wend
 
-    read (ivm03_dev,key=firm_id$+"C"+beg_whse$,dom=*next)
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+    read (ivm03c_dev,key=firm_id$+"C"+beg_whse$,dom=*next)
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03c_dev,1,meter_num,status
     more=1
 
 rem --- Loop Starting
-rem escape;rem dot thru
+
     while more
-        ivm03c_key$=key(ivm03_dev,end=*break)
+        ivm03c_key$=key(ivm03c_dev,end=*break)
         if pos(firm_id$+"C"=ivm03c_key$)<>1 break
-        read (ivm03_dev)
-        if end_whse$<>"" if ivm03c.warehouse_id$>end_whse$ break
-        if beg_prod$<>"" if ivm03c.product_type$<beg_prod$ read (ivm03_dev,
+        read (ivm03c_dev)
+        if end_whse$<>"" if ivm03c_key.warehouse_id$>end_whse$ break
+        if beg_prod$<>"" if ivm03c_key.product_type$<beg_prod$ read (ivm03c_dev,
 :           key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+ivm03c_key.warehouse_id$
 :           +beg_prod$,dom=*continue)
-        if end_prod$<>"" if ivm03c.product_type$>end_prod$ read (ivm03_dev,
+        if end_prod$<>"" if ivm03c_key.product_type$>end_prod$ read (ivm03c_dev,
 :           key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+ivm03c_key.warehouse_id$+$FF$,dom=*continue)
-        if beg_item$<>"" if ivm03c.item_number$<beg_item$ read (ivm03_dev,
+        if beg_item$<>"" if ivm03c_key.item_number$<beg_item$ read (ivm03c_dev,
 :           key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+ivm03c_key.warehouse_id$
 :           +ivm03c_key.product_type$+beg_item$,dom=*continue)
         if end_item$<>"" then 
-            if ivm03c.item_number$>end_item$ then
+            if ivm03c_key.item_number$>end_item$ then
                 continue
             endif
         endif
@@ -96,7 +83,7 @@ rem --- Setup
 
     wend ;rem --- Loop Ending
 
-done: rem --- Totals
+done: rem --- End of label printing
 
     gosub Print
     goto std_exit
@@ -105,21 +92,21 @@ Assemble: rem --- Assemble
 
     x3=0
     while x3<=w3
-    x3=x3+1
-    if x3>w3 break
-    if x0>=across gosub Print
-    x0=x0+1
-    if mod(rcnt,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","",ivm01a.item_id$,0,0,1,0,ignore_status
-    w0$(width*(x0-1)+1,width)=n1$
-    w0$(width*(across+x0-1)+1,width)=cvs(ivm01a.item_id$,3)+" Whse "+ivm03c_key.warehouse_id$
-    w0$(width*(2*across+x0-1)+1,width)=ivm01a.item_desc$(1,width)
-    w0$(width*(3*across+x0-1)+1,width)=ivm01a.item_desc$(width+1)
-    x=pos(" "<>w0$(width*(3*across+x0-1)+1,width),-1)
-    if x+8<width then
-        if x=0 offset=-1 else offset=0
-        w0$(width*(3*across+x0-1)+x+2+offset,8)="Prod "+ivm01a.product_type$
-    endif
-    w0$(width*(4*across+x0-1)+1,width)="Cycle Code "+ivm02a.cycle_cd$+"Location "+ivm02a.location$
+        x3=x3+1
+        if x3>w3 break
+        if x0>=across gosub Print
+        x0=x0+1
+        if mod(rcnt,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","",ivm01a.item_id$,0,0,1,0,ignore_status
+        w0$(width*(x0-1)+1,width)=n1$
+        w0$(width*(across+x0-1)+1,width)=cvs(ivm01a.item_id$,3)+" Whse "+ivm03c_key.warehouse_id$
+        w0$(width*(2*across+x0-1)+1,width)=ivm01a.item_desc$(1,width)
+        w0$(width*(3*across+x0-1)+1,width)=ivm01a.item_desc$(width+1)
+        x=pos(" "<>w0$(width*(3*across+x0-1)+1,width),-1)
+        if x+8<width then
+            if x=0 offset=-1 else offset=0
+            w0$(width*(3*across+x0-1)+x+2+offset,8)="Prod "+ivm01a.product_type$
+        endif
+        w0$(width*(4*across+x0-1)+1,width)="Cycle Code "+ivm02a.cycle_cd$+"Location "+ivm02a.location$
     wend
     return
 
@@ -162,7 +149,16 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+   def fndate$(q$) 
+        if cvs(q$,2)="" return ""
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if testdate$<>"" 
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        endif
+        return testdate$
+    fnend    
+rem    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))),"%Mz/%Dz/%Yd")
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
@@ -257,6 +253,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

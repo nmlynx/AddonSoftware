@@ -1,5 +1,5 @@
 rem --- Inventory Item Labels
-rem --- Program ivr_1a v8.0.0 09Jul2007 (ivr_1a)
+rem --- Program ivr_itemlabels.aon v8.0.0 09Jul2007 (ivr_1a)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/09/2007 11:51:02)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -22,15 +22,14 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
+rem --- Open files
 
     files=7,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
     files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
     files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-    files$[4]="ivm-03"
-    files$[5]="ivm-10"
+    files$[4]="ivm-03",ids$[4]="IVX_ITEMPRWH"
     files$[6]="ivm-14",ids$[6]="IVM_ITEMSYN"
     files$[7]="ivm-15",ids$[7]="IVC_TYPECODE"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -39,43 +38,30 @@ rem --- Open/Lock files
     ivs01_dev=channels[1]
     ivm01_dev=channels[2]
     ivm02_dev=channels[3]
-    ivm03_dev=channels[4]
-    ivm10_dev=channels[5]
+    ivm03c_dev=channels[4]
     ivm14_dev=channels[6]
     ivm15_dev=channels[7]
 
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm14a$:templates$[6],ivm15a$:templates$[7]
-
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivm-10C:IVC_WHSECODE"
-    ids$[2]="ivs-01A:IVS_PARAMS"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
+    dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03c$:templates$[4],
+:	ivm14a$:templates$[6],ivm15a$:templates$[7],ivs01a$:templates$[1]
 
 rem --- retrieve key templates
 
-        call syspgmdir$+"bac_key_template.bbj","IVX_ITEMPRWH","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
-        dim ivm03c_key$:ivm03_key_tpl$
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivm10c$:templates$[1],ivs01a$:templates$[2]
+    call syspgmdir$+"bac_key_template.bbj","IVX_ITEMPRWH","PRIMARY",ivm03_key_tpl$,table_chans$[all],status$
+    dim ivm03c_key$:ivm03_key_tpl$
 
 rem --- Assign form input values to local variables
 
-    begwhse$=option!.getOptionData("warehouse_id_1")
-    endwhse$=option!.getOptionData("warehouse_id_2")
-    begprod$=option!.getOptionData("product_type_1")
-    endprod$=option!.getOptionData("product_type_2")
-    begitem$=option!.getOptionData("item_id_1")
-    enditem$=option!.getOptionData("item_id_2")
+    beg_whse$=option!.getOptionData("warehouse_id_1")
+    end_whse$=option!.getOptionData("warehouse_id_2")
+    beg_prod$=option!.getOptionData("product_type_1")
+    end_prod$=option!.getOptionData("product_type_2")
+    beg_item$=option!.getOptionData("item_id_1")
+    end_item$=option!.getOptionData("item_id_2")
     item_type$=option!.getOptionData("item_type")
-    no_label$=option!.getOptionData("num_copies")
+    no_label$=option!.getOptionData("pick_count")
 
 rem --- Retrieve parameter records
 
@@ -94,12 +80,11 @@ rem --- Parameters
 
 rem --- Init Data
 
-    dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12],x0$(32),y0$(5),y1$(20)
     across=num(ivs01a.label_across$)
     width=num(ivs01a.label_width$)
     height=num(ivs01a.label_length$)
     w3=num(no_label$)
-    dim w0$(across*width*6),w9$(height,$0A$),a1$(70)
+    dim w0$(across*width*6),w9$(height,$0A$)
 
 rem --- Run overlay
     run pgmdir$+"ivr_itemlabels_o1.aon"
@@ -131,7 +116,16 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+   def fndate$(q$) 
+        if cvs(q$,2)="" return ""
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if testdate$<>"" 
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        endif
+        return testdate$
+    fnend    
+rem    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))),"%Mz/%Dz/%Yd")
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
@@ -181,9 +175,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -226,7 +220,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
