@@ -32,6 +32,7 @@ open_xref:
     open(chanXRef)filedir$+"file_normalization"
 read_XRef:
     read(chanXRef,end=finished)dat$
+    if len(dat$)=0 goto read_XRef
     size=0
     if dat$(1,6)<>prev_dat$ then
         print ""
