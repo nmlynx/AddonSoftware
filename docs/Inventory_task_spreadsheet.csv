@@ -44,7 +44,7 @@ Synonyms Listing,T,IVR_ITEMSYN,ivr_itemsyn/ivr_itemsyn_o1,IVR.SA,Input/Report Ov
 Alternate/Superceded Items Listing,T,IVR_ITEMALT,ivr_itemalt.aon & _o1,IVR.2A,Input/Report Overlay,SL,BJ-BP,SL,Done SV-BP,,IVR.2B 20Aug mods converted to ivr_itemalt & _o1. Select form built. Report tested but there aren't any items to include. SL
 Inventory Description Listing,T,IVR_ITEMDESC,ivr_itemdesc/ivr_itemdesc_o1,IVR.TA,Input/Report Overlay,SL,BJ-BP,CH,Done SV-BP,,"IVR.TB; found select screen, so maybe someone did this in the past; I created ivr_itemdesc from ivr_ta, and ivr_itemdesc_o1 from ivr_tb. CH.20Aug mods"
 Item Detail Listing,T,IVR_ITEMDETAIL,ivr_itemdetail & _o1,IVR.RA,Input/Report Overlay,SL,BJ-BP,SL,needs,,IVR.RB 20Aug mods; converted to ivr_itemdetail & _o1. Select form built. SL. Data tested.
-Item Labels,T,,ivr_itemlabels & _o1.aon,IVR.1A,Input/Report Overlay,,BJ-BP,CH,,,IVR.1B;1a/1b converted to ivr_itemlabels and ivr_itemlabels_o1; Select Form built. CH. 20Aug mods
+Inventory Item Labels,T,IVR_ITEMLABELS,ivr_itemlabels & _o1.aon,IVR.1A,Input/Report Overlay,SL,BJ-BP,CH,N/A,N/A,IVR.1B;1a/1b converted to ivr_itemlabels and ivr_itemlabels_o1; Select Form built. CH. 20Aug mods; Fixed form and tested with data.
 Lotted/Serialized Inventory,G,,,,,,,,,,
 History By Item Inquiry,T,,,IVM.FA,Inquiry,,,,,,
 History By Customer Inquiry,T,,,IVM.IA,Inquiry,,,,,,
@@ -110,25 +110,25 @@ Rebuild On Order Quantities,T,IVX_ONORDER,,IVX.EA,Update,,BJ-BP,,,,20Aug mods
 Rebuild Beginning Balances,T,IVX_BEGBALS,,IVX.BA,Update,,BJ-BP,,,,20Aug mods
 LIFO/FIFO Tier Maintenance,T,IVX_LIFOFIFO,,IVX.FA,Input,,,,,,
 ,T,,,IVX.FB,Report/Update,,,,,,
-Copy Items to Another Warehouse,T,IVX_COPYITEM,,IVX.DA,Update,,
-Rebuild Unit Costs,A,,ivx_rebuildcosts.aon,IVX.IA,Update,,JL?
-Inventory Publics,G,,,,,,
-Calculate Actual & Estimated Annual Usage,P,,ivc_usage,IVC.AU,Public,,CH
-Price/Cost Change by Percentage,P,,,IVC.CA,Public,,needs
-Delete Item and/or Warehouse,P,,,IVC.DA,Public,,needs
-Activity Type Descriptions,P,,ivc_activity,IVC.FA,Public,,CH
-Inventory Item Entry,P,,,IVC.IA,Public,,needs
-Standard Report Options Input,P,,,IVC.IB,Public,,needs
-Physical Inventory Entry Screen Processing,P,,,IVC.IC,Public,,needs
-LIFO/FIFO Reporting And Inquiry,P,,,IVC.LF,Public,,needs
-Return Period Quantity Based On Activity Type,P,,ivc_periodqty,IVC.PA,Public,,CH
-Inventory Activity Type Column Entry,P,,,IVC.RA,Public,,needs
-Lot/Serial Input,P,,,IVC.SA,Public,,needs
-Inventory Warning Messages,P,,ivc_warnings,IVC.SB,Public,,JL
-Generate Lot/Serial Numbers,P,,,IVC.SN,Public,,needs
-Process Inventory Transaction Display Window,P,,,IVC.TA,Public,,needs
-Process Lot/Serial Inventory Transaction Display Window,P,,,IVC.TB,Public,,needs
-Format Standard Transaction References,P,,ivc_transdata,IVC.TD,Public,,JL
-Inventory Item Update (ATAMO),P,,ivc_itemupdt,IVC.UA,Public,,JL
-Return Warehouse Information,P,,ivc_whseinfo,IVC.WA,Public,,CH
-Return Warehouse Activity,P,,ivc_whseact,IVC.WB,Public,,JL
+Copy Items to Another Warehouse,T,IVX_COPYITEM,,IVX.DA,Update,,,,,,
+Rebuild Unit Costs,A,,ivx_rebuildcosts.aon,IVX.IA,Update,,JL?,,,,
+Inventory Publics,G,,,,,,,,,,
+Calculate Actual & Estimated Annual Usage,P,,ivc_usage,IVC.AU,Public,,CH,,,,
+Price/Cost Change by Percentage,P,,,IVC.CA,Public,,needs,,,,
+Delete Item and/or Warehouse,P,,,IVC.DA,Public,,needs,,,,
+Activity Type Descriptions,P,,ivc_activity,IVC.FA,Public,,CH,,,,
+Inventory Item Entry,P,,,IVC.IA,Public,,needs,,,,
+Standard Report Options Input,P,,,IVC.IB,Public,,needs,,,,
+Physical Inventory Entry Screen Processing,P,,,IVC.IC,Public,,needs,,,,
+LIFO/FIFO Reporting And Inquiry,P,,,IVC.LF,Public,,needs,,,,
+Return Period Quantity Based On Activity Type,P,,ivc_periodqty,IVC.PA,Public,,CH,,,,
+Inventory Activity Type Column Entry,P,,,IVC.RA,Public,,needs,,,,
+Lot/Serial Input,P,,,IVC.SA,Public,,needs,,,,
+Inventory Warning Messages,P,,ivc_warnings,IVC.SB,Public,,JL,,,,
+Generate Lot/Serial Numbers,P,,,IVC.SN,Public,,needs,,,,
+Process Inventory Transaction Display Window,P,,,IVC.TA,Public,,needs,,,,
+Process Lot/Serial Inventory Transaction Display Window,P,,,IVC.TB,Public,,needs,,,,
+Format Standard Transaction References,P,,ivc_transdata,IVC.TD,Public,,JL,,,,
+Inventory Item Update (ATAMO),P,,ivc_itemupdt,IVC.UA,Public,,JL,,,,
+Return Warehouse Information,P,,ivc_whseinfo,IVC.WA,Public,,CH,,,,
+Return Warehouse Activity,P,,ivc_whseact,IVC.WB,Public,,JL,,,,
