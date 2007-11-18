@@ -21,7 +21,7 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
+rem --- Open files
 
     files=14,begfile=3,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
@@ -123,8 +123,6 @@ rem --- Parameters
 
 rem --- Initializations
 
-    open_list1$="Item Number      Lot/Serial Number"
-    open_list2$="Open  ClosedBoth  "
     call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
     call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
     call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0

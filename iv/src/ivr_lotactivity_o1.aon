@@ -51,8 +51,8 @@ rem --- Print positions
 
 rem --- Open printer  
  
-                call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-                if status goto std_exit
+rem                call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+rem                if status goto std_exit
 
                 call pgmdir$+"adc_progress.aon","N","","","","",0,ivm07_dev,1,meter_num,status
 
@@ -119,24 +119,24 @@ rem ----  column heading
     endif
 
 rem --- Subheading by lot/serial number
-        if sequence$="L" then
+    if sequence$="L" then
 
-     dim columns$[12,10]
-     columns=12
-               columns$[0,0]="Lot/Serial #",          columns$[0,1]="C",columns$[0,2]="10"
-               columns$[1,0]="Wh",                    columns$[1,1]="C",columns$[1,2]="10"
-               columns$[2,0]="Item",                  columns$[2,1]="C",columns$[2,2]="10" 
-               columns$[3,0]="Received or Built",     columns$[3,1]="C",columns$[3,2]="10"
-               columns$[4,0]="Sold or Issued",        columns$[4,1]="C",columns$[4,2]="10"
-               columns$[5,0]=vh$,                     columns$[5,1]="C",columns$[5,2]="10"
-               columns$[6,0]="Prod",                  columns$[6,1]="C",columns$[6,2]="8"
-               columns$[7,0]="Beginning Balance",     columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
-               columns$[8,0]="Received&Built",        columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m2$
-               columns$[9,0]="Sold&Issued",           columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m2$
-               columns$[10,0]="Adjustments&Returns",  columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m2$
-               columns$[11,0]="Transfers In & Out",   columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m2$
-               columns$[12,0]="Ending Blance",        columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m2$
-     endif
+    dim columns$[12,10]
+    columns=12
+              columns$[0,0]="Lot/Serial #",          columns$[0,1]="C",columns$[0,2]="10"
+              columns$[1,0]="Wh",                    columns$[1,1]="C",columns$[1,2]="10"
+              columns$[2,0]="Item",                  columns$[2,1]="C",columns$[2,2]="10" 
+              columns$[3,0]="Received or Built",     columns$[3,1]="C",columns$[3,2]="10"
+              columns$[4,0]="Sold or Issued",        columns$[4,1]="C",columns$[4,2]="10"
+              columns$[5,0]=vh$,                     columns$[5,1]="C",columns$[5,2]="10"
+              columns$[6,0]="Prod",                  columns$[6,1]="C",columns$[6,2]="8"
+              columns$[7,0]="Beginning Balance",     columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
+              columns$[8,0]="Received&Built",        columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m2$
+              columns$[9,0]="Sold&Issued",           columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m2$
+              columns$[10,0]="Adjustments&Returns",  columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m2$
+              columns$[11,0]="Transfers In & Out",   columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m2$
+              columns$[12,0]="Ending Blance",        columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m2$
+    endif
     if h9$="" h9$=h9save$
 
 
@@ -391,7 +391,7 @@ Item_subheading: rem --- Item subheading
                 OutVect!.addItem(ivm01a.product_type$)
                 xwk=fnblank(6)
                 xwk=fnblank(12)
-                let l=l+2,h9save$=h9$,h9$=""
+                l=l+2,h9save$=h9$,h9$=""
                 return
 
 whse_break: rem --- Warehouse Break
@@ -403,8 +403,8 @@ whse_break: rem --- Warehouse Break
                 let t0$=ivm07a_key.warehouse_id$,ivm10c.short_name$="(Not on File)",l=l9+1
                 find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
                 let x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)+" For "+h8$
-                 BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-                 HdrVect!.addItem(x$)
+                BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+                HdrVect!.addItem(x$)
                 return
 
 Item_break: rem --- Item Break
@@ -496,7 +496,16 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fndate$(q$) 
+        if cvs(q$,2)="" return ""
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if testdate$<>"" 
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        endif
+        return testdate$
+    fnend    
+rem    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))),"%Mz/%Dz/%Yd")
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
