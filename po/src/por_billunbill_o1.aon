@@ -27,10 +27,9 @@ rem --- Init Data
     dim a0$(22),a1$(160),a[8]
     printvtot$="N"
     more=1
-
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQHDR","PRIMARY",poe01a_key_pritpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQHDR","ALT_KEY_01",poe01a_key_alttpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",poe11a_key_tpl$,rd_table_chans$[all],status$
+   
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECHDR","PRIMARY",pot04a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_RECDET","PRIMARY",pot14a_key_tpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","APM_VENDMAST","ALT_KEY_02",apm01a_key_tpl$,rd_table_chans$[all],status$
 rem --- Headings and print positions
 
@@ -77,26 +76,30 @@ rem --- Sort by Alt Seq or Vendor Num?
 
     while more
     
+    dim pot04a_key$:pot04a_key_tpl$    
+           
         if printseq$="A"
 
 rem --- Sort by alternate sequence
 
             if initializing$<>"N"
                 initializing$="N"
-                read (apm04_dev,key=firm_id$+"A"+vendfrom$,dom=*next)
+                read (apm01_dev2,key=firm_id$+vendfrom$,dom=*next)
 
 rem --- Find a POT04 record using alt seq
+    
+    dim kalpha$:alt_key_02
 
                 while more
 
-                    km04a$=key(apm04_dev,end=done)
-                    if apm04a.firm_id$+"A"=firm_id$+"A"
-                        km04b$=apm04a.firm_id$+apm04a.vendor_id$
-                        read (apm04_dev); rem "Move ptr
+                    kalpha$=key(apm01_dev2,end=done)
+                    if kalpha.firm_id$=firm_id$
+                        km04b$=kalpha.firm_id$+kalpha.vendor_id$
+                        read (apm01_dev2); rem "Move ptr
                         read (pot04_dev,key=km04b$,dom=*next)
-                        kt04$=key(pot04_dev,end=*continue)
-                        if pot04a.firm_id$+pot04a.vendor_id$<>km04b$ continue
-                        pot04a_key$=kt04$
+                        pot04a_key$=key(pot04_dev,end=*continue)
+                        if pot04a_key.firm_id$+pot04a_key.vendor_id$<>km04b$ continue
+                        if vendthru$<>"" if cvs(kalpha.alt_sequence$,2)>cvs(vendthru$,2) goto done                        
                         break
                     endif
 
@@ -125,18 +128,17 @@ rem --- Read through Receipt Hist Header file
 
 rem --- Valid Vendor?
 
-            if printseq$="A" if vendthru$<>"" if cvs(apm04a.alt_sequence$,2)>cvs(vendthru$,2) more=0;break
-            if printseq$="A"
-                if vendthru$<>"" and pot04a_key.vendor_id$>vendthru$ more=0;break
+            if printseq$<>"A"
+                if vendthru$<>"" and pot04a_key.vendor_id$>vendthru$ goto done
             endif
             vendor$=pot04a_key.vendor_id$
             read record (pot04_dev) pot04a$
-            if whse$<>"" if pot04a.warehouse_id$<>whse$ if printseq$<>"A" break
+            if whse$<>"" if pot04a.warehouse_id$<>whse$ continue ;rem if printseq$<>"A" break
 
 rem --- Valid Receipt Date?
 
-            if datefrom$<>"" and pot04a.recpt_date$<datefrom$ if printseq$<>"A" break
-            if datethru$<>"" and pot04a.recpt_date$>datethru$ if printseq$<>"A" break
+            if datefrom$<>"" and pot04a.recpt_date$<datefrom$ continue ;rem if printseq$<>"A" break
+            if datethru$<>"" and pot04a.recpt_date$>datethru$ continue;rem if printseq$<>"A" break
 
 rem --- Init/Assign PO variables
 
@@ -145,8 +147,8 @@ rem --- Init/Assign PO variables
             poamt=0
             poamt$=str(poamt:m1$)
             dim pline$(132),orddate$(8),rcptdate$(8)
-            if pot04a.ord_date$<>fill(6) orddate$=fndate$(pot04a.ord_date$)
-            if pot04a.recpt_date$<>fill(6) rcptdate$=fndate$(pot04a.recpt_date$)
+            if pot04a.ord_date$<>fill(8) orddate$=fndate$(pot04a.ord_date$)
+            if pot04a.recpt_date$<>fill(8) rcptdate$=fndate$(pot04a.recpt_date$)
             call pgmdir$+"adc_progress.aon","S","","","","",0,pot04_dev,1,meter_num,status
 
 rem --- Accumulate PO Amt (POW-18)
@@ -186,6 +188,7 @@ rem --- Process PO/Receiver
             rcptamt_iv$=str(0:m1$)
 
 rem --- Accumulate receipt total
+            dim pot14a_key$:pot14a_key_tpl$
 
             read (pot14_dev,key=pot04a.firm_id$+pot04a.vendor_id$+pot04a.po_no$+pot04a.receiver_no$,dom=*next)
 
@@ -322,7 +325,7 @@ rem --- See if there's another PO for vend before getting next alt seq
     wend
 
 done: rem --- All Done
-
+escape; rem done?
     if l+1>l9 gosub report_heading
     gosub vendtotals
     grandvari=grandrcptamt-grandrcptamt_iv
@@ -514,11 +517,11 @@ rem #endinclude std_functions.src
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
-
+escape; rem escape
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -563,7 +566,7 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 

@@ -133,20 +133,20 @@ escape; rem start of sorts
                
                 if initializing$<>"N"
                     initializing$="N"
-                    apm02a_key$=firm_id$+"A"+vendfrom$
-                    read (apm04_dev,key=apm02a_key$,dom=*next)
+                    apm01a_key$=firm_id$+vendfrom$
+                    read (apm01_dev2,key=apm01a_key$,dom=*next)
                 endif
 
                 while more
 
-                    apm04a_key$=key(apm04_dev,end=brnch1)
-                    if apm04a_key.firm_id$+"A"=firm_id$+"A"
-                        apm04b_key$=apm04a_key.firm_id$+apm04a_key.vendor_id$
-                        read (apm04_dev); rem "Move ptr
-                        read (poe02_dev,key=apm04b_key$,dom=*next)
+                    apm01a_key$=key(apm01_dev2,end=brnch1)
+                    if apm01a_key.firm_id$=firm_id$
+                        apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
+                        read (apm01_dev2); rem "Move ptr
+                        read (poe02_dev,key=apm01b_key$,dom=*next)
                         poe02a_key$=key(poe02_dev,end=*continue)
-                        if poe02a_key.firm_id$+poe02a_key.vendor_id$=apm04b_key$
-                            k$=apm04b_key$
+                        if poe02a_key.firm_id$+poe02a_key.vendor_id$=apm01b_key$
+                            k$=apm01b_key$
                             break
                         endif
                     else
@@ -190,14 +190,12 @@ rem --- Test Ranges
             headrecprinted$="N"
             if pofrom$<>"" and poe02a.po_no$<pofrom$ if printseq$<>"A" break
             if pothru$<>"" and poe02a.po_no$>pothru$ if printseq$<>"A" break
-            if printseq$="A" and cvs(vendfrom$,2)<>"" and cvs(apm04a.alt_sequence$,2)<cvs(vendfrom$,2) if printseq$<>"A" break
-            if printseq$<>"A" and cvs(vendthru$,2)<>"" and cvs(apm04a.alt_sequence$,2)>cvs(vendthru$,2) if printseq$<>"A" break
+            if printseq$="A" and cvs(vendfrom$,2)<>"" and cvs(apm01a.alt_sequence$,2)<cvs(vendfrom$,2) continue
+            if printseq$="A" and cvs(vendthru$,2)<>"" and cvs(apm01a.alt_sequence$,2)>cvs(vendthru$,2) more=0; continue
             if printseq$<>"A" 
-                if vendfrom$<>"" and poe02a.vendor_id$<vendfrom$ if printseq$<>"A" break
-                if vendthru$<>"" and poe02a.vendor_id$>vendthru$ if printseq$<>"A" break
-            else
-
-                if whse$="ALL" and poe02a.warehouse_id$<>whse$
+                if vendfrom$<>"" and poe02a.vendor_id$<vendfrom$ continue
+                if vendthru$<>"" and poe02a.vendor_id$>vendthru$ more=0; continue
+            if whse$="ALL" and poe02a.warehouse_id$<>whse$
 
 rem --- Header passed tests
 
@@ -281,7 +279,7 @@ printdetail: rem --- Set up variables
     itemnum$=poe12a.item_id$
     memo$=poe12a.order_memo$
     unitmeas$=poe12a.unit_measure$
-    if poe12a.reqd_date$<>fill(6) datereq$=fndate$(poe12a.reqd_date$)
+    if poe12a.reqd_date$<>(8) datereq$=fndate$(poe12a.reqd_date$)
     qtyord$=str(poe12a.qty_ordered:m2$)
     qtyrec$=str(poe12a.qty_received:m2$)
     qtyinqa$=str(poe12a.qa_wip_qty:m2$)
@@ -449,8 +447,8 @@ newpo: rem --- New PO
 brnch5:
 
     dim dateord$(8),dateprom$(8)
-    if poe02a.ord_date$<>fill(6) dateord$=fndate$(poe02a.ord_date$)
-    if poe02a.promise_date$<>fill(6) dateprom$=fndate$(poe02a.promise_date$)
+    if poe02a.ord_date$<>fill(8) dateord$=fndate$(poe02a.ord_date$)
+    if poe02a.promise_date$<>fill(8) dateprom$=fndate$(poe02a.promise_date$)
     if l+5>l9 gosub report_heading
     print (printer_dev)""
     if printseq$<>"P"
@@ -527,7 +525,23 @@ rem --- Format inventory item description
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+  def fndate$(q$) 
+
+        if cvs(q$,2)="" return ""
+
+        testdate$=""
+
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+
+        if testdate$<>"" 
+
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+        endif
+
+        return testdate$
+
+    fnend    
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 

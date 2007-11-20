@@ -59,11 +59,11 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    pofrom$=option!.getOptionData("po_no_01")
-    pothru$=option!.getOptionData("po_no_02")
+    pofrom$=option!.getOptionData("po_no_1")
+    pothru$=option!.getOptionData("po_no_2")
     printseq$=option!.getOptionData("report_sequence")
-    vendfrom$=option!.getOptionData("vendor_id_01")
-    vendthru$=option!.getOptionData("vendor_id_02")
+    vendfrom$=option!.getOptionData("vendor_id_1")
+    vendthru$=option!.getOptionData("vendor_id_2")
     whse$=option!.getOptionData("warehouse_id")
     altfrom$=option!.getOptionData("alt_sequence_01")
     altthru$=option!.getOptionData("alt_sequence_02")
@@ -81,15 +81,23 @@ rem --- Retrieve parameter records
     pos01a_key$=firm_id$+"PO00"
     find record (pos01a_dev,key=pos01a_key$,err=std_missing_params) pos01a$
 
+rem --- masks
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vendomask$,0,vendlen
+
+
 rem --- Parameters
 
-    dim info$[20],desc[3],desclen[3]
+    dim info$[20],desclen[3]
     n2$="PO"
     ap$="N"
     when$=sysinfo.system_date$
     find record (pos01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) pos01a$
     find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-    vendlen=num(aps01a.vendor_size$)
     find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
     ivprecision=num(ivs01a.precision$)
     itemlen=num(ivs01a.item_id_len$)

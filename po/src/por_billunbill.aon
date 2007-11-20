@@ -32,8 +32,8 @@ rem --- Open/Lock files
     files$[7]="pot-05",ids$[7]="POT_INVHDR"
     files$[8]="pot-14",ids$[8]="POT_RECDET"
     files$[9]="pot-25",ids$[9]="POT_INVDET"
-    files$[10]="pot-35",ids$[10]="POT_INVBYPO"
-REM    files$[11]="pot-44",ids$[11]="POT_RECBYVEN"
+    files$[10]="pot-25",ids$[10]="POT_INVDET";rem for key invbypo (POT-35)
+    files$[11]="pot-14",ids$[11]="POT_RECDET";rem for key recpt by vendor (POT-44)
     files$[12]="pow-18",ids$[12]="POW_RECTOTAL"
     files$[13]="aps_params",ids$[13]="APS_PARAMS"
     files$[14]="ivs_params",ids$[14]="IVS_PARAMS"
@@ -49,8 +49,8 @@ REM    files$[11]="pot-44",ids$[11]="POT_RECBYVEN"
     pot05a_dev=channels[7]
     pot14_dev=channels[8]
     pot25a_dev=channels[9]
-    pot35_dev=channels[10]
-REM    pot44_dev=channels[11]
+    pot25_dev2=channels[10]
+    pot14_dev2=channels[11]
     pow18_dev=channels[12]
     aps01a_dev=channels[13]
     ivs01a_dev=channels[14]
@@ -58,22 +58,22 @@ REM    pot44_dev=channels[11]
 
 rem --- Dimension string templates
 
-    dim apm01a$:templates$[2],apm01a$:templates$[3],
+    dim apm01a$:templates$[2],
 :       pom02a$:templates$[5],pot04a$:templates$[6],pot05a$:templates$[7],
-:       pot14a$:templates$[8],pot25a$:templates$[9],pot35a$:templates$[10],
-:       pow18a$:templates$[12],aps01a$:templates$[13],;REM " pot44a$:templates$[11],
+:       pot14a$:templates$[8],pot25a$:templates$[9],
+:       pow18a$:templates$[12],aps01a$:templates$[13],
 :       ivs01a$:templates$[14],pos01a$:templates$[15]
 
 rem --- Assign form input values to local variables
 
-    printseq$=option!.getOptionData("report_sequence")
-    vendfrom$=option!.getOptionData("vendor_id_01")
-    vendthru$=option!.getOptionData("vendor_id_02")
+    printseq$=option!.getOptionData("report_seq")
+    vendfrom$=option!.getOptionData("vendor_id_1")
+    vendthru$=option!.getOptionData("vendor_id_2")
     datefrom$=option!.getOptionData("pick_date_01")
     dateThru$=option!.getOptionData("pick_date_01")
     level$=option!.getOptionData("report_option")
-    altfrom$=option!.getOptionData("alt_sequence_01")
-    altthru$=option!.getOptionData("alt_sequence_02")
+    altfrom$=option!.getOptionData("alt_sequence_1")
+    altthru$=option!.getOptionData("alt_sequence_2")
 
     if vendfrom$="" vendfrom$=altfrom$
     if vendthru$="" vendthru$=altthru$
