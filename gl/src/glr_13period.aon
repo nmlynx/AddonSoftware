@@ -141,9 +141,9 @@ rem --- Read next Financial Report Detail (glm-22) record
               gle09a.total_no$=totalnumber$
               gle09a.gl_updt_seq$=update_sequence$
               gle09_key$=gle09a.firm_id$+gle09a.totals_type$+gle09a.total_no$
-              for y=1 to mp
-                  field gle09a$,"period_amt_"+str(y:"00")=ta[y]
-                  field gle09a$,"period_units_"+str(y:"00")=tu[y]
+              for y=1 to mp+1
+                  field gle09a$,"period_amt_"+str(y:"00")=ta[y-1]
+                  field gle09a$,"period_units_"+str(y:"00")=tu[y-1]
               next y
               gle09a$=field(gle09a$)
               write record (gle09_dev,key=gle09_key$) gle09a$
