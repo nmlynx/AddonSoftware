@@ -37,13 +37,14 @@ rem --- Initializations
 rem --- Print positions
 
     gosub Position
-   
+
 rem --- Position file
     if sequence$<>"L" then
         ivm07a_key$=firm_id$+begwhse$
         if begwhse$<>"" if begitem$<>"" ivm07a_key$=ivm07a_key$+begitem$+beglot$
-        read record (ivm07_dev,key=ivm07a_key$,dom=Next_Record) ivm07a$
-    else
+        read record (ivm07_dev,key=ivm07a_key$,dom=*next) ivm07a$ ; rem dom=Next_Record
+    endif
+    if sequence$="L" then
         ivm08a_key$=firm_id$+beglot$
         if beglot$<>"" if begwhse$<>"" ivm08a_key$=ivm08a_key$+begwhse$+begitem$
         read (ivm08_dev,key=ivm08a_key$,dom=*next)
@@ -274,29 +275,16 @@ Item_Break: rem --- Item break
     endif
     dim h9$(width-3),description$(dw),item[4]
     t1$=item$,ivm01a_key$=firm_id$+item$,ivm01a.Item_desc$(1)="(Not on File)"
-    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    if type$<>"" then
-        if ivm01a.Item_type$<>type$ then
-            skip=1
-        endif
-    else 
-    if begprod$<>"" then
-        if ivm01a.product_type$<begprod$ then
-            t1$=""
-            skip=1
-        endif
-    else 
-    if endprod$<>"" then
-        if ivm01a.product_type$>endprod$ then
-            t1$=""
-            skip=1
-        endif
-    else
-        skip=0,description$(1)=fnitem$(ivm01a.Item_desc$,p[3],p[4],p[5])
-        if sequence$="I" h9$(o[0]+1)=ivm01a.Item_id$+" "+description$
-        if sequence$="L" h9$(o[1]+1)=whse$+" "+ivm01a.Item_id$+" "+description$
-        h9$(o[5]+1)=ivm01a.product_type$
-    endif
+    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    if type$<>"" then if ivm01a.Item_type$<>type$ then t1$="", skip=1 ; goto Item_Break_Return
+    if begprod$<>"" then if ivm01a.product_type$<begprod$ then t1$="", skip=1 ; goto Item_Break_Return
+    if endprod$<>"" then if ivm01a.product_type$>endprod$ then t1$="", skip=1 ; goto Item_Break_Return
+    skip=0,description$(1)=fnitem$(ivm01a.Item_desc$,p[3],p[4],p[5])
+    if sequence$="I" h9$(o[0]+1)=ivm01a.Item_id$+" "+description$
+    if sequence$="L" h9$(o[1]+1)=whse$+" "+ivm01a.Item_id$+" "+description$
+    h9$(o[5]+1)=ivm01a.product_type$
+
+Item_Break_Return:
     return
 
 Total_Accum: rem --- Accumulate totals
