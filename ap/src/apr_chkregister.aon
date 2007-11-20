@@ -38,7 +38,7 @@ rem --- Open/Lock files
     files$[13]="apw-01",ids$[13]="APW_CHECKINVOICE"
     options$[2]="L"
     files$[14]="apc_typecode",ids$[14]="APC_TYPECODE";rem apm-10A
-    files$[15]="APC_distribution",ids$[15]="APC_DISTRIBUTION";rem apm-10B
+    files$[15]="apc_distribution",ids$[15]="APC_DISTRIBUTION";rem apm-10B
 
 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -414,8 +414,12 @@ rem --- Destroy the progress meter and run the next overlay
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     update$=pgmdir$+"apu_chkregister.aon"
     overlay$=update$
-    if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
-    run overlay$,err=std_exit
+    if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
+rem --- run overlay$,err=std_exit
+
+	out_action$="PRT-PDF"
+	next_overlay$=overlay$
+	goto std_exit
 
 report_heading: rem --- Report Heading
 
