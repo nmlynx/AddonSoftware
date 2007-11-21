@@ -21,49 +21,38 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
-escape;rem CAH
+
 rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="glm-01"
-    files$[3]="glm-02"
-    files$[4]="glm-08"
+    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
+    files$[2]="glm-01",ids$[2]="GLM_ACCT"
+    files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
+    files$[4]="glm-08",ids$[4]="GLM_BUDGETMASTER"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    gls01_dev=channels[1]
     glm01_dev=channels[2]
     glm02_dev=channels[3]
     glm08_dev=channels[4]
 
 rem --- Dimension string templates
 
-    dim glm01a$:templates$[2],glm02a$:templates$[3],glm08a$:templates$[4]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim gls01a$:templates$[1]
+    dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3],glm08a$:templates$[4]
 
 rem --- Assign input values to local variables
 
-    budget_code$=cvs(rd_rec_data$[1,0],2)
-    type$=cvs(rd_rec_data$[2,0],2)
+    budget_revs$=option!.getOptionData("BUDGET_REVS")
+    budget_code$=budget_revs$(1,1)
+    type$=budget_revs$(2,1)
 
 rem --- Retrieve parameter and budget revision records
 
     gls01a_key$=firm_id$+"GL00"
     glm08a_key$=firm_id$+budget_code$+type$   
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     find record (glm08_dev,key=glm08a_key$,err=std_exit) glm08a$
     acctlen=num(gls01a.acct_length$)
     m0$=gls01a.acct_output$
@@ -73,23 +62,26 @@ rem --- Initializations
 
     factor=10^pos(glm08a.rounding$="D-HT")/10
     wildcard$=cvs(glm08a.gl_wildcard$,2)
-    k$=firm_id$+glm08a.beg_gl_acct$
-    if cvs(glm08a.beg_gl_acct$,2)<>"" k$=k$(1,len(k$)-1)+$FF$
+    k$=firm_id$+glm08a.gl_account_01$
     more=1
+    found=0
+    read record(glm01_dev,key=k$,dom=*next)glm01a$;found=1
 
 rem --- Start progress meter and position files
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,glm01_dev,1,meter_num,status
-    read (glm01_dev,key=k$,dom=*next)
 
 rem --- Get next account master
 
     while more
-          k$=key(glm01_dev,end=*break)
-          if pos(firm_id$=k$)<>1 break
-          read record (glm01_dev,key=k$) glm01a$
+      if found=1
+          found=0
+      else
+          read record (glm01_dev,end=*break) glm01a$
+      endif
+          if firm_id$<>glm01a.firm_id$ break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-          if cvs(glm08a.end_gl_acct$,2)<>"" if glm01a.gl_account$>glm08a.end_gl_acct$ break
+          if cvs(glm08a.gl_account_02$,2)<>"" if glm01a.gl_account$>glm08a.gl_account_02$ break
           gosub wildcard
           if status continue
   
@@ -97,7 +89,7 @@ rem --- Get next account master
           rem --- Retrieve source glm-02 record
 
           dim a[mp],u[mp]
-          glm02_key$=glm01a.firm_id$+glm01a.gl_account$+glm08a.source_code$
+          glm02_key$=glm01a.firm_id$+glm01a.gl_account$+glm08a.revision_src$(1,1)
           find record (glm02_dev,key=glm02_key$,dom=*next) glm02a$
           call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
 
@@ -132,7 +124,7 @@ rem --- Get next account master
               if type$="U" u[x]=b[x]
           next x
           call pgmdir$+"glc_summary.aon","U",glm02a$,a[all],u[all],status
-          write record (glm02_dev,key=glm02_key$) glm02a$
+          glm02a$=field(glm02a$);write record (glm02_dev,key=glm02_key$) glm02a$
 
           rem --- Loop back for next account master record
 
@@ -179,9 +171,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:        str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -228,7 +219,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
