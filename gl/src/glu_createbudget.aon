@@ -21,7 +21,7 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
-
+escape;rem CAH
 rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
