@@ -173,9 +173,9 @@ rem --- Get next GL Account Master (glm-01) record
           if found=1
             found=0
           else
-            read record (glm01_dev)glm01a$
-            if firm_id$<>glm01a.firm_id$ break
+            read record (glm01_dev,end=*break)glm01a$            
           endif
+          if firm_id$<>glm01a.firm_id$ break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           if endacct$<>"" if glm01a.gl_account$>endacct$ break
           gosub wildcard
