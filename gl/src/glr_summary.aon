@@ -164,16 +164,18 @@ rem --- Start progress meter
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glm01_dev,1,meter_num,status
     k$=firm_id$+begacct$
-    if cvs(begacct$,2)<>"" k$=k$(1,len(k$)-1)+$FF$
-    read (glm01_dev,key=k$,dom=*next)
+    found=0
+    read record (glm01_dev,key=k$,dom=*next)glm01a$;found=1
 
 rem --- Get next GL Account Master (glm-01) record
 
     while more
-
-          k$=key(glm01_dev,end=*break)
-          if pos(firm_id$=k$)<>1 break
-          read record (glm01_dev,key=k$)glm01a$
+          if found=1
+            found=0
+          else
+            read record (glm01_dev)glm01a$
+            if firm_id$<>glm01a.firm_id$ break
+          endif
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           if endacct$<>"" if glm01a.gl_account$>endacct$ break
           gosub wildcard
