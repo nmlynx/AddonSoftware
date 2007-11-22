@@ -44,7 +44,12 @@ rem --- Dimension string templates
 
 rem --- Assign input values to local variables
 
-    budget_revs$=option!.getOptionData("BUDGET_REVS")
+    if callpoint!<>null() 
+        budget_revs$=callpoint!.getColumnData("GLM_BUDGETMASTER.BUDGET_CODE")+
+:                   callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS")
+    else
+        budget_revs$=option!.getOptionData("BUDGET_REVS")
+    endif
     budget_code$=budget_revs$(1,1)
     type$=budget_revs$(2,1)
 
@@ -112,8 +117,11 @@ rem --- Get next account master
           rem --- Retrieve current budget summary record
 
           dim a[mp],u[mp]
-          glm02_key$=glm01a.firm_id$+glm01a.gl_account$+glm08a.budget_code$
-          find record (glm02_dev,key=glm02_key$,dom=update_budget) glm02a$
+          glm02a.firm_id$=glm01a.firm_id$
+          glm02a.gl_account$=glm01a.gl_account$
+          glm02a.record_id$=glm08a.budget_code$
+          find record (glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+
+:           glm02a.record_id$,dom=update_budget) glm02a$
           if glm08a.overwrite$<>"Y" continue
 
           update_budget: rem --- Update/create summary record for this account/budget revision
@@ -124,7 +132,8 @@ rem --- Get next account master
               if type$="U" u[x]=b[x]
           next x
           call pgmdir$+"glc_summary.aon","U",glm02a$,a[all],u[all],status
-          glm02a$=field(glm02a$);write record (glm02_dev,key=glm02_key$) glm02a$
+          glm02a$=field(glm02a$);write record (glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+
+:           glm02a.record_id$) glm02a$
 
           rem --- Loop back for next account master record
 
@@ -145,6 +154,12 @@ wildcard: rem --- Test account number against specified wildcard mask
         if x$(x,1)<>wildcard$(x,1) status=1
     next x
     return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
 
 rem --- Functions
 
@@ -219,6 +234,9 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    msg_id$="UPDATE_COMPLETE"
+    gosub disp_message
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 

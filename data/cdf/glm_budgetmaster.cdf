@@ -1,3 +1,33 @@
+[[GLM_BUDGETMASTER.ASHO]]
+num_files=1
+dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+gosub open_tables
+gls01_dev=num(open_chans$[1])
+dim gls01a$:open_tpls$[1]
+
+readrecord(gls01_dev,key=firm_id$+"GL00",err=std_missing_params)gls01a$
+
+if gls01a.budget_flag$<>"Y"
+	msg_id$="GL_NO_BUDG"
+	gosub disp_message
+	release
+endif
+[[GLM_BUDGETMASTER.AOPT-BREV]]
+rem --- Get user approval to Create Budget Revision
+
+if callpoint!.getRecordStatus()<>"M"
+
+	prompt$="Do you want to Create a Budget Revision?"
+	call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
+	     
+	if answer$="YES" 
+		run stbl("+DIR_PGM")+"glu_createbudget.aon"
+	else
+		callpoint!.setStatus("ABORT")
+	endif
+
+endif
 [[GLM_BUDGETMASTER.ADEL]]
 glm18_dev=fnget_dev("GLM_RECORDTYPE")
 glm18_tpl$=fnget_tpl$("GLM_RECORDTYPE")
@@ -42,6 +72,8 @@ validate_revision_source:
 	endif
 
 return
+
+#include std_missing_params.src
 [[GLM_BUDGETMASTER.REVISION_SRC.AVAL]]
 gosub validate_revision_source
 [[GLM_BUDGETMASTER.BUDGET_CODE.AVAL]]
