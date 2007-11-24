@@ -1,3 +1,6 @@
+[[GLM_BANKMASTER.AOPT-DETL]]
+gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
+run stbl("+DIR_PGM")+"glr_bankmaster.aon"
 [[GLM_BANKMASTER.BSHO]]
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
@@ -28,64 +31,76 @@ rem --- Set up user_tpl$
 	user_tpl.glm02_dev=glm02_dev
 [[GLM_BANKMASTER.<CUSTOM>]]
 check_date: rem " --- Check Statement Ending Date"
-
+rem Needs more work!
 	status=0
-	call stbl("+DIR_PGM")+"adc_periodyear.aon",gls01_dev,gls01a$,curper,curyear,fullname$,abbrname$,begdate$,enddate$,status
-escape
+rem	call stbl("+DIR_PGM")+"glc_datecheck.aon",stmtdate$,"Y",stmtperiod$,stmtyear$,status
+stmtperiod$=stmtdate$(5,2),stmtyear$=stmtdate$(1,4)
 	stmtperiod=num(stmtperiod$)
 	stmtperiod$=str(stmtperiod:"00")
-	stmtyear=FNYY_YEAR(STMTYEAR$)
-	if P4$(6,1)="Y" currentgl=P[2] else currentgl=P[2]-1; REM "GL year end closed?
+	stmtyear=num(stmtyear$)
+	if gls01a.gl_yr_closed$="Y" currentgl=num(gls01a.current_year$) else currentgl=num(gls01a.current_year$)-1; rem "GL year end closed?
 	priorgl=currentgl-1
 	nextgl=currentgl+1
 	if stmtyear<priorgl and stmtyear>nextgl
-		dim MESSAGE$[1]
-		MESSAGE$[0]="Date is not in prior, current or next G/L year."
-		MESSAGE$[1]="       Press <Enter> to Continue"
-		CALL "SYC.XA",2,MESSAGE$[ALL],1,22,-1,V$,V3
+		dim message$[1]
+		message$[0]="Date is not in prior, current or next G/L year."
+		message$[1]="       Press <Enter> to Continue"
+		call stbl("+DIR_PGM")+ "adc.stdmessage.aon",2,message$[all],1,0,0,v$,v3
 		status=1
 	endif
 	return
 [[GLM_BANKMASTER.AOPT-RECL]]
-rem " --- Find G/L Record"
+rem --- Validate Current Statement Date
+	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+	if num(stmtdate$)=0
+		rd_msg_id$="INVALID_DATE"
+		dim rd_msg_tokens$[1]
+		rd_msg_opt$=""
+		gosub disp_message
+		break
+	endif
+
+rem --- Find G/L Record"
 	dim glm02a$:user_tpl.glm02_tpl$
 	dim glt06a$:user_tpl.glt06_tpl$
 	dim gls01a$:user_tpl.gls01_tpl$
 	glm02_dev=user_tpl.glm02_dev
 	glt06_dev=user_tpl.glt06_dev
 	gls01_dev=user_tpl.gls01_dev
-
-	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+	readrecord(gls01_dev,key=firm_id$+"GL00")gls01a$
 	gosub check_date
-	if status THEN GOTO 6790
-	r0$=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT"),S0$=""
-	if stmtyear =PRIORGL THEN LET S0$=R0$+"2"; REM "Use prior year actual
-	IF STMTYEAR=CURRENTGL THEN LET S0$=R0$+"0"; REM "Use current year actual
-	IF STMTYEAR=NEXTGL THEN LET S0$=R0$+"4"; REM "Use next year actual
-	IF S0$="" THEN GOTO 6790; REM "Invalid statement year
-	read record (glm02_dev,key=S0$,dom=*next) glm02a
+	if status release;rem Needs More Work!
 
-rem " --- Calculate Balance"
-	DIM X[1],D[4]
-	FOR X=0 TO STMTPERIOD
-	LET X[0]=X[0]+R[X],X[1]=X[1]+S[X]
-	NEXT X
-	CALL "SYC.CA",C1$(7,6),NEXTDAY$,1
-	d0$=R0$+STMTYEAR$+STMTPERIOD$+NEXTDAY$,amount=0
+	r0$=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT"),s0$=""
+	if stmtyear=priorgl s0$=r0$+"2"; rem "Use prior year actual
+	if stmtyear=currentgl s0$=r0$+"0"; rem "Use current year actual
+	if stmtyear=nextgl s0$=r0$+"4"; rem "Use next year actual
+	if s0$="" release; rem "Invalid statement year Needs more work
+	read record (glm02_dev,key=s0$,dom=*next) glm02a$
+
+rem --- Calculate Balance"
+	total_amt=glm02a.begin_amt,total_units=glm02a.begin_units
+	for x=1 to stmtperiod
+		total_amt=total_amt+nfield(glm02a$,"period_amt_"+str(x:"00"))
+		total_units=total_units+nfield(glm02a$,"period_units_"+str(x:"00"))
+	next x
+	call stbl("+DIR_PGM")+"adc_daydates.aon",stmtdate$,nextday$,1
+	d0$=r0$+stmtyear$+stmtperiod$+nextday$,amount=0
 	readrecord (glt06_dev,key=d0$,dom=*next)
 
-rem " --- Accumulate transactions for period after statement date"
+rem --- Accumulate transactions for period after statement date"
 	while 1
 		k$=key(glt06_dev,END=*break)
-		IF POS(R0$=K$)<>1 break
-		IF K$(13,4)<>STMTYEAR$+STMTPERIOD$ break
-		read record (glt06_dev,key=K$)glt06a
-		amount=amount+D[0]
+		if pos(r0$=k$)<>1 break
+		if k$(13,4)<>stmtyear$+stmtperiod$ break
+		dim glt06a$:fattr(glt06a$)
+		read record (glt06_dev,key=K$)glt06a$
+		amount=amount+glto6a.trans_amt
 	wend
 
-rem " --- Back out transactions for period after statement date"
-	X[0]=X[0]-AMOUNT
+rem --- Back out transactions for period after statement date"
+	total_amt=total_amt-amount
 
-rem " --- All Done"
-	C[2]=X[0]
-	PRINT @(64,12),C[2]:M1$,
+rem --- All Done"
+	callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE",str(total_amt))
+	callpoint!.setStatus("REFRESH")

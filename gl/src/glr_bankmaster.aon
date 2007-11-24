@@ -24,12 +24,13 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=4,begfile=1,endfile=files
+    files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01"
-    files$[2]="glm-05"
-    files$[3]="glt-05"
-    files$[4]="glt-15"
+    files$[1]="glm-01",ids$[1]="GLM_ACCT"
+    files$[2]="glm-05",ids$[2]="GLM_BANKMASTER"
+    files$[3]="glt-05",ids$[3]="GLT_BANKCHECKS"
+    files$[4]="glt-15",ids$[4]="GLT_BANKOTHER"
+    files$[5]="gls_params",ids$[5]="GLS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -37,35 +38,20 @@ rem --- Open/Lock files
     glm05_dev=channels[2]
     glt05_dev=channels[3]
     glt15_dev=channels[4]
+    gls01_dev=channels[5]
 
 rem --- Dimension string templates
 
     dim glm01a$:templates$[1],glm05a$:templates$[2],
-:       glt05a$:templates$[3],glt15a$:templates$[4]
+:       glt05a$:templates$[3],glt15a$:templates$[4],gls01a$:templates$[5]
 
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="gls-01A"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim gls01a$:templates$[1]
-
-rem --- Assign input values to local variables
-
-    gl_account$=rd_rec_data$[1,0]
 
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    acctlen=num(gls01a.acct_length$)
-    m0$=gls01a.acct_output$
-    m1$=gls01a.amount_mask$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,acctlen
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
     m9$="####0"
     m0=len(m0$)
     m1=len(m1$)
@@ -104,7 +90,7 @@ rem --- Calculate print positions
     o[2]=o[1]+7
     o[3]=o[2]+12
     o[5]=width-m9
-    o[6]=o[5]-m1-1
+    o[4]=o[5]-m1-1
 
 rem --- Load GL Account (glm-01) and Bank Master (glm-05) records
 
@@ -231,9 +217,9 @@ rem --- Get the next other transaction (glt-15) record.
              gosub report_heading
              gosub check_heading
           endif
-          print (printer_dev)@(o[0]),glt15a.trans_no$,@(o[1]),glt05a.trans_type$,
+          print (printer_dev)@(o[0]),glt15a.trans_no$,@(o[1]),glt15a.trans_type$,
 :                            @(o[2]),fndate$(glt15a.trns_date$),@(o[3]),glt15a.description$,
-:                            @(o[4]),glt15a.trans_amount:m1$,@(o[5]),glt15a.posted_code$
+:                            @(o[4]),glt15a.trans_amt:m1$,@(o[5]),glt15a.posted_code$
           l=l+1
 
           rem --- Loop back for next transaction record
@@ -260,7 +246,7 @@ balance: rem --- Print the balance information
     print (printer_dev) @(o[4]),fill(m1,"-")
     print (printer_dev) @(o[1]),"Ending Balance:",@(o[4]),balance:m1$
     print (printer_dev) ""
-    print (printer_dev) @(o[1]),"Check Book Balance as of ",fndate$(glm05a.curstm_date),
+    print (printer_dev) @(o[1]),"Check Book Balance as of ",fndate$(glm05a.curstm_date$),
 :                       @(o[4]),glm05a.book_balance:m1$
     difference=glm05a.book_balance-balance
     if difference>0 message$="Short"
@@ -343,9 +329,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -369,8 +355,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 
 std_missing_params_exit:
     
@@ -392,7 +378,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
