@@ -1,6 +1,6 @@
 [[GLM_BANKMASTER.AOPT-DETL]]
 gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
-run stbl("+DIR_PGM")+"glr_bankmaster.aon"
+call stbl("+DIR_PGM")+"glr_bankmaster.aon",gl_account$
 [[GLM_BANKMASTER.BSHO]]
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
@@ -31,10 +31,11 @@ rem --- Set up user_tpl$
 	user_tpl.glm02_dev=glm02_dev
 [[GLM_BANKMASTER.<CUSTOM>]]
 check_date: rem " --- Check Statement Ending Date"
-rem Needs more work!
+
 	status=0
-rem	call stbl("+DIR_PGM")+"glc_datecheck.aon",stmtdate$,"Y",stmtperiod$,stmtyear$,status
-stmtperiod$=stmtdate$(5,2),stmtyear$=stmtdate$(1,4)
+	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",pgm(-2),"GL","","",status
+	if status release
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",stmtdate$,"Y",stmtperiod$,stmtyear$,status
 	stmtperiod=num(stmtperiod$)
 	stmtperiod$=str(stmtperiod:"00")
 	stmtyear=num(stmtyear$)
@@ -69,13 +70,19 @@ rem --- Find G/L Record"
 	gls01_dev=user_tpl.gls01_dev
 	readrecord(gls01_dev,key=firm_id$+"GL00")gls01a$
 	gosub check_date
-	if status release;rem Needs More Work!
+	if status exit
 
 	r0$=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT"),s0$=""
 	if stmtyear=priorgl s0$=r0$+"2"; rem "Use prior year actual
 	if stmtyear=currentgl s0$=r0$+"0"; rem "Use current year actual
 	if stmtyear=nextgl s0$=r0$+"4"; rem "Use next year actual
-	if s0$="" release; rem "Invalid statement year Needs more work
+	if s0$="" 
+		dim message$[1]
+		message$[0]="Invalid date."
+		message$[1]="Press <Enter> to Continue"
+		call stbl("+DIR_PGM")+ "adc.stdmessage.aon",2,message$[all],1,0,0,v$,v3
+		exit; rem "Invalid statement year
+	endif
 	read record (glm02_dev,key=s0$,dom=*next) glm02a$
 
 rem --- Calculate Balance"

@@ -11,6 +11,10 @@ rem  +-----------------------------------------+
     setesc std_error
     seterr std_error
 
+rem --- Call/Enter
+
+    enter gl_account$
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -378,8 +382,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-    release
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    close(printer_dev)
+rem    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+rem    release
+       exit
 
 rem #endinclude std_end.src
 
