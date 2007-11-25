@@ -73,9 +73,9 @@ rem --- Init Read
     dim pot44a_key$:pot14a_key_alttpl$
     
     p44_key$=firm_id$+vendfrom$
-    read (pot14_dev2,knum=1,key=p44_key$,dom=*next)
+    read (pot14_dev2,knum=3,key=p44_key$,dom=*next)
     if vendfrom$<>"" p44_key$=firm_id$+vendfrom$+datefrom$
-      read (pot14_dev2,knum=1,key=p44_key$,dom=*next)
+      read (pot14_dev2,knum=3,key=p44_key$,dom=*next)
     endif
 
 rem --- Read through Sort file
