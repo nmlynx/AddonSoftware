@@ -167,6 +167,7 @@ rem --- Vendor
             if apw01a.check_date$>g8$ apm02a.nxt_cyr_pmts=apm02a.nxt_cyr_pmts+ape04a.invoice_amt-ape04a.retention-ape04a.discount_amt
             apm02a$=field(apm02a$)
             write record (apm02_dev,key=firm_id$+ape04a.vendor_id$+ape04a.ap_type$) apm02a$
+            break
         wend
 
 rem --- G/L Reference Fields
@@ -191,7 +192,7 @@ rem --- Dist Code
 rem --- Cash Basis
 
         if aps01a.cash_basis$<>"Y" goto open_checks
-        read (apt02_dev,key=firm_id$+apae04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$,dom=*next)
+        read (apt02_dev,key=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$,dom=*next)
         while more
             k$=key(apt02_dev,end=open_checks)
             if len(k$)<21 goto open_checks
@@ -215,7 +216,7 @@ open_checks: rem --- Open Checks
         apt05a.retention=ape04a.retention
         apt05_key$=firm_id$+apw01a.ap_type$+apt05a.check_no$+apt05a.vendor_id$+apt05a.ap_inv_no$
         write record (apt05_dev,key=apt05_key$,dom=remove_open_invoice) apt05a$
-        if br$="Y" if gl$="y" gosub update_bank_rec
+        if br$="Y" if gl$="Y" gosub update_bank_rec
         goto remove_open_invoice
 
 remove_open_invoice: rem --- Delete Open Invoice
@@ -314,20 +315,20 @@ update_bank_rec: rem --- Update glt-05
         dim glt05a$:fattr(glt05a$)
         if x9$="" break
         glt05a.firm_id$=firm_id$
-        glt05a.gl_cash_acct$=apm10b.gl_cash_acct$(1,max_acct_len)
+        glt05a.gl_account$=apm10b.gl_cash_acct$(1,max_acct_len)
         glt05a.check_no$=x9$(1,7)
         glt05a.check_type$="A"
         glt05a.paid_code$="V"
         glt05a.bnk_chk_date$=apt05a.check_date$
         glt05a.description$="VOID"
-        write record (glt05_dev,key=firm_id$+glt05a.gl_cash_acct$+glt05a.check_no$) glt05a$
+        write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
         if len(x9$)>7 x9$=x9$(8) else x9$=""
     wend
 
 rem --- Detail
 
     glt05a.firm_id$=firm_id$
-    glt05a.gl_cash_acct$=apm10b.gl_cash_acct$(1,max_acct_len)
+    glt05a.gl_account$=apm10b.gl_cash_acct$(1,max_acct_len)
     glt05a.check_no$=apt05a.check_no$
     glt05a.check_type$="A"
     glt05a.paid_code$="O"
@@ -337,9 +338,9 @@ rem --- Detail
     let glt05a.description$=apm01a.vendor_name$
     let q$=glt05a.description$
     let glt05a.check_amount=apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention
-    find record (glt05_dev,key=firm_id$+glt05a.gl_cash_acct$+glt05a.check_no$,dom=*next) glt05a$;
+    find record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=*next) glt05a$;
 :      let glt05a.check_amount=glt05a.check_amount+apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention,glt05a.description$=q$
-    write record (glt05_dev,key=firm_id$+glt05a.gl_cash_acct$+glt05a.check_no$) glt05a$
+    write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
 
     return
 
