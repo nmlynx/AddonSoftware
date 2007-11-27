@@ -383,10 +383,8 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    close(printer_dev)
-rem    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-rem    release
-       exit
+    close(printer_dev,err=*next)
+    exit
 
 rem #endinclude std_end.src
 
