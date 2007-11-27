@@ -1,10 +1,10 @@
+[[GLM_BANKMASTER.ARAR]]
+rem " --- Calculate Summary info
+
+  	gosub calc_totals
 [[GLM_BANKMASTER.CURSTM_DATE.AVAL]]
 rem " --- Recalc Summary Info
 
-	gosub calc_totals
-[[GLM_BANKMASTER.AREA]]
-rem " --- Calculate Summary info
-escape
 	gosub calc_totals
 [[GLM_BANKMASTER.AOPT-DETL]]
 gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
@@ -53,6 +53,8 @@ rem - Set up disabled controls
 	dctl$[2]="<<DISPLAY>>.CHECKS_OUT"
 	dctl$[3]="<<DISPLAY>>.TRANS_OUT"
 	dctl$[4]="<<DISPLAY>>.END_BAL"
+	dctl$[5]="<<DISPLAY>>.NO_CHECKS"
+	dctl$[6]="<<DISPLAY>>.NO_TRANS"
 	gosub disable_ctls
 [[GLM_BANKMASTER.<CUSTOM>]]
 check_date: rem " --- Check Statement Ending Date"
@@ -116,7 +118,9 @@ rem " --- Find Outstanding Transactions"
 rem " --- Setup display variables
 
 	callpoint!.setColumnData("<<DISPLAY>>.CHECKS_OUT",str(out_checks_amt))
+	callpoint!.setColumnData("<<DISPLAY>>.NO_CHECKS",str(out_checks))
 	callpoint!.setColumnData("<<DISPLAY>>.TRANS_OUT",str(out_trans_amt))
+	callpoint!.setColumnData("<<DISPLAY>>.NO_TRANS",str(out_trans))
 	end_bal=num(callpoint!.setColumnData("<<DISPLAY>>.STMT_AMT","GLM_BANKMASTER.CURSTMT_AMT"))
 	end_bal=end_bal-out_checks_amt+out_trans_amt
 	callpoint!.setColumnData("<<DISPLAY>>.END_BAL",str(end_bal))

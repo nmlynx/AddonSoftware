@@ -30,10 +30,10 @@ rem --- Initializations
     m1=len(m1$)
 
 rem --- Build 13 period headings
-
+escape
     headings=3
-    n=period
-    for x=1 to mp
+    n=period+1
+    for x=1 to mp-1
         x$=str(n)+" "+field(gls01a$,"abbr_name_"+str(n:"00"))
         p=28+m1*x 
         y=len(x$)-1
@@ -41,6 +41,10 @@ rem --- Build 13 period headings
         n=n+1
         if n>total_pers n=1
     next x
+    x$="Total"
+    p=28+m1*x
+    y=len(x$)-1
+    h$(p-y)=x$
     headings$[headings]=h$
 
 rem --- Position Financial Report Detail (glm-22) file
