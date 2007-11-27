@@ -10,13 +10,13 @@ rem --- All Rights Reserved
     seterr std_error
 
 rem --- Document initializations
-            OutVect!=bbjAPI().getSysGui().makeVector()
-            HdrVect!=bbjAPI().getSysGui().makeVector()
-            BrkVect!=bbjAPI().getSysGui().makeVector()
-            rep_date$=date(0:"%Mz/%Dz/%Yd")
-            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-            rep_time$=date(0:"%hz:%mz %p")
-            rep_time_stamp$=date(0:"%Hz%mz%sz")
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Retrieve the program path
 
@@ -59,8 +59,8 @@ rem --- Headings and print positions
     columns$[4,0]="Date Received",        columns$[4,1]="C",columns$[4,2]="4"
     columns$[5,0]="Date Required",        columns$[5,1]="C",columns$[5,2]="4"
     columns$[6,0]="Date Promised",        columns$[6,1]="C",columns$[6,2]="4"
-    columns$[7,0]="Variance Req/Rec",     columns$[7,1]="C",columns$[7,2]="1"
-    columns$[8,0]="Variance Prom/Rec",    columns$[8,1]="C",columns$[8,2]="1"
+    columns$[7,0]="Variance Req/Rec",     columns$[7,1]="N",columns$[7,2]="1",columns$[7,3]=mvar$
+    columns$[8,0]="Variance Prom/Rec",    columns$[8,1]="N",columns$[8,2]="1",columns$[8,3]=mvar$
 rem --- Print positions
 
     o[1]=o[0]+3
@@ -260,21 +260,6 @@ done: rem --- All Done
 
 assignheads: rem --- Assign headings variables
 
-    dim tmph3$(width),tmph4$(width)
-    if vendfrom$="" vendf$="First" else vendf$=fnmask$(vendfrom$(1,vendlen),vendomask$)
-    if vendthru$="" vendt$="Last" else vendt$=fnmask$(vendthru$(1,vendlen),vendomask$)
-    if datefrom$="" datef$="First" else datef$=fndate$(datefrom$)
-    if datethru$="" datet$="Last" else datet$=fndate$(datethru$)
-    if itemfrom$="" itemf$="First" else itemf$=itemfrom$(1,itemlen)
-    if itemthru$="" itemt$="Last" else itemt$=itemthru$(1,itemlen)
-    midh3$="From Item "+itemf$+" Through "+itemt$
-    tmph3$(1)="From Vendor: "+vendf$
-    tmph3$(fncenter(midh3$,width))=midh3$
-    tmph3$(width-len(datef$)-18)="From Receipt Date: "+datef$
-    if whsefor$="" midh4$="All Warehouses" else midh4$="For Warehouse "+whsefor$
-    tmph4$(1)="  To Vendor: "+vendt$
-    tmph4$(fncenter(midh4$,width))=midh4$
-    tmph4$(width-len(datef$)-18)="  To Receipt Date: "+datet$
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+" For Variances Greater Than Or Equal To "+str(minvari:mpcnt$)
  
