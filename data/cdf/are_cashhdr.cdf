@@ -331,8 +331,9 @@ gridInvoice!.setColumnEditable(8,1)
 gridInvoice!.setColumnEditable(9,1)
 gridInvoice!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 [[ARE_CASHHDR.AWRI]]
-escape;rem AWRI -- getting here?
-gosub update_cashhdr_cashdet_cashbal
+rem now doing this gosub in BWRI - for some reason, at one point the AWRI in here stopped functioning
+
+rem gosub update_cashhdr_cashdet_cashbal
 [[ARE_CASHHDR.BWRI]]
 gosub validate_before_writing
 
