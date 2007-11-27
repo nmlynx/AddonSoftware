@@ -18,7 +18,7 @@ vendor_id$=field(apt01a$,"VENDOR_ID")
 ap_type$(1)=UserObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
 vendor_id$(1)=UserObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
 
-apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")+"00"
+apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")
 readrecord(apt_invoicehdr_dev,key=apt01ak1$,dom=*next)apt01a$
 if apt01a$(1,len(apt01ak1$))<>apt01ak1$ 
 
