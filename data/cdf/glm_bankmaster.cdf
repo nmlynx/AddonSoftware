@@ -1,3 +1,13 @@
+[[GLM_BANKMASTER.AOPT-POST]]
+rem " --- Recalc Summary Info
+
+	gosub calc_totals
+
+if balanced$<>"Y" escape
+[[GLM_BANKMASTER.CUR_STMT_AMT.AVAL]]
+rem " --- Recalc Summary Info
+
+	gosub calc_totals
 [[GLM_BANKMASTER.ARAR]]
 rem " --- Calculate Summary info
 
@@ -7,6 +17,10 @@ rem " --- Recalc Summary Info
 
 	gosub calc_totals
 [[GLM_BANKMASTER.AOPT-DETL]]
+rem " --- Recalc Summary Info
+
+	gosub calc_totals
+
 gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
 call stbl("+DIR_PGM")+"glr_bankmaster.aon",gl_account$
 [[GLM_BANKMASTER.BSHO]]
@@ -89,7 +103,8 @@ calc_totals: rem " --- Calculate Totals for Summary Information
 	out_trans_amt=0
 	out_trans=0
 	balanced$="N"
-	callpoint!.setColumnData("<<DISPLAY>>.STMT_AMT","GLM_BANKMASTER.CURSTMT_AMT")
+	statement_amt=num(callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
+	callpoint!.setColumnData("<<DISPLAY>>.STMT_AMT",str(statement_amt))
 
 rem " --- Find Outstanding Checks"           
 	read (glt05_dev,key=firm_id$+gl_acct$,dom=*next)
@@ -121,8 +136,7 @@ rem " --- Setup display variables
 	callpoint!.setColumnData("<<DISPLAY>>.NO_CHECKS",str(out_checks))
 	callpoint!.setColumnData("<<DISPLAY>>.TRANS_OUT",str(out_trans_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.NO_TRANS",str(out_trans))
-	end_bal=num(callpoint!.setColumnData("<<DISPLAY>>.STMT_AMT","GLM_BANKMASTER.CURSTMT_AMT"))
-	end_bal=end_bal-out_checks_amt+out_trans_amt
+	end_bal=statement_amt-out_checks_amt+out_trans_amt
 	callpoint!.setColumnData("<<DISPLAY>>.END_BAL",str(end_bal))
 	callpoint!.setStatus("REFRESH")
 	if end_bal=num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) balanced$="Y"
