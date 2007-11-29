@@ -262,13 +262,21 @@ assignheads: rem --- Assign headings variables
 
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+" For Variances Greater Than Or Equal To "+str(minvari:mpcnt$)
- 
 
-    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+vendf$
-    if vendthru$="" headings$[2]=headings$[2]+" -- To Vendor: Last" else headings$[2]=headings$[2]+" -- To Item: "+ vendt$
-    if datefrom$="" headings$[3]="From Receipt Date: First" else headings$[3]="From Receipt: "+ datef$
-    if datethru$="" headings$[3]=headings$[3]+" -- To Receipt Date: Last" else headings$[3]=headings$[3]+" -- To Receipt: "+ datet$
-    if itemfrom$="" headings$[4]="From Item: First" else headings$[3]="From Item: "+ itemf$
+    if vendfrom$="" vendf$="First" else vendf$=fnmask$(vendfrom$(1,vendlen),vendomask$)
+    if vendthru$="" vendt$="Last" else vendt$=fnmask$(vendthru$(1,vendlen),vendomask$)
+    if datefrom$="" datef$="First" else datef$=fndate$(datefrom$)
+    if datethru$="" datet$="Last" else datet$=fndate$(datethru$)
+    if itemfrom$="" itemf$="First" else itemf$=itemfrom$(1,itemlen)
+    if itemthru$="" itemt$="Last" else itemt$=itemthru$(1,itemlen)
+   
+   
+   
+    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendf$
+    if vendthru$="" headings$[2]=headings$[2]+" -- To Vendor: Last" else headings$[2]=headings$[2]+" -- To Vendor: "+ vendt$
+    if datefrom$="" headings$[3]="From Receipt Date: First" else headings$[3]="From Receipt Date: "+ datef$
+    if datethru$="" headings$[3]=headings$[3]+" -- To Receipt Date: Last" else headings$[3]=headings$[3]+" -- To Receipt Date: "+ datet$
+    if itemfrom$="" headings$[4]="From Item: First" else headings$[4]="From Item: "+ itemf$
     if itemthru$="" headings$[4]=headings$[4]+" -- To Item: Last" else headings$[4]=headings$[4]+" -- To Item: "+ itemt$
     if whsefor$=""  headings$[5]="All Warehouses"  else headings$[5]="For Warehouse " + whsefor$
 
