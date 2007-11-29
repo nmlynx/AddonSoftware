@@ -104,17 +104,18 @@ rem --- Sorts
         purchase_order_seq=1
         vendor_alt_seq=2
         vendor_seq=3
+        dim poe02a_key$:poe02a_key_pritpl$
 
         switch action
             case purchase_order_seq;    rem --- Sort by Purchase Order
-                    dim poe02a_key$:poe02a_key_alttpl$
+                    dim poe02p_key$:poe02a_key_alttpl$
                     if initializing$<>"N"
                         initializing$="N"
-                        read (poe02_dev,knum=1,key=firm_id$+firstpo$,dom=*next)
-                        if firstpo$<>"" poe02a_key$=firm_id$+firstpo$+firstvend$;read(poe02_dev,knum=1,key=poe02a_key$,dom=next);break
+                        read (poe02_dev2,knum=1,key=firm_id$+firstpo$,dom=*next)
+                        if firstpo$<>"" poe02p_key$=firm_id$+firstpo$+firstvend$;read(poe02_dev2,knum=1,key=poe02p_key$,dom=next);break
                     endif
-                    poe02a_key$=key(poe02_dev,knum=1,end=done)
-                    
+                    poe02p_key$=key(poe02_dev2,knum=1,end=done);read(poe02_dev2)
+                    poe02a_key$=poe02p_key.firm_id$+poe02p_key.vendor_id$+poe02p_key.po_no$
                     break
 
             case vendor_alt_seq;     rem --- Sort by alternate sequence
@@ -122,19 +123,23 @@ rem --- Sorts
 
                     if initializing$<>"N"
                         initializing$="N"
-                        a04_key$=firm_id$+"A"+vendfrom$
-                        read (apm01_dev2,key=a04_key$,dom=*next)
+                        a04_key$=firm_id$+altfrom$
+                        read (apm01_dev2,knum=2,key=a04_key$,dom=*next)
                     endif
 rem --- Find a POE02 record using alt seq
 
                     while more
-
-                        apm01a_key$=key(apm01_dev2,end=done)
-                        if apm01a.firm_id$<>firm_id$ goto done
-                        apm01b_key$=apm01a.firm_id$+apm01a.vendor_id$
-                        read (apm01_dev2,key=apm01a_key$); rem "Move ptr
+                        dim apm01a_key$:apm01a_key_tpl$
+                        
+                        apm01a_key$=key(apm01_dev2,knum=2,end=done)
+                        if apm01a_key.firm_id$<>firm_id$ goto done
+                        if altthru$<>"" if apm01a_key.alt_sequence$>altthru$ goto done
+                        apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
+                        read (apm01_dev2,knum=2,key=apm01a_key$); rem "Move ptr
+      
                         read (poe02_dev,key=apm01b_key$,dom=*next)
-                        poe02a_key$=key(poe02_dev,end=*continue)                        if poe02a.firm_id$+poe02a.vendor_id$<>apm04b_key$ continue
+                        poe02a_key$=key(poe02_dev,end=*continue)                  
+                        if poe02a_key.firm_id$+poe02a_key.vendor_id$=apm01b_key$ break
                        
                     wend
                     break
@@ -160,7 +165,8 @@ rem --- Read through PO headers
                
         while more; rem MainHdr Loop
 
-            if poe02a_key.firm_id$<>firm_id$ goto done
+            if printseq$="A" if poe02a_key.firm_id$<>firm_id$ continue
+            if printseq$<>"A" if poe02a_key.firm_id$<>firm_id$ goto done
             read record (poe02_dev,key=poe02a_key$) poe02a$
 
 rem --- Test Ranges
@@ -168,8 +174,8 @@ rem --- Test Ranges
             headrecprinted$="N"
             if pofrom$<>"" and poe02a.po_no$<pofrom$ and printseq$<>"A" break
             if pothru$<>"" and poe02a.po_no$>pothru$ and printseq$<>"A" break
-            if printseq$="A" if cvs(vendfrom$,2)<>"" if cvs(apm01a_key.alt_sequence$,2)<cvs(vendfrom$,2) if printseq$<>"A" break
-            if printseq$="A" if cvs(vendthru$,2)<>"" if cvs(apm01a_key.alt_sequence$,2)>cvs(vendthru$,2) if printseq$<>"A" break
+rem            if printseq$="A" if cvs(vendfrom$,2)<>"" if cvs(apm01a_key.alt_sequence$,2)<cvs(vendfrom$,2) if printseq$<>"A" break
+rem            if printseq$="A" if cvs(vendthru$,2)<>"" if cvs(apm01a_key.alt_sequence$,2)>cvs(vendthru$,2) if printseq$<>"A" break
             if printseq$<>"A"
                 if vendfrom$<>"" and poe02a.vendor_id$<vendfrom$ and printseq$<>"A" break
                 if vendthru$<>"" and poe02a.vendor_id$>vendthru$ and printseq$<>"A" break
@@ -242,9 +248,8 @@ rem --- Loop up for next header record via sort files
 
 rem --- See if there's another PO for vend before getting next alt seq
 
-            escape
-            k$=key(poe02_dev,end=*break)
-            if k$(3,6)<>vendor$ break
+            poe02a_key$=key(poe02_dev,end=*break)
+            if poe02a_key.vendor_id$=vendor$ continue else break
 
         wend
 
@@ -704,7 +709,7 @@ rem #endinclude std_functions.src
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
-escape;rem error
+
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
