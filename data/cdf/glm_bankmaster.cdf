@@ -3,7 +3,67 @@ rem " --- Recalc Summary Info
 
 	gosub calc_totals
 
-if balanced$<>"Y" escape
+	balanced$="Y"
+	if over_under$<>"" 
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
+		balanced$="N"
+		msg_id$="BANK_OOB"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=over_under$
+		msg_tokens$[2]=str(abs(num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE"))-end_bal):m1$)
+		msg_opt$=""
+		gosub disp_message
+	endif
+
+rem " --- See if they want to print
+	
+	msg_id$="PRINT_TRANS"
+	dim msg_tokens$[1]
+	msg_opt$=""
+	gosub disp_message
+	if msg_opt$="Y"
+		gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
+		call stbl("+DIR_PGM")+"glr_bankmaster.aon",gl_account$
+	endif
+
+rem " --- If balanced, see if they want to remove paid transactions
+
+	if balanced$="Y"
+		msg_id$="REMOVE_PAID"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+		if msg_opt$="Y"
+rem " --- Remove Paid Checks"           
+			read (glt05_dev,key=firm_id$+gl_acct$,dom=*next)
+			while 1
+				dim glt05a$:user_tpl.glt05_tpl$
+				readrecord (glt05_dev,end=*break)glt05a$
+				if glt05a.firm_id$<>firm_id$ break
+				if glt05a.gl_account$<>gl_acct$ break
+				if glt05a.paid_code$<>"P" continue
+				if glt05a.bnk_chk_date$>st_date$ continue
+				remove (glt05_dev,key=glt05a.firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=*next)
+			wend
+
+rem " --- Remove Paid Transactions"
+			read (glt15_DEV,key=firm_id$+gl_acct$,dom=*next)
+			while 1
+				dim glt15a$:user_tpl.glt15_tpl$
+				readrecord (glt15_dev,end=*break)glt15a$
+				if glt15a.firm_id$<>firm_id$ break
+				if glt15a.gl_account$<>gl_acct$ break
+				if glt15a.posted_code$<>"O" continue
+				if glt15a.trns_date$>st_date$ continue
+				remove (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$,dom=*next)
+			wend
+		endif
+		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_DATE",callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"))
+		callpoint!.setColumnData("GLM_BANKMASTER.CURSTM_DATE","")
+		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_AMT",callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
+		callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE","0")
+		escape
+	endif
 [[GLM_BANKMASTER.CUR_STMT_AMT.AVAL]]
 rem " --- Recalc Summary Info
 
@@ -21,8 +81,8 @@ rem " --- Recalc Summary Info
 
 	gosub calc_totals
 
-gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
-call stbl("+DIR_PGM")+"glr_bankmaster.aon",gl_account$
+	gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
+	call stbl("+DIR_PGM")+"glr_bankmaster.aon",gl_account$
 [[GLM_BANKMASTER.BSHO]]
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
@@ -102,7 +162,7 @@ calc_totals: rem " --- Calculate Totals for Summary Information
 	out_checks=0
 	out_trans_amt=0
 	out_trans=0
-	balanced$="N"
+	over_under$=""
 	statement_amt=num(callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
 	callpoint!.setColumnData("<<DISPLAY>>.STMT_AMT",str(statement_amt))
 
@@ -139,7 +199,8 @@ rem " --- Setup display variables
 	end_bal=statement_amt-out_checks_amt+out_trans_amt
 	callpoint!.setColumnData("<<DISPLAY>>.END_BAL",str(end_bal))
 	callpoint!.setStatus("REFRESH")
-	if end_bal=num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) balanced$="Y"
+	if end_bal<num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) over_under$="SHORT"
+	if end_bal>num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) over_under$="OVER"
 	return
 
 disable_ctls:rem --- disable selected control
