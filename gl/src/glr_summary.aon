@@ -248,6 +248,8 @@ done: rem --- All Done
     abc=fnblank(13)
     OutVect!.addItem(str(number))
     OutVect!.addItem(" Accounts Listed")
+
+    if update$<>"" next_overlay$=update$
     goto std_exit
 
 account_heading: rem --- Account Heading
