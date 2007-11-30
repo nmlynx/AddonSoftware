@@ -66,7 +66,7 @@ rem --- Dimension string templates
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
-    find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     units_flag$=gls01a.units_flag$
     total_pers=num(gls01a.total_pers$)
     acctlen=num(gls01a.acct_length$)
