@@ -53,7 +53,7 @@ rem " --- Remove Paid Transactions"
 				readrecord (glt15_dev,end=*break)glt15a$
 				if glt15a.firm_id$<>firm_id$ break
 				if glt15a.gl_account$<>gl_acct$ break
-				if glt15a.posted_code$<>"O" continue
+				if glt15a.posted_code$<>"P" continue
 				if glt15a.trns_date$>st_date$ continue
 				remove (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$,dom=*next)
 			wend
@@ -61,8 +61,14 @@ rem " --- Remove Paid Transactions"
 		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_DATE",callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"))
 		callpoint!.setColumnData("GLM_BANKMASTER.CURSTM_DATE","")
 		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_AMT",callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
+		callpoint!.setColumnData("GLM_BANKMASTER.CUR_STMT_AMT","0")
 		callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE","0")
-		escape
+		rec_data.pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
+		rec_data.curstm_date$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+		rec_data.pri_end_amt$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_AMT")
+		rec_data.cur_stmt_amt$=callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT")
+		rec_data.book_balance$=callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")
+		writerecord(fnget_dev("GLM_BANKMASTER"))rec_data$
 	endif
 [[GLM_BANKMASTER.CUR_STMT_AMT.AVAL]]
 rem " --- Recalc Summary Info
@@ -221,9 +227,9 @@ disable_ctls:rem --- disable selected control
 rem --- Validate Current Statement Date
 	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
 	if num(stmtdate$)=0
-		rd_msg_id$="INVALID_DATE"
-		dim rd_msg_tokens$[1]
-		rd_msg_opt$=""
+		msg_id$="INVALID_DATE"
+		dim msg_tokens$[1]
+		msg_opt$=""
 		gosub disp_message
 		break
 	endif
@@ -244,10 +250,10 @@ rem --- Find G/L Record"
 	if stmtyear=currentgl s0$=r0$+"0"; rem "Use current year actual
 	if stmtyear=nextgl s0$=r0$+"4"; rem "Use next year actual
 	if s0$="" 
-		dim message$[1]
-		message$[0]="Invalid date."
-		message$[1]="Press <Enter> to Continue"
-		call stbl("+DIR_PGM")+ "adc.stdmessage.aon",2,message$[all],1,0,0,v$,v3
+		msg_id$="INVALID_DATE"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
 		exit; rem "Invalid statement year
 	endif
 	read record (glm02_dev,key=s0$,dom=*next) glm02a$
