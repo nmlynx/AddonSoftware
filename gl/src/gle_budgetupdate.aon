@@ -53,11 +53,11 @@ rem --- Retrieve parameter records
 rem --- Assign input values to local variables
 
     budget_code$=option!.getOptionData("BUDGET_REVS")
-    id$=budget_codes$(1,1)
-    au$=budget_codes$(2,1)
+    id$=budget_code$(1,1)
+    au$=budget_code$(2,1)
     begacct$=option!.getOptionData("GL_ACCOUNT_1")
     endacct$=option!.getOptionData("GL_ACCOUNT_2")
-    wildcard$=option!.getOptionData("WILDCARD")
+    wildcard$=option!.getOptionData("GL_WILDCARD")
     rounding$=option!.getOptionData("ROUNDING")
     update_year$=option!.getOptionData("UPDATE_TYPE")
 

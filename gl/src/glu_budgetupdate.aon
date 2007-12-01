@@ -32,7 +32,7 @@ rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="gls-01",ids$[1]="GLS_PARAMS"
+    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
     files$[4]="glm-08",ids$[4]="GLM_BUDGETMASTER"
@@ -77,15 +77,18 @@ rem --- Start progress meter and position file
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     call pgmdir$+"adc_progress.aon","N","","","","",0,glm01_dev,1,meter_num,status
     k$=firm_id$+begacct$
-    if cvs(begacct$,2)<>"" k$=k$(1,len(k$)-1)+$FF$
-    read (glm01_dev,key=k$,dom=*next)
+    found=0
+    read record(glm01_dev,key=k$,dom=*next)glm01a$;found=1
 
 rem --- Get next GL account master
 
     while more
-          k$=key(glm01_dev,end=*break)
+          if found=1
+            found=0
+          else
+            read record(glm01_dev,end=*break) glm01a$
+          endif
           if pos(firm_id$=k$)<>1 break
-          read record (glm01_dev) glm01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           if endacct$<>"" if glm01a.gl_account$>endacct$ break
           gosub wildcard
@@ -95,7 +98,7 @@ rem --- Get next GL account master
 
           dim a[mp],u[mp]
           glm02_key$=firm_id$+glm01a.gl_account$+id$
-          find record (glm02_dev,key=x0$,dom=*continue) glm02a$
+          find record (glm02_dev,key=glm02_key$,dom=*continue) glm02a$
           call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
 
           rem --- Amounts or Units?
@@ -109,14 +112,15 @@ rem --- Get next GL account master
           rem --- Update current/next year GL Account Summary (glm-02) record
 
           dim a[mp],u[mp]
-          glm02_key$=firm_id$+glm01a.gl_account$+id$
+          glm02_key$=firm_id$+glm01a.gl_account$+record$
+          glm02a.firm_id$=firm_id$,glm02a.gl_account$=glm01a.gl_account$,glm02a.record_id$=record$
           find record (glm02_dev,key=glm02_key$,dom=*next) glm02a$
           for x=0 to total_periods
-              if c0$(4,1)="A" a[x]=b[x]
-              if c0$(4,1)="U" u[x]=b[x]
+              if au$="A" a[x]=b[x]
+              if au$="U" u[x]=b[x]
           next x
           call pgmdir$+"glc_summary.aon","U",glm02a$,a[all],u[all],status
-          write record (glm02_dev,key=glm02_key$) glm02a$
+          glm02a$=field(glm02a$);write record (glm02_dev,key=glm02_key$) glm02a$
 
           rem --- Loop back for next glm-01 record
 
