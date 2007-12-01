@@ -9,6 +9,15 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
+rem --- Document initializations
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Initializations
 
     precision p[2]
@@ -41,14 +50,30 @@ rem --- Initializations
     masks$[3]=g5$
     more=1
 
+rem --- Headings and print positions
+
+    dim columns$[11,10]
+    columns = 11
+    columns$[0,0]="Vendor",               columns$[0,1]="C",columns$[0,2]="5"
+    columns$[1,0]="Prod Type",            columns$[1,1]="C",columns$[1,2]="5"
+    columns$[2,0]="Serial",               columns$[2,1]="C",columns$[2,2]="6"
+    columns$[3,0]="Transaction Date",     columns$[3,1]="C",columns$[3,2]="5"
+    columns$[4,0]="Type",                 columns$[4,1]="C",columns$[4,2]="4"
+    columns$[5,0]="Whse",                 columns$[5,1]="C",columns$[5,2]="4"
+    columns$[6,0]="Item/Reference",       columns$[6,1]="C",columns$[6,2]="6"
+    columns$[7,0]="Information",          columns$[7,1]="C",columns$[7,2]="25"
+    columns$[8,0]="Quantity",             columns$[8,1]="N",columns$[8,2]="4",columns$[8,3]=m2$
+    columns$[9,0]="Unit Cost",            columns$[9,1]="N",columns$[9,2]="4",columns$[9,3]=m3$
+    columns$[10,0]="Extension",           columns$[10,1]="N",columns$[10,2]="4",columns$[10,3]=m1$
+    columns$[11,0]="Price",               columns$[11,1]="N",columns$[11,2]="4",columns$[11,3]=m4$
+
+
 rem --- Print positions
 
     gosub Position
    
 rem --- Position files
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivt03_dev,1,meter_num,status
 
@@ -119,71 +144,63 @@ rem --- Print detail line
 
         needed=1
         if first$="Y" needed=needed+1
-        if l+needed>l9 gosub report_heading
-        if first$="Y" print (printer_dev)@(o[1]),product$,@(o[2]),ivt03a_key.lotser_no$,@(o[5]),whse$,@(o[6]),item$," ",fnitem$(ivm01a.item_desc$,p[5],p[6],p[7]); let l=l+1
-        print (printer_dev)@(o[3]),fndate$(tran_date$),@(o[4]),type$,@(o[5]),desc$[1],@(o[7]),ivt01a.trans_qty:m2$,@(o[8]),ivt01a.unit_cost:m3$,@(o[9]),ivt01a.trans_qty*ivt01a.unit_cost:m1$,@(o[10]),ivt01a.unit_price:m4$
+        
+        if first$="Y" then 
+            OutVect!.addItem(product$)
+            OutVect!.addItem(ivt03a_key.lotser_no$)
+            OutVect!.addItem(whse$)
+            OutVect!.addItem(item$)
+            OutVect!.addItem(fnitem$(ivm01a.item_desc$))
+            OutVect!.addItem(fnitem$(ivm01a.item_desc$))
+            OutVect!.addItem(fnitem$(ivm01a.item_desc$))
+        else
+            OutVect!.addItem(fndate$(tran_date$))
+            OutVect!.addItem(type$)
+            OutVect!.addItem(desc$[1])
+            OutVect!.addItem(str(ivt01a.trans_qty:m2$))
+            OutVect!.addItem(str(ivt01a.unit_cost:m3$))
+            OutVect!.addItem(str(ivt01a.trans_qty*ivt01a.unit_cost:m1$))
+            OutVect!.addItem(str(ivt01a.unit_price:m4$))
+        endif
         l=l+1
         first$="N"
 
     wend
 
+
 done: rem --- All done
 
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    return
-
 Init_Heading: rem --- Initialize HEADINGS$
 
-    dim h1$(width),h2$(width),h7$(width),h8$(width)
     x1$="First Date"
     x2$="Last Date"
     if ocb$="O" x0$="Open " else if ocb$="C" x0$="Closed " else x0$=""
     if beg_date$<>"" x1$=fndate$(beg_date$)
     if end_date$<>"" x2$=fndate$(end_date$)
     headings$[2]=x0$+"From "+x1$+" Through "+x2$
-    x1$="First"
-    x2$="First"
-    x3$="First"
-    x4$="First"
-    x4=5
-    if beg_item$<>"" x1$=beg_item$
-    if beg_whse$<>"" x2$=beg_whse$
-    if beg_vendor$<>"" x3$=fnmask$(beg_vendor$,vendmask$)
-    if beg_prod$<>"" x4$=beg_prod$,x4=3
-    if end_prod$="" if x4=3 x4=4
-    h1$(1)="From Item: "+x1$
-    h1$(46)="From Warehouse: "+x2$
-    h1$(79)="From Vendor: "+x3$
-    h1$(width-x4-13)="From Product: "+x4$
-    x1$="Last"
-    x2$="Last"
-    x3$="Last"
-    x4$="Last"
-    x5$="All Item Types"
-    if end_item$<>"" x1$=end_item$
-    if end_whse$<>"" x2$=end_whse$
-    if end_vendor$<>"" x3$=fnmask$(end_vendor$,vendmask$)
-    if end_prod$<>"" x4$=end_prod$
-    let h2$(1)="  To Item: "+x1$,h2$(46)="  To Warehouse: "+x2$,h2$(79)="  To Vendor: "+x3$,h2$(width-x4-13)="  To Product: "+x4$
-    let h7$(o[1]+1)="Prod",h7$(22)="Transaction"
-    let h8$(1)="Vendor",h8$(o[1]+1)="Type Serial # Date"
-    let h8$(o[4]+1)="Type Whse Item/Reference Information",h8$(o[7]+m2-8)="Quantity"
-    let h8$(o[8]+m3-9)="Unit Cost",h8$(o[9]+m1-9)="Extension",h8$(o[10]+m4-5)="Price"
-    let headings$[4]=h1$,headings$[5]=h2$,headings$[7]=h7$,headings$[8]=h8$
+
+    if beg_item$="" headings$[3]="From Item: First" else headings$[3]="From Item: "+ beg_item$
+    if end_item$="" headings$[3]=headings$[3] + " -- To Item: Last" else headings$[3]=headings$[3] + " -- To Item: " + end_item$
+    if beg_whse$="" headings$[4]="From Warehouse: First" else headings$[4]="From Warehouse: " + beg_whse$
+    if end_whse$="" headings$[4]=headings$[4] + " -- To Warehouse: Last" else headings$[4]= headings$[4] + " -- To Warehouse:" + end_whse$
+    if beg_vendor$="" headings$[5]="From Vendor: First" else headings$[5]="From Vendor: " + str(fnmask$(beg_vendor$,vendmask$))
+    if end_vendor$="" headings$[5]=headings$[5] + " -- To Vendor: Last" else headings$[5]= headings$[5] + " -- To Vendor:" + fnmask$(end_vendor$,vendmask$)
+    if beg_prod$="" headings$[6]="From Product: First" else headings$[6]="From Product: " + beg_prod$
+    if end_prod$="" headings$[6]=headings$[6] + " -- To Product: Last" else headings$[6]= headings$[6] + " -- To Product:" + end_prod$
+
+
+   
     return
 
 Vendor_Break: rem --- Vendor Break
 
-    if l+1>l9 gosub report_heading
     let apm01a.vendor_name$="Invalid Vendor"
     find record (apm01_dev,key=firm_id$+vendor$,dom=*next) apm01a$
-    print (printer_dev)@(0),fnmask$(vendor$,x7$)," ",apm01a.vendor_name$
+    OutVect!.addItem(str(fnmask$(vendor$,x7$)) + " ")
+    OutVect!.addItem(apm01a.vendor_name$)
+       
     let l=l+1
     let t1$=vendor$,first$="Y"
     return
