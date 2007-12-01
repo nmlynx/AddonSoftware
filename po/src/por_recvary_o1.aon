@@ -116,7 +116,7 @@ rem --- Valid Vendor/Receipt Date?
 rem --- Skip to next vendor
                 p44_key$=pot44a_key.firm_id$+pot44a_key.vendor_id$+$FF$
                 read (pot14_dev2,key=p44_key$,dom=*next)
-                continue
+                break
 
             endif
         else
