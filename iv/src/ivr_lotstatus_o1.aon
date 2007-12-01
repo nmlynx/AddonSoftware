@@ -6,40 +6,48 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    seterr std_error
-    setesc std_error
+            seterr std_error
+            setesc std_error
 
-rem --- Printer open
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+rem --- Document initializations
+            OutVect!=bbjAPI().getSysGui().makeVector()
+            HdrVect!=bbjAPI().getSysGui().makeVector()
+            BrkVect!=bbjAPI().getSysGui().makeVector()
+            rep_date$=date(0:"%Mz/%Dz/%Yd")
+            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+            rep_time$=date(0:"%hz:%mz %p")
+            rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+
 
 rem --- Initializations
 
-    precision p[1]
-    dim headings$[9],o[12]
-    dim warehouse[4],item[4],report[4],total[4]
-    p8$="Serial #"
-    when$=sysinfo.system_date$
-    clock$=""
-    h9$=""
-    width=132
-    page=0
-    l9=59
-    l=l9+1
-    headings=9
-    done=0
-    if sequence$="L" headings=8
-    if ivs01a.LOTSER_FLAG$="L" p8$="Lot #"
-    more=1
+            precision p[1]
+            dim headings$[9],o[12]
+            dim warehouse[4],item[4],report[4],total[4]
+            p8$="Serial #"
+            when$=sysinfo.system_date$
+            clock$=""
+            h9$=""
+            width=132
+            page=0
+            l9=59
+            l=l9+1
+            headings=9
+            done=0
+            if sequence$="L" headings=8
+            if ivs01a.LOTSER_FLAG$="L" p8$="Lot #"
+            more=1
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm07_dev,1,meter_num,status
+            call pgmdir$+"adc_progress.aon","N","","","","",0,ivm07_dev,1,meter_num,status
 
 rem --- Print positions
 
-    gosub Position
+            gosub Position
+ 
 
 rem --- Position file
-    if sequence$<>"L" then
+    if sequence$="I" then
         ivm07a_key$=firm_id$+begwhse$
         if begwhse$<>"" if begitem$<>"" ivm07a_key$=ivm07a_key$+begitem$+beglot$
         read record (ivm07_dev,key=ivm07a_key$,dom=*next) ivm07a$ ; rem dom=Next_Record
@@ -53,7 +61,7 @@ rem --- Position file
 Next_Record: rem --- Next record
 
     while more
-        if sequence$ <>"L" then
+        if sequence$ ="I" then
             ivm07a_key$=key(ivm07_dev,end=*break)
             if pos(firm_id$=ivm07a_key$)<>1 break
             if endwhse$<>"" if ivm07a_key.warehouse_id$>endwhse$ break
@@ -81,9 +89,9 @@ Next_Record: rem --- Next record
 
 rem --- Read ivm-07 Lot/Serial Master
 
-        read record (ivm07_dev,key=ivm07a_key$,dom=*continue) ivm07a$
-        if status$="O" if ivm07a.qty_on_hand=0 continue
-        if status$="C" if ivm07a.qty_on_hand<>0 continue
+            read record (ivm07_dev,key=ivm07a_key$,dom=*continue) ivm07a$
+            if status$="O" if ivm07a.qty_on_hand=0 continue
+            if status$="C" if ivm07a.qty_on_hand<>0 continue
 
 rem --- Format output fields
 
@@ -123,7 +131,7 @@ rem --- Format output fields
 
 rem --- Branch based on sequence
 
-        if sequence$<>"L" then
+        if sequence$="I" then
 rem --- Item Sequence
 
             if whse$<>t0$ gosub Whse_Break
@@ -134,19 +142,34 @@ rem --- Item Sequence
 rem --- Item subheading
 
             if h9$<>"" then
-                if l+3>l9 gosub report_heading
-                print (printer_dev)h9$
-                l=l+1
+                        
+                   OutVect!.addItem(h9$) 
+                   xwk=fnblank(9)
+
                 h9save$=h9$,h9$=""
             endif
 rem --- Print detail line
-            if l+needed>l9 gosub report_heading
-            print (printer_dev)@(o[1]),lotser$(1,p[2]),@(o[2]),received$,@(o[3]),issued$,@(o[4]),vendor$,@(o[6]),amount[0]:m2$,@(o[7]),amount[1]:m2$,@(o[8]),amount[2]:m2$,@(o[9]),amount[3]:m3$,@(o[10]),amount[4]:m1$
-            if comment$<>"" print (printer_dev)@(o[2]),comment$
+             if l+needed>l9  
+
+            OutVect!.addItem(lotser$)
+            OutVect!.addItem(received$)
+            OutVect!.addItem(issued$)
+            OutVect!.addItem(vendor$)
+            OutVect!.addItem("")
+            OutVect!.addItem(str(amount[0]:m2$))
+            OutVect!.addItem(str(amount[1]:m2$))
+            OutVect!.addItem(str(amount[2]:m2$))
+            OutVect!.addItem(str(amount[3]:m3$))
+            OutVect!.addItem(str(amount[4]:m1$))
+
+            if comment$<>""
+            xwk=fnblank(2)
+            OutVect!.addItem(comment$)
+            xwk=fnblank(7)
             l=l+needed
             continue
     
-        endif
+            endif
 
 rem --- Lot/Serial Sequence
 
@@ -155,11 +178,24 @@ rem --- Lot/Serial Sequence
 
 rem --- Print detail line
 
-        if l+needed>l9 gosub report_heading
-        print (printer_dev)@(o[0]),lotser$(1,p[2]),@(o[2]),received$,@(o[3]),issued$,@(o[4]),vendor$,@(o[6]),amount[0]:m2$,@(o[7]),amount[1]:m2$,@(o[8]),amount[2]:m2$,@(o[9]),amount[3]:m3$,@(o[10]),amount[4]:m1$
-        print (printer_dev)@(o[1]),h9$
-        if comment$<>"" print (printer_dev)@(o[2]),comment$
-        l=l+1+needed
+            if l+needed>l9  
+            OutVect!.addItem(lotser$)
+            OutVect!.addItem(received$)
+            OutVect!.addItem(issued$)
+            OutVect!.addItem(vendor$)
+            OutVect!.addItem("")
+            OutVect!.addItem(str(amount[0]:m2$))
+            OutVect!.addItem(str(amount[1]:m2$))
+            OutVect!.addItem(str(amount[2]:m2$))
+            OutVect!.addItem(str(amount[3]:m3$))
+            OutVect!.addItem(str(amount[4]:m1$))
+            OutVect!.addItem(h9$)
+
+            if comment$<>""
+            xwk=fnblank(2)
+            OutVect!.addItem(comment$)
+            xwk=fnblank(7)
+            l=l+1+needed
 
  rem --- Loop back for next record
 
@@ -167,162 +203,175 @@ rem --- Print detail line
 
 done: rem --- All done
 
-    done=1
-    if sequence$="I" gosub Whse_Break
-    total$="Report"
-    t=0
-    for x=0 to 4
-        total[x]=report[x]
-    next x
-    gosub Print_Total_Line
-    goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    return
+            done=1
+            if sequence$="I" gosub Whse_Break
+            total$="Report"
+            t=0
+            for x=0 to 4
+                total[x]=report[x]
+            next x
+            gosub Print_Total_Line
+            goto std_exit
 
 InitHeading: rem --- Initialize HEADINGS$
 
-    dim h1$(width),h2$(width),h6$(width),h7$(width)
-    headings$[0]=sysinfo.firm_name$
-    x3$="All Item Types"
-    if type$<>"" x3$="Item Type "+type$
-    if sequence$="I" headings$[1]=sysinfo.task_desc$+" By Item For "+x3$
-    if sequence$="L" headings$[1]=sysinfo.task_desc$+" By Lot/Serial Number For "+x3$
-    if status$="O" headings$[1]="Open "+headings$[1]
-    if status$="C" headings$[1]="Closed "+headings$[1]
-    x1$="First"
-    x2$="First"
-    x3$="First"
-    x4$="First"
-    x2=5
-    if begitem$<>"" x1$=begitem$
-    if begprod$<>"" x2$=begprod$,x2=3
-    if endprod$="" if x2=3 x2=4
-    if beglot$<>"" x3$=beglot$
-    if begwhse$<>"" x4$=begwhse$
-    h1$(1)="From Item: "+x1$
-    h1$(38)="From Lot/Serial Number: "+x3$
-    if sequence$="L" h1$(89)="From Warehouse: "+x4$
-    h1$(width-x2-13)="From Product: "+x2$
-    x1$="Last"
-    x2$="Last"
-    x3$="Last"
-    x4$="Last"
-    if enditem$<>"" x1$=enditem$
-    if endprod$<>"" x2$=endprod$
-    if endlot$<>"" x3$=endlot$
-    if endwhse$<>"" x4$=endwhse$
-    h2$(1)="  To Item: "+x1$
-    h2$(38)="  To Lot/Serial Number: "+x3$
-    if sequence$="L" h2$(89)="  To Warehouse: "+x4$
-    h2$(width-x2-13)="  To Product: "+x2$
-    h6$(o[3]+1)="Sold Or"
-    h6$(o[6]+m2-8)="Quantity"
-    h6$(o[7]+m2-9)="Committed"
-    h6$(o[8]+m2-9)="Quantity"
-    if sequence$="I" h7$(o[0]+1)="Item Lot/Serial #",x=4
-    if sequence$="L" h7$(o[0]+1)=p8$+"/Whse/Item",x=3
-    h7$(o[2]+1)="Received"
-    h7$(o[3]+1)="Issued"
-    h7$(o[4]+1)="Vendor"
-    h7$(o[5]+1)="Prod"
-    h7$(o[6]+m2-8)="On Hand"
-    h7$(o[7]+m2-9)="Quantity"
-    h7$(o[8]+m2-9)="Available"
-    h7$(o[9]+m3-9)="Unit Cost"
-    h7$(o[10]+m1-11)="Total Value"
-    headings$[x]=h1$
-    headings$[x+1]=h2$
-    headings$[x+3]=h6$
-    headings$[x+4]=h7$
+            dim h1$(width),h2$(width),h6$(width),h7$(width)
+            headings$[0]=sysinfo.firm_name$
+            x3$="All Item Types"
+            if type$<>"" x3$="Item Type "+type$
+            if sequence$="I" headings$[1]=sysinfo.task_desc$+" By Item For "+x3$
+            if sequence$="L" headings$[1]=sysinfo.task_desc$+" By Lot/Serial Number For "+x3$
+            if status$="O" headings$[1]="Open "+headings$[1]
+            if status$="C" headings$[1]="Closed "+headings$[1]
+            headings$[2]="[HEADER]"
+
+             if begitem$="" headings$[3]="From Item: First" else headings$[3]="From Item: "+begitem$
+             if enditem$="" headings$[3]=headings$[3]+" -- To Item: Last" else headings$[3]=headings$[3]+" -- To Item: "+enditem$
+             if beglot$=""  headings$[4]="From Lot/Serial Number:  First" else headings$[4]="From Lot/Serial Number:  "+beglot$
+             if endlot$=""  headings$[4]=headings$[4]+" -- To Lot/Serial Number: Last" else headings$[4]=headings$[4]+" -- To Lot/Serial Number: "+endlot$
+             if begprod$="" headings$[5]="From Product: First" else headings$[5]="From Product: "+begprod$                
+             if endprod$="" headings$[5]=headings$[5]+" -- To Product: Last" else headings$[5]=headings$[5]+" -- To Product: "+endprod$
+             if sequence$="L"
+             if begwhse$="" headings$[6]="From Warehouse:  First" else headings$[6]="From Warehouse: "+begwhse$                
+             if endwhse$="" headings$[6]=headings$[6]+" --  To Warehouse:  Last" else headings$[6]=headings$[6]+" --   To Warehouse: " +endwhse$
+             endif
+
+
+
+     if sequence$="I"
+                dim columns$[9,10]
+                columns=9
+                    columns$[0,0]="Item Lot/Serial #",     columns$[0,1]="C",columns$[0,2]="15"
+                    columns$[1,0]="Received",              columns$[1,1]="C",columns$[1,2]="10"
+                    columns$[2,0]="Sold or Issued",        columns$[2,1]="C",columns$[2,2]="10"
+                    columns$[3,0]="Vendor",                columns$[3,1]="C",columns$[3,2]="10"
+                    columns$[4,0]="Prod",                  columns$[4,1]="C",columns$[4,2]="20"
+                    columns$[5,0]="Quantity On Hand",      columns$[5,1]="N",columns$[5,2]="12",columns$[5,3]=m2$
+                    columns$[6,0]="Committed Quantity ",   columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m2$
+                    columns$[7,0]="Quantity Available",    columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m2$
+                    columns$[8,0]="Unit Cost",             columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m3$
+                    columns$[9,0]="Total Value",           columns$[9,1]="N",columns$[9,2]="12",columns$[9,3]=m1$
+                    
+        endif
+        if sequence$="L"
+
+               dim columns$[9,10]
+                columns=9
+                    columns$[0,0]="Item Lot/Serial #",     columns$[0,1]="C",columns$[0,2]="15"
+                    columns$[1,0]="Received",              columns$[1,1]="C",columns$[1,2]="10"
+                    columns$[2,0]="Sold or Issued",        columns$[2,1]="C",columns$[2,2]="10"
+                    columns$[3,0]="Vendor",                columns$[3,1]="C",columns$[3,2]="10"
+                    columns$[4,0]="Prod",                  columns$[4,1]="C",columns$[4,2]="20"
+                    columns$[5,0]="Quantity On Hand",      columns$[5,1]="N",columns$[5,2]="12",columns$[5,3]=m2$
+                    columns$[6,0]="Committed Quantity ",   columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m2$
+                    columns$[7,0]="Quantity Available",    columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m2$
+                    columns$[8,0]="Unit Cost",             columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m3$
+                    columns$[9,0]="Total Value",           columns$[9,1]="N",columns$[9,2]="12",columns$[9,3]=m1$
+       endif 
     return
+      
+
+  
 
 Whse_Break: rem --- Warehouse Break
 
-    if t0$="" then goto Read_Whse
+                if t0$="" then goto Read_Whse
 
-    if sequence$="I" gosub Item_Break
-    total$="Warehouse "+t0$
-    t=0
-    for x=0 to 4
-        total[x]=warehouse[x]
-    next x
-    gosub Print_Total_Line
+                if sequence$="I" gosub Item_Break
+                total$="Warehouse "+t0$
+                t=0
+                for x=0 to 4
+                    total[x]=warehouse[x]
+                next x
+                gosub Print_Total_Line
 
 Read_Whse:
-    dim warehouse[4]
-    t0$=whse$
-    ivm10c.short_name$="(Not on File)"
-    l=l9+1
-    if done=0 l=l9+1
-    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    headings$[2]="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
-    return
+                dim warehouse[4]
+                t0$=whse$
+                ivm10c.short_name$="(Not on File)"
+                l=l9+1
+                if done=0 l=l9+1
+                find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+                x$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2)
+                BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+                HdrVect!.addItem(x$)
+                return
 
 Item_Break: rem --- Item break
 
-    if t1$<>"" then 
-        total$="Item "+t1$
-        t=1
-        for x=0 to 4
-            total[x]=item[x]
-        next x
-        gosub Print_Total_Line
-    endif
-    dim h9$(width-3),description$(dw),item[4]
-    t1$=item$,ivm01a_key$=firm_id$+item$,ivm01a.Item_desc$(1)="(Not on File)"
-    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    if type$<>"" then if ivm01a.Item_type$<>type$ then t1$="", skip=1 ; goto Item_Break_Return
-    if begprod$<>"" then if ivm01a.product_type$<begprod$ then t1$="", skip=1 ; goto Item_Break_Return
-    if endprod$<>"" then if ivm01a.product_type$>endprod$ then t1$="", skip=1 ; goto Item_Break_Return
-    skip=0,description$(1)=fnitem$(ivm01a.Item_desc$,p[3],p[4],p[5])
-    if sequence$="I" h9$(o[0]+1)=ivm01a.Item_id$+" "+description$
-    if sequence$="L" h9$(o[1]+1)=whse$+" "+ivm01a.Item_id$+" "+description$
-    h9$(o[5]+1)=ivm01a.product_type$
+            if t1$<>"" then 
+                total$="Item "+t1$
+                t=1
+                for x=0 to 4
+                    total[x]=item[x]
+                next x
+                gosub Print_Total_Line
+            endif
+            dim h9$(width-3),description$(dw),item[4]
+            t1$=item$,ivm01a_key$=firm_id$+item$,ivm01a.Item_desc$(1)="(Not on File)"
+            find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+            if type$<>"" then if ivm01a.Item_type$<>type$ then t1$="", skip=1 ; goto Item_Break_Return
+            if begprod$<>"" then if ivm01a.product_type$<begprod$ then t1$="", skip=1 ; goto Item_Break_Return
+            if endprod$<>"" then if ivm01a.product_type$>endprod$ then t1$="", skip=1 ; goto Item_Break_Return
+            skip=0,description$(1)=fnitem$(ivm01a.Item_desc$,p[3],p[4],p[5])
+            if sequence$="I" h9$(o[0]+1)=ivm01a.Item_id$+" "+description$
+            if sequence$="L" h9$(o[1]+1)=whse$+" "+ivm01a.Item_id$+" "+description$
+            h9$(o[5]+1)=ivm01a.product_type$
 
 Item_Break_Return:
     return
 
 Total_Accum: rem --- Accumulate totals
 
-    for x=0 to 4
-        item[x]=item[x]+amount[x],warehouse[x]=warehouse[x]+amount[x]
-        report[x]=report[x]+amount[x]
-    next x
-    return
+            for x=0 to 4
+                item[x]=item[x]+amount[x],warehouse[x]=warehouse[x]+amount[x]
+                report[x]=report[x]+amount[x]
+            next x
+            return
 
 Print_Total_Line: rem --- Print total line
 
-    if l+2>l9 gosub report_heading
-    total$="Total For "+cvs(total$,2)
-    if t=0 print (printer_dev)@(o[5]-len(total$)),total$,@(o[10]),total[4]:m1$
-    if t>0 print (printer_dev)@(o[5]-len(total$)),total$,@(o[6]),total[0]:m2$,@(o[7]),total[1]:m2$,@(o[8]),total[2]:m2$,@(o[10]),total[4]:m1$
-    print (printer_dev)""
-    l=l+2
-    return
+            if l+2>l9 
+            total$="Total For "+cvs(total$,2)
+             if t=0 
+                            xwk=fnblank(4)
+                            OutVect!.addItem(total$)
+                            xwk=fnblank(4)
+                            OutVect!.addItem(str(total[4]:m1$))
 
-Position: rem --- Print positions
+              endif                  
+              if t>0 
 
-    o[10]=width-m1
-    o[9]=o[10]-m3
-    o[8]=o[9]-m2
-    o[7]=o[8]-m2
-    o[6]=o[7]-m2
-    o[5]=o[6]-5
-    o[1]=3
-    if sequence$="I" x=17
-    if sequence$="L" x=18
-    o[2]=o[1]+max(p[2],x)+1
-    o[3]=o[2]+9
-    o[4]=o[3]+9
-    if sequence$="I" dw=o[5]-(max(p[0],x)+2)+1
-    if sequence$="L" dw=o[5]-(o[1]+4+p[0])+1
-    gosub InitHeading
-    return
+
+                            xwk=fnblank(4)
+                            OutVect!.addItem(total$)
+                            OutVect!.addItem(str(total[0]:m2$))
+                            OutVect!.addItem(str(total[1]:m1$))
+                            OutVect!.addItem(str(total[2]:m2$))
+                            OutVect!.addItem("")
+                            OutVect!.addItem(str(total[4]:m1$))
+            l=l+2
+              endif
+              return
+
+ Position: rem --- Print positions
+
+            o[10]=width-m1
+            o[9]=o[10]-m3
+            o[8]=o[9]-m2
+            o[7]=o[8]-m2
+            o[6]=o[7]-m2
+            o[5]=o[6]-5
+            o[1]=3
+            if sequence$="I" x=17
+            if sequence$="L" x=18
+            o[2]=o[1]+max(p[2],x)+1
+            o[3]=o[2]+9
+            o[4]=o[3]+9
+            if sequence$="I" dw=o[5]-(max(p[0],x)+2)+1
+            if sequence$="L" dw=o[5]-(o[1]+4+p[0])+1
+            gosub InitHeading
+            return
 
 
 rem #include std_functions.src
@@ -402,7 +451,14 @@ rem --- fnglobal$: Return string value of passed STBL variable
         q1$=stbl(q$,err=*next)
         return q1$
     fnend
-
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 rem #endinclude std_functions.src
 
 rem #include std_error.src
