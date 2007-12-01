@@ -45,6 +45,7 @@ for x=0 to rows-1
 next x
 [[GLM_BUDGETMAINT.GL_ACCOUNT.AVAL]]
 rem only do this aval on actual acct# entry -- skip it on record save
+
 if callpoint!.getRecordMode()<>"C"
 
 	glm01_dev=fnget_dev("GLM_ACCT")
@@ -273,6 +274,20 @@ calculate_end_bal:
 		next x2
 		vectGLSummary!.addItem(str(end_bal))
 	endif
+return
+
+disable_fields:
+	rem --- used to disable/enable controls
+	rem --- ctl_name$ sent in with name of control to enable/disable (format "ALIAS.CONTROL_NAME")
+	rem --- ctl_stat$ sent in as D or space, meaning disable/enable, respectively
+
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+
 return
 
 
