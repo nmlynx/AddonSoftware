@@ -22,12 +22,10 @@ rem Summary Activity Inquiry
 cp_acct$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
 user_id$=stbl("+USER_ID")
 dim dflt_data$[2,1]
-dflt_data$[1,0]="GL_ACCOUNT_1"
+dflt_data$[1,0]="GL_ACCOUNT"
 dflt_data$[1,1]=cp_acct$
-dflt_data$[2,0]="GL_ACCOUNT_2"
-dflt_data$[2,1]=cp_acct$
 call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:                       "GLR_SUMMARY",
+:                       "GLM_SUMMACTIVITY",
 :                       user_id$,
 :                   	  "",
 :                       "",
