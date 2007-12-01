@@ -112,7 +112,7 @@ rem --- Sorts
                     if initializing$<>"N"
                         initializing$="N"
                         read (poe02_dev2,knum=1,key=firm_id$+firstpo$,dom=*next)
-                        if firstpo$<>"" poe02p_key$=firm_id$+firstpo$+firstvend$;read(poe02_dev2,knum=1,key=poe02p_key$,dom=next);break
+                        if firstpo$<>"" poe02p_key$=firm_id$+firstpo$+firstvend$;read(poe02_dev2,knum=1,key=poe02p_key$,dom=*next);break
                     endif
                     poe02p_key$=key(poe02_dev2,knum=1,end=done);read(poe02_dev2)
                     poe02a_key$=poe02p_key.firm_id$+poe02p_key.vendor_id$+poe02p_key.po_no$
@@ -181,10 +181,11 @@ rem            if printseq$="A" if cvs(vendthru$,2)<>"" if cvs(apm01a_key.alt_se
                 if vendthru$<>"" and poe02a.vendor_id$>vendthru$ and printseq$<>"A" break
             endif
 
-            if whse$<>"ALL" if poe02a.warehouse_id$<>whse$ continue
+            if whse$<>"ALL" if poe02a.warehouse_id$<>whse$ break
                 gosub gettestdate_header
-                if datefrom$<>"" and testdateh$<datefrom$ continue
-                if datethru$<>"" and testdateh$>datethru$ continue
+
+                if datefrom$<>"" and testdateh$<datefrom$ break
+                if datethru$<>"" and testdateh$>datethru$ break
 rem --- Header passed tests
                         gosub testbreaks
                         headrecprinted$="Y"
@@ -205,7 +206,6 @@ rem --- Test PO Detail date range
  
                 read record (poe12_dev,key=poe12a_key$) poe12a$
                 if whse$="ALL" or poe12a.warehouse_id$=whse$
-
                     gosub gettestdate_detail
                     if datefrom$="" or testdated$>=datefrom$
 
@@ -236,7 +236,7 @@ rem --- Accumulate totals; then get next detail
                 extension=0
                 extension$=""
 
-            wend
+            wend ;rem after totals calc
 
 rem --- Done w/detail for this PO
 
