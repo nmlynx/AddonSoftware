@@ -83,8 +83,8 @@ rem --- Position files
 
     while more
         ivt03a_key$=key(ivt03_dev,end=*break)
-        if pos(firm_id$= ivt03a_key$)<>1 break
-        vendor$= ivt03a_key.vendor_id$
+        if pos(firm_id$=ivt03a_key$)<>1 break
+        vendor$=ivt03a_key.vendor_id$
         product$=ivt03a_key.product_type$
         tran_date$=ivt03a_key.trans_date$
         whse$=ivt03a_key.warehouse_id$
@@ -198,7 +198,7 @@ Vendor_Break: rem --- Vendor Break
 
     let apm01a.vendor_name$="Invalid Vendor"
     find record (apm01_dev,key=firm_id$+vendor$,dom=*next) apm01a$
-    OutVect!.addItem(str(fnmask$(vendor$,x7$)) + " ")
+    OutVect!.addItem(str(fnmask$(vendor$(1,x7),x7$)) + " ")
     OutVect!.addItem(apm01a.vendor_name$)
        
     let l=l+1
