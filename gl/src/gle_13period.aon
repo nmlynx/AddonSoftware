@@ -114,6 +114,7 @@ rem --- Assign input values to local variables
     if cvs(begper$,2)="" begper$=gls01a.current_per$
     if cvs(begyear$,2)="" begyear$=gls01a.current_year$
     reprint=reprint$="Y"
+    period=num(begper$)
 
 rem --- Retrieve GL Financial Report Parameter record and either update it
 rem --- or create it if necessary
