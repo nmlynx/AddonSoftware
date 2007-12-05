@@ -322,16 +322,18 @@ print_line: rem --- Perform any required editing and print the line
                      if (ratiopct$<>" " and pos(input_percnt$="   000",3)) or
 :                        values[x]=0 or a[x,0]=9 or a[x,3]=0 continue
                  endif
+
                  if amtunit$="A" mask$=m1$
                  if amtunit$="U" mask$=m2$
                  if ratiopct$="R" mask$=m3$
                  if pos(ratiopct$="P%")>0 mask$=m4$
                  if ratiopct$="$" if x and colinfo$((x-1)*mc+3,1)="U" mask$=m2$
 :                                                                else mask$=m1$
-                 if pos(ratiopct$="PR%")=0 or pos(amtunit$="AR") or pos("$"=editing_code$)
+                 if pos(ratiopct$="PR%")=0 and pos(amtunit$="AR") and pos("$"=editing_code$)
                     xpos=pos("#"=mask$)
                     if xpos mask$=mask$(1,xpos-1)+"$"+mask$(xpos); fi
                  endif
+
                  print (printer_dev) @(fnppos(a[x,3],mask$)),values[x]:mask$,
              next x
           endif
