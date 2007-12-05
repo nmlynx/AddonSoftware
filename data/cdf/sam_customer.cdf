@@ -23,7 +23,7 @@ wmap$=callpoint!.getAbleMap()
 wpos=pos(wctl$=wmap$,8)
 wmap$(wpos+6,1)=ctl_stat$
 callpoint!.setAbleMap(wmap$)
-callpoint!.setStatus("ABLEMAP-REFRESH")
+rem callpoint!.setStatus("ABLEMAP-REFRESH")
 
 return
 [[SAM_CUSTOMER.AOPT-SALU]]
@@ -74,7 +74,6 @@ while 1
 	next x
 	ctl_name$="SAM_CUSTOMER.YEAR"
 	ctl_stat$="D"
-escape
 	gosub disable_fields
 	ctl_name$="SAM_CUSTOMER.CUSTOMER_ID"
 	ctl_stat$="D"
@@ -85,8 +84,7 @@ escape
 	ctl_name$="SAM_CUSTOMER.ITEM_ID"
 	ctl_stat$="D"
 	gosub disable_fields
-escape
-callpoint!.setRecordStatus("")
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setRecordStatus("CLEAR")
+	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH")
 	break
 wend
