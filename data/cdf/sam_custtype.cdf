@@ -29,8 +29,21 @@ call syspgmdir$+"bam_inquiry.bbj",
 :	"PRIMARY",
 :	rd_key$
 
-callpoint!.setColumnData("SAM_CUSTTYPE.YEAR",rd_key.year$)
-callpoint!.setColumnData("SAM_CUSTTYPE.CUSTOMER_TYPE",rd_key.customer_type$)
-callpoint!.setColumnData("SAM_CUSTTYPE.PRODUCT_TYPE",rd_key.product_type$)
-callpoint!.setColumnData("SAM_CUSTTYPE.ITEM_ID",rd_key.item_id$)
-callpoint!.setStatus("REFRESH")
+rem --- get record and redisplay
+
+sam_tpl$=fnget_tpl$("SAM_CUSTTYPE")
+dim sam_tpl$:sam_tpl$
+while 1
+	readrecord(fnget_dev("SAM_CUSTTYPE"),key=rd_key$,dom=*break)sam_tpl$
+	callpoint!.setColumnData("SAM_CUSTTYPE.YEAR",rd_key.year$)
+	callpoint!.setColumnData("SAM_CUSTTYPE.CUSTOMER_TYPE",rd_key.customer_type$)
+	callpoint!.setColumnData("SAM_CUSTTYPE.PRODUCT_TYPE",rd_key.product_type$)
+	callpoint!.setColumnData("SAM_CUSTTYPE.ITEM_ID",rd_key.item_id$)
+	For x=1 to 13
+		callpoint!.setColumnData("SAM_CUSTTYPE.QTY_SHIPPED_"+str(x:"00"),FIELD(sam_tpl$,"qty_shipped_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_CUSTTYPE.TOTAL_COST_"+str(x:"00"),FIELD(sam_tpl$,"total_cost_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_CUSTTYPE.TOTAL_SALES_"+str(x:"00"),FIELD(sam_tpl$,"total_sales_"+str(x:"00")))
+	next x
+	callpoint!.setStatus("REFRESH")
+	break
+wend

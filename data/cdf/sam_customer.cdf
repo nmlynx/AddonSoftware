@@ -1,3 +1,31 @@
+[[SAM_CUSTOMER.AREC]]
+rem --- Enable key fields
+	ctl_name$="SAM_CUSTOMER.YEAR"
+	ctl_stat$=""
+	gosub disable_fields
+	ctl_name$="SAM_CUSTOMER.CUSTOMER_ID"
+	ctl_stat$=""
+	gosub disable_fields
+	ctl_name$="SAM_CUSTOMER.PRODUCT_TYPE"
+	ctl_stat$=""
+	gosub disable_fields
+	ctl_name$="SAM_CUSTOMER.ITEM_ID"
+	ctl_stat$=""
+	gosub disable_fields
+	callpoint!.setStatus("REFRESH")
+[[SAM_CUSTOMER.<CUSTOM>]]
+disable_fields:
+rem --- used to disable/enable controls depending on parameter settings
+rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+
+wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+wmap$=callpoint!.getAbleMap()
+wpos=pos(wctl$=wmap$,8)
+wmap$(wpos+6,1)=ctl_stat$
+callpoint!.setAbleMap(wmap$)
+callpoint!.setStatus("ABLEMAP-REFRESH")
+
+return
 [[SAM_CUSTOMER.AOPT-SALU]]
 rem -- call inquiry program to view Sales Analysis records
 
@@ -33,17 +61,32 @@ rem --- get record and redisplay
 
 sam_tpl$=fnget_tpl$("SAM_CUSTOMER")
 dim sam_tpl$:sam_tpl$
-escape
 while 1
 	readrecord(fnget_dev("SAM_CUSTOMER"),key=rd_key$,dom=*break)sam_tpl$
 	callpoint!.setColumnData("SAM_CUSTOMER.YEAR",rd_key.year$)
 	callpoint!.setColumnData("SAM_CUSTOMER.CUSTOMER_ID",rd_key.customer_id$)
 	callpoint!.setColumnData("SAM_CUSTOMER.PRODUCT_TYPE",rd_key.product_type$)
 	callpoint!.setColumnData("SAM_CUSTOMER.ITEM_ID",rd_key.item_id$)
-For x=1 to 13
-callpoint!.setColumnData("SAM_CUSTOMER.QTY_SHIPPED_"+str(x:”00”),"FIELD(sam_tpl$,”qty_shipped_”+str(x:”00”))")
-next x
-
+	For x=1 to 13
+		callpoint!.setColumnData("SAM_CUSTOMER.QTY_SHIPPED_"+str(x:"00"),FIELD(sam_tpl$,"qty_shipped_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_CUSTOMER.TOTAL_COST_"+str(x:"00"),FIELD(sam_tpl$,"total_cost_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_CUSTOMER.TOTAL_SALES_"+str(x:"00"),FIELD(sam_tpl$,"total_sales_"+str(x:"00")))
+	next x
+	ctl_name$="SAM_CUSTOMER.YEAR"
+	ctl_stat$="D"
+escape
+	gosub disable_fields
+	ctl_name$="SAM_CUSTOMER.CUSTOMER_ID"
+	ctl_stat$="D"
+	gosub disable_fields
+	ctl_name$="SAM_CUSTOMER.PRODUCT_TYPE"
+	ctl_stat$="D"
+	gosub disable_fields
+	ctl_name$="SAM_CUSTOMER.ITEM_ID"
+	ctl_stat$="D"
+	gosub disable_fields
+escape
+callpoint!.setRecordStatus("")
 	callpoint!.setStatus("REFRESH")
 	break
 wend

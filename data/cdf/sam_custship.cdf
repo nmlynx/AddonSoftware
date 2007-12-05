@@ -29,10 +29,21 @@ call syspgmdir$+"bam_inquiry.bbj",
 :	"PRIMARY",
 :	rd_key$
 
-if len(cvs(rd_key$,2))>0 then
+rem --- get record and redisplay
+
+sam_tpl$=fnget_tpl$("SAM_CUSTSHIP")
+dim sam_tpl$:sam_tpl$
+while 1
+	readrecord(fnget_dev("SAM_CUSTSHIP"),key=rd_key$,dom=*break)sam_tpl$
 	callpoint!.setColumnData("SAM_CUSTSHIP.YEAR",rd_key.year$)
 	callpoint!.setColumnData("SAM_CUSTSHIP.CUSTOMER_ID",rd_key.customer_id$)
 	callpoint!.setColumnData("SAM_CUSTSHIP.SHIPTO_NO",rd_key.shipto_no$)
 	callpoint!.setColumnData("SAM_CUSTSHIP.ITEM_ID",rd_key.item_id$)
+	For x=1 to 13
+		callpoint!.setColumnData("SAM_CUSTSHIP.QTY_SHIPPED_"+str(x:"00"),FIELD(sam_tpl$,"qty_shipped_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_CUSTSHIP.TOTAL_COST_"+str(x:"00"),FIELD(sam_tpl$,"total_cost_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_CUSTSHIP.TOTAL_SALES_"+str(x:"00"),FIELD(sam_tpl$,"total_sales_"+str(x:"00")))
+	next x
 	callpoint!.setStatus("REFRESH")
-endif
+	break
+wend

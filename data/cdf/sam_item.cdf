@@ -26,7 +26,20 @@ call syspgmdir$+"bam_inquiry.bbj",
 :	"PRIMARY",
 :	rd_key$
 
-callpoint!.setColumnData("SAM_ITEM.YEAR",rd_key.year$)
-callpoint!.setColumnData("SAM_ITEM.PRODUCT_TYPE",rd_key.product_type$)
-callpoint!.setColumnData("SAM_ITEM.ITEM_ID",rd_key.item_id$)
-callpoint!.setStatus("REFRESH")
+rem --- get record and redisplay
+
+sam_tpl$=fnget_tpl$("SAM_ITEM")
+dim sam_tpl$:sam_tpl$
+while 1
+	readrecord(fnget_dev("SAM_ITEM"),key=rd_key$,dom=*break)sam_tpl$
+	callpoint!.setColumnData("SAM_ITEM.YEAR",rd_key.year$)
+	callpoint!.setColumnData("SAM_ITEM.PRODUCT_TYPE",rd_key.product_type$)
+	callpoint!.setColumnData("SAM_ITEM.ITEM_ID",rd_key.item_id$)
+	For x=1 to 13
+		callpoint!.setColumnData("SAM_ITEM.QTY_SHIPPED_"+str(x:"00"),FIELD(sam_tpl$,"qty_shipped_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_ITEM.TOTAL_COST_"+str(x:"00"),FIELD(sam_tpl$,"total_cost_"+str(x:"00")))
+		callpoint!.setColumnData("SAM_ITEM.TOTAL_SALES_"+str(x:"00"),FIELD(sam_tpl$,"total_sales_"+str(x:"00")))
+	next x
+	callpoint!.setStatus("REFRESH")
+	break
+wend
