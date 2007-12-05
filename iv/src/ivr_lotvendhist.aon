@@ -26,7 +26,6 @@ rem --- Open/Lock files
     files=14,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
-    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="glm-01",ids$[3]="GLM_ACCT"
     files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
     files$[5]="ivm-07",ids$[5]="IVM_LSMASTER"
@@ -44,7 +43,6 @@ rem --- Open/Lock files
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ivs01a_dev=channels[1]
-    apm01_dev=channels[2]
     glm01_dev=channels[3]
     ivm01_dev=channels[4]
     ivm07_dev=channels[5]
@@ -60,7 +58,7 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-    dim apm01a$:templates$[2],glm01a$:templates$[3],ivm01a$:templates$[4]
+    dim glm01a$:templates$[3],ivm01a$:templates$[4]
     dim ivm07a$:templates$[5],ivm10a$:templates$[6],ivm14a$:templates$[7]
     dim ivm15a$:templates$[8],ivt01a$:templates$[9],ivt03a$:templates$[10]
     dim aps01a$:templates$[11],gls01a$:templates$[12],ivs01a$:templates$[1]
@@ -133,9 +131,8 @@ rem --- Check for vendor masterfile
 rem --- Retrieve key template
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_LSMASTER","PRIMARY",ivm07_key_tpl$,table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_LSXREF","PRIMARY",ivm08_key_tpl$,table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_LSVEND","PRIMARY",ivt03_key_tpl$,table_chans$[all],status$
-    dim ivm07a_key$:ivm07_key_tpl$,ivm08a_key$:ivm08_key_tpl$,ivt03a_key$:ivt03_key_tpl$
+    dim ivm07a_key$:ivm07_key_tpl$,ivt03a_key$:ivt03_key_tpl$
 
  rem --- Run Overlay
 

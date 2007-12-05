@@ -67,7 +67,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Retrieve miscellaneous templates
 
-    files=7,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim ids$[files],templates$[files]
     ids$[1]="IVM_ITEMMAST"
     ids$[2]="ARM_CUSTMAST"
@@ -75,36 +75,37 @@ rem --- Retrieve miscellaneous templates
     ids$[4]="GLM_ACCT"
     ids$[5]="IVC_TRANCODE"
     ids$[6]="IVC_WHSECODE"
-    ids$[7]="IVT_ITEMTRAN"
 
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[1],
+    dim ivm01a$:templates$[1],ivm10b$:templates$[5],ivm10c$:templates$[6],
 :       arm01a$:templates$[2],apm01a$:templates$[3],glm01a$:templates$[4]
-    dim ivm10b$:templates$[5],ivm10c$:templates$[6],ivt04a$:templates$[7]
-
 
 l96: rem --- Initializations
 
-    dim a0$(22),a1$(60),b0$(8),b1$(30),c0$(12),c1$(35),x0$(32),x1$(54),x2$(54)
+    dim a0$(22),b0$(8),c0$(12),x0$(32),x1$(54),x2$(54)
     description$[0]=""
     description$[1]=""
     description$[2]=""
-    ivt04a$=trans$
-    source$=ivt04a.trans_source$
-    ref1$=cvs(ivt04a.trans_ref_1$,2)
-    ref2$=ivt04a.trans_ref_2$
+    source$=trans$(1,2)
+    ref1$=cvs(trans$(3,6),2)
+    ref2$=trans$(9,7)
     if pos(source$="IAIIIRIC",2) source$="IT"
-    ref3$=ivt04a.trans_ref_3$
-    ref4$=ivt04a.trans_ref_4$
-    seq$=ivt04a.trans_seq$
+    ref3$=trans$(16,7)
+    ref4$=trans$(23,2)
+    seq$=trans$(25,3)
     desc$=""
-    item$=cvs(ivt04a.finish_item$,2)
+    item$=cvs(trans$(51,20),2)
     type$=""
     types$="Beg BOM TranSalePhysP.O.XferXferW.O.W.O."
+    gl_account$=trans$(71,10)
+    comment$=cvs(trans$(31,20),2)
+    line_code$=trans$(28,1)
+    location$=trans$(81,10)
+    po_line_code$=trans$(91,2)
 
 rem --- Retrieve finished item
 
@@ -136,10 +137,10 @@ l1300: rem --- Retrieve GL account
 
     if pos(source$="OPITTITOBMWIWO",2)=0 goto l1400
     if glm01_dev=0 goto l1400
-    if cvs(ivt04a.gl_account$,2)="" goto l1400
-    c0$(1)=firm_id$+ivt04a.gl_account$
+    if num(gl_account$,err=l1400)=0 goto l1400
+    c0$(1)=firm_id$+gl_account$
     find record (glm01_dev,key=c0$,dom=l1400) glm01a$
-    description$[2]="GL Acct "+fnmask$(glm01a.gl_account$,masks$[3])+" "+glm01a.gl_acct_desc$
+    description$[2]="GL Acct "+fnmask$(gl_account$,masks$[3])+" "+glm01a.gl_acct_desc$
 
 l1400: rem --- Branch based on record source
 
@@ -163,36 +164,38 @@ l2200: rem --- IT Inventory Transactions
 
     x0$(6,20)="(Undefined Code)"
     x2$(1)="Ref "+ref2$
-    find record (ivm10b_dev,key=firm_id$+"B"+ref4$,dom=*next) ivm10b$
+    find record (ivm10b_dev,key=firm_id$+"B"+ref4$,dom=Set_Trans_Desc) ivm10b$
     x0$(6,20)=ivm10b.code_desc$
-    x1$(1)="Code "+ref4$+" "+x0$(6,20)+ivt04a.trans_cmt$
+Set_Trans_Desc:
+    x1$(1)="Code "+ref4$+" "+x0$(6,20)+comment$
     if cvs(seq$,2)<>"" x2$(12)="-"+seq$
     goto done
 
 l2300: rem --- Type "OP" (Invoice)
 
     x1$(1)="Customer "+ref1$+" "+arm01a.customer_name$
-    x2$(1)="Invoice "+ref3$+"-"+seq$+" Order "+ref2$+" Line "+ivt04a.line_code$
+    x2$(1)="Invoice "+ref3$+"-"+seq$+" Order "+ref2$+" Line "+line_code$
     goto done
 
 l2400: rem --- PH Physical Inventory Adjustment
 
     x1$(1)="Physical Inventory Adjustment"
-    x2$(1)="Cycle "+ref4$+"  Loc "+ivt04a.location$
+    x2$(1)="Cycle "+ref4$+"  Loc "+location$
     goto done
 
 l2500: rem --- PO Purchase Order Receipt
 
     x1$(1)="Vendor "+ref1$+" "+apm01a.vendor_name$
-    x2$(1)="PO "+ref2$+"-"+seq$+" Line "+ivt04a.po_line_code$
+    x2$(1)="PO "+ref2$+"-"+seq$+" Line "+po_line_code$
     goto done
 
 l2600: rem --- TI/TO Transfer In/Out
 
     x0$(6,24)="(Undefined Warehouse)"
     x2$(1)="Ref "+ref2$
-    find record (ivm10c_dev,key=firm_id$+"C"+ref4$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+ref4$,dom=Set_Transfer_Desc) ivm10c$
     x0$(6,24)=ivm10c.short_name$
+Set_Transfer_Desc:
     if source$="TO" x1$(1)="To "+ref4$+" "+x0$(6,24)
     if source$="TI" x1$(1)="From "+ref4$+" "+x0$(6,24)
     goto done
@@ -202,7 +205,7 @@ l2700: rem --- WI Work Order Issue
     x1$(1)="WO "+ref3$+"-"+seq$+"  Type "+ref4$
     p=1
     if ref1$<>"" x1$(29)="Customer "+ref1$
-    if cvs(item$,2)<>"" x2$(p)="Item "+item$,p=len(cvs(item$,2))+7
+    if item$<>"" x2$(p)="Item "+item$,p=len(item$)+7
     if cvs(ref2$,2)<>"" x2$(p)="SO "+ref2$
     if cvs(ref2$,2)="" x2$(p)=desc$
     goto done

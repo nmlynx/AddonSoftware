@@ -1,5 +1,6 @@
-rem ivr - Inventory Transaction History Listing (Report Overlay)
-rem Program ivr_transhist.aon v8.0.0 26Oct2006 (ivr_qb)
+rem ivr - Inventory Lot/Serial Transaction History Listing (Report Overlay)
+rem Program ivr_lottranhist.aon v8.0.0 26Oct2006 (ivr_7b)
+rem Created from ivr_transhist, incorporating ivr_7a/7b. 11/2006.CAH
 rem Created by adx_codeport.bbx v1.1.1 (10/26/2006 12:56:00)
 
 rem  +-----------------------------------------+
@@ -7,16 +8,6 @@ rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
 rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
-
-rem This report has been modified for output to vector/grid (OutVect!), instead of directly to printer
-
-rem --- The following IOLIST's were removed from this program:
-
-rem ---     ivt04a1: iolist a0$,a1$,a2$,a3$,a[all]
-rem ---     ivm01a: iolist b0$,b1$,b2$,b3$,b4$,b5$,b6$,b[all]
-rem ---     ivt04a2: iolist l0$,l1$,l2$,l3$,l[all]
-rem ---     ivm10a: iolist x0$(1)
-rem ---     ivm10c: iolist x0$(1)
 
     seterr std_error
     setesc std_error
@@ -37,44 +28,50 @@ rem --- Retrieve sysinfo data
 
 rem --- Open files
 
-    files=12,begfile=1,endfile=files
+    files=15,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
-    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-    files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
-    files$[4]="arm-01",ids$[4]="ARM_CUSTMAST"
-    files$[5]="ivc_whsecode",ids$[5]="IVC_WHSECODE"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="glm-01",ids$[3]="GLM_ACCT"
+    files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
+    files$[5]="ivm-07",ids$[5]="IVM_LSMASTER"
     files$[6]="ivc_prodcode",ids$[6]="IVC_PRODCODE"
-    files$[7]="ivc_trancode",ids$[7]="IVC_TRANCODE"
-    files$[8]="ivt-04",ids$[8]="IVT_ITEMTRAN"
-    files$[9]="aps_params",ids$[9]="APS_PARAMS"
-    files$[10]="ars_params",ids$[10]="ARS_PARAMS"
-    files$[11]="gls_params",ids$[11]="GLS_PARAMS"
-    files$[12]="ivt-04",ids$[12]="IVT_ITEMTRAN"
+    files$[7]="ivm-14",ids$[7]="IVM_ITEMSYN"
+    files$[8]="ivm-15",ids$[8]="IVC_TYPECODE"
+    files$[9]="ivt-01",ids$[9]="IVT_LSTRANS"
+    files$[10]="ivt-01",ids$[10]="IVT_LSTRANS"
+    files$[11]="ars_params",ids$[11]="ARS_PARAMS"
+    files$[12]="gls_params",ids$[12]="GLS_PARAMS"
+    files$[13]="ivc_trancode",ids$[13]="IVC_TRANCODE"
+    files$[14]="ivc_whsecode",ids$[14]="IVC_WHSECODE"
+    files$[15]="aps_params",ids$[15]="APS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ivs01_dev=channels[1]
-    apm01_dev=channels[2]
-    ivm01_dev=channels[3]
-    arm01_dev=channels[4]
-    ivm10c_dev=channels[5]
+    ivs01a_dev=channels[1]
+    arm01_dev=channels[2]
+    glm01_dev=channels[3]
+    ivm01_dev=channels[4]
+    ivm07_dev=channels[5]
     ivm10a_dev=channels[6]
-    ivm10b_dev=channels[7]
-    ivt04_dev=channels[8]
-    aps01_dev=channels[9]
-    ars01_dev=channels[10]
-    gls01_dev=channels[11]
-    ivt04_dev2=channels[12]
+    ivm14_dev=channels[7]
+    ivm15_dev=channels[8]
+    ivt01_dev=channels[9]
+    ivt01_dev2=channels[10]
+    ars01a_dev=channels[11]
+    gls01a_dev=channels[12]
+    ivm10b_dev=channels[13]
+    ivm10c_dev=channels[14]
+    aps01a_dev=channels[15]
 
 rem --- Dimension string templates
 
-    dim ivs01a$:templates$[1],apm01a$:templates$[2],ivm01a$:templates$[3],
-:       arm01a$:templates$[4],ivm10c$:templates$[5],ivm10a$:templates$[6],
-:       ivm10b$:templates$[7],ivt04a$:templates$[8],ivt04b$:templates$[12],
-:	aps01a$:templates$[9],ars01a$:templates$[10],gls01a$:templates$[11]
-
+    dim arm01a$:templates$[2],glm01a$:templates$[3],ivm01a$:templates$[4]
+    dim ivm07a$:templates$[5],ivm10a$:templates$[6],ivm14a$:templates$[7]
+    dim ivm15a$:templates$[8],ivt01a$:templates$[9],ivt01b$:templates$[10]
+    dim ars01a$:templates$[11],gls01a$:templates$[12],ivs01a$:templates$[1]
+    dim ivm10b$:templates$[13],ivm10c$:templates$[14],aps01a$:templates$[15]
 
 rem --- Assign form input values to local variables
     dim ttypes$[9]
@@ -87,7 +84,9 @@ rem --- Assign form input values to local variables
     end_prod$=option!.getOptionData("product_type_2")
     beg_item$=option!.getOptionData("item_id_1")
     end_item$=option!.getOptionData("item_id_2")
-    itype$=option!.getOptionData("item_type")
+    item_type$=option!.getOptionData("item_type")
+    ocb$=option!.getOptionData("op_cl_both")
+    totals$=option!.getOptionData("pick_check")
     ttypes$[0]=option!.getOptionData("tran_hst_all")
     ttypes$[1]=option!.getOptionData("tran_hst_po")
     ttypes$[2]=option!.getOptionData("tran_hst_op")
@@ -99,10 +98,16 @@ rem --- Assign form input values to local variables
     ttypes$[8]=option!.getOptionData("tran_hst_wo")
     ttypes$[9]=option!.getOptionData("tran_hst_bm")
 
+rem --- Retrieve key template
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_LSMASTER","PRIMARY",ivm07_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVT_LSTRANS","PRIMARY",ivt01_key_tpl$,table_chans$[all],status$
+    dim ivm07a_key$:ivm07_key_tpl$,ivt01a_key$:ivt01_key_tpl$,ivt01alt$:ivt01_key_tpl$
+
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- check application settings
 
@@ -123,24 +128,41 @@ rem --- Initializations
     p[5]=num(ivs01a.desc_len_01$)
     p[6]=num(ivs01a.desc_len_02$)
     p[7]=num(ivs01a.desc_len_03$)
+    if num(totals$) totals$="Y" else totals$="N"
+
     call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
     call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
     call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
-    call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
+    call pgmdir$+"adc_getmask.aon","","IV","P",imask$,m4$,0,0
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
+    call pgmdir$+"adc_sizemask.aon",m2$,m2,9,12
+    call pgmdir$+"adc_sizemask.aon",m3$,m3,10,12
+    call pgmdir$+"adc_sizemask.aon",m4$,m4,6,12
 
     if ar$<>"Y" goto ar_not_installed
-    find record (ars01_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
+    find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
     x8=num(ars01a.customer_size$)
     x9$=ars01a.customer_output$, x9=len(x9$)
 ar_not_installed:
-    if ap$<>"Y" goto ap_not_installed
-    find record (aps01_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-    x6=num(aps01a.vendor_size$)
-    x7$=aps01a.vendor_output$,x7=len(x7$)
-ap_not_installed:
-    find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+
+rem --- Check for vendor masterfile
+
+    if ap$<>"N" then
+        find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
+        files=1,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="apm-01",ids$[1]="APM_VENDMAST"
+
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+	if status goto std_exit
+	apm01_dev=channels[1]
+	dim apm01a$:templates$[1]
+        x6=num(aps01a.vendor_size$)
+        x7$=aps01a.vendor_output$,x7=len(x7$)
+    endif
+
+    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
     g2$=gls01a.max_acct_len$
     g5$=gls01a.acct_output$
 
@@ -154,14 +176,15 @@ ap_not_installed:
     h=0
     h1$=firm_name$
     h2$=task_desc$
-    if ttypes$[0]="Y" or ttype$="" then all$="Y"
+    if ttype$="" all$="Y"
 
     precision p[2]
-    headings=8
+    headings=6
     when$=sys_date$
     clock$=""
     h9$=""
-    dim headings$[headings],o[6],a[4],b[12],l[4]
+    dim headings$[headings],o[7],a[4],b[12],l[4],c0$(32)
+    dim item_qty[9],item_ext[9]
     dim ivchannels[6],params[6],masks$[3]
     headings$[0]=firm_name$
     headings$[1]=task_desc$
@@ -191,101 +214,108 @@ ap_not_installed:
 
 rem --- Print positions
 
-    o[0]=p[0]+1
-    o[1]=o[0]+9
-    o[2]=o[1]+5
-    o[6]=width-m2
-    o[5]=o[6]-m1
-    o[4]=o[5]-m3
-    o[3]=o[4]-m2
+    o[0]=5
+    o[1]=o[0]+p[3]+1
+    o[2]=o[1]+9
+    o[3]=o[2]+5
+    o[7]=width-m2
+    o[6]=o[7]-m1
+    o[5]=o[6]-m3
+    o[4]=o[5]-m2
+    gosub init_headings
 
-    gosub l5800 ; rem "initialize headings
-
-    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",3+p[0],ivt04_dev,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",3+p[0],ivt01_dev,1,0,ignore_status
 
 rem --- Position files
 
-    read (ivt04_dev,key=firm_id$+beg_whse$,dom=*next)
+    read (ivt01_dev,key=firm_id$+beg_whse$,dom=*next)
 
 l1000: rem --- Get next record
 
-    k$=key(ivt04_dev,end=done)
-    if pos(firm_id$+beg_whse$=k$)<>1 goto done
-    whse$=k$(3,2)
-    item$=k$(5,20)
+    ivt01a_key$=key(ivt01_dev,end=done)
+    if firm_id$<>ivt01a_key.firm_id$ goto done
+    tran_date$=ivt01a_key.trans_date$
+    whse$=ivt01a_key.warehouse_id$
+    item$=ivt01a_key.item_id$
 
 rem --- Valid Warehouse/Item?
 
     if end_whse$<>"" if whse$>end_whse$ goto done
-    if beg_item$<>"" if item$<beg_item$ read (ivt04_dev,key=k$(1,4)+beg_item$,dom=l3900)
-    if end_item$<>"" if item$>end_item$ read (ivt04_dev,key=k$(1,4)+$FF$,dom=l3900)
-rem    if beg_item$<>"" if cvs(item$,3)<beg_item$ read (ivt04_dev,key=k$(1,4)+beg_item$,dom=l3900)
-rem    if end_item$<>"" if cvs(item$,3)>end_item$ read (ivt04_dev,key=k$(1,4)+$FF$,dom=l3900)
-
-rem --- Valid Product/Type/Date?
-
-    read record (ivt04_dev) ivt04a$
-    if beg_date$<>"" if ivt04a.trans_date$<beg_date$ read (ivt04_dev,key=k$(1,24)+beg_date$,dom=l3900)
-    if end_date$<>"" if ivt04a.trans_date$>end_date$ read (ivt04_dev,key=k$(1,24)+$FF$,dom=l3900)
-    if ivt04a.trans_source$="BB" goto l3900
-    if all$<>"Y" if pos(ivt04a.trans_source$=ttype$,2)=0 goto l3900
-
+    if beg_item$<>"" if item$<beg_item$ read (ivt01_dev,key=firm_id$+whse$+beg_item$,dom=l3900)
+    if end_item$<>"" if item$>end_item$ read (ivt01_dev,key=firm_id$+whse$+$FF$,dom=l3900)
+    if beg_date$<>"" if tran_date$<beg_date$ read (ivt01_dev,key=firm_id$+whse$+item$+ivt01a_key.lotser_no$+beg_date$,dom=l3900)
+    if end_date$<>"" if tran_date$>end_date$ read (ivt01_dev,key=firm_id$+whse$+item$+ivt01a_key.lotser_no$+$FF$,dom=l3900)
     find record (ivm01_dev,key=firm_id$+item$,dom=l3900) ivm01a$
+    if item_type$<>"" if ivm01a.item_type$<>item_type$ goto l3900
     if beg_prod$<>"" if ivm01a.product_type$<beg_prod$ goto l3900
     if end_prod$<>"" if ivm01a.product_type$>end_prod$ goto l3900
-    if itype$<>"" if ivm01a.item_type$<>itype$ goto l3900
+
+rem --- Open or Closed Lots?
+
+    if ocb$<>"B" then
+        ivm07a.qty_on_hand=0
+        find record (ivm07_dev,key=firm_id$+whse$+item$+ivt01a_key.lotser_no$,dom=*next) ivm07a$
+        if (ocb$="O" and ivm07a.qty_on_hand=0) or (ocb$="C" and ivm07a.qty_on_hand<>0) goto l3900
+    endif
+
+l1400: rem --- Valid Product/Type/Date?
+
+    read record (ivt01_dev) ivt01a$
+    if all$<>"Y" if pos(ivt01a.trans_source$=ttype$,2)=0 goto l3900
+    if ivt01a.trans_source$="BB" goto l3900
 
 rem --- Level breaks?
 
-    if all$="Y" and item$<>t1$ gosub l6500
-    call pgmdir$+"adc_progress.aon","S","","","",k$(3,2)+" "+k$(5,p[0]),0,0,1,0,ignore_status
-    if whse$<>t0$ gosub l6000
-    if item$<>t1$ gosub l6200
-    balance=balance+ivt04a.trans_qty
+    if all$="Y" and totals$="Y" and item$<>t1$ gosub get_bb
+
+    call pgmdir$+"adc_progress.aon","S","","","",whse$+" "+item$,0,0,1,0,ignore_status
+
+    if whse$<>t0$ gosub wh_break
+    if item$<>t1$ gosub item_break
+    if all$="Y" and totals$="N" and ivt01a_key.lotser_no$<>t2$ gosub get_bb
+    if ivt01a.lotser_no$=t2$ goto l1580
+    if totals$="N" gosub print_totals
+    ser_lot_no$=ivt01a.lotser_no$
+    t2$=ivt01a.lotser_no$
+l1580: 
+    balance=balance+ivt01a.trans_qty
 
 rem --- Get Reference Block
 
     dim desc$[2]
-    call pgmdir$+"ivc_transdata.aon",ivt04a$,ivchannels[all],params[all],masks$[all],type$,desc$[all]
-    if type$="" goto l3900
+    ivt01a_a1$=ivt01a.TRANS_SOURCE$+ivt01a.TRANS_REF_1$+ivt01a.TRANS_REF_2$+ivt01a.TRANS_REF_3$+ivt01a.TRANS_REF_4$+ivt01a.TRANS_SEQ$+ivt01a.LINE_CODE$+
+:   ivt01a.UNIT_MEASURE$+ivt01a.TRANS_CMT$+ivt01a.FINISH_ITEM$+ivt01a.GL_ACCOUNT$+ivt01a.LOCATION$+
+:   ivt01a.PO_LINE_CODE$+ivt01a.RESERVED_STR$
+    call pgmdir$+"ivc_transdata.aon",ivt01a_a1$,ivchannels[all],params[all],masks$[all],type$,desc$[all]
 
 rem --- Build Totals Array
 
-rem    if ivt04a.trans_source$="BB" goto l2200
+    if ivt01a.trans_source$="BB" or ivt01a.trans_source$="  " goto l3000
 l2120:
     x=pos(type$=item_tot$,4)
     if x=0 item_tot$=item_tot$+type$; goto l2120
     x=(x+3)/4
-    item_qty[x]=item_qty[x]+ivt04a.trans_qty
-    item_ext[x]=item_ext[x]+ivt04a.trans_qty*ivt04a.unit_cost
-
-l2200: rem --- Print subheading?
-
-    if subhead1$="" goto l3000
-    OutVect!.addItem(subhead1$)
-    for x=1 to 2;OutVect!.addItem("");next x
-    OutVect!.addItem(subhead2$)
-    for x=1 to 4;OutVect!.addItem("");next x
-    l=l+1
-    subhead1$="",subhead2$=""
+    item_qty[x]=item_qty[x]+ivt01a.trans_qty
+    item_ext[x]=item_ext[x]+ivt01a.trans_qty*ivt01a.unit_cost
 
 l3000: rem --- Print detail line
 
     needed=1
     if cvs(desc$[1],2)<>"" needed=needed+1
-    OutVect!.addItem("")
-    OutVect!.addItem(fndate$(ivt04a.trans_date$))
+    OutVect!.addItem(ser_lot_no$)
+    OutVect!.addItem(fndate$(ivt01a.trans_date$))
     OutVect!.addItem(type$)
     OutVect!.addItem(desc$[0])
-    OutVect!.addItem(str(ivt04a.trans_qty:m2$))
-    OutVect!.addItem(str(ivt04a.unit_cost:m3$))
-    OutVect!.addItem(str(ivt04a.trans_qty*ivt04a.unit_cost:m1$))
+    OutVect!.addItem(str(ivt01a.trans_qty:m2$))
+    OutVect!.addItem(str(ivt01a.unit_cost:m3$))
+    OutVect!.addItem(str(ivt01a.trans_qty*ivt01a.unit_cost:m1$))
     if all$="Y" then OutVect!.addItem(str(balance:m2$)) else OutVect!.addItem("")
     l=l+1
+    ser_lot_no$=""
     if cvs(desc$[1],2)="" goto l3900
-    for x=1 to 3;OutVect!.addItem("");next x
+    wkx=fnblank(3)
     OutVect!.addItem(cvs(desc$[1],2))
-    for x=1 to 4; OutVect!.addItem("");next x
+    wkx=fnblank(4)
     l=l+1
 
 l3900: rem --- Loop back for next record
@@ -295,10 +325,10 @@ l3900: rem --- Loop back for next record
 done: rem --- All done
 
     done=1
-    gosub l6200
+    gosub item_break
     goto std_exit
 
-l5800: rem --- Initialize HEADINGS$
+init_headings: rem --- Initialize HEADINGS$
 
 rem --- date/time 
 	OutVect!=bbjAPI().getSysGui().makeVector()
@@ -307,13 +337,14 @@ rem --- date/time
 	rep_time$=date(0:"%hz:%mz %p")
 		rep_time_stamp$=date(0:"%Hz%mz%sz")
 
-rem -- miscellaneous headings
+rem --- miscellaneous headings
     dim h1$(width),h2$(width),h7$(width)
     x1$="First Date"
     x2$="Last Date"
+    if ocb$="O" x0$="Open" else if ocb$="C" x0$="Closed" else x0$="All"
     if beg_date$<>"" x1$=fndate$(beg_date$)
     if end_date$<>"" x2$=fndate$(end_date$)
-    headings$[2]="From "+x1$+" Through "+x2$
+    headings$[2]=x0$+" Lot/Serial Numbers From "+x1$+" Through "+x2$
     if all$="Y" headings$[3]="For All Transaction Types"; goto l5850 else headings$[3]="For Transaction Types "
     for x=0 to len(ttype$)-1 step 2; let headings$[3]=headings$[3]+ttype$(x+1,2)+" "; next x
     headings$[3]=cvs(headings$[3],2)
@@ -323,7 +354,7 @@ l5850:
     if beg_item$<>"" x1$=beg_item$
     if beg_prod$<>"" x2$=beg_prod$
     h1$="Item:  from "+x1$
-    h2$="Product:  from "+x2$
+    h2$="Product: from "+x2$
     x1$="Last"
     x2$="Last"
     x3$="All Item Types"
@@ -333,6 +364,13 @@ l5850:
     h1$=h1$+" to "+x1$
     h3$=x3$
     h2$=h2$+" to "+x2$
+    h7$(1)="Item Lot/Serial #"
+    h7$(o[1]+3)="Date"
+    h7$(o[2]+1)="Type"
+    h7$(o[3]+1)="Reference Information"
+    h7$(o[4]+m2-8)="Quantity"
+    h7$(o[5]+m3-9)="Unit Cost"
+    h7$(o[6]+m1-9)="Extension"
 
     headings$[4]=h1$
     headings$[5]=h2$
@@ -340,7 +378,7 @@ l5850:
 
 rem --- column headings
     dim columns$[7,3]
-    columns$[0,0]="Item",columns$[0,1]="C",columns$[0,2]="35"
+    columns$[0,0]="Item Lot/Serial #",columns$[0,1]="C",columns$[0,2]="30"
     columns$[1,0]="Date",columns$[1,1]="C",columns$[1,2]="15"
     columns$[2,0]="Type",columns$[2,1]="C",columns$[2,2]="5"
     columns$[3,0]="Reference Information",columns$[3,1]="C",columns$[3,2]="40"
@@ -351,31 +389,47 @@ rem --- column headings
 
     return
     
-l6000: rem --- Warehouse Break
+    wh_break: rem --- Warehouse Break
     
-    dim x0$(32)
-    gosub l6200
-    t0$=whse$
-    x0$(6,24)="(Not on File)"
-    l=l9+1
-    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    let x0$(6,24)=ivm10c.short_name$
-l6050:
-    x$="Warehouse "+t0$+" "+cvs(x0$(6,24),2)
+    c0$(6,24)="(Not on File)"
+    whbreak=1
+    find record (ivm10c_dev,key=firm_id$+"C"+whse$,dom=l6040) ivm10c$
+    c0$(6,24)=ivm10c.short_name$
+l6040:
+    x$="Warehouse "+whse$+" "+cvs(c0$(6,24),2)
     OutVect!.addItem(x$)
         for x=1 to 7
             OutVect!.addItem("")
         next x
-
+    gosub item_break
+    t0$=whse$
+    whbreak=0
     return
     
-l6200: rem --- Item Break
+item_break: rem --- Item Break
+
+    gosub print_totals
+    if done goto l6290
+    wkx=fnblank(8)
+    OutVect!.addItem(cvs(ivt01a.item_id$,3)+" "+cvs(ivm01a.item_desc$,3))
+    wkx=fnblank(2)
+    OutVect!.addItem("Product type: "+ivm01a.product_type$)
+    wkx=fnblank(4)
+    l=l+1
+    t1$=ivt01a.item_id$
+    ser_lot_no$=ivt01a.lotser_no$
+    t2$=ivt01a.lotser_no$
+    balance=0
+l6290:
+    return
     
-    if t1$="" goto l6300
-    if len(item_tot$)=0 goto l6270
-    for x1=1 to 8;OutVect!.addItem("");next x1;rem "blank line before totals
+print_totals: rem --- Print Totals
+    
+    if t1$="" goto l6380
+    if len(item_tot$)=0 goto l6380
+    wkx=fnblank(8)
     for x=1 to len(item_tot$) step 4
-        for x1=1 to 2;OutVect!.addItem("");next x1
+        wkx=fnblank(2)
         OutVect!.addItem(item_tot$(x,4))
         OutVect!.addItem("Total")           
         OutVect!.addItem(str(item_qty[(x+3)/4]:m2$))
@@ -386,61 +440,54 @@ l6200: rem --- Item Break
         net_ext=net_ext+item_ext[(x+3)/4]
         l=l+1
     next x
-    if all$="N" goto l6270
-    for x1=1 to 3;OutVect!.addItem("");next x1
+    if all$<>"Y" goto l6380
+    wkx=fnblank(3)
     OutVect!.addItem("Net Change")
     OutVect!.addItem(str(net_qty:m2$))
     OutVect!.addItem("")
     OutVect!.addItem(str(net_ext:m1$))
     OutVect!.addItem("")
-    for x1=1 to 8;OutVect!.addItem("");next x1;rem "blank line
-    l=l+1
-l6270:
-l6300:
-    if done goto l6390
+    wkx=fnblank(8)
+    l=l+2
     dim item_qty[9],item_ext[9]
-    t1$=ivt04a.item_id$
     item_tot$=""
     net_qty=0
     net_ext=0
-    wkdesc$=fnitem$(ivm01a.item_desc$)
-rem --- old format using params: wkdesc$=fnitem$(wkdesc$,p[5],p[6],p[7])
-    subhead1$=t1$(1,p[0])+" "+wkdesc$
-    subhead2$="Product type: "+ivm01a.product_type$
-l6390:
+l6380:
     return
     
-l6500: rem --- Determine starting beginning balance
+get_bb: rem --- Determine starting beginning balance
     
-    if itype$<>"" goto l6990
+    if item_type$<>"" goto l6990
     balance=0
-    x$=k$
-    read (ivt04_dev2,key=firm_id$+whse$+item$+beg_date$,dom=*next)
+    x$=ivt01a$
+    read (ivt01_dev2,key=firm_id$+whse$+item$+ivt01a.lotser_no$+beg_date$,dom=*next)
 l6580:
-    let k01$=key(ivt04_dev2,end=l6900)
+    let ivt01alt$=key(ivt01_dev2,end=l6900)
     goto l6630
-    
+ 
 l6600: rem --- Read backwards thru file until BB record is found
-   
-    let k01$=keyp(ivt04_dev2,end=l6900)
-    if k01$(1,24)<>firm_id$+whse$+item$ goto l6900
+  
+    let ivt01alt$=keyp(ivt01_dev2,end=l6900)
 l6630:
-    extract record (ivt04_dev2,key=k01$) ivt04b$
-    if ivt04b.trans_source$<>"BB" goto l6600
-    let balance=ivt04b.trans_qty
-   
+    if ivt01alt$(1,44)<>firm_id$+whse$+item$+ivt01a.lotser_no$ goto l6900
+
+    extract record (ivt01_dev2,key=ivt01alt$) ivt01b$
+    if ivt01b.trans_source$<>"BB" goto l6600
+    let balance=ivt01b.trans_qty
+    
 l6700: rem --- Read forward until first record for BEGDATE$
-    
-    let k01$=key(ivt04_dev2,end=l6900)
-    if k01$(1,24)<>firm_id$+whse$+item$ goto l6900
-    if k01$(25,8)>=beg_date$ goto l6900
-    read record (ivt04_dev2,key=k01$) ivt04b$
-    let balance=balance+ivt04b.trans_qty
+   
+    let ivt01alt$=key(ivt01_dev2,end=l6900)
+    if ivt01alt$(1,44)<>firm_id$+whse$+item$+ivt01a.lotser_no$ goto l6900
+    if ivt01alt.trans_date$>=beg_date$ goto l6900
+    read record (ivt01_dev2,key=ivt01alt$) ivt01b$
+    let balance=balance+ivt01b.trans_qty
     goto l6700
-l6900: rem --- Reread original record (now using two channels)
+l6900: rem --- Reread original record
     
-rem        let k$=x$
-rem        read record (ivt04_dev,key=k$) ivt04a1$
+rem    let ivt01k0$=x$
+rem    read record (ivt01_dev,key=ivt01k0$) ivt01a1$
 l6990:
     return
     
@@ -472,7 +519,7 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-   def fndate$(q$) 
+    def fndate$(q$) 
         if cvs(q$,2)="" return ""
         testdate$=""
         testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
@@ -547,9 +594,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:   str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry

@@ -49,7 +49,7 @@ Lotted/Serialized Inventory,G,,,,,,,,,,
 History By Item Inquiry,T,,,IVM.FA,Inquiry,,,,,,
 History By Customer Inquiry,T,,,IVM.IA,Inquiry,,,,,,
 History By Vendor Inquiry,T,,,IVM.JA,Inquiry,,,,,,
-History By Item Report,T,IVR_LSTRANHIST,,IVR.7A/7B,Input/Report Overlay,,,,,,
+Lot/Serial Number History By Item Report,T,IVR_LSTRANHIST,ivr_lottranhist.aon,IVR.7A/7B,Input/Report Overlay,SL,,SL,Done,SL,IVR.7A/7B; converted to ivr_lottranhist; Select Form built.  DocOut was completed earlier; tested with data.
 Lot/Serial Number History By Customer Report,T,IVR_LOTCUSTHIST,ivr_lotcusthist & _o1.aon,IVR.9A/9B,Input/Report Overlay,SL,BJ-BP,SL,Ready-SL,,"IVR.9B 20Aug mods;data needs to be created for this report; ivt-02 was created, but needs records created from ivt-01."
 Lot/Serial Number History By Vendor Report,T,IVR_LOTVENDHIST,ivr_lotvendhist & _o1.aon,IVR.8A/8B,Input/Report Overlay,SL,BJ-BP,SL,Done SS-BP,,"IVR.8B 20Aug mods;data needs to be created for this report; ivt-03 was created, but needs records created from ivt-01."
 Lot/Serial Number Stock Status Report,T,IVR_LOTSTATUS,ivr_lotstatus.aon & _o1,IVR.YA/YB,Input/Report Overlay,SL,BJ-BP,SL,Done SV-BP,,IVR.YB 20Aug mods
@@ -110,25 +110,25 @@ Rebuild On Order Quantities,T,IVX_ONORDER,,IVX.EA,Update,,BJ-BP,,,,20Aug mods
 Rebuild Beginning Balances,T,IVX_BEGBALS,,IVX.BA,Update,,BJ-BP,,,,20Aug mods
 LIFO/FIFO Tier Maintenance,T,IVX_LIFOFIFO,,IVX.FA,Input,,,,,,
 ,T,,,IVX.FB,Report/Update,,,,,,
-Copy Items to Another Warehouse,T,IVX_COPYITEM,,IVX.DA,Update,,
-Rebuild Unit Costs,A,,ivx_rebuildcosts.aon,IVX.IA,Update,,JL?
-Inventory Publics,G,,,,,,
-Calculate Actual & Estimated Annual Usage,P,,ivc_usage,IVC.AU,Public,,CH
-Price/Cost Change by Percentage,P,,,IVC.CA,Public,,needs
-Delete Item and/or Warehouse,P,,,IVC.DA,Public,,needs
-Activity Type Descriptions,P,,ivc_activity,IVC.FA,Public,,CH
-Inventory Item Entry,P,,,IVC.IA,Public,,needs
-Standard Report Options Input,P,,,IVC.IB,Public,,needs
-Physical Inventory Entry Screen Processing,P,,,IVC.IC,Public,,needs
-LIFO/FIFO Reporting And Inquiry,P,,,IVC.LF,Public,,needs
-Return Period Quantity Based On Activity Type,P,,ivc_periodqty,IVC.PA,Public,,CH
-Inventory Activity Type Column Entry,P,,,IVC.RA,Public,,needs
-Lot/Serial Input,P,,,IVC.SA,Public,,needs
-Inventory Warning Messages,P,,ivc_warnings,IVC.SB,Public,,JL
-Generate Lot/Serial Numbers,P,,,IVC.SN,Public,,needs
-Process Inventory Transaction Display Window,P,,,IVC.TA,Public,,needs
-Process Lot/Serial Inventory Transaction Display Window,P,,,IVC.TB,Public,,needs
-Format Standard Transaction References,P,,ivc_transdata,IVC.TD,Public,,JL
-Inventory Item Update (ATAMO),P,,ivc_itemupdt,IVC.UA,Public,,JL
-Return Warehouse Information,P,,ivc_whseinfo,IVC.WA,Public,,CH
-Return Warehouse Activity,P,,ivc_whseact,IVC.WB,Public,,JL
+Copy Items to Another Warehouse,T,IVX_COPYITEM,,IVX.DA,Update,,,,,,
+Rebuild Unit Costs,A,,ivx_rebuildcosts.aon,IVX.IA,Update,,JL?,,,,
+Inventory Publics,G,,,,,,,,,,
+Calculate Actual & Estimated Annual Usage,P,,ivc_usage,IVC.AU,Public,,CH,,,,
+Price/Cost Change by Percentage,P,,,IVC.CA,Public,,needs,,,,
+Delete Item and/or Warehouse,P,,,IVC.DA,Public,,needs,,,,
+Activity Type Descriptions,P,,ivc_activity,IVC.FA,Public,,CH,,,,
+Inventory Item Entry,P,,,IVC.IA,Public,,needs,,,,
+Standard Report Options Input,P,,,IVC.IB,Public,,needs,,,,
+Physical Inventory Entry Screen Processing,P,,,IVC.IC,Public,,needs,,,,
+LIFO/FIFO Reporting And Inquiry,P,,,IVC.LF,Public,,needs,,,,
+Return Period Quantity Based On Activity Type,P,,ivc_periodqty,IVC.PA,Public,,CH,,,,
+Inventory Activity Type Column Entry,P,,,IVC.RA,Public,,needs,,,,
+Lot/Serial Input,P,,,IVC.SA,Public,,needs,,,,
+Inventory Warning Messages,P,,ivc_warnings,IVC.SB,Public,,JL,,,,
+Generate Lot/Serial Numbers,P,,,IVC.SN,Public,,needs,,,,
+Process Inventory Transaction Display Window,P,,,IVC.TA,Public,,needs,,,,
+Process Lot/Serial Inventory Transaction Display Window,P,,,IVC.TB,Public,,needs,,,,
+Format Standard Transaction References,P,,ivc_transdata,IVC.TD,Public,,JL,,,,
+Inventory Item Update (ATAMO),P,,ivc_itemupdt,IVC.UA,Public,,JL,,,,
+Return Warehouse Information,P,,ivc_whseinfo,IVC.WA,Public,,CH,,,,
+Return Warehouse Activity,P,,ivc_whseact,IVC.WB,Public,,JL,,,,
