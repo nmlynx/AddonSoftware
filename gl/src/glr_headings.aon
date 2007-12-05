@@ -204,7 +204,7 @@ next_report: rem --- Read next Report Selections (gle-04/gle-05) record
           dim headings$[headmax-1]
           for x=0 to headmax-1
               headings$[x]=rpt_head$(x*width+1,width)
-              if cvs(headings$[x],2)<>"" headings=i
+              if cvs(headings$[x],2)<>"" headings=x
           next x
 
           rem --- Extract column positions from the Financial Report Columns (glm-32) file
