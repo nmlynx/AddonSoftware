@@ -24,14 +24,13 @@ rem --- Retrieve sysinfo data
 rem --- Init Data
 
     precision ivprecision
-    dim a0$(15),a1$(160),a[8]
     grandtot=0
     printwtot$="N"
     dim itemnum$(20),itemdesc$(60),whsename$(24)
     more=1
     
     call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",poe11a_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","ALT_KEY_01",poe11a_key_alttpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","WHSE_ITEM",poe11a_key_whsetpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","APM_VENDMAST","PRIMARY",apm01a_key_tpl$,rd_table_chans$[all],status$
 
 rem --- Headings and print positions
@@ -75,17 +74,18 @@ rem --- Position files
 
 rem --- Init Sort File
    
-    dim poe11a_altkey$:poe11a_key_alttpl$
+    dim poe11a_altkey$:poe11a_key_whsetpl$
     if whsefrom$="" firstwhse$=fill(2) else firstwhse$=whsefrom$
 
-    read (poe11_dev2,knum=1,key=firm_id$+firstwhse$+itemfrom$,dom=*next)
-    if itemfrom$<>"" read(poe11_dev2,knum=1,key=firm_id$+firstwhse$+itemfrom$+reqfrom$,dom=*next)
+    read (poe11_dev2,knum=2,key=firm_id$+firstwhse$+"S"+itemfrom$,dom=*next)
+    if itemfrom$<>"" read(poe11_dev2,knum=2,key=firm_id$+firstwhse$+"S"+itemfrom$+reqfrom$,dom=*next)
   
     while more
 
         poe11a_altkey$=key(poe11_dev2,end=*break)
         if poe11a_altkey.firm_id$<>firm_id$ break
-
+        if poe11a_altkey.line_type$<"S" read(poe11_dev2,knum=2,key=firm_id$+poe11a_altkey.warehouse_id$+"S",dom=*continue)
+        if poe11a_altkey.line_type$>"S" read(poe11_dev2,knum=2,key=firm_id$+poe11a_altkey.warehouse_id$+$ff$,dom=*continue)
         sortkey$=firm_id$+poe11a_altkey.vendor_id$+poe11a_altkey.req_no$+poe11a_altkey.po_line_no$
         read (poe11_dev2,end=done)
 

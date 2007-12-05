@@ -115,20 +115,21 @@ rem --- Sorts
         switch action ;rem  Tswitch
 
             case sortbyreq; rem --- Sort by requisition
-                dim poe01a_key$:poe01a_key_alttpl$
-
+                dim poe01_rqkey$:poe01a_key_alttpl$
+                dim poe01a_key$:poe01a_key_pritpl$
                 if initializing$<>"N"
                     initializing$="N"
-                    read (poe01_dev,knum=1,key=firm_id$+firstreq$,dom=*next)
+                    read (poe01_dev2,knum=1,key=firm_id$+firstreq$,dom=*next)
              
-                    if firstreq$<>"" poe01a_key$=firm_id$+firstreq$+firstvend$;read (poe01_dev,key=poe01a_key$,dom=*next);break
+                    if firstreq$<>"" poe01a_key$=firm_id$+firstreq$+firstvend$;read (poe01_dev2,knum=1,key=poe01a_key$,dom=*next);break
                 endif
-                poe01a_key$=key(poe01_dev,knum=1,end=done)
+ escape; rem trace thru
+                poe01_rqkey$=key(poe01_dev2,knum=1,end=done);read(poe01_dev2,knum=1)
+                poe01a_key$=poe01_rqkey.firm_id$+poe01_rqkey.vendor_id$+poe01_rqkey.req_no$
              
                 break
-
+                
             case sortbyalt;  rem --- Sort by alternate sequence
-escape
                 dim apm01a_key$:apm01a_key_tpl$
                 dim poe01a_key$:poe01a_key_pritpl$
 
@@ -253,16 +254,18 @@ rem --- Done w/detail for this req
             if headrecprinted$="Y" gosub reqtotals
 
 rem --- Loop up for next header record via sort files
-
+            
+rem            if printseq$="R" break
             if printseq$<>"A" break;rem  continue
 
 rem --- See if there's another req for vend before getting next alt seq
-escape; rem  check on 268-9 vendor$ and trace 
+
             poe01a_key$=key(poe01_dev,end=*break)
+   
             if poe01a_key.vendor_id$<>vendor$ return
             
         wend ; rem Mainhdr
-
+        if printseq$="R" 
     wend ; rem  Tripread
 
 done: rem --- All Done

@@ -30,7 +30,12 @@ rem --- Init Data
     initializing$="Y"; rem "Init files 1st time through
     if vendfrom$="" firstvend$=fill(6) else firstvend$=vendfrom$
     if reqfrom$="" firstreq$=fill(7) else firstreq$=reqfrom$
+    more=1
 
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQHDR","PRIMARY",poe01a_key_pritpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQHDR","ALT_KEY_01",poe01a_key_alttpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",poe11a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","APM_VENDMAST","ALT_KEY_02",apm01a_key_tpl$,rd_table_chans$[all],status$
 rem --- Headings and print positions
 
     headings=2
@@ -97,7 +102,6 @@ rem --- Position files
 :atus
 
 rem --- Sorts
- escape; rem  start sorts
 
    rem  while more
 
@@ -105,50 +109,49 @@ rem --- Sorts
         sortbyreq=1
         sortbyalt=2
         sortbyvend=3
+        dim poe01a_key$:poe01a_key_pritpl$
 
         switch action
 
             case sortbyreq; rem --- Sort by requisition
-
+                dim poe01r_key$:poe01a_key_alttpl$
                 if initializing$<>"N"
                     initializing$="N"
-                    read (poe31_dev,key=firm_id$+firstreq$,dom=*next)
-                    if firstreq$<>"" read (poe31_dev,key=firm_id$+firstreq$+fi
-:rstvend$,dom=*next)
+                    read (poe01_dev2,knum=1,key=firm_id$+firstreq$,dom=*next)
+                    if firstreq$<>"" poe01r_key$=firm_id$+firstreq$+first_vend$;read (poe01_dev2,knum=1,key=poe01r_key$,dom=*next);break
                 endif
-                poe31a_key$=key(poe31_dev,end=done)
-                k$=poe31a_key.firm_id$+poe31a.vendor_id$+poe31a.req_no$;rem po
-:e31a.req_no$+poe31a.vendor_id$
-                read (poe31_dev)
+                poe01r_key$=key(poe01_dev2,knum=1,end=done);read(poe01_dev2)
+                k$=poe01r_key.firm_id$+poe01r.vendor_id$+poe01r.req_no$
+                
                 break
 
             case sortbyalt;  rem --- Sort by alternate sequence
-
+                dim apm01a_key$:apm01a_key_tpl$
                 if initializing$<>"N"
                     initializing$="N"
-                    a04_key$=firm_id$+"A"+firstvend$
-                    read (apm04_dev,key=a04_key$,dom=*next)
+                    a04_key$=firm_id$+altfrom$
+                    read (apm01_dev2,key=a04_key$,dom=*next)
                 endif
 
 rem --- Find a POE01 record using alt seq
                 while more
+                    dim apm01a_key$:apm01a_key_tpl$
 
-                    apm04a_key$=key(apm04_dev,end=done)
-                    if apm04a.firm_id$+"A"<>firm_id$+"A" goto done
-                    apm04b_key$=apm04a_key.firm_id$+apm04b_key.vendor_id$
-                    read (apm04_dev); rem "Move ptr
-                    read (poe01_dev,key=apm04b_key$,dom=*next)
+                    apm01a_key$=key(apm01_dev2,knum=2,end=done)
+                    if apm01a.firm_id$<>firm_id$ goto done
+                    if altthru$<>"" if apm01a_key.alt_sequence$>altthru$ goto done
+                    apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
+                    read (apm01_dev2,key=apm01b_key$,dom=*next); rem "Move ptr
+                    read (poe01_dev,key=apm01b_key$,dom=*next)
 
-                                        poe01_key$=key(poe01_dev,end=*continue
-:)
-                    if poe01a.firm_id$+poe01a.vendor_id$<>apm04b_key$ continue
+                    poe01a_key$=key(poe01_dev,end=*continue)
+                    if poe01a.firm_id$+poe01a.vendor_id$=apm01b_key$ continue
                     k$=poe01a_key$
 
                 wend
                 break
 
             case sortbyvend;     rem --- Sort by vendor
-escape;rem sort by vend
 
                 if initializing$<>"N"
                     initializing$="N"
@@ -168,8 +171,9 @@ rem --- Read through req headers
         swend
 
             while more
-escape:  rem  should this be firm_id or (1,2)?
-            if poe01a_key$(1,2)<>firm_id$ goto done
+
+            if printseq$="A" if poe01a.firm_id$<>firm_id$ continue
+            if printseq$<>"A" if poe01a_key.firm_id$<>firm_id$ goto done
             read record (poe01_dev,key=poe01a_key$) poe01a$
 
 rem --- Test Ranges
@@ -179,10 +183,6 @@ rem --- Test Ranges
 : continue
             if reqthru$<>"" then if poe01a.req_no$>reqthru$ and printseq$<>"A"
 : continue
-            if printseq$="A" if vendfrom$<>"" if cvs(apm04a.alt_sequence$,2)<c
-:vs(vendfrom$,2) if printseq$<>"A" continue
-            if printseq$="A" if vendthru$<>"" if cvs(apm04a.alt_sequence$,2)>c
-:vs(vendthru$,2) if printseq$<>"A" continue
             if printseq$<>"A"
                 if vendfrom$<>"" and poe01a.vendor_id$<vendfrom$ if printseq$<
 :>"A" continue
@@ -203,14 +203,13 @@ rem --- Header passed tests
 
 rem --- TOn to Details
 
-            dim b0$(18),b1$(48),b2$(32),b3$(22),b4$(40),b[12]
             p01_key$=poe01a.firm_id$+poe01a.vendor_id$+poe01a.req_no$
             read (poe11_dev,key=p01_key$,dom=*next)
 
 rem --- Test Req Detail date range
 
             while more
-escape;  rem  compare to poe11a.. or poe11a_key$..
+
                 poe11a_key$=key(poe11_dev,end=*break)
                 if poe11a.firm_id$+poe11a.vendor_id$+poe11a.req_no$<>poe01a_ke
 :y.firm_id$+poe01a_key.vendor_id$+poe01a_key.req_no$ break
@@ -254,12 +253,12 @@ rem --- Done w/detail for this req
 
 rem --- Loop up for next header record via sort files
 
-            if printseq$<>"A" continue
+            if printseq$<>"A" break
 
 rem --- See if there's another req for vend before getting next alt seq
 
-            poe01a_key$=key(poe01_dev,end=*continue)
-            if poe01a.vendor_id$<>vendor$ break
+            poe01a_key$=key(poe01_dev,end=*break)
+            if poe01a.vendor_id$=vendor$ continue else break
 
         wend
 
@@ -277,8 +276,6 @@ escape;rem  all done?
 rem --- Print Detail Subroutine
 
 printdetail: rem --- Set up variables
-
-escape;rem  look at detail print
 
     dim datereq$(8),dateprom$(8),notb4date$(8)
     whse_detail$=poe11a.vendor_id$
@@ -310,7 +307,7 @@ get_item_disc: rem --- Get Item Desc for S and N type lines
     if linetype$<>"N"
         dim itemdesc$(60),x1$(60)
         ivm01a.item_desc$="Not On File"
-        find record (ivm01a_dev,key=firm_id$+b3$(3,20),dom=get_ext) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+poe11a.item_id$,dom=get_ext) ivm01a$
         ivm01a.item_desc$=fnitem$(x1$,desclen[1],desclen[2],desclen[3])
     else
          itemdesc$=memo$

@@ -29,14 +29,13 @@ rem --- Open/Lock files
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
     files$[5]="ivc_whsecode",ids$[5]="IVC_WHSECODE";rem "ivm-10c"
-    files$[6]="ivm-14",ids$[6]="IVM_ITEMSYN"
-    files$[7]="poe-11",ids$[7]="POE_REQDET"
+    files$[6]="poe_11",ids$[6]="POE_REQDET"
     files$[8]="pom-02",ids$[8]="POC_LINECODE"
     files$[9]="poe-11",ids$[9]="POE_REQDET"
     files$[10]="aps_params",ids$[10]="APS_PARAMS"
     files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
     files$[12]="pos_params",ids$[12]="POS_PARAMS"
-
+   
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -44,8 +43,7 @@ rem --- Open/Lock files
     ivm01a_dev=channels[3]
     ivm02a_dev=channels[4]
     ivm10c_dev=channels[5]
-    
-    poe11a_dev=channels[7]
+    poe11a_dev=channels[6]
     pom02a_dev=channels[8]
     poe11_dev2=channels[9]
     aps01a_dev=channels[10]
@@ -55,7 +53,7 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
     dim apm01a$:templates$[2],ivm01a$:templates$[3],ivm02a$:templates$[4],
-:       ivm10c$:templates$[5],poe11a$:templates$[7],
+:       ivm10c$:templates$[5],poe11a$:templates$[6],
 :       pom02a$:templates$[8],pow14a$:templates$[9],aps01a$:templates$[10],
 :       ivs01a$:templates$[11],pos01a$:templates$[12]
 
