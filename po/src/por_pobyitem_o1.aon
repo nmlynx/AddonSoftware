@@ -30,7 +30,7 @@ rem --- Init Data
     more=1
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",poe12a_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","ALT_KEY_01",poe12a_key_alttpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","WHSE_ITEM",poe12a_key_alttpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","APM_VENDMAST","PRIMARY",apm01a_key_tpl$,rd_table_chans$[all],status$
 
 rem --- Headings and print positions
@@ -82,14 +82,19 @@ rem --- Init Sort File
     dim poe12a_altkey$:poe12a_key_alttpl$
     if whsefrom$="" firstwhse$=fill(2) else firstwhse$=whsefrom$
 
-    read (poe12_dev2,knum=1,key=firm_id$+firstwhse$+itemfrom$,dom=*next)
-    if itemfrom$<>"" read(poe12_dev2,knum=1,key=firm_id$+firstwhse$+itemfrom$+pofrom$,dom=*next)
+    read (poe12_dev2,knum=3,key=firm_id$+firstwhse$+"S"+itemfrom$,dom=*next)
+    if itemfrom$<>"" read(poe12_dev2,knum=3,key=firm_id$+firstwhse$+"S"+itemfrom$+pofrom$,dom=*next)
   
     while more
 
         poe12a_altkey$=key(poe12_dev2,end=*break)
         if poe12a_altkey.firm_id$<>firm_id$ break
-
+ESCAPE; REM at 92 - start cking        
+        if poe12a_altkey.line_type$<"S" read(poe12_dev2,knum=3,key=firm_id$+poe12a_altkey.warehouse_id$+"S",dom=*continue)
+        if poe12a_altkey.line_type$>"S" read(poe12_dev2,knum=3,key=firm_id$+poe12a_altkey.warehouse_id$+$ff$,dom=*continue)
+        if itemfrom$<>"" if poe12a_altkey.item_id$<itemfrom$ read(poe12_dev2,key=firm_id$+poe12a_altkey.warehouse_id$+"S"+itemfrom$,dom=*continue)
+        if itemthru$<>"" if poe12a_altkey.item_id$>itemthru$ read(poe12_dev2,key=firm_id$+poe12a_altkey.warehouse_id$+$ff$,dom=*continue)        
+        
         sortkey$=firm_id$+poe12a_altkey.vendor_id$+poe12a_altkey.po_no$+poe12a_altkey.po_line_no$
         read (poe12_dev2,end=done)
 
@@ -323,11 +328,9 @@ newitem: rem --- New Item
     ivm01a.item_desc$="Not On File"
     itemnum$=poe12a.item_id$
     i01_key$=firm_id$+poe12a.item_id$
-    find record (ivm01a_dev,key=i01_key$,dom=brnch1) ivm01a$
+    find record (ivm01a_dev,key=i01_key$,dom=brnch2) ivm01a$
     ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
-
-brnch1:
-
+brnch2:
     qtyonorder=0
     i02_key$=firm_id$+poe12a.warehouse_id$+poe12a.item_id$
     find record (ivm02a_dev,key=i02_key$,dom=*next) ivm02a$

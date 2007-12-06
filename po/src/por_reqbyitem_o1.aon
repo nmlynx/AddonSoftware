@@ -86,11 +86,13 @@ rem --- Init Sort File
         if poe11a_altkey.firm_id$<>firm_id$ break
         if poe11a_altkey.line_type$<"S" read(poe11_dev2,knum=2,key=firm_id$+poe11a_altkey.warehouse_id$+"S",dom=*continue)
         if poe11a_altkey.line_type$>"S" read(poe11_dev2,knum=2,key=firm_id$+poe11a_altkey.warehouse_id$+$ff$,dom=*continue)
+        if itemfrom$<>"" if poe11a_altkey.item_id$<itemfrom$ read(poe11_dev2,key=firm_id$+poe11a_altkey.warehouse_id$+"S"+itemfrom$,dom=*continue)
+        if itemthru$<>"" if poe11a_altkey.item_id$>itemthru$ read(poe11_dev2,key=firm_id$+poe11a_altkey.warehouse_id$+$ff$,dom=*continue)        
         sortkey$=firm_id$+poe11a_altkey.vendor_id$+poe11a_altkey.req_no$+poe11a_altkey.po_line_no$
         read (poe11_dev2,end=done)
 
 rem --- Find corresponding detail line
-escape; rem 93, start detail
+
         find record (poe11a_dev,key=sortkey$,dom=*next) poe11a$
         if poe11a.firm_id$+poe11a.vendor_id$+poe11a.req_no$+poe11a.po_line_no$<>sortkey$ then continue
 
@@ -122,7 +124,7 @@ rem --- Test Req Detail ranges
 rem --- Test breaks; print line
                         call pgmdir$+"adc_progress.aon","S","","","","",0,poe11a_dev,1,meter_num,status
 
-        if status<>0 escape
+        if status<>0 goto std_exit
                        gosub testbreaks
                         gosub printdetail
 
@@ -417,7 +419,6 @@ rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
-escape; rem error
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
