@@ -35,6 +35,9 @@ rem --- that the correct report list is read.
     setesc std_error
     seterr std_error
 
+    if OutVect!<>null() OutVect!=null()
+    next_overlay$="";rem these two stmts make sure we don't loop in DocOut
+
 rem --- Branch based on whether or not this program is being run from the
 rem --- lead/update overlays (OVERLAY=0) or the report overlay (OVERLAY=1)
 
