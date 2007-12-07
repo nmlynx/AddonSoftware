@@ -89,7 +89,7 @@ rem --- Init Sort File
 
         poe12a_altkey$=key(poe12_dev2,end=*break)
         if poe12a_altkey.firm_id$<>firm_id$ break
-ESCAPE; REM at 92 - start cking        
+       
         if poe12a_altkey.line_type$<"S" read(poe12_dev2,knum=3,key=firm_id$+poe12a_altkey.warehouse_id$+"S",dom=*continue)
         if poe12a_altkey.line_type$>"S" read(poe12_dev2,knum=3,key=firm_id$+poe12a_altkey.warehouse_id$+$ff$,dom=*continue)
         if itemfrom$<>"" if poe12a_altkey.item_id$<itemfrom$ read(poe12_dev2,key=firm_id$+poe12a_altkey.warehouse_id$+"S"+itemfrom$,dom=*continue)
@@ -152,7 +152,7 @@ nextsort: rem --- Accumulate totals; then get next sort file record
     wend
 
 done: rem --- All Done
-escape;rem done
+
     if l+2>l9 gosub report_heading
     gosub itemtotals
     gosub whsetotals
@@ -421,7 +421,7 @@ rem #endinclude std_functions.src
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
-escape;rem  error
+
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
