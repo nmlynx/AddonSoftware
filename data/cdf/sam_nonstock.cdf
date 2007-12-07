@@ -1,3 +1,63 @@
+[[SAM_NONSTOCK.ARAR]]
+rem --- Create totals
+
+	gosub calc_totals
+[[SAM_NONSTOCK.AREC]]
+rem --- Enable key fields
+	ctl_name$="SAM_NONSTOCK.YEAR"
+	ctl_stat$=""
+	gosub disable_fields
+	ctl_name$="SAM_NONSTOCK.PRODUCT_TYPE"
+	ctl_stat$=""
+	gosub disable_fields
+	ctl_name$="SAM_NONSTOCK.NONSTOCK_NO"
+	ctl_stat$=""
+	gosub disable_fields
+	callpoint!.setColumnData("<<DISPLAY>>.TCST","0")
+	callpoint!.setColumnData("<<DISPLAY>>.TQTY","0")
+	callpoint!.setColumnData("<<DISPLAY>>.TSLS","0")
+	callpoint!.setStatus("REFRESH")
+[[SAM_NONSTOCK.BSHO]]
+rem --- disable total elements
+	ctl_name$="<<DISPLAY>>.TQTY"
+	ctl_stat$="I"
+	gosub disable_fields
+	ctl_name$="<<DISPLAY>>.TCST"
+	ctl_stat$="I"
+	gosub disable_fields
+	ctl_name$="<<DISPLAY>>.TSLS"
+	ctl_stat$="I"
+	gosub disable_fields
+	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH")
+[[SAM_NONSTOCK.<CUSTOM>]]
+disable_fields:
+rem --- used to disable/enable controls depending on parameter settings
+rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+
+	return
+
+calc_totals:
+	
+	tcst=0
+	tqty=0
+	tsls=0
+	For x=1 to 13
+		tcst=tcst+num(callpoint!.getColumnData("SAM_NONSTOCK.TOTAL_COST_"+str(x:"00")))
+		tqty=tqty+num(callpoint!.getColumnData("SAM_NONSTOCK.QTY_SHIPPED_"+str(x:"00")))
+		tsls=tsls+num(callpoint!.getColumnData("SAM_NONSTOCK.TOTAL_SALES_"+str(x:"00")))
+	next x
+	callpoint!.setColumnData("<<DISPLAY>>.TCST",str(tcst))
+	callpoint!.setColumnData("<<DISPLAY>>.TQTY",str(tqty))
+	callpoint!.setColumnData("<<DISPLAY>>.TSLS",str(tsls))
+	callpoint!.setStatus("REFRESH")
+
+	return
 [[SAM_NONSTOCK.AOPT-SALU]]
 rem -- call inquiry program to view Sales Analysis records
 
@@ -40,6 +100,17 @@ while 1
 		callpoint!.setColumnData("SAM_NONSTOCK.TOTAL_COST_"+str(x:"00"),FIELD(sam_tpl$,"total_cost_"+str(x:"00")))
 		callpoint!.setColumnData("SAM_NONSTOCK.TOTAL_SALES_"+str(x:"00"),FIELD(sam_tpl$,"total_sales_"+str(x:"00")))
 	next x
-	callpoint!.setStatus("REFRESH")
+	gosub calc_totals
+	ctl_name$="SAM_NONSTOCK.YEAR"
+	ctl_stat$="D"
+	gosub disable_fields
+	ctl_name$="SAM_NONSTOCK.PRODUCT_TYPE"
+	ctl_stat$="D"
+	gosub disable_fields
+	ctl_name$="SAM_NONSTOCK.NONSTOCK_NO"
+	ctl_stat$="D"
+	gosub disable_fields
+	callpoint!.setRecordStatus("CLEAR")
+	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH")
 	break
 wend
