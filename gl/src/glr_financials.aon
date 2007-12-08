@@ -289,8 +289,6 @@ print_line: rem --- Perform any required editing and print the line
                  print_buf$(a[x,3],len(underline$))=underline$
              next x
              gosub output_print_buf
-             dim print_buf$(width)
-             gosub output_print_buf
              l=l+1
           endif
 
@@ -344,10 +342,6 @@ print_line: rem --- Perform any required editing and print the line
              gosub output_print_buf
           endif
           
-          rem --- Print a line feed
-
-          dim print_buf$(width)
-          gosub output_print_buf
           l=l+1
 
           rem --- Loop back for next record
@@ -381,13 +375,11 @@ report_heading: rem --- Report Heading
         page=page+1
         clock$=date(0:"%hz:%mz %p")
         dim print_buf$(width)
-        print_buf$(1)=headings$[0]
-        print_buf$(1,len(when$))=when$
+        print_buf$(1)=heading$[0]
         print_buf$(width-10)=" Page"+str(page:"###0")
         gosub output_print_buf
         dim print_buf$(width)
-        print_buf$(1)=headings$[1]
-        print_buf$(1,len(clock$))=clock$
+        print_buf$(1)=heading$[1]
         print_buf$(width-len(audit$))=audit$
         gosub output_print_buf
 
@@ -396,7 +388,7 @@ report_heading: rem --- Report Heading
         if headings<2 return
         for i=2 to headings
             dim print_buf$(width)
-            print_buf$(1)=headings$[i]
+            print_buf$(1)=heading$[i]
             gosub output_print_buf
         next i
 

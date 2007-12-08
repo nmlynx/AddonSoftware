@@ -41,11 +41,11 @@ rem --- Build 13 period headings
         n=n+1
         if n>total_pers n=1
     next x
-    x$="Total"
-    p=28+m1*x
-    y=len(x$)-1
-    h$(p-y)=x$
-    headings$[headings]=h$
+    rem --- x$="Total"
+    rem --- p=28+m1*x
+    rem --- y=len(x$)-1
+    rem --- h$(p-y)=x$
+    heading$[headings]=h$
 
 rem --- Position Financial Report Detail (glm-22) file
 
@@ -174,21 +174,23 @@ rem --- Read next Financial Report Detail (glm-22) record
           rem --- Blank line?
 
           if pos("S"=editing_code$)
-             print (printer_dev) 'LF',
+             dim print_buf$(width)
+             gosub output_print_buf
              l=l+1
           endif
 
           rem --- Underline?
 
           char$=""
+          dim print_buf$(width)
           if pos("U"=editing_code$) char$="-"
           if pos("D"=editing_code$) char$="="
           if char$<>""
              for x=1 to 13
                  dim underline$(m1,char$)
-                 print (printer_dev) @(28+m1*(x-1)),underline$,
+                 print_buf$(29+m1*(x-1),len(underline$))=underline$
              next x
-             print (printer_dev) 'LF',
+             gosub output_print_buf
              l=l+1
           endif
  
@@ -208,19 +210,18 @@ rem --- Read next Financial Report Detail (glm-22) record
  
           if l+1>l9 gosub report_heading
           line_desc$=cvs(glm22a.gl_line_desc$,2)
-          if line_desc$<>"" print (printer_dev) @(num(glm22a.default_pos$)),line_desc$,
+          dim print_buf$(width)
+          if line_desc$<>"" print_buf$(num(glm22a.default_pos$)+1,len(line_desc$))=line_desc$
 
           rem --- If this isn't a heading line, print amounts
 
           if glm22a.line_type$<>"H" 
              for x=1 to mp
-                 if a[x] print (printer_dev) @(28+m1*(x-1)),a[x]:m1$,
+                 if a[x] print_buf$(29+m1*(x-1),len(m1$))=str(a[x]:m1$)
              next x
+             gosub output_print_buf
           endif
 
-          rem --- Print a line feed
-
-          print (printer_dev) 'LF',
           l=l+1
 
           rem --- Loop back for next record
@@ -229,14 +230,55 @@ rem --- Read next Financial Report Detail (glm-22) record
 
 rem --- Run report headings overlay to get the next report
 
-    run pgmdir$+"glr_headings.aon"
+    next_overlay$=pgmdir$+"glr_headings.aon"
+    goto std_exit
+
+    rem run pgmdir$+"glr_headings.aon"
 
 report_heading: rem --- Report heading
 
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status goto std_exit
-    return
+    if OutVect!=null()
+        rem --- Document initializations
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+        dim columns$[0,10];rem dummy, since won't actually have docout column headings
+        columns$[0,0]="  ",columns$[0,1]="C",columns$[0,2]="135"
+    endif
+        rem Create a new page
+        l=headings+1
+        page=page+1
+        clock$=date(0:"%hz:%mz %p")
+        dim print_buf$(width)
+        print_buf$(1)=heading$[0]
+        print_buf$(width-10)=" Page"+str(page:"###0")
+        gosub output_print_buf
+        dim print_buf$(width)
+        print_buf$(1)=heading$[1]
+        print_buf$(width-len(audit$))=audit$
+        gosub output_print_buf
+
+        rem --- Print remaining heading lines
+
+        if headings<2 return
+        for i=2 to headings
+            dim print_buf$(width)
+            print_buf$(1)=heading$[i]
+            gosub output_print_buf
+        next i
+
+return
+
+output_print_buf:
+
+    OutVect!.addItem(print_buf$)
+
+return
 
 get_totals: rem --- Retrieve Report Totals (gle-09) record
 
@@ -285,6 +327,16 @@ totals_to_period: rem --- Add total amounts to period amounts
         pu[y]=pu[y]+tu[y]
     next y
     return
+
+rem --- Functions
+
+    def fnppos(q,q$)=q-min(1,pos("$"=q$))
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Date/time handling functions
+
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
 
 rem #include std_error.src
 

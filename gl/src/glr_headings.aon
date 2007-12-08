@@ -203,11 +203,12 @@ next_report: rem --- Read next Report Selections (gle-04/gle-05) record
           gosub heading_tokens
 
           rem --- Store heading information
-
-          dim headings$[headmax-1]
+          
+          dim headings$[1];rem dummy for DocOut - these reports print headings in main part of form
+          dim heading$[headmax-1]
           for x=0 to headmax-1
-              headings$[x]=rpt_head$(x*width+1,width)
-              if cvs(headings$[x],2)<>"" headings=x
+              heading$[x]=rpt_head$(x*width+1,width)
+              if cvs(heading$[x],2)<>"" headings=x
           next x
 
           rem --- Extract column positions from the Financial Report Columns (glm-32) file
