@@ -103,9 +103,8 @@ rem --- Position files
      call pgmdir$+"adc_progress.aon","N","","","","",0,poe01_dev,1,meter_num,status
 
 rem --- Sorts
-  rem  start sorts
 
-     while more; rem " trip read, etc
+     while more
 
         action=pos(printseq$="RAV")
         sortbyreq=1
@@ -123,8 +122,8 @@ rem --- Sorts
              
                     if firstreq$<>"" poe01a_key$=firm_id$+firstreq$+firstvend$;read (poe01_dev2,knum=1,key=poe01a_key$,dom=*next);break
                 endif
- escape; rem trace thru
-                poe01_rqkey$=key(poe01_dev2,knum=1,end=done);read(poe01_dev2,knum=1)
+
+                poe01_rqkey$=key(poe01_dev2,knum=1,end=done);read(poe01_dev2,knum=1,key=poe01_rqkey$)
                 poe01a_key$=poe01_rqkey.firm_id$+poe01_rqkey.vendor_id$+poe01_rqkey.req_no$
              
                 break
@@ -135,20 +134,20 @@ rem --- Sorts
 
                 if initializing$<>"N"
                     initializing$="N"
-                    read (apm01_dev2,knum=2,key=firm_id$,dom=*next)
+                    read (apm01_dev2,knum=2,key=firm_id$+altfrom$,dom=*next)
                 endif
 
 rem --- Find a POE01 record using alt seq
         while more ;  rem  alt seq loop
                     apm01a_key$=key(apm01_dev2,knum=2,end=done)
                     if apm01a_key.firm_id$<>firm_id$ goto done
+                    if altthru$<>""if apm01a_key.alt_sequence$(1,len(altthru$))>altthru$ goto done
                     apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
-                    read (apm01_dev2,key=apm01a_key$); rem "Move ptr
+                    read (apm01_dev2,knum=2,key=apm01a_key$); rem "Move ptr
                     
                     read (poe01_dev,key=apm01b_key$,dom=*next)
                     poe01a_key$=key(poe01_dev,end=*continue)
-                    if poe01a_key.vendor_id$<>apm01a_key.vendor_id$ continue
-                    gosub gotomain
+                    if poe01a_key.firm_id$+poe01a_key.vendor_id$=apm01b_key$ break
          wend
                 break
 
@@ -176,19 +175,17 @@ rem --- Read through req headers
             
             if poe01a_key.firm_id$<>firm_id$ goto done
 
-gotomain:
+rem  gotomain:
             read record (poe01_dev,key=poe01a_key$) poe01a$
 
 rem --- Test Ranges
 
             headrecprinted$="N"
-            if reqfrom$<>"" then if poe01a.req_no$<reqfrom$ and printseq$<>"A" continue
-            if reqthru$<>"" then if poe01a.req_no$>reqthru$ and printseq$<>"A" continue
-            if printseq$="A" if vendfrom$<>"" if cvs(apm01a.alt_sequence$,2)<cvs(vendfrom$,2) if printseq$<>"A" continue
-            if printseq$="A" if vendthru$<>"" if cvs(apm01a.alt_sequence$,2)>cvs(vendthru$,2) if printseq$<>"A" continue
+            if reqfrom$<>"" then if poe01a.req_no$<reqfrom$ and printseq$<>"A" break
+            if reqthru$<>"" then if poe01a.req_no$>reqthru$ and printseq$<>"A" break
             if printseq$<>"A"
-                if vendfrom$<>"" and poe01a.vendor_id$<vendfrom$ if printseq$<>"A" continue
-                if vendthru$<>"" and poe01a.vendor_id$>vendthru$ if printseq$<>"A" continue
+                if vendfrom$<>"" and poe01a.vendor_id$<vendfrom$ and printseq$<>"A" break
+                if vendthru$<>"" and poe01a.vendor_id$>vendthru$ and printseq$<>"A" break
             endif
 
             if whse$<>"ALL" if poe01a.warehouse_id$<>whse$ continue
@@ -204,7 +201,6 @@ rem --- Header passed tests
 
 rem --- On to Details
 
-            dim b0$(18),b1$(48),b2$(32),b3$(22),b4$(40),b[12]
             dim poe11a_key$:poe11a_key_tpl$
             
             p01_key$=poe01a.firm_id$+poe01a.vendor_id$+poe01a.req_no$
@@ -247,7 +243,7 @@ rem --- Accumulate totals; then get next detail
                 extension=0
                 extension$=""
 
-            wend ; rem Detail Loop
+            wend 
 
 rem --- Done w/detail for this req
 
@@ -262,15 +258,13 @@ rem --- See if there's another req for vend before getting next alt seq
 
             poe01a_key$=key(poe01_dev,end=*break)
    
-            if poe01a_key.vendor_id$<>vendor$ return
+            if poe01a_key.vendor_id$=vendor$ continue else break
             
         wend ; rem Mainhdr
-        if printseq$="R" 
+rem        if printseq$="R" 
     wend ; rem  Tripread
 
 done: rem --- All Done
-
-escape;rem  all done?
 
     if l+2>l9 gosub report_heading
     if printseq$<>"R" gosub vendtotals
@@ -578,7 +572,7 @@ rem --- Calc extension for S, N and O types; init it for others
 calc_extension:
 
     if pos(linetype$="SNO")=0 return
-    let qty=poe11a.req_qty;rem  -poe11a.reserved_num
+    let qty=poe11a.req_qty
     if linetype$="O" qty=1
     precision 2
     let extension=poe11a.unit_cost*qty,extension$=str(extension:m1$)
@@ -642,7 +636,6 @@ rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
-escape; rem  std error
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
@@ -691,5 +684,5 @@ std_exit: rem --- Standard program end (01Mar2006)
     run pgmdir$+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
-escape; rem  at end
+
     end
