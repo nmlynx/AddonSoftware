@@ -39,42 +39,24 @@ rem --- Open/Lock files
 
     files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
-    files$[3]="ivm-14",ids$[3]="IVM_ITEMSYN"
-    files$[4]="sam-01",ids$[4]="SAM_CUSTOMER"
-    files$[5]="sam-12",ids$[5]="SAM_CUSTTERR"
+    files$[1]="arm-02",ids$[1]="ARM_CUSTDET"
+    files$[2]="ivm-14",ids$[2]="IVM_ITEMSYN"
+    files$[3]="sam-01",ids$[3]="SAM_CUSTOMER"
+    files$[4]="sam-12",ids$[4]="SAM_CUSTTERR"
+    files$[5]="sas_params",ids$[5]="SAS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
-    arm02_dev=channels[2]
-    ivm14_dev=channels[3]
-    sam01_dev=channels[4]
-    sam12_dev=channels[5]
+    arm02_dev=channels[1]
+    ivm14_dev=channels[2]
+    sam01_dev=channels[3]
+    sam12_dev=channels[4]
+    sas01_dev=channels[5]
 
 rem --- Dimension string templates
 
-    dim arm02a$:templates$[2],ivm14a$:templates$[3],
-:       sam01a$:templates$[4],sam12a$:templates$[5]
-
-rem --- Retrieve miscellaneous templates
-
-    files=1,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="sas-01A:SAS_PARAMS"
-
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim sas01a$:templates$[1]
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    value_01$=fnget_fld_data$(table$,"dataname_01")
+    dim arm02a$:templates$[1],ivm14a$:templates$[2],sam01a$:templates$[3]
+    dim sam12a$:templates$[4],sas01a$:templates$[5]
 
 rem --- Parameters
 
@@ -82,7 +64,7 @@ rem --- Parameters
     dim levels$[nmbr],literals$[nmbr],types$[nmbr],imasks$[nmbr],omasks$[nmbr],prompts$[nmbr],inlen[nmbr],fldlen[nmbr]
     dim descchan[nmbr],descrec$[nmbr],descstr[nmbr],descpos[nmbr],desclen[nmbr]
     dim sa_channels[2],xrefs[nmbr],periods$[13],iv_masks$[3],iv_desc[3]
-    call pgmdir$+"sac_pa.aon",action,ads01_dev,firm_id$,segments,levels$[all],literals$[all],types$[all],imasks$[all],omasks$[all],prompts$[all],inlen[all],fldlen[all],descchan[all],descrec$[all],descstr[all],descpos[all],desclen[all],sa_channels[all],keylen,xrefs[all],fy$,periods,periods$[all],iv_masks$[all],iv_desc[all],ivm14_dev,status
+    call pgmdir$+"sac_pa.aon",action,firm_id$,segments,levels$[all],literals$[all],types$[all],imasks$[all],omasks$[all],prompts$[all],inlen[all],fldlen[all],descchan[all],descrec$[all],descstr[all],descpos[all],desclen[all],sa_channels[all],keylen,xrefs[all],fy$,periods,periods$[all],iv_masks$[all],iv_desc[all],ivm14_dev,status
     if status or segments<1 goto std_exit
     if sa_channels[2] gosub build_xrefs
     m1$=iv_masks$[1]
@@ -118,23 +100,71 @@ rem --- Initializations
     dim myps$[3]; let myps$[1]="MTD",myps$[2]="YTD",myps$[3]="Prior",myps$="MYP"
     dim begsegs$[segments],endsegs$[segments]
 
-rem --- Build begsegs and endsegs
+rem --- Build begsegs[1] and endsegs[1]
     switch action
-        case 1; begsegs$[1]=from_cust$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_cust$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 2; begsegs$[1]=from_terr$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_terr$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 3; begsegs$[1]=from_slsmn$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_slsmn$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 4; begsegs$[1]=from_custtype$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_custtype$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 5; begsegs$[1]=from_cust$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_cust$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 6; begsegs$[1]=from_sic$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_sic$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 7; begsegs$[1]=from_prod$,begsegs$[2]=from_item$,endsegs$[1]=thru_prod$,endsegs$[2]=thru_item$;break
-        case 8; begsegs$[1]=from_wh$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_wh$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 9; begsegs$[1]=from_vend$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_vend$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 10; begsegs$[1]=from_dist$,begsegs$[2]=from_prod$,begsegs$[3]=from_item$,endsegs$[1]=thru_dist$,endsegs$[2]=thru_prod$,endsegs$[3]=thru_item$;break
-        case 11; begsegs$[1]=from_prod$,begsegs$[2]=from_item$,endsegs$[1]=thru_prod$,endsegs$[2]=thru_item$;break
-        case 12; begsegs$[1]=from_terr$,begsegs$[2]=from_cust$,begsegs$[3]=from_prod$,begsegs$[4]=from_item$,endsegs$[2]=thru_terr$,endsegs$[2]=thru_cust$,endsegs$[3]=thru_prod$,endsegs$[4]=thru_item$;break
-        case 21; begsegs$[1]=from_prod$,begsegs$[2]=from_item$,begsegs$[3]=from_cust$,endsegs$[1]=thru_prod$,endsegs$[2]=thru_item$,endsegs$[3]=thru_cust$;break
+        case 1; begsegs$[1]=from_cust$,endsegs$[1]=thru_cust$;break
+        case 2; begsegs$[1]=from_terr$,endsegs$[1]=thru_terr$;break
+        case 3; begsegs$[1]=from_slsmn$,endsegs$[1]=thru_slsmn$;break
+        case 4; begsegs$[1]=from_custtype$,endsegs$[1]=thru_custtype$;break
+        case 5; begsegs$[1]=from_cust$,endsegs$[1]=thru_cust$;break
+        case 6; begsegs$[1]=from_sic$,endsegs$[1]=thru_sic$;break
+        case 7; begsegs$[1]=from_prod$,endsegs$[1]=thru_prod$;break
+        case 8; begsegs$[1]=from_wh$,endsegs$[1]=thru_wh$;break
+        case 9; begsegs$[1]=from_vend$,endsegs$[1]=thru_vend$;break
+        case 10; begsegs$[1]=from_dist$,endsegs$[1]=thru_dist$;break
+        case 11; begsegs$[1]=from_prod$,endsegs$[1]=thru_prod$;break
+        case 12; begsegs$[1]=from_terr$,endsegs$[1]=thru_terr$;break
+        case 21; begsegs$[1]=from_prod$,endsegs$[1]=thru_prod$;break
         case default; break
     swend
+
+rem --- Build begsegs[2] and endsegs[2]
+    if segments>=2
+        switch action
+            case 1; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 2; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 3; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 4; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 5; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 6; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 7; begsegs$[2]=from_item$,endsegs$[2]=thru_item$;break
+            case 8; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 9; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 10; begsegs$[2]=from_prod$,endsegs$[2]=thru_prod$;break
+            case 11; begsegs$[2]=from_item$,endsegs$[2]=thru_item$;break
+            case 12; begsegs$[2]=from_cust$,endsegs$[2]=thru_cust$;break
+            case 21; begsegs$[2]=from_item$,endsegs$[2]=thru_item$;break
+            case default; break
+        swend
+    endif
+
+rem --- Build begsegs[3] and endsegs[3]
+    if segments>=3
+        switch action
+            case 1; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 2; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 3; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 4; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 5; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 6; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 7; break
+            case 8; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 9; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 10; begsegs$[3]=from_item$,endsegs$[3]=thru_item$;break
+            case 11; break
+            case 12; begsegs$[3]=from_prod$,endsegs$[3]=thru_prod$;break
+            case 21; begsegs$[3]=from_cust$,endsegs$[3]=thru_cust$;break
+            case default; break
+        swend
+    endif
+
+    if segments=4
+        if action=12
+            begsegs$[4]=from_item$
+            endsegs$[4]=thru_item$
+        endif
+    endif
+
 rem --- Run Report Overlay
 
     if action=12 
