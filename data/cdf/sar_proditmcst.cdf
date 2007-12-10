@@ -2,8 +2,8 @@
 rem --- Check selected level against allowable level
 
 	allow=pos(user_tpl.high_level$=user_tpl.sa_levels$)
-	if pos(callpoint!.getColumnData("SAR_CUSTOMER.SA_LEVEL")=user_tpl.sa_levels$)>allow or
-:	   pos(callpoint!.getColumnData("SAR_CUSTOMER.SA_LEVEL")=user_tpl.sa_levels$)=0
+	if pos(callpoint!.getColumnData("SAR_PRODITMCST.SA_LEVEL")=user_tpl.sa_levels$)>allow or
+:	   pos(callpoint!.getColumnData("SAR_PRODITMCST.SA_LEVEL")=user_tpl.sa_levels$)=0
 		msg_id$="INVALID_SA_LEVEL"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
@@ -48,12 +48,25 @@ endif
 
 callpoint!.setColumnData("SAR_PRODITMCST.CURRENT_PER",ars_params.current_per$)
 callpoint!.setColumnData("SAR_PRODITMCST.CURRENT_YEAR",ars_params.current_year$)
-callpoint!.setColumnData("SAR_PRODITMCST.SA_LEVEL",sas_params.customer_lev$)
+callpoint!.setColumnData("SAR_PRODITMCST.SA_LEVEL","C")
 callpoint!.setStatus("REFRESH")
 
 dim user_tpl$:"sa_levels:c(3),high_level:c(1)"
-user_tpl.sa_levels$="PIC"
-user_tpl.high_level$=sas_params.customer_lev$
+if sas_params.customer_lev$ = "P"
+	dim user_tpl$:"sa_levels:c(2),high_level:c(1)"
+	user_tpl.sa_levels$="PC"
+	user_tpl.high_level$="C"
+endif
+if sas_params.customer_lev$ = "C"
+	dim user_tpl$:"sa_levels:c(1),high_level:c(1)"
+	user_tpl.sa_levels$="C"
+	user_tpl.high_level$="C"
+endif
+if sas_params.customer_lev$ = "I"
+	dim user_tpl$:"sa_levels:c(3),high_level:c(1)"
+	user_tpl.sa_levels$="PIC"
+	user_tpl.high_level$="C"
+endif
 [[SAR_PRODITMCST.BSHO]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
