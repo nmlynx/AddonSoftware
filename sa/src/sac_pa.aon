@@ -136,11 +136,13 @@ rem --- Initializations
 
 rem --- Which Sales Analysis?
 
-    on mod(action,20) goto l4600,l1100,l1200,l1300,l1400,l1500,l1600,l1700,l1800,l1900,l2000,l2100,l2200,l4600
+    on mod(action,20) goto bad_stat,by_cust,by_terr,by_sls,by_custtype,by_custship,
+:                          by_sic,by_prod,by_whse,by_vend,by_dist,by_nonstock,
+:                          by_terr_cust,bad_stat
 
-l1100: rem --- (Action = 1 & 21) Customer/Product/Item
+by_cust: rem --- (Action = 1 & 21) Customer/Product/Item
 
-    if mod(action,20)=1 if sas01a.by_customer$<>"Y" exitto l4500            
+    if mod(action,20)=1 if sas01a.by_customer$<>"Y" exitto not_avail            
     if action=1 then
         levels$[1]="C"
         levels$[2]="P"
@@ -188,9 +190,9 @@ l1100: rem --- (Action = 1 & 21) Customer/Product/Item
         xrefs[3]=2
         goto done
     else
-        levels$[1]="C"
-        levels$[2]="P"
-        levels$[3]="I"
+        levels$[3]="C"
+        levels$[1]="P"
+        levels$[2]="I"
         segments=pos(sas01a.customer_lev$=levels$[1]+levels$[2]+levels$[3])
         literals$[3]="Customer"
         literals$[1]="Product Type"
@@ -235,9 +237,9 @@ l1100: rem --- (Action = 1 & 21) Customer/Product/Item
         goto done
     endif
     
-l1200: rem --- (Action = 2) Territory/Product/Item
+by_terr: rem --- (Action = 2) Territory/Product/Item
 
-    if mod(action,20)=2 if sas01a.by_territory$<>"Y" exitto l4500        
+    if mod(action,20)=2 if sas01a.by_territory$<>"Y" exitto not_avail        
     levels$[1]="T"
     levels$[2]="P"
     levels$[3]="I"
@@ -281,9 +283,9 @@ l1200: rem --- (Action = 2) Territory/Product/Item
     keylen=32
     goto done
 
-l1300: rem --- (Action = 3) Salesperson/Product/Item
+by_sls: rem --- (Action = 3) Salesperson/Product/Item
 
-    if mod(action,20)=3 if sas01a.by_salespsn$<>"Y" exitto l4500    
+    if mod(action,20)=3 if sas01a.by_salespsn$<>"Y" exitto not_avail    
     levels$[1]="S"
     levels$[2]="P"
     levels$[3]="I"
@@ -327,9 +329,9 @@ l1300: rem --- (Action = 3) Salesperson/Product/Item
     keylen=32
     goto done
 
-l1400: rem --- (Action = 4) Customer Type/Product/Item
+by_custtype: rem --- (Action = 4) Customer Type/Product/Item
 
-    if mod(action,20)=1 if sas01a.by_customer_type$<>"Y" exitto l4500
+    if mod(action,20)=1 if sas01a.by_customer_type$<>"Y" exitto not_avail
     levels$[1]="C"
     levels$[2]="P"
     levels$[3]="I"
@@ -373,9 +375,9 @@ l1400: rem --- (Action = 4) Customer Type/Product/Item
     keylen=32
     goto done
 
-l1500: rem --- (Action = 5) Customer/Ship-to/Item
+by_custship: rem --- (Action = 5) Customer/Ship-to/Item
 
-    if mod(action,20)=5 if sas01a.by_shipto$<>"Y" exitto l4500    
+    if mod(action,20)=5 if sas01a.by_shipto$<>"Y" exitto not_avail    
     levels$[1]="C"
     levels$[2]="S"
     levels$[3]="I"
@@ -419,9 +421,9 @@ l1500: rem --- (Action = 5) Customer/Ship-to/Item
     keylen=38
     goto done
 
-l1600: rem --- (Action = 6) SIC/Product/Item
+by_sic: rem --- (Action = 6) SIC/Product/Item
 
-    if mod(action,20)=6 if sas01a.by_sic_code$<>"Y" exitto l4500
+    if mod(action,20)=6 if sas01a.by_sic_code$<>"Y" exitto not_avail
     levels$[1]="C"
     levels$[2]="P"
     levels$[3]="I"
@@ -465,9 +467,9 @@ l1600: rem --- (Action = 6) SIC/Product/Item
     keylen=37
     goto done
 
-l1700: rem --- (Action = 7) Product/Item
+by_prod: rem --- (Action = 7) Product/Item
 
-    if mod(action,20)=7 if sas01a.by_product$<>"Y" exitto l4500
+    if mod(action,20)=7 if sas01a.by_product$<>"Y" exitto not_avail
     levels$[1]="P"
     levels$[2]="I"
     levels$[3]=""
@@ -501,9 +503,9 @@ l1700: rem --- (Action = 7) Product/Item
     let keylen=29
     goto done
 
-l1800: rem --- (Action = 8) Warehouse/Product/Item
+by_whse: rem --- (Action = 8) Warehouse/Product/Item
 
-    if mod(action,20)=8 if sas01a.by_whse$<>"Y" exitto l4500
+    if mod(action,20)=8 if sas01a.by_whse$<>"Y" exitto not_avail
     let levels$[1]="W"
     let levels$[2]="P"
     let levels$[3]="I"
@@ -547,9 +549,9 @@ l1800: rem --- (Action = 8) Warehouse/Product/Item
     let keylen=31
     goto done
 
-l1900: rem --- (Action = 9) Vendor/Product/Item
+by_vend: rem --- (Action = 9) Vendor/Product/Item
 
-    if mod(action,20)=9 if sas01a.by_vendor$<>"Y" exitto l4500
+    if mod(action,20)=9 if sas01a.by_vendor$<>"Y" exitto not_avail
     let levels$[1]="V"
     let levels$[2]="P"
     let levels$[3]="I"
@@ -593,9 +595,9 @@ l1900: rem --- (Action = 9) Vendor/Product/Item
     let keylen=35
     goto done
 
-l2000: rem --- (Action = 10) Dist Code/Product/Item
+by_dist: rem --- (Action = 10) Dist Code/Product/Item
 
-    if mod(action,20)=10 if sas01a.by_dist_code$<>"Y" exitto l4500
+    if mod(action,20)=10 if sas01a.by_dist_code$<>"Y" exitto not_avail
     let levels$[1]="D"
     let levels$[2]="P"
     let levels$[3]="I"
@@ -639,9 +641,9 @@ l2000: rem --- (Action = 10) Dist Code/Product/Item
     let keylen=31
     goto done
 
-l2100: rem --- (Action = 11) Product/Non-stock
+by_nonstock: rem --- (Action = 11) Product/Non-stock
 
-    if mod(action,20)=11 if sas01a.by_nonstock$<>"Y" exitto l4500
+    if mod(action,20)=11 if sas01a.by_nonstock$<>"Y" exitto not_avail
     let levels$[1]="P"
     let levels$[2]="N"
     let levels$[3]=""
@@ -674,9 +676,9 @@ l2100: rem --- (Action = 11) Product/Non-stock
     let keylen=49
     goto done
 
-l2200: rem --- (Action = 12) Territory/Customer/Product/Item
+by_terr_cust: rem --- (Action = 12) Territory/Customer/Product/Item
 
-    if mod(action,20)=1 if sas01a.by_customer$<>"Y" exitto l4500
+    if mod(action,20)=1 if sas01a.by_customer$<>"Y" exitto not_avail
     let levels$[1]="T"
     let levels$[2]="C"
     let levels$[3]="P"
@@ -741,14 +743,14 @@ done: rem --- Open Sales Analysis File(s)
     dim ids$[endfile],templates$[endfile],channels[endfile]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto l4600
+    if status goto bad_stat
     let descchan[1]=channels[1],descchan[2]=channels[2],descchan[3]=channels[3],descchan[4]=channels[4]
 
 rem --- All Done
 
     goto std_exit
 
-l4500: rem --- Selected Sales Analysis Not Available
+not_avail: rem --- Selected Sales Analysis Not Available
 
     let number=1
     dim message$[number]
@@ -756,7 +758,7 @@ l4500: rem --- Selected Sales Analysis Not Available
     let message$[1]="           <Enter> = Continue"
     call pgmdir$+"adc_stdmessage.aon",3,message$[all],number,-1,-1,v$,v3
 
-l4600: rem --- Return STATUS = ERR
+bad_stat: rem --- Return STATUS = ERR
 
     let status=err
     if status=0 status=999

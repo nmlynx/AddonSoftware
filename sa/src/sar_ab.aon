@@ -66,7 +66,7 @@ rem --- Parameters
     dim sa_channels[2],xrefs[nmbr],periods$[13],iv_masks$[3],iv_desc[3]
     call pgmdir$+"sac_pa.aon",action,firm_id$,segments,levels$[all],literals$[all],types$[all],imasks$[all],omasks$[all],prompts$[all],inlen[all],fldlen[all],descchan[all],descrec$[all],descstr[all],descpos[all],desclen[all],sa_channels[all],keylen,xrefs[all],fy$,periods,periods$[all],iv_masks$[all],iv_desc[all],ivm14_dev,status
     if status or segments<1 goto std_exit
-    if sa_channels[2] gosub build_xrefs
+rem     if sa_channels[2] gosub build_xrefs
     m1$=iv_masks$[1]
     m2$=iv_masks$[2]
     m3$=iv_masks$[3]
@@ -90,10 +90,12 @@ rem --- Initializations
     for i=1 to segments
         levels$=levels$+levels$[i]
     next i
+
     if action=21
-        if segments=1 levels$=levels$[2]
-        if segments=2 levels$=levels$[2]+levels$[3]
-        if segments=3 levels$=levels$[2]+levels$[3]+levels$[1]
+       gosub build_xrefs
+rem        if segments=1 levels$=levels$[2]
+rem        if segments=2 levels$=levels$[2]+levels$[3]
+rem        if segments=3 levels$=levels$[2]+levels$[3]+levels$[1]
     endif
     dim seqs$[3]; let seqs$[1]="Ascending",seqs$[2]="Descending",seqs$[3]="Unsorted",seqs$="ADU"
     dim sus$[2]; let sus$[1]="Sales",sus$[2]="Units",sus$="SU"
