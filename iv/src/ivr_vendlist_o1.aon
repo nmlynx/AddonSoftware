@@ -64,11 +64,6 @@ rem ---  column heading
                columns$[11,0]="Quantity Break",       columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m2$
                columns$[12,0]="Cost Break",           columns$[12,1]="N",columns$[12,2]="8",columns$[12,3]=m3$
 
-
-rem --- Print positions and headings
-
-               gosub Position
-
 rem --- Background
 
             call pgmdir$+"adc_progress.aon","N","","","","",0,ivm05_dev,1,meter_num,status
@@ -116,7 +111,7 @@ rem --- Get Actual Annual Usage & EOQ
             dim channs[12],item$[2],whse$[2],whse[20]
             channs[1]=ivm01_dev
             channs[2]=ivm02_dev
-            channs[3]=ivm03_dev
+            channs[3]=ivm03g_dev
             channs[12]=ivm12_dev
             item$[0]=firm_id$
             item$[1]=""
@@ -191,15 +186,6 @@ VendorInit:
         HdrVect!.addItem(h3$)
         return
 
-Position: rem --- Print positions
-
-        m1$=ivs01a.amount_mask$
-        m2$=ivs01a.unit_mask$
-        m3$=ivs01a.cost_mask$
-        call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
-        call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
-
-return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)

@@ -29,7 +29,7 @@ rem --- Open files
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
-    files$[5]="ivm-03",ids$[5]="IVX_ITEMVEND"
+    files$[5]="ivm-03",ids$[5]="IVX_ITEMWHSE"
     files$[6]="ivm-05",ids$[6]="IVM_ITEMVEND"
     files$[7]="ivc_whsecode",ids$[7]="IVC_WHSECODE"
     files$[8]="ivm-12",ids$[8]="IVM_ITEMACT"
@@ -46,7 +46,7 @@ rem --- Open files
     apm01_dev=channels[2]
     ivm01_dev=channels[3]
     ivm02_dev=channels[4]
-    ivm03_dev=channels[5]
+    ivm03g_dev=channels[5]
     ivm05_dev=channels[6]
     ivm10c_dev=channels[7]
     ivm12_dev=channels[8]
@@ -139,6 +139,10 @@ initializations:
 
     seterr std_error
 
+    call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
+    call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
+    call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
+    call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
 
 rem --- run overlay
 

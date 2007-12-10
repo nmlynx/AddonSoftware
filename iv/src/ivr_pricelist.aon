@@ -89,10 +89,7 @@ rem --- Parameters
 rem --- Initializations
 
     precision p[1]
-    dim headings$[8],o[8]
-    dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12]
-    dim o[7],i[3],x0$(32),y0$(5),y1$(20)
-    dim b0$(24),b1$(64),b[20],total[3],warehouse[3],product[3],report[3]
+    dim headings$[8],total[3],warehouse[3],product[3],report[3]
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     when$=sysinfo.system_date$
@@ -106,8 +103,10 @@ rem --- Initializations
     m9=len(m9$)
     done=0
 
-rem --- Row positions
+rem --- Report masks
 
+    call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
+    call pgmdir$+"adc_getmask.aon","","IV","P",imask$,m4$,0,0
     call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
     call pgmdir$+"adc_sizemask.aon",m4$,m4,11,15
 
@@ -141,7 +140,16 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fndate$(q$) 
+        if cvs(q$,2)="" return ""
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if testdate$<>"" 
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        endif
+        return testdate$
+    fnend    
+rem    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))),"%Mz/%Dz/%Yd")
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
@@ -191,8 +199,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call syspgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
