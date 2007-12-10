@@ -24,7 +24,7 @@ rem --- Retrieve sysinfo data
 rem --- Init Data
 
     precision ivprecision
-    dim a0$(22),vendtot[3],vendor$(6)
+    dim vendtot[3],vendor$(6)
     printvtot$="N"
     initializing$="Y"; rem "Init files 1st time through
     mratio$="-##0.00%"
@@ -33,7 +33,7 @@ rem --- Init Data
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECHDR","PRIMARY",pot04a_key_tpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECDET","PRIMARY",pot14a_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECDET","ALT_KEY_01",pot14a_key_alttpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECHDR","VEND_RECDATE",pot04a_key_alttpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","APM_VENDMAST","ALT_KEY_02",apm01a_key_alphtpl$,rd_table_chans$[all],status$
 
 rem --- Headings and print positions
@@ -81,7 +81,7 @@ rem --- Sorts
         sortbyvend=2
         keybyvend=3
         
-       dim pot44a_key$:pot14a_key_alttpl$ ; rem pot-14 key by vend/rec date
+       dim pota_key$:pot04a_key_alttpl$ ; rem pot-04 key by vend/rec date
        dim apm04a_key$:apm01a_key_alphtpl$ ; rem apm-01 key by alt seq
         switch action
 
@@ -89,23 +89,24 @@ rem --- Sorts
 
                 if initializing$<>"N"
                     initializing$="N"
-                    ap04_key$=firm_id$+vendfrom$
-                    read (apm01_dev2,,knum=2,key=ap04_key$,dom=*next)
+                    ap04_key$=firm_id$+altfrom$
+                    read (apm01_dev2,knum=2,key=ap04_key$,dom=*next)
                 endif
 
-rem --- Find a POT44 record using alt seq
+rem --- Find a vendor/recDate record using alt seq
 
                 while more
 
                     apm04a_key$=key(apm01_dev2,knum=2,end=done)
-                    if apm04a_key.firm_id$<>firm_id$ break
-                    if vendthru$<>"" and cvs(apm04a_key.alt_sequence$,2)>cvs(vendthru$,2) more=0;break
+                    if apm04a_key.firm_id$<>firm_id$ goto done
+                    if altthru$<>"" and apm04a_key.alt_sequence$(1,len(altthru$))>altthru$ goto done
                     k04b_key$=apm04a_key.firm_id$+apm04a_key.vendor_id$
-                    read (apm04_dev); rem "Move ptr
-                    read (pot14_dev2,KNUM=1,key=k04b$,dom=*next)
-                    pot44a_key$=key(pot14_dev2,end=*continue)
-                    if pot44a_key.firm_id$+pot44a_key.vendor_id$<>k04b_key$ continue
-                    k$=pot44a_key$
+                    read (apm01_dev2); rem "Move ptr
+                    read (pot04_dev2,KNUM=1,key=k04b_key$+datefrom$,dom=*next)
+                    pota_key$=key(pot04_dev2,knum=1,end=*continue)
+                    if datethru$<>"" if pota_key.recpt_date$>datethru$ continue
+                    if pota_key.firm_id$+pota_key.vendor_id$<>k04b_key$ continue
+                    k$=pota_key$.firm_id$+pota_key.vendor_id$+pota_key.po_no$+pota_key.receiver_no$; break
 
                 wend
 
@@ -115,16 +116,20 @@ rem --- Find a POT44 record using alt seq
 
                 if initializing$<>"N"
                     initializing$="N"
-                    pot44a_key$=firm_id$+vendfrom$
-                    read (pot14_dev,knum=0,key=pot44a_key$,dom=*next)
-                    if vendfrom$<> "" pot44a_key$=firm_id$+vendfrom$+datefrom$  
-                      read(pot14_dev,knum=0,key=pot44a_key$,dom=*next)  
+                    pota_key$=firm_id$+vendfrom$
+                    read (pot04_dev2,knum=1,key=pota_key$,dom=*next)
+                    if vendfrom$<>"" pota_key$=firm_id$+vendfrom$+datefrom$  
+                      read(pot04_dev2,knum=1,key=pota_key$,dom=*next)  
                     endif
                 endif
 
 rem --- Read through req headers
 
-                k$=key(pot14_dev,end=done)
+                pota_key$=key(pot04_dev2,knum=1,end=done)
+                if pota_key.firm_id$<>firm_id$ goto done
+                read (pot04_dev2,end=done); rem "Move ptr
+                if vendthru$<>"" if pota_key.vendor_id$>vendthru$ goto done
+                k$=pota_key.firm_id$+pota_key.vendor_id$+pota_key.po_no$+pota_key.receiver_no$
                 break
 
             case default   
@@ -136,15 +141,9 @@ rem --- Read through req headers
         while more
 
             if k$(1,2)<>firm_id$ continue
-            read (pot14_dev2); rem "Move ptr
-            find record (pot04a_dev,key=k$(1,22),dom=nextheader) pot04a$
-
+            find record (pot04a_dev,key=k$(1,22),dom=*break) pot04a$
+            read (pot14_dev,key=k$(1,22),dom=*next) ; rem trip read for later details
 rem --- Test Ranges
-
-            if printseq$<>"A"
-                if vendthru$<>"" and pot04a.vendor_id$>vendthru$ break
-            endif
-
             if datefrom$<>"" and pot04a.recpt_date$<datefrom$ and printseq$<>"A" continue
             if datethru$<>"" and pot04a.recpt_date$>datethru$ and printseq$<>"A" continue
 
@@ -177,13 +176,12 @@ rem --- Calculate Order Value, Receipt Value and Fill Ratio
             po_oval=0
             po_rval=0
             ratio=0
-rem            read (pot14_dev,key=a0$,dom=*next)
 
 rem --- Get detail numerics and accumulate column buckets
             dim pot14a_key$:pot14a_key_tpl$
-
+          
             while more
-            
+          
                 pot14a_key$=key(pot14_dev,end=*break)
                 if pot14a_key.firm_id$+pot14a_key.vendor_id$+pot14a_key.receiver_no$<>pot04a.firm_id$+
 :                   pot04a.vendor_id$+pot04a.receiver_no$ break
@@ -193,7 +191,7 @@ rem --- Get detail numerics and accumulate column buckets
                     if pos(linetype$="SNO")=0 continue
                     precision 2
                     ordval=(pot14a.unit_cost*pot14a.qty_ordered)
-                    rcptval=(pot14a.unit_cost*pot14a.qty_ordered)
+                    rcptval=(pot14a.unit_cost*pot14a.qty_received)
                     precision ivprecision
 
 rem --- Accumulate totals; then get next detail
@@ -218,25 +216,23 @@ rem --- Done w/detail for this PO
 
             if po_oval>0 ratio=po_rval*100/po_oval
             gosub printline
-escape; rem at 220 after print line -- trace it
-rem  read (pot14_dev2,key=k$(1,28)+$FF$,dom=*next); rem "Move ptr to next recpt
 
 rem --- Loop up for next header record via sort files
 
-nextheader:
             if printseq$<>"A" break
 
 rem --- See if there's another po for vend before getting next alt seq
 
-            pot44a_key$=key(pot14_dev2,end=*continue)
-            if pot44a_key.vendor_id$=vendor$ continue
 
+            pota_key$=key(pot04a_dev,end=*continue)
+            if pota_key.vendor_id$<>vendor$ break
+            k$=pota_key$
         wend
         
     wend
 
 done: rem --- All Done
-ESCAPE; REM DONE
+
     if l+2>l9 gosub report_heading
     gosub vendtotals
     if grandoval>0 grandratio=grandrval*100/grandoval
@@ -420,10 +416,10 @@ rem #endinclude std_functions.src
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
-ESCAPE; REM ERROR
+
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP"),err=std_error_exit)
+    pgmdir$=stbl("+DIR_SYP")
     call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
