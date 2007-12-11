@@ -67,6 +67,14 @@ rem --- Parameters
     call pgmdir$+"sac_pa.aon",action,firm_id$,segments,levels$[all],literals$[all],types$[all],imasks$[all],omasks$[all],prompts$[all],inlen[all],fldlen[all],descchan[all],descrec$[all],descstr[all],descpos[all],desclen[all],sa_channels[all],keylen,xrefs[all],fy$,periods,periods$[all],iv_masks$[all],iv_desc[all],ivm14_dev,status
     if status or segments<1 goto std_exit
 rem     if sa_channels[2] gosub build_xrefs
+    if action=21
+       switch pos(level$="PIC")
+            case 1; segments=1
+            case 2; segments=2
+            case 3; segments=3
+        swend
+    endif
+
     m1$=iv_masks$[1]
     m2$=iv_masks$[2]
     m3$=iv_masks$[3]
@@ -93,6 +101,11 @@ rem --- Initializations
 
     if action=21
        gosub build_xrefs
+       switch pos(level$="PIC")
+           case 1; levels$="P"
+           case 2; levels$="PI"
+           case 3; levels$="PIC"
+       swend
 rem        if segments=1 levels$=levels$[2]
 rem        if segments=2 levels$=levels$[2]+levels$[3]
 rem        if segments=3 levels$=levels$[2]+levels$[3]+levels$[1]
