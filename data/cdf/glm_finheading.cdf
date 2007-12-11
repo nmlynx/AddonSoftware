@@ -3,11 +3,7 @@ gosub show_guide
 [[GLM_FINHEADING.<CUSTOM>]]
 show_guide:
 
-for x=1 to 13
-	wk$=wk$+"----+----"+str(mod(x,10))
-next x
-
-callpoint!.setColumnData("<<DISPLAY>>.GUIDE",wk$)
+callpoint!.setColumnData("<<DISPLAY>>.GUIDE",user_tpl.ruler$)
 callpoint!.setStatus("REFRESH")
 
 return
@@ -45,7 +41,14 @@ currFont!=guide!.getFont()
 myFont!=SysGUI!.makeFont("courier",currFont!.getSize(),currFont!.getStyle())
 guide!.setFont(myFont!)
 
-
 ctl_name$="<<DISPLAY>>.GUIDE"
 ctl_stat$="I"
 gosub disable_fields
+
+dim user_tpl$:"ruler:c(135*)"
+
+for x=1 to 13
+	wk$=wk$+"----+----"+str(mod(x,10))
+next x
+
+user_tpl.ruler$=wk$
