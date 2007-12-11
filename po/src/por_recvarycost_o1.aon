@@ -24,7 +24,7 @@ rem --- Retrieve sysinfo data
 rem --- Init Data
 
     precision ivprecision
-    dim a0$(22),a1$(160),a[8],vendtot[3],prevk$(31),vendor$(6),prevvend$(6)
+    dim vendtot[3],prevk$(31),vendor$(6),prevvend$(6)
     printvtot$="N"
     printptot$="N"
     more=1
@@ -126,7 +126,7 @@ rem --- Get Header & assign variables
         endif
 
 rem --- Get detail
-
+ESCAPE; REM NOT A0$ IN 130
         p14_key$=a0$+linenum$
         find record (pot14a_dev,key=p14_key$,dom=*continue) pot14a$
         whse$=pot14a.warehouse_id$

@@ -31,7 +31,6 @@ rem --- Retrieve sysinfo data
 rem --- Init Data
 
     precision ivprecision
-    dim a0$(15),a1$(160),a[8]
     grandtot=0
 
 rem --- Headings and print positions
@@ -79,8 +78,7 @@ rem --- Position files
 rem --- Sort by Purchase Order
 
     dim poe02a_altkey$:poe02a_key_alttpl$
-escape;rem start sort
-    poe02a_altkey$(1)=firm_id$+pofrom$
+
     read (poe02_dev2,KNUM=1,key=firm_id$+pofrom$,dom=*next)
     if pofrom$<>"" read (poe02_dev2,KNUM=1,key=firm_id$+pofrom$+vendfrom$,dom=*next)poe02a$;break
 
@@ -91,7 +89,7 @@ rem --- Read through sort file
         poe02a_altkey$=key(poe02_dev2,end=*break)
         k$=poe02a_altkey.firm_id$+poe02a_altkey.vendor_id$+poe02a_altkey.po_no$
         read (poe02_dev2)
-        if poe02a_altkey.firm_id$<>firm_id$ break
+        if poe02a_altkey.firm_id$<>firm_id$ goto done
         dim poe02a_key$:poe02a_key_pritpl$
         find record (poe02a_dev,key=k$,dom=*continue) poe02a$
 
@@ -109,20 +107,16 @@ rem --- Test Ranges
 rem --- If req'd date of any detail is w/in date range, print whole PO
 
         dim poe12a_key$:poe12a_key_tpl$
-        p12_key$=poe02a.firm_id$+poe02a.vendor_id$+poe02a.po_no$
-        read (poe12_dev,key=p12_key$,dom=*next)
+        read (poe12_dev,key=k$,dom=*next)
 
 rem --- Test PO Detail date range
 
         while more
-escape;  rem  this needs work here!!!!  you need to go thru each line.  As soon as 
-rem " one has a qualifying date, get out and print the whole thing.  If you get all
-rem " thru and none qualify we aren't printing ANY of it.
 
             poe12a_key$=key(poe12_dev,end=*break)
             if poe12a_key.firm_id$+poe12a_key.vendor_id$+poe12a_key.po_no$<>poe02a.firm_id$+poe02a.vendor_id$+poe02a.po_no$ break
             read record (poe12_dev,key=poe12a_key$) poe12a$
-            if datethru$"" or poe12a.reqd_date$<=datethru$ printit$="Y"
+            if datethru$="" or poe12a.reqd_date$<=datethru$ printit$="Y"
 
 rem --- Detail passed, so go print header & whole PO
                          
@@ -151,13 +145,12 @@ printdetail: rem --- Re-loop through detail & print whole PO
 
     call pgmdir$+"adc_progress.aon","S","","","","",0,poe02a_dev,1,meter_num,status
 
-    p12_key$=poe02a_key.firm_id$+poe02a_key.vendor_id$+poe02a_key.po_no$
-    read (poe12_dev,key=p12_key$,dom=*next)
+    read (poe12_dev,key=k$,dom=*next)
 
     while more
 
         poe12a_key$=key(poe12_dev,end=*break)
-        if poe12a_key.firm_id$+poe12a_key.vendor_id$+poe12a_key.po_no$<>p12_key$ break
+        if poe12a_key.firm_id$+poe12a_key.vendor_id$+poe12a_key.po_no$<>k$ break
         read record (poe12_dev,key=poe12a_key$) poe12a$
 
 rem --- Set up variables
@@ -165,9 +158,8 @@ rem --- Set up variables
         dim datereq$(8)
         whse_detail$=poe12a.warehouse_id$
         itemnum$=poe12a.item_id$
-        memo$=b4$
         unitmeas$=poe12a.unit_measure$
-        if poe12a.reqd_date$<>fill(6) datereq$=fndate$(poe12a.reqd_date$)
+        if poe12a.reqd_date$<>fill(8) datereq$=fndate$(poe12a.reqd_date$)
         qtyord$=str(poe12a.qty_ordered:m2$)
         qtyinqa$=str(poe12a.qa_wip_qty:m2$)
         qtyrec$=str(poe12a.qty_received:m2$)
@@ -184,14 +176,13 @@ rem --- Get Drop Ship flag & Line Type
 
 brnch1: rem --- Get Item Desc for S and N type lines
 
-        if linetype$="N"
-
-            itemdesc$=memo$
-            dim itemdesc$(60),x1$(60)
-            ivm01a.item_desc$="Not On File"
+        dim item_desc$(60)       
+        if linetype$="N" item_desc$(1)=poe12a.order_memo$
+        if linetype$="S" 
+            item_desc$(1)="Not On File"
             i01_key$=firm_id$+poe12a.item_id$
             find record (ivm01a_dev,key=i01_key$,dom=brnch2) ivm01a$
-            ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
+            item_desc$(1)=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
         endif
 
@@ -208,7 +199,7 @@ rem --- Print Line Types 'M', 'O' & 'V'
 
         if pos(linetype$="MOV")<>0
 
-            if linetype$="V" pline$(o[2]+1)=memo$(1,20) else pline$(o[2]+1)=memo$
+            if linetype$="V" pline$(o[2]+1)=poe12a.order_memo$(1,20) else pline$(o[2]+1)=poe12a.order_memo$
             if linetype$<>"M" pline$(o[5]+1)=datereq$
             if linetype$="O" pline$(o[10]+1,m3)=unitcost$,pline$(o[11]+1)=extension$
             if l+2>l9 gosub report_heading
@@ -223,7 +214,7 @@ rem --- Print Line Types 'S' & 'N'
 
                 if l+2>l9 gosub report_heading
                 print (printer_dev)pline$,  @(o[2]),itemnum$(1,itemlen),
-:                                           @(o[3]),ivm01a.item_desc$(1,27),
+:                                           @(o[3]),item_desc$(1,27),
 :                                           @(o[4]),unitmeas$,
 :                                           @(o[5]),datereq$,
 :                                           @(o[6]),qtyord$,
@@ -236,7 +227,7 @@ rem --- Print Line Types 'S' & 'N'
 
 dropship: rem --- Print drop ship info if applicable
 
-                if dropship$<>"Y" or ar$<>"N"
+                if dropship$="Y" 
                 
                     dim custinfo$(321),shipinfo$(173),custaddr$(120),shipaddr$(120)
                     custname$="Not On File"
@@ -342,10 +333,11 @@ assignheads: rem --- Assign headings variables
 
 testbreaks: rem --- Test for Breaks
 
-    if poe02a.po_no$=ponum$
+    if poe02a.po_no$<>ponum$
         if printptot$="Y" gosub pototals
-        gosub newpo
     endif
+    gosub newpo
+ 
     return
 
 newpo: rem --- New PO
@@ -364,7 +356,7 @@ newpo: rem --- New PO
 brnch5:
 
     find record (apm10c_dev,key=firm_id$+"C"+poe02a.terms_code$,dom=brnch6) apm10c$
-    termsdesc$=apm10c.code_desc$(6,18)
+    termsdesc$=apm10c.code_desc$
 
 brnch6:
 
@@ -497,11 +489,11 @@ rem #endinclude std_functions.src
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
-escape ; rem error
+
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call stbl("+DIR_SYP",+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP"+"bac_error.bbj",err=std_error_exit),pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -544,7 +536,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-escape; rem done?
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
