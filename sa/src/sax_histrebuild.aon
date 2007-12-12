@@ -1,0 +1,507 @@
+rem --- Rebuild Sales Anaylis From Invoice History (Rebuild Overlay)
+rem --- Program sax_histrebuild v8.0.0 10Dec2007 (sax_bb)
+rem --- Created by adx_codeport.bbx v1.1.5 (12/10/2007 10:06:05)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+rem -------------- Errors, Warnings and Conversion Information ---------------------
+
+rem --- The following error(s) were encountered during the conversion:
+
+rem --- v7.x Administrator reference ["sys-01A"] (Line 0139)
+rem --- v7.x sys-01 reference [sys01a$:temp] (Line 0145)
+rem --- v7.x sys-01 reference [sys01a_key$=] (Line 0156)
+rem --- v7.x sys-01 reference [sys01a_key$,] (Line 0157)
+rem --- v7.x sys-01 reference [sys01_dev,a0] (Line 0216)
+
+rem --- The following IOLIST's were removed from this program:
+
+rem --- arm01a: iolist *,x4$(1)
+rem --- arm02a: iolist *,x3$(1)
+rem --- ivm01a: iolist *,*,x2$(1)
+rem --- ivm02a: iolist *,t1$(1)
+rem --- ivw05a: iolist *,w[0]
+rem --- opm02a: iolist y0$
+rem --- opt01a: iolist a0$,a1$,a[all]
+rem --- opt11a: iolist w0$,w1$(1),w2$,w[all]
+rem --- sam01a: iolist x0$,x[all],y[all],z[all]
+rem --- sam02a: iolist x0$,x[all],y[all],z[all]
+rem --- sam03a: iolist x0$,x[all],y[all],z[all]
+rem --- sam04a: iolist x0$,x[all],y[all],z[all]
+rem --- sam05a: iolist x0$,x[all],y[all],z[all]
+rem --- sam06a: iolist x0$,x[all],y[all],z[all]
+rem --- sam07a: iolist x0$,x[all],y[all],z[all]
+rem --- sam08a: iolist x0$,x[all],y[all],z[all]
+rem --- sam09a: iolist x0$,x[all],y[all],z[all]
+rem --- sam10a: iolist x0$,x[all],y[all],z[all]
+rem --- sam11a: iolist x0$,x[all],y[all],z[all]
+rem --- sam21a: iolist x0$
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=21,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="sas-01",ids$[1]="SAS_PARAMS"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTOMER"
+    files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
+    files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
+    files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
+    files$[6]="ivw-05",ids$[6]="IVW_LFCOST"
+    files$[7]="opm-02",ids$[7]="OPC_LINECODE"
+    files$[8]="opt-01",ids$[8]="OPT_ORDHDR"
+    files$[9]="opt-11",ids$[9]="OPT_ORDDET"
+    files$[10]="sam-01",ids$[10]="SAM_CUSTOMER"
+    files$[11]="sam-02",ids$[11]="SAM_TERRITRY"
+    files$[12]="sam-03",ids$[12]="SAM_SALESPSN"
+    files$[13]="sam-04",ids$[13]="SAM_CUSTTYPE"
+    files$[14]="sam-05",ids$[14]="SAM_CUSTSHIP"
+    files$[15]="sam-06",ids$[15]="SAM_CUSTSIC"
+    files$[16]="sam-07",ids$[16]="SAM_ITEM"
+    files$[17]="sam-08",ids$[17]="SAM_WAREHSE"
+    files$[18]="sam-09",ids$[18]="SAM_VENDOR"
+    files$[19]="sam-10",ids$[19]="SAM_DISTCODE"
+    files$[20]="sam-11",ids$[20]="SAM_NONSTOCK"
+    files$[21]="sam-12",ids$[21]="SAM_CUSTTERR"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    sas01_dev=channels[1]
+    arm01_dev=channels[2]
+    arm02_dev=channels[3]
+    ivm01_dev=channels[4]
+    ivm02_dev=channels[5]
+    ivw05_dev=channels[6]
+    opm02_dev=channels[7]
+    opt01_dev=channels[8]
+    opt11_dev=channels[9]
+    sam01_dev=channels[10]
+    sam02_dev=channels[11]
+    sam03_dev=channels[12]
+    sam04_dev=channels[13]
+    sam05_dev=channels[14]
+    sam06_dev=channels[15]
+    sam07_dev=channels[16]
+    sam08_dev=channels[17]
+    sam09_dev=channels[18]
+    sam10_dev=channels[19]
+    sam11_dev=channels[20]
+    sam12_dev=channels[21]
+
+rem --- Dimension string templates
+
+    dim arm01a$:templates$[2],arm02a$:templates$[3],ivm01a$:templates$[4],
+:       ivm02a$:templates$[5],ivw05a$:templates$[6],opm02a$:templates$[7],
+:       opt01a$:templates$[8],opt11a$:templates$[9],sam01a$:templates$[10],
+:       sam02a$:templates$[11],sam03a$:templates$[12],sam04a$:templates$[13],
+:       sam05a$:templates$[14],sam06a$:templates$[15],sam07a$:templates$[16],
+:       sam08a$:templates$[17],sam09a$:templates$[18],sam10a$:templates$[19],
+:       sam11a$:templates$[20],sas01a$:templates$[1]
+
+rem --- Assign form input values to local variables
+
+    opt_cust$=option!.getOptionData("BY_CUSTOMER")
+    opt_terr$=option!.getOptionData("BY_TERRITORY")
+    opt_slspsn$=option!.getOptionData("BY_SALESPSN")
+    opt_custtype$=option!.getOptionData("BY_CUSTOMER_TYPE")
+    opt_shipto$=option!.getOptionData("BY_SHIPTO")
+    opt_sic$=option!.getOptionData("BY_SIC_CODE")
+    opt_prod$=option!.getOptionData("BY_PRODUCT")
+    opt_whse$=option!.getOptionData("BY_WHSE")
+    opt_vend$=option!.getOptionData("BY_VENDOR")
+    opt_distcode$=option!.getOptionData("BY_DIST_CODE")
+    opt_nonstock$=option!.getOptionData("BY_NONSTOCK")
+
+rem --- Retrieve parameter records
+
+    sas01a_key$=firm_id$+"SA00"
+    find record (sas01_dev,key=sas01a_key$,err=std_missing_params) sas01a$
+
+rem --- Initializations
+
+    precision ivprecision
+
+rem --- Background
+
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,opt01_dev,1,meter_num,status
+
+rem --- Position File
+
+    read (opt01_dev,key=firm_id$,dom=*next)
+
+rem --- Main read
+    
+    while 1
+        k0$=key(opt01_dev,end=*break)
+        read record (opt01_dev) opt01a$
+        if pos(firm_id$=k0$)<>1 break
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+rem --- Position Invoice History Detail File
+
+        read (opt11_dev,key=k0$(1,17),dom=*next)
+
+rem --- Read next line item
+
+        while 1
+            k$=key(opt11_dev,end=*break)
+            if k$(1,17)<>k0$(1,17) break
+            read record (opt11_dev) opt11a$
+rem jpb next line
+            if lf$="Y" 
+                find record (ivw05_dev,key=firm_id$+opt_orddet.ar_type$+opt_orddet.customer_id$+opt_orddet.order_no$+opt_orddet.item_id$+opt_orddet.line_no$,err=*next) ivw05a$
+            endif    
+
+rem --- Additional Reads
+
+            dim arm01$:fattr(arm01a$),arm02a$:fattr(arm02a$)
+            find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
+            find record (arm02_dev,key=firm_id$+opt01a.customer_id$+"  ",dom=*next) arm02a$
+
+rem --- Get Line Type
+
+            if opt_orddet.line_code<>k2$
+                k2$=opt_orddet.line_code$
+                dim opm02a$:fattr(opm02a$)
+                find record (opm02_dev,key=firm_id$+opt_orddet.line_code$,dom=*next) opm02a$
+            endif
+
+rem --- Update Sales Analysis
+
+            if pos(opc_linecode.line_type$="SNPO")=0 break
+            if pos(opc_linecode.line_type$="NPO") and opc_linecode.prod_type_pr$="N" break
+            dim ivm02a$:fattr(ivm01a$),ivm02a$:fattr(ivm02a$)
+            if opc_linecode.line_type$="N" ivm01a.sa_level$="P"
+            find record (ivm01_dev,key=firm_id$+opt_orddet.item_id$,dom=*next) ivm01a$
+            find record (ivm02_dev,key=firm_id$+opt_orddet.warehouse_id$+opt_orddet.item_id$,dom=*next) ivm02a$
+            if ivm01a.stock_level$="W" vendor$=ivm02a.vendor_id$ else vendor$=ivm01a.vendor_id$
+rem jpb next line? - the call and a0$(24,3)? sh/be opt01a.invoice_date$
+            call pgmdir$+"adc_peryear.aon",firm_id$,sys01_dev,a0$(24,3),period$,year$
+            period=num(period$)
+
+rem --- Customer
+
+            if opt_cust$<>"Y" or pos(arm02a.sa_flag$="PI")=0 or pos(ivm01a.sa_level$="PI")=0 goto territory
+            segs=3
+            dim seg_end[segs],x0$(33)
+            seg_end[1]=11
+            seg_end[2]=14
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt01a.customer_id$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam01_dev
+            if arm02a.sa_flag$="P" or levparams$(1,1)="P" segs=2
+            if levparams$(1,1)="C" segs=1
+            gosub write_rec
+rem last left our hero here! jpb
+            dim sam01a$:fattr(sam01a$)
+            sam01a.firm_id$=firm_id$
+            sam01a.year$=year$
+            sam01a.customer_id$=opt01a.customer_id$
+rem ???            if arm02a.sa_flag$<>"C" sam01a.product_type$=opt_orddet.product_type$
+
+
+territory: rem --- Territory
+
+            if opt_terr$<>"Y" or pos(ivm01a.sa_level$="PI")=0 goto slspsn
+            segs=3
+            dim seg_end[segs],x0$(30)
+            seg_end[1]=8
+            seg_end[2]=11
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt01a.territory$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam02_dev
+            if ivm01a.sa_level$="P" or levparams$(2,1)="P" segs=2
+            if levparams$(2,1)="T" segs=1
+            gosub write_rec
+
+slspsn: rem --- Salesperson
+
+            if opt_slspsn$<>"Y" or pos(ivm01a.sa_level$="PI")=0 goto custtype
+            segs=3
+            dim seg_end[segs],x0$(30)
+            seg_end[1]=8
+            seg_end[2]=11
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt01a.slspsn_code$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam03_dev
+            if ivm01a.sa_level$="P" or levparams$(3,1)="P" segs=2
+            if levparams$(3,1)="S" segs=1
+            gosub write_rec
+
+custtype: rem --- Customer Type
+
+            if opt_custtype$<>"Y" or pos(arm02a.sa_flag$="PI")=0 or pos(ivm01a.sa_level$="PI")=0then goto shipto
+            segs=3
+            dim seg_end[segs],x0$(30)
+            seg_end[1]=8
+            seg_end[2]=11
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+arm02a.customer_type$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam04_dev
+            if ivm01a.sa_level$="P" or levparams$(4,1)="P" segs=2
+            if levparams$(4,1)="C" segs=1
+            gosub write_rec
+
+shipto: rem --- Ship-To
+
+            if opt_shipto$<>"Y" or pos(arm02a.sa_flag$="PI")=0 or pos(ivm01a.sa_level$="PI")=0then goto sic
+            segs=3
+            dim seg_end[segs],x0$(36)
+            seg_end[1]=11
+            seg_end[2]=17
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt01a.customer_id$+opt01a.shipto_no$+opt_orddet.item_id$
+            sa_dev=sam05_dev
+            if arm02a.sa_flag$="P" or levparams$(5,1)="P" segs=2
+            if levparams$(5,1)="C" segs=1
+            gosub write_rec
+
+sic: rem --- Standard Industry Code
+
+            if opt_sic$<>"Y" or pos(ivm01a.sa_level$="PI")=0 or cvs(arm01a.sic_code$,2)="" goto prodtype
+            segs=3
+            dim seg_end[segs],x0$(35)
+            seg_end[1]=13
+            seg_end[2]=16
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+arm01a.sic_code$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam06_dev
+            if ivm01a.sa_level$="P" or levparams$(6,1)="P" segs=2
+            if levparams$(6,1)="C" segs=1
+            gosub write_rec
+
+prodtype: rem --- Product Type
+
+            if opt_prod$<>"Y" or pos(ivm01a.sa_level$="PI")=0 goto warehouse
+            segs=2
+            dim seg_end[segs],x0$(27)
+            seg_end[1]=8
+            seg_end[2]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam07_dev
+            if ivm01a.sa_level$="P" or levparams$(7,1)="P" segs=1
+            gosub write_rec
+
+warehouse: rem --- Warehouse
+
+            if opt_whse$(8,1)<>"Y" or pos(ivm01a.sa_level$="PI")=0 goto stockvend
+            segs=3
+            dim seg_end[segs],x0$(29)
+            seg_end[1]=7
+            seg_end[2]=10
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt_orddet.warehouse_id$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam08_dev
+            if ivm01a.sa_level$="P" or levparams$(8,1)="P" segs=2
+            if levparams$(8,1)="W" segs=1
+            gosub write_rec
+
+stockvend: rem --- Stocking Vendor
+
+            if opt_vend$<>"Y" or pos(ivm01a.sa_level$="PI")=0 or cvs(vendor$,2)="" goto distcode
+            segs=3
+            dim seg_end[segs],x0$(33)
+            seg_end[1]=11
+            seg_end[2]=14
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+vendor$(1,6)+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam09_dev
+            if ivm01a.sa_level$="P" or levparams$(9,1)="P" segs=2
+            if levparams$(9,1)="V" segs=1
+            gosub write_rec
+
+distcode: rem --- Distribution Code
+
+            if opt_distcode$<>"Y" or pos(ivm01a.sa_level$="PI")=0 goto nonstock
+            segs=3
+            dim seg_end[segs],x0$(29)
+            seg_end[1]=7
+            seg_end[2]=10
+            seg_end[3]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt01a.dist_code$+opt_orddet.product_type$+opt_orddet.item_id$
+            sa_dev=sam10_dev
+            if ivm01a.sa_level$="P" or levparams$(10,1)="P" segs=2
+            if levparams$(10,1)="D" segs=1
+            gosub write_rec
+
+nonstock: rem --- Non-Stock
+
+            if opt_nonstock$<>"Y" or opc_linecode.line_type$<>"N" break
+            segs=2
+            dim seg_end[segs],x0$(47)
+            seg_end[1]=8
+            seg_end[2]=len(x0$)+1; rem "End of segment + 1
+            x0$(1)=firm_id$+year$+opt_orddet.product_type$+opt_orddet.order_memo$
+            sa_dev=sam11_dev
+            if levparams$(11,1)="P" segs=1
+            gosub write_rec
+
+rem --- Loop back for next line item
+
+        wend
+        
+rem --- Loop back for next invoice
+
+    wend
+
+done: rem --- All done
+
+    goto std_exit
+
+write_rec: rem --- Write Sales Analysis Records
+
+    x0$(seg_end[segs])=""
+    dim x[12],y[12],z[12]
+    find record (sa_dev,key=x0$,dom=*next) sam01a$
+    x[period-1]=x[period-1]+ord_det.qty_shipped
+    precision 2
+    y[period-1]=y[period-1]+opt_orddet.unit_cost*opt_orddet.qty_shipped
+    precision ivprecision
+    z[period-1]=z[period-1]+opt_orddet.ext_price
+    write record (sa_dev,key=x0$) sam01a$
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
