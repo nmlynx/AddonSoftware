@@ -1,11 +1,10 @@
-[[ARS_CREDIT.ARAR]]
+[[ARS_CREDIT.BSHO]]
 rem --- Open/Lock files
 
-	files=2,begfile=1,endfile=2
+	files=1,begfile=1,endfile=1
 	dim files$[files],options$[files],chans$[files],templates$[files]
 
 	files$[1]="ARS_PARAMS";rem --- "ars-01"
-	files$[2]="ARS_CREDIT"
 
 	for wkx=begfile to endfile
 		options$[wkx]="OTA"
@@ -16,11 +15,10 @@ rem --- Open/Lock files
 
 	if status$<>"" goto std_exit
 	ars01_dev=num(chans$[1])
-	ars_credit_dev=num(chans$[2])
 
 rem --- Dimension string templates
 
-	dim ars01a$:templates$[1],ars01c$:templates$[2]
+	dim ars01a$:templates$[1]
 
 rem --- check to see if main AR param rec (firm/AR/00) exists; if not, tell user to set it up first
 
@@ -32,11 +30,4 @@ rem --- check to see if main AR param rec (firm/AR/00) exists; if not, tell user
 		msg_opt$=""
 		gosub disp_message
 		release
-	endif
-
-rem --- check if new record - refresh display using defaults if so
-
-	find record(ars_credit_dev,key=firm_id$+"AR01",err=*next)ars01c$
-	if cvs(ars01c.sys_install$,2)=""
-		callpoint!.setStatus("REFRESH")
 	endif

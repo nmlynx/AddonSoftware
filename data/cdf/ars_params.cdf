@@ -1,21 +1,14 @@
-[[ARS_PARAMS.ARAR]]
-	pgmdir$=stbl("+DIR_PGM")
+[[ARS_PARAMS.BSHO]]
+num_files=1
+dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+gosub open_tables
 
-rem --- Open/Lock files
-
-	files=2,begfile=1,endfile=files
-	dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-	files$[1]="ars_params",ids$[1]="ARS_PARAMS"
-	files$[2]="gls_params",ids$[2]="GLS_PARAMS"
-	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-	if status goto std_exit
-	ars01_dev=channels[1]
-	gls01_dev=channels[2]
+gls01_dev=num(open_chans$[1])
 
 rem --- Dimension string templates
 
-	dim ars01a$:templates$[1],gls01a$:templates$[2]
+	dim gls01a$:open_tpls$[1]
 
 rem --- Retrieve parameter data
 
@@ -31,7 +24,7 @@ rem --- Retrieve parameter data
 	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
 
-	dim user_tpl$:"app:c(2),gl_pers:c(2),gl_installed:c(1),"+
+	dim user_tpl$:"app:c(2),gl_pers:c(2),gl_curr_per:c(2),gl_curr_year:c(4),gl_installed:c(1),"+
 :                  "ap_installed:c(1),iv_installed:c(1),bank_rec:c(1)"
 
 	user_tpl.app$="AR"
@@ -40,33 +33,25 @@ rem --- Retrieve parameter data
 	user_tpl.ap_installed$=ap$
 	user_tpl.iv_installed$=iv$
 	user_tpl.bank_rec$=br$
+	user_tpl.gl_curr_per$=gls01a.current_per$
+	user_tpl.gl_curr_year$=gls01a.current_year$
+[[ARS_PARAMS.ARNF]]
+rem --- param rec (firm+AR00) doesn't yet exist; set some defaults
 
-	rem --- set some defaults (that I can't do via arde) if param doesn't yet exist
-	ars01a_key$=firm_id$+"AR00"
-	find record (ars01_dev,key=ars01a_key$,err=*next) ars01a$
-	if cvs(ars01a.current_per$,2)=""
-		escape;rem --- current_per$ should only be null if param rec didn't exist
-		callpoint!.setColumnData("ARS_PARAMS.CURRENT_PER",gls01a.current_per$)
-		callpoint!.setColumnUndoData("ARS_PARAMS.CURRENT_PER",gls01a.current_per$)
-		callpoint!.setColumnData("ARS_PARAMS.CURRENT_YEAR",gls01a.current_year$)
-		callpoint!.setColumnUndoData("ARS_PARAMS.CURRENT_YEAR",gls01a.current_year$)
-		callpoint!.setColumnData("ARS_PARAMS.CUSTOMER_SIZE",
-:			callpoint!.getColumnData("ARS_PARAMS.MAX_CUSTOMER_LEN"))
-		callpoint!.setColumnUndoData("ARS_PARAMS.CUSTOMER_SIZE",
-:                     	callpoint!.getColumnData("ARS_PARAMS.MAX_CUSTOMER_LEN"))
-		wkdata$=callpoint!.getColumnData("ARS_PARAMS.CUSTOMER_INPUT")
-		gosub format_cust_outmask
-		callpoint!.setColumnData("ARS_PARAMS.CUSTOMER_OUTPUT",cust_out$)
-		callpoint!.setColumnUndoData("ARS_PARAMS.CUSTOMER_OUTPUT",cust_out$)
-		if ap$="Y" and gl$="Y" and br$="Y" 
-			callpoint!.setColumnData("ARS_PARAMS.BR_INTERFACE","Y")
-			callpoint!.setColumnUndoData("ARS_PARAMS.BR_INTERFACE","Y")
-		endif
+callpoint!.setColumnData("ARS_PARAMS.CURRENT_PER",user_tpl.gl_curr_per$)
+callpoint!.setColumnUndoData("ARS_PARAMS.CURRENT_PER",user_tpl.gl_curr_per$)
+callpoint!.setColumnData("ARS_PARAMS.CURRENT_YEAR",user_tpl.gl_curr_year$)
+callpoint!.setColumnUndoData("ARS_PARAMS.CURRENT_YEAR",user_tpl.gl_curr_year$)
+callpoint!.setColumnData("ARS_PARAMS.CUSTOMER_SIZE",
+:	callpoint!.getColumnData("ARS_PARAMS.MAX_CUSTOMER_LEN"))
+callpoint!.setColumnUndoData("ARS_PARAMS.CUSTOMER_SIZE",
+:                     callpoint!.getColumnData("ARS_PARAMS.MAX_CUSTOMER_LEN"))
+if ap$="Y" and gl$="Y" and br$="Y" 
+	callpoint!.setColumnData("ARS_PARAMS.BR_INTERFACE","Y")
+	callpoint!.setColumnUndoData("ARS_PARAMS.BR_INTERFACE","Y")
+endif
 
-   callpoint!.setStatus("MODIFIED-REFRESH")
-
-
-	endif
+callpoint!.setStatus("MODIFIED-REFRESH")
 [[ARS_PARAMS.AUTO_NO.AVAL]]
 rem --- check here and be sure seq #'s rec exists, if auto-number got checked
 if callpoint!.getUserInput()="Y"
