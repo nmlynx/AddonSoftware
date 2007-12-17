@@ -10,6 +10,15 @@ rem 23Oct96 Caj: Was printing date required on memos (4460)
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -35,7 +44,7 @@ rem --- Init Data
 
 rem --- Headings and print positions
 
-    headings=2
+    headings=5
     dim headings$[headings],o[11]
     width=132
     page=0
@@ -45,6 +54,25 @@ rem --- Headings and print positions
     headings$[1]=sysinfo.task_desc$
     gosub assignheads
     headings$[1]=headings$[1]+" Through "+fndate$(datethru$)
+
+rem --- Headings and print positions
+
+ 
+    dim columns$[11,10]
+    columns = 12
+    columns$[0,0]="Seq",                columns$[0,1]="C",columns$[0,2]="4"
+    columns$[1,0]="Wh",                 columns$[1,1]="C",columns$[1,2]="6"
+    columns$[2,0]="Item",               columns$[2,1]="C",columns$[2,2]="28"
+    columns$[3,0]="Description",        columns$[3,1]="C",columns$[3,2]="20"
+    columns$[4,0]="UM",                 columns$[4,1]="C",columns$[4,2]="4"
+    columns$[5,0]="Date Required",      columns$[5,1]="C",columns$[5,2]="20"
+    columns$[6,0]="Quantity Ordered",   columns$[6,1]="N",columns$[6,2]="3",columns$[6,3]=m2$
+    columns$[7,0]="Quantity In QA",     columns$[7,1]="N",columns$[7,2]="3",columns$[7,3]=m2$
+    columns$[8,0]="Quantity Received",  columns$[8,1]="N",columns$[8,2]="6",columns$[8,3]=m2$
+    columns$[9,0]="Balance Due",        columns$[9,1]="N",columns$[9,2]="3",columns$[9,3]=m2$
+    columns$[10,0]="Unit Cost",         columns$[10,1]="N",columns$[10,2]="3",columns$[10,3]=m3$
+    columns$[11,0]="Extension",         columns$[11,1]="N",columns$[11,2]="15",columns$[11,3]=m1$
+
 
 positions:
 
@@ -71,8 +99,6 @@ positions:
 
 rem --- Position files
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","Printing","","","",0,poe02a_dev,1,meter_num,status
 
 rem --- Sort by Purchase Order
@@ -133,10 +159,13 @@ rem --- Loop up to test next detail record
 
 done: rem --- All Done
 
-    if l+2>l9 gosub report_heading
     gosub pototals
-    print (printer_dev) @(o[11]-17),"Total For Report", 
-:                       @(o[11]),grandtot:m1$
+    
+    xwk = fnblank(12)
+    xwk = fnblank(9)
+    OutVect!.addItem("Total For Report")
+    xwk = fnblank(1)
+    OutVect!.addItem(str(grandtot:m1$))
     goto std_exit
 
 rem --- Print Detail Subroutine
@@ -199,11 +228,30 @@ rem --- Print Line Types 'M', 'O' & 'V'
 
         if pos(linetype$="MOV")<>0
 
-            if linetype$="V" pline$(o[2]+1)=poe12a.order_memo$(1,20) else pline$(o[2]+1)=poe12a.order_memo$
-            if linetype$<>"M" pline$(o[5]+1)=datereq$
-            if linetype$="O" pline$(o[10]+1,m3)=unitcost$,pline$(o[11]+1)=extension$
-            if l+2>l9 gosub report_heading
-            print (printer_dev)pline$
+            OutVect!.addItem(poe12a.po_line_no$)
+            OutVect!.addItem(whse_detail$)
+            
+            if linetype$="V" then 
+                OutVect!.addItem(poe12a.order_memo$(1,20))
+            else 
+                OutVect!.addItem(poe12a.order_memo$)
+            endif
+
+            if linetype$<>"M" then 
+                xwk = fnblank(2)
+                OutVect!.addItem(datereq$)
+            else
+                xwk = fnblank(3)
+            endif
+
+            if linetype$="O" then
+                xwk = fnblank(4)
+                OutVect!.addItem(unitcost$)
+                OutVect!.addItem(extension$)
+            else
+                xwk = fnblank(6)
+            endif
+
             l=l+1
 
         else
@@ -212,17 +260,19 @@ rem --- Print Line Types 'S' & 'N'
 
             if pos(linetype$="SN")<>0
 
-                if l+2>l9 gosub report_heading
-                print (printer_dev)pline$,  @(o[2]),itemnum$(1,itemlen),
-:                                           @(o[3]),item_desc$(1,27),
-:                                           @(o[4]),unitmeas$,
-:                                           @(o[5]),datereq$,
-:                                           @(o[6]),qtyord$,
-:                                           @(o[7]),qtyinqa$,
-:                                           @(o[8]),qtyrec$,
-:                                           @(o[9]),baldue$,
-:                                           @(o[10]),unitcost$,
-:                                           @(o[11]),extension$
+            OutVect!.addItem(poe12a.po_line_no$)
+            OutVect!.addItem(whse_detail$)
+            OutVect!.addItem(itemnum$(1,itemlen))
+            OutVect!.addItem(item_desc$(1,27))
+            OutVect!.addItem(unitmeas$)
+            OutVect!.addItem(datereq$)
+            OutVect!.addItem(qtyord$)
+            OutVect!.addItem(qtyinqa$)
+            OutVect!.addItem(qtyrec$)
+            OutVect!.addItem(baldue$)
+            OutVect!.addItem(unitcost$)
+            OutVect!.addItem(extension$)
+
                 l=l+1
 
 dropship: rem --- Print drop ship info if applicable
@@ -251,20 +301,14 @@ brnch4: rem --- Use Shipto address info if available else, use cust addr info
                     dropaddr$=custaddr$
                     dropname$=custname$
                     if shipaddr$<>fill(120) dropaddr$=shipaddr$,dropname$=shipname$
-                    if l+6>l9 gosub report_heading
-                    print (printer_dev) @(o[2]),"Drop Ship To Customer",
-:                                       @(o[3]+1),fnmask$(poe12a.customer_id$,customask$),
-:                                       "    Order ",poe12a.order_no$," ",poe12a.line_no$
-
-                    print (printer_dev) @(o[3]-4),"Name",
-:                                       @(o[3]+1),dropname$
-
-                    print (printer_dev) @(o[3]-7),"Address",
-:                                       @(o[3]+1),dropaddr$(1,30)
-
-                    print (printer_dev) @(o[3]+1),dropaddr$(31,30)
-                    print (printer_dev) @(o[3]+1),dropaddr$(61,30)
-                    print (printer_dev) @(o[3]+1),dropaddr$(91,30)
+                        xwk = fnblank(14)
+                        OutVect!.addItem("Drop Ship To Customer")
+                        OutVect!.addItem(fnmask$(poe12a.customer_id$,customask$))
+                        xwk = fnblank(1)
+                        OutVect!.addItem("    Order " + poe12a.order_no$)
+                        OutVect!.addItem(poe12a.line_no$)
+                        xwk = fnblank(5)
+                       
                     l=l+6
 
                 endif
@@ -286,49 +330,22 @@ rem --- Done printing detail
 
     return
 
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev) @(0),"From Vendor: ",vendf$," ",vendfname$(1,20),
-:                       @(fncenter(whsepagehead$,width)),whsepagehead$,
-:                       @(104),"From Purchase Order: ",pof$
-
-    print (printer_dev) @(2),"To Vendor: ",vendt$," ",vendtname$(1,20),
-:                       @(106),"To Purchase Order: ",pot$
-    print (printer_dev)""
-    print (printer_dev) @(o[5]),"Date",
-:                       @(o[6]+m2-9),"Quantity",
-:                       @(o[7]+m2-9),"Quantity",
-:                       @(o[8]+m2-9),"Quantity",
-:                       @(o[9]+m2-9),"Balance",
-:                       @(o[10]+m3-5),"Unit"
-
-    print (printer_dev) @(o[0]),"Seq",
-:                       @(o[1]),"Wh",
-:                       @(o[2]),"Item",
-:                       @(o[3]),"Description",
-:                       @(o[4]),"UM",
-:                       @(o[5]),"Required",
-:                       @(o[6]+m2-9),"Ordered",
-:                       @(o[7]+m2-9),"In QA",
-:                       @(o[8]+m2-9),"Received",
-:                       @(o[9]+m2-9),"Due",
-:                       @(o[10]+m3-4),"Cost",
-:                       @(o[11]+m1-10),"Extension"
-
-    print (printer_dev)""
-    l=l+6
-    return
 
 assignheads: rem --- Assign headings variables
 
     if vendfrom$="" vendf$="First" else vendf$=fnmask$(vendfrom$(1,vendlen),vendomask$)
     if vendthru$="" vendt$="Last" else vendt$=fnmask$(vendthru$(1,vendlen),vendomask$)
-    if pofrom$="" pof$="First" else pof$=pofrom$
-    if pothru$="" pot$="Last" else pot$=pothru$
     if whse$="" whsepagehead$="For All Warehouses" else whsepagehead$="For Warehouse "+whse$+" "+cvs(whsename$,2)
+
+
+    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendf$
+    if vendthru$="" headings$[2]=headings$[2] + " -- To Vendor: Last" else headings$[2]=headings$[2] + " -- To Vendor: " + vendt$
+    if pofrom$=""   headings$[3]="From Purchase Order First" else headings$[3]="From Purchase Order "+ pofrom$
+    if pothru$=""   headings$[3]=headings$[3] + " Through Last" else headings$[3]=headings$[3] + " -- Through " + pothru$
+    
+    headings$[4] = whsepagehead$
+
+
     return
 
 testbreaks: rem --- Test for Breaks
@@ -360,28 +377,39 @@ brnch5:
 
 brnch6:
 
-    if l+5>l9 gosub report_heading
     dim dateord$(8),dateprom$(8)
     if poe02a.ord_date$<>fill(8) dateord$=fndate$(poe02a.ord_date$)
     if poe02a.promise_date$<>fill(8) dateprom$=fndate$(poe02a.promise_date$)
-    print (printer_dev) @(0),"PO#: ",ponum$,
-:                       @(14),"Ordered ",dateord$,
-:                       @(33),"Vendor ",fnmask$(vendor$(1,vendlen),vendomask$)," ",vendname$,
-:                       @(74),"Contact ",contact$,
-:                       @(104),"Ack By ",poe02a.acknowledge$
-    print (printer_dev) @(13),"Promised ",dateprom$,
-:                       @(66),"Phone ",phone$,
-:                       @(105),"Terms ",poe02a.terms_code$," ",termsdesc$
-    print (printer_dev)""
+   
+
+    xwk = fnblank(12)
+    OutVect!.addItem("PO#: ")
+    OutVect!.addItem(ponum$)
+    OutVect!.addItem("Ordered: " + dateord$)
+    OutVect!.addItem("Vendor: " + fnmask$(vendor$(1,vendlen),vendomask$) + " " + vendname$)
+    xwk = fnblank(1)
+    OutVect!.addItem("Contact: " + contact$)
+    xwk = fnblank(4)
+    OutVect!.addItem("Ack By: ")
+    OutVect!.addItem(poe02a.acknowledge$)
+    xwk = fnblank(2)
+    OutVect!.addItem("Promised " + dateprom$)
+    xwk = fnblank(2)
+    OutVect!.addItem("Phone " + phone$)
+    xwk = fnblank(4)
+    OutVect!.addItem("Terms " + poe02a.terms_code$)
+    OutVect!.addItem(termsdesc$)
+
     l=l+3
     return
 
 pototals: rem --- Print Purchase Order total
 
-    if l+2>l9 gosub report_heading
-    print (printer_dev) @(o[11]-23),"Total For PO # ",ponum$,
-:                       @(o[11]),potot:m1$
-    print (printer_dev)""
+    xwk = fnblank(9)
+    OutVect!.addItem("Total For PO # ")
+    OutVect!.addItem(ponum$)
+    OutVect!.addItem(str(potot:m1$))
+    
     let l=l+2
     return
 
@@ -482,6 +510,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
