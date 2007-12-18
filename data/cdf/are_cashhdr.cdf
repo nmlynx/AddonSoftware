@@ -265,6 +265,8 @@ rem --- Retrieve parameter data - not keeping any of it here, just make sure par
 ars01a_key$=firm_id$+"AR00"
 find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 user_tpl.amt_msk$=ars01a.amount_mask$
+call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A",imsk$,omsk$,ilen,olen
+user_tpl.amt_msk$=imsk$
 
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
@@ -364,7 +366,6 @@ gosub get_cash_rec_cd
 [[ARE_CASHHDR.CUSTOMER_ID.AVAL]]
 gosub get_customer_balance
 callpoint!.setStatus("REFRESH")
-
 [[ARE_CASHHDR.PAYMENT_AMT.AVAL]]
 rem --- avoid doing aval if check amt hasn't changed; i.e. we're doing a save, or maybe clicked on check amt but didn't change anything
 
@@ -797,6 +798,7 @@ rem --- also uses UserObj! item containing current pay/disc amts to restore what
 				read record(art_invdet_dev,end=*break)art11a$
 				if art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$=
 :					art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$
+
 					if art11a.trans_type$<>" "
 						inv_amt=inv_amt+num(art11a.trans_amt$)+num(art11a.adjdisc_amt$)
 						disc_amt=disc_amt+num(art11a.adjdisc_amt$)
@@ -815,7 +817,7 @@ rem --- also uses UserObj! item containing current pay/disc amts to restore what
 			if len(currdtl$) gosub include_curr_tran_amts
 
 			rem --- now load invoice vector w/ data to display in grid		
-			
+		
 				if inv_amt or zbal_chkbox!.isSelected() 
 					vectInvoice!.addItem("")
 					vectInvoice!.addItem(art01a.ar_inv_no$)
