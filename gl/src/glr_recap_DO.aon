@@ -331,7 +331,6 @@ register_errors: rem --- Register errors
     
 next_overlay: rem --- Run update overlay
 
-    update$="glu_allocate.aon"
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
       if OutVect!.size( )<>0
       next_overlay$=update$
