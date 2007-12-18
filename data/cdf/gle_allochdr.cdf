@@ -5,10 +5,8 @@ recVect!=GridVect!.getItem(0)
         numrecs=recVect!.size()
         if numrecs>0
             for reccnt=0 to numrecs-1
-		if cvs(gridrec$,3)<>""
-	                gridrec$=recVect!.getItem(reccnt)
-	                tot_pct=tot_pct+num(gridrec.percentage$)
-		endif
+	            gridrec$=recVect!.getItem(reccnt)
+	            if cvs(gridrec$,3)<>"" tot_pct=tot_pct+num(gridrec.percentage$)
             next reccnt
 	endif
 
