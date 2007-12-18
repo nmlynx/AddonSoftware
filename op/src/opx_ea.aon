@@ -81,15 +81,15 @@ rem --- Read Detail Records
     while more
 
             ope11a_key$=key(ope11_dev,end=*break)
-            if pos(ope11a_key.firm_id$=firm_id$)=0 then break
+            if pos(ope11a.firm_id$=firm_id$)=0 then break
             read (ope11_dev,key=ope11a_key$,dom=*continue)
             gosub check_header
-            if header$="YES" then read (ope11_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+$ff$,dom=*continue)
-            k1$=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$
+            if header$="YES" then read (ope11_dev,key=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+$ff$,dom=*continue)
+            k1$=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$
 Remove_Record: remove (ope11_dev,key=ope11a_key$)
 
             ope11a_key$=key(ope11_dev,end=*break)
-            if pos(ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$=k1$)>0 then goto Remove_Record
+            if pos(ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$=k1$)>0 then goto Remove_Record
     wend
 
 Read_manual_Record: rem --- Read Manual Ship-To Records
@@ -97,9 +97,9 @@ Read_manual_Record: rem --- Read Manual Ship-To Records
 
     while more 
             ope31a_key$=key(ope31_dev,end=*break)
-            if pos(ope31a_key.firmid$=firm_id$)=0 then break
+            if pos(ope31a.firmid$=firm_id$)=0 then break
             read (ope31_dev,key=ope31a_key$,dom=*continue)
-            k$=ope31a_key.firm_id$+"  "+ope31a_key.customer_id$+ope31a_key.order_no$
+            k$=ope31a.firm_id$+"  "+ope31a.customer_id$+ope31a.order_no$
             gosub check_header
             if header$="YES" then continue
             remove (ope31_dev,key=ope31a_key$)
@@ -111,16 +111,16 @@ Read_Lot_Serial: rem --- Read Lot/Serial Detail Records
 
     while more
             ope21a_key$=key(ope21_dev,end=*break)
-            if pos(ope21a_key.firm_id$=firm_id$)=0 then break
+            if pos(ope21a.firm_id$=firm_id$)=0 then break
             read (ope21_dev,key=ope21a_key$,dom=*continue)
             gosub check_header
-            if header$="YES" then read (ope21_dev,key=ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$+$ff$,dom=*continue)
-            k1$=ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$
+            if header$="YES" then read (ope21_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+$ff$,dom=*continue)
+            k1$=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$
         while more
 Read_Record1: remove (ope21_dev,key=ope21a_key$)
 
                  ope21a_key$=key(ope21_dev,end=done)
-                 if pos(ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$=ope21a_key$)>0 then continue
+                 if pos(ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$=ope21a_key$)>0 then continue
         wend
     wend
 
@@ -132,7 +132,7 @@ check_header: rem --- Check For Valid Header Record
 
     header$="NO"
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-    find (ope01_dev,key=ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$+"000",dom=header)
+    find (ope01_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+"000",dom=header)
     header$="YES"
 header:
     return
