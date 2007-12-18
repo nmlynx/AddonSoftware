@@ -64,6 +64,7 @@ rem --- Read next Invoice Header (ape-01) record
         if year$<=prior_yr$ apm02a.pyr_purch=apm02a.pyr_purch+ape01a.invoice_amt
         if year$>prior_yr$ and year$<=aps01a.current_year$ apm02a.ytd_purch=apm02a.ytd_purch+ape01a.invoice_amt
         if year$>aps01a.current_year$ apm02a.nyr_purch=apm02a.nyr_purch+ape01a.invoice_amt
+        apm02a$=field(apm02a$)
         write record (apm02_dev,key=firm_id$+ape01a.vendor_id$+ape01a.ap_type$) apm02a$
 
         rem --- distribution code
