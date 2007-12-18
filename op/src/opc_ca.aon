@@ -123,7 +123,7 @@ position: rem --- Position file
    while more; rem --- Total Open Orders
 
                         ope01a_key$=key(ope01_dev,end=*break)
-                        if pos(firm_id$+"  "+customer$=ope01a_key.firm_id$+ope01a_key.ar_type$+ope01a_key.customer_id$)<>1 then break
+                        if pos(firm_id$+"  "+customer$=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$)<>1 then break
                         read record (ope01_dev) ope01a$
                         if pos(ope01a.invoice_type$="PV")>0 then continue
                         if ope01a.invoice_type$="B" then let t1=t1+ope01a.total_sales else if ope01a.credit_flag$="C" then let t2=t2+ope01a.total_sales else let t0=t0+ope01a.total_sales
