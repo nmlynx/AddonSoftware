@@ -109,10 +109,10 @@ rem --- Skip Already Printed Orders, Except Reprints
 
 Line_Read: rem --- Orders With Non-Printed Committed Detail Lines Need ope-04 Records
 
-                    read (ope11_dev,key=ope01a_key.firm_id$+ope01a_key.ar_type$+ope01a_key.customer_id$+ope01a_key.order_no$,dom=*next)
+                    read (ope11_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
             while more
                     ope11a_key$=key(ope11_dev,end=*continue)
-                    if pos(ope01a_key.firm_id$+ope01a_key.ar_type$+ope01a_key.customer_id$+ope01a_key.order_no$=ope11a_key$)<>1 then continue
+                    if pos(ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$=ope11a_key$)<>1 then continue
                     read record (ope11_dev) ope11a$
                        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
                     if ope11a.commit_flag$+ope11a.pick_flag$="YN" break; rem "Got one
@@ -120,7 +120,7 @@ Line_Read: rem --- Orders With Non-Printed Committed Detail Lines Need ope-04 Re
         endif      
 Write_Record: rem --- Write ope-04 Record
 
-            ope04a_key$=ope01a_key.firm_id$+ope01a.ordinv_flag$+"  "+ope01a_key.customer_id$+ope01a_key.order_no$
+            ope04a_key$=ope01a.firm_id$+ope01a.ordinv_flag$+"  "+ope01a.customer_id$+ope01a.order_no$
             write record (ope04_dev,key=ope04a_key$,dom=*next) ope04a$
             
 
