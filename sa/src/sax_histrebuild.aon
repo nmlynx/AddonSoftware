@@ -162,7 +162,7 @@ rem --- Update Sales Analysis
 rem --- Customer
 
             if opt_cust$<>"Y" or pos(arm02a.sa_flag$="PI")=0 or pos(ivm01a.sa_level$="PI")=0 goto territory
-            dim sam01a$:fattr(sam01a$)
+            dim sam$:fattr(sam01a$)
             sam01a.firm_id$=firm_id$
             sam01a.year$=year$
             sam01a.customer_id$=opt01a.customer_id$
@@ -172,14 +172,9 @@ rem --- Customer
                     sam01a.item_id$=opt11a.item_id$
                 endif
             endif
-            find record (sam01_dev,key=firm_id$+year$+sam01a.customer_id$+sam01a.product_type$+sam01a.item_id$,dom=*next) sam01a$
-            field sam01a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam01a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam01a$,"TOTAL_COST_"+str(period:"00")=nfield(sam01a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam01a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam01a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam01a$=field(sam01a$)
-            write record (sam01_dev,key=firm_id$+year$+sam01a.customer_id$+sam01a.product_type$+sam01a.item_id$) sam01a$
+            sam_dev=sam01_dev
+            sam_key$=firm_id$+year$+sam01a.customer_id$+sam01a.product_type$+sam01a.item_id$
+            gosub write_rec
 
 territory: rem --- Territory
 
@@ -194,14 +189,9 @@ territory: rem --- Territory
                     sam02a.item_id$=opt11a.item_id$
                 endif
             endif
-            find record (sam02_dev,key=firm_id$+year$+sam02a.territory$+sam02a.product_type$+sam02a.item_id$,dom=*next) sam02a$
-            field sam02a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam02a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam02a$,"TOTAL_COST_"+str(period:"00")=nfield(sam02a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam02a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam02a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam02a$=field(sam02a$)
-            write record (sam02_dev,key=firm_id$+year$+sam02a.territory$+sam02a.product_type$+sam02a.item_id$) sam02a$
+            sam_dev=sam02_dev
+            sam_key$=firm_id$+year$+sam02a.territory$+sam02a.product_type$+sam02a.item_id$
+            gosub write_rec
 
 slspsn: rem --- Salesperson
 
@@ -216,14 +206,9 @@ slspsn: rem --- Salesperson
                     sam03a.item_id$=opt11a.item_id$
                 endif
             endif
-            find record (sam03_dev,key=firm_id$+year$+sam03a.slspsn_code$+sam03a.product_type$+sam03a.item_id$,dom=*next) sam03a$
-            field sam03a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam03a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam03a$,"TOTAL_COST_"+str(period:"00")=nfield(sam03a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam03a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam03a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam03a$=field(sam03a$)
-            write record (sam03_dev,key=firm_id$+year$+sam03a.slspsn_code$+sam03a.product_type$+sam03a.item_id$) sam03a$
+            sam_dev=sam03_dev
+            sam_key$=firm_id$+year$+sam03a.slspsn_code$+sam03a.product_type$+sam03a.item_id$
+            gosub write_rec
 
 custtype: rem --- Customer Type
 
@@ -238,14 +223,9 @@ custtype: rem --- Customer Type
                     sam04a.item_id$=opt11a.item_id$
                 endif
             endif
-            find record (sam04_dev,key=firm_id$+year$+sam04a.customer_type$+sam04a.product_type$+sam04a.item_id$,dom=*next) sam04a$
-            field sam04a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam04a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam04a$,"TOTAL_COST_"+str(period:"00")=nfield(sam04a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam04a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam04a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam04a$=field(sam04a$)
-            write record (sam04_dev,key=firm_id$+year$+sam04a.customer_type$+sam04a.product_type$+sam04a.item_id$) sam04a$
+            sam_dev=sam04_dev
+            sam_key$=firm_id$+year$+sam04a.customer_type$+sam04a.product_type$+sam04a.item_id$
+            gosub write_rec
 
 shipto: rem --- Ship-To
 
@@ -260,14 +240,9 @@ shipto: rem --- Ship-To
                     sam05a.item_id$=opt11a.item_id$
                 endif
             endif
-            find record(sam05_dev,key=firm_id$+year$+sam05a.customer_id$+sam05a.shipto_no$+sam05a.item_id$,dom=*next) sam05a$
-            field sam05a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam05a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam05a$,"TOTAL_COST_"+str(period:"00")=nfield(sam05a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam05a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam05a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam05a$=field(sam05a$)
-            write record(sam05_dev,key=firm_id$+year$+sam05a.customer_id$+sam05a.shipto_no$+sam05a.item_id$) sam05a$
+            sam_dev=sam05_dev
+            sam_key$=firm_id$+year$+sam05a.customer_id$+sam05a.shipto_no$+sam05a.item_id$
+            gosub write_rec
 
 sic: rem --- Standard Industry Code
 
@@ -282,14 +257,9 @@ sic: rem --- Standard Industry Code
                     sam06a.item_id$=opt11a.item_id$
                 endif
             endif
-            find record (sam06_dev,key=firm_id$+year$+sam06a.sic_code$+sam06a.product_type$+sam06a.item_id$,dom=*next) sam06a$
-            field sam06a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam06a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam06a$,"TOTAL_COST_"+str(period:"00")=nfield(sam06a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam06a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam06a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam06a$=field(sam06a$)
-            write record (sam06_dev,key=firm_id$+year$+sam06a.sic_code$+sam06a.product_type$+sam06a.item_id$) sam06a$
+            sam_dev=sam06_dev
+            sam_key$=firm_id$+year$+sam06a.sic_code$+sam06a.product_type$+sam06a.item_id$
+            gosub write_rec
 
 prodtype: rem --- Product Type
 
@@ -301,14 +271,9 @@ prodtype: rem --- Product Type
             if ivm01a.sa_level$="I" and sas01a.product_lev$="I"
                 sam07a.item_id$=opt11a.item_id$
             endif
-            find record (sam07_dev,key=firm_id$+year$+sam07a.product_type$+sam07a.item_id$,dom=*next) sam07a$
-            field sam07a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam07a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam07a$,"TOTAL_COST_"+str(period:"00")=nfield(sam07a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam07a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam07a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam07a$=field(sam07a$)
-            write record (sam07_dev,key=firm_id$+year$+sam07a.product_type$+sam07a.item_id$) sam07a$
+            sam_dev=sam07_dev
+            sam_key$=firm_id$+year$+sam07a.product_type$+sam07a.item_id$
+            gosub write_rec
 
 warehouse: rem --- Warehouse
 
@@ -323,14 +288,9 @@ warehouse: rem --- Warehouse
                     sam08a.item_id$=opt11a.item_id$
                 endif
             endif            
-            find record (sam08_dev,key=firm_id$+year$+sam08a.warehouse_id$+sam08a.product_type$+sam08a.item_id$,dom=*next) sam08a$
-            field sam08a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam08a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam08a$,"TOTAL_COST_"+str(period:"00")=nfield(sam08a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam08a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam08a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam08a$=field(sam08a$)
-            write record (sam08_dev,key=firm_id$+year$+sam08a.warehouse_id$+sam08a.product_type$+sam08a.item_id$) sam08a$
+            sam_dev=sam08_dev
+            sam_key$=firm_id$+year$+sam08a.warehouse_id$+sam08a.product_type$+sam08a.item_id$
+            gosub write_rec
 
 stockvend: rem --- Stocking Vendor
 
@@ -344,15 +304,10 @@ stockvend: rem --- Stocking Vendor
                 if ivm01a.sa_level$="I" and sas01a.vendor_lev$="I"
                     sam09a.item_id$=opt11a.item_id$
                 endif
-            endif            
-            find record (sam09_dev,key=firm_id$+year$+sam09a.vendor_id$+sam09a.product_type$+sam09a.item_id$,dom=*next) sam09a$
-            field sam09a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam09a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam09a$,"TOTAL_COST_"+str(period:"00")=nfield(sam09a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam09a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam09a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam09a$=field(sam09a$)
-            write record (sam09_dev,key=firm_id$+year$+sam09a.vendor_id$+sam09a.product_type$+sam09a.item_id$) sam09a$
+            endif
+            sam_dev=sam09_dev
+            sam_key$=firm_id$+year$+sam09a.vendor_id$+sam09a.product_type$+sam09a.item_id$
+            gosub write_rec
 
 distcode: rem --- Distribution Code
 
@@ -366,15 +321,10 @@ distcode: rem --- Distribution Code
                 if ivm01a.sa_level$="I" and sas01a.distcode_lev$="I"
                     sam10a.item_id$=opt11a.item_id$
                 endif
-            endif            
-            find record(sam10_dev,key=firm_id$+year$+sam10a.dist_code$+sam10a.product_type$+sam10a.item_id$,dom=*next) sam10a$
-            field sam10a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam10a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam10a$,"TOTAL_COST_"+str(period:"00")=nfield(sam10a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam10a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam10a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam10a$=field(sam10a$)
-            write record(sam10_dev,key=firm_id$+year$+sam10a.dist_code$+sam10a.product_type$+sam10a.item_id$) sam10a$
+            endif
+            sam_dev=sam10_dev
+            sam_key$=firm_id$+year$+sam10a.dist_code$+sam10a.product_type$+sam10a.item_id$
+            gosub write_rec
 
 nonstock: rem --- Non-Stock
 
@@ -386,14 +336,9 @@ nonstock: rem --- Non-Stock
             if sas01a.nonstock_lev$="N"
                 sam11a.nonstock_no$=opt11a.order_memo$
             endif
-            find record(sam11_dev,key=firm_id$+year$+sam11a.product_type$+sam11a.nonstock_no$,dom=*next) sam11a$
-            field sam11a$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam11a$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
-            precision 2
-            field sam11a$,"TOTAL_COST_"+str(period:"00")=nfield(sam11a$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
-            precision ivprecision
-            field sam11a$,"TOTAL_SALES_"+str(period:"00")=nfield(sam11a$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
-            sam11a$=field(sam11a$)
-            write record(sam11_dev,key=firm_id$+year$+sam11a.product_type$+sam11a.nonstock_no$) sam11a$
+            sam_dev=sam11_dev
+            sam_key$=firm_id$+year$+sam11a.product_type$+sam11a.nonstock_no$
+            gosub write_rec
 
 rem --- Loop back for next line item
 
@@ -406,6 +351,18 @@ rem --- Loop back for next invoice
 done: rem --- All done
 
     goto std_exit
+
+write_rec: rem --- write records
+
+    find record (sam_dev,key=sam_key$,dom=*next) sam$
+    field sam$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
+    precision 2
+    field sam$,"TOTAL_COST_"+str(period:"00")=nfield(sam$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
+    precision ivprecision
+    field sam$,"TOTAL_SALES_"+str(period:"00")=nfield(sam$,"TOTAL_SALES_"+str(period:"00"))+opt11a.ext_price
+    sam$=field(sam$)
+    write record (sam_dev,key=sam_key$) sam$
+    return
 
 disp_message: rem --- Display Message Dialog
 
