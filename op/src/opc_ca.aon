@@ -148,10 +148,10 @@ while more
     if arm02a.cred_hold$<>"Y" then 
 
          if arm02a.cred_hold$="E" then break
-              if ars01c.auto_hold$<>"Y" and arm02a.credit_limit<=0 and arm02a.credit_limit>=t9+t0+t1+t2 then 
+              if !(ars01c.auto_hold$="Y" and arm02a.credit_limit>0 and arm02a.credit_limit<t9+t0+t1+t2) then 
                    if num(ars01c.hold_amount$)<=0 then if ope01a.total_sales<=num(ars01c.hold_amount$) then 
                               if t8<=num(ars01c.past_due_lim$) then break  
-                                     
+                               endif      
                               endif        
                    endif
               endif     
