@@ -68,7 +68,22 @@ if sas_params.customer_lev$ = "I"
 	user_tpl.high_level$="C"
 endif
 [[SAR_PRODITMCST.BSHO]]
-num_files=1
-dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-open_tables$[1]="SAM_CUSTOMER",open_opts$[1]="OTA"
-gosub open_tables
+	num_files=2
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="SAM_CUSTOMER",open_opts$[1]="OTA"
+	open_tables$[2]="SAS_PARAMS",open_opts$[2]="OTA"
+	gosub open_tables
+	sas01_dev=num(open_chans$[2]),sas01a$=open_tpls$[2]
+
+	dim sas01a$:sas01a$
+	read record (sas01_dev,key=firm_id$+"SA00")sas01a$
+	if sas01a.by_customer$<>"Y"
+		msg_id$="INVALID_SA"
+		dim msg_tokens$[1]
+		msg_tokens$[1]="Customer"
+		gosub disp_message
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+		release
+	endif

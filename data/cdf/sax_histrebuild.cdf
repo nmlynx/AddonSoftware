@@ -1,4 +1,4 @@
-[[SAX_HISTREBUILD.ASHO]]
+[[SAX_HISTREBUILD.AREC]]
 rem --- Open parameter file
 
 	num_files=1
