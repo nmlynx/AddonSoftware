@@ -64,7 +64,7 @@ rem --- Retrieve parameter records
 
 rem --- Parameters
 
-        glcontrol_tpl$=stbl("+GLCONTROL_TPL",err=*next)
+        glcontrol_tpl$=stbl("+GLCONTROL_TPL",err=next_overlay)
         dim glcontrol$:glcontrol_tpl$
         glcontrol$=stbl("+GLCONTROL",err=*next)
         if glcontrol.gl_work_file$<>"Y" goto next_overlay
@@ -332,7 +332,7 @@ register_errors: rem --- Register errors
 next_overlay: rem --- Run update overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-      if OutVect!.size( )<>0
+      if OutVect!<>null()
       next_overlay$=update$
       out_action$="PRT"
       goto std_exit
