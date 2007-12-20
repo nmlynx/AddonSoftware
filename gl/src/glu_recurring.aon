@@ -11,6 +11,9 @@ rem  +-----------------------------------------+
     setesc std_error
     seterr std_error
 
+	next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
+	if OutVect!<>null() OutVect!=null()
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -25,23 +28,28 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=4,begfile=1,endfile=files
+    files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="gle-01"
-    files$[2]="gle-02"
-    files$[3]="gle-11"
-    files$[4]="gle-12"
+    files$[1]="gle-01",ids$[1]="GLE_JRNLHDR"
+    files$[2]="gle-11",ids$[2]="GLE_JRNLDET"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
+
+    rem gle-02/12 already open from register on gle01_dev and gle11_dev
+    rem so set gle02_dev and gle12_dev to gle01_dev and gle11_dev,
+    rem then set gle01_dev and gle11_dev to channels for gle-01 and gle-11,
+    rem just opened above
+
+    gle02_dev=gle01_dev
+    gle12_dev=gle11_dev
     gle01_dev=channels[1]
-    gle02_dev=channels[2]
-    gle11_dev=channels[3]
-    gle12_dev=channels[4]
+    gle11_dev=channels[2]
 
 rem --- Dimension string templates
 
-    dim gle01a$:templates$[1],gle11a$:templates$[3]
+    dim gle01a$:templates$[1],gle11a$:templates$[2]
 
 rem --- Initializations
 
