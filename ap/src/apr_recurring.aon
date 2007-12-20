@@ -218,8 +218,6 @@ rem --- Dimension string templates
 
 rem --- Open printer, start progress meter and position header file
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,ape03_dev,1,meter_num,status
     read (ape03_dev,key=firm_id$,dom=*next)
 
@@ -397,6 +395,13 @@ rem --- Read next Recurring Invoice Header (ape-03) record
     
           if gl$="Y" call pgmdir$+"glc_datecheck.aon",ape03a.accting_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,ape03a.accting_date$,glstatus,lines,errors,status
+
+          rem --- CAH.09/29/07
+          err_msg$=stbl("+DTWARN_MSG",err=*next)
+          if err_msg$<>""
+              OutVect!.addItem(err_msg$)
+              xwk=fnblank(11)
+          endif
           
           rem --- Accumulate totals
 

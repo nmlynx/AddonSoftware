@@ -12,6 +12,9 @@ rem --- added remaining code 10/07.CH
     seterr std_error
     setesc std_error
 
+	next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
+	if OutVect!<>null() OutVect!=null()
+
 rem --- Close printer and destroy current progress meter (if one exists)
 
     close (printer_dev,err=*next)
