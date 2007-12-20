@@ -36,6 +36,6 @@ rem --- Setup user template
 	user_tpl.gls01_dev=gls01_dev
 	user_tpl.gls01_tpl$=templates$[1]
 [[IVS_PARAMS.ARAR]]
-if user_tpl.old_cost_method$=""
+if user_tpl.old_cost_method$<>""
 	user_tpl.old_cost_method$=callpoint!.getColumnData("IVS_PARAMS.COST_METHOD")
 endif
