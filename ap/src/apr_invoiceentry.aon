@@ -431,7 +431,8 @@ rem --- Any errors encountered?
             OutVect!.addItem("")
             OutVect!.addItem("WARNING: This register is out of balance or missing information")
             xwk=fnblank(10)
-          lines=lines+2
+            lines=lines+2
+          endif
           break
     wend
 
@@ -456,6 +457,7 @@ account_heading: rem --- Account subheading
 
     if lines+3>maxlines 
     lines=lines+2
+    endif
     return
 
 print_total: rem --- Print totals
@@ -469,6 +471,7 @@ print_total: rem --- Print totals
         OutVect!.addItem(str(pt[0]:m1$))
         OutVect!.addItem(str(pt[1]:m1$))
         lines=lines+3
+    endif    
     return
 
 type_break: rem --- AP Type break
