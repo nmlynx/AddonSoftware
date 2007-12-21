@@ -52,7 +52,8 @@ rem "update ivs-01 - ABC rec
 			tot_pct=tot_pct+num(gridABC!.getCellText(row,1))
 		next row
 		if tot_pct<>100
-			escape
+			msg_id$="ABC_NOT_100"
+			gosub disp_message
 			callpoint!.setStatus("ABORT")
 		endif
 		ivs01a$=field(ivs01a$)
