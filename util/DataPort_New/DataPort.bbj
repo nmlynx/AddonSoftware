@@ -1,0 +1,74 @@
+rem DataPort Data File Conversion Utility (Initialization Overlay)
+rem Program dataport.bbj v8.0.0 28Oct07
+rem  
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Feb2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+rem  
+rem --- This overlay performs the initializations for the data
+rem --- conversion process and then runs syx70a.bbj or normalization.bbj 
+rem --- according to the version which has to be converted.
+rem 
+begin 
+
+rem --- Initilalization
+
+    dictfile$="C:\Program Files\basis\barista\sys\data\"
+    dictpgm$="C:\Program Files\basis\barista\sys\programs\"
+    pgmdir$="C:\DataPort\"
+    filedir$="C:\DataPort\files\"
+    logdir$="C:\DataPort\logs\"
+    
+
+rem --- Create and open log file
+    let logfile$=logdir$+"DataPort_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    erase logfile$,err=create_logfile
+    create_logfile: 
+    string logfile$
+    let log_dev=unt
+    open (log_dev)logfile$
+
+rem --- Create and open temp file
+    let tempfile$=logdir$+"Fields_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    erase tempfile$,err=create_tempfile
+    create_tempfile: 
+    string tempfile$
+    let temp_dev=unt
+    open (temp_dev)tempfile$
+
+rem --- Get the Addon version
+get_version:
+    let title$="Which Addon version(6/7) data files you want to convert to Addon 8?"
+    let default$="6"
+    call pgmdir$+"user_selections.bbj",title$,default$,filedir$,source_version$
+    let source_version=num(source_version$,err=get_version)
+    if source_version<>6 then 
+        if  source_version<>7 then 
+            a=msgbox("Invalid version.. Try again")
+            goto get_version
+        endif
+    endif
+
+get_source_folder:
+    let title$="Select folder containing Addon "+source_version$+" data files",STATUS=1
+    let filters$="All files (*.*)"+$0A$+"*.*"
+    source_folder$=fileopen(title$,pgmdir$,"","",filters$,1)
+    if source_folder$="::BAD::" then goto get_source_folder
+    if source_folder$="::CANCEL::" then goto the_end
+    let status=0
+
+get_destination_folder:
+    let title$="Select folder for copying Addon 8 data files",STATUS=1
+    let filters$="All files (*.*)"+$0A$+"*.*"
+    destin_folder$=fileopen(title$,pgmdir$,"","",filters$,1)
+    if destin_folder$="::BAD::" then goto get_destination_folder
+    if destin_folder$="::CANCEL::" then goto the_end
+    let status=0
+
+next_overlay:
+    run pgmdir$+"create_template.bbj"
+
+the_end:
+end
