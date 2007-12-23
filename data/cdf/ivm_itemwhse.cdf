@@ -1,11 +1,11 @@
 [[IVM_ITEMWHSE.<CUSTOM>]]
 #include std_missing_params.src
 [[IVM_ITEMWHSE.BSHO]]
-ads01_dev=fnget_dev("IVS_PARAMS")
+ivs01_dev=fnget_dev("IVS_PARAMS")
 dim ivs01a$:fnget_tpl$("IVS_PARAMS")
 
 ivs01a_key$=firm_id$+"IV00"
-find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only
 if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"IVM_LSMASTER;"

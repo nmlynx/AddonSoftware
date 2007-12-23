@@ -52,7 +52,7 @@ callpoint!.setStatus("REFRESH")
 if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.AENA]]
 rem --- Retrieve miscellaneous templates
-
+escape
 files=1,begfile=1,endfile=files
 dim ids$[files],templates$[files]
 ids$[1]="ars-01A:ARS_PARAMS"
@@ -73,7 +73,7 @@ di$="N"
 
 if ar$="Y"
 	ars01a_key$=firm_id$+"AR00"
-	find record (ads01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 	di$=ars01a.dist_by_item$
 	if gl$="N" di$="N"
 endif
@@ -98,37 +98,25 @@ callpoint!.setStatus("ABLEMAP-REFRESH")
 #include std_missing_params.src
 [[IVM_ITEMMAST.BSHO]]
 rem --- Open/Lock files
+	num_files=4
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="IVS_DEFAULTS",open_opts$[2]="OTA"
+	open_tables$[3]="GLS_PARAMS",open_opts$[3]="OTA"
+	open_tables$[4]="ARS_PARAMS",open_opts$[4]="OTA"
+	gosub open_tables
+	ivs01_dev=num(open_chans$[1])
+	ivs01_dev=num(open_chans$[1])
+	ivs01_dev=num(open_chans$[1])
+	ivs01_dev=num(open_chans$[1])
+	gosub open_tables
+	if status$<>""  goto std_exit
 
-files=2,begfile=1,endfile=files
-dim files$[files],options$[files],chans$[files],templates$[files]
-files$[1]="IVS_PARAMS";rem --- ads-01
-files$[2]="IVS_DEFAULTS";rem --- ivs-10 (D)
-
-for wkx=begfile to endfile
-	options$[wkx]="OTA"
-next wkx
-
-call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
-:                                 chans$[all],templates$[all],table_chans$[all],batch,status$
-
-if status$<>""  goto std_exit
-
-ads01_dev=num(chans$[1])
-
-rem --- Retrieve miscellaneous templates
-
-files=4,begfile=1,endfile=files
-dim ids$[files],templates$[files]
-ids$[1]="ivs-01A:IVS_PARAMS"
-ids$[2]="gls-01A:GLS_PARAMS"
-ids$[3]="ars-01A:ARS_PARAMS"
-
-call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-if status goto std_exit
+	ivs01_dev=num(open_chans$[1]),ivs01d_dev=num(open_chans$[2]),gls01_dev=num(open_chans$[3])
 
 rem --- Dimension miscellaneous string templates
 
-dim ivs01a$:templates$[1],gls01a$:templates$[2],ars01a$:templates$[3]
+	dim ivs01a$:open_tpls$[1],ivs01d$:open_tpls$[2],gls01a$:open_tpls$[3],ars01a$:open_tpls$[4]
 
 rem --- init/parameters
 
@@ -137,10 +125,10 @@ enable_str$=""
 dim info$[20]
 
 ivs01a_key$=firm_id$+"IV00"
-find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 gls01a_key$=firm_id$+"GL00"
-find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 
 dir_pgm1$=stbl("+DIR_PGM",err=*next)
 call dir_pgm1$+"adc_application.aon","AR",info$[all]
