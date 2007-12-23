@@ -104,7 +104,7 @@ format_grid:
 
 	attr_disp_col$=attr_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridABC!,"CELL-COLH-DESC-LINES-LIGHT-AUTO-MULTI-NOSIZE",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridABC!,"CELL-EDIT-HIGHO-COLH-DESC-LINES-LIGHT-MULTI",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_col$[all]
 
 	return
@@ -186,6 +186,7 @@ rem --- add grid to store report master records, with checkboxes for user to sel
 	user_tpl.gridABCOfst$="0"
 	user_tpl.vectABCOfst$="1"
 	user_tpl.vectABCSelOfst$="2"
+	gridABC!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 
 	gosub format_grid
 			
@@ -197,7 +198,6 @@ rem --- misc other init
 	gridABC!.setColumnEditable(0,0);rem disable column 0
 	gridABC!.setColumnEditable(1,1);rem enable column 1
 	gridABC!.setColumnEditable(2,1);rem enable column 2
-	gridABC!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridABC!.setSelectionMode(gridABC!.GRID_SELECT_CELL)
 	gridABC!.setSelectedRow(0)
 	gridABC!.setSelectedColumn(1)
