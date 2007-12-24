@@ -1,8 +1,3 @@
-[[POR_POCASHREQMT.REPORT_OPTION.AINP]]
-if callpoint!.getUserInput()="D" callpoint!.setColumnData("POR_POCASHREQMT.PICK_INTEGER",30)
-:  else callpoint!.setColumnData("POR_POCASHREQMT.PICK_INTEGER",0)
-
-callpoint!.setStatus("REFRESH")
 [[POR_POCASHREQMT.ASVA]]
 aging_date$=callpoint!.getColumnData("POR_POCASHREQMT.AGING_DATE")
 aging_date=1

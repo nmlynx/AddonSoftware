@@ -31,7 +31,6 @@ rem --- Open/Lock files
     files$[7]="pot-04",ids$[7]="POT_RECHDR"
     files$[8]="pot-14",ids$[8]="POT_RECDET"
     files$[9]="pot-14",ids$[9]="POT_RECDET"
-    files$[10]="pow-18",ids$[10]="POW_RECTOTAL"
     files$[11]="aps_params",ids$[11]="APS_PARAMS"
     files$[12]="ivs_params",ids$[12]="IVS_PARAMS"
 
@@ -44,7 +43,6 @@ rem --- Open/Lock files
     pot04a_dev=channels[7]
     pot14a_dev=channels[8]
     pot14_dev2=channels[9]
-    pow18_dev=channels[10]
     aps01a_dev=channels[11]
     ivs01a_dev=channels[12]
 
@@ -52,12 +50,12 @@ rem --- Dimension string templates
 
     dim apm01a$:templates$[2],ivm01a$:templates$[3],
 :       pom02a$:templates$[6],pot04a$:templates$[7],
-:       pot14a$:templates$[8],pot14a$:templates$[9],pow18a$:templates$[10],
+:       pot14a$:templates$[8],pot14a$:templates$[9],
 :       aps01a$:templates$[11],ivs01a$:templates$[12]
 
 rem --- Assign form input values to local variables
 
-    whse$=option!.getOptionData("warehouse_id")
+    whsefor$=option!.getOptionData("warehouse_id")
     itemfrom$=option!.getOptionData("item_id_1")
     itemthru$=option!.getOptionData("item_id_2")
     vendfrom$=option!.getOptionData("vendor_id_01")

@@ -79,10 +79,10 @@ rem --- Init Sort File
 
     read (poe11_dev2,knum=2,key=firm_id$+firstwhse$+"S"+itemfrom$,dom=*next)
     if itemfrom$<>"" read(poe11_dev2,knum=2,key=firm_id$+firstwhse$+"S"+itemfrom$+reqfrom$,dom=*next)
-  
+
     while more
 
-        poe11a_altkey$=key(poe11_dev2,end=*break)
+        poe11a_altkey$=key(poe11_dev2,knum=2,end=*break)
         if poe11a_altkey.firm_id$<>firm_id$ break
         if poe11a_altkey.line_type$<"S" read(poe11_dev2,knum=2,key=firm_id$+poe11a_altkey.warehouse_id$+"S",dom=*continue)
         if poe11a_altkey.line_type$>"S" read(poe11_dev2,knum=2,key=firm_id$+poe11a_altkey.warehouse_id$+$ff$,dom=*continue)

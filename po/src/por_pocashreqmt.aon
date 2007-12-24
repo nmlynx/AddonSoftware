@@ -25,8 +25,9 @@ rem --- Open/Lock files
 
     files=11,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-    files$[3]="apc_termscode",ids$[3]="APC_TYPECODE";rem "apm-10c"
+    files$[3]="apc_termscode",ids$[3]="APC_TERMSCODE";rem "apm-10c"
     files$[4]="ivc_prodcode",ids$[4]="IVC_PRODCODE";rem "ivm-10A"
     files$[5]="poe-02",ids$[5]="POE_POHDR"
     files$[6]="poe-12",ids$[6]="POE_PODET"
@@ -39,6 +40,7 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
+ 
     apm01a_dev=channels[2]
     apm10c_dev=channels[3]
     ivm10_dev=channels[4]
@@ -85,6 +87,7 @@ rem --- masks
 rem --- Init Data
 
     precision ivprecision
+    itemlen=num(ivs01a.item_id_len$)
     dim whsename$(24)
 
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,12

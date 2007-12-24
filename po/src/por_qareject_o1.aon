@@ -83,7 +83,7 @@ rem --- Read through receipt headers
 
     while more
 
-        pot04a_key$=key(pot04_dev,end=*break)
+        pot04a_key$=key(pot04_dev,end=totals)
         if pos(firm_id$<>pot04a_key$)=1 break
         read record (pot04_dev,key=pot04a_key$) pot04a$
 
@@ -102,15 +102,15 @@ rem --- Assign pot-04 variables
         if pot04a.recpt_date$<>fill(8) rcptdate$=fndate$(pot04a.recpt_date$)
         ponum$=pot04a.po_no$
         vendor$=pot04a.vendor_id$
-        read (pot14_dev,key=pot04a.firm_id$+pot04a.vendor_id$+pot04a.po_no$+pot04a.receiver_no$,dom=*next)
-
+        k04$=pot04a.firm_id$+vendor$+ponum$+pot04a.receiver_no$
+        read (pot14_dev,key=k04$,dom=*next)
 rem --- Get detail data
         dim pot14a_key$:pot14a_key_tpl$
 
         while more
 
             pot14a_key$=key(pot14_dev,end=*continue)
-            if pos(pot04a.firm_id$+pot04a.vendor_id$+pot04a.po_no$+pot04a.receiver_no$=pot14a_key$)<>1 continue
+            if pos(k04$=pot14a_key$)<>1 break
             read record (pot14_dev) pot14a$
 
 rem --- Correct Warehouse?
@@ -126,22 +126,23 @@ rem --- Assign pot-14 data
             unitcost=pot14a.unit_cost
             qtyord=pot14a.qty_ordered
             qtyrecd=pot14a.qty_received
-escape; rem ck on startrej$
+
+
             startrej$=pot14a_key.firm_id$+vendor$+rec$+ponum$+poseq$
             gosub sumrejqtys
             if rejrecs=0 continue
 
 rem --- Get Item Desc
-
-            ivm01a.item_desc$="Not On File"
+            dim itemdesc$(60)
+            item_desc$(1)="Not On File"
             find record (ivm01a_dev,key=firm_id$+item$,dom=brnch1) ivm01a$
-            ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
+            item_desc$(1)=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
 brnch1: rem --- Test breaks
 
-            if vendor$=prevvendor$
+            if vendor$<>prevvendor$
                 gosub newvendor
-
+            endif
             call pgmdir$+"adc_progress.aon","S","","","","",0,pot04_dev,1,meter_num,status
             gosub printline
 
@@ -159,6 +160,8 @@ rem --- Loop up for receipt hist record
 
 totals: rem --- Print totals from work file
 
+    print (printer_dev)""
+    print (printer_dev)@(20),"* Total: ",@(o[15]),totalrptvalue:m1$
     doingtotals=1
     colsused=width-35-m2-m1-mpercent
     startcol=int(colsused/2)
@@ -169,13 +172,14 @@ totals: rem --- Print totals from work file
     otot[3]=otot[2]+m2
     otot[4]=otot[3]+m1
     gosub report_heading
-    dim s0$(5),rejdesc$(30),s[1]
+    dim rejdesc$(30)
     read (pow16_dev,key="",dom=*next)
 
     while more
 
         read record (pow16_dev,end=*break) pow16a$
-        rejcode$=pow16a.recject_code$
+        rejcode$=pow16a.reject_code$
+        rejdesc$(1)=pow16a.description$
         totqtyrej=pow16a.tot_qty_rej
         totamtrej=pow16a.tot_val_rej
         precision 4
@@ -189,6 +193,9 @@ totals: rem --- Print totals from work file
 
     wend
 
+    print (printer_dev)""
+    print (printer_dev)@(20),"* Total: ",@(otot[3]),totalrptvalue:m1$
+
 rem --- All Done
 
     goto std_exit
@@ -198,7 +205,7 @@ report_heading: rem --- Report Heading
     l=heading+1
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
     if status exitto std_exit
-    if doingtotals
+    if doingtotals=0
         print (printer_dev) @(o[8]),"Rej",
 :                           @(o[12]-9),"Quantity",
 :                           @(o[13]-9),"Quantity",
@@ -278,10 +285,14 @@ brnch2:
 
 workfile: rem --- Accumulate rejection qtys by rej code in workfile
 
+    dim pow16a$:fattr(pow16a$)
+    pow16a.tot_qty_rej=0,pow16a.tot_val_rej=0
     pow16a_key$=pot03a.firm_id$+pot03a.reject_code$
+    pow16a.firm_id$=pot03a.firm_id$,pow16a.reject_code$=pot03a.reject_code$,pow16a.description$=pom03a.description$
     find record (pow16_dev,key=pow16a_key$,dom=*next) pow16a$
     pow16a.tot_qty_rej=pow16a.tot_qty_rej+qtyrej
     pow16a.tot_val_rej=pow16a.tot_val_rej+extension
+    pow16a$=field(pow16a$)
     write record (pow16_dev,key=pow16a_key$) pow16a$
     return
 
@@ -326,7 +337,7 @@ rem --- Assign pot-03 variables
 
         rejseq$=pot03a.po_line_no$
         rejcode$=pot03a.reject_code$
-        opcode$=pot03a.operator_id$
+        opcode$=pot03a.user_id$
         ranum$=pot03a.ra_no$
         qtyrej=pot03a.qty_reject
         precision 2
@@ -339,8 +350,8 @@ rem --- Get rejection desc
 
         dim rejdesc$(30)
         rejdesc$(1)="Not On File"
-        p03_key$=pot04a.firm_id$+pot04a.reject_code$
-        find record (pom03a_dev,key=p03_key$,dom=*next) pom03a$
+        p03_key$=pot04a.firm_id$+pot03a.reject_code$
+        find record (pom03a_dev,key=p03_key$,dom=*next) pom03a$;rejdesc$(1)=pom03a.description$
         if l+1>l9 gosub report_heading
         print (printer_dev) @(o[4]),rejseq$, 
 :                           @(o[5]),rejcode$,
@@ -368,7 +379,7 @@ sumrejqtys: rem --- Add up quantities rejected for this PO/Rec/PO Line Num
         let pot03_key$=key(pot03_dev,end=*break)
         if pos(startrej$=pot03_key$)<>1 break
         read record (pot03_dev,key=pot03_key$) pot03a$
-        let rejseq$=pot03a.sequence_no$,rejcode$=pot03a.reject_code$,opcode$=pot03a.operator_id$,ranum$=pot03a.ra_no$
+        let rejseq$=pot03a.sequence_no$,rejcode$=pot03a.reject_code$,opcode$=pot03a.user_id$,ranum$=pot03a.ra_no$
         let totrej=totrej+pot03a.qty_reject,rejrecs=rejrecs+1
 
     wend
@@ -430,7 +441,7 @@ rem #endinclude std_functions.src
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
-escape ; rem error
+
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
@@ -477,7 +488,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-escape; rem done?
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,pot04_dev,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release

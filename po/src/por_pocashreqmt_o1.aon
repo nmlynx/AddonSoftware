@@ -21,6 +21,14 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
+    maxperiods=num(gls01a.total_pers$)
+    for x=1 to maxperiods
+        periodend$=periodend$+field(gls01a$,"per_ending_"+str(x:"00"))
+    next x
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_POHDR","PRIMARY",poe02a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",poe12a_key_tpl$,rd_table_chans$[all],status$
+
 rem --- Init Data
 
     precision ivprecision
@@ -37,6 +45,7 @@ rem --- Headings and print positions
     page=0
     l9=59
     l=l9+1
+    sord_desc$="Detail";if summordet$="S" sord_desc$="Summary"
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     headings$[2]=sord_desc$+" Report Starting From "
@@ -70,7 +79,7 @@ rem --- Position files
 
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
-    call pgmdir$+"adc_progress.aon","N","","","","",0,0,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,poe12_dev,1,meter_num,status
 
 rem --- Init read
 
@@ -79,7 +88,8 @@ rem --- Init read
 rem --- Read through PO headers
 
     while more
-
+       
+        dim poe02a_key$:poe02a_key_tpl$
         poe02a_key$=key(poe02_dev,end=*break)
         if poe02a_key.firm_id$<>firm_id$ break
         read record (poe02_dev,key=poe02a_key$) poe02a$
@@ -94,13 +104,14 @@ rem --- Read through detail records
 
         while more
 
+            dim poe12a_key$:poe12a_key_tpl$
             poe12a_key$=key(poe12_dev,end=*break)
             if poe12a_key.firm_id$+poe12a_key.vendor_id$+poe12a_key.po_no$<>poe02a.firm_id$+poe02a.vendor_id$+poe02a.po_no$ break
             read record (poe12_dev,key=poe12a_key$) poe12a$
 
 rem --- Test PO Detail for warehouse & line type
 
-            if whse$<>"" and poe12a.warehouse_id$=whse$
+            if whse$<>"" and poe12a.warehouse_id$<>whse$ continue
 
                 gosub getlinetype
                 if pos(linetype$="SON")<>0
@@ -159,7 +170,7 @@ printdetail: rem --- Set up variables
 
     dim datereq$(8),dateprom$(8),notb4date$(8)
     itemnum$=poe12a.item_id$
-    memo$=poe12a.order_memo(1,20)
+    memo$=poe12a.order_memo$(1,20)
     if poe12a.reqd_date$<>fill(8) datereq$=fndate$(poe12a.reqd_date$)
     if poe12a.promise_date$<>fill(8) dateprom$=fndate$(poe12a.promise_date$)
     if poe12a.not_b4_date$<>fill(8) notb4date$=fndate$(poe12a.not_b4_date$)
@@ -178,7 +189,7 @@ rem --- Print detail line
     if summordet$<>"D" goto done_printdetail
     dim pline$(132)
     pline$(o[1]+1)=poe12a.po_line_no$+" "
-    if linetype$="O" pline$(o[2]+1)=memo$ else pline$(o[2]+1)=itemnum$(1,itemlen)
+    if pos(linetype$="OMN")>0 pline$(o[2]+1)=memo$ else pline$(o[2]+1)=itemnum$(1,itemlen)
     if l+1>l9 gosub report_heading
     print (printer_dev)pline$,  @(o[3]),datereq$,
 :                               @(o[4]),dateprom$,
@@ -225,36 +236,87 @@ report_heading: rem --- Report Heading
 calc_heads: rem --- Calculate from/thru date column headings
 
     dim perdatef$[4],perdatet$[4]
-    if perordays$="D" gosub daysheadings;return
-    yearfrom=num(datefrom$(1,4))
+    method=pos(perordays$="PD")
+    byperiod=1
+    bydays=2
 
-rem --- Get Current Period
+    switch method
 
-    call stbl("+DIR_PGM")+"adc_periodyear.aon",gls01a_dev,gls01a$,datefrom$,fisc_per$,fisc_yr$
-    fiscyrfrom=yearfrom
-    fiscyrfrom=num(fnyy$(fisc_yr$),err=*next)
-    fiscperfrom=num(fisc_per$,err=*next)
-    v=fiscperfrom
-    v9=fiscyrfrom
-    col=1; rem "Date from/thru column heading count; one-based
-    call stbl("DIR_PGM")+"adc_perioddates.aon",gls01a_dev,v,v9,v0$,v9$,status
-    perdatef$[col]=fnyy_yy21$(fndate$(fndate$(v0$)))
-    perdatet$[col]=fnyy_yy21$(fndate$(fndate$(v9$)))
+           rem --- By period
 
-rem --- Get Next Periods
+           case byperiod
 
-    for y=1 to 3
-        v=fiscperfrom+y
-        v9=fiscyrfrom
-        col=col+1
-        if v>totalperiods v=v-totalperiods,v9=v9+1
-        call stbl("DIR_PGM")+"adc_perioddates.aon",gls01a_dev,v,v9,v0$,v9$,status
-        perdatef$[col]=fnyy_yy21$(fndate$(fndate$(v0$)))
-        perdatet$[col]=fnyy_yy21$(fndate$(fndate$(v9$)))
-        if perdatef$[col]<perdatef$[col-1] perdatef$[col](5,2)=str(num(perdatef$[col](5,2))+1)
-        if perdatet$[col]<perdatet$[col-1] perdatet$[col](5,2)=str(num(perdatet$[col](5,2))+1)
-    next y
-    perdatet$[4]="20091231"
+               rem --- Determine which period the aging date falls into
+
+                year=num(datefrom$(1,4))
+                mmdd$=datefrom$(5,4)
+                for x=1 to maxperiods
+                    period=x
+                    if mmdd$>periodend$((x*4)-3,4) continue
+                    if x=1 if mmdd$>periodend$((maxperiods*4)-3,4) break
+                    if x>1 if mmdd$>periodend$(((x-1)*4)-3,4) break
+                    if x=1 if periodend$((x*4)-3,4)<periodend$(maxperiods*4-3,4) break
+                    if x>1 if periodend$((x*4)-3,4)<periodend$((x-1)*4-3,4) break
+                next x
+
+                rem --- Get current period beginning and ending dates
+
+                if datefrom$(5,2)<periodend$(1,2) year=year-1
+                call pgmdir$+"adc_perioddates.aon",gls01a_dev,period,year,
+:                                                  begperiod$,endperiod$,status
+
+                begdates$=begperiod$
+                enddates$=endperiod$
+
+                rem --- Calculate prior period beginning and ending dates
+
+                base=period,baseyear=year
+                for x=1 to 3
+                    period=base+x
+                    if period>maxperiods
+                       period=period-maxperiods
+                       year=baseyear+1
+                    endif
+                    call pgmdir$+"adc_perioddates.aon",gls01a_dev,period,year,
+:                                                      begperiod$,endperiod$,status
+                    begdates$=begdates$+begperiod$
+                    enddates$=enddates$+endperiod$
+                next x
+           break
+
+           rem --- By days
+
+           case bydays
+
+                agingdate$=datefrom$
+                begdates$=agingdate$
+                difference=num_days
+                call pgmdir$+"adc_daydates.aon",agingdate$,newdate$,difference
+                enddates$=newdate$
+
+                for x=0 to 2
+                    newdate$=""
+                    difference=(num_days)*(x+1)+1
+                    call pgmdir$+"adc_daydates.aon",agingdate$,newdate$,difference
+                    begdates$=begdates$+newdate$
+                    newdate$=""
+                    if x=2 enddates$=enddates$+"21001231"; continue
+                    difference=(num_days)*(x+2)
+                    call pgmdir$+"adc_daydates.aon",agingdate$,newdate$,difference
+                    enddates$=enddates$+newdate$
+                next x
+           break
+
+           case default
+           break
+
+    swend
+
+    for col=1 to 4
+        perdatef$[col]=begdates$((col-1)*8+1,8)
+        perdatet$[col]=enddates$((col-1)*8+1,8)
+    next col
+
     return
 
 daysheadings: rem --- Headings calculated w/user-entered days
@@ -276,7 +338,7 @@ daysheadings: rem --- Headings calculated w/user-entered days
         v1$=""
         v=num_days
     next col
-    perdatet$[4]="20091231"
+    perdatet$[4]="21001231"
     return
 
 testbreaks: rem --- Test for Breaks
@@ -311,12 +373,12 @@ newpo: rem --- New PO
 
     dim potot[5]
     ponum$=poe02a.po_no$
-    apm10c.item_desc$="Not On File"
+    apm10c.code_desc$="Not On File"
     apm10c.prox_or_days$="D"
     apm10c.due_days=0
     a10_key$=firm_id$+"C"+poe02a.terms_code$
     find record (apm10c_dev,key=a10_key$,dom=brnch2) apm10c$
-    termsdesc$=apm10c.item_desc$
+    termsdesc$=apm10c.code_desc$
 
 brnch2:
 
@@ -363,13 +425,13 @@ whichcolumn: rem --- PRNTCOL=0=>Past Due....PRNTCOL=4=>Last from/thru date colum
 rem --- Calc date based on terms' due days
 
     let from$=poe12a.reqd_date$,days=apm10c.due_days,calcd_date$=""
-    if type$<>"D" from$=fndate$(fndate$(from$))
+  
     call pgmdir$+"adc_duedate.aon",type$,from$,days,calcd_date$,status
-    if len(calcd_date$)=3 calcd_date$=fnyy_yy21$(fndate$(fndate$(calcd_date$)))
+   
     let prntcol=0
     if calcd_date$<>fill(8) and calcd_date$>=perdatef$[1]
         for prntcol=1 to 4
-            if calcd_date$<=perdatet$[prntcol] return
+            if calcd_date$<=perdatet$[prntcol] break
         next prntcol
     endif
     return

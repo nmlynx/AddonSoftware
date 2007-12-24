@@ -24,11 +24,11 @@ rem --- Retrieve sysinfo data
 rem --- Init Data
 
     precision ivprecision
-    dim vendtot[3],prevk$(31),vendor$(6),prevvend$(6)
+    dim vendtot[3],prevk$(33),vendor$(6),prevvend$(6)
     printvtot$="N"
     printptot$="N"
     more=1
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECDET","ALT_KEY_01",pot14a_key_alttpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECDET","VENDOR_RECDATE",pot14a_key_alttpl$,rd_table_chans$[all],status$
 
 rem --- Headings and print positions
 
@@ -66,21 +66,23 @@ positions:
 
 rem --- Position files
 
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,pot04a_dev,1,meter_num,status
 
 rem --- Init Read
 
     p44_key$=firm_id$+vendfrom$+datefrom$
-    read (pot14_dev2,key=p44_key$,dom=*next)
+    read (pot14_dev2,knum=3,key=p44_key$,dom=*next)
 
 rem --- Read through Sort file
 
-dim pot44_key$:pot14a_key_alttpl$
+    dim pot44_key$:pot14a_key_alttpl$
     while more
 
-        pot44_key$=key(pot14_dev2,end=done)
+        pot44_key$=key(pot14_dev2,knum=3,end=done)
         if pot44_key.firm_id$<>firm_id$ break
-        read (pot14_dev2); rem "Move ptr
+        read (pot14_dev2,knum=3,key=pot44_key$); rem "Move ptr
 
 rem --- Valid Vendor/Receipt Date?
 
@@ -98,7 +100,7 @@ rem --- Valid Vendor/Receipt Date?
 
                 rem --- Skip to next vendor
 
-                read (pot14_dev2,key=pot44_key.firm_id$+pot44_key.vendor_id$+$FF$,dom=*next)
+                read (pot14_dev2,knum=3,key=pot44_key.firm_id$+pot44_key.vendor_id$+$FF$,dom=*next)
                 continue
 
             endif
@@ -107,14 +109,14 @@ rem --- Valid Vendor/Receipt Date?
 rem --- Skip to first receipt date for vendor
 
         
-            read (pot14_dev2,key=pot44_key.firm_id$+pot44_key.vendor_id$+datefrom$,dom=*next)
+            read (pot14_dev2,knum=3,key=pot44_key.firm_id$+pot44_key.vendor_id$+datefrom$,dom=*next)
             continue
 
         endif
 
 rem --- Get Header & assign variables
 
-        if pot44_key.firm_id$+pot44_key.vendor_id$+pot44_key.recpt_date$+pot44_key.po_no$+pot44_key.receiver_no$<>prevk$(1,28)
+        if pot44_key.firm_id$+pot44_key.vendor_id$+pot44_key.recpt_date$+pot44_key.po_no$+pot44_key.receiver_no$<>prevk$(1,30)
 
             prevk$(1)=pot44_key$
             p04_key$=firm_id$+vendor$+ponum$+recnum$
@@ -126,8 +128,8 @@ rem --- Get Header & assign variables
         endif
 
 rem --- Get detail
-ESCAPE; REM NOT A0$ IN 130
-        p14_key$=a0$+linenum$
+
+        p14_key$=p04_key$+linenum$
         find record (pot14a_dev,key=p14_key$,dom=*continue) pot14a$
         whse$=pot14a.warehouse_id$
         item$=pot14a.item_id$
@@ -145,7 +147,7 @@ rem --- Valid line type (ie S or N)?
 
 rem --- Valid, so assign vars
 
-        call pgmdir$+"adc_progress.aon","S","","","",0,pot04a_dev,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","S","","","","",0,pot04a_dev,1,meter_num,status
         linecode$=pot14a.po_line_code$
         unitmeas$=pot14a.unit_measure$
         dim dateprom$(8),reqdate$(8)
@@ -158,7 +160,7 @@ rem --- Valid, so assign vars
         ordval=unitcost*qtyord
         rcptval=unitcost*qtyrec
         variance=rcptval-ordval
-        if ordval<>0 varipcnt=rcptval*100/ordval else varipcnt=0
+        if ordval<>0 varipcnt=variance*100/ordval else varipcnt=0
         precision ivprecision
         if varipcnt<minvari continue
 
@@ -168,17 +170,16 @@ rem --- Go test breaks
 
 rem --- Get Item Desc
 
-        dim itemdesc$(60),x1$(60)
-        if linetype$="N"
-
+        dim itemdesc$(60)
+        if linetype$="S"
             itemdesc$(1)="(Not On File)"
-            find record (ivm01a_dev,key=firm_id$+b3$(3,20),dom=brnch1) ivm01a$
-            itemdesc$(1)=fnitem$(x1$,desclen[1],desclen[2],desclen[3])
+            find record (ivm01a_dev,key=firm_id$+pot14a.item_id$,dom=brnch1) ivm01a$
+            itemdesc$(1)=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
         else
 rem --- Nonstock description
 
-            itemdesc$(1)=b4$
+            itemdesc$(1)=pot14a.order_memo$
 
         endif
 
@@ -190,8 +191,11 @@ rem --- Accumulate totals; then get next detail
 
         rec_oval=rec_oval+ordval
         rec_rval=rec_rval+rcptval
+        po_oval=po_oval+ordval
         po_rval=po_rval+rcptval
+        vendoval=vendoval+ordval
         vendrval=vendrval+rcptval
+        grandoval=grandoval+ordval
         grandrval=grandrval+rcptval
 
 rem --- Loop up for next header record via sort files
@@ -204,7 +208,7 @@ done: rem --- All Done
     gosub pototals
     gosub vendtotals
     grandvari=grandrval-grandoval
-    if grandoval>0 grandvpcnt=grandrval*100/grandoval
+    if grandoval>0 grandvpcnt=grandvari*100/grandoval
     print (printer_dev) @(o[11]-17),"Total For Report",
 :                       @(o[11]),grandoval:m1$,
 :                       @(o[12]),grandrval:m1$,
@@ -300,7 +304,7 @@ testbreaks: rem --- Test breaks
 
 newvendor: rem --- New Vendor
 
-    dim c0$(8),c1$(195),vendtot[3]
+    dim vendtot[3]
     vendname$="Not On File"
     prevvend$=vendor$
     printvtot$="Y"
@@ -356,14 +360,14 @@ newpo: rem --- New PO
 
     l=l+1
     fromnewpo=1
-    gosub newrec
+rem    gosub newrec
     fromnewpo=0
     return
 
 vendtotals: rem --- Print Vendor total
 
-    if vendoval>0 vendvpcnt=vendrval*100/vendoval
     vendvari=vendrval-vendoval
+    if vendoval>0 vendvpcnt=vendvari*100/vendoval
     if l+1>l9 gosub report_heading
     print (printer_dev) @(o[11]-18-len(vendomask$)),"Total For Vendor ",fnmask$(prevvend$(1,vendlen),vendomask$),
 :                       @(o[11]),vendoval:m1$,
@@ -375,26 +379,9 @@ vendtotals: rem --- Print Vendor total
 
 pototals: rem --- Print PO total
 
-    dim wfkey$(18)
-    start18$=firm_id$+prevvend$+prevpo$
-    read (pow18_dev,key=start18$,dom=*next)
-
-    while more
-        k18$=key(pow18_dev,end=*break)
-        if pos(start18$=k18$)=1
-            read record (pow18_dev) pow18a$
-            precision 2
-            poamt=poamt+wfpoamt
-            precision ivprecision
-        endif
-    wend
-
-    po_oval=po_oval+poamt
-    vendoval=vendoval+poamt
-    grandoval=grandoval+poamt
-    poamt=0
-    if po_oval>0 po_vpcnt=po_rval*100/po_oval
+    poamt=0,po_vpcnt=0
     po_vari=po_rval-po_oval
+    if po_oval>0 po_vpcnt=po_vari*100/po_oval
     if l+1>l9 gosub report_heading
     print (printer_dev) @(o[11]-23),"Total For PO # ",prevpo$,
 :                       @(o[11]),po_oval:m1$,
