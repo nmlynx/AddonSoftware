@@ -149,7 +149,9 @@ rem --- Init Data
     call pgmdir$+"adc_sizemask.aon",m3$,m3,4,12
     call pgmdir$+"adc_sizemask.aon",m5$,m5,6,9
     dim vendfname$(30),vendtname$(30),whsename$(24)
-
+    if whse$<>"ALL"
+        find record (ivm10_dev,key=firm_id$+"C"+whse$,dom=*next) ivm10c$;whsename$(1)=ivm10c.short_name$
+    endif
 rem --- Run report overlay
 
     run pgmdir$+"por_openreqsn_o1.aon"

@@ -9,7 +9,6 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
-
 rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
@@ -329,16 +328,15 @@ rem --- Get Drop Ship flag & Line Type
     dropship$=pom02a.dropship$
 
 get_item_desc: rem --- Get Item Desc for S and N type lines
-
-    if linetype$="N" itemdesc$=memo$
+    
+    dim itemdesc$(60)   
+    if linetype$="N" itemdesc$(1)=memo$; goto get_ext
         
-        dim itemdesc$(60),x1$(60)
-        ivm01a.item_desc$="Not On File"
-        i01_key$=firm_id$+poe12a.item_id$
-        find record (ivm01a_dev,key=i01_key$,dom=get_ext) ivm01a$
-        ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
+    itemdesc$(1)="Not On File"
+    i01_key$=firm_id$+poe12a.item_id$
+    find record (ivm01a_dev,key=i01_key$,dom=get_ext) ivm01a$
+    itemdesc$(1)=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
 
-    endif
 
 get_ext: rem --- Get extension
 
@@ -483,9 +481,6 @@ brnch2:
     endif
 
     return
-
-
-
    
 assignheads: rem --- Assign headings variables
 
@@ -495,9 +490,9 @@ assignheads: rem --- Assign headings variables
         if vendfrom$="" vendf$="First" else vendf$=fnmask$(vendfrom$(1,vendlen),vendomask$)
         if vendthru$="" vendt$="Last" else vendt$=fnmask$(vendthru$(1,vendlen),vendomask$)
     endif
-     
-    whsepagehead$="For Warehouse "+whse$+" "+cvs(whsename$,2)
-
+   
+    whead$="For All Warehouses"
+    if whse$<>"ALL" whead$="For Warehouse: "+whse$+" "+cvs(whsename$,2)
 
     if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendf$
     if vendthru$="" headings$[2]=headings$[2] + " -- To Vendor: Last" else headings$[2]=headings$[2] + " -- To Vendor: " + vendt$
@@ -505,13 +500,9 @@ assignheads: rem --- Assign headings variables
     if pothru$=""   headings$[3]=headings$[3] + " Through Last" else headings$[3]=headings$[3] + " -- Through " + pot$
     if datefrom$="" headings$[4]="From Order Date: First" else headings$[4]="From Order Date: " + str(fndate$(datefrom$))
     if datethru$="" headings$[4]=headings$[4] + " -- To Order Date: Last" else headings$[4]= headings$[4] + " -- To Order Date:" + fndate$(datethru$)
-
-
    
-    headings$[5] = whsepagehead$
-    
-
-
+    headings$[5] = whead$
+ 
     return
 
 gettestdate_header: rem --- Determine date to use when testing range

@@ -242,7 +242,11 @@ rem --- Print detail line
 
 assignheads: rem --- Assign headings variables
 
-    headings$[1]=headings$[1](1,len(sysinfo.task_desc$))+" For Warehouse "+whse$+" "+cvs(whsename$,2)
+    whead$=" For Warehouse "
+    if whsefrom$="" then whead$=whead$+"First" else whead$=whead$+whsefrom$
+    whead$=whead$+" -- To "
+    if whsethru$="" then whead$=whead$+"Last" else whead$=whead$+whsethru$
+    headings$[1]=headings$[1](1,len(sysinfo.task_desc$))+whead$ 
 
 
     if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendf$
@@ -294,7 +298,6 @@ testbreaks: rem --- Test for Breaks
 
 newwhse: rem --- New Warehouse
 
-    dim c0$(160)
     whsetot=0
     whsename$="Not On File"
     whse$=poe12a.warehouse_id$

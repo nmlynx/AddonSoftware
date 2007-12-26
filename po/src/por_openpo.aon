@@ -132,6 +132,9 @@ rem --- Init Data
     precision ivprecision
     dim vendfname$(30),vendtname$(30),whsename$(24)
 
+    if whse$<>"ALL"
+        find record (ivm10c_dev,key=firm_id$+"C"+whse$,dom=*next) ivm10c$;whsename$(1)=ivm10c.short_name$
+    endif
     datetype$="Order Date"
     if whichdate$="P" datetype$="Promised By Date"
     if whichdate$="R" datetype$="Date Required"
