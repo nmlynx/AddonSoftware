@@ -1,6 +1,40 @@
+[[IVM_ITEMMAST.AWRI]]
+rem --- Populate ivm-02 with Product Type
+
+	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	ivm02a$=fnget_tpl$("IVM_ITEMWHSE")
+	dim ivm02a$:ivm02a$
+	item$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	prod_type$=callpoint!.getColumnData("IVM_ITEMMAST.PRODUCT_TYPE")
+
+	read (ivm02_dev,key=firm_id$+item$,knum=2,dom=*next)
+	while 1
+		readrecord(ivm02_dev,end=*break) ivm02a$
+		if ivm02a.firm_id$<>firm_id$ break
+		if ivm02a.item_id$<>item$ break
+		ivm02a.product_type$=prod_type$
+		ivm02a$=field(ivm02a$)
+		writerecord (ivm02_dev)ivm02a$
+	wend
 [[IVM_ITEMMAST.BDEL]]
 rem --- versions 6/7 have a program ivc.da used for deleting
-rem --- need to codeport it;  after call, if status<>0 then callpoint!.setStatus("ABORT")
+
+	dim params$[7],params[2]
+	params$[0]=firm_id$
+	params$[2]=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	params$[3]=user_tpl.op$
+	params$[4]=user_tpl.po$
+	params$[5]=user_tpl.wo$
+	params$[6]=user_tpl.bm$
+	params$[7]=user_tpl.ap$
+	params[0]=user_tpl.num_pers
+	params[1]=user_tpl.cur_per
+	params[2]=user_tpl.cur_yr
+escape;rem jpb deleting!
+	call stbl("+DIR_PGM")+"ivc_deleteitem.aon","I",channels[all],params$[all],params[all],status
+	if status<>0
+		callpoint!.setStatus("ABORT")
+	endif
 [[IVM_ITEMMAST.SAFETY_STOCK.AVAL]]
 if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.EOQ.AVAL]]
@@ -52,7 +86,7 @@ callpoint!.setStatus("REFRESH")
 if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.AENA]]
 rem --- Retrieve miscellaneous templates
-escape
+
 files=1,begfile=1,endfile=files
 dim ids$[files],templates$[files]
 ids$[1]="ars-01A:ARS_PARAMS"
@@ -98,25 +132,23 @@ callpoint!.setStatus("ABLEMAP-REFRESH")
 #include std_missing_params.src
 [[IVM_ITEMMAST.BSHO]]
 rem --- Open/Lock files
-	num_files=4
+	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_DEFAULTS",open_opts$[2]="OTA"
 	open_tables$[3]="GLS_PARAMS",open_opts$[3]="OTA"
 	open_tables$[4]="ARS_PARAMS",open_opts$[4]="OTA"
-	gosub open_tables
-	ivs01_dev=num(open_chans$[1])
-	ivs01_dev=num(open_chans$[1])
-	ivs01_dev=num(open_chans$[1])
-	ivs01_dev=num(open_chans$[1])
+	open_tables$[5]="IVM_ITEMWHSE",open_opts$[5]="OTA"
 	gosub open_tables
 	if status$<>""  goto std_exit
 
 	ivs01_dev=num(open_chans$[1]),ivs01d_dev=num(open_chans$[2]),gls01_dev=num(open_chans$[3])
+	ivm02_dev=num(open_chans$[5])
 
 rem --- Dimension miscellaneous string templates
 
 	dim ivs01a$:open_tpls$[1],ivs01d$:open_tpls$[2],gls01a$:open_tpls$[3],ars01a$:open_tpls$[4]
+	dim ivm02a$:open_tpls$[5]
 
 rem --- init/parameters
 
@@ -148,6 +180,20 @@ wo$=info$[20]
 call dir_pgm1$+"adc_application.aon","SA",info$[all]
 sa$=info$[20]
 
+rem --- Setup user_tpl$
+	dim user_tpl$:"ar:c(1),ap:c(1),bm:c(1),gl:c(1),op:c(1),po:c(1),wo:c(1),sa:c(1),"+
+:	"num_pers:n(2),cur_per:n(2),cur_yr:n(4)"
+	user_tpl.ar$=ar$
+	user_tpl.ap$=ap$
+	user_tpl.bm$=bm$
+	user_tpl.gl$=gl$
+	user_tpl.op$=op$
+	user_tpl.po$=po$
+	user_tpl.wo$=wo$
+	user_tpl.sa$=sa$
+	user_tpl.num_pers=num(gls01a.total_pers$)
+	user_tpl.cur_per=num(gls01a.current_per$)
+	user_tpl.cur_yr=num(gls01a.current_year$)
 
 if ap$<>"Y" disable_str$=disable_str$+"IVM_ITEMVEND;"; rem --- this is a detail window, give alias name
 if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only

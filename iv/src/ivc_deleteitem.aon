@@ -75,11 +75,11 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-    dim bmm01a$:templates$[2],bmm02a$:templates$[3],ivm01a$:templates$[4],
-:       ivm02a$:templates$[5],ivm03a$:templates$[6],ivm05a$:templates$[7],
-:       ivm09a$:templates$[8],ivm12a$:templates$[9],ivm14a$:templates$[10],
-:       ivm24a$:templates$[11],ope11a$:templates$[12],poe11a$:templates$[13],
-:       sfe01a$:templates$[14],sfe22a$:templates$[15],ivs01a$:templates$[1]
+    dim bmm01a$:templates$[2],bmm02a$:templates$[3],ivm01a$:templates$[4]
+    dim ivm02a$:templates$[5],ivm05a$:templates$[7];rem ,ivm03a$:templates$[6]
+    dim ivm09a$:templates$[8],ivm12a$:templates$[9],ivm14a$:templates$[10]
+    dim ivm24a$:templates$[11],ope11a$:templates$[12],poe11a$:templates$[13]
+    dim sfe01a$:templates$[14],sfe22a$:templates$[15],ivs01a$:templates$[1]
 
 rem --- Retrieve parameter records
 
@@ -99,8 +99,6 @@ rem --- Parameters
 
 rem --- Initializations
 
-    dim a0$(22),a1$(60),a2$(64),a3$(40),a4$(21),a[12]
-    a0$(1)=firm_id$+item$
     m1$=str(params[1]:"00")
     y1$=str(params[2]:"0000")
     m2=params[1]+1
@@ -108,14 +106,14 @@ rem --- Initializations
     if m2>params[0] m2=1,y2=y2+1
     m2$=str(m2:"00")
     y2$=str(y2:"0000")
-    ivm01_dev=c_channels[2]
-    ivm02_dev=c_channels[3]
-    ivm12_dev=c_channels[7]
-    ivm05_dev=c_channels[26]
+rem    ivm01_dev=c_channels[2]
+rem    ivm02_dev=c_channels[3]
+rem    ivm12_dev=c_channels[7]
+rem    ivm05_dev=c_channels[26]
     status=0
 
 rem --- Position warehouse xref
-
+escape
     status=0
     first$=firm_id$+item$+whse$
     k$=first$
@@ -229,7 +227,7 @@ rem --- Remove ivm-03 Xrefs
 rem product type jpb
 
         dim x0$(28)
-        x0$(1)=b0$(1,2)+"C"+b0$(3,2)+a2$(1,3)+b0$(5)
+        x0$(1)=b0$(1,2)+"C"+b0$(3,2)+ivm01a.product_type$+b0$(5)
         remove (ivm03_dev,key=x0$,dom=*next)
 
         dim x0$(37)
@@ -262,7 +260,7 @@ l3400: rem --- Read next ivm-05 vendor record
     x$=x$(1,2)+"D"+x$(3)
 remove (ivm03_dev,key=x$,dom=*next)
 
-    x$=k$(1,2)+"F"+a2$(9,3)+k$(24,6)+a2$(1,3)+a0$(3)+"  "
+    x$=k$(1,2)+"F"+ivm01a.buyer_code$+k$(24,6)+ivm01a.product_type$+item$+"  "
     remove (ivm03_dev,key=x$,dom=*next)
 remove (ivm03_dev,key=k$,dom=*next)
 
@@ -324,7 +322,7 @@ l6200:
 l6230:
     let h_k$=key(ivm03_dev,end=l6290)
     if pos(firm_id$+"H"+item$=h_k$)<>1 goto l6290
-    let x0$(1)=firm_id$+"F"+b1$(19,3)+h_k$(24,6)+a2$(1,3)+b0$(5)+b0$(3,2)
+    let x0$(1)=firm_id$+"F"+b1$(19,3)+h_k$(24,6)+ivm01a.product_type$+b0$(5)+b0$(3,2)
     remove (ivm03_dev,key=x0$,dom=*next)
     read (ivm03_dev,key=h_k$,dom=*next)
     goto l6230
