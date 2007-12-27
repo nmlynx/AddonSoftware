@@ -338,7 +338,9 @@ check_portable_files:
     open(temp_chan)filedir$+"file_normalization"
     read_normalized:
     read(temp_chan,end=end_normalized)dat$
-    if dat$(1,6)=cvs(datafile$,8) then close(temp_chan);goto read_datafile
+    if dat$<>"" 
+        if dat$(1,6)=cvs(datafile$,8) then close(temp_chan);goto read_datafile
+    endif
     goto read_normalized
     end_normalized:
     close(temp_chan)
