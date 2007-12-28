@@ -278,7 +278,7 @@ assignheads: rem --- Assign headings variables
     if datethru$="" headings$[3]=headings$[3]+" -- To Receipt Date: Last" else headings$[3]=headings$[3]+" -- To Receipt Date: "+ datet$
     if itemfrom$="" headings$[4]="From Item: First" else headings$[4]="From Item: "+ itemf$
     if itemthru$="" headings$[4]=headings$[4]+" -- To Item: Last" else headings$[4]=headings$[4]+" -- To Item: "+ itemt$
-    if whsefor$=""  headings$[5]="All Warehouses"  else headings$[5]="For Warehouse " + whsefor$
+    if whsefor$=""  headings$[5]="All Warehouses"  else headings$[5]="For Warehouse " + whsefor$+" "+cvs(whsename$,2)
 
     return
 

@@ -30,7 +30,7 @@ rem --- Open/Lock files
     files$[4]="arm-01",ids$[4]="ARM_CUSTMAST"
     files$[5]="arm-03",ids$[5]="ARM_CUSTSHIP"
     files$[6]="ivm-01",ids$[6]="IVM_ITEMMAST"
-    files$[7]="ivc_prodcode",ids$[7]="IVC_PRODCODE";rem "ivm-10A"
+    files$[7]="ivc_whsecode",ids$[7]="IVC_WHSECODE";rem "ivm-10c"
     files$[8]="poe-02",ids$[8]="POE_POHDR"
     files$[9]="poe-12",ids$[9]="POE_PODET"
     files$[10]="poe-02",ids$[10]="POE_POHDR"
@@ -48,6 +48,7 @@ rem --- Open/Lock files
     arm01a_dev=channels[4]
     arm03a_dev=channels[5]
     ivm01a_dev=channels[6]
+    ivm10c_dev=channels[7]
     poe02a_dev=channels[8]
     poe12_dev=channels[9]
     poe02_dev2=channels[10]
@@ -63,7 +64,7 @@ rem --- Dimension string templates
 :       arm03a$:templates$[5],ivm01a$:templates$[6],
 :       poe02a$:templates$[8],poe12a$:templates$[9],poe32a$:templates$[10],
 :       pom02a$:templates$[11],aps01a$:templates$[12],ars01a$:templates$[13],
-:       ivs01a$:templates$[14],pos01a$:templates$[15] ;rem  ivm10a$:templates$[7],
+:       ivs01a$:templates$[14],pos01a$:templates$[15],ivm10c$:templates$[7]
 
 rem --- Assign form input values to local variables
 
@@ -125,7 +126,9 @@ rem --- Init Data
     call pgmdir$+"adc_sizemask.aon",m2$,m2,9,10
     call pgmdir$+"adc_sizemask.aon",m3$,m3,5,12
     dim vendfname$(30),vendtname$(30),whsename$(24)
-
+    if whse$<>"ALL"
+        find record (ivm10c_dev,key=firm_id$+"C"+whse$,dom=*next) ivm10c$;whsename$(1)=ivm10c.short_name$
+    endif
 rem --- Run report overlay
 
     run pgmdir$+"por_expedite_o1.aon"

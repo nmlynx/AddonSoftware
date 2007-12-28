@@ -494,10 +494,10 @@ assignheads: rem --- Assign headings variables
     whead$="For All Warehouses"
     if whse$<>"ALL" whead$="For Warehouse: "+whse$+" "+cvs(whsename$,2)
 
-    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendf$
-    if vendthru$="" headings$[2]=headings$[2] + " -- To Vendor: Last" else headings$[2]=headings$[2] + " -- To Vendor: " + vendt$
-    if pofrom$=""   headings$[3]="From Purchase Order First" else headings$[3]="From Purchase Order "+ pof$
-    if pothru$=""   headings$[3]=headings$[3] + " Through Last" else headings$[3]=headings$[3] + " -- Through " + pot$
+    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendfrom$
+    if vendthru$="" headings$[2]=headings$[2] + " -- To Vendor: Last" else headings$[2]=headings$[2] + " -- To Vendor: " + vendthru$
+    if pofrom$=""   headings$[3]="From Purchase Order First" else headings$[3]="From Purchase Order "+ pofrom$
+    if pothru$=""   headings$[3]=headings$[3] + " Through Last" else headings$[3]=headings$[3] + " -- Through " + pothru$
     if datefrom$="" headings$[4]="From Order Date: First" else headings$[4]="From Order Date: " + str(fndate$(datefrom$))
     if datethru$="" headings$[4]=headings$[4] + " -- To Order Date: Last" else headings$[4]= headings$[4] + " -- To Order Date:" + fndate$(datethru$)
    

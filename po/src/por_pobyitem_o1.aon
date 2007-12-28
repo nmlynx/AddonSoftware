@@ -134,16 +134,17 @@ rem --- Find corresponding detail line
 
 rem --- Test PO Detail ranges
 
-        if poe12a.warehouse_id$+poe12a.item_id$=poe12a_altkey.warehouse_id$+poe12a_altkey.item_id$ then
-          if whsefrom$="" or poe12a.warehouse_id$>=whsefrom$ then
-            if whsethru$="" or poe12a.warehouse_id$<=whsethru$ then
-             if itemfrom$="" or poe12a.item_id$>=itemfrom$ then
-              if itemthru$="" or poe12a.item_id$<=itemthru$ then
-               if pofrom$="" or poe12a.po_no$>=pofrom$ then
-                if pothru$="" or poe12a.po_no$<=pothru$ then
-                 if vendfrom$="" or poe12a.vendor_id$>=vendfrom$ then
-                  if vendthru$="" or poe12a.vendor_id$<=vendthru$ then
+        if poe12a.warehouse_id$+poe12a.item_id$<>poe12a_altkey.warehouse_id$+poe12a_altkey.item_id$ continue
+          if whsefrom$<>"" if poe12a.warehouse_id$<whsefrom$ continue
+            if whsethru$<>"" if poe12a.warehouse_id$>whsethru$ continue
+             if itemfrom$<>"" if poe12a.item_id$<itemfrom$ continue
+              if itemthru$<>"" if poe12a.item_id$>itemthru$ continue
+               if pofrom$<>"" if poe12a.po_no$<pofrom$ continue
+                if pothru$<>"" if poe12a.po_no$>pothru$ continue
+                 if vendfrom$<>"" if poe12a.vendor_id$<vendfrom$ continue
+                  if vendthru$<>"" if poe12a.vendor_id$>vendthru$ continue
                   gosub gettestdate_detail
+         
         if datefrom$="" or testdated$>=datefrom$ then
         if datethru$="" or testdated$<=datethru$
 
@@ -161,6 +162,7 @@ rem --- Test breaks; print line
         gosub testbreaks
         gosub printdetail
 
+        
 nextsort: rem --- Accumulate totals; then get next sort file record
 
         qtyordtot=qtyordtot+qtyord
@@ -249,12 +251,12 @@ assignheads: rem --- Assign headings variables
     headings$[1]=headings$[1](1,len(sysinfo.task_desc$))+whead$ 
 
 
-    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendf$
-    if vendthru$="" headings$[2]=headings$[2] + " -- To Vendor: Last" else headings$[2]=headings$[2] + " -- To Vendor: " + vendt$
-    if itemfrom$="" headings$[3]="From Item: First" else headings$[3]="From Item: "+ itemf$
-    if itemthru$="" headings$[3]=headings$[3] + " To Item: Last" else headings$[3]=headings$[3] + " -- To Item: " + itemt$
-    if pofrom$=""   headings$[4]="From Purchase Order: First" else headings$[4]="From Purchase Order: " + pof$
-    if pothru$=""   headings$[4]=headings$[4] + " -- To Purchase Order: Last" else headings$[4]= headings$[4] + " -- Purchase Order: " + pot$
+    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendfrom$
+    if vendthru$="" headings$[2]=headings$[2] + " -- To Vendor: Last" else headings$[2]=headings$[2] + " -- To Vendor: " + vendthru$
+    if itemfrom$="" headings$[3]="From Item: First" else headings$[3]="From Item: "+ cvs(itemfrom$,2)
+    if itemthru$="" headings$[3]=headings$[3] + " To Item: Last" else headings$[3]=headings$[3] + " -- To Item: " + cvs(itemthru$,2)
+    if pofrom$=""   headings$[4]="From Purchase Order: First" else headings$[4]="From Purchase Order: " + pofrom$
+    if pothru$=""   headings$[4]=headings$[4] + " -- To Purchase Order: Last" else headings$[4]= headings$[4] + " -- Purchase Order: " + pothru$
     if datefrom$="" headings$[5]="From Order Date: First" else headings$[5]="From Order Date: " + str(fndate$(datefrom$))
     if datethru$="" headings$[5]=headings$[5] + " -- To Order Date: Last" else headings$[5]= headings$[5] + " -- To Order Date:" + fndate$(datethru$)
 

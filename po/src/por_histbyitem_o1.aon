@@ -120,12 +120,12 @@ brnch1: rem --- Valid Item/Wh/Product/Type?
 
 rem --- Skip to beginning whse for this item
 
-            read (pot14_dev2,key=pot24a.firm_id$+pot24a.line_type$+pot24a.item_id$+begwhse$,dom=*continue)
+            read (pot14_dev2,key=pot24a_key.firm_id$+pot24a_key.line_type$+pot24a_key.item_id$+begwhse$,dom=*continue)
             continue
 
 rem --- Skip to next item
 
-            read (pot14_dev2,key=pot24a.firm_id$+pot24a.line_type$+pot24a.item_id$+$FF$,dom=*continue)
+            read (pot14_dev2,key=pot24a_key.firm_id$+pot24a_key.line_type$+pot24a_key.item_id$+$FF$,dom=*continue)
             continue
 
         endif
@@ -211,12 +211,12 @@ initheads: rem --- Initialize HEADINGS$[]
     dim h1$(width),h2$(width),h3$(width),h5$(width),h6$(width),headings$[headings+1]
                 headings$[0]=sysinfo.firm_name$
                 headings$[1]=sysinfo.task_desc$
-                if begitem$="" headings$[2]="From Item: First" else headings$[2]="From Item: "+begitem$
-                if enditem$="" headings$[2]=headings$[2]+" -- To Item: Last" else headings$[2]=headings$[2]+" -- To Item: "+enditem$
+                if begitem$="" headings$[2]="From Item: First" else headings$[2]="From Item: "+cvs(begitem$,2)
+                if enditem$="" headings$[2]=headings$[2]+" -- To Item: Last" else headings$[2]=headings$[2]+" -- To Item: "+cvs(enditem$,2)
                 if begprod$="" headings$[3]="From Product: First" else headings$[3]="From Product: "+begprod$                
                 if endprod$="" headings$[3]=headings$[3]+" -- To Product: Last" else headings$[3]=headings$[3]+" -- To Product: "+endprod$
-                if begitem$="" headings$[4]="From warehouse: First" else headings$[4]="From Warehouse: "+begwhse$
-                if enditem$="" headings$[4]=headings$[4]+" -- To Warehouse: Last" else headings$[4]=headings$[4]+" -- To Item: "+endwhse$
+                if begwhse$="" headings$[4]="From warehouse: First" else headings$[4]="From Warehouse: "+begwhse$
+                if endwhse$="" headings$[4]=headings$[4]+" -- To Warehouse: Last" else headings$[4]=headings$[4]+" -- To Warehouse: "+endwhse$
                 if type$   ="" headings$[5]="All Item Types" else headings$[5]="Item Type: "+type$
     return
  

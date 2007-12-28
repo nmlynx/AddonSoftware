@@ -32,6 +32,7 @@ rem --- Open/Lock files
     files$[6]="poe-02",ids$[6]="POE_POHDR"
     files$[7]="poe-02",ids$[7]="POE_POHDR"
     files$[8]="poe-12",ids$[8]="POE_PODET"
+    files$[9]="ivc_whsecode",ids$[9]="IVC_WHSECODE";rem "ivm10c
     files$[10]="pom-02",ids$[10]="POC_LINECODE"
     files$[11]="aps_params",ids$[11]="APS_PARAMS"
     files$[12]="ivs_params",ids$[12]="IVS_PARAMS"
@@ -47,6 +48,7 @@ rem --- Open/Lock files
     poe02_dev=channels[6]
     poe02_dev2=channels[7]
     poe12_dev=channels[8]
+    ivm10c_dev=channels[9]
     pom02a_dev=channels[10]
     aps01a_dev=channels[11]
     ivs01a_dev=channels[12]
@@ -56,7 +58,7 @@ rem --- Dimension string templates
 
     dim apm01a$:templates$[2],apm10c$:templates$[4],
 :       ivm01a$:templates$[5],poe02a$:templates$[6],
-:       poe12a$:templates$[8],pom02a$:templates$[10],
+:       poe12a$:templates$[8],pom02a$:templates$[10],ivm10c$:templates$[9],
 :       aps01a$:templates$[11],ivs01a$:templates$[12],pos01a$:templates$[13]
 
 rem --- Assign form input values to local variables
@@ -116,6 +118,10 @@ rem --- Init Data
     call pgmdir$+"adc_sizemask.aon",m3$,m3,4,12
     mphone$="(###) ###-####"
     dim vendfname$(30),vendtname$(30),whsename$(24)
+
+    if whse$<>"ALL"
+        find record (ivm10c_dev,key=firm_id$+"C"+whse$,dom=*next) ivm10c$;whsename$(1)=ivm10c.short_name$
+    endif
 
 rem --- Run report overlay
 

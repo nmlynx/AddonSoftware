@@ -229,7 +229,7 @@ rem --- Test Ranges
                 if vendfrom$<>"" and poe02a.vendor_id$<vendfrom$ continue
                 if vendthru$<>"" and poe02a.vendor_id$>vendthru$ more=0; continue
             endif
-            if whse$<>"ALL" and poe02a.warehouse_id$<>whse$ continue
+            if whse$<>"ALL" and poe02a.warehouse_id$<>whse$ break
 
 rem --- Header passed tests
 
@@ -405,26 +405,21 @@ rem new  report_heading: rem --- Report Heading
  
 assignheads: rem --- Assign headings variables
 
-    if printseq$="A" if vendfrom$="" vendf$="First" else vendf$=vendfrom$
-    if printseq$="A" if vendthru$="" vendt$="Last" else vendt$=vendthru$
+    if printseq$="A" if altfrom$="" vendf$="First" else vendf$=altfrom$
+    if printseq$="A" if altthru$="" vendt$="Last" else vendt$=altthru$
     if printseq$<>"A"
         if vendfrom$="" vendf$="First" else vendf$=fnmask$(vendfrom$(1,vendlen),vendomask$)
         if vendthru$="" vendt$="Last" else vendt$=fnmask$(vendthru$(1,vendlen),vendomask$)
-    else
-        if pofrom$="" pof$="First" else pof$=pofrom$
-        if pothru$="" pot$="Last" else pot$=pothru$
-        whsepagehead$="For Warehouse "+whse$+" "+cvs(whsename$,2)
-        headings$[4] = whsepagehead$
-
     endif
+    if pofrom$="" pof$="First" else pof$=pofrom$
+    if pothru$="" pot$="Last" else pot$=pothru$
+    
+    whsepagehead$="For Warehouse "+whse$+" "+cvs(whsename$,2)
+    headings$[4] = whsepagehead$
 
+    headings$[2]="From Vendor: "+vendf$+" -- To Vendor: "+vendt$
+    headings$[3]="From Purchase Order "+pof$+" Thru Last "+pot$
 
-    if vendfrom$="" headings$[2]="From Vendor: First" else headings$[2]="From Vendor: "+ vendf$
-    if vendthru$="" headings$[2]=headings$[2] + " -- To Vendor: Last" else headings$[2]=headings$[2] + " -- To Vendor: " + vendt$
-    if pofrom$=""   headings$[3]="From Purchase Order First" else headings$[3]="From Purchase Order "+ pof$
-    if pothru$=""   headings$[3]=headings$[3] + " Through Last" else headings$[3]=headings$[3] + " -- Through " + pot$
-   
-   
     return
 
 testbreaks: rem --- Test for Breaks
