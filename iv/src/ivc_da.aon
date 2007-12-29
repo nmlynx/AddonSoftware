@@ -1,0 +1,491 @@
+rem --- Delete Item and/or Warehouse
+rem --- Program ivc_da v8.0.0 19Dec2007 (ivc_da)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (12/19/2007 09:40:31)
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+            seterr std_error
+            setesc std_error
+            enter action$,channels[all],params$[all],params[all],status
+
+rem --- Retrieve the program path
+
+           pgmdir$=stbl("+dir_pgm",err=*next)
+
+rem --- Retrieve sysinfo data
+
+            sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+            dim sysinfo$:sysinfo_template$
+            sysinfo$=stbl("+sysinfo",err=*next)
+            milestone=num(stbl("+milestone",err=*next),err=*next)
+            firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+            files=14,begfile=1,endfile=files
+            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+            files$[1]="bmm-01",ids$[1]="BMM_BILLMAST"
+            files$[2]="bmm-04",ids$[2]="BMX_BILLMAT"
+            files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
+            files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
+            files$[5]="ivm-03",ids$[5]="IVX_ITEMPROD"
+            files$[6]="ivm-05",ids$[6]="IVM_ITEMVEND"
+            files$[7]="ivm-09",ids$[7]="IVM_ITEMCMTS"
+            files$[8]="ivm-12",ids$[8]="IVM_ITEMACT"
+            files$[9]="ivm-14",ids$[9]="IVM_ITEMSYN"
+            files$[10]="ivm-24",ids$[10]="IVX_ITEMSYN"
+            files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
+            files$[12]="ope-61",ids$[12]="OPE_ORDITEM"
+            files$[13]="poe-41",ids$[13]="POE_REQBYITM"
+            files$[14]="sfe-03",ids$[14]="SFX_TYPEWO"
+            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+            if status goto std_exit
+            bmm01_dev=channels[1]
+            bmm04_dev=channels[2]
+            ivm01_dev=channels[3]
+            ivm02_dev=channels[4]
+            ivm03_dev=channels[5]
+            ivm05_dev=channels[6]
+            ivm09_dev=channels[7]
+            ivm12_dev=channels[8]
+            ivm14_dev=channels[9]
+            ivm24_dev=channels[10]
+            ivs01a_dev=channels[11]
+            ope61_dev=channels[12]
+            poe41_dev=channels[13]
+            sfe03_dev=channels[14]
+
+rem --- Dimension string templates
+
+            dim bmm01a$:templates$[1],bmm04a$:templates$[2],ivm01a$:templates$[3],
+:               ivm02a$:templates$[4],ivm03a$:templates$[5],ivm05a$:templates$[6],
+:               ivm09a$:templates$[7],ivm12a$:templates$[8],ivm14a$:templates$[9],
+:               ivm24a$:templates$[10],ivs01a$:templates$[11],ope61a$:templates$[12],
+:               poe41a$:templates$[13],sfe03a$:templates$[14]
+
+rem --- Assign form input values to local variables
+
+            value_01$=Option!.getOptionData("form_value_01")
+
+rem --- Retrieve parameter records
+
+            ivs01a_key$=firm_id$+"IV00"
+            find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+
+rem --- Parameters
+
+            firm_id$=params$[0]
+            whse$=params$[1],item$=params$[2],op$=params$[3]
+            po$=params$[4]
+            wo$=params$[5],bm$=params$[6],ap$=params$[7]
+
+rem --- Initializations
+
+            ivm01a.firm_id$=firm_id$
+            ivm01a.item_id$=item$
+            m1$=str(params[1]:"00"),y1$=fnyear_yy21$(params[2])
+            m2=params[1]+1
+            y2=params[2]
+            if m2>params[0] then let m2=1,y2=y2+1
+            m2$=str(m2:"00")
+            y2$=fnyear_yy21$(y2)
+            ivm01_dev=channels[2]
+            ivm02_dev=channels[3],ivm03_dev=channels[4]
+            ivm09_dev=channels[5]
+            ivm12_dev=channels[7],ivm14_dev=channels[9]
+            ivm24_dev=channels[11]
+            ivm05_dev=channels[26],bmm01_dev=channels[28]
+            bmm04_dev=channels[30]
+            ope61_dev=channels[33],poe41_dev=channels[39]
+            sfe03_dev=channels[47]
+            status=0
+            more=1
+            cntr=1
+            stat=1
+            cntr2=1
+
+rem --- Position warehouse xref
+
+            status=0
+            first$=firm_id$+"G"+item$+whse$,k$=first$
+            find record (ivm01_dev,key=a0$,dom=done) ivm01a$
+            read (ivm03_dev,key=k$,dom=Qty_On_Hand)
+            cntr=0
+
+    While more
+
+        Qty_On_Hand: rem --- Quantity on hand, on order or committed?
+            if cntr=1
+                ivm03a_key$=key(ivm03_dev,end=*break)
+            endif
+        
+            if pos(first$=ivm03a_key$)<>1 then
+                break
+            endif
+            read (ivm03_dev)
+            ivm02a.FIRM_ID$=firm_id$
+            ivm02a.WAREHOUSE_ID$=ivm03g.WAREHOUSE_ID$
+            ivm02a.ITEM_ID$=item$
+            find record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=*next) ivm02a$
+            if ivm02a.SELECT_PHYS$="Y" then let status=1
+            if ivm02a.QTY_ON_HAND<>0 or ivm02a.QTY_ON_ORDER<>0 or ivm02a.QTY_COMMIT<>0 then let status=2
+            if status<>0 then
+                stat=0
+                break
+            endif
+
+rem --- Open Orders?
+
+            if op$="Y" then
+                channel=ope61_dev
+                x$=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,x=3
+                gosub Firm_Exist
+                if status<>0 then
+                    stat=0
+                    break
+                endif
+            endif
+rem --- Requisitions?
+
+            if po$="Y" then
+                channel=poe41_dev
+                x$=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,x=4
+                gosub Firm_Exist
+                if status<>0 then
+                    stat=0
+                    break
+                endif
+            endif
+
+rem --- Work Orders?
+
+            if wo$="Y" then
+                channel=sfe03_dev
+                x$=ivm02a.FIRM_ID$+"C"+ivm02a.WAREHOUSE_ID$,x=5
+                gosub Firm_Exist
+                if status<>0 then
+                    stat=0
+                    break
+                endif
+                x$=ivm02a.FIRM_ID$+"E"+"  "+ivm02a.WAREHOUSE_ID$
+                x=6
+                gosub Firm_Exist
+                if status<>0 then
+                    stat=0
+                    break
+                endif
+            endif
+
+rem --- Current or next period activity?
+
+            y$=y1$
+            m$=m1$,x=9
+            gosub Curr_Next_Period_Activity
+            if status<>0 then
+                stat=0
+                break
+            endif
+            y$=y2$
+            m$=m2$,x=10
+            gosub Curr_Next_Period_Activity
+            if status<>0 then
+                stat=0
+                break
+            endif
+
+        rem --- Loop back for next warehouse
+            cntr=1
+
+    wend
+    if stat=1
+rem --- Check Bill of Materials
+            While more
+                if action$="W" then break
+                if bm$<>"Y" then break
+                rem k$=firm_id$+item$
+                ivm03a.FIRM_ID$=firm_id$
+                ivm03a.ITEM_ID$=item$
+                find (bmm01_dev,key=ivm03a_key$,dom=lbl1)
+                status=7
+                break
+                lbl1:
+                    channel=bmm04_dev
+                    x$=k$,x=8
+                    gosub Firm_Exist
+                    break
+            wend
+    endif
+
+rem --- Set message when STATUS<>0
+
+    if status<>0 then
+        dim message$[2]
+        if status=1 then let message$[0]="This Item Has Been Selected For Physical Inventory"
+        if status=2 then let message$[0]="Warehouse Quantities Exist For This Inventory Item"
+        if status=3 then let message$[0]="Sales Orders For This Inventory Item Current Exist"
+        if status=4 then let message$[0]="Purchase Requisitions Exist For This Inventory Item"
+        if status=5 then let message$[0]="Work Orders For This Inventory Item Currently Exist"
+        if status=6 then let message$[0]="This Item Is Required For An Existing Work Order"
+        if status=7 then let message$[0]="This Item Is Also A Bill Of Materials Master Bill"
+        if status=8 then let message$[0]="This Item Is Also A Bill Of Materials Component"
+        if status=9 then let message$[0]="Warehouse Activity Exists For The Current Period"
+        if status=10 then let message$[0]="Warehouse Activity Exists For The Next Period"
+        message$[1]="It Can Not Be Deleted (<Enter>=Continue)"
+
+ rem --- Display message
+
+        call pgmdir$+"adc_stdmessage.aon",2,message$[all],1,22,-1,v$,v3
+        if v$<>"SPECIAL" then goto std_exit
+    endif
+
+rem --- Position warehouse xref
+
+    k$=first$
+    read (ivm03_dev,key=k$,dom=Next_Warehouse)
+    cntr2=0
+
+    While more
+        Next_Warehouse: rem --- Next warehouse xref
+        if cntr2=1
+            ivm03a_key$=key(ivm03_dev,end=*break)
+        endif
+
+        if pos(first$=ivm03a_key$)<>1 then
+                break
+        endif
+        remove (ivm03_dev,key=ivm03a_key$,dom=*next)
+        ivm02a.FIRM_ID$=firm_id$
+        ivm02a.WAREHOUSE_ID$=ivm03g.WAREHOUSE_ID$
+        ivm02a.ITEM_ID$=item$
+        x$=ivm03a_key$
+        find record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=*next) ivm02a$
+
+        remove (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=*next)
+
+rem --- Remove ivm-03 Xrefs
+
+        dim x0$(37)
+        x0$(1)=ivm02a.FIRM_ID$+"B"+ivm02a.WAREHOUSE_ID$+ivm02a.CYCLE_CODE$+ivm02a.LOCATION$+ivm02a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        dim x0$(28)
+        x0$(1)=ivm02a.FIRM_ID$+"C"+ivm02a.WAREHOUSE_ID$+ivm01a.PRODUCT_TYPE$+ivm02a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        dim x0$(37)
+        gosub Remove_All_Vendors
+        read (ivm12_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=*next)
+
+rem --- Remove ivm-12 Activity
+        while more
+            ivm12a_key$=key(ivm12_dev,end=*break)
+            if pos(b0$=ivm12a_key$)<>1 then
+                break
+            endif
+            remove (ivm12_dev,key=ivm12a_key$,dom=*continue)
+        wend
+
+rem --- Loop back for next warehouse
+
+        read (ivm03_dev,key=x$,dom=*continue)
+        cntr2=1
+
+    wend
+
+
+rem --- Position vendor xref
+            if action$="W" then goto std_exit
+            first$=firm_id$+"H"+item$
+            read (ivm03_dev,key=first$,dom=*next)
+
+
+
+rem --- Read next ivm-05 vendor record
+    while more
+            ivm03a_key$=key(ivm03_dev,end=*break)
+            if pos(first$=ivm03a_key$)<>1 then
+                break
+            endif
+           
+            x$=ivm03a.FIRM_ID$+ivm03h.VENDOR_ID$+ivm03h.ITEM_ID$
+            if ap$="Y" remove (ivm05_dev,key=x$,dom=*next)
+           
+            x$=ivm03a.FIRM_ID$+"D"+ivm03h.VENDOR_ID$
+            remove (ivm03_dev,key=x$,dom=*next)
+
+            
+            x$=ivm03a.FIRM_ID$+"F"+ivm01a.BUYER_CODE$+ivm03h.VENDOR_ID$+ivm01a.PRODUCT_TYPE$+ivm01a.ITEM_ID$+"  "
+            remove (ivm03_dev,key=x$,dom=*next)
+            remove (ivm03_dev,key=k$,dom=*next)
+    wend
+
+
+
+rem --- Position synonyms file
+            read (ivm24_dev,key=ivm01a.FIRM_ID$+ivm01a.ITEM_ID$,dom=*next)
+
+
+
+rem --- Read next synonym
+    while more
+            ivm24a_key$=key(ivm24_dev,end=*break)
+            if pos(ivm01a.FIRM_ID$+ivm01a.ITEM_ID$=ivm24a_key$)<>1 then
+                break
+            endif
+            remove (ivm24_dev,key=ivm24a_key$,dom=*next)
+
+            ivm24a_key$=ivm24a.FIRM_ID$+ivm24a.ITEM_SYNONYM$+ivm24a.ITEM_ID$
+            remove (ivm14_dev,key=ivm24a_key$,dom=*next)
+    wend
+
+rem --- Remove ivm-03 Item Xrefs
+
+        dim x0$(26)
+        x0$(1)=firm_id$+"A"+ivm01a.PRODUCT_TYPE$+ivm01a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        dim x0$(43)
+        x0$(1)=firm_id$+"E"+ivm01a.ITEM_DESC$
+        x0$(24)=ivm01a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        x0$(1)=firm_id$+"I"+ivm01a.BAR_CODE$+ivm01a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        x0$(1)=firm_id$+"U"+ivm01a.UPC_CODE$+ivm01a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        dim x0$(37)
+        x0$(1)=firm_id$+"F"+ivm01a.BUYER_CODE$+ivm01a.VENDOR_ID$+ivm01a.PRODUCT_TYPE$+ivm01a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        x0$=firm_id$+"J"+ivm01a.ITEM_CLASS$+ivm01a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        x0$=firm_id$+"T"+ivm01a.ITEM_TYPE$+ivm01a.ITEM_ID$
+        remove (ivm03_dev,key=x0$,dom=*next)
+
+        read (ivm09_dev,key=ivm01a.FIRM_ID$+ivm01a.ITEM_ID$,dom=*next)
+
+
+rem --- Remove ivm-09 commments
+    while more
+        ivm09a_key$=key(ivm09_dev,end=*break)
+        if pos(ivm01a.FIRM_ID$+ivm01a.ITEM_ID$=ivm09a_key$)<>1 then
+            break
+        endif
+        remove (ivm09_dev,key=ivm09a_key$,dom=*next)
+    wend
+
+rem --- Remove ivm-01 item master
+
+        remove (ivm01_dev,key=ivm01a.FIRM_ID$+ivm01a.ITEM_ID$,dom=*next)
+
+    done: rem --- All done
+
+        goto std_exit
+
+    Firm_Exist: rem --- Does Firm/Item/Warehouse exist in file?
+
+        read (channel,key=x$,dom=*next)
+        k$=key(channel,end=Firm_Rtn)
+        if pos(x$=k$)=1 then let status=x
+    Firm_Rtn:
+        return
+
+    Curr_Next_Period_Activity: rem --- Current or Next Period Activity?
+
+        ivm12a.FIRM_ID$=ivm02a.FIRM_ID$
+        ivm12a.WAREHOUSE_ID$=ivm02a.WAREHOUSE_ID$
+        ivm12a.ITEM_ID$=ivm02a.ITEM_ID$
+        ivm12a.YEAR$=y$
+        ivm12a.PERIOD$=m$
+        find record (ivm12_dev,key=ivm12a.FIRM_ID$+ivm12a.WAREHOUSE_ID$+ivm12a.ITEM_ID$+ivm12a.YEAR$+ivm12a.PERIOD$,dom=Curr_Activity_Rtn) ivm12a$
+        for p=0 to 8
+            if c[p]<>0 then let status=x
+        next p
+    Curr_Activity_Rtn:
+        return
+
+
+    Remove_All_Vendors: rem --- Remove IVM03F Records for all Vendors (Stocking level W)
+
+        read (ivm03_dev,key=firm_id$+"H"+item$,dom=*next)
+        while more
+            ivm03h_key$=key(ivm03_dev,end=*break)
+            if pos(firm_id$+"H"+item$=ivm03h_key$)<>1 then
+                break
+            endif
+            x0$(1)=firm_id$+"F"+ivm02a.BUYER_CODE$+ivm03h.VENDOR_ID$+ivm01a.PRODUCT_TYPE$+ivm02a.ITEM_ID$+ivm02a.WAREHOUSE_ID$
+            remove (ivm03_dev,key=x0$,dom=*next)
+            read (ivm03_dev,key=ivm03h_key$,dom=*next)
+        wend
+        return
+
+
+rem --- FNYEAR_YY21$ Convert Numeric Year to 21st Century 2-Char Year
+         def fnyear_yy21$(q)=fnyy_yy21$(str(mod(q,100):"00"))
+rem --- Convert 2-Char Year to 21st Century 2-Char Year
+        def fnyy_yy21$(q1$)
+        let q9=10,q9=num(stbl("+Y2K_UPPER_LIMIT",err=*next),err=year_conversion)
+    year_conversion:
+        if num(q1$(1,2),err=*next)<q9 then let q1$(1,1)=chr(int(num(q1$(1,2))/10)+65)
+        return q1$
+        fnend
+rem --- Un-Convert 21st Century 2-Char Year to 2-Char Year
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+    exit
+
+rem #endinclude std_exit.src
+
+    end
