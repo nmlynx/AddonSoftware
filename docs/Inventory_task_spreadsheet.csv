@@ -6,7 +6,7 @@ Inventory Transaction Register,T,,,IVR.AA,Register,,BJ-BP,,needs,,20Aug mods
 ,T,,,IVU.AA,Update,,Done SV-BP,,,,
 Inventory Transfers Entry,T,IVE_TRANSFER,,IVE.CA,Entry,,,,,,
 Inventory Transfer Register,T,,,IVR.GA,Register,,BJ-BP,,needs,,20Aug mods
-,T,,,IVU.DA,Update,,WIP SV-BP,,,,
+,T,,,IVU.DA,Update,,Done SV-BP,,,,
 Cost Changes,G,,,,,,,,,,
 Cost Change Entry,T,,,IVE.GA,Entry,,,,,,
 Cost Change By Percentage Entry,T,,,IVE.JA,Lead-in to IVC.CA,,,,,,
@@ -26,7 +26,7 @@ Cancel Physical Inventory,T,,,IVE.QA,Entry,,,,,,
 Print Count Sheets,T,,,IVR.UA,Report,,BJ-BP,,needs,,20Aug mods
 Count Sheet Entry,T,,,IVE.RA,Entry,,,,,,
 Physical Inventory Register,T,,,IVR.VA,Register,,BJ-BP,,needs,,20Aug mods
-,T,,,IVU.VA,Update,,WIP SV-BP,,,,
+,T,,,IVU.VA,Update,,Done SV-BP,,,,
 Reports,G,,,,,,,,,,
 Inventory Price List,T,IVR_PRICELIST,ivr_pricelist/ivr_pricelist_o1,IVR.FA/FB,Input/Report Overlay,SL,BJ-BP,CH,Done SV-BP,,IVR.FB; fa and fb converted to ivr_pricelist and ivr_pricelist_o1. Select Form built. CH.20Aug mods
 Inventory Vendor Listing,T,IVR_VENDLIST,ivr_vendlist/ivr_vendlist_o1,IVR.IA/IB,Input/Report Overlay,SL,BJ-BP,CH,Done SS-BP,,"IVR.IB; ia/ib converted to ivr_vendlist and ivr_vendlist_o1. Also converted two publics, ivc_au/wa, now ivc_usage and ivc_whseinfo. Select Form built.CH.20Aug mods"
@@ -56,9 +56,9 @@ Lot/Serial Number Stock Status Report,T,IVR_LOTSTATUS,ivr_lotstatus.aon & _o1,IV
 Lot/Serial Number Activity Report,T,IVR_LOTACTIVITY,ivr_lotactivity.aon & _o1,IVR.6A/6B,Input/Report Overlay,SL,BJ-BP,SL,Done SV-BP,,IVR.6B 20Aug mods;converted to ivr_lotactivity & _o1. Select Form built. SL Data tested. The lot sequence table IVX_LSXREF is empty.  The lot/serial reports could use the alternate key to IVM_LSMASTER.
 Period End Processing,G,,,,,,,,,,
 A B C Analysis Report,T,,ivr_itemabcrpt & _o1 & _02.aon,IVR.PA/PB/PC,Input/Gen/Report,,BJ-BP,WIP SL,needs,,"IVR.PB,IVR.PC 20Aug mods"
-A B C Analysis Update,T,,ivu_itemabcupd.aon,IVU.PA,Update,,WIP SV-BP,,,,
+A B C Analysis Update,T,,ivu_itemabcupd.aon,IVU.PA,Update,,Done SV-BP,,,,
 "EOQ, Order Point & Safety Stock Report",T,,ivr_itemeoqrpt & _o1 & _o2.aon,IVR.OA/OB/OC,Init/Input/Report,,BJ-BP,WIP SL,needs,,"IVR.OB,IVR.OC 20Aug mods"
-"EOQ, Order Point & Safety Stock Update",T,,ivu_itemeoqupd.aon,IVU.OA,Update,,WIP SV-BP,,,,
+"EOQ, Order Point & Safety Stock Update",T,,ivu_itemeoqupd.aon,IVU.OA,Update,,Done SV-BP,,,,
 Inventory Valuation Report,T,,,IVR.NA/NB,Input/Report Overlay,,BJ-BP,,needs,,IVR.NB 20Aug mods
 Purge Inventory Transaction History,T,,,IVU.TA,Update,,BJ-BP,,,,20Aug mods
 Purge Inventory Activity,T,,,IVU.BA,Update,,BJ-BP,,,,20Aug mods
@@ -115,20 +115,20 @@ Copy Items to Another Warehouse,T,IVX_COPYITEM,,IVX.DA,Update,,
 Rebuild Unit Costs,A,,ivx_rebuildcosts.aon,IVX.IA,Update,,JL?
 Inventory Publics,G,,,,,,
 Calculate Actual & Estimated Annual Usage,P,,ivc_usage,IVC.AU,Public,,CH
-Price/Cost Change by Percentage,P,,,IVC.CA,Public,,WIP SV-BP
-Delete Item and/or Warehouse,P,,,IVC.DA,Public,,WIP SV-BP
+Price/Cost Change by Percentage,P,,,IVC.CA,Public,,Done SV-BP
+Delete Item and/or Warehouse,P,,,IVC.DA,Public,,Done SV-BP
 Activity Type Descriptions,P,,ivc_activity,IVC.FA,Public,,CH
-Inventory Item Entry,P,,,IVC.IA,Public,,WIP SV-BP
-Standard Report Options Input,P,,,IVC.IB,Public,,WIP SV-BP
-Physical Inventory Entry Screen Processing,P,,,IVC.IC,Public,,needs
-LIFO/FIFO Reporting And Inquiry,P,,,IVC.LF,Public,,needs
+Inventory Item Entry,P,,,IVC.IA,Public,,Done SV-BP
+Standard Report Options Input,P,,,IVC.IB,Public,,Done SV-BP
+Physical Inventory Entry Screen Processing,P,,,IVC.IC,Public,,Done SV-BP
+LIFO/FIFO Reporting And Inquiry,P,,,IVC.LF,Public,,Done SV-BP
 Return Period Quantity Based On Activity Type,P,,ivc_periodqty,IVC.PA,Public,,CH
-Inventory Activity Type Column Entry,P,,,IVC.RA,Public,,needs
-Lot/Serial Input,P,,,IVC.SA,Public,,needs
+Inventory Activity Type Column Entry,P,,,IVC.RA,Public,,Done SV-BP
+Lot/Serial Input,P,,,IVC.SA,Public,,Done SV-BP
 Inventory Warning Messages,P,,ivc_warnings,IVC.SB,Public,,JL
-Generate Lot/Serial Numbers,P,,,IVC.SN,Public,,needs
-Process Inventory Transaction Display Window,P,,,IVC.TA,Public,,needs
-Process Lot/Serial Inventory Transaction Display Window,P,,,IVC.TB,Public,,needs
+Generate Lot/Serial Numbers,P,,,IVC.SN,Public,,Done SV-BP
+Process Inventory Transaction Display Window,P,,,IVC.TA,Public,,Done SV-BP
+Process Lot/Serial Inventory Transaction Display Window,P,,,IVC.TB,Public,,Done SV-BP
 Format Standard Transaction References,P,,ivc_transdata,IVC.TD,Public,,JL
 Inventory Item Update (ATAMO),P,,ivc_itemupdt,IVC.UA,Public,,JL
 Return Warehouse Information,P,,ivc_whseinfo,IVC.WA,Public,,CH
