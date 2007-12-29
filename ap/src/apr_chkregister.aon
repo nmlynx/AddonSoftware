@@ -10,6 +10,16 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -125,6 +135,27 @@ rem --- Initializations
        retention_hdr2$="   Amount" 
     endif
 
+rem --- Headings and print positions
+
+ 
+    if retention
+        dim columns$[6,10]
+        columns = 7
+    else
+        dim columns$[5,10]
+        columns = 6
+    endif
+
+    columns$[0,0]="Check Number",       columns$[0,1]="C",columns$[0,2]="4"
+    columns$[1,0]="Check Date",         columns$[1,1]="C",columns$[1,2]="6"
+    columns$[2,0]="Vendor",             columns$[2,1]="C",columns$[2,2]="28"
+    columns$[3,0]="Invoice Amount",     columns$[3,1]="N",columns$[3,2]="5",columns$[3,3]=m1$
+    columns$[4,0]="Discount Amount",    columns$[4,1]="N",columns$[4,2]="4",columns$[4,3]=m1$
+    columns$[5,0]="Payment Amount",     columns$[5,1]="N",columns$[5,2]="5",columns$[5,3]=m1$
+    if retention
+        columns$[6,0]="Retention Amount",   columns$[6,1]="S",columns$[6,2]="5",columns$[6,3]=m1$
+    endif
+    
 rem --- Determine print positions
 
     o[0]=0
@@ -176,10 +207,8 @@ rem --- Get user approval to proceed
     if fkey=4 goto std_exit
     if answer$<>"Y" goto std_exit
 
-rem --- Open printer, start progress meter and position header file
+rem --- start progress meter and position header file
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,apw01_dev,1,meter_num,status
     read (apw01_dev,key=firm_id$,dom=*next)
 
@@ -188,11 +217,13 @@ rem --- Read next Check Detail (apw-01) record
     while moreheaders
           k$=key(apw01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
+    
+
           read record (apw01_dev) apw01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
           rem --- Level breaks
-
+    
           if apw01a.ap_type$<>lasttype$ gosub type_break
 
           rem --- Voided check?
@@ -241,6 +272,7 @@ rem --- Read next Check Detail (apw-01) record
                       if multitypes ref3$=ref3$+" "+apw01a.ap_type$
                       break
                 wend
+
                 while first=0
                       notfound=1
                       k$=key(ape04_dev,end=*break)
@@ -377,10 +409,19 @@ rem --- Read next Check Detail (apw-01) record
 
           rem --- Print the information for this check
 
-          if lines+2>maxlines gosub report_heading
-          print (printer_dev) @(o[0]),apw01a.check_no$,@(o[1]),fndate$(apw01a.check_date$),
-:                             @(o[2]),vendor$," ",name$,@(o[3]),vt[0]:m1$,@(o[4]),vt[1]:m1$,@(o[5]),vt[2]:m1$,
-:                             @(o[6]),fnretention$(retention,vt[3],m1$)
+          if lines+2>maxlines gosub set_linecount
+
+          OutVect!.addItem(apw01a.check_no$)
+          OutVect!.addItem(fndate$(apw01a.check_date$))
+          OutVect!.addItem(vendor$ + " " + name$)
+          OutVect!.addItem(str(vt[0]:m1$))
+          OutVect!.addItem(str(vt[1]:m1$))
+          OutVect!.addItem(str(vt[2]:m1$))
+
+          if retention
+            OutVect!.addItem(fnretention$(retention,vt[3],m1$))
+          endif
+  
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,gldate$,glstatus,lines,errors,status
           lines=lines+1
 
@@ -402,9 +443,9 @@ rem --- All done
 rem --- Any errors encountered?
 
     while errors
-          if lines+2>maxlines gosub report_heading
-          print (printer_dev) ""
-          print (printer_dev) @(o[2]),"WARNING: This register is out of balance or missing information"
+          if lines+2>maxlines gosub set_linecount
+          OutVect!.addItem("")
+          OutVect!.addItem("WARNING: This register is out of balance or missing information")
           lines=lines+2
           break
     wend
@@ -415,38 +456,63 @@ rem --- Destroy the progress meter and run the next overlay
     update$=pgmdir$+"apu_chkregister.aon"
     overlay$=update$
     if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
+
 rem --- run overlay$,err=std_exit
 
 	out_action$="PRT-PDF"
 	next_overlay$=overlay$
 	goto std_exit
 
-report_heading: rem --- Report Heading
+set_linecount: rem --- Report Heading
 
     lines=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev) @(h[0]),"Check",@(h[1]),"Check",@(h[3]),"Invoice",@(h[4]),"Discount",
-:                       @(h[5]),"Payment",@(h[6]),retention_hdr1$
-    print (printer_dev) @(h[0]),"Number",@(h[1]),"Date",@(h[2]),"Vendor",@(h[3])," Amount",@(h[4]),"  Amount",
-:                       @(h[5])," Amount",@(h[6]),retention_hdr2$
-    print (printer_dev) ""
     lines=lines+3
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     return
 
 print_total: rem --- Print totals
 
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) @(o[3]),underline$
-    print (printer_dev) @(o[3]-len(total$)),total$,@(o[3]),pt[0]:m1$,@(o[4]),pt[1]:m1$,
-:                       @(o[5]),pt[2]:m1$,@(o[6]),fnretention$(retention,pt[3],m1$)
+    if lines+2>maxlines gosub set_linecount
+
+
+    xwk = fnblank(3)
+
+    OutVect!.addItem(underline$)
+    OutVect!.addItem(underline$)
+    OutVect!.addItem(underline$)
+    if retention
+        OutVect!.addItem(underline$)
+    endif
+
+    xwk = fnblank(2)
+
+    OutVect!.addItem(total$)
+    OutVect!.addItem(str(pt[0]:m1$))
+    OutVect!.addItem(str(pt[1]:m1$))
+    OutVect!.addItem(str(pt[2]:m1$))
+
+    if retention
+        OutVect!.addItem(fnretention$(retention,pt[3],m1$))
+    endif
+
+
     lines=lines+2
     return
 
 print_voided: rem --- Print a voided check
 
-    if lines+1>maxlines gosub report_heading
-    print (printer_dev) @(o[0]),apw01a.check_no$,@(o[1]),fndate$(apw01a.check_date$),@(o[2]),"(Void)"
+    if lines+1>maxlines gosub set_linecount
+
+    OutVect!.addItem(apw01a.check_no$)
+    OutVect!.addItem(fndate$(apw01a.check_date$))
+    OutVect!.addItem("(Void)")
+
+    if retention
+        xwk = fnblank(4)
+    else
+        xwk = fnblank(3)
+    endif    
+
     lines=lines+1
     return
 
@@ -511,6 +577,15 @@ rem --- fnretention$: Return null string or masked amount
         q2$=""
         if q1 q2$=str(q2:q1$)
         return q2$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #include std_error.src
