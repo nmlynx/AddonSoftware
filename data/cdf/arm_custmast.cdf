@@ -1,3 +1,5 @@
+[[ARM_CUSTMAST.CUSTOMER_ID.AVAL]]
+if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
 [[ARM_CUSTMAST.AOPT-IDTL]]
 rem Invoice Dtl Inquiry
 cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
