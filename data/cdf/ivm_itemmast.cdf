@@ -1,3 +1,45 @@
+[[IVM_ITEMMAST.ITEM_ID.AVAL]]
+rem --- See if Auto Numbering in effect
+	ivs01_dev=fnget_dev("IVS_PARAMS")
+	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+	ivs10_dev=fnget_dev("IVS_NUMBERS")
+	dim ivs10n$:fnget_tpl$("IVS_NUMBERS")
+
+	read record(ivs01_dev,key=firm_id$+"IV00") ivs01a$
+	if len(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))=0
+		if ivs01a.auto_no$="N" 
+			callpoint!.setStatus("ABORT")
+		endif
+		item_len=num(callpoint!.getTableColumnAttribute("IVM_ITEMMAST.ITEM_ID","MAXL"))
+		if item_len=0 item_len=20;rem Needed?
+		chk_digit$=""
+		if ivs01a.auto_no$="C" item_len=item_len-1
+		read record (ivs10_dev,key=firm_id$+"N",dom=*next) ivs10n$
+		ivs10n.firm_id$=firm_id$
+		ivs10n.record_id_n$="N"
+		if ivs10n.nxt_item_id=0
+			next_num=1
+		else
+			next_num=ivs10n.nxt_item_id
+		endif
+		dim max_num$(min(item_len,10),"9")
+		if next_num>num(max_num$)
+			msg_id$="NO_MORE_NUMBERS"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+		ivs10n.nxt_item_id=next_num+1
+		ivs10n$=field(ivs10n$)
+		write record (ivs10_dev,key=firm_id$+"N") ivs10n$
+		next_num$=str(next_num)
+		if ivs01a.auto_no$="C"
+			precision 4
+			chk_digit$=str(tim*10000),chk_digit$=chk_digit$(len(chk_digit$),1)
+			precision num(ivs01a.precision$)
+		endif
+		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_ID",next_num$+chk_digit$)
+		callpoint!.setStatus("REFRESH")
+	endif
 [[IVM_ITEMMAST.AWRI]]
 rem --- Populate ivm-02 with Product Type
 
@@ -132,23 +174,24 @@ callpoint!.setStatus("ABLEMAP-REFRESH")
 #include std_missing_params.src
 [[IVM_ITEMMAST.BSHO]]
 rem --- Open/Lock files
-	num_files=5
+	num_files=6
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_DEFAULTS",open_opts$[2]="OTA"
 	open_tables$[3]="GLS_PARAMS",open_opts$[3]="OTA"
 	open_tables$[4]="ARS_PARAMS",open_opts$[4]="OTA"
 	open_tables$[5]="IVM_ITEMWHSE",open_opts$[5]="OTA"
+	open_tables$[6]="IVS_NUMBERS",open_opts$[6]="OTA"
 	gosub open_tables
 	if status$<>""  goto std_exit
 
 	ivs01_dev=num(open_chans$[1]),ivs01d_dev=num(open_chans$[2]),gls01_dev=num(open_chans$[3])
-	ivm02_dev=num(open_chans$[5])
+	ivm02_dev=num(open_chans$[5]),ivs10_dev=num(open_chans$[6])
 
 rem --- Dimension miscellaneous string templates
 
 	dim ivs01a$:open_tpls$[1],ivs01d$:open_tpls$[2],gls01a$:open_tpls$[3],ars01a$:open_tpls$[4]
-	dim ivm02a$:open_tpls$[5]
+	dim ivm02a$:open_tpls$[5],ivs10n$:open_tpls$[6]
 
 rem --- init/parameters
 
