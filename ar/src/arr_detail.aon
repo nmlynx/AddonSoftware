@@ -11,6 +11,15 @@ rem  +-----------------------------------------+
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -110,6 +119,7 @@ rem --- Initializations
     more=1
     page=0
     width=80
+    pbufwidth=85
     maxlines=59
     lines=maxlines+1
     morecustomers=1
@@ -127,6 +137,12 @@ rem --- Initializations
     clock$=""
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
+
+rem --- Headings and print positions
+
+ 
+    dim columns$[0,10]
+    columns = 0
 
 rem --- Define print positions for the invoice history listing
 
@@ -184,8 +200,6 @@ rem --- Dimension string templates
 
 rem --- Open printer, start progress meter and position Customer Master file
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
     while begcustomer$<>""
           read (arm01_dev,key=firm_id$+begcustomer$)
@@ -206,22 +220,61 @@ rem --- Read next Customer Master (arm-01) record
 
           extension$=""
           if cvs(arm01a.phone_exten$,2)<>"" extension$="Ext "+arm01a.phone_exten$
-          gosub report_heading
-          print (printer_dev) ""
-          print (printer_dev) @(1),"Address: ",arm01a.addr_line_1$,@(46),"Telephone: ",fnmask$(arm01a.phone_no$,m8$),
-:                             " ",extension$
-          print (printer_dev) @(10),arm01a.addr_line_2$,@(46),"Fax Phone: ",fnmask$(arm01a.fax_no$,m8$)
-          print (printer_dev) @(10),arm01a.addr_line_3$,@(48),"Contact: ",arm01a.contact_name$
-          print (printer_dev) @(10),arm01a.addr_line_4$,@(37),"Alternate Sequence: ",arm01a.alt_sequence$
-          print (printer_dev) @(4),"City: ",arm01a.city$,@(44),"Date Opened: ",fndate$(arm01a.opened_date$)
-          print (printer_dev) @(3),"State: ",arm01a.state_code$,@(17),"Zip/Postal: ",fnzipcode$(arm01a.zip_code$),
-:                             @(47),"Ship Via: ",arm01a.ar_ship_via$
-          print (printer_dev) @(1),"Country: ",arm01a.country$,@(49),"F.O.B.: ",arm01a.fob$
-          print (printer_dev) @(5),"SIC: ",arm01a.sic_code$,@(42),"Resale Number: ",arm01a.resale_no$
-          print (printer_dev) @(2),"Retain? ",fnyn$(arm01a.retain_cust$),@(45),"D&B Number: ",arm01a.db_no$
+          gosub lines_count
           lines=lines+10
 
-          rem --- Retrieve customer detail record
+          OutVect!.addItem("")
+
+          dim pbuf$(pbufwidth)
+          pbuf$(2,len("Address: " + arm01a.addr_line_1$)) = "Address: " + arm01a.addr_line_1$
+          pbuf$(47,len("Telephone:  " + str(fnmask$(arm01a.phone_no$,m8$)) + " " + extension$)) = "Telephone:  " + str(fnmask$(arm01a.phone_no$,m8$)) + " " + extension$
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(11,len(arm01a.addr_line_2$)) = arm01a.addr_line_2$
+          pbuf$(47,len("Fax Phone:  " + fnmask$(arm01a.fax_no$,m8$))) = "Fax Phone:  " + fnmask$(arm01a.fax_no$,m8$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(11,len(arm01a.addr_line_3$)) = arm01a.addr_line_3$
+          pbuf$(49,len("Contact:  " + arm01a.contact_name$)) = "Contact:  " + arm01a.contact_name$
+          gosub output_print_buf
+
+
+          dim pbuf$(pbufwidth)
+          pbuf$(11,len(arm01a.addr_line_4$)) = arm01a.addr_line_4$
+          pbuf$(38,len("Alternate Sequence:  " + arm01a.alt_sequence$)) = "Alternate Sequence:  " + arm01a.alt_sequence$
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(5,len("City: " + arm01a.city$)) = "City: " + arm01a.city$
+          pbuf$(45,len("Date Opened:  " + fndate$(arm01a.opened_date$))) = "Date Opened:  " + fndate$(arm01a.opened_date$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(4,len("State: " + arm01a.state_code$)) = "State: " + arm01a.state_code$
+          pbuf$(18,len("Zip/Postal:  " + fnzipcode$(arm01a.zip_code$))) = "Zip/Postal:  " + fnzipcode$(arm01a.zip_code$)
+          pbuf$(48,len("Ship Via:  " + arm01a.ar_ship_via$)) = "Ship Via:  " + arm01a.ar_ship_via$
+          gosub output_print_buf
+          
+          dim pbuf$(pbufwidth)
+          pbuf$(2,len("Country: " + arm01a.country$)) = "Country: " + arm01a.country$
+          pbuf$(50,len("F.O.B.:  " + arm01a.fob$)) = "F.O.B.:  " + arm01a.fob$
+          gosub output_print_buf
+          
+          dim pbuf$(pbufwidth)
+          pbuf$(6,len("SIC: " + arm01a.sic_code$)) = "SIC: " + arm01a.sic_code$
+          pbuf$(43,len("Resale Number:  " + arm01a.resale_no$)) = "Resale Number:  " + arm01a.resale_no$
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(3,len("Retain? " + fnyn$(arm01a.retain_cust$))) = "Retain? " + fnyn$(arm01a.retain_cust$)
+          pbuf$(46,len("D&B Number: " + arm01a.db_no$)) = "D&B Number: " + arm01a.db_no$
+          gosub output_print_buf
+
+
+
+         rem --- Retrieve customer detail record
 
           dim arm02a$:fattr(arm02a$)
           arm02a.firm_id$=arm01a.firm_id$
@@ -273,26 +326,66 @@ rem --- Read next Customer Master (arm-01) record
           if sa$<>"Y" arm02a.sa_flag$="N"
           if arm02a.sa_flag$="I" sales_analysis$="By Item"
           if arm02a.sa_flag$="P" sales_analysis$="By Product"
-          if lines+12>maxlines gosub report_heading
+          if lines+12>maxlines gosub lines_count
           gosub profile_heading
-          print (printer_dev) @(0),"Customer Type: ",arm02a.customer_type$,@(19),typedesc$,
-:                             @(41),"Sales Discount: ",arm02a.disc_code$," ",discdesc$
-          print (printer_dev) @(2),"Salesperson: ",arm02a.slspsn_code$,@(19),salesdesc$,
-:                             @(45),"Label Code: ",arm02a.label_code$
-          print (printer_dev) @(3),"Terms Code: ",arm02a.ar_terms_code$,@(19),termsdesc$,
-:                             @(41),"Finance Charge? ",fnyn$(arm02a.finance_chg$)
-          print (printer_dev) @(5),"Tax Code: ",arm02a.tax_code$,@(19),taxdesc$,
-:                             @(45),"Statements? ",fnyn$(arm02a.statements$)
-          print (printer_dev) @(0),"Freight Terms: ",arm02a.frt_terms$,@(19),frtdesc$,
-:                             @(45),"Cycle Code: ",arm02a.cycle_code$," ",cycledesc$
-          print (printer_dev) @(4),"Territory: ",arm02a.territory$,@(19),terrdesc$,
-:                             @(41),"Sales Analysis: ",sales_analysis$
-          print (printer_dev) @(1),"Distribution: ",arm02a.ar_dist_code$,@(19),distdesc$
-          print (printer_dev) @(1),"Message Code: ",arm02a.message_code$,@(19),msgdesc$,
-:                             @(43),"Credit Limit: ",limit$
-          print (printer_dev) @(1),"Pricing Code: ",arm02a.pricing_code$,@(19),pricedesc$,
-:                             @(44),"Credit Hold: ",hold$
+ 
+
+          dim pbuf$(pbufwidth)
+          pbuf$(1,len("Customer Type: "+arm02a.customer_type$)) = "Customer Type: "+arm02a.customer_type$
+          pbuf$(20,len(typedesc$)) = typedesc$
+          pbuf$(42,len("Sales Discount: "+arm02a.disc_code$+" "+discdesc$)) = "Sales Discount: "+arm02a.disc_code$+" "+discdesc$
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(3,len("Salesperson: "+arm02a.slspsn_code$)) = "Salesperson: "+arm02a.slspsn_code$
+          pbuf$(20,len(salesdesc$)) = salesdesc$
+          pbuf$(46,len("Label Code: "+arm02a.label_code$)) = "Label Code: "+arm02a.label_code$
+          gosub output_print_buf
+   
+          dim pbuf$(pbufwidth)
+          pbuf$(3,len("Terms Code: "+arm02a.ar_terms_code$)) = "Terms Code: "+arm02a.ar_terms_code$
+          pbuf$(20,len(termsdesc$)) = termsdesc$
+          pbuf$(42,len("Finance Charge? "+fnyn$(arm02a.finance_chg$))) = "Finance Charge? "+fnyn$(arm02a.finance_chg$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(6,len("Tax Code: "+arm02a.tax_code$)) = "Tax Code: "+arm02a.tax_code$
+          pbuf$(20,len(taxdesc$)) = taxdesc$
+          pbuf$(46,len("Statements? "+fnyn$(arm02a.statements$))) = "Statements? "+fnyn$(arm02a.statements$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(1,len("Freight Terms: "+arm02a.frt_terms$)) = "Freight Terms: "+arm02a.frt_terms$
+          pbuf$(20,len(frtdesc$)) = frtdesc$
+          pbuf$(46,len("Cycle Code: "+arm02a.cycle_code$+" "+cycledesc$)) = "Cycle Code: "+arm02a.cycle_code$+" "+cycledesc$
+          gosub output_print_buf
+   
+          dim pbuf$(pbufwidth)
+          pbuf$(1,len("Territory: "+arm02a.territory$)) = "Territory: "+arm02a.territory$
+          pbuf$(20,len(terrdesc$)) = terrdesc$
+          pbuf$(42,len("Sales Analysis: "+sales_analysis$)) = "Sales Analysis: "+sales_analysis$
+          gosub output_print_buf
+          
+          dim pbuf$(pbufwidth)
+          pbuf$(2,len("Distribution: "+arm02a.ar_dist_code$)) = "Distribution: "+arm02a.ar_dist_code$ 
+          pbuf$(20,len(distdesc$)) = distdesc$
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(2,len("Message Code: "+arm02a.message_code$)) = "Message Code: "+arm02a.message_code$
+          pbuf$(20,len(msgdesc$)) = msgdesc$
+          pbuf$(2,len("Credit Limit: "+limit$)) = "Credit Limit: "+limit$
+          gosub output_print_buf
+          
+          
+          dim pbuf$(pbufwidth)
+          pbuf$(2,len("Pricing Code: "+arm02a.pricing_code$)) = "Pricing Code: "+arm02a.pricing_code$
+          pbuf$(20,len(pricedesc$)) = pricedesc$
+          pbuf$(45,len("Credit Hold: "+hold$)) = "Credit Hold: "+hold$
+          gosub output_print_buf
+          
           lines=lines+10
+
 
           rem --- Print customer comments
 
@@ -304,10 +397,13 @@ rem --- Read next Customer Master (arm-01) record
                       if pos(arm01_key$=k$)<>1 break
                       read record (arm05_dev,key=k$) arm05a$
                       if lines+1>maxlines 
-                         gosub report_heading
+                         gosub lines_count
                          gosub comments_heading
                       endif
-                      print (printer_dev) @(0),arm05a.sequence_num$," ",arm05a.std_comments$
+                      dim pbuf$(pbufwidth)
+                      pbuf$(1,len(arm05a.sequence_num$+" "+arm05a.std_comments$)) = arm05a.sequence_num$+" "+arm05a.std_comments$
+                      gosub output_print_buf
+        
                       lines=lines+1
                 wend
                 break
@@ -340,24 +436,55 @@ rem --- Read next Customer Master (arm-01) record
                 if len(terrdesc$)>19 terrdesc$=terrdesc$(1,19)
                 if len(salesdesc$)>19 salesdesc$=salesdesc$(1,19)
                 arm03a.country$=arm03a.country$(1,23)
-                if lines+9>maxlines gosub report_heading
+                if lines+9>maxlines gosub lines_count
                 if first gosub shipto_heading
-:                   else print (printer_dev) "" 
-                print (printer_dev) @(0),"Ship To: ",arm03a.shipto_no$,
-:                                   @(46),"Telephone: ",fnmask$(arm03a.phone_no$,m8$)," ",extension$
-                print (printer_dev) @(3),"Name: ",arm03a.name$,
-:                                   @(48),"Contact: ",arm03a.contact_name$
-                print (printer_dev) @(0),"Address: ",arm03a.addr_line_1$,
-:                                   @(44),"Salesperson: ",arm03a.slspsn_code$," ",salesdesc$
-                print (printer_dev) @(9),arm03a.addr_line_2$,
-:                                   @(46),"Territory: ",arm03a.territory$," ",terrdesc$
-                print (printer_dev) @(9),arm03a.addr_line_3$,
-:                                   @(47),"Tax Code: ",arm03a.tax_code$,"  ",taxdesc$
-                print (printer_dev) @(9),arm03a.addr_line_4$,@(51),"SIC: ",arm03a.sic_code$
-                print (printer_dev) @(3),"City: ",arm03a.city$,@(45),"D&B Number: ",arm03a.db_no$
-                print (printer_dev) @(2),"State: ",arm03a.state_code$,
-:                                   @(13),"Zip/Postal: ",fnzipcode$(arm03a.zip_code$),
-:                                   @(48),"Country: ",arm03a.country$
+:                   else OutVect!.addItem("") 
+ 
+
+                dim pbuf$(pbufwidth)
+                pbuf$(1,len("Ship To: "+arm03a.shipto_no$)) = "Ship To: "+arm03a.shipto_no$
+                pbuf$(47,len("Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$)) = "Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$
+                gosub output_print_buf
+
+                dim pbuf$(pbufwidth)
+                pbuf$(4,len("Name: "+arm03a.name$)) = "Name: "+arm03a.name$
+                pbuf$(49,len("Contact: "+arm03a.contact_name$)) = "Contact: "+arm03a.contact_name$
+                gosub output_print_buf
+
+                dim pbuf$(pbufwidth)
+                pbuf$(1,len("Address: "+arm03a.addr_line_1$)) = "Address: "+arm03a.addr_line_1$
+                pbuf$(45,len("Salesperson: "+arm03a.slspsn_code$+" "+salesdesc$)) = "Salesperson: "+arm03a.slspsn_code$+" "+salesdesc$
+                gosub output_print_buf
+
+                dim pbuf$(pbufwidth)
+                pbuf$(10,len(arm03a.addr_line_2$)) = arm03a.addr_line_2$
+                pbuf$(47,len("Territory: "+arm03a.territory$+" "+terrdesc$)) = "Territory: "+arm03a.territory$+" "+terrdesc$
+                gosub output_print_buf
+
+                dim pbuf$(pbufwidth)
+                pbuf$(10,len(arm03a.addr_line_3$)) = arm03a.addr_line_3$
+                pbuf$(48,len("Tax Code: "+arm03a.tax_code$+" "+taxdesc$)) = "Tax Code: "+arm03a.tax_code$+" "+taxdesc$
+                gosub output_print_buf
+
+  
+                dim pbuf$(pbufwidth)
+                pbuf$(10,len(arm03a.addr_line_4$)) = arm03a.addr_line_4$
+                pbuf$(52,len("SIC: "+arm03a.sic_code$)) = "SIC: "+arm03a.sic_code$
+                gosub output_print_buf
+
+
+                dim pbuf$(pbufwidth)
+                pbuf$(4,len("City: "+arm03a.city$)) = "City: "+arm03a.city$
+                pbuf$(46,len("D&B Number: "+arm03a.db_no$)) = "D&B Number: "+arm03a.db_no$
+                gosub output_print_buf
+
+                dim pbuf$(pbufwidth)
+                pbuf$(3,len("State: "+arm03a.state_code$)) = "State: "+arm03a.state_code$
+                pbuf$(14,len("Zip/Postal: "+fnzipcode$(arm03a.zip_code$))) = "Zip/Postal: "+fnzipcode$(arm03a.zip_code$)
+                pbuf$(49,len("Country: "+arm03a.country$)) = "Country: "+arm03a.country$
+                gosub output_print_buf
+
+
                 lines=lines+9
 
                 rem --- Loop back for next ship-to record
@@ -370,34 +497,63 @@ rem --- Read next Customer Master (arm-01) record
                 first=1
                 read (opm09_dev,key=arm01_key$,dom=*next)
                 while moredetail
-                      k$=key(opm09_dev,end=*break)
-                      if pos(arm01_key$=k$)<>1 break
-                      read record (opm09_dev,key=k$) opm09a$
-                      extension$=""
-                      if cvs(opm09a.phone_exten$,2)<>"" extension$="Ext "+opm09a.phone_exten$
-                      if lines+9>maxlines gosub report_heading
+                    k$=key(opm09_dev,end=*break)
+                    if pos(arm01_key$=k$)<>1 break
+                    read record (opm09_dev,key=k$) opm09a$
+                    extension$=""
+                    if cvs(opm09a.phone_exten$,2)<>"" extension$="Ext "+opm09a.phone_exten$
+                    if lines+9>maxlines gosub lines_count
                       if first gosub job_heading
-:                         else print (printer_dev) "" 
-                      print (printer_dev) @(3),"Job ID: ",opm09a.job_no$
-                      print (printer_dev) @(1),"Job Name: ",opm09a.customer_name$,
-:                                         @(44),"Preliminary Lien Information"
-                      print (printer_dev) @(2),"Address: ",opm09a.addr_line_1$
-                      print (printer_dev) @(11),opm09a.addr_line_2$,
-:                                         @(46),"Lien Date: ",fndate$(opm09a.lien_date$)
-                      print (printer_dev) @(5),"City: ",opm09a.city$,
-:                                         @(48),"Lien ID: ",opm09a.lien_no$
-                      print (printer_dev) @(2),"State: ",opm09a.state_code$,
-:                                         @(13),"Zip/Postal: ",fnzipcode$(arm01a.zip_code$),
-:                                         @(49),"Amount: ",opm09a.lien_amount:m1$
-                      print (printer_dev) @(0),"Telephone: ",fnmask$(arm03a.phone_no$,m8$)," ",extension$,
-:                                         @(41),"First Shipment: ",fndate$(opm09a.fst_shp_date$)
-                      print (printer_dev) @(2),"Contact: ",opm09a.contact_name$,
-:                                         @(36),"Total Sales to Date: ",opm09a.total_sales:m1$
-                      print (printer_dev) @(3),"Retain? ",fnyn$(opm09a.retain_cust$),
-:                                         @(38),"Last Invoice Date: ",fndate$(opm09a.lstinv_date$)
-                      lines=lines+9
+:                         else OutVect!.addItem("")
 
-                      rem --- Loop back for next customer job record
+                    
+                    dim pbuf$(pbufwidth)
+                    pbuf$(4,len("Job ID: "+opm09a.job_no$)) = "Job ID: "+opm09a.job_no$
+                    gosub output_print_buf
+
+                    dim pbuf$(pbufwidth)
+                    pbuf$(2,len("Job Name: "+opm09a.customer_name$)) = "Job Name: "+opm09a.customer_name$
+                    pbuf$(45,len("Preliminary Lien Information")) = "Preliminary Lien Information"
+                    gosub output_print_buf
+ 
+                    dim pbuf$(pbufwidth)
+                    pbuf$(2,len("Address: "+opm09a.addr_line_1$)) = "Address: "+opm09a.addr_line_1$
+                    gosub output_print_buf
+
+                    dim pbuf$(pbufwidth)
+                    pbuf$(12,len(opm09a.addr_line_2$)) = opm09a.addr_line_2$
+                    pbuf$(45,len("Lien Date:"+fndate$(opm09a.lien_date$))) = "Lien Date:"+fndate$(opm09a.lien_date$)
+                    gosub output_print_buf
+
+                    dim pbuf$(pbufwidth)
+                    pbuf$(6,len("City: "+opm09a.city)) = "City: "+opm09a.city
+                    pbuf$(49,len("Lien ID:"+opm09a.lien_no$)) = "Lien ID:"+opm09a.lien_no$
+                    gosub output_print_buf
+
+                    dim pbuf$(pbufwidth)
+                    pbuf$(3,len("State: "+opm09a.state_code$)) = "State: "+opm09a.state_code$
+                    pbuf$(14,len("Zip/Postal: "+fnzipcode$(arm01a.zip_code$))) = "Zip/Postal: "+fnzipcode$(arm01a.zip_code$)
+                    pbuf$(50,len("Amount: "+str(opm09a.lien_amount:m1$))) = "Amount: "+str(opm09a.lien_amount:m1$)
+                    gosub output_print_buf
+
+                    dim pbuf$(pbufwidth)
+                    pbuf$(3,len("Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$)) = "Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$
+                    pbuf$(42,len("First Shipment: "+fndate$(opm09a.fst_shp_date$))) = "First Shipment: "+fndate$(opm09a.fst_shp_date$)
+                    gosub output_print_buf
+
+                    dim pbuf$(pbufwidth)
+                    pbuf$(3,len("Contact: "+opm09a.contact_name$)) = "Contact: "+opm09a.contact_name$
+                    pbuf$(37,len("Total Sales to Date: "+str(opm09a.total_sales:m1$))) = "Total Sales to Date: "+str(opm09a.total_sales:m1$)
+                    gosub output_print_buf
+
+                    dim pbuf$(pbufwidth)
+                    pbuf$(4,len("Retain? "+fnyn$(opm09a.retain_cust$))) = "Retain? "+fnyn$(opm09a.retain_cust$)
+                    pbuf$(39,len("Last Invoice Date: "+fndate$(opm09a.lstinv_date$))) = "Last Invoice Date: "+fndate$(opm09a.lstinv_date$)
+                    gosub output_print_buf
+
+                    lines=lines+9
+
+                    rem --- Loop back for next customer job record
 
                 wend
                 break
@@ -422,39 +578,110 @@ rem --- Read next Customer Master (arm-01) record
           if arm06a.nmtd_sales<>0 nmtd_percent=(nmtd_profi*100)/arm06a.nmtd_sales
           balance=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+
 :                 arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-          if lines+15>maxlines gosub report_heading
+          if lines+15>maxlines gosub lines_count
           gosub detail_heading
-          print (printer_dev) @(a[0]+m1-7),"Future",@(a[1]+m1-8),"Current",@(a[2]+m1-8),"30 Days",
-:                             @(a[3]+m1-8),"60 Days",@(a[4]+m1-8),"90 Days",@(a[5]+m1-9),"120 Days",
-:                             @(a[6]+m1-8),"Balance"
-          print (printer_dev) @(a[0]),arm02a.aging_future:m1$,@(a[1]),arm02a.aging_cur:m1$,
-:                             @(a[2]),arm02a.aging_30:m1$,@(a[3]),arm02a.aging_60:m1$,
-:                             @(a[4]),arm02a.aging_90:m1$,@(a[5]),arm02a.aging_120:m1$,
-:                             @(a[6]),balance:m1$
-          print (printer_dev) ""
-          print (printer_dev) @(2),"Last Invoice: ",fndate$(arm02a.lstinv_date$),
-:                             @(40),"Avg Days to Pay: ",cvs(str(arm06a.avg_days:m5$),1+2)
-          print (printer_dev) @(2),"Last Payment: ",fndate$(arm02a.lstpay_date$)
-          print (printer_dev) @(s[2]+m1-6),"Prior",@(s[3]+m1-6),"Next"
-          print (printer_dev) @(s[0]+m1-4),"MTD",@(s[1]+m1-4),"YTD",@(s[2]+m1-6),"Year",
-:                             @(s[3]+m1-6),"Month"
-          print (printer_dev) @(10),"Sales: ",@(s[0]),arm06a.mtd_sales:m1$,@(s[1]),arm06a.ytd_sales:m1$,
-:                             @(s[2]),arm06a.pyr_sales:m1$,@(s[3]),arm06a.nmtd_sales:m1$
-          print (printer_dev) @(11),"Cost: ",@(s[0]),arm06a.mtd_cost:m1$,@(s[1]),arm06a.ytd_cost:m1$,
-:                             @(s[2]),arm06a.pri_ytd_cost:m1$,@(s[3]),arm06a.nxt_mtd_cost:m1$
-          print (printer_dev) @(3),"Gross Profit: ",@(s[0]),mtd_profit:m1$,@(s[1]),ytd_profit:m1$,
-:                             @(s[2]),pytd_profit:m1$,@(s[3]),nmtd_profit:m1$
-          print (printer_dev) @(1),"Gross Profit %: ",@(s[0]),mtd_percent:m6$,@(s[1]),ytd_percent:m6$,
-:                             @(s[2]),pytd_percent:m6$,@(s[3]),nmtd_percent:m6$
-          print (printer_dev) @(0),"Avg Days to Pay: ",@(s[0]),arm06a.avg_days_mtd:m5$,@(s[1]),arm06a.avg_days_ytd:m5$,
-:                             @(s[2]),arm06a.avg_dtp_pytd:m5$,@(s[3]),arm06a.avg_dtp_nmtd:m5$
-          print (printer_dev) @(4),"High Credit: ",@(s[0]),arm06a.mtd_high_crd:m1$,@(s[1]),arm06a.ytd_hi_cred:m1$,
-:                             @(s[2]),arm06a.pyr_hi_crd:m1$,@(s[3]),arm06a.nmtd_high_cr:m1$
+
+
+ 
+          dim pbuf$(pbufwidth)
+          pbuf$((a[0]+m1-7)+1,len("Future")) = "Future"
+          pbuf$(a[1]+m1-8,len("Current")) = "Current"
+          pbuf$((a[2]+m1-8)+1,len("30 Days")) = "30 Days"
+          pbuf$(a[3]+m1-8,len("30 Days")) = "60 Days"
+          pbuf$((a[4]+m1-8)+1,len("30 Days")) = "90 Days"
+          pbuf$(a[5]+m1-8,len("120 Days")) = "120 Days"
+          pbuf$((a[6]+m1-8)+1,len("Balance")) = "Balance"
+          gosub output_print_buf
+
+  
+          dim pbuf$(pbufwidth)
+          pbuf$(a[0]+1,len(str(arm02a.aging_future:m1$))) = str(arm02a.aging_future:m1$)
+          pbuf$(a[2]+1,len(str(arm02a.aging_cur:m1$))) = str(arm02a.aging_cur:m1$)
+          pbuf$(a[4]+1,len(str(arm02a.aging_30:m1$))) = str(arm02a.aging_30:m1$)
+          pbuf$(a[6]+1,len(str(arm02a.aging_60:m1$))) = str(arm02a.aging_60:m1$)
+          pbuf$(a[4]+1,len(str(arm02a.aging_90:m1$))) = str(arm02a.aging_90:m1$)
+          pbuf$(a[5]+1,len(str(arm02a.aging_120:m1$))) = str(arm02a.aging_120:m1$)
+          pbuf$(a[6]+1,len(str(balance:m1$))) = str(balance:m1$)
+          gosub output_print_buf
+
+          OutVect!.addItem("")
+
+
+          dim pbuf$(pbufwidth)
+          pbuf$(3,len("Last Invoice: "+fndate$(arm02a.lstinv_date$))) = "Last Invoice: "+fndate$(arm02a.lstinv_date$)
+          pbuf$(41,len("Avg Days to Pay: "+cvs(str(arm06a.avg_days:m5$),1+2))) = "Avg Days to Pay: "+cvs(str(arm06a.avg_days:m5$),1+2)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(3,len("Last Payment: "+fndate$(arm02a.lstpay_date$))) = "Last Payment: "+fndate$(arm02a.lstpay_date$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$((s[2]+m1-6)+1,len("Prior")) = "Prior"
+          pbuf$((s[3]+m1-6)+1,len("Next")) = "Next"
+          gosub output_print_buf
+  
+          dim pbuf$(pbufwidth)
+          pbuf$((s[0]+m1-4)+1,len("MTD"))   = "MTD"
+          pbuf$((s[1]+m1-4)+1,len("YTD"))   = "YTD"
+          pbuf$((s[2]+m1-6)+1,len("Year"))  = "Year"
+          pbuf$((s[3]+m1-6)+1,len("Month")) = "Month"
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(10,len("Sales: ")) = "Sales: "
+          pbuf$(s[0]+1,len(str(arm06a.mtd_sales:m1$))) = str(arm06a.mtd_sales:m1$)
+          pbuf$(s[1]+1,len(str(arm06a.ytd_sales:m1$))) = str(arm06a.ytd_sales:m1$)
+          pbuf$(s[2]+1,len(str(arm06a.pyr_sales:m1$))) = str(arm06a.pyr_sales:m1$)
+          pbuf$(s[3]+1,len(str(arm06a.nmtd_sales:m1$))) = str(arm06a.nmtd_sales:m1$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(11,len("Cost: ")) = "Cost: "
+          pbuf$(s[0]+1,len(str(arm06a.mtd_cost:m1$))) = str(arm06a.mtd_cost:m1$)
+          pbuf$(s[1]+1,len(str(arm06a.ytd_cost:m1$))) = str(arm06a.ytd_cost:m1$)
+          pbuf$(s[2]+1,len(str(arm06a.pri_ytd_cost:m1$))) = str(arm06a.pri_ytd_cost:m1$)
+          pbuf$(s[3]+1,len(str(arm06a.nxt_mtd_cost:m1$))) = str(arm06a.nxt_mtd_cost:m1$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(11,len("Gross Profit: ")) = "Gross Profit: "
+          pbuf$(s[0]+1,len(str(mtd_profit:m1$))) = str(mtd_profit:m1$)
+          pbuf$(s[1]+1,len(str(ytd_profit:m1$))) = str(ytd_profit:m1$)
+          pbuf$(s[2]+1,len(str(pytd_profit:m1$))) = str(pytd_profit:m1$)
+          pbuf$(s[3]+1,len(str(nmtd_profit:m1$))) = str(nmtd_profit:m1$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(2,len("Gross Profit %: ")) = "Gross Profit %: "
+          pbuf$(s[0]+1,len(str(mtd_percent:m6$))) = str(mtd_percent:m6$)
+          pbuf$(s[1]+1,len(str(ytd_percent:m6$))) = str(ytd_percent:m6$)
+          pbuf$(s[2]+1,len(str(pytd_percent:m6$))) = str(pytd_percent:m6$)
+          pbuf$(s[3]+1,len(str(nmtd_percent:m6$))) = str(nmtd_percent:m6$)
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(1,len("Avg Days to Pay: ")) = "Avg Days to Pay: "
+          pbuf$(s[0]+1,len(str(arm06a.avg_days_mtd:m5$))) = str(arm06a.avg_days_mtd:m5$)
+          pbuf$(s[1]+1,len(str(arm06a.avg_days_ytd:m5$))) = str(arm06a.avg_days_ytd:m5$)
+          pbuf$(s[2]+1,len(str(arm06a.avg_dtp_pytd:m5$))) = str(arm06a.avg_dtp_pytd:m5$)
+          pbuf$(s[3]+1,len(str(arm06a.avg_dtp_nmtd:m5$))) = str(arm06a.avg_dtp_nmtd:m5$)
+          gosub output_print_buf
+
+
+          dim pbuf$(pbufwidth)
+          pbuf$(5,len("High Credit: ")) = "High Credit: "
+          pbuf$(s[0]+1,len(str(arm06a.mtd_high_crd:m1$))) = str(arm06a.mtd_high_crd:m1$)
+          pbuf$(s[1]+1,len(str(arm06a.ytd_hi_cred:m1$))) = str(arm06a.ytd_hi_cred:m1$)
+          pbuf$(s[2]+1,len(str(arm06a.pyr_hi_crd:m1$))) = str(arm06a.pyr_hi_crd:m1$)
+          pbuf$(s[3]+1,len(str(arm06a.nmtd_high_cr:m5$))) = str(arm06a.nmtd_high_cr:m5$)
+          gosub output_print_buf
+
           lines=lines+15
 
           rem --- Print invoice history
 
-          if lines+3>maxlines gosub report_heading
+          if lines+3>maxlines gosub lines_count
 
           rem --- Read customer detail records
 
@@ -473,11 +700,19 @@ rem --- Read next Customer Master (arm-01) record
                 if pos(customer$=art01_key$)<>1 break
                 read record (art01_dev) art01a$
                 type$=fntype$(art01a.invoice_type$)
-                if lines+1>maxlines gosub report_heading
+                if lines+1>maxlines gosub lines_count
                 if first gosub invoice_heading
-                print (printer_dev) @(o[1]),art01a.ar_inv_no$,@(o[2]),fndate$(art01a.invoice_date$),
-:                                   @(o[3]),fndate$(art01a.inv_due_date$),@(o[4]),art01a.ar_terms_code$,
-:                                   @(o[5]),type$,@(o[6]),art01a.invoice_amt:m1$,@(o[9]),art01a.disc_allowed:m1$
+
+                dim pbuf$(pbufwidth)
+                pbuf$(o[1],len(art01a.ar_inv_no$)) = art01a.ar_inv_no$
+                pbuf$(o[2],len(fndate$(art01a.invoice_date$))) = str(fndate$(art01a.invoice_date$))
+                pbuf$(o[3]+1,len(fndate$(art01a.inv_due_date$))) = str(fndate$(art01a.inv_due_date$))
+                pbuf$(o[4]+1,len(art01a.ar_terms_code$)) = str(art01a.ar_terms_code$)
+                pbuf$(o[5]+1,len(type$)) = str(type$)
+                pbuf$(o[6]+1,len(str(art01a.invoice_amt:m1$))) = str(art01a.invoice_amt:m1$)
+                pbuf$(o[9]+1,len(str(art01a.disc_allowed:m1$))) = str(art01a.disc_allowed:m1$)
+                gosub output_print_buf
+
                 lines=lines+1
                 printed=1
                 custinv=custinv+art01a.invoice_amt
@@ -495,10 +730,17 @@ rem --- Read next Customer Master (arm-01) record
                       read record (art11_dev) art11a$
                       detail=1
                       type$=fntype$(art11a.trans_type$)
-                      if lines+1>maxlines gosub report_heading
+                      if lines+1>maxlines gosub lines_count
                       if first gosub invoice_heading
-                      print (printer_dev) @(o[2]),fndate$(art11a.trans_date$),@(o[3]),art11a.refchk_no$,
-:                                         @(o[5]),type$,@(o[7]),art11a.trans_amt:m1$,@(o[9]),art11a.adjdisc_amt:m1$
+
+                      dim pbuf$(pbufwidth)
+                      pbuf$(o[2]+1,len(fndate$(art11a.trans_date$))) = str(fndate$(art11a.trans_date$))
+                      pbuf$(o[3]+1,len(fndate$(art11a.refchk_no$))) = str(fndate$(art11a.refchk_no$))
+                      pbuf$(o[5]+1,len(type$)) = str(type$)
+                      pbuf$(o[7]+1,len(str(art11a.trans_amt:m1$))) = str(art11a.trans_amt:m1$)
+                      pbuf$(o[9]+1,len(str(art11a.adjdisc_amt:m1$))) = str(art11a.adjdisc_amt:m1$)
+                      gosub output_print_buf
+
                       lines=lines+1
                       applied=applied+art11a.trans_amt
                       custapp=custapp+art11a.trans_amt
@@ -509,9 +751,13 @@ rem --- Read next Customer Master (arm-01) record
 
                 if detail=0 continue
                 balance=art01a.invoice_amt+applied
-                if lines+1>maxlines gosub report_heading
+                if lines+1>maxlines gosub lines_count
                 if first gosub invoice_heading
-                print (printer_dev) @(o[6]-6),"Total",@(o[8]),balance:m1$
+                dim pbuf$(pbufwidth)
+                pbuf$((o[6]-6)+1,len("Total")) = str("Total")
+                pbuf$(o[8]+1,len(str(balance:m1$))) = str(balance:m1$)
+                gosub output_print_buf
+
                 lines=lines+1
 
           wend
@@ -520,9 +766,16 @@ rem --- Read next Customer Master (arm-01) record
 
           if printed=0 continue
           balance=custinv+custapp
-          if lines+1>maxlines gosub report_heading
-          print (printer_dev) @(o[6]-15),"Customer Total",@(o[6]),custinv:m1$,@(o[7]),custapp:m1$,
-:                             @(o[8]),balance:m1$,@(o[9]),custdis:m1$
+          if lines+1>maxlines gosub lines_count
+
+          dim pbuf$(pbufwidth)
+          pbuf$((o[6]-15)+1,len("Customer Total")) = str("Customer Total")
+          pbuf$(o[6]+1,len(str(custinv:m1$))) = str(custinv:m1$)
+          pbuf$(o[7]+1,len(str(custapp:m1$))) = str(custapp:m1$)
+          pbuf$(o[8]+1,len(str(balance:m1$))) = str(balance:m1$)
+          pbuf$(o[9]+1,len(str(custdis:m1$))) = str(custdis:m1$)
+          gosub output_print_buf
+
           lines=lines+1
           reportinv=reportinv+custinv
           reportapp=reportapp+custapp
@@ -532,70 +785,112 @@ rem --- Read next Customer Master (arm-01) record
 
     wend
 
-rem --- All done
+done: rem --- All done
 
     goto std_exit
 
-report_heading: rem --- Report heading
+output_print_buf:
+
+    OutVect!.addItem(pbuf$)
+
+return
+
+
+lines_count: rem --- Lines Count
 
     lines=heading+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto done
-    print (printer_dev) @(0),"Customer: ",fnmask$(arm01a.customer_id$(1,customer_size),m0$)," ",arm01a.customer_name$
+    
+    dim pbuf$(pbufwidth)
+    cust$ = "Customer: " + str(fnmask$(arm01a.customer_id$(1,customer_size),m0$)) + " " + arm01a.customer_name$
+
+    pbuf$(1,len(cust$)) = cust$
+    gosub output_print_buf
+
+ 
+
     lines=lines+1
     first=1
     return
 
 profile_heading: rem --- Profile subheading
 
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(0),fnheader$("Profile Information",width)
+    if lines+2>maxlines gosub lines_count
+
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1,len(fnheader$("Profile Information",pbufwidth))) = fnheader$("Profile Information",pbufwidth)
+    gosub output_print_buf
+        
     lines=lines+2
     return
 
 comments_heading: rem --- Comments subheading
 
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(0),fnheader$("Comments",width)
+    if lines+2>maxlines gosub lines_count
+
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1,len(fnheader$("Comments",pbufwidth))) = fnheader$("Comments",pbufwidth)
+    gosub output_print_buf
+        
     lines=lines+2
     return
 
 shipto_heading: rem --- Ship-to subheading
 
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(0),fnheader$("Ship-To Address Information",width)
+    if lines+2>maxlines gosub lines_count
+
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1,len(fnheader$("Ship-To Address Information",pbufwidth))) = fnheader$("Ship-To Address Information",pbufwidth)
+    gosub output_print_buf
+
     lines=lines+2
     first=0
     return
 
 job_heading: rem --- Job number subheading
 
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(0),fnheader$("Customer Job Information",width)
+    if lines+2>maxlines gosub lines_count
+
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1,len(fnheader$("Customer Job Information",pbufwidth))) = fnheader$("Customer Job Information",pbufwidth)
+    gosub output_print_buf
     lines=lines+2
     first=0
     return
 
 detail_heading: rem --- Aging and Sales Summary subheading
 
-    if lines+2>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(0),fnheader$("Aging and Sales Summary",width)
+    if lines+2>maxlines gosub lines_count
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1,len(fnheader$("Aging and Sales Summary",pbufwidth))) = fnheader$("Aging and Sales Summary",pbufwidth)
+    gosub output_print_buf
     lines=lines+2
     return
 
 invoice_heading: rem --- Invoice history subheading
 
-    if lines+3>maxlines gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) @(0),fnheader$("Invoice History",width)
-    print (printer_dev) @(o[0]),"Cust/Inv",@(o[2]),"Date",@(o[3]),"Due/Ref",@(o[4]),"TC",
-:                       @(o[5]),"Type",@(o[6]+m1-8),"Invoice",@(o[7]+m1-8),"Applied",
-:                       @(o[8]+m1-8),"Balance",@(o[9]+m1-9),"Discount"
+    if lines+3>maxlines gosub lines_count
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1,len(fnheader$("Invoice History",pbufwidth))) = fnheader$("Invoice History",pbufwidth)
+    gosub output_print_buf
+
+    dim pbuf$(120)
+    pbuf$(o[0]+1,len("Cust/Inv")) = "Cust/Inv"
+    pbuf$(o[2]+1,len("Date")) = "Date"
+    pbuf$(o[3]+1,len("Due/Ref")) = "Due/Ref"
+    pbuf$(o[4]+1,len("TC")) = "TC"
+    pbuf$(o[5]+1,len("Type")) = "Type"
+    pbuf$((o[6]+m1-8)+1,len("Invoice")) = "Invoice"
+    pbuf$((o[7]+m1-8)+1,len("Applied")) = "Applied"
+    pbuf$((o[8]+m1-8)+1,len("Balance")) = "Balance"
+    pbuf$((o[9]+m1-9)+1,len("Discount")) = "Discount"
+    gosub output_print_buf
+
     lines=lines+3
     first=0
     return
