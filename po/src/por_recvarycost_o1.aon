@@ -32,7 +32,7 @@ rem --- Init Data
 
 rem --- Headings and print positions
 
-    headings=4
+    headings=6
     dim headings$[headings],o[14]
     width=132
     page=0
@@ -63,6 +63,32 @@ positions:
         o[10]=o[11]-m2
         o[9]=o[10]-m2
     endif
+
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+    dim columns$[12,4]
+    columns = 13
+    columns$[0,0]="Seq",columns$[0,1]="C",columns$[0,2]="7"
+    columns$[1,0]="Cd",columns$[1,1]="C",columns$[1,2]="15"
+    columns$[2,0]="Wh",columns$[2,1]="C",columns$[2,2]="10"
+    columns$[3,0]="Item",columns$[3,1]="C",columns$[3,2]="25"
+    columns$[4,0]="Date Required",columns$[4,1]="C",columns$[4,2]="5"
+    columns$[5,0]="Date Promised",columns$[5,1]="C",columns$[5,2]="5"
+    columns$[6,0]="UM",columns$[6,1]="C",columns$[6,2]="15"
+    columns$[7,0]="Qty Ordered",columns$[7,1]="N",columns$[7,2]="5"
+    columns$[8,0]="Qty Received",columns$[8,1]="N",columns$[8,2]="5"
+    columns$[9,0]="Order Value",columns$[9,1]="N",columns$[9,2]="5"
+    columns$[10,0]="Receipt Value",columns$[10,1]="N",columns$[10,2]="5"
+    columns$[11,0]="Variance",columns$[11,1]="N",columns$[11,2]="5"
+    columns$[12,0]="Vari Ratio",columns$[12,1]="N",columns$[12,2]="5"
 
 rem --- Position files
 
@@ -204,49 +230,22 @@ rem --- Loop up for next header record via sort files
 
 done: rem --- All Done
 
-    if l+1>l9 gosub report_heading
+rem    if l+1>l9 gosub report_heading
     gosub pototals
     gosub vendtotals
     grandvari=grandrval-grandoval
     if grandoval>0 grandvpcnt=grandvari*100/grandoval
-    print (printer_dev) @(o[11]-17),"Total For Report",
-:                       @(o[11]),grandoval:m1$,
-:                       @(o[12]),grandrval:m1$,
-:                       @(o[13]),grandvari:m1$,
-:                       @(o[14]),grandvpcnt:mpcnt$
+
+    abc=fnblank(7)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" Report ")
+    OutVect!.addItem(str(grandoval:m1$))
+    OutVect!.addItem(str(grandrval:m1$))
+    OutVect!.addItem(str(grandvari:m1$))
+    OutVect!.addItem(str(grandvpcnt:mpcnt$))
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev) @(o[6]),"Date",
-:                       @(o[7]),"Date",
-:                       @(o[9]+m2-10),"Quantity",
-:                       @(o[10]+m2-10),"Quantity",
-:                       @(o[11]+m1-7),"Order",
-:                       @(o[12]+m1-9),"Receipt",
-:                       @(o[14]+mpcnt-7),"Vari"
-
-    print (printer_dev) @(o[2]),"Seq",
-:                       @(o[3]),"Cd",
-:                       @(o[4]),"Wh",
-:                       @(o[5]),"Item",
-:                       @(o[6]),"Required",
-:                       @(o[7]),"Promised",
-:                       @(o[8]),"UM",
-:                       @(o[9]+m2-10),"Ordered",
-:                       @(o[10]+m2-10),"Received",
-:                       @(o[11]+m1-7),"Value",
-:                       @(o[12]+m1-9),"Value",
-:                       @(o[13]+m1-9),"Variance",
-:                       @(o[14]+mpcnt-7),"Ratio"
-
-    print (printer_dev)""
-    l=l+3
-    return
 
 assignheads: rem --- Assign headings variables
 
@@ -257,18 +256,17 @@ assignheads: rem --- Assign headings variables
     if datethru$="" datet$="Last" else datet$=fndate$(datethru$)
     if itemfrom$="" itemf$="First" else itemf$=itemfrom$(1,itemlen)
     if itemthru$="" itemt$="Last" else itemt$=itemthru$(1,itemlen)
-    midh3$="From Item "+itemf$+" Through "+itemt$
-    tmph3$(1)="From Vendor: "+vendf$
-    tmph3$(fncenter(midh3$,width))=midh3$
-    tmph3$(width-len(datef$)-18)="From Receipt Date: "+datef$
+
+    midh3$="Item: "+itemf$+" Through "+itemt$
+    tmph3$(1)="Vendor: "+vendf$+" To "+vendt$
+    tmph4$(1)="Receipt Date: "+datef$+" To "+datet$
     if whsefor$="" midh4$="All Warehouses" else midh4$="For Warehouse "+whsefor$
-    tmph4$(1)="  To Vendor: "+vendt$
-    tmph4$(fncenter(midh4$,width))=midh4$
-    tmph4$(width-len(datef$)-18)="  To Receipt Date: "+datet$
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+" For Variances Greater Than "+str(minvari:mpcnt$)
     headings$[2]=tmph3$
     headings$[3]=tmph4$
+    headings$[4]=midh3$
+    headings$[5]=midh4$
     return
 
 testbreaks: rem --- Test breaks
@@ -317,8 +315,9 @@ newvendor: rem --- New Vendor
 
 brnch2:
 
-    if l+4>l9 gosub report_heading
-    print (printer_dev) @(0),fnmask$(vendor$(1,vendlen),vendomask$)," ",vendname$
+    OutVect!.addItem(fnmask$(vendor$(1,vendlen),vendomask$))
+    OutVect!.addItem(vendname$)
+    abc=fnblank(11)
     l=l+1
     return
 
@@ -332,12 +331,15 @@ newrec: rem --- New Receiver
     printrtot$="Y"
     if fromnewpo
 
-        if l+3>l9 gosub report_heading
-        print (printer_dev) @(o[1]),"PO #: ",ponum$,
-:                           @(18),"Receiver #:",recnum$,
-:                           @(40),"Ordered: ",orddate$,
-:                           @(59),"Received: ",rcptdate$
-
+        OutVect!.addItem("PO #: ")
+        OutVect!.addItem(ponum$)
+        OutVect!.addItem("Receiver #:")
+        OutVect!.addItem(recnum$)
+        OutVect!.addItem("Ordered: ")
+        OutVect!.addItem(orddate$)
+        OutVect!.addItem("Received: ")
+        OutVect!.addItem(rcptdate$)
+        abc=fnblank(5)
         l=l+1
 
     endif
@@ -352,15 +354,19 @@ newpo: rem --- New PO
     po_vpcnt=0
     prevpo$=ponum$
     printptot$="Y"
-    if l+3>l9 gosub report_heading
-    print (printer_dev) @(o[1]),"PO #: ",ponum$, 
-:                       @(18),"Receiver #:",recnum$, 
-:                       @(40),"Ordered: ",orddate$, 
-:                       @(59),"Received: ",rcptdate$
+
+    OutVect!.addItem("PO #: ")
+    OutVect!.addItem(ponum$)
+    OutVect!.addItem("Receiver #:")
+    OutVect!.addItem(recnum$)
+    OutVect!.addItem("Ordered: ")
+    OutVect!.addItem(orddate$)
+    OutVect!.addItem("Received: ")
+    OutVect!.addItem(rcptdate$)
+    abc=fnblank(5)
 
     l=l+1
     fromnewpo=1
-rem    gosub newrec
     fromnewpo=0
     return
 
@@ -368,12 +374,15 @@ vendtotals: rem --- Print Vendor total
 
     vendvari=vendrval-vendoval
     if vendoval>0 vendvpcnt=vendvari*100/vendoval
-    if l+1>l9 gosub report_heading
-    print (printer_dev) @(o[11]-18-len(vendomask$)),"Total For Vendor ",fnmask$(prevvend$(1,vendlen),vendomask$),
-:                       @(o[11]),vendoval:m1$,
-:                       @(o[12]),vendrval:m1$,
-:                       @(o[13]),vendvari:m1$,
-:                       @(o[14]),vendvpcnt:mpcnt$
+    abc=fnblank(6)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" Vendor ")
+    OutVect!.addItem(fnmask$(prevvend$(1,vendlen),vendomask$))
+    OutVect!.addItem(str(vendoval:m1$))
+    OutVect!.addItem(str(vendrval:m1$))
+    OutVect!.addItem(str(vendvari:m1$))
+    OutVect!.addItem(str(vendvpcnt:mpcnt$))
+    
     l=l+1
     return
 
@@ -382,12 +391,15 @@ pototals: rem --- Print PO total
     poamt=0,po_vpcnt=0
     po_vari=po_rval-po_oval
     if po_oval>0 po_vpcnt=po_vari*100/po_oval
-    if l+1>l9 gosub report_heading
-    print (printer_dev) @(o[11]-23),"Total For PO # ",prevpo$,
-:                       @(o[11]),po_oval:m1$,
-:                       @(o[12]),po_rval:m1$,
-:                       @(o[13]),po_vari:m1$,
-:                       @(o[14]),po_vpcnt:mpcnt$
+    abc=fnblank(6)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" PO # ")
+    OutVect!.addItem(prevpo$)
+    OutVect!.addItem(str(po_oval:m1$))
+    OutVect!.addItem(str(po_rval:m1$))
+    OutVect!.addItem(str(po_vari:m1$))
+    OutVect!.addItem(str(po_vpcnt:mpcnt$))
+
     let l=l+1
     return
 
@@ -395,12 +407,15 @@ rectotals: rem --- Print Rec total
 
     if rec_oval>0 rec_vpcnt=rec_rval*100/rec_oval
     let rec_vari=rec_rval-rec_oval
-    if l+1>l9 gosub report_heading
-    print (printer_dev) @(o[11]-25),"Total For Rcpt # ",prevrec$,
-:                       @(o[11]),rec_oval:m1$,
-:                       @(o[12]),rec_rval:m1$,
-:                       @(o[13]),rec_vari:m1$,
-:                       @(o[14]),rec_vpcnt:mpcnt$
+    abc=fnblank(6)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" Rcpt # ")
+    OutVect!.addItem(prevrec$)
+    OutVect!.addItem(str(rec_oval:m1$))
+    OutVect!.addItem(str(rec_rval:m1$))
+    OutVect!.addItem(str(rec_vari:m1$))
+    OutVect!.addItem(str(rec_vpcnt:mpcnt$))
+
     let l=l+1
     return
 
@@ -416,22 +431,25 @@ brnch4:
 
 rem --- Print data line
 printline:
-    if l+2>l9 gosub report_heading
-    print (printer_dev) @(o[2]),linenum$,
-:                       @(o[3]),linecode$,
-:                       @(o[4]),whse$,
-:                       @(o[5]),item$(1,itemlen),
-:                       @(o[6]),reqdate$,
-:                       @(o[7]),dateprom$,
-:                       @(o[8]),unitmeas$,
-:                       @(o[9]),qtyord:m2$,
-:                       @(o[10]),qtyrec:m2$,
-:                       @(o[11]),ordval:m1$,
-:                       @(o[12]),rcptval:m1$,
-:                       @(o[13]),variance:m1$,
-:                       @(o[14]),varipcnt:mpcnt$
 
-    print (printer_dev)@(o[5]),itemdesc$
+    OutVect!.addItem(linenum$)
+    OutVect!.addItem(linecode$)
+    OutVect!.addItem(whse$)
+    OutVect!.addItem(item$(1,itemlen))
+    OutVect!.addItem(reqdate$)
+    OutVect!.addItem(dateprom$)
+    OutVect!.addItem(unitmeas$)
+    OutVect!.addItem(str(qtyord:m2$))
+    OutVect!.addItem(str(qtyrec:m2$))
+    OutVect!.addItem(str(ordval:m1$))
+    OutVect!.addItem(str(rcptval:m1$))
+    OutVect!.addItem(str(variance:m1$))
+    OutVect!.addItem(str(varipcnt:mpcnt$))
+
+    abc=fnblank(3)
+    OutVect!.addItem(itemdesc$)
+    abc=fnblank(9)
+
     let l=l+2
     return
 
@@ -520,6 +538,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
