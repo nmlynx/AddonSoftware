@@ -1,3 +1,31 @@
+[[IVM_ITEMMAST.ARAR]]
+rem --- Enable/disable Alt/Sup Item #
+	ctl_name$="IVM_ITEMMAST.ALT_SUP_ITEM"
+	if callpoint!.getColumnData("IVM_ITEMMAST.ALT_SUP_FLAG")="N"
+		ctl_stat$="I"
+	else
+		ctl_stat$=" "
+	endif
+	wmap$=callpoint!.getAbleMap()
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
+[[IVM_ITEMMAST.ALT_SUP_FLAG.AVAL]]
+rem --- Enable/disable Alt/Sup Item #
+	ctl_name$="IVM_ITEMMAST.ALT_SUP_ITEM"
+	if callpoint!.getColumnData("IVM_ITEMMAST.ALT_SUP_FLAG")="N"
+		ctl_stat$="I"
+	else
+		ctl_stat$=" "
+	endif
+	wmap$=callpoint!.getAbleMap()
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
 [[IVM_ITEMMAST.ITEM_ID.AVAL]]
 rem --- See if Auto Numbering in effect
 	ivs01_dev=fnget_dev("IVS_PARAMS")
@@ -7,38 +35,40 @@ rem --- See if Auto Numbering in effect
 
 	read record(ivs01_dev,key=firm_id$+"IV00") ivs01a$
 	if len(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))=0
-		if ivs01a.auto_no$="N" 
-			callpoint!.setStatus("ABORT")
-		endif
-		item_len=num(callpoint!.getTableColumnAttribute("IVM_ITEMMAST.ITEM_ID","MAXL"))
-		if item_len=0 item_len=20;rem Needed?
-		chk_digit$=""
-		if ivs01a.auto_no$="C" item_len=item_len-1
-		read record (ivs10_dev,key=firm_id$+"N",dom=*next) ivs10n$
-		ivs10n.firm_id$=firm_id$
-		ivs10n.record_id_n$="N"
-		if ivs10n.nxt_item_id=0
-			next_num=1
+		if ivs01a.auto_no_iv$<>"N" 
+			item_len=num(callpoint!.getTableColumnAttribute("IVM_ITEMMAST.ITEM_ID","MAXL"))
+			if item_len=0 item_len=20;rem Needed?
+			chk_digit$=""
+			if ivs01a.auto_no_iv$="C" item_len=item_len-1
+			read record (ivs10_dev,key=firm_id$+"N",dom=*next) ivs10n$
+			ivs10n.firm_id$=firm_id$
+			ivs10n.record_id_n$="N"
+			if ivs10n.nxt_item_id=0
+				next_num=1
+			else
+				next_num=ivs10n.nxt_item_id
+			endif
+			dim max_num$(min(item_len,10),"9")
+			if next_num>num(max_num$)
+				msg_id$="NO_MORE_NUMBERS"
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+			else
+				ivs10n.nxt_item_id=next_num+1
+				ivs10n$=field(ivs10n$)
+				write record (ivs10_dev,key=firm_id$+"N") ivs10n$
+				next_num$=str(next_num)
+				if ivs01a.auto_no_iv$="C"
+					precision 4
+					chk_digit$=str(tim*10000),chk_digit$=chk_digit$(len(chk_digit$),1)
+					precision num(ivs01a.precision$)
+				endif
+				callpoint!.setColumnData("IVM_ITEMMAST.ITEM_ID",next_num$+chk_digit$)
+				callpoint!.setStatus("REFRESH")
+			endif
 		else
-			next_num=ivs10n.nxt_item_id
-		endif
-		dim max_num$(min(item_len,10),"9")
-		if next_num>num(max_num$)
-			msg_id$="NO_MORE_NUMBERS"
-			gosub disp_message
 			callpoint!.setStatus("ABORT")
 		endif
-		ivs10n.nxt_item_id=next_num+1
-		ivs10n$=field(ivs10n$)
-		write record (ivs10_dev,key=firm_id$+"N") ivs10n$
-		next_num$=str(next_num)
-		if ivs01a.auto_no$="C"
-			precision 4
-			chk_digit$=str(tim*10000),chk_digit$=chk_digit$(len(chk_digit$),1)
-			precision num(ivs01a.precision$)
-		endif
-		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_ID",next_num$+chk_digit$)
-		callpoint!.setStatus("REFRESH")
 	endif
 [[IVM_ITEMMAST.AWRI]]
 rem --- Populate ivm-02 with Product Type
@@ -104,7 +134,7 @@ callpoint!.setColumnData("IVM_ITEMMAST.BUYER_CODE",ivs10d.buyer_code$)
 callpoint!.setColumnData("IVM_ITEMMAST.LOTSER_ITEM",ivs10d.lotser_item$)
 callpoint!.setColumnData("IVM_ITEMMAST.INVENTORIED",ivs10d.inventoried$)
 callpoint!.setColumnData("IVM_ITEMMAST.ITEM_CLASS",ivs10d.item_class$)
-callpoint!.setColumnData("IVM_ITEMMAST.STOCK_LEVEL",ivs10d.stock_level$)
+callpoint!.setColumnData("IVM_ITEMMAST.STOCK_LEVEL","W")
 callpoint!.setColumnData("IVM_ITEMMAST.ABC_CODE",ivs10d.abc_code$)
 callpoint!.setColumnData("IVM_ITEMMAST.EOQ_CODE",ivs10d.eoq_code$)
 callpoint!.setColumnData("IVM_ITEMMAST.ORD_PNT_CODE",ivs10d.ord_pnt_code$)

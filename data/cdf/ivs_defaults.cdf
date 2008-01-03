@@ -29,6 +29,9 @@ rem --- Check for Distribute by Item
 		user_tpl.dist_by_item$=ars01a.dist_by_item$
 	endif
 
+rem --- Always set Stocking Level to "W"
+	callpoint!.setColumnData("IVS_DEFAULTS.STOCK_LEVEL","W")
+
 rem --- Enable/Disable fields
 
 	if user_tpl.dist_by_item$="Y"
