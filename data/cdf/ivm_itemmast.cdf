@@ -102,8 +102,8 @@ rem --- versions 6/7 have a program ivc.da used for deleting
 	params[0]=user_tpl.num_pers
 	params[1]=user_tpl.cur_per
 	params[2]=user_tpl.cur_yr
-escape;rem jpb deleting!
-	call stbl("+DIR_PGM")+"ivc_deleteitem.aon","I",channels[all],params$[all],params[all],status
+
+	call stbl("+DIR_PGM")+"ivc_deleteitem.aon","I",params$[all],params[all],status
 	if status<>0
 		callpoint!.setStatus("ABORT")
 	endif
