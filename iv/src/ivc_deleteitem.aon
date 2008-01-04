@@ -9,7 +9,6 @@ rem --- All Rights Reserved
 rem --- action$       : Action Code (input)
 rem ---                 I=Delete Item and Warehouse(s)
 rem ---                 W=Delete Warehouse Only
-rem --- c_channels[n] : Channel references - See ivm_ma.bbx (input)
 rem --- params$[n]    : Parameter information (input)
 rem ---               : [0]=Firm ID             [4]=PO Installed (Y/N)
 rem ---               : [1]=Warehouse ID        [5]=WO Installed (Y/N)
@@ -21,7 +20,7 @@ rem --- status        : 0=No Error (returned)
 
     seterr std_error
     setesc std_error
-    enter action$,c_channels[all],params$[all],params[all],status
+    enter action$,params$[all],params[all],status
 
 rem --- Retrieve the program path
 
@@ -44,7 +43,6 @@ rem --- Open/Lock files
     files$[3]="bmm-02",ids$[3]="BMM_BILLMAT"
     files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
     files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
-    files$[6]="ivm-03",ids$[6]=""
     files$[7]="ivm-05",ids$[7]="IVM_ITEMVEND"
     files$[8]="ivm-09",ids$[8]="IVM_ITEMCMTS"
     files$[9]="ivm-12",ids$[9]="IVM_ITEMACT"
@@ -62,7 +60,6 @@ rem --- Open/Lock files
     bmm02_dev=channels[3]
     ivm01_dev=channels[4]
     ivm02_dev=channels[5]
-    ivm03_dev=channels[6]
     ivm05_dev=channels[7]
     ivm09_dev=channels[8]
     ivm12_dev=channels[9]
@@ -76,7 +73,7 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
     dim bmm01a$:templates$[2],bmm02a$:templates$[3],ivm01a$:templates$[4]
-    dim ivm02a$:templates$[5],ivm05a$:templates$[7];rem ,ivm03a$:templates$[6]
+    dim ivm02a$:templates$[5],ivm05a$:templates$[7]
     dim ivm09a$:templates$[8],ivm12a$:templates$[9],ivm14a$:templates$[10]
     dim ivm24a$:templates$[11],ope11a$:templates$[12],poe11a$:templates$[13]
     dim sfe01a$:templates$[14],sfe22a$:templates$[15],ivs01a$:templates$[1]
@@ -106,14 +103,10 @@ rem --- Initializations
     if m2>params[0] m2=1,y2=y2+1
     m2$=str(m2:"00")
     y2$=str(y2:"0000")
-rem    ivm01_dev=c_channels[2]
-rem    ivm02_dev=c_channels[3]
-rem    ivm12_dev=c_channels[7]
-rem    ivm05_dev=c_channels[26]
     status=0
 
 rem --- Position warehouse xref
-escape
+
     status=0
     first$=firm_id$+item$+whse$
     k$=first$
@@ -136,15 +129,15 @@ rem --- Open Orders?
         if op$<>"Y" goto check_reqs
         read(ope11_dev,key=firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,knum=1,dom=*next)
         ope11_key$=key(ope11_dev,end=check_reqs)
-        if pos(firm_id$+ivm02a.warehouse_id$+item_id$=ope11_key$)=1 status=3
+        if pos(firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$=ope11_key$)=1 status=3
         if status<>0 break
 
 check_reqs: rem --- Requisitions?
 
         if po$<>"Y" goto check_wo
-        read(poe11_dev,key=firm_id$+ivm02a.item_id$,knum=1,dom=*next)
+        read(poe11_dev,key=firm_id$+"S"+ivm02a.item_id$,knum=1,dom=*next)
         poe11_key$=key(poe11_dev,end=check_wo)
-        if pos(firm_id$+ivm02a.item_id$=poe11_key$)<>1 status=4
+        if pos(firm_id$+"S"+ivm02a.item_id$=poe11_key$)=1 status=4
         if status<>0 break
 
 check_wo: rem --- Work Orders?
@@ -219,22 +212,13 @@ delete_item: rem --- Position warehouse xref
     while 1
         dim ivm02a$:fattr(ivm02a$)
         read record (ivm02_dev,key=firm_id$+item$,knum=2,dom=*next)
-        readrecord(ivm02_dev,end=*break)
+        readrecord(ivm02_dev,end=*break) ivm02a$
         if ivm02a.firm_id$<>firm_id$ break
         if ivm02a.item_id$<>item$ break
-        remove (ivm02_dev,key=ivm02a.firm_id$+ivm02a.item_id$+ivm02a.warehouse_id$)
-rem --- Remove ivm-03 Xrefs
-rem product type jpb
-
-        dim x0$(28)
-        x0$(1)=b0$(1,2)+"C"+b0$(3,2)+ivm01a.product_type$+b0$(5)
-        remove (ivm03_dev,key=x0$,dom=*next)
-
-        dim x0$(37)
-        gosub l6200
-        read (ivm12_dev,key=firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*next)
+        remove (ivm02_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$)
 
 rem --- Remove ivm-12 Activity
+        read (ivm12_dev,key=firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*next)
         while 1
             k$=key(ivm12_dev,end=*break)
             if pos(firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$=k$)<>1 break
@@ -248,33 +232,29 @@ rem --- Loop back for next warehouse
 rem --- Position vendor xref
 
     if action$="W" goto done
-    first$=firm_id$+"H"+item$
-    read (ivm03_dev,key=first$,dom=*next)
+    read(ivm05_dev,key=firm_id$+item$,knum=1,dom=*next)
 
-l3400: rem --- Read next ivm-05 vendor record
+rem --- Read next ivm-05 vendor record
 
-    k$=key(ivm03_dev,end=l3500)
-    if pos(first$=k$)<>1 goto l3500
-    x$=k$(1,2)+k$(24)+k$(4,20)
-    if ap$="Y" remove (ivm05_dev,key=x$,dom=*next)
-    x$=x$(1,2)+"D"+x$(3)
-remove (ivm03_dev,key=x$,dom=*next)
+    while 1
+        k$=key(ivm05_dev,end=*break)
+        if pos(firm_id$+item$=k$)<>1 break
+        dim ivm05a$:fattr(ivm05a$)
+        read record (ivm05_dev,key=k$) ivm05a$
+        remove (ivm05_dev,key=firm_id$+ivm05a.vendor_id$+ivm05a.item_id$)
+    wend
 
-    x$=k$(1,2)+"F"+ivm01a.buyer_code$+k$(24,6)+ivm01a.product_type$+item$+"  "
-    remove (ivm03_dev,key=x$,dom=*next)
-remove (ivm03_dev,key=k$,dom=*next)
+rem --- Position synonyms file
 
-    goto l3400
-
-l3500: rem --- Position synonyms file
-
-    read (ivm14_dev,key=firm_id$+item$,dom=*next)
+    read (ivm14_dev,key=firm_id$+item$,knum=1,dom=*next)
 
 rem --- Read next synonym
     while 1
         k$=key(ivm14_dev,end=*break)
         if pos(firm_id$+item$=k$)<>1 break
-        remove (ivm14_dev,key=k$,dom=*next)
+        dim ivm14a$:fattr(ivm14a$)
+        read record (ivm14_dev,key=k$) ivm14a$
+        remove (ivm14_dev,key=firm_id$+ivm14a.item_synonym$+ivm14a.item_id$)
     wend
 
 rem --- Remove ivm-09 comments
@@ -284,10 +264,10 @@ rem --- Remove ivm-09 comments
 rem --- Read next comment
     while 1
         dim ivm09a$:fattr(ivm09a$)
-        readrecord(ivm09_dev,end=*break) arm09a$
-        if arm09a.firm_id$<>firm_id$ break
-        if arm09a.item_id$<>item$ break
-        remove (ivm09_dev,key=firm_id$+item$+arm09a.sequence_num$)
+        readrecord(ivm09_dev,end=*break) ivm09a$
+        if ivm09a.firm_id$<>firm_id$ break
+        if ivm09a.item_id$<>item$ break
+        remove (ivm09_dev,key=firm_id$+item$+ivm09a.sequence_num$)
     wend
 
 rem --- Remove ivm-01 item master
@@ -314,19 +294,6 @@ activity: rem --- Current or Next Period Activity?
 :      ivm12a.qty_returned<>0
         status=x
     endif
-    return
-
-rem --- Remove IVM03F Records for all Vendors (Stocking level W)
-l6200:
-    read (ivm03_dev,key=firm_id$+"H"+item$,dom=*next)
-l6230:
-    let h_k$=key(ivm03_dev,end=l6290)
-    if pos(firm_id$+"H"+item$=h_k$)<>1 goto l6290
-    let x0$(1)=firm_id$+"F"+b1$(19,3)+h_k$(24,6)+ivm01a.product_type$+b0$(5)+b0$(3,2)
-    remove (ivm03_dev,key=x0$,dom=*next)
-    read (ivm03_dev,key=h_k$,dom=*next)
-    goto l6230
-l6290:
     return
 
 rem #include std_error.src
