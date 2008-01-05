@@ -1,3 +1,34 @@
+[[IVM_ITEMMAST.AOPT-STOK]]
+rem --- Populate Stocking Info in Warehouses
+	cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[6,1]
+	dflt_data$[1,0]="ITEM_ID"
+	dflt_data$[1,1]=cp_item_id$
+
+	ivs10d_dev=fnget_dev("IVS_DEFAULT")
+	ivs10d_tpl$=fnget_tpl$("IVS_DEFAULTS")
+
+	dim ivs10d$:ivs10d_tpl$
+	read record (ivs10d_dev,key=firm_id$+"D") ivs10d$
+	dflt_data$[2,0]="ABC_CODE"
+	dflt_data$[2,1]=ivs10d.abc_code$
+	dflt_data$[3,0]="BUYER_CODE"
+	dflt_data$[3,1]=ivs10d.buyer_code$
+	dflt_data$[4,0]="EOQ_CODE"
+	dflt_data$[4,1]=ivs10d.eoq_code$
+	dflt_data$[5,0]="ORD_PNT_CODE"
+	dflt_data$[5,1]=ivs10d.ord_pnt_code$
+	dflt_data$[6,0]="SAF_STK_CODE"
+	dflt_data$[6,1]=ivs10d.saf_stk_code$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:                       "IVM_STOCK",
+:                       user_id$,
+:                   	"",
+:                       "",
+:                       table_chans$[all],
+:                       "",
+:                       dflt_data$[all]
 [[IVM_ITEMMAST.ARAR]]
 rem --- Enable/disable Alt/Sup Item #
 	ctl_name$="IVM_ITEMMAST.ALT_SUP_ITEM"
