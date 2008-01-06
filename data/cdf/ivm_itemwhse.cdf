@@ -34,7 +34,7 @@ rem --- call stbl("+DIR_SYP")+"ivm_itemWhseActivity.aon",
 :	table_chans$[all]
 
 rem --- run dir_pgm$+"ivr_itmWhseAct.aon"
-call dir_pgm$+"ivr_itmWhseAct.aon",iv_item_id$,iv_whse_id$,table_chans$[all]
+call stbl("+DIR_PGM")+"ivr_itmWhseAct.aon",iv_item_id$,iv_whse_id$,table_chans$[all]
 [[IVM_ITEMWHSE.AOPT-LIFO]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
 cp_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
