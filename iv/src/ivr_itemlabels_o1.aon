@@ -40,41 +40,48 @@ Options: rem --- Options
         swend
     wend
 
-    read (ivm03c_dev,key=firm_id$+"C"+beg_whse$,dom=*next)
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03c_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm02_dev,1,meter_num,status
     more=1
 
 rem --- Loop Starting
 
-    while more
-        ivm03c_key$=key(ivm03c_dev,end=*break)
-        if pos(firm_id$+"C"=ivm03c_key$)<>1 break
-        read (ivm03c_dev)
-        if end_whse$<>"" if ivm03c_key.warehouse_id$>end_whse$ break
-        if beg_prod$<>"" if ivm03c_key.product_type$<beg_prod$ read (ivm03c_dev,
-:           key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+ivm03c_key.warehouse_id$
-:           +beg_prod$,dom=*continue)
-        if end_prod$<>"" if ivm03c_key.product_type$>end_prod$ read (ivm03c_dev,
-:           key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+ivm03c_key.warehouse_id$+$FF$,dom=*continue)
-        if beg_item$<>"" if ivm03c_key.item_number$<beg_item$ read (ivm03c_dev,
-:           key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+ivm03c_key.warehouse_id$
-:           +ivm03c_key.product_type$+beg_item$,dom=*continue)
-        if end_item$<>"" then 
-            if ivm03c_key.item_number$>end_item$ then
-                continue
-            endif
-        endif
+    sql_prep$="select ivm_itemwhse.firm_id, ivm_itemwhse.item_id,"
+    sql_prep$=sql_prep$+"ivm_itemwhse.warehouse_id, ivm_itemmast.product_type,"
+    sql_prep$=sql_prep$+"ivm_itemmast.item_type "
+    sql_prep$=sql_prep$+"FROM ivm_itemwhse INNER JOIN ivm_itemmast "
+    sql_prep$=sql_prep$+"ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
+    sql_prep$=sql_prep$+"ivm_itemwhse.firm_id=ivm_itemmast.firm_id "
+    where_clause$="WHERE ivm_itemwhse.firm_id = '"+firm_id$+"' AND "
+    if beg_whse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id >= '"+beg_whse$+"' AND "
+    if end_whse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id <= '"+end_whse$+"' AND "
+    if beg_prod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type >= '"+beg_prod$+"' AND "
+    if end_prod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type <= '"+end_prod$+"' AND "
+    if beg_item$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id >= '"+beg_item$+"' AND "
+    if end_item$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id <= '"+end_item$+"'"
+
+    where_clause$=cvs(where_clause$,2)
+    if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
+    if where_clause$<>"" sql_prep$=sql_prep$+where_clause$
+
+    sql_chan=1
+    sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
 
 rem --- Main Read
+    while more
 
-        read record (ivm01_dev,key=firm_id$+ivm03c_key.item_id$,dom=*continue) ivm01a$
+        read_tpl$=sqlfetch(sql_chan,err=*break)
+
+        read record (ivm01_dev,key=firm_id$+read_tpl.item_id$,dom=*continue) ivm01a$
         rcnt=rcnt+1
         if item_type$<>"" then
             if ivm01a.item_type$<>item_type$ then
                 continue
             endif
         endif
-        read record (ivm02_dev,key=firm_id$+ivm03c_key.warehouse_id$+ivm03c_key.item_id$,dom=*continue) ivm02a$
+        read record (ivm02_dev,key=firm_id$+read_tpl.warehouse_id$+read_tpl.item_id$,dom=*continue) ivm02a$
 
 rem --- Setup
 
@@ -98,7 +105,7 @@ Assemble: rem --- Assemble
         x0=x0+1
         if mod(rcnt,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","",ivm01a.item_id$,0,0,1,0,ignore_status
         w0$(width*(x0-1)+1,width)=n1$
-        w0$(width*(across+x0-1)+1,width)=cvs(ivm01a.item_id$,3)+" Whse "+ivm03c_key.warehouse_id$
+        w0$(width*(across+x0-1)+1,width)=cvs(ivm01a.item_id$,3)+" Whse "+ivm02a.warehouse_id$
         w0$(width*(2*across+x0-1)+1,width)=ivm01a.item_desc$(1,width)
         w0$(width*(3*across+x0-1)+1,width)=ivm01a.item_desc$(width+1)
         x=pos(" "<>w0$(width*(3*across+x0-1)+1,width),-1)
