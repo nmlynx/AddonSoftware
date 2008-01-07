@@ -10,14 +10,6 @@ rem  +-----------------------------------------+
 
 rem This report has been modified for output to vector/grid (OutVect!), instead of directly to printer
 
-rem --- The following IOLIST's were removed from this program:
-
-rem --- ivm01a: iolist a0$(1),a1$(1),a2$(1),a3$(1),a4$,a5$,a6$,a[all]
-
-rem --- ivs01a: iolist i0$,i1$,i2$,i3$,i4$,m0$,m1$,m2$,m3$,m4$,m5$
-rem --- sys01t: iolist x$,f0$,x$,x$,x$,f4$,f5$
-
-
     seterr std_error
     setesc std_error
 
@@ -37,78 +29,61 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=7,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ads-01"
-    files$[2]="ivm-01"
-    files$[3]="ope-01"
-    files$[4]="ope-11"
-    files$[5]="ivm-10"
-    files$[6]="ivm-03"
-    files$[7]="arm-01"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+    files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
+    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
+    files$[3]="ope-01",ids$[3]="OPE_ORDHDR"
+    files$[4]="ope-11",ids$[4]="OPE_ORDDET"
+    files$[5]="ivc_whsecode",ids$[5]="IVC_WHSECODE"
+    files$[6]="arm-01",ids$[6]="ARM_CUSTMAST"
+    call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ads01_dev=channels[1]
+    ivs01_dev=channels[1]
     ivm01_dev=channels[2]
     ope01_dev=channels[3]
     ope11_dev=channels[4]
     ivm10_dev=channels[5]
-    ivm03_dev=channels[6]
-    arm01_dev=channels[7]
+    arm01_dev=channels[6]
 
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[2],ope01a$:templates$[3],ope11a$:templates$[4],
-:       ivm10a$:templates$[5],ivm03a$:templates$[6],arm01a$:templates$[7]
-
-rem --- Retrieve miscellaneous templates
-
-    files=2,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="ivs-01A"
-    ids$[2]="ivm-10C"
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim ivs01a$:templates$[1],ivm10c$:templates$[2]
+    dim ivs01a$:templates$[1],ivm01a$:templates$[2],ope01a$:templates$[3],
+:       ope11a$:templates$[4],ivm10c$:templates$[5],arm01a$:templates$[6]
 
 rem --- retrieve templates for record keys
 
-    call pgmdir$+"adc_key_template.aon","OPE_ORDDET","ALT_KEY_01",key_tpl$,rd_table_chans$[all],rd_status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDDET","ALT_KEY_01",key_tpl$,rd_table_chans$[all],rd_status$
     dim ope11k1$:key_tpl$
-    call pgmdir$+"adc_key_template.aon","OPE_ORDHDR","PRIMARY",key_tpl$,rd_table_chans$[all],rd_status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDHDR","PRIMARY",key_tpl$,rd_table_chans$[all],rd_status$
     dim ope01k0$:key_tpl$
 
 rem --- Assign form input values to local variables
     
-    table$=fnget_table$("")
-    value_01$=fnget_fld_data$(table$,"PICK_DATE_1")
-    value_02$=fnget_fld_data$(table$,"PICK_DATE_2")
-    value_03$=fnget_fld_data$(table$,"WAREHOUSE_ID")
-    value_04$=fnget_fld_data$(table$,"ITEM_ID")
+    begdate$=option!.getOptionData("PICK_DATE_1")
+    enddate$=option!.getOptionData("PICK_DATE_2")
+    whse$=option!.getOptionData("WAREHOUSE_ID")
+    begitem$=option!.getOptionData("ITEM_ID")
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ads01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+rem jpb ?
     dim p[5]
     P[0]=num(ivs01a.item_id_len$)
-    p[1]=num(ivs01a.precision$)
     p[3]=num(ivs01a.desc_len_01$)
     p[4]=num(ivs01a.desc_len_02$)
     p[5]=num(ivs01a.desc_len_03$)
-    m1$=ivs01a.amount_mask$
-    m2$=ivs01a.unit_mask$
-    m3$=ivs01a.cost_mask$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
 
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,9,15
-rem --- took these masks from another program... perhaps should use quantity mask from order params?.CAH
+    call stbl("+DIR_PGM")+"adc_sizemask.aon",m1$,m1,12,15
+    call stbl("+DIR_PGM")+"adc_sizemask.aon",m2$,m2,10,15
+    call stbl("+DIR_PGM")+"adc_sizemask.aon",m2$,m2,9,15
+
 rem --- Initializations
 
     dim o[3],d[1],b0$(200),b[13],c0$(52),c1$(64),c[17],d0$(8),d1$(30)
@@ -120,72 +95,63 @@ rem --- Initializations
     d[0]=d[1]-9
     dw=d[0]-15
 
-
-    begdate$=value_01$
-    enddate$=value_02$
-    whse$=value_03$
-    begitem$=value_04$
-
-    gosub l5800;rem "initialize headings
+    gosub init_head;rem "initialize headings
 
 rem --- Position files
 
-    call pgmdir$+"adc_progress.aon","S","","","","Printing",0,0,1,meter_num,status
+    call stbl("+DIR_PGM")+"adc_progress.aon","NC","","","","",0,ope11_dev,1,meter_num,status
 
     read (ope11_dev,key=firm_id$+whse$+begitem$,knum=1,dom=*next)
-read_ope11:
-    ope11k1$=key(ope11_dev,end=done)
-    if ope11k1.firm_id$+ope11k1.warehouse_id$+cvs(ope11k1.item_id$,3)<>firm_id$+whse$+begitem$ goto done
-    readrecord (ope11_dev)ope11a$
-    ope01k0$=ope11k1.firm_id$+ope11k1.ar_type$+ope11k1.customer_id$+ope11k1.order_no$+"000"
-    find record (ope01_dev,key=ope01k0$,dom=next_ope11) ope01a$
-    if begdate$<>"" if ope01a.order_date$<begdate$ goto next_ope11
-    if enddate$<>"" if ope01a.order_date$>enddate$ goto next_ope11
-    dim customer$(dw),status$(3)
-    find record (arm01_dev,key=ope11a.firm_id$+ope11a.customer_id$,dom=*next) arm01a$
+    while 1
+        ope11k1$=key(ope11_dev,end=*break)
+        if ope11k1.firm_id$+ope11k1.warehouse_id$+ope11k1.item_id$<>firm_id$+whse$+begitem$ break
+        readrecord (ope11_dev)ope11a$
+        call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        ope01k0$=ope11k1.firm_id$+ope11k1.ar_type$+ope11k1.customer_id$+ope11k1.order_no$+"000"
+        find record (ope01_dev,key=ope01k0$,dom=*continue) ope01a$
+        if begdate$<>"" if ope01a.order_date$<begdate$ continue
+        if enddate$<>"" if ope01a.order_date$>enddate$ continue
+        dim customer$(dw),status$(3)
+        find record (arm01_dev,key=ope11a.firm_id$+ope11a.customer_id$,dom=*next) arm01a$
 
-
-   
 rem --- Assign data
 
-    ordnum$=ope11a.order_no$
-    orddate$=fndate$(ope01a.order_date$)
-    shipdate$=fndate$(ope11a.est_shp_date$)
-    if ope01a.order_date$=fill(3) orddate$=fill(8)
-    if ope11a.est_shp_date$=fill(3) if ope01a.shipmnt_date$=fill(3) shipdate$=fill(8) else shipdate$=fndate$(ope01a.shipmnt_date$)
-    commit$=ope11a.commit_flag$
-    ext=ope11a.ext_price
-    qty=ope11a.qty_ordered
-    totqty=totqty+qty
-    totext=totext+ext
+        ordnum$=ope11a.order_no$
+        orddate$=fndate$(ope01a.order_date$)
+        shipdate$=fndate$(ope11a.est_shp_date$)
+rem jpb    if ope01a.order_date$=fill(3) orddate$=fill(8)
+        if ope11a.est_shp_date$=fill(8) if ope01a.shipmnt_date$=fill(8) shipdate$=fill(8) else shipdate$=fndate$(ope01a.shipmnt_date$)
+        commit$=ope11a.commit_flag$
+        ext=ope11a.ext_price
+        qty=ope11a.qty_ordered
+        totqty=totqty+qty
+        totext=totext+ext
 
-rem --- Determine and assign Status
+    rem --- Determine and assign Status
 
-    if ope01a.credit_flag$="C" if ope01a.ordinv_flag$="O" ope01a.ordinv_flag$="C"
-    status$(1,1)=ope01a.ordinv_flag$
-    if ope01a.invoice_type$="P" status$(1,1)="Q"
-    if ope01a.print_status$="Y" status$(2,1)="P"
-    if ope01a.lock_status$="Y" status$(3,1)="L"
-    if pos(ope01a.lock_status$="YN")>0 status$(3,1)=ope01a.lock_status$
+        if ope01a.credit_flag$="C" if ope01a.ordinv_flag$="O" ope01a.ordinv_flag$="C"
+        status$(1,1)=ope01a.ordinv_flag$
+        if ope01a.invoice_type$="P" status$(1,1)="Q"
+        if ope01a.print_status$="Y" status$(2,1)="P"
+        if ope01a.lock_status$="Y" status$(3,1)="L"
+        if pos(ope01a.lock_status$="YN")>0 status$(3,1)=ope01a.lock_status$
 
-l2500: rem --- Store detail line
+    rem --- Store detail line
 
-    dim customer$(dw)
-    customer$(1)=arm01a.customer_id$+" "+arm01a.customer_name$
-    OutVect!.addItem(ordnum$)
-    OutVect!.addItem(status$)
-    OutVect!.addItem(customer$)
-    OutVect!.addItem(orddate$)
-    OutVect!.addItem(shipdate$)
-    OutVect!.addItem(str(qty:m2$))
-    OutVect!.addItem(commit$)
-    OutVect!.addItem(str(ext:m1$))
+        dim customer$(dw)
+        customer$(1)=arm01a.customer_id$+" "+arm01a.customer_name$
+        OutVect!.addItem(ordnum$)
+        OutVect!.addItem(status$)
+        OutVect!.addItem(customer$)
+        OutVect!.addItem(orddate$)
+        OutVect!.addItem(shipdate$)
+        OutVect!.addItem(str(qty:m2$))
+        OutVect!.addItem(commit$)
+        OutVect!.addItem(str(ext:m1$))
 
-    l=l+1
+        l=l+1
 
-next_ope11: rem --- Loop back for next record
-
-    goto read_ope11
+    wend
 
 done: rem --- All done
 
@@ -197,7 +163,7 @@ done: rem --- All done
     goto std_exit
 
 
-l5800: rem --- Initialize HEADINGS$
+init_head: rem --- Initialize HEADINGS$
 
 rem --- date/time 
 	OutVect!=bbjAPI().getSysGui().makeVector()
@@ -331,9 +297,9 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -357,8 +323,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -376,7 +342,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call stbl("+DIR_PGM")+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
