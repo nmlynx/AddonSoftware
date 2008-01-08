@@ -1,0 +1,101 @@
+Description,Type,Version 8 Alias,Version 8 Program,v7 Name,Pgm Type,Form Status,"CodePort (needs, inits)",Print Preview Tested,"DocOut (needs,inits)",DocOut Tested,Comments
+Shop Floor Control,M,,,,,,,,,,
+Work Order Entry,T,,,sfe_aa.aon,entry,,,,,,
+ WO - Header Entry & WO Delete,T,,,sfe_ab.src,entry,,,,,,
+ WO - Customer Order Information ,T,,,sfe_ac.src,entry,,,,,,
+ WO - Operation Requirements Processing,T,,,sfe_ad.src,entry,,,,,,
+" WO - Material Requirements Processing, BM Explosion ",T,,,sfe_ae.src,entry,,,,,,
+ WO - Work Order Subcontract Requirements - Vendor/PO/Req ,T,,,sfe_af.src,entry,,,,,,
+ WO - Status Summary,T,,,sfe_ag.src,entry/inquiry,,,,,,
+ WO - Hard Copy (runs sfr_xa),T,,,sfe_ah.src,entry/report,,,,,,
+ WO - Serial/Lot #'s,T,,,sfe_aj.src,entry/inquiry,,,,,,
+ WO - Forward/Backward/Manual Scheduling,T,,,sfe_ak.src,entry,,,,,,
+ WO - Cost Summary,T,,,sfe_al.src,entry/inquiry,,,,,,
+ WO - Release & Materials Commitment,T,,,sfe_am.src,entry,,,,,,
+ WO - Transaction Display ,T,,,sfe_at.src,entry/inquiry,,,,,,
+Traveler Printing,T,,,sfr_aa.aon,selection,,needs,,,,
+Traveler printing - overlay,T,,,sfr_ab.bbx,read loop,,needs,,
+Work Order Detail Printing,T,,,sfr_xa.bbx,overlay,,needs,,needs
+Materials Commitment Entry,T,,,sfe_ca/cb.aon,entry,,,,
+Pick List Printing,T,,,sfr_ba.aon,selection,,needs,,
+Pick List Printing - overlay,T,,,sfr_bb.bbx,report,,needs,,needs
+Dispatch Inquiry,T,,,sfe_ha.aon,inquiry ,,,,
+Load Balance Inquiry,T,,,sfm_ha.aon,inquiry ,,,,
+Transaction Processing,G,,,,,,,,
+Create Purchase Requisitions,T,,,sfu_ia.aon,entry,,,,
+Create Purchase Requisitions - update,T,,,sfu_ib.bbx,update,,needs,,
+Material Issues Entry,T,,,sfe_da/db/dc.aon,,,,,
+Material Issues Register,T,,,sfr_da.aon,register,,needs,,needs
+Material Issues - Update,T,,,sfu_aa.bbx,update,,needs,,
+Time Sheet Entry,T,,,sfe_ba/bb.aon,,,,,
+Time Sheet Register,T,,,sfr_ca.aon,register,,needs,,needs
+Time Sheet Register - Summary,T,,,sfr_cb.bbx,summary register,,needs,,needs
+Time Sheet - Update,T,,,sfu_ba.bbx,update,,needs,,
+Cost Adjustment Entry,T,,,sfe_fa.aon,,,,,
+Cost Adjustment Register,T,,,sfr_la.aon,register,,needs,,needs
+Cost Adjustment Update,T,,,sfu_ga.bbx,update,,needs,,
+Work Order Close Data Entry,T,,,sfe_ea/eb.aon,,,,,
+Closed Work Order Detail Report,T,,,sfr_ea.aon,report selection,,needs,,
+Closed Work Order Detail Report - overlay,T,,,sfr_eb.bbx,overlay,,needs,,needs
+Work Order Detail Printing,T,,,sfr_xa.bbx,overlay,,needs,,needs
+Closed Work Order Summary Register,T,,,sfr_ka.aon,register,,needs,,needs
+Closed Work Order Update,T,,,sfu_ca.bbx,update,,needs,,
+Reports,G,,,,,,,,
+Work Order Header Report,T,,,sfr_ga.aon,report selection,,needs,,
+Work Order Header Report - overlay,T,,,sfr_gb.bbx,overlay,,needs,,needs
+Shop Floor Dispatch Report,T,,,sfr_pa.aon,report selection,,needs,,
+Shop Floor Dispatch Report - overlay,T,,,sfr_pb.bbx,overlay,,needs,,needs
+Production Exception Report,T,,,sfr_sa.aon,report selection,,needs,,
+Production Exception Report -  overlay,T,,,sfr_sb.bbx,overlay,,needs,,needs
+Bottleneck Analysis Report,T,,,sfr_ta.aon,report selection,,needs,,
+Bottleneck Analysis Report - overlay,T,,,sfr_tb.bbx,overlay,,needs,,needs
+Labor Efficiency Analysis Report,T,,,sfr_fa.aon,report selection,,needs,,
+Labor Efficiency Analysis Report - overlay,T,,,sfr_fb.bbx,overlay,,needs,,needs
+Cost Variance Analysis Report,T,,,sfr_ha.aon,report selection,,needs,,
+Cost Variance Analysis Report - overlay,T,,,sfr_hb.bbx,overlay,,needs,,needs
+Date Analysis Report,T,,,sfr_na.aon,report selection,,needs,,
+Date Analysis Report - overlay,T,,,sfr_nb.bbx,overlay,,needs,,needs
+Work Order Detail Report,T,,,sfr_ia.aon,report selection,,needs,,
+Work Order Detail Report - overlay,T,,,sfr_ib.bbx,overlay,,needs,,needs
+Work Order Detail Printing,T,,,sfr_xa.bbx,overlay,,needs,,needs
+WO Transaction History Report,T,,,sfr_ja.aon,report selection,,needs,,
+WO Transaction History Report - overlay,T,,,sfr_jb.bbx,overlay,,needs,,needs
+WO Committed Materials Report,T,,,sfr_ma.aon,report selection,,needs,,
+WO Committed Materials Report - overlay,T,,,sfr_mb.bbx,overlay,,needs,,needs
+Work Order Job Status Summary,T,,,sfr_va.aon,report selection,,needs,,
+Work Order Job Status Summary - overlay,T,,,sfr_vb.bbx,overlay,,needs,,needs
+Period End Processing,G,,,,,,,,
+Close Recurring Work Orders,T,,,sfu_da.aon,selection,,needs,,
+Close Recurring Work Orders - overlay,T,,,sfu_db.bbx,update overlay,,needs,,
+Closed Recurring WO Detail Report,T,,,sfr_ea.aon,report selection,,needs,,
+Closed Recurring WO Detail Report - overlay,T,,,sfr_eb.bbx,overlay,,needs,,needs
+Work Order Detail Printing,T,,,sfr_xa.bbx,overlay,,needs,,needs
+Closed Recurring WO Summary Report,T,,,sfr_ra.aon,register,,needs,,needs
+Closed Recurring WO Update,T,,,sfu_ra.bbx,update,,needs,,
+Closed Work Order Variance Report,T,,,sfr_oa.aon,report selection,,needs,,
+Closed Work Order Variance Report - overlay,T,,,sfr_ob.bbx,overlay,,needs,,needs
+Period End Update,T,,,sfu_ea.aon,selection,,needs,,
+Period End Update - overlay,T,,,sfu_eb.bbx,update overlay,,needs,,
+Closed Work Order Purge,T,,,sfu_fa.aon,selection,,needs,,
+Closed Work Order Purge - overlay,T,,,sfu_fb.bbx,update overlay,,needs,,
+Maintenance,G,,,,,,,,
+Type Codes,T,,,SFC_WOTYPECD,,,,,
+Operation Codes,T,,,SFC_OPRTNCOD,,,,,
+Employees,T,,,SFM_EMPLMAST,,,,,
+Create Shop Floor Calendar,T,,,sfm_da.aon,,,TBD,,
+Operations Calendar Maintenance,T,,,SFM_OPCALNDR,,,,,
+Copy Shop Floor Calendar,T,,,sfm_ea.aon,,,TBD,,
+Print Shop Floor Calendar,T,,,sfr_qa.aon,report selection,,needs,,
+Print Shop Floor Calendar - overlay,T,,,sfr_qb.bbx,overlay,,needs,,needs
+Batch Rescheduling Of Work Orders,T,,,sfr_ua.aon,report selection,,needs,,
+Batch Rescheduling Of Work Orders - overlay,T,,,sfr_ub.bbx,overlay/update,,needs,,needs
+Application Parameters,T,,,sfp_aa.aon,,,,,
+Utilities,G,,,,,,,,
+Conversion Work Order Entry,T,,,sfx_aa.bbx,entry,,,,
+Conversion Work Order Register,T,,,sfx_ba.bbx,report selection,,needs,,
+Conversion Work Order Register - overlay,T,,,sfx_bb.bbx,overlay,,needs,,needs
+Conversion Work Order Update,T,,,sfx_da.bbx,update,,needs
+Publics,G,,,,,,
+Schedule: Days Forecast Ahead/Behind (Public/Called),P,,,sfc_aa.src,,,needs
+Operations Hours Between Days(Public/Called),P,,,sfc_ba.src,,,needs
+SFC - Serial/Lot # Auto Close,P,,,sfc_ca.src,,,needs
