@@ -1,3 +1,17 @@
+[[IVM_ITEMMAST.AOPT-RORD]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="ITEM_ID"
+dflt_data$[1,1]=cp_item_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_POREQS",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
 [[IVM_ITEMMAST.AOPT-STOK]]
 rem --- Populate Stocking Info in Warehouses
 	cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
