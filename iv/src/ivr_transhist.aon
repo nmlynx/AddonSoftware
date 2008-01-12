@@ -70,11 +70,10 @@ rem --- Open files
 
 rem --- Dimension string templates
 
-    dim ivs01a$:templates$[1],apm01a$:templates$[2],ivm01a$:templates$[3],
-:       arm01a$:templates$[4],ivm10c$:templates$[5],ivm10a$:templates$[6],
-:       ivm10b$:templates$[7],ivt04a$:templates$[8],ivt04b$:templates$[12],
-:	aps01a$:templates$[9],ars01a$:templates$[10],gls01a$:templates$[11]
-
+    dim ivs01a$:templates$[1],apm01a$:templates$[2],ivm01a$:templates$[3]
+    dim arm01a$:templates$[4],ivm10c$:templates$[5],ivm10a$:templates$[6]
+    dim ivm10b$:templates$[7],ivt04a$:templates$[8],ivt04b$:templates$[12]
+    dim	aps01a$:templates$[9],ars01a$:templates$[10],gls01a$:templates$[11]
 
 rem --- Assign form input values to local variables
     dim ttypes$[9]
@@ -132,17 +131,16 @@ rem --- Initializations
 
     if ar$<>"Y" goto ar_not_installed
     find record (ars01_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-    x8=num(ars01a.customer_size$)
-    x9$=ars01a.customer_output$, x9=len(x9$)
+    call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","",imask$,x9$,0,x8
+    x9=len(x9$)
 ar_not_installed:
     if ap$<>"Y" goto ap_not_installed
     find record (aps01_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-    x6=num(aps01a.vendor_size$)
-    x7$=aps01a.vendor_output$,x7=len(x7$)
+    call pgmdir$+"adc_getmask.aon","VENDOR_ID","","",imask$,x7$,0,x6
+    x7=len(x7$)
 ap_not_installed:
     find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-    g2$=gls01a.max_acct_len$
-    g5$=gls01a.acct_output$
+    call pgmdir$+"adc_getmask.aon","GLACCT","","",imask$,g5$,0,g2
 
     alltypes$="POOPITPHTITOWIWOBM"
     for x=1 to 9
@@ -180,7 +178,7 @@ ap_not_installed:
     params[0]=p[0]
     params[1]=x8
     params[2]=x6
-    params[3]=num(g2$)
+    params[3]=g2
     params[4]=p[5]
     params[5]=p[6]
     params[6]=p[7]
@@ -199,106 +197,103 @@ rem --- Print positions
     o[4]=o[5]-m3
     o[3]=o[4]-m2
 
-    gosub l5800 ; rem "initialize headings
+    gosub init_headings ; rem "initialize headings
 
-    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",3+p[0],ivt04_dev,1,0,ignore_status
+    call stbl("+DIR_PGM")+"adc_progress.aon","NC","","","","",0,ivt04_dev,1,meter_num,status
 
 rem --- Position files
 
-    read (ivt04_dev,key=firm_id$+beg_whse$,dom=*next)
+    read (ivt04_dev,key=firm_id$+cvs(beg_whse$,2),dom=*next)
 
 l1000: rem --- Get next record
 
-    k$=key(ivt04_dev,end=done)
-    if pos(firm_id$+beg_whse$=k$)<>1 goto done
-    whse$=k$(3,2)
-    item$=k$(5,20)
+    while 1
+        read record (ivt04_dev) ivt04a$
+        if pos(firm_id$=ivt04a.firm_id$)<>1 break
+        whse$=ivt04a.warehouse_id$
+        item$=ivt04a.item_id$
 
 rem --- Valid Warehouse/Item?
 
-    if end_whse$<>"" if whse$>end_whse$ goto done
-    if beg_item$<>"" if item$<beg_item$ read (ivt04_dev,key=k$(1,4)+beg_item$,dom=l3900)
-    if end_item$<>"" if item$>end_item$ read (ivt04_dev,key=k$(1,4)+$FF$,dom=l3900)
-rem    if beg_item$<>"" if cvs(item$,3)<beg_item$ read (ivt04_dev,key=k$(1,4)+beg_item$,dom=l3900)
-rem    if end_item$<>"" if cvs(item$,3)>end_item$ read (ivt04_dev,key=k$(1,4)+$FF$,dom=l3900)
+        if end_whse$<>"" if whse$>end_whse$ break
+        if beg_item$<>"" if item$<beg_item$ read (ivt04_dev,key=firm_id$+whse$+beg_item$,dom=*continue)
+        if end_item$<>"" if item$>end_item$ read (ivt04_dev,key=firm_id$+whse$+$FF$,dom=*continue)
 
 rem --- Valid Product/Type/Date?
 
-    read record (ivt04_dev) ivt04a$
-    if beg_date$<>"" if ivt04a.trans_date$<beg_date$ read (ivt04_dev,key=k$(1,24)+beg_date$,dom=l3900)
-    if end_date$<>"" if ivt04a.trans_date$>end_date$ read (ivt04_dev,key=k$(1,24)+$FF$,dom=l3900)
-    if ivt04a.trans_source$="BB" goto l3900
-    if all$<>"Y" if pos(ivt04a.trans_source$=ttype$,2)=0 goto l3900
+        if beg_date$<>"" if ivt04a.trans_date$<beg_date$ read (ivt04_dev,key=firm_id$+whse$+item$+beg_date$,dom=*continue)
+        if end_date$<>"" if ivt04a.trans_date$>end_date$ read (ivt04_dev,key=firm_id$+whse$+item$+$FF$,dom=*continue)
+        if ivt04a.trans_source$="BB" continue
+        if all$<>"Y" if pos(ivt04a.trans_source$=ttype$,2)=0 continue
 
-    find record (ivm01_dev,key=firm_id$+item$,dom=l3900) ivm01a$
-    if beg_prod$<>"" if ivm01a.product_type$<beg_prod$ goto l3900
-    if end_prod$<>"" if ivm01a.product_type$>end_prod$ goto l3900
-    if itype$<>"" if ivm01a.item_type$<>itype$ goto l3900
+        find record (ivm01_dev,key=firm_id$+item$,dom=*continue) ivm01a$
+        if beg_prod$<>"" if ivm01a.product_type$<beg_prod$ continue
+        if end_prod$<>"" if ivm01a.product_type$>end_prod$ continue
+        if itype$<>"" if ivm01a.item_type$<>itype$ continue
 
 rem --- Level breaks?
 
-    if all$="Y" and item$<>t1$ gosub l6500
-    call pgmdir$+"adc_progress.aon","S","","","",k$(3,2)+" "+k$(5,p[0]),0,0,1,0,ignore_status
-    if whse$<>t0$ gosub l6000
-    if item$<>t1$ gosub l6200
-    balance=balance+ivt04a.trans_qty
+        if all$="Y" and item$<>t1$ gosub get_beg_bal
+        call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+        if whse$<>t0$ gosub whse_break
+        if item$<>t1$ gosub item_break
+        balance=balance+ivt04a.trans_qty
 
 rem --- Get Reference Block
 
-    dim desc$[2]
-    call pgmdir$+"ivc_transdata.aon",ivt04a$,ivchannels[all],params[all],masks$[all],type$,desc$[all]
-    if type$="" goto l3900
+        dim desc$[2]
+        call pgmdir$+"ivc_transdata.aon",ivt04a$,ivchannels[all],params[all],masks$[all],type$,desc$[all]
+        if type$="" continue
 
 rem --- Build Totals Array
 
 rem    if ivt04a.trans_source$="BB" goto l2200
 l2120:
-    x=pos(type$=item_tot$,4)
-    if x=0 item_tot$=item_tot$+type$; goto l2120
-    x=(x+3)/4
-    item_qty[x]=item_qty[x]+ivt04a.trans_qty
-    item_ext[x]=item_ext[x]+ivt04a.trans_qty*ivt04a.unit_cost
+        x=pos(type$=item_tot$,4)
+        if x=0 item_tot$=item_tot$+type$; goto l2120
+        x=(x+3)/4
+        item_qty[x]=item_qty[x]+ivt04a.trans_qty
+        item_ext[x]=item_ext[x]+ivt04a.trans_qty*ivt04a.unit_cost
 
 l2200: rem --- Print subheading?
 
-    if subhead1$="" goto l3000
-    OutVect!.addItem(subhead1$)
-    for x=1 to 2;OutVect!.addItem("");next x
-    OutVect!.addItem(subhead2$)
-    for x=1 to 4;OutVect!.addItem("");next x
-    l=l+1
-    subhead1$="",subhead2$=""
+        if subhead1$="" goto print_detail
+        OutVect!.addItem(subhead1$)
+        for x=1 to 2;OutVect!.addItem("");next x
+        OutVect!.addItem(subhead2$)
+        for x=1 to 4;OutVect!.addItem("");next x
+        l=l+1
+        subhead1$="",subhead2$=""
 
-l3000: rem --- Print detail line
+print_detail: rem --- Print detail line
 
-    needed=1
-    if cvs(desc$[1],2)<>"" needed=needed+1
-    OutVect!.addItem("")
-    OutVect!.addItem(fndate$(ivt04a.trans_date$))
-    OutVect!.addItem(type$)
-    OutVect!.addItem(desc$[0])
-    OutVect!.addItem(str(ivt04a.trans_qty:m2$))
-    OutVect!.addItem(str(ivt04a.unit_cost:m3$))
-    OutVect!.addItem(str(ivt04a.trans_qty*ivt04a.unit_cost:m1$))
-    if all$="Y" then OutVect!.addItem(str(balance:m2$)) else OutVect!.addItem("")
-    l=l+1
-    if cvs(desc$[1],2)="" goto l3900
-    for x=1 to 3;OutVect!.addItem("");next x
-    OutVect!.addItem(cvs(desc$[1],2))
-    for x=1 to 4; OutVect!.addItem("");next x
-    l=l+1
+        needed=1
+        if cvs(desc$[1],2)<>"" needed=needed+1
+        OutVect!.addItem("")
+        OutVect!.addItem(fndate$(ivt04a.trans_date$))
+        OutVect!.addItem(type$)
+        OutVect!.addItem(desc$[0])
+        OutVect!.addItem(str(ivt04a.trans_qty:m2$))
+        OutVect!.addItem(str(ivt04a.unit_cost:m3$))
+        OutVect!.addItem(str(ivt04a.trans_qty*ivt04a.unit_cost:m1$))
+        if all$="Y" then OutVect!.addItem(str(balance:m2$)) else OutVect!.addItem("")
+        l=l+1
+        if cvs(desc$[1],2)="" continue
+        for x=1 to 3;OutVect!.addItem("");next x
+        OutVect!.addItem(cvs(desc$[1],2))
+        for x=1 to 4; OutVect!.addItem("");next x
+        l=l+1
 
-l3900: rem --- Loop back for next record
-
-    goto l1000
+    wend
 
 done: rem --- All done
 
     done=1
-    gosub l6200
+    gosub item_break
     goto std_exit
 
-l5800: rem --- Initialize HEADINGS$
+init_headings: rem --- Initialize HEADINGS$
 
 rem --- date/time 
 	OutVect!=bbjAPI().getSysGui().makeVector()
@@ -351,10 +346,10 @@ rem --- column headings
 
     return
     
-l6000: rem --- Warehouse Break
+whse_break:
     
     dim x0$(32)
-    gosub l6200
+    gosub item_break
     t0$=whse$
     x0$(6,24)="(Not on File)"
     l=l9+1
@@ -369,7 +364,7 @@ l6050:
 
     return
     
-l6200: rem --- Item Break
+item_break:
     
     if t1$="" goto l6300
     if len(item_tot$)=0 goto l6270
@@ -410,38 +405,37 @@ rem --- old format using params: wkdesc$=fnitem$(wkdesc$,p[5],p[6],p[7])
 l6390:
     return
     
-l6500: rem --- Determine starting beginning balance
-    
-    if itype$<>"" goto l6990
+get_beg_bal: rem --- Determine starting beginning balance
+
     balance=0
-    x$=k$
-    read (ivt04_dev2,key=firm_id$+whse$+item$+beg_date$,dom=*next)
-l6580:
-    let k01$=key(ivt04_dev2,end=l6900)
-    goto l6630
+    if itype$<>"" return
+    found=0
+    sql_prep$="select firm_id, warehouse_id, item_id, trans_date, iv_hist_seq from ivt_itemtran "
+    sql_prep$=sql_prep$+"where firm_id = '"+firm_id$+"' and trans_source='BB' and item_id='"+item$+"' and "
+    sql_prep$=sql_prep$+"warehouse_id='"+whse$+"' and trans_date <= '"+beg_date$+"' order by trans_date desc"
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
+    while 1
+        read_tpl$=sqlfetch(sql_chan,err=*break)
+        found=1
+    wend
     
-l6600: rem --- Read backwards thru file until BB record is found
-   
-    let k01$=keyp(ivt04_dev2,end=l6900)
-    if k01$(1,24)<>firm_id$+whse$+item$ goto l6900
-l6630:
-    extract record (ivt04_dev2,key=k01$) ivt04b$
-    if ivt04b.trans_source$<>"BB" goto l6600
-    let balance=ivt04b.trans_qty
-   
-l6700: rem --- Read forward until first record for BEGDATE$
-    
-    let k01$=key(ivt04_dev2,end=l6900)
-    if k01$(1,24)<>firm_id$+whse$+item$ goto l6900
-    if k01$(25,8)>=beg_date$ goto l6900
-    read record (ivt04_dev2,key=k01$) ivt04b$
-    let balance=balance+ivt04b.trans_qty
-    goto l6700
-l6900: rem --- Reread original record (now using two channels)
-    
-rem        let k$=x$
-rem        read record (ivt04_dev,key=k$) ivt04a1$
-l6990:
+    sqlclose(sql_chan)
+
+    if found=1
+        read (ivt04_dev2,key=firm_id$+read_tpl.warehouse_id$+read_tpl.item_id$+read_tpl.trans_date$+read_tpl.iv_hist_seq$)ivt04b$
+        balance=ivt04b.trans_qty
+    endif
+
+    while found=1
+        read record(ivt04_dev2,end=*break)ivt04b$
+        if ivt04b.firm_id$+ivt04b.warehouse_id$+ivt04b.item_id$<>firm_id$+whse$+item$ break
+        if ivt04b.trans_date$>=beg_date$ break
+        let balance=balance+ivt04b.trans_qty
+    wend
     return
     
 rem #include std_functions.src
@@ -592,7 +586,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    call stbl("+DIR_PGM")+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

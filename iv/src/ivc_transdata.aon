@@ -67,7 +67,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Retrieve miscellaneous templates
 
-    files=6,begfile=1,endfile=files
+    files=7,begfile=1,endfile=files
     dim ids$[files],templates$[files]
     ids$[1]="IVM_ITEMMAST"
     ids$[2]="ARM_CUSTMAST"
@@ -75,6 +75,7 @@ rem --- Retrieve miscellaneous templates
     ids$[4]="GLM_ACCT"
     ids$[5]="IVC_TRANCODE"
     ids$[6]="IVC_WHSECODE"
+    ids$[7]="IVT_ITEMTRAN"
 
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
@@ -82,30 +83,31 @@ rem --- Retrieve miscellaneous templates
 rem --- Dimension string templates
 
     dim ivm01a$:templates$[1],ivm10b$:templates$[5],ivm10c$:templates$[6],
-:       arm01a$:templates$[2],apm01a$:templates$[3],glm01a$:templates$[4]
+:       arm01a$:templates$[2],apm01a$:templates$[3],glm01a$:templates$[4],ivt04a$:templates$[7]
 
-l96: rem --- Initializations
+rem --- Initializations
 
-    dim a0$(22),b0$(8),c0$(12),x0$(32),x1$(54),x2$(54)
+    ivt04a$=trans$
+    dim a0$(22),x0$(32),x1$(54),x2$(54)
     description$[0]=""
     description$[1]=""
     description$[2]=""
-    source$=trans$(1,2)
-    ref1$=cvs(trans$(3,6),2)
-    ref2$=trans$(9,7)
+    source$=ivt04a.trans_source$
+    ref1$=ivt04a.trans_ref_1$
+    ref2$=ivt04a.trans_ref_2$
     if pos(source$="IAIIIRIC",2) source$="IT"
-    ref3$=trans$(16,7)
-    ref4$=trans$(23,2)
-    seq$=trans$(25,3)
+    ref3$=ivt04a.trans_ref_3$
+    ref4$=ivt04a.trans_ref_4$
+    seq$=ivt04a.iv_hist_seq$
     desc$=""
-    item$=cvs(trans$(51,20),2)
+    item$=ivt04a.item_id$
     type$=""
     types$="Beg BOM TranSalePhysP.O.XferXferW.O.W.O."
-    gl_account$=trans$(71,10)
-    comment$=cvs(trans$(31,20),2)
-    line_code$=trans$(28,1)
-    location$=trans$(81,10)
-    po_line_code$=trans$(91,2)
+    gl_account$=ivt04a.gl_account$
+    comment$=ivt04a.trans_cmt$
+    line_code$=ivt04a.line_code$
+    location$=ivt04a.location$
+    po_line_code$=ivt04a.po_line_code$
 
 rem --- Retrieve finished item
 
@@ -121,7 +123,7 @@ l1100: rem --- Retrieve customer name
     if arm01_dev=0 goto l1200
     if ref1$="" goto l1200
     b0$(1)=firm_id$+ref1$
-    find record (arm01_dev,key=b0$,dom=*next) arm01a$
+    find record (arm01_dev,key=firm_id$+ref1$,dom=*next) arm01a$
     ref1$=fnmask$(arm01a.customer_id$,masks$[1])
 
 l1200: rem --- Retrieve vendor name
@@ -129,8 +131,7 @@ l1200: rem --- Retrieve vendor name
     if source$<>"PO" goto l1300
     if apm01_dev=0 goto l1300
     if ref1$="" goto l1300
-    b0$(1)=firm_id$+ref1$
-    find record (apm01_dev,key=b0$,dom=*next) apm01a$
+    find record (apm01_dev,key=firm_id$+ref1$,dom=*next) apm01a$
     ref1$=fnmask$(apm01a.vendor_id$,masks$[2])
 
 l1300: rem --- Retrieve GL account
@@ -138,8 +139,7 @@ l1300: rem --- Retrieve GL account
     if pos(source$="OPITTITOBMWIWO",2)=0 goto l1400
     if glm01_dev=0 goto l1400
     if num(gl_account$,err=l1400)=0 goto l1400
-    c0$(1)=firm_id$+gl_account$
-    find record (glm01_dev,key=c0$,dom=l1400) glm01a$
+    find record (glm01_dev,key=firm_id$+gl_account$,dom=l1400) glm01a$
     description$[2]="GL Acct "+fnmask$(gl_account$,masks$[3])+" "+glm01a.gl_acct_desc$
 
 l1400: rem --- Branch based on record source
@@ -312,8 +312,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -337,8 +337,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
