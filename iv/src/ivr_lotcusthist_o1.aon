@@ -137,7 +137,7 @@ rem --- Get Reference Block
         ivt01a_a1$=ivt01a.TRANS_SOURCE$+ivt01a.TRANS_REF_1$+ivt01a.TRANS_REF_2$+ivt01a.TRANS_REF_3$+ivt01a.TRANS_REF_4$+ivt01a.TRANS_SEQ$+ivt01a.LINE_CODE$+
 :       ivt01a.UNIT_MEASURE$+ivt01a.TRANS_CMT$+ivt01a.FINISH_ITEM$+ivt01a.GL_ACCOUNT+ivt01a.LOCATION$+
 :       ivt01a.PO_LINE_CODE$+ivt01a.RESERVED_STR$
-        call pgmdir$+"ivc_transdata.aon",ivt01a.a1$,ivchannels[all],params[all],masks$[all],type$,desc$[all]
+        call pgmdir$+"ivc_transdata.aon",ivt01a$,ivchannels[all],params[all],masks$[all],type$,desc$[all]
 
 rem --- Print detail line
 
