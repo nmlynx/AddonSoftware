@@ -1,0 +1,394 @@
+rem --- ABC Analysis Report (Generation Overlay)
+rem --- Program ivr_pb v8.0.0 16Jul2007 (ivr_pb)
+rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 03:36:26)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    seterr std_error
+    setesc std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Initializations
+
+    precision num(ivs01a.precision$)
+    dim files[12],item$[2],when$(16)
+    m7$="###########.0000-"
+    rem when$(1)=i4$+sysinfo.system_date$
+    when$(1)=ivs01a.current_per+ivs01a.current_year+sysinfo.system_date$
+    selection$="END"
+    action$="W"
+    files[1]=ivm01_dev
+    files[2]=ivm02_dev
+    files[3]=ivm03_dev2
+    files[12]=ivm12_dev
+    item$[0]=firm_id$
+    items=0
+    baseperiod$=ivs01a.current_per+ivs01a.current_year
+    curperiod$=ivs01a.current_per+ivs01a.current_year
+    rem day_of_mth=num(f0$(22,2))
+    day_of_mth=num(sysinfo.current_date$)
+    more=1
+
+rem --- Background
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm01_dev,1,meter_num,status
+
+rem --- Rebuild IVW-07/IVW-17 for reprint
+
+    if update$<>"Y" then
+        source=ive07_dev
+        target=ivw07_dev
+        first$=firm_id$
+        if pos(level$="IB")>0 gosub Generate_Records
+        source=ive17_dev
+        target=ivw17_dev
+        first$=firm_id$+begwhse$
+        if pos(level$="WB")>0 gosub Generate_Records
+        run pgmdir$+"ivr_pc.bbx"
+    endif
+
+rem --- Position files
+
+    read (ivm01_dev,key=firm_id$,dom=*next)
+
+rem --- Get next item master
+
+rem --- Main Loop starting
+
+    while more
+
+        ivm01a_key$=key(ivm01_dev,end=*break)
+        if pos(firm_id$=ivm01a_key$)<>1 break
+        read record (ivm01_dev) ivm01a$
+        call pgmdir$+"adc_progress.aon","S","","","",ivm01a.Item_Id$,0,0,1,0,ignore_status
+
+rem --- Position warehouse xref
+
+        
+        first$=firm_id$+"G"+ivm01a.Item_Id$
+        read (ivm03_dev,key=first$,dom=*next)
+
+rem --- Inner Loop starting
+
+        while more
+
+            ivm03a_key$=key(ivm03_dev,end=*break)
+            if pos(first$=ivm03a_key$)<>1 break
+            read (ivm03_dev)
+
+rem --- Retrieve warehouse records
+
+            ivm02a_key$=firm_id$+ivm03a_key$+ivm01a.item_Id$
+            ivm12a_key$=ivm02a_key$+ivs01a.current_year+ivs01a.current_per
+            find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+            cost=ivm02a.unit_cost
+            onhand=ivm02a.qty_on_hand
+            usage=0
+            balance=0
+            find record (ivm12a_dev,key=ivm12a_key$,dom=Estimate_annual_usage) ivm12a$
+            call pgmdir$+"ivc_pa.bbx",selection$,c[all],balance
+
+Estimate_annual_usage: rem --- Calculate estimated annual usage
+
+            item$[1]=ivm02a.warehouse_id$
+            item$[2]=ivm02a.item_Id$
+            call pgmdir$+"ivc_au.bbx",action$,files[all],item$[all],factors[all],day_of_mth,baseperiod$,curperiod$,g[0],p[1],x,usage,flag$,status
+
+rem --- Calculate total value for warehouse
+
+            ivw17a.beg_balance=usage
+            ivw17a.beg_qty_received=onhand
+            ivw17a.qty_built=balance
+            ivw17a.qty_sold=cost
+            ivw17a.qty_issued=ivw17a.beg_balance*cost
+            ivw17a.qty_adjust=ivw17a.beg_qty_received*cost
+            ivw17a.qty_xfer_in=ivw17a.qty_built*cost
+            usage=ivw17a.qty_issued
+            onhand=ivw17a.qty_adjust
+            balance=ivw17a.qty_xfer_in
+            gosub Reciprocal_Amt
+            ivw17a_key$=ivm02a.firm_id$+ivm02a.warehouse_id$
+            ivw17a.recip_sign$=sign$
+            ivw17a.recip_amount$=amount$
+            ivw17a.item_number$=ivm02a.item_Id$
+            ivw17a.abc_code$=ivm02a.abc_code$
+            ivs10w_key$=firm_id$+"W"+ivm02a.warehouse_id$
+            ive17a_key$=ivm02a_key$
+
+rem --- Update totals for warehouse/item
+
+            if level$<>"I" then
+                write record (ivw17_dev,key=ivw17a_key$) ivw17a$
+                find record (ivs10w_dev,key=ivs10w_key$,dom=*next) ivs10w$
+                rem ivs10w.period$+ivs10w.year$+ivs10w.run_date$==when$
+                ivs10w.period$=when$
+                ivs10w.total_value=ivs10w.total_value+ivw17a.qty_issued
+                ivs10w.total_value=ivs10w.total_value+ivw17a.qty_adjust
+                ivs10w.total_value=ivs10w.total_value+ivw17a.qty_xfer_in
+                ivs10w.total_item=ivs10w.total_item+1
+                write record (ivs10_dev,key=ivs10w_key$) ivs10w$
+                remove (ive17_dev,key=ive17a_key$,dom=*next)
+            endif
+rem --- Accumulate item totals
+
+            gosub Item_Totals
+
+rem --- Loop back for next warehouse
+
+        wend; rem --- Inner Loop Ending
+
+
+rem --- Done with warehouses
+
+        if level$="W" continue
+        usage=ivw07a.total_value
+        onhand=ivw07a.total_value
+        balance=ivw07a.total_value
+        ivw07a.firm_id$=firm_id$
+        ivw01a.abc_code$=ivm01a.abc_code$
+        gosub Reciprocal_Amt
+        ive07a_key$=ivm01a.firmid$
+        ive07a.item_Id$=ivm01a.item_Id$
+        ivs10i_key$=firm_id$+"I"
+        ivw01a.abc_code$=ivm01a.abc_code$
+        ivw07a.firm_id$=firm_id$
+        ivw07a.recip_sign$=sign$
+        ivw07a.recip_amount$=amount$
+        ivw07a.item_number$=ivm02a.item_Id$
+
+rem --- Update item totals
+
+        write record (ivw07_dev,key=ivw071a_key$) ivw07a$
+        find record (ivs10i_dev,key=ivs10i_key$,dom=*next) ivs10i$
+        ivs10i.period$=when$
+        ivs10i.total_value=ivs10i.total_value+ivw07a.avg_cost
+        ivs10i.total_value=ivs10i.total_value+ivw07a.std_cost
+        ivs10i.total_value=ivs10i.total_value+ivw07a.rep_cost
+        items=items+1
+        ivs10i.total_items=items
+        write record (ivs10_dev,key=ivs10i_key$) ivs10i$
+        remove (ive07_dev,key=ive07a_key$,dom=*next)
+
+rem --- Loop back for next item
+
+    wend; rem --- Main Loop Ending
+
+done: rem --- Done with generation loop
+
+    source=ive07_dev
+    if pos(level$="IB")>0 gosub Remove_Records
+    source=ive17_dev
+    if pos(level$="WB")>0 gosub Remove_Records
+    
+rem --- Run report overlay
+
+    run pgmdir$+"ivr_pc.bbx"
+
+Reciprocal_Amt: rem --- Generate reciprocal amount
+
+    amount=onhand
+    sign$=""
+    amount$=""
+    if value$="U" amount=usage
+    if value$="B" amount=balance
+    amount$=str(100000000000-amount:m7$)
+    if amount<=0 sign$="-",amount$=str(amount:m7$)
+    return
+
+Item_Totals: rem --- Accumulate item totals
+
+    for x=0 to 6
+        d[x]=d[x]+w[x]
+    next x
+    if ivw07a.qty_on_hand<>0 ivw07a.unit_cost=ivw07a.total_value/ivw07a.qty_on_hand
+    if ivw07a.end_balance<>0 if ivw07a.unit_cost=0 ivw07a.unit_cost=ivw07a.total_value/ivw07a.qty_on_hand
+    return
+
+Remove_Records: rem --- Remove any remaining IVE-07/IVE-17 records
+
+    read (source,key=firm_id$,dom=*next)
+
+rem --- Loop Starting
+    while more
+        k$=key(source,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        remove (source,key=k$)
+    wend; rem --- Loop Ending
+    return
+
+Generate_Records: rem --- Generate IVW-07/IVW-17 records using IVE-07/IVE-17
+
+    read (source,key=first$,dom=*next)
+
+rem --- Loop Starting
+
+    while more
+
+        let k$=key(source,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        read record (source) ive07a$
+        if level$<>"I" then 
+            if level$="W" if k$(3,2)>endwhse$ break
+            let x$=k$(3,2)+" "+k$(5,p[0])
+        
+        else
+            let x$=k$(5,p[0])
+        endif
+        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
+        let usage=ive07a.total_amount,onhand=ive07a.total_amount,balance=ive07a.total_amount
+        gosub Reciprocal_Amt
+        let ivw07a_key$=ive07a.firmid$+ive07a.reserved_str$,ivw07a.recip_sign$=sign$,ivw07a.recip_amount$=amount$
+        let ivw07a.item_number$=ive07a.Item_Id$,ivw07a.abc_code$=ive07a.abc_code$
+        rem d[all]=r[all]
+        rem let ivw07a.ANNUAL_USAGE+ivw07a.QTY_ON_HAND+ivw07a.END_BALANCE+ivw07a.UNIT_COST+ivw07a.Total_Value = ive07a.ANNUAL_USAGE+ive07a.QTY_ON_HAND+ive07a.END_BALANCE+ive07a.RESERVED_NUM+ive07a.Total_Value
+        ivw07a.ANNUAL_USAGE=ive07a.ANNUAL_USAGE
+        ivw07a.QTY_ON_HAND=ive07a.QTY_ON_HAND
+        ivw07a.END_BALANCE=ive07a.END_BALANCE
+        ivw07a.UNIT_COST=ive07a.RESERVED_NUM
+        ivw07a.Total_Value=ive07a.Total_Value
+        write record (target,key=ivw07a_key$) ivw07a$
+
+    wend; rem --- Loop Ending
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run pgmdir$+"ads_process_end.aon",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
