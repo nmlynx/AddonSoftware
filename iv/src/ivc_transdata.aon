@@ -8,15 +8,6 @@ rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-rem --- The following IOLIST's were removed from this program:
-
-rem --- apm01a: iolist b0$(1),b1$(1)
-rem --- arm01a: iolist b0$(1),b1$(1)
-rem --- glm01a: iolist c0$(1),c1$(1)
-rem --- ivm01a: iolist a0$(1),a1$(1)
-rem --- ivm10b: iolist x0$(1)
-rem --- ivm10c: iolist x0$(1)
-
 
 rem --- TRANS$         : IVT-01/04 second string (A1$) (input)
 rem --- CHANNELS[n]    : Channel Numbers (input)
@@ -88,7 +79,7 @@ rem --- Dimension string templates
 rem --- Initializations
 
     ivt04a$=trans$
-    dim a0$(22),x0$(32),x1$(54),x2$(54)
+    dim x0$(32),x1$(54),x2$(54)
     description$[0]=""
     description$[1]=""
     description$[2]=""
@@ -111,56 +102,54 @@ rem --- Initializations
 
 rem --- Retrieve finished item
 
-    if pos(source$="BMWI",2)=0 goto l1100
-    a0$(1)=firm_id$+item$
+    if pos(source$="BMWI",2)=0 goto get_cust
     desc$=""
-    find record (ivm01_dev,key=a0$,dom=l1100) ivm01a$
+    find record (ivm01_dev,key=firm_id$+item$,dom=get_cust) ivm01a$
     desc$=fnitem$(ivm01a.item_desc$)
 
-l1100: rem --- Retrieve customer name
+get_cust: rem --- Retrieve customer name
 
-    if pos(source$="OPWIWO",2)=0 goto l1200
-    if arm01_dev=0 goto l1200
-    if ref1$="" goto l1200
-    b0$(1)=firm_id$+ref1$
+    if pos(source$="OPWIWO",2)=0 goto get_vend
+    if arm01_dev=0 goto get_vend
+    if cvs(ref1$,2)="" goto get_vend
     find record (arm01_dev,key=firm_id$+ref1$,dom=*next) arm01a$
     ref1$=fnmask$(arm01a.customer_id$,masks$[1])
 
-l1200: rem --- Retrieve vendor name
+get_vend: rem --- Retrieve vendor name
 
-    if source$<>"PO" goto l1300
-    if apm01_dev=0 goto l1300
-    if ref1$="" goto l1300
+    if source$<>"PO" goto get_gl
+    if apm01_dev=0 goto get_gl
+    if cvs(ref1$,2)="" goto get_gl
     find record (apm01_dev,key=firm_id$+ref1$,dom=*next) apm01a$
     ref1$=fnmask$(apm01a.vendor_id$,masks$[2])
 
-l1300: rem --- Retrieve GL account
+get_gl: rem --- Retrieve GL account
 
-    if pos(source$="OPITTITOBMWIWO",2)=0 goto l1400
-    if glm01_dev=0 goto l1400
-    if num(gl_account$,err=l1400)=0 goto l1400
-    find record (glm01_dev,key=firm_id$+gl_account$,dom=l1400) glm01a$
+    if pos(source$="OPITTITOBMWIWO",2)=0 goto do_branch
+    if glm01_dev=0 goto do_branch
+    if num(gl_account$,err=do_branch)=0 goto do_branch
+    find record (glm01_dev,key=firm_id$+gl_account$,dom=do_branch) glm01a$
     description$[2]="GL Acct "+fnmask$(gl_account$,masks$[3])+" "+glm01a.gl_acct_desc$
 
-l1400: rem --- Branch based on record source
+do_branch: rem --- Branch based on record source
 
     source=pos(source$="BBBMITOPPHPOTITOWIWO",2)
     if source>0 source=int((source+1)/2)
-    on source goto done,l2000,l2100,l2200,l2300,l2400,l2500,l2600,l2600,l2700,l2800,done
+    on source goto done,beg_bal,bom,iv_tran,op,ph,po,xfer,xfer,wo_issue,wo_rcpt,done
 
-l2000: rem --- BB Beginning Balance
+beg_bal: rem --- BB Beginning Balance
 
     x1$(1)="Beginning Balance"
     goto done
 
-l2100: rem --- BM Bill of Materials Production Entry
+bom: rem --- BM Bill of Materials Production Entry
 
     x1$(1)="Ref "+ref2$
-    if item$="" goto done
+    if cvs(item$,2)="" goto done
     x2$(1)="Item "+item$+" "+desc$
     goto done
 
-l2200: rem --- IT Inventory Transactions
+iv_tran: rem --- IT Inventory Transactions
 
     x0$(6,20)="(Undefined Code)"
     x2$(1)="Ref "+ref2$
@@ -171,25 +160,25 @@ Set_Trans_Desc:
     if cvs(seq$,2)<>"" x2$(12)="-"+seq$
     goto done
 
-l2300: rem --- Type "OP" (Invoice)
+op: rem --- Type "OP" (Invoice)
 
     x1$(1)="Customer "+ref1$+" "+arm01a.customer_name$
     x2$(1)="Invoice "+ref3$+"-"+seq$+" Order "+ref2$+" Line "+line_code$
     goto done
 
-l2400: rem --- PH Physical Inventory Adjustment
+ph: rem --- PH Physical Inventory Adjustment
 
     x1$(1)="Physical Inventory Adjustment"
     x2$(1)="Cycle "+ref4$+"  Loc "+location$
     goto done
 
-l2500: rem --- PO Purchase Order Receipt
+po: rem --- PO Purchase Order Receipt
 
     x1$(1)="Vendor "+ref1$+" "+apm01a.vendor_name$
     x2$(1)="PO "+ref2$+"-"+seq$+" Line "+po_line_code$
     goto done
 
-l2600: rem --- TI/TO Transfer In/Out
+xfer: rem --- TI/TO Transfer In/Out
 
     x0$(6,24)="(Undefined Warehouse)"
     x2$(1)="Ref "+ref2$
@@ -200,7 +189,7 @@ Set_Transfer_Desc:
     if source$="TI" x1$(1)="From "+ref4$+" "+x0$(6,24)
     goto done
 
-l2700: rem --- WI Work Order Issue
+wo_issue: rem --- WI Work Order Issue
 
     x1$(1)="WO "+ref3$+"-"+seq$+"  Type "+ref4$
     p=1
@@ -210,7 +199,7 @@ l2700: rem --- WI Work Order Issue
     if cvs(ref2$,2)="" x2$(p)=desc$
     goto done
 
-l2800: rem --- WO Work Order Receipt
+wo_rcpt: rem --- WO Work Order Receipt
 
     x1$(1)="WO "+ref3$+"  Type "+ref4$
     p=1

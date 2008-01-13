@@ -418,19 +418,22 @@ get_beg_bal: rem --- Determine starting beginning balance
     sqlprep(sql_chan)sql_prep$
     dim read_tpl$:sqltmpl(sql_chan)
     sqlexec(sql_chan)
+
     while 1
         read_tpl$=sqlfetch(sql_chan,err=*break)
         found=1
+        break
     wend
     
     sqlclose(sql_chan)
 
     if found=1
-        read (ivt04_dev2,key=firm_id$+read_tpl.warehouse_id$+read_tpl.item_id$+read_tpl.trans_date$+read_tpl.iv_hist_seq$)ivt04b$
+        read record (ivt04_dev2,key=firm_id$+read_tpl.warehouse_id$+read_tpl.item_id$+read_tpl.trans_date$+read_tpl.iv_hist_seq$)ivt04b$
         balance=ivt04b.trans_qty
     endif
 
     while found=1
+        dim ivt04b$:fattr(ivt04b$)
         read record(ivt04_dev2,end=*break)ivt04b$
         if ivt04b.firm_id$+ivt04b.warehouse_id$+ivt04b.item_id$<>firm_id$+whse$+item$ break
         if ivt04b.trans_date$>=beg_date$ break

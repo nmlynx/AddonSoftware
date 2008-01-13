@@ -64,16 +64,16 @@ Next_ivm01: rem --- Next item
             ivm01a_key$=key(ivm01_dev,end=done)
             if pos(firm_id$=ivm01a_key$)<>1 goto done
 range_checks:
-            if enditem$<>"" if ivm01a_key.Item_Id>enditem$ goto done
+            if enditem$<>"" if ivm01a_key.item_id$>enditem$ goto done
             read record (ivm01_dev,key=ivm01a_key$) ivm01a$
             if begprod$<>"" if ivm01a.product_type$<begprod$ goto ivm01_loop
             if endprod$<>"" if ivm01a.product_type$>endprod$ goto ivm01_loop
             if type$<>"" if ivm01a.Item_type$<>type$ goto ivm01_loop
-            item_head$=" Item Number: "+ivm01a.Item_Id$ 
+            item_head$=" Item Number: "+ivm01a.item_id$ 
             l=l9+1
             item_desc$=" Description: "+ivm01a.item_desc$(1,p[3])+" "+ivm01a.item_desc$(p[3]+1,p[4])+" "+ivm01a.item_desc$(p[3]+p[4]+1,p[5])
 
-            call pgmdir$+"adc_progress.aon","S","","","",ivm01a_key.Item_Id$,0,0,1,0,ignore_status
+            call pgmdir$+"adc_progress.aon","S","","","",ivm01a_key.item_id$,0,0,1,0,ignore_status
             gosub sub_heading
 
 rem --- ivm-01 Master Info
@@ -137,8 +137,8 @@ Print:
         l=l+5
         gosub Heading
         if cvs(ivm01a.alt_sup_item$,2)<>"" then 
-            ivm01b.item_Id$=ivm01a.alt_sup_item$
-            find record (ivm01_dev2,key=ivm01a.Firm_Id$+ivm01b.Item_Id$,dom=PrintCode) ivm01b$
+            ivm01b.item_id$=ivm01a.alt_sup_item$
+            find record (ivm01_dev2,key=ivm01a.Firm_Id$+ivm01b.item_id$,dom=PrintCode) ivm01b$
             altsup$=fnitem$(ivm01b.item_desc$,p[3],p[4],p[5])
             rem read record (ivm01_dev,key=k$) ivm01a$
         endif
@@ -308,7 +308,7 @@ rem --- Next warehouse record
             break
         endif
         read (ivm03g_dev)
-        ivm02a_key$=ivm03g_key.firm_id$+ivm03g_key.Warehouse_id$+ivm03g_key.Item_Id$
+        ivm02a_key$=ivm03g_key.firm_id$+ivm03g_key.Warehouse_id$+ivm03g_key.item_id$
         ivm10c_key$=ivm03g_key.firm_id$+"C"+ivm03g_key.warehouse_id$
         ivm10c.short_name$=nf$
         lstrec_date$="",lstblt_date$="",lstsal_date$=""
