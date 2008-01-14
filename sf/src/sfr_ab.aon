@@ -1,0 +1,203 @@
+rem --- WO Traveler Print - Initialize data, Runs sfr_xa.bbx
+rem --- Program sfr_ab v8.0.0 04Jan2008 (sfr_ab)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 10:54:20)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    seterr std_error
+    setesc std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+dir_pgm",err=*next)
+    on o9 goto label2,label1
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+sysinfo",err=*next)
+    milestone=num(stbl("+milestone",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=5,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
+    files$[2]="ivs_params",ids$[2]="IVS_PARAMS"
+    files$[3]="sfe-01",ids$[3]="SFE_WOMASTR"
+    files$[4]="sfe-04",ids$[4]=""
+    files$[5]="sfs-01a",ids$[5]="SFS_PARAMS"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    arm01_dev=channels[1]
+    ivs01a_dev=channels[2]
+    sfe01_dev=channels[3]
+    sfe04_dev=channels[4]
+    sfs01a_dev=channels[5]
+
+rem --- Dimension string templates
+
+    dim arm01a$:templates$[1],ivs01a$:templates$[2],sfe01a$:templates$[3],
+:       sfe04a$:templates$[4],sfs01a$:templates$[5]
+
+rem --- Retrieve parameter records
+
+    ivs01a_key$=firm_id$+"IV00"
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    sfs01a_key$=firm_id$+"SF00"
+    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
+
+label2: rem --- Open/Lock Files
+
+rem --- Init Data
+
+    h0=60
+    h=0,l9=59,l=l9+1,h3$=""
+    more=1
+    flag=0
+
+rem --- Additional File Opens
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status then goto std_exit
+
+rem --- Background
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04_dev,1,meter_num,ignore_status
+
+rem --- Options
+rem --- Init Read
+
+    k$=firm_id$+"  A"+p4$
+    read (sfe04_dev,key=firm_id$+"  "+"A"+p4$,dom=label1)
+    flag=1
+
+label1: rem --- Main Read
+
+    while more
+
+        if flag=0
+          k$=key(sfe04_dev,end=done)
+          if k$(1,5)<>firm_id$+"  "+"A" then break
+          read (sfe04_dev)
+        endif   
+    
+    rem --- Breaks
+
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+
+    rem --- Additional Reads
+
+        read record (sfe01_dev,key=k$(1,4)+k$(6,7),dom=label1) sfe01a$
+            if op$="Y" 
+           arm01a.cust_name$="*** Not On File ***"
+           read record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
+        endif
+
+    rem --- Set Flags...
+
+        z0$="Y"
+        z1$="Y",z2$="N",z3$="N"
+        o9$=pgm(-2)
+        o9=1
+        run pgmdir$+"sfr_xa.bbx"; rem returns to 1100
+        break
+
+    wend
+
+    flag=0
+
+done: rem --- End
+
+    close (printer_dev,err=*next)
+
+    while more
+
+        while more
+
+            v4$="Did The Travelers Print Correctly: "
+            call pgmdir$+"adc_yesno.aon",1,v4$,0,v$,v3
+            if v$="NO" flag=1
+            if v$="YES" read (sfe04_dev,key=firm_id$+"  "+"A",dom=*next);break
+
+        wend
+
+        if flag break
+
+        while more
+
+            k$=key(sfe04_dev,end=done_exit)
+            if k$(1,5)<>firm_id$+"  "+"A" then break
+            remove (sfe04_dev,key=k$)
+
+        wend
+        
+        break
+
+    wend
+
+done_exit:
+
+    goto std_exit
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,1,meter_num,ignore_status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end
