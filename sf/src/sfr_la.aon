@@ -1,0 +1,660 @@
+rem --- Work Order Adjustment Register
+rem --- Program sfr_la v8.0.0 04Jan2008 (sfr_la)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 11:36:22)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+dir_pgm",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+sysinfo",err=*next)
+    milestone=num(stbl("+milestone",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=24,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="apm-01",ids$[1]="APM_VENDMAST"
+    files$[2]="aps_params",ids$[2]="APS_PARAMS"
+    files$[3]="ars_params",ids$[3]="ARS_PARAMS"
+    files$[5]="glm-01",ids$[5]="GLM_ACCT"
+    files$[6]="gls_params",ids$[6]="GLS_PARAMS"
+    files$[7]="glt-14",ids$[7]="GLX_DAILYXRF"
+    files$[8]="glw-11",ids$[8]="GLW_DAILYDETAIL"
+    files$[9]="ivm-01",ids$[9]="IVM_ITEMMAST"
+    files$[10]="ivs_params",ids$[10]="IVS_PARAMS"
+    files$[12]="prs-01a",ids$[12]="PRS_PARAMS"
+    files$[14]="sfe-01",ids$[14]="SFE_WOMASTR"
+    files$[15]="sfe-01b",ids$[15]=""
+    files$[16]="sfe-12",ids$[16]="SFE_WOOPRADJ"
+    files$[17]="sfe-42",ids$[17]="SFE_WOSUBADJ"
+    files$[18]="sfm-10",ids$[18]="SFC_WOTYPECD"
+    files$[19]="sfs-01a",ids$[19]="SFS_PARAMS"
+    files$[20]="sft-01",ids$[20]="SFT_OPNOPRTR"
+    files$[21]="sft-31",ids$[21]="SFT_OPNSUBTR"
+    files$[22]="sfw-06",ids$[22]="SFW_ADJXTYPE"
+    files$[23]="sfw-08",ids$[23]="SFW_COSTADJT"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    apm01_dev=channels[1]
+    aps01a_dev=channels[2]
+    ars01a_dev=channels[3]
+    glm01_dev=channels[5]
+    gls01a_dev=channels[6]
+    glt14_dev=channels[7]
+    glw11_dev=channels[8]
+    ivm01_dev=channels[9]
+    ivs01a_dev=channels[10]
+    prs01a_dev=channels[12]
+    sfe01_dev=channels[14]
+    sfe01b_dev=channels[15]
+    sfe12_dev=channels[16]
+    sfe42_dev=channels[17]
+    sfm10_dev=channels[18]
+    sfs01a_dev=channels[19]
+    sft01_dev=channels[20]
+    sft31_dev=channels[21]
+    sfw06_dev=channels[22]
+    sfw08_dev=channels[23]
+
+rem --- Dimension string templates
+
+    dim apm01a$:templates$[1],aps01a$:templates$[2],ars01a$:templates$[3],
+:       empcoa$:templates$[4],glm01a$:templates$[5],gls01a$:templates$[6],
+:       glt14a$:templates$[7],glw11a$:templates$[8],ivm01a$:templates$[9],
+:       ivs01a$:templates$[10],prs01a$:templates$[12],
+:       sfe01a$:templates$[14],sfe01b$:templates$[15],
+:       sfe12a$:templates$[16],sfe42a$:templates$[17],sfm10a$:templates$[18],
+:       sfs01a$:templates$[19],sft01a$:templates$[20],sft31a$:templates$[21],
+:       sfw06a$:templates$[22],sfw08a$:templates$[23]
+
+rem --- Assign form input values to local variables
+
+    value_01$=Option!.getOptionData("form_value_01")
+
+rem --- Retrieve parameter records
+
+    aps01a_key$=firm_id$+"AP00"
+    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    ars01a_key$=firm_id$+"AR00"
+    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    gls01a_key$=firm_id$+"GL00"
+    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    ivs01a_key$=firm_id$+"IV00"
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    prs01a_key$=firm_id$+"PR00"
+    find record (prs01a_dev,key=prs01a_key$,err=std_missing_params) prs01a$
+    sfs01a_key$=firm_id$+"SF00"
+    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
+
+rem --- Parameters
+
+    bm$=sfs01a.bm_interface$
+    op$=sfs01a.ar_interface$,ap$=sfs01a.po_interface$,pr$=sfs01a.pr_interface$
+    i9=num(ivs01a.item_id_len$)
+    i1=num(ivs01a.precision$),i2=num(ivs01a.ls_no_len$)
+    if op$<>"N"
+        find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
+        c0=num(ars01a.cust_size$)
+        c1=len(ars01a.cust_output$)
+    endif
+
+    if ap$<>"N"
+        find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
+        c2=num(aps01a.vendor_size$)
+        c3=len(aps01a.vend_output$)
+    endif
+
+    if pr$<>"N"
+        find record (prs01a_dev,key=firm_id$+"PR00",dom=std_missing_params) prs01a$
+        c4=num(prs01a.empl_no_len$)
+        c5=len(prs01a.empl_output$)
+    else
+         let c4=num(sfs01a.empl_no_len$),prs01a.empl_output$=m0$
+    endif
+
+    gl$="N"
+    status=0,source$=pgm(-2)
+    call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,n2$,glw11$,gl$,status
+    if status then goto std_exit
+
+rem --- Init Data
+
+    dim j$(80,"-"),t[3],headings$[1],desc[3]
+    h0=132
+    h=0,headings$[0]=n1$,headings$[1]=n3$,l9=59,l=l9+1
+    clock$=""
+    sfs01a.rate_mask$="",when$=sysinfo.system_date$,headings=1,errors=0,termf0$=f0$
+    if p9$="L" then let sfs01a.rate_mask$="Lot Number: "
+    if p9$="S" then let sfs01a.rate_mask$="Serial Number: "
+    m0=len(m0$)
+    m1=len(m1$),m2=len(m2$),m3=len(m3$),o9=0
+    lm$="Labor Cost Adjustment"
+    sm$="Subcontract Cost Adjustment"
+    cm$="Closed Cost Adjustment"
+    desc[1]=num(ivs01a.desc_len_01$)
+    desc[2]=num(ivs01a.desc_len_02$)
+    desc[3]=num(ivs01a.desc_len_03$)
+    precision 4
+    dim j2$(m1,"-")
+    more=1
+
+rem --- Additional File Opens
+
+    if bm$="Y" then let files$[11]="bmm-08"
+    if bm$<>"Y" then let files$[11]="sfm-02"
+    if pr$="Y" then let files$[12]="prm-01"
+    if pr$<>"Y" then let files$[12]="sfm-01"
+    if ap$="Y" then let files$[13]="apm-01"
+    if gl$="Y" then let files$[14]="glm-01",files$[15]=glw11$,options$[15]="CL"
+    call pgmdir$+"adc_fileopen.aon",1,11,15,files$[all],options$[all],channels[all],batch,status
+    if status then goto std_exit
+    opcode_dev=channels[11]
+    empcode_dev=channels[12],apm01_dev=channels[13]
+    if status then goto std_exit
+    if channels[14] then let glm01_dev=channels[14],glw11_dev=channels[15]
+
+rem --- Options
+
+    title=0
+    prompt$="Do You Want To Print The "+n3$,prompt=2
+    call pgmdir$+"adc_yesno.aon",title,prompt$,prompt,v$,v3
+    if v$<>"Y" then goto std_exit
+
+rem --- Clear Work File/Open Printer/Create Report Sort File
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status then goto std_exit
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe12_dev,1,meter_num,ignore_status
+    dim sortseq$(18)
+    sfadj_dev=sfe12_dev
+
+    while more
+
+        read (sfadj_dev,key=firm_id$,dom=*next)
+        while more
+
+            k$=key(sfadj_dev,end=*break)
+            if pos(k$(1,2)=firm_id$)=0 then break
+            read (sfadj_dev,key=k$)
+            sortseq$=k$
+            write record (sfw08_dev,key=sortseq$) sfw08a$
+            call pgmdir$+"adc_progress.aon","S","","","",sortseq$(1,11)+sortseq$(15),0,0,1,0,ignore_status
+
+        wend
+
+        if sfadj_dev=sfe42_dev then break
+        sfadj_dev=sfe42_dev
+
+    wend
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfw08_dev,1,meter_num,ignore_status
+
+rem --- Init Read
+
+    read (sfw08_dev,key=firm_id$,dom=*next)
+
+rem --- Main Read
+
+    while more
+
+        k$=key(sfw08_dev,end=done)
+        if pos(firm_id$=k$)<>1 then break
+        read (sfw08_dev,key=k$)
+        if k$(15,1)="O" then read record (sfe12_dev,key=k$) sfe12a$
+        if k$(15,1)="S" then read record (sfe42_dev,key=k$) sfe42a$
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
+
+    rem --- W/O Header
+
+        find record (sfe01_dev,key=k$(1,11),dom=label1) sfe01a$
+        if sfe01a.wo_category$="I"
+
+        label1:
+            find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=label2) ivm01a$
+            sfe01a.description_01$=ivm01a.item_desc$(1,min(desc[1],30))
+
+        endif
+
+    label2:
+
+        sfe01b$=sfe01a$
+
+    rem --- Get Additional Data
+
+        rec_id$="O"
+        if sfe12a.record_id_o$="O"
+            read record (sft01_dev,key=sfe12a.firm_id$+sfe12a.wo_location$+sfe12a.wo_no$+sfe12a.trans_date$+sfe12a.record_id_o$+sfe12a.trans_seq$,dom=*continue) sft01a$
+            sfex2$=sfe12a$
+            sftx1a$=sft01a$
+            rec_id_x$=sfe12a.record_id_o$
+        endif
+        if sfe42a.record_id_s$="S" 
+            read record (sft31_dev,key=sfe42a.firm_id$+sfe42a.wo_location$+sfe42a.wo_no$+sfe42a.trans_date$+sfe42a.record_id_s$+sfe42a.trans_seq$,dom=*continue) sft31a$
+            sfex2a$=sfe42a$
+            sftx1a$=sft31a$
+            rec_id$="S"
+            rec_id_x$=sfe42a.record_id_s$
+        endif
+
+        find record (sfe01_dev,key=firm_id$+"  "+sfex2a.new_wo_no$,dom=label3) sfe01b$
+        if pos(" "<>sfex2a.new_trn_date$)=0 then let sfex2a.new_trn_date$=sfex2a.trans_date$
+
+    label3:
+
+        if num(sfex2a.new_wo_no$)=0 then let sfex2a.new_wo_no$=sfex2a.wo_no$
+
+        dim e0$(30),r0$(20)
+        if rec_id$="O"
+
+        rem --- Get Employee/Op Code
+
+            apm01a.vendor_name$="*** Missing Employee ***"
+            r0$(1)="Missing Op Code"
+            find record (empcode_dev,key=firm_id$+sftx1a.employee_no$,dom=*next) empcode$
+            d9$=apm01a.vendor_name$(1,16)+", "+apm01a.vendor_name$(17,14); gosub compress_desc
+            apm01a.vendor_name$=d9$
+            find record (opcode_dev,key=firm_id$+sftx1a.op_code$,dom=label5) opcode$
+        label4:
+            r0$=r0$(6,20)
+        label5:
+            r0$=r0$(1,pos("   "=r0$+"   ")-1)
+            apm01a.vendor_name$=apm01a.vendor_name$(1,pos("   "=apm01a.vendor_name$+"   ")-1)
+            if len(apm01a.vendor_name$)+37>124-m1-m2-m3*3-6 then let apm01a.vendor_name$=apm01a.vendor_name$(1,124-m1-m2-m3*3-6-37)
+            if len(r0$)+37>124-m1-m2-m3*3-6 then let r0$=r0$(1,124-m1-m2-m3*3-6-37)
+
+        else 
+            if rec_id$="S" then
+
+            rem --- Get Vendor Name
+
+                apm01a.vendor_name$="*** Missing Vendor ***"
+                find record (apm01_dev,key=firm_id$+sftx1a.vendor_id$,dom=*next) apm01a$
+            endif
+
+        endif
+
+    rem --- Print It Here
+
+        if l>l9 then gosub report_heading
+        print (printer_dev)sfex2.wo_no$,"  ",sfe01a.wo_type$,"  ",sfe01a.wo_category$,"  ",fndate$(sfex2.trans_date$),"  ",rec_id_x$,"  ",sfex2.trans_seq$,
+        if rec_id$="O" then print (printer_dev)@(124-m1-m2*3-m3*3),sftx1a.complete_qty:m2$,sftx1a.direct_rate:m3$,sftx1a.unit_cost-sftx1a.direct_rate:m3$,@(124-m1-m2*2),sftx1a.setup_time:m2$,
+        if rec_id$="S" then print (printer_dev)@(124-m1-m2*2-m3),sftx1a.unit_cost:m3$,
+        print (printer_dev)@(124-m1-m2*3-m3*3-7),"Orig: ",@(124-m1-m2),sftx1a.units:m2$,sftx1a.ext_cost:m1$,
+        if sfex2a.new_wo_no$<>sfex2.wo_no$ then print (printer_dev)@(124),sfex2a.new_wo_no$ else print (printer_dev)""
+
+    rem --- Adj Here
+
+        print (printer_dev)@(3),d1$(1,30),
+        if rec_id$="O" then print (printer_dev)@(124-m1-m2*3-m3*3),sfex2a.new_qty_comp:m2$,sfex2a.new_dir_rate:m3$,sfex2a.new_ovr_rate:m3$,@(124-m1-m2*2),sfex2a.new_set_hrs:m2$,
+        if rec_id$="S" then print (printer_dev)@(124-m1-m2*2-m3),sfex2a.new_dir_rate:m3$,
+        print (printer_dev)@(124-m1-m2*3-m3*3-6),"Adj:",@(124-m1-m2),sfex2a.new_units:m2$,(sfex2a.new_units+sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate):m1$,
+        if sfex2a.new_trn_date$<>sfex2.trans_date$ then print (printer_dev)@(124),fndate$(sfex2a.new_trn_date$) else print (printer_dev)""
+
+    rem --- Net
+
+        if rec_id$="O" then print (printer_dev)@(3),fnmask$(sftx1a.employee_no$,c5$),"  ",sftx1a.op_code$," ",r0$,@(124-m1-m2*3-m3*3),sfex2a.new_qty_comp-sftx1a.complete_qty:m2$,sfex2a.new_dir_rate-sftx1a.direct_rate:m3$,sfex2a.new_ovr_rate-(sftx1a.unit_cost-sftx1a.direct_rate):m3$,@(124-m1-m2*2),sfex2a.new_set_hrs-sftx1a.setup_time:m2$,
+        if rec_id$="S" then print (printer_dev)@(3),fnmask$(sftx1a.vendor_id$,c3$),"   ",sftx1a.po_no$+sftx1a.po_line_no$,@(124-m1-m2*2-m3),sfex2a.new_dir_rate-sftx1a.unit_cost:m3$,
+        print (printer_dev)@(124-m1-m2*3-m3*3-6),"Net:",@(124-m1-m2),sfex2a.new_units-sftx1a.units:m2$,(sfex2a.new_units+sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate)-sftx1a.ext_cost:m1$,
+        if sftx1a.ext_cost<>(sfex2a.new_units+sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate) then print (printer_dev)@(124),"***" else print (printer_dev)""
+        print (printer_dev)@(3),s0$
+        print (printer_dev)""
+        l=l+5
+        t0=t0+(sfex2a.new_units+sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate)-sftx1a.ext_cost
+
+    rem --- Check G/L Posting Dates
+
+        if gl$=""
+            glstatus=0
+            call pgmdir$+"glc_datecheck.aon",sfex2.trans_date$,"N",period$,year$,glstatus
+            if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,sfex2.trans_date$,glstatus,l,errors,status
+            if cvs(sfex2a.new_trn_date$,2)<>""
+                call pgmdir$+"glc_datecheck.aon",sfex2a.new_trn_date$,"N",period$,year$,glstatus
+                if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,sfex2a.new_trn_date$,glstatus,l,errors,status
+            endif
+        endif
+
+    rem --- Post Original Dates
+
+        w0$=firm_id$+sfex2.trans_date$+sfe01a.wo_type$
+
+        find record (sfw06_dev,key=w0$,dom=*next) sfw06a$
+        if rec_id$="O" then let sfw06a.act_dir_amt=sfw06a.act_dir_amt-sftx1a.direct_rate*(sftx1a.units+sftx1a.setup_time),sfw06a.act_ovhd_amt=sfw06a.act_ovhd_amt-(sftx1a.ext_cost-sftx1a.direct_rate*(sftx1a.units+sftx1a.setup_time))
+        if rec_id$ ="S" then let sfw06a.unit_cost=sfw06a.unit_cost-sftx1a.ext_cost
+        sfw06a.net_adjust=sfw06a.net_adjust-sftx1a.ext_cost
+        if !(sfe01a.wo_type$=sfe01b.wo_type$ and sfex2.trans_date$=sfex2a.new_trn_date$)
+            write record (sfw06_dev,key=w0$) sfw06a$
+
+        rem --- Adjusted Dates
+
+            w0$=firm_id$+sfex2a.new_trn_date$+sfe01b.wo_type$
+            find record (sfw06_dev,key=w0$,dom=*next) sfw06a$
+        endif
+
+        if rec_id$="O" then let sfw06a.act_dir_amt=sfw06a.act_dir_amt+sfex2a.new_dir_rate*(sfex2a.new_units+sfex2a.new_set_hrs),sfw06a.act_ovhd_amt=sfw06a.act_ovhd_amt+sfex2a.new_ovr_rate*(sfex2a.new_units+sfex2a.new_set_hrs)
+        if rec_id$="S" then let sfw06a.unit_cost=sfw06a.unit_cost+sfex2a.new_dir_rate*sfex2a.new_units
+        sfw06a.net_adjust=sfw06a.net_adjust+(sfex2a.new_dir_rate+sfex2a.new_ovr_rate)*(sfex2a.new_units+sfex2a.new_set_hrs)
+        write record (sfw06_dev,key=w0$) sfw06a$
+
+    rem --- Generate G/L Summary
+
+        if gl$<>"Y" then continue
+        find record (sfm10_dev,key=firm_id$+"A"+sfe01a.wo_type$) sfm10a$
+        if sfe01b.wo_type$<>sfe01a.wo_type$
+            find record (sfm10_dev,key=firm_id$+"A"+sfe01b.wo_type$,dom=label4) wom10a2$
+        endif
+
+    rem --- Back Out The Distribution
+
+        account$=sfm10a.gl_wip_acct$
+        gldate$=sfex2.trans_date$,amount=-sftx1a.ext_cost,units=0
+        ref1$="WO "+sfex2.wo_no$
+        ref2$="Seq "+sfex2.trans_seq$,ref3$=fndate$(sfex2a.new_trn_date$)
+        memo$=cm$
+        gosub glrecap
+
+        if rec_id$="S"
+
+        rem --- Subcontracts
+
+            account$=sfm10a.gl_pur_acct$
+            amount=sftx1a.ext_cost,memo$=sm$
+            gosub glrecap
+
+        else
+            if rec_id$="O"
+           
+            rem --- Labor
+
+                account$=sfm10a.gl_dir_lab$
+                amount=(sftx1a.units+sftx1a.setup_time)*sftx1a.direct_rate,memo$=lm$
+                gosub glrecap
+                account$=sfm10a.gl_ovh_lab$
+                amount=(sftx1a.units+sftx1a.setup_time)*sftx1a.ovhd_rate
+                gosub glrecap
+            endif
+
+        endif
+
+    rem --- Add It Back In With New Information
+
+        account$=sfm10a.gl_wip_acct$
+        gldate$=sfex2a.new_trn_date$
+        amount=round((sfex2a.new_units+sfex2a.new_set_hrs)*sfex2a.new_dir_rate,2)+round((sfex2a.new_units+sfex2a.new_set_hrs)*sfex2a.new_ovr_rate,2)
+        ref1$="WO "+sfe01a.wo_no$
+        ref2$="Seq "+sfex2.trans_seq$,ref3$=fndate$(sfex2.trans_date$)
+        memo$=cm$
+        gosub glrecap
+
+        if rec_id$="S"
+
+        rem --- Subcontracts
+
+            account$=sfm10a.gl_pur_acct$
+            amount=((-sfex2a.new_units)-sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate),memo$=sm$
+            gosub glrecap
+
+        else
+            if rec_id$="O"
+           
+            rem --- Labor
+
+                account$=sfm10a.gl_dir_lab$
+                amount=((-sfex2a.new_units)-sfex2a.new_set_hrs)*sfex2a.new_dir_rate,memo$=lm$
+                gosub glrecap
+                account$=sfm10a.gl_ovh_lab$
+                amount=((-sfex2a.new_units)-sfex2a.new_set_hrs)*sfex2a.new_ovr_rate
+                gosub glrecap
+            endif
+
+        endif
+
+    rem --- Loop back for next record
+
+    wend
+
+done: rem --- End
+
+    if l+2>l9 then gosub report_heading
+    print (printer_dev)@(124-m1),j$(1,m1-1),'lf',@(37),"Report Total: ",@(124-m1),t0:m1$
+
+rem --- Totals By Type
+
+    l=l9+5
+    dim t[3],u[3]
+    read (sfw06_dev,key=firm_id$,dom=*next)
+
+    while more
+
+        read record (sfw06_dev,end=*break) sfw06a$
+        if pos(firm_id$=sfw06a.firm_id$)<>1 then break
+        if sfw06a.trans_date$<>t0$ then gosub first_sub_tot
+        find record (sfm10_dev,key=firm_id$+"A"+sfw06a.wo_type$,dom=*next) wom10a3$
+        if l>l9 then gosub dates_here
+        print (printer_dev)sfw06a.wo_type$,"  ",sfm10a.code_desc$,@(30),sfw06a.act_dir_amt:m1$,sfw06a.act_ovhd_amt:m1$,sfw06a.unit_cost:m1$,sfw06a.net_adjust:m1$
+        for x=0 to 3; let t[x]=t[x]+w[x],u[x]=u[x]+w[x]; next x
+        l0=l0+1
+
+    wend
+
+    if l+2>l9 then gosub report_heading
+    t9$="E"
+    gosub first_sub_tot
+    if l>l9 then gosub dates_here
+    print (printer_dev)@(30),j$(1,m1*4)
+    print (printer_dev)@(3),"Report Totals: ",@(30),u[0]:m1$,u[1]:m1$,u[2]:m1$,u[3]:m1$
+
+    update$="sfu_ga.bbx"
+    page=h,width=h0,f0$=termf0$
+    if gl$="Y" then run pgmdir$+"glr_recap.aon"
+    run update$
+
+report_heading: rem --- Report Heading
+
+    l=0
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
+    if status then exitto std_exit
+    print (printer_dev)""
+    if o9<>1
+        print (printer_dev)@(18),"Transaction",@(124-m1-m2*2-m3*3-5),"Qty",@(124-m1-m2*2-m3*2-7),"Direct",@(124-m1-m2*2-m3-9),"Overhead",@(124-m1-m2*2-5),"Unit",@(124-m1-m2-5),"Setup",@(124),"New WO #"
+        print (printer_dev)"WO #",@(7),"Type Cat",@(18),"Date",@(25),"Src Seq",@(124-m1-m2*2-m3*3-6),"Cmplt",@(124-m1-m2*2-m3*2-6),"Labor",@(124-m1-m2*2-m3-6),"Labor",@(124-m1-m2*2-5),"Cost",@(124-m1-m2-5),"Units",@(124-m1-6),"Units",@(124-10),"Extension",@(124),"Adj Date"
+        print (printer_dev)@(3),
+        if p3$(3,1)="Y" then print (printer_dev)@(3),"Vendor/PO #/",
+        print (printer_dev)"Employee/Op Code",'lf'
+    endif
+    return
+
+dates_here: rem --- Dates Here
+
+    o9=1
+    if l>l9 then gosub report_heading
+    print (printer_dev)"*** Work Order Adjustment Summary By Type ***",'lf'
+    print (printer_dev)@(30+m1-7),"Direct",@(30+m1*2-9),"Overhead",@(30+m1*3-5),"Subs"
+    print (printer_dev)@(30+m1-6),"Labor",@(30+m1*2-6),"Labor",@(30+m1*3-7),"Amount",@(30+m1*4-6),"Total",'lf'
+    return
+
+date_subhead: rem --- Date Subheading
+
+    if l>l9 then gosub dates_here
+    print (printer_dev)"Transaction Date: ",fndate$(t0$),":",'lf'
+    l=l+2
+    return
+
+compress_desc: rem --- Compress Desc
+
+    z=pos(" "<>d9$); if z>1 then let d9$=d9$(z)
+
+    while more
+        x8=pos("  "=d9$)
+        if x8<>0 then let y8=pos(" "<>d9$(x8+2))
+        let d9$=d9$(1,x8)+d9$(x8+y8+1)
+        if y8=0 then break
+    wend
+
+    return
+
+first_sub_tot: rem --- First Sub Total
+
+    if t0$<>""
+        if l0<>0
+            print (printer_dev)@(30),j$(1,m1*4)
+            print (printer_dev)fndate$(t0$)," Total: ",@(30),t[0]:m1$,t[1]:m1$,t[2]:m1$,t[3]:m1$,'lf'
+            l=l+3
+        endif
+    endif
+
+    if t9$<>"" then return
+    dim t[3]
+    t0$=sfw06a.trans_date$
+    l0=0
+    gosub date_subhead
+    return
+
+glrecap: rem --- Special G/L Recap Routine
+
+    if gl$="Y"
+        precision 2
+        amount=amount*1
+        call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,glt14_dev,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
+        precision 4
+    endif
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
