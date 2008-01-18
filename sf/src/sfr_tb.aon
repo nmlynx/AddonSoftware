@@ -144,10 +144,13 @@ rem --- Add It Here
 print_data: rem --- Print Data
         while more
             if t0=0 then break
-            dim b[31]
             find record (sfm04_dev,key=firm_id$+opcode$+fnyy_yy21$(fndate$(transdate$(1,1),transdate$))+fndate$(transdate$(2,1),transdate$),dom=*next) sfm04a$
             s_day=num(fndate$(transdate$(3,1),transdate$))
-            if b[s_day]<0 then let s_hrs=0 else let s_hrs=b[s_day]
+            if num(FIELD(sfm04a$,"hrs_per_day_"+str(s_day:"00")))<0 then 
+                let s_hrs=0 
+            else 
+                let s_hrs=num(FIELD(sfm04a$,"hrs_per_day_"+str(s_day:"00")))
+            endif
             if s_hrs>0 then if 100*t0/s_hrs<utilperc then break
             if l+5>l9 then let l=l9+1
             gosub sub_heading
