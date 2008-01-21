@@ -21,32 +21,6 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+milestone",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
-
-    files=4,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
-    files$[2]="sfm-04",ids$[2]="SFM_OPCALNDR"
-    files$[3]="sfs-01a",ids$[3]="SFS_PARAMS"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ivs01a_dev=channels[1]
-    sfm04_dev=channels[2]
-    sfs01a_dev=channels[3]
-
-rem --- Dimension string templates
-
-    dim ivs01a$:templates$[1],sfm04a$:templates$[2],
-:       sfs01a$:templates$[3]
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sfs01a_key$=firm_id$+"SF00"
-    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
-
 rem --- Open/Lock Files
 rem --- Initializations
 
@@ -61,7 +35,10 @@ rem --- Initializations
     l[7]=31
     l[8]=31,l[9]=30,l[10]=31,l[11]=30,l[12]=31
     call pgmdir$+"adc_progress.aon","N","","","","",0,sfm04_dev,1,meter_num,ignore_status
+    more=1
 
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFM_OPCALNDR","PRIMARY",sfm04_key_tpl$,rd_table_chans$[all],status$
+   
 
 rem --- Load options
 
@@ -71,6 +48,7 @@ rem --- Load options
     sfm04a.op_code$=opcode$
    
 rem --- Initialize Op Code for All Op Code selection
+    dim sfm04_key$:sfm04_key_tpl$
     if opcode$="" then 
         read (sfm04_dev,key=(sfm04a.firm_id$+sfm04a.op_code$),dom=*next)
         sfm04_key$=key(sfm04_dev,end=done)
