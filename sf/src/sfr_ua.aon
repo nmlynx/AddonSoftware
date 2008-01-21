@@ -28,12 +28,17 @@ rem --- Open/Lock files
     files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
     files$[2]="sfe-01",ids$[2]="SFE_WOMASTR"
     files$[3]="sfs-01a",ids$[3]="SFS_PARAMS"
+    files$[4]="bmm-08",ids$[4]="BMC_OPCODES"
+    files$[5]="sfm-02",ids$[5]="SFC_OPRTNCODE"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ivs01a_dev=channels[1]
     sfe01_dev=channels[2]
     sfs01a_dev=channels[3]
+    bmm08a_dev=channels[4]
+    sfm02a_dev=channels[5]
 
 rem --- Dimension string templates
 
@@ -69,6 +74,22 @@ rem --- Init Data
     l=l9+1
     dim j$(80,"-"),j1$(40," "),j0$(20,"0"),a[11]
     r2$="9"
+
+rem --- Open Additional Files
+rem --- Check For Bill Of Materials
+
+    if sfs01a.bm_interface$<> then 
+rem --- Use Work Order Code File
+        call pgmdir$+"adc_fileopen.aon",1,4,4,files$[all],options$[all],channels[all],batch,status
+        if status then goto std_exit
+        codfile_dev=channels[5]
+    else
+rem --- Use Bill Of Materials Code File
+        call pgmdir$+"adc_fileopen.aon",1,3,3,files$[all],options$[all],channels[all],batch,status
+        if status then goto std_exit
+        codfile_dev=channels[4]
+    endif
+
 
 done: rem --- Overlay
 
