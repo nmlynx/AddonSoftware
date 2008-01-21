@@ -77,15 +77,15 @@ rem --- Parameters
     find record (sfs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) sfs01a$
     no_ops=num(sfs01a.max_op_codes)
     bm$="N",op$="N",po$="N"
-    if p3$(sfs01a.po_interface)="Y" then 
+    if sfs01a.po_interface$="Y" then 
         call pgmdir$+"adc_application.aon","PO",info$[all]
         po$=info$[20]
     endif
-    if p3$(sfs01a.ar_interface)="Y" then 
+    if sfs01a.ar_interface$="Y" then 
         call pgmdir$+"adc_application.aon","AR",info$[all]
         ar$=info$[20]
     endif
-    if p3$(sfs01a.bm_interface)="Y" then 
+    if sfs01a.bm_interface$="Y" then 
         call pgmdir$+"adc_application.aon","AR",info$[all]
         bm$=info$[20]
     endif    
@@ -98,7 +98,6 @@ rem --- Init Data
     dim a[11],d[13],w[11]
     r0$=sysinfo.system_date$
     r2$="N"
-
 
 done: rem --- Overlay
 
