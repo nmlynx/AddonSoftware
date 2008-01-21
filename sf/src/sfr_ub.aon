@@ -1,6 +1,6 @@
 rem --- Batch Reschedule Work Orders - II
 rem --- Program sfr_ub v8.0.0 08Jan2008 (sfr_ub)
-rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/08/2008 10:46:52)
+    rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/08/2008 10:46:52)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
@@ -22,31 +22,6 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+milestone",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
-
-    files=3,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
-    files$[2]="sfe-01",ids$[2]="SFE_WOMASTR"
-    files$[3]="sfs-01a",ids$[3]="SFS_PARAMS"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    ivs01a_dev=channels[1]
-    sfe01_dev=channels[2]
-    sfs01a_dev=channels[3]
-
-rem --- Dimension string templates
-
-    dim ivs01a$:templates$[1],sfe01a$:templates$[2],sfs01a$:templates$[3]
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sfs01a_key$=firm_id$+"SF00"
-    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
-
 rem --- Open/Lock Files
 rem --- Init Data
 
@@ -62,8 +37,8 @@ rem --- Background
     call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01_dev,1,meter_num,status
 rem --- Init Read
 
-    k$=firm_id$+"  "+r0$
-    read record (sfe01_dev,key=k$,dom=*next) sfe01a$; goto label_one
+    sfe01a_key$=firm_id$+"  "+r0$
+    read record (sfe01_dev,key=sfe01a_key$,dom=*next) sfe01a$; goto label_one
 
 
 rem --- Main Loop Starts
@@ -118,7 +93,7 @@ unsch_calender: rem --- Unscheduled Date in Calendar
                     print (printer_dev)@(1),sfe01a.wo_no$,@(9),"***",@(13),sfe01a.priority$,
 :                                      @(17),sfe01a.sched_flag$,@(22),sfe01a.wo_status$,
 :                                      @(25),"Unscheduled Date Found In Operations Calendar"
-                l=l+1
+                    l=l+1
                     break
 
 invalid_date: rem --- Invalid 'From' Date
