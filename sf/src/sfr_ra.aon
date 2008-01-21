@@ -23,7 +23,8 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=17,begfile=1,endfile=files
+
+    files=18,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="glm-01",ids$[1]="GLM_ACCT"
     files$[2]="gls_params",ids$[2]="GLS_PARAMS"
@@ -42,6 +43,7 @@ rem --- Open/Lock files
     files$[15]="sft-21",ids$[15]="SFT_OPNMATTR"
     files$[16]="sft-31",ids$[16]="SFT_OPNSUBTR"
     files$[17]="sfw-07",ids$[17]="SFW_CLSWOXTY"
+    files$[18]="sfe-04",ids$[18]="SFE_WOTRANS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -62,6 +64,7 @@ rem --- Open/Lock files
     sft21_dev=channels[15]
     sft31_dev=channels[16]
     sfw07_dev=channels[17]
+    sfe04_dev=channels[18]
 
 rem --- Dimension string templates
 
@@ -71,7 +74,7 @@ rem --- Dimension string templates
 :       sfe22a$:templates$[10],sfe32a$:templates$[11],
 :       sfm10a$:templates$[12],sfs01a$:templates$[13],
 :       sft01a$:templates$[14],sft21a$:templates$[15],sft31a$:templates$[16],
-:       sfw07a$:templates$[17]
+:       sfw07a$:templates$[17],sfe0a$:templates$[18]
 
 
 rem --- Retrieve parameter records
@@ -83,42 +86,13 @@ rem --- Retrieve parameter records
     sfs01a_key$=firm_id$+"SF00"
     find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
 
-rem --- Open/Lock Files
-
-    files=15
-    dim files$[files],options$[files],channels[files]
-    files$[1]="sfe-04"
-    files$[2]="sfe-01",files$[3]="sfe-02"
-    files$[4]="sfe-22"
-    files$[5]="sfe-32",files$[6]="sft-01"
-    files$[7]="sft-21"
-    files$[8]="sft-31",files$[9]="sfw-07"
-    files$[10]="sys-01"
-    files$[11]="ivm-02",files$[12]="ivm-01"
-    files$[13]="sfm-10"
-    options$[9]="C"
-    options$[10]="P"
-    call pgmdir$+"adc_fileopen.aon",1,1,13,files$[all],options$[all],channels[all],batch,status
-    if status then goto std_exit
-    sfe04_dev=channels[1]
-    sfe01_dev=channels[2],sfe02_dev=channels[3]
-    sfe22_dev=channels[4]
-    sfe32_dev=channels[5],sft01_dev=channels[6]
-    sft21_dev=channels[7]
-    sft31_dev=channels[8],sfw07_dev=channels[9]
-    sys01_dev=channels[10]
-    ivm02_dev=channels[11],ivm01_dev=channels[12]
-    sfm10_dev=channels[13]
-
 rem --- Parameters
 
     dim p[2],g[4],desc[3]
-    find record (sys01_dev,key="T"+fid(0),dom=std_missing_params) sys01t$
-    firm_id$=f0$(16,2)
     n1$=sysinfo.firm_name$,n2$="SF",n3$=sysinfo.task_desc$,source$=pgm(-2)
-    find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) sfs01a$
-    find record (sys01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-    find record (sys01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
+    find record (sfs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) sfs01a$
+    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+    find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
     g[0]=num(gls01a.total_pers$,err=*continue)
     g[1]=num(gls01a.current_per$,err=*continue)
     g[2]=num(gls01a.current_year$,err=*continue)
@@ -126,14 +100,17 @@ rem --- Parameters
     g[4]=num(gls01a.max_acct_len$,err=*continue)
 
     g[2]=fnyy_year(gls01a.current_year$)
-    p[0]=num(p2$(1,2))
-    p[1]=num(p4$(1,2)),p[2]=fnyy_year(p4$(3,2))
-    ivs01_precision=num(p9$(5,1))
+    p[0]=num(sfs01a.emp_no_len$)
+    p[1]=num(sfs01a.current_per$),p[2]=fnyy_year(sfs01a.current_year$)
+    ivs01_precision=num(ivs01a.reserved_str$)
     gl$="N"
     status=0
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,n2$,glw11$,gl$,status
     if status then goto std_exit
-    for i=1 to 3; let desc[i]=num(p9$(i*2+7,2)); next i
+
+    for i=1 to 3
+        let desc[i]=num(FIELD(ivs01a$,"desc_len_"+str(i:"00")))
+    next i
 
 rem --- Init Data
 
@@ -144,6 +121,8 @@ rem --- Init Data
     headings=3,h=0,when$=sysinfo.system_date$,clock$="",l9=59,l=l9+1
     m0=len(m0$)
     m1=len(m1$),m2=len(m2$),m3=len(m3$),g5=len(gls01a.acct_output$)+2
+    more=1   
+
     if g5<10 then let g5=10
     if h0-fnw(m1,m2,m3)<=16 then 
         while more
@@ -156,7 +135,18 @@ rem --- Init Data
             call pgmdir$+"adc_sizemask.aon",m3$,m3,6,xm3
             if h0-fnw(m1,m2,m3)>16 then break
         wend
-    endif     
+    endif  
+
+  call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,rd_table_chans$[all],status$
+  call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
+  call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,rd_table_chans$[all],status$
+
+  call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNOPRTR","PRIMARY",sfe02_key_tpl$,rd_table_chans$[all],status$
+  call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_OPNMATTR","PRIMARY",sft21_key_tpl$,rd_table_chans$[all],status$
+  call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_OPNSUBTR","PRIMARY",sft31_key_tpl$,rd_table_chans$[all],status$
+  
+  call stbl("+DIR_SYP")+"bac_key_template.bbj","SFW_CLSWOXTY","PRIMARY",sfw07_key_tpl$,rd_table_chans$[all],status$
+
 rem --- Additional headings
 
     dim m9$(m1*4,"-"),m8$(g5*3,"-"),j9$(m1*8,"-")
@@ -192,6 +182,7 @@ rem --- Final Initializations
     call pgmdir$+"adc_progress.aon","N","","","","",7,sfe04_dev,1,meter_num,ignore_status
 
 
+
 rem --- Init Read
 
     precision ivs01_precision
@@ -222,6 +213,9 @@ rem --- Additional Reads
         rate=sfe02.direct_rate
 
         dim sfreqa$:tmpl(sfreq_dev)
+        dim sfreqa_key$:sfe02_key_tpl$
+
+
         read (sfreq_dev,key=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$),dom=*next)
         sfw07a.firm_id$=firm_id$
         sfw07a.wo_type$=sfe01a.wo_type$
@@ -236,9 +230,11 @@ calculate_standards: rem --- Calculate Standards
         while more
             read (sfreq_dev,key=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$),dom=*next)
             while more
-                k3$=key(sfreq_dev,end=*break)
-                if k3$(1,11)=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$) then 
-                    read record (sfreq_dev,key=k3$) sfreqa$
+                sfreqa_key$=key(sfreq_dev,end=*break)
+                if sfreqa_key.firm_id$=sfe01a.firm_id$ and
+:                  sfreqa_key.wo_location$=sfe01a.wo_location$ and   
+:                  sfreqa_key.wo_no$=sfe01a.wo_no$ 
+                    read record (sfreq_dev,key=sfreqa_key$) sfreqa$
                     x=pos(record_id$="BC")+1
                     if x>1 then 
                         let b[x]=b[x]+total_cost
@@ -254,6 +250,7 @@ calculate_standards: rem --- Calculate Standards
             if sfreq_dev=sfe02_dev then 
                 let sfreq_dev=sfe22_dev 
                 dim sfreqa$:tmpl(sfreq_dev)
+                dim sfreqa_key$:sfe22_key_tpl$
                 record_id$=sfe22.record_id_b$
                 total_units=sfe22.total_units
                 total_cost=sfe22.total_cost
@@ -263,6 +260,7 @@ calculate_standards: rem --- Calculate Standards
             if sfreq_dev=sfe22_dev then 
                 let sfreq_dev=sfe32_dev
                 dim sfreqa$:tmpl(sfreq_dev)
+                dim sfreqa_key$:sfe32_key_tpl$
                 record_id$=sfe32.record_id_c$
                 total_units=sfe32.total_units
                 total_cost=sfe32.total_cost
@@ -274,14 +272,19 @@ calculate_standards: rem --- Calculate Standards
 rem --- Calculate Actuals
         wotran_dev=sft01_dev
         dim sftran$:tmpl(wotran_dev)
+        dim sftran_key$:sft01_key_tpl$
+
         rate=sft01.direct_rate
         record_id$=sft01.record_id_o$
         while more
             read (wotran_dev,key=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$),dom=*next)
             while more
-                k4$=key(wotran_dev,end=*break)
-                if k4$(1,11)<>(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$) then break
-                read record (wotran_dev,key=k4$) sftran$
+                sftran_key$=key(wotran_dev,end=*break)
+                if sftran_key.firm_id$<>sfe01a.firm_id$ and 
+:                  sftran_key.wo_location$<>sfe01a.wo_location$ and 
+:                  sftran_key.wo_no$<>sfe01a.wo_no$ then break
+                
+                read record (wotran_dev,key=sftran_key$) sftran$
                 x=pos(record_id$="MS")+1
                 if x>1 then 
                     let c[x]=c[x]+sftran.ext_cost
@@ -293,14 +296,16 @@ rem --- Calculate Actuals
             wend
             if wotran_dev=sft01_dev then 
                 let wotran_dev=sft21_dev 
-                 dim sftran$:tmpl(wotran_dev)
+                dim sftran$:tmpl(wotran_dev)
+                dim sftran_key$:sft21_key_tpl$
                 record_id$=sft21.record_id_m$
                 rate=sft21.reserved_num_01
                 continue
             endif    
             if wotran_dev=sft21_dev then 
                 let wotran_dev=sft31_dev
-                 dim sftran$:tmpl(wotran_dev)
+                dim sftran$:tmpl(wotran_dev)
+                dim sftran_key$:sft31_key_tpl$
                 record_id$=sft31.record_id_s$
                 rate=sft31.reserved_num_01
                 continue
@@ -444,6 +449,7 @@ rem --- Now Print By Type
     if l+4>l9 then gosub report_heading
     print (printer_dev)'lf','lf',@(10),"Summary By Work Order Type"
     l=l+4
+    dim sfw07_key$:sfw07_key_tpl$
     while more
         sfw07_key$=key(sfw07_dev,end=*break)
         if pos(firm_id$=sfw07_key.firm_id$)<>1 then break
