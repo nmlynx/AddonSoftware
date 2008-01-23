@@ -1,0 +1,308 @@
+rem --- Bill Material Availability Inquiry - Lightbar
+rem --- Program bmr_ib v8.0.0 07Jan2008 (bmr_ib)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/07/2008 11:47:22)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+        setesc std_error
+        seterr std_error
+
+rem --- Retrieve the program path
+
+        pgmdir$=stbl("+dir_pgm",err=*next)
+
+rem --- Retrieve sysinfo data
+
+        sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+sysinfo",err=*next)
+        milestone=num(stbl("+milestone",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
+
+rem --- Determine interface
+
+        call pgmdir$+"adc_fileopen.aon",1,1,14,files$[all],options$[all],channels[all],batch,status
+        if status then goto std_exit
+        if ui$="W" then 
+            dim resparams$[20],resparams[20]
+            resparams[0]=main_context
+            resparams$[0]=pgm(-2)
+            call pgmdir$+"syc_ra.bbx","O",resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
+            my_context=resparams[0]
+        endif
+rem --- Parameters
+
+            width=80
+            height=18,win_x=0,win_y=4,maxrow=height-5
+            title$="Availability Inquiry"
+            call pgmdir$+"syc_sa.bbx::init",str(ui$),maxrow,pages,linfo$[all]
+
+rem --- Initializations
+
+            dim llist$[pages,maxrow,5],more$[pages,maxrow,5]
+            found=0
+            row=1,page=1
+            dim heading1$(width),heading2$(width),footing$(width),control[3],msg$[0]
+            call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
+rem --- ID's need to match resource
+
+            listbox_id=8000
+            header_id1=2000,header_id2=2001,footer_id=2002
+            control[0]=listbox_id
+            control[1]=header_id1,control[2]=header_id2,control[3]=footer_id
+            call pgmdir$+"syc_ff.bbx","",(my_context),0,3,control[all],ignore_status
+            linfo$[0]=str(my_context)
+            linfo$[1]=str(listbox_id),linfo$[3]=str(my_context)
+            fkey=0
+
+rem --- Display Resource
+
+            gosub headers_footers
+
+rem --- Init Find
+            dim bmm02a_key$:bmm02a_key_tpl$
+            read (bmm02_dev,key=bmm01a.firm_id$+bmm01a.bill_no$,dom=*next)
+
+            while more
+
+                bmm02a_key$=key(bmm02_dev,end=*break)
+                if pos(bmm01a.firm_id$+bmm01a.bill_no$=bmm02a_key$)<>1 then break
+                read record (bmm02_dev) bmm02a$
+                if bmm02a.line_type$<>"S" then continue
+                if bmm02a.effect_date$<>"   " and bmm02a.effect_date$>pdate$ then continue
+                if bmm02a.obsolt_date$<>"   " and bmm02a.obsolt_date$<=pdate$ then continue
+
+            rem --- Find Item Record
+
+                find record (ivm01_dev,key=firm_id$+bmm02a.item_id$,dom=*next) ivm01a$
+                ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
+                find record (ivm02_dev,key=firm_id$+x0$+bmm02a.item_id$,dom=load_detail) ivm02a$
+                goto load_check
+
+            load_detail: rem --- Load & Display Data
+
+                ivm02a.warehouse_id$="  "
+            load_check:
+                gosub verify_billno
+                gosub load_data
+                if row+2>maxrow then gosub display_fields
+            wend
+rem --- Finish Up
+
+        if !found then 
+            msg$[0]="No records found (<Enter>=Continue)"
+            call pgmdir$+"adc_stdmessage.aon",3,msg$[all],0,-1,-1,v$,v3
+        else
+            answer$="|EOF"
+            gosub display_fields
+        endif
+
+        back_to_main: rem --- Back to main overlay
+
+            if name$<>"" then call pgmdir$+"syc_wd.bbx",name$
+            call pgmdir$+"syc_dc.bbx",my_context,main_context,status
+
+rem --- Fkey=1 Report
+
+            o1=1
+            if fkey=1 then run pgmdir$+"bmr_ic.bbx"
+
+rem --- Back to main
+
+            run pgmdir$+"bmr_ia.bbx"
+
+            display_fields: rem --- Display Fields
+
+                found=0
+                row=1,page=1
+                call pgmdir$+"syc_sa.bbx",6,llist$[all],more$[all],linfo$[all],answer$,answer,page,pages,maxrow,name$,height,width,fkey
+                if fkey=4 then exitto back_to_main
+                return
+
+            headers_footers: rem --- Set up and print headers and footer
+
+                heading1$(1)="Seq"
+                heading1$(6)="Wh",heading1$(10)="Item",heading1$(30)="Qty",heading1$(42)="On",heading1$(74)="On"
+                heading2$(6)=x0$
+                heading2$(11)="Description",heading2$(30)="Req",heading2$(41)="Hand",heading2$(50)="Commit",heading2$(63)="Avail",heading2$(73)="Order"
+                footing$(2)=title$
+                footing$(width-26)="PgUp  PgDn  F4=End"
+                footing$(25,10)="<F1>=Print"
+                if ui$<>"W" then 
+                    print @(0,11),'ce',
+                    call pgmdir$+"syc_wa.bbx",0,width,height,win_x,win_y,title$,name$
+                    print @(0,0),'cs','sb','br',heading1$,'er','sf',
+                    print @(0,1),'sb','br',heading2$,'er','sf',
+                    print @(0,height-3),'sb','br',footing$,'er','sf',
+                else
+                    call pgmdir$+"syc_rs.bbx","",my_context,header_id1,heading1$,0,"",status
+                    call pgmdir$+"syc_rs.bbx","",my_context,header_id2,heading2$,0,"",status
+                    call pgmdir$+"syc_rs.bbx","",my_context,footer_id,footing$,0,"",status
+                endif
+                return
+
+            load_data: rem --- Load Display Variable:
+
+                gosub verify_billno
+                dim disp$(width-2),disp2$(40)
+
+rem --- seq, wh, item,
+
+                disp$(1)=bmm02a_key.material_seq$
+                disp$(6)=ivm02a.warehouse_id$,disp$(9)=r0$,disp$(10,15)=ivm01a.item_desc$
+
+rem --- qty, on hand, commit
+
+                disp$(25)=str(x0*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,a[4],bmm02a.scrap_factor):ivs01.item_mask$)
+                disp$(37)=str(ivm02a.qty_on_hand:m2$),disp$(48)=str(ivm02a.qty_commit:m2$)
+
+rem --- avail, order
+
+                disp$(60)=str(ivm02a.qty_on_hand-ivm02a.qty_commit:m2$)
+                disp$(70)=str(ivm02a.qty_on_order:m2$)
+
+rem --- item description
+
+                disp2$(10)=ivm01a.item_desc$(1,30)
+                if x0*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,a[4],bmm02a.scrap_factor)>ivm02a.qty_on_hand-ivm02a.qty_commit then let disp$(3,2)="**"
+                llist$[page,row,1]=disp$
+                llist$[page,row+1,1]=disp2$
+                row=row+2
+                found=1
+                return
+rem --- Verify if Item is a Bill Number
+            verify_billno:
+                r0$=" "
+                find (bmm01_dev,key=firm_id$+bmm02a.item_id$,dom=verify)
+                r0$="*"
+            verify:
+                return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
