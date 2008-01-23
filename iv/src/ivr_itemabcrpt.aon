@@ -23,61 +23,59 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=14,begfile=1,endfile=files
+    files=15,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ivc_whsecode",ids$[1]="IVC_WHSECODE"
     files$[2]="ive-07",ids$[2]="IVE_ABCITEM"
     files$[3]="ive-17",ids$[3]="IVE_ABCWHSE"
     files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
     files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
-    files$[6]="ivm-03",ids$[6]="IVX_ITEMPROD"
-    files$[7]="IVC_PRODCODE",ids$[7]=files$[7]
-    files$[8]="ivm-12",ids$[8]="IVM_ITEMACT"
-    files$[9]="IVS_ZEROBAL",ids$[9]=files$[9]
+    files$[6]="ivm-03",ids$[6]="IVX_ITEMWHSE"
+    files$[7]="ivm-12",ids$[7]="IVM_ITEMACT"
+    files$[8]="ivs_abcitem",ids$[8]="IVS_ABCITEM"
+    files$[9]="ivs_abcwhse",ids$[9]="IVS_ABCWHSE"
     files$[10]="ivw-07",ids$[10]="IVW_ABCITEM"
     files$[11]="ivw-17",ids$[11]="IVW_ABCWHSE"
-    files$[12]="GLS_PARAMS",ids$[12]=files$[12]
-    files$[13]="IVS_PARAMS",ids$[13]=files$[13]
-    files$[14]="IVS_ABCPARAM",ids$[14]=files$[14]
-
+    files$[12]="gls_params",ids$[12]="GLS_PARAMS"
+    files$[13]="ivs_params",ids$[13]="IVS_PARAMS"
+    files$[14]="ivs_abcparam",ids$[14]="IVS_ABCPARAM"    
+    files$[15]="ivm-03",ids$[15]="IVX_ITEMWHSE"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
+    
+    ivm10c_dev=channels[1]
     ive07_dev=channels[2]
     ive17_dev=channels[3]
     ivm01_dev=channels[4]
     ivm02_dev=channels[5]
-    ivm03_dev=channels[6]
-    ivm10a_dev=channels[7]
-    ivm12_dev=channels[8]
-    ivs10a_dev=channels[9]
+    ivm03g_dev=channels[6]
+    ivm12_dev=channels[7]
+    ivs10i_dev=channels[8]
+    ivs10w_dev=channels[9]
     ivw07_dev=channels[10]
     ivw17_dev=channels[11]
     gls01a_dev=channels[12]
     ivs01a_dev=channels[13]
-    ivs01c_dev=channels[14]
-    
-
-
+    ivs01c_dev=channels[14] 
+    ivm03g_dev2=channels[15]
 
 rem --- Dimension string templates
 
-    dim ive07a$:templates$[2],ive17a$:templates$[3],ivm01a$:templates$[4],
-:       ivm02a$:templates$[5],ivm03a$:templates$[6],ivm10a$:templates$[7],
-:       ivm12a$:templates$[8],ivs10a$:templates$[9],ivw07a$:templates$[10],
+    dim ivm10c$:templates$[1],ive07a$:templates$[2],ive17a$:templates$[3],ivm01a$:templates$[4],
+:       ivm02a$:templates$[5],ivm03g$:templates$[6],ivm12a$:templates$[7],
+:       ivs10i$:templates$[8],ivs10w$:templates$[9],ivw07a$:templates$[10],
 :       ivw17a$:templates$[11],gls01a$:templates$[12],ivs01a$:templates$[13],
-:       ivs01c$:templates$[14]     
-
-
-
+:       ivs01c$:templates$[14]
 
 rem --- Assign form input values to local variables
 
-    abc_analysis$=option!.getOptionData("abc_analysis")
-    calculate_total_value$=option!.getOptionData("calculate_total")
-    Detailed_Level$=option!.getOptionData("Detailed_Level")
-    begwhse$=option!.getOptionData("whse_id_1")
-    endwhse$=option!.getOptionData("whse_id_2")
+    update$=option!.getOptionData("report_option")
+    value$=option!.getOptionData("pick_listbutton")
+    level$=option!.getOptionData("rpt_level")
+    begwhse$=option!.getOptionData("warehouse_id_1")
+    endwhse$=option!.getOptionData("warehouse_id_2")
 
 rem --- Retrieve parameter records
 
@@ -85,16 +83,12 @@ rem --- Retrieve parameter records
     find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
     find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    ivs01c_key$=firm_id$+"IV00"
+    ivs01c_key$=firm_id$+"IV02"
     find record (ivs01c_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
    
 rem --- Parameters
 
-    dim p[5],g[1],percents[25],factors[25]
-    n2$="IV"
-    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-    find record (ivs01c_dev,key=firm_id$+n2$+"02",dom=std_missing_params) ivs01c$
-    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+    dim p[5],g[1],percents[25],factors[25],ivchannels[20]
     p[0]=num(ivs01a.item_id_len$)
     p[1]=num(ivs01a.precision$)
     g[0]=num(gls01a.total_pers$)
@@ -102,18 +96,78 @@ rem --- Parameters
     p[4]=num(ivs01a.desc_len_02$)
     p[5]=num(ivs01a.desc_len_03$)
 
-rem --- Initializations
+    precision p[1]
+    baseperiod$=ivs01a.current_per$+ivs01a.current_year$
+    curperiod$=baseperiod$
+    when$=sysinfo.system_date$
+    x$=fndate$(when$)
+    day_of_month=num(x$(4,2))
+    ivchannels[1]=ivm01_dev
+    ivchannels[2]=ivm02_dev
+    ivchannels[3]=ivm03g_dev2
+    ivchannels[12]=ivm12_dev
 
-    precision num(ivs01a.precision$)
-    update$="Y"
-    value$="U"
-    level$="B"
-    begwhse$=""
-    endwhse$=""
+   seterr initializations
+
+    factors[0]=ivs01c.abc_factors_01
+    factors[1]=ivs01c.abc_factors_02
+    factors[2]=ivs01c.abc_factors_03
+    factors[3]=ivs01c.abc_factors_04
+    factors[4]=ivs01c.abc_factors_05
+    factors[5]=ivs01c.abc_factors_06
+    factors[6]=ivs01c.abc_factors_07
+    factors[7]=ivs01c.abc_factors_08
+    factors[8]=ivs01c.abc_factors_09
+    factors[9]=ivs01c.abc_factors_10
+    factors[10]=ivs01c.abc_factors_11
+    factors[11]=ivs01c.abc_factors_12
+    factors[12]=ivs01c.abc_factors_13
+    factors[13]=ivs01c.abc_factors_14
+    factors[14]=ivs01c.abc_factors_15
+    factors[15]=ivs01c.abc_factors_16
+    factors[16]=ivs01c.abc_factors_17
+    factors[17]=ivs01c.abc_factors_18
+    factors[18]=ivs01c.abc_factors_19
+    factors[19]=ivs01c.abc_factors_20
+    factors[20]=ivs01c.abc_factors_21
+    factors[21]=ivs01c.abc_factors_22
+    factors[22]=ivs01c.abc_factors_23
+    factors[23]=ivs01c.abc_factors_24
+    factors[24]=ivs01c.abc_factors_25
+    factors[25]=ivs01c.abc_factors_26
+
+initializations:
+
+    seterr std_error
+
+rem --- Resize masks
+
+    call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
+    call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
+    call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,6,15
+    call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
+    call pgmdir$+"adc_sizemask.aon",m3$,m3,5,12
+   
+rem --- Retrieve key template
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMWHSE","PRIMARY",ivm03g_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMWHSE","PRIMARY",ivm02_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVE_ABCITEM","PRIMARY",ive07_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVW_ABCITEM","PRIMARY",ivw07_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVW_ABCWHSE","PRIMARY",ivw17_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVE_ABCWHSE","PRIMARY",ive17_key_tpl$,table_chans$[all],status$
+
+    dim ivm03g_key$:ivm03g_key_tpl$,
+:	ivm02a_key$:ivm02_key_tpl$,
+:	ive07a_key$:ive07_key_tpl$,
+:	ive17a_key$:ive17_key_tpl$,
+:	ivw07a_key$:ivw07_key_tpl$,
+:	ivw17a_key$:ivw17_key_tpl$
 
 rem --- Run next overlay
 
-    run pgmdir$+"ivr_pb.bbx"
+    run pgmdir$+"ivr_itemabcrpt_o1.aon"
 
 rem #include std_error.src
 
