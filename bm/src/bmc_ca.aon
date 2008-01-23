@@ -1,0 +1,355 @@
+rem --- Packing List
+rem --- Program bmc_ca v8.0.0 10Jan2008 (bmc_ca)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/10/2008 02:49:29)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+        seterr std_error
+        setesc std_error
+        enter action$,printer_dev,bill_no$,page_no,pdate$,status
+
+rem --- Retrieve the program path
+
+        pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+        sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+sysinfo",err=*next)
+        milestone=num(stbl("+milestone",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+        files=6,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="bmm-01",ids$[1]="BMM_BILLMAST"
+        files$[2]="bmm-02",ids$[2]="BMM_BILLMAT"
+        files$[3]="bms-01a",ids$[3]="BMS_PARAMS"
+        files$[4]="bmw-02",ids$[4]="BMX_PACKLIST"
+        files$[5]="ivm-01",ids$[5]="IVM_ITEMMAST"
+        files$[6]="ivs_params",ids$[6]="IVS_PARAMS"
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+        if status goto std_exit
+        bmm01_dev=channels[1]
+        bmm02_dev=channels[2]
+        bms01a_dev=channels[3]
+        bmw02_dev=channels[4]
+        ivm01_dev=channels[5]
+        ivs01a_dev=channels[6]
+   
+rem --- Dimension string templates
+
+        dim bmm01a$:templates$[1],bmm02a$:templates$[2],bms01a$:templates$[3],
+:       bmw02a$:templates$[4],ivm01a$:templates$[5],ivs01a$:templates$[6]
+
+
+rem --- Retrieve parameter records
+
+        bms01a_key$=firm_id$+"BM00"
+        find record (bms01a_dev,key=bms01a_key$,err=std_missing_params) bms01a$
+        ivs01a_key$=firm_id$+"IV00"
+        find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+
+
+rem --- Parameters
+
+        n2$="BM"
+        find record (bms01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) bms01a$
+        find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
+        dim p[2],desc[3],a[11],b[10]
+        desc[1]=num(ivs01a.desc_len_01$)
+        desc[2]=num(ivs01a.desc_len_02$)
+        desc[3]=num(ivs01a.desc_len_03$) 
+        p[0]=num(ivs01a.item_id_len$)
+        precision num(ivs01a.precision$)
+
+rem --- Init Data
+        more=1
+        headings=2
+        dim headings$[headings]
+        l9=45
+        l=l9+1,h0=80,when$=sysinfo.system_date$,clock$=""
+        headings$[0]=sysinfo.firm_name$
+        headings$[1]=sysinfo.task_desc$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","BMX_PACKLIST","PRIMARY",bmw02a_key_tpl$,rd_table_chans$[all],status$
+        dim bmm02a_key$:bmm02a_key_tpl$
+        dim bmw02a_key$:bmw02a_key_tpl$
+
+rem --- Sort File
+
+        op_code$="   "
+        read (bmm02_dev,key=firm_id$+bill_no$,dom=*next)
+        While more
+            bmm02a_key$=key(bmm02_dev,end=*break)
+            if pos(firm_id$+bill_no$=bmm02a_key$)<>1 then
+                break
+            endif
+            read record (bmm02_dev,key=bmm02a_key$) bmm02a$
+            if bmm02a.LINE_TYPE$="S" then
+                let op_code$=bmm02a.OP_SEQ$
+            endif
+            key$=firm_id$+op_code$+bmm02a.BILL_NO$+bmm02a.MATERIAL_SEQ$
+            write record (bmw02_dev,key=key$) bmw02a$
+        wend
+
+rem --- Read
+
+        if pos("D"=action$) then
+            call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
+        endif
+        read record (bmm01_dev,key=firm_id$+bill_no$,dom=std_exit) bmm01a$
+
+rem --- Heading
+
+        gosub report_heading
+
+rem --- Detail
+
+        read (bmw02_dev,key=firm_id$,dom=*next)
+        first_time$="Y"
+
+rem --- Main Loop Starts
+While more
+
+        bmw02a_key$=key(bmw02_dev,end=*break)
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        read (bmw02_dev)
+        if first_time$="Y" then let first_time$="N",t0$=bmw02a.OP_SEQ$
+        bmw02a_key$=bmw02a_key.FIRM_ID$+bmw02a_key.BILL_NO$+bmw02a_key.MATERIAL_SEQ$
+        read record (bmm02_dev,key=bmw02a_key$) bmm02a$
+
+        if pos(bmm01a.FIRM_ID$+bmm01a.BILL_NO$=bmm02a.FIRM_ID$+bmm02a.BILL_NO$+bmm02a.MATERIAL_SEQ$)<>1 then
+            break
+        endif
+
+        if bmm02a.EFFECT_DATE$<>"   " and bmm02a.EFFECT_DATE$>pdate$ then continue
+        if bmm02a.OBSOLT_DATE$<>"   " and bmm02a.OBSOLT_DATE$<=pdate$ then continue
+
+        if bmm02a.LINE_TYPE$<>"S" then
+            if l+1>l9 or t0$<>bmm02a.OP_SEQ$ then
+                t0$=bmm02a.OP_SEQ$
+                gosub report_heading
+            endif
+            print (printer_dev)@(9),bmm02a.EXT_COMMENTS$; let l=l+1
+            continue
+        endif
+
+rem --- Standard Item
+
+        if l+2>l9 or t0$<>bmm02a.OP_SEQ$ then
+            t0$=bmm02a.OP_SEQ$
+            gosub report_heading
+        endif
+        r0$=" "
+        find (bmm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=Addl_Reads)
+        r0$="*"
+
+Addl_Reads: rem --- Additional Reads
+
+        rem dim c1$(60),c2$(62)
+        find record (ivm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=*next) ivm01a$
+        ivm01a.ITEM_DESC$=fnzipcode$(ivm01a.ITEM_DESC$,desc[1],desc[2],desc[3])
+
+rem --- Print Detail
+
+        print (printer_dev)@(1),bmm02a.OP_SEQ$,@(9),bmm02a.ITEM_ID$(1,p[0]),
+:                          @(41),bmm02a.UNIT_MEASURE$,
+:                          @(56-p1),fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$,
+:                          @(68),fill(10,"_"),
+        print (printer_dev)@(12),ivm01a.ITEM_DESC$
+        l=l+2
+
+rem --- Serial/Lot Numbers
+
+        if ivm01a.LOTSER_ITEM$<>"Y" or ivs01a.LOTSER_FLAG$="N" then 
+            continue
+        endif
+
+        if ivs01a.LOTSER_FLAG$="S" then
+            let x$="Serial Number: "
+        else
+            let x$="Lot Number: "
+        endif
+
+        if ivs01a.LOTSER_FLAG$="L" and bmm02a.QTY_REQUIRED>5 then
+            let bmm02a.QTY_REQUIRED=5
+        endif
+
+        for i=1 to bmm02a.QTY_REQUIRED
+            if l+1>l9 then gosub report_heading
+            print (printer_dev)@(20),x$,fill(30,"_")
+            l=l+1
+        next i
+rem --- Main Loop Ends
+Wend
+
+
+totals: rem --- Totals
+
+        gosub print_totals
+
+rem --- End
+
+        goto std_exit
+
+report_heading: rem --- Report Heading
+
+        l=headings+1
+        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page_no,h0,when$,clock$,status
+        if status then exitto std_exit
+        rem dim c1$(60)
+        find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
+        print (printer_dev)'lf',@(5),"Bill Number: ",bill_no$
+        print (printer_dev)@(5),"Description: ",ivm01a.ITEM_DESC$(1,min(desc[1],36)),@(54),"Phantom Bill?: ",bmm01a.PHANTOM_BILL$
+        print (printer_dev)@(18),ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34)),@(52),"Unit Of Measure: ",bmm01a.UNIT_MEASUREa2$
+        print (printer_dev)@(18),ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32)),@(50),"Estimated Yield %: ",bmm01a.EST_YIELD:"##0.00"
+        print (printer_dev)@(2),"Drawing Number: ",bmm01a.DRAWING_NO$,@(50),"Standard Lot Size: ",bmm01a.STD_LOT_SIZE
+        print (printer_dev)@(0),"Drawing Revision:",bmm01a.DRAWING_REV$,@(24),"Revision Code: ",bmm01a.BILL_REV$,@(42),"Created: ",fndate$(bmm01a.CREATE_DATE$),@(60),"Revised: ",fndate$(bmm01a.LSTRVS_DATE$)
+        print (printer_dev)@(62),"As Of: ",fndate$(pdate$)
+        print (printer_dev)fill(80,"-")
+        print (printer_dev)@(0),"Op Seq",@(9),"Component",@(41),"U/M",@(55-p1),"Quantity",@(70),"Picked"
+        print (printer_dev)fill(80,"-")
+        return
+
+print_totals: rem --- Totals
+
+        if l+4>l9 then gosub report_heading
+        print (printer_dev)'lf',
+        print (printer_dev)@(30),"Assembled __________"
+        print (printer_dev)@(32),"Checked __________"
+        print (printer_dev)@(33),"Packed __________"
+        return
+
+rem --- #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+        def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+        def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+        def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+        def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+        def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+        def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+        def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+        def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        def fnyy$(q$)=q$(3,2)
+        def fnclock$(q$)=date(0:"%hz:%mz %p")
+        def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+        def fnmask$(q1$,q2$)
+            if q2$="" q2$=fill(len(q1$),"0")
+            return str(-num(q1$,err=*next):q2$,err=*next)
+            q=1
+            q0=0
+            while len(q2$(q))
+                  if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+                  q=q+1
+            wend
+            if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+            return str(q1$:q2$)
+        fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+        def fnbasename$(q$,q0$)
+            q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+            if q then q$=q$(q+1)
+            if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+        return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+        def fnglobal(q$,q1)
+            q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+            return q1
+        fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+        def fnglobal$(q$,q1$)
+            q1$=stbl(q$,err=*next)
+            return q1$
+        fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+        if pos("EXIT"=rd_err_act$) goto std_error_exit
+        if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+        master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_error_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
+
+rem --- #endinclude std_error.src
+rem --- #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+        call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+        master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
+std_missing_params_release:
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
+
+rem --- #endinclude std_missing_params.src
+
+rem --- #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+        run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+        release
+rem --- #endinclude std_exit.src
+
+        end
