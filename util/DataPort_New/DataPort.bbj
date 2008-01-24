@@ -21,7 +21,6 @@ rem --- Initilalization
     filedir$="C:\DataPort\files\"
     logdir$="C:\DataPort\logs\"
     
-
 rem --- Create and open log file
     let logfile$=logdir$+"DataPort_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
     erase logfile$,err=create_logfile
@@ -30,13 +29,8 @@ rem --- Create and open log file
     let log_dev=unt
     open (log_dev)logfile$
 
-rem --- Create and open temp file
-    let tempfile$=logdir$+"Fields_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
-    erase tempfile$,err=create_tempfile
-    create_tempfile: 
-    string tempfile$
-    let temp_dev=unt
-    open (temp_dev)tempfile$
+rem --- Print the start time in log file
+    print (log_dev)"DataPort Start Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "+$0a$
 
 rem --- Get the Addon version
 get_version:
@@ -68,7 +62,8 @@ get_destination_folder:
     let status=0
 
 next_overlay:
-    run pgmdir$+"create_template.bbj"
+    print (log_dev)" Porting Addon "+str(source_version)+" data files from folder "+source_folder$+" to "+destin_folder$+$0a$ 
+    run pgmdir$+"DataPort_main.bbj"
 
 the_end:
 end
