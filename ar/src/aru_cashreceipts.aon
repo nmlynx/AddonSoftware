@@ -291,7 +291,7 @@ rem --- Read next Cash Receipts Header (are-01) record
 
                 while moredetail
                       dim are31a$:fattr(are31a$)
-                      k$=are11a.firm_id$+are11a.ar_type$+are11a.reserved_str$+
+                      k$=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+
 :                        are11a.customer_id$+are11a.ar_inv_no$
                          find record (are31_dev,key=k$,dom=*break) are31a$
                          are31a.apply_amt=are31a.apply_amt-are11a.apply_amt
