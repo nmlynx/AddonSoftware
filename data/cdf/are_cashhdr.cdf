@@ -1,3 +1,43 @@
+[[ARE_CASHHDR.PAYMENT_AMT.BINP]]
+rem --- store value in control prior to input so we'll know at AVAL if it changed
+
+user_tpl.binp_pay_amt=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
+[[ARE_CASHHDR.ARNF]]
+rem --- ARNF; record not found (i.e., entered date/customer/receipt cd/chk # for new tran)
+
+ctl_stat$="D"
+gosub disable_key_fields
+
+
+gosub get_open_invoices
+
+if len(currdtl$)
+	escape;rem for testing -- shouldn't ever contain anything at this point
+	gosub include_new_OA_trans
+endif
+
+disp_applied=chk_applied+gl_applied
+disp_bal=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))-disp_applied
+callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(disp_applied))
+callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(disp_bal))
+
+gosub fill_bottom_grid
+
+callpoint!.setStatus("REFRESH-ABLEMAP")
+[[ARE_CASHHDR.BWRI]]
+gosub validate_before_writing
+
+switch pos(validate_passed$="NO")
+	case 1; rem validation didn't pass, user elected not to update
+		callpoint!.setStatus("ABORT")
+	break
+	case 2; rem user elected to apply undistributed amt on account
+		gosub apply_on_acct
+	break
+	case default
+	break
+swend
+
 [[ARE_CASHHDR.BSHO]]
 rem --- disable display fields
 
@@ -7,6 +47,7 @@ rem --- disable display fields
 	dctl$[2]="<<DISPLAY>>.DISP_BAL"
 	dctl$[3]="<<DISPLAY>>.DISP_APPLIED"
 	gosub disable_ctls
+
 [[ARE_CASHHDR.ACUS]]
 data_present$="N"
 gosub check_required_fields
@@ -22,33 +63,13 @@ if data_present$="Y"
 	endif
 
 	switch ctl_id
-		case num(user_tpl.OA_chkbox_id$)
-			if user_tpl.existing_chk$="Y"
-rem				msg_id$="AR_CHK_EXISTS"
-rem				gosub disp_message
-rem				if Form!.getControl(num(user_tpl.oa_chkbox_id$)).isSelected()
-rem					Form!.getControl(num(user_tpl.oa_chkbox_id$)).setSelected(0)
-rem				else
-rem					Form!.getControl(num(user_tpl.oa_chkbox_id$)).setSelected(1)
-rem				endif
-				gosub process_OA_chkbox
-				callpoint!.setStatus("REFRESH")
-			else						
-				gosub process_OA_chkbox
-				callpoint!.setStatus("REFRESH")
-			endif
+		case num(user_tpl.OA_chkbox_id$)					
+			gosub process_OA_chkbox
+			callpoint!.setStatus("REFRESH")
 		break
 		case num(user_tpl.zbal_chkbox_id$)
-			if user_tpl.existing_chk$="Y"
-rem				msg_id$="AR_CHK_EXISTS"
-rem				gosub disp_message
-rem				Form!.getControl(num(user_tpl.zbal_chkbox_id$)).setSelected(0)
-				gosub process_zbal_chkbox
-				callpoint!.setStatus("REFRESH")
-			else
-				gosub process_zbal_chkbox
-				callpoint!.setStatus("REFRESH")
-			endif
+			gosub process_zbal_chkbox
+			callpoint!.setStatus("REFRESH")			
 		break
 		case num(user_tpl.asel_chkbox_id$)
 			if num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))<0
@@ -77,6 +98,8 @@ endif
 [[ARE_CASHHDR.ADEL]]
 gosub delete_cashdet_cashbal
 [[ARE_CASHHDR.ADIS]]
+rem --- ADIS; existing are-01/11 tran
+
 gosub get_customer_balance
 wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
 gosub get_cash_rec_cd
@@ -179,6 +202,7 @@ UserObj!.setItem(num(user_tpl.existing_dtl$),"")
 
 user_tpl.existing_chk$=""
 user_tpl.gl_applied$="0"
+user_tpl.binp_pay_amt=0
 
 Form!.getControl(num(user_tpl.GLind_id$)).setText("")
 Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
@@ -230,7 +254,7 @@ user_tpl_str$=user_tpl_str$+"gridCheck_rows:c(5),gridInvoice_rows:c(5),"
 user_tpl_str$=user_tpl_str$+"chk_grid:c(5),inv_grid:c(5),chk_vect:c(5),inv_vect:c(5),chk_sel_vect:c(5),"
 user_tpl_str$=user_tpl_str$+"inv_sel_vect:c(5),cur_bal_ofst:c(5),avail_disc_ofst:c(5),"
 user_tpl_str$=user_tpl_str$+"applied_amt_ofst:c(5),disc_taken_ofst:c(5),new_bal_ofst:c(5),pymt_dist:c(5),"
-user_tpl_str$=user_tpl_str$+"existing_dtl:c(5),sv_row:c(5),GLind_id:c(5),GLstar_id:c(5),gl_applied:c(10)"
+user_tpl_str$=user_tpl_str$+"existing_dtl:c(5),GLind_id:c(5),GLstar_id:c(5),gl_applied:c(10),binp_pay_amt:n(15)"
 dim user_tpl$:user_tpl_str$
 user_tpl.firm_id$=firm_id$
 
@@ -333,33 +357,22 @@ gridInvoice!.setColumnEditable(8,1)
 gridInvoice!.setColumnEditable(9,1)
 gridInvoice!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 [[ARE_CASHHDR.AWRI]]
-rem now doing this gosub in BWRI - for some reason, at one point the AWRI in here stopped functioning
-
-rem gosub update_cashhdr_cashdet_cashbal
-[[ARE_CASHHDR.BWRI]]
-gosub validate_before_writing
-
-if validate_passed$<>"Y"
-	callpoint!.setStatus("ABORT")
-else
-	gosub update_cashhdr_cashdet_cashbal
-endif
+gosub update_cashhdr_cashdet_cashbal
 [[ARE_CASHHDR.CASH_CHECK.AVAL]]
 if callpoint!.getUserInput()="$"
-	wctl$=str(num(callpoint!.getTableColumnAttribute("ARE_CASHHDR.ABA_NO","CTLI")):"00000")
-	wmap$=callpoint!.getAbleMap()
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)="I"
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
+
+	ctl_name$="ABA_NO"
+	ctl_stat$="D"
+	gosub disable_fields
+	
 else
-	wctl$=str(num(callpoint!.getTableColumnAttribute("ARE_CASHHDR.ABA_NO","CTLI")):"00000")
-	wmap$=callpoint!.getAbleMap()
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)=" "
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
+	ctl_name$="ABA_NO"
+	ctl_stat$=" "
+	gosub disable_fields
+
 endif
+
+callpoint!.setStatus("REFRESH-ABLEMAP-ACTIVATE")
 [[ARE_CASHHDR.CASH_REC_CD.AVAL]]
 wk_cash_cd$=callpoint!.getUserInput()
 gosub get_cash_rec_cd
@@ -367,52 +380,23 @@ gosub get_cash_rec_cd
 gosub get_customer_balance
 callpoint!.setStatus("REFRESH")
 [[ARE_CASHHDR.PAYMENT_AMT.AVAL]]
-rem --- avoid doing aval if check amt hasn't changed; i.e. we're doing a save, or maybe clicked on check amt but didn't change anything
+rem --- after check amt entered, alter remaining balance and re-do autopay, if turned on
 
-if callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT")=callpoint!.getUserInput()
-	break
-else
-	if num(callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT"))<>0 and 
-:									callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT")<>callpoint!.getUserInput()
-		pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
-		old_pay=num(callpoint!.getColumnUndoData("ARE_CASHHDR.PAYMENT_AMT"))
-		new_pay=num(callpoint!.getUserInput())
-		pay_id$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
-		callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",
-:			str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))-old_pay+new_pay))
-		if Form!.getControl(num(user_tpl.asel_chkbox_id$)).isSelected()
-			to_pay=new_pay-old_pay
-			gosub auto_select_on
-		endif								
-		callpoint!.setStatus("REFRESH")
-	else
-		data_present$="NO-MSG"
-		gosub check_required_fields
-		if data_present$="Y"
-			gosub get_open_invoices;rem --- currdtl$ and pymt_dist$ s/b empty here?
+pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
+old_pay=user_tpl.binp_pay_amt
+new_pay=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
 
-			disp_applied=0
-			disp_bal=num(callpoint!.getUserInput())
-			callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",callpoint!.getUserInput())
-			if num(callpoint!.getUserInput())>0
-				gosub refresh_asel_amounts
-			else
-				Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
-				on_off=0
-				gosub process_asel_chkbox
-			endif
-
-			gosub fill_bottom_grid
-			ctl_stat$="D"
-			gosub disable_key_fields
-			callpoint!.setStatus("ABLEMAP-REFRESH")
-		else
-			callpoint!.setStatus("CLEAR-NEW")
-		endif
-	endif
+if old_pay<>new_pay
+	pay_id$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
+	callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",
+:		str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))-old_pay+new_pay))
+	if Form!.getControl(num(user_tpl.asel_chkbox_id$)).isSelected()
+		to_pay=new_pay-old_pay
+		gosub auto_select_on
+	endif								
+	callpoint!.setStatus("REFRESH")
+	user_tpl.binp_pay_amt=new_pay
 endif
-rem --- store chk amt so if/as we come thru this routine again we know if we've changed the amount from what it was
-callpoint!.setColumnUndoData("ARE_CASHHDR.PAYMENT_AMT",callpoint!.getUserInput())
 [[ARE_CASHHDR.RECEIPT_DATE.AVAL]]
 if len(callpoint!.getUserInput())<6 or pos("9"<>callpoint!.getUserInput())=0 then callpoint!.setColumnData("ARE_CASHHDR.RECEIPT_DATE",stbl("+SYSTEM_DATE"))
 gl$=user_tpl.glint$
@@ -437,12 +421,22 @@ disable_key_fields:
 	key_fields$[3]="AR_CHECK_NO"
 
 	for wk=0 to 3
-		wctl$=str(num(callpoint!.getTableColumnAttribute("ARE_CASHHDR."+key_fields$[wk],"CTLI")):"00000")
-		wmap$=callpoint!.getAbleMap()
-		wpos=pos(wctl$=wmap$,8)
-		wmap$(wpos+6,1)=ctl_stat$
-		callpoint!.setStatus("ABLEMAP")
+		ctl_name$=key_fields$[wk]
+		ctl_stat$="D"
+		gosub disable_fields
 	next wk
+return
+
+disable_fields:
+	rem --- used to disable/enable controls
+	rem --- ctl_name$ sent in with name of control to enable/disable (format "ALIAS.CONTROL_NAME")
+	rem --- ctl_stat$ sent in as D (or I) or space, meaning disable/enable, respectively
+
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
 return
 
 get_cash_rec_cd:
@@ -487,7 +481,6 @@ return
 
 update_cashhdr_cashdet_cashbal:
 
-rem --- need logic to put out two trans for application of OA funds (and CM) -- a negative to the OA, and positive on the invoice
 	are_cashhdr_dev=fnget_dev("ARE_CASHHDR")
 	are_cashdet_dev=fnget_dev("ARE_CASHDET")
 	are_cashbal_dev=fnget_dev("ARE_CASHBAL")
@@ -505,33 +498,38 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 		dim are21a$:fnget_tpl$("ARE_CASHGL")
 
 		are01a.firm_id$=firm_id$,are11a.firm_id$=firm_id$,are31a.firm_id$=firm_id$,are21a.firm_id$=firm_id$
-		are01a.receipt_date$=callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE"),are11a.receipt_date$=are01a.receipt_date$,
-:																	are21a.receipt_date$=are01a.receipt_date$
-		are01a.customer_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID"),are11a.customer_id$=are01a.customer_id$,
-:																  are31a.customer_id$=are01a.customer_id$,
-:																  are21a.customer_id$=are01a.customer_id$
-		are01a.cash_rec_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD"),are11a.cash_rec_cd$=are01a.cash_rec_cd$,
-:																  are21a.cash_rec_cd$=are01a.cash_rec_cd$
-		are01a.ar_check_no$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO"),are11a.ar_check_no$=are01a.ar_check_no$,
-:																  are21a.ar_check_no$=are01a.ar_check_no$		
-		are11a.ar_inv_no$=cvs(pymt_dist$(updt_loop+10,10),3),are31a.ar_inv_no$=are11a.ar_inv_no$
+		are01a.receipt_date$=callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")
+		are11a.receipt_date$=are01a.receipt_date$
+		are21a.receipt_date$=are01a.receipt_date$
+		are01a.customer_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
+		are11a.customer_id$=are01a.customer_id$
+		are31a.customer_id$=are01a.customer_id$
+		are21a.customer_id$=are01a.customer_id$
+		are01a.cash_rec_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
+		are11a.cash_rec_cd$=are01a.cash_rec_cd$
+		are21a.cash_rec_cd$=are01a.cash_rec_cd$
+		are01a.ar_check_no$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
+		are11a.ar_check_no$=are01a.ar_check_no$
+		are21a.ar_check_no$=are01a.ar_check_no$		
+		are11a.ar_inv_no$=cvs(pymt_dist$(updt_loop+10,10),3)
+		are31a.ar_inv_no$=are11a.ar_inv_no$
 
 		old_pay=0,old_disc=0
 
-		rem --- cashhdr, are-01
+rem --- cashhdr, are-01
 		readrecord(are_cashhdr_dev,key=are01a.firm_id$+are01a.ar_type$+are01a.reserved_key_01$+are01a.receipt_date$+
 :			are01a.customer_id$+are01a.cash_rec_cd$+are11a.ar_check_no$+are01a.reserved_key_02$,dom=*next)are01a$		
 		are01a.payment_amt$=callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT")
 		are01a.cash_check$=callpoint!.getColumnData("ARE_CASHHDR.CASH_CHECK")
 		are01a.aba_no$=callpoint!.getColumnData("ARE_CASHHDR.ABA_NO")		
-		are01a$=field(are01a$);writerecord(are_cashhdr_dev,key=are01a.firm_id$+are01a.ar_type$+are01a.reserved_key_01$+
+		are01a$=field(are01a$)
+		writerecord(are_cashhdr_dev,key=are01a.firm_id$+are01a.ar_type$+are01a.reserved_key_01$+
 :			are01a.receipt_date$+are01a.customer_id$+are01a.cash_rec_cd$+are11a.ar_check_no$+are01a.reserved_key_02$)are01a$
 
 		apply_amt=num(pymt_dist$(updt_loop+20,10))
 		disc_amt=num(pymt_dist$(updt_loop+30,10))
-		callpoint!.setRecordMode("C");rem --- rec_data$[0,1](1,2)="C "
 
-		rem --- cashdet, are-11
+rem --- cashdet, are-11
 		readrecord(are_cashdet_dev,key=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+are11a.receipt_date$+
 :			are11a.customer_id$+are11a.cash_rec_cd$+are11a.ar_check_no$+are11a.reserved_key_02$+are11a.ar_inv_no$,dom=*next)are11a$
 		if num(are11a.apply_amt)<>0 or num(are11a.discount_amt$)<>0
@@ -541,7 +539,8 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 		are11a.apply_amt$=str(apply_amt)
 		are11a.discount_amt$=str(disc_amt)
 		if apply_amt<>0 or disc_amt<>0
-			are11a$=field(are11a$);writerecord(are_cashdet_dev,key=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+
+			are11a$=field(are11a$)
+			writerecord(are_cashdet_dev,key=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+
 :				are11a.receipt_date$+are11a.customer_id$+are11a.cash_rec_cd$+are11a.ar_check_no$+are11a.reserved_key_02$+
 :				are11a.ar_inv_no$)are11a$
 		else
@@ -549,13 +548,14 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 :				are11a.customer_id$+are11a.cash_rec_cd$+are11a.ar_check_no$+are11a.reserved_key_02$+are11a.ar_inv_no$,dom=*next)
 		endif
 
-		rem --- cashbal, are-31
+rem --- cashbal, are-31
 		readrecord(are_cashbal_dev,key=are31a.firm_id$+are31a.ar_type$+are31a.reserved_str$+are31a.customer_id$+
 :			are31a.ar_inv_no$,dom=*next)are31a$
 		are31a.apply_amt$=str(num(are31a.apply_amt)-old_pay+num(are11a.apply_amt$))
 		are31a.discount_amt$=str(num(are31a.discount_amt$)-old_disc+num(are11a.discount_amt$))
 		if num(are31a.apply_amt$)<>0 or num(are31a.discount_amt$)<>0
-			are31a$=field(are31a$);writerecord(are_cashbal_dev,key=are31a.firm_id$+are31a.ar_type$+are31a.reserved_str$+
+			are31a$=field(are31a$)
+			writerecord(are_cashbal_dev,key=are31a.firm_id$+are31a.ar_type$+are31a.reserved_str$+
 :				are31a.customer_id$+are31a.ar_inv_no$)are31a$
 		else
 			remove(are_cashbal_dev,key=are31a.firm_id$+are31a.ar_type$+are31a.reserved_str$+are31a.customer_id$+
@@ -564,7 +564,7 @@ rem --- need logic to put out two trans for application of OA funds (and CM) -- 
 
 	next updt_loop
 	endif
-	callpoint!.setStatus("NEW")
+	callpoint!.setStatus("CLEAR-NEW"); rem CLEAR clears modified flag; NEW sets up for new record
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.clearMainGrid()
 
@@ -580,6 +580,12 @@ validate_before_writing:
 		gosub disp_message
 		validate_passed$=msg_opt$
 	endif
+
+	rem	gosub check_for_neg_invoices; rem --- not sure I care about this routine?
+
+return
+
+check_for_neg_invoices:
 
 	vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
 	cols=num(user_tpl.gridInvoice_cols$)
@@ -598,7 +604,6 @@ validate_before_writing:
 			endif
 		endif
 	endif
-
 return
 
 apply_on_acct:
@@ -628,6 +633,10 @@ apply_on_acct:
 return
 
 delete_cashdet_cashbal:
+rem --- letting Barista delete are-21 based on delete cascade in form
+rem --- can't let Barista just delete are-11 and 31, 
+rem ---  because 31 may or may not be deleted, based on it's bal after deleting are-11's...
+rem ---  so delete are-11 and 31 manually here.
 
 	are_cashdet_dev=fnget_dev("ARE_CASHDET")
 	are_cashbal_dev=fnget_dev("ARE_CASHBAL")	
@@ -713,22 +722,21 @@ gl_distribution:
 		endif
 	wend
 
-rem --- escape;rem check glapp
 	glapp=num(user_tpl.gl_applied$)+gl_applied
 	user_tpl.gl_applied$=str(-gl_applied);rem added 5/16/07.ch
-rem --- escape;rem check again	
-rem used to say if glapp<>0
-		callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))-glapp))
-		callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_APPLIED"))+glapp))
-		Form!.getControl(num(user_tpl.GLind_id$)).setText("* includes GL distributions")
-		Form!.getControl(num(user_tpl.GLstar_id$)).setText("*")
-		callpoint!.setStatus("REFRESH")
-rem used to be endif
+
+	callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))-glapp))
+	callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(num(callpoint!.getColumnData("<<DISPLAY>>.DISP_APPLIED"))+glapp))
+	Form!.getControl(num(user_tpl.GLind_id$)).setText("* includes GL distributions")
+	Form!.getControl(num(user_tpl.GLstar_id$)).setText("*")
+	callpoint!.setStatus("REFRESH")
 
 return
 
 delete_cashgl:
-rem --- intended to use if oper cancels out -- GL dist could already be written in another process, so need to be able to remove them
+rem --- intended to use if oper cancels out after having already done GL dist in separate grid/process, so need to be able to remove them
+rem --- waiting for BCAN event in Barista
+
 escape;rem --- monitor gl dist remove
 	are_cashgl_dev=fnget_dev("ARE_CASHGL")
 	dim are21a$:fnget_tpl$("ARE_CASHGL")
@@ -761,9 +769,14 @@ return
 
 get_open_invoices:
 
-rem --- use this routine both for new checks, and existing (already present in are-01/11)
-rem --- diff is, for existing, will set applied/discount amounts according to are-11 (using UserObj! item containing existing dtl)
-rem --- also uses UserObj! item containing current pay/disc amts to restore what you've currently paid if re-executing this routine
+rem --- use this routine both for new payment trans, and existing (already present in are-01/11)
+rem --- invoked from ADIS (existing), ARNF (new), process_OA_chkbox, process_zbal_chkbox
+rem --- diff is, for existing, will set already applied/discounted amounts according to are-11 (using UserObj! item containing existing_dtl$)
+rem --- this routine initializes two vectors corresponding to the grid on the form: 
+rem ---   vectInvoice! contains invoice info from art01/11, updated with applied/discount from are-31, and from existing_dtl$ as mentioned above.  
+rem ---   vectInvSel! contains Y/N values to correspond to checkboxes in first column of grid.
+rem ---   once vectors are built, they're stored in UserObj!
+
 	inv_key$=firm_id$+"  "+callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
 	art_invhdr_dev=fnget_dev("ART_INVHDR")
 	art_invdet_dev=fnget_dev("ART_INVDET")
@@ -890,8 +903,9 @@ include_curr_tran_amts:
 return
 
 include_new_OA_trans:
+rem --- should only happen if new check applied OA, and this OA inv rec not in art-01/11
+rem --- will add information for the OA tran to both vectInvoice! and vectInvSel!
 
-	rem --- should only happen if new check applied OA, and this OA inv rec not in art-01/11
 	if len(currdtl$)<>40 then escape;rem --- for testing... shouldn't happen
 	if currdtl$(11,2)<>"OA" then escape;rem --- for testing... shouldn't happen
 
@@ -912,7 +926,6 @@ include_new_OA_trans:
 
 return
 
-
 fill_bottom_grid:
 
 	SysGUI!.setRepaintEnabled(0)
@@ -920,7 +933,6 @@ fill_bottom_grid:
 	minrows=num(user_tpl.gridInvoice_rows$)
 	if vectInvoice!.size()
 		numrow=vectInvoice!.size()/gridInvoice!.getNumColumns()
-rem --- 		if numrow<=minrows numrow=minrows
 		gridInvoice!.clearMainGrid()
 		gridInvoice!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)
 		gridInvoice!.setNumRows(numrow)
@@ -941,7 +953,7 @@ return
 
 process_OA_chkbox:
 
-	rem --- if checked off, remove any OA/CM's from grid (unless that's all there is), preserving actual check entry
+	rem --- OA checkbox has been unchecked, remove any OA/CM lines from grid
 	rem --- if checked on, read art-01/11 to build vectCheck! with OA/CM's, and add after actual check, if there is one
 
 	on_off=dec(gui_event.flags$)
@@ -955,10 +967,10 @@ process_OA_chkbox:
 			voffset=0
 
 			while voffset < vectInvoice!.size()
-				rem --- test to see if this is an OA/CM line - not sure, given just test data, if I need to check both amts
 				orig_inv_amt=num(vectInvoice!.getItem(voffset+4))
 				cur_inv_amt=num(vectInvoice!.getItem(voffset+num(user_tpl.cur_bal_ofst$)))
-				if orig_inv_amt<0 or cur_inv_amt<0
+				rem --- stmt below used to say if orig_inv_amt<0 or cur_inv_amt<0...not sure we care about cur_inv_amt?
+				if orig_inv_amt<0 
 					remove_amt=num(vectInvoice!.getItem(voffset+num(user_tpl.applied_amt_ofst$)))
 					remove_disc=num(vectInvoice!.getItem(voffset+num(user_tpl.disc_taken_ofst$)))
 					remove_inv$=vectInvoice!.getItem(voffset+1)
@@ -996,7 +1008,6 @@ process_OA_chkbox:
 	gosub fill_bottom_grid	
 	gosub refresh_asel_amounts
 	
-
 return
 
 process_zbal_chkbox:
@@ -1014,7 +1025,7 @@ process_zbal_chkbox:
 return
 
 process_asel_chkbox:
-rem --- escape;rem --- follow	
+	
 	if on_off=0
 		gosub auto_select_off		
 		UserObj!.setItem(num(user_tpl.pymt_dist$),"")
@@ -1023,10 +1034,7 @@ rem --- escape;rem --- follow
 		pymt_dist$=""
 		pay_id$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
 		to_pay=num(callpoint!.getColumnData("<<DISPLAY>>.DISP_BAL"))
-rem --- 		to_pay=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
-		gosub auto_select_on
-					
-					
+		gosub auto_select_on										
 	endif
 return
 
@@ -1127,8 +1135,8 @@ process_gridInvoice_event:
 	vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
 	vectInvSel!=UserObj!.getItem(num(user_tpl.inv_sel_vect$))
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
-	clicked_row=gridInvoice!.getSelectedRow()
 	cols=num(user_tpl.gridInvoice_cols$)
+	clicked_row=dec(notice.row$)
 
 	pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 
@@ -1137,7 +1145,7 @@ process_gridInvoice_event:
 	switch dec(notice.code$)
 
 		case 7;rem --- edit stop
-			clicked_row=num(user_tpl.sv_row$)
+
 			rem --- only column 8 and 9 are enabled (except for checkbox at 0); 8=pay, 9=discount
 			rem --- don't allow discount if not paying anything
 
@@ -1155,6 +1163,7 @@ process_gridInvoice_event:
 				new_pay=old_pay
 				if new_pay=0 new_disc=0
 			endif
+
 			vectInvoice!.setItem(clicked_row*cols+num(user_tpl.applied_amt_ofst$),str(new_pay))
 			vectInvoice!.setItem(clicked_row*cols+num(user_tpl.disc_taken_ofst$),str(new_disc))
 			vectInvoice!.setItem(clicked_row*cols+num(user_tpl.new_bal_ofst$),
@@ -1192,6 +1201,7 @@ process_gridInvoice_event:
 				wk$(31)=str(new_disc-old_disc)
 				pymt_dist$=pymt_dist$+wk$
 			endif
+			Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
 			UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 			callpoint!.setStatus("REFRESH-MODIFIED"); rem "added MODIFIED 19sept07.CH, as events in dtl grid no longer 'turning on' save icon
 			
@@ -1202,7 +1212,6 @@ process_gridInvoice_event:
 			if dec(notice.col$)<>0
 				vectInvSel!.setItem(clicked_row,"Y")
 				gridInvoice!.setCellStyle(clicked_row,0,SysGUI!.GRID_STYLE_CHECKED)
-				user_tpl.sv_row$=str(gridInvoice!.getSelectedRow())
 			endif
 		break
 
@@ -1215,6 +1224,7 @@ process_gridInvoice_event:
 				if inv_onoff=0 inv_onoff=1 else inv_onoff=0;rem --- toggle
 				gosub invoice_chk_onoff
 				gridInvoice!.setSelectedColumn(1)
+				Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
 			endif
 
 		break
@@ -1226,20 +1236,15 @@ process_gridInvoice_event:
 				if inv_onoff=0 inv_onoff=1 else inv_onoff=0;rem --- toggle
 				gosub invoice_chk_onoff
 				gridInvoice!.setSelectedColumn(1)
+				Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
 			endif
 
 		break
 
-		case 30;rem --- checkbox on/off
-		rem --- being handled manually from select row event; gosubs invoice_chk_onoff
-		break
-
 		case default
 		break
-
 	
 	swend
-
 return
 
 invoice_chk_onoff:
