@@ -1,5 +1,5 @@
 rem --- ABC Analysis Report (Generation Overlay)
-rem --- Program ivr_pb v8.0.0 16Jul2007 (ivr_pb)
+rem --- Program ivr_itemabcrpt_o1.aon v8.0.0 16Jul2007 (ivr_pb)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/16/2007 03:36:26)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -11,13 +11,13 @@ rem --- All Rights Reserved
 
     rem " --- Remove total records for a new report"
     if update$="N" goto init_data
-    remove (ivs10i_dev,key=n0$+"I",dom=*next)
+    remove (ivs10i_dev,key=firm_id$+"I",dom=*next)
     rem " --- Remove existing warehouse total records"
     more=1
-    read (ivs10w_dev,key=no$+"W",dom=*next)
+    read (ivs10w_dev,key=firm_id$+"W",dom=*next)
     while more
         k$=key(ivs10w_dev,end=*break)
-        if pos(n0$+"W"=k$)<>1 goto break
+        if pos(firm_id$+"W"=k$)<>1 goto break
         remove (ivs10w_dev,key=k$)
     wend
 
@@ -106,10 +106,16 @@ rem --- Calculate total value for warehouse
             onhand=ivw17a.total_value_02
             balance=ivw17a.total_value_03
             gosub Reciprocal_Amt
-            ivw17a_key$=ivm02a.firm_id$+ivm02a.warehouse_id$
-            ivw17a.recip_sign$=sign$
-            ivw17a.recip_amount$=amount$
+            ivw17a_key.firm_id$=ivm02a.firm_id$
+            ivw17a.firm_id$=ivm02a.firm_id$
+	    ivw17a_key.item_id$=ivm02a.item_id$
             ivw17a.item_id$=ivm02a.item_id$
+	    ivw17a_key.warehouse_id$=ivm02a.warehouse_id$
+	    ivw17a.warehouse_id$=ivm02a.warehouse_id$
+	    ivw17a_key.recip_sign$=sign$
+            ivw17a.recip_sign$=sign$
+	    ivw17a_key.recip_amount$=amount$
+            ivw17a.recip_amount$=amount$
             ivw17a.abc_code_O1$=ivm02a.abc_code$
             ivs10w_key$=firm_id$+"W"+ivm02a.warehouse_id$
             ive17a_key$=ivm02a_key$
