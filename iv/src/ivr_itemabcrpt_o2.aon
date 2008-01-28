@@ -22,6 +22,8 @@ rem --- Initializations
     clock$=""
     m7$="####0"
     m9$="-##0.00%"
+    m2$="###,###.000-"
+    m1$="###,###,###.00-"
     headings=6
     width=132
     page=0
@@ -30,6 +32,8 @@ rem --- Initializations
     done=0
     m8$="###,###,##0"
     sequence=0
+    m1=len(m1$)
+    m2=len(m2$)
     m7=len(m7$)
     m8=len(m8$)
     m9=len(m9$)
@@ -237,32 +241,36 @@ Whse_Break: rem --- Warehouse Break
         if done gosub l6900
         gosub Print_Total
     endif
-    if done break
+    if done goto whse_break_done
     dim count[25],value[25]
     let class=0,totalpct=0,xlimit=percents[class],sequence=0,number=0
-    let t0$=ivw17a_key.warehouse_id$,ivm10c.whse_name$="(Not on File)",l=l9+1,l1=0,warehouse=0
+    let t0$=ivw17a_key.warehouse_id$,ivm10c.short_name$="(Not on File)",l=l9+1,l1=0,warehouse=0
     find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    let h9$="Warehouse "+t0$+" "+cvs(ivm10c.whse_name$,2),headings$[1]=sysinfo.task_desc$+"For "+h9$
+    let h9$="Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2),headings$[1]=sysinfo.task_desc$+"For "+h9$
     find record (ivs10w_dev,key=firm_id$+"W"+t0$,dom=*next) ivs10w$
     let x$=fndate$(ivs10w.run_date$)
     if pos(value$="UB")>0 x$="Period "+ivs10w.period$+" "+ivs10w.year$
     let headings$[2]="Valued By "+x1$+" "+x2$+" As Of "+x$
+whse_break_done:
     return
 
 Work_File_ivw07: rem --- Process work file record
 
     dim description$(dw)
     ivm01a_key.firm_id$=firm_id$,ivm01a_key.item_id$=ivw07a.item_id$
-    ivm01a.item_desc$="(Not On File)",ivm01a.product_type$=""
-    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5]),oldabc$=ivw07a.abc_code_01$
+    ivm01a.item_desc$="(Not On File)"+fill(60),ivm01a.product_type$=""
+    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    description$=cvs(ivm01a.item_desc$,2)
+    oldabc$=ivw07a.abc_code_01$
 
 rem --- Calculate percentage
 
-    percent=0,quantity=ivw07a.annual_usage,amount=ivw07a.total_value_01,x=0
-    if value$="O" quantity=ivw07a.qty_on_hand,amount=ivw07a.total_value_02,x=1
-    if value$="B" quantity=ivw07a.end_balance,amount=ivw07a.total_value_03,x=2
-    if s[x]<>0 percent=(amount*100)/s[x]
+    percent=0,quantity=ivw07a.annual_usage,amount=ivw07a.abc_total_value_01,x=0
+    if value$="O" quantity=ivw07a.qty_on_hand,amount=ivw07a.abc_total_value_02,x=1
+    if value$="B" quantity=ivw07a.end_balance,amount=ivw07a.abc_total_value_03,x=2
+    if x=0 if ivs10i.abc_total_value_01<>0 percent=(amount*100)/ivs10i.abc_total_value_01
+    if x=1 if ivs10i.abc_total_value_02<>0 percent=(amount*100)/ivs10i.abc_total_value_02
+    if x=2 if ivs10i.abc_total_value_03<>0 percent=(amount*100)/ivs10i.abc_total_value_03
 
 rem --- Print detail line
 
@@ -288,9 +296,12 @@ rem --- Update IVE-07
     ive07a.qty_on_hand=ivw07a.qty_on_hand
     ive07a.end_balance=ivw07a.end_balance
     ive07a.unit_cost=ivw07a.unit_cost
-    ive07a.total_value_01=ivw07a.total_value_01
-    ive07a.total_value_02=ivw07a.total_value_02
-    ive07a.total_value_03=ivw07a.total_value_03
+    ive07a.total_amount_01=ivw07a.abc_total_value_01
+    ive07a.total_amount_02=ivw07a.abc_total_value_02
+    ive07a.total_amount_03=ivw07a.abc_total_value_03
+rem    ive07a.abc_total_value_01=ivw07a.abc_total_value_01
+rem    ive07a.abc_total_value_02=ivw07a.abc_total_value_02
+rem    ive07a.abc_total_value_03=ivw07a.abc_total_value_03
     write record (ive07_dev,key=ive07a_key$) ive07a$
     return
 
@@ -299,15 +310,19 @@ Work_File_ivw17: rem --- Process work file record
     dim description$(dw)
     ivm01a_key.firm_id$=firm_id$,ivm01a_key.item_id$=ivw17a.item_id$
     ivm01a.item_desc$="(Not On File)",ivm01a.product_type$=""
-    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5]),oldabc$=ivw17a.abc_code_01$
+ivw17_item_read:
+    find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
+    description$=cvs(ivm01a.item_desc$,2);if pos("Not"=description$) ivm01a.item_desc$="(Missing)",ivm01a_key.item_id$=ivw17a.item_id$(3)+"  "; goto ivw17_item_read
+    oldabc$=ivw17a.abc_code_01$
 
 rem --- Calculate percentage
 
-    percent=0,quantity=ivw17a.annual_usage,amount=ivw17a.total_value_01,x=0
-    if value$="O" quantity=ivw17a.qty_on_hand,amount=ivw17a.total_value_02,x=1
-    if value$="B" quantity=ivw17a.end_balance,amount=ivw17a.total_value_03,x=2
-    if s[x]<>0 percent=(amount*100)/s[x]
+    percent=0,quantity=ivw17a.annual_usage,amount=ivw17a.abc_total_value_01,x=0
+    if value$="O" quantity=ivw17a.qty_on_hand,amount=ivw17a.abc_total_value_02,x=1
+    if value$="B" quantity=ivw17a.end_balance,amount=ivw17a.abc_total_value_03,x=2
+    if x=0 if ivs10w.abc_total_value_01<>0 percent=(amount*100)/ivs10w.abc_total_value_01
+    if x=1 if ivs10w.abc_total_value_02<>0 percent=(amount*100)/ivs10w.abc_total_value_02
+    if x=2 if ivs10w.abc_total_value_03<>0 percent=(amount*100)/ivs10w.abc_total_value_03
 
 rem --- Print detail line
 
@@ -335,9 +350,9 @@ rem --- Update IVE-17
     ive17a.qty_on_hand=ivw17a.qty_on_hand
     ive17a.end_balance=ivw17a.end_balance
     ive17a.unit_cost=ivw17a.unit_cost
-    ive17a.total_value_01=ivw17a.total_value_01
-    ive17a.total_value_02=ivw17a.total_value_02
-    ive17a.total_value_03=ivw17a.total_value_03
+    ive17a.abc_total_value_01=ivw17a.abc_total_value_01
+    ive17a.abc_total_value_02=ivw17a.abc_total_value_02
+    ive17a.abc_total_value_03=ivw17a.abc_total_value_03
     write record (ive17_dev,key=ive17a_key$) ive17a$
     return
 
@@ -421,7 +436,16 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fndate$(q$) 
+        if cvs(q$,2)="" return ""
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if testdate$<>"" 
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        endif
+        return testdate$
+    fnend    
+rem    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))),"%Mz/%Dz/%Yd")
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")

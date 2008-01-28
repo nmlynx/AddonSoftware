@@ -17,7 +17,7 @@ rem --- All Rights Reserved
     read (ivs10w_dev,key=firm_id$+"W",dom=*next)
     while more
         k$=key(ivs10w_dev,end=*break)
-        if pos(firm_id$+"W"=k$)<>1 goto break
+        if pos(firm_id$+"W"=k$)<>1 break
         remove (ivs10w_dev,key=k$)
     wend
 
@@ -76,14 +76,16 @@ rem --- Inner Loop starting
 
 rem --- Retrieve warehouse records
 
-            ivm02a_key$=firm_id$+ivm03g_key.warehouse_id$+ivm01a.item_id$
-            ivm12a_key$=ivm02a_key$+ivs01a.current_year+ivs01a.current_per
-            find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+            ivm02a_key.firm_id$=firm_id$
+            ivm02a_key.warehouse_id$=ivm03g_key.warehouse_id$
+            ivm02a_key.item_id$=ivm01a.item_id$
+            ivm12a_key$=ivm02a_key$+ivs01a.current_year$+ivs01a.current_per$
+            find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
             cost=ivm02a.unit_cost
             onhand=ivm02a.qty_on_hand
             usage=0
             balance=0
-            find record (ivm12a_dev,key=ivm12a_key$,dom=Estimate_annual_usage) ivm12a$
+            find record (ivm12_dev,key=ivm12a_key$,dom=Estimate_annual_usage) ivm12a$
 	    balance=ivm12a.beg_balance+ivm12a.qty_received+ivm12a.qty_built-ivm12a.qty_sold-ivm12a.qty_issued+ivm12a.qty_adjust+ivm12a.qty_xfer_in-ivm12a.qty_xfer_out+ivm12a.qty_returned
 rem            call pgmdir$+"ivc_periodqty.aon",selection$,c[all],balance
 
@@ -99,12 +101,12 @@ rem --- Calculate total value for warehouse
             ivw17a.qty_on_hand=onhand
             ivw17a.end_balance=balance
             ivw17a.unit_cost=cost
-            ivw17a.total_value_01=ivw17a.annual_usage*cost
-            ivw17a.total_value_02=ivw17a.qty_on_hand*cost
-            ivw17a.total_value_03=ivw17a.end_balance*cost
-            usage=ivw17a.total_value_01
-            onhand=ivw17a.total_value_02
-            balance=ivw17a.total_value_03
+            ivw17a.abc_total_value_01=ivw17a.annual_usage*cost
+            ivw17a.abc_total_value_02=ivw17a.qty_on_hand*cost
+            ivw17a.abc_total_value_03=ivw17a.end_balance*cost
+            usage=ivw17a.abc_total_value_01
+            onhand=ivw17a.abc_total_value_02
+            balance=ivw17a.abc_total_value_03
             gosub Reciprocal_Amt
             ivw17a_key.firm_id$=ivm02a.firm_id$
             ivw17a.firm_id$=ivm02a.firm_id$
@@ -116,7 +118,7 @@ rem --- Calculate total value for warehouse
             ivw17a.recip_sign$=sign$
 	    ivw17a_key.recip_amount$=amount$
             ivw17a.recip_amount$=amount$
-            ivw17a.abc_code_O1$=ivm02a.abc_code$
+            ivw17a.abc_code_01$=ivm02a.abc_code$
             ivs10w_key$=firm_id$+"W"+ivm02a.warehouse_id$
             ive17a_key$=ivm02a_key$
 
@@ -128,9 +130,9 @@ rem --- Update totals for warehouse/item
             ivs10w.period$=ivs01a.current_per$
             ivs10w.year$=ivs01a.current_year$
             ivs10w.run_date$=when$
-            ivs10w.total_value_01=ivs10w.total_value_01+ivw17a.total_value_01
-            ivs10w.total_value_02=ivs10w.total_value_02+ivw17a.total_value_02
-            ivs10w.total_value_03=ivs10w.total_value_03+ivw17a.total_value_03
+            ivs10w.abc_total_value_01=ivs10w.abc_total_value_01+ivw17a.abc_total_value_01
+            ivs10w.abc_total_value_02=ivs10w.abc_total_value_02+ivw17a.abc_total_value_02
+            ivs10w.abc_total_value_03=ivs10w.abc_total_value_03+ivw17a.abc_total_value_03
             ivs10w.total_items=ivs10w.total_items+1
             write record (ivs10w_dev,key=ivs10w_key$) ivs10w$
             remove (ive17_dev,key=ive17a_key$,dom=*next)
@@ -147,9 +149,9 @@ rem --- Loop back for next warehouse
 rem --- Done with warehouses
 
         if level$="W" continue
-        usage=ivw07a.total_value_01
-        onhand=ivw07a.total_value_02
-        balance=ivw07a.total_value_03
+        usage=ivw07a.abc_total_value_01
+        onhand=ivw07a.abc_total_value_02
+        balance=ivw07a.abc_total_value_03
         gosub Reciprocal_Amt
 
         ive07a_key.firm_id$=firm_id$
@@ -173,12 +175,12 @@ rem --- Update item totals
         ivs10i.period$=ivs01a.current_per$
         ivs10i.year$=ivs01a.current_year$
         ivs10i.run_date$=when$
-        ivs10i.total_value_01=ivs10i.total_value_01+ivw07a.total_value_01
-        ivs10i.total_value_02=ivs10i.total_value_02+ivw07a.total_value_02
-        ivs10i.total_value_03=ivs10i.total_value_03+ivw07a.total_value_03
+        ivs10i.abc_total_value_01=ivs10i.abc_total_value_01+ivw07a.abc_total_value_01
+        ivs10i.abc_total_value_02=ivs10i.abc_total_value_02+ivw07a.abc_total_value_02
+        ivs10i.abc_total_value_03=ivs10i.abc_total_value_03+ivw07a.abc_total_value_03
         items=items+1
         ivs10i.total_items=items
-        write record (ivs10_dev,key=ivs10i_key$) ivs10i$
+        write record (ivs10i_dev,key=ivs10i_key$) ivs10i$
         remove (ive07_dev,key=ive07a_key$,dom=*next)
 
 rem --- Loop back for next item
@@ -203,7 +205,7 @@ Reciprocal_Amt: rem --- Generate reciprocal amount
     amount$=""
     if value$="U" amount=usage
     if value$="B" amount=balance
-    amount$=str(100000000000-amount:m7$)
+    amount$=str(10000000000-amount:m7$)
     if amount<=0 sign$="-",amount$=str(amount:m7$)
     return
 
@@ -213,11 +215,11 @@ Item_Totals: rem --- Accumulate item totals
     ivw07a.qty_on_hand=ivw07a.qty_on_hand+ivw17a.qty_on_hand
     ivw07a.end_balance=ivw07a.end_balance+ivw17a.end_balance
     ivw07a.unit_cost=ivw07a.unit_cost+ivw17a.unit_cost
-    ivw07a.total_value_01=ivw07a.total_value_01+ivw17a.total_value_01
-    ivw07a.total_value_02=ivw07a.total_value_02+ivw17a.total_value_02
-    ivw07a.total_value_03=ivw07a.total_value_03+ivw17a.total_value_03
-    if ivw07a.qty_on_hand<>0 ivw07a.unit_cost=ivw07a.total_value_01/ivw07a.qty_on_hand
-    if ivw07a.end_balance<>0 if ivw07a.unit_cost=0 ivw07a.unit_cost=ivw07a.total_value_02/ivw07a.end_balance
+    ivw07a.abc_total_value_01=ivw07a.abc_total_value_01+ivw17a.abc_total_value_01
+    ivw07a.abc_total_value_02=ivw07a.abc_total_value_02+ivw17a.abc_total_value_02
+    ivw07a.abc_total_value_03=ivw07a.abc_total_value_03+ivw17a.abc_total_value_03
+    if ivw07a.qty_on_hand<>0 ivw07a.unit_cost=ivw07a.abc_total_value_01/ivw07a.qty_on_hand
+    if ivw07a.end_balance<>0 if ivw07a.unit_cost=0 ivw07a.unit_cost=ivw07a.abc_total_value_02/ivw07a.end_balance
     return
 
 Remove_Records: rem --- Remove any remaining IVE-07/IVE-17 records
@@ -246,7 +248,7 @@ rem --- Loop Starting
 
         call pgmdir$+"adc_progress.aon","S","","","",ive07a.item_id$,0,0,1,0,ignore_status
 
-        usage=ive07a.total_value_01,onhand=ive07a.total_value_02,balance=ive07a.total_value_03
+        usage=ive07a.abc_total_value_01,onhand=ive07a.abc_total_value_02,balance=ive07a.abc_total_value_03
         gosub Reciprocal_Amt
 
         ivw07a_key.firm_id$=ive07a.firm_id$,ivw07a_key.item_id$=ive07a.item_id$
@@ -257,9 +259,9 @@ rem --- Loop Starting
         ivw07a.qty_on_hand=ive07a.qty_on_hand
         ivw07a.end_balance=ive07a.end_balance
         ivw07a.unit_cost=ive07a.unit_cost
-        ivw07a.total_value_01=ive07a.total_value_01
-        ivw07a.total_value_02=ive07a.total_value_02
-        ivw07a.total_value_03=ive07a.total_value_03
+        ivw07a.abc_total_value_01=ive07a.abc_total_value_01
+        ivw07a.abc_total_value_02=ive07a.abc_total_value_02
+        ivw07a.abc_total_value_03=ive07a.abc_total_value_03
         write record (ivw07_dev,key=ivw07a_key$) ivw07a$
 
     wend; rem --- Loop Ending
@@ -280,7 +282,7 @@ rem --- Loop Starting
 
         call pgmdir$+"adc_progress.aon","S","","","",ive17a.warehouse_id$+" "+ive17a.item_id$,0,0,1,0,ignore_status
 
-        usage=ive17a.total_value_01,onhand=ive17a.total_value_02,balance=ive17a.total_value_03
+        usage=ive17a.abc_total_value_01,onhand=ive17a.abc_total_value_02,balance=ive17a.abc_total_value_03
         gosub Reciprocal_Amt
 
         ivw17a_key.firm_id$=ive07a.firm_id$,ivw17a_key.item_id$=ive17a.item_id$,ivw17a_key.warehouse_id$=ive17a.warehouse_id$
@@ -292,9 +294,9 @@ rem --- Loop Starting
         ivw17a.qty_on_hand=ive17a.qty_on_hand
         ivw17a.end_balance=ive17a.end_balance
         ivw17a.unit_cost=ive17a.unit_cost
-        ivw17a.total_value_01=ive17a.total_value_01
-        ivw17a.total_value_02=ive17a.total_value_02
-        ivw17a.total_value_03=ive17a.total_value_03
+        ivw17a.abc_total_value_01=ive17a.abc_total_value_01
+        ivw17a.abc_total_value_02=ive17a.abc_total_value_02
+        ivw17a.abc_total_value_03=ive17a.abc_total_value_03
         write record (ivw17_dev,key=ivw17a_key$) ivw17a$
 
     wend; rem --- Loop Ending
