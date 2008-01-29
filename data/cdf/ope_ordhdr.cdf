@@ -16,8 +16,9 @@ rem --- reset expiration date to enabled
 	gosub disable_ctls
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
-	if user_tpl.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" 
-		callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_ID",user_tpl.cash_cust$)
+	gosub get_op_params
+	if ars01a.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" 
+		callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_ID",ars01a.customer_id$)
 		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","Y")
 		callpoint!.setStatus("REFRESH")
 	endif
@@ -100,19 +101,19 @@ bill_to_info: rem --- get and display Bill To Information
 	custdet_tpl$=fnget_tpl$("ARM_CUSTDET")
 	dim custdet_tpl$:custdet_tpl$
 	read record(custdet_dev,key=firm_id$+cust_id$+"  ",dom=*next) custdet_tpl$
-	user_tpl.ar_balance=custdet_tpl.aging_future+
-:					custdet_tpl.aging_cur+
-:					custdet_tpl.aging_30+
-:					custdet_tpl.aging_60+
-:					custdet_tpl.aging_90+
-:					custdet_tpl.aging_120
+	ar_balance=custdet_tpl.aging_future+
+:				custdet_tpl.aging_cur+
+:				custdet_tpl.aging_30+
+:				custdet_tpl.aging_60+
+:				custdet_tpl.aging_90+
+:				custdet_tpl.aging_120
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_120",custdet_tpl.aging_120$)
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_30",custdet_tpl.aging_30$)
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_60",custdet_tpl.aging_60$)
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_90",custdet_tpl.aging_90$)
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",custdet_tpl.aging_cur$)
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE",custdet_tpl.aging_future$)
-	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",user_tpl.ar_balance$)
+	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",ar_balance$)
 	callpoint!.setStatus("REFRESH")
 return
 
@@ -120,19 +121,29 @@ ship_to_info: rem --- get and display Bill To Information
 
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
 	if ship_to_no$<>"000099"
-		custship_dev=fnget_dev("ARM_CUSTSHIP")
-		custship_tpl$=fnget_tpl$("ARM_CUSTSHIP")
-		dim custship_tpl$:custship_tpl$
-		custship_tpl.name$="Same"
-		read record (custship_dev,key=firm_id$+cust_id$+ship_to_no$,dom=*next) custmast_tpl$
-		callpoint!.setColumnData("<<DISPLAY>>.SNAME",custship_tpl.name$)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD1",custship_tpl.addr_line_1$)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD2",custship_tpl.addr_line_2$)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD3",custship_tpl.addr_line_3$)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD4",custship_tpl.addr_line_4$)
-		callpoint!.setColumnData("<<DISPLAY>>.SCITY",custship_tpl.city$)
-		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",custship_tpl.state_code$)
-		callpoint!.setColumnData("<<DISPLAY>>.SZIP",custship_tpl.zip_code$)
+		if num(ship_to_no$)<>0
+			custship_dev=fnget_dev("ARM_CUSTSHIP")
+			custship_tpl$=fnget_tpl$("ARM_CUSTSHIP")
+			dim custship_tpl$:custship_tpl$
+			read record (custship_dev,key=firm_id$+cust_id$+ship_to_no$,dom=*next) custship_tpl$
+			callpoint!.setColumnData("<<DISPLAY>>.SNAME",custship_tpl.name$)
+			callpoint!.setColumnData("<<DISPLAY>>.SADD1",custship_tpl.addr_line_1$)
+			callpoint!.setColumnData("<<DISPLAY>>.SADD2",custship_tpl.addr_line_2$)
+			callpoint!.setColumnData("<<DISPLAY>>.SADD3",custship_tpl.addr_line_3$)
+			callpoint!.setColumnData("<<DISPLAY>>.SADD4",custship_tpl.addr_line_4$)
+			callpoint!.setColumnData("<<DISPLAY>>.SCITY",custship_tpl.city$)
+			callpoint!.setColumnData("<<DISPLAY>>.SSTATE",custship_tpl.state_code$)
+			callpoint!.setColumnData("<<DISPLAY>>.SZIP",custship_tpl.zip_code$)
+		else
+			callpoint!.setColumnData("<<DISPLAY>>.SNAME","Same")
+			callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
+			callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
+			callpoint!.setColumnData("<<DISPLAY>>.SADD3","")
+			callpoint!.setColumnData("<<DISPLAY>>.SADD4","")
+			callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
+			callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
+			callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
+		endif
 	else
 		ordship_tpl$=fnget_tpl$("OPE_ORDSHIP")
 		dim ordship_tpl$:ordship_tpl$
@@ -163,6 +174,13 @@ for dctl=1 to 8
 		callpoint!.setStatus("ABLEMAP-REFRESH")
 	endif
 next dctl
+return
+
+get_op_params:
+	ars01_dev=fnget_dev("ARS_PARAMS")
+	ars01a$=fnget_tpl$("ARS_PARAMS")
+	dim ars01a$:ars01a$
+	read record (ars01_dev,key=firm_id$+"AR00") ars01a$
 return
 [[OPE_ORDHDR.ARAR]]
 rem --- Populate address fields
@@ -209,9 +227,6 @@ rem --- open needed files
 rem --- get Parameters
 	dim ars01a$:open_tpls$[4]
 	read record (num(open_chans$[4]),key=firm_id$+"AR00") ars01a$
-	dim user_tpl$:"cash_sale:c(1),cash_cust:c(6),ar_balance:n(14)"
-	user_tpl.cash_sale$=ars01a.cash_sale$
-	user_tpl.cash_cust$=ars01a.customer_id$
 
 rem --- disable display fields
 
