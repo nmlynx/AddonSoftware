@@ -1,3 +1,5 @@
+[[OPE_ORDHDR.ASHO]]
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDDATES",stbl("+USER_ID"),"MNT","",table_chans$[all]
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- enable/disable expire date based on value
 	dim dctl$[8]
@@ -55,7 +57,6 @@ rem --- Write/Remove manual ship to file
 	endif
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 rem --- See which way to deal with ship to's
-
 	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
 	callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
 	callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
