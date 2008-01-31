@@ -32,7 +32,6 @@ rem --- Retrieve key templates
     
 rem --- Assign Title, Record, and Offset
 
-    source_dev=sfe03_dev
     if rpt_seq$="W" 
         h3$="Work Order Sequence"
         x9$="  "
@@ -43,18 +42,21 @@ rem --- Assign Title, Record, and Offset
     if rpt_seq$="B"
         h3$="Bill Number Sequence"
         x9$="C"
+        source_dev=sfe03c_dev
         dim key_tpl$:sfe03c_key_tpl$
         offset=22
     endif
     if rpt_seq$="C"
         h3$="Customer Sequence"
         x9$="B"
+        source_dev=sfe03b_dev
         dim key_tpl$:sfe03b_key_tpl$
         offset=6
     endif
     if rpt_seq$="T"
         h3$="Work Order Type Sequence"
         x9$="A"
+        source_dev=sfe03a_dev
         dim key_tpl$:sfe03a_key_tpl$
         offset=2
     endif
