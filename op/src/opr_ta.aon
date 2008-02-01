@@ -1,393 +1,412 @@
 rem --- Sales Tax Report
-rem --- Program opr_ta v8.0.0 06Jul2007 (opr_ta)
-rem --- Created by adx_codeport.bbx v1.1.5 (07/06/2007 02:57:55)
+rem --- Program opr_ta v8.0.0 28Jan2008 (opr_ta)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/28/2008 11:50:59)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    seterr std_error
-    setesc std_error
+
+        seterr std_error
+        setesc std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+dir_pgm",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+        sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+sysinfo",err=*next)
+        milestone=num(stbl("+milestone",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    rem files$[1]="ads-01"
-    files$[2]="art-02",ids$[2]="ART_SALESTAX"
-    files$[3]="opm-06",ids$[3]="OPC_TAXCODE"
-    files$[4]="ARS_PARAMS",ids$[4]=files$[4]
-    files$[5]="IVS_PARAMS",ids$[5]=files$[5]
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+        files=4,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+        files$[2]="art-02",ids$[2]="ART_SALESTAX"
+        files$[3]="ivs_params",ids$[3]="IVS_PARAMS"
+        files$[4]="opm-06",ids$[4]="OPC_TAXCODE"
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    rem ads01_dev=channels[1]
-    art02_dev=channels[2]
-    opm06_dev=channels[3]
-    ars01a_dev=channels[4]
-    ivs01a_dev=channels[5]
+        if status goto std_exit
+        ars01a_dev=channels[1]
+        art02_dev=channels[2]
+        ivs01a_dev=channels[3]
+        opm06_dev=channels[4]
 
 rem --- Dimension string templates
 
-    dim art02a$:templates$[2],opm06a$:templates$[3],ars01a$:templates$[4],
-:       ivs01a$:templates$[5]
-
+        dim ars01a$:templates$[1],art02a$:templates$[2],ivs01a$:templates$[3],
+:       opm06a$:templates$[4]
 
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-rem value_01$=fnget_fld_data$(table$,"dataname_01")
-    Beginning_Month$=fnget_fld_data$(table$,"Beginning_Month")
-    Ending_Month$=fnget_fld_data$(table$,"Ending_Month")
-
+        p9$ = option!.getOptionData("Beginning_Month")
+        p8$ = option!.getOptionData("Ending_Month")
 
 rem --- Retrieve parameter records
 
-    ars01a_key$=firm_id$+"AR00"
-    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-   
-
+        ars01a_key$=firm_id$+"AR00"
+        find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+        ivs01a_key$=firm_id$+"IV00"
+        find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Parameters
 
-    n1$=sysinfo.firm_name$
-    n2$="AR"
-    n3$=sysinfo.task_desc$
-    find record (ars01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
+        n1$=sysinfo.firm_name$,n2$="AR",n3$=sysinfo.task_desc$
+        find record (ars01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
 
 rem --- Initializations
 
-rem dim headings$[3],a[2],t[2],g[2],o[1]
-    p8$=""
-    p9$=""
-    h0=132
-    h=0
-    headings$[0]=n1$
-    headings$[1]=n3$
-    l9=42
-    l=l9+1
-    when$=sysinfo.system_date$
-    clock$=""
-    headings=3
-    m1=len(ars01a.amount_mask$)
-    m3=len(ars01a.rate_mask$)
-    more=1
+        more=1
+        dim headings$[3],a[2],t[2],g[2],o[1]
+        p8$=""
+        p9$=""
+        h0=132
+        h=0,headings$[0]=n1$,headings$[1]=n3$
+        l9=42
+        l=l9+1,when$=sysinfo.system_date$,clock$="",headings=3
+        m1=len(ars01a.amount_mask$)
+        m3=len(ars01a.rate_mask$)
 
 rem --- Print positions
 
-    call pgmdir$+"adc_sizemask.aon",ars01a.amount_mask$,m1,14,15
-    o[0]=23+m3
-    o[1]=o[0]+6
+        call pgmdir$+"adc_sizemask.aon",ars01a.amount_mask$,m1,14,15
+        o[0]=23+m3
+        o[1]=o[0]+6
 
-rem --- Display Resource
+    rem --- Display Resource
 
-    dim resparams$[20],resparams[20]
-    resaction$=""
-    resparams$[0]=pgm(-2)
-    call pgmdir$+"syc_ra.bbx",resaction$,resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
-    
+        dim resparams$[20],resparams[20]
+        resaction$=""
+        resparams$[0]=pgm(-2)
+        call pgmdir$+"syc_ra.bbx",resaction$,resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
+        rem gosub flow_initializations
+        goto start_done
 
-Beginning_Date: rem --- Beginning Date
+While more
+Begining_Date: rem --- Beginning Date
 
-    v0$="Z"
-    v1$="EC"
-    v2$=p9$
-    v0=4
-    v1=40
-    v2=3
-    v4$="Enter The Starting Month as MMYY (<F1>=First)"
-    v3$=""
-    i0=0
-    control_id=3000
-    on v3 goto Call_Program1,Assign_Value1,flow_control,Beginning_Date,flow_control,Call_Program1,flow_control
-Assign_Value1:
-    v$=""
-Call_Program1:
-    p9$=cvs(v$,2)
-    if p9$="" call pgmdir$+"syc_rs.bbx","",my_context,13000,"First",0,"",status; goto Flow_Control1
-    call pgmdir$+"syc_rs.bbx","",my_context,3000,p9$(1,2)+"/"+p9$(3,2),0,"",status
-Flow_Control1:
-    if p9$<>"" and (p9$(1,2)<"01" or p9$(1,2)>"12") goto Beginning_Date
-    goto flow_control
+        v0$="Z"
+        v1$="EC",v2$=p9$,v0=4,v1=40,v2=3,v4$="Enter The Starting Month as MMYY (<F1>=First)",v3$="",i0=0,control_id=3000
+        rem gosub std_input
+        on v3 goto Label_Two,Label_One,flow_control,Begining_Date,flow_control,Label_Two,flow_control
 
+Label_One:
+        v$=""
+
+Label_Two:
+        p9$=cvs(v$,2)
+        gosub clear_text
+        if p9$="" then
+            call pgmdir$+"syc_rs.bbx","",my_context,13000,"First",0,"",status
+        else
+            call pgmdir$+"syc_rs.bbx","",my_context,3000,p9$(1,2)+"/"+p9$(3,2),0,"",status
+        endif
+
+        if p9$<>"" and (p9$(1,2)<"01" or p9$(1,2)>"12") then
+            continue
+        endif
+        goto flow_control
+Wend
+
+
+While more
 Ending_Date: rem --- Ending Date
 
-    v0$="Z"
-    v1$="C"
-    v2$=p8$
-    v0=4
-    v1=40
-    v2=4
-    v4$="Enter Ending Month as MMYY (<F1>=Last)"
-    v3$=""
-    control_id=3001
-    on v3 goto Call_Program2,Assign_Value2,flow_control,Ending_Date,flow_control,Call_Program2,flow_control
-Assign_Value2:
-    v$=""
-Call_Program2:
-    p8$=cvs(v$,2)
-    if p8$="" call pgmdir$+"syc_rs.bbx","",my_context,13001,"Last",0,"",status; goto Flow_Control2
-    call pgmdir$+"syc_rs.bbx","",my_context,3001,p8$(1,2)+"/"+p8$(3,2),0,"",status
-Flow_Control2:
-    if p8$<>"" and (p8$(1,2)<"01" or p8$(1,2)>"12") goto Ending_Date
-    goto flow_control
+        v0$="Z"
+        v1$="C",v2$=p8$,v0=4,v1=40,v2=4,v4$="Enter Ending Month as MMYY (<F1>=Last)",v3$="",control_id=3001
+        rem gosub std_input
+        on v3 goto Label_Four,Label_Three,flow_control,Ending_Date,flow_control,Label_Four,flow_control
 
-while more
+Label_Three:
+        v$=""
 
-                    dim j$(4*m1,"-")
-                    call pgmdir$+"adc_progress.aon","CN","","","Printing","",8,art02_dev,1,meter_num,status
-                    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-                    if status goto std_exit
-                    if p9$="" x0$="First" else x0$=p9$(1,2)+"/"+p9$(3,2)
-                    if p8$="" x1$="Last" else x1$=p8$(1,2)+"/"+p8$(3,2)
-                    headings$[2]="From "+x0$+" Thru "+x1$
+Label_Four:
+        p8$=cvs(v$,2)
+        gosub clear_text
+        if p8$="" then
+            call pgmdir$+"syc_rs.bbx","",my_context,13001,"Last",0,"",status
+        else
+            call pgmdir$+"syc_rs.bbx","",my_context,3001,p8$(1,2)+"/"+p8$(3,2),0,"",status
+        endif
+
+        if p8$<>"" and (p8$(1,2)<"01" or p8$(1,2)>"12") then
+            continue
+        endif
+        goto flow_control
+Wend
+
+
+
+While more
+rem --- Background
+
+        dim j$(4*m1,"-")
+        call pgmdir$+"adc_progress.aon","N","","","","",0,art02_dev,1,meter_num,status
+        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+        if status then goto std_exit
+        if p9$="" then
+            let x0$="First"
+        else
+            let x0$=p9$(1,2)+"/"+p9$(3,2)
+        endif
+        if p8$="" then
+            let x1$="Last"
+        else
+            let x1$=p8$(1,2)+"/"+p8$(3,2)
+        endif
+        headings$[2]="From "+x0$+" Thru "+x1$
 
 rem --- Position File
 
-                    read (art02_dev,key=firm_id$,dom=*next)
+        read (art02_dev,key=firm_id$,dom=*next)
 
-        while more
+        rem --- Main Read
+        While more
+                read record (art02_dev,end=*break) art02a$
+                if art02a.firm_id$<>firm_id$ then break
+                if p9$<>"" then
+                    if art02a.year$+art02a.month$<fnyy_yy21$(p9$(3,2))+p9$(1,2) then
+                        continue
+                    endif
+                endif
+                if p8$<>"" then
+                    if art02a.year$+art02a.month$>fnyy_yy21$(p8$(3,2))+p8$(1,2) then
+                        continue
+                    endif
+                endif
+                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-                    read record (art02_dev,end=*break) art02a$
-                    if art02a_key.FIRM_ID$<>firm_id$ break
-                    if p9$<>"" if art02a_key.YEAR$+art02a_key.MONTH$<fnyy_yy21$(p9$(3,2))+p9$(1,2) continue
-                    if p8$<>"" if art02a_key.YEAR$+art02a_key.MONTH$>fnyy_yy21$(p8$(3,2))+p8$(1,2) continue
-rem                 call pgmdir$+"adc_progress.aon","S","","","",art02a_key.TAX_CODE$+" "+art02a_key.MONTH$+"/"+fnyy$(art02a_key.YEAR$),0,0,1,meter_num,status
-                    call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+rem ----------- Breaks
 
-rem --- Breaks
+                if art02a.tax_code$<>t0$ then gosub Tax_Code_Breaks
 
-                    if art02a_key.TAX_CODE$<>t0$ gosub Tax_Code
+rem ----------- Print
 
-rem --- Print
-
-                    if l>l9 gosub report_heading
-                    print (printer_dev)h3$,@(o[0]),art02a_key.MONTH$,"/",fnyy$(art02a_key.YEAR$),@(o[1]),a[0]:m1$,a[1]:m1$,a[2]:m1$,a[2]-a[0]:m1$
-                    l=l+1
-                    l0=l0+1
-                    h3$=""
-                    for x=0 to 2
-                        t[x]=t[x]+a[x]
-                        g[x]=g[x]+a[x]
-                    next x
+                if l>l9 then gosub report_heading
+                print (printer_dev)h3$,@(o[0]),art02a.month$,"/",fnyy$(art02a.year$),
+:                                      @(o[1]),art02a.taxable_amt:ars01a.amount_mask$,art02a.tax_amount:ars01a.amount_mask$,
+:                                      art02a.gross_sales:ars01a.amount_mask$,art02a.gross_sales-art02a.taxable_amt:ars01a.amount_mask$
+                l=l+1
+                l0=l0+1,h3$=""
+                t[0]=t[0]+art02a.taxable_amt
+                g[0]=g[0]+art02a.taxable_amt
+                t[1]=t[1]+art02a.tax_amount
+                g[1]=g[1]+art02a.tax_amount
+                t[2]=t[2]+art02a.gross_sales
+                g[2]=g[2]+art02a.gross_sales
+    
 
 rem --- Loop back for next record
+        Wend
 
-        wend
+rem --- All done
 
-
-
-                    if l>l9 gosub report_heading
-                    t9$="E"
-                    gosub Tax_Code
-                    print (printer_dev)@(o[1]+m1),j$(1,m1)
-                    print (printer_dev)@(3),"Totals For Report",@(o[1]+m1),g[1]:m1$
-                    goto std_exit
+        if l>l9 then gosub report_heading
+        t9$="E"
+        gosub Tax_Code_Breaks
+        print (printer_dev)@(o[1]+m1),j$(1,m1)
+        print (printer_dev)@(3),"Totals For Report",@(o[1]+m1),g[1]:ars01a.amount_mask$
+        goto std_exit
 
 report_heading: rem --- Report Heading
 
-                    l=0
-                    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-                    if status exitto std_exit
-                    print (printer_dev)"Tax"
-                    print (printer_dev)"Cd  Description",@(o[0]-5),"Rate",@(o[0]),"Date",@(o[1]+m1-8),"Taxable",@(o[1]+m1*2-4),"Tax",@(o[1]+m1*3-6),"Gross",@(o[1]+m1*4-12),"Non-Taxable"
-                    print (printer_dev)""
-                    return
+        l=0
+        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
+        if status then exitto std_exit
+        print (printer_dev)"Tax"
+        print (printer_dev)"Cd  Description",@(o[0]-5),"Rate",@(o[0]),"Date",@(o[1]+m1-8),"Taxable",
+:                       @(o[1]+m1*2-4),"Tax",@(o[1]+m1*3-6),"Gross",@(o[1]+m1*4-12),"Non-Taxable"
+        print (printer_dev)""
+        return
+
 display_fields:
-                    control_id=3000
-                    cid_cnt=0
-                while more
-                    if cid_cnt=0 if p9$="" disp_inp$="",disp_desc$="First" else disp_inp$=p9$(1,2)+"/"+p9$(3,2),disp_desc$=""
-                    if cid_cnt=1 if p8$="" disp_inp$="",disp_desc$="Last" else disp_inp$=p8$(1,2)+"/"+p8$(3,2),disp_desc$=""
-                    call pgmdir$+"syc_rs.bbx","",my_context,control_id,disp_inp$,0,"",status
-                    call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,disp_desc$,0,"",status
-                    cid_cnt=cid_cnt+1; let control_id=control_id+1
-                    if cid_cnt>i0_done-1 break
-                wend
+        control_id=3000
+        cid_cnt=0
 
-                    disp_inp$=""
-                    disp_desc$=""
-                   rem  return
+        While more
+            if cid_cnt=0 then
+                if p9$="" then
+                    let disp_inp$="",disp_desc$="First"
+                else
+                    let disp_inp$=p9$(1,2)+"/"+p9$(3,2),disp_desc$=""
+                endif
+            endif
+            if cid_cnt=1 then
+                if p8$="" then
+                    let disp_inp$="",disp_desc$="Last"
+                else
+                    let disp_inp$=p8$(1,2)+"/"+p8$(3,2),disp_desc$=""
+                endif
+            endif
+            call pgmdir$+"syc_rs.bbx","",my_context,control_id,disp_inp$,0,"",status
+            call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,disp_desc$,0,"",status
+            cid_cnt=cid_cnt+1; let control_id=control_id+1
+            if cid_cnt>i0_done-1 then break
+        Wend
 
-Tax_Code: rem --- Tax Code Breaks
+        disp_inp$=""
+        disp_desc$=""
+        return
 
-                    if t0$<>"" then
-                     if l0>1 then
-                        print (printer_dev)@(o[1]),j$
-                        print (printer_dev)@(3),"Totals For ",t0$,@(o[1]),t[0]:m1$,t[1]:m1$,t[2]:m1$,t[2]-t[0]:m1$
-                        print (printer_dev)""
-                        l=l+3
-                    endif
-                   endif
+Tax_Code_Breaks: rem --- Tax Code Breaks
 
-                    if t9$="" then
-                            dim x0$(4),x1$(60),t[2]
-                            t0$=art02a_key.TAX_CODE$
-                            l0=0
-                            opm06a.CODE_DESC$="Unknown Tax Code"
-                            x0=0
-                            find record (opm06a_dev,key=firm_id$+t0$,dom=*next) opm06a$
-                            h3$=t0$+" "+opm06a.CODE_DESC$+str(x0:m3$)
-                   endif
+        if t0$<>"" then
+            if l0>=1 then
+                print (printer_dev)@(o[1]),j$
+                print (printer_dev)@(3),"Totals For ",t0$,@(o[1]),t[0]:ars01a.amount_mask$,t[1]:ars01a.amount_mask$,t[2]:ars01a.amount_mask$,
+:                                  t[2]-t[0]:ars01a.amount_mask$
+                print (printer_dev)""
+                l=l+3
+            endif
+        endif
 
-                   return
+        if t9$<>"" then
+            return
+        endif
+        rem dim x0$(4),x1$(60),t[2]
+        t0$=art02a.tax_code$
+        l0=0
+        opm06a.code_desc$="Unknown Tax Code"
+        x0=0
+        find record (opm06_dev,key=firm_id$+t0$,dom=*next) opm06a$
+        h3$=t0$+" "+opm06a.code_desc$+str(x0:ars01a.rate_mask$)
+
+        return
+
 flow_control:
-                    switch v3
-                    case 0
-                    case 1
-                    case 3; let i0=i0+1; break
-                    case 2; if i0<i0_nonkey1 i0=max(0,i0-1) else i0=max(i0_nonkey1,i0-1) fi; break
-                    case 4; let i0=i0_done; break
-                    case default; exitto done_v3
-                    swend
-                    on i0 goto Beginning_Date,Ending_Date,done,done
+        switch v3
+            case 0
+            case 1
+            case 3; let i0=i0+1; break
+            case 2; if i0<i0_nonkey1 then let i0=max(0,i0-1) else let i0=max(i0_nonkey1,i0-1) fi; break
+            case 4; let i0=i0_done; break
+            case default; exitto done_v3
+        swend
+        on i0 goto Begining_Date,Ending_Date,done,done
+
+start_done:
+        i0=i0_done
 
 done: rem --- Correct?
 
-                    if validate then validate=0
-                     else
-                            gosub display_fields
-                            v0$="S"
-                            v1$="KC"
-                            v2$="Y"
-                            v3$=""
-                            v4$="ITAC=Y"
-                            v0=6
-                            v1=fnv(v4$)
-                            v2=22
-                            control_id=i0-i0_done+1
-
+        if !validate then 
+            gosub display_fields
+            v0$="S"
+            v1$="KC",v2$="Y",v3$="",v4$="ITAC=Y",v0=6,v1=fnv(v4$),v2=22,control_id=i0-i0_done+1
+            rem gosub std_input
 done_v3:
-                            on v3 goto done_test,done,done,done,std_exit,validate_input,std_exit,done
+            on v3 goto done_test,done,done,done,std_exit,validate_input,std_exit,done
+
 done_test:
+            rem on pos(v$="YN") goto flow_control,validate_input,do_nonkey1
+            Switch pos(v$="YN")
+                case 0
+                case 1; exitto flow_control
+                case 2; exitto validate_input
+                case 3; v3=0; i0=i0_nonkey1-1; exitto flow_control
+            Swend
 
-
-                     action=pos(v$="YN")
-                                 flow_ctr=0
-                                 validate_ip=1
-                                 d_key=2
-
-                                switch action
-                                       case flow_ctr
-                                             goto flow_control
-                                             break
-                                        case validate_ip
-                                             goto validate_input 
-                                             break
-                                        case d_key
-                                             goto do_nonkey1
-                                             break
-                                             case default
-                                        break
-                                swend
-
-
-
-
-
-rem ------------------------ on pos(v$="YN") goto flow_control,validate_input,do_nonkey1
 validate_input:
-                            let validate=1,old_control_id=0
-do_nonkey1:
-                            let v3=0,i0=i0_nonkey1-1
-                            goto flow_control
-                    endif
+            validate=1
+            old_control_id=0
+
+        else
+            let validate=0
+        endif
+
+rem --- Run report overlay
+        continue
+Wend
+
+clear_text:
+        call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,"",0,"",status
+        if v3=1 or v$="" then call pgmdir$+"syc_rs.bbx","",my_context,control_id,"",0,"",status
+        return
 
 
-
-    wend
-
-    call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,"",0,"",status
-    if v3=1 or v$="" call pgmdir$+"syc_rs.bbx","",my_context,control_id,"",0,"",status
-    return
 
 rem --- FUNCTIONS
 
-    def fnv(q$)=42+int(len(q$)/2)
+        def fnv(q$)=42+int(len(q$)/2)
 
 rem --- Convert 2-Char Year to 21st Century 2-Char Year
 
-    def fnyy_yy21$(q1$)
-    let q9=10,q9=num(stbl("+Y2K_UPPER_LIMIT",err=*next),err=l8131)
+        def fnyy_yy21$(q1$)
+        q9=10
+        q9=num(stbl("+Y2K_UPPER_LIMIT",err=*next),err=l8131)
 l8131:
-    if num(q1$(1,2),err=*next)<q9 q1$(1,1)=chr(int(num(q1$(1,2))/10)+65)
-    return q1$
-    fnend
-rem --- Un-Convert 21st Century 2-Char Year to 2-Char Year
-    def fnyy$(q1$)
-    let q3$=" 01234567890123456789",q1$(1,1)=q3$(pos(q1$(1,1)=" 0123456789ABCDEFGHIJ"))
-    return q1$
-    fnend
+        if num(q1$(1,2),err=*next)<q9 then let q1$(1,1)=chr(int(num(q1$(1,2))/10)+65)
+        return q1$
+        fnend
 
-rem #include std_error.src
+rem --- Un-Convert 21st Century 2-Char Year to 2-Char Year
+        def fnyy$(q1$)
+        let q3$=" 01234567890123456789",q1$(1,1)=q3$(pos(q1$(1,1)=" 0123456789ABCDEFGHIJ"))
+        return q1$
+        fnend
+
+rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
-    if pos("EXIT"=rd_err_act$) goto std_error_exit
-    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$) retry
+        if pos("EXIT"=rd_err_act$) goto std_error_exit
+        if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$) retry
+
 std_error_exit:
-    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_error_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
+        master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_error_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
 std_error_release:
-    status=999
-    if pgm(-1)<>pgm(-2) exit
-    release
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
 
-rem #endinclude std_error.src
-
-rem #include std_missing_params.src
+rem --- #endinclude std_error.src
+rem --- #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
 
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+        call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
 :                                   str(err:"000"),rd_err_text$,rd_err_act$
+
 std_missing_params_exit:
-    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
+        master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
 std_missing_params_release:
-    status=999
-    if pgm(-1)<>pgm(-2) exit
-    release
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
 
-rem #endinclude std_missing_params.src
+rem --- #endinclude std_missing_params.src
 
-rem #include std_end.src
+rem --- #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
- rem   run pgmdir$+"ads_process_end.aon",err=*next
-       run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-    release
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+        run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+        release
 
-rem #endinclude std_end.src
+rem --- #endinclude std_end.src
 
-    end
+        end
