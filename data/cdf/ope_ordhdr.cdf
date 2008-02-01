@@ -12,10 +12,13 @@ rem --- enable/disable expire date based on value
 	gosub disable_ctls
 [[OPE_ORDHDR.AREC]]
 rem --- reset expiration date to enabled
+	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
 	dim dctl$[8]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	dmap$=""
 	gosub disable_ctls
+
+	
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 	gosub get_op_params
