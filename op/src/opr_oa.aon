@@ -25,47 +25,47 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-                files=11,begfile=1,endfile=files
+                files=10,begfile=1,endfile=files
                 dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+                files$[1]="ars_params",ids$[1]="ARS_PARAMS"
                 files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
                 files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-                files$[4]="ivm-10",ids$[4]="IVC_PRODCODE"
-                files$[5]="ope-01",ids$[5]="OPE_ORDHDR"
-                files$[6]="ope-11",ids$[6]="OPE_ORDDET"
-                files$[7]="ope-61",ids$[7]="OPE_ORDITEM"
-                files$[8]="opm-02",ids$[8]="OPC_LINECODE"
-                files$[9]="ARS_PARAMS",ids$[9]=files$[9]
-                files$[10]="IVC_WHSECODE",ids$[10]=files$[10]
-                files$[11]="IVS_PARAMS",ids$[11]=files$[11]
+                files$[4]="ivs_prodcode",ids$[4]="IVS_PRODCODE"
+                files$[5]="ivc_whsecode",ids$[5]="IVC_WHSECODE"
+                files$[6]="ivs_params",ids$[6]="IVS_PARAMS"
+                files$[7]="ope-01",ids$[7]="OPE_ORDHDR"
+                files$[8]="ope-11",ids$[8]="OPE_ORDDET"
+                files$[9]="ope-61",ids$[9]="OPE_ORDITEM"
+                files$[10]="opm-02",ids$[10]="OPC_LINECODE"
                 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
                 if status goto std_exit
+                ars01a_dev=channels[1]
                 ivm01_dev=channels[2]
                 ivm02_dev=channels[3]
                 ivm10_dev=channels[4]
-                ope01_dev=channels[5]
-                ope11_dev=channels[6]
-                ope61_dev=channels[7]
-                opm02_dev=channels[8]
-                ars01a_dev=channels[9]
-                ivm10c_dev=channels[10]
-                ivs01a_dev=channels[11]
+                ivm10c_dev=channels[5]
+                ivs01a_dev=channels[6]
+                ope01_dev=channels[7]
+                ope11_dev=channels[8]
+                ope61_dev=channels[9]
+                opm02_dev=channels[10]
+
+
 rem --- Dimension string templates
 
-                dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm10a$:templates$[4],
-:               ope01a$:templates$[5],ope11a$:templates$[6],ope61a$:templates$[7],
-:               opm02a$:templates$[8],ars01a$:templates$[9],ivm10c$:templates$[10],
-:               ivs01a$:templates$[11]
-
-
+                dim ars01a$:templates$[1],ivm01a$:templates$[2],ivm02a$:templates$[3],
+:               ivm10a$:templates$[4],ivm10c$:templates$[5],ivs01a$:templates$[6],
+:               ope01a$:templates$[7],ope11a$:templates$[8],ope61a$:templates$[9],
+:               opm02a$:templates$[10]
 
 
 rem --- Assign form input values to local variables
 
-                Product_type$=option!.getOptionData("Product_type")
-                option$=option!.getOptionData("option")
-                summary$=option!.getOptionData("summary")   
-                Warehouse$=option!.getOptionData("Warehouse")
+                p8$ = option!.getOptionData("Product_type")
+                p5$ = option!.getOptionData("option")
+                p9$ = option!.getOptionData("summary")   
+                p6$ = option!.getOptionData("Warehouse")
 
 rem --- Retrieve parameter records
 
@@ -109,7 +109,7 @@ rem --- Initializations
 
 rem --- Run report overlay
 
-                run pgmdir$+"opr_ob.bbx"
+                run pgmdir$+"opr_ob.aon"
 
 rem --- FUNCTIONS
 
