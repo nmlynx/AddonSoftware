@@ -1,0 +1,521 @@
+rem DataPort Data File Conversion Utility (Template creation program)
+rem Program create_template.bbj v8.0.0 28Oct07
+rem  
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Feb2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+rem  
+rem --- This overlay creates templates for version 6/7 data files using the 
+rem --- Addon dictionary files ddm-01,ddm-03 and ddm-04 and then copied to Addon 8 
+rem --- data files after performing date format changes. Normalization of data files will also be done in this program
+rem 
+rem
+rem --- Templates of dictionary files
+dim ddm_03$:"file_name:c(6),record_id:c(1*),description:c(30),reserved_str:c(33*),reserved_num:n(3*)"
+dim ddm_04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),"+
+:           "reserved_str1:c(41),fld_sep:c(1),reserved_str2:c(68*),reserved_num:n(1*),fld_repeats:n(3*),fld_occurs:n(3)"
+dim ddm_01$:"data_name:c(12*),description:c(30),lstrev:c(6),data_type:c(1),reserved_str:c(68*),fld_length:n(3*),display_len:n(3*),reserved_num:n(1*)"
+
+rem --- Reads the source folder
+let adata_chan=unt
+open(adata_chan)source_folder$
+read_datafile:
+    readrecord(adata_chan,end=end_read_datafile)datafile$
+    datafile$=cvs(datafile$,version_cvs)
+    gosub check_portable_files
+    print datafile$
+    print (log_dev)datafile$
+    if datafile$=cvs("ivm-03",version_cvs) goto copy_ivm_03
+    if datafile$=cvs("sys-01",version_cvs) sys_01_flag=1
+rem --- Reads the dictionary file ddm-03 to get data file info
+open_ddm_03:
+let ddm_03_chan=unt
+open(ddm_03_chan,err=dictionary_err)source_folder$+"/"+cvs("ddm-03",version_cvs)
+read_ddm_03:
+    readrecord(ddm_03_chan,end=end_read)ddm_03$
+    if cvs(ddm_03.file_name$,8)<>datafile$ goto read_ddm_03
+    if copy_sys01=1 then readrecord(ddm_03_chan,key=k$,dom=read_normalize_xref)ddm_03$
+    gosub get_version8_template
+    rd_gen_table_tpl$=""
+    data_seq_str$=""
+    count=0   
+        print "   Creating template of "+ddm_03.file_name$+ddm_03.record_id$+"  ("+cvs(table_alias$,2)+")"
+        print (log_dev)"   Creating template of "+ddm_03.file_name$+ddm_03.record_id$
+        let ddm_04_chan=unt
+        open (ddm_04_chan,err=dictionary_err)source_folder$+"/"+cvs("ddm-04",version_cvs)
+        read_data:
+            readrecord(ddm_04_chan,end=end_loop)ddm_04$
+            if ddm_04.file_name$=ddm_03.file_name$ and ddm_04.record_id$=ddm_03.record_id$ then
+                let temp_chan=unt
+                open(temp_chan,err=dictionary_err)source_folder$+"/"+cvs("ddm-01",version_cvs)
+                findrecord(temp_chan,key=ddm_04.data_name$,dom=read_data)ddm_01$
+                close(temp_chan)
+                rd_col_length=ddm_01.fld_length
+                if ddm_04.fld_repeats>1 rd_col_length=ddm_01.fld_length*ddm_04.fld_repeats
+
+                rd_col_occurs_sfx$=""
+                rd_col_occurs$=""
+                rd_col_occurs=1
+                if ddm_04.fld_occurs>1
+                    rd_col_occurs$="YES"
+                    rd_col_occurs=ddm_04.fld_occurs
+                endif
+
+                data_seq_pos=pos(pad(ddm_04.data_name$,16)=data_seq_str$,20)
+                if data_seq_pos<>0 
+                    rd_occur_adj=num(data_seq_str$(data_seq_pos+17,2))
+                else
+                    rd_occur_adj=0
+                    data_seq_str$=data_seq_str$+pad(ddm_04.data_name$,16)+"-00;"
+                endif
+
+                for rd_curr_occur=1 to rd_col_occurs
+                    data_seq_pos=pos(pad(ddm_04.data_name$,16)=data_seq_str$,20)
+                    data_seq_str$(data_seq_pos+17,2)=str(num(data_seq_str$(data_seq_pos+17,2))+1:"00")
+
+                    if rd_col_occurs$="YES" or rd_occur_adj>0 rd_col_occurs_sfx$="_"+str(rd_curr_occur+rd_occur_adj:"00")
+                    p=1,data_name$=cvs(ddm_04.data_name$,3)
+                    while p
+                        p=pos("/"=data_name$)
+                        if p<>0 data_name$(p,1)="_"
+                    wend
+                    p=1
+                    while p
+                        p=pos("&"=data_name$)
+                        if p<>0 data_name$(p,1)="_"
+                    wend
+                    p=1
+                    while p
+                        p=pos(" "=data_name$)
+                        if p<> 0 data_name$(p,1)="_"   
+                    wend
+                    rd_temp_seg$=cvs(data_name$,3)+rd_col_occurs_sfx$+":"
+                    if ddm_01.data_type$="N" then datatype$="N" else datatype$="C"
+                    rd_temp_seg$=rd_temp_seg$+datatype$+"("
+                    rd_temp_seg$=rd_temp_seg$+str(rd_col_length)
+                    if ddm_04.fld_sep$="Y"
+                            gosub create_delim
+                    endif
+                    if ddm_04.fld_sep$="X" 
+                            gosub create_delim
+                    endif
+                    rd_temp_seg$=rd_temp_seg$+")"
+                    count=count+1
+                    if rd_gen_table_tpl$<>"" rd_gen_table_tpl$=rd_gen_table_tpl$+","
+                    rd_gen_table_tpl$=rd_gen_table_tpl$+rd_temp_seg$
+
+                next rd_curr_occur
+            endif 
+        goto read_data
+    endif
+end_loop:
+
+if rd_gen_table_tpl$<>"" then 
+
+    dim old_tmpl$:rd_gen_table_tpl$
+    fields$="fname["+str(count)+"]:c(20*)"
+    dim fieldlist$:fields$
+    fieldlist$= FATTR(old_tmpl$,"")
+    let datafile_chan=unt
+    if copy_sys01=1 then datafile$="sys-01"
+    open(datafile_chan)source_folder$+"/"+datafile$
+    print "   Copying data from  "+ddm_03.file_name$+ddm_03.record_id$
+    print(log_dev)"   Copying data from    "+ddm_03.file_name$+ddm_03.record_id$
+    read_date:
+        err_flag=0
+        record_id_fields$=""
+        if pos("RECORD_ID_"=fieldlist.fname$[2])  record_id_fields$=fieldlist.fname$[2]
+        if pos("RECORD_ID_"=fieldlist.fname$[1]) record_id_fields$=fieldlist.fname$[1]
+        if record_id_fields$<>""
+            readrecord(datafile_chan,end=end_ddm_03)old_tmpl$
+            if field(old_tmpl$,record_id_fields$)=ddm_03.record_id$ goto print_fields
+            goto read_date
+        else
+            readrecord(datafile_chan,end=end_ddm_03)old_tmpl$
+        endif
+        if copy_sys01=1
+            if field(old_tmpl$,fieldlist.fname$[2])+field(old_tmpl$,fieldlist.fname$[3])=dat$(1,4) goto print_fields
+            goto read_date
+        endif
+
+        print_fields:
+        for i=1 to count
+            if source_version=6 
+                no_fields=0
+                if pos("ADDR_LINE_5"=fieldlist.fname$[i]) no_fields=5;gosub address_field_change
+                if pos("ADDR_LINE_3"=fieldlist.fname$[i]) no_fields=3;gosub address_field_change
+            endif
+            if pos("_DATE"=fieldlist.fname$[i]) or pos("_DT"=fieldlist.fname$[i]) or pos("PER_ENDING_"=fieldlist.fname$[i])then
+                x$=field(old_tmpl$,fieldlist.fname$[i])
+                if cvs(x$,3)="" then goto copy_data
+                if len(x$)=2 then 
+                    x$=fna$(x$(1,1),x$)+fna$(x$(2,1),x$)
+                    let date_flag=1
+                    goto copy_data
+                endif
+                if len(x$)=6 then goto convert_A4Date
+                if len(x$)<>3 goto copy_data
+                x$=fnb$(x$)
+                x$=fngetdate$(x$)
+                if pos("00"=x$(5)) then gosub error_log
+                let date_flag=1
+                goto copy_data
+                convert_A4Date:
+                    if pos("."=x$) or pos("-"=x$) goto copy_data
+                    gosub add_century_prefix
+                    let date_flag=1
+                    reserved_str_flag=1
+            endif
+            if pos("YEAR"=fieldlist.fname$[i]) or pos("YR"=fieldlist.fname$[i])then
+               x$=field(old_tmpl$,fieldlist.fname$[i])
+               if len(cvs(x$,3))=2
+                    gosub add_century_prefix
+                    let year_flag=1
+               endif             
+            endif
+            copy_data:
+            old_fieldname$=fieldlist.fname$[i]
+            gosub check_fieldname
+            if new_fieldname$="" then continue
+            if date_flag=1 or year_flag=1 then
+                field new_tmpl$,new_fieldname$=x$
+            else
+                field_value$=field(old_tmpl$,fieldlist.fname$[i],err=trim_value)
+                goto check_length
+                trim_value:
+                    if i<> count err_flag=1;goto std_err
+                    old_tmpl$=old_tmpl$(1,len(old_tmpl$)-1)+$0a$
+                    field_value$=field(old_tmpl$,fieldlist.fname$[i])
+                check_length:
+                w$=fattr(new_tmpl$,new_fieldname$)
+                wlen=dec(w$(10,2))
+                If len(field_value$)> wlen 
+                    field_value$=cvs(field_value$,3)
+                    if len(field_value$)<=wlen 
+                        field new_tmpl$,new_fieldname$=field_value$
+                    else
+                        field new_tmpl$,new_fieldname$=field_value$(1,wlen-1)+$0a$
+                        print (log_dev)"      Value of field "+fieldlist.fname$[i]+ " is trimmed for record with key "+$22$+keyp(datafile_chan)+$22$+" as length of the field is "+str(len(field_value$))+" and Defined data length is "+str(wlen)
+                    endif
+                else
+                    field new_tmpl$,new_fieldname$=field_value$
+                endif
+            endif
+            let date_flag=0,year_flag=0,x$=""
+        next i
+        new_tmpl$=field(new_tmpl$)
+        writerecord(version8_chan,err=std_err)new_tmpl$
+        reserved_str_flag=0
+        goto read_date
+endif
+
+end_ddm_03:
+    if datafile_chan<>0 close(datafile_chan)
+    if version8_chan<>0 close(version8_chan)
+    if ddm_04_chan<>0 close(ddm_04_chan)
+    if copy_sys01=1 goto read_normalize_xref
+    goto read_ddm_03
+end_read:
+    if ddm_03_chan<>0 close(ddm_03_chan)
+    goto read_datafile
+end_read_datafile:
+    close(adata_chan)
+    if sys_01_flag=1 then goto copy_sys_01_data
+    a=msgbox("DataPort completed",0,"DataPort")
+    print (log_dev)$0a$+"DataPort completed"
+    print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
+    release
+
+create_delim:rem --- Create Delimiter
+    rd_temp_seg$=rd_temp_seg$+"*"
+return
+
+error_log:
+    print (log_dev)"  Invalid date occured in "+datafile$+" "+fieldlist.fname$[i]+" field"
+return
+
+add_century_prefix:
+    p=pos(x$(1,1)="ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    if p<>0 then 
+        p=p-1
+        if len(str(p))=2 then x$="2"+str(p)+x$(2) else x$="20"+str(p)+x$(2)
+    else 
+        x$="19"+x$
+    endif 
+return
+
+get_version8_template:
+    new_datafile$=datafile$
+    search_string$=ddm_03.file_name$+ddm_03.record_id$
+    let xref_chan=unt
+    open(xref_chan)filedir$+"file_xref"
+    read_xrefs:
+    read(xref_chan,end=get_template)tempname$
+    if tempname$="" goto read_xrefs
+    tempname$=cvs(tempname$,version_cvs)
+    if datafile$=cvs(tempname$(1,12),2+version_cvs) then 
+        search_string$=cvs(tempname$(14),2)+search_string$(len(search_string$))
+        new_datafile$=cvs(tempname$(14),2)
+        print "   "+datafile$+" is renamed to "+new_datafile$
+        print (log_dev)"   "+datafile$+ddm_03.record_id$+" is renamed to "+new_datafile$
+        goto get_template
+    endif
+    if search_string$=cvs(tempname$(1,12),2) then
+        search_string$=cvs(tempname$(14),2)
+        if len(cvs(tempname$(14),2))>7 then new_datafile$=cvs(tempname$(14),2) else new_datafile$=cvs(tempname$(14,len(tempname$(14))-1),2)
+        print "   "+datafile$+ddm_03.record_id$+" is copied to "+new_datafile$
+        print (log_dev)"   "+datafile$+ddm_03.record_id$+" is copied to "+new_datafile$
+        goto get_template
+    endif
+    goto read_xrefs  
+
+    get_template:
+        close(xref_chan)
+        gosub get_alias_name
+        close(temp_chan)
+        dim template$:"table_name:c(16*),file_name:c(30*),tmpl:c(10230*)"
+        let temp_chan=unt
+        open(temp_chan)dictfile$+"ddm_table_tpls.dat"
+        findrecord(temp_chan,key=pad(table_alias$,16),dom=check_for_definition)template$
+        version8_template$=template.tmpl$
+        close(temp_chan)
+        assign_template:
+        dim new_tmpl$:version8_template$
+        newfieldlist$= FATTR(new_tmpl$,"")
+        dim name$[150]
+        tempfieldlist$=newfieldlist$,n=1,p=1
+        while p>0
+            p=pos($0A$=tempfieldlist$)
+            name$[n]=tempfieldlist$(1,p-1)
+            n=n+1
+            tempfieldlist$=tempfieldlist$(p+1)
+        wend
+        let version8_chan=unt
+        open(version8_chan,err=check_for_definition)destin_folder$+"/"+new_datafile$
+        a=msgbox(new_datafile$+" already exists in destination folder. Do you want to overwrite data?",3+32+0,"DataPort")
+        if a=6 return
+        if a=7 goto end_ddm_03
+        if a=2 goto end_dataport
+return
+
+check_fieldname:
+    new_fieldname$=""
+    
+    if reserved_str_flag=1 and cvs(old_fieldname$,8)="reserved_str" then old_fieldname$="reserved_str_02"
+    if pos("reserved_str_0"=cvs(old_fieldname$,8)) new_fieldname$="";return
+    if pos("reserved_num"=cvs(old_fieldname$,8)) new_fieldname$="";return
+    for x=1 to n-1
+        if old_fieldname$=name$[x] then new_fieldname$=old_fieldname$
+    next x
+    if new_fieldname$<>"" and cvs(new_fieldname$,8)<>"reserved_str" return
+    if source_version=6 and pos("ivc_prodcode"=cvs(table_alias$,8)) and cvs(old_fieldname$,8)="reserved_str" then new_fieldname$="sa_level";goto check_fieldlist
+    if pos("inv_due_date_"=cvs(old_fieldname$,8)) new_fieldname$="inv_due_bydt_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("sls_inv_date_"=cvs(old_fieldname$,8)) new_fieldname$="sls_inv_bydt_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("inv_oh_date_"=cvs(old_fieldname$,8)) new_fieldname$="inv_oh_bydt_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("nbr_inv_due_"=cvs(old_fieldname$,8)) new_fieldname$="no_inv_due_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("nbr_ord_ship_"=cvs(old_fieldname$,8)) new_fieldname$="no_ord_ship_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("nbr_lns_rec_"=cvs(old_fieldname$,8)) new_fieldname$="no_lns_rec_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("nbr_inv_date_"=cvs(old_fieldname$,8)) new_fieldname$="no_inv_bydt_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("nbr_inv_bydt_"=cvs(old_fieldname$,8)) new_fieldname$="no_inv_bydt_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+    if pos("earn_deduct_"=cvs(old_fieldname$,8)) new_fieldname$="earndeduct_"+old_fieldname$(len(old_fieldname$)-1);goto check_fieldlist
+
+    let channel=unt
+    open(channel)filedir$+"field_file_xref"
+    read_xref1:
+        read(channel,end=next_xref)fieldname$
+        if fieldname$="" then goto read_xref1
+        if pos(cvs(fieldname$(1,16),2+8)=cvs(table_alias$,8)) then
+            if pos(cvs(fieldname$(18,15),2+8)=cvs(old_fieldname$,2+8)) then new_fieldname$=cvs(fieldname$(34),2+8);goto check_fieldlist
+        endif
+        new_fieldname$=""
+    goto read_xref1
+    next_xref:
+    close(channel)
+    let channel=unt
+    open(channel)filedir$+"field_name_xref"
+    read_xref2:
+        read(channel,end=goback)fieldname$
+        if fieldname$="" then goto read_xref2
+        if pos(cvs(fieldname$(1,16),2+8)=cvs(old_fieldname$,2+8)) then new_fieldname$=cvs(fieldname$(18),2+8);goto check_fieldlist
+        new_fieldname$=""
+    goto read_xref2
+    check_fieldlist:
+        found=0
+        for x=1 to n-1
+            if cvs(new_fieldname$,2+8)=cvs(name$[x],2+8) then found=1;break
+        next x
+        if found=0 then new_fieldname$=""
+        goback:
+        if channel close(channel)
+return
+
+check_for_definition:
+    let temp_chan=unt
+    open(temp_chan)dictfile$+"ddm_tables.dat"
+    read_definition:
+    findrecord(temp_chan,key=pad(table_alias$,16),dom=no_8data_file)table_name$
+    close(temp_chan)
+    gosub create_newfile
+return
+
+no_8data_file: 
+    print "   Data File "+search_string$+" will not be ported"
+    print (log_dev)"   Data File "+search_string$+" will not be ported"
+    goto end_ddm_03
+return
+
+create_newfile:
+    call dictpgm$+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+new_datafile$,rd_table_chans$[all],"CREATE",status$
+    if status$<>"" then goto file_creation_err
+    print "   New data file "+new_datafile$+" is created in folder "+destin_folder$
+    print (log_dev)"   New data file "+new_datafile$+" is created"
+    if version8_chan close(version8_chan)
+    open(version8_chan)destin_folder$+"/"+new_datafile$
+return
+
+get_alias_name:
+    table_alias$=""
+    let temp_chan=unt
+    open(temp_chan)filedir$+"file_alias"
+    read_alias:
+    read(temp_chan,end=no_8data_file)alias_name$
+    if alias_name$="" goto read_alias
+    if cvs(alias_name$(1,25),2+8)=cvs(search_string$,8) then table_alias$=alias_name$(27,16);return
+    goto read_alias
+return
+
+address_field_change:
+    address_flag=0
+    for x=1 to n-1
+        if name$[x]="city" then address_flag=1;break
+    next x
+    if address_flag=0 return
+    if no_fields=5 address$=old_tmpl.addr_line_1$+old_tmpl.addr_line_2$+old_tmpl.addr_line_3$+old_tmpl.addr_line_4$+old_tmpl.addr_line_5$
+    if no_fields=3 address$=old_tmpl.addr_line_1$+old_tmpl.addr_line_2$+old_tmpl.addr_line_3$
+    dim state$(2),city$(24)
+    let valid$="ALAKAZARCACOCTDEDCFLGAHIIDILINIAKSKYLAMEMDMAMIMNMSMOMTNENVNHNJNMNYNCNDOHOKORPAPRRISCSDTNTXUTVTVAVIWAWVWIWY"
+    rem " --- loop thru"
+    if len(address$)=0 or int(len(address$)/24)<>len(address$)/24 then goto last
+    for x=len(address$) to 1 step -24
+    let string1$=cvs(address$(x-23,24),2)
+    if string1$="" then continue
+    if len(string1$)<2 then let city$(1)=string1$,address$(x-23,24)=""; exitto last
+    if len(string1$)=2 then goto assign
+    if string1$(len(string1$)-2,1)<>" " then let city$(1)=""; exitto last
+    assign:
+    let string2$=string1$(len(string1$)-1,2)
+    if pos(string2$=valid$,2)=0 then let city$(1)=""; exitto last
+    let state$=string2$
+    if len(string1$)=2 then if x>1 then let city$(1)=address$(x-47,24),address$(x-47,48)="" fi else let city$(1)=address$(x-23,len(string1$)-3),address$(x-23,24)=""
+    let string1$=cvs(city$,2)
+    if len(string1$)>0 then if string1$(len(string1$),1)="," then let string1$=string1$(1,len(string1$)-1)
+    let city$(1)=string1$
+    exitto last
+    next x
+    last:
+        if city$="" or state$="" goto addr_field_err
+        new_tmpl.addr_line_1$=address$(1,24)
+        new_tmpl.addr_line_2$=address$(25,24)
+        if no_fields=5 then
+            new_tmpl.addr_line_3$=address$(49,24)
+            new_tmpl.addr_line_4$=address$(73,24)
+        endif
+        new_tmpl.city$=city$
+        new_tmpl.state_code$=state$
+return
+
+
+check_portable_files:
+    if pos("."=datafile$) goto read_datafile
+    if pos("_"=datafile$) goto read_datafile
+    if pos("z"=datafile$)  goto read_datafile
+    if pos("dd"=datafile$) goto read_datafile
+    if pos("w-"=datafile$) goto read_datafile
+    if pos("sh"=datafile$) goto read_datafile
+return
+
+
+
+copy_ivm_03:
+    let temp_chan1=unt
+    open(temp_chan1)source_folder$+"/"+datafile$
+    let temp_chan2=unt
+    open(temp_chan2,err=create_ivm_03)destin_folder$+"/"+datafile$
+    copy_ivm_03_data:
+        let k$=key(temp_chan1,err=end_copy_ivm_03_data)
+        readrecord(temp_chan1,end=end_copy_ivm_03_data)value$
+        writerecord(temp_chan2,key=k$)value$
+        goto copy_ivm_03_data
+    create_ivm_03:
+        call "C:/apps/aon/ad/src/adc_makelike.aon",destin_folder$+"/"+"ivm-03","ivm-03",status
+        if status=0 
+            open(temp_chan2)destin_folder$+"/"+datafile$
+            goto copy_ivm_03_data 
+        else 
+            goto ivm_03_error
+        endif
+    end_copy_ivm_03_data:
+        close(temp_chan1)
+        close(temp_chan2)
+        goto read_datafile
+
+copy_sys_01_data:
+    print "sys-01"
+    print "   sys-01 will be normalized to different parameter files"
+    print (log_dev)"sys-01"
+    print (log_dev)"   sys-01 will be normalized to different parameter files"
+    let temp_chan2=unt
+    open(temp_chan2)filedir$+"file_normalization"
+    read_normalize_xref:
+        read(temp_chan2,end=end_read_normalize_xref)dat$
+        copy_sys01=1
+        k$=cvs(dat$(9,7),version_cvs)
+        datafile$=dat$(9,6)
+        goto open_ddm_03
+        end_read_normalize_xref:
+            close(temp_chan2)
+            sys_01_flag=0 
+            goto end_read_datafile
+
+rem --- Function for unpacking 3 character date fields to get 8 character date
+
+DEF FNA$(Q$,Q2$)=STR(MOD((ASC(Q$)-32)*POS(" "<>Q2$(2,1)),100):"00")
+DEF FNB$(Q1$)=FNA$(Q1$(2),Q1$)+"/"+FNA$(Q1$(3),Q1$)+"/"+FNA$(Q1$(1),Q1$)
+
+def fngetdate$(q1$)
+    year$=q1$(len(q1$)-1)
+    if q1$(len(q1$)-1)>date(0:"%Yz") then q1$=q1$(1,len(q1$)-2)+"19"+year$ else q1$=q1$(1,len(q1$)-2)+"20"+year$
+    q1$=q1$(len(q1$)-3)+q1$(1,2)+q1$(4,2)
+    return q1$
+fnend
+
+std_err:
+    a=msgbox("Error occured while porting data file "+datafile$+ddm_03.record_id$+"."+$0A$+"Please make sure that your data file matches to dictionary information",1+64,"DataPort")
+    if err_flag=0 print(log_dev)"   *Error "+errmes(-1)+" occured while porting data file "+datafile$+" (*Error in writing record with key "+$22$+keyp(datafile_chan,err=read_date)+$22$+")"
+    if err_flag=1 print(log_dev)"   *Error "+errmes(-1)+" occured while porting data file "+datafile$+" (*Error in retrieving value of field "+fieldlist.fname$[i]+" in record with key "+$22$+keyp(datafile_chan,err=read_date)+$22$+")"
+    if a=1 goto read_date
+    if a=2 goto end_dataport
+file_creation_err:
+    a=msgbox("   Error in creating file "+new_datafile$+$0a$+"Continue with next file?",1+64,"DataPort")
+    print(log_dev)"   *Error in creating file "+new_datafile$
+    if a=1 goto end_ddm_03
+    if a=2 goto end_dataport
+end_dataport:
+    a=msgbox("Do you want to quit DataPort?",4+32+256,"DataPort")
+    if a=6 release
+    if a=7 a=msgbox("Continuing DataPort..");goto end_ddm_03
+ivm_03_error:
+    a=msgbox("   Error in creating file ivm-03"+$0a$+"Continue with next file?",1+64,"DataPort")
+    print(log_dev)"   *Error in creating file ivm-03"
+    if a=1 goto end_ddm_03
+    if a=2 goto end_dataport
+addr_field_err:
+    a=msgbox("   Error in copying address fields"+$0a$+"Continue with next file?",1+64,"DataPort")
+    print(log_dev)"   *Error in copying address fields"
+    if a=1 goto end_ddm_03
+    if a=2 goto end_dataport
+dictionary_err:
+    a=msgbox("Please make sure that you have all the Addon dictionary files",0+64,"DataPort")
+    release
