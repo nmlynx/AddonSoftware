@@ -1,701 +1,654 @@
 rem --- Invoice History Report (Report Overlay)
-rem --- Program opr_kb v8.0.0 18Jul2007 (opr_kb)
-rem --- Created by adx_codeport.bbx v1.1.5 (07/18/2007 09:38:18)
+rem --- Program opr_kb v8.0.0 23Jan2008 (opr_kb)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/23/2008 12:28:31)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
-rem --- The following IOLIST's were removed from this program:
 
 
-
-    seterr std_error
-    setesc std_error
+        seterr std_error
+        setesc std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
-
-
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    Begin_Cust$=fnget_fld_data$(table$,"Begin_Cust")
-    End_Cust$=fnget_fld_data$(table$,"End_Cust")
-    Begin_Inv_Date$=fnget_fld_data$(table$,"Begin_Inv_Date")
-    End_Inv_Date$=fnget_fld_data$(table$,"End_Inv_Date$")
-    Salesperson$=fnget_fld_data$(table$,"Salesperson")
-    Selcd_Item$=fnget_fld_data$(table$,"Selcd_Item")
-    Blw_Min_CostProfit$=fnget_fld_data$(table$,"Blw_Min_CostProfit")
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Initialize Data
-    more=1
-    ord=0
-    ship=0
-    bo=0
-    l9=59
-    l=l9+1
-    headings=2
-    dim j$(130,"-"),j1$(30," "),j2$(130,"="),j3$(131,"_"),r9$(0)
-rem dim a[13],w[17],d[10],s[2],t[4],u[3],headings$[2],y0$(32),x0$(32)
-    m9$="###.0%"
-    m8$="####.00-"
-    clock$=""
-    when$=sysinfo.system_date$
-    m0=len(m0$)
-    m1=len(m1$)
-    m2=len(m2$)
-    m3=len(m3$)
-    m8=len(m8$)
-    m9=len(m9$)
-    headings$[0]=n1$
-    headings$[1]=n4$
-    h0=132
-    h=0
-    p6=h0-m8
-    p1=h0-m1*3-m3*2
-    p2=h0-m1*3-m3
-    p3=h0-m1
-    p4=h0-m1*2
-    p5=h0-m1*3
-    dim a0$(200),w1$(64)
-    t9$=""
-    max_pcodes=50; dim t9[max_pcodes,3]
-    r9$="SPN"
-    dim r[3,4]
 
-    if i3$(17,1)="S" x2$="Ser#" else if i3$(17,1)="L" x2$="Lot#"
+        more=1
+        ord=0
+        ship=0,bo=0,l9=59,l=l9+1,headings=2
+        dim j$(130,"-"),j1$(30," "),j2$(130,"="),j3$(131,"_"),r9$(0)
+        dim a[13],w[17],d[10],s[2],t[4],u[3],headings$[2],y0$(32),x0$(32)
+        m9$="###.0%"
+        m8$="####.00-",clock$="",when$=sysinfo.system_date$
+        m0=len(ars01a.customer_output$)
+        m1=len(ars01a.amount_mask$)
+        m2=len(ars01a.unit_mask$)
+        m3=len(ars01a.rate_mask$)
+        m8=len(m8$)
+        m9=len(m9$)
+        headings$[0]=n1$
+        headings$[1]=n4$,h0=132,h=0,p6=h0-m8
+        p1=h0-m1*3-m3*2
+        p2=h0-m1*3-m3,p3=h0-m1,p4=h0-m1*2,p5=h0-m1*3
+        rem dim a0$(200),w1$(64)
+        t9$=""
+        max_pcodes=50; dim t9[max_pcodes,3]; rem "TOTALS BY PRODUCT
+        r9$="SPN"
+        dim r[3,4]; rem " 0-3 = STANDARD,PROMOTIONAL,NON-STOCK,OTHER"
+
+rem --- 0-4 = LIST,COST,QTY ORDERED,QTY B/O,QTY SHIPPED
+
+        if ivs01a.lotser_flag$="S" then
+            let x2$="Ser#"
+        else
+            if ivs01a.lotser_flag$="L" then
+                let x2$="Lot#"
+            endif
+        endif
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    if s0$="" h4$="First"
-    if s1$="" h5$="Last"
-    if s2$="" h6$="First"
-    if s3$="" h7$="Last"
-    if s4$="" h8$="All"
-    if s5$="" h9$="All"
+        if status then goto std_exit
+        if s0$="" then let h4$="First"
+        if s1$="" then let h5$="Last"
+        if s2$="" then let h6$="First"
+        if s3$="" then let h7$="Last"
+        if s4$="" then let h8$="All"
+        if s5$="" then let h9$="All"
 
-    
-    call pgmdir$+"adc_progress.aon","CN","","","","",0,opt61_dev,1,meter_num,status
+rem --- Background
 
- rem   precision num(i2$(5,1))
-       precision num(ivs01a.precision$)
-    read (opt01_dev,key=firm_id$+"  "+s0$,dom=*next)
+        call pgmdir$+"adc_progress.aon","N","","","","",0,opt01_dev,1,meter_num,status
 
-while more
+rem --- Options
 
-    opt01a_key$=key(opt01_dev,end=*break)
-    if pos(firm_id$=opt01a_key$)<>1 break
-    if s1$<>"" and opt01a_key.FIRM_ID$+opt01a_key.AR_TYPE$+opt01a_key.CUSTOMER_ID$>firm_id$+"  "+s1$ break
-    call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-    read record (opt01_dev,key=opt01a_key$) opt01a$
-    if s2$<>"" and opt01a.INVOICE_DATE$<s2$ continue
-    if s3$<>"" and opt01a.INVOICE_DATE$>s3$ continue
-    if s4$<>"" and opt01a.SLSPSN_CODE$<>s4$ continue
+        precision num(ivs01a.precision$)
 
-    if opt01a.INVOICE_TYPE$="V" then
-        if l+2>l9 gosub report_heading
-        gosub Find_Customer
-        print (printer_dev)'LF',@(0),fnmask$(opt01a_key$(5,p[0]),m0$)," ",arm01a.CUSTOMER_NAME$," ",opt01a.ORDER_NO$," ",opt01a.AR_INV_NO$," ",fndate$(opt01a.INVOICE_DATE$)," ",opt01a.ORD_TAKEN_BY$," ",opt01a.SLSPSN_CODE$," *** VOID ***"
-        l=l+2
-        continue
-    endif
-        gosub Check_GP
-        if l$<>"PRINT" continue
+rem --- Initial Read
+
+        read (opt01_dev,key=firm_id$+"  "+s0$,dom=*next)
+
+rem --- retrieve template for OPT_ORDHDR record key
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_ORDHDR","PRIMARY",opt01a_key_tpl$,table_chans$[all],status$
+        dim opt01a_key$:opt01a_key_tpl$
+
+
+rem --- retrieve template for OPT_ORDDET record key
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_ORDDET","PRIMARY",opt11a_key_tpl$,table_chans$[all],status$
+        dim opt11a_key$:opt11a_key_tpl$
+
+
+rem --- retrieve template for OPT_INVLSDET record key
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_INVLSDET","PRIMARY",opt21a_key_tpl$,table_chans$[all],status$
+        dim opt21a_key$:opt21a_key_tpl$
+
+
+
+rem --- Main Loop Starts
+While more
+
+        opt01a_key$=key(opt01_dev,end=done)
+        if pos(firm_id$=opt01a_key$)<>1 then break
+        if s1$<>"" and opt01a_key.firm_id$+opt01a_key.ar_type$+opt01a_key.customer_id$>firm_id$+"  "+s1$ then break
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        read record (opt01_dev,key=opt01a_key$) opt01a$
+        if s2$<>"" and opt01a.invoice_date$<s2$ then continue
+        if s3$<>"" and opt01a.invoice_date$>s3$ then continue
+        if s4$<>"" and opt01a.slspsn_code$<>s4$ then continue
+
+rem --- Heading
+
+        if opt01a.invoice_type$="V" then
+
+rem --- Void
+
+            if l+2>l9 then gosub report_heading
+            gosub Find_Customer
+            print (printer_dev)'lf',@(0),fnmask$(opt01a.customer_id$(1,p[0]),ars01a.customer_output$)," ",
+:                                   arm01a.customer_name$," ",opt01a.order_no$," ",opt01a.ar_inv_no$,
+:                                   " ",fndate$(opt01a.invoice_date$)," ",opt01a.ord_taken_by$," ",
+:                                   opt01a.slspsn_code$," *** VOID ***"
+            l=l+2
+            continue
+
+        endif
+
+rem --- Print
+
+        gosub Selected_Item
+        if l$<>"PRINT" then continue
         gosub Find_Customer
         gosub Order_Header
-   
 
-    if l2<>0 then
-                for i=1 to l2
-            rem     dim w1$(40)
-                    opt11a_key$=l0$[i,0]
-                    opt11a.ORDER_MEMO$=l0$[i,1]
-                    for j=0 to 7; let w[j]=l0[i,j]; next j
-                    gosub Detail
-                next i
-                goto Invoice_Totals
+rem --- Detail
 
-            rem --- Detail
+        if l2<>0 then
+            for i=1 to l2
+                rem dim w1$(40)
+                opt11a_key$=l0$[i,0]
+                opt11a.order_memo$=l0$[i,1]
+                for j=0 to 7
+                    let w[j]=l0[i,j]
+                next j
+                gosub Detail
+            next i
+            goto Invoice_Totals
+        endif
 
-Detail: 
+Detail: rem --- Detail
 
-                    w0=opt11a.UNIT_COST
-                    desc$=opt11a.ORDER_MEMO$
-                    if opt11a.MAN_PRICE$<>ivm10a_key$(4,1) dim x0$(32)
-                    find record (opm02a_dev,key=firm_id$+opt11a.MAN_PRICE$,dom=*next) opm02a$
-                    if pos(opm02a.LINE_TYPE$="SP")<>0 then
-                        dim d2$(19),d[10]; find record (ivm01a_dev,key=firm_id$+opt11a.ITEM_ID,dom=Assign_Value) ivm01a$
-                        if pos(" "<>desc$)=0 desc$=d1$
-                        opt11a.DISC_PERCENT=0
-                        opt11a.DISC_PERCENT=num(opt11a.RESERVED_STR$,err=*next)
-                        opt11a.COMM_PERCENT=opt11a.DISC_PERCENT*opt11a.UNIT_PRICE*opt11a.QTY_SHIPPED/100
-                        opt11a.EXT_PRICE=opt11a.UNIT_PRICE*opt11a.QTY_SHIPPED-opt11a.COMM_PERCENT
-                   endif
-Assign_Value:
-                    gosub Print_Detail
-                    s[0]=s[0]+opt11a.EXT_PRICE
-                    s[1]=s[1]+opt11a.UNIT_COST*opt11a.QTY_SHIPPED
-                    s[2]=s[2]+opt11a.COMM_PERCENT
-                    s0=s0+1
-                    u[0]=u[0]+opt11a.EXT_PRICE
-                    u[1]=u[1]+opt11a.UNIT_COST*opt11a.QTY_SHIPPED
-                    u[2]=u[2]+opt11a.COMM_PERCENT
-                    ord=ord+opt11a.QTY_ORDERED
-                    bo=bo+opt11a.QTY_BACKORD
-                    ship=ship+opt11a.QTY_SHIPPED
-                    r9=0
-                    r9=pos(opm02a.LINE_TYPE$=r9$)
-                    if r9<>0 r[r9-1,0]=r[r9-1,0]+opt11a.EXT_PRICE,r[r9-1,1]=r[r9-1,1]+opt11a.UNIT_COST*opt11a.QTY_SHIPPED,r[r9-1,2]=r[r9-1,2]+opt11a.QTY_ORDERED,r[r9-1,3]=r[r9-1,3]+opt11a.QTY_BACKORD,r[r9-1,4]=r[r9-1,4]+opt11a.QTY_SHIPPED
-                    if opm02a.LINE_TYPE$="O" r[3,0]=r[3,0]+opt11a.EXT_PRICE
-                    if opm02a.PROD_TYPE_PR$<>"N" then
-                        if pos(opt11a.PRODUCT_TYPE$=t9$,3)=0 t9$=t9$+opt11a.PRODUCT_TYPE$
-                        if len(t9$)/3>max_pcodes gosub Set_Pcodes
-                        x=pos(opt11a.PRODUCT_TYPE$=t9$,3)
-                        x=int(x/3)
-                        t9[x,0]=t9[x,0]+opt11a.EXT_PRICE
-                        t9[x,1]=t9[x,1]+opt11a.UNIT_COST*opt11a.QTY_SHIPPED
-                        t9[x,2]=t9[x,2]+opt11a.COMM_PERCENT
-                        t9[x,3]=t9[x,3]+opt11a.QTY_SHIPPED
-                        return
-                    endif
-          endif
-rem --- Invoice Totals
-    Invoice_Totals: 
-        gosub Sales_Total
+        w0=opt11a.unit_cost
+        desc$=opt11a.order_memo$
+        if opt11a.line_code$<>ivm10a.product_type$ then
+        rem    dim x0$(32)
+        endif
+        find record (opm02_dev,key=firm_id$+opt11a.line_code$,dom=*next) opm02a$
+
+        if pos(opm02a.line_type$="SP")<>0 then
+            rem dim d2$(19),d[10]
+            find record (ivm01_dev,key=firm_id$+opt11a.item_id$,dom=Label_One) ivm01a$
+            if pos(" "<>desc$)=0 then let desc$=ivm01a.item_desc$
+            opt11a.disc_percent=0
+            opt11a.disc_percent=num(opt11a.reserved_str$,err=*next)
+            opt11a.comm_percent=opt11a.disc_percent*opt11a.unit_price*opt11a.qty_shipped/100
+            opt11a.ext_price=opt11a.unit_price*opt11a.qty_shipped-opt11a.comm_percent
+        endif
+
+Label_One:
+
+        gosub Print_Detail
+        s[0]=s[0]+opt11a.ext_price
+        s[1]=s[1]+opt11a.unit_cost*opt11a.qty_shipped
+        s[2]=s[2]+opt11a.comm_percent
+        s0=s0+1
+        u[0]=u[0]+opt11a.ext_price
+        u[1]=u[1]+opt11a.unit_cost*opt11a.qty_shipped
+        u[2]=u[2]+opt11a.comm_percent
+        ord=ord+opt11a.qty_ordered
+        bo=bo+opt11a.qty_backord
+        ship=ship+opt11a.qty_shipped
+        r9=0
+        r9=pos(opm02a.line_type$=r9$)
+
+        if r9<>0 then
+            r[r9-1,0]=r[r9-1,0]+opt11a.ext_price
+            r[r9-1,1]=r[r9-1,1]+opt11a.unit_cost*opt11a.qty_shipped
+            r[r9-1,2]=r[r9-1,2]+opt11a.qty_ordered
+            r[r9-1,3]=r[r9-1,3]+opt11a.qty_backord
+            r[r9-1,4]=r[r9-1,4]+opt11a.qty_shipped
+        endif
+
+        if opm02a.line_type$="O" then
+            let r[3,0]=r[3,0]+opt11a.ext_price
+        endif
+
+        if opm02a.prod_type_pr$<>"N" then
+            if pos(opt11a.product_type$=t9$,3)=0 then let t9$=t9$+opt11a.product_type$
+            if len(t9$)/3>max_pcodes then gosub P_Codes
+            x=pos(opt11a.product_type$=t9$,3)
+            x=int(x/3)
+            t9[x,0]=t9[x,0]+opt11a.ext_price
+            t9[x,1]=t9[x,1]+opt11a.unit_cost*opt11a.qty_shipped
+            t9[x,2]=t9[x,2]+opt11a.comm_percent
+            t9[x,3]=t9[x,3]+opt11a.qty_shipped
+        endif
+
+        return
+
+Invoice_Totals: rem --- Invoice Totals
+
+        gosub Total_Freight
         dim s[2]; let s0=0
         ord=0
-        bo=0
-        ship=0
-wend
+        bo=0,ship=0
+Wend
+rem --- Main Loop Ends
 
-    if h=0 gosub report_heading; goto std_exit
-    precision 2
-    e9$="E"
-    if l+4>l9 gosub report_heading
-    print (printer_dev)'LF',
-:                   @(p2-m8),j2$(1,3*m1+m3+m8)
-    tmp$=str(fnd(u[0]-u[1],u[0]):m8$)
-    if len(tmp$)>m8 dim tmp$(m8,"*")
-    print (printer_dev)
-:                   @(24),"****Report Totals: ",
-:                   @(p1-m8-4),"Sales Total:",t[0],
-:                   @(p2-m8),u[3]:m1$,
-:                   @(p4-m8),u[1]:m1$,
-:                   @(p3-m8),u[0]-u[1]:m1$,
-:                   @(p6),tmp$
-    print (printer_dev)
-:                   @(p1-m8-1),"Discount:",
-:                   @(p2-m8),-t[2]:m1$
-    print (printer_dev)
-:                   @(p1-m8),"Freight:",
-:                   @(p2-m8),t[1]:m1$
-    print (printer_dev)
-:                   @(p1-m8-2),"Sales Tax:",
-:                   @(p2-m8),t[4]:m1$
-    print (printer_dev)
-:                   @(p2-m8),j$(1,m1)
-    print (printer_dev)
-:                   @(p1-m8-8),"*  Report Total:",
-:                   @(p2-m8),u[3]+t[1]-t[2]+t[4]:m1$
-    print (printer_dev)
-:                   @(22),"Total # Of Invoices: ",u2:"###0-"
-    l=l+9
+
+done: rem --- Totals
+
+        if h=0 then gosub report_heading; goto std_exit
+        precision 2
+        e9$="E"
+        if l+4>l9 then gosub report_heading
+        print (printer_dev)'lf',@(p2-m8),j2$(1,3*m1+m3+m8)
+        tmp$=str(fnd(u[0]-u[1],u[0]):m8$)
+        if len(tmp$)>m8 then dim tmp$(m8,"*")
+        print (printer_dev)@(24),"****Report Totals: ",@(p1-m8-4),"Sales Total: ",t[0],
+:                          @(p2-m8),u[3]:ars01a.amount_mask$,@(p4-m8),u[1]:ars01a.amount_mask$,@(p3-m8),u[0]-u[1]:ars01a.amount_mask$,@(p6),tmp$
+        print (printer_dev)@(p1-m8-1),"Discount:",@(p2-m8),-t[2]:ars01a.amount_mask$
+        print (printer_dev)@(p1-m8),"Freight:",@(p2-m8),t[1]:ars01a.amount_mask$
+        print (printer_dev)@(p1-m8-2),"Sales Tax:",@(p2-m8),t[4]:ars01a.amount_mask$
+        print (printer_dev)@(p2-m8),j$(1,m1)
+        print (printer_dev)@(p1-m8-8),"*  Report Total:",@(p2-m8),u[3]+t[1]-t[2]+t[4]:ars01a.amount_mask$
+        print (printer_dev)@(22),"Total # Of Invoices: ",u2:"###0-"
+        l=l+9
 
 rem --- Totals By Product
 
-    dim t[3]
-    if int(len(t9$)/3)+7+l>l9 gosub report_heading
-    print (printer_dev)'LF',"***Product Type Totals*** ",'LF'
-    print (printer_dev)"Product",
-:                       @(30+m2-6),"Units",
-:                       @(30+m2+m1-6),"Sales",
-:                       @(30+m2+m1*2-5),"Cost",
-:                       @(30+m2+m1*3-6),"G.P.",
-:                       @(30+m2+m1*3+m8-7),"G.P. %",'LF',
-    if len(t9$)<>0 then
+        dim t[3]
+        if int(len(t9$)/3)+7+l>l9 then gosub report_heading
+        print (printer_dev)'lf',"***Product Type Totals*** ",'lf'
+        print (printer_dev)"Product",@(30+m2-6),"Units",@(30+m2+m1-6),"Sales",@(30+m2+m1*2-5),"Cost",
+:                                    @(30+m2+m1*3-6),"G.P.",@(30+m2+m1*3+m8-7),"G.P. %",'lf',
+        if len(t9$)<>0 then
             for x=1 to len(t9$) step 3
                 x0=int(x/3)
-                dim x0$(30); let ivm10a.CODE_DESC$="***Not On File***"
-                find record (ivm10a_dev,key=firm_id$+"A"+t9$(x,3),dom=*next) ivm10a$
+                rem dim x0$(30)
+                let ivm10a.code_desc$="***Not On File***"
+                find record (ivm10_dev,key=firm_id$+"A"+t9$(x,3),dom=*next) ivm10a$
 
-                if !(t9[x0,0]=0 and t9[x0,1]=0)
-                    print (printer_dev)t9$(x,3)," ",ivm10a.CODE_DESC$,@(30),t9[x0,3]:m2$,t9[x0,0]:m1$,t9[x0,1]:m1$,t9[x0,0]-t9[x0,1]:m1$,fnd(t9[x0,0]-t9[x0,1],t9[x0,0]):m8$
-                    t[0]=t[0]+t9[x0,0]
-                    t[1]=t[1]+t9[x0,1]
-                    t[2]=t[2]+t9[x0,2]
-                    t[3]=t[3]+t9[x0,3]
-                    l=l+1
-                endif
+                if t9[x0,0]=0 and t9[x0,1]=0 then continue
+                print (printer_dev)t9$(x,3)," ",ivm10a.code_desc$,@(30),t9[x0,3]:ars01a.unit_mask$,t9[x0,0]:ars01a.amount_mask$,t9[x0,1]:ars01a.amount_mask$,
+:                                  t9[x0,0]-t9[x0,1]:ars01a.amount_mask$,fnd(t9[x0,0]-t9[x0,1],t9[x0,0]):m8$
+                t[0]=t[0]+t9[x0,0]
+                t[1]=t[1]+t9[x0,1]
+                t[2]=t[2]+t9[x0,2]
+                t[3]=t[3]+t9[x0,3]
+                l=l+1
             next x
-    endif
+        endif
 
-    print (printer_dev)
-:                       @(30),j$(1,m2+m1*3+m8),'LF',"Report Totals: ",
-    print (printer_dev)
-:                       @(30),t[3]:m2$,t[0]:m1$,t[1]:m1$,t[0]-t[1]:m1$,fnd(t[0]-t[1],t[0]):m8$
-    l=l+2
+        print (printer_dev)@(30),j$(1,m2+m1*3+m8),'lf',"Report Totals: ",
+        print (printer_dev)@(30),t[3]:ars01a.unit_mask$,t[0]:ars01a.amount_mask$,t[1]:ars01a.amount_mask$,t[0]-t[1]:ars01a.amount_mask$,fnd(t[0]-t[1],t[0]):m8$
+        l=l+2
 
 rem --- Total By Line Type
 
-    if l+10>l9 gosub report_heading
-    dim t[1]
-    print (printer_dev)'LF','LF','LF',
-:                       @(0),"*** Line Type Total ***",'LF','LF',
-:                       @(0),"Description",
-:                       @(30),"Ord",
-:                       @(40),"B/O",
-:                       @(49),"Ship",
-:                       @(62),"Sales",
-:                       @(75),"Cost",'LF'
-    if r[0,0]<>0 or r[0,1]<>0 or r[0,2]<>0 or r[0,3]<>0 or r[0,4]<>0 
-        print (printer_dev)
-:                           @(0),"Standard Items",
-:                           @(33-m2),r[0,2]:m2$,
-:                           @(43-m2),r[0,3]:m2$,
-:                           @(53-m2),r[0,4]:m2$,
-:                           @(67-m3),r[0,0]:m3$,
-:                           @(80-m3),r[0,1]:m3$
-    
-    if r[1,0]<>0 or r[1,1]<>0 or r[1,2]<>0 or r[1,3]<>0 or r[1,4]<>0 
-        print (printer_dev)
-:                           @(0),"Promotional Items",
-:                           @(33-m2),r[1,2]:m2$,
-:                           @(43-m2),r[1,3]:m2$,
-:                           @(53-m2),r[1,4]:m2$,
-:                           @(67-m3),r[1,0]:m3$,
-:                           @(80-m3),r[1,1]:m3$
-    
-    if r[2,1]<>0 or r[2,0]<>0 or r[2,2]<>0 or r[2,3]<>0 or r[2,4]<>0 
-        print (printer_dev)
-:                           @(0),"Non-Stock Items",
-:                           @(33-m2),r[2,2]:m2$,
-:                           @(43-m2),r[2,3]:m2$,
-:                           @(53-m2),r[2,4]:m2$,
-:                           @(67-m3),r[2,0]:m3$,
-:                           @(80-m3),r[2,1]:m3$
-    
-    if r[3,0]<>0 
-         print (printer_dev)
-:                           @(0),"Other Charges",
-:                           @(67-m3),r[3,0]:m3$
-    
-    for x=0 to 3
-        t[0]=t[0]+r[x,0]
-        t[1]=t[1]+r[x,1]
-    next x
-    print (printer_dev)
-:                       @(80-m3*2-m2),j$(1,m2+m3*2),'LF',"Report Totals: ",
-    print (printer_dev)
-:                       @(67-m3),t[0]:m3$,
-:                       @(80-m3),t[1]:m3$
-    l=l+2
-    goto std_exit
+        if l+10>l9 then gosub report_heading
+        dim t[1]
+        print (printer_dev)'lf','lf','lf',@(0),"*** Line Type Total ***",'lf','lf',
+:               @(0),"Description",@(30),"Ord",@(40),"B/O",@(49),"Ship",@(62),"Sales",@(75),"Cost",'lf'
 
-rem --- Report Heading
+        if r[0,0]<>0 or r[0,1]<>0 or r[0,2]<>0 or r[0,3]<>0 or r[0,4]<>0 then
+            print (printer_dev)@(0),"Standard Items",@(33-m2),r[0,2]:ars01a.unit_mask$,@(43-m2),r[0,3]:ars01a.unit_mask$,
+:                              @(53-m2),r[0,4]:ars01a.unit_mask$,@(67-m3),r[0,0]:ars01a.rate_mask$,@(80-m3),r[0,1]:ars01a.rate_mask$
+        endif
 
-report_heading: 
+        if r[1,0]<>0 or r[1,1]<>0 or r[1,2]<>0 or r[1,3]<>0 or r[1,4]<>0 then
+            print (printer_dev)@(0),"Promotional Items",@(33-m2),r[1,2]:ars01a.unit_mask$,@(43-m2),r[1,3]:ars01a.unit_mask$,
+:                              @(53-m2),r[1,4]:ars01a.unit_mask$,@(67-m3),r[1,0]:ars01a.rate_mask$,@(80-m3),r[1,1]:ars01a.rate_mask$
+        endif
 
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)
-:                       @(0),"Beginning Customer: ",h4$,
-:                       @(56),"Salesperson: ",h8$,
-:                       @(98),"Beginning Invoice Date: ",h6$
-    print (printer_dev)
-:                       @(3),"Ending Customer: ",h5$,
-:                       @(54),"Selected Item: ",h9$,
-:                       @(101),"Ending Invoice Date: ",h7$
-    print (printer_dev)
-:                       @(56),"Minimum GP%: ",str(s6:m9$),'LF'
-    l=l+4
-    if e9$<>"E" then
-        print (printer_dev)
-:                       @(2),"-- Customer --",
-:                       @(41),"Order",
-:                       @(48),"Invoice",
-:                       @(57),"Invoice",
-:                       @(75),"P.O.",
-:                       @(97),"Dist",
-:                       @(120),"Tax"
-        print (printer_dev)
-:                       @(0),"Number",
-:                       @(8),"Name",
-:                       @(40),"Number",
-:                       @(48),"Number",
-:                       @(58),"Date",
-:                       @(66),"By",
-:                       @(70),"Sls",
-:                       @(74),"Number",
-:                       @(85),"Ship Via",
-:                       @(97),"Code",
-:                       @(103),"Terms",
-:                       @(120),"Code"
+        if r[2,1]<>0 or r[2,0]<>0 or r[2,2]<>0 or r[2,3]<>0 or r[2,4]<>0 then
+            print (printer_dev)@(0),"Non-Stock Items",@(33-m2),r[2,2]:ars01a.unit_mask$,@(43-m2),r[2,3]:ars01a.unit_mask$,
+:                              @(53-m2),r[2,4]:ars01a.unit_mask$,@(67-m3),r[2,0]:ars01a.rate_mask$,@(80-m3),r[2,1]:ars01a.rate_mask$
+        endif
+
+        if r[3,0]<>0 then print (printer_dev)@(0),"Other Charges",@(67-m3),r[3,0]:ars01a.rate_mask$
+        for x=0 to 3
+            t[0]=t[0]+r[x,0]
+            t[1]=t[1]+r[x,1]
+        next x
+        print (printer_dev)@(80-m3*2-m2),j$(1,m2+m3*2),'lf',"Report Totals: ",
+        print (printer_dev)@(67-m3),t[0]:ars01a.rate_mask$,@(80-m3),t[1]:ars01a.rate_mask$
         l=l+2
-    endif
-    return
+        goto std_exit
 
-rem --- Order Header
+report_heading: rem --- Report Heading
 
-Order_Header: 
+        l=headings+1
+        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
+        if status then exitto std_exit
+        print (printer_dev)@(0),"Beginning Customer: ",h4$,@(56),"Salesperson: ",h8$,@(98),"Beginning Invoice Date: ",h6$
+        print (printer_dev)@(3),"Ending Customer: ",h5$,@(54),"Selected Item: ",h9$,@(101),"Ending Invoice Date: ",h7$
+        print (printer_dev)@(56),"Minimum GP%: ",str(s6:m9$),'lf'
+        l=l+4
+        if e9$<>"E" then
+            print (printer_dev)@(2),"-- Customer --",@(41),"Order",@(48),"Invoice",@(57),"Invoice",
+:                              @(75),"P.O.",@(97),"Dist",@(120),"Tax"
+            print (printer_dev)@(0),"Number",@(8),"Name",@(40),"Number",@(48),"Number",@(58),"Date",
+:                              @(66),"By",@(70),"Sls",@(74),"Number",@(85),"Ship Via",@(97),"Code",
+:                              @(103),"Terms",@(120),"Code"
+            l=l+2
+        endif
 
-    if l+7>l9 gosub report_heading
-    gosub Terms_Code
-    print (printer_dev)'LF',
-:                       @(0),fnmask$(opt01a_key$(5,p[0]),m0$),
-:                       @(8),arm01a.CUSTOMER_NAME$,
-:                       @(40),opt01a.ORDER_NO$,
-:                       @(48),opt01a.AR_INV_NO$,
-:                       @(57),fndate$(opt01a.INVOICE_DATE$),
-:                       @(66),opt01a.ORD_TAKEN_BY$,
-:                       @(70),opt01a.SLSPSN_CODE$,
-:                       @(74),opt01a.CUSTOMER_PO_NO$,
-:                       @(85),opt01a.AR_SHIP_VIA$,
-:                       @(98),opt01a.DIST_CODE$,
-:                       @(103),w$,
-:                       @(120),opt01a.TAX_CODE$,'LF'
-    print (printer_dev)
-:                       @(p4-m3*2-4),"Gross",
-:                       @(p6-m1-9),"Extended"
-    print (printer_dev) @(1),"Ln Cd",
-:                       @(7),"Prd Whs Item",
-    print (printer_dev)
-:                       @(p5-m2*2-m3*2-m8-m9-6),"Ord",
-:                       @(p5-m2-m3*2-m8-m9-5),"B/O",
-:                       @(p1-m8-m9-5),"Ship",
-:                       @(p1-m8-4),"Disc",
-:                       @(p2-m8-6),"Price",
-:                       @(p4-m3-m8-7),"Sales",
-:                       @(p4-m8-5),"Cost",
-:                       @(p6-m1-6),"Cost",
-:                       @(p6-7),"Profit",
-:                       @(h0-5),"GP %"
-    l=l+5
-    return
+        return
 
-rem --- Sales Total Freight Ssles Tax/Invoice Total
+Order_Header: rem --- Order Header
 
-Sales_Total: 
+        if l+7>l9 then gosub report_heading
+        gosub Terms_Code
+        print (printer_dev)'lf',@(0),fnmask$(opt01a.customer_id$(1,p[0]),ars01a.customer_output$),@(8),arm01a.customer_name$,
+:                               @(40),opt01a.order_no$,@(48),opt01a.ar_inv_no$,@(57),fndate$(opt01a.invoice_date$),
+:                               @(66),opt01a.ord_taken_by$,@(70),opt01a.slspsn_code$,
+:                               @(74),opt01a.customer_po_no$(1,10),@(85),opt01a.ar_ship_via$,
+:                               @(98),opt01a.dist_code$,@(103),arm10a.terms_code$,@(120),opt01a.tax_code$,'lf'; rem escape, need to make room for cust po#, a0$(111,20)
+        print (printer_dev)@(p4-m3*2-4),"Gross",@(p6-m1-9),"Extended"
+        print (printer_dev)@(1),"Ln Cd",@(7),"Prd Whs Item",
+        print (printer_dev)@(p5-m2*2-m3*2-m8-m9-6),"Ord",@(p5-m2-m3*2-m8-m9-5),"B/O",
+:                          @(p1-m8-m9-5),"Ship",@(p1-m8-4),"Disc",@(p2-m8-6),"Price",
+:                          @(p4-m3-m8-7),"Sales",@(p4-m8-5),"Cost",@(p6-m1-6),"Cost",
+:                          @(p6-7),"Profit",@(h0-5),"GP %"
+        l=l+5
+        return
 
-    precision 2
-    if l+7>l9 gosub Order_Header
-    print (printer_dev)
-:                       @(p2-m8),j$(1,m1*3+m3+m8),'LF',
-:                       @(p1-m8-4),"Sales Total: ",
-    tmp$=str(fnd(s[0]-s[1],s[0]):m8$)
-    if len(tmp$)>m8 dim tmp$(m8,"*")
-    print (printer_dev)
-:                       @(p2-m8),s[0]:m1$,
-:                       @(p4-m8),s[1]:m1$,
-:                       @(p3-m8),s[0]-s[1]:m1$,
-:                       @(p6),tmp$
-    print (printer_dev)
-:                       @(p1-m8-1),"Discount:",
-:                       @(p2-m8),-opt01a.DISCOUNT_AMT:m1$
-    print (printer_dev)
-:                       @(p1-m8),"Freight:",
-:                       @(p2-m8),opt01a.FREIGHT_AMT:m1$
-    print (printer_dev)
-:                       @(p1-m8-2),"Sales Tax:",
-:                       @(p2-m8),opt01a.TAX_AMOUNT:m1$
-    print (printer_dev)
-:                       @(p2-m8),j$(1,m1)
-    print (printer_dev)
-:                       @(p1-m8-9),"*  Invoice Total:",
-:                       @(p2-m8),s[0]+opt01a.FREIGHT_AMT-opt01a.DISCOUNT_AMT+opt01a.TAX_AMOUNT:m1$
-    u[3]=u[3]+s[0]
-    t2=t2+1
-    u2=u2+1
-    l=l+7
-    ordt=ordt+ord
-    bot=bot+bo
-    shipt=shipt+ship
-    t[1]=t[1]+opt01a.FREIGHT_AMT
-    t[2]=t[2]+opt01a.DISCOUNT_AMT
-    t[4]=t[4]+opt01a.TAX_AMOUNT
-rem    precision num(i2$(5,1))
-precision num(ivs01a.precision$)
-    return
+Total_Freight: rem --- Sales Total Freight Ssles Tax/Invoice Total
 
-rem --- Serialized/Lotted Inventory
+        precision 2
+        if l+7>l9 then gosub Order_Header
+        print (printer_dev)@(p2-m8),j$(1,m1*3+m3+m8),'lf',@(p1-m8-4),"Sales Total: ",
+        tmp$=str(fnd(s[0]-s[1],s[0]):m8$)
+        if len(tmp$)>m8 then dim tmp$(m8,"*")
+        print (printer_dev)@(p2-m8),s[0]:ars01a.amount_mask$,@(p4-m8),s[1]:ars01a.amount_mask$,@(p3-m8),s[0]-s[1]:ars01a.amount_mask$,@(p6),tmp$
+        print (printer_dev)@(p1-m8-1),"Discount:",@(p2-m8),-opt01a.discount_amt:ars01a.amount_mask$
+        print (printer_dev)@(p1-m8),"Freight:",@(p2-m8),opt01a.freight_amt:ars01a.amount_mask$
+        print (printer_dev)@(p1-m8-2),"Sales Tax:",@(p2-m8),opt01a.tax_amount:ars01a.amount_mask$
+        print (printer_dev)@(p2-m8),j$(1,m1)
+        print (printer_dev)@(p1-m8-9),"*  Invoice Total:",@(p2-m8),s[0]+opt01a.freight_amt-opt01a.discount_amt+opt01a.tax_amount:ars01a.amount_mask$
+        u[3]=u[3]+s[0]
+        t2=t2+1
+        u2=u2+1
+        l=l+7
+        ordt=ordt+ord
+        bot=bot+bo
+        shipt=shipt+ship
+        t[1]=t[1]+opt01a.freight_amt
+        t[2]=t[2]+opt01a.discount_amt
+        t[4]=t[4]+opt01a.tax_amount
+        precision num(ivs01a.precision$)
+        return
 
-S_L_Inventory: 
-    read (opt21_dev,key=l0$[i,0](1,20),dom=*next)
-    while more 
-        opt21a_key$=key(opt21_dev,end=*break)
-        if opt21a_key.FIRM_ID$+opt21a_key.AR_TYPE$+opt21a_key.CUSTOMER_ID$+opt21a_key.AR_INV_NO$+opt21a_key.LINE_NO$<>l0$[i,0](1,20) break
-        read record (opt21_dev,key=opt21a_key$) opt21a$
-        if l+1>l9 gosub Order_Header
-        print (printer_dev)
-:                           @(5),x2$," ",opt21a_key.SEQUENCE_NO$," ",r1$,
-        print (printer_dev)
-:                           @(p1-m2*3-m8-m9-3),r0:m2$,
-:                           @(p1-m2*2-m8-m9-2),r1:m2$,
-:                           @(p4-m3-m8),r2:m3$
-        l=l+1
-    wend
-return
+Serialized_Inventory: rem --- Serialized/Lotted Inventory
 
-rem --- Print Detail
-
-Print_Detail: 
-    if l+2>l9 gosub report_heading; gosub Order_Header
-    print (printer_dev)
-:                       @(1),opt11a_key.LINE_NO$," ",opt11a.LINE_CODE$,
-:                       @(11),opt11a.WAREHOUSE_ID$,
-    if pos(opm02a.LINE_TYPE$="MO")>0 print (printer_dev)
-:                       @(15),desc$ else print(printer_dev)
-:                       @(7),opt11a.PRODUCT_TYPE$,
-:                       @(15),opt11a_key$(33,i[0])," ",desc$
-    l=l+1
-    if pos(opm02a.LINE_TYPE$="M")>0 then
-         if pos(opm02a.LINE_TYPE$="SP")<>0 and pos(i3$(17,1)="SL")<>0 and d2$(19,1)="Y" gosub S_L_Inventory
-    else
-        if pos(opm02a.LINE_TYPE$="O")>0 then
-            tmp$=str(fnd(opt11a.EXT_PRICE-opt11a.UNIT_COST*opt11a.QTY_SHIPPED,opt11a.EXT_PRICE):m8$)
-            if len(tmp$)>m8 dim tmp$(m8,"*")
-            print (printer_dev)
-:                               @(p1-m8-m9),opt11a.DISC_PERCENT:m9$,
-:                               @(p1-m8),opt11a.UNIT_PRICE:m3$,
-:                               @(p2-m8),opt11a.EXT_PRICE:m1$,
-:                               @(p4-m3-m8),opt11a.UNIT_COST:m3$,
-:                               @(p4-m8),opt11a.UNIT_COST*opt11a.QTY_SHIPPED:m1$,
-:                               @(p3-m8),opt11a.EXT_PRICE-opt11a.UNIT_COST*opt11a.QTY_SHIPPED:m1$,
-:                               @(p6),tmp$
+        read (opt21_dev,key=l0$[i,0](1,20),dom=*next)
+        While more
+            opt21a_key$=key(opt21_dev,end=*break)
+            if opt21a_key.firm_id$+opt21a_key.ar_type$+opt21a_key.cusotmer_id$+opt21a_key.ar_inv_no$+opt21a_key.line_no$<>l0$[i,0](1,20) then break
+            read record (opt21_dev,key=opt21a_key$) opt21a$
+            if l+1>l9 then gosub Order_Header
+            print (printer_dev)@(5),x2$," ",opt21a_key.sequence_no$," ",r1$,
+            print (printer_dev)@(p1-m2*3-m8-m9-3),r0:ars01a.unit_mask$,@(p1-m2*2-m8-m9-2),r1:ars01a.unit_mask$,@(p4-m3-m8),r2:ars01a.rate_mask$
             l=l+1
+        Wend
+
+        return
+
+Print_Detail: rem --- Print Detail
+
+        if l+2>l9 then gosub report_heading; gosub Order_Header
+        print (printer_dev)@(1),opt11a.line_no$," ",opt11a.line_code$,@(11),opt11a.warehouse_id$,
+        if pos(opm02a.line_type$="MO")>0 then
+            print (printer_dev)@(15),desc$
         else
-            print (printer_dev)
-:                              @(p1-m2*3-m8-m9-3),opt11a.QTY_ORDERED:m2$," ",opt11a.QTY_BACKORD:m2$," ",opt11a.QTY_SHIPPED:m2$,
-        fi
-    fi
-return
+            print (printer_dev)@(7),opt11a.product_type$,@(15),opt11a.item_id$(1,i[0])," ",desc$
+        endif
+        l=l+1
+        if pos(opm02a.line_type$="M")<=0 then
 
-rem --- Find Customer
+            if pos(opm02a.line_type$="O")<=0 then
+                print (printer_dev)@(p1-m2*3-m8-m9-3),opt11a.qty_ordered:ars01a.unit_mask$," ",opt11a.qty_backord:ars01a.unit_mask$," ",opt11a.qty_shipped:ars01a.unit_mask$,
+            endif
 
-Find_Customer: 
- rem dim b1$(30),c[6]
-    arm01a.CUSTOMER_NAME$="Not On File"
-    find record (arm01a_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$,dom=*next) arm01a$
-    find record (arm02a_dev,key=firm_id$+opt01a_key.CUSTOMER_ID$+"  ",dom=*next) arm02a$
-return
+            tmp$=str(fnd(opt11a.ext_price-opt11a.unit_cost*opt11a.qty_shipped,opt11a.ext-price):m8$)
+            if len(tmp$)>m8 then dim tmp$(m8,"*")
+            print (printer_dev)@(p1-m8-m9),opt11a.disc_percent:m9$,@(p1-m8),opt11a.unit_price:ars01a.rate_mask$,
+:                              @(p2-m8),opt11a.ext_price:ars01a.amount_mask$,@(p4-m3-m8),opt11a.unit_cost:ars01a.rate_mask$,
+:                              @(p4-m8),opt11a.unit_cost*opt11a.qty_shipped:ars01a.amount_mask$,
+:                              @(p3-m8),opt11a.ext_price-opt11a.unit_cost*opt11a.qty_shipped:ars01a.amount_mask$,
+:                              @(p6),tmp$
+            l=l+1
 
-rem --- Too Many Pcodes For T9[] Array
-Set_Pcodes: 
-    tmp[all]=t9[all]
-    max_pcodes=max_pcodes+20
-    dim t9[max_pcodes,3]
-    for k=0 to max_pcodes-20
-        t9[k,0]=tmp[k,0]
-        t9[k,1]=tmp[k,1]
-        t9[k,2]=tmp[k,2]
-        t9[k,3]=tmp[k,3]
-    next k
-return
-rem --- Check For Selected Item and Minimum GP%
-Check_GP: 
+        endif
+
+        if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub Serialized_Inventory
+        return
+
+Find_Customer: rem --- Find Customer
+
+        rem dim b1$(30),c[6]
+        arm01a.customer_name$="Not On File"
+        find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
+        find record (arm02_dev,key=firm_id$+opt01a.customer_id$+"  ",dom=*next) arm02a$
+        return
+
+P_Codes: rem --- Too Many Pcodes For T9[] Array
+
+        tmp[all]=t9[all]
+        max_pcodes=max_pcodes+20
+        dim t9[max_pcodes,3]
+        for k=0 to max_pcodes-20
+            t9[k,0]=tmp[k,0]
+            t9[k,1]=tmp[k,1]
+            t9[k,2]=tmp[k,2]
+            t9[k,3]=tmp[k,3]
+        next k
+        return
+
+Selected_Item: rem --- Check For Selected Item and Minimum GP%
+
         l2=0
         l$=""
-        opt01a_key$=opt01a_key.FIRM_ID$+opt01a_key.AR_TYPE$+opt01a_key.CUSTOMER_ID$+opt01a_key.AR_INV_NO$
-        read (opt11_dev,key=opt01a_key$+$FF$,dom=*next)
+        read (opt11_dev,key=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$+$ff$,dom=*next)
         m=1
-        opt11a_key$=keyp(opt11_dev,end=DetailHistory)
-        if pos(opt01a_key$=opt11a_key$)=1 then
-        m=num(opt11a_key.LINE_NO$)
+        opt11a_key$=keyp(opt11_dev,end=No_Invoice_Detail_History)
+        if pos((opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$)=opt11a_key$)=1 then
+            m=num(opt11a_key.line_no$)
 
-rem --- ESCAPE LET M=200
+rem --- escape let m=200
 
-        dim l0$[m,1],l0[m,7],l1[1]
-        read (opt11_dev,key=opt01a_key$+"000",dom=*next)
-    while more
-        opt11a_key$=key(opt11_dev,end=Invoice_End)
-        if opt11a_key.FIRM_ID$+opt11a_key.AR_TYPE$+opt11a_key.CUSTOMER_ID$+opt11a_key.ORDER_NO$<>opt01a_key$ goto Invoice_End
-        find record (opt11a_dev,key=opt11a_key$) opt11a$
-        l2=l2+1
-        l0$[l2,0]=opt11a_key.FIRM_ID$+opt11a_key.AR_TYPE$+opt11a_key.CUSTOMER_ID$+opt11a_key.ORDER_NO$+opt11a_key.LINE_NO$
-        l0$[l2,1]=cvs(opt11a.ORDER_MEMO$,2)
-        for i=0 to 7; let l0[l2,i]=w[i]; next i
-        if opt11a.LINE_CODE$<>opm02a_key.LINE_CODE$ then
-            dim y0$(32)
-            find record (opm02a_dev,key=firm_id$+opt11a.LINE_CODE$,dom=*next) opm02a$
-        endif
-            if pos(opm02a.LINE_TYPE$="SNPO")=0 continue
-            if s5$="" then l$="PRINT"
-              else 
-                if opm02a.LINE_TYPE$<>"O" then
-                    if opm02a.LINE_TYPE$<>"N" and s5$=opt11a_key$(33,i[0]) l$="PRINT"
-                    if opm02a.LINE_TYPE$="N" and pos(s5$=opt11a.ORDER_MEMO$)=1 l$="PRINT"
+            dim l0$[m,1],l0[m,7],l1[1]
+            read (opt11_dev,key=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$+"000",dom=*next)
+
+            While more
+                opt11a_key$=key(opt11_dev,end=End_of_Invoice)
+                if (opt11a_key.firm_id$+opt11a_key.ar_type$+opt11a_key.customer_id$+opt11a_key.order_no$)<>(opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$) then goto End_of_Invoice
+                find record (opt11_dev,key=opt11a_key$) opt11a$
+                l2=l2+1
+                l0$[l2,0]=opt11a_key$,l0$[l2,1]=cvs(opt11a.order_memo$,2)
+                for i=0 to 7
+                    let l0[l2,i]=w[i]
+                next i
+                if opt11a.line_code$<>opm02a.line_code$ then
+                    rem dim y0$(32)
+                    find record (opm02_dev,key=firm_id$+opt11a.line_code$,dom=*next) opm02a$
                 endif
-            endif
-        
-        
-            if s6=100 continue
-            if opm02a.LINE_TYPE$="O" l1[0]=l1[0]+opt11a.EXT_PRICE; continue
-            let w9=0,w9=num(opt11a.RESERVED_STR$,err=*next)
-            let w9=opt11a.QTY_SHIPPED*opt11a.UNIT_PRICE*w9/100,l1[0]=l1[0]+opt11a.QTY_SHIPPED*opt11a.UNIT_PRICE-w9,l1[1]=l1[1]+opt11a.UNIT_COST*opt11a.QTY_SHIPPED
-    wend
 
+                if pos(opm02a.line_type$="SNPO")=0 then continue
+                if s5$<>"" then 
+                    if opm02a.line_type$<>"O" then
+                        if opm02a.line_type$<>"N" and s5$=opt11a.item_id$(1,i[0]) then let l$="PRINT"
+                        if opm02a.line_type$="N" and pos(s5$=opt11a.order_memo$)=1 then let l$="PRINT"
+                    endif
+                else
+                    let l$="PRINT"
+                endif
 
-    endif
-DetailHistory:
-        if s5$<>"" return
-        let s[0]=opt01a.TOTAL_SALES,s[1]=opt01a.TOTAL_COST
-        if s[0]<>0 then w8=(s[0]-s[1])*100/s[0] else w8=0
-        goto Check1
+                if s6=100 then continue
+                if opm02a.line_type$="O" then
+                    let l1[0]=l1[0]+opt11a.ext_price
+                    continue
+                endif
+                w9=0
+                w9=num(opt11a.reserved_str$,err=*next)
+                w9=opt11a.qty_shipped*opt11a.unit_price*w9/100
+                l1[0]=l1[0]+opt11a.qty_shipped*opt11a.unit_price-w9
+                l1[1]=l1[1]+opt11a.unit_cost*opt11a.qty_shipped
+            Wend
 
-rem --- End Of Invoice
+        endif
 
-Invoice_End:  
+No_Invoice_Detail_History: rem --- No Invoice Detail History
 
-        if s6=100 or s5$<>"" and l$="" return
-        if l1[0]<>0  then w8=(l1[0]-l1[1])*100/l1[0] else w8=0
+        if s5$<>"" then
+            return
+        endif
 
+        s[0]=opt01a.total_sales
+        s[1]=opt01a.total_cost
+        if s[0]<>0 then
+            let w8=(s[0]-s[1])*100/s[0]
+        else
+            let w8=0
+        endif
 
-    Check1:
-        if w8>s6 l$="" else l$="PRINT"
-    
-return
+        goto Label_Two
 
-rem --- Terms Code
-Terms_Code:  
-rem  -dim w$(30)
-    let arm10a_key.Firm_ID$="* Not On File *"
-    find record (arm10a_dev,key=firm_id$+"A"+opt01a.TERMS_CODE$,dom=*next) arm10a$
-    let w$=arm10a.CODE_DESC$
-return
+End_of_Invoice: rem --- End Of Invoice
 
-rem #include std_functions.src
+        if s6=100 or s5$<>"" and l$="" then
+            return
+        endif
+        if l1[0]<>0 then
+            let w8=(l1[0]-l1[1])*100/l1[0]
+        else
+            let w8=0
+        endif
+
+Label_Two:
+
+        if w8>s6 then
+            let l$=""
+        else
+            let l$="PRINT"
+        endif
+
+        return
+
+Terms_Code: rem --- Terms Code
+
+        rem dim w$(30)
+        let arm10a.terms_code$="* Not On File *"
+        find record (arm10_dev,key=firm_id$+"A"+opt01a.terms_code$,dom=*next) arm10a$
+        let w$=arm10a.code_desc$
+        return
+
+rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
 
-    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+        def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+        def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
-    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+        def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
+        def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
 
-    def fncenter(q$,q)=int((q-len(q$))/2)
+        def fncenter(q$,q)=int((q-len(q$))/2)
 
 rem --- Format inventory item description
 
-    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+        def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
 
 rem --- Format zip/postal code
 
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+        def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
 :                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
 :                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
-    def fnyy$(q$)=q$(3,2)
-    def fnclock$(q$)=date(0:"%hz:%mz %p")
-    def fntime$(q$)=date(0:"%Hz%mz")
+        def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        def fnyy$(q$)=q$(3,2)
+        def fnclock$(q$)=date(0:"%hz:%mz %p")
+        def fntime$(q$)=date(0:"%Hz%mz")
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
-    def fnmask$(q1$,q2$)
-        if q2$="" q2$=fill(len(q1$),"0")
-        return str(-num(q1$,err=*next):q2$,err=*next)
-        q=1
-        q0=0
-        while len(q2$(q))
-              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
-              q=q+1
-        wend
-        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
-        return str(q1$:q2$)
-    fnend
+        def fnmask$(q1$,q2$)
+            if q2$="" q2$=fill(len(q1$),"0")
+            return str(-num(q1$,err=*next):q2$,err=*next)
+            q=1
+            q0=0
+            while len(q2$(q))
+                  if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+                  q=q+1
+            wend
+            if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+            return str(q1$:q2$)
+        fnend
 
 rem --- fnbasename$: Strip path and optionally the suffix from a file name
 
-    def fnbasename$(q$,q0$)
-        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
-        if q then q$=q$(q+1)
-        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
-    return q$
+        def fnbasename$(q$,q0$)
+            q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+            if q then q$=q$(q+1)
+            if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+        return q$
 
 rem --- fnglobal: Return numeric value of passed stbl variable
 
-    def fnglobal(q$,q1)
-        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
-        return q1
-    fnend
+        def fnglobal(q$,q1)
+            q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+            return q1
+        fnend
 
 rem --- fnglobal$: Return string value of passed STBL variable
 
-    def fnglobal$(q$,q1$)
-        q1$=stbl(q$,err=*next)
-        return q1$
-    fnend
+        def fnglobal$(q$,q1$)
+            q1$=stbl(q$,err=*next)
+            return q1$
+        fnend
 
-rem #endinclude std_functions.src
+rem --- #endinclude std_functions.src
 
-rem #include std_error.src
+rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
-    if pos("EXIT"=rd_err_act$) goto std_error_exit
-    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$) retry
+        if pos("EXIT"=rd_err_act$) goto std_error_exit
+        if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$) retry
+
 std_error_exit:
-    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_error_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
+        master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_error_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
 std_error_release:
-    status=999
-    if pgm(-1)<>pgm(-2) exit
-    release
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
 
-rem #endinclude std_error.src
-
-rem #include std_missing_params.src
+rem --- #endinclude std_error.src
+rem --- #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
 
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+        call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
 :                                   str(err:"000"),rd_err_text$,rd_err_act$
+
 std_missing_params_exit:
-    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
+        master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
 std_missing_params_release:
-    status=999
-    if pgm(-1)<>pgm(-2) exit
-    release
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
 
-rem #endinclude std_missing_params.src
+rem --- #endinclude std_missing_params.src
 
-rem #include std_end.src
+rem --- #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    run pgmdir$+"ads_process_end.aon",err=*next
-    release
-rem #endinclude std_end.src
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+        run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+        release
 
-    end
+rem --- #endinclude std_end.src
+
+        end
