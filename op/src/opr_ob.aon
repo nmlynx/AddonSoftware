@@ -6,102 +6,88 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    seterr std_error
-    setesc std_error
+        seterr std_error
+        setesc std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 
-rem --- Assign form input values to local variables
+rem --- Open Printer
 
-    table$=fnget_table$("")
-rem value_01$=fnget_fld_data$(table$,"dataname_01")
-    Product_Type$=fnget_fld_data$(table$,"Product_Type")
-    Option$=fnget_fld_data$(table$,"Option")
-    Summary_Detail$=fnget_fld_data$(table$,"Summary_Detail")
-    Warehouse$=fnget_fld_data$(table$,"Warehouse")
-
-rem --- Retrieve parameter records
-
-    ars01a_key$=firm_id$+"AR00"
-    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
-rem --- Open/Lock Files
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+        if status goto std_exit
 
 rem --- Initializations
 
-    headings=3
-  rem  dim a0$(200),a[13],w1$(64),w[17],t[1],o[13],headings$[headings]
-  rem  dim d0$(22),d1$(i[3]+i[4]+i[5]),d2$(48),d[8],c[16]
-    m0=len(m0$)
-    m1=len(m1$)
-    x$="Detail "
-    l0=0
-    l1=0
-    if p9$="S" x$="Summary "
-    h1$=x$+h1$
-    clock$=""
-    when$=sysinfo.system_date$
-    nf$="(Not On File)"
-    l9=59
-    l=l9+1
-    h=0
-    h0=132
-    total=0
-    subtotal=0
-    done=0
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,11,11
-    more=1
+        headings=3
+        dim t[1],o[13],headings$[headings]
+        m0=len(ars01a.customer_output$)
+        m1=len(ars01a.amount_mask$)
+        x$="Detail "
+        l0=0
+        l1=0
+        if p9$="S" x$="Summary "
+        h1$=x$+h1$
+        clock$=""
+        when$=sysinfo.system_date$
+        nf$="(Not On File)"
+        l9=59
+        l=l9+1
+        h=0
+        h0=132
+        total=0
+        subtotal=0
+        done=0
+        call pgmdir$+"adc_sizemask.aon",ars01a.unit_mast$,m2,11,11
+        more=1
 
 rem --- Print positions
 
-    o[13]=h0-m2
-    o[12]=o[13]-m2
-    o[11]=o[12]-m2
-    o[10]=o[11]-4
-    o[9]=o[10]-m2
-    o[8]=o[9]-m1
-    o[1]=21
-    o[2]=o[1]+4
-    o[3]=o[2]+3
-    o[4]=o[3]+m0+1
-    o[5]=o[4]+9
-    o[6]=o[5]+9
-    o[7]=o[6]+9
+        o[13]=h0-m2
+        o[12]=o[13]-m2
+        o[11]=o[12]-m2
+        o[10]=o[11]-4
+        o[9]=o[10]-m2
+        o[8]=o[9]-m1
+        o[1]=21
+        o[2]=o[1]+4
+        o[3]=o[2]+3
+        o[4]=o[3]+m0+1
+        o[5]=o[4]+9
+        o[6]=o[5]+9
+        o[7]=o[6]+9
 
 rem --- Headings
 
-    dim j$(h0-o[8],"-"),x$(h0)
-    headings$[0]=n1$
-    headings$[1]=h1$
-    x$(1)=h4$
-    x$(fncenter(h3$,h0))=h3$
-    x$(h0-len(h5$))=h5$
-    headings$[2]=h5$
+        dim j$(h0-o[8],"-"),x$(h0)
+        headings$[0]=n1$
+        headings$[1]=h1$
+        x$(1)=h4$
+        x$(fncenter(h3$,h0))=h3$
+        x$(h0-len(h5$))=h5$
+        headings$[2]=h5$
 
 rem --- Background
 
-rem call pgmdir$+"adc_progress.aon","CN",sysinfo.task_desc$,"","Printing","",23,ope61_dev,1,0,ignore_status
-    call pgmdir$+"adc_progress.aon","CN","","","","",0,opt61_dev,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","N","","","","",0,ope61_dev,1,meter_num,status
 
 rem --- Position File
 
-    read (ope61_dev,key=firm_id$+p6$,dom=*next)
+        read (ope61_dev,key=firm_id$+p6$,dom=*next)
+
+rem     retrieve template for OPX_ORDITEM record key
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPX_ORDITEM","PRIMARY",ope61a_key_tpl$,table_chans$[all],status$
+        dim ope61a_key$:ope61a_key_tpl$
 
 
 while more
@@ -110,29 +96,38 @@ while more
             if pos(firm_id$=ope61a_key$)<>1 break
             if p6$<>"" and ope61a_key.WAREHOUSE_ID$<>p6$ break
             read (ope61_dev)
-rem         call pgmdir$+"adc_progress.aon","S","","","",ope61a_key.WAREHOUSE_ID$+" "+ope61a_key.ITEM_ID$,0,0,1,0,ignore_status
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-        rem --- Level breaks
+rem -------- Level breaks
 
             if ope61a_key.WAREHOUSE_ID$<>t0$ gosub Warehouse
             if ope61a_key.ITEM_ID$<>t1$ gosub Item_Break
 
-        rem --- Check product type
+rem ------- Check product type
 
             if p8$<>"" if ivm01a.PRODUCT_TYPE$<>p8$ continue
 
-        rem --- Order header
+rem ------- Order header
+            
+            ope01a.FIRM_ID$=ope61a_key.FIRM_ID$
+            ope01a.ar_type$=ope61a_key.AR_TYPE$
+            ope01a.customer_id$=ope61a_key.CUSTOMER_ID$
+            ope01a.order_no$=ope61a_key.ORDER_NO$
+            ope01a.sequence_000$="000"
 
-            ope01a_key.FIRM_ID$=ope61a_key.FIRM_ID$+ope61a_key.AR_TYPE$+ope61a_key.CUSTOMER_ID$+ope61a_key.ORDER_NO$+"000"
-            w0$=ope01a_key.FIRM_ID$+ope01a_key.AR_TYPE$+ope01a_key.CUSTOMER_ID$+ope01a_key.ORDER_NO$+ope61a_key.LINE_NO$
-            find record (ope01a_dev,key=ope01a_key.FIRM_ID$+ope01a_key.AR_TYPE$+ope01a_key.CUSTOMER_ID$+ope01a_key.ORDER_NO$+ope01a_key.SEQUENCE_000$,dom=*continue) ope01a$
+            ope11a.firm_id$=ope01a.FIRM_ID$
+            ope11a.ar_type$=ope01a.AR_TYPE$
+            ope11a.customer_id$=ope01a.CUSTOMER_ID$
+            ope11a.order_no$=ope01a.ORDER_NO$
+            ope11a.line_n0$=ope61a_key.LINE_NO$
+            
+            find record (ope01_dev,key=ope01a.FIRM_ID$+ope01a.AR_TYPE$+ope01a.CUSTOMER_ID$+ope01a.ORDER_NO$+ope01a.SEQUENCE_000$,dom=*continue) ope01a$
             if ope01a.ORDINV_FLAG$="V" continue
             if ope01a.ORDINV_FLAG$="I" continue
 
-        rem --- Order line item
+rem ------- Order line item
 
-            find record (ope11a_dev,key=ope11a_key.FIRM_ID$+ope11a_key.AR_TYPE$+ope11a_key.CUSTOMER_ID$+ope11a_key.ORDER_NO$+ope11a_key.LINE_NO$,dom=*continue) ope11a$
+            find record (ope11_dev,key=ope11a.FIRM_ID$+ope11a.AR_TYPE$+ope11a.CUSTOMER_ID$+ope11a.ORDER_NO$+ope11a.LINE_NO$,dom=*continue) ope11a$
             gosub test_code
             if ignoreit$="Y" continue
             amount=ope11a.UNIT_PRICE*ope11a.QTY_ORDERED
@@ -140,107 +135,110 @@ rem         call pgmdir$+"adc_progress.aon","S","","","",ope61a_key.WAREHOUSE_ID
                    if pos("B"=p5$)<0 and ope01a.BACKORD_FLAG$<>"B" then
                         if pos("C"=p5$)<0 and ope01a.CREDIT_FLAG$<>"C"       then
                                 if pos("Q"=p5$)<0 and ope01a.ORDINV_FLAG$<>"P" then
-                                continue
+                                    continue
                                 endif
                         endif
                     endif
              endif      
          
 
-if p9$="D" then
+        if p9$="D" then
 
-        rem --- Order status
+                rem --- Order status
 
-            x$="Order"
-            ship$=ope01a.SHIPMNT_DATE$
-            if ope01a.ORDINV_FLAG$="P" x$="*Quote" else x$="Order"
-            if ope01a.CREDIT_FLAG$="C" x$="Credit"
-            if ope01a.CREDIT_FLAG$="R" x$="Released"
-            if ope01a.BACKORD_FLAG$="B" x$="BackOrder"
-            if ope01a.ORDINV_FLAG$="I" x$="Invoice"
-            if ope11a.EST_SHP_DATE$<>"   " ship$=ope11a.EST_SHP_DATE$
+                    x$="Order"
+                    ship$=ope01a.SHIPMNT_DATE$
+                    if ope01a.ORDINV_FLAG$="P"
+                        x$="*Quote"
+                    else
+                        x$="Order"
+                    endif
+                    if ope01a.CREDIT_FLAG$="C" x$="Credit"
+                    if ope01a.CREDIT_FLAG$="R" x$="Released"
+                    if ope01a.BACKORD_FLAG$="B" x$="BackOrder"
+                    if ope01a.ORDINV_FLAG$="I" x$="Invoice"
+                    if ope11a.EST_SHP_DATE$<>"   " ship$=ope11a.EST_SHP_DATE$
 
-        rem --- Print item stuff?
+rem --------------- Print item stuff?
 
-            if item$<>"" then 
-              if l+3>l9 gosub report_heading
-              print (printer_dev)
-:                               @(o[0]),ivm01a_key.ITEM_ID$,
+                    if item$<>"" then 
+                      if l+3>l9 gosub report_heading
+                      print (printer_dev)
+:                               @(o[0]),ivm01a.ITEM_ID$,
 :                               @(o[1]),ivm01a.PRODUCT_TYPE$,
 :                               @(o[2]),ivm01a.UNIT_OF_SALE$
-              print (printer_dev)@(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
-              l=l+2
-              item$=""
-            endif
+                      print (printer_dev)@(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
+                      l=l+2
+                      item$=""
+                    endif
 
 
-          if nonstock$="Y" then
-                if l+1>l9 gosub report_heading
-                print (printer_dev)@(o[3]-3),ope11a.ORDER_MEMO$
-                l=l+1
+                  if nonstock$="Y" then
+                        if l+1>l9 gosub report_heading
+                        print (printer_dev)@(o[3]-3),ope11a.ORDER_MEMO$
+                        l=l+1
 
-             else
+                     else
 
-                if l+1>l9 gosub report_heading
-                print (printer_dev)
-:                                  @(o[3]),fnmask$(ope61a_key.CUSTOMER_ID$,m0$),
+                        if l+1>l9 gosub report_heading
+                        print (printer_dev)
+:                                  @(o[3]),fnmask$(ope61a.CUSTOMER_ID$,ars01a.customer_output$),
 :                                  @(o[4]),ope01a.ORDER_NO$,ope01a.BACKORD_FLAG$,
-:                                  @(o[5]),fndate$(ope01a.ORDER_DATE),
+:                                  @(o[5]),fndate$(ope01a.ORDER_DATE$),
 :                                  @(o[6]),fndate$(ship$),
 :                                  @(o[7]),x$,
-:                                  @(o[8]),amount:m1$,
-:                                  @(o[9]),ope11a.QTY_ORDERED:m2$,
+:                                  @(o[8]),amount:ivs01a.amount_mask$,
+:                                  @(o[9]),ope11a.QTY_ORDERED:ivs01a.unit_mask$,
 :                                  @(o[10]+1),ope11a.COMMIT_FLAG$
-                l=l+1
+                        l=l+1
 
-           endif
-endif
-        
-
-            t[0]=t[0]+amount
-            t[1]=t[1]+ope11a.QTY_ORDERED
-            l0=l0+1
-            l1=l1+1
-            total=total+amount
-            subtotal=subtotal+amount
+                   endif
+        endif
+       
+        t[0]=t[0]+amount
+        t[1]=t[1]+ope11a.QTY_ORDERED
+        l0=l0+1
+        l1=l1+1
+        total=total+amount
+        subtotal=subtotal+amount
     
 wend
 
 done: rem --- End
 
-    done=1
-    gosub Warehouse
-    if l+2>l9 gosub report_heading
-    x$="Total For Report"
-    print (printer_dev)@(o[8]),j$
-    print (printer_dev)
+        done=1
+        gosub Warehouse
+        if l+2>l9 gosub report_heading
+        x$="Total For Report"
+        print (printer_dev)@(o[8]),j$
+        print (printer_dev)
 :                               @(o[8]-len(x$)),x$,
-:                               @(o[8]),total:m1$
-    goto std_exit
+:                               @(o[8]),total:ivs01a.amount_mask$
+        goto std_exit
 
 report_heading: rem --- Report Heading
 
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status exitto std_exit
-    if p9$="D" print (printer_dev)
+        l=headings+1
+        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
+        if status exitto std_exit
+        if p9$="D" print (printer_dev)
 :                                @(o[4]),"Order",
 :                                @(o[5]+2),"Order",
 :                                @(o[6]+2),"Ship",
-               print (printer_dev)
+                   print (printer_dev)
 :                               @(o[8]+m1-6),"Order",
 :                               @(o[9]+m2-8),"Order",
 :                               @(o[10]),"Com",
 :                               @(o[11]+m2-9),"Quantity",
 :                               @(o[12]+m2-10),"Quantity",
 :                               @(o[13]+m2-10),"Quantity"
-    if p9$="D" print (printer_dev)
+        if p9$="D" print (printer_dev)
 :                               @(o[3]),"Cust",
 :                               @(o[4]),"Number",
 :                               @(o[5]+2),"Date",
 :                               @(o[6]+2),"Date",
 :                               @(o[7]),"Status",
-    print (printer_dev)
+        print (printer_dev)
 :                               @(o[0]),"Item",
 :                               @(o[1]),"Prd",
 :                               @(o[2]),"UM",
@@ -250,59 +248,59 @@ report_heading: rem --- Report Heading
 :                               @(o[11]+m2-9),"On Hand",
 :                               @(o[12]+m2-10),"Committed",
 :                               @(o[13]+m2-10),"Available"
-    print (printer_dev)""
-    l=l+3
-    return
+        print (printer_dev)""
+        l=l+3
+        return
 
 Warehouse: rem --- Warehouse break
 
-    if t0$<>"" then
-         gosub Item_Break
-             if l0<>0 then
-                l=l+2
-                x$="Total For "+h5$
-                if l>l9 gosub report_heading
-                print (printer_dev)
+        if t0$<>"" then
+             gosub Item_Break
+                 if l0<>0 then
+                    l=l+2
+                    x$="Total For "+h5$
+                    if l>l9 gosub report_heading
+                    print (printer_dev)
 :                                   @(o[8]),j$
-                print (printer_dev)
+                    print (printer_dev)
 :                                   @(o[8]-len(x$)),x$,
-:                                   @(o[8]),subtotal:m1$
-             endif
-    endif
+:                                   @(o[8]),subtotal:ivs01a.amount_mask$
+                 endif
+        endif
 
-    if done>0 return
-rem   dim x$(h0)
-    ivm10c.SHORT_NAME$=nf$
-    t0$=ope61a_key.WAREHOUSE_ID$
-    l0=0
-    l=l9+1
-    subtotal=0
-    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
-    h5$="Warehouse: "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2)
-    x$(1)=h4$
-    x$(fncenter(h3$,h0))=h3$
-    x$(h0-len(h5$))=h5$
-    headings$[2]=x$
-return
+        if done>0 return
+        rem   dim x$(h0)
+        ivm10c.SHORT_NAME$=nf$
+        t0$=ope61a_key.WAREHOUSE_ID$
+        l0=0
+        l=l9+1
+        subtotal=0
+        find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+        h5$="Warehouse: "+t0$+" "+cvs(ivm10c.SHORT_NAME$,2)
+        x$(1)=h4$
+        x$(fncenter(h3$,h0))=h3$
+        x$(h0-len(h5$))=h5$
+        headings$[2]=x$
+        return
 
 Item_Break: rem --- Item break
 
-            if t1$<>"" then
+        if t1$<>"" then
               if l1<>0   then
                        avail=ivm02a.QTY_ON_HAND-ivm02a.QTY_COMMIT
-                       x$="Total For Item "+ivm01a_key.ITEM_ID$
+                       x$="Total For Item "+ivm01a.ITEM_ID$
                      if p9$="S" then
                            if l+3>l9 gosub report_heading
-                           if cvs(ivm01a_key.ITEM_ID$,2)="" ivm01a.ITEM_DESC$="Non-Stock Item(s)"
+                           if cvs(ivm01a.ITEM_ID$,2)="" ivm01a.ITEM_DESC$="Non-Stock Item(s)"
                            print (printer_dev)
-:                                           @(o[0]),ivm01a_key.ITEM_ID$,
+:                                           @(o[0]),ivm01a.ITEM_ID$,
 :                                           @(o[1]),ivm01a.PRODUCT_TYPE$,
 :                                           @(o[2]),ivm01a.UNIT_OF_SALE$,
-:                                           @(o[8]),t[0]:m1$,
-:                                           @(o[9]),t[1]:m2$,
-:                                           @(o[11]),c[0]:m2$,
-:                                           @(o[12]),c[2]:m2$,
-:                                           @(o[13]),avail:m2$
+:                                           @(o[8]),t[0]:ivs01a.amount_mask$,
+:                                           @(o[9]),t[1]:ivs01a.unit_mask$,
+:                                           @(o[11]),ivm02a.qty_on_hand:ivs01a.unit_mask$,
+:                                           @(o[12]),ivm02a.qty_commit:ivs01a.unit_mask$,
+:                                           @(o[13]),avail:ivs01a.unit_mask$
                            print (printer_dev)
 :                                           @(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
                            print (printer_dev)""
@@ -314,157 +312,163 @@ Item_Break: rem --- Item break
                     print (printer_dev)@(o[8]),j$
                     print (printer_dev)
 :                                   @(o[8]-len(x$)),x$,
-:                                   @(o[8]),t[0]:m1$,
-:                                   @(o[9]),t[1]:m2$,
-:                                   @(o[11]),ivm02a.QTY_ON_HAND:m2$,
-:                                   @(o[12]),ivm02a.QTY_COMMIT:m2$,
-:                                   @(o[13]),avail:m2$
+:                                   @(o[8]),t[0]:ivs01a.amount_mask$,
+:                                   @(o[9]),t[1]:ivs01a.unit_mask$,
+:                                   @(o[11]),ivm02a.QTY_ON_HAND:ivs01a.unit_mask$,
+:                                   @(o[12]),ivm02a.QTY_COMMIT:ivs01a.unit_mask$,
+:                                   @(o[13]),avail:ivs01a.unit_mask$
               endif
-           endif
+        endif
         gosub Record_Find1
-return
+        return
 
 Record_Find1:
-    if done>0 return
-rem dim d1$(i[3]+i[4]+i[5]),d2$(48),d[8],c[16],t[1]
-    let t1$=ope61a_key.ITEM_ID$,ivm01a_key.FIRM_ID$=ope61a_key.FIRM_ID$+t1$,ivm01a.ITEM_DESC$=nf$
-    let ivm02a_key$=ope61a_key.FIRM_ID$+ope61a_key.WAREHOUSE_ID$+ope61a_key.ITEM_ID$,item$=t1$,l1=0,l=l+2
-    find record (ivm01a_dev,key=ivm01a_key.FIRM_ID$+ivm01a_key.ITEM_ID$,dom=*next) ivm01a$
-    find record (ivm02a_dev,key=ivm02a_key$,dom=*next) ivm02a$
-    return
+
+        if done>0 return
+        rem dim d1$(i[3]+i[4]+i[5]),d2$(48),d[8],c[16],t[1]
+        let t1$=ope61a_key.ITEM_ID$,ivm01a.FIRM_ID$=ope61a_key.FIRM_ID$+t1$,ivm01a.ITEM_DESC$=nf$
+        let ivm02a$=ope61a_key.FIRM_ID$+ope61a_key.WAREHOUSE_ID$+ope61a_key.ITEM_ID$,item$=t1$,l1=0,l=l+2
+        find record (ivm01_dev,key=ivm01a.FIRM_ID$+ivm01a.ITEM_ID$,dom=*next) ivm01a$
+        find record (ivm02_dev,key=ivm02a$,dom=*next) ivm02a$
+        return
 
 test_code: rem --- Test line code to determine whether to print
 
-    let ignoreit$="N",nonstock$="N"
-    find record (opm02a_dev,key=firm_id$+ope11a.LINE_CODE$,dom=*next) opm02a$
-    if opm02a.LINE_TYPE$="M" or opm02a.LINE_TYPE$="O" ignoreit$="Y"
-    if opm02a. LINE_TYPE$="N" nonstock$="Y"
-    return
+        let ignoreit$="N",nonstock$="N"
+        find record (opm02_dev,key=firm_id$+ope11a.LINE_CODE$,dom=*next) opm02a$
+        if opm02a.LINE_TYPE$="M" or opm02a.LINE_TYPE$="O" ignoreit$="Y"
+        if opm02a. LINE_TYPE$="N" nonstock$="Y"
+        return
 
-rem #include std_functions.src
+rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
 
     def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+        def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
-    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+        def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
+        def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
 
-    def fncenter(q$,q)=int((q-len(q$))/2)
+        def fncenter(q$,q)=int((q-len(q$))/2)
 
 rem --- Format inventory item description
 
-    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+        def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
 
 rem --- Format zip/postal code
 
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+        def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
 :                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
 :                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
-    def fnyy$(q$)=q$(3,2)
-    def fnclock$(q$)=date(0:"%hz:%mz %p")
-    def fntime$(q$)=date(0:"%Hz%mz")
+        def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        def fnyy$(q$)=q$(3,2)
+        def fnclock$(q$)=date(0:"%hz:%mz %p")
+        def fntime$(q$)=date(0:"%Hz%mz")
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
-    def fnmask$(q1$,q2$)
-        if q2$="" q2$=fill(len(q1$),"0")
-        return str(-num(q1$,err=*next):q2$,err=*next)
-        q=1
-        q0=0
-        while len(q2$(q))
-              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
-              q=q+1
-        wend
-        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
-        return str(q1$:q2$)
-    fnend
+        def fnmask$(q1$,q2$)
+            if q2$="" q2$=fill(len(q1$),"0")
+            return str(-num(q1$,err=*next):q2$,err=*next)
+            q=1
+            q0=0
+            while len(q2$(q))
+                  if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+                  q=q+1
+            wend
+            if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+            return str(q1$:q2$)
+        fnend
 
 rem --- fnbasename$: Strip path and optionally the suffix from a file name
 
-    def fnbasename$(q$,q0$)
-        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
-        if q then q$=q$(q+1)
-        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
-    return q$
+        def fnbasename$(q$,q0$)
+            q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+            if q then q$=q$(q+1)
+            if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+        return q$
 
 rem --- fnglobal: Return numeric value of passed stbl variable
 
-    def fnglobal(q$,q1)
-        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
-        return q1
-    fnend
+        def fnglobal(q$,q1)
+            q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+            return q1
+        fnend
 
 rem --- fnglobal$: Return string value of passed STBL variable
 
-    def fnglobal$(q$,q1$)
-        q1$=stbl(q$,err=*next)
-        return q1$
-    fnend
+        def fnglobal$(q$,q1$)
+            q1$=stbl(q$,err=*next)
+            return q1$
+        fnend
 
-rem #endinclude std_functions.src
+rem --- #endinclude std_functions.src
 
-rem #include std_error.src
+rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+        call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
-    if pos("EXIT"=rd_err_act$) goto std_error_exit
-    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$) retry
+        if pos("EXIT"=rd_err_act$) goto std_error_exit
+        if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$) retry
+
 std_error_exit:
-    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_error_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
+        master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_error_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
 std_error_release:
-    status=999
-    if pgm(-1)<>pgm(-2) exit
-    release
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
 
-rem #endinclude std_error.src
+rem --- #endinclude std_error.src
 
-rem #include std_missing_params.src
+rem --- #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
 
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+        call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
 :                                   str(err:"000"),rd_err_text$,rd_err_act$
+
 std_missing_params_exit:
-    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
+        master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
 std_missing_params_release:
-    status=999
-    if pgm(-1)<>pgm(-2) exit
-    release
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
 
-rem #endinclude std_missing_params.src
+rem --- #endinclude std_missing_params.src
 
-rem #include std_end.src
+rem --- #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    run pgmdir$+"ads_process_end.aon",err=*next
-    release
-rem #endinclude std_end.src
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+        run pgmdir$+"ads_process_end.aon",err=*next
+        release
 
-    end
+rem --- #endinclude std_end.src
+
+        end
