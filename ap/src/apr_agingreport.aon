@@ -160,7 +160,7 @@ rem --- Determine period beginning and ending dates based on the aging method se
                 for x=1 to maxperiods
                     period=x
                     if mmdd$>periodend$((x*4)-3,4) continue
-                    if x=1 if mmdd$>periodend$((maxperiods*4)-1,4) break
+                    if x=1 if mmdd$>periodend$((maxperiods*4)-3,4) break
                     if x>1 if mmdd$>periodend$(((x-1)*4)-3,4) break
                     if x=1 if periodend$((x*4)-3,4)<periodend$(maxperiods*4-3,4) break
                     if x>1 if periodend$((x*4)-3,4)<periodend$((x-1)*4-3,4) break
