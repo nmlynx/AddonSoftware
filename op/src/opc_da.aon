@@ -40,10 +40,6 @@ rem --- Dimension string templates
 
             dim ars01a$:templates$[1],ivs01a$:templates$[2]
 
-rem --- Assign form input values to local variables
-
-           value_01$=Option!.getOptionData("form_value_01")
-
 rem --- Retrieve parameter records
 
             ars01a_key$=firm_id$+"AR00"
@@ -52,7 +48,6 @@ rem --- Retrieve parameter records
             find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Open/Lock Files
-rem
 
             call pgmdir$+"syc_dg.bbx",sysgui_dev,sysgui$,sysgui,sysfin$,sysfin,ui$,status
             if status then goto std_exit
