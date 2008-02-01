@@ -1,0 +1,490 @@
+rem --- Planned Purchase Report (Report Overlay)
+rem --- Program mpr_ab v8.0.0 29Jan2008 (mpr_ab)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/29/2008 02:32:15)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock Files
+
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status then goto std_exit
+
+initializations: rem --- Initializations
+
+    precision ivprecision
+    dim item$[2]
+    headings$[1]=headings$[1]+" For "+h5$
+    day_of_month=num(f0$(22,2))
+    prefix$=firm_id$+forecast$+whse$
+    done=0,lines=6
+    number=endper-begper+3
+    ht$="Cost Summary By Date Required"
+    if allbuyers then let buyer$=""
+    more=1
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVX_ITEMPROD","PRIMARY",ivm03_key_tpl$,rd_table_chans$[all],status$
+
+rem --- Print positions
+
+    dim o[9],titles$[lines]
+    o[9]=width
+    o[8]=o[9]-m2,o[7]=o[8]-m2,o[6]=o[7]-m2
+    o[5]=o[6]-m2
+    o[4]=o[5]-m3,o[3]=o[4]-20,o[2]=o[3]-m5-1
+    o[1]=ivlength
+    o[9]=o[3]-(31+m0),dw=o[2]-o[1]+1,x=width-o[1]-19
+    numcol=int(x/m1)
+    if numcol>number then let numcol=number
+    titles$[0]="  Gross Requirement"
+    titles$[1]="  Scheduled Receipt"
+    titles$[2]="Projected Available"
+    titles$[3]="    Net Requirement"
+    titles$[4]=" Plan Order Release"
+    titles$[5]=" Plan Order Receipt"
+    titles$[6]="      Extended Cost"
+    begper=begper-1
+    endper=endper-1,position=width-m1*numcol
+    hr=width-max(len(h7$),len(h8$))
+
+rem --- Background
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,mpe03_dev,1,meter_num,ignore_status
+
+rem --- Position file
+
+    read (mpe03_dev,key=prefix$+begitem$,dom=*next)
+
+rem --- Stores the mpe03a numeric fields for Build detail blocks
+
+    dim arrfield$[13]
+    x= 0
+    mpe03_field$=fattr(mpe03a$,"")
+    while mpe03_field$<>""
+       xfield$=mpe03_field$(1,pos($0A$=mpe03_field$)-1)
+       arrfield$[x]=xfield$
+       x=x+1
+       mpe03_field$=mpe03_field$(pos($0A$=mpe03_field$)+1)
+    wend
+
+rem --- Read next mpe-03 record
+    while more
+        read record (mpe03_dev,end=done) mpe03a$
+        if pos(prefix$=(mpe03a.firm_id$+mpe03a.forecast$+mpe03a.warehouse_id$))<>1 then break
+        if cvs(enditem$,2)<>"" then if mpe03a.item_id$ >enditem$ then break
+        if pos(a0$(28,1)="A")=0 then continue
+rem --- Retrieve inventory item and warehouse information
+
+        dim description$(dw)
+        ivm01a.firm_id$=firm_id$
+        ivm01a.item_id$=mpe03a.item_id$
+        ivm02a.firm_id$=firm_id$
+        ivm02a.warehouse_id$=whse$
+        ivm02a.item_id$=mpe03a.item_id$
+        find record (ivm01_dev,key=(ivm01a.firm_id$+ivm01a.item_id$),dom=*continue) ivm01a$
+        find record (ivm02_dev,key=(ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$),dom=*continue) ivm02a$
+        description$(1)=fnzipcode$(ivm01a.item_desc$,i[2],i[3],i[4])
+        itembuyer$=ivm01a.buyer_code$
+        stocking$=ivm01a.vendor_id$
+        safety=ivm01a.safety_stock,eoq=ivm01a.eoq,leadtime=ivm01a.lead_time
+        if ivm01a.stock_level$<>"I" then 
+            itembuyer$=ivm02a.buyer_code$
+            stocking$=ivm02a.vendor_id$
+            safety=ivm02a.safety_stock
+            eoq=ivm02a.eoq,leadtime=ivm02a.lead_time
+        endif
+rem --- Make sure buyer and vendor fall within selection criteria
+
+        if buyer$<>"" then if itembuyer$<>buyer$ then continue
+        if cvs(begvend$,2)<>"" then if stocking$<begvend$ then continue
+        if cvs(endvend$,2)<>"" then if stocking$>endvend$ then continue
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+rem --- Calculate Average Annual Item Usage
+
+        action$="W"
+        periods=num(max_period$),usage=0
+        base_pryr$=curr_period$+curr_year$
+        curr_pryr$=curr_period$+curr_year$
+        item$[0]=firm_id$
+        item$[1]=ivm02a.warehouse_id$,item$[2]=ivm02a.item_id$
+        call pgmdir$+"ivc_au.bbx",action$,ivfiles[all],item$[all],factors[all],day_of_month,base_pryr$,curr_pryr$,periods,ivprecision,actual,estimated,flag$,status
+        if flag$<>"" then let actual=estimated
+        usage=actual/periods
+
+rem --- If alternate vendors are being included then a list of
+rem --- must be compiled so that they can be printed.
+
+        itemvendors$=""
+        itemvendors=0
+        if include$="Y" then 
+            read (ivm03_dev,key=firm_id$+"H"+ivm02a.item_id$,dom=*next)
+
+rem --- Cycle through other vendors for this item and build list
+            dim ivm03_key$:ivm03_key_tpl$
+            while more
+                ivm03_key$=key(ivm03_dev,end=print_item)
+                if pos(firm_id$+"H"=ivm03_key$)<>0 and (ivm03_key.product_type$+ivm03_key.item_id$)=ivm02a.item_id$ then 
+                    read record (ivm03_dev,key=ivm03_key$,dom=print_item) ivm03h$
+                    itemvendors$=itemvendors$+ivm03h.vendor_id$
+                    itemvendors=itemvendors+1
+                else
+                    break
+                endif
+            wend
+        endif
+print_item: rem --- Print item heading
+
+        needed=8+itemvendors
+        if l+needed>l9 then gosub report_heading
+        gosub item_heading
+        gosub vendor_heading
+
+rem --- Print other vendors if they've been included
+
+        if len(itemvendors$)>=6 and include$="Y" then 
+            for x=1 to len(itemvendors$) step 6
+                if itemvendors$(x,6)=stocking$ then continue
+                vendor$=itemvendors$(x,6)
+                gosub vendor_information
+                print (printer_dev)@(o[9]-len(vendortype$)),vendortype$,vendornumb$," ",apm01a.vendor_name$,@(o[3]),vendorpart$,@(o[4]+20),vendorcost$
+                l=l+1
+            next x
+       endif
+rem --- Build detail blocks
+
+        dim required$[number],amounts[number,lines],orderby$[number]
+        required$[1]="   Begin"
+        amounts[1,2]=mpe03a.qty_on_hand,n=1
+        for x=begper to endper
+            p=x*6
+            n=n+1
+            orderby$[n]=fndate$(FIELD(mpe03a$,"plan_date_"+str(x+1:"00")))
+            required$[n]=fndate$(s2$(x*6+1,6))
+            amounts[n,0]= num(FIELD(mpe03a$,arrfield$[p+2]))
+            amounts[n,1]=num(FIELD(mpe03a$,arrfield$[p+1]))
+            amounts[n,2]=num(FIELD(mpe03a$,arrfield$[p+6]))
+            amounts[n,3]=num(FIELD(mpe03a$,arrfield$[p+3]))
+            amounts[n,4]=num(FIELD(mpe03a$,arrfield$[p+4]))
+            amounts[n,5]=num(FIELD(mpe03a$,arrfield$[p+5]))
+            amounts[n,6]=amounts[n,5]*ivm02a.unit_cost
+        next x
+
+rem --- Detail printing initializations
+
+        last=0
+        required$[number]=" Totals "
+        for x=1 to number-1
+            for n=0 to lines
+                amounts[number,n]=amounts[number,n]+amounts[x,n]
+            next n
+        next x
+        amounts[number,2]=num(FIELD(mpe03a$,arrfield$[p+6]))
+
+rem --- Print detail
+        while more
+            first=last+1
+            last=first+numcol-1,needed=4+lines
+            if first>number then continue
+            if last>number then let last=number
+            if l+needed>=l9 then 
+                gosub report_heading
+                gosub item_heading
+            endif
+rem --- Required By
+
+            dim buffer$(width)
+            buffer$(position-12)="Required By"
+            n=position
+            for x=first to last
+                buffer$(n+m1-9)=required$[x]
+                n=n+m1
+            next x
+            print (printer_dev)""
+            print (printer_dev)buffer$
+
+rem --- Amounts
+
+            for y=0 to lines
+                dim buffer$(width)
+                buffer$(position-20)=titles$[y]
+                n=position,mask$=m4$
+                if y=lines then let mask$=m1$
+                for x=first to last
+                    buffer$(n)=str(amounts[x,y]:mask$)
+                    n=n+m1
+                next x
+                print (printer_dev)buffer$
+            next y
+
+rem --- Order By
+
+            dim buffer$(width)
+            buffer$(position-9)="Order By"
+            n=position
+            for x=first to last
+                buffer$(n+m1-9)=orderby$[x]
+                n=n+m1
+            next x
+            print (printer_dev)buffer$
+            l=l+needed
+
+rem --- Accumulate totals
+
+            for x=first to last
+                if x=number then break
+                mpw01a.firm_id$=firm_id$
+                if x>1 then let mpw01a.firm_id$=firm_id$+fnd6$(cvs(required$[x],1+2))
+                find record (mpw01_dev,key=(mpw01a.firm_id$+mpw01a.plan_date$),dom=*next) mpw01a$
+                mpw01a.total_cost=mpw01a.total_cost+amounts[x,lines]
+                write record (mpw01_dev,key=(mpw01a.firm_id$+mpw01a.plan_date$)) mpw01a$
+            next x
+        wend
+rem --- Loop back for next record
+    wend
+done: rem --- Done with report, print totals
+
+    numcol=int((width-12)/m1)
+    dim required$[numcol],amounts[numcol]
+    l=l9+1
+    total=0,n=0,done=1
+    read (mpw01_dev,key=firm_id$,dom=*next)
+
+rem --- Print cost summary
+    while more
+        read record (mpw01_dev,end=finished) mpw01a$
+        if n>=numcol then gosub print_totals
+        n=n+1
+        required$[n]=fndate$(mpw01a.plan_date$)
+        amounts[n]=mpw01a.total_cost
+        total=total+mpw01a.total_cost
+        if cvs(mpw01a.plan_date$,2)="" then let required$[n]="   Begin"
+    wend
+
+finished: rem --- Print grand total and then exit to menu
+
+    if n>0 then gosub print_totals
+    if l>l9 then gosub report_heading
+    print (printer_dev)""
+    print (printer_dev)"Total Cost For Report ",total:m1$
+    goto std_exit
+
+report_heading: rem --- Report Heading
+
+    l=headings+5
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+    if status then exitto std_exit
+    print (printer_dev)h3$,@(fncenter(h6$,width)-2),"  ",h6$,@(hr),h7$
+    print (printer_dev)h4$,@(fncenter(h9$,width)-2),"  ",h9$,@(hr),h8$
+    print (printer_dev)""
+    if !done then 
+        print (printer_dev)@(o[2]),"Lead",@(o[4]+m3-5),"Unit",@(o[6]+m2-8),"Avg Mth",@(o[7]+m2-7),"Safety",@(o[8]+m2-9),"Quantity"
+        print (printer_dev)"Item",@(o[1]),"Description",@(o[2]),"Time",@(o[3]),"Vendor Item Number",@(o[4]+m3-5),"Cost",@(o[5]+m2-4),"EOQ",@(o[6]+m2-6),"Usage",@(o[7]+m2-6),"Stock",@(o[8]+m2-8),"On Hand"
+        return
+    endif
+rem --- Totals Heading
+    print (printer_dev)@(fncenter(ht$,width)),ht$
+    print (printer_dev)""
+    return
+
+item_heading: rem --- Item Heading
+
+    print (printer_dev)""
+    print (printer_dev)ivm01a.item_id$,@(o[1]),description$,@(o[2]),leadtime:m5$,@(o[4]),ivm02a.unit_cost:m2$,@(o[5]),eoq:m2$,@(o[6]),usage:m2$+flag$,@(o[7]),safety:m2$,@(o[8]),ivm02a.qty_on_hand:m2$
+    l=l+2
+    return
+
+vendor_heading: rem --- Stocking Vendor
+
+    vendor$=stocking$
+    gosub vendor_information
+    print (printer_dev)""
+    print (printer_dev)@(o[9]-16),"Stocking Vendor ",vendornumb$," ",apm01a.vendor_name$,@(o[3]),vendorpart$,@(o[4]),"Last Purchase Price:",vendorcost$
+    l=l+2
+    return
+
+print_totals: rem --- Totals
+
+    dim buffer$(width)
+    buffer$(1)="Required By"
+    p=12
+    for x=1 to n
+        buffer$(p+m1-9)=required$[x]
+        p=p+m1
+    next x
+    if l+3>l9 then gosub report_heading
+    print (printer_dev)""
+    print (printer_dev)buffer$
+
+    dim buffer$(width)
+    buffer$(1)=" Total Cost"
+    p=12
+    for x=1 to n
+        buffer$(p)=str(amounts[x]:m1$)
+        p=p+m1
+    next x
+    print (printer_dev)buffer$
+    let l=l+3,n=0
+    return
+
+vendor_information: rem --- Retrieve vendor information
+
+    dim vendornumb$(m0)
+    let vendornumb$(1)="None",vendorpart$="",vendorcost$=""
+    let vendortype$="Other Vendor "
+    if cvs(vendor$,2)<>"" then 
+        let v$(1)=fnmask$(vendor$(1,aplength),m0$)
+        ivm05a.firm_id$=firm_id$
+        ivm05a.vendor_id$=vendor$
+        ivm05a.item_id$=mpe03a.item_id$
+        let apm01a.firm_id$=firm_id$,apm01a.vendor_id$=vendor$,apm01a.vendor_name$="Unknown Vendor" 
+        find record (apm01_dev,key=(apm01a.firm_id$+apm01a.vendor_id$),dom=*next) apm01a$
+        find record (ivm05_dev,key=(ivm05a.firm_id$+ivm05a.vendor_id$+ivm05a.item_id$),dom=vendor_information_exit) ivm05a$
+        let vendorpart$=ivm05a.vendor_item$,vendorcost$=str(ivm05a.last_po_cost:m3$)
+        if ivm05a.prisec_flag$="P" then let vendortype$="Primary Vendor "
+        if ivm05a.prisec_flag$="S" then let vendortype$="Secondary Vendor "
+    endif
+vendor_information_exit:
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+rem #endinclude std_end.src
+
+    end
