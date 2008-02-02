@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -252,7 +252,6 @@ work_order_transaction: rem --- Work Order Transaction
 
         precision ivs01_precision
         w9=1
-        dim y0$(18)
         sft01a.firmid$=firm_id$
         sft01a.wo_location$="  "
         sft01a.wo_no$=timesheet.wo_no$
@@ -260,14 +259,13 @@ work_order_transaction: rem --- Work Order Transaction
         sft01a.record_id_o$="O"
         sft01a.trans_seq$=str(w9:"000")
 
-        y0$=sft01a.firmid$+sft01a.wo_location$+sft01a.wo_no$+sft01a.trans_date$+sft01a.record_id_o$+sft01a.trans_seq$
-
+        
         sft01a.op_seq$=timesheet.op_seq$
         sft01a.op_code$=timesheet.op_code$
         sft01a.employee_no$=timesheet.employee_no$
 
         while more
-            find (sft01_dev,key=y0$,dom=*break)
+            find (sft01_dev,key=(sft01a.firmid$+sft01a.wo_location$+sft01a.wo_no$+sft01a.trans_date$+sft01a.record_id_o$+sft01a.trans_seq$),dom=*break)
             w9=w9+1
             sft01a.trans_seq$=str(w9:"000")
         wend
@@ -283,7 +281,7 @@ work_order_transaction: rem --- Work Order Transaction
         
         sft01a.ext_cost=sft01a.ext_cost*1
         precision ivs01_precision
-        write record (sft01_dev,key=y0$) sft01a$
+        write record (sft01_dev,key=(sft01a.firmid$+sft01a.wo_location$+sft01a.wo_no$+sft01a.trans_date$+sft01a.record_id_o$+sft01a.trans_seq$)) sft01a$
 
 rem --- Transaction Cross Reference
 
