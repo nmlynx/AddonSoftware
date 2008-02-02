@@ -1,8 +1,47 @@
+[[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
+rem -- Deal with which Ship To type
+	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
+	callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
+	callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
+	callpoint!.setColumnData("<<DISPLAY>>.SADD3","")
+	callpoint!.setColumnData("<<DISPLAY>>.SADD4","")
+	callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
+	callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
+	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
+	dim dctl$[9]
+	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	gosub ship_to_info
+	dctl$[1]="<<DISPLAY>>.SNAME"
+	dctl$[2]="<<DISPLAY>>.SADD1"
+	dctl$[3]="<<DISPLAY>>.SADD2"
+	dctl$[4]="<<DISPLAY>>.SADD3"
+	dctl$[5]="<<DISPLAY>>.SADD4"
+	dctl$[6]="<<DISPLAY>>.SCITY"
+	dctl$[7]="<<DISPLAY>>.SSTATE"
+	dctl$[8]="<<DISPLAY>>.SZIP"
+	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")="M"
+		dmap$=""
+	else
+		dmap$="I"
+	endif
+	gosub disable_ctls
+	dim dctl$[9]
+	dctl$[1]="OPE_ORDHDR.SHIPTO_NO"
+	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")="S"
+		dmap$=""
+	else
+		dmap$="I"
+		callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_NO","")
+	endif
+	gosub disable_ctls
 [[OPE_ORDHDR.ASHO]]
 call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDDATES",stbl("+USER_ID"),"MNT","",table_chans$[all]
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- enable/disable expire date based on value
-	dim dctl$[8]
+	dim dctl$[9]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
 		dmap$="I"
@@ -13,7 +52,7 @@ rem --- enable/disable expire date based on value
 [[OPE_ORDHDR.AREC]]
 rem --- reset expiration date to enabled
 	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
-	dim dctl$[8]
+	dim dctl$[9]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	dmap$=""
 	gosub disable_ctls
@@ -39,7 +78,7 @@ rem --- Write/Remove manual ship to file
 	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
 	
-	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")<>"000099"
+	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")<>"M"
 		remove (ordship_dev,key=firm_id$+cust_id$+ord_no$,dom=*next)
 	else
 		ordship_tpl$=fnget_tpl$("OPE_ORDSHIP")
@@ -60,33 +99,34 @@ rem --- Write/Remove manual ship to file
 	endif
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 rem --- See which way to deal with ship to's
-	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD3","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD4","")
-	callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
-	callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
-	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
-	dim dctl$[8]
-	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-	gosub ship_to_info
-	dctl$[1]="<<DISPLAY>>.SNAME"
-	dctl$[2]="<<DISPLAY>>.SADD1"
-	dctl$[3]="<<DISPLAY>>.SADD2"
-	dctl$[4]="<<DISPLAY>>.SADD3"
-	dctl$[5]="<<DISPLAY>>.SADD4"
-	dctl$[6]="<<DISPLAY>>.SCITY"
-	dctl$[7]="<<DISPLAY>>.SSTATE"
-	dctl$[8]="<<DISPLAY>>.SZIP"
-	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")="000099"
-		dmap$=""
-	else
-		dmap$="I"
-	endif
-	gosub disable_ctls
+rem 	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
+rem	callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
+rem	callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
+rem	callpoint!.setColumnData("<<DISPLAY>>.SADD3","")
+rem	callpoint!.setColumnData("<<DISPLAY>>.SADD4","")
+rem	callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
+rem	callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
+rem	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
+rem	dim dctl$[9]
+rem	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+rem	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+rem	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+rem	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+rem	gosub ship_to_info
+rem	dctl$[1]="<<DISPLAY>>.SNAME"
+rem	dctl$[2]="<<DISPLAY>>.SADD1"
+rem	dctl$[3]="<<DISPLAY>>.SADD2"
+rem	dctl$[4]="<<DISPLAY>>.SADD3"
+rem	dctl$[5]="<<DISPLAY>>.SADD4"
+rem	dctl$[6]="<<DISPLAY>>.SCITY"
+rem	dctl$[7]="<<DISPLAY>>.SSTATE"
+rem	dctl$[8]="<<DISPLAY>>.SZIP"
+rem	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")="000099"
+rem		dmap$=""
+rem	else
+rem		dmap$="I"
+rem	endif
+rem	gosub disable_ctls
 [[OPE_ORDHDR.<CUSTOM>]]
 bill_to_info: rem --- get and display Bill To Information
 
@@ -124,8 +164,8 @@ return
 ship_to_info: rem --- get and display Bill To Information
 
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
-	if ship_to_no$<>"000099"
-		if num(ship_to_no$)<>0
+	if ship_to_type$<>"M"
+		if ship_to_type$="S"
 			custship_dev=fnget_dev("ARM_CUSTSHIP")
 			custship_tpl$=fnget_tpl$("ARM_CUSTSHIP")
 			dim custship_tpl$:custship_tpl$
@@ -167,7 +207,7 @@ return
 
 disable_ctls: rem --- disable selected control
 
-for dctl=1 to 8
+for dctl=1 to 9
 	dctl$=dctl$[dctl]
 	if cvs(dctl$,2)<>""
 		wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
@@ -191,10 +231,11 @@ rem --- Populate address fields
 
 	cust_id$=rec_data.customer_id$
 	gosub bill_to_info
+	ship_to_type$=rec_data.shipto_type$
 	ship_to_no$=rec_data.shipto_no$
 	ord_no$=rec_data.order_no$
 	gosub ship_to_info
-	dim dctl$[8]
+	dim dctl$[9]
 	dctl$[1]="<<DISPLAY>>.SNAME"
 	dctl$[2]="<<DISPLAY>>.SADD1"
 	dctl$[3]="<<DISPLAY>>.SADD2"
@@ -203,13 +244,13 @@ rem --- Populate address fields
 	dctl$[6]="<<DISPLAY>>.SCITY"
 	dctl$[7]="<<DISPLAY>>.SSTATE"
 	dctl$[8]="<<DISPLAY>>.SZIP"
-	if rec_data.shipto_no$="000099"
+	if rec_data.shipto_type$="M"
 		dmap$=""
 	else
 		dmap$="I"
 	endif
 	gosub disable_ctls
-	dim dctl$[8]
+	dim dctl$[9]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	if rec_data.invoice_type$<>"P"
 		dmap$="I"
@@ -234,7 +275,7 @@ rem --- get Parameters
 
 rem --- disable display fields
 
-	dim dctl$[8]
+	dim dctl$[9]
 	dmap$="I"
 	dctl$[1]="<<DISPLAY>>.BADD1"
 	dctl$[2]="<<DISPLAY>>.BADD2"
