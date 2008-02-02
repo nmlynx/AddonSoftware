@@ -73,12 +73,13 @@ rem --- Position file
 
 rem --- Stores the mpe03a numeric fields for Build detail blocks
 
-    dim arrfield$[13]
+    dim mpe03a_arrfield$[13]
     x= 0
     mpe03_field$=fattr(mpe03a$,"")
+    mpe03_field$=mpe03_field$(pos("qty_on_hand"=cvs(mpe03_field$,8)))
     while mpe03_field$<>""
        xfield$=mpe03_field$(1,pos($0A$=mpe03_field$)-1)
-       arrfield$[x]=xfield$
+       mpe03a_arrfield$[x]=xfield$
        x=x+1
        mpe03_field$=mpe03_field$(pos($0A$=mpe03_field$)+1)
     wend
@@ -176,12 +177,12 @@ rem --- Build detail blocks
             n=n+1
             orderby$[n]=fndate$(FIELD(mpe03a$,"plan_date_"+str(x+1:"00")))
             required$[n]=fndate$(s2$(x*6+1,6))
-            amounts[n,0]= num(FIELD(mpe03a$,arrfield$[p+2]))
-            amounts[n,1]=num(FIELD(mpe03a$,arrfield$[p+1]))
-            amounts[n,2]=num(FIELD(mpe03a$,arrfield$[p+6]))
-            amounts[n,3]=num(FIELD(mpe03a$,arrfield$[p+3]))
-            amounts[n,4]=num(FIELD(mpe03a$,arrfield$[p+4]))
-            amounts[n,5]=num(FIELD(mpe03a$,arrfield$[p+5]))
+            amounts[n,0]= num(FIELD(mpe03a$,mpe03a_arrfield$[p+2]))
+            amounts[n,1]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+1]))
+            amounts[n,2]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+6]))
+            amounts[n,3]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+3]))
+            amounts[n,4]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+4]))
+            amounts[n,5]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+5]))
             amounts[n,6]=amounts[n,5]*ivm02a.unit_cost
         next x
 
@@ -194,7 +195,7 @@ rem --- Detail printing initializations
                 amounts[number,n]=amounts[number,n]+amounts[x,n]
             next n
         next x
-        amounts[number,2]=num(FIELD(mpe03a$,arrfield$[p+6]))
+        amounts[number,2]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+6]))
 
 rem --- Print detail
         while more
