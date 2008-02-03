@@ -1,3 +1,57 @@
+[[OPE_ORDHDR.ADEL]]
+rem --- Remove extra records
+	ordship_dev=fnget_dev("OPE_ORDSHIP")
+	remove (ordship_dev,key=firm_id$+
+:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
+	cashrct_dev=fnget_dev("OPE_INVCASH")
+	remove (cashrct_dev,key=firm_id$+
+:		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
+:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)
+[[OPE_ORDHDR.ORDER_NO.AVAL]]
+rem --- set default values
+	ope01_dev=fnget_dev("OPE_ORDHDR")
+	ope01a$=fnget_tpl$("OPE_ORDHDR")
+	dim ope01a$:ope01a$
+	find record(ope01_dev,key=firm_id$+
+:		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
+:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)ope01a$
+rem --- new record
+	if ope01a.firm_id$="  "
+		arm02_dev=fnget_dev("ARM_CUSTDET")
+		arm02a$=fnget_tpl$("ARM_CUSTDET")
+		dim arm02a$:arm02a$
+		read record (arm02_dev,key=firm_id$+
+:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+"   ",dom=*next)arm02a$
+		arm01_dev=fnget_dev("ARM_CUSTMAST")
+		arm01a$=fnget_tpl$("ARM_CUSTMAST")
+		dim arm01a$:arm01a$
+		read record (arm01_dev,key=firm_id$+
+:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),dom=*next)arm01a$
+		callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",stbl("OPE_DEF_SHIP"))
+		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
+		callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG","O")
+		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",sysinfo.system_date$)
+		callpoint!.setColumnData("OPE_ORDHDR.AR_SHIP_VIA",arm01a.ar_ship_via$)
+		callpoint!.setColumnData("OPE_ORDHDR.SLSPSN_CODE",arm02a.slspsn_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE",arm02a.terms_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.DISC_CODE",arm02a.disc_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.DIST_CODE",arm02a.dist_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
+		callpoint!.setColumnData("OPE_ORDHDR.MESSAGE_CODE",arm02a.message_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.TERRITORY",arm02a.territory$)
+		callpoint!.setColumnData("OPE_ORDHDR.ORDER_DATE",sysinfo.system_date$)
+		callpoint!.setColumnData("OPE_ORDHDR.TAX_CODE",arm02a.tax_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.PRICING_CODE",arm02a.pricing_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","N")
+		gosub get_op_params
+		if callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")=ars01a.customer_id$
+			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","Y")
+		endif
+		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","Y")
+	endif
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
@@ -49,6 +103,10 @@ rem --- enable/disable expire date based on value
 		dmap$=""
 	endif
 	gosub disable_ctls
+
+ESCAPE;rem check out the next couple of lines
+	jim1$=callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
+	jim2$=callpoint!.getUserInput()
 [[OPE_ORDHDR.AREC]]
 rem --- reset expiration date to enabled
 	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
@@ -57,7 +115,8 @@ rem --- reset expiration date to enabled
 	dmap$=""
 	gosub disable_ctls
 
-	
+rem --- set user_tpl values
+	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 	gosub get_op_params
@@ -258,20 +317,20 @@ rem --- Populate address fields
 		dmap$=""
 	endif
 	gosub disable_ctls
+
+rem --- set user_tpl values
+	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=5
+	num_files=6
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
 	open_tables$[3]="OPE_ORDSHIP",open_opts$[3]="OTA"
 	open_tables$[4]="ARS_PARAMS",open_opts$[4]="OTA"
 	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
+	open_tables$[6]="OPE_INVCASH",open_opts$[6]="OTA"
 	gosub open_tables
-
-rem --- get Parameters
-	dim ars01a$:open_tpls$[4]
-	read record (num(open_chans$[4]),key=firm_id$+"AR00") ars01a$
 
 rem --- disable display fields
 
@@ -303,3 +362,7 @@ rem --- disable display fields
 	dctl$[6]="<<DISPLAY>>.AGING_120"
 	dctl$[7]="<<DISPLAY>>.TOT_AGING"
 	gosub disable_ctls
+
+rem --- Setup user_tpl$
+	dim user_tpl$:"new_rec:c(1)"
+	user_tpl.new_rec$="Y"

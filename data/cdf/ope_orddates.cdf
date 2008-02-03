@@ -14,3 +14,5 @@ rem --- Setup default dates
 	callpoint!.setColumnData("OPE_ORDDATES.DEF_COMMIT",comdate$)
 	callpoint!.setColumnData("OPE_ORDDATES.DEF_SHIP",shpdate$)
 	callpoint!.setStatus("REFRESH")
+	temp_stbl$=stbl("OPE_DEF_SHIP",shpdate$)
+	temp_stbl$=stbl("OPE_DEF_COMMIT",comdate$)
