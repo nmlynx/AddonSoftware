@@ -71,7 +71,7 @@ sl_no: rem --- Serial Number
         v0$="S"
         v1$="CERK",v2$=serial$,v3$="",v0=p[3],v1=32,v2=0,i0=0
         v4$="Enter the first Serial Number to close, <F3>=Lookup"
-        gosub std_input
+rem        gosub std_input
         if v3=3 then gosub lookup_sfe06
         if v3<>4
             if v$="" then continue
@@ -128,7 +128,7 @@ lookup_sfe06: rem --- Lookup sfe-06
     desc$[2]="Completed"
     field[2]=2,position[2]=1,length[2]=1
     call pgmdir$+"syc_lk.bbx",sfe06_dev,record$,2,"Serial Number Lookup",desc$[all],field[all],position[all],length[all],10,5,v$
-    find record (sfe06_dev,key=firm_id$+"  "+wonum$+v$,dom=*next) sfe06a$; v$=sfelotser_no; return
+    find record (sfe06_dev,key=firm_id$+"  "+wonum$+v$,dom=*next) sfe06a$; v$=sfe06a.lotser_no$; return
     v$=""
     return
 
