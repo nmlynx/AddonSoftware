@@ -221,7 +221,7 @@ rem --- Read next Invoice (are-02) record
           arm10d.record_id_d$="D"
           arm10d.ar_dist_code$=are02a.ar_dist_code$
           k$=arm10d.firm_id$+arm10d.record_id_d$+arm10d.ar_dist_code$
-          find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
+          find record (arm10_dev,key=k$,dom=*next) arm10d$
           account$=arm10d.gl_ar_acct$
           gldate$=are02a.invoice_date$
           amount=are02a.invoice_amt
@@ -238,6 +238,13 @@ rem --- Read next Invoice (are-02) record
           glstatus=0
           call stbl("+DIR_PGM")+"glc_datecheck.aon",are02a.invoice_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are02a.invoice_date$,glstatus,lines,errors,status
+
+          rem --- CAH.09/29/07
+          err_msg$=stbl("+DTWARN_MSG",err=*next)
+          if err_msg$<>""
+              OutVect!.addItem(err_msg$)
+              xwk=fnblank(9)
+          endif
 
     rem --- Loop back for next Invoice record
 
@@ -259,8 +266,12 @@ rem --- Destroy progress meter and run next overlay
     update$=pgmdir$+"aru_otherentry.aon"
     overlay$=update$
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
-    run overlay$,err=std_exit
+    if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
+
+	out_action$="PRT-PDF"
+	next_overlay$=overlay$
+	goto std_exit
+    
 
 set_linecount: rem --- Report Heading
 

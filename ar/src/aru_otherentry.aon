@@ -12,6 +12,9 @@ rem --- Charge Register and the Conversion Invoice Register.
     setesc std_error
     seterr std_error
 
+	next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
+	if OutVect!<>null() OutVect!=null()
+
 rem --- Open/Lock files
 
     close (printer_dev,err=*next)
