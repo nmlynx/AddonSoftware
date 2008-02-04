@@ -10,16 +10,17 @@ rem --- All Rights Reserved
         setesc std_error
         seterr std_error
 
+
 rem --- Retrieve the program path
 
-         pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-        sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
         dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+sysinfo",err=*next)
-        milestone=num(stbl("+milestone",err=*next),err=*next)
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -86,7 +87,7 @@ rem --- Init Data
 
 rem run overlay
 
-    run pgmdir$+"bmr_lb.bbx"
+        run pgmdir$+"bmr_lb.bbx"
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
