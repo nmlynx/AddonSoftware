@@ -102,10 +102,14 @@ rem --- Parameters
     when$=sysinfo.system_date$
     x$=fndate$(when$)
     day_of_mth=num(x$(4,2))
+    more=1
     ivchannels[1]=ivm01_dev
     ivchannels[2]=ivm02_dev
     ivchannels[3]=ivm03g_dev2
     ivchannels[12]=ivm12_dev
+
+    call "adc_clearfile.aon",ivw07_dev
+    call "adc_clearfile.aon",ivw17_dev
 
    seterr initializations
 

@@ -261,6 +261,10 @@ Work_File_ivw07: rem --- Process work file record
     ivm01a.item_desc$="(Not On File)"+fill(60),ivm01a.product_type$=""
     find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
     description$=cvs(ivm01a.item_desc$,2)
+    if pos("Not"=description$) 
+	escape
+	ivm01a.item_desc$="(Missing ivw07)"
+    endif
     oldabc$=ivw07a.abc_code_01$
 
 rem --- Calculate percentage
@@ -289,19 +293,26 @@ rem --- Update IVE-07
 
     ive07a_key.firm_id$=ivw07a_key.firm_id$
     ive07a.firm_id$=ivw07a.firm_id$
-    ive07a_key.item_id$=ivw07a_key.item_id$
+    ive07a_key.item_id$=ivw07a.item_id$
     ive07a.item_id$=ivw07a.item_id$
     ive07a.abc_code_01$=oldabc$,ive07a.abc_code_02$=newabc$
+    ive07a.reserved_str$=" "
     ive07a.annual_usage=ivw07a.annual_usage
     ive07a.qty_on_hand=ivw07a.qty_on_hand
     ive07a.end_balance=ivw07a.end_balance
     ive07a.unit_cost=ivw07a.unit_cost
-    ive07a.total_amount_01=ivw07a.abc_total_value_01
-    ive07a.total_amount_02=ivw07a.abc_total_value_02
-    ive07a.total_amount_03=ivw07a.abc_total_value_03
-rem    ive07a.abc_total_value_01=ivw07a.abc_total_value_01
-rem    ive07a.abc_total_value_02=ivw07a.abc_total_value_02
-rem    ive07a.abc_total_value_03=ivw07a.abc_total_value_03
+    ive07a.abc_total_value_01=ivw07a.abc_total_value_01
+    ive07a.abc_total_value_02=ivw07a.abc_total_value_02
+    ive07a.abc_total_value_03=ivw07a.abc_total_value_03
+rem    precision 0 
+rem    ive07a.annual_usage=ive07a.annual_usage*1
+rem    ive07a.qty_on_hand=ive07a.qty_on_hand*1
+rem    ive07a.end_balance=ive07a.end_balance*1
+
+rem    ive07a.abc_total_value_01=ive07a.abc_total_value_01*1
+rem    ive07a.abc_total_value_02=ive07a.abc_total_value_02*1
+rem    ive07a.abc_total_value_03=ive07a.abc_total_value_03*1
+rem    precision 4 
     write record (ive07_dev,key=ive07a_key$) ive07a$
     return
 
@@ -312,7 +323,14 @@ Work_File_ivw17: rem --- Process work file record
     ivm01a.item_desc$="(Not On File)",ivm01a.product_type$=""
 ivw17_item_read:
     find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    description$=cvs(ivm01a.item_desc$,2);if pos("Not"=description$) ivm01a.item_desc$="(Missing)",ivm01a_key.item_id$=ivw17a.item_id$(3)+"  "; goto ivw17_item_read
+
+    description$=cvs(ivm01a.item_desc$,2)
+    if pos("Not"=description$) 
+	escape
+	ivm01a.item_desc$="(Missing ivw17)"
+rem	ivm01a_key.item_id$=ivw17a.item_id$(3)+"  "
+rem	goto ivw17_item_read
+    endif
     oldabc$=ivw17a.abc_code_01$
 
 rem --- Calculate percentage

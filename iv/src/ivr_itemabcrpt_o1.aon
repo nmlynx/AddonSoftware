@@ -157,18 +157,21 @@ rem --- Done with warehouses
         ive07a_key.firm_id$=firm_id$
         ive07a_key.item_id$=ivm01a.item_id$
 
-        ivw07a.firm_id$=firm_id$
-        ivw07a.abc_code_01$=ivm01a.abc_code$
-        ivw07a.recip_sign$=sign$
-        ivw07a.recip_amount$=amount$
-        ivw07a.item_id$=ivm01a.item_id$
+rem escape; print "line 160"
         ivw07a_key.firm_id$=firm_id$
+        ivw07a_key.ar_type$="  "
         ivw07a_key.recip_sign$=sign$
         ivw07a_key.recip_amount$=amount$
         ivw07a_key.item_id$=ivm01a.item_id$
+        ivw07a.firm_id$=firm_id$
+        ivw07a.ar_type$="  "
+        ivw07a.recip_sign$=sign$
+        ivw07a.recip_amount$=amount$
+        ivw07a.item_id$=ivm01a.item_id$
+        ivw07a.abc_code_01$=ivm01a.abc_code$
+        ivw07a.reserved_str$=" "
 
 rem --- Update item totals
-
         write record (ivw07_dev,key=ivw07a_key$) ivw07a$
         ivs10i_key$=firm_id$+"I",ivs10i.firm_id$=firm_id$
         find record (ivs10i_dev,key=ivs10i_key$,dom=*next) ivs10i$
@@ -201,8 +204,8 @@ run_report_overlay: rem --- Run report overlay
 Reciprocal_Amt: rem --- Generate reciprocal amount
 
     amount=onhand
-    sign$=""
-    amount$=""
+    sign$=" "
+    amount$="                 "
     if value$="U" amount=usage
     if value$="B" amount=balance
     amount$=str(10000000000-amount:m7$)
@@ -251,10 +254,17 @@ rem --- Loop Starting
         usage=ive07a.abc_total_value_01,onhand=ive07a.abc_total_value_02,balance=ive07a.abc_total_value_03
         gosub Reciprocal_Amt
 
-        ivw07a_key.firm_id$=ive07a.firm_id$,ivw07a_key.item_id$=ive07a.item_id$
-	ivw07a_key.recip_sign$=sign$,ivw07a_key.recip_amount$=amount$
-	ivw07a.recip_sign$=sign$,ivw07a.recip_amount$=amount$
-        ivw07a.firm_id$=ive07a.firm_id$,ivw07a.item_id$=ive07a.item_id$,ivw07a.abc_code_01$=ive07a.abc_code_01$
+        ivw07a_key.firm_id$=ive07a.firm_id$
+        ivw07a_key.ar_type$="  "
+	ivw07a_key.recip_sign$=sign$
+	ivw07a_key.recip_amount$=amount$
+	ivw07a_key.item_id$=ive07a.item_id$
+        ivw07a.firm_id$=ive07a.firm_id$
+        ivw07a.ar_type$="  "
+	ivw07a.recip_sign$=sign$
+	ivw07a.recip_amount$=amount$
+	ivw07a.item_id$=ive07a.item_id$
+	ivw07a.abc_code_01$=ive07a.abc_code_01$
         ivw07a.annual_usage=ive07a.annual_usage
         ivw07a.qty_on_hand=ive07a.qty_on_hand
         ivw07a.end_balance=ive07a.end_balance
@@ -262,6 +272,7 @@ rem --- Loop Starting
         ivw07a.abc_total_value_01=ive07a.abc_total_value_01
         ivw07a.abc_total_value_02=ive07a.abc_total_value_02
         ivw07a.abc_total_value_03=ive07a.abc_total_value_03
+rem escape; print "line 279"
         write record (ivw07_dev,key=ivw07a_key$) ivw07a$
 
     wend; rem --- Loop Ending
@@ -284,11 +295,17 @@ rem --- Loop Starting
 
         usage=ive17a.abc_total_value_01,onhand=ive17a.abc_total_value_02,balance=ive17a.abc_total_value_03
         gosub Reciprocal_Amt
-
-        ivw17a_key.firm_id$=ive07a.firm_id$,ivw17a_key.item_id$=ive17a.item_id$,ivw17a_key.warehouse_id$=ive17a.warehouse_id$
-	ivw17a_key.recip_sign$=sign$,ivw17a_key.recip_amount$=amount$
-	ivw17a.recip_sign$=sign$,ivw17a.recip_amount$=amount$
-        ivw17a.firm_id$=ive17a.firm_id$,ivw17a.item_id$=ive17a.item_id$,ivw17a.abc_code_01$=ive17a.abc_code_01$
+rem escape
+        ivw17a_key.firm_id$=ive07a.firm_id$,
+	ivw17a_key.item_id$=ive17a.item_id$,
+	ivw17a_key.warehouse_id$=ive17a.warehouse_id$
+	ivw17a_key.recip_sign$=sign$,
+	ivw17a_key.recip_amount$=amount$
+	ivw17a.recip_sign$=sign$,
+	ivw17a.recip_amount$=amount$
+        ivw17a.firm_id$=ive17a.firm_id$,
+	ivw17a.item_id$=ive17a.item_id$,
+	ivw17a.abc_code_01$=ive17a.abc_code_01$
 	ivw17a.warehouse_id$=ive17a.warehouse_id$
         ivw17a.annual_usage=ive17a.annual_usage
         ivw17a.qty_on_hand=ive17a.qty_on_hand
