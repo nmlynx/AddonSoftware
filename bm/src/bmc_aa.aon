@@ -11,16 +11,17 @@ rem --- All Rights Reserved
         seterr std_error
         enter o9,printer_dev,bill_no$,page,comment$,sub$,warehouse$,select$,pdate$,status
 
+
 rem --- Retrieve the program path
 
-        pgmdir$=stbl("+dir_pgm",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-        sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
         dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+sysinfo",err=*next)
-        milestone=num(stbl("+milestone",err=*next),err=*next)
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -246,8 +247,7 @@ While more
                     let l=l+1
                     break
                 endif
-                rem dim d0$(30);
-                let bmm08a.ITEM_DESC$="Not On File"
+                   let bmm08a.ITEM_DESC$="Not On File"
                 bmm08a.DIRECT_RATE=0
                 read record (bmm08_dev,key=bmm03a.FIRM_ID$+bmm03a.OP_CODE$,dom=*next) bmm08a$
                 if l+2>l9 then gosub Operation_Heading
