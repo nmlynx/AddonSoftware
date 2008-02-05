@@ -24,7 +24,7 @@ rem --- new record
 		arm02a$=fnget_tpl$("ARM_CUSTDET")
 		dim arm02a$:arm02a$
 		read record (arm02_dev,key=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+"   ",dom=*next)arm02a$
+:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+"  ",dom=*next)arm02a$
 		arm01_dev=fnget_dev("ARM_CUSTMAST")
 		arm01a$=fnget_tpl$("ARM_CUSTMAST")
 		dim arm01a$:arm01a$
@@ -36,9 +36,9 @@ rem --- new record
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_ORDHDR.AR_SHIP_VIA",arm01a.ar_ship_via$)
 		callpoint!.setColumnData("OPE_ORDHDR.SLSPSN_CODE",arm02a.slspsn_code$)
-		callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE",arm02a.terms_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE",arm02a.ar_terms_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.DISC_CODE",arm02a.disc_code$)
-		callpoint!.setColumnData("OPE_ORDHDR.DIST_CODE",arm02a.dist_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.DIST_CODE",arm02a.ar_dist_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
 		callpoint!.setColumnData("OPE_ORDHDR.MESSAGE_CODE",arm02a.message_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.TERRITORY",arm02a.territory$)
@@ -76,19 +76,10 @@ rem -- Deal with which Ship To type
 	dctl$[6]="<<DISPLAY>>.SCITY"
 	dctl$[7]="<<DISPLAY>>.SSTATE"
 	dctl$[8]="<<DISPLAY>>.SZIP"
-	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")="M"
+	if ship_to_type$="M"
 		dmap$=""
 	else
 		dmap$="I"
-	endif
-	gosub disable_ctls
-	dim dctl$[9]
-	dctl$[1]="OPE_ORDHDR.SHIPTO_NO"
-	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")="S"
-		dmap$=""
-	else
-		dmap$="I"
-		callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_NO","")
 	endif
 	gosub disable_ctls
 [[OPE_ORDHDR.ASHO]]
@@ -161,36 +152,6 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl.zip_code$=callpoint!.getColumnData("<<DISPLAY>>.SZIP")
 		write record (ordship_dev,key=firm_id$+cust_id$+ord_no$) ordship_tpl$
 	endif
-[[OPE_ORDHDR.SHIPTO_NO.AVAL]]
-rem --- See which way to deal with ship to's
-rem 	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
-rem	callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
-rem	callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
-rem	callpoint!.setColumnData("<<DISPLAY>>.SADD3","")
-rem	callpoint!.setColumnData("<<DISPLAY>>.SADD4","")
-rem	callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
-rem	callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
-rem	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
-rem	dim dctl$[9]
-rem	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
-rem	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-rem	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-rem	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-rem	gosub ship_to_info
-rem	dctl$[1]="<<DISPLAY>>.SNAME"
-rem	dctl$[2]="<<DISPLAY>>.SADD1"
-rem	dctl$[3]="<<DISPLAY>>.SADD2"
-rem	dctl$[4]="<<DISPLAY>>.SADD3"
-rem	dctl$[5]="<<DISPLAY>>.SADD4"
-rem	dctl$[6]="<<DISPLAY>>.SCITY"
-rem	dctl$[7]="<<DISPLAY>>.SSTATE"
-rem	dctl$[8]="<<DISPLAY>>.SZIP"
-rem	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")="000099"
-rem		dmap$=""
-rem	else
-rem		dmap$="I"
-rem	endif
-rem	gosub disable_ctls
 [[OPE_ORDHDR.<CUSTOM>]]
 bill_to_info: rem --- get and display Bill To Information
 	custmast_dev=fnget_dev("ARM_CUSTMAST")
