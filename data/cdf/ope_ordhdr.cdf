@@ -104,9 +104,13 @@ rem --- enable/disable expire date based on value
 	endif
 	gosub disable_ctls
 
-ESCAPE;rem check out the next couple of lines
-	jim1$=callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
-	jim2$=callpoint!.getUserInput()
+	if rec_data.invoice_type$="S"
+		if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")="P"
+			msg_id$="OP_NO_CONVERT"
+			gosub  disp_message
+			callpoint!.setStatus("ABORT-REFRESH")
+		endif
+	endif
 [[OPE_ORDHDR.AREC]]
 rem --- reset expiration date to enabled
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT","")
@@ -189,7 +193,6 @@ rem	endif
 rem	gosub disable_ctls
 [[OPE_ORDHDR.<CUSTOM>]]
 bill_to_info: rem --- get and display Bill To Information
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",amt_mask$,0,0
 	custmast_dev=fnget_dev("ARM_CUSTMAST")
 	custmast_tpl$=fnget_tpl$("ARM_CUSTMAST")
 	dim custmast_tpl$:custmast_tpl$
@@ -218,7 +221,7 @@ bill_to_info: rem --- get and display Bill To Information
 		callpoint!.setColumnData("<<DISPLAY>>.AGING_90",custdet_tpl.aging_90$)
 		callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",custdet_tpl.aging_cur$)
 		callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE",custdet_tpl.aging_future$)
-		callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",str(ar_balance:amt_mask$))
+		callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",str(ar_balance))
 	else
 		callpoint!.setColumnData("<<DISPLAY>>.AGING_120","")
 		callpoint!.setColumnData("<<DISPLAY>>.AGING_30","")
@@ -298,9 +301,11 @@ get_op_params:
 return
 
 disp_ord_tot:
-	ord_tot=123
+	ord_tot=0
 	ope11_dev=fnget_dev("OPE_ORDDET")
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
+	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 	read record(ope11_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
@@ -310,23 +315,16 @@ disp_ord_tot:
 :			firm_id$+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :			callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO") break
-
-rem 0830 DIM Y0$(32); FIND (ARM10_DEV,KEY=N0$+"E"+W0$(21,1),DOM=0870)IOL=ARM10E     
-rem 0835 IF Y0$(25,1)="M" THEN GOTO 0895                                            
-rem 0840 IF W1$(44,1)="Y" OR A0$(21,1)="P" THEN GOTO 0855                           
-rem 0845 IF Y0$(25,1)<>"O" THEN LET W[3]=0,W[4]=0,W[6]=0,W[7]=0; REM "Can't ship if 
-rem not committed                                                                   
-rem 0850 IF Y0$(25,1)="O" AND W[6]<>0 THEN LET W[1]=W[6],W[6]=0,W[7]=0; REM "Can't e
-rem xtend price if not committed, so save it as Unit Price                          
-rem 0855 IF POS(Y0$(25,1)="SP")=0 THEN IF Y0$(26,1)="Y" THEN LET W[7]=W[6]; GOTO 087
-rem 0 ELSE GOTO 0870                                                                
-rem 0860 FIND (IVM01_DEV,KEY=N0$+W0$(33,20),DOM=0870)IOL=IVM01A                     
-rem 0865 IF D2$(8,1)="Y" AND Y0$(26,1)="Y" THEN LET W[7]=W[6]                       
-rem 0870 LET U[0]=U[0]+W[6],U[1]=U[1]+W[7],U[2]=U[2]+W[0]*W[4]                      
-rem 0880 WRITE (ARE13_DEV,KEY=W0$(1,20))IOL=ARE13A                                  
-
+		dim opc_linecode$:fattr(opc_linecode$)
+		read record(opc_linecode_dev,key=firm_id$+ope11a.line_code$,dom=*next)opc_linecode$
+		if pos(opc_linecode.line_type$="SNP") ord_tot=ord_tot+(ope11a.unit_price*ope11a.qty_ordered)
+		if opc_linecode.line_type$="O" ord_tot=ord_tot+ope11a.ext_price
+rem 0860 FIND (IVM01_DEV,KEY=N0$+W0$(33,20),DOM=0870)IOL=IVM01A
+rem 0865 IF D2$(8,1)="Y" AND Y0$(26,1)="Y" THEN LET W[7]=W[6]
+rem 0870 LET U[0]=U[0]+W[6],U[1]=U[1]+W[7],U[2]=U[2]+W[0]*W[4]
+		endif
 	wend
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(ord_tot:"#,###,##0.00-"))
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(ord_tot))
 return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
@@ -368,7 +366,7 @@ rem --- set user_tpl values
 	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=7
+	num_files=8
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -377,6 +375,7 @@ rem --- open needed files
 	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
 	open_tables$[6]="OPE_INVCASH",open_opts$[6]="OTA"
 	open_tables$[7]="ARS_CREDIT",open_opts$[7]="OTA"
+	open_tables$[8]="OPC_LINECODE",open_opts$[8]="OTA"
 	gosub open_tables
 
 rem --- disable display fields
