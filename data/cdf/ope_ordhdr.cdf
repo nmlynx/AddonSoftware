@@ -262,7 +262,7 @@ get_op_params:
 return
 
 disp_ord_tot:
-	ord_tot=0
+	user_tpl.ord_tot=0
 	ope11_dev=fnget_dev("OPE_ORDDET")
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
@@ -278,14 +278,14 @@ disp_ord_tot:
 :			callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO") break
 		dim opc_linecode$:fattr(opc_linecode$)
 		read record(opc_linecode_dev,key=firm_id$+ope11a.line_code$,dom=*next)opc_linecode$
-		if pos(opc_linecode.line_type$="SNP") ord_tot=ord_tot+(ope11a.unit_price*ope11a.qty_ordered)
-		if opc_linecode.line_type$="O" ord_tot=ord_tot+ope11a.ext_price
+		if pos(opc_linecode.line_type$="SNP") user_tpl.ord_tot=user_tpl.ord_tot+(ope11a.unit_price*ope11a.qty_ordered)
+		if opc_linecode.line_type$="O" user_tpl.ord_tot=user_tpl.ord_tot+ope11a.ext_price
 rem 0860 FIND (IVM01_DEV,KEY=N0$+W0$(33,20),DOM=0870)IOL=IVM01A
 rem 0865 IF D2$(8,1)="Y" AND Y0$(26,1)="Y" THEN LET W[7]=W[6]
 rem 0870 LET U[0]=U[0]+W[6],U[1]=U[1]+W[7],U[2]=U[2]+W[0]*W[4]
 		endif
 	wend
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(ord_tot))
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(user_tpl.ord_tot))
 return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
@@ -375,7 +375,7 @@ rem --- Setup user_tpl$
 	ars_credit_dev=num(open_chans$[7])
 	dim ars_credit$:open_tpls$[7]
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
-	dim user_tpl$:"new_rec:c(1),credit_installed:c(1),display_bal:c(1)"
+	dim user_tpl$:"new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15)"
 	user_tpl.new_rec$="Y"
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
