@@ -246,6 +246,7 @@ if msg_opt$="Y"
 		if pos(firm_id$=apt01_key$)<>1 break
 		readrecord(apt01_dev,key=apt01_key$)apt01a$
 		apt01a.selected_for_pay$="N"
+		apt01a$=field(apt01a$)
 		write record(apt01_dev,key=apt01_key$)apt01a$
 	wend	
 endif
