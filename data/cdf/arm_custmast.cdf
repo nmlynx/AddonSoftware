@@ -131,7 +131,7 @@ rem --- Retrieve parameter data
 	user_tpl.cust_dflt_rec$=ars10d$
 
 
-	dim dctl$[15]
+	dim dctl$[17]
 
  	dctl$[1]="ARM_CUSTDET.CRED_HOLD"; rem --- looks like this should only be set in CM                
 
@@ -159,11 +159,16 @@ rem --- Retrieve parameter data
 	dctl$[11]="<<DISPLAY>>.DSP_YTD_PROFIT"
 	dctl$[12]="<<DISPLAY>>.DSP_PRI_PROFIT"
 	dctl$[13]="<<DISPLAY>>.DSP_NXT_PROFIT"
+	dctl$[14]="<<DISPLAY>>.DSP_MTD_PROF_PCT"
+	dctl$[15]="<<DISPLAY>>.DSP_YTD_PROF_PCT"
+	dctl$[16]="<<DISPLAY>>.DSP_PRI_PROF_PCT"
+	dctl$[17]="<<DISPLAY>>.DSP_NXT_PROF_PCT"
+
 	gosub disable_ctls
 [[ARM_CUSTMAST.<CUSTOM>]]
 disable_ctls:rem --- disable selected control
 
-    for dctl=1 to 15
+    for dctl=1 to 17
         dctl$=dctl$[dctl]
         if dctl$<>""
             wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
