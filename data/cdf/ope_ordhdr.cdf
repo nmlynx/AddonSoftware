@@ -1,3 +1,10 @@
+[[OPE_ORDHDR.SHIPTO_NO.AVAL]]
+rem --- Display Ship to information
+	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	gosub ship_to_info
 [[OPE_ORDHDR.ADEL]]
 rem --- Remove extra records
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
@@ -371,11 +378,18 @@ rem --- disable display fields
 	dctl$[7]="<<DISPLAY>>.TOT_AGING"
 	gosub disable_ctls
 
+rem --- set up UserObj! as vector
+	UserObj!=SysGUI!.makeVector()
+	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLI"))
+	tamt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	UserObj!.addItem(tamt!)
+
 rem --- Setup user_tpl$
 	ars_credit_dev=num(open_chans$[7])
 	dim ars_credit$:open_tpls$[7]
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
-	dim user_tpl$:"new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15)"
+	dim user_tpl$:"new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),line_boqty:n(15),line_shipqty:n(15)"
 	user_tpl.new_rec$="Y"
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
