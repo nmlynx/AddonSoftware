@@ -80,7 +80,21 @@ disp_totals: rem --- get context and ID of total amount display control, and red
 return
 
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
-escape;rem what now? commit inventory?
+	dim iv_files[44],iv_info$[3],iv_info[0],iv_params$[4],iv_refs$[11],iv_refs[5]
+	iv_files[0]=fnget_dev("GLS_PARAMS")
+	iv_files[1]=fnget_dev("IVM_ITEMMAST")
+	iv_files[2]=fnget_dev("IVM_ITEMWHSE")
+	iv_files[4]=fnget_dev("IVM_ITEMTIER")
+	iv_files[5]=fnget_dev("IVM_ITEMVEND")
+	iv_files[7]=fnget_dev("IVM_LSMASTER")
+	iv_files[8]=fnget_dev("IVX_LSXREF")
+	iv_files[12]=fnget_dev("IVM_ITEMACCT")
+	iv_files[17]=fnget_dev("IVM_LSACT")
+	iv_files[41]=fnget_dev("IVT_LSTRANS")
+	iv_files[42]=fnget_dev("IVX_LSCUST")
+	iv_files[43]=fnget_dev("IVX_LSVEND")
+	iv_fles[44]=fnget_dev("IVT_ITEMTRAN")
+escape; rem decisions have to be made about ivc_ua (ivc_itemupt.aon)
 	U[0]=U[0]+S8*line_sign
 	U[1]=U[1]+S9*line_sign
 	U[2]=U[2]+S0*line_sign

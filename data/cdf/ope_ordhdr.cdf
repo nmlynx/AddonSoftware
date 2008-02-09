@@ -334,7 +334,7 @@ rem --- set user_tpl values
 	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=8
+	num_files=22
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -344,7 +344,25 @@ rem --- open needed files
 	open_tables$[6]="OPE_INVCASH",open_opts$[6]="OTA"
 	open_tables$[7]="ARS_CREDIT",open_opts$[7]="OTA"
 	open_tables$[8]="OPC_LINECODE",open_opts$[8]="OTA"
+	open_tables$[9]="GLS_PARAMS",open_opts$[9]="OTA"
+	open_tables$[10]="GLS_PARAMS",open_opts$[10]="OTA"
+	open_tables$[11]="IVM_LSMASTER",open_opts$[11]="OTA"
+rem	open_tables$[12]="IVX_LSCUST",open_opts$[12]="OTA"
+	open_tables$[13]="IVM_ITEMMAST",open_opts$[13]="OTA"
+rem	open_tables$[14]="IVS_LSXREF",open_opts$[14]="OTA"
+rem	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
+	open_tables$[16]="IVM_ITEMWHSE",open_opts$[16]="OTA"
+	open_tables$[17]="IVM_ITEMACT",open_opts$[17]="OTA"
+	open_tables$[18]="IVT_ITEMTRAN",open_opts$[18]="OTA"
+	open_tables$[19]="IVM_ITEMTIER",open_opts$[19]="OTA"
+	open_tables$[20]="IVM_ITEMACT",open_opts$[20]="OTA"
+	open_tables$[21]="IVM_ITEMVEND",open_opts$[21]="OTA"
+	open_tables$[22]="IVT_LSTRANS",open_opts$[22]="OTA"
 	gosub open_tables
+
+rem --- get AR Params
+	dim ars01a$:open_tpls$[4]
+	read record(num(open_chans$[4]),key=firm_id$+"AR00")ars01a$
 
 rem --- disable display fields
 
@@ -358,6 +376,7 @@ rem --- disable display fields
 	dctl$[6]="<<DISPLAY>>.BSTATE"
 	dctl$[7]="<<DISPLAY>>.BZIP"
 	dctl$[8]="<<DISPLAY>>.ORDER_TOT"
+	if ars01a.job_nos$<>"Y" dctl$[9]="OPE_ORDHDR.JOB_NO"
 	gosub disable_ctls
 	dmap$="I"
 	dctl$[1]="<<DISPLAY>>.SNAME"
