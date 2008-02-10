@@ -96,6 +96,7 @@ rem --- Item report completed
         if level$="I" then
             rem goto done
             done=1
+	    escape
             call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
             close (printer_dev,err=*next)
 rem            run pgmdir$+"ivu_itemabcupd.aon"
@@ -296,7 +297,6 @@ rem --- Update IVE-07
     ive07a_key.item_id$=ivw07a.item_id$
     ive07a.item_id$=ivw07a.item_id$
     ive07a.abc_code_01$=oldabc$,ive07a.abc_code_02$=newabc$
-    ive07a.reserved_str$=" "
     ive07a.annual_usage=ivw07a.annual_usage
     ive07a.qty_on_hand=ivw07a.qty_on_hand
     ive07a.end_balance=ivw07a.end_balance
@@ -338,6 +338,9 @@ rem --- Calculate percentage
     percent=0,quantity=ivw17a.annual_usage,amount=ivw17a.abc_total_value_01,x=0
     if value$="O" quantity=ivw17a.qty_on_hand,amount=ivw17a.abc_total_value_02,x=1
     if value$="B" quantity=ivw17a.end_balance,amount=ivw17a.abc_total_value_03,x=2
+rem    if x=0 if ivs10w.abc_total_value_01<>0 percent=(amount*100)/ivs10w.abc_total_value_01
+rem    if x=1 if ivs10w.abc_total_value_02<>0 percent=(amount*100)/ivs10w.abc_total_value_02
+rem    if x=2 if ivs10w.abc_total_value_03<>0 percent=(amount*100)/ivs10w.abc_total_value_03
     if x=0 if ivs10w.abc_total_value_01<>0 percent=(amount*100)/ivs10w.abc_total_value_01
     if x=1 if ivs10w.abc_total_value_02<>0 percent=(amount*100)/ivs10w.abc_total_value_02
     if x=2 if ivs10w.abc_total_value_03<>0 percent=(amount*100)/ivs10w.abc_total_value_03

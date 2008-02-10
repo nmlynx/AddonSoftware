@@ -119,13 +119,19 @@ rem --- Calculate total value for warehouse
 	    ivw17a_key.recip_amount$=amount$
             ivw17a.recip_amount$=amount$
             ivw17a.abc_code_01$=ivm02a.abc_code$
-            ivs10w_key$=firm_id$+"W"+ivm02a.warehouse_id$
             ive17a_key$=ivm02a_key$
 
 rem --- Update totals for warehouse/item
 
             if level$="I" goto accumulate_item_totals
             write record (ivw17_dev,key=ivw17a_key$) ivw17a$
+
+            ivs10w_key.firm_id$=firm_id$
+            ivs10w_key.record_id_w$="W"
+            ivs10w_key.warehouse_id$=ivm02a.warehouse_id$
+            ivs10w.firm_id$=firm_id$
+            ivs10w.record_id_w$="W"
+            ivs10w.warehouse_id$=ivm02a.warehouse_id$
             find record (ivs10w_dev,key=ivs10w_key$,dom=*next) ivs10w$
             ivs10w.period$=ivs01a.current_per$
             ivs10w.year$=ivs01a.current_year$
@@ -134,7 +140,15 @@ rem --- Update totals for warehouse/item
             ivs10w.abc_total_value_02=ivs10w.abc_total_value_02+ivw17a.abc_total_value_02
             ivs10w.abc_total_value_03=ivs10w.abc_total_value_03+ivw17a.abc_total_value_03
             ivs10w.total_items=ivs10w.total_items+1
-            write record (ivs10w_dev,key=ivs10w_key$) ivs10w$
+	    dim ivs10w[3]
+	    ivs10w0$=ivs10w.firm_id$+ivs10w.record_id_w$+ivs10w.warehouse_id$
+	    ivs10w1$=ivs10w.period$+ivs10w.year$+ivs10w.run_date$
+	    ivs10w[0]=ivs10w.abc_total_value_01
+	    ivs10w[1]=ivs10w.abc_total_value_02
+	    ivs10w[2]=ivs10w.abc_total_value_03
+	    ivs10w[3]=ivs10w.total_items
+rem	    write (ivs10w_dev,key=ivs10w0$)ivs10w0$,ivs10w1$,ivs10w[all]
+   	    write record (ivs10w_dev,key=ivs10w_key$) ivs10w$
             remove (ive17_dev,key=ive17a_key$,dom=*next)
 
 accumulate_item_totals: rem --- Accumulate item totals
@@ -157,14 +171,13 @@ rem --- Done with warehouses
         ive07a_key.firm_id$=firm_id$
         ive07a_key.item_id$=ivm01a.item_id$
 
-rem escape; print "line 160"
         ivw07a_key.firm_id$=firm_id$
-        ivw07a_key.ar_type$="  "
+        ivw07a_key.reserved_key_01$="  "
         ivw07a_key.recip_sign$=sign$
         ivw07a_key.recip_amount$=amount$
         ivw07a_key.item_id$=ivm01a.item_id$
         ivw07a.firm_id$=firm_id$
-        ivw07a.ar_type$="  "
+        ivw07a.reserved_key_01$="  "
         ivw07a.recip_sign$=sign$
         ivw07a.recip_amount$=amount$
         ivw07a.item_id$=ivm01a.item_id$
@@ -173,7 +186,11 @@ rem escape; print "line 160"
 
 rem --- Update item totals
         write record (ivw07_dev,key=ivw07a_key$) ivw07a$
-        ivs10i_key$=firm_id$+"I",ivs10i.firm_id$=firm_id$
+
+	ivs10i_key.firm_id$=firm_id$
+	ivs10i_key.record_id_i$="I"
+	ivs10i.firm_id$=firm_id$
+	ivs10i.record_id_i$="I"
         find record (ivs10i_dev,key=ivs10i_key$,dom=*next) ivs10i$
         ivs10i.period$=ivs01a.current_per$
         ivs10i.year$=ivs01a.current_year$
@@ -183,6 +200,14 @@ rem --- Update item totals
         ivs10i.abc_total_value_03=ivs10i.abc_total_value_03+ivw07a.abc_total_value_03
         items=items+1
         ivs10i.total_items=items
+	dim ivs10i[3]
+	ivs10i0$=ivs10i.firm_id$+ivs10i.record_id_i$
+	ivs10i1$=ivs10i.period$+ivs10i.year$+ivs10i.run_date$
+	ivs10i[0]=ivs10i.abc_total_value_01
+	ivs10i[1]=ivs10i.abc_total_value_02
+	ivs10i[2]=ivs10i.abc_total_value_03
+	ivs10i[3]=ivs10i.total_items
+rem	write (ivs10i_dev,key=ivs10i0$)ivs10i0$,ivs10i1$,ivs10i[all]
         write record (ivs10i_dev,key=ivs10i_key$) ivs10i$
         remove (ive07_dev,key=ive07a_key$,dom=*next)
 
@@ -255,12 +280,12 @@ rem --- Loop Starting
         gosub Reciprocal_Amt
 
         ivw07a_key.firm_id$=ive07a.firm_id$
-        ivw07a_key.ar_type$="  "
+        ivw07a_key.reserved_key_01$="  "
 	ivw07a_key.recip_sign$=sign$
 	ivw07a_key.recip_amount$=amount$
 	ivw07a_key.item_id$=ive07a.item_id$
         ivw07a.firm_id$=ive07a.firm_id$
-        ivw07a.ar_type$="  "
+        ivw07a.reserved_key_01$="  "
 	ivw07a.recip_sign$=sign$
 	ivw07a.recip_amount$=amount$
 	ivw07a.item_id$=ive07a.item_id$
@@ -272,7 +297,6 @@ rem --- Loop Starting
         ivw07a.abc_total_value_01=ive07a.abc_total_value_01
         ivw07a.abc_total_value_02=ive07a.abc_total_value_02
         ivw07a.abc_total_value_03=ive07a.abc_total_value_03
-rem escape; print "line 279"
         write record (ivw07_dev,key=ivw07a_key$) ivw07a$
 
     wend; rem --- Loop Ending
@@ -295,7 +319,7 @@ rem --- Loop Starting
 
         usage=ive17a.abc_total_value_01,onhand=ive17a.abc_total_value_02,balance=ive17a.abc_total_value_03
         gosub Reciprocal_Amt
-rem escape
+
         ivw17a_key.firm_id$=ive07a.firm_id$,
 	ivw17a_key.item_id$=ive17a.item_id$,
 	ivw17a_key.warehouse_id$=ive17a.warehouse_id$
