@@ -106,7 +106,6 @@ rem --- Initialize
     headings$[0]=n1$
     headings$[1]=n3$,headings$[2]=h3$
     dim j2$(132,"-")
-    dim w[13]
     t0$=""
     t2$="",t9$="",t0=0,t1=0,t2=0,t3=0,s0=0,s1=0,u0=0,u1=0,u2=0,u3=0,warn$=""
     call pgmdir$+"adc_sizemask.aon",m1$,m1,9,10
@@ -298,7 +297,7 @@ rem --- Transactions Here
                     if pr$="Y" then let empfile_dev=prm01_dev else let empfile_dev=sfm01_dev
                     if bm$="Y" then let codfile_dev=bmm08_dev else let codfile_dev=sfm02_dev
                 endif
-                dim w[13],t[3],u[3]
+                dim t[3],u[3]
                 gosub transactions
                 t0$=""
                 t9$="",ts=0,us=0
@@ -513,11 +512,15 @@ serial_numbers:
         return
 
 accum_totals:
+        sfe02_field$=fattr(sfe02a$,"")
+        sfe02_field$=sfe02_field$(pos("runtime_hrs"=cvs(sfe02_field$,8)))
         for x=0 to 3
-            t[x]=t[x]+w[x]
+            xfield$=sfe02_field$(1,pos($0A$=sfe02_field$)-1)
+            t[x]=t[x]+FIELD(sfe02$,xfield$)
+            sfe02_field$=sfe02_field$(pos($0A$=sfe02_field$)+1)
         next x
-        t0=t0+w[3]
-        t1=t1+w[1]
+        t0=t0+sfe02a.tot_std_cost$
+        t1=t1+sfe02a.unit_cost$
         return
 
 report_heading: rem --- Report Heading
