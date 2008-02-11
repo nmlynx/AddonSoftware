@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -76,12 +76,12 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    selected$=Option!.getOptionData("Selected Report Sequence")
+    report_sequence$=Option!.getOptionData("Selected Report Sequence")
     beginning$=Option!.getOptionData("Beginning")
     ending$=Option!.getOptionData("Ending")
     how$=Option!.getOptionData("Units or Dollars")
     date1$=Option!.getOptionData("As of Date")
-    wo_status$=Option!.getOptionData("Open Closed Planned Quoted")
+    op_cl_pl_qu$=Option!.getOptionData("Open Closed Planned Quoted")
    
 
 rem --- Retrieve parameter records
@@ -134,6 +134,8 @@ rem --- Init Data
     if status then goto std_error
     sfs01a.current_year$=""
 
+
+   
 done: rem --- Overlay
 
     run pgmdir$+"sfr_vb.bbx"
