@@ -1,30 +1,26 @@
 rem DataPort Data File Conversion Utility (Initialization Overlay)
 rem Program dataport.bbj v8.0.0 28Oct07
-rem  
+rem
 rem  +-----------------------------------------+
 rem  | AddonSoftware Version 8.0.0 - 01Feb2006 |
 rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
-rem  
-rem --- This overlay performs the initializations for the data
-rem --- conversion process and then runs syx70a.bbj or normalization.bbj 
-rem --- according to the version which has to be converted.
-rem 
-begin 
+rem
+begin
 
 rem --- Initilalization
 
-    dictfile$=stbl("+DIR_BRD") 
-    dictpgm$=stbl("+DIR_SYP") 
+    dictfile$=stbl("+DIR_BRD")
+    dictpgm$=stbl("+DIR_SYP")
     pgmdir$="C:\DataPort\"
     filedir$=stbl("+DATAPORT_FILES")
     logdir$=stbl("+DATAPORT_LOGS")
-    
+
 rem --- Create and open log file
     let logfile$=logdir$+"DataPort_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
     erase logfile$,err=create_logfile
-    create_logfile: 
+    create_logfile:
     string logfile$
     let log_dev=unt
     open (log_dev)logfile$
@@ -38,8 +34,8 @@ get_version:
     let default$="6"
     call "user_selections.bbj",title$,default$,filedir$,source_version$
     let source_version=num(source_version$,err=get_version)
-    if source_version<>6 then 
-        if  source_version<>7 then 
+    if source_version<>6 then
+        if  source_version<>7 then
             a=msgbox("Invalid version.. Try again")
             goto get_version
         endif
@@ -62,7 +58,7 @@ get_destination_folder:
     let status=0
 
 next_overlay:
-    print (log_dev)" Porting Addon "+str(source_version)+" data files from folder "+source_folder$+" to "+destin_folder$+$0a$ 
+    print (log_dev)" Porting Addon "+str(source_version)+" data files from folder "+source_folder$+" to "+destin_folder$+$0a$
     run "DataPort_main.bbj"
 
 the_end:
