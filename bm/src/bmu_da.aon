@@ -49,9 +49,6 @@ rem --- Dimension string templates
 :       bms01a$:templates$[4],ivm01a$:templates$[5],ivm14a$:templates$[6],
 :       ivs01a$:templates$[7]
 
-rem --- Assign form input values to local variables
-
-    value_01$=Option!.getOptionData("form_value_01")
 
 rem --- Retrieve parameter records
 
@@ -66,8 +63,8 @@ rem --- Parameters
     dim t$:stbl("+TASK_TMPL")
     t$=stbl("+TASK")
     firm_id$=t.f0$(16,2),n2$="IV"
-    find record (sys01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-    find record (sys01_dev,key=firm_id$+"BM00",dom=std_missing_params) bms01a$
+    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
+    find record (bms01a_dev,key=firm_id$+"BM00",dom=std_missing_params) bms01a$
     dim p[5],desc[3],params[3]
     p[0]=num(ivs01a.item_id_len$)
     p[1]=num(ivs01a.current_per$),p[2]=fnyy_year(ivso1a.current_year$)
@@ -90,6 +87,17 @@ rem --- Init Data
     if p9<=0 then let r6$="X"
     dim r6$(p9,"X")
     r6$="."+r6$
+
+rem --- Assign form input values to local variables
+
+    r0$=Option!.getOptionData("Beginning Bill Number:")
+    r1$=Option!.getOptionData("Ending Bill Number:")
+    r2$=Option!.getOptionData("Old Item Number:")
+    r3$=Option!.getOptionData("New Item Number:")
+    ro=num(Option!.getOptionData("Conversion Factor"))
+    r6$=Option!.getOptionData("Rounding Precision:")
+    r4$=Option!.getOptionData("Obsolete Comments:")
+    r5$=Option!.getOptionData("Effective Date:")
    
 rem --- Printing
 
