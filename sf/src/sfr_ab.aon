@@ -11,55 +11,27 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
     on o9 goto label2,label1
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
-
-    files=5,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
-    files$[2]="ivs_params",ids$[2]="IVS_PARAMS"
-    files$[3]="sfe-01",ids$[3]="SFE_WOMASTR"
-    files$[4]="sfe-04",ids$[4]=""
-    files$[5]="sfs-01a",ids$[5]="SFS_PARAMS"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    arm01_dev=channels[1]
-    ivs01a_dev=channels[2]
-    sfe01_dev=channels[3]
-    sfe04_dev=channels[4]
-    sfs01a_dev=channels[5]
-
-rem --- Dimension string templates
-
-    dim arm01a$:templates$[1],ivs01a$:templates$[2],sfe01a$:templates$[3],
-:       sfe04a$:templates$[4],sfs01a$:templates$[5]
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sfs01a_key$=firm_id$+"SF00"
-    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
-
-label2: rem --- Open/Lock Files
-
-rem --- Init Data
+label2: rem --- Init Data
 
     h0=60
     h=0,l9=59,l=l9+1,h3$=""
     more=1
     flag=0
+
+rem --- Retrieve key templates
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOTRANS","PRIMARY",sfe04a_key_tpl$,rd_table_chans$[all],status$
 
 rem --- Additional File Opens
 
@@ -68,23 +40,23 @@ rem --- Additional File Opens
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04_dev,1,meter_num,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04a_dev,1,meter_num,ignore_status
 
-rem --- Options
 rem --- Init Read
 
     k$=firm_id$+"  A"+p4$
-    read (sfe04_dev,key=firm_id$+"  "+"A"+p4$,dom=label1)
+    read (sfe04a_dev,key=firm_id$+"  "+"A"+p4$,dom=label1)
     flag=1
 
 label1: rem --- Main Read
 
+    dim sfe04a_key$:sfe04a_key_tpl$
     while more
 
         if flag=0
-          k$=key(sfe04_dev,end=done)
-          if k$(1,5)<>firm_id$+"  "+"A" then break
-          read (sfe04_dev)
+          sfe04a_key$=key(sfe04a_dev,end=done)
+          if sfe04a_key.firm_id$+sfe04a_key.wo_location$+sfe04a_key.record_id_a$<>firm_id$+"  "+"A" then break
+          read (sfe04a_dev)
         endif   
     
     rem --- Breaks
@@ -93,10 +65,10 @@ label1: rem --- Main Read
 
     rem --- Additional Reads
 
-        read record (sfe01_dev,key=k$(1,4)+k$(6,7),dom=label1) sfe01a$
+        read record (sfe01a_dev,key=sfe04a_key.firm_id$+sfe04a_key.wo_location$+sfe04qa_key.wo_no$,dom=label1) sfe01a$
             if op$="Y" 
-           arm01a.cust_name$="*** Not On File ***"
-           read record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
+            arm01a.cust_name$="*** Not On File ***"
+            read record (arm01a_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
         endif
 
     rem --- Set Flags...
@@ -105,7 +77,7 @@ label1: rem --- Main Read
         z1$="Y",z2$="N",z3$="N"
         o9$=pgm(-2)
         o9=1
-        run pgmdir$+"sfr_xa.bbx"; rem returns to 1100
+        run pgmdir$+"sfr_xa.aon"; rem returns to 1100
         break
 
     wend
@@ -117,28 +89,20 @@ done: rem --- End
     close (printer_dev,err=*next)
 
     while more
-
         while more
-
             v4$="Did The Travelers Print Correctly: "
             call pgmdir$+"adc_yesno.aon",1,v4$,0,v$,v3
             if v$="NO" flag=1
-            if v$="YES" read (sfe04_dev,key=firm_id$+"  "+"A",dom=*next);break
-
+            if v$="YES" read (sfe04a_dev,key=firm_id$+"  "+"A",dom=*next);break
         wend
 
         if flag break
-
         while more
-
-            k$=key(sfe04_dev,end=done_exit)
-            if k$(1,5)<>firm_id$+"  "+"A" then break
-            remove (sfe04_dev,key=k$)
-
+            sfe04a_key$=key(sfe04a_dev,end=done_exit)
+            if sfe04a_key.firm_id$+sfe04a_key.wo_location$+sfe04a_key.record_id_a$<>firm_id$+"  "+"A" then break
+            remove (sfe04a_dev,key=sfe04a_key$)
         wend
-        
         break
-
     wend
 
 done_exit:
