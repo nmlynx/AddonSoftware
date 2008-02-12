@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -26,33 +26,33 @@ rem --- Open/Lock files
     files=13,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="apm-01",ids$[1]="APM_VENDMAST"
-    files$[2]="aps_params",ids$[2]="APS_PARAMS"
+    files$[2]="APS_PARAMS",ids$[2]="APS_PARAMS"
     files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
-    files$[4]="ars_params",ids$[4]="ARS_PARAMS"
+    files$[4]="ARS_PARAMS",ids$[4]="ARS_PARAMS"
     files$[5]="bms-01a",ids$[5]="BMS_PARAMS"
     files$[6]="ivm-01",ids$[6]="IVM_ITEMMAST"
-    files$[7]="ivs_params",ids$[7]="IVS_PARAMS"
+    files$[7]="IVS_PARAMS",ids$[7]="IVS_PARAMS"
     files$[8]="prs-01a",ids$[8]="PRS_PARAMS"
     files$[9]="sfe-01",ids$[9]="SFE_WOMASTR"
     files$[10]="sfe-02",ids$[10]="SFE_WOOPRTN"
-    files$[11]="sfe-04",ids$[11]=""
+    files$[11]="sfe-04",ids$[11]="SFE_WOTRANS"
     files$[12]="sfm-10",ids$[12]="SFC_WOTYPECD"
     files$[13]="sfs-01a",ids$[13]="SFS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    apm01_dev=channels[1]
+    apm01a_dev=channels[1]
     aps01a_dev=channels[2]
-    arm01_dev=channels[3]
+    arm01a_dev=channels[3]
     ars01a_dev=channels[4]
     bms01a_dev=channels[5]
-    ivm01_dev=channels[6]
+    ivm01a_dev=channels[6]
     ivs01a_dev=channels[7]
     prs01a_dev=channels[8]
-    sfe01_dev=channels[9]
-    sfe02_dev=channels[10]
-    sfe04_dev=channels[11]
-    sfm10_dev=channels[12]
+    sfe01a_dev=channels[9]
+    sfe02a_dev=channels[10]
+    sfe04a_dev=channels[11]
+    sfm10a_dev=channels[12]
     sfs01a_dev=channels[13]
 
 rem --- Dimension string templates
@@ -86,10 +86,10 @@ rem --- Retrieve parameter records
 rem --- Parameters
 
     find record (sfs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) sfs01a$
-    p6=num(p2$(1,2))
-    t_cost$=p3$(28,1)
-    bm$=p3$(1,1)
-    op$=p3$(2,1),po$=p3$(3,1),pr$=p3$(4,1)
+    p6=num(sfs01a.empl_no_len$)
+    t_cost$=sfs01a.print_costs$
+    bm$=sfs01a.bm_interface$
+    op$=sfs01a.ar_interface$,po$=po_interface$,pr$=sfs01a.pr_interface$
 
     if bm$="Y"
         find record (bms01a_dev,key=firm_id$+"BM00",dom=*next) bms01a$
@@ -97,34 +97,36 @@ rem --- Parameters
 
     if op$="Y"
         find record (ars01a_dev,key=firm_id$+"AR00",dom=label1) ars01a$
-        p8=num(x$(1,2))
+        p8=num(ars01a.cust_size$)
     endif
 
 label1:
     if po$="Y"
         find record (aps01a_dev,key=firm_id$+"AP00",dom=label2) aps01a$
-        p7=num(x$(1,2))
+        p7=num(aps01a.vendor_size$)
     endif
 
 label2:
     if pr$="Y"
         find record (prs01a_dev,key=firm_id$+"PR00",dom=label3) prs01a$
-        p6=num(x$(1,2))
+        p6=num(prs01a.empl_no_len$)
     endif
 
 label3:
-    if pr$<>"Y" and p3$(12,1)="P" then let m5=num(p3$(19,6))
+    if pr$<>"Y" and sfs01a.overhd_type$="P" then let m5=num(sfs01a.def_ovd_rate$)
     find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
     dim p[1],desc[3]
-    p[0]=num(p2$(1,2))
-    ivs01_precision=num(p2$(5,1)),p[1]=num(p2$(5,1))
-    m1=len(m1$)
-    m2=len(m2$),m3=len(m3$)
-    for x=1 to 3; let desc[x]=num(p2$((x-1)*2+9,2)); next x
+    p[0]=num(ivs01a.item_id_len$)
+    ivs01_precision=num(ivs01a.precision$),p[1]=num(ivs01a.precision$)
+    m1=len(sfs01a.amount_mask$)
+    m2=len(sfs01a.unit_mask$),m3=len(sfs01a.rate_mask$)
+    desclen[1]=num(ivs01a.desc_len_01$)
+    desclen[2]=num(ivs01a.desc_len_02$)
+    desclen[3]=num(ivs01a.desc_len_03$)  
 
 done: rem --- Overlay
 
-    run pgmdir$+"sfr_ab.bbx"
+    run pgmdir$+"sfr_ab.aon"
 
 rem #include std_error.src
 
