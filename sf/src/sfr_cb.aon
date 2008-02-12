@@ -6,102 +6,69 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+    setesc std_error
+    seterr std_error
 
-    rem setesc std_error
-    rem seterr std_error
+rem --- Retrieve the program path
 
-    rem --- Retrieve the program path
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
-        pgmdir$=stbl("+dir_pgm",err=*next)
+rem --- Retrieve sysinfo data
 
-    rem --- Retrieve sysinfo data
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
 
-        sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
-        dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+sysinfo",err=*next)
-        milestone=num(stbl("+milestone",err=*next),err=*next)
-        firm_id$=sysinfo.firm_id$
+rem --- Init Data
 
-    rem --- Open/Lock files
+    dim u[5],j1$(40," ")
+    l9=59
+    l=l9+1,t1$="",t0$="",t9$=""
+    headings=3
+    headings$[2]="Work Order Summary Report"
+    if pos("("=m1$)=1 then let m1$=m1$(2)
+    if pos(")"=m1$)>0 then let m1$=m1$(1,pos(")"=m1$)-1)
+    if pos("("=m2$)=1 then let m2$=m2$(2)
+    if pos(")"=m2$)>0 then let m2$=m2$(1,pos(")"=m2$)-1)
+    m2$="##"+m2$
+    m1$="##"+m1$
+    m0=len(m0$)
+    m1=len(m1$),m2=len(m2$)
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
+    call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
+    dim j2$(m1*3+m2*2,"="),j$(m1*3+m2*3,"-")
+    precision ivs01_precision
+    more=1
 
-        files=6,begfile=1,endfile=files
-        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-        files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
-        files$[2]="ivs_params",ids$[2]="IVS_PARAMS"
-        files$[3]="sfe-01",ids$[3]="SFE_WOMASTR"
-        files$[4]="sfe-02",ids$[4]="SFE_WOOPRTN"
-        files$[5]="sfs-01a",ids$[5]="SFS_PARAMS"
-        files$[6]="sfw-11",ids$[6]="SFW_TIMESORT"
-        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-        if status goto std_exit
-        ivm01_dev=channels[1]
-        ivs01a_dev=channels[2]
-        sfe01_dev=channels[3]
-        sfe02_dev=channels[4]
-        sfs01a_dev=channels[5]
-        sfw11_dev=channels[6]
+rem --- Background
 
-    rem --- Dimension string templates
+    print @(0,3),'ce',
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfw11a_dev,1,meter_num,status
 
-        dim ivm01a$:templates$[1],ivs01a$:templates$[2],sfe01a$:templates$[3],
-:       sfe02a$:templates$[4],sfs01a$:templates$[5],sfw11a$:templates$[6]
+rem --- Init Read
 
-    rem --- Retrieve parameter records
+    read (sfw11a_dev,key=firm_id$,dom=*next)
 
-        ivs01a_key$=firm_id$+"IV00"
-        find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-        sfs01a_key$=firm_id$+"SF00"
-        find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
-
-    rem --- Init Data
-
-        dim u[5],j1$(40," ")
-        l9=59
-        l=l9+1,t1$="",t0$="",t9$=""
-        headings=3
-        headings$[2]="Work Order Summary Report"
-        if pos("("=m1$)=1 then let m1$=m1$(2)
-        if pos(")"=m1$)>0 then let m1$=m1$(1,pos(")"=m1$)-1)
-        if pos("("=m2$)=1 then let m2$=m2$(2)
-        if pos(")"=m2$)>0 then let m2$=m2$(1,pos(")"=m2$)-1)
-        m2$="##"+m2$
-        m1$="##"+m1$
-        m0=len(m0$)
-        m1=len(m1$),m2=len(m2$)
-        call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
-        call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
-        dim j2$(m1*3+m2*2,"="),j$(m1*3+m2*3,"-")
-        precision ivs01_precision
-        more=1
-
-    rem --- Background
-
-        print @(0,3),'ce',
-        call pgmdir$+"adc_progress.aon","N","","","","",0,sfw11_dev,1,meter_num,status
-
-    rem --- Init Read
-
-        read (sfw11_dev,key=firm_id$,dom=*next)
+rem --- Main Read
 
     while more
 
-
-    rem --- Main Read
-
-        read record (sfw11_dev,end=done) timesheet$
-        if timesht$.firm_id$<>firm_id$ then break
+        read record (sfw11a_dev,end=done) timesheet$
+        if timesht.firm_id$<>firm_id$ then break
 
     rem --- Breaks
 
-        if timesht$.wo_no$<>t0$ then gosub work_order_tot
-        if timesht$.trans_date$<>t1$ then gosub step_sub_tot
+        if timesht.wo_no$<>t0$ then gosub work_order_tot
+        if timesht.trans_date$<>t1$ then gosub step_sub_tot
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
     rem --- Print
 
         if l>l9 then gosub sub_heading
-        print (printer_dev)@(32),fndate$(timesht$.sequance_no$+timesht$.op_seq$),@(41),timesht.complete_qty:m2$,timesht.setup_time:m2$,timesht.hrs:m2$,timesht.direct_rate:m1$,timesht.ovhd_rate:m1$,timesht.extended_amt:m1$
+        print (printer_dev)@(32),fndate$(timesht.sequance_no$+timesht.op_seq$),@(41),timesht.complete_qty:m2$,
+:       timesht.setup_time:m2$,timesht.hrs:m2$,timesht.direct_rate:m1$,timesht.ovhd_rate:m1$,timesht.extended_amt:m1$
         l1=l1+1
         l2=l2+1
         for x=0 to 5
@@ -121,7 +88,7 @@ done: rem --- End
 
 rem --- Run next overlay
 
-    update$="sfu_ba.bbx"
+    update$="sfu_ba.aon"
     width=h0,page=h
     if gl$="Y" then run pgmdir$+"glr_recap.aon"
     run update$
@@ -131,8 +98,10 @@ report_heading: rem --- Report Heading
     l=headings+3
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
     if status then exitto std_exit
-    print (printer_dev)@(41+m2-4),"Qty",@(41+m2*2-6),"Setup",@(41+m2*3+m1-7),"Direct",@(41+m2*3+m1*2-6),"Ov'hd",@(41+m2*3+m1*3-7),"Expense"
-    print (printer_dev)@(2),"Step Op Code",@(34),"Date",@(41+m2-9),"Complete",@(41+m2*2-6),"Hours",@(41+m2*3-6),"Hours",@(41+m2*3+m1-6),"Labor",@(41+m2*3+m1*2-6),"Labor",@(41+m2*3+m1*3-6),"Total"
+    print (printer_dev)@(41+m2-4),"Qty",@(41+m2*2-6),"Setup",@(41+m2*3+m1-7),"Direct",@(41+m2*3+m1*2-6),"Ov'hd",
+:   @(41+m2*3+m1*3-7),"Expense"
+    print (printer_dev)@(2),"Step Op Code",@(34),"Date",@(41+m2-9),"Complete",@(41+m2*2-6),"Hours",@(41+m2*3-6),
+:   "Hours",@(41+m2*3+m1-6),"Labor",@(41+m2*3+m1*2-6),"Labor",@(41+m2*3+m1*3-6),"Total"
     return
 
 sub_heading:   rem --- Sub Heading
@@ -159,13 +128,14 @@ work_order_tot: rem --- Work Order Total
         if l1>1 
 
             if l+2>l9 then gosub step_heading
-            print (printer_dev)@(41),j$(1,m2*3+m1*3),'lf',@(3),"Work Order ",t0$," Totals:",@(41),t[5]:m2$,t[4]:m2$,t[0]:m2$,t[1]:m1$,t[2]:m1$,t[3]:m1$
+            print (printer_dev)@(41),j$(1,m2*3+m1*3),'lf',@(3),"Work Order ",t0$," Totals:",@(41),t[5]:m2$,t[4]:m2$,t[0]:m2$,
+:           t[1]:m1$,t[2]:m1$,t[3]:m1$
             l=l+2
 
         endif
     endif
 
-    t0$=timesht$.wo_no$
+    t0$=timesht.wo_no$
     if t9$<>"" then return
     dim t[5]
     l1=0
@@ -175,7 +145,7 @@ work_order_tot: rem --- Work Order Total
     if sfe01a.wo_category$="I" 
 
         find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=label1) ivm01a$
-         sfe01a.description_01$=ivm01a.description$(1,min(desc[1],30))
+        sfe01a.description_01$=ivm01a.description$(1,min(desc[1],30))
 
     endif
 
@@ -190,7 +160,8 @@ step_sub_tot:rem --- Step Sub Total
         if l>l9 then gosub step_heading
         if l2>1 
 
-            print (printer_dev)@(41),j$(1,m2*3+m1*3),'lf',@(12),"Step ",t1$," Total: ",@(41),s[5]:m2$,s[4]:m2$,s[0]:m2$,s[1]:m1$,s[2]:m1$,s[3]:m1$
+            print (printer_dev)@(41),j$(1,m2*3+m1*3),'lf',@(12),"Step ",t1$," Total: ",@(41),s[5]:m2$,s[4]:m2$,s[0]:m2$,s[1]:m1$,
+:           s[2]:m1$,s[3]:m1$
             l=l+2
 
         endif
@@ -198,9 +169,8 @@ step_sub_tot:rem --- Step Sub Total
 
     if t9$<>"" then return
     dim s[5]
-    t1$=timesht$.trans_date$
+    t1$=timesht.trans_date$
     l2=0,x0$="   ",x1$="*** Not On File ***"
-    dim d2$(30)
     find record (sfe02_dev,key=firm_id$+"  "+t0$+"A"+t1$,dom=end1) sfe02a$
     x0$=sfe02a.op_code$
     x1$=sfe02a.code_desc$(1,18)
@@ -281,6 +251,30 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
 rem #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
@@ -306,6 +300,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
