@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Retrieve key templates
@@ -32,28 +32,28 @@ rem --- Retrieve key templates
     
 rem --- Assign Title, Record, and Offset
 
-    if rpt_seq$="W" 
+    if sequence$="W" 
         h3$="Work Order Sequence"
         x9$="  "
-        source_dev=sfe01_dev
+        source_dev=sfe01a_dev
         dim key_tpl$:sfe01a_key_tpl$
         offset=0
     endif
-    if rpt_seq$="B"
+    if sequence$="B"
         h3$="Bill Number Sequence"
         x9$="C"
         source_dev=sfe03c_dev
         dim key_tpl$:sfe03c_key_tpl$
         offset=22
     endif
-    if rpt_seq$="C"
+    if sequence$="C"
         h3$="Customer Sequence"
         x9$="B"
         source_dev=sfe03b_dev
         dim key_tpl$:sfe03b_key_tpl$
         offset=6
     endif
-    if rpt_seq$="T"
+    if sequence$="T"
         h3$="Work Order Type Sequence"
         x9$="A"
         source_dev=sfe03a_dev
@@ -71,7 +71,7 @@ rem --- Assign Title, Record, and Offset
     if beg_wo$<> "" h4$=h4$+" Beginning With "+beg_wo$ else h4$=h4$+" Beginning With First "
     if end_wo$<> "" h4$=h4$+" and Ending With "+end_wo$ else h4$=h4$+" and Ending with Last "
     
-    if enddate$<>"" then let h6$="Work In Process As Of "+fndate$(enddate$) else let h6$=""
+    if closedate$<>"" then let h6$="Work In Process As Of "+fndate$(closedate$) else let h6$=""
 
     if offset<>0
         rem --- Get the record_id_* field of sfe-03
@@ -87,7 +87,7 @@ rem --- Init Data
     dim u[1],t[1],w[11]
     more=1
     r0=121-c1-item_len-(46+m2+m1)-2
-    enddate$=sfs01a.current_year$
+    closedate$=sfs01a.current_year$
     if r0>30 then let r0=30
     headings$[2]=h3$
     headings$[3]=h4$
@@ -127,7 +127,7 @@ while more
         endif
     endif
 
-    if rpt_seq$<>"W" then 
+    if sequence$<>"W" then 
         if offset=2 data1$=key_tpl.wo_type$
         if offset=6 data1$=key_tpl.customer_id$
         if offset=22 data1$=key_tpl.warehouse_id$+key_tpl.item_id$
@@ -138,8 +138,8 @@ while more
     check_status:
         print @(40,13),key_tpl.wo_no$,
         k$=key_tpl.firm_id$+key_tpl.wo_location$+key_tpl.wo_no$
-        read record (sfe01_dev,key=k$,dom=*continue) sfe01a$
-        if enddate$<>"" and sfe01a.opened_date$>enddate$ then continue
+        read record (sfe01a_dev,key=k$,dom=*continue) sfe01a$
+        if closedate$<>"" and sfe01a.opened_date$>closedate$ then continue
         if !(pos("P"=status$)>0 and sfe01a.wo_status$="P") next
         if !(pos("Q"=status$)>0 and sfe01a.wo_status$="Q") next
         if !(pos("O"=status$)>0 and sfe01a.wo_status$="O") next
@@ -147,17 +147,17 @@ while more
         if pos("Q"=status$)=0 and sfe01a.wo_status$="Q" then continue
         if pos("O"=status$)=0 and sfe01a.wo_status$="O" then continue
         if pos("C"=status$)>0 and sfe01a.wo_status$<>"C" then continue
-        if pos("C"=status$)=0 and sfe01a.wo_status$="C" and enddate$="" then continue
-        if pos("O"=status$)>0 and pos("C"=status$)=0 and sfe01a.wo_status$="C" and sfe01a.closed_date$<=enddate$ then continue
-        if pos("P"=status$)>0 and pos("C"=status$)=0 and sfe01a.wo_status$="C" and sfe01a.closed_date$<=enddate$ then continue
-        if pos("Q"=status$)>0 and pos("C"=status$)=0 and sfe01a.wo_status$="C" and sfe01a.closed_date$<=enddate$ then continue
-        if pos("C"=status$)>0 and len(enddate$)>0 and sfe01a.closed_date$>enddate$ then continue
+        if pos("C"=status$)=0 and sfe01a.wo_status$="C" and closedate$="" then continue
+        if pos("O"=status$)>0 and pos("C"=status$)=0 and sfe01a.wo_status$="C" and sfe01a.closed_date$<=closedate$ then continue
+        if pos("P"=status$)>0 and pos("C"=status$)=0 and sfe01a.wo_status$="C" and sfe01a.closed_date$<=closedate$ then continue
+        if pos("Q"=status$)>0 and pos("C"=status$)=0 and sfe01a.wo_status$="C" and sfe01a.closed_date$<=closedate$ then continue
+        if pos("C"=status$)>0 and len(closedate$)>0 and sfe01a.closed_date$>closedate$ then continue
         
 
         if sfe01a.wo_category$="I" 
             dim d1$(60)
             d1$(1)="**Invalid Item**"
-            find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=*next) ivm01a$
+            find record (ivm01a_dev,key=firm_id$+sfe01a.item_id$,dom=*next) ivm01a$
             d1$(1)=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
         endif
 
@@ -167,8 +167,8 @@ while more
         rem --- Print Closed Values
             if pos("C"=status$)<=0 or sfe01a.wo_status$<>"C" 
                 rem --- Reduce By Closed Amount
-                if enddate$="" then let sfe01a.reserved_num=sfe01a.reserved_num-sfe01a.cls_cst_todt
-                if sfe01a.closed_date$<=enddate$ then let sfe01a.reserved_num=sfe01a.reserved_num-sfe01a.cls_cst_todt
+                if closedate$="" then let sfe01a.reserved_num=sfe01a.reserved_num-sfe01a.cls_cst_todt
+                if sfe01a.closed_date$<=closedate$ then let sfe01a.reserved_num=sfe01a.reserved_num-sfe01a.cls_cst_todt
             endif
 
 rem --- Print
@@ -198,7 +198,7 @@ wend
 done: rem --- End
 
     t9$="U"
-    if rpt_seq$<>"W" then gosub sub_total
+    if sequence$<>"W" then gosub sub_total
     if h=0 then gosub report_heading
     if l+1>l9 then gosub report_heading
     print (printer_dev)@(45+m2),j$(1,m1-1),'lf',
@@ -221,11 +221,11 @@ report_heading: rem --- Report Heading
 
 sub_heading: rem --- Sub Heading
     if l>l9 then gosub report_heading
-    if rpt_seq$="T" 
+    if sequence$="T" 
         print (printer_dev)'lf',fnh$(t0$+"   "),h5$,'lf'
         l=l+3
     endif
-    if rpt_seq$="C"
+    if sequence$="C"
         print (printer_dev)fnmask$(t0$(1,c0),ars01a.customer_output$)," ",h5$
         l=l+1
     endif
@@ -236,9 +236,9 @@ sub_total: rem --- First Sub Total
     if t0$<>"" 
         if l0>1 
             if l+2>l9 then gosub sub_heading
-            if rpt_seq$="B" then print (printer_dev)@(45),j$(1,m2-1),
+            if sequence$="B" then print (printer_dev)@(45),j$(1,m2-1),
             print (printer_dev)@(45+m2),j$(1,m1-1),'lf',
-            if rpt_seq$="B" then print (printer_dev)@(45),t[0]:m2$,
+            if sequence$="B" then print (printer_dev)@(45),t[0]:m2$,
             print (printer_dev)@(10),h9$," ",fnh$(t0$+"   "),"Total: ",@(45+m2),t[1]:m1$,'lf'
             l=l+3
         else
@@ -251,24 +251,24 @@ sub_total: rem --- First Sub Total
     t0$=data1$
     l0=0
 
-    p=pos(rpt_seq$="TC") 
+    p=pos(sequence$="TC") 
     if p=0 return 
     if p=1
         dim h5$(39); let h5$(1)="*** Not On File ***"
-        find record (sfm10_dev,key=firm_id$+"A"+t0$,dom=sub_heading) sfm10a$
+        find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=sub_heading) sfm10a$
         h5$=sfm10a.code_desc$
         gosub sub_heading
     endif 
     if p=2
         dim h5$(30); let h5$(1)="*** Not On File ***"
-        find record (arm01_dev,key=firm_id$+t0$,dom=*next) arm01a$
+        find record (arm01a_dev,key=firm_id$+t0$,dom=*next) arm01a$
         gosub sub_heading
     endif
 return
 
 closed: rem --- Process Closed Work Order Transactions
 
-    wotran_dev=sft03_dev
+    wotran_dev=sft03a_dev
     while more
         k1$=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a_wo_no$
         read (wotran_dev,key=k1$,dom=*next)
@@ -276,19 +276,19 @@ closed: rem --- Process Closed Work Order Transactions
             sft03a_key_tpl$=key(wotran_dev,end=*break)
             k5$=sft03a_key_tpl.firm_id$+sft03a_key_tpl.wo_location$+sft03a_key_tpl.wo_no$
             if k5$<>k1$ then break
-            if enddate$<>"" then if sft03a_key_tpl.trans_date$>enddate$ then break
+            if closedate$<>"" then if sft03a_key_tpl.trans_date$>closedate$ then break
             read record (wotran_dev,key=sft03a_key_tpl$) sft03a$
             sfe01a.reserved_num=sfe01a.reserved_num+sft03a.ext_cost
         wend
-        if wotran_dev=sft03_dev then let wotran_dev=sft23_dev;continue
-        if wotran_dev=sft23_dev then let wotran_dev=sft33_dev;continue
+        if wotran_dev=sft03a_dev then let wotran_dev=sft23a_dev;continue
+        if wotran_dev=sft23a_dev then let wotran_dev=sft33a_dev;continue
         break
     wend
 return
 
 not_closed: rem --- Process Work Order Transactions
 
-    wotran_dev=sft01_dev
+    wotran_dev=sft01a_dev
     while more
         k1$=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a_wo_no$
         read (wotran_dev,key=k1$,dom=*next)
@@ -296,12 +296,12 @@ not_closed: rem --- Process Work Order Transactions
             sft01a_key_tpl$=key(wotran_dev,end=*break)
             k5$=sft01a_key_tpl.firm_id$+sft01a_key_tpl.wo_location$+sft01a_key_tpl.wo_no$
             if k5$<>k1$ then break
-            if enddate$<>"" then if sft01a_key_tpl.trans_date$>enddate$ then break
+            if closedate$<>"" then if sft01a_key_tpl.trans_date$>closedate$ then break
             read record (wotran_dev,key=sft01a_key_tpl$) sft01a$
             sfe01a.reserved_num=sfe01a.reserved_num+sft01a.ext_cost
         wend
-        if wotran_dev=sft01_dev then let wotran_dev=sft21_dev; continue
-        if wotran_dev=sft21_dev then let wotran_dev=sft31_dev; continue
+        if wotran_dev=sft01a_dev then let wotran_dev=sft21a_dev; continue
+        if wotran_dev=sft21a_dev then let wotran_dev=sft31a_dev; continue
         break
     wend
 return
