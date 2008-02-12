@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -26,9 +26,9 @@ rem --- Open/Lock files
     files=12,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="bmm-08",ids$[1]="BMC_OPCODES"
-    files$[2]="gls_params",ids$[2]="GLS_PARAMS"
+    files$[2]="GLS_PARAMS",ids$[2]="GLS_PARAMS"
     files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
-    files$[4]="ivs_params",ids$[4]="IVS_PARAMS"
+    files$[4]="IVS_PARAMS",ids$[4]="IVS_PARAMS"
     files$[5]="sfe-01",ids$[5]="SFE_WOMASTR"
     files$[6]="sfe-02",ids$[6]="SFE_WOOPRTN"
     files$[7]="sfm-02",ids$[7]="SFC_OPRTNCOD"
@@ -40,18 +40,18 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    bmm08_dev=channels[1]
+    bmm08a_dev=channels[1]
     gls01a_dev=channels[2]
-    ivm01_dev=channels[3]
+    ivm01a_dev=channels[3]
     ivs01a_dev=channels[4]
-    sfe01_dev=channels[5]
-    sfe02_dev=channels[6]
-    sfm02_dev=channels[7]
-    sfm10_dev=channels[8]
+    sfe01a_dev=channels[5]
+    sfe02a_dev=channels[6]
+    sfm02a_dev=channels[7]
+    sfm10a_dev=channels[8]
     sfs01a_dev=channels[9]
-    sft01_dev=channels[10]
-    sft03_dev=channels[11]
-    sfw05_dev=channels[12]
+    sft01a_dev=channels[10]
+    sft03a_dev=channels[11]
+    sfw05a_dev=channels[12]
 
 rem --- Dimension string templates
 
@@ -64,8 +64,8 @@ rem --- Assign form input values to local variables
 
     datefrom$=Option!.getOptionData("Beginning Date")
     datethru$=Option!.getOptionData("Ending Date")
-    subbywo$=Option!.getOptionData("Sort By Work Order Type")
-    catagory$=Option!.getOptionData("Selected Work Order Category")
+    sortbywotype$=Option!.getOptionData("Sort By Work Order Type")
+    category$=Option!.getOptionData("Work Order Category")
     wostatus$=Option!.getOptionData("Work Order Status")
 
 
@@ -97,8 +97,8 @@ rem --- Init Data
     desc[2]=num(ivs01a.desc_len_02$)
     desc[3]=num(ivs01a.desc_len_03$)
     bminstalled$=sfs01a.bm_interface$
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,8,12
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,5,11
+    call pgmdir$+"adc_sizemask.aon",sfs01a.amount_mask$,m1,8,12
+    call pgmdir$+"adc_sizemask.aon",unit_mask$,m2,5,11
     m9=m1*4+m2*3
 
 rem --- Find last (prior) Period End Date
@@ -109,7 +109,7 @@ rem --- Find last (prior) Period End Date
 
 rem --- All Done
 
-    run pgmdir$+"sfr_fb.bbx"
+    run pgmdir$+"sfr_fb.aon"
 
 
 rem #include std_functions.src
