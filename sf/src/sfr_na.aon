@@ -7,23 +7,23 @@ rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 11:37:03)
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
     files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[1]="ARS_PARAMS",ids$[1]="ARS_PARAMS"
     files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
-    files$[3]="ivs_params",ids$[3]="IVS_PARAMS"
+    files$[3]="IVS_PARAMSs",ids$[3]="IVS_PARAMS"
     files$[4]="sfe-01",ids$[4]="SFE_WOMASTR"
     files$[5]="sfs-01a",ids$[5]="SFS_PARAMS"
     files$[6]="sfw-04",ids$[6]="SFW_WOXDATE"
@@ -31,11 +31,11 @@ rem --- Open/Lock files
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ars01a_dev=channels[1]
-    ivm01_dev=channels[2]
+    ivm01a_dev=channels[2]
     ivs01a_dev=channels[3]
-    sfe01_dev=channels[4]
+    sfe01a_dev=channels[4]
     sfs01a_dev=channels[5]
-    sfw04_dev=channels[6]
+    sfw04a_dev=channels[6]
 
 rem --- Dimension string templates
 
@@ -44,7 +44,7 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    date_seq$=Option!.getOptionData("Selected Date Sequence")
+    dateseq$=Option!.getOptionData("Selected Date Sequence")
     datefrom$=Option!.getOptionData("Beginning Date")
     datethru$=Option!.getOptionData("Ending Date")
     wofrom$=Option!.getOptionData("Beginning Work Order")
@@ -89,7 +89,7 @@ rem --- Init Data
 
 done: rem --- Overlay
 
-    run pgmdir$+"sfr_nb.bbx"
+    run pgmdir$+"sfr_nb.aon"
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
