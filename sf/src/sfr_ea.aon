@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -26,20 +26,20 @@ rem --- Open/Lock files
     files=19,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="apm-01",ids$[1]="APM_VENDMAST"
-    files$[2]="aps_params",ids$[2]="APS_PARAMS"
+    files$[2]="APS_PARAMS",ids$[2]="APS_PARAMS"
     files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
-    files$[4]="arc_termcode",ids$[4]="ARC_TERMCODE"
-    files$[5]="ars_params",ids$[5]="ARS_PARAMS"
+    files$[4]="ARC_TERMCODE",ids$[4]="ARC_TERMCODE"
+    files$[5]="ARS_PARAMS",ids$[5]="ARS_PARAMS"
     files$[6]="bms-01a",ids$[6]="BMS_PARAMS"
     files$[7]="glm-01",ids$[7]="GLM_ACCT"
-    files$[8]="gls_params",ids$[8]="GLS_PARAMS"
+    files$[8]="GLS_PARAMS",ids$[8]="GLS_PARAMS"
     files$[9]="ivm-01",ids$[9]="IVM_ITEMMAST"
     files$[10]="ivm-02",ids$[10]="IVM_ITEMWHSE"
-    files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
+    files$[11]="IVS_PARAMS",ids$[11]="IVS_PARAMS"
     files$[12]="prs-01a",ids$[12]="PRS_PARAMS"
     files$[13]="sfe-01",ids$[13]="SFE_WOMASTR"
     files$[14]="sfe-02",ids$[14]="SFE_WOOPRTN"
-    files$[15]="sfe-04",ids$[15]=""
+    files$[15]="sfe-04",ids$[15]="SFE_WOTRANS"
     files$[16]="sfe-22",ids$[16]="SFE_WOMATL"
     files$[17]="sfe-32",ids$[17]="SFE_WOSUBCNT"
     files$[18]="sfm-10",ids$[18]="SFC_WOTYPECD"
@@ -47,33 +47,33 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    apm01_dev=channels[1]
+    apm01a_dev=channels[1]
     aps01a_dev=channels[2]
-    arm01_dev=channels[3]
-    arm10_dev=channels[4]
+    arm01a_dev=channels[3]
+    arm10d_dev=channels[4]
     ars01a_dev=channels[5]
     bms01a_dev=channels[6]
-    glm01_dev=channels[7]
+    glm01a_dev=channels[7]
     gls01a_dev=channels[8]
-    ivm01_dev=channels[9]
-    ivm02_dev=channels[10]
+    ivm01a_dev=channels[9]
+    ivm02a_dev=channels[10]
     ivs01a_dev=channels[11]
     prs01a_dev=channels[12]
-    sfe01_dev=channels[13]
-    sfe02_dev=channels[14]
-    sfe04_dev=channels[15]
-    sfe22_dev=channels[16]
-    sfe32_dev=channels[17]
-    sfm10_dev=channels[18]
+    sfe01a_dev=channels[13]
+    sfe02a_dev=channels[14]
+    sfe04b_dev=channels[15]
+    sfe22a_dev=channels[16]
+    sfe32a_dev=channels[17]
+    sfm10a_dev=channels[18]
     sfs01a_dev=channels[19]
 
 rem --- Dimension string templates
 
     dim apm01a$:templates$[1],aps01a$:templates$[2],arm01a$:templates$[3],
-:       arm10a$:templates$[4],ars01a$:templates$[5],bms01a$:templates$[6],
+:       arm10d$:templates$[4],ars01a$:templates$[5],bms01a$:templates$[6],
 :       glm01a$:templates$[7],gls01a$:templates$[8],ivm01a$:templates$[9],
 :       ivm02a$:templates$[10],ivs01a$:templates$[11],prs01a$:templates$[12],
-:       sfe01a$:templates$[13],sfe02a$:templates$[14],sfe04a$:templates$[15],
+:       sfe01a$:templates$[13],sfe02a$:templates$[14],sfe04b$:templates$[15],
 :       sfe22a$:templates$[16],sfe32a$:templates$[17],sfm10a$:templates$[18],
 :       sfs01a$:templates$[19]
 
@@ -115,12 +115,12 @@ rem --- Parameters
     if op$="Y" then let p8=num(ars01a.cust_size$)
 label1:
     if po$="Y"
-        find record (sys01_dev,key=firm_id$+"AP00",dom=label2) aps01a$
+        find record (aps01a_dev,key=firm_id$+"AP00",dom=label2) aps01a$
         p7=num(aps01a.vendor_size$)
     endif
 label2:
     if pr$="Y"
-        find record (sys01_dev,key=firm_id$+"PR00",dom=label3) prs01a$
+        find record (prs01a_dev,key=firm_id$+"PR00",dom=label3) prs01a$
         p6=num(prs01a.empl_no_len$)
     endif
 label3:
@@ -129,8 +129,8 @@ label3:
     dim p[1],desc[3]
     p[0]=num(ivs01a.item_no_len$)
     p[1]=num(ivs01a.precision$)
-    m1=len(m1$)
-    m2=len(m2$),m3=len(m3$),ivs01_precision=p[1]
+    m1=len(sfs01a.amount_mask$)
+    m2=len(sfs01a.unit_mask$),m3=len(sfs01a.rate_mask$),ivs01_precision=p[1]
     
     desc[1]=num(ivs01a.desc_len_01$)
     desc[2]=num(ivs01a.desc_len_02$)
@@ -148,7 +148,7 @@ rem --- Init Data
 
 done: rem --- Overlay
 
-    run pgmdir$+"sfr_eb.bbx"
+    run pgmdir$+"sfr_eb.aon"
 
 rem #include std_error.src
 
