@@ -6,64 +6,21 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-
     seterr std_error
     setesc std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
     precision ivs01_precision
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Open/Lock files
-
-    files=10,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
-    files$[2]="arc_distcode",ids$[2]="ARC_DISTCODE"
-    files$[3]="glm-01",ids$[3]="GLM_ACCT"
-    files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
-    files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
-    files$[6]="ivs_params",ids$[6]="IVS_PARAMS"
-    files$[7]="sfe-01",ids$[7]="SFE_WOMASTR"
-    files$[8]="sfe-04",ids$[8]="SFE_WOTRANS"
-    files$[9]="sfm-10",ids$[9]="SFC_WOTYPECD"
-    files$[10]="sfs-01a",ids$[10]="SFS_PARAMS"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    arm01_dev=channels[1]
-    arm10_dev=channels[2]
-    glm01_dev=channels[3]
-    ivm01_dev=channels[4]
-    ivm02_dev=channels[5]
-    ivs01a_dev=channels[6]
-    sfe01_dev=channels[7]
-    sfe04_dev=channels[8]
-    sfm10_dev=channels[9]
-    sfs01a_dev=channels[10]
-
-rem --- Dimension string templates
-
-    dim arm01a$:templates$[1],arm10a$:templates$[2],glm01a$:templates$[3],
-:       ivm01a$:templates$[4],ivm02a$:templates$[5],ivs01a$:templates$[6],
-:       sfe01a$:templates$[7],sfe04a$:templates$[8],sfm10a$:templates$[9],
-:       sfs01a$:templates$[10]
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sfs01a_key$=firm_id$+"SF00"
-    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
 
     on o9 goto init_data,print_cl_part
 
@@ -72,41 +29,57 @@ init_data: rem --- Init Data
     dim y9$(21*6)
     y9$(1)="Work in Process"
     y9$(22)="Close to Account",y9$(43)="Direct Variance",y9$(64)="Overhead Variance",y9$(85)="Material Variance",y9$(106)="Subcontract Variance"
+    more=1
+    flag=0
 
-rem --- Additional File Opens
+rem --- Retrieve key templates
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOTRANS","PRIMARY",sfe04b_key_tpl$,rd_table_chans$[all],status$
 
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status then goto std_exit
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04b_dev,1,meter_num,status
 
 rem --- Init Read
 
-    more=1
-    k$=firm_id$+"  "+"B"+p4$
-    read (sfe04_dev,key=firm_id$+"  "+"B"+p4$,dom=main_read)
-    goto brks
+    dim sfe04b_key$:sfe04b_key_tpl$
+    sfe04b_key$=firm_id$+"  "+"B"+p4$
+    read (sfe04b_dev,key=sfe04b_key$,dom=main_read)
+    flag=1
+
+main_read: rem --- Main Read
 
     while more
 
-    main_read: rem --- Main Read
+    rem --- check flag and execute code inside if..endif
 
-        k$=key(sfe04_dev,end=done)
-        if k$(1,5)<>firm_id$+"  "+"B" then break
-        read (sfe04_dev)
+        if !flag
 
-    brks: rem --- Breaks
+            sfe04b_key$=key(sfe04b_dev,end=done)
+            if sfe04b_key.firm_id$+sfe04b_key.wo_location$+sfe04b_key.record_id_b$<>firm_id$+"  "+"B" then break
+            read (sfe04b_dev)
+
+        endif
+
+    rem --- reset flag so that next time while..wend loop executes from beginning
+
+    reset_flg:
+
+        flag=0
+
+    rem --- Breaks
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
     rem --- Additional Reads
 
-        read record (sfe01_dev,key=k$(1,4)+k$(6,7),dom=*continue) sfe01a$
+        read record (sfe01a_dev,key=k$(1,4)+k$(6,7),dom=*continue) sfe01a$
         if sfs01a.ar_interface$="Y"
             let arm01a.cust_name$="*** Not On File ***"
-            read record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
+            read record (arm01a_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
         endif
 
     rem --- Set Flags...
@@ -115,29 +88,29 @@ rem --- Init Read
         z1$="Y",z2$="Y",z3$="",z4$="",z5$="MOS",z6$="Y"
         o9$="sfr_eb.bbx"
         o9=1
-        run pgmdir$+"sfr_xa.bbx"; rem returns to 2000
+        run pgmdir$+"sfr_xa.bbx"
 
     print_cl_part: rem --- Print The Closed Part
 
-        dim b[9],c[5]
-        b[0]=sfe01a.sch_prod_qty
-        b[1]=sfe01a.qty_cls_todt
-        b[2]=sfe01a.cls_inp_qty
-        b[5]=u[0]
-        b[6]=u[1]
-        b[7]=sfe01a.cls_cst_todt
-        b[8]=b[6]-b[7]
-        b[9]=sfe01a.cls_inp_qty*sfe01a.closed_cost
+        dim c[5]
+        ivm01a.conv_factor=sfe01a.sch_prod_qty
+        ivm01a.weight=sfe01a.qty_cls_todt
+        ivm01a.msrp=sfe01a.cls_inp_qty
+        ivm01a.safety_stock=u[0]
+        ivm01a.eoq=u[1]
+        ivm01a.lead_time=sfe01a.cls_cst_todt
+        ivm01a.reserved_num=ivm01a.eoq-ivm01a.lead_time
+        ivm01a.dealer_num=sfe01a.cls_inp_qty*sfe01a.closed_cost
 
-        if sfe01a.complete$<>"Y" then let b[3]=b[0]-(b[1]+b[2])
+        if sfe01a.complete$<>"Y" then let ivm01a.maximum_qty=ivm01a.conv_factor-(ivm01a.weight+ivm01a.msrp)
         if sfe01a.wo_category$="I" then
-            find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=label1) ivm01a2$
+            find record (ivm01a_dev,key=firm_id$+sfe01a.item_id$,dom=label1) ivm01a$
             if r9$<>"Y" then
-                let y2$=ivm01a2.gl_inv_acct$
+                let y2$=ivm01a.gl_inv_acct$
             else
-                find record (ivm02_dev,key=firm_id$+sfe01a.warehouse_id$+sfe01a.item_id$,dom=label1) ivm02a$
+                find record (ivm02a_dev,key=firm_id$+sfe01a.warehouse_id$+sfe01a.item_id$,dom=label1) ivm02a$
                 b9$=ivm02a.dist_code$
-                find record (arm10_dev,key=firm_id$+"D"+b9$,dom=label1) arm10d$
+                find record (arm10d_dev,key=firm_id$+"D"+b9$,dom=label1) arm10d$
                 y2$=arm10d.gl_inv_acct$; rem "Set the closed to account...
             endif
         endif
@@ -145,9 +118,9 @@ rem --- Init Read
     label1:
 
         sfm10a.code_desc$="*** Not On File ***"
-        find record (sfm10_dev,key=firm_id$+"A"+sfe01a.wo_type$,dom=*next) sfm10a$
+        find record (sfm10a_dev,key=firm_id$+"A"+sfe01a.wo_type$,dom=*next) sfm10a$
         if sfe01a.wo_category$="I" then let sfm10a.gl_close_to$=y2$
-        if l+11+sgn(b[3]-1)*2+pos(sfm10a.std_act_flag$="A")*3>0 then gosub report_heading
+        if l+11+sgn(ivm01a.maximum_qty-1)*2+pos(sfm10a.std_act_flag$="A")*3>0 then gosub report_heading
         print (printer_dev)'lf',"**** Closed Detail ****",
 :                       @(29),"Closed Date: ",fndate$(sfe01a.cls_inp_date$),
 :                       @(55),"WO Type: ",sfm10a.code_desc$,
@@ -162,18 +135,18 @@ rem --- Init Read
 :                      @(30),"Still Open",@(44),"lete?",@(50),"Unit Cost",
 :                      @(64),"@ Std",@(72),"Std/Actual",@(85),"@ Act",
 :                      @(97),"Closed",@(109),"WIP Value",@(120),"Close Value",'lf'
-        print (printer_dev)@(10-m2),b[0]:m2$,@(18-m2),b[1]:m2$,@(29-m2),b[2]:m2$,
-:                      @(38-m2),b[3]:m2$,@(45),sfe01a.complete_flg$,@(60-m1),b[4]:m1$,
-:                      @(73-m1),b[5]:m1$,@(75),stdact_flag$,@(91-m1),b[6]:m1$,
-:                      @(105-m1),b[7]:m1$,@(119-m1),b[8]:m1$,@(132-m1),b[9]:m1$
+        print (printer_dev)@(10-m2),ivm01a.conv_factor:m2$,@(18-m2),ivm01a.weight:m2$,@(29-m2),ivm01a.msrp:m2$,
+:                      @(38-m2),ivm01a.maximum_qty:m2$,@(45),sfe01a.complete_flg$,@(60-m1),b[4]:m1$,
+:                      @(73-m1),ivm01a.safety_stock:m1$,@(75),stdact_flag$,@(91-m1),ivm01a.eoq:m1$,
+:                      @(105-m1),ivm01a.lead_time:m1$,@(119-m1),ivm01a.reserved_num:m1$,@(132-m1),ivm01a.dealer_num:m1$
 
-        if b[2]<>0 and b[2]<>1 then
-            b0=ivm01a2.order_point
-            if b[0]<>0 then let b1=b[5]/b[0] else let b1=0
-            if b[0]<>0 then let b2=b[6]/b[0] else let b2=0
-            if b[1]<>0 then let b3=b[7]/b[1] else let b3=0
-            if b[2]+b[3]<>0 then let b4=b[8]/(b[2]+b[3]) else let b4=0
-            if b[2]<>0 then let b5=b[9]/b[2] else let b5=0
+        if ivm01a.msrp<>0 and ivm01a.msrp<>1 then
+            b0=ivm01a.order_point
+            if ivm01a.conv_factor<>0 then let b1=ivm01a.safety_stock/ivm01a.conv_factor else let b1=0
+            if ivm01a.conv_factor<>0 then let b2=ivm01a.eoq/ivm01a.conv_factor else let b2=0
+            if ivm01a.weight<>0 then let b3=ivm01a.lead_time/ivm01a.weight else let b3=0
+            if ivm01a.msrp+ivm01a.maximum_qty<>0 then let b4=ivm01a.reserved_num/(ivm01a.msrp+ivm01a.maximum_qty) else let b4=0
+            if ivm01a.msrp<>0 then let b5=ivm01a.dealer_num/ivm01a.msrp else let b5=0
             print (printer_dev)@(36),"Per Unit:",@(60-m3),b0:m3$,@(73-m3),b1:m3$,
 :                          @(75),stdact_flag$,@(91-m3),b2:m3$,@(105-m3),b3:m3$,
 :                          @(119-m3),b4:m3$,@(132-m3),b5:m3$,
@@ -181,7 +154,7 @@ rem --- Init Read
 
     rem --- Calculate Postings
 
-        c[0]=-b[8]
+        c[0]=-ivm01a.reserved_num
         c[1]=sfe01a.cls_inp_qty*sfe01a.closed_cost
 
         if sfe01a.complete_flg$<>"Y"
@@ -192,7 +165,7 @@ rem --- Init Read
 
             if sfm10a.std_act_flag="A" then
 
-                let c[1]=b[8]
+                let c[1]=ivm01a.reserved_num
 
             else
 
@@ -241,7 +214,7 @@ rem --- Init Read
                 precision 2
                 c[2]=(u[2]-u[3])*1
                 c[4]=(u[5]-u[4])*1,c[5]=(u[7]-u[6])*1
-                c[3]=(b[6]-prorte-(c[2]+c[4]+c[5]))*1
+                c[3]=(ivm01a.eoq-prorte-(c[2]+c[4]+c[5]))*1
                 c[0]=c[0]*1
                 c[1]=c[1]*1
 
@@ -274,7 +247,7 @@ rem --- Init Read
                     let g9$=sfm10a.gl_pur_acct$
                 endif
 
-                find (glm01_dev,key=firm_id$+g9$,dom=*next)*,g1$(1)
+                find (glm01a_dev,key=firm_id$+g9$,dom=*next)*,g1$(1)
 
                 print (printer_dev)fnmask$(g9$(1,g3),g3$),"  ",g1$,
                 if c[x]>0 then
@@ -319,7 +292,7 @@ report_heading: rem --- Report Heading
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
     if status then exitto std_exit
     if sfe01a.wo_category$="I" then
-        find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=*next) ivm01a$
+        find record (ivm01a_dev,key=firm_id$+sfe01a.item_id$,dom=*next) ivm01a$
     endif
 
     print (printer_dev)"WO #: ",sfe01a.wo_no$,@(56),"Type: ",sfe01a.wo_type$,
@@ -351,7 +324,7 @@ report_heading: rem --- Report Heading
     if pos(sfe01a.wo_category$="IN")>0 then
         print (printer_dev)@(17),"UM: ",sfe10a.unit_measure$,
     endif
-    print (printer_dev)"Warehouse: ",sfe01a.warehouse_id$,@(56),"Prod Qty: ",a[0]:m2$,"  Completed: ",sfe01a.qty_cls_todt:m2$,
+    print (printer_dev)"Warehouse: ",sfe01a.warehouse_id$,@(56),"Prod Qty: ",sfe01a.sch_prod_qty:m2$,"  Completed: ",sfe01a.qty_cls_todt:m2$,
 :           @(105),"Last Activity: ",fndate$(sfe01a.lstact_date$)
     if sfe01a.cls_inp_qty>0 then
         print (printer_dev)'lf',@(1),"****This Close Date: ",fndate$(sfe01a.cls_inp_date$),"     Complete? ",sfe01a.complete_flg$,
