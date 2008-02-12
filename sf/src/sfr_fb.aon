@@ -11,53 +11,15 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Open/Lock files
-
-    files=8,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="bmm-08",ids$[1]="BMC_OPCODES"
-    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
-    files$[3]="ivs_params",ids$[3]="IVS_PARAMS"
-    files$[4]="sfe-01",ids$[4]="SFE_WOMASTR"
-    files$[5]="sfm-02",ids$[5]="SFC_OPRTNCOD"
-    files$[6]="sfm-10",ids$[6]="SFC_WOTYPECD"
-    files$[7]="sfs-01a",ids$[7]="SFS_PARAMS"
-    files$[8]="sfw-05",ids$[8]="SFW_LABOREFF"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    bmm08_dev=channels[1]
-    ivm01_dev=channels[2]
-    ivs01a_dev=channels[3]
-    sfe01_dev=channels[4]
-    sfm02_dev=channels[5]
-    sfm10_dev=channels[6]
-    sfs01a_dev=channels[7]
-    sfw05_dev=channels[8]
-
-rem --- Dimension string templates
-
-    dim bmm08a$:templates$[1],ivm01a$:templates$[2],ivs01a$:templates$[3],
-:       sfe01a$:templates$[4],sfm02a$:templates$[5],sfm10a$:templates$[6],
-:       sfs01a$:templates$[7],sfw05a$:templates$[8]
-
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sfs01a_key$=firm_id$+"SF00"
-    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
 
 rem --- Init Data
 
@@ -78,32 +40,38 @@ rem --- Init Data
     if status<>0 then goto std_exit
     more=1
 
+rem --- Retrieve key templates
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFW_LABOREFF","PRIMARY",sfw05a_key_tpl$,rd_table_chans$[all],status$
+
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,sfw05_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfw05a_dev,1,meter_num,status
 
 rem --- Init Read
 
-    read (sfw05_dev,key=firm_id$,dom=*next)
+    read (sfw05a_dev,key=firm_id$,dom=*next)
 
  rem --- Main Read
 
+    dim sfw05a_key$:sfw05a_key_tpl$
+
     while more
 
-        k$=key(sfw05_dev,end=*break)
-        if pos(firm_id$=k$)<>1 then break
-        if k$(3,3)<>t1$ then gosub op_code_subtot
-        if subbywo$="Y" then if k$(6,2)<>t2$ then gosub wo_type_code
-        read record (sfw05_dev,key=k$) sfw05a$
+        sfw05a_key$=key(sfw05a_dev,end=*break)
+        if pos(firm_id$=sfw05a_key$)<>1 then break
+        if sfw05a_key.op_code$<>t1$ then gosub op_code_subtot
+        if wotype$="Y" then if sfw05a_key.wo_type$<>t2$ then gosub wo_type_code
+        read record (sfw05a_dev,key=sfw05a_key$) sfw05a$
 
     rem --- Breaks
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-        find record (sfe01_dev,key=firm_id$+"  "+sfw05a.wo_no$) sfe01a$
+        find record (sfe01a_dev,key=firm_id$+"  "+sfw05a.wo_no$) sfe01a$
         if sfe01a.wo_category$="I"
             ivm01a.item_desc$(1)="Not On File"
-            find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=*break) ivm01a$
+            find record (ivm01a_dev,key=firm_id$+sfe01a.item_id$,dom=*break) ivm01a$
             ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
         endif 
 
@@ -111,7 +79,9 @@ rem --- Init Read
 
         if l+2>l9 then gosub sub_head
         if sfw01a.actual_hrs<>0 then let variance=sfw01a.std_hrs*100/sfw01a.actual_hrs else let variance=0
-        print (printer_dev)sfw05a.wo_number$,"  ",sfe01a.wo_type$,@(99-m9),fndate$(sfw05a.reserved_str$(1)),"  ",fndate$(sfw05a.reserved_str$(4)),@(117-m9),sfw05a.std_hrs:m2$,sfw05a.std_dir_tot:m1$,sfw05a.std_ovhd_tot:m1$," ",sfw05a.actual_hrs:m2$,sfw05a.actual_dir_tot:m1$,sfw05a.actual_ovhd_tot:m1$,sfw05a.std_hrs-sfw05a.actual_hrs:m2$,
+        print (printer_dev)sfw05a.wo_number$,"  ",sfe01a.wo_type$,@(99-m9),fndate$(sfw05a.reserved_str$(1)),"  ",
+:       fndate$(sfw05a.reserved_str$(4)),@(117-m9),sfw05a.std_hrs:m2$,sfw05a.std_dir_tot:m1$,sfw05a.std_ovhd_tot:m1$," ",
+:       sfw05a.actual_hrs:m2$,sfw05a.actual_dir_tot:m1$,sfw05a.actual_ovhd_tot:m1$,sfw05a.std_hrs-sfw05a.actual_hrs:m2$,
         if sfw01a.actual_hrs<>0 then print (printer_dev)variance:"#####.00%", else print (printer_dev)"********",
         if sfe01a.wo_status$="C" then print (printer_dev)"*Cmp*" else print (printer_dev)""
         if sfe01a.wo_category$<>"I" then print (printer_dev)@(2),sfe01a.description$
@@ -155,7 +125,6 @@ report_heading: rem --- Report Heading
 
 sub_head: rem --- Sub Heading
 
-
     if l+3>l9 then gosub report_heading
     print (printer_dev)""
     print (printer_dev)"Operation: ",t1$,"  ",opdesc$
@@ -192,7 +161,7 @@ op_code_subtot: rem --- Op Codes Subtotals Here
 
     if t1$<>"" 
             
-        if subbywo$="Y" 
+        if wotype$="Y" 
             if t9$="" then let t9$="S"
             gosub wo_type_code
         endif
@@ -213,8 +182,8 @@ op_code_subtot: rem --- Op Codes Subtotals Here
     if t9$<>"" then return
     dim s[7]
     t1$=k$(3,3)
-    if bminstalled$="Y" then find record (bmm08_dev,key=firm_id$+t1$,dom=label3) bmm08a$
-    if bminstalled$<>"Y" then find record (sfm02_dev,key=firm_id$+t1$,dom=*next) sfm02a$
+    if bminstalled$="Y" then find record (bmm08a_dev,key=firm_id$+t1$,dom=label3) bmm08a$
+    if bminstalled$<>"Y" then find record (sfm02a_dev,key=firm_id$+t1$,dom=*next) sfm02a$
 
 label3:
 
@@ -245,7 +214,7 @@ wo_type_code:  rem --- W/O Type Codes Here
     if l2<=1
         dim r[7]
         t2$=k$(6,2)
-        find record (sfm10_dev,key=firm_id$+"A"+t2$,dom=*next) sfm10a$
+        find record (sfm10a_dev,key=firm_id$+"A"+t2$,dom=*next) sfm10a$
         typedesc$=sfm10a.code_desc(6,pos("   "=sfm10a.code_desc$+"   ")-1)
         gosub label2
     endif
