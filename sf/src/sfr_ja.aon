@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -26,13 +26,13 @@ rem --- Open/Lock files
     files=22,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="apm-01",ids$[1]="APM_VENDMAST"
-    files$[2]="aps_params",ids$[2]="APS_PARAMS"
+    files$[2]="APS_PARAMS",ids$[2]="APS_PARAMS"
     files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
-    files$[4]="ars_params",ids$[4]="ARS_PARAMS"
-    files$[5]="gls_params",ids$[5]="GLS_PARAMS"
+    files$[4]="ARS_PARAMS",ids$[4]="ARS_PARAMS"
+    files$[5]="GLS_PARAMS",ids$[5]="GLS_PARAMS"
     files$[6]="ivm-01",ids$[6]="IVM_ITEMMAST"
-    files$[7]="ivc_whsecode",ids$[7]="IVC_WHSECODE"
-    files$[8]="ivs_params",ids$[8]="IVS_PARAMS"
+    files$[7]="IVC_WHSECODE",ids$[7]="IVC_WHSECODE"
+    files$[8]="IVS_PARAMS",ids$[8]="IVS_PARAMS"
     files$[9]="prs-01a",ids$[9]="PRS_PARAMS"
     files$[10]="sfe-01",ids$[10]="SFE_WOMASTR"
     files$[11]="sfe-03",ids$[11]="SFX_TYPEWO"
@@ -50,28 +50,28 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    apm01_dev=channels[1]
+    apm01a_dev=channels[1]
     aps01a_dev=channels[2]
-    arm01_dev=channels[3]
+    arm01a_dev=channels[3]
     ars01a_dev=channels[4]
     gls01a_dev=channels[5]
-    ivm01_dev=channels[6]
-    ivm10_dev=channels[7]
+    ivm01a_dev=channels[6]
+    ivm10a_dev=channels[7]
     ivs01a_dev=channels[8]
     prs01a_dev=channels[9]
-    sfe01_dev=channels[10]
-    sfe03_dev=channels[11]
-    sfm07_dev=channels[12]
-    sfm10_dev=channels[13]
+    sfe01a_dev=channels[10]
+    sfe03a_dev=channels[11]
+    sfm07a_dev=channels[12]
+    sfm10a_dev=channels[13]
     sfs01a_dev=channels[14]
-    sft01_dev=channels[15]
-    sft03_dev=channels[16]
-    sft11_dev=channels[17]
-    sft12_dev=channels[18]
-    sft21_dev=channels[19]
-    sft23_dev=channels[20]
-    sft31_dev=channels[21]
-    sft33_dev=channels[22]
+    sft01a_dev=channels[15]
+    sft03a_dev=channels[16]
+    sft11a_dev=channels[17]
+    sft12a_dev=channels[18]
+    sft21a_dev=channels[19]
+    sft23a_dev=channels[20]
+    sft31a_dev=channels[21]
+    sft33a_dev=channels[22]
 
 rem --- Dimension string templates
 
@@ -86,14 +86,14 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    sel_rep_seq$=Option!.getOptionData("Selected Report Sequence")
+    sequence$=Option!.getOptionData("Selected Report Sequence")
     whse$=Option!.getOptionData("Warehouse Code")
-    wo_from$=Option!.getOptionData("Beginning Work Order")
-    wo_thru$=Option!.getOptionData("Ending Work Order")
+    wofrom$=Option!.getOptionData("Beginning Work Order")
+    wothru$=Option!.getOptionData("Ending Work Order")
     category$=Option!.getOptionData("Selected Work Order Category")
-    date_from$=Option!.getOptionData("Beginning Transaction Date")
-    date_thru$=Option!.getOptionData("Ending Transaction Date")
-    trans_type$=Option!.getOptionData("Transaction Type")
+    datefrom$=Option!.getOptionData("Beginning Transaction Date")
+    datethru$=Option!.getOptionData("Ending Transaction Date")
+    transtype$=Option!.getOptionData("Transaction Type")
 
 rem --- Retrieve parameter records
 
@@ -161,9 +161,61 @@ rem --- Init Data
     desc[2]=num(ivs01a.desc_len_02$)
     desc[3]=num(ivs01a.desc_len_03$)
 
+rem --- Retrieve key templates
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",sfe01a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFX_TYPEWO","PRIMARY",sfe03a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFX_CUSTWO","PRIMARY",sfe03b_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFX_ITEMWO","PRIMARY",sfe03c_key_tpl$,rd_table_chans$[all],status$
+
+rem --- Options
+
+    action=pos(sequence$="WBCT")-1
+    switch action
+        case 0
+            h3$="Work Order Sequence"
+            rec$="  ",chan_dev=sfe01a_dev,offset=0
+            beging$=wofrom$
+            ending$=wothru$
+            dim key_tpl$:sfe01a_key_tpl$
+            break
+        case 1
+            h3$="Bill Number Sequence"
+            rec$="C",chan_dev=sfe03c_dev,offset=22
+            beging$=billfrom$
+            ending$=billthru$
+            dim key_tpl$:sfe03c_key_tpl$
+            break
+        case 2
+            h3$="Customer Sequence"
+            rec$="B",chan_dev=sfe03b_dev,offset=6
+            beging$=custfrom$
+            ending$=custthru$
+            dim key_tpl$:sfe03b_key_tpl$
+            break
+        case 3
+            h3$="Work Order Type Sequence"
+            rec$="A",chan_dev=sfe03a_dev,offset=2
+            beging$=wotfrom$
+            ending$=wotthru$
+            dim key_tpl$:sfe03a_key_tpl$
+            break
+        case default
+            break
+    swend
+
+rem --- Get the record_id_* field of sfe-03
+
+    if offset<>0
+        dim chan_dev_tmpl$:tmpl(chan_dev)
+        let fields$=fattr(chan_dev_tmpl$,"")
+        let f2$=fields$(pos($0A$=fields$)+1)
+        f2$=f2$(1,pos($0A$=f2$)-1)
+    endif
+
 done: rem --- Overlay
 
-    run pgmdir$+"sfr_jb.bbx"
+    run pgmdir$+"sfr_jb.aon"
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
