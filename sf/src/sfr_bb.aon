@@ -11,73 +11,19 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
     precision ivs01_precision
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Open/Lock files
-
-    files=15,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
-    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
-    files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-    files$[4]="ivc_whsecode",ids$[4]="IVC_WHSECODE"
-    files$[5]="ivs_params",ids$[5]="IVS_PARAMS"
-    files$[6]="sfe-01",ids$[6]="SFE_WOMASTR"
-    files$[7]="sfe-04",ids$[7]="SFE_WOTRANS"
-    files$[8]="sfe-13",ids$[8]="SFE_WOMATHDR"
-    files$[9]="sfe-15",ids$[9]="SFE_WOMATISH"
-    files$[10]="sfe-22",ids$[10]="SFE_WOMATL"
-    files$[11]="sfe-23",ids$[11]="SFE_WOMATDTL"
-    files$[12]="sfe-25",ids$[12]="SFE_WOMATISD"
-    files$[13]="sfm-10",ids$[13]="SFC_WOTYPECD"
-    files$[14]="sfs-01a",ids$[14]="SFS_PARAMS"
-    files$[15]="sfw-13",ids$[15]="SFW_PICKLCTN"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    arm01_dev=channels[1]
-    ivm01_dev=channels[2]
-    ivm02_dev=channels[3]
-    ivm10_dev=channels[4]
-    ivs01a_dev=channels[5]
-    sfe01_dev=channels[6]
-    sfe04_dev=channels[7]
-    sfe13_dev=channels[8]
-    sfe15_dev=channels[9]
-    sfe22_dev=channels[10]
-    sfe23_dev=channels[11]
-    sfe25_dev=channels[12]
-    sfm10_dev=channels[13]
-    sfs01a_dev=channels[14]
-    sfw13_dev=channels[15]
-
-rem --- Dimension string templates
-
-    dim arm01a$:templates$[1],ivm01a$:templates$[2],ivm02a$:templates$[3],
-:       ivm10a$:templates$[4],ivs01a$:templates$[5],sfe01a$:templates$[6],
-:       sfe04a$:templates$[7],sfe13a$:templates$[8],sfe15a$:templates$[9],
-:       sfe22a$:templates$[10],sfe23a$:templates$[11],sfe25a$:templates$[12],
-:       sfm10a$:templates$[13],sfs01a$:templates$[14],sfw13a$:templates$[15]
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    sfs01a_key$=firm_id$+"SF00"
-    find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
 
 rem --- Init Data
 
-    dim w[4],b[11],wo[13]
     m9=80-m2*3
     if m2+23+p[0]>m9 then let splitline=1
     if splitline or m2+23+p[0]<m9-m2 then let m9=m9-m2,m9$="Y"
@@ -95,11 +41,11 @@ rem --- Additional File Opens
 rem --- Background
 
     print @(1,10),'cl',@(1,11),'cl',@(1,12),'cl'
-    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04_dev,1,meter_num,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04c_dev,1,meter_num,ignore_status
 
 rem --- Init Read
 
-    read (sfe04_dev,key=firm_id$+"  "+"C",dom=*next)
+    read (sfe04c_dev,key=firm_id$+"  "+"C",dom=*next)
 
 rem --- Main Read
 
@@ -108,23 +54,22 @@ rem --- Main Read
         old_op_step$=""
         stepnum=1
 
-            while more
+        while more
 
-                k$=key(sfe04_dev,end=done)
-                if k$(1,5)<>firm_id$+"  "+"C"
-                    flag=1
-                    break
-                endif
+            sfe04c_key$=key(sfe04c_dev,end=done)
+            if sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.record_id_c$<>firm_id$+"  "+"C"
+                flag=1
+                break
+            endif
+            read (sfe04c_dev)
 
-                read (sfe04_dev)
+        rem --- Get Work Order
 
-                rem --- Get Work Order
+            read record (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$+"000",dom=*continue) sfe13a$
+            read record (sfe01_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*continue) sfe01a$
+            find (sfe04c_dev2,key=(sfe13a.firm_id$+sfe13a.wo_location$)+"D"+sfe13a.wo_no$,dom=*break)
 
-                read record (sfe13_dev,key=k$(1,4)+k$(6)+"000",dom=*continue) sfe13a$
-                read record (sfe01_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*continue) sfe01a$
-                find (sfe04_dev2,key=(sfe13a.firm_id$+sfe13a.wo_location$)+"D"+sfe13a.wo_no$,dom=*break)
-
-            wend
+        wend
 
         if flag then break
 
@@ -132,22 +77,22 @@ rem --- Main Read
 
         arm01a.cust_name$="*** Not On File ***"
         if pos(" "<> sfe01a.customer_id$)<>0
-            find record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
+            find record (arm01a_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
         endif
 
     rem --- Find Warehouse
 
         if y1$<>sfe13a.warehouse_id$ then
             ivm10c.short_name$="*** Not On File ***"
-            find record (ivm10_dev,key=firm_id$+"C"+sfe13a.warehouse_id$,dom=label1) ivm10c$
+            find record (ivm10c_dev,key=firm_id$+"C"+sfe13a.warehouse_id$,dom=label1) ivm10c$
             y1$=sfe13a.warehouse_id$
         endif
 
     label1: rem --- Type
 
-        if z1$<>sfe13a.FIRM_ID$ then
+        if z1$<>sfe13a.firm_id$ then
             sfm10a.code_desc$="**** Not On File ****"
-            find record (sfm10_dev,key=firm_id$+"A"+sfe13a.firm_id$,dom=*next) sfm10a$
+            find record (sfm10a_dev,key=firm_id$+"A"+sfe13a.firm_id$,dom=*next) sfm10a$
         endif
 
     rem --- Category
@@ -160,30 +105,27 @@ rem --- Main Read
 
     rem --- Details Here
 
-        read (sfw13_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*next)
+        read (sfw13a_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*next)
         head_comm$=""
         gosub get_wo_hdr_cmnts
 
+        dim sfw13a_key$:sfw13a_key_tpl$
         while more
-
-            k$=key(sfw13_dev,end=*break)
-            if k$(1,11)<>sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$ then break
+            sfw13a_key$=key(sfw13a_dev,end=*break)
+            if sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$<>sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$ then break
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            op_step$=k$(12,3)
-            k$=k$(1,11)+k$(25)
-            read (sfw13_dev)
-            read record (sfe23_dev,key=sfw13a_key$,dom=*continue) sfe23b$
-            ivm01a1.item_desc$="*** Not On File ***"
-            find record (ivm01_dev,key=firm_id$+sfe23a.item_id$,dom=*next) ivm01a1$
-            dx$=d1$
-            dim i[4]
-            find record (ivm02_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*next) ivm02a$
+            op_step$=sfw13a_key.op_seq$
+            k$=sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$+sfw13a_key.material_seq$
+            read (sfw13a_dev)
+            read record (sfe23a_dev,key=sfw13a_key$,dom=*continue) sfe23a$
+            ivm01a.item_desc$="*** Not On File ***"
+            find record (ivm01a_dev,key=firm_id$+sfe23a.item_id$,dom=*next) ivm01a1$
+            dx$=ivm01a1.item_desc$
+            find record (ivm02a_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*next) ivm02a$
             ivm02a.qty_on_hand=ivm02a.qty_on_hand-(sfe23a.qty_ordered-sfe23a.tot_qty_iss)
             gosub details
             stepnum=stepnum+1
-
         wend
-
     wend
 
 
@@ -199,30 +141,30 @@ err_Line:
     if v$="N" then goto std_exit
     if v$<>"Y" then goto err_Line
     print @(27,7),"Now Clearing Print File...",'cl',
-    read (sfe04_dev,key=firm_id$+"  "+"C",dom=*next)
+    read (sfe04c_dev,key=firm_id$+"  "+"C",dom=*next)
 
     while more
 
-        k$=key(sfe04_dev,end=std_exit)
-        if k$(1,5)<>firm_id$+"  "+"C" then goto std_exit
-        read (sfe04_dev)
-        read record (sfe13_dev,key=k$(1,4)+k$(6)+"000",dom=*continue) sfe13a$
-        write record (sfe15_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+sfe13a.sequence_000$) sfe15a$
+        sfe04c_key$=key(sfe04c_dev,end=std_exit)
+        if sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.record_id_c$<>firm_id$+"  "+"C" then goto std_exit
+        read (sfe04c_dev)
+        read record (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$+"000",dom=*continue) sfe13a$
+        write record (sfe15a_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+sfe13a.sequence_000$) sfe15a$
 
     rem --- Remove Committed and Create Issue
 
         x0=0
-        read (sfw13_dev,key=sfe15a.firm_id$+sfe15a.wo_location$+sfe15a.wo_no$,dom=*next)
+        read (sfw13a_dev,key=sfe15a.firm_id$+sfe15a.wo_location$+sfe15a.wo_no$,dom=*next)
 
         while more
 
-            k1$=key(sfw13_dev,end=*break)
-            if k1$(1,11)<>sfe15a.firm_id$+sfe15a.wo_location$+sfe15a.wo_no$ then break
-            k1$=k1$(1,11)+k1$(25)
-            read (sfw13_dev)
-            read record (sfe23_dev,key=k1$,dom=*continue) sfe23b$
+            sfw13a_key$=key(sfw13a_dev,end=*break)
+            if sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$<>sfe15a.firm_id$+sfe15a.wo_location$+sfe15a.wo_no$ then break
+            sfw13a_key$=sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$+sfw13a_key.material_seq$
+            read (sfw13a_dev)
+            read record (sfe23a_dev,key=k1$,dom=*continue) sfe23a$
 
-            rem --- Renumber Issue Sequence to Match Pick List
+        rem --- Renumber Issue Sequence to Match Pick List
 
             x0=x0+1
             sfe25a.firm_id$=sfe23a.firm_id$
@@ -230,11 +172,11 @@ err_Line:
             sfe25a.wo_no$=sfe23a.wo_no$
             sfe25a.material_seq$=str(x0:"000")
             sfe23a.step_no$=sfe23a.material_seq$
-            write record (sfe25_dev,key=sfe25a.firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.material_seq$) sfe25a$
+            write record (sfe25a_dev,key=sfe25a.firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.material_seq$) sfe25a$
 
         wend
 
-        remove (sfe04_dev,key=k$)
+        remove (sfe04c_dev,key=k$)
 
     wend
 
@@ -243,10 +185,9 @@ report_heading: rem --- Report Heading
     l=headings+3
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
     if status then exitto std_exit
-    dim description$(60)
-    find record (ivm01_dev,key=firm_id$+sfe13a.item_id$,dom=*next) ivm01a2$
-    if sfe13a.wo_category$="I" then let desc1$=description$(1,min(desc[1],41)),desc2$=description$(desc[1]+1,min(desc[2],42))
-    if sfe13a.wo_category$<>"I" then let desc1$=sfe01a.description$,desc2$=sfe01a.description$
+    find record (ivm01a_dev,key=firm_id$+sfe13a.item_id$,dom=*next) ivm01a2$
+    if sfe13a.wo_category$="I" then let desc1$=ivm01a2.item_desc$(1,min(desc[1],41)),ivm01a2.item_desc$=description$(desc[1]+1,min(desc[2],42))
+    if sfe13a.wo_category$<>"I" then let desc1$=sfe01a.description_01$,desc2$=sfe01a.description_02$
     old_op_step$=op_step$
     print (printer_dev)@(0),"WO Number: ",sfe13a.wo_no$,
 :                      @(21),"Type: ",sfe13a.firm_id$," ",sfm10a.code_desc$,@(53),"Category: ",a1$(3,1)," ",z2$,'lf',
@@ -285,24 +226,24 @@ report_heading: rem --- Report Heading
 details: rem --- Details
 
     x1=0
-    if i3$(17,1)="S" and (ivm01a.lotser_item$+ivm01a.inventoried$)="YY" then let x1=sfe23a.qty_ordered-sfe23a.tot_qty_iss,x9$="Serial #:"
-    if i3$(17,1)="L" and (ivm01a.lotser_item$+ivm01a.inventoried$)="YY" then let x1=5,x9$="Lot #:"
+    if ivs01a.lotser_flag$="S" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=sfe23a.qty_ordered-sfe23a.tot_qty_iss,x9$="Serial #:"
+    if ivs01a.lotser_flag$="L" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=5,x9$="Lot #:"
     if l+2+splitline>l9 or op_step$<>old_op_step$ then gosub report_heading
     print (printer_dev)@(0),stepnum:"000"," ",ivm02a.location$,@(14),sfe23a.qty_ordered-sfe23a.tot_qty_iss:m2$,j1$(1,7),@(22+m2),sfe23a.item_id$,
     if splitline then print (printer_dev)""
     print (printer_dev)@(m9),ivm02a.qty_on_hand:m2$,ivm02a.qty_commit:m2$,ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,
     if m9$="Y" then print (printer_dev)ivm02a.qty_on_order:m2$,
     print (printer_dev)""
-    read record (sfe22_dev,key=(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$)+"B"+sfe23a.material_seq$,dom=*next) sfe22b$
+    read record (sfe22b_dev,key=(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$)+"B"+sfe23a.material_seq$,dom=*next) sfe22b$
     dim desc$(60)
     desc$(1)=fnitem$(dx$,desc[1],desc[2],desc[3])
     print (printer_dev)@(5),"WO Seq: ",sfe23a.material_seq$,@(25+m2),desc$(1,min(desc[1]+desc[2]+desc[3]+2,79-(25+m2)))
     l=l+2+splitline
     gosub material
-    if pos(i3$(17,1)="LS")=0 then
+    if pos(ivs01a.lotser_flag$="LS")=0 then
         return
     endif
-    if (ivm01a.lotser_item$+ivm01a.inventoried$)<>"YY" then
+    if (ivm01a1.lotser_item$+ivm01a1.inventoried$)<>"YY" then
         return
     endif
     for x=1 to x1
@@ -315,34 +256,27 @@ details: rem --- Details
 
 material: rem --- Get comments for this material
 
+    dim sfe22b_key$:sfe22b_key_tpl$
     while more
-        sfe22b_key$=key(sfe22_dev,end=*break)
-        if pos(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$+"B"=sfe22b_key$)<>1 then
-            break
-        endif
-        read record (sfe22_dev) sfe22b$
-        if sfe22a.line_type$<>"M" then
-            break 
-        endif
+        sfe22b_key$=key(sfe22b_dev,end=*break)
+        if pos(sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B"=sfe22b_key$)<>1 then break
+        read record (sfe22b_dev) sfe22b$
+        if sfe22b.line_type$<>"M" then break 
         if l+1>l9 then gosub report_heading
-        print (printer_dev)@(14),sfe22a.ext_comments$
+        print (printer_dev)@(14),sfe22bext_comments$
         l=l+1
     wend
     return
 
 get_wo_hdr_cmnts: rem --- Get header comments for this Work Order
 
-    read (sfe22_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B",dom=*next)
+    read (sfe22b_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B",dom=*next)
     while more
-        sfe22b_key$=key(sfe22_dev,end=*break)
-        if pos(sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B"=sfe22b_key$)<>1 then
-            break
-        endif
-        read record (sfe22_dev) sfe22b$
-        if sfe22a.line_type$<>"M" then
-            break
-        endif
-        head_comm$=head_comm$+sfe22a.ext_comments$
+        sfe22b_key$=key(sfe22b_dev,end=*break)
+        if pos(sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B"=sfe22b_key$)<>1 then break
+        read record (sfe22b_dev) sfe22b$
+        if sfe22b.line_type$<>"M" then break
+        head_comm$=head_comm$+sfe22b.ext_comments$
     wend
     return
 
@@ -480,6 +414,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
+
 rem #endinclude std_end.src
 
     end
