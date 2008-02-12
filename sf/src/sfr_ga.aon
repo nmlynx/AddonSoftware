@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -26,11 +26,11 @@ rem --- Open/Lock files
     files=18,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
-    files$[2]="ars_params",ids$[2]="ARS_PARAMS"
-    files$[3]="gls_params",ids$[3]="GLS_PARAMS"
+    files$[2]="ARS_PARAMS",ids$[2]="ARS_PARAMS"
+    files$[3]="GLS_PARAMS",ids$[3]="GLS_PARAMS"
     files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
-    files$[5]="ivs_prodcode",ids$[5]="IVS_PRODCODE"
-    files$[6]="ivs_params",ids$[6]="IVS_PARAMS"
+    files$[5]="IVC_PRODCODE",ids$[5]="IVC_PRODCODE"
+    files$[6]="IVS_PARAMS",ids$[6]="IVS_PARAMS"
     files$[7]="sfe-01",ids$[7]="SFE_WOMASTR"
     files$[8]="sfe-03",ids$[8]="SFX_TYPEWO"
     files$[9]="sfe-03",ids$[9]="SFX_CUSTWO"
@@ -46,24 +46,24 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    arm01_dev=channels[1]
+    arm01a_dev=channels[1]
     ars01a_dev=channels[2]
     gls01a_dev=channels[3]
-    ivm01_dev=channels[4]
-    ivm10_dev=channels[5]
+    ivm01a_dev=channels[4]
+    ivm10a_dev=channels[5]
     ivs01a_dev=channels[6]
-    sfe01_dev=channels[7]
+    sfe01a_dev=channels[7]
     sfe03a_dev=channels[8]
     sfe03b_dev=channels[9]
     sfe03c_dev=channels[10]
-    sfm10_dev=channels[11]
+    sfm10a_dev=channels[11]
     sfs01a_dev=channels[12]
-    sft01_dev=channels[13]
-    sft03_dev=channels[14]
-    sft21_dev=channels[15]
-    sft23_dev=channels[16]
-    sft31_dev=channels[17]
-    sft33_dev=channels[18]
+    sft01a_dev=channels[13]
+    sft03a_dev=channels[14]
+    sft21a_dev=channels[15]
+    sft23a_dev=channels[16]
+    sft31a_dev=channels[17]
+    sft33a_dev=channels[18]
 
 rem --- Dimension string templates
 
@@ -128,7 +128,7 @@ rem --- Init Data
 
 run_overlay: rem --- Overlay
 
-    run pgmdir$+"sfr_gb.bbx"
+    run pgmdir$+"sfr_gb.aon"
 
 
 rem #include std_functions.src
