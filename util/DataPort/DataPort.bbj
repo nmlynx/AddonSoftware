@@ -59,7 +59,19 @@ get_destination_folder:
 
 next_overlay:
     print (log_dev)" Porting Addon "+str(source_version)+" data files from folder "+source_folder$+" to "+destin_folder$+$0a$
-    run "DataPort_main.bbj"
+
+    open (999)"DataPort_main.bbj"
+    DataPortMain$ = fid(999)(9)
+    close (999)
+
+rem trace$="/temp/DataPort.txt"
+rem erase trace$,err=*next
+rem string trace$
+rem open (999)trace$
+rem lock (999)
+rem settrace (999)
+
+    run DataPortMain$
 
 the_end:
 end
