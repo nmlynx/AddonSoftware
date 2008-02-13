@@ -255,21 +255,17 @@ end_ddm04:
     lock (old_file)
     print "   Copying data from  "+ddm03.file_name$+ddm03.record_id$
     print(log_dev)"   Copying data from    "+ddm03.file_name$+ddm03.record_id$
+
 next_rec:
     readrecord(old_file,end=eof)old_rec$
-    if record_id_fieldname$<>""
-       if field(old_rec$,record_id_fieldname$)=ddm03.record_id$ then
-          goto copy_fields
-       endif
+
+    if record_id_fieldname$<>"" and field(old_rec$,record_id_fieldname$)<>ddm03.record_id$ then
        goto next_rec
     endif
 
-    if copy_sys01
-       if field(old_rec$,fieldlist.fname$[2])+field(old_rec$,fieldlist.fname$[3])=dat$(1,4) then
-          goto copy_fields
-       endif
+    if copy_sys01 and field(old_rec$,fieldlist.fname$[2])+field(old_rec$,fieldlist.fname$[3])<>file_normalization$(1,4) then
        goto next_rec
-    endif; rem ' copy_sys01
+    endif
 
 copy_fields:
 
@@ -318,7 +314,6 @@ convert_A4Date:
         if pos("YEAR"=old_fieldname$) or pos("YR"=old_fieldname$) then
            if len(cvs(value$,3))=2 then
               gosub add_century_prefix
-              year_flag=1
            endif
         endif
 copy_data:
@@ -397,25 +392,25 @@ write_err:
 end_read_dir:
     close (old_dir)
     if normalize_sys01 then
-        print "sys-01"
-        print "   sys-01 will be normalized to different parameter files"
-        print (log_dev)"sys-01"
-        print (log_dev)"   sys-01 will be normalized to different parameter files"
-        temp_chan2=unt
-        open (temp_chan2)filedir$+"file_normalization"
+       print "sys-01"
+       print "   sys-01 will be normalized to different parameter files"
+       print (log_dev)"sys-01"
+       print (log_dev)"   sys-01 will be normalized to different parameter files"
+       temp_chan2=unt
+       open (temp_chan2)filedir$+"file_normalization"
 read_normalize_xref:
-        read(temp_chan2,end=end_read_normalize_xref)dat$
-        if dat$=$$ then
-           goto read_normalize_xref
-        endif
-        copy_sys01=1
-        k$=cvs(dat$(9,7),version_cvs)
-        datafile$=dat$(9,6)
-        goto next_ddm03
+       read(temp_chan2,end=end_read_normalize_xref)file_normalization$
+       if file_normalization$="" then
+          goto read_normalize_xref
+       endif
+       copy_sys01=1
+       k$=cvs(file_normalization$(9,7),version_cvs)
+       datafile$=file_normalization$(9,6)
+       goto next_ddm03
 end_read_normalize_xref:
-        close (temp_chan2)
-        normalize_sys01=0
-        goto end_read_dir
+       close (temp_chan2)
+       normalize_sys01=0
+       goto end_read_dir
     endif; rem ' normalize_sys01
     a=msgbox("DataPort completed",0,"DataPort")
     print (log_dev)$0a$+"DataPort completed"
@@ -425,14 +420,14 @@ end_read_normalize_xref:
 add_century_prefix:
     p=pos(value$(1,1)="ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     if p then
-        p=p-1
-        if len(str(p))=2 then
-           value$="2"+str(p)+value$(2)
-        else
-           value$="20"+str(p)+value$(2)
-        endif
+       p=p-1
+       if len(str(p))=2 then
+          value$="2"+str(p)+value$(2)
+       else
+          value$="20"+str(p)+value$(2)
+       endif
     else
-        value$="19"+value$
+       value$="19"+value$
     endif
 return
 
