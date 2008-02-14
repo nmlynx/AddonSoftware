@@ -101,17 +101,22 @@ rem --- Read the v6/v7 data directory
 old_dir=unt
 open (old_dir)source_folder$
 
-read_dir:
-    readrecord (old_dir,end=end_read_dir)datafile$
+next_file:
+    if rdVectPort! = null() then
+       readrecord (old_dir,end=end_read_loop)datafile$
+    else
+       datafile$ = str(rdVectPort!.removeItem(0),err=end_read_loop)
+    endif
+
     datafile$=cvs(datafile$,version_cvs)
 
     rem ' skip these files -- TODO: Explain why.
-    if pos("."=datafile$)=1 then goto read_dir
-    if pos("_"=datafile$)=1 then goto read_dir
-    if pos("z"=cvs(datafile$,8))=1 then  goto read_dir
-    if pos("dd"=cvs(datafile$,8))=1 then goto read_dir
-    if pos("w-"=cvs(datafile$,8))=1 then goto read_dir
-    if pos("sh"=cvs(datafile$,8))=1 then goto read_dir
+    if pos("."=datafile$)=1 then goto next_file
+    if pos("_"=datafile$)=1 then goto next_file
+    if pos("z"=cvs(datafile$,8))=1 then  goto next_file
+    if pos("dd"=cvs(datafile$,8))=1 then goto next_file
+    if pos("w-"=cvs(datafile$,8))=1 then goto next_file
+    if pos("sh"=cvs(datafile$,8))=1 then goto next_file
 
     print "Data file: ",datafile$
     print (log_dev)"Data file: ",datafile$
@@ -136,7 +141,7 @@ read_dir:
         wend
         close (old_ivm03)
         close (new_ivm03)
-        goto read_dir
+        goto next_file
     endif; rem ivm-03
 
     if cvs(datafile$,8)="sys-01" then
@@ -151,9 +156,9 @@ next_ddm03:
     if copy_sys01 then
        readrecord(ddm03,key=k$,dom=read_normalize_xref)ddm03$
     else
-       readrecord(ddm03,end=read_dir)ddm03$
+       readrecord(ddm03,end=next_file)ddm03$
        if cvs(ddm03.file_name$,3)<>cvs(datafile$,3) then
-          goto read_dir
+          goto next_file
        endif
     endif
     gosub get_new_template
@@ -387,7 +392,7 @@ write_err:
     print "(resized)"
     goto write_record
 
-end_read_dir:
+end_read_loop:
     close (old_dir)
     if normalize_sys01 then
        print "sys-01"
@@ -408,7 +413,7 @@ read_normalize_xref:
 end_read_normalize_xref:
        close (temp_chan2)
        normalize_sys01=0
-       goto end_read_dir
+       goto end_read_loop
     endif; rem ' normalize_sys01
     a=msgbox("DataPort completed",0,"DataPort")
     print (log_dev)$0a$+"DataPort completed"
