@@ -159,7 +159,8 @@ next_ddm03:
     gosub get_new_template
     rd_gen_table_tpl$=""
     data_seq_str$=""
-    fields = 0
+    fields=0
+    date_format$ = $$
     print "   Creating template for "+ddm03.file_name$+ddm03.record_id$+"  ("+table_alias$+")"
     print (log_dev)"   Creating template for "+ddm03.file_name$+ddm03.record_id$
 
@@ -203,8 +204,7 @@ next_ddm04:
 
        rd_temp_seg$=cvs(data_name$,3)+rd_col_occurs_sfx$+":"
        datatype$=iff(ddm01.data_type$="N","N","C")
-       rd_temp_seg$=rd_temp_seg$+datatype$+"("
-       rd_temp_seg$=rd_temp_seg$+str(rd_col_length)
+       rd_temp_seg$=rd_temp_seg$+datatype$+"("+str(rd_col_length)
        if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" then
           rd_temp_seg$=rd_temp_seg$+"*"
        endif
@@ -214,6 +214,16 @@ next_ddm04:
           rd_gen_table_tpl$=rd_gen_table_tpl$+","
        endif
        rd_gen_table_tpl$=rd_gen_table_tpl$+rd_temp_seg$
+       rem ' Date formats
+       if ddm01.data_type$="D" then
+          date_format$ = date_format$ + chr(rd_col_length)
+       else
+          if ddm01.data_type$="A" and rd_col_length=2 then
+             date_format$ = date_format$ + chr(255)
+          else
+             date_format$ = date_format$ + chr(0)
+          endif
+       endif
    next rd_curr_occur
 
    goto next_ddm04
@@ -226,26 +236,36 @@ end_ddm04:
     endif
 
     dim old_rec$:rd_gen_table_tpl$
-    fields$="fname["+str(fields)+"]:c(20*)"
-    dim fieldlist$:fields$
-    fieldlist$=fattr(old_rec$,"")
-    record_id_fieldname$=""
-    if pos("RECORD_ID_"=fieldlist.fname$[2]) then
-       record_id_fieldname$=fieldlist.fname$[2]
+    fields$="name["+str(fields)+"]:c(20*)"
+    dim old_fieldlist$:fields$
+    old_fieldlist$=fattr(old_rec$,"")
+    record_id_field$=""
+    if pos("RECORD_ID_"=old_fieldlist.name$[2]) then
+       record_id_field$=old_fieldlist.name$[2]
     endif
-    if pos("RECORD_ID_"=fieldlist.fname$[1]) then
-       record_id_fieldname$=fieldlist.fname$[1]
+    if pos("RECORD_ID_"=old_fieldlist.name$[1]) then
+       record_id_field$=old_fieldlist.name$[1]
     endif
 
+    rem ' Special address processing?
     addr_lines=0
-    if source_version=6 then
-       if pos($0a$+"ADDR_LINE_3"+$0a$=new_fieldlist$) then
+    if source_version=6 and pos($0a$+"CITY"+$0a$=new_fields$) and pos($0a$+"STATE_CODE"+$0a$=new_fields$) then
+       if pos($0a$+"ADDR_LINE_3"+$0a$=new_fields$) then
           addr_lines=3
        endif
-       if pos($0a$+"ADDR_LINE_5"+$0a$=new_fieldlist$) then
+       if pos($0a$+"ADDR_LINE_5"+$0a$=new_fields$) then
           addr_lines=5
        endif
     endif
+
+    rem ' Correlate old fieldnames to new fieldnames
+    dim new_fieldlist$:fields$
+    new_fieldlist$=$$
+    for field=1 to fields
+        old_fieldname$=old_fieldlist.name$[field]
+        gosub set_new_fieldname
+        new_fieldlist$ = new_fieldlist$ + new_fieldname$ + $0a$
+    next field
 
     old_file=unt
     if copy_sys01 then
@@ -259,79 +279,57 @@ end_ddm04:
 next_rec:
     readrecord(old_file,end=eof)old_rec$
 
-    if record_id_fieldname$<>"" and field(old_rec$,record_id_fieldname$)<>ddm03.record_id$ then
+    if record_id_field$<>"" and field(old_rec$,record_id_field$,err=*continue)<>ddm03.record_id$ then
        goto next_rec
     endif
 
-    if copy_sys01 and field(old_rec$,fieldlist.fname$[2])+field(old_rec$,fieldlist.fname$[3])<>file_normalization$(1,4) then
+    if copy_sys01 and field(old_rec$,old_fieldlist.name$[2],err=*continue) +
+:                     field(old_rec$,old_fieldlist.name$[3],err=*continue) <> file_normalization$(1,4) then
        goto next_rec
     endif
-
-copy_fields:
 
     for field=1 to fields
+        if new_fieldlist.name$[field]=$$ then continue
 
-        old_fieldname$=fieldlist.fname$[field]
+        value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
 
-        value$=field(old_rec$,old_fieldname$,err=*continue)
+        switch asc(date_format$(field))
+           case 0
+              break
+           case 3
+              if len(cvs(value$,3)) then
+                 value$=str(asc(value$)-32+1900)+str(asc(value$(2))-32:"00")+str(mod(asc(value$(3))-32,100):"00")
+              endif
+              break
+           case 2
+           case 6
+              if len(cvs(value$,3)) then
+                 if asc(value$)>=65 then
+                    value$=str(200+asc(value$)-65)+value$(2)
+                 else
+                    value$="19"+value$
+                 endif
+              endif
+              break
+           case 8
+              break
+           case 255
+              if len(cvs(value$,3)) then
+                 value$=str(asc(value$)-32:"00")+str(asc(value$(2))-32:"00")
+              endif
+              break
+           case default; escape; rem ' should never get here
+        swend
 
-        if pos("_DATE"=old_fieldname$) or
-:          pos("_DT"=old_fieldname$) or
-:          pos("PER_ENDING_"=old_fieldname$) then
-
-           if cvs(value$,3)="" then
-              goto copy_data
-           endif
-
-           if len(value$)=2 then
-              value$=fna$(value$(1,1),value$)+fna$(value$(2,1),value$)
-              goto copy_data
-           endif
-
-           if len(value$)=6 then
-              goto convert_A4Date
-           endif
-
-           if len(value$)<>3 then
-              goto copy_data; rem ' Not a date; just copy the raw data
-           endif
-
-           rem ' Packed date (length=3)
-           value$=fnb$(value$)
-           value$=fngetdate$(value$)
-           if pos("00"=value$(5)) then
-              print (log_dev)"  Invalid date occured in "+datafile$+"; field "+old_fieldname$
-           endif
-           goto copy_data
-convert_A4Date:
-           if pos("."=value$) or pos("-"=value$) then
-              goto copy_data
-           endif
-           gosub add_century_prefix
-           reserved_str_flag=1
-        endif; rem date field
-
-        if pos("YEAR"=old_fieldname$) or pos("YR"=old_fieldname$) then
-           if len(cvs(value$,3))=2 then
-              gosub add_century_prefix
-           endif
-        endif
-copy_data:
-        gosub set_new_fieldname
-        if len(new_fieldname$) then
-           field new_rec$,new_fieldname$=value$
-        endif
+        field new_rec$,new_fieldlist.name$[field]=value$
     next field
 
-    if addr_lines then
-       gosub reformat_address
-    endif
+    if addr_lines then gosub reformat_address
 
     new_rec$=field(new_rec$)
 
 write_record:
     writerecord(new_file,err=write_err)new_rec$
-    reserved_str_flag=0
     goto next_rec
 
 eof:
@@ -361,10 +359,10 @@ write_err:
     multi = keyed and asc(fid$(2,1))=0
     single = keyed and !(multi)
     if multi then
-:      file fid$,fin$
-:   else
-:      file fid$
-:   endif
+       file fid$,fin$
+    else
+       file fid$
+    endif
     close (new_file)
     open (new_file)new_file$
     lock (new_file)
@@ -417,20 +415,6 @@ end_read_normalize_xref:
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
     release
 
-add_century_prefix:
-    p=pos(value$(1,1)="ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    if p then
-       p=p-1
-       if len(str(p))=2 then
-          value$="2"+str(p)+value$(2)
-       else
-          value$="20"+str(p)+value$(2)
-       endif
-    else
-       value$="19"+value$
-    endif
-return
-
 get_new_template:
     new_datafile$=cvs(datafile$,8)
     file_id$=ddm03.file_name$+ddm03.record_id$
@@ -459,7 +443,7 @@ get_new_template:
 
     findrecord(ddm_table_tpls,key=pad(table_alias$,16),dom=check_for_definition)ddm_table_tpls$
     dim new_rec$:ddm_table_tpls.template$
-    newfieldlist$=$0a$+fattr(new_rec$,"")
+    new_fields$=$0a$+fattr(new_rec$,"")
 
     new_file=unt
     open (new_file,err=check_for_definition)destin_folder$+"/"+new_datafile$
@@ -479,7 +463,7 @@ return; rem ' get_new_template
 set_new_fieldname:
     new_fieldname$=""
 
-    if reserved_str_flag and old_fieldname$="RESERVED_STR" then
+    if old_fieldname$="RESERVED_STR" then
        old_fieldname$="RESERVED_STR_02"
     endif
 
@@ -488,7 +472,7 @@ set_new_fieldname:
        return
     endif
 
-    if pos($0a$+old_fieldname$+$0a$=newfieldlist$) then
+    if pos($0a$+old_fieldname$+$0a$=new_fields$) then
        new_fieldname$=old_fieldname$
     endif
 
@@ -546,8 +530,6 @@ set_new_fieldname:
        goto check_fieldlist
     endif
 
-    rem ' Some fields have been renamed for v8
-
     keyval$ = table_alias$+"."+old_fieldname$
     new_fieldname! = field_file_xref!.get(keyval$)
     if new_fieldname! = null() then
@@ -568,7 +550,7 @@ set_new_fieldname:
 
 check_fieldlist:
 
-    if pos($0a$+new_fieldname$+$0a$=newfieldlist$)=0 then
+    if pos($0a$+new_fieldname$+$0a$=new_fields$)=0 then
        new_fieldname$=""
     endif
 
@@ -576,7 +558,7 @@ return; rem ' set_new_fieldname
 
 check_for_definition:
     print "Read DDM_TABLES: ",table_alias$
-    find (ddm_tables,key=pad(table_alias$,16),dom=no_8data_file)
+    find (ddm_tables,key=pad(table_alias$,16),dom=undefined_file)
     call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+new_datafile$,rd_table_chans$[all],"CREATE",status$
     if len(status$) then
        print "*** ERROR ***: Couldn't create "+new_datafile$+$0a$+status$
@@ -590,25 +572,22 @@ check_for_definition:
     lock (new_file)
 return
 
-no_8data_file:
-    print "   Data File "+file_id$+" will not be ported"
-    print (log_dev)"   Data File "+file_id$+" will not be ported"
-    goto eof
-return
-
 get_alias_name:
     table_alias! = file_alias!.get(cvs(file_id$,7))
     table_alias$ = iff(table_alias!=null(),"",str(table_alias!))
     print "Table Alias: ",table_alias$
     if table_alias$="" then
-       goto no_8data_file
+       goto undefined_file
     endif
 return
 
+undefined_file:
+    print "   Data File "+file_id$+" will not be ported"
+    print (log_dev)"   Data File "+file_id$+" will not be ported"
+    goto eof
+return
+
 reformat_address:
-    if pos($0a$+"CITY"+$0a$=newfieldlist$) then
-       return
-    endif
     if addr_lines=5 then
        address$=old_rec.addr_line_1$+old_rec.addr_line_2$+old_rec.addr_line_3$+old_rec.addr_line_4$+old_rec.addr_line_5$
     endif
@@ -674,28 +653,12 @@ reformat_address:
     new_rec.state_code$=state$
 return; rem ' reformat_address
 
-rem --- Function for unpacking 3 character date fields to get 8 character date
-
-def fna$(q$,q2$)=str(mod((asc(q$)-32)*pos(" "<>q2$(2,1)),100):"00")
-def fnb$(q1$)=fna$(q1$(2),q1$)+"/"+fna$(q1$(3),q1$)+"/"+fna$(q1$(1),q1$)
-
-def fngetdate$(q1$)
-    year$=q1$(len(q1$)-1)
-    if q1$(len(q1$)-1)>date(0:"%Yz") then
-       q1$=q1$(1,len(q1$)-2)+"19"+year$
-    else
-       q1$=q1$(1,len(q1$)-2)+"20"+year$
-    endif
-    q1$=q1$(len(q1$)-3)+q1$(1,2)+q1$(4,2)
-    return q1$
-fnend
-
 eoj:
-    a=msgbox("Exit from DataPort?",4+32+256,"DataPort")
-    if a=6 then
-       release
-    endif
-    if a=7 then
-       a=msgbox("Continuing DataPort..")
-       goto eof
-    endif
+   a=msgbox("Exit from DataPort?",4+32+256,"DataPort")
+   if a=6 then
+      release
+   endif
+   if a=7 then
+      a=msgbox("Continuing DataPort..")
+      goto eof
+   endif
