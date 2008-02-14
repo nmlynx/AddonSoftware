@@ -1,3 +1,35 @@
+[[OPE_ORDHDR.AOPT-CINV]]
+escape
+[[OPE_ORDHDR.AOPT-DINV]]
+rem --- Duplicate Historical Invoice
+rem	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)<>"" or
+rem	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
+rem		msg_id$="OP_NO_HIST"
+rem		gosub disp_message
+rem	else
+		key_pfx$=firm_id$+
+:			callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
+:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+
+		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:			gui_dev,
+:			Form!,
+:			"OPT_ORDHDR",
+:			"LOOKUP",
+:			table_chans$[all],
+:			key_pfx$,
+:			"PRIMARY",
+:			rd_key$
+rem		if cvs(rd_key$,2)<>""
+rem			opt01a$=fnget_tpl$("OPT_ORDHDR")
+rem			opt01_dev=fnget_dev("OPT_ORDHDR")
+rem			dim opt01a$:opt01a$
+rem			readrecord(opt01_dev,key=rd_key$)opt01a$
+rem			hist$=fattr(opt01a$)
+rem			open$=fattr(rec_data$)
+escape;rem ? open$ and hist$
+rem		endif
+rem	endif
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 rem --- Display Ship to information
 	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
@@ -334,7 +366,7 @@ rem --- set user_tpl values
 	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=22
+	num_files=24
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -358,6 +390,8 @@ rem	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
 	open_tables$[20]="IVM_ITEMACT",open_opts$[20]="OTA"
 	open_tables$[21]="IVM_ITEMVEND",open_opts$[21]="OTA"
 	open_tables$[22]="IVT_LSTRANS",open_opts$[22]="OTA"
+	open_tables$[23]="OPT_ORDHDR",open_opts$[23]="OTA"
+	open_tables$[24]="OPT_ORDDET",open_opts$[24]="OTA"
 	gosub open_tables
 
 rem --- get AR Params

@@ -1,5 +1,23 @@
+[[OPE_ORDDET.QTY_SHIPPED.AVEC]]
+rem --- update header
+	gosub calc_grid_tots
+	gosub disp_totals
+[[OPE_ORDDET.QTY_ORDERED.AVEC]]
+rem --- update header
+escape;rem avec
+	gosub calc_grid_tots
+	gosub disp_totals
+[[OPE_ORDDET.QTY_BACKORD.AVEC]]
+rem --- update header
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.ARAR]]
-escape;rem arar
+rem --- 
+	g!=form!.getControl(1109).getControl(5900)
+	cur_row=g!.getSelectedRow()
+	cur_col=g!.getSelectedColumn()
+rem 	header!=g!.getHeader()
+rem escape;rem ? cur_row and cur_col
 	user_tpl.line_boqty=rec_data.qty_backord
 	user_tpl.line_shipqty=rec_data.qty_shipped
 [[OPE_ORDDET.AREC]]
@@ -38,7 +56,7 @@ rem ---recalc quantities and extended price
 	new_ext_price=newqty*unit_price
 
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
-	callpoint!.setStatus("MODIFIED-REFRESH")
+rem	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_ORDDET.QTY_BACKORD.AVAL]]
 rem ---recalc quantities and extended price
 	boqty=num(callpoint!.getUserInput())
