@@ -177,7 +177,7 @@ rem --- Detail
         if opt01a.total_cost>999 then let opt01a.total_cost=999.99
         if opt01a.invoice_type$<>"V" then
              print (printer_dev)@(0),opt01a.customer_id$,@(15),fnmask$(opt01a.ar_inv_no$(1,p[0]),m0$),
-:                              @(23),fndate$(opt01a.sequence_000$),@(33+12-m1),a[0]:m1$,
+:                              @(23),fndate$(opt01a.sequence_000$),@(33+12-m1),opt01a.tax_amount:m1$,
 :                              @(46+12-m1),opt01a.freight_amt:m1$,@(59+12-m1),opt01a.discount_amt:m1$,
 :                              @(72+12-m1),opt01a.comm_percent:m1$,@(85+12-m1),opt01a.taxable_amt:m1$,
 :                              @(98+12-m1),opt01a.tax_amount+opt01a.discount_amt+opt01a.freight_amt-opt01a.comm_percent+
