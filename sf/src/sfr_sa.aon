@@ -89,6 +89,10 @@ rem --- Parameters
         call pgmdir$+"adc_application.aon","AR",info$[all]
         bm$=info$[20]
     endif    
+    if type$="" then
+        type$="LP"
+    endif
+
 rem --- Init Data
 
     h1$=n1$
