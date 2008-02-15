@@ -25,9 +25,6 @@ rem --- Duplicate Historical Invoice
 			opt01_dev=fnget_dev("OPT_ORDHDR")
 			dim opt01a$:opt01a$
 			readrecord(opt01_dev,key=rd_key$)opt01a$
-			hist$=fattr(opt01a$)
-			open$=fattr(rec_data$)
-escape;rem ? open$ and hist$
 			sign=1
 			gosub copy_order
 		endif
@@ -331,9 +328,9 @@ return
 
 copy_order: rem --- Duplicate or Credit Historical Invoice
 	if sign=0 sign=1
-escape;rem check ope_ordhdr$ and opt01a$
-	call stbl("+DIR_PGM")+"adc_copyfile.aon",OPE_ORDHDR$,opt01a$,status
-escape;rem check ope_ordhdr$ and opt01a$
+escape;rem check rec_data$ and opt01a$
+	call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,rec_data$,status
+escape;rem check rec_data$ and opt01a$
 	callpoint!.setColumnData("OPE_ORDHDR.AR_INV_NO",opt01a.ar_inv_no$)
 	callpoint!.setColumnData("OPE_ORDHDR.AR_SHIP_VIA",opt01a.ar_ship_via$)
 	callpoint!.setColumnData("OPE_ORDHDR.AR_TYPE",opt01a.ar_type$)
