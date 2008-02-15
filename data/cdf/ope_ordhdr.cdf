@@ -2,11 +2,11 @@
 escape
 [[OPE_ORDHDR.AOPT-DINV]]
 rem --- Duplicate Historical Invoice
-rem	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)<>"" or
-rem	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
-rem		msg_id$="OP_NO_HIST"
-rem		gosub disp_message
-rem	else
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
+:	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
+		msg_id$="OP_NO_HIST"
+		gosub disp_message
+	else
 		key_pfx$=firm_id$+
 :			callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -20,16 +20,18 @@ rem	else
 :			key_pfx$,
 :			"PRIMARY",
 :			rd_key$
-rem		if cvs(rd_key$,2)<>""
-rem			opt01a$=fnget_tpl$("OPT_ORDHDR")
-rem			opt01_dev=fnget_dev("OPT_ORDHDR")
-rem			dim opt01a$:opt01a$
-rem			readrecord(opt01_dev,key=rd_key$)opt01a$
-rem			hist$=fattr(opt01a$)
-rem			open$=fattr(rec_data$)
+		if cvs(rd_key$,2)<>""
+			opt01a$=fnget_tpl$("OPT_ORDHDR")
+			opt01_dev=fnget_dev("OPT_ORDHDR")
+			dim opt01a$:opt01a$
+			readrecord(opt01_dev,key=rd_key$)opt01a$
+			hist$=fattr(opt01a$)
+			open$=fattr(rec_data$)
 escape;rem ? open$ and hist$
-rem		endif
-rem	endif
+			sign=1
+			gosub copy_order
+		endif
+	endif
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 rem --- Display Ship to information
 	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
@@ -325,6 +327,53 @@ rem 0870 LET U[0]=U[0]+W[6],U[1]=U[1]+W[7],U[2]=U[2]+W[0]*W[4]
 		endif
 	wend
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(user_tpl.ord_tot))
+return
+
+copy_order: rem --- Duplicate or Credit Historical Invoice
+	if sign=0 sign=1
+escape;rem check ope_ordhdr$ and opt01a$
+	call stbl("+DIR_PGM")+"adc_copyfile.aon",OPE_ORDHDR$,opt01a$,status
+escape;rem check ope_ordhdr$ and opt01a$
+	callpoint!.setColumnData("OPE_ORDHDR.AR_INV_NO",opt01a.ar_inv_no$)
+	callpoint!.setColumnData("OPE_ORDHDR.AR_SHIP_VIA",opt01a.ar_ship_via$)
+	callpoint!.setColumnData("OPE_ORDHDR.AR_TYPE",opt01a.ar_type$)
+	callpoint!.setColumnData("OPE_ORDHDR.BACKORD_FLAG","")
+	callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE",opt01a.cash_sale$)
+	callpoint!.setColumnData("OPE_ORDHDR.COMM_AMT",str(opt01a.comm_amt*sign))
+	callpoint!.setColumnData("OPE_ORDHDR.COMM_PERCENT",opt01a.comm_pct$)
+	callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG",opt01a.credit_flag$)
+	callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_PO_NO","")
+	callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_REL_NO",opt01a.customer_rel_no$)
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(opt01a.discount_amt*sign))
+	callpoint!.setColumnData("OPE_ORDHDR.DISC_CODE",opt01a.disc_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.DIST_CODE",opt01a.dist_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.EXPIRE_DATE","")
+	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",str(opt01a.freight_amt*sign))
+	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",opt01a.invoice_date$)
+	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE",opt01a.invoice_type$)
+	callpoint!.setColumnData("OPE_ORDHDR.JOB_NO",opt01a.job_no$)
+	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS",opt01a.lock_status$)
+	callpoint!.setColumnData("OPE_ORDHDR.MESSAGE_CODE",opt01a.message_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.MISC_NO",opt01a.misc_no$)
+	callpoint!.setColumnData("OPE_ORDHDR.ORDER_DATE",opt01a.order_date$)
+	callpoint!.setColumnData("OPE_ORDHDR.ORDER_NO",opt01a.order_no$)
+	callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG",opt01a.ordinv_flag$)
+	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",opt01a.taken_by$)
+	callpoint!.setColumnData("OPE_ORDHDR.PRICE_CODE",opt01a.price_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.PRICING_CODE",opt01a.pricing_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS",opt01a.print_status$)
+	callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG",opt01a.reprint_flag$)
+	callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",opt01a.shipmnt_date$)
+	callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_NO",opt01a.shipto_no$)
+	callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_TYPE",opt01a.shipto_type$)
+	callpoint!.setColumnData("OPE_ORDHDR.SLSPSN_CODE",opt01a.slspsn_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(opt01a.taxable_amt*sign))
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",opt01a.tax_amount$)
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_CODE",opt01a.tax_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE",opt01a.terms_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.TERRITORY",opt01a.territory$)
+	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",opt01a.total_cost$)
+	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",opt01a.total_sales$)
 return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
