@@ -60,10 +60,6 @@ while 1
 wend
 close (file_alias)
 
-rd_meter_data$="Processing file xref list . . ."
-rd_meter_action$="LST"
-gosub disp_meter
-
 file_xref! = new java.util.HashMap()
 dim file_xref$:"old_filename:c(16*=124),new_filename:c(16*=)"
 file_xref = unt
@@ -77,10 +73,6 @@ while 1
    endif
 wend
 close (file_xref)
-
-rd_meter_data$="Processing field file xref list . . ."
-rd_meter_action$="LST"
-gosub disp_meter
 
 field_file_xref! = new java.util.HashMap()
 dim field_file_xref$:"alias:c(16*=124),old_fieldname:c(16*=124),new_fieldname:c(16*=)"
@@ -96,10 +88,6 @@ while 1
 wend
 close (field_file_xref)
 
-rd_meter_data$="Processing field name xref list . . ."
-rd_meter_action$="LST"
-gosub disp_meter
-
 field_name_xref! = new java.util.HashMap()
 dim field_name_xref$:"old_fieldname:c(16*=124),new_fieldname:c(16*=)"
 field_name_xref = unt
@@ -114,13 +102,8 @@ while 1
 wend
 close (field_name_xref)
 
-	if rdVectPort! = null() then
-		rd_meter_total_recs=0
-	else
-		rd_meter_total_recs=rdVectPort!.size()
-	endif
-
 rd_meter_data$="Processing files . . ."
+rd_meter_total_recs=iff(rdVectPort!=null(),0,rdVectPort!.size())
 rd_meter_action$="LST"
 gosub disp_meter
 
@@ -136,15 +119,15 @@ next_file:
     endif
 
     datafile$=cvs(datafile$,version_cvs)
-	rd_meter_data$="   "+datafile$
-	rd_meter_action$="LST"
-	gosub disp_meter
+    rd_meter_data$="   "+datafile$
+    rd_meter_action$="LST"
+    gosub disp_meter
 
-	if rdVectPort!.size(err=*endif)<>0
-		rd_meter_proc_recs=rd_meter_proc_recs+1
-		rd_meter_action$="MTR-"
-		gosub disp_meter
-	endif
+    if rdVectPort!.size(err=*endif) then
+       rd_meter_proc_recs=rd_meter_proc_recs+1
+       rd_meter_action$="MTR-"
+       gosub disp_meter
+    endif
 
     rem ' skip these files -- TODO: Explain why.
     if pos("."=datafile$)=1 then goto next_file
@@ -451,13 +434,13 @@ end_read_normalize_xref:
        normalize_sys01=0
        goto end_read_loop
     endif; rem ' normalize_sys01
-rem    a=msgbox("DataPort completed",0,"DataPort")
+
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
-	rd_meter_proc_recs=rd_meter_total_recs
-	rd_meter_action$="LST-END"
-	gosub disp_meter
+    rd_meter_proc_recs=rd_meter_total_recs
+    rd_meter_action$="LST-END"
+    gosub disp_meter
 
     release
 
@@ -701,17 +684,17 @@ return; rem ' reformat_address
 
 disp_meter:rem --- Display Progress Meter
 
-	call stbl("+DIR_SYP")+"bam_prog_bar.bbj",
-:		rdSysGUI!,
-:		rdWindow!,
-:		rdMeterWin!,
-:		rd_meter_title$,
-:		rd_meter_total_recs,
-:		rd_meter_proc_recs,
-:		rd_meter_data$,
-:		rd_meter_action$
+    call stbl("+DIR_SYP")+"bam_prog_bar.bbj",
+:        rdSysGUI!,
+:        rdWindow!,
+:        rdMeterWin!,
+:        rd_meter_title$,
+:        rd_meter_total_recs,
+:        rd_meter_proc_recs,
+:        rd_meter_data$,
+:        rd_meter_action$
 
-	return
+    return
 
 eoj:
    a=msgbox("Exit from DataPort?",4+32+256,"DataPort")
