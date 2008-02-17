@@ -511,7 +511,10 @@ check_for_definition:
     endif
     print "   New file "+new_datafile$+" created in folder "+destin_folder$
     print (log_dev)"   New file "+new_datafile$+" created"
-    close (new_file)
+    if new_file then
+       close (new_file)
+    endif
+    new_file=unt
     open (new_file)destin_folder$+"/"+new_datafile$
     lock (new_file)
 return
