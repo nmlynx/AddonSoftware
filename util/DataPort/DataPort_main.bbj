@@ -48,7 +48,7 @@ file_alias = unt
 open (file_alias)filedir$+"file_alias"
 while 1
    read (file_alias,end=*break)file_alias$
-   if len(file_alias$)
+   if len(file_alias$) then
       keyval$ = cvs(file_alias.file_id$,7)
       dataval$ = cvs(file_alias.alias$,7)
       if file_alias!.get(keyval$)=null() then
@@ -66,7 +66,7 @@ file_xref = unt
 open (file_xref)filedir$+"file_xref"
 while 1
    read (file_xref,end=*break)file_xref$
-   if len(file_xref$)
+   if len(file_xref$) then
       keyval$ = cvs(file_xref.old_filename$,7)
       dataval$ = cvs(file_xref.new_filename$,3)
       file_xref!.put(keyval$,dataval$)
@@ -80,7 +80,7 @@ field_file_xref = unt
 open (field_file_xref)filedir$+"field_file_xref"
 while 1
    read (field_file_xref,end=*break)field_file_xref$
-   if len(field_file_xref$)
+   if len(field_file_xref$) then
       keyval$ = cvs(field_file_xref.alias$,7)+"."+cvs(field_file_xref.old_fieldname$,7)
       dataval$ = cvs(field_file_xref.new_fieldname$,7)
       field_file_xref!.put(keyval$,dataval$)
@@ -94,7 +94,7 @@ field_name_xref = unt
 open (field_name_xref)filedir$+"field_name_xref"
 while 1
    read (field_name_xref,end=*break)field_name_xref$
-   if len(field_name_xref$)
+   if len(field_name_xref$) then
       keyval$ = cvs(field_name_xref.old_fieldname$,7)
       dataval$ = cvs(field_name_xref.new_fieldname$,7)
       field_name_xref!.put(keyval$,dataval$)
@@ -203,7 +203,7 @@ next_ddm04:
     rd_col_occurs_sfx$=""
     rd_col_occurs$=""
     rd_col_occurs=1
-    if ddm04.fld_occurs>1 THEN
+    if ddm04.fld_occurs>1 then
        rd_col_occurs$="YES"
        rd_col_occurs=ddm04.fld_occurs
     endif
@@ -359,9 +359,11 @@ write_record:
 eof:
     if old_file then
        close (old_file)
+       old_file=0
     endif
     if new_file then
        close (new_file)
+       new_file=0
     endif
     if copy_sys01 then
        goto read_normalize_xref
@@ -412,16 +414,19 @@ write_err:
     goto write_record
 
 end_read_loop:
-    close (old_dir)
+    if old_dir then
+       close (old_dir)
+       old_dir=0
+    endif
     if normalize_sys01 then
        print "sys-01"
        print "   sys-01 will be normalized to different parameter files"
        print (log_dev)"sys-01"
        print (log_dev)"   sys-01 will be normalized to different parameter files"
-       temp_chan2=unt
-       open (temp_chan2)filedir$+"file_normalization"
+       file_normalization=unt
+       open (file_normalization)filedir$+"file_normalization"
 read_normalize_xref:
-       read(temp_chan2,end=end_read_normalize_xref)file_normalization$
+       read(file_normalization,end=end_read_normalize_xref)file_normalization$
        if file_normalization$="" then
           goto read_normalize_xref
        endif
@@ -430,7 +435,7 @@ read_normalize_xref:
        datafile$=file_normalization$(9,6)
        goto next_ddm03
 end_read_normalize_xref:
-       close (temp_chan2)
+       close (file_normalization)
        normalize_sys01=0
        goto end_read_loop
     endif; rem ' normalize_sys01
@@ -444,7 +449,7 @@ end_read_normalize_xref:
 
     release
 
-get_new_template:
+get_new_template: escape
     new_datafile$=cvs(datafile$,8)
     file_id$=ddm03.file_name$+ddm03.record_id$
 
@@ -454,21 +459,28 @@ get_new_template:
        file_id$ = str(file_id!)
        if len(file_id$)>7 then
           rem ' Longer new-style filename
-          new_datafile$ = cvs(file_id$,8)
+          new_datafile$ = cvs(file_id$,8);escape
        else
           rem ' Drop the record id from the old-style filename
-          new_datafile$=cvs(file_id$(1,len(file_id$)-1),8)
+          new_datafile$=cvs(file_id$(1,len(file_id$)-1),8);escape
        endif
     else
        file_id! = file_xref!.get(cvs(datafile$,7))
        if file_id!<>null() then
           rem ' found mapping for filename
           file_id$ = str(file_id!)+ddm03.record_id$
-          new_datafile$ = cvs(str(file_id!),8)
+          new_datafile$ = cvs(str(file_id!),8);escape
        endif
     endif
 
-    gosub get_alias_name
+    table_alias! = file_alias!.get(cvs(file_id$,7))
+    table_alias$ = iff(table_alias!=null(),"",str(table_alias!))
+    print "Table Alias: ",table_alias$
+    if table_alias$="" then
+       print "   Data File "+file_id$+" will not be ported"
+       print (log_dev)"   Data File "+file_id$+" will not be ported"
+       goto eof
+    endif
 
     findrecord(ddm_table_tpls,key=pad(table_alias$,16),dom=check_for_definition)ddm_table_tpls$
     dim new_rec$:ddm_table_tpls.template$
@@ -476,18 +488,39 @@ get_new_template:
 
     new_file=unt
     open (new_file,err=check_for_definition)destin_folder$+"/"+new_datafile$
-    close (new_file)
+    lock (new_file)
     a=msgbox(new_datafile$+" already exists in destination folder. Do you want to overwrite data?",3+32+0,"DataPort")
     if a=6 then
-       return
+       return; rem ' Yes-Overwrite
     endif
     if a=7 then
-       goto eof
+       goto eof; rem ' No-Skip
     endif
     if a=2 then
-       goto eoj
+       goto eoj; rem ' Cancel-Exit
     endif
 return; rem ' get_new_template
+
+check_for_definition:
+    find (ddm_tables,key=pad(table_alias$,16),dom=undefined_file)
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+new_datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then
+       print "*** ERROR ***: Couldn't create "+new_datafile$+$0a$+status$
+       print (log_dev)"*** ERROR ***: Couldn't create "+new_datafile$+$0a$+status$
+       goto eof
+    endif
+    print "   New file "+new_datafile$+" created in folder "+destin_folder$
+    print (log_dev)"   New file "+new_datafile$+" created"
+    close (new_file)
+    open (new_file)destin_folder$+"/"+new_datafile$
+    lock (new_file)
+return
+
+undefined_file:
+    print "   Data File "+file_id$+" will not be ported"
+    print (log_dev)"   Data File "+file_id$+" will not be ported"
+    goto eof
+return
 
 set_new_fieldname:
     new_fieldname$=""
@@ -584,37 +617,6 @@ check_fieldlist:
     endif
 
 return; rem ' set_new_fieldname
-
-check_for_definition:
-    print "Read DDM_TABLES: ",table_alias$
-    find (ddm_tables,key=pad(table_alias$,16),dom=undefined_file)
-    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+new_datafile$,rd_table_chans$[all],"CREATE",status$
-    if len(status$) then
-       print "*** ERROR ***: Couldn't create "+new_datafile$+$0a$+status$
-       print (log_dev)"*** ERROR ***: Couldn't create "+new_datafile$+$0a$+status$
-       goto eof
-    endif
-    print "   New file "+new_datafile$+" created in folder "+destin_folder$
-    print (log_dev)"   New file "+new_datafile$+" created"
-    close (new_file)
-    open (new_file)destin_folder$+"/"+new_datafile$
-    lock (new_file)
-return
-
-get_alias_name:
-    table_alias! = file_alias!.get(cvs(file_id$,7))
-    table_alias$ = iff(table_alias!=null(),"",str(table_alias!))
-    print "Table Alias: ",table_alias$
-    if table_alias$="" then
-       goto undefined_file
-    endif
-return
-
-undefined_file:
-    print "   Data File "+file_id$+" will not be ported"
-    print (log_dev)"   Data File "+file_id$+" will not be ported"
-    goto eof
-return
 
 reformat_address:
     if addr_lines=5 then
