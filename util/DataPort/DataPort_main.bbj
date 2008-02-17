@@ -449,7 +449,7 @@ end_read_normalize_xref:
 
     release
 
-get_new_template: escape
+get_new_template:
     new_datafile$=cvs(datafile$,8)
     file_id$=ddm03.file_name$+ddm03.record_id$
 
@@ -459,17 +459,17 @@ get_new_template: escape
        file_id$ = str(file_id!)
        if len(file_id$)>7 then
           rem ' Longer new-style filename
-          new_datafile$ = cvs(file_id$,8);escape
+          new_datafile$ = cvs(file_id$,8)
        else
           rem ' Drop the record id from the old-style filename
-          new_datafile$=cvs(file_id$(1,len(file_id$)-1),8);escape
+          new_datafile$=cvs(file_id$(1,len(file_id$)-1),8)
        endif
     else
        file_id! = file_xref!.get(cvs(datafile$,7))
        if file_id!<>null() then
           rem ' found mapping for filename
           file_id$ = str(file_id!)+ddm03.record_id$
-          new_datafile$ = cvs(str(file_id!),8);escape
+          new_datafile$ = cvs(str(file_id!),8)
        endif
     endif
 
