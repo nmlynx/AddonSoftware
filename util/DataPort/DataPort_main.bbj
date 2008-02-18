@@ -173,7 +173,7 @@ rem --- Read the dictionary file ddm-03 to get data file info
 
 next_ddm03:
     if copy_sys01 then
-       readrecord(ddm03,key=k$,dom=read_normalize_xref)ddm03$
+       readrecord(ddm03,key=ddm03_key$,dom=read_normalize_xref)ddm03$
     else
        readrecord(ddm03,end=next_file)ddm03$
        if cvs(ddm03.file_name$,3)<>cvs(datafile$,3) then
@@ -419,20 +419,19 @@ end_read_loop:
        old_dir=0
     endif
     if normalize_sys01 then
-       print "sys-01"
        print "   sys-01 will be normalized to different parameter files"
        print (log_dev)"sys-01"
        print (log_dev)"   sys-01 will be normalized to different parameter files"
        file_normalization=unt
        open (file_normalization)filedir$+"file_normalization"
+       copy_sys01=1
 read_normalize_xref:
        read(file_normalization,end=end_read_normalize_xref)file_normalization$
        if file_normalization$="" then
           goto read_normalize_xref
        endif
-       copy_sys01=1
-       k$=cvs(file_normalization$(9,7),version_cvs)
-       datafile$=file_normalization$(9,6)
+       ddm03_key$=cvs(file_normalization$(9,6),version_cvs)+file_normalization$(15,1)
+       datafile$=ddm03_key$(1,6)
        goto next_ddm03
 end_read_normalize_xref:
        close (file_normalization)
