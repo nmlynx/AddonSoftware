@@ -8,9 +8,6 @@ rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-rem --- ivm-03/ivm-08 writes can probably be deleted.CAH
-rem --- looks like codeported, but post-codeport work not complete.CAH
-
 rem --- The following IOLIST's were removed from this program:
 
 rem --- ivm01a: iolist a0$(1),a1$(1),a2$(1),a3$(1),a4$(1),a5$,a6$(1),a[all]
@@ -86,15 +83,15 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
+    sys_when$=sysinfo.system_date$
+    sys_yyyymmdd$=fndate$(sys_when$)
 
     gls01_dev=tblchans[0]
     ivm01_dev=tblchans[1]
     ivm02_dev=tblchans[2]
-    ivm03_dev=tblchans[3]
     ivm04_dev=tblchans[4]
     ivm05_dev=tblchans[5]
     ivm07_dev=tblchans[7]
-    ivm08_dev=tblchans[8]
     ivm12_dev=tblchans[12]
     ivm17_dev=tblchans[17]
     ivt01_dev=tblchans[41]
@@ -104,32 +101,28 @@ rem --- Retrieve sysinfo data
 
 rem --- Retrieve miscellaneous templates
 
-    files=13,begfile=1,endfile=files
+    files=11,begfile=1,endfile=files
     dim ids$[files],templates$[files]
     ids$[1]="IVM_ITEMMAST"
     ids$[2]="IVM_ITEMWHSE"
-    ids$[3]="IVX_ITEMVEND"
-    ids$[4]="IVM_ITEMTIER"
-    ids$[5]="IVM_ITEMVEND"
-    ids$[6]="IVM_LSMASTER"
-    ids$[7]="IVX_LSXREF"
-    ids$[8]="IVM_ITEMACT"
-    ids$[9]="IVM_LSACT"
-    ids$[10]="IVT_LSTRANS"
-    ids$[11]="IVX_LSCUST"
-    ids$[12]="IVX_LSVEND"
-    ids$[13]="IVT_ITEMTRANS"
+    ids$[3]="IVM_ITEMTIER"
+    ids$[4]="IVM_ITEMVEND"
+    ids$[5]="IVM_LSMASTER"
+    ids$[6]="IVM_ITEMACT"
+    ids$[7]="IVM_LSACT"
+    ids$[8]="IVT_LSTRANS"
+    ids$[9]="IVX_LSCUST"
+    ids$[10]="IVX_LSVEND"
+    ids$[11]="IVT_ITEMTRANS"
 
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm03h$:templates$[3],
-:       ivm04a$:templates$[4],ivm05a$:templates$[5],ivm07a$:templates$[6],
-:       ivm08a$:templates$[7],ivm12a$:templates$[8],ivm17a$:templates$[9],
-:       ivt01a$:templates$[10],ivt02a$:templates$[11],ivt03a$:templates$[12],
-:       ivt04a$:templates$[13]
+    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm04a$:templates$[3],ivm05a$:templates$[4],
+:       ivm07a$:templates$[5],ivm12a$:templates$[6],ivm17a$:templates$[7],ivt01a$:templates$[8],
+:       ivt02a$:templates$[9],ivt03a$:templates$[10],ivt04a$:templates$[11]
 
 rem --- Parameters
 
@@ -150,7 +143,6 @@ rem --- Initializations
     dropship=(pos(action$="OPRC",2) and refs$[12]="Y")
     qty=refs[0]
     cost=refs[1]
-    firm_id$=items$[0]
     whse$(1)=items$[1]
     item$(1)=items$[2]
     lotser$(1)=items$[3]
@@ -166,8 +158,8 @@ rem --- Validate arguments
     clock$=""
     ymd$=fndate$(when$)
     if pos(action$="ICPOOECOUCTAOOPI",2) goto l900
-rem progrm missing    call pgmdir$+"adc_peryear.aon",firm_id$,gls01_dev,ymd$,period$,year$
-    if period$="" period$=p4$(1,2),year$=p4$(3)
+    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,ymd$,period$,year$
+    if period$="" period$=p4$(1,2),year$=p4$(3,4)
     clock$=fntime$(clock$)
 l900:
     dim last$[8]
@@ -257,7 +249,8 @@ l1500: rem --- For receipts, add to existing tier or create new one
     if pos(ivm04a.firm_id$+ivm04a.warehouse_id$+ivm04a.item_id$+ivm04a.receipt_date$=k$)<>1 goto l1550
     read record (ivm04_dev) ivm04a$
     if ivm04a.unit_cost<>cost goto l1500
-    if cvs(r$,2)<>ivm04a.trans_source$+ivm04a.trans_ref$+ivm04a.line_no$ goto l1500
+    if r$(1,12)<>ivm04a.trans_source$+ivm04a.trans_ref$+ivm04a.line_no$ goto l1500
+rem    if cvs(r$,2)<>ivm04a.trans_source$+ivm04a.trans_ref$+ivm04a.line_no$ goto l1500
     goto l1600
 
 l1550: rem --- Create new tier
@@ -310,7 +303,6 @@ l1740:
           refs[1]=avg
           remove (ivm04_dev,key=ivm04a.firm_id$+ivm04a.warehouse_id$+ivm04a.item_id$+
 :           ivm04a.receipt_date$+ivm04a.sequence_no$,dom=l1890)
-      
           goto l1890
       l1850:
           ivm04a.qty_on_hand=ivm04a.qty_on_hand-amount
@@ -336,13 +328,7 @@ l1900: rem --- ivm-05 Vendor Information
     ivm05a.firm_id$=firm_id$,ivm05a.vendor_id$=refs$[1]
     ivm05a.item_id$=item$
     ivm05a.prisec_flag$="S"
-    ivm03h.firm_id$=firm_id$,ivm03h.record_id_h$="H",ivm03h.item_id$=ivm05a.item_id$,ivm03h.vendor_id$=ivm05a.vendor_id$
-    find record (ivm05_dev,key=ivm05a.firm_id$+ivm05a.vendor_id$+ivm05a.item_id$,dom=l1950) ivm05a$
-    goto l1960
-l1950:
-rem --- assume ivm-03,"H" key replaced by index on ivm-05, so can probably remove.CAH
-    write record (ivm03_dev,key=ivm03h$) ivm03h$
-l1960:
+    find record (ivm05_dev,key=ivm05a.firm_id$+ivm05a.vendor_id$+ivm05a.item_id$,dom=*next) ivm05a$
     ivm05a.last_po_date$=ymd$
     ivm05a.last_po_cost=refs[1]
     ivm05a.last_po_lead=refs[3]
@@ -397,9 +383,8 @@ rem --- Update existing ivt-04 record
 
 l2400: rem --- Write new ivt-04 record
 
-    ivt04k0$=firm_id$+whse$+item$+ymd$
     channel=ivt04_dev
-    x=28
+    xseq_pos=28; rem "old transaction sequence position"
     if qty=0 if action$<>"BB" goto l3000
     gosub l6000
     write record (ivt04_dev,key=ivt04a.firm_id$+ivt04a.warehouse_id$+
@@ -437,12 +422,6 @@ rem --- Generate lot/serial comment
     if action$="TI" x$=x$+"Inventory Transfer"
     if action$="WO" x$="Completed Work Order"
     ivm07a.ls_comments$=x$
-
-l3400: rem --- Create ivm-08 Lot/Serial Xref
-rem --- assuming ivm-08 will now just be mkey of ivm-07
-rem --- can probably remove this routine.CAH
-    ivm08a.firm_id$=firm_id$,ivm08a.lotser_no$=lotser$,ivm08a.warehouse_id$=whse$,ivm08a.item_id$=item$
-    write record (ivm08_dev,key=ivm08a$) ivm08a$
 
 l3500: rem --- Update lot/serial master
 
@@ -485,7 +464,7 @@ l3700: rem --- ivt-01 Lot/Serial Transactions
     ivt01a.firm_id$=firm_id$,ivt01a.warehouse_id$=whse$,ivt01a.item_id$=item$,
 :       ivt01a.lotser_no$=lotser$,ivt01a.trans_date$=ymd$
     channel=ivt01_dev
-    x=48
+    xseq_pos=48; rem "old transaction sequence position"
     if dropship location$="Drop Ship"
     gosub l6000
     write record (ivt01_dev,key=ivt01a.firm_id$+ivt01a.warehouse_id$+ivt01a.item_id$+
@@ -522,8 +501,8 @@ l4950: rem --- Missing record
 
 l6000: rem --- Initialize IVT-01/IVT-04 Transaction History Record
 
-    if channel=ivt01_dev dim ivtwk$:fattr(ivt01a$);ivtwk$=ivt01a$
-    if channel=ivt04_dev dim ivtwk$:fattr(ivt04a$);ivtwk$=ivt04a$
+    if channel=ivt01_dev dim ivtwk$:fattr(ivt01a$);ivtwk$=ivt01a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.trans_date$
+    if channel=ivt04_dev dim ivtwk$:fattr(ivt04a$);ivtwk$=ivt04a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.lotser_no$+ivtwk.trans_date$
     ivtwk.trans_source$=trans$(code,2)
     ivtwk.trans_ref_1$=refs$[1]
     ivtwk.trans_ref_2$=refs$[2]
@@ -538,9 +517,9 @@ l6000: rem --- Initialize IVT-01/IVT-04 Transaction History Record
     ivtwk.location$=location$
     if pos(action$="PORC",2) ivtwk.line_code$="",ivtwk.po_line_code$=refs$[6]
     ivtwk.oper_id$=params$[1]
-    ivtwk.system_date$=params$[0]
+    ivtwk.system_date$=sys_yyyymmdd$; rem params$[0]
     ivtwk.system_time$=clock$
-    ivtwk.terminal_id$=fid(0)
+rem    ivtwk.terminal_id$=fid(0)
     ivtwk.trans_qty=qty
     ivtwk.unit_cost=cost
     ivtwk.unit_price=refs[2]
@@ -550,10 +529,12 @@ rem --- Find next available key
 
     let ivtwk.iv_hist_seq$="00000"
     if action$="BB" goto l6190
-    read (channel,key=ivtwk$(1,len(ivtwk$)-len(ivtwk.iv_hist_seq$))+$FF$,dom=*next) 
+rem    read (channel,key=ivtwk$(1,len(ivtwk$)-len(ivtwk.iv_hist_seq$))+$FF$,dom=*next) 
+    read (channel,key=ivtwk0$+$FF$,dom=*next)
+
     let k$=keyp(channel,end=l6160)
-    if pos(ivtwk$(1,len(ivtwk$)-len(ivtwk.iv_hist_seq$))=k$)=1 
-:       ivtwk.iv_hist_seq$=k$(len(k$)-len(ivtwk.iv_hist_seq$)+1) 
+    if pos(ivtwk0$=k$)=1 ivtwk.iv_hist_seq$=k$(len(ivtwk0$)+1,len(ivtwk.iv_hist_seq$)) 
+rem    if pos(ivtwk$(1,len(ivtwk$)-len(ivtwk.iv_hist_seq$))=k$)=1 ivtwk.iv_hist_seq$=k$(len(k$)-len(ivtwk.iv_hist_seq$)+1) 
 l6160:
     let ivtwk.iv_hist_seq$=str(num(ivtwk.iv_hist_seq$)+1:"00000")
 l6190:
@@ -563,7 +544,6 @@ l6190:
     return
 
 l6200: rem --- Initialize IVT-02 Transaction Xref Record
-rem --- as of 11/13/06, ivt-02/03 aren't defined... making mods as if files will be there
 
     ivt02a.firm_id$=firm_id$,ivt02a.customer_id$=refs$[1],ivt02a.product_type$=ivm01a.product_type$,
 :       ivt02a.lotser_no$=lotser$,ivt02a.trans_date$=ymd$,ivt02a.warehouse_id$=whse$,ivt02a.item_id$=item$,
@@ -604,7 +584,7 @@ l6500: rem --- ivm-02 Warehouse/IVM-07 Lot/Serial Number Updates
 
 rem --- Recalculate average cost
 
-    let amount=(ivmwk.qty_on_hand*ivmwk.avg_cost)+(qty*cost),number=ivmwk.qty_on_hand+qty,x=ivmwk.avg_cost
+    amount=(ivmwk.qty_on_hand*ivmwk.avg_cost)+(qty*cost),number=ivmwk.qty_on_hand+qty,x=ivmwk.avg_cost
     if number>0 ivmwk.avg_cost=amount/number
     if ivmwk.avg_cost=0 ivmwk.avg_cost=x
     if ivmwk.avg_cost<0 ivmwk.avg_cost=cost
