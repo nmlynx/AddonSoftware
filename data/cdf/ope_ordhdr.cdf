@@ -55,9 +55,14 @@ rem --- set default values
 	find record(ope01_dev,key=firm_id$+
 :		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)ope01a$
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)ope01a$;goto rec_exist
+	user_tpl.new_rec$="Y"
+
+rec_exist:
+
 rem --- new record
-	if ope01a.firm_id$="  "
+	if user_tpl.new_rec$="Y"
+		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
 		arm02_dev=fnget_dev("ARM_CUSTDET")
 		arm02a$=fnget_tpl$("ARM_CUSTDET")
 		dim arm02a$:arm02a$
@@ -68,7 +73,7 @@ rem --- new record
 		dim arm01a$:arm01a$
 		read record (arm01_dev,key=firm_id$+
 :			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),dom=*next)arm01a$
-		callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",stbl("OPE_DEF_SHIP"))
+		callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",user_tpl.def_ship$)
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
 		callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG","O")
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",sysinfo.system_date$)
@@ -90,6 +95,7 @@ rem --- new record
 		endif
 		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","Y")
 	endif
+	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
@@ -148,9 +154,6 @@ rem --- reset expiration date to enabled
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	dmap$=""
 	gosub disable_ctls
-
-rem --- set user_tpl values
-	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 	gosub get_op_params
@@ -328,10 +331,8 @@ return
 
 copy_order: rem --- Duplicate or Credit Historical Invoice
 	if sign=0 sign=1
-escape;rem check rec_data$ and opt01a$
 	call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,rec_data$,status
-escape;rem check rec_data$ and opt01a$
-	callpoint!.setColumnData("OPE_ORDHDR.AR_INV_NO",opt01a.ar_inv_no$)
+	callpoint!.setColumnData("OPE_ORDHDR.AR_INV_NO","")
 	callpoint!.setColumnData("OPE_ORDHDR.AR_SHIP_VIA",opt01a.ar_ship_via$)
 	callpoint!.setColumnData("OPE_ORDHDR.AR_TYPE",opt01a.ar_type$)
 	callpoint!.setColumnData("OPE_ORDHDR.BACKORD_FLAG","")
@@ -346,21 +347,21 @@ escape;rem check rec_data$ and opt01a$
 	callpoint!.setColumnData("OPE_ORDHDR.DIST_CODE",opt01a.dist_code$)
 	callpoint!.setColumnData("OPE_ORDHDR.EXPIRE_DATE","")
 	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",str(opt01a.freight_amt*sign))
-	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",opt01a.invoice_date$)
-	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE",opt01a.invoice_type$)
+	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",user_tpl.def_ship$)
+	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
 	callpoint!.setColumnData("OPE_ORDHDR.JOB_NO",opt01a.job_no$)
 	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS",opt01a.lock_status$)
 	callpoint!.setColumnData("OPE_ORDHDR.MESSAGE_CODE",opt01a.message_code$)
 	callpoint!.setColumnData("OPE_ORDHDR.MISC_NO",opt01a.misc_no$)
 	callpoint!.setColumnData("OPE_ORDHDR.ORDER_DATE",opt01a.order_date$)
 	callpoint!.setColumnData("OPE_ORDHDR.ORDER_NO",opt01a.order_no$)
-	callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG",opt01a.ordinv_flag$)
+	callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG","O")
 	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",opt01a.taken_by$)
 	callpoint!.setColumnData("OPE_ORDHDR.PRICE_CODE",opt01a.price_code$)
 	callpoint!.setColumnData("OPE_ORDHDR.PRICING_CODE",opt01a.pricing_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS",opt01a.print_status$)
+	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
 	callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG",opt01a.reprint_flag$)
-	callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",opt01a.shipmnt_date$)
+	callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",user_tpl.def_ship$)
 	callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_NO",opt01a.shipto_no$)
 	callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_TYPE",opt01a.shipto_type$)
 	callpoint!.setColumnData("OPE_ORDHDR.SLSPSN_CODE",opt01a.slspsn_code$)
@@ -371,6 +372,75 @@ escape;rem check rec_data$ and opt01a$
 	callpoint!.setColumnData("OPE_ORDHDR.TERRITORY",opt01a.territory$)
 	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",opt01a.total_cost$)
 	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",opt01a.total_sales$)
+
+rem --- copy Manual Ship To if any
+	if opt01a.shipto_type$="M"
+		dim ope31a$:fnget_tpl$("OPE_ORDSHIP")
+		ope31_dev=fnget_dev("OPE_ORDSHIP")
+		dim opt31a$:fnget_tpl$("OPT_INVSHIP")
+		opt31_dev=fnget_dev("OPT_INVSHIP")
+		readrecord(opt31_dev,key=firm_id$+opt01a.customer_id$+opt01a.ar_inv_no$,dom=*next)opt31a$
+		call stbl("+DIR_PGM")+"adc_copyfile.aon",opt31a$,ope31a$,status
+		ope31a.order_no$=rec_data.order_no$
+		writerecord(ope31_dev,key=firm_id$+ope31a.customer_id$+ope31a.order_no$)ope31a$
+	endif
+
+rem --- copy detail lines
+	dim opt11a$:fnget_tpl$("OPT_ORDDET")
+	opt11_dev=fnget_dev("OPT_ORDDET")
+	dim ope11a$:fnget_tpl$("OPE_ORDDET")
+	ope11_dev=fnget_dev("OPE_ORDDET")
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+	read(opt11_dev,key=firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$,dom=*next)
+	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+	while 1
+		read record(opt11_dev,end=*break) opt11a$
+		if firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$<>
+:			opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$ break
+		call stbl("+DIR_PGM")+"adc_copyfile.aon",opt11a$,ope11a$,status		
+		if cvs(opt11a.line_code$,2)<>""
+			read record (opc_linecode_dev,key=firm_id$+opt11a.line_code$,dom=*next)opc_linecode$
+		endif
+		if opc_linecode.line_type$<>"M"
+			if opc_linecode.line_type$="O" and ope11a.commit_flag$="N"
+				ope11a.ext_price=ope11a.unit_price
+				ope11a.unit_price=0			
+			endif
+			if sign<0
+				ope11a.qty_ordered=-ope11a.qty_shipped
+				ope11a.ext_price=-ope11a.ext_price
+			endif
+			if opc_linecode.line_type$<>"O"
+				ope11a.qty_shipped=ope11a.qty_ordered
+				ope11a.qty_backord=0
+				ope11a.taxable_amt=0
+				ope11a.ext_price=round(ope11a.unit_price*ope11a.qty_shipped,2)
+			endif
+			if pos(opc_linecode.line_type$="SP")=0
+				if opc_linecode.taxable_flag$="Y"
+					ope11a.taxable_amt=ope11a.ext_price
+				endif
+			else
+				read record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$
+				if opc_linecode.taxable_flag$="Y" and ivm01a.taxable_flag$="Y"
+					ope11a.taxable_amt=ope11a.ext_price
+				endif
+			endif
+		endif
+		ope11a.order_no$=rec_data.order_no$
+		ope11a.est_shp_date$=rec_data$.shipmnt_date$
+		ope11a.commit_flag$="Y"
+		ope11a.pick_flag$="N"
+		if ope11a.est_shp_date$>user_tpl.def_commit$
+			ope11a.commit_flag$="N"
+		endif
+escape;rem what about line 775 in ope_dd.bbx?
+		writerecord(ope11_dev,key=firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+ope11a.line_no$)ope11a$
+escape;rem what about lines 785 and 790 in ope_dd.bbx
+	wend
+escape;rem lines 800 to 895 here
 return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
@@ -407,12 +477,9 @@ rem --- Populate address fields
 		dmap$=""
 	endif
 	gosub disable_ctls
-
-rem --- set user_tpl values
-	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=24
+	num_files=26
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -438,6 +505,8 @@ rem	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
 	open_tables$[22]="IVT_LSTRANS",open_opts$[22]="OTA"
 	open_tables$[23]="OPT_ORDHDR",open_opts$[23]="OTA"
 	open_tables$[24]="OPT_ORDDET",open_opts$[24]="OTA"
+	open_tables$[25]="OPE_ORDDET",open_opts$[25]="OTA"
+	open_tables$[26]="OPT_INVSHIP",open_opts$[26]="OTA"
 	gosub open_tables
 
 rem --- get AR Params
@@ -488,7 +557,10 @@ rem --- Setup user_tpl$
 	ars_credit_dev=num(open_chans$[7])
 	dim ars_credit$:open_tpls$[7]
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
-	dim user_tpl$:"new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),line_boqty:n(15),line_shipqty:n(15)"
-	user_tpl.new_rec$="Y"
+	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
+	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8)"
+	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
+	user_tpl.def_ship$=stbl("OPE_DEF_SHIP")
+	user_tpl.def_commit$=stbl("OPE_DEF_COMMIT")
