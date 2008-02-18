@@ -127,7 +127,10 @@ rem -- Deal with which Ship To type
 	endif
 	gosub disable_ctls
 [[OPE_ORDHDR.ASHO]]
-call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDDATES",stbl("+USER_ID"),"MNT","",table_chans$[all]
+rem --- get default dates
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDDATES",stbl("+USER_ID"),"MNT","",table_chans$[all]
+	user_tpl.def_ship$=stbl("OPE_DEF_SHIP")
+	user_tpl.def_commit$=stbl("OPE_DEF_COMMIT")
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- enable/disable expire date based on value
 	dim dctl$[9]
@@ -562,5 +565,3 @@ rem --- Setup user_tpl$
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
-	user_tpl.def_ship$=stbl("OPE_DEF_SHIP")
-	user_tpl.def_commit$=stbl("OPE_DEF_COMMIT")

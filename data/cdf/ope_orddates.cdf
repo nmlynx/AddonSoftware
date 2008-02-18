@@ -7,8 +7,8 @@ rem --- Setup default dates
 	orddate$=date(0:"%Y%Mz%Dz")
 	comdate$=orddate$
 	shpdate$=orddate$
-	comdays=ars01a.commit_days
-	shpdays=ars01a.def_shp_days
+	comdays=num(ars01a.commit_days$)
+	shpdays=num(ars01a.def_shp_days$)
 	if comdays<>0 call stbl("+DIR_PGM")+"adc_daydates.aon",orddate$,comdate$,comdays
 	if shpdays<>0 call stbl("+DIR_PGM")+"adc_daydates.aon",orddate$,shpdate$,shpdays
 	callpoint!.setColumnData("OPE_ORDDATES.DEF_COMMIT",comdate$)
