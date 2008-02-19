@@ -47,6 +47,14 @@ rem --- Remove extra records
 :		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)
+	if user_tpl.credit_installed$="Y"
+		ars_cred_dev=fnget_dev("OPE_CREDCUST")
+		dim ars_credcust$:fnget_tpl$("OPE_CREDCUST")
+		remove (ars_cred_dev,key=firm_id$+
+:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
+:			callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")+
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)			
+	endif
 [[OPE_ORDHDR.ORDER_NO.AVAL]]
 rem --- set default values
 	ope01_dev=fnget_dev("OPE_ORDHDR")
@@ -59,7 +67,12 @@ rem --- set default values
 	user_tpl.new_rec$="Y"
 
 rec_exist:
-
+	if user_tpl.new_rec$<>"Y"
+		gosub check_lock_flag
+		if locked=1
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 rem --- new record
 	if user_tpl.new_rec$="Y"
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
@@ -332,6 +345,38 @@ rem 0870 LET U[0]=U[0]+W[6],U[1]=U[1]+W[7],U[2]=U[2]+W[0]*W[4]
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(user_tpl.ord_tot))
 return
 
+check_lock_flag:
+	locked=0
+	on pos(callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS")="NYS12") goto 
+:		end_lock,end_lock,locked,on_invoice,update_stat,update_stat
+locked:
+	msg_id$="ORD_LOCKED"
+	dim msg_tokens$[1]
+	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")="B" 
+		msg_tokens$[1]=" by Batch Print."
+		gosub disp_message
+		if msg_opt$="Y"
+			callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","N")
+			goto end_lock
+		else
+			locked=1
+			goto end_lock
+		endif
+	else
+		goto end_lock
+	endif
+on_invoice:
+	msg_id$="ORD_ON_REG"
+	gosub disp_message
+	locked=1
+	goto end_lock
+update_stat:
+	msg_id$="INVOICE_IN_UPDATE"
+	gosub disp_message
+	locked=1
+end_lock:
+	return
+
 copy_order: rem --- Duplicate or Credit Historical Invoice
 	if sign=0 sign=1
 	call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,rec_data$,status
@@ -341,7 +386,7 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 	callpoint!.setColumnData("OPE_ORDHDR.BACKORD_FLAG","")
 	callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE",opt01a.cash_sale$)
 	callpoint!.setColumnData("OPE_ORDHDR.COMM_AMT",str(opt01a.comm_amt*sign))
-	callpoint!.setColumnData("OPE_ORDHDR.COMM_PERCENT",opt01a.comm_pct$)
+	callpoint!.setColumnData("OPE_ORDHDR.COMM_PERCENT",str(opt01a.comm_percent$))
 	callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG",opt01a.credit_flag$)
 	callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_PO_NO","")
 	callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_REL_NO",opt01a.customer_rel_no$)
@@ -359,7 +404,7 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 	callpoint!.setColumnData("OPE_ORDHDR.ORDER_DATE",opt01a.order_date$)
 	callpoint!.setColumnData("OPE_ORDHDR.ORDER_NO",opt01a.order_no$)
 	callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG","O")
-	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",opt01a.taken_by$)
+	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",opt01a.ord_taken_by$)
 	callpoint!.setColumnData("OPE_ORDHDR.PRICE_CODE",opt01a.price_code$)
 	callpoint!.setColumnData("OPE_ORDHDR.PRICING_CODE",opt01a.pricing_code$)
 	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
@@ -482,7 +527,7 @@ rem --- Populate address fields
 	gosub disable_ctls
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=26
+	num_files=27
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -510,6 +555,7 @@ rem	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
 	open_tables$[24]="OPT_ORDDET",open_opts$[24]="OTA"
 	open_tables$[25]="OPE_ORDDET",open_opts$[25]="OTA"
 	open_tables$[26]="OPT_INVSHIP",open_opts$[26]="OTA"
+	open_tables$[27]="OPE_CREDCUST",open_opts$[27]="OTA"
 	gosub open_tables
 
 rem --- get AR Params
