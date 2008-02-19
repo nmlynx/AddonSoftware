@@ -282,6 +282,9 @@ end_ddm04:
        endif
     endif
 
+    rem ' Do we need to set the shipto type?
+    ar_shipto = table_alias$="OPE_ORDHDR" or table_alias$="OPT_ORDHDR"
+
     rem ' Correlate old fieldnames to new fieldnames
     dim new_fieldlist$:fields$
     new_fieldlist$=$$
@@ -349,6 +352,17 @@ next_rec:
     next field
 
     if addr_lines then gosub reformat_address
+
+    if ar_shipto then
+       shipto_no = -1
+       shipto_no = num(field(new_rec$,"shipto_no"),err=*next)
+       switch shipto_no
+           case 0; shipto_type$="B"; break
+           case 99; shipto_type$="M"; break
+           case default; shipto_type$="S"; break
+       swend
+       field new_rec$,"shipto_type"=shipto_type$
+    endif
 
     new_rec$=field(new_rec$)
 
@@ -473,7 +487,7 @@ get_new_template:
     endif
 
     table_alias! = file_alias!.get(cvs(file_id$,7))
-    table_alias$ = iff(table_alias!=null(),"",str(table_alias!))
+    table_alias$ = iff(table_alias!=null(),"",cvs(str(table_alias!),3))
     print "Table Alias: ",table_alias$
     if table_alias$="" then
        print "   Data File "+file_id$+" will not be ported"
@@ -544,7 +558,7 @@ set_new_fieldname:
        return
     endif
 
-    if source_version=6 and pos("IVC_PRODCODE"=table_alias$) and old_fieldname$="RESERVED_STR" then
+    if source_version=6 and table_alias$="IVC_PRODCODE" and old_fieldname$="RESERVED_STR" then
        new_fieldname$="SA_LEVEL"
        goto check_fieldlist
     endif
