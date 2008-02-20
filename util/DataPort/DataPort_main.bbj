@@ -367,7 +367,16 @@ next_rec:
     new_rec$=field(new_rec$)
 
 write_record:
-    writerecord(new_file,err=write_err)new_rec$
+    if keysize then
+       k$=xkgen(new_rec$,xfin$,0)
+       if len(k$)>keysize then
+          writerecord(new_file,key=k$(1,keysize),err=write_err)new_rec$
+       else
+          writerecord(new_file,key=k$,err=write_err)new_rec$
+       endif
+    else
+       writerecord(new_file,err=write_err)new_rec$
+    endif
     goto next_rec
 
 eof:
@@ -530,6 +539,15 @@ check_for_definition:
     new_file=unt
     open (new_file)destin_folder$+"/"+new_datafile$
     lock (new_file)
+    xfid$=xfid(new_file)
+    xfin$=$$
+    keysize=dec(xfid$(2,4))
+    if keysize then
+       call stbl("+DIR_SYP")+"bac_create_xfin.bbj",table_alias$,xfin$,rd_table_chans$[all],status$
+       if len(status$) then
+          escape
+       endif
+    endif
 return
 
 undefined_file:
