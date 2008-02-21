@@ -54,28 +54,22 @@ rem --- Background
 
 rem --- Initial File Read
 
-        read (opt01_dev,key=firm_id$+" "+p8$,knum=2,dom=*next)
+
+        read (opt01_dev,key=firm_id$+opt01a.ar_type$+p8$,knum=2,dom=*next)
 
 
 rem --- Main Loop (Invoice Read)
-While more
+
+ while more
 
         read record(opt01_dev,end=*break)opt01a$
         if opt01a.firm_id$<>firm_id$ break
 
-rem        if p8$<>"" then
-rem           if opt01a.invoice_date$<p8$ then
-rem                continue
-rem            endif
-rem        endif
         if p9$<>"" then
             if opt01a.invoice_date$>p9$ then
                 break
             endif
         endif
-        find record (opt01_dev,key=opt01a.firm_id$+opt01a.ar_type$+opt01a.invoice_date$+opt01a.ar_inv_no$+opt01a.customer_id$,dom=*continue) opt01a$
-        if opt01a.firm_id$<>firm_id$ then break
-
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Void
@@ -120,7 +114,8 @@ rem --- Totals
         t[5]=t[5]+opt01a.comm_amt
         t[6]=t[6]+opt01a.total_sales
         t[7]=t[7]+opt01a.total_cost
-Wend
+ wend
+
 rem --- Main Loop Ends
 
 
@@ -177,7 +172,7 @@ rem --- Detail
         if opt01a.total_cost>999 then let opt01a.total_cost=999.99
         if opt01a.invoice_type$<>"V" then
              print (printer_dev)@(0),opt01a.customer_id$,@(15),fnmask$(opt01a.ar_inv_no$(1,p[0]),m0$),
-:                              @(23),fndate$(opt01a.sequence_000$),@(33+12-m1),opt01a.tax_amount:m1$,
+:                              @(23),fndate$(opt01a.invoice_date$),@(33+12-m1),opt01a.tax_amount:m1$,
 :                              @(46+12-m1),opt01a.freight_amt:m1$,@(59+12-m1),opt01a.discount_amt:m1$,
 :                              @(72+12-m1),opt01a.comm_percent:m1$,@(85+12-m1),opt01a.taxable_amt:m1$,
 :                              @(98+12-m1),opt01a.tax_amount+opt01a.discount_amt+opt01a.freight_amt-opt01a.comm_percent+
