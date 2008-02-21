@@ -27,22 +27,7 @@ rem --- Open/Lock files
 
     files=1,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="mps-01a",ids$[1]=""
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    mps01a_dev=channels[1]
-
-rem --- Dimension string templates
-
-    dim mps01a$:templates$[1]
-
-
-rem --- Retrieve parameter records
-
-    mps01a_key$=firm_id$+"MP00"
-    find record (mps01a_dev,key=mps01a_key$,err=std_missing_params) mps01a$
-
+   
 rem --- Initializations
 
     action=1
@@ -62,20 +47,22 @@ rem --- Open FILENAME$
         flag=0
         while more
             dim files$[files],options$[files],channels[files]
-            files$[files]=filename$
+            files$[files]=filename$,ids$[files]=alias$
             options$[files]="F"
             begfile=files
             endfile=files
-            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],channels[all],batch,da_status
+            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:           ids$[all],templates$[all],channels[all],batch,da_status
             if da_status then 
                 flag=1
                 break
             endif
             if channels[files]<>0 then break
-            call pgmdir$+"syc_ml.bbx",filename$,alias$,ml_status
+            call pgmdir$+"adc_makelike.aon",filename$,alias$,ml_status
         wend
         if flag=0 then
             channel=channels[files]
+
 rem --- All Done
 
             status=0
