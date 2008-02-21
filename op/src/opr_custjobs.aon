@@ -61,15 +61,17 @@ rem --- Retrieve parameter records
 
 rem --- Parameters
         n1$=sysinfo.firm_name$,n2$="AR",n3$=sysinfo.task_desc$
+        dim p[2]
         find record (ars01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
-        if  ars01a.job_nos$<>"Y" 
-            msg_id$="OP_NOJOBS"
-            gosub disp_message
-            goto std_exit
+
+        if    ars01a.job_nos$<>"Y" 
+              msg_id$="OP_NOJOBS"
+              gosub disp_message
+              goto std_exit
         else
-            p[0]=num(ars01a.customer_size$)
-            p[1]=num(ars01a.customer_max_len$)
-            p[2]=num(ars01a.zip_length$)
+                p[0]=num(ars01a.customer_size$)
+                p[1]=num(ars01a.max_customer_len$)
+                p[2]=num(ars01a.zip_length$)
         endif
 
 rem --- Initialize Data
