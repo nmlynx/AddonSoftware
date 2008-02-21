@@ -114,7 +114,7 @@ report_heading: rem --- Report Heading
 :                                   @(74+m0),"Lien Number",
 :                                   @(87+m0),"Lien Date",
 :                                   @(98+m0+m1-8),"Lien Amount"
-rem :                                   @(98+m0),"Lien Amount"
+
         print (printer_dev)"No.",
 :                                   @(1+m0),"Name",
 :                                   @(32+m0),"Number",
@@ -122,7 +122,7 @@ rem :                                   @(98+m0),"Lien Amount"
 :                                   @(74+m0),"First Ship",
 :                                   @(87+m0),"Last Inv",
 :                                   @(98+m0+m1-8),"Sls-To-Date"
-rem :                                   @(98+m0),"Sls-To-Date"
+
         return
 
 Sub_Head: rem --- Subhead
@@ -138,7 +138,6 @@ Customer_Break: rem --- Customer Break
         if t9$<>"" then
             return
         endif
-        rem dim b1$(30)
         t0$=opm09a.customer_id$
         arm01a.customer_name$="(Not On File)"
         find record (arm01_dev,key=opm09a.firm_id$+t0$,dom=*next) arm01a$
