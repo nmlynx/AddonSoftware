@@ -60,12 +60,17 @@ rem --- Retrieve parameter records
         find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Parameters
-        dim p[2]
-        n1$=sysinfo.firm_name$
-        n2$="AR"
-        n3$=sysinfo.task_desc$
+        n1$=sysinfo.firm_name$,n2$="AR",n3$=sysinfo.task_desc$
         find record (ars01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
-        p[0]=num(ars01a.customer_size$)
+        if  ars01a.job_nos$<>"Y" 
+            msg_id$="OP_NOJOBS"
+            gosub disp_message
+            goto std_exit
+        else
+            p[0]=num(ars01a.customer_size$)
+            p[1]=num(ars01a.customer_max_len$)
+            p[2]=num(ars01a.zip_length$)
+        endif
 
 rem --- Initialize Data
 
@@ -149,7 +154,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
             q1$=stbl(q$,err=*next)
             return q1$
         fnend
+rem #include disp_message.src
 
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
+rem #endinclude disp_message.src
 rem --- #endinclude std_functions.src
 
 rem --- #include std_error.src
