@@ -10,7 +10,7 @@
 			<DD_ALIAS_TYPE>X</DD_ALIAS_TYPE>
 			<DD_KEY_LENGTH>0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD>0</DD_NBR_RECORD>
-			<DD_RECORD_LEN>358</DD_RECORD_LEN>
+			<DD_RECORD_LEN>344</DD_RECORD_LEN>
 			<DD_SYSTEM_REC>N</DD_SYSTEM_REC>
 			<DD_SYSTEM_ID>OP</DD_SYSTEM_ID>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID>F53A7424F3BEF6BD46B6940B29F57F46</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA>Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20080218</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE>20080218</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME>220802</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE>20080221</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE>20080221</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME>214900</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM>[+DIR_CPP]ope_ordhdr_cpt.bbj</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP>T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV>zzzz</DD_ATTR_SLEV>
@@ -99,6 +99,14 @@
 		<ID>DDM_TABLE_OPTS</ID>
 		<RECORD>
 			<DD_TABLE_ALIAS>OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS>G</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD>
+			<DD_TABLE_ALIAS>OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS>V</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD>
+			<DD_TABLE_ALIAS>OPE_ORDHDR      </DD_TABLE_ALIAS>
 			<DD_ATTR_OPTS>W</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
@@ -125,7 +133,7 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>OPE_ORDHDR      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME>ope-01</DD_FILE_NAME>
-			<DD_TABLE_TPL>firm_id:c(2),ar_type:c(2),customer_id:c(6),order_no:c(7),sequence_000:c(3),invoice_type:c(1),ordinv_flag:c(1),backord_flag:c(1),reserved_str:c(8),ar_ship_via:c(10),ar_inv_no:c(7),misc_no:c(10),slspsn_code:c(3),terms_code:c(2),disc_code:c(2),dist_code:c(2),print_status:c(1),lock_status:c(1),message_code:c(2),territory:c(3),price_code:c(2),reserved_str_02:c(3),tax_code:c(2),pricing_code:c(4),job_no:c(10),ord_taken_by:c(16),cash_sale:c(1),reprint_flag:c(1),credit_flag:c(1),shipto_no:c(6),reserved_str_03:c(3),customer_po_no:c(20),customer_rel_no:c(20),reserved_str_04:c(50),invoice_date:c(8),shipmnt_date:c(8),order_date:c(8),expire_date:c(8*),dealer_str:c(1*),tax_amount:n(7*),freight_amt:n(7*),discount_amt:n(7*),comm_percent:n(7*),taxable_amt:n(7*),comm_amt:n(7*),total_sales:n(7*),total_cost:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*),shipto_type:c(1*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL>firm_id:c(2),ar_type:c(2),customer_id:c(6),order_no:c(7),sequence_000:c(3),invoice_type:c(1),ordinv_flag:c(1),backord_flag:c(1),reserved_str:c(8),ar_ship_via:c(10),ar_inv_no:c(7),misc_no:c(10),slspsn_code:c(3),terms_code:c(2),disc_code:c(2),dist_code:c(2),print_status:c(1),lock_status:c(1),message_code:c(2),territory:c(3),price_code:c(2),reserved_str_02:c(3),tax_code:c(2),pricing_code:c(4),job_no:c(10),ord_taken_by:c(3),cash_sale:c(1),reprint_flag:c(1),credit_flag:c(1),shipto_no:c(6),reserved_str_03:c(3),customer_po_no:c(20),customer_rel_no:c(20),reserved_str_04:c(50),invoice_date:c(8),shipmnt_date:c(8),order_date:c(8),expire_date:c(8*),dealer_str:c(1*),tax_amount:n(7*),freight_amt:n(7*),discount_amt:n(7*),comm_percent:n(7*),taxable_amt:n(7*),comm_amt:n(7*),total_sales:n(7*),total_cost:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*),shipto_type:c(1*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -549,7 +557,7 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>OPE_ORDHDR      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE>023</DD_SEQUENCE>
-			<DD_DATA_NAME>TAX_CODE        </DD_DATA_NAME>
+			<DD_DATA_NAME>OP_TAX_CODE     </DD_DATA_NAME>
 			<DD_DVAR_NAME>TAX_CODE        </DD_DVAR_NAME>
 			<DD_COL_REPEATS>0</DD_COL_REPEATS>
 			<DD_COL_OCCURS>0</DD_COL_OCCURS>
@@ -557,6 +565,7 @@
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE>20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW>35</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
 			<DD_ATTR_MAXL>2</DD_ATTR_MAXL>
 			<DD_ATTR_PROM>Tax Code</DD_ATTR_PROM>
 			<DD_ATTR_TIND>42</DD_ATTR_TIND>
@@ -1791,28 +1800,33 @@
 			<DD_ATTR_LABS>Res For Addon Use</DD_ATTR_LABS>
 		</RECORD>
 		<RECORD>
-			<DD_DATA_NAME>TAX_CODE        </DD_DATA_NAME>
+			<DD_DATA_NAME>OP_TAX_CODE     </DD_DATA_NAME>
 			<DD_DESCRIPTION>Tax Code</DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
 			<DD_DATA_LENGTH>2</DD_DATA_LENGTH>
 			<DD_SYSTEM_ID>  </DD_SYSTEM_ID>
 			<DD_MASK_TYPE> </DD_MASK_TYPE>
-			<DD_SPECIAL_MASK>               </DD_SPECIAL_MASK>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>AON</ASC_PROD_ID>
-			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20060329</DD_LSTREV_DATE>
+			<DD_CREATE_DATE>20080119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE>20080119</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL>PR_CODE_DESC    </DD_ATTR_DCOL>
+			<DD_ATTR_DCOL>CODE_DESC</DD_ATTR_DCOL>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
-			<DD_ATTR_DKEY>[+FIRM_ID]+"C"+@</DD_ATTR_DKEY>
-			<DD_ATTR_DTAB>PRC_TAXCODE     </DD_ATTR_DTAB>
+			<DD_ATTR_DKEY>[+FIRM_ID]+@</DD_ATTR_DKEY>
+			<DD_ATTR_DTAB>OPC_TAXCODE     </DD_ATTR_DTAB>
 			<DD_ATTR_LABL>Tax Code</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Tax Cd</DD_ATTR_LABS>
+			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR>0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL>0</DD_ATTR_MINL>
 			<DD_ATTR_MSKI>UU</DD_ATTR_MSKI>
 			<DD_ATTR_PADC>20</DD_ATTR_PADC>
 			<DD_ATTR_PADJ>L</DD_ATTR_PADJ>
+			<DD_ATTR_PREC>0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>PRICING_CODE    </DD_DATA_NAME>

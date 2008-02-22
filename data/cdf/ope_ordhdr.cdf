@@ -1,5 +1,3 @@
-[[OPE_ORDHDR.AOPT-CINV]]
-escape
 [[OPE_ORDHDR.AOPT-DINV]]
 rem --- Duplicate Historical Invoice
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
@@ -379,47 +377,31 @@ end_lock:
 
 copy_order: rem --- Duplicate or Credit Historical Invoice
 	if sign=0 sign=1
-	call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,rec_data$,status
-	callpoint!.setColumnData("OPE_ORDHDR.AR_INV_NO","")
-	callpoint!.setColumnData("OPE_ORDHDR.AR_SHIP_VIA",opt01a.ar_ship_via$)
-	callpoint!.setColumnData("OPE_ORDHDR.AR_TYPE",opt01a.ar_type$)
-	callpoint!.setColumnData("OPE_ORDHDR.BACKORD_FLAG","")
-	callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE",opt01a.cash_sale$)
-	callpoint!.setColumnData("OPE_ORDHDR.COMM_AMT",str(opt01a.comm_amt*sign))
-	callpoint!.setColumnData("OPE_ORDHDR.COMM_PERCENT",str(opt01a.comm_percent$))
-	callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG",opt01a.credit_flag$)
-	callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_PO_NO","")
-	callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_REL_NO",opt01a.customer_rel_no$)
-	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(opt01a.discount_amt*sign))
-	callpoint!.setColumnData("OPE_ORDHDR.DISC_CODE",opt01a.disc_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.DIST_CODE",opt01a.dist_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.EXPIRE_DATE","")
-	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",str(opt01a.freight_amt*sign))
-	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",user_tpl.def_ship$)
-	callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
-	callpoint!.setColumnData("OPE_ORDHDR.JOB_NO",opt01a.job_no$)
-	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS",opt01a.lock_status$)
-	callpoint!.setColumnData("OPE_ORDHDR.MESSAGE_CODE",opt01a.message_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.MISC_NO",opt01a.misc_no$)
-	callpoint!.setColumnData("OPE_ORDHDR.ORDER_DATE",opt01a.order_date$)
-	callpoint!.setColumnData("OPE_ORDHDR.ORDER_NO",opt01a.order_no$)
-	callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG","O")
-	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",opt01a.ord_taken_by$)
-	callpoint!.setColumnData("OPE_ORDHDR.PRICE_CODE",opt01a.price_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.PRICING_CODE",opt01a.pricing_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
-	callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG",opt01a.reprint_flag$)
-	callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",user_tpl.def_ship$)
-	callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_NO",opt01a.shipto_no$)
-	callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_TYPE",opt01a.shipto_type$)
-	callpoint!.setColumnData("OPE_ORDHDR.SLSPSN_CODE",opt01a.slspsn_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(opt01a.taxable_amt*sign))
-	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",opt01a.tax_amount$)
-	callpoint!.setColumnData("OPE_ORDHDR.TAX_CODE",opt01a.tax_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE",opt01a.terms_code$)
-	callpoint!.setColumnData("OPE_ORDHDR.TERRITORY",opt01a.territory$)
-	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",opt01a.total_cost$)
-	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",opt01a.total_sales$)
+	ope01_dev=fnget_dev("OPE_ORDHDR")
+	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
+	call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,ope01a$,status
+	ope01a.ar_inv_no$=""
+	ope01a.backord_flag$=""
+	ope01a.comm_amt=ope01a.comm_amt*sign
+	ope01a.customer_po_no$=""
+	ope01a.discount_amt=ope01a.discount_amt*sign
+	ope01a.expire_date$=""
+	ope01a.freight_amt=ope01a.freight_amt*sign
+	ope01a.invoice_date$=user_tpl.def_ship$
+	ope01a.invoice_type$="S"
+	ope01a.order_date$=sysinfo.system_date$
+	call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",seq_id$,rd_table_chans$[all]
+	ope01a.order_no$=seq_id$
+	ope01a.ordinv_flag$="O"
+	ope01a.ord_taken_by$=sysinfo.user_id$
+	ope01a.print_status$="N"
+	ope01a.reprint_flag$=""
+	ope01a.shipmnt_date$=user_tpl.def_ship$
+	ope01a.taxable_amt=ope01a.taxable_amt*sign
+	ope01a.tax_amount=ope01a.tax_amount*sign
+	ope01a.total_cost=ope01a.total_cost*sign
+	ope01a.total_sales=ope01a.total_sales*sign
+	writerecord(ope01_dev)ope01a$
 
 rem --- copy Manual Ship To if any
 	if opt01a.shipto_type$="M"
@@ -430,7 +412,7 @@ rem --- copy Manual Ship To if any
 		readrecord(opt31_dev,key=firm_id$+opt01a.customer_id$+opt01a.ar_inv_no$,dom=*next)opt31a$
 		call stbl("+DIR_PGM")+"adc_copyfile.aon",opt31a$,ope31a$,status
 		ope31a.order_no$=rec_data.order_no$
-		writerecord(ope31_dev,key=firm_id$+ope31a.customer_id$+ope31a.order_no$)ope31a$
+		writerecord(ope31_dev)ope31a$
 	endif
 
 rem --- copy detail lines
@@ -485,9 +467,10 @@ rem --- copy detail lines
 			ope11a.commit_flag$="N"
 		endif
 escape;rem what about line 775 in ope_dd.bbx?
-		writerecord(ope11_dev,key=firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+ope11a.line_no$)ope11a$
+		writerecord(ope11_dev)ope11a$
 escape;rem what about lines 785 and 790 in ope_dd.bbx
 	wend
+	callpoint!.setStatus("RECORD:"+firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$)
 escape;rem lines 800 to 895 here
 return
 [[OPE_ORDHDR.ARAR]]
