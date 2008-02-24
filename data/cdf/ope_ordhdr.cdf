@@ -411,7 +411,7 @@ rem --- copy Manual Ship To if any
 		opt31_dev=fnget_dev("OPT_INVSHIP")
 		readrecord(opt31_dev,key=firm_id$+opt01a.customer_id$+opt01a.ar_inv_no$,dom=*next)opt31a$
 		call stbl("+DIR_PGM")+"adc_copyfile.aon",opt31a$,ope31a$,status
-		ope31a.order_no$=rec_data.order_no$
+		ope31a.order_no$=ope01a.order_no$
 		writerecord(ope31_dev)ope31a$
 	endif
 
@@ -429,7 +429,8 @@ rem --- copy detail lines
 		read record(opt11_dev,end=*break) opt11a$
 		if firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$<>
 :			opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$ break
-		call stbl("+DIR_PGM")+"adc_copyfile.aon",opt11a$,ope11a$,status		
+		call stbl("+DIR_PGM")+"adc_copyfile.aon",opt11a$,ope11a$,status
+
 		if cvs(opt11a.line_code$,2)<>""
 			read record (opc_linecode_dev,key=firm_id$+opt11a.line_code$,dom=*next)opc_linecode$
 		endif
@@ -459,19 +460,19 @@ rem --- copy detail lines
 				endif
 			endif
 		endif
-		ope11a.order_no$=rec_data.order_no$
-		ope11a.est_shp_date$=rec_data$.shipmnt_date$
+		ope11a.order_no$=ope01a.order_no$
+		ope11a.est_shp_date$=ope01a.shipmnt_date$
 		ope11a.commit_flag$="Y"
 		ope11a.pick_flag$="N"
 		if ope11a.est_shp_date$>user_tpl.def_commit$
 			ope11a.commit_flag$="N"
 		endif
-escape;rem what about line 775 in ope_dd.bbx?
+rem escape;rem what about line 775 in ope_dd.bbx?
 		writerecord(ope11_dev)ope11a$
-escape;rem what about lines 785 and 790 in ope_dd.bbx
+rem escape;rem what about lines 785 and 790 in ope_dd.bbx
 	wend
 	callpoint!.setStatus("RECORD:"+firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$)
-escape;rem lines 800 to 895 here
+rem escape;rem lines 800 to 895 here
 return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
