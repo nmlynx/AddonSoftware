@@ -516,11 +516,11 @@ accum_totals:
         sfe02_field$=sfe02_field$(pos("runtime_hrs"=cvs(sfe02_field$,8)))
         for x=0 to 3
             xfield$=sfe02_field$(1,pos($0A$=sfe02_field$)-1)
-            t[x]=t[x]+FIELD(sfe02$,xfield$)
+            t[x]=t[x]+num(FIELD(sfe02$,xfield$))
             sfe02_field$=sfe02_field$(pos($0A$=sfe02_field$)+1)
         next x
-        t0=t0+sfe02a.tot_std_cost$
-        t1=t1+sfe02a.unit_cost$
+        t0=t0+sfe02a.tot_std_cost
+        t1=t1+sfe02a.unit_cost
         return
 
 report_heading: rem --- Report Heading
