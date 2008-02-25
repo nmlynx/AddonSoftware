@@ -1,0 +1,620 @@
+rem --- Bill Hard Copy
+rem --- Program bmc_printbill v8.0.0 10Jan2008 (bmc_aa)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/10/2008 09:55:29)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+
+    setesc std_error
+    seterr std_error
+    enter o9,printer_dev,bill_no$,page,comment$,sub$,warehouse$,select$,pdate$,status
+
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=12,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="apm-01",ids$[1]="APM_VENDMAST"
+    files$[2]="aps_params",ids$[2]="APS_PARAMS"
+    files$[3]="bmm-01",ids$[3]="BMM_BILLMAST"
+    files$[4]="bmm-02",ids$[4]="BMM_BILLMAT"
+    files$[5]="bmm-03",ids$[5]="BMM_BILLOPER"
+    files$[6]="bmm-05",ids$[6]="BMM_BILLSUB"
+    files$[7]="bmm-08",ids$[7]="BMC_OPCODES"
+    files$[8]="bmm-09",ids$[8]="BMM_BILLCMTS"
+    files$[9]="bms_params",ids$[9]="BMS_PARAMS"
+    files$[10]="ivm-01",ids$[10]="IVM_ITEMMAST"
+    files$[11]="ivm-02",ids$[11]="IVM_ITEMWHSE"
+    files$[12]="ivs_params",ids$[12]="IVS_PARAMS"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    apm01_dev=channels[1]
+    aps01a_dev=channels[2]
+    bmm01_dev=channels[3]
+    bmm02_dev=channels[4]
+    bmm03_dev=channels[5]
+    bmm05_dev=channels[6]
+    bmm08_dev=channels[7]
+    bmm09_dev=channels[8]
+    bms01a_dev=channels[9]
+    ivm01_dev=channels[10]
+    ivm02_dev=channels[11]
+    ivs01a_dev=channels[12]
+
+rem --- Dimension string templates
+
+    dim apm01a$:templates$[1],aps01a$:templates$[2],bmm01a$:templates$[3],
+:       bmm02a$:templates$[4],bmm03a$:templates$[5],bmm05a$:templates$[6],
+:       bmm08a$:templates$[7],bmm09a$:templates$[8],bms01a$:templates$[9],
+:       ivm01a$:templates$[10],ivm02a$:templates$[11],ivs01a$:templates$[12]
+
+
+rem --- Retrieve parameter records
+
+    find record (bms01a_dev,key=firm_id$+"BM"+"00",dom=std_missing_params) bms01a$
+    find record (ivs01a_dev,key=firm_id$+"IV"+"00",dom=std_missing_params) ivs01a$
+    find record (aps01a_dev,key=firm_id$+"AP"+"00",dom=label_one) aps01a$
+    vlen=num(aps01a.firm_id$)
+
+label_one:
+    dim p[2],desc[3]
+    p[0]=num(ivs01a.item_id_len$)
+    if num(ivs01a.precision$)>bms01a.bm_precision then let bms01a.bm_precision=num(ivs01a.precision$)
+
+rem --- Initialize Data
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLCMTS","PRIMARY",bmm09a_key_tpl$,rd_table_chans$[all],status$
+    dim bmm02a_key$:bmm02a_key_tpl$
+    dim bmm09a_key$:bmm09a_key_tpl$
+    more=1
+    if warehouse$="" then let warehouse$=ivs01a.warehouse_id$
+    h2$=sysinfo.task_desc$
+    l9=59
+    l=l9+1,t0=0,headings=9
+    dim j$(80,"-"),headings$[headings]
+    dim z$(80," ")
+    precision bms01a.bm_precision
+    if pos("Listing"=h2$)=0 then let h2$=h2$+" Listing"
+    p9=len(ivs01a.PRICE_MASK$)
+    m6$="###.00"
+    p4$="###0"
+    desc[1]=num(ivs01a.desc_len_01$)
+    desc[2]=num(ivs01a.desc_len_02$)
+    desc[3]=num(ivs01a.desc_len_03$) 
+
+
+rem --- Additional File Opens
+
+    dim info$[20]
+    call pgmdir$+"adc_application.aon","SF",info$[all]
+    wo$=info$[20]
+    call pgmdir$+"adc_application.aon","AP",info$[all]
+    ap$=info$[20]
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
+
+rem --- Print Material Information
+
+    read record (bmm01_dev,key=firm_id$+bill_no$,dom=std_exit) bmm01a$
+    gosub lot_size_yield
+    mattot=0
+    if sub$<>"" then let part$=sub$(1,20) else let part$=bill_no$
+    gosub material_heading
+    read (bmm02_dev,key=firm_id$+part$,dom=*next)
+
+    while more
+        bmm02a_key$=key(bmm02_dev,end=*break)
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        if pos(firm_id$+part$=bmm02a_key$)<>1 then break
+        read record (bmm02_dev,key=bmm02a_key$) bmm02a$
+        if select$<>"A" then
+            if cvs(bmm02a.EFFECT_DATE$,3)<>"" then if bmm02a.EFFECT_DATE$>pdate$ then continue
+            if cvs(bmm02a.OBSOLT_DATE$,3)<>"" then if bmm02a.OBSOLT_DATE$<=pdate$ then continue
+        endif
+
+        if bmm02a.LINE_TYPE$="M" and l+2>l9 then gosub material_heading
+        if bmm02a.LINE_TYPE$="M" then
+            print (printer_dev) @(0),bmm02a.MATERIAL_SEQ$, @(4),bmm02a.EXT_COMMENTS$
+            let l=l+1
+        else
+            find record (ivm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=label_two) ivm01a$
+            x0$(1)=fnitem$(ivm01a.ITEM_DESC$,desc[1],desc[2],desc[3])
+label_two:
+            subbill$=" "
+            find (bmm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=label_three)
+            subbill$="*"
+label_three:
+            find record (ivm02_dev,key=firm_id$+warehouse$+bmm02a.ITEM_ID$,dom=*next) ivm02a$
+            matcost=ivm02a.unit_cost*fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,yield,bmm02a.SCRAP_FACTOR)
+            if l+2>l9 then gosub material_heading
+
+            print (printer_dev)
+:               @(0),bmm02a.MATERIAL_SEQ$,subbill$,
+:               @(4),bmm02a.ITEM_ID$(1,p[0]),
+:               @(25),bmm02a.DIVISOR:bms01a.HRQTY_MASK$,
+:               @(34),bmm02a.QTY_REQUIRED:bms01a.HRQTY_MASK$,
+:               @(43),bmm02a.ALT_FACTOR:bms01a.MAT_FAC_MSK$,
+:               @(52),bmm02a.SCRAP_FACTOR:bms01a.MAT_FAC_MSK$,
+:               @(61),ivm02a.unit_cost:ivs01a.PRICE_MASK$,
+:               @(70),matcost:ivs01a.PRICE_MASK$
+            print (printer_dev)
+:               @(4),ivm01a.item_desc$(1,30),
+:               @(37),"Op Seq: ",bmm02a.OP_SEQ$,
+:               @(50),"U/M: ",bmm02a.UNIT_MEASURE$,
+:               @(58),"Net Qty: ",fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,yield,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$
+            mattot=mattot+matcost
+            l=l+2
+        endif
+        if select$="C" then continue
+        if l+1>l9 then gosub material_heading
+        print (printer_dev)
+:           @(7),"Effective: ",fndate$(bmm02a.EFFECT_DATE$),
+:           @(35),"Obsolete: ",fndate$(bmm02a.OBSOLT_DATE$)
+        let l=l+1
+    wend
+
+rem --- Print Operation Information
+
+    dir_labtot=0
+    oh_labtot=0,sub_cost=0
+    gosub Operation_Heading
+    read (bmm03_dev,key=firm_id$+part$,dom=*next)
+
+    while more
+        read record (bmm03_dev,end=*break) bmm03a$
+        if firm_id$+part$<>bmm03a.FIRM_ID$+bmm03a.BILL_NO$ then break
+
+        if select$<>"A" then
+            if cvs(bmm03a.EFFECT_DATE$,3)<>"" then if bmm03a.EFFECT_DATE$>pdate$ then continue
+            if cvs(bmm03a.OBSOLT_DATE$,3)<>"" then if bmm03a.OBSOLT_DATE$<=pdate$ then continue
+            endif
+        endif
+        if bmm03a.LINE_TYPE$="M" then
+            if l+1>l9 then gosub operation_heading
+        endif
+        if bmm03a.LINE_TYPE$="M" then
+            print (printer_dev)
+:               @(0),bmm03a.OP_SEQ$,
+:               @(4),bmm03a.EXT_COMMENTS$
+            let l=l+1
+        else 
+            let bmm08a.CODE_DESC$="Not On File"
+            bmm08a.DIRECT_RATE=0
+            read record (bmm08_dev,key=bmm03a.FIRM_ID$+bmm03a.OP_CODE$,dom=*next) bmm08a$
+            if l+2>l9 then gosub Operation_Heading
+            if bmm03a.PCS_PER_HOUR=0 then let bmm03a.PCS_PER_HOUR=1
+            if lot=0 then let lot=1
+            dir_labcost=fnop1(bmm03a.HRS_PER_PCE,bmm08a.DIRECT_RATE,bmm03a.PCS_PER_HOUR,yield,bmm03a.SETUP_TIME,lot)
+            oh_labcost=dir_labcost*bmm08a.OVHD_FACTOR
+            print (printer_dev)
+:               @(0),bmm03a.OP_SEQ$,
+:               @(4),bmm03a.OP_CODE$,
+:               @(29),bmm03a.SETUP_TIME:m6$,
+:               @(37),bmm03a.HRS_PER_PCE:bms01a.HRQTY_MASK$,
+:               @(47),bmm03a.PCS_PER_HOUR:bms01a.MAT_FAC_MSK$,
+:               @(67),100*(bmm03a.HRS_PER_PCE/bmm03a.PCS_PER_HOUR)/yield+bmm03a.SETUP_TIME/lot:bms01a.HRQTY_MASK$,
+
+            if wo$="Y" then
+                print (printer_dev)
+:                   @(19),bmm08a.QUEUE_TIME:m6$,
+:                   @(59),bmm03a.MOVE_TIME:m6$
+            else
+                print (printer_dev)""
+            endif
+            print (printer_dev)
+:                @(4),bmm08a.CODE_DESC$,
+:                @(41),bmm08a.DIRECT_RATE:bms01a.HRQTY_MASK$,
+:                @(51),dir_labcost:ivs01a.PRICE_MASK$,
+:                @(61),oh_labcost:ivs01a.PRICE_MASK$,
+:                @(71),dir_labcost+oh_labcost:ivs01a.PRICE_MASK$
+            dir_labtot=dir_labtot+dir_labcost
+            oh_labtot=oh_labtot+oh_labcost
+            l=l+2
+        endif
+
+        if select$="C" continue
+        if l+1>l9 then gosub Operation_Heading
+        print (printer_dev)
+:           @(7),"Effective: ",fndate$(bmm03a.EFFECT_DATE$),
+:           @(35),"Obsolete: ",fndate$(bmm03a.OBSOLT_DATE$)
+        let l=l+1
+    wend
+
+
+rem --- Print Subcontract Information
+
+    if ap$<>"N" then
+        gosub Subcontract_Heading
+        read (bmm05_dev,key=firm_id$+part$,dom=*next)
+        while more
+            read record (bmm05_dev,end=*break) bmm05a$
+            if firm_id$+part$<>bmm05a.FIRM_ID$+bmm05a.BILL_NO$ then break
+            if select$<>"A" then
+                if cvs(bmm05a.EFFECT_DATE$,3)<>"" then 
+                    if bmm05a.EFFECT_DATE$>pdate$ then continue
+                endif
+                if cvs(bmm05a.OBSOLT_DATE$,3)<>"" then
+                    if bmm05a.OBSOLT_DATE$<=pdate$ then continue
+                endif
+            endif
+            if bmm05a.LINE_TYPE$<>"S" then
+                if l+1>l9 then gosub subcontract_heading
+                print (printer_dev)
+:                   @(0),bmm05a.SUBCONT_SEQ$," ",bmm05a.LINE_TYPE$," ",bmm05a.EXT_COMMENTS$
+                l=l+1
+                continue
+            endif
+            if l+2>l9 then gosub subcontract_heading
+            find record (apm01_dev,key=firm_id$+bmm05a.VENDOR_ID$,dom=*next) apm01a$
+            print (printer_dev)
+:               @(0),bmm05a.SUBCONT_SEQ$," ",bmm05a.LINE_TYPE$," ",fnmask$(bmm05a.VENDOR_ID$(1,vlen),vmask$)," ",apm01a.vendor_name$(1,25-len(vmask$)),
+:               @(33),bmm05a.DIVISOR:bms01a.HRQTY_MASK$,
+:               @(42),bmm05a.QTY_REQUIRED:bms01a.HRQTY_MASK$,
+:               @(51),bmm05a.ALT_FACTOR:bms01a.MAT_FAC_MSK$,
+:               @(60),bmm05a.UNIT_COST:ivs01a.PRICE_MASK$,
+:               @(69),bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):ivs01a.PRICE_MASK$
+            print (printer_dev)
+:               @(6),bmm05a.EXT_COMMENTS$(1,30),
+:               @(38),"Ld: ",bmm05a.LEAD_TIME:p4$,
+:               @(47),"U/M: ",bmm05a.UNIT_MEASURE$,
+:               @(55),"Op: ",bmm05a.OP_SEQ$,
+:               @(63),"Net Qty:",fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):bms01a.HRQTY_MASK$
+            sub_cost=sub_cost+bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR)
+            l=l+2
+            if select$="C" continue
+            if l+1>l9 then gosub subcontract_heading
+            print (printer_dev)
+:               @(7),"Effective: ",fndate$(bmm05a.EFFECT_DATE$),
+:               @(35),"Obsolete: ",fndate$(bmm05a.OBSOLT_DATE$)
+            let l=l+1
+        wend
+    endif
+
+rem --- Print Total Information
+
+    if l+8>l9 then gosub report_heading
+    gosub total_information
+
+rem --- Comments
+
+    if comment$="Y" then
+        read (bmm09_dev,key=firm_id$+part$,dom=*next)
+        gosub Comments_Line
+        while more
+            bmm09a_key$=key(bmm09_dev,end=*break)
+            if pos(firm_id$+part$=bmm09a_key$)<>1 then break
+            read record (bmm09_dev,key=bmm09a_key$) bmm09a$
+            if l+1>l9 then gosub report_heading
+            gosub comments_line
+            print (printer_dev)
+:               @(0),bmm09a.SEQUENCE_NUM$,
+:               @(7),bmm09a.STD_COMMENTS$
+            l=l+1
+        wend
+    endif
+
+done:
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
+
+rem --- End
+
+    goto std_exit
+
+report_heading: rem --- Report Heading
+
+    for x=3 to 9; let headings$[x]=fill(80); next x
+    l=headings+1
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=h2$
+    find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
+    headings$[3](6)="Bill Number: "+bill_no$
+    headings$[3](40)="Last Used: "+fndate$(bmm01a.LSTACT_DATE$)
+    if bmm01a.SOURCE_CODE$="B" then
+        let headings$[3](60)="In Production Entry"
+    else
+        if bmm01a.SOURCE_CODE$="W" then
+            let headings$[3](60)="In Work Orders"
+        endif
+    endif
+    headings$[4](6)="Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36))
+    headings$[4](51)="Phantom Bill?: "+bmm01a.PHANTOM_BILL$
+    headings$[5](19)=ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34))
+    headings$[5](51)="Unit Of Measure: "+bmm01a.UNIT_MEASURE$
+    headings$[6](19)=ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32))
+    headings$[6](51)="Estimated Yield %: "+str(yield:"##0.0")
+    headings$[7](3)="Drawing Number: "+bmm01a.DRAWING_NO$
+    headings$[7](51)="Standard Lot Size: "+str(lot)
+    headings$[8](1)="Drawing Revision: "+bmm01a.DRAWING_REV$+" Revision Code: "+bmm01a.BILL_REV$+" Created: "+fndate$(bmm01a.CREATE_DATE$)+" Revised: "+fndate$(bmm01a.LSTRVS_DATE$)
+    if sub$<>"" then let headings$[9](1)="Sub-Assembly : "+sub$(1,20)
+    if select$="C" then let headings$[9](54)="As Of Date: "+fndate$(pdate$)
+    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,80,sysinfo.system_date$,clock$,status
+
+    if status then exitto std_exit
+return
+
+material_heading: rem --- Material Heading
+
+    if l+4>l9 then gosub report_heading
+    print (printer_dev)
+:       @(0),j$,
+:       @(8),"Material Information",'lf',
+:       @(38),"Qty",
+:       @(46),"Alt",
+:       @(55),"Scrap",
+:       @(65),"Unit",
+:       @(73),"Total"
+    print (printer_dev)
+:       @(0),"Seq",
+:       @(4),"Item",
+:       @(26),"Divisor",
+:       @(38),"Reqd",
+:       @(45),"Factor",
+:       @(54),"Factor",
+:       @(65),"Cost",
+:       @(74),"Cost",'lf'
+    l=l+4
+return
+
+operation_heading: rem --- Operation Heading
+
+    if l+4>l9 then gosub report_heading
+    print (printer_dev)
+:       @(0),z$,'lf',
+:       @(0),j$,
+:       @(8),"Operation Information",'lf',
+:       @(4),"Op Code",
+:       @(30),"Setup",
+:       @(36),"Hrs/Piece",
+:       @(47),"Piece/Hr",
+:       @(68),"Net Hrs",
+    if wo$="Y" then 
+        print (printer_dev)
+:           @(20),"Queue",
+:           @(61),"Move" 
+    else 
+        print (printer_dev)""
+    endif
+    print (printer_dev)
+:       @(0),"Seq",
+:       @(4),"Description",
+:       @(41),"Dir Rate",
+:       @(51),"Dir Cost",
+:       @(61),"O/H Cost",
+:       @(71),"Tot Cost",'lf'
+    l=l+4
+return
+
+subcontract_heading: rem --- Subcontract Heading
+
+    if l+4>l9 then gosub report_heading
+    print (printer_dev)
+:       @(0),z$,'lf',
+:       @(0),j$,
+:       @(8),"Subcontract Information",'lf',
+:       @(45),"Qty",
+:       @(54),"Alt",
+:       @(64),"Unit",
+:       @(72),"Total"
+    print (printer_dev)
+:       @(0),"Seq C Vendor/Service",
+:       @(33),"Divisor",
+:       @(42),"Required",
+:       @(53),"Factor",
+:       @(64),"Cost",
+:       @(73),"Cost",'lf'
+    l=l+4
+return
+
+total_information: rem --- Total Information
+
+    print (printer_dev)
+:       @(0),z$,'lf',
+:       @(0),j$,
+:       @(8),"Total Information",'lf'
+    print (printer_dev)
+:       @(18),"Material :  ",mattot:ivs01a.PRICE_MASK$
+    print (printer_dev)
+:       @(14),"Direct Labor :  ",dir_labtot:ivs01a.PRICE_MASK$
+    print (printer_dev)
+:       @(18),"Overhead :  ",oh_labtot:ivs01a.PRICE_MASK$
+    print (printer_dev)
+:       @(15),"Subcontract :  ",sub_cost:ivs01a.PRICE_MASK$
+    print (printer_dev)
+:       @(30),j$(1,p9)
+    print (printer_dev)
+:       @(21),"Total :  ",mattot+dir_labtot+oh_labtot+sub_cost:ivs01a.PRICE_MASK$
+    l=l+8
+return
+
+comments_line: rem --- Comments
+
+    if l+2>l9 then gosub report_heading
+    print (printer_dev)
+:       @(0),j$,
+:       @(8),"Comments"
+    print (printer_dev)
+:       @(0),"Seq"
+    l=l+2
+return
+
+lot_size_yield: rem --- Get Lot Size and Yield for Non-Phantoms
+
+    if sub$="" then let lot=bmm01a.STD_LOT_SIZE,yield=bmm01a.EST_YIELD
+        return
+    endif
+    if len(sub$)=20 then let lot=bmm01a.STD_LOT_SIZE,yield=bmm01a.EST_YIELD
+        return
+    endif
+    find record (bmm01_dev,key=firm_id$+sub$(21,20),dom=*next) bmm01a$; goto label_four
+    lot=bmm01a.STD_LOT_SIZE
+    yield=bmm01a.EST_YIELD
+return
+
+label_four:
+    lot=bmm01a.STD_LOT_SIZE
+    yield=bmm01a.EST_YIELD
+    read record (bmm01_dev,key=firm_id$+bill_no$) bmm01a$
+return
+
+
+rem ----#include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+        def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+        def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+        def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+        def fnget_table$(q0$)=rd_alias_id$
+        def fnqty(q1,q2,q3,q4,q5)=10000*q1*q2/(q3*q4*(100-q5))
+        def fnop1(q1,q2,q3,q4,q5,q6)=100*(q1*q2/q3)/q4+q5*q2/q6
+        def fnsub(q1,q2,q3)=q1*q2/q3
+
+rem --- Miscellaneous functions
+
+        def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+        def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+        def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+rem --- Date/time handling functions
+
+rem        def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+rem #include fndate.src
+
+        def fndate$(q$)
+        if cvs(q$,2)="" return ""
+        if pos("9"<>q$)=0 return q$
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        return testdate$
+        fnend
+
+rem #endinclude fndate.src
+
+        def fnyy$(q$)=q$(3,2)
+        def fnclock$(q$)=date(0:"%hz:%mz %p")
+        def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+        def fnmask$(q1$,q2$)
+            if q2$="" q2$=fill(len(q1$),"0")
+            return str(-num(q1$,err=*next):q2$,err=*next)
+            q=1
+            q0=0
+            while len(q2$(q))
+                  if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+                  q=q+1
+            wend
+            if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+            return str(q1$:q2$)
+        fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+        def fnbasename$(q$,q0$)
+            q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+            if q then q$=q$(q+1)
+            if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+        return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+        def fnglobal(q$,q1)
+            q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+            return q1
+        fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+        def fnglobal$(q$,q1$)
+            q1$=stbl(q$,err=*next)
+            return q1$
+        fnend
+
+rem ----#endinclude std_functions.src
+
+rem ----#include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+        if pos("EXIT"=rd_err_act$) goto std_error_exit
+        if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$) retry
+
+std_error_exit:
+        master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_error_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
+std_error_release:
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
+
+rem ----#endinclude std_error.src
+rem ----#include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+        rd_err_text$=""
+        if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+        pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+        call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+        master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+        if cvs(sysinfo.user_id$,2)=master_user$ escape
+
+std_missing_params_release:
+        status=999
+        if pgm(-1)<>pgm(-2) exit
+        release
+
+rem ----#endinclude std_missing_params.src
+
+rem ----#include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+rem        run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+rem        release
+        exit
+rem ----#endinclude std_exit.src
+
+        end
