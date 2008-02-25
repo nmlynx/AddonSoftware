@@ -1,3 +1,13 @@
+[[APE_INVOICEHDR.INVOICE_DATE.AVAL]]
+if cvs(callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE"),3)=""
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",
+:		callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE"))
+	callpoint!.setStatus("REFRESH")
+endif
+
+invdate$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
+terms_cd$=user_tpl.dflt_terms_cd$
+gosub calculate_due_and_discount
 [[APE_INVOICEHDR.AREC]]
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 user_tpl.inv_amt$=""
@@ -115,6 +125,7 @@ else
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_TERMS_CODE",user_tpl.dflt_terms_cd$)
 	callpoint!.setColumnData("APE_INVOICEHDR.PAYMENT_GRP",user_tpl.dflt_pymt_grp$)
 	callpoint!.setColumnData("APE_INVOICEHDR.INVOICE_DATE",stbl("+SYSTEM_DATE"))
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",stbl("+SYSTEM_DATE"))
 	callpoint!.setColumnData("APE_INVOICEHDR.HOLD_FLAG","N")
 	user_tpl.inv_in_ape01$="N"
 	user_tpl.inv_in_apt01$="N"
@@ -136,6 +147,7 @@ if vend_hist$=""
 	endif
 endif
 [[APE_INVOICEHDR.ACCTING_DATE.AVAL]]
+rem make sure accting date is in an appropriate GL period
 gl$=user_tpl.glint$
 acctgdate$=callpoint!.getUserInput()        
 if gl$="Y" 
@@ -349,7 +361,7 @@ rem --- Additional File Opens
 gl$="N"
 status=0
 source$=pgm(-2)
-call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
+call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,status
 if status<>0 goto std_exit
 user_tpl.glint$=gl$
 user_tpl.glworkfile$=glw11$
