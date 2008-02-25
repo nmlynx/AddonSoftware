@@ -43,11 +43,11 @@ rem --- [1] = ivm-01      [8] = ivm-08    [43] = ivt-03
 rem --- [2] = ivm-02     [12] = ivm-12    [44] = ivt-04
 rem --- [4] = ivm-04     [17] = ivm-17    [40] = ivw-04
 rem --- [5] = ivm-05     [41] = ivt-01    [03] = ivm-03
-rem --- PARAMS[n]  : Numeric Parameters (input)
-rem --- [0] = Total Periods
-rem --- PARAMS$[n] : String Parameters (input)
-rem --- [0] = Terminal Date (YMD)
-rem --- [1] = Operator ID
+rem --- PARAMS[n]  : Numeric Parameters (input) (not used)
+rem --- [0] = Total Periods (not used)
+rem --- PARAMS$[n] : String Parameters (input) (replaced with ivs01a$ template)
+rem --- [0] = Terminal Date (YMD) (replaced with sysinfo)
+rem --- [1] = Operator ID (replaced with stbl)
 rem --- [2] = Inventory Parameter String (P2$)
 rem --- [3] = Inventory Parameter String (P3$)
 rem --- [4] = Inventory Parameter String (P4$)
@@ -71,7 +71,7 @@ rem --- tblchans$[n,n]: used by file open routine to determine if file(s) is/are
 
     seterr std_error
     setesc std_error
-    enter action$,tblchans$[all],params[all],params$[all],items$[all],refs$[all],refs[all],status
+    enter action$,tblchans$[all],ivs01a$,items$[all],refs$[all],refs[all],status
 
 rem --- Retrieve the program path
 
@@ -85,6 +85,7 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
     sys_when$=sysinfo.system_date$
     sys_yyyymmdd$=fndate$(sys_when$)
+    user_id$=stbl(+USER_ID)
 
     gls01_dev=tblchans[0]
     ivm01_dev=tblchans[1]
@@ -127,14 +128,22 @@ rem --- Dimension string templates
 rem --- Parameters
 
     dim p[5]
-    p2$=params$[2]
-    p3$=params$[3]
-    p4$=params$[4]
-    p[0]=num(p2$(1,2));rem --- item# size
-    p[1]=num(p2$(5,1));rem --- precision
-    p[2]=num(p2$(7,2));rem --- lot/ser# length
-    ls=pos(p3$(17,1)="LS")>0;rem --- lotted/serialized flag (LSN)
-    lf=pos(p3$(3,1)="LF")>0;rem --- lifo/fifo code (LFN)
+rem    p2$=params$[2]
+rem    p3$=params$[3]
+rem    p4$=params$[4]
+    p[0]=num(ivs01a.item_id_len$)
+    p[1]=num(ivs01a.precision$)
+    p[2]=num(ivs01a.ls_no_len$)
+    ls=pos(ivs01a.lotser_flag$="LS")
+    lf=pos(ivs01a.lifofifo$="LF")
+    cost_method$=ivs01a.cost_method$)
+    current_per$=ivs01a.current_per$)
+    current_year$=ivs01a.current_year$)
+rem    p[0]=num(p2$(1,2));rem --- item# size
+rem    p[1]=num(p2$(5,1));rem --- precision
+rem    p[2]=num(p2$(7,2));rem --- lot/ser# length
+rem    ls=pos(p3$(17,1)="LS")>0;rem --- lotted/serialized flag (LSN)
+rem    lf=pos(p3$(3,1)="LF")>0;rem --- lifo/fifo code (LFN)
 
 rem --- Initializations
 
@@ -159,7 +168,7 @@ rem --- Validate arguments
     ymd$=fndate$(when$)
     if pos(action$="ICPOOECOUCTAOOPI",2) goto l900
     call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,ymd$,period$,year$
-    if period$="" period$=p4$(1,2),year$=p4$(3,4)
+    if period$="" period$=current_per$,year$=current_year$
     clock$=fntime$(clock$)
 l900:
     dim last$[8]
@@ -278,7 +287,7 @@ l1650:
 l1700: rem --- For issues, decrement existing tier(s)
 
     amount=abs(qty)
-    x=pos(p3$(3,1)="FL")
+    x=lf; rem pos(p3$(3,1)="FL")
     avg=0
     number=0
     if x=1 read (ivm04_dev,key=ivm04a.firm_id$+ivm04a.warehouse_id$+ivm04a.item_id$,dom=l1740)
@@ -516,7 +525,7 @@ l6000: rem --- Initialize IVT-01/IVT-04 Transaction History Record
     ivtwk.gl_account$=refs$[7]
     ivtwk.location$=location$
     if pos(action$="PORC",2) ivtwk.line_code$="",ivtwk.po_line_code$=refs$[6]
-    ivtwk.oper_id$=params$[1]
+    ivtwk.oper_id$=user_id$
     ivtwk.system_date$=sys_yyyymmdd$; rem params$[0]
     ivtwk.system_time$=clock$
 rem    ivtwk.terminal_id$=fid(0)
@@ -600,7 +609,7 @@ l6800:
     if action$="RC" ivmwk.last_po_cost=cost
 
 rem --- Set unit cost
-    switch pos(p3$(8,1)="ASR")
+    switch pos(cost_method$="ASR"); rem pos(p3$(8,1)="ASR")
         case 1
             ivmwk.unit_cost=ivmwk.avg_cost
         break
