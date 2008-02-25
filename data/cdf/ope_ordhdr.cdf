@@ -23,7 +23,7 @@ rem --- Duplicate Historical Invoice
 			opt01_dev=fnget_dev("OPT_ORDHDR")
 			dim opt01a$:opt01a$
 			readrecord(opt01_dev,key=rd_key$)opt01a$
-			sign=1
+			line_sign=1
 			gosub copy_order
 		endif
 	endif
@@ -376,17 +376,17 @@ end_lock:
 	return
 
 copy_order: rem --- Duplicate or Credit Historical Invoice
-	if sign=0 sign=1
+	if line_sign=0 line_sign=1
 	ope01_dev=fnget_dev("OPE_ORDHDR")
 	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
 	call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,ope01a$,status
 	ope01a.ar_inv_no$=""
 	ope01a.backord_flag$=""
-	ope01a.comm_amt=ope01a.comm_amt*sign
+	ope01a.comm_amt=ope01a.comm_amt*line_sign
 	ope01a.customer_po_no$=""
-	ope01a.discount_amt=ope01a.discount_amt*sign
+	ope01a.discount_amt=ope01a.discount_amt*line_sign
 	ope01a.expire_date$=""
-	ope01a.freight_amt=ope01a.freight_amt*sign
+	ope01a.freight_amt=ope01a.freight_amt*line_sign
 	ope01a.invoice_date$=user_tpl.def_ship$
 	ope01a.invoice_type$="S"
 	ope01a.order_date$=sysinfo.system_date$
@@ -397,10 +397,10 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 	ope01a.print_status$="N"
 	ope01a.reprint_flag$=""
 	ope01a.shipmnt_date$=user_tpl.def_ship$
-	ope01a.taxable_amt=ope01a.taxable_amt*sign
-	ope01a.tax_amount=ope01a.tax_amount*sign
-	ope01a.total_cost=ope01a.total_cost*sign
-	ope01a.total_sales=ope01a.total_sales*sign
+	ope01a.taxable_amt=ope01a.taxable_amt*line_sign
+	ope01a.tax_amount=ope01a.tax_amount*line_sign
+	ope01a.total_cost=ope01a.total_cost*line_sign
+	ope01a.total_sales=ope01a.total_sales*line_sign
 	writerecord(ope01_dev)ope01a$
 
 rem --- copy Manual Ship To if any
@@ -439,7 +439,7 @@ rem --- copy detail lines
 				ope11a.ext_price=ope11a.unit_price
 				ope11a.unit_price=0			
 			endif
-			if sign<0
+			if line_sign<0
 				ope11a.qty_ordered=-ope11a.qty_shipped
 				ope11a.ext_price=-ope11a.ext_price
 			endif
@@ -467,7 +467,10 @@ rem --- copy detail lines
 		if ope11a.est_shp_date$>user_tpl.def_commit$
 			ope11a.commit_flag$="N"
 		endif
-rem escape;rem what about line 775 in ope_dd.bbx?
+		if user_tpl.blank_whse$="N" and cvs(ope11a.warehouse_id$,2)="" 
+:			and opc_linecode.dropship$="Y" and user_tpl.dropship_whse$="N"
+			ope11a.warehouse_id$=user_tpl.def_whse$
+		endif
 		writerecord(ope11_dev)ope11a$
 rem escape;rem what about lines 785 and 790 in ope_dd.bbx
 	wend
@@ -511,7 +514,7 @@ rem --- Populate address fields
 	gosub disable_ctls
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=27
+	num_files=29
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -540,14 +543,24 @@ rem	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
 	open_tables$[25]="OPE_ORDDET",open_opts$[25]="OTA"
 	open_tables$[26]="OPT_INVSHIP",open_opts$[26]="OTA"
 	open_tables$[27]="OPE_CREDCUST",open_opts$[27]="OTA"
+	open_tables$[28]="IVC_WHSECODE",open_opts$[28]="OTA"
+	open_tables$[29]="IVS_PARAMS",open_opts$[29]="OTA"
 	gosub open_tables
 
 rem --- get AR Params
 	dim ars01a$:open_tpls$[4]
 	read record(num(open_chans$[4]),key=firm_id$+"AR00")ars01a$
 
-rem --- disable display fields
+rem --- get IV Params
+	dim ivs01a$:open_tpls$[29]
+	read record(num(open_chans$[29]),key=firm_id$+"IV00")ivs01a$
 
+rem --- see if blank warehouse exists
+	blank_whse$="N"
+	dim ivm10c$:open_tpls$[28]
+	read record(num(open_chans$[28]),key=firm_id$+"C"+ivm10c.warehouse_id$,dom=*next)ivm10c$;rem blank_whse$="Y"
+
+rem --- disable display fields
 	dim dctl$[9]
 	dmap$="I"
 	dctl$[1]="<<DISPLAY>>.BADD1"
@@ -591,7 +604,11 @@ rem --- Setup user_tpl$
 	dim ars_credit$:open_tpls$[7]
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
 	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
-	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8)"
+	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1)"
+	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
+	user_tpl.blank_whse$=blank_whse$
+	user_tpl.dropship_whse$=ars01a.dropshp_whse$
+	user_tpl.def_whse$=ivs01a.warehouse_id$

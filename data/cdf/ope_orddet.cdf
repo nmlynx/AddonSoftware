@@ -9,6 +9,7 @@ rem ---display extended price
 rem --- set enable/disable based on line type
 	line_code$=rec_data.line_code$
 	if cvs(line_code$,2)<>""
+rem		callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",rec_data.str(ext_price))
 		opc_linecode_dev=fnget_dev("OPC_LINECODE")
 		dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 		read record (opc_linecode_dev,key=firm_id$+line_code$,dom=*next)opc_linecode$
@@ -18,27 +19,10 @@ rem --- set enable/disable based on line type
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
-[[OPE_ORDDET.QTY_ORDERED.AVEC]]
-rem --- update header
-escape;rem avec
-	gosub calc_grid_tots
-	gosub disp_totals
 [[OPE_ORDDET.QTY_BACKORD.AVEC]]
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
-[[OPE_ORDDET.ARAR]]
-rem --- 
-	g!=form!.getControl(1109).getControl(5900)
-	cur_row=g!.getSelectedRow()
-	cur_col=g!.getSelectedColumn()
-rem 	header!=g!.getHeader()
-rem escape;rem ? cur_row and cur_col
-	user_tpl.line_boqty=rec_data.qty_backord
-	user_tpl.line_shipqty=rec_data.qty_shipped
-[[OPE_ORDDET.BSHO]]
-rem --- Set user template
-	
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 rem ---recalc quantities and extended price
 	shipqty=num(callpoint!.getUserInput())
