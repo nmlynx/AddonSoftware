@@ -1,3 +1,15 @@
+[[OPE_ORDDET.BWRI]]
+rem --- commit inventory
+escape;rem bwri
+	qty=rec_data.qty_ordered
+	qty1=callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")
+escape
+[[OPE_ORDDET.BWAR]]
+rem --- commit inventory
+escape;rem bwar
+	qty=rec_data.qty_ordered
+	qty1=callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")
+escape
 [[OPE_ORDDET.ADIS]]
 rem ---display extended price
 	ordqty=num(rec_data.qty_ordered)
@@ -94,6 +106,7 @@ disp_totals: rem --- get context and ID of total amount display control, and red
 return
 
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
+rem --- need to send in wh_id$, item_id$, ls_id$, and qty
 	dim iv_files[44],iv_info$[3],iv_info[0],iv_params$[4],iv_refs$[11],iv_refs[5]
 	iv_files[0]=fnget_dev("GLS_PARAMS")
 	iv_files[1]=fnget_dev("IVM_ITEMMAST")
@@ -101,13 +114,19 @@ update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
 	iv_files[4]=fnget_dev("IVM_ITEMTIER")
 	iv_files[5]=fnget_dev("IVM_ITEMVEND")
 	iv_files[7]=fnget_dev("IVM_LSMASTER")
-	iv_files[8]=fnget_dev("IVX_LSXREF")
 	iv_files[12]=fnget_dev("IVM_ITEMACCT")
 	iv_files[17]=fnget_dev("IVM_LSACT")
 	iv_files[41]=fnget_dev("IVT_LSTRANS")
 	iv_files[42]=fnget_dev("IVX_LSCUST")
 	iv_files[43]=fnget_dev("IVX_LSVEND")
-	iv_fles[44]=fnget_dev("IVT_ITEMTRAN")
+	iv_files[44]=fnget_dev("IVT_ITEMTRAN")
+	ivs01_dev=fnget_dev("IVS_PARAMS")
+	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+	iv_info$[1]=wh_id$
+	iv_info$[2]=item_id$
+	iv_info$[3]=ls_id$
+	iv_refs[0]=qty
 escape; rem decisions have to be made about ivc_ua (ivc_itemupt.aon)
 	U[0]=U[0]+S8*line_sign
 	U[1]=U[1]+S9*line_sign
@@ -115,9 +134,8 @@ escape; rem decisions have to be made about ivc_ua (ivc_itemupt.aon)
 	while 1
 		if pos(S8$(2,1)="SP")=0 break
 		if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
-		iv_info$[1]=s8$(4,2),iv_info$[2]=s8$(6,20),iv_info$[3]="",iv_refs[0]=s7
 		if line_sign>0 iv_action$="OE" else iv_action$="UC"
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],iv_info[all],iv_params$[all],
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],iv_info[all],ivs01a$,
 :			iv_info$[all],iv_refs$[all],iv_refs[all],iv_status
 		break
 	wend

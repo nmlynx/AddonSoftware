@@ -1,3 +1,44 @@
+[[OPE_ORDHDR.AOPT-CINV]]
+rem --- Credit Historical Invoice
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
+:	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
+		msg_id$="OP_NO_HIST"
+		gosub disp_message
+	else
+		key_pfx$=firm_id$+
+:			callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
+:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+
+		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:			gui_dev,
+:			Form!,
+:			"OPT_ORDHDR",
+:			"LOOKUP",
+:			table_chans$[all],
+:			key_pfx$,
+:			"PRIMARY",
+:			rd_key$
+		if cvs(rd_key$,2)<>""
+			key_pfx_det$=rd_key$
+			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:				gui_dev,
+:				Form!,
+:				"OPT_ORDDET",
+:				"LOOKUP",
+:				table_chans$[all],
+:				key_pfx_det$,
+:				"PRIMARY",
+:				rd_key_det$
+			if cvs(rd_key_det$,2)<>""
+				opt01a$=fnget_tpl$("OPT_ORDHDR")
+				opt01_dev=fnget_dev("OPT_ORDHDR")
+				dim opt01a$:opt01a$
+				readrecord(opt01_dev,key=rd_key$)opt01a$
+				line_sign=-1
+				gosub copy_order
+			endif
+		endif
+	endif
 [[OPE_ORDHDR.AOPT-DINV]]
 rem --- Duplicate Historical Invoice
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
@@ -19,12 +60,24 @@ rem --- Duplicate Historical Invoice
 :			"PRIMARY",
 :			rd_key$
 		if cvs(rd_key$,2)<>""
-			opt01a$=fnget_tpl$("OPT_ORDHDR")
-			opt01_dev=fnget_dev("OPT_ORDHDR")
-			dim opt01a$:opt01a$
-			readrecord(opt01_dev,key=rd_key$)opt01a$
-			line_sign=1
-			gosub copy_order
+			key_pfx_det$=rd_key$
+			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:				gui_dev,
+:				Form!,
+:				"OPT_ORDDET",
+:				"LOOKUP",
+:				table_chans$[all],
+:				key_pfx_det$,
+:				"PRIMARY",
+:				rd_key_det$
+			if cvs(rd_key_det$,2)<>""
+				opt01a$=fnget_tpl$("OPT_ORDHDR")
+				opt01_dev=fnget_dev("OPT_ORDHDR")
+				dim opt01a$:opt01a$
+				readrecord(opt01_dev,key=rd_key$)opt01a$
+				line_sign=1
+				gosub copy_order
+			endif
 		endif
 	endif
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
@@ -527,10 +580,9 @@ rem --- open needed files
 	open_tables$[9]="GLS_PARAMS",open_opts$[9]="OTA"
 	open_tables$[10]="GLS_PARAMS",open_opts$[10]="OTA"
 	open_tables$[11]="IVM_LSMASTER",open_opts$[11]="OTA"
-rem	open_tables$[12]="IVX_LSCUST",open_opts$[12]="OTA"
+	open_tables$[12]="IVX_LSCUST",open_opts$[12]="OTA"
 	open_tables$[13]="IVM_ITEMMAST",open_opts$[13]="OTA"
-rem	open_tables$[14]="IVS_LSXREF",open_opts$[14]="OTA"
-rem	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
+	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
 	open_tables$[16]="IVM_ITEMWHSE",open_opts$[16]="OTA"
 	open_tables$[17]="IVM_ITEMACT",open_opts$[17]="OTA"
 	open_tables$[18]="IVT_ITEMTRAN",open_opts$[18]="OTA"
@@ -604,7 +656,7 @@ rem --- Setup user_tpl$
 	dim ars_credit$:open_tpls$[7]
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
 	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
-	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1)"
+	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
 	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
