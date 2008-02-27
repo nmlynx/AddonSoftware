@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID>BA8EF92D04BD6C841674DEB28D164BD7</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA>Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20080219</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE>20080219</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME>095502</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE>20080227</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE>20080225</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME>105248</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP>T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV>zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT>Invoice History Detail</DD_ATTR_WINT>
@@ -31,7 +31,7 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>OPT_ORDDET      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME>opt-11</DD_FILE_NAME>
-			<DD_TABLE_TPL>firm_id:c(2),ar_type:c(2),customer_id:c(6),order_no:c(7),line_no:c(3),line_code:c(1),man_price:c(1),product_type:c(3),reserved_str:c(5),warehouse_id:c(2),item_id:c(20*),order_memo:c(40),reserved_str_02:c(3),commit_flag:c(1),pick_flag:c(1),vendor_id:c(6),dropship:c(1),reserved_str_03:c(12),est_shp_date:c(8*),dealer_str:c(1*),unit_cost:n(7*),unit_price:n(7*),qty_ordered:n(7*),qty_backord:n(7*),qty_shipped:n(7*),std_list_prc:n(7*),ext_price:n(7*),taxable_amt:n(7*),disc_percent:n(7*),comm_percent:n(7*),comm_amt:n(7*),spl_comm_pct:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL>firm_id:c(2),ar_type:c(2),customer_id:c(6),ar_inv_no:c(7),line_no:c(3),line_code:c(1),man_price:c(1),product_type:c(3),reserved_str:c(5),warehouse_id:c(2),item_id:c(20*),order_memo:c(40),reserved_str_02:c(3),commit_flag:c(1),pick_flag:c(1),vendor_id:c(6),dropship:c(1),reserved_str_03:c(12),est_shp_date:c(8*),dealer_str:c(1*),unit_cost:n(7*),unit_price:n(7*),qty_ordered:n(7*),qty_backord:n(7*),qty_shipped:n(7*),std_list_prc:n(7*),ext_price:n(7*),taxable_amt:n(7*),disc_percent:n(7*),comm_percent:n(7*),comm_amt:n(7*),spl_comm_pct:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -76,7 +76,7 @@
 			<DD_TABLE_ALIAS>OPT_ORDDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER>00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ>04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL>ORDER_NO        </DD_SEGMENT_COL>
+			<DD_SEGMENT_COL>AR_INV_NO</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS>0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF>0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN>0</DD_SEGMENT_LEN>
@@ -639,29 +639,21 @@
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>LINE_CODE       </DD_DATA_NAME>
-			<DD_DESCRIPTION>Line Code</DD_DESCRIPTION>
+			<DD_DESCRIPTION>Line Code                     </DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
 			<DD_DATA_LENGTH>1</DD_DATA_LENGTH>
 			<DD_SYSTEM_ID>  </DD_SYSTEM_ID>
 			<DD_MASK_TYPE> </DD_MASK_TYPE>
+			<DD_SPECIAL_MASK>               </DD_SPECIAL_MASK>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>AON</ASC_PROD_ID>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20080223</DD_LSTREV_DATE>
-			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
-			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
+			<DD_LSTREV_DATE>20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL>CODE_DESC</DD_ATTR_DCOL>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
-			<DD_ATTR_DKEY>[FIRM_ID]+@</DD_ATTR_DKEY>
-			<DD_ATTR_DTAB>OPC_LINECODE    </DD_ATTR_DTAB>
 			<DD_ATTR_LABL>Line Code</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Line Cd</DD_ATTR_LABS>
-			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
-			<DD_ATTR_MAXR>0</DD_ATTR_MAXR>
-			<DD_ATTR_MINL>0</DD_ATTR_MINL>
-			<DD_ATTR_PREC>0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>MAN_PRICE       </DD_DATA_NAME>
