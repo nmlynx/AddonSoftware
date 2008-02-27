@@ -56,7 +56,6 @@ rem --- Init Read
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNOPRTR","PRIMARY",sft01_key_tpl$,rd_table_chans$[all],status$
 rem --- Main Read
     done_flag=0
-    main1=0
     dim sfm05a_key$:sfm05_key_tpl$
     while more
         sfm05a_key$=key(sfm05_dev,end=done)
@@ -117,12 +116,10 @@ rem --- Add It Here
         if num(sfe01a.priority$)=0 then let sfe01a.priority$="9"
         w$[num(sfe01a.priority$)]=w$[num(sfe01a.priority$)]+(sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.op_seq$)
         t0=t0+sfm05a.setup_time+sfm05a.runtime_hrs
-        main1=main1+1
     wend
 
 print_data: rem --- Print Data
     if done_flag=0 then
-        printdata1=0
         while more
             if t0=0 then break
             find record (sfm04_dev,key=firm_id$+opcode$+fnyy_yy21$(fna$(transdate$(1,1),transdate$))+fna$(transdate$(2,1),transdate$),dom=*next) sfm04a$
@@ -177,7 +174,6 @@ rem --- End of Day
             print (printer_dev)""
             l=l+3
             break
-            printdata1= printdata1+1
         wend
 rem --- Reset for next day
 
@@ -232,7 +228,6 @@ find_current_location: rem --- Find Current Location of W.O.
 
 rem --- Read Loop for Standards
     dim sfe02a_key$:sfe02_key_tpl$
-    read1=0
     while more
         sfe02a_key$=key(sfe02_dev,end=*break)
         if pos(sfm05a.firm_id$+"  "+sfm05a.wo_no$=sfe02a_key$)<>1 then break
@@ -241,13 +236,11 @@ rem --- Read Loop for Standards
         opind$=opind$+sfe02a.op_seq$
         ops$[x,0]=sfe02a.op_code$,ops$[x,1]=sfe02a.require_date$,ops[x,0]=sfe02a.total_time,ops[x,2]=sfe02a.setup_time
         x=x+1
-        read1=read1+1
     wend
     read (sft01_dev,key=sfm05a.firm_id$+"  "+sfm05a.wo_no$,dom=*next)
 
 rem --- Read Loop for Actuals
     dim sft01a_key$:sft01_key_tpl$
-    read2=0
     while more
         sft01a_key$=key(sft01_dev,end=*break)
         if pos((sfm05a.firm_id$+"  "+sfm05a.wo_no$)=sft01a_key$)<>1 then break
@@ -257,7 +250,6 @@ rem --- Read Loop for Actuals
         x=int(x/3)
         ops[x,1]=ops[x,1]+sft01a.units+sft01a.unit_cost
         ops[x,3]=ops[x,3]+sft01a.complete_qty
-        read2=read2+1
     wend
 
 rem --- Setup Current Op Code
