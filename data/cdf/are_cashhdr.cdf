@@ -37,7 +37,6 @@ switch pos(validate_passed$="NO")
 	case default
 	break
 swend
-
 [[ARE_CASHHDR.BSHO]]
 rem --- disable display fields
 
@@ -47,7 +46,6 @@ rem --- disable display fields
 	dctl$[2]="<<DISPLAY>>.DISP_BAL"
 	dctl$[3]="<<DISPLAY>>.DISP_APPLIED"
 	gosub disable_ctls
-
 [[ARE_CASHHDR.ACUS]]
 data_present$="N"
 gosub check_required_fields
@@ -448,7 +446,14 @@ get_cash_rec_cd:
 	user_tpl.cash_flag$=arm10c.cash_flag$
 	user_tpl.disc_flag$=arm10c.disc_flag$
 	user_tpl.arglboth$=arm10c.arglboth$
-	
+
+	gridInvoice!=userObj!.getItem(num(user_tpl.inv_grid$))
+	if arm10c.disc_flag$="Y"
+		gridInvoice!.setColumnEditable(num(user_tpl.disc_taken_ofst$),1)
+	else
+		gridInvoice!.setColumnEditable(num(user_tpl.disc_taken_ofst$),0)
+	endif
+
 return
 
 get_customer_balance:
