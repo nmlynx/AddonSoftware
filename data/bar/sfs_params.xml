@@ -17,9 +17,9 @@
 			<ASC_LICENSE_ID>BEA652722CD93E15234CED554BC1BE32</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA>Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20080221</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE>20080130</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME>145322</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE>20080228</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE>20080221</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME>141002</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP>T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV>zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT>Work Order Parameters</DD_ATTR_WINT>
@@ -29,8 +29,7 @@
 		<ID>DDM_TABLE_TPLS</ID>
 		<RECORD>
 			<DD_TABLE_ALIAS>SFS_PARAMS      </DD_TABLE_ALIAS>
-			<DD_FILE_NAME>sfs-01</DD_FILE_NAME>
-			<DD_TABLE_TPL>firm_id:c(2),wo:c(2),sequence_00:c(2*),empl_input:c(12*),empl_no_len:c(2),max_empl_no:c(2*),bm_interface:c(1),ar_interface:c(1),po_interface:c(1),pr_interface:c(1),label_across:c(2),label_length:c(2),label_length_02:c(2),pay_actstd:c(1),overhd_type:c(1),time_clk_flg:c(1),reserved_str:c(5),def_ovd_rate:c(6),time_entry_s:c(1),max_op_codes:c(2),print_costs:c(1),reserved_str_02:c(5*),current_per:c(2),current_year:c(4*),empl_output:c(12*),amount_mask:c(15*),unit_mask:c(12*),rate_mask:c(12*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL>firm_id:c(2),wo:c(2),sequence_00:c(2*),empl_input:c(12*),empl_no_len:c(2),max_empl_no:c(2*),bm_interface:c(1),ar_interface:c(1),po_interface:c(1),pr_interface:c(1),label_across:c(2),label_length:c(2),label_width:c(2),pay_actstd:c(1),overhd_type:c(1),time_clk_flg:c(1),reserved_str:c(5),def_ovd_rate:c(6),time_entry_s:c(1),max_op_codes:c(2),print_costs:c(1),reserved_str_02:c(5*),current_per:c(2),current_year:c(4*),empl_output:c(12*),amount_mask:c(15*),unit_mask:c(12*),rate_mask:c(12*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -224,8 +223,8 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>SFS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE>013</DD_SEQUENCE>
-			<DD_DATA_NAME>LABEL_LENGTH    </DD_DATA_NAME>
-			<DD_DVAR_NAME>LABEL_LENGTH    </DD_DVAR_NAME>
+			<DD_DATA_NAME>LABEL_WIDTH     </DD_DATA_NAME>
+			<DD_DVAR_NAME>LABEL_WIDTH     </DD_DVAR_NAME>
 			<DD_COL_REPEATS>0</DD_COL_REPEATS>
 			<DD_COL_OCCURS>0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM>N</DD_FIELD_DELIM>
@@ -677,8 +676,8 @@
 			<DD_ATTR_PADJ>R</DD_ATTR_PADJ>
 		</RECORD>
 		<RECORD>
-			<DD_DATA_NAME>LABEL_LENGTH    </DD_DATA_NAME>
-			<DD_DESCRIPTION>Vertical Lines Per Label      </DD_DESCRIPTION>
+			<DD_DATA_NAME>LABEL_WIDTH     </DD_DATA_NAME>
+			<DD_DESCRIPTION>Horizontal Chars Per Label    </DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
 			<DD_DATA_LENGTH>2</DD_DATA_LENGTH>
 			<DD_SYSTEM_ID>  </DD_SYSTEM_ID>
@@ -691,8 +690,8 @@
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
-			<DD_ATTR_LABL>Vertical Lines Per Label</DD_ATTR_LABL>
-			<DD_ATTR_LABS>Lines/Label</DD_ATTR_LABS>
+			<DD_ATTR_LABL>Horizontal Chars Per Label</DD_ATTR_LABL>
+			<DD_ATTR_LABS>Chars/Label</DD_ATTR_LABS>
 			<DD_ATTR_MSKI>00</DD_ATTR_MSKI>
 			<DD_ATTR_MSKO>00</DD_ATTR_MSKO>
 			<DD_ATTR_PADC>30</DD_ATTR_PADC>
