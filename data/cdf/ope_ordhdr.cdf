@@ -60,6 +60,7 @@ rem --- Duplicate Historical Invoice
 :			"PRIMARY",
 :			rd_key$
 		if cvs(rd_key$,2)<>""
+escape
 			key_pfx_det$=rd_key$
 			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :				gui_dev,
