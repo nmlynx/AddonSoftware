@@ -62,13 +62,10 @@ rem --- Retrieve parameter records
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     units_flag$=gls01a.units_flag$
     total_pers=num(gls01a.total_pers$)
+    call "adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
+    call "adc_getmask.aon","","GL","A","",m1$,0,m1
+    call "adc_getmask.aon","","GL","U","",m2$,0,m2
     acctlen=num(gls01a.acct_length$)
-    m0$=gls01a.acct_output$
-    m1$=gls01a.amount_mask$
-    m2$=gls01a.unit_mask$
-    m0=len(m0$)
-    m1=len(m1$)
-    m2=len(m2$)
     mp=13
     headings=4
     inquiry$=cvs(inquiry$,2)
@@ -133,23 +130,23 @@ rem --- Summary Report Heading
 
 rem --- Detail Report Heading
 
-        if detail$="D"
+    if detail$="D"
 
-            columns=10
-            dim columns$[10,4]
-            columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(acctlen),columns$[0,3]=m0$
-            columns$[1,0]="Date",columns$[1,1]="C",columns$[1,2]="8"
-            columns$[2,0]="Jrnl",columns$[2,1]="C",columns$[2,2]="3"
-            columns$[3,0]="Audit #",columns$[3,1]="C",columns$[3,2]="10"
-            columns$[4,0]="Memo",columns$[4,1]="C",columns$[4,2]="50"
-            columns$[5,0]="Ref 1",columns$[5,1]="C",columns$[5,2]="10"
-            columns$[6,0]="Ref 2",columns$[6,1]="C",columns$[6,2]="10"
-            columns$[7,0]="Ref 3",columns$[7,1]="C",columns$[7,2]="10"
-            columns$[8,0]="Debits",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
-            columns$[9,0]="Credits",columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$
-            columns$[10,0]="Units",columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m2$
+        columns=10
+        dim columns$[10,4]
+        columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(acctlen),columns$[0,3]=m0$
+        columns$[1,0]="Date",columns$[1,1]="C",columns$[1,2]="8"
+        columns$[2,0]="Jrnl",columns$[2,1]="C",columns$[2,2]="3"
+        columns$[3,0]="Audit #",columns$[3,1]="C",columns$[3,2]="10"
+        columns$[4,0]="Memo",columns$[4,1]="C",columns$[4,2]="50"
+        columns$[5,0]="Ref 1",columns$[5,1]="C",columns$[5,2]="10"
+        columns$[6,0]="Ref 2",columns$[6,1]="C",columns$[6,2]="10"
+        columns$[7,0]="Ref 3",columns$[7,1]="C",columns$[7,2]="10"
+        columns$[8,0]="Debits",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
+        columns$[9,0]="Credits",columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$
+        columns$[10,0]="Units",columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m2$
 
-        endif
+    endif
 
 rem --- Initialize report headings
 
@@ -177,10 +174,11 @@ rem --- Initialize report headings
         if cvs(journal$,2)="" y$="All Journals" 
 :           else y$="Journal ID "+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
         headings$[3]=x$+" Report For "+y$
-    fi
+    endif
 
 rem --- Determine which years for GL summary (glm-02) records
 
+    year1=num(gls01a.current_year$)-1
     begper=0
     endper=total_pers
     year2=year1+1
