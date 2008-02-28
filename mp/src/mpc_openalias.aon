@@ -9,7 +9,7 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
-    enter channel,alias$,firm$,forecast$,filename$,status
+    enter channel,alias$,dd_name$,firm$,forecast$,filename$,status
 
 rem --- Retrieve the program path
 
@@ -47,7 +47,7 @@ rem --- Open FILENAME$
         flag=0
         while more
             dim files$[files],options$[files],channels[files]
-            files$[files]=filename$,ids$[files]=alias$
+            files$[files]=filename$,ids$[files]=dd_name$
             options$[files]="F"
             begfile=files
             endfile=files

@@ -23,7 +23,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock Files
 
-    call pgmdir$+"mpc_openalias.aon",mpe03a_dev,"mpe-03",firm_id$,forecast$,filename$,status
+    call pgmdir$+"mpc_openalias.aon",mpe03a_dev,"mpe-03","MPE_MATDET",firm_id$,forecast$,filename$,status
     if status then goto std_exit
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
 
