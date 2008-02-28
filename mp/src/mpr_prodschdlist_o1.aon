@@ -67,7 +67,7 @@ rem --- Finalize headings
     if enditem$<> "" then h8$="   Ending Item: "+cvs(enditem$,2) else h8$="   Ending Item: Last"
     if buyer$="" then h9$="Buyer Code: All" else h9$="Buyer Code: "+cvs(buyer$,2)
     if begper=1 and endper=mpm01a.no_of_pers then p9$="All Periods" else p9$="Periods "+str(begper)+" Through "+str(endper)
-escape
+
     dim plandate$[number]
     dim nb$(width-o[5],"-")
     begper=begper-1
