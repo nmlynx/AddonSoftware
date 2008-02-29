@@ -56,13 +56,16 @@ rem --- Dimension string templates
 :       sfm04a$:templates$[7],sfm05a$:templates$[8],sfs01a$:templates$[9],
 :       sft01a$:templates$[10]
 
+rem -- Init Data 
+    utilperc=100
+
 rem --- Assign form input values to local variables
 
     opfrom$=Option!.getOptionData("Op_Code_1")
     opthru$=Option!.getOptionData("Op_Code_2")
     datefrom$=Option!.getOptionData("Dates_1")
     datethru$=Option!.getOptionData("Dates_2")
-    h5$=Option!.getOptionData("Per_Of_Util")
+    utilperc=num(Option!.getOptionData("Per_Of_Util"))
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
@@ -81,7 +84,7 @@ rem --- Init Data
     h1$=n1$
     h2$=n3$
     l9=59
-    l=l9+1,utilperc=100
+    l=l9+1
     dim dashes$(80,"-")
     dim a[9],b[31],c[11],d[13],z[9]
     m1$="###0.00-"
