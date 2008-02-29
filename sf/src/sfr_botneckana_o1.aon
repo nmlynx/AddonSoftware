@@ -26,10 +26,10 @@ rem --- Init Data
 
     headings=5
     dim t[2],x0$(30),headings$[headings],w$[9]
-    if opfrom$="" then let h4$="The First Op Code thru " else let h4$="From Op Code "+opfrom$+" thru "
-    if opthru$="" then let h4$=h4$+"The Last Op Code " else let h4$=h4$+"Op Code "+opthru$+" "
-    if datefrom$="" then let h4$=h4$+"From The First Date thru " else let h4$=h4$+"From "+fndate$(datefrom$)+" thru "
-    if datethru$="" then let h4$=h4$+"The Last Date" else let h4$=h4$+fndate$(datethru$)
+    if opfrom$="" then h4$="The First Op Code thru " else h4$="From Op Code "+opfrom$+" thru "
+    if opthru$="" then h4$=h4$+"The Last Op Code " else   h4$=h4$+"Op Code "+opthru$+" "
+    if datefrom$="" then h4$=h4$+"From The First Date thru " else h4$=h4$+"From "+fndate$(datefrom$)+" thru "
+    if datethru$="" then h4$=h4$+"The Last Date" else h4$=h4$+fndate$(datethru$)
     h5$="Based On Utilization Percent Of "+str(utilperc:"##0.0")
     headings$[0]=h1$
     headings$[1]=h2$
@@ -63,21 +63,15 @@ rem --- Main Read
             done_flag=1
             break
         endif
-        if opthru$<>"" then 
-                if sfm05a_key.op_code$>opthru$ then 
-                    done_flag = 1
-                    break
-                endif
+        if opthru$<>"" and sfm05a_key.op_code$>opthru$ then 
+            done_flag = 1
+            break
         endif
-        if datefrom$<>"" then 
-            if sfm05a_key.sched_date$<datefrom$ then 
-                read (sfm05_dev,key=sfm05a_key.firm_id$+sfm05a_key.op_code$+datefrom$,dom=*continue)
-            endif
+        if datefrom$<>"" and sfm05a_key.sched_date$<datefrom$ then 
+            read (sfm05_dev,key=sfm05a_key.firm_id$+sfm05a_key.op_code$+datefrom$,dom=*continue)
         endif    
-        if datethru$<>"" then 
-            if sfm05a_key.sched_date$>datethru$ then 
-                read (sfm05_dev,key=sfm05a_key.firm_id$+sfm05a_key.op_code$+sfm05a_key.sched_date$+$ff$,dom=*continue)
-            endif
+        if datethru$<>"" and sfm05a_key.sched_date$>datethru$ then
+            read (sfm05_dev,key=sfm05a_key.firm_id$+sfm05a_key.op_code$+sfm05a_key.sched_date$+$ff$,dom=*continue)
         endif
         read record (sfm05_dev,key=sfm05a_key$) sfm05a$
 
@@ -91,7 +85,7 @@ rem --- Breaks
         if opcode$<>sfm05a.op_code$ then 
             done_flag=0
             gosub print_data 
-            let l=l9+1
+            l=l9+1
         endif
         if transdate$<>sfm05a.sched_date$ then 
             done_flag=0
@@ -113,7 +107,7 @@ rem --- Include?
 
 rem --- Add It Here
 
-        if num(sfe01a.priority$)=0 then let sfe01a.priority$="9"
+        if num(sfe01a.priority$)=0 then sfe01a.priority$="9"
         w$[num(sfe01a.priority$)]=w$[num(sfe01a.priority$)]+(sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.op_seq$)
         t0=t0+sfm05a.setup_time+sfm05a.runtime_hrs
     wend
@@ -126,23 +120,19 @@ print_data: rem --- Print Data
             month$=transdate$(5,2)
             find record (sfm04_dev,key=firm_id$+opcode$+year$+month$,dom=*next) sfm04a$
             s_day=num(transdate$(7,2))
-            rem escape
             if num(FIELD(sfm04a$,"hrs_per_day_"+str(s_day:"00")))<0 then 
-                let s_hrs=0 
+                s_hrs=0 
             else 
-                let s_hrs=num(FIELD(sfm04a$,"hrs_per_day_"+str(s_day:"00")))
+                s_hrs=num(FIELD(sfm04a$,"hrs_per_day_"+str(s_day:"00")))
             endif
-            if s_hrs>0 then 
-                if 100*t0/s_hrs<utilperc then break
-            endif
-            if l+5>l9 then let l=l9+1
+            if s_hrs>0 and 100*t0/s_hrs<utilperc then break
+            if l+5>l9 then l=l9+1
             gosub sub_heading
             dim sfm05a1$:templates$[8]
             for x=1 to 9
                 if len(w$[x])=0 then continue
                 print @(column1,11),w$[x](1,3)," ",fndate$(w$[x](4,3)),
                 for y=1 to len(w$[x]) step 21
-                    
                     read record (sfm05_dev,key=firm_id$+w$[x](y,21)) sfm05a1$
                     read record (sfe01_dev,key=firm_id$+"  "+sfm05a1.wo_no$,dom=*break) sfe01a$
                     if sfs01a.ar_interface$="Y" then 
@@ -172,7 +162,11 @@ rem --- End of Day
             print (printer_dev)@(85),dashes$(1,3*m1)
             print (printer_dev)@(4),"Total For Date: ",fndate$(transdate$),@(85),t[1]:m1$,
 :                              t[2]:m1$,t[1]+t[2]:m1$,s_hrs:m1$,@(118),s_hrs-(t[1]+t[2]):m1$,
-            if s_hrs=0 then print (printer_dev)"*****" else print (printer_dev)100*(t[1]+t[2])/s_hrs:m2$
+            if s_hrs=0 then 
+                print (printer_dev)"*****" 
+            else 
+                print (printer_dev)100*(t[1]+t[2])/s_hrs:m2$
+            endif
             print (printer_dev)""
             l=l+3
             break
@@ -188,7 +182,10 @@ rem --- Reset for next day
 done: rem --- End Of File Here
 
     a0$=sfm05a.firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.op_seq$
-    if len(a0$)=0 then gosub report_heading; goto std_exit
+    if len(a0$)=0 then 
+        gosub report_heading
+        goto std_exit
+    endif
     done_flag=0
     gosub print_data
     goto std_exit
@@ -258,10 +255,10 @@ rem --- Setup Current Op Code
 
     now=0
     for x=0 to len(opind$)/3-1
-        if ops[x,1]>0 then let now=x
-        if ops[x,3]>=sfe01a.sch_prod_qty then let now=x+1
+        if ops[x,1]>0 then now=x
+        if ops[x,3]>=sfe01a.sch_prod_qty then now=x+1
     next x
-    if ops[now,1]>=ops[now,0] then let now=now+1
+    if ops[now,1]>=ops[now,0] then now=now+1
     if now>len(opind$)/3-1 then return
     now_seq$=opind$(now*3+1,3)
 
@@ -316,8 +313,8 @@ rem --- Date/time handling functions
 
 rem " --- Convert 2-Char Year to 21st Century 2-Char Year" 
     def fnyy_yy21$(q1$)
-        let q9=10,q9=num(stbl("+y2k_upper_limit",err=*next),err=*next)
-        if num(q1$(1,2),err=8133)<q9 then let q1$(1,1)=chr(int(num(q1$(1,2))/10)+65)
+        q9=10,q9=num(stbl("+y2k_upper_limit",err=*next),err=*next)
+        if num(q1$(1,2),err=8133)<q9 then q1$(1,1)=chr(int(num(q1$(1,2))/10)+65)
         return q1$
     fnend
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
