@@ -176,11 +176,14 @@ rem --- Init Header File
     page=1
     selection$=""
     hdrkey$=firm_id$+"  "+cust_id$
-    read (header_channel,key=hdrkey$+beg_ord_inv$,dom=*next)
+    read_nxt$="Y"
+    read record (header_channel,key=hdrkey$+beg_ord_inv$,dom=*next)hdrrec$;read_nxt$="N"
 
 next_header: rem --- Header Read
-
-    read record (header_channel,end=nomore) hdrrec$
+    if read_nxt$="Y"
+        read record (header_channel,end=nomore) hdrrec$
+    endif
+    read_nxt$="Y"
     if pos(firm_id$+"  "+cust_id$=hdrrec$)<>1 goto nomore
     if history$="Y" and beg_ord_inv$<>"" and histinv1$="" histinv1$=hdrrec.ar_inv_no$
 
