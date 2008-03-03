@@ -98,6 +98,13 @@ rem --- Initializations
     thisvendor$=""
     thisname$=""
 
+rem --- Prompt user for permission to continue
+
+    msg_id$="AP_CHECK_SELECT"
+    dim msg_tokens$[1]
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_update
+
 rem --- Headings and print positions
 
     if retention
@@ -149,12 +156,6 @@ rem --- Define print positions
     h[7]=h[7]+m1-9
     h[8]=h[8]+m1-8
     if retention h[9]=h[9]+m1-10
-
-rem --- Prompt user for permission to continue
-
-    call pgmdir$+"adc_yesno.aon",1,"RUN_PAYMENT_SELECT_RPT",2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" goto std_exit
 
 rem --- Open printer, start the progress meter and position payment selections file
 
@@ -369,6 +370,11 @@ vendor_break: rem --- Vendor break
     thisname$=name$
     return
 
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- Functions
 
 rem --- Functions used to retrieve form values
@@ -465,6 +471,11 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src
