@@ -11,7 +11,6 @@ rem --- All Rights Reserved
     seterr std_error
     enter o9,printer_dev,bill_no$,page,comment$,sub$,warehouse$,select$,pdate$,status
 
-
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -175,7 +174,6 @@ rem --- Print Operation Information
     oh_labtot=0,sub_cost=0
     gosub Operation_Heading
     read (bmm03_dev,key=firm_id$+part$,dom=*next)
-
     while more
         read record (bmm03_dev,end=*break) bmm03a$
         if firm_id$+part$<>bmm03a.FIRM_ID$+bmm03a.BILL_NO$ then break
@@ -454,22 +452,25 @@ comments_line: rem --- Comments
 return
 
 lot_size_yield: rem --- Get Lot Size and Yield for Non-Phantoms
-
-    if sub$="" then let lot=bmm01a.STD_LOT_SIZE,yield=bmm01a.EST_YIELD
+    if sub$="" then 
+        lot=bmm01a.STD_LOT_SIZE
+        yield=bmm01a.EST_YIELD
         return
     endif
-    if len(sub$)=20 then let lot=bmm01a.STD_LOT_SIZE,yield=bmm01a.EST_YIELD
+    if len(sub$)=20 then 
+        lot=bmm01a.STD_LOT_SIZE
+        yield=bmm01a.EST_YIELD
         return
     endif
-    find record (bmm01_dev,key=firm_id$+sub$(21,20),dom=*next) bmm01a$; goto label_four
+    find record (bmm01_dev,key=firm_id$+sub$(21,20),dom=label_four) bmm01a$
     lot=bmm01a.STD_LOT_SIZE
     yield=bmm01a.EST_YIELD
+    read record (bmm01_dev,key=firm_id$+bill_no$) bmm01a$
 return
 
 label_four:
     lot=bmm01a.STD_LOT_SIZE
     yield=bmm01a.EST_YIELD
-    read record (bmm01_dev,key=firm_id$+bill_no$) bmm01a$
 return
 
 
@@ -611,9 +612,10 @@ rem ----#endinclude std_missing_params.src
 rem ----#include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
-        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-rem        run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-rem        release
+        rem call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+        for i=1 to 12
+            close(channels[i])
+        next i
         exit
 rem ----#endinclude std_exit.src
 
