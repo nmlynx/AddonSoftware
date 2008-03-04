@@ -39,6 +39,19 @@ attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Amount Due"
 attr_inv_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 attr_inv_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 attr_inv_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+attr_inv_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DISC_AMT"
+attr_inv_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Disc Amt"
+attr_inv_col$[8,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+attr_inv_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+attr_inv_col$[8,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+attr_inv_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PYMNT_AMT"
+attr_inv_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Pymnt Amt"
+attr_inv_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+attr_inv_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+attr_inv_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
 for curr_attr=1 to def_inv_cols
 
 	attr_inv_col$[0,1]=attr_inv_col$[0,1]+pad("APT_PAY."+attr_inv_col$[curr_attr,
@@ -73,8 +86,6 @@ fill_grid:
 			next wk
 		endif
 		gridInvoices!.resort()
-		rem gridInvoices!.setSelectedRow(0)
-		rem gridInvoices!.setSelectedColumn(1)
 	endif
 	SysGUI!.setRepaintEnabled(1)
 return
@@ -100,6 +111,16 @@ create_reports_vector:
 :				firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$) <>1 then break
 			apt01a.invoice_amt=apt01a.invoice_amt+apt11a.trans_amt+apt11a.trans_disc
 		wend
+rem --- override discount and payment amounts if already in ape04
+		disc_amt=0
+		pymnt_amt=0
+		dim ape04a$:fattr(ape04a$)
+		readrecord(ape04_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next)ape04a$
+		if cvs(ape04a.firm_id$,2)<>""
+			disc_amt=ape04a.discount_amt
+			pymnt_amt=ape04a.invoice_amt
+		endif
+rem --- now fill grid
 		if apt01a.invoice_amt<>0 then
 			vectInvoices!.addItem("")
 			vectInvoices!.addItem(apt01a.ap_type$)
@@ -108,6 +129,8 @@ create_reports_vector:
 			vectInvoices!.addItem(apt01a.ap_inv_no$)
 			vectInvoices!.addItem(fndate$(apt01a.inv_due_date$))
 			vectInvoices!.addItem(apt01a.invoice_amt$)
+			vectInvoices!.addItem(str(disc_amt))
+			vectInvoices!.addItem(str(pymnt_amt))
 			if apt01a.selected_for_pay$="Y"
 				vectInvoicesSel!.addItem("Y")
 			else
@@ -127,10 +150,14 @@ switch_value:rem --- Switch Check Values
 	TempRows!=gridInvoices!.getSelectedRows()
 	if TempRows!.size()>0
 		for curr_row=1 to TempRows!.size()
-			if gridInvoices!.getCellState(TempRows!.getItem(curr_row-1),0)=0
-				gridInvoices!.setCellState(TempRows!.getItem(curr_row-1),0,1)
-				else
-				gridInvoices!.setCellState(num(TempRows!.getItem(curr_row-1)),0,0)
+			row_no=num(TempRows!.getItem(curr_row-1))
+			if gridInvoices!.getCellState(row_no,0)=0
+				gridInvoices!.setCellState(row_no,0,1)
+				gridInvoices!.setCellText(row_no,8,gridInvoices!.getCellText(row_no,6))
+			else
+				gridInvoices!.setCellState(row_no,0,0)
+				gridInvoices!.setCellText(row_no,7,"0.00")
+				gridInvoices!.setCellText(row_no,8,"0.00")
 			endif
 		next curr_row
 	endif
@@ -175,20 +202,13 @@ if gridRows
 :						   gridInvoices!.getCellText(row,2)+
 :						   gridInvoices!.getCellText(row,4)
 		readrecord(apt01_dev,key=apt01_key$)apt01a$
-		amt_to_pay=apt01a.invoice_amt
-		disc_to_take=apt01a.discount_amt
+		amt_to_pay=num(gridInvoices!.getCellText(row,8))
+		disc_to_take=num(gridInvoices!.getCellText(row,7))
 		if gridInvoices!.getCellState(row,0)=0
 			apt01a.selected_for_pay$="N"
+			remove(ape04_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next)
 		else
 			apt01a.selected_for_pay$="Y"
-			readrecord(apt11_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next)
-			while more
-				readrecord(apt11_dev,end=*break)apt11a$
-				if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$=
-:					firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$) <>1 then break
-				amt_to_pay=amt_to_pay+apt11a.trans_amt
-				disc_to_take=disc_to_take+apt11a_trans_disc
-			wend
 			dim ape04a$:fattr(ape04a$)
 			ape04a.firm_id$=firm_id$
 			ape04a.ap_type$=apt01a.ap_type$
@@ -199,91 +219,105 @@ if gridRows
 			ape04a.invoice_date$=apt01a.invoice_date$
 			ape04a.disc_date$=apt01a.disc_date$
 			ape04a.invoice_amt=amt_to_pay
-			ape04a.discount_amt=apt01a.discount_amt
+			ape04a.discount_amt=disc_to_take
 			ape04a.retention=apt01a.retention
 			ape04a$=field(ape04a$)
-			write record(ape04_dev,key=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+ape04a.ap_inv_no$)ape04a$
+			write record(ape04_dev)ape04a$
 		endif
 		apt01a$=field(apt01a$)
 		write record(apt01_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$)apt01a$
 	next row
-
 endif
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
-num_files=4
-dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	num_files=5
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
-open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
-open_tables$[2]="APT_INVOICEDET",open_opts$[2]="OTA"
-open_tables$[3]="APM_VENDMAST",open_opts$[3]="OTA"
-open_tables$[4]="APE_CHECKS",open_opts$[4]="OTA"
+	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
+	open_tables$[2]="APT_INVOICEDET",open_opts$[2]="OTA"
+	open_tables$[3]="APM_VENDMAST",open_opts$[3]="OTA"
+	open_tables$[4]="APE_CHECKS",open_opts$[4]="OTA"
+	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
 
-gosub open_tables
+	gosub open_tables
 
-apt01_dev=num(open_chans$[1]),apt01_tpl$=open_tpls$[1]
-apt11_dev=num(open_chans$[2]),apt11_tpl$=open_tpls$[2]
-apm01_dev=num(open_chans$[3]),apm01_tpl$=open_tpls$[3]
-ape04_dev=num(open_chans$[4]),ape04_tpl$=open_tpls$[4]
+	apt01_dev=num(open_chans$[1]),apt01_tpl$=open_tpls$[1]
+	apt11_dev=num(open_chans$[2]),apt11_tpl$=open_tpls$[2]
+	apm01_dev=num(open_chans$[3]),apm01_tpl$=open_tpls$[3]
+	ape04_dev=num(open_chans$[4]),ape04_tpl$=open_tpls$[4]
+	apw01_dev=num(open_chans$[5])
 
 rem --- Dimension string templates
 
-    dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$,ape04a$:ape04_tpl$
+	dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$,ape04a$:ape04_tpl$
+
+rem --- See if Check Printing has already been started
+
+	while 1
+		read (apw01_dev,key=firm_id$,dom=*next)
+		k$=key(apw01_dev,end=*break)
+		if pos(firm_id$=k$)<>1 break
+		msg_id$="CHECKS_IN_PROGRESS"
+		gosub disp_message
+		release
+	wend
 
 rem --- See if we need to clear out ape-04
 
-msg_id$="CLEAR_SEL"
-dim msg_tokens$[1]
-msg_opt$=""
-gosub disp_message
-if msg_opt$="Y"
-	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
-	read(apt01_dev,key=firm_id$,dom=*next)
-	more=1
-	while more
-		apt01_key$=key(apt01_dev,end=*break)
-		if pos(firm_id$=apt01_key$)<>1 break
-		readrecord(apt01_dev,key=apt01_key$)apt01a$
-		apt01a.selected_for_pay$="N"
-		apt01a$=field(apt01a$)
-		write record(apt01_dev,key=apt01_key$)apt01a$
-	wend	
-endif
+	msg_id$="CLEAR_SEL"
+	dim msg_tokens$[1]
+	msg_opt$=""
+	gosub disp_message
+	if msg_opt$="Y"
+		call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
+		read(apt01_dev,key=firm_id$,dom=*next)
+		more=1
+		while more
+			apt01_key$=key(apt01_dev,end=*break)
+			if pos(firm_id$=apt01_key$)<>1 break
+			readrecord(apt01_dev,key=apt01_key$)apt01a$
+			apt01a.selected_for_pay$="N"
+			apt01a$=field(apt01a$)
+			write record(apt01_dev,key=apt01_key$)apt01a$
+		wend	
+	endif
 
 rem --- add grid to store report master records, with checkboxes for user to select one or more reports
 
-user_tpl_str$="gridInvoicesOfst:c(5),gridInvoicesCols:c(5),gridInvoicesRows:c(5),gridInvoicesCtlID:c(5)," +
-:		    	"vectInvoicesOfst:c(5),vectInvoicesSelOfst:c(5)"
-dim user_tpl$:user_tpl_str$
+	user_tpl_str$="gridInvoicesOfst:c(5),gridInvoicesCols:c(5),gridInvoicesRows:c(5),gridInvoicesCtlID:c(5)," +
+:		"vectInvoicesOfst:c(5),vectInvoicesSelOfst:c(5)"
+	dim user_tpl$:user_tpl_str$
 
-UserObj!=SysGUI!.makeVector()
-nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+	UserObj!=SysGUI!.makeVector()
+	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 
-gridInvoices!=Form!.addGrid(nxt_ctlID,5,100,400,200)
-user_tpl.gridInvoicesCtlID$=str(nxt_ctlID)
-user_tpl.gridInvoicesCols$="7"
-user_tpl.gridInvoicesRows$="8"
-user_tpl.gridInvoicesOfst$="0"
-user_tpl.vectInvoicesOfst$="1"
-user_tpl.vectInvoicesSelOfst$="2"
+	gridInvoices!=Form!.addGrid(nxt_ctlID,5,100,400,200)
+	user_tpl.gridInvoicesCtlID$=str(nxt_ctlID)
+	user_tpl.gridInvoicesCols$="9"
+	user_tpl.gridInvoicesRows$="8"
+	user_tpl.gridInvoicesOfst$="0"
+	user_tpl.vectInvoicesOfst$="1"
+	user_tpl.vectInvoicesSelOfst$="2"
 
-gosub format_grid
+	gosub format_grid
 
-UserObj!.addItem(gridInvoices!)
-UserObj!.addItem(SysGUI!.makeVector());rem vector of recs from Open Invoices
-UserObj!.addItem(SysGUI!.makeVector());rem vector of which invoices are selected
+	UserObj!.addItem(gridInvoices!)
+	UserObj!.addItem(SysGUI!.makeVector());rem vector of recs from Open Invoices
+	UserObj!.addItem(SysGUI!.makeVector());rem vector of which invoices are selected
 
 rem --- misc other init
-gridInvoices!.setColumnEditable(0,1)
-gridInvoices!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+	gridInvoices!.setColumnEditable(0,1)
+	gridInvoices!.setColumnEditable(7,1)
+	gridInvoices!.setColumnEditable(8,1)
+	gridInvoices!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 
-gosub create_reports_vector
-gosub fill_grid
+	gosub create_reports_vector
+	gosub fill_grid
 
 rem --- set callbacks - processed in ACUS callpoint
-gridInvoices!.setCallback(gridInvoices!.ON_GRID_KEY_PRESS,"custom_event")
-gridInvoices!.setCallback(gridInvoices!.ON_GRID_MOUSE_UP,"custom_event")
+	gridInvoices!.setCallback(gridInvoices!.ON_GRID_KEY_PRESS,"custom_event")
+	gridInvoices!.setCallback(gridInvoices!.ON_GRID_MOUSE_UP,"custom_event")
 [[APE_PAYSELECT.ASIZ]]
 if UserObj!<>null()
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
