@@ -1,23 +1,23 @@
 Description,Type,Version 8 Alias,Version 8 Program,v7 Name,Pgm Type,Form Status,"CodePort (needs, inits)",Print Preview Tested,"DocOut (needs,inits)",DocOut Tested,Comments
 Bill Of Materials,M,,,,,,,,,,
 Inventory Production Entry,T,,,bme_aa.bbx,entry,,,,,,
-Inventory Production Register,T,,,bmr_ha.bbx,register,,Done SV-BP,,needs,,
+Inventory Production Register,T,,,bmr_ha.bbx,register,,Done SV-BP,WIP NV-BP,needs,,
 Inventory Production Update,T,,,bmu_aa.bbx,update,,WIP SV-BP,,,,
 Order/Production Entry,T,,,bme_ba.bbx,entry,,,,,,
-Order/Production Register,T,,,bmr_ja.bbx,register,,Done SV-BP,,needs,,
+Order/Production Register,T,,,bmr_ja.bbx,register,,Done SV-BP,WIP NV-BP,needs,,
 Order/Production Update,T,,,bmu_ja.bbx,update,,Done SV-BP,,,,
 Reports,G,,,,,,,,,,
-Bill Of Materials Packing Listing,T,,,bmr_ea.bbx,report,,Done SV-BP,WIP NV-BP,needs,,
+Bill Of Materials Packing Listing,T,,bmr_packinglist.aon,bmr_ea.bbx,report,,Done SV-BP,Done NV-BP,needs,,
 Materials Where Used Listing,T,,bmr_materialused.aon,bmr_ba.bbx,report selection,,Done SV-BP,,,,
 Materials Where Used Listing - overlay,T,,bmr_materialused_o1.aon,bmr_bb.bbx,overlay,,Done SV-BP,Done NV-BP,needs,,
-Operations Where Used Listing,T,,,bmr_da.bbx,report selection,,Done SV-BP,,,,
-Operations Where Used Listing - overlay,T,,,bmr_db.bbx,overlay,,Done SV-BP,WIP NV-BP,needs,,
+Operations Where Used Listing,T,,bmr_oplist.aon,bmr_da.bbx,report selection,,Done SV-BP,,,,
+Operations Where Used Listing - overlay,T,,bmr_oplist_o1.aon,bmr_db.bbx,overlay,,Done SV-BP,Done NV-BP,needs,,
 Indented Bill Of Materials Report,T,,bmr_intendedbill.aon,bmr_za.bbx,report selection,,Done SV-BP,,,,
 Indented Bill Of Materials Report - overlay,T,,bmr_intendedbill_o1.aon,bmr_zb.bbx,overlay,,Done SV-BP,Done NV-BP,needs,,
 Bill Of Materials Detail Listing,T,,bmr_detaillist.aon,bmr_aa.bbx,report selection,,Done SV-BP,,
 Bill Of Materials Detail Listing - overlay,T,,bmr_detaillist_o1.aon,bmr_ab.bbx,overlay,,Done SV-BP,Done NV-BP,needs
-Bill Of Materials Inventory Costing,T,,,bmr_fa.bbx,report selection,,Done SV-BP,,
-Bill Of Materials Inventory Costing - overlay,T,,,bmr_fb.bbx,overlay,,Done SV-BP,WIP NV-BP,needs
+Bill Of Materials Inventory Costing,T,,bmr_invcost.aon,bmr_fa.bbx,report selection,,Done SV-BP,,
+Bill Of Materials Inventory Costing - overlay,T,,bmr_invcost_o1.aon,bmr_fb.bbx,overlay,,Done SV-BP,WIP NV-BP,needs
 Maintenance,G,,,,,,,,
 Bill Of Materials Master,T,,,bmm_ma.bbx,master maint,,,,
  BOM - Header ,T,,,bmm_mb.bbx,sub maint,,,,
@@ -42,9 +42,9 @@ Resequence Detail Lines,T,,,bmu_ca/cb.bbx,update,,WIP SV-BP,,,,
 Bill Detail Exception Report,T,,bmr_opseq.aon,bmr_la.bbx,report selection,,Done SV-BP,, ,,
 Bill Detail Exception Report - overlay,T,,bmr_opseq_o1.aon,bmr_lb.bbx,overlay,,Done SV-BP,Done NV-BP,needs,,
 Publics,G,,,,,,,,,,
-Bill Hard Copy,P,,bmc_printbill,bmc_aa.bbx,public,,Done SV-BP,,,,Changed this program as it is called from some reports
+Bill Hard Copy,P,,bmc_printbill.aon,bmc_aa.bbx,public,,Done SV-BP,,,,Changed this program as it is called from some reports
 Enter Effective and Obsolete Dates,P,,,bmc_ba.bbx,public,,Done SV-BP,,,,
- Packing List,P,,,bmc_ca.bbx,public,,Done SV-BP,,,,
+ Packing List,P,,bmc_packinglist.aon,bmc_ca.bbx,public,,Done SV-BP,,,,Changed this program as it is called from bmr_packinglist.aon
 Get Bill Cost,P,,,bmc_ea.bbx,public,,Done SV-BP,,,,
 Phantom Blow-through for Inventory Production Register,P,,,bmc_fa.bbx,public,,Done SV-BP
 Explode Phantoms for Inventory Production Update,P,,,bmc_ga.bbx,public,,WIP SV-BP
