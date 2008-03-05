@@ -260,6 +260,10 @@ rem --- See if Check Printing has already been started
 		if pos(firm_id$=k$)<>1 break
 		msg_id$="CHECKS_IN_PROGRESS"
 		gosub disp_message
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+
 		release
 	wend
 
