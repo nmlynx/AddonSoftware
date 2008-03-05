@@ -7,148 +7,151 @@ rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
 
-    seterr std_error
-    setesc std_error
+        seterr std_error
+        setesc std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
-    precision 4
+        pgmdir$=stbl("+DIR_PGM",err=*next)
+        precision 4
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Open printer
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+        if status then goto std_exit
 
 rem --- Initializations
 
-    dim a[10],c[1],d[1],t[9],u[9],w[1],x[1],o[11],headings$[6]
-    x0$="First Date"
-    x1$="Last Date"
-    h5$=""
-    if beg_date$<>"" x0$=fndate$(beg_date$)
-    if end_date$<>"" x1$=fndate$(end_date$)
-    h4$="Paid Invoices"
-    when$=sysinfo.system_date$
-    clock$=""
-    if option$="B" h4$="Booked Invoices"
-    if begin_salesperson$<>"" h6$=begin_salesperson$ else h6$="First"
-    if end_salesperson$<>"" h7$=end_salesperson$ else h7$="Last"
-    if commission$="S" h8$="Commission Based On Gross Sales"
-    if commission$="P" h8$="Commission Based On Gross Profit"
-    t0$=""
-    t0=0
-    t1=0
-    l9=55
-    l=l9+1
-    h=0
-    h0=132
-    x0$="Beginning Date: "+x0$
-    x1$="   Ending Date: "+x1$
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,11,13
-    more=1
+        dim a[10],c[1],d[1],t[9],u[9],w[1],x[1],o[11],headings$[6]
+        x0$="First Date"
+        x1$="Last Date"
+        h5$=""
+        if beg_date$<>"" then x0$=fndate$(beg_date$)
+        if end_date$<>"" then x1$=fndate$(end_date$)
+        h4$="Paid Invoices"
+        when$=sysinfo.system_date$
+        clock$=""
+        if option$="B" then h4$="Booked Invoices"
+        if begin_salesperson$<>"" then h6$=begin_salesperson$ else h6$="First"
+        if end_salesperson$<>"" then h7$=end_salesperson$ else h7$="Last"
+        if commission$="S" then h8$="Commission Based On Gross Sales"
+        if commission$="P" then h8$="Commission Based On Gross Profit"
+        t0$=""
+        t0=0
+        t1=0
+        l9=55
+        l=l9+1
+        h=0
+        h0=132
+        x0$="Beginning Date: "+x0$
+        x1$="   Ending Date: "+x1$
+        call pgmdir$+"adc_sizemask.aon",m1$,m1,11,13
+        more=1
+
 rem --- Headings
 
-    dim h1$(h0),h2$(h0),j$(5*m1+2*m4,"-")
-    headings$[0]=n1$
-    headings$[1]=n3$
-    h1$(1)="Beginning Salesperson: "+h6$
-    h1$(fncenter(h4$,h0),len(h4$))=h4$
-    h1$(h0-len(x0$))=x0$
-    h2$(1)="   Ending Salesperson: "+h7$
-    h2$(fncenter(h8$,h0),len(h8$))=h8$
-    h2$(h0-len(x1$))=x1$
-    headings$[2]=h1$
-    headings$[3]=h2$
+        dim h1$(h0),h2$(h0),j$(5*m1+2*m4,"-")
+        headings$[0]=n1$
+        headings$[1]=n3$
+        h1$(1)="Beginning Salesperson: "+h6$
+        h1$(fncenter(h4$,h0),len(h4$))=h4$
+        h1$(h0-len(x0$))=x0$
+        h2$(1)="   Ending Salesperson: "+h7$
+        h2$(fncenter(h8$,h0),len(h8$))=h8$
+        h2$(h0-len(x1$))=x1$
+        headings$[2]=h1$
+        headings$[3]=h2$
 
 rem --- Print positions
 
-    o[11]=h0-m1
-    h1$="Commission"
-    h2$="   Due    "
-    h1=o[11]+m1-11
-    if option$<>"P" o[11]=h0-1,h1=o[11],h1$="",h2$=""
-    o[1]=8
-    o[2]=o[1]+m0+1
-    o[10]=o[11]-m1
-    o[9]=o[10]-m4
-    o[8]=o[9]-m4
-    o[7]=o[8]-m1
-    o[6]=o[7]-m1
-    o[5]=o[6]-m1
-    o[4]=o[5]-m1
-    o[3]=o[4]-9
-    h2=h1
-    width=min(30,o[3]-o[2]-1)
+        o[11]=h0-m1
+        h1$="Commission"
+        h2$="   Due    "
+        h1=o[11]+m1-11
+        if option$<>"P" then o[11]=h0-1,h1=o[11],h1$="",h2$=""
+        o[1]=8
+        o[2]=o[1]+m0+1
+        o[10]=o[11]-m1
+        o[9]=o[10]-m4
+        o[8]=o[9]-m4
+        o[7]=o[8]-m1
+        o[6]=o[7]-m1
+        o[5]=o[6]-m1
+        o[4]=o[5]-m1
+        o[3]=o[4]-9
+        h2=h1
+        width=min(30,o[3]-o[2]-1)
 
-rem retrieve template for OPT_SALESCOM record key
+rem     retrieve template for OPT_SALESCOM record key
 
-call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_SALESCOM","PRIMARY",opt71a_key_tpl$,table_chans$[all],status$
-dim opt71a_key$:opt71a_key_tpl$
-call stbl("+DIR_SYP")+"bac_key_template.bbj","ART_INVDET","PRIMARY",art11a_key_tpl$,table_chans$[all],status$
-dim art11a_key$:art11a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_SALESCOM","PRIMARY",opt71a_key_tpl$,table_chans$[all],status$
+        dim opt71a_key$:opt71a_key_tpl$
+
+rem     retrieve template for ART_INVDET record key
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","ART_INVDET","PRIMARY",art11a_key_tpl$,table_chans$[all],status$
+        dim art11a_key$:art11a_key_tpl$
 
 
 
 rem --- Background
 
-rem     call pgmdir$+"adc_progress.aon","CN",sysinfo.task_desc$,"","Printing","",7,opt71_dev,1,0,ignore_status
         call pgmdir$+"adc_progress.aon","CN","","","","",0,opt71_dev,1,meter_num,status
+
 rem --- Position File Pointer
 
-    read (opt71_dev,key=firm_id$,dom=*next)
+        read (opt71_dev,key=firm_id$,dom=*next)
 
-while more
+    while more
 
                 opt71a_key$=key(opt71_dev,end=*break)
                 read record (opt71_dev,end=Control_Breaks) opt71a$
-                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
-                if pos(firm_id$=opt71a.firm_id$)<>1 break
-                if option$="B" if beg_date$<>"" if opt71a.INVOICE_DATE$<beg_date$ continue
-                if option$="B" if end_date$<>"" if opt71a.INVOICE_DATE$>end_date$ continue
-                if begin_salesperson$<>"" if opt71a_key.SLSPSN_CODE$<begin_salesperson$  continue
-                if end_salesperson$<>"" if opt71a_key.SLSPSN_CODE$>end_salesperson$  continue
-                if opt71a.invoice_type$="V" continue
+                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+                if pos(firm_id$=opt71a.firm_id$)<>1 then break 
+                if option$="B" and  beg_date$<>"" and opt71a.INVOICE_DATE$<beg_date$ then continue
+                if option$="B" and  end_date$<>"" and opt71a.INVOICE_DATE$>end_date$ then continue
+                if begin_salesperson$<>"" and opt71a.SLSPSN_CODE$<begin_salesperson$ then continue
+                if end_salesperson$<>"" and opt71a.SLSPSN_CODE$>end_salesperson$ then continue
+                if opt71a.invoice_type$="V" then  continue
 
 Control_Breaks: rem --- Control Breaks
 
-                if opt71a_key.SLSPSN_CODE$<>t0$ gosub Salesperson_Break
+                if opt71a.SLSPSN_CODE$<>t0$ then gosub Salesperson_Break
+
                 if option$<>"B" then
 rem --- Calculate commission due
-
                      gosub Search_Invoice
-                     if paid=0 continue
+                     if paid=0 then continue
                      a[9]=0
-                     if commission$="S" if sold<>0 a[9]=(-paid)/sold*opt71a.TOTAL_SALES*opt71a.COMM_PERCENT/100
-                     if commission$="P" if sold<>0 a[9]=(-paid)/sold*(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)*opt71a.COMM_PERCENT/100
-
+                     if commission$="S" and  sold<>0 then a[9]=(-paid)/sold*opt71a.TOTAL_SALES*opt71a.COMM_PERCENT/100
+                      
+                     if commission$="P" and  sold<>0 then a[9]=(-paid)/sold*(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)*opt71a.COMM_PERCENT/100
+                     
                 endif
 
-rem             dim b1$(width)
-rem             b1$(1)="(Not On File)"
                 arm01a.CUSTOMER_NAME$="(Not On File)"
                 find record (arm01_dev,key=firm_id$+opt71a.CUSTOMER_ID$,dom=*next) arm01a$
               
 
 rem --- Print
+              
 
-                if l>l9 gosub report_heading
+                if l>l9 then gosub report_heading
                 x0=0
                 a[8]=opt71a.TOTAL_SALES*opt71a.COMM_PERCENT/100
                 due$=""
-                if opt71a.TOTAL_SALES<>0 x0=100*(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)/opt71a.TOTAL_SALES
-                if commission$="P" a[8]=(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)*opt71a.COMM_PERCENT/100
-                if option$="P" due$=str(a[9]:m1$)
+                if opt71a.TOTAL_SALES<>0 then x0=100*(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)/opt71a.TOTAL_SALES
+                if commission$="P" then a[8]=(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)*opt71a.COMM_PERCENT/100
+                if option$="P" then due$=str(a[9]:m1$)
                 print (printer_dev)
-:                                @(o[0]),opt71a_key.AR_INV_NO$,
+:                                @(o[0]),opt71a.AR_INV_NO$,
 :                                @(o[1]),fnmask$(opt71a.CUSTOMER_ID$,m0$),
 :                                @(o[2]),arm01a.customer_name$,
 :                                @(o[3]),fndate$(opt71a.INVOICE_DATE$),
@@ -157,7 +160,7 @@ rem --- Print
 :                                @(o[6]),opt71a.TOTAL_COST:m1$,
 :                                @(o[7]),opt71a.TOTAL_SALES-opt71a.TOTAL_COST:m1$,
 :                                @(o[8]),x0:m4$,
-:                                @(o[9]),a[0]:m4$,
+:                                @(o[9]),opt71a.COMM_PERCENT:m4$,
 :                                @(o[10]),a[8]:m1$,
 :                                @(o[11]),due$
                 l=l+1
@@ -181,7 +184,7 @@ rem --- Accumulate totals
 
 rem --- Next record
 
-wend
+   wend
 
 
 
@@ -195,8 +198,8 @@ done: rem --- All done
     h5$="Report Summary"
     gosub report_heading
     print (printer_dev)t0," Total Salespersons"
-    if u[6]<>0 x0=100*(u[6]-u[7])/u[6]
-    if option$="P" due$=str(u[9]:m1$)
+    if u[6]<>0 then x0=100*(u[6]-u[7])/u[6]
+    if option$="P" then due$=str(u[9]:m1$)
              print (printer_dev)
 :                               @(o[4]-len(x$)),x$,
 :                               @(o[4]),u[6]:m1$,
@@ -209,17 +212,17 @@ done: rem --- All done
 
 rem --- Averages
 
-    if t0=0 goto std_exit
+    if t0=0 then goto std_exit
     for x=0 to 9
         u[x]=u[x]/t0
     next x
     x0=0
     x$="Report Averages"
-    if u[6]<>0 x0=100*(u[6]-u[7])/u[6]
-    if option$="P" due$=str(u[9]:m1$)
+    if u[6]<>0 then x0=100*(u[6]-u[7])/u[6]
+    if option$="P" then due$=str(u[9]:m1$)
     u[3]=0
-    if commission$="S" and u[6]<>0 u[3]=100*u[8]/u[6]
-    if commission$="P" and u[6]-u[7]<>0 u[3]=100*u[8]/(u[6]-u[7])
+    if commission$="S" and u[6]<>0 then u[3]=100*u[8]/u[6]
+    if commission$="P" and u[6]-u[7]<>0 then u[3]=100*u[8]/(u[6]-u[7])
              print (printer_dev)
 :                               @(o[4]-len(x$)),x$,
 :                               @(o[4]),u[6]:m1$,
@@ -235,14 +238,11 @@ rem --- Averages
 report_heading: rem --- Report Heading
 
     l=9
-
-
-rem doubt    h5$=arm10f_key.FIRM_ID$+arm10f_key.RECORD_ID_F$+arm10f_key.SLSPSN_CODE$+arm10f.CODE_DESC$
-
-
+        
+        
     headings$[5]=h5$
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],6,h,h0,when$,clock$,status
-    if status exitto std_exit
+    if status then exitto std_exit
              print (printer_dev)
 :                               @(o[0]),"Invoice",
 :                               @(o[4]+m1-6),"Gross",
@@ -269,51 +269,54 @@ Salesperson_Break: rem --- Salesperson Break
           if l1<>0 then   
                 x0=0
                  x$="Total For "+h5$
-                if len(x$)>o[4] x$=x$(1,o[4]-1)
-                if t[6]<>0 x0=100*(t[6]-t[7])/t[6]
-                if option$="P" due$=str(t[9]:m1$)
+                if len(x$)>o[4] then x$=x$(1,o[4]-1)
+                if t[6]<>0 then x0=100*(t[6]-t[7])/t[6]
+                if option$="P" then due$=str(t[9]:m1$)
                 print (printer_dev)@(o[4]),j$
                 print (printer_dev)@(o[4]-len(x$)),x$,@(o[4]),t[6]:m1$,@(o[5]),t[5]:m1$,@(o[6]),t[7]:m1$,@(o[7]),t[6]-t[7]:m1$,@(o[8]),x0:m4$,@(o[10]),t[8]:m1$,@(o[11]),due$
                 t0=t0+1
            endif
     endif
 Find_Record:
-    if t9$<>"" return
-rem dim h5$(32),
+    if t9$<>"" then return
     dim t[9]
     t0$=opt71a_key.SLSPSN_CODE$
     arm10f.SLSPSN_CODE$="(Not On File)"
     l=l9+1
     l1=0
     find record (arm10_dev,key=firm_id$+"F"+t0$,dom=*next) arm10f$
-    let h5$="Salesperson"+t0$+" "+cvs(arm10f.CODE_DESC$,2)
+    h5$="Salesperson"+t0$+" "+cvs(arm10f.CODE_DESC$,2)
     return
 
 Search_Invoice: rem --- Search Invoice Transactions
 
-    let paid=0,sold=0
-    read record (art01_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$+"00",dom=Invoice_Balance) art01a$
-    let sold=w[0]
-    read record (art11_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$,dom=*next) art11a$
+    paid=0,sold=0
+    read record (art01_dev,key=opt71a.FIRM_ID$+opt71a.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a.AR_INV_NO$+"00",dom=Invoice_Balance) art01a$
+    sold=art01a.invoice_amt
+    read record (art11_dev,key=opt71a.FIRM_ID$+opt71a.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a.AR_INV_NO$,dom=*next) art11a$
 
 
     while more
-        let art11a_key$=key(art11_dev,end=Return4)
-        if art11a_key.FIRM_ID$+art11a_key.AR_TYPE$+art11a_key.CUSTOMER_ID$+art11a_key.AR_INV_NO$<>opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a_key.AR_INV_NO$ exitto Return4
+        art11a_key$=key(art11_dev,end=*break)
+        if art11a_key.FIRM_ID$+art11a_key.AR_TYPE$+art11a_key.CUSTOMER_ID$+art11a_key.AR_INV_NO$<>opt71a.FIRM_ID$+opt71a.AR_TYPE$+opt71a.CUSTOMER_ID$+opt71a.AR_INV_NO$ then break
         read record (art11_dev,key=art11a_key$) art11a$
-        if beg_date$<>"" if art11a.TRANS_DATE$<beg_date$ continue
-        if end_date$<>"" if art11a.TRANS_DATE$>end_date$ continue
-        if art11a_key.FIRM_ID$(1,1)="C" paid=paid+art11a.TRANS_AMT+art11a.ADJDISC_AMT else sold=sold+art11a.TRANS_AMT+art11a.ADJDISC_AMT
+        if beg_date$<>"" and art11a.TRANS_DATE$<beg_date$ then continue
+        if end_date$<>"" and art11a.TRANS_DATE$>end_date$ then continue
+        if art11a.trans_type$="C" then 
+            paid=paid+art11a.TRANS_AMT+art11a.ADJDISC_AMT 
+        else 
+            sold=sold+art11a.TRANS_AMT+art11a.ADJDISC_AMT
+        endif
     wend
+    return
 
 
 Invoice_Balance: rem --- Zero Balance Cash Invoice ?
 
-    read record (opt41_dev,key=opt71a_key.FIRM_ID$+opt71a_key.AR_TYPE$+CUSTOMER_ID$+opt71a_key.AR_INV_NO$,dom=Return4) opt41a$
-    if beg_date$<>"" if opt41a.INVOICE_DATE$<beg_date$ return
-    if end_date$<>"" if opt41a.INVOICE_DATE$>end_date$ return
-    let sold=-d[0],paid=d[1]
-Return4:
+    read record (opt41_dev,key=opt71a.FIRM_ID$+opt71a.AR_TYPE$+CUSTOMER_ID$+opt71a.AR_INV_NO$,dom=*return) opt41a$
+    if beg_date$<>"" and opt41a.INVOICE_DATE$<beg_date$ then return
+    if end_date$<>"" and opt41a.INVOICE_DATE$>end_date$ then return
+    sold=-opt41a.invoice_amt,paid=opt41a.tendered_amt
     return
 
 rem #include std_functions.src
