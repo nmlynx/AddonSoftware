@@ -105,7 +105,6 @@ rem --- Additional File Opens
     wo$=info$[20]
     call pgmdir$+"adc_application.aon","AP",info$[all]
     ap$=info$[20]
-
     call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
 
 rem --- Print Material Information
@@ -306,9 +305,6 @@ rem --- Comments
             l=l+1
         wend
     endif
-
-done:
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
 
 rem --- End
 
@@ -612,11 +608,13 @@ rem ----#endinclude std_missing_params.src
 rem ----#include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
-        rem call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-        for i=1 to 12
-            close(channels[i])
-        next i
-        exit
+    
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
+    for i=1 to 12
+        close(channels[i])
+     next i
+
+     exit
 rem ----#endinclude std_exit.src
 
         end
