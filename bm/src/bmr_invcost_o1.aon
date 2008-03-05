@@ -48,24 +48,24 @@ rem --- Init Data
 
 rem --- Read Master
 while more
-        read record (bmm01_dev,end=done) bmm01a$
-        bill_no$=bmm01a.bill_no$
-        if billthru$<>"" then
-                if bmm01a.firm_id$+bmm01a.bill_no$>firm_id$+billthru$ then goto std_exit
-        endif
+    read record (bmm01_dev,end=done) bmm01a$
+    bill_no$=bmm01a.bill_no$
+    if billthru$<>"" then
+        if bmm01a.firm_id$+bmm01a.bill_no$>firm_id$+billthru$ then goto std_exit
+    endif
 
-        find (ivm02_dev,key=firm_id$+whs$+bmm01a.bill_no$,dom=*continue); rem "Skip if not in specified whse
-        h=0
-        i0=0
-        parent$=bill_no$
-        if printorcost$="C" then
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        endif
-        gosub explode
+    find (ivm02_dev,key=firm_id$+whs$+bmm01a.bill_no$,dom=*continue); rem "Skip if not in specified whse
+    h=0
+    i0=0
+    parent$=bill_no$
+    if printorcost$="C" then
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+    endif
+    gosub explode
 
 rem --- Print Material Information
 
-while more
+    while more
         
         if cvs(bill_list$,3)="" then break
         ivm02a_key$=firm_id$+whs$+bill_list$(len(bill_list$)-20+1,20)
@@ -101,7 +101,7 @@ while more
             if cvs(bmm02a.effect_date$,3)<>"" and bmm02a.effect_date$>pdate$ then continue
             if cvs(bmm02a.obsolt_date$,3)<>"" and bmm02a.obsolt_date$<=pdate$ then continue            
             find record (ivm02_dev,key=firm_id$+whs$+bmm02a.item_id$,dom=*continue) ivm02a$
-            tmatcost=tmatcost+ivm02a.UNIT_COST*fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR)
+            tmatcost=tmatcost+ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)
         wend
 
 get_op_info: rem --- Get Operation Information
@@ -114,15 +114,15 @@ get_op_info: rem --- Get Operation Information
             if cvs(bmm03a.effect_date$,3)<>"" and bmm03a.effect_date$>pdate$ then continue
             if cvs(bmm03a.obsolt_date$,3)<>"" and bmm03a.obsolt_date$<=pdate$ then continue
             let bmm08a.code_desc$="Not On File"
-            bmm08a.DIRECT_RATE=0
+            bmm08a.direct_rate=0
             read record (bmm08_dev,key=bmm03a.firm_id$+bmm03a.op_code$,dom=*next) bmm08a$
-            if bmm01a.STD_LOT_SIZE=0 then bmm01a.STD_LOT_SIZE=1
-            if bmm03a.PCS_PER_HOUR<>0 then
-                let directcost=fnop1(bmm03a.HRS_PER_PCE,bmm08a.DIRECT_RATE,bmm03a.PCS_PER_HOUR,bmm01a.EST_YIELD,bmm03a.SETUP_TIME,bmm01a.STD_LOT_SIZE)
+            if bmm01a.std_lot_size=0 then bmm01a.std_lot_size=1
+            if bmm03a.pcs_per_hour<>0 then
+                let directcost=fnop1(bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time,bmm01a.std_lot_size)
             else
                 let directcost=0
             endif
-            ohlabcost=directcost*bmm08a.OVHD_FACTOR
+            ohlabcost=directcost*bmm08a.ovhd_factor
             tdircost=tdircost+directcost
             tohcost=tohcost+ohlabcost
         wend
@@ -174,7 +174,7 @@ rem --- Write Inventory Record - with new cost for Finished Good
 
 rem Main Loop Ends
 
-Wend
+    wend
 
 wend
 
