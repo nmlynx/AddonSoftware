@@ -290,6 +290,7 @@ rem --- See if we need to clear out ape-04
 				write record(apt01_dev,key=apt01_key$)apt01a$
 			wend	
 		endif
+	break
 	wend
 
 rem --- add grid to store report master records, with checkboxes for user to select one or more reports
