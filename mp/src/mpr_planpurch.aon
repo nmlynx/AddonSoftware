@@ -23,11 +23,11 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=14,begfile=1,endfile=files
+    files=15,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="apm-01",ids$[1]="APM_VENDMAST"
     files$[2]="APS_PARAMS",ids$[2]="APS_PARAMS"
-    files$[3]="gls_params",ids$[3]="GLS_PARAMS"
+    files$[3]="GLS_PARAMS",ids$[3]="GLS_PARAMS"
     files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
     files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
     files$[6]="ivm-03",ids$[6]="IVX_ITEMVEND"
@@ -37,9 +37,10 @@ rem --- Open/Lock files
     files$[10]="ivm-12",ids$[10]="IVM_ITEMACT"
     files$[11]="IVS_PARAMS",ids$[11]="IVS_PARAMS"
     files$[12]="IVS_ABCPARAM",ids$[12]="IVS_ABCPARAM"
-    files$[13]="mpm-01",ids$[13]="MPM_FORECAST"
-    files$[14]="mpw-01",ids$[13]="MPW_DATETOT"
-    options$[14]="C"
+    files$[13]="mpe-03",ids$[13]="MPE_MATDET"
+    files$[14]="mpm-01",ids$[14]="MPM_FORECAST"
+    files$[15]="mpw-01",ids$[15]="MPW_DATETOT"
+    options$[15]="C"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -55,8 +56,9 @@ rem --- Open/Lock files
     ivm12a_dev=channels[10]
     ivs01a_dev=channels[11]
     ivs01c_dev=channels[12]
-    mpm01a_dev=channels[13]
-    mpw01a_dev=channels[14]
+    mpe03a_dev=channels[13]
+    mpm01a_dev=channels[14]
+    mpw01a_dev=channels[15]
 
 rem --- Dimension string templates
 
@@ -64,7 +66,7 @@ rem --- Dimension string templates
 :       ivm01a$:templates$[4],ivm02a$:templates$[5],ivm03h$:templates$[6],
 :       ivm05a$:templates$[7],ivm10c$:templates$[8],ivm10f$:templates$[9],
 :       ivm12a$:templates$[10],ivs01a$:templates$[11],ivs01c$:templates$[12],
-:       mpm01a$:templates$[13]
+:       mpm01a$:templates$[14],mpw01a$:templates$[15],ivm01a1$:templates$[4]
 
 rem --- Assign form input values to local variables
 
@@ -89,6 +91,8 @@ rem --- Retrieve parameter records
     find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     ivs01c_key$=firm_id$+"IV02"
     find record (ivs01c_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
+    mpm01a_key$=firm_id$+forecast$
+    find record (mpm01a_dev,key=mpm01a_key$,err=std_missing_params) mpm01a$
   
 
 rem --- Parameters
@@ -105,6 +109,38 @@ rem --- Parameters
     i[3]=num(ivs01a.desc_len_02$),i[4]=num(ivs01a.desc_len_03$)
     aplength=num(aps01a.vendor_size$)
     number=1,headings=2
+
+rem --- Initializations
+
+    precision ivs01_precision
+    dim description$[number],field[number],position[number],length[number]
+rem    begper=0,endper=0,m4$=m2$,mp=26
+rem    include$="N"
+rem    allbuyers=1
+    headings=4
+    dim headings$[headings]
+    headings$[0]=n1$
+    headings$[1]=n3$,l9=59,l=l9+1
+    clock$=""
+    when$=sysinfo.system_date$,page=0,width=132
+    max_period$=gls01a.total_pers$
+    curr_period$=ivs01a.current_per$
+    curr_year$=ivs01a.current_year$
+
+    h5$="Forecast: "+forecast$
+    h6$="Warehouse: "+whse$
+    h3$="Beginning Vendor: "+begvend$
+    h4$="   Ending Vendor: "+endvend$
+    h9$="Buyer Code: "+buyer$
+    h7$="Beginning Item: "+begitem$
+    h8$="   Ending Item: "+enditem$
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,m0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m2$,0,m2
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","R","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m4$,0,m4
+    m5$="###0-",m5=len(m5$)
 
 next_overlay:
 
