@@ -197,7 +197,7 @@ rem --- Read next Check Detail (ape-04) record
           rem --- Format detail line fields
 
           retention$=""
-          if retention retention$=str(ape04a.retention:m1$)
+          if retention retention$=str(ape04a.retention)
           payment=ape04a.invoice_amt-ape04a.discount_amt-ape04a.retention
 
  
@@ -207,9 +207,9 @@ rem --- Read next Check Detail (ape-04) record
           OutVect!.addItem(fndate$(ape04a.invoice_date$))
           OutVect!.addItem(fndate$(ape04a.inv_due_date$))
           OutVect!.addItem(fndate$(ape04a.disc_date$))
-          OutVect!.addItem(str(invoice_amt:m1$))
-          OutVect!.addItem(str(ape04a.discount_amt:m1$))
-          OutVect!.addItem(str(payment:m1$))
+          OutVect!.addItem(str(ape04a.invoice_amt))
+          OutVect!.addItem(str(ape04a.discount_amt))
+          OutVect!.addItem(str(payment))
 
           if retention
             OutVect!.addItem(retention$)
@@ -253,7 +253,8 @@ rem --- All done
    
           OutVect!.addItem(warning$)
 
-          call pgmdir$+"adc_stdmessage.aon",2,"NEGATIVE_CHECKS_ON_RPT",0,0,0,answer$,fkey
+          msg_id$="NEG_CHECKS_ON_RPT"
+          gosub disp_message
           break
     wend
 
@@ -263,7 +264,7 @@ rem --- All done
 print_total: rem --- Print totals
 
     retention$=""
-    if retention retention$=str(totals[2]:m1$)
+    if retention retention$=str(totals[2])
     payment=totals[0]-totals[1]-totals[2]
 
    
@@ -286,9 +287,9 @@ print_total: rem --- Print totals
  
     OutVect!.addItem(total$)
 
-    OutVect!.addItem(str(totals[0]:m1$))
-    OutVect!.addItem(str(totals[1]:m1$))
-    OutVect!.addItem(str(payment:m1$))
+    OutVect!.addItem(str(totals[0]))
+    OutVect!.addItem(str(totals[1]))
+    OutVect!.addItem(str(payment))
 
     if retention
         OutVect!.addItem(retention$)
