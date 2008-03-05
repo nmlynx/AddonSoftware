@@ -49,7 +49,6 @@ rem --- File channels
 
     ivm01_dev=channels[1]
     ivm02_dev=channels[2]
-    ivm03_dev=channels[3]
     ivm12_dev=channels[12]
 
 rem --- Retrieve miscellaneous templates
@@ -58,14 +57,13 @@ rem --- Retrieve miscellaneous templates
     dim ids$[files],templates$[files]
     ids$[1]="IVM_ITEMMAST"; rem ivm-01A:
     ids$[2]="IVM_ITEMWHSE"; rem ivm-02A:
-    ids$[3]="IVX_ITEMWHSE"; rem ivm-03G:
-    ids$[4]="IVM_ITEMACT"; rem ivm-12A:
+    ids$[3]="IVM_ITEMACT"; rem ivm-12A:
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 
-    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm03g$:templates$[3],ivm12a$:templates$[4]
+    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm12a$:templates$[3]
 
 rem --- Initializations
 
@@ -94,16 +92,16 @@ rem --- Initializations
 rem --- Retrieve Item
 
     find record (ivm01_dev,key=firm_id$+item_no$,dom=std_exit) ivm01a$
-    x$=item$[0]+"G"+item$[2]
+    x$=item$[0]+item$[2]
     warehouses$=item$[1]
     if pos("I"=action$)=0 goto all_warehouses
-    read (ivm03_dev,key=x$,dom=*next)
+    read (ivm02_dev,key=x$,knum=2,dom=*next)
     more=1
 while more; rem --- Read next warehouse for item
 
-    k$=key(ivm03_dev,end=*break)
+    k$=key(ivm02_dev,knum=2,end=*break)
     if pos(x$=k$)<>1 *break
-    read (ivm03_dev)
+    read (ivm02_dev,knum=2)
     if pos(k$(24,2)=warehouses$)=0 warehouses$=warehouses$+k$(24,2)
     if pos("I"=action$)=0 exitto read_history
     wend
