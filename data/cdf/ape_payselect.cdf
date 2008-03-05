@@ -269,23 +269,28 @@ rem --- See if Check Printing has already been started
 
 rem --- See if we need to clear out ape-04
 
-	msg_id$="CLEAR_SEL"
-	dim msg_tokens$[1]
-	msg_opt$=""
-	gosub disp_message
-	if msg_opt$="Y"
-		call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
-		read(apt01_dev,key=firm_id$,dom=*next)
-		more=1
-		while more
-			apt01_key$=key(apt01_dev,end=*break)
-			if pos(firm_id$=apt01_key$)<>1 break
-			readrecord(apt01_dev,key=apt01_key$)apt01a$
-			apt01a.selected_for_pay$="N"
-			apt01a$=field(apt01a$)
-			write record(apt01_dev,key=apt01_key$)apt01a$
-		wend	
-	endif
+	while 1
+		read(ape04_dev,key=firm_id$,dom=*next)
+		ape04_key$=key(ape04_dev,end=*break)
+		if pos(firm_id$=ape04_key$)<>1 break
+		msg_id$="CLEAR_SEL"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+		if msg_opt$="Y"
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
+			read(apt01_dev,key=firm_id$,dom=*next)
+			more=1
+			while more
+				apt01_key$=key(apt01_dev,end=*break)
+				if pos(firm_id$=apt01_key$)<>1 break
+				readrecord(apt01_dev,key=apt01_key$)apt01a$
+				apt01a.selected_for_pay$="N"
+				apt01a$=field(apt01a$)
+				write record(apt01_dev,key=apt01_key$)apt01a$
+			wend	
+		endif
+	wend
 
 rem --- add grid to store report master records, with checkboxes for user to select one or more reports
 
