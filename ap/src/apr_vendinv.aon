@@ -6,13 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem --- The following IOLIST's were removed from this program:
-
-rem --- apt01a: iolist x0$,x[0],x[1],x[2]					open invoices
-rem --- apt11a: iolist w0$(1),w1$(1),w[0],w[1],w[2]			invoice transactions
-
-rem --------------------------------------------------------------------------------
-
     setesc std_error
     seterr std_error
 
@@ -31,19 +24,19 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-	files=3,begfile=1,endfile=files
-	dim files$[files],options$[files],chans$[files],templates$[files]
-	files$[1]="APS_PARAMS";rem " --- aps-01"
-	files$[2]="APT_INVOICEHDR";rem " --- apt-01
-	files$[3]="APT_INVOICEDET";rem " --- apt-11
-	for wkx=begfile to endfile
-		options$[wkx]="OTA"
-	next wkx
+    files=3,begfile=1,endfile=files
+    dim files$[files],options$[files],chans$[files],templates$[files]
+    files$[1]="APS_PARAMS";rem " --- aps-01"
+    files$[2]="APT_INVOICEHDR";rem " --- apt-01
+    files$[3]="APT_INVOICEDET";rem " --- apt-11
+    for wkx=begfile to endfile
+	options$[wkx]="OTA"
+    next wkx
 
-	call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
-:			                            chans$[all],templates$[all],rd_table_chans$[all],batch,status$
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:       chans$[all],templates$[all],rd_table_chans$[all],batch,status$
 
-	if status$<>"" goto std_exit
+    if status$<>"" goto std_exit
     aps01_dev=num(chans$[1])
     apt01_dev=num(chans$[2])
     apt11_dev=num(chans$[3])
@@ -55,7 +48,7 @@ rem --- Dimension string templates
 
 rem --- retrieve key template
 
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","APT_INVOICEHDR","PRIMARY",apt01a_key0$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","APT_INVOICEHDR","PRIMARY",apt01a_key0$,rd_table_chans$[all],status$
 
 rem --- Assign form input values to local variables
 
@@ -86,42 +79,41 @@ rem --- Initializations
     dim x0$(73),x[2],w0$(22),w1$(11),w[2]
     dim heading$(width-2),footing$(width-2),msg$[0]
 
-    mask$=aps01a.amount_mask$
-    call dir_pgm$+"adc_sizemask.aon",mask$,mask,9,11
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",mask$,0,0
 
     call dir_pgm$+"adc_progress.aon","N","","","","",0,apt01_dev,1,meter_num,status
 
 rem --- Init Headings
 
 rem --- date/time 
-	OutVect!=bbjAPI().getSysGui().makeVector()
-	rep_date$=date(0:"%Mz/%Dz/%Yd")
-		rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-	rep_time$=date(0:"%hz:%mz %p")
-		rep_time_stamp$=date(0:"%Hz%mz%sz")
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- column headings
-	dim columns$[8,10]
-		columns$[0,0]="Invoice No",columns$[0,1]="C",columns$[0,2]="15"
-		columns$[1,0]="Transaction",columns$[1,1]="C",columns$[1,2]="20"
-		columns$[2,0]="Date",columns$[2,1]="C",columns$[2,2]="15"
-		columns$[3,0]="Due",columns$[3,1]="C",columns$[3,2]="15"
-		columns$[4,0]="PG",columns$[4,1]="C",columns$[4,2]="5"
-		columns$[5,0]="H",columns$[5,1]="C",columns$[5,2]="5"
-		columns$[6,0]="Amount",columns$[6,1]="N",columns$[6,2]="15",columns$[6,3]=mask$
-		columns$[7,0]="Discount",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=mask$
-		if aps01a.ret_flag$="Y"
-			columns$[8,0]="Retention",columns$[8,1]="N",columns$[8,2]="15",columns$[8,3]=mask$
-		else
-			columns$[8,0]=" ",columns$[8,1]="C",columns$[8,2]="15"
-		endif
+    dim columns$[8,10]
+    columns$[0,0]="Invoice No",columns$[0,1]="C",columns$[0,2]="15"
+    columns$[1,0]="Transaction",columns$[1,1]="C",columns$[1,2]="20"
+    columns$[2,0]="Date",columns$[2,1]="C",columns$[2,2]="15"
+    columns$[3,0]="Due",columns$[3,1]="C",columns$[3,2]="15"
+    columns$[4,0]="PG",columns$[4,1]="C",columns$[4,2]="5"
+    columns$[5,0]="H",columns$[5,1]="C",columns$[5,2]="5"
+    columns$[6,0]="Amount",columns$[6,1]="N",columns$[6,2]="15",columns$[6,3]=mask$
+    columns$[7,0]="Discount",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=mask$
+    if aps01a.ret_flag$="Y"
+    	columns$[8,0]="Retention",columns$[8,1]="N",columns$[8,2]="15",columns$[8,3]=mask$
+    else
+    	columns$[8,0]=" ",columns$[8,1]="C",columns$[8,2]="15"
+    endif
 
 rem --- miscellaneous headings
     dim headings$[5]
     headings$[0]=firm_name$
-	headings$[1]=task_desc$
+    headings$[1]=task_desc$
     headings$[2]=title$+vendor_id$
-	headings$[3]="AP Type: "+ap_type$
+    headings$[3]="AP Type: "+ap_type$
     if beg_inv_no$="" then let x$="First Invoice" else let x$="invoice no: "+beg_inv_no$
     headings$[4]="Beginning with "+x$
     headings$[5]="Invoice type: "+inv_types$[pos(pd_unpd_both$="PUB")]
@@ -143,17 +135,17 @@ position_apt01: rem --- Position apt-01
     t0$=""
     invtotal=0
     baltotal=0
-	dim apt01ak0$:apt01a_key0$
-	dim k$:apt01a_key0$
-	apt01ak0.firm_id$=firm_id$,apt01ak0.ap_type$=ap_type$,apt01ak0.vendor_id$=vendor_id$,apt01ak0.ap_inv_no$=beg_inv_no$
+    dim apt01ak0$:apt01a_key0$
+    dim k$:apt01a_key0$
+    apt01ak0.firm_id$=firm_id$,apt01ak0.ap_type$=ap_type$,apt01ak0.vendor_id$=vendor_id$,apt01ak0.ap_inv_no$=beg_inv_no$
     read record (apt01_dev,key=apt01ak0$,dom=*next) apt01a$
 
 next_apt01: rem --- Read next invoice
 
     k$=key(apt01_dev,end=no_more_invoices)
     if pos(firm_id$=k$)<>1 goto no_more_invoices
-    if cvs(k.ap_type$,3)<>ap_type$ goto no_more_invoices
-    if cvs(k.vendor_id$,3)<>vendor_id$ goto no_more_invoices
+    if k.ap_type$<>ap_type$ goto no_more_invoices
+    if k.vendor_id$<>vendor_id$ goto no_more_invoices
 
 rem --- Invoice header
 
@@ -173,21 +165,21 @@ reposition_invhdr: rem --- Reposition to invoice header if OK to display
 
 rem --- Header window record
 
-	OutVect!.addItem(apt01a.ap_inv_no$)
+    OutVect!.addItem(apt01a.ap_inv_no$)
     wk$="Invoice";if apt01a.mc_inv_flag$="M" then wk$(1,2)="MI Invoice"
-	OutVect!.addItem(wk$)
+    OutVect!.addItem(wk$)
     OutVect!.addItem(fndate$(apt01a.invoice_date$))
-	OutVect!.addItem(fndate$(apt01a.accting_date$))
-	OutVect!.addItem(apt01a.payment_grp$)
+    OutVect!.addItem(fndate$(apt01a.accting_date$))
+    OutVect!.addItem(apt01a.payment_grp$)
     OutVect!.addItem(apt01a.hold_flag$)
-    OutVect!.addItem(str(num(apt01a.invoice_amt$):mask$))
-    OutVect!.addItem(str(num(apt01a.discount_amt$):mask$))
+    OutVect!.addItem(apt01a.invoice_amt$)
+    OutVect!.addItem(apt01a.discount_amt$)
     
     if aps01a.ret_flag$="Y" 
-		OutVect!.addItem(str(num(apt01a.retention$):mask$))
-	else
-		OutVect!.addItem("")
-	endif
+	OutVect!.addItem(apt01a.retention$)
+    else
+	OutVect!.addItem("")
+    endif
 
     inv_found=1
     invtotal=invtotal+invoice
@@ -211,17 +203,17 @@ next_apt11: rem --- Detail window record
     case default; let trans$=""; break
     swend
 
-	OutVect!.addItem("")
-	OutVect!.addItem(trans$)
+    OutVect!.addItem("")
+    OutVect!.addItem(trans$)
     OutVect!.addItem(fndate$(apt11a.trans_date$))
-	xwk=fnblank(3)
-	OutVect!.addItem(str(num(apt11a.trans_amt$):mask$))
-	OutVect!.addItem(str(num(apt11a.trans_disc$):mask$))
+    xwk=fnblank(3)
+    OutVect!.addItem(apt11a.trans_amt$)
+    OutVect!.addItem(apt11a.trans_disc$)
     if aps01a.ret_flag$="Y"
-		OutVect!.addItem(str(num(apt11a.trans_ret$):mask$))
-	else
-		OutVect!.addItem("")
-	endif
+	OutVect!.addItem(apt11a.trans_ret$)
+    else
+	OutVect!.addItem("")
+    endif
 
     inv_found=1
 
@@ -232,25 +224,25 @@ apt11_loop: rem --- Loop back for next invoice
 
 no_more_invoices: rem --- No more invoices
 
-	if inv_found
-		gosub inv_total
-		gosub vendor_total
-	else
-		OutVect!.addItem("No invoices")
-		xwk=fnblank(8)
-	endif
+    if inv_found
+	gosub inv_total
+	gosub vendor_total
+    else
+	OutVect!.addItem("No invoices")
+	xwk=fnblank(8)
+    endif
 
 finished: rem --- All done
 
-	goto std_exit
+    goto std_exit
 
 vendor_total: rem --- Vendor Total
 
-	OutVect!.addItem("")
-	OutVect!.addItem("Vendor Total")
-	xwk=fnblank(4)
-	OutVect!.addItem(str(baltotal:mask$))
-	xwk=fnblank(2)
+    OutVect!.addItem("")
+    OutVect!.addItem("Vendor Total")
+    xwk=fnblank(4)
+    OutVect!.addItem(str(baltotal))
+    xwk=fnblank(2)
     inv_found=1
     return
 
@@ -258,11 +250,11 @@ inv_total: rem --- Invoice Total
 
     if t0$="" goto first_inv_total
     if detail$="N" goto first_inv_total
-	OutVect!.addItem("")
-	OutVect!.addItem("Invoice Total")
-	xwk=fnblank(4)
-	OutVect!.addItem(str(lastbalance:mask$)) 
-	xwk=fnblank(2)  
+    OutVect!.addItem("")
+    OutVect!.addItem("Invoice Total")
+    xwk=fnblank(4)
+    OutVect!.addItem(str(lastbalance))
+    xwk=fnblank(2)  
     inv_found=1
 first_inv_total:
     let t0$=k.ap_inv_no$,lastbalance=balance
