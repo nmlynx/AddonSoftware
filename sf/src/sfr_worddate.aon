@@ -50,7 +50,15 @@ rem --- Assign form input values to local variables
     datethru$=Option!.getOptionData("dates_2")
     wofrom$=Option!.getOptionData("work_order_1")
     wothru$=Option!.getOptionData("work_order_2")
-    wostatus$=Option!.getOptionData("wo_status")
+    wo_open$=Option!.getOptionData("open")
+    wo_closed$=Option!.getOptionData("closed")
+    wo_planned$=Option!.getOptionData("planned")
+    wo_quoted$=Option!.getOptionData("quoted")
+    wostatus$=""
+    if wo_open$="Y" wostatus$=wostatus$+"O"
+    if wo_closed$="Y" wostatus$=wostatus$+"C"
+    if wo_quoted$="Y" wostatus$=wostatus$+"Q"
+    if wo_closed$="Y" wostatus$=wostatus$+"C"
 
 rem --- Retrieve parameter records
 
