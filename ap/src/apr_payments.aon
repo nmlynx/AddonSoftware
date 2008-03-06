@@ -350,7 +350,10 @@ vendor_break: rem --- Vendor break
           xwk = fnblank(1)
 
           OutVect!.addItem(warning$)
-
+          xwk = fnblank(7)
+          if retention
+            xwk = fnblank(1)
+          endif
           lines=lines+1
           break
     wend
