@@ -6,18 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem --- The following IOLIST's were removed from this program:
-
-rem --- ivm01a: iolist *,itemdescript$(1)
-rem --- pom02a: iolist y0$(1),y1$(1)									po line codes
-rem --- pot04a: iolist x0$(1),x1$(1),x2$,x3$,x[all]						po receipt history header
-rem --- pot05a: iolist c0$(1),c1$(1)									po invoice history header
-rem --- pot14a: iolist w0$,w1$(1),w2$(1),w3$(1),w4$(1),w5$,w6$,w[all]	po receipt history detail
-rem --- pot25a: iolist d0$(1),d1$(1),d2$,d[all]							po invoice history detail
-rem --- pot35a: iolist xref$(1)											po/invoice xref
-
-rem --------------------------------------------------------------------------------
-
     setesc std_error
     seterr std_error
 
@@ -32,7 +20,7 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-	task_desc$=sysinfo.task_desc$
+    task_desc$=sysinfo.task_desc$
 
 rem --- Open/Lock files
 
@@ -46,13 +34,13 @@ rem --- Open/Lock files
     files$[6]="POT_RECDET";rem --- pot-14"
     files$[7]="POT_INVDET";rem --- pot-25"
     files$[8]="IVS_PARAMS";rem --- ivs-01
-	for wkx=begfile to endfile
-		options$[wkx]="OTA"
-	next wkx
-	call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
-:			                            chans$[all],templates$[all],rd_table_chans$[all],batch,status$
+    for wkx=begfile to endfile
+	options$[wkx]="OTA"
+    next wkx
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:       chans$[all],templates$[all],rd_table_chans$[all],batch,status$
 
-	if status$<>"" goto std_exit
+    if status$<>"" goto std_exit
     aps01_dev=num(chans$[1])
     ivm01_dev=num(chans$[2])
     pom02_dev=num(chans$[3])
@@ -71,8 +59,8 @@ rem --- Dimension string templates
 
 rem --- retrieve key template
 
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECHDR","PRIMARY",pot04a_key0$,rd_table_chans$[all],status$
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_INVDET","INVBYPO",invbypo_key$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECHDR","PRIMARY",pot04a_key0$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_INVDET","INVBYPO",invbypo_key$,rd_table_chans$[all],status$
 
 rem --- Assign form input values to local variables
 
@@ -86,12 +74,12 @@ rem --- Retrieve parameter records
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
 
-	call dir_pgm$+"adc_application.aon","IV",info$[all]
-	iv$=info$[20]
-	if iv$="Y"
-		ivs01a_key$=firm_id$+"IV00"
-		find record (ivs01_dev,key=ivs01a_key$,err=*next) ivs01a$
-	endif
+    call dir_pgm$+"adc_application.aon","IV",info$[all]
+    iv$=info$[20]
+    if iv$="Y"
+    	ivs01a_key$=firm_id$+"IV00"
+    	find record (ivs01_dev,key=ivs01a_key$,err=*next) ivs01a$
+    endif
 
 rem --- Initializations
 
@@ -104,14 +92,10 @@ rem --- Initializations
     dim x0$(22),x1$(160),x[8],y0$(4),y1$(32)
     dim w0$(25),w1$(48),w2$(32),w3$(22),w4$(40),w[12]
     dim heading$(width-2),footing$(width-2),msg$[0],control[2]
-    m1iv$=ivs01a.amount_mask$,mask$=m1iv$
-    m2iv$=ivs01a.unit_mask$
-    m3iv$=ivs01a.cost_mask$
-	mconvf$=ivs01a.convert_mask$
-    call dir_pgm$+"adc_sizemask.aon",m1iv$,m1iv,9,11
-    call dir_pgm$+"adc_sizemask.aon",m2iv$,m2iv,8,9
-    call dir_pgm$+"adc_sizemask.aon",m3iv$,m3iv,6,9
-    call dir_pgm$+"adc_sizemask.aon",mconvf$,mconvf,5,6
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1iv$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2iv$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3iv$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","V","",mconvf$,0,0
 
     dashes$=fill(9,"-")
 
@@ -120,48 +104,48 @@ rem --- Initializations
 rem --- Init Headings
 
 rem --- date/time 
-	OutVect!=bbjAPI().getSysGui().makeVector()
-	rep_date$=date(0:"%Mz/%Dz/%Yd")
-		rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-	rep_time$=date(0:"%hz:%mz %p")
-		rep_time_stamp$=date(0:"%Hz%mz%sz")
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- column headings 
-	if level$="S"
-		dim columns$[7,10]
-			columns$[0,0]="PO #",columns$[0,1]="C",columns$[0,2]="15"
-			columns$[1,0]="Receiver #",columns$[1,1]="C",columns$[1,2]="15"
-			columns$[2,0]="Received",columns$[2,1]="C",columns$[2,2]="15"
-			columns$[3,0]="Invoice #",columns$[3,1]="C",columns$[3,2]="15"
-			columns$[4,0]="Invoiced",columns$[4,1]="C",columns$[4,2]="15"
-			columns$[5,0]="Ordered",columns$[5,1]="N",columns$[5,2]="15",columns$[5,3]=mask$
-			columns$[6,0]="Received",columns$[6,1]="N",columns$[6,2]="15",columns$[6,3]=mask$
-			columns$[7,0]="Invoiced",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=mask$
-	else
-		dim columns$[10,10]	
-			columns$[0,0]="Seq",columns$[0,1]="C",columns$[0,2]="5"
-			columns$[1,0]="Cd",columns$[1,1]="C",columns$[1,2]="5"
-			columns$[2,0]="Wh",columns$[2,1]="C",columns$[2,2]="5"
-			columns$[3,0]="Item",columns$[3,1]="C",columns$[3,2]="30"
-			columns$[4,0]="Required",columns$[4,1]="C",columns$[4,2]="15"
-			columns$[5,0]="UM",columns$[5,1]="C",columns$[5,2]="5"
-			columns$[6,0]="Conv",columns$[6,1]="N",columns$[6,2]="5",columns$[6,3]=mask$
-			columns$[7,0]="Ordered",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=mask$
-			columns$[8,0]="Received",columns$[8,1]="N",columns$[8,2]="15",columns$[8,3]=mask$
-			columns$[9,0]="Cost",columns$[9,1]="N",columns$[9,2]="15",columns$[9,3]=mask$
-			columns$[10,0]="Extension",columns$[10,1]="N",columns$[10,2]="15",columns$[10,3]=mask$
-	endif
+    if level$="S"
+        dim columns$[7,10]
+	columns$[0,0]="PO #",columns$[0,1]="C",columns$[0,2]="15"
+	columns$[1,0]="Receiver #",columns$[1,1]="C",columns$[1,2]="15"
+	columns$[2,0]="Received",columns$[2,1]="C",columns$[2,2]="15"
+	columns$[3,0]="Invoice #",columns$[3,1]="C",columns$[3,2]="15"
+	columns$[4,0]="Invoiced",columns$[4,1]="C",columns$[4,2]="15"
+	columns$[5,0]="Ordered",columns$[5,1]="N",columns$[5,2]="15",columns$[5,3]=m2iv$
+	columns$[6,0]="Received",columns$[6,1]="N",columns$[6,2]="15",columns$[6,3]=m2iv$
+	columns$[7,0]="Invoiced",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=m2iv$
+    else
+	dim columns$[10,10]	
+	columns$[0,0]="Seq",columns$[0,1]="C",columns$[0,2]="5"
+	columns$[1,0]="Cd",columns$[1,1]="C",columns$[1,2]="5"
+	columns$[2,0]="Wh",columns$[2,1]="C",columns$[2,2]="5"
+	columns$[3,0]="Item",columns$[3,1]="C",columns$[3,2]="30"
+	columns$[4,0]="Required",columns$[4,1]="C",columns$[4,2]="15"
+	columns$[5,0]="UM",columns$[5,1]="C",columns$[5,2]="5"
+	columns$[6,0]="Conv",columns$[6,1]="N",columns$[6,2]="5",columns$[6,3]=mconvf$
+	columns$[7,0]="Ordered",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=m2iv$
+	columns$[8,0]="Received",columns$[8,1]="N",columns$[8,2]="15",columns$[8,3]=m2iv$
+	columns$[9,0]="Cost",columns$[9,1]="N",columns$[9,2]="15",columns$[9,3]=m3iv$
+	columns$[10,0]="Extension",columns$[10,1]="N",columns$[10,2]="15",columns$[10,3]=m1iv$
+    endif
 
 rem --- miscellaneous headings
     dim headings$[4]
     headings$[0]=firm_name$
-	headings$[1]=task_desc$
+    headings$[1]=task_desc$
     headings$[2]=title$+vendor_id$
-	if level$="S" 
-		headings$[3]="Summary Report"
-	else
-		headings$[3]="Detail Report"
-	endif
+    if level$="S" 
+	headings$[3]="Summary Report"
+    else
+	headings$[3]="Detail Report"
+    endif
     if startpo$="" then let x$="First PO" else let x$="invoice no: "+startpo$
     headings$[4]="Beginning with "+x$
 
@@ -179,9 +163,9 @@ rem --- Position pot-04
     samerec=0
     endinvs=0
     ponum$=""
-	dim pot04ak0$:pot04a_key0$
-	dim k$:pot04a_key0$
-	pot04ak0.firm_id$=firm_id$,pot04ak0.vendor_id$=vendor_id$,pot04ak0.po_no$=startpo$
+    dim pot04ak0$:pot04a_key0$
+    dim k$:pot04a_key0$
+    pot04ak0.firm_id$=firm_id$,pot04ak0.vendor_id$=vendor_id$,pot04ak0.po_no$=startpo$
     read record (pot04_dev,key=pot04ak0$,dom=*next) pot04a$
 
 readpot04: rem --- Read next PO
@@ -190,9 +174,9 @@ readpot04: rem --- Read next PO
     if pos(firm_id$=k$)<>1 goto no_more_receipts
     if k.vendor_id$<>vendor_id$ goto no_more_receipts
     if level$="S"
-	    if k.po_no$<>ponum$ and ponum$<>"" and polines>1 gosub pototal
-	    if k.po_no$<>ponum$ polines=0,showponum=1,poordtot=0,porectot=0,poinvtot=0,linedetail$=""
-	endif
+	if k.po_no$<>ponum$ and ponum$<>"" and polines>1 gosub pototal
+	if k.po_no$<>ponum$ polines=0,showponum=1,poordtot=0,porectot=0,poinvtot=0,linedetail$=""
+    endif
 
 
 rem --- Receipt header
@@ -243,70 +227,73 @@ rem ---
 
 rem --- Load display string - common parts
 
-    OutVect!.addItem(pot14a.po_line_no$)
-	OutVect!.addItem(pot14a.po_line_code$)
-	OutVect!.addItem(pot14a.warehouse_id$)
-    on pos(pom02a.line_type$="SNVMO") goto nextpot14,stock,nonstock,vpartnum,message,other
+    if level$<>"S"
+        OutVect!.addItem(pot14a.po_line_no$)
+        OutVect!.addItem(pot14a.po_line_code$)
+        OutVect!.addItem(pot14a.warehouse_id$)
+        on pos(pom02a.line_type$="SNVMO") goto nextpot14,stock,nonstock,vpartnum,message,other
 
 stock: rem --- Load display strings - Standard Line
-    itemdescript$="",itemdesc$="",ivm01a.firm_id$=firm_id$,ivm01a.item_id$=pot14a.item_id$
-    find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=stock_buildline) ivm01a$
-    itemdesc$=cvs(ivm01a.item_id$,3)+" "+cvs(ivm01a.item_desc$,3)
+        itemdescript$="",itemdesc$="",ivm01a.firm_id$=firm_id$,ivm01a.item_id$=pot14a.item_id$
+        find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=stock_buildline) ivm01a$
+        itemdesc$=cvs(ivm01a.item_id$,3)+" "+cvs(ivm01a.item_desc$,3)
 stock_buildline:
-	OutVect!.addItem(itemdesc$)
-	OutVect!.addItem(fndate$(pot14a.reqd_date$))
-	OutVect!.addItem(pot14a.unit_measure$)	
-	OutVect!.addItem(str(num(pot14a.conv_factor$):mconvf$))
-	OutVect!.addItem(str(num(pot14a.qty_ordered$):m2iv$))
-	OutVect!.addItem(str(num(pot14a.qty_received$):m2iv$))
-	OutVect!.addItem(str(num(pot14a.unit_cost$):m3iv$))
-	OutVect!.addItem(str(extension:m1iv$))
+        OutVect!.addItem(itemdesc$)
+        OutVect!.addItem(fndate$(pot14a.reqd_date$))
+        OutVect!.addItem(pot14a.unit_measure$)	
+        OutVect!.addItem(pot14a.conv_factor$)
+        OutVect!.addItem(pot14a.qty_ordered$)
+        OutVect!.addItem(pot14a.qty_received$)
+        OutVect!.addItem(pot14a.unit_cost$)
+        OutVect!.addItem(str(extension))
 	
-    goto loaddisp_detail
+        goto loaddisp_detail
 
 nonstock: rem --- Load display strings - Non-Stock Line
 
-	OutVect!.addItem(itemdesc$)
-	OutVect!.addItem(fndate$(pot14a.reqd_date$))
-	OutVect!.addItem(pot14a.unit_measure$)
-	OutVect!.addItem("")
-	OutVect!.addItem(str(num(pot14a.qty_ordered$):m2iv$))
-	OutVect!.addItem(str(num(pot14a.qty_received$):m2iv$))
-	OutVect!.addItem(str(num(pot14a.unit_cost$):m3iv$))
-	OutVect!.addItem(str(extension:m1iv$))
+        xwk=fnblank(3)
+        OutVect!.addItem(itemdesc$)
+        OutVect!.addItem(fndate$(pot14a.reqd_date$))
+        OutVect!.addItem(pot14a.unit_measure$)
+        OutVect!.addItem("")
+        OutVect!.addItem(pot14a.qty_ordered$)
+        OutVect!.addItem(pot14a.qty_received$)
+        OutVect!.addItem(pot14a.unit_cost$)
+        OutVect!.addItem(str(extension))
 
-	xwk=fnblank(3)
-	OutVect!.addItem(pot14a.order_memo$)
-	xwk=fnblank(7)
-    goto loaddisp_detail
+        xwk=fnblank(3)
+        OutVect!.addItem(pot14a.order_memo$)
+        xwk=fnblank(7)
+        goto loaddisp_detail
 
 vpartnum: rem --- Load display strings - Vendor Part Number Line
 
-	xwk=fnblank(3)
-	OutVect!.addItem(pot14a.order_memo$)
-	xwk=fnblank(7)
-    goto loaddisp_detail
+        xwk=fnblank(3)
+        OutVect!.addItem(pot14a.order_memo$)
+        xwk=fnblank(7)
+        goto loaddisp_detail
 
 message: rem --- Load display strings - Message Line
 
-	xwk=fnblank(3)
-	OutVect!.addItem(pot14a.order_memo$)
-	xwk=fnblank(7)
-    goto loaddisp_detail
+        xwk=fnblank(3)
+        OutVect!.addItem(pot14a.order_memo$)
+        xwk=fnblank(7)
+        goto loaddisp_detail
 
 other: rem --- Load display strings - Other Line
 
-	xwk=fnblank(3)
-	OutVect!.addItem(pot14a.order_memo$)
-	OutVect!.addItem(fndate$(pot14a.reqd_date$))
-	xwk=fnblank(3)
-	OutVect!.addItem(str(num(pot14a.unit_cost$):m3iv$))
-	OutVect!.addItem(str(num(pot14a.unit_cost$):m3iv$))
-    goto loaddisp_detail
+        xwk=fnblank(3)
+        OutVect!.addItem(pot14a.order_memo$)
+        OutVect!.addItem(fndate$(pot14a.reqd_date$))
+        xwk=fnblank(3)
+        OutVect!.addItem(pot14a.unit_cost$)
+        OutVect!.addItem(pot14a.unit_cost$)
+        goto loaddisp_detail
 
 loaddisp_detail: rem --- Load LLIST$[]
 
-    po_found=1
+        po_found=1
+    endif
 
 nextpot14: rem --- Loop up for next PO line number
 
@@ -318,26 +305,26 @@ nextpot04: rem --- Loop up for next PO/Receiver
 
 no_more_receipts: rem --- No more Receipts
 
-	if po_found
-		if polines>1 gosub pototal
-		gosub reporttotal
-	else
-		OutVect!.addItem("No records")
-		xwk=fnblank(7)
-	endif
+    if po_found
+	if polines>1 gosub pototal
+	gosub reporttotal
+    else
+    	OutVect!.addItem("No records")
+	xwk=fnblank(7)
+    endif
 
 
 finished: rem --- All done
 
-	goto std_exit
+    goto std_exit
 
 pototal: rem --- PO Total
 
-	xwk=fnblank(4)
-	OutVect!.addItem("Inv Total")
-    OutVect!.addItem(str(poordtot:m1iv$))
-	OutVect!.addItem(str(porectot:m1iv$))
-	OutVect!.addItem(str(poinvtot:m1iv$))
+    xwk=fnblank(4)
+    OutVect!.addItem("PO Total")
+    OutVect!.addItem(str(poordtot))
+    OutVect!.addItem(str(porectot))
+    OutVect!.addItem(str(poinvtot))
     po_found=1
     poordtot=0
     porectot=0
@@ -347,11 +334,11 @@ pototal: rem --- PO Total
 
 reporttotal: rem --- Report Total
 
-	xwk=fnblank(4)
-	OutVect!.addItem("Rpt Total")
-	OutVect!.addItem(str(rptordtot:m1iv$))
-	OutVect!.addItem(str(rptrectot:m1iv$))
-	OutVect!.addItem(str(rptinvtot:m1iv$))
+    xwk=fnblank(4)
+    OutVect!.addItem("Rpt Total")
+    OutVect!.addItem(str(rptordtot))
+    OutVect!.addItem(str(rptrectot))
+    OutVect!.addItem(str(rptinvtot))
     po_found=1
     return
 
@@ -397,17 +384,17 @@ end_getinv:
 loaddisp: rem --- Fill Display array for summary inquiry
 
     if showponum and ponum$<>prevpo$
-		OutVect!.addItem(ponum$)
-	else
-		OutVect!.addItem("")
-	endif
-	OutVect!.addItem(receiver$)
-	OutVect!.addItem(fndate$(rcptdate$))
-	OutVect!.addItem(invnum_print$)
-	OutVect!.addItem(fndate$(invdate$))
-    OutVect!.addItem(str(ordamt:m1iv$))
-	OutVect!.addItem(str(recamt:m1iv$))
-    OutVect!.addItem(str(invamt:m1iv$))
+	OutVect!.addItem(ponum$)
+    else
+	OutVect!.addItem("")
+    endif
+    OutVect!.addItem(receiver$)
+    OutVect!.addItem(fndate$(rcptdate$))
+    OutVect!.addItem(invnum_print$)
+    OutVect!.addItem(fndate$(invdate$))
+    OutVect!.addItem(str(ordamt))
+    OutVect!.addItem(str(recamt))
+    OutVect!.addItem(str(invamt))
     
     let po_found=1
     let poordtot=poordtot+ordamt,porectot=porectot+recamt
@@ -422,14 +409,14 @@ rem --- New PO for detail level inquiry
 newpo:
 
     if ponum$<>prevpo$
-		xwk=fnblank(3)
-		OutVect!.addItem("PO# "+ponum$)
-		OutVect!.addItem("Rcvr# "+receiver$)
-		xwk=fnblank(3)
-		OutVect!.addItem(fndate$(rcptdate$))
-		xwk=fnblank(2)
-		po_found=1,prevpo$=ponum$,prevrec$=receiver$
-	endif
+	xwk=fnblank(3)
+	OutVect!.addItem("PO# "+ponum$)
+	OutVect!.addItem("Rcvr# "+receiver$)
+	xwk=fnblank(3)
+	OutVect!.addItem(fndate$(rcptdate$))
+	xwk=fnblank(2)
+	po_found=1,prevpo$=ponum$,prevrec$=receiver$
+    endif
     return
 
 rem #include std_functions.src
