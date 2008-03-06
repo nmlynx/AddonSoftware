@@ -34,8 +34,8 @@ rem --- Initializations
         x0$="First Date"
         x1$="Last Date",page=0,width=132,l9=59,l=l9+1,headings=3
         dim headings$[headings]
-        if p8$<>"" then let x0$=fndate$(p8$)
-        if p9$<>"" then let x1$=fndate$(p9$)
+        if p8$<>"" then  x0$=fndate$(p8$)
+        if p9$<>"" then  x1$=fndate$(p9$)
         h3$="From "+x0$+" Thru "+x1$
         clock$="",when$=sysinfo.system_date$
         headings$[0]=n1$
@@ -63,13 +63,10 @@ rem --- Main Loop (Invoice Read)
  while more
 
         read record(opt01_dev,end=*break)opt01a$
-        if opt01a.firm_id$<>firm_id$ break
+        if opt01a.firm_id$<>firm_id$ then break
 
-        if p9$<>"" then
-            if opt01a.invoice_date$>p9$ then
-                break
-            endif
-        endif
+        if p9$<>"" and  opt01a.invoice_date$>p9$ then break
+       
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Void
@@ -94,7 +91,7 @@ rem --- Print
         if l+2>l9 then gosub report_heading
         x0=0
         if opt01a.total_sales<>0 then
-            let x0=100*(opt01a.total_sales-opt01a.total_cost)/opt01a.total_sales
+             x0=100*(opt01a.total_sales-opt01a.total_cost)/opt01a.total_sales
         endif
 
         print (printer_dev)@(0),opt01a.ar_inv_no$,
@@ -110,7 +107,11 @@ rem --- Print
 rem --- Totals
 
         t0=t0+1
-        rem for x=0 to 7ru
+        t[0]=t[0]+opt01a.tax_amount
+        t[1]=t[1]+opt01a.freight_amt
+        t[2]=t[2]+opt01a.discount_amt
+        t[3]=t[3]+opt01a.comm_percent
+        t[4]=t[4]+opt01a.taxable_amt
         t[5]=t[5]+opt01a.comm_amt
         t[6]=t[6]+opt01a.total_sales
         t[7]=t[7]+opt01a.total_cost
@@ -122,7 +123,7 @@ rem --- Main Loop Ends
 
         if h=0 or l+4>l9 then gosub report_heading
         x0=0
-        if t[6]<>0 then let x0=100*(t[6]-t[7])/t[6]
+        if t[6]<>0 then  x0=100*(t[6]-t[7])/t[6]
         print (printer_dev)'lf',
 :                               @(2),"Total Invoices:",t0
         print (printer_dev)
@@ -137,9 +138,11 @@ rem --- Averages
                 t[x]=t[x]/t0
             next x
             x0=0
-            if t[6]<>0 then let x0=100*(t[6]-t[7])/t[6]
-            print (printer_dev)@(2),"Averages:",@(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,
-:                                               t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
+            if t[6]<>0 then  x0=100*(t[6]-t[7])/t[6]
+            print (printer_dev)
+:                               @(2),"Averages:",
+:                               @(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,
+:                               t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
         endif
 
         goto std_exit
@@ -169,7 +172,7 @@ report_heading: rem --- Report Heading
 rem --- Detail
 
         if l+3>l9 then gosub report_heading
-        if opt01a.total_cost>999 then let opt01a.total_cost=999.99
+        if opt01a.total_cost>999 then  opt01a.total_cost=999.99
         if opt01a.invoice_type$<>"V" then
              print (printer_dev)@(0),opt01a.customer_id$,@(15),fnmask$(opt01a.ar_inv_no$(1,p[0]),m0$),
 :                              @(23),fndate$(opt01a.invoice_date$),@(33+12-m1),opt01a.tax_amount:m1$,
@@ -200,7 +203,6 @@ rem --- Print VOID
 
 Find_Customer: rem --- Find Customer
 
-        rem dim b1$(30)
         arm01a.customer_name$="Not On File"
         find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
         return
