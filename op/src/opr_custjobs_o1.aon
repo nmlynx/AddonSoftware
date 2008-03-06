@@ -52,24 +52,18 @@ rem --- retrieve template for OPM_CUSTJOBS record key
 
 rem --- Main Loop Starts
 
-While more
+  while more
+
         opm09a_key$=key(opm09_dev,end=*break)
         if pos(firm_id$=opm09a_key$)<>1 then break
         read record (opm09_dev,end=done) opm09a$
 
 rem --- Control Breaks
 
-        if p9$<>"" then
-            if opm09a.customer_id$<p9$ then
-                continue
-            endif
-        endif
-        if p8$<>"" then
-            if opm09a.customer_id$>p8$ then
-                continue
-            endif
-        endif
-
+        if p9$<>"" and opm09a.customer_id$<p9$ then continue
+          
+        if p8$<>"" and opm09a.customer_id$>p8$ then continue
+          
 rem --- Break
 
         if opm09a.customer_id$<>t0$ then gosub Customer_Break
@@ -92,7 +86,7 @@ rem --- Print
         l=l+2
         t0=t0+1
 
-Wend
+  wend
 
 rem --- Main Loop Ends
 
@@ -135,14 +129,11 @@ Sub_Head: rem --- Subhead
 
 Customer_Break: rem --- Customer Break
 
-        if t9$<>"" then
-            return
-        endif
+        if t9$<>"" then return
         t0$=opm09a.customer_id$
         arm01a.customer_name$="(Not On File)"
         find record (arm01_dev,key=opm09a.firm_id$+t0$,dom=*next) arm01a$
         gosub Sub_Head
-
         return
 
 
