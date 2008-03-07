@@ -9,6 +9,9 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
+    call "adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+
 rem --- Initializations
 
     precision p[1]
@@ -19,6 +22,11 @@ rem --- Initializations
     page=0
     l9=59
     l=l9+1
+    cost_index=11+pos(cost$="ASRL")
+    cost_desc$="Average"
+    if cost$="S" cost_desc$="Standard"
+    if cost$="R" cost_desc$="Replacmnt"
+    if cost$="L" cost_desc$="Landed"
     h9$=""
     selection$="END"
     t0$="", t1$="", t2$=""
@@ -69,7 +77,8 @@ rem --- Print positions
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","Printing","",bw,0,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm03_dev,1,meter_num,status
+rem    call pgmdir$+"adc_progress.aon","N","","","Printing","",bw,0,1,meter_num,status
 
 rem --- Report headings
 
@@ -107,9 +116,10 @@ rem --- Position file
     h[11]=o[11]+m2-8
     h[12]=o[12]+m1-6
     first$=firm_id$+"C"
-    ivm03c_key$=first$+begwhse$
-    if begwhse$<>"" ivm03c_key$=ivm03c_key$+begprod$
-    if begwhse$<>"" and begprod$<>"" ivm03c_key$=ivm03c_key$+begitem$
+    ivm03c_key.firm_id$=firm_id$,ivm03c_key.record_id_c$="C"
+    ivm03c_key.warehouse_id$=begwhse$
+    if begwhse$<>"" ivm03c_key.product_type$=begprod$
+    if begwhse$<>"" and begprod$<>"" ivm03c_key.item_id$=begitem$
     read (ivm03_dev,key=ivm03c_key$,dom=Next_ivm03)
     goto Next_Read_ivm03
 
@@ -150,13 +160,14 @@ rem --- Valid Warehouse/Product/Item?
             goto Loop_Back
         endif
     endif
-    whse$=ivm03c_key_key.warehouse_id$
-    product$=ivm03c_key_key.product_type$
-    item$=ivm03c_key_key.item_id$
+    whse$=ivm03c_key.warehouse_id$
+    product$=ivm03c_key.product_type$
+    item$=ivm03c_key.item_id$
 
 rem --- Level breaks?
 
-    call pgmdir$+"adc_progress.aon","S","","","",whse$+" "+product$+" "+item$(1,p[0]),0,0,1,meter_num,status
+rem    call pgmdir$+"adc_progress.aon","S","","","",whse$+" "+product$+" "+item$(1,p[0]),0,0,1,meter_num,status
+
     if whse$<>t0$ gosub whse_break
     if product$<>t1$ gosub product_break
     if format>3 and item$<>t2$ gosub Item_break
@@ -167,19 +178,22 @@ rem --- Retrieve item, warehouse and activity
     ivm01a_key$=firm_id$+item$
     ivm02a_key$=firm_id$+whse$+item$
     ivm12a_key$=ivm02a_key$+period$
-    find record (ivm01a_dev,key=ivm01a_key$,dom=Loop_Back) ivm01a$
+    find record (ivm01_dev,key=ivm01a_key$,dom=Loop_Back) ivm01a$
     if type$<>"" if ivm01a.item_type$<>type$ goto Loop_Back
-    find record (ivm02a_dev,key=ivm02a_key$,dom=Loop_Back) ivm02a$
-    find record (ivm12a_dev,key=ivm12a_key$,dom=*next) ivm12a$
+    find record (ivm02_dev,key=ivm02a_key$,dom=Loop_Back) ivm02a$
+    find record (ivm12_dev,key=ivm12a_key$,dom=*next) ivm12a$
     description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
-    um$=ivm01a.product_type$
+    um$=ivm01a.unit_of_sale$
     printed=0
     location$=ivm02a.location$
     onhand=ivm02a.qty_on_hand
-    cost=ivm02a.unit_cost
+    if cost$="A" cost=ivm02a.avg_cost
+    if cost$="S" cost=ivm02a.std_cost
+    if cost$="R" cost=ivm02a.rep_cost
+    if cost$="L" cost=ivm02a.landed_cost
     quantity=onhand
     if format>3 h11$(o[1]+1)=um$,h11$(o[2]+1)=location$,h11$(o[7]+1)=str(cost:m3$)
-    account$=ivm01a.gl_inv_acct
+    account$=ivm01a.gl_inv_acct$
     l3=l3+1
     w[0]=ivm12a.beg_balance, w[1]=ivm12a.qty_received, w[2]=ivm12a.qty_built 
     w[3]=ivm12a.qty_sold, w[4]=ivm12a.qty_issued, w[5]=ivm12a.qty_adjust 
@@ -191,9 +205,9 @@ rem --- Retrieve item, warehouse and activity
 rem --- Retrieve GL account if distribute by item
 
     if di$<>"N" then
-        arm10d_key$=firm_id$+"D"+ivm02a.dist_code$
-        find record (arm10d_dev,key=arm10d_key.firm_id$+arm10d_key.record_id_d$+arm10d_key.dist_code$,dom=*next) arm10d$
-        account$=arm01a.gl_ar_acct
+        arm10d_key.firm_id$=firm_id$,arm10d_key.record_id_d$="D",arm10d_key.ar_dist_code$=ivm02a.ar_dist_code$
+        find record (arm10_dev,key=arm10d_key.firm_id$+arm10d_key.record_id_d$+arm10d_key.ar_dist_code$,dom=*next) arm10d$
+        account$=arm10a.gl_ar_acct$
     endif
 rem --- Product total or summary report?
 
@@ -211,7 +225,10 @@ rem --- Read next lot/serial master
             if pos(ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$=ivm07a_key$)<>1 goto Print_Total
             read record (ivm07_dev,key=ivm07a_key$) ivm07a$
             onhand=ivm07a.qty_on_hand
-            cost=ivm07a.unit_cost
+	    if cost$="A" cost=ivm07a.avg_cost
+	    if cost$="S" cost=ivm07a.std_cost
+	    if cost$="R" cost=ivm07a.rep_cost
+	    if cost$="L" cost=ivm07a.landed_cost
             quantity=onhand
             balance=onhand
             ls_ortier$=ivm07a.lotser_no$
@@ -220,9 +237,9 @@ rem --- Read next lot/serial master
             goto Read_Next_Lot
 Next_Lot:
             ivm17a_key$=keyp(ivm17_dev,end=*continue)
-            if pos(d0$=ivm17a_key$)<>1 continue
+            if pos(ivm07a.firm_id$+ivm07a.warehouse_id$+ivm07a.item_id$+ivm07a.lotser_no$=ivm17a_key$)<>1 continue
             read record (ivm17_dev,key=ivm17a_key$,dir=0) ivm17a$; rem "Don't move file pointer
-            if ivm17a.year$+ivm17a.period$ >period$ goto Next_Lot
+            if ivm17a.year$+ivm17a.period$>period$ goto Next_Lot
 Read_Next_Lot:
 	    w[0]=ivm17a.beg_balance, w[1]=ivm17a.qty_received, w[2]=ivm17a.qty_built 
 	    w[3]=ivm17a.qty_sold, w[4]=ivm17a.qty_issued, w[5]=ivm17a.qty_adjust 
@@ -231,7 +248,7 @@ Read_Next_Lot:
             if whichqty$="B" quantity=balance
             if include$<>"N" and quantity<>0 then
                 gosub Total_value; rem "Get total value
-gosub Print_Line; rem "Print line
+		gosub Print_Line; rem "Print line
                 gosub Accum_Total; rem "Accum Totals
             endif
         wend
@@ -286,16 +303,16 @@ Cal_Total_Value: rem --- Go Calculate total value
 
 rem --- Print line for formats 2 & 3 (summary & detail no LS or LF)
 
-        if h9$<>"" gosub Product_subhead
+        if h9$<>"" gosub Product_head
         if l+1>l9 gosub report_heading
-        print (printer_dev)@(o[0]),ivm01a.item_no$,@(o[1]),description$,@(o[2]),um$,@(o[3]),location$,@(o[5]),onhand:m2$,@(o[10]),cost:m3$,@(o[11]),balance:m2$,@(o[12]),amount$
+        print (printer_dev)@(o[0]),ivm01a.item_id$,@(o[1]),description$,@(o[2]),um$,@(o[3]),location$,@(o[5]),onhand:m2$,@(o[10]),cost:m3$,@(o[11]),balance:m2$,@(o[12]),amount$
         l=l+1
         l1=l1+1
         goto Go_Accum_Total
     endif
 rem --- Print line for non(LS/LF) items w/formats 4, 5 & 6
 
-    if h9$<>"" gosub Product_subhead
+    if h9$<>"" gosub Product_head
     if l+2>l9 gosub report_heading
     if include$="N" and quantity=0 goto Loop_Back
     print (printer_dev)@(o[0]),h11$,@(o[9]),onhand:m2$,@(o[10]),cost:m3$,@(o[11]),balance:m2$,@(o[12]),amount$
@@ -333,7 +350,9 @@ rem --- Run GL summary overlay
     headings$[1]=work$[1]
     headings=2
     if format=1 headings$[2]=work$[2],headings=2
-    call pgmdir$+"adc_progress.aon","S","","","",fill(bw),0,0,1,meter_num,status
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+rem    call pgmdir$+"adc_progress.aon","S","","","",fill(bw),0,0,1,meter_num,status
 
     run pgmdir$+"glr_accttotals.aon"
 
@@ -349,13 +368,13 @@ Report_rtn:
 
 Product_subhead: rem --- Product subheading (format 1)
 
-    print (printer_dev)@(h[9]),"Quantity",@(h[10]),ch$,@(h[11]),"Ending",@(h[12]),"Total"
+    print (printer_dev)@(h[9]),"Quantity",@(h[10]),cost_desc$,@(h[11]),"Ending",@(h[12]),"Total"
     print (printer_dev)@(o[0]),"Warehouse",@(o[1]),"Product",@(h[9]),"On Hand",@(h[10]),"Unit Cost",@(h[11]),"Balance",@(h[12]),"Value"
     return
 
 Summary_subhead: rem --- Summary subheading (formats 2 & 3)
 
-    print (printer_dev)@(h[5]),"Quantity",@(h[10]),ch$,@(h[11]),"Ending",@(h[12]),"Total"
+    print (printer_dev)@(h[5]),"Quantity",@(h[10]),cost_desc$,@(h[11]),"Ending",@(h[12]),"Total"
     print (printer_dev)@(o[0]),"Item",@(o[1]),"Description",@(o[2]),"UM",@(o[3]),"Location",@(h[5]),"On Hand",@(h[10]),"Unit Cost",@(h[11]),"Balance",@(h[12]),"Value"
     return
 
@@ -365,7 +384,7 @@ Detail_subhead: rem --- Detail subheading (formats 4, 5 & 6)
     line2ls$="Tier  Date   Type Ref #"
     if format=5 line1ls$=""
     if format=6 line1ls$="",line2ls$="Lot/Serial Number"
-    print (printer_dev)@(h[7]),ch$,@(h[8]),line1ls$,@(h[9]),"Quantity",@(h[11]),"Ending",@(h[12]),"Total"
+    print (printer_dev)@(h[7]),cost_desc$,@(h[8]),line1ls$,@(h[9]),"Quantity",@(h[11]),"Ending",@(h[12]),"Total"
     print (printer_dev)@(o[0]),"Item/Description",@(o[1]),"UM",@(o[2]),"Location",@(h[7]),"Cost",@(h[8]),line2ls$,@(h[9]),"On Hand",@(h[10]),"Unit Cost",@(h[11]),"Balance",@(h[12]),"Value"
     return
 
@@ -379,7 +398,7 @@ Product_head: rem --- Product subheading
 
 Print_Line: rem --- Print line for formats 4, 5 & 6 (LS &/or LF)
 
-    if h9$<>"" gosub Product_subhead
+    if h9$<>"" gosub Product_head
     if fromlf balance$="" else balance$=str(balance:m2$)
     if l+2>l9 gosub report_heading
     print (printer_dev)@(o[0]),h11$,@(o[8]),ls_ortier$,@(o[9]),onhand:m2$,@(o[10]),cost:m3$,@(o[11]),balance$,@(o[12]),amount$
@@ -416,6 +435,7 @@ whse_break: rem --- Warehouse Break
             headings$[4](fncenter(x$,width),len(x$))=x$
             l=l9+1
         endif
+    endif
     return
 
 product_break: rem --- Product break
@@ -427,7 +447,7 @@ product_break: rem --- Product break
             if l+1>l9 gosub report_heading
             if whichqty$="B" if t[1]<>0 t[0]=t[2]/t[1]
             if whichqty$="O" if totonhand<>0 t[0]=t[2]/totonhand
-            print (printer_dev)@(o[0]),h6$,@(o[1]),h7$,@(o[9]),totonhand:m2$,@(o[10]),t[0]:m3$,@(o[11]),t[1]:m2$,@(o[12]),fnmask$(t[2],m1$)
+            print (printer_dev)@(o[0]),h6$,@(o[1]),h7$,@(o[9]),totonhand:m2$,@(o[10]),t[0]:m3$,@(o[11]),t[1]:m2$,@(o[12]),fnmask$(str(t[2]),m1$)
             l=l+1
             h6$=""
             goto product_Break_Flow
@@ -451,15 +471,17 @@ product_Break_Flow:
 Item_break: rem --- Item break
 
     if t2$<>"" or l2>=1 then
-        if l2<>1 then
+        if l2>1 then
             let total$="Total For Item "+h10$,itembreak=1
-            let totalbal$=str(item[1]:m2$),totalval$=fnmask$(item[2],m1$)
+            let totalbal$=str(item[1]:m2$),totalval$=fnmask$(str(item[2]),m1$)
             let totalonhand$=str(item[0]:m2$)
             if fromlf fromlf=0,totalbal$=""
-            if l2>1 gosub print_total_line; goto Item_Break_Flow
+            gosub print_total_line
+	    goto Item_Break_Flow
         endif
         let itembreak=0
         if l+1>l9 gosub report_heading
+        if h9$<>"" gosub Product_head
         if pos(" "<>h11$)>0 print (printer_dev)h11$; let l=l+1,l1=l1+1
         if l+1<=l9 print (printer_dev)""; let l=l+1,l1=l1+1
     endif
@@ -476,7 +498,7 @@ Total_value: rem --- Calculate total value
     precision 2
     if whichqty$="B" amount=balance*cost else amount=onhand*cost
     precision p[1]
-    let amount$=fnmask$(amount,m1$)
+    let amount$=fnmask$(str(amount),m1$)
     gosub Update_GL
     return
 
@@ -490,24 +512,24 @@ Accum_Total: rem --- Accumulate Totals
 Update_GL: rem --- Update G/L Summary
 
     if gl$="Y" and amount<>0 then
-        let glw04a_key$=firm_id$+account$
-        find record (glw04a_dev,key=glw04a_key$,dom=*next) glw04a$
+        let glw04a_key.firm_id$=firm_id$
+        let glw04a_key.gl_account$=account$
+        let glw04a.firm_id$=firm_id$
+        let glw04a.gl_account$=account$
+	let glw04a.gl_post_amt=0,glw04a.units=0
+        find record (glw04_dev,key=glw04a_key$,dom=*next) glw04a$
         let glw04a.gl_post_amt=glw04a.gl_post_amt+amount
+	glw04a$=field(glw04a$)
         write record (glw04_dev,key=glw04a_key$) glw04a$
     endif
     return
 rem --- Print total line
 print_total_line:
     if l+2>l9 gosub report_heading
-    if !itembreak then
-        print (printer_dev)@(o[12]-len(total$)),total$,@(o[12]),fnmask$(total,m1$)
-        goto print_total_line_flow
-    endif
-    print (printer_dev)@(o[9]-len(total$)),total$,@(o[9]),totalonhand$,@(o[11]),totalbal$,@(o[12]),totalval$
-    let itembreak=0
-print_total_line_flow:
+    if itembreak print (printer_dev)@(o[9]-len(total$)),total$,@(o[9]),totalonhand$,@(o[11]),totalbal$,@(o[12]),totalval$
+    if !itembreak print (printer_dev)@(o[12]-len(total$)),total$,@(o[12]),fnmask$(str(total),m1$)
     print (printer_dev)""
-    let l=l+2
+    let l=l+2,itembreak=0
     return
 
 rem #include std_functions.src
@@ -537,7 +559,16 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    def fndate$(q$) 
+        if cvs(q$,2)="" return ""
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if testdate$<>"" 
+            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+        endif
+        return testdate$
+    fnend    
+rem    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))),"%Mz/%Dz/%Yd")
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
@@ -632,6 +663,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
