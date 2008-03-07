@@ -47,7 +47,7 @@ rem --- Assign input values to local variables
     begacct$=Option!.getOptionData("GL_ACCOUNT_1")
     endacct$=Option!.getOptionData("GL_ACCOUNT_2")
     wildcard$=Option!.getOptionData("GL_WILDCARD")
-    journal$=Option!.getOptionData("JOURNAL_ID")
+    journal$=Option!.getOptionData("JOURNAL_ID_ENTRY")
     sequence$=Option!.getOptionData("REPORT_SEQ_DA")
     begaudit$=Option!.getOptionData("GL_ADT_NO_1")
     endaudit$=Option!.getOptionData("GL_ADT_NO_2")
@@ -63,13 +63,10 @@ rem --- Retrieve parameter records
     total_periods=num(gls01a.total_pers$)
     period=num(gls01a.current_per$)
     year=num(gls01a.current_year$)
-    acctlen=num(gls01a.acct_length$)
-    m0$=gls01a.acct_output$
-    m1$=gls01a.amount_mask$
-    m2$=gls01a.unit_mask$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",m0$,0,acctlen
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,0
     m0=len(m0$)
-    m1=len(m1$)
-    m2=len(m2$)
     call pgmdir$+"adc_sizemask.aon",m2$,m2,6,10
     headings=5
     width=132
@@ -147,24 +144,24 @@ rem --- Build report headings
     wild$=""
 
     if cvs(begacct$,2)="" acct1$=acct1$+"First --"
-:                    else acct1$=acct1$+fnmask$(begacct$(1,acctlen),m0$)
+:       else acct1$=acct1$+fnmask$(begacct$(1,acctlen),m0$)
     if cvs(endacct$,2)="" acct2$=acct2$+"Last"
-:                    else acct2$=acct2$+fnmask$(endacct$(1,acctlen),m0$)
+:       else acct2$=acct2$+fnmask$(endacct$(1,acctlen),m0$)
     acct$=acct1$+acct2$
 
     if cvs(begdate$,2)="" date1$=date1$+"First --"
-:                    else date1$=date1$+fndate$(begdate$)
+:       else date1$=date1$+fndate$(begdate$)
     if cvs(enddate$,2)="" date2$=date2$+"Last"
-:                    else date2$=date2$+fndate$(enddate$)
+:       else date2$=date2$+fndate$(enddate$)
     dates$=date1$+date2$
 
     if cvs(begaudit$,2)="" aud1$=aud1$+"First --"
-:                     else aud1$=aud1$+begaudit$
+:       else aud1$=aud1$+begaudit$
     if cvs(endaudit$,2)="" aud2$=aud2$+"Last"
-:                     else aud2$=aud2$+endaudit$
+:       else aud2$=aud2$+endaudit$
     aud$=aud1$+aud2$
 
-    if cvs(journal$,2)<>"" jrnl$="For Journal "+glm03a.journal_id$+" "+cvs(glm03.code_desc$,2)
+    if cvs(journal$,2)<>"" jrnl$="For Journal "+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
     if cvs(wildcard$,2)<>"" wild$="Wildcard "+$22$+cvs(wildcard$,2)+$22$
     val$=aud$
 
@@ -246,14 +243,11 @@ rem --- Read next daily detail record
           credit$=""
           unit$=""
           if glt04a.trans_amt>0 debits=glt04a.trans_amt,
-:                               debit$=str(glt04a.trans_amt:m1$)
+:                               debit$=str(glt04a.trans_amt)
           if glt04a.trans_amt<0 credits=glt04a.trans_amt,
-:                               credit$=str(abs(glt04a.trans_amt):m1$)
+:                               credit$=str(abs(glt04a.trans_amt))
           if gls01a.units_flag$="Y" 
-:            if units<>0 unit$=str(units:m2$)
-          while len(unit$)>m2
-                unit$=unit$(2)
-          wend
+:            if units<>0 unit$=str(units)
 
 rem --- Detail line by audit number
 
@@ -477,13 +471,10 @@ wildcard: rem --- Test account number against specified wildcard mask
 
 print_totals: rem --- Print totals line
 
-    debit$=str(debits:m1$)
-    credit$=str(abs(credits):m1$)
+    debit$=str(debits)
+    credit$=str(abs(credits))
     unit$=""
-    if gls01a.units_flag$="Y" unit$=str(units:m2$)
-    while len(unit$)>m2
-          unit$=unit$(2)
-    wend
+    if gls01a.units_flag$="Y" unit$=str(units)
 
     if sequence$="A"
         OutVect!.addItem("")
