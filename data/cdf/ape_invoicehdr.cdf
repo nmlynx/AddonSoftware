@@ -92,7 +92,14 @@ if k$(1,len(apt01_key$))=apt01_key$
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_TYPE",apt01a.ap_type$)
 	callpoint!.setColumnData("APE_INVOICEHDR.VENDOR_ID",apt01a.vendor_id$)
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_INV_NO",apt01a.ap_inv_no$)
-
+	callpoint!.setColumnData("APE_INVOICEHDR.AP_DIST_CODE",apt01a.ap_dist_code$)
+	callpoint!.setColumnData("APE_INVOICEHDR.AP_TERMS_CODE",apt01a.ap_terms_code$)
+	callpoint!.setColumnData("APE_INVOICEHDR.PAYMENT_GRP",apt01a.payment_grp$)
+ 	callpoint!.setColumnData("APE_INVOICEHDR.INVOICE_DATE",apt01a.invoice_date$)
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",apt01a.accting_date$)
+	callpoint!.setColumnData("APE_INVOICEHDR.INV_DUE_DATE",apt01a.inv_due_date$)
+	callpoint!.setColumnData("APE_INVOICEHDR.DISC_DATE",apt01a.disc_date$)
+	callpoint!.setColumnData("APE_INVOICEHDR.HOLD_FLAG","N")
 	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
 	ctl_stat$="D"
 	gosub disable_fields
