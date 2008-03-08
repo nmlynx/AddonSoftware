@@ -14,43 +14,48 @@ attr_inv_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
 attr_inv_col$[1,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 attr_inv_col$[1,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
 
-attr_inv_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AP_TYPE"
-attr_inv_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="A/P Type"
+attr_inv_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PYMNT_GRP"
+attr_inv_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Payment Group"
 attr_inv_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
 
-attr_inv_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_ID"
-attr_inv_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Vendor"
-attr_inv_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+attr_inv_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AP_TYPE"
+attr_inv_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="A/P Type"
+attr_inv_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
 
-attr_inv_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_NAME"
-attr_inv_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Name"
-attr_inv_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="150"
+attr_inv_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_ID"
+attr_inv_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Vendor"
+attr_inv_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
-attr_inv_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="INVOICE_NO"
-attr_inv_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Invoice"
-attr_inv_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+attr_inv_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_NAME"
+attr_inv_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Name"
+attr_inv_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="150"
 
-attr_inv_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DUE_DATE"
-attr_inv_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Due Date"
+attr_inv_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="INVOICE_NO"
+attr_inv_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Invoice"
 attr_inv_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
-attr_inv_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AMT_DUE"
-attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Amount Due"
-attr_inv_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+attr_inv_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DUE_DATE"
+attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Due Date"
 attr_inv_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-attr_inv_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+rem attr_inv_col$[7,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
 
-attr_inv_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DISC_AMT"
-attr_inv_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Disc Amt"
+attr_inv_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AMT_DUE"
+attr_inv_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Amount Due"
 attr_inv_col$[8,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 attr_inv_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 attr_inv_col$[8,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-attr_inv_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PYMNT_AMT"
-attr_inv_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Pymnt Amt"
+attr_inv_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DISC_AMT"
+attr_inv_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Disc Amt"
 attr_inv_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 attr_inv_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 attr_inv_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+attr_inv_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PYMNT_AMT"
+attr_inv_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Pymnt Amt"
+attr_inv_col$[10,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+attr_inv_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+attr_inv_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 for curr_attr=1 to def_inv_cols
 
@@ -61,7 +66,7 @@ next curr_attr
 
 attr_disp_col$=attr_inv_col$[0,1]
 
-call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridInvoices!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-DATES-CHECKS",num_rpts_rows,
+call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridInvoices!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-CHECKS-DATES",num_rpts_rows,
 :	attr_def_col_str$[all],attr_disp_col$,attr_inv_col$[all]
 
 return
@@ -123,6 +128,7 @@ rem --- override discount and payment amounts if already in ape04
 rem --- now fill grid
 		if apt01a.invoice_amt<>0 then
 			vectInvoices!.addItem("")
+			vectInvoices!.addItem(apt01a.payment_grp$)
 			vectInvoices!.addItem(apt01a.ap_type$)
 			vectInvoices!.addItem(fnmask$(apt01a.vendor_id$(1,vendor_len),m0$))
 			vectInvoices!.addItem(apm01a.vendor_name$)
@@ -153,11 +159,11 @@ switch_value:rem --- Switch Check Values
 			row_no=num(TempRows!.getItem(curr_row-1))
 			if gridInvoices!.getCellState(row_no,0)=0
 				gridInvoices!.setCellState(row_no,0,1)
-				gridInvoices!.setCellText(row_no,8,gridInvoices!.getCellText(row_no,6))
+				gridInvoices!.setCellText(row_no,9,gridInvoices!.getCellText(row_no,7))
 			else
 				gridInvoices!.setCellState(row_no,0,0)
-				gridInvoices!.setCellText(row_no,7,"0.00")
 				gridInvoices!.setCellText(row_no,8,"0.00")
+				gridInvoices!.setCellText(row_no,9,"0.00")
 			endif
 		next curr_row
 	endif
@@ -198,12 +204,12 @@ gridRows=gridInvoices!.getNumRows()
 if gridRows
 	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
 	for row=0 to gridRows-1
-		apt01_key$=firm_id$+gridInvoices!.getCellText(row,1)+
-:						   gridInvoices!.getCellText(row,2)+
-:						   gridInvoices!.getCellText(row,4)
+		apt01_key$=firm_id$+gridInvoices!.getCellText(row,2)+
+:						   gridInvoices!.getCellText(row,3)+
+:						   gridInvoices!.getCellText(row,5)
 		readrecord(apt01_dev,key=apt01_key$)apt01a$
-		amt_to_pay=num(gridInvoices!.getCellText(row,8))
-		disc_to_take=num(gridInvoices!.getCellText(row,7))
+		amt_to_pay=num(gridInvoices!.getCellText(row,9))
+		disc_to_take=num(gridInvoices!.getCellText(row,8))
 		if gridInvoices!.getCellState(row,0)=0
 			apt01a.selected_for_pay$="N"
 			remove(ape04_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next)
@@ -304,8 +310,8 @@ rem --- add grid to store report master records, with checkboxes for user to sel
 
 	gridInvoices!=Form!.addGrid(nxt_ctlID,5,100,400,200)
 	user_tpl.gridInvoicesCtlID$=str(nxt_ctlID)
-	user_tpl.gridInvoicesCols$="9"
-	user_tpl.gridInvoicesRows$="8"
+	user_tpl.gridInvoicesCols$="10"
+	user_tpl.gridInvoicesRows$="10"
 	user_tpl.gridInvoicesOfst$="0"
 	user_tpl.vectInvoicesOfst$="1"
 	user_tpl.vectInvoicesSelOfst$="2"
@@ -318,8 +324,9 @@ rem --- add grid to store report master records, with checkboxes for user to sel
 
 rem --- misc other init
 	gridInvoices!.setColumnEditable(0,1)
-	gridInvoices!.setColumnEditable(7,1)
+	gridInvoices!.setColumnEditable(1,1)
 	gridInvoices!.setColumnEditable(8,1)
+	gridInvoices!.setColumnEditable(9,1)
 	gridInvoices!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 
 	gosub create_reports_vector
