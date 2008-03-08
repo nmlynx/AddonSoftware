@@ -138,21 +138,23 @@ rem --- Initializations
        endif
 
 rem --column heading 
-        dim columns$[11,10]
-        columns=11
+        dim columns$[13,10]
+        columns=13
 
-        columns$[0,0]="Vendor",          columns$[0,1]="C",columns$[0,2]="10"
-        columns$[1,0]="Name",            columns$[1,1]="C",columns$[1,2]="35"
-        columns$[2,0]="Invoice",         columns$[2,1]="C",columns$[2,2]="15"
-        columns$[3,0]="DC",              columns$[3,1]="C",columns$[3,2]="8"
-        columns$[4,0]="PG",              columns$[4,1]="C",columns$[4,2]="8"
-        columns$[5,0]="TC",              columns$[5,1]="C",columns$[5,2]="8"
-        columns$[6,0]="HD",              columns$[6,1]="C",columns$[6,2]="8"
-        columns$[7,0]="Invoice/Due Date",columns$[7,1]="C",columns$[7,2]="10"
-        columns$[8,0]="Acct/Disc Date",  columns$[8,1]="C",columns$[8,2]="10"
-        columns$[9,0]="Reference/Memo",  columns$[9,1]="C",columns$[9,2]="10"
-        columns$[10,0]="Invoice Amount", columns$[10,1]="C",columns$[10,2]="10",columns$[10,3]=m1$
-        columns$[11,0]="Discount Amount",columns$[11,1]="C",columns$[11,2]="8",columns$[11,3]=m1$
+        columns$[0,0]="Vendor",columns$[0,1]="C",columns$[0,2]="10"
+        columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="35"
+        columns$[2,0]="Invoice",columns$[2,1]="C",columns$[2,2]="15"
+        columns$[3,0]="DC",columns$[3,1]="C",columns$[3,2]="8"
+        columns$[4,0]="PG",columns$[4,1]="C",columns$[4,2]="8"
+        columns$[5,0]="TC",columns$[5,1]="C",columns$[5,2]="8"
+        columns$[6,0]="HD",columns$[6,1]="C",columns$[6,2]="8"
+        columns$[7,0]="Invoice Date",columns$[7,1]="C",columns$[7,2]="10"
+        columns$[8,0]="Due Date",columns$[8,1]="C",columns$[8,2]="10"
+        columns$[9,0]="Acct Date",columns$[9,1]="C",columns$[9,2]="10"
+        columns$[10,0]="Disc Date",columns$[10,1]="C",columns$[10,2]="10"
+        columns$[11,0]="Reference/Memo",columns$[11,1]="C",columns$[11,2]="10"
+        columns$[12,0]="Invoice Amount",columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m1$
+        columns$[13,0]="Discount Amount",columns$[13,1]="N",columns$[13,2]="8",columns$[13,3]=m1$
         
 
 rem --- Define invoice print and header positions
@@ -302,6 +304,7 @@ rem gosub report_heading
           if cvs(ape01a.accting_date$,2)<>"" acctdate$=fndate$(ape01a.accting_date$)
           if cvs(ape01a.disc_date$,2)<>"" discdate$=fndate$(ape01a.disc_date$)
 
+          xwk=fnblank(14)
           OutVect!.addItem(vendor$)
           OutVect!.addItem(name$)
           OutVect!.addItem(ape01a.ap_inv_no$)
@@ -309,21 +312,18 @@ rem gosub report_heading
           OutVect!.addItem(ape01a.payment_grp$)
           OutVect!.addItem(ape01a.ap_terms_code$)
           OutVect!.addItem(ape01a.hold_flag$)
-          OutVect!.addItem(invdate$+""+duedate$)
-          OutVect!.addItem(acctdate$+discdate$)
-          OutVect!.addItem(ape01a.reference$+""+ape01a.ap_inv_memo$)
+          OutVect!.addItem(duedate$)
+          OutVect!.addItem(duedate$)
+          OutVect!.addItem(acctdate$)
+          OutVect!.addItem(discdate$)
+          OutVect!.addItem(ape01a.reference$+" "+ape01a.ap_inv_memo$)
           OutVect!.addItem(str(ape01a.invoice_amt:m1$))
           OutVect!.addItem(str(ape01a.discount_amt:m1$)+retention$)
          
-
-         xwk=fnblank(12)
          xwk=fnblank(2)
          OutVect!.addItem(ac$)
          OutVect!.addItem(ds$)
-         xwk=fnblank(5)
-         OutVect!.addItem(amt$)
-         xwk=fnblank(2)
-         xwk=fnblank(12)
+         xwk=fnblank(10)
 
           if gl$="Y" call pgmdir$+"glc_datecheck.aon",ape01a.accting_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,ape01a.accting_date$,glstatus,lines,errors,status
@@ -332,7 +332,7 @@ rem gosub report_heading
           err_msg$=stbl("+DTWARN_MSG",err=*next)
           if err_msg$<>""
               OutVect!.addItem(err_msg$)
-              xwk=fnblank(11)
+              xwk=fnblank(13)
           endif
 
           for x=0 to 2
@@ -376,9 +376,9 @@ rem --- Retrieve GL account master
                  xwk=fnblank(2)
                  OutVect!.addItem(fnmask$(ape11a.gl_account$(1,acct_length),g0$))
                  OutVect!.addItem(description$)
-                 xwk=fnblank(5)
+                 xwk=fnblank(8)
                  OutVect!.addItem(str(ape11a.gl_post_amt:g1$))
-                 xwk=fnblank(2)
+                 xwk=fnblank(1)
                 
                 lines=lines+1
                 gllines=gllines+1
@@ -406,11 +406,11 @@ rem --- Retrieve GL account master
           gosub account_heading
           endif
 
-            xwk=fnblank(12)
+            xwk=fnblank(14)
             OutVect!.addItem("WARNING: This transaction is out of balance by")
             OutVect!.addItem("")
             OutVect!.addItem(g1$)
-            xwk=fnblank(9)
+            xwk=fnblank(11)
            
             lines=lines+2
 
@@ -433,10 +433,10 @@ rem --- Any errors encountered?
 
     while errors
           if lines+2>maxlines
-            xwk=fnblank(12)
+            xwk=fnblank(14)
             OutVect!.addItem("")
             OutVect!.addItem("WARNING: This register is out of balance or missing information")
-            xwk=fnblank(10)
+            xwk=fnblank(12)
             lines=lines+2
           endif
           break
@@ -469,10 +469,10 @@ account_heading: rem --- Account subheading
 print_total: rem --- Print totals
 
     if lines+3>maxlines 
-        xwk=fnblank(10)
+        xwk=fnblank(12)
         OutVect!.addItem(underline$)
         OutVect!.addItem(underline$)
-        xwk=fnblank(9)
+        xwk=fnblank(11)
         OutVect!.addItem(total$)
         OutVect!.addItem(str(pt[0]:m1$))
         OutVect!.addItem(str(pt[1]:m1$))
