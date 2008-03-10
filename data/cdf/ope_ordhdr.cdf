@@ -1,3 +1,51 @@
+[[OPE_ORDHDR.BDEL]]
+rem --- remove committments for detail records by calling ATAMO
+	ope13_dev=fnget_dev("OPE_ORDDET")
+	dim ope13a$:fnget_tpl$("OPE_ORDDET")
+	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+	ivs01_dev=fnget_dev("IVS_PARAMS")
+	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+	ope33_dev=fnget_dev("OPE_ORDSHIP")
+	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	read(ope13_dev,key=firm_id$+ar_type$+cust$+ord$,dom=*next)
+	while 1
+		readrecord(ope13_dev,end=*break)ope13a$
+		if pos(firm_id$+ar_type$+cust$+ord$=ope13a.firm_id$+ope13a.ar_type$+
+:			ope13a.customer_id$+ope13a.order_no$)<>1 break
+		readrecord(opc_linecode_dev,key=firm_id$+ope13a.line_code$)opc_linecode$
+		if opc_linecode.dropship$<>"Y" and ope13a.commit_flag$="Y" and
+:			callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
+			if pos(opc_linecode.line_type$="SP")
+				wh_id$=ope13a.warehouse_id$
+				item_id$=ope13a.item_id$
+				ls_id$=""
+				qty=ope13a.qty_ordered
+				line_sign=-1
+				gosub update_totals
+			endif
+		if pos(ivs01a.lotser_flag$="LS") 
+			ord_seq$=ope13a.line_no$
+			gosub remove_lot_ser_det
+		endif
+	wend
+	remove(ope33_dev,key=firm_id$+cust$+ord$,dom=*next)
+	cashrct_dev=fnget_dev("OPE_INVCASH")
+	remove (cashrct_dev,key=firm_id$+
+:		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
+:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)
+	if user_tpl.credit_installed$="Y"
+		ars_cred_dev=fnget_dev("OPE_CREDCUST")
+		dim ars_credcust$:fnget_tpl$("OPE_CREDCUST")
+		remove (ars_cred_dev,key=firm_id$+
+:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
+:			callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")+
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)			
+	endif
 [[OPE_ORDHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
@@ -33,25 +81,6 @@ rem --- Display Ship to information
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub ship_to_info
-[[OPE_ORDHDR.ADEL]]
-rem --- Remove extra records
-	ordship_dev=fnget_dev("OPE_ORDSHIP")
-	remove (ordship_dev,key=firm_id$+
-:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
-	cashrct_dev=fnget_dev("OPE_INVCASH")
-	remove (cashrct_dev,key=firm_id$+
-:		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
-:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)
-	if user_tpl.credit_installed$="Y"
-		ars_cred_dev=fnget_dev("OPE_CREDCUST")
-		dim ars_credcust$:fnget_tpl$("OPE_CREDCUST")
-		remove (ars_cred_dev,key=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:			callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")+
-:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)			
-	endif
 [[OPE_ORDHDR.ORDER_NO.AVAL]]
 rem --- set default values
 	ope01_dev=fnget_dev("OPE_ORDHDR")
@@ -519,12 +548,65 @@ rem --- copy detail lines
 					ope11a.warehouse_id$=user_tpl.def_whse$
 				endif
 				writerecord(ope11_dev)ope11a$
-rem escape;rem what about lines 785 and 790 in ope_dd.bbx
 			wend
 			callpoint!.setStatus("RECORD:"+firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$)
-rem escape;rem lines 800 to 895 here
 		endif
 	endif
+	return
+
+update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
+rem --- need to send in wh_id$, item_id$, ls_id$, and qty
+	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
+	iv_files[0]=fnget_dev("GLS_PARAMS")
+	iv_files[1]=fnget_dev("IVM_ITEMMAST")
+	iv_files[2]=fnget_dev("IVM_ITEMWHSE")
+	iv_files[4]=fnget_dev("IVM_ITEMTIER")
+	iv_files[5]=fnget_dev("IVM_ITEMVEND")
+	iv_files[7]=fnget_dev("IVM_LSMASTER")
+	iv_files[12]=fnget_dev("IVM_ITEMACCT")
+	iv_files[17]=fnget_dev("IVM_LSACT")
+	iv_files[41]=fnget_dev("IVT_LSTRANS")
+	iv_files[42]=fnget_dev("IVX_LSCUST")
+	iv_files[43]=fnget_dev("IVX_LSVEND")
+	iv_files[44]=fnget_dev("IVT_ITEMTRAN")
+	ivs01_dev=fnget_dev("IVS_PARAMS")
+	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+	iv_info$[1]=wh_id$
+	iv_info$[2]=item_id$
+	iv_info$[3]=ls_id$
+	iv_refs[0]=qty
+	while 1
+rem		if pos(S8$(2,1)="SP")=0 break
+rem		if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
+		if line_sign>0 iv_action$="OE" else iv_action$="UC"
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,
+:			iv_info$[all],iv_refs$[all],iv_refs[all],iv_status
+		break
+	wend
+return
+
+remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
+	ope21_dev=fnget_dev("OPE_ORDLSDET")
+	dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
+	read (ope21_dev,key=firm_id$+ar_type$+cust$+ord$+ord_seq$,dom=*next)
+	while 1
+		readrecord(ope21_dev,end=*break)ope21a$
+		if pos(firm_id$+ar_type$+cust$+ord$+ord_seq$=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.line_no$)<>1 break
+		if opc_linecode.dropship$<>"Y" and
+:			callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
+			wh_id$=ope13a.warehouse_id$
+			item_id$=ope13a.item_id$
+			ls_id$=""
+			qty=ope21a.qty_ordered
+			line_sign=1
+			gosub update_totals
+			ls_id$=ope21a.lotser_no$
+			line_sign=-1
+			gosub update_totals
+		endif
+		remove (ope21_dev,key=firm_id$+ar_type$+cust$+ord$+ord_seq$+ope21a.sequence_no$)
+	wend
 	return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
@@ -563,7 +645,7 @@ rem --- Populate address fields
 	gosub disable_ctls
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=29
+	num_files=30
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -593,6 +675,7 @@ rem --- open needed files
 	open_tables$[27]="OPE_CREDCUST",open_opts$[27]="OTA"
 	open_tables$[28]="IVC_WHSECODE",open_opts$[28]="OTA"
 	open_tables$[29]="IVS_PARAMS",open_opts$[29]="OTA"
+	open_tables$[30]="OPE_ORDLSDET",open_opts$[30]="OTA"
 	gosub open_tables
 
 rem --- get AR Params

@@ -57,6 +57,7 @@ rem ---recalc quantities and extended price
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
 rem ---recalc quantities and extended price
 	newqty=num(callpoint!.getUserInput())
+	gosub pricing
 	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD","0")
 	callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(newqty))
 
@@ -107,7 +108,7 @@ return
 
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
 rem --- need to send in wh_id$, item_id$, ls_id$, and qty
-	dim iv_files[44],iv_info$[3],iv_info[0],iv_params$[4],iv_refs$[11],iv_refs[5]
+	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
 	iv_files[0]=fnget_dev("GLS_PARAMS")
 	iv_files[1]=fnget_dev("IVM_ITEMMAST")
 	iv_files[2]=fnget_dev("IVM_ITEMWHSE")
@@ -135,10 +136,37 @@ escape; rem decisions have to be made about ivc_ua (ivc_itemupt.aon)
 		if pos(S8$(2,1)="SP")=0 break
 		if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
 		if line_sign>0 iv_action$="OE" else iv_action$="UC"
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],iv_info[all],ivs01a$,
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,
 :			iv_info$[all],iv_refs$[all],iv_refs[all],iv_status
 		break
 	wend
+return
+
+pricing: rem "Call Pricing routine
+rem jpb do this next...
+rem 6010 IF W[1]<>0 THEN GOTO 6190                                                  
+rem 6020 LET ORDQTY=W[2]                                                            
+rem 6025 IF FNP$(W1$(46,1))<>"" THEN GOTO 6035; REM WA:213                          
+rem 6030 CALL "OPC.PC",IV_FILES[ALL],N0$,W0$(31,2),W0$(33,20),A0$(75,2),A0$(5,6),A0$
+rem (77,3),A0$(82,4),ORDQTY,TYPEFLAG$,PRICE,DISC,STATUS; GOTO 6040; REM WA:213      
+rem 6035 CALL "OPCPC",IV_FILES[ALL],N0$,W0$(31,2),W0$(33,20),W1$(46,1),A0$(75,2),A0$
+rem (5,6),A0$(77,3),A0$(82,4),ORDQTY,TYPEFLAG$,PRICE,DISC,STATUS; REM WA:213        
+rem 6040 IF PRICE<>0 THEN GOTO 6100                                                 
+rem 6045 DIM MESSAGE$[1]                                                            
+rem 6050 LET MESSAGE$[0]="Item Price Must Be Entered (<Enter>=Continue)"            
+rem 6060 CALL "SYC.XA",3,MESSAGE$[ALL],0,10,-1,V$,V3                                
+rem 6070 LET S$(6,1)="1",W[1]=0,W[8]=DISC                                           
+rem 6090 GOTO 6130                                                                  
+rem 6100 REM " --- Price Has Been Set"                                              
+rem 6105 IF TYPEFLAG$="N" THEN LET S$(6,1)="1"                                      
+rem 6110 LET W[1]=PRICE,W[8]=DISC                                                   
+rem 6120 IF TYPEFLAG$="X" THEN PRINT @(50,20),"**Contract Price ",W[1]:M4$,         
+rem 6130 IF W[8]=100 THEN LET W[5]=L[9]; GOTO 6180                                  
+rem 6140 PRECISION I[2]+3                                                           
+rem 6150 LET FACTOR=100/(100-W[8])                                                  
+rem 6160 PRECISION I[2]                                                             
+rem 6170 LET W[5]=W[1]*FACTOR                                                       
+
 return
 
 #include std_missing_params.src
