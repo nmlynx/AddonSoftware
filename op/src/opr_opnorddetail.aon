@@ -42,7 +42,7 @@ rem --- Open/Lock files
         files$[14]="poe-08",ids$[14]="POE_LINKED"
         call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-        if status goto std_exit
+        if status then goto std_exit
         arm01_dev=channels[1]
         arm02_dev=channels[2]
         arm10a_dev=channels[3]
