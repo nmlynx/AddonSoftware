@@ -6,171 +6,169 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+    rem --- Enter variables
+    rem "channels[n] : [1] = ivm-01"              
+    rem "            : [2] = ivm-02"              
+    rem "            : [3] = ivm-06"              
+    rem "            : [4] = ivm-10"             
+    rem "            : [5] = ars_params"
+    rem "            : [6] = ivs_params"
+    rem "whs$        : Warehouse ID"              
+    rem "item$       : Inventory Item Number"     
+    rem "listcd$     : List Price Code"           
+    rem "cust$       : Customer Number"           
+    rem "date$       : Date Ordered"              
+    rem "priccd$     : Pricing Code"              
+    rem "ordqty      : Quantity Ordered"          
+    rem "type_price$ : Type Of Pricing (Returned)"
+    rem "              C = Mark-Up From Cost"     
+    rem "              L = Mark-Down List Price"  
+    rem "              M = Margin Over Cost"      
+    rem "              N = None"                  
+    rem "              P = Prior Price Code"      
+    rem "              X = Contract"              
+    rem "price       : Price (Returned)"          
+    rem "disc        : Discount (Returned)"       
+    rem "status      : 0=No Error (Returned)"     
 
-
-            seterr std_error
-            setesc std_error
-            enter channels[all],firm_id$,whs$,item$,listcd$,cust$,date$,priccd$,ordqty,type_price$,price,disc,status
+    seterr std_error
+    setesc std_error
+    enter channels[all],whs$,item$,listcd$,cust$,date$,priccd$,ordqty,type_price$,price,disc,status
 
 rem --- Retrieve the program path
 
-            pgmdir$=stbl("+dir_pgm",err=*next)
-            whs$=pad(whs$,2)
+    pgmdir$=stbl("+dir_pgm",err=*next)
 
 rem --- Retrieve sysinfo data
 
-            sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
-            dim sysinfo$:sysinfo_template$
-            sysinfo$=stbl("+sysinfo",err=*next)
-            milestone=num(stbl("+milestone",err=*next),err=*next)
-            firm_id$=sysinfo.firm_id$
+    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+sysinfo",err=*next)
+    milestone=num(stbl("+milestone",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
+rem --- Set channels
 
-            files=6,begfile=1,endfile=files
-            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-            files$[1]="ars_params",ids$[1]="ARS_PARAMS"
-            files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
-            files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-            files$[4]="ivm-06",ids$[4]="IVM_ITEMPRIC"
-            files$[5]="ivc_priccode",ids$[5]="IVC_PRICCODE"
-            files$[6]="ivs_params",ids$[6]="IVS_PARAMS"
-            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-            if status goto std_exit
-            ars01a_dev=channels[1]
-            ivm01_dev=channels[2]
-            ivm02_dev=channels[3]
-            ivm06_dev=channels[4]
-            ivm10_dev=channels[5]
-            ivs01a_dev=channels[6]
+    ivm01_dev=channels[1],ivm02_dev=channels[2],ivm06_dev=channels[3],
+:   ivm10_dev=channels[4],ars01_dev=channels[5],ivs01_dev=channels[6]
+
+rem --- retrieve templates
+
+    files=6,begfile=1,endfile=files
+    dim ids$[files],templates$[files]
+    ids$[1]="IVM_ITEMMAST"
+    ids$[2]="IVM_ITEMWHSE"
+    ids$[3]="IVM_ITEMPRIC"
+    ids$[4]="IVC_PRICCODE"
+    ids$[5]="ARS_PARAMS"
+    ids$[6]="IVS_PARAMS"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status goto std_exit
 
 rem --- Dimension string templates
 
-            dim ars01a$:templates$[1],ivm01a$:templates$[2],ivm02a$:templates$[3],
-:           ivm06a$:templates$[4],ivm10a$:templates$[5],ivs01a$:templates$[6]
-
-rem --- Assign form input values to local variables
-
-            value_01$=Option!.getOptionData("form_value_01")
+    dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm06a$:templates$[3],
+:       ivm10a$:templates$[4],ars01a$:templates$[5],ivs01a$:templates$[6]
 
 rem --- Retrieve parameter records
 
-            ars01a_key$=firm_id$+"AR00"
-            find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-            ivs01a_key$=firm_id$+"IV00"
-            find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
-rem --- Open Files
-
-            ivm01_dev=channels[1]
-            ivm02_dev=channels[2],ivm06_dev=channels[6],ivm10_dev=channels[10]
+    ars01a_key$=firm_id$+"AR00"
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    ivs01a_key$=firm_id$+"IV00"
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Initialize Data
-            more=1
-            type_price$="N"
-            price=0,disc=0,status=0
-            digits=tcb(14); rem "Get current precision
+    more=1
+    type_price$="N"
+    price=0,disc=0,status=0
+    digits=tcb(14); rem "Get current precision
 
 rem --- Get Item Class
 
-  while more
-
- 
-             read record (ivm01_dev,key=firm_id$+item$,dom=*break) ivm01a$
+    while more
+        read record (ivm01_dev,key=firm_id$+item$,dom=*break) ivm01a$
 
 rem --- Get Item's Warehouse Cost & Prices
-
- 
-             read record (ivm02_dev,key=firm_id$+whs$+item$,dom=*break) ivm02a$
+        read record (ivm02_dev,key=firm_id$+whs$+item$,dom=*break) ivm02a$
     
-
 list_price: rem --- Use Current List Price
-
-    price=ivm02a.cur_price
+        price=ivm02a.cur_price
 
 rem --- Use Prior List Price
-
-      if cvs(listcd$,2)<>"" or listcd$=ivm02a.pri_price_cd$ or ivm02a.pri_price<>0 then 
-
+        if cvs(listcd$,2)<>"" and listcd$=ivm02a.pri_price_cd$ and ivm02a.pri_price<>0 then 
             price=ivm02a.pri_price
             type_price$="P"
             break
-     endif
-contract_pricing: rem --- Use Contract Pricing
+        endif
 
-    if ivm06_dev<>0 then 
-       dim condata$(48),conbrk[9],conprc[9]
-           find record (ivm06_dev,key=firm_id$+cust$+item$,dom=pricing_table) ivm06a$
-                if (cvs(ivm06a.from_date$,2)="" and date$>=ivm06a.from_date$) or (cvs(ivm06a.thru_date$,2)="" and date$>ivm06a.thru_date$) then 
-                    if abs(ordqty)>=conbrk[0] then 
-                          for x=0 to 9
-                          if conbrk[x]>0 and abs(ordqty)>=conbrk[x] then let price=conprc[x]
-                          next x
-                          type_price$="X"
-                          break
-                    endif
-               endif      
-    endif
+contract_pricing: rem --- Use Contract Pricing
+        if ivm06_dev<>0 then
+            find record (ivm06_dev,key=firm_id$+cust$+item$,dom=pricing_table) ivm06a$
+            contract$="Y"
+            if (cvs(ivm06a.from_date$,2)<>"" and date$<ivm06a.from_date$) or (cvs(ivm06a.thru_date$,2)<>"" and date$>ivm06a.thru_date$) contract$="N"
+            if contract$="Y"
+                if abs(ordqty)>=nfield(ivm06a$,"break_qty",0) then
+                    for x=0 to 9
+                        if nfield(ivm06a$,"break_qty",x)>0 and abs(ordqty)>=nfield(ivm06a$,"break_qty",x) then let price=nfield(ivm06a$,"unit_price",x)
+                    next x
+                    type_price$="X"
+                    break
+                endif
+            endif
+        endif
 
 pricing_table: rem --- Use Pricing Table
+        if ordqty=0 then break
+        find record (ivm10_dev,key=firm_id$+"E"+ivm01a.item_class$+priccd$,dom=*break) ivm10e$
+        if (ivm10e.break_qty_01=0 and ivm10e.break_disc_01=0) or abs(ordqty)<ivm10e.break_qty_01 then let price=ivm02a.cur_price; break
+        for x=1 to 10
+            if nfield(ivm10e$,"break_qty_"+str(x:"00"))>0 and abs(ordqty)>=nfield(ivm10e$,"break_qty_"+str(x:"00")) perc=nfield(ivm10e$,"break_disc_"+str(x:"00"))
+        next x
+        type_price$=ivm10e.iv_price_mth$
+        on pos(type_price$="CML") goto done,mark_up_cost,margin_over_cost,mark_down_list_price
 
-            if ordqty=0 then break
-            find record (ivm10_dev,key=firm_id$+"E"+ivm01a.item_class$+priccd$,dom=*break) ivm10e$
-            if (ivm10e.break_qty=0 and ivm10e.break_disc=0) or abs(ordqty)<ivm10e.break_qty then let price=ivm02a.cur_price; break
-            for x=0 to 9
-                if tablbrk[x]>0 and abs(ordqty)>=tablbrk[x] then let perc=tabldisc[x]
-            next x
-            type_price$=ivm10e.iv_price_mth$
-            on pos(type_price$="CML") goto done,mark_up_cast,margin_over_cost,mark_down_list_price
-
-mark_up_cast: rem --- Mark-Up From Cost
-
-            precision digits+3
-            percent=perc/100
-            precision digits
-            price=ivm02a.unit_cost+ivm02a.unit_cost*percent
-            if ivm02a.cur_price=0 then break
-            precision digits+3
-            percent=1-price/ivm02a.cur_price
-            precision digits
-            disc=100*percent
-            break
+mark_up_cost: rem --- Mark-Up From Cost
+        precision digits+3
+        percent=perc/100
+        precision digits
+        price=ivm02a.unit_cost+ivm02a.unit_cost*percent
+        if ivm02a.cur_price=0 then break
+        precision digits+3
+        percent=1-price/ivm02a.cur_price
+        precision digits
+        disc=100*percent
+        break
 
 margin_over_cost: rem --- Margin Over Cost
-
-            if perc>=100 break; rem "No such thing as 100% margin unless cost=0
-            price=ivm02a.unit_cost*100/(100-perc)
-            if ivm02a.cur_price=0 then break
-            precision digits+3
-            percent=1-price/ivm02a.cur_price
-            precision digits
-            disc=100*percent
-            break
+        if perc>=100 break; rem "No such thing as 100% margin unless cost=0
+        price=ivm02a.unit_cost*100/(100-perc)
+        if ivm02a.cur_price=0 then break
+        precision digits+3
+        percent=1-price/ivm02a.cur_price
+        precision digits
+        disc=100*percent
+        break
 
 mark_down_list_price: rem --- Mark-Down List Price
-
-            precision digits+3
-            percent=perc/100
-            precision digits
-            price=ivm02a.cur_price-ivm02a.cur_price*percent
-            disc=perc
-            break
-
-wend
+        precision digits+3
+        percent=perc/100
+        precision digits
+        price=ivm02a.cur_price-ivm02a.cur_price*percent
+        disc=perc
+        break
+    wend
 
 done: rem --- All Done
-
-            if price=0 then let type_price$="N"
-            goto std_exit
+    if price=0 then let type_price$="N"
+    goto std_exit
 
 rem --- Return STATUS = ERR
 
-            status=err
-            if status=0 then let status=999
-            type_price$="N"
-            price=0,disc=0
-            goto std_exit
+    status=err
+    if status=0 then let status=999
+    type_price$="N"
+    price=0,disc=0
+    goto std_exit
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
