@@ -57,8 +57,8 @@ rem --- Assign form input values to local variables
     wostatus$=""
     if wo_open$="Y" wostatus$=wostatus$+"O"
     if wo_closed$="Y" wostatus$=wostatus$+"C"
+    if wo_planned$="Y" wostatus$=wostatus$+"P"
     if wo_quoted$="Y" wostatus$=wostatus$+"Q"
-    if wo_closed$="Y" wostatus$=wostatus$+"C"
 
 rem --- Retrieve parameter records
 
@@ -189,6 +189,15 @@ rem --- Now Sort It...
     if datethru$="" then let h8$=h8$+"The Last Date" else let h8$=h8$+fndate$(datethru$)
     if wofrom$="" then let h7$="From W.O.#: First" else let h7$="From W.O.#: "+wofrom$
     if wothru$="" then let h7$=h7$+" To W.O.#: Last" else let h7$=h7$+" To W.O.#: "+wothru$
+
+    Z0$="N"
+    Z1$="Y"
+    Z2$="Y"
+    Z3$=""
+    Z4$=""
+    Z5$="OMS"
+    Z6$="Y"
+
     run pgmdir$+"sfr_worddate_o1.aon"
 
 rem #include std_functions.src
