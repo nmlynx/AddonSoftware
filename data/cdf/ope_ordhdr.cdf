@@ -1,7 +1,7 @@
 [[OPE_ORDHDR.BDEL]]
 rem --- remove committments for detail records by calling ATAMO
-	ope13_dev=fnget_dev("OPE_ORDDET")
-	dim ope13a$:fnget_tpl$("OPE_ORDDET")
+	ope11_dev=fnget_dev("OPE_ORDDET")
+	dim ope11a$:fnget_tpl$("OPE_ORDDET")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
 	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 	ivs01_dev=fnget_dev("IVS_PARAMS")
@@ -11,24 +11,24 @@ rem --- remove committments for detail records by calling ATAMO
 	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 	cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-	read(ope13_dev,key=firm_id$+ar_type$+cust$+ord$,dom=*next)
+	read(ope11_dev,key=firm_id$+ar_type$+cust$+ord$,dom=*next)
 	while 1
-		readrecord(ope13_dev,end=*break)ope13a$
-		if pos(firm_id$+ar_type$+cust$+ord$=ope13a.firm_id$+ope13a.ar_type$+
-:			ope13a.customer_id$+ope13a.order_no$)<>1 break
-		readrecord(opc_linecode_dev,key=firm_id$+ope13a.line_code$)opc_linecode$
-		if opc_linecode.dropship$<>"Y" and ope13a.commit_flag$="Y" and
+		readrecord(ope11_dev,end=*break)ope11a$
+		if pos(firm_id$+ar_type$+cust$+ord$=ope11a.firm_id$+ope11a.ar_type$+
+:			ope11a.customer_id$+ope11a.order_no$)<>1 break
+		readrecord(opc_linecode_dev,key=firm_id$+ope11a.line_code$)opc_linecode$
+		if opc_linecode.dropship$<>"Y" and ope11a.commit_flag$="Y" and
 :			callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
 			if pos(opc_linecode.line_type$="SP")
-				wh_id$=ope13a.warehouse_id$
-				item_id$=ope13a.item_id$
+				wh_id$=ope11a.warehouse_id$
+				item_id$=ope11a.item_id$
 				ls_id$=""
-				qty=ope13a.qty_ordered
+				qty=ope11a.qty_ordered
 				line_sign=-1
 				gosub update_totals
 			endif
 		if pos(ivs01a.lotser_flag$="LS") 
-			ord_seq$=ope13a.line_no$
+			ord_seq$=ope11a.line_no$
 			gosub remove_lot_ser_det
 		endif
 	wend
@@ -451,6 +451,15 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 		endif
 	wend
 
+	reprice$="N"
+	if copy_ok$="Y"
+		if line_sign=1
+			msg_id$="OP_REPRICE_ORD"
+			gosub disp_message
+			reprice$=msg_opt$
+		endif
+	endif
+
 	if copy_ok$="Y"
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",seq_id$,rd_table_chans$[all]
 		if len(seq_id$)>0
@@ -509,6 +518,9 @@ rem --- copy detail lines
 
 				if cvs(opt11a.line_code$,2)<>""
 					read record (opc_linecode_dev,key=firm_id$+opt11a.line_code$,dom=*next)opc_linecode$
+				endif
+				if pos(opc_linecode.line_type$="SP")
+					gosub pricing
 				endif
 				if opc_linecode.line_type$<>"M"
 					if opc_linecode.line_type$="O" and ope11a.commit_flag$="N"
@@ -595,8 +607,8 @@ remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
 		if pos(firm_id$+ar_type$+cust$+ord$+ord_seq$=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.line_no$)<>1 break
 		if opc_linecode.dropship$<>"Y" and
 :			callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
-			wh_id$=ope13a.warehouse_id$
-			item_id$=ope13a.item_id$
+			wh_id$=ope11a.warehouse_id$
+			item_id$=ope11a.item_id$
 			ls_id$=""
 			qty=ope21a.qty_ordered
 			line_sign=1
@@ -608,6 +620,47 @@ remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
 		remove (ope21_dev,key=firm_id$+ar_type$+cust$+ord$+ord_seq$+ope21a.sequence_no$)
 	wend
 	return
+
+pricing: rem "Call Pricing routine
+        ope01_dev=fnget_dev("OPE_ORDHDR")
+	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
+	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+	ivs01_dev=fnget_dev("IVS_PARAMS")
+	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+	ordqty=ope11a.qty_ordered
+	wh$=ope11a.warehouse_id$
+	item$=ope11a.item_id$
+	ar_type$=ope11a.ar_type$
+	cust$=ope11a.customer_id$
+	ord$=seq_id$
+	readrecord(ope01_dev,key=firm_id$+ar_type$+cust$+ord$)ope01a$
+	dim pc_files[6]
+	pc_files[1]=fnget_dev("IVM_ITEMMAST")
+	pc_files[2]=ivm02_dev
+	pc_files[3]=fnget_dev("IVM_ITEMPRIC")
+	pc_files[4]=fnget_dev("IVC_PRICCODE")
+	pc_files[5]=fnget_dev("ARS_PARAMS")
+	pc_files[6]=ivs01_dev
+	call stbl("+DIR_PGM")+"opc_pc.aon",pc_files[all],firm_id$,wh$,item$,ope01a.price_code$,cust$,
+:		ope01a.order_date$,ope01a.pricing_code$,ordqty,typeflag$,price,disc,status
+	if price=0
+		msg_id$="ENTER_PRICE"
+		gosub disp_message
+	else
+		ope11a.unit_price=price
+		ope11a.disc_percent=disc
+	endif
+	if disc=100
+		readrecord(ivm02_dev,key=firm_id$+wh$+item$)ivm02a$
+		ope11a.std_list_prc=ivm02a.cur_price
+	else
+		readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+		precision  num(ivs01a.precision$)+3
+		factor=100/(100-disc)
+		precision num(ivs01a.precision$)
+		ope11a.std_list_prc=price*factor
+return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
 	gosub disp_ord_tot
@@ -645,7 +698,7 @@ rem --- Populate address fields
 	gosub disable_ctls
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=30
+	num_files=32
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -676,6 +729,8 @@ rem --- open needed files
 	open_tables$[28]="IVC_WHSECODE",open_opts$[28]="OTA"
 	open_tables$[29]="IVS_PARAMS",open_opts$[29]="OTA"
 	open_tables$[30]="OPE_ORDLSDET",open_opts$[30]="OTA"
+	open_tables$[31]="IVM_ITEMPRIC",open_opts$[31]="OTA"
+	open_tables$[32]="IVC_PRICCODE",open_opts$[32]="OTA"
 	gosub open_tables
 
 rem --- get AR Params

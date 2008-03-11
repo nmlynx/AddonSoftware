@@ -13,6 +13,7 @@ rem --- All Rights Reserved
     rem "            : [4] = ivm-10"             
     rem "            : [5] = ars_params"
     rem "            : [6] = ivs_params"
+    rem "firm_id$    : Firm ID
     rem "whs$        : Warehouse ID"              
     rem "item$       : Inventory Item Number"     
     rem "listcd$     : List Price Code"           
@@ -33,19 +34,11 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
-    enter channels[all],whs$,item$,listcd$,cust$,date$,priccd$,ordqty,type_price$,price,disc,status
+    enter channels[all],firm_id$,whs$,item$,listcd$,cust$,date$,priccd$,ordqty,type_price$,price,disc,status
 
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+dir_pgm",err=*next)
-
-rem --- Retrieve sysinfo data
-
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
 
 rem --- Set channels
 
@@ -68,7 +61,7 @@ rem --- retrieve templates
 rem --- Dimension string templates
 
     dim ivm01a$:templates$[1],ivm02a$:templates$[2],ivm06a$:templates$[3],
-:       ivm10a$:templates$[4],ars01a$:templates$[5],ivs01a$:templates$[6]
+:       ivm10e$:templates$[4],ars01a$:templates$[5],ivs01a$:templates$[6]
 
 rem --- Retrieve parameter records
 
@@ -107,9 +100,9 @@ contract_pricing: rem --- Use Contract Pricing
             contract$="Y"
             if (cvs(ivm06a.from_date$,2)<>"" and date$<ivm06a.from_date$) or (cvs(ivm06a.thru_date$,2)<>"" and date$>ivm06a.thru_date$) contract$="N"
             if contract$="Y"
-                if abs(ordqty)>=nfield(ivm06a$,"break_qty",0) then
-                    for x=0 to 9
-                        if nfield(ivm06a$,"break_qty",x)>0 and abs(ordqty)>=nfield(ivm06a$,"break_qty",x) then let price=nfield(ivm06a$,"unit_price",x)
+                if abs(ordqty)>=nfield(ivm06a$,"break_qty_01") then
+                    for x=1 to 10
+                        if nfield(ivm06a$,"break_qty_"+str(x:"00"))>0 and abs(ordqty)>=nfield(ivm06a$,"break_qty_"+str(x:"00")) then let price=nfield(ivm06a$,"unit_price_"+str(x:"00"))
                     next x
                     type_price$="X"
                     break

@@ -57,7 +57,9 @@ rem ---recalc quantities and extended price
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
 rem ---recalc quantities and extended price
 	newqty=num(callpoint!.getUserInput())
-	gosub pricing
+	if num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE")) = 0
+		gosub pricing
+	endif
 	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD","0")
 	callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(newqty))
 
@@ -65,7 +67,7 @@ rem ---recalc quantities and extended price
 	new_ext_price=newqty*unit_price
 
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
-rem	callpoint!.setStatus("MODIFIED-REFRESH")
+	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_ORDDET.QTY_BACKORD.AVAL]]
 rem ---recalc quantities and extended price
 	boqty=num(callpoint!.getUserInput())
@@ -143,30 +145,44 @@ escape; rem decisions have to be made about ivc_ua (ivc_itemupt.aon)
 return
 
 pricing: rem "Call Pricing routine
-rem jpb do this next...
-rem 6010 IF W[1]<>0 THEN GOTO 6190                                                  
-rem 6020 LET ORDQTY=W[2]                                                            
-rem 6025 IF FNP$(W1$(46,1))<>"" THEN GOTO 6035; REM WA:213                          
-rem 6030 CALL "OPC.PC",IV_FILES[ALL],N0$,W0$(31,2),W0$(33,20),A0$(75,2),A0$(5,6),A0$
-rem (77,3),A0$(82,4),ORDQTY,TYPEFLAG$,PRICE,DISC,STATUS; GOTO 6040; REM WA:213      
-rem 6035 CALL "OPCPC",IV_FILES[ALL],N0$,W0$(31,2),W0$(33,20),W1$(46,1),A0$(75,2),A0$
-rem (5,6),A0$(77,3),A0$(82,4),ORDQTY,TYPEFLAG$,PRICE,DISC,STATUS; REM WA:213        
-rem 6040 IF PRICE<>0 THEN GOTO 6100                                                 
-rem 6045 DIM MESSAGE$[1]                                                            
-rem 6050 LET MESSAGE$[0]="Item Price Must Be Entered (<Enter>=Continue)"            
-rem 6060 CALL "SYC.XA",3,MESSAGE$[ALL],0,10,-1,V$,V3                                
-rem 6070 LET S$(6,1)="1",W[1]=0,W[8]=DISC                                           
-rem 6090 GOTO 6130                                                                  
-rem 6100 REM " --- Price Has Been Set"                                              
-rem 6105 IF TYPEFLAG$="N" THEN LET S$(6,1)="1"                                      
-rem 6110 LET W[1]=PRICE,W[8]=DISC                                                   
-rem 6120 IF TYPEFLAG$="X" THEN PRINT @(50,20),"**Contract Price ",W[1]:M4$,         
-rem 6130 IF W[8]=100 THEN LET W[5]=L[9]; GOTO 6180                                  
-rem 6140 PRECISION I[2]+3                                                           
-rem 6150 LET FACTOR=100/(100-W[8])                                                  
-rem 6160 PRECISION I[2]                                                             
-rem 6170 LET W[5]=W[1]*FACTOR                                                       
-
+        ope01_dev=fnget_dev("OPE_ORDHDR")
+	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
+	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+	ivs01_dev=fnget_dev("IVS_PARAMS")
+	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+	ordqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	wh$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	ar_type$=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
+	cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+	ord$=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	readrecord(ope01_dev,key=firm_id$+ar_type$+cust$+ord$)ope01a$
+	dim pc_files[6]
+	pc_files[1]=fnget_dev("IVM_ITEMMAST")
+	pc_files[2]=ivm02_dev
+	pc_files[3]=fnget_dev("IVM_ITEMPRIC")
+	pc_files[4]=fnget_dev("IVC_PRICCODE")
+	pc_files[5]=fnget_dev("ARS_PARAMS")
+	pc_files[6]=ivs01_dev
+	call stbl("+DIR_PGM")+"opc_pc.aon",pc_files[all],firm_id$,wh$,item$,ope01a.price_code$,cust$,
+:		ope01a.order_date$,ope01a.pricing_code$,ordqty,typeflag$,price,disc,status
+	if price=0
+		msg_id$="ENTER_PRICE"
+		gosub disp_message
+	else
+		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE",str(price))
+		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT",str(disc))
+	endif
+	if disc=100
+		readrecord(ivm02_dev,key=firm_id$+wh$+item$)ivm02a$
+		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC",str(ivm02a.cur_price))
+	else
+		readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+		precision  num(ivs01a.precision$)+3
+		factor=100/(100-disc)
+		precision num(ivs01a.precision$)
+		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC",str(price*factor))
 return
 
 #include std_missing_params.src
