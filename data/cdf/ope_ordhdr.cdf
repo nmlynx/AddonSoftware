@@ -187,6 +187,66 @@ rem --- enable/disable expire date based on value
 			gosub  disp_message
 			callpoint!.setStatus("ABORT-REFRESH")
 		endif
+	else
+		if rec_data.invoice_type$="P"
+			if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")="S"
+				msg_id$="CONVERT_QUOTE"
+				gosub disp_message
+				if msg_opt$="Y"
+					callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
+					ope11_dev=fnget_dev("OPE_ORDDET")
+					dim ope11a$:fnget_tpl$("OPE_ORDDET")
+					ivs01_dev=fnget_dev("IVS_PARAMS")
+					dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+					opc_linecode_dev=fnget_dev("OPC_LINECODE")
+					dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+					read record(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+					precision num(ivs01a.precision$)
+					wh$=ope11a.warehouse_id$
+					item$=ope11a.item_id$
+					ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+					cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+					ord$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+					read record (ope11_dev,key=firm_id$+ar_type$+cust$+ord$,dom=*next)
+					while 1
+						readrecord (ope11_dev,end=*break)ope11a$
+						if pos(firm_id$+ar_type$+cust$+ord$=ope11a.firm_id$+
+:							ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$)<>1 break
+						readrecord (opc_linecode_dev,key=firm_id$+ope11a.line_code$,dom=*continue)opc_linecode$
+						ope11a.commit_flag$="Y"
+						ope11a.pick_flag$="N"
+						if ope11a.est_shp_date$>user_tpl.def_commit$ ope11a.commit_flag$="N"
+						if ope11a.commit_flag$="N" 
+							if opc_linecode.line_type$<>"O" 
+								ope11a.qty_backord=0
+								ope11a.qty_shipped=0
+								ope11a.ext_price=0
+								ope11a.taxable_amt=0
+							else 
+								if ope11a.ext_price<>0
+									ope11a.unit_price=ope11a.ext_price
+									ope11a.ext_price=0
+									ope11a.taxable_amt=0
+								endif
+							endif
+						endif
+						if pos(opc_linecode.line_type$="SP")>0 and opc_linecode.dropship$<>"N" and
+:							ope11a.commit_flag$<>"N"
+							wh_id$=ope11a.warehouse_id$
+							item_id$=ope11a.item_id$
+							ls_id$=""
+							qty=ope11a.qty_ordered
+							line_sign=1
+							gosub update_totals
+						endif
+						ope11a$=field(ope11a$)
+						writerecord (ope11_dev)ope11a$
+					wend
+					precision 2
+					rec_data.invoice_type$="S"
+				endif
+			endif
+		endif
 	endif
 [[OPE_ORDHDR.AREC]]
 rem --- reset expiration date to enabled
