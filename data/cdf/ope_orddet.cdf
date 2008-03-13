@@ -1,3 +1,59 @@
+[[OPE_ORDDET.QTY_ORDERED.AVEC]]
+rem --- Go get Lot/Serial Numbers if needed
+	gosub calc_grid_tots
+	gosub disp_totals
+
+	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("APT_ITEMMAST")
+	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+	ivs01_dev=fnget_dev("IVS_PARAMS")
+	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs0a$
+
+	ar_type$=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
+	cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+	ord$=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	seq$=callpoint!.getColumnData("OPE_ORDDET.LINE_NO")
+	line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+
+	while 1
+		readrecord(opc_linecode_dev,key=firm$+line_code$,err=*break)opc_linecode$
+		if pos(opc_linecode.line_type$="SP")
+			readrecord(ivm_itemmast_dev,key=firm_id$+item$,err=*break)ivm01a$
+			if pos(ivm01a.lotser_item$="Y") and
+:					callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" and
+:					ivm01a.inventoried$="Y"  and
+:					pos(ivs01a.lotser_flag$="LS")
+				user_id$=stbl("+USER_ID")
+				dim dflt_data$[1,1]
+				key_pfx$=firm_id$+ar_type$+cust$+ord$+seq$
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:					"OPE_ORDLSDET",
+:					user_id$,
+:					"MNT",
+:					key_pfx$,
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+			endif
+		endif
+
+
+rem	glns!=bbjapi().getNamespace("GLNS","GL Dist",1)
+rem	amt_dist=num(glns!.getValue("dist_amt"))
+rem	if amt_dist<>num(callpoint!.getColumnData("APE_MANCHECKDET.INVOICE_AMT"))
+rem		msg_id$="AP_NOBAL"
+rem		gosub disp_message
+rem	endif
+
+
+rem	wk =Form!.getChildWindow(1109).getControl(5900).getSelectedRow()
+rem	Form!.getChildWindow(1109).getControl(5900).focus()
+rem --- Form!.getChildWindow(1109).getControl(5900).startEdit(wk,5)
+rem --- Form!.focus()
+	
+rem	endif
 [[OPE_ORDDET.BWRI]]
 rem --- commit inventory
 escape;rem bwri
