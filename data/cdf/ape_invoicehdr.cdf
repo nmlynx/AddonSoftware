@@ -1,3 +1,7 @@
+[[APE_INVOICEHDR.ASHO]]
+rem --- get default date
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_ORDDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
+	user_tpl.dflt_acct_date$=stbl("DEF_ACCT_DATE")
 [[APE_INVOICEHDR.INVOICE_DATE.AVAL]]
 if cvs(callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE"),3)=""
 	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",
@@ -12,6 +16,8 @@ gosub calculate_due_and_discount
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 user_tpl.inv_amt$=""
 user_tpl.tot_dist$=""
+callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
+callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.BWRI]]
 rem --- fully distributed?
 
@@ -345,7 +351,8 @@ user_tpl_str$="glint:c(1),glyr:c(4),glper:c(2),gl_tot_pers:c(2),glworkfile:c(16)
 user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),units_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"misc_entry:c(1),inv_in_ape01:c(1),inv_in_apt01:c(1),"
 user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),dflt_terms_cd:c(2),dflt_pymt_grp:c(2),"
-user_tpl_str$=user_tpl_str$+"disc_pct:c(5),dist_bal_ofst:c(1),inv_amt:c(10),tot_dist:c(10),open_inv_textID:c(5)"
+user_tpl_str$=user_tpl_str$+"disc_pct:c(5),dist_bal_ofst:c(1),inv_amt:c(10),tot_dist:c(10),open_inv_textID:c(5),"
+user_tpl_str$=user_tpl_str$+"dflt_acct_date:c(8)"
 
 dim user_tpl$:user_tpl_str$
 
