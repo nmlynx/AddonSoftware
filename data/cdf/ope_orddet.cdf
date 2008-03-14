@@ -2,7 +2,7 @@
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
 	gosub disp_totals
-
+escape
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm01a$:fnget_tpl$("APT_ITEMMAST")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
