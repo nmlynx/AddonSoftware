@@ -1,6 +1,7 @@
 rem --- Open MRP Files Using Alias
-rem --- Program mpc_fa v8.0.0 31Jan2008 (mpc_fa)
+rem --- Program mpc_openalias v8.0.0 31Jan2008 (mpc_fa)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/31/2008 04:02:59)
+rem --- Modified on March 14,2008
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
@@ -9,7 +10,7 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
-    enter channel,alias$,dd_name$,firm$,forecast$,filename$,status
+    enter channel,alias$,dd_name$,firm$,forecast$,filename$,template$,status
 
 rem --- Retrieve the program path
 
@@ -26,7 +27,6 @@ rem --- Retrieve sysinfo data
 rem --- Open/Lock files
 
     files=1,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
    
 rem --- Initializations
 
@@ -46,17 +46,15 @@ rem --- Build FILENAME$
 rem --- Open FILENAME$
         flag=0
         while more
-            dim files$[files],options$[files],channels[files]
+            dim files$[files],options$[files],channels[files],ids$[files],templates$[files]
             files$[files]=filename$,ids$[files]=dd_name$
             options$[files]="F"
             begfile=files
             endfile=files
             call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :           ids$[all],templates$[all],channels[all],batch,da_status
-            if da_status then 
-                flag=1
-                break
-            endif
+            template$=templates$[files]
+            if da_status then flag=1;break
             if channels[files]<>0 then break
             call pgmdir$+"adc_makelike.aon",filename$,alias$,ml_status
         wend
