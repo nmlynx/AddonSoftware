@@ -140,7 +140,7 @@ else
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_TERMS_CODE",user_tpl.dflt_terms_cd$)
 	callpoint!.setColumnData("APE_INVOICEHDR.PAYMENT_GRP",user_tpl.dflt_pymt_grp$)
 	callpoint!.setColumnData("APE_INVOICEHDR.INVOICE_DATE",stbl("+SYSTEM_DATE"))
-	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",stbl("+SYSTEM_DATE"))
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
 	callpoint!.setColumnData("APE_INVOICEHDR.HOLD_FLAG","N")
 	user_tpl.inv_in_ape01$="N"
 	user_tpl.inv_in_apt01$="N"
