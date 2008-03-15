@@ -32,7 +32,7 @@ rem --- Terms type is days. Due date = FROM$+DAYS
 
     while type$="D"
           due$=""
-          call pgmdir$+"adc_daydates.aon",from$,due$,days
+          call stbl("+DIR_PGM")+"adc_daydates.aon",from$,due$,days
           if due$="N" 
              due$=""
              status=999
@@ -77,8 +77,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
 :                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0

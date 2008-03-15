@@ -15,7 +15,7 @@ rem --- Open/Lock files
 		options$[wkx]="OTA"
 	next wkx
 
-	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                   chans$[all],templates$[all],table_chans$[all],batch,status$
 
 	if status$<>"" goto std_exit
@@ -78,12 +78,12 @@ if num(callpoint!.getColumnData("ARE_CNVINV.INVOICE_AMT"))<>0
 endif
 
 if cvs(callpoint!.getColumnData("ARE_CNVINV.INVOICE_DATE"),2)<>""
-	call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getColumnData("ARE_CNVINV.INVOICE_DATE"),
+	call stbl("+DIR_PGM")+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getColumnData("ARE_CNVINV.INVOICE_DATE"),
 :                              num(user_tpl.inv_days_due$),wk_date_out$,status
 	if status then callpoint!.setStatus("ABORT")
 	callpoint!.setColumnData("ARE_CNVINV.INV_DUE_DATE",wk_date_out$)
 	callpoint!.setColumnUndoData("ARE_CNVINV.INV_DUE_DATE",wk_date_out$)
-	call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getColumnData("ARE_CNVINV.INVOICE_DATE"),
+	call stbl("+DIR_PGM")+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getColumnData("ARE_CNVINV.INVOICE_DATE"),
 :                               num(user_tpl.disc_days$),wk_date_out$,status
 	if status then callpoint!.setStatus("ABORT")
 	callpoint!.setColumnData("ARE_CNVINV.DISC_DATE",wk_date_out$)
@@ -111,12 +111,12 @@ callpoint!.setColumnData("ARE_CNVINV.DISCOUNT_AMT",str(wk_amt))
 callpoint!.setColumnUndoData("ARE_CNVINV.DISCOUNT_AMT",str(wk_amt))
 callpoint!.setStatus("REFRESH")
 [[ARE_CNVINV.INVOICE_DATE.AVAL]]
-call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getUserInput(),num(user_tpl.inv_days_due$),
+call stbl("+DIR_PGM")+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getUserInput(),num(user_tpl.inv_days_due$),
 :	wk_date_out$,status
 if status then callpoint!.setStatus("ABORT")
 callpoint!.setColumnData("ARE_CNVINV.INV_DUE_DATE",wk_date_out$)
 callpoint!.setColumnUndoData("ARE_CNVINV.INV_DUE_DATE",wk_date_out$)
-call dir_pgm$+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getUserInput(),num(user_tpl.disc_days$),
+call stbl("+DIR_PGM")+"adc_duedate.aon",user_tpl.prox_days$,callpoint!.getUserInput(),num(user_tpl.disc_days$),
 :	wk_date_out$,status
 if status then callpoint!.setStatus("ABORT")
 callpoint!.setColumnData("ARE_CNVINV.DISC_DATE",wk_date_out$)
