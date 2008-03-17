@@ -25,7 +25,7 @@ rem --- Open/Lock files
 
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="GLS_PARAMS",ids$[1]=files$[1]
+    files$[1]="gls_params",ids$[1]=files$[1]
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-03",ids$[3]="GLC_JOURNALCODE"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -293,7 +293,7 @@ date_errors: rem --- Any GL transaction date errors detected in lead overlay?
 
 register_errors: rem --- Register errors
 
-    goto next_overlay
+rem    goto next_overlay
     dim msg$[1]
     msg$[0]="Errors were encountered during the generation of the GL summary register. "+
 :           "The update will not be run. Review the register, correct the errors and "+
@@ -540,6 +540,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
