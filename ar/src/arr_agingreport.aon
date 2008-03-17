@@ -454,7 +454,7 @@ rem --- line.
                    opt01a.order_no$=order$
                    opt01a.customer_po_no$=po$
                    k$=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+
-:                     opt01a.ar_inv_no$+opt01a.sequence_000$
+:                     opt01a.ar_inv_no$; rem +opt01a.sequence_000$
                    find record (opt01_dev,key=k$,dom=*proceed) opt01a$
                    order$(1)=opt01a.order_no$
                    po$(1)=opt01a.customer_po_no$
