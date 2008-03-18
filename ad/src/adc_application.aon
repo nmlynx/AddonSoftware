@@ -39,12 +39,13 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=4,begfile=1,endfile=files
+    files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="gls_params",options$[1]="R"
-    files$[2]="ars_params",options$[2]="R"
-    files$[3]="aps_params",options$[3]="R"
-    files$[4]="ivs_params",options$[4]="R"
+    files$[1]="gls_params",options$[1]="R",ids$[1]="GLS_PARAMS"; rem "R"=Required
+    files$[2]="ars_params",options$[2]="R",ids$[2]="ARS_PARAMS"
+    files$[3]="aps_params",options$[3]="R",ids$[3]="APS_PARAMS"
+    files$[4]="ivs_params",options$[4]="R",ids$[4]="IVS_PARAMS"
+    files$[5]="adm_modules.dat",options$[5]="S",ids$[5]="ADM_MODULES";rem "S"=System file
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -52,28 +53,10 @@ rem --- Open/Lock files
     ars01_dev=channels[2]
     aps01_dev=channels[3]
     ivs01_dev=channels[4]
+    adm04_Dev=channels[5]
 
-    num_files=1,open_beg=1,open_end=num_files
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
-    gosub open_tables
-    adm04_dev=num(open_chans$[1]),adm04a_tpl$=open_tpls$[1]
-
-rem --- Dimension string templates
-
-    dim adm04a$:adm04a_tpl$
-
-rem --- Retrieve miscellaneous templates
-
-    templates=1,begtemp=1,endtemp=templates
-    dim tempkeys$[files],records$[templates]
-    tempkeys$[1]="gls-01A:GLS_PARAMS"
-    call pgmdir$+"adc_template.aon",begtemp,endtemp,tempkeys$[all],records$[all],status
-    if status goto std_exit
-
-rem --- Dimension miscellaneous string templates
-
-    dim gls01a$:records$[1]
+    dim gls01a$:templates$[1]
+    dim adm04a$:templates$[5]
 
 rem --- Initializations
 

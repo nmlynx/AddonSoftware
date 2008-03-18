@@ -52,7 +52,7 @@ print_comment:
                 endif
             endif
 
-            call pgmdir$+"bmc_printbill.aon",1,printer_dev,bmm01a.bill_no$,h,comment$,"","",select$,pdate$,status
+            call pgmdir$+"bmc_printbill.aon",1,printer_dev,bmm01a.bill_no$,h,comment$,"","",select$,pdate$,rd_table_chans$[all],status
             if status then goto std_exit
             goto read_master
 rem       wend

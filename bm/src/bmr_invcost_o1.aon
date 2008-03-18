@@ -9,7 +9,6 @@ rem --- All Rights Reserved
         setesc std_error
         seterr std_error
 
-
 rem --- Retrieve the program path
 
         pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -76,8 +75,9 @@ rem --- Print Material Information
             let parentout$=""
         endif
         if printorcost$<>"C" then
-            call pgmdir$+"bmc_printbill.aon",1,printer_dev,bill_no$,h,comments$,ivm02a_key.item_id$+parentout$,whs$,select$,pdate$,status
-            if status<>0 then
+            call pgmdir$+"bmc_printbill.aon",1,printer_dev,bill_no$,h,comments$,ivm02a_key.item_id$+parentout$,whs$,select$,pdate$,rd_table_chans$[all],status
+
+           if status<>0 then
                 if printorcost$="P" then goto std_exit
                 printorcost$="C"
                 call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
