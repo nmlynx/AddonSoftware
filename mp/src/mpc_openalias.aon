@@ -7,10 +7,16 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+rem --- CHANNEL  : Channel number to open file using (Input)
+rem --- ALIAS$   : Standard ADD+ON file alias, e.g. mpe-03 (Input)
+rem --- FIRM$    : Firm ID (Input)
+rem --- FORECAST$: Forecast Type (Input)
+rem --- FILENAME$: Actual file name opened (Returned)
+rem --- STATUS   : 0=No Error (Returned)
 
     seterr std_error
     setesc std_error
-    enter channel,alias$,dd_name$,firm$,forecast$,filename$,template$,status
+    enter channel,alias$,dd_name$,firm$,forecast$,filename$,status
 
 rem --- Retrieve the program path
 
@@ -53,7 +59,6 @@ rem --- Open FILENAME$
             endfile=files
             call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :           ids$[all],templates$[all],channels[all],batch,da_status
-            template$=templates$[files]
             if da_status then flag=1;break
             if channels[files]<>0 then break
             call pgmdir$+"adc_makelike.aon",filename$,alias$,ml_status
