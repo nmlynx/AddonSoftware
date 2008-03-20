@@ -83,7 +83,7 @@ rem --- Build forecast entry lines
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm02a_dev,1,meter_num,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm02_dev,1,meter_num,ignore_status
 
 rem --- Initialize Period Descriptions
 
@@ -102,14 +102,14 @@ rem --- Initialize Period Descriptions
 
 rem --- Position ivm-02a sort file
 
-    read (ivm02a_dev,key=prefix$,knum=3,dom=*next)
+    read (ivm02_dev,key=prefix$,knum=3,dom=*next)
 
 rem --- Read next ivm-02a sort record
 
     while more
 
-        k$=key(ivm02a_dev,end=*break)
-        read record (ivm02a_dev) ivm02a$
+        k$=key(ivm02_dev,end=*break)
+        read record (ivm02_dev) ivm02a$
         if pos(prefix$=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.product_type$+ivm02a.item_id$)<>1 then break
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
 
@@ -122,7 +122,7 @@ rem --- Retrieve the item master record
 
         ivm01a.firm_id$=firm_id$
         ivm01a.item_id$=ivm02a.item_id$
-        find record (ivm01a_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=*continue) ivm01a$
+        find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=*continue) ivm01a$
 
 rem --- Get item usage totals for the past four periods
 
@@ -134,7 +134,7 @@ rem --- Get item usage totals for the past four periods
             ivm12a.item_id$=ivm02a.item_id$
             ivm12a.year$=x$(1,4)
             ivm12a.period$=x$(5,2)
-            find record (ivm12a_dev,key=ivm12a.firm_id$+ ivm12a.warehouse_id$+ivm12a.item_id$+ivm12a.year$+ivm12a.period$,dom=*next) ivm12a$
+            find record (ivm12_dev,key=ivm12a.firm_id$+ ivm12a.warehouse_id$+ivm12a.item_id$+ivm12a.year$+ivm12a.period$,dom=*next) ivm12a$
             usage[loop]=ivm12a.qty_sold+ivm12a.qty_issued
         next loop
 
@@ -196,7 +196,7 @@ product_break: rem --- Product break
     ivm10a.record_id_a$="A"
     ivm10a.product_type$=ivm02a.product_type$
     ivm10a.code_desc$="Unknown Product Type"
-    find record (ivm10a_dev,key=ivm10a.firm_id$+ivm10a.record_id_a$+ivm10a.product_type$,dom=*next) ivm10a$
+    find record (ivm10_dev,key=ivm10a.firm_id$+ivm10a.record_id_a$+ivm10a.product_type$,dom=*next) ivm10a$
     h5$="Product Type: "+ivm10a.product_type$+" "+cvs(ivm10a.code_desc$,2)
     l=l9+1
     t1$=ivm02a.product_type$
