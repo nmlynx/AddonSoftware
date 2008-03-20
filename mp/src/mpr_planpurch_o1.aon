@@ -24,15 +24,16 @@ rem --- Retrieve sysinfo data
 rem --- Open/Lock Files
 
     dim ivfiles[12]
-    ivfiles[1]=ivm01a_dev
-    ivfiles[2]=ivm02a_dev
-    ivfiles[12]=ivm12a_dev
+    ivfiles[1]=ivm01_dev
+    ivfiles[2]=ivm02_dev
+    ivfiles[12]=ivm12_dev
 
-open_mpe03: 
+rem --- Open the file corresponding to mpe-03 and the selected forecast type and warehouse id
 
-    call pgmdir$+"mpc_openalias.aon",mpe03a_dev,"mpe-03","MPE_MATDET",firm_id$,forecast$,filename$,mpe03a$,status
+    call pgmdir$+"mpc_openalias.aon",mpe03_dev,"mpe-03","MPE_MATDET",firm_id$,forecast$,filename$,status
     if status then goto std_exit
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status then goto std_exit
 
 initializations: rem --- Initializations
 
@@ -44,7 +45,6 @@ initializations: rem --- Initializations
     done=0,lines=6
     number=endper-begper+3
     ht$="Cost Summary By Date Required"
-    if allbuyers then let buyer$=""
     more=1
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMMAST","ALT_KEY_04",ivm01a_altkey04_tpl$,rd_table_chans$[all],status$
@@ -73,18 +73,17 @@ rem --- Print positions
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,mpe03a_dev,1,meter_num,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,mpe03_dev,1,meter_num,ignore_status
 
 rem --- Position file
 
-    read (mpe03a_dev,key=prefix$+begitem$,dom=*next)
+    read (mpe03_dev,key=prefix$+begitem$,dom=*next)
 
 rem --- Stores the mpe03a numeric fields for Build detail blocks
 
     dim mpe03a_arrfield$[162]
-    dim mpe03a_rec$:mpe03a$
     x=1
-    mpe03a_field$=fattr(mpe03a_rec$,"")
+    mpe03a_field$=fattr(mpe03a$,"")
     mpe03a_field$=mpe03a_field$(pos("qty_on_hand"=cvs(mpe03a_field$,8)))
     while mpe03a_field$<>""
        xfield$=mpe03a_field$(1,pos($0A$=mpe03a_field$)-1)
@@ -94,22 +93,23 @@ rem --- Stores the mpe03a numeric fields for Build detail blocks
     wend
 
 rem --- Read next mpe-03 record
+
     while more
-        read record (mpe03a_dev,end=*break) mpe03a_rec$
-        if pos(prefix$=(mpe03a_rec.firm_id$+mpe03a_rec.forecast$+mpe03a_rec.warehouse_id$))<>1 then break
-        if cvs(enditem$,2)<>"" then if mpe03a_rec.item_id$ >enditem$ then break
-        if pos(mpe03a_rec.mrp_type$="A")=0 then continue
+        read record (mpe03_dev,end=*break) mpe03a$
+        if pos(prefix$=(mpe03a.firm_id$+mpe03a.forecast$+mpe03a.warehouse_id$))<>1 then break
+        if cvs(enditem$,2)<>"" then if mpe03a.item_id$ >enditem$ then break
+        if pos(mpe03a.mrp_type$="A")=0 then continue
 
 rem --- Retrieve inventory item and warehouse information
 
         dim description$(dw)
         ivm01a.firm_id$=firm_id$
-        ivm01a.item_id$=mpe03a_rec.item_id$
+        ivm01a.item_id$=mpe03a.item_id$
         ivm02a.firm_id$=firm_id$
         ivm02a.warehouse_id$=whse$
-        ivm02a.item_id$=mpe03a_rec.item_id$
-        find record (ivm01a_dev,key=(ivm01a.firm_id$+ivm01a.item_id$),dom=*continue) ivm01a$
-        find record (ivm02a_dev,key=(ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$),dom=*continue) ivm02a$
+        ivm02a.item_id$=mpe03a.item_id$
+        find record (ivm01_dev,key=(ivm01a.firm_id$+ivm01a.item_id$),dom=*continue) ivm01a$
+        find record (ivm02_dev,key=(ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$),dom=*continue) ivm02a$
         description$(1)=fnitem$(ivm01a.item_desc$,i[2],i[3],i[4])
         itembuyer$=ivm01a.buyer_code$
         stocking$=ivm01a.vendor_id$
@@ -120,12 +120,17 @@ rem --- Retrieve inventory item and warehouse information
             safety=ivm02a.safety_stock
             eoq=ivm02a.eoq,leadtime=ivm02a.lead_time
         endif
+
 rem --- Make sure buyer and vendor fall within selection criteria
 
+        itembuyer$=cvs(itembuyer$,1+2)
         if buyer$<>"" then if itembuyer$<>buyer$ then continue
+        stocking$=cvs(stocking$,1+2)
         if cvs(begvend$,2)<>"" then if stocking$<begvend$ then continue
         if cvs(endvend$,2)<>"" then if stocking$>endvend$ then continue
-rem        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+
 rem --- Calculate Average Annual Item Usage
 
         action$="W"
@@ -133,9 +138,11 @@ rem --- Calculate Average Annual Item Usage
         base_pryr$=curr_period$+curr_year$
         curr_pryr$=curr_period$+curr_year$
         item$[0]=firm_id$
-        item$[1]=ivm02a.warehouse_id$,item$[2]=ivm02a.item_id$
+        item$[1]=ivm02a.warehouse_id$
+        item$[2]=ivm02a.item_id$
 
-        call pgmdir$+"ivc_usage.aon",action$,ivfiles[all],item$[all],factors[all],day_of_month,base_pryr$,curr_pryr$,periods,ivprecision,actual,estimated,flag$,status
+        call pgmdir$+"ivc_usage.aon",action$,ivfiles[all],item$[all],factors[all],day_of_month,base_pryr$,curr_pryr$,
+:       periods,ivprecision,actual,estimated,flag$,status
 
         if flag$<>"" then let actual=estimated
         usage=actual/periods
@@ -146,15 +153,15 @@ rem --- If alternate vendors are being included then a list of then must be comp
         itemvendors=0
         if include$="Y" then 
 
-            read (ivm01a_dev,key=firm_id$+ivm02a.item_id$,knum=4,dom=*next)
+            read (ivm01_dev,key=firm_id$+ivm02a.item_id$,knum=4,dom=*next)
 
 rem --- Cycle through other vendors for this item and build list
 
             dim ivm01a_key$:ivm01a_altkey04_tpl$
             while more
-                ivm01a_key$=key(ivm01a_dev,knum=4,end=*break)
+                ivm01a_key$=key(ivm01_dev,knum=4,end=*break)
                 if pos(firm_id$=ivm01a_key$)<>0 and ivm01a_key.item_id$=ivm02a.item_id$ then
-                    read record (ivm01a_dev,key=ivm01a_key$,knum=4,dom=*break) ivm01a1$
+                    read record (ivm01_dev,key=ivm01a_key$,knum=4,dom=*break) ivm01a1$
                     itemvendors$=itemvendors$+ivm01a1.vendor_id$
                     itemvendors=itemvendors+1
                 else
@@ -180,7 +187,8 @@ rem --- Print other vendors if they've been included
                 if itemvendors$(x,6)=stocking$ then continue
                 vendor$=itemvendors$(x,6)
                 gosub vendor_information
-                print (printer_dev)@(o[9]-len(vendortype$)),vendortype$,vendornumb$," ",apm01a.vendor_name$,@(o[3]),vendorpart$,@(o[4]+20),vendorcost$
+                print (printer_dev)@(o[9]-len(vendortype$)),vendortype$,vendornumb$," ",apm01a.vendor_name$,@(o[3]),
+:               vendorpart$,@(o[4]+20),vendorcost$
                 l=l+1
             next x
        endif
@@ -189,18 +197,18 @@ rem --- Build detail blocks
 
         dim required$[number],amounts[number,lines],orderby$[number]
         required$[1]="   Begin"
-        amounts[1,2]=mpe03a_rec.qty_on_hand,n=1
+        amounts[1,2]=mpe03a.qty_on_hand,n=1
         for x=begper to endper
             p=x*6
             n=n+1
-            orderby$[n]=fndate$(FIELD(mpe03a_rec$,"plan_date_"+str(x+1:"00")))
+            orderby$[n]=fndate$(FIELD(mpe03a$,"plan_date_"+str(x+1:"00")))
             required$[n]=fndate$(FIELD(mpm01a$,"plan_date_"+str(x+1:"00")))
-            amounts[n,0]= num(FIELD(mpe03a_rec$,mpe03a_arrfield$[p+2]))
-            amounts[n,1]=num(FIELD(mpe03a_rec$,mpe03a_arrfield$[p+1]))
-            amounts[n,2]=num(FIELD(mpe03a_rec$,mpe03a_arrfield$[p+6]))
-            amounts[n,3]=num(FIELD(mpe03a_rec$,mpe03a_arrfield$[p+3]))
-            amounts[n,4]=num(FIELD(mpe03a_rec$,mpe03a_arrfield$[p+4]))
-            amounts[n,5]=num(FIELD(mpe03a_rec$,mpe03a_arrfield$[p+5]))
+            amounts[n,0]= num(FIELD(mpe03a$,mpe03a_arrfield$[p+2]))
+            amounts[n,1]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+1]))
+            amounts[n,2]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+6]))
+            amounts[n,3]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+3]))
+            amounts[n,4]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+4]))
+            amounts[n,5]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+5]))
             amounts[n,6]=amounts[n,5]*ivm02a.unit_cost
         next x
 
@@ -213,7 +221,7 @@ rem --- Detail printing initializations
                 amounts[number,n]=amounts[number,n]+amounts[x,n]
             next n
         next x
-        amounts[number,2]=num(FIELD(mpe03a_rec$,mpe03a_arrfield$[p+6]))
+        amounts[number,2]=num(FIELD(mpe03a$,mpe03a_arrfield$[p+6]))
 
 rem --- Print detail
         while more
@@ -270,9 +278,9 @@ rem --- Accumulate totals
                 mpw01a.firm_id$=firm_id$
 rem                if x>1 then let mpw01a.firm_id$=firm_id$+fnd6$(cvs(required$[x],1+2))
                 if x>1 then mpw01a.firm_id$=firm_id$;mpw01a.plan_date$=cvs(required$[x],1+2)
-                find record (mpw01a_dev,key=(mpw01a.firm_id$+mpw01a.plan_date$),dom=*next) mpw01a$
+                find record (mpw01_dev,key=(mpw01a.firm_id$+mpw01a.plan_date$),dom=*next) mpw01a$
                 mpw01a.total_cost=mpw01a.total_cost+amounts[x,lines]
-                write record (mpw01a_dev,key=(mpw01a.firm_id$+mpw01a.plan_date$),err=*next) mpw01a$
+                write record (mpw01_dev,key=(mpw01a.firm_id$+mpw01a.plan_date$),err=*next) mpw01a$
             next x
 
         wend
@@ -287,11 +295,11 @@ done: rem --- Done with report, print totals
     dim required$[numcol],amounts[numcol]
     l=l9+1
     total=0,n=0,done=1
-    read (mpw01a_dev,key=firm_id$,dom=*next)
+    read (mpw01_dev,key=firm_id$,dom=*next)
 
 rem --- Print cost summary
     while more
-        read record (mpw01a_dev,end=finished) mpw01a$
+        read record (mpw01_dev,end=finished) mpw01a$
         if n>=numcol then gosub print_totals
         n=n+1
         required$[n]=fndate$(mpw01a.plan_date$)
@@ -318,7 +326,8 @@ report_heading: rem --- Report Heading
     print (printer_dev)""
     if !done then 
         print (printer_dev)@(o[2]),"Lead",@(o[4]+m3-5),"Unit",@(o[6]+m2-8),"Avg Mth",@(o[7]+m2-7),"Safety",@(o[8]+m2-9),"Quantity"
-        print (printer_dev)"Item",@(o[1]),"Description",@(o[2]),"Time",@(o[3]),"Vendor Item Number",@(o[4]+m3-5),"Cost",@(o[5]+m2-4),"EOQ",@(o[6]+m2-6),"Usage",@(o[7]+m2-6),"Stock",@(o[8]+m2-8),"On Hand"
+        print (printer_dev)"Item",@(o[1]),"Description",@(o[2]),"Time",@(o[3]),"Vendor Item Number",@(o[4]+m3-5),"Cost",@(o[5]+m2-4),
+:       "EOQ",@(o[6]+m2-6),"Usage",@(o[7]+m2-6),"Stock",@(o[8]+m2-8),"On Hand"
         return
     endif
 rem --- Totals Heading
@@ -329,7 +338,8 @@ rem --- Totals Heading
 item_heading: rem --- Item Heading
 
     print (printer_dev)""
-    print (printer_dev)ivm01a.item_id$,@(o[1]),description$,@(o[2]),leadtime:m5$,@(o[4]),ivm02a.unit_cost:m2$,@(o[5]),eoq:m2$,@(o[6]),usage:m2$+flag$,@(o[7]),safety:m2$,@(o[8]),ivm02a.qty_on_hand:m2$
+    print (printer_dev)ivm01a.item_id$,@(o[1]),description$,@(o[2]),leadtime:m5$,@(o[4]),ivm02a.unit_cost:m2$,@(o[5]),eoq:m2$,@(o[6]),
+:   usage:m2$+flag$,@(o[7]),safety:m2$,@(o[8]),ivm02a.qty_on_hand:m2$
     l=l+2
     return
 
@@ -338,7 +348,8 @@ vendor_heading: rem --- Stocking Vendor
     vendor$=stocking$
     gosub vendor_information
     print (printer_dev)""
-    print (printer_dev)@(o[9]-16),"Stocking Vendor ",vendornumb$," ",apm01a.vendor_name$,@(o[3]),vendorpart$,@(o[4]),"Last Purchase Price:",vendorcost$
+    print (printer_dev)@(o[9]-16),"Stocking Vendor ",vendornumb$," ",apm01a.vendor_name$,@(o[3]),vendorpart$,@(o[4]),"Last Purchase Price:",
+:   vendorcost$
     l=l+2
     return
 
@@ -375,15 +386,17 @@ vendor_information: rem --- Retrieve vendor information
         let v$(1)=fnmask$(vendor$(1,aplength),m0$)
         ivm05a.firm_id$=firm_id$
         ivm05a.vendor_id$=vendor$
-        ivm05a.item_id$=mpe03a_rec.item_id$
+        ivm05a.item_id$=mpe03a.item_id$
         let apm01a.firm_id$=firm_id$,apm01a.vendor_id$=vendor$,apm01a.vendor_name$="Unknown Vendor" 
-        find record (apm01a_dev,key=(apm01a.firm_id$+apm01a.vendor_id$),dom=*next) apm01a$
-        find record (ivm05a_dev,key=(ivm05a.firm_id$+ivm05a.vendor_id$+ivm05a.item_id$),dom=vendor_information_exit) ivm05a$
+        find record (apm01_dev,key=(apm01a.firm_id$+apm01a.vendor_id$),dom=*next) apm01a$
+        find record (ivm05_dev,key=(ivm05a.firm_id$+ivm05a.vendor_id$+ivm05a.item_id$),dom=vendor_information_exit) ivm05a$
         let vendorpart$=ivm05a.vendor_item$,vendorcost$=str(ivm05a.last_po_cost:m3$)
         if ivm05a.prisec_flag$="P" then let vendortype$="Primary Vendor "
         if ivm05a.prisec_flag$="S" then let vendortype$="Secondary Vendor "
     endif
+
 vendor_information_exit:
+
     return
 
 rem #include std_functions.src
