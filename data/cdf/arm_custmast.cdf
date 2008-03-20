@@ -74,7 +74,7 @@ callpoint!.setColumnData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
 callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG",ars10d.customer_inv_his$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG",ars10d.customer_inv_his$)
-callpoint!.setColumnData("ARM_CUSTMAST.OPENED_DATE",date(0:"%YdMzDz"))
+callpoint!.setColumnData("ARM_CUSTMAST.OPENED_DATE",date(0:"%Yd%Mz%Dz"))
 callpoint!.setColumnData("ARM_CUSTMAST.RETAIN_CUST","Y")
 
 if user_tpl.cm_installed$="Y" and user_tpl.dflt_cred_hold$="Y" 
