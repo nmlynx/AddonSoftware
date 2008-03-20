@@ -1,5 +1,18 @@
+[[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
+rem --- Set Alternate Sequence for new customers
+	if user_tpl.new_cust$="Y"
+		callpoint!.setColumnData("ARM_CUSTMAST.ALT_SEQUENCE",callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_NAME"))
+		callpoint!.setStatus("REFRESH")
+	endif
+[[ARM_CUSTMAST.AREA]]
+rem --- Set New Customer flag
+	user_tpl.new_cust$="N"
+[[ARM_CUSTMAST.BREC]]
+rem --- Set New Customer flag
+	user_tpl.new_cust$="Y"
 [[ARM_CUSTMAST.CUSTOMER_ID.AVAL]]
-if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
+rem --- Validate Customer Number
+	if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
 [[ARM_CUSTMAST.AOPT-IDTL]]
 rem Invoice Dtl Inquiry
 cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
@@ -61,6 +74,8 @@ callpoint!.setColumnData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
 callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG",ars10d.customer_inv_his$)
 callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG",ars10d.customer_inv_his$)
+callpoint!.setColumnData("ARM_CUSTMAST.OPENED_DATE",date(0:"%YdMzDz"))
+callpoint!.setColumnData("ARM_CUSTMAST.RETAIN_CUST","Y")
 
 if user_tpl.cm_installed$="Y" and user_tpl.dflt_cred_hold$="Y" 
 	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","Y")
@@ -118,7 +133,7 @@ rem --- Retrieve parameter data
 	sa$=info$[20]
 
 	dim user_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),"+
-:		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024)"
+:		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024),new_cust:c(1)"
 
 	user_tpl.app$="AR"
 	user_tpl.gl_installed$=gl$
