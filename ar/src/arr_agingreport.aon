@@ -110,7 +110,7 @@ rem --- Retrieve parameter records
     history$=ars01a.inv_hist_flg$
     jn$=ars01a.job_nos$
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
-    m8$="(###)-###-####"
+    m8$="(###) ###-####"
     call pgmdir$+"adc_sizemask.aon",m1$,m1,8,12
     m0=len(m0$)
     m1=len(m1$)

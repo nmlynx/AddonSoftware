@@ -72,7 +72,7 @@ rem --- Retrieve parameter records
     ars01a_key$=firm_id$+"AR00"
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
-    m8$="(###)-###-####"
+    m8$="(###) ###-####"
     m0=len(m0$)
     m8=len(m8$)
 
