@@ -1,19 +1,23 @@
 [[APE_ORDDATE.ASVA]]
 rem --- validate Accounting Date
-rem	call stbl("+DIR_PGM")+"glc_datecheck.aon",
-rem :		callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"),
-rem :		"Y",per$,yr$,status
-rem 	if status<>0 or user_tpl.status$="Y"
-rem 		callpoint!.setStatus("ABORT")
-rem 	endif
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",
+:		callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"),
+:		"Y",per$,yr$,status
+	if status<>0
+		callpoint!.setStatus("ABORT")
+	else
+		temp_stbl$=stbl("DEF_ACCT_DATE",callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"))
+	endif
 [[APE_ORDDATE.BEND]]
 rem --- validate Accounting Date
-rem	call stbl("+DIR_PGM")+"glc_datecheck.aon",
-rem :		callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"),
-rem :		"Y",per$,yr$,status
-rem	if status<>0
-rem		callpoint!.setStatus("ABORT")
-rem	endif
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",
+:		callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"),
+:		"Y",per$,yr$,status
+	if status<>0
+		callpoint!.setStatus("ABORT")
+	else
+		temp_stbl$=stbl("DEF_ACCT_DATE",callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"))
+	endif
 [[APE_ORDDATE.ARAR]]
 rem --- Setup default dates
 
