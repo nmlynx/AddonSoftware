@@ -7,6 +7,11 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+rem --- This overlay reads through the Pegging Transaction Detail
+rem --- file and processes Planned Work Orders, writing them to
+rem --- a work file with accumulate totals by date. That work file
+rem --- is then used by the update overlay to create actual planned
+rem --- work orders in the Shop Floor Control application.
 
     setesc std_error
     seterr std_error
@@ -25,7 +30,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock Files
 
-    call pgmdir$+"mpc_openalias.aon",mpe05_dev,"mpe-05","MPE_PEGGING",firm_id$,forecast$,filename$,mpe05a$,status
+    call pgmdir$+"mpc_openalias.aon",mpe05_dev,"mpe-05","MPE_PEGGING",firm_id$,forecast$,filename$,status
     if status then goto std_exit
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status then goto std_exit
@@ -68,7 +73,6 @@ rem --- Position mpe-05 Pegging Transaction Detail File
     read (mpe05_dev,key=firm_id$,dom=*next)
 
     dim mpe05a_key$:mpe05a_key_tpl$
-    dim mpe05a_rec$:mpe05a$
 
 next_mpe05: rem --- Read next mpe-05 record
 
@@ -84,33 +88,33 @@ next_mpe05: rem --- Read next mpe-05 record
 
 rem --- Read next mpe-05 Pegging Transaction Detail record
 
-        mpe05a_rec.firm_id$=mpe05a_key.firm_id$
-        mpe05a_rec.forecast$=mpe05a_key.forecast$
-        mpe05a_rec.warehouse_id$=mpe05a_key.warehouse_id$
-        mpe05a_rec.item_id$=mpe05a_key.item_id$
-        mpe05a_rec.trns_date$=mpe05a_key.trns_date$
-        mpe05a_rec.source_code$=mpe05a_key.source_code$
-        mpe05a_rec.seq_no$=mpe05a_key.seq_no$
-        mpe05a_rec$=mpe05a_key$
+        mpe05a.firm_id$=mpe05a_key.firm_id$
+        mpe05a.forecast$=mpe05a_key.forecast$
+        mpe05a.warehouse_id$=mpe05a_key.warehouse_id$
+        mpe05a.item_id$=mpe05a_key.item_id$
+        mpe05a.trns_date$=mpe05a_key.trns_date$
+        mpe05a.source_code$=mpe05a_key.source_code$
+        mpe05a.seq_no$=mpe05a_key.seq_no$
+rem        mpe05a$=mpe05a_key$
 
-        read record (mpe05_dev) mpe05a_rec$
-        if mpe05a_rec.source_code$<>"H" then continue
+        read record (mpe05_dev) mpe05a$
+        if mpe05a.source_code$<>"H" then continue
 
 rem --- New inventory item?
 
-        if mpe05a_rec.item_id$<>current_item$ then 
+        if mpe05a.item_id$<>current_item$ then 
 
 rem --- Make sure a bill of materials exists for this item
 
             bmm01a.firm_id$=firm_id$
-            bmm01a.bill_no$=mpe05a_rec.item_id$
+            bmm01a.bill_no$=mpe05a.item_id$
 
             find record (bmm01_dev,key=(bmm01a.firm_id$+bmm01a.bill_no$),dom=*continue) bmm01a$
             if bmm01a.phantom_bill$<>"N" then 
 
 rem --- This item is a phantom bill, skip remaining entries
 
-                read (mpe05_dev,key=mpe05a_rec.firm_id$+mpe05a_rec.forecast$+mpe05a_rec.warehouse_id$+mpe05a_rec.item_id$+$ff$,dom=*continue)
+                read (mpe05_dev,key=mpe05a.firm_id$+mpe05a.forecast$+mpe05a.warehouse_id$+mpe05a.item_id$+$ff$,dom=*continue)
 
             endif
 
@@ -120,33 +124,33 @@ rem --- Perform level break for new inventory item
         endif
 rem --- 
 
-        qty=mpe05a_rec.planned_rel
-        if !(begdate$<>"" and mpe05a_rec.trns_date$<begdate$) and !(enddate$<>"" and mpe05a_rec.trns_date$>enddate$) then 
+        qty=mpe05a.planned_rel
+        if !(begdate$<>"" and mpe05a.trns_date$<begdate$) and !(enddate$<>"" and mpe05a.trns_date$>enddate$) then 
             if l+1>l9 then gosub report_heading
             extension=qty*cost
             l=l+1,l1=l1+1
             print (printer_dev)item$,@(o[1]),desc$,@(o[2]),um$,@(o[3]),buyer$,@(o[4]),cost$,@(o[5]),
-:           fndate$(mpe05a_rec.reqd_date$),@(o[6]),qty:m2$,@(o[7]),extension:m1$
+:           fndate$(mpe05a.reqd_date$),@(o[6]),qty:m2$,@(o[7]),extension:m1$
 
 rem --- Generate (or update if existing) work file record for the date this item is required.
 
-            dim d0$(33)
-            d0$(1)=mpe05a_rec.firm_id$+mpe05a_rec.forecast$+mpe05a_rec.warehouse_id$+mpe05a_rec.item_id$+mpe05a_rec.reqd_date$
-            mpw05a.firm_id$=mpe05a_rec.firm_id$
-            mpw05a.forecast$=mpe05a_rec.forecast$
-            mpw05a.warehouse_id$=mpe05a_rec.warehouse_id$
-            mpw05a.item_id$=mpe05a_rec.item_id$
-            mpw05a.reqd_date$=mpe05a_rec.reqd_date$
+            dim d0$(35)
+            d0$(1)=mpe05a.firm_id$+mpe05a.forecast$+mpe05a.warehouse_id$+mpe05a.item_id$+mpe05a.reqd_date$
+            mpw05a.firm_id$=mpe05a.firm_id$
+            mpw05a.forecast$=mpe05a.forecast$
+            mpw05a.warehouse_id$=mpe05a.warehouse_id$
+            mpw05a.item_id$=mpe05a.item_id$
+            mpw05a.reqd_date$=mpe05a.reqd_date$
 
-            find record (mpw05_dev,key=d0$+$ff$,dom=*next) mpw05a$
+            find record (mpw05_dev,key=d0$,dom=*next) mpw05a$
 
             mpw05a.unit_measure$=um$
-            mpw05a.trns_date$=mpe05a_rec.trns_date$
+            mpw05a.trns_date$=mpe05a.trns_date$
             mpw05a.conv_factor=factor
             mpw05a.unit_cost=cost
             mpw05a.qty_required=mpw05a.qty_required+qty
 
-            write record (mpw05_dev,key=d0$+$ff$) mpw05a$
+            write record (mpw05_dev,key=d0$) mpw05a$
 
             item_qty=item_qty+qty
             item_amt=item_amt+extension,total=total+extension
@@ -200,10 +204,10 @@ rem --- Retrieve item master, warehouse detail and buyer information for this in
 
         dim desc$(dw)
         ivm01a.firm_id$=firm_id$
-        ivm01a.item_id$=mpe05a_rec.item_id$
+        ivm01a.item_id$=mpe05a.item_id$
         ivm02a.firm_id$=firm_id$
-        ivm02a.warehouse_id$=mpe05a_rec.warehouse_id$
-        ivm02a.item_id$=mpe05a_rec.item_id$
+        ivm02a.warehouse_id$=mpe05a.warehouse_id$
+        ivm02a.item_id$=mpe05a.item_id$
         current_item$=ivm01a.item_id$
 
         item_qty=0
