@@ -30,43 +30,39 @@ rem --- Open/Lock files
     files$[3]="GLS_PARAMS",ids$[3]="GLS_PARAMS"
     files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
     files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
-    files$[6]="ivm-03",ids$[6]="IVX_ITEMVEND"
-    files$[7]="ivm-05",ids$[7]="IVM_ITEMVEND"
-    files$[8]="IVC_WHSECODE",ids$[8]="IVC_WHSECODE"
-    files$[9]="IVC_BUYCODE",ids$[9]="IVC_BUYCODE"
-    files$[10]="ivm-12",ids$[10]="IVM_ITEMACT"
-    files$[11]="IVS_PARAMS",ids$[11]="IVS_PARAMS"
-    files$[12]="IVS_ABCPARAM",ids$[12]="IVS_ABCPARAM"
-    files$[13]="mpe-03",ids$[13]="MPE_MATDET"
-    files$[14]="mpm-01",ids$[14]="MPM_FORECAST"
-    files$[15]="mpw-01",ids$[15]="MPW_DATETOT"
-    options$[15]="C"
+    files$[6]="ivm-05",ids$[6]="IVM_ITEMVEND"
+    files$[7]="IVC_WHSECODE",ids$[7]="IVC_WHSECODE"
+    files$[8]="IVC_BUYCODE",ids$[8]="IVC_BUYCODE"
+    files$[9]="ivm-12",ids$[9]="IVM_ITEMACT"
+    files$[10]="IVS_PARAMS",ids$[10]="IVS_PARAMS"
+    files$[11]="mpe-03",ids$[11]="MPE_MATDET"
+    files$[12]="mpm-01",ids$[12]="MPM_FORECAST"
+    files$[13]="mpw-01",ids$[13]="MPW_DATETOT"
+    options$[13]="C"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    apm01a_dev=channels[1]
-    aps01a_dev=channels[2]
-    gls01a_dev=channels[3]
-    ivm01a_dev=channels[4]
-    ivm02a_dev=channels[5]
-    ivm03h_dev=channels[6]
-    ivm05a_dev=channels[7]
-    ivm10c_dev=channels[8]
-    ivm10f_dev=channels[9]
-    ivm12a_dev=channels[10]
-    ivs01a_dev=channels[11]
-    ivs01c_dev=channels[12]
-    mpe03a_dev=channels[13]
-    mpm01a_dev=channels[14]
-    mpw01a_dev=channels[15]
+    apm01_dev=channels[1]
+    aps01_dev=channels[2]
+    gls01_dev=channels[3]
+    ivm01_dev=channels[4]
+    ivm02_dev=channels[5]
+    ivm05_dev=channels[6]
+    ivm10c_dev=channels[7]
+    ivm10f_dev=channels[8]
+    ivm12_dev=channels[9]
+    ivs01_dev=channels[10]
+    mpe03_dev=channels[11]
+    mpm01_dev=channels[12]
+    mpw01_dev=channels[13]
 
 rem --- Dimension string templates
 
     dim apm01a$:templates$[1],aps01a$:templates$[2],gls01a$:templates$[3],
-:       ivm01a$:templates$[4],ivm02a$:templates$[5],ivm03h$:templates$[6],
-:       ivm05a$:templates$[7],ivm10c$:templates$[8],ivm10f$:templates$[9],
-:       ivm12a$:templates$[10],ivs01a$:templates$[11],ivs01c$:templates$[12],
-:       mpm01a$:templates$[14],mpw01a$:templates$[15],ivm01a1$:templates$[4]
+:       ivm01a$:templates$[4],ivm01a1$:templates$[4],ivm02a$:templates$[5],
+:       ivm05a$:templates$[6],ivm10c$:templates$[7],ivm10f$:templates$[8],
+:       ivm12a$:templates$[9],ivs01a$:templates$[10],mpe03a$:templates$[11],
+:       mpm01a$:templates$[12],mpw01a$:templates$[13]
 
 rem --- Assign form input values to local variables
 
@@ -84,25 +80,22 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
-    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     gls01a_key$=firm_id$+"GL00"
-    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    ivs01c_key$=firm_id$+"IV02"
-    find record (ivs01c_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     mpm01a_key$=firm_id$+forecast$
-    find record (mpm01a_dev,key=mpm01a_key$,err=std_missing_params) mpm01a$
+    find record (mpm01_dev,key=mpm01a_key$,err=std_missing_params) mpm01a$
   
 
 rem --- Parameters
 
     dim g2$(10),g3$(325),g4$(32),i[6],abcp[25],factors[25]
     n1$=sysinfo.firm_name$,n2$="MP",n3$=sysinfo.task_desc$
-    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-    find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-    find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
-    find record (ivs01c_dev,key=firm_id$+"IV02",dom=std_missing_params) ivs01c$
+    find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+    find record (aps01_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
+    find record (ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
     i[0]=num(ivs01a.item_id_len$)
     ivlength=i[0],ivprecision=num(ivs01a.precision$)
     i[2]=num(ivs01a.desc_len_01$)
@@ -114,9 +107,6 @@ rem --- Initializations
 
     precision ivs01_precision
     dim description$[number],field[number],position[number],length[number]
-rem    begper=0,endper=0,m4$=m2$,mp=26
-rem    include$="N"
-rem    allbuyers=1
     headings=4
     dim headings$[headings]
     headings$[0]=n1$
@@ -129,17 +119,22 @@ rem    allbuyers=1
 
     h5$="Forecast: "+forecast$
     h6$="Warehouse: "+whse$
-    h3$="Beginning Vendor: "+begvend$
-    h4$="   Ending Vendor: "+endvend$
-    h9$="Buyer Code: "+buyer$
-    h7$="Beginning Item: "+begitem$
-    h8$="   Ending Item: "+enditem$
-
+    begvend$=cvs(begvend$,1+2)
+    if begvend$<>"" then h3$="Beginning Vendor: "+begvend$ else h3$="Beginning Vendor: First"
+    endvend$=cvs(endvend$,1+2)
+    if endvend$<>"" then h4$="   Ending Vendor: "+endvend$ else h4$="Ending Vendor: Last"
+    buyer$=cvs(buyer$,1+2)
+    if buyer$<>"" then h9$="Buyer Code: "+buyer$ else h9$="Buyer Code: All"
+    begitem$=cvs(begitem$,1+2)
+    if begitem$<>"" then h7$="Beginning Item: "+begitem$ else h7$="Beginning Item: First"
+    enditem$=cvs(enditem$,1+2)
+    if enditem$<>"" then h8$="   Ending Item: "+enditem$ else h8$="Ending Item: Last"
+    
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,m0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m2$,0,m2
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","R","",m3$,0,m3
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m4$,0,m4
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m2$,0,m2
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m4$,0,m4
     m5$="###0-",m5=len(m5$)
 
 next_overlay:
