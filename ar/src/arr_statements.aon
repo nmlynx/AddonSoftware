@@ -274,7 +274,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           for x=period to 5
                 balance=balance+aging[x]
           next x
-          if balance<minimum continue
+          if minimum <> 0 then if balance<minimum continue
 
           rem --- Position the Invoice Header (art-01) file for printing
 
