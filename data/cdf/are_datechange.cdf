@@ -1,3 +1,28 @@
+[[ARE_DATECHANGE.INVOICE_DATE.AVAL]]
+rem --- recalculate due and discount dates
+	gosub recalc_dates
+[[ARE_DATECHANGE.<CUSTOM>]]
+recalc_dates:
+	arc_termcode_dev=fnget_dev("ARC_TERMCODE")
+	dim arc_termcode$:fnget_tpl$("ARC_TERMCODE")
+	inv_date$=callpoint!.getColumnData("ARE_DATECHANGE.INVOICE_DATE")
+	term_code$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TERMS_CODE")
+	while 1
+		readrecord (arc_termcode_dev,key=firm_id$+"A"+term_code$,dom=*break)arc_termcode$
+		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,inv_date$,
+:			arc_termcode.inv_days_due,due$,status
+		callpoint!.setColumnData("ARE_DATECHANGE.INV_DUE_DATE",due$)
+		readrecord (arc_termcode_dev,key=firm_id$+"A"+term_code$,dom=*break)arc_termcode$
+		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,inv_date$,
+:			arc_termcode.disc_days,due$,status
+		callpoint!.setColumnData("ARE_DATECHANGE.DISC_DATE",due$)
+		callpoint!.setStatus("REFRESH")
+		break
+	wend
+	return
+[[ARE_DATECHANGE.AR_TERMS_CODE.AVAL]]
+rem --- recalculate due and discount dates
+	gosub recalc_dates
 [[ARE_DATECHANGE.AWIN]]
 rem --- Open/Lock files
 
@@ -15,9 +40,10 @@ if status$<>"" goto std_exit
 
 are_datechange_dev=num(chans$[1])
 [[ARE_DATECHANGE.BSHO]]
-num_files=1
+num_files=2
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA"
+open_tables$[2]="ARC_TERMCODE",open_opts$[2]="OTA"
 gosub open_tables
 dim user_tpl$:"art_invhdr_tpl:c("+str(len(open_tpls$[1]))+"*),art_invhdr_chn:n(3*)"
 user_tpl.art_invhdr_chn=num(open_chans$[1])
@@ -32,10 +58,11 @@ rem if rec_data$[1,0](1,1)="A" or fnget_rec$(callpoint.callpoint_dvar$)="" or fn
 :		callpoint!.getColumnData("ARE_DATECHANGE.AR_INV_NO_VER"),dom=*next);goto invalid_inv
 
 	dim art_invhdr$:user_tpl.art_invhdr_tpl$
-	temp_firm_id$=callpoint!.getColumnData("ARE_DATECHANGE.FIRM_ID")
-	temp_ar_type$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TYPE")
-	temp_customer_id$=callpoint!.getColumnData("ARE_DATECHANGE.CUSTOMER_ID")
-	readrecord(user_tpl.art_invhdr_chn,key=temp_firm_id$+temp_ar_type$+temp_customer_id$+callpoint!.getColumnData("ARE_DATECHANGE.AR_INV_NO_VER")+"00",dom=invalid_inv)art_invhdr$
+	firm_id$=callpoint!.getColumnData("ARE_DATECHANGE.FIRM_ID")
+	ar_type$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TYPE")
+	cust_id$=callpoint!.getColumnData("ARE_DATECHANGE.CUSTOMER_ID")
+	inv_no$=callpoint!.getColumnData("ARE_DATECHANGE.AR_INV_NO_VER")
+	readrecord(user_tpl.art_invhdr_chn,key=firm_id$+ar_type$+cust_id$+inv_no$+"00",dom=invalid_inv)art_invhdr$
 	msg_id$=""
 	callpoint!.setColumnData("ARE_DATECHANGE.AR_TERMS_CODE",art_invhdr.ar_terms_code$)
 	callpoint!.setColumnData("ARE_DATECHANGE.DISCOUNT_AMT",str(art_invhdr.disc_allowed))
@@ -44,13 +71,11 @@ rem if rec_data$[1,0](1,1)="A" or fnget_rec$(callpoint.callpoint_dvar$)="" or fn
 	callpoint!.setColumnData("ARE_DATECHANGE.INVOICE_DATE",art_invhdr.invoice_date$)
 	callpoint!.setColumnData("ARE_DATECHANGE.INVOICE_TYPE",art_invhdr.invoice_type$)
 	callpoint!.setColumnData("ARE_DATECHANGE.INV_DUE_DATE",art_invhdr.inv_due_date$)
-rem 	callpoint!.setColumnData("ARE_DATECHANGE.AR_INV_NO_VER",fnget_rec$("ARE_DATECHANGE.AR_INV_NO_VER"))
-	callpoint!.setStatus("ABLEMAP")
+	callpoint!.setStatus("ABLEMAP-REFRESH")
 rem endif
 
 invalid_inv:
 
 	if msg_id$<>"" then
 		gosub disp_message
-		
 	endif
