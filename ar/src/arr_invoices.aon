@@ -12,6 +12,11 @@ rem --- All Rights Reserved
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
+    
+rem --- Set Print Path
+
+    docdir$="c:\PROGRAM FILES\BASIS\BARISTA\DOCUMENTS\"
+
 
 rem --- Retrieve sysinfo data
 
@@ -63,6 +68,7 @@ rem --- Retrieve parameter records
     find record (ars_report_dev,key=ars01b_key$,err=std_missing_params) ars01b$
     remit$=ars01b.addr_line_1$+ars01b.addr_line_2$+ars01b.city$+ars01b.state_code$+ars01b.zip_code$
     call pgmdir$+"adc_address.aon",remit$,24,3,9,address
+        remit$=ars01b.name$+remit$
 
     call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     call pgmdir$+"adc_getmask.aon","","AR","A","",m1$,0,0
@@ -83,6 +89,7 @@ rem --- Initializations
     offset=0
     width=80
     lines=0
+    address=30
     length=(address*4)+1
     maxlines=59
     moreheaders=1
@@ -129,29 +136,38 @@ rem --- Initialize record template fields for printing test patterns
 
 rem --- Open the printer
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
 
-rem --- Print test patterns until the user is satisfied
+let textfont!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
+let boldfont!=new java.awt.Font("Arial",java.awt.Font.PLAIN,12)
+let boldfont2!=new java.awt.Font("Arial",java.awt.Font.BOLD,14)
+let bigboldfont!=new java.awt.Font("Arial",java.awt.Font.BOLD,18)
+let largefont!=new java.awt.Font("Arial",java.awt.Font.BOLD,26)
+let italicFont!=new java.awt.Font("Times New Roman",java.awt.Font.ITALIC,10)
+let textfont2!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,8)
+let textfont3!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,9)
 
-    while answer$="Y"
-        dim msg_tokens$[1]
-        msg_opt$=""
-        gosub disp_message
-        if msg_opt$="N" break
+red!=new java.awt.Color(red)
+white!=new java.awt.Color(white)
+grey!=new java.awt.Color(grey)
 
-        rem --- Print test pattern
+LET requestAttributes!=new javax.print.attribute.HashPrintRequestAttributeSet()
+requestAttributes!.add(javax.print.attribute.standard.MediaSizeName.NA_LETTER)
+requestAttributes!.add(javax.print.attribute.standard.OrientationRequested.PORTRAIT)
 
-        page=0
-        lines=0
-        gosub heading
-        while lines<limit
-              gosub detail
-        wend
-        gosub totals
-        msg_id$="ANOTHER_PATTERN"
-    wend
-    message$=original$
+units=javax.print.attribute.standard.MediaPrintableArea.INCH
+x!=new java.lang.Float(0.3).floatValue()
+y!=new java.lang.Float(0.3).floatValue()
+w!=new java.lang.Float(7.9).floatValue()
+h!=new java.lang.Float(10.4).floatValue()
+a!=new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
+
+requestAttributes!.add(a!)
+
+
+
+
+
+ 
 
 rem --- Start progress meter and position header file
 
@@ -175,9 +191,22 @@ rem --- Read next Invoice Header (are-05) record
 
         rem --- Initialize invoice header fields
 
+myAPI!=BBjAPI()
+MyPrinter!=BBjAPI()
+prtr_dev=unt
+open (prtr_dev,err=printer)docdIr$+"invoice"+are05a.ar_inv_no$+".pdf"
+CLOSE (prtr_dev)
+ERASE docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
+printer:
+doc!=myPrinter!.getBBjPDFForm(docdir$+"INVOICE"+are05a.ar_inv_no$+".pdf",requestAttributes!)
+
         invoice$=are05a.firm_id$+are05a.ar_inv_no$
         invoice_date$=fndate$(are05a.inv_date$)
         total=0
+
+
+
+       
 
         rem --- Retrieve Customer Master (arm-01) record
 
@@ -205,6 +234,9 @@ rem --- Read next Invoice Header (are-05) record
         rem --- Print the requested number of copies of the invoice
 
         for copy=1 to copies
+
+         
+         page!=doc!.createPage()
   
         rem --- Print the invoice heading
     
@@ -256,53 +288,297 @@ rem --- All done
 heading: rem --- Print the invoice heading
 
     page=page+1
-    lines=headings+16
-    print (printer_dev) 'FF',@(h[0]),"*************"
-    print (printer_dev) @(h[0]),"** Invoice **"
-    print (printer_dev) @(h[0]),"*************"
-    print (printer_dev) ""
-    print (printer_dev) @(o[0]),ars01b.name$,@(h[1]-5),"Page ",str(page)
-    print (printer_dev) @(o[0]),remit$(1,address)
-    print (printer_dev) @(o[0]),remit$(address+1,address),@(h[1]-5),"Date ",invoice_date$
-    print (printer_dev) @(o[0]),remit$((address*2)+1,address)
-    print (printer_dev) @(h[1]-9),"Customer ",fnmask$(arm01a.customer_id$(1,customer_size),m0$)
-    print (printer_dev) ""
-    print (printer_dev) @(o[0]),"Sold to ",arm01a.customer_name$,
-:                       @(h[1]-8),"Invoice ",are05a.ar_inv_no$
-    for x=1 to length step address
-        if cvs(address$(x,address),2)<>"" 
-           print (printer_dev) @(offset+8),address$(x,address)
-           lines=lines+1
-        endif
-    next x
-    print (printer_dev) ""
-    print (printer_dev) @(o[0]),"  Terms ",arm10a.code_desc$
-    print (printer_dev) ""
-    print (printer_dev) @(o[0]),"Seq",@(o[1]),"Date",@(o[2]),"Memo",@(o[3]+m2-4),"Qty",
-:                       @(o[4]+m3-6),"Price",@(o[5]+m1-10),"Extension"
+
+image!=page!.newImage()
+image!.setURL("FILE:c:\apps\aon\logos\fli001.jpg")
+image!.setPosition(new java.awt.Point(160,20))
+image!.setWidth(260)
+image!.setHeight(80)   
+
+invoice!=page!.newParagraph()
+invoice!.setHorizontalFill(1)
+invoice!.setPosition(new java.awt.Point(210,0))
+invoice!.setText("ORIGINAL INVOICE")
+invoice!.setFont(textfont!)
+invoice!.setTextColor(myAPI!.makeColor("RED")) 
+
+
+pageno!=page!.newParagraph()
+pageno!.setHorizontalFill(1)
+pageno!.setPosition(new java.awt.Point(370,90))
+pageno!.setText("Page: "+str(page))
+pageno!.setFont(textfont!)
+
+invoiceno!=page!.newParagraph()
+invoiceno!.setHorizontalFill(1)
+invoiceno!.setPosition(new java.awt.Point(370,120))
+invoiceno!.setText("Invoice: "+are05a.ar_inv_no$)
+invoiceno!.setFont(textfont!)
+
+
+remit1!=page!.newParagraph()
+remit1!.setHorizontalFill(1)
+remit1!.setPosition(new java.awt.Point(10,90))
+remit1!.setText("Remit To:"+remit$(1,address))
+remit1!.setFont(textfont!)
+
+remit2!=page!.newParagraph()
+remit2!.setHorizontalFill(1)
+remit2!.setPosition(new java.awt.Point(40,105))
+remit2!.setText(remit$(31,address))
+remit2!.setFont(textfont!)
+
+remit3!=page!.newParagraph()
+remit3!.setHorizontalFill(1)
+remit3!.setPosition(new java.awt.Point(40,120))
+remit3!.setText(remit$(61,address))
+remit3!.setFont(textfont!)
+
+remit4!=page!.newParagraph()
+remit4!.setHorizontalFill(1)
+remit4!.setPosition(new java.awt.Point(40,135))
+remit4!.setText(remit$(91,address))
+remit4!.setFont(textfont!)
+
+invdt!=page!.newParagraph()
+invdt!.setHorizontalFill(1)
+invdt!.setPosition(new java.awt.Point(370,105))
+invdt!.setText("Date: "+invoice_date$)
+invdt!.setFont(textfont!)
+
+cust!=page!.newParagraph()
+cust!.setHorizontalFill(1)
+cust!.setPosition(new java.awt.Point(370,135))
+cust!.setText("Customer: "+fnmask$(arm01a.customer_id$(1,customer_size),m0$))
+cust!.setFont(textfont!)
+
+name!=page!.newParagraph()
+name!.setHorizontalFill(1)
+name!.setPosition(new java.awt.Point(20,140))
+name!.setText("Sold to:" +arm01a.customer_name$)
+name!.setFont(textfont!)
+
+
+
+add1!=page!.newParagraph()
+add1!.setHorizontalFill(1)
+add1!.setPosition(new java.awt.Point(40,155))
+add1!.setText(address$(1,address))
+add1!.setFont(textfont!)
+
+add2!=page!.newParagraph()
+add2!.setHorizontalFill(1)
+add2!.setPosition(new java.awt.Point(40,170))
+add2!.setText(address$(31,address))
+add2!.setFont(textfont!)
+
+add3!=page!.newParagraph()
+add3!.setHorizontalFill(1)
+add3!.setPosition(new java.awt.Point(40,185))
+add3!.setText(address$(61,address))
+add3!.setFont(textfont!)
+
+add4!=page!.newParagraph()
+add4!.setHorizontalFill(1)
+add4!.setPosition(new java.awt.Point(40,200))
+add4!.setText(address$(91,address))
+add4!.setFont(textfont!)
+
+add5!=page!.newParagraph()
+add5!.setHorizontalFill(1)
+add5!.setPosition(new java.awt.Point(40,215))
+add5!.setText(address$(121,address))
+add5!.setFont(textfont!)
+
+add6!=page!.newParagraph()
+add6!.setHorizontalFill(1)
+add6!.setPosition(new java.awt.Point(40,230))
+add6!.setText(address$(151,address))
+add6!.setFont(textfont!)
+
+    
+term!=page!.newParagraph()
+term!.setHorizontalFill(1)
+term!.setPosition(new java.awt.Point(40,220))
+term!.setText("Terms:"+arm10a.code_desc$)
+term!.setFont(textfont!)
+
+ribb1!=page!.newParagraph()
+ribb1!.setHorizontalFill(1)
+ribb1!.setPosition(new java.awt.Point(0,240))
+ribb1!.setText("Seq")
+ribb1!.setFont(textfont!)
+
+ribb2!=page!.newParagraph()
+ribb2!.setHorizontalFill(1)
+ribb2!.setPosition(new java.awt.Point(40,240))
+ribb2!.setText("Date")
+ribb2!.setFont(textfont!)
+
+ribb3!=page!.newParagraph()
+ribb3!.setHorizontalFill(1)
+ribb3!.setPosition(new java.awt.Point(100,240))
+ribb3!.setText("Memo")
+ribb3!.setFont(textfont!)
+
+ribb4!=page!.newParagraph()
+ribb4!.setHorizontalFill(1)
+ribb4!.setPosition(new java.awt.Point(370,240))
+ribb4!.setText("Qty")
+ribb4!.setFont(textfont!)
+
+ribb5!=page!.newParagraph()
+ribb5!.setHorizontalFill(1)
+ribb5!.setPosition(new java.awt.Point(410,240))
+ribb5!.setText("Price")
+ribb5!.setFont(textfont!)
+
+ribb6!=page!.newParagraph()
+ribb6!.setHorizontalFill(1)
+ribb6!.setPosition(new java.awt.Point(460,240))
+ribb6!.setText("Extension")
+ribb6!.setFont(textfont!)
+
+page!.add(image!)
+page!.add(invoice!)
+page!.add(pageno!)
+page!.add(remit1!) 
+page!.add(remit2!)
+page!.add(remit3!)
+page!.add(invdt!)
+page!.add(cust!)
+page!.add(invoiceno!)
+page!.add(name!)
+page!.add(add1!)
+page!.add(add2!)
+page!.add(add3!)
+page!.add(add4!)
+page!.add(add5!)
+page!.add(add6!)
+page!.add(ribb1!)
+page!.add(ribb2!)
+page!.add(ribb3!)
+page!.add(ribb4!)
+page!.add(ribb5!)
+page!.add(ribb6!)
+
+                       
+
     return
 
 detail: rem --- Print an invoice detail line
 
-    print (printer_dev) ""
-    print (printer_dev) @(o[0]),are15a.line_no$,@(o[1]),linedate$,@(o[2]),are15a.description$,
-:                       @(o[3]),are15a.units:m2$,@(o[4]),are15a.unit_price:m3$,
-:                       @(o[5]),are15a.ext_price:m1$
-    lines=lines+2
-    return
+
+line!=page!.newParagraph()
+line!.setHorizontalFill(1)
+line!.setPosition(new java.awt.Point(0,240+((lines+1)*15)))
+line!.setText(are15a.line_no$)
+line!.setFont(textfont!)
+
+ldate!=page!.newParagraph()
+ldate!.setHorizontalFill(1)
+ldate!.setPosition(new java.awt.Point(46,240+((lines+1)*15)))
+ldate!.setText(linedate$)
+ldate!.setFont(textfont!)
+
+memo!=page!.newParagraph()
+memo!.setHorizontalFill(1)
+memo!.setPosition(new java.awt.Point(100,240+((lines+1)*15)))
+memo!.setText(are15a.description$)
+memo!.setFont(textfont!)   
+
+unit!=page!.newParagraph()
+unit!.setHorizontalFill(1)
+unit!.setPosition(new java.awt.Point(370,240+((lines+1)*15)))
+unit!.setText(str(are15a.units:m2$))
+unit!.setFont(textfont!)   
+
+price!=page!.newParagraph()
+price!.setHorizontalFill(1)
+price!.setPosition(new java.awt.Point(410,240+((lines+1)*15)))
+price!.setText(str(are15a.unit_price:m3$))
+price!.setFont(textfont!)   
+
+extsn!=page!.newParagraph()
+extsn!.setHorizontalFill(1)
+extsn!.setPosition(new java.awt.Point(460,240+((lines+1)*15)))
+extsn!.setText(str(are15a.ext_price:m1$))
+extsn!.setFont(textfont!)   
+
+lines=lines+2
+
+page!.add(line!)
+page!.add(ldate!)
+page!.add(memo!)
+page!.add(unit!)
+page!.add(price!)
+page!.add(extsn!)
+
+return
 
 memo: rem --- Print a memo line
 
-    print (printer_dev)@(o[0]),are15a.line_no$,@(o[1]),linedate$,@(o[2]),are15a.description$
-    lines=lines+1
-    return
+memo1!=page!.newParagraph()
+memo1!.setHorizontalFill(1)
+memo1!.setPosition(new java.awt.Point(100,240+(lines+1*15)))
+memo1!.setText(are15a.description$)
+memo1!.setFont(textfont!)   
+
+line1!=page!.newParagraph()
+line1!.setHorizontalFill(1)
+line1!.setPosition(new java.awt.Point(0,240+(lines+1*15)))
+line1!.setText(are15a.line_no$)
+line1!.setFont(textfont!)
+
+ldate1!=page!.newParagraph()
+ldate1!.setHorizontalFill(1)
+ldate1!.setPosition(new java.awt.Point(46,240+(lines+1*15)))
+ldate1!.setText(linedate$)
+ldate1!.setFont(textfont!)
+   
+lines=lines+1
+
+page!.add(line1!)
+page!.add(ldate1!)
+page!.add(memo1!)
+
+return
 
 totals: rem --- Print the invoice total
 
-    print (printer_dev) @(o[5]),bar$
-    print (printer_dev) @(o[5]-6),"Total ",@(o[5]),total:m1$
-    print (printer_dev) ""
-    print (printer_dev) @(o[2]),message$
+bar!=page!.newParagraph()
+bar!.setHorizontalFill(1)
+bar!.setPosition(new java.awt.Point(460,540))
+bar!.setText(bar$)
+bar!.setFont(textfont!)
+
+tottext!=page!.newParagraph()
+tottext!.setHorizontalFill(1)
+tottext!.setPosition(new java.awt.Point(330,565))
+tottext!.setText("Total:")
+tottext!.setFont(textfont!)
+
+total!=page!.newParagraph()
+total!.setHorizontalFill(1)
+total!.setPosition(new java.awt.Point(460,565))
+total!.setText(str(total:m1$))
+total!.setFont(textfont!)
+
+message!=page!.newParagraph()
+message!.setHorizontalFill(1)
+message!.setPosition(new java.awt.Point(46,240+(lines*15)))
+message!.setText(message$)
+message!.setFont(textfont!)
+
+page!.add(bar!)
+page!.add(tottext!)
+page!.add(total!)
+page!.add(message!)
+
+doc!.print()
+
+
+   
     return
 
 overflow: rem --- Multi-page invoice
