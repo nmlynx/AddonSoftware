@@ -1,5 +1,5 @@
 rem --- Sales Tax Report
-rem --- Program opr_ta v8.0.0 28Jan2008 (opr_ta)
+rem --- Program opr_salestax v8.0.0 28Jan2008 (opr_salestax)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/28/2008 11:50:59)
 
 
@@ -46,8 +46,8 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-        p9$ = option!.getOptionData("Beginning_Month")
-        p8$ = option!.getOptionData("Ending_Month")
+        startdate$ = option!.getOptionData("pick_date_yyyymm_1")
+        enddate$ = option!.getOptionData("pick_date_yyyymm_2")
 
 rem --- Retrieve parameter records
 
@@ -65,8 +65,6 @@ rem --- Initializations
 
         more=1
         dim headings$[3],a[2],t[2],g[2],o[1]
-        p8$=""
-        p9$=""
         h0=132
         h=0,headings$[0]=n1$,headings$[1]=n3$
         l9=42
@@ -78,88 +76,23 @@ rem --- Print positions
 
         call pgmdir$+"adc_sizemask.aon",ars01a.amount_mask$,m1,14,15
         o[0]=23+m3
-        o[1]=o[0]+6
+        o[1]=o[0]+8
 
-    rem --- Display Resource
-
-        dim resparams$[20],resparams[20]
-        resaction$=""
-        resparams$[0]=pgm(-2)
-        call pgmdir$+"syc_ra.bbx",resaction$,resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
-        rem gosub flow_initializations
-        goto start_done
-
-While more
-Begining_Date: rem --- Beginning Date
-
-        v0$="Z"
-        v1$="EC",v2$=p9$,v0=4,v1=40,v2=3,v4$="Enter The Starting Month as MMYY (<F1>=First)",v3$="",i0=0,control_id=3000
-        rem gosub std_input
-        on v3 goto Label_Two,Label_One,flow_control,Begining_Date,flow_control,Label_Two,flow_control
-
-Label_One:
-        v$=""
-
-Label_Two:
-        p9$=cvs(v$,2)
-        gosub clear_text
-        if p9$="" then
-            call pgmdir$+"syc_rs.bbx","",my_context,13000,"First",0,"",status
-        else
-            call pgmdir$+"syc_rs.bbx","",my_context,3000,p9$(1,2)+"/"+p9$(3,2),0,"",status
-        endif
-
-        if p9$<>"" and (p9$(1,2)<"01" or p9$(1,2)>"12") then
-            continue
-        endif
-        goto flow_control
-Wend
-
-
-While more
-Ending_Date: rem --- Ending Date
-
-        v0$="Z"
-        v1$="C",v2$=p8$,v0=4,v1=40,v2=4,v4$="Enter Ending Month as MMYY (<F1>=Last)",v3$="",control_id=3001
-        rem gosub std_input
-        on v3 goto Label_Four,Label_Three,flow_control,Ending_Date,flow_control,Label_Four,flow_control
-
-Label_Three:
-        v$=""
-
-Label_Four:
-        p8$=cvs(v$,2)
-        gosub clear_text
-        if p8$="" then
-            call pgmdir$+"syc_rs.bbx","",my_context,13001,"Last",0,"",status
-        else
-            call pgmdir$+"syc_rs.bbx","",my_context,3001,p8$(1,2)+"/"+p8$(3,2),0,"",status
-        endif
-
-        if p8$<>"" and (p8$(1,2)<"01" or p8$(1,2)>"12") then
-            continue
-        endif
-        goto flow_control
-Wend
-
-
-
-While more
 rem --- Background
 
         dim j$(4*m1,"-")
         call pgmdir$+"adc_progress.aon","N","","","","",0,art02_dev,1,meter_num,status
         call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
         if status then goto std_exit
-        if p9$="" then
-            let x0$="First"
+        if startdate$="" then
+            x0$="First"
         else
-            let x0$=p9$(1,2)+"/"+p9$(3,2)
+            x0$=startdate$(1,4)+"/"+startdate$(5,2)
         endif
-        if p8$="" then
-            let x1$="Last"
+        if enddate$="" then
+            x1$="Last"
         else
-            let x1$=p8$(1,2)+"/"+p8$(3,2)
+            x1$=enddate$(1,4)+"/"+enddate$(5,2)
         endif
         headings$[2]="From "+x0$+" Thru "+x1$
 
@@ -171,13 +104,13 @@ rem --- Position File
         While more
                 read record (art02_dev,end=*break) art02a$
                 if art02a.firm_id$<>firm_id$ then break
-                if p9$<>"" then
-                    if art02a.year$+art02a.month$<fnyy_yy21$(p9$(3,2))+p9$(1,2) then
+                if startdate$<>"" then
+                    if art02a.year$+art02a.month$<startdate$ then
                         continue
                     endif
                 endif
-                if p8$<>"" then
-                    if art02a.year$+art02a.month$>fnyy_yy21$(p8$(3,2))+p8$(1,2) then
+                if enddate$<>"" then
+                    if art02a.year$+art02a.month$>enddate$ then
                         continue
                     endif
                 endif
@@ -190,7 +123,7 @@ rem ----------- Breaks
 rem ----------- Print
 
                 if l>l9 then gosub report_heading
-                print (printer_dev)h3$,@(o[0]),art02a.month$,"/",fnyy$(art02a.year$),
+                print (printer_dev)h3$,@(o[0]),art02a.month$,"/",art02a.year$,
 :                                      @(o[1]),art02a.taxable_amt:ars01a.amount_mask$,art02a.tax_amount:ars01a.amount_mask$,
 :                                      art02a.gross_sales:ars01a.amount_mask$,art02a.gross_sales-art02a.taxable_amt:ars01a.amount_mask$
                 l=l+1
@@ -221,38 +154,9 @@ report_heading: rem --- Report Heading
         call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
         if status then exitto std_exit
         print (printer_dev)"Tax"
-        print (printer_dev)"Cd  Description",@(o[0]-5),"Rate",@(o[0]),"Date",@(o[1]+m1-8),"Taxable",
-:                       @(o[1]+m1*2-4),"Tax",@(o[1]+m1*3-6),"Gross",@(o[1]+m1*4-12),"Non-Taxable"
+        print (printer_dev)"Cd  Description",@(o[0]-5),"Rate",@(o[0]+1),"Date",@(o[1]+m1-9),"Taxable",
+:                       @(o[1]+m1*2-7),"Tax",@(o[1]+m1*3-10),"Gross",@(o[1]+m1*4-15),"Non-Taxable"
         print (printer_dev)""
-        return
-
-display_fields:
-        control_id=3000
-        cid_cnt=0
-
-        While more
-            if cid_cnt=0 then
-                if p9$="" then
-                    let disp_inp$="",disp_desc$="First"
-                else
-                    let disp_inp$=p9$(1,2)+"/"+p9$(3,2),disp_desc$=""
-                endif
-            endif
-            if cid_cnt=1 then
-                if p8$="" then
-                    let disp_inp$="",disp_desc$="Last"
-                else
-                    let disp_inp$=p8$(1,2)+"/"+p8$(3,2),disp_desc$=""
-                endif
-            endif
-            call pgmdir$+"syc_rs.bbx","",my_context,control_id,disp_inp$,0,"",status
-            call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,disp_desc$,0,"",status
-            cid_cnt=cid_cnt+1; let control_id=control_id+1
-            if cid_cnt>i0_done-1 then break
-        Wend
-
-        disp_inp$=""
-        disp_desc$=""
         return
 
 Tax_Code_Breaks: rem --- Tax Code Breaks
@@ -270,87 +174,19 @@ Tax_Code_Breaks: rem --- Tax Code Breaks
         if t9$<>"" then
             return
         endif
+        for x=0 to 2
+          t[x]=0
+        next x
         rem dim x0$(4),x1$(60),t[2]
         t0$=art02a.tax_code$
         l0=0
         opm06a.code_desc$="Unknown Tax Code"
         x0=0
         find record (opm06_dev,key=firm_id$+t0$,dom=*next) opm06a$
+        x0=opm06a.tax_rate
         h3$=t0$+" "+opm06a.code_desc$+str(x0:ars01a.rate_mask$)
 
         return
-
-flow_control:
-        switch v3
-            case 0
-            case 1
-            case 3; let i0=i0+1; break
-            case 2; if i0<i0_nonkey1 then let i0=max(0,i0-1) else let i0=max(i0_nonkey1,i0-1) fi; break
-            case 4; let i0=i0_done; break
-            case default; exitto done_v3
-        swend
-        on i0 goto Begining_Date,Ending_Date,done,done
-
-start_done:
-        i0=i0_done
-
-done: rem --- Correct?
-
-        if !validate then 
-            gosub display_fields
-            v0$="S"
-            v1$="KC",v2$="Y",v3$="",v4$="ITAC=Y",v0=6,v1=fnv(v4$),v2=22,control_id=i0-i0_done+1
-            rem gosub std_input
-done_v3:
-            on v3 goto done_test,done,done,done,std_exit,validate_input,std_exit,done
-
-done_test:
-            rem on pos(v$="YN") goto flow_control,validate_input,do_nonkey1
-            Switch pos(v$="YN")
-                case 0
-                case 1; exitto flow_control
-                case 2; exitto validate_input
-                case 3; v3=0; i0=i0_nonkey1-1; exitto flow_control
-            Swend
-
-validate_input:
-            validate=1
-            old_control_id=0
-
-        else
-            let validate=0
-        endif
-
-rem --- Run report overlay
-        continue
-Wend
-
-clear_text:
-        call pgmdir$+"syc_rs.bbx","",my_context,control_id+10000,"",0,"",status
-        if v3=1 or v$="" then call pgmdir$+"syc_rs.bbx","",my_context,control_id,"",0,"",status
-        return
-
-
-
-rem --- FUNCTIONS
-
-        def fnv(q$)=42+int(len(q$)/2)
-
-rem --- Convert 2-Char Year to 21st Century 2-Char Year
-
-        def fnyy_yy21$(q1$)
-        q9=10
-        q9=num(stbl("+Y2K_UPPER_LIMIT",err=*next),err=l8131)
-l8131:
-        if num(q1$(1,2),err=*next)<q9 then let q1$(1,1)=chr(int(num(q1$(1,2))/10)+65)
-        return q1$
-        fnend
-
-rem --- Un-Convert 21st Century 2-Char Year to 2-Char Year
-        def fnyy$(q1$)
-        let q3$=" 01234567890123456789",q1$(1,1)=q3$(pos(q1$(1,1)=" 0123456789ABCDEFGHIJ"))
-        return q1$
-        fnend
 
 rem --- #include std_error.src
 
@@ -358,8 +194,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
         rd_err_text$=""
         if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-        call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+        call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
         if pos("EXIT"=rd_err_act$) goto std_error_exit
         if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
         if pos("RETRY"=rd_err_act$) retry
@@ -404,7 +240,7 @@ rem --- #endinclude std_missing_params.src
 rem --- #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+        call stbl("+DIR_PGM")+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
         run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
         release
 
