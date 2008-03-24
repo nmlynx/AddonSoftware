@@ -57,7 +57,7 @@ rem --- Retrieve parameter records
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
-    m8$="(###)-###-####"
+    m8$="(###) ###-####"
     m0=len(m0$)
     m8=len(m8$)
 
