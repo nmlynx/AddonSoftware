@@ -215,10 +215,10 @@ user_tpl.gls01a_ofst$="4"
 rem put label on form to show GL period/year corres to date entered
 
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-Form!.addStaticText(nxt_ctlID,225,75,100,18,"")
+Form!.addStaticText(nxt_ctlID,230,75,100,18,"")
 user_tpl.text1_ID$=str(nxt_ctlID)
 
-Form!.addStaticText(nxt_ctlID+1,225,95,100,18,"")
+Form!.addStaticText(nxt_ctlID+1,230,95,100,18,"")
 user_tpl.text2_ID$=str(nxt_ctlID+1)
 	
 rem need to disable units column in grid if gls01a.units_flag$ isn't "Y"
