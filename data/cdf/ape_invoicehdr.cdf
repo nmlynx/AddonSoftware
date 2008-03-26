@@ -16,8 +16,6 @@ gosub calculate_due_and_discount
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 user_tpl.inv_amt$=""
 user_tpl.tot_dist$=""
-callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
-callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.BWRI]]
 rem --- fully distributed?
 
@@ -280,6 +278,10 @@ display_vendor_comments:
 return
 
 calculate_due_and_discount:
+
+	if cvs(callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE"),2)=""
+		callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
+	endif
 
 	apm10c_dev=fnget_dev("APC_TERMSCODE")
 	dim apm10c$:fnget_tpl$("APC_TERMSCODE")
