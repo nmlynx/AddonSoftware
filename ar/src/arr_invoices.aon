@@ -54,7 +54,7 @@ rem --- Dimension string templates
 rem --- Assign form input values to local variables
 
     restart$=option!.getOptionData("PICK_CHECK")
-    invoice$=option!.getOptionData("AR_INV_NO")
+    invoice$=option!.getOptionData("PICK_AR_INV_NO")
     message$=option!.getOptionData("PICK_TEXT")
     copies=num(option!.getOptionData("PICK_INTEGER"))
     copies=max(copies,1)
@@ -277,7 +277,17 @@ next_wend:
           next copy
 
     rem --- Loop back for next Invoice Header
+escape;rem call fax and/or email
+rem call "c:/apps/barista/sys/prog/bac_sendfax.bbj","Test From Chris","Test from BASIS",
+rem :   "test to Chris","test at BASIS","503-570-6107","test invoice","test invoice message",
+rem :   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
 
+call "c:/apps/barista/sys/prog/bac_sendmail.bbj","chris.hawkins@verizon.net","chris.hawkins@verizon.net",
+:   "chris.hawkins@verizon.net","chris.hawkins@verizon.net","chris.hawkins@verizon.net","test invoice","invoice message",
+:   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
+
+escape;rem did it work?
+ 
     wend
 
 rem --- All done
