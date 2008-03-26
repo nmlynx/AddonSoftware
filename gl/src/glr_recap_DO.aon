@@ -203,8 +203,8 @@ rem --- Format detail line fields
           credit$=""
           number=number+1
           amount=glw11a.trans_amt
-          if amount>=0 debits=amount,debit$=str(amount:glm1$)
-          if amount<0 credits=amount,credit$=str(abs(amount):glm1$)
+          if amount>=0 debits=amount,debit$=str(amount)
+          if amount<0 credits=amount,credit$=str(abs(amount))
           memo$=gl_post_memo$
           ref1$=glw11a.reference_01$
           ref2$=glw11a.reference_02$
@@ -291,7 +291,7 @@ rem --- Debits = Credits?
     if balance=0 goto date_errors
     if l+1>l9 gosub report_heading
     xwk=fnblank(2)
-    OutVect!.addItem("WARNING: Out of balance by "+str(balance:glm1$))
+    OutVect!.addItem("WARNING: Out of balance by "+str(balance))
     xwk=fnblank(3)
     if use_suspense$<>"Y" goto register_errors
     if cvs(suspense_account$,2)="" goto register_errors
@@ -487,8 +487,8 @@ account_break_exit:
 print_totals: rem --- Print totals line
 
     if report$<>"Y" goto print_totals_exit
-    debit$=str(debits:glm1$)
-    credit$=str(abs(credits):glm1$)
+    debit$=str(debits)
+    credit$=str(abs(credits))
     unit$=""
     while len(credit$)>m1 
           credit$=credit$(2)
