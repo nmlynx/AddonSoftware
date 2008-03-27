@@ -126,6 +126,12 @@ switch notice.code
 			x=curr_row
 			gosub build_vectGLSummary
 			gridActivity!.setCellText(curr_row,1,vectGLSummary!)
+			if pos(record_type$(1,1)="024",1)<>0
+				gridActivity!.setRowEditable(curr_row,0)
+				gridActivity!.setCellEditable(curr_row,curr_col,1)
+			else
+				gridActivity!.setRowEditable(curr_row,1)
+			endif
 		else
 			vectGLSummary!=SysGUI!.makeVector() 
 			for x=1 to num(user_tpl.pers$)+1
