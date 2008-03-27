@@ -111,7 +111,6 @@ rem --- Retrieve parameter records
     jn$=ars01a.job_nos$
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     m8$="(###) ###-####"
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,8,12
     m0=len(m0$)
     m1=len(m1$)
     m8=len(m8$)
@@ -159,6 +158,7 @@ rem --- Initializations
     salesperson$=""
     lastcode$=""
     u_line$="--------------------"
+    future=future$="Y"
 
 rem --- Underline for subtotals and totals
 
@@ -260,11 +260,11 @@ rem --- column headings
         columns$[4,0]="Terms",columns$[4,1]="C",columns$[4,2]="5"
         columns$[5,0]="Type",columns$[5,1]="C",columns$[5,2]="30"
         columns$[6,0]=future_heading$ ,columns$[6,1]="C",columns$[6,2]="5"
-        columns$[7,0]=p1$,columns$[7,1]="N",columns$[7,2]="5"
-        columns$[8,0]=p2$,columns$[8,1]="N",columns$[8,2]="5"
-        columns$[9,0]=p3$,columns$[9,1]="N",columns$[9,2]="5"
-        columns$[10,0]=p4$,columns$[10,1]="N",columns$[10,2]="5"
-        columns$[11,0]=p5$,columns$[11,1]="N",columns$[11,2]="5"
+        columns$[7,0]=p1$,columns$[7,1]="N",columns$[7,2]="5",columns$[7,3]=m1$
+        columns$[8,0]=p2$,columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m1$
+        columns$[9,0]=p3$,columns$[9,1]="N",columns$[9,2]="5",columns$[9,3]=m1$
+        columns$[10,0]=p4$,columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m1$
+        columns$[11,0]=p5$,columns$[11,1]="N",columns$[11,2]="5",columns$[11,3]=m1$
         columns$[12,0]="Balance",columns$[12,1]="N",columns$[12,2]="5",columns$[12,3]=m9$
 
     endif
@@ -277,12 +277,12 @@ rem --- column headings
         columns$[0,0]="Customer",columns$[0,1]="C",columns$[0,2]="30"
         columns$[1,0]="",columns$[1,1]="C",columns$[1,2]="15"
         columns$[2,0]=future_heading$ ,columns$[2,1]="C",columns$[2,2]="5"
-        columns$[3,0]=periodbeg$[1]+" - "+periodend$[1],columns$[3,1]="N",columns$[3,2]="5"
-        columns$[4,0]=periodbeg$[2]+" - "+periodend$[2],columns$[4,1]="N",columns$[4,2]="5"
-        columns$[5,0]=periodbeg$[3]+" - "+periodend$[3],columns$[5,1]="N",columns$[5,2]="5"
-        columns$[6,0]=periodbeg$[4]+" - "+periodend$[4],columns$[6,1]="N",columns$[6,2]="5"
-        columns$[7,0]=periodend$[5],columns$[7,1]="N",columns$[7,2]="15"
-        columns$[8,0]="Balance",columns$[8,1]="N",columns$[8,2]="5"
+        columns$[3,0]=periodbeg$[1]+" - "+periodend$[1],columns$[3,1]="N",columns$[3,2]="5",columns$[3,3]=m1$
+        columns$[4,0]=periodbeg$[2]+" - "+periodend$[2],columns$[4,1]="N",columns$[4,2]="5",columns$[4,3]=m1$
+        columns$[5,0]=periodbeg$[3]+" - "+periodend$[3],columns$[5,1]="N",columns$[5,2]="5",columns$[5,3]=m1$
+        columns$[6,0]=periodbeg$[4]+" - "+periodend$[4],columns$[6,1]="N",columns$[6,2]="5",columns$[6,3]=m1$
+        columns$[7,0]=periodend$[5],columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=m1$
+        columns$[8,0]="Balance",columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m9$
 
     endif
 
@@ -399,7 +399,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                 rem --- Format detail line
 
                 dim periods$[maxperiods+1],po$(10),order$(7)
-                periods$[period]=cvs(fnoverflow$(amount,m1$),3)
+                periods$[period]=str(amount)
                 periods$[period]=str(amount)
                 po$(1)="None"
                 order$(1)="None"
@@ -470,43 +470,44 @@ rem --- line.
                      OutVect!.addItem(order$)
                      OutVect!.addItem(art01a.ar_terms_code$)
                      OutVect!.addItem(art01a.invoice_type$)
-                     abc=fnblank(1)
+
+                if period=0
+                     OutVect!.addItem(str(amount))
+                     abc=fnblank(5)
+                     OutVect!.addItem(str(amount))
+                endif                     
 
                 if period=1
-
-                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(1)
+                     OutVect!.addItem(str(amount))
                      abc=fnblank(4)
                      OutVect!.addItem(str(amount))
- 
                 endif
 
                 if period=2
-                     abc=fnblank(1)
-                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(2)
+                     OutVect!.addItem(str(amount))
                      abc=fnblank(3)
                      OutVect!.addItem(str(amount))
- 
                 endif
 
                 if period=3
-                     abc=fnblank(2)
-                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(3)
+                     OutVect!.addItem(str(amount))
                      abc=fnblank(2)
                      OutVect!.addItem(str(amount))
- 
                 endif
 
                 if period=4
-                     abc=fnblank(3)
-                     OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                     abc=fnblank(4)
+                     OutVect!.addItem(str(amount))
                      abc=fnblank(1)
                      OutVect!.addItem(str(amount))
- 
                 endif
 
                 if period=5
-                         abc=fnblank(4)   
-                         OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+                         abc=fnblank(5)   
+                         OutVect!.addItem(str(amount))
                          OutVect!.addItem(str(amount))
                 endif
  
@@ -564,12 +565,16 @@ rem --- line.
                    abc=fnblank(1)
                 endif
 
-                OutVect!.addItem(fnfuture$(future$,c[0],m1$))
-                OutVect!.addItem(cvs(fnoverflow$(c[1],m1$),3))
-                OutVect!.addItem(cvs(fnoverflow$(c[2],m1$),3))
-                OutVect!.addItem(cvs(fnoverflow$(c[3],m1$),3))
-                OutVect!.addItem(cvs(fnoverflow$(c[4],m1$),3))
-                OutVect!.addItem(cvs(fnoverflow$(c[5],m1$),3))
+                if future$="Y"
+                    OutVect!.addItem(str(c[0]))
+                else
+                    OutVect!.addItem("")
+                endif
+                OutVect!.addItem(str(c[1]))
+                OutVect!.addItem(str(c[2]))
+                OutVect!.addItem(str(c[3]))
+                OutVect!.addItem(str(c[4]))
+                OutVect!.addItem(str(c[5]))
                 OutVect!.addItem(str(c[6]))
 
                 lines=lines+2                
@@ -631,12 +636,16 @@ rem --- All done
     endif 
  
     OutVect!.addItem(x$)
-    OutVect!.addItem(fnfuture$(future$,t[0],m1$))
-    OutVect!.addItem(cvs(fnoverflow$(t[1],m1$),3))
-    OutVect!.addItem(cvs(fnoverflow$(t[2],m1$),3)) 
-    OutVect!.addItem(cvs(fnoverflow$(t[3],m1$),3))
-    OutVect!.addItem(cvs(fnoverflow$(t[4],m1$),3))
-    OutVect!.addItem(cvs(fnoverflow$(t[5],m1$),3))
+    if future$="Y"
+        OutVect!.addItem(str(t[0]))
+    else
+        OutVect!.addItem("")
+    endif
+    OutVect!.addItem(str(t[1]))
+    OutVect!.addItem(str(t[2])) 
+    OutVect!.addItem(str(t[3]))
+    OutVect!.addItem(str(t[4]))
+    OutVect!.addItem(str(t[5]))
     OutVect!.addItem(str(t[6]))
     
     goto std_exit
@@ -699,13 +708,17 @@ salesperson: rem --- Salesperson break
          abc=fnblank(1) 
       endif    
 
-        OutVect!.addItem(fnfuture$(future$,s[0],m1$))
+        if future$="Y"
+            OutVect!.addItem(str(s[0]))
+        else
+            OutVect!.addItem("")
+        endif    
         OutVect!.addItem(x$)
-        OutVect!.addItem(cvs(fnoverflow$(s[1],m1$),3))
-        OutVect!.addItem(cvs(fnoverflow$(s[2],m1$),3)) 
-        OutVect!.addItem(cvs(fnoverflow$(s[3],m1$),3))
-        OutVect!.addItem(cvs(fnoverflow$(s[4],m1$),3))
-        OutVect!.addItem(cvs(fnoverflow$(s[5],m1$),3))
+        OutVect!.addItem(str(s[1]))
+        OutVect!.addItem(str(s[2])) 
+        OutVect!.addItem(str(s[3]))
+        OutVect!.addItem(str(s[4]))
+        OutVect!.addItem(str(s[5]))
         OutVect!.addItem(str(s[6]))
     
         lines=lines+2
@@ -726,22 +739,6 @@ salesperson: rem --- Salesperson break
     return
 
 rem --- Functions
-
-rem --- fnoverflow$: Mask a numeric value and handle overflow
-
-    def fnoverflow$(q,q1$)
-        q2$=str(q:q1$)
-        if len(q2$)>len(q1$) q2$=fill(len(q1$),"*")
-    return q2$
-    fnend
-
-rem --- fnfuture$: Return future aging amount or blank string
-
-    def fnfuture$(q1$,q,q2$)
-        q3$=""
-        if q1$="Y" or q q3$=fnoverflow$(q,q2$)
-        return q3$
-    fnend
 
 rem --- Functions used to retrieve form values
 
