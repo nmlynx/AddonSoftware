@@ -1,5 +1,5 @@
 [[ARE_CASHGL.GL_POST_AMT.AVAL]]
-escape;rem post amt aval
+rem escape;rem post amt aval
 [[ARE_CASHGL.BEND]]
 num_recs=gridVect!.size()
 dim wkrec$:fattr(rec_data$)

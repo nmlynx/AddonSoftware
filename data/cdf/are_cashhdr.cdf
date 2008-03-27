@@ -33,6 +33,7 @@ switch pos(validate_passed$="NO")
 	break
 	case 2; rem user elected to apply undistributed amt on account
 		gosub apply_on_acct
+		gosub get_open_invoices
 	break
 	case default
 	break
@@ -634,7 +635,14 @@ apply_on_acct:
 
 		gosub update_cashhdr_cashdet_cashbal
 	endif
-
+	callpoint!.setStatus("RECORD:"+firm_id$+
+:		callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
+:		callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02"))
 return
 
 delete_cashdet_cashbal:
