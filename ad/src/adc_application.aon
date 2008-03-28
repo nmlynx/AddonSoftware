@@ -39,13 +39,14 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",options$[1]="R",ids$[1]="GLS_PARAMS"; rem "R"=Required
     files$[2]="ars_params",options$[2]="R",ids$[2]="ARS_PARAMS"
     files$[3]="aps_params",options$[3]="R",ids$[3]="APS_PARAMS"
     files$[4]="ivs_params",options$[4]="R",ids$[4]="IVS_PARAMS"
-    files$[5]="adm_modules.dat",options$[5]="S",ids$[5]="ADM_MODULES";rem "S"=System file
+    files$[5]="sas_params",options$[5]="R",ids$[5]="SAS_PARAMS"
+    files$[6]="adm_modules.dat",options$[6]="S",ids$[6]="ADM_MODULES";rem "S"=System file
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -53,10 +54,11 @@ rem --- Open/Lock files
     ars01_dev=channels[2]
     aps01_dev=channels[3]
     ivs01_dev=channels[4]
-    adm04_Dev=channels[5]
+    sas01_dev=channels[5]
+    adm04_Dev=channels[6]
 
     dim gls01a$:templates$[1]
-    dim adm04a$:templates$[5]
+    dim adm04a$:templates$[6]
 
 rem --- Initializations
 
@@ -101,6 +103,7 @@ parameters: rem --- Translate module to retrieve parameter record (if necessary)
     if module$="AP" find_dev=aps01_dev
     if module$="GL" find_dev=gls01_dev
     if module$="IV" find_dev=ivs01_dev
+    if module$="SA" find_dev=sas01_dev
     if module$="OP" parameters$="AR", find_dev=ars01_dev
     if module$="PO" parameters$="IV", find_dev=ivs01_dev
     if module$="MP" parameters$="IV", find_dev=ivs01_dev
