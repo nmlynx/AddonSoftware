@@ -17,7 +17,8 @@ rem --- Initializations
     ar_type$=fill(2)
 
 rem --- Get user approval to proceed
-
+    overlay$=""
+    next_overlay$=""
     prompt$="Are you ready to update the "+cvs(sysinfo.task_desc$,2)+"?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
     if fkey=4 goto std_exit_no_update
@@ -109,7 +110,6 @@ std_exit: rem --- Standard program end (01Mar2006)
 
 std_exit_no_update:
 
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
