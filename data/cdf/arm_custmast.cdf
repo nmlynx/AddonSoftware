@@ -148,12 +148,12 @@ rem --- Retrieve parameter data
 
 	dim dctl$[17]
 
- 	dctl$[1]="ARM_CUSTDET.CRED_HOLD"; rem --- looks like this should only be set in CM                
+	if user_tpl.cm_installed$="Y"
+ 		dctl$[1]="ARM_CUSTDET.CREDIT_LIMIT"              
+	endif
 
 	if user_tpl.sa_installed$<>"Y"
  		dctl$[2]="ARM_CUSTDET.SA_FLAG"
-	else
-		dctl$[2]="ARM_CUSTDET.CREDIT_LIMIT"
 	endif
 
 	if ars01a.inv_hist_flg$="N"
