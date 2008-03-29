@@ -505,10 +505,14 @@ rem --- line.
                      OutVect!.addItem(str(amount))
                 endif
 
-                if period=5
-                         abc=fnblank(5)   
-                         OutVect!.addItem(str(amount))
-                         OutVect!.addItem(str(amount))
+rem                if period=0 or period>4
+                if period>4
+                     abc=fnblank(5)   
+                     OutVect!.addItem(str(amount))
+rem                     abc=fnblank(1)
+                     OutVect!.addItem(str(amount))
+rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
+rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
                 endif
  
                 lines=lines+1
@@ -667,8 +671,9 @@ customer_heading: rem --- Print customer subheading
         OutVect!.addItem(arm01a.customer_name$)
         OutVect!.addItem(phone$)
         OutVect!.addItem(arm01a.contact_name$)
+        abc=fnblank(1)
         OutVect!.addItem(continued$)
-        abc=fnblank(8)
+        abc=fnblank(7)
         abc=fnblank(13)
         continued$="(Continued)"
         lines=lines+3
