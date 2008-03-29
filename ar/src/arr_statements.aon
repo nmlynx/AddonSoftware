@@ -48,7 +48,7 @@ rem --- Assign form input values to local variables
 
     asof$=option!.getOptionData("CURSTM_DATE")
     original$=option!.getOptionData("PICK_TEXT")
-    cycle$=option!.getOptionData("CYCLE_CODE")
+    cycle$=option!.getOptionData("AR_CYCLECODE")
     territory$=option!.getOptionData("TERRITORY")
     period$=option!.getOptionData("PICK_PER")
     basis$=option!.getOptionData("REPORT_TYPE")
@@ -216,7 +216,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
           if arm02a.statements$<>"Y" continue
           if territory$<>"" if arm02a.territory$<>territory$ continue
-          if cyclecode$<>"" if arm02a.cycle_code$<>cyclecode$ continue
+          if cycle$<>"" if arm02a.ar_cyclecode$<>cycle$ continue
 
           rem --- Initializations for this customer
 
