@@ -125,6 +125,7 @@ rem --- Read next Vendor Master (apm-01) record
           if pos(firm_id$=apm01_key$)<>1 break
           read record (apm01_dev,key=apm01_key$) apm01a$
           if endvendor$<>"" if apm01a.vendor_id$>endvendor$ break
+
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status 
 
           rem --- Read vendor detail records
@@ -221,7 +222,7 @@ rem --- Read next Vendor Master (apm-01) record
 
                 wend
                 if multiple_types$<>"Y" continue
-                if lines+1>maxlines gosub report_heading
+                if lines>maxlines gosub report_heading
                 print (printer_dev) @(o[6]-len(aptype$)-1),aptype$,@(o[6]),typetotal:m1$
                 lines=lines+1
                 
@@ -232,7 +233,7 @@ rem --- Read next Vendor Master (apm-01) record
           rem --- Print vendor total and loop back for next Vendor Master
 
           if printed=0 continue
-          if lines+1>maxlines gosub report_heading
+          if lines>maxlines gosub report_heading
           print (printer_dev) @(o[6]-13),"Vendor Total",@(o[6]),balance:m1$
           lines=lines+1
           total=total+balance
@@ -240,13 +241,13 @@ rem --- Read next Vendor Master (apm-01) record
 
 rem --- All done
 
-    if lines+1>maxlines gosub report_heading
+    if lines>maxlines gosub report_heading
     print (printer_dev) @(o[6]-13),"Report Total",@(o[6]),total:m1$
     goto std_exit
 
 report_heading: rem --- Report heading
 
-    lines=heading+1
+    lines=headings+1
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
     if status exitto done
     print (printer_dev) @(o[0]),"Vendor",@(o[1]),"Invoice",@(o[2]),"Date",@(o[3]),"Due Date",@(o[4]),"Pg",
