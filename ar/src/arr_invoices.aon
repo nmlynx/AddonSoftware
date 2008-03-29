@@ -203,11 +203,7 @@ doc!=myPrinter!.getBBjPDFForm(docdir$+"INVOICE"+are05a.ar_inv_no$+".pdf",request
         invoice$=are05a.firm_id$+are05a.ar_inv_no$
         invoice_date$=fndate$(are05a.inv_date$)
         total=0
-
-
-
-       
-
+    
         rem --- Retrieve Customer Master (arm-01) record
 
         dim arm01a$:fattr(arm01a$)
@@ -234,9 +230,8 @@ doc!=myPrinter!.getBBjPDFForm(docdir$+"INVOICE"+are05a.ar_inv_no$+".pdf",request
         rem --- Print the requested number of copies of the invoice
 
         for copy=1 to copies
-
          
-         page!=doc!.createPage()
+        page!=doc!.createPage()
   
         rem --- Print the invoice heading
     
@@ -271,22 +266,25 @@ doc!=myPrinter!.getBBjPDFForm(docdir$+"INVOICE"+are05a.ar_inv_no$+".pdf",request
 next_wend:
         wend
 
-          rem --- Print the total and move on to the next copy
+        rem --- Print the total and move on to the next copy
 
-          gosub totals
-          next copy
+        gosub totals
+        next copy
 
     rem --- Loop back for next Invoice Header
-escape;rem call fax and/or email
+rem escape;rem call fax and/or email
 rem call "c:/apps/barista/sys/prog/bac_sendfax.bbj","Test From Chris","Test from BASIS",
 rem :   "test to Chris","test at BASIS","503-570-6107","test invoice","test invoice message",
 rem :   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
 
-call "c:/apps/barista/sys/prog/bac_sendmail.bbj","chris.hawkins@verizon.net","chris.hawkins@verizon.net",
-:   "chris.hawkins@verizon.net","chris.hawkins@verizon.net","chris.hawkins@verizon.net","test invoice","invoice message",
-:   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
+rem call "c:/apps/barista/sys/prog/bac_sendmail.bbj","chris.hawkins@verizon.net","chris.hawkins@verizon.net",
+rem :   "chris.hawkins@verizon.net","chris.hawkins@verizon.net","chris.hawkins@verizon.net","test invoice","invoice message",
+rem :   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
+rem call "c:/apps/barista/sys/prog/bac_sendmail.bbj","rsl@masi.com","rsl@masi.com",
+rem :   "rsl@masi.com","rsl@masi.com","rsl@masi.com","test invoice","invoice message",
+rem :   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
 
-escape;rem did it work?
+rem escape;rem did it work?
  
     wend
 
