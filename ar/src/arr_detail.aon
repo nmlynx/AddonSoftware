@@ -290,8 +290,8 @@ rem --- Read next Customer Master (arm-01) record
           terrdesc$=fncode$(arc_terrcode_dev,firm_id$+"H"+arm02a.territory$,fattr(arm10h$))
           salesdesc$=fncode$(arc_salecode_dev,firm_id$+"F"+arm02a.slspsn_code$,fattr(arm10f$))
           typedesc$=fncode$(arc_custtype_dev,firm_id$+"L"+arm02a.customer_type$,fattr(arm10l$))
-          cycledesc$=fncode$(arm08_dev,firm_id$+arm02a.cycle_code$,fattr(arm08a$))
-          if cvs(arm02a.cycle_code$,2)="" cycledesc$=""
+          cycledesc$=fncode$(arm08_dev,firm_id$+arm02a.ar_cyclecode$,fattr(arm08a$))
+          if cvs(arm02a.ar_cyclecode$,2)="" cycledesc$=""
 
           rem --- Get OP code descriptions (if installed)
 
@@ -357,7 +357,7 @@ rem --- Read next Customer Master (arm-01) record
           dim pbuf$(pbufwidth)
           pbuf$(1,len("Freight Terms: "+arm02a.frt_terms$)) = "Freight Terms: "+arm02a.frt_terms$
           pbuf$(20,len(frtdesc$)) = frtdesc$
-          pbuf$(46,len("Cycle Code: "+arm02a.cycle_code$+" "+cycledesc$)) = "Cycle Code: "+arm02a.cycle_code$+" "+cycledesc$
+          pbuf$(46,len("Cycle Code: "+arm02a.ar_cyclecode$+" "+cycledesc$)) = "Cycle Code: "+arm02a.ar_cyclecode$+" "+cycledesc$
           gosub output_print_buf
    
           dim pbuf$(pbufwidth)
