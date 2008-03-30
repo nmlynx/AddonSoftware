@@ -1,3 +1,19 @@
+[[ARE_DATECHANGE.BWRI]]
+rem --- Abort if record not a valid invoice
+	art_invhdr_dev=fnget_dev("ART_INVHDR")
+	find record (art_invhdr_dev,key=firm_id$+
+:		callpoint!.getColumnData("ARE_DATECHANGE.AR_TYPE")+
+:		callpoint!.getColumnData("ARE_DATECHANGE.CUSTOMER_ID")+
+:		callpoint!.getColumnData("ARE_DATECHANGE.AR_INV_NO_VER")+"00",dom=*next);goto valid_inv
+	callpoint!.setMessage("AR_INV_NO")
+	callpoint!.setStatus("ABORT")
+valid_inv:
+	arc_temcode_dev=fnget_dev("ARC_TERMCODE")
+	find record (arc_temcode_dev,key=firm_id$+"A"+
+:		pad(callpoint!.getColumnData("ARE_DATECHANGE.AR_TERMS_CODE"),2),dom=*next);goto valid_terms
+	callpoint!.setMessage("INVALID_TERMS")
+	callpoint!.setStatus("ABORT")
+valid_terms:	
 [[ARE_DATECHANGE.INVOICE_DATE.AVAL]]
 rem --- recalculate due and discount dates
 	gosub recalc_dates
