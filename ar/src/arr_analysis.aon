@@ -135,10 +135,10 @@ rem --- Headings
     headings$[3]="Based on Average Days to Pay"
     x$="Future"
     if aging$="C" x$="Current"
-    if aging$="30" x$="30 Day"
-    if aging$="60" x$="60 Day"
-    if aging$="80" x$="90 Day"
-    if aging$="120" x$="120 Day"
+    if aging$="3" x$="30 Day"
+    if aging$="6" x$="60 Day"
+    if aging$="9" x$="90 Day"
+    if aging$="1" x$="120 Day"
     if basis$="A" headings$[3]="Based on "+x$+" Aging Balance"
 
 rem --- Define print positions
@@ -199,10 +199,10 @@ rem --- Read next Customer Master (arm-01) record
 :                arm02a.aging_90+arm02a.aging_120
           if aging$="C" amount=arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+
 :                       arm02a.aging_90+arm02a.aging_120
-          if aging$="30" amount=arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-          if aging$="60" amount=arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-          if aging$="90" amount=arm02a.aging_90+arm02a.aging_120
-          if aging$="120" amount=arm02a.aging_120
+          if aging$="3" amount=arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+          if aging$="6" amount=arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+          if aging$="9" amount=arm02a.aging_90+arm02a.aging_120
+          if aging$="1" amount=arm02a.aging_120
           if basis$="A" if amount=0 continue
 
           rem --- Print the customer information and accumulate totals
