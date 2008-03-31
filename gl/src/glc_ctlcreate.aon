@@ -80,7 +80,7 @@ rem --- Remaining initializations
           files$[4]="gls_suspense",ids$[4]=files$[4]
           rem files$[5]="IVS_PARAMS",ids$[5]=files$[5]
           rem files$[6]="PRS_PARAMS",ids$[6]=files$[6]
-          rem files$[7]="sfs-01",ids$[7]="SFS_PARAMS"
+          files$[7]="sfs_params",ids$[7]="SFS_PARAMS"
           files$[8]="adm-19",ids$[8]="ADM_PROCDETAIL"
           files$[9]="glm-03",ids$[9]="GLC_JOURNALCODE"
           files$[10]="glm-06",ids$[10]="ADM_AUDITCONTROL"
@@ -93,7 +93,7 @@ rem --- Remaining initializations
           gls01d_dev=channels[4]
           rem --- ivs01_dev=channels[5]
           rem --- prs01_dev=channels[6]
-          rem --- sfs01_dev=channels[7]
+          sfs01_dev=channels[7]
           adm19_dev=channels[8]
           glm03_dev=channels[9]
           glm06_dev=channels[10]
@@ -101,8 +101,8 @@ rem --- Remaining initializations
           rem --- Dimension string templates
 
           dim gls01a$:templates$[1],aps01a$:templates$[2],ars01a$:templates$[3],gls01d$:templates$[4]
-          rem --- dim ivs01a$:templates$[5],prs01a$:templates$[6],sfs01a$:templates$[7],
-          dim adm19a$:templates$[8],glm03a$:templates$[9],glm06a$:templates$[10]
+          rem --- dim ivs01a$:templates$[5],prs01a$:templates$[6],
+          dim sfs01a$:templates$[7],adm19a$:templates$[8],glm03a$:templates$[9],glm06a$:templates$[10]
 
           rem --- Retrieve miscellaneous templates
 
