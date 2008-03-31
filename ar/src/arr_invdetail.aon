@@ -147,7 +147,7 @@ rem --- Header record
     OutVect!.addItem(art01a.invoice_type$)
     OutVect!.addItem(str(invoice:mask$))
     OutVect!.addItem("")
-    if art01a.disc_allowed<>0 OutVect!.addItem(str(art01a.disc_allowed:mask$)) else OutVect!.addItem("")
+    OutVect!.addItem("")    
     if count=0 OutVect!.addItem(str(balance:mask$)) else OutVect!.addItem("")
     inv_found=1
     row=row+1
