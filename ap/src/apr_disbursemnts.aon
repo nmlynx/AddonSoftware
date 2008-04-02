@@ -412,7 +412,7 @@ rem --- Start progress meter and position the driver file
           OutVect!.addItem(vendor$ + " " + name$)
           OutVect!.addItem(invoice$)
           OutVect!.addItem(account$)
-          OutVect!.addItem(str(detail[0]:m1$))
+          OutVect!.addItem(str(detail[0]))
 
           xwk = fnblank(2)
 
@@ -479,9 +479,9 @@ print_total: rem --- Print subtotal/total
     xwk = fnblank(5)
 
     OutVect!.addItem(total$)
-    OutVect!.addItem(str(totals[0]:m1$))
-    OutVect!.addItem(str(totals[1]:m1$))
-    OutVect!.addItem(str(totals[2]:m1$))
+    OutVect!.addItem(str(totals[0]))
+    OutVect!.addItem(str(totals[1]))
+    OutVect!.addItem(str(totals[2]))
 
     if typebreak_flag and !done
        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
