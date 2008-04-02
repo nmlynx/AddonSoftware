@@ -480,8 +480,10 @@ l4950: rem --- Missing record
 
 l6000: rem --- Initialize IVT-01/IVT-04 Transaction History Record
 
-    if channel=ivt01_dev dim ivtwk$:fattr(ivt01a$);ivtwk$=ivt01a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.trans_date$
-    if channel=ivt04_dev dim ivtwk$:fattr(ivt04a$);ivtwk$=ivt04a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.lotser_no$+ivtwk.trans_date$
+    rem if channel=ivt01_dev dim ivtwk$:fattr(ivt01a$);ivtwk$=ivt01a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.trans_date$
+    rem if channel=ivt04_dev dim ivtwk$:fattr(ivt04a$);ivtwk$=ivt04a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.lotser_no$+ivtwk.trans_date$ ; commented this line as lotser_no$ shows error. In record layout of ivt-04, no such field exist.
+    if channel=ivt04_dev dim ivtwk$:fattr(ivt04a$);ivtwk$=ivt04a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.trans_date$
+    if channel=ivt01_dev dim ivtwk$:fattr(ivt01a$);ivtwk$=ivt01a$,ivtwk0$=ivtwk.firm_id$+ivtwk.warehouse_id$+ivtwk.item_id$+ivtwk.lotser_no$+ivtwk.trans_date$
     ivtwk.trans_source$=trans$(code,2)
     ivtwk.trans_ref_1$=refs$[1]
     ivtwk.trans_ref_2$=refs$[2]
@@ -495,7 +497,7 @@ l6000: rem --- Initialize IVT-01/IVT-04 Transaction History Record
     ivtwk.gl_account$=refs$[7]
     ivtwk.location$=location$
     if pos(action$="PORC",2) ivtwk.line_code$="",ivtwk.po_line_code$=refs$[6]
-    ivtwk.oper_id$=user_id$
+    if channel=ivt01_dev then ivtwk.oper_id$=user_id$ else ivtwk.user_id$=user_id$ ; rem changed this line as ivt-04 does not have a field oper_id$
     ivtwk.system_date$=sys_yyyymmdd$; rem params$[0]
     ivtwk.system_time$=clock$
 rem    ivtwk.terminal_id$=fid(0)
@@ -559,7 +561,7 @@ l6500: rem --- ivm-02 Warehouse/IVM-07 Lot/Serial Number Updates
     if curfile=ivm02_dev dim ivmwk$:fattr(ivm02a$);ivmwk$=ivm02a$
     if curfile=ivm07_dev dim ivmwk$:fattr(ivm07a$);ivmwk$=ivm07a$
     if dropship goto l6990
-    if last>0 field ivmwk$,last$[last]=fn1$(field(ivmwk$,last$[last]),ymd$)
+    if last>0 field ivmwk$,last$[last]=fnl$(field(ivmwk$,last$[last]),ymd$)
 
 rem --- Recalculate average cost
 
