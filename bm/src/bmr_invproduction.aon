@@ -170,7 +170,7 @@ rem --- Open Additional Files
     if status<>0 then goto std_exit
     if gl$="Y" then 
         files$[17]="glm-01",ids$[17]="GLM_ACCT"
-        files$[18]=glw11$,ids$[18]="GLW_DAILYDETAIL";rem ,options$[18]="C"
+        files$[18]=glw11$,ids$[18]="GLW_DAILYDETAIL",options$[18]="CL"
         call pgmdir$+"adc_fileopen.aon",action,17,18,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
