@@ -33,7 +33,7 @@ rem --- Open/Lock files
         files$[4]="bmm-05",ids$[4]="BMM_BILLSUB"
         files$[5]="bmm-08",ids$[5]="BMC_OPCODES"
         files$[6]="bmm-09",ids$[6]="BMM_BILLCMTS"
-        files$[7]="bms-01a",ids$[7]="BMS_PARAMS"
+        files$[7]="bms_params",ids$[7]="BMS_PARAMS"
         files$[8]="ivm-02",ids$[8]="IVM_ITEMWHSE"
         files$[9]="ivm-04",ids$[9]="IVM_ITEMTIER"
         files$[10]="ivs_params",ids$[10]="IVS_PARAMS"
@@ -91,15 +91,16 @@ rem --- Initialize Data
         dim bmm02a_key$:bmm02a_key_tpl$
         dim bmm03a_key$:bmm03a_key_tpl$
         dim bmm05a_key$:bmm05a_key_tpl$
+
 rem --- Get Header Record
 
-        read record (bmm01_dev,key=firm_id$+bill$,dom=done) bmm01a1$
+        read record (bmm01_dev,key=firm_id$+bill$,dom=done) bmm01a$
 
 rem --- Get Material Cost
 
         read (bmm02_dev,key=firm_id$+bill$,dom=*next)
 
-while more
+        while more
             bmm02a_key$=key(bmm02_dev,end=*break)
             if pos(firm_id$+bill$=bmm02a_key$)<>1 then break
             read record (bmm02_dev) bmm02a$
@@ -115,125 +116,110 @@ while more
                     endif
             endif
             if phantom$<>"N" then 
-                find record (bmm01_dev,key=firm_id$+bmm02a.item_id$,dom=find_record) bmm01a2$
+                find record (bmm01_dev,key=firm_id$+bmm02a.item_id$,dom=find_record) bmm01a$
                 if l2$(40,1)="Y" then 
                     gosub explodephantoms
                     read (bmm02_dev,key=bmm02a_key$)
                     continue
                 endif
             endif
-        find_record:
+find_record:
             if bmm02a.divisor=0 then let bmm02a.divisor=1
             find record (ivm02_dev,key=firm_id$+wh$+bmm02a.item_id$,dom=not_in_whse) ivm02a$
             if lfy$="Y" and lf$="Y" then gosub lifo_fifo; let ivm02a.unit_cost=icost
-            mat_cost=mat_cost+round(ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a1.est_yield,bmm02a.scrap_factor)*run_qty,2)/run_qty
+            mat_cost=mat_cost+round(ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*run_qty,2)/run_qty
             if level>1 then let mat_cost=mat_cost*run_qty
             continue
-        not_in_whse:
+not_in_whse:
             ea_status=11; rem "Not in whse"
         
-wend
+        wend
 
 rem --- Get Labor Costs
 
         read (bmm03_dev,key=firm_id$+bill$,dom=*next)
-while more
-        bmm03a_key$=key(bmm03_dev,end=*break)
-        if pos(firm_id$+bill$=bmm03a_key$)<>1 then break
-        read record (bmm03_dev) bmm03a$
-        if bmm03a.line_type$<>"S" then continue
-        if bmm03a.effect_date$<>"   " then 
-                if bmm03a.effect_date$>pdate$ then 
-                        continue
-                endif
-        endif
-        if bmm03a.obsolt_date$<>"   " then 
-                if bmm03a.obsolt_date$<=pdate$ then
-                        continue
-                endif
-        endif
-        find record (bmm08_dev,key=firm_id$+bmm03a.op_code$,dom=*continue) bmm08a$
-        directcost=round(fnop1(bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a1.est_yield,bmm03a.setup_time,setup_div)*run_qty,2)/run_qty
-        ohcost=round(directcost*bmm08a.ovhd_factor*run_qty,2)/run_qty
-        if level>1 then let directcost=directcost*run_qty,ohcost=ohcost*run_qty
-        lab_cost=lab_cost+directcost
-        oh_cost=oh_cost+ohcost
-wend
+        while more
+            bmm03a_key$=key(bmm03_dev,end=*break)
+            if pos(firm_id$+bill$=bmm03a_key$)<>1 then break
+            read record (bmm03_dev) bmm03a$
+            if bmm03a.line_type$<>"S" then continue
+            if cvs(bmm03a.effect_date$,3)<>"" and bmm03a.effect_date$>pdate$ then continue
+            if cvs(bmm03a.obsolt_date$,3)<>"" and bmm03a.obsolt_date$<=pdate$ then continue
+            find record (bmm08_dev,key=firm_id$+bmm03a.op_code$,dom=*continue) bmm08a$
+            directcost=round(fnop1(bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time,setup_div)*run_qty,2)/run_qty
+            ohcost=round(directcost*bmm08a.ovhd_factor*run_qty,2)/run_qty
+            if level>1 then let directcost=directcost*run_qty,ohcost=ohcost*run_qty
+            lab_cost=lab_cost+directcost
+            oh_cost=oh_cost+ohcost
+        wend
 
 rem --- Get Subcontract Cost
 
-    if ap$<>"N" then 
-        read (bmm05_dev,key=firm_id$+bill$,dom=*next)
-        while more
-            bmm05a_key$=key(bmm05_dev,end=*break)
-            if pos(firm_id$+bill$=bmm05a_key$)<>1 then break
-            read record (bmm05_dev) bmm05a$
-            if bmm05a.line_type$<>"S" then continue
-            if bmm05a.effect_date$<>"   " then 
-                    if bmm05a.effect_date$>pdate$ then 
-                        continue
-                    endif
-            endif
-            if bmm05a.obsolt_date$<>"   " then 
-                    if bmm05a.obsolt_date$<=pdate$ then 
-                        continue
-                    endif
-            endif
-            if bmm05a.divisor=0 then let bmm05a.divisor=1
-            if level>1 then let sub_cost=sub_cost+bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)*sub_qty else let sub_cost=sub_cost+round(bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)*sub_qty,2)/sub_qty
-        wend
-   endif
+        if ap$<>"N" then 
+            read (bmm05_dev,key=firm_id$+bill$,dom=*next)
+            while more
+                bmm05a_key$=key(bmm05_dev,end=*break)
+                if pos(firm_id$+bill$=bmm05a_key$)<>1 then break
+                read record (bmm05_dev) bmm05a$
+                if bmm05a.line_type$<>"S" then continue
+                if cvs(bmm05a.effect_date$,3)<>"" and bmm05a.effect_date$>pdate$ then continue
+                if cvs(bmm05a.obsolt_date$,3)<>"" and bmm05a.obsolt_date$<=pdate$ then continue
+                if bmm05a.divisor=0 then let bmm05a.divisor=1
+                if level>1 then let sub_cost=sub_cost+bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)*sub_qty else let sub_cost=sub_cost+round(bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)*sub_qty,2)/sub_qty
+            wend
+       endif
+
 done: rem --- End Of Calculation
 
-    goto std_exit
+        goto std_exit
 
 lifo_fifo: rem --- LIFO/FIFO
 
-    dim item$[10]
-    item$[0]=firm_id$
-    item$[1]=wh$,item$[2]=bmm02a.item_id$,type$="R",lf_date$=pdate$
-    action$=ivs01a.lifofifo$+"I"
-    cost=ivm02a.unit_cost
-    qty=abs(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a1.est_yield,bmm02a.scrap_factor))
-    if fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a1.est_yield,bmm02a.scrap_factor)<0 then 
+        dim item$[10]
+        item$[0]=firm_id$
+        item$[1]=wh$,item$[2]=bmm02a.item_id$,type$="R",lf_date$=pdate$
+        action$=ivs01a.lifofifo$+"I"
+        cost=ivm02a.unit_cost
+        qty=abs(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor))
+        if fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)<0 then 
 
 rem --- Inquires For Tier Cost For Returned Items
 
-        action$(2,1)="R"
-        type$="I"
+            action$(2,1)="R"
+            type$="I"
+            call pgmdir$+"ivc_lf.bbx",action$,type$,lf_date$,iv_chans[all],item$[all],places,qty,cost,ret_cost,status
+            if ret_cost<>0 then let cost=ret_cost
+        endif
         call pgmdir$+"ivc_lf.bbx",action$,type$,lf_date$,iv_chans[all],item$[all],places,qty,cost,ret_cost,status
-        if ret_cost<>0 then let cost=ret_cost
-   endif
-    call pgmdir$+"ivc_lf.bbx",action$,type$,lf_date$,iv_chans[all],item$[all],places,qty,cost,ret_cost,status
-    if ret_cost<>0 then let icost=ret_cost
-    w9$=fill(17)+bmm02a.item_id$+bmm02a.material_seq$
-    write record (ivw05_dev,key=w9$) ivw05a$
-    return
+        if ret_cost<>0 then let icost=ret_cost
+        w9$=fill(17)+bmm02a.item_id$+bmm02a.material_seq$
+        write record (ivw05_dev,key=w9$) ivw05a$
+return
 
 explodephantoms: rem --- Explode Phantoms
 
-    run1_qty=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a1.est_yield,bmm02a.scrap_factor)*run_qty
-    sub1_qty=sub_qty*bmm05a.qty_required
-    dim chann[9]
-    chann[0]=bmm01_dev
-    chann[1]=bmm02_dev,chann[2]=bmm03_dev
-    chann[3]=bmm05_dev
-    chann[4]=bmm08_dev,chann[5]=ivm02_dev
-    chann[6]=ivm04_dev
-    chann[7]=ivw04_dev,chann[8]=ivw05_dev
-    chann[9]=sys01_dev
-    while more
-        km02$=key(bmm02_dev,end=reset_ptr); rem "Save ptr
-        break
-        reset_ptr:
-        read (bmm02_dev,key="",dom=*next); rem "On EOF reset ptr to beg of file
-    wend
+        run1_qty=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*run_qty
+        sub1_qty=sub_qty*bmm05a.qty_required
+        dim chann[9]
+        chann[0]=bmm01_dev
+        chann[1]=bmm02_dev,chann[2]=bmm03_dev
+        chann[3]=bmm05_dev
+        chann[4]=bmm08_dev,chann[5]=ivm02_dev
+        chann[6]=ivm04_dev
+        chann[7]=ivw04_dev,chann[8]=ivw05_dev
+        chann[9]=sys01_dev
+        while more
+            km02$=key(bmm02_dev,end=reset_ptr); rem "Save ptr
+            break
+            reset_ptr:
+            read (bmm02_dev,key="",dom=*next); rem "On EOF reset ptr to beg of file
+        wend
 
-    call pgmdir$+"bmc_ea.bbx",bmm02a.item_id$,chann[all],run1_qty,pdate$,firm_id$,ap$,phantom$,level+1,mat1_cost,lab1_cost,oh1_cost,sub1_cost,setup_div,sub1_qty,lfy$,wh$,ea_status
-    mat_cost=mat_cost+mat1_cost
-    lab_cost=lab_cost+lab1_cost,oh_cost=oh_cost+oh1_cost,sub_cost=sub_cost+sub1_cost
-    read (bmm02_dev,key=km02$); rem "Replace ptr
-    return
+        call pgmdir$+"bmc_ea.bbx",bmm02a.item_id$,chann[all],run1_qty,pdate$,firm_id$,ap$,phantom$,level+1,mat1_cost,lab1_cost,oh1_cost,sub1_cost,setup_div,sub1_qty,lfy$,wh$,ea_status
+        mat_cost=mat_cost+mat1_cost
+        lab_cost=lab_cost+lab1_cost,oh_cost=oh_cost+oh1_cost,sub_cost=sub_cost+sub1_cost
+        read (bmm02_dev,key=km02$); rem "Replace ptr
+return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -249,6 +235,9 @@ rem --- Functions used to retrieve form values
 rem --- Miscellaneous functions
 
     def fncenter(q$,q)=int((q-len(q$))/2)
+    def fnqty(q1,q2,q3,q4,q5)=10000*q1*q2/(q3*q4*(100-q5))
+    def fnsub(q1,q2,q3)=q1*q2/q3
+    def fnop1(q1,q2,q3,q4,q5,q6)=100*(q1*q2/q3)/q4+q5*q2/q6
 
 rem --- Format inventory item description
 

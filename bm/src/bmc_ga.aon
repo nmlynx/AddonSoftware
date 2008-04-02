@@ -33,25 +33,24 @@ rem --- Open/Lock files
         files$[4]="bmm-03",ids$[4]="BMM_BILLOPER"
         files$[5]="bmm-05",ids$[5]="BMM_BILLSUB"
         files$[6]="bmm-08",ids$[6]="BMC_OPCODES"
-        files$[7]="bms-01a",ids$[7]="BMS_PARAMS"
+        files$[7]="bms_params",ids$[7]="BMS_PARAMS"
         files$[8]="glm-01",ids$[8]="GLM_ACCT"
         files$[9]="gls_params",ids$[9]="GLS_PARAMS"
         files$[10]="glt-04",ids$[10]="GLE_DAILYDETAIL"
-        files$[11]="glt-14",ids$[11]="GLX_DAILYXRF"
-        files$[12]="ivm-01",ids$[12]="IVM_ITEMMAST"
-        files$[13]="ivm-02",ids$[13]="IVM_ITEMWHSE"
-        files$[14]="ivm-03",ids$[14]="IVX_ITEMPROD"
-        files$[15]="ivm-04",ids$[15]="IVM_ITEMTIER"
-        files$[16]="ivm-05",ids$[16]="IVM_ITEMVEND"
-        files$[17]="ivm-07",ids$[17]="IVM_LSMASTER"
-        files$[18]="ivm-08",ids$[18]="IVX_LSXREF"
-        files$[19]="ivm-12",ids$[19]="IVM_ITEMACT"
-        files$[20]="ivm-17",ids$[20]="IVM_LSACT"
-        files$[21]="ivs_params",ids$[21]="IVS_PARAMS"
-        files$[22]="ivt-01",ids$[22]="IVT_LSTRANS"
-        files$[23]="ivt-02",ids$[23]="IVX_LSCUST"
-        files$[24]="ivt-03",ids$[24]="IVX_LSVEND"
-        files$[25]="ivt-04",ids$[25]="IVT_ITEMTRAN"
+        files$[11]="ivm-01",ids$[11]="IVM_ITEMMAST"
+        files$[12]="ivm-02",ids$[12]="IVM_ITEMWHSE"
+        files$[13]="ivm-03",ids$[13]="IVX_ITEMPROD"
+        files$[14]="ivm-04",ids$[14]="IVM_ITEMTIER"
+        files$[15]="ivm-05",ids$[15]="IVM_ITEMVEND"
+        files$[16]="ivm-07",ids$[16]="IVM_LSMASTER"
+        files$[17]="ivm-08",ids$[17]="IVX_LSXREF"
+        files$[18]="ivm-12",ids$[18]="IVM_ITEMACT"
+        files$[19]="ivm-17",ids$[19]="IVM_LSACT"
+        files$[20]="ivs_params",ids$[20]="IVS_PARAMS"
+        files$[21]="ivt-01",ids$[21]="IVT_LSTRANS"
+        files$[22]="ivt-02",ids$[22]="IVX_LSCUST"
+        files$[23]="ivt-03",ids$[23]="IVX_LSVEND"
+        files$[24]="ivt-04",ids$[24]="IVT_ITEMTRAN"
         call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
@@ -65,34 +64,31 @@ rem --- Open/Lock files
         glm01_dev=channels[8]
         gls01a_dev=channels[9]
         glt04_dev=channels[10]
-        glt14_dev=channels[11]
-        ivm01_dev=channels[12]
-        ivm02_dev=channels[13]
-        ivm03_dev=channels[14]
-        ivm04_dev=channels[15]
-        ivm05_dev=channels[16]
-        ivm07_dev=channels[17]
-        ivm08_dev=channels[18]
-        ivm12_dev=channels[19]
-        ivm17_dev=channels[20]
-        ivs01a_dev=channels[21]
-        ivt01_dev=channels[22]
-        ivt02_dev=channels[23]
-        ivt03_dev=channels[24]
-        ivt04_dev=channels[25]
+        ivm01_dev=channels[11]
+        ivm02_dev=channels[12]
+        ivm03_dev=channels[13]
+        ivm04_dev=channels[14]
+        ivm05_dev=channels[15]
+        ivm07_dev=channels[16]
+        ivm08_dev=channels[17]
+        ivm12_dev=channels[18]
+        ivm17_dev=channels[19]
+        ivs01a_dev=channels[20]
+        ivt01_dev=channels[21]
+        ivt02_dev=channels[22]
+        ivt03_dev=channels[23]
+        ivt04_dev=channels[24]
 
 rem --- Dimension string templates
 
         dim arm10a$:templates$[1],bmm01a$:templates$[2],bmm02a$:templates$[3],
 :       bmm03a$:templates$[4],bmm05a$:templates$[5],bmm08a$:templates$[6],
 :       bms01a$:templates$[7],glm01a$:templates$[8],gls01a$:templates$[9],
-:       glt04a$:templates$[10],glt14a$:templates$[11],ivm01a$:templates$[12],
-:       ivm02a$:templates$[13],ivm03a$:templates$[14],ivm04a$:templates$[15],
-:       ivm05a$:templates$[16],ivm07a$:templates$[17],ivm08a$:templates$[18],
-:       ivm12a$:templates$[19],ivm17a$:templates$[20],ivs01a$:templates$[21],
-:       ivt01a$:templates$[22],ivt02a$:templates$[23],ivt03a$:templates$[24],
-:       ivt04a$:templates$[25]
-
+:       glt04a$:templates$[10],ivm01a$:templates$[11],ivm02a$:templates$[12],
+:       ivm03a$:templates$[13],ivm04a$:templates$[14],ivm05a$:templates$[15],
+:       ivm07a$:templates$[16],ivm08a$:templates$[17],ivm12a$:templates$[18],
+:       ivm17a$:templates$[19],ivs01a$:templates$[20],ivt01a$:templates$[21],
+:       ivt02a$:templates$[22],ivt03a$:templates$[23],ivt04a$:templates$[24]  
 
 
 rem --- Retrieve parameter records
@@ -135,14 +131,13 @@ rem --- Parameters
         g[2]=num(gls01a.current_year$)
         g[3]=num(gls01a.acct_length$)
         g[4]=num(gls01a.max_acct_len$)
-
-        g[2]=fnyy_year(gls01a.current_year$)
+        g[2]=num(gls01a.current_year$)
         p[0]=num(ivs01a.item_nbr_len$)
         p[1]=num(ivs01a.vend_prd_len$)
         p[2]=num(ivs01a.precision$)
         p[3]=num(ivs01a.ls_nbr_len$)
         p[5]=num(ivs01a.current_per$)
-        p[6]=fnyy_year(ivs01a.current_year$)
+        p[6]=num(ivs01a.current_year$)
 
 rem --- Init Data
 
@@ -151,7 +146,7 @@ rem --- Init Data
         value=0
         dim files[44],a0$(50),b0$(22),b1$(60)
         dim b[12],c[20],d[10],h[11]
-        files[0]=sys01_dev
+        files[0]=gls01_dev
         files[1]=ivm01_dev
         files[2]=ivm02_dev
         files[4]=ivm04_dev
@@ -211,86 +206,78 @@ rem --- retrieve template for BMM_BILLSUB record key
         dim bmm05a_key$:bmm05a_key_tpl$
 
 rem --- Main Loop
-while more
+        while more
 
-        bmm02a_key$=key(bmm02_dev,end=*break)
-        read record (bmm02_dev) bmm02a$
-        if bmm02a.effect_date$<>"   " then
-            if pdate$<bmm02a.effect_date$ then
+            bmm02a_key$=key(bmm02_dev,end=*break)
+            read record (bmm02_dev) bmm02a$
+            if cvs(bmm02a.effect_date$,3)<>"" and pdate$<bmm02a.effect_date$ then continue
+            if cvs(bmm02a.obsolt_date$,3)<>"" and pdate$>=bmm02a.obsolt_date$ then continue
+            if bmm02a.line_type$="M" then continue
+            if bmm02a.firm_id$+bmm02a.bill_no$<>firm_id$+subitem$ then break
+            find record (bmm01_dev,key=firm_id$+bmm02a.item_id$,dom=Label_One) bmm01a$
+            if phantom$="Y" then
+                gosub explode
+                read (bmm02_dev,key=bmm02a_key$)
                 continue
             endif
-        endif
-        if bmm02a.obsolt_date$<>"   " then
-            if pdate$>=bmm02a.obsolt_date$ then
-                continue
-            endif
-        endif
-        if bmm02a.line_type$="M" then continue
-        if bmm02a.firm_id$+bmm02a.bill_no$<>firm_id$+subitem$ then break
-        find record (bmm01_dev,key=firm_id$+bmm02a.item_id$,dom=Label_One) bmm01a$
-        if phantom$="Y" then
-            gosub explode
-            read (bmm02_dev,key=bmm02a_key$)
-            continue
-        endif
 
 Label_One:
-        dim glacct$(g[4])
-        childgl$=ivm01a.gl_inv_acct$
-        find record (ivm01_dev,key=firm_id$+bmm02a.item_id$,dom=*continue) ivm01a$
-        childgl$=ivm01a.gl_inv_acct$
-        glacct$=childgl$
+            dim glacct$(g[4])
+            childgl$=ivm01a.gl_inv_acct$
+            find record (ivm01_dev,key=firm_id$+bmm02a.item_id$,dom=*continue) ivm01a$
+            childgl$=ivm01a.gl_inv_acct$
+            glacct$=childgl$
 
 rem --- Issue Children
 
-        if bmm02a.divisor=0 then let bmm02a.divisor=1
-        find record (ivm02_dev,key=firm_id$+whse$+bmm02a.item_id$,dom=Label_Two) ivm02a$
-        goto Label_Three
+            if bmm02a.divisor=0 then let bmm02a.divisor=1
+            find record (ivm02_dev,key=firm_id$+whse$+bmm02a.item_id$,dom=Label_Two) ivm02a$
+            goto Label_Three
 
 Label_Two:
-        in_whse$="F"
+            in_whse$="F"
 
 Label_Three:
-        qty=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
-        iss_or_rec$="I"; rem "I==Issue, O==Receipt"
-        unitcost=ivm02a.unit_cost
-        curlist=ivm02a.cur_price
-        item$=bmm02a.item_id$
-        finished$=subitem$
-        gosub atamo
+            qty=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
+            iss_or_rec$="I"; rem "I==Issue, O==Receipt"
+            unitcost=ivm02a.unit_cost
+            curlist=ivm02a.cur_price
+            item$=bmm02a.item_id$
+            finished$=subitem$
+            gosub atamo
 
 rem --- Distribution
 
-        if ar_dist$<>"N" and in_whse$<>"F" then
-            dim childgl$(g[4],"0"),glacct$(g[4])
-            find record (arm10_dev,key=firm_id$+"D"+ivm02a.dist_code$,dom=update_gl) arm10d2$
-            childgl$=arm10d.gl_inv_acct$
-            glacct$=childgl$
-        endif
+            if ar_dist$<>"N" and in_whse$<>"F" then
+                dim childgl$(g[4],"0"),glacct$(g[4])
+                find record (arm10_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=update_gl) arm10d2$
+                childgl$=arm10d.gl_inv_acct$
+                glacct$=childgl$
+            endif
 
 update_gl: rem --- Update G/L
 
-        if update$="N" then
-            let parentgl$=bms01a.gl_wip_acct$
-        else
-            let parentgl$=ivacct$
-        endif
+            if update$="N" then
+                let parentgl$=bms01a.gl_wip_acct$
+            else
+                let parentgl$=ivacct$
+            endif
 
-        account$=parentgl$
-        when$=pdate$
-        amount=unitcost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
-        units=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
-        precision 2
-        amount=amount*1
-        value=value+amount,memo$="Item "+parent$
-        gosub glpost
-        account$=childgl$
-        amount=-amount,units=-units,memo$="Item "+bmm02a.item_id$(1,p[0])
-        gosub glpost
-        precision num(ivs01a.precision$)
+            account$=parentgl$
+            when$=pdate$
+            amount=unitcost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
+            units=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
+            precision 2
+            amount=amount*1
+            value=value+amount,memo$="Item "+parent$
+            gosub glpost
+            account$=childgl$
+            amount=-amount,units=-units,memo$="Item "+bmm02a.item_id$(1,p[0])
+            gosub glpost
+            precision num(ivs01a.precision$)
 
 rem --- Loop back for next record
-wend
+        wend
 
 
 rem --- Operation & Subcontract Distribution
@@ -352,8 +339,8 @@ atamo: rem --- Item Number
 
 rem --- Inventory updates
 
-        call pgmdir$+"ivc_ua.bbx",action$,files[all],params[all],params$[all],item$[all],ref$[all],ref[all],status
-        return
+        call pgmdir$+"ivc_itemupdt.aon",action$,files[all],params[all],params$[all],item$[all],ref$[all],ref[all],status
+return
 
 subcontracts: rem --- Subcontracts
 
@@ -361,37 +348,29 @@ subcontracts: rem --- Subcontracts
         read (bmm05_dev,key=firm_id$+subitem$,dom=*next)
 
         while more
-                bmm05a_key$=key(bmm05_dev,end=*break)
-                if pos(firm_id$+subitem$=bmm05a_key$)<>1 then break
-                read record (bmm05_dev) bmm05a$
-                if bmm05a.effect_date$<>"   " then
-                    if pdate$<bmm05a.effect_date$ then
-                        continue
-                    endif
-                endif
-                if bmm05a.obsolt_date$<>"   " then
-                    if pdate$>=bmm05a.obsolt_date$ then
-                        continue
-                    endif
-                endif
-                if bmm05a.line_type$<>"S" then continue
-                if update$="N" then
-                    let parentgl$=bms01a.gl_wip_acct$
-                else
-                    let parentgl$=ivacct$
-                endif
-                if bmm05a.divisor=0 then let bmm05a.divisor=1
-                a0=quant*bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)
-                units=quant*bmm05a.unit_cost
-                when$=pdate$
-                account$=parentgl$,amount=a0,value=value+amount,memo$=cvs(parent$,2)+" "+bmm05a.ext_comments$
-                gosub glpost
-                account$=bms01a.gl_pur_acct$
-                amount=-a0
-                units=-units
-                gosub glpost
+            bmm05a_key$=key(bmm05_dev,end=*break)
+            if pos(firm_id$+subitem$=bmm05a_key$)<>1 then break
+            read record (bmm05_dev) bmm05a$
+            if cvs(bmm05a.effect_date$,3)<>"" and pdate$<bmm05a.effect_date$ then continue
+            if cvs(bmm05a.obsolt_date$,3)<>"" and pdate$>=bmm05a.obsolt_date$ then continue
+            if bmm05a.line_type$<>"S" then continue
+            if update$="N" then
+                let parentgl$=bms01a.gl_wip_acct$
+            else
+                let parentgl$=ivacct$
+            endif
+            if bmm05a.divisor=0 then let bmm05a.divisor=1
+            a0=quant*bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)
+            units=quant*bmm05a.unit_cost
+            when$=pdate$
+            account$=parentgl$,amount=a0,value=value+amount,memo$=cvs(parent$,2)+" "+bmm05a.ext_comments$
+            gosub glpost
+            account$=bms01a.gl_pur_acct$
+            amount=-a0
+            units=-units
+            gosub glpost
         wend
-                return
+return
 
 Acc_WareHouse: rem --- Accumulation Of Warehouse Qtys For Average Cost
 
@@ -430,59 +409,50 @@ operation: rem --- Operation
         read (bmm03_dev,key=firm_id$+subitem$,dom=*next)
 
         while more
-                bmm03a_key$=key(bmm03_dev,end=*break)
-                if pos(firm_id$+subitem$=bmm03a_key$)<>1 then break
-                read record (bmm03_dev,key=bmm03a_key$) bmm03a$
-                if bmm03a.effect_date$<>"   " then
-                    if pdate$<bmm03a.effect_date$ then
-                        continue
-                    endif
-                endif
-                if bmm03a.obsolt_date$<>"   " then
-                    if pdate$>=bmm03a.obsolt_date$ then
-                        continue
-                    endif
-                endif
-                if bmm03a.line_type$="M" then continue
-                find record (bmm08_dev,key=bmm03a_key.firm_id$+bmm03a_key.op_code$,dom=*next) bmm08a$
-                if bmm01a.std_lot_size=0 then let bmm01a.std_lot_size=1
-                if quant<>0 then
-                    directcost=fnop2(quant,bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,yield,bmm03a.setup_time)
-                    units=fnopu(quant,bmm03a.hrs_per_pce,bmm03a.pcs_per_hour,yield,bmm03a.setup_time)
-                else
-                    directcost=0
-                    units=0
-                endif
-                ohcost=directcost*bmm08a.ovhd_factor
-                ounits=units*bmm08a.ovhd_factor
+            bmm03a_key$=key(bmm03_dev,end=*break)
+            if pos(firm_id$+subitem$=bmm03a_key$)<>1 then break
+            read record (bmm03_dev,key=bmm03a_key$) bmm03a$
+            if cvs(bmm03a.effect_date$,3)<>"" and pdate$<bmm03a.effect_date$ then continue
+            if cvs(bmm03a.obsolt_date$,3)<>"" and pdate$>=bmm03a.obsolt_date$ then continue
+            if bmm03a.line_type$="M" then continue
+            find record (bmm08_dev,key=bmm03a_key.firm_id$+bmm03a_key.op_code$,dom=*next) bmm08a$
+            if bmm01a.std_lot_size=0 then let bmm01a.std_lot_size=1
+            if quant<>0 then
+                directcost=fnop2(quant,bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,yield,bmm03a.setup_time)
+                units=fnopu(quant,bmm03a.hrs_per_pce,bmm03a.pcs_per_hour,yield,bmm03a.setup_time)
+            else
+                directcost=0
+                units=0
+            endif
+            ohcost=directcost*bmm08a.ovhd_factor
+            ounits=units*bmm08a.ovhd_factor
 
 rem ----------- Direct Labor
 
-                precision 2
-                directcost=directcost*1
-                ohcost=ohcost*1
-                account$=bmm08a.gl_dir_lab$
-                when$=pdate$
-                amount=-directcost
-                units=-units
-                memo$=parent$+" "+bmm08a.code_desc$
-                gosub glpost
-                account$=parentgl$
-                amount=directcost,units=-units,value=value+directcost
-                gosub glpost
+            precision 2
+            directcost=directcost*1
+            ohcost=ohcost*1
+            account$=bmm08a.gl_dir_lab$
+            when$=pdate$
+            amount=-directcost
+            units=-units
+            memo$=parent$+" "+bmm08a.code_desc$
+            gosub glpost
+            account$=parentgl$
+            amount=directcost,units=-units,value=value+directcost
+            gosub glpost
 
 rem ----------- Overhead
 
-                account$=bmm08a.gl_ovh_var$
-                amount=-ohcost,units=-ounits
-                gosub glpost
-                account$=parentgl$
-                amount=ohcost,units=ounits,value=value+ohcost
-                gosub glpost
-                precision num(ivs01a.precision$)
+            account$=bmm08a.gl_ovh_var$
+            amount=-ohcost,units=-ounits
+            gosub glpost
+            account$=parentgl$
+            amount=ohcost,units=ounits,value=value+ohcost
+            gosub glpost
+            precision num(ivs01a.precision$)
         wend
-
-        return
+return
 
 explode: rem --- Explode Phantoms
 
@@ -494,7 +464,7 @@ explode: rem --- Explode Phantoms
         info[0]=quant
         info[1]=yield
         value=value+info[2]
-        return
+return
 
 glpost: rem --- Standard G/L Posting Routine
 
@@ -502,8 +472,7 @@ glpost: rem --- Standard G/L Posting Routine
             return
         endif
         call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,glt14_dev,account$,when$,ref1$,ref2$,ref3$,memo$,amount,units,status
-
-        return
+return
 
 rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
