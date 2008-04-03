@@ -88,7 +88,7 @@ rem --- Read next mpe-05 transaction pegging detail record
         mpw03a.peg_source$=mpe05a.source_code$
         mpw03a.seq_no$=mpe05a.seq_no$
 
-
+escape;rem check length of mpw03a$?
         write record (mpw03_dev,key=mpw03a.firm_id$+mpw03a.forecast$+mpw03a.warehouse_id$+mpw03a.vendor_id$+mpw03a.item_id$+mpw03a.trns_date$+mpw03a.peg_source$+mpw03a.seq_no$) mpw03a$
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
