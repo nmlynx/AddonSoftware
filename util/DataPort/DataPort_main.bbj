@@ -17,6 +17,12 @@ dim ddm01$:"data_name:c(12*),description:c(30),lstrev:c(6),data_type:c(1),reserv
 dim ddm03$:"file_name:c(6),record_id:c(1*),description:c(30),reserved_str:c(33*),reserved_num:n(3*)"
 dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reserved_str1:c(41),fld_sep:c(1),reserved_str2:c(68*),reserved_num:n(1*),fld_repeats:n(3*),fld_occurs:n(3)"
 
+rem --- Set the number of years to add here
+
+    add_year=0
+    add_year=num(stbl("+DEMO_DATE_INCREMENT",err=open_files))
+
+open_files:
 rem --- Open files
 
 ddm01=unt
@@ -325,7 +331,7 @@ next_rec:
               break
            case 3
               if len(cvs(value$,3)) then
-                 value$=str(asc(value$)-32+1900)+str(asc(value$(2))-32:"00")+str(mod(asc(value$(3))-32,100):"00")
+                 value$=str(asc(value$)-32+1900+add_year)+str(asc(value$(2))-32:"00")+str(mod(asc(value$(3))-32,100):"00")
               endif
               break
            case 2
@@ -336,9 +342,11 @@ next_rec:
                  else
                     value$="19"+value$
                  endif
+              value$=str(num(value$(1,4))+add_year)+value$(5)
               endif
               break
            case 8
+              value$=str(num(value$(1,4))+add_year)+value$(5)
               break
            case 255
               if len(cvs(value$,3)) then
