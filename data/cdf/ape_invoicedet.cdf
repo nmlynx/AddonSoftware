@@ -12,7 +12,7 @@ calc_grid_tots:
 	if numrecs>0
 		for reccnt=0 to numrecs-1
 			gridrec$=recVect!.getItem(reccnt)
-			tdist=tdist+num(gridrec.gl_post_amt$)
+			if cvs(gridrec$,3)<> "" then tdist=tdist+num(gridrec.gl_post_amt$)
 		next reccnt
 		user_tpl.tot_dist$=str(tdist)
 	endif
