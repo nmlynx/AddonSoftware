@@ -1,3 +1,32 @@
+[[ARM_CUSTMAST.BDEL]]
+rem  --- Check for Open AR Invoices
+	delete_msg$=""
+	cust$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	read(user_tpl.art01_dev,key=firm_id$+"  "+cust$,dom=*next)
+	art01_key$=key(user_tpl.art01_dev,end=check_op_ord)
+	if pos(firm_id$+"  "+cust$=art01_key$)<>1 goto check_op_ord
+	delete_msg$="Open Invoices exist - Customer deletion not allowed"
+	goto done_checking	
+
+check_op_ord:
+	if user_tpl.op_installed$<>"Y" goto done_checking
+	read (user_tpl.ope01_dev,key=firm_id$+"  "+cust$,dom=*next)
+	ope01_key$=key(user_tpl.ope01_dev,end=check_op_inv)
+	if pos(firm_id$+"  "+cust$=ope01_key$)<>1 goto check_op_inv
+	delete_msg$="Open Orders exist - Customer deletion not allowed"
+	goto done_checking	
+
+check_op_inv:
+	read (user_tpl.opt01_dev,key=firm_id$+"  "+cust$,dom=*next)
+	opt01_key$=key(user_tpl.opt01_dev,end=done_checking)              
+	if pos(firm_id$+"  "+cust$=opt01_key$)<>1 goto done_checking
+	delete_msg$="Historical Invoices exist - Customer deletion not allowed"
+
+done_checking:
+	if delete_msg$<>""
+		callpoint!.setMessage("NO_DELETE:"+delete_msg$)
+		callpoint!.setStatus("ABORT")
+	endif
 [[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
 rem --- Set Alternate Sequence for new customers
 	if user_tpl.new_cust$="Y"
@@ -86,13 +115,16 @@ rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
 	sys_pgm$=stbl("+DIR_SYP")
 
-	num_files=5
+	num_files=8
 	dim files$[num_files],options$[num_files],ids$[num_files],templates$[num_files],channels[num_files]
 	files$[1]="gls_params",ids$[1]="GLS_PARAMS",options$[1]="OTA"
 	files$[2]="ars_params",ids$[2]="ARS_PARAMS",options$[2]="OTA"
 	files$[3]="ars_custdflt",ids$[3]="ARS_CUSTDFLT",options$[3]="OTA"; rem ars-10D
 	files$[4]="ars_credit",ids$[4]="ARS_CREDIT",options$[4]="OTA"; rem ars-01C
 	files$[5]="arm-02",ids$[5]="ARM_CUSTDET",options$[5]="OTA"
+	files$[6]="art-01",ids$[6]="ART_INVHDR",options$[6]="OTA"
+	files$[7]="ope-01",ids$[7]="OPE_ORDHDR",options$[7]="OTA"
+	files$[8]="opt-01",ids$[8]="OPT_ORDHDR",options$[8]="OTA"
 	call stbl("+DIR_PGM")+"adc_fileopen.aon",action,1,num_files,files$[all],options$[all],
 :                              ids$[all],templates$[all],channels[all],batch,status
 	if status goto std_exit
@@ -101,7 +133,6 @@ rem --- Open/Lock files
 	ars10_dev=channels[3]
 	ars01c_dev=channels[4]
 	arm02_dev=channels[5],arm02_tpl$=templates$[5]
-
 
 rem --- Dimension miscellaneous string templates
 
@@ -133,7 +164,8 @@ rem --- Retrieve parameter data
 	sa$=info$[20]
 
 	dim user_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),"+
-:		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024),new_cust:c(1)"
+:		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024),new_cust:c(1),"+
+:		"art01_dev:n(5),ope01_dev:n(5),opt01_dev:n(5)"
 
 	user_tpl.app$="AR"
 	user_tpl.gl_installed$=gl$
@@ -144,7 +176,9 @@ rem --- Retrieve parameter data
 	user_tpl.dflt_cred_hold$=dflt_cred_hold$
 	user_tpl.cust_dflt_tpl$=fattr(ars10d$)
 	user_tpl.cust_dflt_rec$=ars10d$
-
+	user_tpl.art01_dev=channels[6]
+	user_tpl.ope01_dev=channels[7]
+	user_tpl.opt01_dev=channels[8]
 
 	dim dctl$[17]
 
