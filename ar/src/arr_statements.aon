@@ -13,6 +13,10 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Set document Directory
+
+docdir$="c:\PROGRAM FILES\BASIS\BARISTA\DOCUMENTS\"
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -69,14 +73,40 @@ rem --- Retrieve parameter records
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,10,10
+    
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,13,13
     m0=len(m0$)
     m1=len(m1$)
 
-rem --- Open Printer
+rem --- Open the printer
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+
+let textfont!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
+let boldfont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,12)
+let boldfont2!=new java.awt.Font("Arial",java.awt.Font.BOLD,14)
+let bigboldfont!=new java.awt.Font("Arial",java.awt.Font.BOLD,18)
+let largefont!=new java.awt.Font("Arial",java.awt.Font.BOLD,26)
+let italicFont!=new java.awt.Font("Times New Roman",java.awt.Font.ITALIC,10)
+let textfont2!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,8)
+let textfont3!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,9)
+
+red!=new java.awt.Color(red)
+white!=new java.awt.Color(white)
+grey!=new java.awt.Color(grey)
+
+LET requestAttributes!=new javax.print.attribute.HashPrintRequestAttributeSet()
+requestAttributes!.add(javax.print.attribute.standard.MediaSizeName.NA_LETTER)
+requestAttributes!.add(javax.print.attribute.standard.OrientationRequested.PORTRAIT)
+
+units=javax.print.attribute.standard.MediaPrintableArea.INCH
+x!=new java.lang.Float(0.3).floatValue()
+y!=new java.lang.Float(0.3).floatValue()
+w!=new java.lang.Float(7.9).floatValue()
+h!=new java.lang.Float(10.4).floatValue()
+a!=new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
+
+requestAttributes!.add(a!)
+
 
 rem --- Initializations
 
@@ -93,8 +123,6 @@ rem --- Initializations
     moreheaders=1
     moredetail=1
     artype$=fill(2)
-    answer$="Y"
-    prompt$="Do you want to print a test pattern?"
     nf$="(Not on file)"
     when$=sysinfo.system_date$
     clock$=""
@@ -147,45 +175,8 @@ rem --- Open the printer
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
 
-rem --- Initialize record template fields for printing test patterns
 
-    dim address$(6*address,"X")
-    arm01a.customer_id$=fill(6,"9")
-    arm01a.customer_name$=fill(30,"X")
-    transdate$="mm/dd/yy"
-    invoice$=fill(7,"9")
-    message$=fill(40,"-")
-    message$(16,9)=" Message "
-    message$(1,1)="<"
-    message$(40,1)=">"
-    amount=fntestvalue(m1$)
-    applied=amount
-    balance=amount
-    total=amount
-    current=amount
-    days30=amount
-    days60=amount
-    days90=amount
 
-rem --- Print test patterns until the user is satisfied
-
-    while answer$="Y"
-          call pgmdir$+"adc_yesno.aon",1,prompt$,1,answer$,fkey
-          if fkey=4 break
-          if answer$="N" break
-
-          rem --- Print test pattern
-
-          lines=0
-          gosub header
-          while lines<maxlines
-                gosub detail
-          wend
-          gosub footer
-          prompt$="Do you want to print another test pattern?"
-    wend
-    if fkey=4 goto std_exit
-    message$=original$
 
 rem --- Start progress meter and position Customer Master (arm-01) file
 
@@ -219,6 +210,16 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           if cycle$<>"" if arm02a.ar_cyclecode$<>cycle$ continue
 
           rem --- Initializations for this customer
+            
+            rem --- create pdf file
+            myAPI!=BBjAPI()
+            MyPrinter!=BBjAPI()
+            prtr_dev=unt
+            open (prtr_dev,err=printer)docdir$+"statement"+arm01a.customer_id$+".pdf"
+            CLOSE (prtr_dev)
+            ERASE docdir$+"statement"+arm01a.customer_id$+".pdf"
+            printer:
+            doc!=myPrinter!.getBBjPDFForm(docdir$+"Statement"+arm01a.customer_id$+".pdf",requestAttributes!)
 
           dim aging[5]
           page=0
@@ -297,8 +298,9 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
                 transdate$=fndate$(art01a.invoice_date$)
                 type$=art01a.invoice_type$
-                if type$="S" type$="I"
-                if type$="F" type$="FC"
+                if type$="S" type$="Invoice"
+                if type$="F" type$="Finance Charge"
+                if type$="I" type$="Invoice"
                 invoice$=art01a.ar_inv_no$
                 balance=amount+applied
                 total=total+balance
@@ -331,76 +333,278 @@ rem --- All done
 
 header: rem --- Print the statement header
 
-    if first_page=0 print (printer_dev)'ff',
+    
     first_page=0
     lines=0
     page=page+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev) @(p[0]),"Page ",page:"#0",@(p[1]),"Page ",page:"#0"
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) @(h[0]),arm01a.customer_name$
-    print (printer_dev) @(h[0]),address$(1,30),@(h[1]),fnmask$(arm01a.customer_id$(1,customer_size),m0$),
-:                       @(h[2]),arm01a.customer_name$(1,21)
-    print (printer_dev) @(h[0]),address$(31,30)
-    print (printer_dev) @(h[0]),address$(61,30)
-    print (printer_dev) @(h[0]),address$(91,30),@(h[1]),fndate$(asof$),@(h[2]),fndate$(asof$),
-:                       @(h[3]),fnmask$(arm01a.customer_id$(1,customer_size),m0$)
-    print (printer_dev) @(h[0]),address$(121,30)
-    print (printer_dev) @(h[0]),address$(151,30)
-    print (printer_dev) ""
-    print (printer_dev) ""
+
+    page!=doc!.createPage()
+    
+        
+    image!=page!.newImage()
+    image!.setURL("FILE:c:\apps\aon\data_images\fli001.jpg")
+    image!.setPosition(new java.awt.Point(160,20))
+    image!.setWidth(260)
+    image!.setHeight(80)   
+
+    statement!=page!.newParagraph()
+    statement!.setHorizontalFill(1)
+    statement!.setPosition(new java.awt.Point(200,0))
+    statement!.setText("CUSTOMER STATEMENT")
+    statement!.setFont(boldfont!)
+    statement!.setTextColor(myAPI!.makeColor("RED"))
+
+    pageno!=page!.newParagraph()
+    pageno!.setHorizontalFill(1)
+    pageno!.setPosition(new java.awt.Point(370,120))
+    pageno!.setText("Page: "+str(page))
+    pageno!.setFont(textfont!)
+
+    stdate!=page!.newParagraph()
+    stdate!.setHorizontalFill(1)
+    stdate!.setPosition(new java.awt.Point(370,135))
+    stdate!.setText("Statement Date: "+fndate$(asof$))
+    stdate!.setFont(textfont!)
+
+    cust!=page!.newParagraph()
+    cust!.setHorizontalFill(1)
+    cust!.setPosition(new java.awt.Point(370,150))
+    cust!.setText("Customer: "+fnmask$(arm01a.customer_id$(1,customer_size),m0$))
+    cust!.setFont(textfont!)
+
+    name!=page!.newParagraph()
+    name!.setHorizontalFill(1)
+    name!.setPosition(new java.awt.Point(40,120))
+    name!.setText(arm01a.customer_name$)
+    name!.setFont(textfont!)
+    
+    add1!=page!.newParagraph()
+    add1!.setHorizontalFill(1)
+    add1!.setPosition(new java.awt.Point(40,135))
+    add1!.setText(address$(1,30)    )
+    add1!.setFont(textfont!)
+
+    add2!=page!.newParagraph()
+    add2!.setHorizontalFill(1)
+    add2!.setPosition(new java.awt.Point(40,150))
+    add2!.setText(address$(31,30)    )
+    add2!.setFont(textfont!)
+
+    add3!=page!.newParagraph()
+    add3!.setHorizontalFill(1)
+    add3!.setPosition(new java.awt.Point(40,165))
+    add3!.setText(address$(91,30)    )
+    add3!.setFont(textfont!)
+    
+    page!.add(statement!)
+    page!.add(image!)
+    page!.add(pageno!)
+    page!.add(stdate!)
+    page!.add(cust!)
+    page!.add(name!)    
+    page!.add(add1!)
+    page!.add(add2!)
+    page!.add(add3!)
+
+rem ---Ribbon info
+    
+    invdt!=page!.newParagraph()
+    invdt!.setHorizontalFill(1)
+    invdt!.setPosition(new java.awt.Point(0,240))
+    invdt!.setText("Invoice Date")
+    invdt!.setFont(boldfont!)
+
+    type!=page!.newParagraph()
+    type!.setHorizontalFill(1)
+    type!.setPosition(new java.awt.Point(100,240))
+    type!.setText("Type")
+    type!.setFont(boldfont!)
+
+    document!=page!.newParagraph()
+    document!.setHorizontalFill(1)
+    document!.setPosition(new java.awt.Point(200,240))
+    document!.setText("Invoice")
+    document!.setFont(boldfont!)
+
+    amount!=page!.newParagraph()
+    amount!.setHorizontalFill(1)
+    amount!.setPosition(new java.awt.Point(300,240))
+    amount!.setText("Amount")
+    amount!.setFont(boldfont!)
+
+    apply!=page!.newParagraph()
+    apply!.setHorizontalFill(1)
+    apply!.setPosition(new java.awt.Point(400,240))
+    apply!.setText("Applied")
+    apply!.setFont(boldfont!)
+
+    balance!=page!.newParagraph()
+    balance!.setHorizontalFill(1)
+    balance!.setPosition(new java.awt.Point(500,240))
+    balance!.setText("Balance")
+    balance!.setFont(boldfont!)
+
+    page!.add(invdt!)
+    page!.add(type!)
+    page!.add(document!)
+    page!.add(amount!)
+    page!.add(apply!)
+    page!.add(balance!)
+
+    
+    
     return
 
 detail: rem --- Print a statement detail line
 
     if lines>=maxlines-1 gosub continued
-    print (printer_dev) @(o[0]),transdate$,@(o[1]),type$,@(o[2]),invoice$,@(o[3]),amount:m1$,@(o[4]),applied:m1$,
-:                       @(o[5]),balance:m1$,@(o[6]),invoice$,@(o[7]),type$,@(o[8]),balance:m1$
+
+    tdate!=page!.newParagraph()
+    tdate!.setHorizontalFill(1)
+    tdate!.setPosition(new java.awt.Point(10,(lines*15)+270))
+    tdate!.setText(transdate$)
+    tdate!.setFont(textfont!)
+
+    ttype!=page!.newParagraph()
+    ttype!.setHorizontalFill(1)
+    ttype!.setPosition(new java.awt.Point(100,(lines*15)+270))
+    ttype!.setText(type$)
+    ttype!.setFont(textfont!)
+
+    tdoc!=page!.newParagraph()
+    tdoc!.setHorizontalFill(1)
+    tdoc!.setPosition(new java.awt.Point(200,(lines*15)+270))
+    tdoc!.setText(invoice$)
+    tdoc!.setFont(textfont!)
+       
+    tamount!=page!.newParagraph()
+    tamount!.setHorizontalFill(1)
+    tamount!.setPosition(new java.awt.Point(300,(lines*15)+270))
+    tamount!.setText(str(amount:m1$))
+    tamount!.setFont(textfont!)
+    
+    tapply!=page!.newParagraph()
+    tapply!.setHorizontalFill(1)
+    tapply!.setPosition(new java.awt.Point(400,(lines*15)+270))
+    tapply!.setText(str(applied:m1$))
+    tapply!.setFont(textfont!)
+
+    tbal!=page!.newParagraph()
+    tbal!.setHorizontalFill(1)
+    tbal!.setPosition(new java.awt.Point(500,(lines*15)+270))
+    tbal!.setText(str(balance:m1$))
+    tbal!.setFont(textfont!)
+
+    page!.add(tdate!)   
+    page!.add(ttype!)
+    page!.add(tdoc!)
+    page!.add(tamount!)
+    page!.add(tapply!)
+    page!.add(tbal!)
+
     lines=lines+1
-    if spacing=2 
-       print (printer_dev) ""
-       lines=lines+1
-    endif
+    
     return
 
     return
 
 footer: rem --- Print the statement footer
 
-    while lines<maxlines
-          print (printer_dev) ""
-          lines=lines+1
-    wend
-    print (printer_dev) @(f[0]),message$
-    print (printer_dev) ""
-    print (printer_dev) @(f[1]),total:m1$,@(f[2]),total:m1$
-    print (printer_dev) ""
-    print (printer_dev) @(a[0]+m1-8),"Current",@(a[1]+m1-8),"30 Days",@(a[2]+m1-8),"60 Days",@(a[3]+m1-8),"90 Days"
-    print (printer_dev) @(a[0]),current:m1$,@(a[1]),days30:m1$,@(a[2]),days60:m1$,@(a[3]),days90:m1$
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
+    
+    mess!=page!.newParagraph()
+    mess!.setHorizontalFill(1)
+    mess!.setPosition(new java.awt.Point(10,600))
+    mess!.setText(message$)
+    mess!.setFont(textfont!)
+
+    total!=page!.newParagraph()
+    total!.setHorizontalFill(1)
+    total!.setPosition(new java.awt.Point(420,599))
+    total!.setText("Total Balance:")
+    total!.setFont(boldfont!)
+
+    totalamt!=page!.newParagraph()
+    totalamt!.setHorizontalFill(1)
+    totalamt!.setPosition(new java.awt.Point(500,600))
+    totalamt!.setText(str(total:m1$))
+    totalamt!.setFont(textfont!)
+    
+    curr!=page!.newParagraph()
+    curr!.setHorizontalFill(1)
+    curr!.setPosition(new java.awt.Point(10,640))
+    curr!.setText("Current")
+    curr!.setFont(boldfont!)
+
+    day30!=page!.newParagraph()
+    day30!.setHorizontalFill(1)
+    day30!.setPosition(new java.awt.Point(70,640))
+    day30!.setText("30 Days")
+    day30!.setFont(boldfont!)
+
+    day60!=page!.newParagraph()
+    day60!.setHorizontalFill(1)
+    day60!.setPosition(new java.awt.Point(130,640))
+    day60!.setText("60 Days")
+    day60!.setFont(boldfont!)
+    
+    day90!=page!.newParagraph()
+    day90!.setHorizontalFill(1)
+    day90!.setPosition(new java.awt.Point(190,640))
+    day90!.setText("90 Days & Over")
+    day90!.setFont(boldfont!)
+
+    curramt!=page!.newParagraph()
+    curramt!.setHorizontalFill(1)
+    curramt!.setPosition(new java.awt.Point(10,660))
+    curramt!.setText(str(current:m1$))
+    curramt!.setFont(textfont!)
+
+    dayamt30!=page!.newParagraph()
+    dayamt30!.setHorizontalFill(1)
+    dayamt30!.setPosition(new java.awt.Point(70,660))
+    dayamt30!.setText(str(days30:m1$))
+    dayamt30!.setFont(textfont!)
+
+    dayamt60!=page!.newParagraph()
+    dayamt60!.setHorizontalFill(1)
+    dayamt60!.setPosition(new java.awt.Point(130,660))
+    dayamt60!.setText(str(days60:m1$))
+    dayamt60!.setFont(textfont!)
+    
+    dayamt90!=page!.newParagraph()
+    dayamt90!.setHorizontalFill(1)
+    dayamt90!.setPosition(new java.awt.Point(190,660))
+    dayamt90!.setText(str(days90:m1$))
+    dayamt90!.setFont(textfont!)
+    
+    page!.add(mess!)
+    page!.add(total!)
+    page!.add(totalamt!)
+    page!.add(curr!)
+    page!.add(day30!)
+    page!.add(day60!)
+    page!.add(day90!)
+    page!.add(curramt!)
+    page!.add(dayamt30!)
+    page!.add(dayamt60!)
+    page!.add(dayamt90!)
+
+    doc!.print()
+
     return
 
 continued: rem --- This statement continues on the next page
 
-    while lines<maxlines+2
-          print (printer_dev) ""
-          lines=lines+1
-    wend
-    print (printer_dev) @(f[1]),"(Continued)",@(f[2]),"(Continued)"
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
-    print (printer_dev) ""
+    
+    continue!=page!.newParagraph()
+    continue!.setHorizontalFill(1)
+    continue!.setPosition(new java.awt.Point(130,640))
+    continue!.setText("(Continued)")
+    continue!.setFont(textfont!) 
+
+    page!.add(continue!)
+
+    
     gosub header
     return
 
