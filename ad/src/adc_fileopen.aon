@@ -176,7 +176,7 @@ rem --- Process options by file
         errors=1,sverr=err   
         gosub get_file_description
         error$="Error "+str(sverr)+" encountered while trying to open "+description$
-        if err=0 error$=description$+" is in use by another user and cannot be locked or cleared"
+        if sverr=0 error$=description$+" is in use by another user and cannot be locked or cleared"
         break
     
     next_option: rem --- End of options loop
@@ -197,7 +197,7 @@ error_message: rem --- An error was encountered. Display error message and exit.
     title$="Error Recovery"
     buttons=5
     icon=16
-    status=err+1
+    status=sverr+1
     x=msgbox(error$,buttons+icon,title$,err=std_exit)
     goto std_exit
 
