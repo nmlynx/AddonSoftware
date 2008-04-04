@@ -232,7 +232,7 @@ customer_break: rem --- Customer break
                    find (art01_dev,key=k$,dom=*next); continue
                    k$=art01a.firm_id$+invoice$
                    find (are05_dev,key=k$,dom=*next); continue
-                   k$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+invoice$+"000"
+                   k$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+invoice$
                    find (opt01_dev,key=k$,dom=*next); continue
                    duplicate=0
              wend
