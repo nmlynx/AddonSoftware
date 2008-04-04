@@ -143,12 +143,12 @@ rem --- Header record
     OutVect!.addItem(art01a.ar_inv_no$)
     OutVect!.addItem(fndate$(art01a.invoice_date$))
     OutVect!.addItem(fndate$(art01a.inv_due_date$))
-    OutVect!.addItem(art01a.ar_terms_code$)
+    OutVect!.addItem(str(num(art01a.ar_terms_code$)))
     OutVect!.addItem(art01a.invoice_type$)
-    OutVect!.addItem(str(invoice:mask$))
+    OutVect!.addItem(str(invoice))
     OutVect!.addItem("")
     OutVect!.addItem("")    
-    if count=0 OutVect!.addItem(str(balance:mask$)) else OutVect!.addItem("")
+    if count=0 OutVect!.addItem(str(balance)) else OutVect!.addItem("")
     inv_found=1
     row=row+1
     l=l+1
@@ -181,8 +181,8 @@ next_art11:
     OutVect!.addItem("")
     OutVect!.addItem(art11a.trans_type$)
     OutVect!.addItem("")
-    OutVect!.addItem(str(art11a.trans_amt:mask$))
-    if art11a.adjdisc_amt<>0 OutVect!.addItem(str(art11a.adjdisc_amt:mask$)) else OutVect!.addItem("")
+    OutVect!.addItem(str(art11a.trans_amt))
+    if art11a.adjdisc_amt<>0 OutVect!.addItem(str(art11a.adjdisc_amt)) else OutVect!.addItem("")
     OutVect!.addItem("")
     inv_found=1
     row=row+1
@@ -223,10 +223,10 @@ cust_total: rem --- Customer Total
     OutVect!.addItem("")
     OutVect!.addItem("Customer Total")
     xwk=fnblank(3)
-    OutVect!.addItem(str(invtotal:mask$))
-    OutVect!.addItem(str(apptotal:mask$))
-    OutVect!.addItem(str(distotal:mask$))
-    OutVect!.addItem(str(baltotal:mask$))
+    OutVect!.addItem(str(invtotal))
+    OutVect!.addItem(str(apptotal))
+    OutVect!.addItem(str(distotal))
+    OutVect!.addItem(str(baltotal))
     inv_found=1
     row=row+1
     l=l+1
@@ -239,7 +239,7 @@ inv_total: rem --- Invoice Total
     OutVect!.addItem("")
     OutVect!.addItem("Invoice Total")
     xwk=fnblank(6)
-    OutVect!.addItem(str(lastbalance:mask$))
+    OutVect!.addItem(str(lastbalance))
     xwk=fnblank(9);rem "blank line after inv total
    
 set_inv_no:
