@@ -98,8 +98,10 @@ rem --- Is General Ledger installed and being used?
         status=0
         source$=pgm(-2)
         call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
-        if status goto std_exit
-
+        if status 
+            OutVect!=null()
+            goto std_exit
+        endif
 
 
 rem --- Initializations
@@ -574,6 +576,16 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         next q1
         return q1
     fnend
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
+rem #endinclude disp_message.src
 
 
 rem #include std_error.src
