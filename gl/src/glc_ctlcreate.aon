@@ -444,10 +444,12 @@ rem --- or returned.
                 options$[1]="F"
                 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                               ids$[all],templates$[all],channels[all],batch,status
+
                 if status found=0
                 glw11_dev=channels[1]
                 if glw11_dev=0 found=0
                 if found break
+                if status=1 break; rem status should be 1 if err 0 on open; don't try to create
 
                 rem --- Have we already tried to create/open it?
 
