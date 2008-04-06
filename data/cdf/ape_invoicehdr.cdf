@@ -1,3 +1,15 @@
+[[APE_INVOICEHDR.AP_INV_NO.AVAL]]
+	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
+	ctl_stat$=""
+	gosub disable_fields
+
+	ctl_name$="APE_INVOICEHDR.INVOICE_DATE"
+	ctl_stat$=""
+	gosub disable_fields
+
+	ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
+	ctl_stat$=""
+	gosub disable_fields
 [[APE_INVOICEHDR.ASHO]]
 rem --- get default date
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_ORDDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
@@ -16,6 +28,19 @@ gosub calculate_due_and_discount
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 user_tpl.inv_amt$=""
 user_tpl.tot_dist$=""
+
+rem --- Re-enable disabled fields
+ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_INVOICEHDR.INVOICE_DATE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
+ctl_stat$=""
+gosub disable_fields
 [[APE_INVOICEHDR.BWRI]]
 rem --- fully distributed?
 
