@@ -77,6 +77,9 @@ rem --- Retrieve parameter records
     call pgmdir$+"adc_sizemask.aon",m1$,m1,13,13
     m0=len(m0$)
     m1=len(m1$)
+    dpos=pos("."=m1$);if dpos<>0 wm1$=m1$(1,dpos-1),fm1$=m1$(dpos,3)
+   
+
 
 rem --- Open the printer
 
@@ -477,30 +480,55 @@ detail: rem --- Print a statement detail line
     tdoc!.setText(invoice$)
     tdoc!.setFont(textfont!)
        
-    tamount!=page!.newParagraph()
-    tamount!.setHorizontalFill(1)
-    tamount!.setPosition(new java.awt.Point(300,(lines*15)+270))
-    tamount!.setText(str(amount:m1$))
-    tamount!.setFont(textfont!)
+    tamountdollar!=page!.newParagraph()
+    tamountdollar!.setHorizontalAlignment(tamountdollar!.RIGHT_JUSTIFIED)
+    tamountdollar!.setPosition(new java.awt.Point(268,(lines*15)+270))
+    tamountdollar!.setText(str(int(amount):wm1$))
+    tamountdollar!.setFont(textfont!)
+    if amount<0 credit$="-" else credit$=""
+
+    tamountcent!=page!.newParagraph()
+    tamountcent!.setHorizontalAlignment(tamountdollar!.LEFT_JUSTIFIED)
+    tamountcent!.setPosition(new java.awt.Point(340,(lines*15)+270))
+    tamountcent!.setText(str(fpt(amount):fm1$)+credit$)
+    tamountcent!.setFont(textfont!)
     
-    tapply!=page!.newParagraph()
-    tapply!.setHorizontalFill(1)
-    tapply!.setPosition(new java.awt.Point(400,(lines*15)+270))
-    tapply!.setText(str(applied:m1$))
-    tapply!.setFont(textfont!)
+    tapplydollar!=page!.newParagraph()
+    tapplydollar!.setHorizontalAlignment(tapplydollar!.RIGHT_JUSTIFIED)
+    tapplydollar!.setPosition(new java.awt.Point(368,(lines*15)+270))
+    tapplydollar!.setText(str(int(applied):wm1$))
+    tapplydollar!.setFont(textfont!)
+    if applied <0 credit$="-" else credit$=""
 
-    tbal!=page!.newParagraph()
-    tbal!.setHorizontalFill(1)
-    tbal!.setPosition(new java.awt.Point(500,(lines*15)+270))
-    tbal!.setText(str(balance:m1$))
-    tbal!.setFont(textfont!)
+    tapplycent!=page!.newParagraph()
+    tapplycent!.setHorizontalAlignment(tapplycent!.LEFT_JUSTIFIED)
+    tapplycent!.setPosition(new java.awt.Point(440,(lines*15)+270))
+    tapplycent!.setText(str(fpt(applied):fm1$)+credit$)
+    tapplycent!.setFont(textfont!)
 
+    tbaldollar!=page!.newParagraph()
+    tbaldollar!.setHorizontalAlignment(tapplydollar!.RIGHT_JUSTIFIED)
+    tbaldollar!.setPosition(new java.awt.Point(468,(lines*15)+270))
+    tbaldollar!.setText(str(int(balance):wm1$))
+    tbaldollar!.setFont(textfont!)
+    if balance <0 credit$="-" else credit$=""
+
+    tbalcent!=page!.newParagraph()
+    tbalcent!.setHorizontalAlignment(tapplycent!.LEFT_JUSTIFIED)
+    tbalcent!.setPosition(new java.awt.Point(540,(lines*15)+270))
+    tbalcent!.setText(str(fpt(balance):fm1$)+credit$)
+    tbalcent!.setFont(textfont!)
+
+    
     page!.add(tdate!)   
     page!.add(ttype!)
     page!.add(tdoc!)
-    page!.add(tamount!)
-    page!.add(tapply!)
-    page!.add(tbal!)
+    page!.add(tamountdollar!)
+    page!.add(tamountcent!)
+    page!.add(tapplydollar!)
+    page!.add(tapplycent!)
+    page!.add(tbaldollar!)
+    page!.add(tbalcent!)
 
     lines=lines+1
     
@@ -523,12 +551,20 @@ footer: rem --- Print the statement footer
     total!.setText("Total Balance:")
     total!.setFont(boldfont!)
 
-    totalamt!=page!.newParagraph()
-    totalamt!.setHorizontalFill(1)
-    totalamt!.setPosition(new java.awt.Point(500,600))
-    totalamt!.setText(str(total:m1$))
-    totalamt!.setFont(textfont!)
-    
+    totalamtdollar!=page!.newParagraph()
+    totalamtdollar!.setHorizontalAlignment(total!.RIGHT_JUSTIFIED)
+    totalamtdollar!.setPosition(new java.awt.Point(468,600))
+    totalamtdollar!.setText(str(int(total):wm1$))
+    totalamtdollar!.setFont(textfont!)
+    if total<0 credit$="-" else credit$=""
+
+    totalamtcent!=page!.newParagraph()
+    totalamtcent!.setHorizontalAlignment(tapplycent!.LEFT_JUSTIFIED)
+    totalamtcent!.setPosition(new java.awt.Point(540,600))
+    totalamtcent!.setText(str(fpt(total):fm1$)+credit$)
+    totalamtcent!.setFont(textfont!)
+
+       
     curr!=page!.newParagraph()
     curr!.setHorizontalFill(1)
     curr!.setPosition(new java.awt.Point(10,640))
@@ -579,7 +615,8 @@ footer: rem --- Print the statement footer
     
     page!.add(mess!)
     page!.add(total!)
-    page!.add(totalamt!)
+    page!.add(totalamtdollar!)
+    page!.add(totalamtcent!)
     page!.add(curr!)
     page!.add(day30!)
     page!.add(day60!)
