@@ -1,8 +1,7 @@
 [[APM_EMAILFAX.<CUSTOM>]]
 multi_email: rem --- Validate format of email address(es)
 	simple_email$="[-_.A-Za-z0-9]+@[-_A-Za-z0-9\.]+"
-rem	dummy=mask("","^(""[^""]+"" *<"+simple_email$+">|"+simple_email+")$")
-	dummy=mask("",simple_email$)
+	dummy=mask("","^(""[^""]+"" *<"+simple_email$+">|"+simple_email$+")$")
 	not_valid=0
 	if cvs(mail$,2)<>"" 
 		save_mail$=mail$
