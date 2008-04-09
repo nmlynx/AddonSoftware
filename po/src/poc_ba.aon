@@ -1,10 +1,46 @@
 rem --- Update Purchase Requisition File
-rem --- Program poc_ba v8.0.0 11Dec2007 (poc_ba)
-rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (12/11/2007 09:58:38)
+rem --- Program poc_ba v8.0.0 04Apr2008 (poc_ba)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (04/04/2008 11:51:21)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
+
+rem --- CHANS[1]    : apm-02 channel number
+rem --- CHANS[2]    : poe-01 channel number
+rem --- CHANS[3]    : poe-02 channel number
+rem --- CHANS[4]    : poe-11 channel number
+rem --- CHANS[5]    : poe-52 channel number
+rem --- CHANS[6]    : pom-02 channel number
+rem --- CHANS[7]    : pos-10 channel number
+rem --- CHANS[8]    : poe-21 channel number
+rem --- CHANS[9]    : poe-31 channel number
+rem --- CHANS[10]   : poe-41 channel number
+rem --- CHANS[11]   : sys-01 channel number
+rem --- CHANS[12]   : apm-01 channel number
+rem
+rem --- INFO$[0]   : Firm ID
+rem --- INFO$[1]   : Vendor #
+rem --- INFO$[2]   : Line Type (S=Stock/N=Non-stock/M=Message)
+rem --- INFO$[3]   : Warehouse ID
+rem --- INFO$[4]   : Date Ordered (YYMMDD)
+rem --- INFO$[5]   : Date Required (YYMMDD)
+rem --- INFO$[6]   : Unit of Measure
+rem --- INFO$[7]   : Source (W=Work Orders/M=MRP/R=Replenishment)
+rem --- INFO$[8]   : MRP Forecast Type
+rem --- INFO$[9]   : Work Order Number (and optional WO seq number)
+rem --- INFO$[10]  : Customer Number
+rem --- INFO$[11]  : Sales Order Number (and optional SO seq number) (not used)
+rem --- INFO$[12]  : Customer Ship-To Number
+rem --- INFO$[13]  : Item Number (Type S)
+rem --- INFO$[14]  : Memo/Non-stock Description
+rem
+rem --- INFO[0]    : Conversion factor (if 0, defaults to 1)
+rem --- INFO[1]    : Unit Cost
+rem --- INFO[2]    : Requisition Qty
+rem
+rem --- DETAILKEY$ : Returned, First string of detail record
+rem --- STATUS     : Returned, error if > 0
 
     setesc std_error
     seterr std_error
@@ -12,14 +48,14 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -28,8 +64,8 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="apm-01",ids$[1]="APM_VENDMAST"
     files$[2]="apm-02",ids$[2]="APM_VENDHIST"
-    files$[3]="aps-01a",ids$[3]=""
-    files$[4]="ivs_params",ids$[4]="IVS_PARAMS"
+    files$[3]="APS_PARAMS",ids$[3]="APS_PARAMS"
+    files$[4]="IVS_PARAMS",ids$[4]="IVS_PARAMS"
     files$[5]="poe-01",ids$[5]="POE_REQHDR"
     files$[6]="poe-02",ids$[6]="POE_POHDR"
     files$[7]="poe-11",ids$[7]="POE_REQDET"
@@ -38,25 +74,25 @@ rem --- Open/Lock files
     files$[10]="poe-41",ids$[10]="POE_REQBYITM"
     files$[11]="poe-52",ids$[11]="POE_POBYREQ"
     files$[12]="pom-02",ids$[12]="POC_LINECODE"
-    files$[13]="pos-01a",ids$[13]="POS_PARAMS"
+    files$[13]="POS_PARAMS",ids$[13]="POS_PARAMS"
     files$[14]="pos-10",ids$[14]="POS_NUMBERS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    apm01_dev=channels[1]
-    apm02_dev=channels[2]
+    apm01a_dev=channels[1]
+    apm02a_dev=channels[2]
     aps01a_dev=channels[3]
     ivs01a_dev=channels[4]
-    poe01_dev=channels[5]
-    poe02_dev=channels[6]
-    poe11_dev=channels[7]
-    poe21_dev=channels[8]
-    poe31_dev=channels[9]
-    poe41_dev=channels[10]
-    poe52_dev=channels[11]
-    pom02_dev=channels[12]
+    poe01a_dev=channels[5]
+    poe02a_dev=channels[6]
+    poe11a_dev=channels[7]
+    poe21a_dev=channels[8]
+    poe31a_dev=channels[9]
+    poe41a_dev=channels[10]
+    poe52a_dev=channels[11]
+    pom02a_dev=channels[12]
     pos01a_dev=channels[13]
-    pos10_dev=channels[14]
+    pos10n_dev=channels[14]
 
 rem --- Dimension string templates
 
@@ -64,7 +100,7 @@ rem --- Dimension string templates
 :       ivs01a$:templates$[4],poe01a$:templates$[5],poe02a$:templates$[6],
 :       poe11a$:templates$[7],poe21a$:templates$[8],poe31a$:templates$[9],
 :       poe41a$:templates$[10],poe52a$:templates$[11],pom02a$:templates$[12],
-:       pos01a$:templates$[13],pos10a$:templates$[14]
+:       pos01a$:templates$[13],pos10n$:templates$[14]
 
 rem --- Retrieve parameter records
 
@@ -77,7 +113,6 @@ rem --- Retrieve parameter records
 
 rem --- Initializations
 
-    dim a[8],b[12],d[3],b0$(18),x2$(15)
     dim reqnum$(7),detailkey$(18)
     dim purchaddrcode$(2),dateprom$(6),notb4date$(6),ack$(20),whseloc$(10)
     dim firm$(2),linetype$(1),vendor$(6),whse$(2),dateord$(6)
@@ -85,8 +120,13 @@ rem --- Initializations
     dim source$(1),forcasttype$(3),wonum$(7)
     dim wonum_seq$(10),custnum$(6),sonum_seq$(10)
     dim shiptonum$(6),itemnum$(20)
-    more=1
-    flag=1
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQHDR","PRIMARY",poe01a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",poe11a_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_POBYREQ","PRIMARY",poe52a_key_tpl$,rd_table_chans$[all],status$
+    dim poe01a_key$:poe01a_key_tpl$
+    dim poe11a_key$:poe11a_key_tpl$
+    dim poe52a_key$:poe52a_key_tpl$
 
 rem --- Assign input params
 
@@ -112,10 +152,11 @@ rem --- Assign input params
 
 rem --- Defaults
 
-    find record (apm01_dev,key=firm$+vendor$,dom=done_failed) apm01a$
-    find record (sys01_dev,key=firm$+"PO00",dom=done_failed) pos01a$
+    dim po_defaults$(68),vend_defaults$(245)
+    find record (apm01_dev,key=firm$+vendor$,dom=done_unsuccess) apm01a$
+    find record (pos01_dev,key=firm$+"PO00",dom=done_unsuccess) pos01a$
     find record (pos10_dev,key=firm$+"N",dom=*next) pos10n$
-    if pos10n.increment=0 then let pos10n.increment=10
+    if pos10n.increment=0 then pos10n.increment=10
     vshipvia$=pos01a.ap_ship_via$
     freightterms$=pos01a.po_frt_terms$
     fob$=pos01a.fob$
@@ -127,23 +168,19 @@ rem --- Defaults
 
 rem --- Establish correct precision
 
-    find record (sys01_dev,key=firm$+"IV00",dom=done_failed) ivs01a$
+    find record (ivs01a_dev,key=firm$+"IV00",dom=done_unsuccess) ivs01a$
     places=num(ivs01a.precision$)
 
 rem --- Check poe-01 for existing requisition for this vendor
 
-    precision places
+    precision places;flag=0
     read (poe01_dev,key=firm$+vendor$,dom=*next)
-    k01$=key(poe01_dev,end=label1)
-
-    if k01$(1,8)<>firm$+vendor$ then gosub findspot;flag=0
-    
-    if flag
-
-    label1:
+    poe01a_key$=key(poe01_dev,end=label1)
+    if poe01a_key.firm_id$+poe01a_key.vendor_id$=firm$+vendor$ then gosub findspot; flag=1
+label1:
+    if !flag
         gosub getterms
         gosub buildheader
-
     endif
 
 rem --- Build and write detail record
@@ -166,13 +203,8 @@ rem --- Build and write detail record
     poe11a.shipto_no$=shiptonum$
     poe11a.warehouse_id$=whse$
 
-    if linetype$="S"
-        poe11a.item_no$=itemnum$
-    else 
-        gosub get_memodesc
-    fi
-
-    if linetype$<>"M" 
+    if linetype$="S" then poe11a.item_no$=itemnum$ else gosub get_memodesc
+    if linetype$<>"M"
         poe11a.conv_factor=info[0]
         poe11a.unit_cost=info[1]
         poe11a.req_quantity=info[2]
@@ -197,13 +229,13 @@ done: rem --- Done - Successful
 
 rem --- Update print file
 
-    poe21a_key.firm_id$=poe11a_key.firm_id$
-    poe21a_key.vendor_no$=poe11a_key.vendor_no$
-    poe21a_key.req_no$=poe11a_key.req_no$
-    write record (poe21_dev,key=poe21a_key.firm_id$+ poe21a_key.vendor_no$+poe21a_key.req_no$) poe21a$
+    poe21a.firm_id$=poe11a_key.firm_id$
+    poe21a.vendor_no$=poe11a_key.vendor_no$
+    poe21a.req_no$=poe11a_key.req_no$
+    write record (poe21_dev,key=poe21a.firm_id$+ poe21a.vendor_no$+poe21a.req_no$) poe21a$
     goto std_exit
 
-done_failed: rem --- Done - Unsuccessful
+done_unsuccess: rem --- Done - Unsuccessful
 
     if status=0 then let status=1
     goto std_exit
@@ -211,42 +243,52 @@ done_failed: rem --- Done - Unsuccessful
 rem --- At least 1 req exists for vendor, so find spot for new req line
 findspot: rem --- (Add to 1st req if possible, next if not, ... etc)
 
-
-    read (poe11_dev,key=k01$+$ff$,dom=*next)
-    k11$=keyp(poe11_dev,end=wontfit)
-
     while more
+        read (poe11_dev,key=poe01a_key.firm_id$+$ff$,dom=*next)
+        poe11a_key$=keyp(poe11_dev,end=wontfit)
 
         if !looping 
-            if k11$(1,15)<>k01$ 
-                poe11a_key.firm_id$=k01$(1,2)
-                poe11a_key.vendor_no$=k01$(3,6)
-                poe11a_key.req_no$=k01$(9,7)
-                poe11a_key.po_line_no$=str(pos10n.increment:"000")
-                break
+            if poe11a_key.firm_id$+poe11a_key.vendor_id$+poe11a_key.req_no$<>poe01a_key$ 
+                poe11a.firm_id$=poe01a_key.firm_id$
+                poe11a.vendor_id$=poe01a_key.vendor_id$
+                poe11a.req_no$=poe01a_key.req_no$
+                poe11a.po_line_no$=str(pos10n.increment:"000")
+                looping=0
+                return
             else
-                flag=0
-            fi
+                flag=1
+            endif
         endif
 
-        if  flag then if k11$(1,15)=k01$ 
-
-           seq=num(k11$(16,3))+pos10n.increment
+        if !flag then
+           seq=num(poe11a_key.po_line_no$)+pos10n.increment
            if seq<=999 
-               poe11a_key.firm_id$=k11$(1,2)
-               poe11a_key.vendor_no$=k11$(3,6)
-               poe11a_key.req_no$=k11$(9,7)
-               poe11a_key.po_line_no$=str(seq:"000")
-           endif 
-           break
-
-        endif 
+                poe11a.firm_id$=poe11a_key.firm_id$
+                poe11a.vendor_no$=poe11a_key.vendor_id$
+                poe11a.req_no$=poe11a_key.req_no$
+                poe11a.po_line_no$=str(seq:"000")
+                looping=0
+                return
+           endif
+        else
+            if poe11a_key$=poe01a_key$ then
+                seq=num(poe11a_key.po_line_no$)+pos10n.increment
+                if seq<=999 
+                    poe11a.firm_id$=poe11a_key.firm_id$
+                    poe11a.vendor_no$=poe11a_key.vendor_id$
+                    poe11a.req_no$=poe11a_key.req_no$
+                    poe11a.po_line_no$=str(seq:"000")
+                    looping=0
+                    return
+                endif
+           endif
+        endif
 
     getnexthead: rem --- Get next req from header file
 
         read (poe01_dev,end=wontfit)
-        k01$=key(poe01_dev)
-        if k01$(1,8)=firm$+vendor$ then let looping=1;goto findspot 
+        poe01a_key$=key(poe01_dev)
+        if poe01a_key.firm_id$+poe01a_key.vendor_id$=firm$+vendor$ then looping=1;continue 
 
     wontfit: rem --- couldn't find room in existing reqs
 
@@ -260,13 +302,9 @@ findspot: rem --- (Add to 1st req if possible, next if not, ... etc)
 
 getterms: rem --- Get Terms code from apm-02
 
-    dim c1$(24),c[13]
     read (apm02_dev,key=firm$+vendor$,dom=*next)
     apm02_key$=key(apm02_dev,end=label4)
-    if pos(firm$+vendor$=apm02_key$)=1 
-       read record (apm02_dev,key=apm02_key$) apm02a$
-    endif 
-
+    if pos(firm$+vendor$=apm02_key$)=1 then read record (apm02_dev,key=apm02_key$) apm02a$
 label4:
     termscode$=apm02a.terms_code$
     return
@@ -279,96 +317,73 @@ rem --- get 'next req #'; increment and write back
     if pos10n.next_req_no=0 then let pos10n.next_req_no=1
 
     while more
-
         reqnum=pos10n.next_req_no
         pos10n.next_req_no=pos10n.next_req_no+1
         read (poe52_dev,key=firm$+$ff$,dom=*next)
-        k52$=keyp(poe52_dev,end=label5)
-        if k52$(3,7)>str(reqnum:"0000000") then let reqnum=num(k52$(3,7)),pos10n.next_req_no=reqnum+1
-
-    label5:
-
+        poe52a_key$=keyp(poe52_dev,end=label5)
+        if poe52a_key.req_no$>str(reqnum:"0000000") then reqnum=num(poe52a_key.req_no$),pos10n.next_req_no=reqnum+1
+label5:
         if pos10n.next_req_no>9999999 then let pos10n.next_req_no=1
         read (poe52_dev,key=firm$+str(reqnum:"0000000"),dom=*next)
-        k52$=key(poe52_dev,end=label7)
-        if k52$(1,2)=firm$ 
-
-          if k52$(3,7)=str(reqnum:"0000000") 
-              find (poe01_dev,key=firm$+k52$(10,6)+k52$(3,7),dom=label6)
+        poe52a_key$=key(poe52_dev,end=label7)
+        if poe52a_key.firm_id$=firm$ 
+          if poe52a_key.req_no$=str(reqnum:"0000000") 
+              find (poe01_dev,key=firm$+poe52a_key.vendor_id$+poe52a_key.req_no$,dom=label6)
               continue
           endif 
-
         else
             break
         fi
-
-    label6:
-
-        find (poe02_dev,key=firm$+k52$(10),dom=label7)
-
+label6:
+        find (poe02_dev,key=firm$+poe52a_key.vendor_id$+poe52a_key.po_no$,dom=label7)
     wend 
-
 label7:
-
     write record (pos10_dev,key=pos10n_key.firm_id$+pos10n_key.record_id$) pos10n$
 
 rem --- make header
 
     reqnum$=str(pos10n.next_req_no:"0000000")
-    poe01a_key.FIRM_ID$=firm$
-    poe01a_key.VENDOR_NO$=vendor$
-    poe01a_key.REQ_NO$=reqnum$
-    poe01a.WAREHOSE_ID$=whse$
-    poe01a.PURCH_ADDR$=purchaddrcode$
-    poe01a.ORD_DATE$=dateord$
-    poe01a.PROMISE_DATE$=dateprom$
-    poe01a.NOT_B4_DATE$=notb4date$
-    poe01a.REQD_DATE$=datereq$
-    poe01a.HOLD_FLAG$=hold$
-    poe01a.TERMS_CODE$=termscode$
-    poe01a.PO_FRT_TERMS$=freightterms$
-    poe01a.AP_SHIP_VIA$=vshipvia$
-    poe01a.ACKNOWLEDGE$=ack$
-    poe01a.FOB$=fob$
-    poe01a.PO_MSG_CODE$=reqmsg$
-    write record (poe01_dev,key=poe01a_key.FIRM_ID$+poe01a_key.VENDOR_NO$+poe01a_key.REQ_NO$) poe01a$
-    poe31a.firm_id$=poe01a_key.FIRM_ID$
-    poe31a.req_no$=poe01a_key.REQ_NO$
-    poe31a.vendor_no$=poe01a_key.VENDOR_NO$
+    poe01a_key.firm_id$=firm$
+    poe01a_key.vendor_no$=vendor$
+    poe01a_key.req_no$=reqnum$
+    poe01a.warehouse_id$=whse$
+    poe01a.purch_addr$=purchaddrcode$
+    poe01a.ord_date$=dateord$
+    poe01a.promise_date$=dateprom$
+    poe01a.not_b4_date$=notb4date$
+    poe01a.reqd_date$=datereq$
+    poe01a.hold_flag$=hold$
+    poe01a.terms_code$=termscode$
+    poe01a.po_frt_terms$=freightterms$
+    poe01a.ap_ship_via$=vshipvia$
+    poe01a.acknowledge$=ack$
+    poe01a.fob$=fob$
+    poe01a.po_msg_code$=reqmsg$
+    write record (poe01_dev,key=poe01a_key.firm_id$+poe01a_key.vendor_no$+poe01a_key.req_no$) poe01a$
+    poe31a.firm_id$=poe01a_key.firm_id$
+    poe31a.req_no$=poe01a_key.req_no$
+    poe31a.vendor_no$=poe01a_key.vendor_no$
     write record (poe31_dev,key=xref$) poe31a$
-    poe11a_key.FIRM_ID$=poe01a_key.FIRM_ID$
-    poe11a_key.VENDOR_NO$=poe01a_key.VENDOR_NO$
-    poe11a_key.REQ_NO$=poe01a_key.REQ_NO$
-    poe11a_key.PO_LINE_NO$="010"
+    poe11a_key.firm_id$=poe01a_key.firm_id$
+    poe11a_key.vendor_no$=poe01a_key.vendor_no$
+    poe11a_key.req_no$=poe01a_key.req_no$
+    poe11a_key.po_line_no$="010"
     return
 
 linecodes: rem --- Assign line code info based on line type defaults
 
-    dim line4lead$(1),linecode$(2),x1$(32)
-    switch action
-
-        case 2
-
-        ntype:
-            linecode$=pos01a.req_n_linecd; rem "Non-stock item type
-            rem goto getline4lead
-            break
-
-        case 3
-
-        mtype:
-                linecode$=pos01a.req_m_linecd; rem "Message line type
-                break
-
-        case 1
-        case default
-        stype:
-
-            linecode$=pos01a.req_s_linecd$; rem "Standard item type
-            break
-
-    swend
-
+    dim line4lead$(1),linecode$(2)
+    on pos(linetype$="SNM") goto stype,stype,ntype,mtype
+stype:
+    linecode$=pos01a.req_s_linecd$; rem "Standard item type
+    goto getline4lead
+ntype:
+    linecode$=pos01a.req_n_linecd$; rem "Non-stock item type
+    goto getline4lead
+mtype:
+    linecode$=pos01a.req_m_linecd$; rem "Message line type
+    goto getline4lead
+getline4lead:
     find record (pom02_dev,key=firm$+linecode$,dom=*next) pom02a$
     line4lead$(1)=pom02a.lead_tim_flg$
     return
@@ -388,7 +403,6 @@ rem --- Split Message At Last Word Boundary Before 40 Characters
     if wb=0 then let wb=41
     poe11a.order_memo$=memodesc$(1,wb-1)
     memodesc$=cvs(memodesc$(wb),2)
-
     return
 
 rem #include std_error.src
