@@ -10,6 +10,7 @@ rem  +-----------------------------------------+
 rem --- element_id$  : Element name
 rem --- app_id$      : Application ID (in)
 rem --- The following values of mask_type were the valid ones as of 9/1/2007
+rem --- You may use either the one character code, or the token it represents
 rem --- Actual valid types will be built dynamically when this call is run
 rem --- mask_type$   : A = Amount
 rem                    I = ID
@@ -50,30 +51,30 @@ rem --- Retrieve sysinfo data
 
 misc_vars:rem --- Misc Variables
 
-	rd_dir_syp$=stbl("+DIR_SYP")
-	rd_dir_img$=stbl("+DIR_IMG")
-	rd_dir_sys$=stbl("+DIR_SYS")
-	rd_gui_dev$=stbl("+GUI_DEVICE")
-	rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"bar_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
-	rd_file_set$=stbl("+FILE_SET")
-	rd_user_id$=stbl("+USER_ID")
+    rd_dir_syp$=stbl("+DIR_SYP")
+    rd_dir_img$=stbl("+DIR_IMG")
+    rd_dir_sys$=stbl("+DIR_SYS")
+    rd_gui_dev$=stbl("+GUI_DEVICE")
+    rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"bar_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
+    rd_file_set$=stbl("+FILE_SET")
+    rd_user_id$=stbl("+USER_ID")
 
-	rd_task_val$="EXPAND_ELEMENT"+str(dec(info(3,0)):"0000")
+    rd_task_val$="EXPAND_ELEMENT"+str(dec(info(3,0)):"0000")
 
 rem --- Open Tables
 
-	rd_num_files=4
-	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+    rd_num_files=4
+    dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
 
-	rd_open_tables$[1]="DDM_ELEMENTS",rd_open_opts$[1]="OTA"
-	rd_open_tables$[2]="ADS_MASKS",rd_open_opts$[2]="OTA"
-	rd_open_tables$[3]="DDM_ELEMENT_LDAT",rd_open_opts$[3]="OTA"
-	rd_open_tables$[4]="DDM_COLUMN_LDAT",rd_open_opts$[4]="OTA"
+    rd_open_tables$[1]="DDM_ELEMENTS",rd_open_opts$[1]="OTA"
+    rd_open_tables$[2]="ADS_MASKS",rd_open_opts$[2]="OTA"
+    rd_open_tables$[3]="DDM_ELEMENT_LDAT",rd_open_opts$[3]="OTA"
+    rd_open_tables$[4]="DDM_COLUMN_LDAT",rd_open_opts$[4]="OTA"
 
-	gosub open_tables
+    gosub open_tables
 
-	ddm_elements_dev=num(rd_open_chans$[1]);dim ddm_elementsa$:rd_open_tpls$[1]
-	ads_mask_dev=num(rd_open_chans$[2]);dim ads_masksa$:rd_open_tpls$[2]
+    ddm_elements_dev=num(rd_open_chans$[1]);dim ddm_elementsa$:rd_open_tpls$[1]
+    ads_mask_dev=num(rd_open_chans$[2]);dim ads_masksa$:rd_open_tpls$[2]
     ddm_element_ldat_dev=num(rd_open_chans$[3]);dim ddm_element_ldat$:rd_open_tpls$[3]
     ddm_column_ldat_dev=num(rd_open_chans$[4]);dim ddm_column_ldat$:rd_open_tpls$[4]
 
@@ -109,6 +110,25 @@ next_ele_ldat:
     goto next_ele_ldat
 
 validate_input:
+
+rem --- implode mask_type to 1 character if possible
+
+    mask_type$=cvs(mask_type$,4)
+    if mask_type$ = "AMOUNT" mask_type$="A"
+    if mask_type$ = "ID" mask_type$="I"
+    if mask_type$ = "UNITS" mask_type$="U"
+    if mask_type$ = "PERCENT" mask_type$="%"
+    if mask_type$ = "RATE" mask_type$="R"
+    if mask_type$ = "EXTENSION" mask_type$="E"
+    if mask_type$ = "QUANTITY" mask_type$="Q"
+    if mask_type$ = "COST" mask_type$="C"
+    if mask_type$ = "PRICE" mask_type$="P"
+    if mask_type$ = "CONV FACTOR" mask_type$="V"
+    if mask_type$ = "MTL FACTOR" mask_type$="M"
+    if mask_type$ = "OVHD FACTOR" mask_type$="O"
+    if mask_type$ = "HOURS" mask_type$="H"
+    if mask_type$ = "ZIP CODE" mask_type$="Z"
+    if mask_type$ = "TELEPHONE" mask_type$="T"
 
 rem --- Verify valid input
 
