@@ -21,7 +21,7 @@ rem --- Create a sysgui window
     rdSysGUI!.setLookAndFeel("WindowsXPLookAndFeel")
 
     resource_dev=unt
-    resource_dev=resopen(filedir$+"User_selection.arc")
+    resource_dev=resopen(stbl("+UT_ARC")+"User_selection.arc")
     resource$=resget(resource_dev,1,1001)
     print (sysgui_dev) 'context'(0),
     print (sysgui_dev) 'resource'(len(resource$)),resource$,
