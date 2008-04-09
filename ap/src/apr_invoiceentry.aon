@@ -108,7 +108,8 @@ rem --- Initializations
 
         headings=3
         dim headings$[headings],underline$(m1*2,"-"),o[11],h[11],gd[2],gh[2]
-        dim pt[2],rt[2],at[2],vt[2]
+        dim pt[2],rt[2],at[2],vt[2],msg$[1]
+	msg$[0]="This Report Is Out Of Balance Or Missing Information"
         units=0
         errors=0
         glstatus=0
@@ -135,9 +136,9 @@ rem --- Initializations
         h2$=""
         h3$="Discount"
         if retention 
-         h2$=h3$+"/"
-         h3$="Retention"
-       endif
+          h2$=h3$+"/"
+          h3$="Retention"
+        endif
 
 rem --column heading 
         dim columns$[13,10]
@@ -405,14 +406,14 @@ rem --- Retrieve GL account master
           if gltotal=ape01a.invoice_amt continue
           difference=ape01a.invoice_amt-gltotal
           if lines+2>maxlines
-          gosub account_heading
+              gosub account_heading
           endif
 
-            xwk=fnblank(14)
-            OutVect!.addItem("WARNING: This transaction is out of balance by")
-            xwk=fnblank(13)
-           
-            lines=lines+2
+          xwk=fnblank(14)
+          OutVect!.addItem("WARNING: This transaction is out of balance by")
+          xwk=fnblank(13)
+	  errors=errors+1
+          lines=lines+2
 
           rem --- Loop back for next Invoice Header
 
@@ -445,6 +446,12 @@ rem --- Any errors encountered?
 rem --- Destroy the progress meter and run the next overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+
+    if errors
+	gosub Display_Message
+	if special_flag$<>"Y" exitto std_exit
+    endif
+
     update$=pgmdir$+"apu_invoiceentry.aon"
     overlay$=update$
     if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
@@ -506,6 +513,7 @@ type_break: rem --- AP Type break
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     HdrVect!.addItem(aptype$)
     lines=maxlines+1
+    errors=errors+(pos(nf$=apm10a.code_desc$)=1)
     lasttype$=apm10a.ap_type$
     return
 
@@ -532,6 +540,13 @@ glrecap: rem --- Standard GL Recap Routine
 
     if gl$="Y" call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,notused,account$,gldate$,
 :                                            ref1$,ref2$,ref3$,memo$,amount,units,status
+    return
+
+Display_Message: rem --- Display Message Routine
+
+    call pgmdir$+"adc_stdmessage.aon",2,msg$[all],1,y,x,v$,v3
+
+    if v$="SPECIAL" special_flag$="Y"
     return
 
 rem --- Functions
