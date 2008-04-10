@@ -88,8 +88,7 @@ rem --- Initializations
 
 rem --- Open the printer
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+    printer_open$="N"
 
 rem --- Print test patterns until the user is satisfied
 
@@ -97,16 +96,26 @@ rem --- Print test patterns until the user is satisfied
         dim msg_tokens$[1]
         msg_opt$=""
         gosub disp_message
-        if msg_opt$="N" break
+        if msg_opt$<>"Y" break
 
         rem --- Print test pattern
 
+        if printer_open$="N"
+            call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+            if status exitto std_exit
+            printer_open$="Y"
+        endif
         dim label$(across*width*length,"X")
         printed_across=1
         gosub label
         msg_id$="ANOTHER_PATTERN"
     wend
-    if fkey=4 goto std_exit
+    if msg_opt$="C" goto std_exit
+
+    if printer_open$="N"
+        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+        if status goto std_exit
+    endif
 
 rem --- Start the progress meter and position the file
 
