@@ -6,184 +6,242 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-        setesc std_error
-        seterr std_error
+    setesc std_error
+    seterr std_error
 
 rem --- Retrieve the program path
 
-        pgmdir$=stbl("+DIR_PGM",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Document initializations
+
+    if printorcost$<>"C" then
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+    endif
 
 rem --- Retrieve sysinfo data
 
-        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-        dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+SYSINFO",err=*next)
-        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-        firm_id$=sysinfo.firm_id$
-
-
-rem --- printer Open
-
-        if printorcost$<>"C" then
-            call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-            if status then goto std_exit
-        endif
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
 
 rem --- Init Data
-  
-        i0=0
-        more=1
-        dim tmpcosts[3]
-        tmatcost=0
-        tdircost=0,tohcost=0,tsubcost=0
-        precision p6
 
-        call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMWHSE","PRIMARY",ivm02a_key_tpl$,rd_table_chans$[all],status$
-        dim ivm02a_key$:ivm02a_key_tpl$
-        if printorcost$="C" then
-            call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
-        endif
-        extractrecord (bmm01_dev,key=firm_id$+billfrom$,dom=*next) bmm01a$
+    i0=0
+    more=1
+    dim tmpcosts[3]
+    tmatcost=0
+    tdircost=0,tohcost=0,tsubcost=0
+    precision p6
+
+    pbufwidth=85
+    headings=1
+    dim headings$[headings]
+    h2$=sysinfo.task_desc$
+    if pos("Listing"=h2$)=0 then let h2$=h2$+" Listing"
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=h2$
+    dim columns$[0,10]
+    columns=0
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMWHSE","PRIMARY",ivm02a_key_tpl$,rd_table_chans$[all],status$
+    dim ivm02a_key$:ivm02a_key_tpl$
+    if printorcost$="C" then
+        call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
+    endif
+    extractrecord (bmm01_dev,key=firm_id$+billfrom$,dom=*next) bmm01a$
 
 rem --- Read Master
-while more
-    read record (bmm01_dev,end=done) bmm01a$
-    bill_no$=bmm01a.bill_no$
-    if billthru$<>"" then
-        if bmm01a.firm_id$+bmm01a.bill_no$>firm_id$+billthru$ then goto std_exit
-    endif
+    while more
+        read record (bmm01_dev,end=done) bmm01a$
+        bill_no$=bmm01a.bill_no$
+        if billthru$<>"" then
+            if bmm01a.firm_id$+bmm01a.bill_no$>firm_id$+billthru$ then goto std_exit
+        endif
 
-    find (ivm02_dev,key=firm_id$+whs$+bmm01a.bill_no$,dom=*continue); rem "Skip if not in specified whse
-    h=0
-    i0=0
-    parent$=bill_no$
-    if printorcost$="C" then
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-    endif
-    gosub explode
+        find (ivm02_dev,key=firm_id$+whs$+bmm01a.bill_no$,dom=*continue); rem "Skip if not in specified whse
+        h=0
+        i0=0
+        parent$=bill_no$
+        if printorcost$="C" then
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        endif
+        gosub explode
 
 rem --- Print Material Information
 
-    while more
-        
-        if cvs(bill_list$,3)="" then break
-        ivm02a_key$=firm_id$+whs$+bill_list$(len(bill_list$)-20+1,20)
-        gosub get_nonphantom
-        if parent$=ivm02a_key.item_id$ then
-            let parentout$=parent$
-        else
-            let parentout$=""
-        endif
-        if printorcost$<>"C" then
-            call pgmdir$+"bmc_printbill.aon",1,printer_dev,bill_no$,h,comments$,ivm02a_key.item_id$+parentout$,whs$,select$,pdate$,rd_table_chans$[all],status
-
-           if status<>0 then
-                if printorcost$="P" then goto std_exit
-                printorcost$="C"
-                call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
-            endif
-        endif
-
-        if len(bill_list$)>20 then
-            let bill_list$=bill_list$(1,len(bill_list$)-20)
-        else
-            if len(bill_list$)=20 then let bill_list$=""
-        endif
-        read record (bmm01_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next) bmm01a$
-        a6=0
-        tmatcost=0
-        tdircost=0,tohcost=0,tsubcost=0
-        read (bmm02_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next)
-
         while more
-            read record (bmm02_dev,end=get_op_info) bmm02a$
-            if pos(firm_id$+ivm02a_key.item_id$=bmm02a.firm_id$+bmm02a.bill_no$+bmm02a.material_seq$)<>1 then break
-            if cvs(bmm02a.effect_date$,3)<>"" and bmm02a.effect_date$>pdate$ then continue
-            if cvs(bmm02a.obsolt_date$,3)<>"" and bmm02a.obsolt_date$<=pdate$ then continue            
-            find record (ivm02_dev,key=firm_id$+whs$+bmm02a.item_id$,dom=*continue) ivm02a$
-            tmatcost=tmatcost+ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)
-        wend
+
+            if cvs(bill_list$,3)="" then break
+            ivm02a_key$=firm_id$+whs$+bill_list$(len(bill_list$)-20+1,20)
+            gosub get_nonphantom
+            if parent$=ivm02a_key.item_id$ then
+                let parentout$=parent$
+            else
+                let parentout$=""
+            endif
+            sub$=ivm02a_key.item_id$+parentout$
+            if printorcost$<>"C" then
+                BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+                find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
+                OutVect!.addItem("")
+                dim pbuf$(pbufwidth)
+                    pbuf$(6)="Bill Number: "+bill_no$
+                    pbuf$(40)="Last Used: "+fndate$(bmm01a.LSTACT_DATE$)
+                    if bmm01a.SOURCE_CODE$="B" then
+                        pbuf$(60)="In Production Entry"
+                    else
+                        if bmm01a.SOURCE_CODE$="W" then pbuf$(60)="In Work Orders"
+                    endif
+                OutVect!.addItem(pbuf$)
+
+                dim pbuf$(pbufwidth)
+                    pbuf$(6)="Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36))
+                    pbuf$(54)="Phantom Bill?: "+bmm01a.PHANTOM_BILL$
+                OutVect!.addItem(pbuf$)
+
+                dim pbuf$(pbufwidth)
+                    pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34))
+                    pbuf$(52)="Unit Of Measure: "+bmm01a.UNIT_MEASURE$
+                OutVect!.addItem(pbuf$)
+
+                dim pbuf$(pbufwidth)
+                    pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32))
+                    pbuf$(50)="Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00")
+                OutVect!.addItem(pbuf$)
+
+                dim pbuf$(pbufwidth)
+                    pbuf$(3)="Drawing Number: "+bmm01a.DRAWING_NO$
+                    pbuf$(50)="Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE)
+                OutVect!.addItem(pbuf$)
+
+                dim pbuf$(pbufwidth)
+                    pbuf$(1)="Drawing Revision:"+bmm01a.DRAWING_REV$
+                    pbuf$(24)="Revision Code: "+bmm01a.BILL_REV$
+                    pbuf$(42)="Created: "+fndate$(bmm01a.CREATE_DATE$)
+                    pbuf$(60)="Revised: "+fndate$(bmm01a.LSTRVS_DATE$)
+                OutVect!.addItem(pbuf$)
+
+                dim pbuf$(pbufwidth)
+                    if sub$<>"" then let pbuf$(4)="Sub-Assembly : "+sub$(1,20)
+                    if select$="C" then pbuf$(54)="As Of Date: "+fndate$(pdate$)
+                OutVect!.addItem(pbuf$)
+                call pgmdir$+"bmc_printbill.aon",1,printer_dev,bill_no$,h,comments$,sub$,whs$,select$,pdate$,rd_table_chans$[all],OutVect!,status
+
+               if status<>0 then
+                    if printorcost$="P" then goto std_exit
+                    printorcost$="C"
+                    call pgmdir$+"adc_progress.aon","N","","","","",0,bmm01_dev,1,meter_num,status
+                endif
+            endif
+
+            if len(bill_list$)>20 then
+                let bill_list$=bill_list$(1,len(bill_list$)-20)
+            else
+                if len(bill_list$)=20 then let bill_list$=""
+            endif
+            read record (bmm01_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next) bmm01a$
+            a6=0
+            tmatcost=0
+            tdircost=0,tohcost=0,tsubcost=0
+            read (bmm02_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next)
+
+            while more
+                read record (bmm02_dev,end=get_op_info) bmm02a$
+                if pos(firm_id$+ivm02a_key.item_id$=bmm02a.firm_id$+bmm02a.bill_no$+bmm02a.material_seq$)<>1 then break
+                if cvs(bmm02a.effect_date$,3)<>"" and bmm02a.effect_date$>pdate$ then continue
+                if cvs(bmm02a.obsolt_date$,3)<>"" and bmm02a.obsolt_date$<=pdate$ then continue            
+                find record (ivm02_dev,key=firm_id$+whs$+bmm02a.item_id$,dom=*continue) ivm02a$
+                tmatcost=tmatcost+ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)
+            wend
 
 get_op_info: rem --- Get Operation Information
 
-        read (bmm03_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next)
+            read (bmm03_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next)
 
-        while more
-            read record (bmm03_dev,end=get_sub_info) bmm03a$
-            if pos(firm_id$+ivm02a_key.item_id$=bmm03a.firm_id$+bmm03a.bill_no$+bmm03a.op_seq$)<>1 then break
-            if cvs(bmm03a.effect_date$,3)<>"" and bmm03a.effect_date$>pdate$ then continue
-            if cvs(bmm03a.obsolt_date$,3)<>"" and bmm03a.obsolt_date$<=pdate$ then continue
-            let bmm08a.code_desc$="Not On File"
-            bmm08a.direct_rate=0
-            read record (bmm08_dev,key=bmm03a.firm_id$+bmm03a.op_code$,dom=*next) bmm08a$
-            if bmm01a.std_lot_size=0 then bmm01a.std_lot_size=1
-            if bmm03a.pcs_per_hour<>0 then
-                let directcost=fnop1(bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time,bmm01a.std_lot_size)
-            else
-                let directcost=0
-            endif
-            ohlabcost=directcost*bmm08a.ovhd_factor
-            tdircost=tdircost+directcost
-            tohcost=tohcost+ohlabcost
-        wend
+            while more
+                read record (bmm03_dev,end=get_sub_info) bmm03a$
+                if pos(firm_id$+ivm02a_key.item_id$=bmm03a.firm_id$+bmm03a.bill_no$+bmm03a.op_seq$)<>1 then break
+                if cvs(bmm03a.effect_date$,3)<>"" and bmm03a.effect_date$>pdate$ then continue
+                if cvs(bmm03a.obsolt_date$,3)<>"" and bmm03a.obsolt_date$<=pdate$ then continue
+                let bmm08a.code_desc$="Not On File"
+                bmm08a.direct_rate=0
+                read record (bmm08_dev,key=bmm03a.firm_id$+bmm03a.op_code$,dom=*next) bmm08a$
+                if bmm01a.std_lot_size=0 then bmm01a.std_lot_size=1
+                if bmm03a.pcs_per_hour<>0 then
+                    let directcost=fnop1(bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time,bmm01a.std_lot_size)
+                else
+                    let directcost=0
+                endif
+                ohlabcost=directcost*bmm08a.ovhd_factor
+                tdircost=tdircost+directcost
+                tohcost=tohcost+ohlabcost
+            wend
 
 get_sub_info: rem --- Get Subcontract Information
 
-        if ap$<>"N" then
-            read (bmm05_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next)
-            while more
-                read record (bmm05_dev,end=print_total) bmm05a$
-                if pos(firm_id$+ivm02a_key.item_id$=bmm05a.firm_id$+bmm05a.bill_no$+bmm05a.subcont_seq$)<>1 then break
-                if cvs(bmm05a.effect_date$,3)<>"" and bmm05a.effect_date$>pdate$ then continue
-                if cvs(bmm05a.obsolt_date$,3)<>"" and bmm05a.obsolt_date$<=pdate$ then continue
-                if bmm05a.DIVISOR*bmm01a.EST_YIELD<>0 then
-                    let tsubcost=tsubcost+bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR)
-                endif
-            wend
-        endif
+            if ap$<>"N" then
+                read (bmm05_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next)
+                while more
+                    read record (bmm05_dev,end=print_total) bmm05a$
+                    if pos(firm_id$+ivm02a_key.item_id$=bmm05a.firm_id$+bmm05a.bill_no$+bmm05a.subcont_seq$)<>1 then break
+                    if cvs(bmm05a.effect_date$,3)<>"" and bmm05a.effect_date$>pdate$ then continue
+                    if cvs(bmm05a.obsolt_date$,3)<>"" and bmm05a.obsolt_date$<=pdate$ then continue
+                    if bmm05a.DIVISOR*bmm01a.EST_YIELD<>0 then
+                        let tsubcost=tsubcost+bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR)
+                    endif
+                wend
+            endif
 
 print_total: rem --- Print Total Information
-    
-        if printorcost$="P" then continue
 
-        if (bmm01a.firm_id$+bmm01a.bill_no$)=firm_id$+ivm02a_key.item_id$ then
-             bmm01_fields$=fattr(bmm01a$,"")
-             xfer$=bmm01_fields$(1,pos("DEALER_NUM_01"=bmm01_fields$)-1)
-             while xfer$<>""
-                xfield$=xfer$(1,pos($0A$=xfer$)-1)
-                xfer$=xfer$(pos($0A$=xfer$)+1)
-                field bmm01a$,xfield$ = field (bmm01a$,xfield$)
-             wend
-         else
-             find record (bmm01_dev,key=firm_id$+bmm01a.bill_no$,dom=*break)bmm01a$
-        endif
-        write record (bmm01_dev,key=firm_id$+ivm02a_key.item_id$) bmm01a$
+            if printorcost$="P" then continue
+
+            if (bmm01a.firm_id$+bmm01a.bill_no$)=firm_id$+ivm02a_key.item_id$ then
+                 bmm01_fields$=fattr(bmm01a$,"")
+                 xfer$=bmm01_fields$(1,pos("DEALER_NUM_01"=bmm01_fields$)-1)
+                 while xfer$<>""
+                    xfield$=xfer$(1,pos($0A$=xfer$)-1)
+                    xfer$=xfer$(pos($0A$=xfer$)+1)
+                    field bmm01a$,xfield$ = field (bmm01a$,xfield$)
+                 wend
+             else
+                 find record (bmm01_dev,key=firm_id$+bmm01a.bill_no$,dom=*break)bmm01a$
+            endif
+            write record (bmm01_dev,key=firm_id$+ivm02a_key.item_id$) bmm01a$
 
 rem --- Write Inventory Record - with new cost for Finished Good
 
-    if cost_param$<>"S" then
-        if !(cost_param$="R" and pos(ivm02a_key.item_id$=bmm01a.bill_no$)=1) then
-            if bmm01a.phantom_bill$<>"Y" continue
-        endif
-    endif
-    
-    extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a2$
-    tcost=tmatcost+tdircost+tohcost+tsubcost
-    gosub calc_costs
-    write record (ivm02_dev,key=ivm02a_key$) ivm02a2$
+            if cost_param$<>"S" then
+                if !(cost_param$="R" and pos(ivm02a_key.item_id$=bmm01a.bill_no$)=1) then
+                    if bmm01a.phantom_bill$<>"Y" continue
+                endif
+            endif
+
+            extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a2$
+            tcost=tmatcost+tdircost+tohcost+tsubcost
+            gosub calc_costs
+            write record (ivm02_dev,key=ivm02a_key$) ivm02a2$
 
 rem Main Loop Ends
 
-    wend
+        wend
 
-wend
+    wend
 
 done: rem --- End
 
     goto std_exit
 
 explode: rem --- Explode
-
    
     bill_list$=bmm01a.bill_no$
     billseq_list$=""
@@ -249,9 +307,7 @@ return
 
 check_circular_ref: rem --- Circular Reference
 
-    rem i0=i0+1
-    i0=200
-    escape
+    i0=i0+1
     if i0<100 then
         return
     endif
@@ -293,10 +349,22 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    rem def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
+
+rem #include fndate.src
+
+        def fndate$(q$)
+        if cvs(q$,2)="" return ""
+        if pos("9"<>q$)=0 return q$
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        return testdate$
+        fnend
+
+rem #endinclude fndate.src
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 

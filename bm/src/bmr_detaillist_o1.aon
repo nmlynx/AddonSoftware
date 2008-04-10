@@ -6,61 +6,128 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-
-
-    setesc std_error
-    seterr std_error
-
+        setesc std_error
+        seterr std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
-
-rem --- printer open
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Init Data
 
-    h=0
-    more=1
-            
+        h=0
+        more=1
+        pbufwidth=85
+        headings=1
+        dim headings$[headings]
+        h2$=sysinfo.task_desc$
+        if pos("Listing"=h2$)=0 then let h2$=h2$+" Listing"
+        headings$[0]=sysinfo.firm_name$
+        headings$[1]=h2$
+        dim columns$[0,10]
+        columns=0
+
 rem --- Init File
 
-    read record (bmm01a_dev,key=firm_id$+billfrom$,dom=read_master) bmm01a$
-    goto print_comment
-            
+        extractrecord (bmm01a_dev,key=firm_id$+billfrom$,dom=*next) 
+               
 read_master: rem --- Read Master
 
-rem       while more
+rem while more
 
-   read record (bmm01a_dev,end=done) bmm01a$
-            
-print_comment:            
-            if billthru$<>"" then
-                if bmm01a.firm_id$+bmm01a.bill_no$>firm_id$+billthru$ then
-                    goto std_exit
-                endif
+        read record (bmm01a_dev,end=done) bmm01a$
+        if billthru$<>"" then
+            if bmm01a.firm_id$+bmm01a.bill_no$>firm_id$+billthru$ then goto std_exit
+        endif
+        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+
+rem --- Heading
+
+        find record (ivm01_dev,key=firm_id$+bmm01a.bill_no$,dom=*next) ivm01a$
+        OutVect!.addItem("")
+        dim pbuf$(pbufwidth)
+            pbuf$(6)="Bill Number: "+bmm01a.bill_no$
+            pbuf$(40)="Last Used: "+fndate$(bmm01a.LSTACT_DATE$)
+            if bmm01a.SOURCE_CODE$="B" then
+                pbuf$(60)="In Production Entry"
+            else
+                if bmm01a.SOURCE_CODE$="W" then pbuf$(60)="In Work Orders"
             endif
+        OutVect!.addItem(pbuf$)
+        
+        dim pbuf$(pbufwidth)
+            pbuf$(6)="Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36))
+            pbuf$(54)="Phantom Bill?: "+bmm01a.PHANTOM_BILL$
+        OutVect!.addItem(pbuf$)
+        
+        dim pbuf$(pbufwidth)
+            pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34))
+            pbuf$(52)="Unit Of Measure: "+bmm01a.UNIT_MEASURE$
+        OutVect!.addItem(pbuf$)
 
-            call pgmdir$+"bmc_printbill.aon",1,printer_dev,bmm01a.bill_no$,h,comment$,"","",select$,pdate$,rd_table_chans$[all],status
-            if status then goto std_exit
-            goto read_master
-rem       wend
+        dim pbuf$(pbufwidth)
+            pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32))
+            pbuf$(50)="Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00")
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(3)="Drawing Number: "+bmm01a.DRAWING_NO$
+            pbuf$(50)="Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE)
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(1)="Drawing Revision:"+bmm01a.DRAWING_REV$
+            pbuf$(24)="Revision Code: "+bmm01a.BILL_REV$
+            pbuf$(42)="Created: "+fndate$(bmm01a.CREATE_DATE$)
+            pbuf$(60)="Revised: "+fndate$(bmm01a.LSTRVS_DATE$)
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            if sub$<>"" then let pbuf$(1)="Sub-Assembly : "+sub$(1,20)
+            if select$="C" then pbuf$(54)="As Of Date: "+fndate$(pdate$)
+        OutVect!.addItem(pbuf$)
+
+        call pgmdir$+"bmc_printbill.aon",1,printer_dev,bmm01a.bill_no$,h,comment$,"","",select$,pdate$,rd_table_chans$[all],OutVect!,status
+        if status then goto std_exit
+        goto read_master
+
+rem wend
 
 
 done: rem --- End
 
-    goto std_exit
+        goto std_exit
+
+rem ----#include std_functions.src
+rem #include fndate.src
+
+        def fndate$(q$)
+        if cvs(q$,2)="" return ""
+        if pos("9"<>q$)=0 return q$
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        return testdate$
+        fnend
+
+rem #endinclude fndate.src
 
 rem #include std_error.src
 
