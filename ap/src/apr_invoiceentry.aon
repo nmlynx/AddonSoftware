@@ -6,68 +6,57 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-            setesc std_error
-            seterr std_error
+        setesc std_error
+        seterr std_error
 
 rem --- Retrieve the program path
 
-            pgmdir$=stbl("+DIR_PGM",err=*next)
-
-rem --- Document initializations
-
-            OutVect!=bbjAPI().getSysGui().makeVector()
-            HdrVect!=bbjAPI().getSysGui().makeVector()
-            BrkVect!=bbjAPI().getSysGui().makeVector()
-            rep_date$=date(0:"%Mz/%Dz/%Yd")
-            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-            rep_time$=date(0:"%hz:%mz %p")
-            rep_time_stamp$=date(0:"%Hz%mz%sz")
-
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-            sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-            dim sysinfo$:sysinfo_template$
-            sysinfo$=stbl("+SYSINFO",err=*next)
-            milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-            firm_id$=sysinfo.firm_id$
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
-            files=13,begfile=1,endfile=files
-            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-            files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
-            files$[2]="ape-01",ids$[2]="APE_INVOICEHDR";rem "ape-01
-            files$[3]="ape-11",ids$[3]="APE_INVOICEDET";rem "ape-11
-            files$[4]="apm-01",ids$[4]="APM_VENDMAST";rem "apm-01
-            files$[5]="apm-02",ids$[5]="APM_VENDHIST";rem "apm-02
-            files$[7]="apc_typecode",ids$[7]="APC_TYPECODE";rem "apm-10A
-            files$[8]="apt-01",ids$[8]="APT_INVOICEHDR";rem "apt-01
-            files$[9]="apt-02",ids$[9]="APT_INVOICEDIST";rem "apt-02
-            files$[11]="apt-11",ids$[11]="APT_INVOICEDET";rem "apt-11
-            files$[12]="gls_params",ids$[12]="GLS_PARAMS";rem "gls-01
-            files$[13]="apc_distribution",ids$[13]="APC_DISTRIBUTION";rem "apm-10B
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+        files=13,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="aps_params",ids$[1]="APS_PARAMS";rem "aps-01
+        files$[2]="ape-01",ids$[2]="APE_INVOICEHDR";rem "ape-01
+        files$[3]="ape-11",ids$[3]="APE_INVOICEDET";rem "ape-11
+        files$[4]="apm-01",ids$[4]="APM_VENDMAST";rem "apm-01
+        files$[5]="apm-02",ids$[5]="APM_VENDHIST";rem "apm-02
+        files$[7]="apc_typecode",ids$[7]="APC_TYPECODE";rem "apm-10A
+        files$[8]="apt-01",ids$[8]="APT_INVOICEHDR";rem "apt-01
+        files$[9]="apt-02",ids$[9]="APT_INVOICEDIST";rem "apt-02
+        files$[11]="apt-11",ids$[11]="APT_INVOICEDET";rem "apt-11
+        files$[12]="gls_params",ids$[12]="GLS_PARAMS";rem "gls-01
+        files$[13]="apc_distribution",ids$[13]="APC_DISTRIBUTION";rem "apm-10B
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-            if status goto std_exit
-            aps01_dev=channels[1]
-            ape01_dev=channels[2]
-            ape11_dev=channels[3]
-            apm01_dev=channels[4]
-            apm02_dev=channels[5]
-            apm10_dev=channels[7]
-            apt01_dev=channels[8]
-            apt02_dev=channels[9]
-            apt11_dev=channels[11]
-            gls01_dev=channels[12]
-            apm10b_dev=channels[13]
+        if status goto std_exit
+        aps01_dev=channels[1]
+        ape01_dev=channels[2]
+        ape11_dev=channels[3]
+        apm01_dev=channels[4]
+        apm02_dev=channels[5]
+        apm10_dev=channels[7]
+        apt01_dev=channels[8]
+        apt02_dev=channels[9]
+        apt11_dev=channels[11]
+        gls01_dev=channels[12]
+        apm10b_dev=channels[13]
 
 rem --- Dimension string templates
 
-            dim ape01a$:templates$[2],ape11a$:templates$[3],apm01a$:templates$[4]
-            dim apm02a$:templates$[5],apm10a$:templates$[7],apt01a$:templates$[8]
-            dim apt02a$:templates$[9],apt11a$:templates$[11],aps01a$:templates$[1]
-            dim gls01a$:templates$[12],apm10b$:templates$[13]
+        dim ape01a$:templates$[2],ape11a$:templates$[3],apm01a$:templates$[4]
+        dim apm02a$:templates$[5],apm10a$:templates$[7],apt01a$:templates$[8]
+        dim apt02a$:templates$[9],apt11a$:templates$[11],aps01a$:templates$[1]
+        dim gls01a$:templates$[12],apm10b$:templates$[13]
 
 rem --- Retrieve parameter records
 
@@ -99,7 +88,6 @@ rem --- Is General Ledger installed and being used?
         source$=pgm(-2)
         call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
         if status 
-            OutVect!=null()
             goto std_exit
         endif
 
@@ -140,26 +128,6 @@ rem --- Initializations
           h3$="Retention"
         endif
 
-rem --column heading 
-        dim columns$[13,10]
-        columns=13
-
-        columns$[0,0]="Vendor",columns$[0,1]="C",columns$[0,2]="10"
-        columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="35"
-        columns$[2,0]="Invoice",columns$[2,1]="C",columns$[2,2]="15"
-        columns$[3,0]="DC",columns$[3,1]="C",columns$[3,2]="8"
-        columns$[4,0]="PG",columns$[4,1]="C",columns$[4,2]="8"
-        columns$[5,0]="TC",columns$[5,1]="C",columns$[5,2]="8"
-        columns$[6,0]="HD",columns$[6,1]="C",columns$[6,2]="8"
-        columns$[7,0]="Invoice Date",columns$[7,1]="C",columns$[7,2]="10"
-        columns$[8,0]="Due Date",columns$[8,1]="C",columns$[8,2]="10"
-        columns$[9,0]="Acct Date",columns$[9,1]="C",columns$[9,2]="10"
-        columns$[10,0]="Disc Date",columns$[10,1]="C",columns$[10,2]="10"
-        columns$[11,0]="Reference/Memo",columns$[11,1]="C",columns$[11,2]="10"
-        columns$[12,0]="Invoice Amount",columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m1$
-        columns$[13,0]="Discount Amount",columns$[13,1]="N",columns$[13,2]="8",columns$[13,3]=m1$
-        
-
 rem --- Define invoice print and header positions
 
         o[0]=0
@@ -199,7 +167,7 @@ rem --- Additional file opens
         files$[2]="glt-04",ids$[2]="GLE_DAILYDETAIL"
         files$[3]=glw11$
         options$[3]="CL"
-    if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+        if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                             ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
         glm01_dev=channels[1]
@@ -216,6 +184,35 @@ rem --- Get user approval to proceed
         call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
         if fkey=4 goto std_exit
         if answer$<>"Y" goto std_exit
+
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+rem --column heading 
+        dim columns$[13,10]
+        columns=13
+
+        columns$[0,0]="Vendor",columns$[0,1]="C",columns$[0,2]="10"
+        columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="35"
+        columns$[2,0]="Invoice",columns$[2,1]="C",columns$[2,2]="15"
+        columns$[3,0]="DC",columns$[3,1]="C",columns$[3,2]="8"
+        columns$[4,0]="PG",columns$[4,1]="C",columns$[4,2]="8"
+        columns$[5,0]="TC",columns$[5,1]="C",columns$[5,2]="8"
+        columns$[6,0]="HD",columns$[6,1]="C",columns$[6,2]="8"
+        columns$[7,0]="Invoice Date",columns$[7,1]="C",columns$[7,2]="10"
+        columns$[8,0]="Due Date",columns$[8,1]="C",columns$[8,2]="10"
+        columns$[9,0]="Acct Date",columns$[9,1]="C",columns$[9,2]="10"
+        columns$[10,0]="Disc Date",columns$[10,1]="C",columns$[10,2]="10"
+        columns$[11,0]="Reference/Memo",columns$[11,1]="C",columns$[11,2]="10"
+        columns$[12,0]="Invoice Amount",columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m1$
+        columns$[13,0]="Discount Amount",columns$[13,1]="N",columns$[13,2]="8",columns$[13,3]=m1$
 
 rem --- Start progress meter and position header file
 
@@ -449,7 +446,7 @@ rem --- Destroy the progress meter and run the next overlay
 
     if errors
 	gosub Display_Message
-	if special_flag$<>"Y" exitto std_exit
+	if special_flag$<>"Y" goto std_exit
     endif
 
     update$=pgmdir$+"apu_invoiceentry.aon"
