@@ -8,7 +8,7 @@ rem --- All Rights Reserved
 
         seterr std_error
         setesc std_error
-        enter action$,printer_dev,bill_no$,page_no,pdate$,status
+        enter action$,printer_dev,bill_no$,page_no,pdate$,OutVect!,status
 
 rem --- Retrieve the program path
 
@@ -46,14 +46,12 @@ rem --- Dimension string templates
         dim bmm01a$:templates$[1],bmm02a$:templates$[2],bms01a$:templates$[3],
 :           ivm01a$:templates$[4],ivs01a$:templates$[5]
 
-
 rem --- Retrieve parameter records
 
         bms01a_key$=firm_id$+"BM00"
         find record (bms01a_dev,key=bms01a_key$,err=std_missing_params) bms01a$
         ivs01a_key$=firm_id$+"IV00"
         find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
 
 rem --- Parameters
 
@@ -66,12 +64,7 @@ rem --- Parameters
 
 rem --- Init Data
         more=1
-        headings=2
-        dim headings$[headings]
-        l9=45
-        l=l9+1,h0=80,when$=sysinfo.system_date$,clock$=""
-        headings$[0]=sysinfo.firm_name$
-        headings$[1]=sysinfo.task_desc$
+        pbufwidth=85
         call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
         dim bmm02a_key$:bmm02a_key_tpl$
         call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","ALT_KEY_02",bmm02a_altkey02_tpl$,rd_table_chans$[all],status$
@@ -86,7 +79,58 @@ rem --- Read
 
 rem --- Heading
 
-        gosub report_heading
+        find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
+        OutVect!.addItem("")
+        dim pbuf$(pbufwidth)
+            pbuf$(6)="Bill Number: "+bill_no$
+        OutVect!.addItem(pbuf$)
+        
+        dim pbuf$(pbufwidth)
+            pbuf$(6)="Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36))
+            pbuf$(54)="Phantom Bill?: "+bmm01a.PHANTOM_BILL$
+        OutVect!.addItem(pbuf$)
+        
+        dim pbuf$(pbufwidth)
+            pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34))
+            pbuf$(52)="Unit Of Measure: "+bmm01a.UNIT_MEASURE$
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32))
+            pbuf$(50)="Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00")
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(3)="Drawing Number: "+bmm01a.DRAWING_NO$
+            pbuf$(50)="Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE)
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(1)="Drawing Revision:"+bmm01a.DRAWING_REV$
+            pbuf$(24)="Revision Code: "+bmm01a.BILL_REV$
+            pbuf$(42)="Created: "+fndate$(bmm01a.CREATE_DATE$)
+            pbuf$(60)="Revised: "+fndate$(bmm01a.LSTRVS_DATE$)
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(62)="As Of: "+fndate$(pdate$)
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(1)=fill(80,"-")
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(1)="Op Seq"
+            pbuf$(9)="Component"
+            pbuf$(41)="U/M"
+            pbuf$(55-p1)="Quantity"
+            pbuf$(70)="Picked"
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(1)=fill(80,"-")
+        OutVect!.addItem(pbuf$)
 
 rem --- Detail
 
@@ -94,7 +138,7 @@ rem --- Detail
         first_time$="Y"
 
 rem --- Main Loop Starts
-while more
+    while more
 
         bmm02a_altkey$=key(bmm02_dev,knum=2,end=*break)
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -105,15 +149,14 @@ while more
         if cvs(bmm02a.OBSOLT_DATE$,3)<>"" and bmm02a.OBSOLT_DATE$<=pdate$ then continue
 
         if bmm02a.LINE_TYPE$<>"S" then
-            if l+1>l9 gosub report_heading
-            print (printer_dev)@(9),bmm02a.EXT_COMMENTS$
-            l=l+1
+            dim pbuf$(pbufwidth)
+                pbuf$(9)=bmm02a.EXT_COMMENTS$
+            OutVect!.addItem(pbuf$)
             continue
         endif
 
 rem --- Standard Item
 
-        if l+2>l9 gosub report_heading
         r0$=" "
         find (bmm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=addl_reads)
         r0$="*"
@@ -125,12 +168,17 @@ addl_reads: rem --- Additional Reads
 
 rem --- Print Detail
 
-        print (printer_dev)@(1),bmm02a.OP_SEQ$,@(9),bmm02a.ITEM_ID$(1,p[0]),
-:                          @(41),bmm02a.UNIT_MEASURE$,
-:                          @(56-p1),fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$,
-:                          @(68),fill(10,"_")
-        print (printer_dev)@(12),ivm01a.ITEM_DESC$
-        l=l+2
+        dim pbuf$(pbufwidth)
+            pbuf$(1)=bmm02a.OP_SEQ$
+            pbuf$(9)=bmm02a.ITEM_ID$(1,p[0])
+            pbuf$(41)=bmm02a.UNIT_MEASURE$
+            pbuf$(56-p1)=str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$)
+            pbuf$(68)=fill(10,"_")
+        OutVect!.addItem(pbuf$)
+
+        dim pbuf$(pbufwidth)
+            pbuf$(12)=ivm01a.ITEM_DESC$
+        OutVect!.addItem(pbuf$)
 
 rem --- Serial/Lot Numbers
 
@@ -140,49 +188,33 @@ rem --- Serial/Lot Numbers
         else
             x$="Lot Number: "
         endif
-
         if ivs01a.LOTSER_FLAG$="L" and bmm02a.QTY_REQUIRED>5 then bmm02a.QTY_REQUIRED=5
-
         for i=1 to bmm02a.QTY_REQUIRED
-            if l+1>l9 then gosub report_heading
-            print (printer_dev)@(20),x$,fill(30,"_")
-            l=l+1
+            dim pbuf$(pbufwidth)
+                pbuf$(20)=x$+fill(30,"_")
+            OutVect!.addItem(pbuf$)
         next i
 
 rem --- Main Loop Ends
-wend
+    wend
 
+rem --- Totals
+
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+        pbuf$(30)="Assembled __________"
+    OutVect!.addItem(pbuf$)
+
+    dim pbuf$(pbufwidth)
+        pbuf$(32)="Checked __________"
+    OutVect!.addItem(pbuf$)
+
+    dim pbuf$(pbufwidth)
+        pbuf$(33)="Packed __________"
+    OutVect!.addItem(pbuf$)
 
 rem --- End
-        gosub print_totals
-        goto std_exit
-
-report_heading: rem --- Report Heading
-
-        l=headings+1
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page_no,h0,when$,clock$,status
-        if status then exitto std_exit
-        rem dim c1$(60)
-        find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
-        print (printer_dev)'lf',@(5),"Bill Number: ",bill_no$
-        print (printer_dev)@(5),"Description: ",ivm01a.ITEM_DESC$(1,min(desc[1],36)),@(54),"Phantom Bill?: ",bmm01a.PHANTOM_BILL$
-        print (printer_dev)@(18),ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34)),@(52),"Unit Of Measure: ",bmm01a.UNIT_MEASURE$
-        print (printer_dev)@(18),ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32)),@(50),"Estimated Yield %: ",bmm01a.EST_YIELD:"##0.00"
-        print (printer_dev)@(2),"Drawing Number: ",bmm01a.DRAWING_NO$,@(50),"Standard Lot Size: ",bmm01a.STD_LOT_SIZE
-        print (printer_dev)@(0),"Drawing Revision:",bmm01a.DRAWING_REV$,@(24),"Revision Code: ",bmm01a.BILL_REV$,@(42),"Created: ",fndate$(bmm01a.CREATE_DATE$),@(60),"Revised: ",fndate$(bmm01a.LSTRVS_DATE$)
-        print (printer_dev)@(62),"As Of: ",fndate$(pdate$)
-        print (printer_dev)fill(80,"-")
-        print (printer_dev)@(0),"Op Seq",@(9),"Component",@(41),"U/M",@(55-p1),"Quantity",@(70),"Picked"
-        print (printer_dev)fill(80,"-")
-return
-
-print_totals: rem --- Totals
-        if l+4>l9 then gosub report_heading
-        print (printer_dev)'lf',
-        print (printer_dev)@(30),"Assembled __________"
-        print (printer_dev)@(32),"Checked __________"
-        print (printer_dev)@(33),"Packed __________"
-return
+    goto std_exit
 
 rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -228,8 +260,6 @@ rem #include fndate.src
         fnend
 
 rem #endinclude fndate.src
-
-
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
