@@ -37,7 +37,8 @@ attr_inv_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 attr_inv_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DUE_DATE"
 attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Due Date"
 attr_inv_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-rem attr_inv_col$[7,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
+attr_inv_col$[7,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="5"
+attr_inv_col$[7,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
 
 attr_inv_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AMT_DUE"
 attr_inv_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Amount Due"
@@ -133,7 +134,7 @@ rem --- now fill grid
 			vectInvoices!.addItem(fnmask$(apt01a.vendor_id$(1,vendor_len),m0$))
 			vectInvoices!.addItem(apm01a.vendor_name$)
 			vectInvoices!.addItem(apt01a.ap_inv_no$)
-			vectInvoices!.addItem(fndate$(apt01a.inv_due_date$))
+			vectInvoices!.addItem(date(jul(apt01a.inv_due_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
 			vectInvoices!.addItem(apt01a.invoice_amt$)
 			vectInvoices!.addItem(str(disc_amt))
 			vectInvoices!.addItem(str(pymnt_amt))
@@ -308,7 +309,7 @@ rem --- add grid to store report master records, with checkboxes for user to sel
 	UserObj!=SysGUI!.makeVector()
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 
-	gridInvoices!=Form!.addGrid(nxt_ctlID,5,100,400,200)
+	gridInvoices!=Form!.addGrid(nxt_ctlID,5,40,400,300)
 	user_tpl.gridInvoicesCtlID$=str(nxt_ctlID)
 	user_tpl.gridInvoicesCols$="10"
 	user_tpl.gridInvoicesRows$="10"
@@ -340,7 +341,7 @@ if UserObj!<>null()
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 	gridInvoices!.setColumnWidth(0,25)
 	gridInvoices!.setColumnWidth(1,50)
-	gridInvoices!.setSize(Form!.getWidth()-(gridInvoices!.getX()*2),Form!.getHeight()-(gridInvoices!.getY()+40))
+	gridInvoices!.setSize(Form!.getWidth()-(gridInvoices!.getX()*2),Form!.getHeight()-(gridInvoices!.getY()+10))
 	gridInvoices!.setFitToGrid(1)
 
 endif
