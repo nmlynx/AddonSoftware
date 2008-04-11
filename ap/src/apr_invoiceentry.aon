@@ -36,6 +36,8 @@ rem --- Open/Lock files
         files$[11]="apt-11",ids$[11]="APT_INVOICEDET";rem "apt-11
         files$[12]="gls_params",ids$[12]="GLS_PARAMS";rem "gls-01
         files$[13]="apc_distribution",ids$[13]="APC_DISTRIBUTION";rem "apm-10B
+        options$[2]="L"
+        options$[3]="L"
         call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
@@ -180,10 +182,18 @@ rem --- Dimension string templates
 
 rem --- Get user approval to proceed
 
-        prompt$="Do you want to run the Invoice Register?"
-        call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-        if fkey=4 goto std_exit
-        if answer$<>"Y" goto std_exit
+        msg_id$="AON_RUN_QUERY"
+        dim x$:stbl("+SYSINFO_TPL")
+        dim msg_tokens$[1]
+        x$=stbl("+SYSINFO")                                                            
+        msg_tokens$[1]=x.task_desc$
+        gosub disp_message
+        if msg_opt$<>"Y" then goto std_exit
+
+rem        prompt$="Do you want to run the Invoice Register?"
+rem        call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
+rem        if fkey=4 goto std_exit
+rem        if answer$<>"Y" goto std_exit
 
 rem --- Document initializations
 
@@ -445,8 +455,8 @@ rem --- Destroy the progress meter and run the next overlay
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
     if errors
-	gosub Display_Message
-	if special_flag$<>"Y" goto std_exit
+    	gosub Display_Message
+    	if special_flag$<>"Y" goto std_exit
     endif
 
     update$=pgmdir$+"apu_invoiceentry.aon"
