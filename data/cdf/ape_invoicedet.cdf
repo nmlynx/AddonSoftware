@@ -1,3 +1,7 @@
+[[APE_INVOICEDET.ADEL]]
+rem --- after deleting a row from detail grid, recalc/redisplay balance left to distribute
+gosub calc_grid_tots
+gosub disp_totals
 [[APE_INVOICEDET.GL_POST_AMT.AVEC]]
 rem --- add up dist lines and display diff between total inv amt entered and dist line total
 
