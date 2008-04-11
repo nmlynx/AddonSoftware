@@ -541,9 +541,9 @@ glrecap: rem --- Standard GL Recap Routine
 
 Display_Message: rem --- Display Message Routine
 
-    call pgmdir$+"adc_stdmessage.aon",2,msg$[all],1,y,x,v$,v3
-
-    if v$="SPECIAL" special_flag$="Y"
+    msg_id$="AON_REG_ERRS"
+    gosub disp_message
+    if pos("SPECIAL"=msg_opt$)=1 special_flag$="Y"
     return
 
 rem --- Functions

@@ -321,13 +321,9 @@ date_errors: rem --- Any GL transaction date errors detected in lead overlay?
 
 register_errors: rem --- Register errors
 
-rem    goto next_overlay
-    dim msg$[1]
-    msg$[0]="Errors were encountered during the generation of the GL summary register. "+
-:           "The update will not be run. Review the register, correct the errors and "+
-:           "rerun the report."
-    call pgmdir$+"adc_stdmessage.aon",1,msg$[all],1,0,0,v$,v3
-    if v$<>"SPECIAL" goto std_exit
+    msg_id$="AON_REG_ERRS"
+    gosub disp_message
+    if pos("SPECIAL"=msg_opt$)<>1 goto std_exit
     
 next_overlay: rem --- Run update overlay
 
@@ -528,6 +524,16 @@ rem --- Create blank cell(s) in OutVect! (no return value wanted or needed)
         next q1
         return q1
     fnend
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 
