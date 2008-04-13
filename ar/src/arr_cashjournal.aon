@@ -50,7 +50,7 @@ rem --- Open/Lock files
             options$[10]="CL"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-            if status goto std_exit
+            if status goto std_exit_no_update
             ars01_dev=channels[1]
             arm01_dev=channels[2]
             arm02_dev=channels[3]
@@ -212,7 +212,7 @@ rem --- Additional file opens
             endif
             if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                              ids$[all],templates$[all],channels[all],batch,status
-            if status goto std_exit
+            if status goto std_exit_no_update
             glm01_dev=channels[1]
             glw04_dev=channels[2]
 
@@ -627,6 +627,9 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_update:
+
     release
 rem #endinclude std_end.src
 
