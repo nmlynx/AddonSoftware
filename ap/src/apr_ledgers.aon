@@ -68,7 +68,6 @@ rem --- Retrieve parameter records
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     call pgmdir$+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
     call pgmdir$+"adc_getmask.aon","","AP","A","",m1$,0,0
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,9,15
     multiple_types$=aps01a.multi_types$
     retention$=aps01a.ret_flag$
     m0=len(m0$)
@@ -80,7 +79,7 @@ rem --- Initializations
     dim headings$[headings],o[8]
     more=1
     page=0
-    width=80
+    width=90
     total=0
     maxlines=59
     lines=maxlines+1
@@ -102,8 +101,6 @@ rem --- Initializations
 :       else headings$[3]="Includes Transactions Through "+fndate$(thrudate$)
     x$=""
     if retention$="Y" x$="Retention"
-    dim columns$[0,10]
-    columns$[0,0]="  ",columns$[0,1]="C",columns$[0,2]="85"
 
 rem --- Define print positions
 
@@ -113,10 +110,23 @@ rem --- Define print positions
     o[3]=m0+22
     o[4]=m0+31
     o[5]=m0+34
-    o[8]=width-m1+1
+    o[8]=width-(m1+1)
 rem    if retention$="Y" o[8]=width-m1+1
-    o[7]=o[8]-m1+1
-    o[6]=o[7]-m1+1
+    o[7]=o[8]-(m1+1)
+    o[6]=o[7]-(m1+1)
+
+    dim columns$[0,10]
+    dim pbuf$(width)
+    pbuf$(o[0])="Vendor"
+    pbuf$(o[1])="Invoice"
+    pbuf$(o[2])="Date"
+    pbuf$(o[3])="Due Date"
+    pbuf$(o[4])="Pg"
+    pbuf$(o[5])="H"
+    pbuf$(o[6]+m1-7)="Amount"
+    pbuf$(o[7]+m1-9)="Discount"
+    pbuf$(o[8]+m1-10)=x$
+    columns$[0,0]=pbuf$,columns$[0,1]="C",columns$[0,2]="85"
 
 rem --- Start progress meter and position Vendor Master file
 
@@ -136,21 +146,6 @@ rem --- Read next Vendor Master (apm-01) record
           if endvendor$<>"" if apm01a.vendor_id$>endvendor$ break
 
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status 
-
-          rem --- Output Vendor headings
-
-          OutVect!.addItem("")
-          dim pbuf$(width)
-          pbuf$(o[0])="Vendor"
-          pbuf$(o[1])="Invoice"
-          pbuf$(o[2])="Date"
-          pbuf$(o[3])="Due Date"
-          pbuf$(o[4])="Pg"
-          pbuf$(o[5])="H"
-          pbuf$(o[6]+m1-7)="Amount"
-          pbuf$(o[7]+m1-9)="Discount"
-          pbuf$(o[8]+m1-10)=x$
-          OutVect!.addItem(pbuf$)
 
           rem --- Read vendor detail records
 
@@ -257,7 +252,7 @@ rem --- Read next Vendor Master (apm-01) record
                 if multiple_types$<>"Y" continue
                 if lines>maxlines gosub report_heading
                 dim pbuf$(width)
-                pbuf$(o[6]-len(aptype$)-1)=aptype$
+                pbuf$(o[0])=aptype$
                 pbuf$(o[6])=str(typetotal:m1$)
                 OutVect!.addItem(pbuf$)
                 lines=lines+1
@@ -303,6 +298,7 @@ vendor_heading: rem --- Print vendor heading
     OutVect!.addItem("")
     dim pbuf$(width)
     pbuf$(o[0])=apm01a.vendor_id$(1,vendor_size)+" "+apm01a.vendor_name$
+    OutVect!.addItem(pbuf$)
     lines=lines+2
     first=0
     return
