@@ -263,14 +263,20 @@ rem --- All done
 
 rem --- Destroy progress meter and run next overlay
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+
+    if errors
+    	gosub Display_Message
+    	if special_flag$<>"Y" goto std_exit
+    endif
+
     update$=pgmdir$+"aru_otherentry.aon"
     overlay$=update$
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
 
-	out_action$="PRT-PDF"
-	next_overlay$=overlay$
-	goto std_exit
+    out_action$="PRT-PDF"
+    next_overlay$=overlay$
+    goto std_exit
     
 
 set_linecount: rem --- Report Heading
@@ -284,6 +290,13 @@ glrecap: rem --- Standard GL Recap Routine
 
     if gl$="Y" call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,notused,account$,gldate$,
 :                                            ref1$,ref2$,ref3$,memo$,amount,units,status
+    return
+
+Display_Message: rem --- Display Message Routine
+
+    msg_id$="AON_REG_ERRS"
+    gosub disp_message
+    if pos("SPECIAL"=msg_opt$)=1 special_flag$="Y"
     return
 
 rem --- Functions
@@ -315,6 +328,14 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         next q1
         return q1
     fnend
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
 
 rem #include std_error.src
 

@@ -297,6 +297,12 @@ rem ---     print (printer_dev) @(width-m1-12),"Report Total",@(width-m1),total:
 rem --- Destroy progress meter and run next overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+
+    if errors
+    	gosub Display_Message
+    	if special_flag$<>"Y" goto std_exit
+    endif
+
     update$=pgmdir$+"aru_invoiceentry.aon"
     overlay$=update$
 
@@ -361,6 +367,13 @@ glrecap: rem --- Standard GL Recap Routine
 :                                            ref1$,ref2$,ref3$,memo$,amount,units,status
     return
 
+Display_Message: rem --- Display Message Routine
+
+    msg_id$="AON_REG_ERRS"
+    gosub disp_message
+    if pos("SPECIAL"=msg_opt$)=1 special_flag$="Y"
+    return
+
 rem --- Functions
 
 rem --- Functions used to retrieve form values
@@ -399,9 +412,11 @@ rem --- Create blank line in OutVect! (no return value wanted or needed)
         return q1
     fnend
 
+rem #include disp_message.src
+
 disp_message:rem --- Display Message Dialog
 
-	call stbl("+DIR_PGM")+"adc_message.aon",rd_msg_id$,rd_msg_tokens$[all],rd_msg_opt$,rd_table_chans$[all]
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 
 	return
 
