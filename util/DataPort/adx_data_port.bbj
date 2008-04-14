@@ -384,6 +384,8 @@ func_process:rem --- Import Selected Definitions
     filedir$=stbl("+DATAPORT_FILES")
     logdir$=stbl("+DATAPORT_LOGS")
 
+    mkdir logdir$,err=*next
+
     logfile$=logdir$+"DataPort_"+DATE(0:"%Mz%Dz%Yz")+"_"+DATE(0:"%Hz%mz")+".txt"
     erase logfile$,err=create_logfile
     create_logfile:
