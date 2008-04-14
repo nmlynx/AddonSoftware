@@ -532,6 +532,7 @@ get_new_template:
 return; rem ' get_new_template
 
 check_for_definition:
+    new_file=0
     find (ddm_tables,key=pad(table_alias$,16),dom=undefined_file)
     call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+new_datafile$,rd_table_chans$[all],"CREATE",status$
     if len(status$) then
@@ -541,9 +542,7 @@ check_for_definition:
     endif
     print "   New file "+new_datafile$+" created in folder "+destin_folder$
     print (log_dev)"   New file "+new_datafile$+" created"
-    if new_file then
-       close (new_file)
-    endif
+
     new_file=unt
     open (new_file)destin_folder$+"/"+new_datafile$
     lock (new_file)
