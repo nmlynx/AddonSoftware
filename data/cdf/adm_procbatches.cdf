@@ -32,3 +32,4 @@ rem --- Setup defaults
 	callpoint!.setColumnData("ADM_PROCBATCHES.TIME_OPENED",date(0:"%hz%mz"))
 	callpoint!.setColumnData("ADM_PROCBATCHES.USER_ID",sysinfo.user_id$)
 	callpoint!.setColumnData("ADM_PROCBATCHES.DESCRIPTION",stbl("+BATCH_DESC"))
+	callpoint!.setStatus("MODIFIED")
