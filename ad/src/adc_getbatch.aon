@@ -7,13 +7,16 @@ rem  |  Copyright (c) 1981-2008 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-rem --- PROC_ID$  : Process id calling program (in)
-rem --- PROG_NAME$: Program Name to determine if new batches allowed (in)
-rem --- BATCH_ID$ : Returned Batch Number (blank if none)
+rem --- ALIAS$    : Alias if from form (in)
+rem --- PROG_NAME$: Program Name if from back end program (in)
 
     seterr std_error
     setesc std_error
-    enter proc_id$,prog_name$,batch_id$
+    enter alias$,prog_name$
+
+rem --- set default stbl
+
+    x$=stbl("+BATCH_NO","")
 
 rem --- Open/Lock files
 
@@ -35,27 +38,44 @@ rem --- Dimension string templates
 
 rem --- Setup default values
 
+    proc_id$=""
     batch_id$=""
     allow_entry$=""
 
+rem --- Get Process ID"
+
+    if cvs(prog_name$,2)<>""
+        alt_key=2
+        key_val$=pad(prog_name$,len(adm19a.program_name$))
+    else
+        alt_key=1
+        key_val$=pad(alias$,len(adm19a.dd_table_alias$))
+    endif
+    read record (adm19_dev,key=key_val$,knum=alt_key,dom=*next)
+    while 1
+        k$=key(adm19_dev,end=*break)
+        if pos(key_val$=k$)<>1 break
+        readrecord(adm19_dev,end=*break)adm19a$
+        proc_id$=adm19a.process_id$
+        break
+    wend
+    if proc_id$="" goto done
+
 rem --- See if program is in batch file
 
-    read record (adm09_dev,key=pad(proc_id$,16),dom=done)adm09a$
+    read record (adm09_dev,key=proc_id$,dom=done)adm09a$
     if adm09a.batch_entry$<>"Y" goto done
 
 rem --- Now see if this program allows batch entry or not
 
-    read record (adm19_dev,key=pad(proc_id$,16),dom=*next)
-    while 1
-        readrecord(adm19_dev,end=*break)adm19a$
-        if cvs(adm19a.program_name$,2)=cvs(prog_name$,2)
-            allow_entry$=adm19a.new_batch$
-            break
-        endif
-    wend
+    x$=stbl("+BATCH_DESC",adm09a.description$)
+    x$=stbl("+ALLOW_NEW_BATCH",adm19a.new_batch$)
 
 rem --- Here's where we call the proper form (allow new or not)
 
+    call stbl("+DIR_SYP")+"bam_run_prog.bbj","ADM_PROCBATCHES",stbl("+USER_ID"),"MNT","",table_chans$[all]
+    x$=stbl("!CLEAR","+ALLOW_NEW_BATCH")
+    x$=stbl("!CLEAR","+BATCH_DESC")
     batch_id$=allow_entry$
 
 done: rem --- All done
