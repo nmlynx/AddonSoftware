@@ -76,9 +76,13 @@ rem --- Report headings
 
 rem --- Get user approval to run the report
 
-    call pgmdir$+"adc_yesno.aon",1,"VEND_XREF_REPORT",2,v$,v3
-    if v3=4 goto std_exit
-    if v$<>"Y" goto std_exit
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
 
 rem --- Open the printer, start the progress meter and position the file
 
@@ -150,6 +154,13 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
+	
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
