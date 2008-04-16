@@ -22,8 +22,10 @@ if cvs(callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE"),3)=""
 endif
 
 invdate$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
-terms_cd$=user_tpl.dflt_terms_cd$
+terms_cd$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TERMS_CODE")
+if cvs(terms_cd$,3)="" then terms_cd$=user_tpl.dflt_terms_cd$
 gosub calculate_due_and_discount
+callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.AREC]]
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 user_tpl.inv_amt$=""
@@ -167,6 +169,8 @@ else
 	callpoint!.setColumnData("APE_INVOICEHDR.HOLD_FLAG","N")
 	user_tpl.inv_in_ape01$="N"
 	user_tpl.inv_in_apt01$="N"
+
+	Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 	
 	callpoint!.setStatus("REFRESH")
 
@@ -235,7 +239,6 @@ if num(callpoint!.getColumnData("APE_INVOICEHDR.NET_INV_AMT")) = 0
 	callpoint!.setColumnData("APE_INVOICEHDR.NET_INV_AMT",
 :	callpoint!.getUserInput())
 endif
-
 
 user_tpl.inv_amt$=callpoint!.getUserInput()
 
@@ -329,10 +332,11 @@ calc_grid_tots:
 	recVect!=GridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
 	numrecs=recVect!.size()
+	tdist=0
 	if numrecs>0
 		for reccnt=0 to numrecs-1
 			gridrec$=recVect!.getItem(reccnt)
-			tdist=tdist+num(gridrec.gl_post_amt$)
+			if cvs(gridrec$,3)<>"" then tdist=tdist+num(gridrec.gl_post_amt$)
 		next reccnt
 		user_tpl.tot_dist$=str(tdist)
 	endif
