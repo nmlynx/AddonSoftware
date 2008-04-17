@@ -9,6 +9,16 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -24,9 +34,6 @@ rem --- Retrieve sysinfo data
 rem --- Open Printer
 
     call pgmdir$+"mpc_openalias.aon",mpe05_dev,"mpe-05","MPE_PEGGING",firm_id$,forecast$,filename$,status
-
-    if status then goto std_exit
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status then goto std_exit
 
 rem --- Initializations
@@ -39,6 +46,17 @@ rem --- Initializations
     hr=width-max(len(h7$),len(h8$))
     t0$=""
     t1$=""
+
+    dim columns$[7,10]
+    columns = 7
+    columns$[0,0]="Item",               columns$[0,1]="C",columns$[0,2]="6"
+    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="20"
+    columns$[2,0]="UM",                 columns$[2,1]="C",columns$[2,2]="4"
+    columns$[3,0]="Buyer",              columns$[3,1]="C",columns$[3,2]="20"
+    columns$[4,0]="Unit Cost",          columns$[4,1]="N",columns$[4,2]="6",columns$[4,3]=ivs01a.cost_mask$
+    columns$[5,0]="Date Required",      columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]="Quantity Required",  columns$[6,1]="N",columns$[6,2]="6",columns$[6,3]=ivs01a.unit_mask$
+    columns$[7,0]="Extension",          columns$[7,1]="N",columns$[7,2]="6",columns$[7,3]=ivs01a.amount_mask$
 
 rem --- Print positions
 
@@ -153,15 +171,20 @@ rem --- Get Vendor/Item discount price if any
 
 detail_line: rem --- Print detail line
 
-        cost$=str(cost:ivs01a.cost_mask$)
-        if l+1>l9 then gosub report_heading
         x=qty*cost
         l=l+1
         l1=l1+1
-        print (printer_dev)item$,@(o[1]),desc$,@(o[2]),um$,@(o[3]),buyer$,
-:                                @(o[4]),cost$,@(o[5]),fndate$(mpe05a.reqd_date$),
-:                                @(o[6]),qty:ivs01a.unit_mask$,
-:                                @(o[7]),x:ivs01a.amount_mask$
+
+        blank=fnblank(8)
+        OutVect!.addItem(item$)
+        OutVect!.addItem(desc$)
+        OutVect!.addItem(um$)
+        OutVect!.addItem(buyer$)
+        OutVect!.addItem(str(cost))
+        OutVect!.addItem(str(fndate$(mpe05a.reqd_date$)))
+        OutVect!.addItem(str(qty))
+        OutVect!.addItem(str(x))
+        blank=fnblank(8)
 
         mpw04a.firm_id$=mpe05a.firm_id$
         mpw04a.forecast$=mpe05a.forecast$
@@ -199,39 +222,25 @@ done: rem --- All done
 
     t9$="END"
     gosub vendor_break
-    if l+2>l9 then gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(o[6]-18),"Totals For Report",@(o[7]),total:ivs01a.amount_mask$
-    close (printer_dev)
+    blank=fnblank(8)    
+    blank=fnblank(5)    
+    OutVect!.addItem("Totals For Report")
+    OutVect!.addItem(str(total))
+    OutVect!.addItem(str(t[1]))
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run pgmdir$+"mpu_updatereqreg.aon"
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+2
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)h5$,@(hr),h7$
-    print (printer_dev)h6$,@(hr),h8$
-    print (printer_dev)""
-    print (printer_dev)@(o[4]+m3-5),"Unit",@(o[5]+2),"Date",@(o[6]+m2-9),"Quantity"
-    print (printer_dev)"Item",@(o[1]),"Description",@(o[2]),"UM",@(o[3]),"Buyer",
-:                                 @(o[4]+m3-5),"Cost",@(o[5]),"Required",
-:                                 @(o[6]+m2-9),"Required",@(o[7]+m1-10),"Extension"
-
-
-    print (printer_dev)""
-    l=l+6
-    return
 
 vendor_break: rem --- Vendor Break
 
     if t0$<>"" then
         gosub item_break
         if l1<>0 then
-            if l+1>l9 then gosub report_heading
-            print (printer_dev)@(o[6]-18),"Totals For Vendor",@(o[7]),t[1]:ivs01a.amount_mask$
+            blank=fnblank(5)    
+            OutVect!.addItem("Totals For Vendor")
+            blank=fnblank(1)
+            OutVect!.addItem(str(t[1]))
             l=l+1
         endif
    endif
@@ -249,9 +258,12 @@ new_vendor: rem --- Retrieve current vendor info
     t0$=apm01a.vendor_id$
 
     find record (apm01_dev,key=apm01a.firm_id$+apm01a.vendor_id$,dom=*next) apm01a$
-    if l+2>l9 then gosub report_heading
-    print (printer_dev)fnmask$(apm01a.vendor_id$(1,ap),aps01a.vendor_output$)," ",apm01a.vendor_name$
-    print (printer_dev)""
+
+    blank=fnblank(8)
+    OutVect!.addItem(str(fnmask$(apm01a.vendor_id$,aps01a.vendor_output$)))
+    OutVect!.addItem(apm01a.vendor_name$)
+    blank=fnblank(6)
+
     l=l+2
 
     return
@@ -259,12 +271,11 @@ new_vendor: rem --- Retrieve current vendor info
 item_break: rem --- Item Break
 
     if t1$<>"" then
-        if l+3>l9 then gosub report_heading
-        print (printer_dev)""
-        print (printer_dev)@(o[6]-16),"Totals For Item",@(o[6]),mpm01a.no_of_pers:ivs01a.unit_mask$,
-:                          @(o[7]),mpm01a.days_in_per:ivs01a.amount_mask$
-
-        print (printer_dev)""
+        blank=fnblank(5)    
+        OutVect!.addItem("Totals For Item")
+        OutVect!.addItem(str(mpm01a.no_of_pers))
+        OutVect!.addItem(str(mpm01a.days_in_per))
+        blank=fnblank(8)    
         l=l+3
     endif
 
@@ -379,6 +390,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnblank: Create blank cells in OutVect!. No return value
+
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
