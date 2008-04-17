@@ -1,3 +1,7 @@
+[[APE_INVOICEHDR.BTBL]]
+rem --- Get Batch information
+rem	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),""
+x$=stbl("+BATCH_NO","")
 [[APE_INVOICEHDR.AP_INV_NO.AVAL]]
 	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
 	ctl_stat$=""
@@ -15,15 +19,14 @@ rem --- get default date
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_ORDDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
 	user_tpl.dflt_acct_date$=stbl("DEF_ACCT_DATE")
 [[APE_INVOICEHDR.INVOICE_DATE.AVAL]]
-if cvs(callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE"),3)=""
-	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",
-:		callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE"))
-	callpoint!.setStatus("REFRESH")
-endif
-
 invdate$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
 terms_cd$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TERMS_CODE")
 if cvs(terms_cd$,3)="" then terms_cd$=user_tpl.dflt_terms_cd$
+if cvs(user_tpl.dflt_acct_date$,2)=""
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",callpoint!.getUserInput())
+else
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
+endif
 gosub calculate_due_and_discount
 callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.AREC]]
@@ -87,13 +90,11 @@ endif
 if callpoint!.getUserInput()=""
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_DIST_CODE","  ")
 	callpoint!.setStatus("REFRESH")
-
 endif
 [[APE_INVOICEHDR.AP_TYPE.AVAL]]
 if callpoint!.getUserInput()=""
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_TYPE","  ")
 	callpoint!.setStatus("REFRESH")
-
 endif
 [[APE_INVOICEHDR.ARNF]]
 rem record not in ape-01; is it in apt-01?
@@ -165,7 +166,10 @@ else
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_TERMS_CODE",user_tpl.dflt_terms_cd$)
 	callpoint!.setColumnData("APE_INVOICEHDR.PAYMENT_GRP",user_tpl.dflt_pymt_grp$)
 	callpoint!.setColumnData("APE_INVOICEHDR.INVOICE_DATE",stbl("+SYSTEM_DATE"))
-	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
+	if cvs(user_tpl.dflt_acct_date$,2)<>""
+		callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
+	else
+		callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",stbl("+SYSTEM_DATE"))
 	callpoint!.setColumnData("APE_INVOICEHDR.HOLD_FLAG","N")
 	user_tpl.inv_in_ape01$="N"
 	user_tpl.inv_in_apt01$="N"
@@ -310,7 +314,10 @@ calculate_due_and_discount:
 	if cvs(callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE"),2)=""
 		callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
 	endif
-
+	if user_tpl.dflt_acct_date$=""
+		callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",
+:		callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE"))
+	endif
 	apm10c_dev=fnget_dev("APC_TERMSCODE")
 	dim apm10c$:fnget_tpl$("APC_TERMSCODE")
 	
