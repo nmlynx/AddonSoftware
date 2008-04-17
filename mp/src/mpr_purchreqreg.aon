@@ -76,7 +76,6 @@ rem --- Open/Lock files
     ivm10f_dev=channels[23]
 
 rem --- Dimension string templates
-rem mps01a$:templates$[11],
     dim apm01a$:templates$[1],apm02a$:templates$[2],aps01a$:templates$[3],
 :       ivm01a$:templates$[4],ivm02a$:templates$[5],ivm05a$:templates$[6],
 :       ivm10c$:templates$[7],ivs01a$:templates$[8],mpe05a$:templates$[9],
@@ -92,8 +91,7 @@ rem --- Assign form input values to local variables
     whse$=Option!.getOptionData("warehouse_id")
     begdate$=Option!.getOptionData("report_date_1")
     enddate$=Option!.getOptionData("report_date_2")
-
-
+   
 rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
@@ -105,7 +103,7 @@ rem --- Retrieve parameter records
 rem --- Parameters
 
     dim i[4],info$[14]
-    headings=2
+    headings=5
     number=1
     n1$=sysinfo.firm_name$
     n2$="IV"
@@ -127,8 +125,6 @@ rem --- Initializations
     dim description$[number],field[number],position[number],length[number]
     dim headings$[headings]
     whse$(1)=ivs01a.warehouse_id$
-    begdate$=""
-    enddate$=""
     headings$[0]=n1$
     headings$[1]=n3$
     l9=59
@@ -145,11 +141,23 @@ rem --- Initializations
 
     find record (ivm10c_dev,key=firm_id$+"C"+whse$,dom=*next) ivm10c$
     h6$="Warehouse :"+whse$+" "+h6$
-    
-    if begdate$="" then h7$="First" else h7$=begdate$
-    if enddate$="" then h8$="Last"  else h8$=enddate$
+    if begdate$="" then 
+        h7$="First" 
+    else 
+        h7$=fndate$(begdate$)
+    endif
+    if enddate$="" then 
+        h8$="Last"  
+    else 
+        h8$=fndate$(enddate$)
+    endif
     h7$="Beginning Date: "+h7$
-    h8$="   Ending Date: "+h8$
+    h8$="Ending Date: "+h8$
+    headings$[2]=h5$
+    headings$[3]=h6$
+    headings$[4]=h7$
+    headings$[5]=h8$
+
 
 rem --- run overlay
     run pgmdir$+"mpr_purchreqreg_o1.aon"
