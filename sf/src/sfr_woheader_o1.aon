@@ -13,6 +13,16 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -74,8 +84,8 @@ rem --- Assign Title, Record, and keys
     if pos("P"=option$)>0 then let h4$=h4$+"Planned/"
     if pos("Q"=option$)>0 then let h4$=h4$+"Quoted/"
     h4$=h4$(1,len(h4$)-1)
-    if beg_wo$<> "" h4$=h4$+" Beginning With "+beg_wo$ else h4$=h4$+" Beginning With First "
-    if end_wo$<> "" h4$=h4$+" and Ending With "+end_wo$ else h4$=h4$+" and Ending with Last "
+    if beging$<> "" h4$=h4$+" Beginning With "+cvs(beging$,2) else h4$=h4$+" Beginning With First "
+    if ending$<> "" h4$=h4$+" and Ending With "+ending$ else h4$=h4$+" and Ending with Last "
     
     if closedate$<>"" then let h6$="Work In Process As Of "+fndate$(closedate$) else let h6$=""
 
@@ -88,13 +98,25 @@ rem --- Init Data
     headings$[2]=h3$
     headings$[3]=h4$
     headings$[4]=h6$
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
+    
+rem --- Column Headings
+    dim columns$[12,10]
+    columns = 12
 
-rem --- Background
-
-    print 'sb',@(29,13),"Printing:",'sf',
-
+    columns$[0,0]="WO No.",      columns$[0,1]="C",columns$[0,2]="20"
+    columns$[1,0]="Dt Opnd",     columns$[1,1]="C",columns$[1,2]="8"
+    columns$[2,0]="WO Type",     columns$[2,1]="C",columns$[2,2]="3"
+    columns$[3,0]="Ct",          columns$[3,1]="C",columns$[3,2]="3"
+    columns$[4,0]="St",          columns$[4,1]="C",columns$[4,2]="3"
+    columns$[5,0]="Start Dt",    columns$[5,1]="C",columns$[5,2]="8"
+    columns$[6,0]="Comp Dt",     columns$[6,1]="C",columns$[6,2]="8"
+    columns$[7,0]="Close Qty",   columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
+    columns$[8,0]="Close Value", columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
+    columns$[9,0]="Description", columns$[9,1]="C",columns$[9,2]="25"
+    columns$[10,0]="Bill No",    columns$[10,1]="C",columns$[10,2]="8"
+    columns$[11,0]="Cust No",    columns$[11,1]="C",columns$[11,2]="8"
+    columns$[12,0]="Ord No",     columns$[12,1]="C",columns$[12,2]="8"
+    
 rem --- Init Read
 
     extractrecord(sfe01a_dev,key=begin_key$,knum=keynum,dom=*next)
@@ -123,7 +145,6 @@ rem --- Main Read
         endif
 
         check_status:
-            print @(40,13),key_tpl.wo_no$,
             read record (sfe01a_dev,key=key_tpl$,knum=keynum,dom=*continue) sfe01a$
             if closedate$<>"" and sfe01a.opened_date$>closedate$ then continue
             if pos("P"=option$)<=0 or sfe01a.wo_status$<>"P"
@@ -152,7 +173,7 @@ rem --- Main Read
             rem --- Calculate Actuals
 
                 if sfe01a.wo_status$="C" and sfe01a.closed_date$<=g9$ then gosub closed else gosub not_closed
-
+               
             rem --- Print Closed Values
                 if pos("C"=option$)<=0 or sfe01a.wo_status$<>"C" 
                     rem --- Reduce By Closed Amount
@@ -161,25 +182,41 @@ rem --- Main Read
                 endif
 
     rem --- Print
-        if l+1>l9 then gosub sub_heading
-
-        print (printer_dev)sfe01a.wo_no$,@(18),sfe01a.wo_type$,@(22),sfe01a.wo_category$,@(25),sfe01a.wo_status$,@(45),sfe01a.sch_prod_qty:m2$,sfe01a.reserved_num:m1$,
-        if pos(sfe01a.wo_status$="CPQ")=0 print (printer_dev)@(8),fndate$(sfe01a.opened_date$),@(36),fndate$(sfe01a.estcmp_date$),
-        if sfe01a.wo_status$="C" then let stat$="*Closed*" 
-        if sfe01a.wo_status$="P" then let stat$="*Plannd*" 
-        if sfe01a.wo_status$="Q" then let stat$="*Quoted*"  
-        if sfe01a.wo_status$="C" then print (printer_dev)@(8),stat$,@(36),fndate$(sfe01a.closed_date$),
-
-        print (printer_dev)@(27),fndate$(sfe01a.eststt_date$),
-        if sfe01a.wo_category$="I" then print (printer_dev)@(46+m2+m1),d1$(1,desclen),@(121-c1-item_len),sfe01a.item_id$,j1$(1,c1),
-        if sfe01a.wo_category$="N" then print (printer_dev)@(121-c1-item_len),"Special",j1$(1,10),
-        if pos(sfe01a.wo_category$="NR")>0 then print (printer_dev)@(46+m2+m1),sfe01a.description_01$,
-        if sfs01a.ar_interface$="Y" then 
-            if pos(" "<>sfe01a.customer_id$)>0 then print (printer_dev)@(132-9-c1),fnmask$(sfe01a.customer_id$,ars01a.customer_output$),
-            if pos(" "<>sfe01a.order_no$)>0 then print (printer_dev)@(132-7),sfe01a.order_no$,
+        OutVect!.addItem(sfe01a.wo_no$)
+        if pos(sfe01a.wo_status$="CPQ")=0
+            OutVect!.addItem(fndate$(sfe01a.opened_date$))
+        else
+            if sfe01a.wo_status$="C" then let stat$="*Closed*" 
+            if sfe01a.wo_status$="P" then let stat$="*Plannd*" 
+            if sfe01a.wo_status$="Q" then let stat$="*Quoted*"  
+            if sfe01a.wo_status$="C" then OutVect!.addItem(stat$) else OutVect!.addItem("")
         endif
-        print (printer_dev)""
-
+        OutVect!.addItem(sfe01a.wo_type$)
+        OutVect!.addItem(sfe01a.wo_category$)
+        OutVect!.addItem(sfe01a.wo_status$)
+        OutVect!.addItem(fndate$(sfe01a.eststt_date$))
+        if pos(sfe01a.wo_status$="CPQ")=0 then OutVect!.addItem(fndate$(sfe01a.estcmp_date$)) else OutVect!.addItem(fndate$(sfe01a.closed_date$))
+        OutVect!.addItem(str(sfe01a.sch_prod_qty))
+        OutVect!.addItem(str(sfe01a.reserved_num))
+        if sfe01a.wo_category$="I" then 
+            OutVect!.addItem(d1$(1,desclen))
+            OutVect!.addItem(sfe01a.item_id$)
+        endif
+        if pos(sfe01a.wo_category$="R")>0 then 
+            OutVect!.addItem(sfe01a.description_01$)
+            OutVect!.addItem("")
+        endif
+        if sfe01a.wo_category$="N" then 
+            OutVect!.addItem(sfe01a.description_01$)
+            OutVect!.addItem("Special")
+        endif
+        if sfs01a.ar_interface$="Y" then 
+            if pos(" "<>sfe01a.customer_id$)>0 then OutVect!.addItem(fnmask$(sfe01a.customer_id$,ars01a.customer_output$)) else OutVect!.addItem("")
+            if pos(" "<>sfe01a.order_no$)>0 then OutVect!.addItem(sfe01a.order_no$) else OutVect!.addItem("")
+        else
+            xwk=fnblank(2)
+        endif
+        
         t[0]=t[0]+sfe01a.sch_prod_qty
         t[1]=t[1]+sfe01a.reserved_num,u[0]=u[0]+sfe01a.sch_prod_qty,u[1]=u[1]+sfe01a.reserved_num,l=l+1,l0=l0+1
 
@@ -189,36 +226,24 @@ done: rem --- End
 
     t9$="U"
     if sequence$<>"W" then gosub sub_total
-    if h=0 then gosub report_heading
-    if l+1>l9 then gosub report_heading
-    print (printer_dev)@(45+m2),j$(1,m1-1),'lf',
-    print (printer_dev)@(20),"Grand Total: ",@(45+m2),u[1]:m1$
+    xwk=fnblank(8)
+    OutVect!.addItem(j$(1,m1-1))
+    xwk=fnblank(9)
+    OutVect!.addItem("Grand Total: ")
+    xwk=fnblank(2)
+    OutVect!.addItem(str(u[1]))
+    xwk=fnblank(4)
     goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)"W.O.",@(10),"Date",@(18),"WO",@(29),"Start",@(38),"Comp",
-    if sfs01a.ar_interface$="Y" then print (printer_dev)@(132-9-c1),"Customer",@(132-5),"Order",
-    if pos("C"=option$)=0 then print (printer_dev)@(45+m2-5),"Prod",@(45+m2+m1-8),"Current", else print (printer_dev)@(45+m2-6),"Close",@(45+m2+m1-6),"Close",
-    print (printer_dev)'lf',"Number",@(9),"Opened",@(17),"Type Ct St",@(30),"Date",@(38),"Date",@(45+m2-5),"Quan",@(45+m2+m1-6),"Value",@(46+m2+m1),"Description",@(121-c1-item_len),"Bill No.",
-    if sfs01a.ar_interface$="Y" then print (printer_dev)@(132-9-c1),"Number",@(132-6),"Number",
-    print (printer_dev)'lf'
-    l=l+headings+2
-return
 
 sub_heading: rem --- Sub Heading
 
-    if l>l9 then gosub report_heading
     if sequence$="T" 
-        print (printer_dev)'lf',t0$+"   ",h5$,'lf'
-        l=l+3
+        OutVect!.addItem(t0$+"   "+h5$)
+        xwk=fnblank(25)
     endif
     if sequence$="C"
-        print (printer_dev)fnmask$(t0$(1,c0),ars01a.customer_output$)," ",h5$
-        l=l+1
+        OutVect!.addItem(fnmask$(t0$(1,c0),ars01a.customer_output$)+"   "+h5$)
+        xwk=fnblank(25)
     endif
 return
 
@@ -226,15 +251,27 @@ return
 sub_total: rem --- First Sub Total
     if t0$<>"" 
         if l0>1 
-            if l+2>l9 then gosub sub_heading
-            if sequence$="B" then print (printer_dev)@(45),j$(1,m2-1),
-            print (printer_dev)@(45+m2),j$(1,m1-1),'lf',
-            if sequence$="B" then print (printer_dev)@(45),t[0]:m2$,
-            print (printer_dev)@(10),h9$," ",t0$+"   ","Total: ",@(45+m2),t[1]:m1$,'lf'
-            l=l+3
+            if sequence$="B" then 
+                xwk=fnblank(7)
+                OutVect!.addItem(j$(1,m2-1))
+            else
+                xwk=fnblank(8)
+            endif
+            OutVect!.addItem(j$(1,m1-1))
+            xwk=fnblank(4)
+            OutVect!.addItem(h9$)
+            OutVect!.addItem(t0$)
+            OutVect!.addItem("Total: ")
+            if sequence$="B" then 
+                xwk=fnblank(4)
+                OutVect!.addItem(str(t[0]))
+            else
+                xwk=fnblank(5)
+            endif
+            OutVect!.addItem(str(t[1]))
+            xwk=fnblank(17)
         else
-            print (printer_dev)""
-            let l=l+1
+            xwk=fnblank(13)
         endif
     endif
     if t9$<>"" then return
@@ -326,11 +363,17 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+    rem def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
-
+    def fndate$(q$)
+        if cvs(q$,2)="" return ""
+        if pos("9"<>q$)=0 return q$
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        return testdate$
+    fnend
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
     def fnmask$(q1$,q2$)
@@ -366,6 +409,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
