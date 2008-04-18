@@ -209,14 +209,14 @@ rem ---  column heading
     columns=9
     columns$[0,0]="Ref #",           columns$[0,1]="C",columns$[0,2]="20"
     columns$[1,0]="Main Bill Number",columns$[1,1]="C",columns$[1,2]="25"
-    columns$[2,0]="Cost",            columns$[2,1]="C",columns$[2,2]="8"
-    columns$[3,0]="Qty",             columns$[3,1]="C",columns$[3,2]="8"
-    columns$[4,0]="Total",           columns$[4,1]="C",columns$[4,2]="8"
+    columns$[2,0]="Cost",            columns$[2,1]="N",columns$[2,2]="8",columns$[2,3]=m3$
+    columns$[3,0]="Qty",             columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]=m2$
+    columns$[4,0]="Total",           columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$
     columns$[5,0]="Update?",         columns$[5,1]="C",columns$[5,2]="5"
-    columns$[6,0]="Available",       columns$[6,1]="C",columns$[6,2]="8"
-    columns$[7,0]="Required",        columns$[7,1]="C",columns$[7,2]="8"
-    columns$[8,0]="Shortage",        columns$[8,1]="C",columns$[8,2]="8"
-    columns$[9,0]="On-Order",        columns$[9,1]="C",columns$[9,2]="8"
+    columns$[6,0]="Available",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
+    columns$[7,0]="Required",        columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
+    columns$[8,0]="Shortage",        columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m2$
+    columns$[9,0]="On-Order",        columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m2$
    
 rem --- Initial Read
 
@@ -308,15 +308,15 @@ print_components: rem --- Print Components
             OutVect!.addItem("     "+b1$)
             xwk=fnblank(4)
             if bmm02a.divisor=0 then let bmm02a.divisor=1
-            OutVect!.addItem(str(ivm02a.qty_on_hand-ivm02a.qty_commit:m2$))
-            OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered:m2$))
+            OutVect!.addItem(str(ivm02a.qty_on_hand-ivm02a.qty_commit))
+            OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered))
             if ivm02a.qty_on_hand-ivm02a.qty_commit<fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered then 
-                OutVect!.addItem(str(abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered):m2$))
+                OutVect!.addItem(str(abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered)))
                 short=short+1
             else
                 OutVect!.addItem("")
             endif
-            OutVect!.addItem(str(ivm02a.qty_on_order:m2$))
+            OutVect!.addItem(str(ivm02a.qty_on_order))
         wend
         memo$="Variance"
 
@@ -343,9 +343,9 @@ rem --- Print Total for bme-01 record
         u0=u0+cost*bme01a.qty_ordered,u1=u1+cost*bme01a.qty_ordered
         OutVect!.addItem("Total")
         OutVect!.addItem(bme01a.item_id$)
-        OutVect!.addItem(str(cost:m3$))
-        OutVect!.addItem(str(bme01a.qty_ordered:m2$))
-        OutVect!.addItem(str(cost*bme01a.qty_ordered:m1$))
+        OutVect!.addItem(str(cost))
+        OutVect!.addItem(str(bme01a.qty_ordered))
+        OutVect!.addItem(str(cost*bme01a.qty_ordered))
         OutVect!.addItem(bme01a.update_flag$)
         xwk=fnblank(14)
         cost=0
@@ -503,7 +503,7 @@ warehouse: rem --- Warehouse
         xwk=fnblank(6)
         OutVect!.addItem("Warehouse Total:")
         xwk=fnblank(2)
-        OutVect!.addItem(str(t0:m1$))
+        OutVect!.addItem(str(t0))
         xwk=fnblank(5)
         t0=0,u0=0
     endif
@@ -526,7 +526,7 @@ date_sub: rem --- Date
         xwk=fnblank(6)
         OutVect!.addItem("Date Total:")
         xwk=fnblank(2)
-        OutVect!.addItem(str(u0:m1$))
+        OutVect!.addItem(str(u0))
         xwk=fnblank(5)
     endif
     if t9$<>"" then return
@@ -602,7 +602,7 @@ reference: rem --- Reference Total
         xwk=fnblank(6)
         OutVect!.addItem("Reference Total:")
         xwk=fnblank(2)
-        OutVect!.addItem(str(u1:m1$))
+        OutVect!.addItem(str(u1))
         xwk=fnblank(15)
      endif
      if t9$<>"" then return
