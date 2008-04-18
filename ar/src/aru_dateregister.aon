@@ -17,12 +17,16 @@ rem --- Initializations
     ar_type$=fill(2)
 
 rem --- Get user approval to proceed
+
     overlay$=""
     next_overlay$=""
-    prompt$="Are you ready to update the "+cvs(sysinfo.task_desc$,2)+"?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit_no_update
-    if answer$<>"Y" goto std_exit_no_update
+    msg_id$="AON_UPDT_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit_no_update
 
 rem --- Start progress meter and position invoice file
 
@@ -70,8 +74,8 @@ rem --- All done
 
 disp_message:rem --- Display Message Dialog
 
-	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-	return
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 

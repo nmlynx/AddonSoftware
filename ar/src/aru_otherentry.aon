@@ -25,11 +25,14 @@ rem --- Initializations
 
 rem --- Get user approval to proceed
 
-    prompt$="Are you ready to update the "+cvs(sysinfo.task_desc$,2)+"?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
+    msg_id$="AON_UPDT_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit_no_update
     goto std_exit_no_update;rem temp until update tested.CAH
-    if fkey=4 goto std_exit_no_update
-    if answer$<>"Y" goto std_exit_no_update
 
 rem --- Should GL be updated (if it's being used)?
 

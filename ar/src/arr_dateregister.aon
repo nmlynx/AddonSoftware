@@ -60,10 +60,13 @@ rem --- Retrieve parameter records
 
 rem --- Get user approval to proceed
 
-    prompt$="Do you want to produce the "+cvs(sysinfo.task_desc$,2)+"?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit_no_report
-    if answer$<>"Y" goto std_exit_no_report
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit_noreport
 
 rem --- Initializations
 
@@ -201,6 +204,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -253,7 +263,7 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 
-std_exit_no_report:
+std_exit_noreport:
 
     release
 
