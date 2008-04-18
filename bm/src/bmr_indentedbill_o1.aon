@@ -14,6 +14,16 @@ rem --- Retrieve the program path
     pgmdir$=stbl("+DIR_PGM",err=*next)
     precision 5
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -21,11 +31,6 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Open Printer
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
 
 rem --- Initializations
     call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
@@ -35,7 +40,7 @@ rem --- Initializations
     dim junk[10],z[11],ivdesc$(desc[0])
     more=1
 
-rem --- Build Headings and Set Print Positions
+rem --- Headings
 
     h0=132
     h=0,headings=3,when$=sysinfo.system_date$,clock$=""
@@ -44,170 +49,204 @@ rem --- Build Headings and Set Print Positions
     headings$[1]=sysinfo.task_desc$
     headings$[2]="Level Selection: "
     if level$="" then headings$[2]=headings$[2]+"All Levels Selected" else headings$[2]=headings$[2]+"All Levels Up To "+level$
-    if showcost$="N" then let m1=0,m3=0,thead$=""
-    minlen=m2+m3-1
-    mhead$=fill(max(minlen,8),"-")+" "
-    mhead$(int((len(mhead$)-8)/2)+1,8)="Material"
-    lhead$=fill(max(minlen,5),"-")+" "
-    lhead$(int((len(lhead$)-5)/2)+1,5)="Labor"
-    shead$=fill(max(minlen,11),"-")+" "
-    shead$(int((len(shead$)-11)/2)+1,11)="Subcontract"
-    if showcost$="Y" then let thead$=fill(max(m1,5),"-")+" ",thead$(int((len(thead$)-5)/2)+1,5)="Total"
-    mlsthead$=mhead$+lhead$+shead$+thead$
-    dim o[11]
-    o[0]=0
-    o[1]=o[0]+4,o[2]=o[1]+max(level+1,7),o[3]=o[2]+p[0]+1,o[4]=o[3]+desc[0]+1
-    o[11]=h0-max(m1,len(thead$))
-    o[10]=o[11]-m3,o[9]=o[11]-max(m3+m2,len(shead$)),o[8]=o[9]-m3,o[7]=o[9]-max(m3+m2,len(lhead$)),o[6]=o[7]-m3,o[5]=o[7]-max(m3+m2,len(mhead$))
-    if o[4]+3>o[5] then let lines=2,o[4]=o[5]-3 else let lines=1
-    
-    headline1$(o[0]+1)="Seq"
-    headline1$(o[1]+1)="Level",headline1$(o[2]+1)="Item #",headline1$(o[3]+1)="Description",headline1$(o[5]+1)=mlsthead$
-    headline2$(o[4]+1)="UM"
-    headline2$(o[5]+1+m2-6)="Units",headline2$(o[7]+1+m2-6)="Units",headline2$(o[9]+1+m2-6)="Units"
-    if showcost$="Y" then let headline2$(o[6]+1+m3-5,4)="Cost",headline2$(o[8]+1+m3-5,4)="Cost",headline2$(o[10]+1+m3-5,4)="Cost"
+
+rem ---  column heading
+    if showcost$="Y" then
+        dim columns$[11,10]
+        columns=12
+            columns$[0,0]="Seq",               columns$[0,1]="C",columns$[0,2]="5"
+            columns$[1,0]="Level",             columns$[1,1]="C",columns$[1,2]="5"
+            columns$[2,0]="Item ID",           columns$[2,1]="C",columns$[2,2]="8"
+            columns$[3,0]="Description",       columns$[3,1]="C",columns$[3,2]="20"
+            columns$[4,0]="UM",                columns$[4,1]="C",columns$[4,2]="3"
+            columns$[5,0]="Mat Units",         columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m2$
+            columns$[6,0]="Mat Cost",          columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m3$
+            columns$[7,0]="Lab Units",         columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
+            columns$[8,0]="Lab Cost",          columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m3$
+            columns$[9,0]="Sub Units",         columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m2$
+            columns$[10,0]="Sub Cost",         columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m3$
+            columns$[11,0]="Total Cost",       columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m3$    
+    else
+        dim columns$[7,10]
+        columns=8
+            columns$[0,0]="Seq",               columns$[0,1]="C",columns$[0,2]="5"
+            columns$[1,0]="Level",             columns$[1,1]="C",columns$[1,2]="5"
+            columns$[2,0]="Item ID",           columns$[2,1]="C",columns$[2,2]="8"
+            columns$[3,0]="Description",       columns$[3,1]="C",columns$[3,2]="20"
+            columns$[4,0]="UM",                columns$[4,1]="C",columns$[4,2]="3"
+            columns$[5,0]="Material Units",    columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m2$
+            columns$[6,0]="Labor Units",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
+            columns$[7,0]="Subcontract Units", columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
+    endif
 
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","NC","","","","",p[0],bmm01_dev,1,meter_num,status
-
-rem --- Options
-
-    dim l9$(40,$0a$)
 
 rem --- Init Read
 
     extractrecord (bmm01_dev,key=firm_id$+billfrom$,dom=*next) bmm01a$
 
 main_read: rem --- Main Read
-while more
-    read record (bmm01_dev,end=done) bmm01a$
-    if bmm01a.firm_id$<>firm_id$ then goto done
-    x0$=bmm01a.firm_id$+bmm01a.bill_no$
-    lot=bmm01a.std_lot_size,yield=bmm01a.est_yield
-    if billthru$<>"" then if bmm01a.bill_no$>pad(billthru$,20) then goto done
+    while more
+        read record (bmm01_dev,end=done) bmm01a$
+        if bmm01a.firm_id$<>firm_id$ then goto done
+        x0$=bmm01a.firm_id$+bmm01a.bill_no$
+        lot=bmm01a.std_lot_size,yield=bmm01a.est_yield
+        if billthru$<>"" then if bmm01a.bill_no$>pad(billthru$,20) then goto done
 
 rem --- Breaks
 
-    gosub find_description
-    rem if x0$="NONE" then goto main_read
-    if x0$="NONE" then continue
-    call pgmdir$+"adc_progress.aon","S","","","",bmm01a.bill_no$,0,0,1,meter_num,status
-    dim lab_cost[9],mat_cost[9],lab_qty[9],mat_qty[9],sub_qty[9],sub_cost[9],k9$(9*25)
-    k$=bmm01a.firm_id$+bmm01a.bill_no$
-    cur_level=1,mat_qty[cur_level]=1
-    if level<>1 then print (printer_dev)'lf'; let l=l+2
+        gosub find_description
+        if x0$="NONE" then continue
+        call pgmdir$+"adc_progress.aon","S","","","",bmm01a.bill_no$,0,0,1,meter_num,status
+        dim lab_cost[9],mat_cost[9],lab_qty[9],mat_qty[9],sub_qty[9],sub_cost[9],k9$(9*25)
+        k$=bmm01a.firm_id$+bmm01a.bill_no$
+        cur_level=1,mat_qty[cur_level]=1
+        if level<>1 then xwk=fnblank(columns)
+        first=1
 
 get_subcontractors: rem --- Get Subcontracts
 
-    x$=k$
-    levelprinted=0
-    gosub subcontractors
+        x$=k$
+        levelprinted=0
+        gosub add_labor
 
-rem --- Find Labor
+        x$=k$
+        gosub subcontractors
+        cur_level=cur_level+1    
 
-    x$=k$
-    gosub add_labor
-    cur_level=cur_level+1
 
 rem --- Find Parts
+        first=0
+        read (bmm02_dev,key=k$,dom=*next)
+        while more
+            bmm02a_key$=key(bmm02_dev,end=sub_totals)
+            if pos(firm_id$=bmm02a_key$)=1 then 
+              read record (bmm02_dev,key=bmm02a_key$) bmm02a$
+              if bmm02a.firm_id$+bmm02a.bill_no$=k$ then 
+                if bmm02a.line_type$<>"S" then continue
+                if cvs(bmm02a.effect_date$,3)<>"" then if bmm02a.effect_date$>pdate$ then continue
+                if cvs(bmm02a.obsolt_date$,3)<>"" then if bmm02a.obsolt_date$<=pdate$ then continue
+                x0$=bmm02a.firm_id$+bmm02a.item_id$
+                gosub find_description
 
-    read (bmm02_dev,key=k$,dom=*next)
-    while more
-        bmm02a_key$=key(bmm02_dev,end=sub_totals)
-        if pos(firm_id$=bmm02a_key$)=1 then 
-          read record (bmm02_dev,key=bmm02a_key$) bmm02a$
-          if bmm02a.firm_id$+bmm02a.bill_no$=k$ then 
-            if bmm02a.line_type$<>"S" then continue
-            if bmm02a.effect_date$<>"   " then if bmm02a.effect_date$>pdate$ then continue
-            if bmm02a.obsolt_date$<>"   " then if bmm02a.obsolt_date$<=pdate$ then continue
-            x0$=bmm02a.firm_id$+bmm02a.item_id$
-            gosub find_description
+    rem --- Any Pieces??
 
-rem --- Any Pieces??
-
-            find (bmm01_dev,key=bmm02a.firm_id$+bmm02a.item_id$,dom=print_parts)
-            if cur_level>9 then goto circular_reference
-            k9$(((cur_level-1)*25)+1,25)=bmm02a.firm_id$+bmm02a.bill_no$+bmm02a.material_seq$
-            k$=bmm02a.firm_id$+bmm02a.item_id$,mat_qty[cur_level]=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
-            if cur_level=2 and level>=2 then print (printer_dev)@(o[0]),bmm02a.material_seq$,
-            goto get_subcontractors
+                find (bmm01_dev,key=bmm02a.firm_id$+bmm02a.item_id$,dom=print_parts)
+                if cur_level>9 then goto circular_reference
+                k9$(((cur_level-1)*25)+1,25)=bmm02a.firm_id$+bmm02a.bill_no$+bmm02a.material_seq$
+                k$=bmm02a.firm_id$+bmm02a.item_id$,mat_qty[cur_level]=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
+                
+                if cur_level=2 and level>=2 then 
+                    OutVect!.addItem(bmm02a.material_seq$) 
+                else
+                    if cur_level<=level then  OutVect!.addItem("") 
+                endif
+                goto get_subcontractors
 
 print_parts: rem --- Print Parts
 
-            if cur_level<=level then 
-                if l+lines>l9 then gosub report_heading
-                dim dots$(cur_level-1,".")
-                if cur_level=1 then let um$=bmm01a.unit_measure$ else let um$=bmm02a.unit_measure$
-                if cur_level=2 and level>=2 then print (printer_dev)@(o[0]),bmm02a.material_seq$,
-                if bmm02a.divisor=0 then let bmm02a.divisor=1
-                print (printer_dev)@(o[1]),dots$,cur_level:"0",@(o[2]+1),bmm02a.item_id$,
-                if lines=1 then print (printer_dev)@(o[3]+(cur_level-1)*2),ivdesc$(1,desc[0]-(cur_level-1)*2), else print (printer_dev)@(o[3]+(cur_level-1)*2),ivdesc$
-                print (printer_dev)@(o[4]),um$,@(o[5]),fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor):m2$,
-                if showcost$="Y" then print (printer_dev)@(o[6]),bms01a.mat_factor*ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor):m3$ else print (printer_dev)""
-                l=l+lines
-            endif    
-
-            mat_cost[cur_level-1]=mat_cost[cur_level-1]+bms01a.mat_factor*ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
-            continue
-          endif
-        endif
+                if cur_level<=level then 
+                    dim dots$(cur_level-1,".")
+                    if cur_level=1 then let um$=bmm01a.unit_measure$ else let um$=bmm02a.unit_measure$
+                    if cur_level=2 and level>=2 then OutVect!.addItem(bmm02a.material_seq$) else OutVect!.addItem("")
+                    if bmm02a.divisor=0 then let bmm02a.divisor=1
+                    OutVect!.addItem(dots$+str(cur_level:"0"))
+                    OutVect!.addItem(bmm02a.item_id$)
+                    OutVect!.addItem(fill((cur_level-1)*2)+ivdesc$)
+                    OutVect!.addItem(um$)
+                    value=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
+                    OutVect!.addItem(str(value))
+                    if showcost$="Y" then 
+                        value=bms01a.mat_factor*ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
+                        OutVect!.addItem(str(value))
+                        xwk=fnblank(columns-7)
+                    else
+                        xwk=fnblank(columns-6)
+                    endif  
+                endif
+                mat_cost[cur_level-1]=mat_cost[cur_level-1]+bms01a.mat_factor*ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
+                continue
+              endif
+            endif
 
 sub_totals: rem --- Sub Totals
-        
-        cur_level=cur_level-1
-        if cur_level<=level then 
-            if l+1>l9 then gosub report_heading
-            dim dots$(cur_level-1,".")
-            print (printer_dev)@(o[1]),dots$,cur_level:"0",@(o[5]),mat_qty[cur_level]:m2$,@(o[7]),lab_qty[cur_level]*mat_qty[cur_level]:m2$,@(o[9]),sub_qty[cur_level]:m2$,
-            if showcost$="Y" then print (printer_dev)@(o[6]),mat_cost[cur_level]*mat_qty[cur_level]:m3$,@(o[8]),lab_cost[cur_level]*mat_qty[cur_level]:m3$,@(o[10]),sub_cost[cur_level]:m3$,@(o[11]),mat_cost[cur_level]*mat_qty[cur_level]+lab_cost[cur_level]*mat_qty[cur_level]+sub_cost[cur_level]:m3$,
-            if cur_level<level then print (printer_dev)@(o[3]+(cur_level-1)*2),"Total:" else print (printer_dev)""
-            l=l+1
-            if bms01a.mat_factor<>1 and cur_level<>1 then 
-                if cur_level<level then print (printer_dev)@(o[3]+(cur_level-1)*2),"Factored Total:",@(o[7]),lab_qty[cur_level]*mat_qty[cur_level]:m2$,@(o[9]),sub_qty[cur_level]:m2$,
-                if showcost$="Y" then if cur_level<level then print (printer_dev)@(o[6]),bms01a.mat_factor*mat_cost[cur_level]*mat_qty[cur_level]:m3$,@(o[8]),bms01a.mat_factor*lab_cost[cur_level]*mat_qty[cur_level]:m3$,@(o[10]),sub_cost[cur_level]:m3$,@(o[11]),bms01a.mat_factor*(mat_cost[cur_level]*mat_qty[cur_level]+lab_cost[cur_level]*mat_qty[cur_level]+sub_cost[cur_level]):m3$ else print (printer_dev)""
-                l=l+1
+            cur_level=cur_level-1
+            if cur_level<=level then 
+                dim dots$(cur_level-1,".")
+                if showcost$="Y"
+                    OutVect!.addItem("")
+                    OutVect!.addItem(dots$+str(cur_level:"0"))
+                    xwk=fnblank(1)
+                    if cur_level<level then OutVect!.addItem(fill((cur_level-1)*2)+"Total:") else OutVect!.addItem("")  
+                    xwk=fnblank(1)
+                    OutVect!.addItem(str(mat_qty[cur_level]))
+                    OutVect!.addItem(str(mat_cost[cur_level]*mat_qty[cur_level]))
+                    OutVect!.addItem(str(lab_qty[cur_level]*mat_qty[cur_level]))
+                    OutVect!.addItem(str(lab_cost[cur_level]*mat_qty[cur_level]))
+                    OutVect!.addItem(str(sub_qty[cur_level]))
+                    OutVect!.addItem(str(sub_cost[cur_level]))
+                    OutVect!.addItem(str(mat_cost[cur_level]*mat_qty[cur_level]+lab_cost[cur_level]*mat_qty[cur_level]+sub_cost[cur_level]))
+                else
+                    OutVect!.addItem("")
+                    OutVect!.addItem(dots$+str(cur_level:"0"))
+                    xwk=fnblank(1)
+                    if cur_level<level then OutVect!.addItem(fill((cur_level-1)*2)+"Total:") else OutVect!.addItem("")
+                    xwk=fnblank(1)
+                    OutVect!.addItem(str(mat_qty[cur_level]))
+                    OutVect!.addItem(str(lab_qty[cur_level]*mat_qty[cur_level]))
+                    OutVect!.addItem(str(sub_qty[cur_level]))
+                endif
+                if bms01a.mat_factor<>1 and cur_level<>1 then 
+                    if cur_level<level then 
+                        if showcost$="Y" then
+                            xwk=fnblank(3)
+                            OutVect!.addItem(fill((cur_level-1)*2)+"Factored Total:")
+                            xwk=fnblank(2)
+                            OutVect!.addItem(str(bms01a.mat_factor*mat_cost[cur_level]*mat_qty[cur_level]))
+                            OutVect!.addItem(str(lab_qty[cur_level]*mat_qty[cur_level]))
+                            OutVect!.addItem(str(bms01a.mat_factor*lab_cost[cur_level]*mat_qty[cur_level]))
+                            OutVect!.addItem(str(sub_qty[cur_level]))
+                            OutVect!.addItem(str(sub_cost[cur_level]))
+                            OutVect!.addItem(str(bms01a.mat_factor*(mat_cost[cur_level]*mat_qty[cur_level]+lab_cost[cur_level]*mat_qty[cur_level]+sub_cost[cur_level])))
+                        else
+                            xwk=fnblank(3)
+                            OutVect!.addItem(fill((cur_level-1)*2)+"Factored Total:")
+                            xwk=fnblank(2)
+                            OutVect!.addItem(str(lab_qty[cur_level]*mat_qty[cur_level]))
+                            OutVect!.addItem(str(sub_qty[cur_level]))
+                        endif
+                    endif
+                endif
             endif
-        endif
 
 rem --- Do the Next Level
-        
-        if cur_level=1 then goto main_read
-        lab_cost[cur_level-1]=lab_cost[cur_level-1]+bms01a.mat_factor*lab_cost[cur_level]*mat_qty[cur_level]
-        mat_cost[cur_level-1]=mat_cost[cur_level-1]+bms01a.mat_factor*mat_cost[cur_level]*mat_qty[cur_level]
-        lab_qty[cur_level-1]=lab_qty[cur_level-1]+lab_qty[cur_level]*mat_qty[cur_level]*bms01a.mat_factor
-        sub_cost[cur_level-1]=sub_cost[cur_level-1]+sub_cost[cur_level]
-        lab_cost[cur_level]=0
-        mat_cost[cur_level]=0,lab_qty[cur_level]=0
-        mat_qty[cur_level]=0
-        sub_qty[cur_level]=0,sub_cost[cur_level]=0
-        k$=k9$(((cur_level-1)*25)+1,25)
-        k9$(((cur_level-1)*25)+1,25)=""
-        x0$=k$(1,22)
-        find record (bmm01_dev2,key=x0$,dom=unit_cost) bmm01a2$
-        if bmm01a2.phantom_bill$<>"Y" then let lot=bmm01a2.std_lot_size,yield=bmm01a2.est_yield
 
+            if cur_level=1 then goto main_read
+            lab_cost[cur_level-1]=lab_cost[cur_level-1]+bms01a.mat_factor*lab_cost[cur_level]*mat_qty[cur_level]
+            mat_cost[cur_level-1]=mat_cost[cur_level-1]+bms01a.mat_factor*mat_cost[cur_level]*mat_qty[cur_level]
+            lab_qty[cur_level-1]=lab_qty[cur_level-1]+lab_qty[cur_level]*mat_qty[cur_level]*bms01a.mat_factor
+            sub_cost[cur_level-1]=sub_cost[cur_level-1]+sub_cost[cur_level]
+            lab_cost[cur_level]=0
+            mat_cost[cur_level]=0,lab_qty[cur_level]=0
+            mat_qty[cur_level]=0
+            sub_qty[cur_level]=0,sub_cost[cur_level]=0
+            k$=k9$(((cur_level-1)*25)+1,25)
+            k9$(((cur_level-1)*25)+1,25)=""
+            x0$=k$(1,22)
+            find record (bmm01_dev2,key=x0$,dom=unit_cost) bmm01a2$
+            if bmm01a2.phantom_bill$<>"Y" then let lot=bmm01a2.std_lot_size,yield=bmm01a2.est_yield
 unit_cost:
-        gosub find_description
-        read (bmm02_dev,key=k$)
-        k$=k$(1,22)
+            gosub find_description
+            read (bmm02_dev,key=k$)
+            k$=k$(1,22)
+        wend
     wend
-wend
 
 done: rem --- End of File
 
-        goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)@(0),headline1$
-    print (printer_dev)@(0),headline2$
-    print (printer_dev)""
-    l=l+3
-    return
+    goto std_exit
 
 add_labor: rem --- Add Labor
 
@@ -215,15 +254,14 @@ add_labor: rem --- Add Labor
     if bmm01a2.phantom_bill$<>"Y" then let lot=bmm01a2.std_lot_size,yield=bmm01a2.est_yield
     if bmm01a2.phantom_bill$="Y" then let yield=bmm01a2.est_yield
 add_labor_dom:
-    read (bmm03_dev,key=x$,dom=*next)
-
+    extractrecord (bmm03_dev,key=x$,dom=*next)
     while more
         bmm03a_key$=key(bmm03_dev,end=*break)
         if pos(firm_id$=bmm03a_key$)<>1 then break
         read record (bmm03_dev,key=bmm03a_key$) bmm03a$
-        if bmm03a.firm_id$+bmm03a.bill_no$<>bmm01a.firm_id$+bmm01a.bill_no$ then break
-        if bmm03a.effect_date$<>"   " then if bmm03a.effect_date$>pdate$ then continue
-        if bmm03a.obsolt_date$<>"   " then if bmm03a.obsolt_date$<=pdate$ then continue
+        if bmm03a.firm_id$+bmm03a.bill_no$<>x$ then break
+        if cvs(bmm03a.effect_date$,3)<>"" then if bmm03a.effect_date$>pdate$ then continue
+        if cvs(bmm03a.obsolt_date$,3)<>"" then if bmm03a.obsolt_date$<=pdate$ then continue
         if bmm03a.pcs_per_hour=0 then continue
         dim w[13]
         read record (bmm08_dev,key=firm_id$+bmm03a.op_code$,dom=*next) bmm08a$
@@ -232,10 +270,10 @@ add_labor_dom:
         ohcost=directcost*bmm08a.ovhd_factor
         if bmm03a.hrs_per_pce<>0 then let lab_cost[cur_level]=lab_cost[cur_level]+directcost+ohcost
         lab_qty[cur_level]=lab_qty[cur_level]+fnopqty(bmm03a.hrs_per_pce,bmm03a.pcs_per_hour,yield,bmm03a.setup_time,lot)
+        
     wend
 
     if cur_level<=level then 
-        if l+lines>l9 then gosub report_heading
         dim dots$(cur_level-1,".")
         if cur_level=1 then let um$=bmm01a.unit_measure$ else let um$=bmm02a.unit_measure$
         if !levelprinted then 
@@ -243,11 +281,16 @@ add_labor_dom:
             find (bmm01_dev,key=firm_id$+k$(3),dom=printing)
             subbill$="*"
 printing:
-            print (printer_dev)@(o[1]),dots$,cur_level:"0",@(o[2]),subbill$,k$(3),; let levelprinted=1
-            if lines=1 then print (printer_dev)@(o[3]+(cur_level-1)*2),ivdesc$(1,desc[0]-(cur_level-1)*2),
-        endif        
-        print (printer_dev)@(o[4]),um$,@(o[7]),lab_qty[cur_level]:m2$,; if showcost$="Y" then print (printer_dev)@(o[8]),lab_cost[cur_level]:m3$,
-        if cur_level<level or showcost$="N" then print (printer_dev)""; let l=l+1
+            if first=1 then OutVect!.addItem("")
+            OutVect!.addItem(dots$+str(cur_level:"0"))
+            OutVect!.addItem(subbill$+k$(3))
+            levelprinted=1
+            OutVect!.addItem(fill((cur_level-1)*2)+ivdesc$)
+            OutVect!.addItem(um$)
+            if showcost$="Y" then xwk=fnblank(2) else xwk=fnblank(1)
+        endif      
+        OutVect!.addItem(str(lab_qty[cur_level]))
+        if showcost$="Y" then OutVect!.addItem(str(lab_cost[cur_level]))
     endif
 return
 
@@ -267,14 +310,13 @@ subcontractors: rem --- Add Subcontracts
         if pos(firm_id$=bmm05a_key$)<>1 then break
         read record (bmm05_dev,key=bmm05a_key$) bmm05a$
         if bmm05a.firm_id$+bmm05a.bill_no$<>x$ then break
-        if bmm05a.effect_date$<>"   " then if bmm05a.effect_date$>pdate$ then continue
-        if bmm05a.obsolt_date$<>"   " then if bmm05a.obsolt_date$<=pdate$ then continue
+        if cvs(bmm05a.effect_date$,3)<>"" then if bmm05a.effect_date$>pdate$ then continue
+        if cvs(bmm05a.obsolt_date$,3)<>"" then if bmm05a.obsolt_date$<=pdate$ then continue
         sub_qty[cur_level]=sub_qty[cur_level]+bmm05a.qty_required
         if bmm05a.divisor<>0 then let sub_cost[cur_level]=sub_cost[cur_level]+bmm05a.qty_required*bmm05a.alt_factor*bmm05a.unit_cost/bmm05a.divisor else let sub_cost[cur_level]=0
     wend
 
     if cur_level<=level then 
-        if l+lines>l9 then gosub report_heading
         dim dots$(cur_level-1,".")
         if cur_level=1 then let um$=bmm01a.unit_measure$ else let um$=bmm02a.unit_measure$
         if !levelprinted then 
@@ -282,11 +324,16 @@ subcontractors: rem --- Add Subcontracts
             find (bmm01_dev,key=firm_id$+k$(3),dom=printing_dom)
             subbill$="*"
 printing_dom:
-            print (printer_dev)@(o[1]),dots$,cur_level:"0",@(o[2]),subbill$,k$(3),; let levelprinted=1
-            if lines=1 then print (printer_dev)@(o[3]+(cur_level-1)*2),ivdesc$(1,desc[0]-(cur_level-1)*2), else print (printer_dev)@(o[3]+(cur_level-1)*2),ivdesc$; let l=l+1
+            if first=1 then OutVect!.addItem("")
+            OutVect!.addItem(dots$+str(cur_level:"0"))
+            OutVect!.addItem(subbill$+k$(3))
+            levelprinted=1
+            OutVect!.addItem(fill((cur_level-1)*2)+ivdesc$)
+            OutVect!.addItem(um$)
+            if showcost$="Y" then xwk=fnblank(4) else xwk=fnblank(2)
         endif
-
-        print (printer_dev)@(o[4]),um$,@(o[9]),sub_qty[cur_level]:m2$,; if showcost$="Y" then print (printer_dev)@(o[10]),sub_cost[cur_level]:m3$,
+        OutVect!.addItem(str(sub_qty[cur_level]))
+        if showcost$="Y" then OutVect!.addItem(str(sub_cost[cur_level]));OutVect!.addItem("")
     endif
 return
 
@@ -296,7 +343,7 @@ find_description: rem --- Find Description & UnitCost
     ivm01a.item_desc$="***Not On File***"
     find record (ivm01_dev,key=x0$,dom=*next) ivm01a$
     ivdesc$(1)=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
-    find record (ivm02_dev,key=firm_id$+whs$+x0$(3,20),dom=*next) ivm02a$
+    find record (ivm02_dev,key=firm_id$+whse$+x0$(3,20),dom=*next) ivm02a$
 return
 
 rem #include std_functions.src
@@ -369,6 +416,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
