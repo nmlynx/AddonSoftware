@@ -69,9 +69,13 @@ rem --- Background
 
 rem --- Options
 
-                v4$="Are You Ready To Update The "+sysinfo.task_desc$
-                call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-                if v$<>"YES" then goto std_exit
+                msg_id$="AON_RUN_QUERY"
+                dim x$:stbl("+SYSINFO_TPL")
+                dim msg_tokens$[1]
+                x$=stbl("+SYSINFO")                                                            
+                msg_tokens$[1]=x.task_desc$
+                gosub disp_message
+                if msg_opt$<>"Y" then goto std_exit
                 call pgmdir$+"adc_progress.aon","N","","","","",0,arm01_dev,1,meter_num,status
 
 rem --- Disallow 'M'enu option in Error Routine
@@ -267,6 +271,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
 
 rem #include std_error.src
 
