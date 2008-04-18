@@ -68,7 +68,6 @@ rem --- Set focus on the Check Number field
 	ctlID=num(callpoint!.getTableColumnAttribute("APR_CHECKS.CHECK_NO","CTLI"))
 	chk_no!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 	chk_no!.focus()
-
 endif
 
 rem --- Validate Check Date
@@ -94,5 +93,21 @@ rem --- Set focus on the Check Date field
 	ctlID=num(callpoint!.getTableColumnAttribute("APR_CHECKS.CHECK_DATE","CTLI"))
 	chk_date!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 	chk_date!.focus()
+endif
 
+rem --- validate Check Date
+gl$="N"
+status=0
+source$=pgm(-2)
+call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,status
+call stbl("+DIR_PGM")+"glc_datecheck.aon",check_date$,"Y",per$,yr$,status
+if status<>0
+	callpoint!.setStatus("ABORT")
+
+rem --- Set focus on the Check Date field
+
+	ctlContext=num(callpoint!.getTableColumnAttribute("APR_CHECKS.CHECK_DATE","CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute("APR_CHECKS.CHECK_DATE","CTLI"))
+	chk_date!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	chk_date!.focus()
 endif
