@@ -74,7 +74,6 @@ rem --- Parameters
     n1$=sysinfo.firm_name$,n2$="IV",n3$=sysinfo.task_desc$,source$=pgm(-2)
     dim r0$(36),info$[20]
     il=num(ivs01a.item_id_len$)
-
         
 rem --- Is AR installed? then open files ars-01 and arm-10c
     call pgmdir$+"adc_application.aon","AR",info$[all]
@@ -185,14 +184,40 @@ rem --- Options
 
 rem --- Run Report?
 
-    v4$="Do You Want To Print The "+n3$
-    call pgmdir$+"adc_yesno.aon",1,v4$,2,v$,v3
-    if v3=4 then goto std_exit
-    if v$<>"Y" then goto std_exit
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
+    
     call pgmdir$+"adc_progress.aon","N","","","","",0,bme01_dev,1,meter_num,status
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+rem ---  column heading
+    dim columns$[9,10]
+    columns=9
+    columns$[0,0]="Ref #",           columns$[0,1]="C",columns$[0,2]="20"
+    columns$[1,0]="Main Bill Number",columns$[1,1]="C",columns$[1,2]="25"
+    columns$[2,0]="Cost",            columns$[2,1]="C",columns$[2,2]="8"
+    columns$[3,0]="Qty",             columns$[3,1]="C",columns$[3,2]="8"
+    columns$[4,0]="Total",           columns$[4,1]="C",columns$[4,2]="8"
+    columns$[5,0]="Update?",         columns$[5,1]="C",columns$[5,2]="5"
+    columns$[6,0]="Available",       columns$[6,1]="C",columns$[6,2]="8"
+    columns$[7,0]="Required",        columns$[7,1]="C",columns$[7,2]="8"
+    columns$[8,0]="Shortage",        columns$[8,1]="C",columns$[8,2]="8"
+    columns$[9,0]="On-Order",        columns$[9,1]="C",columns$[9,2]="8"
+   
 rem --- Initial Read
 
     read (bme01_dev,key=firm_id$,dom=*next)
@@ -227,10 +252,12 @@ rem --- Additional Reads
 
 rem --- Print Bill
 
-        if l+2>l9 then gosub report_heading
         u0$=ivm01a.gl_inv_acct$
-        print (printer_dev)@(0),bme01a.bm_reference$,@(8),bme01a.item_id$
-        print (printer_dev)@(8),b1$
+        OutVect!.addItem(bme01a.bm_reference$)
+        OutVect!.addItem(bme01a.item_id$)
+        xwk=fnblank(9)
+        OutVect!.addItem(b1$)
+        xwk=fnblank(8)
         l=l+2
 
 rem --- Component Items
@@ -273,19 +300,23 @@ message:
                         
 print_components: rem --- Print Components
 
-            if l+2>l9 then gosub report_heading
             i0$=bmm02a.item_id$
             gosub get_iteminfo
-            print (printer_dev)@(12),"< ",bmm02a.item_id$," ",o1$
+            OutVect!.addItem("")
+            OutVect!.addItem("   < "+bmm02a.item_id$+" "+o1$)
+            xwk=fnblank(9)
+            OutVect!.addItem("     "+b1$)
+            xwk=fnblank(4)
             if bmm02a.divisor=0 then let bmm02a.divisor=1
-            print (printer_dev)@(14),b1$,@(132-4*m2),ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered:m2$,
+            OutVect!.addItem(str(ivm02a.qty_on_hand-ivm02a.qty_commit:m2$))
+            OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered:m2$))
             if ivm02a.qty_on_hand-ivm02a.qty_commit<fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered then 
-                print (printer_dev)@(132-2*m2),abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered):m2$
+                OutVect!.addItem(str(abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered):m2$))
                 short=short+1
+            else
+                OutVect!.addItem("")
             endif
-
-            print (printer_dev)@(132-m2),ivm02a.qty_on_order:m2$
-            l=l+2
+            OutVect!.addItem(str(ivm02a.qty_on_order:m2$))
         wend
         memo$="Variance"
 
@@ -310,9 +341,13 @@ rem --- Print Total for bme-01 record
 
         t0=t0+cost*bme01a.qty_ordered
         u0=u0+cost*bme01a.qty_ordered,u1=u1+cost*bme01a.qty_ordered
-        if l+2>l9 then gosub report_heading
-        print (printer_dev)@(0),"Total",@(8),bme01a.item_id$,@(34),cost:m3$,@(34+m3),bme01a.qty_ordered:m2$,@(34+m3+m2),cost*bme01a.qty_ordered:m1$,@(37+m3+m2+m1),bme01a.update_flag$,'lf'
-        l=l+2
+        OutVect!.addItem("Total")
+        OutVect!.addItem(bme01a.item_id$)
+        OutVect!.addItem(str(cost:m3$))
+        OutVect!.addItem(str(bme01a.qty_ordered:m2$))
+        OutVect!.addItem(str(cost*bme01a.qty_ordered:m1$))
+        OutVect!.addItem(bme01a.update_flag$)
+        xwk=fnblank(14)
         cost=0
     wend
 
@@ -353,17 +388,31 @@ done: rem --- Totals
     t9$="E"
     gosub warehouse
     if o1<>0 and o2$<>"" and div0<>0 then 
-        if o1<>0 and l+3>l9 then gosub report_heading
-        if o1<>0 then print (printer_dev)'lf','lf',@(10),"*** Missing Warehouse Records, Can Not Proceed With Update At This Time"
-        if o2$<>"" and l+5>l9 then gosub report_heading
-        if o2$<>"" then print (printer_dev)'lf',@(0),o2$,'lf','lf',@(10),"*** Missing Operation Codes, Can Not Proceed With Update At This Time"
-        if div0<>0 and l+3>l9 then gosub report_heading
-        if div0<>0 then print (printer_dev)'lf','lf',@(10),"*** Records With Production Quantity Of 0 Exist. Can Not Proceed With Update At This Time"
+        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+        if o1<>0 then 
+            xwk=fnblank(21)
+            OutVect!.addItem("*** Missing Warehouse Records, Can Not Proceed With Update At This Time")
+            xwk=fnblank(8)
+        endif
+        if o2$<>"" then 
+            xwk=fnblank(10)
+            OutVect!.addItem(o2$)
+            xwk=fnblank(21)
+            OutVect!.addItem("*** Missing Operation Codes, Can Not Proceed With Update At This Time")
+            xwk=fnblank(8)
+        endif
+        if div0<>0 then 
+            xwk=fnblank(21)
+            OutVect!.addItem("*** Records With Production Quantity Of 0 Exist. Can Not Proceed With Update At This Time")
+            xwk=fnblank(8)
+        endif 
         goto std_exit
     endif
-    if short<>0 then 
-        if l+2>l9 then gosub report_heading
-        print (printer_dev)'lf',@(10),"*** Warning - Amounts In The Shortage Column Will Create Negative On Hand Balances In Inventory."
+    if short<>0 then
+        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+        xwk=fnblank(11)
+        OutVect!.addItem("*** Warning - Amounts In The Shortage Column Will Create Negative On Hand Balances In Inventory.")
+        xwk=fnblank(8)
         dim message$[1]
         message$[0]="Amounts In The Shortage Column Will Create Negative On Hand"
         message$[1]="Balances In Inventory (<Enter>=Continue)"
@@ -372,34 +421,26 @@ done: rem --- Totals
     endif
     channel=bmw01_dev
     width=h0,page=h,update$="bmu_invproduction.aon"
-    if gl$="Y" then run pgmdir$+"glr_recap.aon"
-    run update$,err=std_exit
+    overlay$=update$
+    if gl$="Y" then overlay$=pgmdir$+"glr_recap_DO.aon"
+    out_action$="PRT-PDF"
+    next_overlay$=overlay$
+    goto std_exit
 
 no_data: rem --- No Data
 
     t9$="E"
-    gosub report_heading
-    print (printer_dev)'lf','lf',@(10),"*** Nothing To Report ***"
+    xwk=fnblank(10)
+    OutVect!.addItem("")
+    OutVect!.addItem("*** Nothing To Report ***")
+    OutVect!.addItem(8)
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    headings$[2]="For Warehouse "+h3$
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status then exitto std_exit
-    if t9$<>"E" then gosub date_heading
-    print (printer_dev)@(0),"Ref #",@(8),"Main Bill Number",@(34+m3-5),"Cost",@(34+m3+m2-4),"Qty",@(34+m3+m2+m1-6),"Total",@(34+m3+m2+m1+1),"Update?",
-    print (printer_dev)@(132-3*m2-10),"Available",@(132-2*m2-9),"Required",@(132-m2-9),"Shortage",@(132-9),"On-Order",'lf'
-    l=l+2
-return
-
 date_heading: rem --- Date Heading
-
-    print (printer_dev)@(0),"Production Date: ",fndate$(t1$)
-    if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,t1$,glstatus,l,errors,status
-    print (printer_dev)""
-    l=l+2
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    OutVect!.addItem("Production Date: "+fndate$(t1$))
+    xwk=fnblank(19)
+    if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,t1$,glstatus,l,errors,status   
 return
 
 subcontracts: rem --- Subcontracts
@@ -457,15 +498,21 @@ warehouse: rem --- Warehouse
         if t9$="" then let t9$="A"
         gosub date_sub
         if t9$="A" then let t9$=""
-        print (printer_dev)@(34+m3+m2),dashes$,'lf',@(10),"Warehouse Total:",@(34+m3+m2),t0:m1$
-        l=l9+1
+        xwk=fnblank(4)
+        OutVect!.addItem(dashes$)
+        xwk=fnblank(6)
+        OutVect!.addItem("Warehouse Total:")
+        xwk=fnblank(2)
+        OutVect!.addItem(str(t0:m1$))
+        xwk=fnblank(5)
         t0=0,u0=0
     endif
     if t9$<>"" then return
     t0$=bme01a.warehouse_id$
-    t1$=bme01a.prod_date$,h3$="Not On File",t2$=bme01a.bm_reference$
+    h3$="Not On File",t2$=bme01a.bm_reference$
     find record (ivm10c_dev,key=firm_id$+"C"+bme01a.warehouse_id$,dom=call_pgm) ivm10c$
     h3$=cvs((ivm10c.warehouse_id$)+" "+ivm10c.short_name$(1,20),2)
+    headings$[2]="For Warehouse "+h3$
 call_pgm:
     if gl$="Y" then call pgmdir$+"glc_datecheck.aon",t1$,"N",period$,year$,glstatus
 return
@@ -474,13 +521,19 @@ date_sub: rem --- Date
 
     if t1$<>"" then 
         gosub reference
-        print (printer_dev)@(34+m3+m2),dashes$,'lf',@(10),"Date Total:",@(34+m3+m2),u0:m1$
-        l=l+2
+        xwk=fnblank(4)
+        OutVect!.addItem(dashes$)
+        xwk=fnblank(6)
+        OutVect!.addItem("Date Total:")
+        xwk=fnblank(2)
+        OutVect!.addItem(str(u0:m1$))
+        xwk=fnblank(5)
     endif
     if t9$<>"" then return
     u0=0
-    t1$=bme01a.prod_date$,l=l9+1
+    t1$=bme01a.prod_date$
     if gl$="Y" then call pgmdir$+"glc_datecheck.aon",t1$,"N",period$,year$,glstatus
+    gosub date_heading
 return
 
 get_iteminfo: rem --- Item
@@ -544,9 +597,13 @@ return
 reference: rem --- Reference Total
 
     if t2$<>"" then 
-        if l>l9 then gosub report_heading
-        print (printer_dev)@(34+m3+m2),dashes$,'lf',@(10),"Reference Total: ",@(34+m3+m2),u1:m1$,'lf'
-        l=l+3
+        xwk=fnblank(4)
+        OutVect!.addItem(dashes$)
+        xwk=fnblank(6)
+        OutVect!.addItem("Reference Total:")
+        xwk=fnblank(2)
+        OutVect!.addItem(str(u1:m1$))
+        xwk=fnblank(15)
      endif
      if t9$<>"" then return
      u1=0
@@ -657,7 +714,25 @@ rem --- fnglobal$: Return string value of passed STBL variable
         return q1$
     fnend
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 

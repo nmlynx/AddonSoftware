@@ -198,9 +198,13 @@ rem --- Additional File Opens
 
 rem --- Options
 
-    v4$="Are You Ready to Update the Production Register"
-    call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-    if v$<>"YES" then goto std_exit
+    msg_id$="AON_UPDT_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
     if gl$="Y" then call pgmdir$+"glc_ctlupdate.aon",status
 
 rem --- Clear LIFO/FIFO Work Files
@@ -294,8 +298,8 @@ rem --- Read Detail
             while more
                 dim bmm01a2$:templates$[3]
                 read record (bmm02_dev,end=*break) bmm02a$
-                if bmm02a.effect_date$<>"   " then if bme01a.prod_date$<bmm02a.effect_date$ then continue
-                if bmm02a.obsolt_date$<>"   " then if bme01a.prod_date$>=bmm02a.obsolt_date$ then continue
+                if cvs(bmm02a.effect_date$,3)<>"" then if bme01a.prod_date$<bmm02a.effect_date$ then continue
+                if cvs(bmm02a.obsolt_date$,3)<>"" then if bme01a.prod_date$>=bmm02a.obsolt_date$ then continue
                 if bmm02a.line_type$="M" then continue
                 if bmm02a.firm_id$+bmm02a.bill_no$<>bme01a.firm_id$+parent$ then break
                 bmm01a2.est_yield=100
@@ -436,8 +440,8 @@ subcontracts: rem --- Subcontracts
         k1$=key(bmm05_dev,end=*break)
         if pos(bme01a.firm_id$+parent$=k1$)<>1 then break
         read record (bmm05_dev) bmm05a$
-        if bmm05a.effect_date$<>"   " then if bme01a.prod_date$<bmm05a.effect_date$ then continue
-        if bmm05a.obsolt_date$<>"   " then if bme01a.prod_date$>=bmm05a.obsolt_date$ then continue
+        if cvs(bmm05a.effect_date$,3)<>"" then if bme01a.prod_date$<bmm05a.effect_date$ then continue
+        if cvs(bmm05a.obsolt_date$,3)<>"" then if bme01a.prod_date$>=bmm05a.obsolt_date$ then continue
         if bmm05a.line_type$<>"S" then continue
         if update$="N" then let parentgl$=bms01a.gl_wip_acct$ else let parentgl$=ivacct$
         if bmm05a.divisor=0 then let bmm05a.divisor=1
@@ -467,8 +471,8 @@ operation: rem --- Operation
         bmm03_key$=key(bmm03_dev,end=*break)
         if pos(bme01a.firm_id$+parent$=bmm03_key$)<>1 then break
         read record (bmm03_dev) bmm03a$
-        if bmm03a.effect_date$<>"   " then if bme01a.prod_date$<bmm03a.effect_date$ then continue
-        if bmm03a.obsolt_date$<>"   " then if bme01a.prod_date$>=bmm03a.obsolt_date$ then continue
+        if cvs(bmm03a.effect_date$,3)<>"" then if bme01a.prod_date$<bmm03a.effect_date$ then continue
+        if cvs(bmm03a.obsolt_date$,3)<>"" then if bme01a.prod_date$>=bmm03a.obsolt_date$ then continue
         if bmm03a.line_type$="M" then continue
         find record (bmm08_dev,key=bmm03_key.firm_id$+bmm03a.op_code$,dom=*next) bmm08a$
         if bmm01a1.std_lot_size=0 then let bmm01a1.std_lot_size=1
@@ -614,6 +618,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 
