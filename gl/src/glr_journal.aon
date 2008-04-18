@@ -23,10 +23,13 @@ rem --- Retrieve sysinfo data
 
 rem --- Run the register?
 
-    title$=cvs(sysinfo.task_desc$,2)
-    message$="Do you want to produce the "+title$+"?"
-    x=msgbox(message$,4+32,title$)
-    if x<>6 goto std_exit
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" goto std_exit
 
 rem --- Initializations
 
@@ -40,6 +43,11 @@ rem --- Initializations
 rem --- Run register overlay
 
     run pgmdir$+"glr_register.aon"
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 

@@ -37,8 +37,13 @@ rem --- Initializations
 rem --- Options
 
     if prompt$="Y" 
-       call pgmdir$+"adc_yesno.aon",0,"Are you ready to update Account Beginning Balances",0,v$,v3
-       if v$<>"YES" goto std_exit_no_update
+        msg_id$="AON_UPDT_QUERY"
+        dim x$:stbl("+SYSINFO_TPL")
+        dim msg_tokens$[1]
+        x$=stbl("+SYSINFO")                                                            
+        msg_tokens$[1]=x.task_desc$
+        gosub disp_message
+        if msg_opt$<>"Y" goto std_exit_no_update
     endif
 
 rem --- Position File

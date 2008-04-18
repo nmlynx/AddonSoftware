@@ -59,9 +59,13 @@ rem --- Initializations
 
 rem --- Options
 
-    prompt$="Are you ready to update the "+task$
-    call pgmdir$+"adc_yesno.aon",0,prompt$,0,v$,v3
-    if v$<>"YES" goto std_exit
+    msg_id$="AON_UPDT_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" goto std_exit 
 
 rem --- Start progress meter and position file
 
@@ -158,6 +162,15 @@ end_of_month: rem --- Make sure the date doesn't fall beyond the end of the mont
     if (month=4 or month=6 or month=9 or month=11) and xday>30 xday=30
     gle01a.trans_date$=str(year:"0000")+str(month:"00")+str(xday:"00")
     return
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 
