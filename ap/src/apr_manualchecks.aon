@@ -44,7 +44,7 @@ rem --- Open/Lock files
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-            if status goto std_exit
+            if status goto std_exit_no_report
             aps01_dev=channels[1]
             ape02_dev=channels[2]
             ape12_dev=channels[3]
@@ -97,7 +97,7 @@ rem --- Is General Ledger installed and being used?
         gl$="N"
         status=0
         call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
-        if status goto std_exit
+        if status goto std_exit_no_report
         gl=gl$="Y"
 
 rem --- Initializations
@@ -225,7 +225,7 @@ rem --- Additional file opens
     options$[4]="CL"
     if gl call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                         ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_report
     glm01_dev=channels[1]
     glt04_dev=channels[2]
     glt05_dev=channels[3]
@@ -243,12 +243,12 @@ rem --- Get user approval to proceed
     x$=stbl("+SYSINFO")                                                            
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit
+    if msg_opt$<>"Y" then goto std_exit_no_report
 
 rem --- Open printer, start progress meter and position header file
 
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+    if status goto std_exit_no_report
     call pgmdir$+"adc_progress.aon","NC","","","","",0,ape02_dev,1,meter_num,status
     read (ape02_dev,key=firm_id$,dom=*next)
 
@@ -688,7 +688,7 @@ rem --- Destroy the progress meter and run the next overlay
 
     if errors
     	gosub Display_Message
-    	if special_flag$<>"Y" goto std_exit
+    	if special_flag$<>"Y" goto std_exit_no_report
     endif
 
     update$=pgmdir$+"apu_manualchecks.aon"
@@ -903,6 +903,9 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
     release
 
 rem #endinclude std_end.src
