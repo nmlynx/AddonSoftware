@@ -278,8 +278,11 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           d=num(ape03a.invoice_date$(7,2))
           while calculating
                 while wrong
+                      if (month=4 or month=6 or month=9 or month=11) and d>30 d=30
+                      if month=2 and d>29 d=29
+                      if month=2 and (int(month/4)<>month/4) and d>28 d=28
                       x=jul(year,month,d,err=*break)
-                      invoice_date$=date(0:"%Yl%Mz%Dz")
+                      invoice_date$=date(x:"%Yl%Mz%Dz")
                       wrong=0
                 wend
                 if wrong=0 break
@@ -510,6 +513,7 @@ rem --- Any errors encountered?
             OutVect!.addItem("WARNING: This register is out of balance or missing information")
             xwk=fnblank(10)
             lines=lines+2
+          endif  
           break
     wend
 
