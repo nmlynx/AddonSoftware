@@ -1,10 +1,5 @@
-[[GLM_ACCT.BDEQ]]
-escape;rem bdeq
-[[GLM_ACCT.BREM]]
-escape;rem brem
 [[GLM_ACCT.BDEL]]
 rem --- Check for activity
-
 	okay$="Y"
 	mp=13
 rem --- Check glm-02 for activity
@@ -35,7 +30,6 @@ rem --- Check glt-06 for history
 			break
 		wend
 	endif
-escape
 	if okay$="N"
 		msg_id$="ACTIVITY_EXISTS"
 		gosub disp_message
@@ -51,6 +45,10 @@ dflt_data$[1,0]="GL_ACCOUNT_1"
 dflt_data$[1,1]=cp_acct$
 dflt_data$[2,0]="GL_ACCOUNT_2"
 dflt_data$[2,1]=cp_acct$
+rem --- next 2 lines will need to be removed once Barista returns proper account number
+rem --- probably other changes as well...
+dflt_data$[1,1]=""
+dflt_data$[2,1]=""
 call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "GLR_TRANSHISTORY",
 :                       user_id$,
