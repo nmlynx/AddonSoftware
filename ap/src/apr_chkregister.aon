@@ -193,13 +193,6 @@ rem --- Additional file opens
     glt05_dev=channels[3]
     glw11_dev=channels[4]
 
-rem --- Make sure that the check stock has been dismounted from the printer
-
-    prompt$="STANDARD_STOCK_LOADED"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" goto std_exit
-
 rem --- Get user approval to proceed
 
     msg_id$="AON_RUN_QUERY"
