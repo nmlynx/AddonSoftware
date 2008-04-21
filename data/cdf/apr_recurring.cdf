@@ -1,3 +1,13 @@
+[[APR_RECURRING.ASVA]]
+rem --- Validate Date
+	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",pgm(-1),"AP",glw11$,gl$,status
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",callpoint!.getColumnData("APR_RECURRING.YEAR")+
+:		callpoint!.getColumnData("APR_RECURRING.MONTH")+"01","Y",per$,yr$,status
+	if status
+		callpoint!.setStatus("ABORT")
+	endif
+[[APR_RECURRING.BEND]]
+release
 [[APR_RECURRING.<CUSTOM>]]
 #include std_missing_params.src
 [[APR_RECURRING.ARAR]]
