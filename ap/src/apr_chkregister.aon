@@ -201,7 +201,7 @@ rem --- Get user approval to proceed
     x$=stbl("+SYSINFO")                                                            
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit
+    if msg_opt$<>"Y" then goto std_exit_no_report
 
 rem --- start progress meter and position header file
 
@@ -657,6 +657,9 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
     release
 
 rem #endinclude std_end.src
