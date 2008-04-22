@@ -15,7 +15,7 @@ Work Order Entry,T,,,sfe_aa.aon,entry,,,,,,
  WO - Transaction Display ,T,,,sfe_at.src,entry/inquiry,,,,,,
 Traveler Printing,T,SFR_WOTRAV,sfr_wotrav.aon,sfr_aa.aon,selection,,Done PPT-BP,PS-BP(25MAR08),,,Testing is incomplete due to empty data file sfe_opentrans
 Traveler printing - overlay,T,SFR_WOTRAV,sfr_wotrav_o1.aon,sfr_ab.bbx,read loop,,Done PPT-BP,PS-BP(25MAR08),,,Testing is incomplete due to empty data file sfe_opentrans
-Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),needs,,
+Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),needs,,Testing is incomplete due to empty data file sfe_opentrans
 Materials Commitment Entry,T,,,sfe_ca/cb.aon,entry,,,,,,
 Pick List Printing,T,SFR_WOPICKLIST,sfr_wopicklist.aon,sfr_ba.aon,selection,,Done PPT-BP,WIP NV-BP,,,"Testing is incomplete due to empty data file sfe_cmmttrans, sfe-13, sfe-23"
 Pick List Printing - overlay,T,SFR_WOPICKLIST,sfr_wopicklist_o1.aon,sfr_bb.bbx,report,,Done PPT-BP,WIP NV-BP,needs,,"Testing is incomplete due to empty data file sfe_cmmttrans, sfe-13, sfe-24"
@@ -25,24 +25,24 @@ Transaction Processing,G,,,,,,,,,,
 Create Purchase Requisitions,T,,,sfu_ia.aon,entry,,Done PS-BP,,,,
 Create Purchase Requisitions - update,T,,,sfu_ib.bbx,update,,Done PS-BP,,,,
 Material Issues Entry,T,,,sfe_da/db/dc.aon,,,,,,,
-Material Issues Register,T,SFR_WOMATISSUE,sfr_womatissue.aon,sfr_da.aon,register,,Done PPT-BP,WIP PS-BP,needs,,
-Material Issues - Update,T,SFR_WOMATISSUE,sfr_womatissue_o1.aon,sfu_aa.bbx,update,,Done PS-BP,WIP PS-BP,,,
+Material Issues Register,T,,sfr_womatissue.aon,sfr_da.aon,register,,Done PPT-BP,WIP PS-BP,needs,,
+Material Issues - Update,T,,sfr_womatissue_o1.aon,sfu_aa.bbx,update,,Done PS-BP,WIP PS-BP,,,
 Time Sheet Entry,T,,,sfe_ba/bb.aon,,,,,,,
 Time Sheet Register,T,,sfr_timesheet.aon,sfr_ca.aon,register,,Done PPT-BP,NV-BP(01APR08),needs,,
 Time Sheet Register - Summary,T,,sfr_timesheet_o1.aon,sfr_cb.bbx,summary register,,Done PPT-BP,NV-BP(01APR08),needs,,
-Time Sheet - Update,T,,,sfu_ba.bbx,update,,Done PS-BP,,,,
+Time Sheet - Update,T,,sfu_timesheet.aon,sfu_ba.bbx,update,,Done PS-BP,,,,
 Cost Adjustment Entry,T,,,sfe_fa.aon,,,,,,,
 Cost Adjustment Register,T,,,sfr_la.aon,register,,Done PPT-BP,WIP SV-BP,needs,,
 Cost Adjustment Update,T,,,sfu_ga.bbx,update,,Done PS-BP,WIP SV-BP,,,
 Work Order Close Data Entry,T,,,sfe_ea/eb.aon,,,,,,,
 Closed Work Order Detail Report,T,SFR_CLSWODET,sfr_clswodet,sfr_ea.aon,report selection,,Done PPT-BP,PS-BP(25MAR08),,,Testing is incomplete due to empty data file  sfe_cmmttrans
 Closed Work Order Detail Report - overlay,T,SFR_CLSWODET,sfr_clswodet,sfr_eb.bbx,overlay,,Done PPT-BP,PS-BP(25MAR08),needs,,Testing is incomplete due to empty data file  sfe_cmmttrans
-Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),needs,,
+Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),needs,,Testing is incomplete due to empty data file  sfe_cmmttrans
 Closed Work Order Summary Register,T,,,sfr_ka.aon,register,,Done PPT-BP,,needs,,
 Closed Work Order Update,T,,,sfu_ca.bbx,update,,Done PS-BP,,,,
 Reports,G,,,,,,,,,,
-Work Order Header Report,T,SFR_WOHEADER,sfr_woheader.aon,sfr_ga.aon,report selection,,Done NV-BP,NV-BP(19MAR08),WIP NV-BP,,
-Work Order Header Report - overlay,T,SFR_WOHEADER,sfr_woheader_o1.aon,sfr_gb.bbx,overlay,,Done NV-BP,NV-BP(19MAR08),WIP NV-BP,,
+Work Order Header Report,T,SFR_WOHEADER,sfr_woheader.aon,sfr_ga.aon,report selection,,Done NV-BP,NV-BP(19MAR08),NV-BP(18APR08),,
+Work Order Header Report - overlay,T,SFR_WOHEADER,sfr_woheader_o1.aon,sfr_gb.bbx,overlay,,Done NV-BP,NV-BP(19MAR08),NV-BP(18APR08),,
 Shop Floor Dispatch Report,T,SFR_SHPFLRDSPTCH,sfr_shpflrdsptch.aon,sfr_pa.aon,report selection,,Done PPT-BP,PS-BP(31MAR08),WIP PS-BP,,
 Shop Floor Dispatch Report - overlay,T,SFR_SHPFLRDSPTCH,sfr_shpflrdsptch_o1.aon,sfr_pb.bbx,overlay,,Done PPT-BP,PS-BP(31MAR08),WIP PS-BP,,
 Production Exception Report,T,SFR_PRODEXCEP ,sfr_prod_excep.aon,sfr_sa.aon,report selection,,Done PS-BP,PS-BP(15FEB08),WIP PS-BP,,
@@ -55,25 +55,25 @@ Cost Variance Analysis Report,T,SFR_WOVARREP,sfr_wovarrep.aon,sfr_ha.aon,report 
 Cost Variance Analysis Report - overlay,T,SFR_WOVARREP,sfr_wovarrep_o1.aon,sfr_hb.bbx,overlay,,Done PPT-BP,PS-BP(27MAR08),WIP PS-BP,,
 Date Analysis Report,T,SFR_WORDDATE,sfr_worddate.aon,sfr_na.aon,report selection,,Done PPT-BP,PS-BP(26FEB08),WIP PS-BP,,
 Date Analysis Report - overlay,T,SFR_WORDDATE,sfr_worddate_o1.aon,sfr_nb.bbx,overlay,,Done PPT-BP,PS-BP(26FEB08),WIP PS-BP,,
-Work Order Detail Report,T,SFR_WORDERDET,sfr_worderdet.aon,sfr_ia.aon,report selection,,Done PPT-BP,PS-BP(25MAR08),,,
-Work Order Detail Report - overlay,T,SFR_WORDERDET,sfr_worderdet _o1.aon,sfr_ib.bbx,overlay,,Done PPT-BP,PS-BP(25MAR08),needs,,
-Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),needs,,
-WO Transaction History Report,T,SFR_WORDTRANS,sfr_wordtrans.aon,sfr_ja.aon,report selection,,Done PPT-BP,NV-BP(26MAR08),,,
-WO Transaction History Report - overlay,T,SFR_WORDTRANS,sfr_wordtrans_o1.aon,sfr_jb.bbx,overlay,,Done PPT-BP,NV-BP(26MAR08),needs,,
+Work Order Detail Report,T,SFR_WORDERDET,sfr_worderdet.aon,sfr_ia.aon,report selection,,Done PPT-BP,PS-BP(25MAR08),WIP PS-BP,,
+Work Order Detail Report - overlay,T,SFR_WORDERDET,sfr_worderdet _o1.aon,sfr_ib.bbx,overlay,,Done PPT-BP,PS-BP(25MAR08),WIP PS-BP,,
+Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),WIP PS-BP,,
+WO Transaction History Report,T,SFR_WORDTRANS,sfr_wordtrans.aon,sfr_ja.aon,report selection,,Done PPT-BP,NV-BP(26MAR08),NV-BP(22APR08),,
+WO Transaction History Report - overlay,T,SFR_WORDTRANS,sfr_wordtrans_o1.aon,sfr_jb.bbx,overlay,,Done PPT-BP,NV-BP(26MAR08),NV-BP(22APR08),,
 WO Committed Materials Report,T,SFR_WORDMAT,sfr_wordmat.aon,sfr_ma.aon,report selection,,Done PPT-BP,PS-BP(12MAR08),,,Testing is incomplete due to empty data file sfe-23
 WO Committed Materials Report - overlay,T,SFR_WORDMAT,sfr_wordmat_o1.aon,sfr_mb.bbx,overlay,,Done PPT-BP,PS-BP(12MAR08),,,Testing is incomplete due to empty data file sfe-24
-Work Order Job Status Summary,T,SFR_WORDJOBSTAT,sfr_wordjobstat.aon ,sfr_va.aon,report selection,,Done PS-BP,PS-BP(20MAR08),,,
-Work Order Job Status Summary - overlay,T,SFR_WORDJOBSTAT,sfr_wordjobstat _o1.aon,sfr_vb.bbx,overlay,,Done PS-BP,PS-BP(20MAR08),needs,,
+Work Order Job Status Summary,T,SFR_WORDJOBSTAT,sfr_wordjobstat.aon ,sfr_va.aon,report selection,,Done PS-BP,PS-BP(20MAR08),WIP PS-BP,,
+Work Order Job Status Summary - overlay,T,SFR_WORDJOBSTAT,sfr_wordjobstat _o1.aon,sfr_vb.bbx,overlay,,Done PS-BP,PS-BP(20MAR08),WIP PS-BP,,
 Period End Processing,G,,,,,,,,,,
 Close Recurring Work Orders,T,,,sfu_da.aon,selection,,Done PS-BP,,,,
 Close Recurring Work Orders - overlay,T,,,sfu_db.bbx,update overlay,,Done PS-BP,,,,
 Closed Recurring WO Detail Report,T,SFR_CLSWODET,sfr_clswodet,sfr_ea.aon,report selection,,Done PPT-BP,PS-BP(25MAR08),,,Testing is incomplete due to empty data file  sfe_cmmttrans
 Closed Recurring WO Detail Report - overlay,T,SFR_CLSWODET,sfr_clswodet,sfr_eb.bbx,overlay,,Done PPT-BP,PS-BP(25MAR08),needs,,Testing is incomplete due to empty data file  sfe_cmmttrans
-Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),needs,,
+Work Order Detail Printing,T,,sfr_worderdet_print.aon,sfr_xa.bbx,overlay,,Done PS-BP,PS-BP(25MAR08),needs,,Testing is incomplete due to empty data file  sfe_cmmttrans
 Closed Recurring WO Summary Report,T,,,sfr_ra.aon,register,,Done PS-BP,,needs,,
 Closed Recurring WO Update,T,,,sfu_ra.bbx,update,,Done PS-BP,,,,
-Closed Work Order Variance Report,T,SFR_WOVARIANCE,sfr_wovariance.aon,sfr_oa.aon,report selection,,Done PPT-BP,NV-BP(26MAR08),,,
-Closed Work Order Variance Report - overlay,T,SFR_WOVARIANCE,sfr_wovariance_o1.aon,sfr_ob.bbx,overlay,,Done PPT-BP,NV-BP(26MAR08),needs,,
+Closed Work Order Variance Report,T,SFR_WOVARIANCE,sfr_wovariance.aon,sfr_oa.aon,report selection,,Done PPT-BP,NV-BP(26MAR08),WIP PS-BP,,
+Closed Work Order Variance Report - overlay,T,SFR_WOVARIANCE,sfr_wovariance_o1.aon,sfr_ob.bbx,overlay,,Done PPT-BP,NV-BP(26MAR08),WIP PS-BP,,
 Period End Update,T,,,sfu_ea.aon,selection,,Done PS-BP,,,,
 Period End Update - overlay,T,,,sfu_eb.bbx,update overlay,,Done PS-BP,,,,
 Closed Work Order Purge,T,,,sfu_fa.aon,selection,,Done PS-BP,,,,
@@ -97,5 +97,5 @@ Conversion Work Order Register - overlay,T,,,sfx_bb.bbx,overlay,,Done PS-BP,,nee
 Conversion Work Order Update,T,,,sfx_da.bbx,update,,WIP PS-BP,,
 Publics,G,,,,,,,,
 Schedule: Days Forecast Ahead/Behind (Public/Called),P,,sfc_schdayfore.aon,sfc_aa.src,,,Done PPT-BP,PS-BP(14MAR08),WIP PS-BP
-Operations Hours Between Days(Public/Called),P,SFR_SHPFLRDSPTCH,sfc_ophours.aon,sfc_ba.src,,,Done PPT-BP,PS-BP(31MAR08),
+Operations Hours Between Days(Public/Called),P,SFR_SHPFLRDSPTCH,sfc_ophours.aon,sfc_ba.src,,,Done PPT-BP,PS-BP(31MAR08),WIP PS-BP
 SFC - Serial/Lot # Auto Close,P,,,sfc_ca.src,,,Done PPT-BP,,
