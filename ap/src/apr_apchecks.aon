@@ -83,27 +83,38 @@ initializations: rem --- Initializations
     l=0
     h0=0
     answer$="Y"
-    prompt$="Do you want to print a test pattern?"
+    msg_id$="PRINT_TEST_PATTERN"
     more=1
-
-rem --- Display Resource and open printer
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    if aps01a.multi_types$="Y" and aps01a.ap_check_seq$="Y" ap_type$=fill(23) else ap_type$=""
+    printer_open$="N"
 
 rem --- Print test patterns until the user is satisfied
 
     while answer$="Y"
-          call stbl("+DIR_PGM")+"adc_yesno.aon",1,prompt$,1,answer$,fkey
-          if fkey=4 break
-          if answer$="N" break
+        dim msg_tokens$[1]
+        msg_opt$=""
+        gosub disp_message
+        if msg_opt$<>"Y" break
 
-          rem --- Print test pattern
+        rem --- Print test pattern
 
-          gosub test_pattern
-          prompt$="Do you want to print another test pattern?"
+        if printer_open$="N"
+            call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+            if status exitto std_exit
+            printer_open$="Y"
+        endif
+        gosub test_pattern
+        msg_id$="ANOTHER_PATTERN"
     wend
+    if msg_opt$="C" goto std_exit
+    
+    if printer_open$="N"
+        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+        if status goto std_exit
+    endif
+
+rem --- Display Resource
+
+    if aps01a.multi_types$="Y" and aps01a.ap_check_seq$="Y" ap_type$=fill(23) else ap_type$=""
 
 rem --- Start progress meter and position check File (ape-04)
 
@@ -383,6 +394,11 @@ l6975:
     t[1]=z5
     t[2]=z6
     show_progress=1
+    return
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     return
 
 rem #include std_functions.src
