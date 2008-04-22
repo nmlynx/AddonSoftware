@@ -170,10 +170,13 @@ rem --- Additional File Opens
 
 rem --- Options
 
-    title=0
-    prompt$="Do You Want To Print The "+n3$,prompt=2
-    call pgmdir$+"adc_yesno.aon",title,prompt$,prompt,v$,v3
-    if v$<>"Y" then goto std_exit
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
 
 rem --- Final Initializations
 
@@ -588,6 +591,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 
