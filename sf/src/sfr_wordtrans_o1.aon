@@ -14,6 +14,16 @@ rem --- Retrieve the program path
     pgmdir$=stbl("+DIR_PGM",err=*next)
     precision ivs01_precision
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -28,8 +38,6 @@ rem --- Init Data
     headings$[2]=h3$
     headings$[3]=h4$
     headings$[4]=h7$
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
     more=1
 
 rem --- Retrieve key templates
@@ -40,6 +48,32 @@ rem --- Retrieve key templates
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","ALT_KEY_02",sfe01b_key_talt$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","ALT_KEY_03",sfe01c_key_talt$,rd_table_chans$[all],status$
  
+rem --- Column Headings
+
+    if pos("O"=transtype$)>0 then
+        dim columns$[8,10]
+        columns = 8
+        columns$[0,0]="Date",                                             columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="Src",                                              columns$[1,1]="C",columns$[1,2]="20"
+        columns$[2,0]="Seq",                                              columns$[2,1]="C",columns$[2,2]="3"
+        columns$[3,0]="Item/Description - Op Code/Employee - Vendor/P.O.",columns$[3,1]="C",columns$[3,2]="10"
+        columns$[4,0]="Cmplt Qty",                                        columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m2$
+        columns$[5,0]="SetUp hrs",                                        columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m2$
+        columns$[6,0]="Total Units",                                      columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
+        columns$[7,0]="Rate",                                             columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m3$
+        columns$[8,0]="Amount",                                           columns$[6,1]="N",columns$[6,2]="8",columns$[8,3]=m1$
+    else
+        dim columns$[6,10]
+        columns = 6
+        columns$[0,0]="Date",                                             columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="Src",                                              columns$[1,1]="C",columns$[1,2]="20"
+        columns$[2,0]="Seq",                                              columns$[2,1]="C",columns$[2,2]="3"
+        columns$[3,0]="Item/Description - Op Code/Employee - Vendor/P.O.",columns$[3,1]="C",columns$[3,2]="10"
+        columns$[4,0]="Units",                                            columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m2$
+        columns$[5,0]="Rate",                                             columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m3$
+        columns$[6,0]="Amount",                                           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$
+    endif
+
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01a_dev,1,meter_num,status
@@ -83,6 +117,7 @@ init_data: rem --- Init Data
         dim s[2]
         t1$=""
         l2=0
+
 rem --- Process Transactions
 
         if sfe01a.wo_status$<>"C" and sfe01a.closed_date$>g9$ then 
@@ -110,105 +145,57 @@ rem --- Process Transactions
             if transtype$<>"" then if pos(record_id_field$=transtype$)=0 then continue
             if sfm07a_key.trans_date$(1,6)<>t1$ then gosub date_subtot
             if l2<=0 
-                if l+3>l9 then gosub report_heading; gosub sub_head
-                print (printer_dev)sfe01a.wo_no$,"  ",
-:                       @(40),"Type: ",sfe01a.wo_type$," Cat: ",sfe01a.wo_category$,"  Stat: ",sfe01a.wo_status$,
-:                       "  Whse: ",sfe01a.warehouse_id$,"  Sched Prod: ",sfe01a.sch_prod_qty$:m2$,
+                OutVect!.addItem(sfe01a.wo_no$)
                 if sfe01a.wo_category$="I"
                     x0$=sfe01a.item_id$
                     x0$=x0$(1,pos("   "=x0$+"   ")-1)+" "+sfe01a.description_01$,x0$=x0$(1,30)
-                    print (printer_dev)@(10),x0$,
+                    OutVect!.addItem(x0$)
                 else
-                    print (printer_dev)@(10),sfe01a.description_01$
+                    OutVect!.addItem(sfe01a.description_01$)
+                endif  
+                OutVect!.addItem("")
+                OutVect!.addItem(fill(20)+"Type: "+sfe01a.wo_type$+" Cat: "+sfe01a.wo_category$+"  Stat: "+sfe01a.wo_status$+"  Whse: "+sfe01a.warehouse_id$+"  Sched Prod: "+str(sfe01a.sch_prod_qty:m2$))
+                if pos("0"<sfe01a.customer_id$)>0 then
+                    if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+                    OutVect!.addItem(fill(20)+"Cust: "+fnmask$(sfe01a.customer_id$,c1$)+"  Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$)
                 endif
-
-                if pos("0"<sfe01a.customer_id$)>0 then print (printer_dev)@(105-c1),"Cust: ",fnmask$(sfe01a.customer_id$,c1$),"  Order: ",sfe01a.order_no$,"-",sfe01a.line_no$,
-                print (printer_dev)""
-                l=l+2
+                if pos("O"=transtype$)>0 then xwk=fnblank(5) else xwk=fnblank(3)
             endif 
 
 rem --- Now Print It
 
-            if l>l9 then gosub sub_head
             if sfm07a_key.record_id$="O" then 
-                print (printer_dev)fndate$(sftran.trans_date$),
-:                       @(12),sftran.record_id_o$,
-:                       @(15),sftran.op_seq$,
-:                       @(132-m1-m2-m3),sftran.units:m2$,sftran.unit_cost:m3$,sftran.ext_cost:m1$,
+                OutVect!.addItem(fndate$(sftran.trans_date$))
+                OutVect!.addItem(sftran.record_id_o$)
+                OutVect!.addItem(sftran.op_seq$)
+                gosub operation_details
+                OutVect!.addItem(str(sftran.units))
+                OutVect!.addItem(str(sftran.unit_cost))
+                OutVect!.addItem(str(sftran.ext_cost))
             endif
 
             if sfm07a_key.record_id$="M" then 
-                print (printer_dev)fndate$(sftran.trans_date$),
-:                       @(12),sftran.record_id_m$,
-:                       @(15),sftran.material_seq$,
-:                       @(132-m1-m2-m3),sftran.units:m2$,sftran.unit_cost:m3$,sftran.ext_cost:m1$,
+                OutVect!.addItem(fndate$(sftran.trans_date$))
+                OutVect!.addItem(sftran.record_id_m$)
+                OutVect!.addItem(sftran.material_seq$)
+                gosub material_details
+                if pos("O"=transtype$)>0 then xwk=fnblank(2)
+                OutVect!.addItem(str(sftran.units))
+                OutVect!.addItem(str(sftran.unit_cost))
+                OutVect!.addItem(str(sftran.ext_cost))
             endif
 
             if sfm07a_key.record_id$="S" then 
-                print (printer_dev)fndate$(sftran.trans_date$),
-:                       @(12),sftran.record_id_s$,
-:                       @(15),sftran.subcont_seq$,
-:                       @(132-m1-m2-m3),sftran.units:m2$,sftran.unit_cost:m3$,sftran.ext_cost:m1$,
+                OutVect!.addItem(fndate$(sftran.trans_date$))
+                OutVect!.addItem(sftran.record_id_s$)
+                OutVect!.addItem(sftran.subcont_seq$)
+                gosub subcontract_details
+                if pos("O"=transtype$)>0 then xwk=fnblank(2)
+                OutVect!.addItem(str(sftran.units))
+                OutVect!.addItem(str(sftran.unit_cost))
+                OutVect!.addItem(str(sftran.ext_cost))
             endif
-            dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
-
-rem --- Materials Here
-            if record_id_field$="M"
-                find record (ivm01a_dev,key=firm_id$+sftran.item_id$,dom=*next) ivm01a$
-                print (printer_dev)
-:                           @(20),sftran.item_id$,"UM: ",sftran.unit_measure$,
-:                           @(50),ivm01a.item_desc$
-                if ivm01a.lotser_item$+ivm01a.inventoried$="YY" and pos(ivs01a.lotser_flag$="LS")<>0 then 
-rem --- Serial Numbers Here
-                    if sfe01a.wo_status$<>"C" and sfe01a.closed_date$>g9$ then 
-                        lstran_dev=sft11a_dev
-                        dim lstran$:templates$[22]
-                    else
-                        lstran_dev=sft12a_dev
-                        dim lstran$:templates$[23]
-                    endif
-
-                    while more
-                        k1$=key(lstran_dev,end=*break)
-                        if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.record_id_m$+sftran.trans_seq$=k1$)=1
-                            read record (lstran_dev) lstran$
-                            if l>=l9 then 
-                                gosub sub_head
-                                print (printer_dev)
-:                                       @(20),sftran$(18),"UM: ",sftran.vendor_id$,
-:                                       @(50),ivm01a.item_desc$
-                            endif 
-    rem --- Print It Here
-                            if ivs01a.lotser_flag$="S" then print (printer_dev)@(20),"Serial: ", else print (printer_dev)@(20),"Lot: ",
-                                print (printer_dev)lstran.lotser_no$,
-                                if lstran_dev=sft11a_dev then print (printer_dev)@(30+i2),"Issued:",lstran.cls_inp_qty:m2$," Cost:",lstran.closed_cost:m3$," Amount: ",lstran.ext_cost:m1$
-                                if lstran_dev=sft11a_dev then print (printer_dev)@(30+i2),"Issued:",lstran.qty_closed:m2$," Cost:",lstran.unit_cost:m3$," Amount: ",lstran.ext_cost:m1$            
-                            endif
-                            l=l+1
-                        endif
-                     wend 
-                 endif
-            endif
-rem --- Operations Here
-            if record_id_field$="O"
-                x1$="Invalid Op Code"
-                find record (opcode_dev,key=firm_id$+sftran.op_code$,dom=label3) opcode$
-                x1$=opcode.code_desc$
-                label3:
-                find record (empcode_dev,key=firm_id$+sftran.employee_no$,dom=*next) empcode$
-                print (printer_dev)
-:                               @(20),sftran.op_code$,"  ",x1$,
-:                               @(50),fnmask$(sftran.employee_no$,c5$)," ",empcode.empl_surname$+empcode.empl_givname$,
-:                               @(132-m1-m2*3-m3),sftran.complete_qty:m2$,sftran.setup_time:m2$
-            endif
-rem --- Subcontracts Here
-            if record_id_field$="S"
-                if po$="Y" then find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
-                print (printer_dev)
-:                           @(20),fnmask$(sftran.vendor_id$,c3$),"  ",apm01a.vendor_name$,
-:                           @(50),"PO #: ",sftran.po_no$+sftran.po_line_no$
-            endif
-
+            
             l=l+1
             l0=l0+1,l2=l2+1
             if record_id_field$="O" then 
@@ -237,66 +224,46 @@ done: rem --- End
 
     t9$="U"
     if sequence$<>"W" then gosub sub_total
-    if h=0 then gosub report_heading
-    if l+1>l9 then gosub report_heading
-    print (printer_dev)@(132-m1),fill(m1-1,"-"),'lf',
-    print (printer_dev)
-:               @(5),"Grand Total: ",
-    if pos("O"=transtype$)>0 then print (printer_dev)
-:               @(44),"Total Hours: ",u[0]:m2$," Setup Hours: ",u[2]:m2$,
-    print (printer_dev)
-:               @(132-m1),u[1]:m1$,'lf'
+    if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+    OutVect!.addItem(fill(m1-1,"-"))
+    xwk=fnblank(1)
+    OutVect!.addItem("Grand Total: ")
+    if pos("O"=transtype$)>0 then 
+        xwk=fnblank(1)
+        OutVect!.addItem("Total Hours: "+str(u[0]:m2$)+" Setup Hours: "+str(u[2]:m2$))
+        xwk=fnblank(4)
+    else
+        xwk=fnblank(4)
+    endif
+    OutVect!.addItem(str(u[1]))
+    if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=0
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status then exitto std_exit
-    if pos("O"=transtype$)>0 then print (printer_dev)
-:                                         @(132-m1*2-m2-m3-7),"Complt",
-:                                         @(132-m1-m2-m3-6),"Setup",
-:                                         @(126-m1-m2),"Total"
-    print (printer_dev)
-:               @(2),"Date",
-:               @(11),"Src",
-:               @(15),"Seq",
-:               @(20),"Item/Description - Op Code/Employee - Vendor/P.O.",
-    if pos("O"=transtype$)>0 then print (printer_dev)
-:                                           @(132-m1*2-m2-m3-4),"Qty",
-:                                           @(132-m1-m2-m3-6),"Hours",
-    print (printer_dev)
-:               @(126-m1-m2),"Units",
-:               @(127-m1),"Rate",
-:               @(125),"Amount",'lf'
-    return
 
 sub_head:rem --- Sub Heading
 
-    if l+2>l9 then gosub report_heading
     if sequence$="T" then
-        print (printer_dev)'lf',t0$+"   ",h5$,'lf'
-        l=l+3
+        OutVect!.addItem(t0$)
+        OutVect!.addItem(h5$)
+        if pos("O"=transtype$)>0 then xwk=fnblank(7) else xwk=fnblank(5)
     endif
     if sequence$="C" then
-        print (printer_dev)fnmask$(t0$,c1$)," ",h5$
-        l=l+1
+        OutVect!.addItem(fnmask$(t0$,c1$))
+        OutVect!.addItem(h5$)
+        if pos("O"=transtype$)>0 then xwk=fnblank(7) else xwk=fnblank(5)
     endif
 return
 
 sub_total: rem --- First Sub Total
 
     if t0$<>"" and l0>=1 then 
-        if l+2>l9 then gosub sub_head
-        print (printer_dev)
-:                   @(132-m1),fill(m1-1,"-"),'lf'
-        print (printer_dev)
-:                   @(15),h9$," ",t0$+"   ","Total: ",
-        if pos("O"=transtype$)>0 then print (printer_dev)
-:                   @(44),"Total Hours: ",t[0]:m2$," Setup Hours: ",t[2]:m2$,
-        print (printer_dev)
-:                   @(132-m1),t[1]:m1$,'lf'
-        l=l+3
+        if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+        OutVect!.addItem(fill(m1-1,"-"))
+        xwk=fnblank(1)
+        OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: ")
+        if pos("O"=transtype$)>0 then xwk=fnblank(6) else xwk=fnblank(4)
+        OutVect!.addItem(str(t[1]))
+        if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
     endif
 
     if t9$<>"" then return
@@ -320,16 +287,18 @@ return
 
 date_subtot:rem --- Date Subtotal
     if t1$<>"" then 
-        if l+2>l9 then gosub sub_head
-        print (printer_dev)
-:                   @(132-m1),fill(m1-1,"-")
-        print (printer_dev)
-:                   @(15),"Month ",fnh$(t1$)," Total: ",
-        if pos("O"=transtype$)>0 then print (printer_dev)
-:                   @(44),"Total Hours: ",d[0]:m2$," Setup Hours: ",d[2]:m2$,
-        print (printer_dev)
-:                   @(132-m1),d[1]:m1$,'lf'
-        l=l+3
+        if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+        OutVect!.addItem(fill(m1-1,"-"))
+        xwk=fnblank(1)
+        OutVect!.addItem("Month "+fnh$(t1$)+"   "+"Total: ")
+        if pos("O"=transtype$)>0 then 
+            xwk=fnblank(1)
+            OutVect!.addItem("Total Hours: "+str(d[0]:m2$)+" Setup Hours: "+str(d[2]:m2$))
+            xwk=fnblank(4)
+        else
+            xwk=fnblank(4)
+        endif
+        OutVect!.addItem(str(d[1]))
     endif
 
     if t9$<>"" then return
@@ -343,16 +312,76 @@ wo_subtot: rem --- W/O Subtotal
     if t9$="" then let t9$="B"
     gosub date_subtot
     if t9$="B" then let t9$=""
-    if l+2>l9 then gosub sub_head
-    print (printer_dev)
-:               @(132-m1),fill(m1-1,"-")
-    print (printer_dev)
-:               @(15),"Work Order ",sfe01a.wo_no$," Total: ",
-    if pos("O"=transtype$)>0 then print (printer_dev)
-:               @(44),"Total Hours: ",s[0]:m2$," Setup Hours: ",s[2]:m2$,
-    print (printer_dev)
-:               @(132-m1),s[1]:m1$,'lf','lf'
-    l=l+3
+    if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+    OutVect!.addItem(fill(m1-1,"-"))
+    xwk=fnblank(1)
+    OutVect!.addItem("Work Order "+sfe01a.wo_no$+" Total: ")
+    if pos("O"=transtype$)>0 then 
+        xwk=fnblank(1)
+        OutVect!.addItem("Total Hours: "+str(s[0]:m2$)+" Setup Hours: "+str(s[2]:m2$))
+        xwk=fnblank(4)
+    else
+        xwk=fnblank(4)
+    endif
+    OutVect!.addItem(str(s[1]))
+    if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
+return
+
+material_details: rem --- Materials Here
+
+    dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
+    if record_id_field$="M"
+        find record (ivm01a_dev,key=firm_id$+sftran.item_id$,dom=*next) ivm01a$
+        OutVect!.addItem(sftran.item_id$+"UM: "+sftran.unit_measure$+fill(5)+ivm01a.item_desc$)
+        if ivm01a.lotser_item$+ivm01a.inventoried$="YY" and pos(ivs01a.lotser_flag$="LS")<>0 then 
+rem --- Serial Numbers Here
+            if sfe01a.wo_status$<>"C" and sfe01a.closed_date$>g9$ then 
+                lstran_dev=sft11a_dev
+                dim lstran$:templates$[22]
+            else
+                lstran_dev=sft12a_dev
+                dim lstran$:templates$[23]
+            endif
+
+            while more
+                k1$=key(lstran_dev,end=*break)
+                if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.record_id_m$+sftran.trans_seq$=k1$)=1
+                    read record (lstran_dev) lstran$ 
+rem --- Print It Here
+                    if ivs01a.lotser_flag$="S" then lotser$="Serial: " else lotser$="Lot: "
+                    OutVect!.addItem("")
+                    OutVect!.addItem(lotser$+lstran.lotser_no$)
+                    OutVect!.addItem("")
+                    if lstran_dev=sft11a_dev then OutVect!.addItem("Issued:"+str(lstran.cls_inp_qty:m2$)+" Cost:"+str(lstran.closed_cost:m3$)+" Amount: "+str(lstran.ext_cost:m1$))
+                    if lstran_dev=sft12a_dev then OutVect!.addItem("Issued:"+str(lstran.qty_closed:m2$)+" Cost:"+str(lstran.unit_cost:m3$)+" Amount: "+str(lstran.ext_cost:m1$))
+                    if pos("O"=transtype$)>0 then xwk=fnblank(5) else xwk=fnblank(3)
+                endif
+             wend 
+         endif
+    endif
+return
+
+subcontract_details: rem --- Subcontracts Here
+
+    dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
+    if record_id_field$="S"
+        if po$="Y" then find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
+        OutVect!.addItem(fnmask$(sftran.vendor_id$,c3$)+"  "+apm01a.vendor_name$+fill(32-len(apm01a.vendor_name$))+"PO #: "+sftran.po_no$+sftran.po_line_no$)
+    endif
+return
+
+operation_details: rem --- Operations Here
+    dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
+    if record_id_field$="O"
+        x1$="Invalid Op Code"
+        find record (opcode_dev,key=firm_id$+sftran.op_code$,dom=label3) opcode$
+        x1$=opcode.code_desc$
+        label3:
+        find record (empcode_dev,key=firm_id$+sftran.employee_no$,dom=*next) empcode$
+        OutVect!.addItem(sftran.op_code$+"  "+x1$+fnmask$(sftran.employee_no$,c5$)+" "+empcode.empl_surname$+empcode.empl_givname$)
+        OutVect!.addItem(str(sftran.complete_qty))
+        OutVect!.addItem(str(sftran.setup_time))
+    endif
 return
 
 rem #include std_functions.src
@@ -423,6 +452,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
