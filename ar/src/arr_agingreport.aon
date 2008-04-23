@@ -157,7 +157,7 @@ rem --- Initializations
     artype$=fill(2)
     salesperson$=""
     lastcode$=""
-    u_line$="--------------------"
+    dim u_line$(m1,"-")
     future=future$="Y"
 
 rem --- Underline for subtotals and totals
@@ -252,20 +252,20 @@ rem --- column headings
         p3$=periodbeg$[3]+"-"+periodend$[3]
         p4$=periodbeg$[4]+"-"+periodend$[4]
         p5$=periodend$[5]
-
+    
         columns$[0,0]="Invoice",columns$[0,1]="C",columns$[0,2]="5"
         columns$[1,0]="Invoiced",columns$[1,1]="C",columns$[1,2]="15"
         columns$[2,0]="PO Number",columns$[2,1]="C",columns$[2,2]="5"
         columns$[3,0]="Order Number",columns$[3,1]="C",columns$[3,2]="5"
         columns$[4,0]="Terms",columns$[4,1]="C",columns$[4,2]="5"
-        columns$[5,0]="Type",columns$[5,1]="C",columns$[5,2]="30"
-        columns$[6,0]=future_heading$ ,columns$[6,1]="N",columns$[6,2]="5",columns$[6,3]=m1$
-        columns$[7,0]=p1$,columns$[7,1]="N",columns$[7,2]="5",columns$[7,3]=m1$
-        columns$[8,0]=p2$,columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m1$
-        columns$[9,0]=p3$,columns$[9,1]="N",columns$[9,2]="5",columns$[9,3]=m1$
-        columns$[10,0]=p4$,columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m1$
-        columns$[11,0]=p5$,columns$[11,1]="N",columns$[11,2]="5",columns$[11,3]=m1$
-        columns$[12,0]="Balance",columns$[12,1]="N",columns$[12,2]="5",columns$[12,3]=m9$
+        columns$[5,0]="Type",columns$[5,1]="C",columns$[5,2]="5"
+        columns$[6,0]=future_heading$ ,columns$[6,1]="N",columns$[6,2]=str(m1),columns$[6,3]=m1$
+        columns$[7,0]=p1$,columns$[7,1]="N",columns$[7,2]=str(m1),columns$[7,3]=m1$
+        columns$[8,0]=p2$,columns$[8,1]="N",columns$[8,2]=str(m1),columns$[8,3]=m1$
+        columns$[9,0]=p3$,columns$[9,1]="N",columns$[9,2]=str(m1),columns$[9,3]=m1$
+        columns$[10,0]=p4$,columns$[10,1]="N",columns$[10,2]=str(m1),columns$[10,3]=m1$
+        columns$[11,0]=p5$,columns$[11,1]="N",columns$[11,2]=str(m1),columns$[11,3]=m1$
+        columns$[12,0]="Balance",columns$[12,1]="N",columns$[12,2]=str(m9),columns$[12,3]=m9$
 
     endif
 
@@ -514,7 +514,7 @@ rem                     abc=fnblank(1)
 rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
 rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
                 endif
- 
+
                 lines=lines+1
 
                 rem --- If job numbers are being used retrieve the job (if one exists) and print it
@@ -575,6 +575,7 @@ rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
                 else
                     OutVect!.addItem("")
                 endif
+
                 OutVect!.addItem(str(c[1]))
                 OutVect!.addItem(str(c[2]))
                 OutVect!.addItem(str(c[3]))
@@ -597,8 +598,8 @@ rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
           arm02a.aging_90=c[4]
           arm02a.aging_120=c[5]
           arm02a$=field(arm02a$)
-          write record (arm02_dev,key=arm02_key$) arm02a$
-          read (arm02_dev,key=arm02_key$)
+          write record (arm02_dev) arm02a$
+          rem read (arm02_dev,key=arm02_key$)
 
           rem --- Loop back for next customer
 
@@ -625,8 +626,11 @@ rem --- All done
         OutVect!.addItem(u_line$)  
         OutVect!.addItem(u_line$)  
         OutVect!.addItem(u_line$)  
-        OutVect!.addItem(u_line$)  
-        abc=fnblank(5)
+        OutVect!.addItem(u_line$) 
+ 
+        abc=fnblank(1)
+        OutVect!.addItem(x$)
+        abc=fnblank(4)
     endif 
 
     if type$="S" 
@@ -640,7 +644,6 @@ rem --- All done
         abc=fnblank(1)
     endif 
  
-    OutVect!.addItem(x$)
     if future$="Y"
         OutVect!.addItem(str(t[0]))
     else
@@ -699,8 +702,11 @@ salesperson: rem --- Salesperson break
         OutVect!.addItem(u_line$)  
         OutVect!.addItem(u_line$)  
         OutVect!.addItem(u_line$)  
-        OutVect!.addItem(u_line$)  
-        abc=fnblank(5)
+        OutVect!.addItem(u_line$) 
+ 
+        abc=fnblank(1)
+        OutVect!.addItem(x$)
+        abc=fnblank(4)
       endif 
  
       if type$="S" 
@@ -719,7 +725,7 @@ salesperson: rem --- Salesperson break
         else
             OutVect!.addItem("")
         endif    
-        OutVect!.addItem(x$)
+        
         OutVect!.addItem(str(s[1]))
         OutVect!.addItem(str(s[2])) 
         OutVect!.addItem(str(s[3]))
