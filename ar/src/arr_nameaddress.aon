@@ -81,7 +81,7 @@ rem --- Initializations
        endvalue$=endalt$
        headings$[2]="By Alternate Sequence"
     endif
-    if begvalue$<>"" begvalue$=begvalue$(1,len(begvalue$)-1)+$FF$
+rem    if begvalue$<>"" begvalue$=begvalue$(1,len(begvalue$)-1)+$FF$
     endvalue=len(endvalue$)
 
 rem --- Document columns
@@ -94,12 +94,18 @@ rem --- Document columns
 
 rem --- Start progress meter and position file
 
+    read(arm01_dev,key=firm_id$,knum=keynum,dom=*next)
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
-    read (arm01_dev,knum=keynum,key=firm_id$+begvalue$,dom=*next)
+    while begvalue$<>""
+        read (arm01_dev,key=firm_id$+begvalue$,knum=keynum,dom=*next)
+        read (arm01_dev,knum=keynum,dir=-1,err=*next)
+        begvalue$=""
+    wend
 
 rem --- Read next Customer Master (arm-01) record
 
     while more
+
           k$=key(arm01_dev,knum=keynum,end=*break)
           if pos(firm_id$=k$)<>1 break
           if endvalue$<>"" if k$(3,endvalue)>endvalue$ break
