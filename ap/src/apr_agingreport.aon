@@ -228,10 +228,10 @@ rem --- Headings and print positions
     date3e$ = fndate$(enddates$(17,8))
     date4e$ = fndate$(enddates$(25,8))
 
-    date1$ = date1b$ + " Through " + date1e$
-    date2$ = date2b$ + " Through " + date2e$
-    date3$ = date3b$ + " Through " + date3e$
-    date4$ = "First Through " + date4e$
+    date1$ = date1b$ + "-" + date1e$
+    date2$ = date2b$ + "-" + date2e$
+    date3$ = date3b$ + "-" + date3e$
+    date4$ = "First -" + date4e$
  
     if detail
         head2$="Reference"
@@ -246,16 +246,16 @@ rem --- Headings and print positions
 
     columns$[0,0]="Vendor",             columns$[0,1]="C",columns$[0,2]="25"
     columns$[1,0]=head2$,               columns$[1,1]="C",columns$[1,2]="3"
-    columns$[2,0]=head3$,               columns$[2,1]="C",columns$[2,2]="14"
+    columns$[2,0]=head3$,               columns$[2,1]="C",columns$[2,2]="10"
     columns$[3,0]=head4$,               columns$[3,1]="C",columns$[3,2]="5"
     columns$[4,0]=head5$,               columns$[4,1]="C",columns$[4,2]="3"
     columns$[5,0]=head6$,               columns$[5,1]="C",columns$[5,2]="3"
-    columns$[6,0]="Future",             columns$[6,1]="C",columns$[6,2]="11"
+    columns$[6,0]="Future",             columns$[6,1]="C",columns$[6,2]="10"
     columns$[7,0]=date1$,               columns$[7,1]="C",columns$[7,2]="5"
     columns$[8,0]=date2$,               columns$[8,1]="C",columns$[8,2]="5"
     columns$[9,0]=date3$,               columns$[9,1]="C",columns$[9,2]="5"
-    columns$[10,0]=date4$,              columns$[10,1]="N",columns$[10,2]="7",columns$[10,3]=m1$
-    columns$[11,0]="Total",             columns$[11,1]="N",columns$[11,2]="11",columns$[11,3]=m1$
+    columns$[10,0]=date4$,              columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m1$
+    columns$[11,0]="Total",             columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m1$
 
 
  
