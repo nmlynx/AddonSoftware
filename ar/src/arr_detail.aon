@@ -142,7 +142,8 @@ rem --- Headings and print positions
 
  
     dim columns$[0,10]
-    columns = 0
+    columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="80"
+    columns=0
 
 rem --- Define print positions for the invoice history listing
 
@@ -200,6 +201,7 @@ rem --- Dimension string templates
 
 rem --- Open printer, start progress meter and position Customer Master file
 
+    first_cust$="Y"
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
     while begcustomer$<>""
           read (arm01_dev,key=firm_id$+begcustomer$)
@@ -218,6 +220,12 @@ rem --- Read next Customer Master (arm-01) record
 
           rem --- Print customer master information
 
+          if first_cust$="N"
+            BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+            HdrVect!.addItem("")
+          else
+            first_cust$="N"
+          endif
           extension$=""
           if cvs(arm01a.phone_exten$,2)<>"" extension$="Ext "+arm01a.phone_exten$
           gosub lines_count
@@ -526,7 +534,7 @@ rem --- Read next Customer Master (arm-01) record
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(6,len("City: "+opm09a.city)) = "City: "+opm09a.city
+                    pbuf$(6,len("City: "+opm09a.city$)) = "City: "+opm09a.city$
                     pbuf$(49,len("Lien ID:"+opm09a.lien_no$)) = "Lien ID:"+opm09a.lien_no$
                     gosub output_print_buf
 
