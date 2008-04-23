@@ -79,10 +79,16 @@ rem --- Initializations
        keynum=2
        begvalue$=begalt$
        endvalue$=endalt$
+       beghead$=begvalue$
+       endhead$=endvalue$
        headings$[2]="By Alternate Sequence"
+    else
+       if begvalue$<>"" beghead$=fnmask$(begvalue$(1,customer_size),m0$)
+       if endvalue$<>"" endhead$=fnmask$(endvalue$(1,customer_size),m0$)
     endif
-rem    if begvalue$<>"" begvalue$=begvalue$(1,len(begvalue$)-1)+$FF$
-    endvalue=len(endvalue$)
+    if begvalue$<>"" headings$[3]="From "+beghead$ else headings$[3]="From First"
+    if endvalue$<>"" headings$[3]=headings$[3]+" Through "+endhead$ else headings$[3]=headings$[3]+" Through Last"
+    endvalue=len(cvs(endvalue$,2))
 
 rem --- Document columns
 
@@ -97,17 +103,23 @@ rem --- Start progress meter and position file
     read(arm01_dev,key=firm_id$,knum=keynum,dom=*next)
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
     while begvalue$<>""
-        read (arm01_dev,key=firm_id$+begvalue$,knum=keynum,dom=*next)
-        read (arm01_dev,knum=keynum,dir=-1,err=*next)
+        read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dom=*next)
+        read (arm01_dev,dir=-1,err=*next)
+        beg_value$=begvalue$
         begvalue$=""
     wend
 
 rem --- Read next Customer Master (arm-01) record
 
     while more
-
           k$=key(arm01_dev,knum=keynum,end=*break)
           if pos(firm_id$=k$)<>1 break
+          if beg_value$<>"" 
+            if k$(3,len(cvs(beg_value$,2)))<beg_value$
+                read(arm01_dev)
+                continue
+            endif
+          endif
           if endvalue$<>"" if k$(3,endvalue)>endvalue$ break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           read record (arm01_dev) arm01a$
