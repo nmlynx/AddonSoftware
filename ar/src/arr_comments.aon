@@ -107,9 +107,15 @@ rem --- Initializations
        keynum=2
        begvalue$=begterr$
        x$=" By Territory"
+       if begterr$="" range$="From First Through " else range$="From "+begterr$+" Through "
+       if endterr$="" range$=range$+"Last" else range$=range$+endterr$
+    else
+       if begsales$="" range$="From First Through " else range$="From "+begsales$+" Through "
+       if endsales$="" range$=range$+"Last" else range$=range$+endsales$
     endif
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+x$
+    headings$[2]=range$
     headings$[4]="[HEADER]"
 rem --- Initialize print positions
 
