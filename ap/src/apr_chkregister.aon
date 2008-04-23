@@ -52,7 +52,7 @@ rem --- Open/Lock files
 
 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_report
     aps01_dev=channels[1]
     ape04_dev=channels[2]
     apm01_dev=channels[5]
