@@ -428,7 +428,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                             k$=key(arm05_dev,end=*break)
                             if pos(arm01_key$=k$)<>1 break
                             read record (arm05_dev) arm05a$
-                            if lines+1>maxlines gosub customer_heading
+                            rem if lines+1>maxlines gosub customer_heading
 
                             OutVect!.addItem(arm05a.sequence_num$)
                             OutVect!.addItem(arm05a.std_comments$)
@@ -438,7 +438,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                             none=0
                       wend
                       if none break
-                      if lines+2>maxlines gosub customer_heading
+                      rem if lines+2>maxlines gosub customer_heading
                       abc=fnblank(13)
                       lines=lines+1
                       break
@@ -469,7 +469,7 @@ rem --- line.
 
                 rem --- Print detail line
 
-                if lines+1>maxlines gosub customer_heading
+                rem if lines+1>maxlines gosub customer_heading
 
                      if col_format$="Y"
                         OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
@@ -533,7 +533,7 @@ rem --- line.
                       k$=opt01a.firm_id$+opt01a.customer_id$+opt01a.job_no$
                       find record (opm09_dev,key=k$,dom=*break) opm09a$
                       job$(1)="Job "+opm09a.job_no$+" "+opm09a.customer_name$
-                      if lines+1>maxlines gosub customer_heading
+                      rem if lines+1>maxlines gosub customer_heading
  
                       OutVect!.addItem(job$)
                       abc=fnblank(12)
@@ -552,7 +552,7 @@ rem --- line.
                     c[maxperiods+1]=c[maxperiods+1]+c[x]
                 next x
                 if type$="D" and col_format$="Y" break
-                if type$="D" if lines+2>maxlines gosub customer_heading 
+                rem if type$="D" if lines+2>maxlines gosub customer_heading 
                 if type$="S" if lines+2>maxlines gosub increment_lines 
                   
                 if type$="D"
@@ -693,7 +693,7 @@ customer_heading: rem --- Print customer subheading
         OutVect!.addItem(continued$)
         abc=fnblank(7)
         abc=fnblank(13)
-        continued$="(Continued)"
+        rem continued$="(Continued)"
         lines=lines+3
 
     return
