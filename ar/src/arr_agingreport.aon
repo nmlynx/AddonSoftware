@@ -101,6 +101,7 @@ rem --- Assign form input values to local variables
     endperiods$[3]=option!.getOptionData("AGEDATE_60_THRU")
     endperiods$[4]=option!.getOptionData("AGEDATE_90_THRU")
     endperiods$[5]=option!.getOptionData("AGEDATE_120_THRU")
+    col_format$=option!.getOptionData("COL_FORMAT")
 
 rem --- Retrieve parameter records
 
@@ -245,7 +246,8 @@ rem --- column headings
     if type$="D"
 
         columns=12
-        dim columns$[12,3]
+        if col_format$="Y" columns=16
+        dim columns$[columns,10]
 
         p1$=periodbeg$[1]+"-"+periodend$[1]
         p2$=periodbeg$[2]+"-"+periodend$[2]
@@ -253,20 +255,25 @@ rem --- column headings
         p4$=periodbeg$[4]+"-"+periodend$[4]
         p5$=periodend$[5]
     
-        columns$[0,0]="Invoice",columns$[0,1]="C",columns$[0,2]="5"
-        columns$[1,0]="Invoiced",columns$[1,1]="C",columns$[1,2]="15"
-        columns$[2,0]="PO Number",columns$[2,1]="C",columns$[2,2]="5"
-        columns$[3,0]="Order Number",columns$[3,1]="C",columns$[3,2]="5"
-        columns$[4,0]="Terms",columns$[4,1]="C",columns$[4,2]="5"
-        columns$[5,0]="Type",columns$[5,1]="C",columns$[5,2]="5"
-        columns$[6,0]=future_heading$ ,columns$[6,1]="N",columns$[6,2]=str(m1),columns$[6,3]=m1$
-        columns$[7,0]=p1$,columns$[7,1]="N",columns$[7,2]=str(m1),columns$[7,3]=m1$
-        columns$[8,0]=p2$,columns$[8,1]="N",columns$[8,2]=str(m1),columns$[8,3]=m1$
-        columns$[9,0]=p3$,columns$[9,1]="N",columns$[9,2]=str(m1),columns$[9,3]=m1$
-        columns$[10,0]=p4$,columns$[10,1]="N",columns$[10,2]=str(m1),columns$[10,3]=m1$
-        columns$[11,0]=p5$,columns$[11,1]="N",columns$[11,2]=str(m1),columns$[11,3]=m1$
-        columns$[12,0]="Balance",columns$[12,1]="N",columns$[12,2]=str(m9),columns$[12,3]=m9$
-
+        columns$[columns-12,0]="Invoice",columns$[columns-12,1]="C",columns$[columns-12,2]="5"
+        columns$[columns-11,0]="Invoiced",columns$[columns-11,1]="C",columns$[columns-11,2]="15"
+        columns$[columns-10,0]="PO Number",columns$[columns-10,1]="C",columns$[columns-10,2]="5"
+        columns$[columns-9,0]="Order Number",columns$[columns-9,1]="C",columns$[columns-9,2]="5"
+        columns$[columns-8,0]="Terms",columns$[columns-8,1]="C",columns$[columns-8,2]="5"
+        columns$[columns-7,0]="Type",columns$[columns-7,1]="C",columns$[columns-7,2]="5"
+        columns$[columns-6,0]=future_heading$ ,columns$[columns-6,1]="N",columns$[columns-6,2]=str(m1),columns$[columns-6,3]=m1$
+        columns$[columns-5,0]=p1$,columns$[columns-5,1]="N",columns$[columns-5,2]=str(m1),columns$[columns-5,3]=m1$
+        columns$[columns-4,0]=p2$,columns$[columns-4,1]="N",columns$[columns-4,2]=str(m1),columns$[columns-4,3]=m1$
+        columns$[columns-3,0]=p3$,columns$[columns-3,1]="N",columns$[columns-3,2]=str(m1),columns$[columns-3,3]=m1$
+        columns$[columns-2,0]=p4$,columns$[columns-2,1]="N",columns$[columns-2,2]=str(m1),columns$[columns-2,3]=m1$
+        columns$[columns-1,0]=p5$,columns$[columns-1,1]="N",columns$[columns-1,2]=str(m1),columns$[columns-1,3]=m1$
+        columns$[columns,0]="Balance",columns$[columns,1]="N",columns$[columns,2]=str(m9),columns$[columns,3]=m9$
+        if col_format$="Y"
+            columns$[0,0]="Customer",columns$[0,1]="C",columns$[0,2]="7"
+            columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="30"
+            columns$[2,0]="Contact",columns$[2,1]="C",columns$[2,2]="30"
+            columns$[3,0]="Phone",columns$[3,1]="C",columns$[3,2]="10"
+        endif
     endif
 
     if type$="S"
@@ -412,7 +419,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                       continued$=""
                       gosub customer_heading
 
-                      if comments=0 break
+                      if comments=0 or col_format$="Y" break
 
                       rem --- Print customer comments
                                                      
@@ -464,6 +471,12 @@ rem --- line.
 
                 if lines+1>maxlines gosub customer_heading
 
+                     if col_format$="Y"
+                        OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
+                        OutVect!.addItem(arm01a.customer_name$)
+                        OutVect!.addItem(arm01a.contact_name$)
+                        OutVect!.addItem(phone$)
+                     endif
                      OutVect!.addItem(art01a.ar_inv_no$) 
                      OutVect!.addItem(fndate$(asof$))
                      OutVect!.addItem(po$)
@@ -505,14 +518,10 @@ rem --- line.
                      OutVect!.addItem(str(amount))
                 endif
 
-rem                if period=0 or period>4
                 if period>4
                      abc=fnblank(5)   
                      OutVect!.addItem(str(amount))
-rem                     abc=fnblank(1)
                      OutVect!.addItem(str(amount))
-rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m1$),3))
-rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
                 endif
 
                 lines=lines+1
@@ -542,6 +551,7 @@ rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
                 for x=0 to maxperiods
                     c[maxperiods+1]=c[maxperiods+1]+c[x]
                 next x
+                if type$="D" and col_format$="Y" break
                 if type$="D" if lines+2>maxlines gosub customer_heading 
                 if type$="S" if lines+2>maxlines gosub increment_lines 
                   
@@ -565,7 +575,9 @@ rem                         OutVect!.addItem(cvs(fnoverflow$(amount,m9$),3))
                 endif 
 
                 if type$="S"
-                   abc=fnblank(9)
+                   if col_format$="N"
+                       abc=fnblank(9)
+                   endif
                    OutVect!.addItem(customer$)
                    abc=fnblank(1)
                 endif
@@ -619,7 +631,7 @@ rem --- All done
         t[maxperiods+1]=t[maxperiods+1]+t[x]
     next x
     if lines+2>maxlines gosub increment_lines
-    if type$="D" 
+    if type$="D" and col_format$<>"Y"
         abc=fnblank(7) 
         OutVect!.addItem(u_line$)  
         OutVect!.addItem(u_line$)  
@@ -633,7 +645,7 @@ rem --- All done
         abc=fnblank(4)
     endif 
 
-    if type$="S" 
+    if type$="S" and col_format$<>"Y"
         abc=fnblank(3) 
         OutVect!.addItem(u_line$)  
         OutVect!.addItem(u_line$)  
@@ -649,13 +661,15 @@ rem --- All done
     else
         OutVect!.addItem("")
     endif
-    OutVect!.addItem(str(t[1]))
-    OutVect!.addItem(str(t[2])) 
-    OutVect!.addItem(str(t[3]))
-    OutVect!.addItem(str(t[4]))
-    OutVect!.addItem(str(t[5]))
-    OutVect!.addItem(str(t[6]))
-    
+    if col_output$<>"Y"
+        OutVect!.addItem(str(t[1]))
+        OutVect!.addItem(str(t[2])) 
+        OutVect!.addItem(str(t[3]))
+        OutVect!.addItem(str(t[4]))
+        OutVect!.addItem(str(t[5]))
+        OutVect!.addItem(str(t[6]))
+    endif
+
     goto std_exit
 
 increment_lines: rem --- Increment lines variable
@@ -667,7 +681,7 @@ increment_lines: rem --- Increment lines variable
 
 customer_heading: rem --- Print customer subheading
 
-    if type$="S" return
+    if type$="S" or col_format$="Y" return
     if lines+3>maxlines gosub increment_lines
 
         abc=fnblank(13)
@@ -687,6 +701,7 @@ customer_heading: rem --- Print customer subheading
 salesperson: rem --- Salesperson break
 
     salesperson=lastcode$<>""
+    if col_output$="N" return
     while salesperson
           x$="Total for "+salesperson$
           for x=0 to maxperiods
@@ -694,7 +709,7 @@ salesperson: rem --- Salesperson break
           next x
           if type$="D" if lines+2>maxlines gosub customer_heading 
           if type$="S" if lines+2>maxlines gosub increment_lines 
-          
+
      if type$="D" 
         abc=fnblank(7) 
         OutVect!.addItem(u_line$)  
