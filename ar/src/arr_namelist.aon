@@ -133,6 +133,8 @@ rem --- Initializations
        endvalue$=endtype$
        headings$[1]=headings$[1]+"By Customer Type"
     endif
+    if begvalue$="" headings$[2]="From First Through " else headings$[2]="From "+cvs(begvalue$,2)+" Through "
+    if endvalue$="" headings$[2]=headings$[2]+"Last" else headings$[2]=headings$[2]+endvalue$
     if begvalue$<>"" begvalue$=begvalue$(1,len(begvalue$)-1)+$FF$
     endvalue=len(endvalue$)
     headings$[5]="[HEADER]"
