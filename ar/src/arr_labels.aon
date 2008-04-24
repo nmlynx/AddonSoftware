@@ -83,6 +83,7 @@ rem --- Initializations
        begvalue$=begzip$
        endvalue$=endzip$
     endif
+    begvalue$=cvs(begvalue$,2)
     endvalue=len(endvalue$)
 
 rem --- Open the printer
@@ -121,8 +122,9 @@ rem --- Start the progress meter and position the file
     read(arm01_dev,key=firm_id$,knum=keynum,dom=*next)
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
     while begvalue$<>""
-        read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dom=*next)
+        read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dom=no_find)
         read (arm01_dev,dir=-1,err=*next)
+no_find:
         beg_value$=begvalue$
         begvalue$=""
     wend
@@ -132,7 +134,7 @@ rem --- Read next Customer Master (arm-01) record
     while more
           k$=key(arm01_dev,knum=keynum,end=*break)
           if pos(firm_id$=k$)<>1 break
-         if beg_value$<>"" 
+          if beg_value$<>"" 
             if k$(3,len(cvs(beg_value$,2)))<beg_value$
                 read(arm01_dev)
                 continue
