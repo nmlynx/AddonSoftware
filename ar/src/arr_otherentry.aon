@@ -209,8 +209,8 @@ rem --- Read next Invoice (are-02) record
           OutVect!.addItem(fndate$(are02a.inv_due_date$))
           OutVect!.addItem(fndate$(are02a.disc_date$))
           OutVect!.addItem(are02a.invoice_type$)
-          OutVect!.addItem(str(are02a.invoice_amt:m1$))
-          OutVect!.addItem(str(are02a.discount_amt:m1$))
+          OutVect!.addItem(str(are02a.invoice_amt))
+          OutVect!.addItem(str(are02a.discount_amt))
 
           lines=lines+1
           total=total+are02a.invoice_amt
@@ -261,8 +261,8 @@ rem --- All done
     xwk = fnblank(6)
     OutVect!.addItem("")
     OutVect!.addItem(x$)
-    OutVect!.addItem(str(total:m1$))
-    OutVect!.addItem(str(discount:m1$))
+    OutVect!.addItem(str(total))
+    OutVect!.addItem(str(discount))
 
 rem --- Destroy progress meter and run next overlay
 
