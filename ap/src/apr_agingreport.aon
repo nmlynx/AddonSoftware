@@ -460,8 +460,8 @@ rem --- Read next Invoice Header (apt-01) record
           OutVect!.addItem(apt01a.payment_grp$)
           OutVect!.addItem(apt01a.hold_flag$)
           xwk = fnblank(4)
-          OutVect!.addItem(str(it[0]:m1$))
-          OutVect!.addItem(str(it[0]:m1$))
+          OutVect!.addItem(str(it[0]))
+          OutVect!.addItem(str(it[0]))
 
           lines=lines+1
           phone$=""
@@ -506,12 +506,12 @@ print_total: rem --- Print totals
     xwk = fnblank(3)
  
    
-    OutVect!.addItem(str(pt[0]:m1$))
-    OutVect!.addItem(str(pt[1]:m1$))
-    OutVect!.addItem(str(pt[2]:m1$))
-    OutVect!.addItem(str(pt[3]:m1$))
-    OutVect!.addItem(str(pt[4]:m1$))
-    OutVect!.addItem(str(totamt:m1$))
+    OutVect!.addItem(str(pt[0]))
+    OutVect!.addItem(str(pt[1]))
+    OutVect!.addItem(str(pt[2]))
+    OutVect!.addItem(str(pt[3]))
+    OutVect!.addItem(str(pt[4]))
+    OutVect!.addItem(str(totamt))
 
  
     if typebreak_flag and !done
@@ -583,12 +583,12 @@ vendor_break: rem --- Vendor break
                 xwk = fnblank(12)
                 OutVect!.addItem(vendor$)
                 xwk = fnblank(5)
-                OutVect!.addItem(str(vt[0]:m1$))
-                OutVect!.addItem(str(vt[1]:m1$))
-                OutVect!.addItem(str(vt[2]:m1$))
-                OutVect!.addItem(str(vt[3]:m1$))
-                OutVect!.addItem(str(vt[4]:m1$))
-                OutVect!.addItem(str(totamt:m1$))
+                OutVect!.addItem(str(vt[0]))
+                OutVect!.addItem(str(vt[1]))
+                OutVect!.addItem(str(vt[2]))
+                OutVect!.addItem(str(vt[3]))
+                OutVect!.addItem(str(vt[4]))
+                OutVect!.addItem(str(totamt))
                
                 lines=lines+2
              endif
