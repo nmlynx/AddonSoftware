@@ -135,7 +135,6 @@ rem --- Initializations
     endif
     if begvalue$="" headings$[2]="From First Through " else headings$[2]="From "+cvs(begvalue$,2)+" Through "
     if endvalue$="" headings$[2]=headings$[2]+"Last" else headings$[2]=headings$[2]+endvalue$
-    if begvalue$<>"" begvalue$=begvalue$(1,len(begvalue$)-1)+$FF$
     endvalue=len(endvalue$)
     headings$[5]="[HEADER]"
 
@@ -151,17 +150,30 @@ rem --- Initialize print positions
 
 rem --- Open printer, start progress meter and position header file
 
+    read(arm02_dev,key=firm_id$,knum=keynum,dom=*next)
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm02_dev,1,meter_num,status
 
 rem --- Initial Read
 
-   read (arm02_dev,knum=keynum,key=firm_id$+begvalue$,dom=*next)
+    while begvalue$<>""
+        read (arm02_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dom=no_find)
+        read (arm02_dev,dir=-1,err=*next)
+no_find:
+        beg_value$=begvalue$
+        begvalue$=""
+    wend
 
 rem --- Read next Customer Detail (arm-02) record
 
     while more
           k$=key(arm02_dev,knum=keynum,end=*break)
           if pos(firm_id$=k$)<>1 break
+          if beg_value$<>"" 
+            if k$(3,len(cvs(beg_value$,2)))<cvs(beg_value$,2)
+                read(arm02_dev)
+                continue
+            endif
+          endif
           if endvalue$<>"" if k$(3,endvalue)>endvalue$ break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           read record (arm02_dev) arm02a$
