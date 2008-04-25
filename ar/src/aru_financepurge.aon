@@ -29,7 +29,7 @@ rem --- Open/Lock files
     files$[2]="are-02",ids$[2]="ARE_CNVINV"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     ars01_dev=channels[1]
     are02_dev=channels[2]
 
@@ -50,8 +50,8 @@ rem --- Get user approval to proceed
 
     prompt$="Remove all generated and entered finance charges?"
     call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" goto std_exit
+    if fkey=4 goto std_exit_no_update
+    if answer$<>"Y" goto std_exit_no_update
 
 rem --- Start progress meter and position invoice header file
 
@@ -73,6 +73,11 @@ rem --- Start progress meter and position invoice header file
 rem --- All done
 
     goto std_exit
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 
@@ -126,7 +131,14 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
     run stbl("+DIR+SYP")+"bac_process_end.bbj",err=*next
+
+std_exit_no_update:
+
     release
 
 rem #endinclude std_end.src
