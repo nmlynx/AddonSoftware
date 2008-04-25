@@ -36,7 +36,7 @@ rem --- Open/Lock files
     files$[9]="arc_termcode",ids$[9]="ARC_TERMCODE"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     ars01_dev=channels[1]
     are02_dev=channels[2]
     are05_dev=channels[3]
@@ -98,7 +98,7 @@ rem --- Additional file opens
     files$[2]="opt-01",ids$[2]="OPM_TERMINAL"
     if op$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                              ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     ops10_dev=channels[1]
     opt01_dev=channels[2]
 
@@ -140,15 +140,16 @@ rem --- Start progress meter and position invoice header file
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           if art01a.inv_due_date$>invoice_date$ continue
           if art01a.invoice_type$="F" continue 
-          amount=art01a.invoice_amt
 
           rem --- Customer break?
 
           if art01a.customer_id$<>customer$ gosub customer_break
+          customer$=art01a.customer_id$
+          artype$=art01a.ar_type$
           if arm02a.finance_chg$<>"Y" continue
 
           rem --- Position Invoice Detail (art-11) file
-
+          amount=art01a.invoice_amt
           invoice$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$
           read (art11_dev,key=art01_key$,dom=*next)
 
@@ -164,7 +165,9 @@ rem --- Start progress meter and position invoice header file
 
           rem --- Is this invoice overdue by the requisite number of days?
 
+          days=0
           call pgmdir$+"adc_daydates.aon",art01a.inv_due_date$,invoice_date$,days
+
           if days>=overdue balance=balance+amount
 
           rem --- Loop back for next invoice
@@ -252,9 +255,9 @@ customer_break: rem --- Customer break
           rem --- Initialize and write the Finance Charge (are-02) record
 
           dim are02a$:fattr(are02a$)
-          are02a.firm_id$=art01a.firm_id$
-          are02a.ar_type$=art01a.ar_type$
-          are02a.customer_id$=art01a.customer_id$
+          are02a.firm_id$=firm_id$
+          are02a.ar_type$=artype$
+          are02a.customer_id$=customer$
           are02a.ar_inv_no$=invoice$
           are02a.ar_dist_code$=ar_dist_code$
           are02a.ar_terms_code$=ar_terms_code$
@@ -266,6 +269,7 @@ customer_break: rem --- Customer break
           are02a$=field(are02a$)
           write record (are02_dev,dom=next_invoice) are02a$
           update=0
+          balance=0
 
           rem --- Finance charge record generated
 
@@ -284,6 +288,11 @@ rem --- Are we supposed to generate finance charges for the new customer?
     if arm02a.finance_chg$="Y" return
     customer$=""
     read (art01_dev,key=art01_key$,dom=*next)
+    return
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     return
 
 rem --- Functions
@@ -346,8 +355,14 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_update:
     release
 
 rem #endinclude std_end.src
