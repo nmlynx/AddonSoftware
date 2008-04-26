@@ -56,6 +56,9 @@ rem --- Assign input values to local variables
     journal$=Option!.getOptionData("PICK_JOURNAL_ID")
     detail$=Option!.getOptionData("PICK_LISTBUTTON")
 
+    begper$=str(num(begper$):"00")
+    endper$=str(num(endper$):"00")
+
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
@@ -242,9 +245,9 @@ rem --- Read next transaction history (glt-06) record
           debit$=""
           credit$=""
           unit$=""
-          if amount>0 debits=amount,debit$=str(amount:m1$)
-          if amount<0 credits=amount,credit$=str(abs(amount):m1$)
-          if units_flag$="Y" if units unit$=stars$,unit$=str(units:m2$,err=*next)
+          if amount>0 debits=amount,debit$=str(amount)
+          if amount<0 credits=amount,credit$=str(abs(amount))
+          if units_flag$="Y" if units unit$=stars$,unit$=str(units,err=*next)
           n[0]=debits
           n[1]=credits
           n[2]=units
@@ -433,14 +436,14 @@ rem --- Initialize account totals
            et[2]=et[2]+us[begindex+x]
        next x
     endif
-    begcredit$=str(abs(et[1]):m1$)
+    begcredit$=str(abs(et[1]))
     begdebit$=""
     begunits$=""
-    if units_flag$="Y" begunits$=str(et[2]:m2$)
+    if units_flag$="Y" begunits$=str(et[2])
     if et[1]>0
        et[0]=et[1]
        et[1]=0
-       begdebit$=str(et[0]:m1$)
+       begdebit$=str(et[0])
        begcredit$=""
     endif
     return
@@ -485,10 +488,10 @@ journal_break: rem --- Journal break
     if detail$="D" return
     if t2$="" goto new_journal
     amount=jt[0]+jt[1]
-    debit$=str(amount:m1$)
+    debit$=str(amount)
     credit$="",unit$=""
-    if amount<0 credit$=str(abs(amount):m1$),debit$=""
-    if units_flag$="Y" if units unit$=stars$,unit$=str(jt[2]:m2$,err=*next)
+    if amount<0 credit$=str(abs(amount)),debit$=""
+    if units_flag$="Y" if units unit$=stars$,unit$=str(jt[2],err=*next)
 
     OutVect!.addItem("")
     OutVect!.addItem(fndate$(t2$))
@@ -513,11 +516,11 @@ new_journal: rem --- New journal
 print_totals: rem --- Print totals line
 
     amount=debits+credits
-    debit$=str(amount:m1$)
+    debit$=str(amount)
     credit$=""
     unit$=""
-    if amount<0 credit$=str(abs(amount):m1$),debit$=""
-    if units_flag$="Y" unit$=stars$,unit$=str(units:m2$,err=*next)
+    if amount<0 credit$=str(abs(amount)),debit$=""
+    if units_flag$="Y" unit$=stars$,unit$=str(units,err=*next)
 
     if detail$="D"
         OutVect!.addItem("")
