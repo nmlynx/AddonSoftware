@@ -282,7 +282,7 @@ rem --- Read the next Cash Receipt Header (are-01) record
           check$=are01a.ar_check_no$
           aba$=are01a.aba_no$
           payment=are01a.payment_amt
-          payment$=str(payment:m1$)
+          payment$=str(payment)
           receipt$=are01a.firm_id$+are01a.ar_type$+are01a.reserved_key_01$+are01a.receipt_date$+
 :                  are01a.customer_id$+are01a.cash_rec_cd$+are01a.ar_check_no$+
 :                  are01a.reserved_key_02$
@@ -337,20 +337,13 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 applied=are11a.apply_amt
                 discount=are11a.discount_amt
                 credits=applied+discount
-rem ---                 if lines+1>maxlines gosub report_heading
-rem ---                 print (printer_dev) @(o[0]),name$,@(o[2]),check$,@(o[3]),are11a.ar_inv_no$,
-rem --- :                                   @(o[4]),applied:m1$,@(o[5]),discount:m1$,
-rem --- :                                   @(o[6]),credits:m1$,@(o[9]),aba$,@(o[10]),payment$
-
-rem ---                 lines=lines+1
-
 
 				if cvs(name$,3)="" xwk=fnblank(2)
 				OutVect!.addItem(check$)
 				OutVect!.addItem(are11a.ar_inv_no$)
-				OutVect!.addItem(str(applied:m1$))
-				OutVect!.addItem(str(discount:m1$))
-				OutVect!.addItem(str(credits:m1$))
+				OutVect!.addItem(str(applied))
+				OutVect!.addItem(str(discount))
+				OutVect!.addItem(str(credits))
 				xwk=fnblank(2)
 				OutVect!.addItem(aba$)
 				OutVect!.addItem(payment$)
@@ -451,14 +444,9 @@ rem ---                 lines=lines+1
 
                 amount=are21a.gl_post_amt
                 account$=are21a.gl_account$
-rem ---                 if lines+1>maxlines gosub report_heading
-rem ---                 print (printer_dev) @(o[7]),fnmask$(account$(1,acct_length),g0$),
-rem --- :                                   @(o[8]),amount:m1$
-
-rem ---                 lines=lines+1
 				xwk=fnblank(7)
 				OutVect!.addItem(fnmask$(account$(1,acct_length),g0$))
-				OutVect!.addItem(str(amount:m1$))
+				OutVect!.addItem(str(amount))
 				xwk=fnblank(2)
 
 
@@ -585,55 +573,39 @@ report_heading: rem --- Report heading --- not used in DocOut versin
 
 print_totals: rem --- Print date or receipt code totals
 
-rem ---     if lines+4>maxlines gosub report_heading
-rem ---     print (printer_dev) ""
-rem ---     print (printer_dev) @(o[10]-7),"Checks",@(o[10]),pt[4]:m1$
-rem ---     print (printer_dev) @(o[4]-len(total$)),total$,@(o[4]),pt[0]:m1$,@(o[5]),pt[1]:m1$,
-rem --- :                       @(o[6]),pt[2]:m1$,@(o[8]),pt[3]:m1$,@(o[10]-5),"Cash",
-rem --- :                       @(o[10]),pt[5]:m1$
-rem ---     print (printer_dev) @(o[10]-8),"Deposit",@(o[10]),pt[6]:m1$
-
-rem ---     lines=lines+4
-
 	xwk=fnblank(11)
 	xwk=fnblank(9)
 	OutVect!.addItem("Checks")
-	OutVect!.addItem(str(pt[4]:m1$))
+	OutVect!.addItem(str(pt[4]))
 
 	OutVect!.addItem(total$)
 	xwk=fnblank(3)
-	OutVect!.addItem(str(pt[0]:m1$))
-	OutVect!.addItem(str(pt[1]:m1$))
-	OutVect!.addItem(str(pt[2]:m1$))
+	OutVect!.addItem(str(pt[0]))
+	OutVect!.addItem(str(pt[1]))
+	OutVect!.addItem(str(pt[2]))
 	OutVect!.addItem("")
-	OutVect!.addItem(str(pt[3]:m1$))
+	OutVect!.addItem(str(pt[3]))
 	OutVect!.addItem("Cash")
-	OutVect!.addItem(str(pt[5]:m1$))
+	OutVect!.addItem(str(pt[5]))
 
 	xwk=fnblank(9)
 	OutVect!.addItem("Deposit")
-	OutVect!.addItem(str(pt[6]:m1$))
+	OutVect!.addItem(str(pt[6]))
 
 
     return
 
 register_totals: rem --- Print register, MTD and next MTD totals
 
-rem ---     if lines+1>maxlines gosub report_heading
-rem ---     print (printer_dev) @(o[4]-len(total$)),total$,@(o[4]),pt[0]:m1$,@(o[5]),pt[1]:m1$,
-rem --- :                       @(o[6]),pt[2]:m1$,@(o[8]),pt[3]:m1$,@(o[10]),pt[4]:m1$
-
-rem ---     lines=lines+1
-	
 	OutVect!.addItem(total$)
 	xwk=fnblank(3)
-	OutVect!.addItem(str(pt[0]:m1$))
-	OutVect!.addItem(str(pt[1]:m1$))
-	OutVect!.addItem(str(pt[2]:m1$))
+	OutVect!.addItem(str(pt[0]))
+	OutVect!.addItem(str(pt[1]))
+	OutVect!.addItem(str(pt[2]))
 	OutVect!.addItem("")
-	OutVect!.addItem(str(pt[3]:m1$))
+	OutVect!.addItem(str(pt[3]))
 	OutVect!.addItem("")
-	OutVect!.addItem(str(pt[4]:m1$))
+	OutVect!.addItem(str(pt[4]))
 
 
     return
