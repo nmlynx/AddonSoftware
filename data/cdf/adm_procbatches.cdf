@@ -1,6 +1,9 @@
+[[ADM_PROCBATCHES.ARAR]]
+x$=stbl("+BATCH_NO","."+callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"))
 [[ADM_PROCBATCHES.AWRI]]
 rem --- set exit stbl to be this batch number
 	x$=stbl("+BATCH_NO","."+callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"))
+	callpoint!.setStatus("EXIT")
 [[ADM_PROCBATCHES.BSHO]]
 rem --- disable key field if no new recs allowed
 
