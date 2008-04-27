@@ -73,15 +73,15 @@ initializations: rem --- Initializations
     p9=num(aps01a.current_per$)
     more=1
 
-rem --- Correct?
+rem --- Get user approval to proceed
 
-    msg_id$="AON_RUN_QUERY"
-    dim x$:stbl("+SYSINFO_TPL")
-    dim msg_tokens$[1]
-    x$=stbl("+SYSINFO")                                                            
-    msg_tokens$[1]=x.task_desc$
+    msg_id$="CLOSE_PERIOD"
+    dim msg_tokens$[2]
+    msg_tokens$[0]=str(current_period)
+    msg_tokens$[1]=fndate$(begdate$)
+    msg_tokens$[2]=fndate$(enddate$)
     gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit_no_update
+    if msg_opt$="N" goto std_exit_no_update
 
 rem --- Init Invoice Read
 

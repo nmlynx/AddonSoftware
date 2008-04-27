@@ -133,11 +133,13 @@ rem --- Initializations
 
 rem --- Get user approval to proceed
 
-    prompt$="Are you ready to close Period "+str(current_period)+" ("+fndate$(begdate$)+
-:           " through "+fndate$(enddate$)+")?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit_no_update
-    if answer$<>"Y" goto std_exit_no_update
+    msg_id$="CLOSE_PERIOD"
+    dim msg_tokens$[2]
+    msg_tokens$[0]=str(current_period)
+    msg_tokens$[1]=fndate$(begdate$)
+    msg_tokens$[2]=fndate$(enddate$)
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_update
 
 rem --- Calculate Date For Retaining Job Numbers
 
