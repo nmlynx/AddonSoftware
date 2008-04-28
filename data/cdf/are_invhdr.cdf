@@ -201,32 +201,42 @@ calc_grid_tots:
 
 disp_cust_addr:
 
-    arm_custmast_dev=fnget_dev("ARM_CUSTMAST")
-    dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
-    readrecord(arm_custmast_dev,key=cust_key$,err=std_error)arm01a$
-    callpoint!.setColumnData("<<DISPLAY>>.CUST_ADDR1",arm01a.addr_line_1$)
-    callpoint!.setColumnData("<<DISPLAY>>.CUST_ADDR2",arm01a.addr_line_2$)               
-    callpoint!.setColumnData("<<DISPLAY>>.CUST_CTST",cvs(arm01a.city$,2)+", "+arm01a.state_code$)
-    callpoint!.setColumnData("<<DISPLAY>>.CUST_ZIP",arm01a.zip_code$)
+	arm_custmast_dev=fnget_dev("ARM_CUSTMAST")
+	dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+	readrecord(arm_custmast_dev,key=cust_key$,err=std_error)arm01a$
+	addr_len=len(arm01a.addr_line_1$)
+	dim addr$(addr_len*5)
+	addr$(1)=arm01a.addr_line_1$
+	addr$(1+addr_len)=arm01a.addr_line_2$
+	addr$(1+(addr_len*2))=arm01a.addr_line_3$
+	addr$(1+(addr_len*3))=arm01a.addr_line_4$
+	addr$(1+(addr_len*4))=arm01a.city$+arm01a.state_code$
+	addr$=addr$+arm01a.zip_code$
+	call stbl("+DIR_PGM")+"adc_address.aon",addr$,addr_len,5,9,30
+	callpoint!.setColumnData("<<DISPLAY>>.CUST_ADDR1",addr$(1,30))
+	callpoint!.setColumnData("<<DISPLAY>>.CUST_ADDR2",addr$(31,30))
+	callpoint!.setColumnData("<<DISPLAY>>.CUST_ADDR3",addr$(61,30))
+	callpoint!.setColumnData("<<DISPLAY>>.CUST_ADDR4",addr$(91,30))
+	callpoint!.setColumnData("<<DISPLAY>>.CUST_CTST",addr$(121,30))
+	callpoint!.setColumnData("<<DISPLAY>>.CUST_ZIP",addr$(151,30))
 
-    rem --- also retrieve default dist/terms codes for customer
+rem --- also retrieve default dist/terms codes for customer
 
 	if cvs(callpoint!.getColumnData("ARE_INVHDR.AR_DIST_CODE"),3)=""
-	    arm_custdet_dev=fnget_dev("ARM_CUSTDET")
-	    dim arm02a$:fnget_tpl$("ARM_CUSTDET")
-	    arm02a.firm_id$=arm01a.firm_id$,arm02a.customer_id$=arm01a.customer_id$,arm02a.ar_type$="  "
-	    readrecord(arm_custdet_dev,key=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$,err=*next)arm02a$
-	    callpoint!.setColumnData("ARE_INVHDR.AR_DIST_CODE",arm02a.ar_dist_code$)
+		arm_custdet_dev=fnget_dev("ARM_CUSTDET")
+		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+		arm02a.firm_id$=arm01a.firm_id$,arm02a.customer_id$=arm01a.customer_id$,arm02a.ar_type$="  "
+		readrecord(arm_custdet_dev,key=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$,err=*next)arm02a$
+		callpoint!.setColumnData("ARE_INVHDR.AR_DIST_CODE",arm02a.ar_dist_code$)
 	endif
 	if cvs(callpoint!.getColumnData("ARE_INVHDR.AR_TERMS_CODE"),3)=""
-	    arm_custdet_dev=fnget_dev("ARM_CUSTDET")
-	    dim arm02a$:fnget_tpl$("ARM_CUSTDET")
-	    arm02a.firm_id$=arm01a.firm_id$,arm02a.customer_id$=arm01a.customer_id$,arm02a.ar_type$="  "
-	    readrecord(arm_custdet_dev,key=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$,err=*next)arm02a$
-	    callpoint!.setColumnData("ARE_INVHDR.AR_TERMS_CODE",arm02a.ar_terms_code$)
+		arm_custdet_dev=fnget_dev("ARM_CUSTDET")
+		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+		arm02a.firm_id$=arm01a.firm_id$,arm02a.customer_id$=arm01a.customer_id$,arm02a.ar_type$="  "
+		readrecord(arm_custdet_dev,key=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$,err=*next)arm02a$
+		callpoint!.setColumnData("ARE_INVHDR.AR_TERMS_CODE",arm02a.ar_terms_code$)
 	endif
-
-    return
+return
 
 check_outstanding_inv:
 
