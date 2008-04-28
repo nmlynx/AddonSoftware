@@ -308,7 +308,7 @@ rem gosub report_heading
           acctdate$=""
           discdate$=""
           retention$=""
-          if retention retention$=str(ape01a.retention:m1$)
+          if retention retention$=str(ape01a.retention)
           if cvs(ape01a.invoice_date$,2)<>"" invdate$=fndate$(ape01a.invoice_date$)
           if cvs(ape01a.inv_due_date$,2)<>"" duedate$=fndate$(ape01a.inv_due_date$)
           if cvs(ape01a.accting_date$,2)<>"" acctdate$=fndate$(ape01a.accting_date$)
@@ -327,8 +327,8 @@ rem gosub report_heading
           OutVect!.addItem(acctdate$)
           OutVect!.addItem(discdate$)
           OutVect!.addItem(ape01a.reference$+" "+ape01a.ap_inv_memo$)
-          OutVect!.addItem(str(ape01a.invoice_amt:m1$))
-          OutVect!.addItem(str(ape01a.discount_amt:m1$)+retention$)
+          OutVect!.addItem(str(ape01a.invoice_amt))
+          OutVect!.addItem(str(ape01a.discount_amt+ape01a.retention))
          
          xwk=fnblank(2)
          OutVect!.addItem(ac$)
@@ -488,8 +488,8 @@ print_total: rem --- Print totals
         OutVect!.addItem(underline$)
         xwk=fnblank(11)
         OutVect!.addItem(total$)
-        OutVect!.addItem(str(pt[0]:m1$))
-        OutVect!.addItem(str(pt[1]:m1$))
+        OutVect!.addItem(str(pt[0]))
+        OutVect!.addItem(str(pt[1]))
         lines=lines+3
     endif    
     return
