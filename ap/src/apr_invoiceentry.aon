@@ -341,8 +341,9 @@ rem gosub report_heading
           rem --- CAH.09/29/07
           err_msg$=stbl("+DTWARN_MSG",err=*next)
           if err_msg$<>""
+              OutVect!.addItem("")
               OutVect!.addItem(err_msg$)
-              xwk=fnblank(13)
+              xwk=fnblank(12)
           endif
 
           for x=0 to 2
