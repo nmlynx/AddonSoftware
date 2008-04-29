@@ -66,9 +66,9 @@ rem --- Retrieve parameter records
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ars01b_key$=firm_id$+"AR02"
     find record (ars_report_dev,key=ars01b_key$,err=std_missing_params) ars01b$
-    remit$=ars01b.addr_line_1$+ars01b.addr_line_2$+ars01b.city$+ars01b.state_code$+ars01b.zip_code$
+    remit$=ars01b.remit_addr_1$+ars01b.remit_addr_2$+ars01b.remit_city$+ars01b.remit_state$+ars01b.remit_zip$
     call pgmdir$+"adc_address.aon",remit$,24,3,9,address
-        remit$=ars01b.name$+remit$
+    remit$=ars01b.name$+remit$
 
     call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     call pgmdir$+"adc_getmask.aon","","AR","A","",m1$,0,0
@@ -319,7 +319,7 @@ pageno!.setFont(textfont!)
 
 invoiceno!=page!.newParagraph()
 invoiceno!.setHorizontalFill(1)
-invoiceno!.setPosition(new java.awt.Point(370,120))
+invoiceno!.setPosition(new java.awt.Point(370,110))
 invoiceno!.setText("Invoice: "+are05a.ar_inv_no$)
 invoiceno!.setFont(textfont!)
 
@@ -327,80 +327,80 @@ invoiceno!.setFont(textfont!)
 remit1!=page!.newParagraph()
 remit1!.setHorizontalFill(1)
 remit1!.setPosition(new java.awt.Point(10,90))
-remit1!.setText("Remit To:"+remit$(1,address))
+remit1!.setText("Remit To: "+remit$(1,address))
 remit1!.setFont(textfont!)
 
 remit2!=page!.newParagraph()
 remit2!.setHorizontalFill(1)
-remit2!.setPosition(new java.awt.Point(40,105))
+remit2!.setPosition(new java.awt.Point(40,100))
 remit2!.setText(remit$(31,address))
 remit2!.setFont(textfont!)
 
 remit3!=page!.newParagraph()
 remit3!.setHorizontalFill(1)
-remit3!.setPosition(new java.awt.Point(40,120))
+remit3!.setPosition(new java.awt.Point(40,110))
 remit3!.setText(remit$(61,address))
 remit3!.setFont(textfont!)
 
 remit4!=page!.newParagraph()
 remit4!.setHorizontalFill(1)
-remit4!.setPosition(new java.awt.Point(40,135))
+remit4!.setPosition(new java.awt.Point(40,120))
 remit4!.setText(remit$(91,address))
 remit4!.setFont(textfont!)
 
 invdt!=page!.newParagraph()
 invdt!.setHorizontalFill(1)
-invdt!.setPosition(new java.awt.Point(370,105))
+invdt!.setPosition(new java.awt.Point(370,100))
 invdt!.setText("Date: "+invoice_date$)
 invdt!.setFont(textfont!)
 
 cust!=page!.newParagraph()
 cust!.setHorizontalFill(1)
-cust!.setPosition(new java.awt.Point(370,135))
+cust!.setPosition(new java.awt.Point(370,120))
 cust!.setText("Customer: "+fnmask$(arm01a.customer_id$(1,customer_size),m0$))
 cust!.setFont(textfont!)
 
 name!=page!.newParagraph()
 name!.setHorizontalFill(1)
-name!.setPosition(new java.awt.Point(20,140))
-name!.setText("Sold to:" +arm01a.customer_name$)
+name!.setPosition(new java.awt.Point(20,135))
+name!.setText("Sold to: " +arm01a.customer_name$)
 name!.setFont(textfont!)
 
 
 
 add1!=page!.newParagraph()
 add1!.setHorizontalFill(1)
-add1!.setPosition(new java.awt.Point(40,155))
+add1!.setPosition(new java.awt.Point(40,145))
 add1!.setText(address$(1,address))
 add1!.setFont(textfont!)
 
 add2!=page!.newParagraph()
 add2!.setHorizontalFill(1)
-add2!.setPosition(new java.awt.Point(40,170))
+add2!.setPosition(new java.awt.Point(40,155))
 add2!.setText(address$(31,address))
 add2!.setFont(textfont!)
 
 add3!=page!.newParagraph()
 add3!.setHorizontalFill(1)
-add3!.setPosition(new java.awt.Point(40,185))
+add3!.setPosition(new java.awt.Point(40,165))
 add3!.setText(address$(61,address))
 add3!.setFont(textfont!)
 
 add4!=page!.newParagraph()
 add4!.setHorizontalFill(1)
-add4!.setPosition(new java.awt.Point(40,200))
+add4!.setPosition(new java.awt.Point(40,175))
 add4!.setText(address$(91,address))
 add4!.setFont(textfont!)
 
 add5!=page!.newParagraph()
 add5!.setHorizontalFill(1)
-add5!.setPosition(new java.awt.Point(40,215))
+add5!.setPosition(new java.awt.Point(40,185))
 add5!.setText(address$(121,address))
 add5!.setFont(textfont!)
 
 add6!=page!.newParagraph()
 add6!.setHorizontalFill(1)
-add6!.setPosition(new java.awt.Point(40,230))
+add6!.setPosition(new java.awt.Point(40,195))
 add6!.setText(address$(151,address))
 add6!.setFont(textfont!)
 
@@ -408,7 +408,7 @@ add6!.setFont(textfont!)
 term!=page!.newParagraph()
 term!.setHorizontalFill(1)
 term!.setPosition(new java.awt.Point(40,220))
-term!.setText("Terms:"+arm10a.code_desc$)
+term!.setText("Terms: "+arm10a.code_desc$)
 term!.setFont(textfont!)
 
 ribb1!=page!.newParagraph()
@@ -453,6 +453,7 @@ page!.add(pageno!)
 page!.add(remit1!) 
 page!.add(remit2!)
 page!.add(remit3!)
+page!.add(remit4!)
 page!.add(invdt!)
 page!.add(cust!)
 page!.add(invoiceno!)
@@ -463,6 +464,7 @@ page!.add(add3!)
 page!.add(add4!)
 page!.add(add5!)
 page!.add(add6!)
+page!.add(term!)
 page!.add(ribb1!)
 page!.add(ribb2!)
 page!.add(ribb3!)
