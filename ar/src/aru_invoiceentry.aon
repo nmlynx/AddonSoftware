@@ -45,16 +45,27 @@ rem --- Read next Invoice Header (are-05) record
           read record (are05_dev,end=*break) are05a$
           if pos(firm_id$=are05a.firm_id$)<>1 break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          are05a_key$=are05a.firm_id$+are05a.ar_inv_no$
 
           rem --- Skip voided invoices
 
-          if are05a.sim_inv_type$="V" continue
+          if are05a.sim_inv_type$="V"
+            while moredetail
+                k$=key(are15_dev,end=*break)
+                if pos(are05a_key$=k$)<>1 break
+                read record (are15_dev) are15a$
+                extension=extension+are15a.ext_price
+                qty=qty+are15a.units
+                remove (are15_dev,key=k$)
+            wend
+            remove (are05_dev,key=are05a_key$)
+            continue
+          endif
 
           rem --- Initializations for this invoice
 
           extension=0
           qty=0
-          are05a_key$=are05a.firm_id$+are05a.ar_inv_no$
 
           rem --- Retrieve Customer Master (arm-01) record
 
@@ -86,7 +97,7 @@ rem --- Read next Invoice Header (are-05) record
           find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
 
           rem --- Position the Invoice Detail (are-15) file
-		  rem --- err 46 here...was using key=invoice$; changed to are05a_key$.CAH
+
           read (are15_dev,key=are05a_key$,dom=*next)
 
           rem --- Read the next Invoice Detail (are-15) record
