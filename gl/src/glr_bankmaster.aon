@@ -19,6 +19,16 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -75,6 +85,7 @@ rem --- Initializations
     l=l9+1
     number=0
     width=132
+    pbufwidth=132
     clock$=""
     when$=sysinfo.system_date$
     checkopen=0
@@ -89,7 +100,7 @@ rem --- Initializations
 
 rem --- Calculate print positions
 
-    o[0]=0
+    o[0]=1
     o[1]=o[0]+9
     o[2]=o[1]+7
     o[3]=o[2]+12
@@ -126,6 +137,10 @@ rem --- Build remaining headings
         headings$[x]=h$
     next x
 
+    dim columns$[0,10]
+    columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="80"
+    columns=0
+
 rem --- Does the user only want to print outstanding items?
 
     prompt$="Do you want to only print outstanding items?"
@@ -137,8 +152,6 @@ rem --- Does the user only want to print outstanding items?
 
 rem --- Open printer, start progress meter and position files
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glt05_dev,1,meter_num,status
     read (glt05_dev,key=glm05_key$,dom=*next)
 
@@ -167,9 +180,14 @@ rem --- This section prints the checks. Get the next check transaction (glt-05) 
              gosub report_heading
              gosub check_heading
           endif
-          print (printer_dev)@(o[0]),glt05a.check_no$,@(o[1]),glt05a.check_type$,
-:                            @(o[2]),fndate$(glt05a.bnk_chk_date$),@(o[3]),glt05a.description$,
-:                            @(o[4]),glt05a.check_amount:m1$,@(o[5]),glt05a.paid_code$
+          dim pbuf$(pbufwidth)
+          pbuf$(o[0])=glt05a.check_no$
+          pbuf$(o[1])=glt05a.check_type$
+          pbuf$(o[2])=fndate$(glt05a.bnk_chk_date$)
+          pbuf$(o[3])=glt05a.description$
+          pbuf$(o[4])=str(glt05a.check_amount:m1$)
+          pbuf$(o[5])=glt05a.paid_code$
+          OutVect!.addItem(pbuf$)
           l=l+1
 
           rem --- Loop back for next check transaction record
@@ -183,7 +201,9 @@ rem --- Print message if there weren't any checks to print
        gosub report_heading
        gosub check_heading
     endif
-    print (printer_dev) @(o[0]),"No check transactions found" 
+    dim pbuf$(pbufwidth)
+    pbuf$(o[0])="No check transactions found"
+    OutVect!.addItem(pbuf$)
     l=l+1
 
 other_transactions: rem --- Print any other transactions
@@ -221,9 +241,14 @@ rem --- Get the next other transaction (glt-15) record.
              gosub report_heading
              gosub check_heading
           endif
-          print (printer_dev)@(o[0]),glt15a.trans_no$,@(o[1]),glt15a.trans_type$,
-:                            @(o[2]),fndate$(glt15a.trns_date$),@(o[3]),glt15a.description$,
-:                            @(o[4]),glt15a.trans_amt:m1$,@(o[5]),glt15a.posted_code$
+          dim pbuf$(pbufwidth)
+          pbuf$(o[0])=glt15a.trans_no$
+          pbuf$(o[1])=glt15a.trans_type$
+          pbuf$(o[2])=fndate$(glt15a.trns_date$)
+          pbuf$(o[3])=glt15a.description$
+          pbuf$(o[4])=str(glt15a.trans_amt:m1$)
+          pbuf$(o[5])=glt15a.posted_code$
+          OutVect!.addItem(pbuf$)
           l=l+1
 
           rem --- Loop back for next transaction record
@@ -237,32 +262,63 @@ rem --- Print message if there weren't any other transactions to print
        gosub report_heading
        gosub check_heading
     endif
-    print (printer_dev) @(o[0]),"No other transactions found" 
+    dim pbuf$(pbufwidth)
+    pbuf$(o[0])="No other transactions found" 
+    OutVect!.addItem(pbuf$)
     l=l+1
 
 balance: rem --- Print the balance information
 
     balance=glm05a.cur_stmt_amt-checkopen+otheropen
     gosub balance_heading
-    print (printer_dev) @(o[1]),"Statement Balance: ",@(o[4]),glm05a.cur_stmt_amt:m1$
-    print (printer_dev) @(o[1]),"Checks Outstanding: ",@(o[4]),checkopen:m1$,@(o[5]),opencheck:m9$
-    print (printer_dev) @(o[1]),"Transactions Outstanding: ",@(o[4]),otheropen:m1$,@(o[5]),openother:m9$
-    print (printer_dev) @(o[4]),fill(m1,"-")
-    print (printer_dev) @(o[1]),"Ending Balance:",@(o[4]),balance:m1$
-    print (printer_dev) ""
-    print (printer_dev) @(o[1]),"Check Book Balance as of ",fndate$(glm05a.curstm_date$),
-:                       @(o[4]),glm05a.book_balance:m1$
+    dim pbuf$(pbufwidth)
+    pbuf$(o[1])="Statement Balance:"
+    pbuf$(o[4])=str(glm05a.cur_stmt_amt:m1$)
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(o[1])="Checks Outstanding:"
+    pbuf$(o[4])=str(checkopen:m1$)
+    pbuf$(o[5])=str(opencheck:m9$)
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(o[1])="Transactions Outstanding:"
+    pbuf$(o[4])=str(otheropen:m1$)
+    pbuf$(o[5])=str(openother:m9$)
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(o[4])=fill(m1,"-")
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(o[1])="Ending Balance:"
+    pbuf$(o[4])=str(balance:m1$)
+    OutVect!.addItem(pbuf$)
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(o[1])="Check Book Balance as of "+fndate$(glm05a.curstm_date$)
+    pbuf$(o[4])=str(glm05a.book_balance:m1$)
+    OutVect!.addItem(pbuf$)
     difference=glm05a.book_balance-balance
     if difference>0 message$="Short"
     if difference<0 message$="Over"
     if difference<>0
-       print (printer_dev) ""
-       print (printer_dev) @(o[1]),"This Account Is ",message$," By ",@(o[4]),difference:m1$
+       OutVect!.addItem("")
+       dim pbuf$(pbufwidth)
+       pbuf$(o[1])="This Account Is "+message$+" By "
+       pbuf$(o[4])=str(difference:m1$)
+       OutVect!.addItem(pbuf$)
     endif
     if print_outstanding=0
-       print (printer_dev) ""
-       print (printer_dev) @(o[1]),"Paid Checks:",@(o[4]),checkpaid:m1$,@(o[5]),paidcheck:m9$
-       print (printer_dev) @(o[1]),"Paid Transactions:",@(o[4]),otherpaid:m1$,@(o[5]),paidother:m9$
+       OutVect!.addItem("")
+       dim pbuf$(pbufwidth)
+       pbuf$(o[1])="Paid Checks:"
+       pbuf$(o[4])=str(checkpaid:m1$)
+       pbuf$(o[5])=str(paidcheck:m9$)
+       OutVect!.addItem(pbuf$)
+       dim pbuf$(pbufwidth)
+       pbuf$(o[1])="Paid Transactions:"
+       pbuf$(o[4])=str(otherpaid:m1$)
+       pbuf$(o[5])=str(paidother:m9$)
+       OutVect!.addItem(pbuf$)
     endif
 
 rem --- All Done
@@ -270,7 +326,7 @@ rem --- All Done
     goto std_exit
 
 report_heading: rem --- Report Heading
-
+return
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
     if status exitto std_exit
     l=headings+1
@@ -278,32 +334,62 @@ report_heading: rem --- Report Heading
 
 check_heading: rem --- Check transaction subheading
 
-    print (printer_dev) ""
-    print (printer_dev) bar$,@(o[1])," Checks "
-    print (printer_dev) @(o[0]),"Number",@(o[1]),"Type",@(o[2]),"Check Date",@(o[3]),"Description",
-:                       @(o[4]),"Amount",@(o[5]),"Paid?"
-    print (printer_dev) bar$
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1)=bar$
+    pbuf$(o[1],8)=" Checks "
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(o[0])="Number"
+    pbuf$(o[1])="Type"
+    pbuf$(o[2])="Check Date"
+    pbuf$(o[3])="Description"
+    pbuf$(o[4])="Amount"
+    pbuf$(o[5])="Paid?"
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(1)=bar$
+    OutVect!.addItem(pbuf$)
     l=l+4
     return
 
 other_heading: rem --- Other transaction subheading
 
     if l>l9-4 gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) bar$,@(o[1])," Other Transactions "
-    print (printer_dev) @(o[0]),"Number",@(o[1]),"Type",@(o[2]),"Trans Date",@(o[3]),"Description",
-:                       @(o[4]),"Amount",@(o[5]),"Paid?"
-    print (printer_dev) bar$
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1)=bar$
+    pbuf$(o[1],20)=" Other Transactions "
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(o[0])="Number"
+    pbuf$(o[1])="Type"
+    pbuf$(o[2])="Trans Date"
+    pbuf$(o[3])="Description"
+    pbuf$(o[4])="Amount"
+    pbuf$(o[5])="Paid?"
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(1)=bar$
+    OutVect!.addItem(pbuf$)
     l=l+4
     return
 
 balance_heading: rem --- Account balance subheading
 
     if l5>l9-18 gosub report_heading
-    print (printer_dev) ""
-    print (printer_dev) bar$,@(o[1])," Balance Information "
-    print (printer_dev) @(o[4]),"Amount",@(o[5]),"Items"
-    print (printer_dev) bar$
+    OutVect!.addItem("")
+    dim pbuf$(pbufwidth)
+    pbuf$(1)=bar$
+    pbuf$(o[1],21)=" Balance Information "
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(o[4])="Amount"
+    pbuf$(o[5])="Items"
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(pbufwidth)
+    pbuf$(1)=bar$
+    OutVect!.addItem(pbuf$)
     return
 
 rem --- Functions
@@ -383,7 +469,6 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    close(printer_dev,err=*next)
     exit
 
 rem #endinclude std_end.src
