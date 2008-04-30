@@ -10,6 +10,16 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -29,27 +39,40 @@ rem --- Init Data
     dim headings$[headings],a1$(141)
     h4$="For Run Date Of "+fndate$(r0$)
     if steps$="Y" then 
-        let h4$=h4$+" Including All Incomplete Steps" 
+        h4$=h4$+" Including All Incomplete Steps" 
     else 
-        let h4$=h4$+" Including Only Past Due Steps"
+        h4$=h4$+" Including Only Past Due Steps"
     endif
     h5$="For "
-    if pos("L"=type$)>0 then let h5$=h5$+"Past Due Labor And "
-    if pos("P"=type$)>0 then let h5$=h5$+"Past Due P.O.'s And "
+    if pos("L"=type$)>0 then h5$=h5$+"Past Due Labor And "
+    if pos("P"=type$)>0 then h5$=h5$+"Past Due P.O.'s And "
     h5$=h5$(1,len(h5$)-5)
     headings$[0]=h1$
     headings$[1]=h2$
     headings$[2]=h4$
     headings$[3]=h5$,h0=80,h=0,when$=sysinfo.system_date$,clock$=""
 
-rem --- Open Printer
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
 
+rem --- Headings and print positions
+
+ 
+    dim columns$[8,10]
+    columns = 9
+    columns$[0,0]="Pri Cod",            columns$[0,1]="C",columns$[0,2]="4"
+    columns$[1,0]="W.O Num",            columns$[1,1]="C",columns$[1,2]="8"
+    columns$[2,0]="Custom Desc",        columns$[2,1]="C",columns$[2,2]="21"
+    columns$[3,0]="Estmte Start",       columns$[3,1]="C",columns$[3,2]="9"
+    columns$[4,0]="Actual Start",       columns$[4,1]="C",columns$[4,2]="9"
+    columns$[5,0]="Estmte Complte",     columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]="Type",               columns$[6,1]="C",columns$[6,2]="5"
+    columns$[7,0]="Sch Mth",            columns$[7,1]="C",columns$[7,2]="3"
+    columns$[8,0]="Date Requ",          columns$[8,1]="C",columns$[8,2]="9"
+    
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01_dev,1,meter_num,status
+
 rem --- Init Read
 
     read (sfe01_dev,key=firm_id$,dom=*next)
@@ -59,7 +82,6 @@ rem --- Init Read
 rem --- Main Loop Starts
 
     while more
-
         read record (sfe01_dev,end=done) sfe01a$
         if pos(firm_id$=sfe01a.firm_id$)<>1 then break
 
@@ -73,7 +95,7 @@ rem --- Operation Overdue?
 
         if pos("L"=type$)<>0 then
             gosub where_is_wo
-            if opind$<>"" and r0$>date_req$ then let labor$="Y"
+            if opind$<>"" and r0$>date_req$ then labor$="Y"
         endif
 
 rem --- Purchase Overdue?
@@ -82,29 +104,40 @@ rem --- Purchase Overdue?
 
 rem --- Check For Print
 
-        if labor$="" and subs$="" continue
+        if labor$="" and subs$="" then continue
 
 rem --- Print Data
 
-        if l+3>l9 then gosub report_heading
         dim desc$(20)
         if sfe01a.wo_category$="I" then
-            let desc$(1)=sfe01a.item_id$
+            desc$(1)=sfe01a.item_id$
         else
-            let desc$(1)=cvs(sfe01a.description_01$,2)+" "+cvs(sfe01a.description_02$,2)
+            desc$(1)=cvs(sfe01a.description_01$,2)+" "+cvs(sfe01a.description_02$,2)
         endif
         if op$<>"N" then 
             find record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
         endif
 
-        print (printer_dev)@(1),sfe01a.priority$,@(4),sfe01a.wo_no$,@(12),desc$,
-:                          @(33),fndate$(sfe01a.eststt_date$),@(42),fndate$(sfe01a.act_st_date$),
-:                          @(51),fndate$(sfe01a.estcmp_date$),@(61),sfe01a.wo_type$,@(66),sfe01a.sched_flag$ 
-        let l=l+1
+        OutVect!.addItem(sfe01a.priority$)
+        OutVect!.addItem(sfe01a.wo_no$)
+        OutVect!.addItem(desc$)
+        OutVect!.addItem(fndate$(sfe01a.eststt_date$))
+        OutVect!.addItem(fndate$(sfe01a.act_st_date$))
+        OutVect!.addItem(fndate$(sfe01a.estcmp_date$))
+        OutVect!.addItem(sfe01a.wo_type$)
+        OutVect!.addItem(sfe01a.sched_flag$)
+
+        l=l+1
+        
+        blank=fnblank(1)
+
         if cvs(arm01a.customer_name$,2)<>"" then
-            print (printer_dev)@(12),arm01a.customer_name$,@(70) 
-            let l=l+1
-        endif
+            blank=fnblank(2)
+            OutVect!.addItem(arm01a.customer_name$)
+            blank=fnblank(6)
+            blank=fnblank(9)
+        endif        
+
 
 rem --- Operation Loop
 
@@ -121,11 +154,17 @@ rem --- Operation Loop
                     x0$=sfm02a.code_desc$
                 endif
 
-                if l+1>l9 then gosub report_heading
-                print (printer_dev)@(6),"Op:",@(10),ops$[i,0],@(14),x0$,
-:                                  @(35),"Setup Left: ",ops[i,2]-ops[i,3]:"###.00",
-:                                  @(54),"Run Left: ",ops[i,0]-ops[i,1]:"###.00",
-:                                  @(72),fndate$(ops$[i,1]); let l=l+1
+                blank=fnblank(1)
+                OutVect!.addItem("Op: "+ops$[i,0])
+                OutVect!.addItem("  "+x0$)
+                OutVect!.addItem("Setup Left: "+str(ops[i,2]-ops[i,3]:"###.00"))
+                OutVect!.addItem("")
+                OutVect!.addItem("Run Left: "+str(ops[i,0]-ops[i,1]:"###.00"))
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem(fndate$(ops$[i,1]))
+
+                l=l+1
             next i
         endif
 
@@ -133,40 +172,42 @@ rem --- Subcontract Loop
 
         if subs$<>"" and po$="Y" then
             for i=1 to len(subs$) step 3
-                if l+1>l9 then gosub report_heading
                 find record (sfe32_dev,key=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$)+"C"+subs$(i,3)) sfe32a$
                 if steps$="N" and sfe32a.require_date$>r0$ then continue
                 apm01a.vendor_name$=pad("Invalid Vendor",30)
                 find record (apm01_dev,key=firm_id$+sfe32a.vendor_id$,dom=*next) apm01a$
 
                 if sfe32a.po_status$=" " then
-                    let status$="None"
+                    status$="None"
                 else 
                     if sfe32a.po_status$="R" then
-                        let status$="Req."
+                         status$="Req."
                     else 
                         if sfe32a.po_status$="P" then
-                            let status$="P.O."
+                            status$="P.O."
                         else
-                            let status$=""
+                            status$=""
                         fi
                     fi
                 fi    
-
-                print (printer_dev)@(6),"Stat:",@(12),status$,@(17),"Vndr:",@(23),apm01a.vendor_name$,
-:                                  @(53),"Days Left:",sfe32a.lead_time:"##0",@(72),fndate$(sfe02a.require_date$)
+                blank=fnblank(1)
+                OutVect!.addItem("Stat: "+status$)
+                OutVect!.addItem("Vndr:"+apm01a.vendor_name$)
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("Days Left: "+str(sfe32a.lead_time:"##0"))
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem(fndate$(sfe02a.require_date$))
                 l=l+1
             next i
         endif
 
 rem --- Page or line feed
-
-        if l+2>l9 then
-            gosub report_heading
-            continue
-        endif
-        print (printer_dev)'lf',""
+        blank=fnblank(9)
+        blank=fnblank(9)
         l=l+2
+        
 rem Main Loop Ends
     wend
 
@@ -176,20 +217,7 @@ done: rem --- End Of File Here
 
     goto std_exit
 
-report_heading: rem --- Report Heading
 
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)""
-    print (printer_dev)@(0),"Pri",@(6),"W.O.",@(12),"Description",@(33),"Estimate",
-:                      @(43),"Actual",@(51),"Estimate",@(60),"Type",@(65),"Sch",
-:                      @(74),"Date"
-    print (printer_dev)@(0),"Cod",@(5),"Number",@(12),"Customer",@(35),"Start",
-:                      @(44),"Start",@(51),"Complete",@(65),"Mth",@(72),"Required"
-    print (printer_dev)""
-    l=l+4
-    return
 
 where_is_wo: rem --- Find Current Location of W.O.
 
@@ -231,12 +259,12 @@ rem --- Setup Current Op Code
 
     now=0
     for i=0 to len(opind$)/3-1
-        if ops[i,1]>0 then let now=i
-        if ops[i,4]>=sfe01a.sch_prod_qty then let now=i+1
+        if ops[i,1]>0 then now=i
+        if ops[i,4]>=sfe01a.sch_prod_qty then now=i+1
     next i
-    if ops[now,1]>=ops[now,0] then let now=now+1
+    if ops[now,1]>=ops[now,0] then now=now+1
     if now>len(opind$)/3-1 then
-        let opind$=""
+        opind$=""
         return
     endif
 
@@ -342,6 +370,14 @@ rem --- fnglobal$: Return string value of passed STBL variable
         return q1$
     fnend
 
+rem --- fnblank: Create blank cells in OutVect!. No return value
+
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 rem #endinclude std_functions.src
 
 rem #include std_error.src
