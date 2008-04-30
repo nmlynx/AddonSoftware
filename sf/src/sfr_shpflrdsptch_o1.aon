@@ -9,6 +9,16 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -42,10 +52,26 @@ rem --- Retrieve key templates
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02a_key_pritpl$,rd_table_chans$[all],status$
     
 
-rem --- Open Printer
+rem --- Headings and print positions
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
+ 
+    dim columns$[13,10]
+    columns = 13
+    columns$[0,0]="Date Req'd",         columns$[0,1]="C",columns$[0,2]="6"
+    columns$[1,0]="Pri Code",           columns$[1,1]="C",columns$[1,2]="4"
+    columns$[2,0]="WO St",              columns$[2,1]="C",columns$[2,2]="15"
+    columns$[3,0]="WO Tp",              columns$[3,1]="C",columns$[3,2]="2"
+    columns$[4,0]="W.O Number",         columns$[4,1]="C",columns$[4,2]="5"
+    columns$[5,0]="Description",        columns$[5,1]="C",columns$[5,2]="6"
+    columns$[6,0]="At Opn",             columns$[6,1]="C",columns$[6,2]="3"
+    columns$[7,0]="Frm Opn",            columns$[7,1]="C",columns$[7,2]="3"
+    columns$[8,0]="Sched Complete",     columns$[8,1]="C",columns$[8,2]="6"
+    columns$[9,0]="Customer",           columns$[9,1]="C",columns$[9,2]="5"
+    columns$[10,0]="Setup Time",        columns$[10,1]="N",columns$[10,2]="4",columns$[10,3]=ivs01a.cost_mask$
+    columns$[11,0]="Run Time",          columns$[11,1]="N",columns$[11,2]="4",columns$[11,3]=ivs01a.cost_mask$
+    columns$[12,0]="Move Time",         columns$[12,1]="N",columns$[12,2]="3",columns$[12,3]=ivs01a.cost_mask$
+    columns$[13,0]="Critical Ratio",    columns$[13,1]="N",columns$[13,2]="4",columns$[13,3]=ivs01a.unit_mask$
+
 
 rem --- Calculate Actual Transactions
 
@@ -150,59 +176,52 @@ return
 done: rem --- End Of File
 
     t9$="E"
-    if len(sfm05a_key$)=0 then
-        gosub report_heading
-    else
+    if len(sfm05a_key$)<>0 then
         gosub totals
     endif
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)@(2),"Date",@(8),"Pri",@(12),"WO",@(15),"WO",@(18),"W.O.",@(26),"Description",@(47),"At",@(51),"Frm",@(57),"Sched",@(64),"Customer",@(117-m3*2-6),"Setup",@(122-m3-4),"Run",@(118),"Move",@(124),"Critical"
-    print (printer_dev)@(2),"Req'd",@(8),"Cod",@(12),"St",@(15),"Tp",@(18),"Number",@(47),"Opn Opn",@(55),"Complete",@(117-m3*2-5),"Time",@(122-m3-5),"Time",@(118),"Time",@(125),"Ratio"
-    print (printer_dev)""
-    l=l+3
-    return
 
 det_disp: rem --- Detail display
-    if l+1>l9 then gosub report_heading
     if l0=0 then gosub sub_head
     gosub calc_ratio
-    print (printer_dev)@(0),fndate$(sfm05a_key.sched_date$),
-:                      @(9),sfe01a.priority$,
-:                      @(12),sfe01a.wo_status$,
-:                      @(15),sfe01a.wo_type$,
-:                      @(18),sfe01a.wo_no$,
-:                      @(26),desc$,@(47),at$,
-:                      @(51),from$,
-:                      @(55),fndate$(sfe01a.estcmp_date$),
-:                      @(64),arm01a.customer_name$,
-:                      @(122-m3*4),set:ivs01a.cost_mask$,runt:ivs01a.cost_mask$,move:ivs01a.cost_mask$,
-:                      @(120),critr:ivs01a.unit_mask$,
-    if not_found$="Y" then 
-        print (printer_dev)"*" 
-    else 
-        print (printer_dev)""
-    endif
+    OutVect!.addItem(str(fndate$(sfm05a_key.sched_date$)))
+    OutVect!.addItem(sfe01a.priority$)
+    OutVect!.addItem(sfe01a.wo_status$)
+    OutVect!.addItem(sfe01a.wo_type$)
+    OutVect!.addItem(sfe01a.wo_no$)
+    OutVect!.addItem(desc$)
+    OutVect!.addItem(at$)
+    OutVect!.addItem(from$)
+    OutVect!.addItem(str(fndate$(sfe01a.estcmp_date$)))
+    OutVect!.addItem(arm01a.customer_name$)
+    OutVect!.addItem(str(set))
+    OutVect!.addItem(str(runt))
+    OutVect!.addItem(str(move))
+    OutVect!.addItem(str(critr))
+
+    
     l=l+1
     l0=l0+1
     l1=l1+1
     return
 
 sub_head: rem --- Sub Heading
-    if l+2>l9 then gosub report_heading
+    blank=fnblank(14)
     if bm$="Y" then
         find record (bmm08_dev,key=firm_id$+sfm05a_key.op_code$,dom=*next) bmm08a$
-        print (printer_dev)@(0),"Operation Code: ",sfm05a_key.op_code$," ",bmm08a.code_desc$
+        OutVect!.addItem("Operation Code: ")
+        OutVect!.addItem(sfm05a_key.op_code$)
+        OutVect!.addItem(bmm08a.code_desc$)
+        blank=fnblank(11)
     else
         find record (sfm02a_dev,key=firm_id$+sfm05a_key.op_code$,dom=*next) sfm02a$
-        print (printer_dev)@(0),"Operation Code: ",sfm05a_key.op_code$," ",sfm02a.code_desc$
+        OutVect!.addItem("Operation Code: ")
+        OutVect!.addItem(sfm05a_key.op_code$)
+        OutVect!.addItem(sfm02a.code_desc$)
+        blank=fnblank(11)
     endif
-    print (printer_dev)""
+    blank=fnblank(14)
     l=l+2
     return
 
@@ -215,10 +234,21 @@ week_end_subtot: rem --- Week Ending Subtotals
         if dow<>0 then
             call pgmdir$+"adc_daydates.aon",t1$,sdate$,7-dow
             if t9$<>"E" and (sfm05a_key.sched_date$>sdate$ or t0$<>sfm05a_key.op_code$)
-                if l+3>l9 then gosub report_heading
-                print (printer_dev)@(124-m3*3),dashes$(1,m3*2)
-                print (printer_dev)@(40),"Totals For Week Ending: ",fndate$(sdate$),@(122-m3*4),wtotset:ivs01a.cost_mask$,wtotrun:ivs01a.cost_mask$
-                print (printer_dev)""
+                blank=fnblank(10)
+                for i=1 to 2 
+                    OutVect!.addItem("-----------")
+                next i
+                blank=fnblank(2)
+                blank=fnblank(5)
+                OutVect!.addItem("Totals")
+                OutVect!.addItem("For")
+                OutVect!.addItem("Week")
+                OutVect!.addItem("Ending")
+                OutVect!.addItem(str(fndate$(sdate$)))
+                OutVect!.addItem(str(wtotset))
+                OutVect!.addItem(str(wtotrun))
+                blank=fnblank(3)
+                blank=fnblank(13)
                 l=l+3
                 wtotset=0
                 wtotrun=0
@@ -233,11 +263,22 @@ totals: rem --- Totals
 
     gosub week_end_subtot
     if t0$<>"" and l0<>0 then
-        if l+3>l9 then gosub report_heading
-        print (printer_dev)@(124-m3*3),dashes$(1,m3*2)
-        print (printer_dev)@(124-m3*3),@(40),"Total For Op Code ",t0$,@(122-m3*4),totset:ivs01a.cost_mask$,totrun:ivs01a.cost_mask$
-        print (printer_dev)""
-        if t9$<>"E" then gosub report_heading
+        blank=fnblank(10)
+        for i=1 to 2 
+            OutVect!.addItem("-----------")
+        next i
+        blank=fnblank(2)
+        blank=fnblank(5)
+        OutVect!.addItem("Total")
+        OutVect!.addItem("For")
+        OutVect!.addItem("Op")
+        OutVect!.addItem("Code")
+        OutVect!.addItem(t0$)
+        blank=fnblank(1)
+        OutVect!.addItem(str(totset))
+        OutVect!.addItem(str(totrun))
+        blank=fnblank(2)
+        blank=fnblank(13)
     endif
     totset=0
     totrun=0
@@ -367,6 +408,14 @@ rem --- Functions used to retrieve form values
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
     def fnget_table$(q0$)=rd_alias_id$
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 rem --- Miscellaneous functions
 
     def fncenter(q$,q)=int((q-len(q$))/2)
