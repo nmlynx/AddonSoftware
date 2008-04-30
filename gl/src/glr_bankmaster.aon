@@ -71,12 +71,13 @@ rem --- Retrieve parameter records
     m1=len(m1$)
     m9=len(m4$)
     headings=7
+    width=120
 
 rem --- Initializations
 
     dim headings$[headings],h$(width)
     dim o[5]
-    dim bar$(width,"-")
+    dim bar$(width+2,"-")
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
     more=1
@@ -84,8 +85,9 @@ rem --- Initializations
     l9=59
     l=l9+1
     number=0
-    width=132
-    pbufwidth=132
+    pbufwidth=123
+    checkhead=0
+    otherhead=0
     clock$=""
     when$=sysinfo.system_date$
     checkopen=0
@@ -96,7 +98,6 @@ rem --- Initializations
     openother=0
     paidcheck=0
     paidother=0
-    longest=0
 
 rem --- Calculate print positions
 
@@ -104,7 +105,7 @@ rem --- Calculate print positions
     o[1]=o[0]+9
     o[2]=o[1]+7
     o[3]=o[2]+12
-    o[5]=width-m9
+    o[5]=width-m9-2
     o[4]=o[5]-m1-1
 
 rem --- Load GL Account (glm-01) and Bank Master (glm-05) records
@@ -120,25 +121,14 @@ rem --- Load GL Account (glm-01) and Bank Master (glm-05) records
 
 rem --- Build remaining headings
 
-    headings$[3]="     Bank Name: "+cvs(glm05a.name$,2)
+    headings$[3]="Bank Name: "+cvs(glm05a.name$,2)
     headings$[4]="Account Number: "+cvs(glm05a.bnk_acct_no$,2)
-    headings$[5]="  Account Name: "+cvs(glm05a.description$,2)
-    headings$[6]="    GL Account: "+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
-    headings$[7]="   Description: "+cvs(glm01a.gl_acct_desc$,2)
-    for x=3 to 7
-        n=len(headings$[x])
-        if n>longest longest=n
-    next x
-    p=int((width-longest)/2)
-    for x=3 to 7
-        dim h$(width)
-        n=len(headings$[x])
-        h$(p,n)=headings$[x]
-        headings$[x]=h$
-    next x
+    headings$[5]="Account Name: "+cvs(glm05a.description$,2)
+    headings$[6]="GL Account: "+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
+    headings$[7]="Description: "+cvs(glm01a.gl_acct_desc$,2)
 
     dim columns$[0,10]
-    columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="80"
+    columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="125"
     columns=0
 
 rem --- Does the user only want to print outstanding items?
@@ -176,8 +166,7 @@ rem --- This section prints the checks. Get the next check transaction (glt-05) 
           if glt05a.paid_code$<>"O" checkpaid=checkpaid+glt05a.check_amount,paidcheck=paidcheck+1
 :                              else checkopen=checkopen+glt05a.check_amount,opencheck=opencheck+1
           endif
-          if l+1>l9 
-             gosub report_heading
+          if checkhead=0
              gosub check_heading
           endif
           dim pbuf$(pbufwidth)
@@ -197,8 +186,7 @@ rem --- This section prints the checks. Get the next check transaction (glt-05) 
 rem --- Print message if there weren't any checks to print
 
     if opencheck+paidcheck goto other_transactions
-    if l+1>l9 
-       gosub report_heading
+    if checkhead=0
        gosub check_heading
     endif
     dim pbuf$(pbufwidth)
@@ -208,10 +196,8 @@ rem --- Print message if there weren't any checks to print
 
 other_transactions: rem --- Print any other transactions
 
-rem --- Start progress meter and position files
+rem --- Position file
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glt15_dev,1,meter_num,status
     gosub other_heading
     read (glt15_dev,key=glm05_key$,dom=*next)
 
@@ -237,9 +223,9 @@ rem --- Get the next other transaction (glt-15) record.
           if glt15a.posted_code$<>"O" otherpaid=otherpaid+glt15a.trans_amt,paidother=paidother+1
 :                                else otheropen=otheropen+glt15a.trans_amt,openother=openother+1
           endif
-          if l+1>l9 
-             gosub report_heading
-             gosub check_heading
+          if otherhead=0
+             gosub other_heading
+             otherhead=1
           endif
           dim pbuf$(pbufwidth)
           pbuf$(o[0])=glt15a.trans_no$
@@ -258,9 +244,8 @@ rem --- Get the next other transaction (glt-15) record.
 rem --- Print message if there weren't any other transactions to print
 
     if openother+paidother goto balance
-    if l+1>l9 
-       gosub report_heading
-       gosub check_heading
+    if otherhead=0
+       gosub other_heading
     endif
     dim pbuf$(pbufwidth)
     pbuf$(o[0])="No other transactions found" 
@@ -325,13 +310,6 @@ rem --- All Done
 
     goto std_exit
 
-report_heading: rem --- Report Heading
-return
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    l=headings+1
-    return
-
 check_heading: rem --- Check transaction subheading
 
     OutVect!.addItem("")
@@ -344,18 +322,18 @@ check_heading: rem --- Check transaction subheading
     pbuf$(o[1])="Type"
     pbuf$(o[2])="Check Date"
     pbuf$(o[3])="Description"
-    pbuf$(o[4])="Amount"
+    pbuf$(o[4]+m1-6)="Amount"
     pbuf$(o[5])="Paid?"
     OutVect!.addItem(pbuf$)
     dim pbuf$(pbufwidth)
     pbuf$(1)=bar$
     OutVect!.addItem(pbuf$)
+    checkhead=1
     l=l+4
     return
 
 other_heading: rem --- Other transaction subheading
 
-    if l>l9-4 gosub report_heading
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
     pbuf$(1)=bar$
@@ -366,25 +344,25 @@ other_heading: rem --- Other transaction subheading
     pbuf$(o[1])="Type"
     pbuf$(o[2])="Trans Date"
     pbuf$(o[3])="Description"
-    pbuf$(o[4])="Amount"
+    pbuf$(o[4]+m1-6)="Amount"
     pbuf$(o[5])="Paid?"
     OutVect!.addItem(pbuf$)
     dim pbuf$(pbufwidth)
     pbuf$(1)=bar$
     OutVect!.addItem(pbuf$)
+    otherhead=1
     l=l+4
     return
 
 balance_heading: rem --- Account balance subheading
 
-    if l5>l9-18 gosub report_heading
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
     pbuf$(1)=bar$
     pbuf$(o[1],21)=" Balance Information "
     OutVect!.addItem(pbuf$)
     dim pbuf$(pbufwidth)
-    pbuf$(o[4])="Amount"
+    pbuf$(o[4]+m1-6)="Amount"
     pbuf$(o[5])="Items"
     OutVect!.addItem(pbuf$)
     dim pbuf$(pbufwidth)
@@ -469,6 +447,9 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    rd_called$="YES"
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
     exit
 
 rem #endinclude std_end.src
