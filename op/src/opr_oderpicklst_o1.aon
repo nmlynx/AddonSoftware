@@ -314,7 +314,7 @@ ready:
             if printer_dev close (printer_dev,err=*next)
             call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
             if o9=2 goto std_exit
-            msg_id$="AON_UPDT_QUERY"
+            msg_id$="AON_UPDT_PICK_QUERY"
             dim x$:stbl("+SYSINFO_TPL")
             dim msg_tokens$[1]
             x$=stbl("+SYSINFO")                                                            
