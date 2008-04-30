@@ -10,9 +10,24 @@ find_code:
 	endif
 return
 
+disable_fields:
+	rem --- used to disable/enable controls
+	rem --- ctl_name$ sent in with name of control to enable/disable (format "ALIAS.CONTROL_NAME")
+	rem --- ctl_stat$ sent in as D or space, meaning disable/enable, respectively
+
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+
+return
+
 
 #include std_missing_params.src
 [[GLS_COLUMNS.BSHO]]
+
 num_files=2
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
@@ -65,6 +80,24 @@ UserObj!=SysGUI!.makeVector()
 
 UserObj!.addItem(codes!)
 UserObj!.addItem(codeList!)
+
+ctl_stat$=" "
+ctl_name$="<<DISPLAY>>.RECORD_CD_1"
+gosub disable_fields
+ctl_name$="<<DISPLAY>>.RECORD_CD_2"
+gosub disable_fields
+ctl_name$="<<DISPLAY>>.RECORD_CD_3"
+gosub disable_fields
+ctl_name$="<<DISPLAY>>.RECORD_CD_4"
+gosub disable_fields
+ctl_name$="<<DISPLAY>>.BUD_CD_1"
+gosub disable_fields
+ctl_name$="<<DISPLAY>>.BUD_CD_2"
+gosub disable_fields
+ctl_name$="<<DISPLAY>>.BUD_CD_3"
+gosub disable_fields
+ctl_name$="<<DISPLAY>>.BUD_CD_4"
+gosub disable_fields
 [[GLS_COLUMNS.ADIS]]
 rem look at cols and tps in param rec; translate those to matching entry in the <<DISPLAY>> lists and set selected index
 
