@@ -9,6 +9,16 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -67,6 +77,24 @@ rem --- Retrieve key templates
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFW_LABOREFF","PRIMARY",sfw05a_key_tpl$,rd_table_chans$[all],status$
 
+rem --- Headings and print positions
+
+      
+    dim columns$[11,10]
+    columns = 12
+    columns$[0,0]="WO #",               columns$[0,1]="C",columns$[0,2]="25"
+    columns$[1,0]="Type",               columns$[1,1]="C",columns$[1,2]="18"
+    columns$[2,0]="Begin Date",         columns$[2,1]="C",columns$[2,2]="4"
+    columns$[3,0]="End Date",           columns$[3,1]="C",columns$[3,2]="4"
+    columns$[4,0]="Labor Hours",        columns$[4,1]="N",columns$[4,2]="5",columns$[4,3]=m2$
+    columns$[5,0]="Direct Total",       columns$[5,1]="N",columns$[5,2]="5",columns$[5,3]=m1$
+    columns$[6,0]="Overhead Total",     columns$[6,1]="N",columns$[6,2]="5",columns$[6,3]=m1$
+    columns$[7,0]="Labor Hours",        columns$[7,1]="N",columns$[7,2]="5",columns$[7,3]=m2$
+    columns$[8,0]="Direct Total",       columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m1$
+    columns$[9,0]="Overhead Total",     columns$[9,1]="N",columns$[9,2]="5",columns$[9,3]=m1$
+    columns$[10,0]="Hours Variance",    columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m2$
+    columns$[11,0]="Variance Percent",  columns$[11,1]="N",columns$[11,2]="5",columns$[11,3]="#####.00%"
+    
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,sfw05a_dev,1,meter_num,status
@@ -80,7 +108,6 @@ rem --- Main Read
     dim sfw05a_key$:sfw05a_key_tpl$
 
     while more
-
         sfw05a_key$=key(sfw05a_dev,end=*break)
         if pos(firm_id$=sfw05a_key$)<>1 then break
         if sfw05a_key.op_code$<>t1$ then gosub op_code_subtot
@@ -94,7 +121,7 @@ rem --- Breaks
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
         find record (sfe01_dev,key=firm_id$+"  "+sfw05a.wo_no$) sfe01a$
-        if sfe01a.wo_category$="I"
+        if sfe01a.wo_category$="I" then
             ivm01a.item_desc$(1)="Not On File"
             find record (ivm01a_dev,key=firm_id$+sfe01a.item_id$,dom=*break) ivm01a$
             ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
@@ -107,21 +134,41 @@ label1: rem --- PRINT
         else 
             variance=0
         endif
-        print (printer_dev)sfw05a.wo_no$,"  ",sfe01a.wo_type$,@(99-m9),fndate$(sfw05a.trans_date_01$),"  ",
-:       fndate$(sfw05a.trans_date_02$),@(117-m9),sfw05a.std_hrs:m2$,sfw05a.std_dir_tot:m1$,sfw05a.std_ovhd_tot:m1$," ",
-:       sfw05a.actual_hrs:m2$,sfw05a.act_dir_tot:m1$,sfw05a.act_ovhd_tot:m1$,sfw05a.std_hrs-sfw05a.actual_hrs:m2$,
+
+        OutVect!.addItem(sfw05a.wo_no$)
+        OutVect!.addItem(sfe01a.wo_type$)
+        OutVect!.addItem(fndate$(sfw05a.trans_date_01$))
+        OutVect!.addItem(fndate$(sfw05a.trans_date_02$))
+        OutVect!.addItem(str(sfw05a.std_hrs))
+        OutVect!.addItem(str(sfw05a.std_dir_tot))
+        OutVect!.addItem(str(sfw05a.std_ovhd_tot))
+        OutVect!.addItem(str(sfw05a.actual_hrs))
+        OutVect!.addItem(str(sfw05a.act_dir_tot))
+        OutVect!.addItem(str(sfw05a.act_ovhd_tot))
+        OutVect!.addItem(str(sfw05a.std_hrs-sfw05a.actual_hrs))
+
+
         if sfe01a.cls_cst_todt<>0 then 
-            print (printer_dev)variance:"#####.00%", 
+            if sfe01a.wo_status$="C" then 
+                OutVect!.addItem(str(variance:"#####.00%")+" *Cmp*")         
+            else 
+                OutVect!.addItem(""+"*Cmp*")         
+            endif
         else 
-            print (printer_dev)"********",
+            if sfe01a.wo_status$="C" then 
+                OutVect!.addItem("*Cmp*"+"********")         
+            else 
+                OutVect!.addItem(""+"********")         
+            endif
         endif
-        if sfe01a.wo_status$="C" then 
-            print (printer_dev)"*Cmp*" 
-        else 
-            print (printer_dev)""
+
+        if sfe01a.wo_category$<>"I" then 
+            OutVect!.addItem(sfe01a.description_01$)  
+            blank=fnblank(11)
+        else
+            OutVect!.addItem(ivm01a.item_desc$)  
+            blank=fnblank(11)
         endif
-        if sfe01a.wo_category$<>"I" then print (printer_dev)@(2),sfe01a.description_01$
-        if sfe01a.wo_category$="I" then print (printer_dev)ivm01a.item_desc$
         l=l+2
         l0=l0+1,l1=l1+1,l2=l2+1
         x=0 
@@ -141,69 +188,80 @@ label1: rem --- PRINT
 done: rem --- End
 
     t9$="E"
-    if h=0 then gosub report_heading
-    if l+2>l9 then gosub report_heading
     gosub op_code_subtot
     if u[3]<>0 then 
         u[6]=u[0]*100/u[3] 
     else 
         u[6]=0
     endif
-    print (printer_dev)@(117-m9),dashes$
-    print (printer_dev)@(0),"Report Total: ",@(117-m9),u[0]:m2$,u[1]:m1$,
-:                      u[2]:m1$," ",u[3]:m2$,u[4]:m1$,u[5]:m1$,u[0]-u[3]:m2$,u[6]:"#######.00%"
+    blank=fnblank(4)
+    for i=1 to 7
+        OutVect!.addItem(dashes$)
+    next i
+    blank=fnblank(2)
+    OutVect!.addItem("Report Total: ")
+    blank=fnblank(3)
+    OutVect!.addItem(str(u[0]))
+    OutVect!.addItem(str(u[1]))
+    OutVect!.addItem(str(u[2]))
+    OutVect!.addItem(str(u[3]))
+    OutVect!.addItem(str(u[4]))
+    OutVect!.addItem(str(u[5]))
+    OutVect!.addItem(str(u[0]-u[3]))
+    OutVect!.addItem(str(u[6]:"#######.00%"))
 
 rem --- All Done!!
 
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)""
-    print (printer_dev)@(117-m9),h8$," ",h9$,@(112),"Labor ",@(118),"Efficiency"
-    print (printer_dev)@(101-m9),"Begin",@(111-m9),"End",@(117-m9),h7$," ",h7$,@(112),"Hours",@(118),"Variance"
-    print (printer_dev)"WO #",@(7),"Type",@(101-m9),"Date",@(111-m9),"Date",@(117-m9),h6$," ",h6$,@(112),"Vnce",@(118),"Percent"
-    print (printer_dev)""
-    l=l+5
-    return
- 
-
 sub_head: rem --- Sub Heading
 
-    if l+3>l9 then gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)"Operation: ",t1$,"  ",opdesc$
-    print (printer_dev)""
     l=l+3
+    blank=fnblank(12)
+    OutVect!.addItem("Operation: "+t1$)
+    OutVect!.addItem(opdesc$)
+    blank=fnblank(10)
+    blank=fnblank(12)
     return
 
 label2: rem --- Sub/Sub Heading
 
     if l+1>l9 then gosub sub_head
-    print (printer_dev)"WO Type: ",t2$,"  ",typedesc$
+    OutVect!.addItem("WO Type: " + t2$)
+    OutVect!.addItem(typedesc$)
+    blank=fnblank(10)
     l=l+1
     return
 
 rem --- W/O Op Code Subtotals Here
     
-    if t0$<>"" 
-        if t9$="" then let t9$="T"
+    if t0$<>"" then
+        if t9$="" then t9$="T"
         gosub op_code_subtot
-        if t9$="T" then let t9$="",t1$="",t2$=""
+        if t9$="T" then t9$="",t1$="",t2$=""
         if l+2>l9 then gosub sub_head
-        if t[3]<>0 then let t[6]=t[0]*100/t[3] else let t[6]=0
-        print (printer_dev)@(117-m9),dashes$
-        print (printer_dev)@(10),"Department: ",t0$," Totals: ",@(117-m9),t[0]:m2$,t[1]:m1$,t[2]:m1$," ",
-:                          t[3]:m2$,t[4]:m1$,t[5]:m1$,t[0]-t[3]:m2$,t[6]:"#####.00%"
+        if t[3]<>0 then t[6]=t[0]*100/t[3] else t[6]=0
+        blank=fnblank(4)
+        for i=1 to 7
+            OutVect!.addItem(dashes$)
+        next i
+        blank=fnblank(2)
+        OutVect!.addItem("Department: "+t0$)
+        OutVect!.addItem("Totals: ")
+        blank=fnblank(2)
+        OutVect!.addItem(str(t[0]))
+        OutVect!.addItem(str(t[1]))
+        OutVect!.addItem(str(t[2]))
+        OutVect!.addItem(str(t[3]))
+        OutVect!.addItem(str(t[4]))
+        OutVect!.addItem(str(t[5]))
+        OutVect!.addItem(str(t[0]-t[3]))
+        OutVect!.addItem(str(t[6]))
         l=l+2
     endif
 
     if t9$<>"" then return
     dim t[7]
-
     dim dep$(1)
     dep$(1)=sfw05a_key.op_code$
     t0$=dep$
@@ -211,32 +269,43 @@ rem --- W/O Op Code Subtotals Here
 
 op_code_subtot: rem --- Op Codes Subtotals Here
 
-    if t1$<>"" 
-            
-        if wotype$="Y" 
-            if t9$="" then let t9$="S"
+    if t1$<>"" then
+        if wotype$="Y" then
+            if t9$="" then t9$="S"
             gosub wo_type_code
         endif
-
-        if t9$="S" then let t9$="",t2$=""
-        if l1>1 
-            if l+2>l9 then gosub report_heading
-            if s[3]<>0 then let s[6]=s[0]*100/s[3] else let s[6]=0
-            print (printer_dev)@(117-m9),dashes$
-            print (printer_dev)@(10),"Op Code: ",t1$," Totals: ",@(117-m9),s[0]:m2$,s[1]:m1$,s[2]:m1$," ",
-:                               s[3]:m2$,s[4]:m1$,s[5]:m1$,s[0]-s[3]:m2$,s[6]:"#######.00%"
+        if t9$="S" then t9$="",t2$=""
+        if l1>1 then
+            if s[3]<>0 then s[6]=s[0]*100/s[3] else s[6]=0
+            blank=fnblank(4)
+            for i=1 to 7
+                OutVect!.addItem(dashes$)
+            next i
+            blank=fnblank(2)
+            OutVect!.addItem("Op Code: "+t1$+" Totals: ")
+            blank=fnblank(2)
+            OutVect!.addItem(str(s[0]))
+            OutVect!.addItem(str(s[1]))
+            OutVect!.addItem(str(s[2]))
+            OutVect!.addItem(str(s[3]))
+            OutVect!.addItem(str(s[4]))
+            OutVect!.addItem(str(s[5]))
+            OutVect!.addItem(str(s[0]-s[3]))
+            OutVect!.addItem(str(s[6]))
+            blank=fnblank(12)
             l=l+2
         endif 
         l1=0
         l2=0
-
     endif 
-
     if t9$<>"" then return
     dim s[7]
     t1$=sfw05a_key.op_code$
-    if bminstalled$="Y" then find record (bmm08a_dev,key=firm_id$+t1$,dom=label3) bmm08a$
-    if bminstalled$<>"Y" then find record (sfm02a_dev,key=firm_id$+t1$,dom=*next) sfm02a$
+    if bminstalled$="Y" then 
+        find record (bmm08a_dev,key=firm_id$+t1$,dom=label3) bmm08a$
+    else 
+        find record (sfm02a_dev,key=firm_id$+t1$,dom=*next) sfm02a$
+    endif
 
 label3:
 
@@ -247,25 +316,33 @@ label3:
 
 wo_type_code:  rem --- W/O Type Codes Here
 
-    if t2$<>"" 
-
-        if l2>1 
-
+    if t2$<>"" then
+        if l2>1 then
             if l+3>l9 then gosub sub_head
-            if r[3]<>0 then let r[6]=r[0]*100/r[3] else let r[6]=0
-            print (printer_dev)@(117-m9),dashes$
-            print (printer_dev)@(10),"WO Type: ",t2$," Totals: ",@(117-m9),r[0]:m2$,r[1]:m1$,
-:                              r[2]:m1$," ",r[3]:m2$,r[4]:m1$,r[5]:m1$,r[0]-r[3]:m2$,r[6]:"#######.00%"
-            print (printer_dev)""
+            if r[3]<>0 then r[6]=r[0]*100/r[3] else r[6]=0
+            blank=fnblank(4)
+            for i=1 to 7
+                OutVect!.addItem(dashes$)
+            next i
+            blank=fnblank(2)
+            OutVect!.addItem("WO Type: "+t2$+" Totals: ")
+            blank=fnblank(2)
+            OutVect!.addItem(str(r[0]))
+            OutVect!.addItem(str(r[1]))
+            OutVect!.addItem(str(r[2]))
+            OutVect!.addItem(str(r[3]))
+            OutVect!.addItem(str(r[4]))
+            OutVect!.addItem(str(r[5]))
+            OutVect!.addItem(str(r[0]-r[3]))
+            OutVect!.addItem(str(r[6]))
+            blank=fnblank(12)
             l=l+3
-
         endif 
         l2=0
-
     endif 
 
     if t9$<>"" then return
-    if l2<=1
+    if l2<=1 then
         dim r[7]
         t2$=sfw05a_key.wo_type$
         find record (sfm10a_dev,key=firm_id$+"A"+t2$,dom=*next) sfm10a$
@@ -274,9 +351,12 @@ wo_type_code:  rem --- W/O Type Codes Here
     endif
     return
 
+
+
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
+
 
     def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
     def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
@@ -288,6 +368,15 @@ rem --- Functions used to retrieve form values
 rem --- Miscellaneous functions
 
     def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- fnblank: Create blank cells in OutVect!. No return value
+
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- Format inventory item description
 
