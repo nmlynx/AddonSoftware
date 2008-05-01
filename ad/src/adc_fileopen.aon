@@ -66,14 +66,16 @@ rem --- Initializations
 
     status=0
     batch=0
+    retry_value=0
 
 arguments: rem --- Edit arguments
 
     if begfile>endfile goto std_exit
 
 rem --- Open requested files
-
+open_file_loop:
     errors=0
+    retry_value=1
     for x=begfile to endfile
         channels[x]=0
         basename$=cvs(files$[x],2)
@@ -153,7 +155,8 @@ rem --- Any errors encountered during the open loop?
     if errors goto error_message 
 
 rem --- Process options by file
-
+options_loop:
+    retry_value=2
     for x=begfile to endfile
         basename$=cvs(files$[x],2)
         if cvs(files$[x],2)="" continue
@@ -197,8 +200,17 @@ error_message: rem --- An error was encountered. Display error message and exit.
     title$="Error Recovery"
     buttons=5
     icon=16
+    msg_return=msgbox(error$,buttons+icon,title$,err=std_exit)
+    if sverr=0 and msg_return=4
+        begfile=x
+        errors=0
+        if retry_value=1
+            goto open_file_loop
+        else
+            goto options_loop
+        endif
+    endif    
     status=sverr+1
-    x=msgbox(error$,buttons+icon,title$,err=std_exit)
     goto std_exit
 
 get_file_description: rem --- Return file description
