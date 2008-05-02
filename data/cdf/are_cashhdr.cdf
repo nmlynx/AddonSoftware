@@ -206,7 +206,6 @@ user_tpl.binp_pay_amt=0
 Form!.getControl(num(user_tpl.GLind_id$)).setText("")
 Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 
-callpoint!.setStatus("REFRESH")
 [[ARE_CASHHDR.ASIZ]]
 if UserObj!<>null()
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
@@ -421,7 +420,6 @@ disable_key_fields:
 
 	for wk=0 to 3
 		ctl_name$=key_fields$[wk]
-		ctl_stat$="D"
 		gosub disable_fields
 	next wk
 return
@@ -570,10 +568,9 @@ rem --- cashbal, are-31
 
 	next updt_loop
 	endif
-	callpoint!.setStatus("CLEAR-NEW"); rem CLEAR clears modified flag; NEW sets up for new record
-	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
-	gridInvoice!.clearMainGrid()
 
+	callpoint!.setStatus("NEWREC"); rem sets up for new record
+	
 return
 
 
