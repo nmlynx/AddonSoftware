@@ -1,3 +1,41 @@
+[[ADM_PROCBATCHES.BEND]]
+rem --- see if process ID of this record is same as set in +PROCESS_ID by adc_getbatch...don't permit user to select batch from a different process
+rem --- hopefully at some point we'll be able to run this form w/ an automatic filter on process ID
+
+if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.PROCESS_ID"),3)<>stbl("+PROCESS_ID")
+
+	callpoint!.setMessage("PROC_INVALID")
+	callpoint!.setStatus("ABORT")
+
+endif
+
+if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"),3)=""
+	callpoint!.setStatus("ABORT")
+endif
+[[ADM_PROCBATCHES.ARNF]]
+rem --- Setup defaults
+	callpoint!.setColumnData("ADM_PROCBATCHES.DATE_OPENED",date(0:"%Yd%Mz%Dz"))
+	callpoint!.setColumnData("ADM_PROCBATCHES.LSTUSE_DATE",date(0:"%Yd%Mz%Dz"))
+	callpoint!.setColumnData("ADM_PROCBATCHES.LSTUSE_TIME",date(0:"%hz%mz"))
+	callpoint!.setColumnData("ADM_PROCBATCHES.PROCESS_ID",stbl("+PROCESS_ID"))
+	callpoint!.setColumnData("ADM_PROCBATCHES.TIME_OPENED",date(0:"%hz%mz"))
+	callpoint!.setColumnData("ADM_PROCBATCHES.USER_ID",sysinfo.user_id$)
+	callpoint!.setColumnData("ADM_PROCBATCHES.DESCRIPTION",stbl("+BATCH_DESC"))
+	callpoint!.setStatus("MODIFIED-REFRESH")
+[[ADM_PROCBATCHES.BWRI]]
+rem --- see if process ID of this record is same as set in +PROCESS_ID by adc_getbatch...don't permit user to select batch from a different process
+rem --- hopefully at some point we'll be able to run this form w/ an automatic filter on process ID
+
+if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.PROCESS_ID"),3)<>stbl("+PROCESS_ID")
+
+	callpoint!.setMessage("PROC_INVALID")
+	callpoint!.setStatus("ABORT")
+
+endif
+
+if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"),3)=""
+	callpoint!.setStatus("ABORT")
+endif
 [[ADM_PROCBATCHES.ARAR]]
 x$=stbl("+BATCH_NO","."+callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"))
 [[ADM_PROCBATCHES.AWRI]]
@@ -9,7 +47,7 @@ rem --- disable key field if no new recs allowed
 
 	if stbl("+ALLOW_NEW_BATCH",err=*next)<>"Y"
 		ctl_name$="ADM_PROCBATCHES.BATCH_NO"
-		ctl_stat$="D"
+		ctl_stat$="I"
 		gosub disable_fields
 	endif
 [[ADM_PROCBATCHES.<CUSTOM>]]
@@ -26,13 +64,3 @@ disable_fields:
 	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 
 return
-[[ADM_PROCBATCHES.AREC]]
-rem --- Setup defaults
-	callpoint!.setColumnData("ADM_PROCBATCHES.DATE_OPENED",date(0:"%Yd%Mz%Dz"))
-	callpoint!.setColumnData("ADM_PROCBATCHES.LSTUSE_DATE",date(0:"%Yd%Mz%Dz"))
-	callpoint!.setColumnData("ADM_PROCBATCHES.LSTUSE_TIME",date(0:"%hz%mz"))
-	callpoint!.setColumnData("ADM_PROCBATCHES.PROCESS_ID",sysinfo.task_desc$)
-	callpoint!.setColumnData("ADM_PROCBATCHES.TIME_OPENED",date(0:"%hz%mz"))
-	callpoint!.setColumnData("ADM_PROCBATCHES.USER_ID",sysinfo.user_id$)
-	callpoint!.setColumnData("ADM_PROCBATCHES.DESCRIPTION",stbl("+BATCH_DESC"))
-	callpoint!.setStatus("MODIFIED")
