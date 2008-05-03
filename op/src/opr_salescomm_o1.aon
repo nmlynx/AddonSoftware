@@ -10,6 +10,16 @@ rem --- All Rights Reserved
         seterr std_error
         setesc std_error
 
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
         pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -23,14 +33,9 @@ rem --- Retrieve sysinfo data
         milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
-rem --- Open printer
-
-        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-        if status then goto std_exit
-
 rem --- Initializations
 
-        dim a[10],c[1],d[1],t[9],u[9],w[1],x[1],o[11],headings$[6]
+        dim a[10],c[1],d[1],t[9],u[9],w[1],x[1],o[11],headings$[8]
         x0$="First Date"
         x1$="Last Date"
         h5$=""
@@ -52,24 +57,53 @@ rem --- Initializations
         h=0
         h0=132
         x0$="Beginning Date: "+x0$
-        x1$="   Ending Date: "+x1$
+        x1$="Ending Date    : "+x1$
         call pgmdir$+"adc_sizemask.aon",m1$,m1,11,13
         more=1
+        times=1
+        if option$="B" then
+            dim columns$[9,10]
+            columns = 10
+
+            columns$[0,0]="Inv.No",             columns$[0,1]="C",columns$[0,2]="8"
+            columns$[1,0]="Customer",           columns$[1,1]="C",columns$[1,2]="30"
+            columns$[2,0]="Date",               columns$[2,1]="C",columns$[2,2]="8"
+            columns$[3,0]="Gross Sales",        columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]=m1$
+            columns$[4,0]="Other",              columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$
+            columns$[5,0]="Cost",               columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
+            columns$[6,0]="Gross Profit",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$
+            columns$[7,0]="G.P %",              columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m4$
+            columns$[8,0]="Comm %",             columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m4$
+            columns$[9,0]="Commission",         columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m1$
+       else
+            dim columns$[10,10]
+            columns = 11
+
+            columns$[0,0]="Inv.No",             columns$[0,1]="C",columns$[0,2]="8"
+            columns$[1,0]="Customer",           columns$[1,1]="C",columns$[1,2]="30"
+            columns$[2,0]="Date",               columns$[2,1]="C",columns$[2,2]="8"
+            columns$[3,0]="Gross Sales",        columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]=m1$
+            columns$[4,0]="Other",              columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$
+            columns$[5,0]="Cost",               columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
+            columns$[6,0]="Gross Profit",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$
+            columns$[7,0]="G.P %",              columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m4$
+            columns$[8,0]="Comm %",             columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m4$
+            columns$[9,0]="Commission",         columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m1$
+            columns$[10,0]="Comm. Due",         columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m1$
+        endif
 
 rem --- Headings
 
         dim h1$(h0),h2$(h0),j$(5*m1+2*m4,"-")
         headings$[0]=n1$
         headings$[1]=n3$
-        h1$(1)="Beginning Salesperson: "+h6$
-        h1$(fncenter(h4$,h0),len(h4$))=h4$
-        h1$(h0-len(x0$))=x0$
-        h2$(1)="   Ending Salesperson: "+h7$
-        h2$(fncenter(h8$,h0),len(h8$))=h8$
-        h2$(h0-len(x1$))=x1$
-        headings$[2]=h1$
-        headings$[3]=h2$
 
+        headings$[2]=h4$
+        headings$[3]=h8$
+        
+        headings$[4]="Beginning Salesperson: "+h6$+"     "+x0$
+        headings$[5]="Ending Salesperson    : "+h7$+"     "+x1$
+        headings$[6]="[HEADER]"
 rem --- Print positions
 
         o[11]=h0-m1
@@ -124,6 +158,7 @@ rem --- Position File Pointer
 Control_Breaks: rem --- Control Breaks
 
                 if opt71a.SLSPSN_CODE$<>t0$ then gosub Salesperson_Break
+                
 
                 if option$<>"B" then
 rem --- Calculate commission due
@@ -143,26 +178,28 @@ rem --- Calculate commission due
 rem --- Print
               
 
-                if l>l9 then gosub report_heading
+rem                
                 x0=0
                 a[8]=opt71a.TOTAL_SALES*opt71a.COMM_PERCENT/100
                 due$=""
                 if opt71a.TOTAL_SALES<>0 then x0=100*(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)/opt71a.TOTAL_SALES
                 if commission$="P" then a[8]=(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)*opt71a.COMM_PERCENT/100
-                if option$="P" then due$=str(a[9]:m1$)
-                print (printer_dev)
-:                                @(o[0]),opt71a.AR_INV_NO$,
-:                                @(o[1]),fnmask$(opt71a.CUSTOMER_ID$,m0$),
-:                                @(o[2]),arm01a.customer_name$,
-:                                @(o[3]),fndate$(opt71a.INVOICE_DATE$),
-:                                @(o[4]),opt71a.TOTAL_SALES:m1$,
-:                                @(o[5]),opt71a.COMM_AMT:m1$,
-:                                @(o[6]),opt71a.TOTAL_COST:m1$,
-:                                @(o[7]),opt71a.TOTAL_SALES-opt71a.TOTAL_COST:m1$,
-:                                @(o[8]),x0:m4$,
-:                                @(o[9]),opt71a.COMM_PERCENT:m4$,
-:                                @(o[10]),a[8]:m1$,
-:                                @(o[11]),due$
+                if option$="P" then due$=str(a[9])
+
+                OutVect!.addItem(opt71a.AR_INV_NO$)
+                OutVect!.addItem(fnmask$(opt71a.CUSTOMER_ID$,m0$)+" "+arm01a.customer_name$)
+                OutVect!.addItem(fndate$(opt71a.INVOICE_DATE$))
+                OutVect!.addItem(str(opt71a.TOTAL_SALES))
+                OutVect!.addItem(str(opt71a.COMM_AMT))
+                OutVect!.addItem(str(opt71a.TOTAL_COST))
+                OutVect!.addItem(str(opt71a.TOTAL_SALES-opt71a.TOTAL_COST))
+                OutVect!.addItem(str(x0))
+                OutVect!.addItem(str(opt71a.COMM_PERCENT))
+                OutVect!.addItem(str(a[8]))
+                if option$="P" then
+                    OutVect!.addItem(due$)
+                endif
+
                 l=l+1
                 l1=l1+1
                 t1=t1+1
@@ -192,23 +229,34 @@ done: rem --- All done
 
     t9$="E"
     gosub Salesperson_Break
+    subheading$=""
     x0=0
     t0$=""
     x$="Report Totals"
     h5$="Report Summary"
-    gosub report_heading
-    print (printer_dev)t0," Total Salespersons"
+    xwk = fnblank(1)
+    OutVect!.addItem(str(t0)+" Total Salespersons")
+    if option$="P" then
+        xwk = fnblank(9)
+    else
+        xwk = fnblank(8)
+    endif
+
     if u[6]<>0 then x0=100*(u[6]-u[7])/u[6]
-    if option$="P" then due$=str(u[9]:m1$)
-             print (printer_dev)
-:                               @(o[4]-len(x$)),x$,
-:                               @(o[4]),u[6]:m1$,
-:                               @(o[5]),u[5]:m1$,
-:                               @(o[6]),u[7]:m1$,
-:                               @(o[7]),u[6]-u[7]:m1$,
-:                               @(o[8]),x0:m4$,
-:                               @(o[10]),u[8]:m1$,
-:                               @(o[11]),due$
+    if option$="P" then due$=str(u[9])
+    xwk = fnblank(1)
+    OutVect!.addItem(x$)
+    xwk = fnblank(1)
+    OutVect!.addItem(str(u[6]))
+    OutVect!.addItem(str(u[5]))
+    OutVect!.addItem(str(u[7]))
+    OutVect!.addItem(str(u[6]-u[7]))
+    OutVect!.addItem(str(x0))
+    xwk = fnblank(1)
+    OutVect!.addItem(str(u[8]))
+    if option$="P" then
+        OutVect!.addItem(due$)
+    endif
 
 rem --- Averages
 
@@ -219,65 +267,76 @@ rem --- Averages
     x0=0
     x$="Report Averages"
     if u[6]<>0 then x0=100*(u[6]-u[7])/u[6]
-    if option$="P" then due$=str(u[9]:m1$)
+    if option$="P" then due$=str(u[9])
     u[3]=0
     if commission$="S" and u[6]<>0 then u[3]=100*u[8]/u[6]
     if commission$="P" and u[6]-u[7]<>0 then u[3]=100*u[8]/(u[6]-u[7])
-             print (printer_dev)
-:                               @(o[4]-len(x$)),x$,
-:                               @(o[4]),u[6]:m1$,
-:                               @(o[5]),u[5]:m1$,
-:                               @(o[6]),u[7]:m1$,
-:                               @(o[7]),u[6]-u[7]:m1$,
-:                               @(o[8]),x0:m4$,
-:                               @(o[9]),u[3]:m4$,
-:                               @(o[10]),u[8]:m1$,
-:                               @(o[11]),due$
+
+    xwk = fnblank(1)
+    OutVect!.addItem(x$)
+    xwk = fnblank(1)
+    OutVect!.addItem(str(u[6]))
+    OutVect!.addItem(str(u[5]))
+    OutVect!.addItem(str(u[7]))
+    OutVect!.addItem(str(u[6]-u[7]))
+    OutVect!.addItem(str(x0))
+    OutVect!.addItem(str(u[3]))
+    OutVect!.addItem(str(u[8]))
+    if option$="P" then
+        OutVect!.addItem(due$)
+    endif
+
     goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=9
-        
-        
-    headings$[5]=h5$
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],6,h,h0,when$,clock$,status
-    if status then exitto std_exit
-             print (printer_dev)
-:                               @(o[0]),"Invoice",
-:                               @(o[4]+m1-6),"Gross",
-:                               @(o[7]+m1-6),"Gross",
-:                               @(h1),h1$
-             print (printer_dev)
-:                               @(o[0]),"Number",
-:                               @(o[1]),"Customer",
-:                               @(o[3]+2),"Date",
-:                               @(o[4]+m1-6),"Sales",
-:                               @(o[5]+m1-6),"Other",
-:                               @(o[6]+m1-5),"Cost",
-:                               @(o[7]+m1-7),"Profit",
-:                               @(o[8]+m4-5),"GP %",
-:                               @(o[9]+m4-7),"Comm %",
-:                               @(o[10]+m1-11),"Commission",
-:                               @(h2),h2$
-    print (printer_dev)""
-    return
 
 Salesperson_Break: rem --- Salesperson Break
 
     if t0$<>"" then
-          if l1<>0 then   
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                OutVect!.addItem("")
+                if option$="P" then
+                    OutVect!.addItem("")
+                endif
+
+rem          if l1<>0 then   
                 x0=0
-                 x$="Total For "+h5$
+                x$="Total For "+h5$
                 if len(x$)>o[4] then x$=x$(1,o[4]-1)
                 if t[6]<>0 then x0=100*(t[6]-t[7])/t[6]
-                if option$="P" then due$=str(t[9]:m1$)
-                print (printer_dev)@(o[4]),j$
-                print (printer_dev)@(o[4]-len(x$)),x$,@(o[4]),t[6]:m1$,@(o[5]),t[5]:m1$,@(o[6]),t[7]:m1$,@(o[7]),t[6]-t[7]:m1$,@(o[8]),x0:m4$,@(o[10]),t[8]:m1$,@(o[11]),due$
+                if option$="P" then due$=str(t[9])
+
+                xwk = fnblank(1)
+                OutVect!.addItem(x$)
+                xwk = fnblank(1)
+                OutVect!.addItem(str(t[6]))
+                OutVect!.addItem(str(t[5]))
+                OutVect!.addItem(str(t[7]))
+                OutVect!.addItem(str(t[6]-t[7]))
+                OutVect!.addItem(str(x0))
+                xwk = fnblank(1)
+                OutVect!.addItem(str(t[8]))
+                if option$="P" then
+                    OutVect!.addItem(str(due$))
+                endif
+                if option$="P" then
+                    xwk = fnblank(11)
+                    xwk = fnblank(11)
+                else
+                    xwk = fnblank(10)
+                    xwk = fnblank(10)
+                endif
                 t0=t0+1
-           endif
+
     endif
 Find_Record:
+
     if t9$<>"" then return
     dim t[9]
     t0$=opt71a_key.SLSPSN_CODE$
@@ -286,6 +345,9 @@ Find_Record:
     l1=0
     find record (arm10_dev,key=firm_id$+"F"+t0$,dom=*next) arm10f$
     h5$="Salesperson"+t0$+" "+cvs(arm10f.CODE_DESC$,2)
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(h5$)
+
     return
 
 Search_Invoice: rem --- Search Invoice Transactions
@@ -319,6 +381,8 @@ Invoice_Balance: rem --- Zero Balance Cash Invoice ?
     sold=-opt41a.invoice_amt,paid=opt41a.tendered_amt
     return
 
+
+
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -350,6 +414,15 @@ rem --- Date/time handling functions
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
