@@ -10,6 +10,16 @@ rem --- All Rights Reserved
         seterr std_error
         setesc std_error
 
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
         pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -52,15 +62,22 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-        p8$=Option!.getOptionData("option_all")
-
+        wo_open$=Option!.getOptionData("open")
+        wo_quoted$=Option!.getOptionData("quoted")
+        wo_backord$=Option!.getOptionData("backorders")
+        wo_cred$=Option!.getOptionData("credit")
+        wo_status$=""
+        if wo_open$="Y" then wo_status$=wo_status$+"O"
+        if wo_quoted$="Y" then wo_status$=wo_status$+"Q"
+        if wo_backord$="Y" then wo_status$=wo_status$+"B"
+        if wo_cred$="Y" then wo_status$=wo_status$+"C"
+        
 rem --- Retrieve parameter records
 
         ars01a_key$=firm_id$+"AR00"
         find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
         ivs01a_key$=firm_id$+"IV00"
         find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
 
 rem --- Parameters
 
@@ -94,6 +111,20 @@ rem --- Initializations
         clock$=""
         when$=sysinfo.system_date$
 
+        dim columns$[9,10]
+        columns = 10
+
+        columns$[0,0]="Customer",       columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="",               columns$[1,1]="C",columns$[1,2]="20"
+        columns$[2,0]="Order No",       columns$[2,1]="C",columns$[2,2]="10"
+        columns$[3,0]="Order Date",     columns$[3,1]="C",columns$[3,2]="8"
+        columns$[4,0]="Ship Date",      columns$[4,1]="C",columns$[4,2]="8"
+        columns$[5,0]="P.O NO",         columns$[5,1]="C",columns$[5,2]="8"
+        columns$[6,0]="Ship-Via",       columns$[6,1]="C",columns$[6,2]="10"
+        columns$[7,0]="Terms",          columns$[7,1]="C",columns$[7,2]="20"
+        columns$[8,0]="Ord.Type",       columns$[8,1]="C",columns$[8,2]="5"
+        columns$[9,0]="Order Amt",      columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$
+
 rem retrieve template for OPE_ORDHDR record key
         call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDHDR","PRIMARY",ope01a_key_tpl$,table_chans$[all],status$
         dim ope01a_key$:ope01a_key_tpl$
@@ -109,48 +140,12 @@ rem --- Display Resource
         resparams$[0]=pgm(-2)
         gosub display_fields
 
-option_1: rem --- Option
-        v0$="S"
-        v1$="^C",v2$=p8$,v3$="",v4$="O=Open Orders, Q=Quotes, B=Backorders, C=Credit Held Orders, <F1>=All Orders",v0=4,v1=40,v2=3,x$="",h3$="",control_id=3000,i0=0
-        on v3 goto label_one,label_two,option_1,label_one
-
-label_one:
-        if v$="" then
-
-label_two:
-            v$=optn$
-        endif
-
-        if len(p8$)<1
-            p8$=v$
-        else
-            p8$=p81$
-            if p8$(1,1)="O" then
-                h3$="Open"
-             else
-                if p8$(1,1)="Q" then
-                    h3$="Quoted"
-                endif
-                if p8$(1,1)="B" then
-                    h3$="Backordered"
-                endif
-                if p8$(1,1)="C" then
-                    h3$="Credit Held"
-                endif
-            endif
-        endif
-        if len(p8$)<4 then
-             h3$=h3$+" Orders Only"
-        else
-             h3$="All Orders"
-        endif
-
-
-        if len(h3$)>80-v1-len(p8$)-1 then
-             x$=h3$(1,80-v1-len(p8$)-1)
-        else
-             x$=h3$
-        endif
+rem --- Setup Headings
+        if pos("O"=wo_status$)>0 then h0$=h0$+"Open/"
+        if pos("Q"=wo_status$)>0 then h0$=h0$+"Quoted/"
+        if pos("B"=wo_status$)>0 then h0$=h0$+"Backorders/"
+        if pos("C"=wo_status$)>0 then h0$=h0$+"Credit Held/"
+        p8$="Includes All "+h0$(1,len(h0$)-1)+" Work Orders"
 
 rem --- Run report overlay
 rem --- File Initializations
@@ -158,7 +153,7 @@ rem --- File Initializations
         call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
         if status then goto std_exit
         call pgmdir$+"adc_progress.aon","N","","","","",0,ope01_dev,1,meter_num,status
-        headings$[2]=h3$
+        headings$[2]=p8$
         read (ope01_dev,key=firm_id$,dom=*next)
 
 rem --- Next key
@@ -227,19 +222,20 @@ rem --- Add Up Order Amount
 
 rem --- Print Status Line
 
-        if l+1>l9 then gosub report_heading
-        print (printer_dev)customer$,
-:                           @(m0+7),name$,
-:                           @(37+m0),ope01a.order_no$,
-:                           @(45+m0),fndate$(ope01a.order_date$),
-:                           @(54+m0),fndate$(ope01a.shipmnt_date$),
-:                           @(63+m0),ope01a.customer_po_no$(1,10),
-:                           @(74+m0),ope01a.ar_ship_via$,
-:                           @(85+m0),ope01a.terms_code$," ",terms$,
-:                           @(106+m0)," ",x9$,
-:                           @(h0-m1),amnt:m1$
+        OutVect!.addItem(customer$)
+        OutVect!.addItem(name$)
+        OutVect!.addItem(ope01a.order_no$)
+        OutVect!.addItem(fndate$(ope01a.order_date$))
+        OutVect!.addItem(fndate$(ope01a.shipmnt_date$))
+        OutVect!.addItem(ope01a.customer_po_no$(1,10))
+        OutVect!.addItem(ope01a.ar_ship_via$)
+        OutVect!.addItem(ope01a.terms_code$+" "+terms$)
+        OutVect!.addItem(" "+x9$)
+        OutVect!.addItem(str(amnt))
+
         customer$=""
-        name$=phone$,phone$=""
+        name$=phone$
+        phone$=""
         l=l+1
         number=number+1
         t0=t0+1
@@ -255,34 +251,13 @@ rem --- End
 
         done=1
         gosub customer_break
-        if l+2>l9 then gosub report_heading
-        print (printer_dev)""
-        print (printer_dev)t0," Total Orders ",
-:                           @(h0-m1-13),"Total Amount",
-:                           @(h0-m1),t1:m1$
+        OutVect!.addItem(str(t0))
+        OutVect!.addItem(" Total Orders ")
+        xwk = fnblank(6)
+        OutVect!.addItem("Total Amount")
+        OutVect!.addItem(str(t1))
+
         goto std_exit
-
-report_heading: rem --- Report Heading
-
-        l=headings+1
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],3,h,h0,when$,clock$,status
-        if status then exitto std_exit
-        print (printer_dev)
-:                           @(37+m0),"Order",
-:                           @(46+m0),"Order",
-:                           @(56+m0),"Ship",
-:                           @(106+m0),"Order"
-        print (printer_dev)"Customer",
-:                           @(37+m0),"Number",
-:                           @(47+m0),"Date",
-:                           @(56+m0),"Date",
-:                           @(63+m0),"PO Number",
-:                           @(74+m0),"Ship-Via",
-:                           @(85+m0),"Terms",
-:                           @(106+m0),"Type",
-:                           @(h0-13),"Order Amount"
-        l=l+2
-        return
 
 display_fields:
 
@@ -303,8 +278,9 @@ customer_break: rem --- Customer break
 
         if t0$<>"" then
             if number<=1 then
-                if l+1>l9 then gosub report_heading
-                print (printer_dev)@(m0+7),name$
+                xwk = fnblank(1)
+                OutVect!.addItem(name$)
+                xwk = fnblank(8)
                 l=l+1
             endif
         endif
@@ -317,8 +293,6 @@ customer_break: rem --- Customer break
         customer$=fnmask$(ope01a.customer_id$(1,p[0]),m0$)
         name$=arm01a.customer_name$
         phone$=fnmask$(arm01a.phone_no$,m8$)
-        if l+2>l9 then gosub report_heading
-        print (printer_dev)""
         l=l+1
         return
 
@@ -336,6 +310,14 @@ rem #include fndate.src
 
 rem #endinclude fndate.src
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- FNF$ AlphaNumeric Masking Function
 
