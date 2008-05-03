@@ -9,6 +9,16 @@ rem --- All Rights Reserved
         setesc std_error
         seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -38,9 +48,26 @@ rem --- Retrieve key templates
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFW_WOXDATE","PRIMARY",sfw04a_key_pritpl$,rd_table_chans$[all],status$
 
 rem --- Additional File Opens
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
     v=5
+
+rem --- Headings and print positions
+
+ 
+    dim columns$[12,10]
+    columns = 12
+    columns$[0,0]="W.O. Number",        columns$[0,1]="C",columns$[0,2]="6"
+    columns$[1,0]="Date Opened",        columns$[1,1]="C",columns$[1,2]="6"
+    columns$[2,0]="WO Type",            columns$[2,1]="C",columns$[2,2]="3"
+    columns$[3,0]="Ct",                 columns$[3,1]="C",columns$[3,2]="2"
+    columns$[4,0]="St",                 columns$[4,1]="C",columns$[4,2]="2"
+    columns$[5,0]="Est Start",          columns$[5,1]="C",columns$[5,2]="6"
+    columns$[6,0]="Est Complete",       columns$[6,1]="C",columns$[6,2]="6"
+    columns$[7,0]="Actual Start",       columns$[7,1]="C",columns$[7,2]="6"
+    columns$[8,0]="Last Activity",      columns$[8,1]="C",columns$[8,2]="6"
+    columns$[9,0]="Description",        columns$[9,1]="C",columns$[9,2]="25"
+    columns$[10,0]="Item",              columns$[10,1]="C",columns$[10,2]="7"
+    columns$[11,0]="Customer CoNumber", columns$[11,1]="C",columns$[11,2]="6"
+    columns$[12,0]="Order Number",      columns$[12,1]="C",columns$[12,2]="6"
 
 rem --- Background
 
@@ -53,8 +80,9 @@ rem --- Init Read
 rem --- Main Read
 
     dim sfw04a_key$:sfw04a_key_pritpl$
+    blank=fnblank(13)
+
     while more
-        
         sfw04a_key$=key(sfw04a_dev,end=*break)
         if pos(firm_id$=sfw04a_key$)<>1 then break
 
@@ -71,74 +99,82 @@ rem --- Breaks
 
 rem --- Print
 
-        if l+1>l9 then gosub report_heading
-
-
-        print (printer_dev)sfe01a.wo_no$,@(19),sfe01a.wo_type$,
-:                   @(23),sfe01a.wo_category$,@(26),sfe01a.wo_status$,
-
-        if sfe01a.wo_status$="C" then
-            print (printer_dev)@(29),"*Closed*",
-        else
-            print (printer_dev)@(29),fndate$(sfe01a.eststt_date$),
-        endif
-
-        print (printer_dev)@(9),fndate$(sfe01a.opened_date$),
-:                          @(47),fndate$(sfe01a.act_st_date$),@(56),fndate$(sfe01a.LSTACT_DATE$),
+        OutVect!.addItem(sfe01a.wo_no$)
+        OutVect!.addItem(str(fndate$(sfe01a.opened_date$)))
+        OutVect!.addItem(sfe01a.wo_type$)
+        OutVect!.addItem(sfe01a.wo_category$)
+        OutVect!.addItem(sfe01a.wo_status$)
 
         if sfe01a.wo_status$="C" then
-            print (printer_dev)@(38),fndate$(sfe01a.closed_date$),
+            OutVect!.addItem("*Closed*")
         else
-            print (printer_dev)@(38),fndate$(sfe01a.estcmp_date$),
+            OutVect!.addItem(str(fndate$(sfe01a.eststt_date$)))
         endif
+
+        if sfe01a.wo_status$="C" then
+            OutVect!.addItem(str(fndate$(sfe01a.closed_date$)))
+        else
+            OutVect!.addItem(str(fndate$(sfe01a.estcmp_date$)))
+        endif
+
+        OutVect!.addItem(str(fndate$(sfe01a.act_st_date$)))
+        OutVect!.addItem(str(fndate$(sfe01a.lstact_date$)))
 
         if sfe01a.wo_category$="I"
             dim desc$(30)
             desc$(1)=ivm01a.item_desc$
-            print (printer_dev)@(67),desc$,
-:                              @(121-c1-i9),sfe01a.item_id$(1,i9),fill(10),; rem escape, why print spaces to a printer?
+            OutVect!.addItem(desc$)
+            OutVect!.addItem(sfe01a.item_id$)
         endif
+        
 
-        if sfe01a.wo_category$="N" then print (printer_dev)@(121-c1-i9),"Special",fill(10),
         desc$(1)=sfe01a.description_01$
-        if pos(sfe01a.wo_category$="NR")>0 then print (printer_dev)@(67),desc$,
+        if pos(sfe01a.wo_category$="NR")>0 then 
+            OutVect!.addItem(desc$)
+        endif
+        if sfe01a.wo_category$="N" then 
+            OutVect!.addItem("Special")
+        endif
         if sfs01a.ar_interface$="Y" then
             if op$="Y" and pos(" "<>sfe01a.customer_id$)>0 then
-                print (printer_dev)@(132-9-c1),fnmask$(sfe01a.customer_id$(1,c0),c1$),
+                OutVect!.addItem(str(fnmask$(sfe01a.customer_id$,c1$)))
+            else
+                OutVect!.addItem("")
             endif
-            if pos(" "<>sfe01a.order_no$)>0 then print (printer_dev)@(132-7),sfe01a.order_no$,
+            if pos(" "<>sfe01a.order_no$)>0 then 
+                OutVect!.addItem(str(sfe01a.order_no$))
+            else
+                OutVect!.addItem("")
+            endif
+        else
+            blank=fnblank(2)
         endif
 
-        print (printer_dev)""
         l=l+1
         l0=l0+1
-
     wend
 
 
 done: rem --- End
 
-        if l+2>l9 then gosub report_heading
-        print (printer_dev)'lf',"Total Records: ",l0
+        blank=fnblank(13)
+        OutVect!.addItem("Total Records: "+str(l0))
+        blank=fnblank(12)
+        blank=fnblank(13)
         goto std_exit
-
-report_heading: rem --- Report Heading
-
-        l=headings+2
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-        if status then exitto std_exit
-        print (printer_dev)"W.O.",@(11),"Date",@(19),"WO",@(32),"Est",@(42),"Est",@(49),"Actual",@(58),"Last",
-:       @(117),"Customer",@(127),"Order"
-        print (printer_dev)"Number",@(9),"Opened",@(18),"Type Ct St",@(31),"Start",@(39),"Complete",@(50),
-:       "Start",@(57),"Activity",@(67),"Description",@(121-c1-i9),"Item Code",@(118),"Number",@(126),"Number"
-        print (printer_dev)'lf'
-        l=l+4
-        return
 
 rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+        def fnblank(q0)
+            for q1=1 to q0
+                OutVect!.addItem("")
+            next q1
+            return q1
+        fnend
         def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
         def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
