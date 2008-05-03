@@ -23,10 +23,17 @@ rem --- Retrieve sysinfo data
         milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
-rem --- Open Printer
 
-        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-        if status then goto std_exit
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 
 rem --- Initializations
         more=1
@@ -47,6 +54,23 @@ rem --- Initializations
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","U","",m2$,0,m2
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","R","",m3$,0,m3
         call pgmdir$+"adc_sizemask.aon",m1$,m1,8,13
+
+rem ---  column heading
+
+            dim columns$[10,10]
+            columns=10
+               columns$[0,0]="Invoice Number",            columns$[0,1]="C",columns$[0,2]="10"
+               columns$[1,0]="Customer No",               columns$[1,1]="C",columns$[1,2]="10"
+               columns$[2,0]="Date",                      columns$[2,1]="C",columns$[2,2]="20"
+               columns$[3,0]="Sales",                     columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m1$
+               columns$[4,0]="Tax",                       columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$
+               columns$[5,0]="Freight",                   columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
+               columns$[6,0]="Discount",                  columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
+               columns$[7,0]="Total",                     columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
+               columns$[8,0]="Cost",                      columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
+               columns$[9,0]="Gross Profit",              columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$
+               columns$[10,0]="GP%",                      columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m4$
+              
 
 rem --- Background
 
@@ -72,11 +96,10 @@ rem --- Main Loop (Invoice Read)
 rem --- Void
 
         if opt01a.invoice_type$="V" then
-            if l+1>l9 then gosub report_heading
 
-            print (printer_dev)
-:                               @(0),opt01a.ar_inv_no$,
-:                               @(8),"Void"
+               OutVect!.addItem(opt01a.ar_inv_no$)
+               OutVect!.addItem("Void")
+               xwk=fnblank(9)
             l=l+1
             continue
         endif
@@ -88,49 +111,59 @@ rem ---  Get Customer Name
 
 rem --- Print
         
-        if l+2>l9 then gosub report_heading
+
         x0=0
         if opt01a.total_sales<>0 then
              x0=100*(opt01a.total_sales-opt01a.total_cost)/opt01a.total_sales
         endif
 
-        print (printer_dev)@(0),opt01a.ar_inv_no$,
-:                          @(8),fnmask$(opt01a.customer_id$(1,p[0]),m0$),
-:                          @(9+m0),fndate$(opt01a.invoice_date$),
-:                          @(18+m0),opt01a.total_sales:m1$,
-:                          opt01a.tax_amount:m1$,opt01a.freight_amt:m1$,opt01a.discount_amt:m1$,
-:                          opt01a.total_sales+opt01a.tax_amount+opt01a.freight_amt-opt01a.discount_amt:m1$,
-:                          opt01a.total_cost:m1$,opt01a.total_sales-opt01a.total_cost:m1$,x0:m4$
-        print (printer_dev)@(10),arm01a.customer_name$
+                               OutVect!.addItem(opt01a.ar_inv_no$)
+                               OutVect!.addItem(opt01a.customer_id$)
+                               OutVect!.addItem(fndate$(opt01a.invoice_date$))
+                               OutVect!.addItem(str(opt01a.total_sales$))
+                               OutVect!.addItem(str(opt01a.tax_amount))
+                               OutVect!.addItem(str(opt01a.freight_amt))
+                               OutVect!.addItem(str(opt01a.discount_amt))
+                               OutVect!.addItem(str(opt01a.total_sales+opt01a.tax_amount+opt01a.freight_amt-opt01a.discount_amt))
+                               OutVect!.addItem(str(opt01a.total_cost))
+                               OutVect!.addItem(str(opt01a.total_sales-opt01a.total_cost))
+                               OutVect!.addItem(str(x0))
+                               xwk=fnblank(2)
+                               OutVect!.addItem(arm01a.customer_name$)
+                               xwk=fnblank(8)
+                     
         l=l+2
 
 rem --- Totals
 
-        t0=t0+1
-        t[0]=t[0]+opt01a.tax_amount
-        t[1]=t[1]+opt01a.freight_amt
-        t[2]=t[2]+opt01a.discount_amt
-        t[3]=t[3]+opt01a.comm_percent
-        t[4]=t[4]+opt01a.taxable_amt
-        t[5]=t[5]+opt01a.comm_amt
-        t[6]=t[6]+opt01a.total_sales
-        t[7]=t[7]+opt01a.total_cost
+                                t0=t0+1
+                                t[0]=t[0]+opt01a.tax_amount
+                                t[1]=t[1]+opt01a.freight_amt
+                                t[2]=t[2]+opt01a.discount_amt
+                                t[3]=t[3]+opt01a.comm_percent
+                                t[4]=t[4]+opt01a.taxable_amt
+                                t[5]=t[5]+opt01a.comm_amt
+                                t[6]=t[6]+opt01a.total_sales
+                                t[7]=t[7]+opt01a.total_cost
  wend
 
 rem --- Main Loop Ends
-
-
-
-        if h=0 or l+4>l9 then gosub report_heading
         x0=0
         if t[6]<>0 then  x0=100*(t[6]-t[7])/t[6]
-        print (printer_dev)'lf',
-:                               @(2),"Total Invoices:",t0
-        print (printer_dev)
-:                               @(2),"Totals:",
-:                               @(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,
-:                                         t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
 
+                                OutVect!.addItem("Total Invoices:")
+                                OutVect!.addItem(str(t0))
+                                xwk=fnblank(9)
+                                OutVect!.addItem("Totals:")
+                                xwk=fnblank(2)
+                                OutVect!.addItem(str(t[6]))
+                                OutVect!.addItem(str(t[0]))
+                                OutVect!.addItem(str(t[1]))
+                                OutVect!.addItem(str(t[2]))
+                                OutVect!.addItem(str(t[6]+t[0]+t[1]-t[2]))
+                                OutVect!.addItem(str(t[7]))
+                                OutVect!.addItem(str(t[6]-t[7]))
+                                OutVect!.addItem(str(x0))         
 rem --- Averages
 
         if t0<>0 then
@@ -139,49 +172,41 @@ rem --- Averages
             next x
             x0=0
             if t[6]<>0 then  x0=100*(t[6]-t[7])/t[6]
-            print (printer_dev)
-:                               @(2),"Averages:",
-:                               @(18+m0),t[6]:m1$,t[0]:m1$,t[1]:m1$,t[2]:m1$,
-:                               t[6]+t[0]+t[1]-t[2]:m1$,t[7]:m1$,t[6]-t[7]:m1$,x0:m4$
+
+                                OutVect!.addItem("Averages:")
+                                xwk=fnblank(2)
+                                OutVect!.addItem(str(t[6]))
+                                OutVect!.addItem(str(t[0]))
+                                OutVect!.addItem(str(t[1]))
+                                OutVect!.addItem(str(t[2]))
+                                OutVect!.addItem(str(t[6]+t[0]+t[1]-t[2]))
+                                OutVect!.addItem(str(t[7]))
+                                OutVect!.addItem(str(t[6]-t[7]))
+                                OutVect!.addItem(str(x0))
+                        
         endif
 
         goto std_exit
+        
 
-report_heading: rem --- Report Heading
-
-        l=headings+1
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-        if status then exitto std_exit
-        print (printer_dev)"Invoice",@(8),"Customer",
-:                                    @(18+m0+7*m1-6),"Gross"
-        print (printer_dev)"Number",
-:                                    @(8),"No.",
-:                                    @(m0+11),"Date",
-:                                    @(18+m0+m1-6),"Sales",
-:                                    @(18+m0+2*m1-4),"Tax",
-:                                    @(18+m0+3*m1-8),"Freight",
-:                                    @(18+m0+4*m1-9),"Discount",
-:                                    @(18+m0+5*m1-6),"Total",
-:                                    @(18+m0+6*m1-5),"Cost",
-:                                    @(18+m0+7*m1-7),"Profit",
-:                                    @(18+m0+7*m1+m4-5),"GP %"
-        print (printer_dev)""
-        l=l+3
-        return
-
-rem --- Detail
-
-        if l+3>l9 then gosub report_heading
         if opt01a.total_cost>999 then  opt01a.total_cost=999.99
         if opt01a.invoice_type$<>"V" then
-             print (printer_dev)@(0),opt01a.customer_id$,@(15),fnmask$(opt01a.ar_inv_no$(1,p[0]),m0$),
-:                              @(23),fndate$(opt01a.invoice_date$),@(33+12-m1),opt01a.tax_amount:m1$,
-:                              @(46+12-m1),opt01a.freight_amt:m1$,@(59+12-m1),opt01a.discount_amt:m1$,
-:                              @(72+12-m1),opt01a.comm_percent:m1$,@(85+12-m1),opt01a.taxable_amt:m1$,
-:                              @(98+12-m1),opt01a.tax_amount+opt01a.discount_amt+opt01a.freight_amt-opt01a.comm_percent+
-:                              opt01a.taxable_amt:m1$,@(111+12-m1),opt01a.total_sales:m1$,
-:                              @(124),opt01a.total_cost:"-##0.00%"
-            print (printer_dev)@(0),arm01a.customer_name$,'lf'
+        
+
+                                 OutVect!.addItem(opt01a.customer_id$)
+                                 OutVect!.addItem(str(opt01a.ar_inv_no$))
+                                 OutVect!.addItem(fndate$(opt01a.invoice_date$))
+                                 OutVect!.addItem(str(opt01a.tax_amount))
+                                 OutVect!.addItem(str(opt01a.freight_amt))
+                                 OutVect!.addItem(str(opt01a.discount_amt))
+                                 OutVect!.addItem(str(opt01a.comm_percent))
+                                 OutVect!.addItem(str(opt01a.taxable_amt))
+                                 OutVect!.addItem(str(opt01a.tax_amount+opt01a.discount_amt+opt01a.freight_amt-opt01a.comm_percent+opt01a.taxable_amt))
+                                 OutVect!.addItem(str(opt01a.taxable_amt))
+                                 OutVect!.addItem(str(opt01a.total_sales))
+                                 OutVect!.addItem(str(opt01a.total_cost))
+                                 OutVect!.addItem(arm01a.customer_name$)
+
             l=l+3
             u[0]=u[0]+opt01a.tax_amount
             u[1]=u[1]+t[1]
@@ -190,17 +215,15 @@ rem --- Detail
             u[3]=u[3]+opt01a.taxable_amt
             u1=u1+opt01a.total_sales
             u=u+opt01a.total_cost
-            return
+            
         endif
 
 rem --- Print VOID
 
-        if l+2>l9 then gosub report_heading
-        print (printer_dev)@(0),opt01a.customer_id$,@(15),fnmask$(opt01a.ar_inv_no$(1,p[0]),m0$),
-:                          @(23),fndate$(opt01a.sequence_000$),"   ****Void****",'lf'
-        l=l+2
-        return
-
+                                OutVect!.addItem(opt01a.customer_id$)
+                                OutVect!.addItem(str(opt01a.ar_inv_no$))
+                                OutVect!.addItem((fndate$(opt01a.sequence_000$))+"   ****Void****",'lf')
+                                l=l+2
 Find_Customer: rem --- Find Customer
 
         arm01a.customer_name$="Not On File"
@@ -283,6 +306,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
             q1$=stbl(q$,err=*next)
             return q1$
         fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- #endinclude std_functions.src
 
