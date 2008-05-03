@@ -22,16 +22,21 @@ rem --- Retrieve sysinfo data
         milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock Files
+rem --- Document initializations
 
-        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-        if status then goto std_exit
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Initializations
         rem t1$=""
         rem t0$=""
         more=1
-        headings=3
+        headings=4
         dim t[1],o[13],headings$[headings]
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
         call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0    
@@ -49,6 +54,52 @@ rem --- Initializations
         l9=59
         l=l9+1,h=0,h0=132,total=0,subtotal=0,done=0
         call pgmdir$+"adc_sizemask.aon",m2$,m2,11,11
+
+rem --- Report Heading
+
+  if p9$="D" then
+
+            dim columns$[13,10]
+            columns=13
+               columns$[0,0]="item",               columns$[0,1]="C",columns$[0,2]="20"
+               columns$[1,0]="prd",                columns$[1,1]="C",columns$[1,2]="5"
+               columns$[2,0]="um",                 columns$[2,1]="C",columns$[2,2]="5"
+               columns$[3,0]="cust",               columns$[3,1]="C",columns$[3,2]="10"
+               columns$[4,0]="order number",       columns$[4,1]="C",columns$[4,2]="10"
+               columns$[5,0]="order date",         columns$[5,1]="C",columns$[5,2]="10"
+               columns$[6,0]="ship date",          columns$[6,1]="C",columns$[6,2]="10"
+               columns$[7,0]="Status",             columns$[7,1]="C",columns$[7,2]="10"
+               columns$[8,0]="OrderTotal",         columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
+               columns$[9,0]="Order Quantity",     columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m2$
+               columns$[10,0]="Comm ?",            columns$[10,1]="C",columns$[10,2]="5"
+               columns$[11,0]="Quantity On Hand",  columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m2$
+               columns$[12,0]="Quantity Committed",columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m2$
+               columns$[13,0]="Quantity Available",columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m2$
+
+        endif
+
+   if p9$="S" then
+
+            dim columns$[13,10]
+            columns=13
+               columns$[0,0]="item",                columns$[0,1]="C",columns$[0,2]="20"
+               columns$[1,0]="prd",                 columns$[1,1]="C",columns$[1,2]="5"
+               columns$[2,0]="um",                  columns$[2,1]="C",columns$[2,2]="5"
+               columns$[3,0]="",                    columns$[3,1]="C",columns$[3,2]="1"
+               columns$[4,0]="",                    columns$[4,1]="C",columns$[4,2]="1"
+               columns$[5,0]="",                    columns$[5,1]="C",columns$[5,2]="15"
+               columns$[6,0]="",                    columns$[6,1]="C",columns$[6,2]="15"
+               columns$[7,0]="",                    columns$[7,1]="C",columns$[7,2]="1"
+               columns$[8,0]="Order Total",         columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
+               columns$[9,0]="Order Quantity",      columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m2$
+               columns$[10,0]="Comm ?",             columns$[10,1]="C",columns$[10,2]="10"
+               columns$[11,0]="Quantity On Hand",   columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m2$
+               columns$[12,0]="Quantity Committed", columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m2$
+               columns$[13,0]="Quantity Available", columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m2$
+
+        endif
+ 
+
 
 
 rem --- Print positions
@@ -78,9 +129,10 @@ rem --- Headings
         more=1
         dim j$(h0-o[8],"-"),x$(h0)
         headings$[0]=n1$
-        headings$[1]=h1$,x$(1)=h4$
-        x$(fncenter(h3$,h0))=h3$
-        x$(h0-len(h5$))=h5$,headings$[2]=h5$
+        headings$[1]=h1$
+        headings$[2]=h4$
+        headings$[3]=h3$
+        headings$[4]="[HEADER]"
 
 rem --- Background
 
@@ -197,13 +249,15 @@ rem --- Order status
 rem --- Print item stuff?
 
             if item$<>"" then
-                if l+3>l9 then gosub report_heading
-                print (printer_dev)
-:                                   @(o[0]),ivm01a.item_id$,
-:                                   @(o[1]),ivm01a.product_type$,
-:                                   @(o[2]),ivm01a.unit_of_sale$
-                print (printer_dev)
-:                                   @(o[0]+2),ivm01a.item_desc$
+
+ 
+                OutVect!.addItem(ivm01a.item_id$)
+                OutVect!.addItem(ivm01a.product_type$)
+                OutVect!.addItem(ivm01a.unit_of_sale$)
+                xwk=fnblank(11)
+                OutVect!.addItem("      " + ivm01a.item_desc$)
+                xwk=fnblank(13)
+
                 l=l+2
                 item$=""
             endif
@@ -211,34 +265,36 @@ rem --- Print item stuff?
 rem --- Print Description for Non-stocks
 
             if nonstock$="Y" then
-                if l+1>l9 then gosub report_heading
-                print (printer_dev)
-:                               @(o[3]-3),ope11a.order_memo$
-                l=l+1
+                 xwk=fnblank(2)
+                 OutVect!.addItem(ope11a.order_memo$)
+                 xwk=fnblank(11)
+                 l=l+1
             endif
 
 rem --- Print detail line
 
-            if l+1>l9 then gosub report_heading
-            print (printer_dev)
-:                              @(o[3]),fnmask$(ope11a_altkey01.customer_id$,m0$),
-:                              @(o[4]),ope01a.order_no$,ope01a.backord_flag$,
-:                              @(o[5]),fndate$(ope01a.order_date$),
-:                              @(o[6]),fndate$(ship$),
-:                              @(o[7]),x$,
-:                              @(o[8]),amount:m1$,
-:                              @(o[9]),ope11a.qty_ordered:m2$,
-:                              @(o[10]+1),ope11a.commit_flag$
-            l=l+1
+               
+                xwk=fnblank(3)
+                OutVect!.addItem(ope11a_altkey01.customer_id$)
+                OutVect!.addItem(ope01a.order_no$+ope01a.backord_flag$)
+                OutVect!.addItem(fndate$(ope01a.order_date$))
+                OutVect!.addItem(fndate$(ship$))
+                OutVect!.addItem(x$)
+                OutVect!.addItem(str(amount))
+                OutVect!.addItem(str(ope11a.qty_ordered))
+                OutVect!.addItem(ope11a.commit_flag$)
+                xwk=fnblank(3)
+            
+               l=l+1
     endif
 
 rem --- Accumulate totals
 
-        t[0]=t[0]+amount
-        t[1]=t[1]+ope11a.qty_ordered
-        l0=l0+1,l1=l1+1
-        total=total+amount
-        subtotal=subtotal+amount
+                t[0]=t[0]+amount
+                t[1]=t[1]+ope11a.qty_ordered
+                l0=l0+1,l1=l1+1
+                total=total+amount
+                subtotal=subtotal+amount
 
 wend
 
@@ -246,50 +302,23 @@ done: rem --- End
 
         done=1
         gosub Warehouse_Break
-        if l+2>l9 then gosub report_heading
         x$="Total For Report"
-        print (printer_dev)
-:                           @(o[8]),j$
-        print (printer_dev)
-:                           @(o[8]-len(x$)),x$,
-:                           @(o[8]),total:m1$
+
+                xwk=fnblank(8)
+                OutVect!.addItem("------------------------")
+                OutVect!.addItem("--------------------------------")
+                OutVect!.addItem("-------")
+                OutVect!.addItem("---------------------------------")
+                OutVect!.addItem("----------------------------------")
+                OutVect!.addItem("------------------------------------")
+                xwk=fnblank(6)
+                OutVect!.addItem(x$)
+                xwk=fnblank(1)
+                OutVect!.addItem(str(total))
+                xwk=fnblank(5)
         goto std_exit
 
-report_heading: rem --- Report Heading
 
-        l=headings+1
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-        if status then exitto std_exit
-        if p9$="D" then print (printer_dev)
-:                                           @(o[4]),"Order",
-:                                           @(o[5]+2),"Order",
-:                                           @(o[6]+2),"Ship",
-        print (printer_dev)
-:                                           @(o[8]+m1-6),"Order",
-:                                           @(o[9]+m2-8),"Order",
-:                                           @(o[10]),"Com",
-:                                           @(o[11]+m2-9),"Quantity",
-:                                           @(o[12]+m2-10),"Quantity",
-:                                           @(o[13]+m2-10),"Quantity"
-        if p9$="D" then print (printer_dev)
-:                                           @(o[3]),"Cust",
-:                                           @(o[4]),"Number",
-:                                           @(o[5]+2),"Date",
-:                                           @(o[6]+2),"Date",
-:                                           @(o[7]),"Status",
-        print (printer_dev)
-:                                           @(o[0]),"Item",
-:                                           @(o[1]),"Prd",
-:                                           @(o[2]),"UM",
-:                                           @(o[8]+m1-6),"Total",
-:                                           @(o[9]+m2-9),"Quantity",
-:                                           @(o[10])," ?",
-:                                           @(o[11]+m2-9),"On Hand",
-:                                           @(o[12]+m2-10),"Committed",
-:                                           @(o[13]+m2-10),"Available"
-        print (printer_dev)""
-        l=l+3
-        return
 
 Warehouse_Break: rem --- Warehouse break
 
@@ -298,12 +327,18 @@ Warehouse_Break: rem --- Warehouse break
             if l0<>0 then
                 l=l+2
                 x$="Total For "+h5$
-                if l>l9 then gosub report_heading
-                print (printer_dev)
-:                                   @(o[8]),j$
-                print (printer_dev)
-:                                   @(o[8]-len(x$)),x$,
-:                                   @(o[8]),subtotal:m1$
+                xwk=fnblank(8)
+                OutVect!.addItem("------------------------")
+                OutVect!.addItem("--------------------------------")
+                OutVect!.addItem("-------")
+                OutVect!.addItem("---------------------------------")
+                OutVect!.addItem("----------------------------------")
+                OutVect!.addItem("------------------------------------")
+                xwk=fnblank(5)
+                OutVect!.addItem(x$)
+                xwk=fnblank(2)
+                OutVect!.addItem(str(subtotal))
+                xwk=fnblank(5)
             endif
         endif
 
@@ -318,10 +353,8 @@ Warehouse_Break: rem --- Warehouse break
         subtotal=0
         find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
         h5$="Warehouse: "+t0$+" "+cvs(ivm10c.short_name$,2)
-        x$(1)=h4$
-        x$(fncenter(h3$,h0))=h3$
-        x$(h0-len(h5$))=h5$
-        headings$[2]=x$
+        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+        HdrVect!.addItem(h5$)
 
         return
 
@@ -332,34 +365,45 @@ Item_Break: rem --- Item break
             avail=ivm02a.qty_on_hand-ivm02a.qty_commit
             x$="Total For Item "+ivm01a.item_id$
             if p9$="S" then
-                if l+3>l9 then gosub report_heading
+
                 if cvs(ivm01a.item_id$,2)="" then  ivm01a.item_desc$="Non-Stock Item(s)"
-                print (printer_dev)
-:                                   @(o[0]),ivm01a.item_id$,
-:                                   @(o[1]),ivm01a.product_type$,
-:                                   @(o[2]),ivm01a.unit_of_sale$,
-:                                   @(o[8]),t[0]:m1$,
-:                                   @(o[9]),t[1]:m2$,
-:                                   @(o[11]),ivm02a.qty_commit:m2$,
-:                                   @(o[12]),ivm02a.qty_commit:m2$,
-:                                   @(o[13]),avail:m2$
-                print (printer_dev)
-:                                   @(o[0]+2),ivm01a.item_desc$
-                print (printer_dev)""
-                l=l+3
-                t[0]=0
-                t[1]=0
+
+                                    OutVect!.addItem(ivm01a.item_id$)
+                                    OutVect!.addItem(ivm01a.product_type$)
+                                    OutVect!.addItem(ivm01a.unit_of_sale$)
+                                    xwk=fnblank(5)
+                                    OutVect!.addItem(str(t[0]))
+                                    OutVect!.addItem(str(t[1]))
+                                    xwk=fnblank(1)
+                                    OutVect!.addItem(str(ivm02a.qty_commit))
+                                    OutVect!.addItem(str(ivm02a.qty_commit))
+                                    OutVect!.addItem(str(avail))
+                                    OutVect!.addItem("      " + ivm01a.item_desc$)
+                                    xwk=fnblank(13)
+                                    
+
+                                    l=l+3
+                                    t[0]=0
+                                    t[1]=0
             else
-                if l+2>l9 then gosub report_heading
-                print (printer_dev)
-:                                   @(o[8]),j$
-                print (printer_dev)
-:                                   @(o[8]-len(x$)),x$,
-:                                   @(o[8]),t[0]:m1$,
-:                                   @(o[9]),t[1]:m2$,
-:                                   @(o[11]),ivm02a.qty_on_hand:m2$,
-:                                   @(o[12]),ivm02a.qty_commit:m2$,
-:                                   @(o[13]),avail:m2$
+
+                                    xwk=fnblank(8)
+                                    OutVect!.addItem("------------------------")
+                                    OutVect!.addItem("--------------------------------")
+                                    OutVect!.addItem("-------")
+                                    OutVect!.addItem("---------------------------------")
+                                    OutVect!.addItem("----------------------------------")
+                                    OutVect!.addItem("------------------------------------")
+                                    xwk=fnblank(4)
+                                    OutVect!.addItem(x$)
+                                    xwk=fnblank(3)
+                                    OutVect!.addItem(str(t[0]))
+                                    OutVect!.addItem(str(t[1]))
+                                    xwk=fnblank(1)
+                                    OutVect!.addItem(str(ivm02a.qty_on_hand))
+                                    OutVect!.addItem(str(ivm02a.qty_commit))
+                                    OutVect!.addItem(str(avail))
+                
                 t[0]=0
                 t[1]=0
             endif
@@ -474,6 +518,14 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
