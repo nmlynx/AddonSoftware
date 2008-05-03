@@ -64,11 +64,19 @@ rem --- Assign form input values to local variables
         
         wh$ = option!.getOptionData("Warehouse_id")
         p8$ = option!.getOptionData("product_type")
-        p7$ = option!.getOptionData("option")
+        wo_open$=Option!.getOptionData("open")
+        wo_quoted$=Option!.getOptionData("quoted")
+        wo_backord$=Option!.getOptionData("backorders")
+        wo_cred$=Option!.getOptionData("credit")
+
+        p7$=""
+        if wo_open$="Y" then p7$=p7$+"O"
+        if wo_quoted$="Y" then p7$=p7$+"Q"
+        if wo_backord$="Y" then p7$=p7$+"B"
+        if wo_cred$="Y" then p7$=p7$+"C"
         p9$ = option!.getOptionData("summ_dtl")   
         p6$ = option!.getOptionData("aging_date")
         p8  = num(option!.getOptionData("days_in_mth"))
-
 
 rem --- Retrieve parameter records
 
@@ -115,23 +123,16 @@ rem --- Initialize Data
         if p7$="" then p7$=optn$
         dim j$(m1+m2*7,"-"),j0$(10,"0"),j1$(50," ")
 
-         if p7$="O" then
+        if p7$=optn$ then
+            h3$=h3$+"All Orders"
+        else
+            if pos("O"=p7$)>0 then h3$=h3$+"Open "
+            if pos("Q"=p7$)>0 then h3$=h3$+"Quoted "
+            if pos("B"=p7$)>0 then h3$=h3$+"Backordered "
+            if pos("C"=p7$)>0 then h3$=h3$+"Credit Held "
+            h3$=h3$+" Orders Only"
+       endif
 
-                h3$=h3$+"Open Orders Only"
-         else
-                if p7$="Q" then
-                    h3$=h3$+"Quoted Orders Only"
-                endif
-                if p7$="B" then
-                    h3$=h3$+"Backordered Orders Only"
-                endif
-                if p7$="C" then
-                    h3$=h3$+"Credit Held Orders Only"
-                endif
-                if p7$=optn$ then
-                    h3$=h3$+"All Orders"
-                endif
-          endif
 
 rem --- retrieve template for OPE_ORDHDR record key
         call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDHDR","PRIMARY",ope01a_key_tpl$,table_chans$[all],status$
@@ -143,8 +144,6 @@ rem --- retrieve template for OPE_ORDDET record key
 
         call pgmdir$+"adc_progress.aon","N","","","","",0,ope01_dev,1,meter_num,status
         call pgmdir$+"adc_clearfile.aon",opw02_dev
-
-
 
         read (ope01_dev,key=firm_id$+"  ",dom=*next)
 
