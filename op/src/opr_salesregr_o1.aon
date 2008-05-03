@@ -10,6 +10,16 @@ rem --- All Rights Reserved
         seterr std_error
         setesc std_error
 
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
         pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -33,6 +43,11 @@ rem --- Parameters
         m0=len(ars01a.customer_output$)
         m1=len(ars01a.amount_mask$)
 
+
+rem --- Parameters
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1 
+
 rem --- Initializations
         more=1
         cntr=0
@@ -53,19 +68,34 @@ rem --- Initializations
         endif
         when$=sysinfo.system_date$
         clock$="",page=0,width=132,l9=55,l=l9+1,headings=5
-        dim headings$[headings],j1$(width),j2$(width,"-"),j3$(width,"=")
+        dim headings$[headings],j1$(width),j2$(width,"-"),j3$(width,"="),j4$(width-100," ")
         headings$[0]=n1$
         headings$[1]=n3$
-        headings$[2]=""
-        dim x$(width)
-        x$(1)="Beginning Customer: "+h5$,x$(int((width-len(h9$))/2))=h9$
-        x$(100)="Beginning Invoice Date: "+h7$
-        headings$[3]=x$
-        dim x$(width)
-        x$(4)="Ending Customer: "+h6$
-        x$(103)="Ending Invoice Date: "+h8$
-        headings$[4]=x$
+rem ***        headings$[2]=""
+        headings$[2]=h9$
+        headings$[3]="Beginning Customer: "+h5$+j4$+"Beginning Invoice Date: "+h7$
+        headings$[4]="Ending Customer     : "+h6$+j4$+"Ending Invoice Date     : "+h8$
 
+rem ***        dim x$(width)
+rem ***        x$(1)="Beginning Customer: "+h5$,x$(int((width-len(h9$))/2))=h9$
+rem ***        x$(100)="Beginning Invoice Date: "+h7$
+rem ***        headings$[3]=x$
+rem ***        dim x$(width)
+rem ***        x$(4)="Ending Customer: "+h6$
+rem ***        x$(103)="Ending Invoice Date: "+h8$
+rem ***        headings$[4]=x$
+
+        dim columns$[7,10]
+        columns = 8
+
+        columns$[0,0]="Customer No & Name", columns$[0,1]="C",columns$[0,2]="30"
+        columns$[1,0]="Inv.No",             columns$[1,1]="C",columns$[1,2]="8"
+        columns$[2,0]="Inv.Date",           columns$[2,1]="C",columns$[2,2]="10"
+        columns$[3,0]="Line.No",            columns$[3,1]="C",columns$[3,2]="8"
+        columns$[4,0]="G.L.No.",            columns$[4,1]="C",columns$[4,2]="8"
+        columns$[5,0]="Description",        columns$[5,1]="C",columns$[5,2]="25"
+        columns$[6,0]="Debit",              columns$[6,1]="C",columns$[6,2]="10"
+        columns$[7,0]="Credit",             columns$[7,1]="C",columns$[7,2]="10"
 
 
 rem --- retrieve template for ARM_CUSTMAST record key
@@ -199,6 +229,17 @@ end_of_file: rem --- End Of File?
     wend
 
 
+rem if summary program exists to glr_accttotalrpt.aon
+    if r5$="S" then
+        retain$="YES"
+        update$=pgmdir$+"glr_accttotalrpt.aon"
+        overlay$=update$
+        out_action$="PRT-PDF"
+        run pgmdir$+"glr_accttotalrpt.aon"
+        goto std_exit
+    endif
+
+    
 rem --- Initial Read From Work File
 
     if r0$="N" then
@@ -211,6 +252,7 @@ rem --- Initial Read From Work File
 temp_flag2:
 
  while more
+    
     if cntr1=0
         arm01a_altkey$=key(arm01_dev,knum=2,end=done)
         if arm01a_altkey.firm_id$<>firm_id$ then break
@@ -220,7 +262,8 @@ temp_flag2:
     endif
 
 heading_read: rem --- Heading Read
-
+    times=0
+    chce=0
     if r0$="A" then
         opw04a_key$=key(opw04_dev,end=*continue)
     else
@@ -240,10 +283,22 @@ heading_read: rem --- Heading Read
         read record (opw04_dev,key=opw04a_key$) opw04a$
 
 rem --- Breaks
+        
+        if opw04a_key.customer_id$<>t0$ then
+            gosub customer_break
+            times=1
+        endif
 
-        if opw04a_key.customer_id$<>t0$ then gosub customer_break
         if opw04a_key.ar_inv_no$<>t1$ then
-            if d3-abs(c3)<>0 then gosub previous_invoice_outof_balance
+rem ***            if times=0
+rem ***                xwk = fnblank(6)
+rem ***            endif
+        if d3-abs(c3)<>0 then chce=1; gosub previous_invoice_outof_balance
+            if times=0
+                xwk = fnblank(6)
+            endif
+
+
 
 rem --- Find Invoice Date
 
@@ -253,8 +308,8 @@ rem --- Print Invoice Number & Date
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         if r5$="D" then 
-            if l+1>l9 then gosub report_heading
-                print (printer_dev)@(39),opw04a_key.ar_inv_no$,@(48),fndate$(opt01a.invoice_date$),
+                OutVect!.addItem(opw04a_key.ar_inv_no$)
+                OutVect!.addItem(fndate$(opt01a.invoice_date$))
             endif
 
             t1$=opw04a_key.ar_inv_no$
@@ -271,16 +326,19 @@ rem --- Find G/L Name
 print_detail: rem --- Print
 
         if r5$="D" then
-            if l+1>l9 then gosub report_heading
-            print (printer_dev)@(58),opw04a_key.line_no$,
-:                              @(63),fnmask$(opw04a_key.gl_account$(1,g[3]),g5$),
-:                              @(64+g5),x1$,
+            OutVect!.addItem(opw04a_key.line_no$)
+            OutVect!.addItem(fnmask$(opw04a_key.gl_account$(1,g[3]),g5$))
+            OutVect!.addItem(x1$)
+
             if opw04a.gl_post_amt>0 then
-                print (printer_dev)@(131-2*m1+2),opw04a.gl_post_amt:ars01a.amount_mask$
+                OutVect!.addItem(str(opw04a.gl_post_amt:m1$))
+                xwk = fnblank(1)
             else
-                print (printer_dev)@(132-m1),abs(opw04a.gl_post_amt):ars01a.amount_mask$
+                xwk = fnblank(1)
+                OutVect!.addItem(str(abs(opw04a.gl_post_amt):m1$))
             endif
             l=l+1
+            xwk = fnblank(3)
         endif
 
         if opw04a.gl_post_amt>0 then
@@ -311,20 +369,31 @@ done: rem --- End
         t9$="E"
         gosub customer_break
         if r5$="D" then
-            if l+2>l9 then gosub report_heading
-            print (printer_dev)@(132-2*m1),j3$(1,2*m1)
-            print (printer_dev)@(10),"Grand Total:",
-            if d2-abs(c2)<>0 then print (printer_dev)@(131-3*m1),"***",
-            print (printer_dev)@(131-2*m1+2),d2:ars01a.amount_mask$,
-:                      @(132-m1),abs(c2):ars01a.amount_mask$,
+            xwk = fnblank(6)
+            OutVect!.addItem("-----------------")
+            OutVect!.addItem("-----------------")
+            xwk = fnblank(6)
+            OutVect!.addItem("-----------------")
+            OutVect!.addItem("-----------------")
+            OutVect!.addItem("Grand Total : ")
+            if d2-abs(c2)<>0 then
+                xwk = fnblank(4)
+                OutVect!.addItem("***")
+            else
+                xwk = fnblank(5)
+            endif
+            OutVect!.addItem(str(d2:m1$))
+            OutVect!.addItem(str(abs(c2):m1$))
         endif
 
 rem --- G/L Account Totals
 
         retain$="YES"
-        run pgmdir$+"glr_accttotalrpt.aon"
+        update$=pgmdir$+"glr_accttotalrpt.aon"
+        overlay$=update$
+        out_action$="PRT-PDF"
+        next_overlay$=overlay$
         goto std_exit
-
 
 ar_account_cash_account: rem --- A/R Account, Cash Account
 
@@ -405,44 +474,23 @@ rem --- Tax Account
 rtn_1:
     return
 
-
-report_heading: rem --- Report Heading
-
-    if r5$="D" then
-        l=0
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-        if status then exitto std_exit
-        print (printer_dev)
-:                           @(0),"Customer",
-:                           @(39),"Invoice",
-:                           @(49),"Invoice",
-:                           @(58),x9$,@(65),"G/L"
-        print (printer_dev)
-:                           @(0),"Number",
-:                           @(7),"Name",
-:                           @(39),"Number",
-:                           @(51),"Date",
-:                           @(58),x8$,
-:                           @(65),"No.",
-:                           @(64+g5),"Description",
-:                           @(width-m1-5),"Debit",
-:                           @(width-7),"Credit",'lf'
-        l=4
-    endif
-
-    return
-    l=l+1
-
 customer_break: rem --- Customer Break
 
     if t0$<>"" then
-        if d3-abs(c3)<>0 then gosub previous_invoice_outof_balance
-        if l+3>l9 then gosub report_heading
+        if d3-abs(c3)<>0 then
+            chce=1
+            gosub previous_invoice_outof_balance
+            chce=0
+        endif
         if r5$="D" then
-            print (printer_dev)@(132-2*m1),j2$(1,2*m1)
-            print (printer_dev)@(10),"Customer ",fnmask$(t0$,ars01a.customer_output$)," Total: ",
-:                              @(131-2*m1+2),d1:ars01a.amount_mask$,
-:                              @(132-m1),abs(c1):ars01a.amount_mask$,'lf'
+            xwk = fnblank(3)
+            OutVect!.addItem("-----------------")
+            OutVect!.addItem("-----------------")
+            OutVect!.addItem("Customer "+t0$+" Total: ")
+            xwk = fnblank(5)
+            OutVect!.addItem(str(d1:m1$))
+            OutVect!.addItem(str(abs(c1):m1$))
+            xwk = fnblank(8)
             l=l+3
         endif
     endif
@@ -455,11 +503,12 @@ customer_break: rem --- Customer Break
         else
             find record (arm01_dev,key=opw04a.firm_id$+arm01a_altkey.alt_sequence$+opw04a.customer_id$,knum=2,dom=label_three) arm01a$
         endif
-        x0$=fnmask$(opw04a.customer_id$,ars01a.customer_output$)+" "+arm01a.customer_name$
+        x0$=fnmask$(opw04a.customer_id$,m0$)+" "+arm01a.customer_name$
         if r5$="D" then
 label_three:
-            if l+1>l9 then gosub report_heading
-            print (printer_dev)@(0),x0$,
+rem ***            if l+1>l9 then rem gosub report_heading
+rem ***            print (printer_dev)@(0),x0$,
+            OutVect!.addItem(x0$)
         endif
 
         t0$=opw04a_key.customer_id$
@@ -476,7 +525,11 @@ previous_invoice_outof_balance: rem --- Previous Invoice Out Of Balance
     gosub invoice_history_detl_retained
     if d3-abs(c3)<>0 then
         if r5$="D" then
-            print (printer_dev)@(131-2*m1),"**",d3:ars01a.amount_mask$,@(132-m1),abs(c3):ars01a.amount_mask$,'lf'
+rem            xwk = fnblank(2)
+rem            OutVect!.addItem("**")
+rem            OutVect!.addItem(str(d3:m1$))
+rem            OutVect!.addItem(str(abs(c3):m1$))
+rem            print (printer_dev)@(131-2*m1),"**",d3:m1$,@(132-m1),abs(c3):m1$,'lf'
             l=l+2
         endif
     endif
@@ -486,7 +539,6 @@ previous_invoice_outof_balance: rem --- Previous Invoice Out Of Balance
 invoice_history_detl_retained: rem --- Invoice History Detail Retained?
 
     read (opt11_dev,key=opw04a_key.firm_id$+opw04a_key.ar_type$+opw04a_key.customer_id$+opw04a_key.ar_inv_no$,dom=*next)
-    rem opt11k$=""
     opt11a_key$=key(opt11_dev,end=*next)
     if pos(opw04a_key.firm_id$+opw04a_key.ar_type$+opw04a_key.customer_id$+opw04a_key.ar_inv_no$=opt11a_key$)=1
         return
@@ -499,12 +551,23 @@ rem --- Summarize Non-Retained Postings
     d0=oob
     gosub update_gl_summary
     if r5$="D" then
-        if l+1>l9 then gosub report_heading
-        print (printer_dev)@(58),"???",@(63),fnmask$(arm10d.gl_ar_acct$(1,g[3]),gls01a.acct_output$),@(64+g5),"***Detail Not Retained***",
+        if chce=0
+            xwk = fnblank(2)
+        endif
+        OutVect!.addItem("???")
+        OutVect!.addItem(fnmask$(arm10d.gl_ar_acct$(1,g[3]),gls01a.acct_output$))
+        OutVect!.addItem("***Detail Not Retained***")
         if oob>0 then
-            print (printer_dev)@(131-2*m1+2),oob:ars01a.amount_mask$
+            OutVect!.addItem(str(oob:m1$))
+            xwk = fnblank(1)
         else
-            print (printer_dev)@(132-m1),abs(oob):ars01a.amount_mask$
+            xwk = fnblank(1)
+            OutVect!.addItem(str(abs(oob):m1$))
+        endif
+        if chce=0 then
+            xwk = fnblank(1)
+        else
+            xwk = fnblank(3)
         endif
         if oob>0 then
             d1=d1+oob
@@ -576,11 +639,27 @@ rem --- Format zip/postal code
 :                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
+        def fndate$(q$)
+            if cvs(q$,2)="" return ""
+            if pos("9"<>q$)=0 return q$
+            testdate$=""
+            testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+            return testdate$
+        fnend
 
-    def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+rem def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
