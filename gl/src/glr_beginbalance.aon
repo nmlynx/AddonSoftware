@@ -26,9 +26,17 @@ rem ---         :   register, update is automatically performed).
 rem --- UPDATE$ : Y=Year End Update (user prompted for permission to close year).
 rem ---         : N=Update Beginning Balances (user prompted for approval to
 rem ---         :   produce the register).
-
+escape;rem check out the totals and remove the rem in the fiscal closed area
     setesc std_error
     seterr std_error
+
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Retrieve the program path
 
@@ -43,13 +51,14 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
     files$[4]="glw-03",ids$[4]="GLW_BEGBAL"
     files$[5]="gls_earnings",ids$[5]="GLS_EARNINGS"
+    files$[6]="glt-04",ids$[6]="GLE_DAILYDETAIL"
     options$[4]="LC"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -59,6 +68,7 @@ rem --- Open/Lock files
     glm02_dev=channels[3]
     glw03_dev=channels[4]
     gls_earnings_dev=channels[5]
+    glt04_dev=channels[6]
 
 rem --- Dimension string templates
 
@@ -69,21 +79,27 @@ rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
     gls01b_key$=firm_id$+"GL01"
+
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     find record (gls_earnings_dev,key=gls01b_key$,err=std_missing_params) gls01b$
+
+    if gls01a.gl_yr_closed$="Y"
+        msg_id$="FISCAL_CLOSED"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=str(num(gls01a.current_year$)-1:"0000")
+        gosub disp_message
+rem        goto std_exit_no_print
+    endif
 
 rem --- Parameters
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,acctlen
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,m2
     total_pers=num(gls01a.total_pers$)
     period=num(gls01a.current_per$)
     year=num(gls01a.current_year$)
     if len(gls01b.gl_account$)>10 then gls01b.gl_account$=gls01b.gl_account$(1,10)
-    m0=len(m0$)
-    m1=len(m1$)
-    m2=len(m2$)
     mp=13
     headings=2
     prior$=str(year-1)
@@ -92,32 +108,16 @@ rem --- Initializations
 
     dim headings$[headings],o[4],totals[1],a[mp],u[mp]
     h0=80
-    h=0
-    l9=59
-    l=l9+1
     more=1
     record$="0"
     action$="R"
-    h1$=n1$
-    h2$=n4$
-    when$=sysinfo.system_date$
-    clock$=""
     unithdr$=""
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
 
-rem --- Print positions
+rem --- Optional heading
 
-    x=m0+1
-    if x<9 x=9
-    o[0]=0
-    o[1]=o[0]+x
-    o[4]=h0
-    if gls01a.units_flag$="Y" o[4]=h0-m2,unithdr$="Units"
-    o[3]=o[4]-m1-1
-    o[2]=o[3]-m1
-    w=o[2]-o[1]-1
-    if w>35 w=35
+    if gls01a.units_flag$="Y" unithdr$="Units"
 
 rem --- Options are based on the lead in program
 rem --- Prompt user for permission to continue for update beginning balances
@@ -125,19 +125,27 @@ rem --- Prompt user for permission to continue for update beginning balances
     if update$="Y" goto closing_year
     msg$="Do you want to produce the Beginning Balances Register?"
     call pgmdir$+"adc_yesno.aon",1,msg$,1,v$,v3
-    if v$<>"Y" goto std_exit
+    if v$<>"Y" goto std_exit_no_print
     goto position_file
 
 closing_year: rem --- Get confirmation from user when closing the fiscal year
 
     v4$="OK to close fiscal "+prior$
     call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-    if v$<>"YES" goto std_exit
+    if v$<>"YES" goto std_exit_no_print
 
-position_file: rem --- Open printer, start progress meter and position File
+position_file: rem --- Setup DocOut, start progress meter and position File
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+rem --- Document columns
+
+    columns=4
+    dim columns$[columns,4]
+    columns$[0,0]="Account",columns$[0,1]="M",columns$[0,2]="10"
+    columns$[1,0]="Description",columns$[1,1]="C",columns$[1,2]="30"
+    columns$[2,0]="Debits",columns$[2,1]="N",columns$[2,2]="10"
+    columns$[3,0]="Credits",columns$[3,1]="N",columns$[3,2]="10"
+    columns$[4,0]="Units",columns$[4,1]="N",columns$[4,2]="10"
+
     call pgmdir$+"adc_progress.aon","NC","","","","",m0,glm01_dev,1,meter_num,status
     read (glm01_dev,key=firm_id$,dom=*next)
 
@@ -177,7 +185,6 @@ rem --- Read next account master
           rem --- Print detail line
 
           gosub format_fields
-          if l+1>l9 gosub report_heading
           gosub print_detail
           l=l+1
           continue
@@ -195,7 +202,6 @@ rem --- All done
 
     dim bar$(h0,"-")
     x$=" Retained Earnings "
-    bar$(fncenter(x$,h0),len(x$))=x$
     glm01a.gl_account$=gls01b.gl_account$
     glm01a.gl_acct_desc$="(Account Not Found)"
     glm01_key$=firm_id$+gls01b.gl_account$
@@ -203,9 +209,13 @@ rem --- All done
     amount=totals[0]
     units=totals[1]
     gosub format_fields
-    if l+3>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)bar$
+    xvct=fnblank(5)
+
+    xvct=fnblank(2)
+    OutVect!.addItem(bar$(1,m1))
+    OutVect!.addItem(bar$(1,m1))
+    OutVect!.addItem(bar$(1,m2))
+
     gosub print_detail
 
 rem --- Update retained earnings account in the work file
@@ -215,24 +225,16 @@ rem --- Update retained earnings account in the work file
 rem --- Run update overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    close (printer_dev,err=*next)
-    run pgmdir$+"glu_beginbalance.aon"
-
-report_heading: rem --- Report Heading
-
-    let l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)@(o[0]),"Account",@(o[1]),"Description",@(o[2]+m1-7),"Debits",
-:                      @(o[3]+m1-8),"Credits",@(o[4]+m2-(len(unithdr$)+1)),unithdr$
-    print (printer_dev)""
-    let l=l+2
-    return
+    next_overlay$=pgmdir$+"glu_beginbalance.aon"
+    goto std_exit
 
 print_detail: rem --- Print detail line
 
-    print (printer_dev)@(o[0]),fnmask$(glm01a.gl_account$(1,acctlen),m0$),@(o[1]),glm01a.gl_acct_desc$(1,w),
-:                      @(o[2]),debits$,@(o[3]),credits$,@(o[4]),units$
+    OutVect!.addItem(fnmask$(glm01a.gl_account$(1,acctlen),m0$))
+    OutVect!.addItem(glm01a.gl_acct_desc$)
+    OutVect!.addItem(debits$)
+    OutVect!.addItem(credits$)
+    OutVect!.addItem(units$)
     return
 
 format_fields: rem --- Format detail line fields
@@ -276,6 +278,19 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
+rem --- Create blank line in OutVect! (no return value wanted or needed)
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -307,8 +322,8 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -328,6 +343,9 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_print:
+
     release
 
 rem #endinclude std_end.src
