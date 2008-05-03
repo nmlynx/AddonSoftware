@@ -48,7 +48,7 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-        rem value_01$=Option!.getOptionData("form_value_01")
+        
         p9$ = option!.getOptionData("customer_id_1")
         p8$ = option!.getOptionData("customer_id_2")
 
@@ -79,8 +79,7 @@ rem --- Initialize Data
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1
         dim j0$(20,"0")
-rem     p9$=""
-rem     p8$=""
+
 
 
 rem --- Run report overlay
