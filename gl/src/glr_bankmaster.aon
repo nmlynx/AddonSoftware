@@ -28,6 +28,12 @@ rem --- Document initializations
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
     rep_time_stamp$=date(0:"%Hz%mz%sz")
+rem unremark the following 5 lines once Barista has been changed to allow for 32 character aliases
+rem    if rd_alias_id$=""
+rem        rd_alias_id$=pgm(-2)
+rem        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+rem        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+rem    endif
 
 rem --- Retrieve sysinfo data
 
