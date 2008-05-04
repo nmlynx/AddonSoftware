@@ -280,10 +280,12 @@ end_ddm04:
     rem ' Special address processing?
     addr_lines=0
     if source_version=6 and pos($0a$+"CITY"+$0a$=new_fields$) and pos($0a$+"STATE_CODE"+$0a$=new_fields$) then
-       if pos($0a$+"ADDR_LINE_3"+$0a$=new_fields$) then
+rem       if pos($0a$+"ADDR_LINE_3"+$0a$=new_fields$) then
+       if pos($0a$+"ADDR_LINE_3"+$0a$=old_fieldlist$) then
           addr_lines=3
        endif
-       if pos($0a$+"ADDR_LINE_5"+$0a$=new_fields$) then
+rem       if pos($0a$+"ADDR_LINE_5"+$0a$=new_fields$) then
+       if pos($0a$+"ADDR_LINE_5"+$0a$=old_fieldlist$) then
           addr_lines=5
        endif
     endif
