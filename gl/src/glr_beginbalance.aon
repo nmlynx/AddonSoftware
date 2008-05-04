@@ -26,7 +26,7 @@ rem ---         :   register, update is automatically performed).
 rem --- UPDATE$ : Y=Year End Update (user prompted for permission to close year).
 rem ---         : N=Update Beginning Balances (user prompted for approval to
 rem ---         :   produce the register).
-escape;rem check out the totals and remove the rem in the fiscal closed area
+
     setesc std_error
     seterr std_error
 
@@ -88,8 +88,19 @@ rem --- Retrieve parameter records
         dim msg_tokens$[1]
         msg_tokens$[1]=str(num(gls01a.current_year$)-1:"0000")
         gosub disp_message
-rem        goto std_exit_no_print
+        goto std_exit_no_print
     endif
+
+rem --- Check Daily Detail file
+
+    while 1
+        readrecord(glt04_dev,key=firm_id$,dom=*next)
+        glt04_key$=key(glt04_dev,end=*break)
+        if pos(firm_id$=glt04_key$)<>1 break
+        msg_id$="GLT_DD_ENTRIES"
+        gosub disp_message
+        goto std_exit_no_print
+    wend
 
 rem --- Parameters
 
@@ -210,11 +221,6 @@ rem --- All done
     units=totals[1]
     gosub format_fields
     xvct=fnblank(5)
-
-    xvct=fnblank(2)
-    OutVect!.addItem(bar$(1,m1))
-    OutVect!.addItem(bar$(1,m1))
-    OutVect!.addItem(bar$(1,m2))
 
     gosub print_detail
 
