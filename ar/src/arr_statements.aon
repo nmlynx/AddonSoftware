@@ -214,15 +214,11 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
           rem --- Initializations for this customer
             
-            rem --- create pdf file
-            myAPI!=BBjAPI()
-            MyPrinter!=BBjAPI()
-            prtr_dev=unt
-            open (prtr_dev,err=printer)docdir$+"statement"+arm01a.customer_id$+".pdf"
-            CLOSE (prtr_dev)
-            ERASE docdir$+"statement"+arm01a.customer_id$+".pdf"
-            printer:
-            doc!=myPrinter!.getBBjPDFForm(docdir$+"Statement"+arm01a.customer_id$+".pdf",requestAttributes!)
+          rem --- create pdf file
+          myAPI!=BBjAPI()
+          MyPrinter!=BBjAPI()
+          filename$=docdir$+"statement"+arm01a.customer_id$+"_"+date(0:"%Y%Mz%Dz%hz%mz%sz")+".pdf"
+          doc!=myPrinter!.getBBjPDFForm(filename$,requestAttributes!)
 
           dim aging[5]
           page=0
