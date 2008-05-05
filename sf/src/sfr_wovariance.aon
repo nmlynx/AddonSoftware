@@ -5,6 +5,16 @@ rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 11:37:21)
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -138,6 +148,26 @@ rem --- Init Data
 
     call "adc_perioddates.aon",gls01a_dev,num(period$),num(sfs01a.current_year$),begdate$,enddate$,status
 
+rem --- Headings and print positions
+ 
+    dim columns$[14,10]
+    columns = 14
+    columns$[0,0]="WO#",                columns$[0,1]="C",columns$[0,2]="23"
+    columns$[1,0]="Hours",              columns$[1,1]="N",columns$[1,2]="7",columns$[1,3]=m4$
+    columns$[2,0]="Direct",             columns$[2,1]="N",columns$[2,2]="7",columns$[2,3]=m1$
+    columns$[3,0]="Ovrhd",              columns$[3,1]="N",columns$[3,2]="7",columns$[3,3]=m1$
+    columns$[4,0]="Mat'ls Total",       columns$[4,1]="N",columns$[4,2]="7",columns$[4,3]=m1$
+    columns$[5,0]="Sub's Total",        columns$[5,1]="N",columns$[5,2]="7",columns$[5,3]=m1$
+    columns$[6,0]="W.O Total",          columns$[6,1]="N",columns$[6,2]="7",columns$[6,3]=m1$
+    columns$[7,0]="Hours",              columns$[7,1]="N",columns$[7,2]="7",columns$[7,3]=m2$
+    columns$[8,0]="Direct",             columns$[8,1]="N",columns$[8,2]="7",columns$[8,3]=m1$
+    columns$[9,0]="Ovrhd",             columns$[9,1]="N",columns$[9,2]="13",columns$[9,3]=m1$
+    columns$[10,0]="Mat'ls Total",      columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m1$
+    columns$[11,0]="Sub's Total",       columns$[11,1]="N",columns$[11,2]="5",columns$[11,3]=m1$
+    columns$[12,0]="W.O Total",         columns$[12,1]="N",columns$[12,2]="5",columns$[12,3]=m1$
+    columns$[13,0]="Variance",          columns$[13,1]="N",columns$[13,2]="5",columns$[13,3]=m1$
+    columns$[14,0]="%",                 columns$[14,1]="N",columns$[14,2]="6",columns$[14,3]="####.00-"
+  
 rem --- Retrieve key templates
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",sfe01a_key_tpl$,rd_table_chans$[all],status$
@@ -158,7 +188,7 @@ rem --- Retrieve key templates
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNSUBTR","PRIMARY",sft33a_key_tpl$,rd_table_chans$[all],status$
 
 rem --- Assign Title, Record, and keys
-    if sequence$="W" 
+    if sequence$="W" then
         h3$="Work Order Sequence"
         x9$="  "
         beging$=wofrom$
@@ -166,41 +196,43 @@ rem --- Assign Title, Record, and keys
         dim key_tpl$:sfe01a_key_tpl$
         begin_key$=firm_id$+sfe01a.wo_location$+beging$
         keynum=0
+    else
+        if sequence$="B" then
+            h3$="Bill Number Sequence"
+            x9$="C"
+            beging$=billfrom$
+            ending$=billthru$
+            dim key_tpl$:sfe03c_key_tpl$
+            begin_key$=firm_id$+whse$+beging$
+            keynum=3
+        else
+            if sequence$="C" then
+                h3$="Customer Sequence"
+                x9$="B"
+                beging$=custfrom$
+                ending$=custthru$
+                dim key_tpl$:sfe03b_key_tpl$
+                begin_key$=firm_id$+beging$
+                keynum=2
+            else
+                if sequence$="T" then
+                    h3$="Work Order Type Sequence"
+                    x9$="A"
+                    beging$=wotfrom$
+                    ending$=wotthru$
+                    dim key_tpl$:sfe03a_key_tpl$
+                    begin_key$=firm_id$+beging$
+                    keynum=1
+                endif
+            endif
+        endif
     endif
-    if sequence$="B"
-        h3$="Bill Number Sequence"
-        x9$="C"
-        beging$=billfrom$
-        ending$=billthru$
-        dim key_tpl$:sfe03c_key_tpl$
-        begin_key$=firm_id$+whse$+beging$
-        keynum=3
-    endif
-    if sequence$="C"
-        h3$="Customer Sequence"
-        x9$="B"
-        beging$=custfrom$
-        ending$=custthru$
-        dim key_tpl$:sfe03b_key_tpl$
-        begin_key$=firm_id$+beging$
-        keynum=2
-    endif
-    if sequence$="T"
-        h3$="Work Order Type Sequence"
-        x9$="A"
-        beging$=wotfrom$
-        ending$=wotthru$
-        dim key_tpl$:sfe03a_key_tpl$
-        begin_key$=firm_id$+beging$
-        keynum=1
-    endif
-
-    rem h9$=h3$(1,pos("Seq"=h3$)-2)
     h3$="Period "+period$+" From "+fndate$(begdate$)+" To "+fndate$(enddate$)
     h4$="Closed Work Orders"
-    if sequence$="B" beging$=whse$+beging$; if ending$<>"" ending$=whse$+ending$
+    if sequence$="B" then beging$=whse$+beging$
+    if ending$<>"" then ending$=whse$+ending$
     h4$=h4$+" Beginning With "
-    if beging$<>"" h4$=h4$+beging$ else h4$=h4$+"The First"
+    if beging$<>"" then h4$=h4$+beging$ else h4$=h4$+"The First"
     h4$=h4$(1,pos("   "=h4$+"   ")-1)
     h4$=h4$+" And Ending With "
     if ending$<>"" h4$=h4$+ending$ else h4$=h4$+"The Last"
