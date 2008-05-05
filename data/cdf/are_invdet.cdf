@@ -21,32 +21,31 @@ gosub disp_totals
 [[ARE_INVDET.<CUSTOM>]]
 calc_grid_tots:
 
-        recVect!=GridVect!.getItem(0)
-        dim gridrec$:dtlg_param$[1,3]
-        numrecs=recVect!.size()
-        if numrecs>0
-            for reccnt=0 to numrecs-1
-                gridrec$=recVect!.getItem(reccnt)
-                tqty=tqty+num(gridrec.units$)
-                tamt=tamt+num(gridrec.ext_price$)
-            next reccnt
-
-            user_tpl.totqty$=str(tqty)
-	 user_tpl.totamt$=str(tamt)
-
-        endif
-    return
+	recVect!=GridVect!.getItem(0)
+	dim gridrec$:dtlg_param$[1,3]
+	numrecs=recVect!.size()
+	if numrecs then
+		for reccnt=0 to numrecs-1
+			gridrec$=recVect!.getItem(reccnt)
+			if len(gridrec$) then
+				tqty=tqty+gridrec.units
+				tamt=tamt+gridrec.ext_price
+			endif
+		next reccnt
+		user_tpl.totqty$=str(tqty)
+		user_tpl.totamt$=str(tamt)
+	endif
+	return
 
 disp_totals:
 
-    rem --- get context and ID of total quantity/amount display controls, and redisplay w/ amts from calc_tots
+rem --- get context and ID of total quantity/amount display controls, and redisplay w/ amts from calc_tots
     
-    tqty!=UserObj!.getItem(0)
-    tqty!.setValue(num(user_tpl.totqty$))
+	tqty!=UserObj!.getItem(0)
+	tqty!.setValue(num(user_tpl.totqty$))
 
-    tamt!=UserObj!.getItem(1)
-    tamt!.setValue(num(user_tpl.totamt$))
-
-    return
+	tamt!=UserObj!.getItem(1)
+	tamt!.setValue(num(user_tpl.totamt$))
+	return
 
 #include std_missing_params.src
