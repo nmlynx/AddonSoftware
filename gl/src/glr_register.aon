@@ -64,13 +64,16 @@ rem --- Retrieve parameter records
     total_periods=num(gls01a.total_pers$)
     period=num(gls01a.current_per$)
     year=num(gls01a.current_year$)
-    account_length=num(gls01a.acct_length$)
-    m0$=gls01a.acct_output$
-    m1$=gls01a.amount_mask$
-    m2$=gls01a.unit_mask$
-    m0=len(m0$)
-    m1=len(m1$)
-    m2=len(m2$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,acct_length
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,m2
+rem    account_length=num(gls01a.acct_length$)
+rem    m0$=gls01a.acct_output$
+rem    m1$=gls01a.amount_mask$
+rem    m2$=gls01a.unit_mask$
+rem    m0=len(m0$)
+rem    m1=len(m1$)
+rem    m2=len(m2$)
 
 rem --- Report initializations
 
@@ -85,7 +88,7 @@ rem --- Report initializations
 
 rem --- Initializations
 
-    dim amountdash$(m1-1,"-"),unitdash$(m2-1,"-")
+    dim amountdash$(20,"-"),unitdash$(15,"-")
     dim headings$[headings+1],o[6],entry[2],total[2]
     h1$=cvs(sysinfo.firm_name$,2)
     h2$=cvs(sysinfo.task_desc$,2)
@@ -133,9 +136,9 @@ rem --- Document columns
     columns$[4,0]="Reversal",columns$[4,1]="C",columns$[4,2]="10"
     columns$[5,0]="Memo",columns$[5,1]="C",columns$[5,2]="10"
     columns$[6,0]="Cycle",columns$[6,1]="C",columns$[6,2]="20"
-    columns$[7,0]="Debits",columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
-    columns$[8,0]="Credits",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
-    columns$[9,0]="Units",columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m2$
+    columns$[7,0]="Debits",columns$[7,1]="S",columns$[7,2]="10"
+    columns$[8,0]="Credits",columns$[8,1]="S",columns$[8,2]="10"
+    columns$[9,0]="Units",columns$[9,1]="S",columns$[9,2]="10"
 
 init_prog_meter: rem --- Initialize the progress meter and position the file
 
@@ -242,6 +245,8 @@ rem --- All done
     balance=total[0]+total[1]
     warning$="",units$=""
     if balance<>0 warning$="Register Is Out Of Balance ---->"
+    debit$=str(total[0]:m1$)
+    credit$=str(abs(total[1]):m1$)
     if gls01a.units_flag$="Y" units$=str(total[2]:m2$)
  
 
@@ -254,8 +259,8 @@ rem --- All done
     OutVect!.addItem(warning$)
     abc=fnblank(3)
     OutVect!.addItem("Total For Register")
-    OutVect!.addItem(str(total[0]:m1$))
-    OutVect!.addItem(str(abs(total[1]):m1$))
+    OutVect!.addItem(debit$)
+    OutVect!.addItem(credit$)
     OutVect!.addItem(units$)
 
 rem --- Run update overlay
@@ -289,6 +294,8 @@ transaction_break: rem --- Transaction Break
     units$=""
     warning$=""
     if balance<>0 warning$="Entry Is Out Of Balance ---->"
+    debit$=str(entry[0]:m1$)
+    credit$=str(abs(entry[1]):m1$)
     if gls01a.units_flag$="Y" units$=str(entry[2]:m2$)
     for x=0 to 2
         total[x]=total[x]+entry[x]
@@ -304,8 +311,8 @@ transaction_break: rem --- Transaction Break
     OutVect!.addItem(warning$)
     abc=fnblank(3)
     OutVect!.addItem("Total For Entry")
-    OutVect!.addItem(str(entry[0]:m1$))
-    OutVect!.addItem(str(abs(entry[1]):m1$))
+    OutVect!.addItem(debit$)
+    OutVect!.addItem(credit$)
     OutVect!.addItem(units$)
 
 journal_id: rem --- Retrieve journal id record

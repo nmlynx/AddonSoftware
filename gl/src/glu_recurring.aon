@@ -28,10 +28,11 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=2,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gle-01",ids$[1]="GLE_JRNLHDR"
     files$[2]="gle-11",ids$[2]="GLE_JRNLDET"
+    files$[3]="glm-07",ids$[3]="GLC_CYCLECODE"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -46,10 +47,11 @@ rem --- Open/Lock files
     gle12_dev=gle11_dev
     gle01_dev=channels[1]
     gle11_dev=channels[2]
+    glm07_dev=channels[3]
 
 rem --- Dimension string templates
 
-    dim gle01a$:templates$[1],gle11a$:templates$[2]
+    dim gle01a$:templates$[1],gle11a$:templates$[2],glm07a$:templates$[3]
 
 rem --- Initializations
 
@@ -92,7 +94,16 @@ rem --- gle-01/11 Journal Entry files.
                 if pos(gle02_key$=k$)<>1 break
                 read record (gle12_dev)gle11a$
                 write record (gle11_dev,key=w0$)gle11a$
-         wend
+          wend
+          dim glm07a$:fattr(glm07a$)
+          while 1
+                readrecord (glm07_dev,key=firm_id$+gle01a.cycle_code$,dom=*break)glm07a$
+                glm07a.lstuse_date$=date(0:"%Y%Mz%Dz")
+                glm07a.lstuse_time$=date(0:"%hz%mz")
+                glm07a$=field(glm07a$)
+                writerecord(glm07_dev,key=firm_id$+gle01a.cycle_code$)glm07a$
+                break
+          wend
     wend
 
 rem --- All done
@@ -178,8 +189,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
 :                                str(err:"000"),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -201,7 +211,10 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
+    msg_id$="UPDATE_COMPLETE"
+    gosub disp_message
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
