@@ -71,7 +71,7 @@ rem --- Assign form input values to local variables
         if wo_quoted$="Y" then wo_status$=wo_status$+"Q"
         if wo_backord$="Y" then wo_status$=wo_status$+"B"
         if wo_cred$="Y" then wo_status$=wo_status$+"C"
-        
+        if wo_status$="" then wo_status$="OQBC"
 rem --- Retrieve parameter records
 
         ars01a_key$=firm_id$+"AR00"
@@ -168,9 +168,9 @@ rem --- Next header
 
         read record (ope01_dev,end=print_4) ope01a$
         if ope01a.invoice_type$="V" or ope01a.ordinv_flag$="I" then continue
-        if (pos("O"=p8$)<=0 or ope01a.backord_flag$="B" or ope01a.credit_flag$="C" or ope01a.invoice_type$="P") and
-:          (pos("B"=p8$)<=0 or ope01a.backord_flag$<>"B") and  (pos("C"=p8$)<=0 or ope01a.credit_flag$<>"C")  and
-:          (pos("Q"=p8$)<=0 or ope01a.invoice_type$<>"P") then continue
+        if (pos("O"=wo_status$)<=0 or ope01a.backord_flag$="B" or ope01a.credit_flag$="C" or ope01a.invoice_type$="P") and
+:          (pos("B"=wo_status$)<=0 or ope01a.backord_flag$<>"B") and  (pos("C"=wo_status$)<=0 or ope01a.credit_flag$<>"C")  and
+:          (pos("Q"=wo_status$)<=0 or ope01a.invoice_type$<>"P") then continue
         
 rem --- Got One To Print
 
