@@ -50,7 +50,10 @@ rem --- Open/Lock files
     files$[17]="sft-23",ids$[17]="SFT_CLSMATTR"
     files$[18]="sft-31",ids$[18]="SFT_OPNSUBTR"
     files$[19]="sft-33",ids$[19]="SFT_CLSSUBTR"
-    files$[20]="sfw-02",ids$[20]="SFW_VRNCXTYP",options$[20]="C"
+    files$[20]="sfw-02",ids$[20]="SFW_VRNCXTYP"
+
+    options$[20]="C"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -161,7 +164,7 @@ rem --- Headings and print positions
     columns$[6,0]="W.O Total",          columns$[6,1]="N",columns$[6,2]="7",columns$[6,3]=m1$
     columns$[7,0]="Hours",              columns$[7,1]="N",columns$[7,2]="7",columns$[7,3]=m2$
     columns$[8,0]="Direct",             columns$[8,1]="N",columns$[8,2]="7",columns$[8,3]=m1$
-    columns$[9,0]="Ovrhd",             columns$[9,1]="N",columns$[9,2]="13",columns$[9,3]=m1$
+    columns$[9,0]="Ovrhd",              columns$[9,1]="N",columns$[9,2]="13",columns$[9,3]=m1$
     columns$[10,0]="Mat'ls Total",      columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m1$
     columns$[11,0]="Sub's Total",       columns$[11,1]="N",columns$[11,2]="5",columns$[11,3]=m1$
     columns$[12,0]="W.O Total",         columns$[12,1]="N",columns$[12,2]="5",columns$[12,3]=m1$
