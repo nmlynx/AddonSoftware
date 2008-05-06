@@ -48,8 +48,6 @@ rem --- Initialize Data
             if m2>9 then call pgmdir$+"adc_sizemask.aon",m2$,m2,9,m2-1
         wend
 
-        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-        if status then goto std_exit
         if p9$="D" then
              h1$="Detail "+h1$
         else
