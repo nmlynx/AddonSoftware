@@ -57,8 +57,6 @@ rem --- Init Data
 
 rem --- Additional File Opens
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
     if period$>=sfs01a.current_per$
         tran01_dev=sft01a_dev;tran02_dev=sft21a_dev;tran03_dev=sft31a_dev
         tran01a_key$=sft01a_key_tpl$
@@ -212,16 +210,17 @@ rem --- Calculate Totals, Variance, etc.
         a0=a[1]+a[2]+a[3]+a[9]
         a1=a[5]+a[6]+a[7]+a[10],a2=a0-a1
         if a0<>0 then a3=(a0-a1)*100/a0 else a3=0
-        if sfe01a.wo_category$="I" then x$=sfe01a.item_id$,x$=x$(1,pos("   "=x$+"   ")-1),sfe01a.description_01$=x$+" "+sfe01a.description_01$
+        if sfe01a.wo_category$="I" then 
+            x$=sfe01a.item_id$
+            x$=x$(1,pos("   "=x$+"   ")-1)
+            sfe01a.description_01$=x$+" "+sfe01a.description_01$
+        endif
 
 rem --- Print
         if l>l9 then gosub sub_head
         str1$=sfe01a.wo_no$+"  "+sfe01a.wo_type$+"  "+sfe01a.description_01$
         OutVect!.addItem(str1$)
-        rem new OutVect!.addItem(sfe01a.wo_type$)
-        rem new OutVect!.addItem(sfe01a.description_01$)
         blank=fnblank(14)
-        print (printer_dev)sfe01a.wo_no$,"  ",sfe01a.wo_type$,"  ",sfe01a.description_01$
         blank=fnblank(1)
         OutVect!.addItem(str(fnnummask$(a[0],m2$)))
         OutVect!.addItem(str(fnnummask$(a[1],m1$)))
@@ -238,10 +237,6 @@ rem --- Print
         OutVect!.addItem(str(fnnummask$(a2,m1$)))
         OutVect!.addItem(str(fnnummask$(a3,"####.00-")))
         
-        print (printer_dev)@(132-m9),fnnummask$(a[0],m2$),fnnummask$(a[1],m1$),fnnummask$(a[9],m1$),fnnummask$(a[2],m1$),
-:                                    fnnummask$(a[3],m1$),fnnummask$(a0,m1$),fnnummask$(a[4],m2$),fnnummask$(a[5],m1$),
-:                                    fnnummask$(a[10],m1$),fnnummask$(a[6],m1$),fnnummask$(a[7],m1$),fnnummask$(a1,m1$),
-:                                    fnnummask$(a2,m1$),fnnummask$(a3,"####.00-")
        
         l=l+2
         l0=l0+1
@@ -270,14 +265,12 @@ done: rem --- End
 
         t9$="U"
         if sequence$<>"W" then gosub sub_total
-        if h=0 then gosub report_heading
-        if l+1>l9 then gosub report_heading
         u0=u[1]+u[2]+u[3]+u[9]
         u1=u[5]+u[6]+u[7]+u[10],u2=u0-u1
-        if u0<>0 then let u3=(u0-u1)*100/u0 else let u3=0
+        if u0<>0 then u3=(u0-u1)*100/u0 else u3=0
         if u[8]<>0 
             u5=u0-(u1-u[8])
-            if u0<>0 then let u6=(u0-(u1-u[8]))*100/u0 else let u6=0
+            if u0<>0 then u6=(u0-(u1-u[8]))*100/u0 else u6=0
         endif
         blank=fnblank(15)
         OutVect!.addItem("--------------------------------------")
@@ -302,11 +295,6 @@ done: rem --- End
         OutVect!.addItem(str(fnnummask$(u2,m1$)))
         OutVect!.addItem(str(fnnummask$(u3,"####.00-")))
 
-        print (printer_dev)@(132-m9),j$(1,m9-1),'lf',
-        print (printer_dev)@(0),"Report Total: ",'lf',@(132-m9),fnnummask$(u[0],m2$),fnnummask$(u[1],m1$),
-:                          fnnummask$(u[9],m1$),fnnummask$(u[2],m1$),fnnummask$(u[3],m1$),fnnummask$(u0,m1$),
-:                          fnnummask$(u[4],m2$),fnnummask$(u[5],m1$),fnnummask$(u[10],m1$),fnnummask$(u[6],m1$),
-:                          fnnummask$(u[7],m1$),fnnummask$(u1,m1$),fnnummask$(u2,m1$),fnnummask$(u3,"####.00-")
         if u[8]<>0 then 
             blank=fnblank(11)
             OutVect!.addItem("Closed: ")
@@ -316,21 +304,16 @@ done: rem --- End
             OutVect!.addItem("Net Open: ")
             OutVect!.addItem(str(u1-u[8]:m1$))
             blank=fnblank(2)
-            print (printer_dev)@(132-m1*2-18),"Closed: ",@(132-m1*2-8),-u[8]:m1$,'lf',@(132-m1*2-20),
-:                              "Net Open: ",@(132-m1*2-8),u1-u[8]:m1$; let l=l+2
         endif
 
 rem --- Subtotals By Type
 
         dim c[2,10],t[10],u[10]
-        gosub report_heading
 
         OutVect!.addItem("Totals By Type: ")
         blank=fnblank(14)
         blank=fnblank(15)
 
-        print (printer_dev)@(0),"Totals By Type: ",'lf'; let l=2
-        print @(40,11),'cl',"Totals By Type ",
         read (sfw02a_dev,key=firm_id$,dom=*next)
         while more    
             k5$=key(sfw02a_dev,end=*break)
@@ -339,9 +322,7 @@ rem --- Subtotals By Type
             dim x0$(30),x1$(g0,"0")
             x0$(6)="*** Not On File ***"
             find record (sfm10a_dev,key=firm_id$+"A"+sfw02a.wo_type$,dom=*next) sfm10a$
-            if l+2>l9 then gosub report_heading
             x0$(1)=sfm10a.code_desc$
-            print (printer_dev)sfw02a.wo_type$,"  ",x0$,"  ",fnmask$(sfm10a.gl_wip_acct$,g5$),"  ",fnmask$(sfm10a.gl_close_to$,g5$)
             str1$=sfw02a.wo_type$+"  "+x0$+"  "+str(fnmask$(sfm10a.gl_wip_acct$,g5$))+"  "+str(fnmask$(sfm10a.gl_close_to$,g5$))
             OutVect!.addItem(str1$)
             blank=fnblank(14)
@@ -369,11 +350,6 @@ rem --- Subtotals By Type
             OutVect!.addItem(str(fnnummask$(b3,"####.00-")))
 
 
-            print (printer_dev)@(132-m9),fnnummask$(sfw02a.std_hrs,m2$),fnnummask$(sfw02a.std_ops_tot,m1$),
-:                              fnnummask$(b[9],m1$),fnnummask$(sfw02a.std_mat_tot,m1$),
-:                              fnnummask$(sfw02a.std_sub_tot,m1$),fnnummask$(b0,m1$),fnnummask$(sfw02a.actual_hrs,m2$),
-:                              fnnummask$(sfw02a.act_ops_tot,m1$),fnnummask$(b[10],m1$),fnnummask$(sfw02a.act_mat_tot,m1$),
-:                              fnnummask$(sfw02a.act_sub_tot,m1$),fnnummask$(b1,m1$),fnnummask$(b2,m1$),fnnummask$(b3,"####.00-")
             if b[8]<>0 then 
                 blank=fnblank(11)
                 OutVect!.addItem("Closed: ")
@@ -383,8 +359,6 @@ rem --- Subtotals By Type
                 OutVect!.addItem("Net Open: ")
                 OutVect!.addItem(str(b1-b[8]:m1$))
                 blank=fnblank(2)
-                print (printer_dev)@(132-m1*2-18),"Closed: ",@(132-m1*2-8),-b[8]:m1$,'lf',
-:                                  @(132-m1*2-20),"Net Open: ",@(132-m1*2-8),b1-b[8]:m1$; let l=l+2
             endif
             l=l+2
             y=pos(sfm10a.wo_category$="INR")-1
@@ -426,11 +400,6 @@ rem --- Report Totals
         OutVect!.addItem(str(fnnummask$(t2,m1$)))
         OutVect!.addItem(str(fnnummask$(t3,"####.00-")))
 
-        print (printer_dev)@(132-m9),j$(1,m9-1),'lf',
-        print (printer_dev)@(0),"Report Totals:",'lf',@(132-m9),fnnummask$(t[0],m2$),fnnummask$(t[1],m1$),fnnummask$(t[9],m1$),
-:                               fnnummask$(t[2],m1$),fnnummask$(t[3],m1$),fnnummask$(t0,m1$),fnnummask$(t[4],m2$),
-:                               fnnummask$(t[5],m1$),fnnummask$(t[10],m1$),fnnummask$(t[6],m1$),fnnummask$(t[7],m1$),
-:                               fnnummask$(t1,m1$),fnnummask$(t2,m1$),fnnummask$(t3,"####.00-")
         if t[8]<>0 then 
             blank=fnblank(11)
             OutVect!.addItem("Closed: ")
@@ -440,14 +409,11 @@ rem --- Report Totals
             OutVect!.addItem("Net Open: ")
             OutVect!.addItem(str(t1-t[8]:m1$))
             blank=fnblank(2)
-            print (printer_dev)@(132-m1*2-18),"Closed: ",@(132-m1*2-8),-t[8]:m1$,'lf',@(132-m1*2-20),"Net Open: ",
-:                              @(132-m1*2-8),t1-t[8]:m1$; let l=l+1
         endif
         l=l+3
 
 rem --- Now Subtotal By Category
 
-        if l+13>l9 then gosub report_heading
         blank=fnblank(15)
         blank=fnblank(15)
         blank=fnblank(15)
@@ -455,22 +421,18 @@ rem --- Now Subtotal By Category
         blank=fnblank(14)
         blank=fnblank(15)
 
-        print (printer_dev)'lf','lf','lf',"Totals By Category: ",'lf'
         for y=0 to 2
             if y=0 then 
                 OutVect!.addItem("Inventory: ")
                 blank=fnblank(14)
-                print (printer_dev)"Inventory: "
             else 
                 if y=1 then 
                     OutVect!.addItem("Specials:")
                     blank=fnblank(14)
-                    print (printer_dev)"Specials:" 
                 else 
                     if y=2 then 
                         OutVect!.addItem("Recurring:")
                         blank=fnblank(14)
-                        print (printer_dev)"Recurring:"
                     endif
                 endif
             endif
@@ -497,11 +459,6 @@ rem --- Now Subtotal By Category
             OutVect!.addItem(str(fnnummask$(c2,m1$)))
             OutVect!.addItem(str(fnnummask$(c3,"####.00-")))
 
-            print (printer_dev)@(132-m9),fnnummask$(c[y,0],m2$),fnnummask$(c[y,1],m1$),fnnummask$(c[y,9],m1$),
-:                                        fnnummask$(c[y,2],m1$),fnnummask$(c[y,3],m1$),fnnummask$(c0,m1$),
-:                                        fnnummask$(c[y,4],m2$),fnnummask$(c[y,5],m1$),fnnummask$(c[y,10],m1$),
-:                                        fnnummask$(c[y,6],m1$),fnnummask$(c[y,7],m1$),fnnummask$(c1,m1$),
-:                                        fnnummask$(c2,m1$),fnnummask$(c3,"####.00-")
             if c[y,8]<>0 then 
                 blank=fnblank(11)
                 OutVect!.addItem("Closed: ")
@@ -511,8 +468,6 @@ rem --- Now Subtotal By Category
                 OutVect!.addItem("Net Open: ")
                 OutVect!.addItem(str(c1-c[y,8]:m1$))
                 blank=fnblank(2)
-                print (printer_dev)@(132-m1*2-18),"Closed: ",@(132-m1*2-8),-c[y,8]:m1$,'lf',
-:                                  @(132-m1*2-20),"Net Open: ",@(132-m1*2-8),c1-c[y,8]:m1$; let l=l+2
             endif
             for x=0 to 10
                 u[x]=u[x]+c[y,x]
@@ -556,26 +511,11 @@ rem --- Report Totals
             OutVect!.addItem("Net Open: ")
             OutVect!.addItem(str(u1-u[8]:m1$))
             blank=fnblank(2)
-            print (printer_dev)@(132-m1*2-18),"Closed: ",@(132-m1*2-8),-u[8]:m1$,'lf',@(132-m1*2-20),
-:                  "Net Open: ",@(132-m1*2-8),u1-u[8]:m1$; let l=l+1
         endif
         goto std_exit
 
-report_heading: rem --- Report Heading
-
-        l=headings+1
-        headings$[2]=h3$
-        headings$[3]=h4$
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-        if status then exitto std_exit
-        print (printer_dev)@(132-m9),h8$,h9$
-        print (printer_dev)@(132-m9),h7$,h7$
-        print (printer_dev)"WO #",@(7),"Type",@(132-m9),h6$,h6$,@(116),"Variance",@(130),"%"
-        print (printer_dev)""
-return
 
 sub_head: rem --- Sub Heading
-        if l>l9 then gosub report_heading
         switch pos(sequence$="CT")
             case 1
                 if t0$="" then 
@@ -583,10 +523,8 @@ sub_head: rem --- Sub Heading
                     OutVect!.addItem(h5$)
                     blank=fnblank(14)
                     blank=fnblank(15)
-                    print (printer_dev)h5$
                 else
                     OutVect!.addItem(str(fnmask$(t0$(1,c0),c1$))+" "+h5$)
-                    print (printer_dev)fnmask$(t0$(1,c0),c1$)," ",h5$
                 endif
                 l=l+1
                 break
@@ -595,7 +533,6 @@ sub_head: rem --- Sub Heading
                 OutVect!.addItem(t0$+" "+h5$)
                 blank=fnblank(14)
                 blank=fnblank(15)
-                print (printer_dev)'lf',t0$,"  ",h5$,'lf'
                 l=l+3
                 break
             case default
@@ -609,23 +546,44 @@ sub_total: rem --- First Sub Total
                 if l+2>l9 then gosub sub_head
                 t0=t[1]+t[2]+t[3]+t[9]
                 t1=t[5]+t[6]+t[7]+t[10],t2=t0-t1
-                if t0<>0 then let t3=(t0-t1)*100/t0 else let t3=0
-                print (printer_dev)@(132-m9),j$(1,m9-1),'lf',
+                if t0<>0 then t3=(t0-t1)*100/t0 else t3=0
+                blank=fnblank(15)
+                OutVect!.addItem("--------------------------------------")
+                for i=1 to 14 
+                    OutVect!.addItem("----------")
+                next i  
                 if sequence$="T" then 
-                    print (printer_dev)@(0),"Type& ",t0$," Totals: ",
+                    OutVect!.addItem("Type "+t0$+" Totals: ")
+                    blank=fnblank(14)
+                    blank=fnblank(1)
                 else
                     if sequence$="C" then 
-                        print (printer_dev)@(0),"Customer ",fnmask$(t0$(1,c0),c1$)," Totals:",
+                        OutVect!.addItem("Customer "+str(fnmask$(t0$(1,c0),c1$))+" Totals: ")
+                        blank=fnblank(14)
+                        blank=fnblank(1)
                     else
                         if sequence$="B" then 
-                            print (printer_dev)@(0),"Bill Number "+cvs(t0$,2)+" Totals:",
+                            OutVect!.addItem("Bill Number "+cvs(t0$,2)+" Totals: ")
+                            blank=fnblank(14)
+                            blank=fnblank(1)
                         endif
                     endif
                 endif
-                print (printer_dev)'lf',@(132-m9),fnnummask$(t[0],m2$),fnnummask$(t[1],m1$),fnnummask$(t[9],m1$),
-:                     fnnummask$(t[2],m1$),fnnummask$(t[3],m1$),fnnummask$(t0,m1$),fnnummask$(t[4],m2$),fnnummask$(t[5],
-:                     m1$),fnnummask$(t[10],m1$),fnnummask$(t[6],m1$),fnnummask$(t[7],m1$),fnnummask$(t1,m1$),
-:                     fnnummask$(t2,m1$),fnnummask$(t3,"####.00-"),'lf'
+                OutVect!.addItem(str(fnnummask$(t[0],m2$)))
+                OutVect!.addItem(str(fnnummask$(t[1],m1$)))
+                OutVect!.addItem(str(fnnummask$(t[9],m1$)))
+                OutVect!.addItem(str(fnnummask$(t[2],m1$)))
+                OutVect!.addItem(str(fnnummask$(t[3],m1$)))
+                OutVect!.addItem(str(fnnummask$(t0,m1$)))
+                OutVect!.addItem(str(fnnummask$(t[4],m2$)))
+                OutVect!.addItem(str(fnnummask$(t[5],m1$)))
+                OutVect!.addItem(str(fnnummask$(t[10],m1$)))
+                OutVect!.addItem(str(fnnummask$(t[6],m1$)))
+                OutVect!.addItem(str(fnnummask$(t[7],m1$)))
+                OutVect!.addItem(str(fnnummask$(t1,m1$)))
+                OutVect!.addItem(str(fnnummask$(t2,m1$)))
+                OutVect!.addItem(str(fnnummask$(t3,"####.00-")))
+                blank=fnblank(15)
                 l=l+3
         endif
         if t9$<>"" then return
@@ -634,13 +592,15 @@ sub_total: rem --- First Sub Total
         t0$=data1$
         l0=0
         if sequence$="T" then
-            dim h5$(20); let h5$(1)="*** Not On File ***"
+            dim h5$(20)
+            h5$(1)="*** Not On File ***"
             find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=*return) sfm10a$
             h5$=sfm10a.code_desc$
             gosub sub_head
         endif
         if sequence$="C" then
-            dim h5$(30); let h5$(1)="*** Not On File ***"
+            dim h5$(30)
+            h5$(1)="*** Not On File ***"
             find record (arm01a_dev,key=firm_id$+t0$,dom=*return) arm01a$
             h5$=arm01a.customer_name$
             gosub sub_head
