@@ -21,6 +21,19 @@ rem --- Retrieve sysinfo data
         milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
+rem --- see if batching
+
+rem ---     call stbl("+DIR_PGM")+"adc_getbatch.aon","",pgm(-2)
+rem --- if a batch number is returned, process only the ape-01/11 recs for that batch (use knum)
+
 rem --- Open/Lock files
 
         files=13,begfile=1,endfile=files
@@ -89,6 +102,7 @@ rem --- Is General Ledger installed and being used?
         status=0
         source$=pgm(-2)
         call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
+ 
         if status 
             goto std_exit
         endif

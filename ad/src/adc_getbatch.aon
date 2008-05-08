@@ -70,12 +70,14 @@ rem --- Now see if this program allows batch entry or not
 
     x$=stbl("+BATCH_DESC",adm09a.description$)
     x$=stbl("+ALLOW_NEW_BATCH",adm19a.new_batch$)
+    x$=stbl("+PROCESS_ID",cvs(adm19a.process_id$,3))
 
 rem --- Here's where we call the proper form (allow new or not)
 
     call stbl("+DIR_SYP")+"bam_run_prog.bbj","ADM_PROCBATCHES",stbl("+USER_ID"),"MNT","",table_chans$[all]
     x$=stbl("!CLEAR","+ALLOW_NEW_BATCH")
     x$=stbl("!CLEAR","+BATCH_DESC")
+    x$=stbl("!CLEAR","+PROCESS_ID")
     batch_id$=allow_entry$
 
 done: rem --- All done

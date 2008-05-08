@@ -1,4 +1,6 @@
 [[ADM_PROCBATCHES.BEND]]
+release
+[[ADM_PROCBATCHES.AOPT-SELB]]
 rem --- see if process ID of this record is same as set in +PROCESS_ID by adc_getbatch...don't permit user to select batch from a different process
 rem --- hopefully at some point we'll be able to run this form w/ an automatic filter on process ID
 
@@ -7,10 +9,18 @@ if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.PROCESS_ID"),3)<>stbl("+PROCESS
 	callpoint!.setMessage("PROC_INVALID")
 	callpoint!.setStatus("ABORT")
 
-endif
+else
 
-if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"),3)=""
+	if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"),3)=""
 	callpoint!.setStatus("ABORT")
+
+else
+
+	rem --- set exit stbl to be this batch number
+
+	x$=stbl("+BATCH_NO",callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"))
+	callpoint!.setStatus("EXIT")
+
 endif
 [[ADM_PROCBATCHES.ARNF]]
 rem --- Setup defaults
@@ -36,12 +46,6 @@ endif
 if cvs(callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"),3)=""
 	callpoint!.setStatus("ABORT")
 endif
-[[ADM_PROCBATCHES.ARAR]]
-x$=stbl("+BATCH_NO","."+callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"))
-[[ADM_PROCBATCHES.AWRI]]
-rem --- set exit stbl to be this batch number
-	x$=stbl("+BATCH_NO","."+callpoint!.getColumnData("ADM_PROCBATCHES.BATCH_NO"))
-	callpoint!.setStatus("EXIT")
 [[ADM_PROCBATCHES.BSHO]]
 rem --- disable key field if no new recs allowed
 
