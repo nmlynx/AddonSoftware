@@ -10,6 +10,16 @@ rem --- All Rights Reserved
         setesc std_error
         seterr std_error
 
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
         pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -37,6 +47,7 @@ rem --- Initialize Data
         dim o[4],r[3,4],s[2],t[4],t9[100,3],u[3]
         ord=0
         ship=0,bo=0,l9=50,l=l9+1,h=0,nf$="(Not On File)"
+        pbufwidth=200
         m8$="##0.00-"
         m9$="###.0%",clock$="",when$=sysinfo.system_date$
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
@@ -65,21 +76,59 @@ rem --- Initialize Data
             call pgmdir$+"adc_sizemask.aon",m3$,m3,max(10,m3-1),max(10,m3-1)
         wend
 
+        dim columns$[1,10]
+        columns = 1
+
+        columns$[0,0]=" ",         columns$[0,1]="C",columns$[0,2]="250"
+
+        dim pbuf$(pbufwidth)
+        if s6$="P" or s6$="A" then
+            pbuf$(1)="Customer No. & Name"
+            pbuf$(40)="Order No"
+            pbuf$(50)="Invoice No"
+            pbuf$(62)="Invoice Date"
+            pbuf$(75)="By"
+            pbuf$(80)="Sls"
+            pbuf$(85)="P.O No"
+            pbuf$(92)="Ship Via"
+            pbuf$(102)="Dist Code"
+            pbuf$(112)="Terms"
+            pbuf$(122)="Tax Code"
+            pbuf$(132)="Printed?"
+            OutVect!.addItem(pbuf$)
+            OutVect!.addItem("")
+            OutVect!.addItem("                                       ===================================================================================================")
+            OutVect!.addItem("")
+        else
+            OutVect!.addItem("                                       ===================================================================================================")
+            pbuf$(1)=""
+            pbuf$(40)=""
+            pbuf$(50)=""
+            pbuf$(62)=""
+            pbuf$(75)=""
+            pbuf$(80)=""
+            pbuf$(85)=""
+            pbuf$(92)=""
+            pbuf$(102)=""
+            pbuf$(112)=""
+            pbuf$(122)=""
+            pbuf$(132)=""
+            OutVect!.addItem(pbuf$)
+            OutVect!.addItem("")
+        endif
+
 rem --- Headings
 
-        headings=5
-        dim headings$[5],x0$(h0),x1$(h0)
+        headings=6
+        dim headings$[6]
         headings$[0]=n1$
-        headings$[1]=n4$,rt$="Report Totals"
-        x0$(1)="Beginning Customer: "+h4$
-        x0$(fncenter(h8$,h0))=h8$
-        x0$(h0-26)="Beginning Order #: "+h6$
-        x1$(1)="   Ending Customer: "+h5$
-        x1$(fncenter(h9$,h0))=h9$
-        x1$(h0-26)="   Ending Order #: "+h7$
-        headings$[3]=x0$
-        headings$[4]=x1$
+        headings$[1]=n4$
+        headings$[2]=x1$
+        headings$[3]=h9$
+        headings$[4]="Beginning Customer : "+h4$+"      "+"Beginning Order #: "+h6$
+        headings$[5]="Ending Customer     : "+h5$+"      "+"Ending Order     #: "+h7$
 
+        rt$="Report Totals"
 rem --- Print positions
 
         lw=m1*3+m3*2+m2*3+m8+m9
@@ -107,8 +156,6 @@ rem --- Initial Read
 
         read (ope01_dev,key=firm_id$+"  "+s0$+s2$,dom=*next)
 
-
-
 rem --- Main Loop Starts
 
 while more
@@ -132,17 +179,19 @@ rem --- Heading
 
 rem --- Void
 
-            if l>l9 then gosub report_heading
+rem            if l>l9 then gosub report_heading
             gosub find_customer
-            print (printer_dev)""
-            print (printer_dev)fnmask$(ope01a.customer_id$(1,p[0]),m0$),
-:                              @(8),arm01a.customer_name$,
-:                              @(40),ope01a.order_no$,
-:                              @(48),ope01a.ar_inv_no$,
-:                              @(57),fndate$(ope01a.invoice_date$),
-:                              @(66),ope01a.ord_taken_by$,
-:                              @(70),ope01a.slspsn_code$,
-:                              @(74),"(Void)"
+            pbuf$(1)=(ope01a.customer_id$+" "+arm01a.customer_name$)
+            pbuf$(40)=ope01a.order_no$
+            pbuf$(52)=ope01a.ar_inv_no$
+            pbuf$(65)=fndate$(ope01a.invoice_date$)
+            pbuf$(75)=ope01a.ord_taken_by$
+            pbuf$(80)=ope01a.slspsn_code$
+            pbuf$(85)="(Void)"
+            OutVect!.addItem("")
+            OutVect!.addItem("")
+            OutVect!.addItem(pbuf$)
+
             l=l+2
             continue
 
@@ -163,7 +212,6 @@ rem --- Print
             if ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$<>ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$ then break
             read record (ope11_dev) ope11a$
             desc$=ope11a.order_memo$
-            rem dim x0$(32)
             find record (opm02_dev,key=firm_id$+ope11a.line_code$,dom=*next) opm02a$
             if pos(opm02a.line_type$="SP")<>0 then
               find record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=label_One) ivm01a$
@@ -220,54 +268,108 @@ rem --- Invioce Totals
         ord=0,bo=0,ship=0
 wend
 rem --- Main Loop Ends
+
        
 done: rem --- Totals
 
         precision 2
 
         e9$="E"
-        if l+7>l9 or s4$="Y" then gosub report_heading
+        if s4$="Y" then
+            subheading$=""
+            BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+            HdrVect!.addItem(subheading$)
+        endif
+        OutVect!.addItem("")
+        pbuf$(1)=rt$
+        pbuf$(37)=str(ordt:m2$)
+        pbuf$(49)=str(bot:m2$)
+        pbuf$(63)=str(shipt:m2$)
+        
+        pbuf$(75)="Sales Total: "
+        pbuf$(88)=str(u[0]:m1$)
+        pbuf$(100)=str(u[1]:m1$)
+        pbuf$(112)=str(u[0]-u[1]:m1$)
+        pbuf$(124)=str(sgn(fnd(u[0]-u[1],u[0]))*min(999.99,abs(fnd(u[0]-u[1],u[0]))):m8$)
+        OutVect!.addItem(pbuf$)
 
-         print (printer_dev)
-:                         @(25),j2$(1,109)
-         print (printer_dev)rt$,
-:                              @(22),ordt:m2$,
-:                              @(39),bot:m2$,
-:                              @(52),shipt:m2$,
-:                              @(67),"Sales Total: ",
-:                              @(o[1]-m8-8),u[0]:m1$,
-:                              @(120-m1*2-m8),u[1]:m1$,
-:                              @(160-m1-m8),u[0]-u[1]:m1$,
-:                              @(160-m8),sgn(fnd(u[0]-u[1],u[0]))*min(999.99,abs(fnd(u[0]-u[1],u[0]))):m8$
-        print (printer_dev)
-:                             @(65),"Sales Discount",
-:                             @(o[1]-m8-8),-t[2]:m1$
-        print (printer_dev)
-:                             @(72),"Freight",
-:                             @(o[1]-m8-8),t[1]:m1$
-        print (printer_dev)
-:                             @(70),"Sales Tax",
-:                             @(o[1]-m8-8),t[4]:m1$
-        print (printer_dev)
-:                             @(o[1]-m8-3),j$(1,m1)
-        print (printer_dev)u2:"###0"," Total Invoices",
-:                             @(66),rt$,
-:                             @(o[1]-m8-8),u[0]+t[1]-t[2]+t[4]:m1$
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(37)=" "
+        pbuf$(49)=" "
+        pbuf$(63)=" "
+        pbuf$(75)="Sales Discount"
+        pbuf$(88)=str(-t[2]:m1$)
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(37)=" "
+        pbuf$(49)=" "
+        pbuf$(63)=" "
+        pbuf$(75)="Freight"
+        pbuf$(88)=str(-t[1]:m1$)
+        OutVect!.addItem(pbuf$)
+        
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(37)=" "
+        pbuf$(49)=" "
+        pbuf$(63)=" "
+        pbuf$(75)="Sales Tax"
+        pbuf$(88)=str(-t[4]:m1$)
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(37)=" "
+        pbuf$(49)=" "
+        pbuf$(63)=" "
+        pbuf$(75)=" "
+        pbuf$(88)="------------"
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)=str(u2:"###0")+" Total Invoices"
+        pbuf$(37)=" "
+        pbuf$(49)=" "
+        pbuf$(63)=" "
+        pbuf$(75)=rt$
+        pbuf$(88)=str(u[0]+t[1]-t[2]+t[4]:m1$)
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(37)=" "
+        pbuf$(49)=" "
+        pbuf$(63)=" "
+        pbuf$(75)=" "
+        pbuf$(88)=" "
+        OutVect!.addItem(pbuf$)
+
+
         l=l+8
 
 rem --- Totals By Product
 
         dim t[3]
-        if int(len(t9$)/3)+7+l>l9 then gosub report_heading
-        print (printer_dev)""
-        print (printer_dev)"Product Type Totals"
-        print (printer_dev)""
-        print (printer_dev)"Product",
-:                           @(32+m2-6),"Units",
-:                           @(35+m2+m1-6),"Sales",
-:                           @(39+m2+m1*2-5),"Cost",
-:                           @(44+m2+m1*3-6),"G.P.",
-:                           @(47+m2+m1*4-7),"  GP %",'lf',
+        OutVect!.addItem("")
+        pbuf$(1)="Product Type Totals"
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)="Products"
+        pbuf$(35)="Units"
+        pbuf$(46)="Sales"
+        pbuf$(58)="Cost"
+        pbuf$(68)="G.P"
+        pbuf$(82)="GP %"
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)=""
+        pbuf$(35)="-----------------------------------------------------"
+        OutVect!.addItem(pbuf$)
 
 
         if len(t9$)<>0 then
@@ -276,10 +378,16 @@ rem --- Totals By Product
                 ivm10a.code_desc$=nf$
                 find record (ivm10_dev,key=firm_id$+"A"+t9$(x,3),dom=*next) ivm10a$
                 if t9[x0,0]=0 and t9[x0,1]=0 then continue
-                print (printer_dev)t9$(x,3)," ",ivm10a.code_desc$,
-:                                       @(30),t9[x0,3]:m2$,t9[x0,0]:m1$,
-:                                       t9[x0,1]:m1$,t9[x0,0]-t9[x0,1]:m1$,fnd(t9[x0,0]-t9[x0,1],
-:                                       t9[x0,0]):m1$
+
+                OutVect!.addItem("")
+                pbuf$(1)=t9$(x,3)+" "+ivm10a.code_desc$
+                pbuf$(30)=str(t9[x0,3]:m2$)
+                pbuf$(38)=str(t9[x0,0]:m1$)
+                pbuf$(50)=str(t9[x0,1]:m1$)
+                pbuf$(62)=str(t9[x0,0]-t9[x0,1]:m1$)
+                pbuf$(75)=str(fnd(t9[x0,0]-t9[x0,1],t9[x0,0]):m1$)
+                OutVect!.addItem(pbuf$)
+
                 t[0]=t[0]+t9[x0,0]
                 t[1]=t[1]+t9[x0,1]
                 t[2]=t[2]+t9[x0,2]
@@ -288,150 +396,187 @@ rem --- Totals By Product
             next x
         endif
 
-        print (printer_dev)
-:                                   @(25),j$(1,59)
+        OutVect!.addItem("")
+        pbuf$(1)=rt$
+        pbuf$(30)=str(t[3]:m2$)
+        pbuf$(38)=str(t[0]:m1$)
+        pbuf$(50)=str(t[1]:m1$)
+        pbuf$(62)=str(t[0]-t[1]:m1$)
+        pbuf$(75)=str(fnd(t[0]-t[1],t[0]):m1$)
+        OutVect!.addItem(pbuf$)
 
-        print (printer_dev)rt$,
-:                                   @(21),t[3]:m2$,t[0]:m1$,t[1]:m1$,t[0]-t[1]:m1$,fnd(t[0]-t[1],t[0]):m1$
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(37)=" "
+        pbuf$(49)=" "
+        pbuf$(63)=" "
+        pbuf$(75)=" "
+        pbuf$(88)=" "
+        OutVect!.addItem(pbuf$)
+
         l=l+2
 
 rem --- Total By Line Type
 
-        if l+9>l9 then gosub report_heading
+rem        if l+9>l9 then gosub report_heading
         dim t[1]
-        print (printer_dev)""
-        print (printer_dev)"Line Type Total",'lf','lf',
-:                                   @(0),"Description",
-:                                   @(29),"Ord",
-:                                   @(39),"B/O",
-:                                   @(48),"Ship",
-:                                   @(61),"Sales",
-:                                   @(75),"Cost",'lf'
+
+        OutVect!.addItem("")
+        pbuf$(1)="Line Type Total"
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)="Description"
+        pbuf$(35)="Ord"
+        pbuf$(46)="B/O"
+        pbuf$(58)="Ship"
+        pbuf$(68)="Sales"
+        pbuf$(82)="Cost"
+        OutVect!.addItem(pbuf$)
 
         if r[0,0]<>0 or r[0,1]<>0 or r[0,2]<>0 or r[0,3]<>0 or r[0,4]<>0 then
-            print (printer_dev)
-:                                   @(0),"Standard Items",
-:                                   @(33-m2),r[0,2]:m2$,
-:                                   @(43-m2),r[0,3]:m2$,
-:                                   @(53-m2),r[0,4]:m2$,
-:                                   @(67-m3),r[0,0]:m3$,
-:                                   @(80-m3),r[0,1]:m3$
+
+            OutVect!.addItem("")
+            pbuf$(1)="Standard Items"
+            pbuf$(30)=str(r[0,2]:m2$)
+            pbuf$(38)=str(r[0,3]:m2$)
+            pbuf$(50)=str(r[0,4]:m2$)
+            pbuf$(62)=str(r[0,0]:m3$)
+            pbuf$(75)=str(r[0,1]:m3$)
+            OutVect!.addItem(pbuf$)
+
         endif
 
         if r[1,0]<>0 or r[1,1]<>0 or r[1,2]<>0 or r[1,3]<>0 or r[1,4]<>0 then
-            print (printer_dev)
-:                                   @(0),"Promotional Items",
-:                                   @(33-m2),r[1,2]:m2$,
-:                                   @(43-m2),r[1,3]:m2$,
-:                                   @(53-m2),r[1,4]:m2$,
-:                                   @(67-m3),r[1,0]:m3$,
-:                                   @(80-m3),r[1,1]:m3$
+
+            OutVect!.addItem("")
+            pbuf$(1)="Promotional Items"
+            pbuf$(30)=str(r[1,2]:m2$)
+            pbuf$(38)=str(r[1,3]:m2$)
+            pbuf$(50)=str(r[1,4]:m2$)
+            pbuf$(62)=str(r[1,0]:m3$)
+            pbuf$(75)=str(r[1,1]:m3$)
+            OutVect!.addItem(pbuf$)
+
         endif
 
         if r[2,1]<>0 or r[2,0]<>0 or r[2,2]<>0 or r[2,3]<>0 or r[2,4]<>0 then
-            print (printer_dev)
-:                                   @(0),"Non-Stock Items",
-:                                   @(33-m2),r[2,2]:m2$,
-:                                   @(43-m2),r[2,3]:m2$,
-:                                   @(53-m2),r[2,4]:m2$,
-:                                   @(67-m3),r[2,0]:m3$,
-:                                   @(80-m3),r[2,1]:m3$
+
+            OutVect!.addItem("")
+            pbuf$(1)="Non-Stock Items"
+            pbuf$(30)=str(r[2,2]:m2$)
+            pbuf$(38)=str(r[2,3]:m2$)
+            pbuf$(50)=str(r[2,4]:m2$)
+            pbuf$(62)=str(r[2,0]:m3$)
+            pbuf$(75)=str(r[2,1]:m3$)
+            OutVect!.addItem(pbuf$)
+
         endif
 
-        if r[3,0]<>0 then print (printer_dev)
-:                                   @(0),"Other Charges",
-:                                   @(67-m3),r[3,0]:m3$
+        if r[3,0]<>0 then 
+
+            OutVect!.addItem("")
+            pbuf$(1)="Other Charges"
+            pbuf$(30)=" "
+            pbuf$(38)=" "
+            pbuf$(50)=" "
+            pbuf$(62)=str(r[3,0]:m2$)
+            OutVect!.addItem(pbuf$)
+
+        endif
 
         for x=0 to 3
             t[0]=t[0]+r[x,0]
             t[1]=t[1]+r[x,1]
         next x
 
-        print (printer_dev)
-:                                   @(57),j$(1,10),
-:                                   @(70),j$(1,10)
-        print (printer_dev)rt$,
-:                                   @(54),t[0]:m3$,
-:                                   @(67),t[1]:m3$
+
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(30)=" "
+        pbuf$(38)=" "
+        pbuf$(50)=" "
+        pbuf$(62)="------------"
+        pbuf$(75)="------------"
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)=rt$
+        pbuf$(30)=" "
+        pbuf$(38)=" "
+        pbuf$(50)=" "
+        pbuf$(62)=str(t[0]:m3$)
+        pbuf$(75)=str(t[1]:m3$)
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        OutVect!.addItem("")
+        OutVect!.addItem("")
+
+
         l=l+2
         goto std_exit
 
-report_heading: rem --- Report Heading
-
-        l=headings+1
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-        if status then exitto std_exit
-
-        if e9$<>"E" then
-            print (printer_dev)
-:                                   @(2),"-- Customer --",
-:                                   @(41),"Order",
-:                                   @(48),"Invoice",
-:                                   @(57),"Invoice",
-:                                   @(75),"P.O.",
-:                                   @(97),"Dist",
-:                                   @(120),"Tax"
-            print (printer_dev)
-:                                   @(0),"Number",
-:                                   @(8),"Name",
-:                                   @(40),"Number",
-:                                   @(48),"Number",
-:                                   @(58),"Date",
-:                                   @(66),"By",
-:                                   @(70),"Sls",
-:                                   @(74),"Number",
-:                                   @(85),"Ship Via",
-:                                   @(97),"Code",
-:                              
-:                                   @(103),"Terms",
-:                                   @(120),"Code",
-:                                   @(126),"Prntd?"
-        endif
-
-        l=l+2
-        return
 
 order_header: rem --- Order Header
 
-        if l+7>l9 or s4$="Y" then gosub report_heading
+rem        if l+7>l9 or s4$="Y" then gosub report_heading
         gosub terms_code
-        print (printer_dev)""
-        print (printer_dev)fnmask$(ope01a.customer_id$(1,p[0]),m0$),
-:                                   @(8),arm01a.customer_name$,
-:                                   @(40),ope11a.order_no$,
-:                                   @(48),ope01a.ar_inv_no$,
-:                                   @(57),fndate$(ope01a.invoice_date$),
-:                                   @(66),ope01a.or_taken_by$,
-:                                   @(70),ope01a.slspsn_code$,
-:                                   @(74),ope01a.customer_po_no$,
-:                                   @(85),ope01a.ar_ship_via$,
-:                                   @(98),ope01a.terms_code$,
-:                                   @(103),arm10a.terms_code$,
-:                                   @(120),ope01a.tax_code$,
-:                                   @(128),ope01a.print_status$; rem escape, need to make room for cust po#, a0$(111,20)
+
+        OutVect!.addItem("")
+        pbuf$(1)=(ope01a.customer_id$+" "+arm01a.customer_name$)
+        pbuf$(40)=ope11a.order_no$
+        pbuf$(52)=ope01a.ar_inv_no$
+        pbuf$(65)=fndate$(ope01a.invoice_date$)
+        pbuf$(75)=ope01a.ord_taken_by$
+        pbuf$(80)=ope01a.slspsn_code$
+        pbuf$(85)=ope01a.customer_po_no$
+        pbuf$(92)=ope01a.ar_ship_via$
+        pbuf$(100)=ope01a.terms_code$
+        pbuf$(110)=arm10a.ar_terms_code$
+        pbuf$(120)=ope01a.tax_code$
+        pbuf$(130)=ope01a.print_status$
+        OutVect!.addItem(pbuf$)
+
         if ope01a.lock_status$<>"N" then
-            print (printer_dev)
-:                                   @(40),"Lock Flag = ",ope01a.lock_status$
+            OutVect!.addItem("")
+            pbuf$(1)=" "
+            pbuf$(40)=("Lock Flag = "+ope01a.lock_status$)
+            OutVect!.addItem(pbuf$)
              l=l+1
         endif
-        print (printer_dev)""
-        print (printer_dev)
-:                                   @(132-m1*2-m3-m8-6),"Gross",
-:                                   @(132-m8-m1-9),"Extended"
-        print (printer_dev)
-:                                   @(1),"Ln Cd",
-:                                   @(7),"Prd Whs Item",
-        print (printer_dev)
-:                                   @(o[0]-m2*2-m8-m9-4),"Ord",
-:                                   @(o[0]-m2-m8-m9-4),"B/O",
-:                                   @(o[0]-m8-m9-5),"Ship",
-:                                   @(o[0]-m8-4),"Disc",
-:                                   @(o[1]-6),"Price",
-:                                   @(132-m1*2-m3-m8-6),"Sales",
-:                                   @(132-m1*2-m8-5),"Cost",
-:                                   @(132-m8-m1-5),"Cost",
-:                                   @(132-m8-7),"Profit",
-:                                   @(132-5),"GP %"
+
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(40)=" "
+        pbuf$(50)=" "
+        pbuf$(60)=" "
+        pbuf$(70)=" "
+        pbuf$(80)=" "
+        pbuf$(90)=" "
+        pbuf$(100)=" "
+        pbuf$(110)="Gross Extended"
+        pbuf$(120)=" "
+        pbuf$(130)=" "
+        OutVect!.addItem(pbuf$)
+
+
+        OutVect!.addItem("")
+        pbuf$(1)="Ln Cd Prd Whs Item"
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)=" "
+        pbuf$(40)="Ord"
+        pbuf$(50)="B/O"
+        pbuf$(60)="Ship"
+        pbuf$(70)="Price"
+        pbuf$(82)="Disc Cost"
+        pbuf$(95)="Sales Cost"
+        pbuf$(110)="Profit"
+        pbuf$(125)="GP %"
+        OutVect!.addItem(pbuf$)
+
         l=l+5
         return
 
@@ -439,31 +584,35 @@ sales_total: rem --- Sales Total/Freight/Sales Tax/Invoice Total
 
         precision 2
         if l+7>l9 then gosub order_header
-        print (printer_dev)
-:                                   @(o[0]-m2*3-m9-m8),j$(1,lw)
-        print (printer_dev)
-:                                   @(o[0]-m8-4),"Sales Total",
-:                                   @(o[0]-m2*3-m8-m9),ord:m2$,
-:                                   @(o[0]-m2*2-m8-m9),bo:m2$,
-:                                   @(o[0]-m2-m8-m9),ship:m2$,
-:                                   @(o[1]),s[0]:m1$,
-:                                   @(132-m1*2-m8),s[1]:m1$,
-:                                   @(132-m1-m8),s[0]-s[1]:m1$,
-:                                   @(132-m8),sgn(fnd(s[0]-s[1],s[0]))*min(999.99,abs(fnd(s[0]-s[1],s[0]))):m8$
-        print (printer_dev)
-:                                   @(o[0]-m8-7),"Sales Discount",
-:                                   @(o[1]),-ope01a.discount_amt:m1$
-        print (printer_dev)
-:                                   @(o[0]-m8),"Freight",
-:                                   @(o[1]),ope01a.freight_amt:m1$
-        print (printer_dev)
-:                                   @(o[0]-m8-2),"Sales Tax",
-:                                   @(o[1]),ope01a.tax_amount:m1$
-        print (printer_dev)
-:                                   @(o[1]),j$(1,m1)
-        print (printer_dev)
-:                                   @(o[0]-m8-9),"   Invoice Total",
-:                                   @(o[1]),s[0]+ope01a.freight_amt-ope01a.discount_amt+ope01a.tax_amount:m1$
+        OutVect!.addItem("")
+        pbuf$(1)="Sales Total"
+        pbuf$(40)=str(ord:m2$)
+        pbuf$(50)=str(bo:m2$)
+        pbuf$(60)=str(ship:m2$)
+        pbuf$(70)=str(s[0]:m1$)
+        pbuf$(82)=str(s[1]:m1$)
+        pbuf$(95)=str(s[0]-s[1]:m1$)
+        pbuf$(110)=str(sgn(fnd(s[0]-s[1],s[0]))*min(999.99,abs(fnd(s[0]-s[1],s[0]))):m8$)
+        pbuf$(125)="GP %"
+        OutVect!.addItem(pbuf$)
+
+
+        OutVect!.addItem("")
+        pbuf$(1)="Sales Discount"+str(-ope01a.discount_amt:m1$)
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)="Freight"+str(ope01a.freight_amt:m1$)
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)="Sales Tax"+str(ope01a.tax_amount:m1$)
+        OutVect!.addItem(pbuf$)
+
+        OutVect!.addItem("")
+        pbuf$(1)="   Invoice Total"+str(s[0]+ope01a.freight_amt-ope01a.discount_amt+ope01a.tax_amount:m1$)
+        OutVect!.addItem(pbuf$)
+
         u[3]=u[3]+s[0]
         t2=t2+1
         u2=u2+1,l=l+7,ordt=ordt+ord,bot=bot+bo,shipt=shipt+ship
@@ -481,13 +630,15 @@ serialized_inventory: rem --- Serialized/Lotted Inventory
             ope21a_key$=key(ope21_dev,end=*break)
             if ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$<>ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$ then break
             read record (ope21_dev,key=ope21a_key$) ope21a$
-            if l+1>l9 then gosub report_heading
-            print (printer_dev)
-:                                   @(max(o[0]-m8-m9-m2*3-i[2]-9,0)),x2$," ",ope21a_key.sequence_no$," ",ope21a.lotser_no$,
-            print (printer_dev)
-:                                   @(o[0]-m2*3-m8-m9),r0:m2$,
-:                                   @(o[0]-m2-m8-m9),r1:m2$,
-:                                   @(132-m1*2-m3-m8),r2:m3$
+rem            if l+1>l9 then gosub report_heading
+
+            OutVect!.addItem("")
+            pbuf$(1)=x2$+" "+ope21a_key.sequence_no$+" "+ope21a.lotser_no$
+            pbuf$(40)=str(r0:m2$)
+            pbuf$(52)=str(r1:m2$)
+            pbuf$(64)=str(r2:m3$)
+            OutVect!.addItem(pbuf$)
+
             l=l+1
         wend
 
@@ -495,37 +646,43 @@ serialized_inventory: rem --- Serialized/Lotted Inventory
 
 print_detail: rem --- Print Detail
 
-        if l>l9 then gosub report_heading; gosub order_header
-        print (printer_dev)
-:                                  @(1),ope11a.line_no$," ",ope11a.line_code$,
-:                                  @(11),ope11a.warehouse_id$,
+
+rem        if l>l9 then gosub report_heading
+        gosub order_header
+
+        OutVect!.addItem("")
+        pbuf$(1)=ope11a.line_no$+" "+ope11a.line_code$+"   "+ope11a.warehouse_id$
+        OutVect!.addItem(pbuf$)
+
         if pos(opm02a.line_type$="M")<=0 then
             if pos(opm02a.line_type$="O")<=0 then
-                print (printer_dev)
-:                                   @(7),ope11a.product_type$,
-                if pos(opm02a.line_type$="SP")<>0 then print (printer_dev)@(15),ope11a.item_id$,
+                OutVect!.addItem("")
+                pbuf$(1)=ope11a.product_type$
+                OutVect!.addItem(pbuf$)
+
+                if pos(opm02a.line_type$="SP")<>0 then OutVect!.addItem(ope11a.item_id$)
                 if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub average_item_cost
                 if ser_qty<>0 then  ope11a.unit_cost=ser_cost/ser_qty
-                print (printer_dev)
-:                                   @(o[0]-m2*3-m8-m9),ope11a.qty_ordered:m2$,ope11a.qty_backord:m2$,ope11a.qty_shipped:m2$,
+                OutVect!.addItem(str(ope11a.qty_ordered:m2$)+str(ope11a.qty_backord:m2$)+str(ope11a.qty_shipped:m2$))
+
             endif
 
-            print (printer_dev)
-:                                   @(o[0]-m8-m9),ope11a.disc_percent:m9$,
-:                                   @(o[0]-m8),ope11a.unit_price:m3$,
-:                                   @(o[0]-m8+m3),ope11a.ext_price:m1$,
-:                                   @(o[0]-m8+m1+m3),ope11a.unit_cost:m3$,
-:                                   @(o[0]-m8+m1+m3*2),ope11a.unit_cost*ope11a.qty_shipped:m1$,
-:                                   @(o[0]-m8+m1*2+m3*2),ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped:m1$,
-:                                   @(h0-m8),sgn(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))*min(999.99,abs(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))):m8$,
+            OutVect!.addItem("")
+            pbuf$(1)=str(ope11a.disc_percent:m9$)
+            pbuf$(40)=str(ope11a.unit_price:m3$)
+            pbuf$(50)=str(ope11a.ext_price:m1$)
+            pbuf$(60)=str(ope11a.unit_cost:m3$)
+            pbuf$(70)=str(ope11a.unit_cost*ope11a.qty_shipped:m1$)
+            pbuf$(82)=str(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped:m1$)
+            pbuf$(95)=str(sgn(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))*min(999.99,abs(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))):m8$)
+            OutVect!.addItem(pbuf$)
+
             if opm02a.line_type$<>"O" then
-                print (printer_dev)""
                 l=l+1
             endif
         endif
+        OutVect!.addItem(desc$)
 
-        print (printer_dev)
-:                                   @(17),desc$
         l=l+1
         if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub serialized_inventory
         return
@@ -597,6 +754,15 @@ rem --- Functions used to retrieve form values
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
         def fnget_table$(q0$)=rd_alias_id$
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+        def fnblank(q0)
+            for q1=1 to q0
+                OutVect!.addItem("")
+            next q1
+            return q1
+        fnend
+
 rem --- Miscellaneous functions
 
         def fncenter(q$,q)=int((q-len(q$))/2)
@@ -613,10 +779,24 @@ rem --- Format zip/postal code
 
 rem --- Date/time handling functions
 
-        def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+rem        def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
         def fnyy$(q$)=q$(3,2)
         def fnclock$(q$)=date(0:"%hz:%mz %p")
         def fntime$(q$)=date(0:"%Hz%mz")
+
+rem #include fndate.src
+
+        def fndate$(q$)
+        if cvs(q$,2)="" return ""
+        if pos("9"<>q$)=0 return q$
+        testdate$=""
+        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        return testdate$
+        fnend
+
+rem #endinclude fndate.src
+
+
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
