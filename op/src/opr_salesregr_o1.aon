@@ -40,8 +40,8 @@ rem --- Open/Lock Files
 rem --- Parameters
 
         g5=len(gls01a.acct_output$)
-        m0=len(ars01a.customer_output$)
-        m1=len(ars01a.amount_mask$)
+        m0=len(m0$)
+        m1=len(m1$)
 
 
 rem --- Parameters
@@ -49,6 +49,7 @@ rem --- Parameters
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1 
 
 rem --- Initializations
+        fr=0
         more=1
         cntr=0
         cntr1=0
@@ -71,20 +72,13 @@ rem --- Initializations
         dim headings$[headings],j1$(width),j2$(width,"-"),j3$(width,"="),j4$(width-100," ")
         headings$[0]=n1$
         headings$[1]=n3$
-rem ***        headings$[2]=""
         headings$[2]=h9$
-        headings$[3]="Beginning Customer: "+h5$+j4$+"Beginning Invoice Date: "+h7$
-        headings$[4]="Ending Customer     : "+h6$+j4$+"Ending Invoice Date     : "+h8$
+        if r1$=""headings$[3]="Begining Customer: First" else headings$[3]="Begining Customer:"+r1$
+        if r2$="" headings$[3]=headings$[3]+" -- Ending Customer: Last" else headings$[3]=headings$[3]+" -- Ending Customer: "+r2$
+        if r3$="" headings$[4]="Begining Invoice Date: First" else headings$[4]="Begining Order Date "+r3$                
+        if r4$="" headings$[4]=headings$[4]+" -- Ending Invoice Date: Last" else headings$[4]=headings$[4]+" -- Ending Order Date: "+r4$
 
-rem ***        dim x$(width)
-rem ***        x$(1)="Beginning Customer: "+h5$,x$(int((width-len(h9$))/2))=h9$
-rem ***        x$(100)="Beginning Invoice Date: "+h7$
-rem ***        headings$[3]=x$
-rem ***        dim x$(width)
-rem ***        x$(4)="Ending Customer: "+h6$
-rem ***        x$(103)="Ending Invoice Date: "+h8$
-rem ***        headings$[4]=x$
-
+rem --Column heading
         dim columns$[7,10]
         columns = 8
 
@@ -94,8 +88,8 @@ rem ***        headings$[4]=x$
         columns$[3,0]="Line.No",            columns$[3,1]="C",columns$[3,2]="8"
         columns$[4,0]="G.L.No.",            columns$[4,1]="C",columns$[4,2]="8"
         columns$[5,0]="Description",        columns$[5,1]="C",columns$[5,2]="25"
-        columns$[6,0]="Debit",              columns$[6,1]="C",columns$[6,2]="10"
-        columns$[7,0]="Credit",             columns$[7,1]="C",columns$[7,2]="10"
+        columns$[6,0]="Debit",              columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
+        columns$[7,0]="Credit",             columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
 
 
 rem --- retrieve template for ARM_CUSTMAST record key
@@ -230,6 +224,7 @@ end_of_file: rem --- End Of File?
 
 
 rem if summary program exists to glr_accttotalrpt.aon
+
     if r5$="S" then
         retain$="YES"
         update$=pgmdir$+"glr_accttotalrpt.aon"
@@ -290,9 +285,7 @@ rem --- Breaks
         endif
 
         if opw04a_key.ar_inv_no$<>t1$ then
-rem ***            if times=0
-rem ***                xwk = fnblank(6)
-rem ***            endif
+
         if d3-abs(c3)<>0 then chce=1; gosub previous_invoice_outof_balance
             if times=0
                 xwk = fnblank(6)
@@ -305,11 +298,12 @@ rem --- Find Invoice Date
             read record (opt01_dev,key=opw04a_key.firm_id$+opw04a_key.ar_type$+opw04a_key.customer_id$+opw04a_key.ar_inv_no$,dom=*next) opt01a$
 
 rem --- Print Invoice Number & Date
-
+        
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         if r5$="D" then 
+                
                 OutVect!.addItem(opw04a_key.ar_inv_no$)
-                OutVect!.addItem(fndate$(opt01a.invoice_date$))
+                OutVect!.addItem(str(fndate$(opt01a.invoice_date$)))
             endif
 
             t1$=opw04a_key.ar_inv_no$
@@ -324,21 +318,22 @@ rem --- Find G/L Name
         x1$=glm01a.gl_acct_desc$
 
 print_detail: rem --- Print
-
+            
         if r5$="D" then
             OutVect!.addItem(opw04a_key.line_no$)
             OutVect!.addItem(fnmask$(opw04a_key.gl_account$(1,g[3]),g5$))
             OutVect!.addItem(x1$)
 
             if opw04a.gl_post_amt>0 then
-                OutVect!.addItem(str(opw04a.gl_post_amt:m1$))
+                OutVect!.addItem(str(opw04a.gl_post_amt))
                 xwk = fnblank(1)
             else
                 xwk = fnblank(1)
-                OutVect!.addItem(str(abs(opw04a.gl_post_amt):m1$))
+                OutVect!.addItem(str(abs(opw04a.gl_post_amt)))
             endif
             l=l+1
             xwk = fnblank(3)
+            
         endif
 
         if opw04a.gl_post_amt>0 then
@@ -382,8 +377,8 @@ done: rem --- End
             else
                 xwk = fnblank(5)
             endif
-            OutVect!.addItem(str(d2:m1$))
-            OutVect!.addItem(str(abs(c2):m1$))
+            OutVect!.addItem(str(d2))
+            OutVect!.addItem(str(abs(c2)))
         endif
 
 rem --- G/L Account Totals
@@ -488,8 +483,8 @@ customer_break: rem --- Customer Break
             OutVect!.addItem("-----------------")
             OutVect!.addItem("Customer "+t0$+" Total: ")
             xwk = fnblank(5)
-            OutVect!.addItem(str(d1:m1$))
-            OutVect!.addItem(str(abs(c1):m1$))
+            OutVect!.addItem(str(d1))
+            OutVect!.addItem(str(abs(c1)))
             xwk = fnblank(8)
             l=l+3
         endif
@@ -506,8 +501,7 @@ customer_break: rem --- Customer Break
         x0$=fnmask$(opw04a.customer_id$,m0$)+" "+arm01a.customer_name$
         if r5$="D" then
 label_three:
-rem ***            if l+1>l9 then rem gosub report_heading
-rem ***            print (printer_dev)@(0),x0$,
+
             OutVect!.addItem(x0$)
         endif
 
@@ -524,14 +518,18 @@ previous_invoice_outof_balance: rem --- Previous Invoice Out Of Balance
 
     gosub invoice_history_detl_retained
     if d3-abs(c3)<>0 then
+         
         if r5$="D" then
-rem            xwk = fnblank(2)
-rem            OutVect!.addItem("**")
-rem            OutVect!.addItem(str(d3:m1$))
-rem            OutVect!.addItem(str(abs(c3):m1$))
-rem            print (printer_dev)@(131-2*m1),"**",d3:m1$,@(132-m1),abs(c3):m1$,'lf'
-            l=l+2
+               
+                xwk = fnblank(2)
+                OutVect!.addItem("**")
+                OutVect!.addItem(str(d3:m1$))
+                OutVect!.addItem(str(abs(c3):m1$))
+                xwk = fnblank(8)
+                xwk = fnblank(3)
+                endif
         endif
+       
     endif
 
     return
@@ -558,16 +556,17 @@ rem --- Summarize Non-Retained Postings
         OutVect!.addItem(fnmask$(arm10d.gl_ar_acct$(1,g[3]),gls01a.acct_output$))
         OutVect!.addItem("***Detail Not Retained***")
         if oob>0 then
-            OutVect!.addItem(str(oob:m1$))
+            OutVect!.addItem(str(oob))
             xwk = fnblank(1)
         else
             xwk = fnblank(1)
-            OutVect!.addItem(str(abs(oob):m1$))
+            OutVect!.addItem(str(abs(oob)))
         endif
         if chce=0 then
             xwk = fnblank(1)
         else
             xwk = fnblank(3)
+           
         endif
         if oob>0 then
             d1=d1+oob
@@ -647,7 +646,7 @@ rem --- Date/time handling functions
             return testdate$
         fnend
 
-rem def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+rem     def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
