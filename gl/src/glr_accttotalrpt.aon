@@ -11,13 +11,14 @@ rem --- All Rights Reserved
         seterr std_error
 
 rem --- Document initializations
-            OutVect!=bbjAPI().getSysGui().makeVector()
-            HdrVect!=bbjAPI().getSysGui().makeVector()
-            BrkVect!=bbjAPI().getSysGui().makeVector()
-            rep_date$=date(0:"%Mz/%Dz/%Yd")
-            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-            rep_time$=date(0:"%hz:%mz %p")
-            rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 
 rem --- Retrieve the program path
@@ -43,8 +44,10 @@ rem --- Parameters
 rem --- Initializations
 
         dim t[1],o[3],p[4]
-        m0=len(ars01a.customer_output$)
-        m1=len(ars01a.amount_mask$),m=max(m0,8),l9=59,l=l9+1
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1 
+        m0=len(m0$)
+        m1=len(m1$),m=max(m0,8),l9=59,l=l9+1
 
 rem -- column heading
 
@@ -52,8 +55,8 @@ rem -- column heading
         columns=4
         columns$[0,0]="Account",     columns$[0,1]="C",columns$[0,2]="10"
         columns$[1,0]="Description", columns$[1,1]="C",columns$[1,2]="25"
-        columns$[2,0]="Debit",       columns$[2,1]="C",columns$[2,2]="10"
-        columns$[3,0]="Credit",      columns$[3,1]="C",columns$[3,2]="10"
+        columns$[2,0]="Debit",       columns$[2,1]="C",columns$[2,2]="10",columns$[2,3]=m1$
+        columns$[3,0]="Credit",      columns$[3,1]="C",columns$[3,2]="10",columns$[3,3]=m1$
 
 
 rem --- Initialize Print Positions
@@ -81,8 +84,9 @@ rem --- Report Headings
         next i
 
         headings$[headings-1]="General Ledger Account Totals"
-
-
+        h9$="*** Summary ***"
+        headings$[2]=h9$
+            
 rem --- Position File
 
         call pgmdir$+"adc_progress.aon","N","","","","",0,glw04_dev,1,meter_num,status
@@ -120,11 +124,11 @@ rem --- Format detail line fields
         credit$=""
         if glw04a.gl_post_amt>0 then
             t[0]=t[0]+glw04a.gl_post_amt
-            debit$=str(glw04a.gl_post_amt:m1$)
+            debit$=str(glw04a.gl_post_amt)
         endif
         if glw04a.gl_post_amt<0 then
             t[1]=t[1]+glw04a.gl_post_amt
-            credit$=str(abs(glw04a.gl_post_amt):m1$)
+            credit$=str(abs(glw04a.gl_post_amt))
         endif
 
 rem --- Print detail line
@@ -136,24 +140,22 @@ rem --- Print detail line
         OutVect!.addItem(credit$)
         l=l+1
 
-
 rem --- Loop back for next glw-04 record
 
  wend
-
 
 done: rem --- All Done
 
         total$="Total For Report"
         balance=t[0]+t[1]
-        debit$=str(t[0]:m1$)
-        credit$=str(t[1]:m1$)
+        debit$=str(t[0])
+        credit$=str(t[1])
         gosub Print_Total
         if balance=0 then goto exit_report
         total$="Balance"
         debit$="",credit$=""
-        if balance>0 then  debit$=str(balance:m1$)
-        if balance<0 then  credit$=str(abs(balance):m1$)
+        if balance>0 then  debit$=str(balance)
+        if balance<0 then  credit$=str(abs(balance))
         gosub Print_Total
         
 
@@ -162,7 +164,6 @@ rem --- Run next overlay
 exit_report:
         next_overlay$=""
         goto std_exit
-
 
 print_Total: rem --- Print total/subtotal
         xwk = fnblank(2)
