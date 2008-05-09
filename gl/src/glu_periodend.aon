@@ -47,9 +47,11 @@ rem --- Parameters
 
 rem --- Assign input values to local variables
 
-    period$=option!.getOptionData("CURRENT_PER")
+rem    period$=option!.getOptionData("CURRENT_PER")
+    period$=gls01a.current_per$
     period=num(period$)
-    year$=option!.getOptionData("CURRENT_YEAR")
+rem    year$=option!.getOptionData("CURRENT_YEAR")
+    year$=gls01a.current_year$
     year=num(year$)
 
 rem --- Initializations
@@ -60,12 +62,17 @@ rem --- All transaction files empty?
 
     call pgmdir$+"glc_filecheck.aon",firm_id$,status
     if status goto std_exit_no_update
-escape;rem jpb
+
 rem --- Confirm that this user REALLY wants to close the fiscal period
 
-    message$="OK to close "+period_name$+" (fiscal period "+period$+" "+year$+")?"
-    call pgmdir$+"adc_yesno.aon",0,message$,0,v$,v3
-    if v3=4 or v$="NO" goto std_exit_no_update
+    msg_id$="GL_PER_END"
+    dim msg_tokens$[3]
+    msg_tokens$[1]=period_name$
+    msg_tokens$[2]=period$
+    msg_tokens$[3]=year$
+
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_update
 
 rem --- Close period
 
