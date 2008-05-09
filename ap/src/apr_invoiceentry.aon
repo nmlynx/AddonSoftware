@@ -204,11 +204,6 @@ rem --- Get user approval to proceed
         gosub disp_message
         if msg_opt$<>"Y" then goto std_exit
 
-rem        prompt$="Do you want to run the Invoice Register?"
-rem        call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-rem        if fkey=4 goto std_exit
-rem        if answer$<>"Y" goto std_exit
-
 rem --- Document initializations
 
         OutVect!=bbjAPI().getSysGui().makeVector()
