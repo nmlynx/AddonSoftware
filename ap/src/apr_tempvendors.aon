@@ -113,9 +113,13 @@ rem --- Define print positions for the invoice history listing
 
 rem --- Prompt user for permission to continue
 
-    call pgmdir$+"adc_yesno.aon",1,"RUN_AP_TEMP_VEND_RPT",2,answer$,fkey
-    if fkey=4 goto std_exit
-    if answer$<>"Y" goto std_exit
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
 
 rem --- Open printer, start progress meter and position Temp Vendor file
 
@@ -239,6 +243,16 @@ rem --- Miscellaneous functions
 rem --- Date/time handling functions
 
     def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 

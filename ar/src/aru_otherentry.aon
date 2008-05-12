@@ -37,10 +37,9 @@ rem --- Get user approval to proceed
 rem --- Should GL be updated (if it's being used)?
 
     if gl$="Y"
-        prompt$="Do you want to post to the General Ledger when this register is updated?"
-        call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-        if fkey=4 goto std_exit_no_update
-        if answer$<>"Y" gl$="N"
+        msg_id$="AR_POST_GL"
+        gosub disp_message
+        if msg_opt$<>"Y" gl$="N"
     endif
 
 rem --- Start progress meter and position invoice file

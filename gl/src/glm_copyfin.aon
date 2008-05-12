@@ -74,23 +74,28 @@ rem --- validate options
         release
     endif
 
-    find(glm12_dev,key=tofirm$+toreport$+"0000",dom=approve)
+    find(glm12_dev,key=tofirm$+toreport$,dom=approve)
         dim msg$[1]
         msg$[0]="You cannot copy to an existing report."
         call pgmdir$+"adc_stdmessage.aon",0,msg$[all],1,0,0,x$,0
         release
-    endif
+    rem endif
 
 rem --- Get user approval to proceed
 approve:
 
     more=1
-    prompt$="Are you ready to copy Firm/Report "+fromfirm$+"/"+fromreport$+
-:           " to Firm/Report "+tofirm$+"/"+toreport$+"?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit_no_copy
-    if answer$<>"Y" goto std_exit_no_copy
+    msg_id$="GL_CPY_FIN"
+    dim msg_tokens$[4]
+    msg_tokens$[1]=fromfirm$
+    msg_tokens$[2]=fromreport$
+    msg_tokens$[3]=tofirm$
+    msg_tokens$[4]=toreport$
 
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_copy
+
+    
 rem --- Start progress meter
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,glm12_dev,1,0,status
@@ -99,10 +104,10 @@ rem  --- Copy Header"
 
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-    glm12_key$=fromfirm$+fromreport$+"0000"
+    glm12_key$=fromfirm$+fromreport$
     read record (glm12_dev,key=glm12_key$,dom=done)glm12a$
     glm12a.firm_id$=tofirm$,glm12a.gl_rpt_no$=toreport$
-    glm12_key$=glm12a.firm_id$+glm12a.gl_rpt_no$+glm12a.gl_rpt_line$
+    glm12_key$=glm12a.firm_id$+glm12a.gl_rpt_no$
     write record (glm12_dev2,key=glm12_key$)glm12a$
 
 rem --- COpy detail records

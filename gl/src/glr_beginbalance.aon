@@ -134,16 +134,18 @@ rem --- Options are based on the lead in program
 rem --- Prompt user for permission to continue for update beginning balances
 
     if update$="Y" goto closing_year
-    msg$="Do you want to produce the Beginning Balances Register?"
-    call pgmdir$+"adc_yesno.aon",1,msg$,1,v$,v3
-    if v$<>"Y" goto std_exit_no_print
+    msg_id$="GL_BEG_BAL"
+    gosub disp_message
+    if msg_opt$<>"Y" goto std_exit_no_print
     goto position_file
 
 closing_year: rem --- Get confirmation from user when closing the fiscal year
 
-    v4$="OK to close fiscal "+prior$
-    call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-    if v$<>"YES" goto std_exit_no_print
+    msg_id$="GL_CLS_FISC"
+    dim msg_tokens$[1]
+    msg_tokens$[1]=prior$
+    gosub disp_message
+    if msg_opt$<>"Y" goto std_exit_no_print
 
 position_file: rem --- Setup DocOut, start progress meter and position File
 

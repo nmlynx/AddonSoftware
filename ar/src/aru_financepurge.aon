@@ -48,10 +48,9 @@ rem --- Initializations
 
 rem --- Get user approval to proceed
 
-    prompt$="Remove all generated and entered finance charges?"
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,answer$,fkey
-    if fkey=4 goto std_exit_no_update
-    if answer$<>"Y" goto std_exit_no_update
+    msg_id$="AR_DEL_FIN_CHRG"
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_update
 
 rem --- Start progress meter and position invoice header file
 
