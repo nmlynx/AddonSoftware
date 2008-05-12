@@ -66,11 +66,11 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
-    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     mpm01a_key$=firm_id$+forecast$
-    find record (mpm01a_dev,key=mpm01a_key$,err=std_missing_params) mpm01a$
+    find record (mpm01_dev,key=mpm01a_key$,err=std_missing_params) mpm01a$
         
 rem --- Parameters
 
@@ -87,7 +87,7 @@ rem --- Parameters
     current_year$=gls01a.current_year$
     m2$=gls01a.unit_mask$
     number=1
-    headings=2,mp=26
+    headings=6,mp=26
 
 rem --- Initializations
 
@@ -100,7 +100,7 @@ rem --- Initializations
     begdate$=cvs(begdate$,3)
     if begdate$="" begdate$=sys_date$
     allproducts=1
-    headings$[o]=firm_name$
+    headings$[0]=firm_name$
     headings$[1]=task_desc$
     when$=sys_date$,clock$=""
     l9=59

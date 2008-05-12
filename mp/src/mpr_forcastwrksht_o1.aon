@@ -14,6 +14,16 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -35,7 +45,7 @@ rem --- Initializations
     months$=" Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec "
     h8$="Number Of Periods: "+str(mpm01a.no_of_pers)
     dates$[1]=begdate$
-    h9$="  Days Per Period: "+str(mpm01a.days_in_per)
+    h9$="Days Per Period: "+str(mpm01a.days_in_per)
     hr=width-max(len(h8$),len(h9$))
     prefix$=cvs(firm_id$+whse$+product$,2)
     underlines$(len(underlines$))=" "
@@ -43,16 +53,25 @@ rem --- Initializations
     dates1$="",dashes1$="",months2$="",dates2$="",dashes2$=""
     t0$=""
     t1$=""
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,15,15
+    call pgmdir$+"adc_sizemask.aon",ivs01a.unit_mask$,m2,15,15
     for x=0 to 3
         o[x]=width-m2*(4-x)
     next x
-    h6$="Forecast: "+forecast$
+    h6$="For Forecast: "+forecast$
     h7$="Beginning Date: "+fndate$(begdate$)
     hc=fncenter(h7$,width)
     hf=fncenter(h6$,width)
-    needed=6,position=40
+    needed=5,position=40
     more=1
+
+    headings$[1]=headings$[1]+h6$
+    headings$[2]="Warehouse: "+whse$
+    headings$[3]=h7$
+    if product$="" then headings$[4]="Product Type: All" else headings$[4]="Product Type: "+product$
+    headings$[5]=h8$
+    headings$[6]=h9$
+    pbufwidth=220
+    dim pbuf$(pbufwidth)
 
 rem --- Build forecast entry lines
 
@@ -66,10 +85,10 @@ rem --- Build forecast entry lines
     endif 
 
     for x=1 to mpm01a.no_of_pers
-        m=num(dates$[x](3,2))
-        d=num(dates$[x](5,2))
-        months1$=months1$+months$((m-1)*5+1,5)
-        dates1$=dates1$+str(d:"##00-"),dashes1$=dashes1$+underlines$
+        m=num(dates$[x](5,2))
+        d=num(dates$[x](7,2))
+        months1$=months1$+" "+months$((m-1)*5+1,5)
+        dates1$=dates1$+str(d:" ##00-"),dashes1$=dashes1$+" "+underlines$
     next x
 
     if mpm01a.no_of_pers>14 then 
@@ -79,7 +98,7 @@ rem --- Build forecast entry lines
         dates1$=dates1$(1,65)
         dashes2$=dashes1$(66)
         dashes1$=dashes1$(1,65),needed=10
-    endif 
+    endif
 
 rem --- Background
 
@@ -99,6 +118,12 @@ rem --- Initialize Period Descriptions
             period$=total_periods$
         endif
     next loop
+
+rem --- Initializations for DocOut
+
+    dim columns$[0,10]
+    columns=0
+    columns$[0,0]="Item"+"                 "+"Description"+"                                         "+header$[1]+" Usage    "+header$[2]+" Usage    "+header$[3]+" Usage    "+header$[4]+" Usage",columns$[0,1]="C",columns$[0,2]="220"
 
 rem --- Position ivm-02a sort file
 
@@ -140,41 +165,39 @@ rem --- Get item usage totals for the past four periods
 
 rem --- Print detail line
 
-        l=l+needed
-        if l>l9 then gosub report_heading
-        print (printer_dev)""
-        print (printer_dev)ivm01a.item_id$," ",@(ivlength),fnitem$(ivm01a.item_desc$,i[2],i[3],
-:       i[4]),@(o[0]),usage[1]:m2$,@(o[1]),usage[2]:m2$,@(o[2]),usage[3]:m2$,@(o[3]),usage[4]:m2$
-        print (printer_dev)""
-        print (printer_dev)@(position),months1$
-        print (printer_dev)@(position),dates1$
-        print (printer_dev)@(position),dashes1$
+        pbuf$(1)=ivm01a.item_id$+" "+fnitem$(ivm01a.item_desc$,i[2],i[3],i[4])
+        pbuf$(70)=str(usage[1]:m2$)
+        pbuf$(90)=str(usage[2]:m2$)
+        pbuf$(110)=str(usage[3]:m2$)
+        pbuf$(130)=str(usage[4]:m2$)
+        OutVect!.addItem(pbuf$)
+        a=fnblank(1)
+        pbuf$(1)=""
+        pbuf$(60)=months1$
+        OutVect!.addItem(pbuf$)
+        pbuf$(60)=dates1$
+        OutVect!.addItem(pbuf$)
+        pbuf$(60)=dashes1$
+        OutVect!.addItem(pbuf$)
+        a=fnblank(1)
 
 rem --- If there are more than 13 periods, print second set
 
-        if mpm01a.no_of_pers>14 then 
-            print (printer_dev)""
-            print (printer_dev)@(position),months2$
-            print (printer_dev)@(position),dates2$
-            print (printer_dev)@(position),dashes2$
+        if mpm01a.no_of_pers>=14 then 
+            a=fnblank(1)
+            pbuf$(60)=months2$
+            OutVect!.addItem(pbuf$)
+            pbuf$(60)=dates2$
+            OutVect!.addItem(pbuf$)
+            pbuf$(60)=dashes2$
+            OutVect!.addItem(pbuf$)
+            a=fnblank(1)
         endif
     wend 
 
 done: rem --- All done
 
     goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=headings+9
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)h4$,@(hf),h6$,@(hr),h8$
-    print (printer_dev)h5$,@(hc),h7$,@(hr),h9$
-    print (printer_dev)""
-    print (printer_dev)"Item",@(ivlength),"Description",@(o[0]+4),header$[1]+" Usage",@(o[1]+4),
-:   header$[2]+" Usage",@(o[2]+4),header$[3]+" Usage",@(o[3]+4),header$[4]+" Usage"
-return
 
 warehouse_break: rem --- Warehouse break
 
@@ -187,7 +210,7 @@ warehouse_break: rem --- Warehouse break
     h4$="   Warehouse: "+ivm10c.warehouse_id$+"  "+cvs(ivm10c.short_name$,2)
     l=l9+1
     t0$=ivm02a.warehouse_id$,t1$=""
-return
+    return
 
 product_break: rem --- Product break
 
@@ -200,7 +223,7 @@ product_break: rem --- Product break
     h5$="Product Type: "+ivm10a.product_type$+" "+cvs(ivm10a.code_desc$,2)
     l=l9+1
     t1$=ivm02a.product_type$
-return
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -256,6 +279,15 @@ rem --- fnbasename$: Strip path and optionally the suffix from a file name
         if q then q$=q$(q+1)
         if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
     return q$
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- fnglobal: Return numeric value of passed stbl variable
 
