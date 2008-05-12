@@ -13,6 +13,16 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -21,17 +31,9 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open printer
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
-
 rem --- Initializations
 
     precision ivprecision
-    dim a0$(27),a1$(100),a[mp],b0$(52),b1$(30),b2$(57),b[11]
-    dim c0$(22),c1$(60),c2$(64),c3$(40),c4$(21),c6$(90),c[9]
-    dim d0$(24),d1$(64),d[20],o[10]
     h5$="Forecast: "+forecast$
     headings$[1]=headings$[1]+" For "+h5$
     prefix$=cvs(firm_id$+forecast$+whse$+begitem$,2)
@@ -39,41 +41,40 @@ rem --- Initializations
     x$=" No Bill Of Materials Defined "
     more=1
 
-rem --- Print positions
-
-    o[10]=width-8
-    o[9]=o[10]-10
-    o[8]=o[9]-10
-    o[7]=o[8]-11
-    o[6]=o[7]-9
-    o[5]=o[6]-m2-1
-    o[4]=o[5]-m2-1
-    o[3]=o[4]-4
-    o[2]=o[3]-m5-1
-    o[1]=ivlength
-    dw=o[2]-o[1]+1
-    x=width-o[1]-15
-    numcol=int(x/m2)
-    if numcol>number then let numcol=number
-
+rem ---  column heading
+    dim columns$[11,10]
+    columns=11
+    columns$[0,0]="Item",          columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]="Description",   columns$[1,1]="C",columns$[1,2]="25"
+    columns$[2,0]="Lead Time",     columns$[2,1]="C",columns$[2,2]="8";rem ,columns$[2,3]=m5$
+    columns$[3,0]="Rev",           columns$[3,1]="C",columns$[3,2]="8"
+    columns$[4,0]="EOQ",           columns$[4,1]="C",columns$[4,2]="8";rem ,columns$[4,3]=m2$
+    columns$[5,0]="Lot Size",      columns$[5,1]="C",columns$[5,2]="5"
+    columns$[6,0]="Phantom Bill?", columns$[6,1]="C",columns$[6,2]="4"
+    columns$[7,0]="Est Yield",     columns$[7,1]="C",columns$[7,2]="6"
+    columns$[8,0]="Bill Created",  columns$[8,1]="C",columns$[8,2]="8"
+    columns$[9,0]="Last Rev",      columns$[9,1]="C",columns$[9,2]="8"
+    columns$[10,0]="Last Used",    columns$[10,1]="C",columns$[10,2]="8"
+    columns$[11,0]=" ",            columns$[11,1]="C",columns$[11,2]="8"
+   
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,mpe01a_dev,1,meter_num,status
 
 rem --- Finalize headings
 
-    h6$=" Warehouse: "+cvs(whse$,2)
-    if begitem$<> "" then h7$="Beginning Item: "+cvs(begitem$,2) else h7$="Beginning Item: First"
-    if enditem$<> "" then h8$="   Ending Item: "+cvs(enditem$,2) else h8$="   Ending Item: Last"
+    h6$="Warehouse: "+cvs(whse$,2)
+    if begitem$<> "" then h7$="From Item: "+cvs(begitem$,2) else h7$="From Item: First"
+    if enditem$<> "" then h7$=h7$+"   To Item: "+cvs(enditem$,2) else h7$=h7$+"   To Item: Last"
     if buyer$="" then h9$="Buyer Code: All" else h9$="Buyer Code: "+cvs(buyer$,2)
     if begper=1 and endper=mpm01a.no_of_pers then p9$="All Periods" else p9$="Periods "+str(begper)+" Through "+str(endper)
-
+    headings$[2]=h6$
+    headings$[3]=p9$
+    headings$[4]=h7$
+    headings$[5]=h9$
     dim plandate$[number]
-    dim nb$(width-o[5],"-")
     begper=begper-1
-    endper=endper-1,position=width-m2*numcol,n=0
-    hr=width-max(len(h7$),len(h8$))
-    nb$(fncenter(x$,len(nb$)),len(x$))=x$
+    endper=endper-1,n=0
     for x=begper to endper
         date_fields$=field(mpm01a$,"plan_date_0"+str(x+1),err=next_per)
         n=n+1
@@ -90,21 +91,15 @@ rem --- Read next mpe-01 production forecast record
 
     while more 
         read record (mpe01a_dev,end=done) mpe01a$
-        if pos(prefix$=mpe01a.firm_id$+mpe01a.forecast$+mpe01a.warehouse_id$+mpe01a.item_id$)<>1 then  goto std_exit
-        if cvs(enditem$,2)<>"" then if mpe01a.item_id$>enditem$ then  goto std_exit
+        if pos(mpe01a.firm_id$+mpe01a.forecast$+mpe01a.warehouse_id$=prefix$)<>1 then  goto std_exit
+        if cvs(enditem$,2)<>"" and mpe01a.item_id$>enditem$ then  goto std_exit
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Retreive item and warehouse
 
-        dim c0$(22),c1$(60),c2$(64),c3$(40),c4$(21),c6$(90),c[9]
-        dim d0$(24),d1$(64),d[20],desc$(dw)
-        ivm01a.firm_id$=firm_id$
-        ivm01a.item_id$=mpe01a.item_id$
-        ivm02a.firm_id$=firm_id$
-        ivm02a.warehouse_id$=whse$
-        ivm02a.item_id$=mpe01a.item_id$
-        find record (ivm01a_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=*next) ivm01a$
-        find record (ivm02a_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*next) ivm02a$
+        dim desc$(60)
+        find record (ivm01a_dev,key=firm_id$+mpe01a.item_id$,dom=*next) ivm01a$
+        find record (ivm02a_dev,key=firm_id$+whse$+mpe01a.item_id$,dom=*next) ivm02a$
         if buyer$<>"" then if ivm02a.buyer_code$<>buyer$ then continue
         eoq=ivm01a.eoq
         leadtime=ivm01a.lead_time
@@ -113,7 +108,6 @@ rem --- Retreive item and warehouse
 
 rem --- Bill of materials?
 
-        dim b0$(52),b1$(30),b2$(57),b[11]
         revcode$=""
         lot$="",phantom$="",yield$="",created$=""
         revision$=""
@@ -139,7 +133,6 @@ rem --- Format bill fields
 
 rem --- Print item heading
 
-        if l+5>l9 then gosub report_heading
         gosub item_heading
 
 rem --- Build detail information
@@ -159,42 +152,21 @@ rem --- Accumulate total for periods being printed
         next x
 
 rem --- Print forecast amounts by period for this item
-
-        while more 
-            first=last+1
-            last=first+numcol-1
-            if first>number then break
-            if last>number then let last=number
-            if l+3>l9 then 
-                gosub report_heading
-                gosub item_heading
-            endif 
-
-rem --- Print dates
-
-            dim buffer$(width)
-            buffer$(position-5)="Date"
-            n=position
-            for x=first to last
-                buffer$(n+m2-9)=plandate$[x]
-                n=n+m2
-            next x
-            print (printer_dev)""
-            print (printer_dev)buffer$
-
-rem --- Print amounts
-
-            dim buffer$(width)
-            buffer$(position-9)="Quantity"
-            n=position
-            for x=first to last
-                buffer$(n)=str(amounts[x]:m2$)
-                n=n+m2
-            next x
-            print (printer_dev)buffer$
-            l=l+3
-        wend 
-
+        xwk=fnblank(12)
+        OutVect!.addItem("")
+        OutVect!.addItem("Date")
+        for x=1 to number
+            OutVect!.addItem(plandate$[x])
+        next x
+        if columns-(number+1)<>0 then xwk=fnblank(columns-(number+1))
+        
+        OutVect!.addItem("")
+        OutVect!.addItem("Quantity")
+        for x=1 to number
+            OutVect!.addItem(str(amounts[x]:m2$))
+        next x
+        if columns-(number+1)<>0 then xwk=fnblank(columns-(number+1))
+       
 rem --- Loop back for next mpe-01 production forecast record
     wend
 
@@ -202,30 +174,35 @@ done: rem --- All done
 
     goto std_exit
 
-report_heading: rem --- Report Heading
-
-    l=headings+5
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)h6$,@(fncenter(p9$,width)),p9$,@(hr),h7$
-    print (printer_dev)h9$,@(hr),h8$
-    print (printer_dev)""
-    print (printer_dev)@(o[2]),"Lead",@(o[5]+m2-4),"Lot",@(o[6]),"Phantom",@(o[7]),"Estimated",@(o[8]+2),"Bill",@(o[9]+2),"Last",@(o[10]+2),"Last"
-    print (printer_dev)"Item",@(o[1]),"Description",@(o[2]),"Time",@(o[3]),"Rev",@(o[4]+m2-4),"EOQ",
-:   @(o[5]+m2-5),"Size",@(o[6])," Bill?",@(o[7]+2),"Yield",@(o[8]),"Created",@(o[9]),"Revision",@(o[10]+2),"Used"
-    return
-
 item_heading: rem --- Item heading
-
+    xwk=fnblank(12)
     print (printer_dev)""
     if bill$<>"" then 
-        print (printer_dev)ivm01a.item_id$,@(o[1]),desc$,@(o[2]),leadtime:m5$,@(o[3]),revcode$,@(o[4]),
-:       eoq:m2$,@(o[5]),lot$,@(o[6]+3),phantom$,@(o[7]),yield$,@(o[8]),created$,@(o[9]),revision$,@(o[10]),used$
+        OutVect!.addItem(ivm01a.item_id$)
+        OutVect!.addItem(desc$)
+        OutVect!.addItem(str(leadtime:m5$))
+        OutVect!.addItem(revcode$)
+        OutVect!.addItem(str(eoq:m2$))
+        OutVect!.addItem(lot$)
+        OutVect!.addItem(phantom$)
+        OutVect!.addItem(yield$)
+        OutVect!.addItem(created$)
+        OutVect!.addItem(revision$)
+        OutVect!.addItem(used$)
+        xwk=fnblank(1)
     else
-        print (printer_dev)ivm01a.item_id$,@(o[1]),desc$,@(o[2]),leadtime:m5$,@(o[4]),eoq:m2$,@(o[5]),nb$
+        OutVect!.addItem(ivm01a.item_id$)
+        OutVect!.addItem(desc$)
+        OutVect!.addItem(str(leadtime:m5$))
+        OutVect!.addItem("")
+        OutVect!.addItem(str(eoq:m2$))
+        OutVect!.addItem(fill(10,"-"))
+        OutVect!.addItem(x$)
+        for i= 1 to 5
+            OutVect!.addItem(fill(10,"-"))
+        next i
     endif
-    let l=l+2
-    return
+return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -302,6 +279,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src

@@ -78,7 +78,7 @@ rem --- Parameters
     i[3]=num(ivs01a.desc_len_02$)
     i[4]=num(ivs01a.desc_len_03$)
     number=1
-    headings=2,mp=26
+    headings=5,mp=26
 
 rem --- Initializations
 
@@ -87,8 +87,8 @@ rem --- Initializations
     dim s0$(5),s1$(83),s2$(156),s[2],w0$(160),y0$(36),y[0]
     dim description$[number],field[number],position[number],length[number]
     dim begvend$(6),endvend$(6),headings$[headings]
-    headings$[o]=firm_name$
-    headings$[1]=task_desc$
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$
     when$=sys_date$,clock$=""
     clock$=""
     l9=59,l=l9+1,width=132
