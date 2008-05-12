@@ -2,6 +2,8 @@
 rem --- Check for activity
 	okay$="Y"
 	mp=13
+	reason$=""
+
 rem --- Check glm-02 for activity
 	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
 	dim glm02a$:fnget_tpl$("GLM_ACCTSUMMARY")
@@ -16,22 +18,109 @@ rem --- Check glm-02 for activity
 			if nfield(glm02a$,"period_amt_"+str(x:"00"))<>0 okay$="N"
 			if nfield(glm02a$,"period_units_"+str(x:"00"))<>0 okay$="N"
 		next x
-		if okay$="N" break
+		if okay$="N"
+			reason$="Account Summary"
+			break
+		endif
 	wend
 
 rem --- Check glt-06 for history
 	if okay$="Y"
 		glt06_dev=fnget_dev("GLT_TRANSDETAIL")
-		dim glt06a$:fnget_tpl$("GLT_TRANSDETAIL")
 		read (glt06_dev,key=firm_id$+this_acct$,dom=*next)
 		while 1
 			glt06_key$=key(glt06_dev,end=*break)
-			if pos(firm_id$+this_acct$=glt06_key$)=1 okay$="N"
+			if pos(firm_id$+this_acct$=glt06_key$)=1
+				okay$="N"
+				reason$="Transaction History"
+			endif
 			break
 		wend
 	endif
+
+rem ---Check Journal Entries for activity
+	if okay$="Y"
+		gle11_dev=fnget_dev("GLE_JRNLDET")
+		read (gle11_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+		while 1
+			gle11_key$=key(gle11_dev,end=*break)
+			if pos(firm_id$+this_acct$=gle11_key$)=1
+				okay$="N"
+				reason$="Journal Entry"
+			endif
+			break
+		wend
+	endif
+
+rem ---Check Recurring Journal Entries for activity
+	if okay$="Y"
+		gle12_dev=fnget_dev("GLE_RECJEDET")
+		read (gle12_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+		while 1
+			gle12_key$=key(gle12_dev,end=*break)
+			if pos(firm_id$+this_acct$=gle12_key$)=1
+				okay$="N"
+				reason$="Recurring Journal Entry"
+			endif
+			break
+		wend
+	endif
+
+rem ---Check Allocation Detail for activity
+	if okay$="Y"
+		gle13_dev=fnget_dev("GLE_ALLOCLDET")
+		read (gle13_dev,key=firm_id$+this_acct$,dom=*next)
+		while 1
+			gle13_key$=key(gle13_dev,end=*break)
+			if pos(firm_id$+this_acct$=gle13_key$)=1
+				okay$="N"
+				reason$="Account Allocation"
+			endif
+			break
+		wend
+		if okay$="Y"
+			read (gle13_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+			while 1
+				gle13_key$=key(gle13_dev,end=*break)
+				if pos(firm_id$+this_acct$=gle13_key$)=1
+					okay$="N"
+					reason$="Account Allocation"
+				endif
+				break
+			wend
+		endif
+	endif
+
+rem ---Check Daily Detail for activity
+	if okay$="Y"
+		glt04_dev=fnget_dev("GLE_DAILYDETAIL")
+		read (glt04_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+		while 1
+			glt04_key$=key(glt04_dev,end=*break)
+			if pos(firm_id$+this_acct$=glt04_key$)=1
+				okay$="N"
+				reason$="Daily Detail"
+			endif
+			break
+		wend
+	endif
+
+rem --- Check Retained Earnings Account
+	if okay$="Y"
+		gls_earnings_dev=fnget_dev("GLS_EARNINGS")
+		dim gls01b$:fnget_tpl$("GLE_EARNINGS")
+		read (gls_earnings_dev,key=firm_id$+"GL01")gls01b$
+		if gls01b.gl_account$=this_acct$
+			okay$="N"
+			reason$="Retained Earnings Account"
+		endif
+	endif
+
+rem --- Disallow delete if flag is set
 	if okay$="N"
 		msg_id$="ACTIVITY_EXISTS"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=reason$
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 	endif
@@ -78,11 +167,17 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 [[GLM_ACCT.BSHO]]
 rem --- Open/Lock files
 
-files=3,begfile=1,endfile=files
+files=8,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
-files$[1]="GLS_PARAMS";rem --- ads-01
+files$[1]="GLS_PARAMS"
 files$[2]="GLM_ACCTSUMMARY"
 files$[3]="GLT_TRANSDETAIL"
+files$[4]="GLE_JRNLDET"
+files$[5]="GLE_RECJEDET"
+files$[6]="GLE_ALLOCDET"
+files$[7]="GLS_EARNINGS"
+files$[8]="GLE_DAILYDETAIL"
+
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
@@ -93,11 +188,11 @@ call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 
 if status$<>""  goto std_exit
 
-ads01_dev=num(chans$[1])
+gls01_dev=num(chans$[1])
 dim gls01a$:templates$[1]
 
 
 rem --- init/parameters
 
 gls01a_key$=firm_id$+"GL00"
-find record (ads01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
