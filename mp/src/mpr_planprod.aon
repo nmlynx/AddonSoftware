@@ -1,5 +1,5 @@
 rem --- Planned Production Report (Input Overlay)
-rem --- Program mpr_ba v8.0.0 30Jan2008 (mpr_ba)
+rem --- Program mpr_planprod v8.0.0 30Jan2008 (mpr_ba)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/30/2008 02:26:21)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -83,10 +83,7 @@ rem --- Initializations
 
     precision ivs01_precision
     dim description$[number],field[number],position[number],length[number]
-    headings=4
-    dim headings$[headings]
-    headings$[0]=n1$
-    headings$[1]=n3$,l9=59,l=l9+1
+    l9=59,l=l9+1
     clock$=""
     when$=sysinfo.system_date$,page=0,width=132
 
