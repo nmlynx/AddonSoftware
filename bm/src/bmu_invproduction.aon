@@ -10,6 +10,9 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+    next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
+    OutVect!=null()
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
