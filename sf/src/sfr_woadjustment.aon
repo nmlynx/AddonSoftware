@@ -373,12 +373,14 @@ rem --- Net
             OutVect!.addItem(str(sfex2a.new_dir_rate-sftx1a.direct_rate))
             OutVect!.addItem(str(sfex2a.new_ovr_rate-(sftx1a.unit_cost-sftx1a.direct_rate)))
             OutVect!.addItem(str(sfex2a.new_set_hrs-sftx1a.setup_time))
-            if rec_id$="S" then 
+        endif
+        if rec_id$="S" then 
             OutVect!.addItem(str(fnmask$(sftx1a.vendor_id$,c3$)))
             OutVect!.addItem(sftx1a.po_no$+sftx1a.po_line_no$)
             OutVect!.addItem(str(sfex2a.new_dir_rate-sftx1a.unit_cost))
-            OutVect!.addItem("Net:"+str(sfex2a.new_units-sftx1a.units))
-            OutVect!.addItem(str((sfex2a.new_units+sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate)-sftx1a.ext_cost))
+        endif
+        OutVect!.addItem("Net:"+str(sfex2a.new_units-sftx1a.units))
+        OutVect!.addItem(str((sfex2a.new_units+sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate)-sftx1a.ext_cost))
 
         if sftx1a.ext_cost<>(sfex2a.new_units+sfex2a.new_set_hrs)*(sfex2a.new_dir_rate+sfex2a.new_ovr_rate) then 
             OutVect!.addItem("***")
