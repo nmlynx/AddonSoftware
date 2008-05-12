@@ -83,7 +83,7 @@ rem --- Retrieve parameter records
 rem --- Parameters
 
     dim i[4]
-    headings=2
+    headings=5
     number=1
     i[0]=num(ivs01a.item_id_len$)
     i[1]=num(ivs01a.precision$)
@@ -99,9 +99,19 @@ rem --- Initializations
     dim description$[number],field[number],position[number],length[number]
     dim headings$[headings]
     headings$[0]=sysinfo.firm_name$
-    headings$[1]=sysinfo.task_desc$,l9=59,l=l9+1
+rem    headings$[1]=sysinfo.task_desc$,
+    l9=59,l=l9+1
     clock$=""
     when$=sysinfo.system_date$,page=0,width=132
+    h5$=sysinfo.task_desc$+" For Forecast: "+forecast$
+    headings$[1]=h5$
+    h6$="Warehouse: "+whse$
+    if begdate$<>"" then h7$="Beginning Date: "+begdate$ else h7$="Beginning Date: First"
+    if enddate$<>"" then h8$="Ending Date: "+enddate$ else h8$="Ending Date: Last"
+    headings$[2]=h6$
+    headings$[3]=h7$
+    headings$[4]=h8$
+
 
 next_overlay:
 

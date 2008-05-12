@@ -20,6 +20,16 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -32,8 +42,6 @@ rem --- Open/Lock Files
 
     call pgmdir$+"mpc_openalias.aon",mpe05_dev,"mpe-05","MPE_PEGGING",firm_id$,forecast$,filename$,status
     if status then goto std_exit
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
 
 rem --- Initializations
 
@@ -41,7 +49,6 @@ rem --- Initializations
     dim o[9]
     prefix$=cvs(firm_id$+forecast$+whse$,2)
     last$="",l1=0,total=0,done=0
-    hr=width-max(len(h7$),len(h8$))
     current_item$=""
     more=1
 
@@ -52,11 +59,20 @@ rem --- Resize masks and calculate print positions
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
     call pgmdir$+"adc_sizemask.aon",m2$,m2,9,12
     call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
-    o[7]=width-m1
-    o[6]=o[7]-m2,o[5]=o[6]-9,o[4]=o[5]-m3
-    o[3]=o[4]-25
-    o[2]=o[3]-4,o[1]=iv_length,dw=o[2]-o[1]
 
+rem ---  column heading
+
+    dim columns$[7,10]
+    columns=7
+    columns$[0,0]="Item",          columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]="Description",   columns$[1,1]="C",columns$[1,2]="25"
+    columns$[2,0]="UM",            columns$[2,1]="C",columns$[2,2]="4"
+    columns$[3,0]="Buyer",         columns$[3,1]="C",columns$[3,2]="20"
+    columns$[4,0]="Unit Cost",     columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m3$
+    columns$[5,0]="Date Reqd",     columns$[5,1]="C",columns$[5,2]="8"
+    columns$[6,0]="Qty Reqd",      columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
+    columns$[7,0]="Extension",     columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m1$
+    
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,mpe05_dev,1,meter_num,status
@@ -70,32 +86,22 @@ rem --- QTY          : Quantity required for pegged transaction
 rem --- TOTAL        : Sum of extended amounts for report
 rem --- Position mpe-05 Pegging Transaction Detail File
 
-    read (mpe05_dev,key=firm_id$,dom=*next)
 
+    read (mpe05_dev,key=firm_id$,dom=*next)
     dim mpe05a_key$:mpe05a_key_tpl$
 
-next_mpe05: rem --- Read next mpe-05 record
+rem --- Read next mpe-05 record
 
     while more
-
         mpe05a_key$=key(mpe05_dev,end=*break)
         if pos(prefix$=mpe05a_key$)<>1 then break
         if (mpe05a_key.warehouse_id$+mpe05a_key.item_id$+mpe05a_key.trns_date$)<>last$ then
             milestone$=mpe05a_key.warehouse_id$+" "+mpe05a_key.item_id$+" "+fndate$(mpe05a_key.trns_date$)
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+            call pgmdir$+"adc_progress.aon","S","",milestone$,"","",0,0,1,meter_num,status
             last$=mpe05a_key.warehouse_id$+mpe05a_key.item_id$+mpe05a_key.trns_date$
         endif
 
 rem --- Read next mpe-05 Pegging Transaction Detail record
-
-        mpe05a.firm_id$=mpe05a_key.firm_id$
-        mpe05a.forecast$=mpe05a_key.forecast$
-        mpe05a.warehouse_id$=mpe05a_key.warehouse_id$
-        mpe05a.item_id$=mpe05a_key.item_id$
-        mpe05a.trns_date$=mpe05a_key.trns_date$
-        mpe05a.source_code$=mpe05a_key.source_code$
-        mpe05a.seq_no$=mpe05a_key.seq_no$
-rem        mpe05a$=mpe05a_key$
 
         read record (mpe05_dev) mpe05a$
         if mpe05a.source_code$<>"H" then continue
@@ -106,10 +112,7 @@ rem --- New inventory item?
 
 rem --- Make sure a bill of materials exists for this item
 
-            bmm01a.firm_id$=firm_id$
-            bmm01a.bill_no$=mpe05a.item_id$
-
-            find record (bmm01_dev,key=(bmm01a.firm_id$+bmm01a.bill_no$),dom=*continue) bmm01a$
+            find record (bmm01_dev,key=(firm_id$+mpe05a.item_id$),dom=*continue) bmm01a$
             if bmm01a.phantom_bill$<>"N" then 
 
 rem --- This item is a phantom bill, skip remaining entries
@@ -122,42 +125,47 @@ rem --- Perform level break for new inventory item
 
             gosub item_break
         endif
-rem --- 
+
+rem --- Print it
 
         qty=mpe05a.planned_rel
-        if !(begdate$<>"" and mpe05a.trns_date$<begdate$) and !(enddate$<>"" and mpe05a.trns_date$>enddate$) then 
-            if l+1>l9 then gosub report_heading
-            extension=qty*cost
-            l=l+1,l1=l1+1
-            print (printer_dev)item$,@(o[1]),desc$,@(o[2]),um$,@(o[3]),buyer$,@(o[4]),cost$,@(o[5]),
-:           fndate$(mpe05a.reqd_date$),@(o[6]),qty:m2$,@(o[7]),extension:m1$
+        if begdate$<>"" and mpe05a.trns_date$<begdate$ then continue
+        if enddate$<>"" and mpe05a.trns_date$>enddate$ then continue 
+        extension=qty*cost
+        l=l+1,l1=l1+1
+        OutVect!.addItem(item$)
+        OutVect!.addItem(desc$)
+        OutVect!.addItem(um$)
+        OutVect!.addItem(buyer$)
+        OutVect!.addItem(cost$)
+        OutVect!.addItem(fndate$(mpe05a.reqd_date$))
+        OutVect!.addItem(str(qty))
+        OutVect!.addItem(str(extension))
 
 rem --- Generate (or update if existing) work file record for the date this item is required.
 
-            dim d0$(35)
-            d0$(1)=mpe05a.firm_id$+mpe05a.forecast$+mpe05a.warehouse_id$+mpe05a.item_id$+mpe05a.reqd_date$
-            mpw05a.firm_id$=mpe05a.firm_id$
-            mpw05a.forecast$=mpe05a.forecast$
-            mpw05a.warehouse_id$=mpe05a.warehouse_id$
-            mpw05a.item_id$=mpe05a.item_id$
-            mpw05a.reqd_date$=mpe05a.reqd_date$
+        dim d0$(35)
+        d0$(1)=mpe05a.firm_id$+mpe05a.forecast$+mpe05a.warehouse_id$+mpe05a.item_id$+mpe05a.reqd_date$
+        mpw05a.firm_id$=mpe05a.firm_id$
+        mpw05a.forecast$=mpe05a.forecast$
+        mpw05a.warehouse_id$=mpe05a.warehouse_id$
+        mpw05a.item_id$=mpe05a.item_id$
+        mpw05a.reqd_date$=mpe05a.reqd_date$
 
-            find record (mpw05_dev,key=d0$,dom=*next) mpw05a$
+        find record (mpw05_dev,key=d0$,dom=*next) mpw05a$
 
-            mpw05a.unit_measure$=um$
-            mpw05a.trns_date$=mpe05a.trns_date$
-            mpw05a.conv_factor=factor
-            mpw05a.unit_cost=cost
-            mpw05a.qty_required=mpw05a.qty_required+qty
+        mpw05a.unit_measure$=um$
+        mpw05a.trns_date$=mpe05a.trns_date$
+        mpw05a.conv_factor=factor
+        mpw05a.unit_cost=cost
+        mpw05a.qty_required=mpw05a.qty_required+qty
 
-            write record (mpw05_dev,key=d0$) mpw05a$
+        write record (mpw05_dev,key=d0$) mpw05a$
 
-            item_qty=item_qty+qty
-            item_amt=item_amt+extension,total=total+extension
-            item$=""
-            desc$="",um$="",buyer$="",cost$="",qty=0
-
-         endif
+        item_qty=item_qty+qty
+        item_amt=item_amt+extension,total=total+extension
+        item$=""
+        desc$="",um$="",buyer$="",cost$="",qty=0
 
 rem --- Loop back for next record
 
@@ -167,67 +175,47 @@ done: rem --- All done
 
     done=1
     gosub item_break
-    if l+2>l9 then gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(o[6]-18),"Totals For Report",@(o[7]),total:m1$
-    close (printer_dev)
+    xwk=fnblank(9)
+    OutVect!.addItem("Totals For Report")
+    xwk=fnblank(5)
+    OutVect!.addItem(str(total))
+    xwk=fnblank(8)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     run pgmdir$+"mpu_woregister.aon"
 
-report_heading: rem --- Report Heading
-
-    l=headings+2
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status then exitto std_exit
-    print (printer_dev)h5$,@(hr),h7$
-    print (printer_dev)h6$,@(hr),h8$
-    print (printer_dev)""
-    print (printer_dev)@(o[4]+m3-5),"Unit",@(o[5]+2),"Date",@(o[6]+m2-9),"Quantity"
-    print (printer_dev)@(o[0]),"Item",@(o[1]),"Description",@(o[2]),"UM",@(o[3]),"Buyer",@(o[4]+m3-5),"Cost",@(o[5]),"Required",@(o[6]+m2-9),"Required",@(o[7]+m1-10),"Extension"
-    print (printer_dev)""
-    l=l+6
-    return
-
 item_break: rem --- Item Break - Print totals for previous item (if any)
 
-    if current_item$<>"" and l1<>0 then 
-        print (printer_dev)""
-        print (printer_dev)@(o[6]-16),"Totals For Item",@(o[6]),item_qty:m2$,@(o[7]),item_amt:m1$
-        print (printer_dev)""
-        l=l+3
+    if current_item$<>"" and l1<>0 then
+        xwk=fnblank(9)
+        OutVect!.addItem("Totals For Item")
+        xwk=fnblank(4)
+        OutVect!.addItem(str(item_qty))
+        OutVect!.addItem(str(item_amt))
+        xwk=fnblank(8)
     endif
 
 rem --- Retrieve item master, warehouse detail and buyer information for this inventory item.
 
     if !done then 
 
-        dim desc$(dw)
-        ivm01a.firm_id$=firm_id$
-        ivm01a.item_id$=mpe05a.item_id$
-        ivm02a.firm_id$=firm_id$
-        ivm02a.warehouse_id$=mpe05a.warehouse_id$
-        ivm02a.item_id$=mpe05a.item_id$
-        current_item$=ivm01a.item_id$
-
+        dim desc$(60)
+        current_item$=mpe05a.item_id$
         item_qty=0
         item_amt=0
-        find record (ivm01_dev,key=(ivm01a.firm_id$+ivm01a.item_id$),dom=*next) ivm01a$
-        find record (ivm02_dev,key=(ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$),dom=*next) ivm02a$
+        find record (ivm01_dev,key=(firm_id$+mpe05a.item_id$),dom=*next) ivm01a$
+        find record (ivm02_dev,key=(firm_id$+mpe05a.warehouse_id$+mpe05a.item_id$),dom=*next) ivm02a$
         item$=current_item$
         desc$(1)=fnitem$(ivm01a.item_desc$,i[2],i[3],i[4]),buyer$=ivm01a.buyer_code$
-        cost$=str(ivm02a.unit_cost:m3$)
+        cost$=str(ivm02a.unit_cost)
         um$=ivm01a.purchase_um$
         cost=ivm02a.unit_cost
         factor=ivm01a.conv_factor
-        find record (ivm10f_dev,key=(firm_id$+"F"+buyer$),dom=item_break_exit) ivm10f$
+        find record (ivm10f_dev,key=(firm_id$+"F"+buyer$),dom=*return) ivm10f$
         buyer$=ivm10f.buyer_code$+" "+cvs(ivm10f.code_desc$,2)
         l1=0
     endif
-
-item_break_exit:
-
-    return
+return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -302,6 +290,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
