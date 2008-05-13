@@ -1,3 +1,9 @@
+[[APE_PAYSELECT.DISC_DATE_DT.AVAL]]
+rem --- Set filters on grid
+	gosub filter_recs
+[[APE_PAYSELECT.DUE_DATE_DT.AVAL]]
+rem --- Set filters on grid
+	gosub filter_recs
 [[APE_PAYSELECT.DISC_DATE.AVAL]]
 rem --- Set filters on grid
 	gosub filter_recs
@@ -239,9 +245,9 @@ rem --- set all excluded filtered flags to No
 		filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
 		filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
 		filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
-		filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE")
+		filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
 		filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
-		filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE")
+		filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
 		for x=1 to vect_size step user_tpl.MasterCols
 			select_rec$="Y"
 			if filter_pymnt_grp$<>"" and filter_pymnt_grp$<>vectInvoicesMaster!.getItem(x-1+2)
