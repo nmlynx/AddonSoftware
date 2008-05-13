@@ -1,5 +1,5 @@
 rem --- Planned Purchase Report (Input Overlay)
-rem --- Program mpr_aa v8.0.0 29Jan2008 (mpr_aa)
+rem --- Program mpr_planpurch v8.0.0 29Jan2008 (mpr_aa)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/29/2008 02:31:47)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -88,7 +88,6 @@ rem --- Retrieve parameter records
     mpm01a_key$=firm_id$+forecast$
     find record (mpm01_dev,key=mpm01a_key$,err=std_missing_params) mpm01a$
   
-
 rem --- Parameters
 
     dim g2$(10),g3$(325),g4$(32),i[6],abcp[25],factors[25]
@@ -107,35 +106,49 @@ rem --- Initializations
 
     precision ivs01_precision
     dim description$[number],field[number],position[number],length[number]
-    headings=4
+    headings=7
     dim headings$[headings]
     headings$[0]=n1$
     headings$[1]=n3$,l9=59,l=l9+1
     clock$=""
-    when$=sysinfo.system_date$,page=0,width=132
+    when$=sysinfo.system_date$,page=0,width=152
     max_period$=gls01a.total_pers$
     curr_period$=ivs01a.current_per$
     curr_year$=ivs01a.current_year$
 
-    h5$="Forecast: "+forecast$
+    h5$=" For Forecast: "+forecast$
+    headings$[1]=headings$[1]+h5$
     h6$="Warehouse: "+whse$
+    headings$[2]=h6$
     begvend$=cvs(begvend$,1+2)
     if begvend$<>"" then h3$="Beginning Vendor: "+begvend$ else h3$="Beginning Vendor: First"
+    headings$[3]=h3$
     endvend$=cvs(endvend$,1+2)
     if endvend$<>"" then h4$="   Ending Vendor: "+endvend$ else h4$="Ending Vendor: Last"
+    headings$[4]=h4$
     buyer$=cvs(buyer$,1+2)
     if buyer$<>"" then h9$="Buyer Code: "+buyer$ else h9$="Buyer Code: All"
+    headings$[5]=h9$
     begitem$=cvs(begitem$,1+2)
     if begitem$<>"" then h7$="Beginning Item: "+begitem$ else h7$="Beginning Item: First"
+    headings$[6]=h7$
     enditem$=cvs(enditem$,1+2)
     if enditem$<>"" then h8$="   Ending Item: "+enditem$ else h8$="Ending Item: Last"
+    headings$[7]=h8$
     
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,m0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m1$,0,m1
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m2$,0,m2
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m3$,0,m3
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m4$,0,m4
-    m5$="###0-",m5=len(m5$)
+rem --- Resize masks as needed for report
+
+    m0$=aps01a.vendor_output$
+    m1$=ivs01a.amount_mask$
+    m2$=ivs01a.unit_mask$
+    m3$=ivs01a.cost_mask$
+    m4$=m2$
+    m5$="###0-",m0=len(m0$),m5=len(m5$)
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,8,15
+    x=m1
+    call pgmdir$+"adc_sizemask.aon",m2$,m2,8,10
+    call pgmdir$+"adc_sizemask.aon",m3$,m3,8,10
+    call pgmdir$+"adc_sizemask.aon",m4$,m4,x,m1
 
 next_overlay:
 
