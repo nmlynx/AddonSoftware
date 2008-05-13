@@ -1,69 +1,3 @@
-[[GLM_SUMMACTIVITY.AOPT-REPL]]
-gosub replicate_amt
-[[GLM_SUMMACTIVITY.ASIZ]]
-if UserObj!<>null()
-	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
-	gridActivity!.setSize(Form!.getWidth()-(gridActivity!.getX()*2),Form!.getHeight()-(gridActivity!.getY()+40))
-	gridActivity!.setFitToGrid(1)
-
-endif
-[[GLM_SUMMACTIVITY.BWRI]]
-rem parse thru gridActivity! and write back each rec to glm-02
-
-gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
-rows=gridActivity!.getNumRows()
-cols=gridActivity!.getNumColumns()
-
-for x=0 to rows-1
-	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
-	dim glm02a$:fnget_tpl$("GLM_ACCTSUMMARY")
-	glm02a.firm_id$=firm_id$
-	glm02a.gl_account$=callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
-	rec_id$=gridActivity!.getCellText(x,0)
-	rec_id$=rec_id$(pos("("=rec_id$,-1,1)+1,2)
-	amt_units$=rec_id$(2,1)
-	glm02a.record_id$=rec_id$(1,1)
-
-	switch pos(amt_units$="AU")
-		case 1;rem amounts
-			glm02a.begin_amt$=gridActivity!.getCellText(x,1)
-			for y=2 to cols-2
-				field glm02a$,"PERIOD_AMT_"+str(y-1:"00")=gridActivity!.getCellText(x,y)
-			next y
-		break
-
-		case 2; rem units
-			glm02a.begin_units$=gridActivity!.getCellText(x,1)
-			for y=2 to cols-2
-				field glm02a$,"PERIOD_UNITS_"+str(y-1:"00")=gridActivity!.getCellText(x,y)
-			next y
-		break
-	swend
-
-	rem --- write glm-02
-
-	glm02a$=field(glm02a$);writerecord(glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$)glm02a$
-
-next x
-[[GLM_SUMMACTIVITY.GL_ACCOUNT.AVAL]]
-rem only do this aval on actual acct# entry -- skip it on record save
-
-if callpoint!.getRecordMode()<>"C"
-
-	glm01_dev=fnget_dev("GLM_ACCT")
-	dim glm01a$:fnget_tpl$("GLM_ACCT")
-
-
-	read record (glm01_dev,key=firm_id$+callpoint!.getUserInput(),dom=*next)glm01a$
-	if cvs(glm01a.gl_account$,3)<>""
-		callpoint!.setColumnData("GLM_SUMMACTIVITY.GL_ACCT_TYPE",glm01a.gl_acct_type$)
-		callpoint!.setColumnData("GLM_SUMMACTIVITY.DETAIL_FLAG",glm01a.detail_flag$)
-		gosub fill_gridActivity
-		callpoint!.setStatus("REFRESH")
-	else
-		callpoint!.setStatus("ABORT")
-	endif
-endif
 [[GLM_SUMMACTIVITY.AREC]]
 rem compare budget columns/types from gls01 with 1st/3rd char of key of glm18
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
@@ -85,6 +19,7 @@ for x=0 to num_cols-1
 			gridActivity!.setCellListSelection(x,0,x1,1)
 			if pos(wcd$(1,1)="024",1)<>0
 				gridActivity!.setRowEditable(x,0)
+				gridActivity!.setCellEditable(x,0,1)
 			endif
 			break
 		else
@@ -93,6 +28,34 @@ for x=0 to num_cols-1
 	wend
 	
 next x
+[[GLM_SUMMACTIVITY.AOPT-REPL]]
+gosub replicate_amt
+[[GLM_SUMMACTIVITY.ASIZ]]
+if UserObj!<>null()
+	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
+	gridActivity!.setSize(Form!.getWidth()-(gridActivity!.getX()*2),Form!.getHeight()-(gridActivity!.getY()+40))
+	gridActivity!.setFitToGrid(1)
+
+endif
+[[GLM_SUMMACTIVITY.GL_ACCOUNT.AVAL]]
+rem only do this aval on actual acct# entry -- skip it on record save
+
+if callpoint!.getRecordMode()<>"C"
+
+	glm01_dev=fnget_dev("GLM_ACCT")
+	dim glm01a$:fnget_tpl$("GLM_ACCT")
+
+
+	read record (glm01_dev,key=firm_id$+callpoint!.getUserInput(),dom=*next)glm01a$
+	if cvs(glm01a.gl_account$,3)<>""
+		callpoint!.setColumnData("GLM_SUMMACTIVITY.GL_ACCT_TYPE",glm01a.gl_acct_type$)
+		callpoint!.setColumnData("GLM_SUMMACTIVITY.DETAIL_FLAG",glm01a.detail_flag$)
+		gosub fill_gridActivity
+		callpoint!.setStatus("REFRESH")
+	else
+		callpoint!.setStatus("ABORT")
+	endif
+endif
 [[GLM_SUMMACTIVITY.ACUS]]
 rem process custom event
 rem see basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
@@ -138,9 +101,10 @@ switch notice.code
 				vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
 			next x
 			gosub calculate_end_bal
-			gridActivity!.setCellText(curr_row,1,vectGLSummary!)			
+			gridActivity!.setCellText(curr_row,1,vectGLSummary!)
+			gosub update_glm_acctsummary		
 		endif
-		
+rem ---	gosub build_vectActivity
 	break
 
 	case 8;rem edit start
@@ -151,6 +115,45 @@ swend
 
 endif
 [[GLM_SUMMACTIVITY.<CUSTOM>]]
+update_glm_acctsummary:
+rem ---  parse thru gridActivity! and write back any budget recs to glm-02
+
+rec_id$=gridActivity!.getCellText(curr_row,0)
+cols=vectGLSummary!.size()-2
+if cols>0
+	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
+	dim glm02a$:fnget_tpl$("GLM_ACCTSUMMARY")
+	glm02a.firm_id$=firm_id$
+	glm02a.gl_account$=callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
+	rec_id$=rec_id$(pos("("=rec_id$,-1,1)+1,2)
+	amt_units$=rec_id$(2,1)
+	glm02a.record_id$=rec_id$(1,1)
+
+		switch pos(amt_units$="AU")
+			case 1;rem amounts
+				glm02a.begin_amt$=vectGLSummary!.getItem(0)
+				for x=1 to cols
+					field glm02a$,"PERIOD_AMT_"+str(x:"00")=vectGLSummary!.getItem(x)
+				next x
+			break
+
+			case 2; rem units
+				glm02a.begin_units$=vectGLSummary!.getCellText(0)
+				for x=1 to cols
+					field glm02a$,"PERIOD_UNITS_"+str(x:"00")=vectGLSummary!.getItem(x)
+				next y
+			break
+		swend
+
+	rem --- write glm-02
+
+	glm02a$=field(glm02a$)
+	writerecord(glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$)glm02a$
+
+endif
+
+return
+
 format_gridActivity:
 
 	dim attr_def_col_str$[0,0]
@@ -230,6 +233,19 @@ fill_gridActivity:
 	next x
 
 	callpoint!.setStatus("REFRESH")
+
+return
+
+build_vectActivity:
+rem -- this vector is refreshed from grid after an edit - used to drive glm-02 update in ASVA
+	vectActivity!=SysGUI!.makeVector()
+	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
+	for x=0 to gridActivity!.getNumRows()-1
+		for y=0 to gridActivity!.getNumColumns()-1
+			vectActivity!.addItem(gridActivity!.getCellText(x,y))
+		next y
+	next x 
+	UserObj!.setItem(num(user_tpl.vectActivity_ofst$),vectActivity!)
 
 return
 
@@ -316,6 +332,9 @@ return
 
 #include std_missing_params.src
 [[GLM_SUMMACTIVITY.BSHO]]
+rem print 'show'
+
+rem --- init...open tables, define custom grid, etc.
 num_files=3
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
@@ -333,14 +352,14 @@ readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 
 call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
 
-rem load up period abbr names from gls_params
+rem --- load up period abbr names from gls_params
 num_pers=num(gls01a.total_pers$)
 per_names!=SysGUI!.makeVector()
 for x=1 to num_pers
 	per_names!.addItem(field(gls01a$,"ABBR_NAME_"+str(x:"00")))
 next x
 
-rem load up budget column codes and types from gls_params
+rem ---  load up budget column codes and types from gls_params
 cols!=SysGUI!.makeVector()
 tps!=SysGUI!.makeVector()
 for x=1 to 4
@@ -348,7 +367,7 @@ for x=1 to 4
 	tps!.addItem(field(gls01a$,"acct_mn_type_"+str(x:"00")))
 next x
 			
-rem create list for column zero of grid -- column type drop-down
+rem ---  create list for column zero of grid -- column type drop-down
 more=1
 codeList!=SysGUI!.makeVector()
 codes!=SysGUI!.makeVector()
@@ -359,7 +378,7 @@ while more
 	codes!.addItem(glm18a.record_id$+glm18a.amt_or_units$)
 wend
 
-rem set up grid
+rem ---  set up grid
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 gridActivity!=Form!.addGrid(nxt_ctlID,5,100,1000,100)
 gridActivity!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
@@ -370,9 +389,9 @@ gridActivity!.setSelectedColumn(0)
 gridActivity!.setCallback(gridActivity!.ON_GRID_EDIT_START,"custom_event")
 gridActivity!.setCallback(gridActivity!.ON_GRID_EDIT_STOP,"custom_event")
 
-rem store desired data (mostly offsets of items in UserObj) in user_tpl
+rem ---  store desired data (mostly offsets of items in UserObj) in user_tpl
 tpl_str$="pers:c(5),pers_ofst:c(5),codes_ofst:c(5),codeList_ofst:c(5),grid_ctlID:c(5),grid_ofst:c(5),"+
-:		  "cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),sv_record_tp:c(30*)"
+:		  "cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),sv_record_tp:c(30*),vectActivity_ofst:c(5)"
 
 dim user_tpl$:tpl_str$
 
@@ -384,9 +403,10 @@ user_tpl.grid_ctlID$=str(nxt_ctlID)
 user_tpl.grid_ofst$="3"
 user_tpl.cols_ofst$="4"
 user_tpl.tps_ofst$="5"
+user_tpl.vectActivity_ofst$="6"
 user_tpl.amt_mask$=m1$
 
-rem store desired vectors/objects in UserObj!
+rem ---  store desired vectors/objects in UserObj!
 UserObj!=SysGUI!.makeVector()
 
 UserObj!.addItem(per_names!)
@@ -395,6 +415,7 @@ UserObj!.addItem(codeList!)
 UserObj!.addItem(gridActivity!)
 UserObj!.addItem(cols!)
 UserObj!.addItem(tps!)
+userobj!.addItem(SysGUI!.makeVector());rem placeholder for vectActivity! that will be used to update glm-02
 
 rem format the grid, and set first column to be a pull-down
 gosub format_gridActivity

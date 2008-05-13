@@ -7,44 +7,6 @@ if UserObj!<>null()
 	gridBudgets!.setFitToGrid(1)
 
 endif
-[[GLM_BUDGETMAINT.BWRI]]
-rem parse thru gridBudgets! and write back each rec to glm-02
-
-gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
-rows=gridBudgets!.getNumRows()
-cols=gridBudgets!.getNumColumns()
-
-for x=0 to rows-1
-	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
-	dim glm02a$:fnget_tpl$("GLM_ACCTSUMMARY")
-	glm02a.firm_id$=firm_id$
-	glm02a.gl_account$=callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")
-	rec_id$=gridBudgets!.getCellText(x,0)
-	rec_id$=rec_id$(pos("("=rec_id$,-1,1)+1,2)
-	amt_units$=rec_id$(2,1)
-	glm02a.record_id$=rec_id$(1,1)
-
-	switch pos(amt_units$="AU")
-		case 1;rem amounts
-			glm02a.begin_amt$=gridBudgets!.getCellText(x,1)
-			for y=2 to cols-2
-				field glm02a$,"PERIOD_AMT_"+str(y-1:"00")=gridBudgets!.getCellText(x,y)
-			next y
-		break
-
-		case 2; rem units
-			glm02a.begin_units$=gridBudgets!.getCellText(x,1)
-			for y=2 to cols-2
-				field glm02a$,"PERIOD_UNITS_"+str(y-1:"00")=gridBudgets!.getCellText(x,y)
-			next y
-		break
-	swend
-
-	rem --- write glm-02
-
-	glm02a$=field(glm02a$);writerecord(glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$)glm02a$
-
-next x
 [[GLM_BUDGETMAINT.GL_ACCOUNT.AVAL]]
 rem only do this aval on actual acct# entry -- skip it on record save
 
@@ -131,6 +93,7 @@ switch notice.code
 				msg_id$="GL_RECID_BUD"
 				gosub disp_message
 				gridBudgets!.setCellText(curr_row,curr_col,user_tpl.sv_budget_tp$)
+
 			endif
 		else
 			vectGLSummary!=SysGUI!.makeVector() 
@@ -139,7 +102,7 @@ switch notice.code
 			next x
 			gosub calculate_end_bal
 			gridBudgets!.setCellText(curr_row,1,vectGLSummary!)
-			
+			gosub update_glm_acctsummary
 		endif
 		
 	break
@@ -152,6 +115,45 @@ swend
 
 endif
 [[GLM_BUDGETMAINT.<CUSTOM>]]
+update_glm_acctsummary:
+rem ---  parse thru vectGLSummary! and write back current budget rec to glm-02
+
+rec_id$=gridBudgets!.getCellText(curr_row,0)
+cols=vectGLSummary!.size()-2
+if cols>0
+	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
+	dim glm02a$:fnget_tpl$("GLM_ACCTSUMMARY")
+	glm02a.firm_id$=firm_id$
+	glm02a.gl_account$=callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")
+	rec_id$=rec_id$(pos("("=rec_id$,-1,1)+1,2)
+	amt_units$=rec_id$(2,1)
+	glm02a.record_id$=rec_id$(1,1)
+
+		switch pos(amt_units$="AU")
+			case 1;rem amounts
+				glm02a.begin_amt$=vectGLSummary!.getItem(0)
+				for x=1 to cols
+					field glm02a$,"PERIOD_AMT_"+str(x:"00")=vectGLSummary!.getItem(x)
+				next x
+			break
+
+			case 2; rem units
+				glm02a.begin_units$=vectGLSummary!.getCellText(0)
+				for x=1 to cols
+					field glm02a$,"PERIOD_UNITS_"+str(x:"00")=vectGLSummary!.getItem(x)
+				next y
+			break
+		swend
+
+	rem --- write glm-02
+
+	glm02a$=field(glm02a$)
+	writerecord(glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$)glm02a$
+
+endif
+
+return
+
 format_gridBudgets:
 
 	dim attr_def_col_str$[0,0]
@@ -280,11 +282,11 @@ return
 
 replicate_amt:
 	
-	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
-	curr_row=gridActivity!.getSelectedRow()
-	if gridActivity!.isRowEditable(curr_row)
-		curr_col=gridActivity!.getSelectedColumn()
-		curr_amt$=gridActivity!.getCellText(curr_row,curr_col)
+	gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
+	curr_row=gridBudgets!.getSelectedRow()
+	if gridBudgets!.isRowEditable(curr_row)
+		curr_col=gridBudgets!.getSelectedColumn()
+		curr_amt$=gridBudgets!.getCellText(curr_row,curr_col)
 		vectGLSummary!=SysGUI!.makeVector()
 		num_pers=num(user_tpl.pers$)
 
@@ -292,11 +294,11 @@ replicate_amt:
 			if x>=curr_col
 				vectGLSummary!.addItem(curr_amt$)
 			else
-				vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
+				vectGLSummary!.addItem(gridBudgets!.getCellText(curr_row,x))
 			endif
 			next x
 			gosub calculate_end_bal
-			gridActivity!.setCellText(curr_row,1,vectGLSummary!)
+			gridBudgets!.setCellText(curr_row,1,vectGLSummary!)
 	endif
 return
 
