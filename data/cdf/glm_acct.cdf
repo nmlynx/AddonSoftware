@@ -68,7 +68,7 @@ rem ---Check Recurring Journal Entries for activity
 
 rem ---Check Allocation Detail for activity
 	if okay$="Y"
-		gle13_dev=fnget_dev("GLE_ALLOCLDET")
+		gle13_dev=fnget_dev("GLE_ALLOCDET")
 		read (gle13_dev,key=firm_id$+this_acct$,dom=*next)
 		while 1
 			gle13_key$=key(gle13_dev,end=*break)
@@ -108,8 +108,8 @@ rem ---Check Daily Detail for activity
 rem --- Check Retained Earnings Account
 	if okay$="Y"
 		gls_earnings_dev=fnget_dev("GLS_EARNINGS")
-		dim gls01b$:fnget_tpl$("GLE_EARNINGS")
-		read (gls_earnings_dev,key=firm_id$+"GL01")gls01b$
+		dim gls01b$:fnget_tpl$("GLS_EARNINGS")
+		read record(gls_earnings_dev,key=firm_id$+"GL01")gls01b$
 		if gls01b.gl_account$=this_acct$
 			okay$="N"
 			reason$="Retained Earnings Account"
@@ -123,6 +123,13 @@ rem --- Disallow delete if flag is set
 		msg_tokens$[1]=reason$
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
+	else
+		msg_id$="ENTRY_DTL_DELETE"
+		msg_opt$=""
+		gosub disp_message
+		if msg_opt$="N"
+			callpoint!.setStatus("ABORT")
+		endif
 	endif
 [[GLM_ACCT.AOPT-TRAN]]
 rem Transaction History Inquiry
