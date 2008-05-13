@@ -125,6 +125,7 @@ rem --- Initializations
         lines=maxlines+1
         moreheaders=1
         moredetail=1
+        recs=0
         when$=sysinfo.system_date$
         clock$=""
         nf$="(Not on File)"
@@ -245,6 +246,7 @@ rem --- Read next Invoice Header (ape-01) record
           read record (ape01_dev,end=*break) ape01a$
           if ape01a.firm_id$<>firm_id$ break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          recs=recs+1
 
 rem --- Level breaks
 
@@ -437,6 +439,12 @@ rem --- Retrieve GL account master
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     gosub type_break
@@ -671,8 +679,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-  rem  call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     release
 
 rem #endinclude std_end.src
