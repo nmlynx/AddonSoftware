@@ -142,6 +142,7 @@ create_reports_vector:
 	while more
 		readrecord (apt01_dev,end=*break)apt01a$
 		if pos(firm_id$=apt01a$)<>1 then break
+		read(ape01_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next);continue
 		dim apm01a$:fattr(apm01a$)
 		readrecord(apm01_dev,key=firm_id$+apt01a.vendor_id$,dom=*next)apm01a$
 		readrecord(apt11_dev,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next)
@@ -390,7 +391,7 @@ endif
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
-	num_files=5
+	num_files=6
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
@@ -398,6 +399,7 @@ rem --- Open/Lock files
 	open_tables$[3]="APM_VENDMAST",open_opts$[3]="OTA"
 	open_tables$[4]="APE_CHECKS",open_opts$[4]="OTA"
 	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
+	open_tables$[6]="APE_INVOICEHDR",open_opts$[6]="OTA"
 
 	gosub open_tables
 
@@ -406,10 +408,12 @@ rem --- Open/Lock files
 	apm01_dev=num(open_chans$[3]),apm01_tpl$=open_tpls$[3]
 	ape04_dev=num(open_chans$[4]),ape04_tpl$=open_tpls$[4]
 	apw01_dev=num(open_chans$[5])
+	ape01_dev=num(open_chans$[6]),ape01_tpl$=open_tpls$[6]
 
 rem --- Dimension string templates
 
 	dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$,ape04a$:ape04_tpl$
+	dim ape01a$:ape01_tpl$
 
 rem --- See if Check Printing has already been started
 
