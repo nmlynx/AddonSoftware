@@ -1,7 +1,39 @@
+[[APE_RECURRINGHDR.AP_INV_NO.AVAL]]
+ctl_name$="APE_RECURRINGHDR.AP_DIST_CODE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_RECURRINGHDR.INVOICE_DATE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_RECURRINGHDR.NET_INV_AMT"
+ctl_stat$=""
+gosub disable_fields
+[[APE_RECURRINGHDR.BTBL]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),""
 [[APE_RECURRINGHDR.AREC]]
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+callpoint!.setColumnData("<<DISPLAY>>.comments","")
 user_tpl.inv_amt$=""
 user_tpl.tot_dist$=""
+dist_bal!=UserObj!.getItem(num(user_tpl.dist_bal_ofst$))
+dist_bal!.setValue(0)
+
+rem --- Re-enable disabled fields
+ctl_name$="APE_RECURRINGHDR.AP_DIST_CODE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_RECURRINGHDR.INVOICE_DATE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_RECURRINGHDR.NET_INV_AMT"
+ctl_stat$=""
+gosub disable_fields
 [[APE_RECURRINGHDR.BWRI]]
 rem --- fully distributed?
 
@@ -25,6 +57,8 @@ if status<=99
 		msg_id$="AP_NOT_DIST"
 		gosub disp_message
 		if msg_opt$="N"
+			gosub calc_grid_tots
+			gosub disp_dist_bal
 			callpoint!.setStatus("ABORT")
 		endif
 	endif
@@ -33,23 +67,23 @@ endif
 [[APE_RECURRINGHDR.NET_INV_AMT.AVAL]]
 rem re-calc discount amount based on net x disc %
 
-disc_amt=num(callpoint!.getUserInput())*(num(user_tpl.disc_pct$)/100)
+disc_amt=num(callpoint!.getColumnData("APE_RECURRINGHDR.NET_INV_AMT"))*(num(user_tpl.disc_pct$)/100)
 callpoint!.setColumnData("APE_RECURRINGHDR.DISCOUNT_AMT",str(disc_amt))
-callpoint!.setStatus("REFRESH")
+callpoint!.setStatus("REFRESH:APE_RECURRINGHDR.DISCOUNT_AMT")
 [[APE_RECURRINGHDR.PAYMENT_GRP.AVAL]]
-if callpoint!.getUserInput()=""
+if cvs(callpoint!.getColumnData("APE_RECURRINGHDR.PAYMENT_GRP"),3)=""
 	callpoint!.setColumnData("APE_RECURRINGHDR.PAYMENT_GRP","  ")
 	callpoint!.setStatus("REFRESH")
 
 endif
 [[APE_RECURRINGHDR.AP_DIST_CODE.AVAL]]
-if callpoint!.getUserInput()=""
+if cvs(callpoint!.getColumnData("APE_RECURRINGHDR.AP_DIST_CODE"),3)=""
 	callpoint!.setColumnData("APE_RECURRINGHDR.AP_DIST_CODE","  ")
 	callpoint!.setStatus("REFRESH")
 
 endif
 [[APE_RECURRINGHDR.AP_TYPE.AVAL]]
-if callpoint!.getUserInput()=""
+if cvs(callpoint!.getColumnData("APE_RECURRINGHDR.AP_TYPE"),3)=""
 	callpoint!.setColumnData("APE_RECURRINGHDR.AP_TYPE","  ")
 	callpoint!.setStatus("REFRESH")
 
@@ -64,13 +98,15 @@ apt02_dev=fnget_dev("APT_INVOICEDIST")
 dim apt02a$:fnget_tpl$("APT_INVOICEDIST")
 k$=""
 
+Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+
 apt02_key$=firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.AP_TYPE")+
 :	callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")+cvs(callpoint!.getColumnData("APE_RECURRINGHDR.AP_INV_NO"),3)
 
 read(apt02_dev,key=apt02_key$,dom=*next)
 
 k$=key(apt02_dev,end=*next); read record(apt02_dev)apt02a$
-if k$(1,len(apt02_key$))=apt02_key$
+if k$(1,len(apt02_key$))=apt02_key$ and cvs(callpoint!.getColumnData("APE_RECURRINGHDR.AP_INV_NO"),3)<>""
 
 	rem --- not in ape-03, but IS in apt-02
 	rem --- disable dist code, inv date, net amt
@@ -82,6 +118,9 @@ if k$(1,len(apt02_key$))=apt02_key$
 	callpoint!.setColumnData("APE_RECURRINGHDR.AP_TYPE",apt02a.ap_type$)
 	callpoint!.setColumnData("APE_RECURRINGHDR.VENDOR_ID",apt02a.vendor_id$)
 	callpoint!.setColumnData("APE_RECURRINGHDR.AP_INV_NO",apt02a.reference$)
+
+	dist_bal!=userObj!.getItem(num(user_tpl.dist_bal_ofst$))
+	dist_bal!.setValue(0)
 
 	ctl_name$="APE_RECURRINGHDR.AP_DIST_CODE"
 	ctl_stat$="D"
@@ -95,7 +134,7 @@ if k$(1,len(apt02_key$))=apt02_key$
 	ctl_stat$="D"
 	gosub disable_fields
 
-	Form!.getControl(num(user_tpl.open_inv_textID$)).setText("Open Invoice from: "+fndate$(apt02a.accting_date$)+
+	Form!.getControl(num(user_tpl.open_inv_textID$)).setText("Adjust Open Invoice: "+$0A$+fndate$(apt02a.accting_date$)+
 :		", for "+str(num(apt02a.gl_post_amt$):user_tpl.amt_msk$))
 
 	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
@@ -125,19 +164,19 @@ endif
 [[APE_RECURRINGHDR.VENDOR_ID.AVAL]]
 rem "check vend hist file to be sure this vendor/ap type ok and to set some defaults;  display vend cmts
 
-gosub display_vendor_comments
+gosub disp_vendor_comments
 gosub get_vendor_history
 
 if vend_hist$=""
 	if user_tpl.multi_types$="Y"
 		msg_id$="AP_NOHIST"
 		gosub disp_message
-		callpoint!.setStatus("ABORT")
+		callpoint!.setStatus("CLEAR-NEWREC")
 	endif
 endif
 [[APE_RECURRINGHDR.ACCTING_DATE.AVAL]]
 gl$=user_tpl.glint$
-acctgdate$=callpoint!.getUserInput()        
+acctgdate$=callpoint!.getColumnData("APE_RECURRINGHDR.ACCTING_DATE")      
 if gl$="Y" 
 	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
 	if status>99
@@ -157,14 +196,16 @@ readrecord(apm10c_dev,key=firm_id$+"C"+callpoint!.getColumnData("APE_RECURRINGHD
 user_tpl.disc_pct$=apm10c.disc_percent$
 
 user_tpl.inv_amt$=callpoint!.getColumnData("APE_RECURRINGHDR.INVOICE_AMT")
+if user_tpl.glint$="N" user_tpl.tot_dist$=user_tpl.inv_amt$
 
 gosub calc_grid_tots
-
-dist_bal=num(user_tpl.inv_amt$)-num(user_tpl.tot_dist$)
-callpoint!.setColumnData("<<DISPLAY>>.DISP_DISTRIB_BAL",str(dist_bal))
+gosub disp_dist_bal
 
 user_tpl.inv_in_ape03$="Y"
 user_tpl.inv_in_apt02$="N"
+
+Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+gosub disp_vendor_comments
 
 callpoint!.setStatus("REFRESH")
 [[APE_RECURRINGHDR.AP_TERMS_CODE.AVAL]]
@@ -181,20 +222,18 @@ rem re-calc due and discount dates based on terms code
 
 endif
 [[APE_RECURRINGHDR.INVOICE_AMT.AVAL]]
-if num(callpoint!.getColumnData("APE_RECURRINGHDR.NET_INV_AMT")) = 0
-	callpoint!.setColumnData("APE_RECURRINGHDR.NET_INV_AMT",
-:	callpoint!.getUserInput())
-endif
+callpoint!.setColumnData("APE_RECURRINGHDR.NET_INV_AMT",
+:	callpoint!.getColumnData("APE_RECURRINGHDR.INVOICE_AMT"))
 
 
-user_tpl.inv_amt$=callpoint!.getUserInput()
+
+user_tpl.inv_amt$=callpoint!.getColumnData("APE_RECURRINGHDR.INVOICE_AMT")
+if user_tpl.glint$="N" user_tpl.tot_dist$=user_tpl.inv_amt$
 
 gosub calc_grid_tots
+gosub disp_dist_bal
 
-dist_bal=num(user_tpl.inv_amt$)-num(user_tpl.tot_dist$)
-callpoint!.setColumnData("<<DISPLAY>>.DISP_DISTRIB_BAL",str(dist_bal))
-
-callpoint!.setStatus("REFRESH")
+callpoint!.setStatus("REFRESH:APE_RECURRINGHDR.NET_INV_AMT")
 [[APE_RECURRINGHDR.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
@@ -252,6 +291,24 @@ display_vendor_comments:
 
 return
 
+disp_vendor_comments:
+	
+	cmt_text$=""
+	apm09_dev=fnget_dev("APM_VENDCMTS")
+	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
+	apm09_key$=firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")
+	more=1
+	read(apm09_dev,key=apm09_key$,dom=*next)
+	while more
+		readrecord(apm09_dev,end=*break)apm09a$
+		if apm09a.firm_id$+apm09a.vendor_id$<>firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID") break
+			cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
+		endif				
+	wend
+
+	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
+	callpoint!.setStatus("REFRESH")
+
 calculate_due_and_discount:
 
 	apm10c_dev=fnget_dev("APC_TERMSCODE")
@@ -275,14 +332,36 @@ calc_grid_tots:
 	recVect!=GridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
 	numrecs=recVect!.size()
+	tdist=0
 	if numrecs>0
 		for reccnt=0 to numrecs-1
 			gridrec$=recVect!.getItem(reccnt)
-			tdist=tdist+num(gridrec.gl_post_amt$)
+			if cvs(gridrec$,3)<>"" then tdist=tdist+num(gridrec.gl_post_amt$)
 		next reccnt
 		user_tpl.tot_dist$=str(tdist)
 	endif
 return
+
+disp_dist_bal:
+
+	dist_bal=num(user_tpl.inv_amt$)-num(user_tpl.tot_dist$)
+	dist_bal!=userObj!.getItem(num(user_tpl.dist_bal_ofst$))
+	dist_bal!.setValue(dist_bal)
+	 
+return
+
+rem #include fnget_control.src
+
+def fnget_control!(ctl_name$)
+
+ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+return get_control!
+
+fnend
+
+rem #endinclude fnget_control.src
 
 #include std_missing_params.src
 [[APE_RECURRINGHDR.BSHO]]
@@ -327,21 +406,44 @@ user_tpl_str$=user_tpl_str$+"disc_pct:c(5),dist_bal_ofst:c(1),inv_amt:c(10),tot_
 
 dim user_tpl$:user_tpl_str$
 
-rem --- set up UserObj! as vector to store tot invoice amt and dist bal 
+rem --- set up UserObj! as vector to store dist bal display control
 UserObj!=SysGUI!.makeVector()
 
-rem --- store inv amount and distrib. bal control in UserObj! for easy update from grid
-ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_DISTRIB_BAL","CTLC"))
-ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_DISTRIB_BAL","CTLI"))
-dist_bal!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
-UserObj!.addItem(dist_bal!)
-user_tpl.dist_bal_ofst$="0"
-
 rem --- add static label for displaying date/amount if pulling up open invoice
+
+inv_no!=fnget_control!("APE_RECURRINGHDR.AP_INV_NO")
+cmts!=fnget_control!("<<DISPLAY>>.COMMENTS")
+inv_no_x=inv_no!.getX()
+inv_no_y=inv_no!.getY()
+inv_no_height=inv_no!.getHeight()
+inv_no_width=inv_no!.getWidth()
+cmts_x=cmts!.getX()
+
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-Form!.addStaticText(nxt_ctlID,205,60,250,18,"")
+Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+5,inv_no_y,cmts_x-(inv_no_x+inv_no_width+5),inv_no_height*2,"")
 user_tpl.open_inv_textID$=str(nxt_ctlID)
+
+rem --- add inputE (display only) for displaying distribution balance in header
+
+discount!=fnget_control!("APE_RECURRINGHDR.DISCOUNT_AMT")
+retention!=fnget_control!("APE_RECURRINGHDR.RETENTION")
+
+dist_bal_w=retention!.getWidth()
+dist_bal_h=retention!.getHeight()
+dist_bal_x=retention!.getX()
+dist_bal_y=retention!.getY()-discount!.getY()+retention!.getY()
+
+dist_bal!=Form!.addInputN(nxt_ctlID+2,dist_bal_x,dist_bal_y,dist_bal_w,dist_bal_h)
+user_tpl.dist_bal_ofst$="0"
+userObj!.addItem(dist_bal!)
+dist_bal!.setEditable(0)
+dist_bal!.setFocusable(0)
+dist_bal!.setMask(retention!.getMask())
+
+rem --- add static label for the distribution balance inputE 
+nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+dist_lbl!=Form!.addStaticText(nxt_ctlID+3,dist_bal_x-dist_bal_w-2,dist_bal_y+2,dist_bal_w,dist_bal_h,"Dist bal:")
+dist_lbl!.setAlignment(dist_lbl!.ALIGN_RIGHT)
 
 rem --- Additional File Opens
 
@@ -416,15 +518,16 @@ if user_tpl.ret_flag$="N"
 	gosub disable_fields
 endif
 
-ctl_name$="<<DISPLAY>>.DISP_DISTRIB_BAL"
-ctl_stat$="I"
-gosub disable_fields
-
 rem --- disable some grid columns depending on params
 
 w!=Form!.getChildWindow(1109)
 c!=w!.getControl(5900)
-if gl$="N" c!.setColumnEditable(0,0)
+if gl$="N" 
+	numcols=c!.getNumColumns()
+	for x=0 to numcols-1
+		c!.setColumnEditable(x,0)
+	next x
+endif
 if user_tpl.misc_entry$="N" c!.setColumnEditable(2,0)
 if user_tpl.units_flag$="N" c!.setColumnEditable(4,0)
 
