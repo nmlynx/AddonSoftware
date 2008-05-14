@@ -110,20 +110,45 @@ rem if so, make sure only pmt grp, terms, hold,
 rem acct dt, due dt, disc dt, adj amount, disc amount
 rem reference, memo are enabled...
 
+rem --- Make sure invoice is not in either ape-04 (Check file) or ape-22 (Manual Check detail file)
+	ape04_dev=fnget_dev("APE_CHECKS")
+	ape22_dev=fnget_dev("APE_MANCHECKDET")
+	in_check_file$=""
+	ap_type$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")
+	vendor_id$=callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
+	inv_no$=callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO")
+	read(ape04_dev,key=firm_id$+ap_type$+vendor_id$+inv_no$,dom=check_manual)
+	in_check_file$="Check"
+	goto abort_entry
 
+check_manual:
+	read(ape22_dev,key=firm_id$+ap_type$+vendor_id$+inv_no$,knum=1,dom=*next)
+	ape22_key$=key(ape22_dev,end=look_for_invoice)
+	if pos(firm_id$+ap_type$+vendor_id$+inv_no$=ape22_key$)<>1 goto look_for_invoice
+	in_check_file$="Manual Check"
+	goto abort_entry
+
+abort_entry:
+	dim msg_tokens$[1]
+	msg_tokens$[1]=in_check_file$
+	msg_id$="AP_INV_IN_USE"
+	gosub disp_message
+	callpoint!.setStatus("ABORT-CLEAR")
+	goto end_of_arnf
+
+look_for_invoice:
 	apt01_dev=fnget_dev("APT_INVOICEHDR")
 	dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
 	k$=""
 
 	Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 
-	apt01_key$=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")+
-:		callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")+cvs(callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO"),3)
+	apt01_key$=firm_id$+ap_type$+vendor_id$+cvs(inv_no$,3)
 
 	read(apt01_dev,key=apt01_key$,dom=*next)
 
 	k$=key(apt01_dev,end=*next); read record(apt01_dev)apt01a$
-	if k$(1,len(apt01_key$))=apt01_key$ and cvs(callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO"),3)<>""
+	if k$(1,len(apt01_key$))=apt01_key$ and cvs(inv_no$,3)<>""
 
 		rem --- not in ape-01, but IS in apt-01
 		rem --- disable dist code, inv date, net amt
@@ -201,6 +226,8 @@ rem reference, memo are enabled...
 			callpoint!.setStatus("REFRESH")
 		endif
 	endif
+
+end_of_arnf:
 [[APE_INVOICEHDR.VENDOR_ID.AVAL]]
 rem "check vend hist file to be sure this vendor/ap type ok and to set some defaults;  display vend cmts
 
@@ -418,7 +445,7 @@ rem --- print 'show'
 
 rem --- Open/Lock files
 
-files=7,begfile=1,endfile=7
+files=9,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="APT_INVOICEHDR";rem --- "apt-01"
 files$[2]="APT_INVOICEDET";rem --- "apt-11"
@@ -427,6 +454,8 @@ files$[4]="APM_VENDMAST";rem --- "apm-01"
 files$[5]="APM_VENDHIST";rem --- "apm-02"
 files$[6]="APS_PARAMS";rem --- "ads-01"
 files$[7]="GLS_PARAMS";rem --- "gls-01"
+files$[8]="APE_CHECKS"
+files$[9]="APE_MANCHECKDET"
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
