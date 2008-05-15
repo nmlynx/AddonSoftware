@@ -78,7 +78,17 @@ rem --- Assign form input values to local variables
         s5$  =  option!.getOptionData("ord_taken_by")
         s7$  =  option!.getOptionData("salesperson")
         s6$  =  option!.getOptionData("print_uprint_all")
-        s4$  =  option!.getOptionData("option")
+        wo_open$=Option!.getOptionData("open")
+        wo_quoted$=Option!.getOptionData("quoted")
+        wo_backord$=Option!.getOptionData("backorders")
+        wo_cred$=Option!.getOptionData("credit")
+        wo_non_stock$=Option!.getOptionData("non_stock")
+        s4$=""
+        if wo_open$="Y" then s4$=s4$+"O"
+        if wo_quoted$="Y" then s4$=s4$+"Q"
+        if wo_backord$="Y" then s4$=s4$+"B"
+        if wo_cred$="Y" then s4$=s4$+"C"
+        if wo_non_stock$="Y" then s4$=s4$+"N"
         s8$  =  option!.getOptionData("non_stock_option")
 
 rem --- Retrieve parameter records
