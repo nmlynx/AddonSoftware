@@ -11,33 +11,20 @@ if bal<>0
 endif
 [[GLE_JRNLHDR.ADIS]]
 gosub display_dates
+if status>100 callpoint!.setStatus("ABORT")
 gosub calc_grid_tots
 gosub disp_totals
 [[GLE_JRNLHDR.REVERSE_DATE.AVAL]]
 gosub display_dates
+if status>100 callpoint!.setStatus("ABORT")
 [[GLE_JRNLHDR.TRANS_DATE.AVAL]]
 rem gosub date validation (calls glc_datecheck); if status <> 0 after return, assume setStatus("ABORT")
 rem since I think the public will have displayed a message?
 
 gosub display_dates
+if status>100 callpoint!.setStatus("ABORT")
 [[GLE_JRNLHDR.AREC]]
 Form!.getControl(num(user_tpl.text1_ID$)).setText("")
-[[GLE_JRNLHDR.AREA]]
-gosub display_dates
-[[GLE_JRNLHDR.ARNF]]
-rem I think this will be the place
-rem set trans_date to sysinfo date
-rem call glc_datecheck
-
-
-
-	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-	dim sysinfo$:sysinfo_template$
-	sysinfo$=stbl("+SYSINFO",err=*next)
-
-	callpoint!.setColumnData("GLE_JRNLHDR.TRANS_DATE",sysinfo.system_date$)
-	gosub display_dates
-	callpoint!.setStatus("REFRESH")
 [[GLE_JRNLHDR.JOURNAL_ID.AVAL]]
 rem "read glm03 -- make sure PERMIT_JE is "Y",
 rem " and update +GLCONTROL with POST_YR_END and POST_LOCKED flags, plus PERMIT_JE, if "Y"
@@ -77,12 +64,12 @@ display_dates:
 
 if user_tpl.glint$="Y"
 	
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",callpoint!.getColumnData("GLE_JRNLHDR.TRANS_DATE"),"N",period$,year$,status	
-	Form!.getControl(num(user_tpl.text1_ID$)).setText("curr period: "+period$+"/"+year$)
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",callpoint!.getColumnData("GLE_JRNLHDR.TRANS_DATE"),"Y",period$,year$,status
+	
+	Form!.getControl(num(user_tpl.text1_ID$)).setText("curr G/L period is "+period$+"/"+year$)
 
 	if cvs(callpoint!.getColumnData("GLE_JRNLHDR.REVERSE_DATE"),3)<>""
-		call stbl("+DIR_PGM")+"glc_datecheck.aon",callpoint!.getColumnData("GLE_JRNLHDR.REVERSE_DATE"),"N",period$,year$,status
-		Form!.getControl(num(user_tpl.text2_ID$)).setText("curr period: "+period$+"/"+year$)
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",callpoint!.getColumnData("GLE_JRNLHDR.REVERSE_DATE"),"Y",period$,year$,status
 	endif
 
 rem	callpoint!.setStatus("REFRESH")
@@ -162,7 +149,7 @@ dim gls01a$:gls_params_tpl$
 read record(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 
 user_tpl_str$="glint:c(5*),glworkfile:c(16*),je:c(1*),debits_ofst:c(5*),credits_ofst:c(5*),bal_ofst:c(5*),units_ofst:c(5*)," +
-:			"gls01a_ofst:c(5*),text1_ID:c(5*),text2_ID:c(5*),tot_db:c(10*),tot_cr:c(10*),tot_bal:c(10*),tot_units:c(10*)"
+:			"gls01a_ofst:c(5*),text1_ID:c(5*),tot_db:c(10*),tot_cr:c(10*),tot_bal:c(10*),tot_units:c(10*)"
 
 dim user_tpl$:user_tpl_str$
 
@@ -214,15 +201,17 @@ user_tpl.gls01a_ofst$="4"
 rem put label on form to show GL period/year corres to date entered
 
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-Form!.addStaticText(nxt_ctlID,225,75,100,18,"")
+Form!.addStaticText(nxt_ctlID,230,75,150,18,"")
 user_tpl.text1_ID$=str(nxt_ctlID)
 
-Form!.addStaticText(nxt_ctlID+1,225,95,100,18,"")
-user_tpl.text2_ID$=str(nxt_ctlID+1)
-	
+
 rem need to disable units column in grid if gls01a.units_flag$ isn't "Y"
 
 if gls01a.units_flag$="Y"
+	w!=Form!.getChildWindow(1109)
+	c!=w!.getControl(5900)
+	c!.setColumnEditable(5,1)
+else
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
 	c!.setColumnEditable(5,0)
