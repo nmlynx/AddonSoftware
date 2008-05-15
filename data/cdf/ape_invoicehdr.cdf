@@ -5,106 +5,6 @@ rem --- Get Batch information
 
 call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),""
 [[APE_INVOICEHDR.AP_INV_NO.AVAL]]
-	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
-	ctl_stat$=""
-	gosub disable_fields
-
-	ctl_name$="APE_INVOICEHDR.INVOICE_DATE"
-	ctl_stat$=""
-	gosub disable_fields
-
-	ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
-	ctl_stat$=""
-	gosub disable_fields
-
-[[APE_INVOICEHDR.ASHO]]
-rem --- get default date
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_ORDDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
-	user_tpl.dflt_acct_date$=stbl("DEF_ACCT_DATE")
-[[APE_INVOICEHDR.INVOICE_DATE.AVAL]]
-invdate$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
-terms_cd$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TERMS_CODE")
-if cvs(terms_cd$,3)="" then terms_cd$=user_tpl.dflt_terms_cd$
-if cvs(user_tpl.dflt_acct_date$,2)=""
-	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE"))
-else
-	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
-endif
-gosub calculate_due_and_discount
-callpoint!.setStatus("REFRESH")
-[[APE_INVOICEHDR.AREC]]
-Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
-callpoint!.setColumnData("<<DISPLAY>>.comments","")
-user_tpl.inv_amt$=""
-user_tpl.tot_dist$=""
-dist_bal!=UserObj!.getItem(num(user_tpl.dist_bal_ofst$))
-dist_bal!.setValue(0)
-
-rem --- Re-enable disabled fields
-ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
-ctl_stat$=""
-gosub disable_fields
-
-ctl_name$="APE_INVOICEHDR.INVOICE_DATE"
-ctl_stat$=""
-gosub disable_fields
-
-ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
-ctl_stat$=""
-gosub disable_fields
-[[APE_INVOICEHDR.BWRI]]
-rem --- fully distributed?
-
-gl$=user_tpl.glint$
-status=0
-acctgdate$=callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE")  
-if gl$="Y" 
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
-	if status>99
-		callpoint!.setStatus("ABORT")
-		ctlContext=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.ACCTING_DATE","CTLC"))
-		ctlID=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.ACCTING_DATE","CTLI"))
-		acct_dt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-		acct_dt!.focus()
-	endif
-endif
-
-if status<=99
-	bal_amt=num(callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_AMT"))-num(user_tpl.tot_dist$)
-	if bal_amt<>0
-		msg_id$="AP_NOT_DIST"
-		gosub disp_message
-		if msg_opt$="N"
-			gosub calc_grid_tots
-			gosub disp_dist_bal			
-			callpoint!.setStatus("ABORT")
-		endif
-	endif
-endif
-	
-[[APE_INVOICEHDR.NET_INV_AMT.AVAL]]
-rem re-calc discount amount based on net x disc %
-
-disc_amt=num(callpoint!.getUserInput())*(num(user_tpl.disc_pct$)/100)
-callpoint!.setColumnData("APE_INVOICEHDR.DISCOUNT_AMT",str(disc_amt))
-callpoint!.setStatus("REFRESH:APE_INVOICEHDR.DISCOUNT_AMT")
-[[APE_INVOICEHDR.PAYMENT_GRP.AVAL]]
-if callpoint!.getUserInput()=""
-	callpoint!.setColumnData("APE_INVOICEHDR.PAYMENT_GRP","  ")
-	callpoint!.setStatus("REFRESH")
-
-endif
-[[APE_INVOICEHDR.AP_DIST_CODE.AVAL]]
-if callpoint!.getColumnData("APE_INVOICEHDR.AP_DIST_CODE")=""
-	callpoint!.setColumnData("APE_INVOICEHDR.AP_DIST_CODE","  ")
-	callpoint!.setStatus("REFRESH")
-endif
-[[APE_INVOICEHDR.AP_TYPE.AVAL]]
-if callpoint!.getUserInput()=""
-	callpoint!.setColumnData("APE_INVOICEHDR.AP_TYPE","  ")
-	callpoint!.setStatus("REFRESH")
-endif
-[[APE_INVOICEHDR.ARNF]]
 rem record not in ape-01; is it in apt-01?
 rem if so, make sure only pmt grp, terms, hold, 
 rem acct dt, due dt, disc dt, adj amount, disc amount
@@ -134,7 +34,7 @@ abort_entry:
 	msg_id$="AP_INV_IN_USE"
 	gosub disp_message
 	callpoint!.setStatus("ABORT-CLEAR")
-	goto end_of_arnf
+	goto end_of_aval
 
 look_for_invoice:
 	apt01_dev=fnget_dev("APT_INVOICEHDR")
@@ -227,7 +127,106 @@ look_for_invoice:
 		endif
 	endif
 
-end_of_arnf:
+	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
+	ctl_stat$=""
+	gosub disable_fields
+
+	ctl_name$="APE_INVOICEHDR.INVOICE_DATE"
+	ctl_stat$=""
+	gosub disable_fields
+
+	ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
+	ctl_stat$=""
+	gosub disable_fields
+
+end_of_aval:
+[[APE_INVOICEHDR.ASHO]]
+rem --- get default date
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_ORDDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
+	user_tpl.dflt_acct_date$=stbl("DEF_ACCT_DATE")
+[[APE_INVOICEHDR.INVOICE_DATE.AVAL]]
+invdate$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
+terms_cd$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TERMS_CODE")
+if cvs(terms_cd$,3)="" then terms_cd$=user_tpl.dflt_terms_cd$
+if cvs(user_tpl.dflt_acct_date$,2)=""
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE"))
+else
+	callpoint!.setColumnData("APE_INVOICEHDR.ACCTING_DATE",user_tpl.dflt_acct_date$)
+endif
+gosub calculate_due_and_discount
+callpoint!.setStatus("REFRESH")
+[[APE_INVOICEHDR.AREC]]
+Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+callpoint!.setColumnData("<<DISPLAY>>.comments","")
+user_tpl.inv_amt$=""
+user_tpl.tot_dist$=""
+dist_bal!=UserObj!.getItem(num(user_tpl.dist_bal_ofst$))
+dist_bal!.setValue(0)
+
+rem --- Re-enable disabled fields
+ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_INVOICEHDR.INVOICE_DATE"
+ctl_stat$=""
+gosub disable_fields
+
+ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
+ctl_stat$=""
+gosub disable_fields
+[[APE_INVOICEHDR.BWRI]]
+rem --- fully distributed?
+
+gl$=user_tpl.glint$
+status=0
+acctgdate$=callpoint!.getColumnData("APE_INVOICEHDR.ACCTING_DATE")  
+if gl$="Y" 
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
+	if status>99
+		callpoint!.setStatus("ABORT")
+		ctlContext=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.ACCTING_DATE","CTLC"))
+		ctlID=num(callpoint!.getTableColumnAttribute("APE_INVOICEHDR.ACCTING_DATE","CTLI"))
+		acct_dt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+		acct_dt!.focus()
+	endif
+endif
+
+if status<=99
+	bal_amt=num(callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_AMT"))-num(user_tpl.tot_dist$)
+	if bal_amt<>0
+		msg_id$="AP_NOT_DIST"
+		gosub disp_message
+		if msg_opt$="N"
+			gosub calc_grid_tots
+			gosub disp_dist_bal			
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+endif
+	
+[[APE_INVOICEHDR.NET_INV_AMT.AVAL]]
+rem re-calc discount amount based on net x disc %
+
+disc_amt=num(callpoint!.getUserInput())*(num(user_tpl.disc_pct$)/100)
+callpoint!.setColumnData("APE_INVOICEHDR.DISCOUNT_AMT",str(disc_amt))
+callpoint!.setStatus("REFRESH:APE_INVOICEHDR.DISCOUNT_AMT")
+[[APE_INVOICEHDR.PAYMENT_GRP.AVAL]]
+if callpoint!.getUserInput()=""
+	callpoint!.setColumnData("APE_INVOICEHDR.PAYMENT_GRP","  ")
+	callpoint!.setStatus("REFRESH")
+
+endif
+[[APE_INVOICEHDR.AP_DIST_CODE.AVAL]]
+if callpoint!.getColumnData("APE_INVOICEHDR.AP_DIST_CODE")=""
+	callpoint!.setColumnData("APE_INVOICEHDR.AP_DIST_CODE","  ")
+	callpoint!.setStatus("REFRESH")
+endif
+[[APE_INVOICEHDR.AP_TYPE.AVAL]]
+if callpoint!.getUserInput()=""
+	callpoint!.setColumnData("APE_INVOICEHDR.AP_TYPE","  ")
+	callpoint!.setStatus("REFRESH")
+endif
 [[APE_INVOICEHDR.VENDOR_ID.AVAL]]
 rem "check vend hist file to be sure this vendor/ap type ok and to set some defaults;  display vend cmts
 
