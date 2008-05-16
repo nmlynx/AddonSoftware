@@ -315,12 +315,6 @@ rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
 
-rem --- Format zip/postal code
-
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
-
 rem --- Date/time handling functions
 
     def fndate$(q$)=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
