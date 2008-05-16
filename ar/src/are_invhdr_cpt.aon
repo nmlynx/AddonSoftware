@@ -682,13 +682,6 @@ rem --- Functions
 	def fnget_rec$(att0$)=rec_data$[fnstr_pos(att0$,rec_data$[0,0],40),0]
 	def fngetv_hattr$(att0$,att1$)=hattr_col$[fnstr_pos(att0$,hattr_col$[0,1],40),fnstr_pos(att1$,hattr_col$[0,0],5)]
 
-
-rem --- Format zip/postal code
-
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
-
 rem #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
