@@ -100,7 +100,7 @@ rem --- Retrieve inventory item and warehouse information
         ivm02a.item_id$=mpe03a.item_id$
         find record (ivm01_dev,key=(ivm01a.firm_id$+ivm01a.item_id$),dom=*continue) ivm01a$
         find record (ivm02_dev,key=(ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$),dom=*continue) ivm02a$
-        description$(1)=fnzipcode$(ivm01a.item_desc$,i[2],i[3],i[4])
+        description$(1)=fnitem$(ivm01a.item_desc$,i[2],i[3],i[4])
         itembuyer$=ivm01a.buyer_code$
         stocking$=ivm01a.vendor_id$
         safety=ivm01a.safety_stock,eoq=ivm01a.eoq,leadtime=ivm01a.lead_time
@@ -381,12 +381,6 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
-
-rem --- Format zip/postal code
-
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 

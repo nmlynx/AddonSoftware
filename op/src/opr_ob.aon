@@ -164,10 +164,10 @@ rem --------------- Print item stuff?
                     if item$<>"" then 
                       if l+3>l9 gosub report_heading
                       print (printer_dev)
-:                               @(o[0]),ivm01a.ITEM_ID$,
-:                               @(o[1]),ivm01a.PRODUCT_TYPE$,
-:                               @(o[2]),ivm01a.UNIT_OF_SALE$
-                      print (printer_dev)@(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
+:                               @(o[0]),ivm01a.item_id$,
+:                               @(o[1]),ivm01a.product_type$,
+:                               @(o[2]),ivm01a.unit_of_sale$
+                      print (printer_dev)@(o[0]+2),fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
                       l=l+2
                       item$=""
                     endif
@@ -175,7 +175,7 @@ rem --------------- Print item stuff?
 
                   if nonstock$="Y" then
                         if l+1>l9 gosub report_heading
-                        print (printer_dev)@(o[3]-3),ope11a.ORDER_MEMO$
+                        print (printer_dev)@(o[3]-3),ope11a.order_memo$
                         l=l+1
 
                      else
@@ -302,7 +302,7 @@ Item_Break: rem --- Item break
 :                                           @(o[12]),ivm02a.qty_commit:ivs01a.unit_mask$,
 :                                           @(o[13]),avail:ivs01a.unit_mask$
                            print (printer_dev)
-:                                           @(o[0]+2),fnzipcode$(ivm01a.ITEM_DESC$,i[3],i[4],i[5])
+:                                           @(o[0]+2),fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
                            print (printer_dev)""
                            l=l+3
                            gosub Record_Find1
@@ -358,12 +358,6 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
         def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
-
-rem --- Format zip/postal code
-
-        def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 

@@ -280,7 +280,7 @@ newvendor: rem --- New Vendor
             break
     swend
     
-    if apm06a.lstrec_date$=(8) lastrcpt$="None" else lastrcpt$=fndate$(apm06a.lstrec_date$)
+    if apm06a.lstrec_date$=fill(8) lastrcpt$="None" else lastrcpt$=fndate$(apm06a.lstrec_date$)
     vendline$(59)="Next Review: "+nxtrev$
     vendline$(83)="Target Type: "+targettype$
     vendline$(107)="Target Units: "+str(apm06a.pur_tgt_unit:m2$)
@@ -728,9 +728,23 @@ rem --- Format inventory item description
 
 rem --- Format zip/postal code
 
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
+    def fnzipcode$(q$)
+        if len(cvs(q$,2))<>9 and len(cvs(q$,2))<>6 return q$
+        if len(cvs(q$,2))=9
+            q1$="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"
+            q1=mask(cvs(q$,2),q1$)
+            if q1=0 return q$
+            if q1<>0
+                if q$(6,4)="0000" return q$(1,5)
+            return q$(1,5)+"-"+q$(6,4)
+            endif
+        endif
+        if len(cvs(q$,2))=6
+            q1$="[a-zA-Z][0-9][a-zA-Z][0-9][a-zA-Z][0-9]"
+            q1=mask(cvs(q$,2),q1$)
+            if q1=0 return q$ else return q$(1,3)+" "+q$(4,3)
+        endif
+    fnend
 
 rem --- Date/time handling functions
 

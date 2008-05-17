@@ -41,7 +41,7 @@ rem --- Open/Lock files
     files$[15]="aps_params",ids$[15]="APS_PARAMS"
     files$[16]="ars_params",ids$[16]="ARS_PARAMS"
     files$[17]="ivs_params",ids$[17]="IVS_PARAMS"
-    files$[18]="pos_params",ids$[18]=POS_PARAMS"
+    files$[18]="pos_params",ids$[18]="POS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -152,12 +152,6 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
-
-rem --- Format zip/postal code
-
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 

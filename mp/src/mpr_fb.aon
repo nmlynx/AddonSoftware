@@ -384,7 +384,7 @@ purchase_heading_exit: rem --- Purchase heading completed
 production_heading: rem --- Production heading
 
     dim description$(production_width)
-    description$(1)=fnzipcode$(ivm01a.item_desc$,i[2],i[3],i[4])
+    description$(1)=fnitem$(ivm01a.item_desc$,i[2],i[3],i[4])
     print (printer_dev)"Production",@(h2[2]),"Lead",@(h2[5]+m2-4),"Lot",@(h2[6]),"Phantom",@(h2[7]),"Estimated",@(h2[8]+2),"Bill",@(h2[9]+2),"Last",@(h2[10]+2),"Last"
     print (printer_dev)"Item",@(h2[1]),"Description",@(h2[2]),"Time",@(h2[3]),"Rev",@(h2[4]+m2-4),"EOQ",@(h2[5]+m2-5),"Size",@(h2[6])," Bill?",@(h2[7]+2),"Yield",@(h2[8]),"Created",@(h2[9]),"Revision",@(h2[10]+2),"Used"
     print (printer_dev)""
@@ -561,12 +561,6 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
-
-rem --- Format zip/postal code
-
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 
