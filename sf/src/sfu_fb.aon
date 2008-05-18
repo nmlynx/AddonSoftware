@@ -75,7 +75,7 @@ rem --- Comments Here woe-07
 
             read (sfe07_dev,key=sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$,dom=*next)
 
-            dim sfe07a_key$:sfe07_key$_key_tpl$   
+            dim sfe07a_key$:sfe07_key_tpl$   
             while more
                 sfe07a_key$=key(sfe07_dev,end=*break)
                 if sfe07a_key.FIRM_ID$+sfe07a_key.WO_LOCATION$+sfe07a_key.WO_NO$<>sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$ then break
@@ -86,7 +86,7 @@ rem --- Lot/Serial Numbers Here woe-06
 
             if pos(ivs01a.lotser_flag$="LS")<>0 then
                     read (sfe06_dev,key=sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$,dom=*next)
-                dim sfe06a_key$:sfe06_key$_key_tpl$    
+                dim sfe06a_key$:sfe06_key_tpl$    
                 while more
                     sfe06a_key$=key(sfe06_dev,end=*break)
                     if sfe06a_key.FIRM_ID$+sfe06a_key.WO_LOCATION$+sfe06a_key.WO_NO$<>sfe01a.FIRM_ID$+sfe01.WO_LOCATION$+sfe01a.WO_NO$ then break
@@ -98,7 +98,7 @@ rem --- Lot/Serial Numbers Here woe-06
 rem --- WOE-02/22/32 And woe-03 Here
 
             sfreq_dev=sfe02_dev
-            dim sfreq_key$:sfe02_key$_key_tpl$   
+            dim sfreq_key$:sfe02_key_tpl$   
             while more
                 read (sfreq_dev,key=sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$,dom=*next)
                 while more
@@ -108,14 +108,17 @@ rem --- WOE-02/22/32 And woe-03 Here
                     rem on pos(w0$(12,1)="ABC")-1 goto l2100,l2200,l2300
                     switch pos(sfe02a.RECORD_ID_A$="ABC")-1
 rem --- Operation Here
-                        case 1; k9$=firm_id$+"D"+sfe02a.WO_LOCATION$+sfe02a.OP_CODE$+sfe02a.REQUIRE_DATE$+sfe02a.W0_NO$+sfe02a.OP_SEQ$
-:                               remove (sfe03_dev,key=k9$,dom=*break)
+                        case 1; k9$=firm_id$+"D"+sfe02a.wo_location$+sfe02a.op_code$+sfe02a.require_date$+sfe02a.wo_no$+sfe02a.op_seq$
+                                remove (sfe03_dev,key=k9$,dom=*break)
+                                break
 rem --- Materials Here
-                        case 2; k9$=firm_id$+"E"+sfe02a.WO_OOCATION$+sfe01a.WAREHOUSE_ID$+sfe02a.RESERVED_STR$(1,20)+sfe02a.WO_NO$+sfe02a.OP_SEQ$
-:                               remove (sfe03_dev,key=k9$,dom=*break)
+                        case 2; k9$=firm_id$+"E"+sfe02a.wo_location$+sfe01a.warehouse_id$+sfe02a.reserved_str$(1,20)+sfe02a.wo_no$+sfe02a.op_seq$
+                                remove (sfe03_dev,key=k9$,dom=*break)
+                                break
  rem --- Subcontracts Here
-                        case 3; k9$=firm_id$+"F"+sfe02a.WO_OOCATION$+sfe02a.CODE_DESC$(1,6)+sfe02a.W0_NO$+sfe02a.OP_SEQ$
-:                              remove (sfe03_dev,key=k9$,dom=*break)
+                        case 3; k9$=firm_id$+"F"+sfe02a.wo_location$+sfe02a.code_desc$(1,6)+sfe02a.wo_no$+sfe02a.op_seq$
+                                remove (sfe03_dev,key=k9$,dom=*break)
+                                break
                     swend
 
 rem ----------- WOE-02/22/32 Here
@@ -124,11 +127,11 @@ rem ----------- WOE-02/22/32 Here
 
                 if sfreq_dev=sfe02_dev then
                     sfreq_dev=sfe22_dev
-                    dim sfreq_key$:sfe22_key$_key_tpl$   
+                    dim sfreq_key$:sfe22_key_tpl$   
                 else
                     if sfreq_dev=sfe22_dev then
                         sfreq_dev=sfe32_dev
-                        dim sfreq_key$:sfe32_key$_key_tpl$   
+                        dim sfreq_key$:sfe32_key_tpl$   
                     endif
                 endif
             wend
@@ -145,7 +148,7 @@ rem --- WOT-03/23/33 And wot-12 Here
             endif
 
 
-            dim wohist_key$:sft03_key$_key_tpl$   
+            dim wohist_key$:sft03_key_tpl$   
             while more
               read (wohist_dev,key=sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$,dom=*next)
               while more
@@ -170,11 +173,11 @@ rem --- WOT-03/23/33 And wot-12 Here
 
                 if wohist_dev=sft03_dev then
                     wohist_dev=sft23_dev
-                    dim wohist_key$:sft23_key$_key_tpl$   
+                    dim wohist_key$:sft23_key_tpl$   
                 else
                     if wohist_dev=sft23_dev then
                         wohist_dev=sft33_dev
-                        dim wohist_key$:sft33_key$_key_tpl$   
+                        dim wohist_key$:sft33_key_tpl$   
                     endif
                 endif
                 remove (sfe01_dev,key=sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$,dom=*next)
@@ -206,12 +209,6 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
         def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
-
-rem --- Format zip/postal code
-
-        def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 

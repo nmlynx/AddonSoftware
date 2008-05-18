@@ -32,10 +32,10 @@ rem --- Retrieve sysinfo data
 rem --- Batched Process?
 
     status=0
-    process$=stbl("+PROCESS",err=l9950)
+    process$=stbl("+PROCESS",err=std_exit)
     batch=num(process$(13,3))
     batch$="."+str(batch:"000")
-    if batch=0 goto l9950
+    if batch=0 goto std_exit
 
 rem --- Open Files
 
@@ -127,7 +127,7 @@ l4400: rem --- Exit - Error While Deleting Batch
     dim tokens$[tokens]
     tokens$[1]=batch$(2)
     call pgmdir$+"syc_xb.bbx",2,"ERROR_DELETING_BATCH_%1",tokens$[all],tokens,-1,-1,v$,v3
-    goto std_error_return
+    goto std_error_release
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -138,12 +138,6 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
-
-rem --- Format zip/postal code
-
-    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
-:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
-:                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 
