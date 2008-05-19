@@ -737,6 +737,7 @@ rem --- Format inventory item description
 rem --- Format zip/postal code
 
     def fnzipcode$(q$)
+        q$=cvs(q$,4)
         if len(cvs(q$,2))<>9 and len(cvs(q$,2))<>6 return q$
         if len(cvs(q$,2))=9
             q1$="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"
