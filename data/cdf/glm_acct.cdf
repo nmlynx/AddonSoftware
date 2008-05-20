@@ -134,8 +134,17 @@ rem --- Disallow delete if flag is set
 [[GLM_ACCT.AOPT-TRAN]]
 rem Transaction History Inquiry
 
-gridObj!=Form!.getControl(5000)
-cp_acct$=gridObj!.getCellText(gridObj!.getSelectedRow(),0)
+cp_acct$=""
+
+rem --- need to set cp_acct$ from grid if we're running glm_acct as maint grid
+while 1
+	gridObj!=Form!.getControl(5000,err=*break)
+	cp_acct$=gridObj!.getCellText(gridObj!.getSelectedRow(),0)
+	break
+wend
+
+rem --- or set cp_acct$ by getting column data if we did an expand on a validated GL acct in some other form
+if cp_acct$="" then cp_acct$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
 
 user_id$=stbl("+USER_ID")
 dim dflt_data$[2,1]
@@ -154,8 +163,17 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 [[GLM_ACCT.AOPT-SUMM]]
 rem Summary Activity Inquiry
 
-gridObj!=Form!.getControl(5000)
-cp_acct$=gridObj!.getCellText(gridObj!.getSelectedRow(),0)
+cp_acct$=""
+
+rem --- need to set cp_acct$ from grid if we're running glm_acct as maint grid
+while 1
+	gridObj!=Form!.getControl(5000,err=*break)
+	cp_acct$=gridObj!.getCellText(gridObj!.getSelectedRow(),0)
+	break
+wend
+
+rem --- or set cp_acct$ by getting column data if we did an expand on a validated GL acct in some other form
+if cp_acct$="" then cp_acct$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
 
 user_id$=stbl("+USER_ID")
 dim dflt_data$[2,1]
