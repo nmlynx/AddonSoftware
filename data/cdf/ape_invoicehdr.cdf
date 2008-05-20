@@ -501,7 +501,7 @@ inv_no_width=inv_no!.getWidth()
 cmts_x=cmts!.getX()
 
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+5,inv_no_y,cmts_x-(inv_no_x+inv_no_width+5),inv_no_height*2,"")
+Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+25,inv_no_y,cmts_x-(inv_no_x+inv_no_width+25),inv_no_height*2,"")
 user_tpl.open_inv_textID$=str(nxt_ctlID)
 
 rem --- add inputE (display only) for displaying distribution balance in header
