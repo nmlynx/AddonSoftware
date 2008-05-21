@@ -100,7 +100,7 @@ rem --- Assign form input values to local variables
     if wo_closed$="Y" wostatus$=wostatus$+"C"
     if wo_planned$="Y" wostatus$=wostatus$+"P"
     if wo_quoted$="Y" wostatus$=wostatus$+"Q"
-    
+
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
@@ -156,6 +156,9 @@ rem --- Init Data
     if status then goto std_error
     sfs01a.current_year$=""
 
+    if wostatus$="" then
+        wostatus$="OCPQ"
+    endif
 
    
 done: rem --- Overlay
@@ -183,6 +186,12 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 
