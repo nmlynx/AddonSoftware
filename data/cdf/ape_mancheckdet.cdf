@@ -1,3 +1,7 @@
+[[APE_MANCHECKDET.ADEL]]
+rem --- Recalc totals for header
+	gosub calc_tots
+	gosub disp_tots
 [[APE_MANCHECKDET.DISCOUNT_AMT.AVEC]]
 gosub calc_tots
 gosub disp_tots

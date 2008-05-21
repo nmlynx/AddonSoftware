@@ -5,10 +5,62 @@ call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :	gui_dev,
 :	Form!,
 :	"APT_INVOICEHDR",
-:	"VIEW",
+:	"LOOKUP",
 :	table_chans$[all],
 :	key_pfx$,
-:	"PRIMARY"
+:	"PRIMARY",
+:	rd_key$
+
+if rd_key$<>""
+	apt01_dev=fnget_dev("APT_INVOICEHDR")
+	dim apt01a$: fnget_tpl$("APT_INVOICEHDR")
+	apt11_dev=fnget_dev("APT_INVOICEDET")
+	dim apt11a$:fnget_tpl$("APT_INVOICEDET")
+	ape22_dev=fnget_dev("APE_MANCHECKDET")
+	dim ape22a$:fnget_tpl$("APE_MANCHECKDET")
+	while 1
+		readrecord(apt01_dev,key=rd_key$,dom=*break)apt01a$
+		apt01_key$=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$
+		inv_amt=num(apt01a.invoice_amt$)
+		disc_amt=num(apt01a.discount_amt$)
+		ret_amt=num(apt01a.retention$)
+		apt11_key$=apt01_key$
+		read(apt11_dev,key=apt11_key$,dom=*next)
+		while 1
+			readrecord(apt11_dev,end=*break)apt11a$
+			if apt11a$(1,len(apt11_key$))=apt11_key$
+				inv_amt=inv_amt+num(apt11a.trans_amt$)
+				disc_amt=disc_amt+num(apt11a.trans_disc$)
+				ret_amt=ret_amt+num(apt11a.trans_ret$)
+			else
+				break
+			endif
+		wend
+		ape22a.firm_id$=firm_id$
+		ape22a.ap_type$=apt01a.ap_type$
+		ape22a.check_no$=callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
+		ape22a.vendor_id$=callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
+		ape22a.ap_inv_no$=apt01a.ap_inv_no$
+		ape22a.sequence_00$="00"
+		ape22a.ap_dist_code$=apt01a.ap_dist_code$
+		ape22a.invoice_date$=apt01a.invoice_date$
+		ape22a.invoice_amt=inv_amt
+		ape22a.discount_amt=disc_amt
+		ape22a.retention=ret_amt
+		ape22a.net_paid_amt=inv_amt-disc_amt-ret_amt
+		ape22_key$=firm_id$+ape22a.ap_type$+ape22a.check_no$+ape22a.vendor_id$+ape22a.ap_inv_no$+"00"
+		ape22a$=field(ape22a$)
+		writerecord(ape22_dev,key=ape22a_key$)ape22a$
+		ape02_key$=firm_id$+ape22a.ap_type$+callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")+ape22a.vendor_id$
+		callpoint!.setStatus("RECORD:"+ape02_key$)
+		gosub calc_tots
+		callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_INV",str(tinv))
+	   	callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_DISC",str(tdisc))
+		callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_RETEN",str(tret))
+		callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_CHECK",str(tinv-tdisc-tret))
+		break
+	wend
+endif
 [[APE_MANCHECKHDR.AOPT-OCHK]]
 rem -- call inquiry program to view open check file; plug check#/vendor id if those fields are still blank on form
 
