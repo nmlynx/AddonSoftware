@@ -9,6 +9,16 @@ rem --- All Rights Reserved
         seterr std_error
         setesc std_error
 
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
         pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -40,7 +50,6 @@ rem --- Retrieve key templates
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNOPRTR","PRIMARY",sft01_key_tpl$,rd_table_chans$[all],status$
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNMATTR","PRIMARY",sft21_key_tpl$,rd_table_chans$[all],status$
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNSUBTR","PRIMARY",sft31_key_tpl$,rd_table_chans$[all],status$
-
 
         switch pos(report_sequence$="WBCT")
             case 1; rem --- report_sequence$="W"    
@@ -104,6 +113,41 @@ rem --- Retrieve key templates
         headings$[4]=h6$
         headings$[5]="In "+h5$
         more=1
+
+        if how$="U"
+            dim columns$[11,10]
+            columns = 12
+
+            columns$[0,0]="W.O #",         columns$[0,1]="C",columns$[0,2]="10"
+            columns$[1,0]="Sts",           columns$[1,1]="C",columns$[1,2]="5"
+            columns$[2,0]="Type",          columns$[2,1]="C",columns$[2,2]="5"
+            columns$[3,0]="Operations",    columns$[3,1]="C",columns$[3,2]="30"
+            columns$[4,0]="Date Req",      columns$[4,1]="C",columns$[4,2]="10"
+            columns$[5,0]="Last Act.",     columns$[5,1]="C",columns$[5,2]="10"
+            columns$[6,0]="Std.Setup",     columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m6$
+            columns$[7,0]="Std.Run",       columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m6$
+            columns$[8,0]="Act.Setup",     columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m6$
+            columns$[9,0]="Act.Run",       columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m6$
+            columns$[10,0]="# Vnce",       columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m6$
+            columns$[11,0]="Cmp Qty",      columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m6$
+        else
+            dim columns$[11,10]
+            columns = 12
+
+            columns$[0,0]="W.O #",         columns$[0,1]="C",columns$[0,2]="10"
+            columns$[1,0]="Sts",           columns$[1,1]="C",columns$[1,2]="5"
+            columns$[2,0]="Type",          columns$[2,1]="C",columns$[2,2]="5"
+            columns$[3,0]="Operations",    columns$[3,1]="C",columns$[3,2]="30"
+            columns$[4,0]="Date Req",      columns$[4,1]="C",columns$[4,2]="10"
+            columns$[5,0]="Last Act.",     columns$[5,1]="C",columns$[5,2]="10"
+            columns$[6,0]="Std.Direct",    columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m6$
+            columns$[7,0]="Std.Ovh",       columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m6$
+            columns$[8,0]="Act.Direct",    columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m6$
+            columns$[9,0]="Act.Ovh",       columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m6$
+            columns$[10,0]="# Vnce",       columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m6$
+            columns$[11,0]="# Vnce",       columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m6$
+        endif
+
 
 rem --- Additional File Opens
 
@@ -192,9 +236,15 @@ rem --- Breaks
 
 rem --- Print Work Order Header Information
 
-            if l+1>l9 then gosub sub_heading
-            print (printer_dev)sfe01a.wo_no$,@(9),sfe01a.wo_status$,@(13),sfe01a.wo_type$, @(18),d1$(1,desclen)
-            print (printer_dev)@(18),"Sched.Qty:",sfe01a.sch_prod_qty:m6$+" Closed Qty:",sfe01a.qty_cls_todt:m6$
+rem ***            if l+1>l9 then gosub sub_heading
+            OutVect!.addItem(sfe01a.wo_no$)
+            OutVect!.addItem(sfe01a.wo_status$)
+            OutVect!.addItem(sfe01a.wo_type$)
+            OutVect!.addItem(d1$(1,desclen))
+            xwk = fnblank(8)
+            xwk = fnblank(3)
+            OutVect!.addItem("Sched.Qty:"+str(sfe01a.sch_prod_qty:m6$)+" Closed Qty:"+str(sfe01a.qty_cls_todt:m6$))
+            xwk = fnblank(8)
             l=l+2
             gosub process_work_order
         wend
@@ -240,6 +290,7 @@ rem --- Calc Standards - Operations
             stdovh[x]=stdovh[x]+sfe02a.tot_std_cost-sfe02a.total_time*sfe02a.direct_rate
             stdset[x]=stdset[x]+sfe02a.setup_time
         wend
+
 rem --- Calc Standards - Materials
 
         totsmat=0
@@ -260,10 +311,12 @@ rem --- Get Actuals
         gosub calculate_actuals
 
 rem --- Print
+
         if x0$="" then return
         for y=1 to len(x0$)/3
-            if l+1>l9 then gosub report_heading
-            print (printer_dev)@(29),x2$(3*y-2,3)," ",x1$(20*y-19,20),
+
+            xwk = fnblank(3)
+            OutVect!.addItem("         "+x2$(3*y-2,3)+" "+x1$(20*y-19,20))
             x=int((3*y-2)/3)
             if how$="U" then 
                 break_flag=1
@@ -278,6 +331,7 @@ rem --- Print
             l=l+1
         next y
         break_flag=0
+
 print_unit_info: rem --- Print Unit Information
         if how$<>"U" or break_flag=1 then
             if how$<>"D" or break_flag=1 then
@@ -288,12 +342,14 @@ print_unit_info: rem --- Print Unit Information
                          ldate$=fndate$(last_date$(x*8+1,8))
                      endif
                 endif
-                print (printer_dev) @(54),fndate$((x3$(x*8+1,8))),
-:                                   @(64),ldate$,
-:                                   @(74),stdset[x]:m6$,
-:                                   @(81),stdrun[x]:m6$,
-:                                   @(88),actset[x]:m6$,
-:                                   @(95),actrun[x]:m6$,
+
+                OutVect!.addItem(fndate$((x3$(x*8+1,8))))
+                OutVect!.addItem(ldate$)
+                OutVect!.addItem(str(stdset[x]:m6$))
+                OutVect!.addItem(str(stdrun[x]:m6$))
+                OutVect!.addItem(str(actset[x]:m6$))
+                OutVect!.addItem(str(actrun[x]:m6$))
+
                 totstd=stdset[x]+stdrun[x]
                 totact=actset[x]+actrun[x]
                 if totstd<>0 then  
@@ -301,7 +357,9 @@ print_unit_info: rem --- Print Unit Information
                 else  
                     pctvar=0
                 endif
-                print (printer_dev) @(103),pctvar:m6$, @(111),qtycom[x]:m6$
+                OutVect!.addItem(str(pctvar:m6$))
+                OutVect!.addItem(str(qtycom[x]:m6$))
+
                 totsset=totsset+stdset[x]
                 totsrun=totsrun+stdrun[x]
                 totaset=totaset+actset[x]
@@ -309,6 +367,7 @@ print_unit_info: rem --- Print Unit Information
                 return
              endif
          endif
+
 print_dollar_info: rem --- Print Dollar Information
         if how$<>"U" or break_flag=1 then
             if how$<>"D" or break_flag=1 then
@@ -319,12 +378,14 @@ print_dollar_info: rem --- Print Dollar Information
                          ldate$=fndate$(last_date$(x*8+1,8))
                      endif
                 endif
-                print (printer_dev) @(54),fndate$(x3$(x*8+1,8)),
-:                                   @(64),ldate$,
-:                                   @(74),stddir[x]:m6$,
-:                                   @(82),stdovh[x]:m6$,
-:                                   @(90),actdir[x]:m6$,
-:                                   @(98),actovh[x]:m6$,
+
+                OutVect!.addItem(fndate$(x3$(x*8+1,8)))
+                OutVect!.addItem(ldate$)
+                OutVect!.addItem(str(stddir[x]:m6$))
+                OutVect!.addItem(str(stdovh[x]:m6$))
+                OutVect!.addItem(str(actdir[x]:m6$))
+                OutVect!.addItem(str(actovh[x]:m6$))
+
                 totstd=stddir[x]+stdovh[x]
                 totact=actdir[x]+actovh[x]
                 if totstd<>0 then 
@@ -332,7 +393,10 @@ print_dollar_info: rem --- Print Dollar Information
                 else
                     pctvar=0
                 endif
-                print (printer_dev) @(106),(totstd-totact):m6$,@(114),pctvar:m6$
+
+                OutVect!.addItem(str((totstd-totact):m6$))
+                OutVect!.addItem(str(pctvar:m6$))
+
                 totsdir=totsdir+stddir[x]
                 totsovh=totsovh+stdovh[x]
                 totadir=totadir+actdir[x]
@@ -344,77 +408,139 @@ print_dollar_info: rem --- Print Dollar Information
 rem --- Dollar Totals
 
         if how$<>"U" or break_flag=1 then
-            if l+4>l9 then gosub report_heading
-            print (printer_dev)@(74),fill(53,"-")
+
             if totsdir<>0 then 
                 pctvar=(totsdir-totadir)*100/totsdir 
             else 
                 pctvar=0
             endif
-            print (printer_dev) @(9),"*** Total For Work Order "+sfe01a.wo_no$+" ***",
-:                               @(56),"Direct Labor:",
-:                               @(72),totsdir:m9$,
-:                               @(90),totadir:m6$,
-:                               @(106),totsdir-totadir:m6$,
-:                            @(114),pctvar:m6$
+
+            xwk = fnblank(6)
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+
+            xwk = fnblank(3)
+            OutVect!.addItem("*** Total For Work Order "+sfe01a.wo_no$+" ***")
+            OutVect!.addItem("Direct Labor:")
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totsdir:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totadir:m6$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totsdir-totadir:m6$))
+            OutVect!.addItem(str(pctvar:m6$))
+
              if totsovh<>0 then 
                 pctvar=(totsovh-totaovh)*100/totsovh
              else 
                 pctvar=0
              endif
-             print (printer_dev) @(54),"Overhead Labor:",
-:                                @(80),totsovh:m9$,
-:                                @(96),totaovh:m9$,
-:                                @(106),totsovh-totaovh:m6$,
-:                                @(114),pctvar:m6$
+            xwk = fnblank(4)
+            OutVect!.addItem("Overhead Labor:")
+            xwk = fnblank(2)
+            OutVect!.addItem(str(totsovh:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totaovh:m9$))
+            OutVect!.addItem(str(totsovh-totaovh:m6$))
+            OutVect!.addItem(str(pctvar:m6$))
+
              totadir=0
              totaovh=0,totsdir=0,totsovh=0
              l=l+3
+
 rem ------- Summary Totals
 
-            if l+8>l9 then gosub report_heading
             if wo_status$="0" then cqty=sfe01a.sch_prod_qty
             if wo_status$="1" and cqty=0 then cqty=sfe01a.sch_prod_qty
-            print (printer_dev)@(74),fill(53,"-")
-            print (printer_dev) @(56),"Labor Totals:",
-:                               @(77),totslab:m9$,
-:                               @(93),totalab:m9$,
-:                               @(106),totslab-totalab:m6$,
+
+            xwk = fnblank(6)
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+
+            xwk = fnblank(4)
+            OutVect!.addItem("Labor Totals:")
+            xwk = fnblank(2)
+            OutVect!.addItem(str(totslab:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totalab:m9$))
+            OutVect!.addItem(str(totslab-totalab:m6$))
+
             if totslab<>0 then 
-                print (printer_dev)@(114),(totslab-totalab)*100/totslab:m6$ 
+                OutVect!.addItem(str((totslab-totalab)*100/totslab:m6$))
             else 
-                print (printer_dev)@(114),0:m6$
+                OutVect!.addItem(str(0:m6$))
             endif
-            print (printer_dev) @(60),"Per Unit:",
-:                               @(77),totslab/cqty:m9$,
-:                               @(93),totalab/cqty:m9$,
-:                               @(106),(totslab-totalab)/cqty:m6$
-            print (printer_dev) @(53),"Material Totals:",
-:                               @(77),totsmat:m9$,
-:                               @(93),totamat:m9$,
-:                              @(106),totsmat-totamat:m6$,
+
+            xwk = fnblank(4)
+            OutVect!.addItem("Per Unit:")
+            xwk = fnblank(2)
+            OutVect!.addItem(str(totslab/cqty:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totalab/cqty:m9$))
+            OutVect!.addItem(str((totslab-totalab)/cqty:m6$))
+            xwk = fnblank(1)
+
+            xwk = fnblank(4)
+            OutVect!.addItem("Material Totals:")
+            xwk = fnblank(2)
+            OutVect!.addItem(str(totsmat:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totamat:m9$))
+            OutVect!.addItem(str(totsmat-totamat:m6$))
+
             if totsmat<>0 then 
-                print (printer_dev)@(114),(totsmat-totamat)*100/totsmat:m6$ 
+                OutVect!.addItem(str((totsmat-totamat)*100/totsmat:m6$))
             else 
-                print (printer_dev)@(114),0:m6$
+                OutVect!.addItem(str(0:m6$))
             endif
-            print (printer_dev) @(60),"Per Unit:",
-:                               @(77),totsmat/cqty:m9$,
-:                               @(93),totamat/cqty:m9$,
-:                               @(106),(totsmat-totamat)/cqty:m6$
-            print (printer_dev)@(74),fill(53,"-")
-            print (printer_dev)  @(59),"WO Totals:",
-:                                @(77),totslab+totsmat:m9$,
-:                                @(93),totalab+totamat:m9$,
-:                                @(106),(totslab+totsmat)-(totalab+totamat):m6$,
+
+            xwk = fnblank(4)
+            OutVect!.addItem("Per Unit:")
+            xwk = fnblank(2)
+            OutVect!.addItem(str(totsmat/cqty:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totamat/cqty:m9$))
+            OutVect!.addItem(str((totsmat-totamat)/cqty:m6$))
+            xwk = fnblank(1)
+
+            xwk = fnblank(6)
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+
+            xwk = fnblank(4)
+            OutVect!.addItem("WO Totals:")
+            xwk = fnblank(2)
+            OutVect!.addItem(str(totslab+totsmat:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totalab+totamat:m9$))
+            OutVect!.addItem(str((totslab+totsmat)-(totalab+totamat):m6$))
+
             if totslab+totsmat<>0 then 
-                print (printer_dev)@(114),((totslab+totsmat)-(totalab+totamat))*100/(totslab+totsmat):m6$
+                OutVect!.addItem(str(((totslab+totsmat)-(totalab+totamat))*100/(totslab+totsmat):m6$))
             endif
-            print (printer_dev) @(53),"Per Unit Totals:",
-:                               @(77),(totslab+totsmat)/cqty:m9$,
-:                               @(93),(totalab+totamat)/cqty:m9$,
-:                               @(106),((totslab+totsmat)-(totalab+totamat))/cqty:m6$,
-:                               @(114),(((totslab+totsmat)/cqty)-((totalab+totamat)/cqty))*100/((totslab+totsmat)/cqty):m6$
+
+            xwk = fnblank(4)
+            OutVect!.addItem("Per Unit Totals:")
+            xwk = fnblank(2)
+            OutVect!.addItem(str((totslab+totsmat)/cqty:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str((totalab+totamat)/cqty:m9$))
+            OutVect!.addItem(str(((totslab+totsmat)-(totalab+totamat))/cqty:m6$))
+            OutVect!.addItem(str((((totslab+totsmat)/cqty)-((totalab+totamat)/cqty))*100/((totslab+totsmat)/cqty):m6$))
+            xwk = fnblank(12)
+
             totslab=0
             totalab=0
             totsmat=0
@@ -422,9 +548,9 @@ rem ------- Summary Totals
             l=l+8
             return
         endif
+
 rem ----Unit Totals
-        if l+4>l9 then gosub report_heading
-        print (printer_dev)@(74),fill(53,"-")
+
         totstd=totsset+totsrun
         totact=totaset+totarun
         if totstd<>0 then 
@@ -432,12 +558,31 @@ rem ----Unit Totals
         else 
             pctvar=0
         endif
-        print (printer_dev)
-:                       @(9),"*** Total For Work Order "+sfe01a.wo_no$+" ***",
-:                       @(72),totsset:m9$,
-:                       @(86),totaset:m9$
-        print (printer_dev)@(79),totsrun:m9$,@(93),totarun:m9$,@(103),pctvar:m6$
-        print (printer_dev)""
+
+
+            xwk = fnblank(6)
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+            OutVect!.addItem("----------")
+
+            xwk = fnblank(3)
+            OutVect!.addItem("*** Total For Work Order "+sfe01a.wo_no$+" ***")
+            xwk = fnblank(2)
+            OutVect!.addItem(str(totsset:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totaset:m9$))
+            xwk = fnblank(3)
+            xwk = fnblank(7)
+            OutVect!.addItem(str(totsrun:m9$))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(totarun:m9$))
+            OutVect!.addItem(str(pctvar:m6$))
+            xwk = fnblank(1)
+            xwk = fnblank(12)
+
         totsset=0
         totaset=0,totsrun=0,totarun=0
         l=l+4
@@ -558,34 +703,21 @@ end_pgm: rem --- End
 
         goto std_exit
         
-report_heading: rem --- Report Heading
-
-        l=headings+2
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-        if status then exitto std_exit
-        if how$<>"D" 
-            print (printer_dev) "W.O. #",@(8),"Sts Type",@(29),"Operations",@(55),"Date Req",@(66),"Last",
-:                         @(78),"Standard", @(94),"Actual",@(104),"% Vnce  Cmp Qty"
-            print (printer_dev) @(64),"Activity", @(76),"Setup", @(85),"Run  Setup",@(99),"Run"
-        else
-            print (printer_dev)"W.O. #",@(8),"Sts Type",@(29),"Operations",@(55),"Date Req",
-:                               @(66),"Last", @(80),"Standard",@(96),"Actual",@(107),"$ Vnce",@(115),"% Vnce"
-            print (printer_dev) @(64),"Activity",@(75),"Direct",@(86),"Ovh  Direct",@(102),"Ovh"
-        endif
-        l=l+3
-        return
 
 sub_heading: rem --- Sub Heading
 
-        if l>l9 then gosub report_heading
         switch pos(report_sequence$="TC")
             case 1 
-                print (printer_dev)'lf',t0$+"   ",h5$,'lf'
+                OutVect!.addItem(t0$+"   "+h5$)
+                xwk = fnblank(11)
+                xwk = fnblank(12)
                 l=l+3
                 break
             case 2 
                 if ars01a.customer_output$<> "" then
-                    print (printer_dev)fnmask$(t0$(1,c0),ars01a.customer_output$)," ",h5$
+                    OutVect!.addItem(fnmask$(t0$(1,c0)+ars01a.customer_output$)+" "+h5$)
+                    xwk = fnblank(11)
+                    xwk = fnblank(12)
                 endif
                 l=l+1
                 break
@@ -595,14 +727,12 @@ sub_heading: rem --- Sub Heading
 first_subtotal:rem --- First Sub Total
         if cvs(t0$,3)<>"" then
             if l0<=1 then 
-                print (printer_dev)""
                 l=l+1
             else
                 if l+2>l9 then gosub sub_heading
-                if report_sequence$="B" then print (printer_dev)@(45),fill(m2-1,"-"),
-                print (printer_dev)@(45+m2),fill(m1-1,"-"),'lf',
-                if report_sequence$="B" then print (printer_dev)@(45),t[0]:m2$,
-                print (printer_dev)@(10),h9$," ",t0$+"   ","Total: ",@(45+m2),t[1]:m1$,'lf'
+                if report_sequence$="B" then OutVect!.addItem(str(t[0]:m2$))
+                OutVect!.addItem(h9$+" "+t0$+"   "+"Total: ")
+                OutVect!.addItem(str(t[1]:m1$))
                 l=l+3
             endif
         endif
@@ -632,6 +762,8 @@ rem --- Customer
          swend
          return
 
+
+
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -650,6 +782,22 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
         def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+        def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+
+:                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+
+:                      q$(6,4)+fill(10),16))
+
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+        def fnblank(q0)
+            for q1=1 to q0
+                OutVect!.addItem("")
+            next q1
+            return q1
+        fnend
 
 rem --- Date/time handling functions
 
