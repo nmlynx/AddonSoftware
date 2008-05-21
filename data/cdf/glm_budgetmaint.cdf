@@ -408,9 +408,3 @@ rem format the grid, and set first column to be a pull-down
 gosub format_gridBudgets
 gosub set_column1_list
 
-rem disable gl acct type and detail flag
-ctl_name$="GL_ACCT_TYPE"
-ctl_stat$="I"
-gosub disable_fields
-ctl_name$="DETAIL_FLAG"
-gosub disable_fields
