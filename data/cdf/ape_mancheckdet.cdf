@@ -107,8 +107,7 @@ if apt01a$(1,len(apt01ak1$))=apt01ak1$
 		ape02_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
 :						callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+
 :						callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")
-		callpoint!.setStatus("ABORT")
-rem		callpoint!.setStatus("ABORT-RECORD:"+ape02_key$)
+		callpoint!.setStatus("ABORT-RECORD:"+ape02_key$)
 		goto end_of_inv_aval
 	endif
 	inv_amt=num(apt01a.invoice_amt$)
