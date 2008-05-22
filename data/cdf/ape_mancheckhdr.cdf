@@ -16,10 +16,23 @@ if rd_key$<>""
 	dim apt01a$: fnget_tpl$("APT_INVOICEHDR")
 	apt11_dev=fnget_dev("APT_INVOICEDET")
 	dim apt11a$:fnget_tpl$("APT_INVOICEDET")
-	ape22_dev=fnget_dev("APE_MANCHECKDET")
+	ape22_dev1=user_tpl.ape22_dev1
 	dim ape22a$:fnget_tpl$("APE_MANCHECKDET")
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","APE_MANCHECKDET","ALT_KEY_01",ape22_key1$,rd_table_chans$[all],status$
 	while 1
 		readrecord(apt01_dev,key=rd_key$,dom=*break)apt01a$
+		if apt01a.selected_for_pay$="Y"
+			callpoint!.setMessage("AP_INV_IN_USE:Check")
+			break
+		endif
+		dim ape22_key$:ape22_key1$
+		read(ape22_dev1,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,knum=1,dom=*next)
+		ape22_key$=key(ape22_dev1,end=*next)
+		if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$=ape22_key$)=1 and
+:			ape22_key.check_no$<>callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
+			callpoint!.setMessage("AP_INV_IN_USE:Manual Check")
+			break
+		endif
 		apt01_key$=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$
 		inv_amt=num(apt01a.invoice_amt$)
 		disc_amt=num(apt01a.discount_amt$)
@@ -50,7 +63,7 @@ if rd_key$<>""
 		ape22a.net_paid_amt=inv_amt-disc_amt-ret_amt
 		ape22_key$=firm_id$+ape22a.ap_type$+ape22a.check_no$+ape22a.vendor_id$+ape22a.ap_inv_no$+"00"
 		ape22a$=field(ape22a$)
-		writerecord(ape22_dev,key=ape22a_key$)ape22a$
+		writerecord(ape22_dev1,key=ape22a_key$)ape22a$
 		ape02_key$=firm_id$+ape22a.ap_type$+callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")+ape22a.vendor_id$
 		callpoint!.setStatus("RECORD:"+ape02_key$)
 		gosub calc_tots
@@ -169,9 +182,9 @@ calc_tots:
 	if numrecs>0
 		for reccnt=0 to numrecs-1
 			gridrec$=recVect!.getItem(reccnt)
-			tinv=tinv+num(gridrec.invoice_amt$)
-			tdisc=tdisc+num(gridrec.discount_amt$)
-			tret=tret+num(gridrec.retention$)
+			tinv=tinv+gridrec.invoice_amt
+			tdisc=tdisc+gridrec.discount_amt
+			tret=tret+gridrec.retention
 		next reccnt
 	endif
 
@@ -332,6 +345,7 @@ files$[12]="GLS_PARAMS"
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
+options$[3]=options$[3]+"N"
 
 call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	begfile,
@@ -356,10 +370,11 @@ user_tpl_str$=user_tpl_str$+"misc_entry:c(1),post_closed:c(1),units_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"existing_tran:c(1),open_check:c(1),existing_invoice:c(1),reuse_chk:c(1),"
 user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),"
 user_tpl_str$=user_tpl_str$+"tinv_vpos:c(1),tdisc_vpos:c(1),tret_vpos:c(1),tchk_vpos:c(1),"
-user_tpl_str$=user_tpl_str$+"ap_type_vpos:c(1),vendor_id_vpos:c(1)"
+user_tpl_str$=user_tpl_str$+"ap_type_vpos:c(1),vendor_id_vpos:c(1),ape22_dev1:n(5)"
 
 dim user_tpl$:user_tpl_str$
 user_tpl.firm_id$=firm_id$
+user_tpl.ape22_dev1=num(chans$[3])
 
 rem --- set up UserObj! as vector
 	UserObj!=SysGUI!.makeVector()

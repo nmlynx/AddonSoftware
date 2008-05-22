@@ -86,8 +86,31 @@ vendor_id$(1)=UserObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
 
 apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")
 apt11ak1$=apt01ak1$(1,len(apt01ak1$)-2)
+ape22_dev1=user_tpl.ape22_dev1
+call stbl("+DIR_SYP")+"bac_key_template.bbj","APE_MANCHECKDET","ALT_KEY_01",ape22_key1$,rd_table_chans$[all],status$
 readrecord(apt_invoicehdr_dev,key=apt01ak1$,dom=*next)apt01a$
 if apt01a$(1,len(apt01ak1$))=apt01ak1$
+	if apt01a.selected_for_pay$="Y"
+		callpoint!.setMessage("AP_INV_IN_USE:Check")
+		ape02_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
+:						callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+
+:						callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")
+		callpoint!.setStatus("ABORT-RECORD:"+ape02_key$)
+		goto end_of_inv_aval
+	endif
+	dim ape22_key$:ape22_key1$
+	read(ape22_dev1,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,knum=1,dom=*next)
+		ape22_key$=key(ape22_dev1,end=*next)
+	if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$=ape22_key$)=1 and
+:		ape22_key.check_no$<>callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")
+		callpoint!.setMessage("AP_INV_IN_USE:Manual Check")
+		ape02_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
+:						callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+
+:						callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")
+		callpoint!.setStatus("ABORT")
+rem		callpoint!.setStatus("ABORT-RECORD:"+ape02_key$)
+		goto end_of_inv_aval
+	endif
 	inv_amt=num(apt01a.invoice_amt$)
 	disc_amt=num(apt01a.discount_amt$)
 	ret_amt=num(apt01a.retention$)
@@ -123,14 +146,13 @@ else
 	c!.setColumnEditable(2,1)
 	callpoint!.setColumnData("APE_MANCHECKDET.AP_DIST_CODE",user_tpl.dflt_dist_cd$)
 endif
-
-	callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_AMT",str(inv_amt))
-	callpoint!.setColumnData("APE_MANCHECKDET.DISCOUNT_AMT",str(disc_amt))
-	callpoint!.setColumnData("APE_MANCHECKDET.RETENTION",str(ret_amt))
-	callpoint!.setColumnData("APE_MANCHECKDET.NET_PAID_AMT",str(inv_amt-disc_amt-ret_amt))
+callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_AMT",str(inv_amt))
+callpoint!.setColumnData("APE_MANCHECKDET.DISCOUNT_AMT",str(disc_amt))
+callpoint!.setColumnData("APE_MANCHECKDET.RETENTION",str(ret_amt))
+callpoint!.setColumnData("APE_MANCHECKDET.NET_PAID_AMT",str(inv_amt-disc_amt-ret_amt))
 
 callpoint!.setStatus("MODIFIED-REFRESH")
-endif
+end_of_inv_aval:
 [[APE_MANCHECKDET.<CUSTOM>]]
 calc_tots:
 
