@@ -151,20 +151,20 @@ rem --column heading
         columns=14
 
         columns$[0,0]="Vendor",          columns$[0,1]="C",columns$[0,2]="10"
-        columns$[1,0]="Name",            columns$[1,1]="C",columns$[1,2]="35"
-        columns$[2,0]="Invoice",         columns$[2,1]="C",columns$[2,2]="15"
+        columns$[1,0]="Name",            columns$[1,1]="C",columns$[1,2]="20"
+        columns$[2,0]="Invoice",         columns$[2,1]="C",columns$[2,2]="10"
         columns$[3,0]="DC",              columns$[3,1]="C",columns$[3,2]="8"
         columns$[4,0]="PG",              columns$[4,1]="C",columns$[4,2]="4"
         columns$[5,0]="TC",              columns$[5,1]="C",columns$[5,2]="4"
         columns$[6,0]="HD",              columns$[6,1]="C",columns$[6,2]="4"
-        columns$[7,0]="Invoice Date",    columns$[7,1]="C",columns$[7,2]="10"
-        columns$[8,0]="Due Date",        columns$[8,1]="C",columns$[8,2]="10"
-        columns$[9,0]="Acct Date",       columns$[9,1]="C",columns$[9,2]="10"
-        columns$[10,0]="Disc Date",      columns$[10,1]="C",columns$[10,2]="10"
+        columns$[7,0]="Invoice Dt",    columns$[7,1]="C",columns$[7,2]="10"
+        columns$[8,0]="Due Dt",        columns$[8,1]="C",columns$[8,2]="10"
+        columns$[9,0]="Acct Dt",       columns$[9,1]="C",columns$[9,2]="10"
+        columns$[10,0]="Disc Dt",      columns$[10,1]="C",columns$[10,2]="10"
         columns$[11,0]="Reference",      columns$[11,1]="C",columns$[11,2]="10"
         columns$[12,0]="Memo",           columns$[12,1]="C",columns$[12,2]="10"
-        columns$[13,0]="Invoice Amount", columns$[13,1]="C",columns$[13,2]="10",columns$[13,3]=m1$
-        columns$[14,0]="Discount Amount",columns$[14,1]="C",columns$[14,2]="8",columns$[14,3]=m1$
+        columns$[13,0]="Invoice Amt", columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m1$
+        columns$[14,0]="Discount Amt",columns$[14,1]="N",columns$[14,2]="8",columns$[14,3]=m1$
 
 rem --- Define invoice print and header positions
 
@@ -384,19 +384,19 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           OutVect!.addItem(discdate$)
           OutVect!.addItem(ape03a.reference$)
           OutVect!.addItem(ape03a.ap_inv_memo$)
-          OutVect!.addItem(str(ape03a.invoice_amt:m1$))
-          OutVect!.addItem(str(ape03a.discount_amt:m1$))
+          OutVect!.addItem(ape03a.invoice_amt$)
+          OutVect!.addItem(ape03a.discount_amt$)
        
-          xwk=fnblank(15)
-          xwk=fnblank(15)
-          xwk=fnblank(15)
+rem          xwk=fnblank(15)
+rem          xwk=fnblank(15)
+rem          xwk=fnblank(15)
           xwk=fnblank(2)
           OutVect!.addItem(ac$)
           OutVect!.addItem(ds$)
-          xwk=fnblank(9)
+          xwk=fnblank(7)
           OutVect!.addItem(amt$)
-          xwk=fnblank(1)
-          xwk=fnblank(15)
+          xwk=fnblank(3)
+rem          xwk=fnblank(15)
     
           if gl$="Y" call pgmdir$+"glc_datecheck.aon",ape03a.accting_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,ape03a.accting_date$,glstatus,lines,errors,status
@@ -455,9 +455,9 @@ rem --- Read next Recurring Invoice Header (ape-03) record
                  xwk=fnblank(2)
                  OutVect!.addItem(fnmask$(pad(ape13a.gl_account$(1,acct_length),acct_length),g0$))
                  OutVect!.addItem(description$)
-                 xwk=fnblank(9)
-                 OutVect!.addItem(str(ape13a.gl_post_amt:g1$))
-                 xwk=fnblank(1)
+                 xwk=fnblank(7)
+                 OutVect!.addItem(ape13a.gl_post_amt$)
+                 xwk=fnblank(3)
                  lines=lines+1
                  gllines=gllines+1
                  total=total+ape13a.gl_post_amt
@@ -554,10 +554,11 @@ print_total: rem --- Print totals
         xwk=fnblank(13)
         OutVect!.addItem(underline$)
         OutVect!.addItem(underline$)
-        xwk=fnblank(12)
+        xwk=fnblank(11)
         OutVect!.addItem(total$)
-        OutVect!.addItem(str(pt[0]:m1$))
-        OutVect!.addItem(str(pt[1]:m1$))
+        xwk=fnblank(1)
+        OutVect!.addItem(str(pt[0]))
+        OutVect!.addItem(str(pt[1]))
         lines=lines+3
     return
 
