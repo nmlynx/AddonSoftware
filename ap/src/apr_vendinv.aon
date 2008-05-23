@@ -94,6 +94,7 @@ rem --- date/time
 
 rem --- column headings
     dim columns$[8,10]
+    if aps01a.ret_flag$<>"Y" dim columns$[7,10]
     columns$[0,0]="Invoice No",columns$[0,1]="C",columns$[0,2]="15"
     columns$[1,0]="Transaction",columns$[1,1]="C",columns$[1,2]="20"
     columns$[2,0]="Date",columns$[2,1]="C",columns$[2,2]="15"
@@ -104,8 +105,6 @@ rem --- column headings
     columns$[7,0]="Discount",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=mask$
     if aps01a.ret_flag$="Y"
     	columns$[8,0]="Retention",columns$[8,1]="N",columns$[8,2]="15",columns$[8,3]=mask$
-    else
-    	columns$[8,0]=" ",columns$[8,1]="C",columns$[8,2]="15"
     endif
 
 rem --- miscellaneous headings
@@ -177,8 +176,6 @@ rem --- Header window record
     
     if aps01a.ret_flag$="Y" 
 	OutVect!.addItem(apt01a.retention$)
-    else
-	OutVect!.addItem("")
     endif
 
     inv_found=1
@@ -211,8 +208,6 @@ next_apt11: rem --- Detail window record
     OutVect!.addItem(apt11a.trans_disc$)
     if aps01a.ret_flag$="Y"
 	OutVect!.addItem(apt11a.trans_ret$)
-    else
-	OutVect!.addItem("")
     endif
 
     inv_found=1
@@ -229,7 +224,7 @@ no_more_invoices: rem --- No more invoices
 	gosub vendor_total
     else
 	OutVect!.addItem("No invoices")
-	xwk=fnblank(8)
+	xwk=fnblank(7+(aps01a.ret_flag$="Y"))
     endif
 
 finished: rem --- All done
@@ -242,7 +237,7 @@ vendor_total: rem --- Vendor Total
     OutVect!.addItem("Vendor Total")
     xwk=fnblank(4)
     OutVect!.addItem(str(baltotal))
-    xwk=fnblank(2)
+    xwk=fnblank(1+(aps01a.ret_flag$="Y"))
     inv_found=1
     return
 
@@ -254,7 +249,7 @@ inv_total: rem --- Invoice Total
     OutVect!.addItem("Invoice Total")
     xwk=fnblank(4)
     OutVect!.addItem(str(lastbalance))
-    xwk=fnblank(2)  
+    xwk=fnblank(1+(aps01a.ret_flag$="Y"))  
     inv_found=1
 first_inv_total:
     let t0$=k.ap_inv_no$,lastbalance=balance
