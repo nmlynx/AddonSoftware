@@ -144,6 +144,26 @@ display_vendor_comments:
 
 return
 
+disp_vendor_comments:
+	
+	cmt_text$=""
+	apm09_dev=fnget_dev("APM_VENDCMTS")
+	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
+	apm09_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
+	more=1
+	read(apm09_dev,key=apm09_key$,dom=*next)
+	while more
+		readrecord(apm09_dev,end=*break)apm09a$
+		if apm09a.firm_id$+apm09a.vendor_id$<>firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID") break
+			cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
+		endif				
+	wend
+
+	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
+	callpoint!.setStatus("REFRESH")
+
+return
+
 disable_grid:
 
 	w!=Form!.getChildWindow(1109)
@@ -235,7 +255,7 @@ if cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)<>""
 :	callpoint!.getColumnUndoData("APE_MANCHECKHDR.VENDOR_ID")	
 
 	rem - gosub display_vendor_address					
-	gosub display_vendor_comments
+	gosub disp_vendor_comments
 
 	callpoint!.setColumnUndoData("APE_MANCHECKHDR.VENDOR_ID",
 :		callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"))
@@ -496,7 +516,7 @@ if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_
 				callpoint!.setColumnData("APE_MANCHECKHDR.CHECK_DATE",apt05a.check_date$)
 				callpoint!.setColumnData("APE_MANCHECKHDR.VENDOR_ID",apt05a.vendor_id$)
 				rem - gosub display_vendor_address
-				gosub display_vendor_comments
+				gosub disp_vendor_comments
 				gosub disable_grid
 			else
 				callpoint!.setStatus("ABORT")
@@ -520,6 +540,7 @@ user_tpl.reuse_chk$=""
 user_tpl.open_check$=""
 user_tpl.dflt_dist_cd$=""
 user_tpl.dflt_gl_account$=""
+callpoint!.setColumnData("<<DISPLAY>>.comments","")
 
 rem --- enable/disable grid cells
 w!=Form!.getChildWindow(1109)
@@ -537,6 +558,8 @@ user_tpl.reuse_chk$=""
 user_tpl.existing_tran$="Y"
 user_tpl.open_check$=""
 user_tpl.reuse_chk$=""
+
+gosub disp_vendor_comments
 
 ctl_name$="APE_MANCHECKHDR.TRANS_TYPE"
 ctl_stat$="D"
