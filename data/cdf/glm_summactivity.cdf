@@ -28,33 +28,30 @@ for x=0 to num_cols-1
 	wend
 	
 next x
+
+rem --- gl acct# has come in from main grid (glm_acct); get acct master, set acct tp and detail flag
+rem --- then gosub fill_gridActivity, which reads corres. glm-02 recs and displays in the grid
+
+glm01_dev=fnget_dev("GLM_ACCT")
+dim glm01a$:fnget_tpl$("GLM_ACCT")
+
+read record (glm01_dev,key=firm_id$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT"),dom=*next)glm01a$
+if cvs(glm01a.gl_account$,3)<>""
+	callpoint!.setColumnData("GLM_SUMMACTIVITY.GL_ACCT_TYPE",glm01a.gl_acct_type$)
+	callpoint!.setColumnData("GLM_SUMMACTIVITY.DETAIL_FLAG",glm01a.detail_flag$)
+	gosub fill_gridActivity
+else
+		callpoint!.setStatus("ABORT")
+endif
 [[GLM_SUMMACTIVITY.AOPT-REPL]]
 gosub replicate_amt
+gosub update_glm_acctsummary
 [[GLM_SUMMACTIVITY.ASIZ]]
 if UserObj!<>null()
 	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 	gridActivity!.setSize(Form!.getWidth()-(gridActivity!.getX()*2),Form!.getHeight()-(gridActivity!.getY()+40))
 	gridActivity!.setFitToGrid(1)
 
-endif
-[[GLM_SUMMACTIVITY.GL_ACCOUNT.AVAL]]
-rem only do this aval on actual acct# entry -- skip it on record save
-
-if callpoint!.getRecordMode()<>"C"
-
-	glm01_dev=fnget_dev("GLM_ACCT")
-	dim glm01a$:fnget_tpl$("GLM_ACCT")
-
-
-	read record (glm01_dev,key=firm_id$+callpoint!.getUserInput(),dom=*next)glm01a$
-	if cvs(glm01a.gl_account$,3)<>""
-		callpoint!.setColumnData("GLM_SUMMACTIVITY.GL_ACCT_TYPE",glm01a.gl_acct_type$)
-		callpoint!.setColumnData("GLM_SUMMACTIVITY.DETAIL_FLAG",glm01a.detail_flag$)
-		gosub fill_gridActivity
-		callpoint!.setStatus("REFRESH")
-	else
-		callpoint!.setStatus("ABORT")
-	endif
 endif
 [[GLM_SUMMACTIVITY.ACUS]]
 rem process custom event
@@ -420,4 +417,3 @@ userobj!.addItem(SysGUI!.makeVector());rem placeholder for vectActivity! that wi
 rem format the grid, and set first column to be a pull-down
 gosub format_gridActivity
 gosub set_column1_list
-

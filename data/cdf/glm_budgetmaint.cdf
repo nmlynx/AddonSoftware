@@ -1,5 +1,6 @@
 [[GLM_BUDGETMAINT.AOPT-REPL]]
 gosub replicate_amt
+gosub update_glm_acctsummary
 [[GLM_BUDGETMAINT.ASIZ]]
 if UserObj!<>null()
 	gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
