@@ -31,7 +31,7 @@ rem --- Open/Lock files
     files$[4]="aps_report",ids$[4]="APS_REPORT"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     aps01_dev=channels[1]
     apm01_dev=channels[2]
     apm02_dev=channels[3]
@@ -78,32 +78,32 @@ rem --- Display file information
         msg_tokens$[2]=appath$+clientfile$
         msg_tokens$[3]=appath$+ten99file$
         gosub disp_message
-        if msg_opt$="N" exitto std_exit
+        if msg_opt$="N" exitto std_exit_no_update
         if msg_opt$="Y" break
     wend    
 
 rem --- Check for company phone number
 
     if num(aps01b.phone_no$,err=*next) goto start_export
-    msgs$[0]="Company Phone Number is required on 1099-MISC after1996."
+    msgs$[0]="Company Phone Number is required on 1099-MISC after 1996."
     msgs$[1]="Use AP's Report Parameter Maintenance to enter the number."
     msgs$[2]="              <Enter> to Continue"
     call pgmdir$+"adc_stdmessage.aon",2,msgs$[all],2,-1,-1,v$,v3
-    goto std_exit
+    goto std_exit_no_update
 
 start_export:
 
 
 rem --- Initialize the text export files
 
-    erase apdata$+ten99file$,err=*next
-    erase apdata$+clientfile$,err=*next; rem "'Client' equates to Employer
-    string apdata$+ten99file$
-    string apdata$+clientfile$
+    erase appath$+ten99file$,err=*next
+    erase appath$+clientfile$,err=*next; rem "'Client' equates to Employer
+    string appath$+ten99file$
+    string appath$+clientfile$
     ten99_dev=unt
-    open (ten99_dev,isz=-1,err=open_error)apdata$+ten99file$
+    open (ten99_dev,isz=-1,err=open_error)appath$+ten99file$
     client_dev=unt
-    open (client_dev,isz=-1,err=open_error)apdata$+clientfile$
+    open (client_dev,isz=-1,err=open_error)appath$+clientfile$
     goto fix_fed
 
 open_error: rem --- Error on open of text files
@@ -114,7 +114,7 @@ open_error: rem --- Error on open of text files
     msgs$[3]="Modify the 'Data Path' field for the AP system description record"
     msgs$[4]="or adjust the permissions on the directory listed."
     call pgmdir$+"adc_stdmessage.aon",0,msgs$[all],4,-1,-1,v$,v3
-    goto std_exit
+    goto std_exit_no_update
 
 fix_fed: rem --- Fix Up Fed ID Number (Strip out all but the 9 digits)
 
@@ -283,7 +283,6 @@ rem --- Write record. Loop up for next Vendor
 
 done:
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     goto std_exit
 
 init_client: rem --- Init variables for Client text file
@@ -504,6 +503,14 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
