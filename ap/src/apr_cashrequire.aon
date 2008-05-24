@@ -247,10 +247,10 @@ rem --- Headings and print positions
     columns$[4,0]=head5$,               columns$[4,1]="C",columns$[4,2]="3"
     columns$[5,0]=head6$,               columns$[5,1]="C",columns$[5,2]="3"
     columns$[6,0]="Past Due",           columns$[6,1]="N",columns$[6,2]="6",columns$[6,3]=m1$
-    columns$[7,0]=date1$,               columns$[7,1]="C",columns$[7,2]="5"
-    columns$[8,0]=date2$,               columns$[8,1]="C",columns$[8,2]="5"
-    columns$[9,0]=date3$,               columns$[9,1]="C",columns$[9,2]="5"
-    columns$[10,0]=date4$,              columns$[10,1]="C",columns$[10,2]="5"
+    columns$[7,0]=date1$,               columns$[7,1]="N",columns$[7,2]="5",columns$[7,3]=m1$
+    columns$[8,0]=date2$,               columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m1$
+    columns$[9,0]=date3$,               columns$[9,1]="N",columns$[9,2]="5",columns$[9,3]=m1$
+    columns$[10,0]=date4$,              columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m1$
     columns$[11,0]="Total",             columns$[11,1]="N",columns$[11,2]="11",columns$[11,3]=m1$
 
 
@@ -288,11 +288,11 @@ rem --- Initialize remaining report headings
     retention$="Retention"
   
     if summary headings=headings+1
-
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,apt01_dev,1,meter_num,status
 rem --- Sort Invoice Headers (apt-01) by vendor alternate sequence
 
     while sorting
-          call pgmdir$+"adc_progress.aon","NC","","","","",0,apt01_dev,1,meter_num,status
+
           read (apt01_dev,key=firm_id$,dom=*next)
 
           rem --- Read next invoice record
@@ -361,7 +361,7 @@ rem --- Read next Invoice Header (apt-01) record
              apt01a.ap_inv_no$=apw02a.ap_inv_no$
              apt01a.sequence_00$=apw02a.sequence_00$
              k$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+
-:            apt01a.ap_inv_no$+apt01a.sequence_00$
+:            apt01a.ap_inv_no$
           endif
           read record (apt01_dev,key=k$,dom=*continue) apt01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -451,9 +451,9 @@ rem --- Read next Invoice Header (apt-01) record
           OutVect!.addItem(fndate$(dateused$))
           OutVect!.addItem(apt01a.payment_grp$)
           OutVect!.addItem(apt01a.hold_flag$)
-          OutVect!.addItem(str(it[0]:m1$))
+          OutVect!.addItem(str(it[0]))
           xwk=fnblank(4)
-          OutVect!.addItem(str(it[0]:m1$))
+          OutVect!.addItem(str(it[0]))
 
           lines=lines+1
           phone$=""
@@ -501,12 +501,12 @@ print_total: rem --- Print totals
     Outvect!.addItem(total$)
     xwk=fnblank(3)
 
-    Outvect!.addItem(str(pt[0]:m1$))
-    Outvect!.addItem(str(pt[1]:m1$))
-    Outvect!.addItem(str(pt[2]:m1$))
-    Outvect!.addItem(str(pt[3]:m1$))
-    Outvect!.addItem(str(pt[4]:m1$))
-    Outvect!.addItem(str(totamt:m1$))
+    Outvect!.addItem(str(pt[0]))
+    Outvect!.addItem(str(pt[1]))
+    Outvect!.addItem(str(pt[2]))
+    Outvect!.addItem(str(pt[3]))
+    Outvect!.addItem(str(pt[4]))
+    Outvect!.addItem(str(totamt))
 
     xwk=fnblank(12)
     lines=lines+(2+retention)
@@ -576,12 +576,12 @@ vendor_break: rem --- Vendor break
                 xwk = fnblank(12)
                 Outvect!.addItem(vendor$)
                 xwk = fnblank(5)
-                Outvect!.addItem(str(vt[0]:m1$))
-                Outvect!.addItem(str(vt[1]:m1$))
-                Outvect!.addItem(str(vt[2]:m1$))
-                Outvect!.addItem(str(vt[3]:m1$))
-                Outvect!.addItem(str(vt[4]:m1$))
-                Outvect!.addItem(str(totamt:m1$))
+                Outvect!.addItem(str(vt[0]))
+                Outvect!.addItem(str(vt[1]))
+                Outvect!.addItem(str(vt[2]))
+                Outvect!.addItem(str(vt[3]))
+                Outvect!.addItem(str(vt[4]))
+                Outvect!.addItem(str(totamt))
                 lines=lines+2
              endif
           endif
@@ -589,7 +589,7 @@ vendor_break: rem --- Vendor break
     wend
     if done return
 
-    dim vendor$(w),vt[4],vr[4]
+    dim vt[4],vr[4]
     lastvendor$=apt01a.vendor_id$
     altseq$=""
     printed=0
@@ -605,7 +605,7 @@ vendor_break: rem --- Vendor break
        endif
        phone$=fnmask$(apm01a.phone_no$,m5$)
        vendorid$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-       vendor$(1)=altseq$+vendorid$+" "+apm01a.vendor_name$
+       vendor$=altseq$+vendorid$+" "+apm01a.vendor_name$
     endif
     if pos("TEMP"=apt01a.vendor_id$)=1
        dim apm03a$:fattr(apm03a$)
@@ -616,7 +616,7 @@ vendor_break: rem --- Vendor break
        k$=apm03a.firm_id$+apm03a.ap_type$+apm03a.ap_inv_no$
        find record (apm03_dev,key=k$,dom=*proceed) apm03a$
        vendorid$=apt01a.vendor_id$
-       vendor$(1)=altseq$+apt01a.vendor_id$+" "+apm03a.vendor_name$
+       vendor$=altseq$+apt01a.vendor_id$+" "+apm03a.vendor_name$
     endif
     return
 
