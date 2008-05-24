@@ -326,6 +326,7 @@ update_bank_rec: rem --- Update glt-05
         glt05a.paid_code$="V"
         glt05a.bnk_chk_date$=apt05a.check_date$
         glt05a.description$="VOID"
+        glt05a$=field(glt05a$)
         write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
         if len(x9$)>7 x9$=x9$(8) else x9$=""
     wend

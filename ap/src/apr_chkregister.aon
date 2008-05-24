@@ -101,7 +101,7 @@ rem --- Is General Ledger installed and being used?
     status=0
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
     if status goto std_exit
-    gl$="N"
+
 
 rem --- Initializations
 
@@ -310,7 +310,7 @@ rem --- Read next Check Detail (apw-01) record
                 invoice$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+
 :                        apt01a.ap_inv_no$
                 k$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+
-:                  apt01a.ap_inv_no$+apt01a.sequence_00$
+:                  apt01a.ap_inv_no$
                 find record (apt01_dev,key=k$) apt01a$
                 total=apt01a.invoice_amt
                 read (apt11_dev,key=invoice$,dom=*next)
@@ -328,9 +328,9 @@ rem --- Read next Check Detail (apw-01) record
 
                 if apt01a.ap_dist_code$<>lastcode$
                    dim apm10b$:fattr(apm10b$)
-                   apm10b.firm_id$=apw01a.firm_id$
+                   apm10b.firm_id$=apt01a.firm_id$
                    apm10b.record_id_b$="B"
-                   apm10b.ap_dist_code$=apw01a.ap_dist_code$
+                   apm10b.ap_dist_code$=apt01a.ap_dist_code$
                    apm10b.code_desc$=nf$
                    k$=apm10b.firm_id$+apm10b.record_id_b$+apm10b.ap_dist_code$
                    find record (apm10b_dev,key=k$,dom=*proceed) apm10b$
@@ -376,7 +376,7 @@ rem --- Read next Check Detail (apw-01) record
                 rem --- Cash account
 
                 account$=apm10b.gl_cash_acct$
-                amount=(-ape04.invoice_amt)+ape04.retention+ape04.discount_amt
+                amount=(-ape04a.invoice_amt)+ape04a.retention+ape04a.discount_amt
                 units=0
                 gosub glrecap
 
@@ -384,16 +384,16 @@ rem --- Read next Check Detail (apw-01) record
 
                 if cashbasis=0
                    account$=apm10b.gl_ap_acct$
-                   amount=ape04.invoice_amt-ape04.retention
+                   amount=ape04a.invoice_amt-ape04a.retention
                    units=0
                    gosub glrecap
                 endif
 
                 rem --- Discount account
 
-                if ape04.discount_amt<>0
+                if ape04a.discount_amt<>0
                    account$=apm10b.gl_disc_acct$
-                   amount=-ape04.discount_amt
+                   amount=-ape04a.discount_amt
                    units=0
                    gosub glrecap
                 endif
@@ -449,7 +449,7 @@ rem --- Any errors encountered?
 
 rem --- Destroy the progress meter and run the next overlay
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 
     if errors
     	gosub Display_Message
