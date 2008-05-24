@@ -118,8 +118,6 @@ rem --- Initializations
     printed=0
     page=0
     width=132
-    maxlines=59
-    lines=maxlines+1
     more=1
     when$=sysinfo.system_date$
     clock$=""
@@ -376,15 +374,12 @@ rem --- Start progress meter and position the driver file
 
           voided=apt05a.trans_type$="V"
           while voided
-                if lines+2>maxlines gosub set_lines
-      
                 OutVect!.addItem(check$)
                 OutVect!.addItem(type$)
                 OutVect!.addItem(paid$)
 
                 xwk = fnblank(6)
 
-                lines=lines+2
                 break
           wend
   
@@ -396,13 +391,6 @@ rem --- Start progress meter and position the driver file
              name$(1)=vendor$+" "+name$
              vendor$=altseq$
           endif
-          while check$<>""
-                if lines+2>maxlines gosub set_lines
-                lines=lines+1
-                break
-          wend
-          if lines+1>maxlines gosub set_lines
-
 
           xwk = fnblank(9)
 
@@ -413,10 +401,8 @@ rem --- Start progress meter and position the driver file
           OutVect!.addItem(invoice$)
           OutVect!.addItem(account$)
           OutVect!.addItem(str(detail[0]))
-
           xwk = fnblank(2)
 
-          lines=lines+1
           printed=printed+1
           gosub accumulate_totals
 
@@ -463,15 +449,8 @@ rem --- Run next overlay
 
     goto std_exit
 
-set_lines: rem --- Set the line count
-
-    lines=headings+1
-    lines=lines+1
-    return
-
 print_total: rem --- Print subtotal/total
 
-    if lines+2>maxlines gosub set_lines
     xwk = fnblank(6)
     for x = 0 to 2
         OutVect!.addItem("--------------------------")
@@ -488,7 +467,6 @@ print_total: rem --- Print subtotal/total
        typebreak_flag = 0
     endif
 
-    lines=lines+2
     return
 
 print_distribution: rem --- Print GL distribution
@@ -498,12 +476,10 @@ print_distribution: rem --- Print GL distribution
         account$=accounts$[n]
         amount=amounts[n]
         detail[0]=amount
-        if lines+1>maxlines gosub set_lines
    
         OutVect!.addItem(str(fnmask$(account$(1,acct_length),g0$)))
         OutVect!.addItem(str(amount:m1$))
    
-        lines=lines+1
         gosub accumulate_totals
         gosub update_gl
     next n
@@ -536,7 +512,6 @@ type_break: rem --- AP type break
     lasttype$=apm10a.ap_type$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
     headings$[3]=aptype$
-    lines=maxlines+1
     return
 
 vendor_break: rem --- Vendor break
