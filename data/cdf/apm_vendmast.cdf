@@ -72,8 +72,9 @@ return
 [[APM_VENDMAST.VENDOR_NAME.AVAL]]
 rem --- if no alt sequence is set, default it to vendor name
 if cvs(callpoint!.getColumnData("APM_VENDMAST.ALT_SEQUENCE"),3)=""
-:	callpoint!.setColumnData("APM_VENDMAST.ALT_SEQUENCE",callpoint!.getUserInput())
-callpoint!.setStatus("REFRESH")
+	callpoint!.setColumnData("APM_VENDMAST.ALT_SEQUENCE",callpoint!.getUserInput())
+	callpoint!.setStatus("REFRESH")
+endif
 [[APM_VENDMAST.BSHO]]
 rem --- Open/Lock files
  
