@@ -100,7 +100,7 @@ rem --- Is General Ledger installed and being used?
     gl$="N"
     status=0
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
-    if status goto std_exit
+    if status goto std_exit_no_report
 
 
 rem --- Initializations
@@ -187,7 +187,7 @@ rem --- Additional file opens
     options$[4]="CL"
     if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                             ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_report
     glm01_dev=channels[1]
     glt04_dev=channels[2]
     glt05_dev=channels[3]
@@ -453,7 +453,7 @@ rem --- Destroy the progress meter and run the next overlay
 
     if errors
     	gosub Display_Message
-    	if special_flag$<>"Y" goto std_exit
+    	if special_flag$<>"Y" goto std_exit_no_report
     endif
 
     update$=pgmdir$+"apu_chkregister.aon"
