@@ -102,7 +102,7 @@ status=0
 source$=pgm(-2)
 call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,status
 call stbl("+DIR_PGM")+"glc_datecheck.aon",check_date$,"Y",per$,yr$,status
-if status<>0
+if status>100
 	callpoint!.setStatus("ABORT")
 
 rem --- Set focus on the Check Date field
