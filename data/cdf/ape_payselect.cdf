@@ -522,6 +522,7 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 	endif
 
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	numcols=gridInvoices!.getNumColumns()
 	vectInvoices!=UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
 	vectInvoicesMaster!=UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
 	curr_row=dec(notice.row$)
@@ -542,12 +543,29 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 				disc_amt=num(gridInvoices!.getCellText(curr_row,9))
 				pmt_amt=num(gridInvoices!.getCellText(curr_row,10))
 				if disc_amt>inv_amt
-					disc_amt=inv_amt*sgn(inv_amt)
+					disc_amt=inv_amt
 					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
 				endif
-				if disc_amt>inv_amt-pmt_amt
+				if disc_amt<>inv_amt-pmt_amt
 					pmt_amt=inv_amt-disc_amt
 					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
+				endif
+				if disc_amt<>0 or inv_amt<>0
+					if gridInvoices!.getCellState(curr_row,0)=0
+						gridInvoices!.setCellState(curr_row,0,1)
+						dummy=fn_setmast_flag(vectInvoices!.getItem(curr_row*numcols+2),
+:											vectInvoices!.getItem(curr_row*numcols+3),
+:											vectInvoices!.getItem(curr_row*numcols+5),"Y",
+:											str(pmt_amt))
+					endif
+				else
+					if gridInvoices!.getCellState(curr_row,0)=1
+						gridInvoices!.setCellState(curr_row,0,0)
+						dummy=fn_setmast_flag(vectInvoices!.getItem(curr_row*numcols+2),
+:											vectInvoices!.getItem(curr_row*numcols+3),
+:											vectInvoices!.getItem(curr_row*numcols+5),"N",
+:											"0")
+					endif
 				endif
 				vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+9,str(disc_amt))
 				vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+10,str(pmt_amt))
@@ -566,9 +584,32 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 					pmt_amt=inv_amt
 					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
 				endif
-				if pmt_amt>inv_amt-disc_amt
+				if pmt_amt<>inv_amt-disc_amt
 					disc_amt=inv_amt-pmt_amt
 					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
+				endif
+				if pmt_amt=0
+					disc_amt=0
+					pmt_amt=0
+					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
+					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
+				endif
+				if pmt_amt<>0
+					if gridInvoices!.getCellState(curr_row,0)=0
+						gridInvoices!.setCellState(curr_row,0,1)
+						dummy=fn_setmast_flag(vectInvoices!.getItem(curr_row*numcols+2),
+:											vectInvoices!.getItem(curr_row*numcols+3),
+:											vectInvoices!.getItem(curr_row*numcols+5),"Y",
+:											str(pmt_amt))
+					endif
+				else
+					if gridInvoices!.getCellState(curr_row,0)=1
+						gridInvoices!.setCellState(curr_row,0,0)
+						dummy=fn_setmast_flag(vectInvoices!.getItem(curr_row*numcols+2),
+:											vectInvoices!.getItem(curr_row*numcols+3),
+:											vectInvoices!.getItem(curr_row*numcols+5),"N",
+:											"0")
+					endif
 				endif
 				vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+9,str(disc_amt))
 				vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+10,str(pmt_amt))
