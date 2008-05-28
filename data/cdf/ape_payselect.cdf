@@ -527,7 +527,6 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 	vectInvoicesMaster!=UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
 	curr_row=dec(notice.row$)
 	curr_col=dec(notice.col$)
-
 	switch notice.code
 		case 12;rem grid_key_press
 			if notice.wparam=32 gosub switch_value
@@ -540,10 +539,10 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 			if curr_col=9
 				x=curr_row
 				inv_amt=num(gridInvoices!.getCellText(curr_row,8))
-				disc_amt=num(gridInvoices!.getCellText(curr_row,9))
+				disc_amt=num(gridInvoices!.getCellText(curr_row,9))*sgn(inv_amt)
 				pmt_amt=num(gridInvoices!.getCellText(curr_row,10))
 				if sgn(disc_amt)<>sgn(inv_amt)
-					disc_amt=disc_amt*sgn(inv_amt)
+					disc_amt=abs(disc_amt)*sgn(inv_amt)
 					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
 				endif
 				if abs(disc_amt)>abs(inv_amt)
@@ -583,9 +582,9 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 				x=curr_row
 				inv_amt=num(gridInvoices!.getCellText(curr_row,8))
 				disc_amt=num(gridInvoices!.getCellText(curr_row,9))
-				pmt_amt=num(gridInvoices!.getCellText(curr_row,10))
+				pmt_amt=num(gridInvoices!.getCellText(curr_row,10))*sgn(inv_amt)
 				if sgn(pmt_amt)<>sgn(inv_amt)
-					pmt_amt=pmt_amt*sgn(inv_amt)
+					pmt_amt=abs(pmt_amt)*sgn(inv_amt)
 					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
 				endif
 				if abs(pmt_amt)>abs(inv_amt)
