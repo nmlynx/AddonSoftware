@@ -1,8 +1,10 @@
 [[ARM_EMAILFAX.WEB_PAGE.AVAL]]
+if cvs(callpoint!.getColumnData("ARM_EMAILFAX.WEB_PAGE"),2)<>""
 	if pos("."=callpoint!.getColumnData("ARM_EMAILFAX.WEB_PAGE"))=0
 		callpoint!.setMessage("INVALID_WEBPAGE")
 		callpoint!.setStatus("ABORT")
 	endif
+endif
 [[ARM_EMAILFAX.EMAIL_CC.AVAL]]
 	mail$=callpoint!.getColumnData("ARM_EMAILFAX.EMAIL_CC")
 	gosub multi_email

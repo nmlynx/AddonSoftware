@@ -43,7 +43,9 @@ return
 		callpoint!.setStatus("ABORT")
 	endif
 [[APM_EMAILFAX.WEB_PAGE.AVAL]]
+if cvs(callpoint!.getColumnData("APM_EMAILFAX.WEB_PAGE"),2)<>""
 	if pos("."=callpoint!.getColumnData("APM_EMAILFAX.WEB_PAGE"))=0
 		callpoint!.setMessage("INVALID_WEBPAGE")
 		callpoint!.setStatus("ABORT")
 	endif
+endif
