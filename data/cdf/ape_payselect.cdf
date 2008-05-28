@@ -542,12 +542,16 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 				inv_amt=num(gridInvoices!.getCellText(curr_row,8))
 				disc_amt=num(gridInvoices!.getCellText(curr_row,9))
 				pmt_amt=num(gridInvoices!.getCellText(curr_row,10))
-				if disc_amt>inv_amt
+				if sgn(disc_amt)<>sgn(inv_amt)
+					disc_amt=disc_amt*sgn(inv_amt)
+					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
+				endif
+				if abs(disc_amt)>abs(inv_amt)
 					disc_amt=inv_amt
 					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
 				endif
-				if disc_amt<>inv_amt-pmt_amt
-					pmt_amt=inv_amt-disc_amt
+				if abs(disc_amt)<>abs(inv_amt)-abs(pmt_amt)
+					pmt_amt=(abs(inv_amt)-abs(disc_amt))*sgn(inv_amt)
 					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
 				endif
 				if disc_amt<>0 or inv_amt<>0
@@ -580,12 +584,16 @@ if ctl_ID=num(user_tpl.gridInvoicesCtlID$)
 				inv_amt=num(gridInvoices!.getCellText(curr_row,8))
 				disc_amt=num(gridInvoices!.getCellText(curr_row,9))
 				pmt_amt=num(gridInvoices!.getCellText(curr_row,10))
-				if pmt_amt>inv_amt
+				if sgn(pmt_amt)<>sgn(inv_amt)
+					pmt_amt=pmt_amt*sgn(inv_amt)
+					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
+				endif
+				if abs(pmt_amt)>abs(inv_amt)
 					pmt_amt=inv_amt
 					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
 				endif
-				if pmt_amt<>inv_amt-disc_amt
-					disc_amt=inv_amt-pmt_amt
+				if abs(pmt_amt)<>abs(inv_amt)-abs(disc_amt)
+					disc_amt=(abs(inv_amt)-abs(pmt_amt))*sgn(inv_amt)
 					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
 				endif
 				if pmt_amt=0
