@@ -362,7 +362,7 @@ if vectInvoicesMaster!.size()
 :						   vectInvoicesMaster!.getItem(row+4)+
 :						   vectInvoicesMaster!.getItem(row+6)
 		readrecord(apt01_dev,key=apt01_key$)apt01a$
-		amt_to_pay=num(vectInvoicesMaster!.getItem(row+11))
+		amt_to_pay=num(vectInvoicesMaster!.getItem(row+9))
 		disc_to_take=num(vectInvoicesMaster!.getItem(row+10))
 		if vectInvoicesMaster!.getItem(row+1)<>"Y"
 			apt01a.selected_for_pay$="N"
