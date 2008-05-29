@@ -10,7 +10,7 @@
 			<DD_ALIAS_TYPE>X</DD_ALIAS_TYPE>
 			<DD_KEY_LENGTH>0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD>0</DD_NBR_RECORD>
-			<DD_RECORD_LEN>322</DD_RECORD_LEN>
+			<DD_RECORD_LEN>355</DD_RECORD_LEN>
 			<DD_SYSTEM_REC>N</DD_SYSTEM_REC>
 			<DD_SYSTEM_ID>PR</DD_SYSTEM_ID>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
@@ -19,8 +19,8 @@
 			<DD_EXPORT_DATA>Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE>20080130</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE>20080428</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME>195854</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE>20080529</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME>124820</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP>T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV>zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT>Employee Master</DD_ATTR_WINT>
@@ -39,7 +39,7 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>PRM_EMPLMAST    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME>prm-01</DD_FILE_NAME>
-			<DD_TABLE_TPL>firm_id:c(2),employee_no:c(9*),empl_surname:c(16),empl_givname:c(14),addr_line_1:c(24),addr_line_2:c(24),city:c(22),state_code:c(2),zip_code:c(9),home_phone:c(10),work_phone:c(10),work_extens:c(4),soc_sec_no:c(9),alt_sequence:c(10),sex:c(1),race:c(1),marital_sts:c(1),reserved_str:c(15),term_code:c(3),emer_contact:c(24),emer_relate:c(10),emer_phone:c(10),pay_period:c(1),dept_code:c(2),normal_title:c(2),hrlysalary:c(1),pension_plan:c(1),empl_memo:c(10),full_or_part:c(1),union_code:c(3),birth_date:c(8),hire_date:c(8),anniv_date:c(8),review_date:c(8),term_date:c(8*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL>firm_id:c(2),employee_no:c(9*),empl_surname:c(16),empl_givname:c(14),addr_line_1:c(24),addr_line_2:c(24),city:c(22),state_code:c(2),zip_code:c(9),home_phone:c(20),work_phone:c(20),work_extens:c(4),soc_sec_no:c(9),alt_sequence:c(10),sex:c(1),race:c(1),marital_sts:c(1),reserved_str:c(15),term_code:c(3),emer_contact:c(24),emer_relate:c(10),emer_phone:c(20),pay_period:c(1),dept_code:c(2),normal_title:c(2),hrlysalary:c(1),pension_plan:c(1),empl_memo:c(10),full_or_part:c(1),union_code:c(3),birth_date:c(8),hire_date:c(8),anniv_date:c(8),review_date:c(8),term_date:c(8*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -862,39 +862,51 @@
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>HOME_PHONE      </DD_DATA_NAME>
-			<DD_DESCRIPTION>Home Telephone                </DD_DESCRIPTION>
+			<DD_DESCRIPTION>Home Telephone</DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH>10</DD_DATA_LENGTH>
+			<DD_DATA_LENGTH>20</DD_DATA_LENGTH>
 			<DD_SYSTEM_ID>  </DD_SYSTEM_ID>
 			<DD_MASK_TYPE> </DD_MASK_TYPE>
-			<DD_SPECIAL_MASK>(###) ###-#### </DD_SPECIAL_MASK>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>AON</ASC_PROD_ID>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE>20080529</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL>Home Telephone</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Home Tel</DD_ATTR_LABS>
+			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR>0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL>0</DD_ATTR_MINL>
+			<DD_ATTR_PREC>0</DD_ATTR_PREC>
+			<DD_ATTR_STYP>T</DD_ATTR_STYP>
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>WORK_PHONE      </DD_DATA_NAME>
-			<DD_DESCRIPTION>Work Telephone                </DD_DESCRIPTION>
+			<DD_DESCRIPTION>Work Telephone</DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH>10</DD_DATA_LENGTH>
+			<DD_DATA_LENGTH>20</DD_DATA_LENGTH>
 			<DD_SYSTEM_ID>  </DD_SYSTEM_ID>
 			<DD_MASK_TYPE> </DD_MASK_TYPE>
-			<DD_SPECIAL_MASK>(###) ###-#### </DD_SPECIAL_MASK>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>AON</ASC_PROD_ID>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE>20080529</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL>Work Telephone</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Work Tel</DD_ATTR_LABS>
+			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR>0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL>0</DD_ATTR_MINL>
+			<DD_ATTR_PREC>0</DD_ATTR_PREC>
+			<DD_ATTR_STYP>T</DD_ATTR_STYP>
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>WORK_EXTENS     </DD_DATA_NAME>
@@ -1079,21 +1091,27 @@
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>EMER_PHONE      </DD_DATA_NAME>
-			<DD_DESCRIPTION>Emergency Telephone           </DD_DESCRIPTION>
+			<DD_DESCRIPTION>Emergency Telephone</DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH>10</DD_DATA_LENGTH>
+			<DD_DATA_LENGTH>20</DD_DATA_LENGTH>
 			<DD_SYSTEM_ID>  </DD_SYSTEM_ID>
 			<DD_MASK_TYPE> </DD_MASK_TYPE>
-			<DD_SPECIAL_MASK>(###) ###-#### </DD_SPECIAL_MASK>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>AON</ASC_PROD_ID>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE>20080529</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL>Emergency Telephone</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Emergency Tel</DD_ATTR_LABS>
+			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR>0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL>0</DD_ATTR_MINL>
+			<DD_ATTR_PREC>0</DD_ATTR_PREC>
+			<DD_ATTR_STYP>T</DD_ATTR_STYP>
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>PAY_PERIOD      </DD_DATA_NAME>

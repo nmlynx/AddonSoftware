@@ -10,7 +10,7 @@
 			<DD_ALIAS_TYPE>X</DD_ALIAS_TYPE>
 			<DD_KEY_LENGTH>0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD>0</DD_NBR_RECORD>
-			<DD_RECORD_LEN>224</DD_RECORD_LEN>
+			<DD_RECORD_LEN>260</DD_RECORD_LEN>
 			<DD_SYSTEM_REC>N</DD_SYSTEM_REC>
 			<DD_SYSTEM_ID>OP</DD_SYSTEM_ID>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
@@ -19,8 +19,8 @@
 			<DD_EXPORT_DATA>Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE>20080130</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE>20080130</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME>145318</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE>20080519</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME>123804</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP>T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV>zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT>Customer Job Number</DD_ATTR_WINT>
@@ -31,7 +31,7 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>OPM_CUSTJOBS    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME>opm-09</DD_FILE_NAME>
-			<DD_TABLE_TPL>firm_id:c(2),customer_id:c(6),job_no:c(10),reserved_str:c(3),lien_no:c(12),reserved_str_02:c(6),retain_cust:c(1),lien_date:c(8),fst_shp_date:c(8),lstinv_date:c(8*),customer_name:c(30),addr_line_1:c(24),addr_line_2:c(24),city:c(22),state_code:c(2),zip_code:c(9),phone_no:c(10),phone_exten:c(4),contact_name:c(20*),lien_amount:n(7*),total_sales:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL>firm_id:c(2),customer_id:c(6),job_no:c(10),reserved_str:c(3),lien_no:c(12),reserved_str_02:c(6),retain_cust:c(1),lien_date:c(8),fst_shp_date:c(8),lstinv_date:c(8*),customer_name:c(30),addr_line_1:c(24),addr_line_2:c(24),city:c(22),state_code:c(2),zip_code:c(9),phone_no:c(20),phone_exten:c(4),contact_name:c(20*),lien_amount:n(7*),total_sales:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -709,25 +709,28 @@
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>PHONE_NO        </DD_DATA_NAME>
-			<DD_DESCRIPTION>Telephone Number              </DD_DESCRIPTION>
+			<DD_DESCRIPTION>Telephone Number</DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH>10</DD_DATA_LENGTH>
+			<DD_DATA_LENGTH>20</DD_DATA_LENGTH>
 			<DD_SYSTEM_ID>  </DD_SYSTEM_ID>
 			<DD_MASK_TYPE> </DD_MASK_TYPE>
-			<DD_SPECIAL_MASK>(000) 000-0000</DD_SPECIAL_MASK>
 			<DD_SYSTEM_REC>Y</DD_SYSTEM_REC>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>BAR</ASC_PROD_ID>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE>20080529</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL>Telephone Number</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Tel No</DD_ATTR_LABS>
 			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
-			<DD_ATTR_MSKI>(000) 000-0000</DD_ATTR_MSKI>
-			<DD_ATTR_MSKO>(000) 000-0000</DD_ATTR_MSKO>
+			<DD_ATTR_MAXR>0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL>0</DD_ATTR_MINL>
+			<DD_ATTR_PREC>0</DD_ATTR_PREC>
+			<DD_ATTR_STYP>T</DD_ATTR_STYP>
 		</RECORD>
 		<RECORD>
 			<DD_DATA_NAME>PHONE_EXTEN     </DD_DATA_NAME>
