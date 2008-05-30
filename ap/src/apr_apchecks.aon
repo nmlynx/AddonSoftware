@@ -23,7 +23,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=8,begfile=1,endfile=files
+    files=9,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="aps_params",ids$[1]="APS_PARAMS"
     files$[2]="ape-04",ids$[2]="APE_CHECKS"
@@ -33,8 +33,8 @@ rem --- Open/Lock files
     files$[6]="apc_typecode",ids$[6]="APC_TYPECODE"
     files$[7]="apt-02",ids$[7]="APT_INVOICEDIST"
     files$[8]="apw-01",ids$[8]="APW_CHECKINVOICE"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
+    files$[9]="aps_report",ids$[9]="APS_REPORT"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     aps01_dev=channels[1]
     ape04_dev=channels[2]
@@ -44,12 +44,13 @@ rem --- Open/Lock files
     apm10_dev=channels[6]
     apt02_dev=channels[7]
     apw01_dev=channels[8]
+    aps01b_dev=channels[9]
 
 rem --- Dimension string templates
 
     dim aps01a$:templates$[1],ape04a$:templates$[2],apm01a$:templates$[3]
     dim ape04b$:templates$[4],apm08a$:templates$[5],apm10a$:templates$[6]
-    dim apt02a$:templates$[7],apw01a$:templates$[8]
+    dim apt02a$:templates$[7],apw01a$:templates$[8],aps01b$:templates$[9]
 
 rem --- Assign form input values to local variables
 
@@ -73,44 +74,60 @@ initializations: rem --- Initializations
     show_progress=1
     t0$=""
     t1$=""
-    dim t[2],h9$(20,$0a$)
+    dim t[2]
     m1$="########.00CR"
+    m7$="00000"
+    if aps01a.zip_length$="9" m7$="00000-0000"
     m8$="*#######"
     m9$="*"+m1$(2,10)
     l9=12
     l=0
     h0=0
-    answer$="N";rem Change to Y if test pattern desired.
-    msg_id$="PRINT_TEST_PATTERN"
     more=1
-    printer_open$="N"
+    stub_offset=266
 
-rem --- Print test patterns until the user is satisfied
+rem --- Check From Address
 
-    while answer$="Y"
-        dim msg_tokens$[1]
-        msg_opt$=""
-        gosub disp_message
-        if msg_opt$<>"Y" break
+       aps01b_key$=firm_id$+"AP02"
+    find record (aps01b_dev,key=aps01b_key$,err=std_missing_params) aps01b$
+    ap_address$=aps01b.addr_line_1$+aps01b.addr_line_2$+aps01b.city$+aps01b.state_code$+aps01b.zip_code$
+    call pgmdir$+"adc_address.aon",ap_address$,24,3,9,35
 
-        rem --- Print test pattern
+  
+rem --- Open the printer
 
-        if printer_open$="N"
-            call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-            if status exitto std_exit
-            printer_open$="Y"
-        endif
-        gosub test_pattern
-        msg_id$="ANOTHER_PATTERN"
-    wend
-    if msg_opt$="C" goto std_exit
-    
-    if printer_open$="N"
-        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-        if status goto std_exit
-    endif
 
-rem --- Display Resource
+    let textfont!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
+    let italicfont!= new java.awt.Font("Times New Roman",java.awt.Font.ITALIC,10)
+    let boldfont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,10)
+    let largefont!=new java.awt.Font("Arial",java.awt.Font.BOLD,26)
+
+    left_justify=0
+    right_justify=1
+    center_justify=2
+
+    rem --- create file
+    myAPI!=BBjAPI()
+    myBBjPrinter!=myAPI!.getBBjPrinter(1)
+
+    REM Create a set of request attributes
+    LET requestAttributes!=new javax.print.attribute.HashPrintRequestAttributeSet()
+    requestAttributes!.add(javax.print.attribute.standard.MediaSizeName.NA_LETTER)
+    requestAttributes!.add(javax.print.attribute.standard.OrientationRequested.PORTRAIT)
+
+    x!=new java.lang.Float(0.25).floatValue()
+    y!=new java.lang.Float(0.25).floatValue()
+    w!=new java.lang.Float(8.0).floatValue()
+    h!=new java.lang.Float(10.5).floatValue()
+    units=javax.print.attribute.standard.MediaPrintableArea.INCH
+    a!=new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
+
+    requestAttributes!.add(a!)
+    myBBjPrinter!.setAttributes(requestAttributes!)
+
+    doc!=myBBjPrinter!.getForm(1)
+
+  rem --- Display Resource
 
     if aps01a.multi_types$="Y" and aps01a.ap_check_seq$="Y" ap_type$=fill(23) else ap_type$=""
 
@@ -133,8 +150,9 @@ rem --- Main Read
 rem --- Breaks
 
         if k$(3,2)<>t0$ gosub ap_type_break
-        if k$(3,8)<>t1$ gosub new_vendor
-        gosub l5200
+        if k$(3,8)<>t1$ gosub new_vendor 
+
+        gosub inv_detail
 
 rem --- Accumulate
 
@@ -147,38 +165,92 @@ done: rem --- Totals
 
     t9$="E"
     gosub new_vendor
+
+    doc!.preview()
+REM doc!.print()
     goto std_exit
 
 check_header: rem --- Check Stub Header
 
     l=0
-    print (printer_dev)@(h0+25),x1$,@(h0+40),"Check No: ",check_no$
-    print (printer_dev)@(h0+25),vend_name$
-    print (printer_dev)@(h0+25),"Check Date: ",fndate$(check_date$),@(h0+50),"Account ID#: ",accntid$
-    print (printer_dev)@(h0),"Inv Date",@(h0+11),"Inv Number",@(h0+23+m1-8),"Inv Amt",@(h0+23+2*m1-9),"Discount",@(h0+23+3*m1-9),"Amt Paid",
-    h1=0
-    if aps01a.ap_chk_memo$<>"Y" goto l5100
-    print (printer_dev)@(h0+24+3*m1),"Memo",
-    h1=5
-    if aps01a.ap_chk_dist$<>"Y" goto l5100
-    print (printer_dev)"/",
-l5100:
-    if aps01a.ap_chk_dist$="Y" print (printer_dev)@(h0+24+3*m1+h1),"Distribution",
-    print (printer_dev)""
+    right_margin=568
+    dim col[5]
+    col[1]=67
+    col[2]=162
+    col[3]=261
+    col[4]=343
+    col[5]=446
+
+    page!=doc!.createPage()
+    page!.setRightMargin(18)
+    page!.setLeftMargin(18)
+    page!.setTopMargin(18)
+    page!.setBottomMargin(18)
+
+    stub=0
+    gosub check_stub
+    stub=stub_offset
+    gosub check_stub
+
     return
 
-l5200: rem --- Invoice Detail
+check_stub:
+      
+    tmp=fntext(6,1+stub,aps01b.name$,boldfont!)
+    tmp=fntext(6,12+stub,ap_address$(1,35),textfont!)
+    tmp=fntext(6,24+stub,ap_address$(36,35),textfont!)   
+
+    tmp=fntext(175,1+stub,x1$,boldfont!)
+    tmp=fntext2(350,1+stub,50,0+stub,"Check No:",italicfont!,right_justify)
+    temp=fntext(400,1+stub,check_no$,boldfont!)
+    tmp=fntext(175,12+stub,vend_name$,boldfont!)
+    tmp=fntext(175,24+stub,"Check Date:",italicfont!)
+    tmp=fntext(228,24+stub,fndate$(check_date$),boldfont!)
+
+    tmp=fntext2(0,36+stub,col[1],36+stub,"Inv Date",italicfont!,center_justify)
+    tmp=fntext(col[1]+6,36+stub,"Inv Number",italicfont!)
+    tmp=fntext2(col[2],36+stub,col[3]-col[2]-6,36+stub,"Inv Amount",italicfont!,right_justify)
+    tmp=fntext2(col[3],36+stub,col[4]-col[3]-6,36+stub,"Discount",italicfont!,right_justify)
+    tmp=fntext2(col[4],36+stub,col[5]-col[4]-6,36+stub,"Amt Paid",italicfont!,right_justify)
+
+    memo_dist$=""
+    if aps01a.ap_chk_memo$="Y" then memo_dist$=memo_dist$+"Memo"
+    if aps01a.ap_chk_memo$="Y" and aps01a.ap_chk_dist$="Y" then memo_dist$=memo_dist$+"/"
+    if aps01a.ap_chk_dist$="Y" memo_dist$=memo_dist$+"Distribution"
+    tmp=fntext(col[5]+6,36+stub,memo_dist$,italicfont!)
+
+    tmp=fnbox(0,0+stub,right_margin,228)
+    tmp=fnline(0,36+stub,right_margin,36+stub)
+    tmp=fnline(0,48+stub,right_margin,48+stub)
+
+    tmp=fnline(166,0+stub,166,36+stub)
+    tmp=fnline(col[1],36+stub,col[1],216+stub)
+    tmp=fnline(col[2],36+stub,col[2],216+stub)
+    tmp=fnline(col[3],36+stub,col[3],216+stub)
+    tmp=fnline(col[4],36+stub,col[4],216+stub)
+    tmp=fnline(col[5],36+stub,col[5],216+stub)  
+
+    return
+
+inv_detail: rem --- Invoice Detail
 
     if l>l9 gosub l5700
-    print (printer_dev)@(h0),fndate$(ape04a.invoice_date$),@(h0+11),ape04a.ap_inv_no$,
-:   @(h0+23),ape04a.invoice_amt:m1$,ape04a.discount_amt:m1$,ape04a.invoice_amt-ape04a.retention-ape04a.discount_amt:m1$,
+
+    row=49+l*12
+
+    stub=0
+    gosub check_stub_detail
+    stub=stub_offset
+    gosub check_stub_detail
+
     l1=0
+
     if pos(" "<>ape04a.ap_inv_memo$)=0 goto l5258
-    if h0+24+3*m1+16>79 h3=h0+24+3*m1+16-80 else h3=0
-    if aps01a.ap_chk_memo$="Y" print (printer_dev)@(h0+24+3*m1),ape04a.ap_inv_memo$(1,16-h3),
+    if aps01a.ap_chk_memo$="Y" then tmp=fntext(col[5]+6,row,ape04a.ap_inv_memo$(1,16),boldfont!)
+    if aps01a.ap_chk_memo$="Y" then tmp=fntext(col[5]+6,row+stub_offset,ape04a.ap_inv_memo$(1,16),boldfont!)
     if aps01a.ap_chk_dist$="N" goto l5380
-    if aps01a.ap_chk_memo$="Y" print (printer_dev)'LF',
     if aps01a.ap_chk_memo$="Y" l=l+1,l1=l1+1
+    row=49+l*12 
 l5258:
     if aps01a.ap_chk_dist$="N" goto l5380
     read (apt02_dev,key=firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$,dom=*next)
@@ -187,43 +259,90 @@ l5270:
     if k1$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$ goto l5380
     read record (apt02_dev) apt02a$
     if l>l9 gosub l5700
+    row=49+l*12
     if ape04a.orig_inv_amt x0=apt02a.gl_post_amt*(ape04a.invoice_amt-ape04a.retention)/ape04a.orig_inv_amt else x0=0
     x$=pad(fnmask$(apt02a.gl_account$(1,acct_length),g0$),dimlen)
     y$=str(x0:m1$)
     y$=y$(pos(" "<>y$))
     if len(cvs(g0$,2)+" "+y$)<=dimlen goto l5350
     if l+1>l9 gosub l5700
-    print (printer_dev)@(h0+24+3*m1),x$
+    row=49+l*12
+    tmp=fntext(col[5]+6,row,x$,boldfont!)
+    tmp=fntext(col[5]+6,row+stub_offset,x$,boldfont!)
     l1=l1+1
     l=l+1
     x$(1)=""
+    row=49+l*12
 l5350:
     x$(dimlen-len(y$))=" "+y$
-    print (printer_dev)@(h0+24+3*m1),x$
+    tmp=fntext(col[5]+6,row,x$,boldfont!)
+    tmp=fntext(col[5]+6,row+stub_offset,x$,boldfont!)
     l1=l1+1
     l=l+1
+    row=49+l*12
     goto l5270
 l5380:
-    if l1=0 print (printer_dev)'LF',
     if l1=0 l=l+1
+    row=49+l*12
     return
 
-l5400: rem --- Stub Total
 
-    print (printer_dev)h9$(1,l9-l+1)
-    print (printer_dev)@(h0+24),t[0]:m1$,t[1]:m1$,t[0]-t[2]-t[1]:m1$
+check_stub_detail:
+
+    tmp=fntext2(0,row+stub,col[1],row+stub,fndate$(ape04a.invoice_date$),boldfont!,center_justify)
+    tmp=fntext(col[1]+6,row+stub,ape04a.ap_inv_no$,boldfont!)
+    tmp=fntext2(col[2],row+stub,col[3]-col[2]-6,row+stub,str(ape04a.invoice_amt:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[3],row+stub,col[4]-col[3]-6,row+stub,str(ape04a.discount_amt:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[4],row+stub,col[5]-col[4]-6,row+stub,str(ape04a.invoice_amt-ape04a.retention-ape04a.discount_amt:m1$),boldfont!,right_justify)
+
+    return
+
+stub_total: rem --- Stub Total
+
+    tmp=fntext2(col[2],204,col[3]-col[2]-6,204,str(t[0]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[3],204,col[4]-col[3]-6,204,str(t[1]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[4],204,col[5]-col[4]-6,204,str(t[0]-t[2]-t[1]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[5],216,118,216,"Accounting Copy",boldfont!,right_justify)
+    tmp=fnbox2(col[1],204,col[2]-col[1],12)
+    tmp=fntext3(col[1],204,col[2]-col[1]-6,204,"Totals",boldfont!,right_justify)
+
+    tmp=fnline(0,204,right_margin,204)
+    tmp=fnline(0,216,right_margin,216)
+
+    tmp=fntext2(col[2],204+stub_offset,col[3]-col[2]-6,204+stub_offset,str(t[0]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[3],204+stub_offset,col[4]-col[3]-6,204+stub_offset,str(t[1]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[4],204+stub_offset,col[5]-col[4]-6,204+stub_offset,str(t[0]-t[2]-t[1]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[5],216+stub_offset,118,216+stub_offset,"Vendor Copy",boldfont!,right_justify)
+    tmp=fnbox2(col[1],204+stub_offset,col[2]-col[1],12)
+    tmp=fntext3(col[1],204+stub_offset,col[2]-col[1]-6,204+stub_offset,"Totals",boldfont!,right_justify)
+
+    tmp=fnline(0,204+stub_offset,right_margin,204+stub)
+    tmp=fnline(0,216+stub_offset,right_margin,216+stub)
+
     return
 
 check_face: rem --- Print Check
 
     call pgmdir$+"adc_address.aon",address$,24,3,9,35
-    print (printer_dev)h9$(1,6)
-    print (printer_dev)@(h0+69),check_no$,'LF','LF'
+
+
     x$=str(fpt(t[0]-t[2]-t[1])*100:"00")
     if x$="00" x$="NO"
-    print (printer_dev)@(h0+7),"Exactly*",int(t[0]-t[2]-t[1]):m8$,"*Dollars*And*",x$,"*Cents",'LF'
-    print (printer_dev)@(h0+52),fndate$(check_date$),@(80-m9),t[0]-t[1]-t[2]:m9$
-    print (printer_dev)@(h0+7),vend_name$,'LF',@(h0+7),address$(1,35),'LF',@(h0+7),address$(36,35),'LF',@(h0+7),address$(71,30)," ",h9$(1,6)
+
+    gosub common_check_face
+
+    exactly$="Exactly*"+str(int(t[0]-t[2]-t[1]):m8$)+"*Dollars*And*"+x$+"*Cents"
+    tmp=fntext(36,612,exactly$,boldfont!)
+
+    tmp=fntext2(332,582, 58,582,fndate$(check_date$),boldfont!,center_justify)
+    tmp=fntext2(390,582, 54,582,check_no$,boldfont!,center_justify)
+    tmp=fntext2(444,582,118,582,str(t[0]-t[1]-t[2]:m9$),boldfont!,right_justify)
+
+    tmp=fntext(72,672,vend_name$,boldfont!)
+    tmp=fntext(72,684,address$(1,35),boldfont!)
+    tmp=fntext(72,696,address$(36,35),boldfont!)
+    tmp=fntext(72,708,address$(71,35),boldfont!)
+
     dim apw01a$:fattr(apw01a$)
     apw01a.firm_id$=firm_id$
     apw01a.ap_type$=t1$(1,2)
@@ -237,6 +356,33 @@ check_face: rem --- Print Check
     write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
     return
 
+common_check_face:
+
+    tmp=fnbox2(332,564, 58, 12)
+    tmp=fnbox2(390,564, 54, 12)
+    tmp=fnbox2(444,564,124, 12)
+    tmp=fnbox(332,576, 58, 24)
+    tmp=fnbox(390,576, 54, 24)
+    tmp=fnbox(444,576,124, 24)
+
+    tmp=fntext3(332,564,58,12,"Date",textfont!,center_justify)
+    tmp=fntext3(390,564,54,12,"Check #",textfont!,center_justify)
+    tmp=fntext3(444,564,118,12,"Amount",textfont!,right_justify)
+
+    tmp=fntext(36,552,aps01b.name$,boldfont!)
+    tmp=fntext(36,564,ap_address$(1,35),textfont!)
+    tmp=fntext(36,576,ap_address$(36,35),textfont!)
+
+    tmp=fntext(6,672,"Pay",italicfont!)
+    tmp=fntext(6,684,"to the",italicfont!)
+    tmp=fntext(6,696,"Order",italicfont!)
+    tmp=fntext(6,708,"of",italicfont!)
+
+    tmp=fnbox(342,720,216,1)
+    tmp=fntext2(342,722,216,722,"Authorized Signature",italicfont!,center_justify)
+
+    return
+
 l5700: rem --- Overflow
 
     gosub l7000
@@ -245,11 +391,14 @@ l5700: rem --- Overflow
 
 void_check: rem --- Void check
 
-    print (printer_dev)h9$(1,6)
-    print (printer_dev)@(h0+69),check_no$,'LF','LF'
-    print (printer_dev)@(h0+7),"***Void***Void***Void***Void***",'LF'
-    print (printer_dev)@(h0+52),fndate$(check_date$),@(h0+68),"***Void***",'LF'
-    print (printer_dev)h9$(1,8)
+    gosub common_check_face
+
+    tmp=fntext(36,612,"***Void***Void***Void***Void***",boldtext!)
+    tmp=fntext2(332,582, 58,582,fndate$(check_date$),boldfont!,center_justify)
+    tmp=fntext2(390,582, 54,582,check_no$,boldfont!,center_justify)
+    tmp=fntext2(444,582,118,582,"***Void***",boldfont!,right_justify)
+
+    tmp=fntext2(342,690,216,690,"**VOID**VOID**",largefont!,center_justify)
 
 rem --- Write Void
 
@@ -262,19 +411,20 @@ rem --- Write Void
     apw01a.ap_inv_no$=ape04a.ap_inv_no$
     if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
     write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
-    gosub l6800
+    gosub increment_check
     return
 
 new_vendor: rem --- New Vendor
 
-    if t1$="" goto l6500
-    if t[0]-t[2]-t[1]<0 goto l6500
-    gosub l5400
-    gosub check_face
+    if t1$="" goto vendor_header
+    
+    gosub stub_total
+    if t[0]-t[2]-t[1]<=0 then gosub void_check else gosub check_face
+ 
 rem now go back and re-write ape-04 using ape04_dev2 and ape04b$
 rem using the current check number and firm_id$ + t1$ (ap type and vendor number)
-    
-dim ape04b$:fattr(ape04b$)
+
+    dim ape04b$:fattr(ape04b$)
 
     read(ape04_dev2,key=firm_id$+t1$,dom=*next)
     while more
@@ -285,29 +435,27 @@ dim ape04b$:fattr(ape04b$)
     wend
 
 l6400:
-    gosub l6800
+    gosub increment_check
 
-l6500:
+vendor_header:
 
     if t9$<>"" goto l6790
-    dim x1$(m0),t[2],address$(81)
+    dim x1$(vendor_length),t[2],address$(81)
     dim t2$:fattr(ape04a$)
     t2$=ape04a$
     accntid$=""
-    find record (apm01_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm01a$;
-:   address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$,
-:   vend_name$=apm01a.vendor_name$
+    find record (apm01_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm01a$
+    address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$,vend_name$=apm01a.vendor_name$
     x1$(1)=fnmask$(ape04a.vendor_id$(1,vendor_length),m0$)
+    
     t1$=k$(3,8)
     accntid$=apm01a.vendor_acct$
-    find record (apm08_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm08a$;
-:   address$(1)=apm08a.addr_line_1$+apm08a.addr_line2$+apm08a.city$+apm08a.state_code$+apm08a.zip_code$,
-:   vend_name$=apm08a.vendor_name$
+    find record (apm08_dev,key=firm_id$+ape04a.vendor_id$,dom=*next) apm08a$;   address$(1)=apm08a.addr_line_1$+apm08a.addr_line2$+apm08a.city$+apm08a.state_code$+apm08a.zip_code$,   vend_name$=apm08a.vendor_name$
     gosub check_header
 l6790:
     return
 
-l6800: rem --- Increment Check #
+increment_check: rem --- Increment Check #
 
     p8=num(check_no$)+1
     if p8>9999999 p8=1
@@ -333,7 +481,6 @@ ap_type_break: rem --- AP Type Break
         t1$=""
         t9$=""
         ap_type$=""
-        if aps01a.multi_types$<>"Y" gosub test_pattern; break
         if aps01a.ap_check_seq$="N" and q6 break
         q6=1
         call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
@@ -349,51 +496,6 @@ rem --- New Checks
     wend
     return
 
-test_pattern: rem --- Test Pattern
-    
-    dim z0$:fattr(ape04a$)
-    z0$=ape04a$
-    z1$=b1$
-    z0=ape04a.invoice_amt
-    z1=ape04a.discount_amt
-    z2=ape04a.retention
-    z3=ape04a.orig_inv_amt
-    z4=t[0]
-    z5=t[1]
-    z6=t[2]
-    show_progress=0
-    ape04a.vendor_id$="XXXXXX"
-    ape04a.ap_inv_no$="XXXXXXXXXX"
-    vend_name$=fill(30,"X")
-    accntid$="XXXXXX"
-    
-    dim t[2]
-    ape04a.invoice_amt=9999.99
-    ape04a.discount_amt=9999.99
-    t[0]=9999.99
-    t[1]=9999.99
-    ape04a.ap_type$=""
-    ape04a.invoice_date$=check_date$
-    gosub check_header
-    for ii=1 to 3
-        gosub l5200
-    next ii
-    ape04a$=z0$
-    b1$=z1$
-    gosub l7000
-l6975:
-    ape04a$=z0$
-    b1$=z1$
-    ape04a.invoice_amt=z0
-    ape04a.discount_amt=z1
-    ape04a.retention=z2
-    ape04a.orig_inv_amt=z3
-    t[0]=z4
-    t[1]=z5
-    t[2]=z6
-    show_progress=1
-    return
-
 disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
@@ -404,10 +506,8 @@ rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
 
     def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
-    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
     def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
@@ -417,6 +517,10 @@ rem --- Miscellaneous functions
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+                      fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+                      q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 
@@ -462,6 +566,101 @@ rem --- fnglobal$: Return string value of passed STBL variable
         return q1$
     fnend
 
+rem --- fntext: Form Text command
+
+     def fntext(tmp_x,tmp_y,tmp_text$,tmp_font!)
+        tmp_text$=cvs(tmp_text$,3)
+        tmp!.destroy(err=*next)
+        tmp!=page!.newParagraph()
+        tmp!.setHorizontalFill(1)
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setText(tmp_text$)
+        tmp!.setFont(tmp_font!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fntext2: Form Text command
+
+     def fntext2(tmp_x,tmp_y,tmp_x2,tmp_y2,tmp_text$,tmp_font!,tmp_just)
+        tmp_text$=cvs(tmp_text$,3)
+        tmp!.destroy(err=*next)
+        tmp!=page!.newParagraph()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        if tmp_just then tmp!.setSize(tmp_x2,tmp_y2)
+        if tmp_just=1 then tmp!.setHorizontalAlignment(tmp!.RIGHT_JUSTIFIED)
+        if tmp_just=2 then tmp!.setHorizontalAlignment(tmp!.CENTER_JUSTIFIED)
+        tmp!.setText(tmp_text$)
+        tmp!.setFont(tmp_font!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fntext3: Form Text command
+
+     def fntext3(tmp_x,tmp_y,tmp_x2,tmp_y2,tmp_text$,tmp_font!,tmp_just)
+        tmp_text$=cvs(tmp_text$,3)
+        tmp!.destroy(err=*next)
+        tmp!=page!.newParagraph()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        if tmp_just then tmp!.setSize(tmp_x2,tmp_y2)
+        if tmp_just=1 then tmp!.setHorizontalAlignment(tmp!.RIGHT_JUSTIFIED)
+        if tmp_just=2 then tmp!.setHorizontalAlignment(tmp!.CENTER_JUSTIFIED)
+        tmp!.setBackgroundColor(myAPI!.makeColor("Black"))
+        tmp!.setTextColor(myAPI!.makeColor("White"))
+        tmp!.setText(tmp_text$)
+        tmp!.setFont(tmp_font!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnbox: Form Box command
+
+    def fnbox(tmp_x,tmp_y,tmp_w,tmp_h)
+        tmp!=page!.newFrame()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setWidth(tmp_w)
+        tmp!.setHeight(tmp_h)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnbox2: Form Box command
+
+    def fnbox2(tmp_x,tmp_y,tmp_w,tmp_h)
+        tmp!=page!.newFrame()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setWidth(tmp_w)
+        tmp!.setHeight(tmp_h)
+        tmp!.setFillColor(myAPI!.makeColor("Black"))
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+
+rem --- fnline: Form Line command
+
+    def fnline(tmp_x,tmp_y,tmp_w,tmp_h)
+        tmp!=page!.newLine()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setWidth(tmp_w)
+        tmp!.setHeight(tmp_h)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnframe: Form Frame command
+
+    def fnframe(tmp_x,tmp_y,tmp_x2,tmp_y2)
+        tmp!=page!.newFrame()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmpdim!=new java.awt.Dimension(tmp_x2,tmp_y2)
+        tmp!.setSize(tmpdim!)
+        page!.add(tmp!)
+        return(1)
+     fnend
+
+
 rem #endinclude std_functions.src
 
 rem #include std_error.src
@@ -470,8 +669,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
-:                                str(err),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -495,8 +693,7 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
-:                                   str(err),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)

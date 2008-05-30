@@ -27,26 +27,27 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ars_params",ids$[1]="ARS_PARAMS"
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
     files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
     files$[4]="art-01",ids$[4]="ART_INVHDR"
     files$[5]="art-11",ids$[5]="ART_INVDET"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
+    files$[6]="ars_report",ids$[6]="ARS_REPORT"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ars01_dev=channels[1]
     arm01_dev=channels[2]
     arm02_dev=channels[3]
     art01_dev=channels[4]
     art11_dev=channels[5]
+    ars_report_dev=channels[6]
 
 rem --- Dimension string templates
 
     dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
-    dim art01a$:templates$[4],art11a$:templates$[5]
+    dim art01a$:templates$[4],art11a$:templates$[5],ars01b$:templates$[6]
 
 rem --- Assign form input values to local variables
 
@@ -71,27 +72,31 @@ rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+
+    ars01b_key$=firm_id$+"AR02"
+    find record (ars_report_dev,key=ars01b_key$,err=std_missing_params) ars01b$
+    remit$=ars01b.remit_addr_1$+ars01b.remit_addr_2$+ars01b.remit_city$+ars01b.remit_state$+ars01b.remit_zip$
+    call pgmdir$+"adc_address.aon",remit$,24,3,9,30
+    remit$=ars01b.remit_name$+remit$
+    ar_address$=ars01b.addr_line_1$+ars01b.addr_line_2$+ars01b.city$+ars01b.state_code$+ars01b.zip_code$
+    call pgmdir$+"adc_address.aon",ar_address$,24,3,9,30
+    ar_address$=ars01b.name$+ar_address$
+
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
-    
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,13,13
+
+        call pgmdir$+"adc_sizemask.aon",m1$,m1,13,13
     m0=len(m0$)
     m1=len(m1$)
     dpos=pos("."=m1$);if dpos<>0 wm1$=m1$(1,dpos-1),fm1$=m1$(dpos,3)
-   
-
 
 rem --- Open the printer
 
 
 let textfont!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
-let boldfont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,12)
-let boldfont2!=new java.awt.Font("Arial",java.awt.Font.BOLD,14)
-let bigboldfont!=new java.awt.Font("Arial",java.awt.Font.BOLD,18)
+let boldfont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,10)
 let largefont!=new java.awt.Font("Arial",java.awt.Font.BOLD,26)
-let italicFont!=new java.awt.Font("Times New Roman",java.awt.Font.ITALIC,10)
-let textfont2!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,8)
-let textfont3!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,9)
+
 
 red!=new java.awt.Color(red)
 white!=new java.awt.Color(white)
@@ -110,6 +115,9 @@ a!=new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
 
 requestAttributes!.add(a!)
 
+left_justify=0
+right_justify=1
+center_justify=2
 
 rem --- Initializations
 
@@ -119,9 +127,8 @@ rem --- Initializations
     offset=0
     address=30
     page=0
-    width=80
     lines=0
-    maxlines=36
+    maxlines=30
     morecustomers=1
     moreheaders=1
     moredetail=1
@@ -141,28 +148,6 @@ rem --- Initializations
 
 rem --- Initialize print positions
 
-    p[0]=offset+46
-    p[1]=offset+71
-    h[0]=offset+9
-    h[1]=offset+48
-    h[2]=offset+59
-    h[3]=width-m0
-    o[0]=offset+1
-    o[1]=offset+11
-    o[2]=offset+14
-    o[3]=offset+23
-    o[4]=offset+35
-    o[5]=offset+46
-    o[6]=offset+58
-    o[7]=offset+66
-    o[8]=width-m1
-    f[0]=offset
-    f[1]=o[5]
-    f[2]=o[8]
-    a[0]=offset
-    a[1]=a[0]+m1
-    a[2]=a[1]+m1
-    a[3]=a[2]+m1
 
 rem --- Determine 30 day aging period dates
 
@@ -177,9 +162,6 @@ rem --- Open the printer
 
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
-
-
-
 
 rem --- Start progress meter and position Customer Master (arm-01) file
 
@@ -212,13 +194,15 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           if territory$<>"" if arm02a.territory$<>territory$ continue
           if cycle$<>"" if arm02a.ar_cyclecode$<>cycle$ continue
 
-          rem --- Initializations for this customer
-            
           rem --- create pdf file
           myAPI!=BBjAPI()
           MyPrinter!=BBjAPI()
-          filename$=docdir$+"statement"+arm01a.customer_id$+"_"+date(0:"%Y%Mz%Dz%hz%mz%sz")+".pdf"
-          doc!=myPrinter!.getBBjPDFForm(filename$,requestAttributes!)
+          prtr_dev=unt
+          open (prtr_dev,err=printer)docdir$+"statement"+arm01a.customer_id$+".pdf"
+          CLOSE (prtr_dev)
+          ERASE docdir$+"statement"+arm01a.customer_id$+".pdf"
+          printer:
+          doc!=myPrinter!.getBBjPDFForm(docdir$+"Statement"+arm01a.customer_id$+".pdf",requestAttributes!)
 
           dim aging[5]
           page=0
@@ -232,8 +216,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           rem --- Format address block
 
           address$=""
-          address$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.addr_line_4$+
-:                  arm01a.city$+arm01a.state_code$+arm01a.zip_code$
+          address$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.addr_line_4$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$
           call pgmdir$+"adc_address.aon",address$,24,5,9,30
 
           rem --- Position the Invoice Header (art-01) file for aging
@@ -259,8 +242,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                 agingdate$=art01a.invoice_date$
                 if basis$<>"I" agingdate$=art01a.inv_due_date$
                 period=pos(agingdate$>period_dates$,8)
-                if period=0 period=5 
-:                      else period=int(period/8)
+                if period=0 period=5                       else period=int(period/8)
                 aging[period]=aging[period]+balance
 
                rem --- Loop back for next Invoice Header
@@ -319,8 +301,8 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           days60=aging[3]
           days90=aging[4]+aging[5]
           if printed gosub footer
-                
-          rem --- Loop back for next Customer Master
+
+                          rem --- Loop back for next Customer Master
 
           if option$="S" break
 
@@ -332,312 +314,135 @@ rem --- All done
 
 header: rem --- Print the statement header
 
-    
+
     first_page=0
     lines=0
     page=page+1
 
     page!=doc!.createPage()
-    
-        
-    image!=page!.newImage()
-    image!.setURL("FILE:c:\apps\aon\data_images\fli001.jpg")
-    image!.setPosition(new java.awt.Point(160,20))
-    image!.setWidth(260)
-    image!.setHeight(80)   
 
-    statement!=page!.newParagraph()
-    statement!.setHorizontalFill(1)
-    statement!.setPosition(new java.awt.Point(200,0))
-    statement!.setText("CUSTOMER STATEMENT")
-    statement!.setFont(boldfont!)
-    statement!.setTextColor(myAPI!.makeColor("RED"))
+    tmp=fntext2(0,10,568,10,"STATEMENT",largefont!,center_justify)
 
-    pageno!=page!.newParagraph()
-    pageno!.setHorizontalFill(1)
-    pageno!.setPosition(new java.awt.Point(370,120))
-    pageno!.setText("Page: "+str(page))
-    pageno!.setFont(textfont!)
+    logo!=page!.newImage()
+    logo!.setURL("file:c:\apps\basislogo.jpg")
+    logo!.setPosition(new java.awt.Point(0,0))
+    logo!.setWidth(185)
+    logo!.setHeight(68)
+    page!.add(logo!)
 
-    stdate!=page!.newParagraph()
-    stdate!.setHorizontalFill(1)
-    stdate!.setPosition(new java.awt.Point(370,135))
-    stdate!.setText("Statement Date: "+fndate$(asof$))
-    stdate!.setFont(textfont!)
+    rem --- Company Address
 
-    cust!=page!.newParagraph()
-    cust!.setHorizontalFill(1)
-    cust!.setPosition(new java.awt.Point(370,150))
-    cust!.setText("Customer: "+fnmask$(arm01a.customer_id$(1,customer_size),m0$))
-    cust!.setFont(textfont!)
+    tmp=fntext(50,60,ar_address$(1,address),textfont!)
+    tmp=fntext(50,72,ar_address$(31,address),textfont!)
+    tmp=fntext(50,84,ar_address$(61,address),textfont!)
+    tmp=fntext(50,96,ar_address$(91,address),textfont!)
 
-    name!=page!.newParagraph()
-    name!.setHorizontalFill(1)
-    name!.setPosition(new java.awt.Point(40,120))
-    name!.setText(arm01a.customer_name$)
-    name!.setFont(textfont!)
-    
-    add1!=page!.newParagraph()
-    add1!.setHorizontalFill(1)
-    add1!.setPosition(new java.awt.Point(40,135))
-    add1!.setText(address$(1,30)    )
-    add1!.setFont(textfont!)
+    rem --- Sold To
+    tmp=fnbox(0,126,568,96)
+    tmp=fnline(45,126,45,222)
+    tmp=fntext2(0,132,40,132,"Sold To",boldfont!,right_justify)
+    tmp=fntext(50,132,arm01a.customer_name$,textfont!)
+    tmp=fntext(50,144,address$(1,address),textfont!)
+    tmp=fntext(50,156,address$(31,address),textfont!)
+    tmp=fntext(50,168,address$(61,address),textfont!)    
+    tmp=fntext(50,180,address$(91,address),textfont!)
+    tmp=fntext(50,192,address$(121,address),textfont!)
+    tmp=fntext(50,204,address$(151,address),textfont!)
 
-    add2!=page!.newParagraph()
-    add2!.setHorizontalFill(1)
-    add2!.setPosition(new java.awt.Point(40,150))
-    add2!.setText(address$(31,30)    )
-    add2!.setFont(textfont!)
+rem --- Info Box
+    tmp=fnbox (424,24,144,72)
+    tmp=fnline(424,48 ,568,48)
+    tmp=fnline(424,72 ,568,72)
+    tmp=fnline(490,24 ,490,96)
 
-    add3!=page!.newParagraph()
-    add3!.setHorizontalFill(1)
-    add3!.setPosition(new java.awt.Point(40,165))
-    add3!.setText(address$(91,30)    )
-    add3!.setFont(textfont!)
-    
-    page!.add(statement!)
-    page!.add(image!)
-    page!.add(pageno!)
-    page!.add(stdate!)
-    page!.add(cust!)
-    page!.add(name!)    
-    page!.add(add1!)
-    page!.add(add2!)
-    page!.add(add3!)
+    tmp=fntext2(432,30,54,30,"Page",boldfont!,right_justify)
+    tmp=fntext2(432,54,54,54,"Date",boldfont!,right_justify)
+    tmp=fntext2(432,78,54,78,"Customer",boldfont!,right_justify)
 
-rem ---Ribbon info
-    
-    invdt!=page!.newParagraph()
-    invdt!.setHorizontalFill(1)
-    invdt!.setPosition(new java.awt.Point(0,240))
-    invdt!.setText("Invoice Date")
-    invdt!.setFont(boldfont!)
+       tmp=fntext(496,30,str(page),textfont!)
+    tmp=fntext(496,54,fndate$(asof$),textfont!)
+    tmp=fntext(496,78,fnmask$(arm01a.customer_id$(1,customer_size),m0$),textfont!)
 
-    type!=page!.newParagraph()
-    type!.setHorizontalFill(1)
-    type!.setPosition(new java.awt.Point(100,240))
-    type!.setText("Type")
-    type!.setFont(boldfont!)
 
-    document!=page!.newParagraph()
-    document!.setHorizontalFill(1)
-    document!.setPosition(new java.awt.Point(200,240))
-    document!.setText("Invoice")
-    document!.setFont(boldfont!)
+rem --- Ribbon
+    tmp=fnbox(0,246,568,24)
+    tmp=fnbox(0,246,568,404)
+    tmp=fnline(72,246,72,650)
+    tmp=fnline(144,246,144,650)
+    tmp=fnline(216,246,216,650)
+    tmp=fnline(324,246,324,650)
+    tmp=fnline(432,246,432,650)
+    tmp=fntext2(0,252,72,252,"Invoice Date",boldfont!,center_justify)
+    tmp=fntext2(72,252,72,252,"Type",boldfont!,center_justify)
+    tmp=fntext2(144,252,72,252,"Invoice",boldfont!,center_justify)
+    tmp=fntext2(216,252,102,252,"Amount",boldfont!,right_justify)
+    tmp=fntext2(324,252,102,252,"Applied",boldfont!,right_justify)
+    tmp=fntext2(432,252,120,252,"Balance",boldfont!,right_justify)
 
-    amount!=page!.newParagraph()
-    amount!.setHorizontalFill(1)
-    amount!.setPosition(new java.awt.Point(300,240))
-    amount!.setText("Amount")
-    amount!.setFont(boldfont!)
+    lines=0
 
-    apply!=page!.newParagraph()
-    apply!.setHorizontalFill(1)
-    apply!.setPosition(new java.awt.Point(400,240))
-    apply!.setText("Applied")
-    apply!.setFont(boldfont!)
-
-    balance!=page!.newParagraph()
-    balance!.setHorizontalFill(1)
-    balance!.setPosition(new java.awt.Point(500,240))
-    balance!.setText("Balance")
-    balance!.setFont(boldfont!)
-
-    page!.add(invdt!)
-    page!.add(type!)
-    page!.add(document!)
-    page!.add(amount!)
-    page!.add(apply!)
-    page!.add(balance!)
-
-    
-    
-    return
+        return
 
 detail: rem --- Print a statement detail line
 
     if lines>=maxlines-1 gosub continued
 
-    tdate!=page!.newParagraph()
-    tdate!.setHorizontalFill(1)
-    tdate!.setPosition(new java.awt.Point(10,(lines*15)+270))
-    tdate!.setText(transdate$)
-    tdate!.setFont(textfont!)
+    tmp_line=264+((lines+1)*12)
+    tmp=fntext2(0,tmp_line,72,tmp_line,transdate$,textfont!,center_justify)
+    tmp=fntext2(72,tmp_line, 72,tmp_line,type$,textfont!,center_justify)
+    tmp=fntext2(144,tmp_line, 72,tmp_line,invoice$,textfont!,center_justify)
+    tmp=fntext2(216,tmp_line,102,tmp_line,str(amount:m1$),textfont!,right_justify)
+    tmp=fntext2(324,tmp_line,102,tmp_line,str(applied:m1$),textfont!,right_justify)
+    tmp=fntext2(432,tmp_line,120,tmp_line,str(balance:m1$),textfont!,right_justify)
 
-    ttype!=page!.newParagraph()
-    ttype!.setHorizontalFill(1)
-    ttype!.setPosition(new java.awt.Point(100,(lines*15)+270))
-    ttype!.setText(type$)
-    ttype!.setFont(textfont!)
-
-    tdoc!=page!.newParagraph()
-    tdoc!.setHorizontalFill(1)
-    tdoc!.setPosition(new java.awt.Point(200,(lines*15)+270))
-    tdoc!.setText(invoice$)
-    tdoc!.setFont(textfont!)
-       
-    tamountdollar!=page!.newParagraph()
-    tamountdollar!.setHorizontalAlignment(tamountdollar!.RIGHT_JUSTIFIED)
-    tamountdollar!.setPosition(new java.awt.Point(268,(lines*15)+270))
-    tamountdollar!.setText(str(int(amount):wm1$))
-    tamountdollar!.setFont(textfont!)
-    if amount<0 credit$="-" else credit$=""
-
-    tamountcent!=page!.newParagraph()
-    tamountcent!.setHorizontalAlignment(tamountdollar!.LEFT_JUSTIFIED)
-    tamountcent!.setPosition(new java.awt.Point(340,(lines*15)+270))
-    tamountcent!.setText(str(fpt(amount):fm1$)+credit$)
-    tamountcent!.setFont(textfont!)
-    
-    tapplydollar!=page!.newParagraph()
-    tapplydollar!.setHorizontalAlignment(tapplydollar!.RIGHT_JUSTIFIED)
-    tapplydollar!.setPosition(new java.awt.Point(368,(lines*15)+270))
-    tapplydollar!.setText(str(int(applied):wm1$))
-    tapplydollar!.setFont(textfont!)
-    if applied <0 credit$="-" else credit$=""
-
-    tapplycent!=page!.newParagraph()
-    tapplycent!.setHorizontalAlignment(tapplycent!.LEFT_JUSTIFIED)
-    tapplycent!.setPosition(new java.awt.Point(440,(lines*15)+270))
-    tapplycent!.setText(str(fpt(applied):fm1$)+credit$)
-    tapplycent!.setFont(textfont!)
-
-    tbaldollar!=page!.newParagraph()
-    tbaldollar!.setHorizontalAlignment(tapplydollar!.RIGHT_JUSTIFIED)
-    tbaldollar!.setPosition(new java.awt.Point(468,(lines*15)+270))
-    tbaldollar!.setText(str(int(balance):wm1$))
-    tbaldollar!.setFont(textfont!)
-    if balance <0 credit$="-" else credit$=""
-
-    tbalcent!=page!.newParagraph()
-    tbalcent!.setHorizontalAlignment(tapplycent!.LEFT_JUSTIFIED)
-    tbalcent!.setPosition(new java.awt.Point(540,(lines*15)+270))
-    tbalcent!.setText(str(fpt(balance):fm1$)+credit$)
-    tbalcent!.setFont(textfont!)
-
-    
-    page!.add(tdate!)   
-    page!.add(ttype!)
-    page!.add(tdoc!)
-    page!.add(tamountdollar!)
-    page!.add(tamountcent!)
-    page!.add(tapplydollar!)
-    page!.add(tapplycent!)
-    page!.add(tbaldollar!)
-    page!.add(tbalcent!)
-
-    lines=lines+1
-    
-    return
+    lines=lines+spacing
 
     return
 
 footer: rem --- Print the statement footer
 
-    
-    mess!=page!.newParagraph()
-    mess!.setHorizontalFill(1)
-    mess!.setPosition(new java.awt.Point(10,600))
-    mess!.setText(message$)
-    mess!.setFont(textfont!)
+rem --- Aging box
+    tmp=fnline(424,126,424,222)
+    tmp=fnline(424,150,568,150)
+    tmp=fnline(424,174,568,174)
+    tmp=fnline(424,198,568,198)
+    tmp=fnline(490,126,490,222)
 
-    total!=page!.newParagraph()
-    total!.setHorizontalFill(1)
-    total!.setPosition(new java.awt.Point(420,599))
-    total!.setText("Total Balance:")
-    total!.setFont(boldfont!)
+    tmp=fntext2(432,132,54,132,"Current",boldfont!,right_justify)
+    tmp=fntext2(432,156,54,132,"30 Days",boldfont!,right_justify)
+    tmp=fntext2(432,180,54,132,"60 Days",boldfont!,right_justify)
+    tmp=fntext2(432,204,54,132,"90 + Days",boldfont!,right_justify)
 
-    totalamtdollar!=page!.newParagraph()
-    totalamtdollar!.setHorizontalAlignment(total!.RIGHT_JUSTIFIED)
-    totalamtdollar!.setPosition(new java.awt.Point(468,600))
-    totalamtdollar!.setText(str(int(total):wm1$))
-    totalamtdollar!.setFont(textfont!)
-    if total<0 credit$="-" else credit$=""
+    tmp=fntext2(496,132,66,132,str(current:m1$),textfont!,right_justify)
+    tmp=fntext2(496,156,66,132,str(days30:m1$),textfont!,right_justify)
+    tmp=fntext2(496,180,66,132,str(days60:m1$),textfont!,right_justify)
+    tmp=fntext2(496,204,66,132,str(days90:m1$),textfont!,right_justify)
 
-    totalamtcent!=page!.newParagraph()
-    totalamtcent!.setHorizontalAlignment(tapplycent!.LEFT_JUSTIFIED)
-    totalamtcent!.setPosition(new java.awt.Point(540,600))
-    totalamtcent!.setText(str(fpt(total):fm1$)+credit$)
-    totalamtcent!.setFont(textfont!)
+rem --- 
+    tmp=fnbox(0,650,568,24)
+    tmp=fnline(324,650,324,674)
+    tmp=fnline(432,650,432,674)
 
-       
-    curr!=page!.newParagraph()
-    curr!.setHorizontalFill(1)
-    curr!.setPosition(new java.awt.Point(10,640))
-    curr!.setText("Current")
-    curr!.setFont(boldfont!)
+    tmp=fntext(10,656,original$,textfont!)
+    tmp=fntext2(324,656,102,656,"Total Due",boldfont!,right_justify)
+    tmp=fntext2(432,656,120,656,str(total:m1$),textfont!,right_justify)
 
-    day30!=page!.newParagraph()
-    day30!.setHorizontalFill(1)
-    day30!.setPosition(new java.awt.Point(70,640))
-    day30!.setText("30 Days")
-    day30!.setFont(boldfont!)
+ rem --- Remit
 
-    day60!=page!.newParagraph()
-    day60!.setHorizontalFill(1)
-    day60!.setPosition(new java.awt.Point(130,640))
-    day60!.setText("60 Days")
-    day60!.setFont(boldfont!)
-    
-    day90!=page!.newParagraph()
-    day90!.setHorizontalFill(1)
-    day90!.setPosition(new java.awt.Point(190,640))
-    day90!.setText("90 Days & Over")
-    day90!.setFont(boldfont!)
+    tmp=fntext(400,700,"Please Remit To:",textfont!)
+    tmp=fntext(408,712,remit$(1,address),textfont!)
+    tmp=fntext(408,724,remit$(31,address),textfont!)
+    tmp=fntext(408,736,remit$(61,address),textfont!)
+    tmp=fntext(408,748,remit$(91,address),textfont!)
 
-    curramt!=page!.newParagraph()
-    curramt!.setHorizontalFill(1)
-    curramt!.setPosition(new java.awt.Point(10,660))
-    curramt!.setText(str(current:m1$))
-    curramt!.setFont(textfont!)
-
-    dayamt30!=page!.newParagraph()
-    dayamt30!.setHorizontalFill(1)
-    dayamt30!.setPosition(new java.awt.Point(70,660))
-    dayamt30!.setText(str(days30:m1$))
-    dayamt30!.setFont(textfont!)
-
-    dayamt60!=page!.newParagraph()
-    dayamt60!.setHorizontalFill(1)
-    dayamt60!.setPosition(new java.awt.Point(130,660))
-    dayamt60!.setText(str(days60:m1$))
-    dayamt60!.setFont(textfont!)
-    
-    dayamt90!=page!.newParagraph()
-    dayamt90!.setHorizontalFill(1)
-    dayamt90!.setPosition(new java.awt.Point(190,660))
-    dayamt90!.setText(str(days90:m1$))
-    dayamt90!.setFont(textfont!)
-    
-    page!.add(mess!)
-    page!.add(total!)
-    page!.add(totalamtdollar!)
-    page!.add(totalamtcent!)
-    page!.add(curr!)
-    page!.add(day30!)
-    page!.add(day60!)
-    page!.add(day90!)
-    page!.add(curramt!)
-    page!.add(dayamt30!)
-    page!.add(dayamt60!)
-    page!.add(dayamt90!)
-
-    doc!.print()
+        doc!.print()
 
     return
 
 continued: rem --- This statement continues on the next page
 
-    
-    continue!=page!.newParagraph()
-    continue!.setHorizontalFill(1)
-    continue!.setPosition(new java.awt.Point(130,640))
-    continue!.setText("(Continued)")
-    continue!.setFont(textfont!) 
+    tmp=fntext2(432,656,120,656,"(Continued)",textfont!,right_justify)
 
-    page!.add(continue!)
-
-    
     gosub header
     return
 
@@ -662,8 +467,7 @@ rem --- Read Invoice Detail (art-11) records
 
 address: rem --- Format the address block
 
-    address$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.addr_line_4$+
-:            arm01a.city$+arm01a.state_code$+arm01a.zip_code$+arm01a.country$
+    address$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.addr_line_4$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$+arm01a.country$
     call pgmdir$+"adc_address.aon",address$,24,5,9,address
     return
 
@@ -684,10 +488,13 @@ rem --- fntestvalue: Return maximum numeric value for a given mask
 rem --- Functions used to retrieve form values
 
     def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
-    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+
+
+rem --- Format zip/postal code
+
+    def fnzipcode$(q$)=fill(10,cvs(q$(1,3)+fill(pos("9"<q$(1,5))>0)+q$(4,2)+fill(ABS(pos("A">=q$(1,6))>0)-pos("0">q$(6,4))>0,"-")+q$(6,4)+fill(10),16))
 
 rem --- Date/time handling functions
 
@@ -711,14 +518,76 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+rem --- fntext: Form Text command
+
+     def fntext(tmp_x,tmp_y,tmp_text$,tmp_font!)
+        tmp_text$=cvs(tmp_text$,3)
+        tmp!.destroy(err=*next)
+        tmp!=page!.newParagraph()
+        tmp!.setHorizontalFill(1)
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setText(tmp_text$)
+        tmp!.setFont(tmp_font!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fntext2: Form Text command
+
+     def fntext2(tmp_x,tmp_y,tmp_x2,tmp_y2,tmp_text$,tmp_font!,tmp_just)
+        tmp_text$=cvs(tmp_text$,3)
+        tmp!.destroy(err=*next)
+        tmp!=page!.newParagraph()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        if tmp_just then tmp!.setSize(tmp_x2,tmp_y2)
+        if tmp_just=1 then tmp!.setHorizontalAlignment(tmp!.RIGHT_JUSTIFIED)
+        if tmp_just=2 then tmp!.setHorizontalAlignment(tmp!.CENTER_JUSTIFIED)
+        tmp!.setText(tmp_text$)
+        tmp!.setFont(tmp_font!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnbox: Form Box command
+
+    def fnbox(tmp_x,tmp_y,tmp_w,tmp_h)
+        tmp!=page!.newFrame()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setWidth(tmp_w)
+        tmp!.setHeight(tmp_h)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnline: Form Line command
+
+    def fnline(tmp_x,tmp_y,tmp_w,tmp_h)
+        tmp!=page!.newLine()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setWidth(tmp_w)
+        tmp!.setHeight(tmp_h)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnframe: Form Frame command
+
+    def fnframe(tmp_x,tmp_y,tmp_x2,tmp_y2)
+        tmp!=page!.newFrame()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmpdim!=new java.awt.Dimension(tmp_x2,tmp_y2)
+        tmp!.setSize(tmpdim!)
+        page!.add(tmp!)
+        return(1)
+     fnend
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
-:                                str(err),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)), str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -742,8 +611,7 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
-:                                   str(err),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
