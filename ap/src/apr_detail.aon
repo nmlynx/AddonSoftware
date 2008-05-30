@@ -187,10 +187,16 @@ rem --- Read next Vendor Master (apm-01) record
             pbuf$(7)="State: "+apm01a.state_code$;pbuf$(18)="Zip/Postal: "+fnzipcode$(apm01a.zip_code$);pbuf$(45)="Date Opened: "+fndate$(apm01a.opened_date$)
           OutVect!.addItem(pbuf$)
           dim pbuf$(width)
-            pbuf$(3)="Telephone: "+fnmask$(apm01a.phone_no$,m8$);pbuf$(29)="Ext: "+apm01a.phone_exten$;pbuf$(46)="Federal ID: "+apm01a.federal_id$
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.phone_no$,2),"",phone_mask$
+          phone$=cvs(apm01a.phone_no$,2)
+          phone$=str(phone$:phone_mask$,err=*next)
+            pbuf$(3)="Telephone: "+phone$;pbuf$(29)="Ext: "+apm01a.phone_exten$;pbuf$(46)="Federal ID: "+apm01a.federal_id$
           OutVect!.addItem(pbuf$)
           dim pbuf$(width)
-            pbuf$(3)="Fax Phone: "+fnmask$(apm01a.fax_no$,m8$);pbuf$(50)="F.O.B.: "+apm01a.fob$
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.fax_no$,2),"",fax_mask$
+          fax$=cvs(apm01a.fax_no$,2)
+          fax$=str(fax$:fax_mask$,err=*next)
+            pbuf$(3)="Fax Phone: "+fax$;pbuf$(50)="F.O.B.: "+apm01a.fob$
           OutVect!.addItem(pbuf$)
           dim pbuf$(width)
             pbuf$(5)="Contact: "+apm01a.contact_name$;pbuf$(48)="Ship Via: "+apm01a.ap_ship_via$
@@ -248,10 +254,16 @@ rem  skipped:  ;rem "can I do that??
                     pbuf$(3)="Purchase ID: "+apm05a.purch_addr$
                 OutVect!.addItem(pbuf$)
                 dim pbuf$(width)
-                    pbuf$(1)="Purchase Name: "+apm05a.name$;pbuf$(47)="Telephone: "+fnmask$(apm05a.phone_no$,m8$)+" Ext: "+apm05a.phone_exten$
+                call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm05a.phone_no$,2),"",phone_mask$
+                phone$=cvs(apm05a.phone_no$,2)
+                phone$=str(phone$:phone_mask$,err=*next)
+                    pbuf$(1)="Purchase Name: "+apm05a.name$;pbuf$(47)="Telephone: "+phone$+" Ext: "+apm05a.phone_exten$
                 OutVect!.addItem(pbuf$)
                 dim pbuf$(width)
-                    pbuf$(7)="Address: "+apm05a.addr_line_1$;pbuf$(47)="Fax Phone: "+fnmask$(apm05a.fax_no$,m8$)
+                call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm05a.fax_no$,2),"",fax_mask$
+                fax$=cvs(apm05a.fax_no$,2)
+                fax$=str(fax$:fax_mask$,err=*next)
+                    pbuf$(7)="Address: "+apm05a.addr_line_1$;pbuf$(47)="Fax Phone: "+fax$
                 OutVect!.addItem(pbuf$)
                 dim pbuf$(width)
                     pbuf$(16)=apm05a.addr_line_2$;pbuf$(49)="Contact: "+apm05a.contact_name$

@@ -610,7 +610,9 @@ vendor_break: rem --- Vendor break
        if sequence$="A"
           altseq$=apm01a.alt_sequence$+" "
        endif
-       phone$=fnmask$(apm01a.phone_no$,m5$)
+       call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.phone_no$,2),"",phone_mask$
+       phone$=cvs(apm01a.phone_no$,2)
+       phone$=str(phone$:phone_mask$,err=*next)
        vendorid$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
        vendor$=altseq$+vendorid$+" "+apm01a.vendor_name$
     endif
