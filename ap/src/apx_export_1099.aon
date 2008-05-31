@@ -129,7 +129,7 @@ rem --- Client (ie Employer) data
 
     client_id$=fndequote$(sysyear$+"AP"+firm_id$)
     name1$=fndequote$(aps01b.name$)
-    if cvs(aps01b.phone_no$,2)<>"" phone$=str(aps01b.phone_no$:phonem$)
+    if cvs(aps01b.phone_no$,2)<>"" phone$=str(cvs(aps01b.phone_no$,2):phonem$)
     address1$=fndequote$(aps01b.addr_line_1$)
     address2$=fndequote$(aps01b.addr_line_2$)
     city$=fndequote$(aps01b.city$)
