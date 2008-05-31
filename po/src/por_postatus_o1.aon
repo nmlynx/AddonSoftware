@@ -439,7 +439,7 @@ testbreaks: rem --- Test for Breaks
 
 newvendor: rem --- New Vendor
 
-    dim contact$(20),phone$(len(mphone$))
+    dim contact$(20)
     vendtot=0
     vendname$="Not On File"
     vendor$=poe02a.vendor_id$
@@ -448,7 +448,9 @@ newvendor: rem --- New Vendor
     find record (apm01a_dev,key=a01_key$,dom=brnch4) apm01a$
     vendname$=apm01a.vendor_name$
     contact$=apm01a.contact_name$
-    phone$=fnmask$(apm01a.phone_no$,mphone$)
+    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.phone_no$,2),"",phone_mask$
+    phone$=cvs(apm01a.phone_no$,2)
+    phone$=str(phone$:phone_mask$,err=*next)
 
 brnch4:
     return

@@ -233,51 +233,57 @@ rem --- Read next Customer Master (arm-01) record
 
           OutVect!.addItem("")
 
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
+          phone$=cvs(arm01a.phone_no$,2)
+          phone$=str(phone$:phone_mask$,err=*next)
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.fax_no$,2),"",fax_mask$
+          fax$=cvs(arm01a.fax_no$,2)
+          fax$=str(fax$:fax_mask$,err=*next)
           dim pbuf$(pbufwidth)
-          pbuf$(2,len("Address: " + arm01a.addr_line_1$)) = "Address: " + arm01a.addr_line_1$
-          pbuf$(47,len("Telephone:  " + str(fnmask$(arm01a.phone_no$,m8$)) + " " + extension$)) = "Telephone:  " + str(fnmask$(arm01a.phone_no$,m8$)) + " " + extension$
+          pbuf$(2) = "Address: " + arm01a.addr_line_1$
+          pbuf$(47) = "Telephone:  " + phone$ + " " + extension$
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(11,len(arm01a.addr_line_2$)) = arm01a.addr_line_2$
-          pbuf$(47,len("Fax Phone:  " + fnmask$(arm01a.fax_no$,m8$))) = "Fax Phone:  " + fnmask$(arm01a.fax_no$,m8$)
+          pbuf$(11) = arm01a.addr_line_2$
+          pbuf$(47) = "Fax Phone:  " + fax$
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(11,len(arm01a.addr_line_3$)) = arm01a.addr_line_3$
-          pbuf$(49,len("Contact:  " + arm01a.contact_name$)) = "Contact:  " + arm01a.contact_name$
+          pbuf$(11) = arm01a.addr_line_3$
+          pbuf$(49) = "Contact:  " + arm01a.contact_name$
           gosub output_print_buf
 
 
           dim pbuf$(pbufwidth)
-          pbuf$(11,len(arm01a.addr_line_4$)) = arm01a.addr_line_4$
-          pbuf$(38,len("Alternate Sequence:  " + arm01a.alt_sequence$)) = "Alternate Sequence:  " + arm01a.alt_sequence$
+          pbuf$(11) = arm01a.addr_line_4$
+          pbuf$(38) = "Alternate Sequence:  " + arm01a.alt_sequence$
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(5,len("City: " + arm01a.city$)) = "City: " + arm01a.city$
-          pbuf$(45,len("Date Opened:  " + fndate$(arm01a.opened_date$))) = "Date Opened:  " + fndate$(arm01a.opened_date$)
+          pbuf$(5) = "City: " + arm01a.city$
+          pbuf$(45) = "Date Opened:  " + fndate$(arm01a.opened_date$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(4,len("State: " + arm01a.state_code$)) = "State: " + arm01a.state_code$
-          pbuf$(18,len("Zip/Postal:  " + fnzipcode$(arm01a.zip_code$))) = "Zip/Postal:  " + fnzipcode$(arm01a.zip_code$)
-          pbuf$(48,len("Ship Via:  " + arm01a.ar_ship_via$)) = "Ship Via:  " + arm01a.ar_ship_via$
+          pbuf$(4) = "State: " + arm01a.state_code$
+          pbuf$(18) = "Zip/Postal:  " + fnzipcode$(arm01a.zip_code$)
+          pbuf$(48) = "Ship Via:  " + arm01a.ar_ship_via$
           gosub output_print_buf
           
           dim pbuf$(pbufwidth)
-          pbuf$(2,len("Country: " + arm01a.country$)) = "Country: " + arm01a.country$
-          pbuf$(50,len("F.O.B.:  " + arm01a.fob$)) = "F.O.B.:  " + arm01a.fob$
+          pbuf$(2) = "Country: " + arm01a.country$
+          pbuf$(50) = "F.O.B.:  " + arm01a.fob$
           gosub output_print_buf
           
           dim pbuf$(pbufwidth)
-          pbuf$(6,len("SIC: " + arm01a.sic_code$)) = "SIC: " + arm01a.sic_code$
-          pbuf$(43,len("Resale Number:  " + arm01a.resale_no$)) = "Resale Number:  " + arm01a.resale_no$
+          pbuf$(6) = "SIC: " + arm01a.sic_code$
+          pbuf$(43) = "Resale Number:  " + arm01a.resale_no$
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(3,len("Retain? " + fnyn$(arm01a.retain_cust$))) = "Retain? " + fnyn$(arm01a.retain_cust$)
-          pbuf$(46,len("D&B Number: " + arm01a.db_no$)) = "D&B Number: " + arm01a.db_no$
+          pbuf$(3) = "Retain? " + fnyn$(arm01a.retain_cust$)
+          pbuf$(46) = "D&B Number: " + arm01a.db_no$
           gosub output_print_buf
 
 
@@ -339,57 +345,55 @@ rem --- Read next Customer Master (arm-01) record
  
 
           dim pbuf$(pbufwidth)
-          pbuf$(1,len("Customer Type: "+arm02a.customer_type$)) = "Customer Type: "+arm02a.customer_type$
-          pbuf$(20,len(typedesc$)) = typedesc$
-          pbuf$(42,len("Sales Discount: "+arm02a.disc_code$+" "+discdesc$)) = "Sales Discount: "+arm02a.disc_code$+" "+discdesc$
+          pbuf$(1) = "Customer Type: "+arm02a.customer_type$
+          pbuf$(20) = typedesc$
+          pbuf$(42) = "Sales Discount: "+arm02a.disc_code$+" "+discdesc$
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(3,len("Salesperson: "+arm02a.slspsn_code$)) = "Salesperson: "+arm02a.slspsn_code$
-          pbuf$(20,len(salesdesc$)) = salesdesc$
-          pbuf$(46,len("Label Code: "+arm02a.label_code$)) = "Label Code: "+arm02a.label_code$
+          pbuf$(3) = "Salesperson: "+arm02a.slspsn_code$
+          pbuf$(20) = salesdesc$
+          pbuf$(46) = "Label Code: "+arm02a.label_code$
           gosub output_print_buf
    
           dim pbuf$(pbufwidth)
-          pbuf$(3,len("Terms Code: "+arm02a.ar_terms_code$)) = "Terms Code: "+arm02a.ar_terms_code$
-          pbuf$(20,len(termsdesc$)) = termsdesc$
-          pbuf$(42,len("Finance Charge? "+fnyn$(arm02a.finance_chg$))) = "Finance Charge? "+fnyn$(arm02a.finance_chg$)
+          pbuf$(3) = "Terms Code: "+arm02a.ar_terms_code$
+          pbuf$(20) = termsdesc$
+          pbuf$(42) = "Finance Charge? "+fnyn$(arm02a.finance_chg$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(6,len("Tax Code: "+arm02a.tax_code$)) = "Tax Code: "+arm02a.tax_code$
-          pbuf$(20,len(taxdesc$)) = taxdesc$
-          pbuf$(46,len("Statements? "+fnyn$(arm02a.statements$))) = "Statements? "+fnyn$(arm02a.statements$)
+          pbuf$(6) = "Tax Code: "+arm02a.tax_code$
+          pbuf$(20) = taxdesc$
+          pbuf$(46) = "Statements? "+fnyn$(arm02a.statements$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(1,len("Freight Terms: "+arm02a.frt_terms$)) = "Freight Terms: "+arm02a.frt_terms$
-          pbuf$(20,len(frtdesc$)) = frtdesc$
-          pbuf$(46,len("Cycle Code: "+arm02a.ar_cyclecode$+" "+cycledesc$)) = "Cycle Code: "+arm02a.ar_cyclecode$+" "+cycledesc$
-          gosub output_print_buf
-   
-          dim pbuf$(pbufwidth)
-          pbuf$(1,len("Territory: "+arm02a.territory$)) = "Territory: "+arm02a.territory$
-          pbuf$(20,len(terrdesc$)) = terrdesc$
-          pbuf$(42,len("Sales Analysis: "+sales_analysis$)) = "Sales Analysis: "+sales_analysis$
-          gosub output_print_buf
-          
-          dim pbuf$(pbufwidth)
-          pbuf$(2,len("Distribution: "+arm02a.ar_dist_code$)) = "Distribution: "+arm02a.ar_dist_code$ 
-          pbuf$(20,len(distdesc$)) = distdesc$
+          pbuf$(1) = "Freight Terms: "+arm02a.frt_terms$
+          pbuf$(20) = frtdesc$
+          pbuf$(46) = "Cycle Code: "+arm02a.ar_cyclecode$+" "+cycledesc$
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(2,len("Message Code: "+arm02a.message_code$)) = "Message Code: "+arm02a.message_code$
-          pbuf$(20,len(msgdesc$)) = msgdesc$
-          pbuf$(2,len("Credit Limit: "+limit$)) = "Credit Limit: "+limit$
+          pbuf$(1) = "Territory: "+arm02a.territory$
+          pbuf$(20) = terrdesc$
+          pbuf$(42) = "Sales Analysis: "+sales_analysis$
           gosub output_print_buf
-          
-          
+
           dim pbuf$(pbufwidth)
-          pbuf$(2,len("Pricing Code: "+arm02a.pricing_code$)) = "Pricing Code: "+arm02a.pricing_code$
-          pbuf$(20,len(pricedesc$)) = pricedesc$
-          pbuf$(45,len("Credit Hold: "+hold$)) = "Credit Hold: "+hold$
+          pbuf$(2) = "Distribution: "+arm02a.ar_dist_code$ 
+          pbuf$(20) = distdesc$
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(2) = "Message Code: "+arm02a.message_code$
+          pbuf$(20) = msgdesc$
+          gosub output_print_buf
+
+          dim pbuf$(pbufwidth)
+          pbuf$(2) = "Pricing Code: "+arm02a.pricing_code$
+          pbuf$(20) = pricedesc$
+          pbuf$(45) = "Credit Hold: "+hold$
           gosub output_print_buf
           
           lines=lines+10
@@ -409,7 +413,7 @@ rem --- Read next Customer Master (arm-01) record
                          gosub comments_heading
                       endif
                       dim pbuf$(pbufwidth)
-                      pbuf$(1,len(arm05a.sequence_num$+" "+arm05a.std_comments$)) = arm05a.sequence_num$+" "+arm05a.std_comments$
+                      pbuf$(1) = arm05a.sequence_num$+" "+arm05a.std_comments$
                       gosub output_print_buf
         
                       lines=lines+1
@@ -450,46 +454,49 @@ rem --- Read next Customer Master (arm-01) record
  
 
                 dim pbuf$(pbufwidth)
-                pbuf$(1,len("Ship To: "+arm03a.shipto_no$)) = "Ship To: "+arm03a.shipto_no$
-                pbuf$(47,len("Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$)) = "Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$
+                pbuf$(1) = "Ship To: "+arm03a.shipto_no$
+                call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm03a.phone_no$,2),"",phone_mask$
+                phone$=cvs(arm03a.phone_no$,2)
+                phone$=str(phone$:phone_mask$,err=*next)
+                pbuf$(47) = "Telephone: "+phone$+" "+extension$
                 gosub output_print_buf
 
                 dim pbuf$(pbufwidth)
-                pbuf$(4,len("Name: "+arm03a.name$)) = "Name: "+arm03a.name$
-                pbuf$(49,len("Contact: "+arm03a.contact_name$)) = "Contact: "+arm03a.contact_name$
+                pbuf$(4) = "Name: "+arm03a.name$
+                pbuf$(49) = "Contact: "+arm03a.contact_name$
                 gosub output_print_buf
 
                 dim pbuf$(pbufwidth)
-                pbuf$(1,len("Address: "+arm03a.addr_line_1$)) = "Address: "+arm03a.addr_line_1$
-                pbuf$(45,len("Salesperson: "+arm03a.slspsn_code$+" "+salesdesc$)) = "Salesperson: "+arm03a.slspsn_code$+" "+salesdesc$
+                pbuf$(1) = "Address: "+arm03a.addr_line_1$
+                pbuf$(45) = "Salesperson: "+arm03a.slspsn_code$+" "+salesdesc$
                 gosub output_print_buf
 
                 dim pbuf$(pbufwidth)
-                pbuf$(10,len(arm03a.addr_line_2$)) = arm03a.addr_line_2$
-                pbuf$(47,len("Territory: "+arm03a.territory$+" "+terrdesc$)) = "Territory: "+arm03a.territory$+" "+terrdesc$
+                pbuf$(10) = arm03a.addr_line_2$
+                pbuf$(47) = "Territory: "+arm03a.territory$+" "+terrdesc$
                 gosub output_print_buf
 
                 dim pbuf$(pbufwidth)
-                pbuf$(10,len(arm03a.addr_line_3$)) = arm03a.addr_line_3$
-                pbuf$(48,len("Tax Code: "+arm03a.tax_code$+" "+taxdesc$)) = "Tax Code: "+arm03a.tax_code$+" "+taxdesc$
+                pbuf$(10) = arm03a.addr_line_3$
+                pbuf$(48) = "Tax Code: "+arm03a.tax_code$+" "+taxdesc$
                 gosub output_print_buf
 
   
                 dim pbuf$(pbufwidth)
-                pbuf$(10,len(arm03a.addr_line_4$)) = arm03a.addr_line_4$
-                pbuf$(52,len("SIC: "+arm03a.sic_code$)) = "SIC: "+arm03a.sic_code$
+                pbuf$(10) = arm03a.addr_line_4$
+                pbuf$(52) = "SIC: "+arm03a.sic_code$
                 gosub output_print_buf
 
 
                 dim pbuf$(pbufwidth)
-                pbuf$(4,len("City: "+arm03a.city$)) = "City: "+arm03a.city$
-                pbuf$(46,len("D&B Number: "+arm03a.db_no$)) = "D&B Number: "+arm03a.db_no$
+                pbuf$(4) = "City: "+arm03a.city$
+                pbuf$(46) = "D&B Number: "+arm03a.db_no$
                 gosub output_print_buf
 
                 dim pbuf$(pbufwidth)
-                pbuf$(3,len("State: "+arm03a.state_code$)) = "State: "+arm03a.state_code$
-                pbuf$(14,len("Zip/Postal: "+fnzipcode$(arm03a.zip_code$))) = "Zip/Postal: "+fnzipcode$(arm03a.zip_code$)
-                pbuf$(49,len("Country: "+arm03a.country$)) = "Country: "+arm03a.country$
+                pbuf$(3) = "State: "+arm03a.state_code$
+                pbuf$(14) = "Zip/Postal: "+fnzipcode$(arm03a.zip_code$)
+                pbuf$(49) = "Country: "+arm03a.country$
                 gosub output_print_buf
 
 
@@ -516,47 +523,50 @@ rem --- Read next Customer Master (arm-01) record
 
                     
                     dim pbuf$(pbufwidth)
-                    pbuf$(4,len("Job ID: "+opm09a.job_no$)) = "Job ID: "+opm09a.job_no$
+                    pbuf$(4) = "Job ID: "+opm09a.job_no$
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(2,len("Job Name: "+opm09a.customer_name$)) = "Job Name: "+opm09a.customer_name$
-                    pbuf$(45,len("Preliminary Lien Information")) = "Preliminary Lien Information"
+                    pbuf$(2) = "Job Name: "+opm09a.customer_name$
+                    pbuf$(45) = "Preliminary Lien Information"
                     gosub output_print_buf
  
                     dim pbuf$(pbufwidth)
-                    pbuf$(2,len("Address: "+opm09a.addr_line_1$)) = "Address: "+opm09a.addr_line_1$
+                    pbuf$(2) = "Address: "+opm09a.addr_line_1$
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(12,len(opm09a.addr_line_2$)) = opm09a.addr_line_2$
-                    pbuf$(45,len("Lien Date:"+fndate$(opm09a.lien_date$))) = "Lien Date:"+fndate$(opm09a.lien_date$)
+                    pbuf$(12) = opm09a.addr_line_2$
+                    pbuf$(45) = "Lien Date:"+fndate$(opm09a.lien_date$)
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(6,len("City: "+opm09a.city$)) = "City: "+opm09a.city$
-                    pbuf$(49,len("Lien ID:"+opm09a.lien_no$)) = "Lien ID:"+opm09a.lien_no$
+                    pbuf$(6) = "City: "+opm09a.city$
+                    pbuf$(49) = "Lien ID:"+opm09a.lien_no$
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(3,len("State: "+opm09a.state_code$)) = "State: "+opm09a.state_code$
-                    pbuf$(14,len("Zip/Postal: "+fnzipcode$(arm01a.zip_code$))) = "Zip/Postal: "+fnzipcode$(arm01a.zip_code$)
-                    pbuf$(50,len("Amount: "+str(opm09a.lien_amount:m1$))) = "Amount: "+str(opm09a.lien_amount:m1$)
+                    pbuf$(3) = "State: "+opm09a.state_code$
+                    pbuf$(14) = "Zip/Postal: "+fnzipcode$(opm09a.zip_code$)
+                    pbuf$(50) = "Amount: "+str(opm09a.lien_amount:m1$)
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(3,len("Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$)) = "Telephone: "+str(fnmask$(arm03a.phone_no$,m8$))+" "+extension$
-                    pbuf$(42,len("First Shipment: "+fndate$(opm09a.fst_shp_date$))) = "First Shipment: "+fndate$(opm09a.fst_shp_date$)
+                    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(opm09a.phone_no$,2),"",phone_mask$
+                    phone$=cvs(opm09a.phone_no$,2)
+                    phone$=str(phone$:phone_mask$,err=*next)
+                    pbuf$(3) = "Telephone: "+phone$+" "+extension$
+                    pbuf$(42) = "First Shipment: "+fndate$(opm09a.fst_shp_date$)
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(3,len("Contact: "+opm09a.contact_name$)) = "Contact: "+opm09a.contact_name$
-                    pbuf$(37,len("Total Sales to Date: "+str(opm09a.total_sales:m1$))) = "Total Sales to Date: "+str(opm09a.total_sales:m1$)
+                    pbuf$(3) = "Contact: "+opm09a.contact_name$
+                    pbuf$(37) = "Total Sales to Date: "+str(opm09a.total_sales:m1$)
                     gosub output_print_buf
 
                     dim pbuf$(pbufwidth)
-                    pbuf$(4,len("Retain? "+fnyn$(opm09a.retain_cust$))) = "Retain? "+fnyn$(opm09a.retain_cust$)
-                    pbuf$(39,len("Last Invoice Date: "+fndate$(opm09a.lstinv_date$))) = "Last Invoice Date: "+fndate$(opm09a.lstinv_date$)
+                    pbuf$(4) = "Retain? "+fnyn$(opm09a.retain_cust$)
+                    pbuf$(39) = "Last Invoice Date: "+fndate$(opm09a.lstinv_date$)
                     gosub output_print_buf
 
                     lines=lines+9
@@ -592,97 +602,97 @@ rem --- Read next Customer Master (arm-01) record
 
  
           dim pbuf$(pbufwidth)
-          pbuf$((a[0]+m1-7)+1,len("Future")) = "Future"
-          pbuf$(a[1]+m1-8,len("Current")) = "Current"
-          pbuf$((a[2]+m1-8)+1,len("30 Days")) = "30 Days"
-          pbuf$(a[3]+m1-8,len("30 Days")) = "60 Days"
-          pbuf$((a[4]+m1-8)+1,len("30 Days")) = "90 Days"
-          pbuf$(a[5]+m1-8,len("120 Days")) = "120 Days"
-          pbuf$((a[6]+m1-8)+1,len("Balance")) = "Balance"
+          pbuf$((a[0]+m1-7)+1) = "Future"
+          pbuf$(a[1]+m1-8) = "Current"
+          pbuf$((a[2]+m1-8)+1) = "30 Days"
+          pbuf$(a[3]+m1-8) = "60 Days"
+          pbuf$((a[4]+m1-8)+1) = "90 Days"
+          pbuf$(a[5]+m1-8) = "120 Days"
+          pbuf$((a[6]+m1-8)+1) = "Balance"
           gosub output_print_buf
 
   
           dim pbuf$(pbufwidth)
-          pbuf$(a[0]+1,len(str(arm02a.aging_future:m1$))) = str(arm02a.aging_future:m1$)
-          pbuf$(a[2]+1,len(str(arm02a.aging_cur:m1$))) = str(arm02a.aging_cur:m1$)
-          pbuf$(a[4]+1,len(str(arm02a.aging_30:m1$))) = str(arm02a.aging_30:m1$)
-          pbuf$(a[6]+1,len(str(arm02a.aging_60:m1$))) = str(arm02a.aging_60:m1$)
-          pbuf$(a[4]+1,len(str(arm02a.aging_90:m1$))) = str(arm02a.aging_90:m1$)
-          pbuf$(a[5]+1,len(str(arm02a.aging_120:m1$))) = str(arm02a.aging_120:m1$)
-          pbuf$(a[6]+1,len(str(balance:m1$))) = str(balance:m1$)
+          pbuf$(a[0]+1) = str(arm02a.aging_future:m1$)
+          pbuf$(a[2]+1) = str(arm02a.aging_cur:m1$)
+          pbuf$(a[4]+1) = str(arm02a.aging_30:m1$)
+          pbuf$(a[6]+1) = str(arm02a.aging_60:m1$)
+          pbuf$(a[4]+1) = str(arm02a.aging_90:m1$)
+          pbuf$(a[5]+1) = str(arm02a.aging_120:m1$)
+          pbuf$(a[6]+1) = str(balance:m1$)
           gosub output_print_buf
 
           OutVect!.addItem("")
 
 
           dim pbuf$(pbufwidth)
-          pbuf$(3,len("Last Invoice: "+fndate$(arm02a.lstinv_date$))) = "Last Invoice: "+fndate$(arm02a.lstinv_date$)
-          pbuf$(41,len("Avg Days to Pay: "+cvs(str(arm06a.avg_days:m5$),1+2))) = "Avg Days to Pay: "+cvs(str(arm06a.avg_days:m5$),1+2)
+          pbuf$(3) = "Last Invoice: "+fndate$(arm02a.lstinv_date$)
+          pbuf$(41) = "Avg Days to Pay: "+cvs(str(arm06a.avg_days:m5$),1+2)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(3,len("Last Payment: "+fndate$(arm02a.lstpay_date$))) = "Last Payment: "+fndate$(arm02a.lstpay_date$)
+          pbuf$(3) = "Last Payment: "+fndate$(arm02a.lstpay_date$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$((s[2]+m1-6)+1,len("Prior")) = "Prior"
-          pbuf$((s[3]+m1-6)+1,len("Next")) = "Next"
+          pbuf$((s[2]+m1-6)+1) = "Prior"
+          pbuf$((s[3]+m1-6)+1) = "Next"
           gosub output_print_buf
   
           dim pbuf$(pbufwidth)
-          pbuf$((s[0]+m1-4)+1,len("MTD"))   = "MTD"
-          pbuf$((s[1]+m1-4)+1,len("YTD"))   = "YTD"
-          pbuf$((s[2]+m1-6)+1,len("Year"))  = "Year"
-          pbuf$((s[3]+m1-6)+1,len("Month")) = "Month"
+          pbuf$((s[0]+m1-4)+1)   = "MTD"
+          pbuf$((s[1]+m1-4)+1)   = "YTD"
+          pbuf$((s[2]+m1-6)+1)  = "Year"
+          pbuf$((s[3]+m1-6)+1) = "Month"
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(10,len("Sales: ")) = "Sales: "
-          pbuf$(s[0]+1,len(str(arm06a.mtd_sales:m1$))) = str(arm06a.mtd_sales:m1$)
-          pbuf$(s[1]+1,len(str(arm06a.ytd_sales:m1$))) = str(arm06a.ytd_sales:m1$)
-          pbuf$(s[2]+1,len(str(arm06a.pyr_sales:m1$))) = str(arm06a.pyr_sales:m1$)
-          pbuf$(s[3]+1,len(str(arm06a.nmtd_sales:m1$))) = str(arm06a.nmtd_sales:m1$)
+          pbuf$(10) = "Sales: "
+          pbuf$(s[0]+1) = str(arm06a.mtd_sales:m1$)
+          pbuf$(s[1]+1) = str(arm06a.ytd_sales:m1$)
+          pbuf$(s[2]+1) = str(arm06a.pyr_sales:m1$)
+          pbuf$(s[3]+1) = str(arm06a.nmtd_sales:m1$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(11,len("Cost: ")) = "Cost: "
-          pbuf$(s[0]+1,len(str(arm06a.mtd_cost:m1$))) = str(arm06a.mtd_cost:m1$)
-          pbuf$(s[1]+1,len(str(arm06a.ytd_cost:m1$))) = str(arm06a.ytd_cost:m1$)
-          pbuf$(s[2]+1,len(str(arm06a.pri_ytd_cost:m1$))) = str(arm06a.pri_ytd_cost:m1$)
-          pbuf$(s[3]+1,len(str(arm06a.nxt_mtd_cost:m1$))) = str(arm06a.nxt_mtd_cost:m1$)
+          pbuf$(11) = "Cost: "
+          pbuf$(s[0]+1) = str(arm06a.mtd_cost:m1$)
+          pbuf$(s[1]+1) = str(arm06a.ytd_cost:m1$)
+          pbuf$(s[2]+1) = str(arm06a.pri_ytd_cost:m1$)
+          pbuf$(s[3]+1) = str(arm06a.nxt_mtd_cost:m1$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(11,len("Gross Profit: ")) = "Gross Profit: "
-          pbuf$(s[0]+1,len(str(mtd_profit:m1$))) = str(mtd_profit:m1$)
-          pbuf$(s[1]+1,len(str(ytd_profit:m1$))) = str(ytd_profit:m1$)
-          pbuf$(s[2]+1,len(str(pytd_profit:m1$))) = str(pytd_profit:m1$)
-          pbuf$(s[3]+1,len(str(nmtd_profit:m1$))) = str(nmtd_profit:m1$)
+          pbuf$(11) = "Gross Profit: "
+          pbuf$(s[0]+1) = str(mtd_profit:m1$)
+          pbuf$(s[1]+1) = str(ytd_profit:m1$)
+          pbuf$(s[2]+1) = str(pytd_profit:m1$)
+          pbuf$(s[3]+1) = str(nmtd_profit:m1$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(2,len("Gross Profit %: ")) = "Gross Profit %: "
-          pbuf$(s[0]+1,len(str(mtd_percent:m6$))) = str(mtd_percent:m6$)
-          pbuf$(s[1]+1,len(str(ytd_percent:m6$))) = str(ytd_percent:m6$)
-          pbuf$(s[2]+1,len(str(pytd_percent:m6$))) = str(pytd_percent:m6$)
-          pbuf$(s[3]+1,len(str(nmtd_percent:m6$))) = str(nmtd_percent:m6$)
+          pbuf$(2) = "Gross Profit %: "
+          pbuf$(s[0]+1) = str(mtd_percent:m6$)
+          pbuf$(s[1]+1) = str(ytd_percent:m6$)
+          pbuf$(s[2]+1) = str(pytd_percent:m6$)
+          pbuf$(s[3]+1) = str(nmtd_percent:m6$)
           gosub output_print_buf
 
           dim pbuf$(pbufwidth)
-          pbuf$(1,len("Avg Days to Pay: ")) = "Avg Days to Pay: "
-          pbuf$(s[0]+1,len(str(arm06a.avg_days_mtd:m5$))) = str(arm06a.avg_days_mtd:m5$)
-          pbuf$(s[1]+1,len(str(arm06a.avg_days_ytd:m5$))) = str(arm06a.avg_days_ytd:m5$)
-          pbuf$(s[2]+1,len(str(arm06a.avg_dtp_pytd:m5$))) = str(arm06a.avg_dtp_pytd:m5$)
-          pbuf$(s[3]+1,len(str(arm06a.avg_dtp_nmtd:m5$))) = str(arm06a.avg_dtp_nmtd:m5$)
+          pbuf$(1) = "Avg Days to Pay: "
+          pbuf$(s[0]+1) = str(arm06a.avg_days_mtd:m5$)
+          pbuf$(s[1]+1) = str(arm06a.avg_days_ytd:m5$)
+          pbuf$(s[2]+1) = str(arm06a.avg_dtp_pytd:m5$)
+          pbuf$(s[3]+1) = str(arm06a.avg_dtp_nmtd:m5$)
           gosub output_print_buf
 
 
           dim pbuf$(pbufwidth)
-          pbuf$(5,len("High Credit: ")) = "High Credit: "
-          pbuf$(s[0]+1,len(str(arm06a.mtd_high_crd:m1$))) = str(arm06a.mtd_high_crd:m1$)
-          pbuf$(s[1]+1,len(str(arm06a.ytd_hi_cred:m1$))) = str(arm06a.ytd_hi_cred:m1$)
-          pbuf$(s[2]+1,len(str(arm06a.pyr_hi_crd:m1$))) = str(arm06a.pyr_hi_crd:m1$)
-          pbuf$(s[3]+1,len(str(arm06a.nmtd_high_cr:m5$))) = str(arm06a.nmtd_high_cr:m5$)
+          pbuf$(5) = "High Credit: "
+          pbuf$(s[0]+1) = str(arm06a.mtd_high_crd:m1$)
+          pbuf$(s[1]+1) = str(arm06a.ytd_hi_cred:m1$)
+          pbuf$(s[2]+1) = str(arm06a.pyr_hi_crd:m1$)
+          pbuf$(s[3]+1) = str(arm06a.nmtd_high_cr:m5$)
           gosub output_print_buf
 
           lines=lines+15
@@ -712,13 +722,13 @@ rem --- Read next Customer Master (arm-01) record
                 if first gosub invoice_heading
 
                 dim pbuf$(pbufwidth)
-                pbuf$(o[1],len(art01a.ar_inv_no$)) = art01a.ar_inv_no$
-                pbuf$(o[2],len(fndate$(art01a.invoice_date$))) = str(fndate$(art01a.invoice_date$))
-                pbuf$(o[3]+1,len(fndate$(art01a.inv_due_date$))) = str(fndate$(art01a.inv_due_date$))
-                pbuf$(o[4]+1,len(art01a.ar_terms_code$)) = str(art01a.ar_terms_code$)
-                pbuf$(o[5]+1,len(type$)) = str(type$)
-                pbuf$(o[6]+1,len(str(art01a.invoice_amt:m1$))) = str(art01a.invoice_amt:m1$)
-                pbuf$(o[9]+1,len(str(art01a.disc_allowed:m1$))) = str(art01a.disc_allowed:m1$)
+                pbuf$(o[1]) = art01a.ar_inv_no$
+                pbuf$(o[2]) = str(fndate$(art01a.invoice_date$))
+                pbuf$(o[3]+1) = str(fndate$(art01a.inv_due_date$))
+                pbuf$(o[4]+1) = str(art01a.ar_terms_code$)
+                pbuf$(o[5]+1) = str(type$)
+                pbuf$(o[6]+1) = str(art01a.invoice_amt:m1$)
+                pbuf$(o[9]+1) = str(art01a.disc_allowed:m1$)
                 gosub output_print_buf
 
                 lines=lines+1
@@ -742,11 +752,11 @@ rem --- Read next Customer Master (arm-01) record
                       if first gosub invoice_heading
 
                       dim pbuf$(pbufwidth)
-                      pbuf$(o[2]+1,len(fndate$(art11a.trans_date$))) = str(fndate$(art11a.trans_date$))
-                      pbuf$(o[3]+1,len(fndate$(art11a.refchk_no$))) = str(fndate$(art11a.refchk_no$))
-                      pbuf$(o[5]+1,len(type$)) = str(type$)
-                      pbuf$(o[7]+1,len(str(art11a.trans_amt:m1$))) = str(art11a.trans_amt:m1$)
-                      pbuf$(o[9]+1,len(str(art11a.adjdisc_amt:m1$))) = str(art11a.adjdisc_amt:m1$)
+                      pbuf$(o[2]+1) = str(fndate$(art11a.trans_date$))
+                      pbuf$(o[3]+1) = str(fndate$(art11a.refchk_no$))
+                      pbuf$(o[5]+1) = str(type$)
+                      pbuf$(o[7]+1) = str(art11a.trans_amt:m1$)
+                      pbuf$(o[9]+1) = str(art11a.adjdisc_amt:m1$)
                       gosub output_print_buf
 
                       lines=lines+1
@@ -762,8 +772,8 @@ rem --- Read next Customer Master (arm-01) record
                 if lines+1>maxlines gosub lines_count
                 if first gosub invoice_heading
                 dim pbuf$(pbufwidth)
-                pbuf$((o[6]-6)+1,len("Total")) = str("Total")
-                pbuf$(o[8]+1,len(str(balance:m1$))) = str(balance:m1$)
+                pbuf$((o[6]-6)+1) = str("Total")
+                pbuf$(o[8]+1) = str(balance:m1$)
                 gosub output_print_buf
 
                 lines=lines+1
@@ -777,11 +787,11 @@ rem --- Read next Customer Master (arm-01) record
           if lines+1>maxlines gosub lines_count
 
           dim pbuf$(pbufwidth)
-          pbuf$((o[6]-15)+1,len("Customer Total")) = str("Customer Total")
-          pbuf$(o[6]+1,len(str(custinv:m1$))) = str(custinv:m1$)
-          pbuf$(o[7]+1,len(str(custapp:m1$))) = str(custapp:m1$)
-          pbuf$(o[8]+1,len(str(balance:m1$))) = str(balance:m1$)
-          pbuf$(o[9]+1,len(str(custdis:m1$))) = str(custdis:m1$)
+          pbuf$((o[6]-15)+1) = str("Customer Total")
+          pbuf$(o[6]+1) = str(custinv:m1$)
+          pbuf$(o[7]+1) = str(custapp:m1$)
+          pbuf$(o[8]+1) = str(balance:m1$)
+          pbuf$(o[9]+1) = str(custdis:m1$)
           gosub output_print_buf
 
           lines=lines+1
@@ -811,7 +821,7 @@ lines_count: rem --- Lines Count
     dim pbuf$(pbufwidth)
     cust$ = "Customer: " + str(fnmask$(arm01a.customer_id$(1,customer_size),m0$)) + " " + arm01a.customer_name$
 
-    pbuf$(1,len(cust$)) = cust$
+    pbuf$(1) = cust$
     gosub output_print_buf
 
  
@@ -826,7 +836,7 @@ profile_heading: rem --- Profile subheading
 
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
-    pbuf$(1,len(fnheader$("Profile Information",pbufwidth))) = fnheader$("Profile Information",pbufwidth)
+    pbuf$(1) = fnheader$("Profile Information",pbufwidth)
     gosub output_print_buf
         
     lines=lines+2
@@ -838,7 +848,7 @@ comments_heading: rem --- Comments subheading
 
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
-    pbuf$(1,len(fnheader$("Comments",pbufwidth))) = fnheader$("Comments",pbufwidth)
+    pbuf$(1) = fnheader$("Comments",pbufwidth)
     gosub output_print_buf
         
     lines=lines+2
@@ -850,7 +860,7 @@ shipto_heading: rem --- Ship-to subheading
 
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
-    pbuf$(1,len(fnheader$("Ship-To Address Information",pbufwidth))) = fnheader$("Ship-To Address Information",pbufwidth)
+    pbuf$(1) = fnheader$("Ship-To Address Information",pbufwidth)
     gosub output_print_buf
 
     lines=lines+2
@@ -863,7 +873,7 @@ job_heading: rem --- Job number subheading
 
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
-    pbuf$(1,len(fnheader$("Customer Job Information",pbufwidth))) = fnheader$("Customer Job Information",pbufwidth)
+    pbuf$(1) = fnheader$("Customer Job Information",pbufwidth)
     gosub output_print_buf
     lines=lines+2
     first=0
@@ -874,7 +884,7 @@ detail_heading: rem --- Aging and Sales Summary subheading
     if lines+2>maxlines gosub lines_count
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
-    pbuf$(1,len(fnheader$("Aging and Sales Summary",pbufwidth))) = fnheader$("Aging and Sales Summary",pbufwidth)
+    pbuf$(1) = fnheader$("Aging and Sales Summary",pbufwidth)
     gosub output_print_buf
     lines=lines+2
     return
@@ -884,19 +894,19 @@ invoice_heading: rem --- Invoice history subheading
     if lines+3>maxlines gosub lines_count
     OutVect!.addItem("")
     dim pbuf$(pbufwidth)
-    pbuf$(1,len(fnheader$("Invoice History",pbufwidth))) = fnheader$("Invoice History",pbufwidth)
+    pbuf$(1) = fnheader$("Invoice History",pbufwidth)
     gosub output_print_buf
 
     dim pbuf$(120)
-    pbuf$(o[0]+1,len("Cust/Inv")) = "Cust/Inv"
-    pbuf$(o[2]+1,len("Date")) = "Date"
-    pbuf$(o[3]+1,len("Due/Ref")) = "Due/Ref"
-    pbuf$(o[4]+1,len("TC")) = "TC"
-    pbuf$(o[5]+1,len("Type")) = "Type"
-    pbuf$((o[6]+m1-8)+1,len("Invoice")) = "Invoice"
-    pbuf$((o[7]+m1-8)+1,len("Applied")) = "Applied"
-    pbuf$((o[8]+m1-8)+1,len("Balance")) = "Balance"
-    pbuf$((o[9]+m1-9)+1,len("Discount")) = "Discount"
+    pbuf$(o[0]+1) = "Cust/Inv"
+    pbuf$(o[2]+1) = "Date"
+    pbuf$(o[3]+1) = "Due/Ref"
+    pbuf$(o[4]+1) = "TC"
+    pbuf$(o[5]+1) = "Type"
+    pbuf$((o[6]+m1-8)+1) = "Invoice"
+    pbuf$((o[7]+m1-8)+1) = "Applied"
+    pbuf$((o[8]+m1-8)+1) = "Balance"
+    pbuf$((o[9]+m1-9)+1) = "Discount"
     gosub output_print_buf
 
     lines=lines+3

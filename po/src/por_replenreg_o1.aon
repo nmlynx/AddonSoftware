@@ -300,8 +300,8 @@ newvendor: rem --- New Vendor
     if pos(" "<>addr3$)<>0 print (printer_dev)@(16),addr3$; let l=l+1
 
     print (printer_dev) @(0),"Contact: ",contact$,
-:                       @(57),"Phone:  ",fnmask$(phone$,phnmsk$),
-:                       @(90),"Fax:  ",fnmask$(fax$,phnmsk$)
+:                       @(57),"Phone:  ",phone$,
+:                       @(90),"Fax:  ",fax$
 
     print (printer_dev)dashes$
 
@@ -378,8 +378,12 @@ useapm01addr:
     addr2$=apm01a.addr_line_2$
     addr3$=cvs(apm01a.city$,51)+", "+apm01a.state_code$
     zip$=fnzipcode$(apm01a.zip_code$)
-    phone$=apm01a.phone_no$
-    fax$=apm01a.fax_no$
+    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.phone_no$,2),"",phone_mask$
+    phone$=cvs(apm01a.phone_no$,2)
+    phone$=str(phone$:phone_mask$,err=*next)
+    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.fax_no$,2),"",fax_mask$
+    fax$=cvs(apm01a.fax_no$,2)
+    fax$=str(fax$:fax_mask$,err=*next)
     contact$=apm01a.contact_name$
     if pos(" "<>addr3$)>0 addr3$=cvs(addr3$,2)+"  "+zip$ else addr2$=cvs(addr2$,2)+"  "+zip$
     return

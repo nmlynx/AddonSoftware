@@ -292,7 +292,9 @@ customer_break: rem --- Customer break
         find record (arm01_dev,key=ope01a.firm_id$+ope01a.customer_id$,dom=*next) arm01a$
         customer$=fnmask$(ope01a.customer_id$(1,p[0]),m0$)
         name$=arm01a.customer_name$
-        phone$=fnmask$(arm01a.phone_no$,m8$)
+        call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
+        phone$=cvs(arm01a.phone_no$,2)
+        phone$=str(phone$:phone_mask$,err=*next)
         l=l+1
         return
 

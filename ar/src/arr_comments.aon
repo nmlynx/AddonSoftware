@@ -160,8 +160,9 @@ rem --- Read next Customer Detail (arm-02) record
 
           dim continued$(width)
           first=1
-          phone$=""
-          if cvs(arm01a.phone_no$,2)<>"" phone$=fnmask$(arm01a.phone_no$,m8$)
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
+          phone$=cvs(arm01a.phone_no$,2)
+          phone$=str(phone$:phone_mask$,err=*next)
 
           rem --- Position Customer Comments (arm-05) file
 

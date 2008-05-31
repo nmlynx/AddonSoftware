@@ -210,7 +210,10 @@ rem --- Read next Customer Detail (arm-02) record
           OutVect!.addItem(fnmask$(arm01a.customer_id$(1,cust_size),m0$)+"  "+arm01a.customer_name$)
           OutVect!.addItem(address$)
           OutVect!.addItem(fnzipcode$(arm01a.zip_code$))
-          OutVect!.addItem(fnmask$(arm01a.phone_no$,m9$))
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
+          phone$=cvs(arm01a.phone_no$,2)
+          phone$=str(phone$:phone_mask$,err=*next)
+          OutVect!.addItem(phone$)
           total=total+1
     wend
 

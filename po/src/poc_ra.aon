@@ -649,8 +649,14 @@ d_purch_addr: rem --- Retrieve and display purchase address
                     x$=apm05a.ADDR_LINE_1$+apm05a.ADDR_LINE_2$+apm05a.CITY$+apm05a.STATE_CODE$+fill(24)+apm05a.ZIP_CODE$
                     status=0
                     call pgmdir$+"adc_address.aon",x$,24,4,9,30
-                    if cvs(apm05a.PHONE_NO$,2)<>"" then let phone$=fnmask$(apm05a.PHONE_NO$,pm$),rvalues$[2]=phone$
-                    if cvs(apm05a.FAX_NO$,2)<>"" then let fax$=fnmask$(apm05a.FAX_NO$,pm$),rvalues$[3]=fax$
+                    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm05a.phone_no$,2),"",phone_mask$
+                    phone$=cvs(apm05a.phone_no$,2)
+                    phone$=str(phone$:phone_mask$,err=*next)
+                    rvalues$[2]=phone$
+                    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm05a.fax_no$,2),"",fax_mask$
+                    fax$=cvs(apm05a.fax_no$,2)
+                    fax$=str(fax$:fax_mask$,err=*next)
+                    rvalues$[3]=fax$
                     if ui$<>"W" then
                         print @(9,l0-2),apm05a.CONTACT_NAME$,
 :                             @(42),phone$,@(66),fax$,@(v1,v2),apm05a.PURCH_ADDR$,'cl',

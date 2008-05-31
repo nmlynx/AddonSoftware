@@ -220,9 +220,10 @@ rem --- Read next Customer Master (arm-01) record
 
           rem --- Print the customer information and accumulate totals
 
-          phone$=fill(m9)
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
+          phone$=cvs(arm01a.phone_no$,2)
+          phone$=str(phone$:phone_mask$,err=*next)
           extension$=fill(5)
-          if cvs(arm01a.phone_no$,2)<>"" phone$=fnmask$(arm01a.phone_no$,m9$)
           if cvs(arm01a.phone_exten$,2)<>"" extension$="x"+arm01a.phone_exten$
           
           xwk=fnblank(13)

@@ -339,8 +339,9 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           printed=0
           first=1
           customer$=fnmask$(arm01a.customer_id$(1,customer_size),m0$)+" "+arm01a.customer_name$
-          phone$=fill(m8)
-          if cvs(arm01a.phone_no$,2)<>"" phone$=fnmask$(arm01a.phone_no$,m8$)
+          call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
+          phone$=cvs(arm01a.phone_no$,2)
+          phone$=str(phone$:phone_mask$,err=*next)
 
           rem --- Position the Invoice Header (art-01) file for aging
 

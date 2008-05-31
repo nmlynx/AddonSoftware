@@ -100,10 +100,12 @@ rem --- Get next key
 
 	    rem --- Format output fields
 
-	    phone$=""
-	    fax$=""
-	    if cvs(apm01a.phone_no$,2)<>"" phone$=fnmask$(apm01a.phone_no$,m8$)
-	    if cvs(apm01a.fax_no$,2)<>"" fax$=fnmask$(apm01a.fax_no$,m8$)
+            call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.phone_no$,2),"",phone_mask$
+            phone$=cvs(apm01a.phone_no$,2)
+            phone$=str(phone$:phone_mask$,err=*next)
+            call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.fax_no$,2),"",fax_mask$
+            fax$=cvs(apm01a.fax_no$,2)
+            fax$=str(fax$:fax_mask$,err=*next)
 	    address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
 	    call pgmdir$+"adc_address.aon",address$,24,3,9,30
 

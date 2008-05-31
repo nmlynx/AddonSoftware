@@ -57,7 +57,6 @@ rem --- Determine interface
 
 rem --- Initializations
 
-    dim phone$(14),fax$(14)
     controls=5
     dim control[controls],value$[controls],value[controls],mask$[controls]
     control[0]=3000
@@ -72,8 +71,12 @@ rem --- Retrieve and display vendor
     address$=apm01a.addr_line1$+apm01a.addr_line2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
     status=0
     call pgmdir$+"adc_address.aon",address$,24,3,9,30
-    if cvs(apm01a.phone_no$,2)<>"" then let phone$(1)=fnmask$(apm01a.phone_no$,pm$)
-    if cvs(apm01a.fax_no$,2)<>"" then let fax$(1)=fnmask$(apm01a.fax_no$,pm$)
+    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.phone_no$,2),"",phone_mask$
+    phone$=cvs(apm01a.phone_no$,2)
+    phone$=str(phone$:phone_mask$,err=*next)
+    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.fax_no$,2),"",fax_mask$
+    fax$=cvs(apm01a.fax_no$,2)
+    fax$=str(fax$:fax_mask$,err=*next)
     if ui$<>"W"
 
       print @(9,3),fnmask$(apm01a.vendor_id$,m0$),@(9,4),apm01a.vendor_name$,@(9,5),address$(1,30),@(9,6),address$(31,30),@(9,7),address$(61,30),@(9,8),address$(91,30),
