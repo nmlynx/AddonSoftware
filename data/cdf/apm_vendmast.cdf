@@ -1,3 +1,34 @@
+[[APM_VENDMAST.AWRI]]
+rem --- Code input if new customer
+	cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+	apm02_dev=fnget_dev("APM_VENDHIST")
+	apm02_key$=""
+	while apm02_key$=""
+		read(apm02_dev,key=firm_id$+cp_vendor_id$,dom=*next)
+		apm02_key$=key(apm02_dev,end=*next)
+		if apm02_key$<>""
+			if pos(firm_id$+cp_vendor_id$=apm02_key$)<>1
+				apm02_key$=""
+			else
+				break
+			endif
+		endif
+		user_id$=stbl("+USER_ID")
+		dim dflt_data$[2,1]
+		dflt_data$[1,0]="VENDOR_ID"
+		dflt_data$[1,1]=cp_vendor_id$
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"APM_VENDHIST",
+:			user_id$,
+:			"",
+:			"",
+:			table_chans$[all],
+:			"",
+:			dflt_data$[all]
+	wend
+[[APM_VENDMAST.ARNF]]
+rem --- Set Date Opened
+	callpoint!.setColumnData("APM_VENDMAST.OPENED_DATE",sysinfo.system_date$)
 [[APM_VENDMAST.VENDOR_ID.AINP]]
 if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
 [[APM_VENDMAST.BDEL]]
