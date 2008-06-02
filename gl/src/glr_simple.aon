@@ -130,7 +130,7 @@ rem --- Document columns
     if bs$<>"Y"
         columns=2
         dim columns$[2,3]
-        columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="50",columns$[0,3]=m0$
+        columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="50"
         columns$[1,0]=mtdhdr$,columns$[1,1]="N",columns$[1,2]="25",columns$[1,3]=m1$
         columns$[2,0]=ytdhdr$,columns$[2,1]="N",columns$[2,2]="30",columns$[2,3]=m1$
     endif
@@ -138,7 +138,7 @@ rem --- Document columns
     if bs$="Y"
         columns=1
         dim columns$[1,3]
-        columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="50",columns$[0,3]=m0$
+        columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="50"
         columns$[1,0]="",columns$[1,1]="N",columns$[1,2]="30",columns$[1,3]=m1$
     endif
 
@@ -187,7 +187,7 @@ rem --- Read next sort record
     while more
           k$=key(glw02_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
-          read (glw02_dev) glw02a$
+          read record (glw02_dev) glw02a$
 
           rem --- Retrieve account master and account summary records
 
@@ -264,9 +264,9 @@ print_subheading: rem --- Print subheading
           if bs$="Y" if pos(type$="12")>0 goto accumulate_totals
           dim buffer$(width)
           mtd$=""
-          ytd$=str(balance:m1$)
+          ytd$=str(balance)
           buffer$(3)=glm01a.gl_acct_desc$
-          if bs$="N" mtd$=str(amount:m1$)
+          if bs$="N" mtd$=str(amount)
           if include$="Y" buffer$(3)=fnmask$(glm01a.gl_account$(1,acctlen),m0$)+" "+glm01a.gl_acct_desc$
 
           if bs$="N"
@@ -327,12 +327,10 @@ account_break: rem --- Chart of Accounts Break
 
     if bs$="Y" and pos(type$="12") return
     mtd$=""
-    ytd$=str(ytd:m1$)
+    ytd$=str(ytd)
     
     if bs$="N"
-        mtd$=str(mtd:m1$)
-        mtd$=cvs(mtd$,3)
-        ytd$=cvs(ytd$,3)
+        mtd$=str(mtd)
         OutVect!.addItem("")
         OutVect!.addItem(j1$)
         OutVect!.addItem(j2$)
