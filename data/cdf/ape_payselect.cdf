@@ -486,6 +486,7 @@ rem --- misc other init
 	gridInvoices!.setColumnEditable(9,1)
 	gridInvoices!.setColumnEditable(10,1)
 	gridInvoices!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+	gridInvoices!.setTabAction(gridInvoices!.GRID_NAVIGATE_GRID)
 
 	gosub create_reports_vector
 	gosub fill_grid
