@@ -1,3 +1,31 @@
+[[APE_MANCHECKHDR.AABO]]
+rem --- need to go thru gridVect!; any record NOT already in ape-22 (detail) should be removed from ape-12 (gl dist)
+rem --- this can happen in this program, since dist grid is launched/handled from dtl grid -- we might write out
+rem --- one or more ape-12 recs, then come back to main form and abort, which won't save the ape-22 recs...
+
+	recVect!=gridVect!.getItem(0)
+	dim gridrec$:dtlg_param$[1,3]
+	numrecs=recVect!.size()
+
+	ape12_dev=fnget_dev("APE_MANCHECKDIST")
+	ape22_dev=fnget_dev("APE_MANCHECKDET")
+	
+	if numrecs>0
+		for reccnt=0 to numrecs-1
+			gridrec$=recVect!.getItem(reccnt)
+			if cvs(gridrec$,3)<>""
+				remove_ky$=firm_id$+gridrec.ap_type$+gridrec.check_no$+gridrec.vendor_id$+gridrec.ap_inv_no$
+				ape22_ky$=remove_ky$+"00"
+				read(ape22_dev,key=ape22_ky$,dom=*next);continue
+				read (ape12_dev,key=remove_ky$,dom=*next)
+				while 1
+					k$=key(ape12_dev,end=*break)
+					if pos(remove_ky$=k$)<>1 then break
+					remove(ape12_dev,key=k$)
+				wend
+			endif
+		next reccnt		
+	endif
 [[APE_MANCHECKHDR.AOPT-OINV]]
 rem -- call inquiry program to view open invoices this vendor
 rem -- only allow if trans_type is manual (vs reversal/void)
@@ -250,6 +278,7 @@ get_vendor_history:
 			pfx$="GLNS",nm$="GL Dist"
 			GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
 			GLNS!.setValue("dflt_gl",apm02a.gl_account$)
+			GLNS!.setValue("dflt_dist",apm02a.ap_dist_code$)
 			vend_hist$="Y"
 	endif
 
@@ -337,6 +366,7 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"",
 :	dflt_data$[all]
 [[APE_MANCHECKHDR.BSHO]]
+
 rem --- disable ap type control if param for multi-types is N
 
 if user_tpl.multi_types$="N" 
@@ -495,8 +525,11 @@ pfx$="GLNS",nm$="GL Dist"
 GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
 GLNS!.setValue("GLMisc",user_tpl.misc_entry$)
 GLNS!.setValue("GLUnits",user_tpl.units_flag$)
+GLNS!.setValue("gl_int",user_tpl.glint$)
 GLNS!.setValue("dist_amt","")
 GLNS!.setValue("dflt_gl","")
+GLNS!.setValue("dflt_dist","")
+GLNS!.setValue("tot_inv","")
 [[APE_MANCHECKHDR.ARNF]]
 if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R" and cvs(callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO"),3)<>""
 	apt_checkhistory_dev=fnget_dev("APT_CHECKHISTORY")
