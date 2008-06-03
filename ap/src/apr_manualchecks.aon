@@ -688,7 +688,7 @@ rem --- Destroy the progress meter and run the next overlay
 
     if errors
     	gosub Display_Message
-    	if special_flag$<>"Y" goto std_exit_no_report
+    	if special_flag$<>"Y" goto std_exit
     endif
 
     update$=pgmdir$+"apu_manualchecks.aon"
