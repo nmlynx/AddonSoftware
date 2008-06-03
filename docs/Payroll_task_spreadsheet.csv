@@ -3,7 +3,7 @@ Payroll,M,,,,,,,,,,
 Daily Processing,G,,,,,,,,,,
 Payroll Period Definition,T,,pre_aa.bbx,PRE_AA,Entry,,,,,,
  - update standard hours - Input,T,,pru_ba.bbx,PRU.BA,Input for process,,,,,,
- - update standard hours - process,T,,pru_bb.bbx,PRU.BB,process,,needs,needs,,,
+ - update standard hours - process,T,,pru_bb.bbx,PRU.BB,process,,WIP NV-OSI,needs,,,
 Payroll Entry -start,T,,pre_ba.bbx,PRE_BA,Entry,,,,,,** Payroll Detail History requires modifications
  - employee info,T,,pre_bb.bbx,PRE_BB,Entry,,,,,,** Payroll Detail History requires modifications
  - earnings entry,T,,pre_bc.bbx,PRE_BC,Entry,,,,,,
@@ -11,11 +11,11 @@ Payroll Entry -start,T,,pre_ba.bbx,PRE_BA,Entry,,,,,,** Payroll Detail History r
  - tax entry,T,,pre_be.bbx,PRE_BE,Entry,,,,,,
  - accrual entry,T,,pre_bf.bbx,PRE_BF,Entry,,,,,,
  - sub menu for payroll entry,T,,pre_bg.bbx,PRE_BG,Entry,,,,,,
-Earnings Entry Report,T,,prr_ca.bbx,PRR_CA ,Report,,needs,needs,needs,needs,"0A in v6, CA in v7"
-Earnings Register,T,,prr_aa.bbx,PRR_AA,Register,,needs,needs,needs,needs,
+Earnings Entry Report,T,,prr_ca.bbx,PRR_CA ,Report,,WIP NV-OSI,WIP NV-OSI,needs,needs,"0A in v6, CA in v7"
+Earnings Register,T,,prr_aa.bbx,PRR_AA,Register,,WIP NV-OSI,needs,needs,needs,
 Distribution Report - Input,T,,prr_ea.bbx,PRR_3A,Input for report,, ,,,,
- - Report,T,,prr_eb.bbx,PRR.3B,Report,,needs,needs,needs,needs,"EA=EB is v7, 3A-3B is v6"
-Payroll Calculation,T,,prr_ua.bbx,PRU_AA,Update,,needs,needs,,,
+ - Report,T,,prr_eb.bbx,PRR.3B,Report,,WIP NV-OSI,needs,needs,needs,"EA=EB is v7, 3A-3B is v6"
+Payroll Calculation,T,,prr_ua.bbx,PRU_AA,Update,,WIP NV-OSI,needs,,,
 Adjustment Report,T,,prr_ba.bbx,PRR_BA,Report,,needs,needs,needs,needs,
 Exception Report,T,,prr_ya.bbx,PRR_YA,Report,,needs,needs,needs,needs,
 Detail Report,T,,prr_xa.bbx,PRR_XA,Report,,needs,needs,needs,needs,
@@ -27,14 +27,14 @@ Check Printing - input,T,,prr_ga.bbx,PRR_GA,Input for report,,,,no doc out,,
 Check Register,T,,prr_ha.bbx,PRR_HA,Input for report,,,,,,
  - report,T,,prr_hb.bbx,PRR_HB,Report,,needs,needs,needs,needs,
  - Update I,T,,pru_ca.bbx,PRU_CA,Update,,needs,,,,** Payroll Detail History requires modifications
- - Update II,T,,pru_cb.bbx,PRU_CB,Update,,needs,,,,** Payroll Detail History requires modifications
- - Update III,T,,pru_cc.bbx,PRU_CC,Update,,needs,,,,
+ - Update II,T,,pru_cb.bbx,PRU_CB,Update,,WIP SV-OSI,,,,** Payroll Detail History requires modifications
+ - Update III,T,,pru_cc.bbx,PRU_CC,Update,,WIP SV-OSI,,,,
 Daily Entry,G,,,,,,,,,,
 Daily Entry I,T,,pre_ca.bbx,PRE_CA,Entry,,,,,,
  - II,T,,pre_cb.bbx,PRE_CB,Entry,,,,,,
  - III,T,,pre_cc.bbx,PRE_CC,Entry,,,,,,
 Daily Entry Register,T,,prr_ua.bbx,PRR_UA,Report,,needs,needs,needs,needs,
- - Update,T,,pru_fa.bbx,PRU_FA,Update,,needs,,,,
+ - Update,T,,pru_fa.bbx,PRU_FA,Update,,WIP SV-OSI,,,,
 Periodic Processing,G,,,,,,,,,,
 Payroll Distribution History Report Input,T,,prr_ia.bbx,PRR_IA,Input for Report,,,,,,
  - Report,T,,prr_ib.bbx,PRR_IB,Report,,needs,needs,needs,needs,
@@ -90,15 +90,15 @@ Employees,T,,prm_ma.bbx,PRM_MA,Entry,,,,,,
  - Hard Copy,T,,prm_mq.bbx,PRM.MQ,Report,,,,
 Contribution Codes ,T,,prm_da.bbx,PRM_DA,Entry,,,,
  - Entry,T,,prm_db.bbx,PRM_DB,Entry,,,,
- - Print Listing,T,,prm_dc.bbx,PRM_DC,Report,,needs,needs,needs
+ - Print Listing,T,,prm_dc.bbx,PRM_DC,Report,,WIP PS-OSI,needs,needs
 Department Codes,T,,prm_ea.bbx,PRM_EA,Entry,,,,
  - Pay Codes,T,,prm_eb.bbx,PRM_EB,Entry,,,,
  - Tax Codes,T,,prm_ec.bbx,PRM_EC,Entry,,,,
  - Contribution Codes,T,,prm_ed.bbx,PRM_ED,Entry,,,,,,
- - Listing,T,,prm_ee.bbx,PRM_EE,Report,,needs,needs,needs,,
+ - Listing,T,,prm_ee.bbx,PRM_EE,Report,,WIP PS-OSI,needs,needs,,
 Deduction Codes,T,,prm_ba.bbx,PRM_BA,Entry,,,,,,
  - Entry,T,,prm_bb.bbx,PRM_BB,Entry,,,,,,
- - Print Listing,T,,prm_bc.bbx,PRM_BC,Report,,needs,needs,needs,,
+ - Print Listing,T,,prm_bc.bbx,PRM_BC,Report,,WIP PS-OSI,needs,needs,,
 Labor Distribution,T,,prm_la.bbx,PRM_LA,Entry,,,,,,"yes, only one program and no listing"
 Pay Codes,T,,prm_aa.bbx,PRM_AA,Entry,,,,,,
  - Entry,T,,prm_ab.bbx,PRM_AB,Entry,,,,,,
@@ -131,7 +131,7 @@ Payroll Conversion Entry - Deductions,T,,prx_ac.bbx,PRX_AC,Entry,,,,,,Entering/c
 Payroll Conversion Entry - Taxes,T,,prx_ad.bbx,PRX_AD,Entry,,,,,,Entering/changing data - limited access only
 Payroll Conversion Entry - Contributions,T,,prx_ae.bbx,PRX_AE,Entry,,,,,,Entering/changing data - limited access only
 Purge Check Work File,T,,prx_ga.bbx,PRX_GA,Update, ,needs,,,, 
-Update Tax Tables for New Year,T,,prx_ta.bbx,PRX_TA,Update, ,needs,,,,
+Update Tax Tables for New Year,T,,prx_ta.bbx,PRX_TA,Update, ,WIP PS-OSI,,,,
 Publics,G,,,,,,,,,,
 Generate GL Postings (called),T,,prc_ga.bbx,PRC_GA,Public,,,,,,
 ,,,,,Public,,,,,,
@@ -143,9 +143,9 @@ Detail History Reports ,T,,,PRR_8A,Report,,needs,needs,needs,needs,** New - need
 New Files for Payroll Detail History,,,,,,,,,,,
 "PRT-61,PRT-62,PRT-63,PRT-64,PRT-65,PRT-66",,,,,,,,,,,** New - needed for Payroll Check History
 PRT-03 - expand key,,,,,,,,,,,** Change required for Payroll Check History
-,,,,,,,,,,,
+
 ----,,,,,,,,,,,
-,,,,,,,,,,,
+
 Programs in CodePort source folder not yet accounted for above AND probably not needed,,,,,,,,,,,
 prc_la.bbx,Employee Lookup,,,,,,,,,,
 prc_vn.bbx,PR Version Number,,,,,,,,,,
