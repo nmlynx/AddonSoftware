@@ -226,6 +226,10 @@ rem need to disable units column in grid if gls01a.units_flag$ isn't "Y"
 if gls01a.units_flag$="Y"
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
+	c!.setColumnEditable(5,1)
+else
+	w!=Form!.getChildWindow(1109)
+	c!=w!.getControl(5900)
 	c!.setColumnEditable(5,0)
 endif
 
