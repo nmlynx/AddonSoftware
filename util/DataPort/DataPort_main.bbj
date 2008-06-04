@@ -325,9 +325,16 @@ next_rec:
 
     for field=1 to fields
         if new_fieldlist.name$[field]=$$ then continue
-
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
-
+        attr$=fattr(old_rec$,old_fieldlist.name$[field])
+        fld_sep$=attr$(3,1)
+        fld_typ$=attr$(1,1)
+        fld_len=dec(attr$(10,2))
+        if fld_sep$=$0a$ and len(value$)>fld_len and dec(fld_typ$)=1 
+            if pos($20$<>value$(fld_len+1))=0
+                value$=value$(1,fld_len)
+            endif
+        endif
         switch asc(date_format$(field))
            case 0
               break
