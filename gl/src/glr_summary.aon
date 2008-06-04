@@ -113,21 +113,21 @@ rem --- Document columns
 
     columns=14
     dim columns$[14,4]
-    columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]="30",columns$[0,3]=m0$
-    columns$[1,0]="Beginning",columns$[1,1]="N",columns$[1,2]="10",columns$[0,3]=m1$
-    columns$[2,0]="Jan",columns$[2,1]="N",columns$[2,2]="8",columns$[2,3]=m1$
-    columns$[3,0]="Feb",columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]=m1$
-    columns$[4,0]="Mar",columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$
-    columns$[5,0]="Apr",columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m1$
-    columns$[6,0]="May",columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$
-    columns$[7,0]="Jun",columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m1$
-    columns$[8,0]="Jul",columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$
-    columns$[9,0]="Aug",columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m1$
-    columns$[10,0]="Sep",columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m1$
-    columns$[11,0]="Oct",columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m1$
-    columns$[12,0]="Nov",columns$[12,1]="N",columns$[12,2]="8",columns$[12,3]=m1$
-    columns$[13,0]="Dec",columns$[13,1]="N",columns$[13,2]="8",columns$[13,3]=m1$
-    columns$[14,0]="Ending",columns$[14,1]="N",columns$[14,2]="15",columns$[14,3]=m1$
+    columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]="30";rem ,columns$[0,3]=m0$
+    columns$[1,0]="Beginning",columns$[1,1]="N",columns$[1,2]="10",columns$[1,3]=m1$
+    columns$[2,0]="Jan",columns$[2,1]="N",columns$[2,2]="10",columns$[2,3]=m1$
+    columns$[3,0]="Feb",columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m1$
+    columns$[4,0]="Mar",columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$
+    columns$[5,0]="Apr",columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
+    columns$[6,0]="May",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
+    columns$[7,0]="Jun",columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
+    columns$[8,0]="Jul",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
+    columns$[9,0]="Aug",columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$
+    columns$[10,0]="Sep",columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$
+    columns$[11,0]="Oct",columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m1$
+    columns$[12,0]="Nov",columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m1$
+    columns$[13,0]="Dec",columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m1$
+    columns$[14,0]="Ending",columns$[14,1]="N",columns$[14,2]="10",columns$[14,3]=m1$
 
 
 rem --- Initialize print positions
@@ -180,7 +180,8 @@ rem --- Get next GL Account Master (glm-01) record
           if endacct$<>"" if glm01a.gl_account$>endacct$ break
           gosub wildcard
           if status continue
-          acct$=fnmask$(glm01a.gl_account$(1,acctlen),m0$)+" "+glm01a.gl_acct_desc$
+          acct$=fnmask$(glm01a.gl_account$(1,acctlen),m0$)
+
           number=number+1
           gosub account_heading
 
@@ -223,13 +224,13 @@ rem --- Get next GL Account Master (glm-01) record
               dim buffer$(width)
               if total_pers<13 buffer$(1,o[1]-1)=title$
               OutVect!.addItem(buffer$(o[1]-14))
-              buffer$(o[1])=str(x[0]:tm$)
+              buffer$(o[1])=str(x[0])
               OutVect!.addItem(buffer$(o[1]))
               for x=2 to max-1
-                  buffer$(o[x])=str(x[x-1]:mm$)
+                  buffer$(o[x])=str(x[x-1])
                   OutVect!.addItem(buffer$(o[x]))
               next x
-              buffer$(o[max])=str(x[max]:tm$)
+              buffer$(o[max])=str(x[max])
               if total_pers<13 buffer$(1,o[1]-1)=title$
               OutVect!.addItem(buffer$(o[max]))
 
@@ -256,11 +257,10 @@ account_heading: rem --- Account Heading
 
     length=len(acct$)
     abc=fnblank(15)
-    OutVect!.addItem(acct$(1,7))
+    OutVect!.addItem(acct$)
     abc=fnblank(14)
-    OutVect!.addItem(acct$(9))
+    OutVect!.addItem(glm01a.gl_acct_desc$)
     abc=fnblank(14)
-    abc=fnblank(15)
 
     return
 

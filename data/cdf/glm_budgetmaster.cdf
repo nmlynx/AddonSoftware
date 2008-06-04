@@ -18,15 +18,22 @@ rem --- Get user approval to Create Budget Revision
 
 if callpoint!.getRecordStatus()<>"M"
 
-	prompt$="Do you want to Create a Budget Revision?"
-	call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
-	     
-	if answer$="YES" 
-		run stbl("+DIR_PGM")+"glu_createbudget.aon"
-	else
-		callpoint!.setStatus("ABORT")
-	endif
+	if cvs(callpoint!.getColumnData("GLM_BUDGETMASTER.BUDGET_CODE"),3)<>"" and
+:	cvs(callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS"),3)<>"" and
+:	cvs(callpoint!.getColumnData("GLM_BUDGETMASTER.DESCRIPTION"),3)<>"" and
+:	cvs(callpoint!.getColumnData("GLM_BUDGETMASTER.AMTPCT_VAL"),3)<>"" and 
+:	cvs(callpoint!.getColumnData("GLM_BUDGETMASTER.REVISION_SRC"),3)<>"" and
+:	cvs(callpoint!.getColumnData("GLM_BUDGETMASTER.REV_TITLE"),3)<>""
 
+		prompt$="Do you want to Create a Budget Revision?"
+		call pgmdir$+"adc_yesno.aon",0,prompt$,0,answer$,fkey
+		     
+		if answer$="YES" 
+			run stbl("+DIR_PGM")+"glu_createbudget.aon"
+		else
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 endif
 [[GLM_BUDGETMASTER.ADEL]]
 glm18_dev=fnget_dev("GLM_RECORDTYPE")
