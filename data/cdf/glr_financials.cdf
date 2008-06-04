@@ -28,6 +28,9 @@ dim gls01a$:gls01_tpl$
 read record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 callpoint!.setColumnData("GLR_FINANCIALS.PERIOD",gls01a.current_per$)
 callpoint!.setColumnData("GLR_FINANCIALS.YEAR",gls01a.current_year$)
+callpoint!.setTableColumnAttribute("GLR_FINANCIALS.PERIOD","MINV","01")
+callpoint!.setTableColumnAttribute("GLR_FINANCIALS.PERIOD","MAXV",str(num(gls01a.total_pers$):"00"))
+
 callpoint!.setStatus("REFRESH")
 [[GLR_FINANCIALS.ACUS]]
 rem process custom event -- used in this pgm to select/de-select checkboxes in grid

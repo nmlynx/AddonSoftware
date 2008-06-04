@@ -142,6 +142,8 @@ dim gls01a$:gls01_tpl$
 read record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 callpoint!.setColumnData("GLR_13PERIOD.PERIOD",gls01a.current_per$)
 callpoint!.setColumnData("GLR_13PERIOD.YEAR",gls01a.current_year$)
+callpoint!.setTableColumnAttribute("GLR_13PERIOD.PERIOD","MINV","01")
+callpoint!.setTableColumnAttribute("GLR_13PERIOD.PERIOD","MAXV",str(num(gls01a.total_pers$):"00"))
 callpoint!.setStatus("REFRESH")
 [[GLR_13PERIOD.ASVA]]
 rem "update GLE_13PERIODRPT (gle-05) -- remove/write -- based on what's checked in the grid

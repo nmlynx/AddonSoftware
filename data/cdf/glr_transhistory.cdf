@@ -7,6 +7,10 @@ rem --- Set default values
 	callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_YEAR",gls01a.current_year$)
 	callpoint!.setColumnData("GLR_TRANSHISTORY.END_GL_PER",gls01a.current_per$)
 	callpoint!.setColumnData("GLR_TRANSHISTORY.END_YEAR",gls01a.current_year$)
+	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.BEG_GL_PER","MINV","01")
+	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.BEG_GL_PER","MAXV",str(num(gls01a.total_pers$):"00"))
+	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.END_GL_PER","MINV","01")
+	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.END_GL_PER","MAXV",str(num(gls01a.total_pers$):"00"))
 	callpoint!.setStatus("REFRESH")
 [[GLR_TRANSHISTORY.BSHO]]
 rem --- Open and get Current Period/Year parameters

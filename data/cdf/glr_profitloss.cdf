@@ -22,4 +22,6 @@ dim gls01a$:gls01_tpl$
 read record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 callpoint!.setColumnData("GLR_PROFITLOSS.PICK_GL_PER",gls01a.current_per$)
 callpoint!.setColumnData("GLR_PROFITLOSS.PICK_YEAR",gls01a.current_year$)
+callpoint!.setTableColumnAttribute("GLR_PROFITLOSS.PICK_GL_PER","MINV","01")
+callpoint!.setTableColumnAttribute("GLR_PROFITLOSS.PICK_GL_PER","MAXV",str(num(gls01a.total_pers$):"00"))
 callpoint!.setStatus("REFRESH")
