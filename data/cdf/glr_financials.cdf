@@ -4,9 +4,11 @@ rem "also update GLS_FINANCIALS w/ period/year from form, first updt sequence "9
 
 gle04_dev=fnget_dev("GLE_FINANCIALRPT")
 dim gle04a$:fnget_tpl$("GLE_FINANCIALRPT")
+recs_written=0
 
 gridReports!=UserObj!.getItem(num(user_tpl.gridReportsOfst$))
 gridRows=gridReports!.getNumRows()
+
 if gridRows
 	for row=0 to gridRows-1
 		if gridReports!.getCellState(row,0)=0
@@ -14,12 +16,18 @@ if gridRows
 		else
 			gle04a.firm_id$=firm_id$,gle04a.gl_rpt_no$=gridReports!.getCellText(row,1)
 			write record(gle04_dev,key=firm_id$+gle04a.gl_rpt_no$)gle04a$
+			recs_written=recs_written+1
 		endif
 	next row
-
 endif
 
-close (gle04_dev);rem "will re-open and lock in gle_financials (pgm run from here)
+if recs_written=0
+	msg_id$="GL_FIN_SELECT"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+else
+	close (gle04_dev);rem "will re-open and lock in gle_financials (pgm run from here)
+endif
 [[GLR_FINANCIALS.ARAR]]
 gls01_dev=fnget_dev("GLS_PARAMS")
 gls01_tpl$=fnget_tpl$("GLS_PARAMS")

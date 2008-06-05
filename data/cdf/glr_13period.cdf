@@ -150,6 +150,7 @@ rem "update GLE_13PERIODRPT (gle-05) -- remove/write -- based on what's checked 
 
 gle05_dev=fnget_dev("GLE_13PERIODRPT")
 dim gle05a$:fnget_tpl$("GLE_13PERIODRPT")
+recs_written=0
 
 gridReports!=UserObj!.getItem(num(user_tpl.gridReportsOfst$))
 gridRows=gridReports!.getNumRows()
@@ -160,12 +161,18 @@ if gridRows
 		else
 			gle05a.firm_id$=firm_id$,gle05a.gl_rpt_no$=gridReports!.getCellText(row,1)
 			write record(gle05_dev,key=firm_id$+gle05a.gl_rpt_no$)gle05a$
+			recs_written=recs_written+1
 		endif
 	next row
-
 endif
 
-close (gle05_dev);rem "will re-open and lock in gle_financials (pgm run from here)
+if recs_written=0
+	msg_id$="GL_FIN_SELECT"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+else
+	close (gle05_dev);rem "will re-open and lock in gle_financials (pgm run from here)
+endif
 [[GLR_13PERIOD.AWIN]]
 num_files=4
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
