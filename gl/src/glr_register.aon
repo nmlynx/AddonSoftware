@@ -232,7 +232,8 @@ level_breaks: rem --- Level breaks
                 account$=gle11a.gl_account$
                 gldate$=gle01a.reverse_date$
                 ref3$="Reversal"
-                amount=-gle11a.gl_post_amt
+                amount=-gle11a.debit_amt
+                if gle11a.credit_amt<>0 amount=gle11a.credit_amt
                 units=-gle11a.units
                 gosub glrecap
           wend
