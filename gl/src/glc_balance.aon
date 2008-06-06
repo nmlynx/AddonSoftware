@@ -35,8 +35,8 @@ rem --- Open/Lock files
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01"
-    files$[2]="glm-02"
+    files$[1]="glm-01",ids$[1]="GLM_ACCT"
+    files$[2]="glm-02",ids$[2]="GLM_ACCTSUMMARY"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
