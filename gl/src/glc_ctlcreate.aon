@@ -49,6 +49,8 @@ rem --- Initialize arguments in case of an early exit
     gl$="N"
     status=0
     glw11_dev=0
+    module_id$=application$
+    application$=stbl("+AON_APPCOMPANY")+PAD(application$,3)
 
 rem --- Remaining initializations
 
@@ -62,7 +64,7 @@ rem --- Remaining initializations
           rem --- Is General Ledger installed and being used by this application?
 
           gl$="N"
-          call pgmdir$+"adc_application.aon",application$,info$[all]
+          call pgmdir$+"adc_application.aon",module_id$,info$[all]
           gl$=info$[9]
           if gl$<>"Y" break
           module$="GL"
@@ -139,11 +141,10 @@ rem --- Remaining initializations
           rem --- Which application parameter record do we need to retrieve to
           rem --- get the current period and year?
 
-          application$=cvs(application$,4)
-          module$=application$
-          if application$="BM" module$="IV"
-          if application$="PO" module$="IV"
-          if application$="OP" module$="AR"
+          module$=cvs(module_id$,4)
+          if module_id$="BM" module$="IV"
+          if module_id$="PO" module$="IV"
+          if module_id$="OP" module$="AR"
 
           rem --- Retrieve application (adm-04) record for the calling application
 

@@ -72,7 +72,7 @@ rem --- Initializations
 
 rem --- Get application record
 
-    find record (adm04_dev,key=module$,dom=*next)adm04a$
+    find record (adm04_dev,key=stbl("+AON_APPCOMPANY",err=*next)+pad(module$,3),dom=*next)adm04a$
     info$[0]=cvs(adm04a.sys_desc$,2)
     info$[1]=adm04a.multi_firm$
     info$[2]=adm04a.company_id$
@@ -89,7 +89,7 @@ rem --- Post to GL?
     if pos(info$[9]="YN")=0 info$[9]="Y"
     if info$[9]="N" goto parameters
     adm04a.sys_install$="N"
-    find record (adm04_dev,key="GL",dom=*next)adm04a$
+    find record (adm04_dev,key=stbl("+AON_APPCOMPANY",err=*next)+"GL ",dom=*next)adm04a$
     info$[9]=adm04a.sys_install$
     if info$[9]="N" goto parameters
     find record (gls01_dev,key=firm_id$+"GL00",dom=parameters)gls01a$

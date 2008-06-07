@@ -142,12 +142,12 @@ rem --- Verify valid input
         if pos(mask_type$=valid_type$)=0 
             goto done
         endif    
-        readrecord(ads_mask_dev,key=firm_id$+app_id$+mask_type$,dom=done)ads_masksa$
+        readrecord(ads_mask_dev,key=firm_id$+stbl("+AON_APPCOMPANY",err=done)+pad(app_id$,3)+mask_type$,dom=done)ads_masksa$
         i_mask$=ads_masksa.dd_attr_mski$
         o_mask$=ads_masksa.dd_attr_msko$
     else
         readrecord(ddm_elements_dev,key=pad(element_id$,16),dom=done)ddm_elementsa$
-        readrecord(ads_mask_dev,key=firm_id$+ddm_elementsa.dd_system_id$+
+        readrecord(ads_mask_dev,key=firm_id$+ddm_elementsa.asc_comp_id$+ddm_elementsa.asc_prod_id$+
 :                                   ddm_elementsa.dd_mask_type$,dom=done)ads_masksa$
         i_mask$=ads_masksa.dd_attr_mski$
         o_mask$=ads_masksa.dd_attr_msko$
