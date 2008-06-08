@@ -448,7 +448,7 @@ new_period: rem --- New period
     t2$=glw11a.posting_per$+glw11a.posting_year$
     period=num(t2$(1,2))
     abbrev$=field(gls01a$,"abbr_name_"+str(period:"00"))
-    h2$="Period "+t2$(1,2)+" ("+abbrev$+" "+t2$(3,2)+")"
+    h2$="Period "+t2$(1,2)+" ("+abbrev$+" "+t2$(3,4)+")"
     ph$=h2$
     lf$=""
 period_break_exit:
