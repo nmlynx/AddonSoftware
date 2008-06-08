@@ -186,7 +186,7 @@ rem --- Retrieve parameter data
  		dctl$[1]="ARM_CUSTDET.CREDIT_LIMIT"              
 	endif
 
-	if user_tpl.sa_installed$<>"Y"
+	if user_tpl.sa_installed$<>"Y" or user_tpl.op_installed$<>"Y"
  		dctl$[2]="ARM_CUSTDET.SA_FLAG"
 	endif
 
