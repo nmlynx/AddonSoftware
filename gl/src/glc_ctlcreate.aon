@@ -134,9 +134,9 @@ rem --- Remaining initializations
           message$="The GL parameter record is missing for this firm."
           k$=firm_id$+"GL00"
           find record (gls01_dev,key=k$,err=*break) gls01a$
-          message$="The GL suspense account record is missing for this firm."
+rem       message$="The GL suspense account record is missing for this firm."
           k$=firm_id$+"GL03"
-          find record (gls01d_dev,key=k$,err=*break) gls01d$
+          find record (gls01d_dev,key=k$,err=*next) gls01d$
 
           rem --- Which application parameter record do we need to retrieve to
           rem --- get the current period and year?
