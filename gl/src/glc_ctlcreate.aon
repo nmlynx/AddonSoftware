@@ -268,7 +268,6 @@ rem --- or returned.
           glcontrol.gl_period$=gls01a.current_per$
           glcontrol.gl_year$=gls01a.current_year$
           glcontrol.acct_length$=gls01a.acct_length$
-          glcontrol.max_acct_len$=gls01a.max_acct_len$
           glcontrol.detail_flag$=gls01a.detail_flag$
           glcontrol.budget_flag$=gls01a.budget_flag$
           glcontrol.units_flag$=gls01a.units_flag$
@@ -294,10 +293,15 @@ rem --- or returned.
           glcontrol.gl_account$=gls01d.gl_account$
           glcontrol.max_lim_str$=str(gls01d.gl_max_limit)
           glcontrol.max_bal_str$=str(gls01d.max_balance)
-          glcontrol.acct_output$=gls01a.acct_output$
-          glcontrol.amount_mask$=gls01a.amount_mask$
-          glcontrol.unit_mask$=gls01a.unit_mask$
-          glcontrol.percent_mask$=gls01a.percent_mask$
+          call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",glm0$,0,max_acct_len
+          glcontrol.acct_output$=glm0$
+          glcontrol.max_acct_len$=str(max_acct_len)
+          call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",glm1$,0,0
+          glcontrol.amount_mask$=glm1$
+          call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",glm2$,0,0
+          glcontrol.unit_mask$=glm2$
+          call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","P","",glm30$,0,0
+          glcontrol.percent_mask$=glm3$
 
           rem --- Set posting control global variable (+GLCONTROL) fields based 
           rem --- on posting control (glm-06) record and update the record.
