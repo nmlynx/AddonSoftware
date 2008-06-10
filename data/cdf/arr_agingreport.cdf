@@ -1,3 +1,25 @@
+[[ARR_AGINGREPORT.UPDATE_AGING.AVAL]]
+if callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")="N"
+	if callpoint!.getColumnData("ARR_AGINGREPORT.UPDATE_AGING")="Y"
+		callpoint!.setMessage("FIXED_PERIODS")
+		callpoint!.setColumnData("ARR_AGINGREPORT.UPDATE_AGING","N")
+		callpoint!.setStatus("REFRESH")
+	endif
+endif
+[[ARR_AGINGREPORT.FIXED_PERIODS.AVAL]]
+rem --- Recalc dates if fixed periods
+if callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")="Y"
+	cal_date=1
+	gosub set_date_seq
+	gosub calc_dates
+	callpoint!.setStatus("REFRESH")
+else
+	if callpoint!.getColumnData("ARR_AGINGREPORT.UPDATE_AGING")="Y"
+		callpoint!.setMessage("FIXED_PERIODS")
+		callpoint!.setColumnData("ARR_AGINGREPORT.FIXED_PERIODS","Y")
+		callpoint!.setStatus("REFRESH")
+	endif
+endif
 [[ARR_AGINGREPORT.AREC]]
 cal_date=1
 gosub set_date_seq
@@ -15,17 +37,17 @@ callpoint!.setStatus("REFRESH")
 [[ARR_AGINGREPORT.<CUSTOM>]]
 set_date_seq:rem --- Set Sequence of Date Columns
 
-	date_seq$=
-:		pad("ARR_AGINGREPORT.AGEDATE_FUT_FROM",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_CUR_FROM",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_CUR_THRU",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_30_FROM",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_30_THRU",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_60_FROM",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_60_THRU",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_90_FROM",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_90_THRU",40)+
-:		pad("ARR_AGINGREPORT.AGEDATE_120_THRU",40)
+rem	date_seq$=
+rem :		pad("ARR_AGINGREPORT.AGEDATE_FUT_FROM",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_CUR_FROM",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_CUR_THRU",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_30_FROM",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_30_THRU",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_60_FROM",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_60_THRU",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_90_FROM",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_90_THRU",40)+
+rem :		pad("ARR_AGINGREPORT.AGEDATE_120_THRU",40)
 
 	return
 
