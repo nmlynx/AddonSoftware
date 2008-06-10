@@ -3,9 +3,10 @@ rem see if in balance
 
 bal=num(user_tpl.tot_bal$)
 if bal<>0
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m0$,0,0
 	msg_id$="GL_JOURNAL_OOB"
 	dim msg_tokens$[1]
-	msg_tokens$[1]=str(bal)
+	msg_tokens$[1]=str(bal:m0$)
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
 endif
