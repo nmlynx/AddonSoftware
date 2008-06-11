@@ -1,3 +1,17 @@
+[[GLR_TRANSHISTORY.ASVA]]
+rem --- Check for Ending Period before Beginning Period
+	begper$=str(num(callpoint!.getColumnData("GLR_TRANSHISTORY.BEG_YEAR")):"0000")+
+:			str(num(callpoint!.getColumnData("GLR_TRANSHISTORY.BEG_GL_PER")):"00")
+	endper$=str(num(callpoint!.getColumnData("GLR_TRANSHISTORY.END_YEAR")):"0000")+
+:			str(num(callpoint!.getColumnData("GLR_TRANSHISTORY.END_GL_PER")):"00")
+	if num(endper$)<>0
+		if begper$>endper$
+			begper$=begper$(5,2)+"/"+begper$(1,4)
+			endper$=endper$(5,2)+"/"+endper$(1,4)
+			callpoint!.setMessage("ENTRY_FROM_TO:Beginning Period/Year "+begper$+";Ending Period/Year "+endper$)
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 [[GLR_TRANSHISTORY.ARAR]]
 rem --- Set default values
 	gls01_dev=fnget_dev("GLS_PARAMS")
