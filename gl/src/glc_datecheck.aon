@@ -235,7 +235,7 @@ message: rem --- Display warning/error message if verification requested
 
     if status=0 or verify$<>"Y" goto done
     dim message$[1]
-    part1$="The current "+glcontrol.system_id$+" period is "+str(apperiod)+
+    part1$="The current "+glcontrol.system_id$(9)+" period is "+str(apperiod)+
 :          " ("+fndate$(glcontrol.app_per_beg$)+" to "+fndate$(glcontrol.app_per_end$)+")."
     part2$="The "+fndate$(yyyymmdd$)+" date occurs "
     switch status
@@ -261,7 +261,10 @@ message: rem --- Display warning/error message if verification requested
            break
     swend
     message$[0]=part1$+$0A$+part2$
-    call pgmdir$+"adc_stdmessage.aon",2,message$[all],0,0,0,v$,v3
+    dim msg_tokens$[1]
+    msg_tokens$[1]=part1$+$0a$+part2$
+    call stbl("+DIR_SYP")+"bac_message.bbj","GENERIC_OK",msg_tokens$[all],msg_opt$,table_chans$[all]
+rem    call pgmdir$+"adc_stdmessage.aon",2,message$[all],0,0,0,v$,v3
 
 done: rem --- All done
 
