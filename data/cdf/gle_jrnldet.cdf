@@ -1,3 +1,7 @@
+[[GLE_JRNLDET.ADEL]]
+rem --- recal/display tots after deleting a grid row
+gosub calc_grid_tots
+gosub disp_totals
 [[GLE_JRNLDET.UNITS.AVAL]]
 gosub calc_grid_tots
 gosub disp_totals
