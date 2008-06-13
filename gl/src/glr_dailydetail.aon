@@ -290,9 +290,9 @@ rem --- Detail line by audit number
           if cvs(glt04a.reference_02$,2)<>"" ref$=ref$+"Ref 2 "+glt04a.reference_02$+" "
           if cvs(glt04a.reference_03$,2)<>"" ref$=ref$+"Ref 3 "+glt04a.reference_03$
           if ref$<>""
-            xwk=fnblank(3)
+            xwk=fnblank(1)
             OutVect!.addItem(ref$)
-            xwk=fnblank(columns-3)
+            xwk=fnblank(columns-1)
           endif
 
           rem --- Accumulate totals
