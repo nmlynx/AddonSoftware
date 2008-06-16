@@ -12,7 +12,7 @@ rem --- All Rights Reserved
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
-    precision p[3]
+
 
 rem --- Retrieve sysinfo data
 
@@ -31,19 +31,23 @@ rem --- Open/Lock files
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    prc_contocde_dev=channels[1]
+    prc_contcode_dev=channels[1]
     prs_params_dev=channels[2]
 
 rem --- Dimension string templates
 
-    dim prc_contocde$:templates$[1],prs_params$:templates$[2]
-
-
+    dim prc_contcode$:templates$[1],prs_params$:templates$[2]
 
 rem --- Retrieve parameter records
 
     prs_params_key$=firm_id$+"PR00"
     find record (prs_params_dev,key=prs_params_key$,err=std_missing_params) prs_params$
+
+    precision num(prs_params.precision$)
+    call pgmdir$+"adc_getmask.aon","","PR","A","",m1$,0,0
+    call pgmdir$+"adc_getmask.aon","","PR","R","",m3$,0,0
+    m1=len(m1$)
+    m3=len(m3$)
 
 rem --- Open/Lock Files
 
@@ -65,28 +69,29 @@ rem --- Initializations
 
 rem --- Initial Read
 
-    read (prc_contocde_dev,key=firm_id$+"D",dom=*next)
+    read (prc_contcode_dev,key=firm_id$+"D",dom=*next)
 
 rem --- Main Read
 
     while more
-        k$=key(prc_contocde_dev,end=done)
+        k$=key(prc_contcode_dev,end=done)
         if pos(firm_id$+"D"=k$)<>1 then goto done
-        read record (prc_contocde_dev) prc_contocde$
+        read record (prc_contcode_dev) prc_contcode$
 
 rem --- Print
 
         if l+2>l9 then gosub report_heading
-        print (printer_dev)@(0),prc_contocde.contrib_code$,@(5),prc_contocde.pr_code_desc$,@(22),prc_contocde.check_code$,
-:                          @(25),prc_contocde.calc_type$,@(27),prc_contocde.pers_taken$,@(33),prc_contocde.regpren_flg$,
-:                          @(35),prc_contocde.basis_tot_cd$,@(40),prc_contocde.special_flag$,@(45),a[0]:m3$,a[1]:m1$,a[2]:m1$,
-        for x=0 to 4
-            print (printer_dev)@(31+4*m1+x*3),FIELD(prc_contocde$,"pr_total_to_"+str(x:"00")),
+        print (printer_dev)@(0),prc_contcode.contrib_code$,@(5),prc_contcode.pr_code_desc$,@(22),prc_contcode.check_code$,
+:                          @(25),prc_contcode.calc_type$,@(27),prc_contcode.pers_taken$,@(33),prc_contcode.regprem_flg$,
+:                          @(35),prc_contcode.basis_tot_cd$,@(40),prc_contcode.special_flag$,
+:                          @(45),prc_contcode.calc_rtamt:m3$,prc_contcode.min_limit:m1$,prc_contcode.max_limit:m1$,
+        for x=1 to 5
+            print (printer_dev)@(31+4*m1+x*3),FIELD(prc_contcode$,"pr_total_to_"+str(x:"00")),
         next x
 
         print (printer_dev)'lf',
-        for x=0 to 4
-            print (printer_dev)@(31+4*m1+x*3),FIELD(prc_contocde$,"pr_tot_oper_"+str(x:"00")),
+        for x=1 to 5
+            print (printer_dev)@(31+4*m1+x*3),FIELD(prc_contcode$,"pr_tot_oper_"+str(x:"00")),
         next x
         print (printer_dev)'lf',
         l=l+2
@@ -103,7 +108,7 @@ report_heading: rem --- Report Heading
     l=headings+1
     call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
     if status<>0 then exitto std_exit
-    if p3$(2,1)="Y" then print @(29),"Dist",
+    if prs_params.reg_pay_code$(2,1)="Y" then print @(29),"Dist",
     print (printer_dev)@(0),"Contribution",@(27),"Period",@(30+m1),"Contrib",
 :                      @(33+2*m1),"Min",@(33+3*m1),"Max",@(31+4*m1),"Total To/"
     print (printer_dev)@(0),"Code",@(5),"Description",@(22),"RC",@(25),"T",@(27),"Taken",
