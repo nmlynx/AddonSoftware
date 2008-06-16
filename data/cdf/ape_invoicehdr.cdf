@@ -604,10 +604,7 @@ rem --- disable some grid columns depending on params
 w!=Form!.getChildWindow(1109)
 c!=w!.getControl(5900)
 if gl$="N" 
-	numcols=c!.getNumColumns()
-	for x=0 to numcols-1
-		c!.setColumnEditable(x,0)
-	next x
+	c!.setFocusable(0)
 endif
 if user_tpl.misc_entry$="N" c!.setColumnEditable(2,0)
 if user_tpl.units_flag$="N" c!.setColumnEditable(4,0)
