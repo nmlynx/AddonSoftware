@@ -166,7 +166,7 @@ dim columns$[6,10]
         columns$[3,0]="Name",          columns$[3,1]="C",columns$[3,2]="25"
         columns$[4,0]="Invoice/Check", columns$[4,1]="C",columns$[4,2]="15"
         columns$[5,0]="Date",          columns$[5,1]="C",columns$[5,2]="20"
-        columns$[6,0]="Amount",        columns$[6,1]="C",columns$[6,2]="10"
+        columns$[6,0]="Amount",        columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
     endif
     if sequence$="V"
         columns$[0,0]="Vendor",        columns$[0,1]="C",columns$[0,2]="10"
@@ -175,7 +175,7 @@ dim columns$[6,10]
         columns$[3,0]="Date",          columns$[3,1]="C",columns$[3,2]="10"
         columns$[4,0]=ah$,             columns$[4,1]="C",columns$[4,2]="10"
         columns$[5,0]=dh$,             columns$[5,1]="C",columns$[5,2]="25"
-        columns$[6,0]="Amount",        columns$[6,1]="C",columns$[6,2]="10"
+        columns$[6,0]="Amount",        columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
     endif
     if sequence$="A"
         columns$[0,0]="Alt Seq",       columns$[0,1]="C",columns$[0,2]="10"
@@ -184,7 +184,7 @@ dim columns$[6,10]
         columns$[3,0]="Date",          columns$[3,1]="C",columns$[3,2]="10"
         columns$[4,0]=ah$,             columns$[4,1]="C",columns$[4,2]="10"
         columns$[5,0]=dh$,             columns$[5,1]="C",columns$[5,2]="25"
-        columns$[6,0]="Amount",        columns$[6,1]="C",columns$[6,2]="10"
+        columns$[6,0]="Amount",        columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
     endif
     
 rem --- Initialize print positions
@@ -351,7 +351,7 @@ rem --- Read next invoice history or sort record
                       OutVect!.addItem(invdate$)
                       OutVect!.addItem(account$)
                       OutVect!.addItem(description$)
-                      OutVect!.addItem(str(amount:m1$))
+                      OutVect!.addItem(str(amount))
                  break
                  case distribution
                       if account$<>"" or vendor$<>"" 
@@ -363,7 +363,7 @@ rem --- Read next invoice history or sort record
                          OutVect!.addItem(name$)
                          OutVect!.addItem(invoice$)
                          OutVect!.addItem(invdate$)
-                         OutVect!.addItem(str(amount:m1$))
+                         OutVect!.addItem(str(amount))
                       endif
                  break
                  case vendor
@@ -377,7 +377,7 @@ rem --- Read next invoice history or sort record
                       OutVect!.addItem(invdate$)
                       OutVect!.addItem(account$)
                       OutVect!.addItem(description$)
-                      OutVect!.addItem(str(amount:m1$))
+                      OutVect!.addItem(str(amount))
                  break
                  case default
                  break
@@ -433,7 +433,7 @@ print_total: rem --- Print subtotal/total
     OutVect!.addItem(underline$)
     xwk=fnblank(5)
     OutVect!.addItem(total$)
-    OutVect!.addItem(str(total:m1$))
+    OutVect!.addItem(str(total))
     return
 
 type_break: rem --- AP type break
