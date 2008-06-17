@@ -67,13 +67,6 @@ rem --- Retrieve parameter records
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,acct_length
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,m2
-rem    account_length=num(gls01a.acct_length$)
-rem    m0$=gls01a.acct_output$
-rem    m1$=gls01a.amount_mask$
-rem    m2$=gls01a.unit_mask$
-rem    m0=len(m0$)
-rem    m1=len(m1$)
-rem    m2=len(m2$)
 
 rem --- Report initializations
 
@@ -83,8 +76,6 @@ rem --- Report initializations
     l9=59
     l=l9+1
     verify$="N"
-
-
 
 rem --- Initializations
 
@@ -200,7 +191,7 @@ level_breaks: rem --- Level breaks
                 rem --- Print detail line
 
                 OutVect!.addItem(gle11a.line_no$)
-                OutVect!.addItem(fnmask$(gle11a.gl_account$(1,account_length),m0$))
+                OutVect!.addItem(fnmask$(gle11a.gl_account$(1,acct_length),m0$))
                 OutVect!.addItem(glm01a.gl_acct_desc$)
                 OutVect!.addItem("")
                 OutVect!.addItem("")
