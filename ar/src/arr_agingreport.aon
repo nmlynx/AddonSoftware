@@ -134,6 +134,8 @@ rem --- Is Sales Order Processing installed?
 rem --- Document initializations
 
             OutVect!=bbjAPI().getSysGui().makeVector()
+            BrkVect!=bbjAPI().getSysGui().makeVector()
+            HdrVect!=bbjAPI().getSysGui().makeVector()
             rep_date$=date(0:"%Mz/%Dz/%Yd")
             rep_date_stamp$=date(0:"%Yd%Mz%Dz")
             rep_time$=date(0:"%hz:%mz %p")
@@ -662,7 +664,7 @@ rem --- All done
     else
         OutVect!.addItem("")
     endif
-    if col_output$<>"Y"
+    if col_format$<>"Y"
         OutVect!.addItem(str(t[1]))
         OutVect!.addItem(str(t[2])) 
         OutVect!.addItem(str(t[3]))
@@ -702,7 +704,7 @@ customer_heading: rem --- Print customer subheading
 salesperson: rem --- Salesperson break
 
     salesperson=lastcode$<>""
-    if col_output$="N" return
+    if col_format$="Y" return
     while salesperson
           x$="Total for "+salesperson$
           for x=0 to maxperiods
@@ -763,6 +765,10 @@ salesperson: rem --- Salesperson break
     find record (arm10_dev,key=k$,dom=*next) arm10f$
     lastcode$=arm10f.slspsn_code$
     salesperson$="Salesperson "+arm10f.slspsn_code$+" "+arm10f.code_desc$
+    if OutVect!.size()>0
+        BrkVect!.addItem(str(OutVect!.size()/columns+1))
+        HdrVect!.addItem(salesperson$)
+    endif    
     lines=maxlines+1
     return
 
