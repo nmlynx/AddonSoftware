@@ -53,6 +53,7 @@ rem --- Assign form input values to local variables
 
     begvend$=Option!.getOptionData("VENDOR_ID_1")
     endvend$=Option!.getOptionData("VENDOR_ID_2")
+    export_fmt$=Option!.getOptionData("EXPORT_FMT")
 
 rem --- Document initializations
 
@@ -72,12 +73,30 @@ rem --- Initializations
     record_count=0
 
 rem --- Document columns
+    
+    if export_fmt$<>"Y"
 
-    dim columns$[3,3]
-    columns$[0,0]="ID",columns$[0,1]="C",columns$[0,2]="8"
-    columns$[1,0]="Name/Address",columns$[1,1]="C",columns$[1,2]="35"
-    columns$[2,0]="Contact",columns$[2,1]="C",columns$[2,2]="25"
-    columns$[3,0]="Telephone/Fax",columns$[3,1]="C",columns$[3,2]="15"
+        dim columns$[3,3]
+        columns$[0,0]="ID",columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="Name/Address",columns$[1,1]="C",columns$[1,2]="35"
+        columns$[2,0]="Contact",columns$[2,1]="C",columns$[2,2]="25"
+        columns$[3,0]="Telephone/Fax",columns$[3,1]="C",columns$[3,2]="15"
+
+    else
+
+        dim columns$[9,3]
+        columns$[0,0]="ID",columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="30"
+        columns$[2,0]="Contact",columns$[2,1]="C",columns$[2,2]="25"
+        columns$[3,0]="Address 1",columns$[3,1]="C",columns$[3,2]="30"
+        columns$[4,0]="Address 2",columns$[4,1]="C",columns$[4,2]="30"
+        columns$[5,0]="City",columns$[5,1]="C",columns$[5,2]="30"
+        columns$[6,0]="State",columns$[6,1]="C",columns$[6,2]="5"
+        columns$[7,0]="Postal",columns$[7,1]="C",columns$[7,2]="10"
+        columns$[8,0]="Telephone",columns$[8,1]="C",columns$[8,2]="15"
+        columns$[9,0]="Fax",columns$[9,1]="C",columns$[9,2]="15"
+
+    endif
 
 rem --- Start progress meter and position file
 
@@ -108,6 +127,10 @@ rem --- Get next key
             fax$=str(fax$:fax_mask$,err=*next)
 	    address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
 	    call pgmdir$+"adc_address.aon",address$,24,3,9,30
+            zip$=apm01a.zip_code$
+            call stbl("+DIR_SYP")+"bac_getmask.bbj","P",cvs(zip$,2),"",postal_mask$
+            postal$=cvs(zip$,2)
+            postal$=str(postal$:postal_mask$,err=*next)
 
 	    rem --- Print vendor
 
@@ -115,33 +138,45 @@ rem --- Get next key
 	    address=len(cvs(address$,2))
 	    if address=0 if fax$<>"" x=x+1
 
-	    for blank_col=1 to 4
-              OutVect!.addItem("")
-          next blank_col
+            if export_fmt$<>"Y"
 
-	    OutVect!.addItem(fnmask$(apm01a.vendor_id$(1,vendlen),m0$))
-	    OutVect!.addItem(apm01a.vendor_name$)
-	    OutVect!.addItem(apm01a.contact_name$)
-	    OutVect!.addItem(phone$)
+                xwk=fnblank(4)
 
-	    rem --- Print address
+                OutVect!.addItem(fnmask$(apm01a.vendor_id$(1,vendlen),m0$))
+                OutVect!.addItem(apm01a.vendor_name$)
+                OutVect!.addItem(apm01a.contact_name$)
+                OutVect!.addItem(phone$)
 
-	    if address
-	       for x=1 to address step 30
-		     if x=1 x$=fax$
-		     OutVect!.addItem("")
-		     OutVect!.addItem(address$(x,30))
-		     OutVect!.addItem("")
-		     OutVect!.addItem(x$)
-		     x$=""
-		 next x
-	    endif
-	    if address=0 and fax$<>""
-	       OutVect!.addItem("")
-		 OutVect!.addItem("")
-		 OutVect!.addItem("")
-		 OutVect!.addItem(fax$)
-	    endif
+                rem --- Print address
+
+                if address
+                   for x=1 to address step 30
+                         if x=1 x$=fax$
+                         OutVect!.addItem("")
+                         OutVect!.addItem(address$(x,30))
+                         OutVect!.addItem("")
+                         OutVect!.addItem(x$)
+                         x$=""
+                     next x
+                endif
+                if address=0 and fax$<>""
+                   OutVect!.addItem("")
+                     OutVect!.addItem("")
+                     OutVect!.addItem("")
+                     OutVect!.addItem(fax$)
+                endif
+            else
+                OutVect!.addItem(fnmask$(apm01a.vendor_id$(1,vendlen),m0$))
+                OutVect!.addItem(apm01a.vendor_name$)
+                OutVect!.addItem(apm01a.contact_name$)
+                OutVect!.addItem(apm01a.addr_line_1$)
+                OutVect!.addItem(apm01a.addr_line_2$)
+                OutVect!.addItem(apm01a.city$)
+                OutVect!.addItem(apm01a.state_code$)
+                OutVect!.addItem(postal$)
+                OutVect!.addItem(phone$)
+                OutVect!.addItem(fax$)
+            endif
 
 	    rem --- Loop back for next record
 
@@ -152,9 +187,7 @@ rem --- All done
     x$="No"
     if record_count x$=str(record_count)
 
-    for blank_col=1 to 4
-        OutVect!.addItem("")
-    next blank_col
+    xwk=fnblank(4)
 
     OutVect!.addItem("")
     OutVect!.addItem(x$+" Vendor(s) Listed")
@@ -164,6 +197,15 @@ rem --- All done
     goto std_exit
 
 rem --- Functions
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- Functions used to retrieve form values
 
