@@ -61,6 +61,7 @@ rem --- Assign form input values to local variables
     begvendor$=Option!.getOptionData("VENDOR_ID_1")
     endvendor$=Option!.getOptionData("VENDOR_ID_2")
     thrudate$=Option!.getOptionData("REPORT_DATE")
+    export_fmt$=Option!.getOptionData("EXPORT_FMT")
 
 rem --- Retrieve parameter records
 
@@ -115,18 +116,18 @@ rem    if retention$="Y" o[8]=width-m1+1
     o[7]=o[8]-(m1+1)
     o[6]=o[7]-(m1+1)
 
-    dim columns$[0,10]
-    dim pbuf$(width)
-    pbuf$(o[0])="Vendor"
-    pbuf$(o[1])="Invoice"
-    pbuf$(o[2])="Date"
-    pbuf$(o[3])="Due Date"
-    pbuf$(o[4])="Pg"
-    pbuf$(o[5])="H"
-    pbuf$(o[6]+m1-7)="Amount"
-    pbuf$(o[7]+m1-9)="Discount"
-    pbuf$(o[8]+m1-10)=x$
-    columns$[0,0]=pbuf$,columns$[0,1]="C",columns$[0,2]="85"
+    dim columns$[9,10]
+
+    columns$[0,0]="Vendor",columns$[0,1]="C",columns$[0,2]="10"
+    columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="30"
+    columns$[2,0]="Invoice",columns$[2,1]="C",columns$[2,2]="10"
+    columns$[3,0]="Date",columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]="Due Date",columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]="Pay Gp",columns$[5,1]="C",columns$[5,2]="6"
+    columns$[6,0]="Hold",columns$[6,1]="C",columns$[6,2]="5"
+    columns$[7,0]="Amount",columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=m1$
+    columns$[8,0]="Discount",columns$[8,1]="N",columns$[8,2]="15",columns$[8,3]=m1$
+    columns$[9,0]=x$,columns$[9,1]="N",columns$[9,2]="15",columns$[9,3]=m1$
 
 rem --- Start progress meter and position Vendor Master file
 
@@ -176,7 +177,6 @@ rem --- Read next Vendor Master (apm-01) record
                 balance=0
                 x$=""
                 if retention$="Y" x$="Retention"
-                if lines+4>maxlines gosub report_heading
                 vendor$=apm02a.firm_id$+apm02a.ap_type$+apm02a.vendor_id$
                 read (apt01_dev,key=vendor$,dom=*next)
 
@@ -191,19 +191,24 @@ rem --- Read next Vendor Master (apm-01) record
                       endif
                       amount$=""
                       if retention$="Y" amount$=str(apt01a.retention:m1$)
-                      if first gosub vendor_heading
-                      if lines+1>maxlines gosub report_heading
-                      dim pbuf$(width)
+                       
+                      if first or export_fmt$="Y"
+                          OutVect!.addItem(apm01a.vendor_id$(1,vendor_size))
+                          OutVect!.addItem(apm01a.vendor_name$)
+                          if export_fmt$<>"Y" then first=0
+                      else
+                          xwk=fnblank(2)
+                      endif
 
-                      pbuf$(o[1])=apt01a.ap_inv_no$
-                      pbuf$(o[2])=fndate$(apt01a.invoice_date$)
-                      pbuf$(o[3])=fndate$(apt01a.inv_due_date$)
-                      pbuf$(o[4])=apt01a.payment_grp$
-                      pbuf$(o[5])=apt01a.hold_flag$
-                      pbuf$(o[6])=str(apt01a.invoice_amt:m1$)
-                      pbuf$(o[7])=str(apt01a.discount_amt:m1$)
-                      pbuf$(o[8])=amount$
-                      OutVect!.addItem(pbuf$)
+                      OutVect!.addItem(apt01a.ap_inv_no$)
+                      OutVect!.addItem(fndate$(apt01a.invoice_date$))
+                      OutVect!.addItem(fndate$(apt01a.inv_due_date$))
+                      OutVect!.addItem(apt01a.payment_grp$)
+                      OutVect!.addItem(apt01a.hold_flag$)
+                      OutVect!.addItem(str(apt01a.invoice_amt))
+                      OutVect!.addItem(str(apt01a.discount_amt))
+                      OutVect!.addItem(str(amount$))
+                      
                       lines=lines+1
                       printed=1
                       amount=apt01a.invoice_amt
@@ -230,15 +235,21 @@ rem --- Read next Vendor Master (apm-01) record
                             amount$=""
                             if retention$="Y" amount$=str(apt11a.trans_ret:m1$)
                             if apt11a.trans_type$="S" type$="M" 
-                            if lines+1>maxlines gosub report_heading
-                            dim pbuf$(width)
-                            pbuf$(o[1]+1)=type$+" "+apt11a.trans_ref$
-                            pbuf$(o[2])=fndate$(apt11a.trans_date$)
-                            pbuf$(o[6])=str(apt11a.trans_amt:m1$)
-                            pbuf$(o[7])=str(apt11a.trans_disc:m1$)
-                            pbuf$(o[8])=amount$
-                            OutVect!.addItem(pbuf$)
-                            lines=lines+1
+                            
+                            if export_fmt$="Y"
+                                OutVect!.addItem(apm01a.vendor_id$(1,vendor_size))
+                                OutVect!.addItem(apm01a.vendor_name$)                               
+                            else
+                                xwk=fnblank(2)
+                            endif
+
+                            OutVect!.addItem(type$+" "+apt11a.trans_ref$)
+                            OutVect!.addItem(fndate$(apt11a.trans_date$))
+                            xwk=fnblank(3)
+                            OutVect!.addItem(str(apt11a.trans_amt))
+                            OutVect!.addItem(str(apt11a.trans_disc))
+                            OutVect!.addItem(str(amount$))
+                            
                             amount=amount+apt11a.trans_amt
                             discount=discount+apt11a.trans_disc
                             retention=retention+apt11a.trans_ret
@@ -250,12 +261,14 @@ rem --- Read next Vendor Master (apm-01) record
 
                 wend
                 if multiple_types$<>"Y" continue
-                if lines>maxlines gosub report_heading
-                dim pbuf$(width)
-                pbuf$(o[0])=aptype$
-                pbuf$(o[6])=str(typetotal:m1$)
-                OutVect!.addItem(pbuf$)
-                lines=lines+1
+
+                if export_fmt$<>"Y" then xwk=fnblank(10)
+                
+                xwk=fnblank(1)
+                OutVect!.addItem(aptype$)
+                xwk=fnblank(5)
+                OutVect!.addItem(str(typetotal))
+                xwk=fnblank(2)
                 
                 rem --- Loop back for next Vendor Detail
 
@@ -264,46 +277,36 @@ rem --- Read next Vendor Master (apm-01) record
           rem --- Print vendor total and loop back for next Vendor Master
 
           if printed=0 continue
-          if lines>maxlines gosub report_heading
-          dim pbuf$(width)
-          pbuf$(o[6]-13)="Vendor Total"
-          pbuf$(o[6])=str(balance:m1$)
-          OutVect!.addItem(pbuf$)
-          lines=lines+1
+
+          xwk=fnblank(1)
+          OutVect!.addItem("Vendor Total")
+          xwk=fnblank(5)
+          OutVect!.addItem(str(balance))
+          xwk=fnblank(2)
           total=total+balance
+
+          if export_fmt$<>"Y" then xwk=fnblank(10)
     wend
 
 rem --- All done
 
-    if lines>maxlines gosub report_heading
-    dim pbuf$(width)
-    pbuf$(o[6]-13)="Report Total"
-    pbuf$(o[6])=str(total:m1$)
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(1)
+    OutVect!.addItem("Report Total")
+    xwk=fnblank(5)
+    OutVect!.addItem(str(total))
+    xwk=fnblank(2)
     goto std_exit
 
-report_heading: rem --- Report heading
-return
-    lines=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto done
-    print (printer_dev) @(o[0]),"Vendor",@(o[1]),"Invoice",@(o[2]),"Date",@(o[3]),"Due Date",@(o[4]),"Pg",
-:                       @(o[5]),"H",@(o[6]+m1-7),"Amount",@(o[7]+m1-9),"Discount",@(o[8]+m1-10),x$
-    lines=lines+1
-    return
-
-vendor_heading: rem --- Print vendor heading
-
-    if lines+3>maxlines gosub report_heading
-    OutVect!.addItem("")
-    dim pbuf$(width)
-    pbuf$(o[0])=apm01a.vendor_id$(1,vendor_size)+" "+apm01a.vendor_name$
-    OutVect!.addItem(pbuf$)
-    lines=lines+2
-    first=0
-    return
-
 rem --- Functions
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem --- Functions used to retrieve form values
 
