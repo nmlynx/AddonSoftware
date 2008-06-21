@@ -33,128 +33,130 @@ rem --- Open/Lock files
 	files$[6]="arw-06",ids$[6]="ARW_RANKING"
     files$[7]="arc_terrcode",ids$[7]="ARC_TERRCODE"
     files$[8]="arc_custtype",ids$[8]="ARC_CUSTTYPE"
-	options$[6]="CL"
-	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
-	if status goto std_exit
-	ars01_dev=channels[1]
-	arm01_dev=channels[2]
-	arm02_dev=channels[3]
-	arm06_dev=channels[4]
-	arc_salecode_dev=channels[5]
-	arw06_dev=channels[6]
+    options$[6]="CL"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ars01_dev=channels[1]
+    arm01_dev=channels[2]
+    arm02_dev=channels[3]
+    arm06_dev=channels[4]
+    arc_salecode_dev=channels[5]
+    arw06_dev=channels[6]
     arc_terrcode_dev=channels[7]
     arc_custtype_dev=channels[8]
 
 rem --- Dimension string templates
-
-	dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
+    
+    dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
     dim arm06a$:templates$[4],arm10f$:templates$[5],arw06a$:templates$[6]
     dim arm10h$:templates$[7],arm10l$:templates$[8]
 
 rem --- Assign form input values to local variables
 
-	method$=option!.getOptionData("REPORT_TYPE")
-	sequence$=option!.getOptionData("REPORT_SEQUENCE")
+    method$=option!.getOptionData("REPORT_TYPE")
+    sequence$=option!.getOptionData("REPORT_SEQUENCE")
+    col_format$=option!.getOptionData("COL_FORMAT")
+    page_break$=option!.getOptionData("PAGE_BREAK")
 
 rem --- Retrieve parameter records
 
-	ars01a_key$=firm_id$+"AR00"
-	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    ars01a_key$=firm_id$+"AR00"
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0    
-	m4$="-##0.00%"
-	m5$="######0"
-	m9$="000000000.00-"
-	call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
-	m0=len(m0$)
-	m1=len(m1$)
-	m4=len(m4$)
-	m5=len(m5$)
+    m4$="-##0.00%"
+    m5$="######0"
+    m9$="000000000.00-"
+    call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
+    m0=len(m0$)
+    m1=len(m1$)
+    m4=len(m4$)
+    m5=len(m5$)
 
 rem --- Initializations
 
-	OutVect!=bbjAPI().getSysGui().makeVector()
-	BrkVect!=bbjAPI().getSysGui().makeVector()
-	HdrVect!=bbjAPI().getSysGui().makeVector()
-	rep_date$=date(0:"%Mz/%Dz/%Yd")
-		rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-	rep_time$=date(0:"%hz:%mz %p")
-		rep_time_stamp$=date(0:"%Hz%mz%sz")
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
 
-	headings=3
-	dim headings$[headings+1],o[8],customer[5],subtotals[5],totals[5]
-	done=0
-	more=1
-	morecodes=pos(sequence$="STY")
-	rank=0
-	nf$="(Not on file)"
-	artype$=fill(2)
-	when$=sysinfo.system_date$
-	clock$=""
-	recap$=""
-	lastcode$=""
-	subheading$=""
-	by$="Customer ID"
-	id$=""
-	if sequence$="S"
-		dim code_template$:fattr(arm10f$)
-		by$="Salesperson"
-		id$="F"
-        code_dev=arc_salecode_dev
-	endif
-	if sequence$="T" 
-		dim code_template$:fattr(arm10h$) 
-		by$="Territory"
-		id$="H"
+    headings=3
+    dim headings$[headings+1],o[8],customer[5],subtotals[5],totals[5]
+    done=0
+    more=1
+    morecodes=pos(sequence$="STY")
+    rank=0
+    nf$="(Not on file)"
+    artype$=fill(2)
+    when$=sysinfo.system_date$
+    clock$=""
+    recap$=""
+    lastcode$=""
+    subheading$=""
+    by$="Customer ID"
+    id$=""
+    if sequence$="S"
+    dim code_template$:fattr(arm10f$)
+    by$="Salesperson"
+    id$="F"
+    code_dev=arc_salecode_dev
+    endif
+    if sequence$="T" 
+	dim code_template$:fattr(arm10h$) 
+	by$="Territory"
+       	id$="H"
         code_dev=arc_terrcode_dev
-	endif
-	if sequence$="Y" 
-		dim code_template$:fattr(arm10l$) 
-		by$="Customer Type"
-		id$="L"
+    endif
+    if sequence$="Y" 
+	dim code_template$:fattr(arm10l$) 
+	by$="Customer Type"
+	id$="L"
         code_dev=arc_custtype_dev
-	endif
-	rankby$="MTD Sales"
-	if method$="2" rankby$="MTD Gross Profit"
-	if method$="3" rankby$="MTD Gross Profit Percentage"
-	if method$="4" rankby$="YTD Sales"
-	if method$="5" rankby$="YTD Gross Profit"
-	if method$="6" rankby$="YTD Gross Profit Percentage"
-	if method$="C" rankby$="Customer ID"
-	headings$[0]=sysinfo.firm_name$
-	headings$[1]=sysinfo.task_desc$+" By "+by$
-	headings$[2]="Ranked by "+rankby$
-	if sequence$<>"N" headings$[3]="[HEADER]"
+    endif
+    rankby$="MTD Sales"
+    if method$="2" rankby$="MTD Gross Profit"
+    if method$="3" rankby$="MTD Gross Profit Percentage"
+    if method$="4" rankby$="YTD Sales"
+    if method$="5" rankby$="YTD Gross Profit"
+    if method$="6" rankby$="YTD Gross Profit Percentage"
+    if method$="C" rankby$="Customer ID"
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$+" By "+by$
+    headings$[2]="Ranked by "+rankby$
+    if sequence$<>"N" headings$[3]="[HEADER]"
 
-	columns=8
-	dim columns$[columns,3]
-		columns$[0,0]="Cust ID",columns$[0,1]="C",columns$[0,2]="8"
-		columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="40"
-		columns$[2,0]="MTD Sales",columns$[2,1]="N",columns$[2,2]="12",columns$[2,3]=m1$
-		columns$[3,0]="MTD Profit",columns$[3,1]="N",columns$[3,2]="12",columns$[3,3]=m1$
-		columns$[4,0]="MTD Prof %",columns$[4,1]="N",columns$[4,2]="12",columns$[4,3]=m1$
-		columns$[5,0]="YTD Sales",columns$[5,1]="N",columns$[5,2]="12",columns$[5,3]=m1$
-		columns$[6,0]="YTD Profit",columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m1$
-		columns$[7,0]="YTD Prof %",columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m1$
-		columns$[8,0]="Rank",columns$[8,1]="N",columns$[8,2]="6",columns$[8,3]=m5$
+    columns=8
+    dim columns$[columns,3]
+    columns$[0,0]="Cust ID",columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="40"
+    columns$[2,0]="MTD Sales",columns$[2,1]="N",columns$[2,2]="12",columns$[2,3]=m1$
+    columns$[3,0]="MTD Profit",columns$[3,1]="N",columns$[3,2]="12",columns$[3,3]=m1$
+    columns$[4,0]="MTD Prof %",columns$[4,1]="N",columns$[4,2]="12",columns$[4,3]=m1$
+    columns$[5,0]="YTD Sales",columns$[5,1]="N",columns$[5,2]="12",columns$[5,3]=m1$
+    columns$[6,0]="YTD Profit",columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m1$
+    columns$[7,0]="YTD Prof %",columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m1$
+    columns$[8,0]="Rank",columns$[8,1]="N",columns$[8,2]="6",columns$[8,3]=m5$
 
 rem --- Determine number of codes (if necessary)
 
-	if morecodes
-		keyprefix$=firm_id$+id$
-		read (code_dev,key=keyprefix$,dom=*proceed)
-	endif
-	while morecodes
-		k$=key(code_dev,end=*break)
-		if pos(keyprefix$=k$)<>1 break
-		read record (code_dev,key=k$) code_template$
-		if sequence$="S" code$=code_template.slspsn_code$
-		if sequence$="T" code$=code_template.territory$
-		if sequence$="Y" code$=code_template.customer_type$
-		recap$=recap$+code$
-	wend
-	x=max(len(recap$)/3,1)*2
-	dim recap[x,5]
+    if morecodes
+        keyprefix$=firm_id$+id$
+	read (code_dev,key=keyprefix$,dom=*proceed)
+    endif
+    while morecodes
+	k$=key(code_dev,end=*break)
+	if pos(keyprefix$=k$)<>1 break
+	read record (code_dev,key=k$) code_template$
+	if sequence$="S" code$=code_template.slspsn_code$
+	if sequence$="T" code$=code_template.territory$
+	if sequence$="Y" code$=code_template.customer_type$
+        recap$=recap$+code$
+    wend
+    x=max(len(recap$)/3,1)*2
+    dim recap[x,5]
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm06_dev,1,meter_num,status
 
@@ -271,8 +273,10 @@ rem --- Print report recap by code
 	if method$="C" more=0
 	subheading$="Totals by "+by$
 
-	BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-	HdrVect!.addItem(subheading$)
+        if page_break$="Y"
+            BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+            HdrVect!.addItem(subheading$)
+        endif    
 
 	while more
 		rank=0
@@ -341,7 +345,7 @@ code_break: rem --- Code break
 	code$=arw06a.ranking_sort$
 	description$=fncode$(code_dev,keyprefix$+code$,fattr(code_template$))
 	subheading$=by$+" "+code$+" "+description$
-	if sequence$<>"N"
+	if sequence$<>"N" and page_break$="Y"
 		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
 		HdrVect!.addItem(subheading$)
 	endif
