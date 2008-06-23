@@ -68,7 +68,7 @@ rem --- Retrieve parameter records
 
 rem --- Initializations
 
-    dim headings$[4],types$[4],m5$(7,"0"),underline$(m1,"-")
+    dim headings$[2],types$[4],m5$(7,"0"),underline$(m1,"-")
     dim h[8],o[8],detail[3],totals[3],at[3],rt[3]
     vm=max(m0,8)
     done=0
@@ -85,6 +85,7 @@ rem --- Initializations
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+" For Period "+str(period)+" From "+fndate$(begdate$)+
 :                " Through "+fndate$(enddate$)
+    headings$[2]="[HEADER]"
     types$[0]="Unknown"
     types$[1]="Void"
     types$[2]="Reversal"
@@ -132,7 +133,8 @@ rem --- OutVect! for DocOut, date/time
 
 rem --- column headings
 	dim columns$[7,10]
-        if retension dim columns$[8,10]
+        columns=7
+        if retension dim columns$[8,10]; columns=8
 	columns$[0,0]="Chk No",       columns$[0,1]="C",columns$[0,2]="10"
 	columns$[1,0]="Chk Date",     columns$[1,1]="C",columns$[1,2]="10"
 	columns$[2,0]="Type",         columns$[2,1]="C",columns$[2,2]="10"
@@ -301,12 +303,12 @@ print_total: rem --- Print totals
     OutVect!.addItem(str(totals[1]))
     OutVect!.addItem(str(totals[2]))
     if retention OutVect!.addItem(retention$)
-    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+rem    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     lines=lines+2
     return
 
 type_break: rem --- AP type break
-
+ESCAPE;rem check lasttype$
     if multitypes=0 return
     while lasttype$<>""
           total$="Total for "+aptype$
@@ -326,7 +328,8 @@ type_break: rem --- AP type break
     find record (apm10_dev,key=k$,dom=*next) apm10a$
     lasttype$=apm10a.ap_type$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
-    headings$[2]=aptype$
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(aptype$)
     lines=maxlines+1
     return
 
