@@ -97,7 +97,7 @@ rem --- Retrieve parameter records
 
 rem --- Initializations
 
-    dim headings$[8],o[12]
+    dim headings$[3],o[12]
     dim pt[4],pr[4],rt[4],rr[4],at[4],ar[4],vt[3],vr[4],it[2]
     done=0
     page=0
@@ -137,6 +137,7 @@ rem --- Initializations
        channel=apw02_dev
        headings$[1]=header1$+" By Alternate Sequence"
     endif
+    headings$[3]="[HEADER]"
 
 rem --- Determine period beginning and ending dates based on the aging method selected
 
@@ -528,8 +529,7 @@ type_break: rem --- AP Type break
     wend
     if multitypes=0 return
     if done return
-    
-    
+        
     dim apm10a$:fattr(apm10a$),at[4],ar[4]
     apm10a.firm_id$=apt01a.firm_id$
     apm10a.record_id_a$="A"
@@ -539,7 +539,7 @@ type_break: rem --- AP Type break
     find record (apm10_dev,key=k$,dom=*next) apm10a$
     lasttype$=apm10a.ap_type$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
-    headings$[3]=aptype$
+rem    headings$[3]=aptype$
     lines=maxlines+1
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     HdrVect!.addItem(aptype$)
