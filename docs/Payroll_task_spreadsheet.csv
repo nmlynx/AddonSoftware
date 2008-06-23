@@ -19,13 +19,13 @@ Payroll Calculation,T,,prr_dailyentry.aon,prr_ua.bbx,PRU_AA,Update,,DONE NV-OSI,
 Adjustment Report,T,PRR_ADJUTMENT,prr_adjustment.aon,prr_ba.bbx,PRR_BA,Report,,DONE NV-OSI,DONE NV-OSI,needs,needs,
 Exception Report,T,,prr_exception.aon,prr_ya.bbx,PRR_YA,Report,,DONE NV-OSI,DONE NV-OSI,needs,needs,
 Detail Report,T,PRR_DETAILS,prr_details.aon,prr_xa.bbx,PRR_XA,Report,,DONE NV-OSI,DONE NV-OSI,needs,needs,
-GL Distribution Report,T,,,prr_ta.bbx,PRR_TA,Report,,WIP NV-OSI,needs,n,needs,
+GL Distribution Report,T,,prr_gldistrib.aon,prr_ta.bbx,PRR_TA,Report,,DONE NV-OSI,needs?,n?,needs,
 Pre-Check Report,T,,prr_precheck.aon,prr_fa.bbx,PRR_FA,Report,,DONE NV-OSI,DONE NV-OSI,needs,needs,
-Check Printing - input,T,,,prr_ga.bbx,PRR_GA,Input for report,,needs,,no doc out,,
- - print,T,,,prr_gb.bbx,PRR.GB,Report,,WIP NV-OSI,needs,no doc out,,Standard checks 
- - optional print,T,,,prr_gc.bbx,PRR.GC,Optional Report,,needs,needs,no doc out,,Checks with blank stubs
+Check Printing - input,T,PRR_CHKPRINT,prr_chkprint.aon,prr_ga.bbx,PRR_GA,Input for report,,DONE NV-OSI,,no doc out,,
+ - print,T,,prr_chkprint_o1.aon,prr_gb.bbx,PRR.GB,Report,,DONE NV-OSI,DONE NV-OSI,no doc out,,Standard checks 
+ - optional print,T,,,prr_gc.bbx,PRR.GC,Optional Report,,DONE NV-OSI,Not used?,no doc out,,Checks with blank stubs
 Check Register,T,PRR_CHKREGISTER,prr_chkregister.aon,prr_ha.bbx,PRR_HA,Input for report,,DONE PS-OSI,,,,
- - report,T,,prr_chkregister_o1.aon,prr_hb.bbx,PRR_HB,Report,,DONE PS-OSI,DONE PS-OSI,WIP PS-OSI,needs,
+ - report,T,,prr_chkregister_o1.aon,prr_hb.bbx,PRR_HB,Report,,DONE PS-OSI,DONE PS-OSI,DONE PS-OSI,needs,
  - Update I,T,,,pru_ca.bbx,PRU_CA,Update,,WIP PS-OSI,,,,** Payroll Detail History requires modifications
  - Update II,T,,,pru_cb.bbx,PRU_CB,Update,,DONE SV-OSI,,,,** Payroll Detail History requires modifications
  - Update III,T,,,pru_cc.bbx,PRU_CC,Update,,DONE SV-OSI,,,,
@@ -51,27 +51,27 @@ Earnings History Report,T,,,prr_wa.bbx,PRR_WA,Input for Report,,DONE PPT_OSI, , 
  - Report,T,,,prr_wb.bbx,PRR_WB,Report,,DONE PPT_OSI,needs,needs,needs
 Union History Report,T,,,prr_va.bbx,PRR_VA,Input for Report,,DONE PPT_OSI, , , 
  - Report,T,,,prr_vb.bbx,PRR.VB,Report,,DONE PPT_OSI,needs,needs,needs
-Union History Purge,T,,,pru_ga.bbx,PRU_GA,Update,,WIP PPT_OSI, , , 
+Union History Purge,T,,,pru_ga.bbx,PRU_GA,Update,,DONE PPT_OSI, , , 
 Payroll Date Listing,T,,,prr_sa.bbx,PRR_SA,Input for Report,,DONE PPT_OSI, , , 
  - Report,T,,,prr_sb.bbx,PRR_SB,Report,,DONE PPT_OSI,needs,needs,needs
 W-2 Processing,G,,,,,,,,,,
 W-2 Configuration,T,,,prw_aa.bbx,PRW_AA,Entry,,,,,
-W-2 Configuration Listing,T,,,prw_ka.bbx,PRW_KA,Report,,WIP PPT_OSI,needs,needs,needs
-Copy/Remove W-2 Configuration,T,,,prw_ba.bbx,PRW_BA,Utility,,WIP PPT_OSI, ,,
-Archive Year End Totals,T,,,prm_ya.bbx,PRM_YA,Utility,,needs, ,,
-W-2 Calculation,T,,,prw_ca.bbx,PRW_CA,Utility,,WIP PPT_OSI, ,,
+W-2 Configuration Listing,T,,,prw_ka.bbx,PRW_KA,Report,,DONE PPT_OSI,needs,needs,needs
+Copy/Remove W-2 Configuration,T,,,prw_ba.bbx,PRW_BA,Utility,,DONE PPT_OSI, ,,
+Archive Year End Totals,T,,,prm_ya.bbx,PRM_YA,Utility,,WIP PPT_OSI, ,,
+W-2 Calculation,T,,,prw_ca.bbx,PRW_CA,Utility,,DONE PPT_OSI, ,,
 Export W-2 Data to Text ,T,,,prx_ya.bbx,PRX_YA,Entry for Utility,,,,,
  - Write,T,,,prx_yb.bbx,PRX_YB,Utility,,WIP PPT_OSI,,,
  - Export,T,,,prx_yc.bbx,PRX_YC,Utility,,WIP PPT_OSI,,,,
-Year End Update,T,,,pru_ea.bbx,PRU_EA,Update,,needs,,,,
+Year End Update,T,,,pru_ea.bbx,PRU_EA,Update,,DONE PPT_OSI,,,,
 Reports,G,,,,,,,,,,,
-Employee Detail Listing,T,,,prr_za.bbx,PRR_ZA,Input for Report,,needs,,,,
- - Entry,T,,,prr_zb.bbx,PRR_ZB,Input for Report,,needs,,,,
+Employee Detail Listing,T,,,prr_za.bbx,PRR_ZA,Input for Report,,DONE PPT_OSI,,,,
+ - Entry,T,,,prr_zb.bbx,PRR_ZB,Input for Report,,DONE PPT_OSI,,,,
  - Report,T,,,prr_zc.bbx,PRR._ZC,Report,,needs,needs,needs,needs,
-Employee Master Listing,T,,,prr_qa.bbx,PRR_QA,Input/Report,,DONE PS-OSI,DONE PS-OSI,needs,needs,
+Employee Master Listing,T,,,prr_qa.bbx,PRR_QA,Input/Report,,DONE PS-OSI,DONE PS-OSI,DONE PS-OSI,needs,
 Employee Cross Reference Report,T,---,,---,PRR_OA,Input/Report,,needs,,,,not necessary
 Employee Labels - Input,T,,prr_emplblprnt.aon,prr_pa.bbx,PRR_PA,Input for Report,,DONE PS-OSI,,,,
- - Report,T,,prr_emplblprnt_o1.aon,prr_pb.bbx,PRR.PB,Report,,DONE PS-OSI,WIP PS-OSI,WIP PS-OSI,needs,
+ - Report,T,,prr_emplblprnt_o1.aon,prr_pb.bbx,PRR.PB,Report,,DONE PS-OSI,DONE PS-OSI,DONE PS-OSI,needs,
 Maintenance,G,,,,,,,,,,,
 Employees,T,,,prm_ma.bbx,PRM_MA,Entry,,,,,,
  - Info - Name/Address,T,,,prm_mb.bbx,PRM_MB,Entry,,,,,,
@@ -90,7 +90,7 @@ Employees,T,,,prm_ma.bbx,PRM_MA,Entry,,,,,,
  - Hard Copy,T,,,prm_mq.bbx,PRM.MQ,Report,,,,
 Contribution Codes ,T,,,prm_da.bbx,PRM_DA,Entry,,,,
  - Entry,T,,,prm_db.bbx,PRM_DB,Entry,,,,
- - Print Listing,T,,,prm_dc.bbx,PRM_DC,Report,,WIP PS-OSI,needs,needs
+ - Print Listing,T,,,prm_dc.bbx,PRM_DC,Report,,DONE PS-OSI,DONE PS-OSI,DONE PS-OSI
 Department Codes,T,,,prm_ea.bbx,PRM_EA,Entry,,,,
  - Pay Codes,T,,,prm_eb.bbx,PRM_EB,Entry,,,,
  - Tax Codes,T,,,prm_ec.bbx,PRM_EC,Entry,,,,
