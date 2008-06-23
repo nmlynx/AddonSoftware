@@ -135,6 +135,7 @@ rem --- Initializations
        channel=apw05_dev
        headings$[1]=headings$[1]+" By Alternate Sequence"
     endif
+    headings$[3]="[HEADER]"
     altseq$=""
     lasttype$=""
     lastvendor$=""
@@ -461,10 +462,10 @@ print_total: rem --- Print subtotal/total
     OutVect!.addItem(str(totals[1]))
     OutVect!.addItem(str(totals[2]))
 
-    if typebreak_flag and !done
-       BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-       typebreak_flag = 0
-    endif
+rem    if typebreak_flag and !done
+rem       BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+rem       typebreak_flag = 0
+rem    endif
 
     return
 
@@ -501,6 +502,7 @@ type_break: rem --- AP type break
     wend
     if multitypes=0 return
     if done return
+    dim at[2]
     dim apm10a$:fattr(apm10a$)
     apm10a.firm_id$=apt05a.firm_id$
     apm10a.record_id_a$="A"
@@ -510,7 +512,8 @@ type_break: rem --- AP type break
     find record (apm10_dev,key=k$,dom=*next) apm10a$
     lasttype$=apm10a.ap_type$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
-    headings$[3]=aptype$
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(aptype$)
     return
 
 vendor_break: rem --- Vendor break
