@@ -719,6 +719,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    close(apw02_dev);rem avoid potential err 0 (on lock before clear) if another pgm using this work file gets run
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
