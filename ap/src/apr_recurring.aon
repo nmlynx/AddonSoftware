@@ -435,13 +435,18 @@ rem          xwk=fnblank(15)
 
                 rem --- Retrieve GL account master
 
-                dim glm01a$:fattr(glm01a$),description$(gw)
+                dim glm01a$:fattr(glm01a$)
+                description$=nf$
+                glacct$="none"
                 glm01a.firm_id$=ape13a.firm_id$
                 glm01a.gl_account$=ape13a.gl_account$
                 glm01a.gl_acct_desc$=nf$
                 k$=glm01a.firm_id$+glm01a.gl_account$
                 find record (glm01_dev,key=k$,dom=*next) glm01a$
-                description$(1)=glm01a.gl_acct_desc$
+                if cvs(glm01a.gl_account$,3)<>"" 
+                    glacct$=fnmask$(pad(ape13a.gl_account$(1,acct_length),acct_length),g0$)
+                    description$=glm01a.gl_acct_desc$
+                endif
                 errors=errors+(pos(nf$=description$)=1)
                 
                 rem --- Print the detail line
@@ -453,7 +458,7 @@ rem          xwk=fnblank(15)
                 endif
 
                  xwk=fnblank(2)
-                 OutVect!.addItem(fnmask$(pad(ape13a.gl_account$(1,acct_length),acct_length),g0$))
+                 OutVect!.addItem(glacct$)
                  OutVect!.addItem(description$)
                  xwk=fnblank(7)
                  OutVect!.addItem(ape13a.gl_post_amt$)
