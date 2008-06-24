@@ -346,6 +346,7 @@ rem --- Detail
     let glt05a.check_amount=apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention
     find record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=*next) glt05a$;
 :      let glt05a.check_amount=glt05a.check_amount+apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention,glt05a.description$=q$
+    glt05a$=field(glt05a$)
     write record (glt05_dev,key=firm_id$+glt05a.gl_account$+glt05a.check_no$) glt05a$
 
     return
