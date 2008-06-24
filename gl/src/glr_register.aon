@@ -361,8 +361,9 @@ rem --- Check dates
     rem --- CAH.09/29/07
     err_msg$=stbl("+DTWARN_MSG",err=*next)
     if err_msg$<>""
+      xwk=fnblank(2)
       OutVect!.addItem(err_msg$)
-      xwk=fnblank(9)
+      xwk=fnblank(7)
     endif
     if cvs(gle01a.reverse_date$,2)="" goto transaction_break_exit
     gldate$=gle01a.reverse_date$
@@ -371,8 +372,9 @@ rem --- Check dates
     rem --- CAH.09/29/07
     err_msg$=stbl("+DTWARN_MSG",err=*next)
     if err_msg$<>""
+      xwk=fnblank(2)
       OutVect!.addItem(err_msg$)
-      xwk=fnblank(9)
+      xwk=fnblank(7)
     endif
 
 transaction_break_exit:
