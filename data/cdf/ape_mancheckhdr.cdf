@@ -366,7 +366,6 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	"",
 :	dflt_data$[all]
 [[APE_MANCHECKHDR.BSHO]]
-
 rem --- disable ap type control if param for multi-types is N
 
 if user_tpl.multi_types$="N" 
@@ -478,7 +477,7 @@ rem --- Additional File Opens
 gl$="N"
 status=0
 source$=pgm(-2)
-call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AR",glw11$,gl$,status
+call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,status
 if status<>0 goto std_exit
 user_tpl.glint$=gl$
 user_tpl.glworkfile$=glw11$
