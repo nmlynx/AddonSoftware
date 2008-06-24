@@ -44,7 +44,7 @@ rem --- validate Accounting Date
 		call stbl("+DIR_PGM")+"glc_datecheck.aon",
 :			callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"),
 :			"Y",per$,yr$,status
-		if status<>0
+		if status>100
 			callpoint!.setStatus("ABORT")
 		else
 			temp_stbl$=stbl("DEF_ACCT_DATE",callpoint!.getColumnData("APE_ORDDATE.DEF_ACCT_DATE"))
