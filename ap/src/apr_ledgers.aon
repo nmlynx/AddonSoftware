@@ -158,20 +158,6 @@ rem --- Read next Vendor Master (apm-01) record
                 if pos(apm01_key$=k$)<>1 break
                 read record (apm02_dev) apm02a$
 
-                rem --- Retrieve AP Type code and description
-
-                typetotal=0
-                aptype$=""
-                if multiple_types$="Y"
-                   dim apm10a$:fattr(apm10a$)
-                   apm10a.firm_id$=firm_id$
-                   apm10a.ap_type$=apm02a.ap_type$
-                   apm10a.code_desc$=nf$
-                   apm10_key$=apm10a.firm_id$+"A"+apm10a.ap_type$
-                   find record (apm10_dev,key=apm10_key$,dom=*proceed) apm10a$
-                   aptype$="Total for AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
-                endif
-
                 rem --- Print invoices
 
                 balance=0
@@ -215,7 +201,6 @@ rem --- Read next Vendor Master (apm-01) record
                       discount=apt01a.discount_amt
                       retention=apt01a.retention
                       balance=balance+apt01a.invoice_amt
-                      typetotal=typetotal+apt01a.invoice_amt
                       detail=0
                       apt01_key$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+
 :                                apt01a.ap_inv_no$
@@ -254,21 +239,10 @@ rem --- Read next Vendor Master (apm-01) record
                             discount=discount+apt11a.trans_disc
                             retention=retention+apt11a.trans_ret
                             balance=balance+apt11a.trans_amt
-                            typetotal=typetotal+apt11a.trans_amt
                       wend
 
-                      rem --- Print type total and loop back for next invoice header
 
                 wend
-                if multiple_types$<>"Y" continue
-
-                if export_fmt$<>"Y" then xwk=fnblank(10)
-                
-                xwk=fnblank(1)
-                OutVect!.addItem(aptype$)
-                xwk=fnblank(5)
-                OutVect!.addItem(str(typetotal))
-                xwk=fnblank(2)
                 
                 rem --- Loop back for next Vendor Detail
 
