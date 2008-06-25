@@ -1,6 +1,12 @@
 [[GLM_BUDGETMAINT.AOPT-REPL]]
 gosub replicate_amt
-gosub update_glm_acctsummary
+
+if vectGLSummary!<>null()
+	gosub update_glm_acctsummary
+else
+	callpoint!.setMessage("GL_REPLICATE")
+	callpoint!.setStatus("ABORT")
+endif
 [[GLM_BUDGETMAINT.ASIZ]]
 if UserObj!<>null()
 	gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
@@ -282,13 +288,14 @@ calculate_end_bal:
 return
 
 replicate_amt:
-	
+
+		
 	gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 	curr_row=gridBudgets!.getSelectedRow()
 	if gridBudgets!.isRowEditable(curr_row)
 		curr_col=gridBudgets!.getSelectedColumn()
 		curr_amt$=gridBudgets!.getCellText(curr_row,curr_col)
-		vectGLSummary!=SysGUI!.makeVector()
+		vectGLSummary!=SysGUI!.makeVector()		
 		num_pers=num(user_tpl.pers$)
 
 		for x=1 to num_pers+1

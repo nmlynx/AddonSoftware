@@ -45,7 +45,13 @@ else
 endif
 [[GLM_SUMMACTIVITY.AOPT-REPL]]
 gosub replicate_amt
-gosub update_glm_acctsummary
+
+if vectGLSummary!<>null()
+	gosub update_glm_acctsummary
+else
+	callpoint!.setMessage("GL_REPLICATE")
+	callpoint!.setStatus("ABORT")
+endif
 [[GLM_SUMMACTIVITY.ASIZ]]
 if UserObj!<>null()
 	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
