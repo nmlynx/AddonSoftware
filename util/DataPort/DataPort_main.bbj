@@ -197,6 +197,7 @@ next_ddm03:
     read(ddm04,key=ddm03.file_name$+ddm03.record_id$,dom=*next)
 next_ddm04:
     readrecord(ddm04,end=end_ddm04)ddm04$
+
     if ddm04.file_name$<>ddm03.file_name$ or ddm04.record_id$<>ddm03.record_id$ then
        goto end_ddm04
     endif
@@ -289,11 +290,9 @@ end_ddm04:
     rem ' Special address processing?
     addr_lines=0
     if source_version=6 and pos($0a$+"CITY"+$0a$=new_fields$) and pos($0a$+"STATE_CODE"+$0a$=new_fields$) then
-rem       if pos($0a$+"ADDR_LINE_3"+$0a$=new_fields$) then
        if pos($0a$+"ADDR_LINE_3"+$0a$=old_fieldlist$) then
           addr_lines=3
        endif
-rem       if pos($0a$+"ADDR_LINE_5"+$0a$=new_fields$) then
        if pos($0a$+"ADDR_LINE_5"+$0a$=old_fieldlist$) then
           addr_lines=5
        endif
@@ -322,6 +321,7 @@ rem       if pos($0a$+"ADDR_LINE_5"+$0a$=new_fields$) then
 
 next_rec:
     readrecord(old_file,end=eof)old_rec$
+
     if old_rec$(1,2)="00" goto next_rec
     if record_id_field$<>"" and field(old_rec$,record_id_field$,err=*continue)<>ddm03.record_id$ then
        goto next_rec
@@ -379,6 +379,10 @@ next_rec:
               break
            case default; escape; rem ' should never get here
         swend
+
+        rem 'if $0a$ is in field, or field is nothing but $00$, correct data to spaces
+        if pos($0a$=value$) value$=value$(1,pos($0a$=value$)-1)
+        if pos($00$<>value$)=0 value$=""
 
         field new_rec$,new_fieldlist.name$[field]=value$
     next field
