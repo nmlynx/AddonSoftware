@@ -263,6 +263,7 @@ readrecord(apm10c_dev,key=firm_id$+"C"+callpoint!.getColumnData("APE_INVOICEHDR.
 user_tpl.disc_pct$=apm10c.disc_percent$
 
 user_tpl.inv_amt$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_AMT")
+user_tpl.tot_dist$=""
 if user_tpl.glint$="N" user_tpl.tot_dist$=user_tpl.inv_amt$
 
 gosub calc_grid_tots
