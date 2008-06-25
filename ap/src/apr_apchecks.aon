@@ -486,11 +486,11 @@ ap_type_break: rem --- AP Type Break
 rem --- New Checks
 
         if aps01a.ap_check_seq$="N" break
-        dim ap_type$(25),tokens$[1]
+        dim msg_tokens$[1]
         find record (apm10_dev,key=firm_id$+"A"+t0$,dom=*next) apm10a$
-        ap_type$=cvs(ap_type$(6,20),1+2)+" "
-        tokens$[1]=ap_type$
-        call pgmdir$+"syc_xb.bbx",0,"MOUNT_AP_CHECKS",tokens$[all],1,-1,-1,v$,v3
+        msg_id$="AP_CHECKS"
+        msg_tokens$[1]=cvs(apm10a.code_desc$,3)
+        gosub disp_message
     wend
     return
 
