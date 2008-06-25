@@ -380,9 +380,8 @@ next_rec:
            case default; escape; rem ' should never get here
         swend
 
-        rem 'if $0a$ is in field, or field is nothing but $00$, correct data to spaces
-        if pos($0a$=value$) value$=value$(1,pos($0a$=value$)-1)
-        if pos($00$<>value$)=0 value$=""
+        rem 'replace non-print characters with spaces
+        value$=cvs(value$,16)
 
         field new_rec$,new_fieldlist.name$[field]=value$
     next field
