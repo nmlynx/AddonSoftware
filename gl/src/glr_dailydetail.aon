@@ -86,7 +86,7 @@ rem --- Document initializations
 
 rem --- Initializations
 
-    dim headings$[headings],buffer$(width),o[12],at[2],dt[2],jt[2],rt[2],xt[2]
+    dim headings$[headings],o[12],at[2],dt[2],jt[2],rt[2],xt[2]
     number=0
     more=1
     keynum=0
@@ -171,20 +171,14 @@ rem --- Build report headings
     m=max(len(val1$),len(val2$))-1
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)+" By "+seqdesc$
-    buffer$(1)=jrnl$
-    headings$[2]=buffer$
+    headings$[2]=jrnl$
     if wild$<>""
-        buffer$(1)=wild$
-        headings$[3]=buffer$
-        buffer$(1)=acct$
-        headings$[4]=buffer$
-        buffer$(1)=val$
-        headings$[5]=buffer$
+        headings$[3]=wild$
+        headings$[4]=acct$
+        headings$[5]=val$
     else
-        buffer$(1)=acct$
-        headings$[3]=buffer$
-        buffer$(1)=val$
-        headings$[4]=buffer$
+        headings$[3]=acct$
+        headings$[4]=val$
     fi
 
 rem --- Start the progress meter
@@ -290,9 +284,15 @@ rem --- Detail line by audit number
           if cvs(glt04a.reference_02$,2)<>"" ref$=ref$+"Ref 2 "+glt04a.reference_02$+" "
           if cvs(glt04a.reference_03$,2)<>"" ref$=ref$+"Ref 3 "+glt04a.reference_03$
           if ref$<>""
-            xwk=fnblank(1)
-            OutVect!.addItem(ref$)
-            xwk=fnblank(columns-1)
+            if sequence$="A"
+                xwk=fnblank(3)
+                OutVect!.addItem(ref$)
+                xwk=fnblank(columns-3)
+            else
+                xwk=fnblank(2)
+                OutVect!.addItem(ref$)
+                xwk=fnblank(columns-2)
+            endif
           endif
 
           rem --- Accumulate totals
