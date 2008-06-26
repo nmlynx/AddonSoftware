@@ -1,3 +1,7 @@
+[[APM_VENDHIST.ARAR]]
+if user_tpl.multi_types$<>"Y"
+	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE","  ")
+endif
 [[APM_VENDHIST.BDEL]]
 rem --- disallow deletion of apm-02 if any of the buckets are non-zero, or if referenced in apt-01 (open invoices)
 
@@ -112,6 +116,15 @@ rem -- store info needed for validation, etc., in user_tpl$
 	user_tpl.multi_dist$=aps01a.multi_dist$
 	user_tpl.ret_flag$=aps01a.ret_flag$
 
+if user_tpl.multi_types$<>"Y"
+	ctl_name$="APM_VENDHIST.AP_TYPE"
+	ctl_stat$="I"
+	gosub disable_fields
+else
+	ctl_name$="APM_VENDHIST.AP_TYPE"
+	ctl_stat$=" "
+	gosub disable_fields
+endif
 [[APM_VENDHIST.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
