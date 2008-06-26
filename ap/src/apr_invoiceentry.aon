@@ -504,11 +504,9 @@ print_total: rem --- Print totals
 
     if lines+3>maxlines
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-rem        xwk=fnblank(12)
-rem        OutVect!.addItem(underline$)
-rem        OutVect!.addItem(underline$)
-        xwk=fnblank(11)
+        xwk=fnblank(9)
         OutVect!.addItem(total$)
+        xwk=fnblank(2)
         OutVect!.addItem(str(pt[0]))
         OutVect!.addItem(str(pt[1]))
         lines=lines+3
