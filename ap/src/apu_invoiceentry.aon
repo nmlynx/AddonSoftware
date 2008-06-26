@@ -183,13 +183,21 @@ rem --- Read next Invoice Header (ape-01) record
             rem --- ****** another section of missing code.CH
             rem --- Invoice Detail
 
-            d0$=ape11a.firm_id$+ape11a.ap_type$+ape11a.vendor_id$+"I"+
-:               ape11a.ap_inv_no$+ape11a.gl_account$+ape01a.accting_date$
-            extract record (apt02_dev,key=d0$,dom=*next) apt02a$
+            apt02_key$=ape11a.firm_id$+ape11a.ap_type$+ape11a.vendor_id$+"I"+
+:                      ape11a.ap_inv_no$+ape11a.gl_account$+ape01a.accting_date$
+            extract record (apt02_dev,key=apt02_key$,dom=*next) apt02a$
+            apt02a.firm_id$=ape11a.firm_id$
+            apt02a.ap_type$=ape11a.ap_type$
+            apt02a.vendor_id$=ape11a.vendor_id$
+            apt02a.invoice_type$="I"
+            apt02a.reference$=ape11a.ap_inv_no$
+            apt02a.gl_account$=ape11a.gl_account$
+            apt02a.accting_date$=ape01a.accting_date$
             apt02a.gl_post_amt=apt02a.gl_post_amt+ape11a.gl_post_amt
             apt02a.units=apt02a.units+ape11a.units
+            apt02a$=field(apt02a$)
 
-            write record (apt02_dev,key=d0$) apt02a$
+            write record (apt02_dev,key=apt02_key$) apt02a$
 
             rem --- ****** end missing code.CH
             remove (ape11_dev,key=k$)
