@@ -136,6 +136,7 @@ rem --- Document initializations
             OutVect!=bbjAPI().getSysGui().makeVector()
             BrkVect!=bbjAPI().getSysGui().makeVector()
             HdrVect!=bbjAPI().getSysGui().makeVector()
+            TotVect!=bbjAPI().getSysGui().makeVector()
             rep_date$=date(0:"%Mz/%Dz/%Yd")
             rep_date_stamp$=date(0:"%Yd%Mz%Dz")
             rep_time$=date(0:"%hz:%mz %p")
@@ -251,25 +252,25 @@ rem --- column headings
         if col_format$="Y" columns=16
         dim columns$[columns,10]
 
-        p1$=periodbeg$[1]+"-"+periodend$[1]
-        p2$=periodbeg$[2]+"-"+periodend$[2]
-        p3$=periodbeg$[3]+"-"+periodend$[3]
-        p4$=periodbeg$[4]+"-"+periodend$[4]
+        p1$=periodbeg$[1]+"^-"+periodend$[1]
+        p2$=periodbeg$[2]+"^-"+periodend$[2]
+        p3$=periodbeg$[3]+"^-"+periodend$[3]
+        p4$=periodbeg$[4]+"^-"+periodend$[4]
         p5$=periodend$[5]
     
-        columns$[columns-12,0]="Invoice",columns$[columns-12,1]="C",columns$[columns-12,2]="5"
-        columns$[columns-11,0]="Invoiced",columns$[columns-11,1]="C",columns$[columns-11,2]="15"
-        columns$[columns-10,0]="PO Number",columns$[columns-10,1]="C",columns$[columns-10,2]="5"
-        columns$[columns-9,0]="Order Number",columns$[columns-9,1]="C",columns$[columns-9,2]="5"
+        columns$[columns-12,0]="Invoice",columns$[columns-12,1]="C",columns$[columns-12,2]="7"
+        columns$[columns-11,0]="Invoiced",columns$[columns-11,1]="C",columns$[columns-11,2]="10"
+        columns$[columns-10,0]="PO^Number",columns$[columns-10,1]="C",columns$[columns-10,2]="7"
+        columns$[columns-9,0]="Order^Number",columns$[columns-9,1]="C",columns$[columns-9,2]="7"
         columns$[columns-8,0]="Terms",columns$[columns-8,1]="C",columns$[columns-8,2]="5"
         columns$[columns-7,0]="Type",columns$[columns-7,1]="C",columns$[columns-7,2]="5"
-        columns$[columns-6,0]=future_heading$ ,columns$[columns-6,1]="N",columns$[columns-6,2]=str(m1),columns$[columns-6,3]=m1$
-        columns$[columns-5,0]=p1$,columns$[columns-5,1]="N",columns$[columns-5,2]=str(m1),columns$[columns-5,3]=m1$
-        columns$[columns-4,0]=p2$,columns$[columns-4,1]="N",columns$[columns-4,2]=str(m1),columns$[columns-4,3]=m1$
-        columns$[columns-3,0]=p3$,columns$[columns-3,1]="N",columns$[columns-3,2]=str(m1),columns$[columns-3,3]=m1$
-        columns$[columns-2,0]=p4$,columns$[columns-2,1]="N",columns$[columns-2,2]=str(m1),columns$[columns-2,3]=m1$
-        columns$[columns-1,0]=p5$,columns$[columns-1,1]="N",columns$[columns-1,2]=str(m1),columns$[columns-1,3]=m1$
-        columns$[columns,0]="Balance",columns$[columns,1]="N",columns$[columns,2]=str(m9),columns$[columns,3]=m9$
+        columns$[columns-6,0]=future_heading$ ,columns$[columns-6,1]="N",columns$[columns-6,2]=str(m1),columns$[columns-6,3]=m1$,columns$[columns-6,10]="T"
+        columns$[columns-5,0]=p1$,columns$[columns-5,1]="N",columns$[columns-5,2]=str(m1),columns$[columns-5,3]=m1$,columns$[columns-5,10]="T"
+        columns$[columns-4,0]=p2$,columns$[columns-4,1]="N",columns$[columns-4,2]=str(m1),columns$[columns-4,3]=m1$,columns$[columns-4,10]="T"
+        columns$[columns-3,0]=p3$,columns$[columns-3,1]="N",columns$[columns-3,2]=str(m1),columns$[columns-3,3]=m1$,columns$[columns-3,10]="T"
+        columns$[columns-2,0]=p4$,columns$[columns-2,1]="N",columns$[columns-2,2]=str(m1),columns$[columns-2,3]=m1$,columns$[columns-2,10]="T"
+        columns$[columns-1,0]=p5$,columns$[columns-1,1]="N",columns$[columns-1,2]=str(m1),columns$[columns-1,3]=m1$,columns$[columns-1,10]="T"
+        columns$[columns,0]="Balance",columns$[columns,1]="N",columns$[columns,2]=str(m9),columns$[columns,3]=m9$,columns$[columns,10]="T"
         if col_format$="Y"
             columns$[0,0]="Customer",columns$[0,1]="C",columns$[0,2]="7"
             columns$[1,0]="Name",columns$[1,1]="C",columns$[1,2]="30"
@@ -285,13 +286,13 @@ rem --- column headings
 
         columns$[0,0]="Customer",columns$[0,1]="C",columns$[0,2]="30"
         columns$[1,0]="",columns$[1,1]="C",columns$[1,2]="15"
-        columns$[2,0]=future_heading$ ,columns$[2,1]="C",columns$[2,2]="5"
-        columns$[3,0]=periodbeg$[1]+" - "+periodend$[1],columns$[3,1]="N",columns$[3,2]="5",columns$[3,3]=m1$
-        columns$[4,0]=periodbeg$[2]+" - "+periodend$[2],columns$[4,1]="N",columns$[4,2]="5",columns$[4,3]=m1$
-        columns$[5,0]=periodbeg$[3]+" - "+periodend$[3],columns$[5,1]="N",columns$[5,2]="5",columns$[5,3]=m1$
-        columns$[6,0]=periodbeg$[4]+" - "+periodend$[4],columns$[6,1]="N",columns$[6,2]="5",columns$[6,3]=m1$
-        columns$[7,0]=periodend$[5],columns$[7,1]="N",columns$[7,2]="15",columns$[7,3]=m1$
-        columns$[8,0]="Balance",columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m9$
+        columns$[2,0]=future_heading$ ,columns$[2,1]="C",columns$[2,2]="10"
+        columns$[3,0]=periodbeg$[1]+"^-"+periodend$[1],columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m1$
+        columns$[4,0]=periodbeg$[2]+"^-"+periodend$[2],columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$
+        columns$[5,0]=periodbeg$[3]+"^-"+periodend$[3],columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
+        columns$[6,0]=periodbeg$[4]+"^-"+periodend$[4],columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
+        columns$[7,0]=periodend$[5],columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
+        columns$[8,0]="Balance",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m9$
 
     endif
 
@@ -563,13 +564,7 @@ rem --- line.
                    x$="Total for "+customer$
                    x$=cvs(x$,2)
 
-                    abc=fnblank(7) 
-                    OutVect!.addItem(u_line$)  
-                    OutVect!.addItem(u_line$)  
-                    OutVect!.addItem(u_line$)  
-                    OutVect!.addItem(u_line$)  
-                    OutVect!.addItem(u_line$)  
-                    OutVect!.addItem(u_line$)
+                    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
                     abc=fnblank(1)
                     OutVect!.addItem(x$)
@@ -635,13 +630,14 @@ rem --- All done
     next x
     if lines+2>maxlines gosub increment_lines
     if type$="D" and col_format$<>"Y"
-        abc=fnblank(7) 
-        OutVect!.addItem(u_line$)  
-        OutVect!.addItem(u_line$)  
-        OutVect!.addItem(u_line$)  
-        OutVect!.addItem(u_line$)  
-        OutVect!.addItem(u_line$)  
-        OutVect!.addItem(u_line$) 
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+rem        abc=fnblank(7) 
+rem        OutVect!.addItem(u_line$)  
+rem        OutVect!.addItem(u_line$)  
+rem        OutVect!.addItem(u_line$)  
+rem        OutVect!.addItem(u_line$)  
+rem        OutVect!.addItem(u_line$)  
+rem        OutVect!.addItem(u_line$) 
  
         abc=fnblank(1)
         OutVect!.addItem(x$)
@@ -688,13 +684,17 @@ customer_heading: rem --- Print customer subheading
     if lines+3>maxlines gosub increment_lines
 
         abc=fnblank(13)
+
         OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
         OutVect!.addItem(arm01a.customer_name$)
+        abc=fnblank(1)
         OutVect!.addItem(phone$)
+        abc=fnblank(1)
         OutVect!.addItem(arm01a.contact_name$)
         abc=fnblank(1)
         OutVect!.addItem(continued$)
-        abc=fnblank(7)
+        abc=fnblank(5)
+
         abc=fnblank(13)
         rem continued$="(Continued)"
         lines=lines+3
