@@ -13,6 +13,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -171,11 +172,12 @@ rem --- Determine period beginning and ending dates based on the aging method se
                 rem --- Calculate future period beginning and ending dates
 
                 base=period
+                base_yr=year
                 for x=1 to 3
                     period=base+x
                     if period>maxperiods
                        period=period-maxperiods
-                       year=year+1
+                       year=base_yr+1
                     endif
                     call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,
 :                                                      begperiod$,endperiod$,status
@@ -224,15 +226,15 @@ rem --- Headings and print positions
     date3e$ = fndate$(enddates$(17,8))
     date4b$ = fndate$(begdates$(25,8))
 
-    date1$ = date1b$ + " Through " + date1e$
-    date2$ = date2b$ + " Through " + date2e$
-    date3$ = date3b$ + " Through " + date3e$
-    date4$ = date4b$ + " Through Last "
+    date1$ = date1b$ + "-^" + date1e$
+    date2$ = date2b$ + "-^" + date2e$
+    date3$ = date3b$ + "-^" + date3e$
+    date4$ = date4b$ + "-^Last "
  
     if detail
         head2$="Reference"
         head3$="Invoice"
-        head4$="Aging date"
+        head4$="Aging dt"
         head5$="PG"
         head6$="H"
     endif
@@ -241,18 +243,18 @@ rem --- Headings and print positions
     dim columns$[11,10]
     columns = 11
 
-    columns$[0,0]="Vendor",             columns$[0,1]="C",columns$[0,2]="35"; rem "25"
-    columns$[1,0]=head2$,               columns$[1,1]="C",columns$[1,2]="5"
-    columns$[2,0]=head3$,               columns$[2,1]="C",columns$[2,2]="14"
-    columns$[3,0]=head4$,               columns$[3,1]="C",columns$[3,2]="5"
+    columns$[0,0]="Vendor",             columns$[0,1]="C",columns$[0,2]="25"
+    columns$[1,0]=head2$,               columns$[1,1]="C",columns$[1,2]="8"
+    columns$[2,0]=head3$,               columns$[2,1]="C",columns$[2,2]="8"
+    columns$[3,0]=head4$,               columns$[3,1]="C",columns$[3,2]="8"
     columns$[4,0]=head5$,               columns$[4,1]="C",columns$[4,2]="3"
     columns$[5,0]=head6$,               columns$[5,1]="C",columns$[5,2]="3"
-    columns$[6,0]="Past Due",           columns$[6,1]="N",columns$[6,2]="6",columns$[6,3]=m1$
-    columns$[7,0]=date1$,               columns$[7,1]="N",columns$[7,2]="5",columns$[7,3]=m1$
-    columns$[8,0]=date2$,               columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m1$
-    columns$[9,0]=date3$,               columns$[9,1]="N",columns$[9,2]="5",columns$[9,3]=m1$
-    columns$[10,0]=date4$,              columns$[10,1]="N",columns$[10,2]="5",columns$[10,3]=m1$
-    columns$[11,0]="Total",             columns$[11,1]="N",columns$[11,2]="11",columns$[11,3]=m1$
+    columns$[6,0]="Past Due",           columns$[6,1]="N",columns$[6,2]=str(len(m1$)),columns$[6,3]=m1$,columns$[6,10]="T"
+    columns$[7,0]=date1$,               columns$[7,1]="N",columns$[7,2]=str(len(m1$)),columns$[7,3]=m1$,columns$[7,10]="T"
+    columns$[8,0]=date2$,               columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[9,0]=date3$,               columns$[9,1]="N",columns$[9,2]=str(len(m1$)),columns$[9,3]=m1$,columns$[9,10]="T"
+    columns$[10,0]=date4$,              columns$[10,1]="N",columns$[10,2]=str(len(m1$)),columns$[10,3]=m1$,columns$[10,10]="T"
+    columns$[11,0]="Total",             columns$[11,1]="N",columns$[11,2]=str(len(m1$)),columns$[11,3]=m1$,columns$[11,10]="T"
 
 
  
@@ -452,8 +454,14 @@ rem --- Read next Invoice Header (apt-01) record
           OutVect!.addItem(fndate$(dateused$))
           OutVect!.addItem(apt01a.payment_grp$)
           OutVect!.addItem(apt01a.hold_flag$)
-          OutVect!.addItem(str(it[0]))
-          xwk=fnblank(4)
+
+          for x=0 to 4
+            if x=period
+                OutVect!.addItem(str(it[0]))
+            else
+                OutVect!.addItem("")
+            endif
+          next x
           OutVect!.addItem(str(it[0]))
 
           lines=lines+1
@@ -488,19 +496,11 @@ print_total: rem --- Print totals
         totret=totret+pr[x]
     next x
     if lines+(2+retention)>maxlines gosub set_linecount
+
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     
-   
-    xwk = fnblank(6)
-    OutVect!.addItem("------------------")
-    for x = 0 to 1
-        OutVect!.addItem("--------------------------------------")
-    next x
-    OutVect!.addItem("--------------------------")
-    OutVect!.addItem("--------------------------------")
-    OutVect!.addItem("------------------")
-    xwk=fnblank(2)
     Outvect!.addItem(total$)
-    xwk=fnblank(3)
+    xwk=fnblank(5)
 
     Outvect!.addItem(str(pt[0]))
     Outvect!.addItem(str(pt[1]))
@@ -539,7 +539,6 @@ type_break: rem --- AP Type break
     find record (apm10_dev,key=k$,dom=*next) apm10a$
     lasttype$=apm10a.ap_type$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
-rem    headings$[3]=aptype$
     lines=maxlines+1
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     HdrVect!.addItem(aptype$)
@@ -549,7 +548,7 @@ vendor_break: rem --- Vendor break
 
     while lastvendor$<>""
           if detail
-             if printed>1
+             if printed>=1
                 total$="Totals for Vendor "+vendorid$
                 for x=0 to 4
                     pt[x]=vt[x]
