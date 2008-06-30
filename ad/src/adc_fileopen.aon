@@ -16,7 +16,7 @@ rem --- Creation of files using the "make like" capability is not supported
 rem --- Verification that the application is installed is not supported
 rem --- The PERSIST option is not supported
 rem --- The REQUIRED FILE option is not supported
-rem --- The MAKE IF NOT FOUND option is not supported
+rem --- The MAKE IF option is not supported
 rem --- Verification that the fiscal calendar is setup is missing
 
 rem --- ACTION       : Action code (Reserved for future use)
@@ -86,7 +86,7 @@ open_file_loop:
         if basename$<>""
     
             rem --- Attempt to open file
-
+actual_open:
             channel=unt
             open_mode$=""
 
@@ -114,8 +114,8 @@ open_file_loop:
     open_error: rem --- Error encountered attempting to open the file
 
         errors=1,sverr=err
-        if err=12 goto not_found
         gosub get_file_description
+        if sverr=12 goto not_found
         error$="Error "+str(sverr)+" encountered while trying to open "+description$
         if sverr=0 goto file_locked
         break
@@ -128,11 +128,17 @@ open_file_loop:
         break
 
     not_found: rem --- Error 12 - File not found
-    
-        description$="file: "+files$[x]
+  
+        if description$="" then description$="file: "+files$[x]
 
         errors=0
         if pos("F"=options$[x]) continue
+
+        if ids$[x]<>"" and ddm10a.restrict_create$<>"Y"
+            call stbl("+DIR_SYP")+"bac_create_table.bbj",cvs(ids$[x],4),"",table_chans$[all],"create",status$
+            if status$="" goto actual_open; rem back to open now that file is created
+        endif
+
         errors=1
         error$="Unable to locate "+description$
         break
@@ -219,7 +225,7 @@ get_file_description: rem --- Return file description
     read (ddm21_dev,key="DDM_TABLES",dom=*next)
     ddm21_key$=key(ddm21_dev,err=*return);read(ddm21_dev)*,*,template$
     if pos("DDM_TABLES"=ddm21_key$)<>1 return
-    ddm10_key$=ids$[x]
+    ddm10_key$=cvs(ids$[x],4)
     ddm10_dev=unt
     open (ddm10_dev,err=*return) sysdatadir$+"ddm_tables.dat"
     dim ddm10a$:template$
