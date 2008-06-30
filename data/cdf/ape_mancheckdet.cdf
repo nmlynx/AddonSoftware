@@ -10,63 +10,6 @@ if cvs(rec_data$,3)<>"" gosub delete_gldist
 gosub calc_tots
 gosub disp_tots
 
-apt_invoicehdr_dev=fnget_dev("APT_INVOICEHDR")			
-dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
-
-ap_type$=field(apt01a$,"AP_TYPE")
-vendor_id$=field(apt01a$,"VENDOR_ID")
-ap_type$(1)=UserObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
-vendor_id$(1)=UserObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
-
-apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")
-readrecord(apt_invoicehdr_dev,key=apt01ak1$,dom=*next)apt01a$
-if apt01a$(1,len(apt01ak1$))<>apt01ak1$ 
-
-	rem --- save row/column so we'll know where to set focus when we return from GL Dist
-	w!=Form!.getChildWindow(1109)
-	c!=w!.getControl(5900)
-	return_to_row=c!.getSelectedRow()
-	return_to_col=c!.getSelectedColumn()
-	Form!.setEnabled(0)
-
-	rem --- invoke GL Dist form
-	gosub get_gl_tots
-	user_id$=stbl("+USER_ID")
-	dim dflt_data$[1,1]
-	dflt_data$[1,0]="GL_ACCOUNT"
-	dflt_data$[1,1]=user_tpl.dflt_gl_account$
-	key_pfx$=callpoint!.getColumnData("APE_MANCHECKDET.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
-:		callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")+
-:		callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"APE_MANCHECKDIST",
-:	user_id$,
-:	"MNT",
-:	key_pfx$,
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
-
-	glns!=bbjapi().getNamespace("GLNS","GL Dist",1)
-	amt_dist=num(glns!.getValue("dist_amt"))
-	if amt_dist<>num(callpoint!.getColumnData("APE_MANCHECKDET.INVOICE_AMT"))
-		msg_id$="AP_NOBAL"
-		gosub disp_message
-	endif
-
-	rem --- return focus to where we were (should be discount amt on same row)
-	Form!.setEnabled(1)
-	Form!.focus()
-	
-	w!=Form!.getChildWindow(1109)
-	c!=w!.getControl(5900)
-	c!.focus()
-rem	c!.setSelectedCell(return_to_row,return_to_col)
-	c!.accept(1,err=*next)
-	c!.startEdit(return_to_row,return_to_col)
-	wait 1
-	
-endif
 [[APE_MANCHECKDET.ADEL]]
 rem --- Recalc totals for header
 
@@ -95,6 +38,50 @@ glns!.setValue("dist_amt",callpoint!.getColumnData("APE_MANCHECKDET.INVOICE_AMT"
 glns!.setValue("dflt_dist",user_tpl.dflt_dist_cd$)
 glns!.setValue("dflt_gl",user_tpl.dflt_gl_account$)
 glns!.setValue("tot_inv",callpoint!.getColumnData("APE_MANCHECKDET.INVOICE_AMT"))
+
+apt_invoicehdr_dev=fnget_dev("APT_INVOICEHDR")			
+dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
+
+ap_type$=field(apt01a$,"AP_TYPE")
+vendor_id$=field(apt01a$,"VENDOR_ID")
+ap_type$(1)=UserObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
+vendor_id$(1)=UserObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
+
+apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")
+readrecord(apt_invoicehdr_dev,key=apt01ak1$,dom=*next)apt01a$
+if apt01a$(1,len(apt01ak1$))<>apt01ak1$ 
+
+	rem --- save row/column so we'll know where to set focus when we return from GL Dist
+	w!=Form!.getChildWindow(1109)
+	c!=w!.getControl(5900)
+	return_to_row=c!.getSelectedRow()
+	return_to_col=c!.getSelectedColumn()
+
+	rem --- invoke GL Dist form
+	gosub get_gl_tots
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[1,1]
+	dflt_data$[1,0]="GL_ACCOUNT"
+	dflt_data$[1,1]=user_tpl.dflt_gl_account$
+	key_pfx$=callpoint!.getColumnData("APE_MANCHECKDET.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
+:		callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")+
+:		callpoint!.getColumnData("APE_MANCHECKDET.AP_INV_NO")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"APE_MANCHECKDIST",
+:	user_id$,
+:	"MNT",
+:	key_pfx$,
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
+
+	rem --- return focus to where we were (should be discount amt on same row)
+	c!.focus()
+	c!.accept(1,err=*next)
+	c!.startEdit(return_to_row,return_to_col+1)
+	
+endif
 
 callpoint!.setStatus("MODIFIED-REFRESH")
 [[APE_MANCHECKDET.AP_INV_NO.AVAL]]
@@ -201,31 +188,26 @@ calc_tots:
 
 return
 
-disp_tots_old:
+disp_tots:
 
     rem --- get context and ID of display controls for totals, and redisplay w/ amts from calc_tots
+    rem --- also setHeaderColumnData so Barista's values for these display controls will stay in sync
     
     tinv!=UserObj!.getItem(num(user_tpl.tinv_vpos$))
     tinv!.setValue(tinv)
+    callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_INV",str(tinv))
 
     tdisc!=UserObj!.getItem(num(user_tpl.tdisc_vpos$))
     tdisc!.setValue(tdisc)
+    callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_DISC",str(tdisc))
 
     tret!=UserObj!.getItem(num(user_tpl.tret_vpos$))
     tret!.setValue(tret)
+    callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_RETEN",str(tret))
 
     tchk!=UserObj!.getItem(num(user_tpl.tchk_vpos$))
     tchk!.setValue(tinv-tdisc-tret)
-
-return
-
-disp_tots:
-	
-	callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_INV",str(tinv))
-	callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_DISC",str(tdisc))
-	callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_RETEN",str(tret))
-	callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_CHECK",str(tinv-tdisc-tret))
-	gosub disp_tots_old
+    callpoint!.setHeaderColumnData("<<DISPLAY>>.DISP_TOT_CHECK",str(tinv-tdisc-tret))
 
 return
 
