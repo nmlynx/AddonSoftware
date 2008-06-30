@@ -189,13 +189,17 @@ rem --- Read next Invoice Header (are-05) record
         if are05a.sim_inv_type$="V" continue
 
         rem --- Initialize invoice header fields
+        rem --- first call bac_documents.bbj to get back document ID
+        call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,"","","I","PDF",docdir$,
+:           "pdf",option!.getAlias(),"C",are05a.customer_id$,table_chans$[all],"DOC_ID"
 
         prtr_dev=unt
-        open (prtr_dev,err=printer)docdIr$+"invoice"+are05a.ar_inv_no$+".pdf"
+        pdf_doc$=docdir$+new_doc_id$+".pdf"
+        open (prtr_dev,err=printer)pdf_doc$
         close (prtr_dev)
-        erase docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
+        erase pdf_doc$
         printer:
-        docPDF!=myBBjPDFPrinter!.getBBjPDFForm(docdir$+"INVOICE"+are05a.ar_inv_no$+".pdf",requestAttributes!)
+        docPDF!=myBBjPDFPrinter!.getBBjPDFForm(pdf_doc$,requestAttributes!)
 
         invoice$=are05a.firm_id$+are05a.ar_inv_no$
         invoice_date$=fndate$(are05a.inv_date$)
@@ -266,20 +270,8 @@ next_wend:
         gosub totals
         next copy
 
-    rem --- Loop back for next Invoice Header
-rem escape;rem call fax and/or email
-rem call "c:/apps/barista/sys/prog/bac_sendfax.bbj","Test From Chris","Test from BASIS",
-rem :   "test to Chris","test at BASIS","503-570-6107","test invoice","test invoice message",
-rem :   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
+     rem --- Loop back for next Invoice Header
 
-rem call "c:/apps/barista/sys/prog/bac_sendmail.bbj","chris.hawkins@verizon.net","chris.hawkins@verizon.net",
-rem :   "chris.hawkins@verizon.net","chris.hawkins@verizon.net","chris.hawkins@verizon.net","test invoice","invoice message",
-rem :   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
-rem call "c:/apps/barista/sys/prog/bac_sendmail.bbj","rsl@masi.com","rsl@masi.com",
-rem :   "rsl@masi.com","rsl@masi.com","rsl@masi.com","test invoice","invoice message",
-rem :   docdir$+"invoice"+are05a.ar_inv_no$+".pdf"
-
-rem escape;rem did it work?
 
      wend
 
@@ -420,6 +412,7 @@ totals: rem --- Print the invoice total
     wend
 
     docPDF!.print()
+    call stbl("+DIR_PGM")+"adc_rptcontrol.aon",option!.getAlias(),are05a.customer_id$,"C",new_doc_id$,"pdf"
 
 return
 
