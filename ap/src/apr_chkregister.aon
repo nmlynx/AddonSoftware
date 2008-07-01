@@ -15,6 +15,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -134,6 +135,7 @@ rem --- Initializations
        retention_hdr1$="Retention"
        retention_hdr2$="   Amount" 
     endif
+    headings$[2]="[HEADER]"
 
 rem --- Headings and print positions
 
@@ -146,14 +148,14 @@ rem --- Headings and print positions
         columns = 6
     endif
 
-    columns$[0,0]="Check Number",       columns$[0,1]="C",columns$[0,2]="4"
-    columns$[1,0]="Check Date",         columns$[1,1]="C",columns$[1,2]="6"
-    columns$[2,0]="Vendor",             columns$[2,1]="C",columns$[2,2]="28"
-    columns$[3,0]="Invoice Amount",     columns$[3,1]="N",columns$[3,2]="5",columns$[3,3]=m1$
-    columns$[4,0]="Discount Amount",    columns$[4,1]="N",columns$[4,2]="4",columns$[4,3]=m1$
-    columns$[5,0]="Payment Amount",     columns$[5,1]="N",columns$[5,2]="5",columns$[5,3]=m1$
+    columns$[0,0]="Check No",       columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]="Check Date",         columns$[1,1]="C",columns$[1,2]="8"
+    columns$[2,0]="Vendor",             columns$[2,1]="C",columns$[2,2]="25"
+    columns$[3,0]="Invoice Amt",     columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m1$,columns$[3,10]="T"
+    columns$[4,0]="Discount Amt",    columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$,columns$[4,10]="T"
+    columns$[5,0]="Payment Amt",     columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
     if retention
-        columns$[6,0]="Retention Amount",   columns$[6,1]="S",columns$[6,2]="5",columns$[6,3]=m1$
+        columns$[6,0]="Retention Amount",   columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
     endif
     
 rem --- Determine print positions
@@ -470,7 +472,7 @@ set_linecount: rem --- Report Heading
 
     lines=headings+1
     lines=lines+3
-    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+
     return
 
 print_total: rem --- Print totals
@@ -478,14 +480,7 @@ print_total: rem --- Print totals
     if lines+2>maxlines gosub set_linecount
 
 
-    xwk = fnblank(3)
-
-    OutVect!.addItem(underline$)
-    OutVect!.addItem(underline$)
-    OutVect!.addItem(underline$)
-    if retention
-        OutVect!.addItem(underline$)
-    endif
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     xwk = fnblank(2)
 
@@ -542,7 +537,8 @@ type_break: rem --- AP Type break
     k$=apm10a.firm_id$+apm10a.record_id_a$+apm10a.ap_type$
     find record (apm10a_dev,key=k$,dom=*next) apm10a$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
-    headings$[1]=taskdesc$+" - "+aptype$
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(taskdesc$+" - "+aptype$)
     errors=errors+(pos(nf$=apm10a.code_desc$)=1)
     lines=maxlines+1
     lasttype$=apm10a.ap_type$
