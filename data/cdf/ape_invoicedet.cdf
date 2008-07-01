@@ -56,9 +56,10 @@ disp_totals:
 
 rem --- get context and ID of display controls, and redisplay w/ amts from calc_grid_tots
     	
-	inv_amt=num(user_tpl.inv_amt$)
+	dist_bal=num(user_tpl.inv_amt$)-num(user_tpl.tot_dist$)
 	dist_bal!=UserObj!.getItem(num(user_tpl.dist_bal_ofst$))
-	dist_bal!.setValue(inv_amt-num(user_tpl.tot_dist$))
-rem	dist_bal!.setRestore(dist_bal!.getValue())
+	dist_bal!.setValue(dist_bal)
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.DIST_BAL",str(dist_bal))
+
 
 return

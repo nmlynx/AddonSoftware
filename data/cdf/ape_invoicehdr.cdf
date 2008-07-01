@@ -74,8 +74,7 @@ look_for_invoice:
 		callpoint!.setColumnData("APE_INVOICEHDR.NET_INV_AMT","")
 		callpoint!.setColumnData("APE_INVOICEHDR.RETENTION","")
 
-		dist_bal!=userObj!.getItem(num(user_tpl.dist_bal_ofst$))
-		dist_bal!.setValue(0)
+		callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL","0")
 		
 		ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
 		ctl_stat$="D"
@@ -160,8 +159,7 @@ Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
 user_tpl.inv_amt$=""
 user_tpl.tot_dist$=""
-dist_bal!=UserObj!.getItem(num(user_tpl.dist_bal_ofst$))
-dist_bal!.setValue(0)
+callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL","0")
 
 rem --- Re-enable disabled fields
 ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
@@ -200,7 +198,7 @@ if status<=99
 		if msg_opt$="N"
 			gosub calc_grid_tots
 			gosub disp_dist_bal			
-			callpoint!.setStatus("ABORT")
+			callpoint!.setStatus("REFRESH-ABORT")
 		endif
 	endif
 endif
@@ -300,7 +298,7 @@ if user_tpl.glint$="N" user_tpl.tot_dist$=user_tpl.inv_amt$
 gosub calc_grid_tots
 gosub disp_dist_bal
 
-callpoint!.setStatus("REFRESH:APE_INVOICEHDR.NET_INV_AMT")
+callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
@@ -421,9 +419,8 @@ return
 disp_dist_bal:
 
 	dist_bal=num(user_tpl.inv_amt$)-num(user_tpl.tot_dist$)
-	dist_bal!=userObj!.getItem(num(user_tpl.dist_bal_ofst$))
-	dist_bal!.setValue(dist_bal)
-	 
+	callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL",str(dist_bal))
+		 
 return
 
 rem #include fnget_control.src
@@ -505,27 +502,11 @@ nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+25,inv_no_y,cmts_x-(inv_no_x+inv_no_width+25),inv_no_height*2,"")
 user_tpl.open_inv_textID$=str(nxt_ctlID)
 
-rem --- add inputE (display only) for displaying distribution balance in header
+rem --- add the display control holding the distribution balance to userObj!
 
-discount!=fnget_control!("APE_INVOICEHDR.DISCOUNT_AMT")
-retention!=fnget_control!("APE_INVOICEHDR.RETENTION")
-
-dist_bal_w=retention!.getWidth()
-dist_bal_h=retention!.getHeight()
-dist_bal_x=retention!.getX()
-dist_bal_y=retention!.getY()-discount!.getY()+retention!.getY()
-
-dist_bal!=Form!.addInputN(nxt_ctlID+2,dist_bal_x,dist_bal_y,dist_bal_w,dist_bal_h)
+dist_bal!=fnget_control!("<<DISPLAY>>.DIST_BAL")
 user_tpl.dist_bal_ofst$="0"
 userObj!.addItem(dist_bal!)
-dist_bal!.setEditable(0)
-dist_bal!.setFocusable(0)
-dist_bal!.setMask(retention!.getMask())
-
-rem --- add static label for the distribution balance inputE 
-nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-dist_lbl!=Form!.addStaticText(nxt_ctlID+3,dist_bal_x-dist_bal_w-2,dist_bal_y+2,dist_bal_w,dist_bal_h,"Dist bal:")
-dist_lbl!.setAlignment(dist_lbl!.ALIGN_RIGHT)
 
 rem --- Additional File Opens
 
@@ -599,6 +580,10 @@ if user_tpl.ret_flag$="N"
 	ctl_stat$="I"
 	gosub disable_fields
 endif
+
+	ctl_name$="<<DISPLAY>>.DIST_BAL"
+	ctl_stat$="I"
+	gosub disable_fields
 
 rem --- disable some grid columns depending on params
 
