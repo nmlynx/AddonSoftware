@@ -53,19 +53,22 @@ return
 [[GLM_FINDETAIL.LINE_TYPE_LIST.AVAL]]
 if pos(callpoint!.getUserInput()="HDTNBC")=0  then callpoint!.setStatus("ABORT-REFRESH")
 [[GLM_FINDETAIL.EDITING_CODE.AVAL]]
-edits$=callpoint!.getColumnData("GLM_FINDETAIL.EDITING_CODE")
+edits$=cvs(callpoint!.getColumnData("GLM_FINDETAIL.EDITING_CODE"),3)
+
 edlen=len(edits$), reject$=""
 
-if edlen >5 reject$="Y"
- 
-for x = 1 to edlen
-	if pos(edits$(x,1)="SUDP-CF$")=0
-	reject$="Y"
-next x
+if edlen>0
+	if edlen >5 reject$="Y"
+	 
+	for x = 1 to edlen
+		if pos(edits$(x,1)="SUDP-CF$")=0
+		reject$="Y"
+	next x
 
-if reject$<>"" 
-	MSG_ID$="GL_FIN_EDIT"
-	gosub disp_message
-	callpoint!.setColumnData("GLM_FINDETAIL.EDITING_CODE","")
-	callpoint!.setStatus("ABORT-REFRESH")
+	if reject$<>"" 
+		MSG_ID$="GL_FIN_EDIT"
+		gosub disp_message
+		callpoint!.setColumnData("GLM_FINDETAIL.EDITING_CODE","")
+		callpoint!.setStatus("ABORT-REFRESH")
+	endif
 endif
