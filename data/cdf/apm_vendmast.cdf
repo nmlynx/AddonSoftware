@@ -103,7 +103,12 @@ return
 [[APM_VENDMAST.VENDOR_NAME.AVAL]]
 rem --- if no alt sequence is set, default it to vendor name
 if cvs(callpoint!.getColumnData("APM_VENDMAST.ALT_SEQUENCE"),3)=""
-	callpoint!.setColumnData("APM_VENDMAST.ALT_SEQUENCE",callpoint!.getUserInput())
+	alt_seq$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_NAME")
+	alt_seq_len=num(callpoint!.getTableColumnAttribute("APM_VENDMAST.ALT_SEQUENCE","MAXL"))
+	if len(alt_seq$)>alt_seq_len
+		alt_seq$=alt_seq$(1,alt_seq_len)
+	endif
+	callpoint!.setColumnData("APM_VENDMAST.ALT_SEQUENCE",alt_seq$)
 	callpoint!.setStatus("REFRESH")
 endif
 [[APM_VENDMAST.BSHO]]
