@@ -323,6 +323,7 @@ register_errors: rem --- Register errors
 
     msg_id$="AON_REG_ERRS"
     gosub disp_message
+    if pos("escape"=mst_opt$) then escape;rem temp
     if pos("SPECIAL"=msg_opt$)<>1 goto std_exit
     errors=0
     
