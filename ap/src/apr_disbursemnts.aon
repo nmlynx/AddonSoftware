@@ -14,6 +14,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -154,15 +155,15 @@ rem --- Headings and print positions
     dim columns$[8,10]
     columns = 8
 
-    columns$[0,0]="Check No",       columns$[0,1]="C",columns$[0,2]="5"
-    columns$[1,0]="Check Tp",         columns$[1,1]="C",columns$[1,2]="4"
-    columns$[2,0]="Check Dt",         columns$[2,1]="C",columns$[2,2]="5"
-    columns$[3,0]="Vendor",             columns$[3,1]="C",columns$[3,2]="30"
-    columns$[4,0]="Invoice No",     columns$[4,1]="C",columns$[4,2]="5"
+    columns$[0,0]="Check No",       columns$[0,1]="C",columns$[0,2]="10"
+    columns$[1,0]="Check Tp",         columns$[1,1]="C",columns$[1,2]="10"
+    columns$[2,0]="Check Dt",         columns$[2,1]="C",columns$[2,2]="10"
+    columns$[3,0]="Vendor",             columns$[3,1]="C",columns$[3,2]="25"
+    columns$[4,0]="Invoice No",     columns$[4,1]="C",columns$[4,2]="10"
     columns$[5,0]="Account",            columns$[5,1]="C",columns$[5,2]="10"
-    columns$[6,0]="Distrib Amt",     columns$[6,1]="N",columns$[6,2]="5",columns$[6,3]=m1$
-    columns$[7,0]="Discount Amt",    columns$[7,1]="N",columns$[7,2]="5",columns$[7,3]=m1$
-    columns$[8,0]="Check Amt",       columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m1$
+    columns$[6,0]="Distrib Amt",     columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+    columns$[7,0]="Discount Amt",    columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
+    columns$[8,0]="Check Amt",       columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
 
    
 rem --- Define print positions
@@ -450,22 +451,14 @@ rem --- Run next overlay
 
 print_total: rem --- Print subtotal/total
 
-    xwk = fnblank(6)
-    for x = 0 to 2
-        OutVect!.addItem("--------------------")
-    next x
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
-    xwk = fnblank(4)
+    xwk = fnblank(3)
     OutVect!.addItem(total$)
-    xwk=fnblank(1)
+    xwk=fnblank(2)
     OutVect!.addItem(str(totals[0]))
     OutVect!.addItem(str(totals[1]))
     OutVect!.addItem(str(totals[2]))
-
-rem    if typebreak_flag and !done
-rem       BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-rem       typebreak_flag = 0
-rem    endif
 
     return
 
@@ -476,9 +469,11 @@ print_distribution: rem --- Print GL distribution
         account$=accounts$[n]
         amount=amounts[n]
         detail[0]=amount
-   
+
+        xwk=fnblank(5)
         OutVect!.addItem(str(fnmask$(account$(1,acct_length),g0$)))
         OutVect!.addItem(str(amount:m1$))
+        xwk=fnblank(2)
    
         gosub accumulate_totals
         gosub update_gl
