@@ -500,6 +500,10 @@ if user_tpl.ret_flag$="N"
 	gosub disable_fields
 endif
 
+	ctl_name$="<<DISPLAY>>.DIST_BAL"
+	ctl_stat$="I"
+	gosub disable_fields
+
 rem --- disable some grid columns depending on params
 
 w!=Form!.getChildWindow(1109)
