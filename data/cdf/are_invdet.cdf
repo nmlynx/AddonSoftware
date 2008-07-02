@@ -1,3 +1,7 @@
+[[ARE_INVDET.ADEL]]
+rem --- after deleting a row from detail grid, recalc/redisplay balance left to distribute
+gosub calc_grid_tots
+gosub disp_totals
 [[ARE_INVDET.UNITS.AVAL]]
 newqty=num(callpoint!.getUserInput())                       
 unit_price=num(callpoint!.getColumnData("ARE_INVDET.UNIT_PRICE"))               
@@ -43,9 +47,12 @@ rem --- get context and ID of total quantity/amount display controls, and redisp
     
 	tqty!=UserObj!.getItem(0)
 	tqty!.setValue(num(user_tpl.totqty$))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.TOT_QTY",user_tpl.totqty$)
 
 	tamt!=UserObj!.getItem(1)
 	tamt!.setValue(num(user_tpl.totamt$))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.TOT_AMT",user_tpl.totamt$)
+
 	return
 
 #include std_missing_params.src
