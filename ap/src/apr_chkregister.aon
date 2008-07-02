@@ -422,6 +422,15 @@ rem --- Read next Check Detail (apw-01) record
           endif
   
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,gldate$,glstatus,lines,errors,status
+
+          rem --- get glc_datewarn message from stbl
+          err_msg$=stbl("+DTWARN_MSG",err=*next)
+          if err_msg$<>""
+              OutVect!.addItem("")
+              OutVect!.addItem(err_msg$)
+              xwk=fnblank(columns-2)
+          endif
+
           lines=lines+1
 
           rem --- Loop back for next Check Detail
@@ -445,6 +454,7 @@ rem --- Any errors encountered?
           if lines+2>maxlines gosub set_linecount
           OutVect!.addItem("")
           OutVect!.addItem("WARNING: This register is out of balance or missing information")
+          xwk=fnblank(columns-2)
           lines=lines+2
           break
     wend
