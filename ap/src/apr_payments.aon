@@ -99,13 +99,14 @@ rem --- Initializations
     thisvendor$=""
     thisname$=""
     headings$[2]="[HEADER]"
+    recs=0
 
 rem --- Prompt user for permission to continue
 
     msg_id$="AP_CHECK_SELECT"
     dim msg_tokens$[1]
     gosub disp_message
-    if msg_opt$="N" goto std_exit_no_update
+    if msg_opt$="N" goto std_exit_no_report
 
 rem --- Headings and print positions
 
@@ -188,6 +189,7 @@ rem --- Read next Check Detail (ape-04) record
 
           k$=key(ape04_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
+          recs=recs+1
           read record (ape04_dev) ape04a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
@@ -239,6 +241,12 @@ rem --- Read next Check Detail (ape-04) record
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     gosub type_break
@@ -472,7 +480,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
-std_exit_no_update:
+std_exit_no_report:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
