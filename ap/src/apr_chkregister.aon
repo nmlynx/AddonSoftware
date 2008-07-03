@@ -136,6 +136,7 @@ rem --- Initializations
        retention_hdr2$="   Amount" 
     endif
     headings$[2]="[HEADER]"
+    recs=0
 
 rem --- Headings and print positions
 
@@ -215,7 +216,7 @@ rem --- Read next Check Detail (apw-01) record
     while moreheaders
           k$=key(apw01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
-    
+          recs=recs+1
 
           read record (apw01_dev) apw01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -438,6 +439,12 @@ rem --- Read next Check Detail (apw-01) record
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     gosub type_break
