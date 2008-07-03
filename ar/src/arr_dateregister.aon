@@ -66,7 +66,7 @@ rem --- Get user approval to proceed
     x$=stbl("+SYSINFO")                                                            
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit_noreport
+    if msg_opt$<>"Y" then goto std_exit_no_report
 
 rem --- Initializations
 
@@ -83,6 +83,7 @@ rem --- Initializations
     clock$=""
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
+    recs=0
 
 rem --- Headings and print positions
 
@@ -119,6 +120,7 @@ rem --- Read next Invoice (are-06) record
     while more
           k$=key(are06_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
+          recs=recs+1
           read record (are06_dev) are06a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
@@ -149,6 +151,12 @@ rem --- Read next Invoice (are-06) record
     wend
 
 rem --- All done
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
 
         total$=str(total)
         if total=0 total$="No"
@@ -263,8 +271,9 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 
-std_exit_noreport:
+std_exit_no_report:
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     release
 
 rem #endinclude std_end.src

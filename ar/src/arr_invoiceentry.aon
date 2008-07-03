@@ -121,6 +121,7 @@ rem --- column headings
     clock$=""
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
+    recs=0
 
 rem --- Initialize print positions
 
@@ -159,7 +160,7 @@ rem --- Get user approval to proceed
     x$=stbl("+SYSINFO")                                                            
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit_noreport
+    if msg_opt$<>"Y" then goto std_exit_no_report
 
 rem --- Open printer, start progress meter and position header file
 
@@ -173,8 +174,9 @@ rem --- Read next Invoice Header (are-05) record
     while moreheaders
           read record (are05_dev,end=*break) are05a$
           if are05a.firm_id$<>firm_id$ break
-		  record_count=record_count+1
-		  if mod(record_count,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+            recs=recs+1
+            record_count=record_count+1
+            if mod(record_count,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           rem --- Skip voided invoices
 
           if are05a.sim_inv_type$="V"
@@ -289,13 +291,15 @@ rem ---           print (printer_dev) @(o[1]),adjustment$,@(o[4]),arm10a.ar_term
 
 rem --- All done
 
-rem ---     if lines+2>maxlines gosub report_heading
-rem ---     print (printer_dev) @(width-m1),fill(m1,"-")
-rem ---     print (printer_dev) @(width-m1-12),"Report Total",@(width-m1),total:m1$
-			
-			xwk=fnblank(4)
-			OutVect!.addItem("Report Total")
-			OutVect!.addItem(str(total))
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+						
+    xwk=fnblank(4)
+    OutVect!.addItem("Report Total")
+    OutVect!.addItem(str(total))
 
 rem --- Destroy progress meter and run next overlay
 
@@ -474,8 +478,9 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 
-std_exit_noreport:
+std_exit_no_report:
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
     release
 
 rem #endinclude std_end.src

@@ -152,6 +152,7 @@ rem --- Initializations
        endvalue$=endalt$
     endif
     first_page=1
+    recs=0
 
 rem --- Initialize print positions
 
@@ -187,6 +188,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
     while morecustomers
           k$=key(arm01_dev,knum=keynum,end=*break)
           if pos(firm_id$=k$)<>1 break
+          recs=recs+1
           read record (arm01_dev,knum=keynum,key=k$) arm01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           if sequence$="C" if endvalue$<>"" if arm01a.customer_id$>endvalue$ break
@@ -315,6 +317,12 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     docPrint!.preview()
     goto std_exit
@@ -619,6 +627,13 @@ rem --- fnlogo: Put logo on page
         return(1)
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -667,8 +682,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src

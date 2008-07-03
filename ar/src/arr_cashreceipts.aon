@@ -164,7 +164,8 @@ rem        channel=are01_dev
 rem        channel=arw05_dev
        headings$[1]=headings$[1]+" By Receipt Code"
     endif
-	headings$[2]="[HEADER]"
+    headings$[2]="[HEADER]"
+    recs=0
 
 rem --- Resize extension mask based of the length of the fixed length fields
 rem --- and the account mask
@@ -252,7 +253,7 @@ rem --- Read the next Cash Receipt Header (are-01) record
 
           k$=key(are01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
-
+          recs=recs+1
           rem --- Read transaction header record
 
           read record (are01_dev,key=k$,dom=*continue) are01a$
@@ -501,6 +502,12 @@ rem --- Read the next Cash Receipt Header (are-01) record
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
 rem ---     if page=0 gosub report_heading
@@ -836,8 +843,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src

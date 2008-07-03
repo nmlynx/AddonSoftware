@@ -98,6 +98,7 @@ rem --- Initializations
     answer$="Y"
     msg_id$="PRINT_TEST_PATTERN"
     nf$="(Not on file)"
+    recs=0
 
 rem --- Initialize print positions
 
@@ -181,6 +182,7 @@ rem --- Read next Invoice Header (are-05) record
 
         read record (are05_dev,end=*break) are05a$
         if are05a.firm_id$<>firm_id$ break
+        recs=recs+1
         if restart$<>"N" if are05a$(1,len(invoice$))<invoice$ goto next_wend
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
@@ -276,6 +278,12 @@ next_wend:
      wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     docPrint!.preview()
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
@@ -593,6 +601,10 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src
