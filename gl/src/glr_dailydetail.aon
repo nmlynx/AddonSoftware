@@ -98,6 +98,7 @@ rem --- Initializations
     h0$=""
     h1$=""
     h2$=""
+    recs=0
 
 rem --- Document columns
 
@@ -195,6 +196,7 @@ rem --- Read next daily detail record
           k$=key(glt04_dev,end=*break)
 
           if pos(firm_id$=k$)<>1 break
+          recs=recs+1
           read record (glt04_dev,key=k$)glt04a$
 
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -318,6 +320,12 @@ rem --- Detail line by audit number
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     if sequence$="A" gosub journal_break
@@ -530,6 +538,14 @@ rem --- Create blank cell(s) in OutVect! (no return value wanted or needed)
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -584,8 +600,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src

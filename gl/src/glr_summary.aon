@@ -108,6 +108,7 @@ rem --- Initializations
     mm=len(mm$)
     records=len(cvs(id$,2))
     if total_pers>12 h1$="Acct",lines=records*2+2
+    recs=0
 
 rem --- Document columns
 
@@ -183,6 +184,7 @@ rem --- Get next GL Account Master (glm-01) record
           acct$=fnmask$(glm01a.gl_account$(1,acctlen),m0$)
 
           number=number+1
+          recs=recs+1
           gosub account_heading
 
           rem --- Retrieve selected GL Summary/Budget (glm-02) records
@@ -245,6 +247,12 @@ rem --- Get next GL Account Master (glm-01) record
 
 done: rem --- All Done
 
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     abc=fnblank(15)
     abc=fnblank(13)
     OutVect!.addItem(str(number))
@@ -304,6 +312,14 @@ rem --- Create blank line in OutVect! (no return value wanted or needed)
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -359,8 +375,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src

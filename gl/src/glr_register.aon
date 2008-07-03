@@ -97,6 +97,7 @@ rem --- Initializations
     headings$[1]=h2$
     if cycles$="Y" headings=headings+1,headings$[2]=h3$
     if gls01a.units_flag$<>"Y" unitdash$=""
+    recs=0
 
 rem --- Additional file opens (for journal entry register)
 
@@ -142,6 +143,7 @@ rem --- Loop through Journal Entry Header records
 
           gle01_key$=key(gle01_dev,end=*break)
           if pos(firm_id$=gle01_key$)<>1 break
+          recs=recs+1
           read record (gle01_dev,key=gle01_key$)gle01a$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
 
@@ -231,6 +233,12 @@ level_breaks: rem --- Level breaks
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done$="Y"
     gosub transaction_break
@@ -481,8 +489,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src
