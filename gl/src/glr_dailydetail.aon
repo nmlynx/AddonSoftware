@@ -79,6 +79,9 @@ rem --- Retrieve parameter records
 rem --- Document initializations
 
     OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()  
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -105,30 +108,30 @@ rem --- Document columns
     if sequence$="A"
 
         columns=6
-        dim columns$[6,4]
+        dim columns$[6,10]
         columns$[0,0]="Date",columns$[0,1]="C",columns$[0,2]="8"
         columns$[1,0]="Account",columns$[1,1]="C",columns$[1,2]=str(acctlen),columns$[1,3]=m0$
-        columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="40"
-        columns$[3,0]="Memo/Reference",columns$[3,1]="C",columns$[3,2]="50"
-        columns$[4,0]="Debits",columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$
-        columns$[5,0]="Credits",columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
-        columns$[6,0]="Units",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m2$
+        columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="30"
+        columns$[3,0]="Memo/Reference",columns$[3,1]="C",columns$[3,2]="40"
+        columns$[4,0]="Debits",columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$,columns$[4,10]="T"
+        columns$[5,0]="Credits",columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
+        columns$[6,0]="Units",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m2$,columns$[6,10]="T"
 
     endif
 
     if sequence$="D"
 
         columns=8
-        dim columns$[8,4]
+        dim columns$[8,10]
         columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(acctlen),columns$[0,3]=m0$
-        columns$[1,0]="Description",columns$[1,1]="C",columns$[1,2]="40"
-        columns$[2,0]="Memo/Reference",columns$[2,1]="C",columns$[2,2]="30"
+        columns$[1,0]="Description",columns$[1,1]="C",columns$[1,2]="30"
+        columns$[2,0]="Memo/Reference",columns$[2,1]="C",columns$[2,2]="40"
         columns$[3,0]="Per",columns$[3,1]="C",columns$[3,2]="5"
         columns$[4,0]="Yr",columns$[4,1]="C",columns$[4,2]="5"
         columns$[5,0]="Audit #",columns$[5,1]="C",columns$[5,2]="10"
-        columns$[6,0]="Debits",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
-        columns$[7,0]="Credits",columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
-        columns$[8,0]="Units",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m2$
+        columns$[6,0]="Debits",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+        columns$[7,0]="Credits",columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
+        columns$[8,0]="Units",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m2$,columns$[8,10]="T"
 
     endif
 
@@ -483,6 +486,8 @@ print_totals: rem --- Print totals line
     credit$=str(abs(credits))
     unit$=""
     if gls01a.units_flag$="Y" unit$=str(units)
+
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     if sequence$="A"
         OutVect!.addItem("")
