@@ -143,10 +143,10 @@ rem --- Headings and print positions
  
     if retention
         dim columns$[6,10]
-        columns = 7
+        columns = 6
     else
         dim columns$[5,10]
-        columns = 6
+        columns = 5
     endif
 
     columns$[0,0]="Check No",       columns$[0,1]="C",columns$[0,2]="8"
@@ -429,7 +429,7 @@ rem --- Read next Check Detail (apw-01) record
           if err_msg$<>""
               OutVect!.addItem("")
               OutVect!.addItem(err_msg$)
-              xwk=fnblank(columns-2)
+              xwk=fnblank(columns-1)
           endif
 
           lines=lines+1
@@ -461,7 +461,7 @@ rem --- Any errors encountered?
           if lines+2>maxlines gosub set_linecount
           OutVect!.addItem("")
           OutVect!.addItem("WARNING: This register is out of balance or missing information")
-          xwk=fnblank(columns-2)
+          xwk=fnblank(columns-1)
           lines=lines+2
           break
     wend
@@ -495,7 +495,6 @@ set_linecount: rem --- Report Heading
 print_total: rem --- Print totals
 
     if lines+2>maxlines gosub set_linecount
-
 
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
