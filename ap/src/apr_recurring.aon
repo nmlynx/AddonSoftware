@@ -13,6 +13,7 @@ rem --- Document initializations
             OutVect!=bbjAPI().getSysGui().makeVector()
             HdrVect!=bbjAPI().getSysGui().makeVector()
             BrkVect!=bbjAPI().getSysGui().makeVector()
+            TotVect!=bbjAPI().getSysGui().makeVector()
             rep_date$=date(0:"%Mz/%Dz/%Yd")
             rep_date_stamp$=date(0:"%Yd%Mz%Dz")
             rep_time$=date(0:"%hz:%mz %p")
@@ -114,7 +115,7 @@ rem --- Is General Ledger installed and being used?
 
 rem --- Initializations
 
-        headings=1
+        headings=2
         dim headings$[headings],underline$(m1*2,"-"),o[11],h[11],gd[2],gh[2]
         dim pt[2],rt[2],at[2],vt[2]
         units=0
@@ -139,32 +140,33 @@ rem --- Initializations
         lastvendor$=""
         headings$[0]=sysinfo.firm_name$
         headings$[1]=sysinfo.task_desc$
+        headings$[2]="[HEADER]"
         h2$=""
         h3$="Discount"
         if retention 
            h2$=h3$+"/"
            h3$="Retention"
         endif
+        recs=0
 
 rem --column heading 
-        dim columns$[14,10]
-        columns=14
+        dim columns$[13,10]
+        columns=13
 
-        columns$[0,0]="Vendor",          columns$[0,1]="C",columns$[0,2]="10"
+        columns$[0,0]="Vendor",          columns$[0,1]="C",columns$[0,2]="8"
         columns$[1,0]="Name",            columns$[1,1]="C",columns$[1,2]="20"
-        columns$[2,0]="Invoice",         columns$[2,1]="C",columns$[2,2]="10"
-        columns$[3,0]="DC",              columns$[3,1]="C",columns$[3,2]="8"
+        columns$[2,0]="Invoice",         columns$[2,1]="C",columns$[2,2]="8"
+        columns$[3,0]="DC",              columns$[3,1]="C",columns$[3,2]="10"
         columns$[4,0]="PG",              columns$[4,1]="C",columns$[4,2]="4"
         columns$[5,0]="TC",              columns$[5,1]="C",columns$[5,2]="4"
         columns$[6,0]="HD",              columns$[6,1]="C",columns$[6,2]="4"
-        columns$[7,0]="Invoice Dt",    columns$[7,1]="C",columns$[7,2]="10"
-        columns$[8,0]="Due Dt",        columns$[8,1]="C",columns$[8,2]="10"
-        columns$[9,0]="Acct Dt",       columns$[9,1]="C",columns$[9,2]="10"
-        columns$[10,0]="Disc Dt",      columns$[10,1]="C",columns$[10,2]="10"
-        columns$[11,0]="Reference",      columns$[11,1]="C",columns$[11,2]="10"
-        columns$[12,0]="Memo",           columns$[12,1]="C",columns$[12,2]="10"
-        columns$[13,0]="Invoice Amt", columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m1$
-        columns$[14,0]="Discount Amt",columns$[14,1]="N",columns$[14,2]="8",columns$[14,3]=m1$
+        columns$[7,0]="Invoice Dt",    columns$[7,1]="C",columns$[7,2]="8"
+        columns$[8,0]="Due Dt",        columns$[8,1]="C",columns$[8,2]="8"
+        columns$[9,0]="Acct Dt",       columns$[9,1]="C",columns$[9,2]="8"
+        columns$[10,0]="Disc Dt",      columns$[10,1]="C",columns$[10,2]="8"
+        columns$[11,0]="Reference/Memo",      columns$[11,1]="C",columns$[11,2]="15"
+        columns$[12,0]="Invoice Amt", columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m1$,columns$[12,10]="T"
+        columns$[13,0]="Discount Amt",columns$[13,1]="N",columns$[13,2]="8",columns$[13,3]=m1$,columns$[13,10]="T"
 
 rem --- Define invoice print and header positions
 
@@ -229,6 +231,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
     while moreheaders
           read record (ape03_dev,end=*break) ape03a$
           if ape03a.firm_id$<>firm_id$ break
+          recs=recs+1
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
           rem --- Level breaks
@@ -370,7 +373,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           if cvs(ape03a.accting_date$,2)<>"" acctdate$=fndate$(ape03a.accting_date$)
           if cvs(ape03a.disc_date$,2)<>"" discdate$=fndate$(ape03a.disc_date$)
           
-
+          xwk=fnblank(14)
           OutVect!.addItem(vendor$)
           OutVect!.addItem(name$)
           OutVect!.addItem(ape03a.ap_inv_no$)
@@ -382,21 +385,15 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           OutVect!.addItem(duedate$)
           OutVect!.addItem(acctdate$)
           OutVect!.addItem(discdate$)
-          OutVect!.addItem(ape03a.reference$)
-          OutVect!.addItem(ape03a.ap_inv_memo$)
+          OutVect!.addItem(ape03a.reference$+" "+ape03a.ap_inv_memo$)
           OutVect!.addItem(ape03a.invoice_amt$)
           OutVect!.addItem(ape03a.discount_amt$)
        
-rem          xwk=fnblank(15)
-rem          xwk=fnblank(15)
-rem          xwk=fnblank(15)
+
           xwk=fnblank(2)
           OutVect!.addItem(ac$)
           OutVect!.addItem(ds$)
-          xwk=fnblank(7)
-          OutVect!.addItem(amt$)
-          xwk=fnblank(3)
-rem          xwk=fnblank(15)
+          xwk=fnblank(10)
     
           if gl$="Y" call pgmdir$+"glc_datecheck.aon",ape03a.accting_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,ape03a.accting_date$,glstatus,lines,errors,status
@@ -406,7 +403,7 @@ rem          xwk=fnblank(15)
           if err_msg$<>""
               OutVect!.addItem("")
               OutVect!.addItem(err_msg$)
-              xwk=fnblank(13)
+              xwk=fnblank(12)
           endif
           
           rem --- Accumulate totals
@@ -460,9 +457,9 @@ rem          xwk=fnblank(15)
                  xwk=fnblank(2)
                  OutVect!.addItem(glacct$)
                  OutVect!.addItem(description$)
-                 xwk=fnblank(7)
+                 xwk=fnblank(8)
                  OutVect!.addItem(ape13a.gl_post_amt$)
-                 xwk=fnblank(3)
+                 xwk=fnblank(1)
                  lines=lines+1
                  gllines=gllines+1
                  total=total+ape13a.gl_post_amt
@@ -490,12 +487,10 @@ rem          xwk=fnblank(15)
               gosub account_heading
           endif
 
-            xwk=fnblank(15)
+            xwk=fnblank(14)
             OutVect!.addItem("")
-            OutVect!.addItem("WARNING: This transaction is out of balance by")
-            OutVect!.addItem("")
-            OutVect!.addItem(g1$)
-            xwk=fnblank(11)
+            OutVect!.addItem("WARNING: This transaction is out of balance by "+str(difference:m1$))
+            xwk=fnblank(12)
 
 
           rem --- Loop back for next Recurring Invoice Header
@@ -503,6 +498,12 @@ rem          xwk=fnblank(15)
     wend
 
 rem --- All done
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
 
         done=1
         gosub type_break
@@ -517,10 +518,10 @@ rem --- Any errors encountered?
 
     while errors
           if lines+2>maxlines 
-            xwk=fnblank(15)
+            xwk=fnblank(14)
             OutVect!.addItem("")
             OutVect!.addItem("WARNING: This register is out of balance or missing information")
-            xwk=fnblank(13)
+            xwk=fnblank(12)
             lines=lines+2
           endif  
           break
@@ -556,12 +557,10 @@ account_heading: rem --- Account subheading
 print_total: rem --- Print totals
 
     if lines+3>maxlines 
-        xwk=fnblank(13)
-        OutVect!.addItem(underline$)
-        OutVect!.addItem(underline$)
-        xwk=fnblank(11)
+        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+        xwk=fnblank(9)
         OutVect!.addItem(total$)
-        xwk=fnblank(1)
+        xwk=fnblank(2)
         OutVect!.addItem(str(pt[0]))
         OutVect!.addItem(str(pt[1]))
         lines=lines+3
@@ -590,6 +589,8 @@ type_break: rem --- AP Type break
     k$=apm10a.firm_id$+apm10a.record_id_a$+apm10a.ap_type$
     find record (apm10a_dev,key=k$,dom=*next) apm10a$
     aptype$="AP Type "+apm10a.ap_type$+" "+cvs(apm10a.code_desc$,2)
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(aptype$)
     lines=maxlines+1
     lasttype$=apm10a.ap_type$
     return
@@ -727,6 +728,10 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     release
 
 rem #endinclude std_end.src
