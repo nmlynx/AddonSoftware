@@ -11,6 +11,7 @@ rem --- All Rights Reserved
 
 rem --- Document initializations
             OutVect!=bbjAPI().getSysGui().makeVector()
+            TotVect!=bbjAPI().getSysGui().makeVector()            
             rep_date$=date(0:"%Mz/%Dz/%Yd")
             rep_date_stamp$=date(0:"%Yd%Mz%Dz")
             rep_time$=date(0:"%hz:%mz %p")
@@ -54,7 +55,7 @@ rem --- Dimension string templates
 rem --- Assign form input values to local variables
 
     basis$=option!.getOptionData("REPORT_TYPE")
-    days$=option!.getOptionData("PICK_INTEGER")
+    days=num(option!.getOptionData("PICK_INTEGER"))
     aging$=option!.getOptionData("PICK_LISTBUTTON")
     sequence$=option!.getOptionData("REPORT_SEQUENCE")
     begcust$=option!.getOptionData("CUSTOMER_ID_1")
@@ -75,20 +76,20 @@ rem --- Retrieve parameter records
     m9=len(m9$)
 
 rem -- Heading Initialization
-    dim columns$[12,10]
-    columns$[0,0]="Customer, Phone and Contact",columns$[0,1]="C",columns$[0,2]="25"
+    columns=11
+    dim columns$[11,10]
+    columns$[0,0]="Customer, Phone, Contact, Terms",columns$[0,1]="C",columns$[0,2]="25"
     columns$[1,0]="Last Inv",columns$[1,1]="C",columns$[1,2]="8"
     columns$[2,0]="Last Pay",columns$[2,1]="C",columns$[2,2]="8"
-    columns$[3,0]="Days Pay",columns$[3,1]="N",columns$[3,2]="5",columns$[3,3]="##0"
-    columns$[4,0]="Terms",columns$[4,1]="C",columns$[4,2]="10"
-    columns$[5,0]="Future",columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m1$
-    columns$[6,0]="Current",columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$
-    columns$[7,0]="30 Days",columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m1$
-    columns$[8,0]="60 Days",columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$
-    columns$[9,0]="90 Days",columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m1$
-    columns$[10,0]="120 Days",columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m1$
-    columns$[11,0]="MTD Sales",columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m1$
-    columns$[12,0]="YTD Sales",columns$[12,1]="N",columns$[12,2]="8",columns$[12,3]=m1$
+    columns$[3,0]="Days Pay",columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]="##0"
+    columns$[4,0]="Future",columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$,columns$[4,10]="T"
+    columns$[5,0]="Current",columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
+    columns$[6,0]="30 Days",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+    columns$[7,0]="60 Days",columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
+    columns$[8,0]="90 Days",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[9,0]="120 Days",columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$,columns$[9,10]="T"
+    columns$[10,0]="MTD Sales",columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$,columns$[10,10]="T"
+    columns$[11,0]="YTD Sales",columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m1$,columns$[11,10]="T"
 
 rem --- Initializations
 
@@ -226,12 +227,11 @@ rem --- Read next Customer Master (arm-01) record
           extension$=fill(5)
           if cvs(arm01a.phone_exten$,2)<>"" extension$="x"+arm01a.phone_exten$
           
-          xwk=fnblank(13)
+          xwk=fnblank(12)
           outVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+"  "+arm01a.customer_name$(1,nw))
           outVect!.addItem(fndate$(arm06a.lstinv_date$))
           outVect!.addItem(fndate$(arm06a.lstpay_date$))
-          outVect!.addItem(str(arm06a.avg_days))
-          outVect!.addItem(arm02a.ar_terms_code$+"  "+arm10a.code_desc$(1,tw))
+          outVect!.addItem(str(arm06a.avg_days))          
           outVect!.addItem(str(arm02a.aging_future))
           outVect!.addItem(str(arm02a.aging_cur))
           outVect!.addItem(str(arm02a.aging_30))
@@ -240,9 +240,13 @@ rem --- Read next Customer Master (arm-01) record
           outVect!.addItem(str(arm02a.aging_120))
           outVect!.addItem(str(arm06a.mtd_sales))
           outVect!.addItem(str(arm06a.ytd_sales))
+
           outVect!.addItem(phone$+" "+extension$+" "+arm01a.contact_name$)
-          xwk=fnblank(12)
-          
+          xwk=fnblank(11)
+
+          outVect!.addItem(arm02a.ar_terms_code$+"  "+arm10a.code_desc$(1,tw))
+          xwk=fnblank(11)
+
           number=number+1
           totals[1]=totals[1]+arm02a.aging_future
           totals[2]=totals[2]+arm02a.aging_cur
@@ -259,11 +263,16 @@ rem --- Read next Customer Master (arm-01) record
 
 rem --- All done
 
+    xwk=fnblank(12)
+
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+
     x$="Totals for Report"
     if number x$=x$+" ("+cvs(str(number:"###,##0"),1)+" Customers)"
-    xwk=fnblank(13)
+    
+
     outVect!.addItem(x$)
-    xwk=fnblank(4)
+    xwk=fnblank(3)
     outVect!.addItem(str(totals[1]))
     outVect!.addItem(str(totals[2]))
     outVect!.addItem(str(totals[3]))
