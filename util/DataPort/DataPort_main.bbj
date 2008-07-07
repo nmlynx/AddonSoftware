@@ -289,7 +289,8 @@ end_ddm04:
 
     rem ' Special address processing?
     addr_lines=0
-    if source_version=6 and pos($0a$+"CITY"+$0a$=new_fields$) and pos($0a$+"STATE_CODE"+$0a$=new_fields$) then
+    if source_version=6 and (pos($0a$+"CITY"+$0a$=new_fields$) or pos($0a$+"REMIT_CITY"+$0a$=new_fields$)) and 
+:                           (pos($0a$+"STATE_CODE"+$0a$=new_fields$) or pos($0a$+"REMIT_STATE"+$0a$=new_fields$)) then
        if pos($0a$+"ADDR_LINE_3"+$0a$=old_fieldlist$) then
           addr_lines=3
        endif
@@ -309,7 +310,6 @@ end_ddm04:
         gosub set_new_fieldname
         new_fieldlist$ = new_fieldlist$ + new_fieldname$ + $0a$
     next field
-
     old_file=unt
     if copy_sys01 then
        datafile$="sys-01"
@@ -321,17 +321,16 @@ end_ddm04:
 
 next_rec:
     readrecord(old_file,end=eof)old_rec$
-
+    if source_version=6 and datafile$="ARM-10" and old_rec$(1,3)="01G" goto next_rec
     if old_rec$(1,2)="00" goto next_rec
     if record_id_field$<>"" and field(old_rec$,record_id_field$,err=*continue)<>ddm03.record_id$ then
        goto next_rec
     endif
-
     if copy_sys01 and field(old_rec$,old_fieldlist.name$[2],err=*continue) +
 :                     field(old_rec$,old_fieldlist.name$[3],err=*continue) <> file_normalization$(1,4) then
        goto next_rec
     endif
-
+if pos("01AR02"=old_rec$)=1 escape
     for field=1 to fields
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
@@ -497,6 +496,11 @@ end_read_normalize_xref:
        goto end_read_loop
     endif; rem ' normalize_sys01
 
+rem --- Now go populate masks and sequences
+
+    if source_version=6 gosub version6_files
+    gosub make_masks
+
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
@@ -505,6 +509,223 @@ end_read_normalize_xref:
     gosub disp_meter
 
     release
+
+version6_files:
+
+    arm10_dev=unt
+    open (arm10_dev)source_folder$+"/"+cvs("arm-10",version_cvs)
+
+    new_file=unt
+    datafile$=cvs("opm-04",8)
+    open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_opm04_template
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then goto start_msg_det
+    open (new_file)destin_folder$+"/"+datafile$
+get_opm04_template:
+    dim ids$[1],templates$[1]
+    ids$[1]="OPC_MSG_HDR"
+    call stbl("+DIR_PGM")+"adc_template.aon",1,1,ids$[all],templates$[all],status
+    if status escape;rem Should have been able to get the template for opm-04
+    dim new_rec$:templates$[1]
+read_msg_hdr:
+    read(arm10_dev,end=start_msg_det)arm10a_0$,arm10a_1$
+    if arm10a_0$(3,1)<>"G" goto read_msg_hdr
+    if arm10a_0$(6,1)<>"1" goto read_msg_hdr
+    new_rec.firm_id$=arm10a_0$(1,2)
+    new_rec.message_code$=arm10a_0$(4,2)
+    new_rec.code_desc$=arm10a_0$(7,20)
+    new_rec$=field(new_rec$)
+    writerecord(new_file)new_rec$
+    goto read_msg_hdr
+
+start_msg_det:
+    close (new_file)
+    new_file=unt
+    datafile$=cvs("opm-14",8)
+    open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_opm14_template
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then goto start_msg_det
+    open (new_file)destin_folder$+"/"+datafile$
+get_opm14_template:
+    dim ids$[1],templates$[1]
+    ids$[1]="OPC_MSG_DET"
+    call stbl("+DIR_PGM")+"adc_template.aon",1,1,ids$[all],templates$[all],status
+    if status escape;rem Should have been able to get the template for opm-14
+    dim new_rec$:templates$[1]
+    read(arm10_dev,key="",dom=*next)
+read_msg_det:
+    read(arm10_dev,end=start_msg_det)arm10a_0$,arm10a_1$
+    if arm10a_0$(3,1)<>"G" goto read_msg_det
+    dim second$(200)
+    k$=key(arm10_dev,end=*next)
+    if pos(arm10a_0$(1,5)=k$)=1
+        read(arm10_dev)*,second$
+    endif
+    msg$=pad(arm10a_1$,200)+pad(second$,200)
+    for x=1 to 400 step 40
+        if pos(" "<>msg$(x))<>0
+            new_rec.firm_id$=arm10a_0$(1,2)
+            new_rec.message_code$=arm10a_0$(4,2)
+            new_rec.message_seq$=str(((x-1)/40)+1:"00")
+            new_rec.message_text$=msg$(x,40)
+            new_rec$=field(new_rec$)
+            writerecord(new_file)new_rec$
+        endif
+    next x
+    close (new_file)
+    new_file=0
+    return
+
+make_masks:
+
+return
+
+rem --- Must figure out how to create glw-11, adm-09, adm-19, and glm-06! at least for v6...
+
+rem --- First try to create the ars_custdflt record"
+    readrecord(ddm03,key="ARS-01A",dom=no_cust_default)ddm03$
+
+no_cust_default:
+    sequences_dev=unt
+    open (sequences_dev)stbl("+DIR_BRA")+"ads_sequences.dat"
+    masks_dev=unt
+    open (masks_dev)stbl("+DIR_BRA")+"ads_masks.dat"
+    comp_id$=stbl("+DEFAULT_ASC_COMP_ID")
+
+    rem --- Get templates for masks and sequences"
+
+    readrecord(ddm_table_tpls,key=pad("ADS_SEQUENCES",16))ddm_table_tpls$
+    dim ads_sequences$:ddm_table_tpls.template$
+
+    readrecord(ddm_table_tpls,key=pad("ADS_MASKS",16))ddm_table_tpls$
+    dim ads_masks$:ddm_table_tpls.template$
+
+    rem --- Do the Masks first
+
+    old_file=unt
+    open (old_file)source_folder$+"/"+cvs("sys-01",version_cvs)
+    while 1
+        read(old_file,end=*break)a0$,a1$,a2$,a3$,a4$,a5$,a6$,a7$,a8$,a9$,a10$
+        if len(a0$)<>6 continue
+        if num(a0$(1,2),err=*continue)=0 continue
+        if a0$(5,2)<>"00" continue
+        if pos(a0$(3,2)="APARBMGLIVPRSFWO",2)=0 continue
+        if a0$(3,2)="SF" a0$(3,2)="WO";rem convert v7 Shop Floor to v6 Work Orders
+        if a0$(3,2)<>"BM"
+            if pos(a0$(3,2)="IVWO",2)<>0
+                dim ads_masks$:fattr(ads_masks$)
+                ads_masks.firm_id$=a0$(1,2)
+                ads_masks.asc_comp_id$=comp_id$
+                ads_masks.asc_prod_id$=a0$(3,2)
+                ads_masks.dd_mask_type$="I"
+                ads_masks.dd_attr_mski$=cvs(a1$,3)
+                ads_masks.dd_attr_msko$=cvs(a5$,3)
+                ads_masks$=field(ads_masks$)
+                writerecord(masks_dev)ads_masks$
+            endif    
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.dd_mask_type$="A"
+            ads_masks.dd_attr_mski$=cvs(a6$,3)
+            ads_masks.dd_attr_msko$=cvs(a6$,3)
+            ads_masks$=field(ads_masks$)
+            writerecord(masks_dev)ads_masks$
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.dd_mask_type$="U"
+            ads_masks.dd_attr_mski$=cvs(a7$,3)
+            ads_masks.dd_attr_msko$=cvs(a7$,3)
+            ads_masks$=field(ads_masks$)
+            writerecord(masks_dev)ads_masks$
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.dd_mask_type$="R"
+            if a0$(3,2)="GL"
+                ads_masks.dd_mask_type$="P"
+            endif
+            if a0$(3,2)="IV"
+                ads_masks.dd_mask_type$="C"
+            endif
+            ads_masks.dd_attr_mski$=cvs(a8$,3)
+            ads_masks.dd_attr_msko$=cvs(a8$,3)
+            ads_masks$=field(ads_masks$)
+            writerecord(masks_dev)ads_masks$
+
+            if a0$(3,2)="IV"
+                dim ads_masks$:fattr(ads_masks$)
+                ads_masks.firm_id$=a0$(1,2)
+                ads_masks.asc_comp_id$=comp_id$
+                ads_masks.asc_prod_id$=a0$(3,2)
+                ads_masks.dd_mask_type$="P"
+                ads_masks.dd_attr_mski$=cvs(a9$,3)
+                ads_masks.dd_attr_msko$=cvs(a9$,3)
+                ads_masks$=field(ads_masks$)
+                writerecord(masks_dev)ads_masks$
+
+                dim ads_masks$:fattr(ads_masks$)
+                ads_masks.firm_id$=a0$(1,2)
+                ads_masks.asc_comp_id$=comp_id$
+                ads_masks.asc_prod_id$=a0$(3,2)
+                ads_masks.dd_mask_type$="V"
+                ads_masks.dd_attr_mski$=cvs(a10$,3)
+                ads_masks.dd_attr_msko$=cvs(a10$,3)
+                ads_masks$=field(ads_masks$)
+                writerecord(masks_dev)ads_masks$
+            endif
+        else
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.dd_mask_type$="H"
+            ads_masks.dd_attr_mski$=cvs(a1$,3)
+            ads_masks.dd_attr_msko$=cvs(a1$,3)
+            ads_masks$=field(ads_masks$)
+            writerecord(masks_dev)ads_masks$
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.dd_mask_type$="Q"
+            ads_masks.dd_attr_mski$=cvs(a1$,3)
+            ads_masks.dd_attr_msko$=cvs(a1$,3)
+            ads_masks$=field(ads_masks$)
+            writerecord(masks_dev)ads_masks$
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.dd_mask_type$="M"
+            ads_masks.dd_attr_mski$=cvs(a2$,3)
+            ads_masks.dd_attr_msko$=cvs(a2$,3)
+            ads_masks$=field(ads_masks$)
+            writerecord(masks_dev)ads_masks$
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.dd_mask_type$="O"
+            ads_masks.dd_attr_mski$=cvs(a3$,3)
+            ads_masks.dd_attr_msko$=cvs(a3$,3)
+            ads_masks$=field(ads_masks$)
+            writerecord(masks_dev)ads_masks$
+        endif
+    end_mask:
+    wend
+
+    return
 
 get_new_template:
     new_datafile$=cvs(datafile$,8)
