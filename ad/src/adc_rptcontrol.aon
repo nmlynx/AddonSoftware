@@ -30,9 +30,9 @@ rem --- Open/Lock files
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     if ref_tp$="C"
-        files$[1]="adm_custrpt_ctl.dat",ids$[1]="ADM_CUSTRPT_CTL"
+        files$[1]="arm_custrpt_ctl",ids$[1]="ARM_CUSTRPT_CTL"
     else
-        files$[1]="adm_vendrpt_ctl.dat",ids$[1]="ADM_VENDRPT_CTL"
+        files$[1]="apm_vendrpt_ctl",ids$[1]="APM_VENDRPT_CTL"
     endif
     files$[2]="adq_faxemail.dat",ids$[2]="ADQ_FAXEMAIL",options$[2]="S"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],                                   ids$[all],templates$[all],channels[all],batch,status
