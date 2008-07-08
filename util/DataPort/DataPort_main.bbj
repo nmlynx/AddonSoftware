@@ -289,8 +289,7 @@ end_ddm04:
 
     rem ' Special address processing?
     addr_lines=0
-    if source_version=6 and (pos($0a$+"CITY"+$0a$=new_fields$) or pos($0a$+"REMIT_CITY"+$0a$=new_fields$)) and 
-:                           (pos($0a$+"STATE_CODE"+$0a$=new_fields$) or pos($0a$+"REMIT_STATE"+$0a$=new_fields$)) then
+    if source_version=6 and pos($0a$+"CITY"+$0a$=new_fields$) and pos($0a$+"STATE_CODE"+$0a$=new_fields$)
        if pos($0a$+"ADDR_LINE_3"+$0a$=old_fieldlist$) then
           addr_lines=3
        endif
@@ -330,10 +329,12 @@ next_rec:
 :                     field(old_rec$,old_fieldlist.name$[3],err=*continue) <> file_normalization$(1,4) then
        goto next_rec
     endif
-if pos("01AR02"=old_rec$)=1 escape
     for field=1 to fields
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
+        if source_version=6 and (datafile$="ARM-10" OR datafile$="APM-10") and old_fieldlist.name$[field]="PROX_OR_DAYS" and cvs(value$,2)="A"
+            value$="P"
+        endif
         attr$=fattr(old_rec$,old_fieldlist.name$[field])
         fld_sep$=attr$(3,1)
         fld_typ$=attr$(1,1)
@@ -500,6 +501,8 @@ rem --- Now go populate masks and sequences
 
     if source_version=6 gosub version6_files
     gosub make_masks
+rem    gosub make_messages
+rem    gosub make_printplus
 
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
@@ -517,6 +520,7 @@ version6_files:
 
     new_file=unt
     datafile$=cvs("opm-04",8)
+    table_alias$="OPC_MSG_HDR"
     open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_opm04_template
     call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
     if len(status$) then goto start_msg_det
@@ -542,9 +546,10 @@ start_msg_det:
     close (new_file)
     new_file=unt
     datafile$=cvs("opm-14",8)
+    table_alias$="OPC_MSG_DET"
     open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_opm14_template
     call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
-    if len(status$) then goto start_msg_det
+    if len(status$) then goto end_of_msgs
     open (new_file)destin_folder$+"/"+datafile$
 get_opm14_template:
     dim ids$[1],templates$[1]
@@ -553,37 +558,68 @@ get_opm14_template:
     if status escape;rem Should have been able to get the template for opm-14
     dim new_rec$:templates$[1]
     read(arm10_dev,key="",dom=*next)
-read_msg_det:
-    read(arm10_dev,end=start_msg_det)arm10a_0$,arm10a_1$
-    if arm10a_0$(3,1)<>"G" goto read_msg_det
-    dim second$(200)
-    k$=key(arm10_dev,end=*next)
-    if pos(arm10a_0$(1,5)=k$)=1
-        read(arm10_dev)*,second$
-    endif
-    msg$=pad(arm10a_1$,200)+pad(second$,200)
-    for x=1 to 400 step 40
-        if pos(" "<>msg$(x))<>0
-            new_rec.firm_id$=arm10a_0$(1,2)
-            new_rec.message_code$=arm10a_0$(4,2)
-            new_rec.message_seq$=str(((x-1)/40)+1:"00")
-            new_rec.message_text$=msg$(x,40)
-            new_rec$=field(new_rec$)
-            writerecord(new_file)new_rec$
+
+    while 1
+        read(arm10_dev,end=*break)arm10a_0$,arm10a_1$
+        if arm10a_0$(3,1)<>"G" continue
+        dim second$(200)
+        k$=key(arm10_dev,end=*next)
+        if pos(arm10a_0$(1,5)=k$)=1
+            read(arm10_dev)*,second$
         endif
-    next x
+        msg$=pad(arm10a_1$,200)+pad(second$,200)
+        for x=1 to 400 step 40
+            if pos(" "<>msg$(x))<>0
+                new_rec.firm_id$=arm10a_0$(1,2)
+                new_rec.message_code$=arm10a_0$(4,2)
+                new_rec.message_seq$=str(((x-1)/40)+1:"00")
+                new_rec.message_text$=msg$(x,40)
+                new_rec$=field(new_rec$)
+                writerecord(new_file)new_rec$
+            endif
+        next x
+    wend
+end_of_msgs:
     close (new_file)
     new_file=0
-    return
+return
 
 make_masks:
 
-return
-
-rem --- Must figure out how to create glw-11, adm-09, adm-19, and glm-06! at least for v6...
-
 rem --- First try to create the ars_custdflt record"
-    readrecord(ddm03,key="ARS-01A",dom=no_cust_default)ddm03$
+
+    sys01_dev=unt
+    open (sys01_dev)source_folder$+"/"+cvs("sys-01",version_cvs)
+
+    new_file=unt
+    datafile$=cvs("ars_custdflt",8)
+    table_alias$="ARS_CUSTDFLT"
+    open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_custdflt_template
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then escape;goto no_cust_default; rem should be able to create the customer default table
+    open (new_file)destin_folder$+"/"+datafile$
+get_custdflt_template:
+    dim ids$[1],templates$[1]
+    ids$[1]="ARS_CUSTDFLT"
+    call stbl("+DIR_PGM")+"adc_template.aon",1,1,ids$[all],templates$[all],status
+    if status escape; goto no_cust_default; rem Should have been able to get the template for opm-04
+    dim new_rec$:templates$[1]
+read_dflt_hdr:
+    read(sys01_dev,end=no_cust_default)sys01_0$,sys01_1$,sys01_2$,sys01_3$
+    if len(sys01_0$)<>6 goto read_dflt_hdr
+    if pos("AR00"=sys01_0$(3))<>1 goto read_dflt_hdr
+    new_rec.firm_id$=sys01_0$(1,2)
+    new_rec.record_id_d$="D"
+    new_rec.disc_code$=sys01_3$(50,2)
+    new_rec.territory$=sys01_3$(52,3)
+    new_rec.slspsn_code$=sys01_3$(55,3)
+    new_rec.tax_code$=sys01_3$(58,2)
+    new_rec.ar_terms_code$=sys01_3$(60,2)
+    new_rec.ar_dist_code$=sys01_3$(62,2)
+    new_rec.customer_inv_his$=sys01_3$(78,1)
+    new_rec$=field(new_rec$)
+    writerecord(new_file)new_rec$
+    goto read_dflt_hdr
 
 no_cust_default:
     sequences_dev=unt
@@ -592,6 +628,7 @@ no_cust_default:
     open (masks_dev)stbl("+DIR_BRA")+"ads_masks.dat"
     comp_id$=stbl("+DEFAULT_ASC_COMP_ID")
 
+return
     rem --- Get templates for masks and sequences"
 
     readrecord(ddm_table_tpls,key=pad("ADS_SEQUENCES",16))ddm_table_tpls$
