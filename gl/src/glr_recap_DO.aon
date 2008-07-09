@@ -250,11 +250,9 @@ reference:
 
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,glw11a.trns_date$,glstatus,
 :                                                     l,errors,status
-          rem --- CAH.09/29/07
-          err_msg$=stbl("+DTWARN_MSG",err=*next)
-          if err_msg$<>""
+          if stbl("+DTWARN_MSG",err=*endif)<>""
               xwk=fnblank(2)
-              OutVect!.addItem(err_msg$)
+              OutVect!.addItem(stbl("+DTWARN_MSG"))
               xwk=fnblank(3)
           endif
 

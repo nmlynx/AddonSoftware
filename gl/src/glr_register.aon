@@ -366,23 +366,19 @@ rem --- Check dates
     gldate$=gle01a.trans_date$
     call pgmdir$+"glc_datecheck.aon",gldate$,verify$,period$,year$,glstatus
     if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,gldate$,glstatus,l,errors,status
-    rem --- CAH.09/29/07
-    err_msg$=stbl("+DTWARN_MSG",err=*next)
-    if err_msg$<>""
-      xwk=fnblank(2)
-      OutVect!.addItem(err_msg$)
-      xwk=fnblank(7)
+    if stbl("+DTWARN_MSG",err=*endif)<>""
+        xwk=fnblank(2)
+        OutVect!.addItem(stbl("+DTWARN_MSG"))
+        xwk=fnblank(7)
     endif
     if cvs(gle01a.reverse_date$,2)="" goto transaction_break_exit
     gldate$=gle01a.reverse_date$
     call pgmdir$+"glc_datecheck.aon",gldate$,verify$,period$,year$,glstatus
     if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,gldate$,glstatus,l,errors,status
-    rem --- CAH.09/29/07
-    err_msg$=stbl("+DTWARN_MSG",err=*next)
-    if err_msg$<>""
-      xwk=fnblank(2)
-      OutVect!.addItem(err_msg$)
-      xwk=fnblank(7)
+    if stbl("+DTWARN_MSG",err=*endif)<>""
+        xwk=fnblank(2)
+        OutVect!.addItem(stbl("+DTWARN_MSG"))
+        xwk=fnblank(7)
     endif
 
 transaction_break_exit:

@@ -356,10 +356,8 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 
                 if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
 :                                                           glstatus,lines,errors,status
-                rem --- CAH.09/29/07
-                err_msg$=stbl("+DTWARN_MSG",err=*next)
-                if err_msg$<>""
-                    OutVect!.addItem(err_msg$)
+                if stbl("+DTWARN_MSG",err=*endif)<>""
+                    OutVect!.addItem(stbl("+DTWARN_MSG"))
                     xwk=fnblank(10)
                 endif
 
@@ -453,10 +451,8 @@ rem --- Read the next Cash Receipt Header (are-01) record
 
                 if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
 :                                                           glstatus,lines,errors,status
-                rem --- CAH.09/29/07
-                err_msg$=stbl("+DTWARN_MSG",err=*next)
-                if err_msg$<>""
-                    OutVect!.addItem(err_msg$)
+                if stbl("+DTWARN_MSG",err=*endif)<>""
+                    OutVect!.addItem(stbl("+DTWARN_MSG"))
                     xwk=fnblank(10)
                 endif
 

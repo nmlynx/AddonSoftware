@@ -243,10 +243,8 @@ rem --- Read next Invoice (are-02) record
           call stbl("+DIR_PGM")+"glc_datecheck.aon",are02a.invoice_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are02a.invoice_date$,glstatus,lines,errors,status
 
-          rem --- CAH.09/29/07
-          err_msg$=stbl("+DTWARN_MSG",err=*next)
-          if err_msg$<>""
-              OutVect!.addItem(err_msg$)
+          if stbl("+DTWARN_MSG",err=*endif)<>""
+              OutVect!.addItem(stbl("+DTWARN_MSG"))
               xwk=fnblank(9)
           endif
 

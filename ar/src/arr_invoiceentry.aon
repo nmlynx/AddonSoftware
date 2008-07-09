@@ -278,10 +278,8 @@ rem ---           print (printer_dev) @(o[1]),adjustment$,@(o[4]),arm10a.ar_term
           call pgmdir$+"glc_datecheck.aon",are05a.inv_date$,"N",period$,year$,glstatus
           if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are05a.inv_date$,glstatus,lines,errors,status
 
-          rem --- CAH.09/29/07
-          err_msg$=stbl("+DTWARN_MSG",err=*next)
-          if err_msg$<>""
-              OutVect!.addItem(err_msg$)
+          if stbl("+DTWARN_MSG",err=*endif)<>""
+              OutVect!.addItem(stbl("+DTWARN_MSG"))
               xwk=fnblank(5)
           endif
 
