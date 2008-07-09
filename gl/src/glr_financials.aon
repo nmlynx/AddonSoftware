@@ -87,7 +87,7 @@ rem --- Read next Financial Report Detail (glm-22) record
               output$=output$+field(glm22a$,"output_total_"+str(x:"00"))
           next x
           for x=1 to 5
-              output$=output$+field(glm22a$,"output_oper_"+str(x:"00"))
+              output$=output$+pad(field(glm22a$,"output_oper_"+str(x:"00")),1)
           next x
 
           rem --- Transfer Financial Report Amounts (gle-06) from 
