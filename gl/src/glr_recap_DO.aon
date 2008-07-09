@@ -322,8 +322,7 @@ register_errors: rem --- Register errors
 
     msg_id$="AON_REG_ERRS"
     gosub disp_message
-    if pos("escape"=msg_opt$)<>0 then escape;rem temp
-    if pos("SPECIAL"=msg_opt$)<>1 goto std_exit
+    if pos("PASSINVALID"=msg_opt$)<>0 goto std_exit
     errors=0
     
 next_overlay: rem --- Run update overlay
