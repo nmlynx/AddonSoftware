@@ -332,9 +332,32 @@ next_rec:
     for field=1 to fields
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
+
+rem --- check for specific values that can't be found any other way
         if source_version=6 and (datafile$="ARM-10" OR datafile$="APM-10") and old_fieldlist.name$[field]="PROX_OR_DAYS" and cvs(value$,2)="A"
             value$="P"
         endif
+        if source_version=6 and datafile$="GLM-22"
+            while pos($22$=value$)
+                value$(pos($22$=value$,1))=" "
+            wend
+            if pos("OUTPUT_OPER"=old_fieldlist.name$[field])=1
+                x$=old_fieldlist.name$[field]
+                if pos(value$="+-")=0
+                    value$=" "
+                endif
+                if value$=" " and num(field(new_rec$,"output_total_"+x$(len(x$)-1,2)))<>0
+                    value$="+"
+                endif
+            endif
+            value$=cvs(value$,2)
+        endif
+        if old_fieldlist.name$[field]="ZIP_CODE" and len(cvs(value$,2))=9
+            if value$(6,4)="0000"
+                value$=value$(1,5)
+            endif
+        endif    
+
         attr$=fattr(old_rec$,old_fieldlist.name$[field])
         fld_sep$=attr$(3,1)
         fld_typ$=attr$(1,1)
