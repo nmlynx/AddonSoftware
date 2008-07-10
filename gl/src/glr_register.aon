@@ -269,7 +269,7 @@ rem --- Run update overlay
 
     if errors
     	gosub Display_Message
-    	if special_flag$<>"Y" goto std_exit
+    	if special_flag$<>"Y" then update$=""
     endif
 
     next_overlay$="glr_recap_DO.aon"
@@ -395,7 +395,7 @@ Display_Message: rem --- Display Message Routine
 
     msg_id$="AON_REG_ERRS"
     gosub disp_message
-    if pos("SPECIAL"=msg_opt$)=1 special_flag$="Y"
+    if pos("PASSVALID"=msg_opt$)<>0 special_flag$="Y"
     return
 
 rem --- Functions

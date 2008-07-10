@@ -353,8 +353,10 @@ rem --- In balance?
     balance$=str(balance:m1$)
     balance$=cvs(balance$,1+2)
     msg$[0]=total$+" "+balance$
-    call pgmdir$+"adc_stdmessage.aon",2,msg$[all],0,0,0,v$,v3
-    if v$<>"SPECIAL" goto std_exit
+rem    call pgmdir$+"adc_stdmessage.aon",2,msg$[all],0,0,0,v$,v3
+    msg_id$="AON_REG_ERRS"
+    gosub disp_message
+    if pos("PASSVALID"=msg_opt$)=0 goto std_exit
 
 balanced: rem --- No update if any ranges were selected
 
