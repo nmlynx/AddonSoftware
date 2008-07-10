@@ -468,12 +468,12 @@ rem --- Destroy the progress meter and run the next overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 
+    update$=pgmdir$+"apu_chkregister.aon"
     if errors
     	gosub Display_Message
-    	if special_flag$<>"Y" goto std_exit
+    	if special_flag$<>"Y" then update$=""
     endif
 
-    update$=pgmdir$+"apu_chkregister.aon"
     overlay$=update$
     if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
 
@@ -568,7 +568,7 @@ Display_Message: rem --- Display Message Routine
 
     msg_id$="AON_REG_ERRS"
     gosub disp_message
-    if pos("SPECIAL"=msg_opt$)=1 special_flag$="Y"
+    if pos("PASSVALID"=msg_opt$)<>0 special_flag$="Y"
     return
 
 rem --- Functions
