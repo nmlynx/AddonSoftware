@@ -13,13 +13,43 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
 
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+rem ---  column heading
+  
+    l=headings+1
+
+    dim columns$[12,12]
+    columns=12
+    columns$[0,0]="Contrib^Code",      columns$[0,1]="C", columns$[0,2]="6"
+    columns$[1,0]="Contrib Desc",      columns$[1,1]="C", columns$[1,2]="15",columns$[1,10]="T"
+    columns$[2,0]="Period^RC",         columns$[2,1]="C", columns$[2,2]="5",columns$[2,10]="T"
+    columns$[3,0]="Period^T",          columns$[3,1]="C", columns$[3,2]="5"   
+    columns$[4,0]="Period^Taken",      columns$[4,1]="C", columns$[4,2]="5"
+    columns$[5,0]="Period^P",          columns$[5,1]="C", columns$[5,2]="5"
+    columns$[6,0]="Period^TC",         columns$[6,1]="C", columns$[6,2]="5"
+    columns$[7,0]="Period^Spl",        columns$[7,1]="C", columns$[7,2]="5"
+    columns$[8,0]="Contrib^Rate",      columns$[8,1]="N", columns$[8,2]="7",   columns$[8,3]=m3$
+    columns$[9,0]="Min^Limit",         columns$[9,1]="N", columns$[9,2]="5",   columns$[9,3]=m1$
+    columns$[10,0]="Max^Limit",        columns$[10,1]="N",columns$[10,2]="5",  columns$[10,3]=m1$
+    columns$[11,0]="Total To",         columns$[11,1]="C",columns$[11,2]="15"
+    columns$[12,0]="Total Op",         columns$[12,1]="C",columns$[12,2]="10"
+    l=l+3
+    
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
@@ -27,7 +57,7 @@ rem --- Open/Lock files
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="PRC_CONTCODE",ids$[1]="PRC_CONTCODE"
-    files$[2]="PRS_PARAMS",ids$[2]="PRS_PARAMS"
+    files$[2]="PRS_PARAMS",  ids$[2]="PRS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -49,11 +79,6 @@ rem --- Retrieve parameter records
     m1=len(m1$)
     m3=len(m3$)
 
-rem --- Open/Lock Files
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status=1 then goto std_exit
-
 rem --- Initializations
 
     h=0
@@ -65,6 +90,7 @@ rem --- Initializations
     clock$=""
     headings$[0]=n1$
     headings$[1]=n4$+" Listing"
+    pbufwidth=85
     more=1
 
 rem --- Initial Read
@@ -74,48 +100,49 @@ rem --- Initial Read
 rem --- Main Read
 
     while more
-        k$=key(prc_contcode_dev,end=done)
-        if pos(firm_id$+"D"=k$)<>1 then goto done
+
+        k$=key(prc_contcode_dev,end=*break)
+        if pos(firm_id$+"D"=k$)<>1 then break
         read record (prc_contcode_dev) prc_contcode$
 
 rem --- Print
 
-        if l+2>l9 then gosub report_heading
-        print (printer_dev)@(0),prc_contcode.contrib_code$,@(5),prc_contcode.pr_code_desc$,@(22),prc_contcode.check_code$,
-:                          @(25),prc_contcode.calc_type$,@(27),prc_contcode.pers_taken$,@(33),prc_contcode.regprem_flg$,
-:                          @(35),prc_contcode.basis_tot_cd$,@(40),prc_contcode.special_flag$,
-:                          @(45),prc_contcode.calc_rtamt:m3$,prc_contcode.min_limit:m1$,prc_contcode.max_limit:m1$,
+        xyz=fnblank(columns+1)
+        OutVect!.addItem(prc_contcode.contrib_code$)
+        OutVect!.addItem(prc_contcode.pr_code_desc$)
+        OutVect!.addItem(prc_contcode.check_code$)
+        OutVect!.addItem(prc_contcode.calc_type$)
+        OutVect!.addItem(prc_contcode.pers_taken$)
+        OutVect!.addItem(prc_contcode.regprem_flg$)
+        OutVect!.addItem(prc_contcode.basis_tot_cd$)
+        OutVect!.addItem(prc_contcode.special_flag$)
+        OutVect!.addItem(str(prc_contcode.calc_rtamt))
+        OutVect!.addItem(str(prc_contcode.min_limit))
+        OutVect!.addItem(str(prc_contcode.max_limit))
+        total_to$=""
         for x=1 to 5
-            print (printer_dev)@(31+4*m1+x*3),FIELD(prc_contcode$,"pr_total_to_"+str(x:"00")),
+            total_to$=total_to$+FIELD(prc_contcode$,"pr_total_to_"+str(x:"00"))+"  "
         next x
-
-        print (printer_dev)'lf',
+        OutVect!.addItem(total_to$)
+        total_oper$=""
         for x=1 to 5
-            print (printer_dev)@(31+4*m1+x*3),FIELD(prc_contcode$,"pr_tot_oper_"+str(x:"00")),
+            total_oper$=total_oper$+FIELD(prc_contcode$,"pr_tot_oper_"+str(x:"00"))+"  "
         next x
-        print (printer_dev)'lf',
+        OutVect!.addItem(total_oper$)
+        if prs_params.reg_pay_code$="Y" then OutVect!.addItem("Dist") 
         l=l+2
         t0=t0+1
+
     wend
 
 done: rem --- Options
-
-    print (printer_dev)'lf',@(10),"Total Records:",t0
-    goto std_exit
-
-report_heading: rem --- Report Heading
-
-    l=headings+1
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-    if status<>0 then exitto std_exit
-    if prs_params.reg_pay_code$(2,1)="Y" then print @(29),"Dist",
-    print (printer_dev)@(0),"Contribution",@(27),"Period",@(30+m1),"Contrib",
-:                      @(33+2*m1),"Min",@(33+3*m1),"Max",@(31+4*m1),"Total To/"
-    print (printer_dev)@(0),"Code",@(5),"Description",@(22),"RC",@(25),"T",@(27),"Taken",
-:                      @(33),"P",@(35),"TC",@(39),"Spl",@(33+m1),"Rate",@(31+2*m1),"Limit",
-:                      @(31+3*m1),"Limit",@(31+4*m1),"Operator",'lf'
-    l=l+3
-    return
+        xyz=fnblank(columns+1)
+        OutVect!.addItem("")
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+        OutVect!.addItem("Total Records:")
+        OutVect!.addItem(str(t0))
+        xyz=fnblank(11)
+        goto std_exit    
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -184,6 +211,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     def fnglobal$(q$,q1$)
         q1$=stbl(q$,err=*next)
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #endinclude std_functions.src
