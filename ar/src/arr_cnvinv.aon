@@ -273,13 +273,13 @@ rem --- Destroy progress meter and run next overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
+    update$=pgmdir$+"aru_otherentry.aon"
     if errors
     	gosub Display_Message
-    	if special_flag$<>"Y" goto std_exit
+    	if special_flag$<>"Y" then update$=""
     endif
 
     rem Okay to share the otherentry update program with Finance Charges. jpb 4/25/08
-    update$=pgmdir$+"aru_otherentry.aon"
     overlay$=update$
     if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
 
@@ -305,7 +305,7 @@ Display_Message: rem --- Display Message Routine
 
     msg_id$="AON_REG_ERRS"
     gosub disp_message
-    if pos("SPECIAL"=msg_opt$)=1 special_flag$="Y"
+    if pos("PASSVALID"=msg_opt$)<>0 special_flag$="Y"
     return
 
 rem --- Functions
