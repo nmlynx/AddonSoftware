@@ -1,0 +1,623 @@
+rem Executive Summary
+rem Proprietary Software. AddonSoftware
+rem Program ID: ads_execsummary.aon  <Oct 19, 2006>
+
+
+        begin
+
+rem --- Functions
+
+	def fnstr_pos(rd_tmp0$,rd_tmp1$,rd_tmp0)=int((pos(rd_tmp0$=rd_tmp1$,rd_tmp0)+rd_tmp0-1)/rd_tmp0)
+	def fnstrip$(rd_tmp0$,rd_tmp1$)=rd_tmp0$(1,pos(fill(50,rd_tmp1$)=rd_tmp0$+fill(50,rd_tmp1$))-1)
+	def fngett_attr$(rd_att0$)=rd_output_attr_tbl$[fnstr_pos(rd_att0$,rd_attr_def_tbl$,5)]
+	def fngetv_attr$(rd_att0$,rd_att1$)=rd_output_attr_col$[fnstr_pos(rd_att0$,rd_output_attr_col$[0,1],40),fnstr_pos(rd_att1$,rd_attr_def_col$[0,0],5)]
+	def fngetc_attr$(rd_att0,rd_att0$)=rd_output_attr_col$[rd_att0,fnstr_pos(rd_att0$,rd_attr_def_col$,5)]
+
+rem --- Directory STBLs
+
+	rd_gui_dev$=stbl("+GUI_DEVICE")
+	rd_dir_pgm$=stbl("+DIR_PGM")
+	rd_dir_img$=stbl("+DIR_IMG")
+	rd_dir_sys$=stbl("+DIR_SYS")
+	rd_file_usr$=stbl("+FILE_USR"),rd_file_usr$=stbl("+DIR_USR",err=*next)+"aon_"+cvs(stbl("+USER_ID",err=*next),138)+".usr"
+	rd_file_set$=stbl("+FILE_SET")
+
+rem --- Misc Setup
+
+	dim rd_date_text$:"default:c(32*=0),sm[12]:c(3*=0),m[12]:c(32*=0),sd[7]:c(3*=0),d[7]:c(32*=0)"
+	rd_date_text$=stbl("!DATE")
+
+	rd_no_columns=8
+	dim rd_columns$[1:rd_no_columns]
+		for rd_curr_elem=1 to 7
+			rd_columns$[rd_curr_elem]=rd_date_text.d$[rd_curr_elem]
+		next rd_curr_elem
+		rd_columns$[8]="Totals"
+
+	rd_no_rows=13
+
+	dim rd_months$[1:12]
+		for rd_curr_elem=1 to 12
+			rd_months$[rd_curr_elem]=rd_date_text.sm$[rd_curr_elem]
+		next rd_curr_elem
+
+	rd_curr_mo=num(date(0:"%Mz"))
+rem rd_curr_mo=3;rem ********************************************** remove
+	rd_default_mo=rd_curr_mo
+
+	rd_curr_yr=num(date(0:"%Yd"))
+rem rd_curr_yr=2004;rem ********************************************** remove
+	rd_default_yr=rd_curr_yr
+
+rem --- Retrieve sysinfo data
+
+    rd_sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
+    dim rd_sysinfo$:rd_sysinfo_tpl$
+    rd_sysinfo$=stbl("+SYSINFO",err=*next)
+	rd_user_id$=rd_sysinfo.user_id$
+	rd_firm_id$=rd_sysinfo.firm_id$
+
+file_opens:rem --- Open File(s)
+
+	rd_num_files=11
+	dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
+
+	rd_open_tables$[1]=stbl("+GUI_DEVICE"),rd_open_opts$[1]="O"
+	rd_open_tables$[2]="ADM_USER",rd_open_opts$[2]="OTA"
+	rd_open_tables$[3]="ADE_EXECAR",rd_open_opts$[3]="OTA"
+	rd_open_tables$[4]="ADE_EXECAP",rd_open_opts$[4]="OTA"
+	rd_open_tables$[5]="ADE_EXECCOST",rd_open_opts$[5]="OTA"
+	rd_open_tables$[6]="ADE_EXECPO",rd_open_opts$[6]="OTA"
+	rd_open_tables$[7]="ADE_EXECSALE",rd_open_opts$[7]="OTA"
+	rd_open_tables$[8]="ADE_EXECCTOT",rd_open_opts$[8]="OTA"
+	rd_open_tables$[9]="ADE_EXECSTOT",rd_open_opts$[9]="OTA"
+	rd_open_tables$[10]="ADE_EXECIV",rd_open_opts$[10]="OTA"
+	rd_open_tables$[11]="ADE_EXECGEN",rd_open_opts$[11]="OTA"
+
+	gosub open_tables
+
+	rd_gui_dev=num(rd_open_chans$[1])
+	rd_adm_user=num(rd_open_chans$[2]);dim rd_adm_user$:rd_open_tpls$[2]
+	rd_ade_execar=num(rd_open_chans$[3]);dim rd_ade_execar$:rd_open_tpls$[3]
+	rd_ade_execap=num(rd_open_chans$[4]);dim rd_ade_execap$:rd_open_tpls$[4]
+	rd_ade_execcost=num(rd_open_chans$[5]);dim rd_ade_execcost$:rd_open_tpls$[5]
+	rd_ade_execpo=num(rd_open_chans$[6]);dim rd_ade_execpo$:rd_open_tpls$[6]
+	rd_ade_execsale=num(rd_open_chans$[7]);dim rd_ade_execsale$:rd_open_tpls$[7]
+	rd_ade_execctot=num(rd_open_chans$[8]);dim rd_ade_execctot$:rd_open_tpls$[8]
+	rd_ade_execstot=num(rd_open_chans$[9]);dim rd_ade_execstot$:rd_open_tpls$[9]
+	rd_ade_execiv=num(rd_open_chans$[10]);dim rd_ade_execiv$:rd_open_tpls$[10]
+	rd_ade_execgen=num(rd_open_chans$[11]);dim rd_ade_execgen$:rd_open_tpls$[11]
+
+rem --- Get SysGUI Object
+
+	rdSysGUI!=bbjAPI().getSysGui()
+	rdDayColor!=rdSysGUI!.makeColor(255,252,215)
+	rdHdrColor!=rdSysGUI!.makeColor(240,240,240)
+	rdHdrText!=rdSysGUI!.makeColor(160,160,160)
+
+	rdDayVect!=rdSysGUI!.makeVector()
+	rdValVect!=rdSysGUI!.makeVector()
+
+    dim rd_gui_event$:tmpl(rd_gui_dev)
+    dim rd_notify_base$:noticetpl(0,0)
+
+rem --- Get Attributes
+
+	call rd_dir_pgm$+"bam_attr_init.aon",rd_attr_def_tbl$[all],rd_attr_def_col$[all]
+		rd_attr_def_col$=rd_attr_def_col$[0,0]
+		rd_attr_def_tbl$=rd_attr_def_tbl$[0,0]
+
+	dim rd_ade_execgen$:fattr(rd_ade_execgen$)
+	readrecord(rd_ade_execgen,key=rd_firm_id$,dom=*next)rd_ade_execgen$
+
+rem --- Main Process
+
+	gosub disp_win
+	gosub get_user_settings
+	gosub def_grids
+	gosub format_tree
+	gosub display_date
+	gosub display_calendar
+	gosub display_status
+	gosub resize_win
+
+	rd_curr_cat=1
+	rd_curr_meas=1
+rem	gosub display_data
+
+	rdWindow!.setVisible(1)
+
+event_ctl:rem --- Event Control
+
+	rdWindow!.setCallback(rdWindow!.ON_CLOSE,"exit_prog")
+	rdWindow!.setCallback(rdWindow!.ON_RESIZE,"resize_win")
+
+	rdBtnPrevYr!.setCallback(rdBtnPrevYr!.ON_BUTTON_PUSH,"adjust_date")
+	rdBtnPrevMo!.setCallback(rdBtnPrevMo!.ON_BUTTON_PUSH,"adjust_date")
+	rdBtnNextMo!.setCallback(rdBtnNextMo!.ON_BUTTON_PUSH,"adjust_date")
+	rdBtnNextYr!.setCallback(rdBtnNextYr!.ON_BUTTON_PUSH,"adjust_date")
+	rdBtnCurrMo!.setCallback(rdBtnCurrMo!.ON_BUTTON_PUSH,"adjust_date")
+
+	rdTreeOpts!.setCallback(rdTreeOpts!.ON_TREE_SELECT,"select_category")
+
+	rdSysGUI!.flushEvents()
+
+	process_events,err=*same
+
+adjust_date:rem --- Adjust Date
+
+   rd_gui_event$=rdSysGUI!.getLastEventString()
+   rd_date_btn=rd_gui_event.id
+
+	switch rd_date_btn
+		case 2000;rem --- Prev Year
+			rd_curr_yr=rd_curr_yr-1
+		break
+		case 2001;rem --- Prev Month
+			rd_curr_mo=rd_curr_mo-1
+			if rd_curr_mo<1
+				rd_curr_yr=rd_curr_yr-1
+				rd_curr_mo=12
+			endif
+		break
+		case 2002;rem --- Next Month
+			rd_curr_mo=rd_curr_mo+1
+			if rd_curr_mo>12
+				rd_curr_yr=rd_curr_yr+1
+				rd_curr_mo=1
+			endif
+		break
+		case 2003;rem --- Next Year
+			rd_curr_yr=rd_curr_yr+1
+		break
+		case 2004;rem --- Current Month
+			rd_curr_mo=rd_default_mo
+			rd_curr_yr=rd_default_yr
+		break
+		case default
+		break
+	swend
+
+	gosub display_date
+	gosub display_calendar
+	gosub display_data
+
+	return
+
+display_date:rem --- Display Current Date
+
+	rdCurrDate!.setText(rd_months$[rd_curr_mo]+" "+str(rd_curr_yr))
+rem		rdChartBar!.setSeriesName(0,rd_months$[rd_curr_mo]+" "+str(rd_curr_yr))
+rem		rdChartBar!.setSeriesName(1,rd_months$[rd_curr_mo]+" "+str(rd_curr_yr-1))
+
+	rd_start_day=num(date(jul(rd_curr_yr,rd_curr_mo,1):"%W"))
+
+	rd_day_str$="313128303130313130313031"
+	if mod(rd_curr_yr,4)=0 rd_day_str$(3,2)="29"
+	rd_no_days=num(rd_day_str$(rd_curr_mo*2-1,2))
+
+	return
+
+display_calendar:rem --- Calculate And Display Calendar
+
+	rdDayVect!.clear()
+	rd_day_count=0
+
+	for rd_curr_day=1 to 96
+		rd_day_text$=""
+		if mod(rd_curr_day,8)<>0 and mod(int((rd_curr_day-1)/8),2)=0 and rd_curr_day>=rd_start_day and rd_day_count<rd_no_days
+			rd_day_count=rd_day_count+1
+			rd_day_text$=str(rd_day_count)
+		endif
+
+		rdDayVect!.addItem(rd_day_text$)
+
+	next rd_curr_day
+
+	rdGridCal!.setCellText(0,0,rdDayVect!)
+
+	return
+
+select_category:rem --- Display Category Selected
+
+	rd_select_node=rdTreeOpts!.getSelectedNode()
+	if rd_select_node>100 and mod(rd_select_node,100)<>0
+		rd_curr_cat=int(rd_select_node/100)
+		rd_curr_meas=mod(rd_select_node,100)
+		gosub display_data
+	endif
+
+	return
+
+display_data:rem --- Display Data For Selected Category and Measure
+
+	rd_read_key$=rd_firm_id$+str(rd_curr_yr:"0000")+str(rd_curr_mo:"00")
+rem	rd_prior_key$=rd_firm_id$+str(rd_curr_yr-1:"0000")+str(rd_curr_mo:"00")
+	rd_read_data$=""
+	dim rd_read_data[1:31]
+rem	dim rd_prior_data[1:31]
+
+	switch rd_curr_cat
+		case 1
+			dim rd_ade_exec_data$:fattr(rd_ade_execar$)
+			rd_ade_exec_chan=rd_ade_execar
+			rd_read_data$="YES-INT"
+			switch rd_curr_meas
+				case 1;rd_read_dvar$="INV_DUE_BYDT";break
+				case 2;rd_read_dvar$="NO_INV_DUE";break
+			swend
+		break
+		case 2
+			dim rd_ade_exec_data$:fattr(rd_ade_execap$)
+			rd_ade_exec_chan=rd_ade_execap
+			rd_read_data$="YES-INT"
+			switch rd_curr_meas
+				case 1;rd_read_dvar$="INV_DUE_BYDT";break
+				case 2;rd_read_dvar$="NO_INV_DUE";break
+			swend
+		break
+		case 3
+			dim rd_ade_exec_data$:fattr(rd_ade_execcost$)
+			rd_ade_exec_chan=rd_ade_execcost
+			rd_read_data$="YES-INT"
+			switch rd_curr_meas
+				case 1;rd_read_dvar$="ORD_CST_SHIP";break
+				case 2;rd_read_dvar$="NO_ORD_SHIP";break
+				case 3;rd_read_dvar$="NO_LNS_SHIP";break
+			swend
+		break
+		case 4
+			dim rd_ade_exec_data$:fattr(rd_ade_execpo$)
+			rd_ade_exec_chan=rd_ade_execpo
+			rd_read_data$="YES-INT"
+			switch rd_curr_meas
+				case 1;rd_read_dvar$="PO_AMT_REC";break
+				case 2;rd_read_dvar$="NO_LNS_REC";break
+			swend
+		break
+		case 5
+			dim rd_ade_exec_data$:fattr(rd_ade_execsale$)
+			rd_ade_exec_chan=rd_ade_execsale
+			switch rd_curr_meas
+				case 1;rd_read_dvar$="ORD_AMT_SHIP";break
+				case 2;rd_read_dvar$="NO_ORD_SHIP";break
+				case 3;rd_read_dvar$="NO_LNS_SHIP";break
+			swend
+		break
+		case 6
+		break
+			dim rd_ade_execctot$:fattr(rd_ade_execctot$)
+			readrecord(rd_ade_execctot,key=rd_read_key$,dom=*next)rd_ade_execctot$
+			dim rd_ade_execstot$:fattr(rd_ade_execstot$)
+			readrecord(rd_ade_execstot,key=rd_read_key$,dom=*next)rd_ade_execstot$
+			switch rd_curr_meas
+				case 1
+					rd_read_dvar$="COST_INV_DTE"
+					rd_read_dvar$="SLS_INV_BYDT"
+				break
+				case 2
+					rd_read_dvar$="NO_INV_BYDT"
+					rd_read_dvar$="NO_INV_BYDT"
+				break
+			swend
+			for rd_read_data=1 to 31
+				if pos("INT"=rd_read_data$)<>0
+					rd_read_data[rd_read_data]=int(nfield(rd_ade_exec_data$,rd_read_dvar$+"_"+str(rd_read_data:"00")))
+					else
+					rd_read_data[rd_read_data]=nfield(rd_ade_exec_data$,rd_read_dvar$+"_"+str(rd_read_data:"00"))
+				endif
+			next rd_read_data
+		break
+		case 7
+		break
+			dim rd_ade_exec_data$:fattr(rd_ade_execiv$)
+			rd_ade_exec_chan=rd_ade_execiv
+			rd_read_data$="YES-INT"
+			switch rd_curr_meas
+				case 1;rd_read_dvar$="COMMIT_VALUE";break
+				case 2;rd_read_dvar$="INV_OH_BYDT";break
+			swend
+		break
+	swend
+
+	if pos("YES"=rd_read_data$)<>0
+		dim rd_ade_exec_data$:fattr(rd_ade_exec_data$)
+		readrecord(rd_ade_exec_chan,key=rd_read_key$,dom=*next)rd_ade_exec_data$
+		for rd_read_data=1 to 31
+			if pos("INT"=rd_read_data$)<>0
+				rd_read_data[rd_read_data]=int(nfield(rd_ade_exec_data$,rd_read_dvar$+"_"+str(rd_read_data:"00")))
+				else
+				rd_read_data[rd_read_data]=nfield(rd_ade_exec_data$,rd_read_dvar$+"_"+str(rd_read_data:"00"))
+			endif
+		next rd_read_data
+	endif
+
+rem	if pos("YES"=rd_read_data$)<>0
+rem		dim rd_ade_exec_data$:fattr(rd_ade_exec_data$)
+rem		readrecord(rd_ade_exec_chan,key=rd_prior_key$,dom=*next)rd_ade_exec_data$
+rem		for rd_read_data=1 to 31
+rem			if pos("INT"=rd_read_data$)<>0
+rem				rd_prior_data[rd_read_data]=int(nfield(rd_ade_exec_data$,rd_read_dvar$+"_"+str(rd_read_data:"00")))
+rem				else
+rem				rd_prior_data[rd_read_data]=nfield(rd_ade_exec_data$,rd_read_dvar$+"_"+str(rd_read_data:"00"))
+rem			endif
+rem		next rd_read_data
+rem	endif
+
+	rdDayVect!.clear()
+	rd_day_count=0
+	rd_wk_total=0
+	rd_yr_total=0
+	dim rd_bottom_total[1:8]
+
+	for rd_curr_day=1 to 48
+		rd_data_text$=""
+		if mod(rd_curr_day,8)<>0 and rd_curr_day>=rd_start_day and rd_day_count<rd_no_days
+			rd_day_count=rd_day_count+1
+			rd_data_text$=str(rd_read_data[rd_day_count])
+			rd_wk_total=rd_wk_total+rd_read_data[rd_day_count]
+			rd_yr_total=rd_yr_total+rd_read_data[rd_day_count]
+			rd_bottom_total[mod(rd_curr_day,8)]=rd_bottom_total[mod(rd_curr_day,8)]+rd_read_data[rd_day_count]
+			else
+			if mod(rd_curr_day,8)=0
+				rd_data_text$=str(rd_wk_total)
+				rd_bottom_total[8]=rd_bottom_total[8]+rd_wk_total
+				rd_wk_total=0
+			endif
+		endif
+
+		rdGridCal!.setCellText(int((rd_curr_day-1)/8)*2+1,mod(rd_curr_day-1,8),rd_data_text$)
+
+	next rd_curr_day
+
+	for rd_curr_total=1 to 8
+		rdGridCal!.setCellText(12,rd_curr_total-1,str(rd_bottom_total[rd_curr_total]))
+	next rd_curr_total
+
+	for rd_curr_day=1 to 31
+		rdChartBar!.setBarValue(0,rd_curr_day-1,rd_read_data[rd_curr_day])
+rem		rdChartBar!.setBarValue(1,rd_curr_day-1,rd_prior_data[rd_curr_day])
+	next rd_curr_day
+
+	return
+
+display_status:rem --- Display Build Status Date/Time
+
+	if len(cvs(rd_ade_execgen.gen_date$,2))=8
+		rd_build_date$=rd_ade_execgen.gen_date$(5,2)+"/"+rd_ade_execgen.gen_date$(7,2)+"/"+rd_ade_execgen.gen_date$(1,4)
+		rd_build_time$=rd_ade_execgen.gen_time$(1,2)+":"+rd_ade_execgen.gen_date$(3,2)+":"+rd_ade_execgen.gen_date$(5,2)
+		rdWindow!.setTitle(rd_win_title$+" "+rd_build_date$+" - "+rd_build_time$)
+	endif
+	
+	return
+
+get_user_settings:rem --- Get User/Windows Settings
+
+	rd_save_win_id$=pad("WIN_[EXEC_SUMM]",20)
+	call rd_dir_pgm$+"bac_winsize.aon",cvs(rd_win_save_id$,4),"W","",rdWindow!,"READ",rd_win_coord[all]
+
+	return
+
+save_user_settings:rem --- Save Windows Coordinates
+
+	call rd_dir_pgm$+"bac_winsize.aon",cvs(rd_win_save_id$,4),"W","",rdWindow!,"SAVE",rd_win_coord[all]
+
+	return
+
+open_tables:rem -----<Open Tables
+
+	call rd_dir_pgm$+"bac_open_tables.aon",
+:		rd_open_beg,
+:		rd_open_end,
+:		rd_open_tables$[all],
+:		rd_open_opts$[all],
+:		rd_open_chans$[all],
+:		rd_open_tpls$[all],
+:		rd_table_chans$[all],
+:		rd_open_batch,
+:		rd_open_status$
+
+	if rd_open_status$<>""
+		rd_msg_id$="ENTRY_OPEN_ERROR"
+		dim rd_msg_tokens$[1]
+			rd_msg_tokens$[1]=rd_open_status$
+		gosub disp_message
+		goto exit_prog
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call rd_dir_pgm$+"bac_message.aon",
+:		rd_msg_id$,
+:		rd_msg_tokens$[all],
+:		rd_msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+
+disp_win:rem --- Display Window
+
+	dim rd_ctl_misc$[20]
+
+	rd_form_id$=rd_dir_sys$+"ads_execsummary.arc"
+
+	call rd_dir_pgm$+"bam_controls.aon",
+:		rd_gui_dev,
+:		rdSysGUI!,
+:		rd_form_id$,
+:		rd_win_coord[all],
+:		rdWindow!,
+:		"DISPLAY",
+:		rd_open_chan$[all],
+:		rd_ctl_misc$[all]
+
+	rdBtnPrevYr!=rdWindow!.getControl(2000)
+	rdBtnPrevMo!=rdWindow!.getControl(2001)
+	rdBtnNextMo!=rdWindow!.getControl(2002)
+	rdBtnNextYr!=rdWindow!.getControl(2003)
+	rdBtnCurrMo!=rdWindow!.getControl(2004)
+
+	rdCurrDate!=rdWindow!.getControl(2100)
+	rdTreeOpts!=rdWindow!.getControl(3000)
+
+	rdTabOpts!=rdWindow!.getControl(4000)
+
+	rdChildCal!=rdWindow!.getControl(10010)
+		rdGridCal!=rdChildCal!.getControl(5000)
+		rdGridFont!=rdGridCal!.getFont()
+		rdHdrFont!=rdSysGUI!.makeFont(rdGridFont!.getName(),rdGridFont!.getSize(),1)
+
+	rdChildBar!=rdWindow!.getControl(10020)
+		rdChartBar!=rdChildBar!.addBarChart(5000,2,2,400,300,"Day","Value",1,31,0,1,0)
+		rdChartBar!.setSeriesName(0,"KPI Activity")
+rem		rdChartBar!.setSeriesName(1,"Prior Year")
+		for rd_curr_day=1 to 31
+			rdChartBar!.setCategoryName(rd_curr_day-1,str(rd_curr_day:"00"))
+		next rd_curr_day
+
+	rdWinColor!=rdWindow!.getBackColor()
+	rd_win_title$=rdWindow!.getTitle()
+
+	rd_win_disp$="YES"
+
+	return
+
+format_tree:rem --- Form Category/Measure Tree
+
+	rdCatVect!=rdSysGUI!.makeVector()
+		rdCatVect!.addItem("Accounts Receivable YYY")
+		rdCatVect!.addItem("Accounts Payable    YYY")
+		rdCatVect!.addItem("Open Orders         YYY")
+		rdCatVect!.addItem("Purchase Orders     YYY")
+		rdCatVect!.addItem("Sales Totals        YYY")
+		rdCatVect!.addItem("Gross Profit        YYY")
+		rdCatVect!.addItem("Inventory           YYY")
+
+	rd_measure_text$="Amount    Units     Average   "
+
+	rdTreeOpts!.setCollapsedIcon(rd_dir_img$+"im_node_doc.png")
+	rdTreeOpts!.setExpandedIcon(rd_dir_img$+"im_node_doc.png")
+	rdTreeOpts!.setLeafIcon(rd_dir_img$+"im_mtype_view.png")
+
+	rdTreeOpts!.setRoot(0,"Indicators")
+	for rd_curr_cat=1 to rdCatVect!.size()
+		rd_temp_cat$=rdCatVect!.getItem(rd_curr_cat-1)
+		rdTreeOpts!.addExpandableNode(rd_curr_cat,0,cvs(rd_temp_cat$(1,20),2))
+		for rd_curr_meas=1 to 3
+			if rd_temp_cat$(20+1,1)="Y"
+				rdTreeOpts!.addNode(rd_curr_cat*100+rd_curr_meas,rd_curr_cat,cvs(rd_measure_text$(rd_curr_meas*10-9,10),2))
+			endif
+		next rd_curr_meas
+rem		rdTreeOpts!.expandNode(rd_curr_cat)
+	next rd_curr_cat
+
+	return
+
+resize_win:rem --- Resize Window Contents
+
+	rdTreeOpts!.setSize(rdTreeOpts!.getWidth(),rdWindow!.getHeight()-(rdTreeOpts!.getY()+5))
+	rdTabOpts!.setSize(rdWindow!.getWidth()-(rdTabOpts!.getX()+3),rdWindow!.getHeight()-(rdTabOpts!.getY()+3))
+
+	rdChildCal!.setSize(rdTabOpts!.getWidth()-6,rdTabOpts!.getHeight()-25)
+		rdGridCal!.setSize(rdChildCal!.getWidth()-(rdGridCal!.getX()*2),rdChildCal!.getHeight()-12)
+		rd_summary_height=rdGridCal!.getHeight()-(rdGridCal!.getColumnHeaderHeight()+98)
+		rd_summary_total=rdGridCal!.getHeight()-rdGridCal!.getColumnHeaderHeight()
+		rd_summary_used=0
+		for rd_curr_row=1 to 12
+			if mod(rd_curr_row,2)=1
+				rdGridCal!.setRowHeight(16)
+				rd_summary_used=rd_summary_used+16
+			endif
+			if mod(rd_curr_row,2)=0
+				rdGridCal!.setRowHeight(rd_curr_row-1,int(rd_summary_height/7))
+				rd_summary_used=rd_summary_used+int(rd_summary_height/7)
+			endif
+		next rd_curr_row
+
+		rdGridCal!.setRowHeight(12,rd_summary_total-(rd_summary_used-1))
+
+	rdChildBar!.setSize(rdTabOpts!.getWidth()-6,rdTabOpts!.getHeight()-25)
+		rdChartBar!.setSize(rdChildBar!.getWidth()-(rdChartBar!.getX()*2),rdChildBar!.getHeight()-(rdChartBar!.getY()+5))
+
+	return
+
+def_grids:rem --- Define Grid
+
+	rd_def_output_cols=rd_no_columns
+	dim rd_attr_col$[rd_def_output_cols,len(rd_attr_def_col$[0,0])/5]
+
+	rd_col_size=int((rdWindow!.getWidth()-rdGridCal!.getX())/8)
+
+	for rd_curr_column=1 to rd_no_columns
+
+		rd_attr_col$[rd_curr_column,fnstr_pos("DVAR",rd_attr_def_col$[0,0],5)]="COL_"+str(rd_curr_column+1:"0")
+		rd_attr_col$[rd_curr_column,fnstr_pos("LABS",rd_attr_def_col$[0,0],5)]=rd_columns$[rd_curr_column]
+		rd_attr_col$[rd_curr_column,fnstr_pos("DTYP",rd_attr_def_col$[0,0],5)]="C"
+		rd_attr_col$[rd_curr_column,fnstr_pos("CTLW",rd_attr_def_col$[0,0],5)]=str(rd_col_size)
+		rd_attr_col$[0,1]=rd_attr_col$[0,1]+pad("SUMMARY."+rd_attr_col$[rd_curr_column,fnstr_pos("DVAR",rd_attr_def_col$[0,0],5)],40)
+
+	next rd_curr_column
+
+	call rd_dir_pgm$+"bam_grid_init.aon",rd_gui_dev,rdGridCal!,"NOSCROLL-COLH-LINES-CALENDAR-CELL-VCENTER",rd_no_rows,rd_attr_def_col$[all],rd_attr_col$[0,1],rd_attr_col$[all]
+	rdGridCal!.setFitToGrid(rdGridCal!.AUTO_RESIZE_LAST_COLUMN)
+
+	for rd_curr_row=1 to 13
+		if mod(rd_curr_row,2)=1
+			rdGridCal!.setRowBackColor(rd_curr_row-1,rdHdrColor!)
+			if rd_curr_row<12
+				rdGridCal!.setRowForeColor(rd_curr_row-1,rdHdrText!)
+				rdGridCal!.setRowFont(rd_curr_row-1,rdHdrFont!)
+			endif
+		endif
+		if mod(rd_curr_row,2)=0
+			rdGridCal!.setRowBackColor(rd_curr_row-1,rdDayColor!)
+			for rd_curr_col=0 to 7
+				rdGridCal!.setCellAlignment(rd_curr_row-1,rd_curr_col,rdGridCal!.GRID_ALIGN_RIGHT)
+			next rd_curr_col
+		endif
+	next rd_curr_row
+
+	for rd_curr_col=0 to 7
+		rdGridCal!.setCellAlignment(12,rd_curr_col,rdGridCal!.GRID_ALIGN_RIGHT)
+	next rd_curr_col
+
+	rdGridCal!.setColumnBackColor(7,rdHdrColor!)
+
+	return
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+exit_prog:rem --- Exit Program
+
+	gosub save_user_settings
+
+	if pgm(-1)=pgm(-1) release
+
+	rdWindow!.destroy()
+
+	exit
