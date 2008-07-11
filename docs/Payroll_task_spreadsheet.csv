@@ -3,7 +3,7 @@ Payroll,M,,,,,,,,,,,
 Daily Processing,G,,,,,,,,,,,
 Payroll Period Definition,T,,,pre_aa.bbx,PRE_AA,Entry,,,,,,
  - update standard hours - Input,T,,,pru_ba.bbx,PRU.BA,Input for process,,,,,,
- - update standard hours - process,T,,,pru_bb.bbx,PRU.BB,process,,WIP NV-OSI,needs,,,
+ - update standard hours - process,T,,,pru_bb.bbx,PRU.BB,process,,DONE NV-OSI,needs?,,,No print statements in the program. There is some variables whose values are not initialized anywhere in the program. Commented in the source code about those variables.
 Payroll Entry -start,T,,,pre_ba.bbx,PRE_BA,Entry,,,,,,** Payroll Detail History requires modifications
  - employee info,T,,,pre_bb.bbx,PRE_BB,Entry,,,,,,** Payroll Detail History requires modifications
  - earnings entry,T,,,pre_bc.bbx,PRE_BC,Entry,,,,,,
@@ -11,16 +11,16 @@ Payroll Entry -start,T,,,pre_ba.bbx,PRE_BA,Entry,,,,,,** Payroll Detail History 
  - tax entry,T,,,pre_be.bbx,PRE_BE,Entry,,,,,,
  - accrual entry,T,,,pre_bf.bbx,PRE_BF,Entry,,,,,,
  - sub menu for payroll entry,T,,,pre_bg.bbx,PRE_BG,Entry,,,,,,
-Earnings Entry Report,T,,prr_earningsentry.aon,prr_ca.bbx,PRR_CA ,Report,,DONE NV-OSI,DONE NV-OSI,WIP NV-OSI,needs,"0A in v6, CA in v7"
-Earnings Register,T,,prr_earnings.aon,prr_aa.bbx,PRR_AA,Register,,DONE NV-OSI,DONE NV-OSI,WIP NV-OSI,needs,
+Earnings Entry Report,T,,prr_earningsentry.aon,prr_ca.bbx,PRR_CA ,Report,,DONE NV-OSI,DONE NV-OSI,DONE NV-OSI,needs,"0A in v6, CA in v7"
+Earnings Register,T,,prr_earnings.aon,prr_aa.bbx,PRR_AA,Register,,DONE NV-OSI,DONE NV-OSI,DONE NV-OSI,needs,
 Distribution Report - Input,T,PRR_LABRDISTRIB,prr_labrdistrib.aon,prr_ea.bbx,PRR_3A,Input for report,,DONE NV-OSI,,,,
- - Report,T,,prr_labrdistrib_o1.aon,prr_eb.bbx,PRR.3B,Report,,DONE NV-OSI,DONE NV-OSI,WIP NV-OSI,needs,"EA=EB is v7, 3A-3B is v6"
+ - Report,T,,prr_labrdistrib_o1.aon,prr_eb.bbx,PRR.3B,Report,,DONE NV-OSI,DONE NV-OSI,DONE NV-OSI,needs,"EA=EB is v7, 3A-3B is v6"
 Payroll Calculation,T,,prr_dailyentry.aon,prr_ua.bbx,PRU_AA,Update,,DONE NV-OSI,DONE NV-OSI,,,
-Adjustment Report,T,PRR_ADJUTMENT,prr_adjustment.aon,prr_ba.bbx,PRR_BA,Report,,DONE NV-OSI,DONE NV-OSI,WIP NV-OSI,needs,
-Exception Report,T,,prr_exception.aon,prr_ya.bbx,PRR_YA,Report,,DONE NV-OSI,DONE NV-OSI,WIP NV-OSI,needs,
-Detail Report,T,PRR_DETAILS,prr_details.aon,prr_xa.bbx,PRR_XA,Report,,DONE NV-OSI,DONE NV-OSI,WIP NV-OSI,needs,
-GL Distribution Report,T,,prr_gldistrib.aon,prr_ta.bbx,PRR_TA,Report,,DONE NV-OSI,needs?,n?,needs,
-Pre-Check Report,T,,prr_precheck.aon,prr_fa.bbx,PRR_FA,Report,,DONE NV-OSI,DONE NV-OSI,WIP NV-OSI,needs,
+Adjustment Report,T,PRR_ADJUTMENT,prr_adjustment.aon,prr_ba.bbx,PRR_BA,Report,,DONE NV-OSI,DONE NV-OSI,DONE NV-OSI,needs,
+Exception Report,T,,prr_exception.aon,prr_ya.bbx,PRR_YA,Report,,DONE NV-OSI,DONE NV-OSI,DONE NV-OSI,needs,
+Detail Report,T,PRR_DETAILS,prr_details.aon,prr_xa.bbx,PRR_XA,Report,,DONE NV-OSI,DONE NV-OSI,DONE NV-OSI,needs,
+GL Distribution Report,T,,prr_gldistrib.aon,prr_ta.bbx,PRR_TA,Report,,DONE NV-OSI,needs?,,needs,
+Pre-Check Report,T,,prr_precheck.aon,prr_fa.bbx,PRR_FA,Report,,DONE NV-OSI,DONE NV-OSI,DONE NV-OSI,needs,
 Check Printing - input,T,PRR_CHKPRINT,prr_chkprint.aon,prr_ga.bbx,PRR_GA,Input for report,,DONE NV-OSI,,no doc out,,
  - print,T,,prr_chkprint_o1.aon,prr_gb.bbx,PRR.GB,Report,,DONE NV-OSI,DONE NV-OSI,no doc out,,Standard checks 
  - optional print,T,,,prr_gc.bbx,PRR.GC,Optional Report,,DONE NV-OSI,Not used?,no doc out,,Checks with blank stubs
