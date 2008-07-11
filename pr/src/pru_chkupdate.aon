@@ -154,6 +154,16 @@ rem --- Date/time handling functions
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
 
+    def fna$(q$,q2$)=str(mod((asc(q$)-32)*pos(" "<>q2$(2,1)),100):"00")
+    def fnc2$(q1$)=fna$(q1$(1),q1$)+fna$(q1$(2),q1$)
+
+rem " --- Convert 2-Char Year to 21st Century 2-Char Year" 
+    def fnyy_yy21$(q1$)
+    let q9=10,q9=num(STBL("+Y2K_UPPER_LIMIT",err=*next),err=*next)
+    if num(q1$(1,2),err=8133)<q9 then let q1$(1,1)=chr(int(num(q1$(1,2))/10)+65)
+    return q1$
+    fnend
+
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
     def fnmask$(q1$,q2$)
