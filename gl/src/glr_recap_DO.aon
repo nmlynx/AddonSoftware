@@ -24,6 +24,7 @@ rem --- ACTION$     : D = Perform date verification
         setesc std_error
         seterr std_error
 
+        rd_alias_id$="<GL_RECAP>";rem dummy id to allow save for column size settings
  	next_overlay$="";rem --- clear next_var and outvect! so bas_process_end doesn't loop...i.e., don't run anything after this
         if OutVect!<>null() OutVect!=null()
 
