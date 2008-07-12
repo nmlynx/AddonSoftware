@@ -108,7 +108,7 @@ rem --- Retrieve parameter records
     ars01a_key$=firm_id$+"AR00"
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
-    history$=ars01a.inv_hist_flg$
+    history$="Y";rem ars01a.inv_hist_flg$ - not accessible anymore? jpb
     jn$=ars01a.job_nos$
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     m8$="(###) ###-####"
