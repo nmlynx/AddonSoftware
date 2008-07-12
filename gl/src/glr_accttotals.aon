@@ -37,6 +37,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -63,10 +64,10 @@ rem --- Headings and print positions
     dim columns$[3,10]
     columns = 3
 
-    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="5"
-    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="20"
-    columns$[2,0]="Debit",              columns$[2,1]="C",columns$[2,2]="9"
-    columns$[3,0]="Credit",             columns$[3,1]="C",columns$[3,2]="9"
+    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="15"
+    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="30"
+    columns$[2,0]="Debit",              columns$[2,1]="C",columns$[2,2]="10",columns$[2,10]="T"
+    columns$[3,0]="Credit",             columns$[3,1]="C",columns$[3,2]="10",columns$[3,10]="T"
 
 rem --- Initializations
 
@@ -173,10 +174,7 @@ print_total: rem --- Print total/subtotal
 
     if lines+2>maxlines gosub set_lines
   
-    xwk = fnblank(2)
-
-    OutVect!.addItem("---------------")
-    OutVect!.addItem("---------------")
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     xwk = fnblank(1)
 
