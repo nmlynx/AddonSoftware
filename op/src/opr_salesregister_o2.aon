@@ -117,10 +117,10 @@ rem --- Close Files Not Needed For Update Or GL Summary
         close (opw31_dev,err=*next)
 
 rem --- Run next overlay
-
+        
         update$="opu_updatesales.aon"
         overlay$=update$
-
+           
         if gl$="Y" then
 
             dim glcontrol$:(stbl("+GLCONTROL_TPL"))
@@ -144,7 +144,7 @@ GL_Summary: rem --- print @(40,5),"G/L Summary",'cl',
         run update$,err=std_exit
         goto std_exit
 
-report_heading:
+
 
 
 Sub_Heading: rem --- Subheading
