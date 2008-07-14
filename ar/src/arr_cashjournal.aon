@@ -14,6 +14,7 @@ rem --- Document initializations
             OutVect!=bbjAPI().getSysGui().makeVector()
             HdrVect!=bbjAPI().getSysGui().makeVector()
             BrkVect!=bbjAPI().getSysGui().makeVector()
+            TotVect!=bbjAPI().getSysGui().makeVector()
             rep_date$=date(0:"%Mz/%Dz/%Yd")
             rep_date_stamp$=date(0:"%Yd%Mz%Dz")
             rep_time$=date(0:"%hz:%mz %p")
@@ -308,12 +309,12 @@ rem --- Print invoice information
                       OutVect!.addItem(fndate$(art06a.receipt_date$))
                       OutVect!.addItem(art06a.cash_rec_cd$)
                       OutVect!.addItem(art06a.ar_check_no$)
-                      OutVect!.addItem(str(art06a.payment_amt:m1$))
+                      OutVect!.addItem(str(art06a.payment_amt))
                       OutVect!.addItem(art16a.ar_inv_no$)
-                      OutVect!.addItem(str(balance:m1$))
-                      OutVect!.addItem(str(art16a.apply_amt:m1$))
-                      OutVect!.addItem(str(art16a.discount_amt:m1$))
-                      OutVect!.addItem(str(credit:m1$))
+                      OutVect!.addItem(str(balance))
+                      OutVect!.addItem(str(art16a.apply_amt))
+                      OutVect!.addItem(str(art16a.discount_amt))
+                      OutVect!.addItem(str(credit))
                       OutVect!.addItem("")
                       OutVect!.addItem("")
                       detail=1
@@ -368,7 +369,7 @@ rem --- Print GL distribution information
 
                       xwk=fnblank(10)
                       OutVect!.addItem(fnmask$(art26a.gl_account$(1,account_length),g0$))
-                      OutVect!.addItem(str(art26a.gl_post_amt:m1$))
+                      OutVect!.addItem(str(art26a.gl_post_amt))
                       detail=1
                       customer[4]=customer[4]+art26a.gl_post_amt
                       totals[4]=totals[4]+art26a.gl_post_amt
@@ -409,15 +410,16 @@ rem --- Print report totals
             totals[3]=totals[1]+totals[2]
             x$="Totals for Report"
             xwk=fnblank(12)
+            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             OutVect!.addItem(x$)
             xwk=fnblank(3)
-            OutVect!.addItem(str(totals[0]:m1$))
+            OutVect!.addItem(str(totals[0]))
             xwk=fnblank(2)
-            OutVect!.addItem(str(totals[1]:m1$))
-            OutVect!.addItem(str(totals[2]:m1$))
-            OutVect!.addItem(str(totals[3]:m1$))
+            OutVect!.addItem(str(totals[1]))
+            OutVect!.addItem(str(totals[2]))
+            OutVect!.addItem(str(totals[3]))
             OutVect!.addItem("")
-            OutVect!.addItem(str(totals[4]:m1$))
+            OutVect!.addItem(str(totals[4]))
 
 rem --- Skip GL Account Distribution if GL isn't installed/used or user didn't request it
 
@@ -429,20 +431,20 @@ rem --- Skip GL Account Distribution if GL isn't installed/used or user didn't r
 init_heading: rem --- Init Column Headings
 
         if journal
-        dim columns$[11,5]
+        dim columns$[11,10]
             columns=11
             columns$[0,0]="Customer",      columns$[0,1]="C",columns$[0,2]="25"
-            columns$[1,0]="Receipt Date",  columns$[1,1]="C",columns$[1,2]="8"
-            columns$[2,0]="Rec Code",      columns$[2,1]="C",columns$[2,2]="3"
-            columns$[3,0]="Chk Number",    columns$[3,1]="C",columns$[3,2]="10"
-            columns$[4,0]="Chk Amt",       columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$
-            columns$[5,0]="Invoice Number",columns$[5,1]="C",columns$[5,2]="8"
-            columns$[6,0]="Invoice Bal",   columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$
-            columns$[7,0]="Amt Applied",   columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m1$
-            columns$[8,0]="Discount Amt",  columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$
-            columns$[9,0]="Total Credit",  columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m1$
+            columns$[1,0]="Receipt Dt",  columns$[1,1]="C",columns$[1,2]="10"
+            columns$[2,0]="Cd",      columns$[2,1]="C",columns$[2,2]="3"
+            columns$[3,0]="Check No",    columns$[3,1]="C",columns$[3,2]="8"
+            columns$[4,0]="Check Amt",       columns$[4,1]="N",columns$[4,2]=str(len(m1$)),columns$[4,3]=m1$,columns$[4,10]="T"
+            columns$[5,0]="Invoice",columns$[5,1]="C",columns$[5,2]="8"
+            columns$[6,0]="Invoice Bal",   columns$[6,1]="N",columns$[6,2]=str(len(m1$)),columns$[6,3]=m1$,columns$[6,10]="T"
+            columns$[7,0]="Amt Applied",   columns$[7,1]="N",columns$[7,2]=str(len(m1$)),columns$[7,3]=m1$,columns$[7,10]="T"
+            columns$[8,0]="Discount Amt",  columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
+            columns$[9,0]="Total Credit",  columns$[9,1]="N",columns$[9,2]=str(len(m1$)),columns$[9,3]=m1$,columns$[9,10]="T"
             columns$[10,0]="Misc Acct",    columns$[10,1]="C",columns$[10,2]="8"
-            columns$[11,0]="Misc Amt",     columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m1$
+            columns$[11,0]="Misc Amt",     columns$[11,1]="N",columns$[11,2]=str(len(m1$)),columns$[11,3]=m1$,columns$[11,10]="T"
         endif
         return
 
@@ -453,15 +455,16 @@ customer_break: rem --- Customer break
                   customer[3]=customer[1]+customer[2]
                   x$="Totals for Customer"
                   xwk=fnblank(12)
+                  TotVect!.addItem(str(OutVect!.size()/(columns+1)))
                   OutVect!.addItem(x$)
                   xwk=fnblank(3)
-                  OutVect!.addItem(str(customer[0]:m1$))
+                  OutVect!.addItem(str(customer[0]))
                   xwk=fnblank(2)
-                  OutVect!.addItem(str(customer[1]:m1$))
-                  OutVect!.addItem(str(customer[2]:m1$))
-                  OutVect!.addItem(str(customer[3]:m1$))
+                  OutVect!.addItem(str(customer[1]))
+                  OutVect!.addItem(str(customer[2]))
+                  OutVect!.addItem(str(customer[3]))
                   OutVect!.addItem("")
-                  OutVect!.addItem(str(customer[4]:m1$))
+                  OutVect!.addItem(str(customer[4]))
                   break
             wend
             if done return
