@@ -174,7 +174,7 @@ rem --- Parameters
 
         call pgmdir$+"glc_ctlcreate.aon",err=label_five,pgm(-2),n2$,glw11$,gl$,status
         if status then goto std_exit
-
+        
 
     files$[30]=glw11$,ids$[30]="GLW_DAILYDETAIL",options$[30]="CL"
     call pgmdir$+"adc_fileopen.aon",action,30,30,files$[all],options$[all],
