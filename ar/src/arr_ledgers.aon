@@ -15,6 +15,7 @@ rem  +-----------------------------------------+
         OutVect!=bbjAPI().getSysGui().makeVector()
         HdrVect!=bbjAPI().getSysGui().makeVector()
         BrkVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
         rep_date$=date(0:"%Mz/%Dz/%Yd")
         rep_date_stamp$=date(0:"%Yd%Mz%Dz")
         rep_time$=date(0:"%hz:%mz %p")
@@ -97,17 +98,17 @@ rem --- Initializations
         headings$[3]="Includes Transactions Through "+fndate$(thrudate$)
 
 rem column heading
-            dim columns$[8,5]
+            dim columns$[8,10]
             columns=8
             columns$[0,0]="Cust/Inv",      columns$[0,1]="C",columns$[0,2]="25"
             columns$[1,0]="Date",          columns$[1,1]="C",columns$[1,2]="8"
-            columns$[2,0]="Due/Ref",       columns$[2,1]="C",columns$[2,2]="3"
-            columns$[3,0]="TC",            columns$[3,1]="C",columns$[3,2]="10"
+            columns$[2,0]="Due/Ref",       columns$[2,1]="C",columns$[2,2]="10"
+            columns$[3,0]="TC",            columns$[3,1]="C",columns$[3,2]="3"
             columns$[4,0]="Type",          columns$[4,1]="N",columns$[4,2]="10"
-            columns$[5,0]="Invoice ",      columns$[5,1]="C",columns$[5,2]="8",columns$[5,3]=m1$
-            columns$[6,0]="Applied",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$
-            columns$[7,0]="Balance",       columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m1$
-            columns$[8,0]="Discount ",     columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$
+            columns$[5,0]="Invoice ",      columns$[5,1]="N",columns$[5,2]=str(len(m1$)),columns$[5,3]=m1$,columns$[5,10]="T"
+            columns$[6,0]="Applied",       columns$[6,1]="N",columns$[6,2]=str(len(m1$)),columns$[6,3]=m1$,columns$[6,10]="T"
+            columns$[7,0]="Balance",       columns$[7,1]="N",columns$[7,2]=str(len(m1$)),columns$[7,3]=m1$,columns$[7,10]="T"
+            columns$[8,0]="Discount ",     columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
 
 rem --- Define print positions
 
@@ -165,9 +166,9 @@ rem --- Read next Customer Master (arm-01) record
                                         OutVect!.addItem(fndate$(art01a.inv_due_date$))
                                         OutVect!.addItem(art01a.ar_terms_code$)
                                         OutVect!.addItem(type$)
-                                        OutVect!.addItem(str(art01a.invoice_amt:m1$))
+                                        OutVect!.addItem(str(art01a.invoice_amt))
                                         xwk=fnblank(2)
-                                        OutVect!.addItem(str(art01a.disc_allowed:m1$))
+                                        OutVect!.addItem(str(art01a.disc_allowed))
                 lines=lines+1
                 printed=1
                 custinv=custinv+art01a.invoice_amt
@@ -192,9 +193,9 @@ rem --- Read next Customer Master (arm-01) record
                                               OutVect!.addItem("")
                                               OutVect!.addItem(type$)
                                               OutVect!.addItem("")
-                                              OutVect!.addItem(str(art11a.trans_amt:m1$))
+                                              OutVect!.addItem(str(art11a.trans_amt))
                                               OutVect!.addItem("")
-                                              OutVect!.addItem(str(art11a.adjdisc_amt:m1$))
+                                              OutVect!.addItem(str(art11a.adjdisc_amt))
                                               lines=lines+1
                                               applied=applied+art11a.trans_amt
                                               custapp=custapp+art11a.trans_amt
@@ -208,7 +209,7 @@ rem --- Read next Customer Master (arm-01) record
                                     xwk=fnblank(4)
                                     OutVect!.addItem("Total")
                                     xwk=fnblank(2)
-                                    OutVect!.addItem(str(balance:m1$))
+                                    OutVect!.addItem(str(balance))
                                     OutVect!.addItem("")
                                     lines=lines+1
 
@@ -218,12 +219,14 @@ rem --- Read next Customer Master (arm-01) record
 
           if printed=0 continue
                                   balance=custinv+custapp
+
+                                  TotVect!.addItem(str(OutVect!.size()/(columns+1)))
                                   xwk=fnblank(4)
                                   OutVect!.addItem("Customer Total")
-                                  OutVect!.addItem(str(custinv:m1$))
-                                  OutVect!.addItem(str(custapp:m1$))
-                                  OutVect!.addItem(str(balance:m1$))
-                                  OutVect!.addItem(str(custdis:m1$))
+                                  OutVect!.addItem(str(custinv))
+                                  OutVect!.addItem(str(custapp))
+                                  OutVect!.addItem(str(balance))
+                                  OutVect!.addItem(str(custdis))
                                   lines=lines+1
                                   reportinv=reportinv+custinv
                                   reportapp=reportapp+custapp
@@ -233,12 +236,13 @@ rem --- Read next Customer Master (arm-01) record
 rem --- All done
                                     balance=reportinv+reportapp
                                     xwk=fnblank(9)
+                                    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
                                     xwk=fnblank(4)
                                     OutVect!.addItem("Report Total")
-                                    OutVect!.addItem(str(reportinv:m1$))
-                                    OutVect!.addItem(str(reportapp:m1$))
-                                    OutVect!.addItem(str(balance:m1$))
-                                    OutVect!.addItem(str(reportdis:m1$))
+                                    OutVect!.addItem(str(reportinv))
+                                    OutVect!.addItem(str(reportapp))
+                                    OutVect!.addItem(str(balance))
+                                    OutVect!.addItem(str(reportdis))
                                     goto std_exit
 
 
