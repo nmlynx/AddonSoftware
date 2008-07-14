@@ -141,7 +141,7 @@ look_for_invoice:
 end_of_aval:
 [[APE_INVOICEHDR.ASHO]]
 rem --- get default date
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_ORDDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_INVDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
 	user_tpl.dflt_acct_date$=stbl("DEF_ACCT_DATE")
 [[APE_INVOICEHDR.INVOICE_DATE.AVAL]]
 invdate$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
