@@ -91,6 +91,7 @@ rem --- Initializations
 rem --- OutVect! for DocOut, date/time 
 
 	OutVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
 	rep_date$=date(0:"%Mz/%Dz/%Yd")
 		rep_date_stamp$=date(0:"%Yd%Mz%Dz")
 	rep_time$=date(0:"%hz:%mz %p")
@@ -98,12 +99,13 @@ rem --- OutVect! for DocOut, date/time
 
 rem --- column headings
 	dim columns$[5,10]
+        columns=5
 		columns$[0,0]="Invoice",columns$[0,1]="C",columns$[0,2]="15"
 		columns$[1,0]="Date",columns$[1,1]="C",columns$[1,2]="15"
 		columns$[2,0]="Cust ID",columns$[2,1]="C",columns$[2,2]="15"
 		columns$[3,0]="Name",columns$[3,1]="C",columns$[3,2]="30"
 		columns$[4,0]="Distribution/Terms",columns$[4,1]="C",columns$[4,2]="30"
-		columns$[5,0]="Amount",columns$[5,1]="N",columns$[5,2]="15",columns$[5,3]=m1$
+		columns$[5,0]="Amount",columns$[5,1]="N",columns$[5,2]="15",columns$[5,3]=m1$,columns$[5,10]="T"
 
     headings=2
     dim headings$[headings],o[5]
@@ -295,6 +297,7 @@ rem --- All done
         goto std_exit_no_report
     endif
 						
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     xwk=fnblank(4)
     OutVect!.addItem("Report Total")
     OutVect!.addItem(str(total))
