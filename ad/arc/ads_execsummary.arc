@@ -9,32 +9,37 @@ BEGIN
     EVENTMASK 1073742856
     NAME "grp_status"
 
-    BUTTON 2000, "<<", 5, 5, 20, 20
+    TOOLBUTTON 2000, "", 5, 5, 20, 20
     BEGIN
+        IMAGEFILE "sys/images/im_nb_fst_i.png" 
         NAME "btn_prev_yr"
         SHORTCUE "Previous year"
     END
 
-    BUTTON 2001, "<", 24, 5, 20, 20
+    TOOLBUTTON 2001, "", 24, 5, 20, 20
     BEGIN
+        IMAGEFILE "sys/images/im_nb_prv_i.png" 
         NAME "btn_prev_mo"
         SHORTCUE "Previous month"
     END
 
-    BUTTON 2002, ">", 126, 5, 20, 20
+    TOOLBUTTON 2002, "", 126, 5, 20, 20
     BEGIN
+        IMAGEFILE "sys/images/im_nb_nxt_i.png" 
         NAME "btn_next_mo"
         SHORTCUE "Next month"
     END
 
-    BUTTON 2003, ">>", 145, 5, 20, 20
+    TOOLBUTTON 2003, "", 145, 5, 20, 20
     BEGIN
+        IMAGEFILE "sys/images/im_nb_lst_i.png" 
         NAME "btn_next_yr"
         SHORTCUE "Next year"
     END
 
-    BUTTON 2004, "<>", 164, 5, 20, 20
+    TOOLBUTTON 2004, "", 164, 5, 20, 20
     BEGIN
+        IMAGEFILE "sys/images/im_tb_cal_f.png" 
         NAME "btn_curr_mo"
         SHORTCUE "Current month"
     END
