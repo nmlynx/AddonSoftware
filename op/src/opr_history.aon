@@ -28,10 +28,10 @@ rem --- Open/Lock files
         dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
         files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
         files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
-        files$[3]="arc_salecode",ids$[3]="ARC_SALECODE"
+        files$[3]="arc_termcode",ids$[3]="ARC_TERMCODE"
         files$[4]="ars_params",ids$[4]="ARS_PARAMS"
         files$[5]="ivm-01",ids$[5]="IVM_ITEMMAST"
-        files$[6]="ivs_prodcode",ids$[6]="IVS_PRODCODE"
+        files$[6]="ivc_prodcode",ids$[6]="IVC_PRODCODE"
         files$[7]="ivs_params",ids$[7]="IVS_PARAMS"
         files$[8]="opm-02",ids$[8]="OPC_LINECODE"
         files$[9]="opt-01",ids$[9]="OPT_ORDHDR"
@@ -57,7 +57,7 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-        dim arm01a$:templates$[1],arm02a$:templates$[2],arm10f$:templates$[3],
+        dim arm01a$:templates$[1],arm02a$:templates$[2],arm10a$:templates$[3],
 :       ars01a$:templates$[4],ivm01a$:templates$[5],ivm10a$:templates$[6],
 :       ivs01a$:templates$[7],opm02a$:templates$[8],opt01a$:templates$[9],
 :       opt11a$:templates$[10],opt21a$:templates$[11]
@@ -65,13 +65,13 @@ rem --- Dimension string templates
 rem --- Assign form input values to local variables
 
         
-        s0$= option!.getOptionData("beginning_customer")
-        s1$= option!.getOptionData("ending_customer")
-        s2$= option!.getOptionData("beginning_invoice_date")
-        s3$= option!.getOptionData("ending_invoice_date")
-        s4$= option!.getOptionData("sales_person")
-        s5$= option!.getOptionData("selected_item")
-        s6 = option!.getOptionData("minimum_gross_profit")
+        s0$= option!.getOptionData("customer_id_1")
+        s1$= option!.getOptionData("customer_id_2")
+        s2$= option!.getOptionData("invoice_date_1")
+        s3$= option!.getOptionData("invoice_date_2")
+        s4$= option!.getOptionData("salesperson")
+        s5$= option!.getOptionData("item_id")
+        s6$ = option!.getOptionData("pick_no")
 
 rem --- Retrieve parameter records
 
@@ -92,16 +92,20 @@ rem --- Parameters
        
         i[0]=num(ivs01a.item_id_len$)
         i[1]=num(ivs01a.vendor_prd_len$)
-        i[2]=num(ivs01a.precision$)+num(ivs01a.reserved_len$)
+        i[2]=num(ivs01a.precision$)+num(ivs01a.reserved_str$)
         i[3]=num(ivs01a.ls_no_len$)
 
         i[0]=num(ivs01a.item_id_len$)
         p[1]=num(ars01a.max_customer_len$)
+        p[2]=num(ars01a.zip_length$)
         p[0]=num(ars01a.customer_size$)
 
 
 rem --- Initialize Data
-
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","U","",m2$,0,m2
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","R","",m3$,0,m3
         h0=0
         number=1
         l9=30
@@ -109,9 +113,11 @@ rem --- Initialize Data
         dim j$(80,"-"),j1$(40," ")
         m0=len(ars01a.customer_output$)
 
-
+         S6=num(s6$)
+         S6$=str(S6:"-###.00%")
 rem --- Run report overlay
-        run pgmdir$+"opr_kb.aon"
+        run pgmdir$+"opr_history_o1.aon"
+
 
 rem --- FUNCTIONS
 
