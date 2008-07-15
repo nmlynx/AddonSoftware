@@ -17,6 +17,7 @@ rem --- and gle-12.
 rem --- Document initializations
 
     OutVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -99,6 +100,14 @@ rem --- Initializations
     if gls01a.units_flag$<>"Y" unitdash$=""
     recs=0
 
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
 rem --- Additional file opens (for journal entry register)
 
     gl$="N"
@@ -120,17 +129,17 @@ rem --- Additional file opens (for journal entry register)
 rem --- Document columns
 
     columns=9
-    dim columns$[9,4]
-    columns$[0,0]="Journal",columns$[0,1]="C",columns$[0,2]="5"
-    columns$[1,0]="",columns$[1,1]="C",columns$[1,2]="10"
+    dim columns$[9,10]
+    columns$[0,0]="Jrn ID",columns$[0,1]="C",columns$[0,2]="5"
+    columns$[1,0]="Description",columns$[1,1]="C",columns$[1,2]="15"
     columns$[2,0]="Transaction",columns$[2,1]="C",columns$[2,2]="30"
     columns$[3,0]="Date",columns$[3,1]="C",columns$[3,2]="10"
     columns$[4,0]="Reversal",columns$[4,1]="C",columns$[4,2]="10"
     columns$[5,0]="Memo",columns$[5,1]="C",columns$[5,2]="10"
-    columns$[6,0]="Cycle",columns$[6,1]="C",columns$[6,2]="20"
-    columns$[7,0]="Debits",columns$[7,1]="S",columns$[7,2]="10"
-    columns$[8,0]="Credits",columns$[8,1]="S",columns$[8,2]="10"
-    columns$[9,0]="Units",columns$[9,1]="S",columns$[9,2]="10"
+    columns$[6,0]="Cycle",columns$[6,1]="C",columns$[6,2]="15"
+    columns$[7,0]="Debits",columns$[7,1]="N",columns$[7,2]=str(len(m1$)),columns$[7,3]=m1$,columns$[7,10]="T"
+    columns$[8,0]="Credits",columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[9,0]="Units",columns$[9,1]="N",columns$[9,2]=str(len(m2$)),columns$[9,3]=m2$,columns$[9,10]="T"
 
 init_prog_meter: rem --- Initialize the progress meter and position the file
 
@@ -250,10 +259,7 @@ rem --- All done
     if gls01a.units_flag$="Y" units$=str(total[2]:m2$)
  
 
-    abc=fnblank(7)
-    OutVect!.addItem(amountdash$)
-    OutVect!.addItem(amountdash$)
-    OutVect!.addItem(unitdash$)
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     abc=fnblank(2)
     OutVect!.addItem(warning$)
@@ -299,13 +305,9 @@ transaction_break: rem --- Transaction Break
     if gls01a.units_flag$="Y" units$=str(entry[2]:m2$)
     for x=0 to 2
         total[x]=total[x]+entry[x]
-    next x
-   
+    next x  
 
-    abc=fnblank(7)
-    OutVect!.addItem(amountdash$)
-    OutVect!.addItem(amountdash$)
-    OutVect!.addItem(unitdash$)
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     abc=fnblank(2)
     OutVect!.addItem(warning$)
