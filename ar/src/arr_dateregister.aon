@@ -85,17 +85,25 @@ rem --- Initializations
     headings$[1]=sysinfo.task_desc$
     recs=0
 
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
 rem --- Headings and print positions
 
-    dim columns$[5,3]
+    dim columns$[5,10]
     columns = 5
    
-    columns$[0,0]="Customer",                 columns$[0,1]="C",columns$[0,2]="15"
-    columns$[1,0]="Invoice Number",           columns$[1,1]="C",columns$[1,2]="7"
-    columns$[2,0]="Terms Code",               columns$[2,1]="C",columns$[2,2]="3"
-    columns$[3,0]="Invoice Date",             columns$[3,1]="C",columns$[3,2]="5"
-    columns$[4,0]="Due Date",                 columns$[4,1]="C",columns$[4,2]="5"
-    columns$[5,0]="Discount Date",            columns$[5,1]="C",columns$[5,2]="5"
+    columns$[0,0]="Customer",                 columns$[0,1]="C",columns$[0,2]="25"
+    columns$[1,0]="Invoice",           columns$[1,1]="C",columns$[1,2]="8"
+    columns$[2,0]="Terms",               columns$[2,1]="C",columns$[2,2]="5"
+    columns$[3,0]="Invoice Dt",             columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]="Due Dt",                 columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]="Discount Dt",            columns$[5,1]="C",columns$[5,2]="10"
     
 
 rem --- Initialize print positions
@@ -139,9 +147,9 @@ rem --- Read next Invoice (are-06) record
           OutVect!.addItem(fnmask$(are06a.customer_id$(1,customer_size),m0$)+" "+arm01a.customer_name$(1,w))
           OutVect!.addItem(are06a.ar_inv_no_ver$)
           OutVect!.addItem(are06a.ar_terms_code$)
-          OutVect!.addItem(are06a.invoice_date$)
-          OutVect!.addItem(are06a.inv_due_date$)
-          OutVect!.addItem(are06a.disc_date$)
+          OutVect!.addItem(fndate$(are06a.invoice_date$))
+          OutVect!.addItem(fndate$(are06a.inv_due_date$))
+          OutVect!.addItem(fndate$(are06a.disc_date$))
 
           lines=lines+1
           total=total+1
