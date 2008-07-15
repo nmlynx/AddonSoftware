@@ -195,9 +195,9 @@ level_breaks: rem --- Level breaks
                 units$=""
                 amount=gle11a.debit_amt
                 if gle11a.credit_amt<>0 amount=-gle11a.credit_amt
-                if amount<0 credit$=str(abs(amount):m1$)
-                if amount>0 debit$=str(amount:m1$)
-                if gls01a.units_flag$="Y" if gle11a.units<>0 units$=str(gle11a.units:m2$)
+                if amount<0 credit$=str(abs(amount))
+                if amount>0 debit$=str(amount)
+                if gls01a.units_flag$="Y" if gle11a.units<>0 units$=str(gle11a.units)
 
                 rem --- Print detail line
 
@@ -254,9 +254,9 @@ rem --- All done
     balance=total[0]+total[1]
     warning$="",units$=""
     if balance<>0 warning$="Register Is Out Of Balance ---->"
-    debit$=str(total[0]:m1$)
-    credit$=str(abs(total[1]):m1$)
-    if gls01a.units_flag$="Y" units$=str(total[2]:m2$)
+    debit$=str(total[0])
+    credit$=str(abs(total[1]))
+    if gls01a.units_flag$="Y" units$=str(total[2])
  
 
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
@@ -300,9 +300,9 @@ transaction_break: rem --- Transaction Break
     units$=""
     warning$=""
     if balance<>0 warning$="Entry Is Out Of Balance ---->"
-    debit$=str(entry[0]:m1$)
-    credit$=str(abs(entry[1]):m1$)
-    if gls01a.units_flag$="Y" units$=str(entry[2]:m2$)
+    debit$=str(entry[0])
+    credit$=str(abs(entry[1]))
+    if gls01a.units_flag$="Y" units$=str(entry[2])
     for x=0 to 2
         total[x]=total[x]+entry[x]
     next x  
