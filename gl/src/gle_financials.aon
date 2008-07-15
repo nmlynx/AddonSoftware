@@ -138,6 +138,8 @@ rem --- or create it if necessary
        if sequence>9 sequence=0
        sequence$=str(sequence$)
        gls01c.gl_updt_seq_01$=sequence$
+       gls01c.period$=begper$
+       gls01c.year$=begyear$
        write record (gls01c_dev,key=gls01c_key$) gls01c$
     endif
 
