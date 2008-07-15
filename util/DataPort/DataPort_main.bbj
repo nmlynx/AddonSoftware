@@ -334,6 +334,14 @@ next_rec:
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
 
 rem --- check for specific values that can't be found any other way
+        if new_fieldlist.name$[field]="REPORT_ALIAS"
+            if value$="AR_STATEMENT" value$="ARR_STATEMENTS"
+            if value$="OP_INVOICE" value$="OPR_INVOICES"
+            if value$="OP_PICKINGLIST" value$="OPR_ODERPICKLST"
+rem            if value$="OP_QUOTE" value$=
+            if value$="PO_PURCHASE_ORDER" value$="POR_POPRINT"
+rem            if value$="PO_REQS"value$=
+        endif
         if source_version=6 and (datafile$="ARM-10" OR datafile$="APM-10") and old_fieldlist.name$[field]="PROX_OR_DAYS" and cvs(value$,2)="A"
             value$="P"
         endif
@@ -651,7 +659,6 @@ no_cust_default:
     open (masks_dev)stbl("+DIR_BRA")+"ads_masks.dat"
     comp_id$=stbl("+DEFAULT_ASC_COMP_ID")
 
-return
     rem --- Get templates for masks and sequences"
 
     readrecord(ddm_table_tpls,key=pad("ADS_SEQUENCES",16))ddm_table_tpls$
@@ -676,38 +683,44 @@ return
                 dim ads_masks$:fattr(ads_masks$)
                 ads_masks.firm_id$=a0$(1,2)
                 ads_masks.asc_comp_id$=comp_id$
-                ads_masks.asc_prod_id$=a0$(3,2)
+                ads_masks.asc_prod_id$=pad(a0$(3,2),3)
                 ads_masks.dd_mask_type$="I"
                 ads_masks.dd_attr_mski$=cvs(a1$,3)
                 ads_masks.dd_attr_msko$=cvs(a5$,3)
                 ads_masks$=field(ads_masks$)
+                if cvs(a1$,3)<>"" or cvs(a5$,3)<>""
+                    writerecord(masks_dev)ads_masks$
+                endif    
+            endif    
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=pad(a0$(3,2),3)
+            ads_masks.dd_mask_type$="A"
+            ads_masks.dd_attr_mski$=cvs(a6$,3)
+            ads_masks.dd_attr_msko$=cvs(a6$,3)
+            ads_masks$=field(ads_masks$)
+            if cvs(a6$,3)<>""
+                writerecord(masks_dev)ads_masks$
+            endif
+
+            dim ads_masks$:fattr(ads_masks$)
+            ads_masks.firm_id$=a0$(1,2)
+            ads_masks.asc_comp_id$=comp_id$
+            ads_masks.asc_prod_id$=pad(a0$(3,2),3)
+            ads_masks.dd_mask_type$="U"
+            ads_masks.dd_attr_mski$=cvs(a7$,3)
+            ads_masks.dd_attr_msko$=cvs(a7$,3)
+            ads_masks$=field(ads_masks$)
+            if cvs(a7$,3)<>""
                 writerecord(masks_dev)ads_masks$
             endif    
 
             dim ads_masks$:fattr(ads_masks$)
             ads_masks.firm_id$=a0$(1,2)
             ads_masks.asc_comp_id$=comp_id$
-            ads_masks.asc_prod_id$=a0$(3,2)
-            ads_masks.dd_mask_type$="A"
-            ads_masks.dd_attr_mski$=cvs(a6$,3)
-            ads_masks.dd_attr_msko$=cvs(a6$,3)
-            ads_masks$=field(ads_masks$)
-            writerecord(masks_dev)ads_masks$
-
-            dim ads_masks$:fattr(ads_masks$)
-            ads_masks.firm_id$=a0$(1,2)
-            ads_masks.asc_comp_id$=comp_id$
-            ads_masks.asc_prod_id$=a0$(3,2)
-            ads_masks.dd_mask_type$="U"
-            ads_masks.dd_attr_mski$=cvs(a7$,3)
-            ads_masks.dd_attr_msko$=cvs(a7$,3)
-            ads_masks$=field(ads_masks$)
-            writerecord(masks_dev)ads_masks$
-
-            dim ads_masks$:fattr(ads_masks$)
-            ads_masks.firm_id$=a0$(1,2)
-            ads_masks.asc_comp_id$=comp_id$
-            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.asc_prod_id$=pad(a0$(3,2),3)
             ads_masks.dd_mask_type$="R"
             if a0$(3,2)="GL"
                 ads_masks.dd_mask_type$="P"
@@ -718,69 +731,83 @@ return
             ads_masks.dd_attr_mski$=cvs(a8$,3)
             ads_masks.dd_attr_msko$=cvs(a8$,3)
             ads_masks$=field(ads_masks$)
-            writerecord(masks_dev)ads_masks$
+            if cvs(a8$,3)<>""
+                writerecord(masks_dev)ads_masks$
+            endif    
 
             if a0$(3,2)="IV"
                 dim ads_masks$:fattr(ads_masks$)
                 ads_masks.firm_id$=a0$(1,2)
                 ads_masks.asc_comp_id$=comp_id$
-                ads_masks.asc_prod_id$=a0$(3,2)
+                ads_masks.asc_prod_id$=pad(a0$(3,2),3)
                 ads_masks.dd_mask_type$="P"
                 ads_masks.dd_attr_mski$=cvs(a9$,3)
                 ads_masks.dd_attr_msko$=cvs(a9$,3)
                 ads_masks$=field(ads_masks$)
-                writerecord(masks_dev)ads_masks$
-
+                if cvs(a9$,3)<>""
+                    writerecord(masks_dev)ads_masks$
+                endif
+    
                 dim ads_masks$:fattr(ads_masks$)
                 ads_masks.firm_id$=a0$(1,2)
                 ads_masks.asc_comp_id$=comp_id$
-                ads_masks.asc_prod_id$=a0$(3,2)
+                ads_masks.asc_prod_id$=pad(a0$(3,2),3)
                 ads_masks.dd_mask_type$="V"
                 ads_masks.dd_attr_mski$=cvs(a10$,3)
                 ads_masks.dd_attr_msko$=cvs(a10$,3)
                 ads_masks$=field(ads_masks$)
-                writerecord(masks_dev)ads_masks$
+                if cvs(a10$,3)<>""
+                    writerecord(masks_dev)ads_masks$
+                endif    
             endif
         else
             dim ads_masks$:fattr(ads_masks$)
             ads_masks.firm_id$=a0$(1,2)
             ads_masks.asc_comp_id$=comp_id$
-            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.asc_prod_id$=pad(a0$(3,2),3)
             ads_masks.dd_mask_type$="H"
             ads_masks.dd_attr_mski$=cvs(a1$,3)
             ads_masks.dd_attr_msko$=cvs(a1$,3)
             ads_masks$=field(ads_masks$)
-            writerecord(masks_dev)ads_masks$
+            if cvs(a1$,3)<>""
+                writerecord(masks_dev)ads_masks$
+            endif    
 
             dim ads_masks$:fattr(ads_masks$)
             ads_masks.firm_id$=a0$(1,2)
             ads_masks.asc_comp_id$=comp_id$
-            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.asc_prod_id$=pad(a0$(3,2),3)
             ads_masks.dd_mask_type$="Q"
             ads_masks.dd_attr_mski$=cvs(a1$,3)
             ads_masks.dd_attr_msko$=cvs(a1$,3)
             ads_masks$=field(ads_masks$)
-            writerecord(masks_dev)ads_masks$
+            if cvs(a1$,3)<>""
+                writerecord(masks_dev)ads_masks$
+            endif    
 
             dim ads_masks$:fattr(ads_masks$)
             ads_masks.firm_id$=a0$(1,2)
             ads_masks.asc_comp_id$=comp_id$
-            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.asc_prod_id$=pad(a0$(3,2),3)
             ads_masks.dd_mask_type$="M"
             ads_masks.dd_attr_mski$=cvs(a2$,3)
             ads_masks.dd_attr_msko$=cvs(a2$,3)
             ads_masks$=field(ads_masks$)
-            writerecord(masks_dev)ads_masks$
+            if cvs(a2$,3)<>""
+                writerecord(masks_dev)ads_masks$
+             endif   
 
             dim ads_masks$:fattr(ads_masks$)
             ads_masks.firm_id$=a0$(1,2)
             ads_masks.asc_comp_id$=comp_id$
-            ads_masks.asc_prod_id$=a0$(3,2)
+            ads_masks.asc_prod_id$=pad(a0$(3,2),3)
             ads_masks.dd_mask_type$="O"
             ads_masks.dd_attr_mski$=cvs(a3$,3)
             ads_masks.dd_attr_msko$=cvs(a3$,3)
             ads_masks$=field(ads_masks$)
-            writerecord(masks_dev)ads_masks$
+            if cvs(a3$,3)<>""
+                writerecord(masks_dev)ads_masks$
+            endif    
         endif
     end_mask:
     wend
