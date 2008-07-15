@@ -106,7 +106,14 @@ rem --- Initializations
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     recs=0
-    rd_alias_id$="<OTHERENTRY>";rem dummy id to allow save for column size settings
+
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
 
 rem --- Headings and print positions
 
