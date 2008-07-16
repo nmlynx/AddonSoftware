@@ -37,7 +37,7 @@ rem --- Initialize Data
         more=1
         ord=0
         ship=0,bo=0,l9=59,l=l9+1,headings=2
-        dim j$(130,"-"),j1$(30," "),j2$(130,"="),j3$(131,"_"),r9$(0)
+        dim r9$(0)
         dim s[2],t[4],u[3],headings$[7],y0$(32),x0$(32)
         m9$="###.0%"
         m8$="####.00-",clock$="",when$=sysinfo.system_date$
@@ -60,8 +60,6 @@ rem --- 0-4 = LIST,COST,QTY ORDERED,QTY B/O,QTY SHIPPED
             endif
         endif
 
-        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-        if status then goto std_exit
         if s0$="" then let h4$="First"
         if s1$="" then let h5$="Last"
         if s2$="" then let h6$="First"
@@ -146,16 +144,16 @@ rem --- Void
                 OutVect!.addItem(" *** VOID ***")
                 xwk = fnblank(5)
 
-                gosub Find_Customer
+                gosub find_customer
                 continue
             endif
 
 rem --- Print
 
-            gosub Selected_Item
+            gosub selected_item
             if l$<>"PRINT" then continue
-            gosub Find_Customer
-            gosub Order_Header
+            gosub find_customer
+            gosub order_header
 
 rem --- Detail
 
@@ -178,12 +176,12 @@ rem --- Detail
                     opt11a.std_list_prc=l0[i,5]
                     opt11a.ext_price=l0[i,6]
                     opt11a.taxable_amt=l0[i,7]
-                    gosub Detail
+                    gosub detail
                 next i
-                goto Invoice_Totals
+                goto invoice_totals
             endif
 
-Detail: rem --- Detail
+detail: rem --- Detail
 
             w0=opt11a.unit_cost
             desc$=opt11a.order_memo$
@@ -193,7 +191,7 @@ Detail: rem --- Detail
             find record (opm02_dev,key=firm_id$+opt11a.line_code$,dom=*next) opm02a$
 
             if pos(opm02a.line_type$="SP")<>0 then
-                find record (ivm01_dev,key=firm_id$+opt11a.item_id$,dom=Label_One) ivm01a$
+                find record (ivm01_dev,key=firm_id$+opt11a.item_id$,dom=label_one) ivm01a$
                 if pos(" "<>desc$)=0 then let desc$=ivm01a.item_desc$
                 opt11a.disc_percent=0
                 opt11a.disc_percent=num(opt11a.reserved_str$,err=*next)
@@ -201,9 +199,9 @@ Detail: rem --- Detail
                 opt11a.ext_price=opt11a.unit_price*opt11a.qty_shipped-opt11a.comm_percent
             endif
 
-Label_One:
+label_one:
 
-            gosub Print_Detail
+            gosub print_detail
             s[0]=s[0]+opt11a.ext_price
             s[1]=s[1]+opt11a.unit_cost*opt11a.qty_shipped
             s[2]=s[2]+opt11a.comm_percent
@@ -231,7 +229,7 @@ Label_One:
 
             if opm02a.prod_type_pr$<>"N" then
                 if pos(opt11a.product_type$=t9$,3)=0 then let t9$=t9$+opt11a.product_type$
-                if len(t9$)/3>max_pcodes then gosub P_Codes
+                if len(t9$)/3>max_pcodes then gosub p_codes
                 x=pos(opt11a.product_type$=t9$,3)
                 x=int(x/3)
                 t9[x,0]=t9[x,0]+opt11a.ext_price
@@ -242,9 +240,9 @@ Label_One:
 
             return
 
-Invoice_Totals: rem --- Invoice Totals
+invoice_totals: rem --- Invoice Totals
 
-            gosub Total_Freight
+            gosub total_freight
             dim s[2]; let s0=0
             ord=0
             bo=0,ship=0
@@ -417,9 +415,9 @@ rem --- Total By Line Type
 
         goto std_exit
 
-Order_Header: rem --- Order Header
+order_header: rem --- Order Header
 
-        gosub Terms_Code
+        gosub terms_code
         OutVect!.addItem(opt01a.customer_id$+ars01a.customer_output$+" "+arm01a.customer_name$)
         OutVect!.addItem(opt01a.order_no$)
         OutVect!.addItem(opt01a.ar_inv_no$)
@@ -449,7 +447,7 @@ Order_Header: rem --- Order Header
 
         return
 
-Total_Freight: rem --- Sales Total Freight Ssles Tax/Invoice Total
+total_freight: rem --- Sales Total Freight Ssles Tax/Invoice Total
 
         precision 2
         xwk = fnblank(3)
@@ -507,10 +505,10 @@ Total_Freight: rem --- Sales Total Freight Ssles Tax/Invoice Total
         precision num(ivs01a.precision$)
         return
 
-Serialized_Inventory: rem --- Serialized/Lotted Inventory
+serialized_inventory: rem --- Serialized/Lotted Inventory
 
         read (opt21_dev,key=opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.line_no$,dom=*next)
-        While more
+        while more
             opt21a_key$=key(opt21_dev,end=*break)
             if opt21a_key.firm_id$+opt21a_key.ar_type$+opt21a_key.customer_id$+opt21a_key.ar_inv_no$+opt21a_key.line_no$<>opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.line_no$ then break
             read record (opt21_dev,key=opt21a_key$) opt21a$
@@ -520,10 +518,10 @@ Serialized_Inventory: rem --- Serialized/Lotted Inventory
             xwk = fnblank(5)
             OutVect!.addItem(str(r2:m3$))
             xwk = fnblank(3)
-        Wend
+        wend
         return
 
-Print_Detail: rem --- Print Detail
+print_detail: rem --- Print Detail
 
         if pos(opm02a.line_type$="MO")>0 then
             OutVect!.addItem(opt11a_key.line_no$+"  "+opt11a.line_code$+"  "+opt11a.warehouse_id$+" "+desc$)
@@ -557,17 +555,17 @@ Print_Detail: rem --- Print Detail
             
         endif
 
-        if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub Serialized_Inventory
+        if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub serialized_inventory
         return
 
-Find_Customer: rem --- Find Customer
+find_customer: rem --- Find Customer
 
         arm01a.customer_name$="Not On File"
         find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
         find record (arm02_dev,key=firm_id$+opt01a.customer_id$+"  ",dom=*next) arm02a$
         return
 
-P_Codes: rem --- Too Many Pcodes For T9[] Array
+p_codes: rem --- Too Many Pcodes For T9[] Array
 
         tmp[all]=t9[all]
         max_pcodes=max_pcodes+20
@@ -580,13 +578,13 @@ P_Codes: rem --- Too Many Pcodes For T9[] Array
         next k
         return
 
-Selected_Item: rem --- Check For Selected Item and Minimum GP%
+selected_item: rem --- Check For Selected Item and Minimum GP%
 
         l2=0
         l$=""
         read (opt11_dev,key=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$+$ff$,dom=*next)
         m=1
-        opt11a_key$=keyp(opt11_dev,end=No_Invoice_Detail_History)
+        opt11a_key$=keyp(opt11_dev,end=no_invoice_detail_history)
         if pos((opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$)=opt11a_key$)=1 then 
             
             m=num(opt11a_key.line_no$)
@@ -651,7 +649,7 @@ rem --- End Of Invoice
         endif
         return
 
-No_Invoice_Detail_History: rem --- No Invoice Detail History
+no_invoice_detail_history: rem --- No Invoice Detail History
 
         if s5$<>"" then 
             return
@@ -671,7 +669,7 @@ No_Invoice_Detail_History: rem --- No Invoice Detail History
         endif
         return
 
-Terms_Code: rem --- Terms Code
+terms_code: rem --- Terms Code
 
         dim w$(30)
         let arm10a.ar_terms_code$="* Not On File *"
