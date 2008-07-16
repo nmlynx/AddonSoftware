@@ -22,6 +22,14 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
 rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
@@ -80,16 +88,19 @@ rem --- Document columns
      columns$[0,0]="Total Number",columns$[0,1]="C",columns$[0,2]="15"
      columns$[1,0]="Report Number",columns$[1,1]="C",columns$[1,2]="15"
      columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="25"
-     columns$[3,0]="Line Number",columns$[3,1]="C",columns$[3,2]="10"
-     columns$[4,0]="Description",columns$[4,1]="C",columns$[4,2]="15"
+     columns$[3,0]="Line Number",columns$[3,1]="C",columns$[3,2]="15"
+     columns$[4,0]="Description",columns$[4,1]="C",columns$[4,2]="25"
      
 
-rem --- Run the report?
+rem --- Get user approval to proceed
 
-    title$=cvs(sysinfo.task_desc$,2)
-    message$="Do you want to produce the "+title$+"?"
-    x=msgbox(message$,4+32,title$)
-    if x<>6 goto std_exit
+     msg_id$="AON_RUN_QUERY"
+     dim x$:stbl("+SYSINFO_TPL")
+     dim msg_tokens$[1]
+     x$=stbl("+SYSINFO")                                                            
+     msg_tokens$[1]=x.task_desc$
+     gosub disp_message
+     if msg_opt$<>"Y" then goto std_exit
 
 rem --- Start progress meter and position files
 
@@ -202,6 +213,15 @@ rem --- Create blank line in OutVect! (no return value wanted or needed)
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 
