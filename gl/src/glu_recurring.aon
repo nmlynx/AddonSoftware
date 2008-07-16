@@ -67,7 +67,7 @@ rem --- Options
     x$=stbl("+SYSINFO")                                                            
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
-    if msg_opt$<>"Y" goto std_exit 
+    if msg_opt$<>"Y" goto std_exit_no_update
 
 rem --- Start progress meter and position file
 
@@ -211,9 +211,13 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
-    msg_id$="UPDATE_COMPLETE"
-    gosub disp_message
+	msg_id$="UPDATE_COMPLETE"
+	dim msg_tokens$[1]
+	msg_opt$=""
+	gosub disp_message
+
+std_exit_no_update:
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
