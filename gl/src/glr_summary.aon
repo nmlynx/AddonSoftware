@@ -112,23 +112,16 @@ rem --- Initializations
 
 rem --- Document columns
 
-    columns=14
-    dim columns$[14,4]
-    columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]="30";rem ,columns$[0,3]=m0$
-    columns$[1,0]="Beginning",columns$[1,1]="N",columns$[1,2]="10",columns$[1,3]=m1$
-    columns$[2,0]="Jan",columns$[2,1]="N",columns$[2,2]="10",columns$[2,3]=m1$
-    columns$[3,0]="Feb",columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m1$
-    columns$[4,0]="Mar",columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$
-    columns$[5,0]="Apr",columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$
-    columns$[6,0]="May",columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
-    columns$[7,0]="Jun",columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
-    columns$[8,0]="Jul",columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
-    columns$[9,0]="Aug",columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$
-    columns$[10,0]="Sep",columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$
-    columns$[11,0]="Oct",columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m1$
-    columns$[12,0]="Nov",columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m1$
-    columns$[13,0]="Dec",columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m1$
-    columns$[14,0]="Ending",columns$[14,1]="N",columns$[14,2]="10",columns$[14,3]=m1$
+    columns=total_pers+2
+    
+    dim columns$[columns,4]
+    columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]="15"
+    columns$[1,0]="Beginning",columns$[1,1]="C",columns$[1,2]="10"
+
+    for x=2 to columns-1
+        columns$[x,0]="Period "+str(x-1:"00")+"^"+field(gls01a$,"abbr_name_"+str(x-1:"00")),columns$[x,1]="C",columns$[x,2]="8"
+    next x
+    columns$[columns,0]="Ending",columns$[columns,1]="C",columns$[columns,2]="12"
 
 
 rem --- Initialize print positions
@@ -210,31 +203,56 @@ rem --- Get next GL Account Master (glm-01) record
               for x=1 to mp
                   if flag$="A" amount=a[x]
                   if flag$="U" amount=u[x]
-                  x[x]=amount
+                  if x<= max then let x[x]=amount
                   x[max]=x[max]+amount
               next x
     
               rem --- Print a record
     
-              if total_pers>12
-                OutVect!.addItem(title$)
-                abc=fnblank(14)
-              endif
+rem              if total_pers>12
+rem                OutVect!.addItem(title$)
+rem                abc=fnblank(columns)
+rem              endif
     
               rem --- Print detail line
-    
-              dim buffer$(width)
-              if total_pers<13 buffer$(1,o[1]-1)=title$
-              OutVect!.addItem(buffer$(o[1]-14))
-              buffer$(o[1])=str(x[0])
-              OutVect!.addItem(buffer$(o[1]))
-              for x=2 to max-1
-                  buffer$(o[x])=str(x[x-1])
-                  OutVect!.addItem(buffer$(o[x]))
+rem --- altered to use staggered format to eliminate docout overrun (pink shading)    
+rem --- so it prints descrip/begin bal, then 2nd/4th/6th period, etc.
+rem --- followed by 2nd row of 1st/3rd/5th period, etc.
+
+              rem --- these lines print type (curr actual, pri actual, etc.) and begin bal
+              dim buffer$(width)              
+              OutVect!.addItem(title$)
+              buffer$(o[1])=str(x[0]:m1$)
+              OutVect!.addItem(str(x[0]:m1$))
+
+              rem --- now stagger -- print 2nd/4th/6th, etc. periods
+              for x=2 to total_pers step 2                  
+                  OutVect!.addItem("")
+                  OutVect!.addItem(str(x[x]:m1$))                  
               next x
-              buffer$(o[max])=str(x[max])
-              if total_pers<13 buffer$(1,o[1]-1)=title$
-              OutVect!.addItem(buffer$(o[max]))
+ 
+              rem --- print blank and ending bal column if total_pers is even or just blank if total_pers is odd 
+              if mod(total_pers,2)=1
+                OutVect!.addItem("")
+                OutVect!.addItem(str(x[max]:m1$))
+              else
+                OutVect!.addItem("")
+              endif
+
+              rem --- print blanks for column type and begin bal on second row of stagger
+              OutVect!.addItem("")
+              OutVect!.addItem("")
+
+              rem --- now print 1st/3rd/5th, etc.
+              for x=1 to total_pers step 2
+                  OutVect!.addItem(str(x[x]:m1$))
+                  OutVect!.addItem("")
+              next x
+ 
+              rem --- print ending bal column if total_pers is even
+              if mod(total_pers,2)=0
+                OutVect!.addItem(str(x[max]:m1$))
+              endif
 
               rem --- Loop back for next summary/budget record
 
@@ -253,10 +271,9 @@ done: rem --- All Done
         goto std_exit_no_report
     endif
 
-    abc=fnblank(15)
-    abc=fnblank(13)
-    OutVect!.addItem(str(number))
-    OutVect!.addItem(" Accounts Listed")
+    abc=fnblank(columns+1)
+    OutVect!.addItem(str(number)+" Accounts Listed")
+    abc=fnblank(columns)
 
     if update$<>"" next_overlay$=update$
     goto std_exit
@@ -264,11 +281,9 @@ done: rem --- All Done
 account_heading: rem --- Account Heading
 
     length=len(acct$)
-    abc=fnblank(15)
-    OutVect!.addItem(acct$)
-    abc=fnblank(14)
-    OutVect!.addItem(glm01a.gl_acct_desc$)
-    abc=fnblank(14)
+    abc=fnblank(columns+1)
+    OutVect!.addItem(acct$+" "+glm01a.gl_acct_desc$)
+    abc=fnblank(columns)
 
     return
 
@@ -375,6 +390,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 
 std_exit_no_report:
