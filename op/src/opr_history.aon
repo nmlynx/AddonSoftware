@@ -112,9 +112,9 @@ rem --- Initialize Data
         l=0
         dim j$(80,"-"),j1$(40," ")
         m0=len(ars01a.customer_output$)
+        S6=num(s6$)
+        S6$=str(S6:"-###.00%")
 
-         S6=num(s6$)
-         S6$=str(S6:"-###.00%")
 rem --- Run report overlay
         run pgmdir$+"opr_history_o1.aon"
 
