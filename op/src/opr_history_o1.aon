@@ -327,7 +327,7 @@ rem --- Totals By Product
 
                 if t9[x0,0]=0 and t9[x0,1]=0 then continue
                 OutVect!.addItem(t9$(x,3)+" "+ivm10a.code_desc$)
-                OutVect!.addItem(str(t9[x0,3]:m2$))
+                OutVect!.addItem(str(t9[x0,3]:m1$))
                 OutVect!.addItem(str(t9[x0,0]:m1$))
                 OutVect!.addItem(str(t9[x0,1]:m1$))
                 OutVect!.addItem(str(t9[x0,0]-t9[x0,1]:m1$))
@@ -344,7 +344,7 @@ rem --- Totals By Product
 
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         OutVect!.addItem("Report Totals: ")
-        OutVect!.addItem(str(t[3]:m2$))
+        OutVect!.addItem(str(t[3]:m1$))
         OutVect!.addItem(str(t[0]:m1$))
         OutVect!.addItem(str(t[1]:m1$))
         OutVect!.addItem(str(t[0]-t[1]:m1$))
@@ -562,7 +562,6 @@ Print_Detail: rem --- Print Detail
 
 Find_Customer: rem --- Find Customer
 
-        rem dim b1$(30),c[6]
         arm01a.customer_name$="Not On File"
         find record (arm01_dev,key=firm_id$+opt01a.customer_id$,dom=*next) arm01a$
         find record (arm02_dev,key=firm_id$+opt01a.customer_id$+"  ",dom=*next) arm02a$
