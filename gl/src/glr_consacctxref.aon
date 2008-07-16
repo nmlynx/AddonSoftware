@@ -37,6 +37,14 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
 rem --- Open/Lock files
 
     files=5,begfile=1,endfile=files
@@ -89,18 +97,18 @@ rem --- Headings and print positions
     dim columns$[11,10]
     columns = 11
 
-    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="18",columns$[0,3]=m0$
-    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="29"
-    columns$[2,0]="Assignment 1",       columns$[2,1]="C",columns$[2,2]="3"
-    columns$[3,0]="Assignment 2",       columns$[3,1]="C",columns$[3,2]="3"
-    columns$[4,0]="Assignment 3",       columns$[4,1]="C",columns$[4,2]="3"
-    columns$[5,0]="Assignment 4",       columns$[5,1]="C",columns$[5,2]="3"
-    columns$[6,0]="Assignment 5",       columns$[6,1]="C",columns$[6,2]="3"
-    columns$[7,0]="Assignment 6",       columns$[7,1]="C",columns$[7,2]="3"
-    columns$[8,0]="Assignment 7",       columns$[8,1]="C",columns$[8,2]="3"
-    columns$[9,0]="Assignment 8",       columns$[9,1]="C",columns$[9,2]="3"
-    columns$[10,0]="Assignment 9",      columns$[10,1]="C",columns$[10,2]="3"
-    columns$[11,0]="Assignment 10",     columns$[11,1]="C",columns$[11,2]="3"
+    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="12"
+    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="20"
+    columns$[2,0]="Assign 1",       columns$[2,1]="C",columns$[2,2]="10"
+    columns$[3,0]="Assign 2",       columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]="Assign 3",       columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]="Assign 4",       columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]="Assign 5",       columns$[6,1]="C",columns$[6,2]="10"
+    columns$[7,0]="Assign 6",       columns$[7,1]="C",columns$[7,2]="10"
+    columns$[8,0]="Assign 7",       columns$[8,1]="C",columns$[8,2]="10"
+    columns$[9,0]="Assign 8",       columns$[9,1]="C",columns$[9,2]="10"
+    columns$[10,0]="Assign 9",      columns$[10,1]="C",columns$[10,2]="10"
+    columns$[11,0]="Assign 10",     columns$[11,1]="C",columns$[11,2]="10"
 
 
 rem --- Print positions
@@ -114,12 +122,15 @@ rem --- Print positions
     width=o[2]-o[1]
     if width>35 width=35
 
-rem --- Run the report?
+rem --- Get user approval to proceed
 
-    title$=cvs(sysinfo.task_desc$,2)
-    message$="Do you want to produce the "+title$+"?"
-    x=msgbox(message$,4+32,title$)
-    if x<>6 goto std_exit
+        msg_id$="AON_RUN_QUERY"
+        dim x$:stbl("+SYSINFO_TPL")
+        dim msg_tokens$[1]
+        x$=stbl("+SYSINFO")                                                            
+        msg_tokens$[1]=x.task_desc$
+        gosub disp_message
+        if msg_opt$<>"Y" then goto std_exit
 
 rem --- Open printer, start progress meter and position files
 
@@ -245,6 +256,16 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         next q1
         return q1
     fnend
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 
