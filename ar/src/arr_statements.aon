@@ -15,7 +15,7 @@ rem --- Retrieve the program path
 
 rem --- Set document Directory
 
-docdir$=stbl("+DOC_DIR_PDF",err=*next)
+    docdir$=stbl("+DOC_DIR_PDF",err=*next)
 
 rem --- Retrieve sysinfo data
 
@@ -203,14 +203,15 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           if territory$<>"" if arm02a.territory$<>territory$ continue
           if cycle$<>"" if arm02a.ar_cyclecode$<>cycle$ continue
 
-          rem --- create pdf file
+          rem --- call bac_documents.bbj to get back a barista document ID
+          
+          new_doc_id$=""
+          pdf_doc$=""
+          call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,"","","I","PDF",docdir$,
+:           "pdf",option!.getAlias(),"C",arm01a.customer_id$,table_chans$[all],"DOC_ID"
 
-          prtr_dev=unt
-          open (prtr_dev,err=printer)docdir$+"statement"+arm01a.customer_id$+".pdf"
-          CLOSE (prtr_dev)
-          ERASE docdir$+"statement"+arm01a.customer_id$+".pdf"
-          printer:
-          docPDF!=myBBjPDFPrinter!.getBBjPDFForm(docdir$+"Statement"+arm01a.customer_id$+".pdf",requestAttributes!)
+
+          rem --- more init
 
           dim aging[5]
           page=0
@@ -250,7 +251,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                 agingdate$=art01a.invoice_date$
                 if basis$<>"I" agingdate$=art01a.inv_due_date$
                 period=pos(agingdate$>period_dates$,8)
-                if period=0 period=5                       else period=int(period/8)
+                if period=0 period=5 else period=int(period/8)
                 aging[period]=aging[period]+balance
 
                rem --- Loop back for next Invoice Header
@@ -330,6 +331,17 @@ rem --- All done
 
 header: rem --- Print the statement header
 
+        rem --- create pdf file
+
+        while pdf_doc$=""
+            prtr_dev=unt
+            pdf_doc$=docdir$+new_doc_id$+".pdf"
+            open (prtr_dev,err=printer)pdf_doc$
+            CLOSE (prtr_dev)
+            ERASE pdf_doc$
+            printer:
+            docPDF!=myBBjPDFPrinter!.getBBjPDFForm(pdf_doc$,requestAttributes!)
+        wend
 
     first_page=0
     lines=0
@@ -468,6 +480,7 @@ rem ---
     wend
     
     docPDF!.print()
+    call stbl("+DIR_PGM")+"adc_rptcontrol.aon",option!.getAlias(),arm01a.customer_id$,"C",new_doc_id$,"pdf"
 
     return
 
