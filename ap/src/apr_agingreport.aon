@@ -71,6 +71,12 @@ rem --- Assign form input values to local variables
     method$=Option!.getOptionData("REPORT_TYPE")
     days$=Option!.getOptionData("PICK_INTEGER")
     discount$=Option!.getOptionData("INCLUDE_DISC")
+    export_format$=Option!.getOptionData("EXPORT_FORMAT")
+    rd_alias_id$=Option!.getAlias()    
+    if export_format$="Y"
+        if len(rd_alias_id$)>15 rd_alias_id$=rd_alias_id$(1,15)
+        rd_alias_id$=rd_alias_id$+"X"
+    endif
     days=num(days$,err=*next)
     method=pos(method$="PD")
     sorting=sequence$="A"
@@ -244,22 +250,24 @@ rem --- Headings and print positions
         head5$="PG"
         head6$="H"
     endif
+    
+    columns = 12
+    dim columns$[columns,10]
+    
 
-    dim columns$[11,10]
-    columns = 11
-
-    columns$[0,0]="Vendor",             columns$[0,1]="C",columns$[0,2]="25"
-    columns$[1,0]=head2$,               columns$[1,1]="C",columns$[1,2]="8"
-    columns$[2,0]=head3$,               columns$[2,1]="C",columns$[2,2]="8"
-    columns$[3,0]=head4$,               columns$[3,1]="C",columns$[3,2]="8"
-    columns$[4,0]=head5$,               columns$[4,1]="C",columns$[4,2]="3"
-    columns$[5,0]=head6$,               columns$[5,1]="C",columns$[5,2]="3"
-    columns$[6,0]="Future",             columns$[6,1]="N",columns$[6,2]=str(len(m1$)),columns$[6,3]=m1$,columns$[6,10]="T"
-    columns$[7,0]=date1$,               columns$[7,1]="N",columns$[7,2]=str(len(m1$)),columns$[7,3]=m1$,columns$[7,10]="T"
-    columns$[8,0]=date2$,               columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
-    columns$[9,0]=date3$,               columns$[9,1]="N",columns$[9,2]=str(len(m1$)),columns$[9,3]=m1$,columns$[9,10]="T"
-    columns$[10,0]=date4$,              columns$[10,1]="N",columns$[10,2]=str(len(m1$)),columns$[10,3]=m1$,columns$[10,10]="T"
-    columns$[11,0]="Total",             columns$[11,1]="N",columns$[11,2]=str(len(m1$)),columns$[11,3]=m1$,columns$[11,10]="T"
+    columns$[0,0]="Vendor",             columns$[0,1]="C",columns$[0,2]="20"
+    columns$[1,0]="Phone",              columns$[1,1]="C",columns$[1,2]="10"
+    columns$[2,0]=head2$,               columns$[2,1]="C",columns$[2,2]="8"
+    columns$[3,0]=head3$,               columns$[3,1]="C",columns$[3,2]="8"
+    columns$[4,0]=head4$,               columns$[4,1]="C",columns$[4,2]="8"
+    columns$[5,0]=head5$,               columns$[5,1]="C",columns$[5,2]="3"
+    columns$[6,0]=head6$,               columns$[6,1]="C",columns$[6,2]="3"
+    columns$[7,0]="Future",             columns$[7,1]="N",columns$[7,2]=str(len(m1$)-2),columns$[7,3]=m1$,columns$[7,10]="T"
+    columns$[8,0]=date1$,               columns$[8,1]="N",columns$[8,2]=str(len(m1$)-2),columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[9,0]=date2$,               columns$[9,1]="N",columns$[9,2]=str(len(m1$)-2),columns$[9,3]=m1$,columns$[9,10]="T"
+    columns$[10,0]=date3$,              columns$[10,1]="N",columns$[10,2]=str(len(m1$)-2),columns$[10,3]=m1$,columns$[10,10]="T"
+    columns$[11,0]=date4$,              columns$[11,1]="N",columns$[11,2]=str(len(m1$)-2),columns$[11,3]=m1$,columns$[11,10]="T"
+    columns$[12,0]="Total",             columns$[12,1]="N",columns$[12,2]=str(len(m1$)-2),columns$[12,3]=m1$,columns$[12,10]="T"
 
 
  
@@ -449,15 +457,22 @@ rem --- Read next Invoice Header (apt-01) record
 
           if summary continue
 
-          while vendor$<>""
-                xwk = fnblank(12)
+
+          if export_format$="Y"
+            OutVect!.addItem(vendor$)
+            OutVect!.addItem(phone$)
+          else
+            if vendor$<>""
+                xwk = fnblank(13)
                 OutVect!.addItem(vendor$)
-                xwk = fnblank(11)
+                OutVect!.addItem(phone$)
                 lines=lines+2
                 vendor$=""
-          wend
-
-          OutVect!.addItem("     " + phone$)
+            else
+                xwk=fnblank(2)
+            endif
+          endif
+          
           OutVect!.addItem(apt01a.reference$)
           OutVect!.addItem(apt01a.ap_inv_no$)
           OutVect!.addItem(fndate$(dateused$))
@@ -473,7 +488,7 @@ rem --- Read next Invoice Header (apt-01) record
           OutVect!.addItem(str(it[0]))
 
           lines=lines+1
-          phone$=""
+          
 
           rem --- Loop back for next record
 
@@ -494,6 +509,7 @@ rem --- All done
 
 print_total: rem --- Print totals
 
+    if export_format$="Y" then return
     totamt=0
     totret=0
     for x=0 to 4
@@ -504,7 +520,7 @@ print_total: rem --- Print totals
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
    
     OutVect!.addItem(total$)
-    xwk = fnblank(5)
+    xwk = fnblank(6)
  
    
     OutVect!.addItem(str(pt[0]))
@@ -574,8 +590,9 @@ vendor_break: rem --- Vendor break
                     totamt=totamt+vt[x]
                 next x
 
-                xwk = fnblank(12)
+                xwk = fnblank(13)
                 OutVect!.addItem(vendor$)
+                OutVect!.addItem(phone$)
                 xwk = fnblank(5)
                 OutVect!.addItem(str(vt[0]))
                 OutVect!.addItem(str(vt[1]))
