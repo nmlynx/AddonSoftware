@@ -197,7 +197,6 @@ next_ddm03:
     read(ddm04,key=ddm03.file_name$+ddm03.record_id$,dom=*next)
 next_ddm04:
     readrecord(ddm04,end=end_ddm04)ddm04$
-
     if ddm04.file_name$<>ddm03.file_name$ or ddm04.record_id$<>ddm03.record_id$ then
        goto end_ddm04
     endif
@@ -232,11 +231,10 @@ next_ddm04:
 
        rem ' field names can only contain [A-Z0-9_]
        data_name$=tbl(cvs(ddm04.data_name$,7),tbl=az_09)
-
        rd_temp_seg$=cvs(data_name$,3)+rd_col_occurs_sfx$+":"
        datatype$=iff(ddm01.data_type$="N","N","C")
        rd_temp_seg$=rd_temp_seg$+datatype$+"("+str(rd_col_length)
-       if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" then
+       if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" or ddm04.fld_sep$="E" then
           rd_temp_seg$=rd_temp_seg$+"*"
        endif
        if rd_col_occurs$="YES" or rd_occur_adj>0
@@ -332,15 +330,14 @@ next_rec:
     for field=1 to fields
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
-
 rem --- check for specific values that can't be found any other way
-        if new_fieldlist.name$[field]="REPORT_ALIAS"
-            if value$="AR_STATEMENT" value$="ARR_STATEMENTS"
-            if value$="OP_INVOICE" value$="OPR_INVOICES"
-            if value$="OP_PICKINGLIST" value$="OPR_ODERPICKLST"
-rem            if value$="OP_QUOTE" value$=
-            if value$="PO_PURCHASE_ORDER" value$="POR_POPRINT"
-rem            if value$="PO_REQS"value$=
+        if cvs(new_fieldlist.name$[field],3)="REPORT_ALIAS"
+            if cvs(value$,3)="AR_STATEMENT" value$="ARR_STATEMENTS"
+            if cvs(value$,3)="OP_INVOICE" value$="OPR_INVOICES"
+            if cvs(value$,3)="OP_PICKINGLIST" value$="OPR_ODERPICKLST"
+            if cvs(value$,3)="OP_QUOTE" value$="OPR_QUOTE"
+            if cvs(value$,3)="PO_PURCHASE_ORDER" value$="POR_POPRINT"
+            if cvs(value$,3)="PO_REQS"value$="POR_REQS"
         endif
         if source_version=6 and (datafile$="ARM-10" OR datafile$="APM-10") and old_fieldlist.name$[field]="PROX_OR_DAYS" and cvs(value$,2)="A"
             value$="P"
@@ -555,6 +552,7 @@ version6_files:
     open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_opm04_template
     call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
     if len(status$) then goto start_msg_det
+    new_file=unt
     open (new_file)destin_folder$+"/"+datafile$
 get_opm04_template:
     dim ids$[1],templates$[1]
@@ -581,6 +579,7 @@ start_msg_det:
     open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_opm14_template
     call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
     if len(status$) then goto end_of_msgs
+    new_file=unt
     open (new_file)destin_folder$+"/"+datafile$
 get_opm14_template:
     dim ids$[1],templates$[1]
@@ -628,6 +627,7 @@ rem --- First try to create the ars_custdflt record"
     open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_custdflt_template
     call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
     if len(status$) then escape;goto no_cust_default; rem should be able to create the customer default table
+    new_file=unt
     open (new_file)destin_folder$+"/"+datafile$
 get_custdflt_template:
     dim ids$[1],templates$[1]
@@ -653,21 +653,16 @@ read_dflt_hdr:
     goto read_dflt_hdr
 
 no_cust_default:
-    sequences_dev=unt
-    open (sequences_dev)stbl("+DIR_BRA")+"ads_sequences.dat"
     masks_dev=unt
     open (masks_dev)stbl("+DIR_BRA")+"ads_masks.dat"
     comp_id$=stbl("+DEFAULT_ASC_COMP_ID")
 
-    rem --- Get templates for masks and sequences"
-
-    readrecord(ddm_table_tpls,key=pad("ADS_SEQUENCES",16))ddm_table_tpls$
-    dim ads_sequences$:ddm_table_tpls.template$
+    rem --- Get templates for masks"
 
     readrecord(ddm_table_tpls,key=pad("ADS_MASKS",16))ddm_table_tpls$
     dim ads_masks$:ddm_table_tpls.template$
 
-    rem --- Do the Masks first
+    rem --- Do the Masks
 
     old_file=unt
     open (old_file)source_folder$+"/"+cvs("sys-01",version_cvs)
@@ -677,15 +672,15 @@ no_cust_default:
         if num(a0$(1,2),err=*continue)=0 continue
         if a0$(5,2)<>"00" continue
         if pos(a0$(3,2)="APARBMGLIVPRSFWO",2)=0 continue
-        if a0$(3,2)="SF" a0$(3,2)="WO";rem convert v7 Shop Floor to v6 Work Orders
+        if a0$(3,2)="WO" a0$(3,2)="SF";rem convert v7 Shop Floor to v6 Work Orders
         if a0$(3,2)<>"BM"
-            if pos(a0$(3,2)="IVWO",2)<>0
+            if pos(a0$(3,2)="IVWO",2)=0
                 dim ads_masks$:fattr(ads_masks$)
                 ads_masks.firm_id$=a0$(1,2)
                 ads_masks.asc_comp_id$=comp_id$
                 ads_masks.asc_prod_id$=pad(a0$(3,2),3)
                 ads_masks.dd_mask_type$="I"
-                ads_masks.dd_attr_mski$=cvs(a1$,3)
+                ads_masks.dd_attr_mski$=cvs(a5$,3)
                 ads_masks.dd_attr_msko$=cvs(a5$,3)
                 ads_masks$=field(ads_masks$)
                 if cvs(a1$,3)<>"" or cvs(a5$,3)<>""
@@ -817,7 +812,6 @@ no_cust_default:
 get_new_template:
     new_datafile$=cvs(datafile$,8)
     file_id$=ddm03.file_name$+ddm03.record_id$
-
     file_id! = file_xref!.get(cvs(file_id$,7))
     if file_id!<>null() then
        rem ' found mapping for filename+record id
