@@ -1,3 +1,15 @@
+[[APE_PAYSELECT.BSHO]]
+rem --- if mult AP types = N, disable AP Type field
+
+	aps_params=fnget_dev("APS_PARAMS")
+	dim aps_params$:fnget_tpl$("APS_PARAMS")
+
+	readrecord(aps_params,key=firm_id$+"AP00",dom=std_missing_params)aps_params$
+	if aps_params.multi_types$<>"Y"
+		ctl_name$="APE_PAYSELECT.AP_TYPE"
+		ctl_stat$="I"
+		gosub disable_fields		
+	endif
 [[APE_PAYSELECT.DISC_DATE_DT.AVAL]]
 rem --- Set filters on grid
 	gosub filter_recs
@@ -289,6 +301,20 @@ rem --- clear and reset visible grid
 	endif
 	return
 
+disable_fields:
+	rem --- used to disable/enable controls
+	rem --- ctl_name$ sent in with name of control to enable/disable (format "ALIAS.CONTROL_NAME")
+	rem --- ctl_stat$ sent in as D or space, meaning disable/enable, respectively
+
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+
+return
+
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
 	def fnmask$(q1$,q2$)
@@ -391,7 +417,7 @@ endif
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
-	num_files=6
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
@@ -400,6 +426,7 @@ rem --- Open/Lock files
 	open_tables$[4]="APE_CHECKS",open_opts$[4]="OTA"
 	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
 	open_tables$[6]="APE_INVOICEHDR",open_opts$[6]="OTA"
+	open_tables$[7]="APS_PARAMS",open_opts$[7]="OTA"
 
 	gosub open_tables
 
@@ -409,11 +436,12 @@ rem --- Open/Lock files
 	ape04_dev=num(open_chans$[4]),ape04_tpl$=open_tpls$[4]
 	apw01_dev=num(open_chans$[5])
 	ape01_dev=num(open_chans$[6]),ape01_tpl$=open_tpls$[6]
+	aps_params=num(open_chans$[7]),aps_params_tpl$=open_tpls$[7]
 
 rem --- Dimension string templates
 
 	dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$,ape04a$:ape04_tpl$
-	dim ape01a$:ape01_tpl$
+	dim ape01a$:ape01_tpl$,aps_params$:aps_params_tpl$
 
 rem --- See if Check Printing has already been started
 
