@@ -84,8 +84,7 @@ rem --- Assign form input values to local variables
             cashcode$=option!.getOptionData("CASH_REC_CD")
             include$=option!.getOptionData("PICK_CHECK")
             export_format$=option!.getOptionData("EXPORT_FORMAT")
-rem            rd_alias_id$=option!.getAlias()    
-            rd_alias_id$="arr_cashjournal"; rem temp; above getAlias() giving error
+            rd_alias_id$=option!.getAlias()    
             if export_format$="Y"
                 if len(rd_alias_id$)>15 rd_alias_id$=rd_alias_id$(1,15)
                 rd_alias_id$=rd_alias_id$+"X"
@@ -316,6 +315,7 @@ rem --- Print invoice information
                       if export_format$="Y"
                         OutVect!.addItem(arm01a.customer_id$)
                         OutVect!.addItem(arm01a.customer_name$)
+                        OutVect!.addItem(arm01a.alt_sequence$)
                       else                   
                         OutVect!.addItem("")  
                       endif
@@ -451,10 +451,11 @@ rem --- Skip GL Account Distribution if GL isn't installed/used or user didn't r
 init_heading: rem --- Init Column Headings
 
         if export_format$="Y"
-            columns=12
+            columns=13
             dim columns$[columns,10]
             columns$[0,0]="Cust ID",      columns$[0,1]="C",columns$[0,2]="10"
             columns$[1,0]="Name",      columns$[1,1]="C",columns$[1,2]="20"
+            columns$[2,0]="Alt Seq",      columns$[2,1]="C",columns$[2,2]="10"
         else
             columns=11
             dim columns$[columns,10]
@@ -501,7 +502,7 @@ customer_break: rem --- Customer break
             customer$=art06a.customer_id$
             if export_format$<>"Y"
                 xwk=fnblank(columns+1)
-                OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+"  "+arm01a.customer_name$)
+                OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+" "+arm01a.customer_name$+" "+arm01a.alt_sequence$)
                 xwk=fnblank(columns)
             endif
             return

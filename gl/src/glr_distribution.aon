@@ -11,10 +11,24 @@ rem --- Document initializations
             OutVect!=bbjAPI().getSysGui().makeVector()
             HdrVect!=bbjAPI().getSysGui().makeVector()
             BrkVect!=bbjAPI().getSysGui().makeVector()
+            TotVect!=bbjAPI().getSysGui().makeVector()
             rep_date$=date(0:"%Mz/%Dz/%Yd")
             rep_date_stamp$=date(0:"%Yd%Mz%Dz")
             rep_time$=date(0:"%hz:%mz %p")
             rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
+    if export_format$="Y"
+        if len(rd_alias_id$)>15 rd_alias_id$=rd_alias_id$(1,15)
+        rd_alias_id$=rd_alias_id$+"X"
+    endif
 
 rem --- Initializations for the GL Account Distribution
 
@@ -31,20 +45,23 @@ rem --- Initializations for the GL Account Distribution
             m1=len(m1$)
             morecustomers=1
 
-rem    gosub init_heading
+
 rem --- column heading
 
-         if distribution
-            dim columns$[6,10]
-                columns=6
-                columns$[0,0]="GL Account",    columns$[0,1]="C",columns$[0,2]="25"
-                columns$[1,0]="Receipt Date",  columns$[1,1]="C",columns$[1,2]="8"
-                columns$[2,0]="Customer",      columns$[2,1]="C",columns$[2,2]="3"
-                columns$[3,0]="Chk Number",    columns$[3,1]="C",columns$[3,2]="10"
-                columns$[4,0]="Invoice Number",columns$[4,1]="C",columns$[4,2]="8"
-                columns$[5,0]="Debit",         columns$[5,1]="C",columns$[5,2]="8"
-                columns$[6,0]="Credit",        columns$[6,1]="C",columns$[6,2]="8"
-            endif  
+         
+            columns=8
+            dim columns$[columns,10]
+                
+                columns$[0,0]="GL Account",    columns$[0,1]="C",columns$[0,2]="10"
+                columns$[1,0]="Description",    columns$[1,1]="C",columns$[1,2]="20"
+                columns$[2,0]="Receipt Dt",  columns$[2,1]="C",columns$[2,2]="10"
+                columns$[3,0]="Cust ID",      columns$[3,1]="C",columns$[3,2]="10"
+                columns$[4,0]="Name",      columns$[4,1]="C",columns$[4,2]="20"
+                columns$[5,0]="Chk Number",    columns$[5,1]="C",columns$[5,2]="10"
+                columns$[6,0]="Invoice No",columns$[6,1]="C",columns$[6,2]="10"
+                columns$[7,0]="Debit",         columns$[7,1]="N",columns$[7,2]=str(len(m1$)),columns$[7,3]=m1$,columns$[7,10]="T"
+                columns$[8,0]="Credit",        columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
+              
  
 rem --- Define print positions
 
@@ -68,6 +85,10 @@ rem --- Start progress meter and position GL Distribution (arw-07) file
             call pgmdir$+"adc_progress.aon","NC","","","","",0,arw07_dev,1,meter_num,status
 
             read (arw07_dev,key=firm_id$,dom=*next)
+
+rem --- reposition custmast as well, in case we used alt seq (different knum) in prev program
+            
+            read (arm01_dev,key="",knum=0,dom=*next)
 
 rem --- Read next GL Distribution (arw-07) record
 
@@ -94,15 +115,7 @@ rem --- Retrieve the Customer Master
              find record (arm01_dev,key=k$,dom=*next) arm01a$
           endif
 
-rem --- Print account subheading if the account has changed
 
-          if account_heading$<>""
-             xwk=fnblank(7)
-             OutVect!.addItem(account_heading$)
-             xwk=fnblank(6)
-             xwk=fnblank(7)
-             account_heading$=""
-          endif
 
 rem --- Print the detail line and accumulate totals
 
@@ -110,17 +123,37 @@ rem --- Print the detail line and accumulate totals
           credit$=""
           index=0
           amount=arw07a.gl_post_amt
-          if amount>=0 debit$=str(amount:m1$)
+          if amount>=0 debit$=str(amount)
           if amount<0
-             credit$=str(amount:m1$)
+             credit$=str(amount)
              index=1
           endif
           bydate[index]=bydate[index]+amount
           account[index]=account[index]+amount
           totals[index]=totals[index]+amount
-          OutVect!.addItem("")
+
+rem --- Print account subheading if the account has changed
+
+          if export_format$="Y"
+              OutVect!.addItem(account$)
+              OutVect!.addItem(glm01a.gl_acct_desc$)            
+          else
+              if account_heading$<>""
+                 xwk=fnblank(columns+1)
+                 OutVect!.addItem(account_heading$)
+                 OutVect!.addItem(glm01a.gl_acct_desc$)
+                 xwk=fnblank(columns-1)
+                 xwk=fnblank(columns+1)
+                 xwk=fnblank(2)
+                 account_heading$=""
+              else
+                 xwk=fnblank(2)
+              endif
+          endif
+
           OutVect!.addItem(fndate$(arw07a.receipt_date$))
-          OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+"  "+arm01a.customer_name$)
+          OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
+          OutVect!.addItem(arm01a.customer_name$)
           OutVect!.addItem(arw07a.ar_check_no$)
           OutVect!.addItem(arw07a.ar_inv_no$)
           OutVect!.addItem(debit$)
@@ -132,13 +165,18 @@ rem --- Loop back for next GL Distribution record
 
 rem --- Print report totals
 
-        done=1
-        gosub date_break
-        x$="Totals for Report"
-        xwk=fnblank(7)
-        xwk=fnblank(5)
-        OutVect!.addItem(str(totals[0]:m1$))
-        OutVect!.addItem(str(totals[1]:m1$))
+
+        if export_format$<>"Y"
+            done=1
+            gosub date_break
+            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+            x$="Totals for Report"
+            xwk=fnblank(1)
+            OutVect!.addItem(x$)
+            xwk=fnblank(5)
+            OutVect!.addItem(str(totals[0]))
+            OutVect!.addItem(str(totals[1]))
+        endif
 
 rem --- Run next overlay
 
@@ -150,15 +188,18 @@ date_break: rem --- Date break
 
         gosub account_break
         print_totals=lastdate$<>""
-        while print_totals
-              x$="Totals for "+fndate$(lastdate$)
-              xwk=fnblank(7)
-              OutVect!.addItem(x$)
-              xwk=fnblank(4)
-              OutVect!.addItem(str(bydate[0]:m1$))
-              OutVect!.addItem(str(bydate[1]:m1$))
-              break
-        wend
+        if export_format$<>"Y"
+            while print_totals
+                  TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+                  x$="Totals for "+fndate$(lastdate$)
+                  xwk=fnblank(1)
+                  OutVect!.addItem(x$)
+                  xwk=fnblank(5)
+                  OutVect!.addItem(str(bydate[0]))
+                  OutVect!.addItem(str(bydate[1]))
+                  break
+            wend
+        endif
         if done return
         dim bydate[1]
         lastdate$=arw07a.receipt_date$
@@ -167,15 +208,18 @@ date_break: rem --- Date break
 account_break: rem --- GL Account break
 
             print_totals=lastaccount$<>""
-            while print_totals
-                  x$="Totals for "+account$
-                  xwk=fnblank(7)
-                  OutVect!.addItem(x$)
-                  xwk=fnblank(4)
-                  OutVect!.addItem(str(account[0]:m1$))
-                  OutVect!.addItem(str(account[1]:m1$))
-                  break
-            wend
+            if export_format$<>"Y"
+                while print_totals
+                      TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+                      x$="Totals for "+account$
+                      xwk=fnblank(1)
+                      OutVect!.addItem(x$)
+                      xwk=fnblank(5)
+                      OutVect!.addItem(str(account[0]))
+                      OutVect!.addItem(str(account[1]))
+                      break
+                wend
+            endif
             if done return
             dim glm01a$:fattr(glm01a$),account[1]
             lastaccount$=arw07a.gl_account$
@@ -184,7 +228,7 @@ account_break: rem --- GL Account break
             glm01a.gl_acct_desc$=nf$
             k$=glm01a.firm_id$+glm01a.gl_account$
             find record (glm01_dev,key=k$,dom=*next) glm01a$
-            account$=fnmask$(glm01a.gl_account$(1,account_length),g0$)+" "+cvs(glm01a.gl_acct_desc$,2)
+            account$=fnmask$(glm01a.gl_account$(1,account_length),g0$)
             account_heading$=account$
             return
 
