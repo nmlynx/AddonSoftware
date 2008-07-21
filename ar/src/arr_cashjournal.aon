@@ -83,6 +83,13 @@ rem --- Assign form input values to local variables
             enddate$=option!.getOptionData("RECEIPT_DATE_2")
             cashcode$=option!.getOptionData("CASH_REC_CD")
             include$=option!.getOptionData("PICK_CHECK")
+            export_format$=option!.getOptionData("EXPORT_FORMAT")
+rem            rd_alias_id$=option!.getAlias()    
+            rd_alias_id$="arr_cashjournal"; rem temp; above getAlias() giving error
+            if export_format$="Y"
+                if len(rd_alias_id$)>15 rd_alias_id$=rd_alias_id$(1,15)
+                rd_alias_id$=rd_alias_id$+"X"
+            endif
 
 rem --- Retrieve parameter records
 
@@ -305,7 +312,14 @@ rem --- Calculate invoice balance
 rem --- Print invoice information
 
                       credit=art16a.apply_amt+art16a.discount_amt
-                      OutVect!.addItem("")  
+
+                      if export_format$="Y"
+                        OutVect!.addItem(arm01a.customer_id$)
+                        OutVect!.addItem(arm01a.customer_name$)
+                      else                   
+                        OutVect!.addItem("")  
+                      endif
+
                       OutVect!.addItem(fndate$(art06a.receipt_date$))
                       OutVect!.addItem(art06a.cash_rec_cd$)
                       OutVect!.addItem(art06a.ar_check_no$)
@@ -367,7 +381,11 @@ rem --- Read next Cash Receipts History GL Distribution (art-16) record
 
 rem --- Print GL distribution information
 
-                      xwk=fnblank(10)
+                      if export_format$="Y"
+                        xwk=fnblank(columns-1)
+                      else
+                        xwk=fnblank(columns-1)
+                      endif
                       OutVect!.addItem(fnmask$(art26a.gl_account$(1,account_length),g0$))
                       OutVect!.addItem(str(art26a.gl_post_amt))
                       detail=1
@@ -405,21 +423,23 @@ rem --- Loop back for next Customer Master record
 
 rem --- Print report totals
 
-            done=1
-            if printed gosub customer_break
-            totals[3]=totals[1]+totals[2]
-            x$="Totals for Report"
-            xwk=fnblank(12)
-            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
-            OutVect!.addItem(x$)
-            xwk=fnblank(3)
-            OutVect!.addItem(str(totals[0]))
-            xwk=fnblank(2)
-            OutVect!.addItem(str(totals[1]))
-            OutVect!.addItem(str(totals[2]))
-            OutVect!.addItem(str(totals[3]))
-            OutVect!.addItem("")
-            OutVect!.addItem(str(totals[4]))
+            if export_format$<>"Y"
+                done=1
+                if printed gosub customer_break
+                totals[3]=totals[1]+totals[2]
+                x$="Totals for Report"
+                xwk=fnblank(12)
+                TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+                OutVect!.addItem(x$)
+                xwk=fnblank(3)
+                OutVect!.addItem(str(totals[0]))
+                xwk=fnblank(2)
+                OutVect!.addItem(str(totals[1]))
+                OutVect!.addItem(str(totals[2]))
+                OutVect!.addItem(str(totals[3]))
+                OutVect!.addItem("")
+                OutVect!.addItem(str(totals[4]))
+            endif
 
 rem --- Skip GL Account Distribution if GL isn't installed/used or user didn't request it
 
@@ -430,25 +450,34 @@ rem --- Skip GL Account Distribution if GL isn't installed/used or user didn't r
 
 init_heading: rem --- Init Column Headings
 
-        if journal
-        dim columns$[11,10]
+        if export_format$="Y"
+            columns=12
+            dim columns$[columns,10]
+            columns$[0,0]="Cust ID",      columns$[0,1]="C",columns$[0,2]="10"
+            columns$[1,0]="Name",      columns$[1,1]="C",columns$[1,2]="20"
+        else
             columns=11
-            columns$[0,0]="Customer",      columns$[0,1]="C",columns$[0,2]="25"
-            columns$[1,0]="Receipt Dt",  columns$[1,1]="C",columns$[1,2]="10"
-            columns$[2,0]="Cd",      columns$[2,1]="C",columns$[2,2]="3"
-            columns$[3,0]="Check No",    columns$[3,1]="C",columns$[3,2]="8"
-            columns$[4,0]="Check Amt",       columns$[4,1]="N",columns$[4,2]=str(len(m1$)),columns$[4,3]=m1$,columns$[4,10]="T"
-            columns$[5,0]="Invoice",columns$[5,1]="C",columns$[5,2]="8"
-            columns$[6,0]="Invoice Bal",   columns$[6,1]="N",columns$[6,2]=str(len(m1$)),columns$[6,3]=m1$,columns$[6,10]="T"
-            columns$[7,0]="Amt Applied",   columns$[7,1]="N",columns$[7,2]=str(len(m1$)),columns$[7,3]=m1$,columns$[7,10]="T"
-            columns$[8,0]="Discount Amt",  columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
-            columns$[9,0]="Total Credit",  columns$[9,1]="N",columns$[9,2]=str(len(m1$)),columns$[9,3]=m1$,columns$[9,10]="T"
-            columns$[10,0]="Misc Acct",    columns$[10,1]="C",columns$[10,2]="8"
-            columns$[11,0]="Misc Amt",     columns$[11,1]="N",columns$[11,2]=str(len(m1$)),columns$[11,3]=m1$,columns$[11,10]="T"
+            dim columns$[columns,10]
+            columns$[0,0]="Customer",      columns$[0,1]="C",columns$[0,2]="20"
         endif
+                    
+            columns$[columns-10,0]="Receipt Dt",  columns$[columns-10,1]="C",columns$[columns-10,2]="10"
+            columns$[columns-9,0]="Cd",      columns$[columns-9,1]="C",columns$[columns-9,2]="3"
+            columns$[columns-8,0]="Check No",    columns$[columns-8,1]="C",columns$[columns-8,2]="8"
+            columns$[columns-7,0]="Check Amt",       columns$[columns-7,1]="N",columns$[columns-7,2]=str(len(m1$)),columns$[columns-7,3]=m1$,columns$[columns-7,10]="T"
+            columns$[columns-6,0]="Invoice",columns$[columns-6,1]="C",columns$[columns-6,2]="8"
+            columns$[columns-5,0]="Invoice Bal",   columns$[columns-5,1]="N",columns$[columns-5,2]=str(len(m1$)),columns$[columns-5,3]=m1$,columns$[columns-5,10]="T"
+            columns$[columns-4,0]="Amt Applied",   columns$[columns-4,1]="N",columns$[columns-4,2]=str(len(m1$)),columns$[columns-4,3]=m1$,columns$[columns-4,10]="T"
+            columns$[columns-3,0]="Discount Amt",  columns$[columns-3,1]="N",columns$[columns-3,2]=str(len(m1$)),columns$[columns-3,3]=m1$,columns$[columns-3,10]="T"
+            columns$[columns-2,0]="Total Credit",  columns$[columns-2,1]="N",columns$[columns-2,2]=str(len(m1$)),columns$[columns-2,3]=m1$,columns$[columns-2,10]="T"
+            columns$[columns-1,0]="Misc Acct",    columns$[columns-1,1]="C",columns$[columns-1,2]="8"
+            columns$[columns,0]="Misc Amt",     columns$[columns,1]="N",columns$[columns,2]=str(len(m1$)-2),columns$[columns,3]=m1$,columns$[columns,10]="T"
+
         return
 
 customer_break: rem --- Customer break
+
+            if export_format$="Y" return
 
             print_totals=customer$<>""
             while print_totals
@@ -470,9 +499,11 @@ customer_break: rem --- Customer break
             if done return
             dim customer[4]
             customer$=art06a.customer_id$
-            xwk=fnblank(12)
-            OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+"  "+arm01a.customer_name$)
-            xwk=fnblank(11)
+            if export_format$<>"Y"
+                xwk=fnblank(columns+1)
+                OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+"  "+arm01a.customer_name$)
+                xwk=fnblank(columns)
+            endif
             return
 
 receipt_code: rem --- Retrieve the Cash Receipts Code record
