@@ -2,7 +2,7 @@
 release
 [[APE_INVDATE.ASVA]]
 rem --- validate Accounting Date
-	if callpoint!.getColumnData("APE_INVDATE.DEF_ACCT_DATE")<>""
+	if callpoint!.getColumnData("APE_INVDATE.DEF_ACCT_DATE")<>"" 
 		call stbl("+DIR_PGM")+"glc_datecheck.aon",
 :			callpoint!.getColumnData("APE_INVDATE.DEF_ACCT_DATE"),
 :			"Y",per$,yr$,status
@@ -39,7 +39,7 @@ rem --- Enable/Disable Date field
 		endif
 	else
 		ctl_stat$="D"
-		acctdate$="",acctdate$=stbl("+SYSTEM_DATE",err=*next)
+		acctdate$=""
 	endif
 	callpoint!.setColumnData("APE_INVDATE.DEF_ACCT_DATE",acctdate$)
 	temp_stbl$=stbl("DEF_ACCT_DATE",acctdate$)
