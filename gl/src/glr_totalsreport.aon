@@ -181,18 +181,13 @@ rem --- Read next sort record
           find record (glm22_dev,key=glm22_key$,dom=level_break) glm22a$
 
           rem --- Print detail line
-
-         
-            if h0$<>""  abc=fnblank(5)
-
+        
             OutVect!.addItem(h0$)
             OutVect!.addItem(glm12a.gl_rpt_no$)
             OutVect!.addItem(glm12a.gl_rpt_desc$)
             OutVect!.addItem(glm22a.gl_rpt_line$)
             OutVect!.addItem(glm22a.gl_line_desc$)
-            h0$=""
             
-
           rem --- Loop back for next sort record
 
     wend
