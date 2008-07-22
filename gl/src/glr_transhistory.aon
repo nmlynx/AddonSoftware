@@ -55,6 +55,7 @@ rem --- Assign input values to local variables
     wildcard$=Option!.getOptionData("GL_WILDCARD")
     journal$=Option!.getOptionData("PICK_JOURNAL_ID")
     detail$=Option!.getOptionData("PICK_LISTBUTTON")
+    export_format$=Option!.getOptionData("EXPORT_FORMAT")
 
     begper$=str(num(begper$):"00")
     endper$=str(num(endper$):"00")
@@ -142,10 +143,10 @@ rem --- Detail Report Heading
         columns$[1,0]="Date",columns$[1,1]="C",columns$[1,2]="10"
         columns$[2,0]="Jrnl",columns$[2,1]="C",columns$[2,2]="5"
         columns$[3,0]="Audit #",columns$[3,1]="C",columns$[3,2]="10"
-        columns$[4,0]="Memo",columns$[4,1]="C",columns$[4,2]="30"
-        columns$[5,0]="Ref 1",columns$[5,1]="C",columns$[5,2]="10"
-        columns$[6,0]="Ref 2",columns$[6,1]="C",columns$[6,2]="10"
-        columns$[7,0]="Ref 3",columns$[7,1]="C",columns$[7,2]="10"
+        columns$[4,0]="Memo",columns$[4,1]="C",columns$[4,2]="25"
+        columns$[5,0]="Ref 1",columns$[5,1]="C",columns$[5,2]="12"
+        columns$[6,0]="Ref 2",columns$[6,1]="C",columns$[6,2]="12"
+        columns$[7,0]="Ref 3",columns$[7,1]="C",columns$[7,2]="12"
         columns$[8,0]="Debits",columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
         columns$[9,0]="Credits",columns$[9,1]="N",columns$[9,2]=str(len(m1$)),columns$[9,3]=m1$,columns$[9,10]="T"
         columns$[10,0]="Units",columns$[10,1]="N",columns$[10,2]=str(len(m2$)),columns$[10,3]=m2$,columns$[10,10]="T"
@@ -254,9 +255,15 @@ rem --- Read next transaction history (glt-06) record
           n[2]=units
 
           rem --- Print detail line
+            
+            if export_format$="Y"
+                wk$=export_acct$
+            else
+                wk$=""
+            endif
 
             if detail$="D"
-                OutVect!.addItem("")
+                OutVect!.addItem(wk$)
                 OutVect!.addItem(fndate$(glt06a.trns_date$))
                 OutVect!.addItem(glt06a.journal_id$)
                 OutVect!.addItem(glt06a.gl_adt_no$)
@@ -267,6 +274,7 @@ rem --- Read next transaction history (glt-06) record
                 OutVect!.addItem(debit$)
                 OutVect!.addItem(credit$)
                 OutVect!.addItem(unit$)
+                l1=l1+1
             endif
 
           rem --- Accumulate totals
@@ -295,24 +303,47 @@ account_heading: rem --- Account Heading
     b$=h0$(8)+"     -    "+bb$
 
     if detail$="S"
-        abc=fnblank(6)
-        OutVect!.addItem(h0$(1,7))
-        OutVect!.addItem("")
-        OutVect!.addItem(b$)
-        OutVect!.addItem(begdebit$)
-        OutVect!.addItem(begcredit$)
-        OutVect!.addItem(begunits$)
+        if export_format$="Y"
+            OutVect!.addItem(export_acct$)
+            abc=fnblank(1)
+            OutVect!.addItem(export_desc$+" "+h1$+" "+bb$)
+            OutVect!.addItem(begdebit$)
+            OutVect!.addItem(begcredit$)
+            OutVect!.addItem(begunits$)
+            h1$=""
+        else
+            abc=fnblank(6)
+            OutVect!.addItem(h0$(1,7))
+            OutVect!.addItem("")
+            OutVect!.addItem(b$)
+            OutVect!.addItem(begdebit$)
+            OutVect!.addItem(begcredit$)
+            OutVect!.addItem(begunits$)
+        endif
     endif
 
     if detail$="D"
-        abc=fnblank(11)
-        OutVect!.addItem(h0$(1,7))
-        abc=fnblank(3)
-        OutVect!.addItem(b$)
-        abc=fnblank(3)
-        OutVect!.addItem(begdebit$)
-        OutVect!.addItem(begcredit$)
-        OutVect!.addItem(begunits$)
+        if export_format$="Y"
+            OutVect!.addItem(export_acct$)
+            abc=fnblank(3)
+            OutVect!.addItem(export_desc$)
+            OutVect!.addItem(h1$)
+            OutVect!.addItem(bb$)
+            abc=fnblank(1)
+            OutVect!.addItem(begdebit$)
+            OutVect!.addItem(begcredit$)
+            OutVect!.addItem(begunits$)
+            h1$=""
+        else
+            abc=fnblank(11)
+            OutVect!.addItem(h0$(1,7))
+            abc=fnblank(3)
+            OutVect!.addItem(b$)
+            abc=fnblank(3)
+            OutVect!.addItem(begdebit$)
+            OutVect!.addItem(begcredit$)
+            OutVect!.addItem(begunits$)
+        endif
     endif
 
     acct$=cvs(h0$,2)+" (continued)"
@@ -321,16 +352,32 @@ account_heading: rem --- Account Heading
 
 period_heading: rem --- Period Heading
 
+
     if detail$="S"
-        OutVect!.addItem("")
-        OutVect!.addItem(h1$)
-        abc=fnblank(4)
+        if export_format$="Y"
+            OutVect!.addItem(export_acct$)
+            OutVect!.addItem("")
+            OutVect!.addItem(export_desc$+" "+h1$)
+            abc=fnblank(3)
+        else
+            OutVect!.addItem("")
+            OutVect!.addItem(h1$)
+            abc=fnblank(4)
+        endif
     endif
 
     if detail$="D"
-        OutVect!.addItem("")
-        OutVect!.addItem(h1$)
-        abc=fnblank(9)
+        if export_format$="Y"
+            OutVect!.addItem(export_acct$)
+            abc=fnblank(3)
+            OutVect!.addItem(export_desc$)
+            OutVect!.addItem(h1$)
+            abc=fnblank(5)
+        else
+            OutVect!.addItem("")
+            OutVect!.addItem(h1$)
+            abc=fnblank(9)            
+        endif
         l1=l1+1
     endif
 
@@ -341,7 +388,12 @@ account_break: rem --- Account number break
 
     if t0$="" goto new_account
     gosub period_break
-    total$="Total For Account "+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
+    if export_format$="Y"
+        total$="Account total"
+        x$="",y$=""
+    else
+        total$="Total For Account "+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
+    endif
     debits=at[0]
     credits=at[1]
     units=at[2]
@@ -378,6 +430,8 @@ new_account: rem --- New account
     glm01_key$=glm01a.firm_id$+glm01a.gl_account$
     find record (glm01_dev,key=glm01_key$,dom=*next)glm01a$
     h0$=fnmask$(glm01a.gl_account$(1,acctlen),m0$)+" "+glm01a.gl_acct_desc$
+    export_acct$=glm01a.gl_account$
+    export_desc$=glm01a.gl_acct_desc$
 
 rem --- Load summary activity for account
 
@@ -421,7 +475,12 @@ period_break: rem --- Period break
     if detail$="D" and l1<1 goto period_balance
     gosub journal_break
     x$=field(gls01a$,"abbr_name_"+str(period:"00"))
-    total$="Total For "+x$+" "+y$
+    y$=glt06a.posting_year$
+    if export_format$="Y"
+        total$="Total"
+    else
+        total$="Total For "+x$+" "+y$
+    endif
     debits=pt[0]
     credits=pt[1]
     units=pt[2]
@@ -429,7 +488,11 @@ period_break: rem --- Period break
 
 period_balance: rem --- Print ending balance for period
 
-    total$="Ending Balance For "+x$+" "+y$
+    if export_format$="Y"
+        total$="Ending balance"
+    else
+        total$="Ending Balance For "+x$+" "+y$
+    endif
     endbal=et[0]+et[1]
     debits=endbal
     credits=0
@@ -460,7 +523,12 @@ journal_break: rem --- Journal break
     if amount<0 credit$=str(abs(amount)),debit$=""
     if units_flag$="Y" if units unit$=stars$,unit$=str(jt[2],err=*next)
 
-    OutVect!.addItem("")
+    if export_format$="Y"
+        wk$=export_acct$
+    else
+        wk$=""
+    endif
+    OutVect!.addItem(wk$)
     OutVect!.addItem(fndate$(t2$))
     OutVect!.addItem(h2$)
     OutVect!.addItem(debit$)
@@ -490,24 +558,44 @@ print_totals: rem --- Print totals line
     if units_flag$="Y" unit$=stars$,unit$=str(units,err=*next)
 
     if detail$="D"
-
-        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
-        abc=fnblank(4)
-        OutVect!.addItem(total$)
-        abc=fnblank(3)
-        OutVect!.addItem(debit$)
-        OutVect!.addItem(credit$)
-        OutVect!.addItem(unit$)
+        if export_format$="Y"
+            OutVect!.addItem(export_acct$)
+            abc=fnblank(3)
+            OutVect!.addItem(export_desc$)
+            OutVect!.addItem(x$+" "+y$)
+            OutVect!.addItem(total$)
+            abc=fnblank(1)
+            OutVect!.addItem(debit$)
+            OutVect!.addItem(credit$)
+            OutVect!.addItem(unit$)
+        else
+            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+            abc=fnblank(4)
+            OutVect!.addItem(total$)
+            abc=fnblank(3)
+            OutVect!.addItem(debit$)
+            OutVect!.addItem(credit$)
+            OutVect!.addItem(unit$)
+        endif
     endif
 
     if detail$="S"
 
-        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
-        abc=fnblank(2)
-        OutVect!.addItem(total$)
-        OutVect!.addItem(debit$)
-        OutVect!.addItem(credit$)
-        OutVect!.addItem(unit$)
+        if export_format$="Y"
+            OutVect!.addItem(export_acct$)
+            abc=fnblank(1)
+            OutVect!.addItem(export_desc$+" "+x$+" "+y$+" "+total$)
+            OutVect!.addItem(debit$)
+            OutVect!.addItem(credit$)
+            OutVect!.addItem(unit$)
+        else
+            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+            abc=fnblank(2)
+            OutVect!.addItem(total$)
+            OutVect!.addItem(debit$)
+            OutVect!.addItem(credit$)
+            OutVect!.addItem(unit$)
+        endif
     endif
 
     return
