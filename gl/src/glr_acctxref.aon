@@ -90,18 +90,23 @@ rem --- Initializations
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
 
-rem --- Document columns
+rem --- Headings and print positions
 
-    columns=7
-    dim columns$[7,4]
-     columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="15"
-     columns$[1,0]="Account",columns$[1,1]="C",columns$[1,2]=str(acctlen)
-     columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="30"
-     columns$[3,0]="Assignment 1,6",columns$[3,1]="C",columns$[3,2]="15"
-     columns$[4,0]="Assignment 2,7",columns$[4,1]="C",columns$[4,2]="15"
-     columns$[5,0]="Assignment 3,8",columns$[5,1]="C",columns$[5,2]="15"
-     columns$[6,0]="Assignment 4,9",columns$[6,1]="C",columns$[6,2]="15"
-     columns$[7,0]="Assignment 5,10",columns$[7,1]="C",columns$[7,2]="15"
+    dim columns$[11,10]
+    columns = 11
+
+    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="10"
+    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="25"
+    columns$[2,0]="Assign 1",       columns$[2,1]="C",columns$[2,2]="10"
+    columns$[3,0]="Assign 2",       columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]="Assign 3",       columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]="Assign 4",       columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]="Assign 5",       columns$[6,1]="C",columns$[6,2]="10"
+    columns$[7,0]="Assign 6",       columns$[7,1]="C",columns$[7,2]="10"
+    columns$[8,0]="Assign 7",       columns$[8,1]="C",columns$[8,2]="9"
+    columns$[9,0]="Assign 8",       columns$[9,1]="C",columns$[9,2]="9"
+    columns$[10,0]="Assign 9",      columns$[10,1]="C",columns$[10,2]="9"
+    columns$[11,0]="Assign 10",     columns$[11,1]="C",columns$[11,2]="9"
 
 rem --- Get user approval to proceed
 
@@ -174,16 +179,13 @@ rem --- Read next glm-01 record
 
 print_detail: rem --- Print detail lines
 
-            OutVect!.addItem("")
             OutVect!.addItem(fnmask$(glm01a.gl_account$(1,acctlen),m0$))   
             OutVect!.addItem(glm01a.gl_acct_desc$)
             OutVect!.addItem(buf$[1])
             OutVect!.addItem(buf$[2])
             OutVect!.addItem(buf$[3])
             OutVect!.addItem(buf$[4])
-            OutVect!.addItem(buf$[5])
-            
-            abc=fnblank(3)
+            OutVect!.addItem(buf$[5])            
             OutVect!.addItem(buf$[6])
             OutVect!.addItem(buf$[7])
             OutVect!.addItem(buf$[8])
@@ -199,8 +201,7 @@ rem --- All done
 subheading: rem --- Subheading
 
     OutVect!.addItem(title$)
-    abc=fnblank(7)
-    abc=fnblank(8)
+    abc=fnblank(11)
     return
 
 rem --- Functions

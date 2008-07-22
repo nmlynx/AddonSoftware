@@ -97,18 +97,18 @@ rem --- Headings and print positions
     dim columns$[11,10]
     columns = 11
 
-    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="12"
-    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="20"
+    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="10"
+    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="25"
     columns$[2,0]="Assign 1",       columns$[2,1]="C",columns$[2,2]="10"
     columns$[3,0]="Assign 2",       columns$[3,1]="C",columns$[3,2]="10"
     columns$[4,0]="Assign 3",       columns$[4,1]="C",columns$[4,2]="10"
     columns$[5,0]="Assign 4",       columns$[5,1]="C",columns$[5,2]="10"
     columns$[6,0]="Assign 5",       columns$[6,1]="C",columns$[6,2]="10"
     columns$[7,0]="Assign 6",       columns$[7,1]="C",columns$[7,2]="10"
-    columns$[8,0]="Assign 7",       columns$[8,1]="C",columns$[8,2]="10"
-    columns$[9,0]="Assign 8",       columns$[9,1]="C",columns$[9,2]="10"
-    columns$[10,0]="Assign 9",      columns$[10,1]="C",columns$[10,2]="10"
-    columns$[11,0]="Assign 10",     columns$[11,1]="C",columns$[11,2]="10"
+    columns$[8,0]="Assign 7",       columns$[8,1]="C",columns$[8,2]="9"
+    columns$[9,0]="Assign 8",       columns$[9,1]="C",columns$[9,2]="9"
+    columns$[10,0]="Assign 9",      columns$[10,1]="C",columns$[10,2]="9"
+    columns$[11,0]="Assign 10",     columns$[11,1]="C",columns$[11,2]="9"
 
 
 rem --- Print positions
@@ -194,7 +194,7 @@ new_heading: rem --- Strip current heading
           print_detail: rem --- Print detail lines
 
           if l+2>l9 gosub set_linecount
-          OutVect!.addItem("       " + str(fnmask$(glm01a.gl_account$(1,acctlen),m0$)))
+          OutVect!.addItem(str(fnmask$(glm01a.gl_account$(1,acctlen),m0$)))
           OutVect!.addItem(glm01a.gl_acct_desc$(1,width))
           OutVect!.addItem(buf$[1])
           OutVect!.addItem(buf$[2])
@@ -220,11 +220,9 @@ set_linecount: rem --- Set Line count
     l=l+3
 
 subheading: rem --- Subheading
-
-    xwk = fnblank(12)
-    OutVect!.addItem(" " + title$)
+    
+    OutVect!.addItem(title$)
     xwk = fnblank(11)
-    xwk = fnblank(12)
 
     l=l+3
     return
