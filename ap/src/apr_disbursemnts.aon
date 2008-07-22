@@ -66,8 +66,15 @@ rem --- Assign form input values to local variables
     period$=Option!.getOptionData("PERIOD")
     sequence$=Option!.getOptionData("REPORT_SEQUENCE")
     year$=Option!.getOptionData("YEAR")
+    export_format$=Option!.getOptionData("EXPORT_FORMAT")
+    if export_format$="Y"
+        rd_alias_id$=Option!.getAlias()    
+        if len(rd_alias_id$)>15 rd_alias_id$=rd_alias_id$(1,15)
+        rd_alias_id$=rd_alias_id$+"X"
+    endif
     year=num(year$)
     period=num(period$)
+    
     
     call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
 
@@ -413,9 +420,11 @@ rem --- Start progress meter and position the driver file
 
           rem --- Initialize fields for the next record
 
-          check$=""
-          type$=""
-          paid$=""
+          if export_format$<>"Y"
+            check$=""
+            type$=""
+            paid$=""
+          endif
 
           rem --- Loop back for next record
 
@@ -425,11 +434,13 @@ rem --- All done
 
     done=1
     gosub type_break
-    total$="Total For Report"
-    totals[0]=rt[0]
-    totals[1]=rt[1]
-    totals[2]=rt[2]
-    gosub print_total
+    if export_format$<>"Y"
+        total$="Total For Report"
+        totals[0]=rt[0]
+        totals[1]=rt[1]
+        totals[2]=rt[2]
+        gosub print_total
+    endif
 
 rem --- Run next overlay
 
@@ -443,11 +454,20 @@ rem --- Run next overlay
 
 print_total: rem --- Print subtotal/total
 
-    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
-
-    xwk = fnblank(4)
-    OutVect!.addItem(total$)
-    xwk=fnblank(3)
+    if export_format$="Y"
+        OutVect!.addItem(check$)
+        OutVect!.addItem(type$)
+        OutVect!.addItem(paid$)
+        OutVect!.addItem(vendor$)
+        OutVect!.addItem(total$)
+        OutVect!.addItem(altseq$)
+    else
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+        xwk = fnblank(4)
+        OutVect!.addItem(total$)
+        xwk=fnblank(1)
+    endif    
+    xwk=fnblank(2)
     OutVect!.addItem(str(totals[0]))
     OutVect!.addItem(str(totals[1]))
     OutVect!.addItem(str(totals[2]))
@@ -462,7 +482,17 @@ print_distribution: rem --- Print GL distribution
         amount=amounts[n]
         detail[0]=amount
 
+    if export_format$="Y"        
+        OutVect!.addItem(check$)
+        OutVect!.addItem(type$)
+        OutVect!.addItem(paid$)
+        OutVect!.addItem(vendor$)
+        OutVect!.addItem(name$)
+        OutVect!.addItem(altseq$)
+        OutVect!.addItem(invoice$)
+    else
         xwk=fnblank(7)
+    endif
         OutVect!.addItem(str(fnmask$(account$(1,acct_length),g0$)))
         OutVect!.addItem(str(amount:m1$))
         xwk=fnblank(2)
@@ -475,17 +505,20 @@ print_distribution: rem --- Print GL distribution
 type_break: rem --- AP type break
 
     while lasttype$<>""
+      
           if sequence$="C" gosub check_break
 :                     else gosub vendor_break
-          if multitypes
-             total$="Total for "+aptype$
-             totals[0]=at[0]
-             totals[1]=at[1]
-             totals[2]=at[2]
-             typebreak_flag=1  
-             gosub print_total
+          if export_format$<>"Y"
+              if multitypes
+                 total$="Total for "+aptype$
+                 totals[0]=at[0]
+                 totals[1]=at[1]
+                 totals[2]=at[2]
+                 typebreak_flag=1  
+                 gosub print_total
+              endif
           endif
-          break
+        break
     wend
     if multitypes=0 return
     if done return
@@ -506,16 +539,19 @@ type_break: rem --- AP type break
 vendor_break: rem --- Vendor break
 
     while lastvendor$<>""
+        
           gosub check_break
           if sequence$="C" break
-          if printed=0 break
-          total$="Total For Vendor "+x$
-          totals[0]=vt[0]
-          totals[1]=vt[1]
-          totals[2]=vt[2]
-          typebreak_flag=0  
-          gosub print_total
-          break
+          if cprinted=0 break
+          if export_format$<>"Y"
+              total$="Total For Vendor "+x$
+              totals[0]=vt[0]
+              totals[1]=vt[1]
+              totals[2]=vt[2]
+              typebreak_flag=0  
+              gosub print_total
+          endif
+        break
     wend
     if done return
     dim apm01a$:fattr(apm01a$)
@@ -532,6 +568,7 @@ vendor_break: rem --- Vendor break
     altseq$(1)=apm01a.alt_sequence$
     oldname$=name$
     oldvend$=vendor$
+    cprinted=0
     return
 
 check_break: rem --- Check break
@@ -551,7 +588,8 @@ check_break: rem --- Check break
           totals[1]=ct[1]
           totals[2]=ct[2]
           total$="Totals For Check "+lastcheck$
-          typebreak_flag=0  
+          typebreak_flag=0 
+          cprinted=1
           gosub print_total
           break
     wend
