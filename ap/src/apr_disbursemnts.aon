@@ -151,19 +151,22 @@ rem --- Initializations
     sorting=pos(sequence$="AV")
 
 rem --- Headings and print positions
-
-    dim columns$[8,10]
-    columns = 8
+    
+    columns = 10
+    dim columns$[columns,10]
+    
 
     columns$[0,0]="Check No",       columns$[0,1]="C",columns$[0,2]="10"
     columns$[1,0]="Check Tp",         columns$[1,1]="C",columns$[1,2]="10"
     columns$[2,0]="Check Dt",         columns$[2,1]="C",columns$[2,2]="10"
-    columns$[3,0]="Vendor",             columns$[3,1]="C",columns$[3,2]="25"
-    columns$[4,0]="Invoice No",     columns$[4,1]="C",columns$[4,2]="10"
-    columns$[5,0]="Account",            columns$[5,1]="C",columns$[5,2]="10"
-    columns$[6,0]="Distrib Amt",     columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
-    columns$[7,0]="Discount Amt",    columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
-    columns$[8,0]="Check Amt",       columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[3,0]="Vendor ID",        columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]="Name",           columns$[4,1]="C",columns$[4,2]="20"
+    columns$[5,0]="Alt Seq",        columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]="Invoice No",     columns$[6,1]="C",columns$[6,2]="10"
+    columns$[7,0]="Account",            columns$[7,1]="C",columns$[7,2]="10"
+    columns$[8,0]="Distrib Amt",     columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[9,0]="Discount Amt",    columns$[9,1]="N",columns$[9,2]=str(len(m1$)),columns$[9,3]=m1$,columns$[9,10]="T"
+    columns$[10,0]="Check Amt",       columns$[10,1]="N",columns$[10,2]=str(len(m1$)),columns$[10,3]=m1$,columns$[10,10]="T"
 
    
 rem --- Define print positions
@@ -309,10 +312,7 @@ rem --- Start progress meter and position the driver file
           rem --- Level breaks
 
           if apt05a.ap_type$<>lasttype$ gosub type_break
-          if pos("TEMP"=apt05a.vendor_id$)=1
-:            if apt05a.vendor_name$<>name$ gosub vendor_break
-          if pos("TEMP"=apt05a.vendor_id$)<>1
-:            if apt05a.vendor_id$<>lastvendor$ gosub vendor_break
+          if apt05a.vendor_id$<>lastvendor$ gosub vendor_break
           if apt05a.check_no$<>lastcheck$ gosub check_break
 
           rem --- Voided check?
@@ -378,7 +378,7 @@ rem --- Start progress meter and position the driver file
                 OutVect!.addItem(type$)
                 OutVect!.addItem(paid$)
 
-                xwk = fnblank(6)
+                xwk = fnblank(8)
 
                 break
           wend
@@ -387,17 +387,12 @@ rem --- Start progress meter and position the driver file
 
           rem --- Print check history record
 
-          if sequence$="A" 
-             name$(1)=vendor$+" "+name$
-             vendor$=altseq$
-          endif
-
-rem          xwk = fnblank(9)
-
           OutVect!.addItem(check$)
           OutVect!.addItem(type$)
           OutVect!.addItem(paid$)
-          OutVect!.addItem(vendor$ + " " + name$)
+          OutVect!.addItem(vendor$)
+          OutVect!.addItem(name$)
+          OutVect!.addItem(altseq$)
           OutVect!.addItem(invoice$)
           OutVect!.addItem(account$)
           OutVect!.addItem(str(detail[0]))
@@ -421,9 +416,6 @@ rem          xwk = fnblank(9)
           check$=""
           type$=""
           paid$=""
-          vendor$=""
-          name$=""
-          altseq$=""
 
           rem --- Loop back for next record
 
@@ -453,9 +445,9 @@ print_total: rem --- Print subtotal/total
 
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
-    xwk = fnblank(3)
+    xwk = fnblank(4)
     OutVect!.addItem(total$)
-    xwk=fnblank(2)
+    xwk=fnblank(3)
     OutVect!.addItem(str(totals[0]))
     OutVect!.addItem(str(totals[1]))
     OutVect!.addItem(str(totals[2]))
@@ -470,7 +462,7 @@ print_distribution: rem --- Print GL distribution
         amount=amounts[n]
         detail[0]=amount
 
-        xwk=fnblank(5)
+        xwk=fnblank(7)
         OutVect!.addItem(str(fnmask$(account$(1,acct_length),g0$)))
         OutVect!.addItem(str(amount:m1$))
         xwk=fnblank(2)
@@ -517,8 +509,6 @@ vendor_break: rem --- Vendor break
           gosub check_break
           if sequence$="C" break
           if printed=0 break
-          if pos("TEMP"=lastvendor$)=1 x$=lastvendor$(1,4)
-:                                 else x$=fnmask$(lastvendor$(1,vendor_size),m0$)
           total$="Total For Vendor "+x$
           totals[0]=vt[0]
           totals[1]=vt[1]
@@ -531,11 +521,6 @@ vendor_break: rem --- Vendor break
     dim apm01a$:fattr(apm01a$)
     dim vt[2],vendor$(m0),name$(dw),altseq$(10)
     lastvendor$=apt05a.vendor_id$
-    if pos("TEMP"=lastvendor$)=1
-       vendor$(1)=lastvendor$
-       name$(1)=apt05a.vendor_name$
-       return
-    endif
     if cvs(lastvendor$,2)="" return
     apm01a.firm_id$=apt05a.firm_id$
     apm01a.vendor_id$=apt05a.vendor_id$
