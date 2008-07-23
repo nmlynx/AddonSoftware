@@ -1,3 +1,7 @@
+[[ARR_AGINGREPORT.REPORT_SEQUENCE.AVAL]]
+gosub set_selections
+[[ARR_AGINGREPORT.REPORT_OPTION.AVAL]]
+gosub set_selections
 [[ARR_AGINGREPORT.UPDATE_AGING.AVAL]]
 if callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")="N"
 	if callpoint!.getColumnData("ARR_AGINGREPORT.UPDATE_AGING")="Y"
@@ -21,6 +25,7 @@ else
 	endif
 endif
 [[ARR_AGINGREPORT.AREC]]
+gosub set_selections
 cal_date=1
 gosub set_date_seq
 gosub calc_dates
@@ -119,3 +124,61 @@ calc_dates:rem --- Calculate Aging Dates
 	swend
 
 	return
+
+set_selections: rem --- Enable/Disable Selection columns based on entries
+dim ctl_name$[6]
+dim ctl_stat$[6]
+ctl_name$[1]="ARR_AGINGREPORT.CUSTOMER_ID_01"
+ctl_name$[2]="ARR_AGINGREPORT.CUSTOMER_ID_02"
+ctl_name$[3]="ARR_AGINGREPORT.ALT_SEQUENCE_01"
+ctl_name$[4]="ARR_AGINGREPORT.ALT_SEQUENCE_02"
+ctl_name$[5]="ARR_AGINGREPORT.SALESPERSON_01"
+ctl_name$[6]="ARR_AGINGREPORT.SALESPERSON_02"
+if callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_OPTION") <> "C"
+	ctl_stat$[1]="D"
+	ctl_stat$[2]="D"
+	ctl_stat$[3]="D"
+	ctl_stat$[4]="D"
+	ctl_stat$[5]=" "
+	ctl_stat$[6]=" "
+	callpoint!.setColumnData("ARR_AGINGREPORT.CUSTOMER_ID_01","")
+	callpoint!.setColumnData("ARR_AGINGREPORT.CUSTOMER_ID_02","")
+	callpoint!.setColumnData("ARR_AGINGREPORT.ALT_SEQUENCE_01","")
+	callpoint!.setColumnData("ARR_AGINGREPORT.ALT_SEQUENCE_02","")
+else
+	ctl_stat$[5]="D"
+	ctl_stat$[6]="D"
+	callpoint!.setColumnData("ARR_AGINGREPORT.SALESPERSON_01","")
+	callpoint!.setColumnData("ARR_AGINGREPORT.SALESPERSON_02","")
+	if callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_SEQUENCE")="A"
+		ctl_stat$[1]="D"
+		ctl_stat$[2]="D"
+		ctl_stat$[3]=" "
+		ctl_stat$[4]=" "
+		callpoint!.setColumnData("ARR_AGINGREPORT.CUSTOMER_ID_01","")
+		callpoint!.setColumnData("ARR_AGINGREPORT.CUSTOMER_ID_02","")
+	else
+		ctl_stat$[1]=" "
+		ctl_stat$[2]=" "
+		ctl_stat$[3]="D"
+		ctl_stat$[4]="D"
+		callpoint!.setColumnData("ARR_AGINGREPORT.ALT_SEQUENCE_01","")
+		callpoint!.setColumnData("ARR_AGINGREPORT.ALT_SEQUENCE_02","")
+	endif
+endif
+gosub disable_fields
+return
+
+disable_fields:
+rem --- used to disable/enable controls depending on parameter settings
+rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+
+	for x=1 to 6
+		wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$[x],"CTLI")):"00000")
+		wmap$=callpoint!.getAbleMap()
+		wpos=pos(wctl$=wmap$,8)
+		wmap$(wpos+6,1)=ctl_stat$[x]
+		callpoint!.setAbleMap(wmap$)
+		callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+	next x 
+return

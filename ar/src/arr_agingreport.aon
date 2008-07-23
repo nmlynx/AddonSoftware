@@ -15,6 +15,8 @@ rem --- option$   : List by customer or salesperson (C/S)?
 rem --- sequence$ : If by customer use ID or alternate sequence (C/A)?
 rem --- begcust$  : Beginning Customer ID
 rem --- endcust$  : Ending Customer ID
+rem --- begalt$   : Beginning Alternate Sequence
+rem --- endalt$   : Ending Alternate Sequence
 rem --- begsales$ : Beginning Salesperson
 rem --- endsales$ : Ending Salesperson
 rem --- credits$  : Include credits in aging (Y/N)?
@@ -86,6 +88,8 @@ rem --- Assign form input values to local variables
     sequence$=option!.getOptionData("REPORT_SEQUENCE")
     begcust$=option!.getOptionData("CUSTOMER_ID_01")
     endcust$=option!.getOptionData("CUSTOMER_ID_02")
+    begalt$=option!.getOptionData("ALT_SEQUENCE_01")
+    endalt$=option!.getOptionData("ALT_SEQUENCE_02")
     begsales$=option!.getOptionData("SALESPERSON_01")
     endsales$=option!.getOptionData("SALESPERSON_02")
     update$=option!.getOptionData("UPDATE_AGING")
@@ -205,7 +209,8 @@ rem --- Initialize report headings
                 h3$=h3$+" From "
                 if sequence$="C" if begcust$<>"" h8$=fnmask$(begcust$(1,customer_size),m0$) 
                 if sequence$="C" if endcust$<>"" h9$=fnmask$(endcust$(1,customer_size),m0$)
-
+                if sequence$="A" if begalt$<>"" h8$=cvs(begalt$,3)
+                if sequence$="A" if endalt$<>"" h9$=cvs(endalt$,3)
            break
            case salesperson 
                 h3$="Customers By Salesperson"
@@ -326,6 +331,8 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           endif
           if cvs(begcust$,3)<>"" if arm01a.customer_id$<begcust$ continue
           if cvs(endcust$,3)<>"" if arm01a.customer_id$>endcust$ continue
+          if cvs(begalt$,3)<>"" if arm01a.alt_sequence$(1,len(cvs(begalt$,3)))<begalt$ continue
+          if cvs(endalt$,3)<>"" if arm01a.alt_sequence$(1,len(cvs(endalt$,3)))>endalt$ continue
           if cvs(begsales$,3)<>"" if arm02a.slspsn_code$<begsales$ continue
           if cvs(endsales$,3)<>"" if arm02a.slspsn_code$>endsales$ continue
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
