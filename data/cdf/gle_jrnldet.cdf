@@ -59,14 +59,18 @@ disp_totals:
 	    
 	debits!=UserObj!.getItem(num(user_tpl.debits_ofst$))
 	debits!.setValue(num(user_tpl.tot_db$))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.DEBIT_AMT",user_tpl.tot_db$)
 
 	credits!=UserObj!.getItem(num(user_tpl.credits_ofst$))
 	credits!.setValue(num(user_tpl.tot_cr$))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_AMT",user_tpl.tot_cr$)
 
 	bal!=UserObj!.getItem(num(user_tpl.bal_ofst$))
 	bal!.setValue(num(user_tpl.tot_bal$))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.BALANCE",user_tpl.tot_bal$)
 
 	units!=UserObj!.getItem(num(user_tpl.units_ofst$))
 	units!.setValue(num(user_tpl.tot_units$))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.UNITS",user_tpl.tot_units$)
 
 	return
