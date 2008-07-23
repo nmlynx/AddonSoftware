@@ -59,7 +59,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           while calculating
                 while wrong
                       x=jul(year,month,d,err=*break)
-                      invoice_date$=date(0:"%Yl%Mz%Dz")
+                      invoice_date$=date(x:"%Yl%Mz%Dz")
                       wrong=0
                 wend
                 if wrong=0 break
