@@ -25,6 +25,17 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- Derive/set path and filename for logo to go on form
+
+    logofile$=""
+    while 1
+        curr_path$=dir("")
+        chdir stbl("+CUST_IMAGES",err=*break),err=*break
+        logofile$="file://"+dir("")+stbl("+FORM_LOGO",err=*break)
+        chdir curr_path$
+        break
+    wend
+
 rem --- Open/Lock files
 
     files=6,begfile=1,endfile=files
@@ -633,7 +644,7 @@ rem --- fnlogo: Put logo on page
 
     def fnlogo(page!)
         logo!=page!.newImage()
-        logo!.setURL("file:c:\apps\aon\data_images\basislogo.jpg")
+        logo!.setURL(logofile$,err=*next)
         logo!.setPosition(new java.awt.Point(0,0))
         logo!.setWidth(185)
         logo!.setHeight(68)
