@@ -63,6 +63,7 @@ rem --- Parameters
         precision num(ivs01a.precision$)
 
 rem --- Init Data
+
         more=1
         pbufwidth=85
         call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
@@ -80,57 +81,49 @@ rem --- Read
 rem --- Heading
 
         find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
-        OutVect!.addItem("")
-        dim pbuf$(pbufwidth)
-            pbuf$(6)="Bill Number: "+bill_no$
-        OutVect!.addItem(pbuf$)
-        
-        dim pbuf$(pbufwidth)
-            pbuf$(6)="Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36))
-            pbuf$(54)="Phantom Bill?: "+bmm01a.PHANTOM_BILL$
-        OutVect!.addItem(pbuf$)
-        
-        dim pbuf$(pbufwidth)
-            pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34))
-            pbuf$(52)="Unit Of Measure: "+bmm01a.UNIT_MEASURE$
-        OutVect!.addItem(pbuf$)
+        OutVect!.addItem("Bill Number: "+bill_no$)
+        xwk=fnblank(4)
 
-        dim pbuf$(pbufwidth)
-            pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32))
-            pbuf$(50)="Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00")
-        OutVect!.addItem(pbuf$)
+        OutVect!.addItem("Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36)))
+        xwk=fnblank(3)
+        OutVect!.addItem("Phantom Bill?: "+bmm01a.PHANTOM_BILL$)
 
-        dim pbuf$(pbufwidth)
-            pbuf$(3)="Drawing Number: "+bmm01a.DRAWING_NO$
-            pbuf$(50)="Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE)
-        OutVect!.addItem(pbuf$)
+        xwk=fnblank(1)
+        OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34)))
+        xwk=fnblank(2)
+        OutVect!.addItem("Unit Of Measure: "+bmm01a.UNIT_MEASURE$)
 
-        dim pbuf$(pbufwidth)
-            pbuf$(1)="Drawing Revision:"+bmm01a.DRAWING_REV$
-            pbuf$(24)="Revision Code: "+bmm01a.BILL_REV$
-            pbuf$(42)="Created: "+fndate$(bmm01a.CREATE_DATE$)
-            pbuf$(60)="Revised: "+fndate$(bmm01a.LSTRVS_DATE$)
-        OutVect!.addItem(pbuf$)
+        xwk=fnblank(1)
+        OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32)))
+        xwk=fnblank(2)
+        OutVect!.addItem("Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00"))
 
-        dim pbuf$(pbufwidth)
-            pbuf$(62)="As Of: "+fndate$(pdate$)
-        OutVect!.addItem(pbuf$)
+        OutVect!.addItem("Drawing Number: "+bmm01a.DRAWING_NO$)
+        xwk=fnblank(3)
+        OutVect!.addItem("Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE))
 
-        dim pbuf$(pbufwidth)
-            pbuf$(1)=fill(80,"-")
-        OutVect!.addItem(pbuf$)
+        OutVect!.addItem("Drawing Revision:"+bmm01a.DRAWING_REV$)
+        OutVect!.addItem("Revision Code: "+bmm01a.BILL_REV$)
+        OutVect!.addItem("Created: "+fndate$(bmm01a.CREATE_DATE$))
+        OutVect!.addItem("Revised: "+fndate$(bmm01a.LSTRVS_DATE$))
+        OutVect!.addItem("As Of: "+fndate$(pdate$))
 
-        dim pbuf$(pbufwidth)
-            pbuf$(1)="Op Seq"
-            pbuf$(9)="Component"
-            pbuf$(41)="U/M"
-            pbuf$(55-p1)="Quantity"
-            pbuf$(70)="Picked"
-        OutVect!.addItem(pbuf$)
+        OutVect!.addItem(fill(40,"-"))
+        OutVect!.addItem(fill(20,"-"))
+        OutVect!.addItem(fill(20,"-"))
+        OutVect!.addItem(fill(20,"-"))
+        OutVect!.addItem(fill(25,"-"))
+        OutVect!.addItem(fill(20," ")+"Op Seq")
+        OutVect!.addItem("Component")
+        OutVect!.addItem("U/M")
+        OutVect!.addItem("Quantity")
+        OutVect!.addItem("Picked")
+        OutVect!.addItem(fill(40,"-"))
+        OutVect!.addItem(fill(20,"-"))
+        OutVect!.addItem(fill(20,"-"))
+        OutVect!.addItem(fill(20,"-"))
+        OutVect!.addItem(fill(25,"-"))
 
-        dim pbuf$(pbufwidth)
-            pbuf$(1)=fill(80,"-")
-        OutVect!.addItem(pbuf$)
 
 rem --- Detail
 
@@ -149,9 +142,9 @@ rem --- Main Loop Starts
         if cvs(bmm02a.OBSOLT_DATE$,3)<>"" and bmm02a.OBSOLT_DATE$<=pdate$ then continue
 
         if bmm02a.LINE_TYPE$<>"S" then
-            dim pbuf$(pbufwidth)
-                pbuf$(9)=bmm02a.EXT_COMMENTS$
-            OutVect!.addItem(pbuf$)
+            xwk=fnblank(1)
+            OutVect!.addItem(bmm02a.EXT_COMMENTS$)
+            xwk=fnblank(3)
             continue
         endif
 
@@ -168,17 +161,14 @@ addl_reads: rem --- Additional Reads
 
 rem --- Print Detail
 
-        dim pbuf$(pbufwidth)
-            pbuf$(1)=bmm02a.OP_SEQ$
-            pbuf$(9)=bmm02a.ITEM_ID$(1,p[0])
-            pbuf$(41)=bmm02a.UNIT_MEASURE$
-            pbuf$(56-p1)=str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$)
-            pbuf$(68)=fill(10,"_")
-        OutVect!.addItem(pbuf$)
-
-        dim pbuf$(pbufwidth)
-            pbuf$(12)=ivm01a.ITEM_DESC$
-        OutVect!.addItem(pbuf$)
+        OutVect!.addItem(fill(20," ")+bmm02a.OP_SEQ$)
+        OutVect!.addItem(bmm02a.ITEM_ID$(1,p[0]))
+        OutVect!.addItem(bmm02a.UNIT_MEASURE$)
+        OutVect!.addItem(str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$))
+        OutVect!.addItem(fill(10,"_"))
+        xwk=fnblank(1)
+        OutVect!.addItem(ivm01a.ITEM_DESC$)
+        xwk=fnblank(3)
 
 rem --- Serial/Lot Numbers
 
@@ -190,9 +180,9 @@ rem --- Serial/Lot Numbers
         endif
         if ivs01a.LOTSER_FLAG$="L" and bmm02a.QTY_REQUIRED>5 then bmm02a.QTY_REQUIRED=5
         for i=1 to bmm02a.QTY_REQUIRED
-            dim pbuf$(pbufwidth)
-                pbuf$(20)=x$+fill(30,"_")
-            OutVect!.addItem(pbuf$)
+            xwk=fnblank(1)
+            OutVect!.addItem(x$+fill(30,"_"))
+            xwk=fnblank(3)
         next i
 
 rem --- Main Loop Ends
@@ -200,18 +190,18 @@ rem --- Main Loop Ends
 
 rem --- Totals
 
-    OutVect!.addItem("")
-    dim pbuf$(pbufwidth)
-        pbuf$(30)="Assembled __________"
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(5)
+    xwk=fnblank(2)
+    OutVect!.addItem("Assembled __________")
+    xwk=fnblank(2)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(32)="Checked __________"
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(2)
+    OutVect!.addItem("Checked   __________")
+    xwk=fnblank(2)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(33)="Packed __________"
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(2)
+    OutVect!.addItem("Packed    __________")
+    xwk=fnblank(2)
 
 rem --- End
     goto std_exit
@@ -242,6 +232,15 @@ rem --- Date/time handling functions
         def fnyy$(q$)=q$(3,2)
         def fnclock$(q$)=date(0:"%hz:%mz %p")
         def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem #include fndate.src
 
