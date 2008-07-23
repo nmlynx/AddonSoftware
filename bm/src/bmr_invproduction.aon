@@ -9,6 +9,17 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -99,7 +110,7 @@ initial:
     p[1]=num(ivs01a.vendor_prd_len$)
     p[2]=num(ivs01a.precision$)
     p[3]=num(ivs01a.ls_no_len$),lf$="N"
-    if pos(ivs01a.lifofifo$="LF")>0 then let lf$="Y"
+    if pos(ivs01a.lifofifo$="LF")>0 then lf$="Y"
     dim iv_chans[10]
     g[0]=num(gls01a.total_pers$)
     g[1]=num(gls01a.current_per$)
@@ -115,6 +126,7 @@ rem --- Init Data
     h1=120,h=0,h1$=n1$,h2$=n3$,o1$="",o2$="",o1=0
     l9=59
     l=l9+1,headings=3,when$=sysinfo.system_date$,clock$="",glstatus=0
+
     dim headings$[headings]
     dim a[1],s[10],k[11],lx[11],sub[9],b1$(60),c1$(64)
     headings$[0]=h1$
@@ -129,9 +141,11 @@ rem --- Init Data
     wip_acct$=bms01a.gl_wip_acct$
     m0=p[0]
     units=0
-    if m0<6 then let m0=6
+    if m0<6 then m0=6
     places=num(ivs01a.precision$)
     more=1
+
+rem --- Retrieve key templates
     call stbl("+DIR_SYP")+"bac_key_template.bbj","BME_PRODUCT","PRIMARY",bme01a_key_tpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLSUB","PRIMARY",bmm05a_key_tpl$,rd_table_chans$[all],status$
@@ -190,29 +204,22 @@ rem --- Run Report?
     x$=stbl("+SYSINFO")                                                            
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
+
     if msg_opt$<>"Y" then goto std_exit
     
     call pgmdir$+"adc_progress.aon","N","","","","",0,bme01_dev,1,meter_num,status
 
-rem --- Document initializations
-
-    OutVect!=bbjAPI().getSysGui().makeVector()
-    HdrVect!=bbjAPI().getSysGui().makeVector()
-    BrkVect!=bbjAPI().getSysGui().makeVector()
-    rep_date$=date(0:"%Mz/%Dz/%Yd")
-    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-    rep_time$=date(0:"%hz:%mz %p")
-    rep_time_stamp$=date(0:"%Hz%mz%sz")
-
 rem ---  column heading
+rem ,columns$[4,10]="T"
+
     dim columns$[9,10]
     columns=9
     columns$[0,0]="Ref #",           columns$[0,1]="C",columns$[0,2]="20"
     columns$[1,0]="Main Bill Number",columns$[1,1]="C",columns$[1,2]="25"
-    columns$[2,0]="Cost",            columns$[2,1]="N",columns$[2,2]="8",columns$[2,3]=m3$
-    columns$[3,0]="Qty",             columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]=m2$
-    columns$[4,0]="Total",           columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$
-    columns$[5,0]="Update?",         columns$[5,1]="C",columns$[5,2]="5"
+    columns$[2,0]="Cost",            columns$[2,1]="N",columns$[2,2]="8",columns$[2,3]=m3$,columns$[2,10]="T"
+    columns$[3,0]="Qty",             columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]=m2$,columns$[3,10]="T"
+    columns$[4,0]="Total",           columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$,columns$[4,10]="T"
+    columns$[5,0]="Update?",         columns$[5,1]="C",columns$[5,2]="8"
     columns$[6,0]="Available",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
     columns$[7,0]="Required",        columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
     columns$[8,0]="Shortage",        columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m2$
@@ -226,15 +233,16 @@ rem --- Initial Read
 
 rem --- Heading Read
     while more
+
         value=0
-        readrecord (bme01_dev,end=done) bme01a$
+        read record (bme01_dev,end=done) bme01a$
 
 rem --- Breaks
 
-        if bme01a.firm_id$<>firm_id$ goto done; rem " --- Company"
-        if bme01a.warehouse_id$<>t0$ gosub warehouse; rem " --- Warehouse"
-        if bme01a.prod_date$<>t1$ gosub date_sub; rem " --- Production Date"
-        if bme01a.bm_reference$<>t2$ gosub reference; rem " --- Reference Number"
+        if bme01a.firm_id$<>firm_id$ then goto done; rem " --- Company"
+        if bme01a.warehouse_id$<>t0$ then gosub warehouse; rem " --- Warehouse"
+        if bme01a.prod_date$<>t1$ then gosub date_sub; rem " --- Production Date"
+        if bme01a.bm_reference$<>t2$ then gosub reference; rem " --- Reference Number"
         call pgmdir$+"adc_progress.aon","S","","","",bme01a.warehouse_id$+" "+bme01a.bm_reference$+" "+bme01a.item_id$,0,0,1,meter_num,status
         ref1$="Whse "+bme01a.warehouse_id$
         ref2$=bme01a.bm_reference$,ref3$="Prod Entry"
@@ -248,7 +256,7 @@ rem --- Get Item Info
 rem --- Additional Reads
 
         read record (bmm01_dev,key=bme01a.firm_id$+bme01a.item_id$,dom=*next) bmm01a1$
-        if bmm01a.est_yield=0 then let bmm01a.est_yield=100
+        if bmm01a.est_yield=0 then bmm01a.est_yield=100
 
 rem --- Print Bill
 
@@ -307,7 +315,7 @@ print_components: rem --- Print Components
             xwk=fnblank(9)
             OutVect!.addItem("     "+b1$)
             xwk=fnblank(4)
-            if bmm02a.divisor=0 then let bmm02a.divisor=1
+            if bmm02a.divisor=0 then bmm02a.divisor=1
             OutVect!.addItem(str(ivm02a.qty_on_hand-ivm02a.qty_commit))
             OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered))
             if ivm02a.qty_on_hand-ivm02a.qty_commit<fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered then 
@@ -321,17 +329,17 @@ print_components: rem --- Print Components
         memo$="Variance"
 
         gosub operation_sub
-        if bme01a.qty_ordered=0 then let div0=div0+1
+        if bme01a.qty_ordered=0 then div0=div0+1
         if ap$="Y" then gosub subcontracts
         if ivs01a.cost_method$<>"S" and bme01a.qty_ordered>0 then 
-            let cost=value/bme01a.qty_ordered
+            cost=value/bme01a.qty_ordered
         else
             i0$=bme01a.item_id$
             gosub get_iteminfo
             gldate$=bme01a.prod_date$
             account$=bms01a.gl_prd_var$,cost=unitcost,amount=value-cost*bme01a.qty_ordered
             gosub glrecap
-            if bme01a.update_flag$="N" then let u0$=wip_acct$ else let u0$=ivacct$
+            if bme01a.update_flag$="N" then u0$=wip_acct$ else u0$=ivacct$
             account$=u0$
             amount=-amount
             gosub glrecap
@@ -341,6 +349,8 @@ rem --- Print Total for bme-01 record
 
         t0=t0+cost*bme01a.qty_ordered
         u0=u0+cost*bme01a.qty_ordered,u1=u1+cost*bme01a.qty_ordered
+
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem("Total")
         OutVect!.addItem(bme01a.item_id$)
         OutVect!.addItem(str(cost))
@@ -359,7 +369,7 @@ dist_code: rem --- Dist Code
         u0$=arm10d.gl_inv_acct$
         ivacct$=u0$
     endif
-return
+    return
 
 distributions: rem --- Distribution
 
@@ -370,9 +380,11 @@ distributions: rem --- Distribution
 
 rem --- Update G/L
 
-    if bme01a.update_flag$="N" then let u0$=wip_acct$ else let u0$=ivacct$
+    if bme01a.update_flag$="N" then u0$=wip_acct$ else u0$=ivacct$
     gldate$=bme01a.prod_date$
-    account$=u0$,amount=unitcost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered,memo$="Item "+bme01a.item_id$
+    account$=u0$
+    amount=unitcost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered
+    memo$="Item "+bme01a.item_id$
     precision 2
     amount=amount*1
     value=value+amount
@@ -381,7 +393,7 @@ rem --- Update G/L
     account$=u1$,amount=(-1)*amount,memo$="Item "+ivm02a.item_id$
     gosub glrecap
     precision num(ivs01a.precision$)
-return
+    return
 
 done: rem --- Totals
 
@@ -408,6 +420,7 @@ done: rem --- Totals
         endif 
         goto std_exit
     endif
+
     if short<>0 then
         BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
         xwk=fnblank(11)
@@ -441,7 +454,7 @@ date_heading: rem --- Date Heading
     OutVect!.addItem("Production Date: "+fndate$(t1$))
     xwk=fnblank(19)
     if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,t1$,glstatus,l,errors,status   
-return
+    return
 
 subcontracts: rem --- Subcontracts
 
@@ -455,8 +468,8 @@ subcontracts: rem --- Subcontracts
         if cvs(bmm05a.effect_date$,3)<>"" and bme01a.prod_date$<bmm05a.effect_date$ then continue
         if cvs(bmm05a.obsolt_date$,3)<>"" and bme01a.prod_date$>=bmm05a.obsolt_date$ then continue
         if bmm05a.line_type$<>"S" then continue
-        if bme01a.update_flag$="N" then let u0$=wip_acct$ else let u0$=ivacct$
-        if bmm05a.divisor=0 then let bmm05a.divisor=1
+        if bme01a.update_flag$="N" then u0$=wip_acct$ else u0$=ivacct$
+        if bmm05a.divisor=0 then bmm05a.divisor=1
         a0=bme01a.qty_ordered*bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)
         gldate$=bme01a.prod_date$
         account$=u0$,amount=a0,value=value+amount,memo$="Item "+cvs(bme01a.item_id$,2)+" "+bmm05a.ext_comments$
@@ -465,7 +478,7 @@ subcontracts: rem --- Subcontracts
         amount=-a0
         gosub glrecap
     wend
-return
+    return
 
 lifo_fifo: rem --- LIFO/FIFO
 
@@ -473,34 +486,38 @@ lifo_fifo: rem --- LIFO/FIFO
     item$[0]=firm_id$
     item$[1]=bme01a.warehouse_id$,item$[2]=bmm02a.item_id$,type$="R",lf_date$=bme01a.prod_date$
     iv_chans[0]=ivm04_dev
-    iv_chans[1]=ivw04_dev,iv_chans[2]=ivm02_dev
+    iv_chans[1]=ivw04_dev
+    iv_chans[2]=ivm02_dev
     action$=ivs01a.lifofifo$+"I"
-    qty=abs(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered),cost=unitcost,ivw05a.unit_cost=0
+    qty=abs(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered)
+    cost=unitcost
+    ivw05a.unit_cost=0
     if fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered<0 then 
 
 rem --- Inquires For Tier Cost For Returned Items
         action$(2,1)="R"
         type$="I"
         call pgmdir$+"ivc_lf.aon",action$,type$,lf_date$,iv_chans[all],item$[all],places,qty,cost,ret_cost,status
-        if ret_cost<>0 then let cost=ret_cost
+        if ret_cost<>0 then cost=ret_cost
         type$="R"
      endif       
 
      call pgmdir$+"ivc_lf.aon",action$,type$,lf_date$,iv_chans[all],item$[all],places,qty,cost,ret_cost,status
-     if ret_cost<>0 then let ivw05a.unit_cost=ret_cost
+     if ret_cost<>0 then ivw05a.unit_cost=ret_cost
      w9$=fill(17)+bmm02a.item_id$+bmmo2a.material_seq$
      write record (ivw05_dev,key=w9$) ivw05a$
-return
+     return
 
 warehouse: rem --- Warehouse
 
     if t0$<>"" then 
-        if t9$="" then let t9$="A"
+        if t9$="" then t9$="A"
         gosub date_sub
-        if t9$="A" then let t9$=""
+        if t9$="A" then t9$=""
         xwk=fnblank(4)
-        OutVect!.addItem(dashes$)
-        xwk=fnblank(6)
+        xwk=fnblank(7)
+
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem("Warehouse Total:")
         xwk=fnblank(2)
         OutVect!.addItem(str(t0))
@@ -515,15 +532,16 @@ warehouse: rem --- Warehouse
     headings$[2]="For Warehouse "+h3$
 call_pgm:
     if gl$="Y" then call pgmdir$+"glc_datecheck.aon",t1$,"N",period$,year$,glstatus
-return
+    return
 
 date_sub: rem --- Date
 
     if t1$<>"" then 
         gosub reference
         xwk=fnblank(4)
-        OutVect!.addItem(dashes$)
-        xwk=fnblank(6)
+        xwk=fnblank(7)
+
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem("Date Total:")
         xwk=fnblank(2)
         OutVect!.addItem(str(u0))
@@ -534,7 +552,7 @@ date_sub: rem --- Date
     t1$=bme01a.prod_date$
     if gl$="Y" then call pgmdir$+"glc_datecheck.aon",t1$,"N",period$,year$,glstatus
     gosub date_heading
-return
+    return
 
 get_iteminfo: rem --- Item
 
@@ -544,7 +562,7 @@ get_iteminfo: rem --- Item
     b1$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
     b1$=b1$+fill(62-len(b1$))
     read record (ivm02_dev,key=firm_id$+bme01a.warehouse_id$+i0$,dom=*next) ivm02a$
-return
+    return
 
 operation_sub: rem --- Operation
 
@@ -560,12 +578,17 @@ operation_sub: rem --- Operation
         if bmm03a.line_type$="M" then continue
         find record (bmm08_dev,key=bmm03a.firm_id$+bmm03a.op_code$,dom=message1) bmm08a$
         goto assignment
-        message1:
-            o2$=o2$+"** Missing Operation Code In Bill Number "+bmm03a.bill_no$+" Sequence "+bmm03a.op_seq$+" **"+'lf'
-    assignment:
-        if bmm01a.std_lot_size=0 then let bmm01a.std_lot_size=1
-        if bmm03a.pcs_per_hour=0 then let bmm03a.pcs_per_hour=1
-        if bme01a.qty_ordered<>0 then let a0=fnop2(bme01a.qty_ordered,bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time) else let a0=0
+message1:
+        o2$=o2$+"** Missing Operation Code In Bill Number "+bmm03a.bill_no$+" Sequence "+bmm03a.op_seq$+" **"+'lf'
+assignment:
+        if bmm01a.std_lot_size=0 then bmm01a.std_lot_size=1
+        if bmm03a.pcs_per_hour=0 then bmm03a.pcs_per_hour=1
+        if bme01a.qty_ordered<>0 then 
+            a0=fnop2(bme01a.qty_ordered,bmm03a.hrs_per_pce,bmm08a.direct_rate,
+:           bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time) 
+        else 
+            a0=0
+        endif    
         a1=a0*bmm08a.ovhd_factor
 
     rem --- Direct Labor
@@ -576,7 +599,7 @@ operation_sub: rem --- Operation
         gldate$=bme01a.prod_date$
         account$=bmm08a.gl_dir_lab$,amount=-a0,memo$="Item "+cvs(bme01a.item_id$,2)+" "+bmm08a.code_desc$
         gosub glrecap
-        if bme01a.update_flag$="N" then let u0$=wip_acct$ else let u0$=ivacct$
+        if bme01a.update_flag$="N" then u0$=wip_acct$ else u0$=ivacct$
         gldate$=bme01a.prod_date$
         account$=u0$,amount=a0,value=value+amount
         gosub glrecap
@@ -586,20 +609,20 @@ operation_sub: rem --- Operation
         gldate$=bme01a.prod_date$
         account$=bmm08a.gl_ovh_var$,amount=-a1
         gosub glrecap
-        if bme01a.update_flag$="N" then let u0$=wip_acct$ else let u0$=ivacct$
+        if bme01a.update_flag$="N" then u0$=wip_acct$ else u0$=ivacct$
         gldate$=bme01a.prod_date$
         account$=u0$,amount=a1,value=value+amount
         gosub glrecap
         precision num(ivs01a.precision$)
     wend
-return
+    return
 
 reference: rem --- Reference Total
-
     if t2$<>"" then 
         xwk=fnblank(4)
-        OutVect!.addItem(dashes$)
-        xwk=fnblank(6)
+        xwk=fnblank(7)
+
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem("Reference Total:")
         xwk=fnblank(2)
         OutVect!.addItem(str(u1))
@@ -608,7 +631,7 @@ reference: rem --- Reference Total
      if t9$<>"" then return
      u1=0
      t2$=bme01a.bm_reference$
-return
+    return
 
 explodephantoms: rem --- Explode Phantoms
 
@@ -621,26 +644,26 @@ explodephantoms: rem --- Explode Phantoms
     channel[7]=sys01_dev,channel[8]=glm01_dev
     channel[9]=glw11_dev
     channel[10]=arm10d_dev,channel[11]=glt14_dev
-    let channel[12]=ivm04_dev,channel[13]=ivw04_dev,channel[14]=ivw05_dev
-    let channel[15]=bmm02_dev
-    let info$[0]=bmm02a.item_id$,info$[1]=ref1$,info$[2]=ref2$,info$[3]=ap$,info$[4]=ar_dist$
-    let info$[5]=o2$,info$[6]=bme01a.warwhouse_id$,info$[7]=bme01a.prod_date$,info$[8]=bme01a.update_flag$
-    let info$[9]=gl$,info$[10]=t1$,info$[11]=ivacct$
-    let info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=l,info[2]=l9,info[3]=headings
-    let info[4]=short,info[5]=o1,info[6]=0,info[7]=u0,info[8]=u1,info[9]=1
-    let info[10]=h,info[12]=glstatus,info[13]=bmm01a.est_yield*lbmm08a.setup_time/100,info[14]=value
+    channel[12]=ivm04_dev,channel[13]=ivw04_dev,channel[14]=ivw05_dev
+    channel[15]=bmm02_dev
+    info$[0]=bmm02a.item_id$,info$[1]=ref1$,info$[2]=ref2$,info$[3]=ap$,info$[4]=ar_dist$
+    info$[5]=o2$,info$[6]=bme01a.warwhouse_id$,info$[7]=bme01a.prod_date$,info$[8]=bme01a.update_flag$
+    info$[9]=gl$,info$[10]=t1$,info$[11]=ivacct$
+    info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=l,info[2]=l9,info[3]=headings
+    info[4]=short,info[5]=o1,info[6]=0,info[7]=u0,info[8]=u1,info[9]=1
+    info[10]=h,info[12]=glstatus,info[13]=bmm01a.est_yield*lbmm08a.setup_time/100,info[14]=value
     call pgmdir$+"bmc_fa.aon",channel[all],info$[all],info[all],headings$[all],bme01a.item_id$
     if info[11]>0 then exitto std_exit
-    let o2$=info$[5]
-    let l=info[1],short=info[4],o1=info[5],u0=info[7],u1=info[8],h=info[10],value=info[14]
-return
+    o2$=info$[5]
+    l=info[1],short=info[4],o1=info[5],u0=info[7],u1=info[8],h=info[10],value=info[14]
+    return
 
 glrecap: rem --- Standard G/L Recap Routine
 
     if gl$="Y" then 
         call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,glt14_dev,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
     endif
-return
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -724,6 +747,7 @@ rem #include disp_message.src
 disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
 return
 	
 rem #endinclude disp_message.src
