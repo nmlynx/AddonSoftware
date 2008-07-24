@@ -9,11 +9,12 @@ rem --- All Rights Reserved
 
     setesc std_error
     seterr std_error
-    enter o9,printer_dev,bill_no$,page,comment$,sub$,warehouse$,select$,pdate$,rd_table_chans$[all],OutVect!,status
+    enter o9,printer_dev,bill_no$,page,comment$,sub$,warehouse$,select$,pdate$,rd_table_chans$[all],OutVect!,status,TotVect!,columns
 
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
+
 
 rem --- Retrieve sysinfo data
 
@@ -73,7 +74,7 @@ rem --- Retrieve parameter records
 label_one:
     dim p[2],desc[3]
     p[0]=num(ivs01a.item_id_len$)
-    if num(ivs01a.precision$)>bms01a.bm_precision then let bms01a.bm_precision=num(ivs01a.precision$)
+    if num(ivs01a.precision$)>bms01a.bm_precision then  bms01a.bm_precision=num(ivs01a.precision$)
 
 rem --- Initialize Data
 
@@ -82,7 +83,7 @@ rem --- Initialize Data
     dim bmm02a_key$:bmm02a_key_tpl$
     dim bmm09a_key$:bmm09a_key_tpl$
     more=1
-    if warehouse$="" then let warehouse$=ivs01a.warehouse_id$
+    if warehouse$="" then warehouse$=ivs01a.warehouse_id$
     t0=0
     dim j$(80,"-")
     dim z$(80," ")
@@ -109,7 +110,7 @@ rem --- Print Material Information
     read record (bmm01_dev,key=firm_id$+bill_no$,dom=std_exit) bmm01a$
     gosub lot_size_yield
     mattot=0
-    if sub$<>"" then let part$=sub$(1,20) else let part$=bill_no$
+    if sub$<>"" then part$=sub$(1,20) else part$=bill_no$
     gosub material_heading
     read (bmm02_dev,key=firm_id$+part$,dom=*next)
 
@@ -124,10 +125,9 @@ rem --- Print Material Information
         endif
 
         if bmm02a.LINE_TYPE$="M" then
-            dim pbuf$(pbufwidth)
-                pbuf$(1)=bmm02a.MATERIAL_SEQ$
-                pbuf$(5)=bmm02a.EXT_COMMENTS$
-            OutVect!.addItem(pbuf$)
+                OutVect!.addItem(bmm02a.MATERIAL_SEQ$)
+                OutVect!.addItem(bmm02a.EXT_COMMENTS$)
+                xwk=fnblank(6)
         else
             find record (ivm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=label_two) ivm01a$
             x0$(1)=fnitem$(ivm01a.ITEM_DESC$,desc[1],desc[2],desc[3])
@@ -137,29 +137,31 @@ label_two:
             subbill$="*"
 label_three:
             find record (ivm02_dev,key=firm_id$+warehouse$+bmm02a.ITEM_ID$,dom=*next) ivm02a$
+
             matcost=ivm02a.unit_cost*fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,yield,bmm02a.SCRAP_FACTOR)
-            dim pbuf$(pbufwidth)
-                pbuf$(1)=bmm02a.MATERIAL_SEQ$+subbill$
-                pbuf$(5)=bmm02a.ITEM_ID$(1,p[0])
-                pbuf$(25)=str(bmm02a.DIVISOR:bms01a.HRQTY_MASK$)
-                pbuf$(34)=str(bmm02a.QTY_REQUIRED:bms01a.HRQTY_MASK$)
-                pbuf$(43)=str(bmm02a.ALT_FACTOR:bms01a.MAT_FAC_MSK$)
-                pbuf$(52)=str(bmm02a.SCRAP_FACTOR:bms01a.MAT_FAC_MSK$)
-                pbuf$(61)=str(ivm02a.unit_cost:ivs01a.PRICE_MASK$)
-                pbuf$(70)=str(matcost:ivs01a.PRICE_MASK$)
-            OutVect!.addItem(pbuf$)
 
-            dim pbuf$(pbufwidth)
-                pbuf$(5)=ivm01a.item_desc$(1,30)
-                pbuf$(37)="Op Seq: "+bmm02a.OP_SEQ$
-                pbuf$(50)="U/M: "+bmm02a.UNIT_MEASURE$
-                pbuf$(58)="Net Qty: "+str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,yield,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$)
-            OutVect!.addItem(pbuf$)
+            OutVect!.addItem(bmm02a.MATERIAL_SEQ$+subbill$)
+            OutVect!.addItem(bmm02a.ITEM_ID$(1,p[0]))
+            OutVect!.addItem(str(bmm02a.DIVISOR:bms01a.HRQTY_MASK$))
+            OutVect!.addItem(str(bmm02a.QTY_REQUIRED:bms01a.HRQTY_MASK$))
+            OutVect!.addItem(str(bmm02a.ALT_FACTOR:bms01a.MAT_FAC_MSK$))
+            OutVect!.addItem(str(bmm02a.SCRAP_FACTOR:bms01a.MAT_FAC_MSK$))
+            OutVect!.addItem(str(ivm02a.unit_cost:ivs01a.PRICE_MASK$))
+            OutVect!.addItem(str(matcost:ivs01a.PRICE_MASK$))
 
+            xwk=fnblank(1)
+            OutVect!.addItem(ivm01a.item_desc$(1,30))
+            xwk=fnblank(1)
+            OutVect!.addItem("Op Seq: "+bmm02a.OP_SEQ$)
+            OutVect!.addItem("U/M: "+bmm02a.UNIT_MEASURE$)
+            OutVect!.addItem("Net Qty: "+str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,yield,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$))
+            xwk=fnblank(2)
             mattot=mattot+matcost
         endif
         if select$="C" then continue
     wend
+
+    xwk=fnblank(8)
 
 rem --- Print Operation Information
 
@@ -172,54 +174,62 @@ rem --- Print Operation Information
         if firm_id$+part$<>bmm03a.FIRM_ID$+bmm03a.BILL_NO$ then break
 
         if select$<>"A" then
-            if cvs(bmm03a.EFFECT_DATE$,3)<>"" then if bmm03a.EFFECT_DATE$>pdate$ then continue
-            if cvs(bmm03a.OBSOLT_DATE$,3)<>"" then if bmm03a.OBSOLT_DATE$<=pdate$ then continue
+            if cvs(bmm03a.EFFECT_DATE$,3)<>"" and bmm03a.EFFECT_DATE$>pdate$ then continue
+            if cvs(bmm03a.OBSOLT_DATE$,3)<>"" and bmm03a.OBSOLT_DATE$<=pdate$ then continue
             endif
         endif
+
         if bmm03a.LINE_TYPE$="M" then
-            dim pbuf$(pbufwidth)
-                pbuf$(1)=bmm03a.OP_SEQ$
-                pbuf$(5)=bmm03a.EXT_COMMENTS$
-            OutVect!.addItem(pbuf$)
+            OutVect!.addItem(bmm03a.OP_SEQ$)
+            OutVect!.addItem(cvs(bmm03a.EXT_COMMENTS$,3))
+            xwk=fnblank(6)
         else 
             let bmm08a.CODE_DESC$="Not On File"
             bmm08a.DIRECT_RATE=0
             read record (bmm08_dev,key=bmm03a.FIRM_ID$+bmm03a.OP_CODE$,dom=*next) bmm08a$
-            if bmm03a.PCS_PER_HOUR=0 then let bmm03a.PCS_PER_HOUR=1
-            if lot=0 then let lot=1
+            if bmm03a.PCS_PER_HOUR=0 then bmm03a.PCS_PER_HOUR=1
+            if lot=0 then lot=1
             dir_labcost=fnop1(bmm03a.HRS_PER_PCE,bmm08a.DIRECT_RATE,bmm03a.PCS_PER_HOUR,yield,bmm03a.SETUP_TIME,lot)
             oh_labcost=dir_labcost*bmm08a.OVHD_FACTOR
-            dim pbuf$(pbufwidth)
-                pbuf$(1)=bmm03a.OP_SEQ$
-                pbuf$(5)=bmm03a.OP_CODE$
-                pbuf$(29)=str(bmm03a.SETUP_TIME:m6$)
-                pbuf$(37)=str(bmm03a.HRS_PER_PCE:bms01a.HRQTY_MASK$)
-                pbuf$(47)=str(bmm03a.PCS_PER_HOUR:bms01a.MAT_FAC_MSK$)
-                pbuf$(67)=str(100*(bmm03a.HRS_PER_PCE/bmm03a.PCS_PER_HOUR)/yield+bmm03a.SETUP_TIME/lot:bms01a.HRQTY_MASK$)
-                if wo$="Y" then 
-                    pbuf$(19,len(str(bmm08a.QUEUE_TIME:m6$)))=str(bmm08a.QUEUE_TIME:m6$)
-                    pbuf$(59,len(str(bmm03a.MOVE_TIME:m6$)))=str(bmm03a.MOVE_TIME:m6$)
+
+                OutVect!.addItem(bmm03a.OP_SEQ$)
+                OutVect!.addItem(bmm03a.OP_CODE$)
+                if wo$="Y" then
+                    OutVect!.addItem(str(bmm08a.QUEUE_TIME:m6$))
+                else
+                    xwk=fnblank(1)
                 endif
-            OutVect!.addItem(pbuf$)
-            dim pbuf$(pbufwidth)
-                pbuf$(5)=bmm08a.CODE_DESC$
-                pbuf$(41)=str(bmm08a.DIRECT_RATE:bms01a.HRQTY_MASK$)
-                pbuf$(51)=str(dir_labcost:ivs01a.PRICE_MASK$)
-                pbuf$(61)=str(oh_labcost:ivs01a.PRICE_MASK$)
-                pbuf$(71)=str(dir_labcost+oh_labcost:ivs01a.PRICE_MASK$)
-            OutVect!.addItem(pbuf$)
+                OutVect!.addItem(str(bmm03a.SETUP_TIME:m6$))
+                OutVect!.addItem(str(bmm03a.HRS_PER_PCE:bms01a.HRQTY_MASK$))
+                OutVect!.addItem(str(bmm03a.PCS_PER_HOUR:bms01a.MAT_FAC_MSK$))
+                if wo$="Y" then
+                    OutVect!.addItem(str(bmm03a.MOVE_TIME:m6$))
+                else
+                    xwk=fnblank(1)   
+                endif
+                OutVect!.addItem(str(100*(bmm03a.HRS_PER_PCE/bmm03a.PCS_PER_HOUR)/yield+bmm03a.SETUP_TIME/lot:bms01a.HRQTY_MASK$))
+
+            xwk=fnblank(1)
+            OutVect!.addItem(bmm08a.CODE_DESC$)
+            xwk=fnblank(2)
+            OutVect!.addItem(str(bmm08a.DIRECT_RATE:bms01a.HRQTY_MASK$))
+            OutVect!.addItem(str(dir_labcost:ivs01a.PRICE_MASK$))
+            OutVect!.addItem(str(oh_labcost:ivs01a.PRICE_MASK$))
+            OutVect!.addItem(str(dir_labcost+oh_labcost:ivs01a.PRICE_MASK$))
             
             dir_labtot=dir_labtot+dir_labcost
             oh_labtot=oh_labtot+oh_labcost
         endif
 
-        if select$="C" continue
-        dim pbuf$(pbufwidth)
-            pbuf$(7)="Effective: "+fndate$(bmm03a.EFFECT_DATE$)
-            pbuf$(35)="Obsolete: "+fndate$(bmm03a.OBSOLT_DATE$)
-        OutVect!.addItem(pbuf$)
-    wend
+        if select$="C" then continue
+        xwk=fnblank(1)
+        OutVect!.addItem("Effective: "+fndate$(bmm03a.EFFECT_DATE$))
+        OutVect!.addItem("Obsolete: ")
+        OutVect!.addItem(fndate$(bmm03a.OBSOLT_DATE$))
+        xwk=fnblank(4)
 
+    wend
+    xwk=fnblank(8)
 
 rem --- Print Subcontract Information
 
@@ -233,35 +243,42 @@ rem --- Print Subcontract Information
                 if cvs(bmm05a.EFFECT_DATE$,3)<>"" and bmm05a.EFFECT_DATE$>pdate$ then continue
                 if cvs(bmm05a.OBSOLT_DATE$,3)<>"" and bmm05a.OBSOLT_DATE$<=pdate$ then continue
             endif
+
             if bmm05a.LINE_TYPE$<>"S" then
-                dim pbuf$(pbufwidth)
-                    pbuf$(1)=bmm05a.SUBCONT_SEQ$+" "+bmm05a.LINE_TYPE$+" "+bmm05a.EXT_COMMENTS$
-                OutVect!.addItem(pbuf$)
+                OutVect!.addItem(bmm05a.SUBCONT_SEQ$+" "+bmm05a.LINE_TYPE$)
+                OutVect!.addItem(bmm05a.EXT_COMMENTS$)
+                xwk=fnblank(6)
                 continue
             endif
             find record (apm01_dev,key=firm_id$+bmm05a.VENDOR_ID$,dom=*next) apm01a$
-            dim pbuf$(pbufwidth)
-                pbuf$(1)=bmm05a.SUBCONT_SEQ$+" "+bmm05a.LINE_TYPE$+" "+fnmask$(bmm05a.VENDOR_ID$(1,vlen),vmask$)+" "+apm01a.vendor_name$(1,25-len(vmask$))
-                pbuf$(33)=str(bmm05a.DIVISOR:bms01a.HRQTY_MASK$)
-                pbuf$(42)=str(bmm05a.QTY_REQUIRED:bms01a.HRQTY_MASK$)
-                pbuf$(51)=str(bmm05a.ALT_FACTOR:bms01a.MAT_FAC_MSK$)
-                pbuf$(60)=str(bmm05a.UNIT_COST:ivs01a.PRICE_MASK$)
-                pbuf$(69)=str(bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):ivs01a.PRICE_MASK$)
-            OutVect!.addItem(pbuf$)
-            dim pbuf$(pbufwidth)
-                pbuf$(6)=bmm05a.EXT_COMMENTS$(1,30)
-                pbuf$(38)="Ld: "+str(bmm05a.LEAD_TIME:p4$)
-                pbuf$(47)="U/M: "+bmm05a.UNIT_MEASURE$
-                pbuf$(55)="Op: "+bmm05a.OP_SEQ$
-                pbuf$(63)="Net Qty:"+str(fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):bms01a.HRQTY_MASK$)
-            OutVect!.addItem(pbuf$)
+
+            OutVect!.addItem(bmm05a.SUBCONT_SEQ$+" "+bmm05a.LINE_TYPE$)
+            OutVect!.addItem(fnmask$(bmm05a.VENDOR_ID$(1,vlen),vmask$)+" "+apm01a.vendor_name$(1,25-len(vmask$)))
+            OutVect!.addItem(str(bmm05a.DIVISOR:bms01a.HRQTY_MASK$))
+            OutVect!.addItem(str(bmm05a.QTY_REQUIRED:bms01a.HRQTY_MASK$))
+            OutVect!.addItem(str(bmm05a.ALT_FACTOR:bms01a.MAT_FAC_MSK$))
+            OutVect!.addItem(str(bmm05a.UNIT_COST:ivs01a.PRICE_MASK$))
+            OutVect!.addItem(str(bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):ivs01a.PRICE_MASK$))
+            xwk=fnblank(1)
+
+            xwk=fnblank(1)
+            OutVect!.addItem(bmm05a.EXT_COMMENTS$(1,30))
+            OutVect!.addItem("Ld: "+str(bmm05a.LEAD_TIME:p4$))
+            OutVect!.addItem("U/M: "+bmm05a.UNIT_MEASURE$)
+            OutVect!.addItem("Op: "+bmm05a.OP_SEQ$)
+            OutVect!.addItem("Net Qty:"+str(fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):bms01a.HRQTY_MASK$))
+            xwk=fnblank(2)
+
             sub_cost=sub_cost+bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR)
             if select$="C" continue
-            dim pbuf$(pbufwidth)
-                pbuf$(7)="Effective: "+fndate$(bmm05a.EFFECT_DATE$)
-                pbuf$(35)="Obsolete: "+fndate$(bmm05a.OBSOLT_DATE$)
-            OutVect!.addItem(pbuf$)
+
+            xwk=fnblank(1)
+            OutVect!.addItem("Effective: "+fndate$(bmm05a.EFFECT_DATE$))
+            OutVect!.addItem("Obsolete: ")
+            OutVect!.addItem(fndate$(bmm05a.OBSOLT_DATE$))
+            xwk=fnblank(4)
         wend
+        xwk=fnblank(8)
     endif
 
 rem --- Print Total Information
@@ -277,10 +294,9 @@ rem --- Comments
             bmm09a_key$=key(bmm09_dev,end=*break)
             if pos(firm_id$+part$=bmm09a_key$)<>1 then break
             read record (bmm09_dev,key=bmm09a_key$) bmm09a$
-            dim pbuf$(pbufwidth)
-                pbuf$(1)=bmm09a.SEQUENCE_NUM$
-                pbuf$(7)=bmm09a.STD_COMMENTS$
-            OutVect!.addItem(pbuf$)
+            OutVect!.addItem(bmm09a.SEQUENCE_NUM$)
+            OutVect!.addItem(bmm09a.STD_COMMENTS$)
+            xwk=fnblank(6)
         wend
     endif
 
@@ -289,140 +305,148 @@ rem --- End
     goto std_exit
 
 material_heading: rem --- Material Heading
- 
-    dim pbuf$(pbufwidth)
-        pbuf$(1)=j$
-        pbuf$(8,len("Material Information"))="Material Information"
-    OutVect!.addItem(pbuf$)
-    OutVect!.addItem("")
 
-    dim pbuf$(pbufwidth)
-        pbuf$(38)="Qty"
-        pbuf$(46)="Alt"
-        pbuf$(55)="Scrap"
-        pbuf$(65)="Unit"
-        pbuf$(73)="Total"
-    OutVect!.addItem(pbuf$)
+    OutVect!.addItem(fill(10,"-"))
+    OutVect!.addItem(fill(35,"-")+"Material Information-------------")
+    OutVect!.addItem(fill(15,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(22,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(10,"-"))
 
-    dim pbuf$(pbufwidth)
-        pbuf$(1)="Seq"
-        pbuf$(5)="Item"
-        pbuf$(26)="Divisor"
-        pbuf$(38)="Reqd"
-        pbuf$(45)="Factor"
-        pbuf$(54)="Factor"
-        pbuf$(65)="Cost"
-        pbuf$(74)="Cost"
-    OutVect!.addItem(pbuf$)
-    OutVect!.addItem("")
+    xwk=fnblank(3)
+    OutVect!.addItem("Qty")
+    OutVect!.addItem("Alt")
+    OutVect!.addItem("Scarp")
+    OutVect!.addItem("Unit")
+    OutVect!.addItem("Unit")
+
+    OutVect!.addItem("Seq")
+    OutVect!.addItem("Item")
+    OutVect!.addItem("Divisor")
+    OutVect!.addItem("Reqd")
+    OutVect!.addItem("Factor")
+    OutVect!.addItem("Factor")
+    OutVect!.addItem("Cost")
+    OutVect!.addItem("Cost")
+
+    xwk=fnblank(8)
+
 return
 
 operation_heading: rem --- Operation Heading
 
-    OutVect!.addItem(z$)
-    OutVect!.addItem("")
-    dim pbuf$(pbufwidth)
-        pbuf$(1)=j$
-        pbuf$(8,len("Operation Information"))="Operation Information"
-    OutVect!.addItem(pbuf$)
-    OutVect!.addItem("")
+    OutVect!.addItem(fill(10,"-"))
+    OutVect!.addItem(fill(35,"-")+"Operation Information-------------")
+    OutVect!.addItem(fill(15,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(22,"-"))
+    OutVect!.addItem(fill(15,"-"))
+    OutVect!.addItem(fill(10,"-"))
 
-    dim pbuf$(pbufwidth)
-        pbuf$(5)="Op Code"
-        pbuf$(30)="Setup"
-        pbuf$(36)="Hrs/Piece"
-        pbuf$(47)="Piece/Hr"
-        pbuf$(68)="Net Hrs"
-        if wo$="Y" then 
-            pbuf$(20,len("Queue"))="Queue"
-            pbuf$(61,len("Move"))="Move"
-        endif
-    OutVect!.addItem(pbuf$)
-    dim pbuf$(pbufwidth)
-        pbuf$(1)="Seq"
-        pbuf$(5)="Description"
-        pbuf$(41)="Dir Rate"
-        pbuf$(51)="Dir Cost"
-        pbuf$(61)="O/H Cost"
-        pbuf$(71)="Tot Cost"
-    OutVect!.addItem(pbuf$)
-    OutVect!.addItem("")
-return
+    xwk=fnblank(1)
+    OutVect!.addItem("Op Code")
+    if wo$="Y" then
+        OutVect!.addItem("Queue")
+    else
+        xwk=fnblank(1)
+    endif
+    OutVect!.addItem("Setup")
+    OutVect!.addItem("Hrs/Piece")
+    OutVect!.addItem("Piece/Hr")
+    if wo$="Y" then
+        OutVect!.addItem("Move")
+    else
+        xwk=fnblank(1)
+    endif
+    OutVect!.addItem("Net Hrs")
+
+    OutVect!.addItem("Seq")
+    OutVect!.addItem("Description")
+    xwk=fnblank(2)
+    OutVect!.addItem("Dir Rate")
+    OutVect!.addItem("Dir Cost")
+    OutVect!.addItem("O/H Cost")
+    OutVect!.addItem("Tot Cost")
+    xwk=fnblank(8)
+    return
 
 subcontract_heading: rem --- Subcontract Heading
 
-    OutVect!.addItem(z$)
-    OutVect!.addItem("")
-    dim pbuf$(pbufwidth)
-        pbuf$(1)=j$
-        pbuf$(8,len("Subcontract Information"))="Subcontract Information"
-    OutVect!.addItem(pbuf$)
-    OutVect!.addItem("")
-    
-    dim pbuf$(pbufwidth)
-        pbuf$(45)="Qty"
-        pbuf$(54)="Alt"
-        pbuf$(64)="Unit"
-        pbuf$(72)="Total"
-    OutVect!.addItem(pbuf$)
+    OutVect!.addItem(fill(10,"-"))
+    OutVect!.addItem(fill(35,"-")+"Subcontract Information----------")
+    OutVect!.addItem(fill(15,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(22,"-"))
+    OutVect!.addItem(fill(16,"-"))
+    OutVect!.addItem(fill(10,"-"))
 
-    dim pbuf$(pbufwidth)
-        pbuf$(1)="Seq C Vendor/Service"
-        pbuf$(33)="Divisor"
-        pbuf$(42)="Required"
-        pbuf$(53)="Factor"
-        pbuf$(64)="Cost"
-        pbuf$(71)="Cost"
-    OutVect!.addItem(pbuf$)
-    OutVect!.addItem("")
-return
+    xwk=fnblank(3)
+    OutVect!.addItem("Qty")
+    OutVect!.addItem("Alt")
+    OutVect!.addItem("Unit")
+    OutVect!.addItem("Total")
+    xwk=fnblank(1)
+    
+    OutVect!.addItem("Seq C")
+    OutVect!.addItem("Vendor/Service")
+    OutVect!.addItem("Divisor")
+    OutVect!.addItem("Required")
+    OutVect!.addItem("Factor")
+    OutVect!.addItem("Cost")
+    OutVect!.addItem("Cost")
+    xwk=fnblank(1)
+    xwk=fnblank(8)
+    return
 
 total_information: rem --- Total Information
 
-    OutVect!.addItem(z$)
-    OutVect!.addItem("")
-    dim pbuf$(pbufwidth)
-        pbuf$(1)=j$
-        pbuf$(8,len("Total Information"))="Total Information"
-    OutVect!.addItem(pbuf$)
-    OutVect!.addItem("")
+    OutVect!.addItem(fill(10,"-"))
+    OutVect!.addItem(fill(35,"-")+"Total Information----------------")
+    OutVect!.addItem(fill(15,"-"))
+    OutVect!.addItem(fill(13,"-"))
+    OutVect!.addItem(fill(13,"-"))
+    OutVect!.addItem(fill(20,"-"))
+    OutVect!.addItem(fill(15,"-"))
+    OutVect!.addItem(fill(10,"-"))
 
-    dim pbuf$(pbufwidth)
-        pbuf$(18)="Material :  "+str(mattot:ivs01a.PRICE_MASK$)
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(1)
+    OutVect!.addItem("Material     :  "+str(mattot:ivs01a.PRICE_MASK$))
+    xwk=fnblank(6)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(14)="Direct Labor :  "+str(dir_labtot:ivs01a.PRICE_MASK$)
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(1)
+    OutVect!.addItem("Direct Labor :  "+str(dir_labtot:ivs01a.PRICE_MASK$))
+    xwk=fnblank(6)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(18)="Overhead :  "+str(oh_labtot:ivs01a.PRICE_MASK$)
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(1)
+    OutVect!.addItem("Overhead     :  "+str(oh_labtot:ivs01a.PRICE_MASK$))
+    xwk=fnblank(6)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(15)="Subcontract :  "+str(sub_cost:ivs01a.PRICE_MASK$)
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(1)
+    OutVect!.addItem("Subcontract  :  "+str(sub_cost:ivs01a.PRICE_MASK$))
+    xwk=fnblank(6)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(30)=j$(1,p9)
-    OutVect!.addItem(pbuf$)
+    xwk=fnblank(1)
+    OutVect!.addItem("_____________________")
+    xwk=fnblank(6)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(21)="Total :  "+str(mattot+dir_labtot+oh_labtot+sub_cost:ivs01a.PRICE_MASK$)
-    OutVect!.addItem(pbuf$)
-return
+    xwk=fnblank(1)
+    OutVect!.addItem("Total        :  "+str(mattot+dir_labtot+oh_labtot+sub_cost:ivs01a.PRICE_MASK$))
+    xwk=fnblank(6)
+
+    return
 
 comments_line: rem --- Comments
 
-    dim pbuf$(pbufwidth)
-        pbuf$(1)=j$
-        pbuf$(8,len("Comments"))="Comments"
-    OutVect!.addItem(pbuf$)
+    OutVect!.addItem(fill(10,"-"))
+    OutVect!.addItem("Comments"+"  "+"Seq")
+    xwk=fnblank(6)
+    xwk=fnblank(8)
 
-    dim pbuf$(pbufwidth)
-        pbuf$(1)="Seq"
-    OutVect!.addItem(pbuf$)
-return
+    return
 
 lot_size_yield: rem --- Get Lot Size and Yield for Non-Phantoms
     if sub$="" then 
@@ -439,12 +463,12 @@ lot_size_yield: rem --- Get Lot Size and Yield for Non-Phantoms
     lot=bmm01a.STD_LOT_SIZE
     yield=bmm01a.EST_YIELD
     read record (bmm01_dev,key=firm_id$+bill_no$) bmm01a$
-return
+    return
 
 label_four:
     lot=bmm01a.STD_LOT_SIZE
     yield=bmm01a.EST_YIELD
-return
+    return
 
 
 rem ----#include std_functions.src
@@ -483,6 +507,15 @@ rem #include fndate.src
         fnend
 
 rem #endinclude fndate.src
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
         def fnyy$(q$)=q$(3,2)
         def fnclock$(q$)=date(0:"%hz:%mz %p")
