@@ -15,15 +15,14 @@ rem --- Retrieve the program path
 
 rem --- Document initializations
 
-    if printorcost$<>"C" then
-        OutVect!=bbjAPI().getSysGui().makeVector()
-        HdrVect!=bbjAPI().getSysGui().makeVector()
-        BrkVect!=bbjAPI().getSysGui().makeVector()
-        rep_date$=date(0:"%Mz/%Dz/%Yd")
-        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-        rep_time$=date(0:"%hz:%mz %p")
-        rep_time_stamp$=date(0:"%Hz%mz%sz")
-    endif
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
 
 rem --- Retrieve sysinfo data
 
@@ -46,11 +45,20 @@ rem --- Init Data
     headings=1
     dim headings$[headings]
     h2$=sysinfo.task_desc$
-    if pos("Listing"=h2$)=0 then let h2$=h2$+" Listing"
+    if pos("Listing"=h2$)=0 then h2$=h2$+" Listing"
     headings$[0]=sysinfo.firm_name$
     headings$[1]=h2$
-    dim columns$[0,10]
-    columns=0
+
+    dim columns$[7,10]
+    columns=7
+    columns$[0,0]=" ",columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]=" ",columns$[1,1]="C",columns$[1,2]="35",columns$[1,3]=p9$,columns$[1,10]="T"
+    columns$[2,0]=" ",columns$[2,1]="C",columns$[2,2]="12"
+    columns$[3,0]=" ",columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]=" ",columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]=" ",columns$[5,1]="C",columns$[5,2]="15"
+    columns$[6,0]=" ",columns$[6,1]="C",columns$[6,2]="12"
+    columns$[7,0]=" ",columns$[7,1]="C",columns$[7,2]="8"
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMWHSE","PRIMARY",ivm02a_key_tpl$,rd_table_chans$[all],status$
     dim ivm02a_key$:ivm02a_key_tpl$
@@ -84,57 +92,80 @@ rem --- Print Material Information
             ivm02a_key$=firm_id$+whs$+bill_list$(len(bill_list$)-20+1,20)
             gosub get_nonphantom
             if parent$=ivm02a_key.item_id$ then
-                let parentout$=parent$
+                parentout$=parent$
             else
-                let parentout$=""
+                parentout$=""
             endif
             sub$=ivm02a_key.item_id$+parentout$
             if printorcost$<>"C" then
                 BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
                 find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
-                OutVect!.addItem("")
-                dim pbuf$(pbufwidth)
-                    pbuf$(6)="Bill Number: "+bill_no$
-                    pbuf$(40)="Last Used: "+fndate$(bmm01a.LSTACT_DATE$)
-                    if bmm01a.SOURCE_CODE$="B" then
-                        pbuf$(60)="In Production Entry"
-                    else
-                        if bmm01a.SOURCE_CODE$="W" then pbuf$(60)="In Work Orders"
-                    endif
-                OutVect!.addItem(pbuf$)
+                xwk=fnblank(1)
+                OutVect!.addItem("Bill Number: "+bill_no$)
+                OutVect!.addItem("Last Used: "+fndate$(bmm01a.LSTACT_DATE$))
+                xwk=fnblank(2)
+                if bmm01a.SOURCE_CODE$="B" then
+                    OutVect!.addItem("In Production Entry")
+                else
+                        if bmm01a.SOURCE_CODE$="W" then
+                            OutVect!.addItem("In Work Orders")
+                        else
+                            xwk=fnblank(1)
+                endif
+                xwk=fnblank(2)
 
-                dim pbuf$(pbufwidth)
-                    pbuf$(6)="Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36))
-                    pbuf$(54)="Phantom Bill?: "+bmm01a.PHANTOM_BILL$
-                OutVect!.addItem(pbuf$)
+                xwk=fnblank(1)
+                OutVect!.addItem("Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36)))
+                xwk=fnblank(3)
+                OutVect!.addItem("Phantom Bill?: "+bmm01a.PHANTOM_BILL$)
+                xwk=fnblank(2)
 
-                dim pbuf$(pbufwidth)
-                    pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34))
-                    pbuf$(52)="Unit Of Measure: "+bmm01a.UNIT_MEASURE$
-                OutVect!.addItem(pbuf$)
+                xwk=fnblank(1)
+                OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34)))
+                xwk=fnblank(3)
+                OutVect!.addItem("Unit Of Measure: "+bmm01a.UNIT_MEASURE$)
+                xwk=fnblank(2)
 
-                dim pbuf$(pbufwidth)
-                    pbuf$(19)=ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32))
-                    pbuf$(50)="Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00")
-                OutVect!.addItem(pbuf$)
+                xwk=fnblank(1)
+                OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32)))
+                xwk=fnblank(3)
+                OutVect!.addItem("Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00"))
+                xwk=fnblank(2)
 
-                dim pbuf$(pbufwidth)
-                    pbuf$(3)="Drawing Number: "+bmm01a.DRAWING_NO$
-                    pbuf$(50)="Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE)
-                OutVect!.addItem(pbuf$)
+                xwk=fnblank(1)
+                OutVect!.addItem("Drawing Number: "+bmm01a.DRAWING_NO$)
+                xwk=fnblank(3)
+                OutVect!.addItem("Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE))
+                xwk=fnblank(2)
 
-                dim pbuf$(pbufwidth)
-                    pbuf$(1)="Drawing Revision:"+bmm01a.DRAWING_REV$
-                    pbuf$(24)="Revision Code: "+bmm01a.BILL_REV$
-                    pbuf$(42)="Created: "+fndate$(bmm01a.CREATE_DATE$)
-                    pbuf$(60)="Revised: "+fndate$(bmm01a.LSTRVS_DATE$)
-                OutVect!.addItem(pbuf$)
+                xwk=fnblank(1)
+                OutVect!.addItem("Drawing Revision:"+bmm01a.DRAWING_REV$)
+                xwk=fnblank(3)
+                OutVect!.addItem("Revision Code: "+bmm01a.BILL_REV$)
+                xwk=fnblank(2)
 
-                dim pbuf$(pbufwidth)
-                    if sub$<>"" then let pbuf$(4)="Sub-Assembly : "+sub$(1,20)
-                    if select$="C" then pbuf$(54)="As Of Date: "+fndate$(pdate$)
-                OutVect!.addItem(pbuf$)
-                call pgmdir$+"bmc_printbill.aon",1,printer_dev,bill_no$,h,comments$,sub$,whs$,select$,pdate$,rd_table_chans$[all],OutVect!,status
+                xwk=fnblank(1)
+                OutVect!.addItem("Created: "+fndate$(bmm01a.CREATE_DATE$))
+                xwk=fnblank(3)
+                OutVect!.addItem("Revised: "+fndate$(bmm01a.LSTRVS_DATE$))
+                xwk=fnblank(2)
+
+                xwk=fnblank(1)
+                if sub$<>"" then
+                    OutVect!.addItem("Sub-Assembly : "+sub$(1,20))
+                else
+                    xwk=fnblank(1)
+                endif
+                xwk=fnblank(3)
+                if select$="C" then
+                    OutVect!.addItem("As Of Date: "+fndate$(pdate$))
+                else
+                    xwk=fnblank(1)
+                endif
+                xwk=fnblank(2)
+
+
+                call pgmdir$+"bmc_printbill.aon",1,printer_dev,bill_no$,h,comments$,sub$,whs$,select$,pdate$,rd_table_chans$[all],OutVect!,status,TotVect!,columns
 
                if status<>0 then
                     if printorcost$="P" then goto std_exit
@@ -144,9 +175,9 @@ rem --- Print Material Information
             endif
 
             if len(bill_list$)>20 then
-                let bill_list$=bill_list$(1,len(bill_list$)-20)
+                bill_list$=bill_list$(1,len(bill_list$)-20)
             else
-                if len(bill_list$)=20 then let bill_list$=""
+                if len(bill_list$)=20 then bill_list$=""
             endif
             read record (bmm01_dev,key=firm_id$+ivm02a_key.item_id$,dom=*next) bmm01a$
             a6=0
@@ -172,14 +203,14 @@ get_op_info: rem --- Get Operation Information
                 if pos(firm_id$+ivm02a_key.item_id$=bmm03a.firm_id$+bmm03a.bill_no$+bmm03a.op_seq$)<>1 then break
                 if cvs(bmm03a.effect_date$,3)<>"" and bmm03a.effect_date$>pdate$ then continue
                 if cvs(bmm03a.obsolt_date$,3)<>"" and bmm03a.obsolt_date$<=pdate$ then continue
-                let bmm08a.code_desc$="Not On File"
+                bmm08a.code_desc$="Not On File"
                 bmm08a.direct_rate=0
                 read record (bmm08_dev,key=bmm03a.firm_id$+bmm03a.op_code$,dom=*next) bmm08a$
                 if bmm01a.std_lot_size=0 then bmm01a.std_lot_size=1
                 if bmm03a.pcs_per_hour<>0 then
-                    let directcost=fnop1(bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time,bmm01a.std_lot_size)
+                    directcost=fnop1(bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,bmm01a.est_yield,bmm03a.setup_time,bmm01a.std_lot_size)
                 else
-                    let directcost=0
+                    directcost=0
                 endif
                 ohlabcost=directcost*bmm08a.ovhd_factor
                 tdircost=tdircost+directcost
@@ -196,7 +227,7 @@ get_sub_info: rem --- Get Subcontract Information
                     if cvs(bmm05a.effect_date$,3)<>"" and bmm05a.effect_date$>pdate$ then continue
                     if cvs(bmm05a.obsolt_date$,3)<>"" and bmm05a.obsolt_date$<=pdate$ then continue
                     if bmm05a.DIVISOR*bmm01a.EST_YIELD<>0 then
-                        let tsubcost=tsubcost+bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR)
+                        tsubcost=tsubcost+bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR)
                     endif
                 wend
             endif
@@ -269,7 +300,7 @@ explode: rem --- Explode
         savea0$=firm_id$+billseq_list$(len(billseq_list$)-22,23)
         billseq_list$=billseq_list$(1,len(billseq_list$)-23)
     wend
-return
+    return
 
 get_nonphantom: rem --- Get Non-Phantom information
 
@@ -348,6 +379,16 @@ rem --- Date/time handling functions
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
+
 rem #include fndate.src
 
         def fndate$(q$)
@@ -403,9 +444,9 @@ rem --- #include "./aon/lib/std_input.src
 
 std_input: rem --- standard input routine (12-mar-2003)
 
-    if restart and vaction$="s" then let vaction$="sp",restart=0
-    if vaction$="g" then let compare_control=num(str(grid_id)+str(grid_row:"000")+str(grid_col:"000")) else let compare_control=control_id
-    if compare_control=old_control_id then let validate=0 else let old_control_id=compare_control
+    if restart and vaction$="s" then vaction$="sp",restart=0
+    if vaction$="g" then compare_control=num(str(grid_id)+str(grid_row:"000")+str(grid_col:"000")) else compare_control=control_id
+    if compare_control=old_control_id then validate=0 else old_control_id=compare_control
     dim vdata$[10],vdata[10],vinfo$[20],vinfo[20]
     vdata$[0]=v0$
     vdata$[1]=v1$,vdata$[2]=v2$,vdata$[3]=v3$,vdata$[4]=v4$
@@ -445,11 +486,11 @@ rem --- error during input
 std_input_error:
      goto std_input
 std_input_exit: rem --- assign local variables and return
-    let v$=vinfo$[1],event$=vinfo$[4],v=vinfo[0],v3=vinfo[1]
-    let next_control=vinfo[2],i0=vinfo[3],next_context=vinfo[6]
-    let validate=vinfo[7],grid_col=vinfo[14],grid_row=vinfo[15]
-    let wants_to_edit_cell=vinfo[16],next_tab_index=vinfo[18]
-    if wants_to_edit_cell then dim vnotice$:vinfo$[3]; let vnotice$=vinfo$[2]
+    v$=vinfo$[1],event$=vinfo$[4],v=vinfo[0],v3=vinfo[1]
+    next_control=vinfo[2],i0=vinfo[3],next_context=vinfo[6]
+    validate=vinfo[7],grid_col=vinfo[14],grid_row=vinfo[15]
+    wants_to_edit_cell=vinfo[16],next_tab_index=vinfo[18]
+    if wants_to_edit_cell then dim vnotice$:vinfo$[3]; vnotice$=vinfo$[2]
     return
 
 rem --- #end include
