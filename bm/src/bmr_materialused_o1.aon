@@ -15,6 +15,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -54,7 +55,7 @@ rem ---  column heading
     columns$[3,0]="Description",    columns$[3,1]="C",columns$[3,2]="25"
     columns$[4,0]="Effect Date",    columns$[4,1]="C",columns$[4,2]="10"
     columns$[5,0]="Obsolete Date",  columns$[5,1]="C",columns$[5,2]="10"
-    columns$[6,0]="Qty Reqd",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=p1$
+    columns$[6,0]="Qty Reqd",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=p1$,columns$[6,10]="T"
     columns$[7,0]="Seq",            columns$[7,1]="C",columns$[7,2]="5"
 
 rem --- Background
@@ -86,7 +87,7 @@ rem --- Breaks
             xwk = fnblank(2)
         endif
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        let d1$="*** Not On File ***"
+        d1$="*** Not On File ***"
         find record (ivm01_dev,key=(bmm01a.firm_id$+bmm01a.bill_no$),dom=print_head) ivm01a$
         d1$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])+fill(60)
         d1$=ivm01a.item_desc$
@@ -109,6 +110,7 @@ done: rem --- Totals
         t9$="E"
         gosub item_break
         xwk = fnblank(9)
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem("Total Records : "+str(t0))
         xwk = fnblank(6)
         goto std_exit
@@ -127,8 +129,8 @@ return
 item_break: rem --- Item Break
     if t0$<>"" then
         if l1>=2 then
-            xwk = fnblank(6)
-            OutVect!.addItem(dashes$(1,p1))
+            xwk = fnblank(7)
+            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             xwk = fnblank(2)
             OutVect!.addItem("Item Total : ")
             xwk = fnblank(4)
@@ -153,7 +155,7 @@ rem --- Setup New Item
 
 prnt_item:
     gosub print_item
-return
+    return
 
 
 rem #include std_functions.src
