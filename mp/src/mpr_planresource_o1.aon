@@ -18,6 +18,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -49,26 +50,25 @@ rem --- Initializations
     maxcol=9,numcol=maxcol,begper=begper-1,endper=endper-1
     if numcol>number then let numcol=number
     call pgmdir$+"adc_sizemask.aon",bms01a.hrqty_mask$,m4,10,10
-    dim columns$[0,10]
-    columns=0
-    columns$[0,0]="Op Code  Description              --------------------------------------------- Hours ----------------------------------------",columns$[0,1]="C",columns$[0,2]="250"
-    pbufwidth=250
+    columns = endper+4
+    dim columns$[columns,10]
+    columns$[0,0]="Oper^Code",columns$[0,1]="C",columns$[0,2]="5"
+    columns$[1,0]="Description",columns$[1,1]="C",columns$[1,2]="15"
+    columns$[2,0]="      ",columns$[2,1]="C",columns$[2,2]="8"
+    clno=3,n=0
+    dim dates$[number]
+    for x=begper to endper
+        dates$[n]=fndate$(FIELD(mpm01a$,"plan_date_"+str(x+1:"00")))
+        columns$[clno,0]=dates$[n],columns$[clno,1]="N",columns$[clno,2]="8",columns$[clno,10]="T"
+        n=n+1
+        clno=clno+1
+    next x
+
+    columns$[clno,0]="Totals",columns$[clno,1]="N",columns$[clno,2]="8",columns$[clno,10]="T"
 
 rem --- Titles/Headings
 
-    dim titles$[lines],h9$((maxcol+1)*m4-1,"-")
     dim totals[number,lines],amounts[number,lines],dates$[number]
-    titles$[1]="Required "
-    titles$[0]="Capacity "
-    titles$[2]="Available"
-    x$=" Hours "
-    h9$(fncenter(x$,len(h9$)),len(x$))=x$
-    n=0
-    for x=begper to endper
-        n=n+1
-        dates$[n]=fndate$(FIELD(mpm01a$,"plan_date_"+str((x+1):"00")))
-    next x
-    dates$[number]="   Totals"
 
 rem --- Background
 
@@ -99,7 +99,6 @@ rem --- Build detail
         dim amounts[number,lines]
         n=0
         last=0
-
         for x=begper to endper
             n=n+1
             amounts[n,0]=num(FIELD(mpe02a$,"resource_cap_"+str((x+1):"00"))),amounts[n,1]=num(FIELD(mpe04a$,"req_per_per_"+str((x+1):"00")))
@@ -116,13 +115,35 @@ rem --- Accumulate operation totals
 
 rem --- Print detail
 
-        while more
-            first=last+1
-            last=first+numcol-1
-            if first>number then break
-            if last>number then let last=number
-            gosub print_detail
-        wend
+        OutVect!.addItem(bmm08a.op_code$)
+        OutVect!.addItem(bmm08a.code_desc$)
+        OutVect!.addItem("(Hours)")
+        xwk=fnblank(endper+4)
+        OutVect!.addItem("Capacity")
+        y=0
+        n=0
+        for x=begper to endper+1
+            n=n+1
+            OutVect!.addItem(str(amounts[n,y]:m4$))
+        next x
+        xwk=fnblank(2)
+        OutVect!.addItem("Required")
+        y=1
+        n=0
+        for x=begper to endper+1
+            n=n+1
+            OutVect!.addItem(str(amounts[n,y]:m4$))
+        next x
+        xwk=fnblank(2)
+        OutVect!.addItem("Available")
+        y=2
+        n=0
+        for x=begper to endper+1
+            n=n+1
+            OutVect!.addItem(str(amounts[n,y]:m4$))
+        next x
+       
+
 
 rem --- Accumulate report totals
 
@@ -148,68 +169,36 @@ done: rem --- All done
 
 rem --- Print totals
 
-        while more
-            first=last+1
-            last=first+numcol-1
-            if first>number then break
-            if last>number then let last=number
-            gosub print_detail
-        wend
-
+        xwk=fnblank(1)
+        OutVect!.addItem("Totals For Report")
+        OutVect!.addItem("(Hours)")
+        xwk=fnblank(endper+4)
+        OutVect!.addItem("Capacity")
+        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+        y=0
+        n=0
+        for x=begper to endper+1
+            n=n+1
+            OutVect!.addItem(str(amounts[n,y]:m4$))
+        next x  
+        xwk=fnblank(2)
+        OutVect!.addItem("Required")
+        y=1
+        n=0
+        for x=begper to endper+1
+            n=n+1
+            OutVect!.addItem(str(amounts[n,y]:m4$))
+        next x  
+        xwk=fnblank(2)
+        y=2
+        n=0
+        OutVect!.addItem("Available")
+        for x=begper to endper+1
+            n=n+1
+            OutVect!.addItem(str(amounts[n,y]:m4$))
+        next x  
         goto std_exit
 
-report_heading: rem --- Report Heading
-
-        l=headings+6
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-        if status then exitto std_exit
-        print (printer_dev)p9$,@(width/2-int(len(h6$)/2)),h6$
-        print (printer_dev)""
-        print (printer_dev)"Operation"
-        print (printer_dev)"Code Description",@(30),h9$
-
-rem        pbuf$(1)="Operation Code  Description  ----------------------------------- Hours ---------------------------------------"
-rem        OutVect!.addItem(pbuf$)
-        return
-
-print_detail: rem --- Print detail block
-        
-        a=fnblank(1)
-rem        dim buffer$(width)
-        dim pbuf$(pbufwidth)
-        l=l+3+lines
-        n=35
-rem        buffer$(1)=bmm08a.op_code$
-rem        buffer$(6)=bmm08a.code_desc$
-        pbuf$(1)=bmm08a.op_code$
-        pbuf$(10)=bmm08a.code_desc$
-        for x=first to last
-rem            buffer$(n)=dates$[x]
-            pbuf$(n)=dates$[x]
-            n=n+10
-        next x
-
-rem        if l+3>l9 then gosub report_heading
-rem        print (printer_dev)""
-rem        print (printer_dev)buffer$
-
-        OutVect!.addItem(pbuf$)
-
-        for y=0 to lines
-rem            dim buffer$(width)
-            n=30
-rem            buffer$(30)=titles$[y]
-            pbuf$(1)=""
-            pbuf$(10)=titles$[y]
-            for x=first to last
-rem                buffer$(n)=str(amounts[x,y]:m4$)
-                pbuf$(n)=str(amounts[x,y]:m4$)
-                n=n+10
-            next x
-rem            print (printer_dev)buffer$
-            OutVect!.addItem(pbuf$)
-        next y
-        return
 
 rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
