@@ -42,20 +42,21 @@ rem --- Initializations
     more=1
 
 rem ---  column heading
+
     dim columns$[11,10]
     columns=11
     columns$[0,0]="Item",          columns$[0,1]="C",columns$[0,2]="8"
-    columns$[1,0]="Description",   columns$[1,1]="C",columns$[1,2]="25"
-    columns$[2,0]="Lead Time",     columns$[2,1]="C",columns$[2,2]="8";rem ,columns$[2,3]=m5$
+    columns$[1,0]="Description",   columns$[1,1]="C",columns$[1,2]="20"
+    columns$[2,0]="Lead Time",     columns$[2,1]="C",columns$[2,2]="8"
     columns$[3,0]="Rev",           columns$[3,1]="C",columns$[3,2]="8"
-    columns$[4,0]="EOQ",           columns$[4,1]="C",columns$[4,2]="8";rem ,columns$[4,3]=m2$
-    columns$[5,0]="Lot Size",      columns$[5,1]="C",columns$[5,2]="5"
-    columns$[6,0]="Phantom Bill?", columns$[6,1]="C",columns$[6,2]="4"
-    columns$[7,0]="Est Yield",     columns$[7,1]="C",columns$[7,2]="6"
-    columns$[8,0]="Bill Created",  columns$[8,1]="C",columns$[8,2]="8"
-    columns$[9,0]="Last Rev",      columns$[9,1]="C",columns$[9,2]="8"
-    columns$[10,0]="Last Used",    columns$[10,1]="C",columns$[10,2]="8"
-    columns$[11,0]=" ",            columns$[11,1]="C",columns$[11,2]="8"
+    columns$[4,0]="EOQ",           columns$[4,1]="C",columns$[4,2]="8"
+    columns$[5,0]="Lot Size",      columns$[5,1]="C",columns$[5,2]="8"
+    columns$[6,0]="Phantom^Bill?", columns$[6,1]="C",columns$[6,2]="8"
+    columns$[7,0]="Est^Yield",     columns$[7,1]="C",columns$[7,2]="7"
+    columns$[8,0]="Bill^Created",  columns$[8,1]="C",columns$[8,2]="8"
+    columns$[9,0]="Last^Rev",      columns$[9,1]="C",columns$[9,2]="8"
+    columns$[10,0]="Last^Used",    columns$[10,1]="C",columns$[10,2]="8"
+    columns$[11,0]="Totals",       columns$[11,1]="C",columns$[11,2]="8"
    
 rem --- Background
 
@@ -81,8 +82,7 @@ rem --- Finalize headings
         plandate$[n]=fndate$(date_fields$)
     next_per:
     next x
-    plandate$[number]="  Totals"
-
+   
 rem --- Position mpe-01 production forecast file
 
     read (mpe01a_dev,key=prefix$,dom=*next)
@@ -152,22 +152,24 @@ rem --- Accumulate total for periods being printed
         next x
 
 rem --- Print forecast amounts by period for this item
-        xwk=fnblank(12)
-        OutVect!.addItem("")
+
+        xwk=fnblank(columns+1)
+        move_col=columns-number
+        xwk=fnblank(move_col)
         OutVect!.addItem("Date")
-        for x=1 to number
+        for x=1 to number-1
             OutVect!.addItem(plandate$[x])
         next x
-        if columns-(number+1)<>0 then xwk=fnblank(columns-(number+1))
         
-        OutVect!.addItem("")
+        xwk=fnblank(move_col+1)
+        
         OutVect!.addItem("Quantity")
         for x=1 to number
             OutVect!.addItem(str(amounts[x]:m2$))
         next x
-        if columns-(number+1)<>0 then xwk=fnblank(columns-(number+1))
-       
+        
 rem --- Loop back for next mpe-01 production forecast record
+
     wend
 
 done: rem --- All done
@@ -175,8 +177,8 @@ done: rem --- All done
     goto std_exit
 
 item_heading: rem --- Item heading
+
     xwk=fnblank(12)
-    print (printer_dev)""
     if bill$<>"" then 
         OutVect!.addItem(ivm01a.item_id$)
         OutVect!.addItem(desc$)
