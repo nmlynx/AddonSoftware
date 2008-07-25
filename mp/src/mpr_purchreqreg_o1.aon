@@ -14,6 +14,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -28,7 +29,6 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Open Printer
@@ -46,17 +46,17 @@ rem --- Initializations
     hr=width-max(len(h7$),len(h8$))
     t0$=""
     t1$=""
-
+    dim t[1]
     dim columns$[7,10]
     columns = 7
     columns$[0,0]="Item",               columns$[0,1]="C",columns$[0,2]="6"
-    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="20"
-    columns$[2,0]="UM",                 columns$[2,1]="C",columns$[2,2]="4"
-    columns$[3,0]="Buyer",              columns$[3,1]="C",columns$[3,2]="20"
-    columns$[4,0]="Unit Cost",          columns$[4,1]="N",columns$[4,2]="6",columns$[4,3]=ivs01a.cost_mask$
-    columns$[5,0]="Date Required",      columns$[5,1]="C",columns$[5,2]="10"
-    columns$[6,0]="Quantity Required",  columns$[6,1]="N",columns$[6,2]="6",columns$[6,3]=ivs01a.unit_mask$
-    columns$[7,0]="Extension",          columns$[7,1]="N",columns$[7,2]="6",columns$[7,3]=ivs01a.amount_mask$
+    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="12"
+    columns$[2,0]="UM",                 columns$[2,1]="C",columns$[2,2]="6"
+    columns$[3,0]="Buyer",              columns$[3,1]="C",columns$[3,2]="15"
+    columns$[4,0]="Unit^Cost",          columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=ivs01a.cost_mask$
+    columns$[5,0]="Date^Required",      columns$[5,1]="C",columns$[5,2]="12"
+    columns$[6,0]="Qty^Required ",      columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=ivs01a.unit_mask$,columns$[6,10]="T"
+    columns$[7,0]="Extension",          columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=ivs01a.amount_mask$,columns$[7,10]="T"
 
 rem --- Print positions
 
@@ -74,9 +74,9 @@ rem --- Print positions
     dw=o[2]-o[1]
 
 rem --- retrieve template for MPX_REQVEND record key
+
     call stbl("+DIR_SYP")+"bac_key_template.bbj","MPX_REQVEND","PRIMARY",mpw03a_key_tpl$,table_chans$[all],status$
    
-
 rem --- Sort mpe-05 transaction pegging detail. Only planned
 rem --- purchase orders are being sorted in order to create
 rem --- a list of requisitions needed by date.
@@ -85,9 +85,10 @@ rem --- a list of requisitions needed by date.
 
     read (mpe05_dev,key=prefix$,dom=*next)
 
-
 rem --- Read next mpe-05 transaction pegging detail record
+
     while more
+
         read record (mpe05_dev,end=*break) mpe05a$
         if pos(prefix$=mpe05a.firm_id$+mpe05a.forecast$+mpe05a.warehouse_id$)<>1 then break
         if mpe05a.source_code$<>"I" then continue
@@ -105,10 +106,12 @@ rem --- Read next mpe-05 transaction pegging detail record
         mpw03a.trns_date$=mpe05a.trns_date$
         mpw03a.peg_source$=mpe05a.source_code$
         mpw03a.seq_no$=mpe05a.seq_no$
-        write record (mpw03_dev,key=mpw03a.firm_id$+mpw03a.forecast$+mpw03a.warehouse_id$+mpw03a.vendor_id$+mpw03a.item_id$+mpw03a.trns_date$+mpw03a.peg_source$+mpw03a.seq_no$) mpw03a$
+        write record (mpw03_dev,key=mpw03a.firm_id$+mpw03a.forecast$+mpw03a.warehouse_id$+mpw03a.vendor_id$+mpw03a.item_id$+
+:                     mpw03a.trns_date$+mpw03a.peg_source$+mpw03a.seq_no$) mpw03a$
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
     wend
+
 rem --- Sort completed
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
@@ -120,7 +123,10 @@ rem --- Position mpw-03 Requirements by Vendor/Date file
     read (mpw03_dev,key=firm_id$,dom=*next)
 
 rem --- Read next mpw-03 Requirements by Vendor/Date record
+
     dim mpw03a_key$:mpw03a_key_tpl$
+    mpm01a.no_of_pers=0
+    mpm01a.days_in_per=0
     while more
         mpw03a_key$=key(mpw03_dev,end=*break)
         if pos(prefix$=mpw03a_key$)<>1 then break
@@ -136,6 +142,7 @@ level_breaks: rem --- Level breaks
         if mpw03a_key.item_id$<>t1$ then gosub item_break
 
 rem --- Retrieve associated pegging detail record
+
         mpe05a.firm_id$=mpw03a_key.firm_id$
         mpe05a.forecast$=mpw03a_key.forecast$
         mpe05a.warehouse_id$=mpw03a_key.warehouse_id$
@@ -144,8 +151,8 @@ rem --- Retrieve associated pegging detail record
         mpe05a.source_code$=mpw03a_key.peg_source$
         mpe05a.seq_no$=mpw03a_key.seq_no$
 
-
-        find record (mpe05_dev,key=mpe05a.firm_id$+mpe05a.forecast$+mpe05a.warehouse_id$+mpe05a.item_id$+mpe05a.trns_date$+mpe05a.source_code$+mpe05a.seq_no$,dom=*continue) mpe05a$
+        find record (mpe05_dev,key=mpe05a.firm_id$+mpe05a.forecast$+mpe05a.warehouse_id$+mpe05a.item_id$+mpe05a.trns_date$+mpe05a.source_code$+
+:                    mpe05a.seq_no$,dom=*continue) mpe05a$
 
         qty=mpe05a.planned_rel
 
@@ -192,7 +199,8 @@ detail_line: rem --- Print detail line
         mpw04a.item_id$=mpe05a.item_id$
         mpw04a.require_date$=mpe05a.reqd_date$
 
-        find record (mpw04_dev,key=mpw04a.firm_id$+mpw04a.forcase$+mpw04a.warehouse_id$+mpw04a.vendor_id$+mpw04a.item_id$+mpw04a.trns_date$,err=*next) mpw04a$
+        find record (mpw04_dev,key=mpw04a.firm_id$+mpw04a.forcase$+mpw04a.warehouse_id$+mpw04a.vendor_id$+mpw04a.item_id$+
+:                   mpw04a.trns_date$,err=*next) mpw04a$
 
         mpw04a.firm_id$=um$
         mpw04a.conv_factor=factor
@@ -205,7 +213,8 @@ detail_line: rem --- Print detail line
 
 rem --- Update mpw-04 Item Requirements by Vendor
 
-        write record (mpw04_dev,key=mpw04a.firm_id$+mpw04a.forecast$+mpw04a.warehouse_id$+mpw04a.vendor_id$+mpw04a.item_id$+mpw04a.trns_date$) mpw04a$
+        write record (mpw04_dev,key=mpw04a.firm_id$+mpw04a.forecast$+mpw04a.warehouse_id$+mpw04a.vendor_id$+mpw04a.item_id$+
+:                    mpw04a.trns_date$) mpw04a$
         mpm01a.no_of_pers=mpm01a.no_of_pers+qty
         mpm01a.days_in_per=mpm01a.days_in_per+x
         t[1]=t[1]+x
@@ -217,13 +226,13 @@ rem --- Loop back for next record
 
     wend
 
-
 done: rem --- All done
 
     t9$="END"
     gosub vendor_break
-    blank=fnblank(8)    
-    blank=fnblank(5)    
+    blank=fnblank(8)
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))     
+    blank=fnblank(5)   
     OutVect!.addItem("Totals For Report")
     OutVect!.addItem(str(total))
     OutVect!.addItem(str(t[1]))
@@ -231,12 +240,12 @@ done: rem --- All done
     run pgmdir$+"mpu_updatereqreg.aon"
     goto std_exit
 
-
 vendor_break: rem --- Vendor Break
 
     if t0$<>"" then
         gosub item_break
         if l1<>0 then
+            TotVect!.addItem(str(OutVect!.size()/(columns+1)))     
             blank=fnblank(5)    
             OutVect!.addItem("Totals For Vendor")
             blank=fnblank(1)
@@ -249,8 +258,7 @@ new_vendor: rem --- Retrieve current vendor info
 
     if t9$<>"" then
         return
-    endif
-    dim t[1]
+    endif    
     
     apm01a.firm_id$=firm_id$
     apm01a.vendor_id$=mpw03a_key.vendor_id$
@@ -271,6 +279,7 @@ new_vendor: rem --- Retrieve current vendor info
 item_break: rem --- Item Break
 
     if t1$<>"" then
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))     
         blank=fnblank(5)    
         OutVect!.addItem("Totals For Item")
         OutVect!.addItem(str(mpm01a.no_of_pers))
