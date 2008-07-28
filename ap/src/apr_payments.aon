@@ -250,6 +250,7 @@ rem --- All done
 
     done=1
     gosub type_break
+
     total$="Totals For Report"
     for x=0 to 2
         totals[x]=rt[x]
@@ -311,8 +312,11 @@ type_break: rem --- AP type break
               totals[x]=at[x]
           next x
           gosub print_total
+          xwk=fnblank(9)
+          if retention OutVect!.additem("")
           break
     wend
+
     if done return
     dim apm10a$:fattr(apm10a$),at[3]
     apm10a.firm_id$=ape04a.firm_id$
@@ -326,7 +330,6 @@ type_break: rem --- AP type break
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     HdrVect!.addItem(aptype$)
     lines=maxlines+1
-    return
     return
 
 vendor_break: rem --- Vendor break
@@ -346,6 +349,8 @@ vendor_break: rem --- Vendor break
           endif
           if printed>=1 
              gosub print_total
+             xwk=fnblank(9)
+             if retention OutVect!.additem("")
              break
           endif
           if warning$="" break
@@ -358,6 +363,8 @@ vendor_break: rem --- Vendor break
             xwk = fnblank(1)
           endif
           lines=lines+1
+          xwk=fnblank(9)
+          if retention OutVect!.additem("")
           break
     wend
 
