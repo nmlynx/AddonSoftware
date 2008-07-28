@@ -68,6 +68,8 @@ rem --- Assign form input values to local variables
     endterr$=option!.getOptionData("TERRITORY_2")
     begtype$=option!.getOptionData("CUSTOMER_TYPE_1")
     endtype$=option!.getOptionData("CUSTOMER_TYPE_2")
+    page_break$=option!.getOptionData("PAGE_BREAK")
+    export_format$=option!.getOptionData("EXPORT_FORMAT")
 
 rem --- Retrieve parameter records
 
@@ -80,6 +82,9 @@ rem --- Retrieve parameter records
 rem --- Column Headings
 
     columns=9
+    if export_format$="Y"
+        columns=13
+    endif
     dim columns$[columns,10]
     
         columns$[0,0]="Cust No",  columns$[0,1]="C",columns$[0,2]="8"
@@ -92,7 +97,12 @@ rem --- Column Headings
         columns$[7,0]="State",   columns$[7,1]="C",columns$[7,2]="5"
         columns$[8,0]="Zip/Postal",columns$[8,1]="C",columns$[8,2]="8"
         columns$[9,0]="Phone",     columns$[9,1]="C",columns$[9,2]="10"
-
+        if export_format$="Y"
+            columns$[10,0]="Terms Code", columns$[10,1]="C",columns$[10,2]="10"
+            columns$[11,0]="Salesperson",columns$[11,1]="C",columns$[11,2]="10"
+            columns$[12,0]="Territory",  columns$[12,1]="C",columns$[12,2]="10"
+            columns$[13,0]="Cust Type",  columns$[13,1]="C",columns$[13,2]="10"
+        endif
 rem --- Initializations
 
     headings=5
@@ -143,7 +153,9 @@ rem --- Initializations
     if begvalue$="" headings$[2]="From First Through " else headings$[2]="From "+cvs(begvalue$,2)+" Through "
     if endvalue$="" headings$[2]=headings$[2]+"Last" else headings$[2]=headings$[2]+endvalue$
     endvalue=len(endvalue$)
-    headings$[5]="[HEADER]"
+    if export_format$<>"Y" and page_break$="Y"
+        headings$[5]="[HEADER]"
+    endif
 
 rem --- Initialize print positions
 
@@ -230,20 +242,36 @@ rem --- Read next Customer Detail (arm-02) record
           phone$=cvs(arm01a.phone_no$,2)
           phone$=str(phone$:phone_mask$,err=*next)
           OutVect!.addItem(phone$)
+          if export_format$="Y"
+            OutVect!.addItem(arm02a.ar_terms_code$)
+            OutVect!.addItem(arm02a.slspsn_code$)
+            OutVect!.addItem(arm02a.territory$)
+            OutVect!.addItem(arm02a.customer_type$)
+          endif
           total=total+1
     wend
 
 rem --- All done
 
-    
     outVect!.addItem(str(total)+" Customer(s) Listed")
-    xwk=fnblank(8)
+    xwk=fnblank(9)
+    if export_format$="Y"
+        xwk=fnblank(4)
+    endif
     goto std_exit
                     
 subheading: rem --- Subheading by code
 
-    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-    HdrVect!.addItem(buffer$)
+    if export_format$<>"Y"
+        if page_break$="Y"
+            BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+            HdrVect!.addItem(buffer$)
+        else
+            xwk=fnblank(10)
+            OutVect!.addItem(buffer$)
+            xwk=fnblank(9)
+        endif    
+    endif    
     return
 
 code_break: rem --- Code sequence break
