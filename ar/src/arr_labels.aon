@@ -23,20 +23,23 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=2,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ars_params",ids$[1]="ARS_PARAMS"
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ars01_dev=channels[1]
     arm01_dev=channels[2]
+    arm02_dev=channels[3]
 
 rem --- Dimension string templates
 
     dim ars01a$:templates$[1]
     dim arm01a$:templates$[2]
+    dim arm02a$:templates$[3]
 
 rem --- Assign form input values to local variables
 
@@ -51,6 +54,7 @@ rem --- Assign form input values to local variables
     begzip$=option!.getOptionData("ZIP_CODE_1")
     endzip$=option!.getOptionData("ZIP_CODE_2")
     labels=num(labels$)
+    col_format$=option!.getOptionData("COL_FORMAT")
 
 rem --- Retrieve parameter records
 
@@ -60,8 +64,37 @@ rem --- Retrieve parameter records
     length=num(ars01a.label_length$)
     width=num(ars01a.label_width$)
 
-rem --- Initializations
+rem --- Document initializations
+    if col_format$="Y"
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+	columns=5
+	dim columns$[columns,10]
 
+        columns$[0,0]="Name",columns$[0,1]="C",columns$[0,2]="30"
+        columns$[1,0]="Address 1",columns$[1,1]="C",columns$[1,2]="30"
+        columns$[2,0]="Address 2",columns$[2,1]="C",columns$[2,2]="30"
+        columns$[3,0]="Address 3",columns$[3,1]="C",columns$[3,2]="30"
+        columns$[4,0]="Address 4",columns$[4,1]="C",columns$[4,2]="30"
+        columns$[5,0]="Address 5",columns$[5,1]="C",columns$[5,2]="30"
+
+        headings=4
+        dim headings$[headings]
+        headings$[0]=sysinfo.firm_name$
+        headings$[1]=sysinfo.task_desc$
+        headings$[2]=range$
+        if sequence$="N" headings$[3]="by Customer ID"
+:       else if sequence$="A" headings$[3]="by Alternate Sequence"
+:       else if sequence$="Z" headings$[3]="by Zip Code"
+    endif    
+
+rem --- Initializations
     dim label$(across*width*6),linefeeds$(length,$0A$)
     answer$="Y"
     msg_id$="PRINT_TEST_PATTERN"
@@ -85,38 +118,45 @@ rem --- Initializations
     endif
     begvalue$=cvs(begvalue$,2)
     endvalue=len(endvalue$)
+    if col_format$="Y"
+        if begvalue$="" beg_out$="First" else beg_out$=begvalue$
+        if endvalue$="" end_out$="Last" else end_out$=endvalue$
+        headings$[4]="From "+beg_out$+" Through "+end_out$
+    endif
 
 rem --- Open the printer
 
-    printer_open$="N"
+    if col_format$<>"Y"
+        printer_open$="N"
 
 rem --- Print test patterns until the user is satisfied
 
-    while answer$="Y"
-        dim msg_tokens$[1]
-        msg_opt$=""
-        gosub disp_message
-        if msg_opt$<>"Y" break
+        while answer$="Y"
+            dim msg_tokens$[1]
+            msg_opt$=""
+            gosub disp_message
+            if msg_opt$<>"Y" break
 
         rem --- Print test pattern
 
+            if printer_open$="N"
+                call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+                if status exitto std_exit
+                printer_open$="Y"
+            endif
+            dim label$(across*width*length,"X")
+            printed_across=1
+            gosub label
+            msg_id$="ANOTHER_PATTERN"
+        wend
+        if msg_opt$="C" goto std_exit
+
         if printer_open$="N"
             call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-            if status exitto std_exit
-            printer_open$="Y"
+            if status goto std_exit
         endif
-        dim label$(across*width*length,"X")
-        printed_across=1
-        gosub label
-        msg_id$="ANOTHER_PATTERN"
-    wend
-    if msg_opt$="C" goto std_exit
-
-    if printer_open$="N"
-        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-        if status goto std_exit
     endif
-
+    
 rem --- Start the progress meter and position the file
 
     read(arm01_dev,key=firm_id$,knum=keynum,dom=*next)
@@ -143,6 +183,11 @@ rem --- Read next Customer Master (arm-01) record
           if endvalue$<>"" if k$(3,endvalue)>endvalue$ break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           read record (arm01_dev) arm01a$
+          dim arm02a$:fattr(arm02a$)
+          read record (arm02_dev,key=k$+"  ") arm02a$
+          if cvs(labelcode$,3)<>""
+            if cvs(arm02a.label_code$,3)<>cvs(label_code$,3) continue
+          endif
 
           rem --- Print the label(s) for this customer
 
@@ -154,12 +199,22 @@ rem --- Read next Customer Master (arm-01) record
                 address$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+
 :                        arm01a.addr_line_4$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$
                 call pgmdir$+"adc_address.aon",address$,24,5,9,30
-                label$(width*(printed_across-1)+1,width)=arm01a.customer_name$
-                label$(width*(across+printed_across-1)+1,width)=address$(1,30)
-                label$(width*(2*across+printed_across-1)+1,width)=address$(31,30)
-                label$(width*(3*across+printed_across-1)+1,width)=address$(61,30)
-                label$(width*(4*across+printed_across-1)+1,width)=address$(91,30)
-                label$(width*(5*across+printed_across-1)+1,width)=address$(121,30)
+                if col_format$<>"Y"
+                    label$(width*(printed_across-1)+1,width)=arm01a.customer_name$
+                    label$(width*(across+printed_across-1)+1,width)=address$(1,30)
+                    label$(width*(2*across+printed_across-1)+1,width)=address$(31,30)
+                    label$(width*(3*across+printed_across-1)+1,width)=address$(61,30)
+                    label$(width*(4*across+printed_across-1)+1,width)=address$(91,30)
+                    label$(width*(5*across+printed_across-1)+1,width)=address$(121,30)
+                endif    
+                if col_format$="Y"
+                    OutVect!.addItem(arm01a.customer_name$)
+                    OutVect!.addItem(address$(1,30))
+                    OutVect!.addItem(address$(31,30))
+                    OutVect!.addItem(address$(61,30))
+                    OutVect!.addItem(address$(91,30))
+                    OutVect!.addItem(address$(121,30))
+                endif
           wend
 
           rem --- Loop back for next customer master
@@ -173,7 +228,7 @@ rem --- All done
 
 label: rem --- Print the label(s)
 
-    if printed_across=0 return
+    if printed_across=0 or col_format$="Y" return
     if first 
        for x=1 to length
            print (printer_dev) ""
