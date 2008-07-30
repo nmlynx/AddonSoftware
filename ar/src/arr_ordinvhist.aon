@@ -82,17 +82,25 @@ rem --- Assign form input values to local variables
     ord_inv$=fnget_fld_data$(table$,"ORD_INV")
     beg_ord_inv$=fnget_fld_data$(table$,"BEG_ORD_INV")
 
+rem --- Get masks
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,m0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",m4$,0,m4
+
     switch pos(ord_inv$="OI")
         case 1
             w3$="Order",w4$="Invoice",w5$="Ord Date",history$=""
-            title1$="Open Orders, Customer "+cust_id$,title2$="Beginning with "
+            title1$="Open Orders, Customer "+fnmask$(cust_id$(1,m0),m0$),title2$="Beginning with "
             if ord_inv_no$<>"" title2$=title2$+"order# "+ord_inv_no$ else title2$=title2$+"First Order"
             header_channel=ope01_dev,detail_channel=ope11_dev,lot_channel=ope21_dev
             dim hdrrec$:fattr(ope01a$),dtlrec$:fattr(ope11a$),lotrec$:fattr(ope21a$)
         break
         case 2
             w3$="Invoice",w4$="Order",w5$="Inv Date",history$="Y"
-            title1$="Invoice History, Customer "+cust_id$,title2$="Beginning with "
+            title1$="Invoice History, Customer "+fnmask$(cust_id$(1,m0),m0$),title2$="Beginning with "
             if ord_inv_no$<>"" title2$=title2$+"invoice# "+ord_inv_no$ else title2$=title2$+"First Invoice"
             header_channel=opt01_dev,detail_channel=opt11_dev,lot_channel=opt21_dev
             dim hdrrec$:fattr(opt01a$),dtlrec$:fattr(opt11a$),lotrec$:fattr(opt21a$)
@@ -115,13 +123,6 @@ rem --- Initializations
     dim x0$(200),x[13],z0$(52),z1$(64),z[17]
     dim heading1$(width),heading2$(width)
     lot_ser$=ivs01a.lotser_flag$
-    m1$=ivs01a.amount_mask$,m2$=ivs01a.unit_mask$,m3$=ivs01a.cost_mask$,m4$=ivs01a.price_mask$
-    m1=len(m1$),m2=len(m2$),m3=len(m3$),m4=len(m4$)
-
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
-    call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
-    call pgmdir$+"adc_sizemask.aon",m4$,m4,10,15
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,header_channel,1,meter_num,status
 
@@ -143,9 +144,9 @@ rem --- column headings
 		columns$[4,0]="PO Number",columns$[4,1]="N",columns$[4,2]="15"
 		columns$[5,0]="Ship-Via",columns$[5,1]="N",columns$[5,2]="15"
 		columns$[6,0]="Slp",columns$[6,1]="N",columns$[6,2]="5"
-		columns$[7,0]=w4$,columns$[7,1]="N",columns$[7,2]="20",columns$[7,3]=m2$
-		columns$[8,0]=col8$,columns$[8,1]="N",columns$[8,2]="20",columns$[8,3]=m3$
-		columns$[9,0]=col9$,columns$[9,1]="N",columns$[9,2]="20",columns$[9,3]=m1$
+		columns$[7,0]=w4$,columns$[7,1]="N",columns$[7,2]="20"
+		columns$[8,0]=col8$,columns$[8,1]="N",columns$[8,2]="20"
+		columns$[9,0]=col9$,columns$[9,1]="N",columns$[9,2]="20"
 rem --- miscellaneous headings
     dim headings$[4]
     headings$[0]=firm_name$,headings$[1]=task_desc$
