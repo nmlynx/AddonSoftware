@@ -70,8 +70,8 @@ rem --- Find last non-blank line (or last line if all are blank)
 zipcode: rem --- Will the ZIP code fit on this line?
 
     last$=cvs(buffer$(ll,width),2)
-    if width>=len(last$+"  "+zip$) buffer$(ll,width)=last$+"  "+zip$ 
-:                             else ll=ll+width,buffer$(ll)=zip$
+    if width>=len(last$+"  "+postal$) buffer$(ll,width)=last$+"  "+postal$ 
+:                             else ll=ll+width,buffer$(ll)=postal$
 
 rem --- Add country if it exists
 
