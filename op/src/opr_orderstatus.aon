@@ -15,10 +15,12 @@ rem --- Document initializations
         OutVect!=bbjAPI().getSysGui().makeVector()
         HdrVect!=bbjAPI().getSysGui().makeVector()
         BrkVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
         rep_date$=date(0:"%Mz/%Dz/%Yd")
         rep_date_stamp$=date(0:"%Yd%Mz%Dz")
         rep_time$=date(0:"%hz:%mz %p")
         rep_time_stamp$=date(0:"%Hz%mz%sz")
+        rep_prog$=pgm(-2)
 
 rem --- Retrieve the program path
 
@@ -112,18 +114,18 @@ rem --- Initializations
         when$=sysinfo.system_date$
 
         dim columns$[9,10]
-        columns = 10
+        columns = 9
+          columns$[0,0]="Customer",             columns$[0,1]="C",columns$[0,2]="8"
+          columns$[1,0]="",                     columns$[1,1]="C",columns$[1,2]="20"
+          columns$[2,0]="Order^Number",         columns$[2,1]="C",columns$[2,2]="10"
+          columns$[3,0]="Order Date",           columns$[3,1]="C",columns$[3,2]="8"
+          columns$[4,0]="Ship Date",            columns$[4,1]="C",columns$[4,2]="8"
+          columns$[5,0]="PO Number",            columns$[5,1]="C",columns$[5,2]="8"
+          columns$[6,0]="Ship-Via",             columns$[6,1]="C",columns$[6,2]="10"
+          columns$[7,0]="Terms",                columns$[7,1]="C",columns$[7,2]="20"
+          columns$[8,0]="Order^Type",           columns$[8,1]="C",columns$[8,2]="10"
+          columns$[9,0]="Order Amt",            columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$,columns$[9,10]="T"
 
-        columns$[0,0]="Customer",       columns$[0,1]="C",columns$[0,2]="8"
-        columns$[1,0]="",               columns$[1,1]="C",columns$[1,2]="20"
-        columns$[2,0]="Order No",       columns$[2,1]="C",columns$[2,2]="10"
-        columns$[3,0]="Order Date",     columns$[3,1]="C",columns$[3,2]="8"
-        columns$[4,0]="Ship Date",      columns$[4,1]="C",columns$[4,2]="8"
-        columns$[5,0]="P.O NO",         columns$[5,1]="C",columns$[5,2]="8"
-        columns$[6,0]="Ship-Via",       columns$[6,1]="C",columns$[6,2]="10"
-        columns$[7,0]="Terms",          columns$[7,1]="C",columns$[7,2]="20"
-        columns$[8,0]="Ord.Type",       columns$[8,1]="C",columns$[8,2]="5"
-        columns$[9,0]="Order Amt",      columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$
 
 rem retrieve template for OPE_ORDHDR record key
         call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDHDR","PRIMARY",ope01a_key_tpl$,table_chans$[all],status$
@@ -251,12 +253,13 @@ rem --- End
 
         done=1
         gosub customer_break
-        OutVect!.addItem(str(t0))
-        OutVect!.addItem(" Total Orders ")
+        xwk = fnblank(10)
+        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+        xwk = fnblank(1)
+        OutVect!.addItem(str(t0)+"    "+" Total Orders ")
         xwk = fnblank(6)
         OutVect!.addItem("Total Amount")
         OutVect!.addItem(str(t1))
-
         goto std_exit
 
 display_fields:
