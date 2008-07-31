@@ -89,19 +89,19 @@ Invoice Date Modification Register,ARR_DATEREGISTER,A,ARR_DATEREGISTER,arr_dater
 Change Sales Analysis Flag,ARX_CHANGESAFLAG,T,ARX_CHANGESAFLAG,,v7,,,,,,,
 General Ledger,GLMENU,M,,,,,,,,,,
 Journal Entry,GLE_JRNLHDR,T,GLE_JRNLHDR,,GLE.CA,SV/CH,Y,,,,,
-Journal Entry Register,GLR_JOURNAL,A,,glr_journal.aon,GLR.MA,JL/CH,Y,,Y,Done-PPT-BP,,"Note - this register runs glr_recap.  Once converted to DocOut, just change the glr_recap program name to glr_recap_DO, as there is already a DocOut version of the recap."
+Journal Entry Register,GLR_JOURNAL,A,,glr_journal.aon,GLR.MA,JL/CH,Y,,Y,Done-PPT-BP,,"Note - this register runs glr_recap.  Once converted to DocOut, just change the glr_recap program name to glr_recap_DO, as there is already a DocOut version of the recap. Added the line rep_prog$=pgm(-2)"
 Daily Detail Register,GLR_DAILYDETAIL,T,GLR_DAILYDETAIL,,GLR.DA,JL/CH,Y,,Y,,,
 Account Allocation Entry,GLE_ALLOCHDR,T,GLE_ALLOCHDR,,GLE.EA,SV/CH,Y,, ,,,
-Account Allocation Register,GLR_ALLOCATE,T,GLR_ALLOCATE,,GLR.QA,JL/CH,Y,,Y,Done SV-BP,,
+Account Allocation Register,GLR_ALLOCATE,T,GLR_ALLOCATE,,GLR.QA,JL/CH,Y,,Y,Done SV-BP,,Added the line rep_prog$=pgm(-2) 
 Bank Reconciliation,GLM_BANKMASTER,T,GLM_BANKMASTER,,APM.EA,SV,P,,,,,
 Reports,GLMENU_REPORTS,G,,,,,,,,,,
-Chart Of Accounts Listing,GLR_ACCTLIST,T,GLR_ACCTLIST,,GLR.KA,SV,Y,,Y,Done-CH,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH"
-Daily Detail Register,GLR_DAILYDETAIL_RP,T,GLR_DAILYDETAIL,,GLR.DA,JL,Y,,Y,Done-PPT-BP,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH"
-Transaction History Report,GLR_TRANSHISTORY,T,GLR_TRANSHISTORY,,GLR.CA,SV,Y,,Y,Done-PPT-BP,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH"
-Summary Activity Report,GLR_SUMMARY,T,GLR_SUMMARY,,GLR.IA,JL,Y,,Y,Done-PPT-BP,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH"
-General Ledger Trial Balance,GLR_TRIALBALANCE,T,GLR_TRIALBALANCE,,GLR.BA,JL,Y,Y,Y,Done-PPT-BP,,"modified 8/30; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH"
-Profit and Loss Statement,GLR_PROFITLOSS,T,GLR_PROFITLOSS,,GLR.PA,SV,Y,,Y,Done-PPT-BP,,
-Balance Sheet,GLR_BALANCE,T,GLR_BALANCE,,GLR.EA,JL,Y,,Y,Done-PPT-BP,,
+Chart Of Accounts Listing,GLR_ACCTLIST,T,GLR_ACCTLIST,,GLR.KA,SV,Y,,Y,Done-CH,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH; Added the line rep_prog$=pgm(-2) "
+Daily Detail Register,GLR_DAILYDETAIL_RP,T,GLR_DAILYDETAIL,,GLR.DA,JL,Y,,Y,Done-PPT-BP,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH; Added the line rep_prog$=pgm(-2) "
+Transaction History Report,GLR_TRANSHISTORY,T,GLR_TRANSHISTORY,,GLR.CA,SV,Y,,Y,Done-PPT-BP,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH; Added the line rep_prog$=pgm(-2) "
+Summary Activity Report,GLR_SUMMARY,T,GLR_SUMMARY,,GLR.IA,JL,Y,,Y,Done-PPT-BP,,"modified 8/29; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH; Added the line rep_prog$=pgm(-2) "
+General Ledger Trial Balance,GLR_TRIALBALANCE,T,GLR_TRIALBALANCE,,GLR.BA,JL,Y,Y,Y,Done-PPT-BP,,"modified 8/30; added Option! syntax, adc_fileopen/template mods, rd/ad ==> ba directories/publics. CH; Added the line rep_prog$=pgm(-2) "
+Profit and Loss Statement,GLR_PROFITLOSS,T,GLR_PROFITLOSS,,GLR.PA,SV,Y,,Y,Done-PPT-BP,,Added the line rep_prog$=pgm(-2) 
+Balance Sheet,GLR_BALANCE,T,GLR_BALANCE,,GLR.EA,JL,Y,,Y,Done-PPT-BP,,Added the line rep_prog$=pgm(-2) 
 Financial Report Printing,GLR_FINANCIALSRP,T,GLR_FINANCIALS,,GLE.AA,JB,Y,Y,Y,,,
 13 Period Financial Report Printing,GLR_13PERIODRP,T,GLR_13PERIOD,,GLE.BA,JL,P,Y,Y,,,
 Budgeting,GLMENU_BUDGETS,G,,,,,,,,,,
@@ -114,11 +114,11 @@ Custom Financials,GLMENU_CUSTOM,G,,,,,,,,,,
 Financial Report Master,GLM_FINMASTER,T,GLM_FINMASTER,,GLM.DA,CT/CH,Y,,,,,New - Detail FS Setup (GLM_FINDETAIL) - runs from GLM_FINMASTER
 Report Heading,GLM_FINHEADING,T,GLM_FINHEADING,,GLM.KA,,,Y,,,,
 Reports by Account,GLM_FA,T,,glm_fa.aon,GLM.FA,CH,Y,,,,,
-Acct/Report Cross Reference Report,GLR_ACCTXREF,A,,glr_acctxref.aon,GLR.GA,JL,P,,Y,Done-PPT-BP,,
-Total/Report Cross Reference Report,GLR_TOTALSREPORT,A,,glr_totalsreport.aon,GLR.OA,JL,P,,Y,Done-PPT-BP,,
+Acct/Report Cross Reference Report,GLR_ACCTXREF,A,,glr_acctxref.aon,GLR.GA,JL,P,,Y,Done-PPT-BP,,Added the line rep_prog$=pgm(-2) 
+Total/Report Cross Reference Report,GLR_TOTALSREPORT,A,,glr_totalsreport.aon,GLR.OA,JL,P,,Y,Done-PPT-BP,,Added the line rep_prog$=pgm(-2) 
 Report/Account Maintenance,GLM_GA,T,,glm_ga.aon,GLM.GA,,,,,,,
 Consolidated Acct/Rpt Maintenance,GLM_IA,T,,glm_ia.aon,GLM.IA,CH,Y,,,,,
-Consolidated Acct/Rpt Xref Report,GLR_CONSACCTXREF,A,,glr_consacctxref.aon,GLR.JA,JL,Y,Y,Y,Done PS-BP,,
+Consolidated Acct/Rpt Xref Report,GLR_CONSACCTXREF,A,,glr_consacctxref.aon,GLR.JA,JL,Y,Y,Y,Done PS-BP,,Added the line rep_prog$=pgm(-2) 
 Create Departmental Reports,GLM_CONSXREFRPT,T,,glm_ha.aon,GLM.HA,,,,,,,
 Copy Financial Reports,GLM_JA,T,,glm_ja.aon,GLM.JA,JB,Y,,,,,
 Financial Report Printing,GLR_FINANCIALS,T,GLR_FINANCIALS,,GLE.AA,,,Y,Y,,,
