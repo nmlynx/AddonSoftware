@@ -6,62 +6,63 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-            setesc std_error
-            seterr std_error
+        setesc std_error
+        seterr std_error
 
 rem --- Document initializations
-            OutVect!=bbjAPI().getSysGui().makeVector()
-            HdrVect!=bbjAPI().getSysGui().makeVector()
-            BrkVect!=bbjAPI().getSysGui().makeVector()
-            TotVect!=bbjAPI().getSysGui().makeVector()
-            rep_date$=date(0:"%Mz/%Dz/%Yd")
-            rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-            rep_time$=date(0:"%hz:%mz %p")
-            rep_time_stamp$=date(0:"%Hz%mz%sz")
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+        rep_prog$=pgm(-2)
 
 rem --- Retrieve the program path
 
-            pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-            sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-            dim sysinfo$:sysinfo_template$
-            sysinfo$=stbl("+SYSINFO",err=*next)
-            milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-            firm_id$=sysinfo.firm_id$
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
-            files=11,begfile=1,endfile=files
-            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-            files$[1]="aps_params",ids$[1]=files$[1];rem "aps-01A
-            files$[2]="ape-01",ids$[2]="APE_INVOICEHDR"
-            files$[3]="ape-03",ids$[3]="APE_RECURRINGHDR"
-            files$[4]="ape-11",ids$[4]="APE_INVOICEDET"
-            files$[5]="ape-13",ids$[5]="APE_RECURRINGDET"
-            files$[6]="apm-01",ids$[6]="APM_VENDMAST"
-            files$[7]="apc_typecode",ids$[7]=files$[7];rem "apm-10a
-            files$[8]="apt-01",ids$[8]="APT_INVOICEHDR"
-            files$[9]="apc_distribution",ids$[9]=files$[9];rem "apm-10B
-            files$[10]="apc_termscode",ids$[10]=files$[10];rem "apm-10C
-            files$[11]="gls_params",ids$[11]=files$[11];rem "gls-01
-            options$[3]="L"
-            options$[5]="L"
+        files=11,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="aps_params",ids$[1]=files$[1];rem "aps-01A
+        files$[2]="ape-01",ids$[2]="APE_INVOICEHDR"
+        files$[3]="ape-03",ids$[3]="APE_RECURRINGHDR"
+        files$[4]="ape-11",ids$[4]="APE_INVOICEDET"
+        files$[5]="ape-13",ids$[5]="APE_RECURRINGDET"
+        files$[6]="apm-01",ids$[6]="APM_VENDMAST"
+        files$[7]="apc_typecode",ids$[7]=files$[7];rem "apm-10a
+        files$[8]="apt-01",ids$[8]="APT_INVOICEHDR"
+        files$[9]="apc_distribution",ids$[9]=files$[9];rem "apm-10B
+        files$[10]="apc_termscode",ids$[10]=files$[10];rem "apm-10C
+        files$[11]="gls_params",ids$[11]=files$[11];rem "gls-01
+        options$[3]="L"
+        options$[5]="L"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-            if status goto std_exit
-            aps01_dev=channels[1]
-            ape01_dev=channels[2]
-            ape03_dev=channels[3]
-            ape11_dev=channels[4]
-            ape13_dev=channels[5]
-            apm01_dev=channels[6]
-            apm10a_dev=channels[7]
-            apt01_dev=channels[8]
-            apm10b_dev=channels[9]
-            apm10c_dev=channels[10]
-            gls01_dev=channels[11]
+        if status goto std_exit
+        aps01_dev=channels[1]
+        ape01_dev=channels[2]
+        ape03_dev=channels[3]
+        ape11_dev=channels[4]
+        ape13_dev=channels[5]
+        apm01_dev=channels[6]
+        apm10a_dev=channels[7]
+        apt01_dev=channels[8]
+        apm10b_dev=channels[9]
+        apm10c_dev=channels[10]
+        gls01_dev=channels[11]
     
 
 rem --- Dimension string templates
@@ -74,36 +75,36 @@ rem --- Dimension string templates
 
 rem --- store ape01/11 templates for update
 
-    ape01_tpl$=templates$[2],ape11_tpl$=templates$[4]
+        ape01_tpl$=templates$[2],ape11_tpl$=templates$[4]
 
 rem --- Assign form input values to local variables
 
-    month$=Option!.getOptionData("month")
-    year$=Option!.getOptionData("year")
-    month=num(month$)
-    year=num(year$)
+        month$=Option!.getOptionData("month")
+        year$=Option!.getOptionData("year")
+        month=num(month$)
+        year=num(year$)
 
 rem --- Retrieve parameter records
 
-    aps01a_key$=firm_id$+"AP00"
-    find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    gls01a_key$=firm_id$+"GL00"
-    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    vendor_size=num(aps01a.vendor_size$)
-    multitypes=aps01a.multi_types$="Y"
-    retention=aps01a.ret_flag$="Y"
-    cashbasis=aps01a.cash_basis$="Y"
-    m0$=aps01a.vendor_output$
-    m1$=aps01a.amount_mask$
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,9,13
-    m0=len(m0$)
-    m1=len(m1$)
-    max_acct_len=num(gls01a.max_acct_len$)
-    acct_length=num(gls01a.acct_length$)
-    g0$=gls01a.acct_output$
-    g1$=gls01a.amount_mask$
-    g0=len(g0$)
-    g1=len(g1$)
+        aps01a_key$=firm_id$+"AP00"
+        find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+        gls01a_key$=firm_id$+"GL00"
+        find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+        vendor_size=num(aps01a.vendor_size$)
+        multitypes=aps01a.multi_types$="Y"
+        retention=aps01a.ret_flag$="Y"
+        cashbasis=aps01a.cash_basis$="Y"
+        m0$=aps01a.vendor_output$
+        m1$=aps01a.amount_mask$
+        call pgmdir$+"adc_sizemask.aon",m1$,m1,9,13
+        m0=len(m0$)
+        m1=len(m1$)
+        max_acct_len=num(gls01a.max_acct_len$)
+        acct_length=num(gls01a.acct_length$)
+        g0$=gls01a.acct_output$
+        g1$=gls01a.amount_mask$
+        g0=len(g0$)
+        g1=len(g1$)
 
 rem --- Is General Ledger installed and being used?
 
@@ -191,31 +192,31 @@ rem --- Define invoice print and header positions
 
 rem --- Update report heading with month and year
 
-    x=jul(year,month,1)
-    headings$[1]=headings$[1]+" For "+date(x:"%Ms")+" "+date(x:"%Yl")
+        x=jul(year,month,1)
+        headings$[1]=headings$[1]+" For "+date(x:"%Ms")+" "+date(x:"%Yl")
 
 rem --- Define GL print and header positions
 
-    gd[0]=o[2]
-    gd[1]=gd[0]+g0+1
-    gd[2]=o[10]-g1-1
-    gh[0]=gd[0]
-    gh[1]=gd[1] 
-    gh[2]=gd[2]+g1-7
-    gw=min(35,gd[2]-gd[1]-1)
+        gd[0]=o[2]
+        gd[1]=gd[0]+g0+1
+        gd[2]=o[10]-g1-1
+        gh[0]=gd[0]
+        gh[1]=gd[1] 
+        gh[2]=gd[2]+g1-7
+        gw=min(35,gd[2]-gd[1]-1)
 
 rem --- Additional file opens
 
-    files=2,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="glm-01",ids$[1]="GLM_ACCT"
-    files$[2]=glw11$
-    options$[2]="CL"
-    if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+        files=2,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="glm-01",ids$[1]="GLM_ACCT"
+        files$[2]=glw11$
+        options$[2]="CL"
+        if gl$="Y" call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                             ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    glm01_dev=channels[1]
-    glw11_dev=channels[2]
+        if status goto std_exit
+        glm01_dev=channels[1]
+        glw11_dev=channels[2]
 
 rem --- Dimension string templates
 
