@@ -1,3 +1,7 @@
+[[OPC_TAXCODE.GL_ACCOUNT.BINP]]
+if user_tpl.gl_installed$="Y"
+	callpoint!.setTableColumnAttribute("OPC_TAXCODE.GL_ACCOUNT","MINL","1")
+endif
 [[OPC_TAXCODE.TAX_RATE.AVAL]]
 rem --- Enable/Disable G/L Account"
 
@@ -264,7 +268,7 @@ rem --- Open second channel to OPC_TAXCODE
 	if status goto std_exit
 
 rem --- Keep info in user_tpl$
-	dim user_tpl$:"opm06_dev:n(4),opm06_tpl:c(500),this_rate:n(10),rate[10]:n(10),this_code:c(10),gl:C(1)"
+	dim user_tpl$:"opm06_dev:n(4),opm06_tpl:c(500),this_rate:n(10),rate[10]:n(10),this_code:c(10),gl:C(1),gl_installed:c(1)"
 	user_tpl.opm06_dev=channels[1]
 	user_tpl.opm06_tpl$=templates$[1]
 	call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
@@ -273,3 +277,5 @@ rem --- Keep info in user_tpl$
 		enableit$="I"
 		gosub able_gl
 	endif
+	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
+	user_tpl.gl_installed$=info$[20]
