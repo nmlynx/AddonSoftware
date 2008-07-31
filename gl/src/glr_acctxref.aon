@@ -74,7 +74,7 @@ rem --- Document initializations
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
     rep_time_stamp$=date(0:"%Hz%mz%sz")
-
+    rep_prog$=pgm(-2)
 
 rem --- Initializations
 
@@ -96,8 +96,8 @@ rem --- Headings and print positions
     dim columns$[11,10]
     columns = 11
 
-    columns$[0,0]="Account",            columns$[0,1]="C",columns$[0,2]="10"
-    columns$[1,0]="Description",        columns$[1,1]="C",columns$[1,2]="25"
+    columns$[0,0]="Account",        columns$[0,1]="C",columns$[0,2]="10"
+    columns$[1,0]="Description",    columns$[1,1]="C",columns$[1,2]="25"
     columns$[2,0]="Assign 1",       columns$[2,1]="C",columns$[2,2]="10"
     columns$[3,0]="Assign 2",       columns$[3,1]="C",columns$[3,2]="10"
     columns$[4,0]="Assign 3",       columns$[4,1]="C",columns$[4,2]="10"
