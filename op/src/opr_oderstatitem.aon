@@ -6,8 +6,7 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-
-
+        
         seterr std_error
         setesc std_error
 
@@ -60,18 +59,18 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-            p8$ = option!.getOptionData("Product_type")
-            p5$ = option!.getOptionData("options")
-            p9$ = option!.getOptionData("summary_detail")   
-            p6$ = option!.getOptionData("Warehouse_id")
+           p8$ = option!.getOptionData("Product_type")
+           p5$ = option!.getOptionData("options")
+           p9$ = option!.getOptionData("summary_detail")   
+           p6$ = option!.getOptionData("Warehouse_id")
 
 
 rem --- Retrieve parameter records
 
-            ars01a_key$=firm_id$+"AR00"
-            find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-            ivs01a_key$=firm_id$+"IV00"
-            find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+           ars01a_key$=firm_id$+"AR00"
+           find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+           ivs01a_key$=firm_id$+"IV00"
+           find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 
 
