@@ -1,15 +1,17 @@
 [[ARC_TERMCODE.BSHO]]
-rem pgm_dir$=stbl("+DIR_PGM")
+num_files=1
+dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+open_tables$[1]="ARS_CREDIT",open_opts$[1]="OTA"
+gosub open_tables
+ars_credit=num(open_chans$[1])
+dim ars_credit$:open_tpls$[1]
 
-rem --- Disable Credit Hold flag if Credit Management not installed
-rem --- Until Order Processing is built, this code won't be used
-rem --- the Credit Hold field will have to be redisplayed using Optional Defs on the field
-rem get template and read OPS_CREDIT to find correct field name
-rem if OPS_CREDIT <> "Y"
-rem 	ctl_name$="OPS_CREDIT.INSTALLED_FLAG"
-rem 	ctl_stat$="I"
-rem 	gosub disable_fields
-rem endif
+read record (ars_credit,key=firm_id$+"AR01",dom=*next)ars_credit$
+if ars_credit.sys_install$ <> "Y"
+ 	ctl_name$="ARC_TERMCODE.CRED_HOLD"
+ 	ctl_stat$="I"
+ 	gosub disable_fields
+endif
 [[ARC_TERMCODE.<CUSTOM>]]
 disable_fields:
 rem --- used to disable/enable controls depending on parameter settings
