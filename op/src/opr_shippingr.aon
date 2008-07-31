@@ -117,7 +117,6 @@ rem --- Initialize Data
         m1=len(m1$)
         m2=len(m2$)
         if m2<9 then call pgmdir$+"adc_sizemask.aon",m2$,m2,9,9
-        p8=15
         if p9$="" then p9$="D"
         if p7$="" then p7$=optn$
         dim j$(m1+m2*7,"-"),j0$(10,"0"),j1$(50," ")
@@ -131,8 +130,8 @@ rem --- Initialize Data
             if pos("C"=p7$)>0 then h3$=h3$+"Credit Held "
             h3$=h3$+" Orders Only"
        endif
-
-
+       
+       
 rem --- retrieve template for OPE_ORDHDR record key
         call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDHDR","PRIMARY",ope01a_key_tpl$,table_chans$[all],status$
         dim ope01a_key$:ope01a_key_tpl$
@@ -223,14 +222,16 @@ heading_date:
             v=p8*x,v0$=""
             call pgmdir$+"adc_daydates.aon",v$,v0$,v
 
-            if v$="N" or v0$="N" then goto l6140
-            h5$=v0$+h5$
-            v=p8*x+1,v0$=""
-            call pgmdir$+"adc_daydates.aon",v$,v0$,v
+            if v$<>"N" and v0$<>"N" then 
+                h5$=v0$+h5$
+                v=p8*x+1,v0$=""
+                call pgmdir$+"adc_daydates.aon",v$,v0$,v
 
-            if v$="N" or v0$="N" then goto l6140
-            h4$=v0$+h4$
-        l6140:
+                if v$<>"N" and v0$<>"N" then 
+                    h4$=v0$+h4$
+                endif
+            endif
+
         next x
         h4$=p6$+h4$
         return
