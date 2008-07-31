@@ -80,6 +80,7 @@ rem --- OutVect! for DocOut, date/time
         rep_date_stamp$=date(0:"%Yd%Mz%Dz")
 	rep_time$=date(0:"%hz:%mz %p")
 	rep_time_stamp$=date(0:"%Hz%mz%sz")
+        rep_prog$=pgm(-2)
 
 rem --- Initializations
 
@@ -227,10 +228,10 @@ rem --- Print detail line
           OutVect!.addItem(memo$)
           OutVect!.addItem(debit$)
           OutVect!.addItem(credit$)
-          if lf$<>"" 
-             xwk=fnblank(6)
-             lf$=""
-          endif
+rem          if lf$<>"" 
+rem             xwk=fnblank(6)
+rem             lf$=""
+rem          endif
           l1=l1+1
 rem --- Print reference information?
 reference: 
