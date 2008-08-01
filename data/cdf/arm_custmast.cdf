@@ -124,7 +124,7 @@ rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
 	sys_pgm$=stbl("+DIR_SYP")
 
-	num_files=8
+	num_files=6
 	dim files$[num_files],options$[num_files],ids$[num_files],templates$[num_files],channels[num_files]
 	files$[1]="gls_params",ids$[1]="GLS_PARAMS",options$[1]="OTA"
 	files$[2]="ars_params",ids$[2]="ARS_PARAMS",options$[2]="OTA"

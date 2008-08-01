@@ -119,7 +119,7 @@ endif
 [[APM_VENDMAST.BSHO]]
 rem --- Open/Lock files
  
-	files=7,begfile=1,endfile=files
+	files=6,begfile=1,endfile=files
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="APE_INVOICEHDR";rem --- ape-01
 	files$[2]="APT_INVOICEHDR";rem --- apt-01
