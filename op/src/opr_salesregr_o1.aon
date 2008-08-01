@@ -15,10 +15,12 @@ rem --- Document initializations
         OutVect!=bbjAPI().getSysGui().makeVector()
         HdrVect!=bbjAPI().getSysGui().makeVector()
         BrkVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
         rep_date$=date(0:"%Mz/%Dz/%Yd")
         rep_date_stamp$=date(0:"%Yd%Mz%Dz")
         rep_time$=date(0:"%hz:%mz %p")
         rep_time_stamp$=date(0:"%Hz%mz%sz")
+        rep_prog$=pgm(-2)
 
 rem --- Retrieve the program path
 
@@ -80,7 +82,7 @@ rem --- Initializations
 
 rem --Column heading
         dim columns$[7,10]
-        columns = 8
+        columns = 7
 
         columns$[0,0]="Customer No & Name", columns$[0,1]="C",columns$[0,2]="30"
         columns$[1,0]="Inv.No",             columns$[1,1]="C",columns$[1,2]="8"
@@ -88,8 +90,8 @@ rem --Column heading
         columns$[3,0]="Line.No",            columns$[3,1]="C",columns$[3,2]="8"
         columns$[4,0]="G.L.No.",            columns$[4,1]="C",columns$[4,2]="8"
         columns$[5,0]="Description",        columns$[5,1]="C",columns$[5,2]="25"
-        columns$[6,0]="Debit",              columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$
-        columns$[7,0]="Credit",             columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$
+        columns$[6,0]="Debit",              columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+        columns$[7,0]="Credit",             columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
 
 
 rem --- retrieve template for ARM_CUSTMAST record key
@@ -364,12 +366,8 @@ done: rem --- End
         t9$="E"
         gosub customer_break
         if r5$="D" then
-            xwk = fnblank(6)
-            OutVect!.addItem("-----------------")
-            OutVect!.addItem("-----------------")
-            xwk = fnblank(6)
-            OutVect!.addItem("-----------------")
-            OutVect!.addItem("-----------------")
+            xwk = fnblank(16)
+            TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             OutVect!.addItem("Grand Total : ")
             if d2-abs(c2)<>0 then
                 xwk = fnblank(4)
@@ -478,9 +476,8 @@ customer_break: rem --- Customer Break
             chce=0
         endif
         if r5$="D" then
-            xwk = fnblank(3)
-            OutVect!.addItem("-----------------")
-            OutVect!.addItem("-----------------")
+            xwk = fnblank(5)
+            TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             OutVect!.addItem("Customer "+t0$+" Total: ")
             xwk = fnblank(5)
             OutVect!.addItem(str(d1))
