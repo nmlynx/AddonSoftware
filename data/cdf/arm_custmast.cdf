@@ -10,15 +10,24 @@ rem  --- Check for Open AR Invoices
 
 check_op_ord:
 	if user_tpl.op_installed$<>"Y" goto done_checking
-	read (user_tpl.ope01_dev,key=firm_id$+"  "+cust$,dom=*next)
-	ope01_key$=key(user_tpl.ope01_dev,end=check_op_inv)
+
+	num_files=2
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="OPE_INVHDR",open_opts$[1]="OTA"
+	open_tables$[2]="OPT_ORDHDR",open_opts$[2]="OTA"
+	gosub open_tables
+	ope01_dev=num(open_chans$[1])
+	opt01_dev=num(open_chans$[2])
+
+	read (ope01_dev,key=firm_id$+"  "+cust$,dom=*next)
+	ope01_key$=key(ope01_dev,end=check_op_inv)
 	if pos(firm_id$+"  "+cust$=ope01_key$)<>1 goto check_op_inv
 	delete_msg$="Open Orders exist - Customer deletion not allowed"
 	goto done_checking	
 
 check_op_inv:
-	read (user_tpl.opt01_dev,key=firm_id$+"  "+cust$,dom=*next)
-	opt01_key$=key(user_tpl.opt01_dev,end=done_checking)              
+	read (opt01_dev,key=firm_id$+"  "+cust$,dom=*next)
+	opt01_key$=key(opt01_dev,end=done_checking)              
 	if pos(firm_id$+"  "+cust$=opt01_key$)<>1 goto done_checking
 	delete_msg$="Historical Invoices exist - Customer deletion not allowed"
 
@@ -123,11 +132,11 @@ rem --- Open/Lock files
 	files$[4]="ars_credit",ids$[4]="ARS_CREDIT",options$[4]="OTA"; rem ars-01C
 	files$[5]="arm-02",ids$[5]="ARM_CUSTDET",options$[5]="OTA"
 	files$[6]="art-01",ids$[6]="ART_INVHDR",options$[6]="OTA"
-	files$[7]="ope-01",ids$[7]="OPE_ORDHDR",options$[7]="OTA"
-	files$[8]="opt-01",ids$[8]="OPT_ORDHDR",options$[8]="OTA"
+
 	call stbl("+DIR_PGM")+"adc_fileopen.aon",action,1,num_files,files$[all],options$[all],
 :                              ids$[all],templates$[all],channels[all],batch,status
 	if status goto std_exit
+
 	gls01_dev=channels[1]
 	ars01_dev=channels[2]
 	ars10_dev=channels[3]
@@ -165,7 +174,7 @@ rem --- Retrieve parameter data
 
 	dim user_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),"+
 :		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024),new_cust:c(1),"+
-:		"art01_dev:n(5),ope01_dev:n(5),opt01_dev:n(5)"
+:		"art01_dev:n(5)"
 
 	user_tpl.app$="AR"
 	user_tpl.gl_installed$=gl$
@@ -177,8 +186,6 @@ rem --- Retrieve parameter data
 	user_tpl.cust_dflt_tpl$=fattr(ars10d$)
 	user_tpl.cust_dflt_rec$=ars10d$
 	user_tpl.art01_dev=channels[6]
-	user_tpl.ope01_dev=channels[7]
-	user_tpl.opt01_dev=channels[8]
 
 	dim dctl$[17]
 

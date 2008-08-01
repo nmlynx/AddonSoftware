@@ -42,7 +42,12 @@ vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
 
 if cvs(vendor_id$,3)<>""
 	if user_tpl.iv_installed$="Y"
-		ivm01_dev=fnget_dev("IVM_ITEMMAST")
+		num_files=1
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+		open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA"
+		gosub open_tables
+		ivm01_dev=num(open_chans$[1])
+		
 		iv_key$=""
 		read(ivm01_dev,key=firm_id$+vendor_id$,knum=3,dom=*next)
 		iv_key$=key(ivm01_dev,end=*next)
@@ -120,9 +125,8 @@ rem --- Open/Lock files
 	files$[2]="APT_INVOICEHDR";rem --- apt-01
 	files$[3]="APT_INVOICEDET";rem --- apt-11
 	files$[4]="APS_PARAMS";rem --- aps-01
-	files$[5]="IVM_ITEMMAST";rem --- ivm-01
-	files$[6]="GLS_PARAMS";rem --- gls-01
-	files$[7]="IVS_PARAMS";rem --- ivs-01
+	files$[5]="GLS_PARAMS";rem --- gls-01
+	files$[6]="IVS_PARAMS";rem --- ivs-01
 
 	for wkx=begfile to endfile
 		options$[wkx]="OTA"
@@ -134,15 +138,13 @@ rem --- Open/Lock files
 	if status$<>"" goto std_exit
 
 	aps01_dev=num(chans$[4])	
-	gls01_dev=num(chans$[6])
-	ivs01_dev=num(chans$[7])
-
-	ivm01_dev=num(chans$[5])
+	gls01_dev=num(chans$[5])
+	ivs01_dev=num(chans$[6])
 
 
 rem --- Dimension miscellaneous string templates
 
-	dim aps01a$:templates$[4],gls01a$:templates$[6],ivs01c$:templates$[7]
+	dim aps01a$:templates$[4],gls01a$:templates$[5],ivs01c$:templates$[6]
 
 rem --- Retrieve parameter data
 
