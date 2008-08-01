@@ -6,49 +6,49 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    setesc std_error
-    seterr std_error
+        setesc std_error
+        seterr std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
-    files=12,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[2]="apm-01",ids$[2]="APM_VENDMAST"
-    files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
-    files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
-    files$[5]="ivc_whsecode",ids$[5]="IVC_WHSECODE";rem "ivm-10c"
-    files$[6]="poe-12",ids$[6]="POE_PODET"
-    files$[7]="poe-12",ids$[7]="POE_PODET"
-    files$[8]="pom-02",ids$[8]="POC_LINECODE"
-    files$[10]="aps_params",ids$[10]="APS_PARAMS"
-    files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
-    files$[12]="pos_params",ids$[12]="POS_PARAMS"
+        files=12,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[2]="apm-01",ids$[2]="APM_VENDMAST"
+        files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
+        files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
+        files$[5]="ivc_whsecode",ids$[5]="IVC_WHSECODE";rem "ivm-10c"
+        files$[6]="poe-12",ids$[6]="POE_PODET"
+        files$[7]="poe-12",ids$[7]="POE_PODET"
+        files$[8]="pom-02",ids$[8]="POC_LINECODE"
+        files$[10]="aps_params",ids$[10]="APS_PARAMS"
+        files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
+        files$[12]="pos_params",ids$[12]="POS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    apm01_dev=channels[2]
-    ivm01a_dev=channels[3]
-    ivm02a_dev=channels[4]
-    ivm10c_dev=channels[5]
-    poe12_dev2=channels[6]
-    poe12a_dev=channels[7]
-    pom02a_dev=channels[8]
-    aps01a_dev=channels[10]
-    ivs01a_dev=channels[11]
-    pos01a_dev=channels[12]
+        if status goto std_exit
+        apm01_dev=channels[2]
+        ivm01a_dev=channels[3]
+        ivm02a_dev=channels[4]
+        ivm10c_dev=channels[5]
+        poe12_dev2=channels[6]
+        poe12a_dev=channels[7]
+        pom02a_dev=channels[8]
+        aps01a_dev=channels[10]
+        ivs01a_dev=channels[11]
+        pos01a_dev=channels[12]
 
 rem --- Dimension string templates
 
@@ -59,72 +59,70 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    whsefrom$=option!.getOptionData("warehouse_id_1")
-    whsethru$=option!.getOptionData("warehouse_id_2")
-    itemfrom$=option!.getOptionData("item_id_01")
-    itemthru$=option!.getOptionData("item_id_02")
-    pofrom$=option!.getOptionData("po_no_1")
-    pothru$=option!.getOptionData("po_no_2")
-    vendfrom$=option!.getOptionData("vendor_id_1")
-    vendthru$=option!.getOptionData("vendor_id_2")
-    whichdate$=option!.getOptionData("date_type")
-    datefrom$=option!.getOptionData("pick_date_1")
-    datethru$=option!.getOptionData("pick_date_2")
+        whsefrom$=option!.getOptionData("warehouse_id_1")
+        whsethru$=option!.getOptionData("warehouse_id_2")
+        itemfrom$=option!.getOptionData("item_id_01")
+        itemthru$=option!.getOptionData("item_id_02")
+        pofrom$=option!.getOptionData("po_no_1")
+        pothru$=option!.getOptionData("po_no_2")
+        vendfrom$=option!.getOptionData("vendor_id_1")
+        vendthru$=option!.getOptionData("vendor_id_2")
+        whichdate$=option!.getOptionData("date_type")
+        datefrom$=option!.getOptionData("pick_date_1")
+        datethru$=option!.getOptionData("pick_date_2")
 
 rem --- Retrieve parameter records
 
-    aps01a_key$=firm_id$+"AP00"
-    find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    pos01a_key$=firm_id$+"PO00"
-    find record (pos01a_dev,key=pos01a_key$,err=std_missing_params) pos01a$
+        aps01a_key$=firm_id$+"AP00"
+        find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+        ivs01a_key$=firm_id$+"IV00"
+        find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+        pos01a_key$=firm_id$+"PO00"
+        find record (pos01a_dev,key=pos01a_key$,err=std_missing_params) pos01a$
 
 rem --- Parameters
 
-    dim info$[20],desclen[3],params[3]
-    n2$="PO"
-    when$=sysinfo.system_date$
-    find record (pos01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) pos01a$
-    find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-    vendlen=num(aps01a.vendor_size$)
-    find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
-    ivprecision=num(ivs01a.precision$)
-    itemlen=num(ivs01a.item_id_len$)
-    desclen[1]=num(ivs01a.desc_len_01$)
-    desclen[2]=num(ivs01a.desc_len_02$)
-    desclen[3]=num(ivs01a.desc_len_03$) 
+        dim info$[20],desclen[3],params[3]
+        n2$="PO"
+        when$=sysinfo.system_date$
+        find record (pos01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) pos01a$
+        find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
+        vendlen=num(aps01a.vendor_size$)
+        find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
+        ivprecision=num(ivs01a.precision$)
+        itemlen=num(ivs01a.item_id_len$)
+        desclen[1]=num(ivs01a.desc_len_01$)
+        desclen[2]=num(ivs01a.desc_len_02$)
+        desclen[3]=num(ivs01a.desc_len_03$) 
 
 rem --- masks
 
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","V","",m5$,0,0
-
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vendomask$,0,vendlen
-    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","V","",m5$,0,0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vendomask$,0,vendlen
+        call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
    
 
 rem --- Init Data
 
-    precision ivprecision
-    
-    datetype$="Order Date"
-    if whichdate$="P" datetype$="Promised By Date"
-    if whichdate$="R" datetype$="Date Required"
-    if whichdate$="D" datetype$="Don't Deliver Before Date"
-  
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,10,14
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,9,11
-    call pgmdir$+"adc_sizemask.aon",m3$,m3,5,11
-    call pgmdir$+"adc_sizemask.aon",m5$,m5,7,10
-    dim vendfname$(30),vendtname$(30),whsefname$(24),whsetname$(24)
-    dim itemfdesc$(30),itemtdesc$(30)
+        precision ivprecision
+        
+        datetype$="Order Date"
+        if whichdate$="P" datetype$="Promised By Date"
+        if whichdate$="R" datetype$="Date Required"
+        if whichdate$="D" datetype$="Don't Deliver Before Date"
+        call pgmdir$+"adc_sizemask.aon",m1$,m1,10,14
+        call pgmdir$+"adc_sizemask.aon",m2$,m2,9,11
+        call pgmdir$+"adc_sizemask.aon",m3$,m3,5,11
+        call pgmdir$+"adc_sizemask.aon",m5$,m5,7,10
+        dim vendfname$(30),vendtname$(30),whsefname$(24),whsetname$(24)
+        dim itemfdesc$(30),itemtdesc$(30)
 
 rem --- Run report overlay
 
-    run pgmdir$+"por_pobyitem_o1.aon"
+        run pgmdir$+"por_pobyitem_o1.aon"
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
