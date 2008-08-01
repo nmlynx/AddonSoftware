@@ -23,6 +23,7 @@ rem --- Document initializations
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
     rep_time_stamp$=date(0:"%Hz%mz%sz")
+    rep_prog$=pgm(-2)
 
 rem --- Retrieve sysinfo data
 
@@ -67,12 +68,11 @@ rem --- Initializations
     headings$[1]=headings$[1]+h6$
     headings$[2]="Warehouse: "+whse$
     headings$[3]=h7$
-    if product$="" then headings$[4]="Product Type: All" else headings$[4]="Product Type: "+product$
-    headings$[5]=h8$
-    headings$[6]=h9$
-    pbufwidth=220
-    dim pbuf$(pbufwidth)
+    headings$[4]=h8$
+    headings$[5]=h9$
+    headings$[6]="[HEADER]"
 
+ 
 rem --- Build forecast entry lines
 
     if mpm01a.no_of_pers>2 then 
@@ -113,35 +113,43 @@ rem --- Initialize Period Descriptions
         header$[loop]=period$+"/"+year$
         period=num(period$)-1
         period$=str(period:"00")
-        if period<0 then 
-            year$=fnyear_yy21$(fnyy_year(year$)-1)
+        if period<=0 then 
+             year$=str(num(year$)-1)
             period$=total_periods$
         endif
     next loop
 
 rem --- Initializations for DocOut
 
-    dim columns$[0,10]
-    columns=0
-    columns$[0,0]="Item"+"                 "+"Description"+"                                         "+header$[1]+" Usage    "+header$[2]+" Usage    "+header$[3]+" Usage    "+header$[4]+" Usage",columns$[0,1]="C",columns$[0,2]="220"
+    dim columns$[6,10]
+    columns = 6
+    columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]="6"
+    columns$[1,0]="Description",           columns$[1,1]="C",columns$[1,2]="20"
+    columns$[2,0]="                ",      columns$[2,1]="C",columns$[2,2]="35"
+    columns$[3,0]=header$[1]+" Usage    ", columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]=header$[2]+" Usage    ", columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]=header$[3]+" Usage    ", columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]=header$[4]+" Usage    ", columns$[6,1]="C",columns$[6,2]="10"
 
 rem --- Position ivm-02a sort file
 
     read (ivm02_dev,key=prefix$,knum=3,dom=*next)
 
 rem --- Read next ivm-02a sort record
-
+    flag=1
     while more
 
         k$=key(ivm02_dev,end=*break)
         read record (ivm02_dev) ivm02a$
         if pos(prefix$=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.product_type$+ivm02a.item_id$)<>1 then break
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
-
 rem --- Level breaks?
-
         if ivm02a.warehouse_id$<>t0$ then gosub warehouse_break
-        if ivm02a.product_type$<>t1$ then gosub product_break
+        if ivm02a.product_type$<>t1$ or flag=1 then 
+            gosub product_break
+            gosub sub_heading
+            flag=0
+        endif    
 
 rem --- Retrieve the item master record
 
@@ -165,33 +173,35 @@ rem --- Get item usage totals for the past four periods
 
 rem --- Print detail line
 
-        pbuf$(1)=ivm01a.item_id$+" "+fnitem$(ivm01a.item_desc$,i[2],i[3],i[4])
-        pbuf$(70)=str(usage[1]:m2$)
-        pbuf$(90)=str(usage[2]:m2$)
-        pbuf$(110)=str(usage[3]:m2$)
-        pbuf$(130)=str(usage[4]:m2$)
-        OutVect!.addItem(pbuf$)
-        a=fnblank(1)
-        pbuf$(1)=""
-        pbuf$(60)=months1$
-        OutVect!.addItem(pbuf$)
-        pbuf$(60)=dates1$
-        OutVect!.addItem(pbuf$)
-        pbuf$(60)=dashes1$
-        OutVect!.addItem(pbuf$)
-        a=fnblank(1)
+        OutVect!.addItem(ivm01a.item_id$)
+        OutVect!.addItem(fnitem$(ivm01a.item_desc$,i[2],i[3],i[4]))
+        OutVect!.addItem("")
+        OutVect!.addItem(str(usage[1]:m2$))
+        OutVect!.addItem(str(usage[2]:m2$))
+        OutVect!.addItem(str(usage[3]:m2$))
+        OutVect!.addItem(str(usage[4]:m2$))
+        xwk=fnblank(2)
+        OutVect!.addItem(months1$)
+        xwk=fnblank(4)
+        xwk=fnblank(2)
+        OutVect!.addItem(dates1$)
+        xwk=fnblank(4)
+        xwk=fnblank(2)
+        OutVect!.addItem(dashes1$)
+        xwk=fnblank(4)
 
 rem --- If there are more than 13 periods, print second set
 
         if mpm01a.no_of_pers>=14 then 
-            a=fnblank(1)
-            pbuf$(60)=months2$
-            OutVect!.addItem(pbuf$)
-            pbuf$(60)=dates2$
-            OutVect!.addItem(pbuf$)
-            pbuf$(60)=dashes2$
-            OutVect!.addItem(pbuf$)
-            a=fnblank(1)
+            xwk=fnblank(2)
+            OutVect!.addItem(months1$)
+            xwk=fnblank(4)
+            xwk=fnblank(2)
+            OutVect!.addItem(dates1$)
+            xwk=fnblank(4)
+            xwk=fnblank(2)
+            OutVect!.addItem(dashes1$)
+            xwk=fnblank(4)
         endif
     wend 
 
@@ -225,6 +235,13 @@ product_break: rem --- Product break
     t1$=ivm02a.product_type$
     return
 
+sub_heading: rem --- Sub Heading
+    subheading$=h5$
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(subheading$)
+    blank=fnblank(7)
+    return
+
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -250,6 +267,7 @@ rem --- Date/time handling functions
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
+
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
