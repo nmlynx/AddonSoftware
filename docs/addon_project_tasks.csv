@@ -40,32 +40,32 @@ Report Parameters,APS_REPORT,T,APS_REPORT,,APP.PA,JL,Y,,,,,
 Accounts Receivable,ARMENU,M,,,,,,,,,,
 Invoice Entry,ARE_INVHDR,T,ARE_INVHDR,,ARE.FA,CH,Y,,,,,
 Invoice Printing,ARR_INVOICES,T,ARR_INVOICES,,ARR.UA,JL,Y,,,,,
-Invoice Register,ARR_INVOICEENTRY,A,,arr_invoiceentry.aon,ARR.VA,JL,Y,,Y,done,,
+Invoice Register,ARR_INVOICEENTRY,A,,arr_invoiceentry.aon,ARR.VA,JL,Y,,Y,done,,Added the line rep_prog$=pgm(-2) in Document Initializations
 Cash Receipts Entry,ARE_CASHHDR,T,ARE_CASHHDR,,ARE.AA,JB,Y,,,,,
-Cash Receipts Register,ARR_CASHRECEIPTS,T,ARR_CASHRECEIPTS,,ARR.AA,JB,Y,,Y,done,,
-Aging Report,ARR_AGINGREPORT,T,ARR_AGINGREPORT,,ARR.4A,JB,Y,,Y,Done-PPT-BP,,
-Aging Analysis Report,ARR_ANALYSIS,T,ARR_ANALYSIS,,ARR.5A,JB,Y,,Y,Done NV-BP,,
+Cash Receipts Register,ARR_CASHRECEIPTS,T,ARR_CASHRECEIPTS,,ARR.AA,JB,Y,,Y,done,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Aging Report,ARR_AGINGREPORT,T,ARR_AGINGREPORT,,ARR.4A,JB,Y,,Y,Done-PPT-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Aging Analysis Report,ARR_ANALYSIS,T,ARR_ANALYSIS,,ARR.5A,JB,Y,,Y,Done NV-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
 Age Transactions,ARU_AGINGUPDATE,T,ARU_AGINGUPDATE,,ARU.EA,JB,Y,Y,,,,
-Credit Managers Review & Release,,,,,,,,,,
-Reports,ARMENU_REPORTS,G,,,,,,,,
-Customer Cross Reference Listing,ARR_CUSTOMERXREF,A,,arr_customerxref.aon,ARR.IA,JB,,,,remove from system
-Customer Label Printing,ARR_LABELS,T,ARR_LABELS,,ARR.EA,JB,Y,,,
-Customer Name Listing,ARR_NAMELIST,T,ARR_NAMELIST,,ARR.RA,JB,Y,,Y,Done NV-BP
-Customer Detail Listing,ARR_DETAIL,T,ARR_DETAIL,,ARM.WA,JB,Y,,Y,Done PS-BP
-Customer Comments Listing,ARR_COMMENTS,T,ARR_COMMENTS,,ARR.RC,JB,Y,,Y,Done NV-BP
-Customer Name & Address Listing,ARR_NAMEADDRESS,T,ARR_NAMEADDRESS,,ARR.DA,JB,Y,,Y,done
-Customer Ledger Cards,ARR_LEDGERS,T,ARR_LEDGERS,,ARR.9A,JB,Y,,Y,Done SV-BP
-Period End Processing,ARMENU_PEND,G,,,,,,,,
-Aging Report,ARR_AGINGREPORTPE,A,ARR_AGINGREPORT,arr_agingreport.aon,ARR.4A,SV,Y,,,
-Generate Finance Charges,ARU_FINANCECHARG,T,ARU_FINANCECHARG,,ARU.HA,JL,Y,,,
-Finance Charge Entry,ARE_FINCHG,T,ARE_FINCHG,,ARE.BA,CH,Y,,,
-Purge Finance Charge Entries,ARU_FINANCEPURGE,A,,aru_financepurge.aon,,JL,Y,,,
-Finance Charge Register,ARR_FINCHGREGISTER,A,,arr_otherentry.aon,ARR.JA,JL,Y,,Y,Done PS-BP
-Customer Statements,ARR_STATEMENTS,T,ARR_STATEMENTS,,ARR.CA,JL,Y,,,
-Monthly Cash Receipts Journal,ARR_CASHJOURNAL,T,ARR_CASHJOURNAL,,ARR.GA,JL,Y,,Y,Done SV-BP,,
+Credit Managers Review & Release,,,,,,,,,,,,
+Reports,ARMENU_REPORTS,G,,,,,,,,,,
+Customer Cross Reference Listing,ARR_CUSTOMERXREF,A,,arr_customerxref.aon,ARR.IA,JB,,,,remove from system,,
+Customer Label Printing,ARR_LABELS,T,ARR_LABELS,,ARR.EA,JB,Y,,,,,
+Customer Name Listing,ARR_NAMELIST,T,ARR_NAMELIST,,ARR.RA,JB,Y,,Y,Done NV-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Customer Detail Listing,ARR_DETAIL,T,ARR_DETAIL,,ARM.WA,JB,Y,,Y,Done PS-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Customer Comments Listing,ARR_COMMENTS,T,ARR_COMMENTS,,ARR.RC,JB,Y,,Y,Done NV-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Customer Name & Address Listing,ARR_NAMEADDRESS,T,ARR_NAMEADDRESS,,ARR.DA,JB,Y,,Y,done,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Customer Ledger Cards,ARR_LEDGERS,T,ARR_LEDGERS,,ARR.9A,JB,Y,,Y,Done SV-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Period End Processing,ARMENU_PEND,G,,,,,,,,,,
+Aging Report,ARR_AGINGREPORTPE,A,ARR_AGINGREPORT,arr_agingreport.aon,ARR.4A,SV,Y,,,,,
+Generate Finance Charges,ARU_FINANCECHARG,T,ARU_FINANCECHARG,,ARU.HA,JL,Y,,,,,
+Finance Charge Entry,ARE_FINCHG,T,ARE_FINCHG,,ARE.BA,CH,Y,,,,,
+Purge Finance Charge Entries,ARU_FINANCEPURGE,A,,aru_financepurge.aon,,JL,Y,,,,,
+Finance Charge Register,ARR_FINCHGREGISTER,A,,arr_otherentry.aon,ARR.JA,JL,Y,,Y,Done PS-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Customer Statements,ARR_STATEMENTS,T,ARR_STATEMENTS,,ARR.CA,JL,Y,,,,,
+Monthly Cash Receipts Journal,ARR_CASHJOURNAL,T,ARR_CASHJOURNAL,,ARR.GA,JL,Y,,Y,Done SV-BP,,Added the line rep_prog$=pgm(-2) in Document Initializations
 Monthly Cash Receipts Journal Purge,ARU_CASHJOURNAL,T,ARU_CASHJOURNAL,,ARU.XA,JL,Y,,,,,
-Customer Ranking Report,ARR_RANKING,T,ARR_RANKING,,ARR.KA,SV,Y,,Y,done,,
-Zero Balance Invoice Report & Purge,ARR_ZEROBALANCE,T,ARR_ZEROBALANCE,,ARR.8A,JL,Y,,Y,Done NV-BP,,"Note -- when testing, print the report but please do NOT answer ""yes"" to the purge prompt."
+Customer Ranking Report,ARR_RANKING,T,ARR_RANKING,,ARR.KA,SV,Y,,Y,done,,Added the line rep_prog$=pgm(-2) in Document Initializations
+Zero Balance Invoice Report & Purge,ARR_ZEROBALANCE,T,ARR_ZEROBALANCE,,ARR.8A,JL,Y,,Y,Done NV-BP,,"Note -- when testing, print the report but please do NOT answer ""yes"" to the purge prompt. Added the line rep_prog$=pgm(-2) in Document Initializations; Modified the fndate$()"
 Period End Update,ARU_PERIODEND,A,ARU_PERIODEND,aru_periodend.aon,ARU.BA,JL,Y,,,,,
 Maintenance,ARMENU_MAINT,G,,,,,,,,,,
 Customers,ARM_CUSTMAST,T,ARM_CUSTMAST,,ARM.MA,JB,Y,,,,,
