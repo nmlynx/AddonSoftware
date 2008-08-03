@@ -17,6 +17,18 @@ dim ddm01$:"data_name:c(12*),description:c(30),lstrev:c(6),data_type:c(1),reserv
 dim ddm03$:"file_name:c(6),record_id:c(1*),description:c(30),reserved_str:c(33*),reserved_num:n(3*)"
 dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reserved_str1:c(41),fld_sep:c(1),reserved_str2:c(68*),reserved_num:n(1*),fld_repeats:n(3*),fld_occurs:n(3)"
 
+rem --- Set the hook for dealer custom call
+
+    custom_prog$=""
+    while 1
+        custom_prog$=cvs(stbl("+CUSTOM_DP_PROG",err=*break),3)
+        if custom_prog$<>""
+            addr custom_prog$,err=*next;break
+            custom_prog$=""
+        endif
+        break
+    wend
+
 rem --- Set the number of years to add here
 
     add_year=0
@@ -330,6 +342,7 @@ next_rec:
     for field=1 to fields
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
+
 rem --- check for specific values that can't be found any other way
         if cvs(new_fieldlist.name$[field],3)="REPORT_ALIAS"
             if cvs(value$,3)="AR_STATEMENT" value$="ARR_STATEMENTS"
@@ -362,6 +375,15 @@ rem --- check for specific values that can't be found any other way
                 value$=value$(1,5)
             endif
         endif    
+
+rem --- Call custom program - Note - there is no CALL/ENTER list, so all variables will be 
+rem     available. Common usages for this would be things like data conversion, since value$
+rem     holds the data in the field coming in, and old_fieldlist.name$[field] is the variable
+rem     name from the dictionary of the source data. datafile$ is the source datafile name.
+
+        if custom_prog$<>""
+            call custom_prog$
+        endif
 
         attr$=fattr(old_rec$,old_fieldlist.name$[field])
         fld_sep$=attr$(3,1)
