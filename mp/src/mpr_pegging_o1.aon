@@ -6,61 +6,62 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-    setesc std_error
-    seterr std_error
+        setesc std_error
+        seterr std_error
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+        pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Document initializations
 
-    OutVect!=bbjAPI().getSysGui().makeVector()
-    HdrVect!=bbjAPI().getSysGui().makeVector()
-    BrkVect!=bbjAPI().getSysGui().makeVector()
-    TotVect!=bbjAPI().getSysGui().makeVector()
-    rep_date$=date(0:"%Mz/%Dz/%Yd")
-    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-    rep_time$=date(0:"%hz:%mz %p")
-    rep_time_stamp$=date(0:"%Hz%mz%sz")
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+        rep_prog$=pgm(-2)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+        firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock Files
 
-    dim files[12]
-    call pgmdir$+"mpc_openalias.aon",mpe05_dev,"mpe-05","MPE_PEGGING",firm_id$,forecast$,filename$,status
-    if status then goto std_exit
-    files[1]=ivm01_dev
-    files[2]=ivm02_dev
-    files[12]=ivm12_dev
+        dim files[12]
+        call pgmdir$+"mpc_openalias.aon",mpe05_dev,"mpe-05","MPE_PEGGING",firm_id$,forecast$,filename$,status
+        if status then goto std_exit
+        files[1]=ivm01_dev
+        files[2]=ivm02_dev
+        files[12]=ivm12_dev
 
 initializations: rem --- Initializations
 
-    precision ivprecision
-    dim types$[typecodes],dashes$(m2*6,"-"),info$[2]
-    types$[0]= "Unknown        "
-    types$[1]= "On Hand        "
-    types$[2]= "PO On Order    "
-    types$[3]= "WO On Order    "
-    types$[4]= "Forecast       "
-    types$[5]= "Dependent      "
-    types$[6]= "Sales Demand   "
-    types$[7]= "WO Demand      "
-    types$[8]= "WO Release     "
-    types$[9]= "PO Release     "
-    types$[10]="WO Receipt     "
-    types$[11]="PO Receipt     "
-    types$[12]="PO Req On Order"
-    headings$[1]=headings$[1]+" For "+h5$
-    headings$[2]="Warehouse: "+whse$
-    if option$="" then headings$[3]="Item Type: All Items" 
+        precision ivprecision
+        dim types$[typecodes],dashes$(m2*6,"-"),info$[2]
+        types$[0]= "Unknown        "
+        types$[1]= "On Hand        "
+        types$[2]= "PO On Order    "
+        types$[3]= "WO On Order    "
+        types$[4]= "Forecast       "
+        types$[5]= "Dependent      "
+        types$[6]= "Sales Demand   "
+        types$[7]= "WO Demand      "
+        types$[8]= "WO Release     "
+        types$[9]= "PO Release     "
+        types$[10]="WO Receipt     "
+        types$[11]="PO Receipt     "
+        types$[12]="PO Req On Order"
+        headings$[1]=headings$[1]+" For "+h5$
+        headings$[2]="Warehouse: "+whse$
+        if option$="" then headings$[3]="Item Type: All Items" 
 :   else if option$="A" then headings$[3]="Item Type: Purchase Items Only"
 :   else if option$="B" then headings$[3]="Item Type: Production Items Only"
     if begitem$="" and enditem$="" then headings$[5]="Item: All Items"
@@ -68,104 +69,105 @@ initializations: rem --- Initializations
         if begitem$="" then headings$[5]="Item: From First" else headings$[5]="From "+begitem$
         if enditem$="" then headings$[5]=headings$[5]+" To Last" else headings$[5]=headings$[5]+" To "+enditem$
     endif
-    headings$[6]="Period: From "+str(begper)+" To "+str(endper)
-    dim columns$[0,10]
-    columns=0
-    columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="132"
-    l1=0
-    h3$="",prefix$=cvs(firm_id$+forecast$+whse$,2),done=0,continued=0
-    m0=max(len(apmask$),len(armask$))
-    number=0
-    more=1
+        headings$[6]="Period: From "+str(begper)+" To "+str(endper)
+        dim columns$[0,10]
+        columns=0
+        columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="132"
+        l1=0
+        h3$="",prefix$=cvs(firm_id$+forecast$+whse$,2),done=0,continued=0
+        m0=max(len(apmask$),len(armask$))
+        number=0
+        more=1
 
 rem --- Initializations for DocOut
 
     dim columns$[10,10]
-    columns = 10
-    columns$[0,0]="            ",columns$[0,1]="C",columns$[0,2]="12"
-    columns$[1,0]="            ",columns$[1,1]="C",columns$[1,2]="20"
-    columns$[2,0]="            ",columns$[2,1]="C",columns$[2,2]="12"
-    columns$[3,0]="            ",columns$[3,1]="C",columns$[3,2]="14"
-    columns$[4,0]="            ",columns$[4,1]="C",columns$[4,2]="17"
-    columns$[5,0]="            ",columns$[5,1]="N",columns$[5,2]="10",columns$[5,10]="T"
-    columns$[6,0]="            ",columns$[6,1]="C",columns$[6,2]="10"
-    columns$[7,0]="            ",columns$[7,1]="N",columns$[7,2]="7",columns$[7,10]="T"
-    columns$[8,0]="            ",columns$[8,1]="N",columns$[8,2]="12",columns$[8,10]="T"
-    columns$[9,0]="            ",columns$[9,1]="N",columns$[9,2]="10",columns$[9,10]="T"
-    columns$[10,0]="           ",columns$[10,1]="N",columns$[10,2]="9",columns$[10,10]="T"
+        columns = 10
+        columns$[0,0]="            ",columns$[0,1]="C",columns$[0,2]="12"
+        columns$[1,0]="            ",columns$[1,1]="C",columns$[1,2]="20"
+        columns$[2,0]="            ",columns$[2,1]="C",columns$[2,2]="12"
+        columns$[3,0]="            ",columns$[3,1]="C",columns$[3,2]="14"
+        columns$[4,0]="            ",columns$[4,1]="C",columns$[4,2]="17"
+        columns$[5,0]="            ",columns$[5,1]="N",columns$[5,2]="10",columns$[5,10]="T"
+        columns$[6,0]="            ",columns$[6,1]="C",columns$[6,2]="10"
+        columns$[7,0]="            ",columns$[7,1]="N",columns$[7,2]="7",columns$[7,10]="T"
+        columns$[8,0]="            ",columns$[8,1]="N",columns$[8,2]="12",columns$[8,10]="T"
+        columns$[9,0]="            ",columns$[9,1]="N",columns$[9,2]="10",columns$[9,10]="T"
+        columns$[10,0]="           ",columns$[10,1]="N",columns$[10,2]="9",columns$[10,10]="T"
+
 rem --- Print positions
 
-    dim o[10],h1[5],h2[10]
-    o[10]=width-m2
-    o[9]=o[10]-m2,o[8]=o[9]-m2,o[7]=o[8]-m2,o[6]=o[7]-m2
-    o[5]=o[6]-m2
-    o[0]=0,o[1]=9,o[2]=o[1]+13,o[3]=o[2]+ivlength,o[4]=o[3]+11
-    x$=" No Bill Of Materials Defined"
-    nw=o[5]-(o[4]+m0+1)
-    h2[10]=width-8
-    h2[9]=h2[10]-10,h2[8]=h2[9]-10,h2[7]=h2[8]-11
-    h2[6]=h2[7]-9
-    h2[5]=h2[6]-m2-1,h2[4]=h2[5]-m2-1,h2[3]=h2[4]-4
-    h2[2]=h2[3]-m5-1
-    h2[1]=ivlength,production_width=h2[2]-h2[1]+1
-    h1[4]=o[7]-m3
-    h1[3]=h1[4]-21,h1[2]=h1[3]-m5-1,h1[1]=ivlength
-    h1[5]=h1[3]-(apmask+31)
-    vw=29
-    if h1[5]<20 then h1[5]=20,vw=h1[3]-(h1[5]+apmask+1)-1
-    dim nb$(width-o[5],"-")
-    purchase_width=h1[2]-h1[1]+1
-    who=o[5]-o[4]
-    hr=width-max(len(h7$),len(h8$))
-    nb$(fncenter(x$,len(nb$)),len(x$))=x$
+        dim o[10],h1[5],h2[10]
+        o[10]=width-m2
+        o[9]=o[10]-m2,o[8]=o[9]-m2,o[7]=o[8]-m2,o[6]=o[7]-m2
+        o[5]=o[6]-m2
+        o[0]=0,o[1]=9,o[2]=o[1]+13,o[3]=o[2]+ivlength,o[4]=o[3]+11
+        x$=" No Bill Of Materials Defined"
+        nw=o[5]-(o[4]+m0+1)
+        h2[10]=width-8
+        h2[9]=h2[10]-10,h2[8]=h2[9]-10,h2[7]=h2[8]-11
+        h2[6]=h2[7]-9
+        h2[5]=h2[6]-m2-1,h2[4]=h2[5]-m2-1,h2[3]=h2[4]-4
+        h2[2]=h2[3]-m5-1
+        h2[1]=ivlength,production_width=h2[2]-h2[1]+1
+        h1[4]=o[7]-m3
+        h1[3]=h1[4]-21,h1[2]=h1[3]-m5-1,h1[1]=ivlength
+        h1[5]=h1[3]-(apmask+31)
+        vw=29
+        if h1[5]<20 then h1[5]=20,vw=h1[3]-(h1[5]+apmask+1)-1
+        dim nb$(width-o[5],"-")
+        purchase_width=h1[2]-h1[1]+1
+        who=o[5]-o[4]
+        hr=width-max(len(h7$),len(h8$))
+        nb$(fncenter(x$,len(nb$)),len(x$))=x$
 
-    s2$=today$
-    for x=1 to mpm01a.no_of_pers
-        s2$=s2$+FIELD(mpm01a$,"plan_date_"+str(x:"00"))
-    next x
-    if pos(today$>=s2$(7,mpm01a.no_of_pers*8),8)>0 then s2$(1,8)=""
-    if begper=1 and endper=mpm01a.no_of_pers then begper=begper-1
+        s2$=today$
+        for x=1 to mpm01a.no_of_pers
+            s2$=s2$+FIELD(mpm01a$,"plan_date_"+str(x:"00"))
+        next x
+        if pos(today$>=s2$(7,mpm01a.no_of_pers*8),8)>0 then s2$(1,8)=""
+        if begper=1 and endper=mpm01a.no_of_pers then begper=begper-1
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,mpe05_dev,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","N","","","","",0,mpe05_dev,1,meter_num,status
 
 rem --- Build report heading based on transactions selected
 
-    if selection$="" then goto all_transactions
-    h9$="Selected Transactions: "
-    nw=len(selection$)
+        if selection$="" then goto all_transactions
+        h9$="Selected Transactions: "
+        nw=len(selection$)
 
-    flag1=0
-    for x=1 to nw
-        transaction=pos(selection$(x,1)=typecodes$)
-        temp$=h9$
-        h9$=h9$+cvs(types$[transaction],3)
-        if !flag1 
-            if len(h9$)>=100
-                h10$=temp$;h9$="";flag1=1
+        flag1=0
+        for x=1 to nw
+            transaction=pos(selection$(x,1)=typecodes$)
+            temp$=h9$
+            h9$=h9$+cvs(types$[transaction],3)
+            if !flag1 
+                if len(h9$)>=100
+                    h10$=temp$;h9$="";flag1=1
+                endif
             endif
-        endif
-        if x=nw-1 and h9$<>"" then h9$=h9$+" And "
-        if x<nw-1 and h9$<>"" then h9$=h9$+", "
-    next x
-    headings$[4]=h9$
-    goto position_mpe05
+            if x=nw-1 and h9$<>"" then h9$=h9$+" And "
+            if x<nw-1 and h9$<>"" then h9$=h9$+", "
+        next x
+        headings$[4]=h9$
+        goto position_mpe05
 
 all_transactions:
 
-    h3$="All Transaction Types"
-    selection$=typecodes$
-    headings$[4]="Selected Transactions: "+h3$
+        h3$="All Transaction Types"
+        selection$=typecodes$
+        headings$[4]="Selected Transactions: "+h3$
 
 position_mpe05: rem --- Position file
 
-    read (mpe05_dev,key=prefix$+begitem$,dom=*next)
+        read (mpe05_dev,key=prefix$+begitem$,dom=*next)
 
 rem --- retrieve template for IVX_ITEMPROD record key
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMMAST","ALT_KEY_04",ivm01a_altkey4_tpl$,table_chans$[all],status$
-    dim ivm01a_altkey$:ivm01a_altkey4_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMMAST","ALT_KEY_04",ivm01a_altkey4_tpl$,table_chans$[all],status$
+        dim ivm01a_altkey$:ivm01a_altkey4_tpl$
 
 next_mpe05: rem --- Read next mpe-05 Pegging Detail record
 
