@@ -114,7 +114,6 @@ get_whse_info: rem --- Read warehouse record and accumulate totals
     more=1
     while more
         find record (ivm02_dev,key=ivm02a_key$,knum=2,dom=*break) ivm02a$
-        more=0
 rem use whse_bal_fields$ to parse/accum names of fields corres. to pre-template b[x] array in iolist
         for x=0 to xlimit
             if x=0 sep1=0 else sep1=pos($0A$=whse_bal_fields$,1,x)
@@ -131,6 +130,7 @@ rem use whse_bal_fields$ to parse/accum names of fields corres. to pre-template 
             whse$[1]=ivm02a$(sep1+1,sep2-(sep1+1));rem old b1$, i.e., ivm02 2nd string
             whse$[2]=ivm02a$(sep2+1,sep3-(sep2+1));rem old b2$, i.e., ivm02 3rd string
         endif
+        break
     wend
     return
 
