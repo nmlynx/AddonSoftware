@@ -119,6 +119,11 @@ rem --- Assign input values to local variables
 rem --- Retrieve GL Financial Report Parameter record and either update it
 rem --- or create it if necessary
 
+
+    gls01c_key$=firm_id$+"GL02"
+    find record (gls01c_dev,key=gls01c_key$,err=*next) gls01c$
+    sequence=num(gls01c.gl_updt_seq_02$)
+    sequence$=str(sequence)
     gls01c.firm_id$=firm_id$
     gls01c.gl$="GL"
     gls01c.sequence_02$="02"
@@ -128,11 +133,8 @@ rem --- or create it if necessary
     gls01c.gl_updt_seq_02$="0"
     gls01c.print_flag_01$="0"
     gls01c.print_flag_02$="0"
-    gls01c_key$=firm_id$+"GL02"
-    find record (gls01_dev,key=gls01c_key$,err=*next) gls01c$
-    sequence=num(gls01c.gl_updt_seq_02$)
-    sequence$=str(sequence)
-    write record (gls01_dev,key=gls01c_key$) gls01c$
+    gls01c$=field(gls01c$)
+    write record (gls01c_dev,key=gls01c_key$) gls01c$
     if reprint=0
        sequence=sequence+1
        if sequence>9 sequence=0
