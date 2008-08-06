@@ -35,16 +35,16 @@ rem --- Build 13 period headings
     n=period+1
     for x=1 to mp-1
         x$=str(n)+" "+field(gls01a$,"abbr_name_"+str(n:"00"))
-        p=28+m1*x 
+        p=24+m1*x 
         y=len(x$)-1
         h$(p-y)=x$
         n=n+1
         if n>total_pers n=1
     next x
-    rem --- x$="Total"
-    rem --- p=28+m1*x
-    rem --- y=len(x$)-1
-    rem --- h$(p-y)=x$
+    x$="Total"
+    p=24+m1*x
+    y=len(x$)-1
+    h$(p-y)=x$
     heading$[headings]=h$
 
 rem --- Position Financial Report Detail (glm-22) file
@@ -188,7 +188,7 @@ rem --- Read next Financial Report Detail (glm-22) record
           if char$<>""
              for x=1 to 13
                  dim underline$(m1,char$)
-                 print_buf$(29+m1*(x-1),len(underline$))=underline$
+                 print_buf$(25+m1*(x-1),len(underline$))=underline$
              next x
              gosub output_print_buf
              l=l+1
@@ -215,10 +215,15 @@ rem --- Read next Financial Report Detail (glm-22) record
 
           rem --- If this isn't a heading line, print amounts
 
-          if glm22a.line_type$<>"H" 
+          if glm22a.line_type$<>"H"
+             tot_line=0
              for x=1 to mp
-                 if a[x] print_buf$(29+m1*(x-1),len(m1$))=str(a[x]:m1$)
+                 if a[x] 
+                    print_buf$(25+m1*(x-1),len(m1$))=str(a[x]:m1$)
+                    tot_line=tot_line+a[x]
+                 endif   
              next x
+             print_buf$(25+m1*(x-2),len(m1$))=str(tot_line:m1$)
              gosub output_print_buf
           endif
 
@@ -257,7 +262,7 @@ report_heading: rem --- Report heading
         clock$=date(0:"%hz:%mz %p")
         dim print_buf$(width)
         print_buf$(1)=heading$[0]
-        print_buf$(width-10)=" Page"+str(page:"###0")
+        print_buf$(width-11)="Page"+str(page:"###0")
         gosub output_print_buf
         dim print_buf$(width)
         print_buf$(1)=heading$[1]
