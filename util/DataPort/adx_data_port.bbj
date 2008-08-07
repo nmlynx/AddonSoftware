@@ -230,7 +230,9 @@ check_files:rem --- Check Status of Files
         endif
         open(rd_temp_chan,err=*endif)rd_temp_dir$
         close(rd_temp_chan)
-        open(rd_temp_chan,err=*endif)rd_temp_dir$+"ddm-03"
+        version=num(rdVectVersionCode!.get(rdVersion!.getSelectedIndex()))
+        if version=6 cvs_check=4 else cvs_check=0
+        open(rd_temp_chan,err=*endif)rd_temp_dir$+cvs("ddm-03",cvs_check)
         close(rd_temp_chan)
         rdTempColor!=rdGoodBackColor!
         rd_proc_status[1]=1
@@ -270,7 +272,11 @@ func_scan:rem --- Scan Source Directory
         close(rd_ddm03)
     endif
     rd_ddm03=unt
-    open(rd_ddm03)rd_source_dir$+"ddm-03"
+    if num(rdVectVersionCode!.get(rdVersion!.getSelectedIndex()))=6
+        open(rd_ddm03)rd_source_dir$+"DDM-03"
+    else
+        open(rd_ddm03)rd_source_dir$+"ddm-03"
+    endif
 
     rd_source_dir=unt
     open(rd_source_dir)rd_source_dir$
