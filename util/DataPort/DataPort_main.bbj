@@ -331,7 +331,7 @@ end_ddm04:
 next_rec:
     readrecord(old_file,end=eof)old_rec$
     if source_version=6 and datafile$="ARM-10" and old_rec$(1,3)="01G" goto next_rec
-    if old_rec$(1,2)="00" goto next_rec
+    if pos("00"=old_rec$)<>1 goto next_rec
     if record_id_field$<>"" and field(old_rec$,record_id_field$,err=*continue)<>ddm03.record_id$ then
        goto next_rec
     endif
