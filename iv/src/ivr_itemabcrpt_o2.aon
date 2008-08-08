@@ -121,7 +121,6 @@ rem --- Item report completed
         if level$="I" then
             done=1
             call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
-            close (printer_dev,err=*next)
 rem            run pgmdir$+"ivu_itemabcupd.aon"
             goto std_exit
         endif
@@ -157,7 +156,7 @@ rem --- Calculate percentage
 
 rem --- Print detail line
 
-    sequence=sequence+1,l=l+1,newabc$=letters$(class+1,1)
+    sequence=sequence+1,newabc$=letters$(class+1,1)
     total=total+amount,warehouse=warehouse+amount,l1=l1+1
     OutVect!.addItem(str(sequence:m7$))
     OutVect!.addItem(ivm01a.item_id$)
