@@ -8,6 +8,9 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
+    next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
+    OutVect!=null()
+
 rem --- Document initializations
 
     OutVect!=bbjAPI().getSysGui().makeVector()
@@ -20,139 +23,115 @@ rem --- Document initializations
     rep_time_stamp$=date(0:"%Hz%mz%sz")
     rep_prog$=pgm(-2)
 
-rem --- Initializations
-
-    precision p[1]
-    dim headings$[7]
-    when$=sysinfo.system_date$
-    clock$=""
-    m4$="##0.00%"
-    headings=5
-    width=132
-    page=0
-    m4=len(m4$)
-    if m3>m4 m4$=fill(m3-m4)+m4$
-    if m4>m3 m3$=fill(m4-m3)+m3$
-    more=1
-
-    setup$="Setup Cost "+str(setup:m3$)
-    carry=carry*100
-    carry$="Carrying Cost "+str(carry:m4$)
-    zerocost1$=fill(m2-4)+"Zero"
-    zerocost2$=fill(m2-4)+"Cost"
-
 rem --- Initialize HEADINGS$
 
-    if type$<>"" h8$=" For Item Type "+type$ else h8$=" For All Item Types"
-    headings$[0]=sysinfo.firm_name$
-    headings$[1]=sysinfo.task_desc$+" By Item"+h8$
-    headings$[2]="For All Warehouses"
-    if begitem$="" headings$[3]="From Item: First" else headings$[3]="From Item: "+begitem$
-    if enditem$="" headings$[3]=headings$[3]+" -- To Item: Last" else headings$[3]=headings$[3]+" -- To Item: "+enditem$
-    if begprod$="" headings$[4]="From Product: First" else headings$[4]="From Product: "+begprod$                
-    if endprod$="" headings$[4]=headings$[4]+" -- To Product: Last" else headings$[4]=headings$[4]+" -- To Product: "+endprod$
-    headings$[5]=setup$
-    headings$[6]=carry$
-
+    headings$[1]=sysinfo.task_desc$+" By Warehouse"+h8$
+    headings$[2]="[HEADER]"
+    
 rem --- Column Headings
 
-    dim columns$[12,10]
-    columns=13
+    dim columns$[13,10]
+    columns=14
     columns$[0,0]="Item^Description",       columns$[0,1]="C",   columns$[0,2]="10"
     columns$[1,0]="ABC^Code",               columns$[1,1]="C",   columns$[1,2]="5"
     columns$[2,0]="Lead^Time",              columns$[2,1]="C",   columns$[2,2]="5"
-    columns$[3,0]="Avg^Period",             columns$[3,1]="N",   columns$[3,2]="10",columns$[3,3]=m2$
-    columns$[4,0]="Act^Annual",             columns$[4,1]="N",   columns$[4,2]="10",columns$[4,3]=m2$
-    columns$[5,0]="Wgt^Period",             columns$[5,1]="N",   columns$[5,2]="10",columns$[5,3]=m2$
-    columns$[6,0]="Est^Annual",             columns$[6,1]="N",   columns$[6,2]="10",columns$[6,3]=m2$
-    columns$[7,0]="Saftey Stock^Old/New",   columns$[7,1]="N",   columns$[7,2]="8",columns$[7,3]=m2$
-    columns$[8,0]="",                       columns$[8,1]="C",   columns$[8,2]="3"
-    columns$[9,0]="Order Point^Old/New",    columns$[9,1]="N",   columns$[9,2]="8",columns$[9,3]=m2$
-    columns$[10,0]="",                      columns$[10,1]="C",  columns$[10,2]="3"
-    columns$[11,0]="EOQ^Old/New",           columns$[11,1]="N",  columns$[11,2]="10"
-    columns$[12,0]="",                      columns$[12,1]="C",  columns$[12,2]="3"
+    columns$[3,0]="Cost",                   columns$[3,1]="N",   columns$[3,2]="10",columns$[3,3]=m3$
+    columns$[4,0]="Avg^Period",             columns$[4,1]="N",   columns$[4,2]="10",columns$[4,3]=m2$
+    columns$[5,0]="Act^Annual",             columns$[5,1]="N",   columns$[5,2]="10",columns$[5,3]=m2$
+    columns$[6,0]="Wgt^Period",             columns$[6,1]="N",   columns$[6,2]="10",columns$[6,3]=m2$
+    columns$[7,0]="Est^Annual",             columns$[7,1]="N",   columns$[7,2]="10",columns$[7,3]=m2$
+    columns$[8,0]="Saftey Stock^Old/New",   columns$[8,1]="N",   columns$[8,2]="10",columns$[8,3]=m2$
+    columns$[9,0]="",                       columns$[9,1]="C",   columns$[9,2]="3"
+    columns$[10,0]="Order Point^Old/New",   columns$[10,1]="N",  columns$[10,2]="10",columns$[10,3]=m2$
+    columns$[11,0]="",                      columns$[11,1]="C",  columns$[11,2]="3"
+    columns$[12,0]="EOQ^Old/New",           columns$[12,1]="N",  columns$[12,2]="10"
+    columns$[13,0]="",                      columns$[13,1]="C",  columns$[13,2]="3"
 
-    if pos(level$="IB") then 
 
-rem --- Position file
-
-        read (ivw11_dev,key=firm_id$,dom=*next)
-
-rem --- Main Read
-
+    if pos(level$="WB") then         
+        t0$=""
+        t1$=""
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        first$=firm_id$+begwhse$
+        read (ivw21_dev,key=first$,dom=*next)
         while more
-            ivw11a_key$=key(ivw11_dev,end=*break)
-            if pos(firm_id$=ivw11a_key$)<>1 break
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            read record (ivw11_dev) ivw11a$
+            ivw21a_key$=key(ivw21_dev,end=*break)
+            if pos(firm_id$=ivw21a_key$)<>1 break
+            if begwhse$<>"" and ivw21a_key.warehouse_id$>endwhse$ break
+            call pgmdir$+"adc_progress.aon","S","","","",ivw21a_key.warehouse_id$+" "+ivw21a_key.product_type$+" "+ivw21a_key.item_id$,0,0,1,meter_num,status
+            read record (ivw21_dev) ivw21a$
 
 rem --- Level break?
 
-            if ivw11a.product_type$<>t1$ then gosub product_break
+            if ivw21a_key.warehouse_id$<>t0$ gosub warehouse_break
+            if ivw21a_key.product_type$<>t1$ then gosub product_break
 
-rem --- Print detail line for record
+rem --- Process work file record
 
-            unitcost=ivw11a.unit_cost
-            if ivw11a.stock_level$<>"I" then continue
+            unitcost=ivw21a.unit_cost
+            if ivw21a.stock_level$<>"W" continue
             if h9$<>"" then
+                xwk=fnblank(columns)
                 OutVect!.addItem(h9$)
                 xwk=fnblank(columns-1)
+                xwk=fnblank(columns)
                 h9$=""
             endif
-
-            average=ivw11a.usage_qty_01/g[0]
-            weighted=ivw11a.usage_qty_02/g[0]
-            oldeoq$=str(ivw11a.eoq_01:m2$)
-            neweoq$=str(ivw11a.eoq_02:m2$)
+            average=ivw21a.usage_qty_01/g[0]
+            weighted=ivw21a.usage_qty_02/g[0]
+            oldeoq$=str(ivw21a.eoq_01:m2$)
+            neweoq$=str(ivw21a.eoq_02:m2$)
             if carry=0 or unitcost=0 oldeoq$=zerocost1$,neweoq$=zerocost2$
 
-            OutVect!.addItem(ivw11a.item_id$)
-            OutVect!.addItem(ivw11a.abc_code$)
-            OutVect!.addItem(str(int(ivw11a.lead_time)))
+            OutVect!.addItem(ivw21a.item_id$)
+            OutVect!.addItem(ivw21a.abc_code$)
+            OutVect!.addItem(str(int(ivw21a.lead_time)))
+            OutVect!.addItem(str(ivw21a.unit_cost))
             OutVect!.addItem(str(average))
-            OutVect!.addItem(str(ivw11a.usage_qty_01))
+            OutVect!.addItem(str(ivw21a.usage_qty_01))
             OutVect!.addItem(str(weighted))
-            OutVect!.addItem(str(ivw11a.usage_qty_02))
-            OutVect!.addItem(str(ivw11a.safety_stock_01))
-            OutVect!.addItem(ivw11a.saf_stk_code$)
-            OutVect!.addItem(str(ivw11a.order_point_01))
-            OutVect!.addItem(ivw11a.ord_pnt_code$)
+            OutVect!.addItem(str(ivw21a.usage_qty_02))
+            OutVect!.addItem(str(ivw21a.safety_stock_01))
+            OutVect!.addItem(ivw21a.saf_stk_code$)
+            OutVect!.addItem(str(ivw21a.order_point_01))
+            OutVect!.addItem(ivw21a.ord_pnt_code$)
             OutVect!.addItem(oldeoq$)
-            OutVect!.addItem(ivw11a.eoq_code$)
-            OutVect!.addItem("   "+ivw11a.item_desc$)
-            xwk=fnblank(6)
-            OutVect!.addItem(str(ivw11a.safety_stock_02))
+            OutVect!.addItem(ivw21a.eoq_code$)
+            OutVect!.addItem("   "+ivw21a.item_desc$)
+            xwk=fnblank(7)
+            OutVect!.addItem(str(ivw21a.safety_stock_02))
             OutVect!.addItem("")
-            OutVect!.addItem(str(ivw11a.order_point_02))
+            OutVect!.addItem(str(ivw21a.order_point_02))
             OutVect!.addItem("")
             OutVect!.addItem(neweoq$)
             OutVect!.addItem("")
         wend
     endif
- 
+
 rem --- All done
-
-    if level$="I" then
-        done=1
-        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
-rem            run pgmdir$+"ivu_oa.aon"
-        goto std_exit
-    endif
     
-rem --- Done
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
-    width=h0,page=h,update$="ivr_itemeoqrpt_o3.aon"
-    overlay$=update$
-    out_action$="PRT-PDF"
-    next_overlay$=overlay$
+rem --- Chain to next overlay
+    
+    rem run pgmdir$+"ivu_oa.aon"
     goto std_exit
+
+warehouse_break: rem --- Warehouse Break
+
+    gosub product_break
+    t0$=ivw21a.warehouse_id$,ivm10c.short_name$="(Not On File)",l=l9+1
+    find record (ivm10c_dev,key=firm_id$+"C"+t0$,dom=*next) ivm10c$
+    BrkVect!.addItem(str(OutVect!.size()/(columns)))
+    HdrVect!.addItem("Warehouse "+t0$+" "+cvs(ivm10c.short_name$,2))
+    return
 
 product_break: rem --- Product Break
 
-    t1$=ivw11a.product_type$
+    t1$=ivw21a.product_type$
     ivm10a.code_desc$="(Not On File)"
     find record (ivm10a_dev,key=firm_id$+"A"+t1$,dom=*next) ivm10a$
-    let h9$="Product "+t1$+" "+ivm10a.code_desc$
+    h9$="Product "+t1$+" "+ivm10a.code_desc$
     return
 
 rem #include std_functions.src
