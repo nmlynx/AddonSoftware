@@ -430,7 +430,7 @@ audit_break: rem --- Audit number break
     x$=cvs(t2$(1,7),2)
     if x$="" x$="NONE"
     total$="Total For Audit Number "+x$+" - Period "+t2$(10,2)+" ("+field(gls01a$,"abbr_name_"+str(period:"00"))+
-:          " "+t2$(8,2)+")"
+:          " "+t2$(8,4)+")"
     debits=at[0]
     credits=at[1]
     units=at[2]
