@@ -133,14 +133,6 @@ if selected_key$<>""
 	endif
 endif
 [[APE_MANCHECKHDR.<CUSTOM>]]
-clear_vendor:
-
-	callpoint!.setColumnData("APE_MANCHECKHDR.VENDOR_ID","")
-	callpoint!.setColumnData("<<DISPLAY>>.DISP_ADDR1","")
-	callpoint!.setColumnData("<<DISPLAY>>.DISP_ADDR2","")
-	callpoint!.setColumnData("<<DISPLAY>>.DISP_CTSTZIP","")
-
-return
 
 display_vendor_address:
 	apm01_dev=fnget_dev("APM_VENDMAST")
@@ -319,7 +311,6 @@ endif
 if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="V"
 	ctl_name$="APE_MANCHECKHDR.VENDOR_ID"
 	ctl_stat$="D"
-	gosub clear_vendor
 	gosub disable_fields
 	gosub disable_grid							
 endif
