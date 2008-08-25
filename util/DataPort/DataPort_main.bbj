@@ -719,6 +719,17 @@ no_cust_default:
                 ads_masks.asc_comp_id$=comp_id$
                 ads_masks.asc_prod_id$=pad(a0$(3,2),3)
                 ads_masks.dd_mask_type$="I"
+                id$=cvs(a5$,3)
+                if len(id$)>0
+                    for id=1 to len(id$)
+                        if a0$(3,2)="GL"
+                            if id$(id,1)="#" id$(id,1)="0"
+                        endif
+                        if pos(a0$(3,2)="ARAPPR",2)
+                            if id$(id,1)="#" id$(id,1)="U"
+                        endif
+                    next id
+                endif    
                 ads_masks.dd_attr_mski$=cvs(a5$,3)
                 ads_masks.dd_attr_msko$=cvs(a5$,3)
                 ads_masks$=field(ads_masks$)
