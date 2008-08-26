@@ -247,9 +247,11 @@ next_ddm04:
        rd_temp_seg$=cvs(data_name$,3)+rd_col_occurs_sfx$+":"
        datatype$=iff(ddm01.data_type$="N","N","C")
        rd_temp_seg$=rd_temp_seg$+datatype$+"("+str(rd_col_length)
-       if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" or ddm04.fld_sep$="E" then
-          rd_temp_seg$=rd_temp_seg$+"*"
-       endif
+       if rd_col_occurs$<>"YES" and rd_occur_adj=0
+         if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" or ddm04.fld_sep$="E" then
+           rd_temp_seg$=rd_temp_seg$+"*"
+         endif
+       endif    
        if rd_col_occurs$="YES" or rd_occur_adj>0
          if rd_curr_occur+rd_occur_adj=rd_col_occurs
            if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" or ddm04.fld_sep$="E"
@@ -729,7 +731,8 @@ no_cust_default:
                             if id$(id,1)="#" id$(id,1)="U"
                         endif
                     next id
-                endif    
+                endif
+                a5$=id$
                 ads_masks.dd_attr_mski$=cvs(a5$,3)
                 ads_masks.dd_attr_msko$=cvs(a5$,3)
                 ads_masks$=field(ads_masks$)
