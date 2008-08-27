@@ -253,7 +253,8 @@ next_ddm04:
          endif
        endif    
        if rd_col_occurs$="YES" or rd_occur_adj>0
-         if rd_curr_occur+rd_occur_adj=rd_col_occurs
+         if rd_curr_occur+rd_occur_adj=rd_col_occurs and datatype$="C" or
+:           datatype$<>"C"
            if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" or ddm04.fld_sep$="E"
              if rd_temp_seg$(len(rd_temp_seg$),1)<>"*"
                rd_temp_seg$=rd_temp_seg$+"*"
