@@ -458,7 +458,9 @@ get_user_settings:rem --- Get User/Windows Settings
 
 save_user_settings:rem --- Save Windows Coordinates
 
-	call dir_syp$+"bac_winsize.bbj",cvs(win_save_id$,4),"W","",Window!,"SAVE",win_coord[all]
+	if Window!<>null() then
+		call dir_syp$+"bac_winsize.bbj",cvs(win_save_id$,4),"W","",Window!,"SAVE",win_coord[all]
+	endif
 
 	return
 
