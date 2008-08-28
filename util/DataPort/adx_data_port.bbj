@@ -33,7 +33,7 @@ rem --- Constants
 
     rd_task_id$="DATAPORT"+str(dec(info(3,0)):"0000")
 
-    rd_indent$=" - "
+    rd_indent$="   "
 
 rem --- Misc Setup
 
@@ -303,14 +303,13 @@ func_scan:rem --- Scan Source Directory
         if pos("Z"=cvs(rd_dir_file$,4))=1 then continue
 
         rd_recid_str$=""
-
         read(rd_ddm03,key=rd_dir_file$,dom=*next,err=*continue)
         while 1
             rd_ddm03_key$=key(rd_ddm03,end=*break)
             if pos(rd_dir_file$=rd_ddm03_key$)<>1 then break
             read(rd_ddm03)rd_ddm03_00$,rd_ddm03_01$
             rdGridVect!.addItem("")
-            if rd_ddm03_key$(7,1)="A" then
+            if rd_ddm03_key$(7,1)="A" or rd_ddm03_key$(1,6)<>cvs(rdGridVect!.getItem(rdGridVect!.size()-4),3) then
                 rdGridVect!.addItem(rd_ddm03_00$(1,6))
             else
                 rdGridVect!.addItem(rd_indent$+rd_ddm03_00$(1,6))
@@ -318,9 +317,9 @@ func_scan:rem --- Scan Source Directory
             rdGridVect!.addItem(rd_ddm03_00$(7,1))
             rdGridVect!.addItem(rd_ddm03_01$(1,30))
             rd_recs_found=rd_recs_found+1
-            if rd_ddm03_key$(7,1)<>"A" then
+            if rd_ddm03_key$(7,1)<>"A" and rd_ddm03_key$(1,6)=cvs(rdGridVect!.getItem(rdGridVect!.size()-7),3) then
                 if rd_recid_str$="" then
-                    rd_recid_str$=rd_recid_str$+rd_ddm03_key$(1,6)+"A:"+str(rd_recs_found-1:"0000")
+                    rd_recid_str$=rd_recid_str$+rd_ddm03_key$(1,7)+":"+str(rd_recs_found-1:"0000")
                     rdGridVect!.insertItem(rdGridVect!.size()-8,"")
                     rdGridVect!.insertItem(rdGridVect!.size()-8,rd_ddm03_00$(1,6))
                     rdGridVect!.insertItem(rdGridVect!.size()-8,"")
