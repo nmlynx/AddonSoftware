@@ -247,7 +247,7 @@ next_ddm04:
        rd_temp_seg$=cvs(data_name$,3)+rd_col_occurs_sfx$+":"
        datatype$=iff(ddm01.data_type$="N","N","C")
        rd_temp_seg$=rd_temp_seg$+datatype$+"("+str(rd_col_length)
-       if rd_col_occurs$<>"YES" and rd_occur_adj=0
+       if rd_col_occurs$<>"YES"
          if ddm04.fld_sep$="X" or ddm04.fld_sep$="Y" or ddm04.fld_sep$="E" then
            rd_temp_seg$=rd_temp_seg$+"*"
          endif
