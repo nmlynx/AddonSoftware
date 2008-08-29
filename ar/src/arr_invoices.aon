@@ -30,9 +30,9 @@ rem --- Derive/set path and filename for logo to go on form
 
     logofile$=""
     while 1
-        curr_path$=dir("")
+        curr_path$=dsk("")+dir("")
         chdir stbl("+CUST_IMAGES",err=*break),err=*break
-        logofile$="file://"+dir("")+stbl("+FORM_LOGO",err=*break)
+        logofile$="file:"+dsk("")+dir("")+stbl("+FORM_LOGO",err=*break)
         chdir curr_path$
         break
     wend
