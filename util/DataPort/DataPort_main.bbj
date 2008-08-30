@@ -29,6 +29,13 @@ rem --- Set the hook for dealer custom call
         break
     wend
 
+rem --- Set the Temporary Vendor Number here
+
+    temp_vend$=""
+    temp_vend_ok$=""
+    temp_vend$=stbl("DP_TEMP_VEND",err=*next)
+    if len(temp_vend$)>6 temp_vend$=""
+
 rem --- Set the number of years to add here
 
     add_year=0
@@ -380,6 +387,19 @@ rem --- check for specific values that can't be found any other way
             endif
         endif    
 
+rem --- Check for Temp Vendor
+
+        if old_fieldlist.name$[field]="VENDOR_ID"
+            if pos("TEMP  "=value$)=1
+                if temp_vend$=""
+                    temp_vend_ok$="N"
+                    goto next_rec
+                else
+                    value$=temp_vend$
+                endif
+            endif
+        endif
+
 rem --- Call custom program - Note - there is no CALL/ENTER list, so all variables will be 
 rem     available. Common usages for this would be things like data conversion, since value$
 rem     holds the data in the field coming in, and old_fieldlist.name$[field] is the variable
@@ -558,6 +578,11 @@ rem --- Now go populate masks and sequences
 rem    gosub make_messages
 rem    gosub make_printplus
 
+    if temp_vend_ok$="N"
+        print "   Temporary vendor records found. See log file"
+        print (log_dev)"Temporary vendor records found without a valid stbl("+$22$+"+DP_TEMP_VEND"+$22$+")."
+        print (log_dev)"Those records were excluded from the DataPort."
+        print (log_dev)"Please set this variable up in the config file and rerun the DataPort."
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
