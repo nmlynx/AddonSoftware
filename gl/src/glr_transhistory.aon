@@ -190,10 +190,11 @@ rem --- Initialize report headings
 rem --- Determine which years for GL summary (glm-02) records
 
     year1=num(gls01a.current_year$)-1
+    if gls01a.gl_yr_closed$<>"Y" then year1=year1-1
     begper=0
     endper=total_pers
     year2=year1+1
-    year3=year2+1
+    year3=year2+1    
     begyear=num(begyear$)
     endyear=num(endyear$)
     begper=num(begper$)-1
@@ -480,8 +481,8 @@ period_break: rem --- Period break
     if t1$="" goto new_period
     if detail$="D" and l1<1 goto period_balance
     gosub journal_break
-    x$=field(gls01a$,"abbr_name_"+str(period:"00"))
-    y$=glt06a.posting_year$
+    x$=field(gls01a$,"abbr_name_"+str(num(t1$(5,2)):"00"))
+    y$=t1$(1,4)
     if export_format$="Y"
         total$="Total"
     else
