@@ -62,6 +62,14 @@ rem --- Retrieve parameter records
         aps01a_key$=firm_id$+"AP00"
         find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
 
+rem --- Set A/P Type if multiple types not installed
+
+        if aps01a.multi_types$<>"Y"
+            aptype$=fattr(apt01a$,"AP_TYPE")
+            aptype_len=dec(aptype$(10,2))
+            dim ap_type$(aptype_len)
+        endif
+        
 rem --- Initializations
 
         width=80
