@@ -33,8 +33,11 @@ rem --- Set the Temporary Vendor Number here
 
     temp_vend$=""
     temp_vend_ok$=""
-    temp_vend$=stbl("DP_TEMP_VEND",err=*next)
+    temp_vend$=stbl("+DP_TEMP_VEND",err=*next)
     if len(temp_vend$)>6 temp_vend$=""
+    if len(temp_vend$)>1
+        temp_vend$=pad(temp_vend$,6,"L","0")
+    endif
 
 rem --- Set the number of years to add here
 
@@ -127,6 +130,12 @@ while 1
    endif
 wend
 close (field_name_xref)
+
+rd_meter_data$="DataPort Start Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")
+rd_meter_proc_recs=rd_meter_total_recs
+rd_meter_action$="LST"
+gosub disp_meter
+
 
 rd_meter_data$="Processing files . . ."
 rd_meter_total_recs=iff(rdVectPort!=null(),0,rdVectPort!.size())
@@ -389,7 +398,7 @@ rem --- check for specific values that can't be found any other way
 
 rem --- Check for Temp Vendor
 
-        if old_fieldlist.name$[field]="VENDOR_ID"
+        if cvs(old_fieldlist.name$[field],2)="VENDOR_NBR"
             if pos("TEMP  "=value$)=1
                 if temp_vend$=""
                     temp_vend_ok$="N"
@@ -579,13 +588,19 @@ rem    gosub make_messages
 rem    gosub make_printplus
 
     if temp_vend_ok$="N"
+        rd_meter_data$="Temporary vendor records found not ported. See log file."
+        rd_meter_total_recs=iff(rdVectPort!=null(),0,rdVectPort!.size())
+        rd_meter_action$="LST"
+        gosub disp_meter
         print "   Temporary vendor records found. See log file"
         print (log_dev)"Temporary vendor records found without a valid stbl("+$22$+"+DP_TEMP_VEND"+$22$+")."
         print (log_dev)"Those records were excluded from the DataPort."
         print (log_dev)"Please set this variable up in the config file and rerun the DataPort."
+    endif    
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
+    rd_meter_data$="DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")
     rd_meter_proc_recs=rd_meter_total_recs
     rd_meter_action$="LST-END"
     gosub disp_meter
