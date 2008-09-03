@@ -1,13 +1,10 @@
 [[IVC_TRANCODE.BREC]]
-rem --- Enable Post to G/L flag
-	ctl_name$="IVC_TRANCODE.POST_GL"
-	ctl_stat$=""
-	gosub disable_fields
-[[IVC_TRANCODE.BREA]]
-rem --- Enable Post to G/L flag
-	ctl_name$="IVC_TRANCODE.POST_GL"
-	ctl_stat$=""
-	gosub disable_fields
+rem --- re-enable Post to G/L flag (unless GL not installed)
+	if user_tpl.gl_installed$="Y"
+		ctl_name$="IVC_TRANCODE.POST_GL"
+		ctl_stat$=""
+		gosub disable_fields
+	endif
 [[IVC_TRANCODE.TRANS_TYPE.AVAL]]
 rem --- Check for Commitment type
 	if callpoint!.getColumnData("IVC_TRANCODE.TRANS_TYPE") = "C"
@@ -18,6 +15,12 @@ rem --- Check for Commitment type
 		gosub disable_fields
 		ctl_name$="IVC_TRANCODE.GL_ADJ_ACCT"
 		gosub disable_fields
+	else
+		if user_tpl.gl_installed$="Y"
+			ctl_name$="IVC_TRANCODE.POST_GL"
+			ctl_stat$=""
+			gosub disable_fields
+		endif
 	endif
 [[IVC_TRANCODE.BWRI]]
 rem --- Check for blank Trans Type
@@ -59,3 +62,19 @@ rem --- init/parameters
 			
 	ivs01a_key$=firm_id$+"IV00"
 	find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+
+rem --- check if GL is installed
+
+	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
+	gl$=info$[20];rem --- gl installed?
+
+	dim user_tpl$:"gl_installed:c(1)"
+	user_tpl.gl_installed$=gl$
+
+	if gl$<>"Y"
+		ctl_stat$="I"
+		ctl_name$="IVC_TRANCODE.POST_GL"
+		gosub disable_fields
+		ctl_name$="IVC_TRANCODE.GL_ADJ_ACCT"
+		gosub disable_fields	
+	endif
