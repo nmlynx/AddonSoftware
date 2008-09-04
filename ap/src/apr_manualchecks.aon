@@ -287,35 +287,15 @@ rem --- Initializations for this check
 rem --- Retrieve vendor name
 
           while transaction<>void
-                if pos("TEMP"=ape02a.vendor_id$)<>1
-                   dim apm01a$:fattr(apm01a$)
-                   apm01a.firm_id$=ape02a.firm_id$
-                   apm01a.vendor_id$=ape02a.vendor_id$
-                   apm01a.vendor_name$=nf$
-                   k$=apm01a.firm_id$+apm01a.vendor_id$
-                   find record (apm01_dev,key=k$,dom=*proceed) apm01a$
-                   id$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-                   name$=apm01a.vendor_name$
-                   vendor$(1)=id$+" "+name$
-                endif
-                if pos("TEMP"=ape02a.vendor_id$)=1 and transaction<>manual
-                   dim apm03a$:fattr(apm03a$)
-                   apm03a.firm_id$=ape02a.firm_id$
-                   apm03a.ap_type$=ape02a.ap_type$
-                   apm03a.ap_inv_no$=ape02a.ap_inv_no$
-                   apm03a.vendor_name$=nf$
-                   k$=apm03a.firm_id$+apm03a.ap_type$+apm03a.ap_inv_no$
-                   find record (apm03_dev,key=k$,dom=*proceed) apm03a$
-                   name$=apm03a.vendor_name$
-                endif
-                if pos("TEMP"=ape02a.vendor_id$)=1 and transaction=manual
-                   name$=ape02a.vendor_name$
-                endif
-                if pos("TEMP"=ape02a.vendor_id$)=1
-                   id$=ape02a.vendor_id$
-                   vendor$(1)=id$
-                   vendor$(m0+2)=name$
-                endif
+                dim apm01a$:fattr(apm01a$)
+                apm01a.firm_id$=ape02a.firm_id$
+                apm01a.vendor_id$=ape02a.vendor_id$
+                apm01a.vendor_name$=nf$
+                k$=apm01a.firm_id$+apm01a.vendor_id$
+                find record (apm01_dev,key=k$,dom=*proceed) apm01a$
+                id$=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+                name$=apm01a.vendor_name$
+                vendor$(1)=id$+" "+name$
                 errors=errors+(pos(nf$=name$)=1)
                 break
           wend
