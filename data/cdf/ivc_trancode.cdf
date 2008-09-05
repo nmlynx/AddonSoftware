@@ -1,3 +1,18 @@
+[[IVC_TRANCODE.BDEL]]
+rem -- don't allow delete of trans code if it's in use in ive_transhdr
+
+ive01_dev=fnget_dev("IVE_TRANSHDR")
+k$=""
+
+read (ive01_dev,key=firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE"),knum=1,dom=*next)
+k$=key(ive01_dev,end=*next)
+if pos(firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE")=k$)=1
+	dim msg_tokens$[1]
+	msg_tokens$[1]="This Transaction Code is referenced by one or more open Transaction Entries."
+	msg_id$="IV_NO_DELETE"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
 [[IVC_TRANCODE.BREC]]
 rem --- re-enable Post to G/L flag (unless GL not installed)
 	if user_tpl.gl_installed$="Y"
@@ -46,9 +61,10 @@ rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space 
 return
 [[IVC_TRANCODE.BSHO]]
 rem --- Open/Lock Files
-	files=1,begfile=1,endfile=files
+	files=2,begfile=1,endfile=files
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="IVS_PARAMS",options$[1]="OTA"
+	files$[2]="IVE_TRANSHDR",options$[2]="OTA"
 	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
 	if status$<>""  goto std_exit
