@@ -64,10 +64,10 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-        wo_open$=Option!.getOptionData("open")
-        wo_quoted$=Option!.getOptionData("quoted")
-        wo_backord$=Option!.getOptionData("backorders")
-        wo_cred$=Option!.getOptionData("credit")
+        wo_open$=Option!.getOptionData("OPEN")
+        wo_quoted$=Option!.getOptionData("QUOTED")
+        wo_backord$=Option!.getOptionData("BACKORDERS")
+        wo_cred$=Option!.getOptionData("CREDIT")
         wo_status$=""
         if wo_open$="Y" then wo_status$=wo_status$+"O"
         if wo_quoted$="Y" then wo_status$=wo_status$+"Q"
@@ -87,7 +87,6 @@ rem --- Parameters
         n1$=sysinfo.firm_name$,n2$="AR",n3$=sysinfo.task_desc$
         find record (ars01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ars01a$
         find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
-        p[0]=num(ars01a.customer_size$)
 
 rem --- Initializations
 
@@ -147,7 +146,7 @@ rem --- Setup Headings
         if pos("Q"=wo_status$)>0 then h0$=h0$+"Quoted/"
         if pos("B"=wo_status$)>0 then h0$=h0$+"Backorders/"
         if pos("C"=wo_status$)>0 then h0$=h0$+"Credit Held/"
-        p8$="Includes All "+h0$(1,len(h0$)-1)+" Work Orders"
+        p8$="Includes All "+h0$(1,len(h0$)-1)+" Sales Orders"
 
 rem --- Run report overlay
 rem --- File Initializations
@@ -293,7 +292,7 @@ customer_break: rem --- Customer break
         arm01a.customer_name$="(Not On File)"
         number=0
         find record (arm01_dev,key=ope01a.firm_id$+ope01a.customer_id$,dom=*next) arm01a$
-        customer$=fnmask$(ope01a.customer_id$(1,p[0]),m0$)
+        customer$=fnmask$(ope01a.customer_id$(1,m0),m0$)
         name$=arm01a.customer_name$
         call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
         phone$=cvs(arm01a.phone_no$,2)
