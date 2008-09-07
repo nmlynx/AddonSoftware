@@ -69,27 +69,27 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-        rem value_01$=Option!.getOptionData("form_value_01")
+        rem value_01$=Option!.getOptionData("form_value_1")
 
-        s0$  =  option!.getOptionData("CUSTOMER_ID_01")
-        s1$  =  option!.getOptionData("CUSTOMER_ID_02")
-        s2$  =  option!.getOptionData("ORDER_DATE_01")
-        s3$  =  option!.getOptionData("ORDER_DATE_02")
+        s0$  =  option!.getOptionData("CUSTOMER_ID_1")
+        s1$  =  option!.getOptionData("CUSTOMER_ID_2")
+        s2$  =  option!.getOptionData("ORDER_DATE_1")
+        s3$  =  option!.getOptionData("ORDER_DATE_2")
         s5$  =  option!.getOptionData("ORD_TAKEN_BY")
         s7$  =  option!.getOptionData("SALESPERSON")
-        s6$  =  option!.getOptionData("OPR_PRINT_STATUS")
+        s6$  =  option!.getOptionData("PRINT_UPRINT_ALL")
         wo_open$=Option!.getOptionData("OPEN")
         wo_quoted$=Option!.getOptionData("QUOTED")
         wo_backord$=Option!.getOptionData("BACKORDERS")
-        wo_cred$=Option!.getOptionData("credit")
-        wo_non_stock$=Option!.getOptionData("non_stock")
+        wo_cred$=Option!.getOptionData("CREDIT")
+        wo_non_stock$=Option!.getOptionData("NON_STOCK")
         s4$=""
         if wo_open$="Y" then s4$=s4$+"O"
         if wo_quoted$="Y" then s4$=s4$+"Q"
         if wo_backord$="Y" then s4$=s4$+"B"
         if wo_cred$="Y" then s4$=s4$+"C"
         if wo_non_stock$="Y" then s4$=s4$+"N"
-        s8$  =  option!.getOptionData("non_stock_option")
+        s8$  =  option!.getOptionData("NON_STOCK_OPTION")
 
 rem --- Retrieve parameter records
 

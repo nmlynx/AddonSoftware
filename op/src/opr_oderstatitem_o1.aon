@@ -43,8 +43,6 @@ rem --- Initializations
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
         call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0    
         call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
-        m0=len(m0$)
-        m1=len(m1$)
         x$="Detail "
         l0=0
         l1=0
@@ -273,7 +271,7 @@ rem --- Print detail line
 
                
                 xwk=fnblank(3)
-                OutVect!.addItem(ope11a_altkey01.customer_id$)
+                OutVect!.addItem(fnmask$(ope11a_altkey01.customer_id$(1,m0),m0$))
                 OutVect!.addItem(ope01a.order_no$+ope01a.backord_flag$)
                 OutVect!.addItem(fndate$(ope01a.order_date$))
                 OutVect!.addItem(fndate$(ship$))
