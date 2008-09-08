@@ -1,7 +1,45 @@
+[[POC_LINECODE.PO_LINE_TYPE.AVAL]]
+po_linecode$=callpoint!.getUserInput()
+
+if pos(po_linecode$="VM") then
+	ctl_name$="POC_LINECODE.LAND_CST_FLG"
+	ctl_stat$="D"
+	gosub disable_fields
+else
+   	ctl_name$="POC_LINECODE.LAND_CST_FLG"
+	ctl_stat$=""
+	gosub disable_fields
+endif   
+
+if pos(po_linecode$="VMNO") then
+	ctl_name$="POC_LINECODE.LEAD_TIM_FLG"
+	ctl_stat$="D"
+	gosub disable_fields
+else
+   	ctl_name$="POC_LINECODE.LEAD_TIM_FLG"
+	ctl_stat$=""
+	gosub disable_fields
+endif   
+
+if pos(po_linecode$="NO")=0 then
+	ctl_name$="POC_LINECODE.GL_EXP_ACCT"
+	ctl_stat$="D"
+	gosub disable_fields
+	ctl_name$="POC_LINECODE.GL_PPV_ACCT"
+	ctl_stat$="D"
+	gosub disable_fields
+else
+	ctl_name$="POC_LINECODE.GL_EXP_ACCT"
+	ctl_stat$=""
+	gosub disable_fields
+	ctl_name$="POC_LINECODE.GL_PPV_ACCT"
+	ctl_stat$=""
+	gosub disable_fields
+endif   
 [[POC_LINECODE.BNEX]]
 rem - set defaults for new records
 
-callpoint!.setColumnData("POC_LINECODE.LINE_TYPE","S")
+rem callpoint!.setColumnData("POC_LINECODE.PO_LINE_TYPE","S")
 
 callpoint!.setColumnData("POC_LINECODE.DROPSHIP","N")
 
