@@ -166,6 +166,7 @@ rem -- Deal with which Ship To type
 	endif
 	gosub disable_ctls
 [[OPE_ORDHDR.ASHO]]
+Print 'SHOW',"asho"
 rem --- get default dates
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDDATES",stbl("+USER_ID"),"MNT","",table_chans$[all]
 	user_tpl.def_ship$=stbl("OPE_DEF_SHIP")
@@ -249,6 +250,7 @@ rem --- enable/disable expire date based on value
 		endif
 	endif
 [[OPE_ORDHDR.AREC]]
+Print 'SHOW',"arec"
 rem --- reset expiration date to enabled
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT","")
 	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
@@ -281,6 +283,7 @@ rem --- Show customer data
 :		"PRIMARY",
 :		rd_key$
 [[OPE_ORDHDR.AWRI]]
+Print 'SHOW',"awri"
 rem --- Write/Remove manual ship to file
 
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -722,6 +725,7 @@ pricing: rem "Call Pricing routine
 		ope11a.std_list_prc=price*factor
 return
 [[OPE_ORDHDR.ARAR]]
+Print 'SHOW',"arar"
 rem --- display order total
 	gosub disp_ord_tot
 
@@ -742,6 +746,7 @@ rem --- Populate address fields
 	dctl$[6]="<<DISPLAY>>.SCITY"
 	dctl$[7]="<<DISPLAY>>.SSTATE"
 	dctl$[8]="<<DISPLAY>>.SZIP"
+
 	if rec_data.shipto_type$="M"
 		dmap$=""
 	else
