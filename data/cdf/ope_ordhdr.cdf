@@ -1,3 +1,30 @@
+[[OPE_ORDHDR.ASIZ]]
+rem --- Create Empty Availability window
+g!=form!.getChildWindow(1109).getControl(5900)
+g!.setSize(g!.getWidth(),g!.getHeight()-75)
+cwin!=form!.getChildWindow(1109).getControl(15000)
+cwin!.setLocation(cwin!.getX(),g!.getY()+g!.getHeight())
+cwin!.setSize(g!.getWidth(),cwin!.getHeight())
+[[OPE_ORDHDR.AFMC]]
+rem --- Create Inventory Availability window
+g!=form!.getChildWindow(1109).getControl(5900)
+userObj!=sysgui!.makeVector()
+mwin!=form!.getChildWindow(1109).addChildWindow(15000,0,10,100,75,"",$00000800$,10)
+mwin!.addGroupBox(15999,0,5,g!.getWidth()-5,65,"Inventory Availability",$$)
+ 
+userObj!.addItem(mwin!)
+mwin!.addStaticText(15001,15,25,75,15,"On Hand:",$$)
+mwin!.addStaticText(15002,15,40,75,15,"Committed:",$$)
+mwin!.addStaticText(15003,215,25,75,15,"Available:",$$)
+mwin!.addStaticText(15004,215,40,75,15,"On Order:",$$)
+mwin!.addStaticText(15005,415,25,75,15,"Warehouse:",$$)
+mwin!.addStaticText(15006,415,40,75,15,"Type:",$$)
+userObj!.addItem(mwin!.addStaticText(15101,90,25,75,15,"",$8000$))
+userObj!.addItem(mwin!.addStaticText(15102,90,40,75,15,"",$8000$))
+userObj!.addItem(mwin!.addStaticText(15103,295,25,75,15,"",$8000$))
+userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
+userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$8000$))
+userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$8000$))
 [[OPE_ORDHDR.BDEL]]
 rem --- remove committments for detail records by calling ATAMO
 	ope11_dev=fnget_dev("OPE_ORDDET")
@@ -166,7 +193,6 @@ rem -- Deal with which Ship To type
 	endif
 	gosub disable_ctls
 [[OPE_ORDHDR.ASHO]]
-Print 'SHOW',"asho"
 rem --- get default dates
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDDATES",stbl("+USER_ID"),"MNT","",table_chans$[all]
 	user_tpl.def_ship$=stbl("OPE_DEF_SHIP")
@@ -250,7 +276,6 @@ rem --- enable/disable expire date based on value
 		endif
 	endif
 [[OPE_ORDHDR.AREC]]
-Print 'SHOW',"arec"
 rem --- reset expiration date to enabled
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT","")
 	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
@@ -283,7 +308,6 @@ rem --- Show customer data
 :		"PRIMARY",
 :		rd_key$
 [[OPE_ORDHDR.AWRI]]
-Print 'SHOW',"awri"
 rem --- Write/Remove manual ship to file
 
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -725,7 +749,6 @@ pricing: rem "Call Pricing routine
 		ope11a.std_list_prc=price*factor
 return
 [[OPE_ORDHDR.ARAR]]
-Print 'SHOW',"arar"
 rem --- display order total
 	gosub disp_ord_tot
 
@@ -856,10 +879,17 @@ rem --- Setup user_tpl$
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
 	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
 	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
-	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10)"
+	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10),avail_oh:c(5),avail_comm:c(5),avail_avail:c(5),"
+	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
 	user_tpl.blank_whse$=blank_whse$
 	user_tpl.dropship_whse$=ars01a.dropshp_whse$
 	user_tpl.def_whse$=ivs01a.warehouse_id$
+	user_tpl.avail_oh$="1"
+	user_tpl.avail_comm$="2"
+	user_tpl.avail_avail$="3"
+	user_tpl.avail_oo$="4"
+	user_tpl.avail_wh$="5"
+	user_tpl.avail_type$="6"

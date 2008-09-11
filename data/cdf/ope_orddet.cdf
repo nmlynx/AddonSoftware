@@ -1,3 +1,13 @@
+[[OPE_ORDDET.ITEM_ID.AVAL]]
+rem --- Set Availability Window info
+	dim avail$[6]
+	avail$[1]="1"
+	avail$[2]="2"
+	avail$[3]="3"
+	avail$[4]="4"
+	avail$[5]="5"
+	avail$[6]="6"
+	gosub set_avail
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
@@ -239,6 +249,17 @@ pricing: rem "Call Pricing routine
 		factor=100/(100-disc)
 		precision num(ivs01a.precision$)
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC",str(price*factor))
+return
+
+rem --- set data in Availability window
+set_avail:
+	rem --- send in array avail$[1-6] with data
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[1])
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[2])
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[3])
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[4])
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[5])
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[6])
 return
 
 #include std_missing_params.src
