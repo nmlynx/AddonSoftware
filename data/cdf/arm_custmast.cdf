@@ -221,6 +221,13 @@ rem --- Retrieve parameter data
 	dctl$[17]="<<DISPLAY>>.DSP_NXT_PROF_PCT"
 
 	gosub disable_ctls
+
+rem --- Disable Option for Jobs if OP not installed or Job flag not set
+	if op$<>"Y" or ars01a.job_nos$<>"Y"
+		enable_str$=""
+		disable_str$="OPM_CUSTJOBS"
+		call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+	endif
 [[ARM_CUSTMAST.<CUSTOM>]]
 disable_ctls:rem --- disable selected control
 
