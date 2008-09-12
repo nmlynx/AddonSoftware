@@ -1,12 +1,22 @@
 [[OPE_ORDDET.ITEM_ID.AVAL]]
 rem --- Set Availability Window info
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+	readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))ivm01a$
+	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+	readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))ivm02a$
+	ivc_whcode_dev=fnget_dev("IVC_WHSECODE")
+	dim ivm10c$:fnget_tpl$("IVC_WHSECODE")
+	readrecord(ivc_whcode_dev,key=firm_id$+"C"+callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))ivm10c$
+
 	dim avail$[6]
-	avail$[1]="1"
-	avail$[2]="2"
-	avail$[3]="3"
-	avail$[4]="4"
-	avail$[5]="5"
-	avail$[6]="6"
+	avail$[1]=str(ivm02a.qty_on_hand)
+	avail$[2]=str(ivm02a.qty_commit)
+	avail$[3]=str(ivm02a.qty_on_hand-ivm02a.qty_commit)
+	avail$[4]=str(ivm02a.qty_on_order)
+	avail$[5]=ivm10c.short_name$
+	avail$[6]=ivm01a.item_type$
 	gosub set_avail
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
 rem --- Go get Lot/Serial Numbers if needed
@@ -170,7 +180,7 @@ calc_grid_tots:
 return
 
 disp_totals: rem --- get context and ID of total amount display control, and redisplay w/ amts from calc_tots
-	tamt!=UserObj!.getItem(1)
+	tamt!=UserObj!.getItem(7)
 	tamt!.setValue(user_tpl.ord_tot)
 return
 
@@ -255,11 +265,11 @@ rem --- set data in Availability window
 set_avail:
 	rem --- send in array avail$[1-6] with data
 	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[1])
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[2])
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[3])
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[4])
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[5])
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[6])
+	userObj!.getItem(num(user_tpl.avail_comm$)).setText(avail$[2])
+	userObj!.getItem(num(user_tpl.avail_avail$)).setText(avail$[3])
+	userObj!.getItem(num(user_tpl.avail_oo$)).setText(avail$[4])
+	userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
+	userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
 return
 
 #include std_missing_params.src

@@ -23,8 +23,8 @@ userObj!.addItem(mwin!.addStaticText(15101,90,25,75,15,"",$8000$))
 userObj!.addItem(mwin!.addStaticText(15102,90,40,75,15,"",$8000$))
 userObj!.addItem(mwin!.addStaticText(15103,295,25,75,15,"",$8000$))
 userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
-userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$8000$))
-userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$8000$))
+userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$0000$))
+userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
 [[OPE_ORDHDR.BDEL]]
 rem --- remove committments for detail records by calling ATAMO
 	ope11_dev=fnget_dev("OPE_ORDDET")
@@ -867,7 +867,7 @@ rem --- disable display fields
 	gosub disable_ctls
 
 rem --- set up UserObj! as vector
-	UserObj!=SysGUI!.makeVector()
+rem	UserObj!=SysGUI!.makeVector()
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLI"))
 	tamt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
