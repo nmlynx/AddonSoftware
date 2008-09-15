@@ -1,3 +1,16 @@
+[[OPE_PRICEQUOTE.ITEM_ID.AINP]]
+rem --- Validate Item
+ivm01_dev=fnget_dev("IVM_ITEMMAST")
+dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+while 1
+	readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),dom=*next)ivm01a$;break
+	msg_id$="ENTRY_INVALID"
+	dim msg_tokens$[1]
+	msg_tokens$[1]="Item Number"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+	break
+wend
 [[OPE_PRICEQUOTE.<CUSTOM>]]
 rem --- Build Pricing records
 build_arrays:
