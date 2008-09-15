@@ -1,23 +1,27 @@
+[[OPE_ORDDET.WAREHOUSE_ID.AVAL]]
+gosub set_avail
+[[OPE_ORDDET.QTY_BACKORD.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.LINE_CODE.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.WAREHOUSE_ID.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.ORDER_MEMO.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.UNIT_COST.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.UNIT_PRICE.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.QTY_ORDERED.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.QTY_SHIPPED.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.EXT_PRICE.BINP]]
+gosub check_new_row
+[[OPE_ORDDET.ITEM_ID.BINP]]
+gosub check_new_row
 [[OPE_ORDDET.ITEM_ID.AVAL]]
-rem --- Set Availability Window info
-	ivm01_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-	readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))ivm01a$
-	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
-	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
-	readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))ivm02a$
-	ivc_whcode_dev=fnget_dev("IVC_WHSECODE")
-	dim ivm10c$:fnget_tpl$("IVC_WHSECODE")
-	readrecord(ivc_whcode_dev,key=firm_id$+"C"+callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))ivm10c$
-
-	dim avail$[6]
-	avail$[1]=str(ivm02a.qty_on_hand)
-	avail$[2]=str(ivm02a.qty_commit)
-	avail$[3]=str(ivm02a.qty_on_hand-ivm02a.qty_commit)
-	avail$[4]=str(ivm02a.qty_on_order)
-	avail$[5]=ivm10c.short_name$
-	avail$[6]=ivm01a.item_type$
-	gosub set_avail
+gosub set_avail
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
@@ -180,7 +184,7 @@ calc_grid_tots:
 return
 
 disp_totals: rem --- get context and ID of total amount display control, and redisplay w/ amts from calc_tots
-	tamt!=UserObj!.getItem(7)
+	tamt!=UserObj!.getItem(8)
 	tamt!.setValue(user_tpl.ord_tot)
 return
 
@@ -263,13 +267,59 @@ return
 
 rem --- set data in Availability window
 set_avail:
-	rem --- send in array avail$[1-6] with data
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[1])
-	userObj!.getItem(num(user_tpl.avail_comm$)).setText(avail$[2])
-	userObj!.getItem(num(user_tpl.avail_avail$)).setText(avail$[3])
-	userObj!.getItem(num(user_tpl.avail_oo$)).setText(avail$[4])
-	userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
-	userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
+	dim avail$[6]
+	good_item$="N"
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+	ivc_whcode_dev=fnget_dev("IVC_WHSECODE")
+	dim ivm10c$:fnget_tpl$("IVC_WHSECODE")
+
+	while 1
+		readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"),dom=*break)ivm01a$
+		readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")+
+:			callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"),dom=*break)ivm02a$
+		readrecord(ivc_whcode_dev,key=firm_id$+"C"+callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"),dom=*break)ivm10c$
+		good_item$="Y"
+		break
+	wend
+
+	if good_item$="Y"
+		avail$[1]=str(ivm02a.qty_on_hand)
+		avail$[2]=str(ivm02a.qty_commit)
+		avail$[3]=str(ivm02a.qty_on_hand-ivm02a.qty_commit)
+		avail$[4]=str(ivm02a.qty_on_order)
+		avail$[5]=ivm10c.short_name$
+		avail$[6]=ivm01a.item_type$
+		userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[1])
+		userObj!.getItem(num(user_tpl.avail_comm$)).setText(avail$[2])
+		userObj!.getItem(num(user_tpl.avail_avail$)).setText(avail$[3])
+		userObj!.getItem(num(user_tpl.avail_oo$)).setText(avail$[4])
+		userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
+		userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
+	endif
+return
+
+rem --- Clear Availability Window
+clear_avail:
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_avail$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
+return
+
+rem --- Check to see if we're on a new row
+check_new_row:
+	MyGrid!=userObj!.getItem(0)
+	CurrRow=MyGrid!.getSelectedRow()
+	if CurrRow<>user_tpl.cur_row
+		gosub clear_avail
+		user_tpl.cur_row=CurrRow
+		gosub set_avail
+	endif
 return
 
 #include std_missing_params.src

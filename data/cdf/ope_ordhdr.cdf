@@ -11,7 +11,8 @@ g!=form!.getChildWindow(1109).getControl(5900)
 userObj!=sysgui!.makeVector()
 mwin!=form!.getChildWindow(1109).addChildWindow(15000,0,10,100,75,"",$00000800$,10)
 mwin!.addGroupBox(15999,0,5,g!.getWidth()-5,65,"Inventory Availability",$$)
- 
+
+userObj!.addItem(g!) 
 userObj!.addItem(mwin!)
 mwin!.addStaticText(15001,15,25,75,15,"On Hand:",$$)
 mwin!.addStaticText(15002,15,40,75,15,"Committed:",$$)
@@ -283,6 +284,14 @@ rem --- reset expiration date to enabled
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	dmap$=""
 	gosub disable_ctls
+
+rem --- Clear Availability Window
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_avail$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 	gosub get_op_params
@@ -784,6 +793,14 @@ rem --- Populate address fields
 		dmap$=""
 	endif
 	gosub disable_ctls
+
+rem --- Clear Availability Window
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_avail$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
 	num_files=32
@@ -880,16 +897,17 @@ rem --- Setup user_tpl$
 	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
 	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
 	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10),avail_oh:c(5),avail_comm:c(5),avail_avail:c(5),"
-	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5)"
+	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),cur_row:n(5)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
 	user_tpl.blank_whse$=blank_whse$
 	user_tpl.dropship_whse$=ars01a.dropshp_whse$
 	user_tpl.def_whse$=ivs01a.warehouse_id$
-	user_tpl.avail_oh$="1"
-	user_tpl.avail_comm$="2"
-	user_tpl.avail_avail$="3"
-	user_tpl.avail_oo$="4"
-	user_tpl.avail_wh$="5"
-	user_tpl.avail_type$="6"
+	user_tpl.avail_oh$="2"
+	user_tpl.avail_comm$="3"
+	user_tpl.avail_avail$="4"
+	user_tpl.avail_oo$="5"
+	user_tpl.avail_wh$="6"
+	user_tpl.avail_type$="7"
+	user_tpl.cur_row=-1
