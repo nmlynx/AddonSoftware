@@ -10,16 +10,16 @@
 			<DD_ALIAS_TYPE>X</DD_ALIAS_TYPE>
 			<DD_KEY_LENGTH>0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD>0</DD_NBR_RECORD>
-			<DD_RECORD_LEN>260</DD_RECORD_LEN>
+			<DD_RECORD_LEN>283</DD_RECORD_LEN>
 			<DD_SYSTEM_REC>N</DD_SYSTEM_REC>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>PO </ASC_PROD_ID>
 			<ASC_LICENSE_ID>1930AF9934EE5322C68214240B4CBC18</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA>Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20080915</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE>20080915</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME>102452</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE>20080916</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE>20080916</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME>090416</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM>[+DIR_CPP]poe_reqdet_cpt.bbj</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP>G</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV>zzzz</DD_ATTR_SLEV>
@@ -45,7 +45,7 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>POE_REQDET      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME>poe-11</DD_FILE_NAME>
-			<DD_TABLE_TPL>firm_id:c(2),vendor_id:c(6),req_no:c(7),po_line_no:c(3*),po_line_code:c(2),reserved_str:c(18),lead_tim_flg:c(1),unit_measure:c(2),location:c(10),source_code:c(1),forecast:c(3),po_msg_code:c(3),reserved_str_02:c(8),reqd_date:c(8),promise_date:c(8),not_b4_date:c(8*),wo_no:c(7),sequence_no:c(3),customer_id:c(6),order_no:c(7),line_no:c(3),shipto_no:c(6*),warehouse_id:c(2),item_id:c(20*),order_memo:c(40*),reserved_str_03:c(1*),dealer_str:c(1*),conv_factor:n(7*),unit_cost:n(7*),req_qty:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),reserved_num_04:n(1*),reserved_num_05:n(1*),reserved_num_06:n(1*),reserved_num_07:n(1*),reserved_num_08:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL>firm_id:c(2),vendor_id:c(6),req_no:c(7),po_line_no:c(3*),po_line_code:c(2),reserved_str:c(18),lead_tim_flg:c(1),unit_measure:c(2),location:c(10),source_code:c(1),forecast:c(3),po_msg_code:c(3),reserved_str_02:c(8),reqd_date:c(8),promise_date:c(8),not_b4_date:c(8*),wo_no:c(7),sequence_no:c(3),customer_id:c(6),order_no:c(7),line_no:c(3),shipto_no:c(6*),warehouse_id:c(2),item_id:c(20*),order_memo:c(40*),reserved_str_03:c(1*),dealer_str:c(1*),conv_factor:n(7*),unit_cost:n(7*),req_qty:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),reserved_num_04:n(1*),reserved_num_05:n(1*),reserved_num_06:n(1*),reserved_num_07:n(1*),reserved_num_08:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),ns_item_id:c(20*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -682,6 +682,26 @@
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE>20060119</DD_LSTREV_DATE>
 			<DD_ATTR_PROM>Reserved For Dealer Use</DD_ATTR_PROM>
+		</RECORD>
+		<RECORD>
+			<DD_TABLE_ALIAS>POE_REQDET      </DD_TABLE_ALIAS>
+			<DD_SEQUENCE>033</DD_SEQUENCE>
+			<DD_DATA_NAME>NS_ITEM_ID      </DD_DATA_NAME>
+			<DD_DVAR_NAME>NS_ITEM_ID      </DD_DVAR_NAME>
+			<DD_COL_REPEATS>0</DD_COL_REPEATS>
+			<DD_COL_OCCURS>0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM>Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR>0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE>20080916</DD_CREATE_DATE>
+			<DD_LSTREV_DATE>20080916</DD_LSTREV_DATE>
+			<DD_ATTR_COLW>0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX>0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY>0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
+			<DD_ATTR_MLAN>N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL>0</DD_ATTR_MINL>
+			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -1441,6 +1461,30 @@
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL>Reserved For Dealer Use</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Res For Dealer Use</DD_ATTR_LABS>
+		</RECORD>
+		<RECORD>
+			<DD_DATA_NAME>NS_ITEM_ID      </DD_DATA_NAME>
+			<DD_DESCRIPTION>Non-stock Item ID</DD_DESCRIPTION>
+			<DD_DATA_TYPE>C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH>20</DD_DATA_LENGTH>
+			<DD_SYSTEM_REC>N</DD_SYSTEM_REC>
+			<ASC_COMP_ID>01007514</ASC_COMP_ID>
+			<ASC_PROD_ID>IV </ASC_PROD_ID>
+			<LOCALIZATION_EX>N</LOCALIZATION_EX>
+			<DD_CREATE_DATE>20080915</DD_CREATE_DATE>
+			<DD_LSTREV_DATE>20080915</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW>0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH>0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
+			<DD_ATTR_DTAB>IVM_ITEMMAST    </DD_ATTR_DTAB>
+			<DD_ATTR_LABL>Non-Stock Item ID</DD_ATTR_LABL>
+			<DD_ATTR_LABS>NS Item ID</DD_ATTR_LABS>
+			<DD_ATTR_MAXL>0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR>0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL>0</DD_ATTR_MINL>
+			<DD_ATTR_MSKI>UUUUUUUUUUUUUUUUUUUU</DD_ATTR_MSKI>
+			<DD_ATTR_PREC>0</DD_ATTR_PREC>
+			<DD_ATTR_PROM>Enter non-stock Item ID</DD_ATTR_PROM>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
