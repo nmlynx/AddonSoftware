@@ -1,16 +1,64 @@
+[[OPE_PRICEQUOTE.WAREHOUSE_ID.AINP]]
+rem --- Validate Warehouse
+ivcwhse_dev=fnget_dev("IVC_WHSECODE")
+dim ivcwhse$:fnget_tpl$("IVC_WHSECODE")
+whse_id$=callpoint!.getUserInput()
+maxl$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.WAREHOUSE_ID","MAXL")
+padc$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.WAREHOUSE_ID","PADC")
+if padc$="" padc$=" " else padc$=ath(padc$)
+padj$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.WAREHOUSE_ID","PADJ")
+if padj$="" padj$="L"
+whse_id$=pad(whse_id$,num(maxl$),padj$,padc$)
+if cvs(whse_id$,2)<>""
+	readrecord(ivcwhse_dev,key=firm_id$+"C"+whse_id$,dom=*next)ivcwhse$;goto end_wh
+	msg_id$="INVALID_ENTRY"
+	dim msg_tokens$[1]
+	msg_tokens$[1]="Warehouse ID"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
+end_wh:
+[[OPE_PRICEQUOTE.CUSTOMER_ID.AINP]]
+rem --- Validate Customer Number
+arm01_dev=fnget_dev("ARM_CUSTMAST")
+dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+cust_no$=callpoint!.getUserInput()
+maxl$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.CUSTOMER_ID","MAXL")
+padc$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.CUSTOMER_ID","PADC")
+if padc$="" padc$=" " else padc$=ath(padc$)
+padj$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.CUSTOMER_ID","PADJ")
+if padj$="" padj$="L"
+cust_no$=pad(cust_no$,num(maxl$),padj$,padc$)
+call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
+if cvs(cust_no$,2)<>""
+	readrecord(arm01_dev,key=firm_id$+cust_no$,dom=*next)arm01a$;goto cust_end
+	msg_id$="INVALID_ENTRY"
+	dim msg_tokens$[1]
+	msg_tokens$[1]="Customer Number"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
+cust_end:
 [[OPE_PRICEQUOTE.ITEM_ID.AINP]]
 rem --- Validate Item
 ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-while 1
-	readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),dom=*next)ivm01a$;break
-	msg_id$="ENTRY_INVALID"
+item_id$=callpoint!.getUserInput()
+maxl$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.ITEM_ID","MAXL")
+padc$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.ITEM_ID","PADC")
+if padc$="" padc$=" " else padc$=ath(padc$)
+padj$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.ITEM_ID","PADJ")
+if padj$="" padj$="L"
+item_id$=pad(item_id$,num(maxl$),padj$,padc$)
+if cvs(item_id$,2)<>""
+	readrecord(ivm01_dev,key=firm_id$+item_id$,dom=*next)ivm01a$;goto item_end
+	msg_id$="INVALID_ENTRY"
 	dim msg_tokens$[1]
 	msg_tokens$[1]="Item Number"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
-	break
-wend
+endif
+item_end:
 [[OPE_PRICEQUOTE.<CUSTOM>]]
 rem --- Build Pricing records
 build_arrays:
@@ -156,7 +204,7 @@ while 1
 wend
 callpoint!.setStatus("REFRESH")
 [[OPE_PRICEQUOTE.BSHO]]
-num_files=7
+num_files=8
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 open_tables$[2]="ARM_CUSTDET",open_opts$[2]="OTA"
@@ -165,6 +213,7 @@ open_tables$[4]="IVM_ITEMWHSE",open_opts$[4]="OTA"
 open_tables$[5]="IVC_PRICCODE",open_opts$[5]="OTA"
 open_tables$[6]="IVM_ITEMMAST",open_opts$[6]="OTA"
 open_tables$[7]="IVM_ITEMPRIC",open_opts$[7]="OTA"
+open_tables$[8]="IVC_WHSECODE",open_opts$[8]="OTA"
 gosub open_tables
 arm01_dev=num(open_chans$[1]),arm01_tpl$=open_tpls$[1]
 arm02_dev=num(open_chans$[2]),arm02_tpl$=open_tpls$[2]
@@ -173,3 +222,4 @@ ivm02_dev=num(open_chans$[4]),ivm02_tpl$=open_tpls$[4]
 ivcprice_dev=num(open_chans$[5]),ivcprice_tpl$=open_tpls$[5]
 ivm01_dev=num(open_chans$[6]),ivm01_tpl$=open_tpls$[6]
 ivm06_dev=num(open_chans$[7]),ivm06_tpl$=open_tpls$[7]
+ivcwhse_dev=num(open_chans$[8]),ivcwhse_tpl$=open_tpls$[8]
