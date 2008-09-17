@@ -39,10 +39,21 @@ rem --- Check for Commitment type
 	endif
 [[IVC_TRANCODE.BWRI]]
 rem --- Check for blank Trans Type
-	if cvs(callpoint!.getColumnData("IVC_TRANCODE.TRANS_TYPE"),2) = ""
+
+	if cvs(callpoint!.getColumnData("IVC_TRANCODE.TRANS_TYPE"),2) = "" then
 		msg_id$="INVALID_TRANS_TYPE"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
+	endif
+
+rem --- Check for G/L Number if Post to G/L is up
+
+	if callpoint!.getColumnData("IVC_TRANCODE.POST_GL") = "Y" then
+		if cvs(callpoint!.getColumnData("IVC_TRANCODE.GL_ADJ_ACCT"),2) = "" then
+			msg_id$ = "IV_NEED_GL_ACCT"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
 	endif
 [[IVC_TRANCODE.<CUSTOM>]]
 rem #include std_missing_params.src
