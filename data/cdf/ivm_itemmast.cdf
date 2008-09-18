@@ -1,3 +1,7 @@
+[[IVM_ITEMMAST.CONV_FACTOR.AVAL]]
+if num(callpoint!.getUserInput())<0 then
+	callpoint!.setStatus("ABORT")
+endif
 [[IVM_ITEMMAST.AOPT-CITM]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
 user_id$=stbl("+USER_ID")
