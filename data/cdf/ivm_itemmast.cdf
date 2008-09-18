@@ -1,3 +1,7 @@
+[[IVM_ITEMMAST.MSRP.AVAL]]
+if num(callpoint!.getUserInput())<0 then
+	callpoint!.setStatus("ABORT")
+endif
 [[IVM_ITEMMAST.CONV_FACTOR.AVAL]]
 if num(callpoint!.getUserInput())<0 then
 	callpoint!.setStatus("ABORT")
