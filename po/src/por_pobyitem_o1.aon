@@ -59,24 +59,28 @@ rem --- Headings and print positions
 
 rem --- Headings and print positions
 
- 
-        dim columns$[14,10]
         columns = 14
-        columns$[0,0]="Item",               columns$[0,1]="C",columns$[0,2]="20"
-        columns$[1,0]="PO #",               columns$[1,1]="C",columns$[1,2]="25"
-        columns$[2,0]="Seq",                columns$[2,1]="C",columns$[2,2]="4"
-        columns$[3,0]="Vendor",             columns$[3,1]="C",columns$[3,2]="6"
-        columns$[4,0]="UM",                 columns$[4,1]="C",columns$[4,2]="4"
-        columns$[5,0]="Date^Required",      columns$[5,1]="C",columns$[5,2]="8"
-        columns$[6,0]="Date^Promised",      columns$[6,1]="C",columns$[6,2]="8"
-        columns$[7,0]="Not^Before",         columns$[7,1]="C",columns$[7,2]="5"
-        columns$[8,0]="Conv^Factor",        columns$[8,1]="N",columns$[8,2]="5",columns$[8,3]=m5$
-        columns$[9,0]="Quantity^Ordered",   columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m2$,columns$[9,10]="T"
-        columns$[10,0]="Quantity^Received", columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m2$,columns$[10,10]="T"
-        columns$[11,0]="Balance",           columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m2$,columns$[11,10]="T"
-        columns$[12,0]="Unit Cost",         columns$[12,1]="N",columns$[12,2]="8",columns$[12,3]=m3$
-        columns$[13,0]="Extension",         columns$[13,1]="N",columns$[13,2]="8",columns$[13,3]=m1$,columns$[13,10]="T"
-        columns$[14,0]="Quantity^On Order", columns$[14,1]="N",columns$[14,2]="8",columns$[14,3]=m2$
+        if col_format$="Y" columns=16
+        dim columns$[columns,10]
+        columns$[0,0]="Item",                       columns$[0,1]="C",columns$[0,2]=str(num(ivs01a.item_id_len$)+1)
+        if col_format$="Y" then
+            columns$[1,0]="Item Description",       columns$[1,1]="C",columns$[1,2]=str(desclen[1]+desclen[2]+desclen[3])
+            columns$[2,0]="WH^ID",                  columns$[2,1]="C",columns$[2,2]="2"
+        endif
+        columns$[columns-13,0]="PO #",              columns$[columns-13,1]="C",columns$[columns-13,2]="8"
+        columns$[columns-12,0]="Seq",               columns$[columns-12,1]="C",columns$[columns-12,2]="4"
+        columns$[columns-11,0]="Vendor",            columns$[columns-11,1]="C",columns$[columns-11,2]=str(len(vendomask$))
+        columns$[columns-10,0]="UM",                columns$[columns-10,1]="C",columns$[columns-10,2]="4"
+        columns$[columns-9,0]="Date^Required",      columns$[columns-9,1]="C", columns$[columns-9,2]="8"
+        columns$[columns-8,0]="Date^Promised",      columns$[columns-8,1]="C", columns$[columns-8,2]="8"
+        columns$[columns-7,0]="Not^Before",         columns$[columns-7,1]="C", columns$[columns-7,2]="5"
+        columns$[columns-6,0]="Conv^Factor",        columns$[columns-6,1]="N", columns$[columns-6,2]=str(len(m5$)),columns$[columns-6,3]=m5$
+        columns$[columns-5,0]="Quantity^Ordered",   columns$[columns-5,1]="N", columns$[columns-5,2]=str(len(m2$)),columns$[columns-5,3]=m2$,columns$[columns-5,10]="T"
+        columns$[columns-4,0]="Quantity^Received",  columns$[columns-4,1]="N", columns$[columns-4,2]=str(len(m2$)),columns$[columns-4,3]=m2$,columns$[columns-4,10]="T"
+        columns$[columns-3,0]="Balance",            columns$[columns-3,1]="N", columns$[columns-3,2]=str(len(m2$)),columns$[columns-3,3]=m2$,columns$[columns-3,10]="T"
+        columns$[columns-2,0]="Unit Cost",          columns$[columns-2,1]="N", columns$[columns-2,2]=str(len(m3$)),columns$[columns-2,3]=m3$
+        columns$[columns-1,0]="Extension",          columns$[columns-1,1]="N", columns$[columns-1,2]=str(len(m1$)),columns$[columns-1,3]=m1$,columns$[columns-1,10]="T"
+        columns$[columns,0]="Quantity^On Order",    columns$[columns,1]="N",   columns$[columns,2]=str(len(m2$))  ,columns$[columns,3]=m2$
  
 
 
@@ -125,7 +129,7 @@ rem --- Get Line Type
         linetype$="N"
         p02_key$=poe12a.firm_id$+poe12a.po_line_code$
         find record (pom02a_dev,key=p02_key$,dom=*next) pom02a$
-        linetype$=pom02a.line_type$
+        linetype$=pom02a.po_line_type$
         if linetype$<>"S" continue
 
 rem --- Test breaks; print line
@@ -158,7 +162,7 @@ done: rem --- All Done
 
         gosub itemtotals
         gosub whsetotals
-        xwk = fnblank(15)
+        rem *** xwk = fnblank(15)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         xwk = fnblank(1)
         OutVect!.addItem("Total For Report")  
@@ -195,8 +199,13 @@ rem --- Get extension
 
 rem --- Print detail line
 
-
-        xwk = fnblank(1)
+        if col_format$="Y" then
+            OutVect!.addItem(poe12a.item_id$)
+            OutVect!.addItem(itemdesc$)
+            OutVect!.addItem(poe12a.warehouse_id$)
+        else
+            xwk = fnblank(1)
+        endif
         OutVect!.addItem(ponum$)
         OutVect!.addItem(poe12a.po_line_no$)
         OutVect!.addItem(vendor$)
@@ -210,7 +219,11 @@ rem --- Print detail line
         OutVect!.addItem(balance$)
         OutVect!.addItem(unitcost$)
         OutVect!.addItem(extension$)
-        xwk = fnblank(1)
+        if col_format$="Y" then
+            OutVect!.addItem(str(qtyonorder))
+         else
+            xwk = fnblank(1)
+        endif
         l=l+1
         return
 
@@ -304,42 +317,53 @@ brnch2:
         i02_key$=firm_id$+poe12a.warehouse_id$+poe12a.item_id$
         find record (ivm02a_dev,key=i02_key$,dom=*next) ivm02a$
 
-        OutVect!.addItem(itemnum$(1,itemlen) + " " + itemdesc$)
-        xwk = fnblank(13)
+        if col_format$<>"Y" then 
+            OutVect!.addItem(itemnum$(1,itemlen))
+            OutVect!.addItem(itemdesc$)
+            xwk = fnblank(12)
 
-        OutVect!.addItem(str(qtyonorder))
 
-        l=l+1
+            OutVect!.addItem(str(ivm02a.qty_on_order))
+            l=l+1
+        endif
+
         return
 
 whsetotals: rem --- Print Warehouse total
 
-        xwk = fnblank(15)
-        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-        xwk = fnblank(1)
-        OutVect!.addItem("Total For Warehouse " + whse$ + " " + whsename$)
-        xwk = fnblank(11)
-        OutVect!.addItem(str(whsetot))
-        xwk = fnblank(1)
+        if col_format$<>"Y" then 
+            rem *** xwk = fnblank(15)
+            TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+            xwk = fnblank(1)
+            OutVect!.addItem("Total For Warehouse " + whse$ + " " + whsename$)
+            xwk = fnblank(11)
+            OutVect!.addItem(str(whsetot))
+            xwk = fnblank(1)
+            let l=l+1
+        endif
 
-        let l=l+2
+ 
         return
 
 itemtotals: rem --- Print Item total
-         xwk = fnblank(15)
-        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-        xwk = fnblank(1)
-        OutVect!.addItem("Total For Item " + itemnum$(1,itemlen) + " " + itemdesc$)
-        xwk = fnblank(7)
 
-        OutVect!.addItem(str(qtyordtot))
-        OutVect!.addItem(str(qtyrectot))
-        OutVect!.addItem(str(baltot))
-        xwk = fnblank(1)
-        OutVect!.addItem(str(itemtot))
-        xwk = fnblank(1)
+        if col_format$<>"Y" then 
+            rem ***  xwk = fnblank(15)
+            TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+            xwk = fnblank(1)
+            OutVect!.addItem("Total For Item " + itemnum$(1,itemlen) + " " + itemdesc$)
+            xwk = fnblank(7)
 
-        let l=l+2
+            OutVect!.addItem(str(qtyordtot))
+            OutVect!.addItem(str(qtyrectot))
+            OutVect!.addItem(str(baltot))
+            xwk = fnblank(1)
+            OutVect!.addItem(str(itemtot))
+            xwk = fnblank(1)
+            let l=l+1
+        endif
+
+
         return
 
 calc_extension: rem --- Calc extension and Balance

@@ -70,6 +70,7 @@ rem --- Assign form input values to local variables
         whichdate$=option!.getOptionData("date_type")
         datefrom$=option!.getOptionData("pick_date_1")
         datethru$=option!.getOptionData("pick_date_2")
+        col_format$=option!.getOptionData("COL_FORMAT")
 
 rem --- Retrieve parameter records
 
@@ -103,7 +104,6 @@ rem --- masks
         call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","V","",m5$,0,0
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vendomask$,0,vendlen
         call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
-   
 
 rem --- Init Data
 
