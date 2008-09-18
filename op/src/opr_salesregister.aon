@@ -52,14 +52,14 @@ rem --- Open/Lock files
         files$[11]="ivw-04",ids$[11]="IVW_LFDET"
         files$[12]="ivw-05",ids$[12]="IVW_LFCOST"
         files$[13]="ope-01",ids$[13]="OPE_ORDHDR"
-        files$[14]="ope-04",ids$[14]="OPE_PRNTLIST"
+rem        files$[14]="ope-04",ids$[14]="OPE_PRNTLIST"
         files$[15]="ope-11",ids$[15]="OPE_ORDDET"
         files$[16]="ope-21",ids$[16]="OPE_ORDLSDET"
         files$[17]="ope-41",ids$[17]="OPE_INVCASH"
         files$[18]="opm-02",ids$[18]="OPC_LINECODE"
         files$[19]="opm-06",ids$[19]="OPC_TAXCODE"
         files$[20]="ops_mtdsales",ids$[20]="OPS_MTDSALES"
-        files$[21]="opw-01",ids$[21]="OPW_INVREG"
+rem        files$[21]="opw-01",ids$[21]="OPW_INVREG"
         files$[22]="opw-11",ids$[22]="OPW_TERRSUMM"
         files$[23]="opw-21",ids$[23]="OPW_LINESUMM"
         files$[24]="opw-31",ids$[24]="OPW_SALESUMM"
@@ -87,14 +87,12 @@ rem --- Open/Lock files
         ivw04_dev=channels[11]
         ivw05_dev=channels[12]
         ope01_dev=channels[13]
-        ope04_dev=channels[14]
         ope11_dev=channels[15]
         ope21_dev=channels[16]
         ope41_dev=channels[17]
         opm02_dev=channels[18]
         opm06_dev=channels[19]
         ops10_dev=channels[20]
-        opw01_dev=channels[21]
         opw11_dev=channels[22]
         opw21_dev=channels[23]
         opw31_dev=channels[24]
@@ -111,16 +109,16 @@ rem glw11a$:templates$[7],
 :       ars01a$:templates$[4],glm01a$:templates$[5],gls01a$:templates$[6],
 :       ivm01a$:templates$[7],ivm02a$:templates$[8],
 :       ivm04a$:templates$[9],ivs01a$:templates$[10],ivw04a$:templates$[11],
-:       ivw05a$:templates$[12],ope01a$:templates$[13],ope04a$:templates$[14],
+:       ivw05a$:templates$[12],ope01a$:templates$[13],
 :       ope11a$:templates$[15],ope21a$:templates$[16],ope41a$:templates$[17],
 :       opm02a$:templates$[18],opm06a$:templates$[19],ops10a$:templates$[20],
-:       opw01a$:templates$[21],opw11a$:templates$[22],opw21a$:templates$[23],
+:       opw11a$:templates$[22],opw21a$:templates$[23],
 :       opw31a$:templates$[24],opw41a$:templates$[25],sas01a$:templates$[26],
 :       glm03a$:templates$[27],arm10f$:templates$[28],arm10h$:templates$[29]
 
 rem --- Assign form input values to local variables
     
-        seq$ = option!.getOptionData("report_Seq")
+        seq$ = option!.getOptionData("REPORT_TYPE")
 
 rem --- Retrieve parameter records
 
@@ -175,7 +173,6 @@ rem --- Parameters
         p[2]=num(ars01a.current_per$)
         p[3]=fnyy_year(ars01a.current_year$)
 
-
         call pgmdir$+"glc_ctlcreate.aon",err=label_five,pgm(-2),n2$,glw11$,gl$,status
         if status then goto std_exit
 
@@ -188,9 +185,8 @@ rem --- Parameters
         glw11_dev=channels[30]
         dim glw11a$:templates$[30]
 
-        call pgmdir$+"adc_application.aon","PO",info$[all]
 label_five:
-
+        call pgmdir$+"adc_application.aon","PO",info$[all]
         po$=info$[20]
         call pgmdir$+"adc_application.aon","SA",info$[all]
         sa$=info$[20]
@@ -221,9 +217,8 @@ rem --- Initialize Data
             headings$[2]="By Invoice Number"
         endif
 
+        call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,m0
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1
-rem        call pgmdir$+"adc_sizemask.aon",ars01a.amount_mask$,m1,11,11
-        m0=len(ars01a.customer_output$)
         errors=0
         glstatus=0
 
@@ -245,137 +240,124 @@ rem        call pgmdir$+"adc_sizemask.aon",ars01a.amount_mask$,m1,11,11
 
 
 rem ------- retrieve template for OPW_INVREG record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_INVREG","PRIMARY",opw01a_key_tpl$,table_chans$[all],status$
-            dim opw01a_key$:opw01a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_INVREG","PRIMARY",opw01a_key_tpl$,table_chans$[all],status$
+        dim opw01a_key$:opw01a_key_tpl$
 
 rem ------- retrieve template for OPW_TERRSUMM record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_TERRSUMM","PRIMARY",opw11a_key_tpl$,table_chans$[all],status$
-            dim opw11a_key$:opw11a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_TERRSUMM","PRIMARY",opw11a_key_tpl$,table_chans$[all],status$
+        dim opw11a_key$:opw11a_key_tpl$
 
 rem ------- retrieve template for OPW_LINESUMM record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_LINESUMM","PRIMARY",opw21a_key_tpl$,table_chans$[all],status$
-            dim opw21a_key$:opw21a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_LINESUMM","PRIMARY",opw21a_key_tpl$,table_chans$[all],status$
+        dim opw21a_key$:opw21a_key_tpl$
 
 rem ------- retrieve template for OPW_SALESUMM record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_SALESUMM","PRIMARY",opw31a_key_tpl$,table_chans$[all],status$
-            dim opw31a_key$:opw31a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_SALESUMM","PRIMARY",opw31a_key_tpl$,table_chans$[all],status$
+        dim opw31a_key$:opw31a_key_tpl$
 
 rem ------- retrieve template for OPW_INVCASH record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_INVCASH","PRIMARY",opw41a_key_tpl$,table_chans$[all],status$
-            dim opw41a_key$:opw41a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPW_INVCASH","PRIMARY",opw41a_key_tpl$,table_chans$[all],status$
+        dim opw41a_key$:opw41a_key_tpl$
 
 rem ------- retrieve template for GLW_DAILYDETAIL record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","GLW_DAILYDETAIL","PRIMARY",glw11a_key_tpl$,table_chans$[all],status$
-            dim glw11a_key$:glw11a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","GLW_DAILYDETAIL","PRIMARY",glw11a_key_tpl$,table_chans$[all],status$
+        dim glw11a_key$:glw11a_key_tpl$
 
 rem ------- retrieve template for OPE_PRNTLIST record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_PRNTLIST","PRIMARY",ope04a_key_tpl$,table_chans$[all],status$
-            dim ope04a_key$:ope04a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_PRNTLIST","PRIMARY",ope04a_key_tpl$,table_chans$[all],status$
+        dim ope04a_key$:ope04a_key_tpl$
 
 rem ------- retrieve template for OPE_ORDDET record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDDET","PRIMARY",ope11a_key_tpl$,table_chans$[all],status$
-            dim ope11a_key$:ope11a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDDET","PRIMARY",ope11a_key_tpl$,table_chans$[all],status$
+        dim ope11a_key$:ope11a_key_tpl$
 
 rem ------- retrieve template for OPE_ORDLSDET record key
-            call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDLSDET","PRIMARY",ope21a_key_tpl$,table_chans$[all],status$
-            dim ope21a_key$:ope21a_key_tpl$
+        call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDLSDET","PRIMARY",ope21a_key_tpl$,table_chans$[all],status$
+        dim ope21a_key$:ope21a_key_tpl$
 
 
-            gosub sort_by_invno
-            call pgmdir$+"adc_progress.aon","N","","","","",0,opw01_dev,1,meter_num,status
+rem        gosub sort_by_invno
+        call pgmdir$+"adc_progress.aon","N","","","","",0,ope01_dev,1,meter_num,status
 
 
 rem --- Initial Read
 
-            if seq$="C" then goto seq_c
-            read (opw01_dev,key=firm_id$,dom=main_read)
-            if seq$="I" then goto main_read
-seq_c:
-            read (ope04_dev,key=firm_id$+"I",dom=*next)
+        if seq$="C" keynum=2 else keynum=3
+        read (ope01_dev,key=firm_id$+"I",knum=keynum,dom=*next)
 
 main_read: rem --- Main Read
     while more
-            precision 4
-            lines$=""
-            if seq$<>"C" then
-                opw01a_key$=key(opw01_dev,end=*break)
-                read (opw01_dev)
-                if opw01a_key.firm_id$<>firm_id$ then break
-                extract record (ope01_dev,key=opw01a_key.firm_id$+"  "+opw01a_key.customer_id$+"000",dom=*continue) ope01a$
-                if seq$="I" then goto label_one
-            endif
-            ope04a_key$=key(ope04_dev,end=*break)
-            read (ope04_dev)
-            if ope04a_key.firm_id$+ope04a_key.ordinv_flag$<>firm_id$+"I" then break
-            extract record (ope01_dev,key=ope04a_key.firm_id$+ope04a_key.ar_type$+"000",dom=*continue) ope01a$
+        precision 4
+        lines$=""
+        ope01a_key$=key(ope01_dev,end=*break)
+        if pos(firm_id$+"I"=ope01a_key$)<>1 break
+        extract record (ope01_dev,key=ope01a_key$,dom=*continue) ope01a$
 
 label_one:
-            if ope01a.print_status$<>"Y" or pos(ope01a.lock_status$="12")<>0 then continue
-            z7$=""
-            z8$=""
-            if ope01a.cash_sale$="Y" then
-                find record (ope41_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next) ope41a$
-            endif
-            ope01a.lock_status$="S"
-            write record (ope01_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+sequence_000$) ope01a$
+        if ope01a.print_status$<>"Y" or pos(ope01a.lock_status$="12")<>0 then continue
+        z7$=""
+        z8$=""
+        if ope01a.cash_sale$="Y" then
+            find record (ope41_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next) ope41a$
+        endif
+        ope01a.lock_status$="S"
+        write record (ope01_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+sequence_000$) ope01a$
 
 rem --- Breaks
 
-            if seq$="C" then call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            if seq$="I" then call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            if ope01a.ordinv_flag$<>"I" then continue
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        if ope01a.ordinv_flag$<>"I" continue
 
 rem --- Heading
 
-            dim t[6]
-            t[2]=ope01a.tax_amount
-            t[3]=ope01a.freight_amt
-            t[5]=ope01a.discount_amt
-            t0=0
-            gosub find_customer
-            if ope01a.invoice_type$="V" then
+        dim t[6]
+        t[2]=ope01a.tax_amount
+        t[3]=ope01a.freight_amt
+        t[5]=ope01a.discount_amt
+        t0=0
+        gosub find_customer
+        if ope01a.invoice_type$="V" then
 
 rem --- Void
 
-                    OutVect!.addItem(fnmask$(ope01a.customer_id$,ars01a.customer_output$))
-                    OutVect!.addItem(ope01a.order_no$)
-                    OutVect!.addItem(ope01a.ar_inv_no$)
-                    OutVect!.addItem(fndate$(ope01a.invoice_date$))
-                    OutVect!.addItem("      * Void *")
-                    xwk = fnblank(7)
-                    OutVect!.addItem(arm01a.customer_name$)
-                    xwk = fnblank(11)
+            OutVect!.addItem(fnmask$(ope01a.customer_id$,m0$))
+            OutVect!.addItem(ope01a.order_no$)
+            OutVect!.addItem(ope01a.ar_inv_no$)
+            OutVect!.addItem(fndate$(ope01a.invoice_date$))
+            OutVect!.addItem("      * Void *")
+            xwk = fnblank(7)
+            OutVect!.addItem(arm01a.customer_name$)
+            xwk = fnblank(11)
 
-                    l=l+3
-                    continue
+            l=l+3
+            continue
 
-            endif
+        endif
 
 rem --- Determine GL Accounts
-
    
-            dim y2$(80,"0"),y9$(80,"0")
-            find record (arm10_dev,key=firm_id$+"D"+ope01a.dist_code$,dom=label_two) arm10d$
-            y2$(1)=arm10d$(31,140)
+        dim y2$(80,"0"),y9$(80,"0")
+        find record (arm10_dev,key=firm_id$+"D"+ope01a.dist_code$,dom=label_two) arm10d$
+        y2$(1)=arm10d$(31,140)
 
 label_two:
-            y9$(1,10)=y2$(1,10)
-            y9$(31,20)=y2$(31,20)
-            if ope01a.cash_sale$="Y" and len(z7$)>=24 then
-               find record (arm10_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
-                y9$(1,10)=arm10c.gl_cash_acct$
-            endif
+        y9$(1,10)=y2$(1,10)
+        y9$(31,20)=y2$(31,20)
+        if ope01a.cash_sale$="Y" and len(z7$)>=24 then
+           find record (arm10_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
+           y9$(1,10)=arm10c.gl_cash_acct$
+        endif
 
 rem --- Setup Invoice GL Variables
 
-            gldate$=ope01a.invoice_date$
-            memo$=arm01a.customer_name$
-            ref1$=fnmask$(ope01a.customer_id$,ars01a.customer_output$)
-            ref2$=ope01a.ar_inv_no$
+        gldate$=ope01a.invoice_date$
+        memo$=arm01a.customer_name$
+        ref1$=fnmask$(ope01a.customer_id$,m0$)
+        ref2$=ope01a.ar_inv_no$
 
 rem --- Position Invoice Detail File
 
-           read (ope11_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
+        read (ope11_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
 
 rem --- Detail
         while more
@@ -407,63 +389,63 @@ rem --- Write Misc
 rem --- Determine GL Postings Here
 
             if gl$="Y" then
-                    if opm02a.line_type$="S" then
-                        if opm02a.dropship$="Y" then goto non_stock
-                        if ars01a.dist_by_item$="N" y9$(21,10)=y2$(21,10),y9$(61,20)=d6$; goto now_post; rem "Distribute by Customer
-
-                        find record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$,dom=*next) ivm02a$
-                        find record (arm10_dev,key=firm_id$+"D"+d1$(13,2),dom=*next) arm10d$
-                        y9$(21,10)=arm10d.gl_sls_acct$
-                        y9$(61,10)=arm10d.gl_inv_acct$
-                        y9$(71,10)=arm10d.gl_cogs_acct$
-                        goto now_post
-                    endif 
+                if opm02a.line_type$="S" then
+                    if opm02a.dropship$="Y" then goto non_stock
+                    if ars01a.dist_by_item$="N" y9$(21,10)=y2$(21,10),y9$(61,20)=d6$; goto now_post; rem "Distribute by Customer
+                        
+                    find record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$,dom=*next) ivm02a$
+                    find record (arm10_dev,key=firm_id$+"D"+d1$(13,2),dom=*next) arm10d$
+                    y9$(21,10)=arm10d.gl_sls_acct$
+                    y9$(61,10)=arm10d.gl_inv_acct$
+                    y9$(71,10)=arm10d.gl_cogs_acct$
+                    goto now_post
+                endif 
 
 rem --- Non-Stock & 'P' Types Here
 
-                    if pos(opm02a.line_type$="NP")<>0 then
+                if pos(opm02a.line_type$="NP")<>0 then
 non_stock:
                         
-                        if ars01a.dist_by_item$="N" and opm02a.line_type$="N" then
-                            y9$(21,10)=y2$(21,10)
-                            y9$(61,10)=y2$(61,10)
-                            y9$(71,10)=y2$(71,10)
-                            goto 2700
-                        endif
-                        find record (arm10_dev,key=firm_id$+"D"+y1$(11,2),dom=*next) arm10d$
-                        y9$(21,10)=arm10d.gl_sls_acct$
-                        y9$(61,10)=arm10d.gl_inv_acct$
-                        y9$(71,10)=arm10d.gl_cogs_acct$
-                        goto now_post
-
+                    if ars01a.dist_by_item$="N" and opm02a.line_type$="N" then
+                        y9$(21,10)=y2$(21,10)
+                        y9$(61,10)=y2$(61,10)
+                        y9$(71,10)=y2$(71,10)
+                        goto 2700
                     endif
+                    find record (arm10_dev,key=firm_id$+"D"+y1$(11,2),dom=*next) arm10d$
+                    y9$(21,10)=arm10d.gl_sls_acct$
+                    y9$(61,10)=arm10d.gl_inv_acct$
+                    y9$(71,10)=arm10d.gl_cogs_acct$
+                    goto now_post
+
+                endif
 
 rem --- Other Charges Here
 
-                    if opm02a.line_type$="O" then
-                            y9$(21,10)=y1$(1,10)
+                if opm02a.line_type$="O" then
+                    y9$(21,10)=y1$(1,10)
 
 now_post: rem --- Now Post Debit/Credit
 
-                            precision 2
-                            ref3$=ope11a.line_no$
-                            account$=y9$(21,10)
-                            amount=-ope11a.ext_price
-                            if ope01a.cash_sale$="Y" then let ref3$=ope11a.line_no$+" (Cash)"
-                            gosub glrecap
-                            account$=y9$(1,10)
-                            amount=ope11a.ext_price
-                            gosub glrecap
-                            if opm02a.line_type$<>"O" and ope11a.unit_cost*ope11a.qty_shipped<>0 then
-                                account$=y9$(61,10)
-                                amount=(-ope11a.unit_cost)*ope11a.qty_shipped
-                                gosub glrecap
-                                account$=y9$(71,10)
-                                amount=ope11a.unit_cost*ope11a.qty_shipped
-                                if validlncd$<>"" then let account$=ab2$(111,10)
-                                gosub glrecap
-                            endif
-                    endif   
+                    precision 2
+                    ref3$=ope11a.line_no$
+                    account$=y9$(21,10)
+                    amount=-ope11a.ext_price
+                    if ope01a.cash_sale$="Y" then let ref3$=ope11a.line_no$+" (Cash)"
+                    gosub glrecap
+                    account$=y9$(1,10)
+                    amount=ope11a.ext_price
+                    gosub glrecap
+                    if opm02a.line_type$<>"O" and ope11a.unit_cost*ope11a.qty_shipped<>0 then
+                        account$=y9$(61,10)
+                        amount=(-ope11a.unit_cost)*ope11a.qty_shipped
+                        gosub glrecap
+                        account$=y9$(71,10)
+                        amount=ope11a.unit_cost*ope11a.qty_shipped
+                        if validlncd$<>"" then let account$=ab2$(111,10)
+                        gosub glrecap
+                    endif
+                endif   
             endif
 
 
@@ -477,7 +459,7 @@ rem --- Print
             if t1<>0 then let t=(t1-t[4])*100/t1
             if abs(t)>999 then let t=sgn(t)*999.99
 
-                    OutVect!.addItem(fnmask$(ope01a.customer_id$,ars01a.customer_output$))
+                    OutVect!.addItem(fnmask$(ope01a.customer_id$,m0$))
                     OutVect!.addItem(ope01a.order_no$)
                     OutVect!.addItem(ope01a.ar_inv_no$)
                     OutVect!.addItem(fndate$(ope01a.invoice_date$))
@@ -732,30 +714,6 @@ find_customer: rem --- Find Customer
 
         return
 
-sort_by_invno: rem --- Sort By Invoice Number
-
-        if seq$="C" then
-            return
-        endif
-        call pgmdir$+"adc_progress.aon","N","","","","",0,ope04_dev,1,meter_num,status
-        read (ope04_dev,key=firm_id$+"I",dom=*next)
-
-        while more
-            ope04a_key$=key(ope04_dev,end=*break)
-            read (ope04_dev)
-            if ope04a_key.firm_id$+ope04a_key.ordinv_flag$<>firm_id$+"I" then break
-            read record (ope01_dev,key=ope04a_key.firm_id$+ope04a_key.ar_type$+"000",dom=*continue) ope01a$
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            opw01a.firm_id$=ope01a.firm_id$
-            opw01a.ar_inv_no$=ope01a.ar_inv_no$
-            opw01a.customer_id$=ope01a.customer_id$
-            opw01a.order_no$=ope01a.order_no$
-            write record (opw01_dev,key=opw01a.firm_id$+opw01a.ar_inv_no$+opw01a.customer_id$+opw01a.order_no$) opw01a$
-        wend
-        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-
-        return
-
 lifo_fifo: rem --- LIFO/FIFO
 
         cost=ope11a.unit_cost
@@ -1004,6 +962,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

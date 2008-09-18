@@ -56,7 +56,6 @@ rem --- Territory Summary
         r2$="H"
         h$="Territory"
         work_dev=opw11_dev
-        call pgmdir$+"adc_progress.aon","N","","","","",0,opw11_dev,1,meter_num,status
         dim key_templ$:opw11a_key_tpl$
         p=7
         w=20
@@ -68,7 +67,6 @@ rem --- Transaction Summary
         r2$="E"
         h$="Transaction"
         work_dev=opw21_dev
-        call pgmdir$+"adc_progress.aon","N","","","","",0,opw21_dev,1,meter_num,status
         dim key_templ$:opw21a_key_tpl$
         p=5
         w=20
@@ -90,7 +88,6 @@ rem --- Salesperson Summary
         r2$="F"
         h$="Salesperson"
         work_dev=opw31_dev
-        call pgmdir$+"adc_progress.aon","N","","","","",0,opw31_dev,1,meter_num,status
         dim key_templ$:opw31a_key_tpl$
         p=7
         w=20
@@ -163,10 +160,8 @@ Sub_Heading: rem --- Subheading
 
 Process_Summary_Section: rem --- Process Summary Section
 
-rem --- print @(40,5),h$," Summary",'cl',
-
-            gosub Sub_Heading
-
+        call pgmdir$+"adc_progress.aon","N","","","","",0,work_dev,1,meter_num,status
+        gosub Sub_Heading
         read (work_dev,key=firm_id$,dom=*next)
 
 rem --- Read next record
@@ -192,10 +187,10 @@ Label_One:
 
         l=l+1
     wend
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 rem --- Section complete
 
-        return
+return
 
 rem --- #include std_error.src
 
