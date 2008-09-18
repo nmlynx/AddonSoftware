@@ -200,6 +200,11 @@ rem -- get default values for new record from ivs-10D, IVS_DEFAULTS
 ivs10_dev=fnget_dev("IVS_DEFAULTS")
 dim ivs10d$:fnget_tpl$("IVS_DEFAULTS")
 
+callpoint!.setColumnData("IVM_ITEMMAST.ALT_SUP_FLAG","N")
+callpoint!.setColumnData("IVM_ITEMMAST.CONV_FACTOR","1")
+callpoint!.setColumnData("IVM_ITEMMAST.ORDER_POINT","D")
+callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE",callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
+
 findrecord(ivs10_dev,key=firm_id$+"D",dom=*next)ivs10d$
 callpoint!.setColumnData("IVM_ITEMMAST.PRODUCT_TYPE",ivs10d.product_type$)
 callpoint!.setColumnData("IVM_ITEMMAST.UNIT_OF_SALE",ivs10d.unit_of_sale$)
