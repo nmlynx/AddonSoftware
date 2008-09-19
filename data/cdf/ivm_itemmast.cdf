@@ -95,20 +95,6 @@ rem --- Enable/disable Alt/Sup Item #
 	wmap$(wpos+6,1)=ctl_stat$
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP")
-[[IVM_ITEMMAST.ALT_SUP_FLAG.AVAL]]
-rem --- Enable/disable Alt/Sup Item #
-	ctl_name$="IVM_ITEMMAST.ALT_SUP_ITEM"
-	if callpoint!.getColumnData("IVM_ITEMMAST.ALT_SUP_FLAG")="N"
-		ctl_stat$="I"
-	else
-		ctl_stat$=" "
-	endif
-	wmap$=callpoint!.getAbleMap()
-	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)=ctl_stat$
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
 [[IVM_ITEMMAST.ITEM_ID.AVAL]]
 rem --- See if Auto Numbering in effect
 	ivs01_dev=fnget_dev("IVS_PARAMS")
@@ -235,11 +221,15 @@ callpoint!.setColumnData("IVM_ITEMMAST.GL_PPV_ACCT",ivs10d.gl_ppv_acct$)
 callpoint!.setColumnData("IVM_ITEMMAST.GL_INV_ADJ",ivs10d.gl_inv_adj$)
 callpoint!.setColumnData("IVM_ITEMMAST.GL_COGS_ADJ",ivs10d.gl_cogs_adj$)
 
-ivm10_dev=fnget_dev("IVC_PRODCODE")
-dim ivm10a$:fnget_tpl$("IVC_PRODCODE")
+if user_tpl.sa$ <> "Y" then
+	callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL","N")
+else
+	ivm10_dev=fnget_dev("IVC_PRODCODE")
+	dim ivm10a$:fnget_tpl$("IVC_PRODCODE")
 
-findrecord(ivm10_dev,key=firm_id$+"A"+ivs10d.product_type$,dom=*next)ivm10a$
-callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL",ivm10a.sa_level$)
+	findrecord(ivm10_dev,key=firm_id$+"A"+ivs10d.product_type$,dom=*next)ivm10a$
+	callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL",ivm10a.sa_level$)
+endif
 
 callpoint!.setStatus("REFRESH")
 [[IVM_ITEMMAST.WEIGHT.AVAL]]
@@ -290,6 +280,21 @@ endif
 callpoint!.setStatus("ABLEMAP-REFRESH")
 [[IVM_ITEMMAST.<CUSTOM>]]
 #include std_missing_params.src
+
+rem --- Disable a field
+rem --- IN: ctl_name$ = control name, disable = 1, 0
+rem --- OUT: nothing
+disable_field:
+
+	if disable then ctl_stat$="I" else ctl_stat$ = " " endif
+	wmap$=callpoint!.getAbleMap()
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
+
+return
 [[IVM_ITEMMAST.BSHO]]
 rem --- Open/Lock files
 	num_files=6
@@ -356,6 +361,8 @@ rem --- Setup user_tpl$
 	user_tpl.cur_per=num(gls01a.current_per$)
 	user_tpl.cur_yr=num(gls01a.current_year$)
 
+rem --- Disable option menu items
+
 if ap$<>"Y" disable_str$=disable_str$+"IVM_ITEMVEND;"; rem --- this is a detail window, give alias name
 if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only
 if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"LTRN;"
@@ -363,6 +370,14 @@ if op$<>"Y" disable_str$=disable_str$+"SORD;"
 if po$<>"Y" disable_str$=disable_str$+"PORD;"
 				
 if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+
+rem --- Disable fields
+
+if sa$<>"Y" then
+	ctl_name$ = "IVM_ITEMMAST.SA_LEVEL"
+	disable = 1
+	gosub disable_field
+endif
 
 rem --- additional file opens, depending on which apps are installed, param values, etc.
 
