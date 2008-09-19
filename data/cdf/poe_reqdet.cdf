@@ -75,6 +75,6 @@ update_line_type_info:
 	dim poc_linecode$:fnget_tpl$("POC_LINECODE")
 	po_line_code$=rec_data.po_line_code$
 	read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
-	callpoint!.setStatus("ENABLE:"+poc_linecode.po_line_type$)
+	callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
 
 return
