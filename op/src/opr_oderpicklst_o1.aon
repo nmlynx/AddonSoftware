@@ -42,10 +42,10 @@ rem     if o9<>1 and o9<>2 call pgmdir$+"syc_fe.bbx",911; rem O9 was not set by 
     h0=0
     more=1
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",m4$,0,m0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",m4$,0,m4
     l9=37
     headings=0
     when$=sysinfo.system_date$
@@ -127,7 +127,7 @@ heading: rem --- Heading
         arm01a.customer_name$="Not On File"
         read record (arm01_dev,key=firm_id$+ope01a.customer_id$,dom=Assign_Value) arm01a$
         b$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.addr_line_4$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$+arm01a.country$
-        call pgmdir$+"adc_address.aon",b$,24,5,p[2],30
+        call pgmdir$+"adc_address.aon",b$,24,5,9,30
 Assign_Value:
         b$=arm01a.customer_name$+b$
             
@@ -148,7 +148,7 @@ call_adc_address:
                 c$=arm03a.addr_line_1$+arm03a.addr_line_2$+arm03a.addr_line_3$+arm03a.addr_line_4$+arm03a.city$+arm03a.country$
             endif
 Cal_Prog:
-            call pgmdir$+"adc_address.aon",c$,24,5,p[2],30
+            call pgmdir$+"adc_address.aon",c$,24,5,9,30
         endif
         c$=arm03a.name$+c$
 
@@ -231,7 +231,7 @@ rem --- OK There Are Lots
 
             if t9<ope11a.qty_ordered
                 dim t1$(i[3],"_"),t[2]
-                y9=ope11a.QTY_ORDERED-t9; if ivs01a.lotser_flag$="L" then y9=3
+                y9=ope11a.qty_ordered-t9; if ivs01a.lotser_flag$="L" then y9=3
                 for y=1 to y9
                     gosub Print4
                 next y

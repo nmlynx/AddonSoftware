@@ -81,11 +81,11 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-        p8$             =     option!.getOptionData("print_price")
-        p7$             =     option!.getOptionData("restart")
-        cust_id$        =     option!.getOptionData("customer_id")   
-        whse$           =     option!.getOptionData("warehouse_id")
-        which_ones$     =     option!.getOptionData("Print_list")
+        p8$             =     option!.getOptionData("PRINT_PRICE")
+        p7$             =     option!.getOptionData("RESTART")
+        cust_id$        =     option!.getOptionData("CUSTOMER_ID")   
+        whse$           =     option!.getOptionData("WAREHOUSE_ID")
+        which_ones$     =     option!.getOptionData("PRINT_LIST")
 
 rem --- Retrieve parameter records
 
@@ -96,7 +96,6 @@ rem --- Retrieve parameter records
 
 rem --- Parameters
 
-       
         n1$=sysinfo.firm_name$
         n2$="AR"
         n4$=sysinfo.task_desc$
@@ -108,7 +107,7 @@ rem --- Parameters
         find record (ars01c_dev,key=firm_id$+"AR01",dom=*next) ars01c$
         find record (opm01_dev,key=firm_id$+pad(fid(0),4),dom=*next) opm01a$
 
-        dim p[2],i[6]
+        dim i[6]
         i[0]=num(ivs01a.item_id_len$)
         i[1]=num(ivs01a.vendor_prd_len$)
         i[2]=num(ivs01a.precision$+ivs01a.reserved_str$)
@@ -117,20 +116,7 @@ rem --- Parameters
         i[5]=num(ivs01a.desc_len_02$)
         i[6]=num(ivs01a.desc_len_03$)
         desclen=i[4]+i[5]+i[6]
-        p[0]=num(ars01a.customer_size$)
-        p[1]=num(ars01a.max_customer_len$)
 
-        m1$=ars01a.customer_output$
-        m2$=ivs01a.unit_mask$
-        m3$=ivs01a.cost_mask$
-        m4$=ivs01a.price_mask$
-
-        m0=len(ars01a.customer_output$)
-        m2=len(ivs01a.unit_mask$)
-        m3=len(ivs01a.cost_mask$)
-        m4=len(ivs01a.price_mask$)
-
-        
 rem --- Initialize Data 
 
         if p7$="" then p7$="N"
@@ -142,8 +128,6 @@ rem --- Run overlay
      
         run pgmdir$+"opr_oderpicklst_o1.aon"
   
-
-
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
