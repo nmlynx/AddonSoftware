@@ -81,20 +81,6 @@ rem --- Populate Stocking Info in Warehouses
 :                       table_chans$[all],
 :                       "",
 :                       dflt_data$[all]
-[[IVM_ITEMMAST.ARAR]]
-rem --- Enable/disable Alt/Sup Item #
-	ctl_name$="IVM_ITEMMAST.ALT_SUP_ITEM"
-	if callpoint!.getColumnData("IVM_ITEMMAST.ALT_SUP_FLAG")="N"
-		ctl_stat$="I"
-	else
-		ctl_stat$=" "
-	endif
-	wmap$=callpoint!.getAbleMap()
-	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)=ctl_stat$
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
 [[IVM_ITEMMAST.ITEM_ID.AVAL]]
 rem --- See if Auto Numbering in effect
 	ivs01_dev=fnget_dev("IVS_PARAMS")
@@ -234,67 +220,10 @@ endif
 callpoint!.setStatus("REFRESH")
 [[IVM_ITEMMAST.WEIGHT.AVAL]]
 if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.AENA]]
-rem --- Retrieve miscellaneous templates
-
-files=1,begfile=1,endfile=files
-dim ids$[files],templates$[files]
-ids$[1]="ars-01A:ARS_PARAMS"
-
-call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-if status goto std_exit
-dim ars01a$:templates$[1]
-
-call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
-gl$=info$[20]
-
-if gl$="Y" 
-	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
-	gl$=info$[9]; rem --- if gl installed, does it interface to inventory?
-endif
-
-di$="N"
-
-if ar$="Y"
-	ars01a_key$=firm_id$+"AR00"
-	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-	di$=ars01a.dist_by_item$
-	if gl$="N" di$="N"
-endif
-
-rem --- if di$="N" and gl$="Y" leave GL tab/fields alone, otherwise disable them
-if di$<>"N" or gl$<>"Y"
-	fields_to_disable$="GL_INV_ACCT     GL_COGS_ACCT    GL_PUR_ACCT     GL_PPV_ACCT     GL_INV_ADJ      GL_COGS_ADJ     "
-	wmap$=callpoint!.getAbleMap()
-	ctl_stat$="I"
-	for wfield=1 to len(fields_to_disable$)-1 step 16
-		ctl_name$="IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3)					
-		wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
-		wpos=pos(wctl$=wmap$,8)
-		wmap$(wpos+6,1)=ctl_stat$
-	next wfield
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
-endif
 [[IVM_ITEMMAST.ASHO]]
 callpoint!.setStatus("ABLEMAP-REFRESH")
 [[IVM_ITEMMAST.<CUSTOM>]]
 #include std_missing_params.src
-
-rem --- Disable a field
-rem --- IN: ctl_name$ = control name, disable = 1, 0
-rem --- OUT: nothing
-disable_field:
-
-	if disable then ctl_stat$="I" else ctl_stat$ = " " endif
-	wmap$=callpoint!.getAbleMap()
-	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)=ctl_stat$
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
-
-return
 [[IVM_ITEMMAST.BSHO]]
 rem --- Open/Lock files
 	num_files=6
@@ -309,7 +238,7 @@ rem --- Open/Lock files
 	if status$<>""  goto std_exit
 
 	ivs01_dev=num(open_chans$[1]),ivs01d_dev=num(open_chans$[2]),gls01_dev=num(open_chans$[3])
-	ivm02_dev=num(open_chans$[5]),ivs10_dev=num(open_chans$[6])
+	ars01_dev=num(open_chans$[4]),ivm02_dev=num(open_chans$[5]),ivs10_dev=num(open_chans$[6])
 
 rem --- Dimension miscellaneous string templates
 
@@ -371,14 +300,6 @@ if po$<>"Y" disable_str$=disable_str$+"PORD;"
 				
 if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
 
-rem --- Disable fields
-
-if sa$<>"Y" then
-	ctl_name$ = "IVM_ITEMMAST.SA_LEVEL"
-	disable = 1
-	gosub disable_field
-endif
-
 rem --- additional file opens, depending on which apps are installed, param values, etc.
 
 more_files$="",files=0
@@ -414,6 +335,69 @@ if files
 
 	if status$<>"" goto std_exit
 
+endif
+
+rem --- if gl installed, does it interface to inventory?
+
+if gl$="Y" 
+	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
+	gl$=info$[9]
+endif
+
+rem --- Distribute GL by item?
+
+di$="N"
+
+if ar$="Y"
+	ars01a_key$=firm_id$+"AR00"
+	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+	di$=ars01a.dist_by_item$
+	if gl$="N" di$="N"
+endif
+
+rem --- Disable fields based on parameters
+
+able_map = 0
+wmap$=callpoint!.getAbleMap()
+
+rem --- If you don't distribute by item, or there's no GL, disable GL fields
+
+if di$<>"N" or gl$<>"Y"
+	fields_to_disable$="GL_INV_ACCT     GL_COGS_ACCT    GL_PUR_ACCT     GL_PPV_ACCT     GL_INV_ADJ      GL_COGS_ADJ     "
+
+	for wfield=1 to len(fields_to_disable$)-1 step 16
+		ctl_name$="IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3)					
+		wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+		wpos=pos(wctl$=wmap$,8)
+
+		if wpos then
+			wmap$(wpos+6,1) = "I"
+			able_map = 1
+		endif
+
+	next wfield
+
+endif
+
+rem --- Disable Sales Analysis level if SA is not installed (this doesn't work yet)
+
+if sa$<>"Y" then
+	ctl_name$ = "IVM_ITEMMAST.SA_LEVEL"
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wpos=pos(wctl$=wmap$,8)
+
+	if wpos then
+		wmap$(wpos+6,1)="I"
+		able_map = 1
+	endif
+
+endif
+
+rem --- Set able-map if we've disabled fields
+
+if able_map then
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
 endif
 [[IVM_ITEMMAST.AOPT-PORD]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
