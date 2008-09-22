@@ -21,12 +21,21 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+    rep_prog$=pgm(-2)
+
 rem --- Open Printer
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
 
-rem --- Initialize Data
 rem --- retrieve template for OPM_CUSTJOBS record key
     o9=1
     call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_PRNTLIST","PRIMARY",ope04a_key_tpl$,table_chans$[all],status$
@@ -34,9 +43,7 @@ rem --- retrieve template for OPM_CUSTJOBS record key
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDDET","PRIMARY",ope11a_key_tpl$,table_chans$[all],status$
     dim ope11a_key$:ope11a_key_tpl$
-       
- 
-        
+
 rem     if o9<>1 and o9<>2 call pgmdir$+"syc_fe.bbx",911; rem O9 was not set by before RUNning
     precision i[2]
     h0=0
@@ -46,16 +53,24 @@ rem     if o9<>1 and o9<>2 call pgmdir$+"syc_fe.bbx",911; rem O9 was not set by 
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",m4$,0,m4
+    m1=len(m1$)
+    m2=len(m2$)
+    m3=len(m3$)
+    m4=len(m4$)
     l9=37
     headings=0
     when$=sysinfo.system_date$
     dim h9$(40,$0A$),headings$[headings],mh0$(36),md0$(6),md1$(40),x4$(400)
-       
+
     mult_wh=0
     read (ivm10c_dev,key=firm_id$+"C",dom=*next)
     read (ivm10c_dev)
     ivm10c_key$=key(ivm10c_dev,end=Back_ground)
     if pos(firm_id$+"C"=ivm10c_key$)=1 mult_wh=1
+
+rem --- column headings
+    dim columns$[0,10]
+    columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="80"
 
 Back_ground: rem --- Background
 
@@ -238,7 +253,7 @@ rem --- OK There Are Lots
             endif
 
             if l+1>l9 continue
-            print (printer_dev)""
+            OutVect!.addItem("")
             l=l+1
       wend
       gosub Total1
@@ -278,7 +293,6 @@ On_Demand1: rem --- Here for on-demand printing
     
 ready:
 
-    if printer_dev close (printer_dev,err=*next)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     if o9=2 goto std_exit
     msg_id$="AON_UPDT_PICK_QUERY"
@@ -324,51 +338,65 @@ all_done: rem --- Done with update
 
 report_heading: rem --- Report Heading
 
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
     if ope01a.invoice_type$="P"
-        print (printer_dev)'LF',@(h0+24),"Q U O T A T I ON    O N L Y" 
+        OutVect!.addItem("")
+        dim out$(80)
+        out$(h0+25)="Q U O T A T I O N   O N L Y"
+        OutVect!.addItem(out$)
     else 
-        print (printer_dev)'LF',@(h0+20),"O R D E R  /  P I C K I N G     L I S T"
+        dim out$(80)
+        out$(h0+21)="O R D E R / P I C K I N G   L I S T"
+        OutVect!.addItem(out$)
     endif
     if ope01a.reprint_flag$="Y"
         z0$="*** R E P R I N T ***" 
     else 
         z0$=""
     endif
-    print (printer_dev)
-:       @(h0+28),z0$,'LF',
-:       @(h0+0),sysinfo.firm_name$,
-:       @(h0+55),"Order Number: ",ope01a.order_no$," ",ope01a.BACKORD_FLAG$,'LF',
-:       @(h0+63),"Date : ",fndate$(ope01a.ORDER_DATE$)
-    print (printer_dev)
-:       @(h0+2),"Customer: ",fnmask$(ope01a.customer_id$,m0$),
-:       @(h0+49),"Ship To:"
+    dim out$(80)
+    out$(h0+29)=z0$
+    OutVect!.addItem(out$)
+    out$(h0+1)=sysinfo.firm_name$
+    out$(h0+56)="Order Number: "+ope01a.order_no$+" "+ope01a.backord_flag$
+    OutVect!.addItem(out$)
+    dim out$(80)
+    out$(h0+64)="Date: "+fndate$(ope01a.order_date$)
+    OutVect!.addItem(out$)
+    dim out$(80)
+    out$(h0+3)="Customer: "+fnmask$(ope01a.customer_id$,m0$)
+    out$(h0+50)="Ship To:"
+    OutVect!.addItem(out$)
     for i=1 to 6
-        print (printer_dev)
-:           @(h0+12),b$(i*30-29,30),
-:           @(h0+49),c$(i*30-29,30),'LF',
+        dim out$(80)
+        out$(h0+13)=b$(i*30-29,30)
+        out$(h0+50)=c$(i*30-29,30)
+        OutVect!.addItem(out$)
     next i
-    print (printer_dev)
-:       @(h0+0),fill(80,"-")
-    print (printer_dev)
-:       @(h0+0),"Cust P.O.#    Terms           Salesperson       Ship Via   Ship Date    PC",'LF',
-:       @(0),fill(80,"-")
-    print (printer_dev)
-:       @(h0+0),ope01a.CUSTOMER_PO_NO$,
-:       @(h0+14),x3$,@(h0+30),x1$,
-:       @(h0+51),ope01a.AR_SHIP_VIA$,
-:       @(h0+62),fndate$(ope01a.SHIPMNT_DATE$),
-:       @(h0+74),ope01a.PRICE_CODE$,'LF',
-:       @(h0+0),fill(80,"-"); rem ESCAPE, Need to make room for Cust PO#, A0$(111,20)
-    print (printer_dev)
-:       @(h0+28),"Item Number &",'LF',
-    if ope01a.invoice_type$="P" or p8$="Y" then print (printer_dev)@(h0+73-m4+4),"Price",
-    print (printer_dev)@(h0+0),"Line  Order   Ship   B/O        Description",
-    if mult_wh>0 then print (printer_dev)@(h0+47),"Whse",
-    print (printer_dev)
-:       @(h0+52),"Location",
-:       @(h0+74),"Carton",'LF',
-:       @(h0+0),fill(80,"-"),'LF'
+    OutVect!.addItem(fill(80,"-"))
+    dim out$(80)
+    out$(h0+1)="Cust P.O.#    Terms           Salesperson          Ship Via   Ship Date    PC"
+    OutVect!.addItem(out$)
+    OutVect!.addItem(fill(80,"-"))
+    dim out$(80)
+    out$(h0+1)=ope01a.customer_po_no$
+    out$(h0+15)=x3$
+    out$(h0+31)=x1$
+    out$(h0+52)=ope01a.ar_ship_via$
+    out$(h0+63)=fndate$(ope01a.shipmnt_date$)
+    out$(h0+75)=ope01a.price_code$
+    OutVect!.addItem(out$)
+    OutVect!.addItem(fill(80,"-"))
+    dim out$(80)
+    out$(h0+29)="Item Number &"
+    OutVect!.addItem(out$)
+    dim out$(80)
+    out$(h0+1)="Line  Order   Ship   B/O        Description"
+    if ope01a.invoice_type$="P" or p8$="Y" then out$(h0+74-m4+4,5)="Price"
+    if mult_wh>0 then out$(h0+48,4)="Whse"
+    out$(h0+53,8)="Location"
+    out$(h0+75,6)="Carton"
+    OutVect!.addItem(out$)
+    OutVect!.addItem(fill(80,"-"))
     l=0
     return
 
@@ -379,59 +407,67 @@ rem --- Item detail
     if l+1>l9
         gosub continue_page
     endif
-    print (printer_dev)@(h0),ope11a_key.line_no$,
+    dim out$(80)
+    out$(1)=ope11a_key.line_no$
     if pos(opm02a.line_type$="MO")=0 then
+        out$(h0+5)=str(ope11a.qty_ordered)
         if ope11a.commit_flag$="N"
-            print (printer_dev)@(h0+13),"Ship:",fndate$(ope11a.EST_SHP_DATE$)
+            out$(h0+14)="Ship:"+fndate$(ope11a.est_shp_date$)
         else 
-            print (printer_dev)@(h0+13),"______ ______",
+            out$(h0+14)="______ ______"
         endif
-        print (printer_dev)@(h0+4),ope11a.qty_ordered,
-        print (printer_dev)@(h0+74),"______",
+        out$(h0+75)="______"
     endif
     
     if pos(opm02a.line_type$="MO")<>0
-        print (printer_dev)@(h0+28),ope11a.ORDER_MEMO$,
+        out$(h0+29)=ope11a.order_memo$
     endif                                     
     if opm02a.line_type$="N"
-        print (printer_dev)@(h0+28),"Non-Stock",
+        out$(h0+29)="Non-Stock"
     endif
     if pos(opm02a.line_type$=" SRDP")<>0
-        print (printer_dev)@(h0+28),ope11a.ITEM_ID$,
+        out$(h0+29)=ope11a.item_id$
     endif
     if ope01a.invoice_type$<>"P"
         if pos(opm02a.line_type$=" SRDPN")<>0 and mult_wh>0
-            print (printer_dev)@(h0+48),ope11a.warehouse_id$,
+            out$(h0+49)=ope11a.warehouse_id$
         endif
         if opm02a.DROPSHIP$="Y"
-            print (printer_dev)@(h0+53),"*Drop Ship",
+            out$(h0+54)="*Drop Ship"
         else   
             if pos(opm02a.line_type$=" SRDP")<>0
-                print (printer_dev)@(h0+53),ivm02a.location$,
+                out$(h0+54)=ivm02a.location$
             endif
         endif        
         if p8$<>"Y" then goto gt_lf
     endif
 
-    if pos(opm02a.line_type$=" SRDPN")<>0 print (printer_dev)
-:       @(h0+73-m4),ope11a.unit_price:m4$,; let total=total+ope11a.ext_price
-    if pos(opm02a.line_type$="O")<>0 print (printer_dev)
-:       @(h0+73-m1),ope11a.ext_price:m1$,;let total=total+ope11a.ext_price
+    if pos(opm02a.line_type$=" SRDPN")<>0
+        out$(h0+73-m4)=str(ope11a.unit_price:m4$)
+        total=total+ope11a.ext_price
+    endif    
+    if pos(opm02a.line_type$="O")<>0
+        out$(h0+73-m1)=str(ope11a.ext_price:m1$)
+        total=total+ope11a.ext_price
+    endif    
 
 gt_lf:
-    print (printer_dev)'LF',
+    OutVect!.addItem(out$)
     l=l+1
     if pos(opm02a.line_type$=" SRDPN")<>0
         if l+1>l9
             gosub continue_page
         endif
     endif
+    dim out$(80)
     if pos(opm02a.line_type$=" SRDP")<>0
-        print (printer_dev)@(h0+32),ivm01a.item_desc$
+        out$(h0+33)=ivm01a.item_desc$
+        OutVect!.addItem(out$)
         l=l+1
     endif
     if opm02a.line_type$="N"
-        print (printer_dev)@(h0+32),ope11a.ORDER_MEMO$
+        out$(h0+33)=ope11a.order_memo$
+        OutVect!.addItem(out$)
         l=l+1
     endif                                
  return
@@ -440,22 +476,26 @@ Print4: rem --- Serial #'s Here
    
     if l>l9-1 then
         gosub continue_page
-        if pos(opm02a.line_type$=" SRDP")<>0 then 
-            print (printer_dev)@(h0+28),ope11a.ITEM_ID$,"(Continued)"; let l=l+1
+        if pos(opm02a.line_type$=" SRDP")<>0 then
+            dim out$(80)
+            out$(h0+29)=ope11a.item_id$+" (Continued)"
+            l=l+1
         endif
     endif
 
+    dim out$(80)
     if ivs01a.lotser_flag$<>"L" then
-        print (printer_dev)@(h0+24),"S/N: ",t1$
+        out$(h0+25)="S/N: "+t1$
     else
-        print (printer_dev)@(h0+24),"Lot: ",t1$,"   Shipped: ",
+        out$(h0+25)="Lot: "+t1$+"   Shipped: "
         if ope21a.qty_shipped<>0 then
-            print (printer_dev)ope21a.qty_shipped:m2$ 
-        else 
-            print (printer_dev)t1$
-        endif 
+            out$(pos(" "<>out$,-1)+2)=str(ope21a.qty_shipped:m2$)
+        else
+            out$(pos(" "<>out$,-1)+2)=t1$
+        endif
     endif
 
+    OutVect!.addItem(out$)
     l=l+1
     return
 
@@ -463,23 +503,31 @@ Total1: rem --- Total
 
     gosub Print_Totals
     if l+2>l9 then gosub continue_page
-    print (printer_dev)'LF',@(h0),fill(80,"=")
+    OutVect!.addItem("")
+    OutVect!.addItem(fill(80,"="))
     l=l+2
     gosub Certification
     if ope01a.invoice_type$<>"P" then
         gosub Print_Box
     endif
-    print (printer_dev)'FF',
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem("")
     return
 
 continue_page: rem --- Continued
 
-    if l9-l-1>0 print (printer_dev)h9$(1,l9-l-1)
-    print (printer_dev)@(h0+64),"Continued"
-    print (printer_dev)'FF',
+    if l9-l-1>0 
+        for cntr=1 to l9-l-1
+            OutVect!.addItem("")
+        next cntr
+    endif    
+    dim out$(80)
+    out$(h0+65)="Continued"
+    OutVect!.addItem(out$)
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(code$)
     gosub report_heading
     return
-
 
  Compress_Description: rem --- Compress Description
 
@@ -500,7 +548,7 @@ valid_lines: rem --- Look for valid lines here
         if ope01a.invoice_type$<>"P"
             if ope11a.commit_flag$="N" continue
             if whse$<>"" and ope11a.warehouse_id$<>whse$
-                if ope11a.PICK_FLAG$<>"Y"
+                if ope11a.pick_flag$<>"Y"
                     allprint$="NO"
                     continue 
                 else 
@@ -508,9 +556,9 @@ valid_lines: rem --- Look for valid lines here
                 endif
             endif
         endif
-        if ope01a.reprint_flag$<>"Y" and ope11a.PICK_FLAG$="Y" continue; rem "Not a reprint and already printed for selected warehouse(s)
-        if ope01a.reprint_flag$="Y" and ope11a.PICK_FLAG$<>"Y" continue; rem "A reprint and not printed yet for selected warehouse(s)
-        if after$="YES" then  ope11a.PICK_FLAG$="Y"; write record (ope11_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.line_no$) ope11a$
+        if ope01a.reprint_flag$<>"Y" and ope11a.pick_flag$="Y" continue; rem "Not a reprint and already printed for selected warehouse(s)
+        if ope01a.reprint_flag$="Y" and ope11a.pick_flag$<>"Y" continue; rem "A reprint and not printed yet for selected warehouse(s)
+        if after$="YES" then  ope11a.pick_flag$="Y"; write record (ope11_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.line_no$) ope11a$
         print$="YES"
     wend
 
@@ -520,33 +568,37 @@ valid_lines: rem --- Look for valid lines here
 Print_Box: rem --- Print Box
 
     if l+9+mult_wh>l9 gosub continue_page
-        print (printer_dev)'LF','LF',
-:           @(h0+12),"Carton       1       2       3    4       5     Total"
-        print (printer_dev)
-:           @(h0+22),fill(47,"-"),
-        print (printer_dev)@(h0+21),"+",
-:           @(h0+29),"+",
-:           @(h0+37),"+",
-:           @(h0+45),"+",
-:           @(h0+53),"+",
-:           @(h0+61),"+",
-:           @(h0+69),"+"
-        print (printer_dev)
-:           @(h0+12),"         |       |       |       |       |      |       |"
-        print (printer_dev)
-:           @(h0+12),"Weight   |       |       |       |       |      |       |"
-        print (printer_dev)
-:           @(h0+12),"         |       |       |       |       |      |       |"
-        print (printer_dev)
-:           @(h0+22),fill(47,"-"),
-        print (printer_dev)
-:           @(h0+21),"+",
-:           @(h0+29),"+",
-:           @(h0+37),"+",
-:           @(h0+45),"+",
-:           @(h0+53),"+",
-:           @(h0+61),"+",
-:           @(h0+69),"+",'LF'
+        OutVect!.addItem("")
+        dim out$(80)
+        out$(h0+13)="Carton       1       2       3      4       5     Total"
+        OutVect!.addItem(out$)
+        dim out$(80)
+        out$(h0+23)=fill(47,"-")
+        out$(h0+22,1)="+"
+        out$(h0+30,1)="+"
+        out$(h0+38,1)="+"
+        out$(h0+46,1)="+"
+        out$(h0+54,1)="+"
+        out$(h0+62,1)="+"
+        out$(h0+70,1)="+"
+        OutVect!.addItem(out$)
+        dim out$(80)
+        out$(h0+13)="         |       |       |       |       |       |       |"
+        OutVect!.addItem(out$)
+        out$(13,6)="Weight"
+        OutVect!.addItem(out$)
+        out$(13,6)=""
+        OutVect!.addItem(out$)
+        dim out$(80)
+        out$(h0+23)=fill(47,"-")
+        out$(h0+22,1)="+"
+        out$(h0+30,1)="+"
+        out$(h0+38,1)="+"
+        out$(h0+46,1)="+"
+        out$(h0+54,1)="+"
+        out$(h0+62,1)="+"
+        out$(h0+70,1)="+"
+        OutVect!.addItem(out$)
         l=l+9
       
         if mult_wh=0 return
@@ -574,29 +626,41 @@ Message1:
  message_creation:
         while more
             if l+1>l9 gosub continue_page
-            if len(message$)<60 print (printer_dev)@(h0+12),message$; let l=l+1; break
-            print (printer_dev)@(h0+12),message$(1,pos(" "=message$(1,60),-1)); letl=l+1; let message$=message$(pos(" "=message$(1,60),-1)+1)
+            if len(message$)<60
+                dim out$(80)
+                out$(h0+13)=message$
+                OutVect!.addItem(out$)
+                l=l+1
+                break
+            endif
+            dim out$(80)
+            out$(h0+13)=message$(1,pos(" "=message$(1,60),-1))
+            OutVect.addItem(out$)
+            l=l+1
+            message$=message$(pos(" "=message$(1,60),-1)+1)
         wend
     return
 
 Certification: rem --- Certification
-
     ms$=""
     gosub build_msg
     if status then return
     for y=1 to 10
         if x4$(y*40-39,40)=fill(40) continue
         if y=1
-            if l+2>l9
+            if l+1>l9
                 gosub continue_page 
             else 
-                print (printer_dev)'LF'; let l=l+2
+                OutVect!.addItem("")
+                l=l+1
             endif
         endif
         if l+1>l9 then
             gosub continue_page
         endif
-        print (printer_dev)@(h0+27),x4$(y*40-39,40)
+        dim out$(80)
+        out$(h0+28)=x4$(y*40-39,40)
+        OutVect!.addItem(out$)
         l=l+1
     next y
     return
@@ -607,8 +671,18 @@ Print_Totals: rem --- Print Totals
     if l+4>l9
         gosub continue_page
     endif
-    print (printer_dev)'LF',@(h0+79-10),"Extension",'LF',@(h0+79-m1),fill(m1-1,"=")
-    print (printer_dev)@(h0+70-m1),"Total:",@(h0+79-m1),total:m1$,'LF'
+    OutVect!.addItem("")
+    dim out$(80)
+    out$(h0+80-10)="Extension"
+    OutVect!.addItem(out$)
+    dim out$(80)
+
+    out$(h0+80-m1)=fill(m1-1,"=")
+    OutVect!.addItem(out$)
+    dim out$(80)
+    out$(h0+71-m1)="Total:"
+    out$(h0+80-m1)=str(total:m1$)
+    OutVect!.addItem(out$)
     l=l+4
     return
 
