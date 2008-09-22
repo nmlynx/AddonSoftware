@@ -66,25 +66,25 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-        dim arm01a$:templates$[1],arm02a$:templates$[2],
-:       arm10d$:templates$[3],ars01a$:templates$[4],glm01a$:templates$[5],
-:       gls01a$:templates$[6],glw04a$:templates$[7],ivm02a$:templates$[8],
-:       ivs01a$:templates$[9],opm02a$:templates$[10],opm06a$:templates$[11],
-:       opt01a$:templates$[12],opt11a$:templates$[13],opt31a$:templates$[14],
-:       opw04a$:templates$[15]
+        dim arm01a$:templates$[1],arm02a$:templates$[2]
+        dim arm10d$:templates$[3],ars01a$:templates$[4],glm01a$:templates$[5]
+        dim gls01a$:templates$[6],glw04a$:templates$[7],ivm02a$:templates$[8]
+        dim ivs01a$:templates$[9],opm02a$:templates$[10],opm06a$:templates$[11]
+        dim opt01a$:templates$[12],opt11a$:templates$[13],opt31a$:templates$[14]
+        dim opw04a$:templates$[15]
         
 
 rem --- Assign form input values to local variables
 
 
-        r0$= option!.getOptionData("sort_order")
-        r1$= option!.getOptionData("customer_id_1")
-        r2$= option!.getOptionData("customer_id_2")
-        alt1$= option!.getOptionData("alt_sequence_1")
-        alt2$= option!.getOptionData("alt_sequence_2")
-        r3$= option!.getOptionData("invoice_date_1")
-        r4$= option!.getOptionData("invoice_date_2")
-        r5$= option!.getOptionData("summ_dtl")
+        r0$= option!.getOptionData("REPORT_SEQUENCE")
+        r1$= option!.getOptionData("CUSTOMER_ID_1")
+        r2$= option!.getOptionData("CUSTOMER_ID_2")
+        alt1$= option!.getOptionData("ALT_SEQUENCE_1")
+        alt2$= option!.getOptionData("ALT_SEQUENCE_2")
+        r3$= option!.getOptionData("INVOICE_DATE_1")
+        r4$= option!.getOptionData("INVOICE_DATE_2")
+        r5$= option!.getOptionData("REPORT_SUMM_DET")
         
 
 rem --- Retrieve parameter records
