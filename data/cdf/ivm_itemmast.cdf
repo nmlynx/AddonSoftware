@@ -340,8 +340,9 @@ endif
 rem --- if gl installed, does it interface to inventory?
 
 if gl$="Y" 
-	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
+	call dir_pgm1$+"adc_application.aon","IV",info$[all]
 	gl$=info$[9]
+	user_tpl.gl$=gl$
 endif
 
 rem --- Distribute GL by item?
@@ -379,7 +380,7 @@ if di$<>"N" or gl$<>"Y"
 
 endif
 
-rem --- Disable Sales Analysis level if SA is not installed (this doesn't work yet)
+rem --- Disable Sales Analysis level if SA is not installed 
 
 if sa$<>"Y" then
 	ctl_name$ = "IVM_ITEMMAST.SA_LEVEL"
@@ -390,6 +391,8 @@ if sa$<>"Y" then
 		wmap$(wpos+6,1)="I"
 		able_map = 1
 	endif
+
+	callpoint!.setTableColumnAttribute("IVM_ITEMMAST.SA_LEVEL","DFLT","N")
 
 endif
 
