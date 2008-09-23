@@ -13,16 +13,35 @@ if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and callpoin
 [[IVM_ITEMWHSE.<CUSTOM>]]
 #include std_missing_params.src
 [[IVM_ITEMWHSE.BSHO]]
+rem --- Get IV params
+
 ivs01_dev=fnget_dev("IVS_PARAMS")
 dim ivs01a$:fnget_tpl$("IVS_PARAMS")
 
 ivs01a_key$=firm_id$+"IV00"
 find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
+rem --- Disable Option menu options
+
 if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only
 if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"IVM_LSMASTER;"
 
 if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+
+rem --- Get item defaults
+
+ivs10d_dev = fnget_dev("IVS_DEFAULTS")
+dim ivs10d$:fnget_tpl$("IVS_DEFAULTS")
+
+ivs10d_key$ = firm_id$ + "D"
+find record(ivs10d_dev, key=ivs10d_key$, dom=*next) ivs10d$
+
+callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.BUYER_CODE","DFLT",ivs10d.buyer_code$)
+callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.AR_DIST_CODE","DFLT",ivs10d.ar_dist_code$)
+callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.ABC_CODE","DFLT",ivs10d.abc_code$)
+callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.EOQ_CODE","DFLT",ivs10d.eoq_code$)
+callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.ORD_PNT_CODE","DFLT",ivs10d.ord_pnt_code$)
+callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.SAF_STK_CODE","DFLT",ivs10d.saf_stk_code$)
 [[IVM_ITEMWHSE.AOPT-HIST]]
 iv_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
 iv_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
