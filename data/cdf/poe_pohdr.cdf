@@ -1,3 +1,72 @@
+[[POE_POHDR.WAREHOUSE_ID.AVAL]]
+gosub whse_addr_info
+[[POE_POHDR.REQD_DATE.AVAL]]
+tmp$=callpoint!.getUserInput()
+if tmp$<callpoint!.getColumnData("POE_POHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
+[[POE_POHDR.NOT_B4_DATE.AVAL]]
+not_b4_date$=cvs(callpoint!.getUserInput(),2)
+if not_b4_date$<>"" then
+	if not_b4_date$<callpoint!.getColumnData("POE_POHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
+	if not_b4_date$>callpoint!.getColumnData("POE_POHDR.REQD_DATE") then callpoint!.setStatus("ABORT")
+	promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
+	if promise_date$<>"" and not_b4_date$>promise_date$ then callpoint!.setStatus("ABORT")
+endif
+[[POE_POHDR.PROMISE_DATE.AVAL]]
+tmp$=cvs(callpoint!.getUserInput(),2)
+if tmp$<>"" and tmp$<callpoint!.getColumnData("POE_POHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
+[[POE_POHDR.BSHO]]
+rem --- Open Files
+	num_files=6
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="APS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
+	open_tables$[3]="POS_PARAMS",open_opts$[3]="OTA"
+	open_tables$[4]="APM_VENDHIST",open_opts$[4]="OTA"
+	open_tables$[5]="IVM_ITEMWHSE",open_opts$[5]="OTA"
+	open_tables$[6]="IVM_ITEMVEND",open_opts$[6]="OTA"
+	gosub open_tables
+	aps_params_dev=num(open_chans$[1]),aps_params_tpl$=open_tpls$[1]
+	ivs_params_dev=num(open_chans$[2]),ivs_params_tpl$=open_tpls$[2]
+	pos_params_dev=num(open_chans$[3]),pos_params_tpl$=open_tpls$[3]
+	apm_vendhist_dev=num(open_chans$[4]),apm_vendhist_tpl$=open_tpls$[4]
+	ivm_itemwhse_dev=num(open_chans$[5]),ivm_itemwhse_tpl$=open_tpls$[5]
+	ivm_itemvend_dev=num(open_chans$[6]),ivm_itemvend_tpl$=open_tpls$[6]
+
+rem --- disable display fields
+	dim dctl$[9]
+	dmap$="I"
+	dctl$[1]="<<DISPLAY>>.V_ADDR1"
+	dctl$[2]="<<DISPLAY>>.V_ADDR2"
+	dctl$[3]="<<DISPLAY>>.V_CITY"
+	dctl$[4]="<<DISPLAY>>.V_STATE"
+	dctl$[5]="<<DISPLAY>>.V_ZIP"
+	dctl$[6]="<<DISPLAY>>.V_CONTACT"
+	dctl$[7]="<<DISPLAY>>.V_PHONE"
+	dctl$[8]="<<DISPLAY>>.V_FAX"
+	gosub disable_ctls
+
+	dmap$="I"
+	dctl$[1]="<<DISPLAY>>.PA_ADDR1"
+	dctl$[2]="<<DISPLAY>>.PA_ADDR2"
+	dctl$[3]="<<DISPLAY>>.PA_CITY"
+	dctl$[4]="<<DISPLAY>>.PA_STATE"
+	dctl$[5]="<<DISPLAY>>.PA_ZIP"
+	gosub disable_ctls
+
+rem --- AP Params
+	dim aps_params$:aps_params_tpl$
+	read record(aps_params_dev,key=firm_id$+"AP00")aps_params$
+
+rem --- set up UserObj! as vector
+	UserObj!=SysGUI!.makeVector()
+	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOTAL","CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOTAL","CTLI"))
+	tamt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	UserObj!.addItem(tamt!)
+
+rem --- Setup user_tpl$
+	user_tpl$="change_flag:n(1)"
+	dim user_tpl$:user_tpl$
 [[POE_POHDR.PURCH_ADDR.AVAL]]
 vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
 purch_addr$=callpoint!.getColumnData("POE_POHDR.PURCH_ADDR")
@@ -72,6 +141,7 @@ for dctl=1 to 9
 		callpoint!.setStatus("ABLEMAP-REFRESH")
 	endif
 next dctl
+return
 [[POE_POHDR.PO_NO.AVAL]]
 rem -- set default values
 
