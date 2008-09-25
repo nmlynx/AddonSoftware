@@ -1,12 +1,8 @@
-[[IVM_ITEMWHSE.CYCLE_CD.BINP]]
+[[IVM_ITEMWHSE.ADIS]]
+rem --- If select in Physical Intentory, location and cycle can't change
+
 if callpoint!.getColumnData("IVM_ITEMWHSE.SELECT_PHYS") = "Y" then
 	call stbl("+DIR_SYP")+"bac_message.bbj","IV_PHY_INV_SELECT",msg_tokens$[all],msg_opt$,table_chans$[all]
-	callpoint!.setStatus("ABORT")
-endif
-[[IVM_ITEMWHSE.LOCATION.BINP]]
-if callpoint!.getColumnData("IVM_ITEMWHSE.SELECT_PHYS") = "Y" then
-	call stbl("+DIR_SYP")+"bac_message.bbj","IV_PHY_INV_SELECT",msg_tokens$[all],msg_opt$,table_chans$[all]
-	callpoint!.setStatus("ABORT")
 endif
 [[IVM_ITEMWHSE.SAFETY_STOCK.AVAL]]
 if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
