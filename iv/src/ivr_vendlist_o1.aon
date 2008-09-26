@@ -117,18 +117,16 @@ rem --- Get Actual Annual Usage & EOQ
 
         if flag$<>"" w0=estimated
         if status<>0 usage=0 else usage=w0
-        if ivm01a.stock_level$="I" then
-            eoq_code$=ivm01a.eoq_code$
-            eoq_qty=ivm01a.eoq
-        else
-            call pgmdir$+"ivc_whseinfo.aon","A",channs[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
-            if status<>0 
-                eoq_code$="*"
-                eoq_qty=0
-            else 
-                eoq_code$=whse$[1](57,1)
-                eoq_qty=whse[6]
-            endif
+
+        rem Stocking level is always at the warehouse now
+
+        call pgmdir$+"ivc_whseinfo.aon","A",channs[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
+        if status<>0 
+            eoq_code$="*"
+            eoq_qty=0
+        else 
+            eoq_code$=whse$[1](57,1)
+            eoq_qty=whse[6]
         endif
 
         d9$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
