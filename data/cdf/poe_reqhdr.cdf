@@ -1,3 +1,64 @@
+[[POE_REQHDR.REQ_NO.AVAL]]
+rem -- see if existing req# was entered
+
+if cvs(callpoint!.getColumnData("POE_REQHDR.VENDOR_ID"),2) = "" then
+
+    ddm_keys=fnget_dev("DDM_KEYS")
+    dim ddm_keys$:fnget_tpl$("DDM_KEYS")
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","DDM_KEYS","NAME",key_tpl$,table_chans$[all],status$
+    dim ddm_key_tpl$:key_tpl$
+    ddm_key_tpl.dd_table_alias$="POE_REQHDR",ddm_key_tpl.dd_key_id$="ALT_KEY_01"
+    readrecord(ddm_keys,key=ddm_key_tpl$,knum=1)ddm_keys$ 
+    keynum=num(ddm_keys.dd_key_number$)
+
+     poe01_dev=fnget_dev("POE_REQHDR")
+     dim poe01a$:fnget_tpl$("POE_REQHDR")
+     req_no$=callpoint!.getColumnData("POE_REQHDR.REQ_NO")
+     read record(poe01_dev,key=firm_id$+req_no$,knum=keynum,dom=*next)
+     while 1
+          read record(poe01_dev,err=*next)poe01a$
+          if poe01a.firm_id$<>firm_id$ or poe01a.req_no$<>req_no$ then
+               vendor!=fnget_control!("POE_REQHDR.VENDOR_ID")
+               vendor!.focus() 
+          else
+               callpoint!.setColumnData("POE_REQHDR.VENDOR_ID",poe01a.vendor_id$)
+          endif
+          break
+     wend              
+endif
+[[POE_REQHDR.ARNF]]
+rem --- IV Params
+	ivs_params_chn=fnget_dev("IVS_PARAMS")
+	dim ivs_params$:fnget_tpl$("IVS_PARAMS")
+	read record(ivs_params_chn,key=firm_id$+"IV00")ivs_params$
+
+rem --- PO Params
+	pos_params_chn=fnget_dev("POS_PARAMS")
+	dim pos_params$:fnget_tpl$("POS_PARAMS")
+	read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
+
+rem --- Set Defaults
+
+	apm02_dev=fnget_dev("APM_VENDHIST")
+	dim apm02a$:fnget_tpl$("APM_VENDHIST")
+
+	read record(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
+	tmp$=key(apm02_dev,end=done_apm_vendhist)
+		if pos(firm_id$+vendir_id$=tmp$)<>1 then goto done_apm_vendhist
+		read record(apm02_dev,key=tmp$)apm02a$
+	done_apm_vendhist:
+
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL","")
+	callpoint!.setColumnData("POE_REQHDR.WAREHOUSE_ID",ivs_params.warehouse_id$)
+	gosub whse_addr_info
+	callpoint!.setColumnData("POE_REQHDR.ORD_DATE",sysinfo.system_date$)
+	callpoint!.setColumnData("POE_REQHDR.TERMS_CODE",apm02a.ap_terms_code$)
+	callpoint!.setColumnData("POE_REQHDR.REQD_DATE",sysinfo.system_date$)
+	callpoint!.setColumnData("POE_REQHDR.PO_FRT_TERMS",pos_params.po_frt_terms$)
+	callpoint!.setColumnData("POE_REQHDR.AP_SHIP_VIA",pos_params.ap_ship_via$)
+	callpoint!.setColumnData("POE_REQHDR.FOB",pos_params.fob$)
+	callpoint!.setColumnData("POE_REQHDR.HOLD_FLAG",pos_params.hold_flag$)
+	callpoint!.setColumnData("POE_REQHDR.PO_MSG_CODE",pos_params.po_req_msg_code$)
 [[POE_REQHDR.PROMISE_DATE.AVAL]]
 tmp$=cvs(callpoint!.getUserInput(),2)
 if tmp$<>"" and tmp$<callpoint!.getColumnData("POE_REQHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
@@ -14,45 +75,6 @@ tmp$=callpoint!.getUserInput()
 if tmp$<callpoint!.getColumnData("POE_REQHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
 [[POE_REQHDR.WAREHOUSE_ID.AVAL]]
 gosub whse_addr_info
-[[POE_REQHDR.REQ_NO.AVAL]]
-rem -- set default values
-
-	if callpoint!.getRecordMode()="A" then 
-	
-	rem --- IV Params
-		ivs_params_chn=fnget_dev("IVS_PARAMS")
-		dim ivs_params$:fnget_tpl$("IVS_PARAMS")
-		read record(ivs_params_chn,key=firm_id$+"IV00")ivs_params$
-
-	rem --- PO Params
-		pos_params_chn=fnget_dev("POS_PARAMS")
-		dim pos_params$:fnget_tpl$("POS_PARAMS")
-		read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
-
-	rem --- Set Defaults
-
-		apm02_dev=fnget_dev("APM_VENDHIST")
-		dim apm02a$:fnget_tpl$("APM_VENDHIST")
-
-		read record(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
-		tmp$=key(apm02_dev,end=done_apm_vendhist)
-			if pos(firm_id$+vendir_id$=tmp$)<>1 then goto done_apm_vendhist
-			read record(apm02_dev,key=tmp$)apm02a$
-		done_apm_vendhist:
-
-		callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL","")
-		callpoint!.setColumnData("POE_REQHDR.WAREHOUSE_ID",ivs_params.warehouse_id$)
-		gosub whse_addr_info
-		callpoint!.setColumnData("POE_REQHDR.ORD_DATE",sysinfo.system_date$)
-		callpoint!.setColumnData("POE_REQHDR.TERMS_CODE",apm02a.ap_terms_code$)
-		callpoint!.setColumnData("POE_REQHDR.REQD_DATE",sysinfo.system_date$)
-		callpoint!.setColumnData("POE_REQHDR.PO_FRT_TERMS",pos_params.po_frt_terms$)
-		callpoint!.setColumnData("POE_REQHDR.AP_SHIP_VIA",pos_params.ap_ship_via$)
-		callpoint!.setColumnData("POE_REQHDR.FOB",pos_params.fob$)
-		callpoint!.setColumnData("POE_REQHDR.HOLD_FLAG",pos_params.hold_flag$)
-		callpoint!.setColumnData("POE_REQHDR.PO_MSG_CODE",pos_params.po_req_msg_code$)
-
-	endif
 [[POE_REQHDR.ARAR]]
 vendor_id$=callpoint!.getColumnData("POE_REQHDR.VENDOR_ID")
 purch_addr$=callpoint!.getColumnData("POE_REQHDR.PURCH_ADDR")
