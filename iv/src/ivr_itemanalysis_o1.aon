@@ -62,9 +62,8 @@ rem --- Background
 
 rem --- Report headings
 
-        if level$="I" headings$[1]=headings$[1]+" By Item"
-        if level$="W" headings$[1]=headings$[1]+" By Warehouse"
-        if level$="W" then headings$[3]="[HEADER]"
+        headings$[1]=headings$[1]+" By Warehouse"
+        headings$[3]="[HEADER]"
         if begitem$="" headings$[4]="From Item: First" else headings$[4]="From Item: "+begitem$
         if enditem$="" headings$[4]=headings$[4]+" -- To Item: Last" else headings$[4]=headings$[4]+" -- To Item: "+enditem$
         if begprod$="" headings$[5]="From Product: First" else headings$[5]="From Product: "+begprod$                
@@ -73,33 +72,18 @@ rem --- Report headings
 
 rem --- column heading
 
-        if level$="W" then
-            dim columns$[9,10]
-            columns=10
-            columns$[0,0]="Item/Description",       columns$[0,1]="C",   columns$[0,2]="25"
-            columns$[1,0]="Prod^Type",              columns$[1,1]="C",   columns$[1,2]="5"
-            columns$[2,0]="UM",                     columns$[2,1]="C",   columns$[2,2]="5"
-            columns$[3,0]="Units^"+h7$,             columns$[3,1]="N",   columns$[3,2]="10",columns$[3,3]=m2$
-            columns$[4,0]="Units^Cost",             columns$[4,1]="N",   columns$[4,2]="10",columns$[4,3]=m3$
-            columns$[5,0]="Total^"+h8$,             columns$[5,1]="N",   columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
-            columns$[6,0]="Cumulative^ % Of "+h8$,  columns$[6,1]="N",   columns$[6,2]="10"
-            columns$[7,0]="Quantity^On Hand",       columns$[7,1]="N",   columns$[7,2]="10",columns$[7,3]=m2$
-            columns$[8,0]="Total^Value",            columns$[8,1]="N",   columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
-            columns$[9,0]="Cumulative^ % Of Value", columns$[9,1]="N",   columns$[9,2]="10",columns$[9,3]=m7$
-        endif
-        if level$="I" then
-            dim columns$[8,10]
-            columns=9
-            columns$[0,0]="Item/Description",       columns$[0,1]="C",   columns$[0,2]="25"
-            columns$[1,0]="Prod^Type",              columns$[1,1]="C",   columns$[1,2]="5"
-            columns$[2,0]="UM",                     columns$[2,1]="C",   columns$[2,2]="5"
-            columns$[3,0]="Units^"+h7$,             columns$[3,1]="N",   columns$[3,2]="10",columns$[3,3]=m2$
-            columns$[4,0]="Total^"+h8$,             columns$[4,1]="N",   columns$[4,2]="10",columns$[4,3]=m1$,columns$[4,10]="T"
-            columns$[5,0]="Cumulative^ % Of "+h8$,  columns$[5,1]="N",   columns$[5,2]="10"
-            columns$[6,0]="Quantity^On Hand",       columns$[6,1]="N",   columns$[6,2]="10",columns$[6,3]=m2$
-            columns$[7,0]="Total^Value",            columns$[7,1]="N",   columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
-            columns$[8,0]="Cumulative^ % Of Value", columns$[8,1]="N",   columns$[8,2]="10",columns$[8,3]=m7$
-        endif  
+		dim columns$[9,10]
+		columns=10
+		columns$[0,0]="Item/Description",       columns$[0,1]="C",   columns$[0,2]="25"
+		columns$[1,0]="Prod^Type",              columns$[1,1]="C",   columns$[1,2]="5"
+		columns$[2,0]="UM",                     columns$[2,1]="C",   columns$[2,2]="5"
+		columns$[3,0]="Units^"+h7$,             columns$[3,1]="N",   columns$[3,2]="10",columns$[3,3]=m2$
+		columns$[4,0]="Units^Cost",             columns$[4,1]="N",   columns$[4,2]="10",columns$[4,3]=m3$
+		columns$[5,0]="Total^"+h8$,             columns$[5,1]="N",   columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
+		columns$[6,0]="Cumulative^ % Of "+h8$,  columns$[6,1]="N",   columns$[6,2]="10"
+		columns$[7,0]="Quantity^On Hand",       columns$[7,1]="N",   columns$[7,2]="10",columns$[7,3]=m2$
+		columns$[8,0]="Total^Value",            columns$[8,1]="N",   columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
+		columns$[9,0]="Cumulative^ % Of Value", columns$[9,1]="N",   columns$[9,2]="10",columns$[9,3]=m7$
 
 rem --- Loop Starting
 
@@ -123,7 +107,7 @@ rem --- Loop Starting
         where_clause$=where_clause$+" order by ivm_itemwhse.warehouse_id,ivm_itemwhse.item_id "
         if where_clause$<>"" sql_prep$=sql_prep$+where_clause$
 
-        sql_chan=1
+        sql_chan=sqlunt
         sqlopen(sql_chan,err=*next)stbl("+DBNAME")
         sqlprep(sql_chan)sql_prep$
         dim read_tpl$:sqltmpl(sql_chan)
@@ -142,8 +126,7 @@ rem --- Accumulate totals
        
             find record (ivm01_dev,key=firm_id$+item$,dom=*continue) ivm01a$
             if type$<>"" and ivm01a.item_type$<>type$ then continue
-            if level$="W" gosub accum_total_whse
-            if level$="I" gosub item_total_accum
+            gosub accum_total_whse
 
 rem --- Write ivw-01 item record
 
@@ -187,9 +170,6 @@ rem --- Position file
         ivw02a.warehouse_id$=""
         ivw02a.total_usage=0
         ivw02a.total_value=0
-        if level$="I" find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
-        total_usage=ivw02a.total_usage
-        total_value=ivw02a.total_value
         total_percent=0
         bar=0
         read (ivw01_dev,key="",dom=*next)
@@ -204,9 +184,9 @@ rem --- Read next work record
             usage=ivw01a.usage_qty
             onhand=ivw01a.qty_on_hand
 
-rem --- Level break?
+rem --- Warehouse break?
 
-            if level$="W" if ivw01a.warehouse_id$<>t0$ gosub whsebreak
+            if ivw01a.warehouse_id$<>t0$ gosub whsebreak
 
 rem --- Additional reads
 
@@ -232,31 +212,17 @@ rem --- Perform detail line calculations
 
 rem --- Print detail line
 
-            if level$="W" then 
-                OutVect!.addItem(ivm01a.item_id$)
-                OutVect!.addItem(product$)
-                OutVect!.addItem(um$)
-                OutVect!.addItem(str(usage))
-                OutVect!.addItem(str(cost))
-                OutVect!.addItem(str(item_usage))
-                OutVect!.addItem(percent$)
-                OutVect!.addItem(str(onhand))
-                OutVect!.addItem(str(item_value))
-                OutVect!.addItem(str(value_percent))
-                OutVect!.addItem("  "+description$)
-            endif
-            if level$="I" then
-                OutVect!.addItem(ivm01a.item_id$)
-                OutVect!.addItem(product$)
-                OutVect!.addItem(um$)
-                OutVect!.addItem(str(usage))
-                OutVect!.addItem(str(item_usage))
-                OutVect!.addItem(percent$)
-                OutVect!.addItem(str(onhand))
-                OutVect!.addItem(str(item_value))
-                OutVect!.addItem(str(value_percent))
-                OutVect!.addItem("  "+description$)
-            endif
+			OutVect!.addItem(ivm01a.item_id$)
+			OutVect!.addItem(product$)
+			OutVect!.addItem(um$)
+			OutVect!.addItem(str(usage))
+			OutVect!.addItem(str(cost))
+			OutVect!.addItem(str(item_usage))
+			OutVect!.addItem(percent$)
+			OutVect!.addItem(str(onhand))
+			OutVect!.addItem(str(item_value))
+			OutVect!.addItem(str(value_percent))
+			OutVect!.addItem("  "+description$)
             xwk=fnblank(columns-1)
             total_percent=total_percent+item_usage_percent
 
@@ -286,7 +252,7 @@ rem --- Reached 100% of usage yet?
 done: rem --- All done
 
         done=1
-        if level$="W" gosub whsebreak
+        gosub whsebreak
         xwk=fnblank(columns)
         TotVect!.addItem(str(OutVect!.size()/(columns)))
         OutVect!.addItem("Total For Report")
@@ -330,27 +296,6 @@ whsebreak: rem --- Warehouse Break
         find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
         let total_usage=ivw02a.total_usage,total_value=ivw02a.total_value,total_percent=0
         let cum_usage=0,cum_value=0
-        return
-
-item_total_accum: rem --- Accumulate totals for item
-
-        dim i[2]
-        let x$=firm_id$+item$
-        read (ivm02a_dev,key=x$,knum=2,dom=*next)
-
-rem --- Read next item/warehouse xref
-        while more
-            ivm02a_key_02$=key(ivm02a_dev,knum=2,end=*break)
-            if pos(x$=ivm02a_key_02$)<>1 then break
-            read (ivm02a_dev)
-            let whse$=ivm02a_key_02.warehouse_id$
-            gosub accum_total_whse
-            amount=(i[0]*i[2])+(cost*onhand),number=i[2]+onhand
-            if number>0 i[0]=amount/number
-            i[1]=i[1]+usage,i[2]=i[2]+onhand
-        wend
-        let cost=i[0],usage=i[1],onhand=i[2],whse$="  "
-        gosub total_usage
         return
 
 accum_total_whse: rem --- Accumulate warehouse totals
