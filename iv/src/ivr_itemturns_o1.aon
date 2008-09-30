@@ -51,18 +51,17 @@ rem --- Report headings
         dim headings$[headings+1]
         headings$[0]=sysinfo.firm_name$
         headings$[1]=sysinfo.task_desc$
-        if level$="I" headings$[1]=headings$[1]+" By Item"
-        if level$="W" headings$[1]=headings$[1]+" By Warehouse"
+        headings$[1]=headings$[1]+" By Warehouse"
         headings$[1]=headings$[1]+" For Period "+period$+" "+year$
         x$="Last "+str(g[0])+" Periods "
         headings$[7]=x$
-        if xlimit$<>"C" then
+        if xlimit$<>"" then
             x$="Limited To Items With Turns "
             if xlimit$="A" x$=x$+"Greater"
             if xlimit$="B" x$=x$+"Less"
             headings$[2]=x$+" Than "+ str(xlimit:"#0.00")
         endif
-        if level$="W" headings$[3]="[HEADER]"
+        headings$[3]="[HEADER]"
         if begitem$="" headings$[4]="From Item: First" else headings$[4]="From Item: "+begitem$
         if enditem$="" headings$[4]=headings$[4]+" -- To Item: Last" else headings$[4]=headings$[4]+" -- To Item: "+enditem$
         if begprod$="" headings$[5]="From Product: First" else headings$[5]="From Product: "+begprod$                
@@ -72,35 +71,19 @@ rem --- Report headings
 
 rem -- column heading
 
-        if level$="W"
-            dim columns$[8,10]
-            columns=9
-            columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]="12"
-            columns$[1,0]="Description",           columns$[1,1]="C",columns$[1,2]="25"
-            columns$[2,0]="UM",                    columns$[2,1]="C",columns$[2,2]="5"
-            columns$[3,0]="Total^Usage",           columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m2$
-            columns$[4,0]="Unit^Cost",             columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m3$
-            columns$[5,0]="Total^Cost",            columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
-            columns$[6,0]="Average^On Hand",       columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m2$
-            columns$[7,0]="Average^Value",         columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
-            columns$[8,0]="Turns",                 columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m8$,columns$[8,10]="T"
-        endif                  
-        if level$="I"
-            dim columns$[7,10]
-            columns=8
-            columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]="12"
-            columns$[1,0]="Description",           columns$[1,1]="C",columns$[1,2]="25"
-            columns$[2,0]="UM",                    columns$[2,1]="C",columns$[2,2]="5"
-            columns$[3,0]="Total^Usage",           columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m2$
-            columns$[4,0]="Total^Cost",            columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$,columns$[4,10]="T"
-            columns$[5,0]="Average^On Hand",       columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m2$
-            columns$[6,0]="Average^Value",         columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
-            columns$[7,0]="Turns",                 columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m8$,columns$[7,10]="T"
-        endif
-          
+        dim columns$[8,10]
+        columns=9
+        columns$[0,0]="Item",                  columns$[0,1]="C",columns$[0,2]="12"
+        columns$[1,0]="Description",           columns$[1,1]="C",columns$[1,2]="25"
+        columns$[2,0]="UM",                    columns$[2,1]="C",columns$[2,2]="5"
+        columns$[3,0]="Total^Usage",           columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m2$
+        columns$[4,0]="Unit^Cost",             columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m3$
+        columns$[5,0]="Total^Cost",            columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
+        columns$[6,0]="Average^On Hand",       columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m2$
+        columns$[7,0]="Average^Value",         columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
+        columns$[8,0]="Turns",                 columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m8$,columns$[8,10]="T"
 
-        if level$="I" then sql_prep$="select distinct ivm_itemwhse.firm_id, ivm_itemwhse.item_id,"
-        if level$="W" then sql_prep$="select ivm_itemwhse.firm_id, ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, ivm_itemwhse.unit_cost, "
+        sql_prep$="SELECT ivm_itemwhse.firm_id, ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, ivm_itemwhse.unit_cost, "
         sql_prep$=sql_prep$+"ivm_itemmast.product_type, ivm_itemmast.item_type "
         sql_prep$=sql_prep$+"FROM ivm_itemwhse, ivm_itemmast "
         sql_prep$=sql_prep$+"WHERE ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
@@ -115,8 +98,7 @@ rem -- column heading
         if type$<>"" where_clause$=where_clause$+"ivm_itemmast.item_type = '"+type$+"'"
         where_clause$=cvs(where_clause$,2)
         if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
-        if level$="I" then where_clause$=where_clause$+" order by ivm_itemmast.product_type"
-        if level$="W" then where_clause$=where_clause$+" order by ivm_itemwhse.warehouse_id,ivm_itemmast.product_type "
+        where_clause$=where_clause$+" ORDER BY ivm_itemwhse.warehouse_id,ivm_itemmast.product_type "
         if where_clause$<>"" sql_prep$=sql_prep$+where_clause$
 
         sql_chan=1
@@ -132,10 +114,8 @@ rem --- Main Read
 
         while more
             read_tpl$=sqlfetch(sql_chan,err=*break)
-            if level$="W" 
-                whse$=read_tpl.warehouse_id$
-                cost=read_tpl.unit_cost
-            endif
+            whse$=read_tpl.warehouse_id$
+            cost=read_tpl.unit_cost
             product$=read_tpl.product_type$
             item$=read_tpl.item_id$
             x$=whse$+" "+product$+" "+item$(1,p[0])
@@ -148,39 +128,12 @@ rem --- Retrieve item
             if type$<>"" and ivm01a.item_type$<>type$ then continue
             description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
 
-            if level$<>"I" then
-                gosub whse_turns
-            else
-                dim item[3]
-                sql_prep$="select firm_id, item_id, warehouse_id, unit_cost from ivm_itemwhse where firm_id='"+firm_id$+"' and item_id='"+item$+"'"        
-                sqlprep(sql_chan1)sql_prep$
-                dim whse_tpl$:sqltmpl(sql_chan1)
-                sqlexec(sql_chan1)
-                while more
-                    whse_tpl$=sqlfetch(sql_chan1,err=*break)
-                    whse$=whse_tpl.warehouse_id$
-                    if begwhse$<>"" and whse$<begwhse$ then continue
-                    if endwhse$<>"" and whse$>endwhse$ then continue
-                    cost=whse_tpl.unit_cost
-                    gosub whse_turns
-                    item[0]=item[0]+usage
-                    item[1]=item[1]+total
-                    item[2]=item[2]+balance
-                    item[3]=item[3]+average
-                wend
-                cost=0
-                turns=0
-                usage=item[0]
-                total=item[1]
-                balance=item[2]
-                average=item[3]
-                if average>0 turns=total/average
-            endif
+            gosub whse_turns
 
 rem --- Number of turns meets selection criteria?
 
-            if xlimit$="A" and  turns<xlimit then continue
-            if xlimit$="B" and turns>xlimit then continue
+            if xlimit$="A" and turns < xlimit then continue
+            if xlimit$="B" and turns > xlimit then continue
         
 rem --- Generate reciprocal amount
 
@@ -217,7 +170,6 @@ rem --- Write sort record
             ivw03a.qty_on_hand=balance
             ivw03a.total_value=average
             ivw03a.item_turns=turns
-            if level$="I" ivw03a_key.warehouse_id$="";ivw03a.warehouse_id$=""
             write record (ivw03_dev,key=ivw03a_key$) ivw03a$
 
         wend; rem --- Main Loop Ending
@@ -238,7 +190,7 @@ rem --- Read next work record
 
 rem --- Level breaks?
 
-            if level$="W" if whse$<>t0$ gosub whse_break
+            if whse$<>t0$ gosub whse_break
             if product$<>t1$ gosub product_break
 
 rem --- Format print fields
@@ -249,27 +201,15 @@ rem --- Format print fields
 rem --- Print detail line
 
             if h9$<>"" gosub prod_heading
-            if level$="W"              
-                OutVect!.addItem(item$)
-                OutVect!.addItem(description$)
-                OutVect!.addItem(um$)
-                OutVect!.addItem(str(ivw03a.total_usage))
-                OutVect!.addItem(str(ivw03a.unit_cost))
-                OutVect!.addItem(str(ivw03a.total_cost))
-                OutVect!.addItem(str(ivw03a.qty_on_hand))
-                OutVect!.addItem(str(ivw03a.total_value))
-                OutVect!.addItem(str(ivw03a.item_turns))
-            endif
-            if level$="I"
-                OutVect!.addItem(item$)
-                OutVect!.addItem(description$)
-                OutVect!.addItem(um$)
-                OutVect!.addItem(str(ivw03a.total_usage))
-                OutVect!.addItem(str(ivw03a.total_cost))
-                OutVect!.addItem(str(ivw03a.qty_on_hand))
-                OutVect!.addItem(str(ivw03a.total_value))
-                OutVect!.addItem(str(ivw03a.item_turns))
-            endif
+            OutVect!.addItem(item$)
+            OutVect!.addItem(description$)
+            OutVect!.addItem(um$)
+            OutVect!.addItem(str(ivw03a.total_usage))
+            OutVect!.addItem(str(ivw03a.unit_cost))
+            OutVect!.addItem(str(ivw03a.total_cost))
+            OutVect!.addItem(str(ivw03a.qty_on_hand))
+            OutVect!.addItem(str(ivw03a.total_value))
+            OutVect!.addItem(str(ivw03a.item_turns))
 
 rem --- Accumulate totals
 
@@ -285,8 +225,7 @@ rem --- Accumulate totals
 done: rem --- All done
 
         done=1
-        if level$="W" gosub whse_break
-        if level$="I" gosub product_break
+        gosub whse_break
         totals$="Totals For Report"
         totals[0]=report[0]
         totals[1]=report[1]
