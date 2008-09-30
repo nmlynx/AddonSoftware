@@ -105,7 +105,8 @@ rem --- Background
 
 rem --- Create Work File
 
-    read (arm01_dev,key=firm_id$+r1$,knum=arm_key_num,dom=*next)
+    dim arm01a$:fattr(arm01a$)
+    read record(arm01_dev,key=firm_id$+r1$,knum=arm_key_num,dom=*next)arm01a$;goto trip_read_opt01
 
 l1050:
 
@@ -114,6 +115,8 @@ l1050:
     if r2$<>"" and arm01_key$(3,len(r2$))>r2$ goto l3000
     dim arm01a$:fattr(arm01a$)
     read record(arm01_dev,key=arm01_key$,knum=arm_key_num)arm01a$
+
+trip_read_opt01:
     read (opt01_dev,key=firm_id$+"  "+arm01a.customer_id$,dom=*next)
 
 l1100: rem --- Initial Read
@@ -189,7 +192,7 @@ rem --- Discount Amount
 
 freight_amt: rem --- Freight Amount
 
-    if opt01a.freight_amt goto tax_account
+    if opt01a.freight_amt=0 goto tax_account
     d1$=arm10d.gl_frgt_acct$
     d0=-opt01a.freight_amt
     z9$="   "
@@ -247,8 +250,15 @@ l3040:
 
     readrecord(opw04_dev,end=done)opw04a$
     if firm_id$<>opw04a.firm_id$ goto done
+    endif    
     
 l3050:
+rem --- Breaks
+
+    if opw04a.customer_id$<>t0$ gosub cust_break
+    if opw04a.ar_inv_no$=t1$ goto get_gl_name
+    if d3-abs(c3)<>0 gosub l6200
+
     if r2$<>""
         if r0$="N"
             if opw04a.customer_id$>r2$ goto done
@@ -256,12 +266,6 @@ l3050:
             if opw04a.alt_sequence$>r2$ goto done
         endif
     endif    
-
-rem --- Breaks
-
-    if opw04a.customer_id$<>t0$ gosub cust_break
-    if opw04a.ar_inv_no$=t1$ goto get_gl_name
-    if d3-abs(c3)<>0 gosub l6200
 
 rem --- Find Invoice Date
 
@@ -358,7 +362,7 @@ cust_break: rem --- Customer Break
     if r5$<>"D" goto l6100
     xwk=fnblank(8)
     TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-    OutVect!.addItem("Customer "+t0$+" Total: ")
+    OutVect!.addItem("Customer "+fnmask$(t0$(1,m0),m0$)+" Total: ")
     xwk=fnblank(5)
     OutVect!.addItem(str(d1))
     OutVect!.addItem(str(abs(c1)))
@@ -406,6 +410,7 @@ l6400: rem --- Invoice History Detail Retained?
     opt11k$=""
     opt11k$=key(opt11_dev,end=l6430)
 l6430:
+rem jpb Here's where things fail when selecting customer 900 through 1000
     if pos(firm_id$+opw04a.ar_type$+opw04a.customer_id$+opw04a.ar_inv_no$=opt11k$)=1 goto l6495; rem "History retained
     oob=-(d3-abs(c3))
 
