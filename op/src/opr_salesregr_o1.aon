@@ -408,8 +408,7 @@ l6400: rem --- Invoice History Detail Retained?
 
     read (opt11_dev,key=firm_id$+opw04a.ar_type$+opw04a.customer_id$+opw04a.ar_inv_no$,dom=*next)
     opt11k$=""
-    opt11k$=key(opt11_dev,end=l6430)
-l6430:
+    opt11k$=key(opt11_dev,end=*next)
 rem jpb Here's where things fail when selecting customer 900 through 1000
     if pos(firm_id$+opw04a.ar_type$+opw04a.customer_id$+opw04a.ar_inv_no$=opt11k$)=1 goto l6495; rem "History retained
     oob=-(d3-abs(c3))
