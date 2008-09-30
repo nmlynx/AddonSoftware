@@ -25,10 +25,8 @@ rem --- Initializations
         more=1
 
         if report$="R" headings$[1]="Inventory Reorder Report" else headings$[1]="Inventory Shortage Report"
-        if level$="I" headings$[1]=headings$[1]+" By Item"
-        if level$="W" headings$[1]=headings$[1]+" By Warehouse"
-
-        if level$="W" headings$[3]="[HEADER]" 
+        headings$[1]=headings$[1]+" By Warehouse"
+        headings$[3]="[HEADER]" 
         if begitem$="" headings$[4]="From Item: First" else headings$[4]="From Item: "+begitem$
         if enditem$="" headings$[4]=headings$[4]+" -- To Item: Last" else headings$[4]=headings$[4]+" -- To Item: "+enditem$
         if begprod$="" headings$[5]="From Product: First" else headings$[5]="From Product: "+begprod$                
@@ -100,40 +98,35 @@ rem --- Level breaks?
 
             call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,meter_num,status
 
-            if level$="W" and whse$<>t0$ gosub whse_break
+            if whse$<>t0$ gosub whse_break
             if product$<>t1$ gosub product_break
             
 rem --- Retrieve item
 
             dim item$[2],whse$[2],w[20]
             ivm01a_key$=firm_id$+item$
-            if level$="W" ivm02a_key$=firm_id$+whse$+item$
+            ivm02a_key$=firm_id$+whse$+item$
             find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
-            if level$="W" and ivm01a.stock_level$<>"W" then continue
-            if level$="I" and ivm01a.stock_level$<>"I" then continue
             if type$<>"" and  ivm01a.item_type$<>type$ then continue
             
-            action$="A"
             item$[0]=firm_id$
             item$[2]=item$
-            if level$="W" item$[1]=whse$,action$=""
-            if level$="W" find record (ivm02_dev,key=ivm02a_key$,knum=0,dom=*continue) ivm02a$
+            item$[1]=whse$,action$=""
+            find record (ivm02_dev,key=ivm02a_key$,knum=0,dom=*continue) ivm02a$
             call pgmdir$+"ivc_whseinfo.aon",action$,ivchannels[all],item$[all],whse$[all],w[all],value,status,rd_table_chans$[all]
-            if ivm01a.stock_level$="I" w[4]=ivm01a.order_point,w[5]=ivm01a.safety_stock,w[6]=ivm01a.eoq
             if report$="R" and w[0]+w[1]-w[2]>w[4] then continue
             if report$="S" and w[0]+w[1]-w[2]>=w[5] then continue
-            call pgmdir$+"ivc_usage.aon",level$,ivchannels[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
+            call pgmdir$+"ivc_usage.aon","W",ivchannels[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
             if flag$<>"" usage=estimated
             avg_usage=usage/g[0]
-            if level$="I" op_code$=ivm01a.ord_pnt_code$,eoq_code$=ivm01a.eoq_code$,safe_code$=ivm01a.saf_stk_code$
-            if level$="W" op_code$=ivm02a.ord_pnt_code$,eoq_code$=ivm02a.eoq_code$,safe_code$=ivm02a.saf_stk_code$
+            op_code$=ivm02a.ord_pnt_code$,eoq_code$=ivm02a.eoq_code$,safe_code$=ivm02a.saf_stk_code$
 
 rem --- Print detail line
 
-            if level$="W" last_issue$=fnl$(ivm02a.lstsal_date$,ivm02a.lstiss_date$) else last_issue$=fnl$(ivm01a.lstsal_date$,ivm01a.lstiss_date$)
-            x$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+            last_issue$=fnl$(ivm02a.lstsal_date$,ivm02a.lstiss_date$) 
+            item_desc$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
             if h9$<>"" gosub prod_heading
-            if level$="W" column_value$=ivm01a.item_id$+ivm02a.location$ else column_value$=ivm01a.item_id$
+            column_value$=ivm01a.item_id$+ivm02a.location$
 
             OutVect!.addItem(column_value$)
             OutVect!.addItem(ivm02a.abc_code$)
@@ -149,7 +142,7 @@ rem --- Print detail line
             OutVect!.addItem(safe_code$)
             OutVect!.addItem(str(avg_usage))
             OutVect!.addItem(flag$)
-            OutVect!.addItem("   "+x$)
+            OutVect!.addItem("   "+item_desc$)
             xwk=fnblank(columns-1)
             number=number+1
 
