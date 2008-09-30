@@ -63,7 +63,6 @@ rem --- Assign form input values to local variables
     period$=str(num(period$):"00")
     year$=option!.getOptionData("pick_year")
     subtotals$=option!.getOptionData("pick_check")
-    level$=option!.getOptionData("stock_level")
     begwhse$=option!.getOptionData("warehouse_id_1")
     endwhse$=option!.getOptionData("warehouse_id_2")
     begprod$=option!.getOptionData("product_type_1")
@@ -90,7 +89,7 @@ rem --- Parameters
     m3$=ivs01a.cost_mask$
     call pgmdir$+"adc_sizemask.aon",m2$,m2,8,12
     call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
-    P[0]=num(ivs01a.item_id_len$)
+    p[0]=num(ivs01a.item_id_len$)
     p[1]=num(ivs01a.precision$)
     p[3]=num(ivs01a.desc_len_01$)
     p[4]=num(ivs01a.desc_len_02$)
