@@ -49,11 +49,9 @@ rem --- Initialize HEADINGS$
         dim headings$[headings+1]
         headings$[0]=sysinfo.firm_name$
         headings$[1]=sysinfo.task_desc$
-        if level$="I" headings$[1]=headings$[1]+" By Item"
-        if level$="W" headings$[1]=headings$[1]+" By Warehouse"
+        headings$[1]=headings$[1]+" By Warehouse"
         headings$[1]=headings$[1]+" For Period "+period$+" "+year$+" "+per_name$[num(period$)]
-        if level$="W" then headings$[3]="[HEADER]"   
-        if level$="I" then headings$[3]="From Warehouse: First -- To Warehouse: Last" 
+        headings$[3]="[HEADER]"   
         if begitem$="" headings$[4]="From Item: First" else headings$[4]="From Item: "+begitem$
         if enditem$="" headings$[4]=headings$[4]+" -- To Item: Last" else headings$[4]=headings$[4]+" -- To Item: "+enditem$
         if begprod$="" headings$[5]="From Product: First" else headings$[5]="From Product: "+begprod$                
@@ -88,8 +86,7 @@ rem --- Position files
           
         call pgmdir$+"adc_progress.aon","N","","","","",0,ivm02_dev,1,meter_num,status
 
-        if level$="I" then sql_prep$="select distinct ivm_itemwhse.firm_id, ivm_itemwhse.item_id,"
-        if level$="W" then sql_prep$="select ivm_itemwhse.firm_id, ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, "
+        sql_prep$="SELECT ivm_itemwhse.firm_id, ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, "
         sql_prep$=sql_prep$+"ivm_itemmast.product_type, ivm_itemmast.item_type "
         sql_prep$=sql_prep$+"FROM ivm_itemwhse INNER JOIN ivm_itemmast "
         sql_prep$=sql_prep$+"ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
@@ -105,11 +102,10 @@ rem --- Position files
 
         where_clause$=cvs(where_clause$,2)
         if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
-        if level$="I" then where_clause$=where_clause$+" order by ivm_itemmast.product_type"
-        if level$="W" then where_clause$=where_clause$+" order by ivm_itemwhse.warehouse_id,ivm_itemmast.product_type "
+        where_clause$=where_clause$+" ORDER BY ivm_itemwhse.warehouse_id,ivm_itemmast.product_type "
         if where_clause$<>"" sql_prep$=sql_prep$+where_clause$
 
-        sql_chan=1
+        sql_chan=sqlunt
         sqlopen(sql_chan,err=*next)stbl("+DBNAME")
         sqlprep(sql_chan)sql_prep$
         dim read_tpl$:sqltmpl(sql_chan)
@@ -121,30 +117,29 @@ rem --- Main Read
             read_tpl$=sqlfetch(sql_chan,err=*break) 
             product$=read_tpl.product_type$
             item$=read_tpl.item_id$
-            if level$="W" then whse$=read_tpl.warehouse_id$
+            whse$=read_tpl.warehouse_id$
             x$=whse$+" "+product$+" "+item$(1,p[0])
             
             call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,meter_num,status
-            if level$="W" if whse$<>t0$ gosub breakwhse
+            if whse$<>t0$ gosub breakwhse
             if product$<>t1$ gosub breakprod
 
 rem --- Retrieve item
 
             dim item$[2],whse$[2],whse[20],activity[12]
             ivm01a_key$=firm_id$+item$
-            if level$="W" ivm02a_key$=firm_id$+whse$+item$
+            ivm02a_key$=firm_id$+whse$+item$
             find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
             if type$<>"" and ivm01a.item_type$<>type$ then continue
-            action$="A"
             item$[0]=firm_id$
             item$[2]=item$
-            if level$="W" item$[1]=whse$,action$=""
-            if level$="W" find record (ivm02_dev,key=ivm02a_key$,knum=0,dom=*continue) ivm02a$
+            item$[1]=whse$,action$=""
+            find record (ivm02_dev,key=ivm02a_key$,knum=0,dom=*continue) ivm02a$
             call pgmdir$+"ivc_whseinfo.aon",action$,ivchannels[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
-            call pgmdir$+"ivc_usage.aon",level$,ivchannels[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
+            call pgmdir$+"ivc_usage.aon","W",ivchannels[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
             if flag$<>"" usage=estimated
             avg_usage=usage/g[0]
-            if level$="W" action$="" else action$="A"
+            action$=""
             call pgmdir$+"ivc_whseact.aon",action$,channs[all],item$[all],period$[all],activity[all],status
             cur_usage=activity[3]+activity[4]-activity[8]
             prior_usage=usage-cur_usage
@@ -153,13 +148,12 @@ rem --- Retrieve item
 
 rem --- Print detail line
 
-            x$=""
             issued$=""
-            if level$="W" last_issue$=fnl$(ivm02a.lstsal_date$,ivm02a.lstiss_date$) else last_issue$=fnl$(ivm01a.lstsal_date$,ivm01a.lstiss_date$)
+            last_issue$=fnl$(ivm02a.lstsal_date$,ivm02a.lstiss_date$) 
             if num(last_issue$(1,4))>0 if last_issue$(5,2)="00" last_issue$(5,4)="0101"
             if cvs(last_issue$,2)<>"" issued$=fndate$(last_issue$)
 
-            x$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+            item_desc$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
             if h9$<>"" gosub prodhead
             OutVect!.addItem(ivm01a_key.item_id$)
             OutVect!.addItem(ivm01a.unit_of_sale$)
@@ -171,7 +165,7 @@ rem --- Print detail line
             OutVect!.addItem(str(prior_usage))
             OutVect!.addItem(str(cur_recpts))
             OutVect!.addItem(str(cur_adj))
-            OutVect!.addItem("   "+x$)
+            OutVect!.addItem("   "+item_desc$)
             xwk=fnblank(columns-1)
                 
 rem --- Accumulate totals
@@ -188,8 +182,7 @@ rem --- Accumulate totals
 done: rem --- All done
 
         done=1
-        if level$="W" gosub breakwhse
-        if level$="I" gosub breakprod
+        gosub breakwhse
         if subtotals$<>"Y" then goto std_exit
 
         xwk=fnblank(columns)
