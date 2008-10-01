@@ -30,7 +30,7 @@ rem --- Init Data
         headings$[0]=sysinfo.firm_name$
         headings$[1]=sysinfo.task_desc$
         headings$[3]="All Below Safety Stock Items"
-        if num(p9$)<>0 headings$[3]=headings$[3]+" Since "+fndate$(p9$)
+        if num(include$)<>0 then headings$[3]=headings$[3]+" Since "+fndate$(include$)
         if begprod$="" headings$[4]="From Product: First" else headings$[4]="From Product: "+begprod$                
         if endprod$="" headings$[4]=headings$[4]+" -- To Product: Last" else headings$[4]=headings$[4]+" -- To Product: "+endprod$
         headings$[2]="[HEADER]"
@@ -100,7 +100,7 @@ rem --- ivt-05 sort - whse/item
             endif
 
             read record (ivt05_dev,key=ivt05a_key$,dom=*continue) ivt05a$
-            if num(p9$)<>0 if ivt05a.writtn_date$<p9$ then continue
+            if num(include$)<>0 and ivt05a.writtn_date$<include$ then continue
             if ivt05a_key.warehouse_id$<>t0$ gosub whsebreak
             if sequence$="P" and product$<>t1$ gosub product_break
 
