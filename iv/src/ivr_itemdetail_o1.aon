@@ -28,7 +28,6 @@ rem --- Report Initializations
     page=0 
     headings=2
     product$=""
-    class$=""
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     when$=sysinfo.system_date$
@@ -49,15 +48,15 @@ rem ---  column heading
     columns$[4,0]="", columns$[4,1]="N",columns$[4,2]="15"
     columns$[5,0]="", columns$[5,1]="N",columns$[5,2]="15"
 
-    sql_chan1=unt
+    sql_chan1=sqlunt
     sqlopen(sql_chan1,err=*next)stbl("+DBNAME")
-    sql_chan2=unt
+    sql_chan2=sqlunt
     sqlopen(sql_chan2,err=*next)stbl("+DBNAME")
 
 rem --- Position files
 
     ivm01a_key$=firm_id$+begitem$
-    extract(ivm01_dev,key=ivm01a_key$,dom=*next)
+    read(ivm01_dev,key=ivm01a_key$,dir=0,dom=*next)
             
 rem --- Next item
 
@@ -71,7 +70,7 @@ rem --- Next item
         if type$<>"" if ivm01a.Item_type$<>type$ then continue
         item_head$=" Item Number: "+ivm01a.item_id$ 
         l=l9+1
-        item_desc$=" Description: "+ivm01a.item_desc$(1,p[3])+" "+ivm01a.item_desc$(p[3]+1,p[4])+" "+ivm01a.item_desc$(p[3]+p[4]+1,p[5])
+        item_desc$=" Description: " + fnitem$(ivm01a.item_desc$, p[3], p[4], p[5])
 
         call pgmdir$+"adc_progress.aon","S","","","",ivm01a_key.item_id$,0,0,1,0,ignore_status
         gosub sub_heading
@@ -80,7 +79,7 @@ rem --- ivm-01 Master Info
 
         x$="Item Information"
         product$=nf$
-        class$=nf$
+        class_desc$=nf$
         type_desc$=nf$
         gosub heading
 
@@ -91,39 +90,44 @@ find_product:
         product$=ivm10a.code_desc$
 find_class:
         find record (ivm13_dev,key=firm_id$+ivm01a.item_class$,dom=print_item_details) ivm13a$
-        class$=ivm13a.code_desc$
+        class_desc$=ivm13a.code_desc$
 
 print_item_details:
       
-        OutVect!.addItem("Product Type:")
-        OutVect!.addItem(ivm01a.product_type$)
-        OutVect!.addItem("Sale UM: ")
-        OutVect!.addItem(ivm01a.unit_of_sale$)
-        OutVect!.addItem("Sales Analysis:")
-        OutVect!.addItem(ivm01a.sa_level$)
-        OutVect!.addItem("Item Class:")
-        OutVect!.addItem(ivm01a.item_class$)
-        OutVect!.addItem("Purchase UM:")
-        OutVect!.addItem(ivm01a.purchase_um$)
-        OutVect!.addItem("Lotted/Serialized:")
-        OutVect!.addItem(ivm01a.lotser_item$)
-        OutVect!.addItem("Item Type:")
-        OutVect!.addItem(ivm01a.item_type$)
-        OutVect!.addItem("Weight:")
-        OutVect!.addItem(str(ivm01a.weight:m6$))
-        OutVect!.addItem("Inventoried:")
-        OutVect!.addItem(ivm01a.inventoried$)
-        OutVect!.addItem("MSR Price:")
-        OutVect!.addItem(str(ivm01a.msrp:m4$))
-        OutVect!.addItem("Conversion Factor:")
-        OutVect!.addItem(str(ivm01a.conv_factor:m5$))
-        OutVect!.addItem("Taxable:")
-        OutVect!.addItem(ivm01a.taxable_flag$)
-        OutVect!.addItem("UPC Code:")
-        OutVect!.addItem(ivm01a.upc_code$)
-        OutVect!.addItem("Bar Code:")
-        OutVect!.addItem(ivm01a.bar_code$)
+        OutVect!.addItem("Product Type: " + ivm01a.product_type$)
+        OutVect!.addItem(type_desc$)
+        OutVect!.addItem("Sale UM: " + ivm01a.unit_of_sale$)
+        OutVect!.addItem("")
+        OutVect!.addItem("Sales Analysis: " + ivm01a.sa_level$)
+        OutVect!.addItem("")
+
+        OutVect!.addItem("Item Class: " + ivm01a.item_class$)
+        OutVect!.addItem(class_desc$)
+        OutVect!.addItem("Purchase UM: " + ivm01a.purchase_um$)
+        OutVect!.addItem("")
+        OutVect!.addItem("Lotted/Serialized: " + ivm01a.lotser_item$)
+        OutVect!.addItem("")
+
+        OutVect!.addItem("Item Type: " + ivm01a.item_type$)
+        OutVect!.addItem(product$)
+        OutVect!.addItem("Weight: " + str(ivm01a.weight:m6$))
+        OutVect!.addItem("")
+        OutVect!.addItem("Inventoried: " + ivm01a.inventoried$)
+        OutVect!.addItem("")
+
+        OutVect!.addItem("MSR Price: " + str(ivm01a.msrp:m4$))
+        OutVect!.addItem("")
+        OutVect!.addItem("Conversion Factor: " + str(ivm01a.conv_factor:m5$))
+        OutVect!.addItem("")
+        OutVect!.addItem("Taxable: " + ivm01a.taxable_flag$)
+        OutVect!.addItem("")
+
+        OutVect!.addItem("UPC Code: " + ivm01a.upc_code$)
+        OutVect!.addItem("")
+        OutVect!.addItem("Bar Code: " + ivm01a.bar_code$)
+        OutVect!.addItem("")
         xwk = fnblank(2)
+
         xwk = fnblank(columns)
 
 rem --- Alternate item information
@@ -142,7 +146,7 @@ print_altsup_details:
         OutVect!.addItem("Code:")
         OutVect!.addItem(ivm01a.alt_sup_flag$)
         OutVect!.addItem("Item:")
-        OutVect!.addItem(ivm01a.alt_sup_item$(2,p[0]))
+        OutVect!.addItem( pad(ivm01a.alt_sup_item$, p[0]) )
         xwk = fnblank(2)
         xwk = fnblank(6)
     
@@ -539,13 +543,16 @@ sub_heading:
 
 heading: rem --- Section heading
 
-    dim j$(80,"-")
-    if x$<>"" j$(9,len(x$)+2)=" "+x$+" "
+    j$ = fill(80,"-")
+    if x$<>"" then j$(9,len(x$)+2)=" "+x$+" "
     OutVect!.addItem(j$)
     OutVect!.addItem("")
-   for x=1 to 4
-        OutVect!.addItem(fill(30,"-"))
-   next x
+
+    for x=1 to 4
+        rem OutVect!.addItem(fill(30,"-"))
+        OutVect!.addItem("")
+    next x
+
     return
 
 print_stock_info: rem --- Print stocking information
