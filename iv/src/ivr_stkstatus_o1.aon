@@ -62,7 +62,7 @@ rem --- Loop Starting
         where_clause$=where_clause$+" ORDER BY ivm_itemwhse.warehouse_id,ivm_itemmast.product_type "
         if where_clause$<>"" sql_prep$=sql_prep$+where_clause$
 
-        sql_chan=1
+        sql_chan=sqlunt
         sqlopen(sql_chan,err=*next)stbl("+DBNAME")
         sqlprep(sql_chan)sql_prep$
         dim read_tpl$:sqltmpl(sql_chan)
