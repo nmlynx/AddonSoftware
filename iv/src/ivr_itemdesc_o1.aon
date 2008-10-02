@@ -51,7 +51,7 @@ rem --- Position files
 
 
         call pgmdir$+"adc_progress.aon","NC",sysinfo.task_desc$,"","Printing","",p[0],ivm01_dev,1,0,ignore_status
-        read (ivm01_dev,key=firm_id$+begitem$,dom=*next)ivm01a$
+        read (ivm01_dev,key=firm_id$+begitem$,dir=0,dom=*next)ivm01a$
 
         while more
             ivm01a_key$=key(ivm01_dev,end=*break)
