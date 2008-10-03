@@ -1,3 +1,5 @@
+[[OPE_ORDHDR.ADIS]]
+gosub disp_cust_comments
 [[OPE_ORDHDR.ASIZ]]
 rem --- Create Empty Availability window
 g!=form!.getChildWindow(1109).getControl(5900)
@@ -305,17 +307,20 @@ rem --- Show customer data
 
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	gosub bill_to_info
-	rd_key$=""
-	key_pfx$=firm_id$+cust_id$
-	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-:		gui_dev,
-:		Form!,
-:		"ARM_CUSTCMTS",
-:		"LOOKUP",
-:		table_chans$[all],
-:		key_pfx$,
-:		"PRIMARY",
-:		rd_key$
+
+	gosub disp_cust_comments
+
+rem	rd_key$=""
+rem	key_pfx$=firm_id$+cust_id$
+rem	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+rem :		gui_dev,
+rem :		Form!,
+rem :		"ARM_CUSTCMTS",
+rem :		"LOOKUP",
+rem :		table_chans$[all],
+rem :		key_pfx$,
+rem :		"PRIMARY",
+rem :		rd_key$
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 
@@ -757,6 +762,25 @@ pricing: rem "Call Pricing routine
 		precision num(ivs01a.precision$)
 		ope11a.std_list_prc=price*factor
 return
+
+disp_cust_comments:
+	
+	cmt_text$=""
+	arm05_dev=fnget_dev("ARM_CUSTCMTS")
+	dim arm05a$:fnget_tpl$("ARM_CUSTCMTS")
+	arm05_key$=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	more=1
+	read(arm05_dev,key=arm05_key$,dom=*next)
+	while more
+		readrecord(arm05_dev,end=*break)arm05a$
+		if arm05a.firm_id$+arm05a.customer_id$<>firm_id$+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID") break
+			cmt_text$=cmt_text$+cvs(arm05a.std_comments$,3)+$0A$
+		endif				
+	wend
+
+	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
+	callpoint!.setStatus("REFRESH")
+return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
 	gosub disp_ord_tot
@@ -803,7 +827,7 @@ rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=32
+	num_files=33
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -836,6 +860,7 @@ rem --- open needed files
 	open_tables$[30]="OPE_ORDLSDET",open_opts$[30]="OTA"
 	open_tables$[31]="IVM_ITEMPRIC",open_opts$[31]="OTA"
 	open_tables$[32]="IVC_PRICCODE",open_opts$[32]="OTA"
+	open_tables$[33]="ARM_CUSTCMTS",open_opts$[33]="OTA"
 	gosub open_tables
 
 rem --- get AR Params
