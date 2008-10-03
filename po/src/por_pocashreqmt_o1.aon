@@ -64,28 +64,29 @@ rem --- Headings and print positions
 
 rem --- Columns
 
-    dim columns$[10,3]
-    columns = 11
+    columns = 10
+    dim columns$[columns,10]
     columns$[0,0]="Vendor No.", columns$[0,1]="C",columns$[0,2]="10"
     columns$[1,0]="Name",       columns$[1,1]="C",columns$[1,2]="25"
     columns$[2,0]="Date Req",   columns$[2,1]="C",columns$[2,2]="10"
     columns$[3,0]="Date Prom",  columns$[3,1]="C",columns$[3,2]="10"
     columns$[4,0]="Not Before", columns$[4,1]="C",columns$[4,2]="10"
-    columns$[5,0]="Past Due",   columns$[5,1]="C",columns$[5,2]="15"
+    columns$[5,0]="Past Due",   columns$[5,1]="N",columns$[5,2]=str(len(m1$)),columns$[5,3]=m1$; rem ,columns$[5,10]="T"
 
     let i=6
     for col=1 to 4
         if perdatet$[col]<>fill(8) and perdatef$[col]<>fill(8)
             if col=4
-                columns$[i,0]=fndate$(perdatef$[col])+"^ Thru Future ^",columns$[i,1]="C",columns$[i,2]="10"
+                columns$[i,0]=fndate$(perdatef$[col])+"^ Thru Future ^"
             else 
-                columns$[i,0]=fndate$(perdatef$[col])+"^ Thru ^"+fndate$(perdatet$[col]),columns$[i,1]="C",columns$[i,2]="10"
+                columns$[i,0]=fndate$(perdatef$[col])+"^ Thru ^"+fndate$(perdatet$[col])
             endif
+            columns$[i,1]="N",columns$[i,2]=str(len(m1$)),columns$[i,3]=m1$,columns$[i,10]="T"
         endif
         i=i+1
     next col
 
-    columns$[10,0]="Total",columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$
+    columns$[10,0]="Total",columns$[10,1]="N",columns$[10,2]=str(len(m1$)),columns$[10,3]=m1$,columns$[10,10]="T"
     
 positions:
     o[1]=o[0]+7
@@ -199,7 +200,7 @@ rem --- Loop up for next header record
 done: rem --- All Done
 
     gosub vendtotals
-    TotVect!.addItem(str(OutVect!.size()/columns))
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     abc=fnblank(3)
     OutVect!.addItem("Total For" )
     OutVect!.addItem(" Report ")
@@ -413,7 +414,7 @@ brnch2:
 
 vendtotals: rem --- Print Vendor total
 
-    TotVect!.addItem(str(OutVect!.size()/columns))
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     abc=fnblank(2)
     OutVect!.addItem("Total For")
     OutVect!.addItem(" Vendor ")
@@ -426,7 +427,7 @@ vendtotals: rem --- Print Vendor total
 
 pototals: rem --- Print Purchase Order total
 
-    TotVect!.addItem(str(OutVect!.size()/columns))
+    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     abc=fnblank(2)
     OutVect!.addItem("Total For")
     OutVect!.addItem(" PO # ")
