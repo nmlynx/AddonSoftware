@@ -1,3 +1,17 @@
+[[POE_REQDET.WAREHOUSE_ID.AVAL]]
+if callpoint!.getHeaderColumnData("POE_REQHDR.WAREHOUSE_ID")<>pad(callpoint!.getUserInput(),2) then
+	msg_id$="PO_WHSE_NOT_MATCH"
+	gosub disp_message
+endif
+[[POE_REQDET.AGDR]]
+po_line_code$=rec_data.po_line_code$
+if cvs(po_line_code$,2)<>"" then  
+    poc_linecode_dev=fnget_dev("POC_LINECODE")
+    dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+    read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
+    callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
+endif
+
 [[POE_REQDET.ITEM_ID.AINP]]
 if cvs(callpoint!.getUserInput(),2)=cvs(callpoint!.getColumnData("POE_REQDET.ITEM_ID"),2) then
 	user_tpl.change_flag=0
