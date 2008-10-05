@@ -1,64 +1,21 @@
-[[OPE_PRICEQUOTE.WAREHOUSE_ID.AINP]]
-rem --- Validate Warehouse
-ivcwhse_dev=fnget_dev("IVC_WHSECODE")
-dim ivcwhse$:fnget_tpl$("IVC_WHSECODE")
-whse_id$=callpoint!.getUserInput()
-maxl$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.WAREHOUSE_ID","MAXL")
-padc$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.WAREHOUSE_ID","PADC")
-if padc$="" padc$=" " else padc$=ath(padc$)
-padj$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.WAREHOUSE_ID","PADJ")
-if padj$="" padj$="L"
-whse_id$=pad(whse_id$,num(maxl$),padj$,padc$)
-if cvs(whse_id$,2)<>""
-	readrecord(ivcwhse_dev,key=firm_id$+"C"+whse_id$,dom=*next)ivcwhse$;goto end_wh
-	msg_id$="INVALID_ENTRY"
-	dim msg_tokens$[1]
-	msg_tokens$[1]="Warehouse ID"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
+[[OPE_PRICEQUOTE.AOPT-AVLE]]
+rem -- call inquiry program to view Sales Analysis records
+
+syspgmdir$=stbl("+DIR_SYP",err=*next)
+
+key_pfx$=firm_id$
+if cvs(callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),2) <>"" then
+	key_pfx$=key_pfx$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
+	call syspgmdir$+"bam_inquiry.bbj",
+:		gui_dev,
+:		Form!,
+:		"IVC_ITEMAVAIL",
+:		"VIEW",
+:		table_chans$[all],
+:		key_pfx$,
+:		"ALT_KEY_02",
+:		""
 endif
-end_wh:
-[[OPE_PRICEQUOTE.CUSTOMER_ID.AINP]]
-rem --- Validate Customer Number
-arm01_dev=fnget_dev("ARM_CUSTMAST")
-dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
-cust_no$=callpoint!.getUserInput()
-maxl$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.CUSTOMER_ID","MAXL")
-padc$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.CUSTOMER_ID","PADC")
-if padc$="" padc$=" " else padc$=ath(padc$)
-padj$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.CUSTOMER_ID","PADJ")
-if padj$="" padj$="L"
-cust_no$=pad(cust_no$,num(maxl$),padj$,padc$)
-call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
-if cvs(cust_no$,2)<>""
-	readrecord(arm01_dev,key=firm_id$+cust_no$,dom=*next)arm01a$;goto cust_end
-	msg_id$="INVALID_ENTRY"
-	dim msg_tokens$[1]
-	msg_tokens$[1]="Customer Number"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
-endif
-cust_end:
-[[OPE_PRICEQUOTE.ITEM_ID.AINP]]
-rem --- Validate Item
-ivm01_dev=fnget_dev("IVM_ITEMMAST")
-dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-item_id$=callpoint!.getUserInput()
-maxl$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.ITEM_ID","MAXL")
-padc$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.ITEM_ID","PADC")
-if padc$="" padc$=" " else padc$=ath(padc$)
-padj$=callpoint!.getTableColumnAttribute("OPE_PRICEQUOTE.ITEM_ID","PADJ")
-if padj$="" padj$="L"
-item_id$=pad(item_id$,num(maxl$),padj$,padc$)
-if cvs(item_id$,2)<>""
-	readrecord(ivm01_dev,key=firm_id$+item_id$,dom=*next)ivm01a$;goto item_end
-	msg_id$="INVALID_ENTRY"
-	dim msg_tokens$[1]
-	msg_tokens$[1]="Item Number"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
-endif
-item_end:
 [[OPE_PRICEQUOTE.<CUSTOM>]]
 rem --- Build Pricing records
 build_arrays:
@@ -92,6 +49,7 @@ rem --- Display pricing table"
 	for x=1 to 10
 		price=0
 		percent=0
+		cost=ivm02a.unit_cost
 		if nfield(ivcprice$,"BREAK_QTY_"+str(x:"00"))<>0 or nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))<>0
 			percent=nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))
 			gosub determine_price
@@ -132,7 +90,7 @@ determine_price:
 		factor=percent/100
 		price=listprice-listprice*factor
 	endif
-	if ivcprice.iv_price_mth$="C"
+	if ivcprice.iv_price_mth$="M"
 		factor=100/(100-percent)
 		price=cost*factor
 	endif
@@ -142,7 +100,6 @@ rem --- Validate Warehouse for this Item
 ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"))ivm01a$
-
 ivm02_dev=fnget_dev("IVM_ITEMWHSE")
 dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
 valid_wh$="Y"
