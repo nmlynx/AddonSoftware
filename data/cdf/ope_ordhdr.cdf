@@ -175,7 +175,7 @@ rem -- Deal with which Ship To type
 	callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
 	callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
 	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
-	dim dctl$[9]
+	dim dctl$[10]
 	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -202,7 +202,7 @@ rem --- get default dates
 	user_tpl.def_commit$=stbl("OPE_DEF_COMMIT")
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- enable/disable expire date based on value
-	dim dctl$[9]
+	dim dctl$[10]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
 		dmap$="I"
@@ -232,8 +232,8 @@ rem --- enable/disable expire date based on value
 					dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 					read record(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 					precision num(ivs01a.precision$)
-					wh$=ope11a.warehouse_id$
-					item$=ope11a.item_id$
+REM jpb					wh$=ope11a.warehouse_id$
+REM jpb					item$=ope11a.item_id$
 					ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 					cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 					ord$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
@@ -282,7 +282,7 @@ rem --- enable/disable expire date based on value
 rem --- reset expiration date to enabled
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT","")
 	callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
-	dim dctl$[9]
+	dim dctl$[10]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	dmap$=""
 	gosub disable_ctls
@@ -436,7 +436,7 @@ return
 
 disable_ctls: rem --- disable selected control
 
-for dctl=1 to 9
+for dctl=1 to 10
 	dctl$=dctl$[dctl]
 	if cvs(dctl$,2)<>""
 		wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
@@ -462,6 +462,8 @@ disp_ord_tot:
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
 	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 	read record(ope11_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
@@ -473,12 +475,18 @@ disp_ord_tot:
 :			callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO") break
 		dim opc_linecode$:fattr(opc_linecode$)
 		read record(opc_linecode_dev,key=firm_id$+ope11a.line_code$,dom=*next)opc_linecode$
-		if pos(opc_linecode.line_type$="SNP") user_tpl.ord_tot=user_tpl.ord_tot+(ope11a.unit_price*ope11a.qty_ordered)
-		if opc_linecode.line_type$="O" user_tpl.ord_tot=user_tpl.ord_tot+ope11a.ext_price
-rem 0860 FIND (IVM01_DEV,KEY=N0$+W0$(33,20),DOM=0870)IOL=IVM01A
-rem 0865 IF D2$(8,1)="Y" AND Y0$(26,1)="Y" THEN LET W[7]=W[6]
-rem 0870 LET U[0]=U[0]+W[6],U[1]=U[1]+W[7],U[2]=U[2]+W[0]*W[4]
+		if pos(opc_linecode.line_type$="SNP")
+			user_tpl.ord_tot=user_tpl.ord_tot+(ope11a.unit_price*ope11a.qty_ordered)
 		endif
+		if opc_linecode.line_type$="O"
+			user_tpl.ord_tot=user_tpl.ord_tot+ope11a.ext_price
+		endif
+		dim ivm01a$:fattr(ivm01a$)
+		read record(ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$;
+:			if ivm01a.taxable_flag$="Y" and opc_linecode.taxable_flag$="Y" ope11a.taxable_amt=ope11a.ext_price
+rem		U[0]=U[0]+ope11a.ext_price
+rem		U[1]=U[1]+ope11a.taxable_amt
+rem		U[2]=U[2]+ope11a.unit_cost*ope11a.qty_shipped
 	wend
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(user_tpl.ord_tot))
 return
@@ -793,7 +801,7 @@ rem --- Populate address fields
 	ship_to_no$=rec_data.shipto_no$
 	ord_no$=rec_data.order_no$
 	gosub ship_to_info
-	dim dctl$[9]
+	dim dctl$[10]
 	dctl$[1]="<<DISPLAY>>.SNAME"
 	dctl$[2]="<<DISPLAY>>.SADD1"
 	dctl$[3]="<<DISPLAY>>.SADD2"
@@ -809,7 +817,7 @@ rem --- Populate address fields
 		dmap$="I"
 	endif
 	gosub disable_ctls
-	dim dctl$[9]
+	dim dctl$[10]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	if rec_data.invoice_type$<>"P"
 		dmap$="I"
@@ -877,7 +885,7 @@ rem --- see if blank warehouse exists
 	read record(num(open_chans$[28]),key=firm_id$+"C"+ivm10c.warehouse_id$,dom=*next)ivm10c$;rem blank_whse$="Y"
 
 rem --- disable display fields
-	dim dctl$[9]
+	dim dctl$[10]
 	dmap$="I"
 	dctl$[1]="<<DISPLAY>>.BADD1"
 	dctl$[2]="<<DISPLAY>>.BADD2"
@@ -887,7 +895,9 @@ rem --- disable display fields
 	dctl$[6]="<<DISPLAY>>.BSTATE"
 	dctl$[7]="<<DISPLAY>>.BZIP"
 	dctl$[8]="<<DISPLAY>>.ORDER_TOT"
-	if ars01a.job_nos$<>"Y" dctl$[9]="OPE_ORDHDR.JOB_NO"
+	if ars01a.job_nos$<>"Y" 
+		dctl$[9]="OPE_ORDHDR.JOB_NO"
+	endif
 	gosub disable_ctls
 	dmap$="I"
 	dctl$[1]="<<DISPLAY>>.SNAME"

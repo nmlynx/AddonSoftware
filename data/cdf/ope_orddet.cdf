@@ -1,3 +1,11 @@
+[[OPE_ORDDET.AUDE]]
+rem --- redisplay totals
+	gosub calc_grid_tots
+	gosub disp_totals
+[[OPE_ORDDET.ADEL]]
+rem --- redisplay totals
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.WAREHOUSE_ID.AVAL]]
 gosub set_avail
 [[OPE_ORDDET.QTY_BACKORD.BINP]]
@@ -177,7 +185,9 @@ calc_grid_tots:
 	if numrecs>0
 		for reccnt=0 to numrecs-1
 			gridrec$=recVect!.getItem(reccnt)
-			tamt=tamt+num(gridrec.ext_price$)
+			if callpoint!.getGridRowDeleteStatus(reccnt)<>"Y" 
+				tamt=tamt+num(gridrec.ext_price$)
+			endif
 		next reccnt
 		user_tpl.ord_tot=tamt
 	endif
