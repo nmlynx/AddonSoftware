@@ -6,10 +6,7 @@ endif
 [[POE_REQDET.AGDR]]
 po_line_code$=rec_data.po_line_code$
 if cvs(po_line_code$,2)<>"" then  
-    poc_linecode_dev=fnget_dev("POC_LINECODE")
-    dim poc_linecode$:fnget_tpl$("POC_LINECODE")
-    read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
-    callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
+    gosub update_line_type_info
 endif
 
 [[POE_REQDET.ITEM_ID.AINP]]
