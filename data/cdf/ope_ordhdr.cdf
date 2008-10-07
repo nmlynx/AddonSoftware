@@ -28,6 +28,7 @@ userObj!.addItem(mwin!.addStaticText(15103,295,25,75,15,"",$8000$))
 userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
 userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$0000$))
 userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
+userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$));rem Drop Ship text
 [[OPE_ORDHDR.BDEL]]
 rem --- remove committments for detail records by calling ATAMO
 	ope11_dev=fnget_dev("OPE_ORDDET")
@@ -294,6 +295,7 @@ rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
+	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 	gosub get_op_params
@@ -833,6 +835,7 @@ rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
+	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
 	num_files=33
@@ -932,7 +935,7 @@ rem --- Setup user_tpl$
 	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
 	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
 	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10),avail_oh:c(5),avail_comm:c(5),avail_avail:c(5),"
-	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),cur_row:n(5)"
+	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),dropship_flag:c(5*),ord_tot_1:c(5*),cur_row:n(5)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
@@ -945,4 +948,6 @@ rem --- Setup user_tpl$
 	user_tpl.avail_oo$="5"
 	user_tpl.avail_wh$="6"
 	user_tpl.avail_type$="7"
+	user_tpl.dropship_flag$="8"
+	user_tpl.ord_tot_1$="9"
 	user_tpl.cur_row=-1

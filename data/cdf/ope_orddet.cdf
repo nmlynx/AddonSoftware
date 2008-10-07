@@ -1,3 +1,20 @@
+[[OPE_ORDDET.EXT_PRICE.AVEC]]
+rem --- update header
+escape
+	gosub calc_grid_tots
+	gosub disp_totals
+[[OPE_ORDDET.UNIT_PRICE.AVAL]]
+rem --- Calc Extension
+	newqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	unit_price=num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	new_ext_price=newqty*unit_price
+
+	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
+	callpoint!.setStatus("MODIFIED-REFRESH")
+
+rem --- update header
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.AUDE]]
 rem --- redisplay totals
 	gosub calc_grid_tots
@@ -34,7 +51,7 @@ gosub set_avail
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
 	gosub disp_totals
-escape
+
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm01a$:fnget_tpl$("APT_ITEMMAST")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
@@ -115,14 +132,6 @@ rem		callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",rec_data.str(ext_price))
 		read record (opc_linecode_dev,key=firm_id$+line_code$,dom=*next)opc_linecode$
 		callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
 	endif
-[[OPE_ORDDET.QTY_SHIPPED.AVEC]]
-rem --- update header
-	gosub calc_grid_tots
-	gosub disp_totals
-[[OPE_ORDDET.QTY_BACKORD.AVEC]]
-rem --- update header
-	gosub calc_grid_tots
-	gosub disp_totals
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 rem ---recalc quantities and extended price
 	shipqty=num(callpoint!.getUserInput())
@@ -142,6 +151,10 @@ rem ---recalc quantities and extended price
 		callpoint!.setStatus("MODIFIED-REFRESH")
 	endif
 	user_tpl.line_shipqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+
+rem --- update header
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
 rem ---recalc quantities and extended price
 	newqty=num(callpoint!.getUserInput())
@@ -156,6 +169,10 @@ rem ---recalc quantities and extended price
 
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
+
+rem --- update header
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.QTY_BACKORD.AVAL]]
 rem ---recalc quantities and extended price
 	boqty=num(callpoint!.getUserInput())
@@ -176,6 +193,10 @@ rem ---recalc quantities and extended price
 		callpoint!.setStatus("MODIFIED-REFRESH")
 	endif
 	user_tpl.line_boqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
+
+rem --- update header
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.<CUSTOM>]]
 calc_grid_tots:
 	recVect!=GridVect!.getItem(0)
@@ -185,8 +206,15 @@ calc_grid_tots:
 	if numrecs>0
 		for reccnt=0 to numrecs-1
 			gridrec$=recVect!.getItem(reccnt)
-			if callpoint!.getGridRowDeleteStatus(reccnt)<>"Y" 
-				tamt=tamt+num(gridrec.ext_price$)
+			if callpoint!.getGridRowDeleteStatus(reccnt)<>"Y"
+				opc_linecode_dev=fnget_dev("OPC_LINECODE")
+				dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+				read record (opc_linecode_dev,key=firm_id$+gridrec.line_code$,dom=*next)opc_linecode$
+				if pos(opc_linecode$="SPN")
+					tamt=tamt+(gridrec.unit_price*gridrec.qty_ordered)
+				else
+					tamt=tamt+gridrec.ext_price
+				endif
 			endif
 		next reccnt
 		user_tpl.ord_tot=tamt
@@ -194,7 +222,7 @@ calc_grid_tots:
 return
 
 disp_totals: rem --- get context and ID of total amount display control, and redisplay w/ amts from calc_tots
-	tamt!=UserObj!.getItem(8)
+	tamt!=UserObj!.getItem(num(user_tpl.ord_tot_1$))
 	tamt!.setValue(user_tpl.ord_tot)
 return
 
@@ -308,6 +336,16 @@ set_avail:
 		userObj!.getItem(num(user_tpl.avail_oo$)).setText(avail$[4])
 		userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
 		userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
+		opc_linecode_dev=fnget_dev("OPC_LINECODE")
+		dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+		while 1
+			userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
+			readrecord(opc_linecode_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.LINE_CODE"),dom=*break)opc_linecode$
+			if opc_linecode.dropship$="Y"
+				userObj!.getItem(num(user_tpl.dropship_flag$)).setText("**Drop Ship**")
+			endif
+			break
+		wend
 	endif
 return
 
@@ -319,6 +357,7 @@ clear_avail:
 	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
+	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
 return
 
 rem --- Check to see if we're on a new row
