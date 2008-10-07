@@ -431,7 +431,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                       continued$=""
                       gosub customer_heading
 
-                      if comments=0 or col_format$="Y" break
+                      if comments$<>"Y" or col_format$="Y" break
 
                       rem --- Print customer comments
                                                      
