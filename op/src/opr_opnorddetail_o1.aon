@@ -471,7 +471,6 @@ label_six:
             xwk = fnblank(6)
         goto std_exit
 
-
 ord_header: rem --- Print Order Header
       
         prth$="Y"
@@ -483,8 +482,8 @@ ord_header: rem --- Print Order Header
         OutVect!.addItem(ope01a.customer_id$)
         OutVect!.addItem(arm01a.customer_name$)
         OutVect!.addItem(stat$+" "+ope01a.order_no$)
-        OutVect!.addItem(ope01a.order_date$)
-        OutVect!.addItem(ope01a.shipmnt_date$)
+        OutVect!.addItem(fndate$(ope01a.order_date$))
+        OutVect!.addItem(fndate$(ope01a.shipmnt_date$))
         OutVect!.addItem(ope01a.ord_taken_by$)
         OutVect!.addItem(ope01a.slspsn_code$)
         OutVect!.addItem(ope01a.customer_po_no$)
@@ -557,95 +556,86 @@ serial_lotted: rem --- Serialized/Lotted Inventory
 
 print_detail: rem --- Print Detail
 
-       ctrl=0
-       OutVect!.addItem(ope11a.line_no$+"   "+ope11a.line_code$+"     "+ ope11a.warehouse_id$)
-       
-              if opm02a.line_type$<>"M" then
-                   
-                    if opm02a.line_type$<>"O" then
-                            ctrl=1
-                            OutVect!.addItem(ope11a.product_type$)
-                            if pos(opm02a.line_type$="SP") then
-                                OutVect!.addItem("                           "+ope11a.item_id$)
-                            else
-                                OutVect!.addItem("")
-                            endif
-                            OutVect!.addItem(str(ope11a.qty_ordered:m2$))
-                            OutVect!.addItem(str(ope11a.qty_backord:m2$))
-                            OutVect!.addItem(str(ope11a.qty_shipped:m2$))
-                            OutVect!.addItem(str(ope11a.disc_percent:m9$)) 
-                            OutVect!.addItem(str(ope11a.unit_price:m4$))
-                            OutVect!.addItem(str(price:m1$))
-                            OutVect!.addItem(str(ope11a.unit_cost:m1$))
-                            OutVect!.addItem(str(cost:m4$))
-                            OutVect!.addItem(str(price-cost:m4$))
-                            OutVect!.addItem(str(fnd(price-cost,price):m9$))
-                            
-                             if opm02a.line_type$<>"O" then 
-                                xwk = fnblank(13)
-                            endif
-                    endif        
-           
-             endif
-
-              if ctrl=1 then
-                   xwk = fnblank(2)
-                   OutVect!.addItem(desc$) 
-                   xwk = fnblank(1)
-              else
-                   xwk = fnblank(12)
-                   xwk = fnblank(2)
-                   OutVect!.addItem(desc$) 
-                   xwk = fnblank(1)
-              endif
-              
-        if ope11a.est_shp_date$<>"   " and (ope11a.est_shp_date$<>ope01a.shipmnt_date$) and opm02a.line_type$<>"M" then
-
-                                                           OutVect!.addItem("Sched Ship Date: "+ fndate$(ope11a.est_shp_date$)) 
-       else
-         xwk = fnblank(1)
-       endif
-        
-        
-        if opm02a.line_type$="N" then 
-            
-             OutVect!.addItem(pol$)
-             xwk = fnblank(7)
-          else
-             xwk = fnblank(8)
-        endif
-        if pos(opm02a.line_type$="SP") and pos(ivs01a.lotser_flag$="SL") and ivm01a.lotser_item$="Y" then gosub serial_lotted
-        return
+    ctrl=0
+    OutVect!.addItem(ope11a.line_no$+"   "+ope11a.line_code$+"     "+ ope11a.warehouse_id$)
+    if opm02a.line_type$<>"M" then
+        if opm02a.line_type$<>"O" then
+            ctrl=1
+            OutVect!.addItem(ope11a.product_type$)
+            if pos(opm02a.line_type$="SP") then
+                OutVect!.addItem("                           "+ope11a.item_id$)
+            else
+                OutVect!.addItem("")
+            endif
+            OutVect!.addItem(str(ope11a.qty_ordered:m2$))
+            OutVect!.addItem(str(ope11a.qty_backord:m2$))
+            OutVect!.addItem(str(ope11a.qty_shipped:m2$))
+            OutVect!.addItem(str(ope11a.disc_percent:m9$)) 
+            OutVect!.addItem(str(ope11a.unit_price:m4$))
+            OutVect!.addItem(str(price:m1$))
+            OutVect!.addItem(str(ope11a.unit_cost:m1$))
+            OutVect!.addItem(str(cost:m4$))
+            OutVect!.addItem(str(price-cost:m4$))
+            OutVect!.addItem(str(fnd(price-cost,price):m9$))
+            if opm02a.line_type$<>"O" then 
+                xwk = fnblank(13)
+            endif
+        endif        
+    endif
+    if ctrl=1 then
+        xwk = fnblank(2)
+        OutVect!.addItem(desc$) 
+        xwk = fnblank(1)
+    else
+        xwk = fnblank(12)
+        xwk = fnblank(2)
+        OutVect!.addItem(desc$) 
+        xwk = fnblank(1)
+    endif
+    if ope11a.est_shp_date$<>"   " and (ope11a.est_shp_date$<>ope01a.shipmnt_date$) and opm02a.line_type$<>"M" then
+        OutVect!.addItem("Sched Ship Date: "+ fndate$(ope11a.est_shp_date$)) 
+    else
+        xwk = fnblank(1)
+    endif
+    if opm02a.line_type$="N" then 
+        OutVect!.addItem(pol$)
+        xwk = fnblank(7)
+    else
+        xwk = fnblank(8)
+    endif
+    if pos(opm02a.line_type$="SP") and pos(ivs01a.lotser_flag$="SL") and ivm01a.lotser_item$="Y" then 
+        gosub serial_lotted
+    endif    
+return
 
 get_cust: rem --- Find Customer
 
-        dim b1$(30),c[6]
-        arm01a.customer_name$="Not On File"
-        find record (arm01_dev,key=firm_id$+ope01a.customer_id$,dom=*next) arm01a$
-        find record (arm02_dev,key=firm_id$+ope01a.customer_id$+"  ",dom=*next) arm02a$
-        return
+    dim b1$(30),c[6]
+    arm01a.customer_name$="Not On File"
+    find record (arm01_dev,key=firm_id$+ope01a.customer_id$,dom=*next) arm01a$
+    find record (arm02_dev,key=firm_id$+ope01a.customer_id$+"  ",dom=*next) arm02a$
+return
 
 pos_for_nonstock: rem --- P/Os for non-stock items
 
-        pol$=""
-        pof$=""
-        if opm02a.line_type$<>"N" then return
-        pol$="Vnd:"+ope11a.vendor_id$
-        poe08a.vendor_id$=""
-        read record (poe08_dev,key=ope11a.firm_id$+ope11a.customer_id$+ope11a.order_no$+ope11a.line_no$,dom=*next) poe08a$
-        if (s8$="N" and poe08a.vendor_id$="") or s8$="A" or (s8$="P" and poe08a.vendor_id$<>"") then  pof$="Y"
-        if pos(s8$="AP") and poe08a.vendor_id$<>"" then  pol$="Vnd:"+poe08a.vendor_id$+" PO:"+poe08a.po_no$+"-"+poe08a.po_line_no$
-
-        return
+    pol$=""
+    pof$=""
+    if opm02a.line_type$<>"N" then return
+    pol$="Vnd:"+ope11a.vendor_id$
+    poe08a.vendor_id$=""
+    read record (poe08_dev,key=ope11a.firm_id$+ope11a.customer_id$+ope11a.order_no$+ope11a.line_no$,dom=*next) poe08a$
+    if (s8$="N" and poe08a.vendor_id$="") or s8$="A" or (s8$="P" and poe08a.vendor_id$<>"") then  pof$="Y"
+    if pos(s8$="AP") and poe08a.vendor_id$<>"" then  pol$="Vnd:"+poe08a.vendor_id$+" PO:"+poe08a.po_no$+"-"+poe08a.po_line_no$
+return
 
 
 get_terms_code: rem --- Terms Code 
 
-           dim w$(30)
-           w$="* Not On File *"
-           find record (arm10a_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
-           w$=arm10a.code_desc$
-           return
+    dim w$(30)
+    w$="* Not On File *"
+    find record (arm10a_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
+    w$=arm10a.code_desc$
+return
 
 rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
