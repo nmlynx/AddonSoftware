@@ -1,3 +1,5 @@
+[[OPS_PARAMS.AREC]]
+callpoint!.setColumnData("OPS_PARAMS.INV_HIST_FLG","Y")
 [[OPS_PARAMS.END_CMT_LINE.AVAL]]
 gosub validate_cmt_lines
 [[OPS_PARAMS.BEG_CMT_LINE.AVAL]]

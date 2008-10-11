@@ -1,3 +1,5 @@
+[[ARS_PARAMS.AREC]]
+callpoint!.setColumnData("ARS_PARAMS.INV_HIST_FLG","Y")
 [[ARS_PARAMS.BSHO]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
