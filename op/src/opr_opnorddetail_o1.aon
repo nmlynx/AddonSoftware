@@ -74,17 +74,17 @@ rem ---column heading
             columns = 12
             columns$[0,0]="Customer^Number",columns$[0,1]="C",columns$[0,2]="10"
             columns$[1,0]="Customer^Name",  columns$[1,1]="C",columns$[1,2]="15"
-            columns$[2,0]="Order^Number",   columns$[2,1]="N",columns$[2,2]="16", columns$[2,10]="T"
-            columns$[3,0]="Order Date",      columns$[3,1]="N",columns$[3,2]="8",  columns$[3,10]="T"
-            columns$[4,0]="Ship Date",       columns$[4,1]="N",columns$[4,2]="9",  columns$[4,10]="T"
-            columns$[5,0]="By",              columns$[5,1]="N",columns$[5,2]="8",  columns$[5,10]="T"
-            columns$[6,0]="Sls",             columns$[6,1]="N",columns$[6,2]="8",  columns$[6,10]="T"
+            columns$[2,0]="Order^Number",   columns$[2,1]="C",columns$[2,2]="16", columns$[2,10]="T"
+            columns$[3,0]="Order Date",      columns$[3,1]="C",columns$[3,2]="8",  columns$[3,10]="T"
+            columns$[4,0]="Ship Date",       columns$[4,1]="C",columns$[4,2]="9",  columns$[4,10]="T"
+            columns$[5,0]="By",              columns$[5,1]="C",columns$[5,2]="8",  columns$[5,10]="T"
+            columns$[6,0]="Sls",             columns$[6,1]="C",columns$[6,2]="8",  columns$[6,10]="T"
             columns$[7,0]="P.O  Number",     columns$[7,1]="C",columns$[7,2]="10"
-            columns$[8,0]="Ship Via",        columns$[8,1]="N",columns$[8,2]="10",  columns$[8,10]="T"
+            columns$[8,0]="Ship Via",        columns$[8,1]="C",columns$[8,2]="10",  columns$[8,10]="T"
             columns$[9,0]="Dist Code",       columns$[9,1]="C",columns$[9,2]="8"
-            columns$[10,0]="Terms",          columns$[10,1]="N",columns$[10,2]="15",columns$[10,10]="T"
-            columns$[11,0]="Tax Code",       columns$[11,1]="N",columns$[11,2]="8", columns$[11,10]="T"
-            columns$[12,0]="Prntd",          columns$[12,1]="N",columns$[12,2]="8", columns$[12,10]="T"
+            columns$[10,0]="Terms",          columns$[10,1]="C",columns$[10,2]="15",columns$[10,10]="T"
+            columns$[11,0]="Tax Code",       columns$[11,1]="C",columns$[11,2]="8", columns$[11,10]="T"
+            columns$[12,0]="Prntd",          columns$[12,1]="C",columns$[12,2]="8", columns$[12,10]="T"
 
 rem --- Headings
         
@@ -341,11 +341,11 @@ rem --- Invoice Totals
                  TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
                  xwk = fnblank(7)
                  OutVect!.addItem("Total For Order")
-                 OutVect!.addItem(str(s[0]:m1$))
+                 OutVect!.addItem(str(s[0]:m1$)+$00$+"R")
                  xwk = fnblank(1)
-                 OutVect!.addItem(str(s[1]:m1$))
-                 OutVect!.addItem(str(s[0]-s[1]:m1$))
-                 OutVect!.addItem(str(fnd(s[0]-s[1],s[0]):m9$))
+                 OutVect!.addItem(str(s[1]:m1$)+$00$+"R")
+                 OutVect!.addItem(str(s[0]-s[1]:m1$)+$00$+"R")
+                 OutVect!.addItem(str(fnd(s[0]-s[1],s[0]):m9$)+$00$+"R")
 
             endif
 
@@ -366,11 +366,11 @@ end_of_report: rem --- Order Totals
                  OutVect!.addItem(str(u2)+" "+" Orders Listed")
                  xwk = fnblank(6)
                  OutVect!.addItem("Totals For Report")
-                 OutVect!.addItem(str(u[0]:m1$))
+                 OutVect!.addItem(str(u[0]:m1$)+$00$+"R")
                  xwk = fnblank(1)
-                 OutVect!.addItem(str(u[1]:m1$))
-                 OutVect!.addItem(str(u[0]-u[1]:m1$))
-                 OutVect!.addItem(str(fnd(u[0]-u[1],u[0]):m9$))
+                 OutVect!.addItem(str(u[1]:m1$)+$00$+"R")
+                 OutVect!.addItem(str(u[0]-u[1]:m1$)+$00$+"R")
+                 OutVect!.addItem(str(fnd(u[0]-u[1],u[0]):m9$)+$00$+"R")
 rem --- Product Totals
 
         if t9$<>"" then
@@ -395,11 +395,11 @@ rem --- Print Product Types
                
                 OutVect!.addItem(t9$(i,3)+"  "+ivm10a.code_desc$)
                 xwk = fnblank(1)
-                OutVect!.addItem(str(t9[x0,3]:m2$))
-                OutVect!.addItem(str(t9[x0,0]:m1$))
-                OutVect!.addItem(str(t9[x0,1]:m1$))
-                OutVect!.addItem(str(t9[x0,0]-t9[x0,1]:m1$))
-                OutVect!.addItem(str(fnd(t9[x0,0]-t9[x0,1],t9[x0,0]):m9$))
+                OutVect!.addItem(str(t9[x0,3]:m2$)+$00$+"R")
+                OutVect!.addItem(str(t9[x0,0]:m1$)+$00$+"R")
+                OutVect!.addItem(str(t9[x0,1]:m1$)+$00$+"R")
+                OutVect!.addItem(str(t9[x0,0]-t9[x0,1]:m1$)+$00$+"R")
+                OutVect!.addItem(str(fnd(t9[x0,0]-t9[x0,1],t9[x0,0]):m9$)+$00$+"R")
                 xwk = fnblank(6)
 
                 t[0]=t[0]+t9[x0,0]
@@ -415,11 +415,11 @@ rem --- Report Totals
                 TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
                 OutVect!.addItem("Totals For Report")
                 xwk = fnblank(1)
-                OutVect!.addItem(str(t[3]:m2$))
-                OutVect!.addItem(str(t[0]:m1$))
-                OutVect!.addItem(str(t[1]:m1$))
-                OutVect!.addItem(str(t[0]-t[1]:m1$))
-                OutVect!.addItem(str(fnd(t[0]-t[1],t[0]):m9$))
+                OutVect!.addItem(str(t[3]:m2$)+$00$+"R")
+                OutVect!.addItem(str(t[0]:m1$)+$00$+"R")
+                OutVect!.addItem(str(t[1]:m1$)+$00$+"R")
+                OutVect!.addItem(str(t[0]-t[1]:m1$)+$00$+"R")
+                OutVect!.addItem(str(fnd(t[0]-t[1],t[0]):m9$)+$00$+"R")
                 xwk = fnblank(6)
         endif
 
@@ -433,22 +433,22 @@ label_six:
              xwk = fnblank(13)
              OutVect!.addItem("Line Type")
              xwk = fnblank(1)
-             OutVect!.addItem("   Order")
-             OutVect!.addItem("   B/O")
-             OutVect!.addItem("   Ship")
-             OutVect!.addItem("   Sales")
-             OutVect!.addItem("   Cost")
+             OutVect!.addItem("Order "+$00$+"R")
+             OutVect!.addItem("B/O "+$00$+"R")
+             OutVect!.addItem("Ship "+$00$+"R")
+             OutVect!.addItem("Sales "+$00$+"R")
+             OutVect!.addItem("Cost "+$00$+"R")
              xwk = fnblank(6)
              xwk = fnblank(13)
         for i=0 to 2
             if r[i,0]=0 and r[i,1]=0 and r[i,2]=0 and r[i,3]=0 and r[i,4]=0 then continue
             OutVect!.addItem(lines$[i])
             xwk = fnblank(1)
-            OutVect!.addItem(str(r[i,2]:m2$))
-            OutVect!.addItem(str(r[i,3]:m2$))
-            OutVect!.addItem(str(r[i,4]:m2$))
-            OutVect!.addItem(str(r[i,0]:m1$))
-            OutVect!.addItem(str(r[i,1]:m1$))
+            OutVect!.addItem(str(r[i,2]:m2$)+$00$+"R")
+            OutVect!.addItem(str(r[i,3]:m2$)+$00$+"R")
+            OutVect!.addItem(str(r[i,4]:m2$)+$00$+"R")
+            OutVect!.addItem(str(r[i,0]:m1$)+$00$+"R")
+            OutVect!.addItem(str(r[i,1]:m1$)+$00$+"R")
             xwk = fnblank(6)
             t[0]=t[0]+r[i,0]
             t[1]=t[1]+r[i,1]
@@ -457,7 +457,7 @@ label_six:
         if r[3,0]<>0 then
                  OutVect!.addItem("Other Charges")
                  xwk = fnblank(4)
-                 OutVect!.addItem(str(r[3,0]:m1$))
+                 OutVect!.addItem(str(r[3,0]:m1$)+$00$+"R")
                  xwk = fnblank(7)
             t[0]=t[0]+r[3,0]
         endif
@@ -466,8 +466,8 @@ label_six:
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             OutVect!.addItem("Totals For Report")
             xwk = fnblank(4)
-            OutVect!.addItem(str(t[0]:m1$))
-            OutVect!.addItem(str(t[1]:m1$))
+            OutVect!.addItem(str(t[0]:m1$)+$00$+"R")
+            OutVect!.addItem(str(t[1]:m1$)+$00$+"R")
             xwk = fnblank(6)
         goto std_exit
 
@@ -503,16 +503,16 @@ ord_header: rem --- Print Order Header
         OutVect!.addItem("Ln    Cd    Whs")
         OutVect!.addItem("Prd")
         OutVect!.addItem("Item")
-        OutVect!.addItem("  Order")
-        OutVect!.addItem("   Back Order")
-        OutVect!.addItem("   Ship")
-        OutVect!.addItem("   Disc pct")
-        OutVect!.addItem("    Price")
-        OutVect!.addItem("Extended Price")
-        OutVect!.addItem("Cost"+$00$+"R")
-        OutVect!.addItem("Extended Cost")
-        OutVect!.addItem("    Profit")
-        OutVect!.addItem("    GP%")
+        OutVect!.addItem("Order "+$00$+"R")
+        OutVect!.addItem("Back Order "+$00$+"R")
+        OutVect!.addItem("Ship "+$00$+"R")
+        OutVect!.addItem("Disc pct"+$00$+"R")
+        OutVect!.addItem("Price "+$00$+"R")
+        OutVect!.addItem("Ext. Price "+$00$+"R")
+        OutVect!.addItem("Cost "+$00$+"R")
+        OutVect!.addItem("Extended Cost "+$00$+"R")
+        OutVect!.addItem("Profit "+$00$+"R")
+        OutVect!.addItem("GP%"+$00$+"R")
 
         return
 
@@ -524,11 +524,11 @@ prod_subtotals: rem --- Product subtotals heading
             xwk = fnblank(13)
             OutVect!.addItem("Product")
             xwk = fnblank(1)
-            OutVect!.addItem("   Units")
-            OutVect!.addItem("   Sales")
-            OutVect!.addItem("   Cost")
-            OutVect!.addItem("   Profit")
-            OutVect!.addItem("   GP%")
+            OutVect!.addItem("Units "+$00$+"R")
+            OutVect!.addItem("Sales "+$00$+"R")
+            OutVect!.addItem("Cost "+$00$+"R")
+            OutVect!.addItem("Profit "+$00$+"R")
+            OutVect!.addItem("GP%"+$00$+"R")
             xwk = fnblank(6)
             xwk = fnblank(13)
         return
@@ -544,10 +544,10 @@ serial_lotted: rem --- Serialized/Lotted Inventory
 
                 OutVect!.addItem(x2$," ",ope21a_key.sequence_no$," ",ope21a.lotser_no$)
                 xwk = fnblank(2)
-                OutVect!.addItem(str(ope21a.qty_shipped:m2$))
-                OutVect!.addItem(str(ope21a.qty_shipped:m2$))
+                OutVect!.addItem(str(ope21a.qty_shipped:m2$)+$00$+"R")
+                OutVect!.addItem(str(ope21a.qty_shipped:m2$)+$00$+"R")
                 xwk = fnblank(4)
-                OutVect!.addItem(str(ope21a.unit_cost:m3$))
+                OutVect!.addItem(str(ope21a.unit_cost:m3$)+$00$+"R")
                 xwk = fnblank(3)
             l=l+1
         wend    
@@ -563,23 +563,20 @@ print_detail: rem --- Print Detail
             ctrl=1
             OutVect!.addItem(ope11a.product_type$)
             if pos(opm02a.line_type$="SP") then
-                OutVect!.addItem("                           "+ope11a.item_id$)
+                OutVect!.addItem(ope11a.item_id$)
             else
                 OutVect!.addItem("")
             endif
-            OutVect!.addItem(str(ope11a.qty_ordered:m2$))
-            OutVect!.addItem(str(ope11a.qty_backord:m2$))
-            OutVect!.addItem(str(ope11a.qty_shipped:m2$))
-            OutVect!.addItem(str(ope11a.disc_percent:m9$)) 
-            OutVect!.addItem(str(ope11a.unit_price:m4$))
-            OutVect!.addItem(str(price:m1$))
+            OutVect!.addItem(str(ope11a.qty_ordered:m2$)+$00$+"R")
+            OutVect!.addItem(str(ope11a.qty_backord:m2$)+$00$+"R")
+            OutVect!.addItem(str(ope11a.qty_shipped:m2$)+$00$+"R")
+            OutVect!.addItem(str(ope11a.disc_percent:m9$)+$00$+"R") 
+            OutVect!.addItem(str(ope11a.unit_price:m4$)+$00$+"R")
+            OutVect!.addItem(str(price:m1$)+$00$+"R")
             OutVect!.addItem(str(ope11a.unit_cost:m1$)+$00$+"R")
-            OutVect!.addItem(str(cost:m4$))
-            OutVect!.addItem(str(price-cost:m4$))
-            OutVect!.addItem(str(fnd(price-cost,price):m9$))
-            if opm02a.line_type$<>"O" then 
-                xwk = fnblank(13)
-            endif
+            OutVect!.addItem(str(cost:m4$)+$00$+"R")
+            OutVect!.addItem(str(price-cost:m4$)+$00$+"R")
+            OutVect!.addItem(str(fnd(price-cost,price):m9$)+$00$+"R")
         endif        
     endif
     if ctrl=1 then
