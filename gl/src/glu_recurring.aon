@@ -58,6 +58,7 @@ rem --- Initializations
     more=1
     moredetail=1
     yyyymm$=sysinfo.system_date$(1,6)
+    if postper$<>"" then let yyyymm$=postper$;rem "override sys dt w/ post yr/per specified by user
 
 rem --- Options
 
