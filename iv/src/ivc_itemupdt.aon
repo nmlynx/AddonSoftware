@@ -33,10 +33,12 @@ rem --- [41] = ivt-01 (IVT_LSTRANS), (needed for lot/serial)
 rem --- [42] = ivt-02 (IVX_LSCUST), (needed for lot/serial)
 rem --- [43] = ivt-03 (IVX_LSVEND), (needed for lot/serial)
 rem --- [44] = ivt-04 (IVT_ITEMTRAN), 
-rem --- IVS01A$    : IV Parameter record, (input/output)
+rem --- IVS01A$    : IV Parameter record, (input)
 rem --- ITEMS$[n]  : Item Information (input)
-rem --- [0] = Firm ID        [2] = Item Number
-rem --- [1] = Warehouse ID   [3] = Lot/Serial Number
+rem --- [0] = Firm ID			(not used) the firm now comes from sysinfo$
+rem --- [1] = Warehouse ID   
+rem --- [2] = Item Number
+rem --- [3] = Lot/Serial Number	(optional)
 rem --- REFS$[n]   : Reference Information (input)
 rem --- [0] = Date             [7] = GL Account Number
 rem --- [1] = Reference 1      [8] = Transaction Comment
@@ -46,9 +48,12 @@ rem --- [4] = Reference 4     [11] = Lot/Serial Comment
 rem --- [5] = Sequence Nbr    [12] = Drop Ship Flag
 rem --- [6] = OP/PO Line Code
 rem --- REFS[n]    : Reference Information (input)
-rem --- [0] = Quantity       [3] = Actual Lead Time
-rem --- [1] = Unit Cost      [4] = Landed Cost
-rem --- [2] = Unit Price     [5] = Physical Count
+rem --- [0] = Quantity       
+rem --- [1] = Unit Cost			(input/output)
+rem --- [2] = Unit Price     
+rem --- [3] = Actual Lead Time
+rem --- [4] = Landed Cost
+rem --- [5] = Physical Count
 rem --- STATUS     : Status Code (Returned)
 rem 
 rem --- Use initialization label to open files and set arays
@@ -67,8 +72,6 @@ rem * status            - returns zero for no error
     setesc std_error
     enter action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],status
 	
-	escape; rem debug
-
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -128,6 +131,7 @@ rem --- Dimension string templates
 	dim ivt02a$:templates$[9]
 	dim ivt03a$:templates$[10]
 	dim ivt04a$:templates$[11]
+	ivt04a_tpl$ = templates$[11]
 
 rem --- Parameters
 
@@ -175,6 +179,7 @@ rem --- Validate arguments
     last$[6]="LSTXIN_DATE"
     last$[7]="LSTXOT_DATE"
     last$[8]="LSTRET_DATE"
+	
     dim action$[8]
     action$[1]="QTY_RECEIVED"
     action$[2]="QTY_BUILT"
@@ -184,6 +189,7 @@ rem --- Validate arguments
     action$[6]="QTY_XFER_IN"
     action$[7]="QTY_XFER_OUT"
     action$[8]="QTY_RETURNED"
+	
     if pos(action$="IRRC",2) then last=1
     if pos(action$="BOWO",2) then last=2
     if action$="OP" then if qty>0 then last=8 else last=3
@@ -219,15 +225,18 @@ rem --- ivm-02 Warehouse
     avg=12
     commit=2
     curfile=ivm02_dev
-	action=0
     gosub update_comtd_on_order
     if action then gosub update_whse_lots
 
 rem --- Adjust remaining fields
 
     location$=ivm02a.location$
-    if action$="PI" ivm02a.landed_cost=refs[4]
-    if action$="PH" and cvs(lotser$,2)="" ivm02a.lstphy_date$=ymd$,ivm02a.select_phys$="N",ivm02a.physical_cnt=refs[5]
+    if action$="PI" then ivm02a.landed_cost=refs[4]
+    if action$="PH" and cvs(lotser$,2)="" then 
+		ivm02a.lstphy_date$=ymd$
+		ivm02a.select_phys$="N"
+		ivm02a.physical_cnt=refs[5]
+	endif
     ivm02a$=field(ivm02a$)
     write record (ivm02_dev) ivm02a$
 
@@ -364,7 +373,7 @@ update_item_vendor: rem --- ivm-05 Vendor Information
     
 rem --- ivm-12 Inventory Activity
 
-    if pos(action$="ICPOOECOUCTAOOPI",2)=0 then
+    if pos(action$="IC,PO,OE,CO,UC,TA,OO,PI",3)=0 then
 	    ivm12a.firm_id$=firm_id$
 		ivm12a.warehouse_id$=whse$
 		ivm12a.item_id$=item$
@@ -372,7 +381,7 @@ rem --- ivm-12 Inventory Activity
 		ivm12a.period$=period$
 	    amount=qty
 		
-	    if pos(action$="BIIIWI",2) then 
+	    if pos(action$="BI,II,WI",3) then 
 			amount=-qty
 		else
 			if pos(action$="OPTO",2) then
@@ -399,15 +408,24 @@ rem --- ivm-12 Inventory Activity
 
 rem --- ivt-04 Inventory Transactions
 
-    if pos(action$="IC,PO,OE,CO,UC,TA,OO,PI",3) goto update_lot_serial
+    if pos(action$="IC,PO,OE,CO,UC,TA,OO,PI",3) then goto update_lot_serial
 
     ivt04a.firm_id$=firm_id$
 	ivt04a.warehouse_id$=whse$
 	ivt04a.item_id$=item$
 	ivt04a.trans_date$=ymd$
 	
+	dim k$:ivt04a_tpl$
     k$=keyp(ivt04_dev,end=write_trans_rec)
-    if pos(ivt04a.firm_id$+ivt04a.warehouse_id$+ivt04a.item_id$+ivt04a.trans_date$=k$)<>1 goto write_trans_rec
+	
+	if	k.firm_id$      <> ivt04a.firm_id$ or 
+:		k.warehouse_id$ <> ivt04a.warehouse_id$ or 
+:		k.item_id$      <> ivt04a.item_id$ or 
+:		k.trans_date$   <> ivt04a.trans_date$ 
+:	then 
+		goto write_trans_rec
+	endif
+	
     read record (ivt04_dev,key=k$,dom=write_trans_rec) ivt04a$
 
 rem --- Update existing ivt-04 record
@@ -486,7 +504,6 @@ update_lot_master: rem --- Update lot/serial master
     unit=3
     avg=4
     curfile=ivm07_dev
-	action=0
     gosub update_comtd_on_order
     if action then gosub update_whse_lots
     if action$="PH" then ivm07a.lstphy_date$=ymd$,ivm07.physical_cnt=refs[5]
@@ -497,7 +514,7 @@ update_lot_master: rem --- Update lot/serial master
 
 update_lot_act: rem --- ivm-17 Lot/Serial Activity
 
-    if pos(action$="ICPOOEOOCOUCTAPI",2)=0 then 
+    if pos(action$="IC,PO,OE,OO,CO,UC,TA,PI",3)=0 then 
 	    ivm17a.firm_id$=firm_id$
 		ivm17a.warehouse_id$=whse$
 		ivm17a.item_id$=item$
@@ -506,7 +523,7 @@ update_lot_act: rem --- ivm-17 Lot/Serial Activity
 		ivm17a.period$=period$
 	    amount=qty
 		
-	    if pos(action$="BIIIWI",2) then 
+	    if pos(action$="BI,II,WI",3) then 
 			amount=-qty
 		else
 			if pos(action$="OPTO",2) then 
@@ -520,9 +537,7 @@ update_lot_act: rem --- ivm-17 Lot/Serial Activity
 	    if action=0 then 
 			ivm17a.beg_balance=amount
 		else
-			if action>0 then 
-				field ivm17a$, action$[action] = str( nfield(ivm17a$,action$[action]) + amount )
-			endif
+			field ivm17a$, action$[action] = str( nfield(ivm17a$,action$[action]) + amount )
 		endif
 		
 	    ivm17a$=field(ivm17a$)
@@ -533,7 +548,7 @@ lot_serial_trans: rem --- ivt-01 Lot/Serial Transactions
 
     if ls=0 goto done
 	
-    if pos(action$="ICPOOECOUCTAOOPI",2)=0 then
+    if pos(action$="IC,PO,OE,CO,UC,TA,OO,PI",3)=0 then
 	    if qty=0 and action$<>"BB" goto done
 	    ivt01a.firm_id$=firm_id$
 		ivt01a.warehouse_id$=whse$
@@ -669,7 +684,7 @@ update_comtd_on_order: rem --- Update IVM-02/IVM-07 committed and on order
 	endif
 	
     if !(dropship) then 
-		if pos(action$="COICIIOEOPTOWI",2) then 
+		if pos(action$="CO,IC,II,OE,OP,TO,WI",3) then 
 			ivmwk.qty_commit=ivmwk.qty_commit+qty
 		else 
 			if action$="UC" then 
@@ -718,11 +733,13 @@ update_whse_lots: rem --- ivm-02 Warehouse/IVM-07 Lot/Serial Number Updates
 
 rem --- Recalculate average cost
 
-    amount=(ivmwk.qty_on_hand*ivmwk.avg_cost)+(qty*cost),number=ivmwk.qty_on_hand+qty,x=ivmwk.avg_cost
-    if number>0 ivmwk.avg_cost=amount/number
-    if ivmwk.avg_cost=0 ivmwk.avg_cost=x
-    if ivmwk.avg_cost<0 ivmwk.avg_cost=cost
-    if ivmwk.qty_on_hand<=0 ivmwk.avg_cost=cost 
+    amount=(ivmwk.qty_on_hand*ivmwk.avg_cost)+(qty*cost)
+	number=ivmwk.qty_on_hand+qty
+	hold_cost=ivmwk.avg_cost
+    if number>0 then ivmwk.avg_cost=amount/number
+    if ivmwk.avg_cost=0 then ivmwk.avg_cost=hold_cost
+    if ivmwk.avg_cost<0 then ivmwk.avg_cost=cost
+    if ivmwk.qty_on_hand<=0 then ivmwk.avg_cost=cost 
 
 rem --- Set replacement cost
 	
