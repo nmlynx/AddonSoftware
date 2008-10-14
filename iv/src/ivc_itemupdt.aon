@@ -8,7 +8,7 @@ rem  |  Copyright (c) 1981-2006 AddonSoftware  |
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-rem --- enter statement data:
+rem --- Enter statement data:
 rem --- ACTION$    : Transaction Type (input)
 rem --- BB       = Beginning Balance
 rem --- BI/BO    = BOM Production Entry (BI=Issue/BO=Receipt)
@@ -24,16 +24,16 @@ rem --- CHANNELS[n]: Channel Numbers (input)
 rem --- [0] = gls-01 (GLS_PARAM)
 rem --- [1] = ivm-01 (IVM_ITEMMAST)
 rem --- [2] = ivm-02 (IVM_ITEMWHSE)
-rem --- [4] = ivm-04 (IVM_ITEMTIER), optional (needed for lifo/fifo)
-rem --- [5] = ivm-05 (IVM_ITEMVEND), optional
-rem --- [7] = ivm-07 (IVM_LSMASTER), optional (needed for lot/serial)
-rem --- [12] = ivm-12 (IVM_ITEMACT), optional
-rem --- [17] = ivm-17 (IVM_LSACT), optional (needed for lot/serial)
-rem --- [41] = ivt-01 (IVT_LSTRANS), optional (needed for lot/serial)
-rem --- [42] = ivt-02 (IVX_LSCUST), optional (needed for lot/serial)
-rem --- [43] = ivt-03 (IVX_LSVEND), optional (needed for lot/serial)
-rem --- [44] = ivt-04 (IVT_ITEMTRAN), optional
-rem --- IVS01A$    : IV Parameter record, optional (input/output)
+rem --- [4] = ivm-04 (IVM_ITEMTIER), (needed for lifo/fifo)
+rem --- [5] = ivm-05 (IVM_ITEMVEND), 
+rem --- [7] = ivm-07 (IVM_LSMASTER), (needed for lot/serial)
+rem --- [12] = ivm-12 (IVM_ITEMACT), 
+rem --- [17] = ivm-17 (IVM_LSACT), (needed for lot/serial)
+rem --- [41] = ivt-01 (IVT_LSTRANS), (needed for lot/serial)
+rem --- [42] = ivt-02 (IVX_LSCUST), (needed for lot/serial)
+rem --- [43] = ivt-03 (IVX_LSVEND), (needed for lot/serial)
+rem --- [44] = ivt-04 (IVT_ITEMTRAN), 
+rem --- IVS01A$    : IV Parameter record, (input/output)
 rem --- ITEMS$[n]  : Item Information (input)
 rem --- [0] = Firm ID        [2] = Item Number
 rem --- [1] = Warehouse ID   [3] = Lot/Serial Number
@@ -50,10 +50,24 @@ rem --- [0] = Quantity       [3] = Actual Lead Time
 rem --- [1] = Unit Cost      [4] = Landed Cost
 rem --- [2] = Unit Price     [5] = Physical Count
 rem --- STATUS     : Status Code (Returned)
+rem 
+rem --- Use initialization label to open files and set arays
+rem
+rem call "ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+rem 
+rem * channels[all]     - returns the references to all open files
+rem * ivs01a$           - returns the IV parameter record
+rem * items$[all]       - returns empty, set to the correct number of elements
+rem * refs$[all]        - same 
+rem * refs[all]         - same
+rem * table_chans$[all] - a Barista standard array, do not modify
+rem * status            - returns zero for no error
 
     seterr std_error
     setesc std_error
     enter action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],status
+	
+	escape; rem debug
 
 rem --- Retrieve the program path
 
@@ -88,15 +102,15 @@ rem --- Retrieve miscellaneous templates
     dim ids$[files],templates$[files]
     ids$[1]="IVM_ITEMMAST"
     ids$[2]="IVM_ITEMWHSE"
-    if ivm04_dev then ids$[3]="IVM_ITEMTIER"
-    if ivm05_dev then ids$[4]="IVM_ITEMVEND"
-    if ivm07_dev then ids$[5]="IVM_LSMASTER"
-    if ivm12_dev then ids$[6]="IVM_ITEMACT"
-    if ivm17_dev then ids$[7]="IVM_LSACT"
-    if ivt01_dev then ids$[8]="IVT_LSTRANS"
-    if ivt02_dev then ids$[9]="IVX_LSCUST"
-    if ivt03_dev then ids$[10]="IVX_LSVEND"
-    if ivt04_dev then ids$[11]="IVT_ITEMTRAN"
+    ids$[3]="IVM_ITEMTIER"
+    ids$[4]="IVM_ITEMVEND"
+    ids$[5]="IVM_LSMASTER"
+    ids$[6]="IVM_ITEMACT"
+    ids$[7]="IVM_LSACT"
+    ids$[8]="IVT_LSTRANS"
+    ids$[9]="IVX_LSCUST"
+    ids$[10]="IVX_LSVEND"
+    ids$[11]="IVT_ITEMTRAN"
 
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
     if status goto std_exit
@@ -105,46 +119,17 @@ rem --- Dimension string templates
 
     dim ivm01a$:templates$[1]
 	dim ivm02a$:templates$[2]
-	if ivm04_dev then dim ivm04a$:templates$[3]
-	if ivm05_dev then dim ivm05a$:templates$[4]
-	if ivm07_dev then dim ivm07a$:templates$[5]
-	if ivm12_dev then dim ivm12a$:templates$[6]
-	if ivm17_dev then dim ivm17a$:templates$[7]
-	if ivt01_dev then dim ivt01a$:templates$[8]
-	if ivt02_dev then dim ivt02a$:templates$[9]
-	if ivt03_dev then dim ivt03a$:templates$[10]
-	if ivt04_dev then dim ivt04a$:templates$[11]
+	dim ivm04a$:templates$[3]
+	dim ivm05a$:templates$[4]
+	dim ivm07a$:templates$[5]
+	dim ivm12a$:templates$[6]
+	dim ivm17a$:templates$[7]
+	dim ivt01a$:templates$[8]
+	dim ivt02a$:templates$[9]
+	dim ivt03a$:templates$[10]
+	dim ivt04a$:templates$[11]
 
-rem --- Was ivs01a$ passed?  If not, get it	
-	
-	ignore$ = fattr(ivs01a$,err=parameters)
-	num_files=5
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
-	call pgmdir$+"bac_open_tables.bbj",
-:		open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
-
-	if open_status$<>"" then
-		msg_id$="ENTRY_OPEN_ERROR"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=open_status$
-		call pgmdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-		goto std_exit
-	endif
-	
-	ivs01_dev = num( open_chans$[1] )
-	dim ivs01a_tpl$:open_tpls$[1]
-	find record(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params)ivs01a$
-
-parameters: rem --- Parameters
+rem --- Parameters
 
     dim p[5]
     p[0]=num(ivs01a.item_id_len$)
@@ -907,5 +892,92 @@ std_exit: rem --- Standard called program exit (01Mar2006)
 
     exit
 rem #endinclude std_exit.src
+
+
+init: rem --- Basic initializations for the caller
+
+    seterr std_error
+    setesc std_error
+    enter chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+rem --- Inits
+
+	status = 0
+	addr pgm(-2),err=*next
+	dim chan[44],items$[3],refs$[12],refs[5]
+	sypdir$ = stbl("+DIR_SYP")
+	
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+	
+rem --- Open all files
+
+	num_files=13
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="IVS_PARAMS",    open_opts$[1]="OTA"
+	open_tables$[2]="GLS_PARAMS",    open_opts$[2]="OTA"
+	open_tables$[3]="IVM_ITEMMAST",  open_opts$[3]="OTA"
+	open_tables$[4]="IVM_ITEMWHSE",  open_opts$[4]="OTA"
+	open_tables$[5]="IVM_ITEMTIER",  open_opts$[5]="OTA"
+	open_tables$[6]="IVM_ITEMVEND",  open_opts$[6]="OTA"
+	open_tables$[7]="IVM_LSMASTER",  open_opts$[7]="OTA"
+	open_tables$[8]="IVM_ITEMACT",   open_opts$[8]="OTA"
+	open_tables$[9]="IVM_LSACT",     open_opts$[9]="OTA"
+	open_tables$[10]="IVT_LSTRANS",  open_opts$[10]="OTA"
+	open_tables$[11]="IVX_LSCUST",   open_opts$[11]="OTA"
+	open_tables$[12]="IVX_LSVEND",   open_opts$[12]="OTA"
+	open_tables$[13]="IVT_ITEMTRAN", open_opts$[13]="OTA"
+	
+	call sypdir$+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		status=912
+		goto init_exit
+	endif
+
+rem --- Update chan with references to the open files
+	
+	ivs01_dev = num( open_chans$[1] )
+	chan[0]   = num( open_chans$[2] )
+	chan[1]   = num( open_chans$[3] )
+	chan[2]   = num( open_chans$[4] )
+	chan[4]   = num( open_chans$[5] )
+	chan[5]   = num( open_chans$[6] )
+	chan[7]   = num( open_chans$[7] )
+	chan[12]  = num( open_chans$[8] )
+	chan[17]  = num( open_chans$[9] )
+	chan[41]  = num( open_chans$[10] )
+	chan[42]  = num( open_chans$[11] )
+	chan[43]  = num( open_chans$[12] )
+	chan[44]  = num( open_chans$[13] )
+	
+rem --- Was ivs01a$ passed?  If not, get it	
+	
+	ivs01a_tpl$ = ""
+	ivs01a_tpl$ = fattr(ivs01a$,err=*next)
+	
+	if ivs01a_tpl$ <> open_tpls$[1] then 
+		dim ivs01a$:open_tpls$[1]
+		find record(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params)ivs01a$	
+	endif
+	
+init_exit: rem --- Init Done
+
+	exit
 
     end
