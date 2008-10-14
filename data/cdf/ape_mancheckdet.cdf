@@ -1,3 +1,8 @@
+[[APE_MANCHECKDET.AUDE]]
+rem --- Recalc totals for header
+
+	gosub calc_tots
+	gosub disp_tots
 [[APE_MANCHECKDET.BDEL]]
 rem --- need to delete the GL dist recs here (but don't try if nothing in grid row/rec_data$)
 
@@ -178,7 +183,7 @@ calc_tots:
 	if numrecs>0
 		for reccnt=0 to numrecs-1			
 				gridrec$=recVect!.getItem(reccnt)
-				if gridrec$<>""
+				if cvs(gridrec$,3)<> "" and callpoint!.getGridRowDeleteStatus(reccnt)<>"Y" 
 					tinv=tinv+num(gridrec.invoice_amt$)
 					tdisc=tdisc+num(gridrec.discount_amt$)
 					tret=tret+num(gridrec.retention$)
