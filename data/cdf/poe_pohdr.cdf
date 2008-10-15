@@ -96,8 +96,8 @@ rem --- Open Files
 	apm_vendhist_dev=num(open_chans$[4]),apm_vendhist_tpl$=open_tpls$[4]
 	ivm_itemwhse_dev=num(open_chans$[5]),ivm_itemwhse_tpl$=open_tpls$[5]
 	ivm_itemvend_dev=num(open_chans$[6]),ivm_itemvend_tpl$=open_tpls$[6]
-	poe_reqhdr_dev=num(open_chans$[7]),poe_reqhdr_tpl$=open_tps$[7]
-	poe_reqdet_dev=num(open_chans$[8]),poe_reqdet_tpl$=open_tps$[8]
+	poe_reqhdr_dev=num(open_chans$[7]),poe_reqhdr_tpl$=open_tpls$[7]
+	poe_reqdet_dev=num(open_chans$[8]),poe_reqdet_tpl$=open_tpls$[8]
 
 rem --- disable display fields
 	dim dctl$[9]
@@ -157,6 +157,11 @@ vendor_info: rem --- get and siplay Vendor Information
 	callpoint!.setColumnData("<<DISPLAY>>.V_CITY",apm01a.city$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_STATE",apm01a.state_code$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_ZIP",apm01a.zip_code$)
+
+
+	callpoint!.setColumnData("<<DISPLAY>>.V_CONTACT",apm01a.contact_name$)
+	callpoint!.setColumnData("<<DISPLAY>>.V_PHONE",apm01a.phone_no$)
+	callpoint!.setColumnData("<<DISPLAY>>.V_FAX",apm01a.fax_no$)
 
 	callpoint!.setStatus("REFRESH")
 
