@@ -8,7 +8,6 @@ po_line_code$=rec_data.po_line_code$
 if cvs(po_line_code$,2)<>"" then  
     gosub update_line_type_info
 endif
-
 [[POE_REQDET.ITEM_ID.AINP]]
 if cvs(callpoint!.getUserInput(),2)=cvs(callpoint!.getColumnData("POE_REQDET.ITEM_ID"),2) then
 	user_tpl.change_flag=0
