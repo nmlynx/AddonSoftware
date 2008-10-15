@@ -1,5 +1,5 @@
 [[POE_PODET.WAREHOUSE_ID.AVAL]]
-if callpoint!.getHeaderColumnData("POE_REQHDR.WAREHOUSE_ID")<>pad(callpoint!.getUserInput(),2) then
+if callpoint!.getHeaderColumnData("POE_POHDR.WAREHOUSE_ID")<>pad(callpoint!.getUserInput(),2) then
 	msg_id$="PO_WHSE_NOT_MATCH"
 	gosub disp_message
 endif
@@ -25,25 +25,22 @@ gosub update_line_type_info
 
 if user_tpl.change_flag then
 	callpoint!.setColumnData("POE_PODET.CONV_FACTOR","")
-	callpoint!.setColumnData("POE_PODET.CUSTOMER_ID","")
 	callpoint!.setColumnData("POE_PODET.FORECAST","")
 	callpoint!.setColumnData("POE_PODET.ITEM_ID","")
 	callpoint!.setColumnData("POE_PODET.LEAD_TIM_FLG","")
-	callpoint!.setColumnData("POE_PODET.LINE_NO","")
 	callpoint!.setColumnData("POE_PODET.LOCATION","")
-	callpoint!.setColumnData("POE_PODET.NOT_B4_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.NOT_B4_DATE"))
+	callpoint!.setColumnData("POE_PODET.NOT_B4_DATE",callpoint!.getHeaderColumnData("POE_POHDR.NOT_B4_DATE"))
 	callpoint!.setColumnData("POE_PODET.NS_ITEM_ID","")
 	callpoint!.setColumnData("POE_PODET.ORDER_MEMO","")
-	callpoint!.setColumnData("POE_PODET.PO_MSG_CODE",callpoint!.getHeaderColumnData("POE_REQHDR.PO_MSG_CODE"))
-	callpoint!.setColumnData("POE_PODET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.PROMISE_DATE"))
-	callpoint!.setColumnData("POE_PODET.REQD_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.REQD_DATE") )
+	callpoint!.setColumnData("POE_PODET.PO_MSG_CODE",callpoint!.getHeaderColumnData("POE_POHDR.PO_MSG_CODE"))
+	callpoint!.setColumnData("POE_PODET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_POHDR.PROMISE_DATE"))
+	callpoint!.setColumnData("POE_PODET.REQD_DATE",callpoint!.getHeaderColumnData("POE_POHDR.REQD_DATE") )
 	callpoint!.setColumnData("POE_PODET.REQ_QTY","")
 	callpoint!.setColumnData("POE_PODET.SEQUENCE_NO","")
-	callpoint!.setColumnData("POE_PODET.SHIPTO_NO","")
 	callpoint!.setColumnData("POE_PODET.SOURCE_CODE","")
 	callpoint!.setColumnData("POE_PODET.UNIT_COST","")
 	callpoint!.setColumnData("POE_PODET.UNIT_MEASURE","")
-	callpoint!.setColumnData("POE_PODET.WAREHOUSE_ID",callpoint!.getHeaderColumnData("POE_REQHDR.WAREHOUSE_ID"))
+	callpoint!.setColumnData("POE_PODET.WAREHOUSE_ID",callpoint!.getHeaderColumnData("POE_POHDR.WAREHOUSE_ID"))
 	callpoint!.setColumnData("POE_PODET.WO_NO","")
 	
 endif
@@ -52,7 +49,7 @@ ivm_itemwhse_dev=fnget_dev("IVM_ITEMWHSE")
 dim ivm_itemwhse$:fnget_tpl$("IVM_ITEMWHSE")
 
 whse$=rec_data.warehouse_id$
-item_no$=callpoint!.getUserInput()
+item_no$=rec_data.item_id$
 
 read record(ivm_itemwhse_dev,key=firm_id$+whse$+item_no$,dom=missing_warehouse)ivm_itemwhse$
 goto not_missing_warehouse

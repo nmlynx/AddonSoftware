@@ -1,31 +1,6 @@
 [[POE_POHDR.REQ_NO.AVAL]]
 rem -- see if existing po# was entered
 
-if cvs(callpoint!.getColumnData("POE_POHDR.VENDOR_ID"),2) = "" then
-	
-     ddm_keys=fnget_dev("DDM_KEYS")
-     dim ddm_keys$:fnget_tpl$("DDM_KEYS")
-     call stbl("+DIR_SYP")+"bac_key_template.bbj","DDM_KEYS","NAME",key_tpl$,table_chans$[all],status$
-     dim ddm_key_tpl$:key_tpl$
-     ddm_key_tpl.dd_table_alias$="POE_POHDR",ddm_key_tpl.dd_key_id$="ALT_KEY_01"
-     readrecord(ddm_keys,key=ddm_key_tpl$,knum=1)ddm_keys$
-     keynum=num(ddm_keys.dd_key_number$)
-escape
-     poe02_dev=fnget_dev("POE_POHDR")
-     dim poe02a$:fnget_tpl$("POE_POHDR")
-     po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
-     read record(poe02_dev,key=firm_id$+po_no$,knum=keynum,dom=*next)
-     while 1
-          read record(poe01_dev,err=*next)poe02a$
-          if poe02a.firm_id$<>firm_id$ or poe02a.po_no$<>po_no$ then
-               rem  vendor!=fnget_control!("POE_POHDR.VENDOR_ID")
-               rem  vendor!.focus() 
-          else
-               callpoint!.setColumnData("POE_POHDR.VENDOR_ID",poe02a.vendor_id$)
-          endif
-          break
-     wend              
-endif
 [[POE_POHDR.ARNF]]
 rem -- set default values
 
