@@ -711,7 +711,7 @@ calc_extension:
     let qty=poe12a.qty_ordered-poe12a.qty_received
     if linetype$="O" qty=1
     precision 2
-    let extension=poe12a.unit_cost*qty,extension$=str(extension:m1$)
+    let extension=poe12a.unit_cost*qty,extension$=str(extension)
     precision ivprecision
 
     return
