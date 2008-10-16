@@ -1,6 +1,36 @@
 [[POE_POHDR.REQ_NO.AVAL]]
-rem -- see if existing po# was entered
+rem " --- Load PO Rec"
 
+	poe01_dev=fnget_dev("POE_REQHDR")
+	dim poe02a$: fnget_tpl$("POE_POHDR")
+	poe02_dev=fnget_dev("POE_POHDR")
+	dim poe01a$: fnget_tpl$("POE_REQHDR")
+	poe11_dev=fnget_dev("POE_REQDET")
+	dim poe11a$: fnget_tpl$("POE_REQDET")
+	poe12_dev=fnget_dev("POE_PODET")
+
+	po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+	req_no$=pad(callpoint!.getUserInput(),7,"R","0")
+	
+	read record (poe01_dev,key=firm_id$+req_no$,dom=*break) poe01a$
+
+	call stbl("+DIR_PGM")+"adc_copyfile.aon",poe01a$,poe02a$,status	
+	poe02a.po_no$=po_no$
+	write record (poe02_dev) poe02a$
+
+	po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+	read record(poe11_dev,key=firm_id$+req_no$,dom=*next)
+	while 1
+		read record(poe11_dev) poe11a$
+		if poe11a.req_no$<>req_no$ or poe11a.firm_id$<>firm_id$ then break
+		dim poe12a$:fnget_tpl$("POE_PODET")
+		call stbl("+DIR_PGM")+"adc_copyfile.aon",poe11a$,poe12a$,status
+		poe12a.po_no$=po_no$
+		write record (poe12_dev) poe12a$
+	wend
+
+	callpoint!.setStatus("RECORD:"+firm_id$+po_no$)
+	
 [[POE_POHDR.ARNF]]
 rem -- set default values
 
@@ -63,7 +93,7 @@ rem --- Open Files
 	open_tables$[5]="IVM_ITEMWHSE",open_opts$[5]="OTA"
 	open_tables$[6]="IVM_ITEMVEND",open_opts$[6]="OTA"
 	open_tables$[7]="POE_REQHDR",open_opts$[7]="OTA"
-	open_tables$[8]="POE_REQDET",open_opts$[7]="OTA"
+	open_tables$[8]="POE_REQDET",open_opts$[8]="OTA"
 	gosub open_tables
 	aps_params_dev=num(open_chans$[1]),aps_params_tpl$=open_tpls$[1]
 	ivs_params_dev=num(open_chans$[2]),ivs_params_tpl$=open_tpls$[2]
