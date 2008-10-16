@@ -150,15 +150,15 @@ rem --- Main Vendor Read
         if apm02_key$(1,2)<>firm_id$ goto done
         read record (apm02_dev) apm02a$
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        apm02a.pyr_purch=apm02a.ytd_purch
-        apm02a.ytd_purch=apm02a.nyr_purch
-        apm02a.nyr_purch=0
-        apm02a.pyr_discs=apm02a.ytd_discs
-        apm02a.ytd_discs=apm02a.nyr_disc
-        apm02a.nyr_disc=0
-        apm02a.pyr_payments=apm02a.ytd_payments
-        apm02a.ytd_payments=apm02a.nyr_payments
-        apm02a.nyr_payments=0
+        apm02a.pyr_purch    = apm02a.ytd_purch
+        apm02a.ytd_purch    = apm02a.nyr_purch
+        apm02a.nyr_purch    = 0
+        apm02a.pri_yr_discs = apm02a.ytd_discs
+        apm02a.ytd_discs    = apm02a.nyr_disc
+        apm02a.nyr_disc     = 0
+        apm02a.pyr_payments = apm02a.ytd_payments
+        apm02a.ytd_payments = apm02a.nyr_payments
+        apm02a.nyr_payments = 0
         write record (apm02_dev,key=k0$) apm02a$
     wend
 
