@@ -948,7 +948,7 @@ get_new_template:
     new_file=unt
     open (new_file,err=check_for_definition)destin_folder$+"/"+new_datafile$
     lock (new_file)
-    a=msgbox(new_datafile$+" already exists in destination folder. Do you want to overwrite data?",3+32+256,"DataPort")
+    a=msgbox(new_datafile$+" already exists in destination folder. Do you want to overwrite data?",3+32+65536,"DataPort")
     if a=6 then
        return; rem ' Yes-Overwrite
     endif
