@@ -23,7 +23,7 @@ if dummy$="Y" then
 endif
 [[POS_PARAMS.LAND_METHOD.AVAL]]
 dummy$=callpoint!.getUserInput()
-if pos(dummy$="CQ")=0 then callpoint!.setStatus("ABORT-REFRESH")
+if pos(dummy$="CQN")=0 then callpoint!.setStatus("ABORT-REFRESH")
 [[POS_PARAMS.<CUSTOM>]]
 disable_fields:
  rem --- used to disable/enable controls depending on parameter settings
