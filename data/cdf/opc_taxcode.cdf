@@ -1,3 +1,14 @@
+[[OPC_TAXCODE.OP_TAX_CODE.AVAL]]
+rem --- Don't allow add of blank code
+while 1
+	code$=callpoint!.getUserInput()
+	if cvs(code$,2)=""
+		find (user_tpl.opm06_dev,key=firm_id$+code$,dom=*next);break
+rem		callpoint!.setMessage("INVALID_ENTRY")
+rem		callpoint!.setStatus("ABORT")
+	endif
+	break
+wend
 [[OPC_TAXCODE.GL_ACCOUNT.BINP]]
 if user_tpl.gl_installed$="Y"
 	callpoint!.setTableColumnAttribute("OPC_TAXCODE.GL_ACCOUNT","MINL","1")
@@ -196,10 +207,12 @@ rem --- Calculate and display all the extra tax codes
 	for x=1 to 10
 		dim opm06a$:fattr(opm06a$)
 		next_code$=field(rec_data$,"AR_TOT_CODE_"+str(x:"00"))
-		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_"+str(x:"00"),opm06a.tax_rate$)
-		total_pct=total_pct+num(opm06a.tax_rate$)
-		field user_tpl$,"rate",[x]=num(opm06a.tax_rate$)
+		if cvs(next_code$,2)<>""
+			read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_"+str(x:"00"),opm06a.tax_rate$)
+			total_pct=total_pct+num(opm06a.tax_rate$)
+			field user_tpl$,"rate",[x]=num(opm06a.tax_rate$)
+		endif
 	next x
 	field user_tpl$,"this_rate"=rec_data.tax_rate
 	field user_tpl$,"this_code"=rec_data.op_tax_code$
