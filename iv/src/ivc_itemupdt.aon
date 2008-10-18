@@ -54,6 +54,7 @@ rem --- [2] = Unit Price
 rem --- [3] = Actual Lead Time
 rem --- [4] = Landed Cost
 rem --- [5] = Physical Count
+rem --- TABLE_CHANS$[ALL] : A Barista array; do not alter
 rem --- STATUS     : Status Code (Returned)
 rem 
 rem --- Use initialization label to open files and set arays
@@ -70,10 +71,11 @@ rem * status            - returns zero for no error
 
     seterr std_error
     setesc std_error
-    enter action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],status
+    enter action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	
 rem --- Retrieve the program path
 
+	pgmdir$=""
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
@@ -85,6 +87,21 @@ rem --- Retrieve sysinfo data
     sys_when$=sysinfo.system_date$
     sys_yyyymmdd$=fndate$(sys_when$)
     user_id$=stbl("+USER_ID")
+
+rem --- Sanity check
+
+    code=pos(action$="BB,BI,BO,IA,IC,II,IR,PH,PO,OE,OP,RC,TI,TO,WI,WO,CO,UC,TA,OO,PI",3)
+    if code=0 then goto bad_action_error
+	if item$[2] = "" then goto no_item_error
+
+rem --- Was "init" called yet?
+
+	if channels[0] = 0 then
+		call pgmdir$+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then goto std_exit
+	endif
+
+rem --- Set file handles from channels array
 
     gls01_dev=channels[0]
     ivm01_dev=channels[1]
@@ -99,39 +116,20 @@ rem --- Retrieve sysinfo data
     ivt03_dev=channels[43]
     ivt04_dev=channels[44]
 
-rem --- Retrieve miscellaneous templates
-
-    files=11,begfile=1,endfile=files
-    dim ids$[files],templates$[files]
-    ids$[1]="IVM_ITEMMAST"
-    ids$[2]="IVM_ITEMWHSE"
-    ids$[3]="IVM_ITEMTIER"
-    ids$[4]="IVM_ITEMVEND"
-    ids$[5]="IVM_LSMASTER"
-    ids$[6]="IVM_ITEMACT"
-    ids$[7]="IVM_LSACT"
-    ids$[8]="IVT_LSTRANS"
-    ids$[9]="IVX_LSCUST"
-    ids$[10]="IVX_LSVEND"
-    ids$[11]="IVT_ITEMTRAN"
-
-    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status goto std_exit
-
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[1]
-	dim ivm02a$:templates$[2]
-	dim ivm04a$:templates$[3]
-	dim ivm05a$:templates$[4]
-	dim ivm07a$:templates$[5]
-	dim ivm12a$:templates$[6]
-	dim ivm17a$:templates$[7]
-	dim ivt01a$:templates$[8]
-	dim ivt02a$:templates$[9]
-	dim ivt03a$:templates$[10]
-	dim ivt04a$:templates$[11]
-	ivt04a_tpl$ = templates$[11]
+    dim ivm01a$:table_chans$[ivm01_dev,0]
+	dim ivm02a$:table_chans$[ivm02_dev,0]
+	dim ivm04a$:table_chans$[ivm04_dev,0]
+	dim ivm05a$:table_chans$[ivm05_dev,0]
+	dim ivm07a$:table_chans$[ivm07_dev,0]
+	dim ivm12a$:table_chans$[ivm12_dev,0]
+	dim ivm17a$:table_chans$[ivm17_dev,0]
+	dim ivt01a$:table_chans$[ivt01_dev,0]
+	dim ivt02a$:table_chans$[ivt02_dev,0]
+	dim ivt03a$:table_chans$[ivt03_dev,0]
+	dim ivt04a$:table_chans$[ivt04_dev,0]
+	ivt04a_tpl$ = table_chans$[ivt04_dev,0]
 
 rem --- Parameters
 
@@ -159,8 +157,6 @@ rem --- Initializations
 
 rem --- Validate arguments
 
-    code=pos(action$="BB,BI,BO,IA,IC,II,IR,PH,PO,OE,OP,RC,TI,TO,WI,WO,CO,UC,TA,OO,PI",3)
-    if code=0 then goto bad_action_error
     when$=refs$[0]
     clock$=""
     if len(when$)=8 then ymd$=fndate$(when$)
@@ -609,6 +605,11 @@ missing_record_error: rem --- Missing record
     status=11
     goto std_exit
 
+no_item_error: rem --- No inventory item passed
+
+	status=901
+	goto std_exit
+	
 init_trans_hist_rec: rem --- Initialize IVT-01/IVT-04 Transaction History Record
 
     if channel=ivt04_dev then 
