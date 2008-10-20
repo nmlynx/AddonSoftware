@@ -72,23 +72,6 @@ rem --- All done
 rem --- Standard AddonSoftware functions (01Mar2006)
 
 rem --- Date/time handling functions
-    def fndate$(q$) 
-
-        if cvs(q$,2)="" return ""
-
-        testdate$=""
-
-        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
-
-        if testdate$<>"" 
-
-            return date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2))))
-
-        endif
-
-        return testdate$
-
-    fnend    
 
 rem #include std_error.src
 
