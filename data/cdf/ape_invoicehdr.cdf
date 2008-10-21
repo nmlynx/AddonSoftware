@@ -140,7 +140,7 @@ look_for_invoice:
 
 end_of_aval:
 [[APE_INVOICEHDR.ASHO]]
-rem --- get default date
+	rem --- get default date
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","APE_INVDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
 	user_tpl.dflt_acct_date$=stbl("DEF_ACCT_DATE")
 [[APE_INVOICEHDR.INVOICE_DATE.AVAL]]
@@ -213,7 +213,6 @@ callpoint!.setStatus("REFRESH:APE_INVOICEHDR.DISCOUNT_AMT")
 if callpoint!.getUserInput()=""
 	callpoint!.setColumnData("APE_INVOICEHDR.PAYMENT_GRP","  ")
 	callpoint!.setStatus("REFRESH")
-
 endif
 [[APE_INVOICEHDR.AP_DIST_CODE.AVAL]]
 if callpoint!.getColumnData("APE_INVOICEHDR.AP_DIST_CODE")=""
@@ -228,15 +227,14 @@ endif
 [[APE_INVOICEHDR.VENDOR_ID.AVAL]]
 rem "check vend hist file to be sure this vendor/ap type ok and to set some defaults;  display vend cmts
 
+vendor_id$ = callpoint!.getUserInput()
 gosub disp_vendor_comments
 gosub get_vendor_history
 
-if vend_hist$=""
-	if user_tpl.multi_types$="Y"
-		msg_id$="AP_NOHIST"
-		gosub disp_message
-		callpoint!.setStatus("CLEAR-NEWREC")
-	endif
+if vend_hist$="" and user_tpl.multi_types$="Y"
+	msg_id$="AP_NOHIST"
+	gosub disp_message
+	callpoint!.setStatus("CLEAR-NEWREC")
 endif
 [[APE_INVOICEHDR.ACCTING_DATE.AVAL]]
 rem make sure accting date is in an appropriate GL period
@@ -254,27 +252,38 @@ endif
 [[APE_INVOICEHDR.ADIS]]
 rem --- get disc % assoc w/ terms in this rec, and disp distributed bal
 
-apm10c_dev=fnget_dev("APC_TERMSCODE")
-dim apm10c$:fnget_tpl$("APC_TERMSCODE")
+	apm10c_dev=fnget_dev("APC_TERMSCODE")
+	dim apm10c$:fnget_tpl$("APC_TERMSCODE")
+	ap_terms_code$ = callpoint!.getColumnData("APE_INVOICEHDR.AP_TERMS_CODE")
+	readrecord(apm10c_dev,key=firm_id$+"C"+ap_terms_code$,dom=*next)apm10c$
 
-readrecord(apm10c_dev,key=firm_id$+"C"+callpoint!.getColumnData("APE_INVOICEHDR.AP_TERMS_CODE"),dom=*next)apm10c$
-user_tpl.disc_pct$=apm10c.disc_percent$
+	if cvs(apm10c.firm_id$,3) <> "" then 
+		user_tpl.disc_pct$=apm10c.disc_percent$
+		user_tpl.inv_amt$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_AMT")
+		user_tpl.tot_dist$=""
+		if user_tpl.glint$="N" then user_tpl.tot_dist$=user_tpl.inv_amt$
 
-user_tpl.inv_amt$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_AMT")
-user_tpl.tot_dist$=""
-if user_tpl.glint$="N" user_tpl.tot_dist$=user_tpl.inv_amt$
+		gosub calc_grid_tots
+		gosub disp_dist_bal
 
-gosub calc_grid_tots
-gosub disp_dist_bal
+		user_tpl.inv_in_ape01$="Y"
+		user_tpl.inv_in_apt01$="N"
 
-user_tpl.inv_in_ape01$="Y"
-user_tpl.inv_in_apt01$="N"
+		Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+		
+		print "in invoicehdr.ADIS"
+		print "Vendor callpoint: ", callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
+		print "userInput       : ", callpoint!.getUserInput()
+		escape; rem debug
+		
+		vendor_id$ = callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
+		gosub disp_vendor_comments
 
-Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
-
-gosub disp_vendor_comments
-
-callpoint!.setStatus("REFRESH")
+		callpoint!.setStatus("REFRESH")
+	else
+		rem terms code missing
+		callpoint!.setStatus("ABORT")
+	endif
 [[APE_INVOICEHDR.AP_TERMS_CODE.AVAL]]
 rem re-calc due and discount dates based on terms code
 
@@ -317,61 +326,41 @@ get_vendor_history:
 
 	apm02_dev=fnget_dev("APM_VENDHIST")				
 	dim apm02a$:fnget_tpl$("APM_VENDHIST")
-	vend_hist$=""
-	readrecord(apm02_dev,key=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")+
-:		callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE"),dom=*next)apm02a$
-	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")+
-:		callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")
-			user_tpl.dflt_dist_cd$=apm02a.ap_dist_code$
-			user_tpl.dflt_gl_account$=apm02a.gl_account$
-			user_tpl.dflt_terms_cd$=apm02a.ap_terms_code$
-			user_tpl.dflt_pymt_grp$=apm02a.payment_grp$
-			vend_hist$="Y"
+	vend_hist$ = ""
+	ap_type$   = callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")
+	vendor_id$ = callpoint!.getUserInput()
+	readrecord(apm02_dev,key=firm_id$+vendor_id$+ap_type$,dom=*next)apm02a$
+
+	if cvs(apm02a.firm_id$,2) <> "" then
+		user_tpl.dflt_dist_cd$    = apm02a.ap_dist_code$
+		user_tpl.dflt_gl_account$ = apm02a.gl_account$
+		user_tpl.dflt_terms_cd$   = apm02a.ap_terms_code$
+		user_tpl.dflt_pymt_grp$   = apm02a.payment_grp$
+		vend_hist$="Y"
 	endif
-
-return
-
-display_vendor_comments:
-
-	apm09_dev=fnget_dev("APM_VENDCMTS")
-	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
-	apm09_key$=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
-	more=1
-	read(apm09_dev,key=apm09_key$,dom=*next)
-	while more
-		readrecord(apm09_dev,end=*break)apm09a$
-		if apm09a.firm_id$+apm09a.vendor_id$=firm_id$+callpoint!.getUserInput()
-			key_pfx$=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
-			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-:				gui_dev,
-:				Form!,
-:				"APM_VENDCMTS",
-:				"VIEW",
-:				table_chans$[all],
-:				key_pfx$,
-:				"PRIMARY"
-		endif
-		break		
-	wend
 
 return
 
 disp_vendor_comments:
 	
+	rem --- You must pass in vendor_id$ because we don't know whether it's verified or not
 	cmt_text$=""
 	apm09_dev=fnget_dev("APM_VENDCMTS")
 	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
-	apm09_key$=firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
+	apm09_key$=firm_id$+vendor_id$
 	more=1
 	read(apm09_dev,key=apm09_key$,dom=*next)
+
 	while more
 		readrecord(apm09_dev,end=*break)apm09a$
-		if apm09a.firm_id$+apm09a.vendor_id$<>firm_id$+callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID") break
-			cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
+		 
+		if apm09a.firm_id$ = firm_id$ and apm09a.vendor_id$ = vendor_id$ then
+			cmt_text$ = cmt_text$ + cvs(apm09a.std_comments$,3)+$0A$
 		endif				
 	wend
 
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
+	callpoint!.setColumnData("APE_INVOICEHDR.VENDOR_ID",vendor_id$)
 	callpoint!.setStatus("REFRESH")
 
 return
@@ -438,8 +427,6 @@ rem #endinclude fnget_control.src
 
 #include std_missing_params.src
 [[APE_INVOICEHDR.BSHO]]
-rem --- print 'show' 
-
 rem --- Open/Lock files
 
 files=9,begfile=1,endfile=files
