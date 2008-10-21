@@ -29,13 +29,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_10")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[10]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_10",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_10",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_10",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_10","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_10","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_09.AVAL]]
@@ -45,13 +49,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_09")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[9]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_09",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_09",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_09",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_09","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_09","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_06.AVAL]]
@@ -61,13 +69,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_06")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[6]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_06",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_06",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_06",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_06","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_06","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_07.AVAL]]
@@ -77,13 +89,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_07")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[7]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_07",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_07",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_07",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_07","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_07","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_08.AVAL]]
@@ -93,13 +109,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_08")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[8]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_08",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_08",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_08",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_08","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_08","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_05.AVAL]]
@@ -109,13 +129,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_05")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[5]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_05",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_05",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_05",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_05","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_05","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_04.AVAL]]
@@ -125,13 +149,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_04")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[4]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_04",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_04",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_04",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_04","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_04","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_03.AVAL]]
@@ -141,13 +169,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_03")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[3]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_03",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_03",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_03",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_03","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_03","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.AR_TOT_CODE_02.AVAL]]
@@ -157,13 +189,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_02")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[2]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_02",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_02",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_02",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_02","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_02","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.BREC]]
@@ -180,13 +216,17 @@ rem --- Put new rate into array and calc total
 	if ok$="Y"
 		opm06_dev=user_tpl.opm06_dev
 		dim opm06a$:user_tpl.opm06_tpl$
-		next_code$=callpoint!.getColumnData("OPC_TAXCODE.AR_TOT_CODE_01")
+		next_code$=callpoint!.getUserInput()
 		read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 		field user_tpl$,"rate",[1]=opm06a.tax_rate
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_01",opm06a.tax_rate$)
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_01",opm06a.code_desc$)
+		if cvs(next_code$,2)<>""
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_01",opm06a.tax_rate$)
+		endif
 		gosub calc_total
 	else
 		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_01","")
+		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_01","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_TAXCODE.ARAR]]
@@ -210,8 +250,13 @@ rem --- Calculate and display all the extra tax codes
 		if cvs(next_code$,2)<>""
 			read record (opm06_dev,key=firm_id$+next_code$,dom=*next) opm06a$
 			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_"+str(x:"00"),opm06a.tax_rate$)
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_"+str(x:"00"),opm06a.code_desc$)
 			total_pct=total_pct+num(opm06a.tax_rate$)
 			field user_tpl$,"rate",[x]=num(opm06a.tax_rate$)
+		else
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_"+str(x:"00"),"")
+			callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_"+str(x:"00"),"")
+			field user_tpl$,"rate",[x]=0
 		endif
 	next x
 	field user_tpl$,"this_rate"=rec_data.tax_rate
