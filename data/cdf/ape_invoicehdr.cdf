@@ -271,11 +271,6 @@ rem --- get disc % assoc w/ terms in this rec, and disp distributed bal
 
 		Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 		
-		print "in invoicehdr.ADIS"
-		print "Vendor callpoint: ", callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
-		print "userInput       : ", callpoint!.getUserInput()
-		escape; rem debug
-		
 		vendor_id$ = callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
 		gosub disp_vendor_comments
 
