@@ -1,3 +1,12 @@
+[[POS_PARAMS.BSHO]]
+rem --- Disable update planned Work Orders if Shop Floor not installed
+pgm_dir$=stbl("+DIR_PGM")
+call pgm_dir$+"adc_application.aon","SF",info$[all]
+if info$[20]<>"Y"
+	ctl_name$="POS_PARAMS.UPDT_PLAN_WO"
+	ctl_stat$="D"
+	gosub disable_fields
+endif
 [[POS_PARAMS.PO_INV_CODE.AVAL]]
 tmp_po_line_code$=callpoint!.getUserInput()
 gosub validate_po_line_type
