@@ -302,7 +302,6 @@ disp_vendor_comments:
 		endif				
 	wend
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
-	callpoint!.setColumnData("APE_INVOICEHDR.VENDOR_ID",vendor_id$)
 	callpoint!.setStatus("REFRESH")
 return
 calculate_due_and_discount:

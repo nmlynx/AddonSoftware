@@ -127,48 +127,17 @@ if selected_key$<>""
 	endif
 endif
 [[APE_MANCHECKHDR.<CUSTOM>]]
-display_vendor_address:
-	apm01_dev=fnget_dev("APM_VENDMAST")
-	dim apm01a$:fnget_tpl$("APM_VENDMAST")
-	readrecord(apm01_dev,key=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),dom=*next)apm01a$
-	if apm01a.firm_id$+apm01a.vendor_id$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID") and 
-:		cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)<>""
-		callpoint!.setColumnData("<<DISPLAY>>.DISP_ADDR1",apm01a.addr_line_1$)
-		callpoint!.setColumnData("<<DISPLAY>>.DISP_ADDR2",apm01a.addr_line_2$)
-		callpoint!.setColumnData("<<DISPLAY>>.DISP_CTSTZIP",cvs(apm01a.city$,2)+
-:			  ", "+apm01a.state_code$+"  "+apm01a.zip_code$)
-	endif
-return
-display_vendor_comments:
-	apm_vendcmts_dev=fnget_dev("APM_VENDCMTS")
-	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
-	apm09ak1$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-	read(apm_vendcmts_dev,key=apm09ak1$,dom=*next)
-	readrecord(apm_vendcmts_dev,end=*next)apm09a$
-	if apm09a$(1,len(apm09ak1$))=apm09ak1$
-		key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-:			gui_dev,
-:			Form!,
-:			"APM_VENDCMTS",
-:			"VIEW",
-:			table_chans$[all],
-:			key_pfx$,
-:			"PRIMARY"
-	
-	endif
-return
 disp_vendor_comments:
 	
 	cmt_text$=""
 	apm09_dev=fnget_dev("APM_VENDCMTS")
 	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
-	apm09_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
+	apm09_key$=firm_id$+tmp_vendor_id$
 	more=1
 	read(apm09_dev,key=apm09_key$,dom=*next)
 	while more
 		readrecord(apm09_dev,end=*break)apm09a$
-		if apm09a.firm_id$+apm09a.vendor_id$<>firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID") break
+		if apm09a.firm_id$= firm_id$ and apm09a.vendor_id$ = tmp_vendor_id$
 			cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
 		endif				
 	wend
@@ -225,9 +194,9 @@ get_vendor_history:
 	apm02_dev=fnget_dev("APM_VENDHIST")				
 	dim apm02a$:fnget_tpl$("APM_VENDHIST")
 	vend_hist$=""
-	readrecord(apm02_dev,key=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")+
+	readrecord(apm02_dev,key=firm_id$+tmp_vendor_id$+
 :		callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE"),dom=*next)apm02a$
-	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")+
+	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+tmp_vendor_id$+
 :		callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
 			user_tpl.dflt_dist_cd$=apm02a.ap_dist_code$
 			user_tpl.dflt_gl_account$=apm02a.gl_account$
@@ -240,14 +209,8 @@ get_vendor_history:
 return
 #include std_missing_params.src
 [[APE_MANCHECKHDR.VENDOR_ID.AVAL]]
-if cvs(callpoint!.getUserInput(),3)<>"" 
-:	and callpoint!.getUserInput()<>
-:	callpoint!.getColumnUndoData("APE_MANCHECKHDR.VENDOR_ID")	
-	rem - gosub display_vendor_address					
+	tmp_vendor_id$=callpoint!.getUserInput()			
 	gosub disp_vendor_comments
-	callpoint!.setColumnUndoData("APE_MANCHECKHDR.VENDOR_ID",
-:		callpoint!.getUserInput())
-	callpoint!.setStatus("REFRESH")
 	gosub get_vendor_history
 	if vend_hist$=""
 		if user_tpl.multi_types$="Y"
@@ -256,7 +219,6 @@ if cvs(callpoint!.getUserInput(),3)<>""
 			callpoint!.setStatus("ABORT")
 		endif
 	endif
-endif
 [[APE_MANCHECKHDR.TRANS_TYPE.AVAL]]
 if callpoint!.getUserInput()="R"
 	msg_id$="AP_REUSE_ERR"
@@ -472,7 +434,8 @@ if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_
 				gosub disable_fields
 				callpoint!.setColumnData("APE_MANCHECKHDR.CHECK_DATE",apt05a.check_date$)
 				callpoint!.setColumnData("APE_MANCHECKHDR.VENDOR_ID",apt05a.vendor_id$)
-				rem - gosub display_vendor_address
+
+				tmp_vendor_id$=callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
 				gosub disp_vendor_comments
 				gosub disable_grid
 			else
@@ -514,6 +477,7 @@ user_tpl.reuse_chk$=""
 user_tpl.existing_tran$="Y"
 user_tpl.open_check$=""
 user_tpl.reuse_chk$=""
+tmp_vendor_id$=callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
 gosub disp_vendor_comments
 ctl_name$="APE_MANCHECKHDR.TRANS_TYPE"
 ctl_stat$="D"
@@ -544,4 +508,3 @@ dtlGrid!=Form!.getChildWindow(1109).getControl(5900)
 		dtlGrid!.setCellEditable(wk,2,0)
 	next wk
 endif
-
