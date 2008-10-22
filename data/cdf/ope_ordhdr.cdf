@@ -1,3 +1,15 @@
+[[OPE_ORDHDR.SHIPTO_TYPE.BINP]]
+rem --- Do we need to create a new order number?
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
+		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",seq_id$,rd_table_chans$[all]
+		if len(seq_id$)=0 
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			callpoint!.setColumnData("OPE_ORDHDR.ORDER_NO",seq_id$)
+			callpoint!.setStatus("REFRESH")
+		endif
+	endif
 [[OPE_ORDHDR.ADIS]]
 gosub disp_cust_comments
 [[OPE_ORDHDR.ASIZ]]
@@ -112,6 +124,18 @@ rem --- Display Ship to information
 	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub ship_to_info
 [[OPE_ORDHDR.ORDER_NO.AVAL]]
+rem --- Do we need to create a new order number?
+rem	if callpoint!.getUserInput()=""
+rem		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",seq_id$,rd_table_chans$[all]
+rem		if len(seq_id$)=0 
+rem			callpoint!.setStatus("ABORT")
+rem			break
+rem		else
+rem			callpoint!.setColumnData("OPE_ORDHDR.ORDER_NO",seq_id$)
+rem			callpoint!.setStatus("REFRESH")
+rem		endif
+rem	endif
+
 rem --- set default values
 	ope01_dev=fnget_dev("OPE_ORDHDR")
 	ope01a$=fnget_tpl$("OPE_ORDHDR")
@@ -230,8 +254,6 @@ rem --- enable/disable expire date based on value
 					dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 					read record(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 					precision num(ivs01a.precision$)
-REM jpb					wh$=ope11a.warehouse_id$
-REM jpb					item$=ope11a.item_id$
 					ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 					cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 					ord$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
@@ -305,17 +327,6 @@ rem --- Show customer data
 	cust_id$=callpoint!.getUserInput()
 	gosub bill_to_info
 	gosub disp_cust_comments
-rem	rd_key$=""
-rem	key_pfx$=firm_id$+cust_id$
-rem	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-rem :		gui_dev,
-rem :		Form!,
-rem :		"ARM_CUSTCMTS",
-rem :		"LOOKUP",
-rem :		table_chans$[all],
-rem :		key_pfx$,
-rem :		"PRIMARY",
-rem :		rd_key$
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -654,34 +665,36 @@ rem --- copy detail lines
 		endif
 	endif
 	return
+
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
 rem --- need to send in wh_id$, item_id$, ls_id$, and qty
-	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
-	iv_files[0]=fnget_dev("GLS_PARAMS")
-	iv_files[1]=fnget_dev("IVM_ITEMMAST")
-	iv_files[2]=fnget_dev("IVM_ITEMWHSE")
-	iv_files[4]=fnget_dev("IVM_ITEMTIER")
-	iv_files[5]=fnget_dev("IVM_ITEMVEND")
-	iv_files[7]=fnget_dev("IVM_LSMASTER")
-	iv_files[12]=fnget_dev("IVM_ITEMACCT")
-	iv_files[17]=fnget_dev("IVM_LSACT")
-	iv_files[41]=fnget_dev("IVT_LSTRANS")
-	iv_files[42]=fnget_dev("IVX_LSCUST")
-	iv_files[43]=fnget_dev("IVX_LSVEND")
-	iv_files[44]=fnget_dev("IVT_ITEMTRAN")
-	ivs01_dev=fnget_dev("IVS_PARAMS")
-	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+rem	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
+	call "ivc_itemupdt.aon::init",iv_files[all],ivs01a$,iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],status
+rem	iv_files[0]=fnget_dev("GLS_PARAMS")
+rem	iv_files[1]=fnget_dev("IVM_ITEMMAST")
+rem	iv_files[2]=fnget_dev("IVM_ITEMWHSE")
+rem	iv_files[4]=fnget_dev("IVM_ITEMTIER")
+rem	iv_files[5]=fnget_dev("IVM_ITEMVEND")
+rem	iv_files[7]=fnget_dev("IVM_LSMASTER")
+rem	iv_files[12]=fnget_dev("IVM_ITEMACCT")
+rem	iv_files[17]=fnget_dev("IVM_LSACT")
+rem	iv_files[41]=fnget_dev("IVT_LSTRANS")
+rem	iv_files[42]=fnget_dev("IVX_LSCUST")
+rem	iv_files[43]=fnget_dev("IVX_LSVEND")
+rem	iv_files[44]=fnget_dev("IVT_ITEMTRAN")
+rem	ivs01_dev=fnget_dev("IVS_PARAMS")
+rem	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+rem	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 	iv_info$[1]=wh_id$
 	iv_info$[2]=item_id$
 	iv_info$[3]=ls_id$
 	iv_refs[0]=qty
 	while 1
-rem		if pos(S8$(2,1)="SP")=0 break
-rem		if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
+rem	jpb need to figure this one out"	if pos(S8$(2,1)="SP")=0 break
+rem	jpb need to figure this one out"	if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
 		if line_sign>0 iv_action$="OE" else iv_action$="UC"
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,
-:			iv_info$[all],iv_refs$[all],iv_refs[all],iv_status
+:			iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],iv_status
 		break
 	wend
 return

@@ -50,7 +50,7 @@ rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
 	gosub disp_totals
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm01a$:fnget_tpl$("APT_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
 	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 	ivs01_dev=fnget_dev("IVS_PARAMS")
@@ -62,7 +62,7 @@ rem --- Go get Lot/Serial Numbers if needed
 	seq$=callpoint!.getColumnData("OPE_ORDDET.LINE_NO")
 	line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	while 1
-		readrecord(opc_linecode_dev,key=firm$+line_code$,err=*break)opc_linecode$
+		readrecord(opc_linecode_dev,key=firm_id$+line_code$,err=*break)opc_linecode$
 		if pos(opc_linecode.line_type$="SP")
 			readrecord(ivm_itemmast_dev,key=firm_id$+item$,err=*break)ivm01a$
 			if pos(ivm01a.lotser_item$="Y") and
@@ -97,12 +97,6 @@ rem	endif
 [[OPE_ORDDET.BWRI]]
 rem --- commit inventory
 escape;rem bwri
-	qty=rec_data.qty_ordered
-	qty1=callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")
-escape
-[[OPE_ORDDET.BWAR]]
-rem --- commit inventory
-escape;rem bwar
 	qty=rec_data.qty_ordered
 	qty1=callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")
 escape
