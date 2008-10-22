@@ -1,3 +1,29 @@
+[[IVM_ITEMWHSE.UNIT_COST.AVAL]]
+rem --- Set default costs from unit cost
+
+unit_cost$ = callpoint!.getUserInput()
+
+if num( callpoint!.getColumnData("IVM_ITEMWHSE.LANDED_COST") ) = 0 then
+	callpoint!.setColumnData("IVM_ITEMWHSE.LANDED_COST",unit_cost$)
+endif
+
+if num( callpoint!.getColumnData("IVM_ITEMWHSE.LAST_PO_COST") ) = 0 then
+	callpoint!.setColumnData("IVM_ITEMWHSE.LAST_PO_COST",unit_cost$)
+endif
+
+if num( callpoint!.getColumnData("IVM_ITEMWHSE.AVG_COST") ) = 0 then
+	callpoint!.setColumnData("IVM_ITEMWHSE.AVG_COST",unit_cost$)
+endif
+
+if num( callpoint!.getColumnData("IVM_ITEMWHSE.STD_COST") ) = 0 then
+	callpoint!.setColumnData("IVM_ITEMWHSE.STD_COST",unit_cost$)
+endif
+
+if num( callpoint!.getColumnData("IVM_ITEMWHSE.REP_COST") ) = 0 then
+	callpoint!.setColumnData("IVM_ITEMWHSE.REP_COST",unit_cost$)
+endif
+
+callpoint!.setStatus("REFRESH")
 [[IVM_ITEMWHSE.ADIS]]
 rem --- If select in Physical Intentory, location and cycle can't change
 
