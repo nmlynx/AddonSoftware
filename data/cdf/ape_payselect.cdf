@@ -16,9 +16,6 @@ rem --- Set filters on grid
 [[APE_PAYSELECT.DUE_DATE_DT.AVAL]]
 rem --- Set filters on grid
 	gosub filter_recs
-[[APE_PAYSELECT.DISC_DATE.AVAL]]
-rem --- Set filters on grid
-	gosub filter_recs
 [[APE_PAYSELECT.DISC_DATE_OP.AVAL]]
 rem --- Set filters on grid
 	gosub filter_recs
@@ -26,9 +23,6 @@ rem --- Set filters on grid
 rem --- Set filters on grid
 	gosub filter_recs
 [[APE_PAYSELECT.DUE_DATE_OP.AVAL]]
-rem --- Set filters on grid
-	gosub filter_recs
-[[APE_PAYSELECT.DUE_DATE.AVAL]]
 rem --- Set filters on grid
 	gosub filter_recs
 [[APE_PAYSELECT.VENDOR_ID.AVAL]]
@@ -119,7 +113,7 @@ return
 
 fill_grid:
 
-	SysGUI!.setRepaintEnabled(0)
+rem	SysGUI!.setRepaintEnabled(0)
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 	minrows=num(user_tpl.gridInvoicesRows$)
 	if vectInvoices!.size()
@@ -141,7 +135,7 @@ fill_grid:
 		gridInvoices!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)
 		gridInvoices!.setNumRows(0)
 	endif
-	SysGUI!.setRepaintEnabled(1)
+rem	SysGUI!.setRepaintEnabled(1)
 return
 
 create_reports_vector:
@@ -210,7 +204,7 @@ return
 
 switch_value:rem --- Switch Check Values
 
-	SysGUI!.setRepaintEnabled(0)
+rem	SysGUI!.setRepaintEnabled(0)
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 	vectInvoices!=UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
 	vectInvoicesMaster!=UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
@@ -239,7 +233,7 @@ switch_value:rem --- Switch Check Values
 		next curr_row
 	endif
 
-	SysGUI!.setRepaintEnabled(1)
+rem	SysGUI!.setRepaintEnabled(1)
 
 	return
 
@@ -253,14 +247,87 @@ rem --- reset all select to include flags to Yes
 		for x=1 to vect_size step user_tpl.MasterCols
 			vectInvoicesMaster!.setItem(x-1,"Y")
 		next x
+rem --- set variables using either getColumnData or getUserInput, depending on where gosub'd from
+		if callpoint!.getVariableName()="APE_PAYSELECT.DISC_DATE_DT"
+			filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
+			filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+			filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
+			filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
+			filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
+			filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
+			filter_disc_date$=callpoint!.getUserInput()
+		else
+			if  callpoint!.getVariableName()="APE_PAYSELECT.DUE_DATE_DT"
+				filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
+				filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+				filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
+				filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
+				filter_due_date$=callpoint!.getUserInput()
+				filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
+				filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
+			else
+				if callpoint!.getVariableName()="APE_PAYSELECT.DISC_DATE_OP"
+					filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
+					filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+					filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
+					filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
+					filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
+					filter_disc_op$=callpoint!.getUserInput()
+					filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
+				else
+					if callpoint!.getVariableName()="APE_PAYSELECT.DUE_DATE_OP"
+						filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
+						filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+						filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
+						filter_due_op$=callpoint!.getUserInput()
+						filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
+						filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
+						filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
+					else
+						if callpoint!.getVariableName()="APE_PAYSELECT.PAYMENT_GRP"
+							filter_pymnt_grp$=callpoint!.getUserInput()
+							filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+							filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
+							filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
+							filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
+							filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
+							filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
+						else
+							if callpoint!.getVariableName()="APE_PAYSELECT.VENDOR_ID"
+								filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
+								filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+								filter_vendor$=callpoint!.getUserInput()
+								filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
+								filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
+								filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
+								filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
+							else
+								if callpoint!.getVariableName()="APE_PAYSELECT.AP_TYPE"
+									filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
+									filter_aptype$=callpoint!.getUserInput()
+									filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
+									filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
+									filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
+									filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
+									filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
+								else
+							escape;rem final else...print callpoint!.getVariableName()
+										filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
+										filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+										filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
+										filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
+										filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
+										filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
+										filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")									
+								endif
+							endif
+						endif
+					endif
+				endif
+			endif
+		endif
+
 rem --- set all excluded filtered flags to No 
-		filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
-		filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
-		filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
-		filter_due_op$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP")
-		filter_due_date$=callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT")
-		filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
-		filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
 		for x=1 to vect_size step user_tpl.MasterCols
 			select_rec$="Y"
 			if filter_pymnt_grp$<>"" and filter_pymnt_grp$<>vectInvoicesMaster!.getItem(x-1+2)
