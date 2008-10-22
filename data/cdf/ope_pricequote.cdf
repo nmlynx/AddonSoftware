@@ -1,8 +1,6 @@
 [[OPE_PRICEQUOTE.AOPT-AVLE]]
 rem -- call inquiry program to view Sales Analysis records
-
 syspgmdir$=stbl("+DIR_SYP",err=*next)
-
 key_pfx$=firm_id$
 if cvs(callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),2) <>"" then
 	key_pfx$=key_pfx$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
@@ -30,7 +28,6 @@ build_arrays:
 	ivm06_dev=fnget_dev("IVM_ITEMPRIC")
 	dim ivm06a$:fnget_tpl$("IVM_ITEMPRIC")
 	precision 9
-
 	readrecord(arm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")+"  ")arm02a$
 	readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")+
 :			callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"))ivm02a$
@@ -58,7 +55,6 @@ rem --- Display pricing table"
 	callpoint!.setColumnData("OPE_PRICEQUOTE.PCT_VALUE_"+str(x:"00"),str(percent))
 	callpoint!.setColumnData("OPE_PRICEQUOTE.UNIT_PRICE_"+str(x:"00"),str(price))
 	next x
-
 rem --- Display Contract Price"
 	for x=1 to 10
 		callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),"")
@@ -79,7 +75,6 @@ rem --- Display Contract Price"
 	wend
 	callpoint!.setStatus("REFRESH")
 return
-
 rem --- Determine Price
 determine_price:
 	if ivcprice.iv_price_mth$="C"
@@ -99,18 +94,16 @@ return
 rem --- Validate Warehouse for this Item
 ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"))ivm01a$
+readrecord(ivm01_dev,key=firm_id$+callpoint!.getUserInput())ivm01a$
 ivm02_dev=fnget_dev("IVM_ITEMWHSE")
 dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
 valid_wh$="Y"
-
 while 1
 	readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")+
-:			callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),dom=*next)ivm02a$;break
+:			callpoint!.getUserInput(),dom=*next)ivm02a$;break
 	valid_wh$="N"
 	break
 wend
-
 if valid_wh$="N"
 	callpoint!.setMessage("IV_NO_ITEM_WH")
 	callpoint!.setStatus("ABORT")
@@ -131,7 +124,6 @@ dim arm02a$:fnget_tpl$("ARM_CUSTDET")
 ar_type$="  "
 opm05_dev=fnget_dev("OPC_PRICECDS")
 dim opm05a$:fnget_tpl$("OPC_PRICECDS")
-
 while 1
 	callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_1","")
 	callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_2","")
@@ -144,8 +136,8 @@ while 1
 	callpoint!.setColumnData("<<DISPLAY>>.ZIP_CODE","")
 	callpoint!.setColumnData("<<DISPLAY>>.CONTACT_NAME","")
 	callpoint!.setColumnData("OPE_PRICEQUOTE.PRICING_CODE","")
-	readrecord(arm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID"),err=*break)arm01a$
-	readrecord(arm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")+ar_type$)arm02a$
+	readrecord(arm01_dev,key=firm_id$+callpoint!.getUserInput(),err=*break)arm01a$
+	readrecord(arm02_dev,key=firm_id$+callpoint!.getUserInput()+ar_type$)arm02a$
 	callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_1",arm01a.addr_line_1$)
 	callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_2",arm01a.addr_line_2$)
 	callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_3",arm01a.addr_line_3$)
@@ -180,3 +172,4 @@ ivcprice_dev=num(open_chans$[5]),ivcprice_tpl$=open_tpls$[5]
 ivm01_dev=num(open_chans$[6]),ivm01_tpl$=open_tpls$[6]
 ivm06_dev=num(open_chans$[7]),ivm06_tpl$=open_tpls$[7]
 ivcwhse_dev=num(open_chans$[8]),ivcwhse_tpl$=open_tpls$[8]
+

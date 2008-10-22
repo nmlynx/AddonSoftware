@@ -2,11 +2,9 @@
 rem --- need to go thru gridVect!; any record NOT already in ape-22 (detail) should be removed from ape-12 (gl dist)
 rem --- this can happen in this program, since dist grid is launched/handled from dtl grid -- we might write out
 rem --- one or more ape-12 recs, then come back to main form and abort, which won't save the ape-22 recs...
-
 	recVect!=gridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
 	numrecs=recVect!.size()
-
 	ape12_dev=fnget_dev("APE_MANCHECKDIST")
 	ape22_dev=fnget_dev("APE_MANCHECKDET")
 	
@@ -29,7 +27,6 @@ rem --- one or more ape-12 recs, then come back to main form and abort, which wo
 [[APE_MANCHECKHDR.AOPT-OINV]]
 rem -- call inquiry program to view open invoices this vendor
 rem -- only allow if trans_type is manual (vs reversal/void)
-
 if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="M"
 	key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
 	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
@@ -41,7 +38,6 @@ if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="M"
 :		key_pfx$,
 :		"PRIMARY",
 :		rd_key$
-
 	if rd_key$<>""
 		apt01_dev=fnget_dev("APT_INVOICEHDR")
 		dim apt01a$: fnget_tpl$("APT_INVOICEHDR")
@@ -111,7 +107,6 @@ else
 endif
 [[APE_MANCHECKHDR.AOPT-OCHK]]
 rem -- call inquiry program to view open check file; plug check#/vendor id if those fields are still blank on form
-
 key_pfx$=callpoint!.getColumnData("APE_MANCHECKHDR.FIRM_ID")+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
 selected_key$=""
 call stbl("+DIR_SYP")+"bam_inquiry.bbj",
@@ -123,7 +118,6 @@ call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :	key_pfx$,
 :	"PRIMARY",
 :	selected_key$
-
 if selected_key$<>""
 	if cvs(callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO"),3)="" and cvs(callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_DATE"),3)="" and
 :		cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)=""
@@ -133,7 +127,6 @@ if selected_key$<>""
 	endif
 endif
 [[APE_MANCHECKHDR.<CUSTOM>]]
-
 display_vendor_address:
 	apm01_dev=fnget_dev("APM_VENDMAST")
 	dim apm01a$:fnget_tpl$("APM_VENDMAST")
@@ -145,15 +138,11 @@ display_vendor_address:
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_CTSTZIP",cvs(apm01a.city$,2)+
 :			  ", "+apm01a.state_code$+"  "+apm01a.zip_code$)
 	endif
-
 return
-
 display_vendor_comments:
-
 	apm_vendcmts_dev=fnget_dev("APM_VENDCMTS")
 	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
 	apm09ak1$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-
 	read(apm_vendcmts_dev,key=apm09ak1$,dom=*next)
 	readrecord(apm_vendcmts_dev,end=*next)apm09a$
 	if apm09a$(1,len(apm09ak1$))=apm09ak1$
@@ -168,9 +157,7 @@ display_vendor_comments:
 :			"PRIMARY"
 	
 	endif
-
 return
-
 disp_vendor_comments:
 	
 	cmt_text$=""
@@ -185,43 +172,30 @@ disp_vendor_comments:
 			cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
 		endif				
 	wend
-
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
 	callpoint!.setStatus("REFRESH")
-
 return
-
 disable_grid:
-
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
 	c!.setEnabled(0)
-
 return
-
 enable_grid:
-
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
 	c!.setEnabled(1)
-
 return
-
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
 	rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
-
 	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
 	wmap$=callpoint!.getAbleMap()
 	wpos=pos(wctl$=wmap$,8)
 	wmap$(wpos+6,1)=ctl_stat$
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP-REFRESH")
-
 return
-
 calc_tots:
-
 	recVect!=GridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
 	numrecs=recVect!.size()
@@ -234,30 +208,20 @@ calc_tots:
 			tret=tret+gridrec.retention
 		next reccnt
 	endif
-
-
 return
-
 disp_tots:
-
     rem --- get context and ID of display controls for totals, and redisplay w/ amts from calc_tots
     
     tinv!=UserObj!.getItem(num(user_tpl.tinv_vpos$))
     tinv!.setValue(tinv)
-
     tdisc!=UserObj!.getItem(num(user_tpl.tdisc_vpos$))
     tdisc!.setValue(tdisc)
-
     tret!=UserObj!.getItem(num(user_tpl.tret_vpos$))
     tret!.setValue(tret)
-
     tchk!=UserObj!.getItem(num(user_tpl.tchk_vpos$))
     tchk!.setValue(tinv-tdisc-tret)
-
     return
-
 get_vendor_history:
-
 	apm02_dev=fnget_dev("APM_VENDHIST")				
 	dim apm02a$:fnget_tpl$("APM_VENDHIST")
 	vend_hist$=""
@@ -273,25 +237,18 @@ get_vendor_history:
 			GLNS!.setValue("dflt_dist",apm02a.ap_dist_code$)
 			vend_hist$="Y"
 	endif
-
 return
-
 #include std_missing_params.src
 [[APE_MANCHECKHDR.VENDOR_ID.AVAL]]
-if cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)<>"" 
-:	and callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")<>
+if cvs(callpoint!.getUserInput(),3)<>"" 
+:	and callpoint!.getUserInput()<>
 :	callpoint!.getColumnUndoData("APE_MANCHECKHDR.VENDOR_ID")	
-
 	rem - gosub display_vendor_address					
 	gosub disp_vendor_comments
-
 	callpoint!.setColumnUndoData("APE_MANCHECKHDR.VENDOR_ID",
-:		callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"))
-
+:		callpoint!.getUserInput())
 	callpoint!.setStatus("REFRESH")
-
 	gosub get_vendor_history
-
 	if vend_hist$=""
 		if user_tpl.multi_types$="Y"
 			msg_id$="AP_NOHIST"
@@ -299,23 +256,21 @@ if cvs(callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID"),3)<>""
 			callpoint!.setStatus("ABORT")
 		endif
 	endif
-
 endif
 [[APE_MANCHECKHDR.TRANS_TYPE.AVAL]]
-if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="R"
+if callpoint!.getUserInput()="R"
 	msg_id$="AP_REUSE_ERR"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
 endif
-
-if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="V"
+if callpoint!.getUserInput()="V"
 	ctl_name$="APE_MANCHECKHDR.VENDOR_ID"
 	ctl_stat$="D"
 	gosub disable_fields
 	gosub disable_grid							
 endif
 						
-if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="M"
+if callpoint!.getUserInput()="M"
 	ctl_name$="APE_MANCHECKHDR.VENDOR_ID"
 	ctl_stat$=" "
 	gosub disable_fields
@@ -323,8 +278,7 @@ if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="M"
 endif
 [[APE_MANCHECKHDR.CHECK_DATE.AVAL]]
 gl$=user_tpl.glint$
-ckdate$=callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_DATE")
-
+ckdate$=callpoint!.getUserInput()
 if gl$="Y" 
 	call stbl("+DIR_PGM")+"glc_datecheck.aon",ckdate$,"Y",per$,yr$,status
 	if status>99
@@ -358,7 +312,6 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	dflt_data$[all]
 [[APE_MANCHECKHDR.BSHO]]
 rem --- disable ap type control if param for multi-types is N
-
 if user_tpl.multi_types$="N" 
 	ctl_name$="APE_MANCHECKHDR.AP_TYPE"
 	ctl_stat$="I"
@@ -373,7 +326,6 @@ c!.setColumnEditable(7,0)
 if user_tpl.multi_types$="N" c!.setColumnEditable(2,0)
 [[APE_MANCHECKHDR.AWIN]]
 rem --- Open/Lock files
-
 files=30,begfile=1,endfile=12
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="APE_MANCHECKHDR";rem --- "ape-02"
@@ -388,12 +340,10 @@ files$[9]="APC_TYPECODE";rem --- "apm-10A"
 files$[10]="APM_VENDCMTS";rem --- "apm-09
 files$[11]="APS_PARAMS";rem --- "ads-01"
 files$[12]="GLS_PARAMS"
-
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
 options$[3]=options$[3]+"N"
-
 call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	begfile,
 :	endfile,
@@ -404,13 +354,10 @@ call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	table_chans$[all],
 :	batch,
 :	status$
-
 if status$<>"" goto std_exit
 aps01_dev=num(chans$[11])
 gls01_dev=num(chans$[12])
-
 dim aps01a$:templates$[11],gls01a$:templates$[12]
-
 user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
 user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"misc_entry:c(1),post_closed:c(1),units_flag:c(1),"
@@ -418,38 +365,30 @@ user_tpl_str$=user_tpl_str$+"existing_tran:c(1),open_check:c(1),existing_invoice
 user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),"
 user_tpl_str$=user_tpl_str$+"tinv_vpos:c(1),tdisc_vpos:c(1),tret_vpos:c(1),tchk_vpos:c(1),"
 user_tpl_str$=user_tpl_str$+"ap_type_vpos:c(1),vendor_id_vpos:c(1),ape22_dev1:n(5)"
-
 dim user_tpl$:user_tpl_str$
 user_tpl.firm_id$=firm_id$
 user_tpl.ape22_dev1=num(chans$[3])
-
 rem --- set up UserObj! as vector
 	UserObj!=SysGUI!.makeVector()
 	
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_INV","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_INV","CTLI"))
 	tinv!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_DISC","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_DISC","CTLI"))
 	tdisc!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_RETEN","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_RETEN","CTLI"))
 	tret!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_CHECK","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.DISP_TOT_CHECK","CTLI"))
 	tchk!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
 	ctlContext=num(callpoint!.getTableColumnAttribute("APE_MANCHECKHDR.AP_TYPE","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("APE_MANCHECKHDR.AP_TYPE","CTLI"))
 	ap_type!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
 	ctlContext=num(callpoint!.getTableColumnAttribute("APE_MANCHECKHDR.VENDOR_ID","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("APE_MANCHECKHDR.VENDOR_ID","CTLI"))
 	vendor_id!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-
 	UserObj!.addItem(tinv!)
 	user_tpl.tinv_vpos$="0"
 	UserObj!.addItem(tdisc!)
@@ -462,9 +401,7 @@ rem --- set up UserObj! as vector
 	user_tpl.ap_type_vpos$="4"
 	UserObj!.addItem(vendor_id!)
 	user_tpl.vendor_id_vpos$="5"
-
 rem --- Additional File Opens
-
 gl$="N"
 status=0
 source$=pgm(-2)
@@ -472,14 +409,11 @@ call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,stat
 if status<>0 goto std_exit
 user_tpl.glint$=gl$
 user_tpl.glworkfile$=glw11$
-
 if gl$="Y"
    files=21,begfile=20,endfile=21
    dim files$[files],options$[files],chans$[files],templates$[files]
    files$[20]="GLM_ACCT",options$[20]="OTA";rem --- "glm-01"
    files$[21]=glw11$,options$[21]="OTAS";rem --- s means no err if tmplt not found
-
-
 	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	begfile,
 :	endfile,
@@ -490,11 +424,8 @@ if gl$="Y"
 :	table_chans$[all],
 :	batch,
 :	status$
-
 if status$<>"" goto std_exit
-
 endif
-
 rem --- Retrieve parameter data
                
 aps01a_key$=firm_id$+"AP00"
@@ -505,12 +436,9 @@ user_tpl.multi_dist$=aps01a.multi_dist$
 user_tpl.ret_flag$=aps01a.ret_flag$
 user_tpl.misc_entry$=aps01a.misc_entry$
 user_tpl.post_closed$=aps01a.post_closed$
-
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 user_tpl.units_flag$=gls01a.units_flag$
-
-
 pfx$="GLNS",nm$="GL Dist"
 GLNS!=BBjAPI().getNamespace(pfx$,nm$,1)
 GLNS!.setValue("GLMisc",user_tpl.misc_entry$)
@@ -526,7 +454,6 @@ if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_
 	dim apt05a$:fnget_tpl$("APT_CHECKHISTORY")
 	apt05k1$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")+callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
 	apt05klen=len(apt05k1$)
-
 	read (apt_checkhistory_dev,key=apt05k1$,dom=*next)
 	readrecord (apt_checkhistory_dev,end=*break)apt05a$
 	if apt05a$(1,apt05klen)=apt05k1$
@@ -571,7 +498,6 @@ user_tpl.open_check$=""
 user_tpl.dflt_dist_cd$=""
 user_tpl.dflt_gl_account$=""
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
-
 rem --- enable/disable grid cells
 w!=Form!.getChildWindow(1109)
 c!=w!.getControl(5900)
@@ -588,15 +514,12 @@ user_tpl.reuse_chk$=""
 user_tpl.existing_tran$="Y"
 user_tpl.open_check$=""
 user_tpl.reuse_chk$=""
-
 gosub disp_vendor_comments
-
 ctl_name$="APE_MANCHECKHDR.TRANS_TYPE"
 ctl_stat$="D"
 gosub disable_fields
 ctl_name$="APE_MANCHECKHDR.VENDOR_ID"
 gosub disable_fields
-
 if callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")="M"
 	gosub calc_tots
 	callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_INV",str(tinv))
@@ -612,7 +535,6 @@ endif
 rem --- disable inv#/date/dist code cells corres to existing data -- only allow change on inv/disc cols
 curr_rows!=GridVect!.getItem(0)
 curr_rows=curr_rows!.size()
-
 if curr_rows
 gosub enable_grid
 dtlGrid!=Form!.getChildWindow(1109).getControl(5900)

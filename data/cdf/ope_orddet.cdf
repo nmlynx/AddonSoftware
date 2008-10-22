@@ -6,12 +6,10 @@ escape
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
 rem --- Calc Extension
 	newqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-	unit_price=num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	unit_price=num(callpoint!.getUserInput())
 	new_ext_price=newqty*unit_price
-
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
-
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
@@ -51,7 +49,6 @@ gosub set_avail
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
 	gosub disp_totals
-
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm01a$:fnget_tpl$("APT_ITEMMAST")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
@@ -59,13 +56,11 @@ rem --- Go get Lot/Serial Numbers if needed
 	ivs01_dev=fnget_dev("IVS_PARAMS")
 	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
 	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs0a$
-
 	ar_type$=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
 	cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 	ord$=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
 	seq$=callpoint!.getColumnData("OPE_ORDDET.LINE_NO")
 	line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-
 	while 1
 		readrecord(opc_linecode_dev,key=firm$+line_code$,err=*break)opc_linecode$
 		if pos(opc_linecode.line_type$="SP")
@@ -87,16 +82,12 @@ rem --- Go get Lot/Serial Numbers if needed
 :					dflt_data$[all]
 			endif
 		endif
-
-
 rem	glns!=bbjapi().getNamespace("GLNS","GL Dist",1)
 rem	amt_dist=num(glns!.getValue("dist_amt"))
 rem	if amt_dist<>num(callpoint!.getColumnData("APE_MANCHECKDET.INVOICE_AMT"))
 rem		msg_id$="AP_NOBAL"
 rem		gosub disp_message
 rem	endif
-
-
 rem	wk =Form!.getChildWindow(1109).getControl(5900).getSelectedRow()
 rem	Form!.getChildWindow(1109).getControl(5900).focus()
 rem --- Form!.getChildWindow(1109).getControl(5900).startEdit(wk,5)
@@ -137,21 +128,18 @@ rem ---recalc quantities and extended price
 	shipqty=num(callpoint!.getUserInput())
 	ordqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	if shipqty>ordqty
-		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(user_tpl.line_shipqty))
+		callpoint!.setUserInput(str(user_tpl.line_shipqty))
 		msg_id$="SHIP_EXCEEDS_ORD"
 		gosub disp_message
 		callpoint!.setStatus("ABORT-REFRESH")
 	else
 		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD",str(ordqty-shipqty))
-
 		unit_price=num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 		new_ext_price=ordqty*unit_price
-
 		callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 		callpoint!.setStatus("MODIFIED-REFRESH")
 	endif
-	user_tpl.line_shipqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
-
+	user_tpl.line_shipqty=num(callpoint!.getUserInput())
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
@@ -163,13 +151,10 @@ rem ---recalc quantities and extended price
 	endif
 	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD","0")
 	callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(newqty))
-
 	unit_price=num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	new_ext_price=newqty*unit_price
-
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
-
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
@@ -178,22 +163,19 @@ rem ---recalc quantities and extended price
 	boqty=num(callpoint!.getUserInput())
 	ordqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	if boqty>ordqty
-		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD",str(user_tpl.line_boqty))
+		callpoint!.setUserInput(str(user_tpl.line_boqty))
 		msg_id$="BO_EXCEEDS_ORD"
 		gosub disp_message
 		callpoint!.setStatus("ABORT-REFRESH")
 	else
 		shipqty=ordqty-boqty
 		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(shipqty))
-
 		unit_price=num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 		new_ext_price=ordqty*unit_price
-
 		callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 		callpoint!.setStatus("MODIFIED-REFRESH")
 	endif
-	user_tpl.line_boqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
-
+	user_tpl.line_boqty=num(callpoint!.getUserInput())
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
@@ -220,12 +202,10 @@ calc_grid_tots:
 		user_tpl.ord_tot=tamt
 	endif
 return
-
 disp_totals: rem --- get context and ID of total amount display control, and redisplay w/ amts from calc_tots
 	tamt!=UserObj!.getItem(num(user_tpl.ord_tot_1$))
 	tamt!.setValue(user_tpl.ord_tot)
 return
-
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
 rem --- need to send in wh_id$, item_id$, ls_id$, and qty
 	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
@@ -261,7 +241,6 @@ escape; rem decisions have to be made about ivc_ua (ivc_itemupt.aon)
 		break
 	wend
 return
-
 pricing: rem "Call Pricing routine
         ope01_dev=fnget_dev("OPE_ORDHDR")
 	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
@@ -302,7 +281,6 @@ pricing: rem "Call Pricing routine
 		precision num(ivs01a.precision$)
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC",str(price*factor))
 return
-
 rem --- set data in Availability window
 set_avail:
 	dim avail$[6]
@@ -313,7 +291,6 @@ set_avail:
 	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
 	ivc_whcode_dev=fnget_dev("IVC_WHSECODE")
 	dim ivm10c$:fnget_tpl$("IVC_WHSECODE")
-
 	while 1
 		readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"),dom=*break)ivm01a$
 		readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")+
@@ -322,7 +299,6 @@ set_avail:
 		good_item$="Y"
 		break
 	wend
-
 	if good_item$="Y"
 		avail$[1]=str(ivm02a.qty_on_hand)
 		avail$[2]=str(ivm02a.qty_commit)
@@ -348,7 +324,6 @@ set_avail:
 		wend
 	endif
 return
-
 rem --- Clear Availability Window
 clear_avail:
 	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
@@ -359,7 +334,6 @@ clear_avail:
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
 return
-
 rem --- Check to see if we're on a new row
 check_new_row:
 	MyGrid!=userObj!.getItem(0)
@@ -370,14 +344,14 @@ check_new_row:
 		gosub set_avail
 	endif
 return
-
 #include std_missing_params.src
 [[OPE_ORDDET.LINE_CODE.AVAL]]
 rem --- set enable/disable based on line type
-	line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+	line_code$=callpoint!.getUserInput()
 	if cvs(line_code$,2)<>""
 		opc_linecode_dev=fnget_dev("OPC_LINECODE")
 		dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 		read record (opc_linecode_dev,key=firm_id$+line_code$,dom=*next)opc_linecode$
 		callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
 	endif
+

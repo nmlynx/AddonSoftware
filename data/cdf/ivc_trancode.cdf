@@ -1,9 +1,7 @@
 [[IVC_TRANCODE.BDEL]]
 rem -- don't allow delete of trans code if it's in use in ive_transhdr
-
 ive01_dev=fnget_dev("IVE_TRANSHDR")
 k$=""
-
 read (ive01_dev,key=firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE"),knum=1,dom=*next)
 k$=key(ive01_dev,end=*next)
 if pos(firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE")=k$)=1
@@ -22,7 +20,7 @@ rem --- re-enable Post to G/L flag (unless GL not installed)
 	endif
 [[IVC_TRANCODE.TRANS_TYPE.AVAL]]
 rem --- Check for Commitment type
-	if callpoint!.getColumnData("IVC_TRANCODE.TRANS_TYPE") = "C"
+	if callpoint!.getUserInput() = "C"
 		callpoint!.setColumnData("IVC_TRANCODE.POST_GL","N")
 		callpoint!.setColumnData("IVC_TRANCODE.GL_ADJ_ACCT","")
 		ctl_name$="IVC_TRANCODE.POST_GL"
@@ -39,15 +37,12 @@ rem --- Check for Commitment type
 	endif
 [[IVC_TRANCODE.BWRI]]
 rem --- Check for blank Trans Type
-
 	if cvs(callpoint!.getColumnData("IVC_TRANCODE.TRANS_TYPE"),2) = "" then
 		msg_id$="INVALID_TRANS_TYPE"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 	endif
-
 rem --- Check for G/L Number if Post to G/L is up
-
 	if callpoint!.getColumnData("IVC_TRANCODE.POST_GL") = "Y" then
 		if cvs(callpoint!.getColumnData("IVC_TRANCODE.GL_ADJ_ACCT"),2) = "" then
 			msg_id$ = "IV_NEED_GL_ACCT"
@@ -57,18 +52,15 @@ rem --- Check for G/L Number if Post to G/L is up
 	endif
 [[IVC_TRANCODE.<CUSTOM>]]
 rem #include std_missing_params.src
-
 disable_fields:
 rem --- used to disable/enable controls depending on parameter settings
 rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
-
 	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
 	wmap$=callpoint!.getAbleMap()
 	wpos=pos(wctl$=wmap$,8)
 	wmap$(wpos+6,1)=ctl_stat$
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP-REFRESH")
-
 return
 [[IVC_TRANCODE.BSHO]]
 rem --- Open/Lock Files
@@ -89,15 +81,11 @@ rem --- init/parameters
 			
 	ivs01a_key$=firm_id$+"IV00"
 	find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
 rem --- check if GL is installed
-
 	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
 	gl$=info$[20];rem --- gl installed?
-
 	dim user_tpl$:"gl_installed:c(1)"
 	user_tpl.gl_installed$=gl$
-
 	if gl$<>"Y"
 		ctl_stat$="I"
 		ctl_name$="IVC_TRANCODE.POST_GL"
@@ -105,3 +93,4 @@ rem --- check if GL is installed
 		ctl_name$="IVC_TRANCODE.GL_ADJ_ACCT"
 		gosub disable_fields	
 	endif
+

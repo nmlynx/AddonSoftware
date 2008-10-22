@@ -13,7 +13,6 @@ g!=form!.getChildWindow(1109).getControl(5900)
 userObj!=sysgui!.makeVector()
 mwin!=form!.getChildWindow(1109).addChildWindow(15000,0,10,100,75,"",$00000800$,10)
 mwin!.addGroupBox(15999,0,5,g!.getWidth()-5,65,"Inventory Availability",$$)
-
 userObj!.addItem(g!) 
 userObj!.addItem(mwin!)
 mwin!.addStaticText(15001,15,25,75,15,"On Hand:",$$)
@@ -108,7 +107,7 @@ rem --- Duplicate Historical Invoice
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 rem --- Display Ship to information
 	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
-	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	ship_to_no$=callpoint!.getUserInput()
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub ship_to_info
@@ -120,9 +119,8 @@ rem --- set default values
 	find record(ope01_dev,key=firm_id$+
 :		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)ope01a$;goto rec_exist
+:		callpoint!.getUserInput(),dom=*next)ope01a$;goto rec_exist
 	user_tpl.new_rec$="Y"
-
 rec_exist:
 	if user_tpl.new_rec$<>"Y"
 		gosub check_lock_flag
@@ -177,7 +175,7 @@ rem -- Deal with which Ship To type
 	callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
 	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
 	dim dctl$[10]
-	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	ship_to_type$=callpoint!.getUserInput()
 	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
@@ -205,22 +203,21 @@ rem --- get default dates
 rem --- enable/disable expire date based on value
 	dim dctl$[10]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
-	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
+	if callpoint!.getUserInput()<>"P"
 		dmap$="I"
 	else
 		dmap$=""
 	endif
 	gosub disable_ctls
-
 	if rec_data.invoice_type$="S"
-		if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")="P"
+		if callpoint!.getUserInput()="P"
 			msg_id$="OP_NO_CONVERT"
 			gosub  disp_message
 			callpoint!.setStatus("ABORT-REFRESH")
 		endif
 	else
 		if rec_data.invoice_type$="P"
-			if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")="S"
+			if callpoint!.getUserInput()="S"
 				msg_id$="CONVERT_QUOTE"
 				gosub disp_message
 				if msg_opt$="Y"
@@ -287,7 +284,6 @@ rem --- reset expiration date to enabled
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	dmap$=""
 	gosub disable_ctls
-
 rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
@@ -306,12 +302,9 @@ rem --- If cash customer, get correct customer number
 	endif
 [[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
 rem --- Show customer data
-
-	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	cust_id$=callpoint!.getUserInput()
 	gosub bill_to_info
-
 	gosub disp_cust_comments
-
 rem	rd_key$=""
 rem	key_pfx$=firm_id$+cust_id$
 rem	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
@@ -325,7 +318,6 @@ rem :		"PRIMARY",
 rem :		rd_key$
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
-
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
@@ -391,9 +383,7 @@ bill_to_info: rem --- get and display Bill To Information
 	endif
 	callpoint!.setStatus("REFRESH")
 return
-
 ship_to_info: rem --- get and display Bill To Information
-
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
 	if ship_to_type$<>"M"
 		if ship_to_type$="S"
@@ -432,12 +422,9 @@ ship_to_info: rem --- get and display Bill To Information
 		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",ordship_tpl.state_code$)
 		callpoint!.setColumnData("<<DISPLAY>>.SZIP",ordship_tpl.zip_code$)
 	endif
-
 	callpoint!.setStatus("REFRESH")
 return
-
 disable_ctls: rem --- disable selected control
-
 for dctl=1 to 10
 	dctl$=dctl$[dctl]
 	if cvs(dctl$,2)<>""
@@ -450,14 +437,12 @@ for dctl=1 to 10
 	endif
 next dctl
 return
-
 get_op_params:
 	ars01_dev=fnget_dev("ARS_PARAMS")
 	ars01a$=fnget_tpl$("ARS_PARAMS")
 	dim ars01a$:ars01a$
 	read record (ars01_dev,key=firm_id$+"AR00") ars01a$
 return
-
 disp_ord_tot:
 	user_tpl.ord_tot=0
 	ope11_dev=fnget_dev("OPE_ORDDET")
@@ -492,7 +477,6 @@ rem		U[2]=U[2]+ope11a.unit_cost*ope11a.qty_shipped
 	wend
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(user_tpl.ord_tot))
 return
-
 check_lock_flag:
 	locked=0
 	on pos(callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS")="NYS12") goto 
@@ -524,7 +508,6 @@ update_stat:
 	locked=1
 end_lock:
 	return
-
 copy_order: rem --- Duplicate or Credit Historical Invoice
 	copy_ok$="Y"
 	while 1
@@ -561,7 +544,6 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 			break
 		endif
 	wend
-
 	reprice$="N"
 	if copy_ok$="Y"
 		if line_sign=1
@@ -570,7 +552,6 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 			reprice$=msg_opt$
 		endif
 	endif
-
 	if copy_ok$="Y"
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",seq_id$,rd_table_chans$[all]
 		if len(seq_id$)>0
@@ -598,7 +579,6 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 			ope01a.total_cost=ope01a.total_cost*line_sign
 			ope01a.total_sales=ope01a.total_sales*line_sign
 			writerecord(ope01_dev)ope01a$
-
 rem --- copy Manual Ship To if any
 			if opt01a.shipto_type$="M"
 				dim ope31a$:fnget_tpl$("OPE_ORDSHIP")
@@ -610,7 +590,6 @@ rem --- copy Manual Ship To if any
 				ope31a.order_no$=ope01a.order_no$
 				writerecord(ope31_dev)ope31a$
 			endif
-
 rem --- copy detail lines
 			dim opt11a$:fnget_tpl$("OPT_ORDDET")
 			opt11_dev=fnget_dev("OPT_ORDDET")
@@ -626,7 +605,6 @@ rem --- copy detail lines
 				if firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$<>
 :					opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$ break
 				call stbl("+DIR_PGM")+"adc_copyfile.aon",opt11a$,ope11a$,status
-
 				if cvs(opt11a.line_code$,2)<>""
 					read record (opc_linecode_dev,key=firm_id$+opt11a.line_code$,dom=*next)opc_linecode$
 				endif
@@ -676,7 +654,6 @@ rem --- copy detail lines
 		endif
 	endif
 	return
-
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
 rem --- need to send in wh_id$, item_id$, ls_id$, and qty
 	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
@@ -708,7 +685,6 @@ rem		if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
 		break
 	wend
 return
-
 remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
 	ope21_dev=fnget_dev("OPE_ORDLSDET")
 	dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
@@ -731,7 +707,6 @@ remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
 		remove (ope21_dev,key=firm_id$+ar_type$+cust$+ord$+ord_seq$+ope21a.sequence_no$)
 	wend
 	return
-
 pricing: rem "Call Pricing routine
         ope01_dev=fnget_dev("OPE_ORDHDR")
 	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
@@ -772,7 +747,6 @@ pricing: rem "Call Pricing routine
 		precision num(ivs01a.precision$)
 		ope11a.std_list_prc=price*factor
 return
-
 disp_cust_comments:
 	
 	cmt_text$=""
@@ -787,16 +761,13 @@ disp_cust_comments:
 			cmt_text$=cmt_text$+cvs(arm05a.std_comments$,3)+$0A$
 		endif				
 	wend
-
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
 	callpoint!.setStatus("REFRESH")
 return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
 	gosub disp_ord_tot
-
 rem --- Populate address fields
-
 	cust_id$=rec_data.customer_id$
 	gosub bill_to_info
 	ship_to_type$=rec_data.shipto_type$
@@ -812,7 +783,6 @@ rem --- Populate address fields
 	dctl$[6]="<<DISPLAY>>.SCITY"
 	dctl$[7]="<<DISPLAY>>.SSTATE"
 	dctl$[8]="<<DISPLAY>>.SZIP"
-
 	if rec_data.shipto_type$="M"
 		dmap$=""
 	else
@@ -827,7 +797,6 @@ rem --- Populate address fields
 		dmap$=""
 	endif
 	gosub disable_ctls
-
 rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
@@ -873,20 +842,16 @@ rem --- open needed files
 	open_tables$[32]="IVC_PRICCODE",open_opts$[32]="OTA"
 	open_tables$[33]="ARM_CUSTCMTS",open_opts$[33]="OTA"
 	gosub open_tables
-
 rem --- get AR Params
 	dim ars01a$:open_tpls$[4]
 	read record(num(open_chans$[4]),key=firm_id$+"AR00")ars01a$
-
 rem --- get IV Params
 	dim ivs01a$:open_tpls$[29]
 	read record(num(open_chans$[29]),key=firm_id$+"IV00")ivs01a$
-
 rem --- see if blank warehouse exists
 	blank_whse$="N"
 	dim ivm10c$:open_tpls$[28]
 	read record(num(open_chans$[28]),key=firm_id$+"C"+ivm10c.warehouse_id$,dom=*next)ivm10c$;rem blank_whse$="Y"
-
 rem --- disable display fields
 	dim dctl$[10]
 	dmap$="I"
@@ -920,14 +885,12 @@ rem --- disable display fields
 	dctl$[6]="<<DISPLAY>>.AGING_120"
 	dctl$[7]="<<DISPLAY>>.TOT_AGING"
 	gosub disable_ctls
-
 rem --- set up UserObj! as vector
 rem	UserObj!=SysGUI!.makeVector()
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLI"))
 	tamt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 	UserObj!.addItem(tamt!)
-
 rem --- Setup user_tpl$
 	ars_credit_dev=num(open_chans$[7])
 	dim ars_credit$:open_tpls$[7]
@@ -951,3 +914,4 @@ rem --- Setup user_tpl$
 	user_tpl.dropship_flag$="8"
 	user_tpl.ord_tot_1$="9"
 	user_tpl.cur_row=-1
+
