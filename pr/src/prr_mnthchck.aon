@@ -186,18 +186,6 @@ rem --- Functions used to retrieve form values
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
     def fnget_table$(q0$)=rd_alias_id$
 
-rem #include fndate.src
-
-        def fndate$(q$)
-        if cvs(q$,2)="" return ""
-        if pos("9"<>q$)=0 return q$
-        testdate$=""
-        testdate$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
-        return testdate$
-        fnend
-
-rem #endinclude fndate.src
-
 
 rem --- Miscellaneous functions
 
