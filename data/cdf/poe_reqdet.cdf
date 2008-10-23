@@ -9,14 +9,18 @@ rem --- After Grid Display Row
 	endif
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
+escape
+
 	gosub update_line_type_info
-	if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getUserInput(),2)  then
+
+escape
+
+	if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2)  then
+
 		callpoint!.setColumnData("POE_REQDET.CONV_FACTOR","")
-		callpoint!.setColumnData("POE_REQDET.CUSTOMER_ID","")
 		callpoint!.setColumnData("POE_REQDET.FORECAST","")
 		callpoint!.setColumnData("POE_REQDET.ITEM_ID","")
 		callpoint!.setColumnData("POE_REQDET.LEAD_TIM_FLG","")
-		callpoint!.setColumnData("POE_REQDET.LINE_NO","")
 		callpoint!.setColumnData("POE_REQDET.LOCATION","")
 		callpoint!.setColumnData("POE_REQDET.NOT_B4_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.NOT_B4_DATE"))
 		callpoint!.setColumnData("POE_REQDET.NS_ITEM_ID","")
@@ -26,7 +30,6 @@ rem --- Line Code - After Validataion
 		callpoint!.setColumnData("POE_REQDET.REQD_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.REQD_DATE") )
 		callpoint!.setColumnData("POE_REQDET.REQ_QTY","")
 		callpoint!.setColumnData("POE_REQDET.SEQUENCE_NO","")
-		callpoint!.setColumnData("POE_REQDET.SHIPTO_NO","")
 		callpoint!.setColumnData("POE_REQDET.SOURCE_CODE","")
 		callpoint!.setColumnData("POE_REQDET.UNIT_COST","")
 		callpoint!.setColumnData("POE_REQDET.UNIT_MEASURE","")
@@ -51,6 +54,9 @@ rem --- Custom
 	update_line_type_info:
 		poc_linecode_dev=fnget_dev("POC_LINECODE")
 		dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+
+escape
+		
 		if callpoint!.getVariableName()="POE_REQDET.PO_LINE_CODE" then
 			po_line_code$=callpoint!.getUserInput()
 		else
@@ -58,6 +64,9 @@ rem --- Custom
 		endif
 		read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
 		callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
+
+		if pos(poc_linecode.line_type$="SNO") then gosub calc_ext_cost
+
 	return
 	validate_whse_item:
 		ivm_itemwhse_dev=fnget_dev("IVM_ITEMWHSE")
@@ -65,11 +74,11 @@ rem --- Custom
 		change_flag=0
 		if callpoint!.getVariableName()="POE_REQDET.ITEM_ID" then
 			item_no$=callpoint!.getUserInput()
-			if item_no$<>callpoint!.getColumnData("POE_REQDET.ITEM_NO") then 
+			if item_no$<>callpoint!.getColumnData("POE_REQDET.ITEM_ID") then 
 				change_flag=1
 			 endif
 		else
-			item_no$=callpoint!.getColumnData("POE_REQDET.ITEM_NO")
+			item_no$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
 		endif
 		if callpoint!.getVariableName()="POE_REQDET.WAREHOUSE_ID" then
 			whse$=callpoint!.getUserInput()
@@ -79,7 +88,6 @@ rem --- Custom
 		else
 			whse$=callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID")
 		endif
-		if item_no$="" then break
 		
 		if change_flag then
 			read record (ivm_itemwhse_dev,key=firm_id$+whse$+item_no$,dom=missing_warehouse) ivm_itemwhse$
@@ -98,6 +106,21 @@ rem --- Custom
 		callpoint!.setStatus("ABORT")
 	
 	return
-		
-		
 
+
+	calc_ext_cost:
+
+		unit_cost=num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))
+		req_qty=num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))
+		conv_factor=num(callpoint!.getColumnData("POE_REQDET.CONV_FACTOR"))
+
+		ext_cost=req_qty*conv_factor*unit_cost
+
+REM
+REM		callpoint!.setColumnData("<<DISPLAY>>.EXT_COST",str(ext_cost))
+REM
+
+	return
+
+		
+		
