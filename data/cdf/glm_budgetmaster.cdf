@@ -50,10 +50,11 @@ glm18a.rev_title$=callpoint!.getColumnData("GLM_BUDGETMASTER.REV_TITLE")
 glm18a$=field(glm18a$)
 writerecord(glm18_dev)glm18a$
 [[GLM_BUDGETMASTER.BWRI]]
+rev_src$=callpoint!.getColumnData("GLM_BUDGETMASTER.REVISION_SRC")
 gosub validate_revision_source
 [[GLM_BUDGETMASTER.<CUSTOM>]]
 validate_revision_source:
-	rev_src$=callpoint!.getColumnData("GLM_BUDGETMASTER.REVISION_SRC")
+	rem --- rev_src$ set prior to gosub
 	amt_units$=callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS")
 	if cvs(rev_src$,3)<>"" and cvs(amt_units$,3)<>""
 		if rev_src$(len(rev_src$),1)<>amt_units$ or rev_src$(1,1)<"0" or rev_src$(1,1)>"5"
@@ -65,6 +66,7 @@ validate_revision_source:
 return
 #include std_missing_params.src
 [[GLM_BUDGETMASTER.REVISION_SRC.AVAL]]
+rev_src$=callpoint!.getUserInput()
 gosub validate_revision_source
 [[GLM_BUDGETMASTER.BUDGET_CODE.AVAL]]
 if callpoint!.getUserInput()<="5"
