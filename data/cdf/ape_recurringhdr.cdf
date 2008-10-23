@@ -133,6 +133,7 @@ else
 endif
 [[APE_RECURRINGHDR.VENDOR_ID.AVAL]]
 rem "check vend hist file to be sure this vendor/ap type ok and to set some defaults;  display vend cmts
+tmp_vendor_id$=callpoint!.getUserInput()
 gosub disp_vendor_comments
 gosub get_vendor_history
 if vend_hist$=""
@@ -167,6 +168,7 @@ gosub disp_dist_bal
 user_tpl.inv_in_ape03$="Y"
 user_tpl.inv_in_apt02$="N"
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
+tmp_vendor_id$=callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")
 gosub disp_vendor_comments
 callpoint!.setStatus("REFRESH")
 [[APE_RECURRINGHDR.AP_TERMS_CODE.AVAL]]
@@ -202,9 +204,9 @@ get_vendor_history:
 	apm02_dev=fnget_dev("APM_VENDHIST")				
 	dim apm02a$:fnget_tpl$("APM_VENDHIST")
 	vend_hist$=""
-	readrecord(apm02_dev,key=firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")+
+	readrecord(apm02_dev,key=firm_id$+tmp_vendor_id$+
 :		callpoint!.getColumnData("APE_RECURRINGHDR.AP_TYPE"),dom=*next)apm02a$
-	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")+
+	if apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$=firm_id$+tmp_vendor_id$+
 :		callpoint!.getColumnData("APE_RECURRINGHDR.AP_TYPE")
 			user_tpl.dflt_dist_cd$=apm02a.ap_dist_code$
 			user_tpl.dflt_gl_account$=apm02a.gl_account$
@@ -213,39 +215,18 @@ get_vendor_history:
 			vend_hist$="Y"
 	endif
 return
-display_vendor_comments:
-	apm09_dev=fnget_dev("APM_VENDCMTS")
-	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
-	apm09_key$=firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")
-	more=1
-	read(apm09_dev,key=apm09_key$,dom=*next)
-	while more
-		readrecord(apm09_dev,end=*break)apm09a$
-		if apm09a.firm_id$+apm09a.vendor_id$=firm_id$+callpoint!.getUserInput()
-			key_pfx$=firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")
-			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-:				gui_dev,
-:				Form!,
-:				"APM_VENDCMTS",
-:				"VIEW",
-:				table_chans$[all],
-:				key_pfx$,
-:				"PRIMARY"
-		endif
-		break		
-	wend
-return
+
 disp_vendor_comments:
 	
 	cmt_text$=""
 	apm09_dev=fnget_dev("APM_VENDCMTS")
 	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
-	apm09_key$=firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID")
+	apm09_key$=firm_id$+tmp_vendor_id$
 	more=1
 	read(apm09_dev,key=apm09_key$,dom=*next)
 	while more
 		readrecord(apm09_dev,end=*break)apm09a$
-		if apm09a.firm_id$+apm09a.vendor_id$<>firm_id$+callpoint!.getColumnData("APE_RECURRINGHDR.VENDOR_ID") break
+		if apm09a.firm_id$+apm09a.vendor_id$<>firm_id$+tmp_vendor_id$  break
 			cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
 		endif				
 	wend

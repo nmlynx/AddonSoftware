@@ -16,20 +16,21 @@ valid_inv:
 valid_terms:	
 [[ARE_DATECHANGE.INVOICE_DATE.AVAL]]
 rem --- recalculate due and discount dates
+	tmp_inv_date$=callpoint!.getUserInput()
+	tmp_term_code$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TERMS_CODE")
 	gosub recalc_dates
 [[ARE_DATECHANGE.<CUSTOM>]]
 recalc_dates:
+	rem --- tmp_term_code$ and tmp_inv_date$ set prior to gosub
 	arc_termcode_dev=fnget_dev("ARC_TERMCODE")
 	dim arc_termcode$:fnget_tpl$("ARC_TERMCODE")
-	inv_date$=callpoint!.getColumnData("ARE_DATECHANGE.INVOICE_DATE")
-	term_code$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TERMS_CODE")
 	while 1
-		readrecord (arc_termcode_dev,key=firm_id$+"A"+term_code$,dom=*break)arc_termcode$
-		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,inv_date$,
+		readrecord (arc_termcode_dev,key=firm_id$+"A"+tmp_term_code$,dom=*break)arc_termcode$
+		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,tmp_inv_date$,
 :			arc_termcode.inv_days_due,due$,status
 		callpoint!.setColumnData("ARE_DATECHANGE.INV_DUE_DATE",due$)
-		readrecord (arc_termcode_dev,key=firm_id$+"A"+term_code$,dom=*break)arc_termcode$
-		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,inv_date$,
+		readrecord (arc_termcode_dev,key=firm_id$+"A"+tmp_term_code$,dom=*break)arc_termcode$
+		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,tmp_inv_date$,
 :			arc_termcode.disc_days,due$,status
 		callpoint!.setColumnData("ARE_DATECHANGE.DISC_DATE",due$)
 		callpoint!.setStatus("REFRESH")
@@ -38,6 +39,8 @@ recalc_dates:
 	return
 [[ARE_DATECHANGE.AR_TERMS_CODE.AVAL]]
 rem --- recalculate due and discount dates
+	tmp_inv_date$=callpoint!.getColumnData("ARE_DATECHANGE.INVOICE_DATE")
+	tmp_term_code$=callpoint!.getUserInput()
 	gosub recalc_dates
 [[ARE_DATECHANGE.AWIN]]
 rem --- Open/Lock files

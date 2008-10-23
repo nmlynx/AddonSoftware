@@ -11,6 +11,7 @@ callpoint!.setColumnData("<<DISPLAY>>.TOT_QTY",str(tqty))
 callpoint!.setColumnData("<<DISPLAY>>.TOT_AMT",str(tamt))
 callpoint!.setStatus("REFRESH")
 if callpoint!.getColumnData("ARE_INVHDR.SIM_INV_TYPE")="V"
+	tmp_cust_id$=callpoint!.getColumnData("ARE_INVHDR.CUSTOMER_ID")
 	gosub check_outstanding_inv
 	if os_inv$="N"
 		msg_id$="AR_VOID_INV"
@@ -135,6 +136,7 @@ if cvs(callpoint!.getUserInput(),2)<>"" and callpoint!.getUserInput()<>
 		cust_key$=callpoint!.getColumnData("ARE_INVHDR.FIRM_ID")+callpoint!.getUserInput()
 		gosub disp_cust_addr
 		callpoint!.setStatus("REFRESH")
+		tmp_cust_id$=callpoint!.getUserInput()
 		gosub check_outstanding_inv
 		if os_inv$="Y"
 			msg_id$="AR_INV_ADJ"
@@ -212,10 +214,11 @@ rem --- also retrieve default dist/terms codes for customer
 	endif
 return
 check_outstanding_inv:
+    rem --- tmp_cust_id$ set prior to gosub
     os_inv$="N"
     art_invhdr_dev=fnget_dev("ART_INVHDR")
     dim art01a$:fnget_tpl$("ART_INVHDR")
-    readrecord(art_invhdr_dev,key=firm_id$+"  "+callpoint!.getColumnData("ARE_INVHDR.CUSTOMER_ID")+
+    readrecord(art_invhdr_dev,key=firm_id$+"  "+tmp_cust_id$+
 :       callpoint!.getColumnData("ARE_INVHDR.AR_INV_NO")+"00",err=*next)art01a$;os_inv$="Y"
     return
 disable_ctls:rem --- disable selected control
@@ -232,4 +235,3 @@ disable_ctls:rem --- disable selected control
 	next dctl
 	return
 #include std_missing_params.src
-

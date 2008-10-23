@@ -85,6 +85,7 @@ endif
 gosub delete_cashdet_cashbal
 [[ARE_CASHHDR.ADIS]]
 rem --- ADIS; existing are-01/11 tran
+tmp_cust_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
 gosub get_customer_balance
 wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
 gosub get_cash_rec_cd
@@ -315,6 +316,7 @@ callpoint!.setStatus("REFRESH-ABLEMAP-ACTIVATE")
 wk_cash_cd$=callpoint!.getUserInput()
 gosub get_cash_rec_cd
 [[ARE_CASHHDR.CUSTOMER_ID.AVAL]]
+tmp_cust_id$=callpoint!.getUserInput()
 gosub get_customer_balance
 callpoint!.setStatus("REFRESH")
 [[ARE_CASHHDR.PAYMENT_AMT.AVAL]]
@@ -385,9 +387,10 @@ get_cash_rec_cd:
 	endif
 return
 get_customer_balance:
+	rem --- tmp_cust_id$ being set prior to gosub
 	arm_custdet_dev=fnget_dev("ARM_CUSTDET")
 	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
-	arm02a.firm_id$=firm_id$,arm02a.customer_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID"),arm02a.ar_type$="  "
+	arm02a.firm_id$=firm_id$,arm02a.customer_id$=tmp_cust_id$,arm02a.ar_type$="  "
 	readrecord(arm_custdet_dev,key=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$,err=*next)arm02a$
 	callpoint!.setColumnData("<<DISPLAY>>.DISP_CUST_BAL",
 :		str(num(arm02a.aging_future$)+num(arm02a.aging_cur$)+num(arm02a.aging_30$)+
@@ -788,7 +791,7 @@ rem --- will add information for the OA tran to both vectInvoice! and vectInvSel
 	chk_applied=chk_applied+num(currdtl$(21,10))
 return
 fill_bottom_grid:
-	SysGUI!.setRepaintEnabled(0)
+rem	SysGUI!.setRepaintEnabled(0)
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	minrows=num(user_tpl.gridInvoice_rows$)
 	if vectInvoice!.size()
@@ -808,7 +811,7 @@ fill_bottom_grid:
 		gridInvoice!.setSelectedRow(0)
 		gridInvoice!.setSelectedColumn(1)
 	endif
-	SysGUI!.setRepaintEnabled(1)
+rem	SysGUI!.setRepaintEnabled(1)
 return
 process_OA_chkbox:
 	rem --- OA checkbox has been unchecked, remove any OA/CM lines from grid
@@ -1261,4 +1264,3 @@ disable_ctls:rem --- disable selected controls
 	next dctl
 	return
 #include std_missing_params.src
-
