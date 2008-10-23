@@ -1,3 +1,9 @@
+[[OPE_PRICEQUOTE.WAREHOUSE_ID.AVAL]]
+rem --- Fill arrays
+cust_id$=callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")
+wh$=callpoint!.getUserInput()
+item$=callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
+gosub build_arrays
 [[OPE_PRICEQUOTE.AOPT-AVLE]]
 rem -- call inquiry program to view Sales Analysis records
 syspgmdir$=stbl("+DIR_SYP",err=*next)
@@ -17,63 +23,77 @@ endif
 [[OPE_PRICEQUOTE.<CUSTOM>]]
 rem --- Build Pricing records
 build_arrays:
-	arm01_dev=fnget_dev("ARM_CUSTDET")
-	dim arm01a$:fnget_tpl$("ARM_CUSTDET")
-	ivcprice_dev=fnget_dev("IVC_PRICCODE")
-	dim ivcprice$:fnget_tpl$("IVC_PRICCODE")
-	arm02_dev=fnget_dev("ARM_CUSTDET")
-	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
-	ivm01_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-	ivm06_dev=fnget_dev("IVM_ITEMPRIC")
-	dim ivm06a$:fnget_tpl$("IVM_ITEMPRIC")
-	precision 9
-	readrecord(arm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")+"  ")arm02a$
-	readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")+
-:			callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"))ivm02a$
-	readrecord(ivm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"))ivm01a$
-	readrecord (ivcprice_dev,key=firm_id$+"E"+ivm01a.item_class$+arm02a.pricing_code$,dom=*next)ivcprice$
-	listprice=ivm02a.cur_price*(100-ivcprice.break_disc_01)/100
-	description$=cvs(ivcprice.code_desc$,2)
-rem --- Method for pricing
-	x$=" (Unknown Pricing Method)"
-	if ivcprice.iv_price_mth$="C" x$=" (Mark-Up Over Cost)"
-	if ivcprice.iv_price_mth$="L" x$=" (Mark-Down From List)"
-	if ivcprice.iv_price_mth$="M" x$=" (Margin Over Cost)"
-	description$=description$+x$
-rem --- Display pricing table"
-	callpoint!.setColumnData("<<DISPLAY>>.PRICE_METH",description$)
-	for x=1 to 10
-		price=0
-		percent=0
-		cost=ivm02a.unit_cost
-		if nfield(ivcprice$,"BREAK_QTY_"+str(x:"00"))<>0 or nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))<>0
-			percent=nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))
-			gosub determine_price
-		endif
-	callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_ORDERED_"+str(x:"00"),str(nfield(ivcprice$,"BREAK_QTY_"+str(x:"00"))))
-	callpoint!.setColumnData("OPE_PRICEQUOTE.PCT_VALUE_"+str(x:"00"),str(percent))
-	callpoint!.setColumnData("OPE_PRICEQUOTE.UNIT_PRICE_"+str(x:"00"),str(price))
-	next x
-rem --- Display Contract Price"
-	for x=1 to 10
-		callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),"")
-		callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),"")
-		callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC","")
-	next x
-	while 1
-		readrecord(ivm06_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")+
-:			callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),dom=*break)ivm06a$
-		description$=cvs(ivm06a.code_desc$,2)
-		description$=description$+" (From "+fndate$(ivm06a.from_date$)+" Through "+fndate$(ivm06a.thru_date$)+")"
-		callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC",description$)
+	if cvs(cust_id$,2)="" or cvs(wh$,2)="" or cvs(item$,2)=""
 		for x=1 to 10
-			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),str(nfield(ivm06a$,"BREAK_QTY_"+str(x:"00"))))
-			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),str(nfield(ivm06a$,"UNIT_PRICE_"+str(x:"00"))))
+			callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_ORDERED_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.PCT_VALUE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.UNIT_PRICE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),"")
+			callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC","")
 		next x
-		break
-	wend
-	callpoint!.setStatus("REFRESH")
+	else
+		arm01_dev=fnget_dev("ARM_CUSTDET")
+		dim arm01a$:fnget_tpl$("ARM_CUSTDET")
+		ivcprice_dev=fnget_dev("IVC_PRICCODE")
+		dim ivcprice$:fnget_tpl$("IVC_PRICCODE")
+		arm02_dev=fnget_dev("ARM_CUSTDET")
+		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+		ivm01_dev=fnget_dev("IVM_ITEMMAST")
+		dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+		ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+		dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+		ivm06_dev=fnget_dev("IVM_ITEMPRIC")
+		dim ivm06a$:fnget_tpl$("IVM_ITEMPRIC")
+		precision 9
+		readrecord(arm02_dev,key=firm_id$+cust_id$+"  ")arm02a$
+		readrecord(ivm02_dev,key=firm_id$+wh$+item$)ivm02a$
+		readrecord(ivm01_dev,key=firm_id$+item$)ivm01a$
+		readrecord (ivcprice_dev,key=firm_id$+"E"+ivm01a.item_class$+arm02a.pricing_code$,dom=*next)ivcprice$
+		listprice=ivm02a.cur_price*(100-ivcprice.break_disc_01)/100
+		description$=cvs(ivcprice.code_desc$,2)
+
+rem --- Method for pricing
+		x$=" (Unknown Pricing Method)"
+		if ivcprice.iv_price_mth$="C" x$=" (Mark-Up Over Cost)"
+		if ivcprice.iv_price_mth$="L" x$=" (Mark-Down From List)"
+		if ivcprice.iv_price_mth$="M" x$=" (Margin Over Cost)"
+		description$=description$+x$
+
+rem --- Display pricing table"
+		callpoint!.setColumnData("<<DISPLAY>>.PRICE_METH",description$)
+		for x=1 to 10
+			price=0
+			percent=0
+			cost=ivm02a.unit_cost
+			if nfield(ivcprice$,"BREAK_QTY_"+str(x:"00"))<>0 or nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))<>0
+				percent=nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))
+				gosub determine_price
+			endif
+			callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_ORDERED_"+str(x:"00"),str(nfield(ivcprice$,"BREAK_QTY_"+str(x:"00"))))
+			callpoint!.setColumnData("OPE_PRICEQUOTE.PCT_VALUE_"+str(x:"00"),str(percent))
+			callpoint!.setColumnData("OPE_PRICEQUOTE.UNIT_PRICE_"+str(x:"00"),str(price))
+		next x
+
+rem --- Display Contract Price"
+		for x=1 to 10
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),"")
+			callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC","")
+		next x
+		while 1
+			readrecord(ivm06_dev,key=firm_id$+cust_id$+item$,dom=*break)ivm06a$
+			description$=cvs(ivm06a.code_desc$,2)
+			description$=description$+" (From "+fndate$(ivm06a.from_date$)+" Through "+fndate$(ivm06a.thru_date$)+")"
+			callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC",description$)
+			for x=1 to 10
+				callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),str(nfield(ivm06a$,"BREAK_QTY_"+str(x:"00"))))
+				callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),str(nfield(ivm06a$,"UNIT_PRICE_"+str(x:"00"))))
+			next x
+			break
+		wend
+		callpoint!.setStatus("REFRESH")
+	endif
 return
 rem --- Determine Price
 determine_price:
@@ -113,6 +133,9 @@ else
 	callpoint!.setColumnData("<<DISPLAY>>.QTY_AVAIL",str(ivm02a.qty_on_hand-ivm02a.qty_commit))
 	callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_COMMIT",str(ivm02a.qty_commit))
 	callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_ON_HAND",str(ivm02a.qty_on_hand))
+	cust_id$=callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")
+	wh$=callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")
+	item$=callpoint!.getUserInput()
 	gosub build_arrays
 	callpoint!.setStatus("REFRESH")
 endif
@@ -151,6 +174,10 @@ while 1
 	callpoint!.setColumnData("OPE_PRICEQUOTE.PRICING_CODE",arm02a.pricing_code$)
 	break
 wend
+cust_id$=callpoint!.getUserInput()
+wh$=callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")
+item$=callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
+gosub build_arrays
 callpoint!.setStatus("REFRESH")
 [[OPE_PRICEQUOTE.BSHO]]
 num_files=8
