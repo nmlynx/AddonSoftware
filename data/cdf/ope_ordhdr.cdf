@@ -1,3 +1,12 @@
+[[OPE_ORDHDR.ORDER_DATE.AVAL]]
+rem --- Set user template info
+	user_tpl.order_date$=callpoint!.getUserInput()
+[[OPE_ORDHDR.PRICING_CODE.AVAL]]
+rem --- Set user template info
+	user_tpl.pricing_code$=callpoint!.getUserInput()
+[[OPE_ORDHDR.PRICE_CODE.AVAL]]
+rem --- Set user template info
+	user_tpl.price_code$=callpoint!.getUserInput()
 [[OPE_ORDHDR.SHIPTO_TYPE.BINP]]
 rem --- Do we need to create a new order number?
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
@@ -11,6 +20,7 @@ rem --- Do we need to create a new order number?
 		endif
 	endif
 [[OPE_ORDHDR.ADIS]]
+cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 gosub disp_cust_comments
 [[OPE_ORDHDR.ASIZ]]
 rem --- Create Empty Availability window
@@ -151,6 +161,9 @@ rec_exist:
 		if locked=1
 			callpoint!.setStatus("ABORT")
 		endif
+		user_tpl.price_code$=ope01a.price_code$
+		user_tpl.pricing_code$=ope01a.pricing_code$
+		user_tpl.order_date$=ope01a.order_date$
 	endif
 rem --- new record
 	if user_tpl.new_rec$="Y"
@@ -186,6 +199,9 @@ rem --- new record
 			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","Y")
 		endif
 		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","Y")
+		user_tpl.price_code$=""
+		user_tpl.pricing_code$=arm02a.pricing_code$
+		user_tpl.order_date$=sysinfo.system_date$
 	endif
 	user_tpl.new_rec$="N"
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
@@ -306,6 +322,12 @@ rem --- reset expiration date to enabled
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 	dmap$=""
 	gosub disable_ctls
+
+rem --- Clear Pricing data from user template
+	user_tpl.price_code$=""
+	user_tpl.pricing_code$=""
+	user_tpl.order_date$=""
+
 rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
@@ -326,6 +348,7 @@ rem --- If cash customer, get correct customer number
 rem --- Show customer data
 	cust_id$=callpoint!.getUserInput()
 	gosub bill_to_info
+	cust$=callpoint!.getUserInput()
 	gosub disp_cust_comments
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
@@ -394,6 +417,7 @@ bill_to_info: rem --- get and display Bill To Information
 	endif
 	callpoint!.setStatus("REFRESH")
 return
+
 ship_to_info: rem --- get and display Bill To Information
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
 	if ship_to_type$<>"M"
@@ -435,6 +459,7 @@ ship_to_info: rem --- get and display Bill To Information
 	endif
 	callpoint!.setStatus("REFRESH")
 return
+
 disable_ctls: rem --- disable selected control
 for dctl=1 to 10
 	dctl$=dctl$[dctl]
@@ -448,12 +473,14 @@ for dctl=1 to 10
 	endif
 next dctl
 return
+
 get_op_params:
 	ars01_dev=fnget_dev("ARS_PARAMS")
 	ars01a$=fnget_tpl$("ARS_PARAMS")
 	dim ars01a$:ars01a$
 	read record (ars01_dev,key=firm_id$+"AR00") ars01a$
 return
+
 disp_ord_tot:
 	user_tpl.ord_tot=0
 	ope11_dev=fnget_dev("OPE_ORDDET")
@@ -488,6 +515,7 @@ rem		U[2]=U[2]+ope11a.unit_cost*ope11a.qty_shipped
 	wend
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(user_tpl.ord_tot))
 return
+
 check_lock_flag:
 	locked=0
 	on pos(callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS")="NYS12") goto 
@@ -519,6 +547,7 @@ update_stat:
 	locked=1
 end_lock:
 	return
+
 copy_order: rem --- Duplicate or Credit Historical Invoice
 	copy_ok$="Y"
 	while 1
@@ -590,6 +619,9 @@ copy_order: rem --- Duplicate or Credit Historical Invoice
 			ope01a.total_cost=ope01a.total_cost*line_sign
 			ope01a.total_sales=ope01a.total_sales*line_sign
 			writerecord(ope01_dev)ope01a$
+			user_tpl.price_code$=ope01a.price_code$
+			user_tpl.pricing_code$=ope01a.pricing_code$
+			user_tpl.order_date$=ope01a.order_date$
 rem --- copy Manual Ship To if any
 			if opt01a.shipto_type$="M"
 				dim ope31a$:fnget_tpl$("OPE_ORDSHIP")
@@ -619,7 +651,7 @@ rem --- copy detail lines
 				if cvs(opt11a.line_code$,2)<>""
 					read record (opc_linecode_dev,key=firm_id$+opt11a.line_code$,dom=*next)opc_linecode$
 				endif
-				if pos(opc_linecode.line_type$="SP")
+				if pos(opc_linecode.line_type$="SP") and reprice$="Y"
 					gosub pricing
 				endif
 				if opc_linecode.line_type$<>"M"
@@ -698,6 +730,7 @@ rem	jpb need to figure this one out"	if s8$(3,1)="Y" or a0$(21,1)="P" break; REM
 		break
 	wend
 return
+
 remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
 	ope21_dev=fnget_dev("OPE_ORDLSDET")
 	dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
@@ -720,6 +753,7 @@ remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
 		remove (ope21_dev,key=firm_id$+ar_type$+cust$+ord$+ord_seq$+ope21a.sequence_no$)
 	wend
 	return
+
 pricing: rem "Call Pricing routine
         ope01_dev=fnget_dev("OPE_ORDHDR")
 	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
@@ -741,8 +775,8 @@ pricing: rem "Call Pricing routine
 	pc_files[4]=fnget_dev("IVC_PRICCODE")
 	pc_files[5]=fnget_dev("ARS_PARAMS")
 	pc_files[6]=ivs01_dev
-	call stbl("+DIR_PGM")+"opc_pc.aon",pc_files[all],firm_id$,wh$,item$,ope01a.price_code$,cust$,
-:		ope01a.order_date$,ope01a.pricing_code$,ordqty,typeflag$,price,disc,status
+	call stbl("+DIR_PGM")+"opc_pc.aon",pc_files[all],firm_id$,wh$,item$,user_tpl.price_code$,cust$,
+:		user_tpl.order_date$,user_tpl.pricing_code$,ordqty,typeflag$,price,disc,status
 	if price=0
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
@@ -760,17 +794,17 @@ pricing: rem "Call Pricing routine
 		precision num(ivs01a.precision$)
 		ope11a.std_list_prc=price*factor
 return
+
 disp_cust_comments:
-	
 	cmt_text$=""
 	arm05_dev=fnget_dev("ARM_CUSTCMTS")
 	dim arm05a$:fnget_tpl$("ARM_CUSTCMTS")
-	arm05_key$=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	arm05_key$=firm_id$+cust$
 	more=1
 	read(arm05_dev,key=arm05_key$,dom=*next)
 	while more
 		readrecord(arm05_dev,end=*break)arm05a$
-		if arm05a.firm_id$+arm05a.customer_id$<>firm_id$+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID") break
+		if arm05a.firm_id$+arm05a.customer_id$<>firm_id$+cust$ break
 			cmt_text$=cmt_text$+cvs(arm05a.std_comments$,3)+$0A$
 		endif				
 	wend
@@ -786,6 +820,9 @@ rem --- Populate address fields
 	ship_to_type$=rec_data.shipto_type$
 	ship_to_no$=rec_data.shipto_no$
 	ord_no$=rec_data.order_no$
+	user_tpl.price_code$=rec_data.price_code$
+	user_tpl.pricing_code$=rec_data.pricing_code$
+	user_tpl.order_date$=rec_data.order_date$
 	gosub ship_to_info
 	dim dctl$[10]
 	dctl$[1]="<<DISPLAY>>.SNAME"
@@ -911,7 +948,8 @@ rem --- Setup user_tpl$
 	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
 	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
 	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10),avail_oh:c(5),avail_comm:c(5),avail_avail:c(5),"
-	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),dropship_flag:c(5*),ord_tot_1:c(5*),cur_row:n(5)"
+	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),dropship_flag:c(5*),ord_tot_1:c(5*),cur_row:n(5),"
+	user_tpl$=user_tpl$+"price_code:c(2),pricing_code:c(4),order_date:c(8)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
 	user_tpl.display_bal$=ars_credit.display_bal$
@@ -927,4 +965,3 @@ rem --- Setup user_tpl$
 	user_tpl.dropship_flag$="8"
 	user_tpl.ord_tot_1$="9"
 	user_tpl.cur_row=-1
-
