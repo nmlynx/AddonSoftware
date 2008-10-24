@@ -176,7 +176,7 @@ rem --- update header
 rem ---recalc quantities and extended price
 	newqty=num(callpoint!.getUserInput())
 	if num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE")) = 0
-		qty_ord=callpoint!.getUserInput()
+		qty_ord=num(callpoint!.getUserInput())
 		gosub pricing
 	endif
 	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD","0")
