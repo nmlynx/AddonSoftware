@@ -9,13 +9,9 @@ rem --- After Grid Display Row
 	endif
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
-escape
-
 	gosub update_line_type_info
 
-escape
-
-	if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2)  then
+        if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2)  then
 
 		callpoint!.setColumnData("POE_REQDET.CONV_FACTOR","")
 		callpoint!.setColumnData("POE_REQDET.FORECAST","")
