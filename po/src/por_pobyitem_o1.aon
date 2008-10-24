@@ -74,7 +74,7 @@ rem --- Headings and print positions
         columns$[columns-9,0]="Date^Required",      columns$[columns-9,1]="C", columns$[columns-9,2]="8"
         columns$[columns-8,0]="Date^Promised",      columns$[columns-8,1]="C", columns$[columns-8,2]="8"
         columns$[columns-7,0]="Not^Before",         columns$[columns-7,1]="C", columns$[columns-7,2]="5"
-        columns$[columns-6,0]="Conv^Factor",        columns$[columns-6,1]="N", columns$[columns-6,2]=str(len(m5$)),columns$[columns-6,3]=m5$
+        columns$[columns-6,0]="Conv^Factor",        columns$[columns-6,1]="N", columns$[columns-6,2]=str(len(m2$)),columns$[columns-6,3]=m2$
         columns$[columns-5,0]="Quantity^Ordered",   columns$[columns-5,1]="N", columns$[columns-5,2]=str(len(m2$)),columns$[columns-5,3]=m2$,columns$[columns-5,10]="T"
         columns$[columns-4,0]="Quantity^Received",  columns$[columns-4,1]="N", columns$[columns-4,2]=str(len(m2$)),columns$[columns-4,3]=m2$,columns$[columns-4,10]="T"
         columns$[columns-3,0]="Balance",            columns$[columns-3,1]="N", columns$[columns-3,2]=str(len(m2$)),columns$[columns-3,3]=m2$,columns$[columns-3,10]="T"
@@ -90,41 +90,42 @@ rem --- Position files
 
 rem --- Init Sort File
 
-           dim poe12a_altkey$:poe12a_key_alttpl$
         if whsefrom$="" firstwhse$=fill(2) else firstwhse$=whsefrom$
 
-        read (poe12_dev2,knum=3,key=firm_id$+firstwhse$+"S"+itemfrom$,dom=*next)
-        if itemfrom$<>"" read(poe12_dev2,knum=3,key=firm_id$+firstwhse$+"S"+itemfrom$+pofrom$,dom=*next)
+        read (poe12a_dev,knum=3,key=firm_id$+firstwhse$+itemfrom$,dom=*next)
+        if itemfrom$<>"" read(poe12a_dev,knum=3,key=firm_id$+firstwhse$+itemfrom$+pofrom$,dom=*next)
 
     while more
 
-        poe12a_altkey$=key(poe12_dev2,end=*break)
-        if poe12a_altkey.firm_id$<>firm_id$ break
-        sortkey$=firm_id$+poe12a_altkey.vendor_id$+poe12a_altkey.po_no$+poe12a_altkey.po_line_no$
-        read (poe12_dev2,end=done)
+        poe12a_key$=key(poe12a_dev,end=*break)
+        if pos(firm_id$=poe12a_key$(1,2))<>1 break
 
-rem --- Find corresponding detail line
+        rem --- Find corresponding detail line
 
-        find record (poe12a_dev,key=sortkey$,dom=*next) poe12a$
-        if poe12a.firm_id$+poe12a.vendor_id$+poe12a.po_no$+poe12a.po_line_no$<>sortkey$ then continue
+        find record (poe12a_dev,key=poe12a_key$,dom=*next) poe12a$
+        rem *** if poe12a.firm_id$+poe12a.po_no$+poe12a.po_line_no$<>sortkey$ then continue
 
 rem --- Test PO Detail ranges
 
-        if poe12a.warehouse_id$+poe12a.item_id$<>poe12a_altkey.warehouse_id$+poe12a_altkey.item_id$ continue
-          if whsefrom$<>"" if poe12a.warehouse_id$<whsefrom$ continue
-            if whsethru$<>"" if poe12a.warehouse_id$>whsethru$ continue
-             if itemfrom$<>"" if poe12a.item_id$<itemfrom$ continue
-              if itemthru$<>"" if poe12a.item_id$>itemthru$ continue
-               if pofrom$<>"" if poe12a.po_no$<pofrom$ continue
-                if pothru$<>"" if poe12a.po_no$>pothru$ continue
-                 if vendfrom$<>"" if poe12a.vendor_id$<vendfrom$ continue
-                  if vendthru$<>"" if poe12a.vendor_id$>vendthru$ continue
-                  gosub gettestdate_detail
+        rem *** if poe12a.warehouse_id$+poe12a.item_id$<>poe12a_altkey.warehouse_id$+poe12a_altkey.item_id$ continue
+        if whsefrom$<>"" if poe12a.warehouse_id$<whsefrom$ continue
+        if whsethru$<>"" if poe12a.warehouse_id$>whsethru$ continue
+        if itemfrom$<>"" if poe12a.item_id$<itemfrom$ continue
+        if itemthru$<>"" if poe12a.item_id$>itemthru$ continue
+        if pofrom$<>"" if poe12a.po_no$<pofrom$ continue
+        if pothru$<>"" if poe12a.po_no$>pothru$ continue
+        rem *** if vendfrom$<>"" if poe12a.vendor_id$<vendfrom$ continue
+        rem *** if vendthru$<>"" if poe12a.vendor_id$>vendthru$ continue
 
-                 if datefrom$="" or testdated$>=datefrom$ then
-        if datethru$="" or testdated$<=datethru$
+                gosub gettestdate_detail
+        if datefrom$<>"" and testdated$<datefrom$ continue
+        if datethru$<>"" and testdated$>datethru$ continue
 
-rem --- Get Line Type
+        if poe02a.po_no$<>poe12a.po_no$ then read record(poe02a_dev,key=poe12a.firm_id$+poe12a.po_no$,dom=*next) poe02a$
+        if vendfrom$<>"" if poe02a.vendor_id$<vendfrom$ continue
+        if vendthru$<>"" if poe02a.vendor_id$>vendthru$ continue
+
+        rem --- Get Line Type
 
         linetype$="N"
         p02_key$=poe12a.firm_id$+poe12a.po_line_code$
@@ -191,7 +192,7 @@ printdetail: rem --- Set up variables
         qtyord$=str(qtyord:m2$)
         qtyrec$=str(qtyrec:m2$)
         ponum$=poe12a.po_no$
-        vendor$=fnmask$(poe12a.vendor_id$,vendomask$)
+        vendor$=fnmask$(poe02a.vendor_id$,vendomask$)
 
 rem --- Get extension
 
@@ -318,12 +319,12 @@ brnch2:
         find record (ivm02a_dev,key=i02_key$,dom=*next) ivm02a$
 
         if col_format$<>"Y" then 
-            OutVect!.addItem(itemnum$(1,itemlen))
-            OutVect!.addItem(itemdesc$)
+            OutVect!.addItem(itemnum$(1,itemlen)+$00$+"B")
+            OutVect!.addItem(itemdesc$+$00$+"B")
             xwk = fnblank(12)
 
 
-            OutVect!.addItem(str(ivm02a.qty_on_order))
+            OutVect!.addItem(str(ivm02a.qty_on_order)+$00$+"B")
             l=l+1
         endif
 
@@ -335,9 +336,9 @@ whsetotals: rem --- Print Warehouse total
             rem *** xwk = fnblank(15)
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             xwk = fnblank(1)
-            OutVect!.addItem("Total For Warehouse " + whse$ + " " + whsename$)
+            OutVect!.addItem("Total For Warehouse " + whse$ + " " + whsename$+$00$+"B")
             xwk = fnblank(11)
-            OutVect!.addItem(str(whsetot))
+            OutVect!.addItem(str(whsetot)+$00$+"B")
             xwk = fnblank(1)
             let l=l+1
         endif
@@ -351,14 +352,14 @@ itemtotals: rem --- Print Item total
             rem ***  xwk = fnblank(15)
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             xwk = fnblank(1)
-            OutVect!.addItem("Total For Item " + itemnum$(1,itemlen) + " " + itemdesc$)
+            OutVect!.addItem("Total For Item " + itemnum$(1,itemlen) + " " + itemdesc$+$00$+"B")
             xwk = fnblank(7)
 
-            OutVect!.addItem(str(qtyordtot))
-            OutVect!.addItem(str(qtyrectot))
-            OutVect!.addItem(str(baltot))
+            OutVect!.addItem(str(qtyordtot)+$00$+"B")
+            OutVect!.addItem(str(qtyrectot)+$00$+"B")
+            OutVect!.addItem(str(baltot)+$00$+"B")
             xwk = fnblank(1)
-            OutVect!.addItem(str(itemtot))
+            OutVect!.addItem(str(itemtot)+$00$+"B")
             xwk = fnblank(1)
             let l=l+1
         endif
