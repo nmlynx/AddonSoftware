@@ -182,6 +182,7 @@ rem --- Read next Check Header (ape-02) record
                     if apt05_key.firm_id$+apt05_key.ap_type$+apt05.check_no$+apt05.vendor_id$ <>
 :                      apt02a.firm_ie$+apt02a.ap_type$+ape02a.check_no$+ape02a.vendor_id$ continue
     
+                    dim apt05a2$:fattr(apt05a$)
                     apt05a2$=apt05a1$
                     apt05a2.invoice_amt=-apt05a2.invoice_amt
                     apt05a2.discount_amt=-apt05a2.discount_amt
