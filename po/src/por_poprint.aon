@@ -309,7 +309,7 @@ rem --- Level breaks?
         if poe02a.vendor_id$ + poe02a.purch_addr$ <> t1$ gosub shipfrom_break
         if poe02a.ap_terms_code$ <> t2$ gosub terms_break
         poe02a_key$=poe02a.firm_id$+poe02a.vendor_id$+poe02a.po_no$
-        read (poe12_dev,key=poe02a_key$,dom=*next)
+        read (poe12_dev,key=poe02a.firm_id$+poe02a.po_no$,dom=*next)
 
 sort_lines: rem --- Sort line items by ship-to warehouse
 
