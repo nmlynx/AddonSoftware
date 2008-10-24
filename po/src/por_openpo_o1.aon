@@ -631,10 +631,10 @@ brnch8:
     dim dateord$(8)
     if poe02a.ord_date$<>fill(8) dateord$=fndate$(poe02a.ord_date$) 
 
-    OutVect!.addItem("PO#: ")
+    OutVect!.addItem("PO#: "+$00$+"B")
     OutVect!.addItem("")
     OutVect!.addItem("")
-    OutVect!.addItem(ponum$)
+    OutVect!.addItem(ponum$+$00$+"B")
     OutVect!.addItem("Ordered " + str(fndate$(poe02a.ord_date$)))
     OutVect!.addItem(termsdesc$)
     OutVect!.addItem("")
