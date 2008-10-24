@@ -10,16 +10,16 @@
 			<DD_ALIAS_TYPE>X</DD_ALIAS_TYPE>
 			<DD_KEY_LENGTH>0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD>0</DD_NBR_RECORD>
-			<DD_RECORD_LEN>269</DD_RECORD_LEN>
+			<DD_RECORD_LEN>0</DD_RECORD_LEN>
 			<DD_SYSTEM_REC>N</DD_SYSTEM_REC>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>PO </ASC_PROD_ID>
 			<ASC_LICENSE_ID>3E2FF8EDD6CE6BF3267B0E7B6E3381D7</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA>Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20080130</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE>20080904</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME>145958</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE>20081024</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE>20081024</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME>123346</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP>T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV>zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT>PO Receipt History Header</DD_ATTR_WINT>
@@ -30,7 +30,7 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>POT_RECHDR      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME>pot-04</DD_FILE_NAME>
-			<DD_TABLE_TPL>firm_id:c(2),vendor_id:c(6),po_no:c(7),receiver_no:c(7*),warehouse_id:c(2),purch_addr:c(2),reserved_str:c(30),hold_flag:c(1),reserved_str_02:c(1),terms_code:c(2),reserved_str_03:c(4),po_frt_terms:c(15),ap_ship_via:c(15),acknowledge:c(20),fob:c(15),po_msg_code:c(3),req_no:c(7),packing_list:c(15),rec_complete:c(1),reserved_str_04:c(26),ord_date:c(8),promise_date:c(8),not_b4_date:c(8),reqd_date:c(8),recpt_date:c(8*),reserved_str_05:c(1*),dealer_str:c(1*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),reserved_num_04:n(1*),reserved_num_05:n(1*),reserved_num_06:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL>firm_id:c(2),vendor_id:c(6),po_no:c(7),receiver_no:c(7*),warehouse_id:c(2),purch_addr:c(2),reserved_str:c(30),hold_flag:c(1),reserved_str_02:c(1),ap_terms_code:c(2),reserved_str_03:c(4),po_frt_terms:c(15),ap_ship_via:c(15),acknowledge:c(20),fob:c(15),po_msg_code:c(3),req_no:c(7),packing_list:c(15),rec_complete:c(1),reserved_str_04:c(26),ord_date:c(8),promise_date:c(8),not_b4_date:c(8),reqd_date:c(8),recpt_date:c(8*),reserved_str_05:c(1*),dealer_str:c(1*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),reserved_num_04:n(1*),reserved_num_05:n(1*),reserved_num_06:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS>
@@ -247,8 +247,8 @@
 		<RECORD>
 			<DD_TABLE_ALIAS>POT_RECHDR      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE>010</DD_SEQUENCE>
-			<DD_DATA_NAME>TERMS_CODE      </DD_DATA_NAME>
-			<DD_DVAR_NAME>TERMS_CODE      </DD_DVAR_NAME>
+			<DD_DATA_NAME>AP_TERMS_CODE   </DD_DATA_NAME>
+			<DD_DVAR_NAME>AP_TERMS_CODE   </DD_DVAR_NAME>
 			<DD_COL_REPEATS>0</DD_COL_REPEATS>
 			<DD_COL_OCCURS>0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM>N</DD_FIELD_DELIM>
@@ -688,21 +688,21 @@
 			<DD_ATTR_LABS>Res For Addon Use</DD_ATTR_LABS>
 		</RECORD>
 		<RECORD>
-			<DD_DATA_NAME>TERMS_CODE      </DD_DATA_NAME>
-			<DD_DESCRIPTION>Terms Code</DD_DESCRIPTION>
+			<DD_DATA_NAME>AP_TERMS_CODE   </DD_DATA_NAME>
+			<DD_DESCRIPTION>AP Terms Code</DD_DESCRIPTION>
 			<DD_DATA_TYPE>C</DD_DATA_TYPE>
 			<DD_DATA_LENGTH>2</DD_DATA_LENGTH>
 			<DD_MASK_TYPE> </DD_MASK_TYPE>
 			<ASC_COMP_ID>01007514</ASC_COMP_ID>
 			<ASC_PROD_ID>AON</ASC_PROD_ID>
-			<DD_CREATE_DATE>20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE>20060321</DD_LSTREV_DATE>
+			<DD_CREATE_DATE>20061129</DD_CREATE_DATE>
+			<DD_LSTREV_DATE>20070130</DD_LSTREV_DATE>
 			<DD_ATTR_CTYP>E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOL>CODE_DESC       </DD_ATTR_DCOL>
 			<DD_ATTR_DCOM>            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP>            </DD_ATTR_DEXP>
-			<DD_ATTR_DKEY>[+FIRM_ID]+"A"+@</DD_ATTR_DKEY>
-			<DD_ATTR_DTAB>ARC_TERMCODE    </DD_ATTR_DTAB>
+			<DD_ATTR_DKEY>[+FIRM_ID]+"C"+@ </DD_ATTR_DKEY>
+			<DD_ATTR_DTAB>APC_TERMSCODE   </DD_ATTR_DTAB>
 			<DD_ATTR_LABL>Terms Code</DD_ATTR_LABL>
 			<DD_ATTR_LABS>Terms Cd</DD_ATTR_LABS>
 			<DD_ATTR_MSKI>UU</DD_ATTR_MSKI>
