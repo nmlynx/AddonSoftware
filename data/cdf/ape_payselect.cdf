@@ -113,7 +113,7 @@ return
 
 fill_grid:
 
-rem	SysGUI!.setRepaintEnabled(0)
+	SysGUI!.setRepaintEnabled(0)
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 	minrows=num(user_tpl.gridInvoicesRows$)
 	if vectInvoices!.size()
@@ -135,7 +135,7 @@ rem	SysGUI!.setRepaintEnabled(0)
 		gridInvoices!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)
 		gridInvoices!.setNumRows(0)
 	endif
-rem	SysGUI!.setRepaintEnabled(1)
+	SysGUI!.setRepaintEnabled(1)
 return
 
 create_reports_vector:
@@ -204,7 +204,7 @@ return
 
 switch_value:rem --- Switch Check Values
 
-rem	SysGUI!.setRepaintEnabled(0)
+	SysGUI!.setRepaintEnabled(0)
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 	vectInvoices!=UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
 	vectInvoicesMaster!=UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
@@ -233,7 +233,7 @@ rem	SysGUI!.setRepaintEnabled(0)
 		next curr_row
 	endif
 
-rem	SysGUI!.setRepaintEnabled(1)
+	SysGUI!.setRepaintEnabled(1)
 
 	return
 
