@@ -55,8 +55,6 @@ rem --- Custom
 		poc_linecode_dev=fnget_dev("POC_LINECODE")
 		dim poc_linecode$:fnget_tpl$("POC_LINECODE")
 
-escape
-		
 		if callpoint!.getVariableName()="POE_REQDET.PO_LINE_CODE" then
 			po_line_code$=callpoint!.getUserInput()
 		else
