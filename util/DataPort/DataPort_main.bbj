@@ -169,7 +169,7 @@ next_file:
     if pos("_"=datafile$)=1 then goto next_file
     if pos("z"=cvs(datafile$,8))=1 then  goto next_file
     if pos("dd"=cvs(datafile$,8))=1 then goto next_file
-    if pos("w-"=cvs(datafile$,8))=1 then goto next_file
+    if pos("w-"=cvs(datafile$,8))=3 then goto next_file
     if pos("sh"=cvs(datafile$,8))=1 then goto next_file
 
     print "Data file: ",datafile$
