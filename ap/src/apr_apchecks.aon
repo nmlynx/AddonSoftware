@@ -134,10 +134,6 @@ rem --- Open the printer
 
     doc!=myBBjPrinter!.getForm(0)
 
-  rem --- Display Resource
-
-    if aps01a.multi_types$="Y" and aps01a.ap_check_seq$="Y" ap_type$=fill(23) else ap_type$=""
-
 rem --- Start progress meter and position check File (ape-04)
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,ape04_dev,1,meter_num,status
