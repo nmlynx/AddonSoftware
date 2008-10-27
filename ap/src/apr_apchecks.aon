@@ -99,6 +99,11 @@ rem --- Check From Address
     find record (aps01b_dev,key=aps01b_key$,err=std_missing_params) aps01b$
     ap_address$=aps01b.addr_line_1$+aps01b.addr_line_2$+aps01b.city$+aps01b.state_code$+aps01b.zip_code$
     call pgmdir$+"adc_address.aon",ap_address$,24,3,9,35
+    if cvs(ap_address$(71),2)<>"" then
+        stub_address$=ap_address$(71)
+    else
+        stub_address$=ap_address$(36,35)
+    endif
 
   
 rem --- Open the printer
@@ -208,7 +213,7 @@ check_stub:
       
     tmp=fntext(6,1+stub,aps01b.name$,boldfont!)
     tmp=fntext(6,12+stub,ap_address$(1,35),textfont!)
-    tmp=fntext(6,24+stub,ap_address$(36,35),textfont!)   
+    tmp=fntext(6,24+stub,stub_address$,textfont!)   
 
     tmp=fntext(175,1+stub,x1$,boldfont!)
     tmp=fntext2(350,1+stub,50,0+stub,"Check No:",italicfont!,right_justify)
@@ -382,6 +387,7 @@ common_check_face:
     tmp=fntext(36,552,aps01b.name$,boldfont!)
     tmp=fntext(36,564,ap_address$(1,35),textfont!)
     tmp=fntext(36,576,ap_address$(36,35),textfont!)
+    tmp=fntext(36,588,ap_address$(71),textfont!)
 
     tmp=fntext(6,672,"Pay",italicfont!)
     tmp=fntext(6,684,"to the",italicfont!)
