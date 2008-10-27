@@ -135,15 +135,22 @@ disp_vendor_comments:
 	apm09_key$=firm_id$+tmp_vendor_id$
 	more=1
 	read(apm09_dev,key=apm09_key$,dom=*next)
+
 	while more
 		readrecord(apm09_dev,end=*break)apm09a$
-		if apm09a.firm_id$= firm_id$ and apm09a.vendor_id$ = tmp_vendor_id$
-			cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
-		endif				
+
+		if apm09a.firm_id$ <> firm_id$ or apm09a.vendor_id$<>tmp_vendor_id$ then 
+			break
+		endif
+
+		cmt_text$=cmt_text$+cvs(apm09a.std_comments$,3)+$0A$
 	wend
+
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
 	callpoint!.setStatus("REFRESH")
+
 return
+
 disable_grid:
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
