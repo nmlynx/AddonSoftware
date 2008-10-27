@@ -311,7 +311,6 @@ rem --- set variables using either getColumnData or getUserInput, depending on w
 									filter_disc_op$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP")
 									filter_disc_date$=callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT")
 								else
-							escape;rem final else...print callpoint!.getVariableName()
 										filter_pymnt_grp$=callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP")
 										filter_aptype$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
 										filter_vendor$=callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID")
@@ -382,6 +381,16 @@ disable_fields:
 
 return
 
+strip_dashes:
+rem --- Strip dashes from Vendor Number and pad with zeroes if necessary
+	new_vend$=""
+	for dashes=1 to len(vend$)
+		if vend$(dashes,1)<>"-" new_vend$=new_vend$+vend$(dashes,1)
+	next dashes
+	vend_len=num(callpoint!.getTableColumnAttribute("APE_PAYSELECT.VENDOR_ID","MAXL"))
+	vend$=pad(new_vend$,vend_len,"L","0")
+return
+
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
 	def fnmask$(q1$,q2$)
@@ -435,6 +444,7 @@ def fn_setmast_amts(q1$,q2$,q3$,f_disc_amt$,f_pmt_amt$)
 	next q
 	return 0
 	fnend
+
 #include std_missing_params.src
 [[APE_PAYSELECT.ASVA]]
 rem "update apt-01) -- remove/write -- based on what's checked in the grid
@@ -451,8 +461,10 @@ vectInvoicesMaster!=UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
 if vectInvoicesMaster!.size()
 	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
 	for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
+		vend$=vectInvoicesMaster!.getItem(row+4)
+		gosub strip_dashes
 		apt01_key$=firm_id$+vectInvoicesMaster!.getItem(row+3)+
-:						   vectInvoicesMaster!.getItem(row+4)+
+:						   vend$+
 :						   vectInvoicesMaster!.getItem(row+6)
 		readrecord(apt01_dev,key=apt01_key$)apt01a$
 		amt_to_pay=num(vectInvoicesMaster!.getItem(row+9))
