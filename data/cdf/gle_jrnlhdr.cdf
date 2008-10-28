@@ -162,11 +162,16 @@ rem --- need to disable units column in grid if gls01a.units_flag$ isn't "Y"
 if gls01a.units_flag$="Y"
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
+	enable_color!=c!.getCellBackColor(0,0)
 	c!.setColumnEditable(5,1)
+	c!.setColumnBackColor(5,enable_color!)
+
 else
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
+	disable_color!=c!.getLineColor()
 	c!.setColumnEditable(5,0)
+	c!.setColumnBackColor(5,disable_color!)
 endif
 rem --- Disable display only columns
 	dctls!=SysGUI!.makeVector()
@@ -175,4 +180,3 @@ rem --- Disable display only columns
 	dctls!.addItem("<<DISPLAY>>.BALANCE")
 	dctls!.addItem("<<DISPLAY>>.UNITS")
 	gosub disable_ctls
-
