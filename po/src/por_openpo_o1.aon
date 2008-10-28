@@ -269,7 +269,7 @@ done: rem --- All Done
     xwk = fnblank(11)
     OutVect!.addItem("Total For Report"+$00$+"B")
     OutVect!.addItem("")
-    OutVect!.addItem(str(grandtot:m1$)+$00$+"B")
+    OutVect!.addItem(str(grandtot)+$00$+"B")
 
                        goto std_exit
 
@@ -659,7 +659,7 @@ brnch8:
     OutVect!.addItem("Conv Fact")
     OutVect!.addItem("Qty Ordered")
     OutVect!.addItem("Qty Rec'd")
-    OutVect!.addItem("Balanace Due")
+    OutVect!.addItem("Balance Due")
     OutVect!.addItem("Unit Cost")
     OutVect!.addItem("Extension")
 
@@ -672,7 +672,7 @@ vendtotals: rem --- Print Vendor total
     xwk = fnblank(11)
     OutVect!.addItem("Total For Vendor "+$00$+"B")
     OutVect!.addItem(str(vendor$(1,vendlen))+$00$+"B")
-    OutVect!.addItem(str(vendtot:m1$)+$00$+"B")
+    OutVect!.addItem(str(vendtot)+$00$+"B")
 
       l=l+1
     return
@@ -683,7 +683,7 @@ pototals: rem --- Print Purchase Order total
     xwk = fnblank(11)
     OutVect!.addItem("Total For PO # "+$00$+"B")
     OutVect!.addItem(ponum$+$00$+"B")
-    OutVect!.addItem(str(potot:m1$)+$00$+"B")
+    OutVect!.addItem(str(potot)+$00$+"B")
 
        let l=l+1
     return
