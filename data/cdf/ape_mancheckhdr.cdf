@@ -216,6 +216,8 @@ get_vendor_history:
 return
 #include std_missing_params.src
 [[APE_MANCHECKHDR.VENDOR_ID.AVAL]]
+	print "Head: VENDOR_ID.AVAL (After Column Validation)"; rem debug
+
 	tmp_vendor_id$=callpoint!.getUserInput()			
 	gosub disp_vendor_comments
 	gosub get_vendor_history
@@ -294,6 +296,8 @@ c!.setColumnEditable(6,0)
 c!.setColumnEditable(7,0)
 if user_tpl.multi_types$="N" c!.setColumnEditable(2,0)
 [[APE_MANCHECKHDR.AWIN]]
+rem debug; print 'show',; rem debug
+
 rem --- Open/Lock files
 files=30,begfile=1,endfile=12
 dim files$[files],options$[files],chans$[files],templates$[files]
@@ -418,51 +422,76 @@ GLNS!.setValue("dflt_gl","")
 GLNS!.setValue("dflt_dist","")
 GLNS!.setValue("tot_inv","")
 [[APE_MANCHECKHDR.ARNF]]
-if user_tpl.open_check$<>"Y" or callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")<>"R" and cvs(callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO"),3)<>""
-	apt_checkhistory_dev=fnget_dev("APT_CHECKHISTORY")
-	dim apt05a$:fnget_tpl$("APT_CHECKHISTORY")
-	apt05k1$=firm_id$+callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")+callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
-	apt05klen=len(apt05k1$)
-	read (apt_checkhistory_dev,key=apt05k1$,dom=*next)
-	readrecord (apt_checkhistory_dev,end=*break)apt05a$
-	if apt05a$(1,apt05klen)=apt05k1$
-		user_tpl.open_check$="Y"
-		if pos(apt05a.trans_type$="CM")
-			msg_id$="AP_REVERSE"
-			msg_opt$=""
-			gosub disp_message
-			if msg_opt$="Y"
-				callpoint!.setColumnData("APE_MANCHECKHDR.TRANS_TYPE","R")
-				callpoint!.setColumnUndoData("APE_MANCHECKHDR.TRANS_TYPE","R")
-				ctl_name$="APE_MANCHECKHDR.TRANS_TYPE"
-				ctl_stat$="D"
-				gosub disable_fields
-				ctl_name$="APE_MANCHECKHDR.VENDOR_ID"
-				gosub disable_fields
-				callpoint!.setColumnData("APE_MANCHECKHDR.CHECK_DATE",apt05a.check_date$)
-				callpoint!.setColumnData("APE_MANCHECKHDR.VENDOR_ID",apt05a.vendor_id$)
+rem --- Look in check history for this check number
 
-				tmp_vendor_id$=callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
-				gosub disp_vendor_comments
-				gosub disable_grid
+	trans_type$ = callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")
+	check_no$   = callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
+	ap_type$    = callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
+	vendor_id$  = callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
+
+	if user_tpl.open_check$<>"Y" and trans_type$<>"R" and cvs(check_no$,3)<>"" then
+		apt05_dev = fnget_dev("APT_CHECKHISTORY")
+		dim apt05a$:fnget_tpl$("APT_CHECKHISTORY")
+
+		read (apt05_dev,key=firm_id$+ap_type$+check_no$+vendor_id$,dom=*next)
+		readrecord (apt05_dev,end=*next)apt05a$
+
+		if	apt05a.firm_id$   = firm_id$  and
+:			apt05a.ap_type$   = ap_type$  and
+:			apt05a.check_no$  = check_no$ and
+:			apt05a.vendor_id$ = vendor_id$
+:		then
+			user_tpl.open_check$="Y"; rem don't check again
+
+			rem --- Reverse? (Check is Manual or Computer generated)
+
+			if pos(apt05a.trans_type$="CM") then
+				msg_id$="AP_REVERSE"
+				msg_opt$=""
+				gosub disp_message
+
+				if msg_opt$="Y"
+					callpoint!.setColumnData("APE_MANCHECKHDR.TRANS_TYPE","R")
+					callpoint!.setColumnUndoData("APE_MANCHECKHDR.TRANS_TYPE","R")
+					ctl_name$="APE_MANCHECKHDR.TRANS_TYPE"
+					ctl_stat$="D"
+					gosub disable_fields
+					ctl_name$="APE_MANCHECKHDR.VENDOR_ID"
+					gosub disable_fields
+					callpoint!.setColumnData("APE_MANCHECKHDR.CHECK_DATE",apt05a.check_date$)
+					callpoint!.setColumnData("APE_MANCHECKHDR.VENDOR_ID",vendor_id$)
+					tmp_vendor_id$=vendor_id$
+					gosub disp_vendor_comments
+					gosub disable_grid
+				else
+					callpoint!.setStatus("ABORT")
+				endif
+
 			else
-				callpoint!.setStatus("ABORT")
-			endif
-		else
-			msg_id$="AP_OPEN_CHK"
-			msg_opt$=""
-			gosub disp_message
-			if msg_opt$="Y"
-				user_tpl.reuse_chk$="Y"
-				callpoint!.setColumnData("APE_MANCHECKHDR.TRANS_TYPE","M")
-				callpoint!.setStatus("REFRESH")
-			else
-				callpoint!.setStatus("ABORT")
+
+				rem --- Recycle? (check is Void or Reversed)
+				
+				if pos(apt05a.trans_type$="VR") then
+
+					msg_id$="AP_OPEN_CHK"
+					msg_opt$=""
+					gosub disp_message
+
+					if msg_opt$="Y"
+						user_tpl.reuse_chk$="Y"
+						callpoint!.setColumnData("APE_MANCHECKHDR.TRANS_TYPE","M")
+						callpoint!.setStatus("REFRESH")
+					else
+						callpoint!.setStatus("ABORT")
+					endif
+				endif
 			endif
 		endif
 	endif
-endif
 [[APE_MANCHECKHDR.AREC]]
+print "Head: AREC (After New Record)"; rem debug
+print "open_check$ reset"; rem debug
+
 user_tpl.reuse_chk$=""
 user_tpl.open_check$=""
 user_tpl.dflt_dist_cd$=""
@@ -477,10 +506,16 @@ c!.setColumnEditable(6,0)
 c!.setColumnEditable(7,0)
 if user_tpl.multi_dist$="N" c!.setColumnEditable(2,0)
 [[APE_MANCHECKHDR.AREA]]
+print "Head: AREA (After Record Read)"; rem debug
+print "open_check$ is reset"; rem debug
+
 user_tpl.existing_tran$="Y"
 user_tpl.open_check$=""
 user_tpl.reuse_chk$=""
 [[APE_MANCHECKHDR.ADIS]]
+print "Head: ADIS (After Record Displays)"; rem debug
+print "open_check$ is reset"; rem debug
+
 user_tpl.existing_tran$="Y"
 user_tpl.open_check$=""
 user_tpl.reuse_chk$=""
