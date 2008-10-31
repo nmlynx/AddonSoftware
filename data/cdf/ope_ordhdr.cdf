@@ -22,6 +22,31 @@ rem --- Do we need to create a new order number?
 [[OPE_ORDHDR.ADIS]]
 cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 gosub disp_cust_comments
+
+rem --- Disable Cost field if there is a value in it
+g!=form!.getChildWindow(1109).getControl(5900)
+enable_color!=g!.getCellBackColor(0,0)
+disable_color!=g!.getLineColor()
+numcols=g!.getNumColumns()
+
+rem --- process_line_types
+
+recVect!=GridVect!.getItem(0)
+dim gridrec$:dtlg_param$[1,3]
+numrecs=recVect!.size()
+if numrecs>0
+for reccnt=0 to numrecs-1
+	gridrec$=recVect!.getItem(reccnt)
+
+	if gridrec.unit_cost=0
+		g!.setCellEditable(reccnt,5,1)
+		g!.setCellBackColor(reccnt,5,enable_color!)
+	else
+		g!.setCellEditable(reccnt,5,0)
+		g!.setCellBackColor(reccnt,5,disable_color!)
+	endif
+next reccnt
+endif
 [[OPE_ORDHDR.ASIZ]]
 rem --- Create Empty Availability window
 g!=form!.getChildWindow(1109).getControl(5900)
