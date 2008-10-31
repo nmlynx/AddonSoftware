@@ -1,8 +1,42 @@
+[[OPE_ORDDET.UNIT_COST.AVAL]]
+rem --- Disable Cost field if there is a value in it
+g!=form!.getChildWindow(1109).getControl(5900)
+enable_color!=g!.getCellBackColor(0,0)
+disable_color!=g!.getLineColor()
+
+r=g!.getSelectedRow()
+if num(callpoint!.getUserInput())=0
+ 	g!.setCellEditable(r,5,1)
+ 	g!.setCellBackColor(r,5,enable_color!)
+else
+	g!.setCellEditable(r,5,0)
+	g!.setCellBackColor(r,5,disable_color!)
+endif
 [[OPE_ORDDET.EXT_PRICE.AVEC]]
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
+rem --- See if this should be repriced
+rem 	if num(callpoint!.getUserInput())<0
+rem 		dim op_chans[6]
+rem 		op_chans[1]=fnget_dev("IVM_ITEMMAST")
+rem 		op_chans[2]=fnget_dev("IVM_ITEMWHSE")
+rem 		op_chans[4]=fnget_dev("IVM_ITEMPRIC")
+rem 		op_chans[5]=fnget_dev("ARS_PARAMS")
+rem 		op_chans[6]=fnget_dev("IVS_PARAMS")
+rem 		whs$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+rem 		item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+rem 		listcd$=""
+rem 		cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+rem 		date$=user_tpl.order_date$
+rem 		priccd$=user_tpl.price_code$
+rem 		ordqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+rem 		type_price$=""
+rem 		call stbl("+DIR_PGM")+"opc_pc.aon",op_chans[all],firm_id$,whs$,item$,listcd$,cust$,date$,priccd$,ordqty,type_price$,price,disc,status
+rem 		callpoint!.setUserInput(str(price))
+rem 	endif
+
 rem --- Calc Extension
 	newqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	unit_price=num(callpoint!.getUserInput())
@@ -377,6 +411,15 @@ check_new_row:
 		user_tpl.cur_row=CurrRow
 		gosub set_avail
 	endif
+return
+
+disable_ctl:rem --- disable selected controls
+	wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=dmap$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
 return
 
 #include std_missing_params.src
