@@ -168,6 +168,7 @@ rem --- Initializations
     lastcode$=""
     dim u_line$(m1,"-")
     future=future$="Y"
+	customer_printed=0
 
 rem --- Underline for subtotals and totals
 
@@ -618,6 +619,7 @@ rem --- line.
 
                 lines=lines+2                
                 printed=0
+				customer_printed=1
 
           wend  
 
@@ -720,7 +722,7 @@ customer_heading: rem --- Print customer subheading
 salesperson: rem --- Salesperson break
     
     if col_format$="Y" return
-	prev_salesperson=(lastcode$<>"")
+	prev_salesperson=(lastcode$<>"" and customer_printed)
 	
     while prev_salesperson
         x$="Total for "+salesperson$
@@ -760,6 +762,7 @@ salesperson: rem --- Salesperson break
 
         lines=lines+2
         prev_salesperson=0
+		customer_printed=0
 
     wend
 
