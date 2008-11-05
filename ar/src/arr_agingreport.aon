@@ -718,15 +718,15 @@ customer_heading: rem --- Print customer subheading
     return
 
 salesperson: rem --- Salesperson break
-
-    salesperson=(lastcode$<>"")
+    
     if col_format$="Y" return
-
-    while salesperson
+	prev_salesperson=(lastcode$<>"")
+	
+    while prev_salesperson
         x$="Total for "+salesperson$
 
         for x=0 to maxperiods
-        s[maxperiods+1]=s[maxperiods+1]+s[x]
+			s[maxperiods+1]=s[maxperiods+1]+s[x]
         next x
 
         rem if type$="D" if lines+2>maxlines gosub customer_heading 
@@ -759,7 +759,7 @@ salesperson: rem --- Salesperson break
         OutVect!.addItem(str(s[6]))
 
         lines=lines+2
-        salesperson=0
+        prev_salesperson=0
 
     wend
 
