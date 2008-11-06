@@ -257,7 +257,8 @@ add_progress_meter:
 
     if pos("PRINT @(COLUMN,11)"=rec$) then
         line_num$=rec$(1,5)
-        rec$=rec$(25)
+        wk=pos("COLUMN,11)"=rec$)
+        rec$=rec$(wk+11)
         l=len(rec$)
         for x=1 to l
             if mod(pos($28$=rec$(1,x),1,0),2)=1 
@@ -431,6 +432,32 @@ display_done:
     gosub display_message
 return 
 
+switch_replacements:
+rem --- now that we've gone from v6 to v7, and are about to go from v7 to v8,
+rem --- switch from replacements_oldport.ini to replacements.ini file 
+    dim oldcode$[999],newcode$[999]
+    functions$=""
+    repfile$=filedir$+"replacements.ini"
+    close (rep_dev)
+    open (rep_dev)repfile$
+rem --- Load code replacement table
+next_code_replacement: 
+    read (rep_dev,end=load_replacements_exit)rec$
+    let rec$=cvs(rec$,2)
+    if rec$="" or pos("#"=rec$)=1 then goto next_code_replacement
+    let p=pos("|"=rec$)
+    if p=0 then goto next_code_replacement
+    let x$=cvs(rec$(1,p-1),1+2),y$=cvs(rec$(p+1),1+2)
+    let replacements=replacements+1
+    let oldcode$[replacements]=x$,newcode$[replacements]=y$
+    if pos("fn"=oldcode$[replacements])=1 then let functions$=functions$+newcode$[replacements]
+    goto next_code_replacement
+
+load_replacements_exit:
+    let functions$=functions$+"fnitem$fnglobal(fnglobal$fnstr_pos("
+    let functions$=functions$+"fnget_table$fnget_rec_data$fnget_fld_data$"
+return
+
 rem --- Functions
     def fndatestamp$(q)=DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
@@ -458,6 +485,7 @@ the_end:
     pathname$=tmpfile$(1,p)+"bbx"
     bbxfile$=pathname$
     pgmdir$=outputdir$
+    gosub switch_replacements
     run "adx_codeportconv.bbj"
 finished: 
     end
