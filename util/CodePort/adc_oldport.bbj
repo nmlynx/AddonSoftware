@@ -35,7 +35,7 @@ rem --- Source Code changes
     open (txt_dev)tmpfile$
     for i=1 to numlines
         rec$=lines$[i]
-        
+ 
         rem --- Change the Header lines of the program (Line 10 & 20)
         if i=1 then
             if MASK(rec$(11,3),"[A-Z][A-Z][A-Z]") then rec$(11,3)=cvs(rec$(11,3),8)
@@ -167,7 +167,6 @@ rem --- Add labels to source code
     next i
     close(txt_dev)
 
-
 rem --- Recompile program
 pro5cpl$=fnglobal$("+PRO5CPL","c:/basis/vpro5/pro5cpl.exe")
 
@@ -257,6 +256,8 @@ add_progress_meter:
 
     if pos("PRINT @(COLUMN,11)"=rec$) then
         line_num$=rec$(1,5)
+        wk=pos("L"+cvs(line_num$,3)+":"=rec$)
+        if wk<>0 then label$=rec$(wk,len(line_num$)+2) else label$=""
         wk=pos("COLUMN,11)"=rec$)
         rec$=rec$(wk+11)
         l=len(rec$)
@@ -280,7 +281,7 @@ add_progress_meter:
         endif
 
         if rec$(l)="+" then rec$=rec$(1,l-1)
-        rec$=line_num$+"CALL "+$22$+"syc_pm.bbx"+$22$+","+$22$+"S"+$22$+","+$22$+$22$+","+$22$+$22$+","+$22$+$22$+","+rec$+",0,0,1,0,IGNORE_STATUS"
+        rec$=line_num$+label$+"CALL "+$22$+"syc_pm.bbx"+$22$+","+$22$+"S"+$22$+","+$22$+$22$+","+$22$+$22$+","+$22$+$22$+","+rec$+",0,0,1,0,IGNORE_STATUS"
     endif
 return
 
