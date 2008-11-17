@@ -310,6 +310,13 @@ rem --- All Done
 			OutVect!.addItem("Nothing to print within these parameters")
 			ignore = fnblank(3)
 		endif
+	else
+		total$="Total For Report"
+		debits=rt[0]
+		credits=rt[1]
+		units=rt[2]
+		amount=debits+credits
+		if amount<>0 then gosub print_totals
 	endif
 	
     goto std_exit
