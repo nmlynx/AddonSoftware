@@ -143,8 +143,7 @@ rem --- Initializations
     type$="P"
     let defaultmsg$=pos01a.po_msg_code$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","POC_MSGCODE","PRIMARY",pom04a_key_tpl$,rd_table_chans$[all],status$
-    escape
-    dim pom04a_key$:fattr(pom04a_key_tpl$)
+    dim pom04a_key$:pom04a_key_tpl$
 
 rem --- Assign form input values to local variables
 
@@ -181,7 +180,6 @@ rem --- Open the printer
     left_justify=0
     right_justify=1
     center_justify=2
-    l9=50
 
     rem --- create file
     myAPI!=BBjAPI()
@@ -213,7 +211,7 @@ rem --- ESCAPE IF PLAIN$="Y" THEN LET SHIPFLEN$="Y
     t4$=""
     return_l9=l9
     if o0 batch=0
-    qtymaskmax=9,qtymaskmin=9,maxfooters=10,l9=50
+    qtymaskmax=9,qtymaskmin=9,maxfooters=10,l9=29
     dim footer$[maxfooters]
     title=len(title$)
     label=len(label$)
@@ -333,7 +331,7 @@ rem --- Print any associated message
 
             msg$ = pom04a_key.po_msg_code$
             pom04a_key$ = firm_id$ + poe12a.po_msg_code$
-            find record (pom04a_dev,key = pom04a_key$,dom=*break) pom04a$
+            find record (pom04_dev,key = pom04a_key$,dom=*break) pom04a$
             if pos(pom04a.message_type$ = "B" + type$) = 0 break
             read (pom14_dev,key=pom04a_key$,dom=*next)
 
@@ -344,7 +342,7 @@ read_msg: rem --- Read next message line
                 k$ = key(pom14_dev,end=*break)
                 if pos(pom04a_key$ = k$) <> 1 break
                 read record (pom14_dev) pom14a$
-                aps01b_key$ = pom14a.message_text$
+                gen_text$ = pom14a.message_text$
                 gosub text_only
 
             wend
@@ -355,73 +353,13 @@ print_done: rem --- Done printing line message
 
         d$=""
 
-        wend;   rem loop back for next sort record
-
-print_tot: rem --- Print total
-
-
-        msg$=defaultmsg$
-        if cvs(poe02a.po_msg_code$,2) <> "" msg$ = poe02a.po_msg_code$
-
-        nomsg_flg=1
-        if cvs(msg$,2)<>""
-
-            nomsg_flg=0
-            if msg$ <> pom04a.po_msg_code$
-
-rem --- Load current message
-
-                dim footer$[maxfooters]
-                pom04a_key$ = firm_id$ + msg$
-                footcnt=0
-                if cvs(pomessage$,2)<>"" footcnt=2
-                find record (pom04a_dev,key=pom04a_key$,dom=nomsg) pom04a$
-
-                nomsg_flg=1
-                if pos(pom04a.message_type$="B"+type$)<>0
-                    read (pom14_dev,key=pom04a_key$,dom=*next)
-
-rem --- Load message lines
-                    nomsg_flag=0
-                    while more
-
-                        k$=key(pom14_dev,end=*break)
-                        if pos(pom04a_key$=k$)=1
-
-                            read record (pom14_dev) pom14a$
-                            if footcnt<maxfooters-2
-
-                                footcnt=footcnt+1
-                                footer$[footcnt]=pom14a.message_text$
-
-                            endif
-
-                        endif
-
-                    wend
-
-                endif
-
-            endif
-
-       endif
-
-nomsg: rem --- No message
-
-       if nomsg_flg=1
-           dim footer$[maxfooters]
-           footcnt=0
-       endif
-
-prn_tot: rem --- Print total
-
-       gosub print_total
+        rem *** wend;   rem loop back for next sort record
 
 check_batch:
 
-        if (batch = 0) break
+         if (batch = 0) break
 
-    rem *** wend;   rem loop back for next header
+        wend;   rem loop back for next header
 
 done: rem --- All requisitions printed
 
@@ -579,7 +517,6 @@ print_detail_line: rem --- Print Detail Line
     if cvs(poe12a.promise_date$+poe12a.not_b4_date$,2)<>"" needed=needed+1
 
     if l+needed>l9-2 gosub print_continued
-    l=l+1
 
     gosub get_row
 
@@ -609,8 +546,8 @@ print_detail_line: rem --- Print Detail Line
             tmp=fntext2(390,row,75,row,str(w[1]:m3$),textfont!,right_justify,page!)
             tmp=fntext2(470,row,20,row,poe12a.unit_measure$,textfont!,center_justify,page!)
             tmp=fntext2(490,row,75,row,str(extension:m1$),textfont!,right_justify,page!)
-
             l=l+1
+
             gen_text$=fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
             gosub text_only
             if cvs(ivm05a.vendor_item$,2)<>""
@@ -623,12 +560,15 @@ print_detail_line: rem --- Print Detail Line
 
             tmp=fntext2(20,row,20,row,poe12a.po_line_no$,textfont!,center_justify,page!)
             tmp=fntext2(40,row,70,row,str(qty:m2$),textfont!,right_justify,page!)
-            tmp=fntext(120,row,poe12a.order_memo$,textfont!,page!)
+            tmp=fntext(120,row,poe12a.ns_item_id$,textfont!,page!)
             tmp=fntext(345,row,fndate$(poe12a.reqd_date$),textfont!,page!)
             tmp=fntext2(390,row,75,row,str(w[1]:m3$),textfont!,right_justify,page!)
             tmp=fntext2(470,row,20,row,poe12a.unit_measure$,textfont!,center_justify,page!)
             tmp=fntext2(490,row,75,row,str(extension:m1$),textfont!,right_justify,page!)
             l=l+1
+
+            gen_text$=poe12a.order_memo$
+            gosub text_only
             break
 
         case vend_part_num; rem --- Print Vendor Part Number, Message or Other Line
@@ -644,7 +584,7 @@ print_detail_line: rem --- Print Detail Line
             l=l+1
             break
 
-                    case other_line
+        case other_line
 
             tmp=fntext2(20,row,20,row,poe12a.po_line_no$,textfont!,center_justify,page!)
             tmp=fntext(120,row,poe12a.order_memo$,textfont!,page!)
@@ -667,6 +607,7 @@ date_promised: rem --- Date Promised or Not Before Date?
         if cvs(poe12a.promise_date$,2)<>"" gen_text$=pad("Promised By "+fndate$(poe12a.promise_date$),22)
         if cvs(poe12a.not_b4_date$,2)<>"" gen_text$=gen_text$+"Not Before "+fndate$(poe12a.not_b4_date$)
         gosub text_only
+        break
     wend
 
     return
@@ -684,9 +625,11 @@ print_total: rem --- Total
 
     if page
 
+        gosub print_tot
+
         if l+footcnt > l9 then gosub print_continued
 
-        for dlx = 1 to footcnt
+        for dlx = 0 to footcnt
             gen_text$=footer$[dlx]
             gosub text_only
         next dlx
@@ -710,8 +653,8 @@ print_total: rem --- Total
 print_continued: rem --- Continued
 
     if page then tmp=fntext2(505,672,60,672,"(Continued)",textfont!,right_justify,page!)
-    
-    gosub shipto_break; gosub report_heading
+
+        gosub shipto_break; gosub report_heading
     first=0
     return
 
@@ -791,8 +734,63 @@ calc_ext: rem " --- Calculate Extension"
     precision num(ivs01a.precision$)
     return
 
+print_tot: rem --- Print total
+
+       msg$=defaultmsg$
+       if cvs(poe02a.po_msg_code$,2) <> "" msg$ = poe02a.po_msg_code$
+       nomsg_flg=1
+
+       if cvs(msg$,2)<>""
+
+rem --- Load current message
+
+           dim footer$[maxfooters]
+           pom04a_key$ = firm_id$ + msg$
+           footcnt=0
+           if cvs(pomessage$,2)<>"" footcnt=2
+           find record (pom04_dev,key=pom04a_key$,dom=nomsg) pom04a$
+
+           nomsg_flag=0
+           if pos(pom04a.message_type$="B"+type$)<>0
+               read (pom14_dev,key=pom04a_key$,dom=*next)
+
+rem --- Load message lines
+               nomsg_flag=0
+               while more
+
+                   k$=key(pom14_dev,end=*break)
+                   if pos(pom04a_key$=k$)=1
+
+                       read record (pom14_dev) pom14a$
+                       if footcnt<maxfooters-2
+
+                           footcnt=footcnt+1
+                           footer$[footcnt]=pom14a.message_text$
+
+                       endif
+                   else
+                        break
+                   endif
+
+               wend
+
+            endif
+
+            rem *** endif
+
+       endif
+
+nomsg: rem --- No message
+
+       if nomsg_flg=1
+           dim footer$[maxfooters]
+           footcnt=0
+       endif
+
+                return
+
 get_row: rem " --- Return Current Row"
-    row=274+l*12
+    row=286+l*12
     return
 
 rem #include std_functions.src
