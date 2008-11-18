@@ -200,7 +200,7 @@ rem #endinclude fnget_control.src
 [[IVE_TRANSHDR.BSHO]]
 rem --- Pre-inits
 
-rem print 'show', 
+print 'show', 
 pgmdir$ = stbl("+DIR_PGM")
 
 rem --- Open files
@@ -258,8 +258,8 @@ rem lf$ = "N"
 ls$ = "N"
 
 set_iv_params:
-rem i[0] = num(ivs01a.item_id_len$)
-rem i[1] = num(ivs01a.ls_no_len$)
+rem i[0] = ivs01a.item_id_len
+rem i[1] = ivs01a.ls_no_len$
 rem i[3] = num(ivs01a.desc_len_01$)
 rem i[4] = num(ivs01a.desc_len_02$)
 rem i[5] = num(ivs01a.desc_len_03$)

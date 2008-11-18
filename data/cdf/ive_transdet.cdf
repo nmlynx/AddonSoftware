@@ -57,24 +57,14 @@ rem OUT: default values set and displayed
 		rem --- Display Lot/Serial if needed
 
 		user_tpl.this_item_lot_or_ser% = ( user_tpl.ls$="Y" and ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" )
+		lot_or_ser$ = iff(user_tpl.this_item_lot_or_ser%, "Y", "N")
 
-		print "this_item_lot_or_ser: ", iff(user_tpl.this_item_lot_or_ser%, "Y", "N")
+		print "this_item_lot_or_ser: ", lot_or_ser$
 		print "lot/serial okay: ", user_tpl.ls$
 		print "lot/serial item: ", ivm01a.lotser_item$
 		print "inventoried    : ", ivm01a.inventoried$
 
-		rem w!=Form!.getChildWindow(1109); rem window with grid in it
-		rem c!=w!.getControl(5900); rem grid control
-
-		rem if user_tpl.this_item_lot_or_ser% then
-			rem c!.setColumnEditable(5,1) ; rem cell 6 (zero based), editable
-			rem c!.setColumnEditable(6,1)
-			rem c!.setColumnEditable(7,1)
-		rem else
-			rem c!.setColumnEditable(5,0); rem not editable
-			rem c!.setColumnEditable(6,0)
-			rem c!.setColumnEditable(7,0)
-		rem endif
+		callpoint!.setStatus( "ENABLE:" + lot_or_ser$ )
 
 		rem --- Set cost and extension
 		
