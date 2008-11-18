@@ -108,10 +108,10 @@ rem --- Parameters
         find record (opm01_dev,key=firm_id$+pad(fid(0),4),dom=*next) opm01a$
 
         dim i[6]
-        i[0]=num(ivs01a.item_id_len$)
-        i[1]=num(ivs01a.vendor_prd_len$)
-        i[2]=num(ivs01a.precision$+ivs01a.reserved_str$)
-        i[3]=num(ivs01a.ls_no_len$)
+        i[0]=ivs01a.item_id_len
+        i[1]=ivs01a.vendor_prd_len
+        i[2]=num(ivs01a.precision$)
+        i[3]=ivs01a.ls_no_len
         i[4]=num(ivs01a.desc_len_01$)
         i[5]=num(ivs01a.desc_len_02$)
         i[6]=num(ivs01a.desc_len_03$)

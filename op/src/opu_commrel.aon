@@ -98,7 +98,7 @@ rem --- Parameters
     ars01c.display_bal$="N"
     find record (ivs01a_dev,key=firm_id$+"IV"+"00",dom=std_missing_params) ivs01a$
     dim p[1],i[2]
-    p[0]=num(ivs01a.item_id_len$)
+    p[0]=ivs01a.item_id_len
     i[2]=num(ivs01a.precision$)
     if pos(ivs01a.lotser_flag$="LS") ls$="Y"
 
