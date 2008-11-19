@@ -6,8 +6,3 @@
 // --- Copyright (c) 1981-2007 AddonSoftware
 // --- All Rights Reserved
 
-
-
-d
-
-

@@ -112,8 +112,3 @@ BEGIN
     NAME "cwn_chart_bar"
 END
 
-
-
-D
-
-
