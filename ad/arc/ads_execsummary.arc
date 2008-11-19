@@ -1,6 +1,4 @@
-/elroy//#charset: windows-1252
-
-/elroy//#charset: windows-1252
+//#charset: windows-1252
 
 VERSION "4.0"
 
@@ -113,5 +111,9 @@ BEGIN
     BACKGROUNDCOLOR RGB(252,252,254)
     NAME "cwn_chart_bar"
 END
+
+
+
+D
 
 
