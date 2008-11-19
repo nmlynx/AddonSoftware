@@ -10,7 +10,7 @@ rem  +-----------------------------------------+
 
     seterr std_error
     setesc std_error
-
+	
 rem --- Get program path
 
     pgmdir$=fnglobal$("+DIR_PGM","")
@@ -71,7 +71,7 @@ rem --- Options
     if v$<>"YES" or v3<>0 then goto std_exit
 
 rem --- Position warehouse file
-
+	
     call pgmdir$+"adc_progress.aon","N","","","Updating ivm-02","",47,ivm02_dev,1,0,status
     read (ivm02_dev,key=firm_id$,dom=*next)
 
@@ -94,6 +94,7 @@ rem --- Reset ivm-02 Unit Cost
 			endif
 		endif
 		
+		ivm02a$ = field(ivm02a$)
 	    write record (ivm02_dev)ivm02a$
 	wend
 
@@ -123,6 +124,7 @@ rem --- Position Lot/Serial Number file
 				endif
 			endif
 			
+			ivm07a$ = field(ivm07a$)
 		    write record (ivm07_dev)ivm07a$
 		wend
 	
