@@ -1,3 +1,7 @@
+/elroy//#charset: windows-1252
+
+/elroy//#charset: windows-1252
+
 VERSION "4.0"
 
 WINDOW 1001 "User Selection" 350 300 404 164
@@ -30,4 +34,6 @@ BEGIN
     END
 
 END
+
+
 

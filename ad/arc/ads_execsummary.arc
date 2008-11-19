@@ -1,3 +1,7 @@
+/elroy//#charset: windows-1252
+
+/elroy//#charset: windows-1252
+
 VERSION "4.0"
 
 WINDOW 1000 "Executive Summary As Of " 100 100 597 428
@@ -109,3 +113,5 @@ BEGIN
     BACKGROUNDCOLOR RGB(252,252,254)
     NAME "cwn_chart_bar"
 END
+
+

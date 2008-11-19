@@ -1,3 +1,7 @@
+/elroy//#charset: windows-1252
+
+/elroy//#charset: windows-1252
+
 VERSION "4.0"
 
 WINDOW 1000 "DataPort Utility" 100 100 500 400
@@ -95,3 +99,5 @@ BEGIN
         CLIENTEDGE
     END
 END
+
+
