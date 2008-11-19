@@ -1,13 +1,32 @@
-[[IVE_TRANSDET.LOTSER_NO.BINP]]
-rem --- Disable this cell if necessary
+[[IVE_TRANSDET.AREC]]
+print "after new record (AREC)"; rem debug
+[[IVE_TRANSDET.ARAR]]
+print "after array transfer (ARAR)"; rem debug
+[[IVE_TRANSDET.AGDR]]
+print "after grid display row (AGDR)"; rem debug
+[[IVE_TRANSDET.AGDS]]
+print "after grid display (AGDS)"; rem debug
+[[IVE_TRANSDET.AGCL]]
+print "after grid clear (AGCL)"; rem debug
+[[IVE_TRANSDET.TRANS_QTY.AINP]]
+rem --- Serialized receipt or issue must be 1
 
-	print "in LOTSER_NO, BINP"
+	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
+		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
+			if callpoint!.getUserInput() <> "1" then
+				callpoint!.setStatus("ABORT")
+			endif
+		endif
+	endif
+[[IVE_TRANSDET.TRANS_QTY.BINP]]
+rem --- Serialized receipt or issue must be 1
 
-	rem item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	rem whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	rem gosub get_whse_item
-
-	rem if !(user_tpl.this_item_lot_or_ser%) then callpoint!.setStatus("ABORT")
+	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
+		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
+			callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY","1")
+			callpoint!.setStatus("REFRESH:IVE_TRANSDET.TRANS_QTY")
+		endif
+	endif
 [[IVE_TRANSDET.WAREHOUSE_ID.AVAL]]
 rem --- Set item/warehouse defaults
 
@@ -22,9 +41,9 @@ rem --- Calculate and display extended cost
 	gosub calc_ext_cost
 [[IVE_TRANSDET.<CUSTOM>]]
 calc_ext_cost: rem --- Calculate and display extended cost
-rem  IN: unit_cost
-rem    : trans_qty
-rem OUT: Extended cost calculated and displayed
+               rem  IN: unit_cost
+               rem    : trans_qty
+               rem OUT: Extended cost calculated and displayed
 
 	callpoint!.setColumnData("IVE_TRANSDET.TOTAL_COST", str(unit_cost * trans_qty) )
 	callpoint!.setStatus("MODIFIED-REFRESH")
@@ -32,9 +51,9 @@ rem OUT: Extended cost calculated and displayed
 return
 
 get_whse_item: rem --- Get warehouse and item records and display
-rem  IN: item$ = the current item ID
-rem    : whse$ = the current warehouse
-rem OUT: default values set and displayed
+               rem  IN: item$ = the current item ID
+               rem    : whse$ = the current warehouse
+               rem OUT: default values set and displayed
 
 	print "in get_whse_item: item$ = """, item$, """, whse$: """, whse$, """"
 
@@ -59,6 +78,7 @@ rem OUT: default values set and displayed
 		user_tpl.this_item_lot_or_ser% = ( user_tpl.ls$="Y" and ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" )
 		lot_or_ser$ = iff(user_tpl.this_item_lot_or_ser%, "Y", "N")
 
+		rem debug
 		print "this_item_lot_or_ser: ", lot_or_ser$
 		print "lot/serial okay: ", user_tpl.ls$
 		print "lot/serial item: ", ivm01a.lotser_item$
@@ -122,17 +142,20 @@ rem OUT: default values set and displayed
 
 return
 [[IVE_TRANSDET.TRANS_QTY.AVAL]]
+print "in TRANS_QTY.AVAL (should enable/disable cost)"; rem debug
+
 rem --- Calculate and display extended cost
 
 	trans_qty = num( callpoint!.getUserInput() )
 	unit_cost = num( callpoint!.getColumnData("IVE_TRANSDET.UNIT_COST") )
 	gosub calc_ext_cost
-[[IVE_TRANSDET.AGDS]]
-print "after grid display (not row)"; rem debug
-[[IVE_TRANSDET.AWRI]]
-print "after record write"
-[[IVE_TRANSDET.ARAR]]
-print "after array transfer"
+
+rem --- Enter cost only for receipts and adjusting up
+
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
+		callpoint!.setStatus("ENABLE:C")
+		print "cost is enabled"; rem debug
+	endif
 [[IVE_TRANSDET.AGRE]]
 	print "***after grid row exit"
 
@@ -173,12 +196,15 @@ print "after array transfer"
 
 	endif
 			
-[[IVE_TRANSDET.AGDR]]
-print "after grid display row"
-[[IVE_TRANSDET.BWRI]]
-print "before record write"
 [[IVE_TRANSDET.BGDR]]
-print "before grid display row"
+print "before grid display row (should enable/disable GL)"; rem debug
+
+rem --- Enable G/L entry based on transaction code
+
+	if user_tpl.gl$="Y" and user_tpl.trans_post_gl$ = "Y" then
+		callpoint!.setStatus("ENABLE:G")
+		print "Enabled G/L"; rem debug
+	endif
 [[IVE_TRANSDET.ITEM_ID.AVAL]]
 rem --- Old code for reference
 rem 2245 FIND (IVM01_DEV,KEY=D0$,DOM=2220)IOL=IVM01A; rem D0$(1),D1$(1),D2$(1),D3$,D4$,D5$,D6$,D[ALL]
