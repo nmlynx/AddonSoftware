@@ -10,40 +10,39 @@ rem  +-----------------------------------------+
 
     seterr std_error
     setesc std_error
-	
+
 rem --- Get program path
 
-    pgmdir$=fnglobal$("+DIR_PGM","")
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Open/Lock files
 
-    files=3,begfile=1,endfile=2
+    files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
     files$[2]="ivm-02",ids$[2]="IVM_ITEMWHSE"
-    files$[3]="ivm-07",ids$[3]="IVM_LSMASTER"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],
-:        templates$[all],channels[all],batch,status
-    if status then goto std_exit
-    ivs01a_dev=channels[1]
+:                           templates$[all],channels[all],batch,status
+    if status goto std_exit_no_update
+    ivs01_dev=channels[1]
     ivm02_dev=channels[2]
 
 rem --- Dimension string templates
 
-	dim ivs01a$:templates$[1]
-    dim ivm02a$:templates$[2]
+    dim ivs01a$:templates$[1],ivm02a$:templates$[2]
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=fnglobal$("+SYSINFO_TPL","")
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=fnglobal$("+SYSINFO","")
+    sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    ls$="N"
     iv_precision=num(ivs01a.precision$)
     method$=ivs01a.cost_method$
     if pos(ivs01a.lotser_flag$="LS") then ls$="Y" else ls$="N"
@@ -54,96 +53,71 @@ rem --- Initializations
 
 rem --- Additional file opens
 
-    if ls$="Y" then     
-		begfile=3
-	    endfile=3
-	    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],
-:		     templates$[all],channels[all],batch,status
-	    if status goto std_exit
-	    ivm07_dev=channels[3]
-	    dim ivm07a$:templates$[3]
-	endif
+    if ls$="Y"
+        files=1,begfile=1,endfile=files
+        files$[1]="ivm-07",ids$[1]="IVM_LSMASTER"
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],
+:                               templates$[all],channels[all],batch,status
+        if status goto std_exit_no_update
+        ivm07_dev=channels[1]
+        dim ivm07a$:templates$[1]
+    endif
 
 rem --- Options
 
-    v4$="Do you wish to rebuild Inventory Unit Costs"
-    call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-    if v$<>"YES" or v3<>0 then goto std_exit
+    msg_id$="IV_UPDATE_COSTS"
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_update
 
 rem --- Position warehouse file
-	
-    call pgmdir$+"adc_progress.aon","N","","","Updating ivm-02","",47,ivm02_dev,1,0,status
+
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,ivm02_dev,1,meter_num,status
     read (ivm02_dev,key=firm_id$,dom=*next)
 
 rem --- Reset ivm-02 Unit Cost
 
-	while 1
-	    extract record (ivm02_dev,end=*break)ivm02a$
-		if ivm02a.firm_id$<>firm_id$ then break
-		call pgmdir$+"adc_progress.aon","S","","","",ivm02a.warehouse_id$+" "+ivm02a.item_id$,0,0,1,0,status
-	    
-		if method$="A" then 
-			ivm02a.unit_cost=ivm02a.avg_cost
-		else
-			if method$="S" then
-				ivm02a.unit_cost=ivm02a.std_cost
-			else
-				if method$="R" then 
-					ivm02a.unit_cost=ivm02a.rep_cost
-				endif
-			endif
-		endif
-		
-		ivm02a$ = field(ivm02a$)
-	    write record (ivm02_dev)ivm02a$
-	wend
+    while 1
+        k$=key(ivm02_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        extract record (ivm02_dev,key=k$)ivm02a$
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        if method$="A" ivm02a.unit_cost=ivm02a.avg_cost
+        if method$="S" ivm02a.unit_cost=ivm02a.std_cost
+        if method$="R" ivm02a.unit_cost=ivm02a.rep_cost
+        ivm02a$=field(ivm02a$)
+        write record (ivm02_dev,key=k$)ivm02a$
+    wend
 
 rem --- Position Lot/Serial Number file
 
-    if ls$="Y" then 
-	    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-	    call pgmdir$+"adc_progress.aon","N","","","Updating ivm-07","",47,ivm07_dev,1,0,status
-	    read (ivm07_dev,key=firm_id$,dom=*next)
+    if ls$="N" goto done
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,ivm07_dev,1,meter_num,status
+    read (ivm07_dev,key=firm_id$,dom=*next)
 
-		rem --- Reset ivm-07 Unit Cost
-		
-		while 1
-		    extract record (ivm07_dev,end=*break)ivm07a$
-			if ivm07a.firm_id$<>firm_id$ then break
-			call pgmdir$+"adc_progress.aon","S","","","",ivm07a.warehouse_id$+" "+ivm07a.item_id$+" "+ivm07a.lotser_no$,0,ivm07_dev,1,0,status
-			
-		    if method$="A" then 
-				ivm02a.unit_cost=ivm02a.avg_cost
-			else
-				if method$="S" then 
-					ivm02a.unit_cost=ivm02a.std_cost
-				else
-					if method$="R" then 
-						ivm02a.unit_cost=ivm02a.rep_cost
-					endif
-				endif
-			endif
-			
-			ivm07a$ = field(ivm07a$)
-		    write record (ivm07_dev)ivm07a$
-		wend
-	
-	endif
+rem --- Reset ivm-07 Unit Cost
 
-rem --- All done
+    while 1
+        k$=key(ivm07_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        extract record (ivm07_dev,key=k$)ivm07a$
+        if method$="A" ivm07a.unit_cost=ivm07a.avg_cost
+        if method$="S" ivm07a.unit_cost=ivm07a.std_cost
+        if method$="R" ivm07a.unit_cost=ivm07a.rep_cost
+        ivm07a$=field(ivm07a$)
+        write record (ivm07_dev,key=k$)ivm07a$
+    wend
 
-	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+done: rem --- All done
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     goto std_exit
 
-rem --- Functions
+disp_message: rem --- Display Message Dialog
 
-rem --- fnglobal$: Return string value of passed STBL variable
-
-    def fnglobal$(q$,q1$)
-        q1$=stbl(q$,err=globalstr_exit)
-        globalstr_exit:
-        return q1$
-    fnend
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 
@@ -151,9 +125,8 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call pgmdir$+"adc_error.aon",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -177,11 +150,11 @@ std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$) escape; retry
+    if pos("RETRY"=rd_err_act$) retry
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
@@ -199,7 +172,15 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run pgmdir$+"ads_process_end.aon",err=*next
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
