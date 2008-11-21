@@ -92,7 +92,7 @@ rem --- Sanity check
 
     code=pos(action$="BB,BI,BO,IA,IC,II,IR,PH,PO,OE,OP,RC,TI,TO,WI,WO,CO,UC,TA,OO,PI",3)
     if code=0 then goto bad_action_error
-	if item$[2] = "" then goto no_item_error
+	if items$[2] = "" then goto no_item_error
 
 rem --- Was "init" called yet?
 
@@ -637,7 +637,7 @@ init_trans_hist_rec: rem --- Initialize IVT-01/IVT-04 Transaction History Record
     ivtwk.gl_account$=refs$[7]
     ivtwk.location$=location$
     if pos(action$="PORC",2) then ivtwk.line_code$="",ivtwk.po_line_code$=refs$[6]
-    if channel=ivt01_dev then ivtwk.oper_id$=user_id$ else ivtwk.user_id$=user_id$ ; rem ivt-04 does not have a field oper_id$
+    ivtwk.user_id$=user_id$ 
     ivtwk.system_date$=sys_yyyymmdd$; rem params$[0]
     ivtwk.system_time$=clock$
     ivtwk.terminal_id$=fid(0)
@@ -938,8 +938,12 @@ rem --- Inits
 	
 rem --- Open all files
 
-	num_files=13
+	num_files = 13
+	open_beg  = 1
+	open_end  = num_files
+	
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	
 	open_tables$[1]="IVS_PARAMS",    open_opts$[1]="OTA"
 	open_tables$[2]="GLS_PARAMS",    open_opts$[2]="OTA"
 	open_tables$[3]="IVM_ITEMMAST",  open_opts$[3]="OTA"
