@@ -9,131 +9,6 @@ print "HEADER: after array transfer (ARAR)"
 [[IVE_TRANSHDR.BWRI]]
 print "HEADER: before record write (BWRI)"; rem debug
 
-goto bwri_done; rem *** DISABLED ***
-
-curDtl! = SysGUI!.makeVector()
-curDtl! = GridVect!.getItem(0)
-origDtl! = UserObj!.getItem( user_tpl.orig_dtl ); rem getting the orig rec does not work
-
-rem --- Loop thru each current line, commit inventory
-
-cur_size = curDtl!.size()
-transdet_tpl$ = user_tpl.transdet_tpl$
-pgmdir$ = stbl("+DIR_PGM")
-
-rem Initialize inventory item update
-call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-if status then goto std_exit
-
-for rec=0 to cur_size - 1
-	dim currdet_rec$:transdet_tpl$
-	dim origdet_rec$:transdet_tpl$
-	currdet_rec$ = curDtl!.getItem(rec)
-	
-	if currdet_rec$ = "" then 
-		break
-	endif
-	
-	curr_whse$   = currdet_rec.warehouse_id$
-	curr_item$   = currdet_rec.item_id$
-	curr_qty     = num( currdet_rec.trans_qty$ )
-	origdet_rec$ = fnget_record$(origDtl!, currdet_rec.sequence_no$)
-	
-	if origdet_rec$ = "" then
-		orig_qty   = 0
-		orig_whse$ = ""
-		orig_item$ = ""
-	else
-		orig_qty   = num( origdet_rec.trans_qty$ )
-		orig_whse$ = currdet_rec.warehouse_id$
-		orig_item$ = currdet_rec.item_id$
-	endif
-	
-	rem 0510 DIM IV_FILES[44],IV_INFO$[3],IV_INFO[0],IV_PARAMS$[4]
-	rem 0513 PRECISION I[2]
-	rem 0515 DIM IV_PARAMS[5],IV_REFS$[11],IV_REFS[5]
-	rem 0520 LET IV_FILES[0]=SYS01_DEV,IV_FILES[1]=IVM01_DEV,IV_FILES[2]=IVM02_DEV
-	rem 3530 LET QNTY=W[0]-PREV_QTY,ACTION$="CO"
-	rem 5520 LET IV_INFO$[1]=PREV_WH_ITEM$(1,2),IV_INFO$[2]=PREV_WH_ITEM$(3),IV_INFO$[3]=PREV_LOT_SER$
-	rem 5530 LET IV_REFS[0]=QNTY
-	rem 5550 CALL "ivc_ua.bbx",ACTION$,IV_FILES[ALL],IV_INFO[ALL],IV_PARAMS$[ALL],IV_INFO$[ALL],IV_REFS$[ALL],IV_REFS[ALL],IV_STATUS
-	
-	print "Current, orig whse: ", curr_whse$, ", ", orig_whse$; rem debug
-	print "Current, orig item: ", curr_item$, ", ", orig_item$; rem debug
-	print "Current, orig qty : ", curr_qty, ", ", orig_qty; rem debug
-
-	rem Should we commit inventory?
-	rem debug: this is the correct logic, but orig rec is not set correctly
-	rem debug: force posting
-
-rem 	if	orig_whse$ <> curr_whse$ or 
-rem :		orig_item$ <> curr_item$ or 
-rem :		( orig_qty <> curr_qty and orig_qty <> 0 ) 
-rem :	then
-
-		rem If item and warehouse haven't changed, commit difference
-		if orig_whse$ = curr_whse$ and orig_item$ = curr_item$ then
-			items$[1] = curr_whse$
-			items$[2] = curr_item$
-			refs[0]   = curr_qty - orig_qty
-
-			call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],status
-			if status then escape; rem problem committing 
-		else
-			rem Items are different: uncommit previous
-			items$[1] = orig_whse$
-			items$[2] = orig_item$
-			
-			if user_tpl.prod_trans_type$ = "A" then
-				refs[0] = -orig_qty
-			else
-				refs[0] = orig_qty
-			endif
-			
-			call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],status
-			if status then escape; rem problem uncommitting previous qty
-			
-			rem Commit current
-			items$[1] = curr_whse$
-			items$[2] = curr_item$
-			refs[0]   = curr_qty
-			
-			call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],status
-			if status then escape; rem problem committing current qty
-		endif
-	
-	rem endif
-	
-next rec
-
-rem --- Find original detail line from the sequence number
-
-def fnget_record$(thisVect!, seq_no$)
-	dim this_rec$:transdet_tpl$
-	this_size = thisVect!.size()
-	found_it = 0
-
-	if this_size = 1 then 
-		return ""
-	endif
-
-	for ii=0 to this_size-1
-		this_rec$ = thisVect!.getItem(ii)
-		if this_rec$ <> "" and this_rec.sequence_no$ = seq_no$ then
-			found_it = 1
-			break
-		endif
-	next ii
-
-	if found_it then
-		return this_rec$
-	else
-		return ""
-	endif
-
-fnend
-
-bwri_done:
 [[IVE_TRANSHDR.AREA]]
 print "HEADER: after record read (AREA)"; rem debug
 
@@ -162,6 +37,16 @@ rem --- Get trans code record and set flags
 
 	trans_code$ = callpoint!.getUserInput()
 	gosub get_trans_rec
+
+rem --- Disable grid columns based on params (does this work?)
+
+	w!=Form!.getChildWindow(1109)
+	c!=w!.getControl(5900)
+
+	if user_tpl.gl$ <> "Y" or user_tpl.trans_post_gl$ <> "Y" then 
+		c!.setColumnEditable(3,0); rem G/L entry
+		print "G/L entry should be dissabled"; rem debug
+	endif
 [[IVE_TRANSHDR.TRANS_DATE.AVAL]]
 rem --- Does date fall into the GL period?
 
@@ -306,19 +191,6 @@ rem --- Is GL installed?
 	if status then goto std_exit
 	user_tpl.gl$    = gl$
 	user_tpl.glw11$ = glw11$
-
-rem --- Disable grid columns based on params (does this work?)
-
-	rem w!=Form!.getChildWindow(1109)
-	rem c!=w!.getControl(5900)
-
-	rem if gl$="N" then c!.setColumnEditable(3,0)
-
-	rem if ls$="N" then
-		rem c!.setColumnEditable(4,0)
-		rem c!.setColumnEditable(5,0)
-		rem c!.setColumnEditable(6,0)
-	rem endif
 
 rem --- Final inits
 

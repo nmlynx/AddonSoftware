@@ -142,8 +142,6 @@ get_whse_item: rem --- Get warehouse and item records and display
 
 return
 [[IVE_TRANSDET.TRANS_QTY.AVAL]]
-print "in TRANS_QTY.AVAL (should enable/disable cost)"; rem debug
-
 rem --- Calculate and display extended cost
 
 	trans_qty = num( callpoint!.getUserInput() )
@@ -154,57 +152,131 @@ rem --- Enter cost only for receipts and adjusting up
 
 	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
 		callpoint!.setStatus("ENABLE:C")
-		print "cost is enabled"; rem debug
 	endif
 [[IVE_TRANSDET.AGRE]]
-	print "***after grid row exit"
+	print "***after grid row exit"; rem debug
 
+rem --- Commit inventory
+
+	rem --- Has this row changed?
 	this_row = callpoint!.getValidationRow()
 
 	if callpoint!.getGridRowModifyStatus(this_row)<>"Y"
-		print "row ",this_row," not modified..."
+		print "row ",this_row," not modified"
 	else
 		print "row ",this_row," modified..."
+
+		rem --- Get current and prior values
 		curVect!  = gridVect!.getItem(0)
 		undoVect! = gridVect!.getItem(1)
-		diskVect! = gridVect!.getItem(2)
 
 		dim cur_rec$:dtlg_param$[1,3]
 		dim undo_rec$:dtlg_param$[1,3]
-		dim disk_rec$:dtlg_param$[1,3]
+
+		cur_rec$  = curVect!.getItem(this_row)
+		undo_rec$ = undoVect!.getItem(this_row)
 
 		curr_whse$  = cur_rec.warehouse_id$
 		curr_item$  = cur_rec.item_id$
 		curr_qty    = num( cur_rec.trans_qty$ )
-		prior_whse$ = disk_rec.warehouse_id$
-		prior_item$ = disk_rec.item_id$
-		prior_qty   = num( disk_rec.trans_qty$ )
 
+		if undo_rec$ <> "" then
+			prior_whse$ = undo_rec.warehouse_id$
+			prior_item$ = undo_rec.item_id$
+			prior_qty   = num( undo_rec.trans_qty$ )
+		else
+			prior_whse$ = ""
+			prior_item$ = ""
+			prior_qty   = 0
+		endif
+
+		rem debug to end
 		if (curr_whse$<>prior_whse$) then
-			print "Warehouses don't match"
+			print "Warehouses don't match or new"
 		else
 			print "Warehouses match"
 		endif
 
 		if (curr_item$<>prior_item$) then
-			print "Items don't match"
+			print "Items don't match or new"
 		else
 			print "Items match"
 		endif
 
 		print "Change in quantity:", curr_qty - prior_qty
+		rem end debug
+
+		rem --- Has there been any change?
+
+		if	curr_whse$ <> prior_whse$ or 
+:			curr_item$ <> prior_item$ or 
+:			curr_qty   <> prior_qty 
+:		then
+
+			rem --- Initialize inventory item update
+
+			print "initializing ATAMO..."
+			status = 999
+			call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then goto std_exit
+
+			rem --- Items or warehouses are different: uncommit previous
+
+			if (prior_whse$ <> "" and prior_whse$ <> curr_whse$) or 
+:			   (prior_item$ <> "" and prior_item$ <> curr_item$) 
+:			then
+
+				print "uncomtting old item or warehouse..."; rem debug
+				items$[1] = prior_whse$
+				items$[2] = prior_item$
+				
+				if user_tpl.trans_type$ = "A" then
+					refs[0] = -prior_qty
+				else
+					refs[0] = prior_qty
+				endif
+				
+				call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then escape; rem problem uncommitting previous qty
+
+				rem --- Commit quantity for current item and warehouse
+
+				print "committing current item and warehouse..."; rem debug
+				items$[1] = curr_whse$
+				items$[2] = curr_item$
+				refs[0]   = curr_qty 
+
+				call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then escape; rem problem committing 
+
+			endif
+
+			rem --- New record or item and warehouse haven't changed: commit difference
+
+			if (prior_whse$ = "" or prior_whse$ = curr_whse$) and 
+:			   (prior_item$ = "" or prior_item$ = curr_item$) 
+:			then
+
+				rem --- Commit quantity for current item and warehouse
+
+				print "committing new or current item and warehouse..."; rem debug
+				items$[1] = curr_whse$
+				items$[2] = curr_item$
+				refs[0]   = curr_qty - prior_qty
+
+				call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then escape; rem problem committing 
+
+			endif
+
+			print "done committing"; rem debug
+
+		endif
 
 	endif
 			
 [[IVE_TRANSDET.BGDR]]
-print "before grid display row (should enable/disable GL)"; rem debug
-
-rem --- Enable G/L entry based on transaction code
-
-	if user_tpl.gl$="Y" and user_tpl.trans_post_gl$ = "Y" then
-		callpoint!.setStatus("ENABLE:G")
-		print "Enabled G/L"; rem debug
-	endif
+print "before grid display row"; rem debug
 [[IVE_TRANSDET.ITEM_ID.AVAL]]
 rem --- Old code for reference
 rem 2245 FIND (IVM01_DEV,KEY=D0$,DOM=2220)IOL=IVM01A; rem D0$(1),D1$(1),D2$(1),D3$,D4$,D5$,D6$,D[ALL]
