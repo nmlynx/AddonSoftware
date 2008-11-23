@@ -71,6 +71,8 @@ rd_meter_action$="WIN-LST-OK"
 rd_meter_title$="DataPort"
 gosub disp_meter
 
+rem --- read file_alias into hash map
+
 file_alias! = new java.util.HashMap()
 dim file_alias$:"file_id:c(16*=124),alias:c(16*=)"
 file_alias = unt
@@ -89,6 +91,8 @@ while 1
 wend
 close (file_alias)
 
+rem --- read file_xref into hash map
+
 file_xref! = new java.util.HashMap()
 dim file_xref$:"old_filename:c(16*=124),new_filename:c(16*=)"
 file_xref = unt
@@ -102,6 +106,8 @@ while 1
    endif
 wend
 close (file_xref)
+
+rem --- read field_file_xref into hash map
 
 field_file_xref! = new java.util.HashMap()
 dim field_file_xref$:"alias:c(16*=124),old_fieldname:c(16*=124),new_fieldname:c(16*=)"
@@ -117,6 +123,8 @@ while 1
 wend
 close (field_file_xref)
 
+rem --- read field_name_xref into hash map
+
 field_name_xref! = new java.util.HashMap()
 dim field_name_xref$:"old_fieldname:c(16*=124),new_fieldname:c(16*=)"
 field_name_xref = unt
@@ -130,6 +138,22 @@ while 1
    endif
 wend
 close (field_name_xref)
+
+rem --- read internal_seq into hash map
+
+internal_seq! = new java.util.HashMap()
+dim int_seq$:"alias:c(16*=124),disp_seq:c(16*=124),int_seq:c(16*=)"
+int_seq_xref = unt
+open (int_seq_xref)filedir$+"internal_seq"
+while 1
+   read (int_seq_xref,end=*break)int_seq$
+   if len(int_seq$) then
+      keyval$ = cvs(int_seq.alias$,7)+"."+cvs(int_seq.disp_seq$,7)
+      dataval$ = cvs(int_seq.int_seq$,7)
+      internal_seq!.put(keyval$,dataval$)
+   endif
+wend
+close (int_seq_xref)
 
 rd_meter_data$="DataPort Start Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")
 rd_meter_proc_recs=rd_meter_total_recs
@@ -362,6 +386,15 @@ next_rec:
     for field=1 to fields
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
+
+rem --- Populate new internal sequence from old display sequence
+
+        keyval$ = table_alias$+"."+new_fieldlist.name$[field]
+        int_seq! = internal_seq!.get(keyval$)
+        if int_seq! <> null() then
+            int_seq$ = int_seq!
+            field new_rec$,int_seq$=str(num(value$):"000000000000")
+        endif
 
 rem --- check for specific values that can't be found any other way
         if cvs(new_fieldlist.name$[field],3)="REPORT_ALIAS"
