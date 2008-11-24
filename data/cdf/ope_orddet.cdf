@@ -122,7 +122,7 @@ rem --- Go get Lot/Serial Numbers if needed
 	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 	ivs01_dev=fnget_dev("IVS_PARAMS")
 	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs0a$
+	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 	ar_type$=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
 	cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 	ord$=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
