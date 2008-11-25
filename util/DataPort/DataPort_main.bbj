@@ -371,7 +371,7 @@ end_ddm04:
     lock (old_file)
     print "   Copying data from  "+ddm03.file_name$+ddm03.record_id$
     print(log_dev)"   Copying data from    "+ddm03.file_name$+ddm03.record_id$
-
+	
 next_rec:
     readrecord(old_file,end=eof)old_rec$
     if source_version=6 and datafile$="ARM-10" and old_rec$(1,3)="01G" goto next_rec
@@ -1094,6 +1094,11 @@ set_new_fieldname:
        new_fieldname$="EARNDEDUCT_"+old_fieldname$(len(old_fieldname$)-1)
        goto check_fieldlist
     endif
+	
+	if old_fieldname$ = "PRI_SEC_FLAG" then
+		new_fieldname$ = "PRISEC_FLAG"
+		goto check_fieldlist
+	endif
 
     keyval$ = table_alias$+"."+old_fieldname$
     new_fieldname! = field_file_xref!.get(keyval$)
