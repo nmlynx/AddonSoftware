@@ -281,9 +281,18 @@ next_ddm04:
        if rd_col_occurs$="YES" or rd_occur_adj>0 then
           rd_col_occurs_sfx$="_"+str(rd_curr_occur+rd_occur_adj:"00")
        endif
+	   
+	   rem --- Remove slashes from data name
+	   data_name$ = ddm04.data_name$
+	   s_pos = pos("/" = data_name$)
+	   
+	   while s_pos
+	      data_name$ = data_name$(1, s_pos-1) + data_name$(s_pos+1)
+		  s_pos = pos("/" = data_name$)
+	   wend
 
        rem ' field names can only contain [A-Z0-9_]
-       data_name$=tbl(cvs(ddm04.data_name$,7),tbl=az_09)
+       data_name$=tbl(cvs(data_name$,7),tbl=az_09)
        rd_temp_seg$=cvs(data_name$,3)+rd_col_occurs_sfx$+":"
        datatype$=iff(ddm01.data_type$="N","N","C")
        rd_temp_seg$=rd_temp_seg$+datatype$+"("+str(rd_col_length)
@@ -1094,11 +1103,6 @@ set_new_fieldname:
        new_fieldname$="EARNDEDUCT_"+old_fieldname$(len(old_fieldname$)-1)
        goto check_fieldlist
     endif
-	
-	if old_fieldname$ = "PRI_SEC_FLAG" then
-		new_fieldname$ = "PRISEC_FLAG"
-		goto check_fieldlist
-	endif
 
     keyval$ = table_alias$+"."+old_fieldname$
     new_fieldname! = field_file_xref!.get(keyval$)
