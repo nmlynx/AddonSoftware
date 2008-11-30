@@ -1,3 +1,29 @@
+[[OPE_ORDDET.AGRE]]
+rem --- check for lotted/serialized item
+ivm01_dev=fnget_dev("IVM_ITEMMAST")
+dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+
+myrow=callpoint!.getValidationRow()
+
+if callpoint!.getGridRowModifyStatus(myrow)="Y"
+	curVect!=gridVect!.getItem(0)
+	undoVect!=gridVect!.getItem(1)
+	diskVect!=gridVect!.getItem(2)
+
+	dim cur_rec$:dtlg_param$[1,3]
+	dim undo_rec$:dtlg_param$[1,3]
+	dim disk_rec$:dtlg_param$[1,3]
+
+rem 	cur_rec$=cvs(cvs(curVect!.getItem(myrow),16),3)
+	cur_rec$=cvs(curVect!.getItem(myrow),16)
+escape;rem ? fattr(cur_rec$) or curVect!.getItem(myrow)
+	undo_rec$=cvs(cvs(undoVect!.getItem(myrow),16),3)
+	disk_rec$=cvs(cvs(diskVect!.getItem(myrow),16),3)
+		
+	print "current: ",cur_rec$
+	print "undo: ",undo_rec$
+	print "disk: ",disk_rec$	
+endif	
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 g!=form!.getChildWindow(1109).getControl(5900)
