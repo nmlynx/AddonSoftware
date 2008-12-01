@@ -1,3 +1,9 @@
+[[IVE_TRANSDET.BWRI]]
+print "before record write (BWRI)"; rem debug
+[[IVE_TRANSDET.BUDE]]
+print "before record undelete (BUDE)"; rem debug
+[[IVE_TRANSDET.BDEL]]
+print "before record delete (BDEL)"; rem debug
 [[IVE_TRANSDET.AREC]]
 print "after new record (AREC)"; rem debug
 [[IVE_TRANSDET.ARAR]]
@@ -158,6 +164,9 @@ rem --- Enter cost only for receipts and adjusting up
 
 rem --- Commit inventory
 
+	rem --- Receipts do not commit
+	if user_tpl.trans_type$ = "R" then break; rem exit callpoint
+
 	rem --- Has this row changed?
 	this_row = callpoint!.getValidationRow()
 
@@ -176,18 +185,21 @@ rem --- Commit inventory
 		cur_rec$  = curVect!.getItem(this_row)
 		undo_rec$ = undoVect!.getItem(this_row)
 
-		curr_whse$  = cur_rec.warehouse_id$
-		curr_item$  = cur_rec.item_id$
-		curr_qty    = num( cur_rec.trans_qty$ )
+		curr_whse$   = cur_rec.warehouse_id$
+		curr_item$   = cur_rec.item_id$
+		curr_qty     = num( cur_rec.trans_qty$ )
+		curr_lotser$ = cur_rec.lotser_no$
 
 		if undo_rec$ <> "" then
-			prior_whse$ = undo_rec.warehouse_id$
-			prior_item$ = undo_rec.item_id$
-			prior_qty   = num( undo_rec.trans_qty$ )
+			prior_whse$   = undo_rec.warehouse_id$
+			prior_item$   = undo_rec.item_id$
+			prior_qty     = num( undo_rec.trans_qty$ )
+			prior_lotser$ = undo_rec.lotser_no$
 		else
-			prior_whse$ = ""
-			prior_item$ = ""
-			prior_qty   = 0
+			prior_whse$   = ""
+			prior_item$   = ""
+			prior_qty     = 0
+			prior_lotser$ = ""
 		endif
 
 		rem debug to end
@@ -222,14 +234,17 @@ rem --- Commit inventory
 
 			rem --- Items or warehouses are different: uncommit previous
 
-			if (prior_whse$ <> "" and prior_whse$ <> curr_whse$) or 
-:			   (prior_item$ <> "" and prior_item$ <> curr_item$) 
+			if (prior_whse$   <> "" and prior_whse$   <> curr_whse$) or 
+:			   (prior_item$   <> "" and prior_item$   <> curr_item$) or
+:				(prior_lotser$ <> "" and prior_lotser$ <> curr_lotser$)
 :			then
 
 				print "uncomtting old item or warehouse..."; rem debug
 				items$[1] = prior_whse$
 				items$[2] = prior_item$
+				items$[3] = prior_lotser$
 				
+				rem --- Adjustments reverse the commitment
 				if user_tpl.trans_type$ = "A" then
 					refs[0] = -prior_qty
 				else
@@ -244,6 +259,7 @@ rem --- Commit inventory
 				print "committing current item and warehouse..."; rem debug
 				items$[1] = curr_whse$
 				items$[2] = curr_item$
+				items$[3] = curr_lotser$
 				refs[0]   = curr_qty 
 
 				call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
@@ -253,8 +269,9 @@ rem --- Commit inventory
 
 			rem --- New record or item and warehouse haven't changed: commit difference
 
-			if (prior_whse$ = "" or prior_whse$ = curr_whse$) and 
-:			   (prior_item$ = "" or prior_item$ = curr_item$) 
+			if (prior_whse$   = "" or prior_whse$   = curr_whse$) and 
+:			   (prior_item$   = "" or prior_item$   = curr_item$) and
+:				(prior_lotser$ = "" or prior_lotser$ = curr_lotser$)
 :			then
 
 				rem --- Commit quantity for current item and warehouse
@@ -262,6 +279,7 @@ rem --- Commit inventory
 				print "committing new or current item and warehouse..."; rem debug
 				items$[1] = curr_whse$
 				items$[2] = curr_item$
+				items$[3] = curr_lotser$
 				refs[0]   = curr_qty - prior_qty
 
 				call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
@@ -274,9 +292,8 @@ rem --- Commit inventory
 		endif
 
 	endif
-			
 [[IVE_TRANSDET.BGDR]]
-print "before grid display row"; rem debug
+print "before grid display row (BGDR)"; rem debug
 [[IVE_TRANSDET.ITEM_ID.AVAL]]
 rem --- Old code for reference
 rem 2245 FIND (IVM01_DEV,KEY=D0$,DOM=2220)IOL=IVM01A; rem D0$(1),D1$(1),D2$(1),D3$,D4$,D5$,D6$,D[ALL]
