@@ -28,8 +28,8 @@ Why can't I see the buttons?
 resize_window has one limitation: it needs to be called in the After Window
 Create (AWIN) event in order for the push buttons to display correctly.  This 
 is probably because between AWIN and BSHO (Before Show) Barista sets up where 
-the button are.  If you resize in AWIN, Barista will take care of positioning the
-buttons for you.
+the button are.  If you resize in AWIN, Barista will take care of positioning 
+the buttons for you.
 
 
 Did resize_window change the window position?
@@ -40,7 +40,14 @@ the current screen.  Otherwise it leaves the positioning of the window up to
 Barista
 
 
-Dec-01-2008
+What if I like my form size bigger than the controls?
+-----------------------------------------------------
+
+That's okay.  resize_window will never make your form smaller, only bigger, and
+only enough to fit all the controls.
+
+
+Dec-02-2008
 Knute Snortum
 ksnortum@basis.com
 	

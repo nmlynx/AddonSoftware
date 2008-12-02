@@ -216,10 +216,10 @@ resize_window: rem --- Resize window based on new controls
 	screen_height = ScreenSize!.height - 40
 	group_box = 21
 	push_button = 11
-	new_width = 0
-	new_height = 0
-	extra_width = 5
-	extra_height = 5
+	new_width = Form!.getWidth()
+	new_height = Form!.getHeight()
+	extra_width = 10
+	extra_height = 10
 	no_buttons_yet = 1
 
 	rem --- Roll throught all controls, setting the max width and height
@@ -230,7 +230,7 @@ resize_window: rem --- Resize window based on new controls
 		rem --- Group boxes dimesions can mess up the calculation
 		if type = group_box then continue
 		
-		rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottum
+		rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottom
 		if type = push_button then
 			if no_buttons_yet then
 				extra_height = extra_height + this_ctrl!.getHeight() + 5
