@@ -14,16 +14,12 @@ if callpoint!.getGridRowModifyStatus(myrow)="Y"
 	dim undo_rec$:dtlg_param$[1,3]
 	dim disk_rec$:dtlg_param$[1,3]
 
-rem 	cur_rec$=cvs(cvs(curVect!.getItem(myrow),16),3)
-	cur_rec$=cvs(curVect!.getItem(myrow),16)
-escape;rem ? fattr(cur_rec$) or curVect!.getItem(myrow)
+ 	cur_rec$=cvs(cvs(curVect!.getItem(myrow),16),3)
 	undo_rec$=cvs(cvs(undoVect!.getItem(myrow),16),3)
 	disk_rec$=cvs(cvs(diskVect!.getItem(myrow),16),3)
-		
-	print "current: ",cur_rec$
-	print "undo: ",undo_rec$
-	print "disk: ",disk_rec$	
 endif	
+
+gosub get_lot_info
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 g!=form!.getChildWindow(1109).getControl(5900)
@@ -446,6 +442,14 @@ disable_ctl:rem --- disable selected controls
 	wmap$(wpos+6,1)=dmap$
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP")
+return
+
+get_lot_info:
+	callpoint!.setDevObject("wh","01")
+	callpoint!.setDevObject("item","100                 ")
+	callpoint!.setDevObject("lsdet_dev",str(fnget_dev("IVM_LSMASTER")))
+	callpoint!.setDevObject("lsdet_tpl",fnget_tpl$("IVM_LSMASTER"))
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT","",table_chans$[all]
 return
 
 #include std_missing_params.src
