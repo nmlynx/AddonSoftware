@@ -34,26 +34,42 @@ resize_window: rem --- Resize window based on new controls
 	screen_width = ScreenSize!.width - 40
 	screen_height = ScreenSize!.height - 40
 	group_box = 21
+	push_button = 11
 	new_width = 0
 	new_height = 0
+	extra_width = 10
+	extra_height = 10
+	no_buttons_yet = 1
 
 	rem --- Roll throught all controls, setting the max width and height
 	for i=0 to controls!.size() - 1
 		this_ctrl! = controls!.getItem(i)
 		type = this_ctrl!.getControlType()
 
-		if type <> group_box then
+		rem --- Group boxes dimesions can mess up the calculation
+		if type = group_box then continue
+		
+		rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottum
+		if type = push_button then
+			if no_buttons_yet then
+				extra_height = extra_height + this_ctrl!.getHeight() + 5
+				no_buttons_yet = 0
+			endif
+		else
+		
+			rem --- Most controls go here
 			new_width  = max( new_width,  this_ctrl!.getX() + this_ctrl!.getWidth() )
 			new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
 		endif
+		
 	next i
 
-	rem --- Set new size
-	new_width = min( screen_width, new_width + 10 )
-	new_height = min( screen_height, new_height + 10 )
+	rem --- Set new size, but not bigger than the screen
+	new_width = min( screen_width, new_width + extra_width )
+	new_height = min( screen_height, new_height + extra_height )
 	Form!.setSize(new_width, new_height)
 	
-	rem --- Is the window location still OK?
+	rem --- Will the form still fit on the screen?
 	new_position = 0
 	form_x = Form!.getX()
 	form_y = Form!.getY()

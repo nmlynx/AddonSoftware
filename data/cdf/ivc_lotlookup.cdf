@@ -1,3 +1,140 @@
+[[IVC_LOTLOOKUP.AWIN]]
+rem --- open files
+
+	num_files=4
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="APM_VENDMAST",open_opts$[1]="OTA"
+	open_tables$[2]="IVM_LSMASTER",open_opts$[2]="OTA"
+	open_tables$[3]="APS_PARAMS",open_opts$[3]="OTA"
+	open_tables$[4]="IVS_PARAMS",open_opts$[4]="OTA"
+
+	gosub open_tables
+
+	apm_vendmast_dev=num(open_chans$[1]);dim apm_vendmast$:open_tpls$[1]
+	ivm_lsmaster_dev=num(open_chans$[2]);dim ivm_lsmaster$:open_tpls$[2]
+	aps_params_dev=num(open_chans$[3]);dim aps_params$:open_tpls$[3]
+	ivs_params_dev=num(open_chans$[4]);dim ivs_params$:open_tpls$[4]
+
+rem --- Retrieve parameter records
+
+    find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
+    find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
+
+rem --- Parameters
+
+    dim p[5]   
+    if pos(ivs_params.lotser_flag$="SL")=0 goto std_exit
+    p[0]=num(ivs_params.item_id_len$)
+    p[1]=num(ivs_params.vendor_prd_len$)
+    p[3]=num(ivs_params.ls_no_len$)
+    p[2]=num(ivs_params.desc_len_01$)
+    p[4]=num(ivs_params.desc_len_02$)
+    p[5]=num(ivs_params.desc_len_03$)
+    call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
+    callpoint!.setDevObject("ap_installed",info$[20])
+
+rem ---  Set up grid
+
+	dims_tmpl$ = "x:u(2),y:u(2),w:u(2),h:u(2)"
+	dim g$:dims_tmpl$
+	g.x = 10, g.y = 75, g.w = 300, g.h = 220
+	callpoint!.setDevObject("dims_tmpl", dims_tmpl$)
+	callpoint!.setDevObject("grid_dims", g$)
+
+	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+	gridLots!=Form!.addGrid(nxt_ctlID, g.x, g.y, g.w, g.h)
+	gridLots!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+
+	gridLots!.setColumnEditable(0,0)
+	gridLots!.setColumnEditable(1,0)
+
+	gridLots!.setCallback(gridLots!.ON_GRID_MOUSE_UP,"custom_event")
+	gridLots!.setCallback(gridLots!.ON_GRID_SELECT_ROW,"custom_event")
+
+	callpoint!.setDevObject("gridLots",gridLots!)
+
+	dim attr_def_col_str$[0,0]
+	attr_def_col_str$[0,0]=callpoint!.getColumnAttributeTypes()
+	def_grid_cols=2
+	num_rows=10
+	dim attr_grid_col$[def_grid_cols,len(attr_def_col_str$[0,0])/5]
+
+	dvar_pos = fnstr_pos("DVAR", attr_def_col_str$[0,0], 5)
+	labs_pos = fnstr_pos("LABS", attr_def_col_str$[0,0], 5)
+	ctlw_pos = fnstr_pos("CTLW", attr_def_col_str$[0,0], 5)
+	
+	attr_grid_col$[1,dvar_pos]="LOT NO"
+	attr_grid_col$[1,labs_pos]="Lot/Serial No"
+	attr_grid_col$[1,ctlw_pos]="125"
+
+	attr_grid_col$[2,dvar_pos]="STATUS"
+	attr_grid_col$[2,labs_pos]="Status"
+	attr_grid_col$[2,ctlw_pos]="125"	
+	
+	for curr_attr=1 to def_grid_cols
+		attr_grid_col$[0,1] = attr_grid_col$[0,1] + 
+:			pad( "IVC_LOTLOOKUP." + attr_grid_col$[curr_attr, dvar_pos], 40 )
+	next curr_attr
+
+	attr_disp_col$=attr_grid_col$[0,1]
+	
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",
+:		gui_dev,
+:		gridLots!,
+:		"LINES",
+:		num_rows,
+:		attr_def_col_str$[all],
+:		attr_disp_col$,
+:		attr_grid_col$[all]
+
+rem --- Create Lot Information window			
+		
+	dim w$:dims_tmpl$
+	w.x = 330, w.y = 65, w.w = 400, w.h = 225
+	callpoint!.setDevObject("child_window_dims", w$)
+
+	lotWin!=form!.addChildWindow(15000, w.x, w.y, w.w, w.h, "", $00000800$, 10)
+	lotWin!.addGroupBox(15999,5,5,380,220,"Lot/Serial Information",$$)
+	
+	lotWin!.addStaticText(15001,10,25,75,15,"Vendor:",$8000$)
+	lotWin!.addStaticText(15002,10,45,75,15,"Comment:",$8000$)
+	lotWin!.addStaticText(15003,10,65,75,15,"Received:",$8000$)
+	lotWin!.addStaticText(15009,175,65,75,15,"Issued:",$8000$)
+
+	lotWin!.addStaticText(15004,10,105,75,15,"Cost:",$8000$)
+	lotWin!.addStaticText(15005,175,105,75,15,"Location:",$8000$)
+
+	lotWin!.addStaticText(15006,10,145,75,15,"On hand:",$8000$)
+	lotWin!.addStaticText(15007,10,165,75,15,"Committed:",$8000$)
+	lotWin!.addStaticText(15008,10,185,75,15,"Available:",$8000$)
+
+	callpoint!.setDevObject("vendor_id",  str(15101))
+	callpoint!.setDevObject("comment_id", str(15102))
+	callpoint!.setDevObject("receipt_id", str(15103))
+	callpoint!.setDevObject("issued_id",  str(15109))
+
+	lotWin!.addStaticText(15101,95,25,175,15,"",$0000$)
+	lotWin!.addStaticText(15102,95,45,175,15,"",$0000$)
+	lotWin!.addStaticText(15103,95,65,75,15,"",$0000$)
+	lotWin!.addStaticText(15109,260,65,75,15,"",$0000$)
+
+	callpoint!.setDevObject("cost_id",     str(15104))
+	callpoint!.setDevObject("location_id", str(15105))
+
+	lotWin!.addStaticText(15104,95,105,75,15,"",$0000$)
+	lotWin!.addStaticText(15105,260,105,75,15,"",$0000$)
+
+	callpoint!.setDevObject("onhand_id",    str(15106))
+	callpoint!.setDevObject("committed_id", str(15107))
+	callpoint!.setDevObject("available_id", str(15108))
+
+	lotWin!.addStaticText(15106,95,145,75,15,"",$0000$)
+	lotWin!.addStaticText(15107,95,165,75,15,"",$0000$)
+	lotWin!.addStaticText(15108,95,185,75,15,"",$0000$)
+
+	callpoint!.setDevObject("lotInfo",lotWin!)			
+
+	gosub resize_window
 [[IVC_LOTLOOKUP.LOTS_TO_DISP.AVAL]]
 rem -- user changed lot type -- re-read/display selected lot type
 
@@ -7,6 +144,8 @@ rem --- item_id, warehouse_id, and type of lot (open,closed, etc.) coming from c
 
 gosub read_and_display_lot_grid
 [[IVC_LOTLOOKUP.ASHO]]
+break; rem ***** DISABLED *****
+
 rem --- Resize window to fit custom controls
 
 	form_width = Form!.getWidth()
@@ -56,11 +195,11 @@ rem --- Resize window to fit custom controls
 	
 [[IVC_LOTLOOKUP.ACUS]]
 rem --- Process custom event -- used in this pgm to select lot and display info.
-
+rem
 rem --- See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
-
+rem
 rem --- This routine is executed when callbacks have been set to run a "custom event".
-
+rem
 rem --- Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind
 rem --- of event it is... in this case, we're toggling checkboxes on/off in form grid control.
 
@@ -106,6 +245,69 @@ rem	gridLots!.setSize(300,Form!.getHeight()-(gridLots!.getY()+40))
 rem	gridLots!.setFitToGrid(1)
 rem endif
 [[IVC_LOTLOOKUP.<CUSTOM>]]
+resize_window: rem --- Resize window based on new controls
+
+	controls! = Form!.getAllControls()
+	ScreenSize! = SysGUI!.getSystemMetrics().getScreenSize()
+	screen_width = ScreenSize!.width - 40
+	screen_height = ScreenSize!.height - 40
+	group_box = 21
+	push_button = 11
+	new_width = 0
+	new_height = 0
+	extra_width = 5
+	extra_height = 5
+	no_buttons_yet = 1
+
+	rem --- Roll throught all controls, setting the max width and height
+	for i=0 to controls!.size() - 1
+		this_ctrl! = controls!.getItem(i)
+		type = this_ctrl!.getControlType()
+
+		rem --- Group boxes dimesions can mess up the calculation
+		if type = group_box then continue
+		
+		rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottum
+		if type = push_button then
+			if no_buttons_yet then
+				extra_height = extra_height + this_ctrl!.getHeight() + 5
+				no_buttons_yet = 0
+			endif
+		else
+		
+			rem --- Most controls go here
+			new_width  = max( new_width,  this_ctrl!.getX() + this_ctrl!.getWidth() )
+			new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
+		endif
+		
+	next i
+
+	rem --- Set new size, but not bigger than the screen
+	new_width = min( screen_width, new_width + extra_width )
+	new_height = min( screen_height, new_height + extra_height )
+	Form!.setSize(new_width, new_height)
+	
+	rem --- Will the form still fit on the screen?
+	new_position = 0
+	form_x = Form!.getX()
+	form_y = Form!.getY()
+	
+	if form_x + new_width > screen_width then
+		form_x = int( (screen_width - new_width) / 2 )
+		new_position = 1
+	endif
+	
+	if form_y + new_height > screen_height then
+		form_y = int( (screen_height - new_height) / 2 )
+		new_position = 1
+	endif
+	
+	if new_position then
+		Form!.setLocation(form_x, form_y)
+	endif
+
+return
+
 read_and_display_lot_grid:
 
 rem --- Position ivm-07 file
@@ -262,138 +464,3 @@ rem --- Format date from YYYYMMDD to MM/DD/YY
     fnend
 
 #include std_missing_params.src
-[[IVC_LOTLOOKUP.BSHO]]
-rem --- open files
-
-	num_files=4
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="APM_VENDMAST",open_opts$[1]="OTA"
-	open_tables$[2]="IVM_LSMASTER",open_opts$[2]="OTA"
-	open_tables$[3]="APS_PARAMS",open_opts$[3]="OTA"
-	open_tables$[4]="IVS_PARAMS",open_opts$[4]="OTA"
-
-	gosub open_tables
-
-	apm_vendmast_dev=num(open_chans$[1]);dim apm_vendmast$:open_tpls$[1]
-	ivm_lsmaster_dev=num(open_chans$[2]);dim ivm_lsmaster$:open_tpls$[2]
-	aps_params_dev=num(open_chans$[3]);dim aps_params$:open_tpls$[3]
-	ivs_params_dev=num(open_chans$[4]);dim ivs_params$:open_tpls$[4]
-
-rem --- Retrieve parameter records
-
-    find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
-    find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
-
-rem --- Parameters
-
-    dim p[5]   
-    if pos(ivs_params.lotser_flag$="SL")=0 goto std_exit
-    p[0]=num(ivs_params.item_id_len$)
-    p[1]=num(ivs_params.vendor_prd_len$)
-    p[3]=num(ivs_params.ls_no_len$)
-    p[2]=num(ivs_params.desc_len_01$)
-    p[4]=num(ivs_params.desc_len_02$)
-    p[5]=num(ivs_params.desc_len_03$)
-    call pgmdir$+"adc_application.aon","AP",info$[all]
-    callpoint!.setDevObject("ap_installed",info$[20])
-
-rem ---  Set up grid
-
-	dims_tmpl$ = "x:u(2),y:u(2),w:u(2),h:u(2)"
-	dim g$:dims_tmpl$
-	g.x = 10, g.y = 75, g.w = 300, g.h = 220
-	callpoint!.setDevObject("dims_tmpl", dims_tmpl$)
-	callpoint!.setDevObject("grid_dims", g$)
-
-	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	gridLots!=Form!.addGrid(nxt_ctlID, g.x, g.y, g.w, g.h)
-	gridLots!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
-
-	gridLots!.setColumnEditable(0,0)
-	gridLots!.setColumnEditable(1,0)
-
-	gridLots!.setCallback(gridLots!.ON_GRID_MOUSE_UP,"custom_event")
-	gridLots!.setCallback(gridLots!.ON_GRID_SELECT_ROW,"custom_event")
-
-	callpoint!.setDevObject("gridLots",gridLots!)
-
-	dim attr_def_col_str$[0,0]
-	attr_def_col_str$[0,0]=callpoint!.getColumnAttributeTypes()
-	def_grid_cols=2
-	num_rows=10
-	dim attr_grid_col$[def_grid_cols,len(attr_def_col_str$[0,0])/5]
-
-	dvar_pos = fnstr_pos("DVAR", attr_def_col_str$[0,0], 5)
-	labs_pos = fnstr_pos("LABS", attr_def_col_str$[0,0], 5)
-	ctlw_pos = fnstr_pos("CTLW", attr_def_col_str$[0,0], 5)
-	
-	attr_grid_col$[1,dvar_pos]="LOT NO"
-	attr_grid_col$[1,labs_pos]="Lot/Serial No"
-	attr_grid_col$[1,ctlw_pos]="125"
-
-	attr_grid_col$[2,dvar_pos]="STATUS"
-	attr_grid_col$[2,labs_pos]="Status"
-	attr_grid_col$[2,ctlw_pos]="125"	
-	
-	for curr_attr=1 to def_grid_cols
-		attr_grid_col$[0,1] = attr_grid_col$[0,1] + 
-:			pad( "IVC_LOTLOOKUP." + attr_grid_col$[curr_attr, dvar_pos], 40 )
-	next curr_attr
-
-	attr_disp_col$=attr_grid_col$[0,1]
-	
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",
-:		gui_dev,
-:		gridLots!,
-:		"LINES",
-:		num_rows,
-:		attr_def_col_str$[all],
-:		attr_disp_col$,
-:		attr_grid_col$[all]
-
-rem --- Create Lot Information window			
-		
-	dim w$:dims_tmpl$
-	w.x = 330, w.y = 65, w.w = 400, w.h = 225
-	callpoint!.setDevObject("child_window_dims", w$)
-
-	lotWin!=form!.addChildWindow(15000, w.x, w.y, w.w, w.h, "", $00000800$, 10)
-	lotWin!.addGroupBox(15999,5,5,380,220,"Lot/Serial Information",$$)
-	
-	lotWin!.addStaticText(15001,10,25,75,15,"Vendor:",$8000$)
-	lotWin!.addStaticText(15002,10,45,75,15,"Comment:",$8000$)
-	lotWin!.addStaticText(15003,10,65,75,15,"Received:",$8000$)
-	lotWin!.addStaticText(15009,175,65,75,15,"Issued:",$8000$)
-
-	lotWin!.addStaticText(15004,10,105,75,15,"Cost:",$8000$)
-	lotWin!.addStaticText(15005,175,105,75,15,"Location:",$8000$)
-
-	lotWin!.addStaticText(15006,10,145,75,15,"On hand:",$8000$)
-	lotWin!.addStaticText(15007,10,165,75,15,"Committed:",$8000$)
-	lotWin!.addStaticText(15008,10,185,75,15,"Available:",$8000$)
-
-	callpoint!.setDevObject("vendor_id",  str(15101))
-	callpoint!.setDevObject("comment_id", str(15102))
-	callpoint!.setDevObject("receipt_id", str(15103))
-	callpoint!.setDevObject("issued_id",  str(15109))
-
-	lotWin!.addStaticText(15101,95,25,175,15,"",$0000$)
-	lotWin!.addStaticText(15102,95,45,175,15,"",$0000$)
-	lotWin!.addStaticText(15103,95,65,75,15,"",$0000$)
-	lotWin!.addStaticText(15109,260,65,75,15,"",$0000$)
-
-	callpoint!.setDevObject("cost_id",     str(15104))
-	callpoint!.setDevObject("location_id", str(15105))
-
-	lotWin!.addStaticText(15104,95,105,75,15,"",$0000$)
-	lotWin!.addStaticText(15105,260,105,75,15,"",$0000$)
-
-	callpoint!.setDevObject("onhand_id",    str(15106))
-	callpoint!.setDevObject("committed_id", str(15107))
-	callpoint!.setDevObject("available_id", str(15108))
-
-	lotWin!.addStaticText(15106,95,145,75,15,"",$0000$)
-	lotWin!.addStaticText(15107,95,165,75,15,"",$0000$)
-	lotWin!.addStaticText(15108,95,185,75,15,"",$0000$)
-
-	callpoint!.setDevObject("lotInfo",lotWin!)			
