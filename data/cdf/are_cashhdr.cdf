@@ -262,7 +262,8 @@ user_tpl.gridInvoice_id$=str(nxt_ctlID+3)
 user_tpl.GLind_id$=str(nxt_ctlID+4)
 user_tpl.GLstar_id$=str(nxt_ctlID+5)
 rem --- Reset window size
-Form!.setSize(760, 375)
+rem Form!.setSize(760, 375)
+gosub resize_window
 rem --- set user-friendly names for controls' positions in UserObj vector, num grid cols, data pos w/in vector, etc.				
 user_tpl.gridInvoice_cols$="12"				
 user_tpl.gridInvoice_rows$="10"				
@@ -351,6 +352,53 @@ if gl$="Y"
 	endif
 endif
 [[ARE_CASHHDR.<CUSTOM>]]
+resize_window: rem --- Resize window based on new controls
+
+	controls! = Form!.getAllControls()
+	ScreenSize! = SysGUI!.getSystemMetrics().getScreenSize()
+	screen_width = ScreenSize!.width - 40
+	screen_height = ScreenSize!.height - 40
+	group_box = 21
+	new_width = 0
+	new_height = 0
+
+	rem --- Roll throught all controls, setting the max width and height
+	for i=0 to controls!.size() - 1
+		this_ctrl! = controls!.getItem(i)
+		type = this_ctrl!.getControlType()
+
+		if type <> group_box then
+			new_width  = max( new_width,  this_ctrl!.getX() + this_ctrl!.getWidth() )
+			new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
+		endif
+	next i
+
+	rem --- Set new size
+	new_width = min( screen_width, new_width + 5 )
+	new_height = min( screen_height, new_height + 5 )
+	Form!.setSize(new_width, new_height)
+	
+	rem --- Is the window location still OK?
+	new_position = 0
+	form_x = Form!.getX()
+	form_y = Form!.getY()
+	
+	if form_x + new_width > screen_width then
+		form_x = int( (screen_width - new_width) / 2 )
+		new_position = 1
+	endif
+	
+	if form_y + new_height > screen_height then
+		form_y = int( (screen_height - new_height) / 2 )
+		new_position = 1
+	endif
+	
+	if new_position then
+		Form!.setLocation(form_x, form_y)
+	endif
+
+return
+
 disable_key_fields:
 	rem --- used after entering check amount to disable key fields, or on new rec to re-enable them, depending on ctl_stat$
 	dim key_fields$[3]
