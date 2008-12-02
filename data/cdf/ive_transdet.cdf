@@ -1,3 +1,41 @@
+[[IVE_TRANSDET.LOTSER_NO.BINP]]
+rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
+
+	rem --- save current row/column so we'll know where to set focus when we return from lot lookup
+	w!=Form!.getChildWindow(1109)
+	c!=w!.getControl(5900)
+	return_to_row=c!.getSelectedRow()
+	return_to_col=c!.getSelectedColumn()
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="ITEM_ID"
+	dflt_data$[1,1]=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	dflt_data$[2,0]="WAREHOUSE_ID"
+	dflt_data$[2,1]=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	dflt_data$[3,0]="LOTS_TO_DISP"
+	dflt_data$[3,1]="O";rem --- default to open lots (not sure if this is same as v6/7, might need to change)
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "IVC_LOTLOOKUP",
+:	                       stbl("+USER_ID"),
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
+
+	if callpoint!.getDevObject("selected_lot")<>null()
+		callpoint!.setColumnData("IVE_TRANSDET.LOTSER_NO",str(callpoint!.getDevObject("selected_lot")))
+		callpoint!.setColumnData("IVE_TRANSDET.LS_LOCATION",str(callpoint!.getDevObject("selected_lot_loc")))
+		callpoint!.setColumnData("IVE_TRANSDET.LS_COMMENTS",str(callpoint!.getDevObject("selected_lot_cmt")))
+		callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY",str(callpoint!.getDevObject("selected_lot_avail")))
+		callpoint!.setStatus("REFGRID")
+	endif
+
+	rem --- return focus to where we were (lot number)
+	c!.focus()
+	c!.accept(1,err=*next)
+	c!.startEdit(return_to_row,return_to_col)
 [[IVE_TRANSDET.BWRI]]
 print "before record write (BWRI)"; rem debug
 [[IVE_TRANSDET.BUDE]]

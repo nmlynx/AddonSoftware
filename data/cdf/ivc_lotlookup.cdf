@@ -1,3 +1,11 @@
+[[IVC_LOTLOOKUP.LOTS_TO_DISP.AVAL]]
+rem -- user changed lot type -- re-read/display selected lot type
+
+gosub read_and_display_lot_grid
+[[IVC_LOTLOOKUP.AREC]]
+rem --- item_id, warehouse_id, and type of lot (open,closed, etc.) coming from calling program
+
+gosub read_and_display_lot_grid
 [[IVC_LOTLOOKUP.ASHO]]
 rem --- Resize window to fit custom controls
 
@@ -86,7 +94,7 @@ rem --- Get the control ID of the event
 		switch notice.code
 			case 19; rem grid_key_press
 			case 14; rem grid_mouse_up
-				get_lot$=gridLots!.getCellText(curr_row,0)
+				callpoint!.setDevObject("selected_lot",gridLots!.getCellText(curr_row,0))				
 				gosub get_lot_info
 				break
 		swend
@@ -97,9 +105,8 @@ rem if gridLots!<>Null()
 rem	gridLots!.setSize(300,Form!.getHeight()-(gridLots!.getY()+40))
 rem	gridLots!.setFitToGrid(1)
 rem endif
-[[IVC_LOTLOOKUP.LOTS_TO_DISP.AVAL]]
-rem --- putting logic here for now that gets lots based on item/whse/open_closed_>zero_all
-rem --- these fields will eventually be populated by whatever alias is calling this OE form
+[[IVC_LOTLOOKUP.<CUSTOM>]]
+read_and_display_lot_grid:
 
 rem --- Position ivm-07 file
 
@@ -109,6 +116,7 @@ rem --- Position ivm-07 file
 	
 	whse_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.WAREHOUSE_ID")
 	item_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.ITEM_ID")
+	lots_to_disp$=callpoint!.getColumnData("IVC_LOTLOOKUP.LOTS_TO_DISP")
 	
 	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$,dom=*next)
 
@@ -120,11 +128,9 @@ rem --- Position ivm-07 file
 :			or ivm_lsmaster.item_id$<>item_id$
 :		then break
 
-		what_lots$ = callpoint!.getUserInput()
-
-		if what_lots$="O" and ivm_lsmaster.closed_flag$<>" " then continue
-		if what_lots$="C" and ivm_lsmaster.closed_flag$<>"C" then continue
-		if what_lots$="Z" and (ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit<=0 or ivm_lsmaster.closed_flag$<>"C") then continue
+		if lots_to_disp$="O" and ivm_lsmaster.closed_flag$<>" " then continue
+		if lots_to_disp$="C" and ivm_lsmaster.closed_flag$<>"C" then continue
+		if lots_to_disp$="Z" and (ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit<=0 or ivm_lsmaster.closed_flag$<>"C") then continue
 		
 		switch pos(ivm_lsmaster.closed_flag$=" CL")
 			case 1
@@ -153,13 +159,15 @@ rem --- Position ivm-07 file
 		gridLots!.setNumRows(numrows)
 		gridLots!.setCellText(0,0,vectLots!)
 		gridLots!.resort()
+		gridLots!.deselectAllCells()
 	else
 		gridLots!.clearMainGrid()
 		gridLots!.setNumRows(0)
 	endif
 
 	callpoint!.setDevObject("vectLots",vectLots!)
-[[IVC_LOTLOOKUP.<CUSTOM>]]
+return
+
 get_lot_info:
 
 ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
@@ -171,7 +179,11 @@ dim apm_vendmast$:fnget_tpl$("APM_VENDMAST")
 whse_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.WAREHOUSE_ID")
 item_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.ITEM_ID")
 
-read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),dom=*next)
+get_lot$=callpoint!.getDevObject("selected_lot")
+
+rem --- added knum=0 to below, because if user typed their own lot#, Barista validation logic would
+rem --- have used knum=3...
+read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),knum=0,dom=*next)
 
 lotWin!=callpoint!.getDevObject("lotInfo")	
 
@@ -184,12 +196,16 @@ while 1
 :		or ivm_lsmaster.lotser_no$<>get_lot$ 
 :   then break
 
+	callpoint!.setDevObject("selected_lot_loc",ivm_lsmaster.ls_location$)
+	callpoint!.setDevObject("selected_lot_cmt",ivm_lsmaster.ls_comments$)
+	callpoint!.setDevObject("selected_lot_avail",str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
+
 	rem --- Retrieve vendor name
 
 	vendor$=""
 	vendor_id = num( callpoint!.getDevObject("vendor_id") )
 	
-	if ap$<>"N"
+	if callpoint!.getDevObject("ap_installed") = "Y"
 		vendor$=ivm_lsmaster.vendor_id$
 		disp_vendor$="(unknown)"
 			if cvs(vendor$,2)<>""
@@ -208,7 +224,7 @@ while 1
 	issue$=fn_date$(fnlatest$(ivm_lsmaster.lstsal_date$,ivm_lsmaster.lstiss_date$))
 	w!=lotWin!.getControl( num( callpoint!.getDevObject("receipt_id") ) )
 	w!.setText(receipt$)
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("issue_id") ) )
+	w!=lotWin!.getControl( num( callpoint!.getDevObject("issued_id") ) )
 	w!.setText(issue$)
 	w!=lotWin!.getControl( num( callpoint!.getDevObject("cost_id") ) )
 	w!.setText(ivm_lsmaster.unit_cost$);rem need mask
@@ -279,7 +295,7 @@ rem --- Parameters
     p[4]=num(ivs_params.desc_len_02$)
     p[5]=num(ivs_params.desc_len_03$)
     call pgmdir$+"adc_application.aon","AP",info$[all]
-    ap$=info$[20]
+    callpoint!.setDevObject("ap_installed",info$[20])
 
 rem ---  Set up grid
 
@@ -325,14 +341,11 @@ rem ---  Set up grid
 	next curr_attr
 
 	attr_disp_col$=attr_grid_col$[0,1]
-
-rem	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridLots!,"DESC-COLH-ROWH-EDIT-LINES-LIGHT-HIGHO-CELL-SIZEC-AUTO",num_rows,
-rem :		attr_def_col_str$[all],attr_disp_col$,attr_grid_col$[all]
 	
 	call stbl("+DIR_SYP")+"bam_grid_init.bbj",
 :		gui_dev,
 :		gridLots!,
-:		"COLH-LINES-LIGHT-AUTO-CHECKS-DATES",
+:		"LINES",
 :		num_rows,
 :		attr_def_col_str$[all],
 :		attr_disp_col$,
