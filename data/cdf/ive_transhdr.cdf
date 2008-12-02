@@ -6,33 +6,49 @@ print "HEADER: before table overview (BOVE)"; rem debug
 print "HEADER: before delete query (BDEQ)"; rem debug
 [[IVE_TRANSHDR.BDEL]]
 print "HEADER: before record delete (BDEL)"; rem debug
+[[IVE_TRANSHDR.ADIS]]
+print "HEADER: After display record (ADIS)"; rem debug
+[[IVE_TRANSHDR.AWRI]]
+print "HEADER: after write record (AWRI)"
+[[IVE_TRANSHDR.ARER]]
+print "HEADER: after new record ready (ARER)"
+[[IVE_TRANSHDR.ARAR]]
+print "HEADER: after array transfer (ARAR)"
+[[IVE_TRANSHDR.BWRI]]
+print "HEADER: before record write (BWRI)"; rem debug
 
-rem --- Uncommit all detail lines
+rem --- Check for lines marked deleted
 
 	rem --- Receipts do not commit
 	if user_tpl.trans_type$ = "R" then break; rem exit this callpoint
 
 	rem --- Get detail lines vector and record template
-	curDtl! = SysGUI!.makeVector()
-	curDtl! = GridVect!.getItem(0)
+	curDtl!  = SysGUI!.makeVector()
+	curDtl!  = GridVect!.getItem(0)
 	dim curr_rec$:dtlg_param$[1,3]
 
 	rem --- Initialize inventory item update
 	status = 999
 	call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	if status then goto std_exit
-	escape
 
-	rem --- Roll through detail lines
-	for i=0 to curDtl!.size()
+	rem --- Roll through detail lines, uncommitting lines mark for deletion
+	for i=0 to curDtl!.size() - 1
 		curr_rec$ = curDtl!.getItem(i)
 		
 		if curr_rec$ = "" then break
+
+		if callpoint!.getGridRowDeleteStatus(i) <> "Y" then 
+			print "row", i, " not deleted"; rem debug
+			continue
+		endif
 
 		curr_whse$   = curr_rec.warehouse_id$
 		curr_item$   = curr_rec.item_id$
 		curr_qty     = num( curr_rec.trans_qty$ )
 		curr_lotser$ = curr_rec.lotser_no$
+
+		print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
 
 		if curr_whse$ <> "" and curr_item$ <>"" then 
 
@@ -48,63 +64,6 @@ rem --- Uncommit all detail lines
 			items$[3] = curr_lotser$
 			call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 		endif
-
-	next i
-[[IVE_TRANSHDR.ADIS]]
-print "HEADER: After display record (ADIS)"; rem debug
-[[IVE_TRANSHDR.AWRI]]
-print "HEADER: after write record (AWRI)"
-[[IVE_TRANSHDR.ARER]]
-print "HEADER: after new record ready (ARER)"
-[[IVE_TRANSHDR.ARAR]]
-print "HEADER: after array transfer (ARAR)"
-[[IVE_TRANSHDR.BWRI]]
-print "HEADER: before record write (BWRI)"; rem debug
-
-rem --- Check for lines marked deleted
-
-	rem --- Get detail lines vector and record template
-	curDtl!  = SysGUI!.makeVector()
-	undoDtl! = SysGUI!.makeVector()
-	diskDtl! = SysGUI!.makeVector()
-
-	curDtl!  = GridVect!.getItem(0)
-	undoDtl! = GridVect!.getItem(1)
-	diskDtl! = GridVect!.getItem(2)
-
-	dim curr_rec$:dtlg_param$[1,3]
-	dim undo_rec$:dtlg_param$[1,3]
-	dim disk_rec$:dtlg_param$[1,3]	
-
-	rem --- Roll through detail lines
-	for i=0 to curDtl!.size() - 1
-		print "Row", i
-
-		curr_rec$ = curDtl!.getItem(i)
-		undo_rec$ = undoDtl!.getItem(i)
-		disk_rec$ = diskDtl!.getItem(i)
-
-		if curr_rec$ = "" then break
-
-		if undo_rec$ = "" then 
-			print "Nothing to undo"
-			undo_trans_qty = 0
-		else
-			undo_trans_qty = undo_rec.trans_qty
-		endif
-
-		if disk_rec$ = "" then 
-			print "New record"
-			disk_trans_qty = 0
-		else
-			disk_trans_qty = disk_rec.trans_qty
-		endif
-
-		if callpoint!.getGridRowDeleteStatus(i) = "Y" then print "Row", i, " was deleted"
-
-		print "Current qty", curr_rec.trans_qty
-		print "   Undo qty", undo_trans_qty
-		print "   Disk qty", disk_trans_qty
 
 	next i
 [[IVE_TRANSHDR.AREA]]
