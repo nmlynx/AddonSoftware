@@ -6,6 +6,7 @@ dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 myrow=callpoint!.getValidationRow()
 
 if callpoint!.getGridRowModifyStatus(myrow)="Y"
+
 	curVect!=gridVect!.getItem(0)
 	undoVect!=gridVect!.getItem(1)
 	diskVect!=gridVect!.getItem(2)
@@ -13,10 +14,10 @@ if callpoint!.getGridRowModifyStatus(myrow)="Y"
 	dim cur_rec$:dtlg_param$[1,3]
 	dim undo_rec$:dtlg_param$[1,3]
 	dim disk_rec$:dtlg_param$[1,3]
+	
+	cur_rec$=curVect!.getItem(myrow)
+escape;rem checkit out
 
- 	cur_rec$=cvs(cvs(curVect!.getItem(myrow),16),3)
-	undo_rec$=cvs(cvs(undoVect!.getItem(myrow),16),3)
-	disk_rec$=cvs(cvs(diskVect!.getItem(myrow),16),3)
 endif	
 
 gosub get_lot_info
