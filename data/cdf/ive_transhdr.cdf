@@ -17,6 +17,8 @@ print "HEADER: after array transfer (ARAR)"
 [[IVE_TRANSHDR.BWRI]]
 print "HEADER: before record write (BWRI)"; rem debug
 
+break; rem *****DISABLED*****
+
 rem --- Check for lines marked deleted
 
 	rem --- Receipts do not commit
@@ -71,7 +73,7 @@ print "HEADER: after record read (AREA)"; rem debug
 
 rem --- Get trans code record and set flags
 	
-	rem can't use this method because the data is not displayed yet
+	rem can't use the method below because the data is not displayed yet
 	rem trans_code$ = callpoint!.getColumnData("IVE_TRANSHDR.TRANS_CODE")
 	trans_code$ = rec_data.trans_code$
 	gosub get_trans_rec
@@ -95,15 +97,6 @@ rem --- Get trans code record and set flags
 	trans_code$ = callpoint!.getUserInput()
 	gosub get_trans_rec
 
-rem --- Disable grid columns based on params (does this work?)
-
-	w!=Form!.getChildWindow(1109)
-	c!=w!.getControl(5900)
-
-	if user_tpl.gl$ <> "Y" or user_tpl.trans_post_gl$ <> "Y" then 
-		c!.setColumnEditable(3,0); rem G/L entry
-		print "G/L entry should be dissabled"; rem debug
-	endif
 [[IVE_TRANSHDR.TRANS_DATE.AVAL]]
 rem --- Does date fall into the GL period?
 
@@ -129,6 +122,16 @@ get_trans_rec: rem --- Get Transaction Code Record
 	user_tpl.trans_adj_acct$ = trans_rec.gl_adj_acct$
 
 	print "in get_trans_rec: Got transaction code and set user_tpl$; post to GL = ", user_tpl.trans_post_gl$; rem debug
+
+rem --- Disable grid columns based on params (does this work?)
+
+	w!=Form!.getChildWindow(1109)
+	c!=w!.getControl(5900)
+
+	if user_tpl.gl$ <> "Y" or user_tpl.trans_post_gl$ <> "Y" then 
+		c!.setColumnEditable(3,0); rem G/L entry
+		print "G/L entry should be dissabled"; rem debug
+	endif
 
 return
 
@@ -179,7 +182,7 @@ rem --- Setup user template and object
 	user_tpl_str$ = user_tpl_str$ + "location_obj:u(1),qoh_obj:u(1),commit_obj:u(1),avail_obj:u(1),"
 	user_tpl_str$ = user_tpl_str$ + "trans_post_gl:c(1),trans_type:c(1),trans_adj_acct:c(1*),"
 	user_tpl_str$ = user_tpl_str$ + "prev_wh_item:c(1*),prev_lot_ser:c(1*),prev_qty:n(1),this_item_lot_or_ser:u(1),"
-	user_tpl_str$ = user_tpl_str$ + "lotted:u(1),serialized:u(1)"
+	user_tpl_str$ = user_tpl_str$ + "lotted:u(1),serialized:u(1),lot_avail:n(1*),multi_whse:u(1),warehouse_id:c(2)"
 	dim user_tpl$:user_tpl_str$
 
 rem --- Setup for display fields on header
@@ -204,17 +207,12 @@ rem --- Get parameter records
 	dim i[5],g[1]
 	findrecord(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params)ivs01a$; rem p1$, p2$, p3$, p4$, m0$, m1$, m2$, m3$
 	findrecord(gls01_dev,key=firm_id$+"GL00",err=set_iv_params)gls01a$; rem g1$, g2$, g5$
-	rem g[0] = num(gls01a.acct_length$)
-	rem g[1] = num(gls01a.max_acct_len$)
 	rem lf$ = "N"
 	ls$ = "N"
 
 	set_iv_params:
-	rem i[0] = ivs01a.item_id_len
-	rem i[1] = ivs01a.ls_no_len$
-	rem i[3] = num(ivs01a.desc_len_01$)
-	rem i[4] = num(ivs01a.desc_len_02$)
-	rem i[5] = num(ivs01a.desc_len_03$)
+	user_tpl.multi_whse$ = ivs01a.multi_whse$
+	user_tpl.warehouse_id$ = ivs01a.warehouse_id$
 
 rem --- Numeric masks
 

@@ -1,4 +1,12 @@
 [[IVE_TRANSDET.LOTSER_NO.BINP]]
+print "in LOTSER_NO.BINP"; rem debug
+
+rem --- Should user enter a lot of look it up?
+
+	rem --- Receipts and negatice Adjustments require new lot entry
+	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_typ$ = "A" and trans_qty > 0 ) then break; rem exit callpoint
+
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
 
 	rem --- save current row/column so we'll know where to set focus when we return from lot lookup
@@ -7,14 +15,19 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 	return_to_row=c!.getSelectedRow()
 	return_to_col=c!.getSelectedColumn()
 
-	dim dflt_data$[3,1]
-	dflt_data$[1,0]="ITEM_ID"
-	dflt_data$[1,1]=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	dflt_data$[2,0]="WAREHOUSE_ID"
-	dflt_data$[2,1]=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	dflt_data$[3,0]="LOTS_TO_DISP"
-	dflt_data$[3,1]="O";rem --- default to open lots (not sure if this is same as v6/7, might need to change)
+	rem --- Set data for the lookup form
+	curr_item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	curr_whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
 
+	dim dflt_data$[3,1]
+	dflt_data$[1,0] = "ITEM_ID"
+	dflt_data$[1,1] = curr_item$
+	dflt_data$[2,0] = "WAREHOUSE_ID"
+	dflt_data$[2,1] = curr_whse$
+	dflt_data$[3,0] = "LOTS_TO_DISP"
+	dflt_data$[3,1] = "O"; rem --- default to open lots
+
+	rem --- Call the lookup form
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	                       "IVC_LOTLOOKUP",
 :	                       stbl("+USER_ID"),
@@ -24,11 +37,15 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 :	                       "",
 :	                       dflt_data$[all]
 
+	rem --- Set the detail grid to the data selected in the lookup
 	if callpoint!.getDevObject("selected_lot")<>null()
-		callpoint!.setColumnData("IVE_TRANSDET.LOTSER_NO",str(callpoint!.getDevObject("selected_lot")))
-		callpoint!.setColumnData("IVE_TRANSDET.LS_LOCATION",str(callpoint!.getDevObject("selected_lot_loc")))
-		callpoint!.setColumnData("IVE_TRANSDET.LS_COMMENTS",str(callpoint!.getDevObject("selected_lot_cmt")))
-		callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY",str(callpoint!.getDevObject("selected_lot_avail")))
+		callpoint!.setColumnData( "IVE_TRANSDET.LOTSER_NO",   str(callpoint!.getDevObject("selected_lot")) )
+		callpoint!.setColumnData( "IVE_TRANSDET.LS_LOCATION", str(callpoint!.getDevObject("selected_lot_loc")) )
+		callpoint!.setColumnData( "IVE_TRANSDET.LS_COMMENTS", str(callpoint!.getDevObject("selected_lot_cmt")) )
+		user_tpl.lot_avail = num( callpoint!.getDevObject("selected_lot_avail") )
+		if trans_qty = 0 then
+			callpoint!.setColumnData( "IVE_TRANSDET.TRANS_QTY", str(user_tpl.lot_avail) )
+		endif
 		callpoint!.setStatus("REFGRID")
 	endif
 
@@ -36,12 +53,69 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 	c!.focus()
 	c!.accept(1,err=*next)
 	c!.startEdit(return_to_row,return_to_col)
+	
 [[IVE_TRANSDET.BWRI]]
 print "before record write (BWRI)"; rem debug
 [[IVE_TRANSDET.BUDE]]
 print "before record undelete (BUDE)"; rem debug
+
+rem --- Re-commit quantity
+
+	status = 999
+	call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	if status then goto std_exit
+
+	curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	curr_item$   = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
+
+	print "re-committing item ", curr_item$, ", amount", curr_qty; rem debug
+
+	if curr_whse$ <> "" and curr_item$ <>"" then 
+
+		rem --- Adjustments reverse the commitment
+		if user_tpl.trans_type$ = "A" then 
+			refs[0] = -curr_qty 
+		else 
+			refs[0] = curr_qty
+		endif
+
+		items$[1] = curr_whse$
+		items$[2] = curr_item$
+		items$[3] = curr_lotser$
+		call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	endif
 [[IVE_TRANSDET.BDEL]]
 print "before record delete (BDEL)"; rem debug
+
+rem --- Uncommit quantity
+
+	status = 999
+	call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	if status then goto std_exit
+
+	curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	curr_item$   = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
+
+	print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
+
+	if curr_whse$ <> "" and curr_item$ <>"" then 
+
+		rem --- Adjustments reverse the commitment
+		if user_tpl.trans_type$ = "A" then 
+			refs[0] = -curr_qty 
+		else 
+			refs[0] = curr_qty
+		endif
+
+		items$[1] = curr_whse$
+		items$[2] = curr_item$
+		items$[3] = curr_lotser$
+		call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	endif
 [[IVE_TRANSDET.AREC]]
 print "after new record (AREC)"; rem debug
 [[IVE_TRANSDET.ARAR]]
@@ -185,6 +259,20 @@ get_whse_item: rem --- Get warehouse and item records and display
 	whse_item_done:
 
 return
+
+enable_columns: rem --- Enable columns based on header data
+
+	if user_tpl.gl$ = "Y" and user_tpl.trans_post_gl$ = "Y" then 
+		callpoint!.setStatus("ENABLE:G")
+	endif
+
+	if user_tpl.multi_whse$ = "Y" then
+		callpoint!.setStatus("ENABLE:W")
+	else
+		callpoint!.setColumnData("IVE_TRANSDET.WAREHOUSE_ID",user_tpl.warehouse_id$)
+	endif
+
+return
 [[IVE_TRANSDET.TRANS_QTY.AVAL]]
 rem --- Calculate and display extended cost
 
@@ -198,7 +286,9 @@ rem --- Enter cost only for receipts and adjusting up
 		callpoint!.setStatus("ENABLE:C")
 	endif
 [[IVE_TRANSDET.AGRE]]
-	print "***after grid row exit"; rem debug
+print "after grid row exit"; rem debug
+
+	gosub enable_columns
 
 rem --- Commit inventory
 
@@ -258,9 +348,10 @@ rem --- Commit inventory
 
 		rem --- Has there been any change?
 
-		if	curr_whse$ <> prior_whse$ or 
-:			curr_item$ <> prior_item$ or 
-:			curr_qty   <> prior_qty 
+		if	curr_whse$   <> prior_whse$ or 
+:			curr_item$   <> prior_item$ or 
+:			curr_qty     <> prior_qty   or
+:        curr_lotser$ <> prior_lotser$
 :		then
 
 			rem --- Initialize inventory item update
@@ -277,20 +368,26 @@ rem --- Commit inventory
 :				(prior_lotser$ <> "" and prior_lotser$ <> curr_lotser$)
 :			then
 
-				print "uncomtting old item or warehouse..."; rem debug
-				items$[1] = prior_whse$
-				items$[2] = prior_item$
-				items$[3] = prior_lotser$
+				rem --- Uncommit prior item and warehouse
+
+				if prior_whse$ <> "" and prior_item$ <> "" then
 				
-				rem --- Adjustments reverse the commitment
-				if user_tpl.trans_type$ = "A" then
-					refs[0] = -prior_qty
-				else
-					refs[0] = prior_qty
+					print "uncomtting old item or warehouse..."; rem debug
+					items$[1] = prior_whse$
+					items$[2] = prior_item$
+					items$[3] = prior_lotser$
+					
+					rem --- Adjustments reverse the commitment
+					if user_tpl.trans_type$ = "A" then
+						refs[0] = -prior_qty
+					else
+						refs[0] = prior_qty
+					endif
+					
+					call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+					if status then escape; rem problem uncommitting previous qty
+
 				endif
-				
-				call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then escape; rem problem uncommitting previous qty
 
 				rem --- Commit quantity for current item and warehouse
 
@@ -332,6 +429,8 @@ rem --- Commit inventory
 	endif
 [[IVE_TRANSDET.BGDR]]
 print "before grid display row (BGDR)"; rem debug
+
+gosub enable_columns
 [[IVE_TRANSDET.ITEM_ID.AVAL]]
 rem --- Old code for reference
 rem 2245 FIND (IVM01_DEV,KEY=D0$,DOM=2220)IOL=IVM01A; rem D0$(1),D1$(1),D2$(1),D3$,D4$,D5$,D6$,D[ALL]
