@@ -502,9 +502,9 @@ update_lot_master: rem --- Update lot/serial master
     curfile=ivm07_dev
     gosub update_comtd_on_order
     if action then gosub update_whse_lots
-    if action$="PH" then ivm07a.lstphy_date$=ymd$,ivm07.physical_cnt=refs[5]
+    if action$="PH" then ivm07a.lstphy_date$=ymd$,ivm07a.physical_cnt=refs[5]
     vendor$=ivm07a.vendor_id$
-    if ivm07.qty_on_hand=0 then ivm07a.closed_flag$="C" else ivm07a.closed_flag$=""
+    if ivm07a.qty_on_hand=0 then ivm07a.closed_flag$="C" else ivm07a.closed_flag$=""
     ivm07a$=field(ivm07a$)
     write record (ivm07_dev) ivm07a$
 
