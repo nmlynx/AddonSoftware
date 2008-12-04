@@ -2,6 +2,7 @@
 rem print 'show'
 
 rem --- init...open tables, define custom grid, etc.
+use ::ado_util.src::util
 num_files=3
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
@@ -87,7 +88,7 @@ userobj!.addItem(SysGUI!.makeVector());rem placeholder for vectActivity! that wi
 rem format the grid, and set first column to be a pull-down
 gosub format_gridActivity
 gosub set_column1_list
-gosub resize_window
+util.resizeWindow(Form!, SysGui!)
 [[GLM_SUMMACTIVITY.AREC]]
 rem compare budget columns/types from gls01 with 1st/3rd char of key of glm18
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
@@ -208,69 +209,6 @@ swend
 
 endif
 [[GLM_SUMMACTIVITY.<CUSTOM>]]
-resize_window: rem --- Resize window based on new controls
-
-	controls! = Form!.getAllControls()
-	ScreenSize! = SysGUI!.getSystemMetrics().getScreenSize()
-	screen_width = ScreenSize!.width - 40
-	screen_height = ScreenSize!.height - 40
-	group_box = 21
-	push_button = 11
-	new_width = Form!.getWidth()
-	new_height = Form!.getHeight()
-	extra_width = 10
-	extra_height = 10
-	no_buttons_yet = 1
-
-	rem --- Roll throught all controls, setting the max width and height
-	for i=0 to controls!.size() - 1
-		this_ctrl! = controls!.getItem(i)
-		type = this_ctrl!.getControlType()
-
-		rem --- Group boxes dimesions can mess up the calculation
-		if type = group_box then continue
-		
-		rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottom
-		if type = push_button then
-			if no_buttons_yet then
-				extra_height = extra_height + this_ctrl!.getHeight() + 5
-				no_buttons_yet = 0
-			endif
-		else
-		
-			rem --- Most controls go here
-			new_width  = max( new_width,  this_ctrl!.getX() + this_ctrl!.getWidth() )
-			new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
-		endif
-		
-	next i
-
-	rem --- Set new size, but not bigger than the screen
-	new_width = min( screen_width, new_width + extra_width )
-	new_height = min( screen_height, new_height + extra_height )
-	Form!.setSize(new_width, new_height)
-	
-	rem --- Will the form still fit on the screen?
-	new_position = 0
-	form_x = Form!.getX()
-	form_y = Form!.getY()
-	
-	if form_x + new_width > screen_width then
-		form_x = int( (screen_width - new_width) / 2 )
-		new_position = 1
-	endif
-	
-	if form_y + new_height > screen_height then
-		form_y = int( (screen_height - new_height) / 2 )
-		new_position = 1
-	endif
-	
-	if new_position then
-		Form!.setLocation(form_x, form_y)
-	endif
-
-return
-
 update_glm_acctsummary:
 rem ---  parse thru gridActivity! and write back any budget recs to glm-02
 
