@@ -1,17 +1,35 @@
-rem --- ado - Resize Window
+rem --- ado - A set of utility method for use with Barista
 rem --- Program ado_util.src v8.0.0 03Dec2008
 rem --- Copyright 2008, BASIS International, Ltd.
-rem 
-rem --- This object helps resize Barista windows with customer objects
 
 class public util
 
 	field private static BBjTopLevelWindow Form!
 	field private static BBjSysGui SysGUI!
+	rem --- width/height for adjusting window
 	field public static BBjInt ExtraWidth% = 10
 	field public static BBjInt ExtraHeight% = 10
+	rem --- width/height for adjusting screen
 	field public static BBjInt LessWidth% = 40
 	field public static BBjInt LessHeight% = 40
+	field private static BBjInt GROUP_BOX% = 21
+	field private static BBjInt PUSH_BUTTON% = 11
+	field private static BBjInt ENABLE% = 1
+	field private static BBjInt DISABLE% = 0
+	rem --- These IDs are set by Barista
+	field private static BBjInt CHILD_WINDOW_ID% = 1109
+	field private static BBjInt GRID_ID% = 5900
+	field public static BBjColor EnableColor!
+	field public static BBjColor DisableColor!
+	
+	rem --- Resize a Baritsa window after custom controls have been placed on it.
+	rem --- This methods is normally called in a AWIN callpoint just after the last
+	rem --- controls has been added.  The method will not make the window smaller so
+	rem --- that it would override a user's resize.  The window will be repositioned
+	rem --- if after the resize the window won't fit on the screen.
+	rem 
+	rem --- ExtraWidth, ExtraHeight, LessWidth, and LessHeight are all public and can
+	rem --- be set with the automatic setter method setExtraWidth(), etc.
 	
 	method public static void resizeWindow(BBjTopLevelWindow inForm!, BBjSysGui inSysgui!)
 	
@@ -21,8 +39,6 @@ class public util
 		ScreenSize! = #SysGUI!.getSystemMetrics().getScreenSize()
 		screen_width = ScreenSize!.width - #LessWidth%
 		screen_height = ScreenSize!.height - #LessHeight%
-		group_box = 21
-		push_button = 11
 		new_width = #Form!.getWidth()
 		new_height = #Form!.getHeight()
 		no_buttons_yet = 1
@@ -33,12 +49,12 @@ class public util
 			type = this_ctrl!.getControlType()
 
 			rem --- Group boxes dimesions can mess up the calculation
-			if type = group_box then continue
+			if type = #GROUP_BOX% then continue
 			
 			rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottom
-			if type = push_button then
+			if type = #PUSH_BUTTON% then
 				if no_buttons_yet then
-					ExtraHeight = ExtraHeight + this_ctrl!.getHeight() + 5
+					#ExtraHeight% = #ExtraHeight% + this_ctrl!.getHeight() + 5
 					no_buttons_yet = 0
 				endif
 			else
@@ -76,6 +92,133 @@ class public util
 	
 	methodend
 
+	rem --- Enable/Disable Barista grid column(s)
+	rem 
+	rem --- Use the background color of cell (0,0) as the enable color.  It's important to get
+	rem --- this color before that cell is disabled!  The disable color is the grid line color.
+	rem --- Both can be set by the caller using the automatic setter methods setEnableColor() and
+	rem --- setDisableColor()
+	rem 
+	rem --- The other methods are simply shortcuts
+	
+	method public static void ableGridColumns(BBjTopLevelWindow inForm!, BBjVector cols!, BBjInt able%)
+	
+		#Form! = inForm!
+		grid! = #getGridAbleColors()
+		
+		for i=0 to cols!.size() - 1
+			col = num( cols!.getItem(i),err=*continue )
+			
+			if able% = #DISABLE% then
+				grid!.setColumnEditable(col, #DISABLE%)
+				grid!.setColumnBackColor(col, #DisableColor!)
+			else
+				if able% = #ENABLE% then
+					grid!.setColumnEditable(col, #ENABLE%)
+					grid!.setColumnBackColor(col, #EnableColor!)
+				endif
+			endif
+		next i
+		
+	methodend
+	
+	rem --- One column (no vector)
+	method public static void ableGridColumns(BBjTopLevelWindow inForm!, BBjInt col%, BBjInt able%)
+		#Form! = inForm!
+		cols! = BBjAPI().makeVector()
+		cols!.addItem(col%)
+		#ableGridColumns(#Form!, cols!, able%)
+	methodend
+
+	rem --- Assume Disable
+	method public static void ableGridColumns(BBjTopLevelWindow inForm!, BBjInt col%)
+		#Form! = inForm!
+		#ableGridColumns(#Form!, col%, #DISABLE%)
+	methodend
+
+	rem --- Allow number (as opposed to Int)
+	method public static void ableGridColumns(BBjTopLevelWindow inForm!, BBjNumber col)
+		#Form! = inForm!
+		#ableGridColumns(#Form!, int(col), #DISABLE%)
+	methodend
+	
+	rem --- Accessor methods for ENABLE/DISABLE
+	method public static BBjInt DISABLE()
+		methodret #DISABLE%
+	methodend
+
+	method public static BBjInt ENABLE()
+		methodret #ENABLE%
+	methodend
+
+	rem --- Get the Barista grid and set enable/disable colors
+	method protected static BBjStandardGrid getGridAbleColors()
+
+		declare auto BBjStandardGrid grid!
+		grid! = #Form!.getChildWindow(#CHILD_WINDOW_ID%).getControl(#GRID_ID%)
+		
+		if #EnableColor! = null() then
+			#EnableColor! = grid!.getCellBackColor(0,0)
+		endif
+		
+		if #DisableColor! = null() then
+			#DisableColor! = grid!.getLineColor()
+		endif
+		
+		methodret grid!
+		
+	methodend
+	
+	rem --- Disable a cell or cells on a Barista grid
+	rem
+	rem --- This method should be called within the detail where the row is
+	rem --- implied as the current row, as opposed to the above methods which 
+	rem --- are typically called in the header to disable an entire column
+	
+	method public static void ableGridCells(BBjTopLevelWindow inForm!, BBjVector cols!, BBjInt able%)
+	
+		#Form! = inForm!
+		grid! = #getGridAbleColors()
+		row = grid!.getSelectedRow()
+		
+		if row <> -1 then
+			for i=0 to cols!.size() - 1
+				col = num( cols!.getItem(i),err=*continue )
+				
+				if able% = #DISABLE% then
+					grid!.setCellEditable(row, col, #DISABLE%)
+					grid!.setCellBackColor(row, col, #DisableColor!)
+				else
+					if able% = #ENABLE% then
+						grid!.setCellEditable(row, col, #ENABLE%)
+						grid!.setCellBackColor(row, col, #EnableColor!)
+					endif
+				endif
+			next i
+		endif
+	
+	methodend
+
+	rem --- One column (no vector)
+	method public static void ableGridCells(BBjTopLevelWindow inForm!, BBjInt col%, BBjInt able%)
+		#Form! = inForm!
+		cols! = BBjAPI().makeVector()
+		cols!.addItem(col%)
+		#ableGridColumns(#Form!, cols!, able%)
+	methodend
+
+	rem --- Assume Disable
+	method public static void ableGridCells(BBjTopLevelWindow inForm!, BBjInt col%)
+		#Form! = inForm!
+		#ableGridColumns(#Form!, col%, #DISABLE%)
+	methodend
+
+	rem --- Allow number (as opposed to Int)
+	method public static void ableGridCells(BBjTopLevelWindow inForm!, BBjNumber col)
+		#Form! = inForm!
+		#ableGridColumns(#Form!, int(col), #DISABLE%)
+	methodend
+	
 classend
 
 end
