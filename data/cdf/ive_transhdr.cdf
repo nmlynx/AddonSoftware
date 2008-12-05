@@ -16,58 +16,6 @@ print "HEADER: after new record ready (ARER)"
 print "HEADER: after array transfer (ARAR)"
 [[IVE_TRANSHDR.BWRI]]
 print "HEADER: before record write (BWRI)"; rem debug
-
-break; rem *****DISABLED*****
-
-rem --- Check for lines marked deleted
-
-	rem --- Receipts do not commit
-	if user_tpl.trans_type$ = "R" then break; rem exit this callpoint
-
-	rem --- Get detail lines vector and record template
-	curDtl!  = SysGUI!.makeVector()
-	curDtl!  = GridVect!.getItem(0)
-	dim curr_rec$:dtlg_param$[1,3]
-
-	rem --- Initialize inventory item update
-	status = 999
-	call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-	if status then goto std_exit
-
-	rem --- Roll through detail lines, uncommitting lines mark for deletion
-	for i=0 to curDtl!.size() - 1
-		curr_rec$ = curDtl!.getItem(i)
-		
-		if curr_rec$ = "" then break
-
-		if callpoint!.getGridRowDeleteStatus(i) <> "Y" then 
-			print "row", i, " not deleted"; rem debug
-			continue
-		endif
-
-		curr_whse$   = curr_rec.warehouse_id$
-		curr_item$   = curr_rec.item_id$
-		curr_qty     = num( curr_rec.trans_qty$ )
-		curr_lotser$ = curr_rec.lotser_no$
-
-		print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
-
-		if curr_whse$ <> "" and curr_item$ <>"" then 
-
-			rem --- Adjustments reverse the commitment
-			if user_tpl.trans_type$ = "A" then 
-				refs[0] = -curr_qty 
-			else 
-				refs[0] = curr_qty
-			endif
-
-			items$[1] = curr_whse$
-			items$[2] = curr_item$
-			items$[3] = curr_lotser$
-			call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		endif
-
-	next i
 [[IVE_TRANSHDR.AREA]]
 print "HEADER: after record read (AREA)"; rem debug
 
@@ -96,7 +44,6 @@ rem --- Get trans code record and set flags
 
 	trans_code$ = callpoint!.getUserInput()
 	gosub get_trans_rec
-
 [[IVE_TRANSHDR.TRANS_DATE.AVAL]]
 rem --- Does date fall into the GL period?
 
@@ -123,14 +70,12 @@ get_trans_rec: rem --- Get Transaction Code Record
 
 	print "in get_trans_rec: Got transaction code and set user_tpl$; post to GL = ", user_tpl.trans_post_gl$; rem debug
 
-rem --- Disable grid columns based on params (does this work?)
-
-	w!=Form!.getChildWindow(1109)
-	c!=w!.getControl(5900)
-
+	rem --- Disable grid columns based on params 
 	if user_tpl.gl$ <> "Y" or user_tpl.trans_post_gl$ <> "Y" then 
-		c!.setColumnEditable(3,0); rem G/L entry
-		print "G/L entry should be dissabled"; rem debug
+		cols! = BBjAPI().makeVector()
+		cols!.addItem(3)
+		util.ableGridColumns(Form!, cols!, util.DISABLE())
+		print "G/L entry should be disabled"; rem debug
 	endif
 
 return
@@ -155,6 +100,7 @@ print 'show', ; rem debug
 
 rem --- Pre-inits
 	
+	use ::ado_util.src::util
 	pgmdir$ = stbl("+DIR_PGM")
 
 rem --- Open files
@@ -167,7 +113,9 @@ rem --- Open files
 	open_tables$[4]="IVE_TRANSDET", open_opts$[4]="OTA"
 	open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
 	open_tables$[6]="IVM_ITEMWHSE", open_opts$[6]="OTA"
+
 	gosub open_tables
+
 	ivs01_dev=num(open_chans$[1])
 	gls01_dev=num(open_chans$[2])
 	dim ivs01a$:open_tpls$[1]
@@ -213,6 +161,11 @@ rem --- Get parameter records
 	set_iv_params:
 	user_tpl.multi_whse$ = ivs01a.multi_whse$
 	user_tpl.warehouse_id$ = ivs01a.warehouse_id$
+
+	rem --- If we're not multi-warehouse, disable column
+	if ivs01a.multi_whse$ <> "Y" then
+		util.ableGridColumns(Form!, 0)
+	endif
 
 rem --- Numeric masks
 
