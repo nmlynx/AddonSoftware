@@ -204,6 +204,9 @@ return
 
 switch_value:rem --- Switch Check Values
 
+	apt01_dev=fnget_dev("APT_INVOICEHDR")
+	dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
+
 	SysGUI!.setRepaintEnabled(0)
 	gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 	vectInvoices!=UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
@@ -215,7 +218,15 @@ switch_value:rem --- Switch Check Values
 			row_no=num(TempRows!.getItem(curr_row-1))
 			if gridInvoices!.getCellState(row_no,0)=0
 				gridInvoices!.setCellState(row_no,0,1)
-				gridInvoices!.setCellText(row_no,10,gridInvoices!.getCellText(row_no,8))
+				readrecord(apt01_dev,key=firm_id$+
+:					gridInvoices!.getCellText(row_no,2)+
+:					gridInvoices!.getCellText(row_no,3)+
+:					gridInvoices!.getCellText(row_no,5),dom=*next)apt01a$
+				if callpoint!.getColumnData("APE_PAYSELECT.INCLUDE_DISC")="Y" or
+:					apt01a.disc_date$>=sysinfo.system_date$
+					gridInvoices!.setCellText(row_no,9,apt01a.discount_amt$)
+				endif
+				gridInvoices!.setCellText(row_no,10,str(num(gridInvoices!.getCellText(row_no,8))-num(gridInvoices!.getCellText(row_no,9))))
 				vectInvoices!.setItem(row_no*numcols,"Y")
 				dummy=fn_setmast_flag(vectInvoices!.getItem(row_no*numcols+2),
 :									vectInvoices!.getItem(row_no*numcols+3),
