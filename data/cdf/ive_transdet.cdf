@@ -217,7 +217,7 @@ get_whse_item: rem --- Get warehouse and item records and display
 			cols!.addItem(7)
 			cols!.addItem(8)
 			cols!.addItem(9)
-			util.ableGridCells(Form!, cols!, util.DISABLE())
+			util.disableGridCells(Form!, cols!)
 		endif
 
 		rem debug
@@ -301,9 +301,7 @@ rem --- Enter cost only for receipts and adjusting up (that is, incoming)
 
 	if user_tpl.trans_type$ <> "R" and (user_tpl.trans_type$ <> "A" or trans_qty < 0) then
 		print "calling the disable method..."
-		cols! = BBjAPI().makeVector()
-		cols!.addItem(10)
-		util.ableGridCells(Form!, cols!, util.DISABLE())
+		util.disableGridCell(Form!, 10)
 	endif
 
 rem old code for reference

@@ -72,9 +72,7 @@ get_trans_rec: rem --- Get Transaction Code Record
 
 	rem --- Disable grid columns based on params 
 	if user_tpl.gl$ <> "Y" or user_tpl.trans_post_gl$ <> "Y" then 
-		cols! = BBjAPI().makeVector()
-		cols!.addItem(3)
-		util.ableGridColumns(Form!, cols!, util.DISABLE())
+		util.disableGridColumn(Form!, 3)
 		print "G/L entry should be disabled"; rem debug
 	endif
 
@@ -164,7 +162,7 @@ rem --- Get parameter records
 
 	rem --- If we're not multi-warehouse, disable column
 	if ivs01a.multi_whse$ <> "Y" then
-		util.ableGridColumns(Form!, 0)
+		util.disableGridColumn(Form!, 0)
 	endif
 
 rem --- Numeric masks
