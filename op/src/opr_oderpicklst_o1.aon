@@ -234,10 +234,10 @@ rem --- Any Serial/Lot #'s?
 rem --- OK There Are Lots
 
             dim t[2]; let t9=0
-            read (ope21_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.line_no$,dom=*next)
+            read (ope21_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.internal_seq_no$,dom=*next)
             while more
                 ope21a_key$=key(ope21_dev,end=*break)
-                if pos(ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.line_no$=ope21a_key$)<>1 break
+                if pos(ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.internal_seq_no$=ope21a_key$)<>1 break
                 read record (ope21_dev) ope21a$
                 if ope21a.qty_ordered=0 continue
                 gosub Print4
@@ -408,7 +408,7 @@ rem --- Item detail
         gosub continue_page
     endif
     dim out$(80)
-    out$(1)=ope11a_key.line_no$
+    out$(1)=ope11a_key.internal_seq_no$
     if pos(opm02a.line_type$="MO")=0 then
         out$(h0+5)=str(ope11a.qty_ordered)
         if ope11a.commit_flag$="N"
@@ -558,7 +558,7 @@ valid_lines: rem --- Look for valid lines here
         endif
         if ope01a.reprint_flag$<>"Y" and ope11a.pick_flag$="Y" continue; rem "Not a reprint and already printed for selected warehouse(s)
         if ope01a.reprint_flag$="Y" and ope11a.pick_flag$<>"Y" continue; rem "A reprint and not printed yet for selected warehouse(s)
-        if after$="YES" then  ope11a.pick_flag$="Y"; write record (ope11_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.line_no$) ope11a$
+        if after$="YES" then  ope11a.pick_flag$="Y"; write record (ope11_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.internal_seq_no$) ope11a$
         print$="YES"
     wend
 
