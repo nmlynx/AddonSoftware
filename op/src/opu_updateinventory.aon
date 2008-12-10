@@ -889,16 +889,15 @@ glpost: rem --- Standard G/L Posting Routine
 
 rem --- Delete PO to order link
 unlink_po:
-escape;rem jpb See how this paragraph works out - internal_seq_no$?
-        find record (poe08_dev,key=firm_id$+ope11a.customer_id$+ope11a.order_no$+ope11a.line_no$,knum=1,dom=label_six) poe08a$
-        extract record (poe12_dev,key=poe08a.firm_id$+poe08a.vendor_id$+poe08a.po_no$+poe08a.po_line_no$,dom=label_five) poe12a$
-        rem let ppp2$(11,22)=""
+        find record (poe08_dev,key=firm_id$+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$,knum=1,dom=label_six) poe08a$
+        extract record (poe12_dev,key=poe08a.firm_id$+poe08a.po_no$+poe08a.poedet_seq_ref$,dom=label_five) poe12a$
         poe12a.customer_id$=""
         poe12a.order_no$=""
-        poe12a.line_no$=""
+        poe12a.orddet_seq_ref$=""
         poe12a.shipto_no$=""
-        write record (poe12_dev,key=poe12a.firm_id$+poe12a.vendor_id$+poe12a.pn_no$+poe12a.po_line_no$) poe12a$
-        remove (poe08_dev,key=poe08a.firm_id$+poe08a.vendor_id$+poe08a.po_no$+poe08a.po_line_no$,dom=*next)
+        poe12a$=field(poe12a$)
+        write record (poe12_dev,key=poe12a.firm_id$+poe12a.po_no$+poe12a.internal_seq_no$) poe12a$
+        remove (poe08_dev,key=poe08a.firm_id$+poe08a.vendor_id$+poe08a.po_no$+poe08a.internal_seq_no$,dom=*next)
 
 label_five:
 
