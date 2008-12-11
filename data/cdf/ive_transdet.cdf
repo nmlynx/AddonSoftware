@@ -145,6 +145,13 @@ rem --- Set item/warehouse defaults
 	item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
 	whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
 	gosub get_whse_item
+
+rem --- Enter cost only for receipts and adjusting up (that is, incoming)
+
+	if user_tpl.trans_type$ <> "R" and (user_tpl.trans_type$ <> "A" or trans_qty < 0) then
+		print "disabling cost editing"; rem debug
+		util.disableGridCell( Form!, 10, callpoint!.getValidationRow() )
+	endif
 [[IVE_TRANSDET.AGDS]]
 print "after grid display (AGDS)"; rem debug
 [[IVE_TRANSDET.AGCL]]
@@ -234,12 +241,6 @@ get_whse_item: rem --- Get warehouse and item records and display
 			print "disabling lot/serial fields"; rem debug
 			util.disableGridCells(Form!, cols!, this_row)
 		endif
-
-		rem debug
-		print "this_item_lot_or_ser: ", iff(user_tpl.this_item_lot_or_ser%, "Y", "N")
-		print "lot/serial okay: ", user_tpl.ls$
-		print "lot/serial item: ", ivm01a.lotser_item$
-		print "inventoried    : ", ivm01a.inventoried$
 
 		rem --- Set cost and extension
 		
@@ -355,11 +356,7 @@ rem --- Commit inventory
 	rem --- Check the transaction qty
 	gosub test_qty
 	if failed then 
-		grid! = util.getGrid(Form!)
-		grid!.setSelectedCell(this_row, 6); rem --- qty
-		grid!.focus()
-		grid!.accept(1,err=*next)
-		grid!.startEdit(this_row, 6)
+		util.forceEdit(Form!, this_row, 6); rem --- qty
 		break; rem exit callpoint
 	endif
 
