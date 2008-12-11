@@ -128,10 +128,10 @@ rem --- Setup user template and object
 	user_tpl_str$ = ""
 	user_tpl_str$ = user_tpl_str$ + "gl:c(1),ls:c(1),glw11:c(1*),m9:c(1*),prod_type:c(3),"
 	user_tpl_str$ = user_tpl_str$ + "location_obj:u(1),qoh_obj:u(1),commit_obj:u(1),avail_obj:u(1),"
-	user_tpl_str$ = user_tpl_str$ + "trans_post_gl:c(1),trans_type:c(1),trans_adj_acct:c(1*),item_avail:n(1*),"
+	user_tpl_str$ = user_tpl_str$ + "trans_post_gl:c(1),trans_type:c(1),trans_adj_acct:c(1*),"
 	user_tpl_str$ = user_tpl_str$ + "prev_wh_item:c(1*),prev_lot_ser:c(1*),prev_qty:n(1),this_item_lot_or_ser:u(1),"
-	user_tpl_str$ = user_tpl_str$ + "lotted:u(1),serialized:u(1),lot_avail:n(1*),multi_whse:u(1),warehouse_id:c(2)"
-	user_tpl_str$ = user_tpl_str$ + ""
+	user_tpl_str$ = user_tpl_str$ + "lotted:u(1),serialized:u(1),lot_avail:n(1*),multi_whse:u(1),warehouse_id:c(2),"
+	user_tpl_str$ = user_tpl_str$ + "item_avail:n(1*),item_commit:n(1*)"
 	dim user_tpl$:user_tpl_str$
 
 rem --- Setup for display fields on header

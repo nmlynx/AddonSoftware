@@ -191,10 +191,12 @@ rem --- Calculate and display extended cost
 	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 	gosub calc_ext_cost
 [[IVE_TRANSDET.<CUSTOM>]]
+rem ==========================================================================
 calc_ext_cost: rem --- Calculate and display extended cost
-               rem  IN: unit_cost
-               rem    : trans_qty
-               rem OUT: Extended cost calculated and displayed
+               rem ---  IN: unit_cost
+               rem ---    : trans_qty
+               rem --- OUT: Extended cost calculated and displayed
+rem ==========================================================================
 
 	callpoint!.setColumnData("IVE_TRANSDET.TOTAL_COST", str(unit_cost * trans_qty) )
 	callpoint!.setStatus("MODIFIED-REFRESH")
@@ -202,10 +204,12 @@ calc_ext_cost: rem --- Calculate and display extended cost
 
 return
 
+rem ==========================================================================
 get_whse_item: rem --- Get warehouse and item records and display
-               rem  IN: item$ = the current item ID
-               rem    : whse$ = the current warehouse
-               rem OUT: default values set and displayed
+               rem ---  IN: item$ = the current item ID
+               rem ---    : whse$ = the current warehouse
+               rem --- OUT: default values set and displayed
+rem ==========================================================================
 
 	print "in get_whse_item: item$ = """, item$, """, whse$: """, whse$, """"; rem debug
 
@@ -272,6 +276,7 @@ get_whse_item: rem --- Get warehouse and item records and display
 			avail$  = str( avail:m9$ )
 			
 			user_tpl.item_avail = avail
+			user_tpl.item_commit = commit
 
 			rem --- Display
 			location!.setText( loc$ )
@@ -301,45 +306,91 @@ whse_item_done:
 
 return
 
+rem ==========================================================================
 test_qty: rem --- Test whether the transaction quantity is valid
+          rem ---  IN: trans_qty
+rem ==========================================================================
 
-	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 	failed = 0
+	dim msg_tokens$[0]
 	
+	rem --- Can never be zero
 	if trans_qty = 0 then
 		msg_id$ = "IV_QTY_ZERO"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		failed = 1
-		return
+		goto test_qty_err
+	endif
+	
+	rem --- Issuse and Receipts can't be negative
+	if (user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R") and trans_qty < 0 then
+		msg_id$ = "IV_QTY_NEGATIVE"
+		goto test_qty_err
 	endif
 
-rem old code for reference
+	rem --- When adjusting, serialized items can only have a qty of 1 or -1
+ 	if user_tpl.trans_type$ = "A" or user_tpl.trans_type$ = "C" then
+		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
+			if trans_qty <> 1 and trans_qty <> -1 then
+				msg_id$ = "IV_SERIAL_ONE"
+				goto test_qty_err
+			endif
+		endif
+	endif
 
-rem 6130 IF POS(TYPE$="IR") AND V<0 THEN LET MSG$[0]="Issues and Receipts must have quantites greater than zero",FAILED=1; GOTO 6180
-rem 6140 IF THIS_ITEM_LOT_OR_SER AND SERIALIZED AND POS(TYPE$="AC") AND V<>1 AND V<>-1 THEN LET MSG$[0]="Serialized items can only have a quantity of 1 or -1",FAILED=1; GOTO 6180
-rem 6145 IF THIS_ITEM_LOT_OR_SER THEN GOTO 6190; REM Have to wait to enter Lot/Serial before testing available (but we need to know if qty is negative or positive before Lot/Serial)
-rem 6150 IF (TYPE$="I" OR (TYPE$="A" AND V<0) OR (TYPE$="C" AND V>0)) AND ABS(V)>AVAIL THEN LET MSG$[0]="Quantity can't be more than available ("+STR(AVAIL)+")",FAILED=1; GOTO 6180
-rem 6160 IF TYPE$="C" AND V<0 AND V+L[2]<0 THEN LET MSG$[0]="Can't decrease committed less than zero ("+STR(L[2])+")",FAILED=1; GOTO 6180
+	rem --- At this point, if the item is lotted or serialied, the qty is ok
+	if user_tpl.this_item_lot_or_ser then goto test_qty_end
+
+	rem --- Is the quantity more than available?
+	if (user_tpl.trans_type$ = "I" or 
+:		(user_tpl.trans_type$ = "A" and trans_qty < 0) or 
+:		(user_tpl.trans_type$ = "C" and trans_qty > 0) ) and
+:		abs(trans_qty) > user_tpl.item_avail 
+:	then
+		msg_id$ = "IV_QTY_OVER_AVAIL"
+		msg_tokens$[0] = str(user_tpl.item_avail)
+		goto test_qty_err
+	endif
+
+	rem --- Check committed
+	if user_tpl.trans_type$ = "C" and trans_qty < 0 and trans_qty + user_tpl.item_commit < 0 then
+		msg_id$ = "IV_COMMIT_DECREASE"
+		msg_token$[0] = str(user_tpl.item_commit)
+		goto test_qty_err
+	endif
+
+	rem --- Passed
+	goto test_qty_end
+
+test_qty_err: rem --- Failed
+
+	gosub disp_message
+	rem callpoint!.setStatus("ABORT"); rem bogus non-numeric error after message
+	callpoint!.setStatus("EXIT"); rem does not restart edit qty
+	util.forceEdit(Form!, callpoint!.getValidationRow(), 6); rem --- qty
+	failed = 1
+
+test_qty_end:
 
 return
 [[IVE_TRANSDET.TRANS_QTY.AVAL]]
 print "in TRANS_QTY.AVAL"; rem debug
 
-rem --- Calculate and display extended cost
+rem --- Check the transaction qty
 
 	trans_qty = num( callpoint!.getUserInput() )
-	unit_cost = num( callpoint!.getColumnData("IVE_TRANSDET.UNIT_COST") )
-	gosub calc_ext_cost
+	gosub test_qty
 
-rem --- Enter cost only for receipts and adjusting up (that is, incoming)
+	if !(failed) then 
 
-	rem debug and below
-	print "Trans Type: ", user_tpl.trans_type$
-	print "Trans Qty :", trans_qty
+		rem --- Calculate and display extended cost
+		trans_qty = num( callpoint!.getUserInput() )
+		unit_cost = num( callpoint!.getColumnData("IVE_TRANSDET.UNIT_COST") )
+		gosub calc_ext_cost
 
-	if user_tpl.trans_type$ <> "R" and (user_tpl.trans_type$ <> "A" or trans_qty < 0) then
-		util.disableGridCell(Form!, 10)
+		rem --- Enter cost only for receipts and adjusting up (that is, incoming)
+		if user_tpl.trans_type$ <> "R" and (user_tpl.trans_type$ <> "A" or trans_qty < 0) then
+			util.disableGridCell(Form!, 10); rem --- Cost
+		endif
+
 	endif
 [[IVE_TRANSDET.AGRE]]
 print "after grid row exit"; rem debug
@@ -347,147 +398,144 @@ print "after grid row exit"; rem debug
 rem --- Commit inventory
 
 	rem --- Receipts do not commit
-	if user_tpl.trans_type$ = "R" then break; rem exit callpoint
+
+	if user_tpl.trans_type$ = "R" then break; rem --- exit callpoint
 	
 	rem --- Is this row deleted?
+
 	this_row = callpoint!.getValidationRow()
 	if callpoint!.getGridRowDeleteStatus(this_row) = "Y" then break; rem exit callpoint
 
-	rem --- Check the transaction qty
-	gosub test_qty
-	if failed then 
-		util.forceEdit(Form!, this_row, 6); rem --- qty
-		break; rem exit callpoint
+	rem --- Has this row changed?
+
+	if callpoint!.getGridRowModifyStatus(this_row)<>"Y"
+		print "row ",this_row," not modified"; rem debug
+		break; rem --- exit callpoint
 	endif
 
-	rem --- Has this row changed?
-	if callpoint!.getGridRowModifyStatus(this_row)<>"Y"
-		print "row ",this_row," not modified"
+	print "row ",this_row," modified..."; rem debug
+
+	rem --- Get current and prior values
+
+	curVect!  = gridVect!.getItem(0)
+	undoVect! = gridVect!.getItem(1)
+
+	dim cur_rec$:dtlg_param$[1,3]
+	dim undo_rec$:dtlg_param$[1,3]
+
+	cur_rec$  = curVect!.getItem(this_row)
+	undo_rec$ = undoVect!.getItem(this_row)
+
+	curr_whse$   = cur_rec.warehouse_id$
+	curr_item$   = cur_rec.item_id$
+	curr_qty     = num( cur_rec.trans_qty$ )
+	curr_lotser$ = cur_rec.lotser_no$
+
+	if undo_rec$ <> "" then
+		prior_whse$   = undo_rec.warehouse_id$
+		prior_item$   = undo_rec.item_id$
+		prior_qty     = num( undo_rec.trans_qty$ )
+		prior_lotser$ = undo_rec.lotser_no$
 	else
-		print "row ",this_row," modified..."
+		prior_whse$   = ""
+		prior_item$   = ""
+		prior_qty     = 0
+		prior_lotser$ = ""
+	endif
 
-		rem --- Get current and prior values
-		curVect!  = gridVect!.getItem(0)
-		undoVect! = gridVect!.getItem(1)
+	rem debug to end
+	if (curr_whse$<>prior_whse$) then
+		print "Warehouses don't match or new"
+	else
+		print "Warehouses match"
+	endif
 
-		dim cur_rec$:dtlg_param$[1,3]
-		dim undo_rec$:dtlg_param$[1,3]
+	if (curr_item$<>prior_item$) then
+		print "Items don't match or new"
+	else
+		print "Items match"
+	endif
 
-		cur_rec$  = curVect!.getItem(this_row)
-		undo_rec$ = undoVect!.getItem(this_row)
+	print "Change in quantity:", curr_qty - prior_qty
+	rem end debug
 
-		curr_whse$   = cur_rec.warehouse_id$
-		curr_item$   = cur_rec.item_id$
-		curr_qty     = num( cur_rec.trans_qty$ )
-		curr_lotser$ = cur_rec.lotser_no$
+	rem --- Has there been any change?
 
-		if undo_rec$ <> "" then
-			prior_whse$   = undo_rec.warehouse_id$
-			prior_item$   = undo_rec.item_id$
-			prior_qty     = num( undo_rec.trans_qty$ )
-			prior_lotser$ = undo_rec.lotser_no$
-		else
-			prior_whse$   = ""
-			prior_item$   = ""
-			prior_qty     = 0
-			prior_lotser$ = ""
-		endif
-
-		rem debug to end
-		if (curr_whse$<>prior_whse$) then
-			print "Warehouses don't match or new"
-		else
-			print "Warehouses match"
-		endif
-
-		if (curr_item$<>prior_item$) then
-			print "Items don't match or new"
-		else
-			print "Items match"
-		endif
-
-		print "Change in quantity:", curr_qty - prior_qty
-		rem end debug
-
-		rem --- Has there been any change?
-
-		if	curr_whse$   <> prior_whse$ or 
-:			curr_item$   <> prior_item$ or 
-:			curr_qty     <> prior_qty   or
+	if	curr_whse$   <> prior_whse$ or 
+:		curr_item$   <> prior_item$ or 
+:		curr_qty     <> prior_qty   or
 :        curr_lotser$ <> prior_lotser$
+:	then
+
+		rem --- Initialize inventory item update
+
+		print "initializing ATAMO..."
+		status = 999
+		call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then goto std_exit
+
+		rem --- Items or warehouses are different: uncommit previous
+
+		if (prior_whse$   <> "" and prior_whse$   <> curr_whse$) or 
+:		   (prior_item$   <> "" and prior_item$   <> curr_item$) or
+:			(prior_lotser$ <> "" and prior_lotser$ <> curr_lotser$)
 :		then
 
-			rem --- Initialize inventory item update
+			rem --- Uncommit prior item and warehouse
 
-			print "initializing ATAMO..."
-			status = 999
-			call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then goto std_exit
-
-			rem --- Items or warehouses are different: uncommit previous
-
-			if (prior_whse$   <> "" and prior_whse$   <> curr_whse$) or 
-:			   (prior_item$   <> "" and prior_item$   <> curr_item$) or
-:				(prior_lotser$ <> "" and prior_lotser$ <> curr_lotser$)
-:			then
-
-				rem --- Uncommit prior item and warehouse
-
-				if prior_whse$ <> "" and prior_item$ <> "" then
+			if prior_whse$ <> "" and prior_item$ <> "" then
+			
+				print "uncomtting old item or warehouse..."; rem debug
+				items$[1] = prior_whse$
+				items$[2] = prior_item$
+				items$[3] = prior_lotser$
 				
-					print "uncomtting old item or warehouse..."; rem debug
-					items$[1] = prior_whse$
-					items$[2] = prior_item$
-					items$[3] = prior_lotser$
-					
-					rem --- Adjustments reverse the commitment
-					if user_tpl.trans_type$ = "A" then
-						refs[0] = -prior_qty
-					else
-						refs[0] = prior_qty
-					endif
-					
-					call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-					if status then escape; rem problem uncommitting previous qty
-
+				rem --- Adjustments reverse the commitment
+				if user_tpl.trans_type$ = "A" then
+					refs[0] = -prior_qty
+				else
+					refs[0] = prior_qty
 				endif
-
-				rem --- Commit quantity for current item and warehouse
-
-				print "committing current item and warehouse..."; rem debug
-				items$[1] = curr_whse$
-				items$[2] = curr_item$
-				items$[3] = curr_lotser$
-				refs[0]   = curr_qty 
-
-				call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then escape; rem problem committing 
+				
+				call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then escape; rem problem uncommitting previous qty
 
 			endif
 
-			rem --- New record or item and warehouse haven't changed: commit difference
+			rem --- Commit quantity for current item and warehouse
 
-			if (prior_whse$   = "" or prior_whse$   = curr_whse$) and 
-:			   (prior_item$   = "" or prior_item$   = curr_item$) and
-:				(prior_lotser$ = "" or prior_lotser$ = curr_lotser$)
-:			then
+			print "committing current item and warehouse..."; rem debug
+			items$[1] = curr_whse$
+			items$[2] = curr_item$
+			items$[3] = curr_lotser$
+			refs[0]   = curr_qty 
 
-				rem --- Commit quantity for current item and warehouse
-
-				print "committing new or current item and warehouse..."; rem debug
-				items$[1] = curr_whse$
-				items$[2] = curr_item$
-				items$[3] = curr_lotser$
-				refs[0]   = curr_qty - prior_qty
-
-				call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then escape; rem problem committing 
-
-			endif
-
-			print "done committing"; rem debug
+			call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then escape; rem problem committing 
 
 		endif
+
+		rem --- New record or item and warehouse haven't changed: commit difference
+
+		if (prior_whse$   = "" or prior_whse$   = curr_whse$) and 
+:		   (prior_item$   = "" or prior_item$   = curr_item$) and
+:			(prior_lotser$ = "" or prior_lotser$ = curr_lotser$)
+:		then
+
+			rem --- Commit quantity for current item and warehouse
+
+			print "committing new or current item and warehouse..."; rem debug
+			items$[1] = curr_whse$
+			items$[2] = curr_item$
+			items$[3] = curr_lotser$
+			refs[0]   = curr_qty - prior_qty
+
+			call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then escape; rem problem committing 
+
+		endif
+
+		print "done committing"; rem debug
 
 	endif
 [[IVE_TRANSDET.BGDR]]
