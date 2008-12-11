@@ -1,6 +1,8 @@
+rem ==========================================================================
 rem --- ado - A set of utility methods for use with Barista
 rem --- Program ado_util.src v8.0.0 03Dec2008
 rem --- Copyright 2008, BASIS International, Ltd.
+rem ==========================================================================
 
 use ::bao_callpoint.bbj::Callpoint
 
@@ -24,14 +26,16 @@ class public util
 	field public static BBjColor EnableColor!
 	field public static BBjColor DisableColor!
 	
-	rem --- Resize a Baritsa window after custom controls have been placed on it.
-	rem --- This methods is normally called in a AWIN callpoint just after the last
-	rem --- controls has been added.  The method will not make the window smaller so
-	rem --- that it would override a user's resize.  The window will be repositioned
-	rem --- if after the resize the window won't fit on the screen.
-	rem 
-	rem --- ExtraWidth, ExtraHeight, LessWidth, and LessHeight are all public and can
-	rem --- be set with the automatic setter method setExtraWidth(), etc.
+rem ==========================================================================
+rem --- Resize a Baritsa window after custom controls have been placed on it.
+rem --- This methods is normally called in a AWIN callpoint just after the last
+rem --- controls has been added.  The method will not make the window smaller so
+rem --- that it would override a user's resize.  The window will be repositioned
+rem --- if after the resize the window won't fit on the screen.
+rem 
+rem --- ExtraWidth, ExtraHeight, LessWidth, and LessHeight are all public and can
+rem --- be set with the automatic setter method setExtraWidth(), etc.
+rem ==========================================================================
 	
 	method public static void resizeWindow(BBjTopLevelWindow inForm!, BBjSysGui inSysgui!)
 	
@@ -93,17 +97,21 @@ class public util
 		endif
 	
 	methodend
-
-	rem --- Enable/Disable Barista grid column(s)
-	rem 
-	rem --- Use the background color of cell (0,0) as the enable color.  It's important to get
-	rem --- this color before that cell is disabled!  The disable color is the grid line color.
-	rem --- Both can be set by the caller using the automatic setter methods setEnableColor() and
-	rem --- setDisableColor()
-	rem 
-	rem --- The other methods are simply shortcuts
+	
+	
+rem ==========================================================================
+rem --- Enable/Disable Barista grid column(s)
+rem 
+rem --- Use the background color of cell (0,0) as the enable color.  It's important to get
+rem --- this color before that cell is disabled!  The disable color is the grid line color.
+rem --- Both can be set by the caller using the automatic setter methods setEnableColor() and
+rem --- setDisableColor()
+rem 
+rem --- The other methods are simply shortcuts
+rem ==========================================================================
 	
 	method public static void ableGridColumns(BBjTopLevelWindow Form!, BBjVector cols!, BBjInt able%)
+		rem declare BBjStandardGrid grid!
 		grid! = #getGridAbleColors(Form!)
 		
 		for i=0 to cols!.size() - 1
@@ -170,9 +178,8 @@ class public util
 
 	rem --- Get the Barista grid and set enable/disable colors
 	method protected static BBjStandardGrid getGridAbleColors(BBjTopLevelWindow Form!)
-
-		declare auto BBjStandardGrid grid!
-		grid! = Form!.getChildWindow(#CHILD_WINDOW_ID%).getControl(#GRID_ID%)
+		declare BBjStandardGrid grid!
+		grid! = #getGrid(Form!)
 		
 		if #EnableColor! = null() then
 			#EnableColor! = grid!.getCellBackColor(0,0)
@@ -186,14 +193,17 @@ class public util
 		
 	methodend
 	
-	rem --- Disable a cell or cells on a Barista grid
-	rem
-	rem --- This method should be called within the detail where the row is
-	rem --- implied as the current row, as opposed to the above methods which 
-	rem --- are typically called in the header to disable an entire column
+
+rem ==========================================================================
+rem --- Disable a cell or cells on a Barista grid
+rem
+rem --- This method should be called within the detail where the row is
+rem --- implied as the current row, as opposed to the above methods which 
+rem --- are typically called in the header to disable an entire column
+rem ==========================================================================
 	
 	method public static void ableGridCells(BBjTopLevelWindow Form!, BBjVector cols!, BBjInt able%, BBjInt row%)
-	
+		rem declare BBjStandardGrid grid!
 		grid! = #getGridAbleColors(Form!)
 		
 		if row% = -1 then
@@ -276,10 +286,13 @@ class public util
 	method public static void enableGridCell(BBjTopLevelWindow Form!, BBjNumber col)
 		if col >=0 then #enableGridCells(Form!, int(col))
 	methodend
-	
-	rem
-	rem --- Enable / Disable non-grid fields
-	rem
+
+
+rem ==========================================================================
+rem
+rem --- Enable / Disable non-grid fields
+rem
+rem ==========================================================================
 	
 	method public static void ableFields(Callpoint callpoint!, BBjVector fields!, BBjString able$)
 		set_ablemap = 0
@@ -330,16 +343,27 @@ class public util
 		fields!.addItem(fld$)
 		#ableFields(callpoint!, fields!, " ")
 	methodend
+
+
+rem ==========================================================================
+rem
+rem --- Small, helper methods
+rem 
+rem ==========================================================================
 	
-	rem
 	rem --- Return true if the string is a number
-	rem
-	
 	method public static BBjInt isNumber(BBjString in$)
 		ignore = num(in$,err=is_number_false)
 		methodret 1
 		is_number_false:
 		methodret 0
+	methodend
+	
+	rem --- Return the detail grid control
+	method public static BBjStandardGrid getGrid(BBjTopLevelWindow Form!)
+		declare auto BBjStandardGrid grid!
+		grid! = Form!.getChildWindow(#CHILD_WINDOW_ID%).getControl(#GRID_ID%)
+		methodret grid!
 	methodend
 	
 classend
