@@ -199,7 +199,9 @@ rem --- Disable a cell or cells on a Barista grid
 rem
 rem --- This method should be called within the detail where the row is
 rem --- implied as the current row, as opposed to the above methods which 
-rem --- are typically called in the header to disable an entire column
+rem --- are typically called in the header to disable an entire column.  If
+rem --- you do need the row, such as when calling it from AGDR, you can
+rem --- pass it manually.
 rem ==========================================================================
 	
 	method public static void ableGridCells(BBjTopLevelWindow Form!, BBjVector cols!, BBjInt able%, BBjInt row%)
@@ -343,6 +345,38 @@ rem ==========================================================================
 		fields!.addItem(fld$)
 		#ableFields(callpoint!, fields!, " ")
 	methodend
+	
+	
+rem ==========================================================================
+rem
+rem --- Force focus back to a specific cell and start editing
+rem 
+rem ==========================================================================
+	
+	method public static void forceEdit(BBjTopLevelWindow Form!, BBjNumber row, BBjNumber col)
+		
+		if row < 0 or fpt(row) <> 0 or col < 0 or fpt(col) <> 0 then goto force_edit_row_col
+		
+		grid! = #getGrid(Form!)
+		grid!.setSelectedCell(row, col, err=force_edit_select)
+		grid!.focus()
+		grid!.accept(1, err=*next)
+		grid!.startEdit(row, col, err=force_edit_start)
+		methodret
+
+	force_edit_row_col:
+		throw "util: forceEdit(): Row or column is invalid", 256
+		methodret
+		
+	force_edit_select:
+		throw "util: forceEdit(): Can't select this cell", 257
+		methodret
+		
+	force_edit_start:
+		throw "util: forceEdit(): Can't start editing this cell", 258
+		methodret
+		
+	methodend
 
 
 rem ==========================================================================
@@ -355,7 +389,8 @@ rem ==========================================================================
 	method public static BBjInt isNumber(BBjString in$)
 		ignore = num(in$,err=is_number_false)
 		methodret 1
-		is_number_false:
+		
+	is_number_false:
 		methodret 0
 	methodend
 	
