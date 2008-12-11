@@ -8,14 +8,13 @@ use ::bao_callpoint.bbj::Callpoint
 
 class public util
 
-	field private static BBjTopLevelWindow Form!
-	field private static BBjSysGui SysGUI!
 	rem --- width/height for adjusting window
 	field public static BBjInt ExtraWidth% = 10
 	field public static BBjInt ExtraHeight% = 10
 	rem --- width/height for adjusting screen
 	field public static BBjInt LessWidth% = 40
 	field public static BBjInt LessHeight% = 40
+	rem --- Constants
 	field private static BBjInt GROUP_BOX% = 21
 	field private static BBjInt PUSH_BUTTON% = 11
 	field private static BBjInt ENABLE% = 1
@@ -23,6 +22,7 @@ class public util
 	rem --- These IDs are set by Barista
 	field private static BBjInt CHILD_WINDOW_ID% = 1109
 	field private static BBjInt GRID_ID% = 5900
+	rem --- Enable/Disable colors for grid cells
 	field public static BBjColor EnableColor!
 	field public static BBjColor DisableColor!
 	
@@ -33,20 +33,18 @@ rem --- controls has been added.  The method will not make the window smaller so
 rem --- that it would override a user's resize.  The window will be repositioned
 rem --- if after the resize the window won't fit on the screen.
 rem 
-rem --- ExtraWidth, ExtraHeight, LessWidth, and LessHeight are all public and can
-rem --- be set with the automatic setter method setExtraWidth(), etc.
+rem --- ExtraWidth, ExtraHeight, LessWidth, and LessHeight are all public and 
+rem --- can be set with the automatic setter method setExtraWidth(), etc.
 rem ==========================================================================
 	
-	method public static void resizeWindow(BBjTopLevelWindow inForm!, BBjSysGui inSysgui!)
+	method public static void resizeWindow(BBjTopLevelWindow Form!, BBjSysGui Sysgui!)
 	
-		#Form! = inForm!
-		#SysGUI! = inSysgui!
-		controls! = #Form!.getAllControls()
-		ScreenSize! = #SysGUI!.getSystemMetrics().getScreenSize()
+		controls! = Form!.getAllControls()
+		ScreenSize! = SysGUI!.getSystemMetrics().getScreenSize()
 		screen_width = ScreenSize!.width - #LessWidth%
 		screen_height = ScreenSize!.height - #LessHeight%
-		new_width = #Form!.getWidth()
-		new_height = #Form!.getHeight()
+		new_width = 0
+		new_height = 0
 		no_buttons_yet = 1
 
 		rem --- Roll throught all controls, setting the max width and height
@@ -71,16 +69,21 @@ rem ==========================================================================
 			endif
 			
 		next i
+		
+		rem --- If the current form fits or is bigger, we're done
+		if Form!.getWidth() >= new_width + #ExtraWidth% and Form!.getHeight() >= new_height + #ExtraHeight% then
+			methodret
+		endif
 
 		rem --- Set new size, but not bigger than the screen
 		new_width = min( screen_width, new_width + #ExtraWidth% )
 		new_height = min( screen_height, new_height + #ExtraHeight% )
-		#Form!.setSize(new_width, new_height)
+		Form!.setSize(new_width, new_height)
 		
 		rem --- Will the form still fit on the screen?
 		new_position = 0
-		form_x = #Form!.getX()
-		form_y = #Form!.getY()
+		form_x = Form!.getX()
+		form_y = Form!.getY()
 		
 		if form_x + new_width > screen_width then
 			form_x = int( (screen_width - new_width) / 2 )
@@ -93,7 +96,7 @@ rem ==========================================================================
 		endif
 		
 		if new_position then
-			#Form!.setLocation(form_x, form_y)
+			Form!.setLocation(form_x, form_y)
 		endif
 	
 	methodend
@@ -111,7 +114,7 @@ rem --- The other methods are simply shortcuts
 rem ==========================================================================
 	
 	method public static void ableGridColumns(BBjTopLevelWindow Form!, BBjVector cols!, BBjInt able%)
-		rem declare BBjStandardGrid grid!
+
 		grid! = #getGridAbleColors(Form!)
 		
 		for i=0 to cols!.size() - 1
@@ -205,7 +208,7 @@ rem --- pass it manually.
 rem ==========================================================================
 	
 	method public static void ableGridCells(BBjTopLevelWindow Form!, BBjVector cols!, BBjInt able%, BBjInt row%)
-		rem declare BBjStandardGrid grid!
+
 		grid! = #getGridAbleColors(Form!)
 		
 		if row% = -1 then
