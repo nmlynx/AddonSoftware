@@ -5,8 +5,6 @@ rem --- Should user enter a lot of look it up?
 
 	rem --- Receipts and negatice Adjustments require new lot entry
 	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-	rem old code for reference
-	rem IF TYPE$="R" OR (TYPE$="A" AND W[0]>0)
 	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0 ) then break; rem exit callpoint
 
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
@@ -20,13 +18,18 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 	curr_item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
 	curr_whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
 
+	if curr_item$ = "" or curr_whse$ = "" then 
+		callpoint!.setMessage("IV_NO_ITEM_WHSE")
+		callpoint!.setStatus("ABORT")
+	endif
+
 	dim dflt_data$[3,1]
 	dflt_data$[1,0] = "ITEM_ID"
 	dflt_data$[1,1] = curr_item$
 	dflt_data$[2,0] = "WAREHOUSE_ID"
 	dflt_data$[2,1] = curr_whse$
 	dflt_data$[3,0] = "LOTS_TO_DISP"
-	dflt_data$[3,1] = "O"; rem --- default to open lots
+	dflt_data$[3,1] = "O"; rem --- Open lots only
 
 	rem --- Call the lookup form
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
@@ -39,7 +42,7 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 :	                       dflt_data$[all]
 
 	rem --- Set the detail grid to the data selected in the lookup
-	if callpoint!.getDevObject("selected_lot")<>null()
+	if callpoint!.getDevObject("selected_lot") <> null() then
 		callpoint!.setColumnData( "IVE_TRANSDET.LOTSER_NO",   str(callpoint!.getDevObject("selected_lot")) )
 		callpoint!.setColumnData( "IVE_TRANSDET.LS_LOCATION", str(callpoint!.getDevObject("selected_lot_loc")) )
 		callpoint!.setColumnData( "IVE_TRANSDET.LS_COMMENTS", str(callpoint!.getDevObject("selected_lot_cmt")) )
@@ -47,7 +50,8 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 		if trans_qty = 0 then
 			callpoint!.setColumnData( "IVE_TRANSDET.TRANS_QTY", str(user_tpl.lot_avail) )
 		endif
-		callpoint!.setStatus("REFGRID")
+		callpoint!.setStatus("MODIFIED-REFRESH")
+		rem callpoint!.setStatus("REFGRID")
 	endif
 
 	rem --- return focus to where we were (lot number)
@@ -71,9 +75,8 @@ rem --- Re-commit quantity
 	curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 	curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
 
-	print "re-committing item ", curr_item$, ", amount", curr_qty; rem debug
-
-	if curr_whse$ <> "" and curr_item$ <>"" then 
+	if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
+		print "re-committing item ", curr_item$, ", amount", curr_qty; rem debug
 
 		rem --- Adjustments reverse the commitment
 		if user_tpl.trans_type$ = "A" then 
@@ -101,9 +104,8 @@ rem --- Uncommit quantity
 	curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 	curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
 
-	print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
-
-	if curr_whse$ <> "" and curr_item$ <>"" then 
+	if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
+		print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
 
 		rem --- Adjustments reverse the commitment
 		if user_tpl.trans_type$ = "A" then 
@@ -120,15 +122,23 @@ rem --- Uncommit quantity
 [[IVE_TRANSDET.AREC]]
 print "after new record (AREC)"; rem debug
 
-rem --- If this is not multi-warehouse, display the default
+rem --- Display defaults for this row
 
 	if user_tpl.multi_whse$ <> "Y" then
 		callpoint!.setColumnData("IVE_TRANSDET.WAREHOUSE_ID",user_tpl.warehouse_id$)
 	endif
+
+	if user_tpl.gl$ = "Y" and user_tpl.trans_post_gl$ = "Y" then
+		callpoint!.setColumnData("IVE_TRANSDET.GL_ACCOUNT",user_tpl.trans_adj_acct$)
+	endif
+
+	callpoint!.setStatus("MODIFIED-REFRESH")
+	rem callpoint!.setStatus("REFGRID")
 [[IVE_TRANSDET.ARAR]]
 print "after array transfer (ARAR)"; rem debug
 [[IVE_TRANSDET.AGDR]]
 print "after grid display row (AGDR)"; rem debug
+print "row =", callpoint!.getValidationRow(); rem debug
 
 rem --- Set item/warehouse defaults
 
@@ -145,22 +155,22 @@ print "after grid clear (AGCL)"; rem debug
 [[IVE_TRANSDET.TRANS_QTY.AINP]]
 rem --- Serialized receipt or issue must be 1
 
-	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
-		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
-			if callpoint!.getUserInput() <> "1" then
-				callpoint!.setStatus("ABORT")
-			endif
-		endif
-	endif
+rem	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
+rem		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
+rem			if callpoint!.getUserInput() <> "1" then
+rem				callpoint!.setStatus("ABORT")
+rem			endif
+rem		endif
+rem	endif
 [[IVE_TRANSDET.TRANS_QTY.BINP]]
 rem --- Serialized receipt or issue must be 1
 
-	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
-		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
-			callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY","1")
-			callpoint!.setStatus("REFRESH:IVE_TRANSDET.TRANS_QTY")
-		endif
-	endif
+rem 	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
+rem		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
+rem			callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY","1")
+rem			callpoint!.setStatus("REFRESH:IVE_TRANSDET.TRANS_QTY")
+rem		endif
+rem	endif
 [[IVE_TRANSDET.WAREHOUSE_ID.AVAL]]
 rem --- Set item/warehouse defaults
 
@@ -180,8 +190,8 @@ calc_ext_cost: rem --- Calculate and display extended cost
                rem OUT: Extended cost calculated and displayed
 
 	callpoint!.setColumnData("IVE_TRANSDET.TOTAL_COST", str(unit_cost * trans_qty) )
-	rem callpoint!.setStatus("MODIFIED-REFRESH")
-	callpoint!.setStatus("REFGRID")
+	callpoint!.setStatus("MODIFIED-REFRESH")
+	rem callpoint!.setStatus("REFGRID")
 
 return
 
@@ -190,7 +200,7 @@ get_whse_item: rem --- Get warehouse and item records and display
                rem    : whse$ = the current warehouse
                rem OUT: default values set and displayed
 
-	print "in get_whse_item: item$ = """, item$, """, whse$: """, whse$, """"
+	print "in get_whse_item: item$ = """, item$, """, whse$: """, whse$, """"; rem debug
 
 	rem --- Are both columns set?
 
@@ -208,16 +218,21 @@ get_whse_item: rem --- Get warehouse and item records and display
 		dim ivm02a$:ivm02a_tpl$
 		find record(ivm02_dev,key=firm_id$+whse$+item$,dom=no_whse_rec) ivm02a$
 
-		rem --- Display Lot/Serial if needed
+		rem --- Disable/Enable Lot/Serial if needed
 
 		user_tpl.this_item_lot_or_ser% = ( user_tpl.ls$="Y" and ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" )
+		cols! = BBjAPI().makeVector()
+		cols!.addItem(7); rem --- lot
+		cols!.addItem(8); rem --- location
+		cols!.addItem(9); rem --- comment
+		this_row = callpoint!.getValidationRow()
 	
-		if !(user_tpl.this_item_lot_or_ser%) then
-			cols! = BBjAPI().makeVector()
-			cols!.addItem(7)
-			cols!.addItem(8)
-			cols!.addItem(9)
-			util.disableGridCells(Form!, cols!)
+		if user_tpl.this_item_lot_or_ser% then
+			print "enabling lot/serial fields"; rem debug
+			util.enableGridCells(Form!, cols!, this_row)
+		else
+			print "disabling lot/serial fields"; rem debug
+			util.disableGridCells(Form!, cols!, this_row)
 		endif
 
 		rem debug
@@ -252,7 +267,10 @@ get_whse_item: rem --- Get warehouse and item records and display
 			qoh$    = str( qoh:m9$ )
 			commit  = num( ivm02a.qty_commit$ )
 			commit$ = str( commit:m9$ )
-			avail$  = str( (qoh - commit):m9$ )
+			avail   = qoh - commit
+			avail$  = str( avail:m9$ )
+			
+			user_tpl.item_avail = avail
 
 			rem --- Display
 			location!.setText( loc$ )
@@ -272,13 +290,36 @@ get_whse_item: rem --- Get warehouse and item records and display
 
 	goto whse_item_done
 
-	rem No Warehouse Record error
+no_whse_rec: rem --- No Warehouse Record error
 
-	no_whse_rec:
-	call stbl("+DIR_SYP")+"bac_message.bbj","IV_NO_WHSE_ITEM",msg_tokens$[all],msg_opt$,table_chans$[all]
+	callpoint!.setMessage("IV_NO_WHSE_ITEM")
+	rem call stbl("+DIR_SYP")+"bac_message.bbj","IV_NO_WHSE_ITEM",msg_tokens$[all],msg_opt$,table_chans$[all]
 	rem callpoint!.setStatus("ABORT")
 
-	whse_item_done:
+whse_item_done:
+
+return
+
+test_qty: rem --- Test whether the transaction quantity is valid
+
+	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	failed = 0
+	
+	if trans_qty = 0 then
+		msg_id$ = "IV_QTY_ZERO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		failed = 1
+		return
+	endif
+
+rem old code for reference
+
+rem 6130 IF POS(TYPE$="IR") AND V<0 THEN LET MSG$[0]="Issues and Receipts must have quantites greater than zero",FAILED=1; GOTO 6180
+rem 6140 IF THIS_ITEM_LOT_OR_SER AND SERIALIZED AND POS(TYPE$="AC") AND V<>1 AND V<>-1 THEN LET MSG$[0]="Serialized items can only have a quantity of 1 or -1",FAILED=1; GOTO 6180
+rem 6145 IF THIS_ITEM_LOT_OR_SER THEN GOTO 6190; REM Have to wait to enter Lot/Serial before testing available (but we need to know if qty is negative or positive before Lot/Serial)
+rem 6150 IF (TYPE$="I" OR (TYPE$="A" AND V<0) OR (TYPE$="C" AND V>0)) AND ABS(V)>AVAIL THEN LET MSG$[0]="Quantity can't be more than available ("+STR(AVAIL)+")",FAILED=1; GOTO 6180
+rem 6160 IF TYPE$="C" AND V<0 AND V+L[2]<0 THEN LET MSG$[0]="Can't decrease committed less than zero ("+STR(L[2])+")",FAILED=1; GOTO 6180
 
 return
 [[IVE_TRANSDET.TRANS_QTY.AVAL]]
@@ -292,31 +333,13 @@ rem --- Calculate and display extended cost
 
 rem --- Enter cost only for receipts and adjusting up (that is, incoming)
 
-	rem old code for reference
-	rem IF TYPE$<>"R" AND (TYPE$<>"A" OR W[0]<0) THEN GOTO 2780
-
 	rem debug and below
-	print "Trans type: ", user_tpl.trans_type$
-	print " Trans Qty:", trans_qty
+	print "Trans Type: ", user_tpl.trans_type$
+	print "Trans Qty :", trans_qty
 
 	if user_tpl.trans_type$ <> "R" and (user_tpl.trans_type$ <> "A" or trans_qty < 0) then
-		print "calling the disable method..."
 		util.disableGridCell(Form!, 10)
 	endif
-
-rem old code for reference
-
-rem 6100 QTY_TESTS: REM " --- Quantity tests and error messages
-rem 6110 LET FAILED=0
-rem 6120 IF V=0 THEN LET MSG$[0]="Quantity can not equal zero",FAILED=1; GOTO 6180
-rem 6130 IF POS(TYPE$="IR") AND V<0 THEN LET MSG$[0]="Issues and Receipts must have quantites greater than zero",FAILED=1; GOTO 6180
-rem 6140 IF THIS_ITEM_LOT_OR_SER AND SERIALIZED AND POS(TYPE$="AC") AND V<>1 AND V<>-1 THEN LET MSG$[0]="Serialized items can only have a quantity of 1 or -1",FAILED=1; GOTO 6180
-rem 6145 IF THIS_ITEM_LOT_OR_SER THEN GOTO 6190; REM Have to wait to enter Lot/Serial before testing available (but we need to know if qty is negative or positive before Lot/Serial)
-rem 6150 IF (TYPE$="I" OR (TYPE$="A" AND V<0) OR (TYPE$="C" AND V>0)) AND ABS(V)>AVAIL THEN LET MSG$[0]="Quantity can't be more than available ("+STR(AVAIL)+")",FAILED=1; GOTO 6180
-rem 6160 IF TYPE$="C" AND V<0 AND V+L[2]<0 THEN LET MSG$[0]="Can't decrease committed less than zero ("+STR(L[2])+")",FAILED=1; GOTO 6180
-rem 6170 GOTO 6190
-rem 6180 CALL "syc_xa.bbx",2,MSG$[ALL],1,-1,-1,IGNORE$,IGNORE
-rem 6190 RETURN 
 [[IVE_TRANSDET.AGRE]]
 print "after grid row exit"; rem debug
 
@@ -324,10 +347,23 @@ rem --- Commit inventory
 
 	rem --- Receipts do not commit
 	if user_tpl.trans_type$ = "R" then break; rem exit callpoint
+	
+	rem --- Is this row deleted?
+	this_row = callpoint!.getValidationRow()
+	if callpoint!.getGridRowDeleteStatus(this_row) = "Y" then break; rem exit callpoint
+
+	rem --- Check the transaction qty
+	gosub test_qty
+	if failed then 
+		grid! = util.getGrid(Form!)
+		grid!.setSelectedCell(this_row, 6); rem --- qty
+		grid!.focus()
+		grid!.accept(1,err=*next)
+		grid!.startEdit(this_row, 6)
+		break; rem exit callpoint
+	endif
 
 	rem --- Has this row changed?
-	this_row = callpoint!.getValidationRow()
-
 	if callpoint!.getGridRowModifyStatus(this_row)<>"Y"
 		print "row ",this_row," not modified"
 	else
@@ -459,6 +495,7 @@ rem --- Commit inventory
 	endif
 [[IVE_TRANSDET.BGDR]]
 print "before grid display row (BGDR)"; rem debug
+print "row =", callpoint!.getValidationRow(); rem debug
 
 rem --- If this is not multi-warehouse, display the default
 
@@ -466,14 +503,7 @@ rem --- If this is not multi-warehouse, display the default
 		callpoint!.setColumnData("IVE_TRANSDET.WAREHOUSE_ID",user_tpl.warehouse_id$)
 	endif
 [[IVE_TRANSDET.ITEM_ID.AVAL]]
-rem --- Old code for reference
-rem 2245 FIND (IVM01_DEV,KEY=D0$,DOM=2220)IOL=IVM01A; rem D0$(1),D1$(1),D2$(1),D3$,D4$,D5$,D6$,D[ALL]
-rem 2250 LET L0$(1)=N0$+W1$,AVAIL=0
-rem 2255 FIND (IVM02_DEV,KEY=L0$,DOM=2220)IOL=IVM02A; rem L0$(1),L1$,L2$,L[ALL]
-rem 2260 LET AVAIL=L[0]-L[2]
-rem 2265 IF VALIDATE OR W1$=PREV_WH_ITEM$ THEN GOTO 2390
-rem 2270 DIM W[2]
-rem 2275 LET W2$(1)="",W[1]=L[11]
+print "in ITEM_ID After Column Validation (AVAL)"; rem debug
 
 rem --- Set and display default values
 
