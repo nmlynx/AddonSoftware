@@ -5,7 +5,7 @@ dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
 myrow=callpoint!.getValidationRow()
 
-if callpoint!.getGridRowModifyStatus(myrow)="Y"
+rem if callpoint!.getGridRowModifyStatus(myrow)="Y"
 
 	curVect!=gridVect!.getItem(0)
 	undoVect!=gridVect!.getItem(1)
@@ -16,11 +16,21 @@ if callpoint!.getGridRowModifyStatus(myrow)="Y"
 	dim disk_rec$:dtlg_param$[1,3]
 	
 	cur_rec$=curVect!.getItem(myrow)
-escape;rem checkit out
+	undo_rec$=undoVect!.getItem(myrow)
+	disk_rec$=diskVect!.getItem(myrow)
+rem escape;rem checkit out cur_rec.item_id$, undo_rec and disk_rec
 
-endif	
+rem endif	
 
-gosub get_lot_info
+while 1
+	readrecord(ivm01_dev,key=firm_id$+cur_rec.item_id$,dom=*break)ivm01a$
+	if ivm01a.lotser_item$="Y" then
+		item$=cur_rec.item_id$
+		wh$=cur_rec.warehouse_id$
+		gosub get_lot_info
+	endif
+	break
+wend
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 g!=form!.getChildWindow(1109).getControl(5900)
@@ -446,11 +456,21 @@ disable_ctl:rem --- disable selected controls
 return
 
 get_lot_info:
-	callpoint!.setDevObject("wh","01")
-	callpoint!.setDevObject("item","100                 ")
-	callpoint!.setDevObject("lsdet_dev",str(fnget_dev("IVM_LSMASTER")))
-	callpoint!.setDevObject("lsdet_tpl",fnget_tpl$("IVM_LSMASTER"))
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT","",table_chans$[all]
+	callpoint!.setDevObject("ar_type",callpoint!.getColumnData("OPE_ORDDET.AR_TYPE"))
+	callpoint!.setDevObject("cust",callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID"))
+	callpoint!.setDevObject("order",callpoint!.getColumnData("OPE_ORDDET.ORDER_NO"))
+	callpoint!.setDevObject("wh",wh$)
+	callpoint!.setDevObject("item",item$)
+	callpoint!.setDevObject("lsmast_dev",str(fnget_dev("IVM_LSMASTER")))
+	callpoint!.setDevObject("lsmast_tpl",fnget_tpl$("IVM_LSMASTER"))
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="AR_TYPE"
+	dflt_data$[1,1]=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
+	dflt_data$[2,0]="CUSTOMER_ID"
+	dflt_data$[2,1]=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+	dflt_data$[3,0]="ORDER_NO"
+	dflt_data$[3,1]=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT","",table_chans$[all],dflt_data$[all]
 return
 
 #include std_missing_params.src
