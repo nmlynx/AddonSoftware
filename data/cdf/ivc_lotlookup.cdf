@@ -95,7 +95,7 @@ rem --- Create Lot Information window
 	w.x = 330, w.y = 65, w.w = 400, w.h = 225
 	callpoint!.setDevObject("child_window_dims", w$)
 
-	lotWin!=form!.addChildWindow(15000, w.x, w.y, w.w, w.h, "", $00000800$, 10)
+	lotWin!=form!.addChildWindow(15000, w.x, w.y, w.w, w.h, "", $00000800$, 99)
 	lotWin!.addGroupBox(15999,5,5,380,220,"Lot/Serial Information",$$)
 	
 	lotWin!.addStaticText(15001,10,25,75,15,"Vendor:",$8000$)
