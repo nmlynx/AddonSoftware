@@ -1,5 +1,3 @@
-[[IVE_TRANSHDR.AOPT-LSLU]]
-print "in Lot Lookup (LSLU)"; rem debug
 [[IVE_TRANSHDR.ADEQ]]
 print "HEADER: After delete query (ADEQ)"; rem debug
 [[IVE_TRANSHDR.BOVE]]
@@ -105,7 +103,7 @@ rem --- Pre-inits
 
 rem --- Open files
 
-	num_files=6
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
 	open_tables$[2]="GLS_PARAMS",   open_opts$[2]="OTA"
@@ -113,6 +111,7 @@ rem --- Open files
 	open_tables$[4]="IVE_TRANSDET", open_opts$[4]="OTA"
 	open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
 	open_tables$[6]="IVM_ITEMWHSE", open_opts$[6]="OTA"
+	open_tables$[7]="IVM_LSMASTER", open_opts$[7]="OTA"
 
 	gosub open_tables
 
@@ -129,9 +128,9 @@ rem --- Setup user template and object
 	user_tpl_str$ = user_tpl_str$ + "gl:c(1),ls:c(1),glw11:c(1*),m9:c(1*),prod_type:c(3),"
 	user_tpl_str$ = user_tpl_str$ + "location_obj:u(1),qoh_obj:u(1),commit_obj:u(1),avail_obj:u(1),"
 	user_tpl_str$ = user_tpl_str$ + "trans_post_gl:c(1),trans_type:c(1),trans_adj_acct:c(1*),"
-	user_tpl_str$ = user_tpl_str$ + "prev_wh_item:c(1*),prev_lot_ser:c(1*),prev_qty:n(1),this_item_lot_or_ser:u(1),"
-	user_tpl_str$ = user_tpl_str$ + "lotted:u(1),serialized:u(1),lot_avail:n(1*),multi_whse:u(1),warehouse_id:c(2),"
-	user_tpl_str$ = user_tpl_str$ + "item_avail:n(1*),item_commit:n(1*)"
+	user_tpl_str$ = user_tpl_str$ + "this_item_lot_or_ser:u(1),lotted:u(1),serialized:u(1),ls_found:u(1),"
+	user_tpl_str$ = user_tpl_str$ + "multi_whse:u(1),warehouse_id:c(2),avail:n(1*),commit:n(1*),qoh:n(1*),"
+	user_tpl_str$ = user_tpl_str$ + "setup_checked:u(1)"
 	dim user_tpl$:user_tpl_str$
 
 rem --- Setup for display fields on header
@@ -153,9 +152,8 @@ rem --- Setup for display fields on header
 
 rem --- Get parameter records
 
-	dim i[5],g[1]
-	findrecord(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params)ivs01a$; rem p1$, p2$, p3$, p4$, m0$, m1$, m2$, m3$
-	findrecord(gls01_dev,key=firm_id$+"GL00",err=set_iv_params)gls01a$; rem g1$, g2$, g5$
+	find record(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
+	find record(gls01_dev,key=firm_id$+"GL00",err=set_iv_params) gls01a$
 	rem lf$ = "N"
 	ls$ = "N"
 
@@ -175,19 +173,16 @@ rem --- Numeric masks
 
 rem --- Lotted flags
 
-	rem p8$=""
 	user_tpl.lotted=0
 	user_tpl.serialized=0
 
 	if ivs01a.lotser_flag$="L" then 
 		user_tpl.ls$="Y"
 		user_tpl.lotted=1
-		rem p8$="Lot Number" 
 	else 
 		if ivs01a.lotser_flag$="S" then 
 			user_tpl.ls$="Y"
 			user_tpl.serialized=1
-			rem p8$="Serial Number"
 		endif
 	endif
 
