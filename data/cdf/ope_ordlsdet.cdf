@@ -1,3 +1,69 @@
+[[OPE_ORDLSDET.QTY_SHIPPED.AVAL]]
+rem --- Check if Serial and validate quantity
+if callpoint!.getDevObject("lotser_flag")="S"
+	if abs(num(callpoint!.getUserInput()))<>1
+		msg_id$="IV_SERIAL_ONE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+endif
+
+rem --- Signs must be the same
+if sgn(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED")))<>sgn(num(callpoint!.getUserInput()))
+	msg_id$=""
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
+
+rem --- Ship Qty must be <= Order Qty
+if abs(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED")))<abs(num(callpoint!.getUserInput()))
+	msg_id$="SHIP_EXCEEDS_ORD"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
+[[OPE_ORDLSDET.QTY_ORDERED.AVAL]]
+rem --- Check if Serial and validate quantity
+if callpoint!.getDevObject("lotser_flag")="S"
+	if abs(num(callpoint!.getUserInput()))<>1
+		msg_id$="IV_SERIAL_ONE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+endif
+
+rem --- Signs must be the same
+if sgn(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED")))<>sgn(num(callpoint!.getUserInput()))
+	msg_id$=""
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
+
+rem --- Ship Qty must be <= Order Qty
+if abs(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED")))>abs(num(callpoint!.getUserInput()))
+	msg_id$="SHIP_EXCEEDS_ORD"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
+[[OPE_ORDLSDET.<CUSTOM>]]
+rem --- Calculate total quantities and compare to order line
+[[OPE_ORDLSDET.AGRE]]
+rem --- populate key area of detail records
+
+	myrow=callpoint!.getValidationRow()
+
+	curVect!=gridVect!.getItem(0)
+	dim cur_rec$:dtlg_param$[1,3]
+	cur_rec$=curVect!.getItem(myrow)
+	
+	ar_type$=callpoint!.getDevObject("ar_type")
+	cust$=callpoint!.getDevObject("cust")
+	order$=callpoint!.getDevObject("order")
+	int_seq$=callpoint!.getDevObject("int_seq")
+
+	cur_rec.ar_type$=ar_type$
+	cur_rec.customer_id$=cust$
+	cur_rec.order_no$=order$
+	cur_rec.orddet_seq_ref$=int_seq$
 [[OPE_ORDLSDET.LOTSER_NO.BINP]]
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
 rem --- save current row/column so we'll know where to set focus when we return from lot lookup

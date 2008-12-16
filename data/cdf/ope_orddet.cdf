@@ -5,7 +5,7 @@ dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
 myrow=callpoint!.getValidationRow()
 
-rem if callpoint!.getGridRowModifyStatus(myrow)="Y"
+jim$=callpoint!.getGridRowModifyStatus(myrow)
 
 	curVect!=gridVect!.getItem(0)
 	undoVect!=gridVect!.getItem(1)
@@ -23,11 +23,13 @@ rem escape;rem checkit out cur_rec.item_id$, undo_rec and disk_rec
 rem endif	
 
 while 1
-	readrecord(ivm01_dev,key=firm_id$+cur_rec.item_id$,dom=*break)ivm01a$
-	if ivm01a.lotser_item$="Y" then
-		item$=cur_rec.item_id$
-		wh$=cur_rec.warehouse_id$
-		gosub get_lot_info
+	if pos(user_tpl.lot_ser$="LS")>0
+		readrecord(ivm01_dev,key=firm_id$+cur_rec.item_id$,dom=*break)ivm01a$
+		if ivm01a.lotser_item$="Y" then
+			item$=cur_rec.item_id$
+			wh$=cur_rec.warehouse_id$
+			gosub get_lot_info
+		endif
 	endif
 	break
 wend
@@ -459,10 +461,12 @@ get_lot_info:
 	callpoint!.setDevObject("ar_type",callpoint!.getColumnData("OPE_ORDDET.AR_TYPE"))
 	callpoint!.setDevObject("cust",callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID"))
 	callpoint!.setDevObject("order",callpoint!.getColumnData("OPE_ORDDET.ORDER_NO"))
+	callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
 	callpoint!.setDevObject("wh",wh$)
 	callpoint!.setDevObject("item",item$)
 	callpoint!.setDevObject("lsmast_dev",str(fnget_dev("IVM_LSMASTER")))
 	callpoint!.setDevObject("lsmast_tpl",fnget_tpl$("IVM_LSMASTER"))
+	callpoint!.setDevObject("lotser_flag",user_tpl.lot_ser$)
 	dim dflt_data$[3,1]
 	dflt_data$[1,0]="AR_TYPE"
 	dflt_data$[1,1]=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
@@ -470,7 +474,8 @@ get_lot_info:
 	dflt_data$[2,1]=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 	dflt_data$[3,0]="ORDER_NO"
 	dflt_data$[3,1]=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT","",table_chans$[all],dflt_data$[all]
+	lot_pfx$=firm_id$+callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")+callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
 return
 
 #include std_missing_params.src
