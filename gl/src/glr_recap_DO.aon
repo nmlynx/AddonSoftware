@@ -332,18 +332,19 @@ register_errors: rem --- Register errors
 next_overlay: rem --- Run update overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    if OutVect!<>null()
-	next_overlay$=update$
-	out_action$="PRT"
-	goto std_exit
-    rem --- run update$,err=std_exit -- DocOut will run next pgm for us
+	
+    if OutVect!<>null() then 
+		next_overlay$=update$
+		out_action$="PRT"
+		goto std_exit
+	    rem --- run update$,err=std_exit -- DocOut will run next pgm for us
     else
-	next_overlay$=""
-	OutVect!=null( )
-	out_action$=""
-	run update$,err=std_exit
+		next_overlay$=""
+		out_action$=""
+		run update$,err=std_exit
     endif
-rem --- run update$,err=std_exit -- DocOut will run next pgm for us
+
+	rem --- run update$,err=std_exit -- DocOut will run next pgm for us
 
 report_heading: rem --- Report Heading
 
