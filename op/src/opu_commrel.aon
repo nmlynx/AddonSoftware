@@ -104,17 +104,9 @@ rem --- Parameters
 
 rem --- Initialize Data
 
+    call "ivc_itemupdt.aon::init",iv_channels[all],ivs01a$,iv_items$[all],iv_refs$[all],iv_refs[all],iv_table_chans$[all],status
+
     precision num(ivs01a.precision$)
-    dim iv_files[44],iv_info$[3],iv_info[0],iv_params$[4],iv_refs$[11],iv_refs[5]
-    iv_files[0]=sys01_dev
-    iv_files[1]=ivm01_dev
-    iv_files[2]=ivm02_dev
-    iv_info$[0]=firm_id$
-    iv_params$[0]=sysinfo.system_date$
-    iv_params$[1]=sysinfo.user_id$
-    iv_params$[2]=i2$
-    iv_params$[3]=i3$
-    iv_params$[4]=i4$
     more=1
 
 rem --- Additional File Opens
@@ -126,7 +118,6 @@ rem --- Additional File Opens
         if status goto std_exit
         ope21_dev=channels[12]
         ivm07_dev=channels[13]
-        iv_files[7]=ivm07_dev
     endif
 
 rem --- Initialize Progress Meter
@@ -162,7 +153,7 @@ rem --- Process Lines Here
                     iv_info$[2]=ope11a.item_id$
                     iv_info$[3]=""
                     iv_refs[0]=ope11a.qty_ordered
-                    call pgmdir$+"ivc_ua.bbx","OE",iv_files[all],iv_info[all],iv_params$[all],iv_info$[all],iv_refs$[all],iv_refs[all],iv_status; rem "Commit warehouse quantities
+                    call pgmdir$+"ivc_itemupdt.aon","OE",iv_channels[all],ivs01a$,iv_items$[all],iv_refs$[all],iv_refs[all],iv_table_chans$[all],status
 
 rem --- Serialized/Lotted Items
 
@@ -179,9 +170,9 @@ rem --- Commit Lot/Serial Quantities
                             iv_info$[2]=ope11a.item_id$
                             iv_info$[3]=""
                             iv_refs[0]=ope21a.qty_shipped
-                            call pgmdir$+"ivc_ua.bbx","UC",iv_files[all],iv_info[all],iv_params$[all],iv_info$[all],iv_refs$[all],iv_refs[all],iv_status; rem "Uncommit previous warehouse quantites
+                            call pgmdir$+"ivc_itemupdt.aon","UC",iv_channels[all],ivs01a$,iv_items$[all],iv_refs$[all],iv_refs[all],iv_table_chans$[all],status
                             iv_info$[3]=ope21a.lotser_no$
-                            call pgmdir$+"ivc_ua.bbx","OE",iv_files[all],iv_info[all],iv_params$[all],iv_info$[all],iv_refs$[all],iv_refs[all],iv_status; rem "Commit warehouse andlot/serial quantites
+                            call pgmdir$+"ivc_itemupdt.aon","OE",iv_channels[all],ivs01a$,iv_items$[all],iv_refs$[all],iv_refs[all],iv_table_chans$[all],status
                         wend
                     endif
                 endif
@@ -198,7 +189,7 @@ rem --- Commit Lot/Serial Quantities
                 ope11a.unit_price=0
             endif
             if pos(opm02a.line_type$="MO")=0
-                ope11a.EXT_PRICE=ope11a.unit_price*ope11a.qty_shipped
+                ope11a.ext_price=ope11a.unit_price*ope11a.qty_shipped
             endif
             gosub Taxable_Check
             ope01a.taxable_amt=ope01a.taxable_amt+ope11a.taxable_amt-x7
