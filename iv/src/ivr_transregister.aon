@@ -73,25 +73,9 @@ rem --- Dimension string templates
 	dim ivs01a$:templates$[8]
 	dim ivm10b$:templates$[9]
 
-rem --- Assign form input values to local variables
-
-    rem table$=fnget_table$("")
-	rem  value_01$=fnget_fld_data$(table$,"dataname_01")
-
-rem --- Retrieve parameter records
-
-    rem find record (ars01a_dev,key=firm_id$+"AR00",err=std_missing_params) ars01a$
-    rem find record (gls01a_dev,key=firm_id$+"GL00",err=std_missing_params) gls01a$
-    rem find record (ivs01a_dev,key=firm_id$+"IV00",err=std_missing_params) ivs01a$
-
 rem --- Parameters
 
-    dim p[5],g[4]; rem ,t$:stbl("+TASK_TMPL")
-    rem t$=stbl("+TASK")
-    rem sysinfo.firm_name$=sysinfo.firm_name$
-    rem sysinfo.task_desc$=sysinfo.task_desc$
-    rem firm_id$=sysinfo.firm_id$
-	rem when$=sysinfo.system_date$
+    dim p[5],g[4]
     n2$="IV"
     source$=pgm(-2)
 	gl$="N"
@@ -152,8 +136,8 @@ rem --- Parameters
 rem --- Document initializations
 
 	OutVect!=bbjAPI().getSysGui().makeVector()
-	rem HdrVect!=bbjAPI().getSysGui().makeVector()
-	rem BrkVect!=bbjAPI().getSysGui().makeVector()
+	HdrVect!=bbjAPI().getSysGui().makeVector()
+	BrkVect!=bbjAPI().getSysGui().makeVector()
 	TotVect!=bbjAPI().getSysGui().makeVector()
 	rep_date$=date(0:"%Mz/%Dz/%Yd")
 	rep_date_stamp$=date(0:"%Yd%Mz%Dz")
@@ -164,16 +148,11 @@ rem --- Document initializations
 rem --- Initializations
 
     precision num(ivs01a.precision$)
-    rem dim c0$(50),a[2]
-    dim headings$[2]
 	dim o[8]
 	dim lf[10]
 	dim item$[10]
     width=132
     page=0
-    rem l9=59
-    rem l=l9+1
-    rem w=34
     units=0
     errors=0
 	more=1
@@ -186,10 +165,9 @@ rem --- Initializations
 		glh=0
 	endif
 	
-	rem  headings=2
+	dim headings$[5]
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
-	headings$[2]="[HEADER]"
     glstatus=0
     places=p[2]
 	
@@ -216,18 +194,18 @@ rem --- Initializations
 	
 rem --- Column heading
 
-	if gl$<>"Y" then columns=7 else columns=8
-	dim columns$[columns-1,10]
+	if gl$<>"Y" then columns=6 else columns=7
+	dim columns$[columns,10]
 	
 	columns$[0,0]="Wh",          columns$[0,1]="C", columns$[0,2]="2"
 	columns$[1,0]="Item",        columns$[1,1]="C", columns$[1,2]=str(ivs01a.item_id_len)
 	columns$[2,0]="Description", columns$[2,1]="C", columns$[2,2]=str(dw)
-	columns$[3,0]="Quantity",    columns$[3,1]="N", columns$[3,2]=str(m2), columns$[3,3]=m2$
-	columns$[4,0]="Cost",        columns$[4,1]="N", columns$[4,2]=str(m3), columns$[4,3]=m3$
-	columns$[5,0]="Total Cost",  columns$[5,1]="N", columns$[5,2]=str(m1), columns$[5,3]=m1$
+	columns$[3,0]="Quantity",    columns$[3,1]="N", columns$[3,2]=str(m2), columns$[3,3]=m2$, columns$[3,10]="T"
+	columns$[4,0]="Cost",        columns$[4,1]="N", columns$[4,2]=str(m3), columns$[4,3]=m3$, columns$[4,10]="T"
+	columns$[5,0]="Total Cost",  columns$[5,1]="N", columns$[5,2]=str(m1), columns$[5,3]=m1$, columns$[5,10]="T"
 	
 	if gl$<>"Y" then
-		columns$[6,0]="Who", columns$[6,1]="C", columns$[6,2]="16"
+		columns$[6,0]="Who",        columns$[6,1]="C", columns$[6,2]="16"
 	else
 		columns$[6,0]="GL Account", columns$[6,1]="C", columns$[6,2]=str(glh)
 		columns$[7,0]="Who",        columns$[7,1]="C", columns$[7,2]="16"
@@ -248,7 +226,7 @@ rem --- Additional File Opens
 	
     if gl$ ="Y" then
         files$[24]="glm-01",ids$[24]="GLM_ACCT"
-		files$[25]=glw11$,ids$[25]="GLE_DAILYDETAIL"
+		files$[25]=glw11$,ids$[25]="GLE_DAILYDETAIL",options$[25]="CL"
     endif
 	
 	action=1,begfile=19,endfile=29
@@ -297,7 +275,6 @@ rem --- Breaks
 
 rem --- Additional Reads
 
-			rem dim b0$(22),b1$(60),z0$(g[4]),description$(dw)
 			dim description$(dw)
 			ivm01a.item_desc$="Unknown Item"
 			find record (ivm01_dev,key=firm_id$+ive11a.item_id$,dom=*next) ivm01a$
@@ -337,19 +314,11 @@ rem --- Cost change?
 				endif
 			endif
 
-rem --- New page?
-
-			rem if l+2>=l9 then 
-				rem gosub report_heading
-				rem gosub trans_heading
-			rem endif
-
 rem --- Print detail line
 
 			account$=""
 			lotser$=""
 			prev_total=prev_total+ive11a.total_cost
-			rem l=l+2
 			if gl$="Y" then account$=fnmask$(ive11a.gl_account$,gls01a.acct_output$)
 			if ls$="Y" and ivm01a.inventoried$="Y" then lotser$=ive11a.lotser_no$
 			
@@ -370,7 +339,7 @@ rem --- Print detail line
 			if lotser$<>"" then
 				ignore=fnblank(2)
 				OutVect!.addItem(lotser_text$+lotser$)
-				ignore=fnblank(columns-3)
+				ignore=fnblank(columns-2)
 			endif
 
 rem --- G/L Distribution
@@ -382,7 +351,6 @@ rem --- Distribute by Item?
 				account$=ivm01a.gl_inv_acct$
 				
 				if a9$="Y" then
-					rem dim d1$(40)
 					find record (ivm02a_dev,key=firm_id$+ive11a.warehouse_id$+ive11a.item_id$,dom=*endif) ivm02a$
 					find record (arc_distcode_dev,key=firm_id$+"D"+ivm02a.dist_code$,dom=*endif) arc_distcode_rec$
 					account$=arc_distcode_rec.gl_inv_acct$
@@ -428,46 +396,32 @@ rem --- Print GL recap and run update
 
 trans_heading: rem --- Trans Heading
 
-	ignore=fnblank(columns)
-	
-	ignore=fnblank(2)
-	OutVect!.addItem("Reference "+ive01a.iv_trans_no$)
-	ignore=fnblank(columns-3)
-	
-	ignore=fnblank(2)
-	OutVect!.addItem("Transaction Code: "+ive01a.trans_code$+" "+ivm10b.code_desc$)
-	ignore=fnblank(columns-3)
-
-	ignore=fnblank(2)
-	OutVect!.addItem("Transaction Date: "+fndate$(ive01a.trans_date$))
-	ignore=fnblank(columns-3)
-
-	ignore=fnblank(2)
-	OutVect!.addItem("Comment: "+ive01a.trans_cmt$)
-	ignore=fnblank(columns-3)	
-	
-	ignore=fnblank(columns)
+	BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+	headings$[2]="Reference: "+ive01a.iv_trans_no$
+	headings$[3]="Transaction Code: "+ive01a.trans_code$+" "+ivm10b.code_desc$
+	headings$[4]="Transaction Date: "+fndate$(ive01a.trans_date$)
+	headings$[5]="Comment: "+ive01a.trans_cmt$
+	HdrVect!.addItem(headings$[2])
+	HdrVect!.addItem(headings$[3])
+	HdrVect!.addItem(headings$[4])
+	HdrVect!.addItem(headings$[5])
 	
     return
 
 ref_break: rem --- Reference break, previous totals
 
     if prev_trans_no$<>"" then
-        rem if l+1>l9 gosub report_heading
-        rem print (printer_dev)@(o[6]-27),"Total For Reference ",prev_trans_no$,@(o[6]),prev_total:m1$
 		TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 		ignore=fnblank(2)
 		OutVect!.addItem("Total For Reference "+prev_trans_no$)
 		ignore=fnblank(2)
 		OutVect!.addItem(str(prev_total))
-		ignore=fnblank(columns-6)
-        rem let l=l+1
+		ignore=fnblank(columns-5)
     endif
 	
 rem --- New reference
 
     if !(last_time) then
-        rem dim x0$(32),x1$(g[4])
         prev_trans_no$=ive01a.iv_trans_no$
 		ivm10b.code_desc$="(Not On File)"
 		prev_total=0
