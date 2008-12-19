@@ -157,9 +157,11 @@ rem --- Initializations
 
 rem --- Validate arguments
 
-    when$=refs$[0]
+    ymd$=refs$[0]
     clock$=""
-    if len(when$)=8 then ymd$=fndate$(when$)
+	if len(ymd$)<>8 then goto bad_date_error
+	check_date$=fndate$(ymd$)
+	if check_date$=ymd$ then goto bad_date_error
     if pos(action$="IC,PO,OE,CO,UC,TA,OO,PI",3)=0
         call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,ymd$,period$,year$
         if period$="" then period$=current_per$,year$=current_year$
@@ -609,6 +611,11 @@ no_item_error: rem --- No inventory item passed
 
 	status=901
 	goto std_exit
+
+bad_date_error: rem --- Date in wrong format
+
+	status=902
+	goto std_exit
 	
 init_trans_hist_rec: rem --- Initialize IVT-01/IVT-04 Transaction History Record
 
@@ -803,10 +810,11 @@ rem --- Format inventory item description
 
 rem --- Date/time handling functions
 
+	rem --- yyyymmdd -> mm/dd/yy, unchanged if error
     def fndate$(q$)
         q1$=""
-        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
-        if q1$="" q1$=q$
+        q1$=date( jul( num(q$(1,4)), num(q$(5,2)), num(q$(7,2)),err=*next ),err=*next )
+        if q1$="" then q1$=q$
         return q1$
     fnend
 
