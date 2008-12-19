@@ -26,10 +26,10 @@ rem --- Open/Lock files
     files=16,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
-    files$[3]="arm-10",ids$[3]="ARC_TERMCODE"
+    files$[3]="arc_termcode",ids$[3]="ARC_TERMCODE"
     files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
-    files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
-    files$[6]="ivm-07",ids$[6]="IVM_LSMASTER"
+rem     files$[5]="ivm-02",ids$[5]="IVM_ITEMWHSE"
+rem     files$[6]="ivm-07",ids$[6]="IVM_LSMASTER"
     files$[7]="ope-01",ids$[7]="OPE_ORDHDR"
     files$[8]="ope-02",ids$[8]="OPE_CREDCUST"
     files$[9]="ope-03",ids$[9]="OPE_CREDDATE"
@@ -37,17 +37,17 @@ rem --- Open/Lock files
     files$[11]="ope-11",ids$[11]="OPE_ORDDET"
     files$[12]="ope-21",ids$[12]="OPE_ORDLSDET"
     files$[13]="opm-02",ids$[13]="OPC_LINECODE"
-    files$[14]="ARS_PARAMS",ids$[14]=files$[14]
-    files$[15]="ARS_PARAMS",ids$[15]=files$[15]
-    files$[16]="IVS_PARAMS",ids$[16]=files$[16]
+    files$[14]="ars_params",ids$[14]="ARS_PARAMS"
+    files$[15]="ars_credit",ids$[15]="ARS_CREDIT"
+    files$[16]="ivs_params",ids$[16]="IVS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     arm02_dev=channels[2]
     arm10_dev=channels[3]
     ivm01_dev=channels[4]
-    ivm02_dev=channels[5]
-    ivm07_dev=channels[6]
+rem    ivm02_dev=channels[5]
+rem     ivm07_dev=channels[6]
     ope01_dev=channels[7]
     ope02_dev=channels[8]
     ope03_dev=channels[9]
@@ -62,7 +62,8 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
     dim arm02a$:templates$[2],arm10a$:templates$[3],ivm01a$:templates$[4]
-    dim ivm02a$:templates$[5],ivm07a$:templates$[6],ope01a$:templates$[7]
+rem     dim ivm02a$:templates$[5],ivm07a$:templates$[6],
+    dim ope01a$:templates$[7]
     dim ope02a$:templates$[8],ope03a$:templates$[9],ope04a$:templates$[10]
     dim ope11a$:templates$[11],ope21a$:templates$[12],opm02a$:templates$[13]
     dim ars01a$:templates$[14],ars01c$:templates$[15],ivs01a$:templates$[16]
@@ -75,7 +76,7 @@ rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    ars01c_key$=firm_id$+"AR00"
+    ars01c_key$=firm_id$+"AR01"
     find record (ars01c_dev,key=ars01c_key$,err=std_missing_params) ars01c$
     ivs01a_key$=firm_id$+"IV00"
     find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
@@ -111,14 +112,14 @@ rem --- Initialize Data
 
 rem --- Additional File Opens
 
-    if ls$="Y" then
-        files$[12]="ope-21"
-        files$[13]="ivm-07"
-        call pgmdir$+"adc_fileopen.aon",1,12,files,files$[all],options$[all],channels[all],batch,status
-        if status goto std_exit
-        ope21_dev=channels[12]
-        ivm07_dev=channels[13]
-    endif
+rem     if ls$="Y" then
+rem         files$[12]="ope-21"
+rem         files$[13]="ivm-07"
+rem         call pgmdir$+"adc_fileopen.aon",1,12,12,files$[all],options$[all],channels[all],batch,status
+rem         if status goto std_exit
+rem         ope21_dev=channels[12]
+rem        ivm07_dev=channels[13]
+rem     endif
 
 rem --- Initialize Progress Meter
 
@@ -204,31 +205,31 @@ Order_End: rem --- End of Order Here
 
         if new$="YES"
             ope01a.print_status$="N"
-            if ars01c.SYS_INSTALL$="Y"
+            if ars01c.sys_install$="Y"
                 credit$="1"; rem "Initialize Credit Okay
                 read record (arm02_dev,key=firm_id$+ope01a.customer_id$+ope01a.ar_type$,dom=Credit_Initialize)arm02a$
                 call pgmdir$+"opc_ca.bbx",ope01_dev,arm02_dev,firm_id$,ope01a.customer_id$,c9$,credit$,i6$,0
 Credit_Initialize:
-                if credit$<>"1"
-                    ope01a.credit_flag$="C"
-                    gosub Update_Credit
 
-rem goto Not_Credit; rem "Credit Not Okay
-                    read record (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=Record_Write) arm10a$
-                    if arm10a.cred_hold$="Y"
-                        ope01a.credit_flag$="C"
-                        gosub Update_Credit
-                    endif
-rem goto Not_Credit
-Record_Write:
-                    ope04a_key$=firm_id$+"O"+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$
-                    write record (ope04_dev,key=ope04a_key$) ope04a$
-                endif
-                ope01a.lock_status$="N"
-                write record (ope01_dev) ope01a$
-                if t9$="END" return
+                if credit$<>"1" goto Bad_Credit; REM "Credit Not Okay
+                readrecord (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=Update_Print)arm10a$
+                if arm10a.cred_hold$="Y" goto Bad_Credit
+
+Update_Print:
+                ope04a_key$=firm_id$+"O"+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$
+                writerecord (ope04_dev,key=ope04a_key$)ope04a$
+                goto Unlock_Order
+
+Bad_Credit:
+                ope01a.credit_flag$="C"
+                gosub Update_Credit
             endif    
         endif    
+
+Unlock_Order:
+        ope01a.lock_status$="N"
+        write record (ope01_dev) ope01a$
+        if t9$="END" THEN RETURN
     wend
 
 rem --- End of orders
