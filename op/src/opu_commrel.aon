@@ -195,7 +195,7 @@ Order_End: rem --- End of Order Here
             if ars01c.sys_install$="Y"
                 credit$="1"; rem "Initialize Credit Okay
                 read record (arm02_dev,key=firm_id$+ope01a.customer_id$+ope01a.ar_type$,dom=Credit_Initialize)arm02a$
-                call pgmdir$+"opc_ca.aon",ope01_dev,arm02_dev,firm_id$,ope01a.customer_id$,c9$,credit$,i6$,0
+                call pgmdir$+"opc_creditmgmnt.aon",ope01_dev,arm02_dev,firm_id$,ope01a.customer_id$,c9$,credit$,i6$,0
 Credit_Initialize:
 
                 if credit$<>"1" goto Bad_Credit; REM "Credit Not Okay
