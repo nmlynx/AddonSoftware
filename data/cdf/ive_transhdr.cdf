@@ -125,12 +125,11 @@ rem --- Setup user template and object
 	UserObj! = SysGUI!.makeVector(); rem to store objects in
 
 	user_tpl_str$ = ""
-	user_tpl_str$ = user_tpl_str$ + "gl:c(1),ls:c(1),glw11:c(1*),m9:c(1*),prod_type:c(3),"
+	user_tpl_str$ = user_tpl_str$ + "gl:c(1),glw11:c(1*),ls:c(1),lf:c(1),m9:c(1*),prod_type:c(3),"
 	user_tpl_str$ = user_tpl_str$ + "location_obj:u(1),qoh_obj:u(1),commit_obj:u(1),avail_obj:u(1),"
 	user_tpl_str$ = user_tpl_str$ + "trans_post_gl:c(1),trans_type:c(1),trans_adj_acct:c(1*),"
 	user_tpl_str$ = user_tpl_str$ + "this_item_lot_or_ser:u(1),lotted:u(1),serialized:u(1),ls_found:u(1),"
-	user_tpl_str$ = user_tpl_str$ + "multi_whse:u(1),warehouse_id:c(2),avail:n(1*),commit:n(1*),qoh:n(1*),"
-	user_tpl_str$ = user_tpl_str$ + "setup_checked:u(1)"
+	user_tpl_str$ = user_tpl_str$ + "multi_whse:u(1),warehouse_id:c(2),avail:n(1*),commit:n(1*),qoh:n(1*)"
 	dim user_tpl$:user_tpl_str$
 
 rem --- Setup for display fields on header
@@ -154,8 +153,6 @@ rem --- Get parameter records
 
 	find record(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
 	find record(gls01_dev,key=firm_id$+"GL00",err=set_iv_params) gls01a$
-	rem lf$ = "N"
-	ls$ = "N"
 
 	set_iv_params:
 	user_tpl.multi_whse$ = ivs01a.multi_whse$
@@ -171,10 +168,11 @@ rem --- Numeric masks
 	user_tpl.m9$ = ivs01a.price_mask$
 	call pgmdir$+"adc_sizemask.aon",user_tpl.m9$,ignore,8,10
 
-rem --- Lotted flags
+rem --- Lotted flags, Lifo/fifo
 
-	user_tpl.lotted=0
-	user_tpl.serialized=0
+	user_tpl.lotted = 0
+	user_tpl.serialized = 0
+	user_tpl.ls$ = "N"
 
 	if ivs01a.lotser_flag$="L" then 
 		user_tpl.ls$="Y"
@@ -186,7 +184,7 @@ rem --- Lotted flags
 		endif
 	endif
 
-	rem if pos(ivs01a.lifofifo$="LF") then lf$="Y"
+	if pos(ivs01a.lifofifo$="LF") then user_tpl.lf$="Y" else user_tpl.lf$ = "N"
 
 rem --- Is GL installed?
 
