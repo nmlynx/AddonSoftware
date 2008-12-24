@@ -149,8 +149,6 @@ rem --- Initializations
 
     precision num(ivs01a.precision$)
 	dim o[8]
-	dim lf[10]
-	dim item$[10]
     width=132
     page=0
     units=0
@@ -240,10 +238,20 @@ rem --- Additional File Opens
     glm01_dev=channels[24]
 	glw11_dev=channels[25]
 	
-    lf[0]=ivm04_dev
-    lf[1]=ivw04_dev
-    lf[2]=ivm02_dev
+rem --- Lifo/fifo setup
+	
+	dim chans[10]
+	dim tmpls$[10]
+	dim item$[10]
 
+	chans[1]=ivm02_dev
+    chans[2]=ivm04_dev
+    chans[3]=ivw04_dev
+	
+    tmpls$[1]=templates$[5];  rem ivm-02
+	tmpls$[2]=templates$[22]; rem ivm-04
+	tmpls$[3]=templates$[23]; rem ivw-04
+	
 rem --- Final inits, Position file
 	
 	prev_trans_no$=""
@@ -287,7 +295,6 @@ rem --- Not lotted
 rem --- LIFO/FIFO?
 
 				if lf$ = "Y" and ivm10b.trans_type$ <> "C" then
-					item$[0]=firm_id$
 					item$[1]=ive11a.warehouse_id$
 					item$[2]=ive11a.item_id$
 					lf_date$=ive01a.trans_date$
@@ -302,13 +309,13 @@ rem --- LIFO/FIFO?
 						action$=ivs01a.lifofifo$+"R"
 					endif
 					
-					call pgmdir$+"ivc_lf.bbx",action$,type$,lf_date$,lf[all],item$[all],places,abs(quantity),cost,ret_cost,status
+					call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,chans[all],tmpls$[all],item$[all],places,abs(quantity),cost,ret_cost,ignore_status
 					
 rem --- Cost change?
 
 					if ive11a.unit_cost<>ret_cost then
 						if ret_cost then ive11a.unit_cost=ret_cost
-						ive11a.total_cost=round(ive11a.trans_qty*ive11a.ive11a.unit_cost,2)
+						ive11a.total_cost=round(ive11a.trans_qty*ive11a.unit_cost,2)
 						write record (ive11_dev,key=ive11a.firm_id$+ive11a.iv_trans_no$+ive11a.sequence_no$) ive11a$
 					endif
 				endif
@@ -386,7 +393,7 @@ rem --- End of detail, total
 	gosub ref_break
 
 rem --- Print GL recap and run update
-	
+
 	update$="ivu_transregister.aon"
 	overlay$=update$
     if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
