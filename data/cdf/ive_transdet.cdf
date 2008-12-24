@@ -244,7 +244,8 @@ rem ==========================================================================
 get_whse_item: rem --- Get warehouse and item records and display
                rem ---  IN: item$ = the current item ID
                rem ---    : whse$ = the current warehouse
-               rem --- OUT: default values set and displayed
+               rem --- OUT: default values set and displayed,
+               rem          fields disable/enabled
 rem ==========================================================================
 
 	print "in get_whse_item: item$ = """, item$, """, whse$: """, whse$, """"; rem debug
@@ -432,13 +433,14 @@ test_ls: rem --- Test whether lot/serial# quantities are valid
 rem ==========================================================================
 
 	failed = 0
+	if !(user_tpl.this_item_lot_or_ser) then goto test_ls_end
 	dim msg_tokens$[0]
 	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 
 	rem --- Do you need an existing lot/serial#?
 	if !(user_tpl.ls_found) and 
-:		(user_tpl.trans_type$ = "C" or user_tpl.trans_type$ = "I" or
-:		(user_tpl.trans_type$ = "A" and trans_qty < 0))
+:		 (user_tpl.trans_type$ = "C" or user_tpl.trans_type$ = "I" or
+:		 (user_tpl.trans_type$ = "A" and trans_qty < 0))
 :	then
 		msg_id$ = "IV_LOT_MUST_EXIST"
 		goto test_ls_err
@@ -522,14 +524,16 @@ ls_loc_cmt: rem --- Enable/disable comment and location fields based on whether 
 rem                 IN: assumes user_tpl.ls_found is set
 rem ==========================================================================
 
-	cols! = BBjAPI().makeVector()
-	cols!.addItem(8); rem --- lot loc
-	cols!.addItem(9); rem -- lot comment
+	if user_tpl.this_item_lot_or_ser then 
+		cols! = BBjAPI().makeVector()
+		cols!.addItem(8); rem --- lot loc
+		cols!.addItem(9); rem -- lot comment
 
-	if user_tpl.ls_found then
-		util.disableGridCells(Form!, cols!)
-	else
-		util.enableGridCells(Form!, cols!)
+		if user_tpl.ls_found then
+			util.disableGridCells(Form!, cols!)
+		else
+			util.enableGridCells(Form!, cols!)
+		endif
 	endif
 
 return
@@ -643,7 +647,7 @@ rem --- Commit inventory
 	if	curr_whse$   <> prior_whse$ or 
 :		curr_item$   <> prior_item$ or 
 :		curr_qty     <> prior_qty   or
-:        curr_lotser$ <> prior_lotser$
+:     curr_lotser$ <> prior_lotser$
 :	then
 
 		rem --- Initialize inventory item update
@@ -696,8 +700,8 @@ rem --- Commit inventory
 
 		rem --- New record or item and warehouse haven't changed: commit difference
 
-		if (prior_whse$   = "" or prior_whse$   = curr_whse$) and 
-:		   (prior_item$   = "" or prior_item$   = curr_item$) and
+		if	(prior_whse$   = "" or prior_whse$   = curr_whse$) and 
+:			(prior_item$   = "" or prior_item$   = curr_item$) and
 :			(prior_lotser$ = "" or prior_lotser$ = curr_lotser$)
 :		then
 
