@@ -803,16 +803,12 @@ rem --- Format inventory item description
 rem --- Date/time handling functions
 
 	rem --- Return 1 if valid date, 0 if invalid
-    def fndate(q$)
-        q1$=""
-		if len(q$)=8 then
-			q=num(q1$,err=*next), q=jul( num(q$(1,4)), num(q$(5,2)), num(q$(7,2)),err=*next ), q1$=date(q,err=*next)
-		endif
-        return iff(q1$="", 0, 1)
-    fnend
+ 	def fndate(q$)
+		q=0
+	    q=jul(q$, "%Yl%Mz%Dz", err=*next)
+	    return q<>0
+	fnend
 
-    def fnyy$(q$)=q$(3,2)
-    def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
