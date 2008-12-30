@@ -53,6 +53,7 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 
 	rem --- save current row/column so we'll know where to set focus when we return from lot lookup
 
+	declare BBjStandardGrid grid!
 	grid! = util.getGrid(Form!)
 	return_to_row = grid!.getSelectedRow()
 	return_to_col = grid!.getSelectedColumn()
