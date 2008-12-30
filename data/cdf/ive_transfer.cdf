@@ -25,11 +25,6 @@ rem --- Display extended cost
 	gosub display_ext
 
 trans_qty_aval_end:
-[[IVE_TRANSFER.AREC]]
-rem --- Set defaults
-
-	callpoint!.setColumnData("IVE_TRANSFER.TRANS_QTY","1")
-	callpoint!.setStatus("REFRESH:IVE_TRANSFER.TRANS_QTY")
 [[IVE_TRANSFER.LOTSER_NO.AVAL]]
 rem --- Validate entered lot
 
@@ -43,7 +38,7 @@ rem --- Validate entered lot
 	find record(fnget_dev(ls_file$), key=firm_id$ + whse$ + item$ + ls_no$, dom=lotser_no_aval_not_found) ls_rec$
 
 	callpoint!.setColumnData("IVE_TRANSFER.UNIT_COST", str(ls_rec.unit_cost:user_tpl.cost_mask$))
-	callpoint!.setStatus("REFRESH:IVM_ITEMWHSE.UNIT_COST")
+	callpoint!.setStatus("REFRESH:IVE_TRANSFER.UNIT_COST")
 
 	qty = num( callpoint!.getColumnData("IVE_TRANSFER.TRANS_QTY") )
 	gosub display_ext
@@ -64,6 +59,8 @@ lotser_no_aval_not_found:
 lotser_no_aval_exit:
 [[IVE_TRANSFER.LOTSER_NO.BINP]]
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
+
+	print 'show',"LOTSR_NO.BINP"; rem debug
 
 	rem --- save current row/column so we'll know where to set focus when we return from lot lookup
 	declare BBjStandardGrid grid!
@@ -146,11 +143,12 @@ rem --- Is this item lotted or serialised?
 	if user_tpl.this_item_is_lot_ser% then
 		util.enableField(callpoint!, "IVE_TRANSFER.LOTSER_NO")
 	else
+
+		rem --- Not lotted or serialized
 		util.disableField(callpoint!, "IVE_TRANSFER.LOTSER_NO")
 		callpoint!.setColumnData("IVE_TRANSFER.LOTSER_NO", "")
 		callpoint!.setColumnData("IVM_ITEMMAST.PURCHASE_UM", ivm01a.purchase_um$)
 		callpoint!.setColumnData("IVE_TRANSFER.UNIT_COST", str(ivm02a.unit_cost:user_tpl.cost_mask$))
-		callpoint!.setStatus("REFRESH")
 
 		qty = num( callpoint!.getColumnData("IVE_TRANSFER.TRANS_QTY") )
 		gosub display_ext
@@ -264,7 +262,7 @@ rem --- Set IV flags
 	user_tpl.ls$ = iff( pos(ivs01a.lotser_flag$ = "LS"), "Y", "N" )
 	user_tpl.lf$ = iff( pos(ivs01a.lifofifo$    = "LF"), "Y", "N" )
 
-	if ivs01a.lotser_flag$="S" then user_tpl.serialized%=1
+	if ivs01a.lotser_flag$ = "S" then user_tpl.serialized% = 1
 
 	util.disableField(callpoint!, "IVE_TRANSFER.LOTSER_NO")
 
@@ -327,7 +325,7 @@ rem ===========================================================================
 
 	cost = num( callpoint!.getColumnData("IVE_TRANSFER.UNIT_COST") )
 	callpoint!.setColumnData("IVE_TRANSFER.EXT_COST", str( cost*qty:user_tpl.cost_mask$ ))
-	callpoint!.setStatus("REFRESH:IVE_TRANSFER.EXT_COST")
+	callpoint!.setStatus("REFRESH")
 
 return
 
