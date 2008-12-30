@@ -25,6 +25,10 @@ class public util
 	rem --- Enable/Disable colors for grid cells
 	field public static BBjColor EnableColor!
 	field public static BBjColor DisableColor!
+	rem --- Enable/Disable values for maintenance forms
+	field public static BBjString EnableValue$ = ""
+	field public static BBjString DisableValue$ = "I"
+	
 	
 rem ==========================================================================
 rem --- Resize a Baritsa window after custom controls have been placed on it.
@@ -201,8 +205,8 @@ rem ==========================================================================
 		methodret grid!
 		
 	methodend
-	
 
+	
 rem ==========================================================================
 rem --- Disable a cell or cells on a Barista grid
 rem
@@ -252,7 +256,7 @@ rem ==========================================================================
 		#ableGridCells(Form!, cols!, #DISABLE%, int(row))
 	methodend
 	
-	rem --- Enable several cells, deefault row
+	rem --- Enable several cells, default row
 	method public static void enableGridCells(BBjTopLevelWindow Form!,  BBjVector cols!)
 		#ableGridCells(Form!, cols!, #ENABLE%, -1)
 	methodend
@@ -335,7 +339,7 @@ rem ==========================================================================
 	
 	rem --- Disable several fields
 	method public static void disableFields(Callpoint callpoint!, BBjVector fields!)
-		#ableFields(callpoint!, fields!, "D")
+		#ableFields(callpoint!, fields!, #DisableValue$)
 	methodend
 	
 	rem --- Disable one field
@@ -343,12 +347,12 @@ rem ==========================================================================
 		declare BBjVector fields!
 		fields! = BBjAPI().makeVector()
 		fields!.addItem(fld$)
-		#ableFields(callpoint!, fields!, "D")
+		#ableFields(callpoint!, fields!, #DisableValue$)
 	methodend
 	
 	rem --- Enable several fields
 	method public static void enableFields(Callpoint callpoint!, BBjVector fields!)
-		#ableFields(callpoint!, fields!, " ")
+		#ableFields(callpoint!, fields!, #EnableValue$)
 	methodend
 	
 	rem --- Enable one field
@@ -356,7 +360,7 @@ rem ==========================================================================
 		declare BBjVector fields!
 		fields! = BBjAPI().makeVector()
 		fields!.addItem(fld$)
-		#ableFields(callpoint!, fields!, " ")
+		#ableFields(callpoint!, fields!, #EnableValue$)
 	methodend
 	
 	
