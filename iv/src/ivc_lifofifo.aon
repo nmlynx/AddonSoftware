@@ -20,22 +20,23 @@ rem		For Issues, tier cost or average cost if qty spans tiers. Qty is
 rem			deducted from tier(s).
 rem		For receipts, add to tier with matching cost or create new tier.
 rem 
-rem ACTION$    : Action type (Input)
-rem              (1,1): F = FIFO       
-rem                     L = LIFO   
-rem              (2,1): I = Issue    
-rem                     R = Receipt
-rem TYPE$      : Type of call (Input)
-rem              I = Inquiry    R = Report
-rem LF_DATE$   : Transaction Date (Input)
-rem CHANNELS[n]: [1] = IVM_ITEMTIER, [2] = IVW_LFDET, [3] = IVM_ITEMWHSE (Input/Returned)
-rem ITEM$[n]   : Item Information (Input)
-rem              [0]=not used    [1]=Warehouse ID     [2]=Item
-rem PLACES     : Inventory PRECISION (Input)
-rem QUANTITY   : Transaction quantity (Input)
-rem COST       : Transaction cost (Input)
-rem RETURN_COST: Tier Cost (Returned, Average cost for multi-tier issues)
-rem STATUS     : 0=No Error (Returned)
+rem ACTION$      : Action type (Input)
+rem                (1,1): F = FIFO       
+rem                       L = LIFO   
+rem                (2,1): I = Issue    
+rem                       R = Receipt
+rem TYPE$        : Type of call (Input)
+rem                I = Inquiry    R = Report
+rem LF_DATE$     : Transaction Date (Input)
+rem CHANNELS[n]  : [1] = IVM_ITEMTIER, [2] = IVW_LFDET, [3] = IVM_ITEMWHSE (Input/Returned)
+rem TEMPLATES$[n]: From adc_fileopen.aon, do not modify (Input)
+rem ITEM$[n]     : Item Information (Input)
+rem                [0]=not used    [1]=Warehouse ID     [2]=Item
+rem PLACES       : Inventory PRECISION (Input)
+rem QUANTITY     : Transaction quantity (Input)
+rem COST         : Transaction cost (Input)
+rem RETURN_COST  : Tier Cost (Returned, Average cost for multi-tier issues)
+rem STATUS       : 0=No Error (Returned)
 
 	seterr std_error
 	setesc std_error
