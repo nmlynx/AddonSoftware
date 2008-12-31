@@ -58,15 +58,7 @@ lotser_no_aval_not_found:
 
 lotser_no_aval_exit:
 [[IVE_TRANSFER.LOTSER_NO.BINP]]
-rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
-
-	print 'show',"LOTSR_NO.BINP"; rem debug
-
-	rem --- save current row/column so we'll know where to set focus when we return from lot lookup
-	declare BBjStandardGrid grid!
-	grid! = util.getGrid(Form!)
-	return_to_row = grid!.getSelectedRow()
-	return_to_col = grid!.getSelectedColumn()
+rem --- Call the lot lookup window and set default lot
 
 	rem --- Set data for the lookup form
 	item$ = callpoint!.getColumnData("IVE_TRANSFER.ITEM_ID")
@@ -87,7 +79,6 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 	dflt_data$[3,1] = "O"; rem --- Open lots only
 
 	rem --- Call the lookup form
-
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	                       "IVC_LOTLOOKUP",
 :	                       stbl("+USER_ID"),
@@ -98,16 +89,14 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 :	                       dflt_data$[all]
 
 	rem --- Set the detail grid to the data selected in the lookup
-
 	if callpoint!.getDevObject("selected_lot") <> null() then
 		callpoint!.setColumnData( "IVE_TRANSFER.LOTSER_NO", str(callpoint!.getDevObject("selected_lot"))  )
 		user_tpl.avail = num( callpoint!.getDevObject("selected_lot_avail") )
 		callpoint!.setStatus("MODIFIED-REFRESH")
-		rem callpoint!.setStatus("REFGRID")
 	endif
 
-	rem --- return focus to where we were (lot number)
-	util.forceEdit(Form!, return_to_row, return_to_col)
+	rem --- Bring focus back to this form
+	callpoint!.setStatus("ACTIVATE")
 
 lotser_no_binp_exit:
 [[IVE_TRANSFER.ITEM_ID.AVAL]]
@@ -325,7 +314,7 @@ rem ===========================================================================
 
 	cost = num( callpoint!.getColumnData("IVE_TRANSFER.UNIT_COST") )
 	callpoint!.setColumnData("IVE_TRANSFER.EXT_COST", str( cost*qty:user_tpl.cost_mask$ ))
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setStatus("MODIFIED-REFRESH")
 
 return
 
