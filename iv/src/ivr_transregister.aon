@@ -37,15 +37,15 @@ rem --- Open/Lock files
     files=29,begfile=1,endfile=19
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
 
-	files$[1]="ARC_DISTCODE", ids$[1]=files$[1]
+	files$[1]="arc_distcode", ids$[1]="ARC_DISTCODE"
     files$[2]="ive-01",       ids$[2]="IVE_TRANSHDR"
     files$[3]="ive-11",       ids$[3]="IVE_TRANSDET"
     files$[4]="ivm-01",       ids$[4]="IVM_ITEMMAST"
     files$[5]="ivm-02",       ids$[5]="IVM_ITEMWHSE"
-    files$[6]="ARS_PARAMS",   ids$[6]=files$[6]
-    files$[7]="GLS_PARAMS",   ids$[7]=files$[7]
-    files$[8]="IVS_PARAMS",   ids$[8]=files$[8]
-	files$[9]="IVC_TRANCODE", ids$[9]=files$[9]
+    files$[6]="ars_params",   ids$[6]="ARS_PARAMS"
+    files$[7]="gls_params",   ids$[7]="GLS_PARAMS"
+    files$[8]="ivs_params",   ids$[8]="IVS_PARAMS"
+	files$[9]="ivc_trancode", ids$[9]="IVC_TRANCODE"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -124,13 +124,13 @@ rem --- Parameters
     call pgmdir$+"adc_sizemask.aon",m3$,m3,5,12
 	
     ar$="N"
-    a9$="N"
+    dist_gl_by_item$="N"
     call pgmdir$+"adc_application.aon","AR",info$[all]
     ar$=info$[20]
 	
     if ar$="N" then
         find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-        a9$=ars01a.dist_by_item$
+        dist_gl_by_item$=ars01a.dist_by_item$
     endif
 		
 rem --- Document initializations
@@ -144,6 +144,7 @@ rem --- Document initializations
 	HdrVect!=bbjAPI().getSysGui().makeVector()
 	BrkVect!=bbjAPI().getSysGui().makeVector()
 	TotVect!=bbjAPI().getSysGui().makeVector()
+	
 	rep_date$=date(0:"%Mz/%Dz/%Yd")
 	rep_date_stamp$=date(0:"%Yd%Mz%Dz")
 	rep_time$=date(0:"%hz:%mz %p")
@@ -320,8 +321,9 @@ rem --- Cost change?
 
 					if ive11a.unit_cost<>ret_cost then
 						if ret_cost then ive11a.unit_cost=ret_cost
-						ive11a.total_cost=round(ive11a.trans_qty*ive11a.unit_cost,2)
-						write record (ive11_dev,key=ive11a.firm_id$+ive11a.iv_trans_no$+ive11a.sequence_no$) ive11a$
+						ive11a.total_cost = round(ive11a.trans_qty*ive11a.unit_cost, 2)
+						ive11a$ = field(ive11a$)
+						write record (ive11_dev) ive11a$
 					endif
 				endif
 			endif
@@ -362,7 +364,7 @@ rem --- Distribute by Item?
 
 				account$=ivm01a.gl_inv_acct$
 				
-				if a9$="Y" then
+				if dist_gl_by_item$="Y" then
 					find record (ivm02a_dev,key=firm_id$+ive11a.warehouse_id$+ive11a.item_id$,dom=*endif) ivm02a$
 					find record (arc_distcode_dev,key=firm_id$+"D"+ivm02a.dist_code$,dom=*endif) arc_distcode_rec$
 					account$=arc_distcode_rec.gl_inv_acct$
@@ -400,8 +402,13 @@ rem --- End of detail, total
 rem --- Print GL recap and run update
 
 	update$="ivu_transregister.aon"
-	overlay$=update$
-    if gl$="Y" overlay$=pgmdir$+"glr_recap_DO.aon"
+	
+    if gl$="Y" then 
+		overlay$=pgmdir$+"glr_recap_DO.aon"
+	else
+		overlay$=update$
+	endif
+	
     out_action$="PRT-PDF"
     next_overlay$=overlay$
     goto std_exit
@@ -520,7 +527,9 @@ rem --- fnglobal$: Return string value of passed STBL variable
         q1$=stbl(q$,err=*next)
         return q1$
     fnend
-	
+
+rem #endinclude std_functions.src
+
 rem --- fnBlank : Create blank cells in OutVect!. No return value
    
     def fnblank(q0)
@@ -529,15 +538,16 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         next q1
         return q1
     fnend
-
-rem #endinclude std_functions.src
-
+	
 rem #include disp_message.src
 
 disp_message:rem --- Display Message Dialog
 
-    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-return
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
+rem #endinclude disp_message.src
 
 rem #include std_error.src
 
