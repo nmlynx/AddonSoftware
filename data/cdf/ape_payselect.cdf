@@ -493,6 +493,7 @@ if vectInvoicesMaster!.size()
 			ape04a.reference$=apt01a.reference$
 			ape04a.ap_inv_memo$=apt01a.ap_inv_memo$
 			ape04a.invoice_date$=apt01a.invoice_date$
+			ape04a.inv_due_date$=apt01a.inv_due_date$
 			ape04a.disc_date$=apt01a.disc_date$
 			ape04a.invoice_amt=amt_to_pay
 			ape04a.discount_amt=disc_to_take
