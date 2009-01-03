@@ -47,8 +47,20 @@ if ctl_ID=num(user_tpl.gridCreditCtlID$)
 	cust_no$=gridCredit!.getCellText(curr_row,1)
 	cust$=cust_no$
 	gosub strip_dashes
+	callpoint!.setDevObject("tick_date",gridCredit!.getCellText(curr_row,0))
+	callpoint!.setDevObject("order",gridCredit!.getCellText(curr_row,3))
+	callpoint!.setDevObject("ord_date",gridCredit!.getCellText(curr_row,4))
+	callpoint!.setDevObject("ship_date",gridCredit!.getCellText(curr_row,5))
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_CREDMNT",stbl("+USER_ID"),"INQ",firm_id$+cust$,table_chans$[all]
-
+rem --- redisplay grid
+	if user_tpl.cur_sel$="C"
+		gosub create_cust_vector
+		gosub fill_grid
+	endif
+	if user_tpl.cur_sel$="O"
+		gosub create_orders_vector
+		gosub fill_grid
+	endif
 endif
 break
 [[OPE_CREDREV.<CUSTOM>]]
@@ -288,7 +300,6 @@ rem --- add grid to store credit holds, with checkboxes for user to select one o
 	UserObj!.addItem(vectCredit!);rem vector of filtered recs from Credit recs
 
 rem --- misc other init
-	gridCredit!.setColumnEditable(0,1)
 	gridCredit!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridCredit!.setTabAction(gridCredit!.GRID_NAVIGATE_GRID)
 

@@ -1,11 +1,83 @@
+[[OPE_CREDMNT.BEND]]
+rem --- One last chance to update the tickler date
+	gosub update_tickler
+[[OPE_CREDMNT.AOPT-MDAT]]
+rem --- Modify Tickler date
+	ctl_name$="<<DISPLAY>>.TICK_DATE"
+	ctl_stat$=" "
+	gosub disable_fields
+[[OPE_CREDMNT.AOPT-RELO]]
+rem --- Release an Order from Credit Hold
+
+	gosub update_tickler
+	cust$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
+	ord$=callpoint!.getDevObject("order")
+	if cvs(ord$,2)="" goto no_rel
+
+	dim msg_tokens$[1]
+	msg_tokens$[1]=ord$
+	msg_id$="OP_CONFIRM_REL"
+	gosub disp_message
+	if msg_opt$="N" goto no_rel
+
+	ope03_dev=fnget_dev("OPE_ORDHDR")
+	dim ope03a$:fnget_tpl$("OPE_ORDHDR")
+	arc_terms_dev=fnget_dev("ARC_TERMCODE")
+	while 1
+		readrecord(ope03_dev,key=firm_id$+ope03a.ar_type$+cust$+ord$,dom=*break)ope03a$
+		rem --- allow change to Terms Code
+		callpoint!.setDevObject("terms",ope03a.terms_code$)
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_CREDTERMS",stbl("+USER_ID"),"MNT","",table_chans$[all]
+		ope03a.terms_code$=callpoint!.getDevObject("terms")
+		readrecord(arc_terms_dev,key=firm_id$+"A"+ope03a.terms_code$,dom=*next);goto good_code
+		continue
+good_code:
+		ope03a.credit_flag$="R"
+		ope03a$=field(ope03a$)
+		writerecord(ope03_dev)ope03a$
+		break
+	wend
+
+	gosub remove_tickler
+
+rem 6200 REM " --- Print the order?
+rem 6230 LET V0$="S",V1$="C",V2$="",V3$="",V4$="Order Has Been Released (<Enter>=C
+rem 6230:ontinue"
+rem 6235 IF POS(" "<>A0$)>0 AND R0$<>"" THEN LET V4$=V4$+"/<F1>=Print/<F3>=Select
+rem 6235:Printer"
+rem 6240 LET V4$=V4$+")",V0=1,V1=FNV(V4$),V2=22
+rem 6250 GOSUB 7000
+rem 6260 IF V3=3 THEN GOSUB 6500; GOTO 6200
+rem 6280 IF V3=1 THEN GOTO 6400
+rem 6300 REM " --- Print the order!!
+rem 6330 GOTO 1000
+rem 6400 REM " --- Print it here
+rem 6410 IF R0$="" THEN GOTO 6200
+rem 6420 LET PRTR_DEV=UNT
+rem 6430 LET SELECTPR$=R2$(15,2)+FORMAT$
+rem 6440 CALL "SYC.GA",PRTR_DEV,0,"Order Pick List Printing",SELECTPR$,STATUS
+rem 6450 IF STATUS THEN GOTO 6200
+rem 6470 DIM W1$(64),W[14],S$(11)
+rem 6480 LET O9=2,O9$="ARM.QA"; RUN "OPR.PA"
+rem 6500 REM " --- Printer Select
+rem 6510 DIM OPTION$[5]; LET OPTION$[1]="ORDER"
+rem 6520 CALL "SYC.QP",STAT,OPTION$[ALL]
+rem 6530 IF OPTION$[1]<>"EXIT" THEN LET R2$(15,2)=OPTION$[1]
+rem 6540 IF LEN(OPTION$[1])>2 THEN LET FORMAT$=OPTION$[1](3)
+rem 6560 PRINT 'SB',@(16,1),R2$(15,2),'SF'
+rem 6590 RETURN
+
+no_rel:
+	callpoint!.setStatus("REFRESH")
 [[OPE_CREDMNT.AOPT-CMTS]]
 rem --- Comment Maintenance
-cust_id$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="CUSTOMER_ID"
-dflt_data$[1,1]=cust_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+	gosub update_tickler
+	cust_id$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cust_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "ARM_CUSTCMTS",
 :                       user_id$,
 :                   	"MNT",
@@ -14,15 +86,16 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "",
 :                       dflt_data$[all]
 
-gosub disp_cust_comments
+	gosub disp_cust_comments
 [[OPE_CREDMNT.AOPT-IDTL]]
 rem Invoice Dtl Inquiry
-cp_cust_id$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="CUSTOMER_ID"
-dflt_data$[1,1]=cp_cust_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+	gosub update_tickler
+	cp_cust_id$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "ARR_INVDETAIL",
 :                       user_id$,
 :                   	"",
@@ -32,6 +105,7 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       dflt_data$[all]
 [[OPE_CREDMNT.AOPT-ORIV]]
 rem Order/Invoice History Inq
+	gosub update_tickler
 	cp_cust_id$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
 	user_id$=stbl("+USER_ID")
 	dim dflt_data$[2,1]
@@ -46,23 +120,39 @@ rem Order/Invoice History Inq
 :		"",
 :		dflt_data$[all]
 [[OPE_CREDMNT.ADIS]]
-rem --- show customer comments
+rem --- Set display fields
+	tick_date$=callpoint!.getDevObject("tick_date")
+	ord$=callpoint!.getDevObject("order")
+	ord_date$=callpoint!.getDevObject("ord_date")
+	ship_date$=callpoint!.getDevObject("ship_date")
 
-cust_id$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
-gosub disp_cust_comments
+	callpoint!.setColumnData("<<DISPLAY>>.TICK_DATE",tick_date$(5,4)+tick_date$(1,4))
+	callpoint!.setColumnData("<<DISPLAY>>.ORD",ord$)
+	if cvs(ord_date$,2)<>"" callpoint!.setColumnData("<<DISPLAY>>.ORD_DATE",ord_date$(5,4)+ord_date$(1,4))
+	if cvs(ship_date$,2)<>"" callpoint!.setColumnData("<<DISPLAY>>.SHP_DATE",ship_date$(5,4)+ship_date$(1,4))
+
+	cust_id$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
+	gosub disp_cust_comments
 [[OPE_CREDMNT.BSHO]]
-num_files=1
-dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-open_tables$[1]="ARM_CUSTCMTS",open_opts$[1]="OTA"
-gosub open_tables
-arm05_dev=num(open_chans$[1])
+rem --- Open tables
+	num_files=4
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ARM_CUSTCMTS",open_opts$[1]="OTA"
+	open_tables$[2]="OPE_ORDHDR",open_opts$[1]="OTA"
+	open_tables$[3]="ARC_TERMCODE",open_opts$[1]="OTA"
+	open_tables$[4]="OPE_CREDDATE",open_opts$[1]="OTA"
+	gosub open_tables
+	arm05_dev=num(open_chans$[1])
+	ope03_dev=num(open_chans$[2])
+	arc_terms_dev=num(open_chans$[3])
+	ope03_dev=num(open_chans$[4])
 
 rem --- Enable 2 credit fields
-ctl_name$="ARM_CUSTDET.CREDIT_LIMIT"
-ctl_stat$=" "
-gosub disable_fields
-ctl_name$="ARM_CUSTDET.CRED_HOLD"
-gosub disable_fields
+	ctl_name$="ARM_CUSTDET.CREDIT_LIMIT"
+	ctl_stat$=" "
+	gosub disable_fields
+	ctl_name$="ARM_CUSTDET.CRED_HOLD"
+	gosub disable_fields
 [[OPE_CREDMNT.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls
@@ -96,4 +186,32 @@ rem --- You must pass in cust_id$ because we don't know whether it's verified or
 	wend
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
 	callpoint!.setStatus("REFRESH")
+return
+
+update_tickler: rem --- Modify Tickler date
+	ctl_name$="<<DISPLAY>>.TICK_DATE"
+	ctl_stat$="D"
+	gosub disable_fields
+	ope03_dev=fnget_dev("OPE_CREDDATE")
+	dim ope03a$:fnget_tpl$("OPE_CREDDATE")
+	gosub remove_tickler
+	tick_date$=callpoint!.getColumnData("<<DISPLAY>>.TICK_DATE")
+	ord$=callpoint!.getDevObject("order")
+	cust_no$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
+	ope03a.firm_id$=firm_id$
+	ope03a.rev_date$=tick_date$
+	ope03a.customer_id$=cust_no$
+	ope03a.order_no$=ord$
+	ope03a$=field(ope03a$)
+	writerecord(ope03_dev)ope03a$
+	callpoint!.setDevObject("tick_date",tick_date$)
+return
+
+remove_tickler:
+	ope03_dev=fnget_dev("OPE_CREDDATE")
+	dim ope03a$:fnget_tpl$("OPE_CREDDATE")
+	tick_date$=callpoint!.getDevObject("tick_date")
+	ord$=callpoint!.getDevObject("order")
+	cust_no$=callpoint!.getColumnData("OPE_CREDMNT.CUSTOMER_ID")
+	remove(ope03_dev,key=firm_id$+tick_date$(5,4)+tick_date$(1,4)+cust_no$+ord$,dom=*next)
 return
