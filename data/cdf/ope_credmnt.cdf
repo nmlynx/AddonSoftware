@@ -40,32 +40,14 @@ good_code:
 
 	gosub remove_tickler
 
-rem 6200 REM " --- Print the order?
-rem 6230 LET V0$="S",V1$="C",V2$="",V3$="",V4$="Order Has Been Released (<Enter>=C
-rem 6230:ontinue"
-rem 6235 IF POS(" "<>A0$)>0 AND R0$<>"" THEN LET V4$=V4$+"/<F1>=Print/<F3>=Select
-rem 6235:Printer"
-rem 6240 LET V4$=V4$+")",V0=1,V1=FNV(V4$),V2=22
-rem 6250 GOSUB 7000
-rem 6260 IF V3=3 THEN GOSUB 6500; GOTO 6200
-rem 6280 IF V3=1 THEN GOTO 6400
-rem 6300 REM " --- Print the order!!
-rem 6330 GOTO 1000
-rem 6400 REM " --- Print it here
-rem 6410 IF R0$="" THEN GOTO 6200
-rem 6420 LET PRTR_DEV=UNT
-rem 6430 LET SELECTPR$=R2$(15,2)+FORMAT$
-rem 6440 CALL "SYC.GA",PRTR_DEV,0,"Order Pick List Printing",SELECTPR$,STATUS
-rem 6450 IF STATUS THEN GOTO 6200
-rem 6470 DIM W1$(64),W[14],S$(11)
-rem 6480 LET O9=2,O9$="ARM.QA"; RUN "OPR.PA"
-rem 6500 REM " --- Printer Select
-rem 6510 DIM OPTION$[5]; LET OPTION$[1]="ORDER"
-rem 6520 CALL "SYC.QP",STAT,OPTION$[ALL]
-rem 6530 IF OPTION$[1]<>"EXIT" THEN LET R2$(15,2)=OPTION$[1]
-rem 6540 IF LEN(OPTION$[1])>2 THEN LET FORMAT$=OPTION$[1](3)
-rem 6560 PRINT 'SB',@(16,1),R2$(15,2),'SF'
-rem 6590 RETURN
+rem --- Print the order?
+
+	msg_id$="OP_ORDREL"
+	gosub disp_message
+	if msg_opt$="N" goto no_rel
+escape;rem what's cust$ and ord$
+	x$=stbl("on_demand","Y"+cust$+ord$)
+	run "opr_oderpicklst.aon"
 
 no_rel:
 	callpoint!.setStatus("REFRESH")
