@@ -1,3 +1,15 @@
+[[IVE_TRANSDET.AGRN]]
+print "after grid row entry (AGRN)"; rem debug
+
+rem --- Set item/warehouse defaults
+
+	item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	gosub get_whse_item
+
+rem --- Disable cost entry until we know it's legal
+
+	util.disableGridCell(Form!, 10); rem --- Cost
 [[IVE_TRANSDET.LOTSER_NO.AVAL]]
 print "in LOTSER_NO.AVAL"; rem debug
 
@@ -104,13 +116,14 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 	
 [[IVE_TRANSDET.BWRI]]
 print "before record write (BWRI)"; rem debug
+
 [[IVE_TRANSDET.BUDE]]
 print "before record undelete (BUDE)"; rem debug
 
 rem --- Re-commit quantity
 
 	status = 999
-	call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	if status then goto std_exit
 
 	curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
@@ -131,7 +144,7 @@ rem --- Re-commit quantity
 		items$[1] = curr_whse$
 		items$[2] = curr_item$
 		items$[3] = curr_lotser$
-		call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 [[IVE_TRANSDET.BDEL]]
 print "before record delete (BDEL)"; rem debug
@@ -139,7 +152,7 @@ print "before record delete (BDEL)"; rem debug
 rem --- Uncommit quantity
 
 	status = 999
-	call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	if status then goto std_exit
 
 	curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
@@ -160,7 +173,7 @@ rem --- Uncommit quantity
 		items$[1] = curr_whse$
 		items$[2] = curr_item$
 		items$[3] = curr_lotser$
-		call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 [[IVE_TRANSDET.AREC]]
 print "after new record (AREC)"; rem debug
@@ -181,26 +194,13 @@ rem --- Display defaults for this row
 print "after array transfer (ARAR)"; rem debug
 [[IVE_TRANSDET.AGDR]]
 print "after grid display row (AGDR)"; rem debug
-print "row =", callpoint!.getValidationRow(); rem debug
-
-rem --- Set item/warehouse defaults
-
-	item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	gosub get_whse_item
-
-rem --- Enter cost only for receipts and adjusting up (that is, incoming)
-
-	if user_tpl.trans_type$ <> "R" and (user_tpl.trans_type$ <> "A" or trans_qty < 0) then
-		print "disabling cost editing"; rem debug
-		util.disableGridCell( Form!, 10, callpoint!.getValidationRow() )
-	endif
 [[IVE_TRANSDET.AGDS]]
 print "after grid display (AGDS)"; rem debug
 [[IVE_TRANSDET.AGCL]]
 print "after grid clear (AGCL)"; rem debug
 
-	rem --- Does it matter where we put the "use"?
+	rem --- We'll be using the "util" object throughout.
+	rem --- The "use" just needs to be earlier than the first invocation.
 	use ::ado_util.src::util
 [[IVE_TRANSDET.TRANS_QTY.BINP]]
 print "in TRANS_QTY.BINP"; rem debug
@@ -211,7 +211,7 @@ rem --- Serialized receipt or issue must be 1
 		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
 			if num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") ) = 0 then
 				callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY","1")
-				callpoint!.setStatus("REFRESH:IVE_TRANSDET.TRANS_QTY")
+				callpoint!.setStatus("MODIFIED-REFRESH")
 			endif
 		endif
 	endif
@@ -419,9 +419,6 @@ rem ==========================================================================
 test_qty_err: rem --- Failed
 
 	gosub disp_message
-	callpoint!.setStatus("ABORT"); rem bogus non-numeric error after message
-	rem callpoint!.setStatus("EXIT"); rem does not restart edit qty
-	rem util.forceEdit(Form!, callpoint!.getValidationRow(), 6); rem --- qty
 	failed = 1
 
 test_qty_end:
@@ -481,9 +478,6 @@ rem ==========================================================================
 test_ls_err: rem --- Failed
 
 	gosub disp_message
-	callpoint!.setStatus("ABORT"); rem bogus non-numeric error after message
-	rem callpoint!.setStatus("EXIT"); rem does not restart edit qty
-	rem util.forceEdit(Form!, callpoint!.getValidationRow(), 6); rem --- qty
 	failed = 1
 
 test_ls_end:
@@ -554,8 +548,8 @@ rem --- Check the transaction qty
 		gosub calc_ext_cost
 
 		rem --- Enter cost only for receipts and adjusting up (that is, incoming)
-		if user_tpl.trans_type$ <> "R" and (user_tpl.trans_type$ <> "A" or trans_qty < 0) then
-			util.disableGridCell(Form!, 10); rem --- Cost
+		if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
+			util.enableGridCell(Form!, 10); rem --- Cost
 		endif
 
 	endif
@@ -572,13 +566,25 @@ rem --- Is this row deleted?
 		break; rem --- exit callpoint
 	endif
 
-rem --- Check lot/serial# data if necessary
+rem --- Tests to make sure trans qty is correct
 
-	gosub test_ls
+	if user_tpl.this_item_lot_or_ser then 
 
-	if failed then 
-		print "failed L/S tests, exitting"; rem debug
-		break; rem --- exit callpoint
+		gosub test_ls
+		if failed then
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
+
+	else
+
+		trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+		gosub test_qty
+		if failed then
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
+
 	endif
 
 rem --- Commit inventory
@@ -655,7 +661,7 @@ rem --- Commit inventory
 
 		print "initializing ATAMO..."
 		status = 999
-		call pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 		if status then goto std_exit
 
 		rem --- Items or warehouses are different: uncommit previous
@@ -681,7 +687,7 @@ rem --- Commit inventory
 					refs[0] = prior_qty
 				endif
 				
-				call pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then escape; rem problem uncommitting previous qty
 
 			endif
@@ -694,7 +700,7 @@ rem --- Commit inventory
 			items$[3] = curr_lotser$
 			refs[0]   = curr_qty 
 
-			call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 			if status then escape; rem problem committing 
 
 		endif
@@ -714,7 +720,7 @@ rem --- Commit inventory
 			items$[3] = curr_lotser$
 			refs[0]   = curr_qty - prior_qty
 
-			call pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 			if status then escape; rem problem committing 
 
 		endif
@@ -724,13 +730,6 @@ rem --- Commit inventory
 	endif
 [[IVE_TRANSDET.BGDR]]
 print "before grid display row (BGDR)"; rem debug
-print "row =", callpoint!.getValidationRow(); rem debug
-
-rem --- If this is not multi-warehouse, display the default
-
-	if user_tpl.multi_whse$ <> "Y" then
-		callpoint!.setColumnData("IVE_TRANSDET.WAREHOUSE_ID",user_tpl.warehouse_id$)
-	endif
 [[IVE_TRANSDET.ITEM_ID.AVAL]]
 print "in ITEM_ID After Column Validation (AVAL)"; rem debug
 
