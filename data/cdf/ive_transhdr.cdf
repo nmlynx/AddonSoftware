@@ -34,7 +34,7 @@ rem --- You can't modify the trans code use you've entered the record
 	orig_trans_code$ = callpoint!.getColumnDiskData("IVE_TRANSHDR.TRANS_CODE")
 
 	if cvs( orig_trans_code$, 2 ) <> "" and trans_code$ <> orig_trans_code$ then
-		call stbl("+DIR_SYP")+"bac_message.bbj","IV_TRANS_CODE_CHANGE",msg_tokens$[all],msg_opt$,table_chans$[all]
+		callpoint!.setMessage("IV_TRANS_CODE_CHANGE")
 		callpoint!.setStatus("ABORT")
 	endif
 [[IVE_TRANSHDR.TRANS_CODE.AVAL]]
@@ -47,15 +47,17 @@ rem --- Get trans code record and set flags
 [[IVE_TRANSHDR.TRANS_DATE.AVAL]]
 rem --- Does date fall into the GL period?
 
-if user_tpl.gl$ = "Y" then
-	date$ = callpoint!.getUserInput()
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",date$,"Y",period$,year$,status
-	if status > 99 then callpoint!.setStatus("ABORT")
-endif
+	if user_tpl.gl$ = "Y" then
+		date$ = callpoint!.getUserInput()
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",date$,"Y",period$,year$,status
+		if status > 99 then callpoint!.setStatus("ABORT")
+	endif
 [[IVE_TRANSHDR.<CUSTOM>]]
+rem --------------------------------------------------------------------------
 get_trans_rec: rem --- Get Transaction Code Record
                rem  IN: trans_code$, file opened
                rem OUT: flags set
+rem --------------------------------------------------------------------------
 
 	transcode_dev  = fnget_dev("IVC_TRANCODE")
 	trans_rec_tpl$ = fnget_tpl$("IVC_TRANCODE")
@@ -78,7 +80,9 @@ get_trans_rec: rem --- Get Transaction Code Record
 
 return
 
+rem --------------------------------------------------------------------------
 rem #include fnget_control.src
+rem --------------------------------------------------------------------------
 
 	rem   IN: ctl_name$    = name of control
 	rem  OUT: get_control! = control object
@@ -92,7 +96,9 @@ rem #include fnget_control.src
 
 rem #endinclude fnget_control.src
 
+rem --------------------------------------------------------------------------
 #include std_missing_params.src
+rem --------------------------------------------------------------------------
 [[IVE_TRANSHDR.BSHO]]
 print 'show', ; rem debug
 
@@ -129,8 +135,11 @@ rem --- Setup user template and object
 	user_tpl_str$ = user_tpl_str$ + "location_obj:u(1),qoh_obj:u(1),commit_obj:u(1),avail_obj:u(1),"
 	user_tpl_str$ = user_tpl_str$ + "trans_post_gl:c(1),trans_type:c(1),trans_adj_acct:c(1*),"
 	user_tpl_str$ = user_tpl_str$ + "this_item_lot_or_ser:u(1),lotted:u(1),serialized:u(1),ls_found:u(1),"
-	user_tpl_str$ = user_tpl_str$ + "multi_whse:u(1),warehouse_id:c(2),avail:n(1*),commit:n(1*),qoh:n(1*)"
+	user_tpl_str$ = user_tpl_str$ + "multi_whse:u(1),warehouse_id:c(2),avail:n(1*),commit:n(1*),qoh:n(1*),"
+	user_tpl_str$ = user_tpl_str$ + "pgmdir:c(1*)"
 	dim user_tpl$:user_tpl_str$
+
+	user_tpl.pgmdir$ = pgmdir$
 
 rem --- Setup for display fields on header
 
