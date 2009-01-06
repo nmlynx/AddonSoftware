@@ -75,7 +75,7 @@ rem --- Set Report Parameters/create report object
 
 	locale$ = stbl("!LOCALE")
 	locale$ = stbl("+USER_LOCALE",err=*next)
-	report!.setLocaleFromString(locale$)
+	report!.setLocale(locale$)
 
 rem --- Fill Report and Show
 
