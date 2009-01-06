@@ -60,7 +60,7 @@ goto std_exit
 
 create_sproc_def:
     SQLPREP(chan) sqlprep$
-    SQLEXEC(chan,err=*next);rem err=*next is currently there only because the create proc command gets upset if .prc file already exists...should be fixed soon. (12/31/08)
+    SQLEXEC(chan)
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 return
 
