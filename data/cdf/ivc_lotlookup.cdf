@@ -5,17 +5,17 @@ rem --- open files
 
 	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="APM_VENDMAST",open_opts$[1]="OTA"
-	open_tables$[2]="IVM_LSMASTER",open_opts$[2]="OTA"
-	open_tables$[3]="APS_PARAMS",open_opts$[3]="OTA"
-	open_tables$[4]="IVS_PARAMS",open_opts$[4]="OTA"
+	open_tables$[1]="APM_VENDMAST", open_opts$[1]="OTA"
+	open_tables$[2]="IVM_LSMASTER", open_opts$[2]="OTA"
+	open_tables$[3]="APS_PARAMS",   open_opts$[3]="OTA"
+	open_tables$[4]="IVS_PARAMS",   open_opts$[4]="OTA"
 
 	gosub open_tables
 
-	apm_vendmast_dev=num(open_chans$[1]);dim apm_vendmast$:open_tpls$[1]
-	ivm_lsmaster_dev=num(open_chans$[2]);dim ivm_lsmaster$:open_tpls$[2]
-	aps_params_dev=num(open_chans$[3]);dim aps_params$:open_tpls$[3]
-	ivs_params_dev=num(open_chans$[4]);dim ivs_params$:open_tpls$[4]
+	apm_vendmast_dev=num(open_chans$[1]); dim apm_vendmast$:open_tpls$[1]
+	ivm_lsmaster_dev=num(open_chans$[2]); dim ivm_lsmaster$:open_tpls$[2]
+	aps_params_dev=num(open_chans$[3]);   dim aps_params$:open_tpls$[3]
+	ivs_params_dev=num(open_chans$[4]);   dim ivs_params$:open_tpls$[4]
 
 rem --- Retrieve parameter records
 
@@ -136,66 +136,18 @@ rem --- Create Lot Information window
 
 	callpoint!.setDevObject("lotInfo",lotWin!)			
 
-	util.resizeWindow(Form!, SysGui!)
+	if !util.alreadyResized() then 
+		util.resizeWindow(Form!, SysGui!)
+	endif
 	
 [[IVC_LOTLOOKUP.LOTS_TO_DISP.AVAL]]
 rem -- user changed lot type -- re-read/display selected lot type
 
-gosub read_and_display_lot_grid
+	gosub read_and_display_lot_grid
 [[IVC_LOTLOOKUP.AREC]]
 rem --- item_id, warehouse_id, and type of lot (open,closed, etc.) coming from calling program
 
-gosub read_and_display_lot_grid
-[[IVC_LOTLOOKUP.ASHO]]
-break; rem ***** DISABLED *****
-
-rem --- Resize window to fit custom controls
-
-	form_width = Form!.getWidth()
-	form_height = Form!.getHeight()
-
-	dims_tmpl$ = callpoint!.getDevObject("dims_tmpl")
-	dim grid$:dims_tmpl$
-	dim child_window$:dims_tmpl$
-	grid$ = callpoint!.getDevObject("grid_dims")
-	child_window$ = callpoint!.getDevObject("child_window_dims")
-	
-	width = child_window.x + child_window.w + 10
-	height = grid.h + 100
-
-	if width > form_width or height > form_height then
-		form_width = max(form_width, width)
-		form_height = max(form_height, height)
-		Form!.setSize(form_width, form_height)
-
-		rem --- Still have to re-position buttons
-
-		controls! = Form!.getAllControls()
-		
-		rem --- Find the OK and Cancel button controls
-
-		for i=0 to controls!.size() -1
-			if ok! <> null() and cancel! <> null() then break
-			if controls!.getItem(i).getText() = "OK" then
-				ok! = controls!.getItem(i)
-			else
-				if controls!.getItem(i).getText() = "Cancel" then
-					cancel! = controls!.getItem(i)
-				endif
-			endif
-		next i	
-
-		rem --- Re-position the buttons
-		
-		cancel_x = form_width - cancel!.getWidth() - 5
-		cancel_y = form_height - cancel!.getHeight() - 5
-		ok_x = cancel_x - ok!.getWidth() - 5
-		ok_y = cancel_y
-		cancel!.setLocation(cancel_x, cancel_y)
-		ok!.setLocation(ok_x, ok_y)
-
-	endif
-	
+	gosub read_and_display_lot_grid
 [[IVC_LOTLOOKUP.ACUS]]
 rem --- Process custom event -- used in this pgm to select lot and display info.
 rem
@@ -248,7 +200,9 @@ rem	gridLots!.setSize(300,Form!.getHeight()-(gridLots!.getY()+40))
 rem	gridLots!.setFitToGrid(1)
 rem endif
 [[IVC_LOTLOOKUP.<CUSTOM>]]
+rem ==========================================================================
 read_and_display_lot_grid:
+rem ==========================================================================
 
 rem --- Position ivm-07 file
 
@@ -308,82 +262,87 @@ rem --- Position ivm-07 file
 	endif
 
 	callpoint!.setDevObject("vectLots",vectLots!)
+
 return
 
+rem ==========================================================================
 get_lot_info:
+rem ==========================================================================
 
-ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
-apm_vendmast_dev=fnget_dev("APM_VENDMAST")
+	ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
+	apm_vendmast_dev=fnget_dev("APM_VENDMAST")
 
-dim ivm_lsmaster$:fnget_tpl$("IVM_LSMASTER")
-dim apm_vendmast$:fnget_tpl$("APM_VENDMAST")
+	dim ivm_lsmaster$:fnget_tpl$("IVM_LSMASTER")
+	dim apm_vendmast$:fnget_tpl$("APM_VENDMAST")
 
-whse_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.WAREHOUSE_ID")
-item_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.ITEM_ID")
+	whse_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.WAREHOUSE_ID")
+	item_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.ITEM_ID")
 
-get_lot$=callpoint!.getDevObject("selected_lot")
+	get_lot$=callpoint!.getDevObject("selected_lot")
 
-rem --- added knum=0 to below, because if user typed their own lot#, Barista validation logic would
-rem --- have used knum=3...
-read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),knum=0,dom=*next)
+	rem --- added knum=0 to below, because if user typed their own lot#, Barista validation logic would
+	rem --- have used knum=3...
+	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),knum=0,dom=*next)
 
-lotWin!=callpoint!.getDevObject("lotInfo")	
+	lotWin!=callpoint!.getDevObject("lotInfo")	
 
-while 1
-	readrecord(ivm_lsmaster_dev,end=*break) ivm_lsmaster$
-	
-	if ivm_lsmaster.firm_id$<>firm_id$ 
-:		or ivm_lsmaster$.warehouse_id$<>whse_id$
-:		or ivm_lsmaster.item_id$<>item_id$
-:		or ivm_lsmaster.lotser_no$<>get_lot$ 
-:   then break
+	while 1
+		readrecord(ivm_lsmaster_dev,end=*break) ivm_lsmaster$
+		
+		if ivm_lsmaster.firm_id$<>firm_id$ 
+:			or ivm_lsmaster$.warehouse_id$<>whse_id$
+:			or ivm_lsmaster.item_id$<>item_id$
+:			or ivm_lsmaster.lotser_no$<>get_lot$ 
+:	   then break
 
-	callpoint!.setDevObject("selected_lot_loc",ivm_lsmaster.ls_location$)
-	callpoint!.setDevObject("selected_lot_cmt",ivm_lsmaster.ls_comments$)
-	callpoint!.setDevObject("selected_lot_avail",str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
+		callpoint!.setDevObject("selected_lot_loc",ivm_lsmaster.ls_location$)
+		callpoint!.setDevObject("selected_lot_cmt",ivm_lsmaster.ls_comments$)
+		callpoint!.setDevObject("selected_lot_avail",str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
 
-	rem --- Retrieve vendor name
+		rem --- Retrieve vendor name
 
-	vendor$=""
-	vendor_id = num( callpoint!.getDevObject("vendor_id") )
-	
-	if callpoint!.getDevObject("ap_installed") = "Y"
-		vendor$=ivm_lsmaster.vendor_id$
-		disp_vendor$="(unknown)"
-			if cvs(vendor$,2)<>""
-				find record (apm_vendmast_dev,key=firm_id$+vendor$,dom=*next) apm_vendmast$
-				disp_vendor$=apm_vendmast.vendor_id$+" "+cvs(apm_vendmast.vendor_name$,2)
-			endif
-		w!=lotWin!.getControl(vendor_id)
-		w!.setText(disp_vendor$)
-	endif
+		vendor$=""
+		vendor_id = num( callpoint!.getDevObject("vendor_id") )
+		
+		if callpoint!.getDevObject("ap_installed") = "Y"
+			vendor$=ivm_lsmaster.vendor_id$
+			disp_vendor$="(unknown)"
+				if cvs(vendor$,2)<>""
+					find record (apm_vendmast_dev,key=firm_id$+vendor$,dom=*next) apm_vendmast$
+					disp_vendor$=apm_vendmast.vendor_id$+" "+cvs(apm_vendmast.vendor_name$,2)
+				endif
+			w!=lotWin!.getControl(vendor_id)
+			w!.setText(disp_vendor$)
+		endif
 
-	rem --- Display grid info
-	
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("comment_id") ) )
-	w!.setText(ivm_lsmaster.ls_comments$)
-	receipt$=fn_date$(fnlatest$(ivm_lsmaster.lstrec_date$,ivm_lsmaster.lstblt_date$))
-	issue$=fn_date$(fnlatest$(ivm_lsmaster.lstsal_date$,ivm_lsmaster.lstiss_date$))
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("receipt_id") ) )
-	w!.setText(receipt$)
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("issued_id") ) )
-	w!.setText(issue$)
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("cost_id") ) )
-	w!.setText(ivm_lsmaster.unit_cost$);rem need mask
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("location_id") ) )
-	w!.setText(ivm_lsmaster.ls_location$)
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("onhand_id") ) )
-	w!.setText(ivm_lsmaster.qty_on_hand$)
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("committed_id") ) )
-	w!.setText(ivm_lsmaster.qty_commit$)
-	w!=lotWin!.getControl( num( callpoint!.getDevObject("available_id") ) )
-	w!.setText(str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
+		rem --- Display grid info
+		
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("comment_id") ) )
+		w!.setText(ivm_lsmaster.ls_comments$)
+		receipt$=fn_date$(fnlatest$(ivm_lsmaster.lstrec_date$,ivm_lsmaster.lstblt_date$))
+		issue$=fn_date$(fnlatest$(ivm_lsmaster.lstsal_date$,ivm_lsmaster.lstiss_date$))
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("receipt_id") ) )
+		w!.setText(receipt$)
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("issued_id") ) )
+		w!.setText(issue$)
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("cost_id") ) )
+		w!.setText(ivm_lsmaster.unit_cost$);rem need mask
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("location_id") ) )
+		w!.setText(ivm_lsmaster.ls_location$)
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("onhand_id") ) )
+		w!.setText(ivm_lsmaster.qty_on_hand$)
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("committed_id") ) )
+		w!.setText(ivm_lsmaster.qty_commit$)
+		w!=lotWin!.getControl( num( callpoint!.getDevObject("available_id") ) )
+		w!.setText(str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
 
-wend
+	wend
 
 return
 
+rem ==========================================================================
 rem --- Functions
+rem ==========================================================================
 
 rem --- Return the later of two dates
 
@@ -403,4 +362,6 @@ rem --- Format date from YYYYMMDD to MM/DD/YY
         return q1$
     fnend
 
+rem ==========================================================================
 #include std_missing_params.src
+rem ==========================================================================
