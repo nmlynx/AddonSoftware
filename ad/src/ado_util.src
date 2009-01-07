@@ -28,6 +28,8 @@ class public util
 	rem --- Enable/Disable values for maintenance forms
 	field public static BBjString EnableValue$ = ""
 	field public static BBjString DisableValue$ = "I"
+	rem --- Misc
+	field private static BBjInt Resized% = 0
 	
 	
 rem ==========================================================================
@@ -46,9 +48,9 @@ rem ==========================================================================
 		declare java.awt.Dimension ScreenSize!
 		declare BBjControl this_ctrl!
 		
-		controls! = Form!.getAllControls()
-		ScreenSize! = SysGUI!.getSystemMetrics().getScreenSize()
-		screen_width = ScreenSize!.width - #LessWidth%
+		controls!     = Form!.getAllControls()
+		ScreenSize!   = SysGUI!.getSystemMetrics().getScreenSize()
+		screen_width  = ScreenSize!.width - #LessWidth%
 		screen_height = ScreenSize!.height - #LessHeight%
 		new_width = 0
 		new_height = 0
@@ -64,15 +66,18 @@ rem ==========================================================================
 			
 			rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottom
 			if type = #PUSH_BUTTON% then
+			
 				if no_buttons_yet then
 					#ExtraHeight% = #ExtraHeight% + this_ctrl!.getHeight() + 5
 					no_buttons_yet = 0
 				endif
+				
 			else
 			
 				rem --- Most controls go here
 				new_width  = max( new_width,  this_ctrl!.getX() + this_ctrl!.getWidth() )
 				new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
+				
 			endif
 			
 		next i
@@ -81,11 +86,12 @@ rem ==========================================================================
 		if Form!.getWidth() >= new_width + #ExtraWidth% and Form!.getHeight() >= new_height + #ExtraHeight% then
 			methodret
 		endif
-
+		
 		rem --- Set new size, but not bigger than the screen
 		new_width = min( screen_width, new_width + #ExtraWidth% )
 		new_height = min( screen_height, new_height + #ExtraHeight% )
 		Form!.setSize(new_width, new_height)
+		#Resized% = 1
 		
 		rem --- Will the form still fit on the screen?
 		new_position = 0
@@ -106,6 +112,11 @@ rem ==========================================================================
 			Form!.setLocation(form_x, form_y)
 		endif
 	
+	methodend
+	
+	rem --- Has this form been resized?
+	method public static BBjInt alreadyResized()
+		methodret #Resized%
 	methodend
 	
 	
