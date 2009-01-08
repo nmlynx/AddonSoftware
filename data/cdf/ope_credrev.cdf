@@ -51,7 +51,78 @@ if ctl_ID=num(user_tpl.gridCreditCtlID$)
 	callpoint!.setDevObject("order",gridCredit!.getCellText(curr_row,3))
 	callpoint!.setDevObject("ord_date",gridCredit!.getCellText(curr_row,4))
 	callpoint!.setDevObject("ship_date",gridCredit!.getCellText(curr_row,5))
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_CREDMNT",stbl("+USER_ID"),"INQ",firm_id$+cust$,table_chans$[all]
+
+	arm01_dev=fnget_dev("ARM_CUSTMAST")
+	dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+	arm02_dev=fnget_dev("ARM_CUSTDET")
+	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+	readrecord(arm01_dev,key=firm_id$+cust$,dom=*next)arm01a$
+	readrecord(arm02_dev,key=firm_id$+cust$+"  ",dom=*next)arm02a$
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[27,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cust$
+	dflt_data$[2,0]="ADDR_LINE_1"
+	dflt_data$[2,1]=arm01a.addr_line_1$
+	dflt_data$[3,0]="ADDR_LINE_2"
+	dflt_data$[3,1]=arm01a.addr_line_2$
+	dflt_data$[4,0]="ADDR_LINE_3"
+	dflt_data$[4,1]=arm01a.addr_line_3$
+	dflt_data$[5,0]="ADDR_LINE_4"
+	dflt_data$[5,1]=arm01a.addr_line_4$
+	dflt_data$[6,0]="CITY"
+	dflt_data$[6,1]=arm01a.city$
+	dflt_data$[7,0]="STATE_CODE"
+	dflt_data$[7,1]=arm01a.state_code$
+	dflt_data$[8,0]="ZIP_CODE"
+	dflt_data$[8,1]=arm01a.zip_code$
+	dflt_data$[9,0]="COUNTRY"
+	dflt_data$[9,1]=arm01a.country$
+	dflt_data$[10,0]="CONTACT_NAME"
+	dflt_data$[10,1]=arm01a.contact_name$
+	dflt_data$[11,0]="PHONE_NO"
+	dflt_data$[11,1]=arm01a.phone_no$
+	dflt_data$[12,0]="PHONE_EXTEN"
+	dflt_data$[12,1]=arm01a.phone_exten$
+	dflt_data$[13,0]="FAX_NO"
+	dflt_data$[13,1]=arm01a.fax_no$
+	dflt_data$[14,0]="SLSPSN_CODE"
+	dflt_data$[14,1]=arm02a.slspsn_code$
+	dflt_data$[15,0]="AR_TERMS_CODE"
+	dflt_data$[15,1]=arm02a.ar_terms_code$
+	dflt_data$[16,0]="CRED_HOLD"
+	dflt_data$[16,1]=arm02a.cred_hold$
+	dflt_data$[17,0]="AGING_FUTURE"
+	dflt_data$[17,1]=str(arm02a.aging_future)
+	dflt_data$[18,0]="AGING_CUR"
+	dflt_data$[18,1]=str(arm02a.aging_cur)
+	dflt_data$[19,0]="AGING_30"
+	dflt_data$[19,1]=str(arm02a.aging_30)
+	dflt_data$[20,0]="AGING_60"
+	dflt_data$[20,1]=str(arm02a.aging_60)
+	dflt_data$[21,0]="AGING_90"
+	dflt_data$[21,1]=str(arm02a.aging_90)
+	dflt_data$[22,0]="AGING_120"
+	dflt_data$[22,1]=str(arm02a.aging_120)
+	dflt_data$[23,0]="CREDIT_LIMIT"
+	dflt_data$[23,1]=str(arm02a.credit_limit)
+	dflt_data$[24,0]="REV_DATE"
+	dflt_data$[24,1]=gridCredit!.getCellText(curr_row,0)
+	dflt_data$[25,0]="ORDER_NO"
+	dflt_data$[25,1]=gridCredit!.getCellText(curr_row,3)
+	dflt_data$[26,0]="ORDER_DATE"
+	dflt_data$[26,1]=gridCredit!.getCellText(curr_row,4)
+	dflt_data$[27,0]="SHIPMNT_DATE"
+	dflt_data$[27,1]=gridCredit!.getCellText(curr_row,5)
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"OPE_CREDMAINT",
+:		user_id$,
+:		"",
+:		firm_id$+cust$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 rem --- redisplay grid
 	if user_tpl.cur_sel$="C"
 		gosub create_cust_vector
@@ -244,17 +315,14 @@ return
 rem --- Build custom form
 	use ::ado_util.src::util
 
-	num_files=7
+	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="ARS_CREDIT",open_opts$[1]="OTA"
 	open_tables$[2]="OPE_CREDDATE",open_opts$[2]="OTA"
 	open_tables$[3]="OPE_ORDHDR",open_opts$[3]="OTA"
 	open_tables$[4]="ARM_CUSTMAST",open_opts$[4]="OTA"
-
-	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
-	open_tables$[6]="APE_INVOICEHDR",open_opts$[6]="OTA"
-	open_tables$[7]="APS_PARAMS",open_opts$[7]="OTA"
+	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
 
 	gosub open_tables
 
@@ -262,10 +330,7 @@ rem --- Build custom form
 	ope03_dev=num(open_chans$[2]),ope03_tpl$=open_tpls$[2]
 	ope01_dev=num(open_chans$[3]),ope01_tpl$=open_tpls$[3]
 	arm01_dev=num(open_chans$[4]),arm01_tpl$=open_tpls$[4]
-
-	apw01_dev=num(open_chans$[5])
-	ape01_dev=num(open_chans$[6]),ape01_tpl$=open_tpls$[6]
-	aps_params=num(open_chans$[7]),aps_params_tpl$=open_tpls$[7]
+	arm02_dev=num(open_chans$[5]),arm02_tpl$=open_tpls$[5]
 
 rem --- Dimension string templates
 
