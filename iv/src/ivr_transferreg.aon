@@ -64,7 +64,7 @@ rem --- Dimension string templates
 
 rem --- Parameters
 
-    dim p[5],g[4],info$[20]
+    dim p[5],info$[20]
     n2$="IV"
     source$=pgm(-2)
     when$=sysinfo.system_date$
@@ -72,11 +72,11 @@ rem --- Parameters
 	find record (ivs01a_dev,key=firm_id$+"IV00",err=std_missing_params) ivs01a$
 	
     p[0]=ivs01a.item_id_len
-    p[1]=ivs01a.lot_no_len
+    p[1]=ivs01a.ls_no_len
     p[2]=num(ivs01a.precision$)
-    p[3]=num(ivs01a.desc_len$)
-    p[4]=num(ivs01a.desc_len$)
-    p[5]=num(ivs01a.desc_len$)
+    p[3]=num(ivs01a.desc_len_01$)
+    p[4]=num(ivs01a.desc_len_02$)
+    p[5]=num(ivs01a.desc_len_03$)
 	
     lf$="N"
     ls$="N"
@@ -90,8 +90,7 @@ rem --- Parameters
     if ar$="Y" then
         find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
         dist_gl_by_item$=ars01a.dist_by_item$
-        places=p[2]
-        more=1
+        places=num(ivs01a.precision$)
     endif
 
     gl$="N"
@@ -101,12 +100,6 @@ rem --- Parameters
 	
 	if gl$="Y" then 
 		find record (gls01a_dev,key=firm_id$+"GL00",err=std_missing_params) gls01a$
-		    
-		g[0]=num(gls01a.total_pers$)
-	    g[1]=num(gls01a.current_per$)
-	    g[2]=fnyy_year(gls01a.current_year$)
-	    g[3]=num(gls01a.acct_length$)
-	    g[4]=num(gls01.max_acct_length$)
 	endif
 	
 rem --- Document initializations
@@ -130,32 +123,33 @@ rem --- Document initializations
 rem --- Other initializations
 
     precision num(ivs01a.precision$)
-    rem dim a[2],b[12],
-    dim item$[10],o[4],lf[10]
+	
+    dim o[4]
+	
     m1$=ivs01a.amount_mask$
     m2$=ivs01a.unit_mask$
     m3$=ivs01a.cost_mask$
     m1=len(m1$)
     m2=len(m2$)
     m3=len(m3$)
-    m0=p[0]
+	
     if ls$ = "Y" then p8$=" and Lot/Serial Number" else p8$ = ""
+	
     width=132
-    page=0
-    l9=55
-    l=l9+1
-    w=34
     units=0
     prev_whse$=""
     prev_trans_date$=""
     last_time$="N"
+	
     o[4]=width-9
     o[3]=o[4]-m1-1
     o[2]=o[3]-m2
     o[1]=o[2]-m3
     o[0]=o[1]-3
+	
     errors=0
     glstatus=0
+	more=1
 
 rem --- Column headings
 
@@ -179,7 +173,6 @@ rem --- Report headings
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$	
 	headings$[headings]="[HEADER]"
-	h3$=""
 
 rem --- Additional File Opens
 	
@@ -190,28 +183,41 @@ rem --- Additional File Opens
 	
     if gl$="Y" then
 		files$[22]="glm-01", ids$[22]="GLM_ACCT"
-		files$[23]="glt-14", ids$[23]="GLX_DAILYXRF"
-		files$[24]=glw11$,   ids$[24]="GLW_DAILYDETAIL", options$[24]="CL"
+		files$[23]=glw11$,   ids$[23]="GLW_DAILYDETAIL", options$[23]="CL"
 	endif
 	
     if gl$="Y" and dist_gl_by_item$="Y" then 
-		files$[25]="arc_distcode", ids$[25]="ARC_DISTCODE"
+		files$[24]="arc_distcode", ids$[24]="ARC_DISTCODE"
 	endif
 	
-	begfile=20, endfile=25
-    call pgmdir$+"adc_fileopen.aon",1,begfile,endfile,files$[all],options$[all],channels[all],batch,status
+	begfile=20, endfile=24
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status	
     if status then goto std_exit
 	
     ivm04_dev  = channels[20]
     ivw04_dev  = channels[21]
     glm01_dev  = channels[22]
-	glt14_dev  = channels[23]
-    glw11_dev  = channels[24]
-    arm10d_dev = channels[25]
+    glw11_dev  = channels[23]
+    arm10d_dev = channels[24]
 	
-	lf[1] = ivm02_dev
-    lf[2] = ivm04_dev
-    lf[3] = ivw04_dev
+	if gl$="Y" and dist_gl_by_item$="Y" then 
+		dim arm10d$:templates$[24]
+	endif
+	
+rem --- Lifo/fifo setup
+	
+	dim lf_chans[10]
+	dim lf_tmpls$[10]
+	dim lf_item$[10]
+
+	lf_chans[1]=ivm02_dev
+    lf_chans[2]=ivm04_dev
+    lf_chans[3]=ivw04_dev
+	
+    lf_tmpls$[1]=templates$[8];  rem ivm-02
+	lf_tmpls$[2]=templates$[20]; rem ivm-04
+	lf_tmpls$[3]=templates$[21]; rem ivw-04
 
 rem --- Progress meter
 
@@ -225,11 +231,11 @@ rem --- Heading Read
 
     while more
         read record (ive02_dev,end=*break) ive02a$
+		if firm_id$ <> ive02a.firm_id$ then break
         cost=ive02a.unit_cost
 
 rem --- Breaks
-
-        if pos(firm_id$=ive02a_key$)<>1 break
+        
         if ive02a.warehouse_id$<>prev_whse$ then gosub whse_id
         if ive02a.trans_date$<>prev_trans_date$ then gosub trans_date
         call pgmdir$+"adc_progress.aon","S","","","",ive02a.warehouse_id$+" "+ive02a.item_id$,0,0,1,meter_num,ignore_status
@@ -238,16 +244,17 @@ rem --- Breaks
 rem --- LIFO/FIFO?
 
         if lf$="Y" then
-            item$[1]=ive02a.warehouse_id$
-            item$[2]=ive02a.item_id$
-            lf_date$=ive02a.trans_date$
-            action$=ivs01a.lifofifo$+"I"
-            quantity=ive02a.trans_qty
-            cost=ive02a.unit_cost
-            ret_cost=0
-            type$="R"
+		
+            lf_item$[1] = ive02a.warehouse_id$
+            lf_item$[2] = ive02a.item_id$
+            lf_date$    = ive02a.trans_date$
+            action$     = ivs01a.lifofifo$ + "I"
+            quantity    = ive02a.trans_qty
+            cost        = ive02a.unit_cost
+            ret_cost    = 0
+            type$       = "R"
 			
-            call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,lf[all],templates$[all],item$[all],places,quantity,cost,ret_cost,ignore_status
+            call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],places,quantity,cost,ret_cost,ignore_status
 
 rem --- Cost change?
 
@@ -255,6 +262,7 @@ rem --- Cost change?
 				ive02a.ext_cost = ive02a.trans_qty * ret_cost
 				ive02a.unit_cost = ret_cost
 				cost = ret_cost
+				
 				ive02a$ = field(ive02a$)
                 write record (ive02_dev) ive02a$
             endif
@@ -271,7 +279,7 @@ rem --- Detail line
 		OutVect!.addItem(str(cost))
 		OutVect!.addItem(str(ive02a.trans_qty))
 		OutVect!.addItem(str(tot_cost))
-		OutVect!.addItem(ive02a.inv_xfer_nbr$)
+		OutVect!.addItem(ive02a.inv_xfer_no$)
 		
 		ignore = fnblank(2)
         OutVect!.addItem(item_desc$)
@@ -303,15 +311,18 @@ rem --- Generate G/L Recap
 rem --- From Warehouse
 
         gldate$=ive02a.trans_date$
-        ref1$="Xfr "+ive02a.inv_xfer_nbr$
-        memo$=ive02a.item_id$+" "+ivm01a.item_desc$
+        ref1$="Xfr "+ive02a.inv_xfer_no$
+        memo$=ive02a.item_id$+" "+item_desc$
         ref2$="Fr Whse "+ive02a.warehouse_id$
         ref3$="To Whse "+ive02a.warehouse_id$
-        find record (ivm02a_dev,key=firm_id$+ive02a.warehouse_id$+ive02a.item_id$,dom=to_whse) ivm02a$
-        find record (arm10d_dev,key=firm_id$+"D"+ivm02a.dist_code$,dom=to_whse) arm10d$
+		
+        find record (ivm02_dev,key=firm_id$+ive02a.warehouse_id$+ive02a.item_id$,dom=to_whse) ivm02a$
+        find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=to_whse) arm10d$
+		
         account$=arm10d.gl_inv_acct$
         amount=(ive02a.ext_cost-ive02a.trans_qty)*cost
         units=0
+		
         gosub glrecap
 
 to_whse: rem --- To Warehouse
@@ -319,11 +330,14 @@ to_whse: rem --- To Warehouse
         x$=ref2$
         ref2$=ref3$
         ref3$=x$
-        find record (ivm02a_dev,key=firm_id$+ive02a.warehouse_id_to$+ive02a.item_id$,dom=gl_recap_done) ivm02a$
-        find record (arm10d_dev,key=firm_id$+"D"+ivm02a.dist_code$,dom=gl_recap_done) arm10d$
+		
+        find record (ivm02_dev,key=firm_id$+ive02a.warehouse_id_to$+ive02a.item_id$,dom=gl_recap_done) ivm02a$
+        find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=gl_recap_done) arm10d$
+		
         account$=arm10d.gl_inv_acct$
         amount=ive02a.trans_qty*cost
         units=0
+		
         gosub glrecap
 		
 gl_recap_done:
@@ -413,11 +427,11 @@ get_item_data: rem --- Get item data
 	um$=""
 	ivm01a$=""
 	ivm10c.short_name$="Unknown Warehouse"
-    find record (ivm01a_dev,key=firm_id$+ive02a.item_id$,dom=*next) ivm01a$
+    find record (ivm01_dev,key=firm_id$+ive02a.item_id$,dom=*next) ivm01a$
     find record (ivm10c_dev,key=firm_id$+"C"+ive02a.warehouse_id$,dom=*next) ivm10c$
 	
 	if ivm01a$<>"" then 
-		item_desc$ = fnitem$(ivm01a.item_desc$)
+		item_desc$ = fnitem$(ivm01a.item_desc$, p[3], p[4], p[5])
 		um$ = ivm01a.purchase_um$
 	endif
 	
