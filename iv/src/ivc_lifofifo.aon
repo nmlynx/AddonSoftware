@@ -28,7 +28,7 @@ rem                       R = Receipt
 rem TYPE$        : Type of call (Input)
 rem                I = Inquiry    R = Report
 rem LF_DATE$     : Transaction Date (Input)
-rem CHANNELS[n]  : [1] = IVM_ITEMTIER, [2] = IVW_LFDET, [3] = IVM_ITEMWHSE (Input/Returned)
+rem CHANNELS[n]  : [1] = IVM_ITEMWHSE, [2] = IVM_ITEMTIER, [3] = IVW_LFDET, (Input/Returned)
 rem TEMPLATES$[n]: From adc_fileopen.aon, do not modify (Input)
 rem ITEM$[n]     : Item Information (Input)
 rem                [0]=not used    [1]=Warehouse ID     [2]=Item
@@ -158,6 +158,7 @@ rem --------------------------------------------------------------------------
 			if ivw04a.unit_cost = cost then 
 				if report then
 					ivw04a.qty_on_hand = ivw04a.qty_on_hand + quantity
+					ivw04a$ = field(ivw04a$)
 					write record (lfchan_dev) ivw04a$
 				endif
 				
@@ -261,7 +262,10 @@ rem --------------------------------------------------------------------------
 				work_qty = 0
 			endif
 
-			if report then write record (ivw04_dev) ivw04a$
+			if report then 
+				ivw04a$ = field(ivw04a$) 
+				write record (ivw04_dev) ivw04a$
+			endif
 			
 			if work_qty = 0 then done = true
 				
@@ -309,6 +313,7 @@ rem --------------------------------------------------------------------------
 		
 	wend
 
+	ivw04a$ = field(ivw04a$)
 	write record (lfchan_dev) ivw04a$
 
 return	
