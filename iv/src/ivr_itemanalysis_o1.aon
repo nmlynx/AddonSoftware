@@ -145,6 +145,7 @@ rem --- Write ivw-01 item record
             ivw01a.unit_cost=cost
             ivw01a.usage_qty=usage
             ivw01a.qty_on_hand=onhand
+			ivw01a$ = field(ivw01a$)
             write record (ivw01_dev,key=ivw01a_key$) ivw01a$
 
 rem --- Write ivw-02 totals record
@@ -158,6 +159,7 @@ rem --- Write ivw-02 totals record
             find record (ivw02_dev,key=ivw02a_key$,dom=*next) ivw02a$
             ivw02a.total_usage=ivw02a.total_usage+cost*usage
             ivw02a.total_value=ivw02a.total_value+cost*onhand
+			ivw02a$ = field(ivw02a$)
             write record (ivw02_dev,key=ivw02a_key$,err=ivw02_reg_write) ivw02a$
             continue
 ivw02_reg_write:
