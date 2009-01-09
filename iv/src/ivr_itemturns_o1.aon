@@ -173,6 +173,7 @@ rem --- Write sort record
             ivw03a.qty_on_hand=balance
             ivw03a.total_value=average
             ivw03a.item_turns=turns
+			ivw03a$ = field(ivw03a$)
             write record (ivw03_dev,key=ivw03a_key$) ivw03a$
 
         wend; rem --- Main Loop Ending
