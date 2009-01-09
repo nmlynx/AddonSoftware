@@ -246,17 +246,17 @@ rem --- Additional File Opens
 	
 rem --- Lifo/fifo setup
 	
-	dim chans[10]
-	dim tmpls$[10]
-	dim item$[10]
+	dim lf_chans[10]
+	dim lf_tmpls$[10]
+	dim lf_item$[10]
 
-	chans[1]=ivm02_dev
-    chans[2]=ivm04_dev
-    chans[3]=ivw04_dev
+	lf_chans[1]=ivm02_dev
+    lf_chans[2]=ivm04_dev
+    lf_chans[3]=ivw04_dev
 	
-    tmpls$[1]=templates$[5];  rem ivm-02
-	tmpls$[2]=templates$[22]; rem ivm-04
-	tmpls$[3]=templates$[23]; rem ivw-04
+    lf_tmpls$[1]=templates$[5];  rem ivm-02
+	lf_tmpls$[2]=templates$[22]; rem ivm-04
+	lf_tmpls$[3]=templates$[23]; rem ivw-04
 	
 rem --- Final inits, Position file
 	
@@ -301,8 +301,8 @@ rem --- Not lotted
 rem --- LIFO/FIFO?
 
 				if lf$ = "Y" and ivm10b.trans_type$ <> "C" then
-					item$[1]=ive11a.warehouse_id$
-					item$[2]=ive11a.item_id$
+					lf_item$[1]=ive11a.warehouse_id$
+					lf_item$[2]=ive11a.item_id$
 					lf_date$=ive01a.trans_date$
 					quantity=ive11a.trans_qty
 					cost=ive11a.unit_cost
@@ -315,7 +315,7 @@ rem --- LIFO/FIFO?
 						action$=ivs01a.lifofifo$+"R"
 					endif
 					
-					call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,chans[all],tmpls$[all],item$[all],places,abs(quantity),cost,ret_cost,ignore_status
+					call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],places,abs(quantity),cost,ret_cost,ignore_status
 					
 rem --- Cost change?
 
