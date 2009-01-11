@@ -8,13 +8,6 @@ if callpoint!.getDevObject("lotser_flag")="S"
 	endif
 endif
 
-rem --- Signs must be the same
-if sgn(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED")))<>sgn(num(callpoint!.getUserInput()))
-	msg_id$=""
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
-endif
-
 rem --- Ship Qty must be <= Order Qty
 if abs(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED")))<abs(num(callpoint!.getUserInput()))
 	msg_id$="SHIP_EXCEEDS_ORD"
@@ -46,24 +39,6 @@ if abs(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED")))>abs(num(callpo
 endif
 [[OPE_ORDLSDET.<CUSTOM>]]
 rem --- Calculate total quantities and compare to order line
-[[OPE_ORDLSDET.AGRE]]
-rem --- populate key area of detail records
-
-	myrow=callpoint!.getValidationRow()
-
-	curVect!=gridVect!.getItem(0)
-	dim cur_rec$:dtlg_param$[1,3]
-	cur_rec$=curVect!.getItem(myrow)
-	
-	ar_type$=callpoint!.getDevObject("ar_type")
-	cust$=callpoint!.getDevObject("cust")
-	order$=callpoint!.getDevObject("order")
-	int_seq$=callpoint!.getDevObject("int_seq")
-
-	cur_rec.ar_type$=ar_type$
-	cur_rec.customer_id$=cust$
-	cur_rec.order_no$=order$
-	cur_rec.orddet_seq_ref$=int_seq$
 [[OPE_ORDLSDET.LOTSER_NO.BINP]]
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
 rem --- save current row/column so we'll know where to set focus when we return from lot lookup
@@ -99,9 +74,9 @@ if cvs(callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO"),3)=""
 
 	rem --- Set the detail grid to the data selected in the lookup
 	if callpoint!.getDevObject("selected_lot")<>null()
-		callpoint!.setColumnData( "OPE_ORDLSDET.LOTSER_NO",   str(callpoint!.getDevObject("selected_lot")) )
-		lot_avail = num( callpoint!.getDevObject("selected_lot_avail") )
-		callpoint!.setColumnData( "OPE_ORDLSDET.QTY_ORDERED", str(lot_avail) )
+		callpoint!.setColumnData( "OPE_ORDLSDET.LOTSER_NO",str(callpoint!.getDevObject("selected_lot")))
+		lot_avail = num(callpoint!.getDevObject("selected_lot_avail"))
+		callpoint!.setColumnData("OPE_ORDLSDET.QTY_ORDERED",str(lot_avail))
 		callpoint!.setStatus("MODIFIED-REFRESH")
 	endif
 endif
@@ -114,7 +89,9 @@ rem --- validate open lot number
 
 	readrecord(lsmast_dev,key=firm_id$+wh$+item$+callpoint!.getUserInput())lsmast_tpl$
 	if lsmast_tpl.closed_flag$<>"Y"
-		escape
+		msg_id$="IV_SERLOT_CLOSED"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
 	endif
 [[OPE_ORDLSDET.LOTSER_NO.AINQ]]
 escape; rem ainq

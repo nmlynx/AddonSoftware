@@ -4,8 +4,9 @@ ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
 myrow=callpoint!.getValidationRow()
-
+escape;rem ? myrow
 jim$=callpoint!.getGridRowModifyStatus(myrow)
+jim1$=callpoint!.getGridRowNewStatus(myrow)
 
 	curVect!=gridVect!.getItem(0)
 	undoVect!=gridVect!.getItem(1)
@@ -474,7 +475,10 @@ get_lot_info:
 	dflt_data$[2,1]=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 	dflt_data$[3,0]="ORDER_NO"
 	dflt_data$[3,1]=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
-	lot_pfx$=firm_id$+callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")+callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	lot_pfx$=firm_id$+callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")+
+:		callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")+
+:		callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")+
+:		callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
 return
 

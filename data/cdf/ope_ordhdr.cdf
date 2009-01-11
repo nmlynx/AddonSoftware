@@ -377,6 +377,7 @@ rem --- Show customer data
 	gosub disp_cust_comments
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
+
 	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	ordship_dev=fnget_dev("OPE_ORDSHIP")
