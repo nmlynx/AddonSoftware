@@ -73,7 +73,7 @@ rem --- column headings
     columns$[0,0]="",columns$[0,1]="C",columns$[0,2]="80"
 
 Back_ground: rem --- Background
-escape
+
     if o9<>2 then
         call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
         call pgmdir$+"adc_progress.aon","N","","","","",0,ope01_dev,1,meter_num,status
@@ -254,18 +254,20 @@ rem --- OK There Are Lots
             if l+1>l9 continue
             OutVect!.addItem("")
             l=l+1
-      wend
-      gosub Total1
-      if o9=2 break
+        wend
+        gosub Total1
+        if o9=2 goto After_Loop
 
-      extract record (ope01_dev,key=ope01.firm_id$+ope01.ar_type$+ope01.customer_id$+ope01.order_no$,err=*continue) ope01a$
-      if ope01a.reprint_flag$="Y"
-          ope01a.print_status$=reprint$ 
-      else 
-          ope01a.print_status$="B"
-      endif
-      write record (ope01_dev,key=ope01.firm_id$+ope01.ar_type$+ope01.customer_id$+ope01.order_no$) ope01a$
+        extract record (ope01_dev,key=ope01.firm_id$+ope01.ar_type$+ope01.customer_id$+ope01.order_no$,err=*continue) ope01a$
+        if ope01a.reprint_flag$="Y"
+            ope01a.print_status$=reprint$ 
+        else 
+            ope01a.print_status$="B"
+        endif
+        write record (ope01_dev,key=ope01.firm_id$+ope01.ar_type$+ope01.customer_id$+ope01.order_no$) ope01a$
     wend
+
+After_Loop:
 
     if o9<>1 then
         after$="YES"
@@ -599,7 +601,7 @@ Print_Box: rem --- Print Box
         out$(h0+70,1)="+"
         OutVect!.addItem(out$)
         l=l+9
-      
+
         if mult_wh=0 return
         if whse$<>"" and len(othwhse$)<2
             message$="All of this order to be filled from these warehouses."
