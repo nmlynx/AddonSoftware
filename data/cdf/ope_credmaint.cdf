@@ -194,9 +194,10 @@ rem --- Print the order?
 
 	msg_id$="OP_ORDREL"
 	gosub disp_message
-	if msg_opt$="N" goto no_rel
-	x$=stbl("on_demand","Y"+cust$+ord$)
-	run "opr_oderpicklst.aon"
+	if msg_opt$="Y"
+		x$=stbl("on_demand","Y"+cust$+ord$)
+		run "opr_oderpicklst.aon"
+	endif
 	callpoint!.setStatus("EXIT")
 
 no_rel:
