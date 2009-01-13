@@ -137,9 +137,6 @@ rem --- Other initializations
 	
     width=132
     units=0
-    prev_whse$=""
-    prev_trans_date$=""
-    last_time$="N"
 	
     o[4]=width-9
     o[3]=o[4]-m1-1
@@ -225,6 +222,10 @@ rem --- Progress meter
 
 rem --- Initial Read
 
+    prev_whse$=""
+    prev_trans_date$=""
+    last_time$="N"
+
     read (ive02_dev,key=firm_id$,dom=*next)
 	
 rem --- Heading Read
@@ -236,9 +237,17 @@ rem --- Heading Read
 
 rem --- Breaks
         
-        if ive02a.warehouse_id$<>prev_whse$ then gosub whse_id
-        if ive02a.trans_date$<>prev_trans_date$ then gosub trans_date
+        if ive02a.warehouse_id$ <> prev_whse$ then 
+			gosub whse_id
+		else
+			if ive02a.trans_date$<>prev_trans_date$ then 
+				gosub trans_date_totals
+				gosub trans_date_new
+			endif
+		endif
+		
         call pgmdir$+"adc_progress.aon","S","","","",ive02a.warehouse_id$+" "+ive02a.item_id$,0,0,1,meter_num,ignore_status
+		
         gosub get_item_data
 
 rem --- LIFO/FIFO?
@@ -376,47 +385,85 @@ rem --- End of register
 whse_id: rem --- Warehouse
 
     if prev_whse$<>"" then
-        if last_time$="N" then last_time$="A"
-        gosub trans_date
-        if last_time$="A" then last_time$="N"
+	
+        gosub trans_date_totals
+		
+		ignore = fnblank_line(void)
+		
 		TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 		ignore = fnblank(2)
-        OutVect!.addItem("Total For Warehouse " + prev_whse$ + " " + whse_desc$)
+        OutVect!.addItem("**Total For Warehouse " + prev_whse$ + " " + whse_desc$)
 		ignore = fnblank(3)
 		OutVect!.addItem(str(whse_total))
 		ignore = fnblank(1)
-        whse_total=0
+        
+		whse_total=0
+		
     endif
 
     if last_time$="N" then 
+	
 	    prev_whse$=ive02a.warehouse_id$
 		prev_trans_date$=ive02a.trans_date$
 	    ivm10c.short_name$="Unknown Warehouse"
 		date_total=0
 	    find record (ivm10c_dev,key=firm_id$+"C"+prev_whse$,dom=*next) ivm10c$
+		
+		rem --- Break goes on the header
+		new_whse$ = "From Warehouse " + cvs(prev_whse$ + " " + ivm10c.short_name$, 2)
 		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-		HdrVect!.addItem( "From Warehouse " + cvs(prev_whse$ + " " + ivm10c.short_name$, 2) )
+		HdrVect!.addItem(new_whse$)
 	    whse_desc$=cvs(ivm10c.short_name$,2)
+		
+		rem --- Print new whse on the report
+		ignore = fnblank_line(void)
+		
+		ignore = fnblank(2)
+        OutVect!.addItem(new_whse$)
+		ignore = fnblank(5)
+		
+		gosub trans_date_new
+		
 	endif
 	
     return
 
-trans_date: rem --- Date
+trans_date_totals: rem --- Trans Date, previous totals
 
     if prev_trans_date$<>"" then
+	
+		ignore = fnblank_line(void)
+	
 		TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 		ignore = fnblank(2)
-        OutVect!.addItem("Total For "+fndate$(prev_trans_date$))
+        OutVect!.addItem("*Total For "+fndate$(prev_trans_date$))
 		ignore = fnblank(3)
 		OutVect!.addItem(str(date_total))
 		ignore = fnblank(1)
+		
     endif
 	
+	return
+	
+trans_date_new: rem --- Trans Date: start new date	
+	
     if last_time$="N" then
+	
 		date_total=0
 		prev_trans_date$=ive02a.trans_date$
+		
+		rem --- Print break on header
+		new_date$ = "Transfer Date " + fndate$(prev_trans_date$)
 		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-		HdrVect!.addItem("Transfer Date "+fndate$(prev_trans_date$))
+		HdrVect!.addItem(new_date$)
+		
+		rem --- Print break on report
+		ignore = fnblank_line(void)
+		
+		ignore = fnblank(2)
+        OutVect!.addItem(new_date$)
+		ignore = fnblank(5)
+				
 	endif
 	
     return
@@ -530,8 +577,12 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         for q1=1 to q0
             OutVect!.addItem("")
         next q1
-        return q1
+        return void
     fnend
+
+rem --- Create a blank line.  "void" is simply a variable; it's there to remind you that this function takes no input
+
+	def fnblank_line(void)=fnblank(columns+1)
 	
 rem #include disp_message.src
 
