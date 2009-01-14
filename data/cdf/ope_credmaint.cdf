@@ -47,6 +47,7 @@ rem --- Delete the order
 	ope_ordship_dev=fnget_dev("OPE_ORDSHIP")
 	dim ope_ordship$:fnget_tpl$("OPE_ORDSHIP")
 	ope_prntlist_dev=fnget_dev("OPE_PRNTLIST")
+	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 
 	readrecord(ivs_params_dev,key=firm_id$+"IV00")ivs01a$
 	readrecord(ope01_dev,key=firm_id$+ope01a.ar_type$+cust$+ord$,dom=no_delete)ope01a$
@@ -62,31 +63,40 @@ rem --- Delete the order
 		if pos(opc_linecode.line_type$="SP")=0 goto remove_line
 		if ope01a.invoice_type$="P" goto remove_line
 		if opc_linecode.dropship$="Y" or ope11a.commit_flag$="N" or ope11a.dropship$="Y" goto remove_line
+		if ope11a.commit_flag$<>"Y" goto remove_line
 
 rem --- Uncommit Inventory
 
+		dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+		readrecord(ivm_itemmast_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm_itemmast$
 		items$[1]=ope11a.warehouse_id$
 		items$[2]=ope11a.item_id$
 		action$="UC"
 		refs[0]=ope11a.qty_ordered
-		if pos(ivs01a$.lotser_flag$="LS")=0
-			call "ivc_itemupdt.aon",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if ivm_itemmast.lotser_item$<>"Y" or ivm_itemmast.inventoried$<>"Y"
+			call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 			goto remove_line
 		else
+			found_lot=0
 			readrecord(ope_ordlsdet_dev,key=firm_id$+ope11a.ar_type$+cust$+
-:				ord$+ope11a.internal_seq_no$,dom=*next)
+:					ord$+ope11a.internal_seq_no$,dom=*next)
 			while 1
 				readrecord(ope_ordlsdet_dev,end=*break)ope_ordlsdet$
 				if pos(firm_id$+ope11a.ar_type$+cust$+ord$+ope11a.internal_seq_no$=ope_ordlsdet$)<>1 break
 				items$[3]=ope_ordlsdet.lotser_no$
 				refs[0]=ope_ordlsdet.qty_ordered
-				call "ivc_itemupdt.aon",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				remove (ope_ordlsdet_dev,key=ope_ordlsdet.firm_id$+ope_ordlsdet.ar_type$+cust$+
 :					ord$+ope_ordlsdet.internal_seq_no$+ope_ordlsdet.sequence_no$)
+				found_lot=1
 			wend
+			if found_lot=0
+				call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			endif
 		endif
 remove_line:
-		remove (ope11_dev,key=firm_id$+ope01a.ar_type$+cust$+ord$+ope11a.internal_seq_no$,dom=*next)
+			remove (ope11_dev,key=firm_id$+ope01a.ar_type$+cust$+ord$+ope11a.internal_seq_no$,dom=*next)
+		endif
 	wend
 
 rem	 --- Remove Header
@@ -204,7 +214,7 @@ no_rel:
 	callpoint!.setStatus("REFRESH")
 [[OPE_CREDMAINT.BSHO]]
 rem --- Open tables
-	num_files=11
+	num_files=12
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTCMTS",open_opts$[1]="OTA"
 	open_tables$[2]="OPE_ORDHDR",open_opts$[2]="OTA"
@@ -217,6 +227,7 @@ rem --- Open tables
 	open_tables$[9]="OPE_ORDLSDET",open_opts$[9]="OTA"
 	open_tables$[10]="OPE_ORDSHIP",open_opts$[10]="OTA"
 	open_tables$[11]="OPE_PRNTLIST",open_opts$[11]="OTA"
+	open_tables$[12]="IVM_ITEMMAST",open_opts$[12]="OTA"
 	gosub open_tables
 [[OPE_CREDMAINT.<CUSTOM>]]
 disp_cust_comments:
