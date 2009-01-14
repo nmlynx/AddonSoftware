@@ -4,10 +4,10 @@ ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
 myrow=callpoint!.getValidationRow()
-escape;rem ? myrow
+
 jim$=callpoint!.getGridRowModifyStatus(myrow)
 jim1$=callpoint!.getGridRowNewStatus(myrow)
-
+rem escape;rem ? jim$ (mod stat) and jim1$ (new stat)
 	curVect!=gridVect!.getItem(0)
 	undoVect!=gridVect!.getItem(1)
 	diskVect!=gridVect!.getItem(2)

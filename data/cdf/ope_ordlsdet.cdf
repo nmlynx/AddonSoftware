@@ -1,3 +1,5 @@
+[[OPE_ORDLSDET.BSHO]]
+print 'show'
 [[OPE_ORDLSDET.QTY_SHIPPED.AVAL]]
 rem --- Check if Serial and validate quantity
 if callpoint!.getDevObject("lotser_flag")="S"
@@ -42,6 +44,7 @@ rem --- Calculate total quantities and compare to order line
 [[OPE_ORDLSDET.LOTSER_NO.BINP]]
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
 rem --- save current row/column so we'll know where to set focus when we return from lot lookup
+print "binp"
 
 if cvs(callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO"),3)=""
 	rem jpb grid! = Form!.getChildWindow(1109).getControl(5900)
