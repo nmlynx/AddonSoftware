@@ -227,7 +227,7 @@ rem --- Position ivm-07 file
 
 		if lots_to_disp$="O" and ivm_lsmaster.closed_flag$<>" " then continue
 		if lots_to_disp$="C" and ivm_lsmaster.closed_flag$<>"C" then continue
-		if lots_to_disp$="Z" and (ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit<=0 or ivm_lsmaster.closed_flag$<>"C") then continue
+		if lots_to_disp$="Z" and (ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit<=0 or ivm_lsmaster.closed_flag$="C") then continue
 		
 		switch pos(ivm_lsmaster.closed_flag$=" CL")
 			case 1
