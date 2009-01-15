@@ -143,10 +143,12 @@ rem --- Create Lot Information window
 [[IVC_LOTLOOKUP.LOTS_TO_DISP.AVAL]]
 rem -- user changed lot type -- re-read/display selected lot type
 
+	lots_to_disp$=callpoint!.getUserInput()
 	gosub read_and_display_lot_grid
 [[IVC_LOTLOOKUP.AREC]]
 rem --- item_id, warehouse_id, and type of lot (open,closed, etc.) coming from calling program
 
+	lots_to_disp$=callpoint!.getColumnData("IVC_LOTLOOKUP.LOTS_TO_DISP")
 	gosub read_and_display_lot_grid
 [[IVC_LOTLOOKUP.ACUS]]
 rem --- Process custom event -- used in this pgm to select lot and display info.
@@ -212,7 +214,6 @@ rem --- Position ivm-07 file
 	
 	whse_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.WAREHOUSE_ID")
 	item_id$ = callpoint!.getColumnData("IVC_LOTLOOKUP.ITEM_ID")
-	lots_to_disp$=callpoint!.getColumnData("IVC_LOTLOOKUP.LOTS_TO_DISP")
 	
 	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$,dom=*next)
 
