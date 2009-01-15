@@ -91,7 +91,7 @@ rem --- validate open lot number
 	dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
 
 	readrecord(lsmast_dev,key=firm_id$+wh$+item$+callpoint!.getUserInput())lsmast_tpl$
-	if lsmast_tpl.closed_flag$<>"Y"
+	if lsmast_tpl.closed_flag$="C"
 		msg_id$="IV_SERLOT_CLOSED"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
