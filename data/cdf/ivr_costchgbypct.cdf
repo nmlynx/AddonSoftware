@@ -1,24 +1,21 @@
 [[IVR_COSTCHGBYPCT.ASVA]]
-print "in ASVA"; rem debug
-
 rem --- Is percent in range?
 
 	pct = num( callpoint!.getColumnData("IVR_COSTCHGBYPCT.PERCENT_CHANGE") )
 
-	print "percentage (callpoint):", pct; rem debug
-
-	rem if pct < -999.99 or pct > 999.99 or pct = 0 then
+	if pct < -999.99 or pct > 999.99 or pct = 0 then
 		rem percentChangeControl! = util.getControl(callpoint!, "IVR_COSTCHGBYPCT.PERCENT_CHANGE")
 		rem percentChangeControl!.focus()
-		rem callpoint!.setMessage("IV_PCT_CHG_INVALID")
-		rem callpoint!.setStatus("ABORT")
-	rem endif
+		callpoint!.setMessage("IV_PCT_CHG_INVALID")
+		callpoint!.setStatus("ABORT")
+	endif
 
-	print "date: ", callpoint!.getColumnData("IVR_COSTCHGBYPCT.EFFECT_DATE"); rem debug
+	rem --- Check date
+	rem callpoint!.getColumnData("IVR_COSTCHGBYPCT.EFFECT_DATE")
 [[IVR_COSTCHGBYPCT.PERCENT_CHANGE.AVAL]]
 rem --- Is percent in range?
 
-	pct = num( callpoint!.getColumnData("IVR_COSTCHGBYPCT.PERCENT_CHANGE") )
+	pct = num( callpoint!.getUserInput() )
 
 	if pct < -999.99 or pct > 999.99 or pct = 0 then
 		callpoint!.setStatus("ABORT")
@@ -26,8 +23,6 @@ rem --- Is percent in range?
 [[IVR_COSTCHGBYPCT.<CUSTOM>]]
 #include std_missing_params.src
 [[IVR_COSTCHGBYPCT.BSHO]]
-print 'show',"in BSHO"; rem debug
-
 rem --- Inits
 
 	use ::ado_util.src::util
