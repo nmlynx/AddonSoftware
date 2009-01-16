@@ -15,11 +15,25 @@ rem ==========================================================================
 	setesc std_error
 
 rem  --- Set action$ to Cost change; entry$ to cost file
-	
-	action$="C"
-	entry$="IVE_COSTCHG"
 
-	call "ivc_pricecostchgbypct.aon",action$,entry$,options!,ignore_status
+	pgmdir$ = ""
+	pgmdir$ = stbl("+DIR_PGM",err=*next)
+	sypdir$ = ""
+	sypdir$ = stbl("+DIR_SYP",err=*next)
+	action$ = "C"
+	entry$  = "IVE_COSTCHG"
+	status  = 999
+
+	call pgmdir$ + "ivc_pricecostchgbypct.aon", err=*next, action$, entry$, option!, status
+	
+	if status = 0 then
+		msg_id$ = "IV_COST_CHANGE_DONE"
+		call sypdir$ + "bac_message.bbj", err=*endif,
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		table_chans$[all]
+	endif
 	
 	goto std_exit
 
@@ -58,3 +72,4 @@ std_exit: rem --- Standard program end (01Mar2006)
 rem #endinclude std_end.src
 
     end
+	
