@@ -8,6 +8,10 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
+	
+rem --- Use for type checking
+
+	use ::sys/prog/bao_option.bbj::Option	
 
 rem --- Retrieve the program path
 
@@ -23,61 +27,71 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- Assign form input values to local variables
+	
+	declare Option option!
+	effect_date$ = option!.getOptionData("EFFECT_DATE")	
+
 rem --- Open all files
 
-	num_files = 1
+	num_files = 8
 	open_beg  = 1
 	open_end  = num_files
 	
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
 	open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
-	
-	call sypdir$+"bac_open_tables.bbj",
-:		open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
+	open_tables$[2]="GLS_PARAMS",   open_opts$[2]="OTA"
+	open_tables$[3]="IVE_COSTCHG",  open_opts$[3]="OTAL"
+	open_tables$[4]="IVX_COSTXREF", open_opts$[4]="OTAI"
+	open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
+	open_tables$[6]="IVM_ITEMWHSE", open_opts$[6]="OTA"
+	open_tables$[7]="IVC_PRODCODE", open_opts$[7]="OTA"
+	open_tables$[8]="IVC_WHSECODE", open_opts$[8]="OTA"
 
-	if open_status$<>"" then
-		msg_id$="ENTRY_OPEN_ERROR"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-		status=912
-		goto std_exit
-	endif
+	gosub open_tables
 
-	ivs_params_dev   = num( open_chans$[1] )
+	ivs_params_dev = num( open_chans$[1] )
+	gls_params_dev = num( open_chans$[2] )
+	costchg_dev    = num( open_chans$[3] )
+	costxref_dev   = num( open_chans$[4] )
+	itemmast_dev   = num( open_chans$[5] )
+	itemwhse_dev   = num( open_chans$[6] )
+	prodcode_dev   = num( open_chans$[7] )
+	whsecode_dev   = num( open_chans$[8] )
 	
 	dim ivs_params_rec$:open_tpls$[1]
+	dim gls_params_rec$:open_tpls$[2]
+	dim costchg_rec$:open_tpls$[3]
+	dim costxref_rec$:open_tpls$[4]
+	dim itemmast_rec$:open_tpls$[5]
+	dim itemwhse_rec$:open_tpls$[6]
+	dim prodcode_rec$:open_tpls$[7]
+	dim whsecode_rec$:open_tpls$[8]
 	
 rem --- Parameters
 
-    dim p[7],g[4]
+    dim p[7]
     n1$=sysinfo.firm_name$
     n2$="IV"
     n3$=sysinfo.task_desc$
 	
     find record (ivs_params_dev, key=firm_id$+n2$+"00", dom=std_missing_params) ivs_params_rec$
-    if ivs_params_rec.cost_method$<>"S" goto Std_Cost
 	
-    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-    g[4]=num(gls01.max_acct_length$)
+    if ivs_params_rec.cost_method$<>"S" goto std_cost
+	
+    find record (gls_params_dev, key=firm_id$+"GL00", dom=std_missing_params) 
+	
     p[0]=ivs_params_rec.item_id_len
     p[1]=num(ivs_params_rec.precision$)
     p[5]=num(ivs_params_rec.desc_len_01$)
     p[6]=num(ivs_params_rec.desc_len_02$)
     p[7]=num(ivs_params_rec.desc_len_03$)
 	
+	rem --- is GL active for this application? (IV)
     call pgmdir$+"adc_application.aon",n2$,info$[all]
     gl$=info$[9]
-    ar$="N"
+    dist_gl_by_item$="N"
 	
     if gl$="Y" then
         call pgmdir$+"adc_application.aon","AR",info$[all]
@@ -85,13 +99,13 @@ rem --- Parameters
 		
         if ar$<>"Y" then
             find record (ars01a_dev,key=firm_id$+"AR00",dom=*endif) ars01a$
-            ar$=ars01a.dist_by_item$
+            dist_gl_by_item$=ars01a.dist_by_item$
         endif
     endif
 
 rem --- Initializations
 
-    precision num(ivs01a.precision$)
+    precision num(ivs_params_rec.precision$)
     rem dim a0$(24),a1$(64),a[20],b0$(22),b1$(60),b6$(50),b[12],o[8]
     dim o[8]
     dim d[1],s[1],t[1],r[1],headings$[3]
@@ -103,10 +117,10 @@ rem --- Initializations
     when$=sysinfo.system_date$
     effective$=when$
     clock$=""
-    m1$=ivs01a.amount_mask$
+    m1$=ivs_params_rec.amount_mask$
     m1=len(m1$)
-    m2$=ivs01a.unit_mask$
-    m3$=ivs01a.cost_mask$
+    m2$=ivs_params_rec.unit_mask$
+    m3$=ivs_params_rec.cost_mask$
     call pgmdir$+"adc_sizemask.aon",m2$,m2,7,12
     call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
     o[1]=p[0]
@@ -128,115 +142,152 @@ rem --- Initializations
 
 rem --- Additional File Opens
 
-    if gl$="Y" then
-        call pgmdir$+"adc_fileopen.aon",1,9,10,files$[all],options$[all],channels[all],batch,status
-        if status goto std_exit
-        glm01_dev=channels[9]
-        glw04_dev=channels[10]
-        if byitem$<>"Y" then
-            call pgmdir$+"adc_fileopen.aon",1,11,11,files$[all],options$[all],channels[all],batch,status
-            if status goto std_exit
-            arm10_dev=channels[11]
-        endif
-    endif
-rem --- Set default effective date
+	if gl$ = "Y" then 
 
-    ive06a_key$=key(ive06_dev,end=GUI_Resource)
-    if pos(firm_id$=ive06_key$)=1 effective$=ive06a_key.effect_date$
+		num_files = 3
+		open_beg  = 1
+		
+		if dist_gl_by_item$ = "Y" then 
+			open_end = 2
+		else
+			open_end = 3
+		endif
+		
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
-GUI_Resource: rem --- GUI Resource
+		open_tables$[1]="GLW_ACCTTOTALS", open_opts$[1]="OTAI"
+		open_tables$[2]="GLM_ACCT",       open_opts$[2]="OTA"
+		open_tables$[3]="ARC_DISTCODE",   open_opts$[3]="OTA"
+		
+		gosub open_tables
+		
+		accttotals_dev = num( open_chans$[1] )
+		glm_acct_dev   = num( open_chans$[2] )
+		
+		dim accttotals_rec$:open_tpls$[1]
+		dim glm_acct_rec$:open_tpls$[2]
+		
+		if dist_gl_by_item$ <> "Y" then
+			distcode_dev = num( open_chans$[3] )
+			dim distcode_rec$:open_tpls$[3]
+		endif
+	
+	endif
 
-    dim resparams$[20],resparams[20]
-    resparams$[0]=pgm(-2)
-    call pgmdir$+"syc_ra.bbx","",resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
-    if status goto std_exit
+rem --- Document initializations
 
-Effective_Date: rem --- Effective Date
+	declare BBjVector OutVect!
+	declare BBjVector HdrVect!
+	declare BBjVector BrkVect!
+	declare BBjVector TotVect!
 
-    v4$="Enter The Effective Date For Changes To Be Listed On This Report (<F1>=All)"
-    v0$="D"
-    v1$="CE"
-    v2$=effective$
-    v3$=""
-    v0=3
-    v1=40
-    v2=3
-    control_id=3000
-    on v3 goto Effective_Date_Assign,Effective_Date_Flow,Effective_Date,Effective_Date,std_exit,Effective_Date_Assign,std_exit
-Effective_Date_Flow:
-    effective$=""
-    call pgmdir$+"syc_rs.bbx","",my_context,3000,effective$,0,"",ignore_status
-    call pgmdir$+"syc_rs.bbx","",my_context,13000,"All",0,"",ignore_status
-    goto Report_Init
-Effective_Date_Assign:
-    effective$=v$
+	OutVect!=bbjAPI().getSysGui().makeVector()
+	HdrVect!=bbjAPI().getSysGui().makeVector()
+	BrkVect!=bbjAPI().getSysGui().makeVector()
+	TotVect!=bbjAPI().getSysGui().makeVector()
+	
+	rep_date$=date(0:"%Mz/%Dz/%Yd")
+	rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+	rep_time$=date(0:"%hz:%mz %p")
+	rep_time_stamp$=date(0:"%Hz%mz%sz")
+	rep_prog$=pgm(-2)	
+	
+rem --- Column headings
 
-Report_Init: rem --- Report Initializations
+	columns=8
+	dim columns$[columns,10]
+	
+	columns$[0,0]="Item",           columns$[0,1]="C", columns$[0,2]=str(p[0])
+	columns$[1,0]="Description",    columns$[1,1]="C", columns$[1,2]=str(dw)
+	columns$[2,0]="UM",             columns$[2,1]="C", columns$[2,2]="2"
+	columns$[3,0]="On Hand",        columns$[3,1]="N", columns$[3,2]=str(m2), columns$[3,3]=m2$
+	columns$[4,0]="Current^Cost",   columns$[4,1]="N", columns$[4,2]=str(m3), columns$[4,3]=m3$
+	columns$[5,0]="Current^Value",  columns$[5,1]="N", columns$[5,2]=str(m1), columns$[5,3]=m1$, columns$[5,10]="T"
+	columns$[6,0]="New^Cost",       columns$[6,1]="N", columns$[6,2]=str(m3), columns$[6,3]=m3$
+	columns$[7,0]="New^Value",      columns$[7,1]="N", columns$[7,2]=str(m1), columns$[7,3]=m1$, columns$[7,10]="T"
+	columns$[8,0]="Change^InValue", columns$[8,1]="N", columns$[8,2]=str(m1), columns$[8,3]=m1$, columns$[8,10]="T"
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$," Sorting","","",16+p[0],ive06_dev,1,0,ignore_status
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ive06_dev,1,meter_num,status
-    gosub sort_ive06
-    call pgmdir$+"adc_progress.aon","S","","Printing","","",0,ivw06_dev,1,0,ignore_status
-    read (ivw06_dev,key="",dom=*next)
+rem --- Report headings
 
-rem --- Next ivw-06 record
+    headings=3
+	dim headings$[headings]
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$	
+	headings$[headings]="[HEADER]"
+	
+rem --- Sort Cost Change file
+
+    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$," Sorting","","",16+p[0],costchg_dev,1,0,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,costchg_dev,1,meter_num,status
+	gosub sort_costchg
+	call pgmdir$+"adc_progress.aon","S","","Printing","","",0,costxref_dev,1,0,ignore_status
+	
+    read (costxref_dev, key="", dom=*next)
+	t0$ = ""
+	t1$ = ""
+	t2$ = ""
+
+rem --- Next costxref record
+
     while more
-        ivw06a_key$=key(ivw06_dev,end=*break)
-        if ivw06a_key.effect_date$ >sysinfo.system_date$ break
-        read (ivw06_dev)
-        call pgmdir$+"adc_progress.aon","S","","","",fndate$(ivw06a_key.effect_date$)+" "+ivw06a_key.warehouse_Id$+" "+ivw06a_key.product_type$+" "+ivw06a_key.Item_Id$,0,0,1,meter_num,status
-        ive06a_key$=ivw06a_key.firm_id$+ivw06a_key.effect_date$+ivw06a_key.warehouse_Id$+ivw06a_key.Item_Id$
-        read record (ive06_dev,key=ive06a_key$,dom=*continue) ive06a$
+	
+        read (costxref_dev, end=*break)costxref_rec$
+		
+		display$ = fndate$(costxref_rec.effect_date$)+" "+costxref_rec.warehouse_id$+" "+costxref_rec.product_type$+" "+costxref_rec.item_id$
+        call pgmdir$+"adc_progress.aon","S","","","",display$,0,0,1,meter_num,status
+        
+		costchg_key$ = firm_id$ + costxref_rec.effect_date$ + costxref_rec.warehouse_id$ + costxref_rec.item_id$
+        read record (costchg_dev, key=costchg_key$, dom=*continue) costchg_rec$
 
 rem --- Level breaks?
 
-        if ivw06a_key.effect_date$<>t0$ gosub Date_Break
-        if ivw06a_key.warehouse_Id$<>t1$ gosub Whse_Break
-        if ivw06a_key.product_type$<>t2$ gosub Product_Break
+        if costxref_rec.effect_date$<>t0$  then gosub date_break
+        if costxref_rec.warehouse_id$<>t1$ then gosub whse_break
+        if costxref_rec.product_type$<>t2$ then gosub product_break
 
 rem --- Additional reads
 
-        rem dim a0$(24),a1$(64),a[20],b0$(22),b1$(60),b6$(50),b[12]
-        ivm01a_key$=firm_id$+ive06a.product_type$
-        ivm02a_key$=firm_id$+ive06a.warehouse_Id$
-        find record (ivm01a_dev,key=ivm01a_key$,dom=*continue) ivm01a$
-        find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+        find record (itemmast_dev, key=firm_id$+costchg_rec.item_id$, dom=*continue) itemmast_rec$
+        find record (itemwhse_dev, key=firm_id$+costchg_rec.item_id$+costchg_rec.warehouse_id$, dom=*continue) itemwhse_rec$
 
 rem --- Format detail line fields
 
         dim description$(dw)
-        description$=fnitem$(ivm01a.item_desc$,p[5],p[6],p[7])
-        onhand=ivm02a.qty_on_hand
-        oldcost=ivm02a.unit_cost
-        newcost=ive06a.std_cost
+        description$ = fnitem$(itemmast_rec.item_desc$,p[5],p[6],p[7])
+        onhand       = itemwhse_rec.qty_on_hand
+        oldcost      = itemwhse_rec.unit_cost
+        newcost      = costchg_rec.std_cost
 
 rem --- Calculate extensions at precision 2
 
-        precision 2
-        oldvalue=onhand*oldcost
-        newvalue=onhand*newcost
-        change=newvalue-oldvalue
-        precision num(ivs01a.precision$)
+        oldvalue = round(onhand*oldcost, 2)
+        newvalue = round(onhand*newcost, 2)
+        change   = newvalue-oldvalue
 
 rem --- New product?
 
         if h5$<>"" then 
-            if l+3+nl>l9 gosub report_heading
-            if nl>0 print (printer_dev)""
-            print (printer_dev)h5$
-            print (printer_dev)""
-            l=l+2+nl
+            if nl>0 then ignore=fnblank_line(void)
+			OutVect!.addItem(h5$)
+            ignore=fnblank(8)
+			ignore=fnblank_line(void)
             nl=1
             h5$=""
         endif
+		
 rem --- Print detail line
 
-        if l>l9 gosub report_heading
-        print (printer_dev)@(o[0]),ivm01a.item_id$,@(o[1]),description$,@(o[2]),ivm01a.unit_of_sale$,@(o[3]),onhand:m2$,@(o[4]),oldcost:m3$,@(o[5]),oldvalue:m1$,@(o[6]),newcost:m3$,@(o[7]),newvalue:m1$,@(o[8]),change:m1$
-        l=l+1
         nl=1
+		
+		OutVect!.addItem(itemmast_rec.item_id$)
+		OutVect!.addItem(description$)
+		OutVect!.addItem(itemmast_rec.unit_of_sale$)
+		OutVect!.addItem( str(onhand) )
+		OutVect!.addItem( str(oldcost) )
+		OutVect!.addItem( str(oldvalue) )
+		OutVect!.addItem( str(newcost) )
+		OutVect!.addItem( str(newvalue) )
+		OutVect!.addItem( str(change) )
 
 rem --- Accumulate totals
 
@@ -251,149 +302,242 @@ rem --- Accumulate totals
 
 rem --- G/L distribution
 
-        if gl$<>"Y" continue
-        if ar$="Y" then
-
+        if gl$ = "Y" then 
+		
 rem --- By Distribution Code
+		
+	        if dist_gl_by_item$="Y" then
+	            find record (distcode_dev, key=firm_id$+"D"+itemwhse.dist_code$, dom=*continue) distcode_rec$
+	            if distcode_rec.gl_ar_acct$<>"" then account$=distcode_rec.gl_ar_acct$
+				
+rem --- By Item	
+			
+	        else
+				if itemmast.gl_ar_acct$<>"" then account$=itemmast.gl_ar_acct$
+			endif
 
-            rem dim d1$(8*g[4],"0")
-            arm10d_key$=firm_id$+"D"+ivm02a.dist_code$
-            find record (arm10d_dev,key=arm10d_key$,dom=*next) arm10d$
-            account$=arm10d.gl_ar_acct$
-            goto Summary_Record
-        endif
-rem --- By Item
+rem --- Write summary record
 
-        dim account$(g[4],"0")
-        if cvs(ivm01a.gl_ar_acct$,2)<>"" account$=ivm01a.gl_ar_acct$
-
-Summary_Record: rem --- Write summary record
-
-        amount=change
-        gosub Update_GL
+	        amount=change
+	        gosub update_gl
+		
+		endif
 
 rem --- Loop back for next record
 
     wend
 
-done: rem --- All done
+rem --- All done
 
-    if l>l9 gosub report_heading
+	rem --- Last break
     done=1
-    gosub Date_Break
+    gosub date_break
     total$="Report"
     t0=r[0]
     t1=r[1]
-    gosub Print_Total
-    if gl$<>"Y" goto std_exit
-    run pgmdir$+"glr_xb.bbx"
+    gosub print_total
 
-Std_Cost: rem --- Not Standard Costing
+	rem --- Destroy progress meter
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
 
-    call pgmdir$+"ivc_warnings.aon","S",status
+	rem --- Determine whether to run the GL overlay
+	if gl$ = "Y" then 
+		overlay$ = pgmdir$ + "glr_accttotals_DO.aon"	
+	else
+		overlay$ = ""
+	endif
+	
+	rem --- Print register via DocOut
+	out_action$="PRT-PDF"
+	next_overlay$=overlay$
+	goto std_exit
+	
+std_cost: rem --- Must be Standard Costing
+
+	msg_id$="IV_NO_STD_COST"
+	call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     status=999
     goto std_exit
 
-report_heading: rem --- Report Heading
+sort_costchg: rem --- Sort Cost Change file by product type
 
-    l=headings+3
-    nl=0
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)@(o[4]+m3-8),"Current",@(o[5]+m1-8),"Current",@(o[6]+m3-5),"New",@(o[7]+m1-6),"New",@(o[8]+m1-9),"Change"
-    print (printer_dev)@(o[0]),"Item",@(o[1]),"Description",@(o[2]),"UM",@(o[3]+m2-8),"On Hand",@(o[4]+m3-8),"Cost",@(o[5]+m1-8),"Value",@(o[6]+m3-5),"Cost",@(o[7]+m1-6),"Value",@(o[8]+m1-9),"In Value"
-    print (printer_dev)""
-    return
-
-sort_ive06: rem --- Sort ive-06 by product type
-
-    rem dim y0$(30)
-    first$=firm_id$+effective$
-    read (ive06_dev,key=first$,dom=*next)
+    first$ = firm_id$+effective$
+    read (costchg_dev, key=first$, dom=*next)
 
 rem --- Read next entry record
+
     while more
-        ive06a_key$=key(ive06_dev,end=sort_ive06_rtn)
-        if pos(first$=ive06a_key$)<>1 goto sort_ive06_rtn
-        read (ive06_dev)
-        call pgmdir$+"adc_progress.aon","S","","","",fndate$(ive06a.effect_date$)+" "+ive06a.warehouse_id$+" "+ive06a.item_id$,0,0,1,0,ignore_status
-        ivm01a_key$=ive06a.firm_id$+ive06a.item_id$
-        find record (ivm01a_dev,key=ivm01a_key$,dom=*continue) ivm01a$
+        costchg_key$ = key(costchg_dev, end=*break)
+        if pos(first$ = costchg_key$)<>1 then break
+        read (costchg_dev) costchg_rec$
+		if costchg_rec.effect_date$ > effect_date$ then continue
+		
+        call pgmdir$+"adc_progress.aon","S","","","",fndate$(costchg_rec.effect_date$)+" "+costchg_rec.warehouse_id$+" "+costchg_rec.item_id$,0,0,1,0,ignore_status
+
+        find record (itemmast_dev, key=firm_id$+costchg_rec.item_id$, dom=*continue) itemmast_rec$
 
 rem --- Write sort record
 
-        ivw06a_key$=ive06a.firm_id$+ive06a.effect_date$+ive06a.warehouse_id$+ivm01a.product_type$+ive06a.item_id$
-        write record (ivw06_dev,key=ivw06a_key$) ivw06a$
+        costxref_rec.firm_id$      = costchg_rec.firm_id$
+		costxref_rec.effect_date$  = costchg_rec.effect_date$
+		costxref_rec.warehouse_id$ = costchg_rec.warehouse_id$
+		costxref_rec.product_type$ = itemmast_rec.product_type$
+		costxref_rec.item_id$      = costchg_rec.item_id$
+		
+		costxref_rec$ = field(costxref_rec$)
+        write record (costxref_dev) costxref_rec$
      wend
-
-sort_ive06_rtn: rem --- Sort completed
 
     return
 
-Date_Break: rem --- Date break
+date_break: rem --- Date break
 
+	rem --- Previoius totals
     if t0$<>"" then 
-        if l+3>l9 gosub report_heading
-        gosub Whse_Break
+        gosub whse_break
         total$=h2$
         t0=d[0]
         t1=d[1]
-        gosub Print_Total
+        gosub print_total
     endif
+	
+	rem --- Start new date
     if done<=0 then
         dim d[1]
-        t0$=ive06a.effect_date$
-        h2$=fndate$(ive06a.effect_date$)
+        t0$=costchg_rec.effect_date$
+        h2$=fndate$(costchg_rec.effect_date$)
         headings$[1]=sysinfo.task_desc$+" For Changes Effective "+h2$
+		
+		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+		HdrVect!.addItem(h2$)
+		
+		ignore=fnblank_line(void)
+		OutVect!.addItem(h2$)
+		ignore=fnblank(8)
+		ignore=fnblank_line(void)
     endif
+	
     return
 
-Whse_Break: rem --- Warehouse break
+whse_break: rem --- Warehouse break
 
+	rem --- Previous totals
     if t1$<> "" then
-        if l+4>l9 gosub report_heading
-        gosub Product_Break
-        let total$=h3$,t0=t[0],t1=t[1]
-        gosub Print_Total
+        gosub product_break
+        total$=h3$
+		t0=t[0]
+		t1=t[1]
+        gosub print_total
     endif
+	
+	rem --- New warehouse
     if done<=0 then
         dim t[1]
-        let t1$=ive06a.warehouse_id$,ivm10c.whse_name$="Not On File"
-        find record (ivm10c_dev,key=firm_id$+"C"+t1$,dom=*next) ivm10c$
-        let h3$="Warehouse "+t1$+" "+cvs(ivm10c.whse_name$,2),l=l9+1
-        let headings$[2]=h3$,headings=3
+        t1$=costchg_rec.warehouse_id$
+		whsecode_rec.short_name$="Not On File"
+        find record (whsecode_dev, key=firm_id$+"C"+t1$, dom=*next) whsecode_rec$
+        h3$="Warehouse "+t1$+" "+cvs(whsecode_rec.short_name$,2)
+		
+		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+		HdrVect!.addItem(h3$)
+		
+		ignore=fnblank_line(void)
+		OutVect!.addItem( "Warehouse " + t1$ )
+		OutVect!.addItem( cvs(whsecode_rec.short_name$,2) )
+		ignore=fnblank(7)
+		ignore=fnblank_line(void)
     endif
+	
     return
 
-Product_Break: rem --- Product break
+product_break: rem --- Product break
 
+	rem --- Previous totals
     if t2$<>"" then
-        let total$=t5$,t0=s[0],t1=s[1]
-        gosub Print_Total
+        total$=t5$
+		t0=s[0]
+		t1=s[1]
+        gosub print_total
     endif
+	
+	rem --- Start a new product type
     if done<=0 then
         dim s[1]
-        let t2$=ivm01a.product_type$,ivm10a.code_desc$="(Not On File)"
-        find record (ivm10a_dev,key=firm_id$+"A"+t2$,dom=*next) ivm10a$
-        let h5$="Product "+t2$+" "+cvs(ivm10a.code_desc$,2),t5$=h5$
+        t2$=itemmast_rec.product_type$
+		prodcode_rec.code_desc$="(Not On File)"
+        find record (prodcode_dev, key=firm_id$+"A"+t2$, dom=*next) prodcode_rec$
+        h5$="Product "+t2$+" "+cvs(prodcode_rec.code_desc$,2)
+		t5$=h5$
+		
+		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+		HdrVect!.addItem(h5$)
+		
+		ignore=fnblank_line(void)
+		OutVect!.addItem("Product "+t2$)
+		OutVect!.addItem( cvs(prodcode_rec.code_desc$,2) )
+		ignore=fnblank(7)
+		ignore=fnblank_line(void)
     endif
+	
     return
 
-Print_Total: rem --- Print totals
+print_total: rem --- Print totals
 
-    let t2=t1-t0,l=l+1,total$="Totals For "+total$
-    print (printer_dev)@(o[1]),total$,@(o[5]),t0:m1$,@(o[7]),t1:m1$,@(o[8]),t2:m1$
+    t2=t1-t0
+	total$="Totals For "+total$
+	
+	TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+	
+	OutVect!.addItem("")
+	OutVect!.addItem(total$)
+	ignore=fnblank(3)
+	OutVect!.addItem( str(t0) )
+	OutVect!.addItem("")
+	OutVect!.addItem( str(t1) )
+	OutVect!.addItem( str(t2) )
+	
     return
-rem --- Update G/L Summary
-Update_GL:
-    if gl$="Y" or amount<>0 then
-        let glw04a_key$=firm_id$+account$,x0=0
-        find record (glw04a_dev,key=glw04a_key$,dom=*next) glw04a$
-        let x0=x0+amount
-        write record (glw04_dev,key=glw04a_key$) glw04a$
+
+update_gl: rem --- Update G/L Summary
+
+    if gl$="Y" and amount<>0 and account$<>"" then
+		accttotals_rec.firm_id$     = firm_id$
+		accttotals_rec.gl_acctount$ = account$
+		accttotals_rec.gl_post_amt  = 0
+		
+        find record (accttotals_dev, key=firm_id$+account$, dom=*next) accttotals_rec$
+		
+        accttotals_rec.gl_post_amt = accttotals_rec.gl_post_amt + amount
+		accttotals_rec$ = field(accttotals_rec$)
+        write record (accttotals_dev) accttotals_rec$
     endif
+	
     return
+	
+open_tables: rem --- Call the open tables routine
 
+	call sypdir$+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		status=912
+		exitto std_exit
+	endif
+
+	return	
+	
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -465,6 +609,19 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return void
+    fnend
+
+rem --- Create a blank line.  "void" is simply a variable; it's there to remind you that this function takes no input
+
+	def fnblank_line(void)=fnblank(columns+1)
+	
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -522,60 +679,3 @@ std_exit: rem --- Standard program end (01Mar2006)
 rem #endinclude std_end.src
 
     end
-	
-rem +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-rem --- Open/Lock files
-
-    files=15,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[2]="ARC_TERMCODE",ids$[2]=files$[2]
-    files$[3]="glm-01",ids$[3]="GLM_ACCT"
-    files$[4]="glw_costtotals",ids$[4]="GLW_COSTTOTALS"
-    files$[5]="ive-06",ids$[5]="IVE_COSTCHG"
-    files$[6]="ivm-01",ids$[6]="IVM_ITEMMAST"
-    files$[7]="ivm-02",ids$[7]="IVM_ITEMWHSE"
-    files$[8]="ivm-03",ids$[8]="IVX_ITEMPROD"
-    files$[9]="IVC_PRODCODE",ids$[9]=files$[9]
-    files$[10]="ivm-14",ids$[10]="IVM_ITEMSYN"
-    files$[11]="ivw-06",ids$[11]="IVX_COSTXREF"
-    files$[12]="ARS_PARAMS",ids$[12]=files$[12]
-    files$[13]="GLS_PARAMS",ids$[13]=files$[13]
-    files$[14]="IVC_WHSECODE",ids$[14]=files$[14]
-    files$[15]="IVS_PARAMS",ids$[15]=files$[15]
-
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-    arm10a_dev=channels[2]
-    glm01_dev=channels[3]
-    glw04_dev=channels[4]
-    ive06_dev=channels[5]
-    ivm01_dev=channels[6]
-    ivm02_dev=channels[7]
-    ivm03_dev=channels[8]
-    ivm10a_dev=channels[9]
-    ivm14_dev=channels[10]
-    ivw06_dev=channels[11]
-    ars01a_dev=channels[12]
-    gls01a_dev=channels[13]
-    ivm10c_dev=channels[14]
-    ivs01a_dev=channels[15]
-    
-
-rem --- Dimension string templates
-
-    dim arm10a$:templates$[2],glm01a$:templates$[3],glw04a$:templates$[4],
-:       ive06a$:templates$[5],ivm01a$:templates$[6],ivm02a$:templates$[7],
-:       ivm03a$:templates$[8],ivm10a$:templates$[9],ivm14a$:templates$[10],
-:       ivw06a$:templates$[11],ars01a$:templates$[12],gls01a$:templates$[13],
-:       ivm10c$:templates$[14],ivs01a$:templates$[15]     
-
-rem --- Retrieve parameter records
-
-    ars01a_key$=firm_id$+"AR00"
-    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    gls01a_key$=firm_id$+"GL00"
-    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$	
