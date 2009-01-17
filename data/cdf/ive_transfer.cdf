@@ -44,7 +44,7 @@ rem --- Commit inventory
 [[IVE_TRANSFER.ADIS]]
 print "in ADIS (After Record Display)"; rem debug
 
-rem --- Get "previous" qty, getColumnDiskData() doesn't work yet
+rem --- Get "previous" qty
 
 	user_tpl.prev_qty = num( callpoint!.getColumnData("IVE_TRANSFER.TRANS_QTY") )
 
