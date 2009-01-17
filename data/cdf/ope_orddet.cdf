@@ -27,17 +27,9 @@ while 1
 	if pos(user_tpl.lot_ser$="LS")>0
 		readrecord(ivm01_dev,key=firm_id$+cur_rec.item_id$,dom=*break)ivm01a$
 		if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
-			callpoint!.setDevObject("ar_type",callpoint!.getColumnData("OPE_ORDDET.AR_TYPE"))
-			callpoint!.setDevObject("cust",callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID"))
-			callpoint!.setDevObject("order",callpoint!.getColumnData("OPE_ORDDET.ORDER_NO"))
 			callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
 			callpoint!.setDevObject("wh",cur_rec.warehouse_id$)
 			callpoint!.setDevObject("item",cur_rec.item_id$)
-			callpoint!.setDevObject("lsmast_dev",str(fnget_dev("IVM_LSMASTER")))
-			callpoint!.setDevObject("lsmast_tpl",fnget_tpl$("IVM_LSMASTER"))
-			callpoint!.setDevObject("lotser_flag",user_tpl.lot_ser$)
-			item$=cur_rec.item_id$
-			wh$=cur_rec.warehouse_id$
 		endif
 	endif
 	break

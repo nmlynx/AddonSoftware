@@ -1,32 +1,29 @@
 [[OPE_ORDHDR.AOPT-LENT]]
 rem --- Go get Lot Numbers
 
-	cust$=callpoint!.getDevObject("cust")
-	ar_type$=callpoint!.getDevObject("ar_type")
-	order$=callpoint!.getDevObject("order")
-	int_seq$=callpoint!.getDevObject("int_seq")
-	if cvs(cust$,2)<>""
-		dim dflt_data$[3,1]
-		dflt_data$[1,0]="AR_TYPE"
-		dflt_data$[1,1]=ar_type$
-		dflt_data$[2,0]="CUSTOMER_ID"
-		dflt_data$[2,1]=cust$
-		dflt_data$[3,0]="ORDER_NO"
-		dflt_data$[3,1]=order$
-		lot_pfx$=firm_id$+ar_type$+cust$+order$+int_seq$
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
-	endif
+	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+	item$=callpoint!.getDevObject("item")
+	readrecord(ivm_itemmast_dev,key=firm_id$+item$,dom=*next)ivm_itemmast$
 
-rem --- Clear variables
-	callpoint!.setDevObject("cust","")
-	callpoint!.setDevObject("ar_type","")
-	callpoint!.setDevObject("order","")
-	callpoint!.setDevObject("int_seq","")
-	callpoint!.setDevObject("wh","")
-	callpoint!.setDevObject("item","")
-	callpoint!.setDevObject("lsmast_dev","")
-	callpoint!.setDevObject("lsmast_tpl","")
-	callpoint!.setDevObject("lotser_flag","")
+	if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
+		cust$=callpoint!.getDevObject("cust")
+		ar_type$="  "
+		order$=callpoint!.getDevObject("order")
+		int_seq$=callpoint!.getDevObject("int_seq")
+
+		if cvs(cust$,2)<>""
+			dim dflt_data$[3,1]
+			dflt_data$[1,0]="AR_TYPE"
+			dflt_data$[1,1]=ar_type$
+			dflt_data$[2,0]="CUSTOMER_ID"
+			dflt_data$[2,1]=cust$
+			dflt_data$[3,0]="ORDER_NO"
+			dflt_data$[3,1]=order$
+			lot_pfx$=firm_id$+ar_type$+cust$+order$+int_seq$
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
+		endif
+	endif
 [[OPE_ORDHDR.ORDER_DATE.AVAL]]
 rem --- Set user template info
 	user_tpl.order_date$=callpoint!.getUserInput()
@@ -87,7 +84,8 @@ cwin!.setSize(g!.getWidth(),cwin!.getHeight())
 rem --- Create Inventory Availability window
 g!=form!.getChildWindow(1109).getControl(5900)
 userObj!=sysgui!.makeVector()
-mwin!=form!.getChildWindow(1109).addChildWindow(15000,0,10,100,75,"",$00000800$,10)
+cxt=SysGUI!.getAvailableContext()
+mwin!=form!.getChildWindow(1109).addChildWindow(15000,0,10,100,75,"",$00000800$,cxt)
 mwin!.addGroupBox(15999,0,5,g!.getWidth()-5,65,"Inventory Availability",$$)
 userObj!.addItem(g!) 
 userObj!.addItem(mwin!)
@@ -210,6 +208,7 @@ rem --- set default values
 :		callpoint!.getUserInput(),dom=*next)ope01a$;goto rec_exist
 	user_tpl.new_rec$="Y"
 rec_exist:
+	callpoint!.setDevObject("order",callpoint!.getUserInput())
 	if user_tpl.new_rec$<>"Y"
 		gosub check_lock_flag
 		if locked=1
@@ -404,6 +403,7 @@ rem --- Show customer data
 	gosub bill_to_info
 	cust$=callpoint!.getUserInput()
 	gosub disp_cust_comments
+	callpoint!.setDevObject("cust",cust$)
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 
@@ -910,6 +910,11 @@ rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
+
+rem --- Set variables
+	callpoint!.setDevObject("cust",cust_id$)
+	callpoint!.setDevObject("ar_type","")
+	callpoint!.setDevObject("order",ord_no$)
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
 	num_files=33
@@ -1021,3 +1026,14 @@ rem --- Setup user_tpl$
 	user_tpl.ord_tot_1$="9"
 	user_tpl.cur_row=-1
 	user_tpl.lot_ser$=ivs01a.lotser_flag$
+
+rem --- Clear variables
+	callpoint!.setDevObject("cust","")
+	callpoint!.setDevObject("ar_type","")
+	callpoint!.setDevObject("order","")
+	callpoint!.setDevObject("int_seq","")
+	callpoint!.setDevObject("wh","")
+	callpoint!.setDevObject("item","")
+	callpoint!.setDevObject("lsmast_dev",open_chans$[13])
+	callpoint!.setDevObject("lsmast_tpl",open_tpls$[13])
+	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
