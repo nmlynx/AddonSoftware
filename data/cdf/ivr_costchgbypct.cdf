@@ -1,23 +1,14 @@
 [[IVR_COSTCHGBYPCT.ASVA]]
-rem --- Is percent in range?
+rem --- Percent change can't be zero
 
-	pct = num( callpoint!.getColumnData("IVR_COSTCHGBYPCT.PERCENT_CHANGE") )
-
-	if pct < -999.99 or pct > 999.99 or pct = 0 then
-		rem percentChangeControl! = util.getControl(callpoint!, "IVR_COSTCHGBYPCT.PERCENT_CHANGE")
-		rem percentChangeControl!.focus()
+	if num( callpoint!.getColumnData("IVR_COSTCHGBYPCT.PERCENT_CHANGE") ) = 0 then
 		callpoint!.setMessage("IV_PCT_CHG_INVALID")
 		callpoint!.setStatus("ABORT")
 	endif
-
-	rem --- Check date
-	rem callpoint!.getColumnData("IVR_COSTCHGBYPCT.EFFECT_DATE")
 [[IVR_COSTCHGBYPCT.PERCENT_CHANGE.AVAL]]
-rem --- Is percent in range?
+rem --- Percent can't be zero
 
-	pct = num( callpoint!.getUserInput() )
-
-	if pct < -999.99 or pct > 999.99 or pct = 0 then
+	if num( callpoint!.getUserInput() ) = 0 then
 		callpoint!.setStatus("ABORT")
 	endif
 [[IVR_COSTCHGBYPCT.<CUSTOM>]]
