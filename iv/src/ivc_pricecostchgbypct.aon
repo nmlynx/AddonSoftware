@@ -71,7 +71,6 @@ rem --- Open all files
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
 	open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
-	open_tables$[2]="IVX_ITEMPRWH", open_opts$[2]="OTA"
 	open_tables$[3]="IVM_ITEMMAST", open_opts$[3]="OTA"
 	open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
 	open_tables$[5]=entry$,         open_opts$[5]="OTA"
@@ -97,13 +96,11 @@ rem --- Open all files
 	endif
 
 	params_dev   = num( open_chans$[1] )
-	itemprwh_dev = num( open_chans$[2] )
 	itemmast_dev = num( open_chans$[3] )
 	itemwhse_dev = num( open_chans$[4] )
 	entry_dev    = num( open_chans$[5] )
 	
 	dim params_rec$:open_tpls$[1]
-	dim itemprwh_rec$:open_tpls$[2]
 	dim itemmast_rec$:open_tpls$[3]
 	dim itemwhse_rec$:open_tpls$[4]
 	dim entry_rec$:open_tpls$[5]
@@ -116,61 +113,50 @@ rem --- Initializations
 	
 	precision num( params_rec.precision$ )
 	more = 1
+	
+	call pgmdir$+"adc_progress.aon","N","","","","",0,itemwhse_dev,1,0,ignore_status
+	
+rem --- Setup SQL to read through IVM_ITEMMAST
 
-rem --- Initial read
-	
-	call pgmdir$+"adc_progress.aon","N","","","","",0,itemprwh_dev,1,0,ignore_status
-	
-	first$ = firm_id$ + "C"
-	k$ = first$ + begwhse$
-	if begwhse$ <> "" then k$ = k$ + begprod$
-	if k$ <> first$ then k$ = k$ + begitem$
-	read (itemprwh_dev, key=k$, dom=*next)
+	sql_prep$ = ""
+    sql_prep$ = sql_prep$ + "SELECT ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, ivm_itemmast.product_type "
+    sql_prep$ = sql_prep$ + "  FROM ivm_itemwhse INNER JOIN ivm_itemmast "
+    sql_prep$ = sql_prep$ + "    ON ivm_itemwhse.item_id = ivm_itemmast.item_id AND "
+    sql_prep$ = sql_prep$ + "       ivm_itemwhse.firm_id = ivm_itemmast.firm_id "
+    where_clause$="WHERE ivm_itemwhse.firm_id = '"+firm_id$+"' AND "
+    if begwhse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id >= '"+begwhse$+"' AND "
+    if endwhse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id <= '"+endwhse$+"' AND "
+    if begprod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type >= '"+begprod$+"' AND "
+    if endprod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type <= '"+endprod$+"' AND "
+    if begitem$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id >= '"+begitem$+"' AND "
+    if enditem$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id <= '"+enditem$+"' AND "
+	if type$<>""    where_clause$=where_clause$+"ivm_itemmast.item_type = '"+type$+"'"
 
-	while more
-	
+    where_clause$=cvs(where_clause$,2)
+    if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
+    sql_prep$=sql_prep$+where_clause$
+
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim sql_rec$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
+
 rem --- Get next sort record
+	
+	while more
 
-		itemprwh_key$ = key(itemprwh_dev, end=*break)
-		if pos(first$ = itemprwh_key$) <> 1 then break 
-		read (itemprwh_dev) itemprwh_rec$
+		sql_rec$=sqlfetch(sql_chan,err=*break)
 		
-		whse$    = itemprwh_rec.warehouse_id$
-		product$ = itemprwh_rec.product_type$
-		item$    = itemprwh_rec.item_id$
-
-rem --- Test for in range, do trip reads
-
-		if endwhse$<>"" and whse$>endwhse$ then break
-		
-		if begprod$<>"" and product$<begprod$ then
-			read (itemprwh_dev, key=firm_id$+"C"+whse$+begprod$, dom=*continue)
-			continue
-		endif
-		
-		if endprod$<>"" and product$>endprod$ then
-			read (itemprwh_dev, key=firm_id$+"C"+whse$+$ff$, dom=*continue)
-			continue
-		endif
-		
-		if begitem$<>"" and item$<begitem$ then
-			read (itemprwh_dev, key=firm_id$+"C"+whse$+product$+begitem$, dir=0, dom=*continue)
-			continue
-		endif
-		
-		if enditem$<>"" and item$>enditem$ then
-			read (itemprwh_dev, key=firm_id$+"C"+whse$+product$+$ff$, dom=*continue)
-			continue
-		endif
+		whse$    = sql_rec.warehouse_id$
+		product$ = sql_rec.product_type$
+		item$    = sql_rec.item_id$
 
 rem --- Read item and warehouse records
 
 		call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
 			
-		find record (itemmast_dev, key=firm_id$+item$, dom=*continue) itemmast_rec$
-		
-		if type$<>"" and itemmast_rec.item_type$<>type$ then continue
-		
+		find record (itemmast_dev, key=firm_id$+item$,       dom=*continue) itemmast_rec$
 		find record (itemwhse_dev, key=firm_id$+whse$+item$, dom=*continue) itemwhse_rec$
 		
 		if itemmast_rec.stock_level$<>"W" then
