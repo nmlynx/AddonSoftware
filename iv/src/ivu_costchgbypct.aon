@@ -26,6 +26,7 @@ rem  --- Set action$ to Cost change; entry$ to cost file
 
 	call pgmdir$ + "ivc_pricecostchgbypct.aon", err=*next, action$, entry$, option!, status
 	
+	rem --- Report success or it seems it "did nothing"
 	if status = 0 then
 		msg_id$ = "IV_COST_CHANGE_DONE"
 		call sypdir$ + "bac_message.bbj", err=*endif,
