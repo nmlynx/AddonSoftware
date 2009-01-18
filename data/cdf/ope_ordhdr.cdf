@@ -1,3 +1,14 @@
+[[OPE_ORDHDR.AOPT-RPRT]]
+gosub add_to_batch_print
+callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG","Y")
+callpoint!.setStatus("MODIFIED")
+[[OPE_ORDHDR.ADEL]]
+rem --- Remove from ope-04
+
+	ope_prntlist_dev=fnget_dev("OPE_PRNTLIST")
+	remove (ope_prntlist_dev,key=firm_id$+"O"+"  "+
+:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
 [[OPE_ORDHDR.AOPT-LENT]]
 rem --- Go get Lot Numbers
 
@@ -429,6 +440,10 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl.state_code$=callpoint!.getColumnData("<<DISPLAY>>.SSTATE")
 		ordship_tpl.zip_code$=callpoint!.getColumnData("<<DISPLAY>>.SZIP")
 		write record (ordship_dev,key=firm_id$+cust_id$+ord_no$) ordship_tpl$
+	endif
+
+	if user_tpl.new_rec$="Y"
+		gosub add_to_batch_print
 	endif
 [[OPE_ORDHDR.<CUSTOM>]]
 bill_to_info: rem --- get and display Bill To Information
@@ -866,6 +881,18 @@ disp_cust_comments:
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
 	callpoint!.setStatus("REFRESH")
 return
+
+add_to_batch_print:
+	ope_prntlist_dev=fnget_dev("OPE_PRNTLIST")
+	dim ope_prntlist$:fnget_tpl$("OPE_PRNTLIST")
+	ope_prntlist.firm_id$=firm_id$
+	ope_prntlist.ordinv_flag$="O"
+	ope_prntlist.ar_type$="  "
+	ope_prntlist.customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ope_prntlist.order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ope_prntlist$=field(ope_prntlist$)
+	writerecord(ope_prntlist_dev)ope_prntlist$
+return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
 	gosub disp_ord_tot
@@ -917,7 +944,7 @@ rem --- Set variables
 	callpoint!.setDevObject("order",ord_no$)
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
-	num_files=33
+	num_files=34
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
@@ -951,6 +978,7 @@ rem --- open needed files
 	open_tables$[31]="IVM_ITEMPRIC",open_opts$[31]="OTA"
 	open_tables$[32]="IVC_PRICCODE",open_opts$[32]="OTA"
 	open_tables$[33]="ARM_CUSTCMTS",open_opts$[33]="OTA"
+	open_tables$[34]="OPE_PRNTLIST",open_opts$[34]="OTA"
 	gosub open_tables
 rem --- get AR Params
 	dim ars01a$:open_tpls$[4]
