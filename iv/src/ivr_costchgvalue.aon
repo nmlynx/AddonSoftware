@@ -72,9 +72,7 @@ rem --- Open all files
 rem --- Parameters
 
     dim p[7]
-    n1$=sysinfo.firm_name$
     n2$="IV"
-    n3$=sysinfo.task_desc$
 	
     find record (ivs_params_dev, key=firm_id$+n2$+"00", dom=std_missing_params) ivs_params_rec$
 	
@@ -106,23 +104,18 @@ rem --- Parameters
 rem --- Initializations
 
     precision num(ivs_params_rec.precision$)
-    rem dim a0$(24),a1$(64),a[20],b0$(22),b1$(60),b6$(50),b[12],o[8]
+	
     dim o[8]
-    dim d[1],s[1],t[1],r[1],headings$[3]
-    headings$[0]=sysinfo.firm_name$
-    headings$[2]=sysinfo.task_desc$
-    headings=2
-    page=0
-    width=132
-    when$=sysinfo.system_date$
-    effective$=when$
-    clock$=""
+    dim d[1],s[1],t[1],r[1]
+	
     m1$=ivs_params_rec.amount_mask$
     m1=len(m1$)
     m2$=ivs_params_rec.unit_mask$
     m3$=ivs_params_rec.cost_mask$
     call pgmdir$+"adc_sizemask.aon",m2$,m2,7,12
     call pgmdir$+"adc_sizemask.aon",m3$,m3,8,12
+		    
+	width=132
     o[1]=p[0]
     o[8]=width-m1
     o[7]=o[8]-m1
@@ -132,13 +125,11 @@ rem --- Initializations
     o[3]=o[4]-m2
     o[2]=o[3]-3
     dw=min(o[2]-o[1]-1,p[5]+p[6]+p[7])
-    l9=55
-    l=l9+1
-    done=0
-    split=0
+	
+	more=1
+	h2$=""
     h3$=""
     h4$=""
-    h5$=""
 
 rem --- Additional File Opens
 
@@ -161,10 +152,10 @@ rem --- Additional File Opens
 		
 		gosub open_tables
 		
-		accttotals_dev = num( open_chans$[1] )
-		glm_acct_dev   = num( open_chans$[2] )
+		glw_accttotals_dev = num( open_chans$[1] )
+		glm_acct_dev       = num( open_chans$[2] )
 		
-		dim accttotals_rec$:open_tpls$[1]
+		dim glw_accttotals_rec$:open_tpls$[1]
 		dim glm_acct_rec$:open_tpls$[2]
 		
 		if dist_gl_by_item$ <> "Y" then
@@ -214,41 +205,67 @@ rem --- Report headings
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$	
 	headings$[headings]="[HEADER]"
-	
-rem --- Sort Cost Change file
 
-    rem call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$," Sorting","","",16+p[0],costchg_dev,1,0,ignore_status
-    call pgmdir$+"adc_progress.aon","N","","","","",0,costchg_dev,1,meter_num,status
-	gosub sort_costchg
-	call pgmdir$+"adc_progress.aon","S","","Printing","","",0,costxref_dev,1,0,ignore_status
-	
-    read (costxref_dev, key="", dom=*next)
-	t0$ = ""
-	t1$ = ""
-	t2$ = ""
+rem --- Sort by product type using SQL	
 
-rem --- Next costxref record
+	call pgmdir$+"adc_progress.aon","N","","","","",0,costchg_dev,1,meter_num,ignore_status
+	
+	unlock(costchg_dev,err=*next); rem SQL will execute with file locked
+
+	sql_prep$ = ""
+	sql_prep$ = sql_prep$ + "SELECT ive_costchg.effect_date, ive_costchg.warehouse_id, ivm_itemmast.product_type, ive_costchg.item_id "
+	sql_prep$ = sql_prep$ + "  FROM ive_costchg INNER JOIN ivm_itemmast ON ive_costchg.firm_id = ivm_itemmast.firm_id AND "
+	sql_prep$ = sql_prep$ + "       ive_costchg.item_id = ivm_itemmast.item_id "
+	sql_prep$ = sql_prep$ + " WHERE ive_costchg.firm_id = '" + firm_id$ + "' AND "
+	sql_prep$ = sql_prep$ + "       ive_costchg.effect_date <= '" + effect_date$ +"'"
+	sql_prep$ = sql_prep$ + "ORDER BY ive_costchg.effect_date, ive_costchg.warehouse_id, ivm_itemmast.product_type$, ive_costchg.item_id"
+
+	sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim sql_rec$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
+
+rem --- Inits for record loop
+
+	call pgmdir$+"adc_progress.aon","S","","Printing","","",0,costchg_dev,1,0,ignore_status
+
+	prev_date$ = ""
+	prev_whse$ = ""
+	prev_type$ = ""
+
+rem --- Next SQL record
 
     while more
-	
-        read (costxref_dev, end=*break)costxref_rec$
+
+		sql_rec$=sqlfetch(sql_chan,err=*break)
 		
-		display$ = fndate$(costxref_rec.effect_date$)+" "+costxref_rec.warehouse_id$+" "+costxref_rec.product_type$+" "+costxref_rec.item_id$
-        call pgmdir$+"adc_progress.aon","S","","","",display$,0,0,1,meter_num,status
+        rem debug --- call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
         
-		costchg_key$ = firm_id$ + costxref_rec.effect_date$ + costxref_rec.warehouse_id$ + costxref_rec.item_id$
+		costchg_key$ = firm_id$ + sql_rec.effect_date$ + sql_rec.warehouse_id$ + sql_rec.item_id$
         read record (costchg_dev, key=costchg_key$, dom=*continue) costchg_rec$
-
-rem --- Level breaks?
-
-        if costxref_rec.effect_date$<>t0$  then gosub date_break
-        if costxref_rec.warehouse_id$<>t1$ then gosub whse_break
-        if costxref_rec.product_type$<>t2$ then gosub product_break
-
+		
 rem --- Additional reads
 
         find record (itemmast_dev, key=firm_id$+costchg_rec.item_id$, dom=*continue) itemmast_rec$
-        find record (itemwhse_dev, key=firm_id$+costchg_rec.item_id$+costchg_rec.warehouse_id$, dom=*continue) itemwhse_rec$
+        find record (itemwhse_dev, key=firm_id$+costchg_rec.warehouse_id$+costchg_rec.item_id$, dom=*continue) itemwhse_rec$
+
+rem --- Level breaks?
+
+        if costchg_rec.effect_date$<>prev_date$ then 
+			gosub prev_date_totals
+			gosub new_date
+		else
+			if costchg_rec.warehouse_id$<>prev_whse$ then 
+				gosub prev_whse_totals
+				gosub new_whse
+			else
+				if sql_rec.product_type$<>prev_type$ then
+					gosub prev_prod_totals
+					gosub new_prod
+				endif
+			endif
+		endif
 
 rem --- Format detail line fields
 
@@ -256,7 +273,7 @@ rem --- Format detail line fields
         description$ = fnitem$(itemmast_rec.item_desc$,p[5],p[6],p[7])
         onhand       = itemwhse_rec.qty_on_hand
         oldcost      = itemwhse_rec.unit_cost
-        newcost      = costchg_rec.std_cost
+        newcost      = costchg_rec.new_cost
 
 rem --- Calculate extensions at precision 2
 
@@ -264,20 +281,9 @@ rem --- Calculate extensions at precision 2
         newvalue = round(onhand*newcost, 2)
         change   = newvalue-oldvalue
 
-rem --- New product?
-
-        if h5$<>"" then 
-            if nl>0 then ignore=fnblank_line(void)
-			OutVect!.addItem(h5$)
-            ignore=fnblank(8)
-			ignore=fnblank_line(void)
-            nl=1
-            h5$=""
-        endif
-		
 rem --- Print detail line
 
-        nl=1
+        nl=nl+1
 		
 		OutVect!.addItem(itemmast_rec.item_id$)
 		OutVect!.addItem(description$)
@@ -307,13 +313,13 @@ rem --- G/L distribution
 rem --- By Distribution Code
 		
 	        if dist_gl_by_item$="Y" then
-	            find record (distcode_dev, key=firm_id$+"D"+itemwhse.dist_code$, dom=*continue) distcode_rec$
-	            if distcode_rec.gl_ar_acct$<>"" then account$=distcode_rec.gl_ar_acct$
+	            find record (distcode_dev, key=firm_id$+"D"+itemwhse_rec.dist_code$, dom=*continue) distcode_rec$
+	            if distcode_rec.gl_inv_acct$<>"" then account$=distcode_rec.gl_inv_acct$
 				
 rem --- By Item	
 			
 	        else
-				if itemmast.gl_ar_acct$<>"" then account$=itemmast.gl_ar_acct$
+				if itemmast_rec.gl_inv_acct$<>"" then account$=itemmast_rec.gl_inv_acct$
 			endif
 
 rem --- Write summary record
@@ -323,6 +329,12 @@ rem --- Write summary record
 		
 		endif
 
+rem --- Set previous values
+		
+		prev_date$ = costchg_rec.effect_date$
+		prev_whse$ = costchg_rec.warehouse_id$
+		prev_type$ = itemmast_rec.product_type$
+
 rem --- Loop back for next record
 
     wend
@@ -330,8 +342,7 @@ rem --- Loop back for next record
 rem --- All done
 
 	rem --- Last break
-    done=1
-    gosub date_break
+	gosub prev_date_totals
     total$="Report"
     t0=r[0]
     t1=r[1]
@@ -342,7 +353,7 @@ rem --- All done
 
 	rem --- Determine whether to run the GL overlay
 	if gl$ = "Y" then 
-		overlay$ = pgmdir$ + "glr_accttotals_DO.aon"	
+		overlay$ = pgmdir$ + "glr_accttotals.aon"	
 	else
 		overlay$ = ""
 	endif
@@ -352,139 +363,104 @@ rem --- All done
 	next_overlay$=overlay$
 	goto std_exit
 	
-std_cost: rem --- Must be Standard Costing
+std_cost: rem --- Must be Standard Costing 
 
 	msg_id$="IV_NO_STD_COST"
 	call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     status=999
     goto std_exit
 
-sort_costchg: rem --- Sort Cost Change file by product type
+rem --- Date break
 
-    first$ = firm_id$+effective$
-    read (costchg_dev, key=first$, dom=*next)
+prev_date_totals: rem --- Previous totals
 
-rem --- Read next entry record
-
-    while more
-        costchg_key$ = key(costchg_dev, end=*break)
-        if pos(first$ = costchg_key$)<>1 then break
-        read (costchg_dev) costchg_rec$
-		if costchg_rec.effect_date$ > effect_date$ then continue
-		
-        call pgmdir$+"adc_progress.aon","S","","","",fndate$(costchg_rec.effect_date$)+" "+costchg_rec.warehouse_id$+" "+costchg_rec.item_id$,0,0,1,0,ignore_status
-
-        find record (itemmast_dev, key=firm_id$+costchg_rec.item_id$, dom=*continue) itemmast_rec$
-
-rem --- Write sort record
-
-        costxref_rec.firm_id$      = costchg_rec.firm_id$
-		costxref_rec.effect_date$  = costchg_rec.effect_date$
-		costxref_rec.warehouse_id$ = costchg_rec.warehouse_id$
-		costxref_rec.product_type$ = itemmast_rec.product_type$
-		costxref_rec.item_id$      = costchg_rec.item_id$
-		
-		costxref_rec$ = field(costxref_rec$)
-        write record (costxref_dev) costxref_rec$
-     wend
-
-    return
-
-date_break: rem --- Date break
-
-	rem --- Previoius totals
-    if t0$<>"" then 
-        gosub whse_break
+    if prev_date$<>"" then 
+		gosub prev_whse_totals
         total$=h2$
         t0=d[0]
         t1=d[1]
         gosub print_total
     endif
 	
-	rem --- Start new date
-    if done<=0 then
-        dim d[1]
-        t0$=costchg_rec.effect_date$
-        h2$=fndate$(costchg_rec.effect_date$)
-        headings$[1]=sysinfo.task_desc$+" For Changes Effective "+h2$
-		
-		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-		HdrVect!.addItem(h2$)
-		
-		ignore=fnblank_line(void)
-		OutVect!.addItem(h2$)
-		ignore=fnblank(8)
-		ignore=fnblank_line(void)
-    endif
+	return
+	
+new_date: rem --- Start new date
+
+	dim d[1]
+	h2$=fndate$(costchg_rec.effect_date$)
+	
+	BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+	HdrVect!.addItem("Effective Date: " + h2$)
+	
+	gosub new_whse
+	nl = 0
 	
     return
 
-whse_break: rem --- Warehouse break
+rem --- Warehouse break
 
-	rem --- Previous totals
-    if t1$<> "" then
-        gosub product_break
+prev_whse_totals: rem --- Previous totals
+
+    if prev_whse$<> "" then
+		gosub prev_prod_totals
         total$=h3$
 		t0=t[0]
 		t1=t[1]
         gosub print_total
     endif
 	
-	rem --- New warehouse
-    if done<=0 then
-        dim t[1]
-        t1$=costchg_rec.warehouse_id$
-		whsecode_rec.short_name$="Not On File"
-        find record (whsecode_dev, key=firm_id$+"C"+t1$, dom=*next) whsecode_rec$
-        h3$="Warehouse "+t1$+" "+cvs(whsecode_rec.short_name$,2)
-		
-		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-		HdrVect!.addItem(h3$)
-		
-		ignore=fnblank_line(void)
-		OutVect!.addItem( "Warehouse " + t1$ )
-		OutVect!.addItem( cvs(whsecode_rec.short_name$,2) )
-		ignore=fnblank(7)
-		ignore=fnblank_line(void)
-    endif
+	return
+	
+new_whse: rem --- New warehouse
+
+	dim t[1]
+	whsecode_rec.short_name$="Not On File"
+	find record (whsecode_dev, key=firm_id$+"C"+costchg_rec.warehouse_id$, dom=*next) whsecode_rec$
+	h3$="Warehouse "+costchg_rec.warehouse_id$+" "+cvs(whsecode_rec.short_name$,2)
+	
+	ignore=fnblank_line(void)
+	OutVect!.addItem(h3$)
+	ignore=fnblank(8)
+	ignore=fnblank_line(void)
+	
+	gosub new_prod
+	nl = 0
 	
     return
 
-product_break: rem --- Product break
+rem --- Product break
 
-	rem --- Previous totals
-    if t2$<>"" then
-        total$=t5$
+prev_prod_totals: rem --- Previous totals
+
+    if prev_type$ <> "" and nl > 1 then
+        total$=h4$
 		t0=s[0]
 		t1=s[1]
         gosub print_total
     endif
 	
-	rem --- Start a new product type
-    if done<=0 then
-        dim s[1]
-        t2$=itemmast_rec.product_type$
-		prodcode_rec.code_desc$="(Not On File)"
-        find record (prodcode_dev, key=firm_id$+"A"+t2$, dom=*next) prodcode_rec$
-        h5$="Product "+t2$+" "+cvs(prodcode_rec.code_desc$,2)
-		t5$=h5$
-		
-		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-		HdrVect!.addItem(h5$)
-		
-		ignore=fnblank_line(void)
-		OutVect!.addItem("Product "+t2$)
-		OutVect!.addItem( cvs(prodcode_rec.code_desc$,2) )
-		ignore=fnblank(7)
-		ignore=fnblank_line(void)
-    endif
+	return
+	
+new_prod: rem --- Start a new product type
+
+	dim s[1]
+	prodcode_rec.code_desc$="(Not On File)"
+	find record (prodcode_dev, key=firm_id$+"A"+itemmast_rec.product_type$, dom=*next) prodcode_rec$
+	h4$="Product "+itemmast_rec.product_type$+" "+cvs(prodcode_rec.code_desc$,2)
+	
+	ignore=fnblank_line(void)
+	OutVect!.addItem(h4$)
+	ignore=fnblank(8)
+	ignore=fnblank_line(void)
+	
+	nl = 0
 	
     return
 
 print_total: rem --- Print totals
 
     t2=t1-t0
-	total$="Totals For "+total$
+	total$="*Totals For "+total$
 	
 	TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 	
@@ -501,15 +477,15 @@ print_total: rem --- Print totals
 update_gl: rem --- Update G/L Summary
 
     if gl$="Y" and amount<>0 and account$<>"" then
-		accttotals_rec.firm_id$     = firm_id$
-		accttotals_rec.gl_acctount$ = account$
-		accttotals_rec.gl_post_amt  = 0
+		glw_accttotals_rec.firm_id$    = firm_id$
+		glw_accttotals_rec.gl_account$ = account$
+		glw_accttotals_rec.gl_post_amt = 0
 		
-        find record (accttotals_dev, key=firm_id$+account$, dom=*next) accttotals_rec$
+        find record (glw_accttotals_dev, key=firm_id$+account$, dom=*next) glw_accttotals_rec$
 		
-        accttotals_rec.gl_post_amt = accttotals_rec.gl_post_amt + amount
-		accttotals_rec$ = field(accttotals_rec$)
-        write record (accttotals_dev) accttotals_rec$
+        glw_accttotals_rec.gl_post_amt = glw_accttotals_rec.gl_post_amt + amount
+		glw_accttotals_rec$ = field(glw_accttotals_rec$)
+        write record (glw_accttotals_dev) glw_accttotals_rec$
     endif
 	
     return
