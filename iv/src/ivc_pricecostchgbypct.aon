@@ -6,15 +6,16 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem  ACTION$: Entry Type (Input)
-rem           C=Cost Change/P=Price Change/R=Price Change Reversal
-rem  ENTRY$ : Entry File Name (Input)
-rem           C=IVE-06/P=IVE-05/R=IVW-09
-rem  STATUS : 0=No error (Returned)
+rem  action$      : Entry Type (Input)
+rem                 C=Cost Change/P=Price Change/R=Price Change Reversal
+rem  entry$       : Entry File Name (Input)
+rem                 C=IVE-06/P=IVE-05/R=IVW-09
+rem  no_of_records: Number of records written to the entry file
+rem  status       : 0=No error (Returned)
 
 	seterr std_error
 	setesc std_error
-	enter action$,entry$,option!,status
+	enter action$, entry$, option!, no_of_records, status
 	
 rem --- Use for type checking
 
@@ -135,7 +136,7 @@ rem --- Setup SQL to read through IVM_ITEMMAST
     where_clause$=cvs(where_clause$,2)
     if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
     sql_prep$=sql_prep$+where_clause$
-
+	
     sql_chan=sqlunt
     sqlopen(sql_chan)stbl("+DBNAME")
     sqlprep(sql_chan)sql_prep$
@@ -143,6 +144,8 @@ rem --- Setup SQL to read through IVM_ITEMMAST
     sqlexec(sql_chan)
 
 rem --- Get next sort record
+
+	no_of_records = 0
 	
 	while more
 
@@ -205,6 +208,8 @@ rem --- Generate price/cost change record
 
 		entry_rec$ = field(entry_rec$)
         write record (entry_dev) entry_rec$
+		
+		no_of_records = no_of_records + 1
 
 rem --- Loop back for next sort record
 
