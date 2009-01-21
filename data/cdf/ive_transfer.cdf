@@ -329,7 +329,7 @@ rem --- If both warehouses are entered, they can't match
 		gosub disp_message
 	endif
 [[IVE_TRANSFER.BSHO]]
-print 'show',"in BSHO"; rem debug
+rem print 'show',"in BSHO"; rem debug
 
 rem --- Inits
 
