@@ -297,6 +297,37 @@ ready:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     if o9=2 goto std_exit
+
+	if OutVect!<>null() and OutVect!.size() then
+rem		if rep_prog$<>"" then
+rem			rd_temp_chan=unt
+rem			open (rd_temp_chan,err=*endif)rep_prog$
+rem			rd_temp_fin$=xfin(rd_temp_chan)
+rem			close (rd_temp_chan)
+rem			rep_prog_stamp$=fndate_time$(rd_temp_fin$(27,4))
+rem		endif
+		call stbl("+DIR_SYP")+"bax_docout.bbj",err=*next,
+:			rdForm!,
+:			rd_alias_id$,
+:			rep_date$,
+:			rep_date_stamp$,
+:			rep_time$,
+:			rep_time_stamp$,
+:			rep_prog_stamp$,
+:			headings$[all],
+:			columns$[all],
+:			OutVect!,
+:			BrkVect!,
+:			HdrVect!,
+:			TotVect!,
+:			out_types$,
+:			out_action$,
+:			out_status$,
+:			rd_table_chans$[all]
+	endif
+
+	OutVect!=null()
+    
     msg_id$="AON_UPDT_PICK_QUERY"
     dim x$:stbl("+SYSINFO_TPL")
     dim msg_tokens$[1]
