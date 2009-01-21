@@ -43,7 +43,6 @@ rem --- Open all files
 	open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
 	open_tables$[2]="GLS_PARAMS",   open_opts$[2]="OTA"
 	open_tables$[3]="IVE_COSTCHG",  open_opts$[3]="OTAL"
-	open_tables$[4]="IVX_COSTXREF", open_opts$[4]="OTAI"
 	open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
 	open_tables$[6]="IVM_ITEMWHSE", open_opts$[6]="OTA"
 	open_tables$[7]="IVC_PRODCODE", open_opts$[7]="OTA"
@@ -54,7 +53,6 @@ rem --- Open all files
 	ivs_params_dev = num( open_chans$[1] )
 	gls_params_dev = num( open_chans$[2] )
 	costchg_dev    = num( open_chans$[3] )
-	costxref_dev   = num( open_chans$[4] )
 	itemmast_dev   = num( open_chans$[5] )
 	itemwhse_dev   = num( open_chans$[6] )
 	prodcode_dev   = num( open_chans$[7] )
@@ -63,7 +61,6 @@ rem --- Open all files
 	dim ivs_params_rec$:open_tpls$[1]
 	dim gls_params_rec$:open_tpls$[2]
 	dim costchg_rec$:open_tpls$[3]
-	dim costxref_rec$:open_tpls$[4]
 	dim itemmast_rec$:open_tpls$[5]
 	dim itemwhse_rec$:open_tpls$[6]
 	dim prodcode_rec$:open_tpls$[7]
@@ -188,15 +185,15 @@ rem --- Column headings
 	columns=8
 	dim columns$[columns,10]
 	
-	columns$[0,0]="Item",           columns$[0,1]="C", columns$[0,2]=str(p[0])
-	columns$[1,0]="Description",    columns$[1,1]="C", columns$[1,2]=str(dw)
-	columns$[2,0]="UM",             columns$[2,1]="C", columns$[2,2]="2"
-	columns$[3,0]="On Hand",        columns$[3,1]="N", columns$[3,2]=str(m2), columns$[3,3]=m2$
-	columns$[4,0]="Current^Cost",   columns$[4,1]="N", columns$[4,2]=str(m3), columns$[4,3]=m3$
-	columns$[5,0]="Current^Value",  columns$[5,1]="N", columns$[5,2]=str(m1), columns$[5,3]=m1$, columns$[5,10]="T"
-	columns$[6,0]="New^Cost",       columns$[6,1]="N", columns$[6,2]=str(m3), columns$[6,3]=m3$
-	columns$[7,0]="New^Value",      columns$[7,1]="N", columns$[7,2]=str(m1), columns$[7,3]=m1$, columns$[7,10]="T"
-	columns$[8,0]="Change^InValue", columns$[8,1]="N", columns$[8,2]=str(m1), columns$[8,3]=m1$, columns$[8,10]="T"
+	columns$[0,0]="Item",            columns$[0,1]="C", columns$[0,2]=str(p[0])
+	columns$[1,0]="Description",     columns$[1,1]="C", columns$[1,2]=str(dw)
+	columns$[2,0]="UM",              columns$[2,1]="C", columns$[2,2]="2"
+	columns$[3,0]="On Hand",         columns$[3,1]="N", columns$[3,2]=str(m2), columns$[3,3]=m2$
+	columns$[4,0]="Current^Cost",    columns$[4,1]="N", columns$[4,2]=str(m3), columns$[4,3]=m3$
+	columns$[5,0]="Current^Value",   columns$[5,1]="N", columns$[5,2]=str(m1), columns$[5,3]=m1$, columns$[5,10]="T"
+	columns$[6,0]="New^Cost",        columns$[6,1]="N", columns$[6,2]=str(m3), columns$[6,3]=m3$
+	columns$[7,0]="New^Value",       columns$[7,1]="N", columns$[7,2]=str(m1), columns$[7,3]=m1$, columns$[7,10]="T"
+	columns$[8,0]="Change^In Value", columns$[8,1]="N", columns$[8,2]=str(m1), columns$[8,3]=m1$, columns$[8,10]="T"
 
 rem --- Report headings
 
@@ -210,7 +207,7 @@ rem --- Sort by product type using SQL
 
 	call pgmdir$+"adc_progress.aon","N","","","","",0,costchg_dev,1,meter_num,ignore_status
 	
-	unlock(costchg_dev,err=*next); rem SQL will execute with file locked
+	unlock(costchg_dev,err=*next); rem SQL won't execute with file locked
 
 	sql_prep$ = ""
 	sql_prep$ = sql_prep$ + "SELECT ive_costchg.effect_date, ive_costchg.warehouse_id, ivm_itemmast.product_type, ive_costchg.item_id "
@@ -240,7 +237,7 @@ rem --- Next SQL record
 
 		sql_rec$=sqlfetch(sql_chan,err=*break)
 		
-        rem debug --- call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+        call pgmdir$+"adc_progress.aon","S","","","","",0,costchg_dev,1,meter_num,ignore_status
         
 		costchg_key$ = firm_id$ + sql_rec.effect_date$ + sql_rec.warehouse_id$ + sql_rec.item_id$
         read record (costchg_dev, key=costchg_key$, dom=*continue) costchg_rec$
@@ -421,7 +418,6 @@ new_whse: rem --- New warehouse
 	ignore=fnblank_line(void)
 	OutVect!.addItem(h3$)
 	ignore=fnblank(8)
-	ignore=fnblank_line(void)
 	
 	gosub new_prod
 	nl = 0
