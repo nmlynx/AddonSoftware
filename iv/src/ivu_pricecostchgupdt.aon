@@ -1,194 +1,152 @@
 rem --- Price/Cost Change Update
-rem --- Program ivu_ga v8.0.0 05Dec2007 (ivu_ga)
+rem --- Program ivu_pricecostchgupdt.aon v8.0.0 05Dec2007 (ivu_ga)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (12/05/2007 02:53:33)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+rem ---      O0: program flag
+rem ---           0 = Price Change, (ivr_la)
+rem ---           1 = Cost Change, from ivr_costchgreg.aon (ivr_ja)
+rem ---           2 = Price Reversal (ivr_4a)
+rem --- CHANNEL: driving file handle
+rem ---           0 = IVE_PRICECHG (ive-05)
+rem ---           1 = IVE_COSTCHG (ive-06) 
+rem ---           2 = IVW_PRICREV (ivw-09)
+rem ---           All other channels remain open from the register
+rem ---  FIRST$: Position file with this
 
-                seterr std_error
-                setesc std_error
+	seterr std_error
+	setesc std_error
 
 rem --- Retrieve the program path
 
-                pgmdir$=stbl("+dir_pgm",err=*next)
-                precision p[1]
+	pgmdir$=""
+	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-                sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
-                dim sysinfo$:sysinfo_template$
-                sysinfo$=stbl("+sysinfo",err=*next)
-                milestone=num(stbl("+milestone",err=*next),err=*next)
-                firm_id$=sysinfo.firm_id$
-
-rem --- Open/Lock files
-
-                files=5,begfile=1,endfile=files
-                dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-                files$[1]="ive-05",ids$[1]="IVE_PRICECHG"
-                files$[2]="ive-06",ids$[2]="IVE_COSTCHG"
-                files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-                files$[4]="ivm-07",ids$[4]="IVM_LSMASTER"
-                files$[5]="ivs_params",ids$[5]="IVS_PARAMS"
-                call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-                if status goto std_exit
-                ive05_dev=channels[1]
-                ive06_dev=channels[2]
-                ivm02_dev=channels[3]
-                ivm07_dev=channels[4]
-                ivs01a_dev=channels[5]
-                more=1
-                cntr=0
-                cntr2=0
-rem --- Dimension string templates
-
-                dim ive05a$:templates$[1],ive06a$:templates$[2],ivm02a$:templates$[3],
-:               ivm07a$:templates$[4],ivs01a$:templates$[5]
-
-rem --- Assign form input values to local variables
-
-                value_01$=Option!.getOptionData("form_value_01")
-
-rem --- Retrieve parameter records
-
-                ivs01a_key$=firm_id$+"IV00"
-                find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
-rem --- Initializations
-
-                row=5
-                p=o0
-                if o0>1 then let row=3,p=0
-
-rem --- Background
-
-                print @(0,row),'ce',
+	sysinfo_template$=stbl("+SYSINFO_TPL")
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO")
+	firm_id$=sysinfo.firm_id$
 
 rem --- Options
 
-                msg_id$="AON_RUN_QUERY"
-                dim x$:stbl("+SYSINFO_TPL")
-                dim msg_tokens$[1]
-                x$=stbl("+SYSINFO")                                                            
-                msg_tokens$[1]=x.task_desc$
-                gosub disp_message
-                if msg_opt$<>"Y" then goto std_exit
-                call pgmdir$+"adc_progress.aon","N","","","","",0,arm01_dev,1,meter_num,status
+	msg_id$="AON_RUN_QUERY"
+	dim msg_tokens$[1]
+	msg_tokens$[1]=sysinfo.task_desc$
+	gosub disp_message
+	if msg_opt$<>"Y" then goto std_exit
+	
+rem --- Initializations
 
-rem --- Disallow 'M'enu option in Error Routine
-
-                exit_ctrl=1
+	precision p[1]
+	more = 1
+	price_change = 0
+	cost_change = 1
+	price_reversal = 2
 
 rem --- Position file
 
-                read (channel,key=first$,dom=*next)
+	call pgmdir$+"adc_progress.aon","N","","","","",0,channel,1,meter_num,ignore_status
+	read (channel, key=first$, dom=*next)
 
 rem --- Main Loop Starts
 
-While more
+	while more
 
-            k$=key(channel,end=done)
-            if pos(first$=k$)<>1
-                break
-            endif
-            on o0 goto Price_Change,Cost_Change,Price_Reversal
+		k$=key(channel,end=*break)
+		if pos(first$=k$)<>1 then break
+		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+		
+		switch o0
+		
+			case price_change
+				read record (channel) pricechg_rec$
+				break
 
-    While more
+			case cost_change
 
-Price_Change: rem --- Price change
+	            if costchg_rec.effect_date$>sysinfo.system_date$
+	                exitto std_exit
+	            endif
+				
+	            read record (channel) costchg_rec$
+	            break
 
-            read record (channel) ive05a$
-            x$=ive05a.PRICE_CODE$
-            break
+			case price_reversal
+			
+	            read (channel)
+	            w0$(1)=k$(1,6)+k$(10)
+	            break
+				
+		swend
+		
 
-Cost_Change: rem --- Cost change
-
-            if ive06a.EFFECT_DATE$>sysinfo.system_date$
-                cntr=1
-                break
-            endif
-            read record (channel) ive06a$
-            x$=fndate$(ive06a.EFFECT_DATE$)
-            break
-
-Price_Reversal: rem --- Price change reversal
-
-            read (channel)
-            w0$(1)=k$(1,6)+k$(10)
-            x$=ive05a.PRICE_CODE$
-            break
-    Wend
-
-rem --- if cntr=1, control exists main loop
-    if cntr=1
-        break
-    endif
 rem --- Get warehouse record
-
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        ivm02a.FIRM_ID$=firm_id$
-        ivm02a.WAREHOUSE_ID$=ive05a.WAREHOUSE_ID$(5+p)
-        extract record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=Remove_Rec) ivm02a$
-        on o0 goto Update_PriceList,Update_StdCost,Reverse_ListPrice
-
-While more
-
-Update_PriceList: rem --- Update list price
-
-    ivm02a.PRI_PRICE_CD$=ivm02a.CUR_PRICE_CD$
-    ivm02a.PRI_PRICE=ivm02a.CUR_PRICE
-    ivm02a.CUR_PRICE_CD$=ive05a.PRICE_CODE$
-    ivm02a.CUR_PRICE=ive05a.UNIT_PRICE
-
-
-    break
-
-Update_StdCost: rem --- Update standard cost
-
-    ivm02a.UNIT_COST=ive05a.UNIT_PRICE
-    ivm02a.STD_COST=ive05a.UNIT_PRICE
-
+        
+        extract record (itemwhse_dev, key=firm_id$+whse$+item$, dom=remove_rec) itemwhse_rec$
+        
+		rem on o0 goto Update_PriceList,Update_StdCost,Reverse_ListPrice
+		
+		switch o0
+		
+			case price_change
+			
+				itemwhse_rec.pri_price_cd$ = itemwhse_rec.cur_price_cd$
+				itemwhse_rec.pri_price     = itemwhse_rec.cur_price
+				itemwhse_rec.cur_price_cd$ = pricechg_rec.price_code$
+				itemwhse_rec.cur_price     = pricechg_rec.unit_price
+				
+				break
+			
+			case cost_change
+			
+				itemwhse_rec.unit_cost = pricechg_rec.unit_price
+				itemwhse_rec.std_cost  = pricechg_rec.unit_price
 
 rem --- Update Lot/Serial Standard Cost
 
-    if ls$<>"Y"
-        break
-    endif
-    read (ivm07_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=*next)
+				if ls$="Y" then 
+
+					read (lsmaster_dev,key=firm_id$+itemwhse_rec.WAREHOUSE_ID$+itemwhse_rec.ITEM_ID$,dom=*next)
     While more
-        ivm07a_key$=key(ivm07_dev,end=Update_WhseRecord)
-        if pos(ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$=ivm07a_key$)<>1
+        ivm07a_key$=key(lsmaster_dev,end=Update_WhseRecord)
+        if pos(itemwhse_rec.FIRM_ID$+itemwhse_rec.WAREHOUSE_ID$+itemwhse_rec.ITEM_ID$=ivm07a_key$)<>1
             cntr2=1
             break
         endif
-        extract record (ivm07_dev,key=ivm07a_key$) ivm07a$
-        ivm07a.UNIT_COST=ive05a.UNIT_PRICE
-        ivm07a.STD_COST=ive05a.UNIT_PRICE
-        write record (ivm07_dev,key=ivm07a_key$) ivm07a$
+        extract record (lsmaster_dev,key=ivm07a_key$) lsmaster_rec$
+        lsmaster_rec.UNIT_COST=pricechg_rec.UNIT_PRICE
+        lsmaster_rec.STD_COST=pricechg_rec.UNIT_PRICE
+        write record (lsmaster_dev,key=ivm07a_key$) lsmaster_rec$
     Wend
     if cntr2=1
         break
     endif
+	
+	
+			case price_reversal
+			
 Reverse_ListPrice: rem --- Reverse list price
 
-    x$=ivm02a.CUR_PRICE_CODE$
-    x=ivm02a.CUR_PRICE
-    ivm02a.CUR_PRICE_CODE$=ivm02a.PRI_PRICE_CODE$
-    ivm02a.CUR_PRICE=ivm02a.PRI_PRICE
+    x$=itemwhse_rec.CUR_PRICE_CODE$
+    x=itemwhse_rec.CUR_PRICE
+    itemwhse_rec.CUR_PRICE_CODE$=itemwhse_rec.PRI_PRICE_CODE$
+    itemwhse_rec.CUR_PRICE=itemwhse_rec.PRI_PRICE
 
-rem    x=b[9],ivm02a.CUR_PRICE_CODE$=ivm02a.PRI_PRICE_CODE$,b[9]=b[10]
+rem    x=b[9],itemwhse_rec.CUR_PRICE_CODE$=itemwhse_rec.PRI_PRICE_CODE$,b[9]=b[10]
 
-    ivm02a.PRI_PRICE_CODE$=x$
-    ivm02a.PRI_PRICE=x
+    itemwhse_rec.PRI_PRICE_CODE$=x$
+    itemwhse_rec.PRI_PRICE=x
     break
 Wend
 
 Update_WhseRecord: rem --- Update warehouse record
 
-    write record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$) ivm02a$
+    write record (ivm02_dev,key=itemwhse_rec.FIRM_ID$+itemwhse_rec.WAREHOUSE_ID$+itemwhse_rec.ITEM_ID$) itemwhse_rec$
 
 
 Remove_Rec: rem --- Main Loop Ends
