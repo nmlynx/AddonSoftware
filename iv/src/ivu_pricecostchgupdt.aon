@@ -16,6 +16,9 @@ rem ---           1 = IVE_COSTCHG (ive-06)
 rem ---           2 = IVW_PRICREV (ivw-09)
 rem ---           All other channels remain open from the register
 rem ---  FIRST$: Position file with this
+rem ---     LS$: Y = Lots or Serial#'s, N = neither
+
+rem --- Development Note: this should be three separate programs
 
 	seterr std_error
 	setesc std_error
@@ -32,22 +35,35 @@ rem --- Retrieve sysinfo data
 	sysinfo$=stbl("+SYSINFO")
 	firm_id$=sysinfo.firm_id$
 
-rem --- Options
-
-	msg_id$="AON_RUN_QUERY"
-	dim msg_tokens$[1]
-	msg_tokens$[1]=sysinfo.task_desc$
-	gosub disp_message
-	if msg_opt$<>"Y" then goto std_exit
-	
 rem --- Initializations
 
 	precision p[1]
+	
 	more = 1
-	price_change = 0
-	cost_change = 1
+	price_change   = 0
+	cost_change    = 1
 	price_reversal = 2
+	
+rem --- Options
 
+	dim msg_tokens$[1]
+	
+	if o0 = price_change then
+		msg_tokens$[1]="Price Change Update"
+	else
+		if o0 = cost_change then
+			msg_tokens$[1]="Cost Change Update"
+		else
+			if o0 = price_reversal then
+				msg_tokens$[1]="Price Reversal Update"
+			endif
+		endif
+	endif
+
+	msg_id$="AON_RUN_QUERY"
+	gosub disp_message
+	if msg_opt$<>"Y" then goto std_exit
+	
 rem --- Position file
 
 	call pgmdir$+"adc_progress.aon","N","","","","",0,channel,1,meter_num,ignore_status
@@ -57,106 +73,110 @@ rem --- Main Loop Starts
 
 	while more
 
-		k$=key(channel,end=*break)
+		k$=key(channel, end=*break)
 		if pos(first$=k$)<>1 then break
-		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 		
-		switch o0
+		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+
+rem --- Read record and get item and warehouse
 		
-			case price_change
-				read record (channel) pricechg_rec$
-				break
-
-			case cost_change
-
-	            if costchg_rec.effect_date$>sysinfo.system_date$
-	                exitto std_exit
-	            endif
-				
-	            read record (channel) costchg_rec$
-	            break
-
-			case price_reversal
+		if o0 = price_change then
+		
+			read record (channel) pricechg_rec$
+			whse$ = pricechg_rec.warehouse_id$
+			item$ = pricechg_rec.item_id$
 			
-	            read (channel)
-	            w0$(1)=k$(1,6)+k$(10)
-	            break
-				
-		swend
-		
+		else 
+			if o0 = cost_change then
 
-rem --- Get warehouse record
+rem --- Cost only: are we past the effective date?
+			
+				if costchg_rec.effect_date$ > sysinfo.system_date$ then 
+					exitto done
+				endif
+				
+				read record (channel) costchg_rec$
+				whse$ = costchg_rec.warehouse_id$
+				item$ = costchg_rec.item_id$
+
+			else 
+				if o0 = price_reversal then 
+			
+					read record (channel) pricev_rec$
+					whse$ = pricev_rec.warehouse_id$
+					item$ = pricev_rec.item_id$
+			
+				endif 
+			endif 
+		endif
+
+rem --- Get item/warehouse record
         
         extract record (itemwhse_dev, key=firm_id$+whse$+item$, dom=remove_rec) itemwhse_rec$
-        
-		rem on o0 goto Update_PriceList,Update_StdCost,Reverse_ListPrice
-		
-		switch o0
-		
-			case price_change
-			
-				itemwhse_rec.pri_price_cd$ = itemwhse_rec.cur_price_cd$
-				itemwhse_rec.pri_price     = itemwhse_rec.cur_price
-				itemwhse_rec.cur_price_cd$ = pricechg_rec.price_code$
-				itemwhse_rec.cur_price     = pricechg_rec.unit_price
-				
-				break
-			
-			case cost_change
-			
-				itemwhse_rec.unit_cost = pricechg_rec.unit_price
-				itemwhse_rec.std_cost  = pricechg_rec.unit_price
 
-rem --- Update Lot/Serial Standard Cost
+rem --- Make changes to item/warehouse record
+
+		if o0 = price_change then 
+			
+			itemwhse_rec.pri_price_cd$ = itemwhse_rec.cur_price_cd$
+			itemwhse_rec.pri_price     = itemwhse_rec.cur_price
+			itemwhse_rec.cur_price_cd$ = pricechg_rec.price_code$
+			itemwhse_rec.cur_price     = pricechg_rec.unit_price
+				
+		else
+			if o0 = cost_change then 
+			
+				itemwhse_rec.unit_cost = costchg_rec.new_cost
+				itemwhse_rec.std_cost  = costchg_rec.new_cost
+
+rem --- Cost only: update Lot/Serial costs
 
 				if ls$="Y" then 
 
-					read (lsmaster_dev,key=firm_id$+itemwhse_rec.WAREHOUSE_ID$+itemwhse_rec.ITEM_ID$,dom=*next)
-    While more
-        ivm07a_key$=key(lsmaster_dev,end=Update_WhseRecord)
-        if pos(itemwhse_rec.FIRM_ID$+itemwhse_rec.WAREHOUSE_ID$+itemwhse_rec.ITEM_ID$=ivm07a_key$)<>1
-            cntr2=1
-            break
-        endif
-        extract record (lsmaster_dev,key=ivm07a_key$) lsmaster_rec$
-        lsmaster_rec.UNIT_COST=pricechg_rec.UNIT_PRICE
-        lsmaster_rec.STD_COST=pricechg_rec.UNIT_PRICE
-        write record (lsmaster_dev,key=ivm07a_key$) lsmaster_rec$
-    Wend
-    if cntr2=1
-        break
-    endif
+					read (lsmaster_dev,key=firm_id$+whse$+item$,dom=*next)
+					
+				    while more
+				        lsmaster_key$ = key(lsmaster_dev, end=*break)
+				        if pos(firm_id$+whse$+item$ = lsmaster_key$)<>1 break
+						
+				        extract record (lsmaster_dev, key=lsmaster_key$) lsmaster_rec$
+				        lsmaster_rec.unit_cost = costchg_rec.new_cost
+				        lsmaster_rec.std_cost  = costchg_rec.new_cost
+						lsmaster_rec$ = field(lsmaster_rec$)
+				        write record (lsmaster_dev) lsmaster_rec$
+				    wend
+					
+				endif
 	
-	
-			case price_reversal
+			else
+				if o0 = price_reversal then 
 			
-Reverse_ListPrice: rem --- Reverse list price
+					x$ = itemwhse_rec.cur_price_code$
+					x  = itemwhse_rec.cur_price
+					itemwhse_rec.cur_price_code$ = itemwhse_rec.pri_price_code$
+					itemwhse_rec.cur_price       = itemwhse_rec.pri_price
+					itemwhse_rec.pri_price_code$ = x$
+					itemwhse_rec.pri_price       = x
+				
+				endif
+			endif
+		endif
+		
+rem --- Update item/warehouse record
 
-    x$=itemwhse_rec.CUR_PRICE_CODE$
-    x=itemwhse_rec.CUR_PRICE
-    itemwhse_rec.CUR_PRICE_CODE$=itemwhse_rec.PRI_PRICE_CODE$
-    itemwhse_rec.CUR_PRICE=itemwhse_rec.PRI_PRICE
+		itemwhse_rec$ = field(itemwhse_rec$)
+	    write record (itemwhse_dev) itemwhse_rec$
 
-rem    x=b[9],itemwhse_rec.CUR_PRICE_CODE$=itemwhse_rec.PRI_PRICE_CODE$,b[9]=b[10]
+remove_rec: rem --- Remove entry record 
 
-    itemwhse_rec.PRI_PRICE_CODE$=x$
-    itemwhse_rec.PRI_PRICE=x
-    break
-Wend
-
-Update_WhseRecord: rem --- Update warehouse record
-
-    write record (ivm02_dev,key=itemwhse_rec.FIRM_ID$+itemwhse_rec.WAREHOUSE_ID$+itemwhse_rec.ITEM_ID$) itemwhse_rec$
-
-
-Remove_Rec: rem --- Main Loop Ends
-
-remove (channel,key=k$,dom=done)
-Wend
+		remove (channel, key=k$, dom=*next)
+	
+	wend
 
 done: rem --- All done
 
-    call pgmdir$+"adc_batchdelete.aon",status
+    rem call pgmdir$+"adc_batchdelete.aon",status
+	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,ignore_status
     goto std_exit
 
 rem #include std_functions.src
@@ -235,6 +255,7 @@ rem #include disp_message.src
 disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+	
 return
 
 rem #include std_error.src
@@ -285,9 +306,10 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
+	
 rem #endinclude std_end.src
 
     end
