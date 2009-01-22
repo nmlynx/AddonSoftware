@@ -40,8 +40,8 @@ rem --- Sanity check
 	status = 911
 	
 	if pos(action$="CRP") = 0 then goto std_exit
-	if entry$ <> "IVE_COSTCHG" and entry$ <> "IVE_PRICECHG" then goto std_exit
-	if option! = null() then goto  std_exit
+	if entry$ <> "IVE_COSTCHG" and entry$ <> "IVE_PRICECHG" and entry$ <> "IVW_PRICEV" then goto std_exit
+	if option! = null() then goto std_exit
 	
 	status = 0
 
@@ -49,19 +49,22 @@ rem --- Assign form input values to local variables
 	
 	declare Option option!
 	
-	effect_date$ = option!.getOptionData("EFFECT_DATE")
-	begvend$     = option!.getOptionData("VENDOR_ID_1")
-	endvend$     = option!.getOptionData("VENDOR_ID_2")
-	begwhse$     = option!.getOptionData("WAREHOUSE_ID_1")
-	endwhse$     = option!.getOptionData("WAREHOUSE_ID_2")
-	begprod$     = option!.getOptionData("PRODUCT_TYPE_1")
-	endprod$     = option!.getOptionData("PRODUCT_TYPE_2")
-	begitem$     = option!.getOptionData("ITEM_ID_1")
-	enditem$     = option!.getOptionData("ITEM_ID_2")
-	type$        = option!.getOptionData("ITEM_TYPE")
-	percent      = num( option!.getOptionData("PERCENT_CHANGE") )
+	if action$ = "C" then 
+		effect_date$ = option!.getOptionData("EFFECT_DATE")
+	else
+		price_code$ = option!.getOptionData("PRICE_CODE")
+	endif
 	
-	price_code$=""; rem Price code
+	begvend$ = option!.getOptionData("VENDOR_ID_1")
+	endvend$ = option!.getOptionData("VENDOR_ID_2")
+	begwhse$ = option!.getOptionData("WAREHOUSE_ID_1")
+	endwhse$ = option!.getOptionData("WAREHOUSE_ID_2")
+	begprod$ = option!.getOptionData("PRODUCT_TYPE_1")
+	endprod$ = option!.getOptionData("PRODUCT_TYPE_2")
+	begitem$ = option!.getOptionData("ITEM_ID_1")
+	enditem$ = option!.getOptionData("ITEM_ID_2")
+	type$    = option!.getOptionData("ITEM_TYPE")
+	percent  = num( option!.getOptionData("PERCENT_CHANGE") )
 
 rem --- Open all files
 
