@@ -17,6 +17,8 @@ rem --- Retrieve the program path
 	
 	pgmdir$=""
     pgmdir$=stbl("+DIR_PGM",err=*next)
+	sypdir$=""
+	sypdir$=stbl("+DIR_SYP",err=*next)
 
 rem --- Retrieve sysinfo data
 
@@ -71,11 +73,11 @@ rem --- Parameters
 	
     p[0]=ivs_params_rec.item_id_len
     p[1]=num(ivs_params_rec.precision$)
-    p[3]=num(ivs_params_rec.desc_len$)
-    p[4]=num(ivs_params_rec.desc_len$)
-    p[5]=num(ivs_params_rec.desc_len$)
+    p[3]=num(ivs_params_rec.desc_len_01$)
+    p[4]=num(ivs_params_rec.desc_len_02$)
+    p[5]=num(ivs_params_rec.desc_len_03$)
 	
-	if pos(ivs_params_rec.lotser_flag="LS") then ls$="Y" else ls$="N"
+	if pos(ivs_params_rec.lotser_flag$="LS") then ls$="Y" else ls$="N"
 	
 rem --- Additional opens
 rem --- This is used in the overlay, not here
@@ -164,8 +166,8 @@ rem --- Sort by product type using SQL
 	sql_prep$ = sql_prep$ + "  FROM ive_costchg INNER JOIN ivm_itemmast ON ive_costchg.firm_id = ivm_itemmast.firm_id AND "
 	sql_prep$ = sql_prep$ + "       ive_costchg.item_id = ivm_itemmast.item_id "
 	sql_prep$ = sql_prep$ + " WHERE ive_costchg.firm_id = '" + firm_id$ + "' AND "
-	sql_prep$ = sql_prep$ + "       ive_costchg.effect_date <= '" + effect_date$ +"'"
-	sql_prep$ = sql_prep$ + "ORDER BY ive_costchg.effect_date, ive_costchg.warehouse_id, ivm_itemmast.product_type$, ive_costchg.item_id"
+	sql_prep$ = sql_prep$ + "       ive_costchg.effect_date <= '" + effect_date$ +"' "
+	sql_prep$ = sql_prep$ + "ORDER BY ive_costchg.effect_date, ive_costchg.warehouse_id, ivm_itemmast.product_type$, ive_costchg.item_id "
 
 	sql_chan=sqlunt
     sqlopen(sql_chan)stbl("+DBNAME")
@@ -182,6 +184,7 @@ rem --- Inits for record loop
 	prev_type$ = ""
 	errors = 0
 	number = 0
+	more = 1
 
 rem --- Next SQL record
 
@@ -218,12 +221,12 @@ rem --- Calculations
 		dim description$(dw)
         description$(1) = fnitem$( itemmast_rec.item_desc$, p[3], p[4], p[5] )
 
-        change  = costchg_rec.std_cost-itemwhse_rec.unit_cost
-        margin  = itemwhse_rec.cur_price-costchg_rec.std_cost
+        change  = costchg_rec.new_cost-itemwhse_rec.unit_cost
+        margin  = itemwhse_rec.cur_price-costchg_rec.new_cost
         percent = 100
 		
         if itemwhse_rec.unit_cost<>0 then
-            percent = max( min( ((costchg_rec.std_cost - itemwhse_rec.unit_cost) * 100) / itemwhse_rec.unit_cost, 9999.99), -9999.99 )
+            percent = max( min( ((costchg_rec.new_cost - itemwhse_rec.unit_cost) * 100) / itemwhse_rec.unit_cost, 9999.99), -9999.99 )
         endif
 		
 rem --- Print detail line
@@ -238,7 +241,7 @@ rem --- Print detail line
 		OutVect!.addItem(descr_hold$)
 		OutVect!.addItem(itemmast_rec.unit_of_sale$)
 		OutVect!.addItem( str(itemwhse_rec.unit_cost) )
-		OutVect!.addItem( str(costchg_rec.std_cost) )
+		OutVect!.addItem( str(costchg_rec.new_cost) )
 		OutVect!.addItem( str(change) )
 		OutVect!.addItem( str(percent) )
 		OutVect!.addItem( str(margin) )
@@ -252,9 +255,9 @@ rem --- Print detail line
         number=number+1
 		prev_date$=costchg_rec.effect_date$
 		prev_whse$=costchg_rec.warehouse_id$
-		prev_type$=costchg_rec.product_type$
+		prev_type$=sql_rec.product_type$
 		
-        if costchg_rec.std_cost<0 then errors=errors+1
+        if costchg_rec.new_cost<0 then errors=errors+1
 
 rem --- Loop back for next record
 
@@ -280,10 +283,16 @@ rem --- Any negative costs?
 
 rem --- Run update overlay
 
+	rem --- Values for Price/Cost Update program
     channel = costchg_dev
 	o0 = 1; rem signals a cost update
 	first$ = firm_id$ + effect_date$
-    run pgmdir$+"ivu_pricecostchgupdt.aon"
+    overlay$ = pgmdir$+"ivu_pricecostchgupdt.aon"
+	
+	rem --- Print register via DocOut
+	out_action$="PRT-PDF"
+	next_overlay$=overlay$
+	goto std_exit
 
 std_cost: rem --- Must be Standard Costing 
 
@@ -314,10 +323,10 @@ whse_break: rem --- Warehouse Break
 product_break: rem --- Product Break
 
 	prodcode_rec.code_desc$="(Not On File)"
-    find record (prodcode_dev,key=firm_id$+"A"+costchg_rec.product_type$,dom=*next) prodcode_rec$
+    find record (prodcode_dev,key=firm_id$+"A"+sql_rec.product_type$,dom=*next) prodcode_rec$
 	
 	ignore = fnblank_line(void)
-    OutVect!.addItem( "Product "+costchg_rec.product_type$+" "+prodcode_rec.code_desc$ )
+    OutVect!.addItem( "Product "+sql_rec.product_type$+" "+prodcode_rec.code_desc$ )
 	ignore = fnblank(7)
 	
     return
@@ -480,10 +489,10 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    rem run pgmdir$+"ads_process_end.aon",err=*next
+
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
+	
 rem #endinclude std_end.src
 
     end
