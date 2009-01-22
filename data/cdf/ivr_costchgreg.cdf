@@ -1,3 +1,10 @@
+[[IVR_COSTCHGREG.ASVA]]
+rem --- Close file so it can be locked in the register
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="IVE_COSTCHG",open_opts$[1]="C"
+	gosub open_tables
 [[IVR_COSTCHGREG.AREC]]
 rem --- Get default date from first record
 
@@ -20,4 +27,3 @@ rem --- Open file
 	open_tables$[1]="IVE_COSTCHG", open_opts$[1]="OTA"
 
 	gosub open_tables
-
