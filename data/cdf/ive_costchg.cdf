@@ -1,3 +1,11 @@
+[[IVE_COSTCHG.ARAR]]
+rem --- Set default warehouse if necessary
+
+	if user_tpl.default_whse$ <> "" then 
+		callpoint!.setColumnData("IVE_COSTCHG.WAREHOUSE_ID", user_tpl.default_whse$)
+		callpoint!.setStatus("REFRESH")
+		util.disableField(callpoint!, "WAREHOUSE_ID")
+	endif
 [[IVE_COSTCHG.AWRI]]
 rem --- Set last date as a default for the next record
 
@@ -109,6 +117,10 @@ rem --- Is the warehouse / item combination valid?
 		if !failed then gosub set_display_cost
 	endif
 [[IVE_COSTCHG.BSHO]]
+rem --- Inits
+
+	use ::ado_util.src::util
+
 rem --- Open files
 
 	num_files=3
@@ -119,13 +131,8 @@ rem --- Open files
 
 	gosub open_tables
 
-	itemmast_dev   = num(open_chans$[1])
-	itemwhse_dev   = num(open_chans$[2])
-	itemparams_dev = num(open_chans$[3])
-
-	dim itemmast_rec$:open_tpls$[1]
-	dim itemwhse_rec$:open_tpls$[2]
-	dim itemparams_rec$:open_tpls$[3]
+	ivs_params_dev = num(open_chans$[3])
+	dim ivs_params_rec$:open_tpls$[3]
 
 rem --- Globals
 
@@ -133,16 +140,16 @@ rem --- Globals
 
 rem --- Get parameter records
 
-	find record(itemparams_dev, key=firm_id$+"IV00", dom=std_missing_params) itemparams_rec$
+	find record(ivs_params_dev, key=firm_id$+"IV00", dom=std_missing_params) ivs_params_rec$
 
-	if itemparams_rec.cost_method$ <> "S" then
+	if ivs_params_rec.cost_method$ <> "S" then
 		callpoint!.setMessage("IV_NO_STD_COST")
 		callpoint!.setStatus("EXIT")
 		goto bsho_end
 	endif
 
-	if itemparams_rec.multi_whse$ <> "Y" then 
-		user_tpl.default_whse$ = itemparams_rec.warehouse_id$
+	if ivs_params_rec.multi_whse$ <> "Y" then 
+		user_tpl.default_whse$ = ivs_params_rec.warehouse_id$
 	endif
 
 bsho_end:
