@@ -112,7 +112,7 @@ rem --- Print positions
     o[1]=p[0]+1
     v=o[2]-o[1]
 	dw=p[3]+p[4]+p[5]
-    if dw>v then split=1,dw=o[2]-3
+    if dw>v then split=1,dw=o[2]-3 else split=0
     dim description$(dw)
 
 rem --- Document initializations
@@ -206,9 +206,12 @@ rem --- Level breaks?
 
         if costchg_rec.effect_date$<>prev_date$ then 
 			gosub date_break
+			gosub whse_break
+			gosub product_break
 		else
 			if costchg_rec.warehouse_id$<>prev_whse$ then 
 				gosub whse_break
+				gosub product_break
 			else
 				if sql_rec.product_type$<>prev_type$ then
 					gosub product_break
@@ -303,14 +306,13 @@ std_cost: rem --- Must be Standard Costing
 
 date_break: rem --- Date Break
 
-    if prev_date$<>"" then gosub whse_break
-    headings$[1]=sysinfo.task_desc$+" For Changes Effective "+fndate$(costchg_rec.effect_date$)
+	BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
+	HdrVect!.addItem( "For Changes Effective "+fndate$(costchg_rec.effect_date$) )
 	
     return
 
 whse_break: rem --- Warehouse Break
 
-    if prev_whse$<>"" then gosub product_break
 	whsecode_rec.short_name$="(Not on File)"
     find record (whsecode_dev, key=firm_id$+"C"+costchg_rec.warehouse_id$, dom=*next) whsecode_rec$
 	
