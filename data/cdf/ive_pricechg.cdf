@@ -56,7 +56,7 @@ rem --- Set default warehouse if necessary
 	if user_tpl.default_whse$ <> "" then 
 		callpoint!.setColumnData("IVE_PRICECHG.WAREHOUSE_ID", user_tpl.default_whse$)
 		callpoint!.setStatus("REFRESH")
-		util.disableField(callpoint!, "WAREHOUSE_ID")
+		callpoint!.setColumnEnabled("IVE_PRICECHG.WAREHOUSE_ID",-1); rem permanent disable
 	endif
 
 rem --- Set price code to the last one used
@@ -113,9 +113,7 @@ rem ===========================================================================
 #include std_missing_params.src
 rem ===========================================================================
 [[IVE_PRICECHG.BSHO]]
-rem --- Inits
-	print 'show',"in BSHO"; rem debug
-	use ::ado_util.src::util
+rem print 'show',"in BSHO"; rem debug
 
 rem --- Open files
 
