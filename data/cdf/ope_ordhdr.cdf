@@ -1,7 +1,16 @@
 [[OPE_ORDHDR.AOPT-RPRT]]
-gosub add_to_batch_print
-callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG","Y")
-callpoint!.setStatus("MODIFIED")
+rem --- Check for printing in next batch and set
+
+	if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
+:		callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")="C"
+		msg_id$="OP_CR_HOLD_NOPRINT"
+	else
+		gosub add_to_batch_print
+		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG","Y")
+		callpoint!.setStatus("SAVE")
+		msg_id$="OP_BATCH_PRINT"
+	endif
+	gosub disp_message
 [[OPE_ORDHDR.ADEL]]
 rem --- Remove from ope-04
 
@@ -1037,9 +1046,11 @@ rem --- Setup user_tpl$
 	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
 	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10),avail_oh:c(5),avail_comm:c(5),avail_avail:c(5),"
 	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),dropship_flag:c(5*),ord_tot_1:c(5*),cur_row:n(5),"
-	user_tpl$=user_tpl$+"price_code:c(2),pricing_code:c(4),order_date:c(8),lot_ser:c(1)"
+	user_tpl$=user_tpl$+"price_code:c(2),pricing_code:c(4),order_date:c(8),lot_ser:c(1),"
+	user_tpl$=user_tpl$+"pick_hold:c(1)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
+	user_tpl.pick_hold$=ars_credit.pick_hold$
 	user_tpl.display_bal$=ars_credit.display_bal$
 	user_tpl.blank_whse$=blank_whse$
 	user_tpl.dropship_whse$=ars01a.dropshp_whse$
