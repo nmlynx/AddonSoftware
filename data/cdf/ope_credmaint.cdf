@@ -206,12 +206,14 @@ rem --- Print the order?
 	gosub disp_message
 	if msg_opt$="Y"
 		x$=stbl("on_demand","Y"+cust$+ord$)
-		run "opr_oderpicklst.aon"
+		call "opr_oderpicklst.aon",cust$+ord$
 	endif
 	callpoint!.setStatus("EXIT")
 
 no_rel:
-	callpoint!.setStatus("REFRESH")
+	if pos("EXIT"=callpoint!.getStatus())=0
+		callpoint!.setStatus("REFRESH")
+	endif
 [[OPE_CREDMAINT.BSHO]]
 rem --- Open tables
 	num_files=12
@@ -272,11 +274,12 @@ remove_tickler:
 	dim ope03a$:fnget_tpl$("OPE_CREDDATE")
 	old_tick_date$=callpoint!.getDevObject("old_tick_date")
 	ord$=callpoint!.getColumnData("OPE_CREDMAINT.ORDER_NO")
-	if len(ord$)=0
-		ord$=fill(num(callpoint!.getTableColumnAttribute("OPE_CREDMAINT.ORDER_NO","MAXL")))
-	endif
 	cust_no$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
 	remove(ope03_dev,key=firm_id$+old_tick_date$+cust_no$+ord$,dom=*next)
+	if len(ord$)=0
+		ord$=fill(num(callpoint!.getTableColumnAttribute("OPE_CREDMAINT.ORDER_NO","MAXL")))
+		remove(ope03_dev,key=firm_id$+old_tick_date$+cust_no$+ord$,dom=*next)
+	endif
 return
 [[OPE_CREDMAINT.AOPT-COMM]]
 rem --- Comment Maintenance
