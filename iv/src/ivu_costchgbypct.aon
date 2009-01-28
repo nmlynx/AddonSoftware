@@ -24,7 +24,7 @@ rem  --- Set action$ to Cost change; entry$ to cost file
 	entry$  = "IVE_COSTCHG"
 	status  = 999
 
-	call pgmdir$ + "ivc_pricecostchgbypct.aon", err=*next, action$, entry$, option!, no_of_records, status
+	call pgmdir$ + "ivc_pricecostchgbypct.aon", action$, entry$, option!, no_of_records, table_chans$[all], status
 	
 	rem --- Report success or it seems it "did nothing"
 	if status = 0 then
@@ -32,10 +32,10 @@ rem  --- Set action$ to Cost change; entry$ to cost file
 		dim msg_tokens$[1]
 		msg_tokens$[1] = str(no_of_records)
 		call sypdir$ + "bac_message.bbj", err=*endif,
-:		msg_id$,
-:		msg_tokens$[all],
-:		msg_opt$,
-:		table_chans$[all]
+:			msg_id$,
+:			msg_tokens$[all],
+:			msg_opt$,
+:			table_chans$[all]
 	endif
 	
 	goto std_exit
