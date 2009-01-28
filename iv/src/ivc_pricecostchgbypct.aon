@@ -6,16 +6,23 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2009 AddonSoftware
 rem --- All Rights Reserved
 
-rem  action$      : Entry Type (Input)
-rem                 C=Cost Change/P=Price Change/R=Price Change Reversal
-rem  entry$       : Entry File Name (Input)
-rem                 C=IVE-06/P=IVE-05/R=IVW-09
-rem  no_of_records: Number of records written to the entry file
-rem  status       : 0=No error (Returned)
+rem  action$       : Entry Type (Input)
+rem                    C=Cost Change
+rem                    P=Price Change
+rem                    R=Price Change Reversal
+rem  entry$        : Entry File Name (Input)
+rem                    C=IVE_COSTCHG
+rem                    P=IVE_PRICECHG
+rem                    R=IVW_PRICREV
+rem  no_of_records : Number of records written to the entry file
+rem  table_chans$[]: Barista array, do not modify
+rem  status        : 0=No error (Returned)
+
+rem --- Development Note: this should be three separate programs
 
 	seterr std_error
 	setesc std_error
-	enter action$, entry$, option!, no_of_records, status
+	enter action$, entry$, option!, no_of_records, table_chans$[all], status
 	
 rem --- Use for type checking
 
@@ -40,7 +47,7 @@ rem --- Sanity check
 	status = 911
 	
 	if pos(action$="CRP") = 0 then goto std_exit
-	if entry$ <> "IVE_COSTCHG" and entry$ <> "IVE_PRICECHG" and entry$ <> "IVW_PRICEV" then goto std_exit
+	if entry$ <> "IVE_COSTCHG" and entry$ <> "IVE_PRICECHG" and entry$ <> "IVW_PRICREV" then goto std_exit
 	if option! = null() then goto std_exit
 	
 	status = 0
