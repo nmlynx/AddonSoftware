@@ -6,17 +6,21 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem ---      O0: program flag
-rem ---           0 = Price Change, from ivr_pricechgreg.aon (ivr_la)
-rem ---           1 = Cost Change, from ivr_costchgreg.aon (ivr_ja)
-rem ---           2 = Price Reversal (ivr_4a)
-rem --- CHANNEL: driving file handle
-rem ---           0 = IVE_PRICECHG (ive-05)
-rem ---           1 = IVE_COSTCHG (ive-06) 
-rem ---           2 = IVW_PRICREV (ivw-09)
-rem ---           All other channels remain open from the register
-rem ---  FIRST$: Position file with this
-rem ---     LS$: Y = Lots or Serial#'s, N = neither
+rem       O0: program flag
+rem            0 = Price Change, from ivr_pricechgreg.aon (ivr_la)
+rem            1 = Cost Change, from ivr_costchgreg.aon (ivr_ja)
+rem            2 = Price Reversal, ivr_pricechgrecreg.aon (ivr_4a)
+rem  CHANNEL: driving file handle
+rem            0 = IVE_PRICECHG (ive-05)
+rem            1 = IVE_COSTCHG (ive-06) 
+rem            2 = IVW_PRICREV (ivw-09)
+rem            All other channels remain open from the register
+rem   FIRST$: Position file with this
+rem   *_REC$: A templated string to hold the record
+rem            0 = pricechg_rec$
+rem            1 = costchg_rec$
+rem            2 = pricerev_rec$
+rem      LS$: Y = Lots or Serial#'s, N = neither (cost only)
 
 rem --- Development Note: this should be three separate programs
 
@@ -102,9 +106,9 @@ rem --- Cost only: are we past the effective date?
 			else 
 				if o0 = price_reversal then 
 			
-					read record (channel) pricev_rec$
-					whse$ = pricev_rec.warehouse_id$
-					item$ = pricev_rec.item_id$
+					read record (channel) pricerev_rec$
+					whse$ = pricerev_rec.warehouse_id$
+					item$ = pricerev_rec.item_id$
 			
 				endif 
 			endif 
@@ -151,12 +155,12 @@ rem --- Cost only: update Lot/Serial costs
 			else
 				if o0 = price_reversal then 
 			
-					x$ = itemwhse_rec.cur_price_code$
+					x$ = itemwhse_rec.cur_price_cd$
 					x  = itemwhse_rec.cur_price
-					itemwhse_rec.cur_price_code$ = itemwhse_rec.pri_price_code$
-					itemwhse_rec.cur_price       = itemwhse_rec.pri_price
-					itemwhse_rec.pri_price_code$ = x$
-					itemwhse_rec.pri_price       = x
+					itemwhse_rec.cur_price_cd$ = itemwhse_rec.pri_price_cd$
+					itemwhse_rec.cur_price     = itemwhse_rec.pri_price
+					itemwhse_rec.pri_price_cd$ = x$
+					itemwhse_rec.pri_price     = x
 				
 				endif
 			endif
