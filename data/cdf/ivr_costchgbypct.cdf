@@ -16,8 +16,6 @@ rem --- Percent can't be zero
 [[IVR_COSTCHGBYPCT.BSHO]]
 rem --- Inits
 
-	use ::ado_util.src::util
-
 	pgmdir$=""
 	pgmdir$=stbl("+DIR_PGM")
 
@@ -50,8 +48,8 @@ rem --- is AP installed?  If not, disable vendor fields
 	ap_installed = (info$[20] = "Y")
 
 	if !ap_installed then
-		util.disableField(callpoint!, "IVR_COSTCHGBYPCT.VENDOR_ID_1")
-		util.disableField(callpoint!, "IVR_COSTCHGBYPCT.VENDOR_ID_2")
+		callpoint!.setColumnEnabled("IVR_COSTCHGBYPCT.VENDOR_ID_1", -1)
+		callpoint!.setColumnEnabled("IVR_COSTCHGBYPCT.VENDOR_ID_2", -1)
 	endif
 
 bsho_end:
