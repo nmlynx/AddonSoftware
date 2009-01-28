@@ -1,5 +1,5 @@
 rem --- Price Change Reversal Register
-rem --- Program ivr_pricechgrecreg.aon v8.0.0 09Jul2007 (ivr_4a)
+rem --- Program ivr_pricechgrevreg.aon v8.0.0 09Jul2007 (ivr_4a)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/09/2007 11:43:20)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -56,14 +56,14 @@ rem --- Open all files
 	
 rem --- Parameters
 
-    find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params_rec$
+    find record (ivs_params_dev, key=firm_id$+"IV00", dom=std_missing_params) ivs_params_rec$
 
     dim p[5]
     p[0]=ivs_params_rec.item_id_len
     p[1]=num(ivs_params_rec.precision$)
-    p[3]=num(ivs_params_rec.desc_len$)
-    p[4]=num(ivs_params_rec.desc_len$)
-    p[5]=num(ivs_params_rec.desc_len$)
+    p[3]=num(ivs_params_rec.desc_len_01$)
+    p[4]=num(ivs_params_rec.desc_len_02$)
+    p[5]=num(ivs_params_rec.desc_len_03$)
 
 rem --- Initializations
 
@@ -129,9 +129,21 @@ rem --- Report headings
 rem --- Call price/cost change entry program
 
     action$="R"
-    entry$="ivw-09"
-    call pgmdir$+"ivc_pricecostchgbypct.aon",action$,entry$,option!,no_of_records,status
-    if status goto std_exit
+    entry$="IVW_PRICREV"
+    call pgmdir$+"ivc_pricecostchgbypct.aon",action$,entry$,option!,no_of_records,table_chans$[all],status
+    if status then if status = 911 then escape else goto std_exit
+	
+	if no_of_records = 0 then 
+		msg_id$ = "AD_NORECS"
+		call sypdir$ + "bac_message.bbj", err=*endif,
+:			msg_id$,
+:			msg_tokens$[all],
+:			msg_opt$,
+:			table_chans$[all]
+	
+		goto std_exit
+	endif
+	
     read (pricerev_dev,key="",dom=*next)
 	
     rem ivw09a_key$=key(pricerev_dev,end=Report_Init)
@@ -179,7 +191,7 @@ rem --- Additional reads
         find record (itemmast_dev, key=firm_id$+item$,       dom=*next) itemmast_rec$
         find record (itemwhse_dev, key=firm_id$+whse$+item$, dom=*next) itemwhse_rec$
 		
-        if itemmast_rec.cur_price_cd$<>pricerev_rec.price_code$ continue
+        if itemwhse_rec.cur_price_cd$<>pricerev_rec.price_code$ continue
 		
         description$=fnitem$(itemmast_rec.item_desc$,p[3],p[4],p[5])
 
@@ -188,9 +200,9 @@ rem --- Print detail line
 		OutVect!.addItem(item$)
 		OutVect!.addItem(description$)
 		OutVect!.addItem(itemmast_rec.unit_of_sale$)
-		OutVect!.addItem( str(ivm02a.cur_price) )
-		OutVect!.addItem( str(ivm02a.pri_price) )
-		OutVect!.addItem(ivm02a.pri_price_cd$)
+		OutVect!.addItem( str(itemwhse_rec.cur_price) )
+		OutVect!.addItem( str(itemwhse_rec.pri_price) )
+		OutVect!.addItem(itemwhse_rec.pri_price_cd$)
 		
         number=number+1
 		
@@ -226,7 +238,7 @@ rem --- Run update overlay
 price_code_break: rem --- Price Code Break
 
 	BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
-	HdrVect!.addItem( "For New List Price Code " + pricerev_rec.price_code$ )
+	HdrVect!.addItem( "For List Price Code " + pricerev_rec.price_code$ )
 	
     return
 
