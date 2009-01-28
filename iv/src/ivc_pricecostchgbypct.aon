@@ -3,7 +3,7 @@ rem --- Program ivc_pricecostchgbypct.aon v8.0.0 18Dec2007 (ivc_ca)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (12/18/2007 09:44:51)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
-rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- Copyright (c) 1981-2009 AddonSoftware
 rem --- All Rights Reserved
 
 rem  action$      : Entry Type (Input)
@@ -64,7 +64,10 @@ rem --- Assign form input values to local variables
 	begitem$ = option!.getOptionData("ITEM_ID_1")
 	enditem$ = option!.getOptionData("ITEM_ID_2")
 	type$    = option!.getOptionData("ITEM_TYPE")
-	percent  = num( option!.getOptionData("PERCENT_CHANGE") )
+	
+	if action$ <> "R" then 
+		percent = num( option!.getOptionData("PERCENT_CHANGE") )
+	endif
 
 rem --- Open all files
 
@@ -174,7 +177,8 @@ rem --- Read item and warehouse records
 		if begvend$<>"" and vendor$<begvend$ then continue
 		if endvend$<>"" and vendor$>endvend$ then continue
 		
-		if action$="R" and cvs(itemwhse_rec.cur_price_cd$,2)<>price_code$ then continue
+		rem if action$="R" and cvs(itemwhse_rec.cur_price_cd$,2)<>price_code$ then continue
+		if action$ <> "C" and cvs(itemwhse_rec.cur_price_cd$, 2) <> cvs(price_code$, 2) then continue
 
 rem --- Generate price/cost change record
 
