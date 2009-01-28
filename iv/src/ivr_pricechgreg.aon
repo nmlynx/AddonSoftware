@@ -9,9 +9,10 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
-rem --- Use for type checking
+rem --- Use statements
 
 	use ::sys/prog/bao_option.bbj::Option
+	use ::sys/prog/bao_translator.bbj::Translator
 
 rem --- Retrieve the program path
 
@@ -19,7 +20,6 @@ rem --- Retrieve the program path
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 	sypdir$=""
 	sypdir$=stbl("+DIR_SYP",err=*next)
-
 
 rem --- Retrieve sysinfo data
 
@@ -32,10 +32,10 @@ rem --- Assign form input values to local variables
 	
 	declare Option option!
 	new_price_code$ = option!.getOptionData("NEW_PRICE_CODE")
-	
+
 rem --- Open all files
 
-	num_files = 6
+	num_files = 7
 	open_beg  = 1
 	open_end  = num_files
 	
@@ -47,6 +47,7 @@ rem --- Open all files
 	open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
 	open_tables$[5]="IVC_PRODCODE", open_opts$[5]="OTA"
 	open_tables$[6]="IVC_WHSECODE", open_opts$[6]="OTA"
+	open_tables$[7]="ADM_MODULES",  open_opts$[7]="OTA"
 	
 	gosub open_tables
 	
@@ -56,6 +57,7 @@ rem --- Open all files
 	itemwhse_dev   = num( open_chans$[4] )
 	prodcode_dev   = num( open_chans$[5] )
 	whsecode_dev   = num( open_chans$[6] )
+	modules_dev    = num( open_chans$[7] )
 	
 	dim ivs_params_rec$:open_tpls$[1]
 	dim pricechg_rec$:open_tpls$[2]
@@ -63,7 +65,19 @@ rem --- Open all files
 	dim itemwhse_rec$:open_tpls$[4]
 	dim prodcode_rec$:open_tpls$[5]
 	dim whsecode_rec$:open_tpls$[6]	
+	dim modules_rec$:open_tpls$[7]
 	
+rem --- Get locale info and instantiate translator object
+
+	declare BBjString locale_path!
+	declare BBjString locale_res!
+	declare Translator tr!
+
+	read record (modules_dev, key=pad(sysinfo.lic_feature$,11)) modules_rec$
+    locale_res! = modules_rec.locale_resource$
+    locale_path! = modules_rec.locale_path$
+	tr! = Translator.getInstance(locale_res!, stbl("+USER_LOCALE"), null(), locale_path!)
+
 rem --- Parameters
 
     find record (ivs_params_dev, key=firm_id$+"IV00", dom=std_missing_params) ivs_params_rec$
@@ -78,7 +92,6 @@ rem --- Parameters
 rem --- Initializations
 
     precision p[1]
-	
 	
     width=132
     number=0
@@ -111,10 +124,10 @@ rem --- Document initializations
 	declare BBjVector BrkVect!
 	declare BBjVector TotVect!
 
-	OutVect!=bbjAPI().getSysGui().makeVector()
-	HdrVect!=bbjAPI().getSysGui().makeVector()
-	BrkVect!=bbjAPI().getSysGui().makeVector()
-	TotVect!=bbjAPI().getSysGui().makeVector()
+	OutVect!=BBjAPI().makeVector()
+	HdrVect!=BBjAPI().makeVector()
+	BrkVect!=BBjAPI().makeVector()
+	TotVect!=BBjAPI().makeVector()
 	
 	rep_date$=date(0:"%Mz/%Dz/%Yd")
 	rep_date_stamp$=date(0:"%Yd%Mz%Dz")
@@ -127,14 +140,14 @@ rem --- Column headings
 	columns=7
 	dim columns$[columns,10]
 	
-	columns$[0,0]="Item",               columns$[0,1]="C", columns$[0,2]=str(p[0])
-	columns$[1,0]="Description",        columns$[1,1]="C", columns$[1,2]=str(dw)
-	columns$[2,0]="UM",                 columns$[2,1]="C", columns$[2,2]="2"
-	columns$[3,0]="Prior^List Price",   columns$[3,1]="N", columns$[3,2]=str(m4), columns$[3,3]=m4$
-	columns$[4,0]="Price^Code",         columns$[4,1]="C", columns$[4,2]="5"
-	columns$[5,0]="Current^List Price", columns$[5,1]="N", columns$[5,2]=str(m4), columns$[5,3]=m4$
-	columns$[6,0]="Price^Code",         columns$[6,1]="C", columns$[6,2]="5"
-	columns$[7,0]="New^List Price",     columns$[7,1]="N", columns$[7,2]=str(m4), columns$[7,3]=m4$
+	columns$[0,0]=tr!.getTranslation("ITEM", "Item"),                             columns$[0,1]="C", columns$[0,2]=str(p[0])
+	columns$[1,0]=tr!.getTranslation("DESCRIPTION", "Description"),               columns$[1,1]="C", columns$[1,2]=str(dw)
+	columns$[2,0]=tr!.getTranslation("UM", "UM"),                                 columns$[2,1]="C", columns$[2,2]="2"
+	columns$[3,0]=tr!.getTranslation("PRIOR_LIST_PRICE", "Prior^List Price"),     columns$[3,1]="N", columns$[3,2]=str(m4), columns$[3,3]=m4$
+	columns$[4,0]=tr!.getTranslation("PRICE_CODE", "Price^Code"),                 columns$[4,1]="C", columns$[4,2]="5"
+	columns$[5,0]=tr!.getTranslation("CURRENT_LIST_PRICE", "Current^List Price"), columns$[5,1]="N", columns$[5,2]=str(m4), columns$[5,3]=m4$
+	columns$[6,0]=tr!.getTranslation("PRICE_CODE", "Price^Code"),                 columns$[6,1]="C", columns$[6,2]="5"
+	columns$[7,0]=tr!.getTranslation("NEW_LIST_PRICE", "New^List Price"),         columns$[7,1]="N", columns$[7,2]=str(m4), columns$[7,3]=m4$
 	
 rem --- Report headings
 
@@ -157,7 +170,7 @@ rem --- Sort by product type using SQL
 	sql_prep$ = sql_prep$ + " WHERE ive_pricechg.firm_id = '" + firm_id$ + "' "
 	
 	if new_price_code$ <> "" then 
-		sql_prep$ = sql_prep$ + "AND ive_pricechg.price_code <= '" + new_price_code$ +"' "
+		sql_prep$ = sql_prep$ + "AND ive_pricechg.price_code = '" + new_price_code$ +"' "
 	endif
 	
 	sql_prep$ = sql_prep$ + "ORDER BY ive_pricechg.price_code, ive_pricechg.warehouse_id, ivm_itemmast.product_type$, ive_pricechg.item_id "
@@ -250,8 +263,9 @@ rem --- All done
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
 	
     if !number then
-		OutVect!.addItem("No Price Change Entries Found")
+		OutVect!.addItem( tr!.getTranslation("NO_PRICE_CHANGE_ENTRIES_FOUND", "No Price Change Entries Found") )
 		ignore = fnblank(7)
+		goto std_exit
     endif
 	
 rem --- Any negative prices?
@@ -278,7 +292,7 @@ rem --- Run update overlay
 price_code_break: rem --- Price Code Break
 
 	BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
-	HdrVect!.addItem( "For New List Price Code "+sql_rec.price_code$ )
+	HdrVect!.addItem( tr!.getTranslation("FOR_NEW_LIST_PRICE_CODE_", "For New List Price Code ") + sql_rec.price_code$ )
 	
     return
 
@@ -299,7 +313,7 @@ product_break: rem --- Product Break
     find record (prodcode_dev,key=firm_id$+"A"+sql_rec.product_type$,dom=*next) prodcode_rec$
 	
 	ignore = fnblank_line(void)
-    OutVect!.addItem( "Product "+sql_rec.product_type$+" "+prodcode_rec.code_desc$ )
+    OutVect!.addItem( tr!.getTranslation("PRODUCT_", "Product ") + sql_rec.product_type$ + " " + prodcode_rec.code_desc$ )
 	ignore = fnblank(7)
 	
     return
