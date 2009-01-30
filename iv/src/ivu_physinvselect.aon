@@ -1,0 +1,319 @@
+rem --- Physical Inventory Selection Update (ive_pa/ivc_ic)
+rem --- Program ivu_physinvselect.aon v8.0.0 28Jan2009
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2009 AddonSoftware
+rem --- All Rights Reserved
+
+    seterr std_error
+    setesc std_error
+	
+rem --- Use for type checking
+
+	use ::sys/prog/bao_option.bbj::Option
+
+rem --- Retrieve the program path
+
+	pgmdir$=""
+	pgmdir$=stbl("+DIR_PGM",err=*next)
+	sypdir$=""
+	sypdir$=stbl("+DIR_SYP",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL")
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO")
+    firm_id$=sysinfo.firm_id$
+
+rem --- Assign form input values to local variables
+
+	declare Option option!
+	
+	whse_id$     = option!.getOptionData("WAREHOUSE_ID")
+	cutoff_date$ = option!.getOptionData("CUTOFF_DATE")
+	cycle_code$  = option!.getOptionData("CYCLE_CODE")
+
+rem --- Open all files
+
+	num_files = 5
+	open_beg  = 1
+	open_end  = num_files
+	
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	
+	open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
+	open_tables$[2]="IVE_PHYSICAL", open_opts$[2]="OTA"
+	open_tables$[3]="IVC_PHYSCODE", open_opts$[3]="OTA"
+	open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
+	open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
+	
+	gosub open_tables
+	
+	params_dev   = num( open_chans$[1] )
+	physical_dev = num( open_chans$[1] )
+	physcode_dev = num( open_chans$[3] )
+	itemwhse_dev = num( open_chans$[4] )
+	itemmast_dev = num( open_chans$[5] )
+	
+	dim params_rec$:open_tpls$[1]
+	dim physical_rec$:open_tpls$[2]
+	dim physcode_rec$:open_tpls$[3]
+	dim itemwhse_rec$:open_tpls$[4]
+	dim itemmast_rec$:open_tpls$[5]
+
+rem --- Parameters
+	
+	find record (params_dev, key=firm_id$+"IV00", dom=std_missing_params) params_rec$	
+	if pos(params_rec.lotser_flag$ = "LS") then ls$="Y" else ls$ = "N"
+
+rem --- Open Lot/serial file if necessary
+
+	if ls$ = "Y" then 
+		open_beg = 1
+		open_end = 1
+		open_tables$[1]="IVM_LSMASTER", open_opts$[1]="OTA"
+		gosub open_tables
+		lsmaster_dev = num(open_chans$[1])
+		dim lsmaster_rec$:opentpls$[1]
+	endif
+	
+rem --- Initializations
+	
+	precision num( params_rec.precision$ )
+	more = 1
+	number = 0
+	
+	call pgmdir$+"adc_progress.aon","N","","","","",0,itemwhse_dev,1,0,ignore_status
+	read (itemwhse_dev, knum=2, key=firm_id$+whse_id$+cycle_code$, dom=*next)
+
+rem --- Get next sort record
+	
+	while more
+
+		read record (itemwhse_dev, knum=2, end=*break) itemwhse_rec$
+		if firm_id$ <> itemwhse_rec.firm_id$ then break
+		if whse_id$ <> itemwhse_rec.warehouse_id$ then break
+		if cycle_code$ <> "" and itemwhse_rec.cycle_cd$ <> cycle_code$ then break
+	
+rem --- Position Physical Entry file
+
+		read (physical_dev, key=firm_id$+whse_id$+itemwhse_rec.cycle_cd$, dom=*next)
+		
+		while more
+		
+			read record (physical_dev, end=*break) physical_rec$
+			if firm_id$ <> physical_rec.firm_id$ then break
+			if whse_id$ <> physical_rec.warehouse_id$ then break
+			if itemwhse_rec.cycle_cd$ <> physical_rec.cycle_cd$ then break
+			
+			call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
+			
+rem --- Update warehouse record
+
+			extract record (itemwhse_dev, key=firm_id$+whse_id$+itemwhse_rec.item_id$) itemwhse_rec$
+			itemwhse_rec.select_phys$ = "Y"
+			onhand = itemwhse_rec.qty_on_hand
+			total  = 0
+			blanks = 0
+			number = number + 1
+			needs_update = 1
+			this_item_is_lot_ser = 0
+			item_id$ = itemwhse_rec.item_id$
+			itemwhse_rec$ = field(itemwhse_rec$)
+			write record (itemwhse_dev) itemwhse_rec$
+			
+rem --- Count Lot/serial, if necessary
+
+			if ls$ = "Y" then 
+				find record (ivmmast_dev, key=firm_id$+item_id$) itemmast_rec$
+				this_item_is_lot_ser = (itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
+				
+				if this_item_is_lot_ser then
+					read (lsmaster_dev, key=firm_id$+whse_id$+item_id$, dom=*next)
+					
+					while more
+						read record (lsmaster_dev, end=*break) lsmaster_rec$
+						if firm_id$ <> lsmaster_rec.firm_id$ then break
+						if whse_id$ <> lsmaster_rec.warehouse_id$ then break
+						if item_id$ <> lsmaster_rec.item_id$ then break
+						if lsmaster_rec.qty_on_hand = 0 then break
+						
+						number = number + 1
+
+rem --- Write Physical Entry record for lot/serial
+
+						dim physical_rec$:fattr(physical_rec$)
+						physical_rec.firm_id$      = firm_id$
+						physical_rec.warehouse_id$ = whse_id$
+						physical_rec.cycle_cd$     = cycle_code$
+						physical_rec.item_id$      = item_id$
+						physical_rec.lotser_no$    = lsmaster_rec.lotser_no$
+						physical_rec.cutoff_date$  = cutoff$
+						physical_rec.entered_flag$ = "N"
+						physical_reclotser_item$   = "Y"
+						physical_rec.freeze_qty    = lsmaster_rec.qty_on_hand
+						total = total + lsmaster_rec.qty_on_hand
+						
+rem  --- Don't change onhand qnty for blank lot/serial number
+
+						if cvs(physical_rec.lotser_no$,2) = "" then 
+							physical_rec.act_phys_cnt = physical_rec.freeze_qty
+							blanks = physical_rec.freeze_qty
+						endif
+						
+						physical_rec$ = field(physical_rec$)
+						write record (physical_dev) physical_rec$
+					
+					wend
+					
+rem --- Missing Lot/Serial Numbers?
+
+					if onhand=total and total <> 0 then needs_update = 0
+				
+				endif
+			
+			endif
+			
+rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
+
+			if needs_update then
+			
+				dim physical_rec$:fattr(physical_rec$)
+				physical_rec.firm_id$      = firm_id$
+				physical_rec.warehouse_id$ = whse_id$
+				physical_rec.cycle_cd$     = cycle_code$
+				physical_rec.item_id$      = item_id$
+				physical_rec.cutoff_date$  = cutoff$
+				physical_rec.entered_flag$ = "N"
+				physical_reclotser_item$   = "N"
+				physical_rec.freeze_qty    = onhand - total
+				
+rem --- Treat as Non-Serialized/Non-Lotted unless item is Inventoried by Serial/Lot number
+				
+				if this_item_is_lot_ser then 
+					physical_reclotser_item$  = "Y"
+					physical_rec.freeze_qty   = physical_rec.freeze_qty + blanks
+					physical_rec.act_phys_cnt = blanks
+				endif
+			
+				physical_rec$ = field(physical_rec$)
+				write record (physical_dev) physical_rec$
+				
+			endif
+		
+		wend
+
+rem --- Update Physical Code file
+
+		rem LET Y0$(1)=N0$+"P"+B0$(3,2)+B1$(11,2),Y0$(8,1)="1",Y0$(9,3)=CUTOFF$
+		rem IF NUMBER=0 THEN REMOVE (IVM10_DEV,KEY=Y0$(1,7),DOM=3850)
+		rem IF NUMBER>1 THEN WRITE (IVM10_DEV,KEY=Y0$(1,7))IOL=IVM10P
+		
+		rem --- The code above is directly from version 7.  What happens if number = 1?  It seems ivm10p is not written.
+		
+		if number = 0 then 
+			remove (physcode_dev, key=firm_id$+"P"+whse_id$+cycle_code$, dom=*next)
+		else
+			rem --- should this be number > 0?
+			if number > 1 then
+				dim physcode_rec$:fattr(physcode_rec$)
+				physcode_rec.firm_id$      = firm_id$
+				physcode_rec.record_id_p$  = "P"
+				physcode_rec.warehouse_id$ = whse_id$
+				physcode_rec.cycle_cd$     = cycle_code$
+				physcode_rec.phys_inv_sts$ = "1"
+				physcode_rec.cutoff_date$  = cutoff$
+				physcode_rec$ = field(physcode_rec$)
+				write record (physcode_dev) physcode_rec$
+			endif
+			
+		endif
+
+	wend
+
+rem --- All done
+
+	goto std_exit
+
+open_tables: rem --- Open tables
+
+	call sypdir$+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		status=912
+		goto std_exit
+	endif
+
+	return
+	
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:   str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+	
+rem #endinclude std_end.src
+
+    end
