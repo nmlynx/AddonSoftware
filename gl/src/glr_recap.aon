@@ -294,7 +294,7 @@ rem --- Debits = Credits?
     if balance=0 goto date_errors
     if l+1>l9 gosub report_heading
     xwk=fnblank(2)
-    OutVect!.addItem("WARNING: Out of balance by "+str(balance))
+    OutVect!.addItem("WARNING: Out of balance by "+str(balance:glm1$))
     xwk=fnblank(3)
     if use_suspense$<>"Y" goto register_errors
     if cvs(suspense_account$,2)="" goto register_errors
@@ -428,10 +428,9 @@ new_journal: rem --- New Sequence
     t1$=glw11a.journal_id$
     lf$=""
     find record (glm03_dev,key=glm03_key$,dom=*next)glm03a$
-    if jh$="" headings$[2]="General Ledger Summary - Journal "+glm03a.journal_id$+
-:                          " "+cvs(glm03a.code_desc$,2),l=l9+1
+    jh$="Journal "+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2),l=l9+1
 	BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-	HdrVect!.addItem(headings$[2])
+	HdrVect!.addItem(jh$)
 journal_break_exit:
     return
 
@@ -595,7 +594,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-    
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
