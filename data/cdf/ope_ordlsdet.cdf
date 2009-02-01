@@ -1,3 +1,10 @@
+[[OPE_ORDLSDET.BSHO]]
+rem --- Set Lot/Serial button up properly
+	switch pos(callpoint!.getDevObject("lotser_flag")="LS")
+		case 1; callpoint!.setOptionText("LLOK","Lot Lookup"); break
+		case 2; callpoint!.setOptionText("LLOK","Serial Lookup"); break
+		case default; callpoint!.setOptionEnabled("LLOK",0); break
+	swend
 [[OPE_ORDLSDET.AOPT-LLOK]]
 rem jpb grid! = Form!.getChildWindow(1109).getControl(5900)
 

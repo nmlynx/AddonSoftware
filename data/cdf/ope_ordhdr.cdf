@@ -151,7 +151,7 @@ rem --- remove committments for detail records by calling ATAMO
 				line_sign=-1
 				gosub update_totals
 			endif
-		if pos(ivs01a.lotser_flag$="LS") 
+		if pos(callpoint!.getDevObject("lotser_flag")="LS") 
 			ord_seq$=ope11a.line_no$
 			gosub remove_lot_ser_det
 		endif
@@ -277,6 +277,18 @@ rem --- new record
 		user_tpl.order_date$=sysinfo.system_date$
 	endif
 	user_tpl.new_rec$="N"
+
+rem --- Enable/Disable buttons
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
+	if user_tpl.new_rec$="N"
+		if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
+:			callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")="C"
+				callpoint!.setOptionEnabled("RPRT",0)
+		else
+			callpoint!.setOptionEnabled("RPRT",1)
+		endif
+	endif
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
@@ -409,6 +421,11 @@ rem --- Clear Availability Window
 	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
+
+rem --- Clear Duplicate buttons
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
+	callpoint!.setOptionEnabled("RPRT",0)
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 	gosub get_op_params
@@ -424,6 +441,12 @@ rem --- Show customer data
 	cust$=callpoint!.getUserInput()
 	gosub disp_cust_comments
 	callpoint!.setDevObject("cust",cust$)
+
+rem --- Enable Duplicate buttons
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
+		callpoint!.setOptionEnabled("DINV",1)
+		callpoint!.setOptionEnabled("CINV",1)
+	endif
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 
@@ -779,30 +802,14 @@ rem --- copy detail lines
 
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
 rem --- need to send in wh_id$, item_id$, ls_id$, and qty
-rem	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
 	call "ivc_itemupdt.aon::init",iv_files[all],ivs01a$,iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],status
-rem	iv_files[0]=fnget_dev("GLS_PARAMS")
-rem	iv_files[1]=fnget_dev("IVM_ITEMMAST")
-rem	iv_files[2]=fnget_dev("IVM_ITEMWHSE")
-rem	iv_files[4]=fnget_dev("IVM_ITEMTIER")
-rem	iv_files[5]=fnget_dev("IVM_ITEMVEND")
-rem	iv_files[7]=fnget_dev("IVM_LSMASTER")
-rem	iv_files[12]=fnget_dev("IVM_ITEMACCT")
-rem	iv_files[17]=fnget_dev("IVM_LSACT")
-rem	iv_files[41]=fnget_dev("IVT_LSTRANS")
-rem	iv_files[42]=fnget_dev("IVX_LSCUST")
-rem	iv_files[43]=fnget_dev("IVX_LSVEND")
-rem	iv_files[44]=fnget_dev("IVT_ITEMTRAN")
-rem	ivs01_dev=fnget_dev("IVS_PARAMS")
-rem	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-rem	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 	iv_info$[1]=wh_id$
 	iv_info$[2]=item_id$
 	iv_info$[3]=ls_id$
 	iv_refs[0]=qty
 	while 1
-rem	jpb need to figure this one out"	if pos(S8$(2,1)="SP")=0 break
-rem	jpb need to figure this one out"	if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
+		if pos(opc_linecode.line_type$="SP")=0 break
+		if opc_linecode.dropship$="Y" or callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")="P" break; REM "Drop ship or quote
 		if line_sign>0 iv_action$="OE" else iv_action$="UC"
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,
 :			iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],iv_status
@@ -951,6 +958,16 @@ rem --- Set variables
 	callpoint!.setDevObject("cust",cust_id$)
 	callpoint!.setDevObject("ar_type","")
 	callpoint!.setDevObject("order",ord_no$)
+
+rem --- Enable/Disable buttons
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
+	if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
+:		callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")="C"
+			callpoint!.setOptionEnabled("RPRT",0)
+	else
+		callpoint!.setOptionEnabled("RPRT",1)
+	endif
 [[OPE_ORDHDR.BSHO]]
 rem --- open needed files
 	num_files=34
@@ -992,13 +1009,16 @@ rem --- open needed files
 rem --- get AR Params
 	dim ars01a$:open_tpls$[4]
 	read record(num(open_chans$[4]),key=firm_id$+"AR00")ars01a$
+
 rem --- get IV Params
 	dim ivs01a$:open_tpls$[29]
 	read record(num(open_chans$[29]),key=firm_id$+"IV00")ivs01a$
+
 rem --- see if blank warehouse exists
 	blank_whse$="N"
 	dim ivm10c$:open_tpls$[28]
 	read record(num(open_chans$[28]),key=firm_id$+"C"+ivm10c.warehouse_id$,dom=*next)ivm10c$;rem blank_whse$="Y"
+
 rem --- disable display fields
 	dim dctl$[10]
 	dmap$="I"
@@ -1046,7 +1066,7 @@ rem --- Setup user_tpl$
 	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
 	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10),avail_oh:c(5),avail_comm:c(5),avail_avail:c(5),"
 	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),dropship_flag:c(5*),ord_tot_1:c(5*),cur_row:n(5),"
-	user_tpl$=user_tpl$+"price_code:c(2),pricing_code:c(4),order_date:c(8),lot_ser:c(1),"
+	user_tpl$=user_tpl$+"price_code:c(2),pricing_code:c(4),order_date:c(8),"
 	user_tpl$=user_tpl$+"pick_hold:c(1)"
 	dim user_tpl$:user_tpl$
 	user_tpl.credit_installed$=ars_credit.sys_install$
@@ -1064,7 +1084,6 @@ rem --- Setup user_tpl$
 	user_tpl.dropship_flag$="8"
 	user_tpl.ord_tot_1$="9"
 	user_tpl.cur_row=-1
-	user_tpl.lot_ser$=ivs01a.lotser_flag$
 
 rem --- Clear variables
 	callpoint!.setDevObject("cust","")
@@ -1076,3 +1095,10 @@ rem --- Clear variables
 	callpoint!.setDevObject("lsmast_dev",open_chans$[13])
 	callpoint!.setDevObject("lsmast_tpl",open_tpls$[13])
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
+
+rem --- Set Lot/Serial button up properly
+	switch pos(ivs01a.lotser_flag$="LS")
+		case 1; callpoint!.setOptionText("LENT","Lot Entry"); break
+		case 2; callpoint!.setOptionText("LENT","Serial Entry"); break
+		case default; callpoint!.setOptionEnabled("LENT",0); break
+	swend

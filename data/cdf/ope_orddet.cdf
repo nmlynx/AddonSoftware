@@ -24,7 +24,7 @@ rem escape;rem checkit out cur_rec.item_id$, undo_rec and disk_rec
 rem endif	
 
 while 1
-	if pos(user_tpl.lot_ser$="LS")>0
+	if pos(callpoint!.getDevObject("lotser_flag")="LS")>0
 		readrecord(ivm01_dev,key=firm_id$+cur_rec.item_id$,dom=*break)ivm01a$
 		if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
 			callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
@@ -156,9 +156,6 @@ rem --- Go get Lot/Serial Numbers if needed
 	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 	opc_linecode_dev=fnget_dev("OPC_LINECODE")
 	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-	ivs01_dev=fnget_dev("IVS_PARAMS")
-	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 	ar_type$=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
 	cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 	ord$=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
@@ -171,7 +168,7 @@ rem --- Go get Lot/Serial Numbers if needed
 			if pos(ivm01a.lotser_item$="Y") and
 :					callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" and
 :					ivm01a.inventoried$="Y"  and
-:					pos(ivs01a.lotser_flag$="LS")
+:					pos(callpoint!.getDevObject("lotser_flag")="LS")
 				user_id$=stbl("+USER_ID")
 				dim dflt_data$[1,1]
 				key_pfx$=firm_id$+ar_type$+cust$+ord$+seq$
