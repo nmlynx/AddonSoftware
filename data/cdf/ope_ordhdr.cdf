@@ -100,6 +100,8 @@ g!.setSize(g!.getWidth(),g!.getHeight()-75)
 cwin!=form!.getChildWindow(1109).getControl(15000)
 cwin!.setLocation(cwin!.getX(),g!.getY()+g!.getHeight())
 cwin!.setSize(g!.getWidth(),cwin!.getHeight())
+mwin!=cwin!.getControl(15999)
+mwin!.setSize(g!.getWidth()-5,mwin!.getHeight())
 [[OPE_ORDHDR.AFMC]]
 rem --- Create Inventory Availability window
 g!=form!.getChildWindow(1109).getControl(5900)
@@ -1100,5 +1102,6 @@ rem --- Set Lot/Serial button up properly
 	switch pos(ivs01a.lotser_flag$="LS")
 		case 1; callpoint!.setOptionText("LENT","Lot Entry"); break
 		case 2; callpoint!.setOptionText("LENT","Serial Entry"); break
-		case default; callpoint!.setOptionEnabled("LENT",0); break
+		case default; break
 	swend
+	callpoint!.setOptionEnabled("LENT",0)

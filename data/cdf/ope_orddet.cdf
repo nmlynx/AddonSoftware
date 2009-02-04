@@ -1,12 +1,22 @@
+[[OPE_ORDDET.AGRN]]
+rem --- Set Lot/Serial button up properly
+	gosub lot_ser_check
+	if pos(callpoint!.getDevObject("lotser_flag")="LS")
+		if lotted$="Y"
+			callpoint!.setOptionEnabled("LENT",1)
+		else
+			callpoint!.setOptionEnabled("LENT",0)
+		endif
+	endif
 [[OPE_ORDDET.AGRE]]
 rem --- check for lotted/serialized item
 ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
-myrow=callpoint!.getValidationRow()
+currow=callpoint!.getValidationRow()
 
-jim$=callpoint!.getGridRowModifyStatus(myrow)
-jim1$=callpoint!.getGridRowNewStatus(myrow)
+jim$=callpoint!.getGridRowModifyStatus(currow)
+jim1$=callpoint!.getGridRowNewStatus(currow)
 rem escape;rem ? jim$ (mod stat) and jim1$ (new stat)
 	curVect!=gridVect!.getItem(0)
 	undoVect!=gridVect!.getItem(1)
@@ -16,9 +26,9 @@ rem escape;rem ? jim$ (mod stat) and jim1$ (new stat)
 	dim undo_rec$:dtlg_param$[1,3]
 	dim disk_rec$:dtlg_param$[1,3]
 	
-	cur_rec$=curVect!.getItem(myrow)
-	undo_rec$=undoVect!.getItem(myrow)
-	disk_rec$=diskVect!.getItem(myrow)
+	cur_rec$=curVect!.getItem(currow)
+	undo_rec$=undoVect!.getItem(currow)
+	disk_rec$=diskVect!.getItem(currow)
 rem escape;rem checkit out cur_rec.item_id$, undo_rec and disk_rec
 
 rem endif	
@@ -34,6 +44,8 @@ while 1
 	endif
 	break
 wend
+
+	callpoint!.setOptionEnabled("LENT",0)
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 g!=form!.getChildWindow(1109).getControl(5900)
@@ -148,6 +160,16 @@ while 1
 	break
 wend
 callpoint!.setStatus("REFRESH")
+
+rem --- Set Lot/Serial button up properly
+	gosub lot_ser_check
+	if pos(callpoint!.getDevObject("lotser_flag")="LS")
+		if lotted$="Y"
+			callpoint!.setOptionEnabled("LENT",1)
+		else
+			callpoint!.setOptionEnabled("LENT",0)
+		endif
+	endif
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
@@ -453,6 +475,39 @@ disable_ctl:rem --- disable selected controls
 	wmap$(wpos+6,1)=dmap$
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP")
+return
+
+lot_ser_check: rem Check for lotted item
+	lotted$="N"
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+
+	currow=callpoint!.getValidationRow()
+	new_rec$=callpoint!.getGridRowNewStatus(currow)
+	curVect!=gridVect!.getItem(0)
+	dim cur_rec$:dtlg_param$[1,3]
+	cur_rec$=curVect!.getItem(currow)
+
+	while 1
+		if pos(callpoint!.getDevObject("lotser_flag")="LS")>0
+			if new_rec$<>"Y"
+				readrecord(ivm01_dev,key=firm_id$+cur_rec.item_id$,dom=*break)ivm01a$
+			else
+				readrecord(ivm01_dev,key=firm_id$+callpoint!.getUserInput(),dom=*break)ivm01a$
+			endif
+			if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
+				lotted$="Y"
+				callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+				callpoint!.setDevObject("wh",cur_rec.warehouse_id$)
+				if new_rec$<>"Y"
+					callpoint!.setDevObject("item",callpoint!.getUserInput())
+				else
+					callpoint!.setDevObject("item",cur_rec.item_id$)
+				endif
+			endif
+		endif
+		break
+	wend
 return
 
 #include std_missing_params.src
