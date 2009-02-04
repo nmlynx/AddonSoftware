@@ -60,6 +60,9 @@ rem --- Open all files
 
 	pom01_dev=num(open_chans$[1])
 	dim pom01a$:open_tpls$[1]
+	
+	call pgmdir$+"adc_progress.aon","NC","","","","",0,pom01_dev,1,meter_num,status
+
 
 rem --- process
 
@@ -81,6 +84,7 @@ rem --- process
             call pgmdir$+"adc_daydates.aon",x$,x0$,1
             x$=x0$    
         next y
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status        
     next x
     gosub write_record
     goto std_exit
@@ -138,6 +142,11 @@ open_tables: rem --- Call the open tables routine
 	endif
 
 	return	
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+	return
     
 
 rem #include std_functions.src
@@ -203,6 +212,12 @@ rem #include std_exit.src
 std_exit: rem --- Standard called program exit (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+
+	msg_id$="UPDATE_COMPLETE"
+	dim msg_tokens$[1]
+	msg_opt$=""
+	gosub disp_message
+
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_exit.src
