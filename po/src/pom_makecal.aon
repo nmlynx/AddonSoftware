@@ -86,7 +86,7 @@ rem --- process
     goto std_exit
 
 write_record: rem ---  Write Record
-escape;rem write record
+
     pom01a.firm_id$=firm_id$
     pom01a.year$=old_date$(1,4)
     pom01a.month$=old_date$(5,2)
@@ -97,7 +97,7 @@ escape;rem write record
         call pgmdir$+"adc_dayweek.aon",x9$(1,4)+"0229",x0$,x0
         if x0<>0 then let pom01a.days_in_mth=29 else let pom01a.days_in_mth=28
     endif
-escape;rem writing...
+    
 	pom01a$=field(pom01a$)
     write record (pom01_dev,key=pom01a.firm_id$+pom01a.year$+pom01a.month$) pom01a$
     old_date$=x$
@@ -105,7 +105,7 @@ escape;rem writing...
     return
 
 get_exist_rec: rem --- Get existing record
-escape;rem getting existing record
+
 	dim pom01a$:fattr(pom01a$)
     
     pom01a.firm_id$=firm_id$
