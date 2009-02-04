@@ -1,0 +1,58 @@
+rem ==========================================================================
+rem --- A set of utility methods to replace some Addon functions
+rem --- Program ado_func.src v8.0.0 02Feb2009
+rem --- Copyright 2008-2009, BASIS International, Ltd.
+rem ==========================================================================
+
+class public func
+
+	rem ==========================================================================
+	rem --- Display segmented description (fnitem$)
+	rem ==========================================================================
+	
+	method public static BBjString displayDesc(BBjString p_desc$, BBjInt p_len_1%, BBjInt p_len_2%, BBjInt p_len_3%)
+		
+		rem --- Sanity checks
+		if p_desc$ = "" then methodret ""
+		if p_len_1% = 0 and p_len_2% = 0 and p_len_3% = 0 then methodret p_desc$
+		
+		desc$ = pad(p_desc$, p_len_1% +  p_len_2% + p_len_3%)
+		methodret cvs( desc$(1, p_len_1%) + " " + desc$(p_len_1% + 1, p_len_2%) + " " + desc$(p_len_1% + p_len_2% + 1, p_len_3%), 32)
+		
+	methodend
+	
+	method public static BBjString displayDesc(BBjString p_desc$, BBjNumber p_len_1, BBjNumber p_len_2, BBjNumber p_len_3)
+		methodret #displayDesc(p_desc$, int(p_len_1), int(p_len_2), int(p_len_3))
+	methodend
+
+classend
+
+rem ==========================================================================
+rem --- Testing
+rem ==========================================================================
+
+	dim p[5]
+	p[3] = 30
+	p[4] = 0
+	p[5] = 0
+	dim desc$(60)
+	desc$(1) = "Description for Foo"
+	print func.displayDesc(desc$, p[3], p[4], p[5])
+	desc$ = "Description for Foo"
+	print func.displayDesc(desc$, p[3], p[4], p[5])
+	
+	p[3] = 20
+	p[4] = 20
+	p[5] = 20
+	dim desc$(60)
+	desc$(1) = "Foo: Segment 1"
+	desc$(21) = "Segement 2"
+	desc$(41) = "Segement 3"
+	print func.displayDesc(desc$, p[3], p[4], p[5])
+	
+	print func.displayDesc(desc$, 0, 0, 0)
+	
+	print func.displayDesc("", p[3], p[4], p[5])
+	
+	end
+	
