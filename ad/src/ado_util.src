@@ -1,5 +1,5 @@
 rem ==========================================================================
-rem --- ado - A set of utility methods for use with Barista
+rem --- A set of utility methods for use with Barista
 rem --- Program ado_util.src v8.0.0 03Dec2008
 rem --- Copyright 2008-2009, BASIS International, Ltd.
 rem ==========================================================================
@@ -68,7 +68,7 @@ rem ==========================================================================
 			if type = #PUSH_BUTTON% then
 			
 				if no_buttons_yet then
-					#ExtraHeight% = #ExtraHeight% + this_ctrl!.getHeight() + 5
+					#ExtraHeight% = #ExtraHeight% + int(this_ctrl!.getHeight()) + 5
 					no_buttons_yet = 0
 				endif
 				
@@ -378,7 +378,7 @@ rem ==========================================================================
 	
 rem ==========================================================================
 rem
-rem --- Force focus back to a specific cell and start editing
+rem --- Force focus back to a specific grid cell and start editing
 rem 
 rem ==========================================================================
 	
@@ -407,7 +407,21 @@ rem ==========================================================================
 		methodret
 		
 	methodend
+	
+	
+rem ==========================================================================
+rem
+rem --- Force focus back to a specific non-grid field
+rem 
+rem ==========================================================================
 
+	method public static void forceFocus(Callpoint callpoint!, BBjString data_name$)
+		declare BBjControl ctrl!
+		ctrl! = #getControl(callpoint!, data_name$)
+		ctrl!.focus()
+	methodend
+
+	
 rem ==========================================================================
 rem 
 rem --- Get control object from data name.
