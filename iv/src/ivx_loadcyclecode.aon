@@ -30,40 +30,30 @@ rem --- Inform user of what's about to happen
 
 rem --- Open all files
 
-	num_files = 2
+	num_files = 1
 	open_beg  = 1
 	open_end  = num_files
 	
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	
-	open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
-	open_tables$[2]="IVC_PHYSCODE", open_opts$[2]="OTA"
+	open_tables$[1]="IVC_PHYSCODE", open_opts$[1]="OTA"
 	
 	gosub open_tables
 	
-	params_dev   = num( open_chans$[1] )
-	physcode_dev = num( open_chans$[2] )
-	
-	dim params_rec$:open_tpls$[1]
-	dim physcode_rec$:open_tpls$[2]
-
-rem --- Parameters
-	
-	find record (params_dev, key=firm_id$+"IV00", dom=std_missing_params) params_rec$
+	physcode_dev = num(open_chans$[1])
+	dim physcode_rec$:open_tpls$[1]
 
 rem --- Initializations
 	
-	precision num( params_rec.precision$ )
 	more = 1
 	call pgmdir$+"adc_progress.aon","N","","","","",0,itemwhse_dev,1,meter_num,ignore_status
 
 rem ---  SQL to get unique warehouse and cycle code
 
 	prep$ = ""
-	prep$ = prep$ + "SELECT distinct warehouse_id, pi_cyclecode "
+	prep$ = prep$ + "SELECT distinct firm_id, warehouse_id, pi_cyclecode "
 	prep$ = prep$ + "  FROM ivm_itemwhse "
-	prep$ = prep$ + " WHERE pi_cyclecode > '  ' AND firm_id = '" + firm_id$ + "' "
-	prep$ = prep$ + " ORDER BY warehouse_id, pi_cyclecode"
+	prep$ = prep$ + " WHERE pi_cyclecode > '  ' "
+	prep$ = prep$ + " ORDER BY firm_id, warehouse_id, pi_cyclecode "
 	
 	sql_dev = sqlunt
 	sqlopen (sql_dev) stbl("+DBNAME")
@@ -80,13 +70,13 @@ rem --- Get next sort record (firm/warehouse/cycle)
 
 rem --- Does Cycle Code exists?
 
-		find (physcode_dev, key=firm_id$+sql_rec.warehouse_id$+sql_rec.pi_cyclecode$, dom=build_rec)
-		break
+		find (physcode_dev, key=sql_rec.firm_id$+sql_rec.warehouse_id$+sql_rec.pi_cyclecode$, dom=build_rec)
+		continue
 
 build_rec: rem --- If not, build and write record
 
 		dim physcode_rec$:fattr(physcode_rec$)
-		physcode_rec.firm_id$        = firm_id$
+		physcode_rec.firm_id$        = sql_rec.firm_id$
 		physcode_rec.warehouse_id$   = sql_rec.warehouse_id$
 		physcode_rec.pi_cyclecode$   = sql_rec.pi_cyclecode$
 		physcode_rec.phys_inv_sts$   = "0"
