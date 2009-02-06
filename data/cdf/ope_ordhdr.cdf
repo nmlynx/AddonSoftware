@@ -291,6 +291,8 @@ rem --- Enable/Disable buttons
 			callpoint!.setOptionEnabled("RPRT",1)
 		endif
 	endif
+
+	callpoint!.setStatus("REFRESH")
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
