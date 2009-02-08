@@ -1,3 +1,7 @@
+[[OPE_ORDDET.UNIT_PRICE.AVEC]]
+rem --- update header
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.AGRN]]
 rem --- Set Lot/Serial button up properly
 	gosub lot_ser_check
@@ -91,6 +95,7 @@ rem --- Calc Extension
 	new_ext_price=newqty*unit_price
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
+
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals

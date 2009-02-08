@@ -1096,8 +1096,8 @@ rem --- Clear variables
 	callpoint!.setDevObject("int_seq","")
 	callpoint!.setDevObject("wh","")
 	callpoint!.setDevObject("item","")
-	callpoint!.setDevObject("lsmast_dev",open_chans$[13])
-	callpoint!.setDevObject("lsmast_tpl",open_tpls$[13])
+	callpoint!.setDevObject("lsmast_dev",open_chans$[11])
+	callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
 
 rem --- Set Lot/Serial button up properly
@@ -1107,3 +1107,6 @@ rem --- Set Lot/Serial button up properly
 		case default; break
 	swend
 	callpoint!.setOptionEnabled("LENT",0)
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
+	callpoint!.setOptionEnabled("RPRT",0)

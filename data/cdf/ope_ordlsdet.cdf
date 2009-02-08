@@ -68,13 +68,6 @@ if callpoint!.getDevObject("lotser_flag")="S"
 	endif
 endif
 
-rem --- Signs must be the same
-if sgn(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED")))<>sgn(num(callpoint!.getUserInput()))
-	msg_id$=""
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
-endif
-
 rem --- Ship Qty must be <= Order Qty
 if abs(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED")))>abs(num(callpoint!.getUserInput()))
 	msg_id$="SHIP_EXCEEDS_ORD"
@@ -96,9 +89,15 @@ rem --- validate open lot number
 	lsmast_dev=num(callpoint!.getDevObject("lsmast_dev"))
 	dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
 
-	readrecord(lsmast_dev,key=firm_id$+wh$+item$+callpoint!.getUserInput())lsmast_tpl$
+	got_rec$="N"
+	readrecord(lsmast_dev,key=firm_id$+wh$+item$+callpoint!.getUserInput(),dom=*next)lsmast_tpl$;got_rec$="Y"
 	if lsmast_tpl.closed_flag$="C"
 		msg_id$="IV_SERLOT_CLOSED"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+	if got_rec$="N"
+		msg_id$="IV_LOT_MUST_EXIST"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 	endif
