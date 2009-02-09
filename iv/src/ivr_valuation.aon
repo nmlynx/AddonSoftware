@@ -193,10 +193,10 @@ rem --- Resize masks
    
 rem --- Retrieve key template
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMMAST","PRIMARY",ivm01_key_tpl$,table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMWHSE","PRIMARY",ivm02_key_tpl$,table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","ARC_DISTCODE","PRIMARY",arm10d_key_tpl$,table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","GLW_ACCTTOTALS","PRIMARY",glw04a_key_tpl$,table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMMAST","PRIMARY",ivm01_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMWHSE","PRIMARY",ivm02_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","ARC_DISTCODE","PRIMARY",arm10d_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","GLW_ACCTTOTALS","PRIMARY",glw04a_key_tpl$,rd_table_chans$[all],status$
 
     dim ivm01a_key$:ivm01_key_tpl$,
 :	ivm02a_key$:ivm02_key_tpl$,

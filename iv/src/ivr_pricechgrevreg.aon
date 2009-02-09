@@ -130,7 +130,7 @@ rem --- Call price/cost change entry program
 
     action$="R"
     entry$="IVW_PRICREV"
-    call pgmdir$+"ivc_pricecostchgbypct.aon",action$,entry$,option!,no_of_records,table_chans$[all],status
+    call pgmdir$+"ivc_pricecostchgbypct.aon",action$,entry$,option!,no_of_records,rd_table_chans$[all],status
     if status then if status = 911 then escape else goto std_exit
 	
 	if no_of_records = 0 then 
@@ -139,7 +139,7 @@ rem --- Call price/cost change entry program
 :			msg_id$,
 :			msg_tokens$[all],
 :			msg_opt$,
-:			table_chans$[all]
+:			rd_table_chans$[all]
 	
 		goto std_exit
 	endif
@@ -273,7 +273,7 @@ open_tables: rem --- Call open table routine
 :		open_opts$[all],
 :		rd_open_chans$[all],
 :		open_tpls$[all],
-:		table_chans$[all],
+:		rd_table_chans$[all],
 :		open_batch,
 :		open_status$
 
@@ -281,7 +281,7 @@ open_tables: rem --- Call open table routine
 		msg_id$="ENTRY_OPEN_ERROR"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 		status=912
 		goto std_exit
 	endif

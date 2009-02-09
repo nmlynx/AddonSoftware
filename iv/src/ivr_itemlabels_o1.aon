@@ -134,7 +134,7 @@ printer_err: rem --- Can the printer hadle this width?
     if err<>1 then goto std_error
 
     msg_id$="PRINTER_TOO_NARROW"
-    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
     goto std_exit
 
 rem #include std_functions.src

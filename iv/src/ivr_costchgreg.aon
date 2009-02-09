@@ -280,7 +280,7 @@ rem --- Any negative costs?
 
     if errors then
         msg_id$ = "IV_REG_NEG_COSTS"
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 		goto std_exit
     endif
 
@@ -300,7 +300,7 @@ rem --- Run update overlay
 std_cost: rem --- Must be Standard Costing 
 
 	msg_id$="IV_NO_STD_COST"
-	call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+	call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
     status=999
     goto std_exit
 
@@ -342,7 +342,7 @@ open_tables: rem --- Call the open tables routine
 :		open_opts$[all],
 :		rd_open_chans$[all],
 :		open_tpls$[all],
-:		table_chans$[all],
+:		rd_table_chans$[all],
 :		open_batch,
 :		open_status$
 
@@ -350,7 +350,7 @@ open_tables: rem --- Call the open tables routine
 		msg_id$="ENTRY_OPEN_ERROR"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 		status=912
 		exitto std_exit
 	endif

@@ -43,12 +43,10 @@ rem --- Assign form input values to local variables
 
 rem --- Close Physcode file, it's locked by the Options Entry code
 
-call "dump_var","table_chans$["; escape; rem debug
-
 	call sypdir$ + "bac_open_table.bbj",
 :		"IBC_PHYSCODE",
 :		"C",
-:		table_chans$[all],
+:		rd_table_chans$[all],
 :		open_chan,
 :		table_tpl$,
 :		proc_mssg$	
@@ -285,7 +283,7 @@ open_tables: rem --- Open tables
 :		open_opts$[all],
 :		rd_open_chans$[all],
 :		open_tpls$[all],
-:		table_chans$[all],
+:		rd_table_chans$[all],
 :		open_batch,
 :		open_status$
 
@@ -293,7 +291,7 @@ open_tables: rem --- Open tables
 		msg_id$="ENTRY_OPEN_ERROR"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 		status=912
 		goto std_exit
 	endif
@@ -304,17 +302,12 @@ rem #include disp_message.src
 
 disp_message:rem --- Display Message Dialog
 
-	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 
 	return
 	
 rem #endinclude disp_message.src
 
-rem --- Functions
-
-	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(tmp0$=table_chans$[0,0],20)+17,3))
-	def fnget_tpl$(tmp0$)=table_chans$[int(pos(tmp0$=table_chans$[0,0],20)/20)+1,0]
-	
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)

@@ -24,7 +24,7 @@ rem  --- Set action$ to Cost change; entry$ to cost file
 	entry$  = "IVE_PRICECHG"
 	status  = 999
 
-	call pgmdir$ + "ivc_pricecostchgbypct.aon", action$, entry$, option!, no_of_records, table_chans$[all], status
+	call pgmdir$ + "ivc_pricecostchgbypct.aon", action$, entry$, option!, no_of_records, rd_table_chans$[all], status
 	
 	rem --- Report success or it seems it "did nothing"
 	if status = 0 then

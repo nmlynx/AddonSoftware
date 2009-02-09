@@ -272,7 +272,7 @@ rem --- Any negative prices?
 
     if errors then
         msg_id$ = "IV_REG_NEG_PRICES"
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 		goto std_exit
     endif
 
@@ -327,7 +327,7 @@ open_tables: rem --- Call open table routine
 :		open_opts$[all],
 :		rd_open_chans$[all],
 :		open_tpls$[all],
-:		table_chans$[all],
+:		rd_table_chans$[all],
 :		open_batch,
 :		open_status$
 
