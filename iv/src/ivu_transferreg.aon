@@ -104,7 +104,7 @@ rem --- Additional File Opens
 
 rem --- Initialize update arrays
 
-	call pgmdir$+"ivc_itemupdt.aon::init",files[all],ivs01a$,item$[all],refs$[all],refs[all],table_chans$[all],ignore_status
+	call pgmdir$+"ivc_itemupdt.aon::init",files[all],ivs01a$,item$[all],refs$[all],refs[all],rd_table_chans$[all],ignore_status
 
 	more=1
 
@@ -225,7 +225,7 @@ return
 
 update_inventory: rem --- Update Inventory
 
-	call pgmdir$+"ivc_itemupdt.aon",action$,files[all],ivs01a$,item$[all],refs$[all],refs[all],table_chans$[all],ignore_status
+	call pgmdir$+"ivc_itemupdt.aon",action$,files[all],ivs01a$,item$[all],refs$[all],refs[all],rd_table_chans$[all],ignore_status
 	
 return
 

@@ -43,6 +43,8 @@ rem --- Assign form input values to local variables
 
 rem --- Close Physcode file, it's locked by the Options Entry code
 
+call "dump_var","table_chans$["; escape; rem debug
+
 	call sypdir$ + "bac_open_table.bbj",
 :		"IBC_PHYSCODE",
 :		"C",
@@ -68,7 +70,7 @@ rem --- Open all files
 	gosub open_tables
 	
 	params_dev   = num( open_chans$[1] )
-	physical_dev = num( open_chans$[1] )
+	physical_dev = num( open_chans$[2] )
 	physcode_dev = num( open_chans$[3] )
 	itemwhse_dev = num( open_chans$[4] )
 	itemmast_dev = num( open_chans$[5] )
@@ -281,7 +283,7 @@ open_tables: rem --- Open tables
 :		open_end,
 :		open_tables$[all],
 :		open_opts$[all],
-:		open_chans$[all],
+:		rd_open_chans$[all],
 :		open_tpls$[all],
 :		table_chans$[all],
 :		open_batch,
