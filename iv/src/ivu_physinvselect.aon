@@ -7,43 +7,44 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
-	
+
 rem --- Retrieve the program path
 
-	pgmdir$=""
-	pgmdir$=stbl("+DIR_PGM",err=*next)
-	sypdir$=""
-	sypdir$=stbl("+DIR_SYP",err=*next)
+    pgmdir$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next)
+	
 rem --- Use for type checking
 
-	use ::sys/prog/bao_option.bbj::Option
-	
+    use ::sys/prog/bao_option.bbj::Option
+
 rem --- Retrieve sysinfo data
 
     dim sysinfo$:stbl("+SYSINFO_TPL")
     sysinfo$=stbl("+SYSINFO")
     firm_id$=sysinfo.firm_id$
-	
+
 rem --- Run Update?
 
-	msg_id$="IV_READY_TO_FREEZE"
-	gosub disp_message
-	if msg_opt$<>"Y" then goto std_exit
-	
+    msg_id$="IV_READY_TO_FREEZE"
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
+
 rem --- Assign form input values to local variables
-	
-	declare Option option!
-	declare BBjObjectTable ot!
-	
-	whse$   = option!.getOptionData("WAREHOUSE_ID")	
-	cutoff$ = option!.getOptionData("CUTOFF_DATE")
-	
-	ot! = BBjAPI().getObjectTable()
-	selected_all = num( ot!.get("IVE_PHYSICALSEL.SELECTED_ALL") )
+
+    declare Option option!
+    declare BBjObjectTable ot!
+
+    whse$   = option!.getOptionData("WAREHOUSE_ID")	
+    cutoff$ = option!.getOptionData("CUTOFF_DATE")
+
+    ot! = BBjAPI().getObjectTable()
+    selected_all = num( ot!.get("IVE_PHYSICALSEL.SELECTED_ALL") )
 
 rem --- Close Physcode file, it's locked by the Options Entry code
 
-	call sypdir$ + "bac_open_table.bbj",
+    call sypdir$ + "bac_open_table.bbj",
 :		"IBC_PHYSCODE",
 :		"C",
 :		rd_table_chans$[all],
@@ -53,99 +54,98 @@ rem --- Close Physcode file, it's locked by the Options Entry code
 
 rem --- Open all files
 
-	num_files = 5
-	open_beg  = 1
-	open_end  = num_files
-	
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	
-	open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
-	open_tables$[2]="IVE_PHYSICAL", open_opts$[2]="OTA"
-	open_tables$[3]="IVC_PHYSCODE", open_opts$[3]="OTAL"
-	open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
-	open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
-	
-	gosub open_tables
-	
-	params_dev   = num( open_chans$[1] )
-	physical_dev = num( open_chans$[2] )
-	physcode_dev = num( open_chans$[3] )
-	itemwhse_dev = num( open_chans$[4] )
-	itemmast_dev = num( open_chans$[5] )
-	
-	dim params_rec$:open_tpls$[1]
-	dim physical_rec$:open_tpls$[2]
-	dim physcode_rec$:open_tpls$[3]
-	dim itemwhse_rec$:open_tpls$[4]
-	dim itemmast_rec$:open_tpls$[5]
-	
+    num_files = 5
+    open_beg  = 1
+    open_end  = num_files
+
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+    open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
+    open_tables$[2]="IVE_PHYSICAL", open_opts$[2]="OTA"
+    open_tables$[3]="IVC_PHYSCODE", open_opts$[3]="OTAL"
+    open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
+    open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
+
+    gosub open_tables
+
+    params_dev   = num( open_chans$[1] )
+    physical_dev = num( open_chans$[2] )
+    physcode_dev = num( open_chans$[3] )
+    itemwhse_dev = num( open_chans$[4] )
+    itemmast_dev = num( open_chans$[5] )
+
+    dim params_rec$:open_tpls$[1]
+    dim physical_rec$:open_tpls$[2]
+    dim physcode_rec$:open_tpls$[3]
+    dim itemwhse_rec$:open_tpls$[4]
+    dim itemmast_rec$:open_tpls$[5]
+
 rem --- Parameters
-	
-	find record (params_dev, key=firm_id$+"IV00", dom=std_missing_params) params_rec$	
-	if pos(params_rec.lotser_flag$ = "LS") then ls$="Y" else ls$ = "N"
+
+    find record (params_dev, key=firm_id$+"IV00", dom=std_missing_params) params_rec$	
+    if pos(params_rec.lotser_flag$ = "LS") then ls$="Y" else ls$ = "N"
 
 rem --- Open Lot/serial file if necessary
 
-	if ls$ = "Y" then 
-		open_beg = 1
-		open_end = 1
-		open_tables$[1]="IVM_LSMASTER", open_opts$[1]="OTA"
-		gosub open_tables
-		lsmaster_dev = num(open_chans$[1])
-		dim lsmaster_rec$:opentpls$[1]
-	endif
-	
-rem --- Initializations
-	
-	precision num( params_rec.precision$ )
-	more = 1
-	number = 0
+    if ls$ = "Y" then 
+        open_beg = 1
+        open_end = 1
+        open_tables$[1]="IVM_LSMASTER", open_opts$[1]="OTA"
+        gosub open_tables
+        lsmaster_dev = num(open_chans$[1])
+        dim lsmaster_rec$:open_tpls$[1]
+    endif
 
-	call pgmdir$+"adc_progress.aon","N","","","","",0,itemwhse_dev,1,0,ignore_status
+rem --- Initializations
+
+    precision num( params_rec.precision$ )
+    more = 1
+    number = 0
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,itemwhse_dev,1,0,ignore_status
 
 rem --- Setup SQL to read through IVM_ITEMWHSE with selected cycle codes
 
-	sql_prep$ = ""
+    sql_prep$ = ""
     sql_prep$ = sql_prep$ + "SELECT warehouse_id, pi_cyclecode, item_id "
     sql_prep$ = sql_prep$ + "  FROM ivm_itemwhse "
-	sql_prep$ = sql_prep$ + " ORDER BY warehouse_id, pi_cyclecode, item_id "
     where_clause$ =         " WHERE firm_id = '" + firm_id$ + "' AND warehouse_id = '" + whse$ +"' "
-	
-	read (physcode_dev, key=firm_id$, dom=*next)
-	first_time = 1
-	
-	rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
-	if selected_all = 0 then
-	
-		while more
-		
-			read record (physcode_dev, end=*break) physcode_rec$
-			if physcode_rec.firm_id$ <> firm_id$ then break
-			
-			rem --- Pending action of Select for Freeze
-			if physcode_rec.pending_action$ = "1" then
-				if first_time then
-					rem --- Start WHERE clause for cycles
-					where_clause$ = where_clause$ + "AND pi_cyclcecode IN ('" + physcode_rec.pi_cyclecode$ + "', "
-				else
-					rem --- Continue WHERE clause for cycles
-					where_clause$ = where_clause$ + "'" + physcode_rec.pi_cyclecode$ + "', "
-				endif
-			endif
-			
-		wend
-		
-		rem --- Finish WHERE clause if necessary
-		if where_clause$(len(where_clause$)-1, 2) = ", " then
-			where_clause$ = where_clause$(1, len(where_clause$)-2) + ")"
-		endif
 
-	endif
+    read (physcode_dev, key=firm_id$, dom=*next)
+    first_time = 1
+
+rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
+    if selected_all = 0 then
+
+        while more
+
+            read record (physcode_dev, end=*break) physcode_rec$
+            if physcode_rec.firm_id$ <> firm_id$ then break
+
+rem         Pending action of Select for Freeze
+            if physcode_rec.pending_action$ = "1" then
+                if first_time then
+rem                 Start WHERE clause for cycles
+                    where_clause$ = where_clause$ + "AND pi_cyclecode IN ('" + physcode_rec.pi_cyclecode$ + "', "
+					first_time = 0
+                else
+rem                 Continue WHERE clause for cycles
+                    where_clause$ = where_clause$ + "'" + physcode_rec.pi_cyclecode$ + "', "
+                endif
+            endif
+
+        wend
+
+rem     Finish WHERE clause if necessary
+        if where_clause$(len(where_clause$)-1, 2) = ", " then
+            where_clause$ = where_clause$(1, len(where_clause$)-2) + ")"
+        endif
+
+    endif
 
     sql_prep$ = sql_prep$ + where_clause$
-	
-	print sql_prep$; escape; rem debug
-	
+    sql_prep$ = sql_prep$ + " ORDER BY warehouse_id, pi_cyclecode, item_id "
+
     sql_chan=sqlunt
     sqlopen(sql_chan)stbl("+DBNAME")
     sqlprep(sql_chan)sql_prep$
@@ -154,159 +154,159 @@ rem --- Setup SQL to read through IVM_ITEMWHSE with selected cycle codes
 
 rem --- Get next SQL record
 
-	while more
+    while more
 
-		sql_rec$=sqlfetch(sql_chan,err=*break)
-		whse_id$ = sql_rec.warehouse_id$
-		item_id$ = sql_rec.item_id$
-			
-		call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
-		
+        sql_rec$=sqlfetch(sql_chan,err=*break)
+        whse_id$    = sql_rec.warehouse_id$
+        item_id$    = sql_rec.item_id$
+		cycle_code$ = sql_rec.pi_cyclecode$
+
+        call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
+
 rem --- Update warehouse record
 
-		extract record (itemwhse_dev, key=firm_id$+whse_id$+item_id$) itemwhse_rec$
-		itemwhse_rec.select_phys$ = "Y"
-		onhand = itemwhse_rec.qty_on_hand
-		total  = 0
-		blanks = 0
-		number = number + 1
-		needs_update = 1
-		this_item_is_lot_ser = 0
-		itemwhse_rec$ = field(itemwhse_rec$)
-		write record (itemwhse_dev) itemwhse_rec$
-		
+        extract record (itemwhse_dev, key=firm_id$+whse_id$+item_id$) itemwhse_rec$
+        itemwhse_rec.select_phys$ = "Y"
+        onhand = itemwhse_rec.qty_on_hand
+        total  = 0
+        blanks = 0
+        number = number + 1
+        needs_update = 1
+        this_item_is_lot_ser = 0
+        itemwhse_rec$ = field(itemwhse_rec$)
+        write record (itemwhse_dev) itemwhse_rec$
+
 rem --- Count Lot/serial, if necessary
 
-		if ls$ = "Y" then 
-			find record (ivmmast_dev, key=firm_id$+item_id$) itemmast_rec$
-			this_item_is_lot_ser = (itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
-			
-			if this_item_is_lot_ser then
-				read (lsmaster_dev, key=firm_id$+whse_id$+item_id$, dom=*next)
-				
-				while more
-					read record (lsmaster_dev, end=*break) lsmaster_rec$
-					if firm_id$ <> lsmaster_rec.firm_id$ then break
-					if whse_id$ <> lsmaster_rec.warehouse_id$ then break
-					if item_id$ <> lsmaster_rec.item_id$ then break
-					if lsmaster_rec.qty_on_hand = 0 then break
-					
-					number = number + 1
+        if ls$ = "Y" then 
+            find record (itemmast_dev, key=firm_id$+item_id$) itemmast_rec$
+            this_item_is_lot_ser = (itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
+
+            if this_item_is_lot_ser then
+                read (lsmaster_dev, key=firm_id$+whse_id$+item_id$, dom=*next)
+
+                while more
+                    read record (lsmaster_dev, end=*break) lsmaster_rec$
+                    if firm_id$ <> lsmaster_rec.firm_id$ then break
+                    if whse_id$ <> lsmaster_rec.warehouse_id$ then break
+                    if item_id$ <> lsmaster_rec.item_id$ then break
+                    if lsmaster_rec.qty_on_hand = 0 then break
+
+                    number = number + 1
 
 rem --- Write Physical Entry record for lot/serial
 
-					dim physical_rec$:fattr(physical_rec$)
-					physical_rec.firm_id$      = firm_id$
-					physical_rec.warehouse_id$ = whse_id$
-					physical_rec.cycle_cd$     = cycle_code$
-					physical_rec.item_id$      = item_id$
-					physical_rec.lotser_no$    = lsmaster_rec.lotser_no$
-					physical_rec.cutoff_date$  = cutoff$
-					physical_rec.entered_flag$ = "N"
-					physical_reclotser_item$   = "Y"
-					physical_rec.freeze_qty    = lsmaster_rec.qty_on_hand
-					total = total + lsmaster_rec.qty_on_hand
-					
+                    dim physical_rec$:fattr(physical_rec$)
+                    physical_rec.firm_id$      = firm_id$
+                    physical_rec.warehouse_id$ = whse_id$
+                    physical_rec.pi_cyclecode$ = cycle_code$
+                    physical_rec.item_id$      = item_id$
+                    physical_rec.lotser_no$    = lsmaster_rec.lotser_no$
+                    physical_rec.cutoff_date$  = cutoff$
+                    physical_rec.entered_flag$ = "N"
+                    physical_reclotser_item$   = "Y"
+                    physical_rec.freeze_qty    = lsmaster_rec.qty_on_hand
+                    total = total + lsmaster_rec.qty_on_hand
+
 rem  --- Don't change onhand qnty for blank lot/serial number
 
-					if cvs(physical_rec.lotser_no$,2) = "" then 
-						physical_rec.act_phys_cnt = physical_rec.freeze_qty
-						blanks = physical_rec.freeze_qty
-					endif
-					
-					write record (physical_dev) physical_rec$
-				
-				wend
-				
+                    if cvs(physical_rec.lotser_no$,2) = "" then 
+                        physical_rec.act_phys_cnt = physical_rec.freeze_qty
+                        blanks = physical_rec.freeze_qty
+                    endif
+
+                    write record (physical_dev) physical_rec$
+
+                wend
+
 rem --- Missing Lot/Serial Numbers?
 
-				if onhand=total and total <> 0 then needs_update = 0
-			
-			endif
-		
-		endif
-		
+                if onhand=total and total <> 0 then needs_update = 0
+
+            endif
+
+        endif
+
 rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
 
-		if needs_update then
-		
-			dim physical_rec$:fattr(physical_rec$)
-			physical_rec.firm_id$      = firm_id$
-			physical_rec.warehouse_id$ = whse_id$
-			physical_rec.cycle_cd$     = cycle_code$
-			physical_rec.item_id$      = item_id$
-			physical_rec.cutoff_date$  = cutoff$
-			physical_rec.entered_flag$ = "N"
-			physical_reclotser_item$   = "N"
-			physical_rec.freeze_qty    = onhand - total
-			
+        if needs_update then
+
+            dim physical_rec$:fattr(physical_rec$)
+            physical_rec.firm_id$      = firm_id$
+            physical_rec.warehouse_id$ = whse_id$
+            physical_rec.pi_cyclecode$ = cycle_code$
+            physical_rec.item_id$      = item_id$
+            physical_rec.cutoff_date$  = cutoff$
+            physical_rec.entered_flag$ = "N"
+            physical_reclotser_item$   = "N"
+            physical_rec.freeze_qty    = onhand - total
+
 rem --- Treat as Non-Serialized/Non-Lotted unless item is Inventoried by Serial/Lot number
-			
-			if this_item_is_lot_ser then 
-				physical_reclotser_item$  = "Y"
-				physical_rec.freeze_qty   = physical_rec.freeze_qty + blanks
-				physical_rec.act_phys_cnt = blanks
-			endif
-		
-			write record (physical_dev) physical_rec$
-			
-		endif
-	
+
+            if this_item_is_lot_ser then 
+                physical_reclotser_item$  = "Y"
+                physical_rec.freeze_qty   = physical_rec.freeze_qty + blanks
+                physical_rec.act_phys_cnt = blanks
+            endif
+
+            write record (physical_dev) physical_rec$
+
+        endif
+
 rem --- Update Physical Code file
 
-		if number = 0 then 
-			remove (physcode_dev, key=firm_id$+"P"+whse_id$+cycle_code$, dom=*next)
-		else
-			dim physcode_rec$:fattr(physcode_rec$)
-			physcode_rec.firm_id$      = firm_id$
-			physcode_rec.record_id_p$  = "P"
-			physcode_rec.warehouse_id$ = whse_id$
-			physcode_rec.cycle_cd$     = cycle_code$
-			physcode_rec.phys_inv_sts$ = "1"
-			physcode_rec.cutoff_date$  = cutoff$
-			write record (physcode_dev) physcode_rec$
-		endif
+		read record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*continue) physcode_rec$
 
-	wend
+        if number = 0 then 
+            physcode_rec.phys_inv_sts$ = "0"
+			physcode_rec.cutoff_date$  = ""
+        else
+            physcode_rec.phys_inv_sts$ = "1"
+        endif
+		
+		physcode_rec.pending_action$ = "0"
+        write record (physcode_dev) physcode_rec$
+
+    wend
 
 rem --- All done
 
-	call pgmdir$+"adc_progress.aon","D","","",""," ",0,0,1,0,ignore_status
-	goto std_exit
+    call pgmdir$+"adc_progress.aon","D","","",""," ",0,0,1,0,ignore_status
+    goto std_exit
 
 open_tables: rem --- Open tables
 
-	call sypdir$+"bac_open_tables.bbj",
+    call sypdir$+"bac_open_tables.bbj",
 :		open_beg,
 :		open_end,
 :		open_tables$[all],
 :		open_opts$[all],
-:		rd_open_chans$[all],
+:		open_chans$[all],
 :		open_tpls$[all],
 :		rd_table_chans$[all],
 :		open_batch,
 :		open_status$
 
-	if open_status$<>"" then
-		msg_id$="ENTRY_OPEN_ERROR"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
-		status=912
-		goto std_exit
-	endif
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        status=912
+        goto std_exit
+    endif
 
-	return
-	
-rem #include disp_message.src
+    return
 
 disp_message:rem --- Display Message Dialog
 
-	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+    call sypdir$+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		rd_table_chans$[all]
 
-	return
-	
-rem #endinclude disp_message.src
+    return
 
 rem #include std_error.src
 
@@ -361,7 +361,7 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
-	
+
 rem #endinclude std_end.src
 
     end
