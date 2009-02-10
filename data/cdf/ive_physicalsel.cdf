@@ -111,6 +111,11 @@ rem --- of event it is.  In this case, we're toggling checkboxes on/off in form 
 rem --- Filter grid on selected warehouse
 
 	whse$ = callpoint!.getUserInput()
+
+	if callpoint!.getColumnUndoData("IVE_PHYSICALSEL.WAREHOUSE_ID") <> whse$ then
+		user_tpl.whse_changed = 1
+	endif
+
 	gosub fill_grid
 [[IVE_PHYSICALSEL.<CUSTOM>]]
 rem ==========================================================================
@@ -179,6 +184,7 @@ get_data: rem --- Get cycle data
           rem          physcode_rec$
           rem     OUT: cycleData!, global in setDevObject("cycle_data")
           rem          user_tpl.cutoff_default$
+          rem          user_tpl.whse_id$
 rem ==========================================================================
 
 	declare BBjVector cycleData!
@@ -226,7 +232,7 @@ rem ==========================================================================
 		no_of_rows  = no_of_cells / no_of_cols
 
 		grid!.clearMainGrid()
-		grid!.setColumnStyle(0, SysGUI!.GRID_STYLE_UNCHECKED)
+		rem grid!.setColumnStyle(0, SysGUI!.GRID_STYLE_UNCHECKED)
 		grid!.setNumRows(no_of_rows)
 
 		row = -1
@@ -236,9 +242,14 @@ rem ==========================================================================
 				row = row + 1
 
 				rem --- Checkbox
-				if cycleData!.getItem(i)="1" then 
+				if cycleData!.getItem(i)="1" or 
+:              ( grid!.getCellState(row, 0) and user_tpl.whse_changed = 0 )
+:				then 
 					grid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_CHECKED)
+				else
+					grid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_UNCHECKED)
 				endif
+
 				grid!.setCellText(row, 0, "")
 
 				rem --- Warehouse
@@ -308,8 +319,9 @@ rem --- Inits
 
 	use ::ado_util.src::util
 
+	dim user_tpl$:"grid_id:u(2),cutoff_default:c(8*),whse_id:c(2),whse_changed:u(1)"
 	more = 1
-	dim user_tpl$:"grid_id:u(2),cutoff_default:c(8*),whse_id:c(2)"
+	user_tpl.whse_changed = 0
 
 rem --- Open files
 
