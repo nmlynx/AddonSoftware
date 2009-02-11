@@ -2,12 +2,6 @@
 rem --- Set last price code
 
 	user_tpl.last_price_cd$ = callpoint!.getColumnData("IVE_PRICECHG.PRICE_CODE")
-[[IVE_PRICECHG.WAREHOUSE_ID.BINP]]
-print "in WAREHOUSE_ID.BINP"; rem debug
-[[IVE_PRICECHG.ITEM_ID.BINP]]
-print "in ITEM_ID.BINP"; rem debug
-[[IVE_PRICECHG.PRICE_CODE.BINP]]
-print "in PRICE_CODE.BINP"; rem debug
 [[IVE_PRICECHG.UNIT_PRICE.BINP]]
 print "in UNIT_PRICE.BINP"; rem debug
 
@@ -61,7 +55,7 @@ rem --- Set default warehouse if necessary
 
 rem --- Set price code to the last one used
 
-	if user_tpl.last_price_cd$ <> "" then
+	if cvs(user_tpl.last_price_cd$, 2) <> "" then
 		callpoint!.setColumnData("IVE_PRICECHG.PRICE_CODE", user_tpl.last_price_cd$)
 		callpoint!.setStatus("REFRESH")
 	endif
