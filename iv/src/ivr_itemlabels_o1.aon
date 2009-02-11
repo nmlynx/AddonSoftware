@@ -113,7 +113,7 @@ Assemble: rem --- Assemble
             if x=0 offset=-1 else offset=0
             w0$(width*(3*across+x0-1)+x+2+offset,8)="Prod "+ivm01a.product_type$
         endif
-        w0$(width*(4*across+x0-1)+1,width)="Cycle Code "+ivm02a.cycle_cd$+"Location "+ivm02a.location$
+        w0$(width*(4*across+x0-1)+1,width)="Cycle Code "+ivm02a.pi_cyclecode$+"Location "+ivm02a.location$
     wend
     return
 
