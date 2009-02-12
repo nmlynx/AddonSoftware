@@ -1,3 +1,12 @@
+[[OPE_ORDDET.BWRI]]
+rem --- commit inventory
+	gosub retrieve_row_data
+escape;rem bwri disc_rec and cur_rec
+[[OPE_ORDDET.BDEL]]
+rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
+	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y"
+		gosub uncommit_iv
+	endif
 [[OPE_ORDDET.UNIT_PRICE.AVEC]]
 rem --- update header
 	gosub calc_grid_tots
@@ -6,7 +15,7 @@ rem --- update header
 rem --- Set Lot/Serial button up properly
 	gosub lot_ser_check
 	if pos(callpoint!.getDevObject("lotser_flag")="LS")
-		if lotted$="Y"
+		if lotted$="Y" and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) <> 0
 			callpoint!.setOptionEnabled("LENT",1)
 		else
 			callpoint!.setOptionEnabled("LENT",0)
@@ -17,25 +26,7 @@ rem --- check for lotted/serialized item
 ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
-currow=callpoint!.getValidationRow()
-
-jim$=callpoint!.getGridRowModifyStatus(currow)
-jim1$=callpoint!.getGridRowNewStatus(currow)
-rem escape;rem ? jim$ (mod stat) and jim1$ (new stat)
-	curVect!=gridVect!.getItem(0)
-	undoVect!=gridVect!.getItem(1)
-	diskVect!=gridVect!.getItem(2)
-
-	dim cur_rec$:dtlg_param$[1,3]
-	dim undo_rec$:dtlg_param$[1,3]
-	dim disk_rec$:dtlg_param$[1,3]
-	
-	cur_rec$=curVect!.getItem(currow)
-	undo_rec$=undoVect!.getItem(currow)
-	disk_rec$=diskVect!.getItem(currow)
-rem escape;rem checkit out cur_rec.item_id$, undo_rec and disk_rec
-
-rem endif	
+gosub retrieve_row_data
 
 while 1
 	if pos(callpoint!.getDevObject("lotser_flag")="LS")>0
@@ -44,12 +35,13 @@ while 1
 			callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
 			callpoint!.setDevObject("wh",cur_rec.warehouse_id$)
 			callpoint!.setDevObject("item",cur_rec.item_id$)
+			callpoint!.setDevObject("ord_qty",str(cur_rec.qty_ordered))
 		endif
 	endif
 	break
 wend
 
-	callpoint!.setOptionEnabled("LENT",0)
+callpoint!.setOptionEnabled("LENT",0)
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 g!=form!.getChildWindow(1109).getControl(5900)
@@ -168,7 +160,7 @@ callpoint!.setStatus("REFRESH")
 
 rem --- Set Lot/Serial button up properly
 	gosub lot_ser_check
-	if pos(callpoint!.getDevObject("lotser_flag")="LS")
+	if pos(callpoint!.getDevObject("lotser_flag")="LS") and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))<>0
 		if lotted$="Y"
 			callpoint!.setOptionEnabled("LENT",1)
 		else
@@ -179,56 +171,15 @@ rem --- Set Lot/Serial button up properly
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
 	gosub disp_totals
-	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-	opc_linecode_dev=fnget_dev("OPC_LINECODE")
-	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-	ar_type$=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
-	cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
-	ord$=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
-	seq$=callpoint!.getColumnData("OPE_ORDDET.LINE_NO")
-	line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	while 1
-		readrecord(opc_linecode_dev,key=firm_id$+line_code$,err=*break)opc_linecode$
-		if pos(opc_linecode.line_type$="SP")
-			readrecord(ivm_itemmast_dev,key=firm_id$+item$,err=*break)ivm01a$
-			if pos(ivm01a.lotser_item$="Y") and
-:					callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" and
-:					ivm01a.inventoried$="Y"  and
-:					pos(callpoint!.getDevObject("lotser_flag")="LS")
-				user_id$=stbl("+USER_ID")
-				dim dflt_data$[1,1]
-				key_pfx$=firm_id$+ar_type$+cust$+ord$+seq$
-				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:					"OPE_ORDLSDET",
-:					user_id$,
-:					"MNT",
-:					key_pfx$,
-:					table_chans$[all],
-:					"",
-:					dflt_data$[all]
-			endif
-		endif
-		break
-	wend
-rem	glns!=bbjapi().getNamespace("GLNS","GL Dist",1)
-rem	amt_dist=num(glns!.getValue("dist_amt"))
-rem	if amt_dist<>num(callpoint!.getColumnData("APE_MANCHECKDET.INVOICE_AMT"))
-rem		msg_id$="AP_NOBAL"
-rem		gosub disp_message
-rem	endif
-rem	wk =Form!.getChildWindow(1109).getControl(5900).getSelectedRow()
-rem	Form!.getChildWindow(1109).getControl(5900).focus()
-rem --- Form!.getChildWindow(1109).getControl(5900).startEdit(wk,5)
-rem --- Form!.focus()
-	
-rem	endif
-[[OPE_ORDDET.BWRI]]
-rem --- commit inventory
-escape;rem bwri
-	qty=rec_data.qty_ordered
-	qty1=callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")
-escape
+
+rem --- Set Lot/Serial button up properly
+	gosub retrieve_row_data
+	gosub lot_ser_check
+	if pos(callpoint!.getDevObject("lotser_flag")="LS") and cur_rec.qty_ordered<>0 and lotted$="Y"
+		callpoint!.setOptionEnabled("LENT",1)
+	else
+		callpoint!.setOptionEnabled("LENT",0)
+	endif
 [[OPE_ORDDET.ADIS]]
 rem ---display extended price
 	ordqty=num(rec_data.qty_ordered)
@@ -336,36 +287,21 @@ return
 
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
 rem --- need to send in wh_id$, item_id$, ls_id$, and qty
-	dim iv_files[44],iv_info$[3],iv_params$[4],iv_refs$[11],iv_refs[5]
-	iv_files[0]=fnget_dev("GLS_PARAMS")
-	iv_files[1]=fnget_dev("IVM_ITEMMAST")
-	iv_files[2]=fnget_dev("IVM_ITEMWHSE")
-	iv_files[4]=fnget_dev("IVM_ITEMTIER")
-	iv_files[5]=fnget_dev("IVM_ITEMVEND")
-	iv_files[7]=fnget_dev("IVM_LSMASTER")
-	iv_files[12]=fnget_dev("IVM_ITEMACCT")
-	iv_files[17]=fnget_dev("IVM_LSACT")
-	iv_files[41]=fnget_dev("IVT_LSTRANS")
-	iv_files[42]=fnget_dev("IVX_LSCUST")
-	iv_files[43]=fnget_dev("IVX_LSVEND")
-	iv_files[44]=fnget_dev("IVT_ITEMTRAN")
+	call "ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	ivs01_dev=fnget_dev("IVS_PARAMS")
 	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
 	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
-	iv_info$[1]=wh_id$
-	iv_info$[2]=item_id$
-	iv_info$[3]=ls_id$
-	iv_refs[0]=qty
-escape; rem decisions have to be made about ivc_ua (ivc_itemupt.aon)
-	U[0]=U[0]+S8*line_sign
-	U[1]=U[1]+S9*line_sign
-	U[2]=U[2]+S0*line_sign
+	items$[1]=wh_id$
+	items$[2]=item_id$
+	items$[3]=ls_id$
+	refs[0]=qty
+	if qty>0 line_sign=1 else line_sign=-1
+escape; rem decisions have to be made about ivc_itemupdt.aon
 	while 1
 		if pos(S8$(2,1)="SP")=0 break
 		if s8$(3,1)="Y" or a0$(21,1)="P" break; REM "Drop ship or quote
-		if line_sign>0 iv_action$="OE" else iv_action$="UC"
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,
-:			iv_info$[all],iv_refs$[all],iv_refs[all],iv_status
+		if line_sign>0 action$="OE" else action$="UC"
+		call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 		break
 	wend
 return
@@ -513,6 +449,65 @@ lot_ser_check: rem Check for lotted item
 		endif
 		break
 	wend
+return
+
+retrieve_row_data:
+	currow=callpoint!.getValidationRow()
+
+	mod_stat$=callpoint!.getGridRowModifyStatus(currow)
+	new_stat$=callpoint!.getGridRowNewStatus(currow)
+
+	curVect!=gridVect!.getItem(0)
+	dim cur_rec$:dtlg_param$[1,3]
+	cur_rec$=curVect!.getItem(currow)
+
+	undoVect!=gridVect!.getItem(1)
+	dim undo_rec$:dtlg_param$[1,3]
+	undo_rec$=curVect!.getItem(currow)
+
+	diskVect!=gridVect!.getItem(2)
+	dim disk_rec$:dtlg_param$[1,3]
+	disk_rec$=curVect!.getItem(currow)
+return
+
+uncommit_iv: rem --- Uncommit Inventory
+	iv_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+	ope_ordlsdet_dev=fnget_dev("OPE_ORDLSDET")
+	dim ope_ordlsdet$:fnget_tpl$("OPE_ORDLSDET")
+	cust$=callpoint!.getDevObject("cust")
+	ar_type$=callpoint!.getDevObject("ar_type")
+	order$=callpoint!.getDevObject("order")
+	seq$=callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
+	wh$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	ord_qty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	call "ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+	readrecord(ivm_itemmast_dev,key=firm_id$+item$,dom=*next)ivm_itemmast$
+	items$[1]=wh$
+	items$[2]=item$
+	action$="UC"
+	refs[0]=ord_qty
+	if ivm_itemmast.lotser_item$<>"Y" or ivm_itemmast.inventoried$<>"Y"
+		call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	else
+		found_lot=0
+		readrecord(ope_ordlsdet_dev,key=firm_id$+ar_type$+cust$+
+:				order$+seq$,dom=*next)
+		while 1
+			readrecord(ope_ordlsdet_dev,end=*break)ope_ordlsdet$
+			if pos(firm_id$+ar_type$+cust$+order$+seq$=ope_ordlsdet$)<>1 break
+			items$[3]=ope_ordlsdet.lotser_no$
+			refs[0]=ope_ordlsdet.qty_ordered
+			call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			remove (ope_ordlsdet_dev,key=firm_id$+ar_type$+cust$+order$+seq$+ope_ordlsdet.sequence_no$)
+			found_lot=1
+		wend
+		if found_lot=0
+			call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		endif
+	endif
 return
 
 #include std_missing_params.src

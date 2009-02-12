@@ -1,3 +1,22 @@
+[[OPE_ORDLSDET.<CUSTOM>]]
+rem --- check for available quantity
+check_avail:
+	wh$=callpoint!.getDevObject("wh")
+	item$=callpoint!.getDevObject("item")
+	lsmast_dev=num(callpoint!.getDevObject("lsmast_dev"))
+	dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
+
+	read record(lsmast_dev,key=firm_id$+wh$+item$+callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO"),dom=*break)lsmast_tpl$
+	if lot_qty>=0
+		if lot_qty>lsmast_tpl.qty_on_hand-lsmast_tpl.qty_commit
+			dim msg_tokens$[1]
+			msg_tokens$[1]=str(lsmast_tpl.qty_on_hand-lsmast_tpl.qty_commit)
+			msg_id$="IV_QTY_OVER_AVAIL"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+return
 [[OPE_ORDLSDET.BSHO]]
 rem --- Set Lot/Serial button up properly
 	switch pos(callpoint!.getDevObject("lotser_flag")="LS")
@@ -74,8 +93,11 @@ if abs(num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED")))>abs(num(callpo
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
 endif
-[[OPE_ORDLSDET.<CUSTOM>]]
-rem --- Calculate total quantities and compare to order line
+
+rem --- Now check for Sales Line quantity
+	line_qty=num(callpoint!.getDevObject("ord_qty"))
+	lot_qty=num(callpoint!.getUserInput())
+	gosub check_avail
 [[OPE_ORDLSDET.LOTSER_NO.BINP]]
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
 rem --- save current row/column so we'll know where to set focus when we return from lot lookup
