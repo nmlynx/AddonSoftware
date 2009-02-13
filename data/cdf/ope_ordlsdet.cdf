@@ -101,9 +101,6 @@ rem --- Now check for Sales Line quantity
 [[OPE_ORDLSDET.LOTSER_NO.BINP]]
 rem --- call the lot lookup window and set default lot, lot location, lot comment and qty
 rem --- save current row/column so we'll know where to set focus when we return from lot lookup
-
-myrow=callpoint!.getValidationRow()
-callpoint!.setDevObject("return_to_row",str(myrow))
 [[OPE_ORDLSDET.LOTSER_NO.AVAL]]
 rem --- validate open lot number
 	wh$=callpoint!.getDevObject("wh")

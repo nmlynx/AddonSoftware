@@ -43,9 +43,9 @@ rem --- Go get Lot Numbers
 			lot_pfx$=firm_id$+ar_type$+cust$+order$+int_seq$
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
 rem --- return focus to where we were (Detail line grid)
-			return_to_row=num(callpoint!.getDevObject("return_to_row"))
-			return_to_col=num(callpoint!.getDevObject("return_to_col"))
-			util.forceEdit(Form!, return_to_row,return_to_col)
+rem			return_to_row=num(callpoint!.getDevObject("return_to_row"))
+rem  			return_to_col=num(callpoint!.getDevObject("return_to_col"))
+rem			util.forceEdit(Form!, return_to_row,return_to_col)
 		endif
 	endif
 [[OPE_ORDHDR.ORDER_DATE.AVAL]]

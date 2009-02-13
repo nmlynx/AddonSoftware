@@ -1,4 +1,4 @@
-[[OPE_ORDDET.AGDS]]
+[[OPE_ORDDET.AGCL]]
 use ::ado_util.src::util
 [[OPE_ORDDET.BWRI]]
 rem --- commit inventory
@@ -51,6 +51,8 @@ declare BBjStandardGrid grid!
 grid! = util.getGrid(Form!)
 callpoint!.setDevObject("return_to_row",str(grid!.getSelectedRow()))
 callpoint!.setDevObject("return_to_col",str(grid!.getSelectedColumn()))
+
+x$=stbl("jimmy",str(grid!.getSelectedRow()))
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 g!=form!.getChildWindow(1109).getControl(5900)
