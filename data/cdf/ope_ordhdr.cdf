@@ -42,6 +42,10 @@ rem --- Go get Lot Numbers
 			dflt_data$[3,1]=order$
 			lot_pfx$=firm_id$+ar_type$+cust$+order$+int_seq$
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
+rem --- return focus to where we were (Detail line grid)
+			return_to_row=num(callpoint!.getDevObject("return_to_row"))
+			return_to_col=num(callpoint!.getDevObject("return_to_col"))
+			util.forceEdit(Form!, return_to_row,return_to_col)
 		endif
 	endif
 [[OPE_ORDHDR.ORDER_DATE.AVAL]]
@@ -1110,3 +1114,5 @@ rem --- Set Lot/Serial button up properly
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
+
+	use ::ado_util.src::util

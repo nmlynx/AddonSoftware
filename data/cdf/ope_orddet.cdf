@@ -1,3 +1,5 @@
+[[OPE_ORDDET.AGDS]]
+use ::ado_util.src::util
 [[OPE_ORDDET.BWRI]]
 rem --- commit inventory
 	gosub retrieve_row_data
@@ -42,6 +44,13 @@ while 1
 wend
 
 callpoint!.setOptionEnabled("LENT",0)
+
+rem --- save current row/column so we'll know where to set focus when we return from lot lookup
+ 
+declare BBjStandardGrid grid!
+grid! = util.getGrid(Form!)
+callpoint!.setDevObject("return_to_row",str(grid!.getSelectedRow()))
+callpoint!.setDevObject("return_to_col",str(grid!.getSelectedColumn()))
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 g!=form!.getChildWindow(1109).getControl(5900)
