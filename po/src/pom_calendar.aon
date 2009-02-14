@@ -33,6 +33,7 @@ rem --- also get !DATE, which contains date format, short/long month desc, and s
 
 	dim date_text$:"default:c(32*=0),sm[12]:c(3*=0),m[12]:c(32*=0),sd[7]:c(3*=0),d[7]:c(32*=0)"
 	date_text$=stbl("!DATE")
+    day_str$="312831303130313130313031"
 
 	no_columns=7
 
@@ -128,17 +129,14 @@ rem --- get application record in order to get form icon
 	gosub resolve_path
 	form_icon$=prog_path$
 
-gosub get_calendar_boundaries
-gosub validate_calendar_date
-
 rem --- Main Process
 
+    gosub find_gaps
+    gosub get_calendar_boundaries
 	gosub disp_win
 	gosub get_user_settings
 	gosub def_grids
 	gosub display_date
-	gosub display_calendar
-    gosub display_data
 	gosub resize_win
 
 	Window!.setVisible(1)
@@ -156,47 +154,51 @@ event_ctl:rem --- Event Control
     popmenu_stat1!.setCallback(popmenu_stat1!.ON_POPUP_ITEM_SELECT,"adjust_status")
     popmenu_stat2!.setCallback(popmenu_stat2!.ON_POPUP_ITEM_SELECT,"adjust_status")
     popmenu_stat3!.setCallback(popmenu_stat3!.ON_POPUP_ITEM_SELECT,"adjust_status")
+    LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
 
 SysGUI!.flushEvents()
 
 	process_events,err=*same
 
 adjust_date:rem --- Adjust Date
-rem --- this routine should be altered to make sure selected date is in pom_calendar
-rem --- alternatively, if not, give option to add?
+
    gui_event$=SysGUI!.getLastEventString()
    date_btn=gui_event.id
 
 	switch date_btn
 		case 101;rem --- Prev Year
-			curr_yr=curr_yr-1
+			try_yr=curr_yr-1
+            try_mo=curr_mo
 		break
 		case 102;rem --- Prev Month
-			curr_mo=curr_mo-1
-			if curr_mo<1
-				curr_yr=curr_yr-1
-				curr_mo=12
+			try_mo=curr_mo-1
+            try_yr=curr_yr
+			if try_mo<1
+				try_yr=curr_yr-1
+				try_mo=12
 			endif
 		break
 		case 103;rem --- Next Month
-			curr_mo=curr_mo+1
-			if curr_mo>12
-				curr_yr=curr_yr+1
-				curr_mo=1
+			try_mo=curr_mo+1
+            try_yr=curr_yr
+			if try_mo>12
+				try_yr=curr_yr+1
+				try_mo=1
 			endif
 		break
 		case 104;rem --- Next Year
-			curr_yr=curr_yr+1
+			try_yr=curr_yr+1
+            try_mo=curr_mo
 		break
 		case 105;rem --- Current Month
-			curr_mo=default_mo
-			curr_yr=default_yr
+			try_mo=default_mo
+			try_yr=default_yr
 		break
 		case default
 		break
 	swend
-
-    gosub validate_calendar_date
+        
+    gosub validate_date 
 	gosub display_date
 	gosub display_calendar
 	gosub display_data
@@ -212,9 +214,11 @@ display_date:rem --- Display Current Date
     start_day=start_day-(firstDayOfWeek-1)
     if start_day<=0 start_day=start_day+7
 
-	day_str$="312831303130313130313031"
-	if mod(curr_yr,4)=0 day_str$(3,2)="29"
 	no_days=num(day_str$(curr_mo*2-1,2))
+    if mod(curr_yr,4)=0 and curr_mo=2 then no_days=29
+
+    FirstDate!.setText(first_date$)
+    LastDate!.setText(last_date$)
 
 	return
 
@@ -255,31 +259,33 @@ display_data:rem --- Display Data For Selected Category and Measure
         switch pos(day_stat$="CHW");REM C=closed,H=holiday,W=workday
             case 1
                 useColor!=ClosedColor!
+                useText$=" - Closed"
             break
             case 2
                 useColor!=HolidayColor!
+                useText$=" - Holiday"
             break
             case 3
                 useColor!=DayColor!
+                useText$=" - Workday"
             break
             case default
                 useColor!=HdrColor!
+                useText$=""
             break
         swend
-        gosub set_Color
+        gosub set_Color_and_Text
     next curr_day
-
-    FirstDate!.setText(first_date$)
-    LastDate!.setText(last_date$)
 
 	return
 
-set_Color:
+set_Color_and_Text:
 
     wpos=(pos(str(curr_day:"00")+"^"=stringDays$,3)-1)/3
     grid_row=int(wpos/7)
     grid_col=mod(wpos,7)
     GridCal!.setCellBackColor(grid_row,grid_col,useColor!)
+    GridCal!.setCellText(grid_row,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
 
     return
 
@@ -292,14 +298,17 @@ adjust_status:
     if pop_opt$="Closed"
         useColor!=ClosedColor!
         change_stat$="C"
+        useText$=" - "+pop_opt$
     endif
     if pop_opt$="Holiday"
         useColor!=HolidayColor!
         change_stat$="H"
+        useText$=" - "+pop_opt$
     endif
     if pop_opt$="Workday"
         useColor!=DayColor!
         change_stat$="W"
+        useText$=" - "+pop_opt$
     endif
 
     sel_rows!=GridCal!.getSelectedRows()
@@ -309,8 +318,12 @@ adjust_status:
         for x=0 to sel_rows!.size()-1
             for y=0 to sel_cols!.size()-1
                 change_day$=GridCal!.getCellText(sel_rows!.get(x),sel_cols!.get(y))
+                if pos(" -"=change_day$)
+                    change_day$=change_day$(1,pos(" -"= change_day$)-1)
+                endif
                 if change_day$<>""
                     GridCal!.setCellBackColor(sel_rows!.get(x),sel_cols!.get(y),useColor!)
+                    GridCal!.setCellText(sel_rows!.get(x),sel_cols!.get(y),change_day$+useText$)
                     gosub update_pom_calendar
                 endif
             next y
@@ -329,31 +342,14 @@ update_pom_calendar:
     write record(pom_calendar_dev)pom_calendar$
     return
 
-validate_calendar_date:
-rem --- set beginning mo/yr; set to values in curr_yr/curr_mo;if dom try next; if dom go to last for firm
-
-    dim pom_calendar$:fattr(pom_calendar$)
-
-    read record(pom_calendar_dev,key=firm_id$+str(curr_yr:"0000")+str(curr_mo:"00"),dom=*next)pom_calendar$
-    if cvs(pom_calendar.year$,3)=""
-        while 1
-            k$=key(pom_calendar_dev,end=get_last)
-            read record(pom_calendar_dev)pom_calendar$
-            if pom_calendar.firm_id$=firm_id$ break
-get_last:
-            read(pom_calendar_dev,key=firm_id$+$ff$,dom=*next)
-            k$=keyp(pom_calendar_dev)
-            readrecord(pom_calendar_dev,key=k$)pom_calendar$
-            if pom_calendar.firm_id$=firm_id$ break
-no_calendar:
-            msg_id$="PO_NO_CAL"
-            gosub disp_message
-            exitto exit_prog
-        wend
-
-        curr_yr=num(pom_calendar.year$)
-        curr_mo=num(pom_calendar.month$)
-    endif
+find_gap:
+    
+    gap_date$=LstGaps!.getItemAt(num(LstGaps!.getSelectedIndex()))
+    curr_yr=num(gap_date$(7,4))
+    curr_mo=num(gap_date$(1,2))
+	gosub display_date
+	gosub display_calendar
+	gosub display_data
 
     return
 
@@ -363,9 +359,7 @@ get_calendar_boundaries:
     read(pom_calendar_dev,key=firm_id$,dom=*next)
     k$=key(pom_calendar_dev,err=*next);readrecord(pom_calendar_dev,key=k$)pom_calendar$
     if pom_calendar.firm_id$<>firm_id$ 
-        msg_id$="PO_NO_CAL"
-        gosub disp_message
-        exitto exit_prog
+        first_date$="None"
     else
         first_date$=pom_calendar.month$+"/"+pom_calendar.year$
     endif
@@ -373,12 +367,127 @@ get_calendar_boundaries:
     read(pom_calendar_dev,key=firm_id$+$ff$,dom=*next)
     k$=keyp(pom_calendar_dev,err=*next);readrecord(pom_calendar_dev,key=k$)pom_calendar$
     if pom_calendar.firm_id$<>firm_id$
-        msg_id$="PO_NO_CAL"
-        gosub disp_message
-        exitto exit_prog
+        last_date$="None"
     else
         last_date$=pom_calendar.month$+"/"+pom_calendar.year$
     endif
+
+    return
+
+find_gaps:rem --- find gaps (unsched days) between begin/end dates
+rem --- this logic is complicated... in v6/7 all day statuses were in a single string
+rem --- w/ v8, all are separate templated fields.  So we look at each day, mark start of
+rem --- gap when we find a space (also set stop=start at that point), then set end of gap 
+rem --- each space day thereafter until we hit non-space again.  When we find new start of
+rem --- gap, previous start/stop pair are added to gapVect!.  It should process entire
+rem --- month gaps correctly as well.
+rem --- start_of_gap=1 means we're at the start of a new gap, 0 means we've captured
+rem --- the start of gap date, and need set stop dates until we hit a non-space day.
+
+    first_rec=1
+    start_of_gap=1
+    GapVect!=SysGUI!.makeVector()  
+    gap_start$=""
+    gap_stop$=""
+    last_key$=""
+    dim pom_calendar$:fattr(pom_calendar$)
+
+    read(pom_calendar_dev,key=firm_id$,dom=*next)
+
+    while 1
+
+        readrecord(pom_calendar_dev,end=*break)pom_calendar$
+        if pom_calendar.firm_id$<>firm_id$ then break
+        if last_key$="" then last_key$=pom_calendar.year$+pom_calendar.month$
+
+        for curr_day=1 to pom_calendar.days_in_mth
+            day_stat$=field(pom_calendar$,"DAY_STATUS_"+str(curr_day:"00"))
+            if cvs(day_stat$,3)=""
+                if start_of_gap=1
+                    if num(pom_calendar.year$+pom_calendar.month$)-num(last_key$)>1
+                        wk_date$=last_key$+day_str$(num(last_key$(5,2))*2-1,2)
+                        call stbl("+DIR_PGM")+"adc_daydates.aon",wk_date$,nxt_date$,1
+                        gosub load_GapVect
+                        gap_start$=nxt_date$
+                        gap_stop$=gap_start$
+                        last_key$=pom_calendar.year$+pom_calendar.month$
+                        start_of_gap=0
+                    else
+                        gosub load_GapVect
+                        gap_start$=pom_calendar.year$+pom_calendar.month$+str(curr_day:"00")
+                        gap_stop$=gap_start$
+                        start_of_gap=0
+                    endif
+                else
+                    gap_stop$=pom_calendar.year$+pom_calendar.month$+str(curr_day:"00")
+                endif
+            else
+                rem --- init gapvect! once we find first non-space day in calendar
+                if first_rec=1
+                    gapVect!.clear()
+                    start_of_gap=1
+                    first_rec=0
+                else
+                    rem --- if first day of new month, and gap isn't closed, get end date
+                    if curr_day=1 and start_of_gap=0
+                        wk_date$=pom_calendar.year$+pom_calendar.month$+str(curr_day:"00")
+                        call stbl("+DIR_PGM")+"adc_daydates.aon",wk_date$,prev_date$,-1
+                        gap_stop$=prev_date$
+                        start_of_gap=1
+                    endif
+                    rem --- just a regular non-space day
+                    start_of_gap=1
+                endif
+            endif
+        next curr_day
+
+        last_key$=pom_calendar.year$+pom_calendar.month$
+
+    wend
+    gosub load_GapVect
+
+    return
+
+load_GapVect:
+    if cvs(gap_start$,3)<>"" and cvs(gap_stop$,3)<>""
+        GapVect!.addItem(fndate$(gap_start$)+" - "+fndate$(gap_stop$))
+    endif
+    gap_start$=""
+    gap_stop$=""
+    return
+
+validate_date:
+rem --- see if curr_mo/curr_yr is in calendar; option to create if not
+
+    dim pom_calendar$:fattr(pom_calendar$)
+
+    read record(pom_calendar_dev,key=firm_id$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)pom_calendar$
+    if cvs(pom_calendar.year$,3)=""
+        msg_id$="PO_NO_CAL"
+        msg_opt$=""
+        gosub disp_message
+        if msg_opt$="Y"
+            curr_yr=try_yr
+            curr_mo=try_mo
+            gosub create_new_month
+        endif
+    else
+        curr_yr=try_yr
+        curr_mo=try_mo
+    endif
+
+    return
+
+create_new_month:rem --- add new, blank record for specified yr/mo to calendar
+
+    dim pom_calendar$:fattr(pom_calendar$)
+    pom_calendar.firm_id$=firm_id$
+    pom_calendar.year$=str(curr_yr:"0000")
+    pom_calendar.month$=str(curr_mo:"00")
+	
+	pom_calendar.days_in_mth=num(day_str$(curr_mo*2-1,2))
+    if mod(curr_yr,4)=0 and curr_mo=2 then pom_calendar.days_in_mth=29
+    writerecord(pom_calendar_dev)pom_calendar$
 
     return
 
@@ -438,6 +547,14 @@ disp_win:rem --- Display Window
     FirstDate!=Window!.getControl(109)
     LastDate!=Window!.getControl(110)
 
+    LstGaps!=Window!.getControl(111)
+    if GapVect!.size()
+        LstGaps!.insertItems(0,GapVect!)
+    else
+        LstGaps!.addItem("None")
+    endif
+    LstGaps!.selectIndex(0)
+
     GridCal!=childGrid!.getControl(100)
     GridFont!=GridCal!.getFont()
     HdrFont!=SysGUI!.makeFont(GridFont!.getName(),GridFont!.getSize(),1)
@@ -452,25 +569,9 @@ disp_win:rem --- Display Window
 
 resize_win:rem --- Resize Window Contents
 
-        childGrid!.setSize(Window!.getWidth()-(childGrid!.getX()*2),Window!.getHeight()-childGrid!.getY()-50)
-		GridCal!.setSize(childGrid!.getWidth()-(GridCal!.getX()*2),childGrid!.getHeight()-20)
+        childGrid!.setSize(Window!.getWidth()-(childGrid!.getX()*2),Window!.getHeight()-childGrid!.getY()-20)
+		GridCal!.setSize(childGrid!.getWidth()-(GridCal!.getX()*2),childGrid!.getHeight()-10)
         GridCal!.setRowHeight((GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/6)
-return
-        summary_height=GridCal!.getHeight()-(GridCal!.getColumnHeaderHeight()+98)
-		summary_total=GridCal!.getHeight()-GridCal!.getColumnHeaderHeight()
-		summary_used=0
-		for curr_row=1 to 12
-			if mod(curr_row,2)=1
-				GridCal!.setRowHeight(16)
-				summary_used=summary_used+16
-			endif
-			if mod(curr_row,2)=0
-				GridCal!.setRowHeight(curr_row-1,int(summary_height/7))
-				summary_used=summary_used+int(summary_height/7)
-			endif
-		next curr_row
-
-		GridCal!.setRowHeight(12,summary_total-(summary_used-1))
 
 	return
 
@@ -552,6 +653,16 @@ def fnLocale!(Locale$)
        return new Locale(Locale$)
    swend
  fnend
+
+rem --- Date/time handling functions
+rem --- format added to this version
+
+    def fndate$(q$)
+        q1$=""
+        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next):"%Mz/%Dz/%Yd",err=*next)
+        if q1$="" q1$=q$
+        return q1$
+    fnend
 
 rem #include std_error.src
 
