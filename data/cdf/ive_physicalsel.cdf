@@ -232,13 +232,12 @@ rem ==========================================================================
 		no_of_rows  = no_of_cells / no_of_cols
 
 		grid!.clearMainGrid()
-		rem grid!.setColumnStyle(0, SysGUI!.GRID_STYLE_UNCHECKED)
 		grid!.setNumRows(no_of_rows)
 
 		row = -1
 
 		for i=0 to no_of_cells - 1 step no_of_cols
-			if whse$ = "" or cycleData!.getItem(i+1) = whse$ then 
+			if cvs(whse$,2) = "" or cycleData!.getItem(i+1) = whse$ then 
 				row = row + 1
 
 				rem --- Checkbox
@@ -264,8 +263,7 @@ rem ==========================================================================
 			endif
 		next i
 
-		grid!.setNumRows(row)
-		rem grid!.resort()
+		grid!.setNumRows(row+1)
 
 	else
 
@@ -319,7 +317,7 @@ rem --- Inits
 
 	use ::ado_util.src::util
 
-	dim user_tpl$:"grid_id:u(2),cutoff_default:c(8*),whse_id:c(2),whse_changed:u(1)"
+	dim user_tpl$:"grid_id:u(2), cutoff_default:c(8*), whse_id:c(2), whse_changed:u(1)"
 	more = 1
 	user_tpl.whse_changed = 0
 
