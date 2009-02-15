@@ -7,7 +7,7 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
-
+	
 rem --- Retrieve the program path
 
     pgmdir$=""
@@ -100,7 +100,6 @@ rem --- Initializations
 
     precision num( params_rec.precision$ )
     more = 1
-    number = 0
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,itemwhse_dev,1,0,ignore_status
 
@@ -154,12 +153,16 @@ rem     Finish WHERE clause if necessary
 
 rem --- Get next SQL record
 
+	prev_cycle$ = ""
+
     while more
 
         sql_rec$=sqlfetch(sql_chan,err=*break)
         whse_id$    = sql_rec.warehouse_id$
         item_id$    = sql_rec.item_id$
 		cycle_code$ = sql_rec.pi_cyclecode$
+		
+		if prev_cycle$ <> cycle_code$ then number = 0
 
         call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
 
@@ -201,6 +204,7 @@ rem --- Write Physical Entry record for lot/serial
                     physical_rec.warehouse_id$ = whse_id$
                     physical_rec.pi_cyclecode$ = cycle_code$
                     physical_rec.item_id$      = item_id$
+					physical_rec.location$     = itemwhse_rec.location$
                     physical_rec.lotser_no$    = lsmaster_rec.lotser_no$
                     physical_rec.cutoff_date$  = cutoff$
                     physical_rec.entered_flag$ = "N"
@@ -236,6 +240,7 @@ rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
             physical_rec.warehouse_id$ = whse_id$
             physical_rec.pi_cyclecode$ = cycle_code$
             physical_rec.item_id$      = item_id$
+			physical_rec.location$     = itemwhse_rec.location$
             physical_rec.cutoff_date$  = cutoff$
             physical_rec.entered_flag$ = "N"
             physical_reclotser_item$   = "N"
@@ -255,17 +260,26 @@ rem --- Treat as Non-Serialized/Non-Lotted unless item is Inventoried by Serial/
 
 rem --- Update Physical Code file
 
-		read record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*continue) physcode_rec$
+		if prev_cycle$ <> cycle_code$ then 
 
-        if number = 0 then 
-            physcode_rec.phys_inv_sts$ = "0"
-			physcode_rec.cutoff_date$  = ""
-        else
-            physcode_rec.phys_inv_sts$ = "1"
-        endif
+			read record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*endif) physcode_rec$
+
+	        if number = 0 then 
+	            physcode_rec.phys_inv_sts$ = "0"
+				physcode_rec.cutoff_date$  = ""
+	        else
+	            physcode_rec.phys_inv_sts$ = "1"
+	        endif
+			
+			physcode_rec.pending_action$ = "0"
+			physcode_rec$ = field(physcode_rec$)
+	        write record (physcode_dev) physcode_rec$
+			
+			number = 0
 		
-		physcode_rec.pending_action$ = "0"
-        write record (physcode_dev) physcode_rec$
+		endif
+		
+		prev_cycle$ = cycle_code$
 
     wend
 
