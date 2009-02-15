@@ -108,6 +108,20 @@ class public func
 		
     methodend
 
+	rem ==========================================================================
+	rem --- fndate$: Convert YYYYMMDD to MM/DD/YY
+	rem ==========================================================================
+	
+	method public static BBjString formatDate(BBjString p_date$)
+	
+		this_jul = jul(p_date$, "%Yl%Mz%Dz", err=format_date_err)
+		methodret date(this_jul, err=format_date_err)
+		
+	format_date_err:
+		methodret p_date$
+		
+	methodend
+
 classend
 
 rem ==========================================================================
@@ -151,6 +165,17 @@ rem ==========================================================================
 	print func.alphaMask("111223333", "###-##-####")
 	print func.alphaMask("AABBBB", "##-####")
 	print func.alphaMask("111223333", "(###) ##-####")
+	
+	rem  -- fndate$()
+	
+	print fill(79, "="), 'lf', "fndate$()..."
+	print func.formatDate("20080230")
+	print func.formatDate("20080229")
+	print func.formatDate("20081232")
+	print func.formatDate("20081224")
+	print func.formatDate("nonsense")
+	print func.formatDate("short")
+	print func.formatDate("")
 	
 	end
 	
