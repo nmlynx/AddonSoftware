@@ -19,6 +19,7 @@ dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reser
 
 rem --- Set the hook for dealer custom call
 
+    blank_fields$=""
     custom_prog$=""
     while 1
         custom_prog$=cvs(stbl("+CUSTOM_DP_PROG",err=*break),3)
@@ -188,7 +189,7 @@ next_file:
        gosub disp_meter
     endif
 
-    rem ' skip these files -- TODO: Explain why.
+    rem --- skip these files
     if pos("."=datafile$)=1 then goto next_file
     if pos("_"=datafile$)=1 then goto next_file
     if pos("z"=cvs(datafile$,8))=1 then  goto next_file
@@ -380,7 +381,7 @@ end_ddm04:
     lock (old_file)
     print "   Copying data from  "+ddm03.file_name$+ddm03.record_id$
     print(log_dev)"   Copying data from    "+ddm03.file_name$+ddm03.record_id$
-	
+    
 next_rec:
     readrecord(old_file,end=eof)old_rec$
     if source_version=6 and datafile$="ARM-10" and old_rec$(1,3)="01G" goto next_rec
@@ -479,6 +480,17 @@ rem     name from the dictionary of the source data. datafile$ is the source dat
             call custom_prog$
         endif
 
+rem --- Check value of new field for blanks if part of primary key
+        if pos(new_fieldlist.name$[field]+$0a$=key_temp$)>0
+            if cvs(value$,2)=""
+                if pos(new_fieldlist.name$[field]+$0a$=blank_fields$)=0
+                    blank_fields$=blank_fields$+new_fieldlist.name$[field]+$0a$
+                    print (log_dev) "field "+new_fieldlist.name$[field]+" has a blank value."
+                    if new_fieldlist.name$[field]="FIRM_ID" escape;rem ? datafile$ and table_alias$
+                endif    
+            endif
+        endif
+
         attr$=fattr(old_rec$,old_fieldlist.name$[field])
         fld_sep$=attr$(3,1)
         fld_typ$=attr$(1,1)
@@ -559,6 +571,9 @@ write_record:
     goto next_rec
 
 eof:
+
+    key_temp$=""
+
     if old_file then
        close (old_file)
        old_file=0
@@ -657,7 +672,21 @@ rem    gosub make_printplus
         print (log_dev)"Temporary vendor records found without a valid stbl("+$22$+"+DP_TEMP_VEND"+$22$+")."
         print (log_dev)"Those records were excluded from the DataPort."
         print (log_dev)"Please set this variable up in the config file and rerun the DataPort."
-    endif    
+    endif
+
+    if len(blank_fields$)>0
+        rd_meter_data$="Blank values for elements in primary keys exist. See log for details."
+        rd_meter_total_recs=iff(rdVectPort!=null(),0,rdVectPort!.size())
+        rd_meter_action$="LST"
+        gosub disp_meter        
+        print "   Blank values for elements in primary keys exist. See log for details."
+    endif
+    while len(blank_fields$)>0
+        print (log_dev)"Element "+blank_fields$(1,pos($0a$=blank_fields$)-1)+" has a blank value."
+        print (log_dev)"  Consider converting to a non-blank value and re-running DataPort."
+        blank_fields$=blank_fields$(pos($0a$=blank_fields$)+1)
+    wend
+
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
@@ -994,6 +1023,15 @@ get_new_template:
        print "   Data File "+file_id$+" will not be ported"
        print (log_dev)"   Data File "+file_id$+" will not be ported"
        goto eof
+    endif
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj",table_alias$,"PRIMARY",key_temp$,table_chans$[all],rd_stat$
+    while pos(",reserved_str:c(1)"=key_temp$)<>0
+        key_temp$=key_temp$(1,pos(",reserved_str:c(1)"=key_temp$)-1)+key_temp$(pos(",reserved_str:c(1)"=key_temp$)+18)
+    wend
+    if cvs(key_temp$,2)<>""
+        dim key_temp$:key_temp$
+        key_temp$=fattr(key_temp$,"")
     endif
 
     findrecord(ddm_table_tpls,key=pad(table_alias$,16),dom=check_for_definition)ddm_table_tpls$
