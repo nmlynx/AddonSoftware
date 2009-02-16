@@ -33,6 +33,8 @@ rem --- Go get Lot Numbers
 		int_seq$=callpoint!.getDevObject("int_seq")
 
 		if cvs(cust$,2)<>""
+			g!=Form!.getChildWindow(1109).getControl(5900)
+			g!.focus()
 			dim dflt_data$[3,1]
 			dflt_data$[1,0]="AR_TYPE"
 			dflt_data$[1,1]=ar_type$
@@ -44,7 +46,7 @@ rem --- Go get Lot Numbers
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
 rem --- return focus to where we were (Detail line grid)
 rem			return_to_row=num(callpoint!.getDevObject("return_to_row"))
-rem  			return_to_col=num(callpoint!.getDevObject("return_to_col"))
+rem			return_to_col=num(callpoint!.getDevObject("return_to_col"))
 rem			util.forceEdit(Form!, return_to_row,return_to_col)
 		endif
 	endif

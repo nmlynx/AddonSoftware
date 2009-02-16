@@ -1,3 +1,33 @@
+[[OPE_ORDLSDET.BEND]]
+rem --- Check total quantity from all lines against ordered quantity
+	lot_qty=0
+	recVect!=GridVect!.getItem(0)
+	dim gridrec$:dtlg_param$[1,3]
+	numrecs=recVect!.size()
+	if numrecs>0
+		for reccnt=0 to numrecs-1
+			gridrec$=recVect!.getItem(reccnt)
+			if cvs(gridrec$,3)<>""
+				if callpoint!.getGridRowDeleteStatus(reccnt)<>"Y"
+					lot_qty=lot_qty+gridrec.qty_ordered
+				endif
+			endif
+		next reccnt
+	endif
+
+	if lot_qty<>num(callpoint!.getDevObject("ord_qty"))
+		msg_id$="OP_LOT_QTY_UNEQUAL"
+		dim msg_tokens$[3]
+		msg_tokens$[1]=str(lot_qty)
+		if callpoint!.getDevObject("lotser_flag")="L"
+			msg_tokens$[2]="Lot numbers"
+		else
+			msg_tokens$[2]="Serial numbers"
+		endif
+		msg_tokens$[3]=str(callpoint!.getDevObject("ord_qty"))
+		gosub disp_message
+		if msg_opt$="N" callpoint!.setStatus("ABORT")
+	endif
 [[OPE_ORDLSDET.<CUSTOM>]]
 rem --- check for available quantity
 check_avail:
