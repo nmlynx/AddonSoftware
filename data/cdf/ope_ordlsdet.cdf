@@ -1,12 +1,11 @@
 [[OPE_ORDLSDET.BEND]]
 rem --- Check total quantity from all lines against ordered quantity
 	lot_qty=0
-	recVect!=GridVect!.getItem(0)
-	dim gridrec$:dtlg_param$[1,3]
-	numrecs=recVect!.size()
+	dim gridrec$:fattr(rec_data$)
+	numrecs=GridVect!.size()
 	if numrecs>0
 		for reccnt=0 to numrecs-1
-			gridrec$=recVect!.getItem(reccnt)
+			gridrec$=GridVect!.getItem(reccnt)
 			if cvs(gridrec$,3)<>""
 				if callpoint!.getGridRowDeleteStatus(reccnt)<>"Y"
 					lot_qty=lot_qty+gridrec.qty_ordered
