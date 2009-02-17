@@ -19,6 +19,7 @@ dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reser
 
 rem --- Set the hook for dealer custom call
 
+    dupe_rec$="N"
     blank_fields$=""
     custom_prog$=""
     while 1
@@ -486,7 +487,6 @@ rem --- Check value of new field for blanks if part of primary key
                 if pos(new_fieldlist.name$[field]+$0a$=blank_fields$)=0
                     blank_fields$=blank_fields$+new_fieldlist.name$[field]+$0a$
                     print (log_dev) "field "+new_fieldlist.name$[field]+" has a blank value."
-                    if new_fieldlist.name$[field]="FIRM_ID" escape;rem ? datafile$ and table_alias$
                 endif    
             endif
         endif
@@ -561,12 +561,32 @@ write_record:
     if keysize then
        k$=xkgen(new_rec$,xfin$,0)
        if len(k$)>keysize then
-          writerecord(new_file,key=k$(1,keysize),err=write_err)new_rec$
+          writerecord(new_file,key=k$(1,keysize),dom=duplicate_record,err=write_err)new_rec$
        else
-          writerecord(new_file,key=k$,err=write_err)new_rec$
+          writerecord(new_file,key=k$,dom=duplicate_record,err=write_err)new_rec$
        endif
     else
-       writerecord(new_file,err=write_err)new_rec$
+       writerecord(new_file,dom=duplicate_record,err=write_err)new_rec$
+    endif
+    goto next_rec
+
+duplicate_record:
+    dupe_rec$="Y"
+    call stbl("+DIR_SYP")+"bac_key_template.bbj",table_alias$,"PRIMARY",key_temp1$,table_chans$[all],rd_stat$
+    if len(key_temp1$)>0
+        dim dupe_key$:key_temp1$
+        dupe_key$=new_rec$
+        dupe_key$=field(dupe_key$)
+    endif    
+    print (log_dev)"There are duplicate records being written to "+new_datafile$+" with a key template of"
+    if len(key_temp1$)>0
+        print (log_dev)"   "+key_temp1$
+        print (log_dev)"   and values of "+dupe_key$
+        print (log_dev)"   This key will be ignored."
+    else
+        print (log_dev)"   No key could be determined. The record value is"
+        print (log_dev)"   "+new_rec$
+        print (log_dev)"   This record will be ignored."
     endif
     goto next_rec
 
@@ -686,6 +706,14 @@ rem    gosub make_printplus
         print (log_dev)"  Consider converting to a non-blank value and re-running DataPort."
         blank_fields$=blank_fields$(pos($0a$=blank_fields$)+1)
     wend
+
+    if dupe_rec$="Y" 
+        rd_meter_data$="Duplicate keys exist in the ported data. See log for details."
+        rd_meter_total_recs=iff(rdVectPort!=null(),0,rdVectPort!.size())
+        rd_meter_action$="LST"
+        gosub disp_meter        
+        print "   Duplicate keys exist in the ported data. See log for details."
+    endif
 
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
