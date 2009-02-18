@@ -184,7 +184,9 @@ rem ==========================================================================
 		read record (physcode_dev, end=*break) physcode_rec$
 		if physcode_rec.firm_id$ <> firm_id$ then break
 
-		if physcode_rec.phys_inv_sts$ = "1" then 
+		if physcode_rec.phys_inv_sts$ = "1" and 
+:			(physcode_rec.pending_action$ = "0" or physcode_rec.pending_action$ = "2") 
+:		then 
 			cycleData!.addItem(physcode_rec.pending_action$)
 			cycleData!.addItem(physcode_rec.warehouse_id$)
 			cycleData!.addItem(physcode_rec.pi_cyclecode$)
@@ -305,6 +307,7 @@ rem --- Inits
 
 	dim user_tpl$:"grid_id:u(2), whse_id:c(2), whse_changed:u(1)"
 	user_tpl.whse_changed = 0
+	more = 1
 
 rem --- Open files
 
