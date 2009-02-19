@@ -571,6 +571,7 @@ write_record:
     goto next_rec
 
 duplicate_record:
+    if cvs(new_datafile$,2)="glm-06" or cvs(new_datafile$,2)="adm-19" or cvs(new_datafile$,2)="opm-14" goto next_rec
     dupe_rec$="Y"
     call stbl("+DIR_SYP")+"bac_key_template.bbj",table_alias$,"PRIMARY",key_temp1$,table_chans$[all],rd_stat$
     if len(key_temp1$)>0
