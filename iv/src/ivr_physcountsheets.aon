@@ -1,5 +1,5 @@
 rem --- Physical Inventory Count Sheets
-rem --- Program ivr_ua v8.0.0 09Jul2007 (ivr_ua)
+rem --- Program ivr_physcountsheets.aon v8.0.0 09Jul2007 (ivr_ua)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/09/2007 11:44:30)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -211,17 +211,17 @@ rem --- Setup SQL to read through IVM_ITEMWHSE with selected cycle codes
     sql_prep$ = sql_prep$ + "  FROM ivm_itemwhse "
     where_clause$ =         " WHERE firm_id = '" + firm_id$ + "' AND warehouse_id = '" + whse$ +"' "
 
-    read (physcode_dev, key=firm_id$, dom=*next)
+    read (physcode_dev, key=firm_id$+whse$, dom=*next)
     first_time = 1
 
 rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
-escape; rem debug
+
     if selected_all = 0 then
 
         while more
 
             read record (physcode_dev, end=*break) physcode_rec$
-            if physcode_rec.firm_id$ <> firm_id$ then break
+            if physcode_rec.firm_id$ <> firm_id$ or physcode_rec.warehouse_id$ <> whse$ then break
 
 rem         Pending action of Select for Print
             if physcode_rec.pending_action$ = "2" then
@@ -247,8 +247,6 @@ rem     Finish WHERE clause if necessary
     sql_prep$ = sql_prep$ + where_clause$
     sql_prep$ = sql_prep$ + " ORDER BY warehouse_id, pi_cyclecode, item_id "
 	
-	print sql_prep$; escape; rem debug
-
     sql_chan=sqlunt
     sqlopen(sql_chan)stbl("+DBNAME")
     sqlprep(sql_chan)sql_prep$
@@ -268,23 +266,21 @@ rem --- Get next SQL record
 		location$   = sql_rec.location$
 		
 		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
-	
-rem --- Get cycle code record
+		
+rem --- Cycle code break
 
 		if prev_cycle$ <> cycle_code$ then 
-	        find record (physcode_dev, key=firm_id$+"P"+whse_id$+cyclcode$, dom=*endif) physcode_rec$
-	        last$=""
+	        find record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*endif) physcode_rec$
+			last$=""
 			BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
 			HdrVect!.addItem( "Cycle Code "+cycle_code$+" - Cutoff Date "+fndate$(physcode_rec.cutoff_date$) )
 		endif
-		
-		prev_cycle$ = cycle_code$
 		
 rem --- Get physical inventory record(s) (may be lot/serial)
 
 		first_time = 1
 
-		read (physical_dev, key=firm_id$+whse_id$+cycle_code$+location$+item_id$, dom=*next)
+		read (physical_dev, key=firm_id$+whse_id$+cycle_code$+location$+item_id$, dir=0, dom=*next)
 		
 		while more
 		
@@ -403,7 +399,19 @@ rem --- Retrieve and print lot/serial record
 rem --- Next physical record
 
 		wend
+		
+rem --- Cycle code update
 
+		if prev_cycle$ <> cycle_code$ then 
+	        find record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*endif) physcode_rec$
+			physcode_rec.phys_inv_sts$   = physcode_rec.pending_action$
+			physcode_rec.pending_action$ = "0"
+			physcode_rec$ = field(physcode_rec$)
+			write record (physcode_dev) physcode_rec$
+		endif
+		
+		prev_cycle$ = cycle_code$
+		
 rem --- Loop back for next SQL record
 
     wend
