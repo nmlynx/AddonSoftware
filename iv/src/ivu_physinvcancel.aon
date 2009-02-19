@@ -94,7 +94,7 @@ rem --- Setup SQL to read through IVM_ITEMWHSE with selected cycle codes
     sql_prep$ = sql_prep$ + "  FROM ivm_itemwhse "
     where_clause$ =         " WHERE firm_id = '" + firm_id$ + "' AND warehouse_id = '" + whse$ +"' "
 
-    read (physcode_dev, key=firm_id$, dom=*next)
+    read (physcode_dev, key=firm_id$+whse$, dom=*next)
     first_time = 1
 
 rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
@@ -103,7 +103,7 @@ rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
         while more
 
             read record (physcode_dev, end=*break) physcode_rec$
-            if physcode_rec.firm_id$ <> firm_id$ then break
+            if physcode_rec.firm_id$ <> firm_id$ or physcode_rec.warehouse_id$ <> whse$ then break
 
 rem         Pending action of Select for Freeze
             if physcode_rec.pending_action$ = "5" then
@@ -158,7 +158,7 @@ rem --- Update warehouse record
 
 rem --- Remove Physical records
 
-		read (physical_dev, key=firm_id$+whse_id$+cycle_code$+location$+item_id$, dom=*next)
+		read (physical_dev, key=firm_id$+whse_id$+cycle_code$+location$+item_id$, dir=0, dom=*next)
 		
 		while more
 			physical_key$ = key(physical_dev, end=*break)
