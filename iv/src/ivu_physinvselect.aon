@@ -68,11 +68,11 @@ rem --- Open all files
 
     gosub open_tables
 
-    params_dev   = num( open_chans$[1] )
-    physical_dev = num( open_chans$[2] )
-    physcode_dev = num( open_chans$[3] )
-    itemwhse_dev = num( open_chans$[4] )
-    itemmast_dev = num( open_chans$[5] )
+    params_dev   = num(open_chans$[1])
+    physical_dev = num(open_chans$[2])
+    physcode_dev = num(open_chans$[3])
+    itemwhse_dev = num(open_chans$[4])
+    itemmast_dev = num(open_chans$[5])
 
     dim params_rec$:open_tpls$[1]
     dim physical_rec$:open_tpls$[2]
@@ -110,7 +110,7 @@ rem --- Setup SQL to read through IVM_ITEMWHSE with selected cycle codes
     sql_prep$ = sql_prep$ + "  FROM ivm_itemwhse "
     where_clause$ =         " WHERE firm_id = '" + firm_id$ + "' AND warehouse_id = '" + whse$ +"' "
 
-    read (physcode_dev, key=firm_id$, dom=*next)
+    read (physcode_dev, key=firm_id$+whse$, dom=*next)
     first_time = 1
 
 rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
@@ -119,7 +119,7 @@ rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
         while more
 
             read record (physcode_dev, end=*break) physcode_rec$
-            if physcode_rec.firm_id$ <> firm_id$ then break
+            if physcode_rec.firm_id$ <> firm_id$ or physcode_rec.warehouse_id$ <> whse$ then break
 
 rem         Pending action of Select for Freeze
             if physcode_rec.pending_action$ = "1" then
@@ -243,7 +243,7 @@ rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
 			physical_rec.location$     = itemwhse_rec.location$
             physical_rec.cutoff_date$  = cutoff$
             physical_rec.entered_flag$ = "N"
-            physical_reclotser_item$   = "N"
+            physical_rec.lotser_item$  = "N"
             physical_rec.freeze_qty    = onhand - total
 
 rem --- Treat as Non-Serialized/Non-Lotted unless item is Inventoried by Serial/Lot number
@@ -312,7 +312,7 @@ open_tables: rem --- Open tables
 
     return
 
-disp_message:rem --- Display Message Dialog
+disp_message: rem --- Display Message Dialog
 
     call sypdir$+"bac_message.bbj",
 :		msg_id$,
