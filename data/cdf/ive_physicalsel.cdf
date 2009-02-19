@@ -35,26 +35,43 @@ rem --- Roll thru grid rows, saving the pending action of checked records
 
 	nothing_checked = 1
 	selected_all = 1
+	more = 1
+	
+	read (physcode_dev, key=firm_id$+whse$, dom=*next)
+	
+	while more 
+	
+		physcode_key$ = key(physcode_dev, end=*break)
+		if pos(firm_id$+whse$ = physcode_key$) <> 1 then break
+		read record (physcode_dev) physcode_rec$
 
-	for row = 0 to grid!.getNumRows() - 1
-
-		cycle$ = grid!.getCellText(row, 2)
-		read record (physcode_dev, key=firm_id$+whse$+cycle$, dom=*continue) physcode_rec$
-
-		if grid!.getCellState(row, 0) then
+		if physcode_rec.phys_inv_sts$ <> "0" then 
+			selected_all = 0
+			continue
+		endif
+		
+		found = 0
+		
+		for row = 0 to grid!.getNumRows() - 1
+			if grid!.getCellText(row, 2) = physcode_rec.pi_cyclecode$ then
+				found = 1
+				break
+			endif
+		next row
+		
+		if found and grid!.getCellState(row, 0) then
 			physcode_rec.pending_action$ = "1"
-			physcode_rec.cutoff_date$    = cutoff$
+			physcode_rec.cutoff_date$ = cutoff$
 			nothing_checked = 0
 		else
 			physcode_rec.pending_action$ = "0"
-			physcode_rec.cutoff_date$    = ""
 			selected_all = 0
 		endif
-
+		
 		physcode_rec$ = field(physcode_rec$)
 		write record (physcode_dev) physcode_rec$
-
-	next row
+		
+	wend
 
 	if nothing_checked then
 		callpoint!.setMessage("IV_PI_NONE_SELECTED")
