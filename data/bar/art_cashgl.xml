@@ -10,16 +10,16 @@
 			<DD_ALIAS_TYPE id="ddm_tables.art_cashgl">V</DD_ALIAS_TYPE>
 			<DD_KEY_LENGTH id="ddm_tables.art_cashgl">0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD id="ddm_tables.art_cashgl">0</DD_NBR_RECORD>
-			<DD_RECORD_LEN id="ddm_tables.art_cashgl">64</DD_RECORD_LEN>
+			<DD_RECORD_LEN id="ddm_tables.art_cashgl">0</DD_RECORD_LEN>
 			<DD_SYSTEM_REC id="ddm_tables.art_cashgl">N</DD_SYSTEM_REC>
 			<ASC_COMP_ID id="ddm_tables.art_cashgl">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_tables.art_cashgl">AR </ASC_PROD_ID>
 			<ASC_LICENSE_ID id="ddm_tables.art_cashgl">EFFD4D6ED8F6F9EB6036FB70A35F110F</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.art_cashgl">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.art_cashgl">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.art_cashgl">20080130</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.art_cashgl">20090124</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.art_cashgl">102008</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.art_cashgl">20090219</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.art_cashgl">20090219</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.art_cashgl">122750</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP id="ddm_tables.art_cashgl">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.art_cashgl">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.art_cashgl">Cash Receipts History GL Dist</DD_ATTR_WINT>
@@ -30,7 +30,7 @@
 		<RECORD id="ddm_table_tpls.art_cashgl">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.art_cashgl">ART_CASHGL      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.art_cashgl">art-26</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.art_cashgl">firm_id:c(2),ar_type:c(2),reserved_str:c(1),customer_id:c(6),receipt_date:c(8),cash_rec_cd:c(3),ar_check_no:c(7),reserved_str_02:c(1),gl_account:c(10),reserved_str_03:c(10*),gl_post_amt:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.art_cashgl">firm_id:c(2),ar_type:c(2),reserved_key_01:c(1),customer_id:c(6),receipt_date:c(8),cash_rec_cd:c(3),ar_check_no:c(7),reserved_key_02:c(1),gl_account:c(10),reserved_str:c(10*),gl_post_amt:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -66,7 +66,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashgl0003">ART_CASHGL      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_cashgl0003">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashgl0003">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_cashgl0003">RESERVED_STR    </DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashgl0003">RESERVED_KEY_01</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_cashgl0003">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashgl0003">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashgl0003">0</DD_SEGMENT_LEN>
@@ -111,7 +111,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashgl0008">ART_CASHGL      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_cashgl0008">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashgl0008">08</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_cashgl0008">RESERVED_STR    </DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashgl0008">RESERVED_KEY_02</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_cashgl0008">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashgl0008">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashgl0008">0</DD_SEGMENT_LEN>
@@ -156,8 +156,8 @@
 		<RECORD id="ddm_table_cols.art_cashgl003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashgl003">ART_CASHGL      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashgl003">003</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashgl003">RESERVED_STR    </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashgl003">RESERVED_STR    </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashgl003">RESERVED_KEY_01 </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashgl003">RESERVED_KEY_01 </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashgl003">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashgl003">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashgl003">N</DD_FIELD_DELIM>
@@ -225,8 +225,8 @@
 		<RECORD id="ddm_table_cols.art_cashgl008">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashgl008">ART_CASHGL      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashgl008">008</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashgl008">RESERVED_STR    </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashgl008">RESERVED_STR    </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashgl008">RESERVED_KEY_02 </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashgl008">RESERVED_KEY_02 </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashgl008">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashgl008">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashgl008">N</DD_FIELD_DELIM>
@@ -327,22 +327,24 @@
 			<DD_ATTR_LABS id="ddm_elements.ar_type">AR Type</DD_ATTR_LABS>
 			<DD_ATTR_PVAL id="ddm_elements.ar_type">"  "</DD_ATTR_PVAL>
 		</RECORD>
-		<RECORD id="ddm_elements.reserved_str">
-			<DD_DATA_NAME id="ddm_elements.reserved_str">RESERVED_STR    </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.reserved_str">Reserved For Addon Use        </DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.reserved_str">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.reserved_str">1</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.reserved_str"> </DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.reserved_str">Y</DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.reserved_str">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.reserved_str">BAR</ASC_PROD_ID>
-			<DD_CREATE_DATE id="ddm_elements.reserved_str">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.reserved_str">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CTYP id="ddm_elements.reserved_str">X</DD_ATTR_CTYP>
-			<DD_ATTR_DCOM id="ddm_elements.reserved_str">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.reserved_str">            </DD_ATTR_DEXP>
-			<DD_ATTR_LABL id="ddm_elements.reserved_str">Reserved For Addon Use</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.reserved_str">Res For Addon Use</DD_ATTR_LABS>
+		<RECORD id="ddm_elements.reserved_key_01">
+			<DD_DATA_NAME id="ddm_elements.reserved_key_01">RESERVED_KEY_01 </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.reserved_key_01">Reserved Key String</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.reserved_key_01">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.reserved_key_01">1</DD_DATA_LENGTH>
+			<DD_SYSTEM_REC id="ddm_elements.reserved_key_01">N</DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.reserved_key_01">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.reserved_key_01">AON</ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.reserved_key_01">20070112</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.reserved_key_01">20070112</DD_LSTREV_DATE>
+			<DD_ATTR_CTYP id="ddm_elements.reserved_key_01">H</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.reserved_key_01">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.reserved_key_01">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.reserved_key_01">Reserved Key String</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.reserved_key_01">Res Key Str        </DD_ATTR_LABS>
+			<DD_ATTR_PADC id="ddm_elements.reserved_key_01">20</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.reserved_key_01">L</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.reserved_key_01">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.customer_id">
 			<DD_DATA_NAME id="ddm_elements.customer_id">CUSTOMER_ID     </DD_DATA_NAME>
@@ -430,6 +432,25 @@
 			<DD_ATTR_PADC id="ddm_elements.ar_check_no">20</DD_ATTR_PADC>
 			<DD_ATTR_PADJ id="ddm_elements.ar_check_no">L</DD_ATTR_PADJ>
 		</RECORD>
+		<RECORD id="ddm_elements.reserved_key_02">
+			<DD_DATA_NAME id="ddm_elements.reserved_key_02">RESERVED_KEY_02 </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.reserved_key_02">Reserved Key String</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.reserved_key_02">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.reserved_key_02">1</DD_DATA_LENGTH>
+			<DD_SYSTEM_REC id="ddm_elements.reserved_key_02">N</DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.reserved_key_02">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.reserved_key_02">AON</ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.reserved_key_02">20070112</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.reserved_key_02">20070112</DD_LSTREV_DATE>
+			<DD_ATTR_CTYP id="ddm_elements.reserved_key_02">H</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.reserved_key_02">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.reserved_key_02">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.reserved_key_02">Reserved Key String</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.reserved_key_02">Res Key Str        </DD_ATTR_LABS>
+			<DD_ATTR_PADC id="ddm_elements.reserved_key_02">20</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.reserved_key_02">L</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.reserved_key_02">0</DD_ATTR_PREC>
+		</RECORD>
 		<RECORD id="ddm_elements.gl_account">
 			<DD_DATA_NAME id="ddm_elements.gl_account">GL_ACCOUNT      </DD_DATA_NAME>
 			<DD_DESCRIPTION id="ddm_elements.gl_account">GL Account Number</DD_DESCRIPTION>
@@ -451,6 +472,23 @@
 			<DD_ATTR_MSKI id="ddm_elements.gl_account">UUUUUUUUUU</DD_ATTR_MSKI>
 			<DD_ATTR_PADC id="ddm_elements.gl_account">30</DD_ATTR_PADC>
 			<DD_ATTR_PADJ id="ddm_elements.gl_account">L</DD_ATTR_PADJ>
+		</RECORD>
+		<RECORD id="ddm_elements.reserved_str">
+			<DD_DATA_NAME id="ddm_elements.reserved_str">RESERVED_STR    </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.reserved_str">Reserved For Addon Use        </DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.reserved_str">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.reserved_str">1</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.reserved_str"> </DD_MASK_TYPE>
+			<DD_SYSTEM_REC id="ddm_elements.reserved_str">Y</DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.reserved_str">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.reserved_str">BAR</ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.reserved_str">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.reserved_str">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CTYP id="ddm_elements.reserved_str">X</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.reserved_str">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.reserved_str">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.reserved_str">Reserved For Addon Use</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.reserved_str">Res For Addon Use</DD_ATTR_LABS>
 		</RECORD>
 		<RECORD id="ddm_elements.gl_post_amt">
 			<DD_DATA_NAME id="ddm_elements.gl_post_amt">GL_POST_AMT     </DD_DATA_NAME>
