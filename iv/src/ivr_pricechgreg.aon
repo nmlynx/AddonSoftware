@@ -12,7 +12,6 @@ rem --- All Rights Reserved
 rem --- Use statements
 
 	use ::sys/prog/bao_option.bbj::Option
-	use ::sys/prog/bao_translator.bbj::Translator
 
 rem --- Retrieve the program path
 
@@ -67,17 +66,6 @@ rem --- Open all files
 	dim whsecode_rec$:open_tpls$[6]	
 	dim modules_rec$:open_tpls$[7]
 	
-rem --- Get locale info and instantiate translator object
-
-	declare BBjString locale_path!
-	declare BBjString locale_res!
-	declare Translator tr!
-
-	read record (modules_dev, key=pad(sysinfo.lic_feature$,11)) modules_rec$
-    locale_res! = modules_rec.locale_resource$
-    locale_path! = modules_rec.locale_path$
-	tr! = Translator.getInstance(locale_res!, stbl("+USER_LOCALE"), null(), locale_path!)
-
 rem --- Parameters
 
     find record (ivs_params_dev, key=firm_id$+"IV00", dom=std_missing_params) ivs_params_rec$
@@ -140,14 +128,14 @@ rem --- Column headings
 	columns=7
 	dim columns$[columns,10]
 	
-	columns$[0,0]=tr!.getTranslation("ITEM", "Item"),                             columns$[0,1]="C", columns$[0,2]=str(p[0])
-	columns$[1,0]=tr!.getTranslation("DESCRIPTION", "Description"),               columns$[1,1]="C", columns$[1,2]=str(dw)
-	columns$[2,0]=tr!.getTranslation("UM", "UM"),                                 columns$[2,1]="C", columns$[2,2]="2"
-	columns$[3,0]=tr!.getTranslation("PRIOR_LIST_PRICE", "Prior^List Price"),     columns$[3,1]="N", columns$[3,2]=str(m4), columns$[3,3]=m4$
-	columns$[4,0]=tr!.getTranslation("PRICE_CODE", "Price^Code"),                 columns$[4,1]="C", columns$[4,2]="5"
-	columns$[5,0]=tr!.getTranslation("CURRENT_LIST_PRICE", "Current^List Price"), columns$[5,1]="N", columns$[5,2]=str(m4), columns$[5,3]=m4$
-	columns$[6,0]=tr!.getTranslation("PRICE_CODE", "Price^Code"),                 columns$[6,1]="C", columns$[6,2]="5"
-	columns$[7,0]=tr!.getTranslation("NEW_LIST_PRICE", "New^List Price"),         columns$[7,1]="N", columns$[7,2]=str(m4), columns$[7,3]=m4$
+	columns$[0,0]="Item",                             columns$[0,1]="C", columns$[0,2]=str(p[0])
+	columns$[1,0]="Description",               columns$[1,1]="C", columns$[1,2]=str(dw)
+	columns$[2,0]="UM",                                 columns$[2,1]="C", columns$[2,2]="2"
+	columns$[3,0]="Prior^List Price",     columns$[3,1]="N", columns$[3,2]=str(m4), columns$[3,3]=m4$
+	columns$[4,0]="Price^Code",                 columns$[4,1]="C", columns$[4,2]="5"
+	columns$[5,0]="Current^List Price", columns$[5,1]="N", columns$[5,2]=str(m4), columns$[5,3]=m4$
+	columns$[6,0]="Price^Code",                 columns$[6,1]="C", columns$[6,2]="5"
+	columns$[7,0]="New^List Price",         columns$[7,1]="N", columns$[7,2]=str(m4), columns$[7,3]=m4$
 	
 rem --- Report headings
 
@@ -263,7 +251,7 @@ rem --- All done
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
 	
     if !number then
-		OutVect!.addItem( tr!.getTranslation("NO_PRICE_CHANGE_ENTRIES_FOUND", "No Price Change Entries Found") )
+		OutVect!.addItem("No Price Change Entries Found")
 		ignore = fnblank(7)
 		goto std_exit
     endif
@@ -292,7 +280,7 @@ rem --- Run update overlay
 price_code_break: rem --- Price Code Break
 
 	BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
-	HdrVect!.addItem( tr!.getTranslation("FOR_NEW_LIST_PRICE_CODE_", "For New List Price Code ") + sql_rec.price_code$ )
+	HdrVect!.addItem( "For New List Price Code " + sql_rec.price_code$ )
 	
     return
 
@@ -313,7 +301,7 @@ product_break: rem --- Product Break
     find record (prodcode_dev,key=firm_id$+"A"+sql_rec.product_type$,dom=*next) prodcode_rec$
 	
 	ignore = fnblank_line(void)
-    OutVect!.addItem( tr!.getTranslation("PRODUCT_", "Product ") + sql_rec.product_type$ + " " + prodcode_rec.code_desc$ )
+    OutVect!.addItem( "Product " + sql_rec.product_type$ + " " + prodcode_rec.code_desc$ )
 	ignore = fnblank(7)
 	
     return
