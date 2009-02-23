@@ -241,6 +241,12 @@ rem ---recalc quantities and extended price
 	new_ext_price=newqty*unit_price
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
+
+rem --- remove lot records if qty goes to 0
+	gosub lot_ser_check
+	if lotted$="Y"
+	endif
+
 rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
