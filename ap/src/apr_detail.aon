@@ -37,12 +37,12 @@ rem --- retrieve retention value from param file
 
 	readrecord(aps_params_dev,key=firm_id$+"AP00",dom=*next)aps_params$
 	
-rem --- Assign form input values to local variables
+rem --- Set additional params
 
-    begvendor$=option!.getOptionData("VENDOR_ID_1")
-    endvendor$=option!.getOptionData("VENDOR_ID_2")
-    comments$=option!.getOptionData("PICK_CHECK")
-    
+    params!.put("FIRM_ID",firm_id$)
+    params!.put("BARISTA_WD",dir(""))		
+	if params!.get("VENDOR_ID_2")="" then params!.put("VENDOR_ID_2","~~~~~~")    
+    params!.put("RETENTION",aps_params.ret_flag$)
 
 rem --- Make Document Archive Record and Get ID
 
@@ -79,20 +79,14 @@ rem --- Document Output Report Parameters
 rem --- Set Report Name & Subreport directory
 
 	reportDir$ = stbl("+DIR_REPORTS",err=*next)
+rem	reportDir$=reportDir$+"testing/";rem testing SQL vs SPROC driven; rem this for SQL version CH
+	reportTitle$="Vendor Detail Listing"
 	temp = unt
 	open (temp)reportDir$
 	reportDir$ = fid(temp)(9)+"/"
 	close (temp)
 	reportBaseName$ = "VendorDetail"
 	filename$ = reportDir$ + reportBaseName$ + ".jasper"
-
-rem --- Set Report Parameters/create report object
-
-    params!.put("FIRM_ID",firm_id$)
-    params!.put("BEG_VENDOR_ID",begvendor$)
-    params!.put("END_VENDOR_ID",endvendor$)
-    params!.put("INCLUDE_CMTS",comments$)
-    params!.put("RETENTION",aps_params.ret_flag$)
 
     declare BBJasperReport report!
         
@@ -108,7 +102,7 @@ rem --- Fill Report and Show
     declare BBJasperViewerWindow viewerWindow!
 
 	report!.fill()
-    viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,"Vendor Detail Report",$93$)
+    viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,reportTitle$,$93$)
     viewerWindow!.setReleaseOnClose(1)
     viewerWindow!.show(0)
         
