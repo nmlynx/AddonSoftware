@@ -1105,6 +1105,7 @@ rem --- Clear variables
 	callpoint!.setDevObject("lsmast_dev",open_chans$[11])
 	callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
+	callpoint!.setDevObject("default_linecode",ars01a.line_code$)
 
 rem --- Set Lot/Serial button up properly
 	switch pos(ivs01a.lotser_flag$="LS")
