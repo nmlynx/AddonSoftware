@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report name" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="0">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report name" pageWidth="595" pageHeight="842" columnWidth="575" leftMargin="0" rightMargin="20" topMargin="0" bottomMargin="0">
 	<parameter name="FIRM_ID" class="java.lang.String">
 		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
 	</parameter>
 	<parameter name="VENDOR_ID" class="java.lang.String"/>
 	<parameter name="RETENTION" class="java.lang.String"/>
+	<parameter name="AP_TYPE" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select * from apt_invoicehdr where firm_id=$P{FIRM_ID} and vendor_id=$P{VENDOR_ID}]]>
+		<![CDATA[select * from apt_invoicehdr where firm_id=$P{FIRM_ID} and ap_type=$P{AP_TYPE} and vendor_id=$P{VENDOR_ID}]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
@@ -192,20 +193,23 @@
 				<subreportParameter name="AP_INV_NO">
 					<subreportParameterExpression><![CDATA[$F{AP_INV_NO}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="DISCOUNT_AMT">
 					<subreportParameterExpression><![CDATA[$F{DISCOUNT_AMT}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="FIRM_ID">
-					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				<subreportParameter name="AP_TYPE">
+					<subreportParameterExpression><![CDATA[$F{AP_TYPE}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="RETENTION">
 					<subreportParameterExpression><![CDATA[$P{RETENTION}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="RETENTION_AMT">
-					<subreportParameterExpression><![CDATA[$F{RETENTION}]]></subreportParameterExpression>
-				</subreportParameter>
 				<subreportParameter name="VENDOR_ID">
 					<subreportParameterExpression><![CDATA[$P{VENDOR_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="RETENTION_AMT">
+					<subreportParameterExpression><![CDATA[$F{RETENTION}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<returnValue subreportVariable="totAmt" toVariable="totDet" calculation="Sum"/>
@@ -215,7 +219,7 @@
 	</detail>
 	<summary>
 		<band height="14">
-			<textField pattern="#,##0.00">
+			<textField pattern="#,##0.00" hyperlinkType="None">
 				<reportElement x="284" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{balance}.add( $V{totDet} )]]></textFieldExpression>

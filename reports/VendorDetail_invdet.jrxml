@@ -7,8 +7,9 @@
 	<parameter name="INVOICE_AMT" class="java.math.BigDecimal" isForPrompting="false"/>
 	<parameter name="DISCOUNT_AMT" class="java.math.BigDecimal" isForPrompting="false"/>
 	<parameter name="RETENTION_AMT" class="java.math.BigDecimal" isForPrompting="false"/>
+	<parameter name="AP_TYPE" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select * from apt_invoicedet where firm_id=$P{FIRM_ID} and vendor_id=$P{VENDOR_ID} and ap_inv_no=$P{AP_INV_NO}]]>
+		<![CDATA[select * from apt_invoicedet where firm_id=$P{FIRM_ID} and ap_type=$P{AP_TYPE} and vendor_id=$P{VENDOR_ID} and ap_inv_no=$P{AP_INV_NO}]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
@@ -106,7 +107,7 @@
 	</detail>
 	<summary>
 		<band height="18">
-			<textField pattern="#,##0.00">
+			<textField pattern="#,##0.00" hyperlinkType="None">
 				<reportElement x="284" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{orig_inv_amt}.add( $V{totAmt} )]]></textFieldExpression>
@@ -116,12 +117,12 @@
 				<textElement/>
 				<text><![CDATA[Total]]></text>
 			</staticText>
-			<textField pattern="#,##0.00">
+			<textField pattern="#,##0.00" hyperlinkType="None">
 				<reportElement x="366" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{orig_disc_amt}.add( $V{totDisc} )]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.00">
+			<textField pattern="#,##0.00" hyperlinkType="None">
 				<reportElement x="440" y="0" width="60" height="13">
 					<printWhenExpression><![CDATA[new Boolean($P{RETENTION}.equals( "Y" ))]]></printWhenExpression>
 				</reportElement>
