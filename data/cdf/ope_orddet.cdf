@@ -1,3 +1,7 @@
+[[OPE_ORDDET.AREC]]
+rem --- Set default Line Code
+escape
+	callpoint!.setColumnData("OPE_ORDDET.LINE_CODE",callpoint!.getDevObject("default_linecode"))
 [[OPE_ORDDET.AGCL]]
 use ::ado_util.src::util
 [[OPE_ORDDET.BWRI]]
