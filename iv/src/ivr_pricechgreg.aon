@@ -323,7 +323,7 @@ open_tables: rem --- Call open table routine
 		msg_id$="ENTRY_OPEN_ERROR"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 		status=912
 		goto std_exit
 	endif
