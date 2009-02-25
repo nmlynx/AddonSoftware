@@ -6,23 +6,23 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2009 AddonSoftware
 rem --- All Rights Reserved
 
-rem  action$       : Entry Type (Input)
-rem                    C=Cost Change
-rem                    P=Price Change
-rem                    R=Price Change Reversal
-rem  entry$        : Entry File Name (Input)
-rem                    C=IVE_COSTCHG
-rem                    P=IVE_PRICECHG
-rem                    R=IVW_PRICREV
-rem  no_of_records : Number of records written to the entry file
-rem  table_chans$[]: Barista array, do not modify
-rem  status        : 0=No error (Returned)
+rem  action$          : Entry Type (Input)
+rem                       C=Cost Change
+rem                       P=Price Change
+rem                       R=Price Change Reversal
+rem  entry$           : Entry File Name (Input)
+rem                       C=IVE_COSTCHG
+rem                       P=IVE_PRICECHG
+rem                       R=IVW_PRICREV
+rem  no_of_records    : Number of records written to the entry file
+rem  rd_table_chans$[]: Barista array, do not modify
+rem  status           : 0=No error (Returned)
 
 rem --- Development Note: this should be three separate programs
 
 	seterr std_error
 	setesc std_error
-	enter action$, entry$, option!, no_of_records, table_chans$[all], status
+	enter action$, entry$, option!, no_of_records, rd_table_chans$[all], status
 	
 rem --- Use for type checking
 
@@ -96,7 +96,7 @@ rem --- Open all files
 :		open_opts$[all],
 :		open_chans$[all],
 :		open_tpls$[all],
-:		table_chans$[all],
+:		rd_table_chans$[all],
 :		open_batch,
 :		open_status$
 
@@ -104,7 +104,7 @@ rem --- Open all files
 		msg_id$="ENTRY_OPEN_ERROR"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 		status=912
 		goto std_exit
 	endif
