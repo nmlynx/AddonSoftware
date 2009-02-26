@@ -586,7 +586,7 @@ lifo_fifo: rem --- LIFO/FIFO
         lf_item$[0]=firm_id$
         lf_item$[1]=ope11a.warehouse_id$
         lf_item$[2]=ope11a.item_id$
-        call pgmdir$+"ivc_lf.bbx",lf_action$,"R",lf_date$,lf_channels[all],lf_item$[all],i[1],abs(ope11a.qty_shipped),ope11a.unit_cost,ret_cost,status
+        call pgmdir$+"ivc_lifofifo.aon",lf_action$,"R",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],i[1],abs(ope11a.qty_shipped),ope11a.unit_cost,ret_cost,status
 
         return
 
