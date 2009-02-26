@@ -379,7 +379,7 @@ rem --- Get LIFO/FIFO Cost As Necessary
     let lf_item$[0]=firm_id$,lf_item$[1]=ive03a.warehouse_id$,lf_item$[2]=ive03a.item_id$
     let lf_act$=lf$+"R",lf_type$="R",lf_date$=ive03a.cutoff_date$,lf_qnty=ive03a.ACT_PHYS_CNT-ive03a.freeze_qty,lf_cost=0
     if lf_qnty<0 lf_act$=lf$+"I"
-    call pgmdir$+"ivc_lf.bbx",lf_act$,lf_type$,lf_date$,lf_chans[all],lf_item$[all],p[1],abs(lf_qnty),cost,lf_cost,status
+    call pgmdir$+"ivc_lifofifo.aon",lf_act$,lf_type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],p[1],abs(lf_qnty),cost,lf_cost,status
     if lf_qnty<0 and lf_cost<>0 cost=lf_cost
     return
 
