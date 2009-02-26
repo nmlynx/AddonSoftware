@@ -729,13 +729,13 @@ rem --- Inquiry On Tier Cost For Returned Items
 
         if ope11a.qty_shipped<0 then
             lf_action$(2,1)="R"
-            call pgmdir$+"ivc_lf.bbx",lf_action$,"I",lf_date$,lf_channels[all],lf_item$[all],i[2],abs(ope11a.qty_shipped),cost,ret_cost,status
+            call pgmdir$+"ivc_lifofifo.aon",lf_action$,"I",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],i[2],abs(ope11a.qty_shipped),cost,ret_cost,status
             if ret_cost<>0 then let cost=ret_cost
         endif
 
 rem --- Report On Tier Cost For Sold Items
 
-        call pgmdir$+"ivc_lf.bbx",lf_action$,"R",lf_date$,lf_channels[all],lf_item$[all],i[2],abs(ope11a.qty_shipped),cost,ret_cost,status
+        call pgmdir$+"ivc_lifofifo.aon",lf_action$,"R",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],i[2],abs(ope11a.qty_shipped),cost,ret_cost,status
         if ret_cost<>0 then let icost=ret_cost
         ivw05a.firm_id$=ope11a.firm_id$
         ivw05a.ar_type$=ope11a.ar_type$
