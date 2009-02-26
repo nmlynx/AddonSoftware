@@ -236,9 +236,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-	msg_id$="AD_SPROC_UPDT"
-	gosub disp_message
-
+	if pos("SPROC_UPDT"=sysinfo.menu_option_id$)<>0
+		msg_id$="AD_SPROC_UPDT"
+		gosub disp_message;rem only display message if running stand-alone
+	endif
+	
 	progress!.setValue("+process_task",task_val$+"^D^")
     run stbl("DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release
