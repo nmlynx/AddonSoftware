@@ -155,7 +155,9 @@ rem --- Read through req headers
             if k.firm_id$<>firm_id$ continue
             find record (pot04a_dev,key=k$,dom=*break) pot04a$
             read (pot14_dev,key=k$,dom=*next) ; rem trip read for later details
+            
 rem --- Test Ranges
+
             if datefrom$<>"" and pot04a.recpt_date$<datefrom$ and printseq$<>"A" continue
             if datethru$<>"" and pot04a.recpt_date$>datethru$ and printseq$<>"A" continue
 
