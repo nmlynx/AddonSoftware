@@ -31,53 +31,28 @@ firm_id$=sysinfo.firm_id$
 
 rem --- Init Data
 
-    begdate$="None"
-    enddate$="None"
     begdt$=""
+    begdate$=""
     enddt$=""
+    enddate$=""
 
-rem --- Position file
+rem --- Retrieve first/last date scheduled
 
-    read (pom_calendar_dev,key=firm_id$,dom=*next)
+    call stbl("+DIR_PGM")+"poc_firstlast.aon",pom_calendar_dev,fattr(pom_calendar$),firm_id$,begdate$,enddate$,status
 
-rem --- Get First Day Scheduled
-
-    k$=key(pom_calendar_dev,err=*next); read record(pom_calendar_dev,key=k$)pom_calendar$
-    if pom_calendar.firm_id$=firm_id$ 
-       for i = 1 to 31
-            workday$=field(pom_calendar$,"day_status_"+str(i:"00"))
-            if workday$<>" " then 
-                workday$ = str(i:"00")
-                break
-            endif   
-       next i 
-       if workday$="00" then  workday$="01"
-       callpoint!.setDevObject("begdt",pom_calendar.year$+pom_calendar.month$)
-       begdate$=fndate$(pom_calendar.year$+pom_calendar.month$+workday$)
-    endif 
-
-rem --- Position file
-
-    read (pom_calendar_dev,key=firm_id$+$ff$,dom=*next)
-
-rem --- Get Last Day Scheduled
-
-    k$=keyp(pom_calendar_dev,end=*next); read record(pom_calendar_dev,key=k$)pom_calendar$
-    if pom_calendar.firm_id$=firm_id$
-        i = 31
-	while i >= 1
-            workday$=field(pom_calendar$,"day_status_"+str(i:"00")) 
-            if workday$<>" " then 
-                workday$ = str(i:"00")
-                break   
-            endif    
-            i=i-1
-	wend
-        if workday$="00" then workday$="01"
-        callpoint!.setDevObject("enddt",pom_calendar.year$+pom_calendar.month$)
-        enddate$=fndate$(pom_calendar.year$+pom_calendar.month$+workday$)
+    if begdate$="" 
+	begdate$="None"
+    else	
+	callpoint!.setDevObject("begdt",begdate$(1,6))
+	begdate$=fndate$(begdate$)
     endif
-
+    if enddate$="" 
+	enddate$="None"
+    else
+	callpoint!.setDevObject("enddt",enddate$(1,6))
+	enddate$=fndate$(enddate$)
+    endif
+  
 callpoint!.setColumnData("POR_CALENDAR.FIRST_DATE",begdate$)
 callpoint!.setColumnData("POR_CALENDAR.LAST_DATE",enddate$)
 if len(begdate$)=10
