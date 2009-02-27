@@ -1,7 +1,11 @@
 [[OPE_ORDDET.AREC]]
 rem --- Set default Line Code
-escape
-	callpoint!.setColumnData("OPE_ORDDET.LINE_CODE",callpoint!.getDevObject("default_linecode"))
+rem	line_code$=callpoint!.getDevObject("default_linecode")
+rem	callpoint!.setColumnData("OPE_ORDDET.LINE_CODE",line_code$)
+rem	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+rem	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+rem	read record (opc_linecode_dev,key=firm_id$+line_code$,dom=*next)opc_linecode$
+rem	callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
 [[OPE_ORDDET.AGCL]]
 use ::ado_util.src::util
 [[OPE_ORDDET.BWRI]]
@@ -59,18 +63,18 @@ callpoint!.setDevObject("return_to_col",str(grid!.getSelectedColumn()))
 x$=stbl("jimmy",str(grid!.getSelectedRow()))
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
-g!=form!.getChildWindow(1109).getControl(5900)
-enable_color!=g!.getCellBackColor(0,0)
-disable_color!=g!.getLineColor()
+rem g!=form!.getChildWindow(1109).getControl(5900)
+rem enable_color!=g!.getCellBackColor(0,0)
+rem disable_color!=g!.getLineColor()
 
-r=g!.getSelectedRow()
-if num(callpoint!.getUserInput())=0
- 	g!.setCellEditable(r,5,1)
- 	g!.setCellBackColor(r,5,enable_color!)
-else
-	g!.setCellEditable(r,5,0)
-	g!.setCellBackColor(r,5,disable_color!)
-endif
+rem r=g!.getSelectedRow()
+rem if num(callpoint!.getUserInput())=0
+rem 	g!.setCellEditable(r,5,1)
+rem	g!.setCellBackColor(r,5,enable_color!)
+rem else
+rem 	g!.setCellEditable(r,5,0)
+rem 	g!.setCellBackColor(r,5,disable_color!)
+rem endif
 [[OPE_ORDDET.EXT_PRICE.AVEC]]
 rem --- update header
 	gosub calc_grid_tots
