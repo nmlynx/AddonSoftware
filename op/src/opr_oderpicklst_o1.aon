@@ -425,7 +425,7 @@ report_heading: rem --- Report Heading
     out$(h0+29)="Item Number &"
     OutVect!.addItem(out$)
     dim out$(80)
-    out$(h0+1)="Line  Order   Ship   B/O        Description"
+    out$(h0+1)="    Order     Ship   B/O        Description"
     if ope01a.invoice_type$="P" or p8$="Y" then out$(h0+74-m4+4,5)="Price"
     if mult_wh>0 then out$(h0+48,4)="Whse"
     out$(h0+53,8)="Location"
@@ -443,9 +443,9 @@ rem --- Item detail
         gosub continue_page
     endif
     dim out$(80)
-    out$(1)=ope11a_key.internal_seq_no$
+rem    out$(1)=ope11a_key.internal_seq_no$
     if pos(opm02a.line_type$="MO")=0 then
-        out$(h0+5)=str(ope11a.qty_ordered)
+        out$(h0+1)=pad(str(ope11a.qty_ordered),9,"R")
         if ope11a.commit_flag$="N"
             out$(h0+14)="Ship:"+fndate$(ope11a.est_shp_date$)
         else 
