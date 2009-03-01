@@ -19,6 +19,7 @@ dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reser
 
 rem --- Set the hook for dealer custom call
 
+    invalid_date$="N"
     dupe_rec$="N"
     blank_fields$=""
     custom_prog$=""
@@ -509,6 +510,10 @@ rem --- Check value of new field for blanks if part of primary key
               else
                  value$=pad("",8)
               endif
+              if date(jul(num(value$(1,4)),num(value$(5,2)),num(value$(7,2)),err=*next),err=*next)>"" break
+              print (log_dev)"There is an invalid date in table "+new_datafile$+". Value was "+value$+" in field "+new_fieldlist.name$[field]+" and has been changed to blanks."
+              value$=""
+              invalid_date$="Y"
               break
            case 2
            case 6
@@ -525,6 +530,10 @@ rem --- Check value of new field for blanks if part of primary key
               break
            case 8
               value$=str(num(value$(1,4))+add_year)+value$(5)
+              if date(jul(num(value$(1,4)),num(value$(5,2)),num(value$(7,2)),err=*next),err=*next)>"" break
+              print (log_dev)"There is an invalid date in table "+new_datafile$+". Value was "+value$+" in field "+new_fieldlist.name$[field]+" and has been changed to blanks."
+              value$=""
+              invalid_date$="Y"
               break
            case 255
               if len(cvs(value$,3)) then
@@ -714,6 +723,14 @@ rem    gosub make_printplus
         rd_meter_action$="LST"
         gosub disp_meter        
         print "   Duplicate keys exist in the ported data. See log for details."
+    endif
+
+    if invalid_date$="Y" 
+        rd_meter_data$="Invalid dates exist in the ported data. See log for details."
+        rd_meter_total_recs=iff(rdVectPort!=null(),0,rdVectPort!.size())
+        rd_meter_action$="LST"
+        gosub disp_meter        
+        print "   Invalid dates exist in the ported data. See log for details."
     endif
 
     print (log_dev)$0a$+"DataPort completed"
