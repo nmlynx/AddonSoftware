@@ -15,6 +15,7 @@ class public util
 	field public static BBjInt LessWidth% = 40
 	field public static BBjInt LessHeight% = 40
 	rem --- Constants
+	field private static BBjInt CHILD_WINDOW% = 2
 	field private static BBjInt GROUP_BOX% = 21
 	field private static BBjInt PUSH_BUTTON% = 11
 	field private static BBjInt ENABLE% = 1
@@ -119,6 +120,60 @@ rem ==========================================================================
 		methodret #Resized%
 	methodend
 	
+	
+rem ==========================================================================
+rem 	Find a control from its label text
+rem ==========================================================================
+	
+	method public static BBjControl findControl(BBjWindow Form!, BBjString p_text$)
+		declare BBjVector controls!
+		declare BBjControl this_ctrl!
+		
+		controls! = Form!.getAllControls()
+		found = 0
+	
+		for i = 0 to controls!.size() - 1
+			this_ctrl! = cast(BBjControl, controls!.getItem(i))
+			
+			if this_ctrl!.getControlType() = #CHILD_WINDOW%
+				this_ctrl! = #findControl( cast(BBjWindow, this_ctrl!), p_text$ ) 
+				
+				if this_ctrl! <> null() then
+					found = 1
+					break
+				endif
+			else
+				
+				if pos(p_text$ = this_ctrl!.getText()) then
+					found = 1
+					break
+				endif
+			endif
+			
+		next i
+		
+		if found then
+			methodret this_ctrl!
+		else
+			methodret null()
+		endif
+	
+	methodend
+	
+	
+rem ==========================================================================
+rem 	Change the text of a control
+rem ==========================================================================
+
+	method public static void changeText(BBjTopLevelWindow Form!, BBjString p_find$, BBjString p_set$)
+		declare BBjControl this_ctrl!
+		this_ctrl! = #findControl(Form!, p_find$)
+		
+		if this_ctrl! <> null() then
+			this_ctrl!.setText(p_set$)
+		endif
+	methodend
+
 	
 rem ==========================================================================
 rem 	Enable/Disable Barista grid column(s)
@@ -474,7 +529,7 @@ rem ==========================================================================
 rem ==========================================================================
 rem
 rem --- Enable / Disable non-grid fields
-rem *** DEPRECEATED*** use Callpoint::setEnableColumn()
+rem *** DEPRECATED*** use Callpoint::setEnableColumn()
 rem
 rem ==========================================================================
 	
