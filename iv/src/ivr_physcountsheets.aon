@@ -259,7 +259,7 @@ rem --- Get next SQL record
 
     while more
 
-        sql_rec$=sqlfetch(sql_chan,err=*break)
+        sql_rec$    = sqlfetch(sql_chan, err=*break)
         whse_id$    = sql_rec.warehouse_id$
         item_id$    = sql_rec.item_id$
 		cycle_code$ = sql_rec.pi_cyclecode$
@@ -327,6 +327,10 @@ rem --- Print detail line (lotted/serialized)
 			endif
 			
 rem --- Print detail for blank lot/serial number	
+
+rem     *** NOTE *** This code is overly complex.  
+rem     The only reason a lot/serial# should be blank is if this item is not lotted or serialized.
+rem     Simplify this code at some point.
 		
 			if cvs(physical_rec.lotser_no$,2) = "" then 
 			
@@ -335,7 +339,7 @@ rem 			Print detail for "none" serial numbers (nothing counted, nothing frozen)
 					physical_rec.lotser_no$="None"
 				else
 				
-rem 				"Blank" lot/serial (something counted)	
+rem 				"Blank" lot/serial (something counted.  Note: act_phys_cnt was used to distinguish "blank" and "missing" lot/serial#.  It is no longer needed here)
 					if physical_rec.act_phys_cnt then 
 						physical_rec.lotser_no$="Blank"
 
@@ -355,7 +359,7 @@ rem 					Exclude blanks from freeze qnty
 						physical_rec.freeze_qty = physical_rec.freeze_qty - physical_rec.act_phys_cnt
 						if physical_rec.freeze_qty <= 0 then continue
 						
-rem 					We've printed all that were count -- if there's frozen, "fall thru" to Missing
+rem 					We've printed all that were counted -- if there's frozen, "fall thru" to Missing
 						
 					endif
 
