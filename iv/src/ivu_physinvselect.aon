@@ -114,6 +114,7 @@ rem --- Setup SQL to read through IVM_ITEMWHSE with selected cycle codes
     first_time = 1
 
 rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
+
     if selected_all = 0 then
 
         while more
@@ -157,7 +158,7 @@ rem --- Get next SQL record
 
     while more
 
-        sql_rec$=sqlfetch(sql_chan,err=*break)
+        sql_rec$    = sqlfetch(sql_chan, err=*break)
         whse_id$    = sql_rec.warehouse_id$
         item_id$    = sql_rec.item_id$
 		cycle_code$ = sql_rec.pi_cyclecode$
@@ -172,7 +173,6 @@ rem --- Update warehouse record
         itemwhse_rec.select_phys$ = "Y"
         onhand = itemwhse_rec.qty_on_hand
         total  = 0
-        blanks = 0
         number = number + 1
         needs_update = 1
         this_item_is_lot_ser = 0
@@ -190,10 +190,10 @@ rem --- Count Lot/serial, if necessary
 
                 while more
                     read record (lsmaster_dev, end=*break) lsmaster_rec$
-                    if firm_id$ <> lsmaster_rec.firm_id$ then break
+                    if firm_id$ <> lsmaster_rec.firm_id$      then break
                     if whse_id$ <> lsmaster_rec.warehouse_id$ then break
-                    if item_id$ <> lsmaster_rec.item_id$ then break
-                    if lsmaster_rec.qty_on_hand = 0 then break
+                    if item_id$ <> lsmaster_rec.item_id$      then break
+                    if lsmaster_rec.qty_on_hand = 0           then break
 
                     number = number + 1
 
@@ -208,16 +208,9 @@ rem --- Write Physical Entry record for lot/serial
                     physical_rec.lotser_no$    = lsmaster_rec.lotser_no$
                     physical_rec.cutoff_date$  = cutoff$
                     physical_rec.entered_flag$ = "N"
-                    physical_reclotser_item$   = "Y"
+                    physical_rec.lotser_item$  = "Y"
                     physical_rec.freeze_qty    = lsmaster_rec.qty_on_hand
                     total = total + lsmaster_rec.qty_on_hand
-
-rem  --- Don't change onhand qnty for blank lot/serial number
-
-                    if cvs(physical_rec.lotser_no$,2) = "" then 
-                        physical_rec.act_phys_cnt = physical_rec.freeze_qty
-                        blanks = physical_rec.freeze_qty
-                    endif
 
                     write record (physical_dev) physical_rec$
 
@@ -225,7 +218,7 @@ rem  --- Don't change onhand qnty for blank lot/serial number
 
 rem --- Missing Lot/Serial Numbers?
 
-                if onhand=total and total <> 0 then needs_update = 0
+                if onhand = total and total <> 0 then needs_update = 0
 
             endif
 
@@ -249,9 +242,7 @@ rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
 rem --- Treat as Non-Serialized/Non-Lotted unless item is Inventoried by Serial/Lot number
 
             if this_item_is_lot_ser then 
-                physical_reclotser_item$  = "Y"
-                physical_rec.freeze_qty   = physical_rec.freeze_qty + blanks
-                physical_rec.act_phys_cnt = blanks
+                physical_rec.lotser_item$ = "Y"
             endif
 
             write record (physical_dev) physical_rec$
