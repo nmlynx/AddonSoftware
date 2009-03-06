@@ -17,6 +17,14 @@ dim ddm01$:"data_name:c(12*),description:c(30),lstrev:c(6),data_type:c(1),reserv
 dim ddm03$:"file_name:c(6),record_id:c(1*),description:c(30),reserved_str:c(33*),reserved_num:n(3*)"
 dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reserved_str1:c(41),fld_sep:c(1),reserved_str2:c(68*),reserved_num:n(1*),fld_repeats:n(3*),fld_occurs:n(3)"
 
+rem --- Open message table for use at the end of processing
+
+    num_files=1
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADS_SEQUENCES",open_opts$[1]="OTA"
+    gosub open_tables
+    ads_sequences_dev=num(open_chans$[1]),ads_sequences_tpl$=open_tpls$[1]
+
 rem --- Set the hook for dealer custom call
 
     dropship$="N"
@@ -400,6 +408,15 @@ next_rec:
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
 
+rem --- Get list of valid firms
+        if cvs(old_fieldlist.name$[field],3)="FIRM_ID"
+            if cvs(value$,3)<>""
+                if pos(value$=firms$,2)=0
+                    firms$=firms$+value$
+                endif
+            endif
+        endif
+
 rem --- Check for and warn if PO detail files contain Drop Ship information
 
         if new_datafile$="poe-11" or new_datafile$="poe-12"
@@ -760,12 +777,27 @@ rem    gosub make_printplus
         print "   Drop ship information exists in the ported data. See error file for details."
     endif
 
-rem --- Set initial Internal Sequence Number
-rem    seq_dev=unt
-rem    open (seq_dev,err=complete)stbl("+DIR_BRD")+"ads_sequences.dat"
-rem    call stbl("+DIR_SYP")+"bac_key_template.bbj","ads_sequences.dat","PRIMARY",key_temp1$,table_chans$[all],rd_stat$
+rem --- Populate sequence record(s)
 
-complete:
+    if len(firms$)>0
+        for firms=1 to len(firms$) step 2
+            dim ads_sequences$:ads_sequences_tpl$
+            ads_sequences.firm_id$=firms$(firms,2)
+            ads_sequences.seq_id$=pad("INTERNAL_SEQ_NO",16)
+            ads_sequences.description$="Internal Sequence Number"
+            ads_sequences.active$="Y"
+            ads_sequences.seq_no_increment=1
+            ads_sequences.seq_mask$="000000000000"
+            ads_sequences.seq_query_new$="N"
+            ads_sequences.asc_comp_id$="01007514"
+            ads_sequences.asc_prod_id$="AD"
+            readrecord(ads_sequences_dev,key=ads_sequences.firm_id$+ads_sequences.seq_id$,dom=*next)ads_sequences$
+            if ads_sequences.seq_last_used<1000 ads_sequences.seq_last_used=1000
+            ads_sequences$=field(ads_sequences$)
+            writerecord(ads_sequences_dev)ads_sequences$
+        next firms    
+    endif
+
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
@@ -1341,6 +1373,34 @@ disp_meter:rem --- Display Progress Meter
 :        rd_meter_data$,
 :        rd_meter_action$
 
+    return
+
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:	open_end,
+:	open_tables$[all],
+:	open_opts$[all],
+:	open_chans$[all],
+:	open_tpls$[all],
+:	table_chans$[all],
+:	open_batch,
+:	open_status$
+
+    if open_status$<>""
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        release
+    endif
+
+    return
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     return
 
 eoj:
