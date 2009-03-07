@@ -477,17 +477,17 @@ accum_total: rem --- Accumulate Totals
 
 update_GL: rem --- Update G/L Summary
 
-    if gl$="Y" and amount<>0 then
-        glw04a_key.firm_id$=firm_id$
-        glw04a_key.gl_account$=account$
-        glw04a.firm_id$=firm_id$
-        glw04a.gl_account$=account$
-	glw04a.gl_post_amt=0,glw04a.units=0
-        find record (glw04_dev,key=glw04a_key$,dom=*next) glw04a$
-        glw04a.gl_post_amt=glw04a.gl_post_amt+amount
-	glw04a$=field(glw04a$)
-        write record (glw04_dev,key=glw04a_key$) glw04a$
+    if gl$="Y" and amount then
+        glw_accttotals_rec.firm_id$    = firm_id$
+        glw_accttotals_rec.gl_account$ = account$
+		glw_accttotals_rec.gl_post_amt = 0
+		glw_accttotals_rec.units       = 0
+        find record (glw_accttotals_dev, key=firm_id$+account$, dom=*next) glw_accttotals_rec$
+        glw_accttotals_rec.gl_post_amt = glw_accttotals_rec.gl_post_amt + amount
+		glw_accttotals_rec$ = field(glw_accttotals_rec$)
+        write record (glw_accttotals_dev) glw_accttotals_rec$
     endif
+	
     return
 
 print_total_line: rem --- Print total line
