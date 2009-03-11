@@ -17,14 +17,24 @@
 			<ASC_LICENSE_ID id="ddm_tables.ope_orddet">542B8DFCA2BA161BC1197B18828F0134</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ope_orddet">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ope_orddet">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ope_orddet">20090226</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ope_orddet">20090225</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ope_orddet">222020</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ope_orddet">20090310</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ope_orddet">20090310</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ope_orddet">201118</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.ope_orddet">/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.ope_orddet">ALT_KEY_03</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.ope_orddet">G</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.ope_orddet">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.ope_orddet">Order/Invoice Entry Detail</DD_ATTR_WINT>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_aopt">
+		<ID id="ddm_table_aopt">DDM_TABLE_AOPT</ID>
+		<RECORD id="ddm_table_aopt.ope_orddet01">
+			<DD_TABLE_ALIAS id="ddm_table_aopt.ope_orddet01">OPE_ORDDET      </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_aopt.ope_orddet01">01</DD_ATTR_SEQ>
+			<DD_ATTR_AOPT id="ddm_table_aopt.ope_orddet01">Serial Entry</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT_CD id="ddm_table_aopt.ope_orddet01">LENT</DD_ATTR_AOPT_CD>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.ope_orddet01">F</DD_ATTR_AOPT_FM>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
@@ -53,6 +63,10 @@
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_orddetagrn">OPE_ORDDET      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ope_orddetagrn">AGRN</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_table_cpro.ope_orddetaopt">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_orddetaopt">OPE_ORDDET      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.ope_orddetaopt">AOPT-LENT</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.ope_orddetarec">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_orddetarec">OPE_ORDDET      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ope_orddetarec">AREC</DD_ATTR_CPRO>
@@ -65,9 +79,9 @@
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_orddetbdel">OPE_ORDDET      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ope_orddetbdel">BDEL</DD_ATTR_CPRO>
 		</RECORD>
-		<RECORD id="ddm_table_cpro.ope_orddetbwri">
-			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_orddetbwri">OPE_ORDDET      </DD_TABLE_ALIAS>
-			<DD_ATTR_CPRO id="ddm_table_cpro.ope_orddetbwri">BWRI</DD_ATTR_CPRO>
+		<RECORD id="ddm_table_cpro.ope_orddetbude">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_orddetbude">OPE_ORDDET      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.ope_orddetbude">BUDE</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_dtld">
@@ -449,7 +463,9 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ope_orddet009">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ope_orddet009">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ope_orddet009">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_MAXL id="ddm_table_cols.ope_orddet009">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ope_orddet009">Reserved For Addon Use</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.ope_orddet009">30</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_cols.ope_orddet010">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ope_orddet010">OPE_ORDDET      </DD_TABLE_ALIAS>
@@ -516,7 +532,9 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ope_orddet013">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ope_orddet013">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ope_orddet013">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_MAXL id="ddm_table_cols.ope_orddet013">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ope_orddet013">Reserved For Addon Use</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.ope_orddet013">31</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_cols.ope_orddet014">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ope_orddet014">OPE_ORDDET      </DD_TABLE_ALIAS>
@@ -590,7 +608,9 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ope_orddet018">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ope_orddet018">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ope_orddet018">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_MAXL id="ddm_table_cols.ope_orddet018">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ope_orddet018">Reserved For Addon Use</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.ope_orddet018">32</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_cols.ope_orddet019">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ope_orddet019">OPE_ORDDET      </DD_TABLE_ALIAS>
@@ -639,7 +659,9 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.ope_orddet021">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ope_orddet021">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ope_orddet021">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_MAXL id="ddm_table_cols.ope_orddet021">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ope_orddet021">Reserved For Dealer Use</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.ope_orddet021">33</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_cols.ope_orddet022">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ope_orddet022">OPE_ORDDET      </DD_TABLE_ALIAS>
@@ -862,7 +884,9 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.ope_orddet034">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ope_orddet034">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ope_orddet034">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_MAXL id="ddm_table_cols.ope_orddet034">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ope_orddet034">Reserved For Addon Use</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.ope_orddet034">34</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_cols.ope_orddet035">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ope_orddet035">OPE_ORDDET      </DD_TABLE_ALIAS>
@@ -875,7 +899,9 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.ope_orddet035">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ope_orddet035">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ope_orddet035">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_MAXL id="ddm_table_cols.ope_orddet035">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ope_orddet035">Reserved For Dealer Use</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.ope_orddet035">35</DD_ATTR_TIND>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cmts">
