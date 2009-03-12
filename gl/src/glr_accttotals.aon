@@ -18,12 +18,6 @@ rem --- width               : Report width in characters (optional)
 rem --- headings            : Maximum element number in heading array
 rem --- headings$[*]        : Standard report headings array
 rem --- retain$             : Retain full report heading array if not NULL
-rem --- glm_acct_dev        : glm_acct channel number (glm-01)
-rem --- glm_acct_rec$       : glm_acct record
-rem --- glw_accttotals_dev  : glw_accttotals channel number (glw-04)
-rem --- glw_accttotals_rec$ : glw_accttotals record
-rem --- gls_params_dev      : gls_params channel number (gls-01)
-rem --- gls_params_rec$     : gls_params record
 
     setesc std_error
     seterr std_error
@@ -58,12 +52,14 @@ rem --- Delete old progress meter
 
 rem --- Parameters
 
-    find record (gls_params_dev, key=firm_id$+"GL00", err=std_missing_params) gls_params_rec$
-    acct_length=num(gls_params_rec.acct_length$)
-    m0$=gls_params_rec.acct_output$
-    m1$=gls_params_rec.amount_mask$
-    m0=len(m0$)
-    m1=len(m1$)
+    find record (gls01_dev, key=firm_id$+"GL00", err=std_missing_params) gls01a$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",m0$,0,m0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
+rem    acct_length=num(gls0a1.acct_length$)
+rem    m0$=gls01a.acct_output$
+rem    m1$=gls01a.amount_mask$
+rem    m0=len(m0$)
+rem    m1=len(m1$)
 
 rem --- Headings and print positions
 
@@ -72,8 +68,8 @@ rem --- Headings and print positions
 
     columns$[0,0]="Account",     columns$[0,1]="C", columns$[0,2]="15"
     columns$[1,0]="Description", columns$[1,1]="C", columns$[1,2]="30"
-    columns$[2,0]="Debit",       columns$[2,1]="N", columns$[2,2]=str(m1), columns$[2,3]=m1$, columns$[2,10]="T"
-    columns$[3,0]="Credit",      columns$[3,1]="N", columns$[3,2]=str(m1), columns$[3,3]=m1$, columns$[3,10]="T"
+    columns$[2,0]="Debit",       columns$[2,1]="N", columns$[2,2]="10", columns$[2,3]=m1$, columns$[2,10]="T"
+    columns$[3,0]="Credit",      columns$[3,1]="N", columns$[3,2]="10", columns$[3,3]=m1$, columns$[3,10]="T"
 
 rem --- Initializations
 
@@ -108,33 +104,33 @@ rem --- Adjust report headings
 
 rem --- Start progress meter and position file
 
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glw_accttotals_dev,1,meter_num,status
-    read (glw_accttotals_dev,key=firm_id$,dom=*next)
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,glw04_dev,1,meter_num,status
+    read (glw04_dev,key=firm_id$,dom=*next)
 
 rem --- Get next GL Summary (glw-04) record
 
     while more
-		k$=key(glw_accttotals_dev,end=*break)
+		k$=key(glw04_dev,end=*break)
 		if pos(firm_id$=k$)<>1 break
-		read record (glw_accttotals_dev,key=k$) glw_accttotals_rec$
+		read record (glw04_dev,key=k$) glw04a$
 		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-		amount=glw_accttotals_rec.gl_post_amt
+		amount=glw04a.gl_post_amt
 
 		rem --- Retrieve account description
 
-		dim glm_acct_rec$:fattr(glm_acct_rec$)
-		glm_acct_rec.firm_id$=firm_id$
-		glm_acct_rec.gl_account$=glw_accttotals_rec.gl_account$
-		glm_acct_rec.gl_acct_desc$=nf$
+		dim glm01a$:fattr(glm01a$)
+		glm01a.firm_id$=firm_id$
+		glm01a.gl_account$=glw04a.gl_account$
+		glm01a.gl_acct_desc$=nf$
 		
-		find record (glm_acct_dev, key=firm_id$+glw_accttotals_rec.gl_account$, dom=*next) glm_acct_rec$
-		description$=glm_acct_rec.gl_acct_desc$
+		find record (glm01_dev, key=firm_id$+glw04a.gl_account$, dom=*next) glm01a$
+		description$=glm01a.gl_acct_desc$
 
 		rem --- Format detail line fields
 
 		debit$=""
 		credit$=""
-		account$=fnmask$(glw_accttotals_rec.gl_account$(1,acct_length),m0$)
+		account$=fnmask$(glw04a.gl_account$(1,m0),m0$)
 
 		if amount>0 then 
 			debits=debits+amount
