@@ -18,38 +18,6 @@ rem --- Remove from ope-04
 	remove (ope_prntlist_dev,key=firm_id$+"O"+"  "+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
-[[OPE_ORDHDR.AOPT-LENT]]
-rem --- Go get Lot Numbers
-
-	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
-	item$=callpoint!.getDevObject("item")
-	readrecord(ivm_itemmast_dev,key=firm_id$+item$,dom=*next)ivm_itemmast$
-
-	if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
-		cust$=callpoint!.getDevObject("cust")
-		ar_type$="  "
-		order$=callpoint!.getDevObject("order")
-		int_seq$=callpoint!.getDevObject("int_seq")
-
-		if cvs(cust$,2)<>""
-			g!=Form!.getChildWindow(1109).getControl(5900)
-			g!.focus()
-			dim dflt_data$[3,1]
-			dflt_data$[1,0]="AR_TYPE"
-			dflt_data$[1,1]=ar_type$
-			dflt_data$[2,0]="CUSTOMER_ID"
-			dflt_data$[2,1]=cust$
-			dflt_data$[3,0]="ORDER_NO"
-			dflt_data$[3,1]=order$
-			lot_pfx$=firm_id$+ar_type$+cust$+order$+int_seq$
-			call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
-rem --- return focus to where we were (Detail line grid)
-rem			return_to_row=num(callpoint!.getDevObject("return_to_row"))
-rem			return_to_col=num(callpoint!.getDevObject("return_to_col"))
-rem			util.forceEdit(Form!, return_to_row,return_to_col)
-		endif
-	endif
 [[OPE_ORDHDR.ORDER_DATE.AVAL]]
 rem --- Set user template info
 	user_tpl.order_date$=callpoint!.getUserInput()

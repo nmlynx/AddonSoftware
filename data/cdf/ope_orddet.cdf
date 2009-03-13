@@ -1,20 +1,60 @@
+[[OPE_ORDDET.AOPT-LENT]]
+rem --- Go get Lot Numbers
+
+	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+	item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	readrecord(ivm_itemmast_dev,key=firm_id$+item$,dom=*next)ivm_itemmast$
+
+	if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
+		callpoint!.setOptionEnabled("LENT",0)
+		callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+		callpoint!.setDevObject("wh",callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
+		callpoint!.setDevObject("item",callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
+		callpoint!.setDevObject("ord_qty",callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+		cust$=callpoint!.getDevObject("cust")
+		ar_type$="  "
+		order$=callpoint!.getDevObject("order")
+		int_seq$=callpoint!.getDevObject("int_seq")
+
+		if cvs(cust$,2)<>""
+			g!=Form!.getChildWindow(1109).getControl(5900)
+			g!.focus()
+			dim dflt_data$[3,1]
+			dflt_data$[1,0]="AR_TYPE"
+			dflt_data$[1,1]=ar_type$
+			dflt_data$[2,0]="CUSTOMER_ID"
+			dflt_data$[2,1]=cust$
+			dflt_data$[3,0]="ORDER_NO"
+			dflt_data$[3,1]=order$
+			lot_pfx$=firm_id$+ar_type$+cust$+order$+int_seq$
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDLSDET",stbl("+USER_ID"),"MNT",lot_pfx$,table_chans$[all],dflt_data$[all]
+rem --- return focus to where we were (Detail line grid)
+			return_to_row=num(callpoint!.getDevObject("return_to_row"))
+			return_to_col=num(callpoint!.getDevObject("return_to_col"))
+			util.forceEdit(Form!, return_to_row,return_to_col)
+		endif
+	endif
+[[OPE_ORDDET.BUDE]]
+rem --- add and recommit Lot/Serial records (if any) and detail lines if not
+	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y"
+		action$="CO"
+		gosub uncommit_iv
+	endif
 [[OPE_ORDDET.AREC]]
 rem --- Set default Line Code
-rem	line_code$=callpoint!.getDevObject("default_linecode")
-rem	callpoint!.setColumnData("OPE_ORDDET.LINE_CODE",line_code$)
-rem	opc_linecode_dev=fnget_dev("OPC_LINECODE")
-rem	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-rem	read record (opc_linecode_dev,key=firm_id$+line_code$,dom=*next)opc_linecode$
-rem	callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+	line_code$=callpoint!.getDevObject("default_linecode")
+	callpoint!.setColumnData("OPE_ORDDET.LINE_CODE",line_code$)
+	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+	read record (opc_linecode_dev,key=firm_id$+line_code$,dom=*next)opc_linecode$
+	callpoint!.setStatus("REFRESH-ENABLE:"+opc_linecode.line_type$)
 [[OPE_ORDDET.AGCL]]
 use ::ado_util.src::util
-[[OPE_ORDDET.BWRI]]
-rem --- commit inventory
-	gosub retrieve_row_data
-escape;rem bwri disc_rec and cur_rec
 [[OPE_ORDDET.BDEL]]
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y"
+		action$="UC"
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.UNIT_PRICE.AVEC]]
@@ -26,12 +66,122 @@ rem --- Set Lot/Serial button up properly
 	gosub lot_ser_check
 	if pos(callpoint!.getDevObject("lotser_flag")="LS")
 		if lotted$="Y" and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) <> 0
-			callpoint!.setOptionEnabled("LENT",1)
+			callpoint!.setOptionEnabled("LENT",0)
 		else
 			callpoint!.setOptionEnabled("LENT",0)
 		endif
 	endif
+rem jpb set first option to 1 when getting back to Lot/Serial stuff
 [[OPE_ORDDET.AGRE]]
+rem --- Is this row deleted?
+
+	callpoint!.setOptionEnabled("LENT",0)
+
+rem --- Get current and prior values
+
+	curVect!=gridVect!.getItem(0)
+	undoVect!=gridVect!.getItem(1)
+
+	dim cur_rec$:dtlg_param$[1,3]
+	dim undo_rec$:dtlg_param$[1,3]
+
+	cur_rec$=curVect!.getItem(this_row)
+	undo_rec$=undoVect!.getItem(this_row)
+
+	curr_whse$=cur_rec.warehouse_id$
+	curr_item$=cur_rec.item_id$
+	curr_qty=num(cur_rec.qty_ordered$)
+
+	this_row = callpoint!.getValidationRow()
+	
+	if callpoint!.getGridRowDeleteStatus(this_row)="Y"
+		goto set_params; rem --- exit callpoint
+	endif
+
+rem --- Commit inventory
+
+rem --- Has this row changed?
+	if callpoint!.getGridRowModifyStatus(this_row)<>"Y"
+		goto set_params; rem --- exit callpoint
+	endif
+
+	if undo_rec$<>"" then
+		prior_whse$=undo_rec.warehouse_id$
+		prior_item$=undo_rec.item_id$
+		prior_qty=num(undo_rec.qty_ordered$)
+	else
+		prior_whse$=""
+		prior_item$=""
+		prior_qty=0
+	endif
+
+rem --- Has there been any change?
+
+	if	curr_whse$<>prior_whse$ or 
+:		curr_item$<>prior_item$ or 
+:		curr_qty<>prior_qty 
+
+rem --- Initialize inventory item update
+		status=999
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status goto std_exit
+
+rem --- Items or warehouses are different: uncommit previous
+
+		if (prior_whse$<>"" and prior_whse$<>curr_whse$) or 
+:		   (prior_item$<>"" and prior_item$<>curr_item$)
+
+rem --- Uncommit prior item and warehouse
+
+			if prior_whse$<>"" and prior_item$<>"" then
+				items$[1]=prior_whse$
+				items$[2]=prior_item$
+				refs[0]=prior_qty
+				
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then escape; rem problem uncommitting previous qty
+			endif
+
+rem --- Commit quantity for current item and warehouse
+			items$[1]=curr_whse$
+			items$[2]=curr_item$
+			refs[0]=curr_qty 
+			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then escape; rem problem committing 
+		endif
+
+rem --- New record or item and warehouse haven't changed: commit difference
+
+		if	(prior_whse$="" or prior_whse$=curr_whse$) and 
+:			(prior_item$="" or prior_item$=curr_item$)
+
+rem --- Commit quantity for current item and warehouse
+
+			items$[1]=curr_whse$
+			items$[2]=curr_item$
+			refs[0]=curr_qty - prior_qty
+			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then escape; rem problem committing 
+		endif
+	endif
+
+set_params:
+
+	callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+	callpoint!.setDevObject("wh",cur_rec.warehouse_id$)
+	callpoint!.setDevObject("item",cur_rec.item_id$)
+	callpoint!.setDevObject("ord_qty",str(cur_rec.qty_ordered))
+
+rem --- save current row/column so we'll know where to set focus when we return from lot lookup
+ 
+	declare BBjStandardGrid grid!
+	grid! = util.getGrid(Form!)
+
+	callpoint!.setDevObject("return_to_row",str(grid!.getSelectedRow()))
+	callpoint!.setDevObject("return_to_col",str(grid!.getSelectedColumn()))
+
+break; rem jpb
+
 rem --- check for lotted/serialized item
 ivm01_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
@@ -50,17 +200,6 @@ while 1
 	endif
 	break
 wend
-
-callpoint!.setOptionEnabled("LENT",0)
-
-rem --- save current row/column so we'll know where to set focus when we return from lot lookup
- 
-declare BBjStandardGrid grid!
-grid! = util.getGrid(Form!)
-callpoint!.setDevObject("return_to_row",str(grid!.getSelectedRow()))
-callpoint!.setDevObject("return_to_col",str(grid!.getSelectedColumn()))
-
-x$=stbl("jimmy",str(grid!.getSelectedRow()))
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 rem g!=form!.getChildWindow(1109).getControl(5900)
@@ -181,11 +320,12 @@ rem --- Set Lot/Serial button up properly
 	gosub lot_ser_check
 	if pos(callpoint!.getDevObject("lotser_flag")="LS") and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))<>0
 		if lotted$="Y"
-			callpoint!.setOptionEnabled("LENT",1)
+			callpoint!.setOptionEnabled("LENT",0)
 		else
 			callpoint!.setOptionEnabled("LENT",0)
 		endif
 	endif
+rem jpb set first option to 1 when getting back to Lot/Serial stuff
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
 rem --- Go get Lot/Serial Numbers if needed
 	gosub calc_grid_tots
@@ -195,10 +335,11 @@ rem --- Set Lot/Serial button up properly
 	gosub retrieve_row_data
 	gosub lot_ser_check
 	if pos(callpoint!.getDevObject("lotser_flag")="LS") and cur_rec.qty_ordered<>0 and lotted$="Y"
-		callpoint!.setOptionEnabled("LENT",1)
+		callpoint!.setOptionEnabled("LENT",0)
 	else
 		callpoint!.setOptionEnabled("LENT",0)
 	endif
+rem jpb set first option to 1 when getting back to Lot/Serial stuff
 [[OPE_ORDDET.ADIS]]
 rem ---display extended price
 	ordqty=num(rec_data.qty_ordered)
@@ -496,7 +637,9 @@ retrieve_row_data:
 return
 
 uncommit_iv: rem --- Uncommit Inventory
-	iv_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+rem --- Make sure action$ is set before entry
+
+	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
 	ope_ordlsdet_dev=fnget_dev("OPE_ORDLSDET")
 	dim ope_ordlsdet$:fnget_tpl$("OPE_ORDLSDET")
@@ -512,7 +655,6 @@ uncommit_iv: rem --- Uncommit Inventory
 	readrecord(ivm_itemmast_dev,key=firm_id$+item$,dom=*next)ivm_itemmast$
 	items$[1]=wh$
 	items$[2]=item$
-	action$="UC"
 	refs[0]=ord_qty
 	if ivm_itemmast.lotser_item$<>"Y" or ivm_itemmast.inventoried$<>"Y"
 		call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
