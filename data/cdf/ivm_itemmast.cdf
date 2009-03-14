@@ -302,7 +302,12 @@ if files
 	next wkx
 	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 	chans$[all],templates$[all],table_chans$[all],batch,status$
-	if status$<>"" goto std_exit
+	if status$<>"" then
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+		release
+	endif
 endif
 
 rem --- if gl installed, does it interface to inventory?

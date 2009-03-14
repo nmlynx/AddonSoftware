@@ -79,7 +79,13 @@ rem --- Open/Lock Files
 	files$[2]="IVE_TRANSHDR",options$[2]="OTA"
 	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
-	if status$<>""  goto std_exit
+	if status$<>"" then
+		remove_process_bar:
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+		release
+	endif
 	ivs01_dev=num(chans$[1])
 			
 	rem --- Dimension miscellaneous string templates
@@ -102,4 +108,3 @@ rem --- check if GL is installed
 		ctl_name$="IVC_TRANCODE.GL_ADJ_ACCT"
 		gosub disable_fields	
 	endif
-
