@@ -378,7 +378,13 @@ call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	table_chans$[all],
 :	batch,
 :	status$
-if status$<>"" goto std_exit
+if status$<>"" then
+	remove_process_bar:
+	bbjAPI!=bbjAPI()
+	rdFuncSpace!=bbjAPI!.getGroupNamespace()
+	rdFuncSpace!.setValue("+build_task","OFF")
+	release
+endif
 aps01_dev=num(chans$[6])
 gls01_dev=num(chans$[7])
 dim aps01a$:templates$[6],gls01a$:templates$[7]
@@ -429,7 +435,12 @@ if gl$="Y"
 :	table_chans$[all],
 :	batch,
 :	status$
-if status$<>"" goto std_exit
+if status$<>"" then
+	bbjAPI!=bbjAPI()
+	rdFuncSpace!=bbjAPI!.getGroupNamespace()
+	rdFuncSpace!.setValue("+build_task","OFF")
+	release
+endif
 endif
 rem --- Retrieve parameter data
                
@@ -478,4 +489,3 @@ endif
 if user_tpl.misc_entry$="N" c!.setColumnEditable(2,0)
 if user_tpl.units_flag$="N" c!.setColumnEditable(4,0)
 		
-
