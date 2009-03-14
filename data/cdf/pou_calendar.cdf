@@ -44,4 +44,10 @@ call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	batch,
 :	status$
 
-if status$<>"" goto std_exit
+if status$<>"" then
+	remove_process_bar:
+	bbjAPI!=bbjAPI()
+	rdFuncSpace!=bbjAPI!.getGroupNamespace()
+	rdFuncSpace!.setValue("+build_task","OFF")
+	release
+endif
