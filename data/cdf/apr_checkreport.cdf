@@ -8,7 +8,14 @@ rem --- Open/Lock files
 	files$[1]="aps_params",ids$[1]="APS_PARAMS"
 	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-	if status goto std_exit
+	if status then
+		remove_process_bar:
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+	 	release
+	endif
+	
 	aps01_dev=channels[1]
 
 rem --- Dimension string templates
