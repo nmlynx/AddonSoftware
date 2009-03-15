@@ -152,7 +152,7 @@ rem --- Main Loop Starts
         if thru_ord$<>"" and ope01a_key.order_no$>thru_ord$ then break
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         read record (ope01_dev,key=ope01a_key$) ope01a$
-rem        if ope01a.ordinv_flag$<>"I" or ope01a.ar_inv_no$=fill(len(ope01a.ar_inv_no$)) then continue
+        if ope01a.ordinv_flag$<>"I" or ope01a.ar_inv_no$=fill(len(ope01a.ar_inv_no$)) then continue
         if taken_by$<>"" and ope01a.ord_taken_by$<>taken_by$ then continue
         if print_stat$<>"A" then
             if print_stat$="P" and ope01a.print_status$<>"Y" then continue
@@ -173,6 +173,11 @@ rem --- Void
             OutVect!.addItem(ope01a.slspsn_code$)
             OutVect!.addItem("(Void)")
             xwk=fnblank(5)
+            if page_break$="Y" and print_stat$<>"U" then
+                subheading$=""
+                BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+                HdrVect!.addItem(subheading$)
+            endif
             continue
         endif
 
@@ -425,7 +430,7 @@ order_header: rem --- Order Header
 
         gosub terms_code
         OutVect!.addItem((ope01a.customer_id$+" "+arm01a.customer_name$))
-        OutVect!.addItem(ope11a.order_no$)
+        OutVect!.addItem(ope01a.order_no$)
         OutVect!.addItem(ope01a.ar_inv_no$)
         OutVect!.addItem(fndate$(ope01a.invoice_date$))
         OutVect!.addItem(ope01a.ord_taken_by$)
@@ -440,60 +445,70 @@ order_header: rem --- Order Header
         if ope01a.lock_status$<>"N" then
             OutVect!.addItem("Lock Flag = "+ope01a.lock_status$)
             xwk=fnblank(11)
-            
         endif
 
-        xwk=fnblank(6)
-        OutVect!.addItem("Gross Extended")
-        xwk=fnblank(5)
+        xwk=fnblank(7)
+        OutVect!.addItem("Gross")
+        OutVect!.addItem("Extended")
+        xwk=fnblank(3)
 
-        OutVect!.addItem("Ln Cd Prd Whs Item")
-        xwk=fnblank(11)
-
-        xwk=fnblank(1)
+        OutVect!.addItem("Cd Prd Whs Item")
         OutVect!.addItem("Ord")
         OutVect!.addItem("B/O")
         OutVect!.addItem("Ship")
         OutVect!.addItem("Price")
-        OutVect!.addItem("Disc Cost")
-        OutVect!.addItem("Sales Cost")
+        OutVect!.addItem("Disc")
+        OutVect!.addItem("Cost")
+        OutVect!.addItem("Sales")
+        OutVect!.addItem("Cost")
         OutVect!.addItem("Profit")
         OutVect!.addItem("GP %")
-        xwk=fnblank(3)
+        xwk=fnblank(1)
 
-        
-        return
+    return
 
 sales_total: rem --- Sales Total/Freight/Sales Tax/Invoice Total
 
         precision 2
-rem        if l+7>l9 then gosub order_header
-        OutVect!.addItem("Sales Total")
+        OutVect!.addItem("")
         OutVect!.addItem(str(ord:m2$))
         OutVect!.addItem(str(bo:m2$))
         OutVect!.addItem(str(ship:m2$))
+        xwk=fnblank(2)
+        OutVect!.addItem("Sales Total"+$00$+"R")
         OutVect!.addItem(str(s[0]:m1$))
         OutVect!.addItem(str(s[1]:m1$))
         OutVect!.addItem(str(s[0]-s[1]:m1$))
         OutVect!.addItem(str(sgn(fnd(s[0]-s[1],s[0]))*min(999.99,abs(fnd(s[0]-s[1],s[0]))):m8$))
-        OutVect!.addItem("GP %")
-        xwk=fnblank(3)
+        OutVect!.addItem("")
+
+        xwk=fnblank(6)
+        OutVect!.addItem("Sales Discount"+$00$+"R")
+        OutVect!.addItem(str(-ope01a.discount_amt:m1$))
+        xwk=fnblank(4)
+
+        xwk=fnblank(6)
+        OutVect!.addItem("Freight"+$00$+"R")
+        OutVect!.addItem(str(ope01a.freight_amt:m1$))
+        xwk=fnblank(4)
+
+        xwk=fnblank(6)
+        OutVect!.addItem("Sales Tax"+$00$+"R")
+        OutVect!.addItem(str(ope01a.tax_amount:m1$))
+        xwk=fnblank(4)
+
+        xwk=fnblank(6)
+        OutVect!.addItem("Invoice Total"+$00$+"R")
+        OutVect!.addItem(str(s[0]+ope01a.freight_amt-ope01a.discount_amt+ope01a.tax_amount:m1$))
+        xwk=fnblank(4)
 
         xwk=fnblank(12)
-        OutVect!.addItem("Sales Discount"+str(-ope01a.discount_amt:m1$))
-        xwk=fnblank(11)
 
-        xwk=fnblank(12)
-        OutVect!.addItem("Freight"+str(ope01a.freight_amt:m1$))
-        xwk=fnblank(11)
-
-        xwk=fnblank(12)
-        OutVect!.addItem("Sales Tax"+str(ope01a.tax_amount:m1$))
-        xwk=fnblank(11)
-
-        xwk=fnblank(12)
-        OutVect!.addItem("   Invoice Total"+str(s[0]+ope01a.freight_amt-ope01a.discount_amt+ope01a.tax_amount:m1$))
-        xwk=fnblank(11)
+        if page_break$="Y" and print_stat$<>"U" then
+            subheading$=""
+            BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+            HdrVect!.addItem(subheading$)
+        endif
 
         u[3]=u[3]+s[0]
         t2=t2+1
@@ -523,45 +538,31 @@ serialized_inventory: rem --- Serialized/Lotted Inventory
 
 print_detail: rem --- Print Detail
 
-        gosub order_header
-        OutVect!.addItem(ope11a.line_no$+" "+ope11a.line_code$+"   "+ope11a.warehouse_id$)
-        xwk=fnblank(11)
-
-        if pos(opm02a.line_type$="M")<=0 then
-            if pos(opm02a.line_type$="O")<=0 then
-                OutVect!.addItem(ope11a.product_type$)
-                xwk=fnblank(11)
-
-                if pos(opm02a.line_type$="SP")<>0
-                    OutVect!.addItem(ope11a.item_id$)
-                else
-                    OutVect!.addItem("")
-                endif    
-                if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub average_item_cost
-                if ser_qty<>0 then  ope11a.unit_cost=ser_cost/ser_qty
-                OutVect!.addItem(str(ope11a.qty_ordered:m2$)+str(ope11a.qty_backord:m2$)+str(ope11a.qty_shipped:m2$))
-                xwk=fnblank(10)
-            endif
-
-            xwk=fnblank(1)
-            OutVect!.addItem(str(ope11a.disc_percent:m9$))
-            OutVect!.addItem(str(ope11a.unit_price:m3$))
-            OutVect!.addItem(str(ope11a.ext_price:m1$))
-            OutVect!.addItem(str(ope11a.unit_cost:m3$))
-            OutVect!.addItem(str(ope11a.unit_cost*ope11a.qty_shipped:m1$))
-            OutVect!.addItem(str(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped:m1$))
-            OutVect!.addItem(str(sgn(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))*min(999.99,abs(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))):m8$))
-            xwk=fnblank(4)
-            if opm02a.line_type$<>"O" then
-                
-            endif
+        column1$=ope11a.line_code$+" "+ope11a.product_type$+" "+ope11a.warehouse_id$
+        if pos(opm02a.line_type$="SP")<>0
+            column1$=column1$+" "+ope11a.item_id$
         endif
-        OutVect!.addItem(desc$)
-        xwk=fnblank(11)
+        OutVect!.addItem(column1$)
+        if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub average_item_cost
+        if ser_qty<>0 then  ope11a.unit_cost=ser_cost/ser_qty
+        OutVect!.addItem(str(ope11a.qty_ordered:m2$))
+        OutVect!.addItem(str(ope11a.qty_backord:m2$))
+        OutVect!.addItem(str(ope11a.qty_shipped:m2$))
+        OutVect!.addItem(str(ope11a.unit_price:m3$))
+        OutVect!.addItem(str(ope11a.disc_percent:m9$))
+        OutVect!.addItem(str(ope11a.unit_cost:m3$))
+        OutVect!.addItem(str(ope11a.ext_price:m1$))
+        OutVect!.addItem(str(ope11a.unit_cost*ope11a.qty_shipped:m1$))
+        OutVect!.addItem(str(ope11a.ext_price-(ope11a.unit_cost*ope11a.qty_shipped):m1$))
+        OutVect!.addItem(str(sgn(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))*min(999.99,abs(fnd(ope11a.ext_price-ope11a.unit_cost*ope11a.qty_shipped,ope11a.ext_price))):m8$))
+        OutVect!.addItem("")
 
+        OutVect!.addItem("")
+        OutVect!.addItem(desc$+$00$+"L")
+        xwk=fnblank(10)
         
         if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub serialized_inventory
-        return
+    return
 
 find_customer: rem --- Find Customer
 
