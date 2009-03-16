@@ -384,11 +384,11 @@ rem 				Serial#'s (lots "fall thru")
 			
 rem --- Retrieve and print lot/serial record 
 
-			lsmaster_rec.inv_location$ = physical_rec.inv_location$
+			lsmaster_rec.ls_location$ = physical_rec.location$
 			
 			if physical_rec.lotser_no$ = "None" or physical_rec.lotser_no$ = "Missing" then 
-				if cvs(lsmaster_rec.inv_location$, 2) = "" then 
-					lsmaster_rec.inv_location$ = fill(10,".")
+				if cvs(lsmaster_rec.ls_location$, 2) = "" then 
+					lsmaster_rec.ls_location$ = fill(10,".")
 				endif
 			else
 				if cvs(lsmaster_rec.lotser_no$, 2) <> "" then 
@@ -396,7 +396,7 @@ rem --- Retrieve and print lot/serial record
 				endif
 			endif
 			
-			location$ = lsmaster_rec.inv_location$
+			location$ = lsmaster_rec.ls_location$
 			qty = physical_rec.freeze_qty
 			gosub print_detail
 		
@@ -441,7 +441,7 @@ item_subhead: rem --- Item subheading (lotted/serialized)
 	OutVect!.addItem(x$)
 	OutVect!.addItem("")
 	OutVect!.addItem(itemmast_rec.unit_of_sale$)
-	OutVect!.addItem(physical_rec.inv_location$)
+	OutVect!.addItem(physical_rec.location$)
 	ignore=fnblank(2)
 	
     if split then x$=description$ else x$=""
