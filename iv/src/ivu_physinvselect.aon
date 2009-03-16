@@ -179,54 +179,63 @@ rem --- Update warehouse record
         itemwhse_rec$ = field(itemwhse_rec$)
         write record (itemwhse_dev) itemwhse_rec$
 
+rem --- Master file
+
+		find record (itemmast_dev, key=firm_id$+item_id$) itemmast_rec$
+		this_item_is_lot_ser = (ls$ = "Y" and itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
+		
 rem --- Count Lot/serial, if necessary
 
-        if ls$ = "Y" then 
-            find record (itemmast_dev, key=firm_id$+item_id$) itemmast_rec$
-            this_item_is_lot_ser = (itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
+		if this_item_is_lot_ser then
+			read (lsmaster_dev, key=firm_id$+whse_id$+item_id$, dom=*next)
 
-            if this_item_is_lot_ser then
-                read (lsmaster_dev, key=firm_id$+whse_id$+item_id$, dom=*next)
+			while more
+				read record (lsmaster_dev, end=*break) lsmaster_rec$
+				if firm_id$ <> lsmaster_rec.firm_id$      then break
+				if whse_id$ <> lsmaster_rec.warehouse_id$ then break
+				if item_id$ <> lsmaster_rec.item_id$      then break
+				if lsmaster_rec.qty_on_hand = 0           then continue
 
-                while more
-                    read record (lsmaster_dev, end=*break) lsmaster_rec$
-                    if firm_id$ <> lsmaster_rec.firm_id$      then break
-                    if whse_id$ <> lsmaster_rec.warehouse_id$ then break
-                    if item_id$ <> lsmaster_rec.item_id$      then break
-                    if lsmaster_rec.qty_on_hand = 0           then continue
-
-                    number = number + 1
+				number = number + 1
 
 rem --- Write Physical Entry record for lot/serial
 
-					dim physical_rec$:fattr(physical_rec$)
-                    physical_rec.firm_id$      = firm_id$
-                    physical_rec.warehouse_id$ = whse_id$
-                    physical_rec.pi_cyclecode$ = cycle_code$
-                    physical_rec.item_id$      = item_id$
-					physical_rec.location$     = itemwhse_rec.location$
-                    physical_rec.lotser_no$    = lsmaster_rec.lotser_no$
-                    physical_rec.cutoff_date$  = cutoff$
-                    physical_rec.entered_flag$ = "N"
-                    physical_rec.lotser_item$  = "Y"
-                    physical_rec.freeze_qty    = lsmaster_rec.qty_on_hand
-                    total = total + lsmaster_rec.qty_on_hand
+				dim physical_rec$:fattr(physical_rec$)
+				physical_rec.firm_id$      = firm_id$
+				physical_rec.warehouse_id$ = whse_id$
+				physical_rec.pi_cyclecode$ = cycle_code$
+				physical_rec.item_id$      = item_id$
+				physical_rec.location$     = itemwhse_rec.location$
+				physical_rec.lotser_no$    = lsmaster_rec.lotser_no$
+				physical_rec.cutoff_date$  = cutoff$
+				physical_rec.entered_flag$ = "N"
+				physical_rec.lotser_item$  = "Y"
+				physical_rec.freeze_qty    = lsmaster_rec.qty_on_hand
+				total = total + lsmaster_rec.qty_on_hand
 
-                    write record (physical_dev) physical_rec$
+				write record (physical_dev) physical_rec$
 
-                wend
+			wend
 
 rem --- Missing Lot/Serial Numbers?
 
-                if onhand = total and total <> 0 then needs_update = 0
+			if onhand > total then 
+				dim physical_rec$:fattr(physical_rec$)
+				physical_rec.firm_id$      = firm_id$
+				physical_rec.warehouse_id$ = whse_id$
+				physical_rec.pi_cyclecode$ = cycle_code$
+				physical_rec.item_id$      = item_id$
+				physical_rec.location$     = itemwhse_rec.location$
+				physical_rec.lotser_no$    = fill(20)
+				physical_rec.cutoff_date$  = cutoff$
+				physical_rec.entered_flag$ = "N"
+				physical_rec.lotser_item$  = "Y"
+				physical_rec.freeze_qty    = onhand - total
+			endif
 
-            endif
+        else
 
-        endif
-
-rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
-
-        if needs_update then
+rem --- Write non-lot/serial Physical Inventory record
 
 			dim physical_rec$:fattr(physical_rec$)
             physical_rec.firm_id$      = firm_id$
@@ -237,13 +246,7 @@ rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
             physical_rec.cutoff_date$  = cutoff$
             physical_rec.entered_flag$ = "N"
             physical_rec.lotser_item$  = "N"
-            physical_rec.freeze_qty    = onhand - total
-
-rem --- Treat as Non-Serialized/Non-Lotted unless item is Inventoried by Serial/Lot number
-
-            if this_item_is_lot_ser then 
-                physical_rec.lotser_item$ = "Y"
-            endif
+            physical_rec.freeze_qty    = onhand
 
             write record (physical_dev) physical_rec$
 
