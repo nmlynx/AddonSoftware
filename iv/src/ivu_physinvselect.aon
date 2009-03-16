@@ -163,7 +163,7 @@ rem --- Get next SQL record
         item_id$    = sql_rec.item_id$
 		cycle_code$ = sql_rec.pi_cyclecode$
 
-				if prev_cycle$ <> cycle_code$ then number = 0
+		if prev_cycle$ <> cycle_code$ then number = 0
 
         call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
 
@@ -228,7 +228,7 @@ rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
 
         if needs_update then
 
-					dim physical_rec$:fattr(physical_rec$)
+			dim physical_rec$:fattr(physical_rec$)
             physical_rec.firm_id$      = firm_id$
             physical_rec.warehouse_id$ = whse_id$
             physical_rec.pi_cyclecode$ = cycle_code$
@@ -262,15 +262,15 @@ rem --- Update Physical Code file
 	            physcode_rec.phys_inv_sts$ = "1"
 	        endif
 
-						physcode_rec.pending_action$ = "0"
+			physcode_rec.pending_action$ = "0"
 			physcode_rec$ = field(physcode_rec$)
 	        write record (physcode_dev) physcode_rec$
 
-						number = 0
+			number = 0
 
-				endif
+		endif
 
-				prev_cycle$ = cycle_code$
+		prev_cycle$ = cycle_code$
 
     wend
 
