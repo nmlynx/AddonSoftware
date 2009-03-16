@@ -1,4 +1,6 @@
 [[IVE_PHYSICAL.ITEM_ID.AVAL]]
+print "ITEM_ID:AVAL"; rem debug
+
 rem --- Get Whse/Item record
 
 	whse$ = callpoint!.getColumnData("IVE_PHYSICAL.WAREHOUSE_ID")
@@ -6,6 +8,8 @@ rem --- Get Whse/Item record
 
 	gosub check_item_whse
 [[IVE_PHYSICAL.ADIS]]
+print "ADIS"; rem debug
+
 rem --- Is cycle in the correct stage?
 
 	whse$  = callpoint!.getColumnData("IVE_PHYSICAL.WAREHOUSE_ID")
@@ -19,6 +23,8 @@ rem --- Check item/warehouse
 
 	gosub check_item_whse
 [[IVE_PHYSICAL.PI_CYCLECODE.AVAL]]
+print "PI_CYCLECODE:AVAL"; rem debug
+
 rem --- Is cycle in the correct stage?
 
 	whse$  = callpoint!.getColumnData("IVE_PHYSICAL.WAREHOUSE_ID")
@@ -26,6 +32,8 @@ rem --- Is cycle in the correct stage?
 
 	gosub check_whse_cycle
 [[IVE_PHYSICAL.LOTSER_ITEM.BINP]]
+print "LOTSER_NO:BINP"; rem debug
+
 rem --- Is there a lot/serial#?
 
 	item$ = callpoint!.getColumnData("IVE_PHYSICAL.ITEM_ID")
@@ -44,6 +52,8 @@ rem --- Is there a lot/serial#?
 
 lotser_item_end:
 [[IVE_PHYSICAL.ARAR]]
+print "ARAR"; rem debug
+
 rem --- Set default values
 
 	if user_tpl.default_whse$ <> "" then
@@ -53,13 +63,14 @@ rem --- Set default values
 	if user_tpl.default_cycle$ <> "" then
 		callpoint!.setColumnData("IVE_PHYSICAL.PI_CYCLECODE", user_tpl.default_cycle$)
 	endif
-
 [[IVE_PHYSICAL.<CUSTOM>]]
 rem ===========================================================================
 check_whse_cycle: rem --- Check the Physical Cycle code for the correct status
                   rem      IN: whse$
                   rem          cycle$
 rem ===========================================================================
+
+print "in check_whse_cycle"; rem debug
 
 	file_name$ = "IVC_PHYSCODE"
 	dim physcode$:fnget_tpl$(file_name$)
@@ -96,11 +107,13 @@ check_item_whse: rem --- Check that a warehouse record exists for this item
                  rem          itemwhse_rec$ (item/whse record)
 rem ===========================================================================
 
+print "in check_item_whse"; rem debug
+
 	item_file$ = "IVM_ITEMMAST"
 	dim itemmast_rec$:fnget_tpl$(item_file$)
 	find record (fnget_dev(item_file$), key=firm_id$+item$) itemmast_rec$
 
-	this_item_lot_ser = (user_tpl.ls$ = "Y" and itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried = "Y")
+	this_item_lot_ser = (user_tpl.ls$ = "Y" and itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
 	callpoint!.setStatus( "ENABLE:" + str(this_item_lot_ser) )
 
 	if !this_item_lot_ser then
@@ -132,6 +145,8 @@ rem ===========================================================================
 #include std_missing_params.src
 rem ===========================================================================
 [[IVE_PHYSICAL.COUNT_STRING.AVAL]]
+print "COUNT_STRING:AVAL"; rem debug
+
 rem --- Parse count string, display total
 
 	count$ = cvs( callpoint!.getColumnData("IVE_PHYSICAL.COUNT_STRING"), 1)
@@ -157,6 +172,8 @@ count_error:
 
 count_string_end:
 [[IVE_PHYSICAL.BSHO]]
+print 'show',"BSHO"; rem debug
+
 rem --- Inits
 
 	use ::ado_util.src::util
