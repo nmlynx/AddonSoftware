@@ -7,15 +7,15 @@ rem --- All Rights Reserved
 
     seterr std_error
     setesc std_error
-	
-rem --- Retrieve the program path
+
+	rem --- Retrieve the program path
 
     pgmdir$=""
     pgmdir$=stbl("+DIR_PGM",err=*next)
     sypdir$=""
     sypdir$=stbl("+DIR_SYP",err=*next)
-	
-rem --- Use for type checking
+
+	rem --- Use for type checking
 
     use ::sys/prog/bao_option.bbj::Option
 
@@ -162,8 +162,8 @@ rem --- Get next SQL record
         whse_id$    = sql_rec.warehouse_id$
         item_id$    = sql_rec.item_id$
 		cycle_code$ = sql_rec.pi_cyclecode$
-		
-		if prev_cycle$ <> cycle_code$ then number = 0
+
+				if prev_cycle$ <> cycle_code$ then number = 0
 
         call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
 
@@ -193,13 +193,13 @@ rem --- Count Lot/serial, if necessary
                     if firm_id$ <> lsmaster_rec.firm_id$      then break
                     if whse_id$ <> lsmaster_rec.warehouse_id$ then break
                     if item_id$ <> lsmaster_rec.item_id$      then break
-                    if lsmaster_rec.qty_on_hand = 0           then break
+                    if lsmaster_rec.qty_on_hand = 0           then continue
 
                     number = number + 1
 
 rem --- Write Physical Entry record for lot/serial
 
-                    dim physical_rec$:fattr(physical_rec$)
+					dim physical_rec$:fattr(physical_rec$)
                     physical_rec.firm_id$      = firm_id$
                     physical_rec.warehouse_id$ = whse_id$
                     physical_rec.pi_cyclecode$ = cycle_code$
@@ -228,7 +228,7 @@ rem --- Write non-lot/serial Physical Inventory record, or missing lot/serial#
 
         if needs_update then
 
-            dim physical_rec$:fattr(physical_rec$)
+					dim physical_rec$:fattr(physical_rec$)
             physical_rec.firm_id$      = firm_id$
             physical_rec.warehouse_id$ = whse_id$
             physical_rec.pi_cyclecode$ = cycle_code$
@@ -261,16 +261,16 @@ rem --- Update Physical Code file
 	        else
 	            physcode_rec.phys_inv_sts$ = "1"
 	        endif
-			
-			physcode_rec.pending_action$ = "0"
+
+						physcode_rec.pending_action$ = "0"
 			physcode_rec$ = field(physcode_rec$)
 	        write record (physcode_dev) physcode_rec$
-			
-			number = 0
-		
-		endif
-		
-		prev_cycle$ = cycle_code$
+
+						number = 0
+
+				endif
+
+				prev_cycle$ = cycle_code$
 
     wend
 
@@ -278,6 +278,16 @@ rem --- All done
 
     call pgmdir$+"adc_progress.aon","D","","",""," ",0,0,1,0,ignore_status
     goto std_exit
+
+get_location: rem --- Determine if location	come from lot or item (NOT CURRENTLY USED)
+
+	if this_item_is_lot_ser and cvs(lsmaster_rec.ls_location$, 2) <> "" then
+		location$ = lsmaster_rec.ls_location$
+	else
+		location$ = itemwhse_rec.location$
+	endif
+
+	return
 
 open_tables: rem --- Open tables
 
