@@ -34,7 +34,7 @@ rem --- Roll thru grid rows, saving the pending action of checked records
 		if pos(firm_id$+whse$ = physcode_key$) <> 1 then break
 		read record (physcode_dev) physcode_rec$
 
-		if physcode_rec.phys_inv_sts$ <> "1" then 
+		if physcode_rec.phys_inv_sts$ <> "1" and physcode_rec.phys_inv_sts$ <> "2" then 
 			selected_all = 0
 			continue
 		endif
@@ -202,8 +202,13 @@ rem ==========================================================================
 		read record (physcode_dev, end=*break) physcode_rec$
 		if physcode_rec.firm_id$ <> firm_id$ then break
 
-		if physcode_rec.phys_inv_sts$ = "1" and 
-:			(physcode_rec.pending_action$ = "0" or physcode_rec.pending_action$ = "2") 
+rem --- If frozen, then pending can be nothing or starting printing
+rem --- If printed, pending action can only be nothing (0)
+rem --- this allows for reprints of count sheets
+
+		if (physcode_rec.phys_inv_sts$ = "1" and 
+:			(physcode_rec.pending_action$ = "0" or physcode_rec.pending_action$ = "2") ) or
+:        (physcode_rec.phys_inv_sts$ = "2" and physcode_rec.pending_action$ = "0")
 :		then 
 			cycleData!.addItem(physcode_rec.pending_action$)
 			cycleData!.addItem(physcode_rec.warehouse_id$)
