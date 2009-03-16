@@ -124,11 +124,11 @@ rem --- Retrieve warehouse and build HEADINGS$
 	whsecode_rec.short_name$="(Warehouse Not Found)"
     find record (whsecode_dev, key=firm_id$+"C"+whse$, dom=*next) whsecode_rec$
 	
-	headings=3
+	headings=4
 	dim headings$[headings]
 	headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+" For Warehouse "+whse$+" "+cvs(whsecode_rec.short_name$,2)
-    headings$[headings]="[HEADER]"
+    headings$[3]="[HEADER]"
 
 rem --- Print positions
 
@@ -279,7 +279,6 @@ rem --- Cycle code break
 rem --- Get physical inventory record(s) (may be lot/serial)
 
 		first_time = 1
-
 		read (physical_dev, key=firm_id$+whse_id$+cycle_code$+location$+item_id$, dir=0, dom=*next)
 		
 		while more
@@ -327,78 +326,45 @@ rem --- Print detail line (lotted/serialized)
 			endif
 			
 rem --- Print detail for blank lot/serial number	
-
-rem     *** NOTE *** This code is overly complex.  
-rem     The only reason a lot/serial# should be blank is if this item is not lotted or serialized.
-rem     Simplify this code at some point.
+rem     The only reason a lot/serial# should be blank is if it is missing.
 		
 			if cvs(physical_rec.lotser_no$,2) = "" then 
-			
-rem 			Print detail for "none" serial numbers (nothing counted, nothing frozen)
-				if physical_rec.act_phys_cnt = 0 and physical_rec.freeze_qty = 0 then 
-					physical_rec.lotser_no$="None"
+				physical_rec.lotser_no$ = "Missing"
+				print_loc$ = fill(10, ".")
+
+rem 			Lotted				
+				if params_rec.lotser_flag$ = "L" then
+					qty = physical_rec.act_phys_cnt
+					gosub print_detail
 				else
-				
-rem 				"Blank" lot/serial (something counted.  Note: act_phys_cnt was used to distinguish "blank" and "missing" lot/serial#.  It is no longer needed here)
-					if physical_rec.act_phys_cnt then 
-						physical_rec.lotser_no$="Blank"
-
-rem 					Lotted				
-						if params_rec.lotser_flag$="L" then
-							qty=physical_rec.act_phys_cnt
-							gosub print_detail
-						else
-rem 						Serial#'s					
-							for count=1 to physical_rec.act_phys_cnt
-								qty=1
-								gosub print_detail
-							next count
-						endif
-					
-rem 					Exclude blanks from freeze qnty 
-						physical_rec.freeze_qty = physical_rec.freeze_qty - physical_rec.act_phys_cnt
-						if physical_rec.freeze_qty <= 0 then continue
-						
-rem 					We've printed all that were counted -- if there's frozen, "fall thru" to Missing
-						
-					endif
-
-rem 				Missing serial numbers (nothing counted, something frozen)
-					if physical_rec.freeze_qty > 0 then 
-						physical_rec.lotser_no$="Missing"
-						location$=fill(10,".")
-					endif
-					
-rem 				Serial#'s (lots "fall thru")			
-					if params_rec.lotser_flag$ = "S" then
-						for count=1 to physical_rec.freeze_qty
-							qty=1
-							gosub print_detail
-						next count
-						continue
-					endif
-				
+rem 				Serial#'s					
+					for count = 1 to physical_rec.act_phys_cnt
+						qty = 1
+						gosub print_detail
+					next count
 				endif
-				
-			endif
 			
-rem --- Retrieve and print lot/serial record 
-
-			lsmaster_rec.ls_location$ = physical_rec.location$
-			
-			if physical_rec.lotser_no$ = "None" or physical_rec.lotser_no$ = "Missing" then 
-				if cvs(lsmaster_rec.ls_location$, 2) = "" then 
-					lsmaster_rec.ls_location$ = fill(10,".")
-				endif
 			else
-				if cvs(lsmaster_rec.lotser_no$, 2) <> "" then 
-					find record (lsmaster_dev,key=firm_id$+whse_id$+item_id$+physical_rec.lotser_no$,dom=*next) lsmaster_rec$
-				endif
-			endif
 			
-			location$ = lsmaster_rec.ls_location$
-			qty = physical_rec.freeze_qty
-			gosub print_detail
+rem --- Retrieve and print lot/serial record, determine source of location 
+
+				print_loc$ = physical_rec.location$
+				find record (lsmaster_dev, key=firm_id$+whse_id$+item_id$+physical_rec.lotser_no$, dom=*next) lsmaster_rec$
+				print_loc$ = lsmaster_rec.ls_location$
+				
+rem 			Lotted				
+				if params_rec.lotser_flag$ = "L" then
+					qty = physical_rec.act_phys_cnt
+					gosub print_detail
+				else
+rem 				Serial#'s					
+					for count = 1 to physical_rec.act_phys_cnt
+						qty = 1
+						gosub print_detail
+					next count
+				endif
+			
+			endif
 		
 rem --- Next physical record
 
@@ -462,7 +428,7 @@ print_detail: rem --- Print lot/serial detail
 	ignore=fnblank(2)
 	OutVect!.addItem(physical_rec.lotser_no$)
 	OutVect!.addItem("")
-	OutVect!.addItem(location$)
+	OutVect!.addItem(print_loc$)
 	OutVect!.addItem(qty$)
 	OutVect!.addItem(j9$)
     first_time=0
