@@ -1,3 +1,5 @@
+[[POE_REQDET.REQ_QTY.AVAL]]
+rem --- assume we need to call poc.ua to retrieve unit cost from ivm-05, at least that's what v6 did here
 [[POE_REQDET.AREC]]
 rem --- After Array Transfer
 	if cvs(rec_data.po_line_code$,2)="" then

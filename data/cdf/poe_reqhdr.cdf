@@ -15,7 +15,7 @@ if cvs(callpoint!.getColumnData("POE_REQHDR.VENDOR_ID"),2) = "" then
      while 1
           read record(poe01_dev,err=*next)poe01a$
           if poe01a.firm_id$<>firm_id$ or poe01a.req_no$<>req_no$ then
-               vendor!=fnget_control!("POE_REQHDR.VENDOR_ID")
+               vendor!=util.getControl(callpoint!,"POE_REQHDR.VENDOR_ID")
                vendor!.focus() 
           else
                callpoint!.setColumnData("POE_REQHDR.VENDOR_ID",poe01a.vendor_id$)
@@ -132,6 +132,10 @@ for dctl=1 to 9
 next dctl
 return
 [[POE_REQHDR.BSHO]]
+rem --- inits
+
+	use ::ado_util.src::util
+
 rem --- Open Files
 	num_files=6
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -148,25 +152,7 @@ rem --- Open Files
 	apm_vendhist_dev=num(open_chans$[4]),apm_vendhist_tpl$=open_tpls$[4]
 	ivm_itemwhse_dev=num(open_chans$[5]),ivm_itemwhse_tpl$=open_tpls$[5]
 	ivm_itemvend_dev=num(open_chans$[6]),ivm_itemvend_tpl$=open_tpls$[6]
-rem --- disable display fields
-	dim dctl$[9]
-	dmap$="I"
-	dctl$[1]="<<DISPLAY>>.V_ADDR1"
-	dctl$[2]="<<DISPLAY>>.V_ADDR2"
-	dctl$[3]="<<DISPLAY>>.V_CITY"
-	dctl$[4]="<<DISPLAY>>.V_STATE"
-	dctl$[5]="<<DISPLAY>>.V_ZIP_CODE"
-	dctl$[6]="<<DISPLAY>>.V_CONTACT"
-	dctl$[7]="<<DISPLAY>>.V_PHONE"
-	dctl$[8]="<<DISPLAY>>.V_FAX"
-	gosub disable_ctls
-	dmap$="I"
-	dctl$[1]="<<DISPLAY>>.PA_ADDR1"
-	dctl$[2]="<<DISPLAY>>.PA_ADDR2"
-	dctl$[3]="<<DISPLAY>>.PA_CITY"
-	dctl$[4]="<<DISPLAY>>.PA_STATE"
-	dctl$[5]="<<DISPLAY>>.PA_ZIP_CODE"
-	gosub disable_ctls
+
 rem --- AP Params
 	dim aps_params$:aps_params_tpl$
 	read record(aps_params_dev,key=firm_id$+"AP00")aps_params$
@@ -181,4 +167,3 @@ rem --- Setup user_tpl$
 	dim user_tpl$:user_tpl$
 	
 	
-
