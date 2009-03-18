@@ -1,5 +1,8 @@
 [[APR_PURCHASES.ARAR]]
-	pgmdir$=stbl("+DIR_PGM")
+
+use ::ado_func.src::func	
+
+pgmdir$=stbl("+DIR_PGM")
 
 rem --- Open/Lock files
 
@@ -28,5 +31,9 @@ rem --- Retrieve parameter data
 	find record (aps01_dev,key=aps01a_key$,err=*next) aps01a$
 	callpoint!.setColumnData("APR_PURCHASES.PERIOD",aps01a.current_per$)
 	callpoint!.setColumnData("APR_PURCHASES.YEAR",aps01a.current_year$)
+
+	tot_per$=func.getNumPeriods()
+	callpoint!.setTableColumnAttribute("APR_PURCHASES.PERIOD","MINV","01")
+	callpoint!.setTableColumnAttribute("APR_PURCHASES.PERIOD","MAXV",tot_per$)
 
 	callpoint!.setStatus("MODIFIED-REFRESH")
