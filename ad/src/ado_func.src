@@ -121,6 +121,41 @@ class public func
 		methodret p_date$
 		
 	methodend
+	
+	
+	rem ==========================================================================
+	rem --- get number of GL periods from GL param file; nothing sent in, #periods out
+	rem ==========================================================================
+	
+	method public static BBjString getNumPeriods()
+	
+		rem --- Open GL param file
+		call stbl("+DIR_SYP",err=getNumPeriodsDone) + "bac_open_table.bbj", 
+:			err=getNumPeriodsDone, 
+:			"GLS_PARAMS", 
+:			"OTA", 
+:			table_chans$[all], 
+:			open_chan, 
+:			table_tpl$, 
+:			proc_mssg$ 
+
+		if proc_mssg$ <> "" then goto getNumPeriodsDone
+
+		rem --- Get firm
+		dim sysinfo$:stbl("+SYSINFO_TPL", err=getNumPeriodsDone)
+		sysinfo$ = stbl("+SYSINFO", err=getNumPeriodsDone)
+
+		rem --- Get GL parameter record
+		dim param_rec$:table_tpl$
+		find record (open_chan, key=sysinfo.firm_id$+"GL00", dom=getNumPeriodsDone) param_rec$
+
+		methodret str(num(param_rec.total_pers$):"00")
+
+
+		getNumPeriodsDone:
+		methodret "12"
+	methodend
+	
 
 classend
 
