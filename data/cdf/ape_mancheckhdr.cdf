@@ -254,7 +254,6 @@ return
 		if user_tpl.multi_types$="Y"
 			msg_id$="AP_NOHIST"
 			gosub disp_message
-			callpoint!.setStatus("ABORT")
 		endif
 	endif
 [[APE_MANCHECKHDR.TRANS_TYPE.AVAL]]
