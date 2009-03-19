@@ -513,6 +513,7 @@ if vectInvoicesMaster!.size()
 			ape04a.invoice_amt=amt_to_pay
 			ape04a.discount_amt=disc_to_take
 			ape04a.retention=apt01a.retention
+			ape04a.orig_inv_amt=amt_to_pay; rem --- added this 3/18/08, but not sure if it's the right way to set it.CAH
 			ape04a$=field(ape04a$)
 			write record(ape04_dev)ape04a$
 		endif
