@@ -673,6 +673,31 @@ rem ==========================================================================
 		methodret grid!
 	methodend
 	
+	rem --- Return true if open file has records
+	method public static BBjNumber hasRecords(BBjNumber p_handle)
+		has_records = 0
+		if fpt(p_handle) or p_handle <= 0 then goto has_records_end
+		xfid$ = xfid(p_handle, err=has_records_end)
+		type = asc( and($0f$, xfid$(1,1)) )
+		
+		if type = 0 or type = 1 or type = 3 or type = 4 or type = 5 then goto has_records_end
+
+		if dec($00$ + xfid$(6,4)) then
+			has_records = 1
+			goto has_records_end
+		endif
+		
+		if type = 6 or type = 8 or type = 13 then
+			xfin$ = xfin(p_handle)
+			if dec($00$ + xfin$(77,4)) then
+				has_records = 1
+			endif
+		endif
+		
+	has_records_end:
+		methodret has_records
+	methodend
+	
 classend
 
 end
