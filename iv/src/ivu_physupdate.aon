@@ -1,330 +1,249 @@
 rem --- Physical Inventory Update
-rem --- Program ivu_va v8.0.0 05Dec2007 (ivu_va)
+rem --- Program ivu_physupdate.aon v8.0.0 05Dec2007 (ivu_va)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (12/05/2007 03:07:41)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
-rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- Copyright (c) 1981-2009 AddonSoftware
 rem --- All Rights Reserved
 
-
-                setesc std_error
-                seterr std_error
+    setesc std_error
+    seterr std_error
 
 rem --- Retrieve the program path
 
-                pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next)
 
 rem --- Retrieve sysinfo data
 
-                sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
-                dim sysinfo$:sysinfo_template$
-                sysinfo$=stbl("+sysinfo",err=*next)
-                milestone=num(stbl("+milestone",err=*next),err=*next)
-                firm_id$=sysinfo.firm_id$
-
-rem --- Open/Lock files
-
-                files=16,begfile=1,endfile=files
-                dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-                files$[1]="gls_params",ids$[1]="GLS_PARAMS"
-                files$[2]="ive-03",ids$[2]="IVE_PHYSICAL"
-                files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
-                files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
-                files$[5]="ivm-04",ids$[5]="IVM_ITEMTIER"
-                files$[6]="ivm-07",ids$[6]="IVM_LSMASTER"
-                files$[7]="ivm-08",ids$[7]="IVX_LSXREF"
-                files$[8]="ivc_physcode",ids$[8]="IVC_PHYSCODE"
-                files$[9]="ivm-12",ids$[9]="IVM_ITEMACT"
-                files$[10]="ivm-17",ids$[10]="IVM_LSACT"
-                files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
-                files$[12]="ivt-01",ids$[12]="IVT_LSTRANS"
-                files$[13]="ivt-02",ids$[13]="IVX_LSCUST"
-                files$[14]="ivt-03",ids$[14]="IVX_LSVEND"
-                files$[15]="ivt-04",ids$[15]="IVT_ITEMTRAN"
-                files$[16]="ivw-10",ids$[16]="IVW_PHYSICAL"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-                if status goto std_exit
-                gls01a_dev=channels[1]
-                ive03_dev=channels[2]
-                ivm01_dev=channels[3]
-                ivm02_dev=channels[4]
-                ivm04_dev=channels[5]
-                ivm07_dev=channels[6]
-                ivm08_dev=channels[7]
-                ivm10_dev=channels[8]
-                ivm12_dev=channels[9]
-                ivm17_dev=channels[10]
-                ivs01a_dev=channels[11]
-                ivt01_dev=channels[12]
-                ivt02_dev=channels[13]
-                ivt03_dev=channels[14]
-                ivt04_dev=channels[15]
-                ivw10_dev=channels[16]
-
-rem --- Dimension string templates
-
-                dim gls01a$:templates$[1],ive03a$:templates$[2],ivm01a$:templates$[3],
-:                ivm02a$:templates$[4],ivm04a$:templates$[5],ivm07a$:templates$[6],
-:                ivm08a$:templates$[7],ivm10a$:templates$[8],ivm12a$:templates$[9],
-:                ivm17a$:templates$[10],ivs01a$:templates$[11],ivt01a$:templates$[12],
-:                ivt02a$:templates$[13],ivt03a$:templates$[14],ivt04a$:templates$[15],
-:                ivw10a$:templates$[16]
-
-rem --- Assign form input values to local variables
-
-                value_01$=Option!.getOptionData("form_value_01")
-
-rem --- Retrieve parameter records
-
-                gls01a_key$=firm_id$+"GL00"
-                find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-                ivs01a_key$=firm_id$+"IV00"
-                find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-
-rem --- Open/Lock Files
-
-                close (printer_dev,err=*next); rem "Print register
-
-rem --- Parameters
-
-                dim g[1]
-                find record (sys01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-                g[0]=num(g2$(1,2))
-
-rem --- Initializations
-
-                precision p[1]
-                dim iv_chans[44],params[10],params$[10],item$[3]
-                params[0]=g[0]
-                params$[0]=sysinfo.system_date$,params$[1]=sysinfo.user_id$
-                params$[2]=i2$
-                params$[3]=i3$,params$[4]=i4$
-                action$="PH"
-                more=1
-                cntr=0
-rem --- Update channels
-
-                iv_chans[0]=sys01_dev
-                iv_chans[1]=ivm01_dev,iv_chans[2]=ivm02_dev
-                iv_chans[4]=ivm04_dev
-                iv_chans[7]=ivm07_dev,iv_chans[8]=ivm08_dev
-                iv_chans[12]=ivm12_dev
-                iv_chans[17]=ivm17_dev,iv_chans[41]=ivt01_dev
-                iv_chans[42]=ivt02_dev
-                iv_chans[43]=ivt03_dev,iv_chans[44]=ivt04_dev
-
-rem --- Background
-
-                call pgmdir$+"syc_cn.bbx","",0,3,'ce',status
+    dim sysinfo$:stbl("+SYSINFO_TPL")
+    sysinfo$=stbl("+SYSINFO")
+    firm_id$=sysinfo.firm_id$
 
 rem --- Run Update?
 
-            msg_id$="AON_RUN_QUERY"
-            dim x$:stbl("+SYSINFO_TPL")
-            dim msg_tokens$[1]
-            x$=stbl("+SYSINFO")                                                            
-            msg_tokens$[1]=x.task_desc$
-            gosub disp_message
-            if msg_opt$<>"Y" then goto std_exit
-            call pgmdir$+"adc_progress.aon","N","","","","",0,arm01_dev,1,meter_num,status
+    msg_id$="AON_RUN_QUERY"
+    dim msg_tokens$[1]
+    msg_tokens$[1]=sysinfo.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
 
-rem --- Disallow 'M'enu option in Error Routine
+rem --- Initializations
 
-            exit_ctrl=1
+    precision p[1]
+	
+    dim iv_chans[44],item$[3]
+    action$="PH"
+    more=1
+	start_block=1
 
-rem --- Position file
+	call pgmdir$+"ivc_itemupdt.aon::init",iv_chans[all],ivs_params_rec$,items$[all],refs$[all],refs[all],rd_table_chans$[all],status
+	call pgmdir$+"adc_progress.aon","N","","","","",0,physical_dev,1,meter_num,status
+	
+	read (physcode_dev, key=firm_id$, dom=*next)
 
-           read (ivw10_dev,key=firm_id$,dom=*next)
+rem --- Get next cycle
 
-rem --- Main Loop Starts
+    while more
+	
+		read record (physcode_dev, end=*break) physcode_rec$
+		if physcode_rec.firm_id$ <> firm_id$ then break
+		if physcode_rec.pending_action$ <> "4" then continue
 
-While more
+        whse_id$    = physcode_rec.warehouse_id$
+		cycle_code$ = physcode_rec.pi_cyclecode$
 
-            ivw10a_key$=key(ivw10_dev,end=done)
-            if pos(firm_id$=ivw10a_key$)<>1
-                break
-            endif
-            read (ivw10_dev)
+rem --- Position physical inventory record
 
-rem --- Update ivm-10 cycle code record
+        lastitem$ = ""
+        lsitem$   = "N"
+        first$    = firm_id$ + whse_id$ + cycle_code$
+        read (physical_dev, key=first$, dom=*next)
 
-            ivm10p.FIRM_ID$=firm_id$
-            ivm10p.record_id_p$="p"
-            ivm10p.warehouse_ID$=whse$
-            ivm10p.CYCLE_CODE$=ivw10a.CYCLE_CODE$
-            find record (ivm10_dev,key=ivm10p.FIRM_ID$+ivm10p.RECORD_ID_P$+
-:               ivm10p.WAREHOUSE_ID$+ivm10p.CYCLE_CODE,dom=Pos_Record) ivm10p$
-            ivm10p.PHYS_INV_STS$="4"
-            write record (ivm10_dev,key=ivm10p.FIRM_ID$+ivm10p.RECORD_ID_P$+
-:               ivm10p.WAREHOUSE_ID$+ivm10p.CYCLE_CODE$) ivm10p$
+rem --- Read next physical inventory record
 
-Pos_Record: rem --- Position physical inventory record (l1900)
+        while more
 
-            lastitem$=""
-            lsitem$="N"
-            first$=ivw10a.FIRM_ID$+whse$+ivw10a$.CYCLE_CODE$
-            read (ive03_dev,key=first$,dom=*next)
-
-rem --- Sub Loop Starts
-
-  While more
-
-
-            ive03a_key$=key(ive03_dev,end=*break)
-            if pos(first$=ive03a_key$)<>1
-                break
-            endif
-            read record (ive03_dev) ive03a$
+            physical_key$ = key(physical_dev, end=*break)
+            if pos(first$=physical_key$) <> 1 then break
+            read record (physical_dev) physical_rec$
+			
+			item_id$   = physical_rec.item_id$
+			location$  = physical_rec.location$
 
 rem --- Lotted/Serialized Item Break?
 
-    While more
-            if ls$="Y"
-                if pos(lastitem$=ive03a_key$)=1 then break
-                gosub Lot_Ser_Item_Break
-            endif
+			if ls$ = "Y" and pos(lastitem$=physical_key$) <> 1 then 
+				gosub lot_ser_item_break
+			endif
 
+			if ls$ <> "Y" or pos(lastitem$=physical_key$) <> 1 then 
+					
 rem --- Selected for Phys Inventory?
 
-
-            ivm02a.FIRM_ID$=ive03a.FIRM_ID$
-            ivm02a.WAREHOUSE_ID$=ive03a.WAREHOUSE_ID$
-            ivm02a.ITEM_ID$=ive03a.ITEM_ID$
-
-            find record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=nextive03) ivm02a$
-            if ivm02a.SELECT_PHYS$<>"Y" then
-                remove (ive03_dev,key=ive03a_key$)
-                cntr=1
-                break
-            endif
-            itemphysdate$=ivm02a.LSTPHY_DATE$
-            break
-      Wend
-            If cntr=1
-                continue
-            endif
-
+				itemwhse_dom = 1
+				
+				if start_block then
+					find record (itemwhse_dev, key=firm_id$+whse_id$+item_id$, dom=*endif) itemwhse_rec$
+					itemwhse_dom = 0
+				endif
+				
+				if itemwhse_dom or itemwhse_rec.select_phys$ <> "Y" then 
+					remove (physical_dev, key=physical_key$)
+					continue
+				endif
+				
+				itemphysdate$ = itemwhse_rec.lstphy_date$
+			
+			endif
+			
 rem --- Got One To Update
 
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            cost=ivm02a.UNIT_COST
-            freezeqty=ive03a.FREEZE_QTY
-            countqty=ive03a.ACT_PHYS_CNT
-            lastphysdate$=ive03a.FIRM_ID$
+            cost          = itemwhse_rec.unit_cost
+            freezeqty     = physical_rec.freeze_qty
+            countqty      = physical_rec.act_phys_cnt
+            lastphysdate$ = physical_rec.cutoff_date$
 
 rem --- Lotted/Serialized Item 
 
-        if lsitem$="Y"
-            if cvs(ive03a.LOTSER_NO$(37),2)="" and ive03a.FREEZE_QTY<>0 ive03a.ENTERED_FLAG$="Y"; rem "Count always entered for Missing and Blank
-            ivm07a.FIRM_ID$=ive03a.FIRM_ID$
-            ivm07a.WAREHOUSE_ID$=ive03a.WAREHOUSE_ID$
-            ivm07a.ITEM_ID$=ive03a.ITEM_ID$
-            ivm07a.LOTSER_NO$=ive03a.LOTSER_NO$
-            find record (ivm07_dev,key=ivm07a.FIRM_ID$+ivm07a.WAREHOUSE_ID$+ivm07a.ITEM_ID$+ivm07a.LOTSER_NO$,dom=Label2) ivm07a$
-            cost=ivm07a.UNIT_COST
+            if lsitem$ = "Y" then 
+                if cvs(physical_rec.lotser_no$,2)="" and physical_rec.freeze_qty<>0 then physical_rec.entered_flag$="Y"; rem --- Count always entered for Missing and Blank (why?)
+				
+				if start_block then
+					find record (lsmaster_dev, key=firm_id$+whse_id$+item_id$+physical_rec.lotser_no$, dom=*endif) lsmaster_rec$
+					cost=lsmaster_rec.unit_cost
+				endif
 
-Label2:
-            if ive03a.ENTERED_FLAG$<>"Y" then
-                let lastphysdate$=ivm07a.LSTPHY_DATE$
-                countqty=ivm07a.PHYSICAL_CNT
-                tot_countqty=tot_countqty+freezeqty
-            else
-                lotser$=ive03a.LOTSER_NO$
-                tot_countqty=tot_countqty+countqty,itemphysdate$=lastphysdate$,lscntntrd=1
-                if freezeqty<>countqty
-                    gosub atamo
-                    remove (ive03_dev,key=ive03a_key$)
-                    continue
+                if physical_rec.entered_flag$ <> "Y" then
+                    lastphysdate$ = lsmaster_rec.lstphy_date$
+                    countqty      = lsmaster_rec.physical_cnt
+                    tot_countqty  = tot_countqty + freezeqty
+                else
+                    lotser$       = physical_rec.lotser_no$
+                    tot_countqty  = tot_countqty + countqty
+					itemphysdate$ = lastphysdate$
+					lscntntrd     = 1
+					
+                    if freezeqty <> countqty then 
+                        gosub atamo
+                        remove (physical_dev, key=physical_key$)
+                        continue
+                    endif
                 endif
-            endif
 
 rem --- No Change In Lotted/Serialized On-Hand Quantity
 
-            ivm07a.LSTPHY_DATE$(61,3)=lastphysdate$
-            ivm07a.PHYSICAL_CNT=countqty
-            write record (ivm07_dev,key=ivm07a.FIRMI_ID$+ivm07a.WAREHOUSE_ID$+ivm07a.ITEM_ID$+ivm07a.LOTSER_NO$) ivm07a$
-            ivm08a$=ivm07a.FIRM_ID$+ivm07a.LOTSER_NO$+ivm07a.WAREHOUSE_ID$+ivm07a.ITEM_ID$
-            write record (ivm08_dev,key=ivm08a$) ivm08a$
-            remove (ive03_dev,key=ive03a_key$)
-            continue
-        endif
+                lsmaster_rec.lstphy_date$ = lastphysdate$
+                lsmaster_rec.physical_cnt = countqty
+				lsmaster_rec$ = field(lsmaster_rec$)
+                write record (lsmaster_dev) lsmaster_rec$ 
+				
+                remove (physical_dev,key=physical_key$)
+                continue
+            endif
 
-rem --- Update ivm-02 Item Warehouse Detail
+rem --- Update Item Warehouse Detail
 
-            if ive03a.ENTERED_FLAG$="Y"
-                lotser$=""
-                if freezeqty<>countqty
+            if physical_rec.entered_flag$ = "Y" then 
+                lotser$ = ""
+                if freezeqty <> countqty then 
                     gosub atamo
-                    remove (ive03_dev,key=ive03a_key$)
+                    remove (physical_dev, key=physical_key$)
                     continue
                 endif
             else
-                let lastphysdate$=ivm02a.LSTPHY_DATE$
-                countqty=ivm02a.PHYSICAL_CNT
+                lastphysdate$ = itemwhse_rec.lstphy_date$
+                countqty      = itemwhse_rec.physical_cnt
             endif
 
 rem --- No Change In On-Hand Quantity
 
-            ivm02a.SELECT_PHYS$="N"
-            ivm02a.LSTPHY_DATE$=lastphysdate$,ivm02a.PHYSICAL_CNT=countqty
-            write record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$) ivm02a$
+            itemwhse_rec.select_phys$ = "N"
+            itemwhse_rec.lstphy_date$ = lastphysdate$
+			itemwhse_rec.physical_cnt = countqty
+			itemwhse_rec$ = field(itemwhse_rec$)
+            write record (itemwhse_dev) itemwhse_rec$
 
 rem --- Loop back for next physical inventory record
 
-nextive03:
-            remove (ive03_dev,key=ive03a_key$)
+            remove (physical_dev, key=physical_key$)
 
-rem ------- End of Sub Loop
+rem ------- Next physical Inv rec
 
-   Wend
+        wend
 
-            if lsitem$="Y" then gosub Lot_Ser_Item_Break
-            remove (ivm10_dev,key=ivm10p.FIRM_ID$+ivm10p.RECORD_ID_P$+ivm10p.WAREHOUSE_ID$+ivm10p.CYCLE_CODE$)
+        if lsitem$="Y" then gosub lot_ser_item_break
+		
+rem --- Update cycle code record (back to zero)
 
+        find record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*continue) physcode_rec$
+        physcode_rec.phys_inv_sts$   = "0"
+		physcode_rec.pending_action$ = "0"
+		physcode_rec.cutoff_date$    = ""
+		physcode_rec$ = field(physcode_rec$)
+        write record (physcode_dev) physcode_rec$
+		
 rem ------ End of Main Loop
-Wend
-    
-done: rem --- All done
 
-            goto std_exit
+    wend
 
-Lot_Ser_Item_Break: rem --- Lotted/Serialized Item Break
+rem --- All done
 
-            if lastitem$<>""
-                if lsitem$="Y" 
-                    find record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$,dom=Next_Item) ivm02a$
-                    ivm02a.SELECT_PHYS$="N"
-                    if lscntntrd then let ivm02a.LSTPHY_DATE$=itemphysdate$,a[8]=tot_countqty
-                    write record (ivm02_dev,key=ivm02a.FIRM_ID$+ivm02a.WAREHOUSE_ID$+ivm02a.ITEM_ID$) ivm02a$
-                endif
-            endif
-Next_Item: rem --- Is Next Item Lotted/Serialized?
+    goto std_exit
 
-            lsitem$="N"
-            if len(ive03a_key$)<36 then return
-            find record (ivm01_dev,key=ive03a.FIRM_ID$+ive03a.ITEM_ID$,dom=*next) ivm01a$
-            if ivm01a.LOTSER_ITEM$+ivm01a.INVENTORIED$="YY"
-                lsitem$="Y"
-            else
-                lastitem$=ive03a.FIRM_ID$+ive03a.WAREHOUSE_ID$+ive03a.CYCLE_CODE$+LOCATION$+ive03a.ITEM_ID$
-                tot_countqty=0,lscntntrd=0
-            endif
+lot_ser_item_break: rem --- Lotted/Serialized Item Break, update item warehouse 
 
-            return
+    if lastitem$ <> "" and lsitem$ = "Y" then 
+		find record (itemwhse_dev, key=firm_id$+whse_id$+item_id$, dom=*endif) itemwhse_rec$
+		itemwhse_rec.select_phys$ = "N"
+		
+		if lscntntrd then 
+			itemwhse_rec.lstphy_date$ = itemphysdate$
+			itemwhse_rec.physical_cnt = tot_countqty
+		endif
+		
+		itemwhse_rec$ = field(itemwhse_rec$)
+		write record (itemwhse_dev) itemwhse_rec$
+    endif
+	
+rem --- Is Next Item Lotted/Serialized?
 
+    lsitem$ = "N"
+	
+    if physical_rec.lotser_item$ = "Y" then 
+		find record (itemmast_dev,key=firm_id$+item_id$, dom=*endif) itemmast_rec$
+		
+		if itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y" then
+			lsitem$="Y"
+		endif
+		
+		lastitem$    = firm_id$ + whse_id$ + cycle_code$ + location$ + item_id$
+		tot_countqty = 0
+		lscntntrd    = 0
+		
+	endif
+
+    return
 
 atamo: rem --- Initialize Varaibles For ATAMO Inventory Item Update Routine
 
-            dim refs$[11],refs[5]
-            item$[0]=ive03a.FIRM_ID$
-            item$[1]=ive03a.WAREHOUSE_ID$,item$[2]=ive03a.ITEM_ID$,item$[3]=lotser$
-            refs$[0]=lastphysdate$
-            refs$[4]=ive03a.CYCLE_CODE$
-            refs[0]=countqty-freezeqty
-            refs[1]=cost,refs[5]=countqty
-            call pgmdir$+"ivc_ua.bbx",action$,iv_chans[all],params[all],params$[all],item$[all],refs$[all],refs[all],status
-            return
+    dim refs$[11],refs[5]
+    item$[0] = firm_id$
+    item$[1] = whse_id$
+	item$[2] = item_id$
+	item$[3] = lotser$
+    refs$[0] = lastphysdate$
+    refs$[4] = cycle_code$
+    refs[0]  = countqty - freezeqty
+    refs[1]  = cost
+	refs[5]  = countqty
+	
+	call pgmdir$+"ivc_itemupdt.aon",action$,iv_chans[all],ivs_params_rec$,items$[all],refs$[all],refs[all],rd_table_chans$[all],status
+	
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -354,38 +273,38 @@ rem --- Date/time handling functions
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
     def fnmask$(q1$,q2$)
-        if q2$="" q2$=fill(len(q1$),"0")
-        return str(-num(q1$,err=*next):q2$,err=*next)
-        q=1
-        q0=0
-        while len(q2$(q))
-              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
-              q=q+1
-        wend
-        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
-        return str(q1$:q2$)
+    if q2$="" q2$=fill(len(q1$),"0")
+    return str(-num(q1$,err=*next):q2$,err=*next)
+    q=1
+    q0=0
+    while len(q2$(q))
+        if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+        q=q+1
+    wend
+    if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+    return str(q1$:q2$)
     fnend
 
 rem --- fnbasename$: Strip path and optionally the suffix from a file name
 
     def fnbasename$(q$,q0$)
-        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
-        if q then q$=q$(q+1)
-        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+    if q then q$=q$(q+1)
+    if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
     return q$
 
 rem --- fnglobal: Return numeric value of passed stbl variable
 
     def fnglobal(q$,q1)
-        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
-        return q1
+    q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+    return q1
     fnend
 
 rem --- fnglobal$: Return string value of passed STBL variable
 
     def fnglobal$(q$,q1$)
-        q1$=stbl(q$,err=*next)
-        return q1$
+    q1$=stbl(q$,err=*next)
+    return q1$
     fnend
 
 rem #endinclude std_functions.src
@@ -395,7 +314,7 @@ rem #include disp_message.src
 disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
-return
+    return
 
 rem #include std_error.src
 
