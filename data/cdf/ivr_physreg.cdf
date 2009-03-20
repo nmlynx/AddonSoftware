@@ -202,15 +202,17 @@ rem ==========================================================================
 		read record (physcode_dev, end=*break) physcode_rec$
 		if physcode_rec.firm_id$ <> firm_id$ then break
 
-		if  physcode_rec.phys_inv_sts$ = "2" and 
-:			(physcode_rec.pending_action$ = "0" or physcode_rec.pending_action$ = "3")
+		if  physcode_rec.phys_inv_sts$   = "2" and 
+:			(physcode_rec.pending_action$ = "0" or 
+:			 physcode_rec.pending_action$ = "3" or
+:			 physcode_rec.pending_action$ = "4")
 :		then 
 			cycleData!.addItem(physcode_rec.pending_action$)
 			cycleData!.addItem(physcode_rec.warehouse_id$)
 			cycleData!.addItem(physcode_rec.pi_cyclecode$)
 			cycleData!.addItem(physcode_rec.description$)
 
-			if physcode_rec.pending_action$ = "3" then 
+			if physcode_rec.pending_action$ = "3" or physcode_rec.pending_action$ = "4" then 
 				user_tpl.whse_id$ = physcode_rec.warehouse_id$
 			endif
 
