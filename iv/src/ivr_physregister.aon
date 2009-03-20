@@ -1,9 +1,9 @@
 rem --- Physical Inventory Register
-rem --- Program ivr_va v8.0.0 09Jul2007 (ivr_va)
+rem --- Program ivr_physregister.aon v8.0.0 09Jul2007 (ivr_va)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/09/2007 11:45:02)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
-rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- Copyright (c) 1981-2009 AddonSoftware
 rem --- All Rights Reserved
 
     seterr std_error
@@ -11,178 +11,137 @@ rem --- All Rights Reserved
 
 rem --- Retrieve the program path
 
+    pgmdir$=""
     pgmdir$=stbl("+DIR_PGM",err=*next)
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next)
+	
+rem --- Use for type checking
+
+    use ::sys/prog/bao_option.bbj::Option
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    dim sysinfo$:stbl("+SYSINFO_TPL")
+    sysinfo$=stbl("+SYSINFO")
     firm_id$=sysinfo.firm_id$
+	
+rem --- Run Update?
 
-rem --- Open/Lock files
-
-    files=18,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[2]="ive-03",ids$[2]="IVE_PHYSICAL"
-    files$[3]="ivm-01",ids$[3]="IVM_ITEMMAST"
-    files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
-    files$[5]="ivm-04",ids$[5]="IVM_ITEMTIER"
-    files$[6]="ivm-07",ids$[6]="IVM_LSMASTER"
-    files$[7]="ivm-08",ids$[7]="IVX_LSXREF"
-    files$[8]="IVC_PRODCODE",ids$[8]=files$[8]
-    files$[9]="ivm-12",ids$[9]="IVM_ITEMACT"
-    files$[10]="ivm-17",ids$[10]="IIVM_LSACT"
-    files$[11]="ivt-01",ids$[11]="IVT_LSTRANS"
-    files$[12]="ivt-02",ids$[12]="IVX_LSCUST"
-    files$[13]="ivt-03",ids$[13]="IVX_LSVEND"
-    files$[14]="ivt-04",ids$[14]="IVT_ITEMTRAN"
-    files$[15]="ivw-04",ids$[15]="IVW_LFDET"
-    files$[16]="ivw-10",ids$[16]="IVW_PHYSICAL"
-    files$[17]="IVC_PHYSCODE",ids$[17]=files$[17]
-    files$[18]="IVS_PARAMS",ids$[18]=files$[18]
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-
-    ive03_dev=channels[2]
-    ivm01_dev=channels[3]
-    ivm02_dev=channels[4]
-    ivm04_dev=channels[5]
-    ivm07_dev=channels[6]
-    ivm08_dev=channels[7]
-    ivm10a_dev=channels[8]
-    ivm12_dev=channels[9]
-    ivm17_dev=channels[10]
-    ivt01_dev=channels[11]
-    ivt02_dev=channels[12]
-    ivt03_dev=channels[13]
-    ivt04_dev=channels[14]
-    ivw04_dev=channels[15]
-    ivw10_dev=channels[16]
-    ivm10p_dev=channels[17]
-    ivs01a_dev=channels[18]
-
-rem --- Dimension string templates
-
-    dim ive03a$:templates$[2],ivm01a$:templates$[3],ivm02a$:templates$[4],
-:       ivm04a$:templates$[5],ivm07a$:templates$[6],ivm08a$:templates$[7],
-:       ivm10a$:templates$[8],ivm12a$:templates$[9],ivm17a$:templates$[10],
-:       ivt01a$:templates$[11],ivt02a$:templates$[12],ivt03a$:templates$[13],
-:       ivt04a$:templates$[14],ivw04a$:templates$[15],ivw10a$:templates$[16],
-:       ivm10p$:templates$[17],ivs01a$:templates$[18]
-
-
+    msg_id$="IV_PHYS_REG_READY"
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
+	
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    whse_Id$=fnget_fld_data$(table$,"whse_id")
-    cycle$=fnget_fld_data$(table$,"cycle_id")
-    status$=fnget_fld_data$(table$,"status")
-    cutoff$=fnget_fld_data$(table$,"cut_off")
-    tdate$=fnget_fld_data$(table$,"tdate")
+    declare Option option!
+    declare BBjObjectTable ot!
 
-rem --- Retrieve parameter records
+    whse$ = option!.getOptionData("WAREHOUSE_ID")	
 
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    
+    ot! = BBjAPI().getObjectTable()
+    selected_all = num( ot!.get("IVR_PHYSREG.SELECTED_ALL") )
+
+rem --- Close Physcode file, it's locked by the Options Entry code
+
+    call sypdir$ + "bac_open_table.bbj",
+:		"IBC_PHYSCODE",
+:		"C",
+:		rd_table_chans$[all],
+:		open_chan,
+:		table_tpl$,
+:		proc_mssg$	
+
+rem --- Open all files
+
+    num_files = 6
+    open_beg  = 1
+    open_end  = num_files
+
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+    open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
+    open_tables$[2]="IVE_PHYSICAL", open_opts$[2]="OTA"
+    open_tables$[3]="IVC_PHYSCODE", open_opts$[3]="OTAL"
+	open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
+    open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
+	open_tables$[6]="IVC_WHSECODE", open_opts$[6]="OTA"
+
+    gosub open_tables
+
+    ivs_params_dev = num(open_chans$[1])
+    physical_dev   = num(open_chans$[2])
+    physcode_dev   = num(open_chans$[3])
+	itemwhse_dev   = num(open_chans$[4])
+    itemmast_dev   = num(open_chans$[5])
+	whsecode_dev   = num(open_chans$[6])
+
+    dim ivs_params_rec$:open_tpls$[1]
+    dim physical_rec$:open_tpls$[2]
+    dim physcode_rec$:open_tpls$[3]
+	dim itemwhse_rec$:open_tpls$[4]
+    dim itemmast_rec$:open_tpls$[5]
+	dim whsecode_rec$:open_tpls$[6]
+
+rem --- Parameter record
+
+    find record (ivs_params_dev, key=firm_id$+"IV00", dom=std_missing_params) ivs_params_rec$	
+    if pos(ivs_params_rec.lotser_flag$ = "LS") then ls$="Y" else ls$ = "N"
+	
+rem --- Open Lot/serial file if necessary
+
+    if ls$ = "Y" then 
+        open_beg = 1
+        open_end = 1
+        open_tables$[1]="IVM_LSMASTER", open_opts$[1]="OTA"
+        gosub open_tables
+        lsmaster_dev = num(open_chans$[1])
+        dim lsmaster_rec$:open_tpls$[1]
+    endif
 
 rem --- Parameters
 
     dim p[5]
-    firm_id$=sysinfo.firm_id$
-    n2$="IV"
-    ls$="N"
-    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-    p[0]=ivs01a.item_id_len
-    p[1]=num(ivs01a.precision$)
-    p[2]=ivs01a.ls_no_len
-    p[3]=num(ivs01a.desc_len$)
-    p[4]=num(ivs01a.desc_len$)
-    p[5]=num(ivs01a.desc_len$)
+    p[0]=ivs_params_rec.item_id_len
+    p[1]=num(ivs_params_rec.precision$)
+    p[2]=ivs_params_rec.ls_no_len
+    p[3]=num(ivs_params_rec.desc_len_01$)
+    p[4]=num(ivs_params_rec.desc_len_02$)
+    p[5]=num(ivs_params_rec.desc_len_03$)
     dw=p[3]+p[4]+p[5]
-    if pos(ivs01a.lotser_flag$="SL")>0 ls$="Y"
-    lf$=ivs01a.lifofifo$
+    lf$=ivs_params_rec.lifofifo$
 
 rem --- Initializations
 
-    precision num(ivs01a.precision$)
-    dim headings$[3]
-    dim o[10],item[6],cycle[6],report[6],lf_chans[2]
-    clock$=""
-    when$=sysinfo.system_date$
-    l9=55
-    l=l9+1
-    width=132
-    headings=2
-    headings$[0]=sysinfo.firm_name$
-    headings$[1]=sysinfo.task_desc$
-    lsh$=""
-    done=0
-    qh$="Quantity"
-    th$="Total Value"
-    if ls$="Y" lsh$="Lot/Serial Number"
-    more=1
-rem --- Additional file opens
+    precision p[1]
 
-    if ls$="Y" then
-        files$[11]="ivm-08"
-        files$[12]="ivm-17"
-        files$[13]="ivt-01"
-        files$[14]="ivt-02"
-        files$[15]="ivt-03"
-        files$[16]="ivm-07"
-    endif
-    if pos(lf$="LF") files$[17]="ivw-04",options$[17]="CL"
-    call pgmdir$+"adc_fileopen.aon",1,11,17,files$[all],options$[all],channels[all],batch,status
-    if status goto std_exit
-    ivm08_dev=channels[11]
-    ivm17_dev=channels[12]
-    ivt01_dev=channels[13]
-    ivt02_dev=channels[14]
-    ivt03_dev=channels[15]
-    ivm07_dev=channels[16]
-    if pos(lf$="LF") ivw04_dev=channels[17],lf_chans[0]=ivm04_dev,lf_chans[1]=ivw04_dev,lf_chans[2]=ivm02_dev
+    dim o[10],item[6],cycle[6],report[6],lf_chans[2],lf_tmpls$[2]
+    width=132
+    done=0
+    if ls$="Y" then lsh$="Lot/Serial Number" else lsh$=""
+    more=1
+	detail_printed = 0
+	item_printed = 0
+	cycle_printed = 0
 
 rem --- Resize masks
-    m1$=ivs01a.amount_mask$
-    m2$=ivs01a.unit_mask$
+
+    m1$=ivs_params_rec.amount_mask$
+    m2$=ivs_params_rec.unit_mask$
     call pgmdir$+"adc_sizemask.aon",m1$,m1,12,15
     call pgmdir$+"adc_sizemask.aon",m2$,m2,9,12
-    x=m1+m2
-    dim ph$(x,"-"),sh$(x,"-"),vh$(x,"-")
-    ph$(fncenter(x,10),10)=" Physical "
-    sh$(fncenter(x,8),8)=" System "
-    vh$(fncenter(x,10),10)=" Variance "
-
-rem --- Display Resource
-
-    dim resparams$[20],resparams[20]
-    resaction$=""
-    resparams$[0]=pgm(-2)
-    call pgmdir$+"syc_ra.bbx",resaction$,resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
-    main_context=resparams[0]
-    if status goto std_exit
-
-rem --- GOSUB FLOW_INITIALIZATIONS
-rem --- Process input
-
-    action$="R"
-    whse$=ivs01a.warehouse_id$
-    cutoff$=""
-    quantity$="N"
-    call pgmdir$+"ivc_ic.bbx",action$,channels[all],whse$,cutoff$,quantity$,fkey,status,my_context,throw$
-    if fkey<>0 goto std_exit
-    if status<>0 goto std_exit
-    if throw$="Y" goto std_exit
 
 rem --- Retrieve warehouse and build HEADINGS$
 
-    find record (ivm10c_dev,key=firm_id$+"C"+whse$,dom=std_exit) ivm10c$
-    headings$[1]=sysinfo.task_desc$+" For Warehouse "+x0$(4,2)+" "+cvs(x0$(6,24),2)
-    if quantity$="Y" sqh$="Quantity"
+    find record (whsecode_dev, key=firm_id$+"C"+whse$, dom=std_exit) whsecode_rec$
+	
+	headings=3
+	dim headings$[headings]
+    headings$[0] = sysinfo.firm_name$
+    headings$[1] = sysinfo.task_desc$ + " For Warehouse " + whse$ + " " + cvs(whsecode_rec.short_name$,2)
+	headings$[2] = "[HEADER]"
+	
+	rem if quantity$="Y" then sqh$="Quantity"; rem used?
 
 rem --- Print positions
 
@@ -196,88 +155,163 @@ rem --- Print positions
     o[3]=o[4]-3
     o[1]=3
     o[2]=o[3]-max(p[2],18)
+	
+rem --- Document initializations
 
-rem --- Position file
+	declare BBjVector OutVect!
+	declare BBjVector HdrVect!
+	declare BBjVector BrkVect!
+	declare BBjVector TotVect!
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-    rem call pgmdir$+"adc_progress.aon","N","","","Printing","",17+p[0],0,1,meter_num,status
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivw10_dev,1,meter_num,status
-    read (ivw10_dev,key=firm_id$,dom=*next)
+	OutVect!=BBjAPI().makeVector()
+	HdrVect!=BBjAPI().makeVector()
+	BrkVect!=BBjAPI().makeVector()
+	TotVect!=BBjAPI().makeVector()
+	
+	rep_date$=date(0:"%Mz/%Dz/%Yd")
+	rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+	rep_time$=date(0:"%hz:%mz %p")
+	rep_time_stamp$=date(0:"%Hz%mz%sz")
+	rep_prog$=pgm(-2)	
+	
+rem --- Column headings 
+	
+    columns=9
+    dim columns$[columns,10]
 
-rem --- Read next entry record
+    columns$[0,0] = "Item",           columns$[0,1] = "C", columns$[0,2] = str(dw)
+    columns$[1,0] = lsh$,             columns$[1,1] = "C", columns$[1,2] = str( iff(lsh$="", 0, p[2]) ); rem Lot/Serial#
+    columns$[2,0] = "UM",             columns$[2,1] = "C", columns$[2,2] = "2"
+	columns$[3,0] = "Location",       columns$[3,1] = "C", columns$[3,2] = "10"
+    columns$[4,0] = "Physical^Qty",   columns$[4,1] = "N", columns$[4,2] = str(m2), columns$[4,3] = m2$, columns$[4,10] = "T"
+	columns$[5,0] = "Physical^Value", columns$[5,1] = "N", columns$[5,2] = str(m1), columns$[5,3] = m1$, columns$[5,10] = "T"
+	columns$[6,0] = "System^Qty",     columns$[6,1] = "N", columns$[6,2] = str(m2), columns$[6,3] = m2$, columns$[6,10] = "T"
+	columns$[7,0] = "System^Value",   columns$[7,1] = "N", columns$[7,2] = str(m1), columns$[7,3] = m1$, columns$[7,10] = "T"
+	columns$[8,0] = "Variance^Qty",   columns$[8,1] = "N", columns$[8,2] = str(m2), columns$[8,3] = m2$, columns$[8,10] = "T"
+	columns$[9,0] = "Variance^Value", columns$[9,1] = "N", columns$[9,2] = str(m1), columns$[9,3] = m1$, columns$[9,10] = "T"
+	
+    rem                                                                 @(o[5]),ph$,                         @(o[7]),sh$,                         @(o[9]),vh$
+    rem @(o[0]),"Item", @(o[2]),lsh$, @(o[3]),"UM", @(o[4]),"Location", @(o[5]+m2-9),qh$, @(o[6]+m1-12),th$, @(o[7]+m2-9),qh$, @(o[8]+m1-12),th$, @(o[9]+m2-9),qh$, @(o[10]+m1-12),th$
+
+rem --- Position cycle file
+
+	call pgmdir$+"adc_progress.aon","N","","","","",0,physical_dev,1,meter_num,ignore_status
+	
+	read (physcode_dev, key=firm_id$, dom=*next)
+
+rem --- Get next cycle
+
     while more
-        ivw10a_key$=key(ivw10_dev,end=*continue)
-        if pos(firm_id$=ivw10a_key$)<>1 continue
-        read (ivw10_dev)
+	
+		read record (physcode_dev, end=*break) physcode_rec$
+		if physcode_rec.firm_id$ <> firm_id$ then break
+		if physcode_rec.pending_action$ <> "3" then continue
 
-rem --- Position physical inventory record
+        whse_id$    = physcode_rec.warehouse_id$
+		cycle_code$ = physcode_rec.pi_cyclecode$
+		
+rem --- Get physical inventory record(s) (may be lot/serial)
 
-        first$=ivw10a_key.firm_id$+whse$+ivw10a_key.cycle_code$
-        read (ive03_dev,key=first$,dom=*next)
-
-rem --- Read next physical inventory record
-        while more
-            ive03a_key$=key(ive03_dev,end=*break)
-            if pos(first$=ive03a_key$)<>1 break
-            read record (ive03_dev) ive03a$
-            call pgmdir$+"adc_progress.aon","S","","","",ive03a.warehouse_id$+" "+ive03a.cycle_code$+" "+ive03a_key.inv_location$+" "+ive03a_key.item_id$,0,0,1,meter_num,status
+		first$ = firm_id$ + whse_id$ + cycle_code$
+		read (physical_dev, key=first$, dom=*next)
+		
+		while more
+		
+			physical_key$ = key(physical_dev, end=*break)
+			if pos(first$ = physical_key$) <> 1 then break
+			read record (physical_dev) physical_rec$
+			
+			item_id$   = physical_rec.item_id$
+			location$  = physical_rec.location$
+			
+			call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
 
 rem --- Level breaks
 
-            if ive03a.cycle_code$<>t0$ gosub Cycle_Break
-            if ive03a.item_id$<>t1$ gosub Item_Break
+            if physical_rec.pi_cyclecode$ <> prev_cycle$ then gosub cycle_break
+            if physical_rec.item_id$      <> prev_item$  then gosub item_break
 
 rem --- Retrieve lot/serial master
 
-            if ls$="Y" or ivm01a.LOTSER_ITEM$+ivm01a.INVENTORIED$="YY" then
-                rem dim d0$(44),d1$(96),d[12]
-                ivm07a_key$=ive03a.firm_id$+ive03a.warehouse_id+ive03a.item_id$
-                ivm07a.inv_location$=ive03a.inv_location$
-                ivm07a.unit_cost=cost
-                if cvs(ive03a.lotser_no$,2)="" then
-                    if ive03a.freeze_qty<>0 ive03a.lotser_item$="Y"; rem "Count always entered for Missingand Blank
-                    if ive03a.freeze_qty=0 ive03a.lotser_no$="None"
-                    if ive03a.ACT_PHYS_CNT<>0 ive03a.lotser_no$="Blank"
-                    if ive03a.ACT_PHYS_CNT<>0 and ive03a.freeze_qty>ive03a.ACT_PHYS_CNT ive03a.lotser_no$="Blank & Missing"
-                    if ive03a.ACT_PHYS_CNT<>0 and ive03a.freeze_qty<ive03a.ACT_PHYS_CNT ive03a.lotser_no$="Blank & Extra"
-                    if ive03a.ACT_PHYS_CNT=0 and ive03a.freeze_qty>ive03a.ACT_PHYS_CNT ive03a.lotser_no$="Missing"
-                    if ive03a.ACT_PHYS_CNT=0 and ive03a.freeze_qty<ive03a.ACT_PHYS_CNT ive03a.lotser_no$="Extra"
-                    if pos("Blank"=ive03a.lotser_no$)<>1 ivm07a.inv_location$=".........."
+			this_item_lot_ser = (ls$ = "Y" and itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
+
+            if this_item_lot_ser then
+                lsmaster_key$ = firm_id$ + whse_id$ + item_id$
+                lsmaster_rec.ls_location$ = physical_rec.location$
+                lsmaster_rec.unit_cost = cost
+				
+                if cvs(physical_rec.lotser_no$,2)="" then
+                    if physical_rec.freeze_qty <> 0 then physical_rec.lotser_item$ = "Y"; rem --- Count always entered for Missing (why?)
+                    physical_rec.lotser_no$   = "Missing"
+                    lsmaster_rec.ls_location$ = ".........."
                 endif
-                find record (ivm07a_dev,key=ivm07a_key$,dom=Total_Value) ivm07a$
-                cost=ivm07a.unit_cost
+				
+                find record (lsmaster_dev, key=lsmaster_key$, dom=*endif) lsmaster_rec$
+                cost=lsmaster_rec.unit_cost
             endif
-Total_Value: rem --- Calculate total value and variance
+			
+rem --- Calculate total value and variance
 
             dim t[6]
-            if ive03a.lotser_item$<>"Y" ive03a.ACT_PHYS_CNT=ive03a.freeze_qty
-            t[0]=ive03a.ACT_PHYS_CNT
-            t[1]=t[0]*cost
-            t[2]=ive03a.freeze_qty
-            t[3]=t[2]*cost
-            t[4]=t[0]-t[2]
-            t[5]=t[1]-t[3]
+            rem if physical_rec.lotser_item$ <> "Y" then physical_rec.act_phys_cnt = physical_rec.freeze_qty; rem why?
+            t[0] = physical_rec.act_phys_cnt
+            t[1] = t[0]*cost
+            t[2] = physical_rec.freeze_qty
+            t[3] = t[2]*cost
+            t[4] = t[0]-t[2]
+            t[5] = t[1]-t[3]
             mark$=""
-            if ls$<>"Y" and cvs(ive03a.lotser_no$,2)<>"None" then
-                if ive03a.lotser_item$<>"Y" t[6]=1,mark$="*"
+			
+            if ls$<>"Y" and cvs(physical_rec.lotser_no$,2)<>"None" and physical_rec.lotser_item$<>"Y" then 
+				rem t[6]=1
+				mark$="*"
             endif
+			
 rem --- Print non-lotted/serialized item
 
-            if ls$<>"Y" if ivm01a.LOTSER_ITEM$+ivm01a.INVENTORIED$<>"YY" then
-                if l+2>l9 gosub report_heading
-                print (printer_dev)@(o[0]),ivm01a.ITEM_Id$,mark$,@(o[3]),ivm01a.unit_of_sale$,@(o[4]),ive03a.inv_location$,@(o[5]),t[0]:m2$,@(o[6]),t[1]:m1$,@(o[7]),t[2]:m2$,@(o[8]),t[3]:m1$,@(o[9]),t[4]:m2$,@(o[10]),t[5]:m1$
-                print (printer_dev)@(o[1]),description$
+            if !this_item_lot_ser then
+			
+                rem if l+2>l9 gosub report_heading
+				OutVect!.addItem(itemmast_rec.item_id$ + mark$)
+				OutVect!.addItem("")
+				OutVect!.addItem(itemmast_rec.unit_of_sale$)
+				OutVect!.addItem(physical_rec.location$)
+				OutVect!.addItem(str(t[0]))
+				OutVect!.addItem(str(t[1]))
+				OutVect!.addItem(str(t[2]))
+				OutVect!.addItem(str(t[3]))
+				OutVect!.addItem(str(t[4]))
+				OutVect!.addItem(str(t[5]))
+				
+				OutVect!.addItem("   " + description$)
+				ignore = fnblank(9)
+				
+                rem print (printer_dev)@(o[0]),itemmast_rec.item_id$,mark$,@(o[3]),itemmast_rec.unit_of_sale$,@(o[4]),physical_rec.location$,@(o[5]),t[0]:m2$,@(o[6]),t[1]:m1$,@(o[7]),t[2]:m2$,@(o[8]),t[3]:m1$,@(o[9]),t[4]:m2$,@(o[10]),t[5]:m1$
+                rem print (printer_dev)@(o[1]),"   ",description$
                 l=l+2
-                continue
-            endif
+				detail_printed = detail_printed + 1
+                
+            else
+			
  rem --- Print lotted/serialized item
 
-            if ive03a.firm_id$+ive03a.warehouse_id+ive03a.cycle_code$+ive03a.inv_location$+ive03a.item_id$<>last$ gosub Item_Head
-            if l+1>l9 l=l9+1; gosub Item_Head
-            print (printer_dev)@(o[2]),ive03a.lotser_no$,len(cvs(ive03a.lotser_no$,2)),mark$,@(o[4]),ivm07a.inv_location$,@(o[5]),t[0]:m2$,@(o[6]),t[1]:m1$,@(o[7]),t[2]:m2$,@(o[8]),t[3]:m1$,@(o[9]),t[4]:m2$,@(o[10]),t[5]:m1$
-            l=l+1
-            l1=l1+1
+				if firm_id$ + whse_id$ + cycle_code$ + location$ + item_id$ <> last$ then gosub item_head
+				OutVect!.addItem("")
+				OutVect!.addItem( cvs(physical_rec.lotser_no$,2) + mark$ )
+				OutVect!.addItem("")
+				OutVect!.addItem(lsmaster_rec.ls_location$)
+				OutVect!.addItem(str(t[0]))
+				OutVect!.addItem(str(t[1]))
+				OutVect!.addItem(str(t[2]))
+				OutVect!.addItem(str(t[3]))
+				OutVect!.addItem(str(t[4]))
+				OutVect!.addItem(str(t[5]))
+				
+				rem print (printer_dev)@(o[2]),physical_rec.lotser_no$, len(cvs(physical_rec.lotser_no$,2)) @(o[3]),mark$,@(o[4]),lsmaster_rec.ls_location$,@(o[5]),t[0]:m2$,@(o[6]),t[1]:m1$,@(o[7]),t[2]:m2$,@(o[8]),t[3]:m1$,@(o[9]),t[4]:m2$,@(o[10]),t[5]:m1$
+				rem l1=l1+1
+				detail_printed = detail_printed + 1
+			
+			endif
 
 rem --- Loop back for next physical inventory record
 
@@ -286,116 +320,214 @@ rem --- Loop back for next physical inventory record
                 cycle[x]=cycle[x]+t[x]
                 report[x]=report[x]+t[x]
             next x
+			
         wend
+		
+rem --- Set pending action to update
+		
+		physcode_rec.pending_action$="4"
+		physcode_rec$ = field(physcode_rec$)
+		write record (physcode_dev) physcode_rec$
+		
 rem --- Loop back for next entry record
 
     wend
 
-done: rem --- All done
+rem --- All done
 
+rem Do last break
     done=1
-    gosub Cycle_Break
-    dim totals$[5]
-    total$="Register "
-    totals$[1]=str(report[1]:m1$)
-    nl=1
-    totals$[3]=str(report[3]:m1$)
-    totals$[5]=str(report[5]:m1$)
-    warning=report[6]
-    gosub Print_Line
+    gosub cycle_break
+	
+	if cycle_printed > 1 then
+		nl=1
+		dim totals$[5]
+		total$="Register "
+		totals$[1]=str(report[1])
+		totals$[3]=str(report[3])
+		totals$[5]=str(report[5])
+		warning=report[6]
+		gosub print_line
+	endif
+	
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    run pgmdir$+"ivu_va.bbx"
 
-report_heading: rem --- Report Heading
+rem Run update overlay after DocOut report	
+    overlay$ = pgmdir$+"ivu_physupdate.aon"
+    out_action$ = "PRT-PDF"
+    next_overlay$ = overlay$
+    goto std_exit	
 
-    l=headings+4
-    nl=0
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)@(o[5]),ph$,@(o[7]),sh$,@(o[9]),vh$
-    print (printer_dev)@(o[0]),"Item",@(o[2]),lsh$,@(o[3]),"UM",@(o[4]),"Location",@(o[5]+m2-9),qh$,@(o[6]+m1-12),th$,@(o[7]+m2-9),qh$,@(o[8]+m1-12),th$,@(o[9]+m2-9),qh$,@(o[10]+m1-12),th$
-    print (printer_dev)""
-    return
+item_head: rem --- Item subheading (lotted/serialized)
 
-Item_Head: rem --- Item subheading (lotted/serialized)
-
-    if l+3>l9 gosub report_heading
-    print (printer_dev)@(o[0]),ive03a.item_id$,@(o[3]),ivm01a.unit_of_sale$,@(o[4]),ive03a.inv_location$," ",continued$
-    print (printer_dev)@(o[1]),description$
+    rem if l+3>l9 gosub report_heading
+	OutVect!.addItem(physical_rec.item_id$)
+	OutVect!.addItem(itemmast_rec.unit_of_sale$)
+	OutVect!.addItem(physical_rec.location$)
+	OutVect!.addItem(continued$)
+	ignore = fnblank(6)
+	
+	OutVect!.addItem("   "+description$)
+	ignore = fnblank(9)
+	
+    rem print (printer_dev)@(o[0]),physical_rec.item_id$,@(o[3]),itemmast_rec.unit_of_sale$,@(o[4]),physical_rec.location$," ",continued$
+    rem print (printer_dev)@(o[1]),"   ",description$
     l=l+2
-    continued$="(Continued)"
-    last$=ive03a.firm_id$+ive03a.warehouse_id+ive03a.cycle_code$+ive03a.inv_location$+ive03a.item_id$
+    continued$ = "(Continued)"
+    last$ = firm_id$ + whse_id$ + cycle_code$ + location$ + item_id$
+	
     return
 
-Cycle_Break: rem --- Cycle Break
+cycle_break: rem --- Cycle Break
 
-    if t0$<>"" then
-        gosub Item_Break
+    if prev_cycle$<>"" and item_printed > 1 then
+        gosub item_break
+		
+		nl=1
         dim totals$[5]
-        total$="Cycle Code "+t0$
-        totals$[1]=str(cycle[1]:m1$)
-        nl=1
-        totals$[3]=str(cycle[3]:m1$)
-        totals$[5]=str(cycle[5]:m1$)
+        total$="Cycle Code "+prev_cycle$
+        totals$[1]=str(cycle[1])
+        totals$[3]=str(cycle[3])
+        totals$[5]=str(cycle[5])
         warning=cycle[6]
-        gosub Print_Line
+        gosub print_line
     endif
-    if done return
-    dim cycle[6]
-    t0$=ive03a.cycle_code$
-    ivm10p_key$=firm_id$+"P"+whse$+t0$
-    ivm10p.cutoff_date$=sysinfo.system_date$
-    find record (ivm10p_dev,key=ivm10p_key.firm_id$+ivm10p_key.record_id_p$+ivm10p_key.warehouse_id$+ivm10p_key.cycle_code$,dom=*next) ivm10p$
-    ivm10p.phys_ivn_sts$="3"
-    l=l9+1
-    headings=3
-    headings$[2]="Cycle Code "+t0$+" - Cutoff Date "+fndate$(ivm10p.cutoff_date$)
-    write record (ivm10_dev,key=ivm10p_key.firm_id$+ivm10p_key.record_id_p$+ivm10p_key.warehouse_id$+ivm10p_key.cycle_code$) ivm10p$
+			
+	detail_printed = 0
+	item_printed = 0
+	
+    if !done then 
+		dim cycle[6]
+		
+		prev_cycle$ = physical_rec.pi_cyclecode$
+		physcode_rec.cutoff_date$ = sysinfo.system_date$
+		cycle_printed = cycle_printed + 1
+		
+		BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
+		HdrVect!.addItem( "Cycle Code " + prev_cycle$ + " - Cutoff Date " + fndate$(physcode_rec.cutoff_date$) )
+
+	endif
+	
     return
 
-Item_Break: rem --- Item Break
+item_break: rem --- Item Break
 
-    if t1$<>"" or l1>=1 then 
+    if prev_item$ <> "" and detail_printed > 1 then 
         dim totals$[5]
-        let total$="Item "+t1$,nl=0,warning=0
-        let totals$[0]=str(item[0]:m2$),totals$[1]=str(item[1]:m1$)
-        let totals$[2]=str(item[2]:m2$),totals$[3]=str(item[3]:m1$)
-        let totals$[4]=str(item[4]:m2$),totals$[5]=str(item[5]:m1$)
-        gosub Print_Line
+        total$="Item "+prev_item$
+		nl=0
+		warning=0
+        totals$[0]=str(item[0])
+		totals$[1]=str(item[1])
+        totals$[2]=str(item[2])
+		totals$[3]=str(item[3])
+        totals$[4]=str(item[4])
+		totals$[5]=str(item[5])
+        gosub print_line
     endif
-    if done return
-    dim description$(dw),item[6]
-    let ivm01a_key$=firm_id$+ive03a.item_id$,ivm01a.item_desc$="(Not On File)",t1$=ive03a.item_id$
-    let ivm02a_key$=firm_id$+ive03a.warehouse_id$+ive03a.item_id$,ivm02a.unit_cost=0,l1=0
-    find record (ivm01a_dev,key=ivm01a_key$,dom=*next) ivm01a$
-    find record (ivm02a_dev,key=ivm02a_key$,dom=*next) ivm02a$
-    let description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5]),continued$="",cost=ivm02a.unit_cost
+	
+	detail_printed = 0
+	
+    if !done then 
+		dim description$(dw)
+		dim item[6]
+		itemmast_key$ = firm_id$ + item_id$
+		itemmast_rec.item_desc$ = "(Not On File)"
+		prev_item$ = item_id$
+		itemwhse_key$ = firm_id$ + whse_id$ + item_id$
+		itemwhse_rec.unit_cost = 0
+		item_printed = item_printed + 1
+		find record (itemmast_dev, key=itemmast_key$, dom=*next) itemmast_rec$
+		find record (itemwhse_dev, key=itemwhse_key$, dom=*next) itemwhse_rec$
+		description$ = fnitem$(itemmast_rec.item_desc$,p[3],p[4],p[5])
+		continued$ = ""
+		cost = itemwhse_rec.unit_cost
 
 rem --- Get LIFO/FIFO Cost As Necessary
 
-    if pos(lf$="LF")=0 return
-    if ls$="Y" and ivm01a.LOTSER_ITEM$+ivm01a.INVENTORIED$="YY" return; rem "Use lot/serial cost
-    dim lf_item$[2]
-    let lf_item$[0]=firm_id$,lf_item$[1]=ive03a.warehouse_id$,lf_item$[2]=ive03a.item_id$
-    let lf_act$=lf$+"R",lf_type$="R",lf_date$=ive03a.cutoff_date$,lf_qnty=ive03a.ACT_PHYS_CNT-ive03a.freeze_qty,lf_cost=0
-    if lf_qnty<0 lf_act$=lf$+"I"
-    call pgmdir$+"ivc_lifofifo.aon",lf_act$,lf_type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],p[1],abs(lf_qnty),cost,lf_cost,status
-    if lf_qnty<0 and lf_cost<>0 cost=lf_cost
+		if pos(lf$="LF") and !this_item_lot_ser then
+			dim lf_item$[2]
+			lf_item$[0] = firm_id$
+			lf_item$[1] = physical_rec.warehouse_id$
+			lf_item$[2] = physical_rec.item_id$
+			lf_type$ = "R"
+			lf_date$ = physical_rec.cutoff_date$
+			lf_qnty  = physical_rec.act_phys_cnt - physical_rec.freeze_qty
+			lf_cost  = 0
+			if lf_qnty < 0 then lf_act$=lf$+"I" else lf_act$=lf$+"R"
+			call pgmdir$+"ivc_lifofifo.aon",lf_act$,lf_type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],p[1],abs(lf_qnty),cost,lf_cost,status
+			if lf_qnty < 0 and lf_cost <> 0 then cost=lf_cost
+		endif
+	endif
+	
     return
 
-Print_Line: rem --- Print total line
+print_line: rem --- Print total line
 
-    let needed=1
-    if warning>0 needed=3
-    if nl>0 needed=needed+1
-    if l+needed>l9 gosub report_heading
-    if nl>0 print (printer_dev)""
-    print (printer_dev)@(o[1]),"Totals For ",total$,@(o[5]),totals$[0],@(o[6]),totals$[1],@(o[7]),totals$[2],@(o[8]),totals$[3],@(o[9]),totals$[4],@(o[10]),totals$[5]
-    if warning<>0 then
-        print (printer_dev)""
-        print (printer_dev)@(o[1]),"WARNING:",warning," Item(s) Not Entered For"+total$
+    rem if warning then needed=3 else needed=1
+    rem if nl then needed=needed+1
+    rem if l+needed>l9 gosub report_heading
+    if nl then ignore = fnblank_line(void)
+	
+	TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+	OutVect!.addItem("")
+	OutVect!.addItem("**Totals For " + total$)
+	ignore = fnblank(2)
+	OutVect!.addItem(totals$[0])
+	OutVect!.addItem(totals$[1])
+	OutVect!.addItem(totals$[2])
+	OutVect!.addItem(totals$[3])
+	OutVect!.addItem(totals$[4])
+	OutVect!.addItem(totals$[5])
+	
+	ignore = fnblank_line(void)
+	
+    rem print (printer_dev)@(o[1]),"Totals For ",total$,@(o[5]),totals$[0],@(o[6]),totals$[1],@(o[7]),totals$[2],@(o[8]),totals$[3],@(o[9]),totals$[4],@(o[10]),totals$[5]
+    
+	if warning then
+        ignore = fnblank_line(void)
+		OutVect!.addItem("")
+		OutVect!.addItem("WARNING: " + str(warning) + " Item(s) Not Entered For" + total$)
+        ignore = fnblank(8)
     endif
-    let l=l+needed,nl=0
+	
+    rem l=l+needed
+	nl=0
+	
+    return
+	
+open_tables: rem --- Open tables
+
+    call sypdir$+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		rd_table_chans$[all],
+:		open_batch,
+:		open_status$
+
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        status=912
+        goto std_exit
+    endif
+
+    return
+
+disp_message: rem --- Display Message Dialog
+
+    call sypdir$+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		rd_table_chans$[all]
+
     return
 
 rem #include std_functions.src
@@ -468,6 +600,19 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return void
+    fnend
+
+rem --- Create a blank line.  "void" is simply a variable; it's there to remind you that this function takes no input
+
+	def fnblank_line(void)=fnblank(columns+1)
 
 rem #include std_error.src
 
