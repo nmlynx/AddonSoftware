@@ -1,42 +1,58 @@
+[[IVE_COUNT_ENTRY.COUNT_STRING.BINP]]
+rem --- Serial number's count defaults to one
+
+	if user_tpl.this_item_lot_ser and user_tpl.lotser_flag$ = "S"
+		callpoint!.setTableColumnAttribute("IVE_COUNT_ENTRY.ACT_PHYS_CNT","DFLT","1")
+	endif
 [[IVE_COUNT_ENTRY.AREC]]
 print "AREC"; rem debug
 
 rem --- Display next record
 
 	gosub read_display
+	user_tpl.prev_cycle$ = physical_rec.pi_cyclecode$
+	print "previous cycle code set: ", user_tpl.prev_cycle$; rem debug
 [[IVE_COUNT_ENTRY.LOTSER_NO.AVAL]]
 print "LOTSER_NO:AVAL"; rem debug
 
 rem --- Check for valid lot and lookup the lot location
 
+	item$ = callpoint!.getColumnData("IVE_COUNT_ENTRY.ITEM_ID")
 	lotser_no$ = callpoint!.getUserInput()
-	gosub valid_ls
-
-	if found then
-
-rem --- Set location if it's not blank (NOT CURRENTLY USED)
-
-		rem if cvs(lsmaster_rec.ls_location$, 2) <> "" then
-			rem callpoint!.setColumnData("IVE_COUNT_ENTRY.LOCATION", lsmaster_rec.ls_location$)
-			rem callpoint!.setStatus("REFRESH")
-		rem endif
 
 rem --- Does record exists?  Ok to add?
 
-		gosub find_record
+	gosub find_record
 
+	if cvs(lotser_no$, 2) = "" then 
+		callpoint!.setStatus("ABORT")
+	else 
 		if new_record then
 			msg_id$ = "IV_ADD_PHYS_REC"
 			gosub disp_message
 
 			if msg_opt$ = "N" then
 				callpoint!.setStatus("ABORT")
+			else
+				callpoint!.setColumnData("IVE_COUNT_ENTRY.FREEZE_QTY", "0")
+
+rem			Serial number count defaults to one
+				if user_tpl.lotser_flag$ = "S" then
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.COUNT_STRING", "1")
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.ACT_PHYS_CNT", "1")
+				else
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.COUNT_STRING", "")
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.ACT_PHYS_CNT", "0")	
+				endif
+
+				callpoint!.setStatus("REFRESH")
 			endif
+
 		else
 			gosub display_record
 		endif
-
 	endif
+
 [[IVE_COUNT_ENTRY.ASVA]]
 print "ASVA"; rem debug
 
@@ -75,12 +91,12 @@ rem --- Check for valid lot/serial
 	if user_tpl.this_item_lot_ser
 
 		lotser_no$ = callpoint!.getColumnData("IVE_COUNT_ENTRY.LOTSER_NO")
-		gosub valid_ls
+		rem gosub valid_ls
 
-		if !found then
-			callpoint!.setStatus("ABORT")
-			goto asva_end			
-		endif
+		rem if !found then
+		rem 	callpoint!.setStatus("ABORT")
+		rem 	goto asva_end			
+		rem endif
 
 	endif
 
@@ -88,6 +104,7 @@ rem --- Write existing record and display the next
 
 	gosub write_record
 	gosub read_display
+	callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_NO", 0)
 
 asva_end:
 [[IVE_COUNT_ENTRY.ITEM_ID.AVAL]]
@@ -134,13 +151,22 @@ rem --- Get record if this isn't a lotted/serial item
 [[IVE_COUNT_ENTRY.PI_CYCLECODE.AVAL]]
 print "PI_CYCLCODE:AVAL"; rem debug
 
-rem --- Is cycle in the correct stage?
+rem --- Has cycle changed?
 
 	whse$  = callpoint!.getColumnData("IVE_COUNT_ENTRY.WAREHOUSE_ID")
 	cycle$ = callpoint!.getUserInput()
+
+	if user_tpl.prev_cycle$ <> cycle$ then
+		print "trip read for new cycle..."; rem debug
+		read (fnget_dev("IVE_PHYSICAL"), key=firm_id$+whse$+cycle$, dom=*next)
+		gosub read_display
+		user_tpl.prev_cycle$ = cycle$
+		print "previous cycle code set: ", user_tpl.prev_cycle$; rem debug
+	endif
+
+rem --- Is cycle in the correct stage?
+	
 	gosub check_whse_cycle
-[[IVE_COUNT_ENTRY.ARAR]]
-print "ARAR"; rem debug
 [[IVE_COUNT_ENTRY.<CUSTOM>]]
 rem ==========================================================================
 check_whse_cycle: rem --- Check the Physical Cycle code for the correct status
@@ -199,8 +225,12 @@ print "in check_item_whse"; rem debug
 	find record (fnget_dev(item_file$), key=firm_id$+item$) itemmast_rec$
 
 	user_tpl.this_item_lot_ser = (user_tpl.ls$ = "Y" and itemmast_rec.lotser_item$ = "Y" and itemmast_rec.inventoried$ = "Y")
-	callpoint!.setStatus( "ENABLE:" + str(user_tpl.this_item_lot_ser) )
+	rem callpoint!.setStatus( "ENABLE:" + str(user_tpl.this_item_lot_ser) )
 	print "user_tpl.this_item_lot_ser =", user_tpl.this_item_lot_ser; rem debug
+
+	if user_tpl.this_item_lot_ser then
+		callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_NO", 1)
+	endif
 
 	whse_file$ = "IVM_ITEMWHSE"
 	dim itemwhse_rec$:fnget_tpl$(whse_file$)
@@ -264,12 +294,12 @@ print "in display_record"; rem debug
 	callpoint!.setColumnData("IVE_COUNT_ENTRY.CUTOFF_DATE", physical_rec.cutoff_date$)
 	callpoint!.setColumnData("IVE_COUNT_ENTRY.LOCATION", physical_rec.location$)
 	callpoint!.setColumnData("IVE_COUNT_ENTRY.ITEM_ID", physical_rec.item_id$)
+	callpoint!.setColumnData("IVE_COUNT_ENTRY.LOTSER_NO", physical_rec.lotser_no$)
 	callpoint!.setColumnData("IVE_COUNT_ENTRY.FREEZE_QTY", physical_rec.freeze_qty$)
 	callpoint!.setColumnData("IVE_COUNT_ENTRY.COUNT_STRING", physical_rec.count_string$)
 	callpoint!.setColumnData("IVE_COUNT_ENTRY.ACT_PHYS_CNT", physical_rec.act_phys_cnt$)
 
 	callpoint!.setStatus("REFRESH")
-print "Status Refresh set"; rem debug
 
 	user_tpl.entered_flag$ = physical_rec.entered_flag$
 	user_tpl.lotser_item$  = physical_rec.lotser_item$
@@ -471,15 +501,21 @@ rem --- Test and total count string
 	if failed then
 		callpoint!.setStatus("ABORT")
 	endif
+
+rem --- Serial number count must be one
+
+	if user_tpl.this_item_lot_ser and user_tpl.lotser_flag$ = "S" and total <> 1
+		callpoint!.setStatus("ABORT")
+	endif
 [[IVE_COUNT_ENTRY.BSHO]]
-print 'show',"BSHO"; rem debug
+rem print 'show',"BSHO"; rem debug
 
 rem --- Inits
 
 	use ::ado_util.src::util
 
-	dim user_tpl$:"amt_mask:c(1*), ls:c(1), this_item_lot_ser:u(1)," +
-:                "entered_flag:c(1), lotser_item:c(1), freeze_qty:n(1*)"
+	dim user_tpl$:"amt_mask:c(1*), ls:c(1), lotser_flag:c(1), this_item_lot_ser:u(1)," +
+:                "entered_flag:c(1), lotser_item:c(1), freeze_qty:n(1*), prev_cycle:c(2)"
 
 rem --- Open files
 
@@ -504,6 +540,7 @@ rem --- Get IV params, set mask, lot/serial
 	user_tpl.amt_mask$ = params_rec.amount_mask$
 	if pos(params_rec.lotser_flag$ = "LS") then ls$="Y" else ls$ = "N"
 	user_tpl.ls$ = ls$
+	user_tpl.lotser_flag$ = params_rec.lotser_flag$
 
 	if ls$ = "N" then
 		callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_ITEM", -1)
