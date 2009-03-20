@@ -175,7 +175,7 @@ rem --- Document initializations
 	rep_time_stamp$=date(0:"%Hz%mz%sz")
 	rep_prog$=pgm(-2)	
 	
-rem --- Column headinhs
+rem --- Column headings
 	
     columns=6
     dim columns$[columns,10]
@@ -198,94 +198,48 @@ rem --- Report headings
 
 rem --- Report Inits
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,itemwhse_dev,1,meter_num,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,physical_dev,1,meter_num,ignore_status
 	
     number=0
     more=1
 	nl=0
 	
-rem --- Setup SQL to read through IVM_ITEMWHSE with selected cycle codes
+	read (physcode_dev, key=firm_id$, dom=*next)
 
-    sql_prep$ = ""
-    sql_prep$ = sql_prep$ + "SELECT warehouse_id, pi_cyclecode, item_id, location "
-    sql_prep$ = sql_prep$ + "  FROM ivm_itemwhse "
-    where_clause$ =         " WHERE firm_id = '" + firm_id$ + "' AND warehouse_id = '" + whse$ +"' "
-
-    read (physcode_dev, key=firm_id$+whse$, dom=*next)
-    first_time = 1
-
-rem --- Loop through IVC_PHYSCODE to build the rest of the WHERE clause
-
-    if selected_all = 0 then
-
-        while more
-
-            read record (physcode_dev, end=*break) physcode_rec$
-            if physcode_rec.firm_id$ <> firm_id$ or physcode_rec.warehouse_id$ <> whse$ then break
-
-rem         Pending action of Select for Print
-            if physcode_rec.pending_action$ = "2" then
-                if first_time then
-rem                 Start WHERE clause for cycles
-                    where_clause$ = where_clause$ + "AND pi_cyclecode IN ('" + physcode_rec.pi_cyclecode$ + "', "
-					first_time = 0
-                else
-rem                 Continue WHERE clause for cycles
-                    where_clause$ = where_clause$ + "'" + physcode_rec.pi_cyclecode$ + "', "
-                endif
-            endif
-
-        wend
-
-rem     Finish WHERE clause if necessary
-        if where_clause$(len(where_clause$)-1, 2) = ", " then
-            where_clause$ = where_clause$(1, len(where_clause$)-2) + ")"
-        endif
-
-    endif
-
-    sql_prep$ = sql_prep$ + where_clause$
-    sql_prep$ = sql_prep$ + " ORDER BY warehouse_id, pi_cyclecode, item_id "
-	
-    sql_chan=sqlunt
-    sqlopen(sql_chan)stbl("+DBNAME")
-    sqlprep(sql_chan)sql_prep$
-    dim sql_rec$:sqltmpl(sql_chan)
-    sqlexec(sql_chan)
-
-rem --- Get next SQL record
-
-	prev_cycle$ = ""
+rem --- Get next cycle
 
     while more
 
-        sql_rec$    = sqlfetch(sql_chan, err=*break)
-        whse_id$    = sql_rec.warehouse_id$
-        item_id$    = sql_rec.item_id$
-		cycle_code$ = sql_rec.pi_cyclecode$
-		location$   = sql_rec.location$
-		
-		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+		read record (physcode_dev, end=*break) physcode_rec$
+		if physcode_rec.firm_id$ <> firm_id$ then break
+		if physcode_rec.pending_action$ <> "2" then continue
+
+        whse_id$    = physcode_rec.warehouse_id$
+		cycle_code$ = physcode_rec.pi_cyclecode$
 		
 rem --- Cycle code break
 
-		if prev_cycle$ <> cycle_code$ then 
-	        find record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*endif) physcode_rec$
-			last$=""
-			BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
-			HdrVect!.addItem( "Cycle Code "+cycle_code$+" - Cutoff Date "+fndate$(physcode_rec.cutoff_date$) )
-		endif
+		last$=""
+		BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
+		HdrVect!.addItem( "Cycle Code "+cycle_code$+" - Cutoff Date "+fndate$(physcode_rec.cutoff_date$) )
 		
 rem --- Get physical inventory record(s) (may be lot/serial)
 
 		first_time = 1
-		read (physical_dev, key=firm_id$+whse_id$+cycle_code$+location$+item_id$, dir=0, dom=*next)
+		first$ = firm_id$+whse_id$+cycle_code$
+		read (physical_dev, key=first$, dom=*next)
 		
 		while more
 		
 			physical_key$ = key(physical_dev, end=*break)
-			if pos(firm_id$+whse_id$+cycle_code$+location$+item_id$ = physical_key$) <> 1 then break
+			if pos(first$ = physical_key$) <> 1 then break
 			read record (physical_dev) physical_rec$
+
+			item_id$   = physical_rec.item_id$
+			location$  = physical_rec.location$
+			lotser_no$ = physical_rec.lotser_no$
+			
+			call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
 		
 rem --- Retrieve item master
 
@@ -372,15 +326,11 @@ rem --- Next physical record
 		
 rem --- Cycle code update
 
-		if prev_cycle$ <> cycle_code$ then 
-	        find record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*endif) physcode_rec$
-			physcode_rec.phys_inv_sts$   = physcode_rec.pending_action$
-			physcode_rec.pending_action$ = "0"
-			physcode_rec$ = field(physcode_rec$)
-			write record (physcode_dev) physcode_rec$
-		endif
-		
-		prev_cycle$ = cycle_code$
+		find record (physcode_dev, key=firm_id$+whse_id$+cycle_code$, dom=*endif) physcode_rec$
+		physcode_rec.phys_inv_sts$   = physcode_rec.pending_action$
+		physcode_rec.pending_action$ = "0"
+		physcode_rec$ = field(physcode_rec$)
+		write record (physcode_dev) physcode_rec$
 		
 rem --- Loop back for next SQL record
 
