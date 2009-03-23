@@ -1,3 +1,6 @@
+[[POE_REQDET.BGDR]]
+	find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
+	gosub get_item_desc
 [[POE_REQDET.WAREHOUSE_ID.BINP]]
 rem --- old version defaulted whse to the ship-to one
 
@@ -63,6 +66,7 @@ rem --- After Grid Display Row
 	if cvs(po_line_code$,2)<>"" then  
 	    gosub update_line_type_info
 	endif
+
 [[POE_REQDET.ITEM_ID.AVAL]]
 rem --- did user enter item#, or are we trying to do synonym lookup, or ? for custom lookup
 
@@ -166,6 +170,16 @@ missing_warehouse:
 	msg_tokens$[1]=whse$
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
+
+return
+
+get_item_desc:
+
+	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+
+	read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*next)ivm_itemmast$
+	x$=stbl("+POE_REQDET_ITEM_DESC",cvs(ivm_itemmast.item_desc$,3))
 
 return
 		

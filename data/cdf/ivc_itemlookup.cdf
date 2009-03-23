@@ -1,5 +1,3 @@
-[[IVC_ITEMLOOKUP.BSHO]]
-rem bsho
 [[IVC_ITEMLOOKUP.AWIN]]
 rem --- open files
 
@@ -7,59 +5,39 @@ rem --- open files
 
 	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="APM_VENDMAST", open_opts$[1]="OTA"
-	open_tables$[2]="IVM_LSMASTER", open_opts$[2]="OTA"
-	open_tables$[3]="APS_PARAMS",   open_opts$[3]="OTA"
-	open_tables$[4]="IVS_PARAMS",   open_opts$[4]="OTA"
+	open_tables$[1]="IVM_ITEMMAST", open_opts$[1]="OTA"
+	open_tables$[2]="IVM_ITEMVEND", open_opts$[2]="OTA"
+	open_tables$[3]="IVM_ITEMSYN",   open_opts$[3]="OTA"
 
 	gosub open_tables
 
-	apm_vendmast_dev=num(open_chans$[1]); dim apm_vendmast$:open_tpls$[1]
-	ivm_lsmaster_dev=num(open_chans$[2]); dim ivm_lsmaster$:open_tpls$[2]
-	aps_params_dev=num(open_chans$[3]);   dim aps_params$:open_tpls$[3]
-	ivs_params_dev=num(open_chans$[4]);   dim ivs_params$:open_tpls$[4]
-
-rem --- Retrieve parameter records
-
-    find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
-    find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
-
-rem --- Parameters
-
-    dim p[5]   
-    if pos(ivs_params.lotser_flag$="SL")=0 goto std_exit
-    p[0]=num(ivs_params.item_id_len$)
-    p[1]=num(ivs_params.vendor_prd_len$)
-    p[3]=num(ivs_params.ls_no_len$)
-    p[2]=num(ivs_params.desc_len_01$)
-    p[4]=num(ivs_params.desc_len_02$)
-    p[5]=num(ivs_params.desc_len_03$)
-    call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
-    callpoint!.setDevObject("ap_installed",info$[20])
+	ivm_itemmast_dev=num(open_chans$[1]); dim ivm_itemmast$:open_tpls$[1]
+	ivm_itemvend_dev=num(open_chans$[2]); dim ivm_itemvend$:open_tpls$[2]
+	ivm_itemsyn_dev=num(open_chans$[3]);   dim ivm_itemsyn$:open_tpls$[3]
 
 rem ---  Set up grid
 
 	dims_tmpl$ = "x:u(2),y:u(2),w:u(2),h:u(2)"
 	dim g$:dims_tmpl$
-	g.x = 10, g.y = 75, g.w = 300, g.h = 220
+	g.x = 10, g.y = 75, g.w = 400, g.h = 220
 	callpoint!.setDevObject("dims_tmpl", dims_tmpl$)
 	callpoint!.setDevObject("grid_dims", g$)
 
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	gridLots!=Form!.addGrid(nxt_ctlID, g.x, g.y, g.w, g.h)
-	gridLots!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+	gridSearch!=Form!.addGrid(nxt_ctlID, g.x, g.y, g.w, g.h)
+	gridSearch!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 
-	gridLots!.setColumnEditable(0,0)
-	gridLots!.setColumnEditable(1,0)
+	gridSearch!.setColumnEditable(0,0)
+	gridSearch!.setColumnEditable(1,0)
 
-	gridLots!.setCallback(gridLots!.ON_GRID_MOUSE_UP,"custom_event")
-	gridLots!.setCallback(gridLots!.ON_GRID_SELECT_ROW,"custom_event")
+	gridSearch!.setCallback(gridSearch!.ON_GRID_MOUSE_UP,"custom_event")
+	gridSearch!.setCallback(gridSearch!.ON_GRID_SELECT_ROW,"custom_event")
 
-	callpoint!.setDevObject("gridLots",gridLots!)
+	callpoint!.setDevObject("gridSearch",gridSearch!)
 
 	dim attr_def_col_str$[0,0]
 	attr_def_col_str$[0,0]=callpoint!.getColumnAttributeTypes()
-	def_grid_cols=2
+	def_grid_cols=3
 	num_rows=10
 	dim attr_grid_col$[def_grid_cols,len(attr_def_col_str$[0,0])/5]
 
@@ -67,13 +45,17 @@ rem ---  Set up grid
 	labs_pos = fnstr_pos("LABS", attr_def_col_str$[0,0], 5)
 	ctlw_pos = fnstr_pos("CTLW", attr_def_col_str$[0,0], 5)
 	
-	attr_grid_col$[1,dvar_pos]="LOT NO"
-	attr_grid_col$[1,labs_pos]="Lot/Serial No"
+	attr_grid_col$[1,dvar_pos]="SEARCH_KEY"
+	attr_grid_col$[1,labs_pos]="Search Key"
 	attr_grid_col$[1,ctlw_pos]="125"
 
-	attr_grid_col$[2,dvar_pos]="STATUS"
-	attr_grid_col$[2,labs_pos]="Status"
+	attr_grid_col$[2,dvar_pos]="ITEM_NO"
+	attr_grid_col$[2,labs_pos]="Item"
 	attr_grid_col$[2,ctlw_pos]="125"	
+
+	attr_grid_col$[3,dvar_pos]="DESC"
+	attr_grid_col$[3,labs_pos]="Description"
+	attr_grid_col$[3,ctlw_pos]="125"	
 	
 	for curr_attr=1 to def_grid_cols
 		attr_grid_col$[0,1] = attr_grid_col$[0,1] + 
@@ -84,62 +66,45 @@ rem ---  Set up grid
 	
 	call stbl("+DIR_SYP")+"bam_grid_init.bbj",
 :		gui_dev,
-:		gridLots!,
-:		"LINES",
+:		gridSearch!,
+:		"LINES-COLH",
 :		num_rows,
 :		attr_def_col_str$[all],
 :		attr_disp_col$,
 :		attr_grid_col$[all]
 
-rem --- Create Lot Information window			
+rem --- Create Item Information window			
 		
 	dim w$:dims_tmpl$
-	w.x = 330, w.y = 65, w.w = 400, w.h = 225
+	w.x = 420, w.y = 65, w.w = 420, w.h = 225
 	callpoint!.setDevObject("child_window_dims", w$)
 
 	cxt=SysGUI!.getAvailableContext()
-	lotWin!=form!.addChildWindow(15000, w.x, w.y, w.w, w.h, "", $00000800$, cxt)
+	infoWin!=form!.addChildWindow(15000, w.x, w.y, w.w, w.h, "", $00000800$, cxt)
 	SysGUI!.setContext(cxt)
 
-	lotWin!.addGroupBox(15999,5,5,380,220,"Lot/Serial Information",$$)
+	infoWin!.addGroupBox(15999,5,5,415,220,"Inventory Detail",$$)
 	
-	lotWin!.addStaticText(15001,10,25,75,15,"Vendor:",$8000$)
-	lotWin!.addStaticText(15002,10,45,75,15,"Comment:",$8000$)
-	lotWin!.addStaticText(15003,10,65,75,15,"Received:",$8000$)
-	lotWin!.addStaticText(15009,175,65,75,15,"Issued:",$8000$)
+	infoWin!.addStaticText(15001,10,25,75,15,"Product Type:",$8000$)
 
-	lotWin!.addStaticText(15004,10,105,75,15,"Cost:",$8000$)
-	lotWin!.addStaticText(15005,175,105,75,15,"Location:",$8000$)
+	infoWin!.addStaticText(15003,10,65,75,15,"Unit of Sale:",$8000$)
+	infoWin!.addStaticText(15004,10,85,75,15,"Weight:",$8000$)
 
-	lotWin!.addStaticText(15006,10,145,75,15,"On hand:",$8000$)
-	lotWin!.addStaticText(15007,10,165,75,15,"Committed:",$8000$)
-	lotWin!.addStaticText(15008,10,185,75,15,"Available:",$8000$)
+	infoWin!.addStaticText(15005,200,25,75,15,"Alt/Super:",$8000$)
+	infoWin!.addStaticText(15006,200,45,75,15,"Last Receipt:",$8000$)
+	infoWin!.addStaticText(15007,200,65,75,15,"Last Issue:",$8000$)
+	infoWin!.addStaticText(15008,200,85,75,15,"Lot/Serialized?:",$8000$)
 
-	callpoint!.setDevObject("vendor_id",  str(15101))
-	callpoint!.setDevObject("comment_id", str(15102))
-	callpoint!.setDevObject("receipt_id", str(15103))
-	callpoint!.setDevObject("issued_id",  str(15109))
+	infoWin!.addStaticText(15009,10,125,75,15,"On hand:",$8000$)
+	infoWin!.addStaticText(15010,10,145,75,15,"Committed:",$8000$)
+	infoWin!.addStaticText(15011,10,165,75,15,"Available:",$8000$)
+	infoWin!.addStaticText(15012,10,185,75,15,"On Order:",$8000$)
 
-	lotWin!.addStaticText(15101,95,25,175,15,"",$0000$)
-	lotWin!.addStaticText(15102,95,45,175,15,"",$0000$)
-	lotWin!.addStaticText(15103,95,65,75,15,"",$0000$)
-	lotWin!.addStaticText(15109,260,65,75,15,"",$0000$)
+	rem --- above labels, now data (sample only -- need to fix)
+	rem callpoint!.setDevObject("vendor_id",  str(15101))
+	rem infoWin!.addStaticText(15101,95,25,175,15,"",$0000$)
 
-	callpoint!.setDevObject("cost_id",     str(15104))
-	callpoint!.setDevObject("location_id", str(15105))
-
-	lotWin!.addStaticText(15104,95,105,75,15,"",$0000$)
-	lotWin!.addStaticText(15105,260,105,75,15,"",$0000$)
-
-	callpoint!.setDevObject("onhand_id",    str(15106))
-	callpoint!.setDevObject("committed_id", str(15107))
-	callpoint!.setDevObject("available_id", str(15108))
-
-	lotWin!.addStaticText(15106,95,145,75,15,"",$0000$)
-	lotWin!.addStaticText(15107,95,165,75,15,"",$0000$)
-	lotWin!.addStaticText(15108,95,185,75,15,"",$0000$)
-
-	callpoint!.setDevObject("lotInfo",lotWin!)			
+	callpoint!.setDevObject("infoWin",infoWin!)			
 
 	if !util.alreadyResized() then 
 		util.resizeWindow(Form!, SysGui!)
@@ -149,11 +114,6 @@ rem --- Create Lot Information window
 rem -- user changed lot type -- re-read/display selected lot type
 
 	lots_to_disp$=callpoint!.getUserInput()
-	gosub read_and_display_lot_grid
-[[IVC_ITEMLOOKUP.AREC]]
-rem --- item_id, warehouse_id, and type of lot (open,closed, etc.) coming from calling program
-
-	lots_to_disp$=callpoint!.getColumnData("IVC_ITEMLOOKUP.LOTS_TO_DISP")
 	gosub read_and_display_lot_grid
 [[IVC_ITEMLOOKUP.ACUS]]
 rem --- Process custom event -- used in this pgm to select lot and display info.
@@ -174,8 +134,8 @@ rem --- Get the control ID of the event
 
 	rem --- Get Grid's ID
 
-	gridLots!=callpoint!.getDevObject("gridLots")
-	wctl=gridLots!.getID()
+	gridSearch!=callpoint!.getDevObject("gridSearch")
+	wctl=gridSearch!.getID()
 	
 	rem --- This is a grid event
 
@@ -187,7 +147,7 @@ rem --- Get the control ID of the event
 			notice$=notify_base$
 		endif
 		
-		numcols=gridLots!.getNumColumns()
+		numcols=gridSearch!.getNumColumns()
 		vectLots!=callpoint!.getDevObject("vectLots")
 		curr_row=dec(notice.row$)
 		curr_col=dec(notice.col$)
@@ -195,17 +155,11 @@ rem --- Get the control ID of the event
 		switch notice.code
 			case 19; rem grid_key_press
 			case 14; rem grid_mouse_up
-				callpoint!.setDevObject("selected_lot",gridLots!.getCellText(curr_row,0))				
+				callpoint!.setDevObject("selected_lot",gridSearch!.getCellText(curr_row,0))				
 				gosub get_lot_info
 				break
 		swend
 	endif
-[[IVC_ITEMLOOKUP.ASIZ]]
-rem gridLots!=callpoint!.getDevObject("gridLots")
-rem if gridLots!<>Null()
-rem	gridLots!.setSize(300,Form!.getHeight()-(gridLots!.getY()+40))
-rem	gridLots!.setFitToGrid(1)
-rem endif
 [[IVC_ITEMLOOKUP.<CUSTOM>]]
 rem ==========================================================================
 read_and_display_lot_grid:
@@ -253,18 +207,18 @@ rem --- Position ivm-07 file
 		vectLots!.addItem(desc$)
 	wend
 
-	gridLots!=callpoint!.getDevObject("gridLots")
+	gridSearch!=callpoint!.getDevObject("gridSearch")
 
 	if vectLots!.size()
-		numrows=vectLots!.size()/gridLots!.getNumColumns()
-		gridLots!.clearMainGrid()
-		gridLots!.setNumRows(numrows)
-		gridLots!.setCellText(0,0,vectLots!)
-		gridLots!.resort()
-		gridLots!.deselectAllCells()
+		numrows=vectLots!.size()/gridSearch!.getNumColumns()
+		gridSearch!.clearMainGrid()
+		gridSearch!.setNumRows(numrows)
+		gridSearch!.setCellText(0,0,vectLots!)
+		gridSearch!.resort()
+		gridSearch!.deselectAllCells()
 	else
-		gridLots!.clearMainGrid()
-		gridLots!.setNumRows(0)
+		gridSearch!.clearMainGrid()
+		gridSearch!.setNumRows(0)
 	endif
 
 	callpoint!.setDevObject("vectLots",vectLots!)
@@ -290,7 +244,7 @@ rem ==========================================================================
 	rem --- have used knum=3...
 	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),knum=0,dom=*next)
 
-	lotWin!=callpoint!.getDevObject("lotInfo")	
+	infoWin!=callpoint!.getDevObject("lotInfo")	
 
 	while 1
 		readrecord(ivm_lsmaster_dev,end=*break) ivm_lsmaster$
@@ -317,29 +271,29 @@ rem ==========================================================================
 					find record (apm_vendmast_dev,key=firm_id$+vendor$,dom=*next) apm_vendmast$
 					disp_vendor$=apm_vendmast.vendor_id$+" "+cvs(apm_vendmast.vendor_name$,2)
 				endif
-			w!=lotWin!.getControl(vendor_id)
+			w!=infoWin!.getControl(vendor_id)
 			w!.setText(disp_vendor$)
 		endif
 
 		rem --- Display grid info
 		
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("comment_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("comment_id") ) )
 		w!.setText(ivm_lsmaster.ls_comments$)
 		receipt$=fn_date$(fnlatest$(ivm_lsmaster.lstrec_date$,ivm_lsmaster.lstblt_date$))
 		issue$=fn_date$(fnlatest$(ivm_lsmaster.lstsal_date$,ivm_lsmaster.lstiss_date$))
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("receipt_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("receipt_id") ) )
 		w!.setText(receipt$)
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("issued_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("issued_id") ) )
 		w!.setText(issue$)
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("cost_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("cost_id") ) )
 		w!.setText(ivm_lsmaster.unit_cost$);rem need mask
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("location_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("location_id") ) )
 		w!.setText(ivm_lsmaster.ls_location$)
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("onhand_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("onhand_id") ) )
 		w!.setText(ivm_lsmaster.qty_on_hand$)
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("committed_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("committed_id") ) )
 		w!.setText(ivm_lsmaster.qty_commit$)
-		w!=lotWin!.getControl( num( callpoint!.getDevObject("available_id") ) )
+		w!=infoWin!.getControl( num( callpoint!.getDevObject("available_id") ) )
 		w!.setText(str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
 
 	wend
