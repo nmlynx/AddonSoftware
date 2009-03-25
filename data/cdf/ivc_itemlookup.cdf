@@ -30,12 +30,16 @@ switch pos(search_by$="ISTV")
 		gosub load_and_display_grid
 	break
 	case 4; rem by vendor
-		search_dev=fnget_dev("IVM_ITEMVEND")
-		dim searchrec$:fnget_tpl$("IVM_ITEMVEND")
-		search_knum=0
-		search_text$=callpoint!.getUserInput()
-		search_field$="VENDOR_ID"
-		gosub load_and_display_grid
+		sql_prep$="SELECT ivm_itemvend.vendor_id, ivm_itemvend.item_id, apm_vendmast.vendor_name, ivm_itemmast.item_desc "
+		sql_prep$=sql_prep$+"FROM ivm_itemvend "
+		sql_prep$=sql_prep$+"INNER JOIN apm_vendmast ON ivm_itemvend.firm_id = apm_vendmast.firm_id "
+		sql_prep$=sql_prep$+"AND ivm_itemvend.vendor_id = apm_vendmast.vendor_id "
+		sql_prep$=sql_prep$+"INNER JOIN ivm_itemmast on ivm_itemvend.firm_id = ivm_itemmast.firm_id "
+		sql_prep$=sql_prep$+"AND ivm_itemvend.item_id = ivm_itemmast.item_id "
+		sql_prep$=sql_prep$+"WHERE ivm_itemvend.firm_id = '" + firm_id$ + "' "
+		sql_prep$=sql_prep$+"AND apm_vendmast.vendor_name like '%" + callpoint!.getRawUserInput() + "%' "
+		sql_prep$=sql_prep$+"ORDER BY apm_vendmast.vendor_name"
+		gosub load_and_display_grid_sql		
 	break
 	case default
 	break
@@ -188,14 +192,14 @@ rem --- Get the control ID of the event
 		endif
 		
 		numcols=gridSearch!.getNumColumns()
-		vectLots!=callpoint!.getDevObject("vectLots")
+		vectSearch!=callpoint!.getDevObject("vectSearch")
 		curr_row=dec(notice.row$)
 		curr_col=dec(notice.col$)
 		
 		switch notice.code
 			case 19; rem grid_key_press
 			case 14; rem grid_mouse_up
-				callpoint!.setDevObject("selected_item",gridSearch!.getCellText(curr_row,1))				
+				callpoint!.setDevObject("find_item",gridSearch!.getCellText(curr_row,1))				
 				break
 		swend
 	endif
@@ -214,12 +218,18 @@ rem --- Position search file
 	while 1 
 		read record (search_dev,end=*break) searchrec$		
 		if searchrec.firm_id$<>firm_id$ then break
-		read record (ivm_itemmast_dev,key=searchrec.item_id$,dom=*next)ivm_itemmast$
+		read record (ivm_itemmast_dev,key=firm_id$+searchrec.item_id$,dom=*next)ivm_itemmast$
 	
 		vectSearch!.addItem(field(searchrec$,search_field$))
 		vectSearch!.addItem(ivm_itemmast.item_id$)
 		vectSearch!.addItem(ivm_itemmast.item_desc$)
 	wend
+
+	gosub load_vect_into_grid
+
+return
+
+load_vect_into_grid:
 
 	gridSearch!=callpoint!.getDevObject("gridSearch")
 
@@ -227,7 +237,7 @@ rem --- Position search file
 		numrows=vectSearch!.size()/gridSearch!.getNumColumns()
 		gridSearch!.clearMainGrid()
 		gridSearch!.setNumRows(numrows)
-		gridSearch!.setCellText(0,0,vectLots!)
+		gridSearch!.setCellText(0,0,vectSearch!)
 		gridSearch!.resort()
 		gridSearch!.deselectAllCells()
 	else
@@ -239,6 +249,28 @@ rem --- Position search file
 
 return
 
+load_and_display_grid_sql:
+
+	vectSearch!=SysGUI!.makeVector()
+
+	rem --- execute the sql statement constructed in sql_prep$
+        sql_chan=sqlunt
+        sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+        sqlprep(sql_chan)sql_prep$
+        dim read_tpl$:sqltmpl(sql_chan)
+        sqlexec(sql_chan)
+		
+	rem --- process returned recordset
+        while 1
+	        read_tpl$=sqlfetch(sql_chan,err=*break) 
+		vectSearch!.addItem(read_tpl.vendor_name$)
+		vectSearch!.addItem(read_tpl.item_id$)
+		vectSearch!.addItem(read_tpl.item_desc$)
+ 	wend
+
+	gosub load_vect_into_grid
+
+return
 
 get_inventory_detail:
 rem --- get/display Inventory Detail info
