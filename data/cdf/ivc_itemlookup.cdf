@@ -1,3 +1,53 @@
+[[IVC_ITEMLOOKUP.SEARCH_KEY.AVAL]]
+rem --- set search key/file according to user's selection in the "search by" listbutton.
+rem --- and search text entered here.
+rem --- load/display grid
+
+search_by$=callpoint!.getColumnData("IVC_ITEMLOOKUP.SEARCH_BY")
+switch pos(search_by$="ISTV")
+	case 1; rem by item
+		search_dev=fnget_dev("IVM_ITEMMAST")
+		dim searchrec$:fnget_tpl$("IVM_ITEMMAST")
+		search_knum=0
+		search_text$=callpoint!.getUserInput()
+		search_field$="ITEM_ID"
+		gosub load_and_display_grid
+	break
+	case 2; rem by synonym
+		search_dev=fnget_dev("IVM_ITEMSYN")
+		dim searchrec$:fnget_tpl$("IVM_ITEMSYN")
+		search_knum=0
+		search_text$=callpoint!.getUserInput()
+		search_field$="ITEM_SYNONYM"
+		gosub load_and_display_grid
+	break
+	case 3; rem by product type
+		search_dev=fnget_dev("IVM_ITEMMAST")
+		dim searchrec$:fnget_tpl$("IVM_ITEMMAST")
+		search_knum=2
+		search_text$=callpoint!.getUserInput()
+		search_field$="PRODUCT_TYPE"
+		gosub load_and_display_grid
+	break
+	case 4; rem by vendor
+		sql_prep$="SELECT ivm_itemvend.vendor_id, ivm_itemvend.item_id, apm_vendmast.vendor_name, ivm_itemmast.item_desc "
+		sql_prep$=sql_prep$+"FROM ivm_itemvend "
+		sql_prep$=sql_prep$+"INNER JOIN apm_vendmast ON ivm_itemvend.firm_id = apm_vendmast.firm_id "
+		sql_prep$=sql_prep$+"AND ivm_itemvend.vendor_id = apm_vendmast.vendor_id "
+		sql_prep$=sql_prep$+"INNER JOIN ivm_itemmast on ivm_itemvend.firm_id = ivm_itemmast.firm_id "
+		sql_prep$=sql_prep$+"AND ivm_itemvend.item_id = ivm_itemmast.item_id "
+		sql_prep$=sql_prep$+"WHERE ivm_itemvend.firm_id = '" + firm_id$ + "' "
+		sql_prep$=sql_prep$+"AND apm_vendmast.vendor_name like '%" + callpoint!.getRawUserInput() + "%' "
+		sql_prep$=sql_prep$+"ORDER BY apm_vendmast.vendor_name"
+		gosub load_and_display_grid_sql		
+	break
+	case default
+	break
+swend
+[[IVC_ITEMLOOKUP.ARER]]
+rem --- set default search type to I (by item)
+callpoint!.setColumnData("IVC_ITEMLOOKUP.SEARCH_BY","I")
+callpoint!.setStatus("REFRESH")
 [[IVC_ITEMLOOKUP.AWIN]]
 rem --- open files
 
@@ -109,12 +159,6 @@ rem --- Create Item Information window
 	if !util.alreadyResized() then 
 		util.resizeWindow(Form!, SysGui!)
 	endif
-	
-[[IVC_ITEMLOOKUP.LOTS_TO_DISP.AVAL]]
-rem -- user changed lot type -- re-read/display selected lot type
-
-	lots_to_disp$=callpoint!.getUserInput()
-	gosub read_and_display_lot_grid
 [[IVC_ITEMLOOKUP.ACUS]]
 rem --- Process custom event -- used in this pgm to select lot and display info.
 rem
@@ -148,72 +192,52 @@ rem --- Get the control ID of the event
 		endif
 		
 		numcols=gridSearch!.getNumColumns()
-		vectLots!=callpoint!.getDevObject("vectLots")
+		vectSearch!=callpoint!.getDevObject("vectSearch")
 		curr_row=dec(notice.row$)
 		curr_col=dec(notice.col$)
 		
 		switch notice.code
 			case 19; rem grid_key_press
 			case 14; rem grid_mouse_up
-				callpoint!.setDevObject("selected_lot",gridSearch!.getCellText(curr_row,0))				
-				gosub get_lot_info
+				callpoint!.setDevObject("find_item",gridSearch!.getCellText(curr_row,1))				
 				break
 		swend
 	endif
 [[IVC_ITEMLOOKUP.<CUSTOM>]]
-rem ==========================================================================
-read_and_display_lot_grid:
-rem ==========================================================================
+load_and_display_grid:
 
-rem --- Position ivm-07 file
+	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
 
-	vectLots!=SysGUI!.makeVector()
-	ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
-	dim ivm_lsmaster$:fnget_tpl$("IVM_LSMASTER")
+rem --- Position search file	
+
+	vectSearch!=SysGUI!.makeVector()
 	
-	whse_id$ = callpoint!.getColumnData("IVC_ITEMLOOKUP.WAREHOUSE_ID")
-	item_id$ = callpoint!.getColumnData("IVC_ITEMLOOKUP.ITEM_ID")
-	
-	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$,dom=*next)
+	read (search_dev,key=firm_id$+cvs(search_text$,3),knum=search_knum,dom=*next)
 
 	while 1 
-		read record (ivm_lsmaster_dev,end=*break) ivm_lsmaster$
-		
-		if ivm_lsmaster.firm_id$<>firm_id$ 
-:			or ivm_lsmaster$.warehouse_id$<>whse_id$
-:			or ivm_lsmaster.item_id$<>item_id$
-:		then break
-
-		if lots_to_disp$="O" and ivm_lsmaster.closed_flag$<>" " then continue
-		if lots_to_disp$="C" and ivm_lsmaster.closed_flag$<>"C" then continue
-		if lots_to_disp$="Z" and (ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit<=0 or ivm_lsmaster.closed_flag$="C") then continue
-		
-		switch pos(ivm_lsmaster.closed_flag$=" CL")
-			case 1
-				desc$="Open"
-			break
-			case 2
-				desc$="Closed"
-			break
-			case 3
-				desc$="Locked"
-			break
-			case default
-				desc$="not found"
-			break
-		swend		
-		
-		vectLots!.addItem(ivm_lsmaster.lotser_no$)
-		vectLots!.addItem(desc$)
+		read record (search_dev,end=*break) searchrec$		
+		if searchrec.firm_id$<>firm_id$ then break
+		read record (ivm_itemmast_dev,key=firm_id$+searchrec.item_id$,dom=*next)ivm_itemmast$
+	
+		vectSearch!.addItem(field(searchrec$,search_field$))
+		vectSearch!.addItem(ivm_itemmast.item_id$)
+		vectSearch!.addItem(ivm_itemmast.item_desc$)
 	wend
+
+	gosub load_vect_into_grid
+
+return
+
+load_vect_into_grid:
 
 	gridSearch!=callpoint!.getDevObject("gridSearch")
 
-	if vectLots!.size()
-		numrows=vectLots!.size()/gridSearch!.getNumColumns()
+	if vectSearch!.size()
+		numrows=vectSearch!.size()/gridSearch!.getNumColumns()
 		gridSearch!.clearMainGrid()
 		gridSearch!.setNumRows(numrows)
-		gridSearch!.setCellText(0,0,vectLots!)
+		gridSearch!.setCellText(0,0,vectSearch!)
 		gridSearch!.resort()
 		gridSearch!.deselectAllCells()
 	else
@@ -221,82 +245,36 @@ rem --- Position ivm-07 file
 		gridSearch!.setNumRows(0)
 	endif
 
-	callpoint!.setDevObject("vectLots",vectLots!)
+	callpoint!.setDevObject("vectSearch",vectSearch!)
 
 return
 
-rem ==========================================================================
-get_lot_info:
-rem ==========================================================================
+load_and_display_grid_sql:
 
-	ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
-	apm_vendmast_dev=fnget_dev("APM_VENDMAST")
+	vectSearch!=SysGUI!.makeVector()
 
-	dim ivm_lsmaster$:fnget_tpl$("IVM_LSMASTER")
-	dim apm_vendmast$:fnget_tpl$("APM_VENDMAST")
-
-	whse_id$ = callpoint!.getColumnData("IVC_ITEMLOOKUP.WAREHOUSE_ID")
-	item_id$ = callpoint!.getColumnData("IVC_ITEMLOOKUP.ITEM_ID")
-
-	get_lot$=callpoint!.getDevObject("selected_lot")
-
-	rem --- added knum=0 to below, because if user typed their own lot#, Barista validation logic would
-	rem --- have used knum=3...
-	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),knum=0,dom=*next)
-
-	infoWin!=callpoint!.getDevObject("lotInfo")	
-
-	while 1
-		readrecord(ivm_lsmaster_dev,end=*break) ivm_lsmaster$
+	rem --- execute the sql statement constructed in sql_prep$
+        sql_chan=sqlunt
+        sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+        sqlprep(sql_chan)sql_prep$
+        dim read_tpl$:sqltmpl(sql_chan)
+        sqlexec(sql_chan)
 		
-		if ivm_lsmaster.firm_id$<>firm_id$ 
-:			or ivm_lsmaster$.warehouse_id$<>whse_id$
-:			or ivm_lsmaster.item_id$<>item_id$
-:			or ivm_lsmaster.lotser_no$<>get_lot$ 
-:	   then break
+	rem --- process returned recordset
+        while 1
+	        read_tpl$=sqlfetch(sql_chan,err=*break) 
+		vectSearch!.addItem(read_tpl.vendor_name$)
+		vectSearch!.addItem(read_tpl.item_id$)
+		vectSearch!.addItem(read_tpl.item_desc$)
+ 	wend
 
-		callpoint!.setDevObject("selected_lot_loc",ivm_lsmaster.ls_location$)
-		callpoint!.setDevObject("selected_lot_cmt",ivm_lsmaster.ls_comments$)
-		callpoint!.setDevObject("selected_lot_avail",str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
+	gosub load_vect_into_grid
 
-		rem --- Retrieve vendor name
+return
 
-		vendor$=""
-		vendor_id = num( callpoint!.getDevObject("vendor_id") )
-		
-		if callpoint!.getDevObject("ap_installed") = "Y"
-			vendor$=ivm_lsmaster.vendor_id$
-			disp_vendor$="(unknown)"
-				if cvs(vendor$,2)<>""
-					find record (apm_vendmast_dev,key=firm_id$+vendor$,dom=*next) apm_vendmast$
-					disp_vendor$=apm_vendmast.vendor_id$+" "+cvs(apm_vendmast.vendor_name$,2)
-				endif
-			w!=infoWin!.getControl(vendor_id)
-			w!.setText(disp_vendor$)
-		endif
+get_inventory_detail:
+rem --- get/display Inventory Detail info
 
-		rem --- Display grid info
-		
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("comment_id") ) )
-		w!.setText(ivm_lsmaster.ls_comments$)
-		receipt$=fn_date$(fnlatest$(ivm_lsmaster.lstrec_date$,ivm_lsmaster.lstblt_date$))
-		issue$=fn_date$(fnlatest$(ivm_lsmaster.lstsal_date$,ivm_lsmaster.lstiss_date$))
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("receipt_id") ) )
-		w!.setText(receipt$)
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("issued_id") ) )
-		w!.setText(issue$)
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("cost_id") ) )
-		w!.setText(ivm_lsmaster.unit_cost$);rem need mask
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("location_id") ) )
-		w!.setText(ivm_lsmaster.ls_location$)
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("onhand_id") ) )
-		w!.setText(ivm_lsmaster.qty_on_hand$)
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("committed_id") ) )
-		w!.setText(ivm_lsmaster.qty_commit$)
-		w!=infoWin!.getControl( num( callpoint!.getDevObject("available_id") ) )
-		w!.setText(str(ivm_lsmaster.qty_on_hand-ivm_lsmaster.qty_commit))
-
-	wend
 
 return
 

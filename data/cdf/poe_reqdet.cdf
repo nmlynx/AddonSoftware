@@ -79,8 +79,9 @@ rem --- if userInput() is a "?", call custom inquiry
 
 	if cvs(callpoint!.getUserInput(),3)="?"
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj","IVC_ITEMLOOKUP",stbl("+USER_ID"),"MNT","",table_chans$[all]
-		find_item$=callpoint!.devObject("FIND_ITEM")
+		find_item$=callpoint!.getDevObject("find_item")
 		read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*endif)ivm_itemmast$
+		callpoint!.setUserInput(find_item$)
 		x$=stbl("+POE_REQDET_ITEM_DESC",cvs(ivm_itemmast.item_desc$,3))
 		gosub validate_whse_item
 	else
