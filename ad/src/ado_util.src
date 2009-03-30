@@ -651,6 +651,7 @@ rem ==========================================================================
 		
 	methodend
 
+
 rem ==========================================================================
 rem
 rem --- Small, helper methods
@@ -672,6 +673,13 @@ rem ==========================================================================
 		grid! = cast(BBjStandardGrid, Form!.getChildWindow(#CHILD_WINDOW_ID%).getControl(#GRID_ID%))
 		methodret grid!
 	methodend
+	
+	rem --- Return the child window control
+    method public static BBjChildWindow getChild(BBjTopLevelWindow Form!)
+        declare BBjChildWindow child!
+        child! = cast(BBjChildWindow, Form!.getChildWindow(#CHILD_WINDOW_ID%))
+        methodret child!
+    methodend
 	
 	rem --- Return true if open file has records
 	method public static BBjNumber hasRecords(BBjNumber p_handle)
