@@ -49,58 +49,52 @@ rem --- Do we need to create a new order number?
 [[OPE_ORDHDR.ADIS]]
 rem --- Display customer comments
 
-	cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	cust$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	gosub disp_cust_comments
 
 rem --- Disable Cost field if there is a value in it
 
-	g!=form!.getChildWindow(1109).getControl(5900)
-	enable_color!=g!.getCellBackColor(0,0)
-	disable_color!=g!.getLineColor()
-	rem numcols=g!.getNumColumns()
-
-rem --- process_line_types
-
-	recVect!=GridVect!.getItem(0)
+	grid! = util.getGrid(Form!)
+	recVect! = GridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
-	numrecs=recVect!.size()
+	numrecs = recVect!.size()
 
-	if numrecs>0
+	if numrecs>0 then
 		for reccnt=0 to numrecs-1
-			gridrec$=recVect!.getItem(reccnt)
+			gridrec$ = recVect!.getItem(reccnt)
 
-			if gridrec.unit_cost=0
-				g!.setCellEditable(reccnt,5,1)
-				g!.setCellBackColor(reccnt,5,enable_color!)
+			if gridrec.unit_cost = 0
+				util.enableGridCell(grid!, 5, reccnt)
 			else
-				g!.setCellEditable(reccnt,5,0)
-				g!.setCellBackColor(reccnt,5,disable_color!)
+				util.disableGridCell(grid!, 5, reccnt)
 			endif
 		next reccnt
 	endif
 [[OPE_ORDHDR.ASIZ]]
 rem --- Create Empty Availability window
 
-	g!=form!.getChildWindow(1109).getControl(5900)
-	g!.setSize(g!.getWidth(),g!.getHeight()-75)
+	grid! = util.getGrid(Form!)
+	grid!.setSize(grid!.getWidth(), grid!.getHeight() - 75)
 
-	cwin!=form!.getChildWindow(1109).getControl(15000)
-	cwin!.setLocation(cwin!.getX(),g!.getY()+g!.getHeight())
-	cwin!.setSize(g!.getWidth(),cwin!.getHeight())
+	cwin! = util.getChild(Form!).getControl(15000)
+	cwin!.setLocation(cwin!.getX(), grid!.getY() + grid!.getHeight())
+	cwin!.setSize(grid!.getWidth(), cwin!.getHeight())
 
 	mwin!=cwin!.getControl(15999)
-	mwin!.setSize(g!.getWidth()-5,mwin!.getHeight())
+	mwin!.setSize(grid!.getWidth() - 5, mwin!.getHeight())
 [[OPE_ORDHDR.AFMC]]
+rem --- Inits
+
+	use ::ado_util.src::util
+
 rem --- Create Inventory Availability window
 
-	g!=form!.getChildWindow(1109).getControl(5900)
-	userObj!=sysgui!.makeVector()
-	cxt=SysGUI!.getAvailableContext()
+	grid!  = util.getGrid(Form!)
+	child! = util.getChild(Form!)
+	cxt    = SysGUI!.getAvailableContext()
 
-	mwin!=form!.getChildWindow(1109).addChildWindow(15000,0,10,100,75,"",$00000800$,cxt)
-	mwin!.addGroupBox(15999,0,5,g!.getWidth()-5,65,"Inventory Availability",$$)
-	userObj!.addItem(g!) 
-	userObj!.addItem(mwin!)
+	mwin! = child!.addChildWindow(15000, 0, 10, 100, 75, "", $00000800$, cxt)
+	mwin!.addGroupBox(15999, 0, 5, grid!.getWidth()-5, 65, "Inventory Availability", $$)
 
 	mwin!.addStaticText(15001,15,25,75,15,"On Hand:",$$)
 	mwin!.addStaticText(15002,15,40,75,15,"Committed:",$$)
@@ -109,13 +103,19 @@ rem --- Create Inventory Availability window
 	mwin!.addStaticText(15005,415,25,75,15,"Warehouse:",$$)
 	mwin!.addStaticText(15006,415,40,75,15,"Type:",$$)
 
+rem --- Save controls in the global userObj! (vector)
+
+	userObj! = SysGUI!.makeVector()
+	userObj!.addItem(grid!) 
+	userObj!.addItem(mwin!)
+
 	userObj!.addItem(mwin!.addStaticText(15101,90,25,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15102,90,40,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15103,295,25,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$0000$))
 	userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
-	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$));rem Drop Ship text
+	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Drop Ship text
 [[OPE_ORDHDR.BDEL]]
 rem --- remove committments for detail records by calling ATAMO
 
@@ -129,21 +129,21 @@ rem --- remove committments for detail records by calling ATAMO
 
 	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 
-	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
-	cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-	read(ope11_dev,key=firm_id$+ar_type$+cust$+ord$,dom=*next)
+	ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	cust$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	read (ope11_dev, key=firm_id$+ar_type$+cust$+ord$, dom=*next)
 
 	while 1
-		readrecord(ope11_dev,end=*break)ope11a$
+		read record (ope11_dev, end=*break) ope11a$
 
-		if pos(firm_id$+ar_type$+cust$+ord$=ope11a.firm_id$+ope11a.ar_type$+
-:			ope11a.customer_id$+ope11a.order_no$)<>1 
+		if pos(firm_id$+ar_type$+cust$+ord$ = ope11a.firm_id$+ope11a.ar_type$+
+:			ope11a.customer_id$+ope11a.order_no$) <> 1 
 :		then
 			break
 		endif
 
-		readrecord(opc_linecode_dev,key=firm_id$+ope11a.line_code$)opc_linecode$
+		read record (opc_linecode_dev, key=firm_id$+ope11a.line_code$) opc_linecode$
 
 		if opc_linecode.dropship$<>"Y" and ope11a.commit_flag$="Y" and
 :			callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
@@ -158,27 +158,27 @@ rem --- remove committments for detail records by calling ATAMO
 			endif
 		endif
 
-		if pos(callpoint!.getDevObject("lotser_flag")="LS") 
+		if pos(callpoint!.getDevObject("lotser_flag")="LS") then 
 			ord_seq$=ope11a.line_no$
 			gosub remove_lot_ser_det
 		endif
 
 	wend
 
-	remove(ope33_dev,key=firm_id$+cust$+ord$,dom=*next)
+	remove (ope33_dev, key=firm_id$+cust$+ord$, dom=*next)
 	cashrct_dev=fnget_dev("OPE_INVCASH")
-	remove (cashrct_dev,key=firm_id$+
+	remove (cashrct_dev, key=firm_id$+
 :		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)
+:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), err=*next)
 
 	if user_tpl.credit_installed$="Y" then
 		ars_cred_dev=fnget_dev("OPE_CREDCUST")
 		dim ars_credcust$:fnget_tpl$("OPE_CREDCUST")
-		remove (ars_cred_dev,key=firm_id$+
+		remove (ars_cred_dev, key=firm_id$+
 :			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :			callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")+
-:			callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),err=*next)			
+:			callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), err=*next)			
 	endif
 [[OPE_ORDHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
@@ -213,10 +213,10 @@ rem --- Duplicate Historical Invoice
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 rem --- Display Ship to information
 
-	ship_to_type$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
-	ship_to_no$=callpoint!.getUserInput()
-	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	ship_to_no$   = callpoint!.getUserInput()
+	cust_id$      = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord_no$       = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub ship_to_info
 [[OPE_ORDHDR.ORDER_NO.AVAL]]
 rem --- Do we need to create a new order number?
@@ -339,10 +339,10 @@ rem -- Deal with which Ship To type
 	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
 
 	dim dctl$[10]
-	ship_to_type$=callpoint!.getUserInput()
-	ship_to_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-	cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ship_to_type$ = callpoint!.getUserInput()
+	ship_to_no$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	cust_id$      = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord_no$       = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub ship_to_info
 
 	dctl$[1]="<<DISPLAY>>.SNAME"
@@ -362,18 +362,18 @@ rem -- Deal with which Ship To type
 
 	gosub disable_ctls
 [[OPE_ORDHDR.ASHO]]
-rem --- get default dates
+rem --- Get default dates
 
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPE_ORDDATES",stbl("+USER_ID"),"MNT","",table_chans$[all]
-	user_tpl.def_ship$=stbl("OPE_DEF_SHIP")
-	user_tpl.def_commit$=stbl("OPE_DEF_COMMIT")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj", "OPE_ORDDATES", stbl("+USER_ID"), "MNT", "", table_chans$[all]
+	user_tpl.def_ship$   = stbl("OPE_DEF_SHIP")
+	user_tpl.def_commit$ = stbl("OPE_DEF_COMMIT")
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- enable/disable expire date based on value
 
 	dim dctl$[10]
 	dctl$[1]="OPE_ORDHDR.EXPIRE_DATE"
 
-	if callpoint!.getUserInput()<>"P"
+	if callpoint!.getUserInput() <> "P" then
 		dmap$="I"
 	else
 		dmap$=""
@@ -381,8 +381,8 @@ rem --- enable/disable expire date based on value
 
 	gosub disable_ctls
 
-	if rec_data.invoice_type$="S"
-		if callpoint!.getUserInput()="P"
+	if rec_data.invoice_type$="S" then 
+		if callpoint!.getUserInput()="P" then 
 			msg_id$="OP_NO_CONVERT"
 			gosub  disp_message
 			callpoint!.setStatus("ABORT-REFRESH")
@@ -392,21 +392,22 @@ rem --- enable/disable expire date based on value
 			msg_id$="CONVERT_QUOTE"
 			gosub disp_message
 
-			if msg_opt$="Y"
+			if msg_opt$ = "Y" then 
 				callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
-				ope11_dev=fnget_dev("OPE_ORDDET")
+				ope11_dev        = fnget_dev("OPE_ORDDET")
+				ivs01_dev        = fnget_dev("IVS_PARAMS")
+				opc_linecode_dev = fnget_dev("OPC_LINECODE")
 				dim ope11a$:fnget_tpl$("OPE_ORDDET")
-				ivs01_dev=fnget_dev("IVS_PARAMS")
 				dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-				opc_linecode_dev=fnget_dev("OPC_LINECODE")
 				dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+				
 				read record(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 
 				precision num(ivs01a.precision$)
 
-				ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
-				cust$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-				ord$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+				ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+				cust$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+				ord$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 				read record (ope11_dev,key=firm_id$+ar_type$+cust$+ord$,dom=*next)
 
 				while 1
@@ -504,6 +505,12 @@ rem --- Show customer data
 	cust$=callpoint!.getUserInput()
 	gosub disp_cust_comments
 	callpoint!.setDevObject("cust",cust$)
+
+rem --- Credit check?
+
+	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], SysGui!, Form!, callpoint!
+	endif
 
 rem --- Enable Duplicate buttons
 
@@ -1088,6 +1095,29 @@ add_to_batch_print:
 	writerecord(ope_prntlist_dev)ope_prntlist$
 
 return
+
+rem ==========================================================================
+cm_status: rem --- Credit Management status display
+rem ==========================================================================
+
+	curr_context = num(SysGui!.getContext())
+	next_context = num(SysGui!.getAvailableContext())
+	win_w = 400
+	win_h = 200
+	childWindow! = Form!.addChildWindow(16273, 50, 100, win_w, win_h, "", $00000800$, next_context)
+	groupBox! = childWindow!.addGroupBox(16274, 0, 5, win_w, win_h-5, "Customer Credit Status", $0000$)
+	staticText! = childWindow!.addStaticText(16275, 20,  25, 80, 15, "Credit Limit:", $8000$)
+	inputN!     = childWindow!.addInputN(    16375, 105, 25, 80, 15, $0001$, user_tpl.amount_mask$, $$, 0, 123456.78)
+	staticText! = childWindow!.addStaticText(16276, 20,  45, 80, 15, "Open Invoices:", $8000$)
+	inputN!     = childWindow!.addInputN(    16376, 105, 45, 80, 15, $0001$, user_tpl.amount_mask$, $$, 0, 76543.21)
+	staticText! = childWindow!.addStaticText(16277, 20, 65, 80, 15, "Open Orders:", $8000$)
+	staticText! = childWindow!.addStaticText(16278, 20, 85, 80, 15, "Open B/O's:", $8000$)
+	staticText! = childWindow!.addStaticText(16279, 20, 105, 80, 15, "Held Orders:", $8000$)
+	rem staticText! = childWindow!.addStaticText(16275, 20, 20, 50, 20, "Credit Limit:", $8000$)
+	button!     = childWindow!.addButton(1, win_w - 65, win_h - 25, 60, 20, "Ok", $$)
+	escape; rem debug
+
+return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
 
@@ -1161,13 +1191,8 @@ rem --- Enable/Disable buttons
 	else
 		callpoint!.setOptionEnabled("RPRT",1)
 	endif
-
 [[OPE_ORDHDR.BSHO]]
-rem --- Inits
-
-	use ::ado_util.src::util
-
-rem --- open needed files
+rem --- Open needed files
 
 	num_files=34
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -1220,7 +1245,12 @@ rem --- see if blank warehouse exists
 
 	blank_whse$="N"
 	dim ivm10c$:open_tpls$[28]
-	read record(num(open_chans$[28]),key=firm_id$+"C"+ivm10c.warehouse_id$,dom=*next)ivm10c$;rem blank_whse$="Y"
+	start_block = 1
+	
+	if start_block then
+		read record(num(open_chans$[28]),key=firm_id$+"C"+ivm10c.warehouse_id$,dom=*endif)ivm10c$
+		blank_whse$="Y"
+	endif
 
 rem --- disable display fields
 
@@ -1235,7 +1265,7 @@ rem --- disable display fields
 	dctl$[7]="<<DISPLAY>>.BZIP"
 	dctl$[8]="<<DISPLAY>>.ORDER_TOT"
 
-	if ars01a.job_nos$<>"Y" 
+	if ars01a.job_nos$<>"Y" then 
 		dctl$[9]="OPE_ORDHDR.JOB_NO"
 	endif
 
@@ -1261,13 +1291,9 @@ rem --- disable display fields
 	dctl$[7]="<<DISPLAY>>.TOT_AGING"
 	gosub disable_ctls
 
-rem --- set up UserObj! as vector
+rem --- Save totals object
 
-rem	UserObj!=SysGUI!.makeVector()
-	ctlContext = num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLC"))
-	ctlID      = num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOT","CTLI"))
-	tamt!      = SysGUI!.getWindow(ctlContext).getControl(ctlID)
-	UserObj!.addItem(tamt!)
+	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") )
 
 rem --- Setup user_tpl$
 
@@ -1275,29 +1301,35 @@ rem --- Setup user_tpl$
 	dim ars_credit$:open_tpls$[7]
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
 
-	user_tpl$="new_rec:c(1),credit_installed:c(1),display_bal:c(1),ord_tot:n(15),"
-	user_tpl$=user_tpl$+"line_boqty:n(15),line_shipqty:n(15),def_ship:c(8),def_commit:c(8),blank_whse:c(1),"
-	user_tpl$=user_tpl$+"dropship_whse:c(1),def_whse:c(10),avail_oh:c(5),avail_comm:c(5),avail_avail:c(5),"
-	user_tpl$=user_tpl$+"avail_oo:c(5),avail_wh:c(5),avail_type:c(5*),dropship_flag:c(5*),ord_tot_1:c(5*),cur_row:n(5),"
-	user_tpl$=user_tpl$+"price_code:c(2),pricing_code:c(4),order_date:c(8),"
-	user_tpl$=user_tpl$+"pick_hold:c(1)"
+	user_tpl$ =""
+	user_tpl$ = user_tpl$ + "new_rec:c(1), credit_installed:c(1), display_bal:c(1), ord_tot:n(15), amount_mask:c(1*),"
+	user_tpl$ = user_tpl$ + "line_boqty:n(15), line_shipqty:n(15), def_ship:c(8), def_commit:c(8), blank_whse:c(1),"
+	user_tpl$ = user_tpl$ + "dropship_whse:c(1), def_whse:c(10), avail_oh:c(5), avail_comm:c(5), avail_avail:c(5),"
+	user_tpl$ = user_tpl$ + "avail_oo:c(5), avail_wh:c(5), avail_type:c(5*), dropship_flag:c(5*), ord_tot_1:c(5*),"
+	user_tpl$ = user_tpl$ + "price_code:c(2), pricing_code:c(4), order_date:c(8),cur_row:n(5), pick_hold:c(1),"
+	user_tpl$ = user_tpl$ + "pgmdir:c(1*)"
 	dim user_tpl$:user_tpl$
 
-	user_tpl.credit_installed$=ars_credit.sys_install$
-	user_tpl.pick_hold$=ars_credit.pick_hold$
-	user_tpl.display_bal$=ars_credit.display_bal$
-	user_tpl.blank_whse$=blank_whse$
-	user_tpl.dropship_whse$=ars01a.dropshp_whse$
-	user_tpl.def_whse$=ivs01a.warehouse_id$
-	user_tpl.avail_oh$="2"
-	user_tpl.avail_comm$="3"
-	user_tpl.avail_avail$="4"
-	user_tpl.avail_oo$="5"
-	user_tpl.avail_wh$="6"
-	user_tpl.avail_type$="7"
-	user_tpl.dropship_flag$="8"
-	user_tpl.ord_tot_1$="9"
-	user_tpl.cur_row=-1
+	user_tpl.credit_installed$ = ars_credit.sys_install$
+	user_tpl.pick_hold$        = ars_credit.pick_hold$
+	user_tpl.display_bal$      = ars_credit.display_bal$
+	user_tpl.blank_whse$       = blank_whse$
+	user_tpl.dropship_whse$    = ars01a.dropshp_whse$
+	user_tpl.amount_mask$      = ars01a.amount_mask$
+	user_tpl.def_whse$         = ivs01a.warehouse_id$
+	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
+	user_tpl.cur_row = -1
+
+rem --- Save the indices of the controls for the Avail Window, setup in AFMC
+
+	user_tpl.avail_oh$      ="2"
+	user_tpl.avail_comm$    ="3"
+	user_tpl.avail_avail$   ="4"
+	user_tpl.avail_oo$      ="5"
+	user_tpl.avail_wh$      ="6"
+	user_tpl.avail_type$    ="7"
+	user_tpl.dropship_flag$ ="8"
+	user_tpl.ord_tot_1$     ="9"
 
 rem --- Clear variables
 
@@ -1324,4 +1356,3 @@ rem --- Set Lot/Serial button up properly
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
-
