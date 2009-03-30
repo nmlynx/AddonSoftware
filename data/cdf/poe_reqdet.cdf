@@ -1,3 +1,8 @@
+[[POE_REQDET.AGRN]]
+find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
+if cvs(find_item$,3)<>"" then gosub get_item_desc
+[[POE_REQDET.AGCL]]
+use ::ado_util.src::util
 [[POE_REQDET.BGDR]]
 	find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
 	gosub get_item_desc
@@ -8,15 +13,6 @@ if cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)=""
 	callpoint!.setColumnData("POE_REQDET.WAREHOUSE_ID",callpoint!.getHeaderColumnData("POE_REQHDR.WAREHOUSE_ID"))
 	callpoint!.setStatus("REFRESH:POE_REQDET.WAREHOUSE_ID")
 endif
-[[POE_REQDET.AGRN]]
-rem -- set default line code 
-
-callpoint!.setColumnData("POE_REQDET.PO_LINE_CODE",str(callpoint!.getDevObject("dflt_po_line_code")))
-gosub update_line_type_info
-
-x$=stbl("+POE_REQDET_ITEM_DESC","")
-
-callpoint!.setStatus("MODIFIED-REFRESH")
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
 
@@ -48,15 +44,35 @@ rem --- Line Code - After Validataion
 	endif
 	
 [[POE_REQDET.REQ_QTY.AVAL]]
-rem --- assume we need to call poc.ua to retrieve unit cost from ivm-05, at least that's what v6 did here
+rem --- call poc.ua to retrieve unit cost from ivm-05, at least that's what v6 did here
+rem --- send in: R/W for retrieve or write
+rem                   R for req, P for PO, Q for QA recpt, C for PO recpt
+rem                   vendor_id and ord_date from header rec
+rem                   item_id,conv factor, unit cost, req qty or ordered qty from detail record
+rem                   IV precision from iv params rec
+rem 			status
+
+vendor_id$=callpoint!.getHeaderColumnData("POE_REQHDR.VENDOR_ID")
+ord_date$=callpoint!.getHeaderColumnData("POE_REQHDR.ORD_DATE")
+item_id$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
+conv_factor=num(callpoint!.getColumnData("POE_REQDET.CONV_FACTOR"))
+unit_cost=num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))
+req_qty=num(callpoint!.getUserInput())
+status=0
+
+call stbl("+DIR_PGM")+"poc_itemvend.aon","R","R",vendor_id$,ord_date$,item_id$,conv_factor,unit_cost,req_qty,callpoint!.getDevObject("iv_prec"),status
+
+callpoint!.setColumnData("POE_REQDET.UNIT_COST",str(unit_cost))
+
 [[POE_REQDET.AREC]]
-rem --- After Array Transfer
-	if cvs(rec_data.po_line_code$,2)="" then
-		wgrid!=form!.getChildWindow(1109).getControl(5900)
-		wrow=wgrid!.getSelectedRow()
-		wgrid!.setSelectedCell(wrow,0)
-	endif
-	gosub update_line_type_info
+rem -- set default line code 
+
+callpoint!.setColumnData("POE_REQDET.PO_LINE_CODE",str(callpoint!.getDevObject("dflt_po_line_code")))
+gosub update_line_type_info
+
+x$=stbl("+POE_REQDET_ITEM_DESC","")
+
+callpoint!.setStatus("MODIFIED-REFRESH")
 [[POE_REQDET.WAREHOUSE_ID.AVAL]]
 rem --- Warehouse ID - After Validataion
 	gosub validate_whse_item
@@ -66,7 +82,6 @@ rem --- After Grid Display Row
 	if cvs(po_line_code$,2)<>"" then  
 	    gosub update_line_type_info
 	endif
-
 [[POE_REQDET.ITEM_ID.AVAL]]
 rem --- did user enter item#, or are we trying to do synonym lookup, or ? for custom lookup
 
@@ -75,10 +90,18 @@ found_item=0
 ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
 
+rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
+
+declare BBjStandardGrid grid!
+grid! = util.getGrid(Form!)
+return_to_row = grid!.getSelectedRow()
+return_to_col = grid!.getSelectedColumn()
+	
 rem --- if userInput() is a "?", call custom inquiry
 
 	if cvs(callpoint!.getUserInput(),3)="?"
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj","IVC_ITEMLOOKUP",stbl("+USER_ID"),"MNT","",table_chans$[all]
+		util.forceEdit(Form!, return_to_row, return_to_col)
 		find_item$=callpoint!.getDevObject("find_item")
 		read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*endif)ivm_itemmast$
 		callpoint!.setUserInput(find_item$)
@@ -96,6 +119,9 @@ rem --- if userInput() is a "?", call custom inquiry
 
 				call stbl("+DIR_SYP")+"bam_inquiry.bbj",gui_dev,Form!,"IVM_ITEMSYN","LOOKUP",
 :					table_chans$[all],firm_id$,"PRIMARY",return_key$
+
+				util.forceEdit(Form!, return_to_row, return_to_col)
+
 				if cvs(return_key$,3)<>""
 					find_item$=return_key.item_id$
 					read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*next)ivm_itemmast$
@@ -153,7 +179,7 @@ validate_whse_item:
 	
 rem	if change_flag and cvs(item_id$,2)<>"" then
 	if cvs(item_id$,2)<>"" then
-		read record (ivm_itemwhse_dev,key=firm_id$+whse$+item_id$,dom=missing_warehouse) ivm_itemwhse$
+		read record (ivm_itemwhse_dev,key=firm_id$+whse$+item_id$,knum=0,dom=missing_warehouse) ivm_itemwhse$
 		ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 		dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
 		read record(ivm_itemmast_dev,key=firm_id$+item_id$)ivm_itemmast$

@@ -1,3 +1,14 @@
+[[POE_REQHDR.AREC]]
+rem --- setting up for new rec... disable SO_INT_SEQ_REF column in detail grid until/unless dropship flag gets checked
+util.ableGridColumn(Form!,18,0)
+[[POE_REQHDR.ADIS]]
+rem --- enable/disable SO_INT_SEQ_REF column in grid depending on whether or not drop-ship flag is selected
+
+if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")<>"Y"
+	util.ableGridColumn(Form!,18,0)
+else
+	util.ableGridColumn(Form!,18,1)
+endif
 [[POE_REQHDR.ORDER_NO.AVAL]]
 rem --- if dropshipping, retrieve specified sales order and display shipto address (unless reqhdr's dropship name/address line 1 not blank)
 
@@ -40,6 +51,13 @@ if callpoint!.getUserInput()="Y"
 		callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",1)
 		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",1)
 	endif
+	rem --- enable SO Seq No column in detail grid
+	
+	util.ableGridColumn(Form!,18,1)
+else
+	util.ableGridColumn(Form!,18,0)
+	gosub clear_so_ref
+
 endif
 [[POE_REQHDR.REQ_NO.AVAL]]
 rem -- see if existing req# was entered
@@ -212,6 +230,26 @@ fill_dropship_address:
 	callpoint!.setColumnData("POE_REQHDR.DS_ZIP_CODE",rec.zip_code$)
 return
 
+clear_so_ref:
+rem --- clear SO_INT_SEQ_REF field in all detail lines for this requisition if drop-ship flag has been turned off
+
+	poe_reqdet_dev=fnget_dev("POE_REQDET")
+	dim poe_reqdet$:fnget_tpl$("POE_REQDET")
+
+	req_no$=callpoint!.getColumnData("POE_REQHDR.REQ_NO")
+
+	read (poe_reqdet_dev,key=firm_id$+req_no$,dom=*next)
+	
+	while 1
+		read record (poe_reqdet_dev,end=*break)poe_reqdet$
+		if poe_reqdet.firm_id$+poe_reqdet.req_no$ <> firm_id$+req_no$ then break
+		poe_reqdet.so_int_seq_ref$=""
+		write record (poe_reqdet_dev)poe_reqdet$
+	wend
+	callpoint!.setStatus("REFGRID")
+
+return
+
 disable_ctls:
 for dctl=1 to 9
 	dctl$=dctl$[dctl]
@@ -268,21 +306,22 @@ rem --- call adc_application to see if OE is installed; if so, open a couple tab
 rem --- AP Params
 	dim aps_params$:aps_params_tpl$
 	read record(aps_params_dev,key=firm_id$+"AP00")aps_params$
+
 rem --- set up UserObj! as vector
 	UserObj!=SysGUI!.makeVector()
 	ctlContext=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOTAL","CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute("<<DISPLAY>>.ORDER_TOTAL","CTLI"))
 	tamt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 	UserObj!.addItem(tamt!)
-rem --- Setup user_tpl$
-	user_tpl$="change_flag:n(1)"
-	dim user_tpl$:user_tpl$
 
 rem --- store default PO Line Code from POS_PARAMS
 	
-	pos_params_chn=fnget_dev("POS_PARAMS")
 	dim pos_params$:fnget_tpl$("POS_PARAMS")
-	read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
+	read record (pos_params_dev,key=firm_id$+"PO00")pos_params$
 	callpoint!.setDevObject("dflt_po_line_code",pos_params.po_line_code$)
 	
-	
+rem --- get IV precision
+
+	dim ivs_params$:fnget_tpl$("IVS_PARAMS")
+	read record (ivs_params_dev,key=firm_id$+"IV00")ivs_params$
+	callpoint!.setDevObject("iv_prec",ivs_params.precision$)	
