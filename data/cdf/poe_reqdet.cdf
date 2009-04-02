@@ -1,24 +1,29 @@
 [[POE_REQDET.AGRN]]
+rem print 'show',;rem debug
+rem print "AGRN";rem debug
+rem print "getValidationRow: ",callpoint!.getValidationRow();rem debug
+rem print "getGridRowNewStatus: ",callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()));rem debug
+rem print "getGridRowModifyStatus: ",callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()));rem debug
+
 find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
 if cvs(find_item$,3)<>"" then gosub get_item_desc
 [[POE_REQDET.AGCL]]
 use ::ado_util.src::util
 [[POE_REQDET.BGDR]]
-	find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
-	gosub get_item_desc
-[[POE_REQDET.WAREHOUSE_ID.BINP]]
-rem --- old version defaulted whse to the ship-to one
-
-if cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)=""
-	callpoint!.setColumnData("POE_REQDET.WAREHOUSE_ID",callpoint!.getHeaderColumnData("POE_REQHDR.WAREHOUSE_ID"))
-	callpoint!.setStatus("REFRESH:POE_REQDET.WAREHOUSE_ID")
-endif
+find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
+gosub get_item_desc
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
+rem print callpoint!.getUserInput();rem debug
+rem print callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE");rem debug
+rem print "validation row:", callpoint!.getValidationRow()
+rem print "new status:",callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))
+rem print "modify status:",callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))
 
-	gosub update_line_type_info
 
-        if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) then
+gosub update_line_type_info
+
+         if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) then
 
 		callpoint!.setColumnData("POE_REQDET.CONV_FACTOR","")
 		callpoint!.setColumnData("POE_REQDET.FORECAST","")
@@ -30,7 +35,7 @@ rem --- Line Code - After Validataion
 		callpoint!.setColumnData("POE_REQDET.ORDER_MEMO","")
 		callpoint!.setColumnData("POE_REQDET.PO_MSG_CODE",callpoint!.getHeaderColumnData("POE_REQHDR.PO_MSG_CODE"))
 		callpoint!.setColumnData("POE_REQDET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.PROMISE_DATE"))
-		callpoint!.setColumnData("POE_REQDET.REQD_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.REQD_DATE") )
+		callpoint!.setColumnData("POE_REQDET.REQD_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.REQD_DATE"))
 		callpoint!.setColumnData("POE_REQDET.REQ_QTY","")
 		callpoint!.setColumnData("POE_REQDET.SO_INT_SEQ_REF","")
 		callpoint!.setColumnData("POE_REQDET.SOURCE_CODE","")
@@ -40,9 +45,8 @@ rem --- Line Code - After Validataion
 		callpoint!.setColumnData("POE_REQDET.WO_NO","")
 		callpoint!.setColumnData("POE_REQDET.WO_SEQ_REF","")
 
-		
-	endif
-	
+
+ 	endif
 [[POE_REQDET.REQ_QTY.AVAL]]
 rem --- call poc.ua to retrieve unit cost from ivm-05, at least that's what v6 did here
 rem --- send in: R/W for retrieve or write
@@ -65,14 +69,24 @@ call stbl("+DIR_PGM")+"poc_itemvend.aon","R","R",vendor_id$,ord_date$,item_id$,c
 callpoint!.setColumnData("POE_REQDET.UNIT_COST",str(unit_cost))
 
 [[POE_REQDET.AREC]]
+rem -- was trying to set the default line code to "S" in here, but it caused problems... grid row confusion, and no aval firing if you just tab out of the
+rem --	default on 2nd/subsequent rows... turns out cleaner to just let it default to (none) and have user select each time.  So all that's currently
+rem --	happening in here is initialization of the item description stbl
+
 rem -- set default line code 
 
-callpoint!.setColumnData("POE_REQDET.PO_LINE_CODE",str(callpoint!.getDevObject("dflt_po_line_code")))
-gosub update_line_type_info
+rem callpoint!.setColumnData("POE_REQDET.PO_LINE_CODE",str(callpoint!.getDevObject("dflt_po_line_code")))
+rem gosub update_line_type_info
 
 x$=stbl("+POE_REQDET_ITEM_DESC","")
 
-callpoint!.setStatus("MODIFIED-REFRESH")
+rem if callpoint!.getDevObject("so_ldat")<>null()
+rem	callpoint!.setTableColumnAttribute("POE_REQDET.SO_INT_SEQ_REF","LDAT",str(callpoint!.getDevObject("so_ldat")))
+rem endif
+
+rem util.forceFocus(callpoint!,"PO_LINE_CODE")
+rem util.forceEdit(Form!,num(callpoint!.getValidationRow()),0)
+rem callpoint!.setStatus("MODIFIED-REFRESH")
 [[POE_REQDET.WAREHOUSE_ID.AVAL]]
 rem --- Warehouse ID - After Validataion
 	gosub validate_whse_item
@@ -177,8 +191,8 @@ validate_whse_item:
 		whse$=callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID")
 	endif
 	
-rem	if change_flag and cvs(item_id$,2)<>"" then
-	if cvs(item_id$,2)<>"" then
+	if change_flag and cvs(item_id$,2)<>"" then
+rem	if cvs(item_id$,2)<>"" then
 		read record (ivm_itemwhse_dev,key=firm_id$+whse$+item_id$,knum=0,dom=missing_warehouse) ivm_itemwhse$
 		ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 		dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
@@ -209,4 +223,17 @@ get_item_desc:
 	x$=stbl("+POE_REQDET_ITEM_DESC",cvs(ivm_itemmast.item_desc$,3))
 
 return
+
+rem #include fnget_control.src
+
+def fnget_control!(ctl_name$)
+
+ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+return get_control!
+
+fnend
+
+rem #endinclude fnget_control.src
 		

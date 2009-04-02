@@ -1,15 +1,16 @@
 [[IVC_ITEMLOOKUP.BEND]]
 rem --- since files were forced open on new channels, close to keep tidy
 
-	num_files=4
+	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	rem -- not closing 'first' ivm_itemmast, i.e., not sure if this was open in calling pgm or not.  Just close ones we forced open on new channel
+	
 	open_tables$[1]="IVM_ITEMSYN",   open_opts$[1]="@C"
 	open_tables$[2]="IVM_ITEMWHSE",   open_opts$[2]="@C"
 	open_tables$[3]="IVS_PARAMS",   open_opts$[3]="@C"
 	open_tables$[4]="IVM_ITEMMAST",   open_opts$[4]="@C"	
-
+	open_tables$[5]="IVM_ITEMMAST",   open_opts$[5]="@C"
 	gosub open_tables
+	
 [[IVC_ITEMLOOKUP.SEARCH_KEY.AVAL]]
 rem --- set search key/file according to user's selection in the "search by" listbutton.
 rem --- and search text entered here.
@@ -66,18 +67,25 @@ rem --- open files
 	use ::ado_util.src::util
 	use ::ado_func.src::func
 
-rem --- opening possible search files with force flag (force open on another channel) so use of knums won't mess up reads 
-rem --- on these files that might be going on in in calling programs 
-
+rem --- opening possible search files with force flag (N=force open on another channel) so use of knums won't mess up reads on these files 
+rem --- 	that might be going on in in calling programs
+rem --- also... saving channel # of first ivm_itemmast open, so I can distinguish 'main' open from extra open for searching by product type, etc. (i.e. different knum)
+rem --- the "@" in the open flags is a special prefix used by Barista; since I'm not sure if these files are already open or not, the "@" marks them in
+rem --- 	rd_table_chans$[ ], so I can do fnget_dev/fnget_tpl using the @ prefix on the alias,
+rem --- 	and I can call open_tables to close these files when done, using "@C" flags, so Barista knows which one to close, i.e., the file(s) I forced 
+rem ---	open rather than one that might have already been open on another channel.
+ 
 	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="IVM_ITEMMAST", open_opts$[1]="OTA"
-	open_tables$[2]="IVM_ITEMSYN",   open_opts$[2]="@OTA"
-	open_tables$[3]="IVM_ITEMWHSE",   open_opts$[3]="@OTA"
-	open_tables$[4]="IVS_PARAMS",   open_opts$[4]="@OTA"
-	open_tables$[5]="IVM_ITEMMAST",   open_opts$[5]="@OTA"	
+	open_tables$[1]="IVM_ITEMMAST", open_opts$[1]="@NTA"
+	open_tables$[2]="IVM_ITEMSYN",   open_opts$[2]="@NTA"
+	open_tables$[3]="IVM_ITEMWHSE",   open_opts$[3]="@NTA"
+	open_tables$[4]="IVS_PARAMS",   open_opts$[4]="@NTA"
+	open_tables$[5]="IVM_ITEMMAST",   open_opts$[5]="@NTA"	
 
 	gosub open_tables
+
+	callpoint!.setDevObject("ivm_itemmast_dev",open_chans$[1])
 
 rem ---  Set up grid
 
@@ -205,7 +213,6 @@ rem --- Create Item Information window
 		util.resizeWindow(Form!, SysGui!)
 	endif
 [[IVC_ITEMLOOKUP.ACUS]]
-
 rem --- Process custom event -- used in this pgm to select lot and display info.
 rem
 rem --- See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
@@ -323,8 +330,8 @@ get_inventory_detail:
 rem --- get/display Inventory Detail info
 
 	ivs_params_dev=fnget_dev("@IVS_PARAMS")
-	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	ivm_itemwhse_dev=fnget_dev("@IVM_ITEMWHSE")
+	ivm_itemmast_dev=num(callpoint!.getDevObject("ivm_itemmast_dev"))
 
 	dim ivs_params$:fnget_tpl$("@IVS_PARAMS")
 	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
