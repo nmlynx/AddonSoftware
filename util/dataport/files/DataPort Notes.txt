@@ -52,4 +52,5 @@ After the Dataport process is complete
 5) Changes to the Data Dictionary.
         a. In file GLT-06, removed the 2 fields after the Description in 1$ (POSTING PER and POSTING YEAR), and changed Description to have a Y for the Separator.
 6) Temporary vendors have been discontinued in this version. In order to facilitate this, all records in the system that have TEMP as the Vendor Number will be consolidated into 1 vendor. That vendor number needs to be set up by you, the dealer, in the config file by setting +DP_TEMP_VEND= and then the new vendor number. It will then be your responsibility to create that vendor after the DataPort is completed. Don't forget to set the Temporary flag to Y. If this stbl is not set up prior to running DataPort, and there is a TEMP vendor found in the data, there will be a message on the screen and in the error file to that effect, and none of those records will be ported.
-7) We STRONGLY encourage you to replace blank Maintenance Codes with codes that have a value. You can do this by creating a custom public program as noted elswhere in this document. 
+7) We STRONGLY encourage you to replace blank Maintenance Codes with codes that have a value. You can do this by creating a custom public program as noted elswhere in this document.
+8) Run the GL Chart of Accounts Breaks form.  If there is a blank record, delete it.
