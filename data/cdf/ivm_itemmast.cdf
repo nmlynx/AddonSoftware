@@ -1,12 +1,28 @@
+[[IVM_ITEMMAST.DISPLAY_DESC.AVAL]]
+rem --- Set segments after changes in Display Desc
+rem --- Note: Should we allow changes here or only in the segments?
+
+	desc$ = callpoint!.getUserInput()
+	gosub set_desc_segs
+
+	if desc$ <> callpoint!.getColumnDiskData("IVM_ITEMMAST.DISPLAY_DESC") then
+		callpoint!.setStatus("MODIFIED-REFRESH")
+	else
+		callpoint!.setStatus("REFRESH")
+	endif
 [[IVM_ITEMMAST.ADIS]]
 rem --- Display Description segments
 
 	desc$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC")
-	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1", desc$(1, user_tpl.desc_len_1))
-	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2", desc$(user_tpl.desc_len_1 + 1, user_tpl.desc_len_2))
-	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3", desc$(user_tpl.desc_len_1 + user_tpl.desc_len_2 + 1, user_tpl.desc_len_3))
-	callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_1, user_tpl.desc_len_2, user_tpl.desc_len_3))
-	callpoint!.setStatus("REFRESH")
+	gosub set_desc_segs
+
+rem --- This is necessary if no utility to update the display description is run
+
+	if desc$ <> callpoint!.getColumnData("IVM_ITEMMAST.DISPLAY_DESC") then
+		callpoint!.setStatus("MODIFIED-REFRESH")
+	else
+		callpoint!.setStatus("REFRESH")
+	endif
 [[IVM_ITEMMAST.MSRP.AVAL]]
 if num(callpoint!.getUserInput())<0 then
 	callpoint!.setStatus("ABORT")
@@ -224,7 +240,23 @@ if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 ca
 [[IVM_ITEMMAST.ASHO]]
 callpoint!.setStatus("ABLEMAP-REFRESH")
 [[IVM_ITEMMAST.<CUSTOM>]]
+rem ==========================================================================
+set_desc_segs: rem --- Set the description segments
+               rem      IN: desc$
+               rem     OUT: Display segments set
+rem ==========================================================================
+
+	desc$ = pad(desc$, 30)
+	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1", desc$(1, user_tpl.desc_len_1))
+	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2", desc$(user_tpl.desc_len_1 + 1, user_tpl.desc_len_2))
+	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3", desc$(user_tpl.desc_len_1 + user_tpl.desc_len_2 + 1, user_tpl.desc_len_3))
+	callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_1, user_tpl.desc_len_2, user_tpl.desc_len_3))
+
+return
+
+rem ==========================================================================
 #include std_missing_params.src
+rem ==========================================================================
 [[IVM_ITEMMAST.BSHO]]
 rem --- Inits
 
