@@ -149,19 +149,21 @@ rem --- See if Auto Numbering in effect
 	endif
 [[IVM_ITEMMAST.AWRI]]
 rem --- Populate ivm-02 with Product Type
+
 	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
-	ivm02a$=fnget_tpl$("IVM_ITEMWHSE")
-	dim ivm02a$:ivm02a$
-	item$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-	prod_type$=callpoint!.getColumnData("IVM_ITEMMAST.PRODUCT_TYPE")
-	read (ivm02_dev,key=firm_id$+item$,knum=2,dom=*next)
+	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+
+	item$      = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	prod_type$ = callpoint!.getColumnData("IVM_ITEMMAST.PRODUCT_TYPE")
+
+	read (ivm02_dev, key=firm_id$+item$, knum=2, dom=*next) 
+
 	while 1
-		readrecord(ivm02_dev,end=*break) ivm02a$
-		if ivm02a.firm_id$<>firm_id$ break
-		if ivm02a.item_id$<>item$ break
-		ivm02a.product_type$=prod_type$
-		ivm02a$=field(ivm02a$)
-		writerecord (ivm02_dev)ivm02a$
+		read record (ivm02_dev, end=*break) ivm02a$
+		if ivm02a.firm_id$<>firm_id$ or ivm02a.item_id$<>item$ then break
+		ivm02a.product_type$ = prod_type$
+		ivm02a$ = field(ivm02a$)
+		write record (ivm02_dev) ivm02a$
 	wend
 [[IVM_ITEMMAST.BDEL]]
 rem --- versions 6/7 have a program ivc.da used for deleting
@@ -197,12 +199,12 @@ rem -- Get default values for new record from ivs-10D, IVS_DEFAULTS
 
 	ivs10_dev=fnget_dev("IVS_DEFAULTS")
 	dim ivs10d$:fnget_tpl$("IVS_DEFAULTS")
-	callpoint!.setColumnData("IVM_ITEMMAST.ALT_SUP_FLAG","N")
-	callpoint!.setColumnData("IVM_ITEMMAST.CONV_FACTOR","1")
-	callpoint!.setColumnData("IVM_ITEMMAST.ORDER_POINT","D")
-	callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE",callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
+	callpoint!.setColumnData("IVM_ITEMMAST.ALT_SUP_FLAG", "N")
+	callpoint!.setColumnData("IVM_ITEMMAST.CONV_FACTOR", "1")
+	callpoint!.setColumnData("IVM_ITEMMAST.ORDER_POINT", "D")
+	callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE", callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
 
-	findrecord(ivs10_dev,key=firm_id$+"D",dom=*next)ivs10d$
+	find record (ivs10_dev, key=firm_id$+"D", dom=*next) ivs10d$
 
 	callpoint!.setColumnData("IVM_ITEMMAST.PRODUCT_TYPE",ivs10d.product_type$)
 	callpoint!.setColumnData("IVM_ITEMMAST.UNIT_OF_SALE",ivs10d.unit_of_sale$)
@@ -228,10 +230,10 @@ rem -- Get default values for new record from ivs-10D, IVS_DEFAULTS
 	if user_tpl.sa$ <> "Y" then
 		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL","N")
 	else
-		ivm10_dev=fnget_dev("IVC_PRODCODE")
+		ivm10_dev = fnget_dev("IVC_PRODCODE")
 		dim ivm10a$:fnget_tpl$("IVC_PRODCODE")
-		findrecord(ivm10_dev,key=firm_id$+"A"+ivs10d.product_type$,dom=*next)ivm10a$
-		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL",ivm10a.sa_level$)
+		find record(ivm10_dev, key=firm_id$+"A"+ivs10d.product_type$, dom=*next)ivm10a$
+		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL", ivm10a.sa_level$)
 	endif
 
 	callpoint!.setStatus("REFRESH")
