@@ -25,63 +25,51 @@ endif
 rem --- if dropshipping, retrieve specified sales order and display shipto address
 
 if cvs(callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID"),3)<>""
+
 	tmp_customer_id$=callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID")
 	tmp_order_no$=callpoint!.getUserInput()
-	if callpoint!.getUserInput()<>callpoint!.getColumnUndoData("POE_REQHDR.ORDER_NO") 
-		if cvs(callpoint!.getColumnUndoData("POE_REQHDR.ORDER_NO"),3)<>""
-			dtl!=gridvect!.getItem(0)
-			if dtl!.size() 
-				msg_id$="PO_DTL_EXISTS"
-				gosub disp_message
-				callpoint!.setStatus("ABORT")
-			else
-				gosub dropship_shipto
-				gosub get_dropship_order_lines
-			endif
-		else
-			gosub dropship_shipto
-			gosub get_dropship_order_lines
-		endif		
+
+	if callpoint!.getUserInput()<>callpoint!.getColumnUndoData("POE_REQHDR.ORDER_NO") 		
+		gosub dropship_shipto
+		gosub get_dropship_order_lines				
 	endif	
+
 endif
 [[POE_REQHDR.CUSTOMER_ID.AVAL]]
 rem --- if dropshipping, retrieve specified sales order and display shipto address
 
 if callpoint!.getUserInput()<>callpoint!.getColumnUndoData("POE_REQHDR.CUSTOMER_ID") 
-ok_to_change$=""
-	if cvs(callpoint!.getColumnUndoData("POE_REQHDR.CUSTOMER_ID"),3)<>""
-	rem --- undo not null, so changing a value vs. adding a value where there didn't used to be one
-		dtl!=gridvect!.getItem(0)
-		if dtl!.size() and callpoint!.getDevObject("OP_installed")="Y"
-			msg_id$="PO_DTL_EXISTS"
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			ok_to_change$="N"
-		else
-			callpoint!.setColumnData("POE_REQHDR.ORDER_NO","")
-			callpoint!.setColumnData("POE_REQHDR.SHIPTO_NO","")
-			callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_1","")
-			callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_2","")
-			callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_3","")
-			callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_4","")
-			callpoint!.setColumnData("POE_REQHDR.DS_CITY","")
-			callpoint!.setColumnData("POE_REQHDR.DS_NAME","")
-			callpoint!.setColumnData("POE_REQHDR.DS_STATE_CD","")
-			callpoint!.setColumnData("POE_REQHDR.DS_ZIP_CODE","")
-			ok_to_change$="Y"
-		endif
+
+	callpoint!.setColumnData("POE_REQHDR.ORDER_NO","")
+	callpoint!.setColumnData("POE_REQHDR.SHIPTO_NO","")
+	callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_1","")
+	callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_2","")
+	callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_3","")
+	callpoint!.setColumnData("POE_REQHDR.DS_ADDR_LINE_4","")
+	callpoint!.setColumnData("POE_REQHDR.DS_CITY","")
+	callpoint!.setColumnData("POE_REQHDR.DS_NAME","")
+	callpoint!.setColumnData("POE_REQHDR.DS_STATE_CD","")
+	callpoint!.setColumnData("POE_REQHDR.DS_ZIP_CODE","")
+
+	rem --- if OE not installed, fill in cust address at this point, otherwise wait until order# is entered
+	if callpoint!.getDevObject("OP_installed")<>"Y"
+		tmp_customer_id$=callpoint!.getUserInput()
+		gosub shipto_cust
 	endif
-	if ok_to_change$="Y"
-		rem --- if OE not installed, fill in cust address at this point, otherwise wait until order# is entered
-		if callpoint!.getDevObject("OP_installed")<>"Y"
-			tmp_customer_id$=callpoint!.getUserInput()
-			gosub shipto_cust
-		endif
-		callpoint!.setStatus("REFRESH")
-	endif
+
+	callpoint!.setStatus("REFRESH")
+	
 endif
 [[POE_REQHDR.DROPSHIP.AVAL]]
-if callpoint!.getUserInput()="Y"
+rem --- can't toggle dropship (at least for this release) if any detail lines exist when OP is installed
+		
+dtl!=gridvect!.getItem(0)		
+if dtl!.size() and callpoint!.getDevObject("OP_installed")="Y"
+	msg_id$="PO_DTL_EXISTS"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+else
+	if callpoint!.getUserInput()="Y"
 		if callpoint!.getDevObject("OP_installed")<>"Y"
 			callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)
 			util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
@@ -89,9 +77,10 @@ if callpoint!.getUserInput()="Y"
 			callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",1)
 			util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),1)
 		endif			
-else
-	util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
-	gosub clear_so_ref
+	else
+		util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
+		rem gosub clear_so_ref
+	endif
 endif
 [[POE_REQHDR.REQ_NO.AVAL]]
 rem -- see if existing req# was entered
@@ -448,4 +437,3 @@ rem --- store detail grid and temp listbutton objects in devObject as well (see 
 	tmpListCtl!=dtlWin!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
 	callpoint!.setDevObject("dtl_grid",dtlGrid!)
 	callpoint!.setDevObject("dtl_grid_so_ref_ctl",tmpListCtl!)
-
