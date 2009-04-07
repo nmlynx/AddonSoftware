@@ -1,27 +1,59 @@
-[[IVM_ITEMMAST.DISPLAY_DESC.AVAL]]
-rem --- Set segments after changes in Display Desc
-rem --- Note: Should we allow changes here or only in the segments?
+[[<<DISPLAY>>.ITEM_DESC_SEG_3.BINP]]
+rem --- Set previous value
 
-	desc$ = callpoint!.getUserInput()
-	gosub set_desc_segs
+	user_tpl.prev_desc_seg_3$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3")
+[[<<DISPLAY>>.ITEM_DESC_SEG_1.BINP]]
+rem --- Set previous value
 
-	if desc$ <> callpoint!.getColumnDiskData("IVM_ITEMMAST.DISPLAY_DESC") then
-		callpoint!.setStatus("MODIFIED-REFRESH")
-	else
-		callpoint!.setStatus("REFRESH")
-	endif
+	user_tpl.prev_desc_seg_1$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1")
+[[<<DISPLAY>>.ITEM_DESC_SEG_2.BINP]]
+rem --- Set previous value
+
+	user_tpl.prev_desc_seg_2$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2")
 [[IVM_ITEMMAST.ADIS]]
-rem --- Display Description segments
+rem --- Set Description Segments
+
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
+	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1", desc$(1, user_tpl.desc_len_01))
+ 	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2", desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02))
+	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3", desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03))
+
+	callpoint!.setStatus("REFRESH")
+[[<<DISPLAY>>.ITEM_DESC_SEG_3.AVAL]]
+rem --- Set this section back into desc, if modified
 
 	desc$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC")
-	gosub set_desc_segs
+	seg$  = callpoint!.getUserInput()
 
-rem --- This is necessary if no utility to update the display description is run
+	if seg$ <> user_tpl.prev_desc_seg_3$ then
+		desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03) = seg$
+		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$)
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03))
+		callpoint!.setStatus("MODIFIED;REFRESH")
+	endif
+[[<<DISPLAY>>.ITEM_DESC_SEG_2.AVAL]]
+rem --- Set this section back into desc, if modified
 
-	if desc$ <> callpoint!.getColumnData("IVM_ITEMMAST.DISPLAY_DESC") then
-		callpoint!.setStatus("MODIFIED-REFRESH")
-	else
-		callpoint!.setStatus("REFRESH")
+	desc$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC")
+	seg$  = callpoint!.getUserInput()
+
+	if seg$ <> user_tpl.prev_desc_seg_2$ then
+		desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02) = seg$
+		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$)
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03))
+		callpoint!.setStatus("MODIFIED;REFRESH")
+	endif
+[[<<DISPLAY>>.ITEM_DESC_SEG_1.AVAL]]
+rem --- Set this section back into desc, if modified
+
+	desc$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC")
+	seg$  = callpoint!.getUserInput()
+
+	if seg$ <> user_tpl.prev_desc_seg_1$ then
+		desc$(1, user_tpl.desc_len_01) = seg$
+		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$)
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03))
+		callpoint!.setStatus("MODIFIED;REFRESH")
 	endif
 [[IVM_ITEMMAST.MSRP.AVAL]]
 if num(callpoint!.getUserInput())<0 then
@@ -316,8 +348,10 @@ rem --- init/parameters
 
 rem --- Setup user_tpl$
 
-	dim user_tpl$:"ar:c(1),ap:c(1),bm:c(1),gl:c(1),op:c(1),po:c(1),wo:c(1),sa:c(1),"+
-:	"num_pers:n(2),cur_per:n(2),cur_yr:n(4),desc_len_1:u(2),desc_len_2:u(2),desc_len_3:u(2)"
+	dim user_tpl$:"ar:c(1), ap:c(1), bm:c(1), gl:c(1), op:c(1), po:c(1), wo:c(1), sa:c(1)," +
+:	              "num_pers:n(2), cur_per:n(2), cur_yr:n(4)," +
+:                "desc_len_01:n(1*), desc_len_02:n(1*), desc_len_03:n(1*)," +
+:                "prev_desc_seg_1:c(1*), prev_desc_seg_2:c(1*), prev_desc_seg_3:c(1*)"
 
 	user_tpl.ar$=ar$
 	user_tpl.ap$=ap$
@@ -328,19 +362,34 @@ rem --- Setup user_tpl$
 	user_tpl.wo$=wo$
 	user_tpl.sa$=sa$
 
-	user_tpl.num_pers=num(gls01a.total_pers$)
-	user_tpl.cur_per=num(gls01a.current_per$)
-	user_tpl.cur_yr=num(gls01a.current_year$)
+	user_tpl.num_pers = num(gls01a.total_pers$)
+	user_tpl.cur_per  = num(gls01a.current_per$)
+	user_tpl.cur_yr   = num(gls01a.current_year$)
 
-	user_tpl.desc_len_1 = num(ivs01a.desc_len_01$)
-	user_tpl.desc_len_2 = num(ivs01a.desc_len_02$)
-	user_tpl.desc_len_3 = num(ivs01a.desc_len_03$)
+	user_tpl.desc_len_01 = num(ivs01a.desc_len_01$)
+	user_tpl.desc_len_02 = num(ivs01a.desc_len_02$)
+	user_tpl.desc_len_03 = num(ivs01a.desc_len_03$)
 
-rem --- Set user labels for description segments 
+rem --- Set user labels and lengths for description segments 
 
 	util.changeText(Form!, "Segment Description 1:", cvs(ivs01a.user_desc_lb_01$, 2) + ":")
-	util.changeText(Form!, "Segment Description 2:", cvs(ivs01a.user_desc_lb_02$, 2) + ":")
-	util.changeText(Form!, "Segment Description 3:", cvs(ivs01a.user_desc_lb_03$, 2) + ":")
+	callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_1", "MAXL", str(user_tpl.desc_len_01))
+
+	if cvs(ivs01a.user_desc_lb_02$, 2) <> "" then
+		util.changeText(Form!, "Segment Description 2:", cvs(ivs01a.user_desc_lb_02$, 2) + ":")
+		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_2", "MAXL", str(user_tpl.desc_len_02))
+	else
+		util.changeText(Form!, "Segment Description 2:", "")
+		callpoint!.setColumnEnabled("<<DISPLAY>>.ITEM_DESC_SEG_2", -1)
+	endif
+
+	if cvs(ivs01a.user_desc_lb_03$, 2) <> "" then 
+		util.changeText(Form!, "Segment Description 3:", cvs(ivs01a.user_desc_lb_03$, 2) + ":")
+		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_3", "MAXL", str(user_tpl.desc_len_03))
+	else
+		util.changeText(Form!, "Segment Description 3:", "")
+		callpoint!.setColumnEnabled("<<DISPLAY>>.ITEM_DESC_SEG_3", -1)
+	endif
 
 rem --- Disable option menu items
 if ap$<>"Y" disable_str$=disable_str$+"IVM_ITEMVEND;"; rem --- this is a detail window, give alias name
