@@ -22,7 +22,7 @@ rem --- Set Description Segments
 [[<<DISPLAY>>.ITEM_DESC_SEG_3.AVAL]]
 rem --- Set this section back into desc, if modified
 
-	desc$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC")
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
 	seg$  = callpoint!.getUserInput()
 
 	if seg$ <> user_tpl.prev_desc_seg_3$ then
@@ -34,7 +34,7 @@ rem --- Set this section back into desc, if modified
 [[<<DISPLAY>>.ITEM_DESC_SEG_2.AVAL]]
 rem --- Set this section back into desc, if modified
 
-	desc$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC")
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
 	seg$  = callpoint!.getUserInput()
 
 	if seg$ <> user_tpl.prev_desc_seg_2$ then
@@ -46,7 +46,7 @@ rem --- Set this section back into desc, if modified
 [[<<DISPLAY>>.ITEM_DESC_SEG_1.AVAL]]
 rem --- Set this section back into desc, if modified
 
-	desc$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC")
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
 	seg$  = callpoint!.getUserInput()
 
 	if seg$ <> user_tpl.prev_desc_seg_1$ then
