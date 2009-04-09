@@ -29,7 +29,7 @@ if cvs(callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID"),3)<>""
 	tmp_customer_id$=callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID")
 	tmp_order_no$=callpoint!.getUserInput()
 
-	if callpoint!.getUserInput()<>callpoint!.getColumnUndoData("POE_REQHDR.ORDER_NO") 		
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.ORDER_NO") 		
 		gosub dropship_shipto
 		gosub get_dropship_order_lines				
 	endif	
@@ -38,7 +38,7 @@ endif
 [[POE_REQHDR.CUSTOMER_ID.AVAL]]
 rem --- if dropshipping, retrieve specified sales order and display shipto address
 
-if callpoint!.getUserInput()<>callpoint!.getColumnUndoData("POE_REQHDR.CUSTOMER_ID") 
+if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID") 
 
 	callpoint!.setColumnData("POE_REQHDR.ORDER_NO","")
 	callpoint!.setColumnData("POE_REQHDR.SHIPTO_NO","")
@@ -60,26 +60,29 @@ if callpoint!.getUserInput()<>callpoint!.getColumnUndoData("POE_REQHDR.CUSTOMER_
 	callpoint!.setStatus("REFRESH")
 	
 endif
+end_customer_id_aval:
 [[POE_REQHDR.DROPSHIP.AVAL]]
 rem --- can't toggle dropship (at least for this release) if any detail lines exist when OP is installed
-		
-dtl!=gridvect!.getItem(0)		
-if dtl!.size() and callpoint!.getDevObject("OP_installed")="Y"
-	msg_id$="PO_DTL_EXISTS"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
-else
-	if callpoint!.getUserInput()="Y"
-		if callpoint!.getDevObject("OP_installed")<>"Y"
-			callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)
-			util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
-		else
-			callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",1)
-			util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),1)
-		endif			
+
+if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.DROPSHIP")		
+	dtl!=gridvect!.getItem(0)		
+	if dtl!.size() and callpoint!.getDevObject("OP_installed")="Y"
+		msg_id$="PO_DTL_EXISTS"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
 	else
-		util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
-		rem gosub clear_so_ref
+		if callpoint!.getUserInput()="Y"
+			if callpoint!.getDevObject("OP_installed")<>"Y"
+				callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)
+				util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
+			else
+				callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",1)
+				util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),1)
+			endif			
+		else
+			util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
+			rem gosub clear_so_ref
+		endif
 	endif
 endif
 [[POE_REQHDR.REQ_NO.AVAL]]
@@ -353,7 +356,7 @@ rem --- inits
 	use ::ado_util.src::util
 
 rem --- Open Files
-	num_files=7
+	num_files=8
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -362,6 +365,7 @@ rem --- Open Files
 	open_tables$[5]="IVM_ITEMWHSE",open_opts$[5]="OTA"
 	open_tables$[6]="IVM_ITEMVEND",open_opts$[6]="OTA"
 	open_tables$[7]="IVM_ITEMMAST",open_opts$[7]="OTA"
+	open_tables$[8]="IVM_ITEMSYN",open_opts$[8]="OTA"
 
 	gosub open_tables
 	aps_params_dev=num(open_chans$[1]),aps_params_tpl$=open_tpls$[1]

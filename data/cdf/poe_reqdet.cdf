@@ -1,17 +1,50 @@
-[[POE_REQDET.AGRN]]
-rem print 'show',;rem debug
-rem print "AGRN";rem debug
-rem print "getValidationRow: ",callpoint!.getValidationRow();rem debug
-rem print "getGridRowNewStatus: ",callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()));rem debug
-rem print "getGridRowModifyStatus: ",callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()));rem debug
+[[POE_REQDET.ITEM_ID.AINV]]
+rem --- remember row/column we're on so we can force focus when we return from synonym lookup
 
-find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
-if cvs(find_item$,3)<>"" then gosub get_item_desc
+declare BBjStandardGrid grid!
+grid! = util.getGrid(Form!)
+return_to_row = grid!.getSelectedRow()
+return_to_col = grid!.getSelectedColumn()
+
+rem --- see if they entered a synonym, if so, display (if only one of them), if not, launch bam_inquiry on synonym file
+
+ivm_itemsyn_dev=fnget_dev("IVM_ITEMSYN")
+dim ivm_itemsyn$:fnget_tpl$("IVM_ITEMSYN")
+
+read (ivm_itemsyn_dev,key=firm_id$+callpoint!.getRawUserInput(),dom=*next)
+read_count=0
+found_count=0
+found_item$=""
+
+while read_count<2
+	read record (ivm_itemsyn_dev,end=*break)ivm_itemsyn$
+	if ivm_itemsyn.firm_id$=firm_id$ and cvs(ivm_itemsyn.item_synonym$,3)=callpoint!.getRawUserInput()
+		found_count=found_count+1
+		found_item$=ivm_itemsyn.item_id$
+	endif
+	read_count=read_count+1
+wend
+
+if found_count=1
+	callpoint!.setUserInput(found_item$)
+	callpoint!.setStatus("")
+else
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMSYN","PRIMARY",key_tpl$,table_chans$[all],rd_stat$
+	dim return_key$:key_tpl$
+
+	call stbl("+DIR_SYP")+"bam_inquiry.bbj",gui_dev,Form!,"IVM_ITEMSYN","LOOKUP",
+:		table_chans$[all],firm_id$,"PRIMARY",return_key$
+	if cvs(return_key$,3)<>""
+		callpoint!.setUserInput(return_key.item_id$)	
+		callpoint!.setStatus("")
+	else
+		callpoint!.setStatus("ABORT")
+	endif
+endif
+
+util.forceEdit(Form!, return_to_row, return_to_col)
 [[POE_REQDET.AGCL]]
 use ::ado_util.src::util
-[[POE_REQDET.BGDR]]
-find_item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
-gosub get_item_desc
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
 rem print callpoint!.getUserInput();rem debug
@@ -70,19 +103,12 @@ callpoint!.setColumnData("POE_REQDET.UNIT_COST",str(unit_cost))
 
 [[POE_REQDET.AREC]]
 rem -- was trying to set the default line code to "S" in here, but it caused problems... grid row confusion, and no aval firing if you just tab out of the
-rem --	default on 2nd/subsequent rows... turns out cleaner to just let it default to (none) and have user select each time.  So all that's currently
-rem --	happening in here is initialization of the item description stbl
+rem --	default on 2nd/subsequent rows... turns out cleaner to just let it default to (none) and have user select each time.  
 
 rem -- set default line code 
 
 rem callpoint!.setColumnData("POE_REQDET.PO_LINE_CODE",str(callpoint!.getDevObject("dflt_po_line_code")))
 rem gosub update_line_type_info
-
-x$=stbl("+POE_REQDET_ITEM_DESC","")
-
-rem if callpoint!.getDevObject("so_ldat")<>null()
-rem	callpoint!.setTableColumnAttribute("POE_REQDET.SO_INT_SEQ_REF","LDAT",str(callpoint!.getDevObject("so_ldat")))
-rem endif
 
 rem util.forceFocus(callpoint!,"PO_LINE_CODE")
 rem util.forceEdit(Form!,num(callpoint!.getValidationRow()),0)
@@ -97,55 +123,9 @@ rem --- After Grid Display Row
 	    gosub update_line_type_info
 	endif
 [[POE_REQDET.ITEM_ID.AVAL]]
-rem --- did user enter item#, or are we trying to do synonym lookup, or ? for custom lookup
-
-find_item$=callpoint!.getUserInput()
-found_item=0
-ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
-dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
-
-rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
-
-declare BBjStandardGrid grid!
-grid! = util.getGrid(Form!)
-return_to_row = grid!.getSelectedRow()
-return_to_col = grid!.getSelectedColumn()
 	
-rem --- if userInput() is a "?", call custom inquiry
+gosub validate_whse_item
 
-	if cvs(callpoint!.getUserInput(),3)="?"
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj","IVC_ITEMLOOKUP",stbl("+USER_ID"),"MNT","",table_chans$[all]
-		util.forceEdit(Form!, return_to_row, return_to_col)
-		find_item$=callpoint!.getDevObject("find_item")
-		read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*endif)ivm_itemmast$
-		callpoint!.setUserInput(find_item$)
-		x$=stbl("+POE_REQDET_ITEM_DESC",cvs(ivm_itemmast.item_desc$,3))
-		gosub validate_whse_item
-	else
-		read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*next)ivm_itemmast$;found_item=1
-			if found_item=1
-				x$=stbl("+POE_REQDET_ITEM_DESC",cvs(ivm_itemmast.item_desc$,3))
-				gosub validate_whse_item
-			else
-				rem --- otherwise, try synonym lookup
-				call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_ITEMSYN","PRIMARY",key_tpl$,table_chans$[all],rd_stat$
-				dim return_key$:key_tpl$
-
-				call stbl("+DIR_SYP")+"bam_inquiry.bbj",gui_dev,Form!,"IVM_ITEMSYN","LOOKUP",
-:					table_chans$[all],firm_id$,"PRIMARY",return_key$
-
-				util.forceEdit(Form!, return_to_row, return_to_col)
-
-				if cvs(return_key$,3)<>""
-					find_item$=return_key.item_id$
-					read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*next)ivm_itemmast$
-					x$=stbl("+POE_REQDET_ITEM_DESC",cvs(ivm_itemmast.item_desc$,3))
-					callpoint!.setUserInput(ivm_itemmast.item_id$)
-					gosub validate_whse_item
-				endif
-			endif
-	endif
-		
 
 
 
@@ -213,27 +193,3 @@ missing_warehouse:
 	callpoint!.setStatus("ABORT")
 
 return
-
-get_item_desc:
-
-	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
-
-	read record (ivm_itemmast_dev,key=firm_id$+find_item$,dom=*next)ivm_itemmast$
-	x$=stbl("+POE_REQDET_ITEM_DESC",cvs(ivm_itemmast.item_desc$,3))
-
-return
-
-rem #include fnget_control.src
-
-def fnget_control!(ctl_name$)
-
-ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
-ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
-get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-return get_control!
-
-fnend
-
-rem #endinclude fnget_control.src
-		

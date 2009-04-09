@@ -252,7 +252,7 @@ rem --- Get the control ID of the event
 		switch notice.code
 			case 19; rem grid_key_press
 			case 14; rem grid_mouse_up
-				callpoint!.setDevObject("find_item",gridSearch!.getCellText(curr_row,1))
+				callpoint!.setDevObject("find_item",firm_id$+gridSearch!.getCellText(curr_row,1))
 				gosub get_inventory_detail		
 			break
 		swend
@@ -340,7 +340,7 @@ rem --- get/display Inventory Detail info
 	read record (ivs_params_dev,key=firm_id$+"IV00",dom=*next)ivs_params$
 	ls$=ivs_params.lotser_flag$
 
-	read (ivm_itemwhse_dev,key=firm_id$+callpoint!.getDevObject("find_item"),knum=2,dom=*next)
+	read (ivm_itemwhse_dev,key=callpoint!.getDevObject("find_item"),knum=2,dom=*next)
 	on_hand=0
 	committed=0
 	available=0
@@ -357,7 +357,7 @@ rem --- get/display Inventory Detail info
 
 	infoWin!=callpoint!.getDevObject("infoWin")
 
-	read record (ivm_itemmast_dev,key=firm_id$+callpoint!.getDevObject("find_item"),dom=*next)ivm_itemmast$
+	read record (ivm_itemmast_dev,key=callpoint!.getDevObject("find_item"),dom=*next)ivm_itemmast$
 	
 	w!=infoWin!.getControl( num( callpoint!.getDevObject("prod_tp") ) )
 	w!.setText(ivm_itemmast.product_type$)

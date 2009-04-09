@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.poe_reqdet">1930AF9934EE5322C68214240B4CBC18</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.poe_reqdet">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.poe_reqdet">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.poe_reqdet">20090407</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.poe_reqdet">20090407</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.poe_reqdet">125432</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.poe_reqdet">20090408</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.poe_reqdet">20090408</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.poe_reqdet">152326</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.poe_reqdet">/dev/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.poe_reqdet">DISPLAY_SEQ</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.poe_reqdet">G</DD_ATTR_FTYP>
@@ -39,17 +39,9 @@
 			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_reqdetagdr">POE_REQDET      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.poe_reqdetagdr">AGDR</DD_ATTR_CPRO>
 		</RECORD>
-		<RECORD id="ddm_table_cpro.poe_reqdetagrn">
-			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_reqdetagrn">POE_REQDET      </DD_TABLE_ALIAS>
-			<DD_ATTR_CPRO id="ddm_table_cpro.poe_reqdetagrn">AGRN</DD_ATTR_CPRO>
-		</RECORD>
 		<RECORD id="ddm_table_cpro.poe_reqdetarec">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_reqdetarec">POE_REQDET      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.poe_reqdetarec">AREC</DD_ATTR_CPRO>
-		</RECORD>
-		<RECORD id="ddm_table_cpro.poe_reqdetbgdr">
-			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_reqdetbgdr">POE_REQDET      </DD_TABLE_ALIAS>
-			<DD_ATTR_CPRO id="ddm_table_cpro.poe_reqdetbgdr">BGDR</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_opts">
@@ -745,30 +737,16 @@
 		<RECORD id="ddm_table_disp.poe_reqdet001">
 			<DD_TABLE_ALIAS id="ddm_table_disp.poe_reqdet001">POE_REQDET      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_disp.poe_reqdet001">001</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_disp.poe_reqdet001">TEXT_60         </DD_DATA_NAME>
-			<DD_CTRL_NAME id="ddm_table_disp.poe_reqdet001">DISP_ITEM_DESC  </DD_CTRL_NAME>
-			<DD_ATTR_LABL id="ddm_table_disp.poe_reqdet001">Description</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_disp.poe_reqdet001">Desc</DD_ATTR_LABS>
-			<DD_ATTR_CALC id="ddm_table_disp.poe_reqdet001">[+POE_REQDET_ITEM_DESC]</DD_ATTR_CALC>
+			<DD_DATA_NAME id="ddm_table_disp.poe_reqdet001">EXT_COST        </DD_DATA_NAME>
+			<DD_CTRL_NAME id="ddm_table_disp.poe_reqdet001">DISP_EXT_COST   </DD_CTRL_NAME>
+			<DD_ATTR_LABL id="ddm_table_disp.poe_reqdet001">Extended cost</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_disp.poe_reqdet001">Ext Cost</DD_ATTR_LABS>
+			<DD_ATTR_CALC id="ddm_table_disp.poe_reqdet001">ROUND([POE_REQDET.UNIT_COST]*[POE_REQDET.REQ_QTY],2)</DD_ATTR_CALC>
 			<DD_ATTR_CTLX id="ddm_table_disp.poe_reqdet001">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.poe_reqdet001">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.poe_reqdet001">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.poe_reqdet001">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.poe_reqdet001">10</DD_ATTR_TIND>
-		</RECORD>
-		<RECORD id="ddm_table_disp.poe_reqdet002">
-			<DD_TABLE_ALIAS id="ddm_table_disp.poe_reqdet002">POE_REQDET      </DD_TABLE_ALIAS>
-			<DD_SEQUENCE id="ddm_table_disp.poe_reqdet002">002</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_disp.poe_reqdet002">EXT_COST        </DD_DATA_NAME>
-			<DD_CTRL_NAME id="ddm_table_disp.poe_reqdet002">DISP_EXT_COST   </DD_CTRL_NAME>
-			<DD_ATTR_LABL id="ddm_table_disp.poe_reqdet002">Extended cost</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_disp.poe_reqdet002">Ext Cost</DD_ATTR_LABS>
-			<DD_ATTR_CALC id="ddm_table_disp.poe_reqdet002">ROUND([POE_REQDET.UNIT_COST]*[POE_REQDET.REQ_QTY],2)</DD_ATTR_CALC>
-			<DD_ATTR_CTLX id="ddm_table_disp.poe_reqdet002">0</DD_ATTR_CTLX>
-			<DD_ATTR_CTLY id="ddm_table_disp.poe_reqdet002">0</DD_ATTR_CTLY>
-			<DD_ATTR_CTLW id="ddm_table_disp.poe_reqdet002">0</DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_table_disp.poe_reqdet002">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.poe_reqdet002">16</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.poe_reqdet001">16</DD_ATTR_TIND>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cmts">
@@ -803,6 +781,11 @@
 			<DD_TABLE_ALIAS id="ddm_column_cpro.poe_reqdetwarehouse_idaval">POE_REQDET      </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.poe_reqdetwarehouse_idaval">WAREHOUSE_ID    </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.poe_reqdetwarehouse_idaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.poe_reqdetitem_idainv">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.poe_reqdetitem_idainv">POE_REQDET      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.poe_reqdetitem_idainv">ITEM_ID         </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.poe_reqdetitem_idainv">AINV</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_column_cpro.poe_reqdetitem_idaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.poe_reqdetitem_idaval">POE_REQDET      </DD_TABLE_ALIAS>
@@ -877,10 +860,10 @@
 			<DD_DVAR_NAME id="ddm_column_opts.poe_reqdetitem_idb">ITEM_ID         </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.poe_reqdetitem_idb">B</DD_ATTR_OPTS>
 		</RECORD>
-		<RECORD id="ddm_column_opts.poe_reqdetdisp_item_descc">
-			<DD_TABLE_ALIAS id="ddm_column_opts.poe_reqdetdisp_item_descc">POE_REQDET      </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.poe_reqdetdisp_item_descc">DISP_ITEM_DESC  </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.poe_reqdetdisp_item_descc">C</DD_ATTR_OPTS>
+		<RECORD id="ddm_column_opts.poe_reqdetitem_idv">
+			<DD_TABLE_ALIAS id="ddm_column_opts.poe_reqdetitem_idv">POE_REQDET      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.poe_reqdetitem_idv">ITEM_ID         </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.poe_reqdetitem_idv">V</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.poe_reqdetdisp_ext_costc">
 			<DD_TABLE_ALIAS id="ddm_column_opts.poe_reqdetdisp_ext_costc">POE_REQDET      </DD_TABLE_ALIAS>
@@ -1306,10 +1289,15 @@
 			<ASC_PROD_ID id="ddm_elements.item_id_input">IV </ASC_PROD_ID>
 			<LOCALIZATION_EX id="ddm_elements.item_id_input">N</LOCALIZATION_EX>
 			<DD_CREATE_DATE id="ddm_elements.item_id_input">20090320</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.item_id_input">20090320</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.item_id_input">20090407</DD_LSTREV_DATE>
+			<DD_AUTO_COMP id="ddm_elements.item_id_input">N</DD_AUTO_COMP>
 			<DD_ATTR_CTLW id="ddm_elements.item_id_input">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.item_id_input">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.item_id_input">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.item_id_input">ITEM_DESC</DD_ATTR_DCOL>
+			<DD_ATTR_DKEY id="ddm_elements.item_id_input">[+FIRM_ID]+@</DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.item_id_input">IVM_ITEMMAST    </DD_ATTR_DTAB>
+			<DD_ATTR_DINQ id="ddm_elements.item_id_input">c:/dev/apps/aon/iv/src/ivc_itemlookup.aon</DD_ATTR_DINQ>
 			<DD_ATTR_LABL id="ddm_elements.item_id_input">Inventory Item ID</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.item_id_input">Item ID</DD_ATTR_LABS>
 			<DD_ATTR_MAXL id="ddm_elements.item_id_input">0</DD_ATTR_MAXL>
@@ -1462,27 +1450,6 @@
 			<DD_ATTR_MSKI id="ddm_elements.ns_item_id">UUUUUUUUUUUUUUUUUUUU</DD_ATTR_MSKI>
 			<DD_ATTR_PREC id="ddm_elements.ns_item_id">0</DD_ATTR_PREC>
 			<DD_ATTR_PROM id="ddm_elements.ns_item_id">Enter non-stock Item ID</DD_ATTR_PROM>
-		</RECORD>
-		<RECORD id="ddm_elements.text_60">
-			<DD_DATA_NAME id="ddm_elements.text_60">TEXT_60         </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.text_60">Text field</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.text_60">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.text_60">60</DD_DATA_LENGTH>
-			<ASC_COMP_ID id="ddm_elements.text_60">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.text_60">AD </ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.text_60">N</LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.text_60">20090320</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.text_60">20090320</DD_LSTREV_DATE>
-			<DD_ATTR_BLNK id="ddm_elements.text_60">N</DD_ATTR_BLNK>
-			<DD_ATTR_CTLW id="ddm_elements.text_60">0</DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.text_60">0</DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.text_60">E</DD_ATTR_CTYP>
-			<DD_ATTR_LABL id="ddm_elements.text_60">Text field</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.text_60">Text field</DD_ATTR_LABS>
-			<DD_ATTR_MAXL id="ddm_elements.text_60">0</DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.text_60">0</DD_ATTR_MAXR>
-			<DD_ATTR_MINL id="ddm_elements.text_60">0</DD_ATTR_MINL>
-			<DD_ATTR_PREC id="ddm_elements.text_60">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.ext_cost">
 			<DD_DATA_NAME id="ddm_elements.ext_cost">EXT_COST        </DD_DATA_NAME>
