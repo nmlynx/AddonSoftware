@@ -122,6 +122,29 @@ class public func
 		
 	methodend
 	
+	rem ==========================================================================
+	rem --- fnlatest$: Return the latest date (YYYYMMDD)
+	rem ==========================================================================
+	
+	method public static BBjString latestDate(BBjString p_date1$, BBjString p_date2$)
+	
+		jul1 = -1
+		jul2 = -1
+		jul1 = jul(p_date1$, "%Yl%Mz%Dz", err=*next)
+		jul2 = jul(p_date2$, "%Yl%Mz%Dz", err=*next)
+	
+		if jul1 = -1 and jul2 = -1 then
+			methodret ""
+		endif
+		
+		if jul1 >= jul2 then
+			methodret p_date1$
+		else
+			methodret p_date2$
+		endif
+		
+	methodend
+	
 	
 	rem ==========================================================================
 	rem --- get number of GL periods from GL param file; nothing sent in, #periods out
@@ -212,6 +235,17 @@ rem ==========================================================================
 	print func.formatDate("nonsense")
 	print func.formatDate("short")
 	print func.formatDate("")
+	
+	rem --- fnlatest$()
+	
+	print fill(79, "="), 'lf', "fnlatest$()..."
+	print func.latestDate("20090101", "20090201")
+	print func.latestDate("20090202", "20090201")
+	print func.latestDate("", "20090201")
+	print func.latestDate("20090202", "")
+	print func.latestDate("", "")
+	print func.latestDate("20090230", "20090201")
+	print func.latestDate("20090202", "junk")
 	
 	end
 	
