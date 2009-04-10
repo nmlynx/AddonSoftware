@@ -114,9 +114,6 @@ rem --- call the lot lookup window and set default lot, lot location, lot commen
 	rem --- return focus to where we were (lot number)
 	util.forceEdit(Form!, return_to_row, return_to_col)
 	
-[[IVE_TRANSDET.BWRI]]
-print "before record write (BWRI)"; rem debug
-
 [[IVE_TRANSDET.BUDE]]
 print "before record undelete (BUDE)"; rem debug
 
@@ -190,17 +187,11 @@ rem --- Display defaults for this row
 
 	callpoint!.setStatus("MODIFIED-REFRESH")
 	rem callpoint!.setStatus("REFGRID")
-[[IVE_TRANSDET.ARAR]]
-print "after array transfer (ARAR)"; rem debug
-[[IVE_TRANSDET.AGDR]]
-print "after grid display row (AGDR)"; rem debug
-[[IVE_TRANSDET.AGDS]]
-print "after grid display (AGDS)"; rem debug
 [[IVE_TRANSDET.AGCL]]
 print "after grid clear (AGCL)"; rem debug
 
 	rem --- We'll be using the "util" object throughout.
-	rem --- The "use" just needs to be earlier than the first invocation.
+	rem --- It doesn't matter where the "use" statement is
 	use ::ado_util.src::util
 [[IVE_TRANSDET.TRANS_QTY.BINP]]
 print "in TRANS_QTY.BINP"; rem debug

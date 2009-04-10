@@ -1,21 +1,3 @@
-[[IVE_TRANSHDR.ADEQ]]
-print "HEADER: After delete query (ADEQ)"; rem debug
-[[IVE_TRANSHDR.BOVE]]
-print "HEADER: before table overview (BOVE)"; rem debug
-[[IVE_TRANSHDR.BDEQ]]
-print "HEADER: before delete query (BDEQ)"; rem debug
-[[IVE_TRANSHDR.BDEL]]
-print "HEADER: before record delete (BDEL)"; rem debug
-[[IVE_TRANSHDR.ADIS]]
-print "HEADER: After display record (ADIS)"; rem debug
-[[IVE_TRANSHDR.AWRI]]
-print "HEADER: after write record (AWRI)"; rem debug
-[[IVE_TRANSHDR.ARER]]
-print "HEADER: after new record ready (ARER)"; rem debug
-[[IVE_TRANSHDR.ARAR]]
-print "HEADER: after array transfer (ARAR)"; rem debug
-[[IVE_TRANSHDR.BWRI]]
-print "HEADER: before record write (BWRI)"; rem debug
 [[IVE_TRANSHDR.AREA]]
 print "HEADER: after record read (AREA)"; rem debug
 
@@ -25,8 +7,6 @@ rem --- Get trans code record and set flags
 	rem trans_code$ = callpoint!.getColumnData("IVE_TRANSHDR.TRANS_CODE")
 	trans_code$ = rec_data.trans_code$
 	gosub get_trans_rec
-[[IVE_TRANSHDR.AREC]]
-print "HEADER: after new record (AREC)"; rem debug
 [[IVE_TRANSHDR.TRANS_CODE.AINP]]
 rem --- You can't modify the trans code use you've entered the record
 
