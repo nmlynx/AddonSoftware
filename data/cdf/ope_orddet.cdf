@@ -17,7 +17,7 @@ rem --- Go get Lot Numbers
 rem --- Is this item lot/serial?
 
 	if ivm_itemmast.lotser_item$ = "Y" and ivm_itemmast.inventoried$ = "Y"
-		callpoint!.setOptionEnabled("LENT",0)
+		rem callpoint!.setOptionEnabled("LENT",0); rem why?
 		callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
 		callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
 		callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
@@ -72,10 +72,8 @@ rem --- Set default Line Code
 	if start_block then
 		read record (opc_linecode_dev, key=firm_id$+line_code$, dom=*endif) opc_linecode$
 		rem callpoint!.setStatus("REFRESH-ENABLE:"+opc_linecode.line_type$)
-		callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+		rem callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
 	endif
-[[OPE_ORDDET.AGCL]]
-use ::ado_util.src::util
 [[OPE_ORDDET.BDEL]]
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
@@ -157,7 +155,7 @@ rem --- Initialize inventory item update
 
 		status=999
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status goto std_exit
+		if status then exitto std_exit
 
 rem --- Items or warehouses are different: uncommit previous
 
@@ -173,7 +171,7 @@ rem --- Uncommit prior item and warehouse
 				refs[0]=prior_qty
 				
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then escape; rem problem uncommitting previous qty
+				if status then exitto std_exit
 			endif
 
 rem --- Commit quantity for current item and warehouse
@@ -182,7 +180,7 @@ rem --- Commit quantity for current item and warehouse
 			items$[2]=curr_item$
 			refs[0]=curr_qty 
 			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then escape; rem problem committing 
+			if status then exitto std_exit
 
 		endif
 
@@ -198,7 +196,7 @@ rem --- Commit quantity for current item and warehouse
 			items$[2]=curr_item$
 			refs[0]=curr_qty - prior_qty
 			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then escape; rem problem committing 
+			if status then exitto std_exit
 
 		endif
 
@@ -210,7 +208,6 @@ set_params:
 	callpoint!.setDevObject("wh", cur_rec.warehouse_id$)
 	callpoint!.setDevObject("item", cur_rec.item_id$)
 	callpoint!.setDevObject("ord_qty", str(cur_rec.qty_ordered))
-
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 rem g!=form!.getChildWindow(1109).getControl(5900)
@@ -288,9 +285,13 @@ rem --- Check row
 [[OPE_ORDDET.LINE_CODE.BINP]]
 rem --- Check row
 
-	item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-	wh$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	gosub check_new_row
+
+rem --- Set previous
+
+	user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 [[OPE_ORDDET.WAREHOUSE_ID.BINP]]
 rem --- Check new row
 
@@ -336,9 +337,10 @@ rem --- Check new row
 [[OPE_ORDDET.ITEM_ID.BINP]]
 rem --- Check new row
 
-	item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-	wh$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	gosub check_new_row
+
 [[OPE_ORDDET.ITEM_ID.AVAL]]
 rem --- Set available
 
@@ -530,32 +532,6 @@ disp_totals: rem --- get context and ID of total amount display control, and red
 
 return
 
-update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
-rem                --- need to send in wh_id$, item_id$, ls_id$, and qty
-
-	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-	ivs01_dev=fnget_dev("IVS_PARAMS")
-	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
-
-	items$[1]=wh_id$
-	items$[2]=item_id$
-	items$[3]=ls_id$
-	refs[0]=qty
-	if qty>0 line_sign=1 else line_sign=-1
-
-escape; rem decisions have to be made about ivc_itemupdt.aon
-
-	while 1
-		if pos(S8$(2,1)="SP")=0 break
-		if s8$(3,1)="Y" or a0$(21,1)="P" break; rem Drop ship or quote
-		if line_sign>0 action$="OE" else action$="UC"
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		break
-	wend
-
-return
-
 pricing: rem "Call Pricing routine
 
 	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
@@ -618,13 +594,14 @@ rem ==========================================================================
 	dim ivm10c$:fnget_tpl$("IVC_WHSECODE")
 
 	good_item$="N"
+	start_block = 1
 
-	repeat
-		readrecord(ivm01_dev, key=firm_id$+item$, dom=*break)ivm01a$
-		readrecord(ivm02_dev, key=firm_id$+wh$+item$, dom=*break)ivm02a$
-		readrecord(ivc_whcode_dev, key=firm_id$+"C"+wh$, dom=*break)ivm10c$
+	if start_block then
+		readrecord(ivm01_dev, key=firm_id$+item$, dom=*endif) ivm01a$
+		readrecord(ivm02_dev, key=firm_id$+wh$+item$, dom=*endif) ivm02a$
+		readrecord(ivc_whcode_dev, key=firm_id$+"C"+wh$, dom=*endif) ivm10c$
 		good_item$="Y"
-	until 1
+	endif
 
 	if good_item$="Y"
 		avail$[1]=str(ivm02a.qty_on_hand)
@@ -644,17 +621,17 @@ rem ==========================================================================
 		opc_linecode_dev=fnget_dev("OPC_LINECODE")
 		dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 
-		repeat
+		if start_block then
 			dropship_idx = num(user_tpl.dropship_flag$)
 			userObj!.getItem(dropship_idx).setText("")
 
 			line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-			read record (opc_linecode_dev, key=firm_id$+line_code$, dom=*break) opc_linecode$
+			read record (opc_linecode_dev, key=firm_id$+line_code$, dom=*endif) opc_linecode$
 
 			if opc_linecode.dropship$="Y"
 				userObj!.getItem(dropship_idx).setText("**Drop Ship**")
 			endif
-		until 1
+		endif
 
 	endif
 
@@ -683,20 +660,9 @@ rem ==========================================================================
 
 	if currRow <> user_tpl.cur_row
 		gosub clear_avail
-		user_tpl.cur_row = CurrRow
+		user_tpl.cur_row = currRow
 		gosub set_avail
 	endif
-
-return
-
-disable_ctl: rem --- disable selected controls
-
-	wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
-	wmap$=callpoint!.getAbleMap()
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)=dmap$
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
 
 return
 
@@ -719,21 +685,18 @@ rem ==========================================================================
 	repeat
 		if pos(callpoint!.getDevObject("lotser_flag") = "LS") then 
 			if new_rec$<>"Y"
-				read record (ivm01_dev, key=firm_id$+cur_rec.item_id$, dom=*break) ivm01a$
+				item_id$ = cur_rec.item_id$
 			else
-				read record (ivm01_dev, key=firm_id$+callpoint!.getUserInput(), dom=*break) ivm01a$
+				item_id$ = callpoint!.getUserInput()
 			endif
+
+			read record (ivm01_dev, key=firm_id$+item_id$, dom=*break) ivm01a$
 
 			if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
 				lotted$="Y"
 				callpoint!.setDevObject("int_seq",callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
 				callpoint!.setDevObject("wh",cur_rec.warehouse_id$)
-
-				if new_rec$<>"Y"
-					callpoint!.setDevObject("item",callpoint!.getUserInput())
-				else
-					callpoint!.setDevObject("item",cur_rec.item_id$)
-				endif
+				callpoint!.setDevObject("item",item_id$)
 			endif
 		endif
 	until 1
@@ -809,15 +772,50 @@ rem              --- Make sure action$ is set before entry
 
 return
 
+rem ==========================================================================
 #include std_missing_params.src
+rem ==========================================================================
+
+rem ==========================================================================
+rem 	Use util object
+rem ==========================================================================
+
+	use ::ado_util.src::util
 [[OPE_ORDDET.LINE_CODE.AVAL]]
 rem --- set enable/disable based on line type
 
-	line_code$=callpoint!.getUserInput()
+	line_code$ = callpoint!.getUserInput()
 
-	if cvs(line_code$,2)<>""
-		opc_linecode_dev=fnget_dev("OPC_LINECODE")
+	if cvs(line_code$,2) <> "" then
+		opc_linecode_dev = fnget_dev("OPC_LINECODE")
 		dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-		read record (opc_linecode_dev,key=firm_id$+line_code$,dom=*next)opc_linecode$
-		callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+		start_block = 1
+
+		if start_block then
+			read record (opc_linecode_dev, key=firm_id$+line_code$, dom=*endif) opc_linecode$
+			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+		endif
+	endif
+
+rem --- Has line code changed?
+
+	if line_code$ <> user_tpl.prev_line_code$ then
+		callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "")
+		callpoint!.setColumnData("OPE_ORDDET.PRODUCT_TYPE", "")
+		callpoint!.setColumnData("OPE_ORDDET.ORDER_MEMO", "")
+		callpoint!.setColumnData("OPE_ORDDET.WAREHOUSE_ID", "?"); rem r2$(32,2)
+		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y"); rem why?
+		callpoint!.setColumnData("OPE_ORDDET.VENDOR_ID", "")
+		callpoint!.setColumnData("OPE_ORDDET.DROPSHIP", "")
+		callpoint!.setColumnData("OPE_ORDDET.UNIT_COST", "0")
+		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", "0")
+		callpoint!.setColumnData("OPE_ORDDET.QTY_ORDERED", "0")
+		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
+		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", "0")
+		callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", "0")
+		callpoint!.setColumnData("OPE_ORDDET.TAXABLE_AMT", "0")
+		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", "0")
+		callpoint!.setColumnData("OPE_ORDDET.COMM_PERCENT", "0")
+		callpoint!.setColumnData("OPE_ORDDET.COMM_AMT", "0")
 	endif
