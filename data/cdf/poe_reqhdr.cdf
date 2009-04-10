@@ -1,9 +1,28 @@
 [[POE_REQHDR.BWRI]]
-print "in BWRI";rem debug
+rem --- check for mandatory data
+
+ok_to_write$="Y"
+
+if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")="Y"
+	if cvs(callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID"),3)="" then ok_to_write$="N"
+	if callpoint!.getDevObject("OP_installed")="Y"
+		if cvs(callpoint!.getColumnData("POE_REQHDR.ORDER_NO"),3)="" then ok_to_write$="N"
+		if callpoint!.getDevObject("ds_orders")="N" then ok_to_write$="N"
+	endif
+endif
+
+if ok_to_write$<>"Y"
+	msg_id$="PO_REQD_DATA"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
 [[POE_REQHDR.AREC]]
-rem --- setting up for new rec... disable SO_INT_SEQ_REF column in detail grid until/unless dropship flag gets checked
+rem --- setting up for new rec
 
 util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
+callpoint!.setDevObject("ds_orders","")
+callpoint!.setDevObject("so_ldat","")
+callpoint!.setDevObject("so_lines_list","")
 [[POE_REQHDR.ADIS]]
 rem --- enable/disable SO_INT_SEQ_REF column in grid, and load possible orde line#'s into list, 
 rem ---	depending on whether or not drop-ship flag is selected and OE is installed
@@ -31,10 +50,16 @@ if cvs(callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID"),3)<>""
 
 	if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.ORDER_NO") 		
 		gosub dropship_shipto
-		gosub get_dropship_order_lines				
+		gosub get_dropship_order_lines
+
+		if callpoint!.getDevObject("ds_orders")<>"Y" 
+			msg_id$="PO_NO_SO_LINES"
+			gosub disp_message
+		endif			
 	endif	
 
 endif
+
 [[POE_REQHDR.CUSTOMER_ID.AVAL]]
 rem --- if dropshipping, retrieve specified sales order and display shipto address
 
@@ -81,7 +106,6 @@ if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.DROPSHIP")
 			endif			
 		else
 			util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
-			rem gosub clear_so_ref
 		endif
 	endif
 endif
@@ -266,7 +290,7 @@ fill_dropship_address:
 return
 
 get_dropship_order_lines:
-rem --- eventually, this needs to only load up order lines w/ line codes that are marked as drop-ship...either load those up ahead of time, or use SQL here
+rem --- read thru selected sales order and build list of lines for which line code is marked as drop-ship
 	ope_ordhdr_dev=fnget_dev("OPE_ORDHDR")
 	ope_orddet_dev=fnget_dev("OPE_ORDDET")
 
@@ -285,69 +309,31 @@ rem --- eventually, this needs to only load up order lines w/ line codes that ar
 		read record (ope_orddet_dev,end=*break)ope_orddet$
 		if ope_orddet.firm_id$+ope_orddet.ar_type$+ope_orddet.customer_id$+ope_orddet.order_no$<>
 :			ope_ordhdr.firm_id$+ope_ordhdr.ar_type$+ope_ordhdr.customer_id$+ope_ordhdr.order_no$ then break
-rem		if pos(ope_orddet.line_code$=callpoint!.getDevObject("oe_ds_line_codes"))<>0
+		if pos(ope_orddet.line_code$=callpoint!.getDevObject("oe_ds_line_codes"))<>0
 			order_lines!.addItem(ope_orddet.internal_seq_no$)
-rem		endif
+		endif
 	wend
 
-	rem --- not using the Barista LDAT right now... was throwing an error, so just setting list for order lines by operating directly on grid object
-	ldat$=""
-	if order_lines!.size()
-		for x=0 to order_lines!.size()-1
-			ldat$=order_lines!.getItem(x)+"~"+order_lines!.getItem(x)+";"
-		next x
-	endif
+	if order_lines!.size()=0 
+		callpoint!.setDevObject("ds_orders","N")
+		callpoint!.setDevObject("so_ldat","")
+		callpoint!.setDevObject("so_lines_list","")
+	else 
+		callpoint!.setDevObject("ds_orders","Y")
+		ldat$=""
+		if order_lines!.size()
+			for x=0 to order_lines!.size()-1
+				ldat$=order_lines!.getItem(x)+"~"+order_lines!.getItem(x)+";"
+			next x
+		endif
 
-	callpoint!.setDevObject("so_ldat",ldat$)
+		callpoint!.setDevObject("so_ldat",ldat$)
 
-	callpoint!.setDevObject("so_lines_list",order_lines!)
-	tmpListCtl!.insertItems(0,order_lines!)
-	dtlGrid!=callpoint!.getDevObject("dtl_grid")
- 	dtlGrid!.setColumnListControl(num(callpoint!.getDevObject("dtl_grid_so_ref_col")),tmpListCtl!) 
-	
-return
-
-clear_so_ref:
-rem --- clear SO_INT_SEQ_REF field in all detail lines for this requisition if drop-ship flag has been turned off
-rem --- also clear out order_lines! vector, the list for the tmpListCtl!
-rem --- I think this should drive off of the grid (gridVect) instead of going straight to the file?
-rem --- actually... this should just clear the line#'s from the grid, then let the normal writeback take care of the disk !
-
-	poe_reqdet_dev=fnget_dev("POE_REQDET")
-	dim poe_reqdet$:fnget_tpl$("POE_REQDET")
-
-	req_no$=callpoint!.getColumnData("POE_REQHDR.REQ_NO")
-
-	read (poe_reqdet_dev,key=firm_id$+req_no$,dom=*next)
-	
-	while 1
-		read record (poe_reqdet_dev,end=*break)poe_reqdet$
-		if poe_reqdet.firm_id$+poe_reqdet.req_no$ <> firm_id$+req_no$ then break
-		poe_reqdet.so_int_seq_ref$=""
-		write record (poe_reqdet_dev)poe_reqdet$
-	wend
-
-	order_lines!=SysGUI!.makeVector()
-	tmpListCtl!=callpoint!.getDevObject("dtl_grid_so_ref_ctl")
-	tmpListCtl!.removeAllItems()
-	callpoint!.setDevObject("so_lines_list",order_lines!)
-
-	callpoint!.setStatus("REFGRID")
-
-return
-
-disable_ctls:
-for dctl=1 to 9
-	dctl$=dctl$[dctl]
-	if cvs(dctl$,2)<>""
-		wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
-		wmap$=callpoint!.getAbleMap()
-		wpos=pos(wctl$=wmap$,8)
-		wmap$(wpos+6,1)=dmap$
-		callpoint!.setAbleMap(wmap$)
-		callpoint!.setStatus("ABLEMAP-REFRESH")
-	endif
-next dctl
+		callpoint!.setDevObject("so_lines_list",order_lines!)
+		tmpListCtl!.insertItems(0,order_lines!)
+		dtlGrid!=callpoint!.getDevObject("dtl_grid")
+	 	dtlGrid!.setColumnListControl(num(callpoint!.getDevObject("dtl_grid_so_ref_col")),tmpListCtl!) 
+	endif	
 return
 [[POE_REQHDR.BSHO]]
 rem  print 'show';rem debug
