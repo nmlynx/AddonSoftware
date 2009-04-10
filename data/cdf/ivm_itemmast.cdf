@@ -452,7 +452,7 @@ rem --- Disable fields based on parameters
 able_map = 0
 wmap$=callpoint!.getAbleMap()
 rem --- If you don't distribute by item, or there's no GL, disable GL fields
-if di$<>"N" or gl$<>"Y"
+if di$="N" or gl$<>"Y"
 	fields_to_disable$="GL_INV_ACCT     GL_COGS_ACCT    GL_PUR_ACCT     GL_PPV_ACCT     GL_INV_ADJ      GL_COGS_ADJ     "
 	for wfield=1 to len(fields_to_disable$)-1 step 16
 		ctl_name$="IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3)					
