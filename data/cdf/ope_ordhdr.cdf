@@ -236,21 +236,22 @@ rem --- set default values
 	ope01_dev=fnget_dev("OPE_ORDHDR")
 	ope01a$=fnget_tpl$("OPE_ORDHDR")
 	dim ope01a$:ope01a$
+
+	ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord_no$  = callpoint!.getUserInput()
+
+	user_tpl.new_rec$ = "Y"
 	start_block = 1
 
 	if start_block then
-		find record(ope01_dev,key=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:			callpoint!.getUserInput(),dom=*endif)ope01a$
-		user_tpl.new_rec$="Y"
+		find record (ope01_dev, key=firm_id$+ar_type$+cust_id$+ord_no$, dom=*endif) ope01a$
+		user_tpl.new_rec$ = "N"
 	endif
 
-rec_exist:
+	callpoint!.setDevObject("order", ord_no$)
 
-	callpoint!.setDevObject("order",callpoint!.getUserInput())
-
-	if user_tpl.new_rec$<>"Y"
+	if user_tpl.new_rec$ = "N" then 
 		gosub check_lock_flag
 
 		if locked=1 then 
@@ -258,26 +259,23 @@ rec_exist:
 			break; rem --- exit callpoint
 		endif
 
-		user_tpl.price_code$=ope01a.price_code$
-		user_tpl.pricing_code$=ope01a.pricing_code$
-		user_tpl.order_date$=ope01a.order_date$
-	endif
+		user_tpl.price_code$   = ope01a.price_code$
+		user_tpl.pricing_code$ = ope01a.pricing_code$
+		user_tpl.order_date$   = ope01a.order_date$
 
-rem --- new record
+	else
 
-	if user_tpl.new_rec$="Y"
+rem --- New record
+
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
+
 		arm02_dev=fnget_dev("ARM_CUSTDET")
-		arm02a$=fnget_tpl$("ARM_CUSTDET")
-		dim arm02a$:arm02a$
-		read record (arm02_dev,key=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+"  ",dom=*next)arm02a$
+		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+		read record (arm02_dev, key=firm_id$+cust_id$+"  ", dom=*next) arm02a$
 
 		arm01_dev=fnget_dev("ARM_CUSTMAST")
-		arm01a$=fnget_tpl$("ARM_CUSTMAST")
-		dim arm01a$:arm01a$
-		read record (arm01_dev,key=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),dom=*next)arm01a$
+		dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+		read record (arm01_dev,key=firm_id$+cust_id$, dom=*next) arm01a$
 
 		callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",user_tpl.def_ship$)
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
@@ -298,24 +296,22 @@ rem --- new record
 
 		gosub get_op_params
 
-		if callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")=ars01a.customer_id$
+		if cust_id$ = ars01a.customer_id$
 			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","Y")
 		endif
 
 		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","Y")
-		user_tpl.price_code$=""
-		user_tpl.pricing_code$=arm02a.pricing_code$
-		user_tpl.order_date$=sysinfo.system_date$
+		user_tpl.price_code$   = ""
+		user_tpl.pricing_code$ = arm02a.pricing_code$
+		user_tpl.order_date$   = sysinfo.system_date$
 	endif
-
-	user_tpl.new_rec$="N"
 
 rem --- Enable/Disable buttons
 
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 
-	if user_tpl.new_rec$="N"
+	if user_tpl.new_rec$="N" then 
 		if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
 :			callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")="C"
 :		then
@@ -367,6 +363,8 @@ rem --- Get default dates
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj", "OPE_ORDDATES", stbl("+USER_ID"), "MNT", "", table_chans$[all]
 	user_tpl.def_ship$   = stbl("OPE_DEF_SHIP")
 	user_tpl.def_commit$ = stbl("OPE_DEF_COMMIT")
+
+	
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- enable/disable expire date based on value
 
@@ -1095,29 +1093,6 @@ add_to_batch_print:
 	writerecord(ope_prntlist_dev)ope_prntlist$
 
 return
-
-rem ==========================================================================
-cm_status: rem --- Credit Management status display
-rem ==========================================================================
-
-	curr_context = num(SysGui!.getContext())
-	next_context = num(SysGui!.getAvailableContext())
-	win_w = 400
-	win_h = 200
-	childWindow! = Form!.addChildWindow(16273, 50, 100, win_w, win_h, "", $00000800$, next_context)
-	groupBox! = childWindow!.addGroupBox(16274, 0, 5, win_w, win_h-5, "Customer Credit Status", $0000$)
-	staticText! = childWindow!.addStaticText(16275, 20,  25, 80, 15, "Credit Limit:", $8000$)
-	inputN!     = childWindow!.addInputN(    16375, 105, 25, 80, 15, $0001$, user_tpl.amount_mask$, $$, 0, 123456.78)
-	staticText! = childWindow!.addStaticText(16276, 20,  45, 80, 15, "Open Invoices:", $8000$)
-	inputN!     = childWindow!.addInputN(    16376, 105, 45, 80, 15, $0001$, user_tpl.amount_mask$, $$, 0, 76543.21)
-	staticText! = childWindow!.addStaticText(16277, 20, 65, 80, 15, "Open Orders:", $8000$)
-	staticText! = childWindow!.addStaticText(16278, 20, 85, 80, 15, "Open B/O's:", $8000$)
-	staticText! = childWindow!.addStaticText(16279, 20, 105, 80, 15, "Held Orders:", $8000$)
-	rem staticText! = childWindow!.addStaticText(16275, 20, 20, 50, 20, "Credit Limit:", $8000$)
-	button!     = childWindow!.addButton(1, win_w - 65, win_h - 25, 60, 20, "Ok", $$)
-	escape; rem debug
-
-return
 [[OPE_ORDHDR.ARAR]]
 rem --- display order total
 
@@ -1307,7 +1282,7 @@ rem --- Setup user_tpl$
 	user_tpl$ = user_tpl$ + "dropship_whse:c(1), def_whse:c(10), avail_oh:c(5), avail_comm:c(5), avail_avail:c(5),"
 	user_tpl$ = user_tpl$ + "avail_oo:c(5), avail_wh:c(5), avail_type:c(5*), dropship_flag:c(5*), ord_tot_1:c(5*),"
 	user_tpl$ = user_tpl$ + "price_code:c(2), pricing_code:c(4), order_date:c(8),cur_row:n(5), pick_hold:c(1),"
-	user_tpl$ = user_tpl$ + "pgmdir:c(1*)"
+	user_tpl$ = user_tpl$ + "pgmdir:c(1*), prev_line_code:c(1)"
 	dim user_tpl$:user_tpl$
 
 	user_tpl.credit_installed$ = ars_credit.sys_install$
