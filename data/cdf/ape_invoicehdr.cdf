@@ -487,7 +487,7 @@ if user_tpl.multi_types$="N"
 	gosub disable_fields
 endif
 if user_tpl.multi_dist$="N" 
-	ctl_name$="APE_INVOICEHDR.AP_DIST_CD"
+	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"
 	ctl_stat$="I"
 	gosub disable_fields
 endif
