@@ -1,3 +1,8 @@
+[[IVM_ITEMMAST.ARNF]]
+rem --- item not found (so assuming new record); default bar code to item id
+
+callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE", callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
+callpoint!.setStatus("REFRESH")
 [[<<DISPLAY>>.ITEM_DESC_SEG_3.BINP]]
 rem --- Set previous value
 
