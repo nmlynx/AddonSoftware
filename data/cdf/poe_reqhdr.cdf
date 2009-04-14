@@ -2,12 +2,28 @@
 rem --- check for mandatory data
 
 ok_to_write$="Y"
+missing_so_ref$=""
 
 if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")="Y"
 	if cvs(callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID"),3)="" then ok_to_write$="N"
 	if callpoint!.getDevObject("OP_installed")="Y"
 		if cvs(callpoint!.getColumnData("POE_REQHDR.ORDER_NO"),3)="" then ok_to_write$="N"
-		if callpoint!.getDevObject("ds_orders")="N" then ok_to_write$="N"
+		if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")="Y"
+			rem --- loop thru detail grid and see if all lines contain reference to corres. sales order line
+			dtl!=gridVect!.getItem(0)
+			numrecs=dtl!.size()
+			dim dtl_rec$:dtlg_param$[1,3]
+			if numrecs
+				for x=0 to numrecs-1
+					dtl_rec$=dtl!.getItem(x)
+					if cvs(dtl_rec$,3)<> "" and callpoint!.getGridRowDeleteStatus(reccnt)<>"Y" 
+						if pos(cvs(dtl_rec.po_line_code$,3)="DSNO")
+							if cvs(dtl_rec.so_int_seq_ref$,3)="" then missing_so_ref$="Y"
+						endif
+					endif
+				next x
+			endif
+		endif
 	endif
 endif
 
@@ -15,6 +31,14 @@ if ok_to_write$<>"Y"
 	msg_id$="PO_REQD_DATA"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
+else
+	if missing_so_ref$="Y"
+		msg_id$="PO_MISSING_SO"
+		gosub disp_message
+		if msg_opt$="N"
+			callpoint!.setStatus("ABORT")
+		endif		
+	endif	
 endif
 [[POE_REQHDR.AREC]]
 rem --- setting up for new rec
@@ -26,6 +50,9 @@ callpoint!.setDevObject("so_lines_list","")
 [[POE_REQHDR.ADIS]]
 rem --- enable/disable SO_INT_SEQ_REF column in grid, and load possible orde line#'s into list, 
 rem ---	depending on whether or not drop-ship flag is selected and OE is installed
+rem ---	if drop-ship is selected, disable drop-ship checkbox, customer, order until/unless no detail exists
+
+callpoint!.setColumnEnabled("POE_REQHDR.DROPSHIP",1)
 
 if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")<>"Y"
 	util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
@@ -35,11 +62,18 @@ else
 		tmp_customer_id$=callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID")
 		tmp_order_no$=callpoint!.getColumnData("POE_REQHDR.ORDER_NO")
 		gosub get_dropship_order_lines
+		dtl!=gridvect!.getItem(0)		
+		if dtl!.size() 
+			callpoint!.setColumnEnabled("POE_REQHDR.DROPSHIP",0)
+			callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",0)
+			callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)			
+		endif
 	else
-		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)
-		callpoint!.setStatus("REFRESH")
+		util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
+		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)		
 	endif
 endif
+callpoint!.setStatus("REFRESH")
 [[POE_REQHDR.ORDER_NO.AVAL]]
 rem --- if dropshipping, retrieve specified sales order and display shipto address
 
@@ -48,22 +82,17 @@ if cvs(callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID"),3)<>""
 	tmp_customer_id$=callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID")
 	tmp_order_no$=callpoint!.getUserInput()
 
-	if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.ORDER_NO") 		
-		gosub dropship_shipto
-		gosub get_dropship_order_lines
+	gosub dropship_shipto
+	gosub get_dropship_order_lines
 
-		if callpoint!.getDevObject("ds_orders")<>"Y" 
-			msg_id$="PO_NO_SO_LINES"
-			gosub disp_message
-		endif			
-	endif	
-
+	if callpoint!.getDevObject("ds_orders")<>"Y" and cvs(callpoint!.getUserInput(),3)<>""
+		msg_id$="PO_NO_SO_LINES"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif			
 endif
-
 [[POE_REQHDR.CUSTOMER_ID.AVAL]]
 rem --- if dropshipping, retrieve specified sales order and display shipto address
-
-if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID") 
 
 	callpoint!.setColumnData("POE_REQHDR.ORDER_NO","")
 	callpoint!.setColumnData("POE_REQHDR.SHIPTO_NO","")
@@ -76,64 +105,36 @@ if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID")
 	callpoint!.setColumnData("POE_REQHDR.DS_STATE_CD","")
 	callpoint!.setColumnData("POE_REQHDR.DS_ZIP_CODE","")
 
-	rem --- if OE not installed, fill in cust address at this point, otherwise wait until order# is entered
-	if callpoint!.getDevObject("OP_installed")<>"Y"
-		tmp_customer_id$=callpoint!.getUserInput()
-		gosub shipto_cust
-	endif
-
+	tmp_customer_id$=callpoint!.getUserInput()
+	gosub shipto_cust;rem will refresh address w/ that from order once order# is entered
+	
 	callpoint!.setStatus("REFRESH")
 	
-endif
-end_customer_id_aval:
 [[POE_REQHDR.DROPSHIP.AVAL]]
 rem --- can't toggle dropship (at least for this release) if any detail lines exist when OP is installed
 
-if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQHDR.DROPSHIP")		
-	dtl!=gridvect!.getItem(0)		
-	if dtl!.size() and callpoint!.getDevObject("OP_installed")="Y"
-		msg_id$="PO_DTL_EXISTS"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	else
-		if callpoint!.getUserInput()="Y"
-			if callpoint!.getDevObject("OP_installed")<>"Y"
-				callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)
-				util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
-			else
-				callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",1)
-				util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),1)
-			endif			
+
+if callpoint!.getDevObject("OP_installed")="Y"
+	if gridVect!.size()
+		recs!=gridVect!.getItem(0)
+		if recs!.size()
+			msg_id$="PO_DTL_EXISTS"
+			gosub disp_message
+			callpoint!.setUserInput(callpoint!.getColumnData("POE_REQHDR.DROPSHIP"))
+			callpoint!.setStatus("REFRESH")
 		else
-			util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
+			if callpoint!.getUserInput()="N"
+				callpoint!.setDevObject("ds_orders","N")
+				callpoint!.setDevObject("so_ldat","")
+				callpoint!.setDevObject("so_lines_list","")
+				util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
+				callpoint!.setStatus("REFRESH")
+			endif
 		endif
 	endif
-endif
-[[POE_REQHDR.REQ_NO.AVAL]]
-rem -- see if existing req# was entered
-if cvs(callpoint!.getColumnData("POE_REQHDR.VENDOR_ID"),2) = "" then
-    ddm_keys=fnget_dev("DDM_KEYS")
-    dim ddm_keys$:fnget_tpl$("DDM_KEYS")
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","DDM_KEYS","NAME",key_tpl$,table_chans$[all],status$
-    dim ddm_key_tpl$:key_tpl$
-    ddm_key_tpl.dd_table_alias$="POE_REQHDR",ddm_key_tpl.dd_key_id$="ALT_KEY_01"
-    readrecord(ddm_keys,key=ddm_key_tpl$,knum=1)ddm_keys$ 
-    keynum=num(ddm_keys.dd_key_number$)
-     poe01_dev=fnget_dev("POE_REQHDR")
-     dim poe01a$:fnget_tpl$("POE_REQHDR")
-     req_no$=callpoint!.getUserInput()
-     read record(poe01_dev,key=firm_id$+req_no$,knum=keynum,dom=*next)
-     while 1
-          read record(poe01_dev,err=*next)poe01a$
-          if poe01a.firm_id$<>firm_id$ or poe01a.req_no$<>req_no$ then
-               vendor!=util.getControl(callpoint!,"POE_REQHDR.VENDOR_ID")
-               vendor!.focus() 
-          else
-               callpoint!.setColumnData("POE_REQHDR.VENDOR_ID",poe01a.vendor_id$)
-          endif
-          break
-     wend              
-endif
+endif			
+
+			
 [[POE_REQHDR.ARNF]]
 rem --- IV Params
 	ivs_params_chn=fnget_dev("IVS_PARAMS")
@@ -242,7 +243,7 @@ dropship_shipto: rem --- get and display shipto from Sales Order if drop ship in
 	dim arm_custship$:fnget_tpl$("ARM_CUSTSHIP")
 	dim ope_ordship$:fnget_tpl$("OPE_ORDSHIP")
 
-	read record (ope_ordhdr_dev,key=firm_id$+ope_ordhdr.ar_type$+tmp_customer_id$+tmp_order_no$,dom=*return)ope_ordhdr$
+	read record (ope_ordhdr_dev,key=firm_id$+ope_ordhdr.ar_type$+tmp_customer_id$+tmp_order_no$,dom=*next)ope_ordhdr$
 	shipto_no$=ope_ordhdr.shipto_no$
 	callpoint!.setColumnData("POE_REQHDR.SHIPTO_NO",shipto_no$)
 	if cvs(shipto_no$,3)=""
@@ -300,6 +301,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 	order_lines!=SysGUI!.makeVector()
 	tmpListCtl!=callpoint!.getDevObject("dtl_grid_so_ref_ctl")
 	tmpListCtl!.removeAllItems()
+	callpoint!.setDevObject("ds_orders","N")
 
 	read record (ope_ordhdr_dev,key=firm_id$+ope_ordhdr.ar_type$+tmp_customer_id$+tmp_order_no$,dom=*return)ope_ordhdr$
 
@@ -318,6 +320,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 		callpoint!.setDevObject("ds_orders","N")
 		callpoint!.setDevObject("so_ldat","")
 		callpoint!.setDevObject("so_lines_list","")
+		util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),0)
 	else 
 		callpoint!.setDevObject("ds_orders","Y")
 		ldat$=""
@@ -333,10 +336,11 @@ rem --- read thru selected sales order and build list of lines for which line co
 		tmpListCtl!.insertItems(0,order_lines!)
 		dtlGrid!=callpoint!.getDevObject("dtl_grid")
 	 	dtlGrid!.setColumnListControl(num(callpoint!.getDevObject("dtl_grid_so_ref_col")),tmpListCtl!) 
+		util.ableGridColumn(Form!,num(callpoint!.getDevObject("dtl_grid_so_ref_col")),1)
 	endif	
 return
 [[POE_REQHDR.BSHO]]
-rem  print 'show';rem debug
+rem print 'show';rem debug
 rem --- inits
 
 	use ::ado_util.src::util
@@ -427,3 +431,8 @@ rem --- store detail grid and temp listbutton objects in devObject as well (see 
 	tmpListCtl!=dtlWin!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
 	callpoint!.setDevObject("dtl_grid",dtlGrid!)
 	callpoint!.setDevObject("dtl_grid_so_ref_ctl",tmpListCtl!)
+
+rem --- store dropship control so it can be retrieved and enabled/disabled from detail grid
+
+	c!=util.getControl(callpoint!,"POE_REQHDR.DROPSHIP")
+	callpoint!.setDevObject("dropship_ctl",c!)

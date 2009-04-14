@@ -1,6 +1,51 @@
 [[POE_REQDET.AGRE]]
 rem --- check data to see if o.k. to leave row
 rem --- qty? / item/whse? / so line?
+
+ok_to_write$="Y"
+
+if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="" or 
+:	cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" then ok_to_write$="N"
+
+if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="SD")<>0 
+	if cvs(callpoint!.getColumnData("POE_REQDET.ITEM_ID"),3)="" or
+:	num(callpoint!.getColumnData("POE_REQDET.CONV_FACTOR"))<=0 or
+:	num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
+:	num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
+:	cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 
+		ok_to_write$="N"
+	endif
+endif
+
+if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="N" 
+	if cvs(callpoint!.getColumnData("POE_REQDET.NS_ITEM_ID"),3)="" or
+:	num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
+:	num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
+:	cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
+		ok_to_write$="N"
+	endif
+endif
+
+if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="O" 
+	if num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
+:	cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
+		ok_to_write$="N"
+	endif
+endif
+
+if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="MNOV")<>0 then
+:	if cvs(callpoint!.getColumnData("POE_REQDET.ORDER_MEMO"),3)="" then ok_to_write$="N"
+
+if callpoint!.getHeaderColumnData("POE_REQHDR.DROPSHIP")="Y" and callpoint!.getDevObject("OP_installed")="Y"
+	if cvs(callpoint!.getColumnData("POE_REQDET.SO_INT_SEQ_REF"),3)="" then ok_to_write$="N"
+endif
+
+if ok_to_write$<>"Y"
+	msg_id$="PO_REQD_DET"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+endif
+ 
 [[POE_REQDET.ITEM_ID.AINV]]
 rem --- remember row/column we're on so we can force focus when we return from synonym lookup
 
@@ -56,7 +101,6 @@ use ::ado_util.src::util
 
 rem --- set default line code based on param file
 rem --- this is throwing an error, so setting actual columndata instead...callpoint!.setTableColumnAttribute("POE_REQDET.PO_LINE_CODE","DFLT",str(callpoint!.getDevObject("dflt_po_line_code")))
-
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
 rem print callpoint!.getUserInput();rem debug
