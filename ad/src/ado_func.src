@@ -178,8 +178,81 @@ class public func
 		getNumPeriodsDone:
 		methodret "12"
 	methodend
-	
 
+	rem ==========================================================================
+	rem --- Return true if open file has records
+	rem ==========================================================================
+
+	method public static BBjNumber hasRecords(BBjNumber p_handle)
+		has_records = 0
+		if fpt(p_handle) or p_handle <= 0 then goto has_records_end
+		xfid$ = xfid(p_handle, err=has_records_end)
+		type = asc( and($0f$, xfid$(1,1)) )
+		
+		if type <> 0 and type <> 1 and type <> 3 and type <> 4 and type <> 5 then
+
+			if dec($00$ + xfid$(6,4)) then
+				has_records = 1
+			else
+				if type = 6 or type = 8 or type = 13 then
+					xfin$ = xfin(p_handle)
+					if dec($00$ + xfin$(77,4)) then has_records = 1
+				endif
+			endif
+			
+		endif
+		
+	has_records_end:
+		methodret has_records
+	methodend
+
+	rem ==========================================================================
+	rem --- Return true if the string is a number
+	rem ==========================================================================
+	
+	method public static BBjInt isNumber(BBjString in$)
+		ignore = num(in$,err=is_number_false)
+		methodret 1
+		
+	is_number_false:
+		methodret 0
+	methodend
+	
+	rem ==========================================================================
+	rem --- Return true if string is hex
+	rem ==========================================================================
+	
+	method public static BBjNumber isHex(BBjString in$)
+		methodret mask(in$, "^([A-Fa-f0-9][A-Fa-f0-9])+$")
+	methodend
+	
+	rem ==========================================================================
+	rem --- Return the lowest non-zero value, unless both are zero
+	rem ==========================================================================
+	
+	method public static BBjNumber minimumNotZero(BBjNumber p1, BBjNumber p2)
+	
+		if p1=0 and p2=0 then 
+			methodret 0
+		else
+			if p1=0 then
+				methodret p2
+			else 
+				if p2 = 0 then
+					methodret p1
+				else
+					if p1 < p2 then
+						methodret p1
+					else
+						methodret p2
+					endif
+				endif
+			endif
+		endif
+		
+	methodend
+	
+	
 classend
 
 rem ==========================================================================
@@ -246,6 +319,86 @@ rem ==========================================================================
 	print func.latestDate("", "")
 	print func.latestDate("20090230", "20090201")
 	print func.latestDate("20090202", "junk")
+	
+	rem --- hasRecords()
+	
+	print fill(79, "="), 'lf', "hasRecords()..."
+	ape01_dev = unt
+	open(ape01_dev)"../../data/ape-01"
+	print "The file ape-01...",
+	
+	if func.hasRecords(ape01_dev) then
+		print "has records"
+	else
+		print "does not have records"
+	endif
+	
+	apm01_dev = unt
+	open(apm01_dev)"../../data/apm-01"
+	print "The file apm-01...",
+	
+	if func.hasRecords(apm01_dev) then
+		print "has records"
+	else
+		print "does not have records"
+	endif
+	
+	rem --- isNumber()
+	
+	print fill(79, "="), 'lf', "isNumber()..."
+	x$ = "abc123"
+	
+	if func.isNumber(x$) then
+		print x$, " is a number"
+	else
+		print x$," is not a number"
+	endif
+	
+	x$ = "23.45"
+	
+	if func.isNumber(x$) then
+		print x$, " is a number"
+	else
+		print x$," is not a number"
+	endif
+
+	rem --- isHex
+	
+	print fill(79, "="), 'lf', "isHex()..."
+	
+	x$="heehee"
+	print x$, 
+	if func.isHex(x$) then
+		print " is hex"
+	else
+		print " is not hex"
+	endif
+
+	x$="1b0300ff"
+	print x$, 
+	if func.isHex(x$) then
+		print " is hex"
+	else
+		print " is not hex"
+	endif
+
+	x$="7f0"
+	print x$, 
+	if func.isHex(x$) then
+		print " is hex"
+	else
+		print " is not hex"
+	endif
+	
+	rem --- minimumNotZero
+	
+	print fill(79, "="), 'lf', "minimumNotZero()..."
+	print "Expect 0: ", func.minimumNotZero(0, 0)
+	print "Expect 1: ", func.minimumNotZero(0, 1)
+	print "Expect 2: ", func.minimumNotZero(2, 0)
+	print "Expect 1: ", func.minimumNotZero(1, 2)
+	print "Expect 1: ", func.minimumNotZero(2, 1)
+	
 	
 	end
 	
