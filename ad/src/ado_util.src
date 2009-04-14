@@ -5,6 +5,7 @@ rem --- Copyright 2008-2009, BASIS International, Ltd.
 rem ==========================================================================
 
 use ::sys/prog/bao_callpoint.bbj::Callpoint
+use ::ado_func.src::func
 
 class public util
 
@@ -540,7 +541,7 @@ rem ==========================================================================
 			field_name$ = str( fields!.getItem(i) )
 			ctl_id$ = callpoint!.getTableColumnAttribute(field_name$, "CTLI")
 			
-			if ctl_id$ <> "" and #isNumber(ctl_id$) then 
+			if ctl_id$ <> "" and func.isNumber(ctl_id$) then 
 				wctl$ = str( num(ctl_id$):"00000" )
 				wmap$ = callpoint!.getAbleMap()
 				wpos = pos(wctl$=wmap$, 8)
@@ -658,15 +659,6 @@ rem --- Small, helper methods
 rem 
 rem ==========================================================================
 	
-	rem --- Return true if the string is a number
-	method public static BBjInt isNumber(BBjString in$)
-		ignore = num(in$,err=is_number_false)
-		methodret 1
-		
-	is_number_false:
-		methodret 0
-	methodend
-	
 	rem --- Return the detail grid control
 	method public static BBjStandardGrid getGrid(BBjTopLevelWindow Form!)
 		declare BBjStandardGrid grid!
@@ -681,30 +673,6 @@ rem ==========================================================================
         methodret child!
     methodend
 	
-	rem --- Return true if open file has records
-	method public static BBjNumber hasRecords(BBjNumber p_handle)
-		has_records = 0
-		if fpt(p_handle) or p_handle <= 0 then goto has_records_end
-		xfid$ = xfid(p_handle, err=has_records_end)
-		type = asc( and($0f$, xfid$(1,1)) )
-		
-		if type = 0 or type = 1 or type = 3 or type = 4 or type = 5 then goto has_records_end
-
-		if dec($00$ + xfid$(6,4)) then
-			has_records = 1
-			goto has_records_end
-		endif
-		
-		if type = 6 or type = 8 or type = 13 then
-			xfin$ = xfin(p_handle)
-			if dec($00$ + xfin$(77,4)) then
-				has_records = 1
-			endif
-		endif
-		
-	has_records_end:
-		methodret has_records
-	methodend
 	
 classend
 
