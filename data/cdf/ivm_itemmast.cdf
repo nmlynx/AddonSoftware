@@ -451,35 +451,21 @@ endif
 rem --- Disable fields based on parameters
 able_map = 0
 wmap$=callpoint!.getAbleMap()
+
+rem --- if you aren't doing lotted/serialized
+if pos(ivs01a.lotser_flag$="LS")=0 then callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",-1)
+
 rem --- If you don't distribute by item, or there's no GL, disable GL fields
 if di$="N" or gl$<>"Y"
 	fields_to_disable$="GL_INV_ACCT     GL_COGS_ACCT    GL_PUR_ACCT     GL_PPV_ACCT     GL_INV_ADJ      GL_COGS_ADJ     "
 	for wfield=1 to len(fields_to_disable$)-1 step 16
-		ctl_name$="IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3)					
-		wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
-		wpos=pos(wctl$=wmap$,8)
-		if wpos then
-			wmap$(wpos+6,1) = "I"
-			able_map = 1
-		endif
+		callpoint!.setColumnEnabled("IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3),-1)					
 	next wfield
 endif
+
 rem --- Disable Sales Analysis level if SA is not installed 
 if sa$<>"Y" then
-	ctl_name$ = "IVM_ITEMMAST.SA_LEVEL"
-	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
-	wpos=pos(wctl$=wmap$,8)
-	if wpos then
-		wmap$(wpos+6,1)="I"
-		able_map = 1
-	endif
-	callpoint!.setTableColumnAttribute("IVM_ITEMMAST.SA_LEVEL","DFLT","N")
-endif
-
-rem --- Set able-map if we've disabled fields
-if able_map then
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH")
+	callpoint!.setColumnEnabled("IVM_ITEMMAST.SA_LEVEL",-1)
 endif
 [[IVM_ITEMMAST.AOPT-PORD]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
