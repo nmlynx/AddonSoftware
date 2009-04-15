@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.ope_invhdr">05A62744EEB94BBA642E49995D23A875</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ope_invhdr">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ope_invhdr">20080123</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ope_invhdr">20090325</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ope_invhdr">20090325</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ope_invhdr">120928</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ope_invhdr">20090415</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ope_invhdr">20090415</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ope_invhdr">132114</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP id="ddm_tables.ope_invhdr">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.ope_invhdr">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.ope_invhdr">Invoice Entry Header</DD_ATTR_WINT>
@@ -59,7 +59,7 @@
 		<RECORD id="ddm_table_tpls.ope_invhdr">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.ope_invhdr">OPE_INVHDR      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.ope_invhdr">ope-01</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.ope_invhdr">firm_id:c(2),ar_type:c(2),customer_id:c(6),order_no:c(7),sequence_000:c(3),invoice_type:c(1),ordinv_flag:c(1),backord_flag:c(1),reserved_str:c(8),ar_ship_via:c(10),ar_inv_no:c(7),misc_no:c(10),slspsn_code:c(3),terms_code:c(2),disc_code:c(2),dist_code:c(2),print_status:c(1),lock_status:c(1),message_code:c(2),territory:c(3),price_code:c(2),reserved_str_02:c(3),tax_code:c(2),pricing_code:c(4),job_no:c(10),ord_taken_by:c(3),cash_sale:c(1),reprint_flag:c(1),credit_flag:c(1),shipto_no:c(6),reserved_str_03:c(3),customer_po_no:c(20),customer_rel_no:c(20),reserved_str_04:c(50),invoice_date:c(8),shipmnt_date:c(8),order_date:c(8),expire_date:c(8*),dealer_str:c(1*),tax_amount:n(7*),freight_amt:n(7*),discount_amt:n(7*),comm_percent:n(7*),taxable_amt:n(7*),comm_amt:n(7*),total_sales:n(7*),total_cost:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.ope_invhdr">firm_id:c(2),ar_type:c(2),customer_id:c(6),order_no:c(7),sequence_000:c(3),invoice_type:c(1),ordinv_flag:c(1),backord_flag:c(1),reserved_str:c(8),ar_ship_via:c(10),ar_inv_no:c(7),misc_no:c(10),slspsn_code:c(3),terms_code:c(2),disc_code:c(2),dist_code:c(2),print_status:c(1),lock_status:c(1),message_code:c(2),territory:c(3),price_code:c(2),reserved_str_02:c(3),tax_code:c(10),pricing_code:c(4),job_no:c(10),ord_taken_by:c(16),cash_sale:c(1),reprint_flag:c(1),credit_flag:c(1),shipto_no:c(6),reserved_str_03:c(3),customer_po_no:c(20),customer_rel_no:c(20),reserved_str_04:c(50),invoice_date:c(8),shipmnt_date:c(8),order_date:c(8),expire_date:c(8*),dealer_str:c(1*),tax_amount:n(7*),freight_amt:n(7*),discount_amt:n(7*),comm_percent:n(7*),taxable_amt:n(7*),comm_amt:n(7*),total_sales:n(7*),total_cost:n(7*),reserved_num_01:n(1*),reserved_num_02:n(1*),reserved_num_03:n(1*),dealer_num_01:n(1*),dealer_num_02:n(1*),dealer_num_03:n(1*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -481,7 +481,7 @@
 		<RECORD id="ddm_table_cols.ope_invhdr023">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ope_invhdr023">OPE_INVHDR      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.ope_invhdr023">023</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.ope_invhdr023">TAX_CODE        </DD_DATA_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.ope_invhdr023">OP_TAX_CODE     </DD_DATA_NAME>
 			<DD_DVAR_NAME id="ddm_table_cols.ope_invhdr023">TAX_CODE        </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ope_invhdr023">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ope_invhdr023">0</DD_COL_OCCURS>
@@ -1372,27 +1372,34 @@
 			<DD_ATTR_PADJ id="ddm_elements.price_code">L</DD_ATTR_PADJ>
 			<DD_ATTR_PREC id="ddm_elements.price_code">0</DD_ATTR_PREC>
 		</RECORD>
-		<RECORD id="ddm_elements.tax_code">
-			<DD_DATA_NAME id="ddm_elements.tax_code">TAX_CODE        </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.tax_code">Tax Code</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.tax_code">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.tax_code">2</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.tax_code"> </DD_MASK_TYPE>
-			<ASC_COMP_ID id="ddm_elements.tax_code">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.tax_code">AON</ASC_PROD_ID>
-			<DD_CREATE_DATE id="ddm_elements.tax_code">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.tax_code">20060329</DD_LSTREV_DATE>
-			<DD_ATTR_CTYP id="ddm_elements.tax_code">E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL id="ddm_elements.tax_code">PR_CODE_DESC    </DD_ATTR_DCOL>
-			<DD_ATTR_DCOM id="ddm_elements.tax_code">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.tax_code">            </DD_ATTR_DEXP>
-			<DD_ATTR_DKEY id="ddm_elements.tax_code">[+FIRM_ID]+"C"+@</DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.tax_code">PRC_TAXCODE     </DD_ATTR_DTAB>
-			<DD_ATTR_LABL id="ddm_elements.tax_code">Tax Code</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.tax_code">Tax Cd</DD_ATTR_LABS>
-			<DD_ATTR_MSKI id="ddm_elements.tax_code">UU</DD_ATTR_MSKI>
-			<DD_ATTR_PADC id="ddm_elements.tax_code">20</DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.tax_code">L</DD_ATTR_PADJ>
+		<RECORD id="ddm_elements.op_tax_code">
+			<DD_DATA_NAME id="ddm_elements.op_tax_code">OP_TAX_CODE     </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.op_tax_code">Tax Code</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.op_tax_code">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.op_tax_code">10</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.op_tax_code"> </DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.op_tax_code">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.op_tax_code">OP </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.op_tax_code">20080119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.op_tax_code">20090415</DD_LSTREV_DATE>
+			<DD_ATTR_BLNK id="ddm_elements.op_tax_code">N</DD_ATTR_BLNK>
+			<DD_ATTR_CTLW id="ddm_elements.op_tax_code">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.op_tax_code">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.op_tax_code">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.op_tax_code">CODE_DESC</DD_ATTR_DCOL>
+			<DD_ATTR_DCOM id="ddm_elements.op_tax_code">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.op_tax_code">            </DD_ATTR_DEXP>
+			<DD_ATTR_DKEY id="ddm_elements.op_tax_code">[+FIRM_ID]+@</DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.op_tax_code">OPC_TAXCODE     </DD_ATTR_DTAB>
+			<DD_ATTR_LABL id="ddm_elements.op_tax_code">Tax Code</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.op_tax_code">Tax Cd</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.op_tax_code">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.op_tax_code">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.op_tax_code">0</DD_ATTR_MINL>
+			<DD_ATTR_MSKI id="ddm_elements.op_tax_code">UUUUUUUUUU</DD_ATTR_MSKI>
+			<DD_ATTR_PADC id="ddm_elements.op_tax_code">20</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.op_tax_code">L</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.op_tax_code">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.pricing_code">
 			<DD_DATA_NAME id="ddm_elements.pricing_code">PRICING_CODE    </DD_DATA_NAME>
