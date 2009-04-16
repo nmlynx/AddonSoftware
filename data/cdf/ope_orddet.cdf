@@ -60,20 +60,24 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.AREC]]
-rem --- Set default Line Code
+print "Det:AREC"; rem debug
 
-	start_block = 1
-	line_code$ = callpoint!.getDevObject("default_linecode")
+rem --- Set detail defaults
+
+	line_code$ = user_tpl$.line_code$
 	callpoint!.setColumnData("OPE_ORDDET.LINE_CODE", line_code$)
+	print "Line code s/b ", line_code$; rem debug
+	whse$ = user_tpl.warehouse_id$
+	callpoint!.setColumnData("OPE_ORDDET.WAREHOUSE_ID", whse$)
+	print "Warehouse s/b ", whse$
+	rem callpoint!.setStatus("REFRESH")
+	callpoint!.setStatus("REFGRID")
+	print "REFGRID..."; rem debug
 
-	opc_linecode_dev = fnget_dev("OPC_LINECODE")
-	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+rem --- Disable skipped columns
 
-	if start_block then
-		read record (opc_linecode_dev, key=firm_id$+line_code$, dom=*endif) opc_linecode$
-		rem callpoint!.setStatus("REFRESH-ENABLE:"+opc_linecode.line_type$)
-		rem callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
-	endif
+	gosub disable_linecode_whse
+	gosub disable_by_linetype
 [[OPE_ORDDET.BDEL]]
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
@@ -87,6 +91,8 @@ rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
 [[OPE_ORDDET.AGRN]]
+print "Det:AGRN"; rem debug
+
 rem --- Set Lot/Serial button up properly
 
 	if pos(callpoint!.getDevObject("lotser_flag") = "LS") and 
@@ -101,6 +107,8 @@ rem --- Set Lot/Serial button up properly
 		endif
 	endif
 [[OPE_ORDDET.AGRE]]
+print "Det:AGRE"; rem debug
+
 rem --- Is this row deleted?
 
 	callpoint!.setOptionEnabled("LENT",0)
@@ -398,20 +406,12 @@ rem ---display extended price
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_ORDDET.AGDR]]
-rem --- Set enable/disable based on line type
+print "Det:AGDR"; rem debug
 
-	start_block = 1
-	line_code$ = rec_data.line_code$
+rem --- Disable skipped columns
 
-	if cvs(line_code$,2) <> ""
-		opc_linecode_dev=fnget_dev("OPC_LINECODE")
-		dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-
-		if start_block then
-			read record (opc_linecode_dev, key=firm_id$+line_code$, dom=*endif) opc_linecode$
-			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
-		endif
-	endif
+	gosub disable_linecode_whse
+	gosub disable_by_linetype
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 rem --- recalc quantities and extended price
 
@@ -767,6 +767,43 @@ rem              --- Make sure action$ is set before entry
 
 		if found_lot=0
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		endif
+	endif
+
+return
+
+rem ==========================================================================
+disable_linecode_whse: rem --- Disable line code and warehouse columns
+                       rem --- These come from parameters and POS records
+rem ==========================================================================
+
+	if user_tpl.skip_ln_code$ = "Y" then
+		print "Disable line code..."; rem debug
+		callpoint!.setColumnEnabled("OPE_ORDDET.LINE_CODE", 0)
+	endif
+
+	if user_tpl.skip_whse$ = "Y" then
+		print "Disable warehouse..."; rem debug
+		callpoint!.setColumnEnabled("OPE_ORDDET.WAREHOUSE_ID", 0)
+	endif
+
+return
+
+rem ==========================================================================
+disable_by_linetype: rem --- Set enable/disable based on line type
+                     rem --- These work from the CALLPOINT enable in the form
+rem ==========================================================================
+
+	start_block = 1
+	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+
+	if cvs(line_code$,2) <> ""
+		file$ = "OPC_LINECODE"
+		dim opc_linecode$:fnget_tpl$(file$)
+
+		if start_block then
+			read record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
+			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
 		endif
 	endif
 
