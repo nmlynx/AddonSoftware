@@ -511,6 +511,11 @@ rem --- Set blank Credit Hold (Y;N;E) field values to N
         if cvs(new_fieldlist.name$[field],3)="CRED_HOLD"
             if cvs(value$,2)="" value$="N"
         endif
+        
+rem --- set Stocking Level to "W" for all items
+		if cvs(new_fieldlist.name$[field],3)="STOCK_LEVEL"
+			value$="W"
+		endif
 
 rem --- Call custom program - Note - there is no CALL/ENTER list, so all variables will be 
 rem     available. Common usages for this would be things like data conversion, since value$
