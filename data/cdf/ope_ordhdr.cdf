@@ -81,7 +81,7 @@ rem --- Create Empty Availability window
 	cwin!.setSize(grid!.getWidth(), cwin!.getHeight())
 
 	mwin!=cwin!.getControl(15999)
-	mwin!.setSize(grid!.getWidth() - 5, mwin!.getHeight())
+	mwin!.setSize(grid!.getWidth(), mwin!.getHeight())
 [[OPE_ORDHDR.AFMC]]
 print "Hdr:AFMC"; rem debug
 
@@ -96,7 +96,7 @@ rem --- Create Inventory Availability window
 	cxt    = SysGUI!.getAvailableContext()
 
 	mwin! = child!.addChildWindow(15000, 0, 10, 100, 75, "", $00000800$, cxt)
-	mwin!.addGroupBox(15999, 0, 5, grid!.getWidth()-5, 65, "Inventory Availability", $$)
+	mwin!.addGroupBox(15999, 0, 5, grid!.getWidth(), 65, "Inventory Availability", $$)
 
 	mwin!.addStaticText(15001,15,25,75,15,"On Hand:",$$)
 	mwin!.addStaticText(15002,15,40,75,15,"Committed:",$$)
