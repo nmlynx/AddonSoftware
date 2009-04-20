@@ -149,7 +149,7 @@ rem --- Display
 
 rem --- Note: there is currently no easy way to display a pop-up window in Barista
 
-	goto do_as_message
+	goto do_as_call
 	
 rem *** Disabled ***	
 
@@ -201,6 +201,8 @@ rem *** Disabled ***
 	
 do_as_message:
 
+rem *** Disabled ***
+
 	message$ = "<html>"
 	message$ = message$ + "Credit Limit: "+str(arm02a.credit_limit:ars01a.amount_mask$)+"<br>"
 	message$ = message$ + "Open Invoices: "+str(t9:ars01a.amount_mask$)+"<br>"
@@ -221,21 +223,35 @@ do_as_message:
 	
 do_as_call:
 
-rem *** Disabled ***
-
-	dim dflt_data$[8]
+	dim dflt_data$[8,1]
 	
-	dflt_data$[1] = str(arm02a.credit_limit:ars01a.amount_mask$)
-	dflt_data$[2] = str(t9:ars01a.amount_mask$)
-	dflt_data$[3] = str(t0:ars01a.amount_mask$)
-	dflt_data$[4] = str(t1:ars01a.amount_mask$)
-	dflt_data$[5] = str(t2:ars01a.amount_mask$)
+	dflt_data$[1,0] = "CREDIT_LIMIT"
+	dflt_data$[2,0] = "OPEN_AR_INVS"
+	dflt_data$[3,0] = "OPEN_ORDERS"
+	dflt_data$[4,0] = "OPEN_BOS"
+	dflt_data$[5,0] = "ORDERS_HELD"
+	dflt_data$[6,0] = "CREDIT_LEFT"
+	dflt_data$[7,0] = "OVER_MAX_DAYS"
+	dflt_data$[8,0] = "CRED_HOLD"
+	
+	dflt_data$[1,1] = str(arm02a.credit_limit:ars01a.amount_mask$)
+	dflt_data$[2,1] = str(t9:ars01a.amount_mask$)
+	dflt_data$[3,1] = str(t0:ars01a.amount_mask$)
+	dflt_data$[4,1] = str(t1:ars01a.amount_mask$)
+	dflt_data$[5,1] = str(t2:ars01a.amount_mask$)
 	if arm02a.credit_limit > 0 then
-		dflt_data$[6] = str(arm02a.credit_limit-t9-t0-t1-t2:ars01a.amount_mask$)
+		dflt_data$[6,1] = str(arm02a.credit_limit-t9-t0-t1-t2:ars01a.amount_mask$)
 	endif
-	dflt_data$[7] = str(t8:ars01a.amount_mask$)
-	dflt_data$[8] = arm02a.cred_hold$
-
+	dflt_data$[7,1] = str(t8:ars01a.amount_mask$)
+	dflt_data$[8,1] = arm02a.cred_hold$
+	
+	rem debug
+	print arm02a.credit_limit:ars01a.amount_mask$
+	print t9:ars01a.amount_mask$
+	print t0:ars01a.amount_mask$
+	print t1:ars01a.amount_mask$
+	print t2:ars01a.amount_mask$
+	
 	call sypdir$+"bam_run_prog.bbj", "OPE_CREDITSTATUS", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
 	rem "MOD"=rd_proc_mode$)+pos("EXP"=rd_proc_mode$)+pos("INQ"=rd_proc_mode$)+pos("NEW"=, "MNT"
 	
