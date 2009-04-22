@@ -367,13 +367,55 @@ rem --- Disable Ship To fields
 [[OPE_ORDHDR.ASHO]]
 print "Hdr:ASHO"; rem debug
 
-rem --- Get default dates
+rem --- Get default dates, POS station
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj", "OPE_ORDDATES", stbl("+USER_ID"), "MNT", "", table_chans$[all]
 	user_tpl.def_ship$   = stbl("OPE_DEF_SHIP")
 	user_tpl.def_commit$ = stbl("OPE_DEF_COMMIT")
 
-	
+rem --- Check for a POS record by station
+
+	station$ = "DEFAULT"
+	station$ = stbl("OPE_DEF_STATION", err=*next)
+
+	file$ = "OPM_POINTOFSALE"
+	dim pointofsale_rec$:fnget_tpl$(file$)
+
+	find record (fnget_dev(file$), key=firm_id$+pad(station$, 16), dom=no_pointofsale) pointofsale_rec$
+	goto end_pointofsale
+
+no_pointofsale: rem --- Should we create a default record?
+
+	msg_id$ = "POS_REC_NOT_FOUND"
+	dim msg_tokens$[1]
+	msg_tokens$[1] = cvs(station$, 2)
+
+	gosub disp_message
+
+	if msg_opt$ = "N" then
+		callpoint!.setStatus("EXIT")
+		break; rem --- Exit callpoint
+	endif
+
+rem --- Create a default POS record
+
+	dim sysinfo$:stbl("+SYSINFO_TPL")
+	sysinfo$=stbl("+SYSINFO")
+
+	pointofsale_rec.firm_id$         = firm_id$
+	pointofsale_rec.default_station$ = pad(station$, 16)
+	pointofsale_rec.skip_whse$       = "N"
+	pointofsale_rec.val_ctr_prt$     = sysinfo.printer_id$
+	pointofsale_rec.val_rec_prt$     = sysinfo.printer_id$
+	pointofsale_rec.cntr_printer$    = sysinfo.printer_id$
+	pointofsale_rec.rec_printer$     = sysinfo.printer_id$
+
+	write record (pointofsale_dev) pointofsale_rec$
+		
+end_pointofsale:
+
+	user_tpl.skip_whse$    = pointofsale_rec.skip_whse$
+	user_tpl.warehouse_id$ = pointofsale_rec.warehouse_id$	
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- Enable/disable expire date based on value
 
@@ -1227,6 +1269,7 @@ rem --- Open needed files
 	open_tables$[33]="ARM_CUSTCMTS",open_opts$[33]="OTA"
 	open_tables$[34]="OPE_PRNTLIST",open_opts$[34]="OTA"
 	open_tables$[35]="OPM_POINTOFSALE",open_opts$[35]="OTA"
+
 	gosub open_tables
 
 rem --- get AR Params
@@ -1358,44 +1401,3 @@ rem --- Set Lot/Serial button up properly
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
-
-rem --- Check for a POS record by user
-
-	dim pointofsale_rec$:open_tpls$[35]
-	pointofsale_dev = num(open_chans$[35])
-	user$ = stbl("+USER_ID")
-	find record (pointofsale_dev, key=firm_id$+pad(user$, 16), dom=no_pointofsale) pointofsale_rec$
-	goto end_pointofsale
-
-no_pointofsale: rem --- Should we create a default record?
-
-	msg_id$ = "POS_REC_NOT_FOUND"
-	dim msg_tokens$[1]
-	msg_tokens$[1] = user$
-
-	gosub disp_message
-
-	if msg_opt$ = "N" then
-		callpoint!.setStatus("EXIT")
-		break; rem --- Exit callpoint
-	endif
-
-rem --- Create a default POS record
-
-	dim sysinfo$:stbl("+SYSINFO_TPL")
-	sysinfo$=stbl("+SYSINFO")
-
-	pointofsale_rec.firm_id$      = firm_id$
-	pointofsale_rec.user_id$      = pad(user$, 16)
-	pointofsale_rec.skip_whse$    = "N"
-	pointofsale_rec.val_ctr_prt$  = sysinfo.printer_id$
-	pointofsale_rec.val_rec_prt$  = sysinfo.printer_id$
-	pointofsale_rec.cntr_printer$ = sysinfo.printer_id$
-	pointofsale_rec.rec_printer$  = sysinfo.printer_id$
-
-	write record (pointofsale_dev) pointofsale_rec$
-		
-end_pointofsale:
-
-	user_tpl.skip_whse$    = pointofsale_rec.skip_whse$
-	user_tpl.warehouse_id$ = pointofsale_rec.warehouse_id$
