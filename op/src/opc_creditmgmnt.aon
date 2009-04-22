@@ -147,82 +147,6 @@ rem --- Set Check Credit Limit Flag
 
 rem --- Display	
 
-rem --- Note: there is currently no easy way to display a pop-up window in Barista
-
-	goto do_as_call
-	
-rem *** Disabled ***	
-
-	declare BBjChildWindow childWindow!
-	declare BBjGroupBox    groupBox!
-	declare BBjStaticText  staticText!
-	declare BBjInputN      inputN!
-	declare BBjInputE      inputE!
-	declare BBjButton      button!
-
-	next_context = num(SysGui!.getAvailableContext())
-	win_w = 190
-	win_h = 230
-	id = 16273; rem a random ID
-	ctrl_h = 15
-	ctrl_w = 80
-	no_border$ = $00000800$
-	left_just$ = $8000$
-	disable$   = $0001$
-	childWindow! = Form!.addChildWindow(     id,     50,  100, win_w, win_h, "", no_border$, next_context)
-	groupBox!   = childWindow!.addGroupBox(  id+1,   0,   5,   win_w, win_h-5, "Customer Credit Status", $0000$)
-	staticText! = childWindow!.addStaticText(id+2,   20,  25,  ctrl_w, ctrl_h, "Credit Limit:", left_just$)
-	inputN!     = childWindow!.addInputN(    id+102, 105, 25,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, arm02a.credit_limit)
-	staticText! = childWindow!.addStaticText(id+3,   20,  45,  ctrl_w, ctrl_h, "Open Invoices:", left_just$)
-	inputN!     = childWindow!.addInputN(    id+103, 105, 45,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t9)
-	staticText! = childWindow!.addStaticText(id+4,   20,  65,  ctrl_w, ctrl_h, "Open Orders:", left_just$)
-	inputN!     = childWindow!.addInputN(    id+104, 105, 65,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t0)
-	staticText! = childWindow!.addStaticText(id+5,   20,  85,  ctrl_w, ctrl_h, "Open B/O's:", left_just$)
-	inputN!     = childWindow!.addInputN(    id+105, 105, 85,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t1)
-	staticText! = childWindow!.addStaticText(id+6,   20,  105, ctrl_w, ctrl_h, "Held Orders:", left_just$)
-	inputN!     = childWindow!.addInputN(    id+106, 105, 105, ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t2)
-	staticText! = childWindow!.addStaticText(id+7,   20,  145, ctrl_w, ctrl_h, "Credit Left:", left_just$)	
-	
-	if arm02a.credit_limit > 0 then 
-		inputN! = childWindow!.addInputN(    id+107, 105, 145, ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, arm02a.credit_limit-t9-t0-t1-t2)
-	endif
-	
-	bucket$ = str((aging_bucket-1)*30)
-	staticText! = childWindow!.addStaticText(id+8,   20,  165, ctrl_w, ctrl_h, "Over "+bucket$+" Days:", left_just$)
-	inputN!     = childWindow!.addInputN(    id+108, 105, 165, ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t8)
-	staticText! = childWindow!.addStaticText(id+9,   20,  185, ctrl_w, ctrl_h, "Customer Hold", left_just$)
-	inputE!     = childWindow!.addInputE(    id+109, 105, 185, ctrl_w, ctrl_h, disable$, 1, " ", arm02a.cred_hold$)
-	
-	button! = childWindow!.addButton(id+10, win_w - 65, win_h - 25, 60, 20, "Ok", $$)
-	rem button!.setCallback(button!.ON_BUTTON_PUSH, "all_done")
-	button!.setCallback(button!.ON_BUTTON_PUSH, PGM(-2) + "::all_done")
-	rem callback(ON_BUTTON_PUSH, all_done, next_context, button!.getID())
-	process_events
-	
-do_as_message:
-
-rem *** Disabled ***
-
-	message$ = "<html>"
-	message$ = message$ + "Credit Limit: "+str(arm02a.credit_limit:ars01a.amount_mask$)+"<br>"
-	message$ = message$ + "Open Invoices: "+str(t9:ars01a.amount_mask$)+"<br>"
-	message$ = message$ + "Open Orders: "+str(t0:ars01a.amount_mask$)+"<br>"
-	message$ = message$ + "Open Backorders: "+str(t1:ars01a.amount_mask$)+"<br>"
-	message$ = message$ + "Held Orders: "+str(t2:ars01a.amount_mask$)+"<br>"
-	if arm02a.credit_limit > 0 then
-			message$ = message$ + "Remaining Credit: "+str(arm02a.credit_limit-t9-t0-t1-t2:ars01a.amount_mask$)+"<br>"
-	endif
-	bucket$ = str((aging_bucket-1)*30)
-	message$ = message$+"Over "+bucket$+" Days: "+str(t8:ars01a.amount_mask$)+"<br>"
-	message$ = message$+"Customer Hold: "+arm02a.cred_hold$
-	message$ = message$+"</html>"
-   
-	i=msgbox(message$,0,"Customer Credit Status")
-	
-	goto all_done
-	
-do_as_call:
-
 	dim dflt_data$[8,1]
 	
 	dflt_data$[1,0] = "CREDIT_LIMIT"
@@ -234,83 +158,21 @@ do_as_call:
 	dflt_data$[7,0] = "OVER_MAX_DAYS"
 	dflt_data$[8,0] = "CRED_HOLD"
 	
-	dflt_data$[1,1] = str(arm02a.credit_limit:ars01a.amount_mask$)
-	dflt_data$[2,1] = str(t9:ars01a.amount_mask$)
-	dflt_data$[3,1] = str(t0:ars01a.amount_mask$)
-	dflt_data$[4,1] = str(t1:ars01a.amount_mask$)
-	dflt_data$[5,1] = str(t2:ars01a.amount_mask$)
+	dflt_data$[1,1] = str(arm02a.credit_limit)
+	dflt_data$[2,1] = str(t9)
+	dflt_data$[3,1] = str(t0)
+	dflt_data$[4,1] = str(t1)
+	dflt_data$[5,1] = str(t2)
 	if arm02a.credit_limit > 0 then
-		dflt_data$[6,1] = str(arm02a.credit_limit-t9-t0-t1-t2:ars01a.amount_mask$)
+		dflt_data$[6,1] = str(arm02a.credit_limit-t9-t0-t1-t2)
 	endif
-	dflt_data$[7,1] = str(t8:ars01a.amount_mask$)
+	dflt_data$[7,1] = str(t8)
 	dflt_data$[8,1] = arm02a.cred_hold$
 	
-	rem debug
-	print arm02a.credit_limit:ars01a.amount_mask$
-	print t9:ars01a.amount_mask$
-	print t0:ars01a.amount_mask$
-	print t1:ars01a.amount_mask$
-	print t2:ars01a.amount_mask$
-	
 	call sypdir$+"bam_run_prog.bbj", "OPE_CREDITSTATUS", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
-	rem "MOD"=rd_proc_mode$)+pos("EXP"=rd_proc_mode$)+pos("INQ"=rd_proc_mode$)+pos("NEW"=, "MNT"
 	
-	goto all_done
-
-do_as_parent:
-
-rem *** Disabled ***
-
-	declare BBjTopLevelWindow window!
-	declare BBjGroupBox       groupBox!
-	declare BBjStaticText     staticText!
-	declare BBjInputN         inputN!
-	declare BBjInputE         inputE!
-	declare BBjButton         button!
-
-	next_context = num(SysGui!.getAvailableContext())
-	win_w = 190
-	win_h = 230
-	id = 16273; rem a random ID
-	ctrl_h = 15
-	ctrl_w = 80
-	left_just$ = $8000$
-	disable$   = $0001$
+rem --- All done
 	
-	window!     = SysGui!.addWindow(next_context, 50, 100, win_w, win_h, "Customer Credit Status", $00880002$, $00000080$)
-	staticText! = window!.addStaticText(id+2,   20,  25,  ctrl_w, ctrl_h, "Credit Limit:", left_just$)
-	inputN!     = window!.addInputN(    id+102, 105, 25,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, arm02a.credit_limit)
-	staticText! = window!.addStaticText(id+3,   20,  45,  ctrl_w, ctrl_h, "Open Invoices:", left_just$)
-	inputN!     = window!.addInputN(    id+103, 105, 45,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t9)
-	staticText! = window!.addStaticText(id+4,   20,  65,  ctrl_w, ctrl_h, "Open Orders:", left_just$)
-	inputN!     = window!.addInputN(    id+104, 105, 65,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t0)
-	staticText! = window!.addStaticText(id+5,   20,  85,  ctrl_w, ctrl_h, "Open B/O's:", left_just$)
-	inputN!     = window!.addInputN(    id+105, 105, 85,  ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t1)
-	staticText! = window!.addStaticText(id+6,   20,  105, ctrl_w, ctrl_h, "Held Orders:", left_just$)
-	inputN!     = window!.addInputN(    id+106, 105, 105, ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t2)
-	staticText! = window!.addStaticText(id+7,   20,  145, ctrl_w, ctrl_h, "Credit Left:", left_just$)	
-	
-	if arm02a.credit_limit > 0 then 
-		inputN! = window!.addInputN(    id+107, 105, 145, ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, arm02a.credit_limit-t9-t0-t1-t2)
-	endif
-	
-	bucket$ = str((aging_bucket-1)*30)
-	staticText! = window!.addStaticText(id+8,   20,  165, ctrl_w, ctrl_h, "Over "+bucket$+" Days:", left_just$)
-	inputN!     = window!.addInputN(    id+108, 105, 165, ctrl_w, ctrl_h, disable$, ars01a.amount_mask$, $$, 0, t8)
-	staticText! = window!.addStaticText(id+9,   20,  185, ctrl_w, ctrl_h, "Customer Hold", left_just$)
-	inputE!     = window!.addInputE(    id+109, 105, 185, ctrl_w, ctrl_h, disable$, 1, " ", arm02a.cred_hold$)
-	
-	button! = window!.addButton(id+10, win_w - 65, win_h - 25, 60, 20, "Ok", $$)
-	rem button!.setCallback(button!.ON_BUTTON_PUSH, "all_done")
-	rem button!.setCallback(button!.ON_BUTTON_PUSH, PGM(-2) + "::all_done")
-	callback(ON_CLOSE, all_done, next_context)
-	callback(ON_BUTTON_PUSH, all_done, next_context, button!.getID())
-	process_events
-	
-all_done: rem --- All done
-	
-	rem childWindow!.destroy()
-	rem window!.destroy()
     goto std_exit
 	
 open_tables: rem --- Open tables
