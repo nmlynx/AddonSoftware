@@ -30,11 +30,11 @@ class public Config
 		
 		config_dev = unt
 		open(config_dev, err=config_no_file) #ConfigFileName$
+		ignore = mask("", "^[Aa][Ll][Ii][Aa][Ss][ 	]")
 		
 		while 1
 			read (config_dev, end=*break) line$
 			#ConfigLines!.addItem(line$)
-			ignore = mask("", "^[Aa][Ll][Ii][Aa][Ss][ 	]")
 			
 			if mask(cvs(line$, 1+2)) then
 				#Aliases!.addItem(cvs(line$, 1+2))
