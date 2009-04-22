@@ -1,3 +1,5 @@
+[[OPE_ORDDET.BWRI]]
+print "Det:BWRI"; rem debug
 [[OPE_ORDDET.AGCL]]
 print "Det:AGCL"; rem debug
 
@@ -7,7 +9,7 @@ rem --- Set detail defaults and disabled columns
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID","DFLT", user_tpl.warehouse_id$)
 
 	rem debug
-	print "line defualt: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.LINE_CODE", "DFLT")
+	print "line default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.LINE_CODE", "DFLT")
 	print "whse default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID", "DFLT")
 
 	if user_tpl.skip_ln_code$ = "Y" then
@@ -92,7 +94,7 @@ rem --- Disable skipped columns
 	gosub disable_by_linetype
 
 	rem debug
-	print "line defualt: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.LINE_CODE", "DFLT")
+	print "line default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.LINE_CODE", "DFLT")
 	print "whse default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID", "DFLT")
 [[OPE_ORDDET.BDEL]]
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
