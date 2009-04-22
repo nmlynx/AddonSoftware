@@ -453,6 +453,7 @@ if ar$="Y"
 	di$=ars01a.dist_by_item$
 	if gl$="N" di$="N"
 endif
+callpoint!.setDevObject("di",di$)
 rem --- Disable fields based on parameters
 able_map = 0
 wmap$=callpoint!.getAbleMap()
@@ -461,7 +462,7 @@ rem --- if you aren't doing lotted/serialized
 if pos(ivs01a.lotser_flag$="LS")=0 then callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",-1)
 
 rem --- If you don't distribute by item, or there's no GL, disable GL fields
-if di$="N" or gl$<>"Y"
+if di$<>"N" or gl$<>"Y"
 	fields_to_disable$="GL_INV_ACCT     GL_COGS_ACCT    GL_PUR_ACCT     GL_PPV_ACCT     GL_INV_ADJ      GL_COGS_ADJ     "
 	for wfield=1 to len(fields_to_disable$)-1 step 16
 		callpoint!.setColumnEnabled("IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3),-1)					
