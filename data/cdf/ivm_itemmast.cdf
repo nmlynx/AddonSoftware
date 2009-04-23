@@ -1,3 +1,47 @@
+[[IVM_ITEMMAST.LOTSER_ITEM.AVAL]]
+rem --- Can't change flag is there is QOH
+
+	break; rem *** DISABLED ***
+
+	prev_flag$ = callpoint!.getColumnDiskData("IVM_ITEMMAST.LOTSER_ITEM")
+	this_flag$ = callpoint!.getUserInput()
+
+	rem debug
+	print "Lot/Serial..."
+	print " disk: ", prev_flag$
+	print "input: ", this_flag$
+
+	if this_flag$ <> prev_flag$ then
+		gosub check_qoh
+
+		if qoh then
+			msg_id$ = "IV_CANT_CHANGE_CODE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+[[IVM_ITEMMAST.INVENTORIED.AVAL]]
+rem --- Can't change flag is there is QOH
+
+	break; rem *** DISABLED ***
+
+	prev_flag$ = callpoint!.getColumnDiskData("IVM_ITEMMAST.INVENTORIED")
+	this_flag$ = callpoint!.getUserInput()
+
+	rem debug
+	print "Inventoried..."
+	print " disk: ", prev_flag$
+	print "input: ", this_flag$
+
+	if this_flag$ <> prev_flag$ then
+		gosub check_qoh
+
+		if qoh then
+			msg_id$ = "IV_CANT_CHANGE_CODE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 [[IVM_ITEMMAST.ARNF]]
 rem --- item not found (so assuming new record); default bar code to item id
 
@@ -204,6 +248,7 @@ rem --- Populate ivm-02 with Product Type
 	wend
 [[IVM_ITEMMAST.BDEL]]
 rem --- versions 6/7 have a program ivc.da used for deleting
+
 	dim params$[7],params[2]
 	params$[0]=firm_id$
 	params$[2]=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
@@ -294,6 +339,28 @@ rem ==========================================================================
 return
 
 rem ==========================================================================
+check_qoh: rem --- Check for any QOH for this item
+           rem     OUT: qoh - 0 = none, <> 0 = some (may not be exact)
+rem ==========================================================================
+
+	item$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	file$ = "IVM_ITEMWHSE"
+	itemwhse_dev = fnget_dev(file$)
+	dim itemwhse_rec$:fnget_tpl$(file$)
+
+	read (itemwhse_dev, key=firm_id$+item$, knum=2, dom=*next)
+	qoh = 0
+
+	while 1
+		read record (itemwhse_dev, end=*break) itemwhse_rec$
+		if itemwhse_rec.firm_id$ <> firm_id$ or itemwhse_rec.item_id$ <> item$ then break
+		qoh = itemwhse_rec.qty_on_hand
+		if qoh then break
+	wend
+
+return
+
+rem ==========================================================================
 #include std_missing_params.src
 rem ==========================================================================
 [[IVM_ITEMMAST.BSHO]]
@@ -314,7 +381,7 @@ rem --- Open/Lock files
 	open_tables$[6]="IVS_NUMBERS",open_opts$[6]="OTA"
 
 	gosub open_tables
-	if status$<>""  goto std_exit
+	if status$ <> ""  then goto std_exit
 
 	ivs01_dev=num(open_chans$[1]),ivs01d_dev=num(open_chans$[2]),gls01_dev=num(open_chans$[3])
 	ars01_dev=num(open_chans$[4]),ivm02_dev=num(open_chans$[5]),ivs10_dev=num(open_chans$[6])
@@ -397,82 +464,126 @@ rem --- Set user labels and lengths for description segments
 	endif
 
 rem --- Disable option menu items
-if ap$<>"Y" disable_str$=disable_str$+"IVM_ITEMVEND;"; rem --- this is a detail window, give alias name
-if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only
-if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"LTRN;"
-if op$<>"Y" disable_str$=disable_str$+"SORD;"
-if po$<>"Y" disable_str$=disable_str$+"PORD;"
+
+	if ap$<>"Y" disable_str$=disable_str$+"IVM_ITEMVEND;"; rem --- this is a detail window, give alias name
+	if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only
+	if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"LTRN;"
+	if op$<>"Y" disable_str$=disable_str$+"SORD;"
+	if po$<>"Y" disable_str$=disable_str$+"PORD;"
 				
-if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+	if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+
 rem --- additional file opens, depending on which apps are installed, param values, etc.
-more_files$="",files=0
-if pos(ivs01a.lifofifo$="LF")<>0 then more_files$=more_files$+"IVM_ITEMTIER;",files=files+1
-if pos(ivs01a.lotser_flag$="LS")<>0 then more_files$=more_files$+"IVM_LSMASTER;IVM_LSACT;IVT_LSTRANS;",files=files+3
-if ivs01a.master_flag_01$="Y" or ivs01a.master_flag_02$="Y" or ivs01a.master_flag_03$="Y"
-	more_files$=more_files$+"IVM_DESCRIP1;IVM_DESCRIP2;IVM_DESCRIP3;"
-	files=files+3
-endif 
-if ar$="Y" then more_files$=more_files$+"ARM_CUSTMAST;ARC_DISTCODE;",files=files+2
-if bm$="Y" then more_files$=more_files$+"BMM_BILLMAST;BMM_BILLMAT;",files=files+2
-if op$="Y" then more_files$=more_files$+"OPE_ORDHDR;OPE_ORDDET;OPE_ORDITEM;",files=files+3
-if po$="Y" then more_files$=more_files$+"POE_REQHDR;POE_POHDR;POE_REQDET;POE_PODET;"
-:	+"POC_LINECODE;POT_RECHDR;POT_RECDET;",files=files+7
-if wo$="Y" then more_files$=more_files$+"SFE_WOMASTER;SFE_WOMATL;",files=files+2
-if files
-	begfile=1,endfile=files,wfile=1
-	dim files$[files],options$[files],chans$[files],templates$[files]
-	while pos(";"=more_files$)
-		files$[wfile]=more_files$(1,pos(";"=more_files$)-1)
-		more_files$=more_files$(pos(";"=more_files$)+1)
-		wfile=wfile+1
-	wend
-	for wkx=begfile to endfile
-		options$[wkx]="OTA"
-	next wkx
-	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
-:                                 	chans$[all],templates$[all],table_chans$[all],batch,status$
-	if status$<>"" then
-		bbjAPI!=bbjAPI()
-		rdFuncSpace!=bbjAPI!.getGroupNamespace()
-		rdFuncSpace!.setValue("+build_task","OFF")
-		release
+
+	more_files$=""
+	files=0
+
+	if pos(ivs01a.lifofifo$="LF")<>0 then 
+		more_files$=more_files$+"IVM_ITEMTIER;"
+		files=files+1
 	endif
-endif
+
+	if pos(ivs01a.lotser_flag$="LS")<>0 then 
+		more_files$=more_files$+"IVM_LSMASTER;IVM_LSACT;IVT_LSTRANS;"
+		files=files+3
+	endif
+
+	if ivs01a.master_flag_01$="Y" or ivs01a.master_flag_02$="Y" or ivs01a.master_flag_03$="Y"
+		more_files$=more_files$+"IVM_DESCRIP1;IVM_DESCRIP2;IVM_DESCRIP3;"
+		files=files+3
+	endif 
+
+	if ar$="Y" then 
+		more_files$=more_files$+"ARM_CUSTMAST;ARC_DISTCODE;"
+		files=files+2
+	endif
+
+	if bm$="Y" then 
+		more_files$=more_files$+"BMM_BILLMAST;BMM_BILLMAT;"
+		files=files+2
+	endif
+
+	if op$="Y" then 
+		more_files$=more_files$+"OPE_ORDHDR;OPE_ORDDET;OPE_ORDITEM;"
+		files=files+3
+	endif
+
+	if po$="Y" then 
+		more_files$=more_files$+"POE_REQHDR;POE_POHDR;POE_REQDET;POE_PODET;POC_LINECODE;POT_RECHDR;POT_RECDET;"
+		files=files+7
+	endif
+
+	if wo$="Y" then 
+		more_files$=more_files$+"SFE_WOMASTER;SFE_WOMATL;"
+		files=files+2
+	endif
+
+	if files then
+		begfile=1,endfile=files,wfile=1
+		dim files$[files],options$[files],chans$[files],templates$[files]
+
+		while pos(";"=more_files$)
+			files$[wfile]=more_files$(1,pos(";"=more_files$)-1)
+			more_files$=more_files$(pos(";"=more_files$)+1)
+			wfile=wfile+1
+		wend
+
+		for wkx=begfile to endfile
+			options$[wkx]="OTA"
+		next wkx
+
+		call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:	                                 	chans$[all],templates$[all],table_chans$[all],batch,status$
+		if status$<>"" then
+			bbjAPI!=bbjAPI()
+			rdFuncSpace!=bbjAPI!.getGroupNamespace()
+			rdFuncSpace!.setValue("+build_task","OFF")
+			release
+		endif
+	endif
 
 rem --- if gl installed, does it interface to inventory?
-if gl$="Y" 
-	call dir_pgm1$+"adc_application.aon","IV",info$[all]
-	gl$=info$[9]
-	user_tpl.gl$=gl$
-endif
+
+	if gl$="Y" 
+		call dir_pgm1$+"adc_application.aon","IV",info$[all]
+		gl$=info$[9]
+		user_tpl.gl$=gl$
+	endif
+
 rem --- Distribute GL by item?
-di$="N"
-if ar$="Y"
-	ars01a_key$=firm_id$+"AR00"
-	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-	di$=ars01a.dist_by_item$
-	if gl$="N" di$="N"
-endif
-callpoint!.setDevObject("di",di$)
+
+	di$="N"
+	if ar$="Y"
+		ars01a_key$=firm_id$+"AR00"
+		find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+		di$=ars01a.dist_by_item$
+		if gl$="N" di$="N"
+	endif
+	callpoint!.setDevObject("di",di$)
+
 rem --- Disable fields based on parameters
-able_map = 0
-wmap$=callpoint!.getAbleMap()
+
+	able_map = 0
+	wmap$=callpoint!.getAbleMap()
 
 rem --- if you aren't doing lotted/serialized
-if pos(ivs01a.lotser_flag$="LS")=0 then callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",-1)
+
+	if pos(ivs01a.lotser_flag$="LS")=0 then callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",-1)
 
 rem --- If you don't distribute by item, or there's no GL, disable GL fields
-if di$<>"N" or gl$<>"Y"
-	fields_to_disable$="GL_INV_ACCT     GL_COGS_ACCT    GL_PUR_ACCT     GL_PPV_ACCT     GL_INV_ADJ      GL_COGS_ADJ     "
-	for wfield=1 to len(fields_to_disable$)-1 step 16
-		callpoint!.setColumnEnabled("IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3),-1)					
-	next wfield
-endif
+
+	if di$<>"N" or gl$<>"Y"
+		fields_to_disable$="GL_INV_ACCT     GL_COGS_ACCT    GL_PUR_ACCT     GL_PPV_ACCT     GL_INV_ADJ      GL_COGS_ADJ     "
+		for wfield=1 to len(fields_to_disable$)-1 step 16
+			callpoint!.setColumnEnabled("IVM_ITEMMAST."+cvs(fields_to_disable$(wfield,16),3),-1)					
+		next wfield
+	endif
 
 rem --- Disable Sales Analysis level if SA is not installed 
-if sa$<>"Y" then
-	callpoint!.setColumnEnabled("IVM_ITEMMAST.SA_LEVEL",-1)
-endif
+
+	if sa$<>"Y" then
+		callpoint!.setColumnEnabled("IVM_ITEMMAST.SA_LEVEL",-1)
+	endif
 [[IVM_ITEMMAST.AOPT-PORD]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
 user_id$=stbl("+USER_ID")
