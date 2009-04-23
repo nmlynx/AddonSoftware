@@ -1,5 +1,3 @@
-[[OPE_ORDDET.BWRI]]
-print "Det:BWRI"; rem debug
 [[OPE_ORDDET.AGCL]]
 print "Det:AGCL"; rem debug
 
@@ -409,6 +407,9 @@ rem --- Disable skipped columns
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
+
+	print "Cost in array: ", callpoint!.getColumnData("OPE_ORDDET.UNIT_COST"); rem debug
+	print "Cost on disk : ", callpoint!.getColumnDiskData("OPE_ORDDET.UNIT_COST"); rem debug
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 rem --- recalc quantities and extended price
 
