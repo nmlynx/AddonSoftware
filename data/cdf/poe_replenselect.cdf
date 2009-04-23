@@ -68,12 +68,12 @@ rem --- See if we need to clear out poe-07
 		msg_opt$=""
 		gosub disp_message
 		if msg_opt$="Y"
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",poe_ordhdr_dev,firm_id$,status
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",poe_orddet_dev,firm_id$,status
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",poe_ordtot_dev,firm_id$,status
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",poe_repsel_dev,firm_id$,status
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",poe_repsurp_dev,firm_id$,status
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",poe_repxref_dev,firm_id$,status
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",poe_ordhdr_dev,firm_id$,status;if status then release
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",poe_orddet_dev,firm_id$,status; if status then release
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",poe_ordtot_dev,firm_id$,status; if status then release
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",poe_repsel_dev,firm_id$,status; if status then release
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",poe_repsurp_dev,firm_id$,status; if status then release
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",poe_repxref_dev,firm_id$,status; if status then release
 		endif
 		break
 	wend
