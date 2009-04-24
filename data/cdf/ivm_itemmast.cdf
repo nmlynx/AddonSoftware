@@ -1,3 +1,11 @@
+[[IVM_ITEMMAST.BWRI]]
+rem --- Is item code blank?
+
+	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"), 2) = "" then
+		msg_id$ = "IV_BLANK_ID"
+		gosub disp_message
+		callpoint!.setFocus("IVM_ITEMMAST.ITEM_ID")
+	endif
 [[IVM_ITEMMAST.LOTSER_ITEM.AVAL]]
 rem --- Can't change flag is there is QOH
 
@@ -187,27 +195,34 @@ rem --- Populate Stocking Info in Warehouses
 :                       dflt_data$[all]
 [[IVM_ITEMMAST.ITEM_ID.AVAL]]
 rem --- See if Auto Numbering in effect
-	ivs01_dev=fnget_dev("IVS_PARAMS")
-	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-	ivs10_dev=fnget_dev("IVS_NUMBERS")
-	dim ivs10n$:fnget_tpl$("IVS_NUMBERS")
-	read record(ivs01_dev,key=firm_id$+"IV00") ivs01a$
-	if len(callpoint!.getUserInput())=0
-		if ivs01a.auto_no_iv$<>"N" 
-			item_len=num(callpoint!.getTableColumnAttribute("IVM_ITEMMAST.ITEM_ID","MAXL"))
-			if item_len=0 item_len=20;rem Needed?
-			chk_digit$=""
-			if ivs01a.auto_no_iv$="C" item_len=item_len-1
+
+	if cvs(callpoint!.getUserInput(), 2) = "" then 
+		ivs01_dev = fnget_dev("IVS_PARAMS")
+		dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+		ivs10_dev = fnget_dev("IVS_NUMBERS")
+		dim ivs10n$:fnget_tpl$("IVS_NUMBERS")
+		read record (ivs01_dev, key=firm_id$+"IV00") ivs01a$
+
+		if ivs01a.auto_no_iv$="N" then
+			callpoint!.setStatus("ABORT")
+		else
+			item_len = num(callpoint!.getTableColumnAttribute("IVM_ITEMMAST.ITEM_ID","MAXL"))
+			if item_len=0 then item_len=20; rem Needed?
+			chk_digit$ = ""
+			if ivs01a.auto_no_iv$="C" then item_len=item_len-1
 			read record (ivs10_dev,key=firm_id$+"N",dom=*next) ivs10n$
-			ivs10n.firm_id$=firm_id$
-			ivs10n.record_id_n$="N"
+			ivs10n.firm_id$ = firm_id$
+			ivs10n.record_id_n$ = "N"
+
 			if ivs10n.nxt_item_id=0
 				next_num=1
 			else
 				next_num=ivs10n.nxt_item_id
 			endif
+
 			dim max_num$(min(item_len,10),"9")
-			if next_num>num(max_num$)
+
+			if next_num>num(max_num$) then 
 				msg_id$="NO_MORE_NUMBERS"
 				gosub disp_message
 				callpoint!.setStatus("ABORT")
@@ -216,16 +231,16 @@ rem --- See if Auto Numbering in effect
 				ivs10n$=field(ivs10n$)
 				write record (ivs10_dev,key=firm_id$+"N") ivs10n$
 				next_num$=str(next_num)
-				if ivs01a.auto_no_iv$="C"
+
+				if ivs01a.auto_no_iv$="C" then 
 					precision 4
 					chk_digit$=str(tim*10000),chk_digit$=chk_digit$(len(chk_digit$),1)
 					precision num(ivs01a.precision$)
 				endif
+
 				callpoint!.setUserInput(next_num$+chk_digit$)
 				callpoint!.setStatus("REFRESH")
 			endif
-		else
-			callpoint!.setStatus("ABORT")
 		endif
 	endif
 [[IVM_ITEMMAST.AWRI]]
