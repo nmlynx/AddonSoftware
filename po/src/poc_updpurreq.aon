@@ -311,7 +311,7 @@ rem --- get 'next req #'; increment and write back
     poe_reqhdr.ap_ship_via$=vshipvia$
     poe_reqhdr.acknowledge$=ack$
     poe_reqhdr.fob$=fob$
-    poe_reqhdr.po_req_msg_code$=reqmsg$
+    poe_reqhdr.po_msg_code$=reqmsg$
 
     write record (poe_reqhdr_dev) poe_reqhdr$
 

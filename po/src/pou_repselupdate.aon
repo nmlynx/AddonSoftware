@@ -115,7 +115,7 @@ rem --- Read Suggested Order File
 
         while more
 
-            k$=key(poe_ordhdr_dev,end=done)
+            k$=key(poe_ordhdr_dev,end=*break)
             if pos(firm_id$=k$)<>1 then break
             read record (poe_ordhdr_dev) poe_ordhdr$
             buyer$=poe_ordhdr.buyer_code$
@@ -176,7 +176,7 @@ rem --- this routine also entered when stocking by 'W', but only to remove poe_o
 
     while more
 
-        k26$=key(poe_ordtot_dev,end=done_create)
+        k26$=key(poe_ordtot_dev,end=*break)
         if pos(firm_id$+buyer$+vendor$=k26$)<>1 then break
         read record (poe_ordtot_dev) poe_ordtot$
         itemnum$=poe_ordtot.item_id$
@@ -204,7 +204,7 @@ callpocba: rem --- Assign and call poc_updpurreq (poc.ba) to create requisition
     if sugg>0
         dim info$[15],info[2]
 
-                info$[0]=firm_id$
+        info$[0]=firm_id$
         info$[1]=vendor$,info$[2]="S",info$[3]=whse$
         info$[4]=dateord$
         info$[5]=datereq$,info$[6]=unitmeas$,info$[7]="R"
