@@ -115,9 +115,9 @@ rem --- Init detail ptr
 
             if stocklevel$<>"I"
 
-                            if suggonly$="Y" 
+            	if suggonly$="Y" 
 
-                                	if itemnum$<>prevwitem$
+                	if itemnum$<>prevwitem$
 
 						csugg=0
 						p16_key$=poe_orddet.firm_id$+poe_orddet.buyer_code$+poe_orddet.vendor_id$+poe_orddet.product_type$+poe_orddet.item_id$
@@ -134,9 +134,9 @@ rem --- Init detail ptr
 						minusonord=0
 						prevwitem$=itemnum$
 
-											endif
+					endif
 
-					                endif
+				endif
 
                 sugg=num(poe_orddet.sugg_ord_qty$)
 
@@ -153,7 +153,7 @@ rem --- Accum amts to subtract from total line for sugg=0 'W' items
 
                 if suggonly$="Y" 
 
-                                	if sugg=0
+                	if sugg=0
 
 						minusannuse=minusannuse+poe_orddet.annual_usage
 						minusavguse=minusavguse+poe_orddet.avg_usage
@@ -162,9 +162,9 @@ rem --- Accum amts to subtract from total line for sugg=0 'W' items
 						if itemnum$<>previtem$ gosub newitem
 						continue
 
-											endif
+					endif
 
-					                endif
+				endif
 
                 linepoint$=str(poe_orddet.line_point:m2$)
                 ordpoint$=str(poe_orddet.order_point:m2$)
@@ -252,10 +252,10 @@ done: rem --- Done
     gosub vendtotals
     gosub buyertotals
     gosub printfooter
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,1,meter_num,status
-rem --- temp goto std_exit until update is completed
-	goto std_exit;rem temp
-    run pgmdir$+"pou_ba.bbx"
+
+	next_overlay$=stbl("+DIR_PGM")+"pou_repselupdate.aon"
+	goto std_exit
+
 
 report_heading: rem --- Report Heading
 
