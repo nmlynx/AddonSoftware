@@ -4,9 +4,10 @@ Running DataPort
 
 1) Before beginning
 	a. Make sure your data dictionary files from version 6/7 are up-to-date.  Dataport will only port files/fields referenced in the dictionary.
-	b. Ensure that you have a target (destination) directory that contains no data files.
-	c. Copy/paste the arc, bar, cdf and def subdirectories from the Addon /data folder into your target directory.
-	d. Ensure that the source directory has all of the files you want to port. It MUST contain the data dictionary files (ddm) as well.
+	b. Make the following changes to the Data Dictionary:  in file GLT-06, remove the 2 fields after the Description in 1$ (POSTING PER and POSTING YEAR), and change Description to have a Y for the separator.
+	c. Ensure that you have a target (destination) directory that contains no data files.
+	d. Copy/paste the arc, bar, cdf and def subdirectories from the Addon /data folder into your target directory.
+	e. Ensure that the source directory has all of the files you want to port. It MUST contain the data dictionary files (ddm) as well.
 2) Start up a working version of Addon/Barista.
 3) Select the AddonSoftware Administration menu, then Utilities, then DataPort.
 4) Select the proper version (6 or 7).
@@ -49,8 +50,6 @@ After the Dataport process is complete
 4) Check masks via Barista Administration ==> Maintenance ==> Input/Display Masks
 	a. G/L ID Masks will have pound signs (#) converted to zeroes.
 	b. A/P, A/R, and P/R masks will have pound signs (#) converted to capital U’s. If you want to use only numeric ID’s, you will need to change those parameters manually to zeroes.
-5) Changes to the Data Dictionary.
-        a. In file GLT-06, removed the 2 fields after the Description in 1$ (POSTING PER and POSTING YEAR), and changed Description to have a Y for the Separator.
-6) Temporary vendors have been discontinued in this version. In order to facilitate this, all records in the system that have TEMP as the Vendor Number will be consolidated into 1 vendor. That vendor number needs to be set up by you, the dealer, in the config file by setting +DP_TEMP_VEND= and then the new vendor number. It will then be your responsibility to create that vendor after the DataPort is completed. Don't forget to set the Temporary flag to Y. If this stbl is not set up prior to running DataPort, and there is a TEMP vendor found in the data, there will be a message on the screen and in the error file to that effect, and none of those records will be ported.
-7) We STRONGLY encourage you to replace blank Maintenance Codes with codes that have a value. You can do this by creating a custom public program as noted elswhere in this document.
-8) Run the GL Chart of Accounts Breaks form.  If there is a blank record, delete it.
+5) Temporary vendors have been discontinued in this version. In order to facilitate this, all records in the system that have TEMP as the Vendor Number will be consolidated into 1 vendor. That vendor number needs to be set up by you, the dealer, in the config file by setting +DP_TEMP_VEND= and then the new vendor number. It will then be your responsibility to create that vendor after the DataPort is completed. Don't forget to set the Temporary flag to Y. If this stbl is not set up prior to running DataPort, and there is a TEMP vendor found in the data, there will be a message on the screen and in the error file to that effect, and none of those records will be ported.
+6) We STRONGLY encourage you to replace blank Maintenance Codes with codes that have a value. You can do this by creating a custom public program as noted elswhere in this document.
+7) Run the GL Chart of Accounts Breaks form.  If there is a blank record, delete it.
