@@ -536,11 +536,11 @@ rem --- Distribution Code
                     segs=3
                     dim seg_end[segs]
                     seg_end[1]=7
-                    seg_end[2]=10,seg_end[3]=len(sam10a.firm_id$+sam10a.year$+sam10a.dist_code$+sam10a.product_type$+sam10a.item_id$)+1; rem "End of segment + 1
+                    seg_end[2]=10,seg_end[3]=len(sam10a.firm_id$+sam10a.year$+sam10a.ar_dist_code$+sam10a.product_type$+sam10a.item_id$)+1; rem "End of segment + 1
 
                     sam10a.firm_id$=firm_id$
                     sam10a.year$=year$                
-                    sam10a.dist_code$=ope01a.dist_code$
+                    sam10a.ar_dist_code$=ope01a.ar_dist_code$
                     sam10a.product_type$=ope11a.product_type$
                     sam10a.item_id$=ope11a.item_id$                
 

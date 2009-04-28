@@ -186,7 +186,7 @@ rem --- Display record
 rem --- Retrieve Distribution Code
 
             dim z0$(10*g[4])
-            d$=ope01a.dist_code$
+            d$=ope01a.ar_dist_code$
             gosub retrieve_distribution_code
             z0$(1)=arm10d.gl_ar_acct$+arm10d.gl_cash_acct$+arm10d.gl_sls_acct$+arm10d.gl_disc_acct$+
 :                  arm10d.gl_frgt_acct$+arm10d.gl_inv_adj$+arm10d.gl_inv_acct$+arm10d.gl_cogs_acct$+
@@ -260,16 +260,16 @@ rem --- Retrieve Inventory Item
                                     ivm02a.warehouse_id$=ope11a.warehouse_id$
                                     ivm02a.item_id$=ope11a.item_id$
                                     find record (ivm02_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=sales_account) ivm02a$
-                                    d$=ivm02a.dist_code$
+                                    d$=ivm02a.ar_dist_code$
                                 endif
 
 sales_account: rem ------------ Sales Account
 
                                 if r9$="N" and opm02a.line_type$<>"P" and opm02a.dropship$<>"Y"
-                                    d$=ope01a.dist_code$; rem "Invoice Ribbon
+                                    d$=ope01a.ar_dist_code$; rem "Invoice Ribbon
                                 else
                                     if pos(opm02a.line_type$="PN")>0 or opm02a.dropship$="Y"
-                                        d$=opm02a.dist_code$; rem "Order Line Item
+                                        d$=opm02a.ar_dist_code$; rem "Order Line Item
                                     endif
                                 endif
 
@@ -436,7 +436,7 @@ rem -------- Loop created to replace goto 3500 using break
 
 ar_open_inv_hdr: rem --- AR Open Invoice Header
 
-                    art01a.dist_code$=ope01a.dist_code$
+                    art01a.ar_dist_code$=ope01a.ar_dist_code$
                     art01a.terms_code$=ope01a.terms_code$
                     art01a.invoice_date$=ope01a.invoice_date$
 
@@ -462,7 +462,7 @@ ar_open_inv_det_smry_record: rem --- AR Open Invoice Detail Summary Record
                     art01a.customer_id$=art11a.customer_id$
                     art01a.ar_inv_no$=art11a.ar_inv_no$
                     art01a.sequence_00$=art11a.sequence_no$
-                    art01a.dist_code$="99"
+                    art01a.ar_dist_code$="99"
 
                     read (art11_dev,key=art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_no$,dom=ar_open_invoice_detail)
                     extract record (art11_dev,key=art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_no$) art11a$
@@ -482,7 +482,7 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
                     art01a.customer_id$=art11a.customer_id$
                     art01a.ar_inv_no$=art11a.ar_inv_no$
                     art01a.sequence_00$=art11a.sequence_no$
-                    art01a.dist_code$="01"
+                    art01a.ar_dist_code$="01"
 
                     k$=keyp(art11_dev,end=label_two)
                     if art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_no$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$+art01a.sequence_00$ then
