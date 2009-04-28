@@ -54,7 +54,8 @@ rem --- setup for G/L Parameter
 	user_tpl.dist_dev=arc_dist_dev
 	user_tpl.dist_tpl$=arc_dist_tpl$
 [[OPC_LINECODE.ARAR]]
-rem --- re-enable all fields
+rem --- Re-enable all fields
+
 	dim dctl$[7],dmap$[7]
 	dctl$[1]="GL_REV_ACCT"
 	dctl$[2]="TAXABLE_FLAG"
@@ -102,15 +103,17 @@ rem --- re-enable all fields
 		dmap$[4]="I"
 	endif
 	gosub disable_ctls
+
 rem --- Either fill or blank out 3 G/L display fields
+
 	if user_tpl.gl$="Y"
-		if cvs(rec_data.dist_code$,2)=""
+		if cvs(rec_data.ar_dist_code$,2)=""
 			callpoint!.setColumnData("<<DISPLAY>>.GL_COGS_ACCT","")
 			callpoint!.setColumnData("<<DISPLAY>>.GL_INV_ACCT","")
 			callpoint!.setColumnData("<<DISPLAY>>.GL_SLS_ACCT","")
 		else
 			dim dist_tpl$:user_tpl.dist_tpl$
-			read record (user_tpl.dist_dev,key=firm_id$+"D"+rec_data.dist_code$,dom=*next) dist_tpl$
+			read record (user_tpl.dist_dev,key=firm_id$+"D"+rec_data.ar_dist_code$,dom=*next) dist_tpl$
 			callpoint!.setColumnData("<<DISPLAY>>.GL_SLS_ACCT",dist_tpl.gl_sls_acct$)
 			callpoint!.setColumnData("<<DISPLAY>>.GL_INV_ACCT",dist_tpl.gl_inv_acct$)
 			callpoint!.setColumnData("<<DISPLAY>>.GL_COGS_ACCT",dist_tpl.gl_cogs_acct$)
