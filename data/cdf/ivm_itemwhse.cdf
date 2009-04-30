@@ -1,3 +1,12 @@
+[[IVM_ITEMWHSE.BDEL]]
+rem --- Allow this warehouse to be deleted?
+
+	action$ = "W"
+	whse$   = callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+	item$   = callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+
+	call stbl("+DIR_PGM")+"ivc_deleteitem.aon", action$, whse$, item$, rd_table_chans$[all], status
+	if status then callpoint!.setStatus("ABORT")
 [[IVM_ITEMWHSE.UNIT_COST.AVAL]]
 rem --- Set default costs from unit cost
 

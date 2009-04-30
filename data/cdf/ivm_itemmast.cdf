@@ -262,23 +262,14 @@ rem --- Populate ivm-02 with Product Type
 		write record (ivm02_dev) ivm02a$
 	wend
 [[IVM_ITEMMAST.BDEL]]
-rem --- versions 6/7 have a program ivc.da used for deleting
+rem --- Allow this item to be deleted?
 
-	dim params$[7],params[2]
-	params$[0]=firm_id$
-	params$[2]=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-	params$[3]=user_tpl.op$
-	params$[4]=user_tpl.po$
-	params$[5]=user_tpl.wo$
-	params$[6]=user_tpl.bm$
-	params$[7]=user_tpl.ap$
-	params[0]=user_tpl.num_pers
-	params[1]=user_tpl.cur_per
-	params[2]=user_tpl.cur_yr
-	call stbl("+DIR_PGM")+"ivc_deleteitem.aon","I",params$[all],params[all],status
-	if status<>0
-		callpoint!.setStatus("ABORT")
-	endif
+	action$ = "I"
+	whse$   = ""
+	item$   = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+
+	call stbl("+DIR_PGM")+"ivc_deleteitem.aon", action$, whse$, item$, rd_table_chans$[all], status
+	if status then callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.SAFETY_STOCK.AVAL]]
 if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.EOQ.AVAL]]
@@ -411,10 +402,12 @@ rem --- init/parameters
 	disable_str$=""
 	enable_str$=""
 	dim info$[20]
+
 	ivs01a_key$=firm_id$+"IV00"
 	find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 	gls01a_key$=firm_id$+"GL00"
 	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+
 	dir_pgm1$=stbl("+DIR_PGM",err=*next)
 	call dir_pgm1$+"adc_application.aon","AR",info$[all]
 	ar$=info$[20]
@@ -435,23 +428,11 @@ rem --- init/parameters
 
 rem --- Setup user_tpl$
 
-	dim user_tpl$:"ar:c(1), ap:c(1), bm:c(1), gl:c(1), op:c(1), po:c(1), wo:c(1), sa:c(1)," +
-:	              "num_pers:n(2), cur_per:n(2), cur_yr:n(4)," +
+	dim user_tpl$:"sa:c(1)," +
 :                "desc_len_01:n(1*), desc_len_02:n(1*), desc_len_03:n(1*)," +
 :                "prev_desc_seg_1:c(1*), prev_desc_seg_2:c(1*), prev_desc_seg_3:c(1*)"
 
-	user_tpl.ar$=ar$
-	user_tpl.ap$=ap$
-	user_tpl.bm$=bm$
-	user_tpl.gl$=gl$
-	user_tpl.op$=op$
-	user_tpl.po$=po$
-	user_tpl.wo$=wo$
 	user_tpl.sa$=sa$
-
-	user_tpl.num_pers = num(gls01a.total_pers$)
-	user_tpl.cur_per  = num(gls01a.current_per$)
-	user_tpl.cur_yr   = num(gls01a.current_year$)
 
 	user_tpl.desc_len_01 = num(ivs01a.desc_len_01$)
 	user_tpl.desc_len_02 = num(ivs01a.desc_len_02$)
@@ -562,7 +543,6 @@ rem --- if gl installed, does it interface to inventory?
 	if gl$="Y" 
 		call dir_pgm1$+"adc_application.aon","IV",info$[all]
 		gl$=info$[9]
-		user_tpl.gl$=gl$
 	endif
 
 rem --- Distribute GL by item?
