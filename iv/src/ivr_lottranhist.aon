@@ -43,7 +43,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open files
 
-	num_files = 13
+	num_files = 14
 	open_beg  = 1
 	open_end  = num_files
 	
@@ -83,12 +83,8 @@ rem --- Open files
 	dim ars01a$:open_tpls$[2]
 	dim gls01a$:open_tpls$[3]
 	dim ivs01a$:open_tpls$[4]
-	dim arm01a$:open_tpls$[5]
-	dim glm01a$:open_tpls$[6]
 	dim ivm01a$:open_tpls$[7]
 	dim ivm07a$:open_tpls$[8]
-	dim ivm10a$:open_tpls$[9]
-	dim ivm10b$:open_tpls$[10]
 	dim ivm10c$:open_tpls$[11]
 	dim ivt01a$:open_tpls$[12]
 	dim ivt01b$:open_tpls$[13]
@@ -120,19 +116,17 @@ rem --- Assign form input values to local variables
 
 rem --- Retrieve key template
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","IVM_LSMASTER","PRIMARY",ivm07_key_tpl$,rd_table_chans$[all],status$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVT_LSTRANS","PRIMARY",ivt01_key_tpl$,rd_table_chans$[all],status$
-    dim ivm07a_key$:ivm07_key_tpl$,ivt01a_key$:ivt01_key_tpl$,ivt01alt$:ivt01_key_tpl$
+    dim ivt01a_key$:ivt01_key_tpl$
+	dim ivt01alt$:ivt01_key_tpl$
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
     find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
-rem --- check application settings
+rem --- Check application settings
 
-    call pgmdir$+"adc_application.aon","IV",info$[all]
-    gl$=info$[9];rem --- post to GL?
     call pgmdir$+"adc_application.aon","AR",info$[all]
     ar$=info$[20]; rem --- AR installed?
     call pgmdir$+"adc_application.aon","AP",info$[all]
@@ -161,21 +155,19 @@ rem --- Initializations
     if ar$="Y" then
         find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
         x8=num(ars01a.customer_size$)
-        x9$=ars01a.customer_output$, x9=len(x9$)
+        x9$=ars01a.customer_output$
     endif
 
 rem --- Check for vendor masterfile
 
     if ap$<>"N" then
-        find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-        files$[14]="apm-01",ids$[14]="APM_VENDMAST"
-        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-	if status goto std_exit
-	apm01_dev=channels[14]
-	dim apm01a$:templates$[14]
+		open_tables$[14]="APM_VENDMAST", open_opts$[14]="OTA"
+        gosub open_tables
+		apm01_dev = num(open_chans$[14])
+		
+		find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
         x6=num(aps01a.vendor_size$)
-        x7$=aps01a.vendor_output$,x7=len(x7$)
+        x7$=aps01a.vendor_output$
     endif
 
     find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
@@ -191,24 +183,20 @@ rem --- Check for vendor masterfile
         next x
     endif
 
-    h0=60
-    h1=115
-    h=0
     if ttype$=all_ttypes$ then all$="Y" else all$="N"
     more=1
+	
     precision p[2]
     headings=7
-    when$=sys_date$
-    clock$=""
-    h9$=""
+	
     dim headings$[headings]
     dim item_qty[9],item_ext[9]
     dim ivchannels[6],params[6],masks$[3]
+	
     headings$[0]=firm_name$
     headings$[1]=task_desc$
-    width=132
-    page=0
     done=0
+	
     ivchannels[0]=ivm01_dev
     ivchannels[1]=ivm10a_dev
     ivchannels[2]=arm01_dev
@@ -216,6 +204,7 @@ rem --- Check for vendor masterfile
     ivchannels[4]=glm01_dev
     ivchannels[5]=ivm10b_dev
     ivchannels[6]=ivm10c_dev
+	
     params[0]=p[0]
     params[1]=x8
     params[2]=x6
@@ -223,16 +212,14 @@ rem --- Check for vendor masterfile
     params[4]=p[5]
     params[5]=p[6]
     params[6]=p[7]
+	
     masks$[0]=firm_id$
     masks$[1]=x9$
     masks$[2]=x7$
     masks$[3]=g5$
 
-
 rem --- Headings
 
-    dim h1$(width),h2$(width)
-    
     if ocb$="O" x0$="Open" else if ocb$="C" x0$="Closed" else x0$="All"
     if beg_date$<>"" x1$=fndate$(beg_date$) else x1$="First Date"
     if end_date$<>"" x2$=fndate$(end_date$) else x2$="Last Date"
@@ -266,7 +253,6 @@ rem --- column headings
     columns$[5,0]="Unit Cost",              columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m3$
     columns$[6,0]="Extension",              columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
     columns$[7,0]="Balance",                columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
-
 
     call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",3+p[0],ivt01_dev,1,0,ignore_status
 
