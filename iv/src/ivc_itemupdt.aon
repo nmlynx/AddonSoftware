@@ -77,6 +77,8 @@ rem --- Retrieve the program path
 
 	pgmdir$=""
     pgmdir$=stbl("+DIR_PGM",err=*next)
+	sypdir$=""
+	sypdir$=stbl("+DIR_SYP",err=*next)
 
 rem --- Retrieve sysinfo data
 
@@ -595,17 +597,31 @@ done: rem --- All done
     goto std_exit
 
 bad_action_error: rem --- Argument errors
-
+	
+	msg_id$="IV_BAD_ACTION_PASSED"
+	dim msg_tokens$[1]
+	msg_tokens$[1] = pgm(-2)
+	gosub disp_message
     status=917
     goto std_exit
 
 missing_record_error: rem --- Missing record
 
+	msg_id$="IV_ITEM_WHSE_MISSING"
+	dim msg_tokens$[3]
+	msg_tokens$[1] = item$
+	msg_tokens$[2] = whse$
+	msg_tokens$[3] = pgm(-2)
+	gosub disp_message
     status=11
     goto std_exit
 
 no_item_error: rem --- No inventory item passed
 
+	msg_id$="IV_NO_ITEM_PASSED_IN"
+	dim msg_tokens$[1]
+	msg_tokens$[1] = pgm(-2)
+	gosub disp_message
 	status=901
 	goto std_exit
 
@@ -781,6 +797,40 @@ update_qoh: rem --- Update quantity on hand
 	
 return
 
+open_tables: rem --- Open tables
+	
+	call sypdir$+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		status=912
+		goto std_exit
+	endif
+
+	return
+
+disp_message: rem --- Display a message
+	
+	call sypdir$+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		table_chans$[all]
+
+	return
+
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -955,26 +1005,8 @@ rem --- Open all files
 	open_tables$[12]="IVX_LSVEND",   open_opts$[12]="OTA"
 	open_tables$[13]="IVT_ITEMTRAN", open_opts$[13]="OTA"
 	
-	call sypdir$+"bac_open_tables.bbj",
-:		open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
-
-	if open_status$<>"" then
-		msg_id$="ENTRY_OPEN_ERROR"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-		status=912
-		goto init_exit
-	endif
-
+	gosub open_tables
+	
 rem --- Update chan with references to the open files
 	
 	ivs01_dev = num( open_chans$[1] )
