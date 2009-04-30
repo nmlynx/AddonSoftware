@@ -642,10 +642,11 @@ rem --- Commit inventory
 
 	rem --- Has there been any change?
 
-	if	curr_whse$   <> prior_whse$ or 
-:		curr_item$   <> prior_item$ or 
-:		curr_qty     <> prior_qty   or
-:     curr_lotser$ <> prior_lotser$
+	if (curr_whse$ <> "" and curr_item$ <> "") and 
+:		(curr_whse$   <> prior_whse$   or 
+:		 curr_item$   <> prior_item$   or 
+:		 curr_qty     <> prior_qty     or
+:      curr_lotser$ <> prior_lotser$) 
 :	then
 
 		rem --- Initialize inventory item update
@@ -653,7 +654,10 @@ rem --- Commit inventory
 		print "initializing ATAMO..."
 		status = 999
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then goto std_exit
+		if status then 
+			callpoint!.setStatus("EXIT")
+			break; rem --- exit callpoint
+		endif
 
 		rem --- Items or warehouses are different: uncommit previous
 
@@ -679,7 +683,10 @@ rem --- Commit inventory
 				endif
 				
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then escape; rem problem uncommitting previous qty
+				if status then 
+					callpoint!.setStatus("EXIT")
+					break; rem --- exit callpoint
+				endif
 
 			endif
 
@@ -692,7 +699,10 @@ rem --- Commit inventory
 			refs[0]   = curr_qty 
 
 			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then escape; rem problem committing 
+			if status then 
+				callpoint!.setStatus("EXIT")
+				break; rem --- exit callpoint
+			endif
 
 		endif
 
@@ -712,7 +722,10 @@ rem --- Commit inventory
 			refs[0]   = curr_qty - prior_qty
 
 			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then escape; rem problem committing 
+			if status then 
+				callpoint!.setStatus("EXIT")
+				break; rem --- exit callpoint
+			endif
 
 		endif
 
