@@ -36,7 +36,7 @@ rem --- Initializations
     dim headings$[5],o[14],vendor[1],req[1],report[1],totals[1]
     dim c0$(22),c1$(60),d0$(24),d1$(64),d[20],description$(40),r0$(8),r1$(30)
     dim w0$(18),w1$(48),w2$(32),w3$(22),w4$(40),w[12],y0$(4),y1$(32)
-    dim h1$(132),h2$(132)
+    dim h1$(132),h2$(132),h3$(132)
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     when$=sysinfo.system_date$
@@ -114,26 +114,21 @@ no_beg_vendor:
 
 no_end_vendor:
 
-    h1$(1)="From Vendor: "+x1$
-    h2$(1)="  To Vendor: "+x2$
+    h1$(1)="From Vendor: "+x1$+ " to "+x2$
     x1$="First"
     x2$="Last"
     if begreq$<>"" x1$=begreq$
     if endreq$<>"" x2$=endreq$
-    x1=18+max(5,max(len(x1$),len(x2$)))
-    x2=int((width-x1)/2)
-    h1$(x2,x1)="From Requisition: "+x1$
+    h2$(1)="From Requisition: "+x1$+" to "+x2$
     x1$="First"
-    h2$(x2,x1)="  To Requisition: "+x2$
     x2$="Last"
     if begdate$<>"" x1$=fndate$(begdate$)
     if enddate$<>"" x2$=fndate$(enddate$)
-    x1=max(len(x1$),len(x2$))
-    x2=width-x1-len(datetitle$)-6
-    h1$(x2)="From "+datetitle$+": "+x1$
-    h2$(x2)="  To "+datetitle$+": "+x2$
-    headings$[3]=h1$
-    headings$[4]=h2$
+    h3$(1)="From "+datetitle$+": "+x1$+" to "+x2$
+    headings$[2]=h1$
+    headings$[3]=h2$
+    headings$[4]=h3$
+    if pagebreak$="Y" then headings$[headings]="[HEADER]"
 
 rem --- Position files
 
@@ -153,8 +148,8 @@ rem --- Position files
                 poe_reqhdr.firm_id$=pow_reqregalt.firm_id$
                 poe_reqhdr.vendor_id$=pow_reqregalt.vendor_id$
                 poe_reqhdr.req_no$=pow_reqregalt.req_no$
-                if t0$<>pow_reqregalt.alt_sequence$+pow_reqregalt.vendor_id$ gosub vend_break
-                if t1$<>pow_reqregalt.req_no$ gosub req_break
+                if t0$<>pow_reqregalt.alt_sequence$+pow_reqregalt.vendor_id$ then gosub vend_break
+                if t1$<>pow_reqregalt.req_no$ then gosub req_break
             endif
             if sequence$="V"
                 pow_reqregven$=key(pow_reqregven_dev,end=*break)
@@ -163,8 +158,8 @@ rem --- Position files
                 poe_reqhdr.firm_id$=pow_reqregven.firm_id$
                 poe_reqhdr.vendor_id$=pow_reqregven.vendor_id$
                 poe_reqhdr.req_no$=pow_reqregven.req_no$
-                if t0$<>pow_reqregven.vendor_id$ gosub vend_break
-                if t1$<>pow_reqregven.req_no$ gosub req_break
+                if t0$<>pow_reqregven.vendor_id$ then gosub vend_break
+                if t1$<>pow_reqregven.req_no$ then gosub req_break
             endif
             if sequence$="R"
                 pow_reqregreq$=key(pow_reqregreq_dev,end=*break)
@@ -173,7 +168,11 @@ rem --- Position files
                 poe_reqhdr.firm_id$=pow_reqregreq.firm_id$
                 poe_reqhdr.vendor_id$=pow_reqregreq.vendor_id$
                 poe_reqhdr.req_no$=pow_reqregreq.req_no$
-                if t1$<>pow_reqregreq.req_no$ gosub ret_vendor
+                if t1$<>pow_reqregreq.req_no$
+                	gosub req_break
+                	v$=pow_reqregreq.vendor_id$
+                	gosub ret_vendor
+                endif
             endif
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -442,7 +441,10 @@ vend_break: rem --- Vendor break
     v$=t0$
     if sequence$="A" then t0$=pow_reqregalt.alt_sequence$+pow_reqregalt.vendor_id$
     gosub ret_vendor
-    if pagebreak$="Y" then l=l9+1
+    if pagebreak$="Y" 
+    	BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    	HdrVect!.addItem("Vendor: "+vendor$)
+    endif
     return
 
 req_break: rem --- Requisition break
@@ -456,7 +458,10 @@ req_break: rem --- Requisition break
     if done then return
     dim req[1]
     let t1$=poe_reqhdr.req_no$
-    if sequence$="R" and pagebreak$="Y" then l=l9+1
+    if sequence$="R" and pagebreak$="Y" 
+    	BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    	HdrVect!.addItem("Requisition: "+t1$)    
+    endif
     return
 
 ret_vendor: rem --- Retrieve vendor

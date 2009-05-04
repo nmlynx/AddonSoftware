@@ -108,12 +108,18 @@ rem --- Assign form input values to local variables
     begreq$=option!.getOptionData("req_no_1")
     endreq$=option!.getOptionData("req_no_2")
     sequence$=option!.getOptionData("report_type")                         
-    begven$=option!.getOptionData("vendor_id_1")
-    endven$=option!.getOptionData("vendor_id_2")
+    begvend$=option!.getOptionData("vendor_id_1")
+    endvend$=option!.getOptionData("vendor_id_2")
     datetype$=option!.getOptionData("date_type")
     begdate$=option!.getOptionData("pick_date_01")
     enddate$=option!.getOptionData("pick_date_02")
-    pagebrk$=option!.getOptionData("page_break")
+    pagebreak$=option!.getOptionData("page_break")
+    
+    if datetype$="O" datetitle$="Date Ordered",comp_date_field$="ORD_DATE"
+	if datetype$="P" datetitle$="Date Promised",comp_date_field$="PROMISE_DATE"
+	if datetype$="R" datetitle$="Date Required",comp_date_field$="REQD_DATE"
+	if datetype$="D" datetitle$="Not Before Date",comp_date_field$="NOT_B4_DATE"
+
 
 rem --- Retrieve parameter records
 
@@ -180,13 +186,14 @@ sort_req_file:
         if poe_reqhdr.hold_flag$="Y" then continue
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-        rem --- Does record meet selection criteria?
-
-        if begdate$<>"" and enddate$<>""
-            if (cvs(poe_reqhdr.promise_date$,2)<>"" and cvs(poe_reqhdr.not_b4_date$,2)<>"" and cvs(poe_reqhdr.reqd_date$,2)<>"")
-                if begdate$<>"" and (poe_reqhdr.promise_date$<begdate$ or poe_reqhdr.not_b4_date$<begdate$ or poe_reqhdr.reqd_date$<begdate$) then continue
-                if enddate$<>"" and (poe_reqhdr.promise_date$>enddate$ or poe_reqhdr.not_b4_date$>enddate$ or poe_reqhdr.reqd_date$>enddate$) then continue
-            endif
+rem --- Does record meet selection criteria?
+        
+        if begdate$<>"" or enddate$<>""
+        	comp_date$=cvs(field(poe_reqhdr$,comp_date_field$),3)
+        	if comp_date$<>""
+        		if begdate$<>"" and comp_date$<begdate$ then continue
+        		if enddate$<>"" and comp_date$>enddate$ then continue
+        	endif
         endif
 
 rem --- Get vendor for alpha sort
@@ -194,8 +201,7 @@ rem --- Get vendor for alpha sort
         if sequence$="A"
             apm_vendmast.firm_id$=poe_reqhdr.firm_id$
             apm_vendmast.vendor_id$=poe_reqhdr.vendor_id$
-            apm_vendmast.req_no$=poe_reqhdr.req_no$
-            find record (apm_vendmast_dev,key=apm_vendmast.firm_id$+apm_vendmast.vendor_id$+apm_vendmast.req_no$,dom=*next) apm_vendmast$
+            find record (apm_vendmast_dev,key=apm_vendmast.firm_id$+apm_vendmast.vendor_id$,dom=*next) apm_vendmast$
         endif
 
 rem --- Write sort record
