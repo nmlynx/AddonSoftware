@@ -410,9 +410,9 @@ done: rem --- All done
     totals[1]=report[1]
     gosub print_totals
     if number=0 then goto std_exit
-
-	goto std_exit;rem temp -- remove when ready to run update
-    run pgmdir$ +"pou_reqregister.aon"
+    
+	goto std_exit;rem --- temp until update is tested
+    run pgmdir$ +"pou_reqsnreg.aon"
 
 req_subheading: rem --- Requisition subheading
 
