@@ -491,29 +491,31 @@ rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
 [[OPE_ORDDET.<CUSTOM>]]
+rem ==========================================================================
 calc_grid_tots:
+rem ==========================================================================
 
 	recVect!=GridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
 	numrecs=recVect!.size()
 	tamt=0
 
-	if numrecs>0
+	if numrecs>0 then 
 
 		for reccnt=0 to numrecs-1
 			gridrec$=recVect!.getItem(reccnt)
-			if cvs(gridrec$,3)<>""
-				if callpoint!.getGridRowDeleteStatus(reccnt)<>"Y"
+
+			if cvs(gridrec$,3)<>"" then 
+				if callpoint!.getGridRowDeleteStatus(reccnt)<>"Y" then 
 					opc_linecode_dev=fnget_dev("OPC_LINECODE")
 					dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-					read record (opc_linecode_dev,key=firm_id$+gridrec.line_code$,dom=*next)opc_linecode$
+					read record (opc_linecode_dev, key=firm_id$+gridrec.line_code$, dom=*next) opc_linecode$
 
-					if pos(opc_linecode$="SPN")
+					if pos(opc_linecode.line_code$="SPN")
 						tamt=tamt+(gridrec.unit_price*gridrec.qty_ordered)
 					else
 						tamt=tamt+gridrec.ext_price
 					endif
-
 				endif
 			endif
 		next reccnt
@@ -523,26 +525,31 @@ calc_grid_tots:
 
 return
 
+rem ==========================================================================
 disp_totals: rem --- get context and ID of total amount display control, and redisplay w/ amts from calc_tots
+rem ==========================================================================
 
 	tamt!=UserObj!.getItem(num(user_tpl.ord_tot_1$))
 	tamt!.setValue(user_tpl.ord_tot)
 
 return
 
-pricing: rem "Call Pricing routine
+rem ==========================================================================
+pricing: rem --- Call Pricing routine
+rem ==========================================================================
 
 	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
 	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+
 	ivs01_dev=fnget_dev("IVS_PARAMS")
 	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
 
-	ordqty=qty_ord
-	wh$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
-	item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-	ar_type$=callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
-	cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
-	ord$=callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	ordqty   = qty_ord
+	wh$      = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$    = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	ar_type$ = callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
+	cust$    = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+	ord$     = callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
 
 	dim pc_files[6]
 	pc_files[1]=fnget_dev("IVM_ITEMMAST")
@@ -564,10 +571,10 @@ pricing: rem "Call Pricing routine
 	endif
 
 	if disc=100
-		readrecord(ivm02_dev,key=firm_id$+wh$+item$)ivm02a$
+		read record (ivm02_dev, key=firm_id$+wh$+item$) ivm02a$
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC",str(ivm02a.cur_price))
 	else
-		readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+		read record (ivs01_dev, key=firm_id$+"IV00") ivs01a$
 		precision  num(ivs01a.precision$)+3
 		factor=100/(100-disc)
 		precision num(ivs01a.precision$)
@@ -595,9 +602,9 @@ rem ==========================================================================
 	start_block = 1
 
 	if start_block then
-		readrecord(ivm01_dev, key=firm_id$+item$, dom=*endif) ivm01a$
-		readrecord(ivm02_dev, key=firm_id$+wh$+item$, dom=*endif) ivm02a$
-		readrecord(ivc_whcode_dev, key=firm_id$+"C"+wh$, dom=*endif) ivm10c$
+		read record (ivm01_dev, key=firm_id$+item$, dom=*endif) ivm01a$
+		read record (ivm02_dev, key=firm_id$+wh$+item$, dom=*endif) ivm02a$
+		read record (ivc_whcode_dev, key=firm_id$+"C"+wh$, dom=*endif) ivm10c$
 		good_item$="Y"
 	endif
 
@@ -680,15 +687,17 @@ rem ==========================================================================
 	dim cur_rec$:dtlg_param$[1,3]
 	cur_rec$ = curVect!.getItem(currow)
 
-	repeat
-		if pos(callpoint!.getDevObject("lotser_flag") = "LS") then 
-			if new_rec$<>"Y"
-				item_id$ = cur_rec.item_id$
-			else
-				item_id$ = callpoint!.getUserInput()
-			endif
+	if pos(callpoint!.getDevObject("lotser_flag") = "LS") then 
+		if new_rec$<>"Y"
+			item_id$ = cur_rec.item_id$
+		else
+			item_id$ = callpoint!.getUserInput()
+		endif
 
-			read record (ivm01_dev, key=firm_id$+item_id$, dom=*break) ivm01a$
+		start_block = 1
+
+		if start_block then
+			read record (ivm01_dev, key=firm_id$+item_id$, dom=*endif) ivm01a$
 
 			if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
 				lotted$="Y"
@@ -697,11 +706,13 @@ rem ==========================================================================
 				callpoint!.setDevObject("item",item_id$)
 			endif
 		endif
-	until 1
+	endif
 
 return
 
+rem ==========================================================================
 retrieve_row_data:
+rem ==========================================================================
 
 	currow=callpoint!.getValidationRow()
 
@@ -722,44 +733,46 @@ retrieve_row_data:
 
 return
 
+rem ==========================================================================
 uncommit_iv: rem --- Uncommit Inventory
 rem              --- Make sure action$ is set before entry
+rem ==========================================================================
 
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+
 	ope_ordlsdet_dev=fnget_dev("OPE_ORDLSDET")
 	dim ope_ordlsdet$:fnget_tpl$("OPE_ORDLSDET")
 
-	cust$=callpoint!.getDevObject("cust")
-	ar_type$=callpoint!.getDevObject("ar_type")
-	order$=callpoint!.getDevObject("order")
+	cust$    = callpoint!.getDevObject("cust")
+	ar_type$ = callpoint!.getDevObject("ar_type")
+	order$   = callpoint!.getDevObject("order")
 
-	seq$=callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
-	wh$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
-	item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-	ord_qty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	seq$    = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
+	wh$     = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$   = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	ord_qty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-	readrecord(ivm_itemmast_dev,key=firm_id$+item$,dom=*next)ivm_itemmast$
+	read record (ivm_itemmast_dev, key=firm_id$+item$, dom=*next) ivm_itemmast$
 
 	items$[1]=wh$
 	items$[2]=item$
 	refs[0]=ord_qty
 
-	if ivm_itemmast.lotser_item$<>"Y" or ivm_itemmast.inventoried$<>"Y"
+	if ivm_itemmast.lotser_item$<>"Y" or ivm_itemmast.inventoried$<>"Y" then
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	else
 		found_lot=0
-		readrecord(ope_ordlsdet_dev,key=firm_id$+ar_type$+cust$+
-:				order$+seq$,dom=*next)
+		read (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+seq$, dom=*next)
 
 		while 1
-			readrecord(ope_ordlsdet_dev,end=*break)ope_ordlsdet$
-			if pos(firm_id$+ar_type$+cust$+order$+seq$=ope_ordlsdet$)<>1 break
-			items$[3]=ope_ordlsdet.lotser_no$
-			refs[0]=ope_ordlsdet.qty_ordered
+			read record (ope_ordlsdet_dev, end=*break) ope_ordlsdet$
+			if pos(firm_id$+ar_type$+cust$+order$+seq$=ope_ordlsdet$)<>1 then break
+			items$[3] = ope_ordlsdet.lotser_no$
+			refs[0]   = ope_ordlsdet.qty_ordered
 			call "ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			remove (ope_ordlsdet_dev,key=firm_id$+ar_type$+cust$+order$+seq$+ope_ordlsdet.sequence_no$)
+			remove (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+seq$+ope_ordlsdet.sequence_no$)
 			found_lot=1
 		wend
 
@@ -796,7 +809,7 @@ rem ==========================================================================
 
 	start_block = 1
 
-	if cvs(line_code$,2) <> ""
+	if cvs(line_code$,2) <> "" then
 		file$ = "OPC_LINECODE"
 		dim opc_linecode$:fnget_tpl$(file$)
 
@@ -818,7 +831,7 @@ rem ==========================================================================
 
 	use ::ado_util.src::util
 [[OPE_ORDDET.LINE_CODE.AVAL]]
-rem --- set enable/disable based on line type
+rem --- Set enable/disable based on line type
 
 	line_code$ = callpoint!.getUserInput()
 	gosub disable_by_linetype
@@ -829,7 +842,6 @@ rem --- Has line code changed?
 		callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "")
 		callpoint!.setColumnData("OPE_ORDDET.PRODUCT_TYPE", "")
 		callpoint!.setColumnData("OPE_ORDDET.ORDER_MEMO", "")
-		callpoint!.setColumnData("OPE_ORDDET.WAREHOUSE_ID", "?"); rem r2$(32,2)
 		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y"); rem why?
 		callpoint!.setColumnData("OPE_ORDDET.VENDOR_ID", "")
 		callpoint!.setColumnData("OPE_ORDDET.DROPSHIP", "")
