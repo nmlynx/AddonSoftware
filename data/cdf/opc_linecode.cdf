@@ -1,4 +1,4 @@
-[[OPC_LINECODE.DIST_CODE.AVAL]]
+[[OPC_LINECODE.AR_DIST_CODE.AVAL]]
 rem --- Either fill or blank out 3 G/L display fields
 	dist_code$=callpoint!.getUserInput()
 	if user_tpl.gl$="Y"
@@ -37,7 +37,7 @@ rem --- Maybe disable Product Type
 [[OPC_LINECODE.DROPSHIP.AVAL]]
 rem --- Check Distribution Code
 	if line_type$="S" and callpoint!.getUserInput()="N"
-		callpoint!.setColumnData("OPC_LINECODE.DIST_CODE","")
+		callpoint!.setColumnData("OPC_LINECODE.AR_DIST_CODE","")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPC_LINECODE.BSHO]]
