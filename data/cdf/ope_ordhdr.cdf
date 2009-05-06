@@ -71,6 +71,8 @@ rem --- Disable Cost field if there is a value in it
 		next reccnt
 	endif
 [[OPE_ORDHDR.ASIZ]]
+print "Hdr:ASIZ"; rem debug
+
 rem --- Create Empty Availability window
 
 	grid! = util.getGrid(Form!)
@@ -83,7 +85,7 @@ rem --- Create Empty Availability window
 	mwin!=cwin!.getControl(15999)
 	mwin!.setSize(grid!.getWidth(), mwin!.getHeight())
 [[OPE_ORDHDR.AFMC]]
-print "Hdr:AFMC"; rem debug
+print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
@@ -287,7 +289,7 @@ rem --- New record
 		callpoint!.setColumnData("OPE_ORDHDR.SLSPSN_CODE",arm02a.slspsn_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE",arm02a.ar_terms_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.DISC_CODE",arm02a.disc_code$)
-		callpoint!.setColumnData("OPE_ORDHDR.DIST_CODE",arm02a.ar_dist_code$)
+		callpoint!.setColumnData("OPE_ORDHDR.AR_DIST_CODE",arm02a.ar_dist_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
 		callpoint!.setColumnData("OPE_ORDHDR.MESSAGE_CODE",arm02a.message_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.TERRITORY",arm02a.territory$)
@@ -1229,7 +1231,7 @@ rem --- Enable/Disable buttons
 		callpoint!.setOptionEnabled("RPRT",1)
 	endif
 [[OPE_ORDHDR.BSHO]]
-print 'show',"Hdr:BSHO"; rem debug
+print "Hdr:BSHO"; rem debug
 
 rem --- Open needed files
 
