@@ -61,7 +61,7 @@ rem --- Re-enable all fields
 	dctl$[2]="TAXABLE_FLAG"
 	dctl$[3]="DROPSHIP"
 	dctl$[4]="PRODUCT_TYPE"
-	dctl$[5]="DIST_CODE"
+	dctl$[5]="AR_DIST_CODE"
 	dctl$[6]="PROD_TYPE_PR"
 	dctl$[7]="MESSAGE_TYPE"
 	line_type$=callpoint!.getColumnData("OPC_LINECODE.LINE_TYPE")
@@ -126,7 +126,7 @@ rem --- re-enable all fields
 	dctl$[2]="TAXABLE_FLAG"
 	dctl$[3]="DROPSHIP"
 	dctl$[4]="PRODUCT_TYPE"
-	dctl$[5]="DIST_CODE"
+	dctl$[5]="AR_DIST_CODE"
 	dctl$[6]="PROD_TYPE_PR"
 	dctl$[7]="MESSAGE_TYPE"
 	gosub disable_ctls
