@@ -19,13 +19,6 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO")
     firm_id$=sysinfo.firm_id$
 
-rem --- Ready to close?
-
-    repeat
-        call pgmdir$+"adc_yesno.aon",0,"Are you ready to close this period",0,v$,v3
-        if v$="NO" or v3=4 then goto std_exit
-    until v$="YES" and v3=0
-
 rem --- Open/Lock files
 
     files=30,begfile=3,endfile=12
@@ -44,7 +37,7 @@ rem --- Open/Lock files
     files$[28]="ivt-01",ids$[28]="IVT_LSTRANS"
 
     call pgmdir$+"adc_fileopen.aon",1,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
 
     ivm01_dev=channels[3]
     ivm02_dev=channels[4]
@@ -87,10 +80,22 @@ rem --- Parameters
         if apflag$=" " then apflag$="N"
     endif
 
-
     total_periods  = num(gls01a.total_pers$)
     current_period = num(ivs01a.current_per$)
     current_year   = num(ivs01a.current_year$)
+
+    call pgmdir$+"adc_perioddates.aon",gls01a_dev,current_period,current_year,begdate$,
+:                                      enddate$,status
+
+rem --- Get user approval to proceed
+
+    msg_id$="CLOSE_PERIOD"
+    dim msg_tokens$[2]
+    msg_tokens$[0]=str(current_period)
+    msg_tokens$[1]=fndate$(begdate$)
+    msg_tokens$[2]=fndate$(enddate$)
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_update
 
 rem --- Init Data
 
@@ -98,14 +103,14 @@ rem --- Init Data
     more=1
 
     call "ivc_itemupdt.aon::init",channs[all],ivs01a$,items$[all],refs$[all],refs[all],rd_table_chans$[all],status
-	if status = 999 then goto std_exit
+	if status = 999 then goto std_exit_no_update
 
 rem --- Check on Lot/Serial Flag
 
     ls$="N"
     if pos(ivs01a.lotser_flag$="LS") then
         call pgmdir$+"adc_fileopen.aon",1,25,28,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
-        if status goto std_exit
+        if status goto std_exit_no_update
         ivm07_dev=channels[25]
         ivm17_dev=channels[27]
         ivt01_dev=channels[28]
@@ -118,7 +123,7 @@ rem --- Check on Replenishment
 
     if apflag$="Y" then
         call pgmdir$+"adc_fileopen.aon",1,2,2,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
-		if status = 999 then goto std_exit
+		if status = 999 then goto std_exit_no_update
         if status then apflag$="N"
         apm06_dev=channels[2]
         dim apm06a$:templates$[2]
@@ -127,14 +132,14 @@ rem --- Check on Replenishment
 rem --- Determine Period Limits
 
     call pgmdir$+"adc_perioddates.aon",gls01a_dev,current_period,current_year,start_date$,end_date$,status
-	if status = 999 then goto std_exit
+	if status = 999 then goto std_exit_no_update
     call pgmdir$+"adc_daydates.aon",end_date$,when$,1
     refs$[0]=when$
 
 rem --- Process ivm-02
 
     call pgmdir$+"adc_progress.aon","N","","","Updating","",0,0,1,meter_num,status
-	if status = 999 then goto std_exit
+	if status = 999 then goto std_exit_no_update
     read (ivm02_dev, key=firm_id$, dom=*next)
 
 rem --- Main Read
@@ -150,7 +155,7 @@ rem --- Main Read
 
         read record (ivm01_dev,key=firm_id$+item$, dom=*continue) ivm01a$
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-		if status = 999 then exitto std_exit
+		if status = 999 then exitto std_exit_no_update
 
         items$[0]=firm_id$
         items$[1]=whse$
@@ -169,14 +174,14 @@ rem --- Check for Serial Numbers
                 read record (ivm07_dev) ivm07a$
                 find record (ivm17_dev, key=ivm07_key$+ivs01a.current_year$+ivs01a.current_per$, dom=*continue) ivm17a$
                 call pgmdir$+"ivc_periodqty.aon","END",ivm17a$,ignore[all],balance,status
-                if status = 999 then exitto std_exit
+                if status = 999 then exitto std_exit_no_update
                 items$[3]=ivm17a.lotser_no$
                 refs$[10]=ivm07a.ls_location$
                 refs$[11]=ivm07a.ls_comments$
                 refs[0]=balance
                 refs[1]=ivm07a.unit_cost
                 call  pgmdir$+"ivc_itemupdt.aon","BB",channs[all],ivs01a$,items$[all],refs$[all],refs[all],rd_table_chans$[all],status
-				if status = 999 then exitto std_exit
+				if status = 999 then exitto std_exit_no_update
             wend
 
         else
@@ -185,14 +190,14 @@ rem --- Regular inventory
 
             find record (ivm12_dev, key=firm_id$+whse$+item$+ivs01a.current_per$+ivs01a.current_year$, dom=*continue) ivm12a$
             call pgmdir$+"ivc_periodqty.aon","END",ivm12a$,ignore[all],balance,status
-			if status = 999 then exitto std_exit
+			if status = 999 then exitto std_exit_no_update
             items$[3]=""
             refs$[10]=""
             refs$[11]=""
             refs[0]=balance
             refs[1]=ivm02a.unit_cost
             call  pgmdir$+"ivc_itemupdt.aon","BB",channs[all],ivs01a$,items$[all],refs$[all],refs[all],rd_table_chans$[all],status
-			if status = 999 then exitto std_exit
+			if status = 999 then exitto std_exit_no_update
 
         endif
 
@@ -235,6 +240,20 @@ rem --- Increment Period
     write record (ivs01a_dev, key=firm_id$+n2$+"00") ivs01a$
 
     goto std_exit
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
+rem --- Date function
+
+    def fndate$(q$)
+        q1$=""
+        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if q1$="" q1$=q$
+        return q1$
+    fnend
 
 rem #include std_error.src
 
@@ -285,11 +304,17 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,ignore_status
-    if status=0 then run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
 rem #endinclude std_end.src
 
     end
-	
