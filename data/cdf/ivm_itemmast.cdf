@@ -70,7 +70,7 @@ rem --- Set previous value
 [[IVM_ITEMMAST.ADIS]]
 rem --- Set Description Segments
 
-	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 90)
 	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1", desc$(1, user_tpl.desc_len_01))
  	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2", desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02))
 	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3", desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03))
