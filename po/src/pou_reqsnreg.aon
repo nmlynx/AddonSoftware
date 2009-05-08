@@ -9,6 +9,8 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+        next_overlay$=""
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -43,10 +45,10 @@ rem --- Open/Lock files
 	open_tables$[15]="POW_REQREGALT", open_opts$[15]="OTA"
 	open_tables$[16]="POW_REQREGVEN", open_opts$[16]="OTA"
 	open_tables$[17]="POW_REQREGREQ", open_opts$[17]="OTA"
-	   
-    gosub open_tables
-	
-	aps_params_dev=num(open_chans$[1])
+
+	       gosub open_tables
+
+		aps_params_dev=num(open_chans$[1])
 	ivm_itemmast_dev=num(open_chans$[2])
 	ivm_itemwhse_dev=num(open_chans$[3])
 	ivs_params_dev=num(open_chans$[4])
@@ -84,7 +86,7 @@ rem --- Open/Lock files
 
 rem --- Retrieve parameter records
 
-    find record (aps_params_dev,key=afirm_id$+"AP00",err=std_missing_params) aps_params$
+    find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
     find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
 
 rem --- Initializations
@@ -99,6 +101,10 @@ rem --- Initializations
     files[13]=poe_linked_dev
     more=1
 
+    rem --- Initialize Atamo for subsequent calls
+
+call pgmdir$+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],rd_table_chans$[all],status
+
 rem --- Run Update?
 
     msg_id$="AON_UPDT_QUERY"
@@ -111,12 +117,12 @@ rem --- Run Update?
 
 rem --- Position file
 
-    
+
     if sequence$="A" then powork_dev=pow_reqregalt_dev;dim powork$:fattr(pow_reqregalt$)
     if sequence$="V" then powork_dev=pow_reqregven_dev;dim powork$:fattr(pow_reqregven$)
     if sequence$="R" then powork_dev=pow_reqregreq_dev;dim powork$:fattr(pow_reqregreq$)
-    
-    call pgmdir$+"adc_progress.aon","N","","","","",0,powork_dev,1,meter_num,ignore_status
+
+        call pgmdir$+"adc_progress.aon","N","","","","",0,powork_dev,1,meter_num,ignore_status
 
     read (powork_dev,key=firm_id$,dom=*next)
 
@@ -130,11 +136,12 @@ rem --- Get next sort record
 
 		poe_reqhdr.firm_id$=powork.firm_id$
 		poe_reqhdr.req_no$=powork.req_no$
+		poe_reqhdr.vendor_id$=powork.vendor_id$
 
 rem --- Read requisition header
 
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
-        find record (poe_reqhdr_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.req_no$,dom=*continue) poe_reqhdr$
+rem unrem for live...        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+        find record (poe_reqhdr_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$,knum=1,dom=*continue) poe_reqhdr$
 
 
 rem --- Create purchase order from requisition
@@ -144,23 +151,21 @@ rem --- Create purchase order from requisition
 		dim dest_rec$:fattr(poe_pohdr$)
 		gosub copy_fields
 		poe_pohdr$=dest_rec$
-        
-rem --- Get next PO Number
+
+        rem --- Get next PO Number
 
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","PO_NO",seq_id$,rd_table_chans$[all]
 
         poe_pohdr.firm_id$=poe_reqhdr.firm_id$
         poe_pohdr.po_no$=seq_id$
-
 		poe_pohdr$=field(poe_pohdr$)
         write record (poe_pohdr_dev) poe_pohdr$
-        
-rem --- Create PO Print record        
+
+        rem --- Create PO Print record        
 
         poe_poprint.firm_id$ = poe_pohdr.firm_id$
         poe_poprint.vendor_id$ = poe_pohdr.vendor_id$
         poe_poprint.po_no$ = poe_pohdr.po_no$
-                
 		poe_poprint$=field(poe_poprint$)
         write record (poe_poprint_dev) poe_poprint$
 
@@ -170,29 +175,23 @@ rem --- Position detail file
 
         while more
 
-            k$=key(poe_reqdet_dev,end=*break)
-            if pos(firm_id$=k$)<>1 then break
-
-rem --- Read next detail line
-
-            read record (poe_reqdet_dev) poe_reqdet$
+                    read record (poe_reqdet_dev) poe_reqdet$
+            if pos(firm_id$=poe_reqdet$)<>1 then break
+            if poe_reqdet.req_no$<>poe_reqhdr.req_no$ then break
             dim poe_podet$:fattr(poe_podet$)
-            
-rem --- Copy all common fields from requisition to po detail  
+
+            rem --- Copy all common fields from requisition to po detail  
 
 			dim source_rec$:fattr(poe_reqdet$)
 			source_rec$=poe_reqdet$
 			dim dest_rec$:fattr(poe_podet$)
 			gosub copy_fields
 			poe_podet$=dest_rec$
-            
-rem --- Now put in the po#, copy req qty to qty ordered, and get internal seq#
+
+            rem --- Now put in the po#, copy req qty to qty ordered, and get internal seq#
 
             poe_podet.po_no$=poe_pohdr.po_no$
             poe_podet.qty_ordered=poe_podet.req_qty
-			call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",seq_id$,rd_table_chans$[all]
-			poe_podet.internal_seq_no$=seq_id$
-			
             poe_podet$=field(poe_podet$)        
             write record (poe_podet_dev) poe_podet$
 
@@ -208,19 +207,18 @@ rem --- Read line code
                 poc_linecode.lead_tim_flg$=""
                 poc_linecode.land_cst_flg$=""
                 poc_linecode.add_options$=""
-                
-                find record (poc_linecode_dev,key=poc_linecode.firm_id$+poc_linecode.po_line_code$,dom=*next) poc_linecode$
+
+                                find record (poc_linecode_dev,key=poc_linecode.firm_id$+poc_linecode.po_line_code$,dom=*next) poc_linecode$
 
             endif
 
             rem --- Update inventory?
 
             if poc_linecode.line_type$="S"
-escape;rem monitor atamo
                 item$[0]=firm_id$
                 item$[1]=poe_podet.warehouse_id$,item$[2]=poe_podet.item_id$,refs[0]=poe_podet.qty_ordered
                 action$="OO"
-                call pgmdir$+"ivc_itemupdt.bbx",action$,channels[all],ivs_params$,item$[all],refs$[all],refs[all],rd_table_chans$[all],status
+                call pgmdir$+"ivc_itemupdt.aon",action$,channels[all],ivs_params$,item$[all],refs$[all],refs[all],rd_table_chans$[all],status
 
             endif
 
@@ -240,9 +238,8 @@ escape;rem logic not yet exercised
 
 				dim poe_linked$:fattr(poe_linked$)
 				poe_linked.firm_id$=firm_id$
-				poe_linked.vendor_id$=poe_pohdr.vendor_id$
 				poe_linked.po_no$=poe_pohdr.po_no$
-				poe_linked.podet_seq_ref$=poe_podet.internal_seq_no$
+				poe_linked.poedet_seq_ref$=poe_podet.internal_seq_no$
 				poe_linked.customer_id$=poe_pohdr.customer_id$
 				poe_linked.order_no$=poe_pohdr.order_no$
 				poe_linked.opedet_seq_ref$=poe_podet.so_int_seq_ref$
@@ -257,11 +254,11 @@ escape;rem logic not yet exercised
 
     rem --- Delete requisition source
 
-        sf_installed$="N"
+            sf_installed$="N"
         dtl_tpl$=fattr(poe_reqdet$)
-        hdr_key$=poe_reqhdr.firm_id$+poe_reqhdr.req_no$
-        print_key$=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$
-        call pgmdir$+"poc_deletepo.aon","R",files[all],sf_installed$,ivs_params$,hdr_key$,print_key$,dtl_tpl$,status
+        hdr_pri_key$=poe_reqhdr.firm_id$+poe_reqhdr.req_no$
+        hdr_alt_key1$=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$
+        call pgmdir$+"poc_deletepo.aon","R",files[all],sf_installed$,ivs_params$,hdr_pri_key$,hdr_alt_key1$,dtl_tpl$,status
 
     rem --- Loop back for next record
 
@@ -295,10 +292,10 @@ copy_fields:
 
 	field_list$=fattr(source_rec$,"")
 	fields=pos($0A$=field_list$,1,0)
-	dim fields$:"name$["+str(fields)+"]:c(16*)"
+	dim fields$:"name["+str(fields)+"]:c(16*)"
 	fields$=field_list$
 	for x=1 to fields
-		field dest_rec$,fields.name$[x]=field(source_rec$,fields.name$[x])
+		field dest_rec$,fields.name$[x]=field(source_rec$,fields.name$[x]),err=*next
 	next x
 return
 
@@ -324,8 +321,8 @@ disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 return
-	
-rem #endinclude disp_message.src
+
+	rem #endinclude disp_message.src
 
 rem #include std_error.src
 
@@ -333,8 +330,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
-:                                str(err),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -357,8 +353,7 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),                                   str(err:"000"),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
