@@ -6,9 +6,9 @@ rem --- Restrict lookup to printed cycles
 	key_pfx$  = firm_id$
 	key_id$   = "PRIMARY"
 
-	dim filter_defs$[0,1]
-	filter_defs$[0,0] = "IVC_PHYSCODE.PHYS_INV_STS"
-	filter_defs$[0,1] = "='2'"
+	dim filter_defs$[1,1]
+	filter_defs$[1,0] = "IVC_PHYSCODE.PHYS_INV_STS"
+	filter_defs$[1,1] = "='2'"
 
 	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :		gui_dev,
