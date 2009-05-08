@@ -204,7 +204,7 @@ rem --- Print transaction dates
 
 rem --- GL accounts
 
-        if gl$<>"N" or di$<>"Y" 
+        if gl$="Y" and di$="N" 
             gl_inv_desc$=nf$,gl_cogs_desc$=nf$,gl_pur_desc$=nf$
             gl_ppv_desc$=nf$,gl_invadj_desc$=nf$,gl_cogsadj_desc$=nf$
             find record (glm01_dev,key=firm_id$+ivm01a.gl_inv_acct$,dom=*next) glm01a$; gl_inv_desc$=glm01a.gl_acct_desc$
