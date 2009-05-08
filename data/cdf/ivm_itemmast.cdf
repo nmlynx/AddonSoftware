@@ -121,19 +121,30 @@ if num(callpoint!.getUserInput())<0 then
 	callpoint!.setStatus("ABORT")
 endif
 [[IVM_ITEMMAST.AOPT-CITM]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[1,1]
-dflt_data$[1,0]="OLD_ITEM"
-dflt_data$[1,1]=cp_item_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVM_COPYITEM",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
+rem --- Copy item
+
+	cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[1,1]
+	dflt_data$[1,0]="OLD_ITEM"
+	dflt_data$[1,1]=cp_item_id$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"IVM_COPYITEM",
+:		user_id$,
+:		"",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+rem --- Edit the item just copied
+
+	new_item_id$ = str(callpoint!.getDevObject("new_item_id"))
+
+	if new_item_id$ <> "" then
+		callpoint!.setStatus("RECORD:"+firm_id$+pad(new_item_id$, 2))
+	endif
 [[IVM_ITEMMAST.AOPT-HCPY]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
 user_id$=stbl("+USER_ID")
@@ -268,8 +279,10 @@ rem --- Allow this item to be deleted?
 	whse$   = ""
 	item$   = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
 
-	call stbl("+DIR_PGM")+"ivc_deleteitem.aon", action$, whse$, item$, rd_table_chans$[all], status
-	if status then callpoint!.setStatus("ABORT")
+	if cvs(item$, 2) <> "" then
+		call stbl("+DIR_PGM")+"ivc_deleteitem.aon", action$, whse$, item$, rd_table_chans$[all], status
+		if status then callpoint!.setStatus("ABORT")
+	endif
 [[IVM_ITEMMAST.SAFETY_STOCK.AVAL]]
 if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.EOQ.AVAL]]
