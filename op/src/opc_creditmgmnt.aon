@@ -12,11 +12,9 @@ rem enter ope01_dev,arm02_dev,firm_id$,customer$,credit$,s$,m1$,type
     setesc std_error
     seterr std_error
     
-	declare BBjSysGui SysGui!
-	declare BBjTopLevelWindow Form!
 	declare Callpoint callpoint!
 	
-	enter customer$, table_chans$[all], SysGui!, Form!, callpoint!
+	enter customer$, table_chans$[all], callpoint!
 
 rem --- Retrieve the program path
 
