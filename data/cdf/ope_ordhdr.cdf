@@ -557,7 +557,7 @@ rem --- Show customer data
 rem --- Credit check?
 
 	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], SysGui!, Form!, callpoint!
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
 	endif
 
 rem --- Enable Duplicate buttons
