@@ -1,5 +1,5 @@
-rem --- Purchase Order Printing (Input Overlay) 
-rem --- Program por_ba v8.0.0 06Jul2007 (por_ba)
+rem --- Requisition Printing (Input Overlay) 
+rem --- Program por_ba v8.0.0 06Jul2007 (por_xa)
 rem --- Created by adx_codeport.bbx v1.1.5 (07/06/2007 02:01:54)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -50,9 +50,9 @@ rem --- Open/Lock files
     files$[9]="ivm-05",ids$[9]="IVM_ITEMVEND"
     files$[10]="ivc_prodcode",ids$[10]="IVC_PRODCODE";rem "ivm-10A"
     files$[11]="ope-31",ids$[11]="OPE_ORDSHIP"
-    files$[12]="poe-02",ids$[12]="POE_POHDR"
-    files$[13]="poe-12",ids$[13]="POE_PODET"
-    files$[14]="poe-22",ids$[14]="POE_POPRINT"
+    files$[12]="poe-01",ids$[12]="POE_REQHDR"
+    files$[13]="poe-11",ids$[13]="POE_REQDET"
+    files$[14]="poe-21",ids$[14]="POE_REQPRINT"
     files$[15]="pom-02",ids$[15]="POC_LINECODE"
     files$[16]="pom-04",ids$[16]="POC_MSGCODE"
     files$[17]="pom-14",ids$[17]="POC_MSGLINE"
@@ -75,9 +75,9 @@ rem --- Open/Lock files
     ivm05_dev=channels[9]
     ivm10a_dev=channels[10]
     ope31_dev=channels[11]
-    poe02_dev=channels[12]
-    poe12_dev=channels[13]
-    poe22_dev=channels[14]
+    poe01_dev=channels[12]
+    poe11_dev=channels[13]
+    poe21_dev=channels[14]
     pom02_dev=channels[15]
     pom04_dev=channels[16]
     pom14_dev=channels[17]
@@ -90,7 +90,7 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-    dim apm01a$:templates$[2],apm05a$:templates$[3],apm10a$:templates$[4],arm01a$:templates$[5],arm03a$:templates$[6],ivm01a$:templates$[7],ivm02a$:templates$[8],ivm05a$:templates$[9],ivm10a$:templates$[10],ope31a$:templates$[11],poe02a$:templates$[12],poe12a$:templates$[13],poe22a$:templates$[14],pom02a$:templates$[15],pom04a$:templates$[16],pom14a$:templates$[17],aps01a$:templates$[18],ars01a$:templates$[19],ivs01a$:templates$[20],pos01a$:templates$[21],apm10c$:templates$[22],ivm10c$:templates$[23]
+    dim apm01a$:templates$[2],apm05a$:templates$[3],apm10a$:templates$[4],arm01a$:templates$[5],arm03a$:templates$[6],ivm01a$:templates$[7],ivm02a$:templates$[8],ivm05a$:templates$[9],ivm10a$:templates$[10],ope31a$:templates$[11],poe01a$:templates$[12],poe11a$:templates$[13],poe21a$:templates$[14],pom02a$:templates$[15],pom04a$:templates$[16],pom14a$:templates$[17],aps01a$:templates$[18],ars01a$:templates$[19],ivs01a$:templates$[20],pos01a$:templates$[21],apm10c$:templates$[22],ivm10c$:templates$[23]
 
 rem --- Retrieve parameter records
 
@@ -138,10 +138,10 @@ rem --- Initializations
     pomessage$=""
     restart$="N"
     vendor$=""
-    title$="P U R C H A S E   O R D E R"
-    label$="Purchase Order"
-    type$="P"
-    let defaultmsg$=pos01a.po_msg_code$
+    title$="P U R C H A S E   R E Q U I S I T I O N"
+    label$="Purchase Requisition"
+    type$="R"
+    let defaultmsg$=pos01a.po_req_msg_code$
     call stbl("+DIR_SYP")+"bac_key_template.bbj","POC_MSGCODE","PRIMARY",pom04a_key_tpl$,rd_table_chans$[all],status$
     dim pom04a_key$:pom04a_key_tpl$
 
@@ -172,7 +172,7 @@ rem --- Open the printer
     let textfont!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
     let italicfont!= new java.awt.Font("Times New Roman",java.awt.Font.ITALIC,10)
     let boldfont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,10)
-    let largefont!=new java.awt.Font("Arial",java.awt.Font.BOLD,20)
+    let largefont!=new java.awt.Font("Arial",java.awt.Font.BOLD,16)
     let smallfont!= new java.awt.Font("Times New Roman",java.awt.Font.BOLD,8)
 
     left_justify=0
@@ -228,27 +228,27 @@ rem --- Resize masks
 
 rem --- Test pattern initializations
 
-rem    poe12a.unit_cost=9999.99
+rem    poe11a.unit_cost=9999.99
 rem    qty=999999
 rem    extension=999999.99
 rem    total=extension
-rem    poe12a.reqd_date$ = f0$(18,6)
-rem    poe12a.unit_measure$ = "EA"
-rem    poe02a.ord_date$ = f0$(18,6)
+rem    poe11a.reqd_date$ = f0$(18,6)
+rem    poe11a.unit_measure$ = "EA"
+rem    poe01a.ord_date$ = f0$(18,6)
 rem    pom02a.line_type$ = "N"
-rem    poe12a.promise_date$ = poe02a.ord_date$ 
+rem    poe11a.promise_date$ = poe01a.ord_date$ 
 rem    shipfrom$="99 "+fill(30,"X")
 
 rem --- Loop Starting
 
-    sql_prep$="select poe_poprint.firm_id, poe_poprint.vendor_id, poe_poprint.po_no, poe_podet.internal_seq_no, "
-    sql_prep$=sql_prep$+"poe_podet.warehouse_id, apm_vendmast.alt_sequence "
-    sql_prep$=sql_prep$+"FROM poe_poprint, poe_podet, apm_vendmast "
+    sql_prep$="select poe_reqprint.firm_id, poe_reqprint.vendor_id, poe_reqprint.req_no, poe_reqdet.internal_seq_no, "
+    sql_prep$=sql_prep$+"poe_reqdet.warehouse_id, apm_vendmast.alt_sequence "
+    sql_prep$=sql_prep$+"FROM poe_reqprint, poe_reqdet, apm_vendmast "
 
 
-    where_clause$="WHERE poe_poprint.firm_id = '"+firm_id$+"' AND "
-    where_clause$=where_clause$+"poe_poprint.firm_id=poe_podet.firm_id AND poe_poprint.po_no=poe_podet.po_no AND "
-    where_clause$=where_clause$+"poe_poprint.firm_id=apm_vendmast.firm_id AND poe_poprint.vendor_id=apm_vendmast.vendor_id "
+    where_clause$="WHERE poe_reqprint.firm_id = '"+firm_id$+"' AND "
+    where_clause$=where_clause$+"poe_reqprint.firm_id=poe_reqdet.firm_id AND poe_reqprint.req_no=poe_reqdet.req_no AND "
+    where_clause$=where_clause$+"poe_reqprint.firm_id=apm_vendmast.firm_id AND poe_reqprint.vendor_id=apm_vendmast.vendor_id "
 
     action=pos(sequence$="NRPAW")
         vend_seq=1
@@ -259,17 +259,17 @@ rem --- Loop Starting
 
     switch action
         case vend_seq
-            order_by$="order by poe_poprint.vendor_id,poe_poprint.po_no,poe_podet.internal_seq_no"
+            order_by$="order by poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
             break
          case req_seq
          case po_seq
-            order_by$="order by poe_poprint.po_no,poe_poprint.vendor_id,poe_poprint.internal_seq_no"
+            order_by$="order by poe_reqprint.req_no,poe_reqprint.vendor_id,poe_reqprint.internal_seq_no"
             break
          case alt_seq
-            order_by$="order by apm_vendmast.alt_sequence,poe_poprint.vendor_id,poe_poprint.po_no,poe_poprint.internal_seq_no"
+            order_by$="order by apm_vendmast.alt_sequence,poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqprint.internal_seq_no"
             break
          case whse_seq
-            order_by$="order by poe_podet.warehouse_id,poe_poprint.vendor_id,poe_poprint.po_no"
+            order_by$="order by poe_reqdet.warehouse_id,poe_reqprint.vendor_id,poe_reqprint.req_no"
             break
          case default
             more=0
@@ -286,14 +286,14 @@ rem --- Loop Starting
     while more
         read_tpl$=sqlfetch(sql_chan,err=*break)
         recs=recs+1
-        po_no$=read_tpl.po_no$
+        req_no$=read_tpl.req_no$
         vendor_id$=read_tpl.vendor_id$
         whse_id$=read_tpl.warehouse_id$
         internal_seq_no$=read_tpl.internal_seq_no$
-
-        if po_no$<>poe02a.po_no$ then 
+        
+        if req_no$<>poe01a.req_no$ then 
             gosub print_total
-            read record (poe02_dev,key=firm_id$+po_no$,dom=*continue) poe02a$
+            read record (poe01_dev,key=firm_id$+req_no$,dom=*continue) poe01a$
             page=0
             l=l9+1
         endif
@@ -303,18 +303,18 @@ rem --- Loop Starting
             page=0
             l=l9+1
         endif
-        if vendor_id$+poe02a.purch_addr$<>t1$ then
+        if vendor_id$+poe01a.purch_addr$<>t1$ then
             gosub print_total
             gosub shipfrom_break
             page=0
             l=l9+1
         endif
-        if poe02a.ap_terms_code$<>t2$ then gosub terms_break
+        if poe01a.ap_terms_code$<>t2$ then gosub terms_break
 
-        find record (poe12_dev,key=firm_id$ + po_no$ + internal_seq_no$,dom=*continue) poe12a$
+        find record (poe11_dev,key=firm_id$ + req_no$ + internal_seq_no$,dom=*continue) poe11a$
 
-        rem *** if poe12a.warehouse_id$ <> t3$ gosub shipto_break
-        if poe12a.po_line_code$ <> t4$ gosub line_code_break
+        rem *** if poe11a.warehouse_id$ <> t3$ gosub shipto_break
+        if poe11a.po_line_code$ <> t4$ gosub line_code_break
 
 rem --- Print detail
 
@@ -324,10 +324,10 @@ rem --- Print detail
 
 rem --- Print any associated message
 
-        if cvs(poe12a.po_msg_code$,2)<>""
+        if cvs(poe11a.po_msg_code$,2)<>""
 
             msg$ = pom04a_key.po_msg_code$
-            pom04a_key$ = firm_id$ + poe12a.po_msg_code$
+            pom04a_key$ = firm_id$ + poe11a.po_msg_code$
             find record (pom04_dev,key = pom04a_key$,dom=*break) pom04a$
             if pos(pom04a.message_type$ = "B" + type$) = 0 break
             read (pom14_dev,key=pom04a_key$,dom=*next)
@@ -366,42 +366,30 @@ rem --- All done
         docPrint!.cancel()
         msg_id$="DOC_OUTPUT_NODATA"
         gosub disp_message
-        goto std_exit_no_report
+        goto std_exit
     endif
+    
+    gosub print_total
 
     doc!.preview()
-    call "adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    goto std_exit
-
 
 update: rem --- Update print file?
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,1,0,ignore_status
-    v4$="Are you ready to update the "+label$+" Print File"
-    call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-
-on v3 goto brnch1,update,update,update,all_done,brnch1,all_done
-
-brnch1:
-
-    if v$<>"YES" goto std_exit
-    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Updating","",16,poe22_dev,1,0,ignore_status
-    read (poe22_dev,key=firm_id$,dom=*next)
-
-rem --- Update the print file
-
-update_print_file:
-
-    while more
-        k$=key(poe22_dev,end=*break)
-        if pos(firm_id$=k$)<>1 break
-        call pgmdir$+"adc_progress.aon","S","","","",fnmask$(k$(3,vendlen),m0$)+" "+       poe22a.po_no$,0,0,1,0,ignore_status
-        remove (poe22_dev,key=k$,dom=*break)
-    wend
+    msg_id$="PO_UPDTPRT"
+    dim msg_tokens$[1]
+    msg_tokens$[1]=label$
+	gosub disp_message
+	if msg_opt$="Y"
+	    read (poe21_dev,key=firm_id$,dom=*next)
+		while more
+			k$=key(poe21_dev,end=*break)
+			if pos(firm_id$=k$)<>1 break
+			remove (poe21_dev,key=k$,dom=*break)
+		wend
+	endif
 
 all_done: rem --- All done
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     goto std_exit
 
 report_heading: rem --- Report Heading
@@ -415,7 +403,7 @@ report_heading: rem --- Report Heading
     page!.setBottomMargin(18)
 
     rem --- Header
-    tmp=fntext2(0,10,568,10,"PURCHASE ORDER",largefont!,center_justify,page!)
+    tmp=fntext2(0,10,568,10,"PURCHASE REQUISITION",largefont!,center_justify,page!)
     tmp=fnlogo(page!)
 
     rem --- Ship-To Address
@@ -437,9 +425,9 @@ report_heading: rem --- Report Heading
 
     tmp=fnline(490, 30,490,126,page!)
     tmp=fntext(496, 36,str(page),textfont!,page!)
-    tmp=fntext(496, 60,fndate$(poe02a.ord_date$),textfont!,page!)
-    tmp=fntext(496, 84,poe02a.vendor_id$,textfont!,page!)
-    tmp=fntext(496,108,poe02a.po_no$,textfont!,page!)
+    tmp=fntext(496, 60,fndate$(poe01a.ord_date$),textfont!,page!)
+    tmp=fntext(496, 84,poe01a.vendor_id$,textfont!,page!)
+    tmp=fntext(496,108,poe01a.req_no$,textfont!,page!)
 
     rem --- Vendor Address
     tmp=fnbox(20,126,550,96,page!)
@@ -470,18 +458,18 @@ report_heading: rem --- Report Heading
     tmp=fnline(195,222,195,246,page!)
     tmp=fnline(260,222,260,246,page!)
     tmp=fntext2(195,228,60,228,"Ship Via",boldfont!,right_justify,page!)
-    tmp=fntext(265,228,poe02a.ap_ship_via$,textfont!,page!)
+    tmp=fntext(265,228,poe01a.ap_ship_via$,textfont!,page!)
 
     tmp=fnline(384,222,384,246,page!)
     tmp=fnline(416,222,416,246,page!)
     tmp=fntext2(384,228,25,228,"FOB",boldfont!,right_justify,page!)
-    tmp=fntext(421,228,poe02a.fob$,textfont!,page!)
+    tmp=fntext(421,228,poe01a.fob$,textfont!,page!)
 
     rem --- Acknowledgement
     tmp=fnbox(20,246,550,24,page!)
     tmp=fnline(195,246,195,270,page!)
     tmp=fntext2(20,252,170,228,"Acknowledged By:",boldfont!,right_justify,page!)
-    tmp=fntext(200,252,poe02a.acknowledge$,textfont!,page!)
+    tmp=fntext(200,252,poe01a.acknowledge$,textfont!,page!)
 
     rem --- Ribbon
     tmp=fnbox(20,270,550,24,page!)
@@ -511,7 +499,7 @@ print_detail_line: rem --- Print Detail Line
     needed=2
     if pos(pom02a.line_type$="SN") needed=3
 
-    if cvs(poe12a.promise_date$+poe12a.not_b4_date$,2)<>"" needed=needed+1
+    if cvs(poe11a.promise_date$+poe11a.not_b4_date$,2)<>"" needed=needed+1
 
     if l+needed>l9-2 gosub print_continued
 
@@ -528,20 +516,20 @@ print_detail_line: rem --- Print Detail Line
         case std_line;   rem --- Print Standard Line
 
             dim b0$(22),b1$(60),r0$(28),r1$(32),r2$(20),x$(40)
-            ivm01a_key$=firm_id$+poe12a.item_id$
+            ivm01a_key$=firm_id$+poe11a.item_id$
             ivm01a.item_desc$=nf$
-            ivm05a_key$=apm01a.vendor_id$+poe12a.item_id$
+            ivm05a_key$=apm01a.vendor_id$+poe11a.item_id$
             find record (ivm01_dev,key=ivm01a_key$,dom=*next) ivm01a$
             rem *** if p3$(58,1)="Y" find record (ivm05a_dev,key=ivm05a_key$,dom=*next) ivm05a$
             if cvs(ivm05a.vendor_item$,2)<>"" needed=needed+1
             if l+needed>l9-2 gosub print_continued
 
-            tmp=fntext2(20,row,70,row,poe12a.internal_seq_no$,textfont!,center_justify,page!)
+            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
             tmp=fntext2(90,row,50,row,str(qty:m2$),textfont!,right_justify,page!)
-            tmp=fntext(145,row,poe12a.item_id$,textfont!,page!)
-            tmp=fntext(345,row,fndate$(poe12a.reqd_date$),textfont!,page!)
-            tmp=fntext2(390,row,75,row,str(w[1]:m3$),textfont!,right_justify,page!)
-            tmp=fntext2(470,row,20,row,poe12a.unit_measure$,textfont!,center_justify,page!)
+            tmp=fntext(145,row,poe11a.item_id$,textfont!,page!)
+            tmp=fntext(345,row,fndate$(poe11a.reqd_date$),textfont!,page!)
+            tmp=fntext2(390,row,75,row,str(poe11a.unit_cost:m3$),textfont!,right_justify,page!)
+            tmp=fntext2(470,row,20,row,poe11a.unit_measure$,textfont!,center_justify,page!)
             tmp=fntext2(490,row,75,row,str(extension:m1$),textfont!,right_justify,page!)
             l=l+1
 
@@ -555,36 +543,36 @@ print_detail_line: rem --- Print Detail Line
 
         case nonstock_line; rem --- Print Non-Stock Line
 
-            tmp=fntext2(20,row,70,row,poe12a.internal_seq_no$,textfont!,center_justify,page!)
+            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
             tmp=fntext2(90,row,50,row,str(qty:m2$),textfont!,right_justify,page!)
-            tmp=fntext(145,row,poe12a.ns_item_id$,textfont!,page!)
-            tmp=fntext(345,row,fndate$(poe12a.reqd_date$),textfont!,page!)
+            tmp=fntext(145,row,poe11a.ns_item_id$,textfont!,page!)
+            tmp=fntext(345,row,fndate$(poe11a.reqd_date$),textfont!,page!)
             tmp=fntext2(390,row,75,row,str(w[1]:m3$),textfont!,right_justify,page!)
-            tmp=fntext2(470,row,20,row,poe12a.unit_measure$,textfont!,center_justify,page!)
+            tmp=fntext2(470,row,20,row,poe11a.unit_measure$,textfont!,center_justify,page!)
             tmp=fntext2(490,row,75,row,str(extension:m1$),textfont!,right_justify,page!)
             l=l+1
 
-            gen_text$=poe12a.order_memo$
+            gen_text$=poe11a.order_memo$
             gosub text_only
             break
 
         case vend_part_num; rem --- Print Vendor Part Number, Message or Other Line
 
-            tmp=fntext2(20,row,70,row,poe12a.internal_seq_no$,textfont!,center_justify,page!)
-            tmp=fntext(145,row,"Your Item Number ",poe12a.order_memo$,textfont!,page!)
+            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
+            tmp=fntext(145,row,"Your Item Number ",poe11a.order_memo$,textfont!,page!)
             l=l+1
             break
         case message_line; rem --- Print Message Line
 
-            tmp=fntext2(20,row,70,row,poe12a.internal_seq_no$,textfont!,center_justify,page!)
-            tmp=fntext(145,row,poe12a.order_memo$,textfont!,page!)
+            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
+            tmp=fntext(145,row,poe11a.order_memo$,textfont!,page!)
             l=l+1
             break
 
         case other_line
 
-            tmp=fntext2(20,row,70,row,poe12a.internal_seq_no$,textfont!,center_justify,page!)
-            tmp=fntext(145,row,poe12a.order_memo$,textfont!,page!)
+            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
+            tmp=fntext(145,row,poe11a.order_memo$,textfont!,page!)
             tmp=fntext2(390,row,75,row,str(w[1]:m3$),textfont!,right_justify,page!)
             tmp=fntext2(490,row,75,row,str(extension:m1$),textfont!,right_justify,page!)
             l=l+1
@@ -600,9 +588,9 @@ date_promised: rem --- Date Promised or Not Before Date?
 
     while more
         if pos(pom02a.line_type$="VM") break
-        if cvs(poe12a.promise_date$,2)="" break else if cvs(poe12a.not_b4_date$,2)="" break
-        if cvs(poe12a.promise_date$,2)<>"" gen_text$=pad("Promised By "+fndate$(poe12a.promise_date$),22)
-        if cvs(poe12a.not_b4_date$,2)<>"" gen_text$=gen_text$+"Not Before "+fndate$(poe12a.not_b4_date$)
+        if cvs(poe11a.promise_date$,2)="" break else if cvs(poe11a.not_b4_date$,2)="" break
+        if cvs(poe11a.promise_date$,2)<>"" gen_text$=pad("Promised By "+fndate$(poe11a.promise_date$),22)
+        if cvs(poe11a.not_b4_date$,2)<>"" gen_text$=gen_text$+"Not Before "+fndate$(poe11a.not_b4_date$)
         gosub text_only
         break
     wend
@@ -644,6 +632,7 @@ print_total: rem --- Total
     endif
 
     first=0
+    total=0
 
     return
 
@@ -661,9 +650,9 @@ skip_lines: rem --- Skip lines
 
 vendor_break: rem --- Vendor Break
     dim apm01a_key$(8),apm01a$:fattr(apm01a$)
-    apm01a_key$(1)=poe02a.firm_id$+poe02a.vendor_id$
+    apm01a_key$(1)=poe01a.firm_id$+poe01a.vendor_id$
     apm01a.vendor_name$=nf$
-    t0$=poe02a.vendor_id$
+    t0$=poe01a.vendor_id$
     find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
     n$= apm01a.addr_line_1$ + apm01a.addr_line_2$ + apm01a.city$ + apm01a.state_code$ + apm01a.zip_code$
 
@@ -673,17 +662,17 @@ vendor_break: rem --- Vendor Break
 shipfrom_break: rem --- Ship-From Break
 
     dim apm05a_key$(10),apm05a$:fattr(apm05a$),s$(140)
-    apm05a_key$=poe02a.firm_id$ + poe02a.vendor_id$ + poe02a.purch_addr$
-    t1$=poe02a.vendor_id$+poe02a.purch_addr$
+    apm05a_key$=poe01a.firm_id$ + poe01a.vendor_id$ + poe01a.purch_addr$
+    t1$=poe01a.vendor_id$+poe01a.purch_addr$
     shipfrom$="SAME"
-    if cvs(poe02a.purch_addr$,2)="" return
+    if cvs(poe01a.purch_addr$,2)="" return
     apm05a.name$=nf$
     find record (apm05a_dev,key=apm05a_key$,dom=*next) apm05a$
 
 rem --- 
 
     s$= apm05a.addr_line_1$ + apm05a.addr_line_2$ + apm05a.city$ + apm05a.state_code$ + apm05a.zip_code$
-    shipfrom$=poe02a.purch_addr$+" "+apm05a.name$
+    shipfrom$=poe01a.purch_addr$+" "+apm05a.name$
     call pgmdir$+"adc_address.aon",s$,24,3,9,35
 
     return
@@ -691,19 +680,19 @@ rem ---
 terms_break: rem --- Terms Break
 
     dim z0$(32)
-    apm10c_key$=firm_id$+"C"+poe02a.ap_terms_code$+nf$
-    t2$=poe02a.ap_terms_code$
+    apm10c_key$=firm_id$+"C"+poe01a.ap_terms_code$+nf$
+    t2$=poe01a.ap_terms_code$
     find record (apm10c_dev,key=apm10c_key$(1,5),dom=*next) apm10c$
     return
 
 shipto_break: rem --- Ship-To Break
 
     dim ivm10c$:fattr(ivm10c$)
-    ivm10c.firm_id$=firm_id$,ivm10c.record_id_c$="C",ivm10c.warehouse_id$=poe12a.warehouse_id$,ivm10c.short_name$=nf$
-    t3$=poe12a.warehouse_id$
-    if cvs(poe12a.warehouse_id$,2)="" 
-        ivm10c.warehouse_id$=poe02a.warehouse_id$
-        t3$=poe02a.warehouse_id$; rem ESCAPE
+    ivm10c.firm_id$=firm_id$,ivm10c.record_id_c$="C",ivm10c.warehouse_id$=poe11a.warehouse_id$,ivm10c.short_name$=nf$
+    t3$=poe11a.warehouse_id$
+    if cvs(poe11a.warehouse_id$,2)="" 
+        ivm10c.warehouse_id$=poe01a.warehouse_id$
+        t3$=poe01a.warehouse_id$; rem ESCAPE
     endif
     ivm10c_key$=firm_id$+"C"+ivm10c.warehouse_id$
     find record (ivm10c_dev,key=ivm10c_key$,dom=*next) ivm10c$
@@ -716,25 +705,25 @@ shipto_break: rem --- Ship-To Break
 line_code_break: rem --- Line Code Break
 
     dim y0$(4),y1$(32)
-    pom02a_key$=firm_id$+poe12a.po_line_code$
-    t4$=poe12a.po_line_code$
+    pom02a_key$=firm_id$+poe11a.po_line_code$
+    t4$=poe11a.po_line_code$
     find record (pom02_dev,key=pom02a_key$,dom=*next) pom02a$
     return
 
 calc_ext: rem " --- Calculate Extension"
 
-    let qty=poe12a.qty_ordered
-    if type$="P" qty=poe12a.qty_ordered-poe12a.qty_received
+    let qty=poe11a.req_qty
+    if type$="P" qty=poe11a.qty_ordered-poe11a.qty_received
     if pom02a.line_type$="O" qty=1
     precision 2
-    let extension=poe12a.unit_cost*qty
+    let extension=poe11a.unit_cost*qty
     precision num(ivs01a.precision$)
     return
 
 print_tot: rem --- Print total
 
        msg$=defaultmsg$
-       if cvs(poe02a.po_msg_code$,2) <> "" msg$ = poe02a.po_msg_code$
+       if cvs(poe01a.po_msg_code$,2) <> "" msg$ = poe01a.po_msg_code$
        nomsg_flg=1
 
        if cvs(msg$,2)<>""
@@ -789,6 +778,12 @@ nomsg: rem --- No message
 get_row: rem " --- Return Current Row"
     row=286+l*12
     return
+    
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+    
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -958,6 +953,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
