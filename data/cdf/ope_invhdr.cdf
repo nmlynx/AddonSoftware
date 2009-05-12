@@ -1,3 +1,28 @@
+[[OPE_INVHDR.BOVE]]
+rem --- Restrict lookup to orders
+
+	alias_id$ = "OPE_INVHDR"
+	inq_mode$ = "EXM_ITEM"
+	key_pfx$  = firm_id$
+	key_id$   = "PRIMARY"
+
+	dim filter_defs$[1,1]
+	filter_defs$[1,0] = "OPE_INVHDR.ORDINV_FLAG"
+	filter_defs$[1,1] = "='I'"
+
+	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:		gui_dev,
+:		Form!,
+:		alias_id$,
+:		inq_mode$,
+:		table_chans$[all],
+:		key_pfx$,
+:		key_id$,
+:		selected_key$,
+:		filter_defs$[all],
+:		search_defs$[all]
+
+	if selected_key$<>"" then callpoint!.setStatus("RECORD:[" + selected_key$ +"]")
 [[OPE_INVHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 
@@ -87,7 +112,7 @@ rem --- Set default values
 
 	else
 
-rem --- New record
+rem --- New record, set default
 
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE", "S")
 
@@ -144,6 +169,13 @@ rem --- Enable/Disable buttons
 	endif
 
 	callpoint!.setStatus("REFRESH")
+
+rem --- Has this order been printed?
+
+	gosub check_print_flag
+	if locked then
+		callpoint!.setStatus("ABORT")
+	endif
 [[OPE_INVHDR.CUSTOMER_ID.AVAL]]
 rem --- Show customer data
 
@@ -441,7 +473,7 @@ return
 
 rem ==========================================================================
 check_print_flag: rem --- Check print flag
-                  rem     OUT: locked - 1/0
+                  rem     OUT: locked = 1/0
                   rem          printed$ = Y/N
 rem ==========================================================================
 
@@ -455,8 +487,9 @@ rem ==========================================================================
 		 
 	if ordinv_flag$ = "O" then 
 		if print_status$ <> "Y" then 
-			rem call "syc_yn.bbx",0,"Order pick list not printed completely - Do you wish to continue?  (yes/no)",4,v$,v3
-			rem if v$="N" then 
+			msg_id$ = "OP_PICKLIST_NOT_DONE"
+			gosub disp_message
+			if msg_opt$ = "N" then
 				gosub unlock_order
 				locked=1
 			endif
@@ -464,9 +497,9 @@ rem ==========================================================================
 	else
 		if ordinv_flag$ = "I" then 
 			if print_status$ <> "N" then 
-				rem msgtype=2, msg0$="Continuing will require a reprint of this invoice (<enter>=continue)"
-				rem gosub message
-				rem if v3=4 then 
+				msg_id$ = "OP_REPRINT_INVOICE"
+				gosub disp_message
+				if msg_opt$ = "N" then 
 					gosub unlock_order
 					locked=1
 				else
