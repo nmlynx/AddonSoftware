@@ -1,3 +1,28 @@
+[[OPE_ORDHDR.BOVE]]
+rem --- Restrict lookup to orders
+
+	alias_id$ = "OPE_ORDHDR"
+	inq_mode$ = "EXM_ITEM"
+	key_pfx$  = firm_id$
+	key_id$   = "PRIMARY"
+
+	dim filter_defs$[1,1]
+	filter_defs$[1,0] = "OPE_ORDHDR.ORDINV_FLAG"
+	filter_defs$[1,1] = "='O'"
+
+	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:		gui_dev,
+:		Form!,
+:		alias_id$,
+:		inq_mode$,
+:		table_chans$[all],
+:		key_pfx$,
+:		key_id$,
+:		selected_key$,
+:		filter_defs$[all],
+:		search_defs$[all]
+
+	if selected_key$<>"" then callpoint!.setStatus("RECORD:[" + selected_key$ +"]")
 [[OPE_ORDHDR.AOPT-RPRT]]
 rem --- Check for printing in next batch and set
 
