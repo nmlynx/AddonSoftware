@@ -1420,7 +1420,7 @@ reformat_address:
 
     new_rec.addr_line_1$=address$(1,24)
     new_rec.addr_line_2$=address$(25,24)
-    if pos("addr_line_3"=fattr(new_rec$))<>0 then new_rec.addr_line_3$=address$(49,24)
+    if pos("ADDR_LINE_3"=fattr(new_rec$))<>0 then new_rec.addr_line_3$=address$(49,24)
     if addr_lines=5 then
        new_rec.addr_line_4$=address$(73,24)
     endif
