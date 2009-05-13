@@ -24,7 +24,7 @@ rem " --- Load PO Rec"
 		poe12a.po_no$=po_no$
 		write record (poe12_dev) poe12a$
 	wend
-	callpoint!.setStatus("RECORD:"+firm_id$+po_no$)
+	callpoint!.setStatus("RECORD:["+firm_id$+po_no$+"]")
 	
 [[POE_POHDR.ARNF]]
 rem -- set default values
