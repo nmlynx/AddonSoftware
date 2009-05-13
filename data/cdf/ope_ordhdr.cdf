@@ -1019,7 +1019,7 @@ rem --- copy detail lines
 				writerecord(ope11_dev)ope11a$
 			wend
 
-			callpoint!.setStatus("RECORD:"+firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$)
+			callpoint!.setStatus("RECORD:["+firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+"]")
 
 		endif
 
