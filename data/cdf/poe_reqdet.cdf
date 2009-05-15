@@ -1,51 +1,106 @@
+[[POE_REQDET.BDGX]]
+rem -- loop thru gridVect; if there are any lines not marked deleted, set the callpoint!.setDevObject("dtl_posted") to Y
+
+dtl!=gridVect!.getItem(0)
+callpoint!.setDevObject("dtl_posted","")
+if dtl!.size()
+	for x=0 to dtl!.size()-1
+		if callpoint!.getGridRowDeleteStatus(x)<>"Y" then callpoint!.setDevObject("dtl_posted","Y")
+	next x
+endif
+[[POE_REQDET.ADGE]]
+rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
+rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
+
+order_lines!=callpoint!.getDevObject("so_lines_list")
+ldat$=callpoint!.getDevObject("so_ldat")
+
+if ldat$<>""
+	callpoint!.setColumnEnabled(-1,"POE_REQDET.SO_INT_SEQ_REF",1)
+	callpoint!.setTableColumnAttribute("POE_REQDET.SO_INT_SEQ_REF","LDAT",ldat$)
+	g!=callpoint!.getDevObject("dtl_grid")
+	c!=g!.getColumnListControl(num(callpoint!.getDevObject("so_seq_ref_col")))
+	c!.removeAllItems()
+	c!.insertItems(0,order_lines!)
+	g!.setColumnListControl(num(callpoint!.getDevObject("so_seq_ref_col")),c!)	
+else
+	callpoint!.setColumnEnabled(-1,"POE_REQDET.SO_INT_SEQ_REF",0)
+endif 
+[[POE_REQDET.AUDE]]
+gosub update_header_tots
+[[POE_REQDET.ADEL]]
+gosub update_header_tots
+[[POE_REQDET.AREC]]
+callpoint!.setDevObject("qty_this_row",0)
+callpoint!.setDevObject("cost_this_row",0)
+[[POE_REQDET.UNIT_COST.AVAL]]
+gosub update_header_tots
+callpoint!.setDevObject("cost_this_row",num(callpoint!.getUserInput()))
+[[POE_REQDET.AGRN]]
+rem --- save current qty/price this row
+
+callpoint!.setDevObject("qty_this_row",callpoint!.getColumnData("POE_REQDET.REQ_QTY"))
+callpoint!.setDevObject("cost_this_row",callpoint!.getColumnData("POE_REQDET.UNIT_COST"))
+
+rem print "AGRN "
+rem print "qty this row: ",callpoint!.getDevObject("qty_this_row")
+rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
 [[POE_REQDET.AGRE]]
-rem --- check data to see if o.k. to leave row
-rem --- qty? / item/whse? / so line?
+rem --- check data to see if o.k. to leave row (only if the row isn't marked as deleted)
 
-ok_to_write$="Y"
+rem print "col data: ",callpoint!.getColumnData("POE_REQDET.REQ_QTY")
+rem print "undo data: ",callpoint!.getColumnUndoData("POE_REQDET.REQ_QTY")
+rem print "disk data: ",callpoint!.getColumnDiskData("POE_REQDET.REQ_QTY")
 
-if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="" or 
-:	cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" then ok_to_write$="N"
+if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 
-if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="SD")<>0 
-	if cvs(callpoint!.getColumnData("POE_REQDET.ITEM_ID"),3)="" or
-:	num(callpoint!.getColumnData("POE_REQDET.CONV_FACTOR"))<=0 or
-:	num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
-:	num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
-:	cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 
-		ok_to_write$="N"
+	ok_to_write$="Y"
+
+	if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="" or 
+:		cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" then ok_to_write$="N"
+
+	if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="SD")<>0 
+		if cvs(callpoint!.getColumnData("POE_REQDET.ITEM_ID"),3)="" or
+:		num(callpoint!.getColumnData("POE_REQDET.CONV_FACTOR"))<=0 or
+:		num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
+:		num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
+:		cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 
+			ok_to_write$="N"
+		endif
 	endif
-endif
 
-if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="N" 
-	if cvs(callpoint!.getColumnData("POE_REQDET.NS_ITEM_ID"),3)="" or
-:	num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
-:	num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
-:	cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
-		ok_to_write$="N"
+	if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="N" 
+		if cvs(callpoint!.getColumnData("POE_REQDET.NS_ITEM_ID"),3)="" or
+:		num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
+:		num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
+:		cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
+			ok_to_write$="N"
+		endif
 	endif
-endif
 
-if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="O" 
-	if num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
-:	cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
-		ok_to_write$="N"
+	if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="O" 
+		if num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
+:		cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
+			ok_to_write$="N"
+		endif
 	endif
-endif
 
-if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="MNOV")<>0 then
-:	if cvs(callpoint!.getColumnData("POE_REQDET.ORDER_MEMO"),3)="" then ok_to_write$="N"
+	if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="MNOV")<>0 then
+:		if cvs(callpoint!.getColumnData("POE_REQDET.ORDER_MEMO"),3)="" then ok_to_write$="N"
 
-if callpoint!.getHeaderColumnData("POE_REQHDR.DROPSHIP")="Y" and callpoint!.getDevObject("OP_installed")="Y"
-	if cvs(callpoint!.getColumnData("POE_REQDET.SO_INT_SEQ_REF"),3)="" then ok_to_write$="N"
-endif
+	if callpoint!.getHeaderColumnData("POE_REQHDR.DROPSHIP")="Y" and callpoint!.getDevObject("OP_installed")="Y"
+		if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="DSNO")<>0
+			if cvs(callpoint!.getColumnData("POE_REQDET.SO_INT_SEQ_REF"),3)="" then ok_to_write$="N"
+		endif
+	endif
 
-if ok_to_write$<>"Y"
-	msg_id$="PO_REQD_DET"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
+	if ok_to_write$<>"Y"
+		msg_id$="PO_REQD_DET"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+
 endif
- 
 [[POE_REQDET.ITEM_ID.AINV]]
 rem --- remember row/column we're on so we can force focus when we return from synonym lookup
 
@@ -100,18 +155,20 @@ endif
 use ::ado_util.src::util
 
 rem --- set default line code based on param file
-rem --- this is throwing an error, so setting actual columndata instead...callpoint!.setTableColumnAttribute("POE_REQDET.PO_LINE_CODE","DFLT",str(callpoint!.getDevObject("dflt_po_line_code")))
+callpoint!.setTableColumnAttribute("POE_REQDET.PO_LINE_CODE","DFLT",str(callpoint!.getDevObject("dflt_po_line_code")))
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
+rem print 'show',;rem debug
 rem print callpoint!.getUserInput();rem debug
 rem print callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE");rem debug
+rem print callpoint!.getColumnUndoData("POE_REQDET.PO_LINE_CODE");rem debug
 rem print "validation row:", callpoint!.getValidationRow()
 rem print "new status:",callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))
 rem print "modify status:",callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))
 
 gosub update_line_type_info
 
-         if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) then
+if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) then
 
 		callpoint!.setColumnData("POE_REQDET.CONV_FACTOR","")
 		callpoint!.setColumnData("POE_REQDET.FORECAST","")
@@ -133,8 +190,7 @@ gosub update_line_type_info
 		callpoint!.setColumnData("POE_REQDET.WO_NO","")
 		callpoint!.setColumnData("POE_REQDET.WO_SEQ_REF","")
 
-
- 	endif
+endif
 [[POE_REQDET.REQ_QTY.AVAL]]
 rem --- call poc.ua to retrieve unit cost from ivm-05, at least that's what v6 did here
 rem --- send in: R/W for retrieve or write
@@ -156,27 +212,24 @@ call stbl("+DIR_PGM")+"poc_itemvend.aon","R","R",vendor_id$,ord_date$,item_id$,c
 
 callpoint!.setColumnData("POE_REQDET.UNIT_COST",str(unit_cost))
 
-[[POE_REQDET.AREC]]
-rem -- was trying to set the default line code to "S" in here, but it caused problems... grid row confusion, and no aval firing if you just tab out of the
-rem --	default on 2nd/subsequent rows... turns out cleaner to just let it default to (none) and have user select each time.  
-
-rem -- set default line code
-
-rem callpoint!.setColumnData("POE_REQDET.PO_LINE_CODE",str(callpoint!.getDevObject("dflt_po_line_code")))
-rem gosub update_line_type_info
-
-rem --- throws barista error because it does setTableColumnAttribute...util.forceFocus(callpoint!,"PO_LINE_CODE")
-rem util.forceEdit(Form!,num(callpoint!.getValidationRow()),0)
-rem callpoint!.setStatus("REFRESH")
+gosub update_header_tots
+callpoint!.setDevObject("qty_this_row",num(callpoint!.getUserInput()))
+callpoint!.setDevObject("cost_this_row",unit_cost);rem setting both qty and cost because cost may have changed based on qty break
 [[POE_REQDET.WAREHOUSE_ID.AVAL]]
 rem --- Warehouse ID - After Validataion
 	gosub validate_whse_item
 [[POE_REQDET.AGDR]]
 rem --- After Grid Display Row
-	po_line_code$=callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE")
-	if cvs(po_line_code$,2)<>"" then  
-	    gosub update_line_type_info
-	endif
+
+po_line_code$=callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE")
+if cvs(po_line_code$,2)<>"" then  
+    gosub update_line_type_info
+endif
+
+
+total_amt=num(callpoint!.getDevObject("total_amt"))
+total_amt=total_amt+round(num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))*num(callpoint!.getColumnData("POE_REQDET.UNIT_COST")),2)
+callpoint!.setDevObject("total_amt",str(total_amt))
 [[POE_REQDET.ITEM_ID.AVAL]]
 	
 gosub validate_whse_item
@@ -246,5 +299,57 @@ missing_warehouse:
 	msg_tokens$[1]=whse$
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
+
+return
+
+update_header_tots:
+
+if pos(".AVAL"=callpoint!.getCallpointEvent())
+	if callpoint!.getVariableName()="POE_REQDET.REQ_QTY"
+		new_qty=num(callpoint!.getUserInput())
+		new_cost=num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))
+	else
+		new_qty=num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))
+		new_cost=num(callpoint!.getUserInput())
+	endif
+	gosub calculate_header_tots
+endif
+
+if pos(".ADEL"=callpoint!.getCallpointEvent())
+	new_qty=0
+	new_cost=0
+	gosub calculate_header_tots
+	callpoint!.setDevObject("qty_this_row",0)
+	callpoint!.setDevObject("cost_this_row",0)
+endif
+
+if pos(".AUDE"=callpoint!.getCallpointEvent())
+	new_cost=num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))
+	new_qty=num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))
+	callpoint!.setDevObject("qty_this_row",0)
+	callpoint!.setDevObject("cost_this_row",0)
+	gosub calculate_header_tots
+	callpoint!.setDevObject("qty_this_row",new_cost)
+	callpoint!.setDevObject("cost_this_row",new_qty)
+endif
+
+return
+
+calculate_header_tots:
+
+total_amt=num(callpoint!.getDevObject("total_amt"))
+old_price=round(num(callpoint!.getDevObject("qty_this_row"))*num(callpoint!.getDevObject("cost_this_row")),2) 
+new_price=round(new_qty*new_cost,2)
+new_total=total_amt-old_price+new_price
+callpoint!.setDevObject("total_amt",new_total)
+tamt!=callpoint!.getDevObject("tamt")
+tamt!.setValue(new_total)
+callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOTAL",str(new_total))
+
+rem print "amts:"
+rem print "total_amt: ",total_amt
+rem print "old_price: ",old_price
+rem print "new_price: ",new_price
+rem print "new_total: ",new_total
 
 return
