@@ -143,7 +143,7 @@ rem --- Edit the item just copied
 	new_item_id$ = str(callpoint!.getDevObject("new_item_id"))
 
 	if new_item_id$ <> "" then
-		callpoint!.setStatus("RECORD:"+firm_id$+pad(new_item_id$, 2))
+		callpoint!.setStatus("RECORD:["+firm_id$+new_item_id$+"]")
 	endif
 [[IVM_ITEMMAST.AOPT-HCPY]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
