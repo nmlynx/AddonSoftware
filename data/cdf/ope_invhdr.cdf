@@ -1,3 +1,17 @@
+[[OPE_INVHDR.SHIPTO_TYPE.BINP]]
+rem --- Do we need to create a new order number?
+
+	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)=""
+		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",seq_id$,table_chans$[all]
+		
+		if len(seq_id$)=0 
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		else
+			callpoint!.setColumnData("OPE_INVHDR.ORDER_NO",seq_id$)
+			callpoint!.setStatus("REFRESH")
+		endif
+	endif
 [[OPE_INVHDR.BOVE]]
 rem --- Restrict lookup to orders
 
