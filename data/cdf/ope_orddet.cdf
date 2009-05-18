@@ -6,10 +6,6 @@ rem --- Set detail defaults and disabled columns
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.LINE_CODE","DFLT", user_tpl$.line_code$)
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID","DFLT", user_tpl.warehouse_id$)
 
-	rem debug
-	print "line default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.LINE_CODE", "DFLT")
-	print "whse default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID", "DFLT")
-
 	if user_tpl.skip_ln_code$ = "Y" then
 		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.LINE_CODE", 0)
 		line_code$ = user_tpl$.line_code$
@@ -90,10 +86,6 @@ rem --- Disable skipped columns
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
-
-	rem debug
-	print "line default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.LINE_CODE", "DFLT")
-	print "whse default: ", callpoint!.getTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID", "DFLT")
 [[OPE_ORDDET.BDEL]]
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
@@ -407,9 +399,6 @@ rem --- Disable skipped columns
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
-
-	print "Cost in array: ", callpoint!.getColumnData("OPE_ORDDET.UNIT_COST"); rem debug
-	print "Cost on disk : ", callpoint!.getColumnDiskData("OPE_ORDDET.UNIT_COST"); rem debug
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 rem --- recalc quantities and extended price
 
