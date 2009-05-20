@@ -1,3 +1,15 @@
+[[OPE_ORDDET.ARAR]]
+print "Det:ARAR"; rem debug
+[[OPE_ORDDET.AGDS]]
+print "Det:AGDS"; rem debug
+[[OPE_ORDDET.ADGE]]
+print "Det:ADGE"; rem debug
+[[OPE_ORDDET.BDGX]]
+print "Det:BDGX"; rem debug
+[[OPE_ORDDET.BGDR]]
+print "Det:BGDR"; rem debug
+[[OPE_ORDDET.BGDS]]
+print "Det:BGDS"; rem debug
 [[OPE_ORDDET.AGCL]]
 print "Det:AGCL"; rem debug
 
@@ -73,6 +85,8 @@ rem --- return focus to where we were (Detail line grid)
 		endif
 	endif
 [[OPE_ORDDET.BUDE]]
+print "Det:BUDE"; rem debug
+
 rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 
 	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y"
@@ -87,6 +101,8 @@ rem --- Disable skipped columns
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
 [[OPE_ORDDET.BDEL]]
+print "Det:BDEL"; rem debug
+
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
 	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y"
@@ -202,6 +218,11 @@ rem --- Commit quantity for current item and warehouse
 
 	endif
 
+rem --- Update header
+
+	gosub calc_grid_tots
+	gosub disp_totals
+
 agre_end:
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
@@ -256,11 +277,15 @@ rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
 [[OPE_ORDDET.AUDE]]
+print "Det:AUDE"; rem debug
+
 rem --- redisplay totals
 
 	gosub calc_grid_tots
 	gosub disp_totals
 [[OPE_ORDDET.ADEL]]
+print "Det:ADEL"; rem debug
+
 rem --- redisplay totals
 
 	gosub calc_grid_tots
