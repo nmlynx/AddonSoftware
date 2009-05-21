@@ -3,6 +3,7 @@ rem -- loop thru gridVect; if there are any lines not marked deleted, set the ca
 
 dtl!=gridVect!.getItem(0)
 callpoint!.setDevObject("dtl_posted","")
+
 if dtl!.size()
 	for x=0 to dtl!.size()-1
 		if callpoint!.getGridRowDeleteStatus(x)<>"Y" then callpoint!.setDevObject("dtl_posted","Y")
@@ -33,6 +34,8 @@ gosub update_header_tots
 [[POE_REQDET.AREC]]
 callpoint!.setDevObject("qty_this_row",0)
 callpoint!.setDevObject("cost_this_row",0)
+
+rem print "AREC line_no: ",callpoint!.getColumnData("POE_REQDET.PO_LINE_NO")
 [[POE_REQDET.UNIT_COST.AVAL]]
 gosub update_header_tots
 callpoint!.setDevObject("cost_this_row",num(callpoint!.getUserInput()))
@@ -45,6 +48,8 @@ callpoint!.setDevObject("cost_this_row",callpoint!.getColumnData("POE_REQDET.UNI
 rem print "AGRN "
 rem print "qty this row: ",callpoint!.getDevObject("qty_this_row")
 rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
+
+rem print "AGRN line_no: ",callpoint!.getColumnData("POE_REQDET.PO_LINE_NO")
 [[POE_REQDET.AGRE]]
 rem --- check data to see if o.k. to leave row (only if the row isn't marked as deleted)
 
@@ -100,6 +105,35 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 		callpoint!.setStatus("ABORT")
 	endif
 
+	rem -- now loop thru entire gridVect to make sure SO line reference, if used, isn't used >1 time
+
+	dtl!=gridVect!.getItem(0)
+	so_lines_referenced$=""
+	dup_so_lines$=""
+
+	if dtl!.size()
+		dim rec$:dtlg_param$[1,3]
+		for x=0 to dtl!.size()-1
+			if callpoint!.getGridRowDeleteStatus(x)<>"Y"
+				rec$=dtl!.getItem(x)
+				if cvs(rec.so_int_seq_ref$,3)<>""
+					if pos(rec.so_int_seq_ref$+"^"=so_lines_referenced$)<>0 
+						dup_so_lines$="Y"
+					else
+						so_lines_referenced$=so_lines_referenced$+rec.so_int_seq_ref$+"^"
+					endif
+				endif
+			endif
+		next x
+	endif
+
+	if dup_so_lines$="Y"
+		msg_id$="PO_DUP_SO_LINE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+
+
 endif
 [[POE_REQDET.ITEM_ID.AINV]]
 rem --- remember row/column we're on so we can force focus when we return from synonym lookup
@@ -152,6 +186,8 @@ else
 endif
 
 [[POE_REQDET.AGCL]]
+print 'show';rem debug
+
 use ::ado_util.src::util
 
 rem --- set default line code based on param file

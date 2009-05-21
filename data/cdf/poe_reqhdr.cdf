@@ -344,9 +344,15 @@ if callpoint!.getDevObject("dtl_posted")="Y"
 		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)		
 	endif
 else
+	if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")="Y"
 		callpoint!.setColumnEnabled("POE_REQHDR.DROPSHIP",1)
 		callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",1)
 		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",1)
+	else
+		callpoint!.setColumnEnabled("POE_REQHDR.DROPSHIP",1)
+		callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",0)
+		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)
+	endif
 endif
 
 callpoint!.setStatus("REFRESH")
