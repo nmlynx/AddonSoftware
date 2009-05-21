@@ -1,8 +1,15 @@
+[[OPE_ORDHDR.AOPT-CRCH]]
+rem --- Credit check?
+
+	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+
+	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+	endif
 [[OPE_ORDHDR.BPRK]]
 print "Hdr:BPRK"; rem debug
-break; rem --- DIABLED --- debug
 
-rem --- Is previous record an order?
+rem --- Is previous record an order and not void?
 
 	file_name$ = "OPE_ORDHDR"
 	ope01_dev = fnget_dev(file_name$)
@@ -11,19 +18,30 @@ rem --- Is previous record an order?
 
 	while 1
 		if start_block then
-			p_key$ = keyp(ope01_dev,end=*endif)
+			this_key$ = key(ope01_dev); rem debug
+			print "--- key: ", this_key$; rem debug
+			p_key$ = keyp(ope01_dev, end=*endif)
+			print "---keyp: ", p_key$; rem debug
+			read (ope01_dev, key=p_key$, dir=0)
+			p_key$ = keyp(ope01_dev, end=*endif)
+			print "---keyp: ", p_key$; rem debug
 			read record (ope01_dev, key=p_key$, dir=0) ope01a$
 
-			if ope01a.ordinv_flag$ = "O" then
-				break
-			else
-				continue
+			if ope01a.firm_id$ = firm_id$ then 
+				if ope01a.ordinv_flag$ = "O" and ope01a.invoice_type$ <> "V" then
+					read record (ope01_dev, key=p_key$); rem added by Sam V
+					print "---good!"; rem debug
+					break
+				else
+					print "---bad!"; rem debug
+					continue
+				endif
 			endif
 		endif
 
-		rem --- If EOF, rewind to last record
-		l_key$ = keyl(ope01_dev, end=*break)
-		read (ope01_dev, key=l_key$, dir=0)
+		rem --- If EOF or past firm, rewind to last record in this firm
+		read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
+		print "---rewind!"; rem debug
 	wend
 [[OPE_ORDHDR.BPRI]]
 print "Hdr:BPRI"; rem debug
@@ -53,6 +71,36 @@ print "Hdr:BREA"; rem debug
 print "Hdr:BNEX"; rem debug
 [[OPE_ORDHDR.BNEK]]
 print "Hdr:BNEK"; rem debug
+
+rem --- Is next record an order and not void?
+
+	file_name$ = "OPE_ORDHDR"
+	ope01_dev = fnget_dev(file_name$)
+	dim ope01a$:fnget_tpl$(file_name$)
+	start_block = 1
+
+	while 1
+		if start_block then
+			this_key$ = key(ope01_dev, end=*endif)
+			print "---key: ", this_key$; rem debug
+			read record (ope01_dev, key=this_key$, dir=0) ope01a$
+
+			if ope01a.firm_id$ = firm_id$ then
+				if ope01a.ordinv_flag$ = "O" and ope01a.invoice_type$ <> "V" then
+					print "---good!"; rem debug
+					break
+				else
+					print "---bad!"; rem debug
+					read (ope01_dev)
+					continue
+				endif
+			endif
+		endif
+
+		rem --- If EOF or wrong firm, rewind to first record of the firm
+		print "---rewind!"; rem debug
+		read (ope01_dev, key=firm_id$, dom=*next)
+	wend
 [[OPE_ORDHDR.BFMC]]
 print "Hdr:BFMC"; rem debug
 [[OPE_ORDHDR.BTBL]]
@@ -73,36 +121,14 @@ rem --- Set flag
 	user_tpl.user_entry$ = "N"; rem user entered an order (not navagated)
 [[OPE_ORDHDR.AREC]]
 print "Hdr:AREC"; rem debug
-
-rem debug
-print "Cust#: ", callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-print " Ord#: ", callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-print "Not Found!"
-print "Record entered? """, user_tpl.user_entry$, """"
-rem debug
 [[OPE_ORDHDR.ARNF]]
 print "Hdr:ARNF"; rem debug
-
 [[OPE_ORDHDR.AREA]]
 print "Hdr:AREA"; rem debug
-
-rem debug
-print "Cust#: ", rec_data.CUSTOMER_ID$
-print " Ord#: ", rec_data.ORDER_NO$
-print "Record Read!"
-print "Record entered? """, user_tpl.user_entry$, """"
-rem debug
 [[OPE_ORDHDR.ARAR]]
 print "Hdr:ARAR"; rem debug
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
-
-rem debug
-print "Cust#: ", callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-print " Ord#: ", callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-print "Displaying Record!"
-print "Record entered? """, user_tpl.user_entry$, """"
-rem debug
 
 rem --- Show customer data
 
@@ -134,10 +160,18 @@ rem --- Restrict lookup to orders
 	inq_mode$ = "EXM_ITEM"
 	key_pfx$  = firm_id$
 	key_id$   = "PRIMARY"
+	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 
-	dim filter_defs$[1,1]
+	dim filter_defs$[3,1]
 	filter_defs$[1,0] = "OPE_ORDHDR.ORDINV_FLAG"
 	filter_defs$[1,1] = "='O'"
+	filter_defs$[2,0] = "OPE_ORDHDR.INVOICE_NO"
+	filter_defs$[2,1] = "<>'V'"
+
+	if cvs(cust_id$, 2) <> "" then
+		filter_defs$[3,0] = "OPE_ORDHDR.CUSTOMER_ID"
+		filter_defs$[3,1] = "='" + cust_id$ + "'"
+	endif
 
 	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :		gui_dev,
@@ -547,6 +581,7 @@ rem --- Enable/Disable buttons
 
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
+	callpoint!.setOptionEnabled("CRCH",0)
 
 	if new_seq$ = "N" then 
 		if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
@@ -767,11 +802,12 @@ rem --- Credit check?
 		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
 	endif
 
-rem --- Enable Duplicate buttons
+rem --- Enable buttons
 
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
+		callpoint!.setOptionEnabled("CRCH",1)
 	endif
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
@@ -1581,3 +1617,4 @@ rem --- Set Lot/Serial button up properly
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
+	callpoint!.setOptionEnabled("CRCH",0)

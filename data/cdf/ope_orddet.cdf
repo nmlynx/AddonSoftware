@@ -1,15 +1,15 @@
 [[OPE_ORDDET.ARAR]]
-print "Det:ARAR"; rem debug
+rem print "Det:ARAR"; rem debug
 [[OPE_ORDDET.AGDS]]
-print "Det:AGDS"; rem debug
+rem print "Det:AGDS"; rem debug
 [[OPE_ORDDET.ADGE]]
-print "Det:ADGE"; rem debug
+rem print "Det:ADGE"; rem debug
 [[OPE_ORDDET.BDGX]]
-print "Det:BDGX"; rem debug
+rem print "Det:BDGX"; rem debug
 [[OPE_ORDDET.BGDR]]
-print "Det:BGDR"; rem debug
+rem print "Det:BGDR"; rem debug
 [[OPE_ORDDET.BGDS]]
-print "Det:BGDS"; rem debug
+rem print "Det:BGDS"; rem debug
 [[OPE_ORDDET.AGCL]]
 print "Det:AGCL"; rem debug
 
@@ -94,7 +94,7 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.AREC]]
-print "Det:AREC"; rem debug
+rem print "Det:AREC"; rem debug
 
 rem --- Disable skipped columns
 
@@ -115,7 +115,7 @@ rem --- update header
 	gosub calc_grid_tots
 	gosub disp_totals
 [[OPE_ORDDET.AGRN]]
-print "Det:AGRN"; rem debug
+rem print "Det:AGRN"; rem debug
 
 rem --- Set Lot/Serial button up properly
 
@@ -131,7 +131,7 @@ rem --- Set Lot/Serial button up properly
 		endif
 	endif
 [[OPE_ORDDET.AGRE]]
-print "Det:AGRE"; rem debug
+rem print "Det:AGRE"; rem debug
 
 rem --- Commit inventory: Inits
 
@@ -418,7 +418,7 @@ rem ---display extended price
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_ORDDET.AGDR]]
-print "Det:AGDR"; rem debug
+rem print "Det:AGDR"; rem debug
 
 rem --- Disable skipped columns
 
@@ -830,6 +830,7 @@ rem ==========================================================================
 		if start_block then
 			read record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
 			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+			print "---Line Code set: ", opc_linecode.line_type$; rem debug
 		endif
 	endif
 
