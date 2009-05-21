@@ -186,7 +186,7 @@ else
 endif
 
 [[POE_REQDET.AGCL]]
-print 'show';rem debug
+rem print 'show';rem debug
 
 use ::ado_util.src::util
 
