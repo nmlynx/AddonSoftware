@@ -9,6 +9,7 @@ if dtl!.size()
 		if callpoint!.getGridRowDeleteStatus(x)<>"Y" then callpoint!.setDevObject("dtl_posted","Y")
 	next x
 endif
+
 [[POE_REQDET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
@@ -194,17 +195,17 @@ rem --- set default line code based on param file
 callpoint!.setTableColumnAttribute("POE_REQDET.PO_LINE_CODE","DFLT",str(callpoint!.getDevObject("dflt_po_line_code")))
 [[POE_REQDET.PO_LINE_CODE.AVAL]]
 rem --- Line Code - After Validataion
-rem print 'show',;rem debug
-rem print callpoint!.getUserInput();rem debug
-rem print callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE");rem debug
-rem print callpoint!.getColumnUndoData("POE_REQDET.PO_LINE_CODE");rem debug
+
+rem  print "userInput: ",callpoint!.getUserInput();rem debug
+rem  print "columnData: ",callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE");rem debug
+rem  print "undoData: ",callpoint!.getColumnUndoData("POE_REQDET.PO_LINE_CODE");rem debug
 rem print "validation row:", callpoint!.getValidationRow()
 rem print "new status:",callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))
 rem print "modify status:",callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))
 
 gosub update_line_type_info
 
-if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) then
+if cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) 
 
 		callpoint!.setColumnData("POE_REQDET.CONV_FACTOR","")
 		callpoint!.setColumnData("POE_REQDET.FORECAST","")
