@@ -1,7 +1,102 @@
+[[OPE_ORDDET.AWRI]]
+print "Det:AWRI"; rem debug
+
+rem --- Commit inventory
+
+rem --- Is this row deleted?
+
+	if callpoint!.getGridRowModifyStatus( callpoint!.getValidationRow() ) <> "Y" then 
+		break; rem --- exit callpoint
+	endif
+
+rem --- Get current and prior values
+
+	curr_whse$ = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	curr_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	curr_qty   = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+
+	prior_whse$ = callpoint!.getColumnUndoData("OPE_ORDDET.WAREHOUSE_ID")
+	prior_item$ = callpoint!.getColumnUndoData("OPE_ORDDET.ITEM_ID")
+	prior_qty   = num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_ORDERED"))
+
+rem --- Has there been any change?
+
+	if	curr_whse$ <> prior_whse$ or 
+:		curr_item$ <> prior_item$ or 
+:		curr_qty   <> prior_qty 
+:	then
+
+rem --- Initialize inventory item update
+
+		status=999
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then exitto std_exit
+
+rem --- Items or warehouses are different: uncommit previous
+
+		if (prior_whse$<>"" and prior_whse$<>curr_whse$) or 
+:		   (prior_item$<>"" and prior_item$<>curr_item$)
+:		then
+
+rem --- Uncommit prior item and warehouse
+
+			if prior_whse$<>"" and prior_item$<>"" and prior_qty<>0 then
+				items$[1] = prior_whse$
+				items$[2] = prior_item$
+				refs[0]   = prior_qty
+
+				print "---Uncommit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+
+rem --- Commit quantity for current item and warehouse
+
+			if curr_whse$<>"" and curr_item$<>"" and curr_qty<>0 then
+				items$[1] = curr_whse$
+				items$[2] = curr_item$
+				refs[0]   = curr_qty 
+
+				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+
+		endif
+
+rem --- New record or item and warehouse haven't changed: commit difference
+
+		if	(prior_whse$="" or prior_whse$=curr_whse$) and 
+:			(prior_item$="" or prior_item$=curr_item$) 
+:		then
+
+rem --- Commit quantity for current item and warehouse
+
+			if curr_whse$<>"" and curr_item$<>"" and curr_qty - prior_qty <> 0
+				items$[1] = curr_whse$
+				items$[2] = curr_item$
+				refs[0]   = curr_qty - prior_qty
+
+				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+
+		endif
+
+	endif
+
+rem --- Update header
+
+	gosub calc_grid_tots
+	gosub disp_totals
 [[OPE_ORDDET.ARAR]]
 rem print "Det:ARAR"; rem debug
 [[OPE_ORDDET.AGDS]]
-rem print "Det:AGDS"; rem debug
+print "Det:AGDS"; rem debug
 [[OPE_ORDDET.ADGE]]
 rem print "Det:ADGE"; rem debug
 [[OPE_ORDDET.BDGX]]
@@ -94,7 +189,7 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.AREC]]
-rem print "Det:AREC"; rem debug
+print "Det:AREC"; rem debug
 
 rem --- Disable skipped columns
 
@@ -131,9 +226,9 @@ rem --- Set Lot/Serial button up properly
 		endif
 	endif
 [[OPE_ORDDET.AGRE]]
-rem print "Det:AGRE"; rem debug
+print "Det:AGRE"; rem debug
 
-rem --- Commit inventory: Inits
+rem --- Disable button, set objects
 
 	callpoint!.setOptionEnabled("LENT",0)
 
@@ -142,88 +237,6 @@ rem --- Commit inventory: Inits
 	callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
 	callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 
-rem --- Is this row deleted?
-
-	this_row = callpoint!.getValidationRow()
-
-	if callpoint!.getGridRowModifyStatus(this_row)<>"Y"
-		goto agre_end
-	endif
-
-rem --- Get current and prior values
-
-	curr_whse$ = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
-	curr_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-	curr_qty   = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-
-	prior_whse$ = callpoint!.getColumnDiskData("OPE_ORDDET.WAREHOUSE_ID")
-	prior_item$ = callpoint!.getColumnDiskData("OPE_ORDDET.ITEM_ID")
-	prior_qty   = num(callpoint!.getColumnDiskData("OPE_ORDDET.QTY_ORDERED"))
-
-rem --- Has there been any change?
-
-	if	curr_whse$<>prior_whse$ or 
-:		curr_item$<>prior_item$ or 
-:		curr_qty<>prior_qty 
-:	then
-
-rem --- Initialize inventory item update
-
-		status=999
-		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then exitto std_exit
-
-rem --- Items or warehouses are different: uncommit previous
-
-		if (prior_whse$<>"" and prior_whse$<>curr_whse$) or 
-:		   (prior_item$<>"" and prior_item$<>curr_item$)
-:		then
-
-rem --- Uncommit prior item and warehouse
-
-			if prior_whse$<>"" and prior_item$<>"" then
-				items$[1]=prior_whse$
-				items$[2]=prior_item$
-				refs[0]=prior_qty
-				
-				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
-			endif
-
-rem --- Commit quantity for current item and warehouse
-
-			items$[1]=curr_whse$
-			items$[2]=curr_item$
-			refs[0]=curr_qty 
-			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then exitto std_exit
-
-		endif
-
-rem --- New record or item and warehouse haven't changed: commit difference
-
-		if	(prior_whse$="" or prior_whse$=curr_whse$) and 
-:			(prior_item$="" or prior_item$=curr_item$)
-:		then
-
-rem --- Commit quantity for current item and warehouse
-
-			items$[1]=curr_whse$
-			items$[2]=curr_item$
-			refs[0]=curr_qty - prior_qty
-			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then exitto std_exit
-
-		endif
-
-	endif
-
-rem --- Update header
-
-	gosub calc_grid_tots
-	gosub disp_totals
-
-agre_end:
 [[OPE_ORDDET.UNIT_COST.AVAL]]
 rem --- Disable Cost field if there is a value in it
 rem g!=form!.getChildWindow(1109).getControl(5900)
@@ -418,7 +431,7 @@ rem ---display extended price
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_ORDDET.AGDR]]
-rem print "Det:AGDR"; rem debug
+print "Det:AGDR"; rem debug
 
 rem --- Disable skipped columns
 
@@ -821,6 +834,8 @@ disable_by_linetype: rem --- Set enable/disable based on line type
                      rem      IN: line_code$
 rem ==========================================================================
 
+print "in disable_by_linetype:"; rem debug
+
 	start_block = 1
 
 	if cvs(line_code$,2) <> "" then
@@ -830,7 +845,15 @@ rem ==========================================================================
 		if start_block then
 			read record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
 			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
-			print "---Line Code set: ", opc_linecode.line_type$; rem debug
+
+			print "---line code set: ", opc_linecode.line_type$; rem debug
+			rem debug
+			if opc_linecode.line_type$ = user_tpl.line_type$ then
+				print "---line code was already set"
+			endif
+			rem debug end
+
+			user_tpl.line_type$ = opc_linecode.line_type$
 		endif
 	endif
 
@@ -846,6 +869,8 @@ rem ==========================================================================
 
 	use ::ado_util.src::util
 [[OPE_ORDDET.LINE_CODE.AVAL]]
+print "LINE_CODE:AVAL"; rem debug
+
 rem --- Set enable/disable based on line type
 
 	line_code$ = callpoint!.getUserInput()
