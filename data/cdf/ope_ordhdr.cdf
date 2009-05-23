@@ -18,22 +18,14 @@ rem --- Is previous record an order and not void?
 
 	while 1
 		if start_block then
-			this_key$ = key(ope01_dev); rem debug
-			print "--- key: ", this_key$; rem debug
 			p_key$ = keyp(ope01_dev, end=*endif)
-			print "---keyp: ", p_key$; rem debug
-			read (ope01_dev, key=p_key$, dir=0)
-			p_key$ = keyp(ope01_dev, end=*endif)
-			print "---keyp: ", p_key$; rem debug
-			read record (ope01_dev, key=p_key$, dir=0) ope01a$
+			read record (ope01_dev, key=p_key$) ope01a$
 
 			if ope01a.firm_id$ = firm_id$ then 
 				if ope01a.ordinv_flag$ = "O" and ope01a.invoice_type$ <> "V" then
-					read record (ope01_dev, key=p_key$); rem added by Sam V
-					print "---good!"; rem debug
 					break
 				else
-					print "---bad!"; rem debug
+					read (ope01_dev, dir=-1, end=*endif)
 					continue
 				endif
 			endif
@@ -41,7 +33,6 @@ rem --- Is previous record an order and not void?
 
 		rem --- If EOF or past firm, rewind to last record in this firm
 		read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
-		print "---rewind!"; rem debug
 	wend
 [[OPE_ORDHDR.BPRI]]
 print "Hdr:BPRI"; rem debug
@@ -61,8 +52,23 @@ print "Hdr:AKEY"; rem debug
 print "Hdr:ACAL"; rem debug
 [[OPE_ORDHDR.APFE]]
 print "Hdr:APFE"; rem debug
+
+rem --- Enable button
+
+	callpoint!.setOptionEnabled("CRCH",1)
+
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
+		callpoint!.setOptionEnabled("DINV",1)
+		callpoint!.setOptionEnabled("CINV",1)
+	endif
 [[OPE_ORDHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
+
+rem --- Disable buttons
+
+	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
 [[OPE_ORDHDR.BREC]]
 print "Hdr:BREC"; rem debug
 [[OPE_ORDHDR.BREA]]
@@ -81,24 +87,19 @@ rem --- Is next record an order and not void?
 
 	while 1
 		if start_block then
-			this_key$ = key(ope01_dev, end=*endif)
-			print "---key: ", this_key$; rem debug
-			read record (ope01_dev, key=this_key$, dir=0) ope01a$
+			read record (ope01_dev, dir=0, end=*endif) ope01a$
 
 			if ope01a.firm_id$ = firm_id$ then
 				if ope01a.ordinv_flag$ = "O" and ope01a.invoice_type$ <> "V" then
-					print "---good!"; rem debug
 					break
 				else
-					print "---bad!"; rem debug
-					read (ope01_dev)
+					read (ope01_dev, end=*endif)
 					continue
 				endif
 			endif
 		endif
 
 		rem --- If EOF or wrong firm, rewind to first record of the firm
-		print "---rewind!"; rem debug
 		read (ope01_dev, key=firm_id$, dom=*next)
 	wend
 [[OPE_ORDHDR.BFMC]]
@@ -151,6 +152,10 @@ rem --- Credit check?
 			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
 		endif
 	endif
+
+rem --- Display order total
+
+callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
@@ -581,7 +586,6 @@ rem --- Enable/Disable buttons
 
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
-	callpoint!.setOptionEnabled("CRCH",0)
 
 	if new_seq$ = "N" then 
 		if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
@@ -721,6 +725,7 @@ rem --- Convert Quote?
 				
 				read record(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 
+				old_prec = tcb(14)
 				precision num(ivs01a.precision$)
 
 				ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
@@ -768,7 +773,7 @@ rem --- Convert Quote?
 					writerecord (ope11_dev)ope11a$
 				wend
 
-				precision 2
+				precision old_prec
 				rec_data.invoice_type$="S"
 			endif
 		endif
@@ -807,7 +812,6 @@ rem --- Enable buttons
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
-		callpoint!.setOptionEnabled("CRCH",1)
 	endif
 [[OPE_ORDHDR.AWRI]]
 rem --- Write/Remove manual ship to file
@@ -870,23 +874,13 @@ rem ==========================================================================
 :		custdet_tpl.aging_90+
 :		custdet_tpl.aging_120
 
-	if user_tpl.credit_installed$="Y" and user_tpl.display_bal$="A" then 
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_120",custdet_tpl.aging_120$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_30",custdet_tpl.aging_30$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_60",custdet_tpl.aging_60$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_90",custdet_tpl.aging_90$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",custdet_tpl.aging_cur$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE",custdet_tpl.aging_future$)
-		callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",str(ar_balance))
-	else
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_120","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_30","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_60","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_90","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE","")
-		callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING","")
-	endif
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_120",custdet_tpl.aging_120$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_30",custdet_tpl.aging_30$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_60",custdet_tpl.aging_60$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_90",custdet_tpl.aging_90$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",custdet_tpl.aging_cur$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE",custdet_tpl.aging_future$)
+	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",str(ar_balance))
 
 	callpoint!.setStatus("REFRESH")
 
@@ -1560,7 +1554,7 @@ rem --- Setup user_tpl$
 	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
 
 	tpl$ = ""
-	tpl$ = tpl$ + "credit_installed:c(1), display_bal:c(1), ord_tot:n(15), amount_mask:c(1*),"
+	tpl$ = tpl$ + "credit_installed:c(1), display_bal:c(1), ord_tot:n(15), amount_mask:c(1*), line_type:c(1),"
 	tpl$ = tpl$ + "line_boqty:n(15), line_shipqty:n(15), def_ship:c(8), def_commit:c(8), blank_whse:c(1),"
 	tpl$ = tpl$ + "dropship_whse:c(1), def_whse:c(10), avail_oh:c(5), avail_comm:c(5), avail_avail:c(5),"
 	tpl$ = tpl$ + "avail_oo:c(5), avail_wh:c(5), avail_type:c(5*), dropship_flag:c(5*), ord_tot_1:c(5*),"
@@ -1617,4 +1611,4 @@ rem --- Set Lot/Serial button up properly
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
-	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("CRCH",1)
