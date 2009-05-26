@@ -215,7 +215,7 @@ if cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" or cvs(callpoin
 		callpoint!.setColumnData("POE_REQDET.NOT_B4_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.NOT_B4_DATE"))
 		callpoint!.setColumnData("POE_REQDET.NS_ITEM_ID","")
 		callpoint!.setColumnData("POE_REQDET.ORDER_MEMO","")
-		callpoint!.setColumnData("POE_REQDET.PO_MSG_CODE",callpoint!.getHeaderColumnData("POE_REQHDR.PO_MSG_CODE"))
+		callpoint!.setColumnData("POE_REQDET.PO_MSG_CODE","")
 		callpoint!.setColumnData("POE_REQDET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.PROMISE_DATE"))
 		callpoint!.setColumnData("POE_REQDET.REQD_DATE",callpoint!.getHeaderColumnData("POE_REQHDR.REQD_DATE"))
 		callpoint!.setColumnData("POE_REQDET.REQ_QTY","")
