@@ -333,7 +333,11 @@ callpoint!.setTableColumnAttribute("POE_REQHDR.ORDER_NO","MINL","0")
 return
 
 enable_dropship_fields:
+rem disables/enables dropship fields if detail has (or hasn't) been created for this requisition
+rem since warehouse in hdr can't be changed once detail is posted, handling that control here, too.
+
 if callpoint!.getDevObject("dtl_posted")="Y"
+	callpoint!.setColumnEnabled("POE_REQHDR.WAREHOUSE_ID",0)
 	if callpoint!.getDevObject("OP_installed")="Y"
 		callpoint!.setColumnEnabled("POE_REQHDR.DROPSHIP",0)
 		callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",0)
@@ -344,6 +348,7 @@ if callpoint!.getDevObject("dtl_posted")="Y"
 		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)		
 	endif
 else
+	callpoint!.setColumnEnabled("POE_REQHDR.WAREHOUSE_ID",1)
 	if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")="Y"
 		callpoint!.setColumnEnabled("POE_REQHDR.DROPSHIP",1)
 		callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",1)
