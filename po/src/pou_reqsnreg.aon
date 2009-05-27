@@ -9,7 +9,7 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
-        next_overlay$=""
+	next_overlay$=""
 
 rem --- Retrieve the program path
 
@@ -46,9 +46,9 @@ rem --- Open/Lock files
 	open_tables$[16]="POW_REQREGVEN", open_opts$[16]="OTA"
 	open_tables$[17]="POW_REQREGREQ", open_opts$[17]="OTA"
 
-	       gosub open_tables
+	gosub open_tables
 
-		aps_params_dev=num(open_chans$[1])
+	aps_params_dev=num(open_chans$[1])
 	ivm_itemmast_dev=num(open_chans$[2])
 	ivm_itemwhse_dev=num(open_chans$[3])
 	ivs_params_dev=num(open_chans$[4])
@@ -103,7 +103,7 @@ rem --- Initializations
 
     rem --- Initialize Atamo for subsequent calls
 
-call pgmdir$+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],rd_table_chans$[all],status
+call pgmdir$+"ivc_itemupdt.aon::init",channels[all],ivs01a$,item$[all],refs$[all],refs[all],rd_table_chans$[all],status
 
 rem --- Run Update?
 
@@ -122,7 +122,7 @@ rem --- Position file
     if sequence$="V" then powork_dev=pow_reqregven_dev;dim powork$:fattr(pow_reqregven$)
     if sequence$="R" then powork_dev=pow_reqregreq_dev;dim powork$:fattr(pow_reqregreq$)
 
-        call pgmdir$+"adc_progress.aon","N","","","","",0,powork_dev,1,meter_num,ignore_status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,powork_dev,1,meter_num,ignore_status
 
     read (powork_dev,key=firm_id$,dom=*next)
 
@@ -188,7 +188,7 @@ rem --- Position detail file
 			gosub copy_fields
 			poe_podet$=dest_rec$
 
-            rem --- Now put in the po#, copy req qty to qty ordered, and get internal seq#
+            rem --- Now put in the po# and copy req qty to qty ordered
 
             poe_podet.po_no$=poe_pohdr.po_no$
             poe_podet.qty_ordered=poe_podet.req_qty
@@ -208,7 +208,7 @@ rem --- Read line code
                 poc_linecode.land_cst_flg$=""
                 poc_linecode.add_options$=""
 
-                                find record (poc_linecode_dev,key=poc_linecode.firm_id$+poc_linecode.po_line_code$,dom=*next) poc_linecode$
+				find record (poc_linecode_dev,key=poc_linecode.firm_id$+poc_linecode.po_line_code$,dom=*next) poc_linecode$
 
             endif
 
@@ -224,13 +224,13 @@ rem --- Read line code
 
             rem --- Update work order?
 
-            if sf$<>"N" and pos(poc_linecode.line_type$="NS")=1 and cvs(poe_podet.wo_no$,2)<>""
-escape;rem logic not yet exercised
+            if sf$<>"N" and pos(poc_linecode.line_type$="NS")<>0 and cvs(poe_podet.wo_no$,2)<>""
+escape;rem logic not yet exercised - poc_wa not ready
                 oldwo$=poe_podet.wo_no$+poe_podet.wo_seq_ref$
                 newwo$=oldwo$,po$=poe_podet.po_no$+poe_podet.internal_seq_no$
                 call pgmdir$+"poc_wa.bbx",sfe22_dev,sfe32_dev,firm_id$,po$,"P",poc_linecode.code_desc$,oldwo$,newwo$,i[1],status
 
-            else
+            endif
 
             rem --- Update PO to OP link
 
@@ -254,7 +254,7 @@ escape;rem logic not yet exercised
 
     rem --- Delete requisition source
 
-            sf_installed$="N"
+		sf_installed$="N"
         dtl_tpl$=fattr(poe_reqdet$)
         hdr_pri_key$=poe_reqhdr.firm_id$+poe_reqhdr.req_no$
         hdr_alt_key1$=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$

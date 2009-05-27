@@ -195,7 +195,7 @@ rem --- Position files
 
 rem --- Position detail file
 
-        read (poe_reqdet_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.req_no$,dom=*next); rem requisition detail
+        read (poe_reqdet_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.req_no$,knum="DISPLAY_SEQ",dom=*next); rem requisition detail
 
         while more; rem --- Begin loop for detail file
 
