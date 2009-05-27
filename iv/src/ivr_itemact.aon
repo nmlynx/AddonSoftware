@@ -18,7 +18,8 @@ rem --- Use function object, Option object
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+DIR_PGM",err=*next)
+	pgmdir$ = ""
+    pgmdir$ = stbl("+DIR_PGM",err=*next)
 
 rem --- Document initializations
 
@@ -38,9 +39,8 @@ rem --- Document initializations
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
+    dim sysinfo$:stbl("+SYSINFO_TPL")
+    sysinfo$=stbl("+SYSINFO")
     firm_id$=sysinfo.firm_id$
     firm_name$=sysinfo.firm_name$
     task_desc$=sysinfo.task_desc$
@@ -164,8 +164,7 @@ rem ----  column heading
 rem --- Loop Starting
 
     sql_prep$=""
-    sql_prep$=sql_prep$+"SELECT ivm_itemwhse.firm_id, ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, "
-    sql_prep$=sql_prep$+"       ivm_itemmast.product_type, ivm_itemmast.item_type "
+    sql_prep$=sql_prep$+"SELECT ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, ivm_itemmast.product_type "
     sql_prep$=sql_prep$+"  FROM ivm_itemwhse, ivm_itemmast "
     sql_prep$=sql_prep$+" WHERE ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
     sql_prep$=sql_prep$+"       ivm_itemwhse.firm_id=ivm_itemmast.firm_id "
@@ -193,11 +192,11 @@ rem --- Loop Starting
 rem --- Main Read
 
     while more
-        read_tpl$=sqlfetch(sql_chan,err=*break)
-        whse$=read_tpl.warehouse_id$
-        product$=read_tpl.product_type$
-        item$=read_tpl.item_id$
-        x$=whse$+" "+product$+" "+item$(1,p[0])
+        read_tpl$ = sqlfetch(sql_chan,err=*break)
+        whse$     = read_tpl.warehouse_id$
+        product$  = read_tpl.product_type$
+        item$     = read_tpl.item_id$
+        x$ = whse$+" "+product$+" "+item$(1,p[0])
 
 rem --- Level breaks?
 
@@ -212,12 +211,13 @@ rem --- Retrieve item and activity
         dim item$[2]
 		dim activity[12]
 		dim description$(dw)
-        find record (ivm01a_dev, key=firm_id$+read_tpl.item_id$, dom=*continue) ivm01a$
+        find record (ivm01a_dev, key=firm_id$+item$, dom=*continue) ivm01a$
         if type$<>"" and ivm01a.item_type$<>type$ then continue
         description$(1) = func.displayDesc(ivm01a.item_desc$, p[3], p[4], p[5])
         item$[0]=firm_id$
+		item$[1]=whse$
         item$[2]=item$
-        action$="",item$[1]=whse$
+        action$=""
 
 rem --- old call pgms were ivc_wb.bbx and ivc_pa.bbx
 
