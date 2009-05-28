@@ -102,6 +102,9 @@ dim poe_qahdr$:fnget_tpl$("POE_QAHDR")
 poe_rechdr_dev=fnget_dev("POE_RECHDR")
 dim poe_rechdr$:fnget_tpl$("POE_RECHDR")
 
+poe_invdet_dev=fnget_dev("POE_INVDET")
+dim poe_invdet$:fnget_tpl$("POE_INVDET")
+
 vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
 po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
 
@@ -117,6 +120,14 @@ read (poe_qahdr_dev,key=firm_id$+po_no$+vendor_id$,knum=1,dom=*next)
 read record (poe_qahdr_dev,err=*next)poe_qahdr$
 if poe_qahdr.firm_id$=firm_id$ and poe_qahdr.vendor_id$=vendor_id$ and poe_qahdr.po_no$=po_no$
 	msg_id$="PO_QA_EXISTS"
+	gosub disp_message
+	callpoint!.setStatus("NEWREC")
+endif
+
+read (poe_invdet_dev,key=firm_id$+po_no$+vendor_id$,knum=1,dom=*next)
+read record (poe_invdet_dev,err=*next)poe_invdet$
+if poe_invdet.firm_id$=firm_id$ and poe_invdet.vendor_id$=vendor_id$ and poe_invdet.po_no$=po_no$
+	msg_id$="PO_INV_EXISTS"
 	gosub disp_message
 	callpoint!.setStatus("NEWREC")
 endif
@@ -322,7 +333,7 @@ rem --- inits
 	use ::ado_util.src::util
 
 rem --- Open Files
-	num_files=15
+	num_files=16
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -339,6 +350,7 @@ rem --- Open Files
 	open_tables$[13]="POE_REQPRINT",open_opts$[13]="OTA"
 	open_tables$[14]="POE_QAHDR",open_opts$[14]="OTA"
 	open_tables$[15]="POE_RECHDR",open_opts$[15]="OTA"
+	open_tables$[16]="POE_INVDET",open_opts$[16]="OTA"
 
 	gosub open_tables
 

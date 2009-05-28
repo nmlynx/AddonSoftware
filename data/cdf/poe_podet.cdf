@@ -52,11 +52,11 @@ rem --- Uncommit prior item and warehouse
 			if prior_whse$<>"" and prior_item$<>"" and prior_qty<>0 then
 				items$[1] = prior_whse$
 				items$[2] = prior_item$
-				refs[0]   = prior_qty
+				refs[0]   = -prior_qty
 
 				print "---Uncommit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
-				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
 			endif
 
@@ -69,7 +69,7 @@ rem --- Commit quantity for current item and warehouse
 
 				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
-				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
 			endif
 
@@ -90,14 +90,13 @@ rem --- Commit quantity for current item and warehouse
 
 				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
-				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
 			endif
 
 		endif
 
 	endif
-
 [[POE_PODET.BDEL]]
 rem before delete, uncommit inventory (columnData or columnUndoData?) - don't uncommit qty already rec'd
 	print "BDEL:"
@@ -185,26 +184,6 @@ else
 	util.forceEdit(Form!, return_to_row, return_to_col)
 endif
 [[POE_PODET.AGRE]]
-rem --- debug stuff
-	r0!=gridVect!.getItem(0);rem current
-	r1!=gridVect!.getItem(1);rem undo
-	r2!=gridVect!.getItem(2);rem disk
-	dim rec0$:dtlg_param$[1,3]
-	dim rec1$:fattr(rec0$)
-	dim rec2$:fattr(rec0$)
-	this_row=callpoint!.getValidationRow()
-	rec0$=r0!.getItem(this_row)
-	rec1$=r1!.getItem(this_row)
-	rec2$=r2!.getItem(this_row)
-	if (rec0.qty_ordered+rec1.qty_ordered+rec2.qty_ordered)/3=rec0.qty_ordered then break;rem break from callpoint
-	print "AGRE stats:"
-rem	print "rec0.qty: ",rec0.qty_ordered
-rem	print "rec1.qty: ",rec1.qty_ordered
-rem	print "rec2.qty: ",rec2.qty_ordered
-	print "column: ",callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
-	print "undo: ", callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")
-	print "disk: ",callpoint!.getColumnDiskData("POE_PODET.QTY_ORDERED")
-rem --- end debug stuff
 
 rem --- check data to see if o.k. to leave row (only if the row isn't marked as deleted)
 
@@ -295,7 +274,6 @@ callpoint!.setDevObject("cost_this_row",callpoint!.getColumnData("POE_PODET.UNIT
 rem print "AGRN "
 rem print "qty this row: ",callpoint!.getDevObject("qty_this_row")
 rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
-
 [[POE_PODET.UNIT_COST.AVAL]]
 gosub update_header_tots
 callpoint!.setDevObject("cost_this_row",num(callpoint!.getUserInput()))
@@ -377,8 +355,8 @@ rem I think if line type changes on existing row, need to uncommit whatever's on
 
 gosub update_line_type_info
 
-rem if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_PODET.PO_LINE_CODE"),2) then
-if cvs(callpoint!.getColumnData("POE_PODET.WAREHOUSE_ID"),3)="" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_PODET.PO_LINE_CODE"),2) then
+if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_PODET.PO_LINE_CODE"),2) then
+rem if cvs(callpoint!.getColumnData("POE_PODET.WAREHOUSE_ID"),3)="" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_PODET.PO_LINE_CODE"),2) then
 		callpoint!.setColumnData("POE_PODET.CONV_FACTOR","")
 		callpoint!.setColumnData("POE_PODET.FORECAST","")
 		callpoint!.setColumnData("POE_PODET.ITEM_ID","")
