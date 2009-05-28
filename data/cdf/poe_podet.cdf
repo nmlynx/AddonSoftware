@@ -1,26 +1,107 @@
 [[POE_PODET.AWRI]]
-rem --- debug stuff
-	r0!=gridVect!.getItem(0);rem current
-	r1!=gridVect!.getItem(1);rem undo
-	r2!=gridVect!.getItem(2);rem disk
-	dim rec0$:dtlg_param$[1,3]
-	dim rec1$:fattr(rec0$)
-	dim rec2$:fattr(rec0$)
-	this_row=callpoint!.getValidationRow()
-	rec0$=r0!.getItem(this_row)
-	rec1$=r1!.getItem(this_row)
-	rec2$=r2!.getItem(this_row)
-	if (rec0.qty_ordered+rec1.qty_ordered+rec2.qty_ordered)/3=rec0.qty_ordered then break;rem break from callpoint
+rem --- debug stuff=========================================================
+
 	print "AWRI stats:"
-rem	print "rec0.qty: ",rec0.qty_ordered
-rem	print "rec1.qty: ",rec1.qty_ordered
-rem	print "rec2.qty: ",rec2.qty_ordered
-	print "column: ",callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
-	print "undo: ", callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")
-	print "disk: ",callpoint!.getColumnDiskData("POE_PODET.QTY_ORDERED")
-rem --- end debug stuff
+	print "column: ",callpoint!.getColumnData("POE_PODET.ITEM_ID"),callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
+	print "undo: ", callpoint!.getColumnUndoData("POE_PODET.ITEM_ID"),callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")
+	print "disk: ",callpoint!.getColumnDiskData("POE_PODET.ITEM_ID"),callpoint!.getColumnDiskData("POE_PODET.QTY_ORDERED")
+
+	if callpoint!.getColumnData("POE_PODET.ITEM_ID")<>callpoint!.getColumnUndoData("POE_PODET.ITEM_ID") or
+:		callpoint!.getColumnData("POE_PODET.QTY_ORDERED")<>callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")
+		print "need to call atamo..."
+		print "will uncommit: ",callpoint!.getColumnUndoData("POE_PODET.ITEM_ID")," for ",callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")
+		print "and commit: ",callpoint!.getColumnData("POE_PODET.ITEM_ID")," for ",callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
+	endif
+rem --- end debug stuff=======================================================
+
+rem need to updt ivm-05 (old poc.ua, now poc_itemvend) if on a new row -- still need this logic
+
+rem --- Commit inventory
+
+rem --- Get current and prior values
+
+	curr_whse$ = callpoint!.getColumnData("POE_PODET.WAREHOUSE_ID")
+	curr_item$ = callpoint!.getColumnData("POE_PODET.ITEM_ID")
+	curr_qty   = num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))
+
+	prior_whse$ = callpoint!.getColumnUndoData("POE_PODET.WAREHOUSE_ID")
+	prior_item$ = callpoint!.getColumnUndoData("POE_PODET.ITEM_ID")
+	prior_qty   = num(callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnUndoData("POE_PODET.CONV_FACTOR"))
+
+rem --- Has there been any change?
+
+	if curr_whse$ <> prior_whse$ or 
+:		curr_item$ <> prior_item$ or 
+:		curr_qty   <> prior_qty 
+:	then
+
+rem --- Initialize inventory item update
+
+		status=999
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then exitto std_exit
+
+rem --- Items or warehouses are different: uncommit previous
+
+		if (prior_whse$<>"" and prior_whse$<>curr_whse$) or 
+:		   (prior_item$<>"" and prior_item$<>curr_item$)
+:		then
+
+rem --- Uncommit prior item and warehouse
+
+			if prior_whse$<>"" and prior_item$<>"" and prior_qty<>0 then
+				items$[1] = prior_whse$
+				items$[2] = prior_item$
+				refs[0]   = prior_qty
+
+				print "---Uncommit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+
+rem --- Commit quantity for current item and warehouse
+
+			if curr_whse$<>"" and curr_item$<>"" and curr_qty<>0 then
+				items$[1] = curr_whse$
+				items$[2] = curr_item$
+				refs[0]   = curr_qty 
+
+				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+
+		endif
+
+rem --- New record or item and warehouse haven't changed: commit difference
+
+		if	(prior_whse$="" or prior_whse$=curr_whse$) and 
+:			(prior_item$="" or prior_item$=curr_item$) 
+:		then
+
+rem --- Commit quantity for current item and warehouse
+
+			if curr_whse$<>"" and curr_item$<>"" and curr_qty - prior_qty <> 0
+				items$[1] = curr_whse$
+				items$[2] = curr_item$
+				refs[0]   = curr_qty - prior_qty
+
+				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+
+		endif
+
+	endif
+
 [[POE_PODET.BDEL]]
-rem detail BDEL
+rem before delete, uncommit inventory (columnData or columnUndoData?) - don't uncommit qty already rec'd
+	print "BDEL:"
+	print "column: ",callpoint!.getColumnData("POE_PODET.ITEM_ID"),callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
 [[POE_PODET.QTY_ORDERED.AVAL]]
 rem --- call poc_itemvend.aon (poc.ua) to retrieve unit cost from ivm-05
 rem --- send in: R/W for retrieve or write
@@ -29,6 +110,8 @@ rem                   vendor_id and ord_date from header rec
 rem                   item_id,conv factor, unit cost, req qty or ordered qty from detail record
 rem                   IV precision from iv params rec
 rem 			status
+
+rem don't allow ordered qty < qty rec'd -- need that logic still...
 
 vendor_id$=callpoint!.getHeaderColumnData("POE_POHDR.VENDOR_ID")
 ord_date$=callpoint!.getHeaderColumnData("POE_POHDR.ORD_DATE")
@@ -217,8 +300,16 @@ rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
 gosub update_header_tots
 callpoint!.setDevObject("cost_this_row",num(callpoint!.getUserInput()))
 [[POE_PODET.AUDE]]
+	print "AUDE:"
+	print "column: ",callpoint!.getColumnData("POE_PODET.ITEM_ID"),callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
+
 gosub update_header_tots
+
+rem also re-commit IV, but again, not counting qty already rec'd
 [[POE_PODET.ADEL]]
+	print "ADEL:"
+	print "column: ",callpoint!.getColumnData("POE_PODET.ITEM_ID"),callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
+
 gosub update_header_tots
 [[POE_PODET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
@@ -281,6 +372,8 @@ rem print callpoint!.getColumnUndoData("POE_PODET.PO_LINE_CODE");rem debug
 rem print "validation row:", callpoint!.getValidationRow()
 rem print "new status:",callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))
 rem print "modify status:",callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))
+
+rem I think if line type changes on existing row, need to uncommit whatever's on this line (assuming old line code was a stock type)
 
 gosub update_line_type_info
 

@@ -94,6 +94,32 @@ gosub enable_dropship_fields
 
 rem --- check if receiver, QA receiver, or invoice exists for this PO.  If so, give warning and don't allow edits
 rem --- old code checked poe-33 (QA), 34(receiver) and 35 (invoice GL dist); we'll use alt_key_01 on the 33 and 34 files, and we still have 35.
+rem --- v6 code that accessed poe-35 looks like it could never have worked?
+
+poe_qahdr_dev=fnget_dev("POE_QAHDR")
+dim poe_qahdr$:fnget_tpl$("POE_QAHDR")
+
+poe_rechdr_dev=fnget_dev("POE_RECHDR")
+dim poe_rechdr$:fnget_tpl$("POE_RECHDR")
+
+vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
+po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+
+read (poe_rechdr_dev,key=firm_id$+po_no$+vendor_id$,knum=1,dom=*next)
+read record (poe_rechdr_dev,err=*next)poe_rechdr$
+if poe_rechdr.firm_id$=firm_id$ and poe_rechdr.vendor_id$=vendor_id$ and poe_rechdr.po_no$=po_no$
+	msg_id$="PO_REC_EXISTS"
+	gosub disp_message
+	callpoint!.setStatus("NEWREC")
+endif
+
+read (poe_qahdr_dev,key=firm_id$+po_no$+vendor_id$,knum=1,dom=*next)
+read record (poe_qahdr_dev,err=*next)poe_qahdr$
+if poe_qahdr.firm_id$=firm_id$ and poe_qahdr.vendor_id$=vendor_id$ and poe_qahdr.po_no$=po_no$
+	msg_id$="PO_QA_EXISTS"
+	gosub disp_message
+	callpoint!.setStatus("NEWREC")
+endif
 [[POE_POHDR.AREC]]
 gosub  form_inits
 [[POE_POHDR.APFE]]
@@ -296,7 +322,7 @@ rem --- inits
 	use ::ado_util.src::util
 
 rem --- Open Files
-	num_files=13
+	num_files=15
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -311,6 +337,8 @@ rem --- Open Files
 	open_tables$[11]="POE_LINKED",open_opts$[11]="OTA"
 	open_tables$[12]="IVM_ITEMSYN",open_opts$[12]="OTA"
 	open_tables$[13]="POE_REQPRINT",open_opts$[13]="OTA"
+	open_tables$[14]="POE_QAHDR",open_opts$[14]="OTA"
+	open_tables$[15]="POE_RECHDR",open_opts$[15]="OTA"
 
 	gosub open_tables
 
