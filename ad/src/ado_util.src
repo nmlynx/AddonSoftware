@@ -175,6 +175,49 @@ rem ==========================================================================
 		endif
 	methodend
 
+rem ==========================================================================
+rem 	Enable/Disable Barista grid row
+rem ==========================================================================
+	
+	method public static void ableGridRow(BBjTopLevelWindow Form!, BBjNumber row, BBjInt able%)
+		declare BBjStandardGrid grid!
+		grid! = #getGrid(Form!)
+		
+		if #EnableColor! = null() or #DisableColor! = null() then
+			#setGridAbleColors(grid!)
+		endif
+		
+		if able% = #DISABLE% then
+			grid!.setRowEditable(row, #DISABLE%)
+			grid!.setRowBackColor(row, #DisableColor!)
+		else
+			if able = #ENABLE% then
+				grid!.setRowEditable(row, #ENABLE%)
+				grid!.setRowBackColor(row, #EnableColor!)
+			endif
+		endif
+	methodend
+	
+	method public static void ableCurrentGridRow(BBjTopLevelWindow Form!, Callpoint callpoint!, BBjInt able%)
+		#ableGridRow(Form!, num(callpoint!.getValidationRow()), able%)
+	methodend
+	
+	method public static void disableCurrentGridRow(BBjTopLevelWindow Form!, Callpoint callpoint!)
+		#ableGridRow(Form!, num(callpoint!.getValidationRow()), #DISABLE%)
+	methodend
+
+	method public static void enableCurrentGridRow(BBjTopLevelWindow Form!, Callpoint callpoint!)
+		#ableGridRow(Form!, num(callpoint!.getValidationRow()), #ENABLE%)
+	methodend
+
+	method public static void disableGridRow(BBjTopLevelWindow Form!, BBjNumber row)
+		#ableGridRow(Form!, row, #DISABLE%)
+	methodend
+
+	method public static void enableGridRow(BBjTopLevelWindow Form!, BBjNumber row)
+		#ableGridRow(Form!, row, #ENABLE%)
+	methodend
+	
 	
 rem ==========================================================================
 rem 	Enable/Disable Barista grid column(s)
