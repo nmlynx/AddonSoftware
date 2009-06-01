@@ -615,11 +615,15 @@ print_total: rem --- Total
         gosub print_tot
 
         if l+footcnt > l9 then gosub print_continued
+        
+        if nomsg_flg = 0
 
-        for dlx = 0 to footcnt
-            gen_text$=footer$[dlx]
-            gosub text_only
-        next dlx
+			for dlx = 0 to footcnt
+				gen_text$=footer$[dlx]
+				gosub text_only
+			next dlx
+        
+        endif
 
         tmp=fnbox(440,664,130,24,page!)
         tmp=fnline(505,664,505,688,page!)
@@ -738,12 +742,12 @@ rem --- Load current message
            if cvs(pomessage$,2)<>"" footcnt=2
            find record (pom04_dev,key=pom04a_key$,dom=nomsg) pom04a$
 
-           nomsg_flag=0
+           nomsg_flg=0
            if pos(pom04a.message_type$="B"+type$)<>0
                read (pom14_dev,key=pom04a_key$,dom=*next)
 
 rem --- Load message lines
-               nomsg_flag=0
+               nomsg_flg=0
                while more
 
                    k$=key(pom14_dev,end=*break)
@@ -763,8 +767,6 @@ rem --- Load message lines
                wend
 
             endif
-
-            rem *** endif
 
        endif
 
