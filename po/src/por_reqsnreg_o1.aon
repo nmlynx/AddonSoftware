@@ -492,14 +492,18 @@ other_line:
     OutVect!.addItem(poe_reqdet.po_line_no$)
     OutVect!.addItem(poe_reqdet.po_line_code$)
     OutVect!.addItem(poe_reqdet.warehouse_id$)
+    xwk=fnblank(1)
     OutVect!.addItem(before$)
     OutVect!.addItem(fndate$(poe_reqdet.reqd_date$))
     OutVect!.addItem(promised$)
-    OutVect!.addItem(str(ivm_itemwhse.unit_cost$:m3$))
+    xwk=fnblank(5)
     OutVect!.addItem(str(po_extension:m1$))
     OutVect!.addItem(source$)
+    xwk=fnblank(2)
     OutVect!.addItem(poe_reqdet.order_memo$)
+    xwk=fnblank(5)
     OutVect!.addItem(wo$)
+    xwk=fnblank(5)
     l=l+needed
     return
 
