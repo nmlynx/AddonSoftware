@@ -1,3 +1,19 @@
+[[OPE_ORDHDR.ASVA]]
+print "Hdr:ASVA"; rem debug
+[[OPE_ORDHDR.SLSPSN_CODE.AVAL]]
+rem --- Set Commission Percent
+
+	file$ = "ARC_SALECODE"
+	salecode_dev = fnget_dev(file$)
+	dim salecode_rec$:fnget_tpl$(file$)
+	slsp$ = callpoint!.getUserInput()
+	start_block = 1
+
+	if start_block then
+		find record (salecode_dev, key=firm_id$+"E"+slsp$, dom=*endif) salecode_rec$
+		callpoint!.setColumnData("OPE_ORDHDR.COMM_PERCENT", salescode_rec.comm_percent$)
+		callpoint!.setStatus("REFRESH")
+	endif
 [[OPE_ORDHDR.AOPT-CRCH]]
 rem --- Credit check?
 
@@ -282,68 +298,63 @@ rem --- Save controls in the global userObj! (vector)
 [[OPE_ORDHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
-rem --- remove committments for detail records by calling ATAMO
+rem --- Remove committments for detail records by calling ATAMO
 
-	ope11_dev=fnget_dev("OPE_ORDDET")
+	ope11_dev = fnget_dev("OPE_ORDDET")
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
-	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+
+	opc_linecode_dev = fnget_dev("OPC_LINECODE")
 	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-	ivs01_dev=fnget_dev("IVS_PARAMS")
+
+	ivs01_dev = fnget_dev("IVS_PARAMS")
 	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-	ope33_dev=fnget_dev("OPE_ORDSHIP")
+	read record (ivs01_dev, key=firm_id$+"IV00") ivs01a$
 
-	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+	ope33_dev = fnget_dev("OPE_ORDSHIP")
+	cashrct_dev = fnget_dev("OPE_INVCASH")
+	ars_cred_dev = fnget_dev("OPE_CREDCUST")
 
-	ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
-	cust$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ar_type$  = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	cust$     = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord$      = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ord_date$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
+	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
+
 	read (ope11_dev, key=firm_id$+ar_type$+cust$+ord$, dom=*next)
 
 	while 1
 		read record (ope11_dev, end=*break) ope11a$
 
-		if pos(firm_id$+ar_type$+cust$+ord$ = ope11a.firm_id$+ope11a.ar_type$+
-:			ope11a.customer_id$+ope11a.order_no$) <> 1 
-:		then
-			break
-		endif
+		if firm_id$<>ope11a.firm_id$ then break
+		if ar_type$<>ope11a.ar_type$ then break
+		if cust$<>ope11a.customer_id$ then break
+		if ord$<>ope11a.order_no$ then break
 
 		read record (opc_linecode_dev, key=firm_id$+ope11a.line_code$) opc_linecode$
 
-		if opc_linecode.dropship$<>"Y" and ope11a.commit_flag$="Y" and
-:			callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
-:		then
+		if opc_linecode.dropship$<>"Y" and ope11a.commit_flag$="Y" and inv_type$<>"P" then
 			if pos(opc_linecode.line_type$="SP") then
-				wh_id$=ope11a.warehouse_id$
-				item_id$=ope11a.item_id$
-				ls_id$=""
-				qty=ope11a.qty_ordered
-				line_sign=-1
+				wh_id$    = ope11a.warehouse_id$
+				item_id$  = ope11a.item_id$
+				ls_id$    = ""
+				qty       = ope11a.qty_ordered
+				line_sign = -1
 				gosub update_totals
 			endif
 		endif
 
 		if pos(callpoint!.getDevObject("lotser_flag")="LS") then 
-			ord_seq$=ope11a.line_no$
+			ord_seq$ = ope11a.line_no$
 			gosub remove_lot_ser_det
 		endif
 
 	wend
 
 	remove (ope33_dev, key=firm_id$+cust$+ord$, dom=*next)
-	cashrct_dev=fnget_dev("OPE_INVCASH")
-	remove (cashrct_dev, key=firm_id$+
-:		callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
-:		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), err=*next)
+	remove (cashrct_dev, key=firm_id$+ar_type$+cust$+ord$, err=*next)
 
 	if user_tpl.credit_installed$="Y" then
-		ars_cred_dev=fnget_dev("OPE_CREDCUST")
-		dim ars_credcust$:fnget_tpl$("OPE_CREDCUST")
-		remove (ars_cred_dev, key=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
-:			callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")+
-:			callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), err=*next)			
+		remove (ars_cred_dev, key=firm_id$+cust$+ord_date$+ord$, err=*next)	
 	endif
 [[OPE_ORDHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
@@ -693,7 +704,9 @@ end_pointofsale:
 [[OPE_ORDHDR.INVOICE_TYPE.AVAL]]
 rem --- Enable/disable expire date based on value
 
-	if callpoint!.getUserInput() <> "P" then
+	inv_type$ = callpoint!.getUserInput()
+
+	if inv_type$ <> "P" then
 		status = -1
 	else
 		status = 1
@@ -704,13 +717,13 @@ rem --- Enable/disable expire date based on value
 rem --- Convert Quote?
 
 	if rec_data.invoice_type$="S" then 
-		if callpoint!.getUserInput()="P" then 
+		if inv_type$="P" then 
 			msg_id$="OP_NO_CONVERT"
-			gosub  disp_message
+			gosub disp_message
 			callpoint!.setStatus("ABORT-REFRESH")
 		endif
 	else
-		if rec_data.invoice_type$="P" and callpoint!.getUserInput()="S" then 
+		if rec_data.invoice_type$="P" and inv_type$="S" then 
 			msg_id$="CONVERT_QUOTE"
 			gosub disp_message
 
@@ -723,7 +736,7 @@ rem --- Convert Quote?
 				dim ivs01a$:fnget_tpl$("IVS_PARAMS")
 				dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 				
-				read record(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+				read record (ivs01_dev, key=firm_id$+"IV00") ivs01a$
 
 				old_prec = tcb(14)
 				precision num(ivs01a.precision$)
@@ -731,29 +744,33 @@ rem --- Convert Quote?
 				ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 				cust$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 				ord$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-				read record (ope11_dev,key=firm_id$+ar_type$+cust$+ord$,dom=*next)
+				read record (ope11_dev, key=firm_id$+ar_type$+cust$+ord$, dom=*next)
 
 				while 1
-					readrecord (ope11_dev,end=*break)ope11a$
+					read record (ope11_dev, end=*break) ope11a$
+
 					if pos(firm_id$+ar_type$+cust$+ord$=ope11a.firm_id$+
-:						ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$)<>1 break
+:						ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$)<>1 
+:              then
+						break
+					endif
 
-					readrecord (opc_linecode_dev,key=firm_id$+ope11a.line_code$,dom=*continue)opc_linecode$
-					ope11a.commit_flag$="Y"
-					ope11a.pick_flag$="N"
-					if ope11a.est_shp_date$>user_tpl.def_commit$ ope11a.commit_flag$="N"
+					read record (opc_linecode_dev, key=firm_id$+ope11a.line_code$, dom=*continue) opc_linecode$
+					ope11a.commit_flag$ = "Y"
+					ope11a.pick_flag$   = "N"
+					if ope11a.est_shp_date$>user_tpl.def_commit$ then ope11a.commit_flag$="N"
 
-					if ope11a.commit_flag$="N" 
-						if opc_linecode.line_type$<>"O" 
-							ope11a.qty_backord=0
-							ope11a.qty_shipped=0
-							ope11a.ext_price=0
-							ope11a.taxable_amt=0
+					if ope11a.commit_flag$="N" then 
+						if opc_linecode.line_type$<>"O" then 
+							ope11a.qty_backord = 0
+							ope11a.qty_shipped = 0
+							ope11a.ext_price   = 0
+							ope11a.taxable_amt = 0
 						else 
-							if ope11a.ext_price<>0
-								ope11a.unit_price=ope11a.ext_price
-								ope11a.ext_price=0
-								ope11a.taxable_amt=0
+							if ope11a.ext_price<>0 then 
+								ope11a.unit_price  = ope11a.ext_price
+								ope11a.ext_price   = 0
+								ope11a.taxable_amt = 0
 							endif
 						endif
 					endif
@@ -761,20 +778,20 @@ rem --- Convert Quote?
 					if pos(opc_linecode.line_type$="SP")>0 and opc_linecode.dropship$<>"N" and
 :						ope11a.commit_flag$<>"N"
 :					then
-						wh_id$=ope11a.warehouse_id$
-						item_id$=ope11a.item_id$
-						ls_id$=""
-						qty=ope11a.qty_ordered
-						line_sign=1
+						wh_id$    = ope11a.warehouse_id$
+						item_id$  = ope11a.item_id$
+						ls_id$    = ""
+						qty       = ope11a.qty_ordered
+						line_sign = 1
 						gosub update_totals
 					endif
 
 					ope11a$=field(ope11a$)
-					writerecord (ope11_dev)ope11a$
+					write record (ope11_dev) ope11a$
 				wend
 
 				precision old_prec
-				rec_data.invoice_type$="S"
+				rec_data.invoice_type$ = "S"
 			endif
 		endif
 	endif
@@ -814,6 +831,8 @@ rem --- Enable buttons
 		callpoint!.setOptionEnabled("CINV",1)
 	endif
 [[OPE_ORDHDR.AWRI]]
+print "Hdr:AWRI"; rem debug
+
 rem --- Write/Remove manual ship to file
 
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -1053,14 +1072,14 @@ end_lock:
 
 rem ==========================================================================
 copy_order: rem --- Duplicate or Credit Historical Invoice
-            rem      IN: key_pfx$ = a/r type + cust_id
+            rem      IN: key_pfx$  = a/r type + cust_id
             rem          line_sign = 1/-1
 rem ==========================================================================
 
 	copy_ok$="Y"
 
 	while 1
-		rd_key$=""
+		rd_key$ = ""
 		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :			gui_dev,
 :			Form!,
@@ -1072,7 +1091,7 @@ rem ==========================================================================
 :			rd_key$
 
 		if cvs(rd_key$,2)<>"" then 
-			key_pfx_det$=rd_key$
+			key_pfx_det$ = rd_key$
 			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :				gui_dev,
 :				Form!,
@@ -1084,7 +1103,7 @@ rem ==========================================================================
 :				rd_key_det$
 
 			if cvs(rd_key_det$,2)<>"" then 
-				opt01_dev=fnget_dev("OPT_ORDHDR")
+				opt01_dev = fnget_dev("OPT_ORDHDR")
 				dim opt01a$:fnget_tpl$("OPT_ORDHDR")
 				read record (opt01_dev, key=rd_key$) opt01a$
 				break
@@ -1102,15 +1121,15 @@ rem ==========================================================================
 	if copy_ok$="Y" then 
 
 		if line_sign=1 then 
-			msg_id$="OP_REPRICE_ORD"
+			msg_id$ = "OP_REPRICE_ORD"
 			gosub disp_message
-			reprice$=msg_opt$
+			reprice$ = msg_opt$
 		endif
 
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",seq_id$,rd_table_chans$[all]
 
 		if seq_id$<>"" then 
-			ope01_dev=fnget_dev("OPE_ORDHDR")
+			ope01_dev = fnget_dev("OPE_ORDHDR")
 			dim ope01a$:fnget_tpl$("OPE_ORDHDR")
 			call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,ope01a$,status
 
@@ -1141,7 +1160,7 @@ rem ==========================================================================
 			user_tpl.pricing_code$ = ope01a.pricing_code$
 			user_tpl.order_date$   = ope01a.order_date$
 
-rem --- copy Manual Ship To if any
+rem --- Copy Manual Ship To if any
 
 			if opt01a.shipto_type$="M" then 
 				dim ope31a$:fnget_tpl$("OPE_ORDSHIP")
@@ -1152,12 +1171,13 @@ rem --- copy Manual Ship To if any
 
 				read record (opt31_dev, key=firm_id$+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*next) opt31a$
 				call stbl("+DIR_PGM")+"adc_copyfile.aon",opt31a$,ope31a$,status
+				if status=999 then exitto std_exit
 				ope31a.order_no$ = ope01a.order_no$
 				ope31a$ = field(ope31a$)
 				write record (ope31_dev) ope31a$
 			endif
 
-rem --- copy detail lines
+rem --- Copy detail lines
 
 			dim opt11a$:fnget_tpl$("OPT_ORDDET")
 			opt11_dev=fnget_dev("OPT_ORDDET")
@@ -1170,7 +1190,7 @@ rem --- copy detail lines
 
 			read (opt11_dev, key=firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*next)
 
-			opc_linecode_dev=fnget_dev("OPC_LINECODE")
+			opc_linecode_dev = fnget_dev("OPC_LINECODE")
 			dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 
 			while 1
@@ -1199,8 +1219,8 @@ rem --- copy detail lines
 					endif
 
 					if line_sign=-1 then 
-						ope11a.qty_ordered=-ope11a.qty_shipped
-						ope11a.ext_price=-ope11a.ext_price
+						ope11a.qty_ordered = -ope11a.qty_shipped
+						ope11a.ext_price   = -ope11a.ext_price
 					endif
 
 					if opc_linecode.line_type$<>"O" then 
@@ -1258,107 +1278,115 @@ update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
                rem          qty
 rem ==========================================================================
 
-	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",iv_files[all],ivs01a$,
-:	     iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],status
-	iv_info$[1]=wh_id$
-	iv_info$[2]=item_id$
-	iv_info$[3]=ls_id$
-	iv_refs[0]=qty
+	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
+
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",iv_files[all],ivs01a$,iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],status
+	iv_info$[1] = wh_id$
+	iv_info$[2] = item_id$
+	iv_info$[3] = ls_id$
+	iv_refs[0]  = qty
 
 	while 1
 		if pos(opc_linecode.line_type$="SP")=0 then break
-		if opc_linecode.dropship$="Y" or callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")="P" then break; REM "Drop ship or quote
+		if opc_linecode.dropship$="Y" or inv_type$="P" then break; REM "Drop ship or quote
 		if line_sign>0 then iv_action$="OE" else iv_action$="UC"
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,
-:			iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],iv_status
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],iv_status
 		break
 	wend
 
 return
 
 rem ==========================================================================
-remove_lot_ser_det: rem " --- Remove Lot/Serial Detail"
+remove_lot_ser_det: rem --- Remove Lot/Serial Detail
+                    rem      IN: ar_type$
+                    rem          cust$
+                    rem          ord$     = order number
+                    rem          ord_seq$ = detail line number
 rem ==========================================================================
 
-	ope21_dev=fnget_dev("OPE_ORDLSDET")
+	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
+
+	ope21_dev = fnget_dev("OPE_ORDLSDET")
 	dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
-	read (ope21_dev,key=firm_id$+ar_type$+cust$+ord$+ord_seq$,dom=*next)
+	read (ope21_dev, key=firm_id$+ar_type$+cust$+ord$+ord_seq$, dom=*next)
 
 	while 1
-		readrecord(ope21_dev,end=*break)ope21a$
+		read record (ope21_dev, end=*break) ope21a$
 
-		if pos( firm_id$+ar_type$+cust$+ord$+ord_seq$ = 
-:			ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.line_no$ ) <> 1 
-:		then
-			break
-		endif
+		if firm_id$<>ope21a.firm_id$ then break
+		if ar_type$<>ope21a.ar_type$ then break
+		if cust$<>ope21a.customer_id$ then break
+		if ord$<>ope21a.order_no$ then break
+		if ord_seq$<>ope21a.line_no$ then break
 
-		if opc_linecode.dropship$<>"Y" and
-:			callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
-			wh_id$=ope11a.warehouse_id$
-			item_id$=ope11a.item_id$
-			ls_id$=""
-			qty=ope21a.qty_ordered
-			line_sign=1
+		if opc_linecode.dropship$<>"Y" and inv_type$<>"P" then 
+			wh_id$    = ope11a.warehouse_id$
+			item_id$  = ope11a.item_id$
+			ls_id$    = ""
+			qty       = ope21a.qty_ordered
+			line_sign = 1
 			gosub update_totals
 
-			ls_id$=ope21a.lotser_no$
-			line_sign=-1
+			ls_id$    = ope21a.lotser_no$
+			line_sign = -1
 			gosub update_totals
 		endif
 
-		remove (ope21_dev,key=firm_id$+ar_type$+cust$+ord$+ord_seq$+ope21a.sequence_no$)
+		remove (ope21_dev, key=firm_id$+ar_type$+cust$+ord$+ord_seq$+ope21a.sequence_no$)
 	wend
 
 	return
 
 rem ==========================================================================
-pricing: rem "Call Pricing routine
+pricing: rem --- Call Pricing routine
+         rem      IN: ope11a$ - Order Detail record
+         rem          seq_id$ - order number
+         rem          ivm02_dev
+         rem          ivs01_dev
 rem ==========================================================================
 
-	ope01_dev=fnget_dev("OPE_ORDHDR")
+	ope01_dev = fnget_dev("OPE_ORDHDR")
 	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
-	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+
+	ivm02_dev = fnget_dev("IVM_ITEMWHSE")
 	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
-	ivs01_dev=fnget_dev("IVS_PARAMS")
+
+	ivs01_dev = fnget_dev("IVS_PARAMS")
 	dim ivs01a$:fnget_tpl$("IVS_PARAMS")
 
-	ordqty=ope11a.qty_ordered
-	wh$=ope11a.warehouse_id$
-	item$=ope11a.item_id$
-	ar_type$=ope11a.ar_type$
-	cust$=ope11a.customer_id$
-	ord$=seq_id$
-	readrecord(ope01_dev,key=firm_id$+ar_type$+cust$+ord$)ope01a$
+	ordqty   =ope11a.qty_ordered
+	wh$      =ope11a.warehouse_id$
+	item$    =ope11a.item_id$
+	ar_type$ =ope11a.ar_type$
+	cust$    =ope11a.customer_id$
+	ord$     =seq_id$
+	read record (ope01_dev, key=firm_id$+ar_type$+cust$+ord$) ope01a$
 
 	dim pc_files[6]
-	pc_files[1]=fnget_dev("IVM_ITEMMAST")
-	pc_files[2]=ivm02_dev
-	pc_files[3]=fnget_dev("IVM_ITEMPRIC")
-	pc_files[4]=fnget_dev("IVC_PRICCODE")
-	pc_files[5]=fnget_dev("ARS_PARAMS")
-	pc_files[6]=ivs01_dev
+	pc_files[1] = fnget_dev("IVM_ITEMMAST")
+	pc_files[2] = ivm02_dev
+	pc_files[3] = fnget_dev("IVM_ITEMPRIC")
+	pc_files[4] = fnget_dev("IVC_PRICCODE")
+	pc_files[5] = fnget_dev("ARS_PARAMS")
+	pc_files[6] = ivs01_dev
 
 	call stbl("+DIR_PGM")+"opc_pc.aon",pc_files[all],firm_id$,wh$,item$,user_tpl.price_code$,cust$,
 :		user_tpl.order_date$,user_tpl.pricing_code$,ordqty,typeflag$,price,disc,status
+	if status=999 then exitto std_exit
 
-	if price=0
+	if price=0 then
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
 	else
-		ope11a.unit_price=price
-		ope11a.disc_percent=disc
+		ope11a.unit_price   = price
+		ope11a.disc_percent = disc
 	endif
 
-	if disc=100
-		readrecord(ivm02_dev,key=firm_id$+wh$+item$)ivm02a$
-		ope11a.std_list_prc=ivm02a.cur_price
+	if disc=100 then
+		read record (ivm02_dev, key=firm_id$+wh$+item$) ivm02a$
+		ope11a.std_list_prc = ivm02a.cur_price
 	else
-		readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
-		precision  num(ivs01a.precision$)+3
-		factor=100/(100-disc)
-		precision num(ivs01a.precision$)
-		ope11a.std_list_prc=price*factor
+		ope11a.std_list_prc = (price*100)/(100-disc)
 	endif
 
 return
@@ -1371,10 +1399,9 @@ rem ==========================================================================
 	cmt_text$=""
 	arm05_dev=fnget_dev("ARM_CUSTCMTS")
 	dim arm05a$:fnget_tpl$("ARM_CUSTCMTS")
-	arm05_key$=firm_id$+cust_id$
 	more=1
 
-	read (arm05_dev, key=arm05_key$, dom=*next)
+	read (arm05_dev, key=firm_id$+cust_id$, dom=*next)
 
 	while more
 		read record (arm05_dev, end=*break) arm05a$
@@ -1443,42 +1470,43 @@ rem     Old s$(7,1) = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=35
+	num_files=36
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
-	open_tables$[2]="ARM_CUSTSHIP",open_opts$[2]="OTA"
-	open_tables$[3]="OPE_ORDSHIP",open_opts$[3]="OTA"
-	open_tables$[4]="ARS_PARAMS",open_opts$[4]="OTA"
-	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
-	open_tables$[6]="OPE_INVCASH",open_opts$[6]="OTA"
-	open_tables$[7]="ARS_CREDIT",open_opts$[7]="OTA"
-	open_tables$[8]="OPC_LINECODE",open_opts$[8]="OTA"
-	open_tables$[9]="GLS_PARAMS",open_opts$[9]="OTA"
-	open_tables$[10]="GLS_PARAMS",open_opts$[10]="OTA"
-	open_tables$[11]="IVM_LSMASTER",open_opts$[11]="OTA"
-	open_tables$[12]="IVX_LSCUST",open_opts$[12]="OTA"
-	open_tables$[13]="IVM_ITEMMAST",open_opts$[13]="OTA"
-	open_tables$[15]="IVX_LSVEND",open_opts$[15]="OTA"
-	open_tables$[16]="IVM_ITEMWHSE",open_opts$[16]="OTA"
-	open_tables$[17]="IVM_ITEMACT",open_opts$[17]="OTA"
-	open_tables$[18]="IVT_ITEMTRAN",open_opts$[18]="OTA"
-	open_tables$[19]="IVM_ITEMTIER",open_opts$[19]="OTA"
-	open_tables$[20]="IVM_ITEMACT",open_opts$[20]="OTA"
-	open_tables$[21]="IVM_ITEMVEND",open_opts$[21]="OTA"
-	open_tables$[22]="IVT_LSTRANS",open_opts$[22]="OTA"
-	open_tables$[23]="OPT_ORDHDR",open_opts$[23]="OTA"
-	open_tables$[24]="OPT_ORDDET",open_opts$[24]="OTA"
-	open_tables$[25]="OPE_ORDDET",open_opts$[25]="OTA"
-	open_tables$[26]="OPT_INVSHIP",open_opts$[26]="OTA"
-	open_tables$[27]="OPE_CREDCUST",open_opts$[27]="OTA"
-	open_tables$[28]="IVC_WHSECODE",open_opts$[28]="OTA"
-	open_tables$[29]="IVS_PARAMS",open_opts$[29]="OTA"
-	open_tables$[30]="OPE_ORDLSDET",open_opts$[30]="OTA"
-	open_tables$[31]="IVM_ITEMPRIC",open_opts$[31]="OTA"
-	open_tables$[32]="IVC_PRICCODE",open_opts$[32]="OTA"
-	open_tables$[33]="ARM_CUSTCMTS",open_opts$[33]="OTA"
-	open_tables$[34]="OPE_PRNTLIST",open_opts$[34]="OTA"
+	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
+	open_tables$[2]="ARM_CUSTSHIP",  open_opts$[2]="OTA"
+	open_tables$[3]="OPE_ORDSHIP",   open_opts$[3]="OTA"
+	open_tables$[4]="ARS_PARAMS",    open_opts$[4]="OTA"
+	open_tables$[5]="ARM_CUSTDET",   open_opts$[5]="OTA"
+	open_tables$[6]="OPE_INVCASH",   open_opts$[6]="OTA"
+	open_tables$[7]="ARS_CREDIT",    open_opts$[7]="OTA"
+	open_tables$[8]="OPC_LINECODE",  open_opts$[8]="OTA"
+	open_tables$[9]="GLS_PARAMS",    open_opts$[9]="OTA"
+	open_tables$[10]="GLS_PARAMS",   open_opts$[10]="OTA"
+	open_tables$[11]="IVM_LSMASTER", open_opts$[11]="OTA"
+	open_tables$[12]="IVX_LSCUST",   open_opts$[12]="OTA"
+	open_tables$[13]="IVM_ITEMMAST", open_opts$[13]="OTA"
+	open_tables$[15]="IVX_LSVEND",   open_opts$[15]="OTA"
+	open_tables$[16]="IVM_ITEMWHSE", open_opts$[16]="OTA"
+	open_tables$[17]="IVM_ITEMACT",  open_opts$[17]="OTA"
+	open_tables$[18]="IVT_ITEMTRAN", open_opts$[18]="OTA"
+	open_tables$[19]="IVM_ITEMTIER", open_opts$[19]="OTA"
+	open_tables$[20]="IVM_ITEMACT",  open_opts$[20]="OTA"
+	open_tables$[21]="IVM_ITEMVEND", open_opts$[21]="OTA"
+	open_tables$[22]="IVT_LSTRANS",  open_opts$[22]="OTA"
+	open_tables$[23]="OPT_ORDHDR",   open_opts$[23]="OTA"
+	open_tables$[24]="OPT_ORDDET",   open_opts$[24]="OTA"
+	open_tables$[25]="OPE_ORDDET",   open_opts$[25]="OTA"
+	open_tables$[26]="OPT_INVSHIP",  open_opts$[26]="OTA"
+	open_tables$[27]="OPE_CREDCUST", open_opts$[27]="OTA"
+	open_tables$[28]="IVC_WHSECODE", open_opts$[28]="OTA"
+	open_tables$[29]="IVS_PARAMS",   open_opts$[29]="OTA"
+	open_tables$[30]="OPE_ORDLSDET", open_opts$[30]="OTA"
+	open_tables$[31]="IVM_ITEMPRIC", open_opts$[31]="OTA"
+	open_tables$[32]="IVC_PRICCODE", open_opts$[32]="OTA"
+	open_tables$[33]="ARM_CUSTCMTS", open_opts$[33]="OTA"
+	open_tables$[34]="OPE_PRNTLIST", open_opts$[34]="OTA"
 	open_tables$[35]="OPM_POINTOFSALE",open_opts$[35]="OTA"
+	open_tables$[36]="ARC_SALECODE", open_opts$[36]="OTA"
 
 	gosub open_tables
 
