@@ -248,9 +248,9 @@ return
 
 rem ==========================================================================
 get_whse_item: rem --- Get warehouse and item records and display
-               rem ---  IN: item$ = the current item ID
-               rem ---    : whse$ = the current warehouse
-               rem --- OUT: default values set and displayed,
+               rem      IN: item$ = the current item ID
+               rem          whse$ = the current warehouse
+               rem     OUT: default values set and displayed,
                rem          fields disable/enabled
 rem ==========================================================================
 
@@ -369,7 +369,7 @@ return
 
 rem ==========================================================================
 test_qty: rem --- Test whether the transaction quantity is valid
-          rem ---  IN: trans_qty
+          rem      IN: trans_qty
 rem ==========================================================================
 
 	failed = 0
@@ -492,10 +492,10 @@ return
 
 rem ==========================================================================
 set_display_fields: rem --- Set the values of the header display fields
-                    rem     IN: loc$    = location
-                    rem         qoh$    = quantity on hand
-                    rem         commit$ = committed qty
-                    rem         avail$  = available qty
+                    rem      IN: loc$    = location
+                    rem          qoh$    = quantity on hand
+                    rem          commit$ = committed qty
+                    rem          avail$  = available qty
 rem ==========================================================================
 
 	rem --- Get the header controls
