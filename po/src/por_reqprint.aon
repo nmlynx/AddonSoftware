@@ -216,6 +216,7 @@ rem --- ESCAPE IF PLAIN$="Y" THEN LET SHIPFLEN$="Y
     l=l9+1
     first=1
     page=0
+    seq_msk$="####0000"
 
 rem --- Resize masks
 
@@ -263,10 +264,10 @@ rem --- Loop Starting
             break
          case req_seq
          case po_seq
-            order_by$="order by poe_reqprint.req_no,poe_reqprint.vendor_id,poe_reqprint.internal_seq_no"
+            order_by$="order by poe_reqprint.req_no,poe_reqprint.vendor_id,poe_reqdet.internal_seq_no"
             break
          case alt_seq
-            order_by$="order by apm_vendmast.alt_sequence,poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqprint.internal_seq_no"
+            order_by$="order by apm_vendmast.alt_sequence,poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
             break
          case whse_seq
             order_by$="order by poe_reqdet.warehouse_id,poe_reqprint.vendor_id,poe_reqprint.req_no"
@@ -363,7 +364,7 @@ done: rem --- All requisitions printed
 rem --- All done
 
     if recs=0
-        docPrint!.cancel()
+        doc!.cancel()
         msg_id$="DOC_OUTPUT_NODATA"
         gosub disp_message
         goto std_exit
@@ -474,13 +475,13 @@ report_heading: rem --- Report Heading
     rem --- Ribbon
     tmp=fnbox(20,270,550,24,page!)
     tmp=fnbox(20,270,550,394,page!)
-    tmp=fnline(90,270,90,664,page!)
+    tmp=fnline(80,270,80,664,page!)
     tmp=fnline(140,270,140,664,page!)
     tmp=fnline(390,270,390,664,page!)
     tmp=fnline(470,270,470,664,page!)
     tmp=fnline(490,270,490,664,page!)
-    tmp=fntext2(20,276,70,276,"Seq",boldfont!,center_justify,page!)
-    tmp=fntext2(90,276,50,276,"Quantity",boldfont!,right_justify,page!)
+    tmp=fntext2(15,276,60,276,"Seq",boldfont!,right_justify,page!)
+    tmp=fntext2(80,276,55,276,"Quantity",boldfont!,right_justify,page!)
     tmp=fntext(145,276,"Item/Description",boldfont!,page!)
     tmp=fntext(340,276,"Date Req'd",boldfont!,page!)
     tmp=fntext2(390,276,75,276,"Cost",boldfont!,right_justify,page!)
@@ -524,8 +525,8 @@ print_detail_line: rem --- Print Detail Line
             if cvs(ivm05a.vendor_item$,2)<>"" needed=needed+1
             if l+needed>l9-2 gosub print_continued
 
-            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
-            tmp=fntext2(90,row,50,row,str(qty:m2$),textfont!,right_justify,page!)
+            tmp=fntext2(15,row,60,row,str(num(poe11a.internal_seq_no$):seq_msk$),textfont!,right_justify,page!)
+            tmp=fntext2(80,row,55,row,str(qty:m2$),textfont!,right_justify,page!)
             tmp=fntext(145,row,poe11a.item_id$,textfont!,page!)
             tmp=fntext(345,row,fndate$(poe11a.reqd_date$),textfont!,page!)
             tmp=fntext2(390,row,75,row,str(poe11a.unit_cost:m3$),textfont!,right_justify,page!)
@@ -543,11 +544,11 @@ print_detail_line: rem --- Print Detail Line
 
         case nonstock_line; rem --- Print Non-Stock Line
 
-            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
-            tmp=fntext2(90,row,50,row,str(qty:m2$),textfont!,right_justify,page!)
+            tmp=fntext2(15,row,60,row,str(num(poe11a.internal_seq_no$):seq_msk$),textfont!,right_justify,page!)
+            tmp=fntext2(80,row,55,row,str(qty:m2$),textfont!,right_justify,page!)
             tmp=fntext(145,row,poe11a.ns_item_id$,textfont!,page!)
             tmp=fntext(345,row,fndate$(poe11a.reqd_date$),textfont!,page!)
-            tmp=fntext2(390,row,75,row,str(w[1]:m3$),textfont!,right_justify,page!)
+            tmp=fntext2(390,row,75,row,str(poe11a.unit_cost:m3$),textfont!,right_justify,page!)
             tmp=fntext2(470,row,20,row,poe11a.unit_measure$,textfont!,center_justify,page!)
             tmp=fntext2(490,row,75,row,str(extension:m1$),textfont!,right_justify,page!)
             l=l+1
@@ -558,22 +559,23 @@ print_detail_line: rem --- Print Detail Line
 
         case vend_part_num; rem --- Print Vendor Part Number, Message or Other Line
 
-            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
-            tmp=fntext(145,row,"Your Item Number ",poe11a.order_memo$,textfont!,page!)
+            tmp=fntext2(15,row,60,row,str(num(poe11a.internal_seq_no$):seq_msk$),textfont!,right_justify,page!)
+            tmp=fntext(145,row,"Your Item Number "+poe11a.order_memo$,textfont!,page!)
             l=l+1
             break
         case message_line; rem --- Print Message Line
 
-            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
+            tmp=fntext2(15,row,60,row,str(num(poe11a.internal_seq_no$):seq_msk$),textfont!,right_justify,page!)
             tmp=fntext(145,row,poe11a.order_memo$,textfont!,page!)
             l=l+1
             break
 
         case other_line
 
-            tmp=fntext2(20,row,70,row,poe11a.internal_seq_no$,textfont!,center_justify,page!)
+            tmp=fntext2(15,row,60,row,str(num(poe11a.internal_seq_no$):seq_msk$),textfont!,right_justify,page!)
             tmp=fntext(145,row,poe11a.order_memo$,textfont!,page!)
-            tmp=fntext2(390,row,75,row,str(w[1]:m3$),textfont!,right_justify,page!)
+            tmp=fntext(345,row,fndate$(poe11a.reqd_date$),textfont!,page!)            
+            tmp=fntext2(390,row,75,row,str(poe11a.unit_cost:m3$),textfont!,right_justify,page!)
             tmp=fntext2(490,row,75,row,str(extension:m1$),textfont!,right_justify,page!)
             l=l+1
             break
@@ -667,7 +669,7 @@ shipfrom_break: rem --- Ship-From Break
     shipfrom$="SAME"
     if cvs(poe01a.purch_addr$,2)="" return
     apm05a.name$=nf$
-    find record (apm05a_dev,key=apm05a_key$,dom=*next) apm05a$
+    find record (apm05_dev,key=apm05a_key$,dom=*next) apm05a$
 
 rem --- 
 
@@ -910,8 +912,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),                                str(err:"000"),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
