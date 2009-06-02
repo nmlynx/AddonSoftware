@@ -220,14 +220,19 @@ return
 whse_addr_info: rem --- get and display Warehouse Address Info
 	ivc_whsecode_dev=fnget_dev("IVC_WHSECODE")
 	dim ivc_whsecode$:fnget_tpl$("IVC_WHSECODE")
-	warehouse_id$=callpoint!.getColumnData("POE_REQHDR.WAREHOUSE_ID")
+	if pos("WAREHOUSE_ID.AVAL"=callpoint!.getCallpointEvent())<>0
+		warehouse_id$=callpoint!.getUserInput()
+	else
+		warehouse_id$=callpoint!.getColumnData("POE_REQHDR.WAREHOUSE_ID")
+	endif
 	read record(ivc_whsecode_dev,key=firm_id$+"C"+warehouse_id$,dom=*next)ivc_whsecode$
-	callpoint!.setColumnData("<<DISPLAY>>.W_ADDR1",ivc_whsecode$.addr_line_1$)
-	callpoint!.setColumnData("<<DISPLAY>>.W_ADDR2",ivc_whsecode$.addr_line_2$)
-	callpoint!.setColumnData("<<DISPLAY>>.W_CITY",ivc_whsecode$.city$)
-	callpoint!.setColumnData("<<DISPLAY>>.W_STATE",ivc_whsecode$.state_code$)
-	callpoint!.setColumnData("<<DISPLAY>>.W_ZIP_CODE",ivc_whsecode$.zip_code$)
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setColumnData("<<DISPLAY>>.W_ADDR1",ivc_whsecode.addr_line_1$)
+	callpoint!.setColumnData("<<DISPLAY>>.W_ADDR2",ivc_whsecode.addr_line_2$)
+	callpoint!.setColumnData("<<DISPLAY>>.W_CITY",ivc_whsecode.city$)
+	callpoint!.setColumnData("<<DISPLAY>>.W_STATE",ivc_whsecode.state_code$)
+	callpoint!.setColumnData("<<DISPLAY>>.W_ZIP_CODE",ivc_whsecode.zip_code$)
+	callpoint!.setStatus("REFRESH-WAIT:.5")
+
 return
 
 dropship_shipto: rem --- get and display shipto from Sales Order if drop ship indicated, and OE installed
