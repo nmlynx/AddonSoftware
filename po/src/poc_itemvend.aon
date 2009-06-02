@@ -70,7 +70,7 @@ rem --- Reassign cost if record exists
     else
 
 rem --- Update last PO date
-escape;rem this logic hasn't yet been executed
+
         if conv_factor then let ivm_itemvend.last_po_cost=unit_cost/conv_factor
         if when$>ivm_itemvend.last_po_date$ then let ivm_itemvend.last_po_date$=when$
         if pos(type$="PQC") then write record (ivm_itemvend_dev,key=ivm_itemvend.firm_id$+ivm_itemvend.vendor_id$+ivm_itemvend.item_id$) ivm_itemvend$
