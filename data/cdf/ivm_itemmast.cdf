@@ -76,6 +76,11 @@ rem --- Set Description Segments
 	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3", desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03))
 
 	callpoint!.setStatus("REFRESH")
+
+rem --- Save old Bar Code and UPC Code for Synonym Maintenance
+
+	user_tpl.old_barcode$=callpoint!.getColumnData("IVM_ITEMMAST.BAR_CODE")
+	user_tpl.old_upc$=callpoint!.getColumnData("IVM_ITEMMAST.UPC_CODE")
 [[<<DISPLAY>>.ITEM_DESC_SEG_3.AVAL]]
 rem --- Set this section back into desc, if modified
 
@@ -272,6 +277,47 @@ rem --- Populate ivm-02 with Product Type
 		ivm02a$ = field(ivm02a$)
 		write record (ivm02_dev) ivm02a$
 	wend
+
+rem --- Write synonyms of the Item Number, UPC Code and Bar Code
+	ivm_itemsyn_dev=fnget_dev("IVM_ITEMSYN")
+	dim ivm_itemsyn$:fnget_tpl$("IVM_ITEMSYN")
+	ivm_itemsyn.firm_id$=firm_id$
+	item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	ivm_itemsyn.item_synonym$=item_id$
+	ivm_itemsyn.item_id$=item_id$
+	ivm_itemsyn$=field(ivm_itemsyn$)
+	write record (ivm_itemsyn_dev) ivm_itemsyn$
+
+rem --- Remove old UPC Code and Bar Code
+	if cvs(user_tpl.old_barcode$,3)<>"" and user_tpl.old_barcode$<>item_id$
+		ivm_itemsyn.item_synonym$=user_tpl.old_barcode$
+		ivm_itemsyn.item_id$=item_id$
+		ivm_itemsyn$=field(ivm_itemsyn$)
+		remove(ivm_itemsyn_dev,key=ivm_itemsyn$(1,pos($0a$=ivm_itemsyn$+$0a$)-1),dom=*next)
+	endif
+	if cvs(user_tpl.old_upc$,3)<>"" and user_tpl.old_upc$<>item_id$
+		ivm_itemsyn.item_synonym$=user_tpl.old_upc$
+		ivm_itemsyn.item_id$=item_id$
+		ivm_itemsyn$=field(ivm_itemsyn$)
+		remove(ivm_itemsyn_dev,key=ivm_itemsyn$(1,pos($0a$=ivm_itemsyn$+$0a$)-1),dom=*next)
+	endif
+
+rem --- Add new UPC Code and Bar Code
+	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.BAR_CODE"),3)<>""
+		ivm_itemsyn.item_synonym$=callpoint!.getColumnData("IVM_ITEMMAST.BAR_CODE")
+		ivm_itemsyn.item_id$=item_id$
+		ivm_itemsyn$=field(ivm_itemsyn$)
+		write record (ivm_itemsyn_dev) ivm_itemsyn$
+	endif
+	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.UPC_CODE"),3)<>""
+		ivm_itemsyn.item_synonym$=callpoint!.getColumnData("IVM_ITEMMAST.UPC_CODE")
+		ivm_itemsyn.item_id$=item_id$
+		ivm_itemsyn$=field(ivm_itemsyn$)
+		write record (ivm_itemsyn_dev) ivm_itemsyn$
+	endif
+
+	user_tpl.old_barcode$=callpoint!.getColumnData("IVM_ITEMMAST.BAR_CODE")
+	user_tpl.old_upc$=callpoint!.getColumnData("IVM_ITEMMAST.UPC_CODE")
 [[IVM_ITEMMAST.BDEL]]
 rem --- Allow this item to be deleted?
 
@@ -390,7 +436,7 @@ rem --- Inits
 
 rem --- Open/Lock files
 
-	num_files=6
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_DEFAULTS",open_opts$[2]="OTA"
@@ -398,6 +444,7 @@ rem --- Open/Lock files
 	open_tables$[4]="ARS_PARAMS",open_opts$[4]="OTA"
 	open_tables$[5]="IVM_ITEMWHSE",open_opts$[5]="OTA"
 	open_tables$[6]="IVS_NUMBERS",open_opts$[6]="OTA"
+	open_tables$[7]="IVM_ITEMSYN",open_opts$[7]="OTA"
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit
@@ -443,7 +490,8 @@ rem --- Setup user_tpl$
 
 	dim user_tpl$:"sa:c(1)," +
 :                "desc_len_01:n(1*), desc_len_02:n(1*), desc_len_03:n(1*)," +
-:                "prev_desc_seg_1:c(1*), prev_desc_seg_2:c(1*), prev_desc_seg_3:c(1*)"
+:                "prev_desc_seg_1:c(1*), prev_desc_seg_2:c(1*), prev_desc_seg_3:c(1*)," +
+:		"old_upc:c(1*),old_barcode:c(1*)"
 
 	user_tpl.sa$=sa$
 
