@@ -134,7 +134,6 @@ rem --- Parameters
 rem --- Initializations
 
     dim params[10],params$[10]
-    o0=0
     sequence$="N"
     pomessage$=""
     restart$="N"
@@ -256,7 +255,7 @@ rem --- Loop Starting
 		where_clause$=where_clause$+"poe_reqprint.firm_id=poe_reqdet.firm_id AND poe_reqprint.req_no=poe_reqdet.req_no AND "
 		where_clause$=where_clause$+"poe_reqprint.firm_id=apm_vendmast.firm_id AND poe_reqprint.vendor_id=apm_vendmast.vendor_id "
 
-		order_by$=""
+		order_by$="order by poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.po_line_no"
 		
 	else
 
@@ -277,14 +276,14 @@ rem --- Loop Starting
 
 		switch action
 			case vend_seq
-				order_by$="order by poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
+				order_by$="order by poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.po_line_no"
 				break
 			 case req_seq
 			 case po_seq
-				order_by$="order by poe_reqprint.req_no,poe_reqprint.vendor_id,poe_reqdet.internal_seq_no"
+				order_by$="order by poe_reqprint.req_no,poe_reqprint.vendor_id,poe_reqdet.po_line_no"
 				break
 			 case alt_seq
-				order_by$="order by apm_vendmast.alt_sequence,poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
+				order_by$="order by apm_vendmast.alt_sequence,poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.po_line_no"
 				break
 			 case whse_seq
 				order_by$="order by poe_reqdet.warehouse_id,poe_reqprint.vendor_id,poe_reqprint.req_no"
@@ -370,7 +369,6 @@ print_done: rem --- Done printing line message
 
         d$=""
 
-
         wend;   rem loop back for next result from sql fetch
 
 done: rem --- All requisitions printed
@@ -440,7 +438,7 @@ report_heading: rem --- Report Heading
     tmp=fntext2(432, 36,54, 36,"Page",boldfont!,right_justify,page!)
     tmp=fntext2(432, 60,54, 36,"Date",boldfont!,right_justify,page!)
     tmp=fntext2(432, 84,54, 36,"Vendor",boldfont!,right_justify,page!)
-    tmp=fntext2(432,108,54, 36,"PO Nbr",boldfont!,right_justify,page!)
+    tmp=fntext2(432,108,54, 36,"Req No",boldfont!,right_justify,page!)
 
     tmp=fnline(490, 30,490,126,page!)
     tmp=fntext(496, 36,str(page),textfont!,page!)
