@@ -6,6 +6,10 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+	rem --- err= on enter because pgm is usually run from req print form, but can be called
+	rem --- on demand from w/in requisition entry
+	enter single_vendor_id$,single_req_no$,err=*next
+
     seterr std_error
     setesc std_error
 
@@ -130,10 +134,7 @@ rem --- Parameters
 rem --- Initializations
 
     dim params[10],params$[10]
-    o0$="sys_ac.bbx"
     o0=0
-    sortfile$="pow-02"
-    workfile$="pow-12"
     sequence$="N"
     pomessage$=""
     restart$="N"
@@ -148,11 +149,15 @@ rem --- Initializations
 rem --- Assign form input values to local variables
 
     table$=fnget_table$("")
-
-    sequence$=option!.getOptionData("REPORT_TYPE")
-    msg$=option!.getOptionData("MESSAGE_TEXT")
-    restart$=option!.getOptionData("RESTART")
-    vendor$=option!.getOptionData("VENDOR_ID")
+    if cvs(table$,3)=""
+		vendor$=single_vendor_id$
+		req_no$=single_req_no$
+    else
+		sequence$=option!.getOptionData("REPORT_TYPE")
+		msg$=option!.getOptionData("MESSAGE_TEXT")
+		restart$=option!.getOptionData("RESTART")
+		vendor$=option!.getOptionData("VENDOR_ID")
+	endif
 
 rem --- Initializations
 
@@ -162,7 +167,6 @@ rem --- Initializations
     dim w0$(18,"9"),w1$(48,"X"),w2$(32),w3$(22,"X"),w4$(40,"X"),w[12]
     dim l0$(7),l1$(40),c0$(8,"0"),c1$(30,"X"),z0$(32,"X"),x8$(25),x9$(20)
     dim a$(140,"X"),n$(105,"X"),s$(105,"X")
-    batch=1
     nf$="(Not On File)"
     shipflen=35
     more=1
@@ -208,7 +212,6 @@ rem --- ESCAPE IF PLAIN$="Y" THEN LET SHIPFLEN$="Y
     t3$=""
     t4$=""
     return_l9=l9
-    if o0 batch=0
     qtymaskmax=9,qtymaskmin=9,maxfooters=10,l9=29
     dim footer$[maxfooters]
     title=len(title$)
@@ -242,40 +245,56 @@ rem    shipfrom$="99 "+fill(30,"X")
 
 rem --- Loop Starting
 
-    sql_prep$="select poe_reqprint.firm_id, poe_reqprint.vendor_id, poe_reqprint.req_no, poe_reqdet.internal_seq_no, "
-    sql_prep$=sql_prep$+"poe_reqdet.warehouse_id, apm_vendmast.alt_sequence "
-    sql_prep$=sql_prep$+"FROM poe_reqprint, poe_reqdet, apm_vendmast "
+	if single_vendor_id$<>""
+	
+		sql_prep$="select poe_reqprint.firm_id, poe_reqprint.vendor_id, poe_reqprint.req_no, poe_reqdet.internal_seq_no, "
+		sql_prep$=sql_prep$+"poe_reqdet.warehouse_id, apm_vendmast.alt_sequence "
+		sql_prep$=sql_prep$+"FROM poe_reqprint, poe_reqdet, apm_vendmast "
 
+		where_clause$="WHERE poe_reqprint.firm_id = '"+firm_id$+"' AND poe_reqprint.vendor_id = '" +single_vendor_id$+ "' AND "
+		where_clause$=where_clause$+"poe_reqprint.req_no = '"+single_req_no$+"' AND "
+		where_clause$=where_clause$+"poe_reqprint.firm_id=poe_reqdet.firm_id AND poe_reqprint.req_no=poe_reqdet.req_no AND "
+		where_clause$=where_clause$+"poe_reqprint.firm_id=apm_vendmast.firm_id AND poe_reqprint.vendor_id=apm_vendmast.vendor_id "
 
-    where_clause$="WHERE poe_reqprint.firm_id = '"+firm_id$+"' AND "
-    where_clause$=where_clause$+"poe_reqprint.firm_id=poe_reqdet.firm_id AND poe_reqprint.req_no=poe_reqdet.req_no AND "
-    where_clause$=where_clause$+"poe_reqprint.firm_id=apm_vendmast.firm_id AND poe_reqprint.vendor_id=apm_vendmast.vendor_id "
+		order_by$=""
+		
+	else
 
-    action=pos(sequence$="NRPAW")
-        vend_seq=1
-        req_seq=2
-        po_seq=3
-        alt_seq=4
-        whse_seq=5
+		sql_prep$="select poe_reqprint.firm_id, poe_reqprint.vendor_id, poe_reqprint.req_no, poe_reqdet.internal_seq_no, "
+		sql_prep$=sql_prep$+"poe_reqdet.warehouse_id, apm_vendmast.alt_sequence "
+		sql_prep$=sql_prep$+"FROM poe_reqprint, poe_reqdet, apm_vendmast "
 
-    switch action
-        case vend_seq
-            order_by$="order by poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
-            break
-         case req_seq
-         case po_seq
-            order_by$="order by poe_reqprint.req_no,poe_reqprint.vendor_id,poe_reqdet.internal_seq_no"
-            break
-         case alt_seq
-            order_by$="order by apm_vendmast.alt_sequence,poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
-            break
-         case whse_seq
-            order_by$="order by poe_reqdet.warehouse_id,poe_reqprint.vendor_id,poe_reqprint.req_no"
-            break
-         case default
-            more=0
-            continue
-    swend
+		where_clause$="WHERE poe_reqprint.firm_id = '"+firm_id$+"' AND "
+		where_clause$=where_clause$+"poe_reqprint.firm_id=poe_reqdet.firm_id AND poe_reqprint.req_no=poe_reqdet.req_no AND "
+		where_clause$=where_clause$+"poe_reqprint.firm_id=apm_vendmast.firm_id AND poe_reqprint.vendor_id=apm_vendmast.vendor_id "
+
+		action=pos(sequence$="NRPAW")
+			vend_seq=1
+			req_seq=2
+			po_seq=3
+			alt_seq=4
+			whse_seq=5
+
+		switch action
+			case vend_seq
+				order_by$="order by poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
+				break
+			 case req_seq
+			 case po_seq
+				order_by$="order by poe_reqprint.req_no,poe_reqprint.vendor_id,poe_reqdet.internal_seq_no"
+				break
+			 case alt_seq
+				order_by$="order by apm_vendmast.alt_sequence,poe_reqprint.vendor_id,poe_reqprint.req_no,poe_reqdet.internal_seq_no"
+				break
+			 case whse_seq
+				order_by$="order by poe_reqdet.warehouse_id,poe_reqprint.vendor_id,poe_reqprint.req_no"
+				break
+			 case default
+				more=0
+				continue
+		swend
+		
+	endif	
 
     sql_prep$=sql_prep$ + where_clause$ + order_by$
     sql_chan=sqlunt
@@ -351,13 +370,8 @@ print_done: rem --- Done printing line message
 
         d$=""
 
-        rem *** wend;   rem loop back for next sort record
 
-check_batch:
-
-         if (batch = 0) break
-
-        wend;   rem loop back for next header
+        wend;   rem loop back for next result from sql fetch
 
 done: rem --- All requisitions printed
 
@@ -376,17 +390,21 @@ rem --- All done
 
 update: rem --- Update print file?
 
-    msg_id$="PO_UPDTPRT"
-    dim msg_tokens$[1]
-    msg_tokens$[1]=label$
-	gosub disp_message
-	if msg_opt$="Y"
-	    read (poe21_dev,key=firm_id$,dom=*next)
-		while more
-			k$=key(poe21_dev,end=*break)
-			if pos(firm_id$=k$)<>1 break
-			remove (poe21_dev,key=k$,dom=*break)
-		wend
+	if single_vendor_id$=""
+
+		msg_id$="PO_UPDTPRT"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=label$
+		gosub disp_message
+		if msg_opt$="Y"
+			read (poe21_dev,key=firm_id$,dom=*next)
+			while more
+				k$=key(poe21_dev,end=*break)
+				if pos(firm_id$=k$)<>1 break
+				remove (poe21_dev,key=k$,dom=*break)
+			wend
+		endif
+		
 	endif
 
 all_done: rem --- All done
@@ -957,8 +975,11 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
+    
+    if single_vendor_id$<>"" then rd_called$="YES"
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
+    
 
 rem #endinclude std_end.src
 

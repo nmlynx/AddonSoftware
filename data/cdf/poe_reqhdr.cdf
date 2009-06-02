@@ -1,3 +1,21 @@
+[[POE_REQHDR.AOPT-DPRT]]
+rem --- on-demand requisition print
+
+vendor_id$=callpoint!.getColumnData("POE_REQHDR.VENDOR_ID")
+req_no$=callpoint!.getColumnData("POE_REQHDR.REQ_NO")
+
+gosub queue_for_printing
+
+if cvs(vendor_id$,3)<>"" and cvs(req_no$,3)<>""
+
+	gosub queue_for_printing
+	call "por_reqprint.aon",vendor_id$,req_no$	
+
+endif
+[[POE_REQHDR.AOPT-QPRT]]
+gosub queue_for_printing
+msg_id$="PO_REQ_QPRT"
+gosub disp_message
 [[POE_REQHDR.ADEL]]
 rem --- also delete requisition print record
 
@@ -7,14 +25,7 @@ remove (poe_reqprint_dev,key=firm_id$+callpoint!.getColumnData("POE_REQHDR.VENDO
 [[POE_REQHDR.AWRI]]
 rem --- need to put out poe_reqprint record
 
-poe_reqprint_dev=fnget_dev("POE_REQPRINT")
-dim poe_reqprint$:fnget_tpl$("POE_REQPRINT")
-
-poe_reqprint.firm_id$=firm_id$
-poe_reqprint.vendor_id$=callpoint!.getColumnData("POE_REQHDR.VENDOR_ID")
-poe_reqprint.req_no$=callpoint!.getColumnData("POE_REQHDR.REQ_NO")
-
-writerecord (poe_reqprint_dev)poe_reqprint$
+gosub queue_for_printing
 [[POE_REQHDR.APFE]]
 rem --- set total order amt
 
@@ -361,6 +372,19 @@ else
 endif
 
 callpoint!.setStatus("REFRESH")
+
+return
+
+queue_for_printing:
+
+poe_reqprint_dev=fnget_dev("POE_REQPRINT")
+dim poe_reqprint$:fnget_tpl$("POE_REQPRINT")
+
+poe_reqprint.firm_id$=firm_id$
+poe_reqprint.vendor_id$=callpoint!.getColumnData("POE_REQHDR.VENDOR_ID")
+poe_reqprint.req_no$=callpoint!.getColumnData("POE_REQHDR.REQ_NO")
+
+writerecord (poe_reqprint_dev)poe_reqprint$
 
 return
 [[POE_REQHDR.BSHO]]

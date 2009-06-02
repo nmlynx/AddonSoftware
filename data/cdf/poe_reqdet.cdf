@@ -185,7 +185,6 @@ else
 	endif
 	util.forceEdit(Form!, return_to_row, return_to_col)
 endif
-
 [[POE_REQDET.AGCL]]
 rem print 'show';rem debug
 
@@ -205,7 +204,7 @@ rem print "modify status:",callpoint!.getGridRowModifyStatus(num(callpoint!.getV
 
 gosub update_line_type_info
 
-if cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) 
+if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),2) 
 
 		callpoint!.setColumnData("POE_REQDET.CONV_FACTOR","")
 		callpoint!.setColumnData("POE_REQDET.FORECAST","")
@@ -226,6 +225,7 @@ if cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" or cvs(callpoin
 		callpoint!.setColumnData("POE_REQDET.WAREHOUSE_ID",callpoint!.getHeaderColumnData("POE_REQHDR.WAREHOUSE_ID"))
 		callpoint!.setColumnData("POE_REQDET.WO_NO","")
 		callpoint!.setColumnData("POE_REQDET.WO_SEQ_REF","")
+
 
 endif
 [[POE_REQDET.REQ_QTY.AVAL]]
@@ -291,6 +291,7 @@ update_line_type_info:
 	endif
 	read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
 	callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
+	callpoint!.setDevObject("line_type",poc_linecode.line_type$)
 
 return
 
