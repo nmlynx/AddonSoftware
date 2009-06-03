@@ -315,7 +315,7 @@ next_ddm04:
 	   data_name$ = ddm04.data_name$
 	   s_pos = pos("/" = data_name$)
 
-	   	   while s_pos
+	   while s_pos
 	      data_name$ = data_name$(1, s_pos-1) + data_name$(s_pos+1)
 		  s_pos = pos("/" = data_name$)
 	   wend
