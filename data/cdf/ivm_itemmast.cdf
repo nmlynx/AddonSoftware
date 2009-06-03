@@ -292,14 +292,12 @@ rem --- Remove old UPC Code and Bar Code
 	if cvs(user_tpl.old_barcode$,3)<>"" and user_tpl.old_barcode$<>item_id$
 		ivm_itemsyn.item_synonym$=user_tpl.old_barcode$
 		ivm_itemsyn.item_id$=item_id$
-		ivm_itemsyn$=field(ivm_itemsyn$)
-		remove(ivm_itemsyn_dev,key=ivm_itemsyn$(1,pos($0a$=ivm_itemsyn$+$0a$)-1),dom=*next)
+		remove(ivm_itemsyn_dev,key=firm_id$+ivm_itemsyn.item_synonym$+ivm_itemsyn.item_id$,dom=*next)
 	endif
 	if cvs(user_tpl.old_upc$,3)<>"" and user_tpl.old_upc$<>item_id$
 		ivm_itemsyn.item_synonym$=user_tpl.old_upc$
 		ivm_itemsyn.item_id$=item_id$
-		ivm_itemsyn$=field(ivm_itemsyn$)
-		remove(ivm_itemsyn_dev,key=ivm_itemsyn$(1,pos($0a$=ivm_itemsyn$+$0a$)-1),dom=*next)
+		remove(ivm_itemsyn_dev,key=firm_id$+ivm_itemsyn.item_synonym$+ivm_itemsyn.item_id$,dom=*next)
 	endif
 
 rem --- Add new UPC Code and Bar Code
