@@ -504,17 +504,21 @@ rem --- Set user labels and lengths for description segments
 
 	if cvs(ivs01a.user_desc_lb_02$, 2) <> "" then
 		util.changeText(Form!, "Segment Description 2:", cvs(ivs01a.user_desc_lb_02$, 2) + ":")
-		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_2", "MAXL", str(user_tpl.desc_len_02))
 	else
 		util.changeText(Form!, "Segment Description 2:", "")
+	if user_tpl.desc_len_02 <> 0 then
+		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_2", "MAXL", str(user_tpl.desc_len_02))
+	else
 		callpoint!.setColumnEnabled("<<DISPLAY>>.ITEM_DESC_SEG_2", -1)
 	endif
 
 	if cvs(ivs01a.user_desc_lb_03$, 2) <> "" then 
 		util.changeText(Form!, "Segment Description 3:", cvs(ivs01a.user_desc_lb_03$, 2) + ":")
-		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_3", "MAXL", str(user_tpl.desc_len_03))
 	else
 		util.changeText(Form!, "Segment Description 3:", "")
+	if user_tpl.desc_len_03 <>0 then
+		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_3", "MAXL", str(user_tpl.desc_len_03))
+	else
 		callpoint!.setColumnEnabled("<<DISPLAY>>.ITEM_DESC_SEG_3", -1)
 	endif
 
