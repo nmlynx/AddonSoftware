@@ -1,3 +1,14 @@
+[[POE_PODET.BDEL]]
+rem --- before delete; check to see if this row is disabled (as it will be if there have been any receipts)...if so don't allow delete
+rem --- this didn't work, because the isRowEditable() property is sometimes set to 0 by Barista
+rem g!=callpoint!.getDevObject("dtl_grid")
+rem can_delete = num(g!.isRowEditable(num(callpoint!.getValidationRow())))
+rem print "in bdel, can_delete is ",can_delete," for row ",callpoint!.getValidationRow()
+rem if !can_delete then callpoint!.setStatus("ABORT")
+
+if num(callpoint!.getColumnData("POE_PODET.QTY_RECEIVED"))<>0
+	callpoint!.setStatus("ABORT")
+endif
 [[POE_PODET.AWRI]]
 
 rem --- if new row, updt ivm-05 (old poc.ua, now poc_itemvend) 
@@ -14,6 +25,28 @@ if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y"
 
 	call stbl("+DIR_PGM")+"poc_itemvend.aon","W","P",vendor_id$,ord_date$,item_id$,conv_factor,unit_cost,qty_ordered,callpoint!.getDevObject("iv_prec"),status
 	
+endif
+
+rem --- also need to update POE_LINKED if this is a dropship
+
+cust_id$=callpoint!.getHeaderColumnData("POE_POHDR.CUSTOMER_ID")
+order_no$=callpoint!.getHeaderColumnData("POE_POHDR.ORDER_NO")
+so_line_no$=callpoint!.getColumnData("POE_PODET.SO_INT_SEQ_REF")
+
+if num(so_line_no$)<>0
+
+	poe_linked_dev=fnget_dev("POE_LINKED")
+	dim poe_linked$:fnget_tpl$("POE_LINKED")
+
+	poe_linked.firm_id$=firm_id$
+	poe_linked.po_no$=callpoint!.getColumnData("POE_PODET.PO_NO")
+	poe_linked.poedet_seq_ref$=callpoint!.getColumnData("POE_PODET.INTERNAL_SEQ_NO")
+	poe_linked.customer_id$=cust_id$
+	poe_linked.order_no$=order_no$
+	poe_linked.opedet_seq_ref$=so_line_no$
+
+	write record (poe_linked_dev)poe_linked$
+
 endif
 
 rem --- Update inventory OO if not a dropship PO
@@ -56,7 +89,7 @@ if callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"
 				items$[2] = prior_item$
 				refs[0]   = -prior_qty
 
-				print "---reverse OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				rem print "---reverse OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -69,7 +102,7 @@ if callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"
 				items$[2] = curr_item$
 				refs[0]   = curr_qty 
 
-				print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				rem print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -90,7 +123,7 @@ if callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"
 				items$[2] = curr_item$
 				refs[0]   = curr_qty - prior_qty
 
-				print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				rem print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -100,18 +133,6 @@ if callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"
 
 	endif
 endif
-[[POE_PODET.BDEL]]
-rem --- before delete; check to see if this row is disabled (as it will be if there have been any receipts)...if so don't allow delete
-
-g!=callpoint!.getDevObject("dtl_grid")
-can_delete = g!.isRowEditable(num(callpoint!.getValidationRow()))
-if can_delete then callpoint!.setStatus("ABORT")
-
-print "column: ", callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
-print "undo: ",callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")
-
-rem curr_qty = -num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))
-rem gosub update_iv_oo
 [[POE_PODET.QTY_ORDERED.AVAL]]
 rem --- call poc_itemvend.aon (poc.ua) to retrieve unit cost from ivm-05
 rem --- send in: R/W for retrieve or write
@@ -139,7 +160,7 @@ gosub update_header_tots
 callpoint!.setDevObject("qty_this_row",num(callpoint!.getUserInput()))
 callpoint!.setDevObject("cost_this_row",unit_cost);rem setting both qty and cost because cost may have changed based on qty break
 [[POE_PODET.AGCL]]
-print 'show';rem debug
+rem print 'show';rem debug
 
 use ::ado_util.src::util
 
@@ -282,6 +303,8 @@ rem --- save current qty/price this row
 callpoint!.setDevObject("qty_this_row",callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))
 callpoint!.setDevObject("cost_this_row",callpoint!.getColumnData("POE_PODET.UNIT_COST"))
 
+callpoint!.setDevObject("bdel_flag","")
+
 rem print "AGRN "
 rem print "qty this row: ",callpoint!.getDevObject("qty_this_row")
 rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
@@ -294,16 +317,14 @@ gosub update_header_tots
 po_line_code$=callpoint!.getColumnData("POE_PODET.PO_LINE_CODE")
 if cvs(po_line_code$,2)<>"" then  gosub update_line_type_info
 
-print "column: ", callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
-print "undo: ",callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")
-
-rem curr_qty = num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))
-rem gosub update_iv_oo
+curr_qty = num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))
+if curr_qty<>0 then gosub update_iv_oo
 [[POE_PODET.ADEL]]
-	print "ADEL:"
-	print "column: ",callpoint!.getColumnData("POE_PODET.ITEM_ID"),callpoint!.getColumnData("POE_PODET.QTY_ORDERED")
 
 gosub update_header_tots
+
+curr_qty = -num(callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnUndoData("POE_PODET.CONV_FACTOR"))
+if curr_qty<>0 then gosub update_iv_oo
 [[POE_PODET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
@@ -349,6 +370,8 @@ rem --- After Grid Display Row
 
 if num(callpoint!.getColumnData("POE_PODET.QTY_RECEIVED"))<>0
 	util.disableGridRow(Form!,num(callpoint!.getValidationRow()))
+	callpoint!.setDevObject("qty_received","Y")
+	rem print "receipt amt found - disabled row ",callpoint!.getValidationRow();rem debug
 else
 	po_line_code$=callpoint!.getColumnData("POE_PODET.PO_LINE_CODE")
 	if cvs(po_line_code$,2)<>"" then  gosub update_line_type_info
@@ -411,6 +434,7 @@ update_line_type_info:
 	endif
 	read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
 	callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
+	callpoint!.setDevObject("line_type",poc_linecode.line_type$)
 
 return
 
@@ -521,7 +545,7 @@ items$[1] = curr_whse$
 items$[2] = curr_item$
 refs[0]   = curr_qty
 
-print "---Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+rem print "---Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
 call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 if status then exitto std_exit
