@@ -1,5 +1,54 @@
-[[OPE_ORDHDR.ASVA]]
-print "Hdr:ASVA"; rem debug
+[[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
+print "CUSTOMER_ID:AVAL"; rem debug
+
+rem --- Get credit limit
+
+	cust_id$ = callpoint!.getUserInput()
+	file$ = "ARM_CUSTDET"
+	dim custdet$:fnget_tpl$(file$)
+	start_block = 1
+
+	if start_block then
+		found = 0
+		find record (fnget_dev(file$), key=firm_id$+cust_id$+"  ", dom=*endif) custdet$
+		found = 1
+	endif
+
+	if !found then
+		callpoint!.setStatut("ABORT")
+		break; rem --- exit callpoint
+	endif
+
+	user_tpl.credit_limit = custdet.credit_limit
+
+rem --- Show customer data
+	
+	gosub bill_to_info
+	if pos("ABORT" = callpoint!.getStatus()) then break; rem --- exit callpoint
+	gosub disp_cust_comments
+
+	rem callpoint!.setDevObject("cust",cust$); rem why?
+
+rem --- Is this a cash sale?
+
+	if user_tpl.cash_sale$ = "Y" and cust_id$ = user_tpl.cash_cust$ then
+		user_tpl.is_cash_sale = 1
+	else
+		user_tpl.is_cash_sale = 0
+	endif
+
+rem --- Credit check?
+
+	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+	endif
+
+rem --- Enable buttons
+
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = ""
+		callpoint!.setOptionEnabled("DINV",1)
+		callpoint!.setOptionEnabled("CINV",1)
+	endif
 [[OPE_ORDHDR.SLSPSN_CODE.AVAL]]
 rem --- Set Commission Percent
 
@@ -50,22 +99,12 @@ rem --- Is previous record an order and not void?
 		rem --- If EOF or past firm, rewind to last record in this firm
 		read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
 	wend
-[[OPE_ORDHDR.BPRI]]
-print "Hdr:BPRI"; rem debug
 [[OPE_ORDHDR.SHIPTO_NO.BINP]]
 print "SHIPTO:BINP"; rem debug
 
 rem --- Save old value
 
 	user_tpl.old_ship_to$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-[[OPE_ORDHDR.AWIN]]
-print "Hdr:AWIN"; rem debug
-[[OPE_ORDHDR.AOVE]]
-print "Hdr:AOVE"; rem debug
-[[OPE_ORDHDR.AKEY]]
-print "Hdr:AKEY"; rem debug
-[[OPE_ORDHDR.ACAL]]
-print "Hdr:ACAL"; rem debug
 [[OPE_ORDHDR.APFE]]
 print "Hdr:APFE"; rem debug
 
@@ -85,12 +124,6 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
-[[OPE_ORDHDR.BREC]]
-print "Hdr:BREC"; rem debug
-[[OPE_ORDHDR.BREA]]
-print "Hdr:BREA"; rem debug
-[[OPE_ORDHDR.BNEX]]
-print "Hdr:BNEX"; rem debug
 [[OPE_ORDHDR.BNEK]]
 print "Hdr:BNEK"; rem debug
 
@@ -118,32 +151,12 @@ rem --- Is next record an order and not void?
 		rem --- If EOF or wrong firm, rewind to first record of the firm
 		read (ope01_dev, key=firm_id$, dom=*next)
 	wend
-[[OPE_ORDHDR.BFMC]]
-print "Hdr:BFMC"; rem debug
-[[OPE_ORDHDR.BTBL]]
-print "Hdr:BTBL"; rem debug
-[[OPE_ORDHDR.BENA]]
-print "Hdr:BENA"; rem debug
-[[OPE_ORDHDR.BWRI]]
-print "Hdr:BWRI"; rem debug
-[[OPE_ORDHDR.BWAR]]
-print "Hdr:BWAR"; rem debug
-[[OPE_ORDHDR.AENA]]
-print "Hdr:AENA"; rem debug
 [[OPE_ORDHDR.ARER]]
 print "Hdr:ARER"; rem debug
 
 rem --- Set flag
 
 	user_tpl.user_entry$ = "N"; rem user entered an order (not navagated)
-[[OPE_ORDHDR.AREC]]
-print "Hdr:AREC"; rem debug
-[[OPE_ORDHDR.ARNF]]
-print "Hdr:ARNF"; rem debug
-[[OPE_ORDHDR.AREA]]
-print "Hdr:AREA"; rem debug
-[[OPE_ORDHDR.ARAR]]
-print "Hdr:ARAR"; rem debug
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
 
@@ -151,6 +164,7 @@ rem --- Show customer data
 
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	gosub bill_to_info
+	if pos("ABORT" = callpoint!.getStatus()) then break; rem --- exit callpoint
 	gosub disp_cust_comments
 
 rem --- Display Ship to information
@@ -171,7 +185,8 @@ rem --- Credit check?
 
 rem --- Display order total
 
-callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
+	print "---Order Total: ", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
@@ -499,6 +514,7 @@ rem --- Existing record
 		rem --- Display order total
 
 		callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", str(ope01a.total_sales:user_tpl.amount_mask$))
+		print "---Order Total:", ope01a.total_sales
 
 		rem --- Check if reprintable
 
@@ -807,29 +823,6 @@ rem --- If cash customer, get correct customer number
 		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","Y")
 		callpoint!.setStatus("REFRESH")
 	endif
-[[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
-print "CUSTOMER_ID:AVAL"; rem debug
-
-rem --- Show customer data
-
-	cust_id$ = callpoint!.getUserInput()
-	gosub bill_to_info
-	gosub disp_cust_comments
-
-	rem callpoint!.setDevObject("cust",cust$); rem why?
-
-rem --- Credit check?
-
-	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
-	endif
-
-rem --- Enable buttons
-
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
-		callpoint!.setOptionEnabled("DINV",1)
-		callpoint!.setOptionEnabled("CINV",1)
-	endif
 [[OPE_ORDHDR.AWRI]]
 print "Hdr:AWRI"; rem debug
 
@@ -872,34 +865,47 @@ rem ==========================================================================
 
 	custmast_dev = fnget_dev("ARM_CUSTMAST")
 	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
-	read record (custmast_dev, key=firm_id$+cust_id$, dom=*next) custmast_tpl$
+	find record (custmast_dev, key=firm_id$+cust_id$) custmast_tpl$
 
-	callpoint!.setColumnData("<<DISPLAY>>.BADD1",custmast_tpl.addr_line_1$)
-	callpoint!.setColumnData("<<DISPLAY>>.BADD2",custmast_tpl.addr_line_2$)
-	callpoint!.setColumnData("<<DISPLAY>>.BADD3",custmast_tpl.addr_line_3$)
-	callpoint!.setColumnData("<<DISPLAY>>.BADD4",custmast_tpl.addr_line_4$)
-	callpoint!.setColumnData("<<DISPLAY>>.BCITY",custmast_tpl.city$)
-	callpoint!.setColumnData("<<DISPLAY>>.BSTATE",custmast_tpl.state_code$)
-	callpoint!.setColumnData("<<DISPLAY>>.BZIP",custmast_tpl.zip_code$)
+	callpoint!.setColumnData("<<DISPLAY>>.BADD1",  custmast_tpl.addr_line_1$)
+	callpoint!.setColumnData("<<DISPLAY>>.BADD2",  custmast_tpl.addr_line_2$)
+	callpoint!.setColumnData("<<DISPLAY>>.BADD3",  custmast_tpl.addr_line_3$)
+	callpoint!.setColumnData("<<DISPLAY>>.BADD4",  custmast_tpl.addr_line_4$)
+	callpoint!.setColumnData("<<DISPLAY>>.BCITY",  custmast_tpl.city$)
+	callpoint!.setColumnData("<<DISPLAY>>.BSTATE", custmast_tpl.state_code$)
+	callpoint!.setColumnData("<<DISPLAY>>.BZIP",   custmast_tpl.zip_code$)
 
 	custdet_dev = fnget_dev("ARM_CUSTDET")
 	dim custdet_tpl$:fnget_tpl$("ARM_CUSTDET")
-	read record (custdet_dev, key=firm_id$+cust_id$+"  ", dom=*next) custdet_tpl$
+	start_block = 1
 
-	ar_balance=custdet_tpl.aging_future+
+	if start_block then
+		found = 0
+		find record (custdet_dev, key=firm_id$+cust_id$+"  ", dom=*endif) custdet_tpl$
+		found = 1
+	endif
+
+	if !found then
+		callpoint!.setStatus("ABORT")
+		return
+	endif
+
+	user_tpl.balance = custdet_tpl.aging_future+
 :		custdet_tpl.aging_cur+
 :		custdet_tpl.aging_30+
 :		custdet_tpl.aging_60+
 :		custdet_tpl.aging_90+
 :		custdet_tpl.aging_120
 
-	callpoint!.setColumnData("<<DISPLAY>>.AGING_120",custdet_tpl.aging_120$)
-	callpoint!.setColumnData("<<DISPLAY>>.AGING_30",custdet_tpl.aging_30$)
-	callpoint!.setColumnData("<<DISPLAY>>.AGING_60",custdet_tpl.aging_60$)
-	callpoint!.setColumnData("<<DISPLAY>>.AGING_90",custdet_tpl.aging_90$)
-	callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",custdet_tpl.aging_cur$)
-	callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE",custdet_tpl.aging_future$)
-	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",str(ar_balance))
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_120",    custdet_tpl.aging_120$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_30",     custdet_tpl.aging_30$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_60",     custdet_tpl.aging_60$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_90",     custdet_tpl.aging_90$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",    custdet_tpl.aging_cur$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE", custdet_tpl.aging_future$)
+	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",    user_tpl.balance$)
+
+	user_tpl.credit_limit = custdet_tpl.credit_limit
 
 	callpoint!.setStatus("REFRESH")
 
@@ -975,6 +981,8 @@ rem ==========================================================================
 disp_ord_tot:
 rem ==========================================================================
 
+print "Hdr: in disp_ord_tot"; rem debug
+
 	user_tpl.ord_tot = 0
 
 	ope11_dev = fnget_dev("OPE_ORDDET")
@@ -1023,6 +1031,7 @@ rem ==========================================================================
 	wend
 
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", str(user_tpl.ord_tot:user_tpl.amount_mask$))
+	print "---Order Total:", user_tpl.ord_tot; rem debug
 
 return
 
@@ -1527,7 +1536,7 @@ rem --- see if blank warehouse exists
 	start_block = 1
 	
 	if start_block then
-		read record(num(open_chans$[28]),key=firm_id$+"C"+ivm10c.warehouse_id$,dom=*endif)ivm10c$
+		read record (num(open_chans$[28]), key=firm_id$+"C"+ivm10c.warehouse_id$, dom=*endif) ivm10c$
 		blank_whse$="Y"
 	endif
 
@@ -1573,22 +1582,24 @@ rem --- Disable display fields
 
 rem --- Save totals object
 
-	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") )
+	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") ); rem do we need this?
 
 rem --- Setup user_tpl$
 
 	ars_credit_dev=num(open_chans$[7])
 	dim ars_credit$:open_tpls$[7]
-	read record (ars_credit_dev,key=firm_id$+"AR01")ars_credit$
+	read record (ars_credit_dev, key=firm_id$+"AR01") ars_credit$
 
 	tpl$ = ""
-	tpl$ = tpl$ + "credit_installed:c(1), display_bal:c(1), ord_tot:n(15), amount_mask:c(1*), line_type:c(1),"
-	tpl$ = tpl$ + "line_boqty:n(15), line_shipqty:n(15), def_ship:c(8), def_commit:c(8), blank_whse:c(1),"
+	tpl$ = tpl$ + "credit_installed:c(1), balance:n(15), credit_limit:n(15), display_bal:c(1), ord_tot:n(15),"
+	tpl$ = tpl$ + "def_ship:c(8), def_commit:c(8), blank_whse:c(1), line_code:c(1), line_type:c(1),"
 	tpl$ = tpl$ + "dropship_whse:c(1), def_whse:c(10), avail_oh:c(5), avail_comm:c(5), avail_avail:c(5),"
 	tpl$ = tpl$ + "avail_oo:c(5), avail_wh:c(5), avail_type:c(5*), dropship_flag:c(5*), ord_tot_1:c(5*),"
-	tpl$ = tpl$ + "price_code:c(2), pricing_code:c(4), order_date:c(8),cur_row:n(5), pick_hold:c(1),"
-	tpl$ = tpl$ + "pgmdir:c(1*), prev_line_code:c(1), skip_whse:c(1), warehouse_id:c(2), user_entry:c(1),"
-	tpl$ = tpl$ + "line_code:c(1), skip_ln_code:c(1), hist_ord:c(1), old_ship_to:c(1*), old_disc_code:c(1*)"
+	tpl$ = tpl$ + "price_code:c(2), pricing_code:c(4), order_date:c(8), pick_hold:c(1), never_checked:u(1),"
+	tpl$ = tpl$ + "pgmdir:c(1*), skip_whse:c(1), warehouse_id:c(2), user_entry:c(1), cur_row:n(5),"
+	tpl$ = tpl$ + "skip_ln_code:c(1), hist_ord:c(1), old_ship_to:c(1*), old_disc_code:c(1*), is_cash_sale:u(1),"
+	tpl$ = tpl$ + "prev_item:c(1*), cash_sale:c(1), cash_cust:c(6), bo_col:u(1), allow_bo:c(1), amount_mask:c(1*),"
+	tpl$ = tpl$ + "line_taxable:c(1), item_taxable:c(1), min_line_amt:n(5), min_ord_amt:n(5), item_price:n(15)"
 	dim user_tpl$:tpl$
 
 	user_tpl.credit_installed$ = ars_credit.sys_install$
@@ -1599,9 +1610,16 @@ rem --- Setup user_tpl$
 	user_tpl.amount_mask$      = ars01a.amount_mask$
 	user_tpl.line_code$        = ars01a.line_code$
 	user_tpl.skip_ln_code$     = ars01a.skip_ln_code$
+	user_tpl.cash_sale$        = ars01a.cash_sale$
+	user_tpl.cash_cust$        = ars01a.customer_id$
+	user_tpl.allow_bo$         = ars01a.backorders$
+	user_tpl.min_ord_amt       = num(ars01a.min_ord_amt$)
+	user_tpl.min_line_amt		= num(ars01a.min_line_amt$)
 	user_tpl.def_whse$         = ivs01a.warehouse_id$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
-	user_tpl.cur_row           = -1
+	user_tpl.cur_row				= -1
+	user_tpl.bo_col            = 8
+	user_tpl.never_checked     = 1
 
 rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 
@@ -1625,7 +1643,7 @@ rem --- Clear variables
 	callpoint!.setDevObject("lsmast_dev",open_chans$[11])
 	callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
-	callpoint!.setDevObject("default_linecode",ars01a.line_code$)
+	rem callpoint!.setDevObject("default_linecode",ars01a.line_code$)
 
 rem --- Set Lot/Serial button up properly
 
@@ -1636,6 +1654,7 @@ rem --- Set Lot/Serial button up properly
 	swend
 
 	callpoint!.setOptionEnabled("LENT",0)
+	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
