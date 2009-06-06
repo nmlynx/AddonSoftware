@@ -255,8 +255,10 @@ rem #endinclude std_missing_params.src
 rem #include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
-
-	exit
+ 
+    rd_called$="YES"
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
 	   
 rem #endinclude std_exit.src
 
