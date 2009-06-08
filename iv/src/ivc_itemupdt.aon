@@ -264,11 +264,11 @@ receive_a_tier: rem --- For receipts, add to existing tier or create new one
 :       refs$[5] <> ivm04a.line_no$ or
 :       ( pos(action$="OPRC",2)     and ivm04a.trans_ref$ <> refs$[3] ) or
 :       ( pos(action$="OPRC",2) = 0 and ivm04a.trans_ref$ <> refs$[2] )
-:       then
-    goto receive_a_tier
-endif
+:   then
+        goto receive_a_tier
+    endif
 
-goto update_a_tier
+    goto update_a_tier
 
 create_a_tier: rem --- Create new tier
 
@@ -349,7 +349,7 @@ decrement_tier: rem --- For issues, decrement existing tier(s)
             remove (ivm04_dev,key=ivm04a_key$,dom=*next)
         endif
 
-    lifo_zero_amount:
+    lifo_zero_amount: 
         amount=0
     wend
 
@@ -415,28 +415,28 @@ rem --- ivt-04 Inventory Transactions
     dim k$:ivt04a_tpl$
     k$=keyp(ivt04_dev,end=write_trans_rec)
 
-    if	k.firm_id$      <> ivt04a.firm_id$ or 
-:       k.warehouse_id$ <> ivt04a.warehouse_id$ or 
-:       k.item_id$      <> ivt04a.item_id$ or 
+    if	k.firm_id$      <> ivt04a.firm_id$      or
+:       k.warehouse_id$ <> ivt04a.warehouse_id$ or
+:       k.item_id$      <> ivt04a.item_id$      or 
 :       k.trans_date$   <> ivt04a.trans_date$ 
-:       then 
-    goto write_trans_rec
-endif
+:   then 
+        goto write_trans_rec
+    endif
 
-read record (ivt04_dev,key=k$,dom=write_trans_rec) ivt04a$
+    read record (ivt04_dev,key=k$,dom=write_trans_rec) ivt04a$
 
 rem --- Update existing ivt-04 record
 
     if  trans$(code,2) = ivt04a.trans_source$ and
 :       refs$[1] = ivt04a.trans_ref_1$ and
-:           refs$[2] = ivt04a.trans_ref_2$ and	
-:           refs$[3] = ivt04a.trans_ref_3$ and
-:           refs$[4] = ivt04a.trans_ref_4$ and
-:           refs$[5] = ivt04a.trans_seq$ and
-:           ivm01a.unit_of_sale$ = ivt04a.unit_measure$ and
-:           ( ( pos(action$="PORC",2)     and ivt04a.line_code$ = refs$[6] ) or
-:           ( pos(action$="PORC",2) = 0 and ivt04a.po_line_code$ = refs$[6] ) )
-:           then
+:       refs$[2] = ivt04a.trans_ref_2$ and	
+:       refs$[3] = ivt04a.trans_ref_3$ and
+:       refs$[4] = ivt04a.trans_ref_4$ and
+:       refs$[5] = ivt04a.trans_seq$ and
+:       ivm01a.unit_of_sale$ = ivt04a.unit_measure$ and
+:       ( ( pos(action$="PORC",2)     and ivt04a.line_code$ = refs$[6] ) or
+:       ( pos(action$="PORC",2) = 0 and ivt04a.po_line_code$ = refs$[6] ) )
+:   then
         ivt04a.trans_qty=ivt04a.trans_qty+qty
         if action$="BB" and cvs(lotser$,2)="" then ivt04a.trans_qty=qty
         if cost<>0 then ivt04a.unit_cost=cost
@@ -870,13 +870,13 @@ std_error: rem --- Standard error handler (01Apr2006)
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
-std_error_exit:
+std_error_exit: 
     master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=std_error_release)
     if cvs(sysinfo.user_id$,2)=master_user$ escape
-std_error_release:
+std_error_release: 
     status=999
     if pgm(-1)<>pgm(-2) exit
     release
@@ -892,13 +892,13 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
     call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
 :       str(err:"000"),rd_err_text$,rd_err_act$
-std_missing_params_exit:
+std_missing_params_exit: 
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
     if cvs(sysinfo.user_id$,2)=master_user$ escape
-std_missing_params_release:
+std_missing_params_release: 
     status=999
     if pgm(-1)<>pgm(-2) exit
     release
