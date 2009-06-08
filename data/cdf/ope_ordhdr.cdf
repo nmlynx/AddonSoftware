@@ -521,7 +521,7 @@ rem --- Existing record
 		reprint = 0
 		gosub check_if_reprintable
 
-		if reprintable=0 then 
+		if reprintable then 
 			msg_id$="OP_REPRINT_ORDER"
 			gosub disp_message
 			
@@ -1441,7 +1441,7 @@ rem ==========================================================================
 return
 
 rem ==========================================================================
-check_if_reprintable: rem --- Are There Reprintable Detail Lines?
+check_if_reprintable: rem --- Are There Reprintable Detail Lines? 
                       rem      IN: ar_type$
                       rem          cust_id$
                       rem          ord_no$
@@ -1449,7 +1449,6 @@ check_if_reprintable: rem --- Are There Reprintable Detail Lines?
 rem ==========================================================================
 
 	reprintable = 0
-	first_time  = 1
 	
 	ope11_dev = fnget_dev("OPE_ORDDET")
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
@@ -1458,7 +1457,6 @@ rem ==========================================================================
 	while 1
 		read record (ope11_dev, end=*break) ope11a$
 		if pos(firm_id$+ar_type$+cust_id$+ord_no$ = ope11a$) <> 1 then break
-		first_time = 0
 
 		if ope11a.pick_flag$ = "Y" then 
 			reprintable = 1
@@ -1466,8 +1464,6 @@ rem ==========================================================================
 		endif
 		
 	wend
-
-	if first_time then reprintable = 1
 
 return 
 [[OPE_ORDHDR.BSHO]]
