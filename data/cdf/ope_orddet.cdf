@@ -25,7 +25,7 @@ rem --- Clear quantities if line type is Memo or Other
 
 rem --- Set product types for certain line types 
 
-	if pos(linecode_rec.line_type="NOP") then
+	if pos(linecode_rec.line_type$="NOP") then
 		if linecode_rec.prod_type_pr$ = "D" then			
 			callpoint!.setColumnData("OPE_ORDDET.PRODUCT_TYPE", linecode_rec.product_type$)
 		else
