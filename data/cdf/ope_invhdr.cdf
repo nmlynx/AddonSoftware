@@ -324,7 +324,6 @@ rem --- Restrict lookup to orders
 	else
 		callpoint!.setStatus("ABORT")
 	endif
-
 [[OPE_INVHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 
@@ -356,10 +355,23 @@ rem --- Write/Remove manual ship to file
 
 [[OPE_INVHDR.ADIS]]
 rem --- Show customer data
+	
+	cust_id = callpoint!.getUserInput()
+	gosub display_customer
 
-	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	gosub bill_to_info
+	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
+		gosub display_aging
+
+		rem --- Only display if user did not enter the customer, that is, used the nav arrows
+		if user_tpl.user_entry$ = "N" then
+			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
+				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+			endif
+		endif
+	endif
+
 	gosub disp_cust_comments
+
 
 rem --- Display Ship to information
 
@@ -578,18 +590,19 @@ rem --- Enable/Disable buttons
 	callpoint!.setStatus("REFRESH")
 [[OPE_INVHDR.CUSTOMER_ID.AVAL]]
 rem --- Show customer data
+	
+	cust_id = callpoint!.getUserInput()
+	gosub display_customer
 
-	cust_id$ = callpoint!.getUserInput()
-	gosub bill_to_info
-	gosub disp_cust_comments
+	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
+		gosub display_aging
 
-	rem callpoint!.setDevObject("cust", cust_id$)
-
-rem --- Credit check?
-
-	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
+			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+		endif
 	endif
+
+	gosub disp_cust_comments
 
 rem --- Enable Duplicate buttons
 
@@ -600,63 +613,75 @@ rem --- Enable Duplicate buttons
 [[OPE_INVHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 
-	gosub get_op_params
-
-	if ars01a.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" 
-		callpoint!.setColumnData("OPE_INVHDR.CUSTOMER_ID",ars01a.customer_id$)
-		callpoint!.setColumnData("OPE_INVHDR.CASH_SALE","Y")
+	if user_tpl.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" then
+		callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_ID", user_tpl.cash_cust$)
+		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "Y")
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPE_INVHDR.<CUSTOM>]]
 rem ==========================================================================
-bill_to_info: rem --- Get and display Bill To Information
-              rem      IN: cust_id$
+display_customer: rem --- Get and display Bill To Information
+                  rem      IN: cust_id$
 rem ==========================================================================
 
 	custmast_dev = fnget_dev("ARM_CUSTMAST")
 	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
+	find record (custmast_dev, key=firm_id$+cust_id$) custmast_tpl$
 
-	read record (custmast_dev, key=firm_id$+cust_id$, dom=*next) custmast_tpl$
+	callpoint!.setColumnData("<<DISPLAY>>.BADD1",  custmast_tpl.addr_line_1$)
+	callpoint!.setColumnData("<<DISPLAY>>.BADD2",  custmast_tpl.addr_line_2$)
+	callpoint!.setColumnData("<<DISPLAY>>.BADD3",  custmast_tpl.addr_line_3$)
+	callpoint!.setColumnData("<<DISPLAY>>.BADD4",  custmast_tpl.addr_line_4$)
+	callpoint!.setColumnData("<<DISPLAY>>.BCITY",  custmast_tpl.city$)
+	callpoint!.setColumnData("<<DISPLAY>>.BSTATE", custmast_tpl.state_code$)
+	callpoint!.setColumnData("<<DISPLAY>>.BZIP",   custmast_tpl.zip_code$)
 
-	callpoint!.setColumnData("<<DISPLAY>>.BADD1",custmast_tpl.addr_line_1$)
-	callpoint!.setColumnData("<<DISPLAY>>.BADD2",custmast_tpl.addr_line_2$)
-	callpoint!.setColumnData("<<DISPLAY>>.BADD3",custmast_tpl.addr_line_3$)
-	callpoint!.setColumnData("<<DISPLAY>>.BADD4",custmast_tpl.addr_line_4$)
-	callpoint!.setColumnData("<<DISPLAY>>.BCITY",custmast_tpl.city$)
-	callpoint!.setColumnData("<<DISPLAY>>.BSTATE",custmast_tpl.state_code$)
-	callpoint!.setColumnData("<<DISPLAY>>.BZIP",custmast_tpl.zip_code$)
+return
+
+rem ==========================================================================
+display_aging: rem --- Display customer aging
+               rem      IN: cust_id$
+rem ==========================================================================
 
 	custdet_dev = fnget_dev("ARM_CUSTDET")
 	dim custdet_tpl$:fnget_tpl$("ARM_CUSTDET")
 
-	read record (custdet_dev, key=firm_id$+cust_id$+"  ", dom=*next) custdet_tpl$
+	find record (custdet_dev, key=firm_id$+cust_id$+"  ") custdet_tpl$
 
-	ar_balance = custdet_tpl.aging_future +
-:		custdet_tpl.aging_cur +
-:		custdet_tpl.aging_30 +
-:		custdet_tpl.aging_60 +
-:		custdet_tpl.aging_90 +
+	user_tpl.balance = custdet_tpl.aging_future+
+:		custdet_tpl.aging_cur+
+:		custdet_tpl.aging_30+
+:		custdet_tpl.aging_60+
+:		custdet_tpl.aging_90+
 :		custdet_tpl.aging_120
 
-	if user_tpl.credit_installed$="Y" and user_tpl.display_bal$="A" then 
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_120",custdet_tpl.aging_120$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_30",custdet_tpl.aging_30$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_60",custdet_tpl.aging_60$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_90",custdet_tpl.aging_90$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",custdet_tpl.aging_cur$)
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE",custdet_tpl.aging_future$)
-		callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",str(ar_balance))
-	else
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_120","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_30","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_60","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_90","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR","")
-		callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE","")
-		callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING","")
-	endif
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_120",    custdet_tpl.aging_120$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_30",     custdet_tpl.aging_30$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_60",     custdet_tpl.aging_60$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_90",     custdet_tpl.aging_90$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",    custdet_tpl.aging_cur$)
+	callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE", custdet_tpl.aging_future$)
+	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",    user_tpl.balance$)
 
-	callpoint!.setStatus("REFRESH")
+	user_tpl.credit_limit = custdet_tpl.credit_limit
+
+return
+
+rem ==========================================================================
+check_credit: rem --- Check credit limit of customer
+              rem      IN: custdet_tpl$ (cust detail record)
+rem ==========================================================================
+
+	if custdet_tpl.credit_limit and user_tpl.balance>=user_tpl.credit_limit then
+   	if user_tpl.credit_installed <> "Y" then
+      	msg_id$ = "OP_OVER_CREDIT_LIMIT"
+			dim msg_token$[1]
+			msg_token$[1] = str(custdet_tpl.credit_limit:user_tpl.amount_mask$)
+         gosub disp_message
+      endif  
+   
+		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Credit Limit Exceeded ***") 
+   endif
 
 return
 
@@ -1462,8 +1487,9 @@ rem --- Setup user_tpl$
 	tpl$ = tpl$ + "dropship_whse:c(1), def_whse:c(10), avail_oh:c(5), avail_comm:c(5), avail_avail:c(5),"
 	tpl$ = tpl$ + "avail_oo:c(5), avail_wh:c(5), avail_type:c(5*), dropship_flag:c(5*), ord_tot_1:c(5*),"
 	tpl$ = tpl$ + "price_code:c(2), pricing_code:c(4), order_date:c(8), cur_row:n(5), pick_hold:c(1),"
-	tpl$ = tpl$ + "pgmdir:c(1*), prev_line_code:c(1), skip_whse:c(1), warehouse_id:c(2),"
-	tpl$ = tpl$ + "line_code:c(1), skip_ln_code:c(1), user_entry:c(1), old_ship_to:c(1*), old_disc_code:c(1*)"
+	tpl$ = tpl$ + "pgmdir:c(1*), prev_line_code:c(1), skip_whse:c(1), warehouse_id:c(2), balance:n(15),"
+	tpl$ = tpl$ + "line_code:c(1), skip_ln_code:c(1), user_entry:c(1), old_ship_to:c(1*), old_disc_code:c(1*),"
+	tpl$ = tpl$ + "cash_sale:c(1), cash_cust:c(6), credit_limit:n(15)"
 	dim user_tpl$:tpl$
 
 	user_tpl.credit_installed$ = ars_credit.sys_install$
@@ -1474,6 +1500,8 @@ rem --- Setup user_tpl$
 	user_tpl.amount_mask$      = ars01a.amount_mask$
 	user_tpl.line_code$        = ars01a.line_code$
 	user_tpl.skip_ln_code$     = ars01a.skip_ln_code$
+	user_tpl.cash_sale$        = ars01a.cash_sale$
+	user_tpl.cash_cust$        = ars01a.customer_id$
 	user_tpl.def_whse$         = ivs01a.warehouse_id$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
