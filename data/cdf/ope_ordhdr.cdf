@@ -138,7 +138,7 @@ print "Hdr:ADIS"; rem debug
 
 rem --- Show customer data
 	
-	cust_id$ = callpoint!.getUserInput()
+	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 

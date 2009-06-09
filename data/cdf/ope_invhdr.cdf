@@ -356,7 +356,7 @@ rem --- Write/Remove manual ship to file
 [[OPE_INVHDR.ADIS]]
 rem --- Show customer data
 	
-	cust_id$ = callpoint!.getUserInput()
+	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
