@@ -181,11 +181,12 @@ print "Det:AGDS"; rem debug
 
 rem --- Disable Back orders if necessary
 
-	cust_id$ = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+	cust_id$   = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+	cash_sale$ = callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE")
 
 	if user_tpl.allow_bo$ = "N"        or
 :		pos(user_tpl.line_type$ = "MO") or
-:		user_tpl.is_cash_sale
+:		cash_sale$ = "Y"
 :	then
 		util.disableGridColumn(Form!, user_tpl.bo_col)
 		print "---BO Disabled"; rem debug
@@ -428,12 +429,12 @@ rem --- Warehouse and Item must be correct
 		callpoint!.setStatus("ABORT")
 	else
 
-	rem --- Set objects
+	rem --- Set objects (why?)
 
-		callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
-		callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
-		callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
-		callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+		rem callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+		rem callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
+		rem callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
+		rem callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 
 	rem --- Clear line type
 
@@ -593,13 +594,16 @@ rem --- Set shipped and back ordered
 
 		if qty_ord<>prev_qty_ord then
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+			print "---Backord cleared"; rem debug
 
 			if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" and
 :				callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P"
 :			then
 				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
+				print "---Shipped set to", qty_ord; rem debug
 			else
 				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
+				print "---Shipped cleared"; rem debug
 			endif
 		endif
 
@@ -665,6 +669,7 @@ rem --- recalc quantities and extended price
 	shipqty      = num(callpoint!.getUserInput())
 	prev_shipqty = num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_SHIPPED"))
 	ordqty       = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	cash_sale$   = callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE")
 
 print "---Shipped:", shipqty; rem debug
 print "---Prev   :", prev_shipqty
@@ -678,7 +683,7 @@ print "---Ordered:", ordqty
 		break; rem --- exit callpoint
 	endif
 
-	if user_tpl.allow_bo$ = "N" or user_tpl.is_cash_sale then
+	if user_tpl.allow_bo$ = "N" or cash_sale$ = "Y" then
 		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 		print "---BO set to zero"; rem debug
 	else
@@ -785,7 +790,7 @@ pricing: rem --- Call Pricing routine
          rem     OUT: price (UNIT_PRICE), disc (DISC_PERCENT), STD_LINE_PRC
 rem ==========================================================================
 
-print "Det: in pricing"; rem debug
+print "Det:in pricing"; rem debug
 
 	wh$      = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	item$    = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
@@ -824,12 +829,16 @@ print "Det: in pricing"; rem debug
 	else
 		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", str(price))
 		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", str(disc))
+		print "---Unit Price set to", price; rem debug
+		print "---Discount set to", disc; rem debug
 	endif
 
 	if disc=100 then
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str(user_tpl.item_price))
+		print "---List Price set to", user_tpl.item_price; rem debug
 	else
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str((price*100)/(100-disc)) )
+		print "---List Price set to", (price*100)/(100-disc); rem debug
 	endif
 
 rem --- Recalc and display extended price
@@ -1177,6 +1186,7 @@ rem ==========================================================================
 	ord_qty    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(ord_qty * unit_price))
+	print "---Ext price set to", ord_qty * unit_price; rem debug
 	callpoint!.setStatus("MODIFIED;REFRESH")
 
 return
