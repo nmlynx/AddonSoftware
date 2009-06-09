@@ -3,11 +3,12 @@ print "CUSTOMER_ID:AVAL"; rem debug
 
 rem --- Show customer data
 	
-	cust_id = callpoint!.getUserInput()
+	cust_id$ = callpoint!.getUserInput()
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
+        gosub check_credit
 
 		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
 			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
@@ -20,7 +21,7 @@ rem --- Show customer data
 
 rem --- Enable buttons
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = ""
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = "" then
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
 	endif
@@ -137,11 +138,12 @@ print "Hdr:ADIS"; rem debug
 
 rem --- Show customer data
 	
-	cust_id = callpoint!.getUserInput()
+	cust_id$ = callpoint!.getUserInput()
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
+        gosub check_credit
 
 		rem --- Only display if user did not enter the customer, that is, used the nav arrows
 		if user_tpl.user_entry$ = "N" then
@@ -526,7 +528,9 @@ rem --- Existing record
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit callpoint
 		endif
-
+        
+rem --- Set Codes		
+        
 		price_code$ = "Y"
 		if reprint then callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
 
@@ -565,13 +569,14 @@ rem --- New record
 		callpoint!.setColumnData("OPE_ORDHDR.ORDER_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_ORDHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.PRICING_CODE",arm02a.pricing_code$)
-		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","N")
 		callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
 
 		gosub get_op_params
 
 		if cust_id$ = ars01a.customer_id$
 			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","Y")
+        else
+			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "N")
 		endif
 
 		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","Y")
@@ -958,10 +963,10 @@ rem ==========================================================================
 get_op_params:
 rem ==========================================================================
 
-	ars01_dev=fnget_dev("ARS_PARAMS")
-	ars01a$=fnget_tpl$("ARS_PARAMS")
-	dim ars01a$:ars01a$
-	read record (ars01_dev,key=firm_id$+"AR00") ars01a$
+	ars01_dev = fnget_dev("ARS_PARAMS")
+	dim ars01a$:fnget_tpl$("ARS_PARAMS")
+    
+	read record (ars01_dev, key=firm_id$+"AR00") ars01a$
 
 return
 
@@ -1008,13 +1013,15 @@ print "Hdr: in disp_ord_tot"; rem debug
 		if opc_linecode.line_type$ = "O" then 
 			user_tpl.ord_tot = user_tpl.ord_tot + ope11a.ext_price
 		endif
-
+        
+        rem --- this does nothing...
 		dim ivm01a$:fattr(ivm01a$)
 		read record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
 
 		if ivm01a.taxable_flag$="Y" and opc_linecode.taxable_flag$="Y" then 
 			ope11a.taxable_amt = ope11a.ext_price; rem --- does nothing
 		endif
+        rem ---
 
 	wend
 
@@ -1024,7 +1031,8 @@ print "Hdr: in disp_ord_tot"; rem debug
 return
 
 rem ==========================================================================
-check_lock_flag:
+check_lock_flag: rem --- Check manual record lock
+                 rem     OUT: locked = 1 or 0
 rem ==========================================================================
 
 	locked=0
@@ -1465,7 +1473,8 @@ rem --- Open needed files
 
 	num_files=36
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
+	
+   open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",  open_opts$[2]="OTA"
 	open_tables$[3]="OPE_ORDSHIP",   open_opts$[3]="OTA"
 	open_tables$[4]="ARS_PARAMS",    open_opts$[4]="OTA"
@@ -1506,12 +1515,15 @@ rem --- Open needed files
 rem --- get AR Params
 
 	dim ars01a$:open_tpls$[4]
-	read record(num(open_chans$[4]),key=firm_id$+"AR00")ars01a$
+	read record (num(open_chans$[4]), key=firm_id$+"AR00") ars01a$
+
+	dim ars_credit$:open_tpls$[7]
+	read record (num(open_chans$[7]), key=firm_id$+"AR01") ars_credit$
 
 rem --- get IV Params
 
 	dim ivs01a$:open_tpls$[29]
-	read record(num(open_chans$[29]),key=firm_id$+"IV00")ivs01a$
+	read record (num(open_chans$[29]), key=firm_id$+"IV00") ivs01a$
 
 rem --- see if blank warehouse exists
 
@@ -1570,20 +1582,54 @@ rem --- Save totals object
 
 rem --- Setup user_tpl$
 
-	ars_credit_dev=num(open_chans$[7])
-	dim ars_credit$:open_tpls$[7]
-	read record (ars_credit_dev, key=firm_id$+"AR01") ars_credit$
+	tpl$ = 
+:		"credit_installed:c(1), " +
+:		"balance:n(15), " +
+:     "credit_limit:n(15), " +
+:     "display_bal:c(1), " +
+:     "ord_tot:n(15), " +
+:     "def_ship:c(8), " + 
+:     "def_commit:c(8), " +
+:     "blank_whse:c(1), " +
+:     "line_code:c(1), " +
+:     "line_type:c(1), " +
+:     "dropship_whse:c(1), " +
+:     "def_whse:c(10), " +
+:     "avail_oh:c(5), " +
+:     "avail_comm:c(5), " +
+:     "avail_avail:c(5), " +
+:     "avail_oo:c(5), " +
+:     "avail_wh:c(5), " +
+:     "avail_type:c(5*), " +
+:     "dropship_flag:c(5*), " +
+:     "ord_tot_1:c(5*), " +
+:     "price_code:c(2), " +
+:     "pricing_code:c(4), " +
+:     "order_date:c(8), " +
+:     "pick_hold:c(1), " +
+:     "never_checked:u(1), " +
+:     "pgmdir:c(1*), " +
+:     "skip_whse:c(1), " +
+:     "warehouse_id:c(2), " +
+:     "user_entry:c(1), " +
+:     "cur_row:n(5), " +
+:     "skip_ln_code:c(1), " +
+:     "hist_ord:c(1), " +
+:     "old_ship_to:c(1*), " +
+:     "old_disc_code:c(1*), "+
+:     "cash_sale:c(1), " +
+:     "cash_cust:c(6), " +
+:     "bo_col:u(1), " +
+:     "allow_bo:c(1), " +
+:     "amount_mask:c(1*)," +
+:     "line_taxable:c(1), " +
+:     "item_taxable:c(1), " +
+:     "min_line_amt:n(5), " +
+:     "min_ord_amt:n(5), " +
+:     "item_price:n(15), " +
+:		"line_dropship:c(1), " +
+:		"dropship_cost:c(1)"
 
-	tpl$ = ""
-	tpl$ = tpl$ + "credit_installed:c(1), balance:n(15), credit_limit:n(15), display_bal:c(1), ord_tot:n(15),"
-	tpl$ = tpl$ + "def_ship:c(8), def_commit:c(8), blank_whse:c(1), line_code:c(1), line_type:c(1),"
-	tpl$ = tpl$ + "dropship_whse:c(1), def_whse:c(10), avail_oh:c(5), avail_comm:c(5), avail_avail:c(5),"
-	tpl$ = tpl$ + "avail_oo:c(5), avail_wh:c(5), avail_type:c(5*), dropship_flag:c(5*), ord_tot_1:c(5*),"
-	tpl$ = tpl$ + "price_code:c(2), pricing_code:c(4), order_date:c(8), pick_hold:c(1), never_checked:u(1),"
-	tpl$ = tpl$ + "pgmdir:c(1*), skip_whse:c(1), warehouse_id:c(2), user_entry:c(1), cur_row:n(5),"
-	tpl$ = tpl$ + "skip_ln_code:c(1), hist_ord:c(1), old_ship_to:c(1*), old_disc_code:c(1*),"
-	tpl$ = tpl$ + "prev_item:c(1*), cash_sale:c(1), cash_cust:c(6), bo_col:u(1), allow_bo:c(1), amount_mask:c(1*),"
-	tpl$ = tpl$ + "line_taxable:c(1), item_taxable:c(1), min_line_amt:n(5), min_ord_amt:n(5), item_price:n(15)"
 	dim user_tpl$:tpl$
 
 	user_tpl.credit_installed$ = ars_credit.sys_install$
@@ -1597,11 +1643,12 @@ rem --- Setup user_tpl$
 	user_tpl.cash_sale$        = ars01a.cash_sale$
 	user_tpl.cash_cust$        = ars01a.customer_id$
 	user_tpl.allow_bo$         = ars01a.backorders$
+	user_tpl.dhipship_cost$    = ars01a.dropship_cost$
 	user_tpl.min_ord_amt       = num(ars01a.min_ord_amt$)
-	user_tpl.min_line_amt		= num(ars01a.min_line_amt$)
+	user_tpl.min_line_amt      = num(ars01a.min_line_amt$)
 	user_tpl.def_whse$         = ivs01a.warehouse_id$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
-	user_tpl.cur_row				= -1
+	user_tpl.cur_row           = -1
 	user_tpl.bo_col            = 8
 	user_tpl.never_checked     = 1
 
@@ -1618,15 +1665,15 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 
 rem --- Clear variables
 
-	callpoint!.setDevObject("cust","")
-	callpoint!.setDevObject("ar_type","")
-	callpoint!.setDevObject("order","")
-	callpoint!.setDevObject("int_seq","")
-	callpoint!.setDevObject("wh","")
-	callpoint!.setDevObject("item","")
-	callpoint!.setDevObject("lsmast_dev",open_chans$[11])
-	callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
-	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
+	rem callpoint!.setDevObject("cust","")
+	rem callpoint!.setDevObject("ar_type","")
+	rem callpoint!.setDevObject("order","")
+	rem callpoint!.setDevObject("int_seq","")
+	rem callpoint!.setDevObject("wh","")
+	rem callpoint!.setDevObject("item","")
+	rem callpoint!.setDevObject("lsmast_dev",open_chans$[11])
+	rem callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
+	rem callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
 	rem callpoint!.setDevObject("default_linecode",ars01a.line_code$)
 
 rem --- Set Lot/Serial button up properly
