@@ -1,13 +1,13 @@
 [[POE_PODET.BDEL]]
 rem --- before delete; check to see if this row is disabled (as it will be if there have been any receipts)...if so don't allow delete
-rem --- this didn't work, because the isRowEditable() property is sometimes set to 0 by Barista
-rem g!=callpoint!.getDevObject("dtl_grid")
-rem can_delete = num(g!.isRowEditable(num(callpoint!.getValidationRow())))
-rem print "in bdel, can_delete is ",can_delete," for row ",callpoint!.getValidationRow()
-rem if !can_delete then callpoint!.setStatus("ABORT")
+rem --- otherwise, reverse the OO quantity in ivm-02
+
 
 if num(callpoint!.getColumnData("POE_PODET.QTY_RECEIVED"))<>0
 	callpoint!.setStatus("ABORT")
+else
+	curr_qty = -num(callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnUndoData("POE_PODET.CONV_FACTOR"))
+	if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"then gosub update_iv_oo
 endif
 [[POE_PODET.AWRI]]
 
@@ -160,7 +160,7 @@ gosub update_header_tots
 callpoint!.setDevObject("qty_this_row",num(callpoint!.getUserInput()))
 callpoint!.setDevObject("cost_this_row",unit_cost);rem setting both qty and cost because cost may have changed based on qty break
 [[POE_PODET.AGCL]]
-rem print 'show';rem debug
+print 'show';rem debug
 
 use ::ado_util.src::util
 
@@ -323,8 +323,6 @@ if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y" the
 
 gosub update_header_tots
 
-curr_qty = -num(callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnUndoData("POE_PODET.CONV_FACTOR"))
-if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"then gosub update_iv_oo
 [[POE_PODET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
