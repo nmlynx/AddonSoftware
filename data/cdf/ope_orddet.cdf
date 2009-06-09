@@ -38,12 +38,6 @@ rem --- Set product types for certain line types
 rem --- Round 
 
 	callpoint!.setUserInput( str(round(num(callpoint!.getUserInput()), 2)) )
-[[OPE_ORDDET.UNIT_COST.BINP]]
-rem --- For standard lines, only edit cost if it's zero
-
-	if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST")) then
-		callpoint!.setStatus("ABORT")
-	endif
 [[OPE_ORDDET.WAREHOUSE_ID.AVEC]]
 print "Det:WAREHOUSE_ID.AVEC"; rem debug
 
@@ -76,10 +70,6 @@ rem --- Disable Recalc Price button
 rem --- Enable the Recalc Price button
 
 	callpoint!.setOptionEnabled("RCPR",1)
-[[OPE_ORDDET.ITEM_ID.BINP]]
-rem --- Set previous item
-
-	user_tpl.prev_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 [[OPE_ORDDET.AWRI]]
 print "Det:AWRI"; rem debug
 
@@ -516,18 +506,8 @@ rem 		call stbl("+DIR_PGM")+"opc_pc.aon",op_chans[all],firm_id$,whs$,item$,listc
 rem 		callpoint!.setUserInput(str(price))
 rem 	endif
 
-rem --- Calc Extension
-
-	newqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-	unit_price=num(callpoint!.getUserInput())
-	new_ext_price=newqty*unit_price
-	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
-	callpoint!.setStatus("MODIFIED-REFRESH")
-
-rem --- update header
-
+	gosub disp_ext_amt
 	gosub disp_grid_totals
-
 [[OPE_ORDDET.AUDE]]
 print "Det:AUDE"; rem debug
 
@@ -561,10 +541,11 @@ print "Det:ITEM_ID.AVAL"; rem debug
 rem --- Check item/warehouse combination and setup values
 
 	start_block = 1
-	item$ = callpoint!.getUserInput()
-	wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$       = callpoint!.getUserInput()
+	wh$         = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	prev_item$  = callpoint!.getColumnUndoData("OPE_ORDDET.ITEM_ID")
 
-	if item$<>user_tpl.prev_item$ then
+	if item$<>prev_item$ then
 		gosub clear_all_numerics
 	endif
 
@@ -742,7 +723,7 @@ rem ==========================================================================
 	tamt! = UserObj!.getItem(num(user_tpl.ord_tot_1$))
 	tamt!.setValue(user_tpl.ord_tot)
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", user_tpl.ord_tot$)
-	callpoint!.setStatus("MODIFIED;REFRESH")
+	callpoint!.setStatus("REFRESH")
 
 return
 
@@ -891,19 +872,11 @@ rem ==========================================================================
 
 		rem --- Set Drop Ship flag
 
-		opc_linecode_dev = fnget_dev("OPC_LINECODE")
-		dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+		dropship_idx = num(user_tpl.dropship_flag$)
+		userObj!.getItem(dropship_idx).setText("")
 
-		if start_block then
-			dropship_idx = num(user_tpl.dropship_flag$)
-			userObj!.getItem(dropship_idx).setText("")
-
-			line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-			read record (opc_linecode_dev, key=firm_id$+line_code$, dom=*endif) opc_linecode$
-
-			if opc_linecode.dropship$="Y"
-				userObj!.getItem(dropship_idx).setText("**Drop Ship**")
-			endif
+		if user_tpl.line_dropship$="Y"
+			userObj!.getItem(dropship_idx).setText("**Drop Ship**")
 		endif
 
 	endif
@@ -1086,8 +1059,23 @@ print "Det: in disable_by_linetype..."; rem debug
 			endif
 			rem debug end
 
-			user_tpl.line_type$    = opc_linecode.line_type$
-			user_tpl.line_taxable$ = opc_linecode.taxable_flag$
+			user_tpl.line_type$     = opc_linecode.line_type$
+			user_tpl.line_taxable$  = opc_linecode.taxable_flag$
+			user_tpl.line_dropship$ = opc_linecode.dropship$
+		endif
+	endif
+
+rem --- Disable / enable unit cost
+
+	if pos(user_tpl.line_type$="NSP") = 0 then
+		callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
+	else
+		if user_tpl.line_dropship$ = "Y" and user_tpl.dropship_cost = "N" then
+			callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
+		else
+			if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST")) = 0
+				callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
+			endif
 		endif
 	endif
 
