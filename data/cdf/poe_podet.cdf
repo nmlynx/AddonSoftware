@@ -89,7 +89,7 @@ if callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"
 				items$[2] = prior_item$
 				refs[0]   = -prior_qty
 
-				rem print "---reverse OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				print "---reverse OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -102,7 +102,7 @@ if callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"
 				items$[2] = curr_item$
 				refs[0]   = curr_qty 
 
-				rem print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -123,7 +123,7 @@ if callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"
 				items$[2] = curr_item$
 				refs[0]   = curr_qty - prior_qty
 
-				rem print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -160,7 +160,7 @@ gosub update_header_tots
 callpoint!.setDevObject("qty_this_row",num(callpoint!.getUserInput()))
 callpoint!.setDevObject("cost_this_row",unit_cost);rem setting both qty and cost because cost may have changed based on qty break
 [[POE_PODET.AGCL]]
-rem print 'show';rem debug
+print 'show';rem debug
 
 use ::ado_util.src::util
 
@@ -318,13 +318,13 @@ po_line_code$=callpoint!.getColumnData("POE_PODET.PO_LINE_CODE")
 if cvs(po_line_code$,2)<>"" then  gosub update_line_type_info
 
 curr_qty = num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))
-if curr_qty<>0 then gosub update_iv_oo
+if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y" then gosub update_iv_oo
 [[POE_PODET.ADEL]]
 
 gosub update_header_tots
 
 curr_qty = -num(callpoint!.getColumnUndoData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnUndoData("POE_PODET.CONV_FACTOR"))
-if curr_qty<>0 then gosub update_iv_oo
+if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"then gosub update_iv_oo
 [[POE_PODET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
@@ -405,7 +405,7 @@ rem if cvs(callpoint!.getColumnData("POE_PODET.WAREHOUSE_ID"),3)="" or cvs(callp
 		callpoint!.setColumnData("POE_PODET.NOT_B4_DATE",callpoint!.getHeaderColumnData("POE_POHDR.NOT_B4_DATE"))
 		callpoint!.setColumnData("POE_PODET.NS_ITEM_ID","")
 		callpoint!.setColumnData("POE_PODET.ORDER_MEMO","")
-		callpoint!.setColumnData("POE_PODET.PO_MSG_CODE",callpoint!.getHeaderColumnData("POE_POHDR.PO_MSG_CODE"))
+		callpoint!.setColumnData("POE_PODET.PO_MSG_CODE","")
 		callpoint!.setColumnData("POE_PODET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_POHDR.PROMISE_DATE"))
 		callpoint!.setColumnData("POE_PODET.REQD_DATE",callpoint!.getHeaderColumnData("POE_POHDR.REQD_DATE"))
 		callpoint!.setColumnData("POE_PODET.REQ_QTY","")
@@ -545,7 +545,7 @@ items$[1] = curr_whse$
 items$[2] = curr_item$
 refs[0]   = curr_qty
 
-rem print "---Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+print "---Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
 call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 if status then exitto std_exit

@@ -20,89 +20,12 @@ gosub disp_message
 [[POE_POHDR.BDEL]]
 rem --- don't allow deletion if any detail line on the PO has a non-zero qty received
 
-if callpoint!.getDevObject("qty_received")<>"Y" 
+if callpoint!.getDevObject("qty_received")="Y" 
 
-	rem --- ask if user wants to retain the requisition (if this PO came from one); if so, re-create it
-
-	if cvs(callpoint!.getColumnData("POE_POHDR.REQ_NO"),3)<>""
-
-		msg_id$="PO_RETAIN_REQ"
-		msg_opt$=""
-		gosub disp_message
-		if msg_opt$="Y"
-
-			poe_reqhdr_dev=fnget_dev("POE_REQHDR")
-			poe_reqdet_dev=fnget_dev("POE_REQDET")
-			poe_pohdr_dev=fnget_dev("POE_POHDR")
-			poe_podet_dev=fnget_dev("POE_PODET")
-
-			dim poe_reqhdr$:fnget_tpl$("POE_REQHDR")
-			dim poe_reqdet$:fnget_tpl$("POE_REQDET")
-			dim poe_pohdr$:fnget_tpl$("POE_POHDR")
-			dim poe_podet$:fnget_tpl$("POE_PODET")
-
-			po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
-			
-			read record (poe_pohdr_dev,key=firm_id$+po_no$,dom=*break) poe_pohdr$
-			call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_pohdr$,poe_reqhdr$,status	
-			poe_reqhdr$=field(poe_reqhdr$)
-			write record (poe_reqhdr_dev) poe_reqhdr$
-
-			read (poe_podet_dev,key=poe_pohdr.firm_id$+poe_pohdr.po_no$,dom=*next)
-
-			while 1
-				read record (poe_podet_dev,end=*break)poe_podet$
-				if pos(firm_id$+poe_pohdr.po_no$=poe_podet$)<>1 then break
-				if num(poe_podet.req_qty$)=0 then continue
-				call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_podet$,poe_reqdet$,status
-				poe_reqdet.req_no$=poe_reqhdr.req_no$;rem dataport util doesn't yet fill req_no in det recs, so get from hdr
-				poe_reqdet$=field(poe_reqdet$)
-				write record (poe_reqdet_dev)poe_reqdet$
-			wend
-			rem --- old version called poc_wa if shop floor was installed and requisition was retained --- that logic not enabled/tested here
-			rem --- from v7 poe_bb.bbx:
-			rem  IF SF$="N" OR RETAIN_REQ$="N" THEN GOTO RESET_PO_NO
-			rem  READ (POE11_DEV,KEY=B0$,DOM=4630)
-			rem  READ (POE11_DEV,END=RESET_PO_NO)IOL=POE11A
-			rem  IF W0$(1,15)<>B0$ THEN GOTO RESET_PO_NO
-			rem  IF CVS(W2$(1,7),2)="" THEN GOTO 4690
-			rem  FIND (POM02_DEV,KEY=N0$+W1$(1,2),DOM=4690)IOL=POM02A
-			rem  IF POS(Y1$(21,1)="NS")=0 THEN GOTO 4690
-			rem  CALL "poc_wa.bbx",SFE22_DEV,SFE32_DEV,N0$,W0$(9),"R",Y1$,W2$(1,10),W2$(1,10),I[1],STATUS
-			rem  GOTO 4630
-		endif
-	endif
-
-	rem --- also loop thru gridVect! and call atamo to reverse OO qty for each dtl row that isn't already marked deleted (skip dropship orders)
-
-	if callpoint!.getColumnData("POE_POHDR.DROPSHIP")<>"Y"
-		g!=gridVect!.getItem(0)
-		dim poe_podet$:dtlg_param$[1,3]
-
-		if g!.size()	
-			for x=0 to g!.size()-1
-				if callpoint!.getGridRowDeleteStatus(x)<>"Y"
-					poe_podet$=g!.getItem(x)
-
-					status = 999
-					call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
-					if status then goto std_exit
-		 
-					items$[0]=firm_id$
-		 			items$[1]=poe_podet.warehouse_id$
-					items$[2]=poe_podet.item_id$
-					refs[0]=-(poe_podet.qty_ordered - poe_podet.qty_received)*poe_podet.conv_factor
-					action$="OO"
-
-					if refs[0]<>0 then call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				endif
-			next x
-		endif
-	endif
-else
 	msg_id$="PO_NO_DELETE"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
+
 endif
 [[POE_POHDR.VENDOR_ID.AVAL]]
 vendor_id$=callpoint!.getUserInput()
@@ -240,7 +163,85 @@ gosub queue_for_printing
 
 
 [[POE_POHDR.ADEL]]
-rem --- also delete PO print record
+rem --- ask if user wants to retain the requisition (if this PO came from one); if so, re-create it
+
+if cvs(callpoint!.getColumnData("POE_POHDR.REQ_NO"),3)<>""
+
+	msg_id$="PO_RETAIN_REQ"
+	msg_opt$=""
+	gosub disp_message
+	if msg_opt$="Y"
+
+		poe_reqhdr_dev=fnget_dev("POE_REQHDR")
+		poe_reqdet_dev=fnget_dev("POE_REQDET")
+		poe_pohdr_dev=fnget_dev("POE_POHDR")
+		poe_podet_dev=fnget_dev("POE_PODET")
+
+		dim poe_reqhdr$:fnget_tpl$("POE_REQHDR")
+		dim poe_reqdet$:fnget_tpl$("POE_REQDET")
+		dim poe_pohdr$:fnget_tpl$("POE_POHDR")
+		dim poe_podet$:fnget_tpl$("POE_PODET")
+
+		po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+		
+		read record (poe_pohdr_dev,key=firm_id$+po_no$,dom=*break) poe_pohdr$
+		call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_pohdr$,poe_reqhdr$,status	
+		poe_reqhdr$=field(poe_reqhdr$)
+		write record (poe_reqhdr_dev) poe_reqhdr$
+
+		read (poe_podet_dev,key=poe_pohdr.firm_id$+poe_pohdr.po_no$,dom=*next)
+
+		while 1
+			read record (poe_podet_dev,end=*break)poe_podet$
+			if pos(firm_id$+poe_pohdr.po_no$=poe_podet$)<>1 then break
+			if num(poe_podet.req_qty$)=0 then continue
+			call stbl("+DIR_PGM")+"adc_copyfile.aon",poe_podet$,poe_reqdet$,status
+			poe_reqdet.req_no$=poe_reqhdr.req_no$;rem dataport util doesn't yet fill req_no in det recs, so get from hdr
+			poe_reqdet$=field(poe_reqdet$)
+			write record (poe_reqdet_dev)poe_reqdet$
+		wend
+		rem --- old version called poc_wa if shop floor was installed and requisition was retained --- that logic not enabled/tested here
+		rem --- from v7 poe_bb.bbx:
+		rem  IF SF$="N" OR RETAIN_REQ$="N" THEN GOTO RESET_PO_NO
+		rem  READ (POE11_DEV,KEY=B0$,DOM=4630)
+		rem  READ (POE11_DEV,END=RESET_PO_NO)IOL=POE11A
+		rem  IF W0$(1,15)<>B0$ THEN GOTO RESET_PO_NO
+		rem  IF CVS(W2$(1,7),2)="" THEN GOTO 4690
+		rem  FIND (POM02_DEV,KEY=N0$+W1$(1,2),DOM=4690)IOL=POM02A
+		rem  IF POS(Y1$(21,1)="NS")=0 THEN GOTO 4690
+		rem  CALL "poc_wa.bbx",SFE22_DEV,SFE32_DEV,N0$,W0$(9),"R",Y1$,W2$(1,10),W2$(1,10),I[1],STATUS
+		rem  GOTO 4630
+	endif
+endif
+
+rem ---  loop thru gridVect! and call atamo to reverse OO qty for each dtl row that isn't already marked deleted (skip dropship orders)
+
+if callpoint!.getColumnData("POE_POHDR.DROPSHIP")<>"Y"
+	g!=gridVect!.getItem(0)
+	dim poe_podet$:dtlg_param$[1,3]
+
+	if g!.size()	
+		for x=0 to g!.size()-1
+			if callpoint!.getGridRowDeleteStatus(x)<>"Y"
+				poe_podet$=g!.getItem(x)
+
+				status = 999
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then goto std_exit
+	 
+				items$[0]=firm_id$
+	 			items$[1]=poe_podet.warehouse_id$
+				items$[2]=poe_podet.item_id$
+				refs[0]=-(poe_podet.qty_ordered - poe_podet.qty_received)*poe_podet.conv_factor
+				action$="OO"
+
+				if refs[0]<>0 then call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs_params$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			endif
+		next x
+	endif
+endif
+
+rem ---  delete PO print records, and poe_linked records for dropships
 
 poe_poprint_dev=fnget_dev("POE_POPRINT")
 remove (poe_poprint_dev,key=firm_id$+callpoint!.getColumnData("POE_POHDR.VENDOR_ID")+callpoint!.getColumnData("POE_POHDR.PO_NO"),dom=*next)

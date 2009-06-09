@@ -50,11 +50,11 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 
 	curr_whse$ = callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID")
 	curr_item$ = callpoint!.getColumnData("POE_RECDET.ITEM_ID")
-	curr_qty   = num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR"))
+	curr_qty   = (num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED"))-num(callpoint!.getColumnData("POE_RECDET.QTY_PREV_REC"))) * num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR"))
 
 	prior_whse$ = callpoint!.getColumnUndoData("POE_RECDET.WAREHOUSE_ID")
 	prior_item$ = callpoint!.getColumnUndoData("POE_RECDET.ITEM_ID")
-	prior_qty   = num(callpoint!.getColumnUndoData("POE_RECDET.QTY_ORDERED")) * num(callpoint!.getColumnUndoData("POE_RECDET.CONV_FACTOR"))
+	prior_qty   = (num(callpoint!.getColumnUndoData("POE_RECDET.QTY_ORDERED"))-num(callpoint!.getColumnUndoData("POE_RECDET.QTY_PREV_REC"))) * num(callpoint!.getColumnUndoData("POE_RECDET.CONV_FACTOR"))
 
 	rem --- Has there been any change?
 
@@ -82,7 +82,7 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 				items$[2] = prior_item$
 				refs[0]   = -prior_qty
 
-				rem print "---reverse OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				print "---reverse OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -95,7 +95,7 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 				items$[2] = curr_item$
 				refs[0]   = curr_qty 
 
-				rem print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -116,7 +116,7 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 				items$[2] = curr_item$
 				refs[0]   = curr_qty - prior_qty
 
-				rem print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+				print "-----Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
@@ -125,6 +125,53 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 		endif
 
 	endif
+endif
+
+rem --- if this is a lotted/serialized item, launch lot/serial entry
+
+ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+
+item_id$=callpoint!.getColumnData("POE_RECDET.ITEM_ID")
+receiver_no$=callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
+po_int_seq_ref$=callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
+po_no$=callpoint!.getColumnData("POE_RECDET.PO_NO")
+unit_cost$=callpoint!.getColumnData("POE_RECDET.UNIT_COST")
+qty_received=num(callpoint!.getColumnData("POE_RECDET.QTY_RECEIVED"))
+
+declare BBjStandardGrid grid!
+grid! = util.getGrid(Form!)
+return_to_row = grid!.getSelectedRow()
+return_to_col = grid!.getSelectedColumn()
+
+read record (ivm_itemmast_dev,key=firm_id$+item_id$,dom=*break)ivm_itemmast$
+
+if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
+
+	dim dflt_data$[4,1]
+	dflt_data$[1,0] = "RECEIVER_NO"
+	dflt_data$[1,1] = receiver_no$
+	dflt_data$[2,0] = "PO_INT_SEQ_REF"
+	dflt_data$[2,1] = po_int_seq_ref$
+	dflt_data$[3,0]="PO_NO"
+	dflt_data$[3,1]=po_no$
+	dflt_data$[4,0]="UNIT_COST"
+	dflt_data$[4,1]=unit_cost$
+
+	callpoint!.setDevObject("ls_po_no",po_no$)
+	callpoint!.setDevObject("ls_unit_cost",unit_cost$)
+	callpoint!.setDevObject("ls_qty_received",qty_received)
+
+	lot_pfx$ = firm_id$+receiver_no$+po_int_seq_ref$
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"POE_RECLSDET", 
+:		stbl("+USER_ID"), 
+:		"MNT", 
+:		lot_pfx$, 
+:		table_chans$[all], 
+:		dflt_data$[all]
+
 endif
 [[POE_RECDET.QTY_ORDERED.AVAL]]
 rem --- call poc_itemvend.aon (poc.ua) to retrieve unit cost from ivm-05
@@ -143,7 +190,7 @@ callpoint!.setColumnData("POE_RECDET.UNIT_COST",str(unit_cost))
 
 callpoint!.setDevObject("cost_this_row",unit_cost);rem re-setting cost because it may have changed based on qty break
 [[POE_RECDET.AGCL]]
-print 'show';rem debug
+rem print 'show';rem debug
 
 use ::ado_util.src::util
 
@@ -304,22 +351,43 @@ rem --- if this line is new (i.e., NOT from a PO, restore the OO)
 
 if cvs(callpoint!.getColumnUndoData("POE_RECDET.PO_NO"),3)<>""
 
-	curr_qty = num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR"))
-	if curr_qty<>0 then gosub update_iv_oo
+	curr_qty = (num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED"))-num(callpoint!.getColumnData("POE_RECDET.QTY_PREV_REC"))) * num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR"))
+	if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" then gosub update_iv_oo
 
 endif
 [[POE_RECDET.ADEL]]
 
 gosub update_header_tots
 
-rem --- if this line is new (i.e., NOT from a PO, reverse the OO)
+rem --- if this line is new (i.e., NOT from a PO) reverse the OO quantity and remove the dropship link, if applicable
 
-if cvs(callpoint!.getColumnUndoData("POE_RECDET.PO_NO"),3)<>""
+if cvs(callpoint!.getColumnUndoData("POE_RECDET.PO_NO"),3)=""
 
-	curr_qty = -num(callpoint!.getColumnUndoData("POE_RECDET.QTY_ORDERED")) * num(callpoint!.getColumnUndoData("POE_RECDET.CONV_FACTOR"))
-	if curr_qty<>0 then gosub update_iv_oo
+	poe_linked_dev=fnget_dev("POE_LINKED")
+	remove (poe_linked_dev,key=firm_id$+callpoint!.getColumnData("POE_RECDET.PO_NO")+callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO"),dom=*next)
+
+	curr_qty = -(num(callpoint!.getColumnUndoData("POE_RECDET.QTY_ORDERED"))-num(callpoint!.getColumnUndoData("POE_RECDET.QTY_PREV_REC"))) * num(callpoint!.getColumnUndoData("POE_RECDET.CONV_FACTOR"))
+	if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" then gosub update_iv_oo
 
 endif
+
+rem --- also delete lot/ser records
+
+poe_reclsdet_dev=fnget_dev("POE_RECLSDET")
+dim poe_reclsdet$:fnget_tpl$("POE_RECLSDET")
+
+receiver_no$=callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
+po_int_seq_ref$=callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
+
+read (poe_reclsdet_dev,key=firm_id$+receiver_no$+po_int_seq_ref$,dom=*next)
+
+while 1
+	
+	read record (poe_reclsdet_dev,end=*break)poe_reclsdet$
+	if pos(firm_id$+receiver_no$+po_int_seq_ref$=poe_reclsdet$)<>1 then break
+	remove (poe_reclsdet_dev,key=firm_id$+poe_reclsdet.receiver_no$+poe_reclsdet.po_int_seq_ref$+poe_reclsdet.sequence_no$,dom=*next)
+	
+wend
 [[POE_RECDET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
@@ -393,7 +461,7 @@ rem if cvs(callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID"),3)="" or cvs(call
 		callpoint!.setColumnData("POE_RECDET.NOT_B4_DATE",callpoint!.getHeaderColumnData("POE_RECHDR.NOT_B4_DATE"))
 		callpoint!.setColumnData("POE_RECDET.NS_ITEM_ID","")
 		callpoint!.setColumnData("POE_RECDET.ORDER_MEMO","")
-		callpoint!.setColumnData("POE_RECDET.PO_MSG_CODE",callpoint!.getHeaderColumnData("POE_RECHDR.PO_MSG_CODE"))
+		callpoint!.setColumnData("POE_RECDET.PO_MSG_CODE","")
 		callpoint!.setColumnData("POE_RECDET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_RECHDR.PROMISE_DATE"))
 		callpoint!.setColumnData("POE_RECDET.REQD_DATE",callpoint!.getHeaderColumnData("POE_RECHDR.REQD_DATE"))
 		callpoint!.setColumnData("POE_RECDET.REQ_QTY","")
@@ -533,7 +601,7 @@ items$[1] = curr_whse$
 items$[2] = curr_item$
 refs[0]   = curr_qty
 
-rem print "---Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
+print "---Update OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
 call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 if status then exitto std_exit
