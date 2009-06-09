@@ -1,5 +1,6 @@
 [[POE_RECLSDET.BEND]]
 gosub check_lotser_tot
+
 [[POE_RECLSDET.<CUSTOM>]]
 check_lotser_tot:
 rem --- warn if total lotted/serialized <> receipt qty --- allow to proceed, as register won't update under these circumstances
@@ -31,8 +32,8 @@ rem ---- if serial (as opposed to lots), qty must be one.
 if callpoint!.getDevObject("lot_or_serial")="S"
 	callpoint!.setUserInput("1")
 endif
-
 [[POE_RECLSDET.BSHO]]
 callpoint!.setTableColumnAttribute("POE_RECLSDET.PO_NO","DFLT",str(callpoint!.getDevObject("ls_po_no")))
 callpoint!.setTableColumnAttribute("POE_RECLSDET.QTY_RECEIVED","DFLT",str(callpoint!.getDevObject("ls_qty_received")))
+if callpoint!.getDevObject("lot_or_serial")="S" then callpoint!.setTableColumnAttribute("POE_RECLSDET.QTY_RECEIVED","DFLT","1")
 callpoint!.setTableColumnAttribute("POE_RECLSDET.UNIT_COST","DFLT",str(callpoint!.getDevObject("ls_unit_cost")))
