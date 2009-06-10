@@ -1643,7 +1643,7 @@ rem --- Setup user_tpl$
 	user_tpl.cash_sale$        = ars01a.cash_sale$
 	user_tpl.cash_cust$        = ars01a.customer_id$
 	user_tpl.allow_bo$         = ars01a.backorders$
-	user_tpl.dhipship_cost$    = ars01a.dropship_cost$
+	user_tpl.dhipship_cost$    = ars01a.dropshp_cost$
 	user_tpl.min_ord_amt       = num(ars01a.min_ord_amt$)
 	user_tpl.min_line_amt      = num(ars01a.min_line_amt$)
 	user_tpl.def_whse$         = ivs01a.warehouse_id$
