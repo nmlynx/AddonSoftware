@@ -112,30 +112,30 @@ rem --- Check for printing in next batch and set
 [[OPE_INVHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
-:	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
+	if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)="" or
+:	   cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>""
 :	then
 		msg_id$="OP_NO_HIST"
 		gosub disp_message
 	else
 		key_pfx$=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+:			callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")+
+:			callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		line_sign=-1
 		gosub copy_order
 	endif
 [[OPE_INVHDR.AOPT-DINV]]
 rem --- Duplicate Historical Invoice
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
-:	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
+	if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)="" or
+:	   cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>""
 :	then 
 		msg_id$="OP_NO_HIST"
 		gosub disp_message
 	else
 		key_pfx$=firm_id$+
-:			callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+
-:			callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+:			callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")+
+:			callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		line_sign=1
 		gosub copy_order
 	endif
@@ -208,7 +208,7 @@ rem --- Remove committments for detail records by calling ATAMO
 			endif
 		endif
 
-		if pos(callpoint!.getDevObject("lotser_flag")="LS") then 
+		if pos(user_tpl.lotser_flag$="LS") then 
 			ord_seq$ = ope11a.line_no$
 			gosub remove_lot_ser_det
 		endif
@@ -359,7 +359,7 @@ rem --- Show customer data
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	gosub display_customer
 
-	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
+	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
       gosub check_credit
 
@@ -409,8 +409,8 @@ rem --- Do we need to create a new order number?
 
 rem --- Does order exist?
 
-	ope01_dev = fnget_dev("OPE_ORDHDR")
-	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
+	ope01_dev = fnget_dev("OPE_INVHDR")
+	dim ope01a$:fnget_tpl$("OPE_INVHDR")
 
 	ar_type$ = callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
@@ -546,9 +546,9 @@ rem --- New record, set default
 		call stbl("+DIR_SYP")+"bas_sequences.bbj", "INVOICE_NO", invoice_no$, table_chans$[all]
 		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", invoice_no$)
 
-        cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-		ord_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
+        cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		ord_no$  = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","S")
         
 		arm02_dev = fnget_dev("ARM_CUSTDET")
 		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
@@ -573,7 +573,7 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.ORDER_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_INVHDR.PRICING_CODE",arm02a.pricing_code$)
-        callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
+        callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
 
 		gosub get_op_params
 
@@ -617,7 +617,7 @@ rem --- Show customer data
 	cust_id$ = callpoint!.getUserInput()
 	gosub display_customer
 
-	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
+	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
       gosub check_credit
 
@@ -697,7 +697,7 @@ check_credit: rem --- Check credit limit of customer
 rem ==========================================================================
 
 	if custdet_tpl.credit_limit and user_tpl.balance>=user_tpl.credit_limit then
-   	if user_tpl.credit_installed <> "Y" then
+   	if user_tpl.credit_installed$ <> "Y" then
       	msg_id$ = "OP_OVER_CREDIT_LIMIT"
 			dim msg_token$[1]
 			msg_token$[1] = str(custdet_tpl.credit_limit:user_tpl.amount_mask$)
@@ -1480,7 +1480,7 @@ rem --- Disable display fields
 	column!.addItem("<<DISPLAY>>.ORDER_TOT")
 
 	if ars01a.job_nos$<>"Y" then 
-		column!.addItem("OPE_ORDHDR.JOB_NO")
+		column!.addItem("OPE_INVHDR.JOB_NO")
 	endif
 
 	callpoint!.setColumnEnabled(column!, -1)
@@ -1557,7 +1557,8 @@ rem --- Setup user_tpl$
 :        "min_ord_amt:n(5), " +
 :         "item_price:n(15), " +
 :		 "line_dropship:c(1), " +
-:		 "dropship_cost:c(1)"
+:		 "dropship_cost:c(1), " +
+:        "lotser_flag:c(1)"
 
 	dim user_tpl$:tpl$
 
@@ -1576,6 +1577,7 @@ rem --- Setup user_tpl$
 	user_tpl.min_ord_amt       = num(ars01a.min_ord_amt$)
 	user_tpl.min_line_amt      = num(ars01a.min_line_amt$)
 	user_tpl.def_whse$         = ivs01a.warehouse_id$
+	user_tpl.lotser_flag$      = ivs01a.lotser_flag$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
 	user_tpl.bo_col            = 8
@@ -1641,7 +1643,7 @@ rem --- Set Lot/Serial button up properly
 	callpoint!.setOptionEnabled("RPRT",0)
 	callpoint!.setOptionEnabled("CRCH",1)
 [[OPE_INVHDR.AFMC]]
-print 'show', "Hdr:AFMC"; rem debug
+rem print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
