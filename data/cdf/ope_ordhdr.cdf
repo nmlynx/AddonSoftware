@@ -337,7 +337,7 @@ rem --- Remove committments for detail records by calling ATAMO
 			endif
 		endif
 
-		if pos(callpoint!.getDevObject("lotser_flag")="LS") then 
+		if pos(user_tpl.lotser_flag$="LS") then 
 			ord_seq$ = ope11a.line_no$
 			gosub remove_lot_ser_det
 		endif
@@ -892,7 +892,7 @@ check_credit: rem --- Check credit limit of customer
 rem ==========================================================================
 
 	if custdet_tpl.credit_limit and user_tpl.balance>=user_tpl.credit_limit then
-   	if user_tpl.credit_installed <> "Y" then
+   	if user_tpl.credit_installed$ <> "Y" then
       	msg_id$ = "OP_OVER_CREDIT_LIMIT"
 			dim msg_token$[1]
 			msg_token$[1] = str(custdet_tpl.credit_limit:user_tpl.amount_mask$)
@@ -1628,7 +1628,8 @@ rem --- Setup user_tpl$
 :     "min_ord_amt:n(5), " +
 :     "item_price:n(15), " +
 :		"line_dropship:c(1), " +
-:		"dropship_cost:c(1)"
+:		"dropship_cost:c(1), " +
+:		"lotser_flag:c(1)"
 
 	dim user_tpl$:tpl$
 
@@ -1643,10 +1644,11 @@ rem --- Setup user_tpl$
 	user_tpl.cash_sale$        = ars01a.cash_sale$
 	user_tpl.cash_cust$        = ars01a.customer_id$
 	user_tpl.allow_bo$         = ars01a.backorders$
-	user_tpl.dhipship_cost$    = ars01a.dropshp_cost$
+	user_tpl.dropship_cost$    = ars01a.dropshp_cost$
 	user_tpl.min_ord_amt       = num(ars01a.min_ord_amt$)
 	user_tpl.min_line_amt      = num(ars01a.min_line_amt$)
 	user_tpl.def_whse$         = ivs01a.warehouse_id$
+	user_tpl.lotser_flag$      = ivs01a.lotser_flag$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
 	user_tpl.bo_col            = 8
