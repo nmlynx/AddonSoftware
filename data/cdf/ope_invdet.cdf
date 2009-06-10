@@ -920,7 +920,7 @@ rem ==========================================================================
 
 	lotted$="N"
 
-	if cvs(item_id$, 2)<>"" and pos(callpoint!.getDevObject("lotser_flag") = "LS") then 
+	if cvs(item_id$, 2)<>"" and pos(user_tpl.lotser_flag$ = "LS") then 
 		ivm01_dev=fnget_dev("IVM_ITEMMAST")
 		dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 		start_block = 1
@@ -1153,11 +1153,12 @@ able_lot_button: rem --- Enable/disable Lot/Serial button
                  rem      IN: item$ (for lot_ser_check)
 rem ==========================================================================
 
-	item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+	item$   = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+	qty_ord = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 	gosub lot_ser_check
 
-	if pos(callpoint!.getDevObject("lotser_flag") = "LS")           and 
-:		num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED")) <> 0 and
+	if pos(user_tpl.lotser_flag$ = "LS") and 
+:		qty_ord <> 0                      and
 :		lotted$ = "Y"
 :	then
 		callpoint!.setOptionEnabled("LENT",1)
@@ -1203,6 +1204,8 @@ rem ==========================================================================
 
 	if user_tpl.credit_limit and user_tpl.never_checked then
 		msg_id$ = "OP_OVER_CREDIT_LIMIT"
+		dim msg_tokens$[1]
+		msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
 		gosub disp_message
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Over Credit Limit ***")
 		user_tpl.never_checked = 0
