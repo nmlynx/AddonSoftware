@@ -577,7 +577,7 @@ rem --- Set shipped and back ordered
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 			print "---Backord cleared"; rem debug
 
-			if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" and
+			if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" or
 :				callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P"
 :			then
 				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
