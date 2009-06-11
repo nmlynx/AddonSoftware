@@ -253,25 +253,53 @@ rem --- Is next record not a quote and not void?
 	file_name$ = "OPE_INVHDR"
 	ope01_dev = fnget_dev(file_name$)
 	dim ope01a$:fnget_tpl$(file_name$)
+	dim first_rec$:fnget_tpl$(file_name$)
 	start_block = 1
+	first_time  = 1
 
 	while 1
 		if start_block then
 			read record (ope01_dev, dir=0, end=*endif) ope01a$
 
+		rem --- Get first record
+			if first_time then
+				first_rec$ = ope01a$
+				first_time = 0
+			else
+
+			rem --- Is this the first record again?
+				if firm_id$            = first_rec.firm_id$     and 
+:					ope01a.customer_id$ = first_rec.customer_id$ and 
+:					ope01a.order_no$    = first_rec.order_no$
+:				then
+					exitto bnek_none_found
+				endif
+			endif
+
+		rem --- The wrong firm will "fall thru"
 			if ope01a.firm_id$ = firm_id$ then
-				if ope01a.ordinv_flag$ <> "P" and ope01a.invoice_type$ <> "V" then
-					break
+				if ope01a.invoice_type$ <> "P" and ope01a.invoice_type$ <> "V" then
+					break; rem --- found a good record
 				else
 					read (ope01_dev, end=*endif)
-					continue
+					continue; rem --- look again
 				endif
 			endif
 		endif
 
-		rem --- If EOF or wrong firm, rewind to first record of the firm
+	rem --- If EOF or wrong firm, rewind to first record of the firm
 		read (ope01_dev, key=firm_id$, dom=*next)
 	wend
+
+	goto bnek_done
+
+bnek_none_found:
+
+	msg_id$ = "OP_ALL_WRONG_TYPE"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+
+bnek_done:
 [[OPE_INVHDR.SHIPTO_TYPE.BINP]]
 rem --- Do we need to create a new order number?
 
@@ -295,15 +323,13 @@ rem --- Restrict lookup to orders
 	key_id$   = "PRIMARY"
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 
-	dim filter_defs$[3,1]
-	filter_defs$[1,0] = "OPE_INVHDR.ORDINV_FLAG"
-	filter_defs$[1,1] = "='I'"
-	filter_defs$[2,0] = "OPE_INVHDR.INVOICE_NO"
-	filter_defs$[2,1] = "<>'V'"
+	dim filter_defs$[2,1]
+	filter_defs$[1,0] = "OPE_INVHDR.INVOICE_TYPE"
+	filter_defs$[1,1] = "<>'V' AND OPE_INVHDR.INVOICE_TYPE <>'P'"
 
 	if cvs(cust_id$, 2) <> "" then
-		filter_defs$[3,0] = "OPE_INVHDR.CUSTOMER_ID"
-		filter_defs$[3,1] = "='" + cust_id$ + "'"
+		filter_defs$[2,0] = "OPE_INVHDR.CUSTOMER_ID"
+		filter_defs$[2,1] = "='" + cust_id$ + "'"
 	endif
 
 
@@ -385,6 +411,8 @@ rem --- Display order total
 
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
 [[OPE_INVHDR.ORDER_NO.AVAL]]
+print "Hdr:ORDER_NO.AVAL"; rem debug
+
 rem --- Do we need to create a new order number?
 
 	new_seq$ = "N"
@@ -448,7 +476,7 @@ rem --- Existing record
 
 		rem --- Check for quote
 		
-		if ope01a.invoice_type$ = "O" then
+		if ope01a.invoice_type$ = "P" then
 			msg_id$ = "OP_IS_QUOTE"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
@@ -525,6 +553,7 @@ rem --- Existing record
 		endif
 
 		if ope01a.ordinv_flag$ = "O" then
+			print "---Converting Order to Invoice..."; rem debug
 			callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "I")
 			callpoint!.setColumnData("OPE_INVHDR.INVOICE_DATE", sysinfo.system_date$)
 			callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
@@ -546,7 +575,7 @@ rem --- New record, set default
 		call stbl("+DIR_SYP")+"bas_sequences.bbj", "INVOICE_NO", invoice_no$, table_chans$[all]
 		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", invoice_no$)
 
-        cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+      cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		ord_no$  = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","S")
         
@@ -573,7 +602,7 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.ORDER_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_INVHDR.PRICING_CODE",arm02a.pricing_code$)
-        callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
+      callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
 
 		gosub get_op_params
 
