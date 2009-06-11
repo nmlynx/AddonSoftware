@@ -5,7 +5,7 @@ if callpoint!.getDevObject("gl_installed")="Y"
 	if status>99 then callpoint!.setStatus("ABORT")
 endif
 [[POE_RECHDR.RECEIVER_NO.AVAL]]
-rem --- don't allow user to assign number to new PO -- use Barista seq#
+rem --- don't allow user to assign new receiver# -- use Barista seq#
 rem --- if user made null entry (to assign next seq automatically) then getRawUserInput() will be empty
 rem --- if not empty, then the user typed a number -- if an existing receiver, fine; if not, abort
 
@@ -41,7 +41,7 @@ if cvs(callpoint!.getUserInput(),3)<>""
 			rem --- launch form to ask receive complete/default receipt qty
 
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "POE_RECDFLTS", stbl("+USER_ID"), "MNT", "", table_chans$[all]
-
+			callpoint!.setStatus("ACTIVATE")
 
 			rem --- write the poe_rechdr and det recs
 
@@ -407,7 +407,7 @@ rem --- store dtlGrid! and column for sales order line# reference listbutton (wi
 	dtlWin!=Form!.getChildWindow(1109)
 	dtlGrid!=dtlWin!.getControl(5900)
 	callpoint!.setDevObject("dtl_grid",dtlGrid!)
-	callpoint!.setDevObject("so_seq_ref_col",14)
+	callpoint!.setDevObject("so_seq_ref_col",15)
 
 rem --- call glc_ctlcreate
 
@@ -419,7 +419,6 @@ call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"PO",glw11$,gl$,stat
 if status<>0 then release
 
 callpoint!.setDevObject("gl_installed",gl$)
-
 [[POE_RECHDR.PURCH_ADDR.AVAL]]
 vendor_id$=callpoint!.getColumnData("POE_RECHDR.VENDOR_ID")
 purch_addr$=callpoint!.getUserInput()

@@ -172,6 +172,8 @@ if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
 :		table_chans$[all], 
 :		dflt_data$[all]
 
+	callpoint!.setStatus("ACTIVATE")
+
 endif
 [[POE_RECDET.QTY_ORDERED.AVAL]]
 rem --- call poc_itemvend.aon (poc.ua) to retrieve unit cost from ivm-05

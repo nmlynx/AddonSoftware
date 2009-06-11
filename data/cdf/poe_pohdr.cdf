@@ -1,3 +1,20 @@
+[[POE_POHDR.PO_NO.AVAL]]
+rem --- don't allow user to assign new PO# -- use Barista seq#
+rem --- if user made null entry (to assign next seq automatically) then getRawUserInput() will be empty
+rem --- if not empty, then the user typed a number -- if an existing po, fine; if not, abort
+
+if cvs(callpoint!.getRawUserInput(),3)<>""
+	msk$=callpoint!.getTableColumnAttribute("POE_POHDR.PO_NO","MSKI")
+	find_po$=str(num(callpoint!.getRawUserInput()):msk$)
+	poe_pohdr_dev=fnget_dev("POE_POHDR")
+	dim poe_pohdr$:fnget_tpl$("POE_POHDR")
+	read record (poe_pohdr_dev,key=firm_id$+find_po$,dom=*next)poe_pohdr$
+	if poe_pohdr.firm_id$<>firm_id$ or  poe_pohdr.po_no$<>find_po$
+		msg_id$="PO_INVAL_PO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+endif
 [[POE_POHDR.AOPT-DPRT]]
 rem --- on-demand PO print
 
@@ -131,6 +148,8 @@ endif
 [[POE_POHDR.VENDOR_ID.AVAL]]
 vendor_id$=callpoint!.getUserInput()
 gosub vendor_info
+gosub disp_vendor_comments
+
 [[POE_POHDR.DROPSHIP.AVAL]]
 rem --- if turning off dropship flag, clear devObject items
 
@@ -185,6 +204,7 @@ endif
 vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
 purch_addr$=callpoint!.getColumnData("POE_POHDR.PURCH_ADDR")
 gosub vendor_info
+gosub disp_vendor_comments
 gosub purch_addr_info
 gosub whse_addr_info
 
@@ -436,7 +456,7 @@ rem --- inits
 	use ::ado_util.src::util
 
 rem --- Open Files
-	num_files=16
+	num_files=17
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -454,6 +474,7 @@ rem --- Open Files
 	open_tables$[14]="POE_QAHDR",open_opts$[14]="OTA"
 	open_tables$[15]="POE_RECHDR",open_opts$[15]="OTA"
 	open_tables$[16]="POE_INVDET",open_opts$[16]="OTA"
+	open_tables$[17]="APM_VENDCMTS",open_opts$[17]="OTA"
 
 	gosub open_tables
 
@@ -572,12 +593,28 @@ vendor_info: rem --- get and display Vendor Information
 	read record(apm01_dev,key=firm_id$+vendor_id$,dom=*next)apm01a$
 	callpoint!.setColumnData("<<DISPLAY>>.V_ADDR1",apm01a.addr_line_1$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_ADDR2",apm01a.addr_line_2$)
-	callpoint!.setColumnData("<<DISPLAY>>.V_CITY",apm01a.city$)
-	callpoint!.setColumnData("<<DISPLAY>>.V_STATE",apm01a.state_code$)
-	callpoint!.setColumnData("<<DISPLAY>>.V_ZIP",apm01a.zip_code$)
+	callpoint!.setColumnData("<<DISPLAY>>.V_CITY",cvs(apm01a.city$,3)+", "+apm01a.state_code$+"  "+apm01a.zip_code$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_CONTACT",apm01a.contact_name$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_PHONE",apm01a.phone_no$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_FAX",apm01a.fax_no$)
+	callpoint!.setStatus("REFRESH")
+return
+
+disp_vendor_comments:	
+	rem --- You must pass in vendor_id$ because we don't know whether it's verified or not
+	cmt_text$=""
+	apm_vendcmts_dev=fnget_dev("APM_VENDCMTS")
+	dim apm_vendcmts$:fnget_tpl$("APM_VENDCMTS")
+	apm_vendcmts_key$=firm_id$+vendor_id$
+	more=1
+	read(apm_vendcmts_dev,key=apm_vendcmts_key$,dom=*next)
+	while more
+		readrecord(apm_vendcmts_dev,end=*break)apm_vendcmts$		 
+		if apm_vendcmts.firm_id$ = firm_id$ and apm_vendcmts.vendor_id$ = vendor_id$ then
+			cmt_text$ = cmt_text$ + cvs(apm_vendcmts.std_comments$,3)+$0A$
+		endif				
+	wend
+	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
 	callpoint!.setStatus("REFRESH")
 return
 
