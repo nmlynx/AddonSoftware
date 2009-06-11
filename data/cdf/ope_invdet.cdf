@@ -1068,13 +1068,13 @@ print "Det: in disable_by_linetype..."; rem debug
 rem --- Disable / enable unit cost
 
 	if pos(user_tpl.line_type$="NSP") = 0 then
-		callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
+		callpoint!.setColumnEnabled("OPE_INVDET.UNIT_COST", 0)
 	else
 		if user_tpl.line_dropship$ = "Y" and user_tpl.dropship_cost = "N" then
-			callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
+			callpoint!.setColumnEnabled("OPE_INVDET.UNIT_COST", 0)
 		else
-			if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST")) = 0
-				callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
+			if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_INVDET.UNIT_COST")) = 0
+				callpoint!.setColumnEnabled("OPE_INVDET.UNIT_COST", 0)
 			endif
 		endif
 	endif
