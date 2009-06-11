@@ -188,7 +188,7 @@ rem --- Check for Serial Numbers
 
 rem --- Regular inventory
 
-            find record (ivm12_dev, key=firm_id$+whse$+item$+ivs01a.current_per$+ivs01a.current_year$, dom=*continue) ivm12a$
+            find record (ivm12_dev, key=firm_id$+whse$+item$+ivs01a.current_year$+ivs01a.current_per$, dom=*continue) ivm12a$
             call pgmdir$+"ivc_periodqty.aon","END",ivm12a$,ignore[all],balance,status
 			if status = 999 then exitto std_exit_no_update
             items$[3]=""
