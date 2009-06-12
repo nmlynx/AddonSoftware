@@ -801,6 +801,7 @@ rem --- If cash customer, get correct customer number
 	if user_tpl.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" then
 		callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_ID", user_tpl.cash_cust$)
 		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "Y")
+		user_tpl.is_cash_sale = 1
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPE_ORDHDR.AWRI]]
@@ -1629,7 +1630,14 @@ rem --- Setup user_tpl$
 :     "item_price:n(15), " +
 :		"line_dropship:c(1), " +
 :		"dropship_cost:c(1), " +
-:		"lotser_flag:c(1)"
+:		"lotser_flag:c(1), " +
+:		"new_detail:u(1), " +
+:		"prev_line_code:c(1*), " +
+:		"prev_item:c(1*), " +
+:		"prev_qty_ord:n(15), " +
+:		"prev_boqty:n(15), " +
+:		"prev_shipqty:n(15), " +
+:		"is_cash_sale:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -1653,6 +1661,7 @@ rem --- Setup user_tpl$
 	user_tpl.cur_row           = -1
 	user_tpl.bo_col            = 8
 	user_tpl.never_checked     = 1
+	user_tpl.is_cash_sale      = 0
 
 rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 
