@@ -1,3 +1,13 @@
+[[OPE_ORDDET.QTY_BACKORD.BINP]]
+user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
+[[OPE_ORDDET.QTY_SHIPPED.BINP]]
+user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+[[OPE_ORDDET.QTY_ORDERED.BINP]]
+user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+[[OPE_ORDDET.ITEM_ID.BINP]]
+user_tpl.prev_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+[[OPE_ORDDET.LINE_CODE.BINP]]
+user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 [[OPE_ORDDET.BWRI]]
 print "Det:BWRI"; rem debug
 
@@ -241,16 +251,16 @@ rem --- Go get Lot Numbers
 rem --- Is this item lot/serial?
 
 	if ivm_itemmast.lotser_item$ = "Y" and ivm_itemmast.inventoried$ = "Y"
-		rem callpoint!.setOptionEnabled("LENT",0); rem why?
+		callpoint!.setOptionEnabled("LENT",0)
 		callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
 		callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
 		callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
 		callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 
 		ar_type$ = "  "
-		cust$    = callpoint!.getDevObject("cust")
-		order$   = callpoint!.getDevObject("order")
-		int_seq$ = callpoint!.getDevObject("int_seq")
+		cust$    = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+		order$   = callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+		int_seq$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 
 		if cvs(cust$,2) <> ""
 			grid!.focus()
@@ -293,6 +303,13 @@ rem --- Disable skipped columns (debug: disabled, line code won't be set yet)
 	rem line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	rem gosub disable_by_linetype
 
+rem --- Backorder is zero and disabled on a new record
+
+	user_tpl.new_detail = 1
+	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+	callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
+	print "---BO cleared and disabled"
+
 rem --- Set defaults for new record
 
 	inv_type$  = callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")
@@ -303,12 +320,15 @@ rem --- Set defaults for new record
 	
 	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
  		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "N")
-		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", "0")
-		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", "0")
-		print "--- BO and Shipped disabled, commit flag is N"; rem debug
+		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", 0)
+		print "---Shipped disabled, commit flag is N"; rem debug
 	else
 		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y")
  	endif
+
+rem --- Enable/disable backorder
+
+	gosub able_backorder
 
 	callpoint!.setStatus("REFRESH")
 [[OPE_ORDDET.BDEL]]
@@ -331,31 +351,28 @@ rem --- Recalc and display extended price
 [[OPE_ORDDET.AGRN]]
 print "Det:AGRN"; rem debug
 
+rem (fires regardles of new or existing row)
+
 rem --- Set line type
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	user_tpl.line_type$ = ""
+	gosub disable_by_linetype
 
-	if cvs(line_code$, 2) <> "" then 
-		file$ = "OPC_LINECODE"
-		dim opc_linecode$:fnget_tpl$(file$)
+rem --- Disable cost if necessary
 
-		if start_block then
-			read record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
-			user_tpl.line_type$ = opc_linecode.line_type$
-			user_tpl.line_taxable$ = opc_linecode.taxable_flag$
-			print "---line code set: ", opc_linecode.line_type$; rem debug	
+	if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST")) then
+		callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
+	endif
 
-		rem --- Disable cost if necessary
-			if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST")) then
-				callpoint!.setColumnEnabled("OPE_ORDDET.UNIT_COST", 0)
-			endif
+rem --- Set enable/disable back order
 
-		rem --- Set enable/disable based on line type
-			gosub disable_by_linetype
-			print "---Disabled fields by line type"; rem debug
+	gosub able_backorder
 
-		endif
+rem --- Disable Shipped?
+
+	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" then
+		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", 0)
+		print "---Shipped disabled, commit flag is N"; rem debug
 	endif
 
 rem --- Set item tax flag
@@ -377,8 +394,17 @@ rem --- Set item price if item and whse exist
 			user_tpl.item_price = itemwhse.cur_price
 		endif
 	endif
+
+rem --- Set buttons
+
+	gosub enable_repricing
+	gosub able_lot_button
 [[OPE_ORDDET.AGRE]]
 print "Det:AGRE"; rem debug
+
+rem --- Clear new detail line flag
+
+	user_tpl.new_detail = 0
 
 rem --- Has customer credit been exceeded?
 
@@ -541,11 +567,10 @@ print "Det:ITEM_ID.AVAL"; rem debug
 rem --- Check item/warehouse combination and setup values
 
 	start_block = 1
-	item$       = callpoint!.getUserInput()
-	wh$         = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
-	prev_item$  = callpoint!.getColumnUndoData("OPE_ORDDET.ITEM_ID")
+	item$ = callpoint!.getUserInput()
+	wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 
-	if item$<>prev_item$ then
+	if item$<>user_tpl.prev_item$ then
 		gosub clear_all_numerics
 	endif
 
@@ -567,13 +592,12 @@ print "Det:QTY_ORDERED.AVEC"; rem debug
 
 rem --- Set shipped and back ordered
 
-	prev_qty_ord = num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_ORDERED"))
-	qty_ord      = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-	unit_price   = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	qty_ord    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 
-	if qty_ord<>prev_qty_ord or unit_price = 0 then
+	if qty_ord<>user_tpl.prev_qty_ord or unit_price = 0 then
 
-		if qty_ord<>prev_qty_ord then
+		if qty_ord<>user_tpl.prev_qty_ord then
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 			print "---Backord cleared"; rem debug
 
@@ -623,41 +647,27 @@ rem ---display extended price
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
 	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_ORDDET.AGDR]]
-print "Det:AGDR"; rem debug
 
-rem --- Disable skipped columns
 
-	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	gosub disable_by_linetype
 
-rem --- Disable BO?  Shipped?
 
-	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" then
-		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
-		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", 0)
-		print "--- BO, Shipped disabled, commit flag is N"; rem debug
-	endif
 
-rem --- Set buttons
 
-	gosub enable_repricing
-	gosub able_lot_button
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 print "Det:QTY_SHIPPED.AVAL"; rem debug
 
 rem --- recalc quantities and extended price
 
-	shipqty      = num(callpoint!.getUserInput())
-	prev_shipqty = num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_SHIPPED"))
-	ordqty       = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-	cash_sale$   = callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE")
+	shipqty    = num(callpoint!.getUserInput())
+	ordqty     = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	cash_sale$ = callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE")
 
 print "---Shipped:", shipqty; rem debug
-print "---Prev   :", prev_shipqty
+print "---Prev   :", user_tpl.prev_shipqty
 print "---Ordered:", ordqty
 
 	if shipqty > ordqty then 
-		callpoint!.setUserInput(str(prev_shipqty))
+		callpoint!.setUserInput(str(user_tpl.prev_shipqty))
 		msg_id$="SHIP_EXCEEDS_ORD"
 		gosub disp_message
 		callpoint!.setStatus("ABORT-REFRESH")
@@ -668,7 +678,7 @@ print "---Ordered:", ordqty
 		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 		print "---BO set to zero"; rem debug
 	else
-		if prev_shipqty <> shipqty then
+		if user_tpl.prev_shipqty <> shipqty then
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(max(0, ordqty - shipqty)) )
 			print "---BO set to", max(0, ordqty - shipqty); rem debug
 		endif
@@ -682,29 +692,28 @@ print "Det:QTY_BACKORD.AVAL"; rem debug
 
 rem --- Recalc quantities and extended price
 
-	boqty      = num(callpoint!.getUserInput())
-   prev_boqty = num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_BACKORD"))
-	ordqty     = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	boqty  = num(callpoint!.getUserInput())
+	ordqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 
 print "--- BO qty:", boqty; rem debug
-print "---Prev BO:", prev_boqrt
+print "---Prev BO:", user_tpl.prev_boqty
 print "---Ord Qty:", ordqty
 
 	if boqty > ordqty then
-		callpoint!.setUserInput(str(prev_boqty))
+		callpoint!.setUserInput(str(user_tpl.prev_boqty))
 		msg_id$ = "BO_EXCEEDS_ORD"
 		gosub disp_message
 		callpoint!.setStatus("ABORT-REFRESH")
 		break; rem --- exit callpoint
 	endif
 
-	if boqty = 0 then
+	if boqty = 0 and !user_tpl.new_detail then
 		callpoint!.setUserInput(str(ordqty))
 		print "---Bo qty set to ordered:", ordqty; rem debug
 		boqty = ordqty
 	endif
 
-	if boqty <> prev_boqty then
+	if boqty <> user_tpl.prev_boqty then
 		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(ordqty - boqty))
 		print "---Shipped set to:", ordqty - boqty; rem debug
 		gosub disp_ext_amt
@@ -975,14 +984,13 @@ print "Det: in uncommit_iv"; rem deebug
 	ope_ordlsdet_dev=fnget_dev("OPE_ORDLSDET")
 	dim ope_ordlsdet$:fnget_tpl$("OPE_ORDLSDET")
 
-	cust$    = callpoint!.getDevObject("cust")
-	ar_type$ = callpoint!.getDevObject("ar_type")
-	order$   = callpoint!.getDevObject("order")
-
-	seq$    = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
-	wh$     = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
-	item$   = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-	ord_qty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	cust$    = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
+	ar_type$ = callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
+	order$   = callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	seq$     = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
+	wh$      = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
+	item$    = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	ord_qty  = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 
 	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty then
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
@@ -1050,8 +1058,8 @@ print "Det: in disable_by_linetype..."; rem debug
 			find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
 			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
 
-			print "---line code set: """, opc_linecode.line_type$, """"; rem debug
 			rem debug
+			print "---line code set: """, opc_linecode.line_type$, """"
 			if opc_linecode.line_type$ = user_tpl.line_type$ then
 				print "---line code was already set"
 			else
@@ -1213,6 +1221,31 @@ rem ==========================================================================
 
 return
 
+rem ==========================================================================
+able_backorder: rem --- All the factors for enabling or disabling back orders
+rem ==========================================================================
+
+	print "Det:in able_backorder"; rem debug	
+
+	if user_tpl.allow_bo$ = "N" or 
+:		pos(user_tpl.line_type$="MO") or
+:		callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" or
+:		user_tpl.is_cash_sale
+:	then
+		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
+		print "---BO disabled"; rem debug
+	else
+		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 1)
+		print "---BO enable"; rem debug
+
+		if user_tpl.new_detail then
+			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+			print "---BO cleared"; rem debug
+		endif
+	endif
+
+return
+
 
 rem ==========================================================================
 #include std_missing_params.src
@@ -1233,9 +1266,7 @@ rem --- Set enable/disable based on line type
 
 rem --- Has line code changed?
 
-	prev_line_code$ = callpoint!.getColumnUndoData("OPE_ORDDET.LINE_CODE")
-
-	if line_code$ <> prev_line_code$ then
+	if line_code$ <> user_tpl.prev_line_code$ then
 		callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "N")
 		callpoint!.setColumnData("OPE_ORDDET.PRODUCT_TYPE", "")
 		callpoint!.setColumnData("OPE_ORDDET.WAREHOUSE_ID", user_tpl.def_whse$)
@@ -1251,5 +1282,8 @@ rem --- Has line code changed?
 		gosub disp_grid_totals
 		gosub clear_avail
 
-		rem needed? callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 1)
 	endif
+
+rem --- Disable / Enable Backorder
+
+	gosub able_backorder
