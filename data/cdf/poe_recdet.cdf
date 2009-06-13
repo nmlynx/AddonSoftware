@@ -346,10 +346,10 @@ callpoint!.setDevObject("cost_this_row",num(callpoint!.getUserInput()))
 [[POE_RECDET.AUDE]]
 
 gosub update_header_tots
-po_line_code$=callpoint!.getColumnData("POE_PODET.PO_LINE_CODE")
+po_line_code$=callpoint!.getColumnData("POE_RECDET.PO_LINE_CODE")
 if cvs(po_line_code$,2)<>"" then  gosub update_line_type_info
 
-rem --- if this line is new (i.e., NOT from a PO, restore the OO)
+rem --- if this line is new (i.e., NOT from a PO) restore the OO
 
 if cvs(callpoint!.getColumnUndoData("POE_RECDET.PO_NO"),3)<>""
 

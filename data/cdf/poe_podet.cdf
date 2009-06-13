@@ -160,7 +160,7 @@ gosub update_header_tots
 callpoint!.setDevObject("qty_this_row",num(callpoint!.getUserInput()))
 callpoint!.setDevObject("cost_this_row",unit_cost);rem setting both qty and cost because cost may have changed based on qty break
 [[POE_PODET.AGCL]]
-rem print 'show';rem debug
+print 'show';rem debug
 
 use ::ado_util.src::util
 
