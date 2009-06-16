@@ -31,14 +31,14 @@ rem --- set rd_alias_id$, if needed, for DocOut Settings
     
     
 rem --- Document initializations
-	OutVect!=bbjAPI().getSysGui().makeVector()
-	HdrVect!=bbjAPI().getSysGui().makeVector()
-	BrkVect!=bbjAPI().getSysGui().makeVector()
-	TotVect!=bbjAPI().getSysGui().makeVector()
-	rep_date$=date(0:"%Mz/%Dz/%Yd")
-	rep_date_stamp$=date(0:"%Yd%Mz%Dz")
-	rep_time$=date(0:"%hz:%mz %p")
-	rep_time_stamp$=date(0:"%Hz%mz%sz")
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
     
 rem --- each receipt on separate page?
 
@@ -191,7 +191,7 @@ rem --- Initializations
     ls=0
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
-	headings$[headings]="[HEADER]"
+    headings$[2]="[HEADER]"
     number=0
     nf$="(Not On File)"
     if ivs01a.cost_method$="S" cost$="Std"
@@ -403,11 +403,11 @@ l1900: rem --- Standard line
     pbuf$(o[10]+1)=str(poe14a.unit_cost:m3$)
     pbuf$(o[11]+1)=str(po_extension:m1$)
     pbuf$(o[12]+1)=poe14a.location$
- 	OutVect!.addItem(pbuf$)
+    OutVect!.addItem(pbuf$)
    
     dim pbuf$(width)
     pbuf$(o[3]+1)=description$
-	OutVect!.addItem(pbuf$)
+    OutVect!.addItem(pbuf$)
 
     l=l+2
     goto l2400
@@ -428,11 +428,11 @@ l2000: rem --- Non-stock line
     pbuf$(o[10]+1)=str(poe14a.unit_cost:m3$)
     pbuf$(o[11]+1)=str(po_extension:m1$)
     pbuf$(o[12]+1)=poe14a.location$
-	OutVect!.addItem(pbuf$)
+    OutVect!.addItem(pbuf$)
     
     dim pbuf$(width)   
     pbuf$(o[3]+1)=poe14a.order_memo$
-	OutVect!.addItem(pbuf$)    
+    OutVect!.addItem(pbuf$)    
     
     l=l+2
     goto l2400
@@ -440,12 +440,12 @@ l2000: rem --- Non-stock line
 l2100: rem --- Vendor part number line
 
     if l+1>l9 gosub report_heading
-	dim pbuf$(width)
+    dim pbuf$(width)
     pbuf$(o[0]+1)=poe14a.po_line_no$
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
-	OutVect!.addItem(pbuf$)    
+    OutVect!.addItem(pbuf$)    
 
     l=l+1
     goto l2400
@@ -453,12 +453,12 @@ l2100: rem --- Vendor part number line
 l2200: rem --- Message line
 
     if l+1>l9 gosub report_heading
-	dim pbuf$(width)    
+    dim pbuf$(width)    
     pbuf$(o[0]+1)=poe14a.po_line_no$
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.order_memo$
-	OutVect!.addItem(pbuf$)    
+    OutVect!.addItem(pbuf$)    
 
     l=l+1
     goto l2400
@@ -466,18 +466,18 @@ l2200: rem --- Message line
 l2300: rem --- Other type line
 
     if l+2>l9 gosub report_heading
-	dim pbuf$(width)        
+    dim pbuf$(width)        
     pbuf$(o[0]+1)=poe14a.po_line_no$
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[10]+1)=str(poe14a.unit_cost:m3$)
     pbuf$(o[11]+1)=str(po_extension:m1$)
     pbuf$(o[12]+1)=poe14a.location$
-	OutVect!.addItem(pbuf$)
-	
-	dim pbuf$(width)    
+    OutVect!.addItem(pbuf$)
+    
+    dim pbuf$(width)    
     pbuf$(o[3]+1)=poe14a.order_memo$
-	OutVect!.addItem(pbuf$)    
+    OutVect!.addItem(pbuf$)    
 
     l=l+2
 
@@ -502,12 +502,12 @@ l2500: rem --- Read next lot/serial detail record
 rem --- Print detail line
 
     if l+1>l9 gosub report_heading
-	dim pbuf$(width)        
+    dim pbuf$(width)        
     pbuf$(o[3]+1)=lsdesc$+" "+poe24a.sequence_no$+" "+poe24a.lotser_no$(1,i[2])
     pbuf$(o[7]+1)=str(poe24a.qty_received:m2$)
     pbuf$(o[10]+1)=str(poe24a.unit_cost:m3$)
     pbuf$(o[11]+1)=str(extension:m1$)
-	OutVect!.addItem(pbuf$)    
+    OutVect!.addItem(pbuf$)    
     l=l+1
     total=total+poe24a.qty_received
     lastseq=num(poe24a.sequence_no$)
@@ -532,9 +532,9 @@ l2900: rem --- Print lines for missing lot/serial numbers
         if l+1>l9 gosub report_heading
         l=l+1
         lastseq=lastseq+1
-		dim pbuf$(width)        
+        dim pbuf$(width)        
         pbuf$(o[3]+1)=lsdesc$+" "+str(lastseq:"000-")+x$
-		OutVect!.addItem(pbuf$)    
+        OutVect!.addItem(pbuf$)    
         
     next x
 
@@ -708,6 +708,9 @@ report_heading: rem --- Report Heading
     let l=headings+4
 rem    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
 rem    if status exitto std_exit
+
+    HdrVect!.addItem("")
+    BrkVect!.addItem(str(OutVect!.size()))
     if ls goto l5400
     dim pbuf$(width)
     pbuf$(o[4]+1)=dh1$
@@ -772,17 +775,17 @@ l5400: rem --- Subheading for lot/serial number errors
     pbuf$(51+1)="Lot/Serial Number Differences"
     OutVect!.addItem(pbuf$)
     
-	dim pbuf$(width)
-	OutVect!.addItem(pbuf$)
-	
-	dim pbuf$(width)
+    dim pbuf$(width)
+    OutVect!.addItem(pbuf$)
+    
+    dim pbuf$(width)
     pbuf$(o[3]+1+m2-10)="Line Item"
     pbuf$(o[4]+1+m5-7)="Conv"
     pbuf$(o[5]+1+m2-10)="Stocking"
     pbuf$(o[6]+1+m2-11)="Lot/Serial"
     OutVect!.addItem(pbuf$)
-	
-	dim pbuf$(width)    
+    
+    dim pbuf$(width)    
     pbuf$(o[0]+1)="Vendor"
     pbuf$(o[1]+1)="Receiver"
     pbuf$(o[2]+1)="PO #    Seq"
@@ -816,7 +819,7 @@ l6800:
     if l+1>l9 gosub report_heading
     if len(totals$)>o[6] totals$=totals$(1,o[6])
     
-	dim pbuf$(width)        
+    dim pbuf$(width)        
     pbuf$(o[6]+1-len(totals$))=totals$
     pbuf$(o[6]+1)=str(totals[0]:m2$)
     pbuf$(o[7]+1)=str(totals[1]:m2$)

@@ -46,7 +46,9 @@ rem --- Initializations
     p8=max(p8,8)
     x1$=" This Warehouse "
     x2$=" Other Warehouses "
-    headings$[2]="Suggested Backorder Fill Report"
+    HdrVect!.addItem("Suggested Backorder Fill Report")
+    BrkVect!.addItem(str(OutVect!.size()))        
+rem headings$[2]="Suggested Backorder Fill Report"
 
 rem --- Print positions
 
@@ -178,11 +180,11 @@ rem --- Run next overlay
 
     update$="pou_recptreg.aon"    
     overlay$=update$
-	if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
-	
-	out_action$="PRT-PDF"
-	next_overlay$=overlay$
-	goto std_exit
+    if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
+    
+    out_action$="PRT-PDF"
+    next_overlay$=overlay$
+    goto std_exit
 
 
 report_heading: rem --- Report Heading
@@ -190,6 +192,7 @@ report_heading: rem --- Report Heading
     l=headings+3
 rem    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
 rem    if status exitto std_exit
+
     dim pbuf$(width)
     pbuf$(o[3]+1)="Customer"
     pbuf$(o[4]+1+2)="Order"
@@ -252,15 +255,15 @@ l6200: rem --- Item break
     OutVect!.addItem(pbuf$)
     
     dim pbuf$(width)
-	pbuf$(o[6]+1-(16+i[0]))="Totals For Item ",t1$
-	pbuf$(o[6]+1)=str(totals[1]:m2$)
-	pbuf$(o[7]+1)=str(pow03a.qty_received:m2$)
-	pbuf$(o[8]+1)=str(totals[2]:m2$)
-	pbuf$(o[9]+1)=str(totals[3]:m2$)
-	pbuf$(o[10]+1)=str(totals[4]:m2$)
-	pbuf$(o[11]+1)=str(totals[5]:m2$)
-	pbuf$(o[12]+1)=str(totals[6]:m2$)
-	pbuf$(o[13]+1)=str(totals[7]:m2$)
+    pbuf$(o[6]+1-(16+i[0]))="Totals For Item ",t1$
+    pbuf$(o[6]+1)=str(totals[1]:m2$)
+    pbuf$(o[7]+1)=str(pow03a.qty_received:m2$)
+    pbuf$(o[8]+1)=str(totals[2]:m2$)
+    pbuf$(o[9]+1)=str(totals[3]:m2$)
+    pbuf$(o[10]+1)=str(totals[4]:m2$)
+    pbuf$(o[11]+1)=str(totals[5]:m2$)
+    pbuf$(o[12]+1)=str(totals[6]:m2$)
+    pbuf$(o[13]+1)=str(totals[7]:m2$)
     OutVect!.addItem(pbuf$)
     l=l+2
 l6300:
