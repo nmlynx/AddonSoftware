@@ -135,9 +135,25 @@ l1560:
 l1600: rem --- Print detail line
 
     if l+2>l9 gosub report_heading
-    print (printer_dev)@(o[0]),wo$,mark$,@(o[1]),poe14a.item_id$,@(o[2]),poe14a.unit_measure$,@(o[3]),poe14a.qty_received:m2$,@(o[4]),poe14a.unit_cost:m3$,@(o[5]),po_extension:m1$,@(o[6]),poe14a.location$,@(o[7]),fnmask$(poe04a.vendor_id$(1,vendlen),m0$),@(o[8]),poe04a.receiver_no$,@(o[9]),poe14a.po_no$,"-",poe14a.po_line_no$,@(o[10]),complete$,@(o[11]),fndate$(poe04a.recpt_date$)
-    print (printer_dev)@(o[1]),description$
-
+    dim pbuf$(width)
+    pbuf$(o[0]+1)=wo$,mark$
+    pbuf$(o[1]+1)=poe14a.item_id$
+    pbuf$(o[2]+1)=poe14a.unit_measure$
+    pbuf$(o[3]+1)=str(poe14a.qty_received:m2$)
+    pbuf$(o[4]+1)=str(poe14a.unit_cost:m3$)
+    pbuf$(o[5]+1)=str(po_extension:m1$)
+    pbuf$(o[6]+1)=poe14a.location$
+    pbuf$(o[7]+1)=fnmask$(poe04a.vendor_id$(1,vendlen),m0$)
+    pbuf$(o[8]+1)=poe04a.receiver_no$
+    pbuf$(o[9]+1)=poe14a.po_no$+"-"+poe14a.po_line_no$
+    pbuf$(o[10]+1)=complete$
+    pbuf$(o[11]+1)=fndate$(poe04a.recpt_date$)
+	OutVect!.addItem(pbuf$)
+	
+	dim pbuf$(width)
+    pbuf$(o[1]+1)=description$
+	OutVect!.addItem(pbuf$)
+	
 rem --- Accumulate totals
 
     whse=whse+po_extension
@@ -162,10 +178,19 @@ rem --- Any unreleased work orders?
 
     if notopen=0 goto l2500
     if l+3>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)"WARNING: ",$22$,"*",$22$," Indicates That This Is A ",$22$,"Special Order",$22$," Inventory Item For A Work Order Which is Not Open."
+	dim pbuf$(width)
+	OutVect!.addItem(pbuf$)
+	
+	dim pbuf$(width)	
+    pbuf$(1)="WARNING: "+$22$+"*"+$22$+" Indicates That This Is A "+$22$+"Special Order"+$22$+" Inventory Item For A Work Order Which is Not Open."
+	OutVect!.addItem(pbuf$)
+	
     if pos01a.updt_plan_wo$="Y" goto l2500
-    print (printer_dev)"          The Receipt Register Update May Not Be Run Until These Work Orders Are Released Or This Line Is Deleted."
+    
+ 	dim pbuf$(width)	   
+    pbuf$(1)="          The Receipt Register Update May Not Be Run Until These Work Orders Are Released Or This Line Is Deleted."
+	OutVect!.addItem(pbuf$)
+	
     wo=notopen
 
 l2500: rem --- Initializations for Sales Order Report
@@ -232,13 +257,16 @@ l3000: rem --- Get next sort record
 
 rem --- Level breaks?
 
-    if t0$<>pow09a.warehouse_id$ then warehouse_id$=pow09a.warehouse_id$; gosub l6000
+    if t0$<>pow09a.warehouse_id$ then warehouse_id$=pow09a.warehouse_id$,customer_id$=pow09a.customer_id$; gosub l6000
     if t1$<>pow09a.customer_id$ then customer_id$=pow09a.customer_id$; gosub l6200
     if subhead$<>"" gosub l5400
     if customer$="" goto l3200
     if l+4>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)customer$
+    dim pbuf$(width)
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(width)
+    pbuf$(1)customer$
+    OutVect!.addItem(pbuf$)
     l=l+2
     customer$=""
 
@@ -277,9 +305,26 @@ rem --- Calculate extensions and branch based on line type
 rem --- Print detail line
 
     if l+2>l9 gosub report_heading
-    print (printer_dev)@(o[0]),poe04a.order_no$,"-",poe14a.so_int_seq_ref$,@(o[1]),poe14a.item_id$,@(o[2]),um$,@(o[3]),ope11a.qty_ordered:m2$,@(o[4]),qty:m2$,@(o[5]),cost:m3$,@(o[6]),po_extension:m1$,@(o[7]),fnmask$(poe04a.vendor_id$(1,vendlen),m0$),@(o[8]),poe04a.receiver_no$,@(o[9]),poe14a.po_no$,"-",poe14a.po_line_no$,@(o[10]),drop$,@(o[11]),complete$,@(o[12]),fndate$(poe04a.recpt_date$)
-    print (printer_dev)@(o[1]),description$
-    l=l+2
+    dim pbuf$(width)
+    pbuf$(o[0]+1)=poe04a.order_no$+"-"+poe14a.so_int_seq_ref$
+    pbuf$(o[1]+1)=poe14a.item_id$
+    pbuf$(o[2]+1)=um$
+    pbuf$(o[3]+1)=str(ope11a.qty_ordered:m2$)
+    pbuf$(o[4]+1)=str(qty:m2$)
+    pbuf$(o[5]+1)=str(cost:m3$)
+    pbuf$(o[6]+1)=str(po_extension:m1$)
+    pbuf$(o[7]+1)=fnmask$(poe04a.vendor_id$(1,vendlen),m0$)
+    pbuf$(o[8]+1)=poe04a.receiver_no$
+    pbuf$(o[9]+1)=poe14a.po_no$+"-"+poe14a.po_line_no$
+    pbuf$(o[10]+1)=drop$
+    pbuf$(o[11]+1)=complete$
+    pbuf$(o[12]+1)=fndate$(poe04a.recpt_date$)
+	OutVect!.addItem(pbuf$)
+	
+    dim pbuf$(width)
+    pbuf$(o[1]+1)=description$
+ 	OutVect!.addItem(pbuf$)
+   l=l+2
 
 rem --- Accumulate totals
 
@@ -309,28 +354,77 @@ l4900: rem --- Run next overlay
 report_heading: rem --- Report Heading
 
     l=headings+3
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
+rem    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+rem    if status exitto std_exit
     if sales goto l5200
 
 rem --- Heading for work order receipts
 
-    print (printer_dev)@(o[3]+m2-9),"Quantity",@(o[4]+m3-5),"PO",@(o[5]+m1-10),"PO",@(o[6]),"Receiving",@(o[10]),"Rec'd",@(o[11]+2),"Date"
-    print (printer_dev)@(o[0]),"Work Order",@(o[1]),"Item",@(o[2]),"UM",@(o[3]+m2-9),"Received",@(o[4]+m3-5),"Cost",@(o[5]+m1-10),"Extension",@(o[6]),"Location",@(o[7]),"Vendor",@(o[8]),"Rec #",@(o[9]),"PO Number",@(o[10]),"Comp?",@(o[11]),"Received"
+	dim pbuf$(width)
+    pbuf$(o[3]+1+m2-9)="Quantity"
+    pbuf$(o[4]+1+m3-5)="PO"
+    pbuf$(o[5]+1+m1-10)="PO"
+    pbuf$(o[6]+1)="Receiving"
+    pbuf$(o[10]+1)="Rec'd"
+    pbuf$(o[11]+1+2)="Date"
+	OutVect!.addItem(pbuf$)
+	
+	dim pbuf$(width)
+	pbuf$(o[0]+1)="Work Order"
+	pbuf$(o[1]+1)="Item"
+	pbuf$(o[2]+1)="UM"
+	pbuf$(o[3]+1+m2-9)="Received"
+	pbuf$(o[4]+1+m3-5)="Cost"
+	pbuf$(o[5]+1+m1-10)="Extension"
+	pbuf$(o[6]+1)="Location"
+	pbuf$(o[7]+1)="Vendor"
+	pbuf$(o[8]+1)="Rec #"
+	pbuf$(o[9]+1)="PO Number"
+	pbuf$(o[10]+1)="Comp?"
+	pbuf$(o[11]+1)="Received"
+    OutVect!.addItem(pbuf$)
     return
 
 l5200: rem --- Heading for sales order receipts
 
-    print (printer_dev)@(o[3]+m2-9),"Order",@(o[4]+m2-9),"Quantity",@(o[5]+m3-5),"Unit",@(o[10]),"Drop",@(o[11]),"Rec'd",@(o[12]+2),"Date"
-    print (printer_dev)@(o[0]),"Sales Order",@(o[1]),"Item",@(o[2]),"UM",@(o[3]+m2-9),"Quantity",@(o[4]+m2-9),"Received",@(o[5]+m3-5),"Cost",@(o[6]+m1-10),"Extension",@(o[7]),"Vendor",@(o[8]),"Rec #",@(o[9]),"PO Number",@(o[10]),"Ship",@(o[11]),"Comp?",@(o[12]),"Received"
+    dim pbuf$(width)
+	pbuf$(o[3]+1+m2-9)="Order"
+	pbuf$(o[4]+1+m2-9)="Quantity"
+	pbuf$(o[5]+1+m3-5)="Unit"
+	pbuf$(o[10]+1)="Drop"
+	pbuf$(o[11]+1)="Rec'd"
+	pbuf$(o[12]+1+2)="Date"
+    OutVect!.addItem(pbuf$)
+    
+    dim pbuf$(width)
+	pbuf$(o[0]+1)="Sales Order"
+	pbuf$(o[1]+1)="Item"
+	pbuf$(o[2]+1)="UM"
+	pbuf$(o[3]+1+m2-9)="Quantity"
+	pbuf$(o[4]+1+m2-9)="Received"
+	pbuf$(o[5]+1+m3-5)="Cost"
+	pbuf$(o[6]+1+m1-10)="Extension"
+	pbuf$(o[7]+1)="Vendor"
+	pbuf$(o[8]+1)="Rec #"
+	pbuf$(o[9]+1)="PO Number"
+	pbuf$(o[10]+1)="Ship"
+	pbuf$(o[11]+1)="Comp?"
+	pbuf$(o[12]+1)="Received"
+    OutVect!.addItem(pbuf$)
     return
 
 l5400: rem --- Subheading
 
     if l+4>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)subhead$
-    print (printer_dev)""
+	dim pbuf$(width)
+    OutVect!.addItem(pbuf$)
+
+	dim pbuf$(width)
+    pbuf$(1)=subhead$
+    OutVect!.addItem(pbuf$)
+    
+	dim pbuf$(width)
+    OutVect!.addItem(pbuf$)
     l=l+3
     subhead$=""
     return
@@ -408,7 +502,10 @@ l6690:
 rem --- Print totals
 l6900:
     if l+1>l9 gosub report_heading
-    print (printer_dev)@(o[t]-len(totals$)),totals$,@(o[t]),total:m1$
+ 	dim pbuf$(width)
+    pbuf$(o[t]+1-len(totals$))=totals$
+    pbuf$(o[t]+1)=total:m1$
+    OutVect!.addItem(pbuf$)
     let l=l+1
     return
 

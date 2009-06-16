@@ -124,6 +124,8 @@ rem --- sys01a: Channel reference (Line 0352)
 
     setesc std_error
     seterr std_error
+    
+    next_overlay$=""
 
 rem --- Retrieve the program path
 
@@ -137,8 +139,8 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-ESCAPE;rem needs post codeport work...not ready to run ! (12Jun09.CAH)
-
+goto std_exit;rem needs post codeport work...not ready to run ! (12Jun09.CAH)
+escape
 rem --- Open/Lock files
 
     files=53,begfile=1,endfile=files
