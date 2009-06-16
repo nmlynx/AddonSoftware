@@ -23,11 +23,18 @@ rem --- Retrieve sysinfo data
 
 rem --- Initializations
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
+
+
     precision i[1]
     dim description$(i[3]+i[4]+i[5]),s0$(200),s[13]
     dim files[3],item$[2],whse$[2],z0$(32)
     number=0
-    m2$=i7$
     l=l9+1
     subhead$=""
     t0$=""
@@ -162,6 +169,7 @@ l4500: rem --- Close files before proceeding to update
 rem --- Run next overlay
 
     update$="pou_recptreg.aon"
+    update$="";rem temp until update is ready (CAH 15Jun09)
     if gl$<>"Y" run update$,err=std_exit
     run pgmdir$+"glr_recap.aon"
 

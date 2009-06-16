@@ -64,7 +64,7 @@ l1000: rem --- Get next sort record
 
 rem --- Level breaks?
 
-    if t0$<>pow04a.warehouse_id$ then warehouse_id$=pow04a.warehouse_id$; gosub l6000
+    if t0$<>pow04a.warehouse_id$ then warehouse_id$=pow04a.warehouse_id$,recpt_date$=pow04a.recpt_date$; gosub l6000
     if t1$<>pow04a.recpt_date$ then recpt_date$=pow04a.recpt_date$; gosub l6200
     if subhead$<>"" gosub l5400
 
@@ -77,7 +77,8 @@ rem --- Read receipt header and detail
     poe04a.receiver_no$=pow04a.receiver_no$
 
     poe14a.firm_id$=firm_id$
-    poe14a.receiver_no$=pow04a.receiver_no$+pow04a.po_line_no$
+    poe14a.receiver_no$=pow04a.receiver_no$
+    poe14a.po_line_no$=pow04a.po_line_no$
 
     gosub l6400
     if status goto l1900
@@ -151,8 +152,8 @@ l3000: rem --- Get next sort record
 
 rem --- Level breaks?
 
-    if t0$<>pow05a.warehouse_id$ gosub l6000
-    if t1$<>pow05a.recpt_date$ gosub l6200
+    if t0$<>pow05a.warehouse_id$ then warehouse_id$=pow05a.warehouse_id$,recpt_date$=pow05a.recpt_date$; gosub l6000
+    if t1$<>pow05a.recpt_date$ then recpt_date$=pow05a.recpt_date$; gosub l6200
     if subhead$<>"" gosub l5400
 
 rem --- Read receipt header, detail and line code
@@ -164,7 +165,8 @@ rem --- Read receipt header, detail and line code
     poe04a.receiver_no$=pow05a.receiver_no$
 
     poe14a.firm_id$=firm_id$
-    poe14a.receiver_no$=pow05a.receiver_no$+pow05a.po_line_no$
+    poe14a.receiver_no$=pow05a.receiver_no$
+    poe14a.po_line_no$=pow05a.po_line_no$
 
     gosub l6400
     if status goto l3900
@@ -326,8 +328,15 @@ l6690:
 
 l6700: rem --- Report Initializations
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
+
     dim receipt[1],whse[1],report[1],totals[1]
-    let m1$=i6$,m2$=i7$,m3$=i8$,m1=len(m1$),m2=len(m2$),m3=len(m3$),done=0
+    let m1=len(m1$),m2=len(m2$),m3=len(m3$),done=0
     let number=0,maxm1=15,maxm2=12,maxm3=12,l=l9+1,subhead$="",t0$="",t1$=""
 rem --- Print positions
 l6800:

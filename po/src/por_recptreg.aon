@@ -51,9 +51,8 @@ rem --- Open/Lock files
     files$[16]="pow-05",ids$[16]="POW_RECNSTCK",options$[16]="C"
     files$[17]="pow-08",ids$[17]="POW_RECBYWO",options$[17]="C"
     files$[18]="pow-09",ids$[18]="POW_RECBYORD",options$[18]="C"
- 
-    call pgmdir$+"adc_fileopen.aon",action,begfile,18,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
+
+     call pgmdir$+"adc_fileopen.aon",action,begfile,18,files$[all],options$[all],                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     apm01_dev=channels[1]
     aps01a_dev=channels[2]
@@ -76,15 +75,7 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-    dim apm01a$:templates$[1],aps01a$:templates$[2],
-:       ars01a$:templates$[3],
-:       gls01a$:templates$[4],ivm01a$:templates$[5],
-:       ivm02a$:templates$[6],
-:       ivm10c$:templates$[7],ivs01a$:templates$[8],
-:       poe04a$:templates$[9],
-:       poe14a$:templates$[10],poe24a$:templates$[11],pom02a$:templates$[12],
-:       pos01a$:templates$[13],pow03a$:templates$[14],pow04a$:templates$[15],
-:       pow05a$:templates$[16],pow08a$:templates$[17],pow09a$:templates$[18]
+    dim apm01a$:templates$[1],aps01a$:templates$[2],       ars01a$:templates$[3],       gls01a$:templates$[4],ivm01a$:templates$[5],       ivm02a$:templates$[6],       ivm10c$:templates$[7],ivs01a$:templates$[8],       poe04a$:templates$[9],       poe14a$:templates$[10],poe24a$:templates$[11],pom02a$:templates$[12],       pos01a$:templates$[13],pow03a$:templates$[14],pow04a$:templates$[15],       pow05a$:templates$[16],pow08a$:templates$[17],pow09a$:templates$[18]
 
 rem --- Retrieve parameter records
 
@@ -104,8 +95,8 @@ rem --- masks
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
-    
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vendomask$,0,vendlen
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
 
 rem --- Parameters
@@ -119,20 +110,20 @@ rem --- Parameters
     lf$="N"
 
     vendlen=num(aps01a.vendor_size$)
-    i[0]=ivs01a.item_no_len
-    i[1]=ivs01a.precision
+    i[0]=ivs01a.item_id_len
+    i[1]=num(ivs01a.precision$)
     i[2]=ivs01a.ls_no_len
-    i[3]=num(ivs01a.desc_len$)
-    i[4]=num(ivs01a.desc_len$)
-    i[5]=num(ivs01a.desc_len$)
-    i[6]=ivs01a.vend_prd_len
-    i[7]=fnyy_year(current_year$)
+    i[3]=num(ivs01a.desc_len_01$)
+    i[4]=num(ivs01a.desc_len_02$)
+    i[5]=num(ivs01a.desc_len_03$)
+    i[6]=ivs01a.vendor_prd_len
+    i[7]=num(ivs01a.current_year$)
     g[0]=num(gls01a.total_pers$)
     g[1]=num(gls01a.current_per$)
-    g[2]=fnyy_year(gls01a.current_year$)
+    g[2]=num(gls01a.current_year$)
     g[3]=num(gls01a.acct_length$)
     g[4]=num(gls01a.max_acct_len$)
-    replenishment$=gls01a.use_replen$
+    replenishment$=aps01a.use_replen$
     call pgmdir$+"adc_application.aon","AR",info$[all]
     ar$=info$[20]
     op$="N"
@@ -163,9 +154,6 @@ rem --- Initializations
     if pos(ivs01a.lotser_flag$="LS")>0 ls$="Y"
     if pos(ivs01a.lifofifo$="LF")>0 lf$="Y"
     m0=len(m0$)
-    m1$=i6$
-    m2$=i7$
-    m3$=i8$
     width=132
     page=0
     l9=59
@@ -191,7 +179,6 @@ rem --- Initializations
     lotser=0
     errors=0
     dif$=""
-    break$="Y"
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_RECDET","PRIMARY",lsdiff_tpl$,rd_table_chans$[all],status$
 
@@ -201,8 +188,7 @@ rem --- Additional File Opens
         files$[19]="arm-01",ids$[19]="ARM_CUSTMAST"
         files$[20]="arc_distcode",ids$[20]="ARC_DISTCODE"
 
-        call pgmdir$+"adc_fileopen.aon",action,19,20,files$[all],options$[all],
-    :                                   ids$[all],templates$[all],channels[all],batch,status
+        call pgmdir$+"adc_fileopen.aon",action,19,20,files$[all],options$[all],                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
 
       arm01_dev=channels[19]
@@ -216,8 +202,7 @@ rem --- Additional File Opens
         files$[22]="ope-11",ids$[22]="OPE_ORDDET"
         files$[23]="opm-02",ids$[23]="OPC_LINECODE"
 
-        call pgmdir$+"adc_fileopen.aon",action,21,23,files$[all],options$[all],
-    :                                   ids$[all],templates$[all],channels[all],batch,status
+        call pgmdir$+"adc_fileopen.aon",action,21,23,files$[all],options$[all],                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
 
         ope01_dev=channels[21]
@@ -231,8 +216,7 @@ rem --- Additional File Opens
         files$[24]="ivm-04",ids$[24]="IVM_ITEMTIER"
         files$[25]="ivw-04",ids$[25]="IVW_LFDET",options$[25]="CL"
 
-        call pgmdir$+"adc_fileopen.aon",action,24,25,files$[all],options$[all],
-    :                                   ids$[all],templates$[all],channels[all],batch,status
+        call pgmdir$+"adc_fileopen.aon",action,24,25,files$[all],options$[all],                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
 
         ivm04_dev=channels[24]
@@ -243,16 +227,15 @@ rem --- Additional File Opens
 
     if gl$<>"N"
         files$[26]="glm-01",ids$[26]="GLM_ACCT"
-        files$[27]="glw-11",ids$[27]="GLW_DAILYDETAIL"
+        files$[27]=glw11$,options$[27]="CL"
 
-        call pgmdir$+"adc_fileopen.aon",action,26,27,files$[all],options$[all],
-    :                                   ids$[all],templates$[all],channels[all],batch,status
+        call pgmdir$+"adc_fileopen.aon",action,26,27,files$[all],options$[all],                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
 
         glm01_dev=channels[26]
         glw11_dev=channels[27]
 
-        dim glm01a$:templates$[26],glw11a$:templates$[27]
+        dim glm01a$:templates$[26]
     endif
 
     if sf$<>"N"
@@ -260,8 +243,7 @@ rem --- Additional File Opens
         files$[29]="sfe-04",ids$[29]="SFE_WOTRANS"
         files$[30]="sfm-10",ids$[30]="SFC_WOTYPECD"
 
-        call pgmdir$+"adc_fileopen.aon",action,28,endfile,files$[all],options$[all],
-:                                       ids$[all],templates$[all],channels[all],batch,status
+        call pgmdir$+"adc_fileopen.aon",action,28,30,files$[all],options$[all],                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
 
         sfe01_dev=channels[28]
@@ -296,7 +278,6 @@ rem --- Position file
     if status goto std_exit
     call pgmdir$ + "adc_progress.aon","N","","","","",0,poe04_dev,1,meter_num,status
     read (poe04_dev,key=firm_id$,knum=1,dom=*next)
-
 l1000: rem --- Read next header
 
     k$=key(poe04_dev,end=done)
@@ -330,7 +311,7 @@ l1500: rem --- Read next detail record
     read record (poe14_dev) poe14a$
     if pom02a.firm_id$+pom02a.po_line_code$=firm_id$+poe14a.po_line_code$ goto l1600
     pom02a.firm_id$=firm_id$
-    pom02a.po_line_code=poe14a.po_line_code$
+    pom02a.po_line_code$=poe14a.po_line_code$
     find record (pom02_dev,key=pom02a.firm_id$+pom02a.po_line_code$,dom=l3800) pom02a$
 
 l1600: rem --- Retrieve inventory item for S lines
@@ -407,7 +388,6 @@ l2300: rem --- Other type line
     l=l+2
 
 l2400: rem --- Lotted/Serialized?
-
     if ls$="N" goto l3000
     if pom02a.line_type$<>"S" goto l3000
     if ivm01a.lotser_item$+ivm01a.inventoried$<>"YY" goto l3000
@@ -483,14 +463,14 @@ l3000: rem --- Generate GL Recap Postings
     glparams[2]=i[0]
     glparams$[12]=ivs01a.cost_method$
     glparams[3]=iv_extension
-    tpls$[0]=fattr(poe14a$)
-    tpls$[1]=fattr(gls01a$)
-    tpls$[2]=fattr(pom02a$)
-    tpls$[3]=fattr(ivm01a$)
-    tpls$[4]=fattr(arm10d$)
-    tpls$[5]=fattr(sfe01a$)
-    tpls$[6]=fattr(sfm10a$)
-    call pgmdir$+"poc_recglpost.aon",glfiles[all],w0$,w[all],glparams$[all],glparams[all],tpls$[all],status
+    if cvs(poe14a$,3)<>"" then tpls$[0]=fattr(poe14a$)
+    if cvs(gls01a$,3)<>"" then tpls$[1]=fattr(gls01a$)
+    if cvs(pom02a$,3)<>"" then tpls$[2]=fattr(pom02a$)
+    if cvs(ivm01a$,3)<>"" then tpls$[3]=fattr(ivm01a$)
+    if cvs(arm10d$,3)<>"" then tpls$[4]=fattr(arm10d$)
+    if cvs(sfe01a$,3)<>"" then tpls$[5]=fattr(sfe01a$)
+    if cvs(sfm10a$,3)<>"" then tpls$[6]=fattr(sfm10a$)
+    call pgmdir$+"poc_recglpost.aon",glfiles[all],w$[all],w[all],glparams$[all],glparams[all],tpls$[all],status
     if status goto std_exit
 
 l3500: rem --- Write sort records
@@ -506,7 +486,7 @@ l3500: rem --- Write sort records
 
     pow04a.firm_id$=firm_id$
     pow04a.warehouse_id$=poe14a.warehouse_id$
-    pow04a.recpt_date$=poe14a.recpt_date$
+    pow04a.recpt_date$=poe04a.recpt_date$
     pow04a.item_id$=poe14a.item_id$
     pow04a.vendor_id$=poe04a.vendor_id$
     pow04a.receiver_no$=poe14a.receiver_no$
@@ -515,7 +495,7 @@ l3500: rem --- Write sort records
 
     pow05a.firm_id$=firm_id$
     pow05a.warehouse_id$=poe14a.warehouse_id$
-    pow05a.recpt_date$=poe14a.recpt_date$
+    pow05a.recpt_date$=poe04a.recpt_date$
     pow05a.item_id$=poe14a.item_id$
     pow05a.order_memo$=poe14a.order_memo$
     pow05a.vendor_id$=poe04a.vendor_id$
@@ -542,20 +522,14 @@ l3500: rem --- Write sort records
     pow09a.po_no$=poe14a.po_no$
     pow09a.po_line_no$=poe14a.po_line_no$
 
-    if pos(pom02a.line_type$="NO") write record (pow05_dev,key=pow05a.firm_id$+pow05a.warehouse_id$+
-:       pow05a.recpt_date$+pow05a.item_id$+pow05a.order_memo$+pow05a.vendor_id$+pow05a.receiver_no$+
-:       pow05a.po_no$+pow05a.po_line_no$) pow05a$
-    if cvs(pow08a.wo_no$+pow08a.wo_seq_ref$,3)<>"" write record (pow08_dev,key=pow08a.firm_id$+pow08a.warehouse_id$+
-:       pow08a.wo_no$+pow08a.wo_seq_ref$+pow08a.vendor_id$+pow08a.receiver_no$+pow08a.po_no$+pow08a.po_line_no$) pow08a$
-    if cvs(pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$,3)<>"" write record (pow09_dev,key=pow09a.firm_id$+
-:       pow09a.warehouse_id$+pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$+pow09a.vendor_id$+
-:       pow09a.receiver_no$+pow09a.po_no$+pow09a.po_line_no$) pow09a$
+    if pos(pom02a.line_type$="NO") write record (pow05_dev,key=pow05a.firm_id$+pow05a.warehouse_id$+       pow05a.recpt_date$+pow05a.item_id$+pow05a.order_memo$+pow05a.vendor_id$+pow05a.receiver_no$+       pow05a.po_no$+pow05a.po_line_no$) pow05a$
+    if cvs(pow08a.wo_no$+pow08a.wo_seq_ref$,3)<>"" write record (pow08_dev,key=pow08a.firm_id$+pow08a.warehouse_id$+       pow08a.wo_no$+pow08a.wo_seq_ref$+pow08a.vendor_id$+pow08a.receiver_no$+pow08a.po_no$+pow08a.po_line_no$) pow08a$
+    if cvs(pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$,3)<>"" write record (pow09_dev,key=pow09a.firm_id$+       pow09a.warehouse_id$+pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$+pow09a.vendor_id$+       pow09a.receiver_no$+pow09a.po_no$+pow09a.po_line_no$) pow09a$
     if pom02a.line_type$<>"S" goto l3600
     find record (pow03_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$,dom=*next) pow03a$
     pow03a.qty_received=pow03a.qty_received+(poe14a.qty_received*poe14a.conv_factor)
     write record (pow03_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$) pow03a$
-    write record (pow04_dev,key=pow04a.firm_id$+pow04a.warehouse_id$+pow04a.recpt_date$+pow04a.item_id$+
-:       pow04a.vendor_id$+pow04a.receiver_no$+pow04a.po_no$+pow04a.po_line_no$) pow04a$
+    write record (pow04_dev,key=pow04a.firm_id$+pow04a.warehouse_id$+pow04a.recpt_date$+pow04a.item_id$+       pow04a.vendor_id$+pow04a.receiver_no$+pow04a.po_no$+pow04a.po_line_no$) pow04a$
 
 
 l3600: rem --- Accumulate totals
@@ -600,17 +574,21 @@ rem --- Any missing lot/serial numbers?
 rem --- Print list of lines with lot/serial number differences
     for x=1 to lotser
         dim k$:lsdiff_tpl$,apm01a$:fattr(apm01a$)
-        let k$=dif$[x],apm01a.firm_id$=firm_id$,apm01a.vendor_id$=poe04a.vendor_id$
+        let k$=dif$[x]
+        dim poe04a$:fattr(poe04a$)
+        dim poe14a$:fattr(poe14a$)
+        read record (poe14_dev,key=k.firm_id$+k.receiver_no$+k.internal_seq_no$,knum=0)poe14a$
+        read record (poe04_dev,key=k.firm_id$+k.receiver_no$,knum=0)poe04a$
+        apm01a.firm_id$=firm_id$,apm01a.vendor_id$=poe04a.vendor_id$
         find record (apm01_dev,key=apm01a.firm_id$+apm01a.vendor_id$,dom=*next) apm01a$
     l4640:
         if l+1>l9 gosub report_heading
         let stock=lineqty[x]*factor[x],dif=stock-lsqty[x]
-        print (printer_dev)@(o[0]),fnmask$(apm01a.vendor_id$,m0$)," ",apm01a.vendor_name$,@(o[1]),k.receiver_no$,@(o[2]),poe04a.po_no$,"-",k.internal_seq_no$,@(o[3]),lineqty[x]:m2$,@(o[4]),factor[x]:m5$,@(o[5]),stock:m2$,@(o[6]),lsqty[x]:m2$,@(o[7]),dif:m2$
+        print (printer_dev)@(o[0]),fnmask$(apm01a.vendor_id$,m0$)," ",apm01a.vendor_name$,@(o[1]),k.receiver_no$,@(o[2]),poe14a.po_no$,"-",poe14a.po_line_no$,@(o[3]),lineqty[x]:m2$,@(o[4]),factor[x]:m5$,@(o[5]),stock:m2$,@(o[6]),lsqty[x]:m2$,@(o[7]),dif:m2$
         let l=l+1
     next x
 
 l4900: rem --- Run next overlay
-escape;rem ready for next pgm
     if number=0 goto std_exit
     run pgmdir$+"por_recptreg_o1.aon"
 
@@ -628,7 +606,7 @@ report_heading: rem --- Report Heading
 l5200: rem --- Receipt subheading
 
     print (printer_dev)""
-    print (printer_dev)"Vendor: ",vendor$,@(63),"Rec #: ",a0$(9,7),@(97),"Receipt Date: ",fndate$(poe04a.recpt_date$)," ",complete$
+    print (printer_dev)"Vendor: ",vendor$,@(63),"Rec #: ",poe04a.receiver_no$,@(97),"Receipt Date: ",fndate$(poe04a.recpt_date$)," ",complete$
     print (printer_dev)@(63)," PO #: ",poe04a.po_no$,@(97),packlist$
     print (printer_dev)""
     let l=l+4
@@ -683,10 +661,8 @@ rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
 
     def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
-    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
     def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
@@ -775,8 +751,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
-:                                str(err),rd_err_text$,rd_err_act$
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$) retry
@@ -800,8 +775,7 @@ std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
-:                                   str(err),rd_err_text$,rd_err_act$
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),                                   str(err),rd_err_text$,rd_err_act$
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)

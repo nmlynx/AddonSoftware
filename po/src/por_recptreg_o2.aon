@@ -23,15 +23,20 @@ rem --- Retrieve sysinfo data
 
 rem --- Initializations
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
+
+
     precision i[1]
     dim description$(40),b0$(8),b1$(30),l0$(52),l1$(64),l[17],z0$(75)
     headings$[2]="Receipts By Work Order"
     number=0
     t=5
     sales=0
-    m1$=i6$
-    m2$=i7$
-    m3$=i8$
     m1=len(m1$)
     m2=len(m2$)
     m3=len(m3$)
@@ -101,7 +106,8 @@ rem --- Read receipt header and detail
     poe04a.receiver_no$=pow08a.receiver_no$
 
     poe14a.firm_id$=firm_id$
-    poe14a.receiver_no$=pow08a.receiver_no$+pow08a.po_line_no$
+    poe14a.receiver_no$=pow08a.receiver_no$
+    poe14a.po_line_no$=pow08a.po_line_no$
 
     gosub l6400
     if status goto l1900
@@ -164,14 +170,19 @@ rem --- Any unreleased work orders?
 
 l2500: rem --- Initializations for Sales Order Report
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
+
+
     if op$<>"Y" goto l4900
     headings$[2]="Receipts By Customer Sales Order"
     number=0
     t=6
     sales=1
-    m1$=i6$
-    m2$=i7$
-    m3$=i8$
     m1=len(m1$)
     m2=len(m2$)
     m3=len(m3$)
@@ -240,7 +251,8 @@ l3200: rem --- Read receipt header and detail
     poe04a.receiver_no$=pow09a.receiver_no$
 
     poe14a.firm_id$=firm_id$
-    poe14a.receiver_no$=pow09a.receiver_no$+pow09a.po_line_no$
+    poe14a.receiver_no$=pow09a.receiver_no$
+    poe14a.po_line_no$=pow09a.po_line_no$
 
     gosub l6400
     if status goto l3900
