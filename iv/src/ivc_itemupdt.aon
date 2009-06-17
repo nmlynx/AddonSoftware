@@ -35,10 +35,10 @@ rem --- [43] = ivt-03 (IVX_LSVEND), (needed for lot/serial)
 rem --- [44] = ivt-04 (IVT_ITEMTRAN), 
 rem --- IVS01A$    : IV Parameter record, (input)
 rem --- ITEMS$[n]  : Item Information (input)
-rem --- [0] = Firm ID			(not used) the firm now comes from sysinfo$
+rem --- [0] = Firm ID           (not used) the firm now comes from sysinfo$
 rem --- [1] = Warehouse ID   
 rem --- [2] = Item Number
-rem --- [3] = Lot/Serial Number	(optional)
+rem --- [3] = Lot/Serial Number (optional)
 rem --- REFS$[n]   : Reference Information (input)
 rem --- [0] = Date             [7] = GL Account Number
 rem --- [1] = Reference 1      [8] = Transaction Comment
@@ -49,7 +49,7 @@ rem --- [5] = Sequence Nbr    [12] = Drop Ship Flag
 rem --- [6] = OP/PO Line Code
 rem --- REFS[n]    : Reference Information (input)
 rem --- [0] = Quantity       
-rem --- [1] = Unit Cost			(input/output)
+rem --- [1] = Unit Cost         (input/output)
 rem --- [2] = Unit Price     
 rem --- [3] = Actual Lead Time
 rem --- [4] = Landed Cost
@@ -259,7 +259,7 @@ receive_a_tier: rem --- For receipts, add to existing tier or create new one
 
     read record (ivm04_dev) ivm04a$
 
-    if 	ivm04a.unit_cost <> cost or 
+    if  ivm04a.unit_cost <> cost or 
 :       action$ <> ivm04a.trans_source$ or
 :       refs$[5] <> ivm04a.line_no$ or
 :       ( pos(action$="OPRC",2)     and ivm04a.trans_ref$ <> refs$[3] ) or
@@ -415,7 +415,7 @@ rem --- ivt-04 Inventory Transactions
     dim k$:ivt04a_tpl$
     k$=keyp(ivt04_dev,end=write_trans_rec)
 
-    if	k.firm_id$      <> ivt04a.firm_id$      or
+    if  k.firm_id$      <> ivt04a.firm_id$      or
 :       k.warehouse_id$ <> ivt04a.warehouse_id$ or
 :       k.item_id$      <> ivt04a.item_id$      or 
 :       k.trans_date$   <> ivt04a.trans_date$ 
@@ -429,7 +429,7 @@ rem --- Update existing ivt-04 record
 
     if  trans$(code,2) = ivt04a.trans_source$ and
 :       refs$[1] = ivt04a.trans_ref_1$ and
-:       refs$[2] = ivt04a.trans_ref_2$ and	
+:       refs$[2] = ivt04a.trans_ref_2$ and  
 :       refs$[3] = ivt04a.trans_ref_3$ and
 :       refs$[4] = ivt04a.trans_ref_4$ and
 :       refs$[5] = ivt04a.trans_seq$ and
@@ -713,7 +713,7 @@ update_comtd_on_order: rem --- Update IVM-02/IVM-07 committed and on order
         if pos(action$="OOPO",2) then 
             ivmwk.qty_on_order=ivmwk.qty_on_order+qty
         else 
-            if action$="RC" then 
+            if action$="RC" and !(dropship) then 
                 ivmwk.qty_on_order=ivmwk.qty_on_order-qty
             endif
         endif
@@ -741,7 +741,7 @@ update_whse_lots: rem --- ivm-02 Warehouse/IVM-07 Lot/Serial Number Updates
         endif
     endif
 
-    if dropship then goto update_qoh
+    if dropship then return; rem goto update_qoh was causing it to update qoh for dropships
 
     if last then 
         field ivmwk$, last$[last] = fnl$( field(ivmwk$,last$[last]), ymd$ )
@@ -971,14 +971,14 @@ rem --- Update chan with references to the open files
     chan[43]  = num( open_chans$[12] )
     chan[44]  = num( open_chans$[13] )
 
-rem --- Was ivs01a$ passed?  If not, get it	
+rem --- Was ivs01a$ passed?  If not, get it 
 
     ivs01a_tpl$ = ""
     ivs01a_tpl$ = fattr(ivs01a$,err=*next)
 
     if ivs01a_tpl$ <> open_tpls$[1] then 
         dim ivs01a$:open_tpls$[1]
-        find record(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params)ivs01a$	
+        find record(ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params)ivs01a$    
     endif
 
 init_exit: rem --- Init Done
