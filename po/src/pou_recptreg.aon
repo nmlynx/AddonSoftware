@@ -59,12 +59,12 @@ rem --- Open/Lock Files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="poe-02",ids$[1]="POE_POHDR"
     files$[2]="poe-12",ids$[2]="POE_PODET"
-    files$[3]="pot-04",ids$[1]="POT_RECHDR"
-    files$[4]="pot-14",ids$[1]="POT_RECDET"
-    files$[5]="apm-06",ids$[1]="APM_VENDREPL"
-    files$[6]="ivm-05",ids$[1]="IVM_ITEMVEND"
-    files$[7]="ivm-12",ids$[1]="IVM_ITEMACT"
-    files$[8]="ivt-04",ids$[1]="IVT_ITEMTRAN"
+    files$[3]="pot-04",ids$[3]="POT_RECHDR"
+    files$[4]="pot-14",ids$[4]="POT_RECDET"
+    files$[5]="apm-06",ids$[5]="APM_VENDREPL"
+    files$[6]="ivm-05",ids$[6]="IVM_ITEMVEND"
+    files$[7]="ivm-12",ids$[7]="IVM_ITEMACT"
+    files$[8]="ivt-04",ids$[8]="IVT_ITEMTRAN"
     
     call pgmdir$+"adc_fileopen.aon",action,begfile,8,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -283,7 +283,7 @@ l1900: rem --- Update Lotted/Serialized Inventory
 
     read record (poe24_dev,end=l2000) poe24a$
     if pos(poe14a.firm_id$+poe14a.receiver_no$+poe14a.internal_seq_no$=poe24a$)<>1 goto l2000
-    item$[3]=poe24a.item_id$
+    item$[3]=poe24a.lotser_no$
     qty=poe24a.qty_received
     cost=poe24a.unit_cost
     if qty<>0 gosub l6100
@@ -397,16 +397,16 @@ rem --- note: poe-14 contains 12-char sales order line ref, pot-14 contains (old
 rem --- need to decide if we just skip putting line# in pot-14; if we can't, we need to add it, or change
 rem --- current line# to the 12-char one, which in turn has dataport implications
 
-    if pom02a.line_type$="M" and pos_params.m_line_hist$<>"Y" goto l3000; rem "Don't retain message lines in history
-    if pom02a.line_type$="V" and pos_params.v_line_hist$<>"Y" goto l3000; rem "Don't retain vendor part lines in history
+    if pom02a.line_type$="M" and pos01a.m_line_hist$<>"Y" goto l3000; rem "Don't retain message lines in history
+    if pom02a.line_type$="V" and pos01a.v_line_hist$<>"Y" goto l3000; rem "Don't retain vendor part lines in history
     dim pot14a$:fattr(pot14a$)
-    call stbl("+DIR_PGM")+"adc_copyfile.aon",poe14a$,pot14a$,status  
+    call stbl("+DIR_PGM")+"adc_copyfile.aon",poe14a$,pot14a$,status 
     pot14a$=field(pot14a$)
     write record (pot14_dev,key=pot14a.firm_id$+pot14a.po_no$+pot14a.receiver_no$) pot14a$
 
 l3000: rem --- Remove receipt detail
 
-remove (poe14_dev,key=poe14a.firm_id$+poe14a.receiver_no$+poe14a.internal_seq_no$,dom=l3020)
+remove (poe14_dev,key=poe14a.firm_id$+poe14a.receiver_no$+poe14a.internal_seq_no$,dom=*next)
 
 rem --- Remove Receipt Lot/Serial Detail
 
@@ -448,11 +448,10 @@ l3400: rem --- Loop back for next detail
 
 l3500: rem --- Done with detail lines - Remove receipt header
 
-    flippeda0$=a0$(1,8)+a0$(16,7)+a0$(9,7)
     dim pot04a$:fattr(pot04a$)
     call stbl("+DIR_PGM")+"adc_copyfile.aon",poe04a$,pot04a$,status      
     write record (pot04_dev,key=pot04a.firm_id$+pot04a.po_no$+pot04a.receiver_no$) pot04a$
-remove (poe04_dev,key=poe04a.firm_id$+poe04a.receiver_no$,dom=l3530)
+remove (poe04_dev,key=poe04a.firm_id$+poe04a.receiver_no$,dom=*next)
 
 rem --- Done with details - Update PO Header
 
@@ -469,7 +468,7 @@ rem --- Done with details - Update PO Header
 
 l3700: rem --- Received complete - Delete PO
 
-remove (poe02_dev,key=poe02a.firm_id$+poe02a.po_no$,dom=l3720)
+remove (poe02_dev,key=poe02a.firm_id$+poe02a.po_no$,dom=*next)
 
 l3900: rem --- Loop back for next header
 
@@ -509,7 +508,7 @@ l6200: rem --- Call standard inventory update program
     let ref3$=poe14a.po_line_no$,refs$[0]=poe04a.recpt_date$,refs$[1]=poe04a.vendor_id$,refs$[2]=poe14a.po_no$
     let refs$[3]=poe14a.receiver_no$,refs$[4]="",refs$[5]=ref3$,refs$[6]=poe14a.po_line_code$
     let refs$[8]=ivacct$,refs$[9]="",refs$[10]="",refs$[11]=""
-    let refs$[12]=pom02a.dropship$,refs[0]=qty,refs[1]=cost,refs[2]=ivm02a.cur_price
+    let refs$[12]=poe04a.dropship$,refs[0]=qty,refs[1]=cost,refs[2]=ivm02a.cur_price
     let refs[3]=leadtime,refs[4]=cost,refs[5]=0
 
     call pgmdir$+"ivc_itemupdt.aon",action$,files[all],ivs01a$,item$[all],refs$[all],refs[all],rd_table_chans$[all],ignore_status
@@ -532,7 +531,7 @@ glpost:
     call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,glt14_dev,account$,when$,ref1$,ref2$,ref3$,memo$,amount,units,status
 l6990:
     return
-    
+        
 disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
