@@ -149,7 +149,7 @@ rem --- Set Defaults
 	dim apm02a$:fnget_tpl$("APM_VENDHIST")
 	read record(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
 	tmp$=key(apm02_dev,end=done_apm_vendhist)
-		if pos(firm_id$+vendir_id$=tmp$)<>1 then goto done_apm_vendhist
+		if pos(firm_id$+vendor_id$=tmp$)<>1 then goto done_apm_vendhist
 		read record(apm02_dev,key=tmp$)apm02a$
 	done_apm_vendhist:
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL","")
