@@ -35,7 +35,7 @@ while 1
 wend
 [[POE_INVHDR.BSHO]]
 rem --- Open/Lock files
-files=13,begfile=1,endfile=files
+files=15,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 
 files$[1]="APM_VENDCMTS";rem --- "apm-09
@@ -51,6 +51,8 @@ files$[10]="POT_RECHDR";rem --- "pot-04"
 files$[11]="POT_RECDET";rem --- "pot-14"
 files$[12]="APT_INVOICEHDR";rem --- "apt-01"
 files$[13]="IVM_ITEMMAST";rem --- "ivm-01"
+files$[14]="POC_LINECODE";rem --- "pom-02"
+files$[15]="APC_TERMSCODE"
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
@@ -136,7 +138,7 @@ inv_no_height=inv_no!.getHeight()
 inv_no_width=inv_no!.getWidth()
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 x$=stbl("+CUSTOM_CTL",str(nxt_ctlID+1))
-Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+25,inv_no_y,inv_no_width,inv_no_height,"xxx")
+Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+25,inv_no_y,inv_no_width,inv_no_height,"")
 callpoint!.setDevObject("inv_adj_label",str(nxt_ctlID))
 
 rem --- add the display control holding the distribution balance to devObject
@@ -335,22 +337,6 @@ if gl$="Y"
 	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
 	if status>99
 		callpoint!.setStatus("ABORT")
-		ctlContext=num(callpoint!.getTableColumnAttribute("POE_INVHDR.ACCT_DATE","CTLC"))
-		ctlID=num(callpoint!.getTableColumnAttribute("POE_INVHDR.ACCT_DATE","CTLI"))
-		acct_dt!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
-		acct_dt!.focus()
-	endif
-endif
-if status<=99
-	bal_amt=num(callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))-num(callpoint!.getDevObject("tot_dist"))
-	if bal_amt<>0
-		msg_id$="AP_NOT_DIST"
-		gosub disp_message
-		if msg_opt$="N"
-			gosub calc_grid_tots
-			gosub disp_dist_bal			
-			callpoint!.setStatus("REFRESH-ABORT")
-		endif
 	endif
 endif
 
