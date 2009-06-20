@@ -1,13 +1,13 @@
 [[OPE_INVDET.LINE_CODE.BINP]]
-user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
 [[OPE_INVDET.ITEM_ID.BINP]]
-user_tpl.prev_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+user_tpl.prev_item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
 [[OPE_INVDET.QTY_ORDERED.BINP]]
-user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 [[OPE_INVDET.QTY_SHIPPED.BINP]]
-user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
 [[OPE_INVDET.QTY_BACKORD.BINP]]
-user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
+user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_BACKORD"))
 [[OPE_INVDET.BWRI]]
 print "Det:BWRI"; rem debug
 
@@ -306,8 +306,8 @@ rem --- Disable skipped columns (debug: disabled, line code won't be set yet)
 rem --- Backorder is zero and disabled on a new record
 
 	user_tpl.new_detail = 1
-	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
-	callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
+	callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
+	callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
 	print "---BO cleared and disabled"
 
 rem --- Set defaults for new record
@@ -370,8 +370,8 @@ rem --- Set enable/disable based on line type
 
 rem --- Disable Shipped?
 
-	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" then
-		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", 0)
+	if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" then
+		callpoint!.setColumnEnabled("OPE_INVDET.QTY_SHIPPED", 0)
 		print "---Shipped disabled, commit flag is N"; rem debug
 	endif
 
@@ -1218,17 +1218,17 @@ rem ==========================================================================
 
 	if user_tpl.allow_bo$ = "N" or 
 :		pos(user_tpl.line_type$="MO") or
-:		callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" or
+:		callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" or
 :		user_tpl.is_cash_sale
 :	then
-		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
+		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
 		print "---BO disabled"; rem debug
 	else
-		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 1)
+		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 1)
 		print "---BO enable"; rem debug
 
 		if user_tpl.new_detail then
-			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+			callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
 			print "---BO cleared"; rem debug
 		endif
 	endif
