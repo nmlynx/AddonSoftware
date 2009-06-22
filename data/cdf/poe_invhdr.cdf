@@ -329,7 +329,7 @@ disc_amt=num(callpoint!.getUserInput())*(num(callpoint!.getDevObject("disc_pct")
 callpoint!.setColumnData("POE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 callpoint!.setStatus("REFRESH:POE_INVHDR.DISCOUNT_AMT")
 [[POE_INVHDR.BWRI]]
-rem --- re-check acct date, and make sure fully distributed
+rem --- re-check acct date
 gl$=callpoint!.getDevObject("gl_int")
 status=0
 acctgdate$=callpoint!.getColumnData("POE_INVHDR.ACCT_DATE")  
@@ -358,6 +358,25 @@ if dont_write$="Y"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
 endif
+
+rem --- remove invoice detail prior to re-writing it based on poe_invsel
+	
+	poe_invdet_dev=fnget_dev("POE_INVDET")
+	dim poe_invdet$:fnget_tpl$("POE_INVDET")
+
+	del_key$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
+:		callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+
+:		callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+
+	read (poe_invdet_dev,key=del_key$,dom=*next)
+	
+	while 1
+		read record (poe_invdet_dev,end=*break)poe_invdet$
+		if pos(del_key$=poe_invdet$)<>1 then break
+		remove (poe_invdet_dev,key=poe_invdet.firm_id$+poe_invdet.ap_type$+poe_invdet.vendor_id$+poe_invdet.ap_inv_no$,dom=*next)
+	wend
+
+
 [[POE_INVHDR.AREC]]
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
 callpoint!.setDevObject("inv_amt","")
