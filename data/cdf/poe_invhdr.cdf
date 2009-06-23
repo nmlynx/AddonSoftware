@@ -1,3 +1,110 @@
+[[POE_INVHDR.AOPT-GDIS]]
+pfx$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+dim dflt_data$[3,1]
+dflt_data$[1,0]="AP_TYPE"
+dflt_data$[1,1]=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+dflt_data$[2,0]="VENDOR_ID"
+dflt_data$[2,1]=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+dflt_data$[3,0]="AP_INV_NO"
+dflt_data$[3,1]=callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVGL",stbl("+USER_ID"),"MNT",pfx$,table_chans$[all],"",dflt_data$[all]
+
+gosub calc_gl_tots
+gosub calc_grid_tots
+gosub disp_dist_bal
+[[POE_INVHDR.AWRI]]
+rem --- look thru gridVect for any rows we've deleted from invsel... delete corres rows from invdet
+
+if gridVect!.size()
+
+	poe_invdet_dev=fnget_dev("POE_INVDET")
+	dim poe_invdet$:fnget_tpl$("POE_INVDET")
+	recs!=gridVect!.getItem(0)
+	dim poe_invsel$:dtlg_param$[1,3]
+	if recs!.size()
+		for x=0 to recs!.size()-1
+			if callpoint!.getGridRowDeleteStatus(x)="Y"
+				poe_invsel$=recs!.getItem(x)
+				read (poe_invdet_dev,key=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$,dom=*next)
+				while 1
+					read record (poe_invdet_dev,end=*break)poe_invdet$
+					if pos(poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$=poe_invdet$)<>1 then break
+					if poe_invsel.po_no$<>poe_invdet.po_no$ then continue
+					if cvs(poe_invsel.receiver_no$,3)<>"" and poe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
+					remove (poe_invdet_dev,key=poe_invdet.firm_id$+poe_invdet.ap_type$+poe_invdet.vendor_id$+poe_invdet.ap_inv_no$+poe_invdet.line_no$,dom=*next)
+				wend
+			endif
+		next x
+	endif
+endif
+[[POE_INVHDR.AOPT-INVD]]
+pfx$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+dim dflt_data$[3,1]
+dflt_data$[1,0]="AP_TYPE"
+dflt_data$[1,1]=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+dflt_data$[2,0]="VENDOR_ID"
+dflt_data$[2,1]=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+dflt_data$[3,0]="AP_INV_NO"
+dflt_data$[3,1]=callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVDET",stbl("+USER_ID"),"MNT",pfx$,table_chans$[all],"",dflt_data$[all]
+
+rem --- re-align invsel w/ invdet based on changes user may have made in invdet
+rem --- corresponds to 6000 logic from old POE.EC
+
+poe_invsel_dev=fnget_dev("POE_INVSEL")
+poe_invdet_dev=fnget_dev("POE_INVDET")
+
+dim poe_invsel$:fnget_tpl$("POE_INVSEL")
+dim poe_invdet$:fnget_tpl$("POE_INVDET")
+
+other=0
+dim x$:str(callpoint!.getDevObject("poe_invsel_key"))
+last$=""
+
+ky$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+read (poe_invsel_dev,key=ky$,dom=*next)
+
+while 1
+	read record (poe_invsel_dev,end=*break)poe_invsel$
+	if pos(ky$=poe_invsel$)<>1 then break
+	if cvs(poe_invsel.po_no$,3)="" then let x$=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$+poe_invsel.line_no$
+	tot_invsel=0,last$=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$,last_seq$=poe_invsel.line_no$
+	read (poe_invdet_dev,key=ky$,dom=*next)
+	while 1
+		read record (poe_invdet_dev,end=*break)poe_invdet$
+		if pos(ky$=poe_invdet$)<>1 then break
+		if cvs(poe_invdet.po_no$,3)="" then other=1; continue
+		if poe_invdet.po_no$<>poe_invsel.po_no$ then continue
+		if cvs(poe_invsel.receiver_no$,3)<>"" and cpoe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
+		tot_invsel=tot_invsel+round(num(poe_invdet.unit_cost$)*num(poe_invdet.qty_received$),2)
+	wend
+	poe_invsel.total_amount$=str(tot_invsel)
+	poe_invsel$=field(poe_invsel$)
+	write record (poe_invsel_dev)poe_invsel$
+wend
+
+if other
+	read (poe_invdet_dev,key=ky$,dom=*next)
+	while 1
+		read record (poe_invdet_dev,end=*break)poe_invdet$
+		if pos(ky$=poe_invdet$)<>1 then break
+		if cvs(poe_invdet.po_no$,3)<>"" then continue
+		tot_other=tot_other+num(poe_invdet.unit_cost$)
+	wend
+	dim poe_invsel$:fattr(poe_invsel$)
+	if cvs(x$,3)="" then x$=last$+str(num(last_seq$)+1:"000")
+	poe_invsel.firm_id$=x.firm_id$
+	poe_invsel.ap_type$=x.ap_type$
+	poe_invsel.vendor_id$=x.vendor_id$
+	poe_invsel.ap_inv_no$=x.ap_inv_no$
+	poe_invsel.line_no$=x.line_no$
+	find record (poe_invsel_dev,key=x$,dom=*next)poe_invsel$
+	poe_invsel.total_amount$=str(tot_other)
+	poe_invsel$=field(poe_invsel$)
+	write record (poe_invsel_dev)poe_invsel$
+endif
+
+callpoint!.setStatus("RECORD:["+ky$+"]")
 [[POE_INVHDR.ARNF]]
 rem --- set defaults
 		
@@ -130,6 +237,10 @@ callpoint!.setDevObject("gl_year",gls01a.current_year$)
 callpoint!.setDevObject("gl_per",gls01a.current_per$)
 callpoint!.setDevObject("gl_tot_pers",gls01a.total_pers$)
 
+
+call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_INVSEL","PRIMARY",poe_invsel_key_tpl$,table_chans$[all],status$
+callpoint!.setDevObject("poe_invsel_key",poe_invsel_key_tpl$)
+
 rem --- add static label for displaying date/amount if pulling up open invoice
 inv_no!=fnget_control!("POE_INVHDR.AP_INV_NO")
 inv_no_x=inv_no!.getX()
@@ -231,6 +342,23 @@ calculate_due_and_discount:
 	callpoint!.setDevObject("disc_pct",apm10c.disc_percent$)
 return
 
+calc_gl_tots:
+
+	poe_invgl_dev=fnget_dev("POE_INVGL")
+	dim poe_invgl$:fnget_tpl$("POE_INVGL")
+
+	tot_gl=0
+	ky$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+	read (poe_invgl_dev,key=ky$,dom=*next)
+
+	while 1
+		read record (poe_invgl_dev,end=*break)poe_invgl$
+		if pos(ky$=poe_invgl$)<>1 then break
+		tot_gl=tot_gl+poe_invgl.gl_post_amt
+	wend
+	callpoint!.setDevObject("tot_gl",str(tot_gl))
+return
+
 calc_grid_tots:
 	recVect!=GridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
@@ -244,11 +372,13 @@ calc_grid_tots:
 		callpoint!.setDevObject("tot_dist",str(tdist))
 	endif
 return
+
 disp_dist_bal:
-	dist_bal=num(callpoint!.getDevObject("inv_amt"))-num(callpoint!.getDevObject("tot_dist"))
+	dist_bal=num(callpoint!.getDevObject("inv_amt"))-num(callpoint!.getDevObject("tot_dist"))-num(callpoint!.getDevObject("tot_gl"))
 	callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL",str(dist_bal))
-		 
+	callpoint!.setStatus("REFRESH")		 
 return
+
 rem #include fnget_control.src
 def fnget_control!(ctl_name$)
 ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
@@ -291,7 +421,8 @@ while 1
 	callpoint!.setDevObject("disc_pct",apm10c.disc_percent$)
 	callpoint!.setDevObject("inv_amt",callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))
 	callpoint!.setDevObject("tot_dist","")
-	if callpoint!.getDevObject("gl_int")="N" then callpoint!.setDevObject("tot_dist",callpoint!.getDevObject("inv_amt"))
+	callpoint!.setDevObject("tot_gl","")
+	gosub calc_gl_tots	
 	gosub calc_grid_tots
 	gosub disp_dist_bal
 	vendor_id$ = callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
@@ -359,24 +490,12 @@ if dont_write$="Y"
 	callpoint!.setStatus("ABORT")
 endif
 
-rem --- remove invoice detail prior to re-writing it based on poe_invsel
-	
-	poe_invdet_dev=fnget_dev("POE_INVDET")
-	dim poe_invdet$:fnget_tpl$("POE_INVDET")
-
-	del_key$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
-:		callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+
-:		callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
-
-	read (poe_invdet_dev,key=del_key$,dom=*next)
-	
-	while 1
-		read record (poe_invdet_dev,end=*break)poe_invdet$
-		if pos(del_key$=poe_invdet$)<>1 then break
-		remove (poe_invdet_dev,key=poe_invdet.firm_id$+poe_invdet.ap_type$+poe_invdet.vendor_id$+poe_invdet.ap_inv_no$,dom=*next)
-	wend
-
-
+rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
+if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
+	msg_id$="AP_NOT_DIST"
+	gosub disp_message
+	if msg_opt$="N" then callpoint!.setStatus("ABORT")
+endif
 [[POE_INVHDR.AREC]]
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
 callpoint!.setDevObject("inv_amt","")

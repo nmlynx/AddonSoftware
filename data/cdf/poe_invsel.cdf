@@ -1,6 +1,28 @@
+[[POE_INVSEL.AGDR]]
+rem --- don't allow change on existing invsel row... user can delete/add
+util.disableGridRow(Form!,num(callpoint!.getValidationRow()))
+[[POE_INVSEL.RECEIVER_NO.AVEC]]
+gosub calc_grid_tots
+gosub disp_totals
+[[POE_INVSEL.PO_NO.AVEC]]
+gosub calc_grid_tots
+gosub disp_totals
+[[POE_INVSEL.AUDE]]
+gosub calc_grid_tots
+gosub disp_totals
+[[POE_INVSEL.ADEL]]
+gosub calc_grid_tots
+gosub disp_totals
+[[POE_INVSEL.PO_NO.AVAL]]
+gosub accum_receiver_tot; rem accumulate total for po/receiver# entered
 [[POE_INVSEL.AWRI]]
+rem --- accum tot for po/receiver# entered and write to poe-25 for new/modified rows
+rem --- existing rows are disabled, so their info won't go to poe-25 again
 
-gosub accum_receiver_tot; rem --- accum tot for po/receiver# entered and write to poe-25
+if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or 
+: 	callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))="Y"
+		gosub accum_receiver_tot
+endif
 [[POE_INVSEL.AGRE]]
 gosub receiver_already_selected
 [[POE_INVSEL.AGCL]]
@@ -9,6 +31,7 @@ rem print 'show';rem debug
 use ::ado_util.src::util
 [[POE_INVSEL.RECEIVER_NO.AVAL]]
 gosub accum_receiver_tot; rem accumulate total for po/receiver# entered
+
 [[POE_INVSEL.<CUSTOM>]]
 receiver_already_selected:
 rem --- given a po/receiver (or po w/ no receiver) see if it's already in gridvect
@@ -67,6 +90,9 @@ receiver_no$=callpoint!.getColumnData("POE_INVSEL.RECEIVER_NO")
 if pos("POE_INVSEL.RECEIVER_NO.AVAL"=event$)
 	receiver_no$=callpoint!.getUserInput()
 endif
+if pos("POE_INVSEL.PO_NO.AVAL"=event$)
+	po_no$=callpoint!.getUserInput()
+endif
 
 ky_po_rec$=firm_id$+po_no$+receiver_no$
 foundone=0
@@ -87,6 +113,8 @@ while 1
 	line_tot=line_tot+(pot_recdet.qty_received*pot_recdet.unit_cost)
 	if pos(".AWRI"=event$)<>0 then gosub write_poe_invdet
 wend
+
+
 
 if pos(".AVAL"=event$)<>0
 	if foundone
@@ -138,6 +166,34 @@ write_poe_invdet:
 print "writing poe_invdet: ",poe_invdet$
 	write record (poe_invdet_dev)poe_invdet$
 return
+
+calc_grid_tots:
+
+	recVect!=GridVect!.getItem(0)
+	dim gridrec$:dtlg_param$[1,3]
+	numrecs=recVect!.size()
+	tdist=0
+	if numrecs>0
+		for reccnt=0 to numrecs-1
+			gridrec$=recVect!.getItem(reccnt)
+			if cvs(gridrec$,3)<> "" and callpoint!.getGridRowDeleteStatus(reccnt)<>"Y" 
+				tdist=tdist+num(gridrec.total_amount)
+			endif
+		next reccnt
+		callpoint!.setDevObject("tot_dist",str(tdist))
+	endif
+return
+
+disp_totals:
+
+rem --- get context and ID of display controls, and redisplay w/ amts from calc_grid_tots
+    	
+	dist_bal=num(callpoint!.getHeaderColumnData("POE_INVHDR.INVOICE_AMT"))-num(callpoint!.getDevObject("tot_dist"))-num(callpoint!.getDevObject("tot_gl"))
+	dist_bal!=callpoint!.getDevObject("dist_bal_control")
+	dist_bal!.setValue(dist_bal)
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.DIST_BAL",str(dist_bal))
+return
+
 
 rem #include fndate.src
 

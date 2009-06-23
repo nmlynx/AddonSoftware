@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.poe_invsel">5DCBE3FE0D3D10E43DCAC2A3B3F1515E</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.poe_invsel">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.poe_invsel">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.poe_invsel">20090622</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.poe_invsel">20090622</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.poe_invsel">142532</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.poe_invsel">20090623</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.poe_invsel">20090623</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.poe_invsel">152036</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.poe_invsel">/dev/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.poe_invsel">PRIMARY</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.poe_invsel">G</DD_ATTR_FTYP>
@@ -31,13 +31,25 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.poe_invseladel">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_invseladel">POE_INVSEL      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.poe_invseladel">ADEL</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.poe_invselagcl">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_invselagcl">POE_INVSEL      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.poe_invselagcl">AGCL</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_table_cpro.poe_invselagdr">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_invselagdr">POE_INVSEL      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.poe_invselagdr">AGDR</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.poe_invselagre">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_invselagre">POE_INVSEL      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.poe_invselagre">AGRE</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.poe_invselaude">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_invselaude">POE_INVSEL      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.poe_invselaude">AUDE</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_table_cpro.poe_invselawri">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.poe_invselawri">POE_INVSEL      </DD_TABLE_ALIAS>
@@ -199,6 +211,7 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.poe_invsel006">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.poe_invsel006">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.poe_invsel006">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.poe_invsel006">/dev/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLW id="ddm_table_cols.poe_invsel006">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.poe_invsel006">0</DD_ATTR_CTLH>
 			<DD_ATTR_MAXL id="ddm_table_cols.poe_invsel006">7</DD_ATTR_MAXL>
@@ -298,10 +311,25 @@
 	</ALIAS>
 	<ALIAS id="ddm_column_cpro">
 		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
+		<RECORD id="ddm_column_cpro.poe_invselpo_noaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.poe_invselpo_noaval">POE_INVSEL      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.poe_invselpo_noaval">PO_NO           </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.poe_invselpo_noaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.poe_invselpo_noavec">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.poe_invselpo_noavec">POE_INVSEL      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.poe_invselpo_noavec">PO_NO           </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.poe_invselpo_noavec">AVEC</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_column_cpro.poe_invselreceiver_noaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.poe_invselreceiver_noaval">POE_INVSEL      </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.poe_invselreceiver_noaval">RECEIVER_NO     </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.poe_invselreceiver_noaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.poe_invselreceiver_noavec">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.poe_invselreceiver_noavec">POE_INVSEL      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.poe_invselreceiver_noavec">RECEIVER_NO     </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.poe_invselreceiver_noavec">AVEC</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
@@ -330,6 +358,11 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.poe_invselline_noo">POE_INVSEL      </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.poe_invselline_noo">LINE_NO         </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.poe_invselline_noo">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.poe_invseltotal_amount+">
+			<DD_TABLE_ALIAS id="ddm_column_opts.poe_invseltotal_amount+">POE_INVSEL      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.poe_invseltotal_amount+">TOTAL_AMOUNT    </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.poe_invseltotal_amount+">+</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.poe_invseltotal_amountc">
 			<DD_TABLE_ALIAS id="ddm_column_opts.poe_invseltotal_amountc">POE_INVSEL      </DD_TABLE_ALIAS>
