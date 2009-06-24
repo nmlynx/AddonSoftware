@@ -110,7 +110,7 @@ while 1
 :			(pot_recdet.qty_received<=0 and pot_recdet.qty_received>=pot_recdet.qty_invoiced) then continue
 	endif
 	foundone=1
-	line_tot=line_tot+(pot_recdet.qty_received*pot_recdet.unit_cost)
+	line_tot=line_tot+round(pot_recdet.qty_received*pot_recdet.unit_cost,2)
 	if pos(".AWRI"=event$)<>0 then gosub write_poe_invdet
 wend
 

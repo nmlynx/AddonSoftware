@@ -491,6 +491,7 @@ if dont_write$="Y"
 endif
 
 rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
+
 if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
 	msg_id$="AP_NOT_DIST"
 	gosub disp_message
@@ -500,6 +501,7 @@ endif
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
 callpoint!.setDevObject("inv_amt","")
 callpoint!.setDevObject("tot_dist","")
+callpoint!.setDevObject("tot_gl","")
 callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL","0")
 rem --- Re-enable disabled fields
 callpoint!.setColumnEnabled("POE_INVHDR.AP_DIST_CODE",1)
