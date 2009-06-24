@@ -114,12 +114,20 @@ rem ==========================================================================
             methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, p_font!, p_just%, null(), null(), p_page!)
         methodend
         
+        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjInt p_just%, BBjFormPage p_page!)
+            methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), p_just%, null(), null(), p_page!)
+        methodend
+        
         method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, Font p_font!, BBjFormPage p_page!)
             methodret #setText(p_x%, p_y%, 0, 0, p_text$, p_font!, 0, null(), null(), p_page!)
         methodend
         
         method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, BBjFormPage p_page!)
             methodret #setText(p_x%, p_y%, 0, 0, p_text$, null(), 0, null(), null(), p_page!)
+        methodend
+
+        method public BBjFormPage setText(BBjInt p_x%, BBjNumber p_y, BBjString p_text$, BBjFormPage p_page!)
+            methodret #setText(p_x%, int(p_y), 0, 0, p_text$, null(), 0, null(), null(), p_page!)
         methodend
         
     rem --- Draw a box
@@ -239,7 +247,6 @@ rem --- Create PDF printer and set attributes
     declare BBjForm docPrint!
     
     myBBjPrinter! = myBBjAPI!.getBBjPrinter(1)
-
     myBBjPrinter!.setAttributes(requestAttributes!)
     docPrint! = myBBjPrinter!.getForm(0)
     
