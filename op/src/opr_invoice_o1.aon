@@ -164,7 +164,7 @@ rem --- Init PDF printing
     myAPI! = BBjAPI()
     white! = myAPI!.makeColor("WHITE")
     black! = myAPI!.makeColor("BLACK")
-    light_gray! = myAPI!.makeColor("LTGRAY")
+    light_gray! = myAPI!.makeColor(224, 224, 224)
 
 rem --- Setup PDF printer and print area   
 
@@ -204,11 +204,9 @@ rem --- Initialize Data
     precision i[2]
 
     address=30
-    page=0; rem p, \Wp\W
-    line=0; rem l, \Wl\W
-    maxline=28; rem l9 , \Wl9\W
-    rem h0=0
-    rem l9=30
+    page=0
+    line=0
+    maxline=28
     headings=0
     when$=sysinfo.system_date$
 
@@ -236,9 +234,6 @@ rem --- Initial Read
     if o9<>1 then 
         read record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$, dir=0, dom=run_overlay)
     else
-
-    rem --- P5$=Starting customer number on restart
-
         read (ope04_dev, key=firm_id$+"I"+"  "+cust_id$, dom=*next)
     endif
 
@@ -252,7 +247,7 @@ rem --- Main Read
 
             if start_block then
                 bad_record = 1
-                extract record (ope01_dev, key=firm_id$+"  "+ope04a.customer_id$+ope04a.order_no$, dom=*endif) ope01a$; rem a0$
+                extract record (ope01_dev, key=firm_id$+"  "+ope04a.customer_id$+ope04a.order_no$, dom=*endif) ope01a$
                 bad_record = 0
             endif
 
@@ -278,7 +273,7 @@ rem --- Main Read
             if ope01a.ordinv_flag$ = "I" then
                 if ope01a.print_status$ = "Y" then continue
                 if ope01a.print_status$<>"B" and ope01a.lock_status$="Y" then continue
-                rem testing ope01a.lock_status$ = "Y"
+                ope01a.lock_status$ = "Y"
                 ope01a$ = field(ope01a$)
                 write record (ope01_dev) ope01a$
             else
@@ -307,7 +302,7 @@ rem --- Main Read
         start_block = 1
 
         if start_block then
-            read record (arm01_dev, key=firm_id$+ope01a.customer_id$, dom=*endif) arm01a1$; rem b1$
+            read record (arm01_dev, key=firm_id$+ope01a.customer_id$, dom=*endif) arm01a1$
             b$ = arm01a1.addr_line_1$ + arm01a1.addr_line_2$ + arm01a1.addr_line_3$ + arm01a1.addr_line_4$ + arm01a1.city$ + arm01a1.state_code$ + arm01a1.zip_code$; rem  b1$(31,72)+b1$(179,48)+b1$(103,9)
             call pgmdir$+"adc_address.aon",b$,24,5,p[2],30
         endif
@@ -324,10 +319,10 @@ rem --- Main Read
             start_block = 1
 
             if start_block then
-                find record (ope31_dev, key=firm_id$+ope01a.customer_id$+ope01a.order_no$, dom=*endif) ope31a$; rem d1$
+                find record (ope31_dev, key=firm_id$+ope01a.customer_id$+ope01a.order_no$, dom=*endif) ope31a$
                 c$ = ope31a.addr_line_1$ + ope31a.addr_line_2$ + ope31a.addr_line_3$ + ope31a.addr_line_4$ + ope31a.city$ + ope31a.state_code$ + ope31a.zip_code$; rem d1$(31,81)
 
-                arm03a.name$ = ope31a.name$; rem d1$(1,30)
+                arm03a.name$ = ope31a.name$
             endif
 
             call pgmdir$+"adc_address.aon",c$,24,3,p[2],30
@@ -346,18 +341,16 @@ rem --- Main Read
             endif
         endif
 
-        rem if len(c$)<len(b$) then c$ = pad(c$, len(b$))
-
     rem --- Terms
 
         dim arm10a$:fattr(arm10a$)
         arm10a.code_desc$ = "Not Found"
-        find record (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$; rem x1$
+        find record (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
 
     rem --- Salesperson
 
         arm10f.code_desc$ = "Not Found"
-        find record (arm10f_dev,key=firm_id$+"F"+ope01a.slspsn_code$,dom=*next) arm10f$; rem x3$
+        find record (arm10f_dev,key=firm_id$+"F"+ope01a.slspsn_code$,dom=*next) arm10f$
 
     rem --- Job Name
 
@@ -365,7 +358,7 @@ rem --- Main Read
         opm09a.customer_name$ = "Not Found"
 
         if opm09_dev then 
-            find record (opm09_dev, key=firm_id$+ope01a.customer_id$+ope01a.job_no$, dom=*next) opm09a$; rem x8$
+            find record (opm09_dev, key=firm_id$+ope01a.customer_id$+ope01a.job_no$, dom=*next) opm09a$
         else
             opm09a.customer_name$ = ope01a.job_no$
         endif
@@ -395,12 +388,12 @@ rem --- Main Read
             start_block = 1
 
             if start_block then
-                find record (opm02_dev, key=firm_id$+ope11a.line_code$, dom=*endif) opm02a$; rem y0$
+                find record (opm02_dev, key=firm_id$+ope11a.line_code$, dom=*endif) opm02a$
                 ivm01a.item_desc$ = ope11a.item_id$
             endif
 
             if pos(opm02a.line_type$=" SP") then
-                find record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$; rem *, x2$, x9$
+                find record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
                 item_desc$ = pad( func.displayDesc(ivm01a.item_desc$), desclen )
             endif
 
@@ -624,29 +617,29 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
  
     rem --- Bill To
 
-        page! = pdf!.drawBox(0,126,568,96,page!)
-        page! = pdf!.drawVLine(45,126,96,page!)
-        page! = pdf!.setText(0,132,40,0,"Bill To",boldfont!,pdf!.RIGHT_JUSTIFY(),page!)
+        page! = pdf!.drawBox(0, 126, 568, 96, page!)
+        page! = pdf!.drawVLine(45, 126, 96, page!)
+        page! = pdf!.setText(0, 132, 40, 0, "Bill To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         
-        page! = pdf!.setText(50,132,b$(1,address),page!)
-        page! = pdf!.setText(50,144,b$(31,address),page!)
-        page! = pdf!.setText(50,156,b$(61,address),page!)
-        page! = pdf!.setText(50,168,b$(91,address),page!)    
-        page! = pdf!.setText(50,180,b$(121,address),page!)
-        page! = pdf!.setText(50,192,b$(151,address),page!)
+        page! = pdf!.setText(50, 132, b$(1,address),   page!)
+        page! = pdf!.setText(50, 144, b$(31,address),  page!)
+        page! = pdf!.setText(50, 156, b$(61,address),  page!)
+        page! = pdf!.setText(50, 168, b$(91,address),  page!)    
+        page! = pdf!.setText(50, 180, b$(121,address), page!)
+        page! = pdf!.setText(50, 192, b$(151,address), page!)
         
     rem --- Ship to
     
-        page! = pdf!.drawVLine(284,126,96,page!)
-        page! = pdf!.drawVLine(329,126,96,page!)
-        page! = pdf!.setText(284,132,40,0,"Ship To",boldfont!,pdf!.RIGHT_JUSTIFY(),page!)
+        page! = pdf!.drawVLine(284, 126, 96, page!)
+        page! = pdf!.drawVLine(329, 126, 96, page!)
+        page! = pdf!.setText(284, 132, 40, 0, "Ship To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
 
-        page! = pdf!.setText(334,132,c$(1,address),page!)
-        page! = pdf!.setText(334,144,c$(31,address),page!)
-        page! = pdf!.setText(334,156,c$(61,address),page!)
-        page! = pdf!.setText(334,168,c$(91,address),page!)    
-        page! = pdf!.setText(334,180,c$(121,address),page!)
-        page! = pdf!.setText(334,192,c$(151,address),page!)
+        page! = pdf!.setText(334, 132, c$(1,address),   page!)
+        page! = pdf!.setText(334, 144, c$(31,address),  page!)
+        page! = pdf!.setText(334, 156, c$(61,address),  page!)
+        page! = pdf!.setText(334, 168, c$(91,address),  page!)    
+        page! = pdf!.setText(334, 180, c$(121,address), page!)
+        page! = pdf!.setText(334, 192, c$(151,address), page!)
 
     rem --- Info Box
 
@@ -655,9 +648,9 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.drawHLine(424, 72, 144, page!)
         page! = pdf!.drawVLine(490, 24,  72, page!)
 
-        page! = pdf!.setText(432, 30, 54, 30, "Page",      boldfont!, pdf!.RIGHT_JUSTIFY(), page!)
-        page! = pdf!.setText(432, 54, 54, 54, "Date",      boldfont!, pdf!.RIGHT_JUSTIFY(), page!)
-        page! = pdf!.setText(432, 78, 54, 78, "Invoice #", boldfont!, pdf!.RIGHT_JUSTIFY(), page!)
+        page! = pdf!.setText(432, 30, 54, 30, "Page",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(432, 54, 54, 54, "Date",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(432, 78, 54, 78, "Invoice #", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
 
         page! = pdf!.setText(496,30,str(page),page!)
         page! = pdf!.setText(496,54,func.formatDate(ope01a.invoice_date$),page!)
@@ -679,14 +672,16 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.drawVLine(378, 234, 48, page!)
         page! = pdf!.drawVLine(438, 234, 48, page!)
         
-        page! = pdf!.setText(0,     234+2, 0,       0, "Order #",    boldfont!, pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(72,    234+2, 132-72,  0, "Order Date", boldfont!, pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(132,   234+2, 180-132, 0, "Cust #",     boldfont!, pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(180+2, 234+2, 204-180, 0, "Sls",        boldfont!, pdf!.LEFT_JUSTIFY(),   page!)
-        page! = pdf!.setText(204,   234+2, 288-204, 0, "P/O Number", boldfont!, pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(288,   234+2, 378-288, 0, "Ship Via",   boldfont!, pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(378,   234+2, 438-378, 0, "Ship Date",  boldfont!, pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(438,   234+2, 568-438, 0, "Terms",      boldfont!, pdf!.CENTER_JUSTIFY(), page!)
+        rem page! = pdf!.setText(1, 234+2, fill(230), light_gray!, page!)
+        
+        page! = pdf!.setText(0,     234+2, 0,       0, "Order #",    boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(72,    234+2, 132-72,  0, "Order Date", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(132,   234+2, 180-132, 0, "Cust #",     boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(180+2, 234+2, 204-180, 0, "Sls",        boldfont!, pdf!.LEFT_JUSTIFY(),   light_gray!, page!)
+        page! = pdf!.setText(204,   234+2, 288-204, 0, "P/O Number", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(288,   234+2, 378-288, 0, "Ship Via",   boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(378,   234+2, 438-378, 0, "Ship Date",  boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(438,   234+2, 568-438, 0, "Terms",      boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
         
         page! = pdf!.setText(0,     234+14, 0,       0, ope01a.order_no$,                         pdf!.CENTER_JUSTIFY(), page!)
         page! = pdf!.setText(72,    234+14, 132-72,  0, func.formatDate(ope01a.order_date$),      pdf!.CENTER_JUSTIFY(), page!)
@@ -710,13 +705,13 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.drawVLine(387, 294, 426, page!)
         page! = pdf!.drawVLine(477, 294, 426, page!)
         
-        page! = pdf!.setText(0,     294+2, 45-2, 0, "Order",      boldfont!, pdf!.RIGHT_JUSTIFY(),  page!)
-        page! = pdf!.setText(45,    294+2, 45-2, 0, "Ship",       boldfont!, pdf!.RIGHT_JUSTIFY(),  page!)
-        page! = pdf!.setText(90,    294+2, 45-2, 0, "B/O",        boldfont!, pdf!.RIGHT_JUSTIFY(),  page!)
-        page! = pdf!.setText(135+2, 294+2, "Item# / Description", boldfont!, page!)
-        page! = pdf!.setText(360+2, 294+2, "UM",                  boldfont!, page!)
-        page! = pdf!.setText(387,   294+2, 90-2, 0, "Price",      boldfont!, pdf!.RIGHT_JUSTIFY(),  page!)
-        page! = pdf!.setText(477,   294+2, 90-2, 0, "Extended",   boldfont!, pdf!.RIGHT_JUSTIFY(),  page!)
+        page! = pdf!.setText(0,     294+2, 45-2, 0, "Order",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(45,    294+2, 45-2, 0, "Ship",       boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(90,    294+2, 45-2, 0, "B/O",        boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(135+2, 294+2, "Item# / Description", boldfont!,                       light_gray!, page!)
+        page! = pdf!.setText(360+2, 294+2, "UM",                  boldfont!,                       light_gray!, page!)
+        page! = pdf!.setText(387,   294+2, 90-2, 0, "Price",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(477,   294+2, 90-2, 0, "Extended",   boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
                 
     rem --- Duplicate what was done on pagePrint!; if both pages have updated, we're done
     
