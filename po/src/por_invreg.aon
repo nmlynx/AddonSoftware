@@ -395,7 +395,7 @@ rem --- Check GL posting date
 
     if stbl("+DTWARN_MSG",err=*endif)<>""
         dim pbuf$(width)
-        pbuf$(1)=stbl("+DTWARN_MSG"))
+        pbuf$(1)=stbl("+DTWARN_MSG")
         OutVect!.addItem(pbuf$)
     endif
 
@@ -516,8 +516,8 @@ l2100: rem --- Read history header and original terms
         item$[6]=s6$;rem not used anymore
         values[0]=extension
         values[1]=poextension
-        values[2]=w[1]
-        values[3]=u[0]
+        values[2]=poe25a.qty_received
+        values[3]=ivm02a.qty_on_hand
         arcode$=ivm02a.ar_dist_code$
         w$[0]=poe25a$
         w$[1]="";rem not used anymore (sending entire poe25a$ rec in w$[0], used to send w1$ here)

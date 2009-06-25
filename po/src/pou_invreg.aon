@@ -6,36 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem --- The following IOLIST's were removed from this program:
-
-rem --- apm01a: iolist h0$(1),h1$(1)
-rem --- apm02a: iolist u0$(1),u1$(1),u2$(1),u[all]
-rem --- apm10b: iolist x0$(1),x1$(1)
-rem --- apt01a: iolist h0$(1),h[all]
-rem --- apt02a: iolist t0$(1),t[all]
-rem --- apt03a: iolist xa$(24)
-rem --- apt03b: iolist xb$(31)
-rem --- apt03c: iolist xc$(21)
-rem --- apt11a: iolist l0$(1),l1$(1),l[all]
-rem --- arm10d: iolist z0$(1),z1$(1)
-rem --- ivm01a: iolist s0$(1),s1$(1),s2$(1),s3$(1),s4$(1),s5$,s6$(1),s[all]
-rem --- ivm02a: iolist u0$(1),u1$(1),u2$,u[all]
-rem --- poe05a: iolist a0$(1),a1$(1),a2$,a3$,a[all]
-rem --- poe12a: iolist l0$(1),l1$(1),l2$(1),l3$(1),l4$(1),l5$,l6$,l[all]
-rem --- poe15a: iolist b0$(1),b1$(1),b2$,b[all]
-rem --- poe25a: iolist c0$(1),c1$(1),c2$,c[all]
-rem --- poe35a: iolist d0$(1),d1$(1),d[all]; rem escape ,job$(1)
-rem --- pom02a: iolist y0$(1),y1$(1),y2$(1)
-rem --- pot05a: iolist ha$(1),a1$(1),a2$,a3$,a[all]
-rem --- pot14a: iolist w0$(1),w1$(1),w2$(1),w3$(1),w4$(1),w5$,w6$,w[all]
-rem --- pot15a: iolist hb$(1),b1$(1),b2$,b[all]
-rem --- pot25a: iolist hc$(1),c1$(1),c2$,c[all]
-rem --- pot35a: iolist hd$(1)
-rem --- pow17a: iolist u0$(1),u[all]
-rem --- sfe01a: iolist woe01$(1)
-rem --- sfm10a: iolist *,wom10$(1)
-
-
     seterr std_error
     setesc std_error
 
@@ -51,9 +21,6 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock Files
-
-    if gl$<>"Y" close (printer_dev,err=*next)
 
 rem --- Initializations
 
@@ -82,15 +49,11 @@ rem --- Get user approval to update
     gosub disp_message
     if msg_opt$<>"Y" then goto std_exit_no_update
 
-rem --- Disallow 'M'enu option in Error Routine
-
-    exit_ctrl=1
-
 rem --- Position file
 
     x=m0+11
     if aptype x=x+3
-    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"Purchase Order Invoice Update","Updating","",x,poe05_dev,1,0,ignore_status
+    call pgmdir$ + "adc_progress.aon","N","","","","",0,poe05_dev,1,meter_num,status
     read (poe05_dev,key=firm_id$,dom=*next)
 
 l1000: rem --- Read next header
@@ -98,190 +61,203 @@ l1000: rem --- Read next header
     k$=key(poe05_dev,end=done)
     if pos(firm_id$=k$)<>1 goto done
     read record (poe05_dev) poe05a$
-    x$=fnmask$(a0$(5,p[0]),m0$)+" "+a0$(11,10)
-    if aptype x$=a0$(3,2)+" "+x$
-    call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,0,ignore_status
+    x$=fnmask$(poe05a.vendor_id$(1,p[0]),m0$)+" "+poe05a.ap_inv_no$
+    if aptype x$=poe05a.ap_type$+" "+x$
+    call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Additional reads
 
-    dim h0$(8),h1$(30),x0$(32),x1$(4*g[4])
-    x0$(1)=firm_id$+"B"+a1$(28,2)
-    h0$(1)=firm_id$+a0$(5,6)
-    find record (apm01_dev,key=h0$,dom=*next) apm01a$
-    find record (apm10_dev,key=x0$(1,5),dom=*next) apm10b$
-    apacct$=x1$(1,g[4])
-    retacct$=x1$(3*g[4]+1,g[4])
-    apcode$=a1$(28,2)
-    gldate$=a1$(7,6)
-    vendor$=h0$(3,p[0])
-    name$=h1$
+    find record (apm01_dev,key=firm_id$+poe05a.vendor_id$,dom=*next) apm01a$
+    find record (apm10b_dev,key=firm_id$+"B"+poe05a.ap_dist_code$,dom=*next) apm10b$
+    apacct$=apm10b.gl_ap_acct$
+    retacct$=apm10b.gl_ret_acct$
+    apcode$=poe05a.ap_dist_code$
+    gldate$=poe05a.acct_date$
+    vendor$=apm01a.vendor_id$(1,p[0])
+    name$=apm01a.vendor_name$
 
 rem --- Create apt-01 record
 
-    dim h0$(71),h[2]
-    h0$(1)=a0$+"00"
-    h0$(23,2)=a1$(28,2)
-    h0$(25,2)=a1$(30,2)
-    h0$(27,2)=a1$(26,2)
-    h0$(29,3)=fndate$(fndate$(a1$(1,6)))
-    h0$(32,3)=fndate$(fndate$(a1$(7,6)))
-    h0$(35,3)=fndate$(fndate$(a1$(13,6)))
-    h0$(38,3)=fndate$(fndate$(a1$(19,6)))
-    h0$(41,10)=a1$(32,10)
-    h0$(51,16)=a1$(42,16)
-    h0$(67,1)=a1$(25,1)
-    h[0]=a[0]
-    h[1]=a[1]
-    h[2]=a[2]
-    write record (apt01_dev,key=h0$(1,22),dom=l1400) apt01a$
-
-rem --- Generate apt-03 xrefs
-
-    xa$(1)=firm_id$+"A"+a0$(3,8)+fndate$(fndate$(a1$(1,6)))+a0$(11)
-    xb$(1)=firm_id$+"B"+a0$(3,8)+a1$(32,10)+a0$(11)
-    xc$(1)=firm_id$+"C"+a0$(11,10)+a0$(3)
-    write record (apt03_dev,key=xa$) apt03a$
-    write record (apt03_dev,key=xb$) apt03b$
-    write record (apt03_dev,key=xc$) apt03c$
+    dim apt01a$:fattr(apt01a$)
+    apt01a.firm_id$=firm_id$
+    apt01a.ap_type$=poe05a.ap_type$
+    apt01a.vendor_id$=poe05a.vendor_id$
+    apt01a.ap_inv_no$=poe05a.ap_inv_no$
+    apt01a.ap_dist_code$=poe05a.ap_dist_code$
+    apt01a.payment_grp$=poe05a.payment_grp$
+    apt01a.ap_terms_code$=poe05a.ap_terms_code$
+    apt01a.invoice_date$=poe05a.inv_date$
+    apt01a.accting_date$=poe05a.acct_date$
+    apt01a.inv_due_date$=poe05a.due_date$
+    apt01a.disc_date$=poe05a.po_disc_date$
+    apt01a.reference$=poe05a.reference$
+    apt01a.ap_inv_memo$=poe05a.ap_inv_memo$
+    apt01a.hold_flag$=poe05a.hold_flag$
+    apt01a.invoice_amt=poe05a.invoice_amt
+    apt01a.discount_amt=poe05a.discount_amt
+    apt01a.retention=poe05a.retention
+    write record (apt01_dev,dom=l1400) apt01a$
     goto l1500
 
 l1400: rem --- Adjustment to current invoice
 
-    dim l0$(22),l1$(12),l[2]
-    l0$(1)=h0$
-    l1$(1,1)="A"
-    l1$(2,3)=h0$(32,3)
-    l1$(5,7)=h0$(41,7)
-    l[all]=h[all]
+    dim apt11a$:fattr(apt11a$)
+    apt11a.firm_id$=firm_id$
+    apt11a.ap_type$=apt01a.ap_type$
+    apt11a.vendor_id$=apt01a.vendor_id$
+    apt11a.ap_inv_no$=apt01a.ap_inv_no$
+    apt11a.trans_type$="A"
+    apt11a.trans_date$=apt01a.accting_date$
+    apt11a.trans_ref$=apt01a.reference$
+    apt11a.trans_amt=apt01a.invoice_amt
+    apt11a.trans_disc=apt01a.discount_amt
+    apt11a.trans_ret=apt01a.retention
     channel=apt11_dev
-    x$=l0$(1,20)
-    k=20
+    x$=apt11a.firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$
+    k=len(x$)
     gosub l6800
-    l0$(21,2)=str(seq:"00")
-    write record (apt11_dev,key=l0$) apt11a$
+    apt11a.sequence_num$=str(seq:"00")
+    write record (apt11_dev) apt11a$
 
 l1500: rem --- Update apm-02 vendor totals
 
-    dim u0$(10),u1$(24),u2$(g[4]),u[13]
-    u0$(1)=firm_id$+a0$(5,6)+a0$(3,2)
-    x$=a1$(7,6)
-    call pgmdir$+"adc_peryear.aon",firm_id$,sys01_dev,x$,period$,year$
-    find record (apm02_dev,key=u0$,dom=*next) apm02a$
-    u1$(7,3)=fndate$(fndate$(a1$(1,6)))
-    u[0]=u[0]+a[0]
-    u[1]=u[1]+a[2]
-    if year$<=p4$(3,2) u[2]=u[2]+a[0]
-    if year$>p4$(3,2) u[4]=u[4]+a[0]
-    write record (apm02_dev,key=u0$) apm02a$
+    dim apm02a$:fattr(apm02a$)
+    apm02a.firm_id$=firm_id$
+    apm02a.vendor_id$=poe05a.vendor_id$
+    apm02a.ap_type$=poe05a.ap_type$    
+    x$=poe05a.acct_date$
+    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,x$,period$,year$
+    find record (apm02_dev,key=apm02a.firm_id$+apm02a.vendor_id$+apm02a.ap_type$,dom=*next) apm02a$
+    apm02a.lstinv_date$=poe05a.inv_date$
+    apm02a.open_invs=apm02a.open_invs+poe05a.invoice_amt
+    apm02a.open_ret=apm02a.open_ret+poe05a.retention
+    if year$<=aps01a.current_year$ then apm02a.ytd_purch=apm02a.ytd_purch+poe05a.invoice_amt
+    if year$>aps01a.current_year$ then apm02a.nyr_purch=apm02a.nyr_purch+poe05a.invoice_amt
+    apm02a$=field(apm02a$)
+    write record (apm02_dev) apm02a$
 
 rem --- Generate pot-05 sequence number and position poe-15 PO Detail
 
-    ha$(1)=a0$
+    dim pot05a$:fattr(pot05a$)
+    pot05a.firm_id$=firm_id$
+    pot05a.ap_type$=poe05a.ap_type$
+    pot05a.vendor_id$=poe05a.vendor_id$
+    pot05a.ap_inv_no$=poe05a.ap_inv_no$
     channel=pot05_dev
-    x$=ha$
-    k=20
+    x$=pot05a.firm_id$+pot05a.ap_type$+pot05a.vendor_id$+pot05a.ap_inv_no$
+    k=len(x$)
     gosub l6800
-    ha$(21,3)=str(seq:"000")
-    read (poe15_dev,key=a0$,dom=*next)
+    pot05a.sequence_no$=str(seq:"000")
+    read (poe15_dev,key=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$,dom=*next)
 
 l2000: rem --- Read next PO record
 
     k$=key(poe15_dev,end=l3300)
-    if pos(a0$=k$)<>1 goto l3300
+    if pos(poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$=k$)<>1 goto l3300
     read record (poe15_dev) poe15a$
 
 rem --- Position line item file
 
-    read (poe25_dev,key=a0$,dom=*next)
+    read (poe25_dev,key=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$,dom=*next)
 
 l2200: rem --- Read next line item
 
     k$=key(poe25_dev,end=l3200)
-    if pos(a0$=k$)<>1 goto l3200
+    if pos(poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$=k$)<>1 goto l3200
     read record (poe25_dev) poe25a$
-    if c1$(1,7)<>b1$(1,7) goto l2200
-    if cvs(b1$(8,7),2)<>"" if c1$(11,7)<>b1$(8,7) goto l2200
+    if poe25a.po_no$<>poe15a.po_no$ then goto l2200
+    if cvs(poe15a.receiver_no$,3)<>"" if poe25a.receiver_no$<>poe15a.receiver_no$ goto l2200
 
 rem --- Update history detail record
 
-    dim w0$(25),w1$(64),w2$(32),w3$(22),w4$(40),w[12]
-    dim h0$(4),h1$(32),h2$(2*g[4])
-    w0$(1)=firm_id$+a0$(5,6)+c1$(1,7)+c1$(11,7)+c1$(8,3)
+    dim pot14a$:fattr(pot14a$)
+    pot14a.firm_id$=firm_id$
+    pot14a.po_no$=poe25a.po_no$
+    pot14a.receiver_no$=poe25a.receiver_no$
+    pot14a.po_line_no$=poe25a.po_line_no$
     found=0
-    find record (pot14_dev,key=w0$,dom=l2370) pot14a$
-    w[8]=w[8]+c[1]
+    find record (pot14_dev,key=pot14a.firm_id$+pot14a.po_no$+pot14a.receiver_no$+pot14a.po_line_no$,dom=l2370) pot14a$
+    pot14a.qty_invoiced=pot14a.qty_invoiced+poe25a.qty_received
     found=1
-    write record (pot14_dev,key=w0$) pot14a$
+    write record (pot14_dev) pot14a$
 l2370:
-    y0$(1)=firm_id$+c1$(18,2)
-    y1$(1)=""
-    y2$(1)=""
+    dim pom02a$:fattr(pom02a$)
+    dim sv_pom02a$:fattr(pom02a$)
+    pom02a.firm_id$=firm_id$
+    pom02a.po_line_code$=poe25a.po_line_code$
     find record (pom02_dev,key=y0$,dom=*next) pom02a$
-    h0$(1)=y0$
-    h1$(1)=y1$
-    h2$(1)=y2$(1)
+    sv_pom02a$=pom02a$
 
 rem --- Update PO line item
 
     dim l0$(18),l1$(64),l2$(32),l3$(22),l4$(40),l[12]
     l0$(1)=firm_id$+a0$(5,6)+c1$(1,7)+c1$(8,3)
-    find record (poe12_dev,key=l0$,dom=l2500) poe12a$
-    y0$(1)=firm_id$+l1$(1,2)
-    find record (pom02_dev,key=y0$,dom=*next) pom02a$
-    if found if y1$(21,1)<>h1$(21,1) goto l2500
-    if found if w3$<>l3$ goto l2500
-    l[8]=l[8]+c[1]
-    write record (poe12_dev,key=l0$) poe12a$
+    dim poe12a$:fattr(poe12a$)
+    poe12a.firm_id$=firm_id$
+    poe12a.po_no$=poe25a.po_no$
+    poe12a.po_line_no$=poe25a.po_line_no$
+    rem --- as of 6/2009, not sure if using po_line_no$ in the receiving and invoicing files
+    rem --- is right... might be better to convert all to use the internal seq # from the po line
+    find record (poe12_dev,key=poe12a.firm_id$+poe12a.po_no$+poe12a.po_line_no$,knum=DISPLAY_SEQ,dom=l2500) poe12a$
+    pom02a.firm_id$=firm_id$
+    pom02a.po_line_code$=poe12a.po_line_code$
+    find record (pom02_dev,key=pom02a.firm_id$+pom02a.po_line_code$,dom=*next) pom02a$
+    if found then if pom02a.line_type$<>sv_pom02a.line_type$ then goto l2500
+    if found if pot14a.warehouse_id$+poe14a.item_id$<>poe12a.warehouse_id$+poe12a.item_id$ goto l2500
+    poe12a.qty_invoiced=poe12a.qty_invoiced+poe25a.qty_received
+    write record (poe12_dev) poe12a$
 
 l2500: rem --- Calculate extension and retrieve line code
 
-    y0$(1)=h0$
-    y1$(1)=h1$
-    y2$(1)=h2$
+    pom02a$=sv_pom02a$
     precision 2
-    extension=c[0]*c[1]
-    poextension=c[2]*c[1]
+    extension=round(poe25a.unit_cost*poe25a.qty_received,2)
+    poextension=round(poe25a.receipt_cost*poe25a.qty_received,2)
     precision i[1]
 
 rem --- Read inventory item and warehouse
 
-    dim s0$(22),s1$(60),s2$(64),s3$(40),s4$(21),s6$(g[4]*9),s[12]
-    dim u0$(24),u1$(64),u[20]
-    if y1$(21,1)<>"S" goto l2700
-    s0$(1)=firm_id$+w3$(3)
-    u0$(1)=firm_id$+w3$
-    find record (ivm01_dev,key=s0$,dom=*next) ivm01a$
-    find record (ivm02_dev,key=u0$,dom=*next) ivm02a$
+    dim ivm01a$:fattr(ivm01a$)
+    dim ivm02a$:fattr(ivm02a$)
+    ivm01a.firm_id$=firm_id$
+    ivm01a.item_id$=pot14a.item_id$
+    ivm02a.firm_id$=firm_id$
+    ivm02a.warehouse_id$=pot14a.warehouse_id$
+    ivm02a.item_id$=pot14a.item_id$
+    if pom02a.line_type$<>"S" goto l2700
+    find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=*next) ivm01a$
+    find record (ivm02_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*next) ivm02a$
 
 l2700: rem --- Generate GL Recap
 
     if gl$="N" goto l3100
     action$=""
     account$=""
-    item$[0]=s0$(3)
-    item$[1]=s1$
-    item$[6]=s6$
+    item$[0]=ivm01a$
+    item$[1]=s1$;rem not used anymore (sending entire rec)
+    item$[6]=s6$;rem not used anymore 
     values[0]=extension
     values[1]=poextension
-    values[2]=c[1]
-    values[3]=u[0]
-    arcode$=u1$(13,2)
-    w$[0]=c0$
-    w$[1]=c1$
-    y$[0]=y0$
-    y$[1]=y1$
-    y$[2]=y2$
+    values[2]=poe25a.qty_received
+    values[3]=ivm02a.qty_on_hand
+    arcode$=ivm02a.ar_dist_code$
+    w$[0]=poe25$
+    w$[1]="";rem not used anymore (sending entire poe25a$ rec in w$[0], used to send c1$ here)
+    y$[0]=pom02a$
+    y$[1]=y1$;rem not used anymore (sending entire rec)
+    y$[2]=y2$;rem not used anymore
     gosub l6900
 
 rem --- Get WIP account for Non-Stocks
 
-    if y1$(21,1)<>"N" goto l3000
+    if pom02a.line_type$<>"N" goto l3000
     if sf$="N" goto l3000
-    if cvs(w2$(1,7),2)="" goto l3000
-    dim woe01$(75),wom10$(9*g[4])
-    find record (sfe01_dev,key=firm_id$+"  "+w2$(1,7),dom=l3000) sfe01a$
-    find record (sfm10_dev,key=firm_id$+"A"+woe01$(12,2),dom=l3000) sfm10a$
-    distaccnt$=wom10$(1,g[4]); rem "Distribution account = WIP account
+    if cvs(pot14a.wo_no$,3)="" goto l3000
+    dim sfe01a$:fattr(sfe01a$)
+    dim sfm10a$:fattr(sfm10a$)
+    find record (sfe01_dev,key=firm_id$+"  "+pot14a.wo_no$,dom=l3000) sfe01a$
+    find record (sfm10_dev,key=firm_id$+"A"+sfe01a.wo_type$,dom=l3000) sfm10a$
+    distaccnt$=sfm10a.gl_wip_acct$; rem "Distribution account = WIP account
 
 l3000: rem --- Generate apt-02 records
 
@@ -289,21 +265,21 @@ l3000: rem --- Generate apt-02 records
 
 l3100: rem --- Loop back for next line item
 
-    hc$(1)=ha$
-    hc$(24,3)=c0$(21,3)
-    write record (pot25_dev,key=hc$) pot25a$
-    hd$(1)=firm_id$+hc$(5,6)+c1$(1,7)+c1$(11,7)+hc$(3,2)+hc$(11,16)
-    write record (pot35_dev,key=hd$) pot35a$
-remove (poe25_dev,key=c0$,dom=l3190)
+    rem --- first create pot25 from poe25, then set sequence no for key to the one we've assigned to pot05 key
+    call stbl("+DIR_PGM")+"adc_copyfile.aon",poe25a$,pot25a$,status
+    pot25a.sequence_no$=pot05a.sequence_no$
+    write record (pot25_dev) pot25a$
+    remove (poe25_dev,key=poe25a.firm_id$+poe25a.ap_type+poe25a.vendor_id$+poe25a.ap_inv_no$+poe25a.line_no$,dom=l3190)
 
     goto l2200
 
 l3200: rem --- Loop back for next PO record
 
-    hb$(1)=ha$
-    hb$(24,3)=b0$(21,3)
-    write record (pot15_dev,key=hb$) pot15a$
-remove (poe15_dev,key=b0$,dom=l3260)
+    rem --- first create pot15 from poe15, then set sequence no for key to the one we've assigned to pot05 key
+    call stbl("+DIR_PGM")+"adc_copyfile.aon",poe15a$,pot15a$,status
+    pot15a.sequence_no$=pot05a.sequence_no$
+    write record (pot15_dev) pot15a$
+    remove (poe15_dev,key=poe15a.firm_id$+poe15a.ap_type+poe15a.vendor_id$+poe15a.ap_inv_no$+poe15a.line_no$,dom=l3260)
 
     goto l2000
 
@@ -312,21 +288,21 @@ l3300: rem --- Position GL distribution file
     if gl$<>"Y" goto l3900
     dim item$[6],values[4],w$[10],y$[10]
     distribution=0
-    read (poe35_dev,key=a0$,dom=*next)
+    read (poe35_dev,key=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$,dom=*next)
 
 l3400: rem --- Read next GL distribution record
 
     k$=key(poe35_dev,end=l3800)
-    if pos(a0$=k$)<>1 goto l3800
+    if pos(poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$=k$)<>1 goto l3800
     read record (poe35_dev) poe35a$
 
 rem --- Generate GL recap postings and loop back for next record
 
-    account$=d1$(1,g[4])
-    amount=-d[0]
+    account$=poe35a.gl_account$
+    amount=-poe35a.gl_post_amt
     values[0]=amount
-    w$[0]=d0$
-    w$[1]=d1$
+    w$[0]=poe35a$
+    w$[1]="";rem not used anymore (sending entire poe35a$ record in w$[0], used to send d1$ here)
     action$="D"
     distribution=distribution+amount
     gosub l6900
@@ -336,7 +312,7 @@ rem --- Generate apt-02 record
     gosub l6000
 
 rem --- Loop back for next distribution record
-remove (poe35_dev,key=k$,dom=l3711)
+    remove (poe35_dev,key=poe35a.firm_id$+poe35a.ap_type$+poe35a.vendor_id$+poe35a.ap_inv_no$+poe35a.line_no$,dom=l3711)
 
     goto l3400
 
@@ -346,22 +322,22 @@ l3800: rem --- Generate GL recap postings for the invoice
     action$="D"
     account$=apacct$
     values[0]=-distribution
-    w$[0]=a0$
+    w$[0]=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$
     if values[0] gosub l6900
 
 l3900: rem --- Loop back for next header
 
-    write record (pot05_dev,key=ha$) pot05a$
-remove (poe05_dev,key=a0$,dom=l3930)
+    rem --- copy poe05 to pot05 -- seq# for pot05 key already set
+    call stbl("+DIR_PGM")+"adc_copyfile.aon",poe05a$,pot05a$,status    
+    write record (pot05_dev) pot05a$
+    remove (poe05_dev,key=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$,dom=l3930)
 
     goto l1000
 
 done: rem --- Update landed cost?
 
-    dim u0$(24),u[1],item$[3]
-    if pos(r3$(55,1)="QC")=0 goto l4900
-    call pgmdir$+"syc_cn.bbx","",0,7,'ce',status
-    call pgmdir$+"adc_progress.aon","S","","Inventory Item Landed Costs","Updating","",3+i[0],0,1,0,ignore_status
+    dim item$[3]
+    if pos(pos01a.land_method$="QC")=0 goto l4900
     read (pow17_dev,key=firm_id$,dom=*next)
 
 l4100: rem --- Read next landed cost record
@@ -369,16 +345,15 @@ l4100: rem --- Read next landed cost record
     k$=key(pow17_dev,end=l4900)
     if pos(firm_id$=k$)<>1 goto l4900
     read record (pow17_dev) pow17a$
-    call pgmdir$+"adc_progress.aon","S","","","",u0$(3,2)+" "+u0$(5,i[0]),0,0,1,0,ignore_status
 
 rem --- Call standard inventory update program
 
     action$="PI"
     item$[0]=firm_id$
-    item$[1]=u0$(3,2)
-    item$[2]=u0$(5)
-    refs[4]=u[0]
-    call pgmdir$+"ivc_ua.bbx",action$,files[all],params[all],params$[all],item$[all],refs$[all],refs[all],status
+    item$[1]=pow17a.warehouse_id$
+    item$[2]=pow17a.item_id$
+    refs[4]=pow17a.landed_cost
+    call pgmdir$+"ivc_itemupdt.aon",action$,files[all],ivs01a$,item$[all],refs$[all],refs[all],rd_table_chans$[all],ignore_status
     goto l4100
 
 l4900: rem --- All done
@@ -389,11 +364,19 @@ l6000: rem --- Generate apt-02 record
 
     if cvs(distaccnt$,2)="" goto l6090
     dim t0$(34),t[1]
-    t0$(1)=a0$(1,10)+"I"+a0$(11,10)+distaccnt$+fndate$(fndate$(gldate$))
-    extract record (apt02_dev,key=t0$,dom=*next) apt02a$
-    t[0]=t[0]+distamnt
-    t[1]=t[1]+distqty
-    write record (apt02_dev,key=t0$) apt02a$
+    dim apt02a$:fattr(apt02a$)
+    apt02a.firm_id$=firm_id$
+    apt02a.ap_type$=poe05.ap_type$
+    apt02a.vendor_id$=poe05.vendor_id$
+    apt02a.invoice_type$="I"
+    apt02a.reference$=poe05a.ap_inv_no$
+    apt02a.gl_account$=distaccnt$
+    apt02a.accting_date$=gldate$
+    extract record (apt02_dev,key=apt02a.firm_id$+apt02a.ap_type$+apt02a.vendor_id$+
+:       apt02a.invoice_type$+apt02a.reference$+apt02a.gl_account$+apt02a.accting_date$,dom=*next) apt02a$
+    apt02a.gl_post_amt=apt02a.gl_post_amt+distamnt
+    apt02a.units=apt02a.units+distqty
+    write record (apt02_dev) apt02a$
 l6090:
     return
 
@@ -409,16 +392,18 @@ l6840:
 l6900: rem --- Call GL Posting Routine
 
     let glfiles[1]=glm01_dev,glfiles[2]=glt04_dev,glfiles[3]=glt14_dev
-    let glfiles[4]=apm10_dev,glfiles[5]=arm10_dev,glparams$[0]=firm_id$
+    let glfiles[4]=apm10b_dev,glfiles[5]=arm10d_dev,glparams$[0]=firm_id$
     let glparams$[1]=apcode$,glparams$[2]=arcode$,glparams$[3]=distcode$
     let glparams$[4]=gldate$,glparams$[5]=vendor$,glparams$[6]=name$
-    let glparams$[7]=m0$,glparams$[8]=g4$,glparams$[9]=i3$(8,1)
+    let glparams$[7]=m0$,glparams$[8]=gls01a$,glparams$[9]=ivs01a.cost_method$
     let glparams$[10]=account$,glparams[0]=i[0],glparams[1]=i[1]
     let glparams[2]=g[4],glparams[3]=i[3],glparams[4]=i[4],glparams[5]=i[5]
     dim glaccounts$[5],glamounts[5],glqtys[5]
-    call pgmdir$+"poc_gb.bbx",action$,glfiles[all],glparams$[all],glparams[all],item$[all],w$[all],y$[all],values[all],glaccounts$[all],glamounts[all],glqtys[all],status
+    let tpls$[1]=fattr(ivm01a$),tpls$[2]=fattr(poe25a$),tpls$[3]=fattr(pom02a$),tpls$[4]=fattr(gls01a$),tpls$[5]=fattr(poe35a$),tpls$[6]=fattr(arm10d$),tpls$[7]=fattr(apm10b$)
+    call pgmdir$+"poc_invglpost.aon",action$,glfiles[all],glparams$[all],glparams[all],item$[all],w$[all],y$[all],values[all],glaccounts$[all],tpls$[all],glamounts[all],glqtys[all],status
+
     let distaccnt$=glaccounts$[1],distamnt=-glamounts[0],distqty=-glqtys[0]; rem "Distribution account = PO account, Distribution amount and quantity = -(AP amount and quantity)
-    if y1$(21,1)="S" distaccnt$=glaccounts$[4]; rem "For S-line types, Distribution account = IV account, Distribution amount and quantity = -(AP amount and quantity)
+    if pom02a.line_type$="S" distaccnt$=glaccounts$[4]; rem "For S-line types, Distribution account = IV account, Distribution amount and quantity = -(AP amount and quantity)
     if action$="D" distaccnt$=glaccounts$[0],distamnt=-distamnt,distqty=-distqty; rem "For GL distribution, Distribution account = AP account, Distribution amount and quantity = AP amount and quantity
     return
 
