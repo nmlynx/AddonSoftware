@@ -21,6 +21,16 @@ rem --- Retrieve sysinfo data
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
+rem --- Document initializations
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
 rem --- Assign form input values to local variables
 
     level$=Option!.getOptionData("REPORT_SEQUENCE")
@@ -203,6 +213,7 @@ l500: rem --- Initializations
     desc$[3]="By Line Item"
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
+    headings$[2]="[HEADER]"
     if aps01a.multi_types$="Y" aptype=1,headings=3
     if aps01a.ret_flag$="Y" retention=1,rh1$="Discount/",rh2$="Retention"
 
@@ -224,6 +235,14 @@ rem --- Print positions
     oi[1]=oi[2]-11
     dw=oi[1]-1
     if dw>m0+31 dw=m0+32,oi[1]=dw
+
+rem --- Headings and print positions
+rem --- because of the non-columnar nature of this report, it has been converted to DocOut
+rem --- using a single column, and print lines are built by constructing pbuf$, then an entire
+rem --- line is added to OutVect! (OutVect!.addItem(pbuf$))
+
+    dim columns$[0,10]
+    columns$[0,0]="  ",columns$[0,1]="C",columns$[0,2]=str(width)
 
 rem --- Additional file opens
 
@@ -270,6 +289,7 @@ l850: rem --- Run Report
 
     x$="Detail"
     if level$="I" x$="Summary"
+    v=pos(level$="SIL")
     headings$[1]=x$+" "+headings$[1]+" "+desc$[v]
 
 rem --- Remaining print positions
@@ -302,7 +322,6 @@ rem --- Position file
 
     x=m0+11
     if aptype x=x+3
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$ + "adc_progress.aon","N","","","","",0,poe05_dev,1,meter_num,status
     read (poe05_dev,key=firm_id$,dom=*next)
@@ -341,9 +360,29 @@ rem --- Format invoice fields
 rem --- Print invoice header
 
     if l+3>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(oi[0]),vendor$,@(oi[1]),poe05a.ap_inv_no$,@(oi[2]),poe05a.ap_dist_code$,@(oi[3]),poe05a.payment_grp$,@(oi[4]),poe05a.ap_terms_code$,@(oi[5]),hold$,@(oi[6]),fndate$(poe05a.inv_date$),@(oi[7]),fndate$(poe05a.acct_date$),@(oi[8]),poe05a.reference$,@(oi[9]),poe05a.invoice_amt:m1$,@(oi[10]),poe05a.discount_amt:m1$
-    print (printer_dev)@(oi[6]),fndate$(poe05a.due_date$),@(oi[7]),fndate$(poe05a.po_disc_date$),@(oi[8]),poe05a.ap_inv_memo$,@(oi[10]),retention$
+    dim pbuf$(width)
+    OutVect!.addItem(pbuf$)
+
+    dim pbuf$(width)
+    pbuf$(oi[0]+1)=vendor$
+    pbuf$(oi[1]+1)=poe05a.ap_inv_no$
+    pbuf$(oi[2]+1)=poe05a.ap_dist_code$
+    pbuf$(oi[3]+1)=poe05a.payment_grp$
+    pbuf$(oi[4]+1)=poe05a.ap_terms_code$
+    pbuf$(oi[5]+1)=hold$
+    pbuf$(oi[6]+1)=fndate$(poe05a.inv_date$)
+    pbuf$(oi[7]+1)=fndate$(poe05a.acct_date$)
+    pbuf$(oi[8]+1)=poe05a.reference$
+    pbuf$(oi[9]+1)=str(poe05a.invoice_amt:m1$)
+    pbuf$(oi[10]+1)=str(poe05a.discount_amt:m1$)
+    OutVect!.addItem(pbuf$)
+    
+    dim pbuf$(width)
+    pbuf$(oi[6]+1)=fndate$(poe05a.due_date$)
+    pbuf$(oi[7]+1)=fndate$(poe05a.po_disc_date$)
+    pbuf$(oi[8]+1)=poe05a.ap_inv_memo$
+    pbuf$(oi[10]+1)=retention$
+    OutVect!.addItem(pbuf$)
     l=l+3
     glskip=0
     if cvs(poe05a.ap_inv_memo$,3)<>"" glskip=1
@@ -353,6 +392,12 @@ rem --- Check GL posting date
     gldate$=poe05a.acct_date$
     if gl$="Y" call pgmdir$+"glc_datecheck.aon",gldate$,"N",period$,year$,glstatus
     if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,gldate$,glstatus,l,errors,status
+
+    if stbl("+DTWARN_MSG",err=*endif)<>""
+        dim pbuf$(width)
+        pbuf$(1)=stbl("+DTWARN_MSG"))
+        OutVect!.addItem(pbuf$)
+    endif
 
 rem --- Position poe-15 PO Detail
 
@@ -396,7 +441,15 @@ l2100: rem --- Read history header and original terms
         po$=receipt$(1,7)
         rec$=receipt$(8,7)
         if cvs(po$,2)="" po$="Other Chgs",rec$="",terms$=""
-        print (printer_dev)@(op[0]),seq$,@(op[1]),po$,@(op[2]),rec$,@(op[3]),ordered$,@(op[4]),received$,@(op[5]),terms$,@(op[7]),receivers[receiver]:m1$
+        dim pbuf$(width)
+        pbuf$(op[0]+1)=seq$
+        pbuf$(op[1]+1)=po$
+        pbuf$(op[2]+1)=rec$
+        pbuf$(op[3]+1)=ordered$
+        pbuf$(op[4]+1)=received$
+        pbuf$(op[5]+1)=terms$
+        pbuf$(op[7]+1)=str(receivers[receiver]:m1$)
+        OutVect!.addItem(pbuf$)
         l=l+1
         first=0
         glskip=1
@@ -506,7 +559,11 @@ rem --- Print it
 
     if first gosub l5300
     if l+1>l9 gosub report_heading; gosub l5300
-    print (printer_dev)@(og[0]),poe35a.line_no$,@(og[1]),g$,@(og[2]),poe35a.gl_post_amt:m1$
+    dim pbuf$(width)
+    pbuf$(og[0]+1)=poe35a.line_no$
+    pbuf$(og[1]+1)=g$
+    pbuf$(og[2]+1)=str(poe35a.gl_post_amt:m1$)
+    OutVect!.addItem(pbuf$)
     l=l+1
     first=0
     glskip=1
@@ -537,7 +594,9 @@ l3700: rem --- Does GL total match invoice header?
 
     if total=a[0] goto l3900
     if l+1>l9 gosub report_heading
-print (printer_dev)"---> ERROR: Invoice Total Does Not Match Sum Of Line Items And/Or Distribution"
+    dim pbuf$(width)
+    pbuf$(1)="---> ERROR: Invoice Total Does Not Match Sum Of Line Items And/Or Distribution"
+    OutVect!.addItem(pbuf$)
     l=l+1
     errors=errors+1
 l3800:
@@ -567,25 +626,73 @@ done: rem --- All done
 report_heading: rem --- Report Heading
 
     l=headings+3
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)@(oi[2]),"Dist",@(oi[3]),"Pay",@(oi[6]),"Inv Date",@(oi[7]),"Acct Date",@(oi[8]),"Ref/",@(oi[9]+m1-8),"Invoice",@(oi[10]+m1-(len(rh1$)+1)),rh1$
-    print (printer_dev)@(oi[0]),"Vendor",@(oi[1]),"Invoice",@(oi[2]),"Code",@(oi[3]),"Grp",@(oi[4]),"Terms",@(oi[5]),"Hold",@(oi[6]),"Due Date",@(oi[7]),"Disc Date",@(oi[8]),"Memo",@(oi[9]+m1-8),"Amount",@(oi[10]+m1-(len(rh1$)+1)),rh2$
+rem    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+rem    if status exitto std_exit
+
+    HdrVect!.addItem("")
+    BrkVect!.addItem(str(OutVect!.size()))
+    dim pbuf$(width)
+    pbuf$(oi[2]+1)="Dist"
+    pbuf$(oi[3]+1)="Pay"
+    pbuf$(oi[6]+1)="Inv Date"
+    pbuf$(oi[7]+1)="Acct Date"
+    pbuf$(oi[8]+1)="Ref/"
+    pbuf$(oi[9]+m1-8+1)="Invoice"
+    pbuf$(oi[10]+m1-(len(rh1$)+1)+1)=rh1$
+    OutVect!.addItem(pbuf$)
+
+    dim pbuf$(width)
+    pbuf$(oi[0]+1)="Vendor"
+    pbuf$(oi[1]+1)="Invoice"
+    pbuf$(oi[2]+1)="Code"
+    pbuf$(oi[3]+1)="Grp"
+    pbuf$(oi[4]+1)="Terms"
+    pbuf$(oi[5]+1)="Hold"
+    pbuf$(oi[6]+1)="Due Date"
+    pbuf$(oi[7]+1)="Disc Date"
+    pbuf$(oi[8]+1)="Memo"
+    pbuf$(oi[9]+m1-8+1)="Amount"
+    pbuf$(oi[10]+m1-(len(rh1$)+1)+1)=rh2$
+    OutVect!.addItem(pbuf$)
     return
 
 l5100: rem --- Purchase Order Subheading
 
     if l+3>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(op[0]),"Seq",@(op[1]),"PO #",@(op[2]),"Rec #",@(op[3]),"Ordered",@(op[4]),"Received",@(op[5]),"Original Terms",@(op[7]+m1-6),"Total"
+
+    dim pbuf$(width)
+    OutVect!.addItem(pbuf$)
+ 
+    dim pbuf$(width)
+    pbuf$(op[0]+1)="Seq"
+    pbuf$(op[1]+1)="PO #"
+    pbuf$(op[2]+1)="Rec #"
+    pbuf$(op[3]+1)="Ordered"
+    pbuf$(op[4]+1)="Received"
+    pbuf$(op[5]+1)="Original Terms"
+    pbuf$(op[7]+m1-6+1)="Total"
+    OutVect!.addItem(pbuf$)
     l=l+2
     return
 
 l5200: rem --- Line Item Subheading
 
     if l+5>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(ol[0]),"Seq",@(ol[1]),"Cd",@(ol[2]),"Wh",@(ol[3]),"Item",@(ol[4]),"Received",@(ol[5]+m2-9),"Quantity",@(ol[6]),"UM",@(ol[7]+m3-5),"Cost",@(ol[8]+m1-10),"Extension"
+
+    dim pbuf$(width)
+    OutVect!.addItem(pbuf$)
+
+    dim pbuf$(width)
+    pbuf$(ol[0]+1)="Seq"
+    pbuf$(ol[1]+1)="Cd"
+    pbuf$(ol[2]+1)="Wh"
+    pbuf$(ol[3]+1)="Item"
+    pbuf$(ol[4]+1)="Received"
+    pbuf$(ol[5]+m2-9+1)="Quantity"
+    pbuf$(ol[6]+1)="UM"
+    pbuf$(ol[7]+m3-5+1)="Cost"
+    pbuf$(ol[8]+m1-10+1)="Extension"
+    OutVect!.addItem(pbuf$)
     l=l+2
     return
 
@@ -593,8 +700,16 @@ l5300: rem --- GL Distribution Subheading
 
     needed=2+glskip
     if l+needed>l9 gosub report_heading
-    if glskip print (printer_dev)""
-    print (printer_dev)@(og[0]),"Seq",@(og[1]),"GL Account",@(og[2]+m1-7),"Amount"
+    if glskip 
+        dim pbuf$(width)
+        OutVect!.addItem(pbuf$)
+    endif
+    
+    dim pbuf$(width)
+    pbuf$(og[0]+1)="Seq"
+    pbuf$(og[1]+1)="GL Account"
+    pbuf$(og[2]+m1-7+1)="Amount"
+    OutVect!.addItem(pbuf$)
     l=l+1+glskip
     return
 
@@ -602,29 +717,51 @@ l5500: rem --- Print detail line based on line type
 
     if first gosub l5200
     if l+3>l9 gosub report_heading; gosub l5200
-    print (printer_dev)@(ol[0]),poe25a.line_no$,@(ol[1]),pom02a.po_line_code$,@(ol[2]),pot14a.warehouse_id$,
+    dim pbuf$(width)
+    pbuf$(ol[0]+1)=poe25a.line_no$
+    pbuf$(ol[1]+1)=pom02a.po_line_code$
+    pbuf$(ol[2]+1)=pot14a.warehouse_id$
     on pos(pom02a.line_type$="SNVMO") goto l5990,l5600,l5700,l5990,l5990,l5800
 
 l5600: rem --- Display Standard Line
 
-    print (printer_dev)@(ol[3]),pot14a.item_id$(1,i[0]),@(ol[4]),received$,@(ol[5]),poe25a.qty_received:m2$,@(ol[6]),pot14a.unit_measure$,@(ol[7]),poe25a.unit_cost:m3$,@(ol[8]),extension:m1$
+    pbuf$(ol[3]+1)=pot14a.item_id$(1,i[0])
+    pbuf$(ol[4]+1)=received$
+    pbuf$(ol[5]+1)=str(poe25a.qty_received:m2$)
+    pbuf$(ol[6]+1)=pot14a.unit_measure$
+    pbuf$(ol[7]+1)=str(poe25a.unit_cost:m3$)
+    pbuf$(ol[8]+1)=str(extension:m1$)
+    OutVect!.addItem(pbuf$)
     goto l5900
 
 l5700: rem --- Display Non-Stock Line
 
-    print (printer_dev)@(ol[3]),pot14a.item_id$(1,i[0]),@(ol[4]),received$,@(ol[5]),poe25a.qty_received:m2$,@(ol[6]),pot14a.unit_measure$,@(ol[7]),poe25a.unit_cost:m3$,@(ol[8]),extension:m1$
+    pbuf$(ol[3]+1)=pot14a.item_id$(1,i[0])
+    pbuf$(ol[4]+1)=received$
+    pbuf$(ol[5]+1)=str(poe25a.qty_received:m2$)
+    pbuf$(ol[6]+1)=pot14a.unit_measure$
+    pbuf$(ol[7]+1)=str(poe25a.unit_cost:m3$)
+    pbuf$(ol[8]+1)=str(extension:m1$)
+    OutVect!.addItem(pbuf$)
     goto l5900
 
 l5800: rem --- Display Other Line
 
-    print (printer_dev)@(ol[4]),received$,@(ol[7]),poe25a.unit_cost:m3$,@(ol[8]),extension:m1$
+    pbuf$(ol[4]+1)=received$
+    pbuf$(ol[7]+1)=str(poe25a.unit_cost:m3$)
+    pbuf$(ol[8]+1)=str(extension:m1$)
+    OutVect!.addItem(pbuf$)
 
 l5900: rem --- Display PO and Receiver
-
-    print (printer_dev)@(ol[3]),description$
+    
+    dim pbuf$(width)
+    pbuf$(ol[3]+1)=description$
+    OutVect!.addItem(pbuf$)
     let l=l+2,first=0
     if cvs(poe25a.po_no$,3)="" goto l5990
-    print (printer_dev)@(ol[3]),"PO # ",poe25a.po_no$,"-",poe25a.po_line_no$," Rec # ",poe25a.receiver_no$
+    dim pbuf$(width)
+    pbuf$(ol[3]+1)="PO # "+poe25a.po_no$+"-"+poe25a.po_line_no$+" Rec # "+poe25a.receiver_no$
+    OutVect!.addItem(pbuf$)
     let l=l+1
 l5990:
     return
@@ -641,7 +778,8 @@ l6100:
     if aptype=0 goto l6190
     let t0$=poe05a.ap_type$,xa$(6,20)=nf$,l=l9+1,warehouse=0
     find record (apm10a_dev,key=firm_id$+"A"+t0$,dom=*next) apm10a$
-    let headings$[2]="For AP Type "+t0$+" "+cvs(apm10a.code_desc$,3)
+    HdrVect!.addItem("For AP Type "+t0$+" "+cvs(apm10a.code_desc$,3))
+    BrkVect!.addItem(str(OutVect!.size()))
 l6190:
     return
 
@@ -690,8 +828,17 @@ l6800: rem --- Print total line
     if retention needed=2
     if l+needed>l9 gosub report_heading
     let l=l+needed,total$="Total For "+cvs(total$,2)
-    print (printer_dev)@(oi[9]-len(total$)),total$,@(oi[9]),totals[1]:m1$,@(oi[10]),totals[2]:m1$
-    if retention print (printer_dev)@(oi[10]),totals[3]:m1$
+    dim pbuf$(width)
+    pbuf$(oi[9]-len(total$)+1)=total$
+    pbuf$(oi[9]+1)=str(totals[1]:m1$)
+    pbuf$(oi[10]+1)=str(totals[2]:m1$)
+    OutVect!.addItem(pbuf$)
+
+    if retention
+        dim pbuf$(width)
+        pbuf$(oi[10]+1)=str(totals[3]:m1$)
+        OutVect!.addItem(pbuf$)
+    endif
     return
 
 l6900: rem --- Call GL Posting Routine

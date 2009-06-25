@@ -25,8 +25,6 @@ rem --- Initializations
 
     precision i[1]
     dim o[11]
-    headings$[2]="Purchase Price Variance"
-    headings$[3]=""
     headings=3
     done=0
     vendor=0
@@ -157,14 +155,38 @@ l2100: rem --- Level breaks?
 
 l2200: rem --- Standard or Non-stock line
 
-    print (printer_dev)@(o[1]),poe25a.po_no$,"-",poe25a.po_line_no$,@(o[2]),poe25a.receiver_no$,@(o[3]),ivm01a.item_id$(1,i[0]),@(o[5]),received$,@(o[6]),poe25a.qty_received:m2$," ",pot14a.unit_measure$,@(o[7]),poe25a.receipt_cost:m3$,@(o[8]),po_extension:m1$,@(o[9]),poe25a.unit_cost:m3$,@(o[10]),iv_extension:m1$,@(o[11]),variance:m1$
-    print (printer_dev)@(o[3]),description$
+    dim pbuf$(width)
+    pbuf$(o[1]+1)=poe25a.po_no$+"-"+poe25a.po_line_no$
+    pbuf$(o[2]+1)=poe25a.receiver_no$
+    pbuf$(o[3]+1)=ivm01a.item_id$(1,i[0])
+    pbuf$(o[5]+1)=received$
+    pbuf$(o[6]+1)=str(poe25a.qty_received:m2$)+" "+pot14a.unit_measure$
+    pbuf$(o[7]+1)=str(poe25a.receipt_cost:m3$)
+    pbuf$(o[8]+1)=str(po_extension:m1$)
+    pbuf$(o[9]+1)=str(poe25a.unit_cost:m3$)
+    pbuf$(o[10]+1)=str(iv_extension:m1$)
+    pbuf$(o[11]+1)=str(variance:m1$)
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(width)
+    pbuf$(o[3]+1)=description$
+    OutVect!.addItem(pbuf$)
     goto l2400
 
 l2300: rem --- Other line
-
-    print (printer_dev)@(o[1]),poe25a.po_no$,"-",poe25a.po_line_no$,@(o[2]),poe25a.receiver_no$,@(o[5]),received$,@(o[7]),poe25a.receipt_cost:m3$,@(o[8]),po_extension:m1$,@(o[9]),poe25a.unit_cost:m3$,@(o[10]),iv_extension:m1$,@(o[11]),variance:m1$
-    print (printer_dev)@(o[3]),description$
+    
+    dim pbuf$(width)
+    pbuf$(o[1]+1)=poe25a.po_no$+"-"+poe25a.po_line_no$
+    pbuf$(o[2]+1)=poe25a.receiver_no$
+    pbuf$(o[5]+1)=received$
+    pbuf$(o[7]+1)=str(poe25a.receipt_cost:m3$)
+    pbuf$(o[8]+1)=str(po_extension:m1$)
+    pbuf$(o[9]+1)=str(poe25a.unit_cost:m3$)
+    pbuf$(o[10]+1)=str(iv_extension:m1$)
+    pbuf$(o[11]+1)=str(variance:m1$)
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(width)
+    pbuf$(o[3]+1)=description$
+    OutVect!.addItem(pbuf$)
 
 l2400: rem --- Loop back for next line item
 
@@ -176,7 +198,7 @@ l2500: rem --- Done with price variances. Update landed cost?
     if pos01a.land_method$="Q" if invqty=0 goto l3900
     if pos01a.land_method$="C" if invamt=0 goto l3900
 
-rem --- Postion detail file for landed cost pass
+rem --- Position detail file for landed cost pass
 
     read (poe25_dev,key=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$,dom=*next)
 
@@ -235,7 +257,7 @@ done: rem --- All done
     done=1
     gosub l6000
     if l+2>l9 gosub report_heading
-    print (printer_dev)""
+    dim pbuf$(width);OutVect!.addItem(pbuf$)
     total$="Register"
     total=report
     gosub l6800
@@ -254,10 +276,30 @@ rem --- Run next overlay
 report_heading: rem --- Report Heading
 
     l=headings+3
-    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
-    if status exitto std_exit
-    print (printer_dev)@(o[7]),po$,@(o[9]),iv$
-    print (printer_dev)@(o[0]),"Vendor",@(o[1]),"PO #",@(o[2]),"Rec #",@(o[3]),"Item",@(o[4]),"Invoice",@(o[5]),"Received",@(o[6]+m2-9),"Quantity UM",@(o[7]+m3-5),"Cost",@(o[8]+m1-10),"Extension",@(o[9]+m3-5),"Cost",@(o[10]+m1-10),"Extension",@(o[11]+m1-9),"Variance"
+rem    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,width,when$,clock$,status
+rem    if status exitto std_exit
+
+    HdrVect!.addItem("Purchase Price Variance")
+    BrkVect!.addItem(str(OutVect!.size()))
+
+    dim pbuf$(width)
+    pbuf$(o[7]+1)=po$
+    pbuf$(o[9]+1)=iv$
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(width)
+    pbuf$(o[0]+1)="Vendor"
+    pbuf$(o[1]+1)="PO #"
+    pbuf$(o[2]+1)="Rec #"
+    pbuf$(o[3]+1)="Item"
+    pbuf$(o[4]+1)="Invoice"
+    pbuf$(o[5]+1)="Received"
+    pbuf$(o[6]+m2-9+1)="Quantity UM"
+    pbuf$(o[7]+m3-5+1)="Cost"
+    pbuf$(o[8]+m1-10+1)="Extension"
+    pbuf$(o[9]+m3-5+1)="Cost"
+    pbuf$(o[10]+m1-10+1)="Extension"
+    pbuf$(o[11]+m1-9+1)="Variance"
+    OutVect!.addItem(pbuf$)
     return
 
 l6000: rem --- Vendor Break
@@ -279,9 +321,12 @@ l6190:
 l6200: rem --- Invoice Break
 
     if l+5>l9 gosub report_heading
-    print (printer_dev)""
-    print (printer_dev)@(o[0]),vendor$,@(o[4]),poe25a.ap_inv_no$
-    print (printer_dev)""
+    dim pbuf$(width);OutVect!.addItem(pbuf$)
+    dim pbuf$(width)
+    pbuf$(o[0]+1)=vendor$
+    pbuf$(o[4]+1)=poe25a.ap_inv_no$
+    OutVect!.addItem(pbuf$)
+    dim pbuf$(width);OutVect!.addItem(pbuf$)
     let t1$=poe25a.ap_inv_no$,l=l+3
     return
 
@@ -294,7 +339,10 @@ rem --- Print total line
 l6800:
     if l+1>l9 gosub report_heading
     let l=l+1,total$="Purchase Price Variance Total For "+cvs(total$,2)
-    print (printer_dev)@(o[11]-len(total$)),total$,@(o[11]),total:m1$
+    dim pbuf$(width)
+    pbuf$(o[11]-len(total$)+1)=total$
+    pbuf$(o[11]+1)=str(total:m1$)
+    OutVect!.addItem(pbuf$)
     return
 
 rem #include std_functions.src
