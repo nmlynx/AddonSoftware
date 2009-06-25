@@ -617,8 +617,7 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
  
     rem --- Bill To
 
-        page! = pdf!.drawBox(0, 126, 568, 96, page!)
-        page! = pdf!.drawVLine(45, 126, 96, page!)
+        page! = pdf!.drawBox(0, 126, 45, 96, light_gray!, light_gray!, page!); rem gray box
         page! = pdf!.setText(0, 132, 40, 0, "Bill To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         
         page! = pdf!.setText(50, 132, b$(1,address),   page!)
@@ -630,8 +629,7 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         
     rem --- Ship to
     
-        page! = pdf!.drawVLine(284, 126, 96, page!)
-        page! = pdf!.drawVLine(329, 126, 96, page!)
+        page! = pdf!.drawBox(284, 126, 45, 96, light_gray!, light_gray!, page!); rem gray box
         page! = pdf!.setText(284, 132, 40, 0, "Ship To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
 
         page! = pdf!.setText(334, 132, c$(1,address),   page!)
@@ -640,10 +638,12 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.setText(334, 168, c$(91,address),  page!)    
         page! = pdf!.setText(334, 180, c$(121,address), page!)
         page! = pdf!.setText(334, 192, c$(151,address), page!)
+        
+        page! = pdf!.drawBox(0, 126, 568, 96, page!); rem outer frame
 
     rem --- Info Box
 
-        page! = pdf!.drawBox(424, 24, 144, 72, page!)
+        page! = pdf!.drawBox(424, 24, 66, 72, light_gray!, light_gray!, page!); rem gray box
         page! = pdf!.drawHLine(424, 48, 144, page!)
         page! = pdf!.drawHLine(424, 72, 144, page!)
         page! = pdf!.drawVLine(490, 24,  72, page!)
@@ -652,17 +652,18 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.setText(432, 54, 54, 54, "Date",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         page! = pdf!.setText(432, 78, 54, 78, "Invoice #", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
 
-        page! = pdf!.setText(496,30,str(page),page!)
-        page! = pdf!.setText(496,54,func.formatDate(ope01a.invoice_date$),page!)
-        page! = pdf!.setText(496,78,ope01a.ar_inv_no$,page!)
+        page! = pdf!.setText(496, 30, str(page), page!)
+        page! = pdf!.setText(496, 54, func.formatDate(ope01a.invoice_date$), page!)
+        page! = pdf!.setText(496, 78, ope01a.ar_inv_no$, page!)
         
         if o9=3 then
-            page! = pdf!.setText(496,102,54,102,"DUPLICATE",boldfont!,pdf!.CENTER_JUSTIFY(),page!)
+            page! = pdf!.setText(496, 102, 54, 102, "DUPLICATE", boldfont!, pdf!.CENTER_JUSTIFY(), page!)
         endif
+
+        page! = pdf!.drawBox(424, 24, 144, 72, page!); rem outer frame
         
     rem --- Ribbon info
     
-        page! = pdf!.drawBox(0, 234, 568, 48, page!)
         page! = pdf!.drawVLine( 72, 234, 48, page!)
         page! = pdf!.drawVLine(132, 234, 48, page!)
         page! = pdf!.drawVLine(180, 234, 48, page!)
@@ -672,7 +673,7 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.drawVLine(378, 234, 48, page!)
         page! = pdf!.drawVLine(438, 234, 48, page!)
         
-        rem page! = pdf!.setText(1, 234+2, fill(230), light_gray!, page!)
+        page! = pdf!.drawBox(0, 234, 568, 14, light_gray!, light_gray!, page!); rem gray bar
         
         page! = pdf!.setText(0,     234+2, 0,       0, "Order #",    boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
         page! = pdf!.setText(72,    234+2, 132-72,  0, "Order Date", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
@@ -693,17 +694,21 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.setText(378,   234+14, 438-378, 0, func.formatDate(ope01a.shipmnt_date$),    pdf!.CENTER_JUSTIFY(), page!)
         page! = pdf!.setText(438,   234+14, 568-438, 0, ope01a.terms_code$,                       pdf!.CENTER_JUSTIFY(), page!)
         page! = pdf!.setText(438,   262+2,  568-438, 0, arm10a.code_desc$,                        pdf!.CENTER_JUSTIFY(), page!)
+        
+        page! = pdf!.drawBox(0, 234, 568, 48, page!); rem outer frame
 
     rem --- Detail box and headings
         
-        page! = pdf!.drawBox(0, 294, 568, 354, page!)
         page! = pdf!.drawBox(0, 648, 568, 72, page!)
+        page! = pdf!.drawBox(387, 648, 181, 72, light_gray!, page!)
         page! = pdf!.drawVLine(45,  294, 354, page!)
         page! = pdf!.drawVLine(90,  294, 354, page!)
         page! = pdf!.drawVLine(135, 294, 354, page!)
         page! = pdf!.drawVLine(360, 294, 354, page!)
-        page! = pdf!.drawVLine(387, 294, 426, page!)
+        page! = pdf!.drawVLine(387, 294, 354, page!)
         page! = pdf!.drawVLine(477, 294, 426, page!)
+        
+        page! = pdf!.drawBox(0, 294, 568, 14, light_gray!, light_gray!, page!); rem gray box
         
         page! = pdf!.setText(0,     294+2, 45-2, 0, "Order",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         page! = pdf!.setText(45,    294+2, 45-2, 0, "Ship",       boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
@@ -712,6 +717,9 @@ rem --- Use page! as a holder object to update both pages.  Start with print obj
         page! = pdf!.setText(360+2, 294+2, "UM",                  boldfont!,                       light_gray!, page!)
         page! = pdf!.setText(387,   294+2, 90-2, 0, "Price",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         page! = pdf!.setText(477,   294+2, 90-2, 0, "Extended",   boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        
+        page! = pdf!.drawBox(0, 294, 568, 354, page!); rem outer frame
+
                 
     rem --- Duplicate what was done on pagePrint!; if both pages have updated, we're done
     
@@ -807,18 +815,18 @@ print_total: rem --- Total
         
         rem if a0$(99,1)="Y" gosub paid_info
         
-        page! = pdf!.setText(387+2, 648+0*12+2, sales_or_cr$, italicfont!, page!)
-        page! = pdf!.setText(387+2, 648+1*12+2, "Discount",   italicfont!, page!) 
-        page! = pdf!.setText(387+2, 648+2*12+2, "Sales Tax",  italicfont!, page!)
-        page! = pdf!.setText(387+2, 648+3*12+2, "Freight",    italicfont!, page!)
-        page! = pdf!.setText(387+2, 648+4*12+2, "Total Due",  boldfont!,   page!)
+        page! = pdf!.setText(387+2, 648+0*12+2, sales_or_cr$, italicfont!, light_gray!, page!)
+        page! = pdf!.setText(387+2, 648+1*12+2, "Discount",   italicfont!, light_gray!, page!) 
+        page! = pdf!.setText(387+2, 648+2*12+2, "Sales Tax",  italicfont!, light_gray!, page!)
+        page! = pdf!.setText(387+2, 648+3*12+2, "Freight",    italicfont!, light_gray!, page!)
+        page! = pdf!.setText(387+2, 648+4*12+2, "Total Due",  boldfont!,   light_gray!, page!)
         
         total_amt = t0+ope01a.tax_amount-ope01a.discount_amt+ope01a.freight_amt
-        page! = pdf!.setText(477, 648+0*12+2, 90-2, 0, str(t0:m1$),                   pdf!.RIGHT_JUSTIFY(), page!)     
-        page! = pdf!.setText(477, 648+1*12+2, 90-2, 0, str(-ope01a.discount_amt:m1$), pdf!.RIGHT_JUSTIFY(), page!)
-        page! = pdf!.setText(477, 648+2*12+2, 90-2, 0, str(ope01a.tax_amount:m1$),    pdf!.RIGHT_JUSTIFY(), page!)
-        page! = pdf!.setText(477, 648+3*12+2, 90-2, 0, str(ope01a.freight_amt:m1$),   pdf!.RIGHT_JUSTIFY(), page!)
-        page! = pdf!.setText(477, 648+4*12+2, 90-2, 0, str(total_amt:m1$), boldfont!, pdf!.RIGHT_JUSTIFY(), page!)
+        page! = pdf!.setText(477, 648+0*12+2, 90-2, 0, str(t0:m1$),                   pdf!.RIGHT_JUSTIFY(), light_gray!, page!)     
+        page! = pdf!.setText(477, 648+1*12+2, 90-2, 0, str(-ope01a.discount_amt:m1$), pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(477, 648+2*12+2, 90-2, 0, str(ope01a.tax_amount:m1$),    pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(477, 648+3*12+2, 90-2, 0, str(ope01a.freight_amt:m1$),   pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        page! = pdf!.setText(477, 648+4*12+2, 90-2, 0, str(total_amt:m1$), boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         
         if page! = pagePDF! then break
         page! = pagePDF!
