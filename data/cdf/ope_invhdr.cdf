@@ -34,7 +34,7 @@ rem --- Change an Order into an Invoice
 			user_tpl.old_disc_code$ = ""
 			user_tpl.price_code$ = "Y"
 			gosub add_to_batch_print
-			callpoint!.setStatus("MODIFIED;REFRESH")
+			callpoint!.setStatus("SAVE;REFRESH")
 		endif
 		
 	endif
@@ -419,7 +419,9 @@ rem --- Show customer data
 		gosub display_aging
       gosub check_credit
 
-		rem --- Only display if user did not enter the customer, that is, used the nav arrows
+		
+	rem --- Only display if user did not enter the customer, that is, used the nav arrows
+
 		if user_tpl.user_entry$ = "N" then
 			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
 				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
@@ -663,7 +665,7 @@ rem --- Enable/Disable buttons
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("MINV",1)
 
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setStatus("MODIFIED;REFRESH")
 [[OPE_INVHDR.CUSTOMER_ID.AVAL]]
 rem --- Show customer data
 	
@@ -929,6 +931,7 @@ locked:
 
 		if msg_opt$="Y"
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
+			callpoint!.setStatus("SAVE")
 			print "---Clear lock"; rem debug
 		else
 			locked=1
@@ -1005,6 +1008,7 @@ rem ==========================================================================
 					locked=1
 				else
 					callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
+					callpoint!.setStatus("SAVE")
 					printed$ = "Y"
 					gosub add_to_batch_print
 				endif
