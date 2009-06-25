@@ -102,12 +102,12 @@ l1500: rem --- Read next PO Detail record
 rem --- Retrieve line code
 
     gosub l6400
-    if pos(poc_linecode.line_type$="MV") goto l2400
+    if pos(pom02a.line_type$="MV") goto l2400
 
 rem --- Calculate variance
 
     qty=poe25a.qty_received
-    if poc_linecode.line_type$="O" qty=1
+    if pom02a.line_type$="O" qty=1
     precision 2
     po_extension=round(poe25a.receipt_cost*qty,2)
     iv_extension=round(poe25a.unit_cost*qty,2)
@@ -117,7 +117,7 @@ rem --- Calculate variance
 rem --- Accumulate totals needed for landed cost
 
     if pos(pos01a.land_method$="QC")=0 goto l1900
-    if poc_linecode.land_cst_flg$<>"Y" goto l1900
+    if pom02a.land_cst_flg$<>"Y" goto l1900
     if cvs(poe25a.po_no$,3)="" goto l1850
     invamt=invamt+iv_extension
     invqty=invqty+qty
@@ -140,7 +140,7 @@ l2000: rem --- Retrieve inventory item
 
     dim s0$(22),s1$(60),s2$(64),s3$(40),s4$(21),s6$(g[4]*6),s[12]
     description$(1)=poe25a.order_memo$
-    if poc_linecode.line_type$<>"S" goto l2100
+    if pom02a.line_type$<>"S" goto l2100
     dim ivm01a$:fattr(ivm01a$)
     find record (ivm01_dev,key=firm_id$+pot14a.item_id$,dom=*next) ivm01a$
     description$(1)=fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
@@ -153,7 +153,7 @@ l2100: rem --- Level breaks?
     l=l+2
     vendor=vendor+variance
     report=report+variance
-    on pos(poc_linecode.line_type$="SNO") goto l2400,l2200,l2200,l2300
+    on pos(pom02a.line_type$="SNO") goto l2400,l2200,l2200,l2300
 
 l2200: rem --- Standard or Non-stock line
 
@@ -190,20 +190,20 @@ rem --- Retrieve line code
 
     if cvs(poe25a.po_no$,3)="" goto l3800
     gosub l6400
-    if pos(poc_linecode.line_type$="MV") goto l3800
-    if poc_linecode.land_cst_flg$<>"Y" goto l3800
+    if pos(pom02a.line_type$="MV") goto l3800
+    if pom02a.land_cst_flg$<>"Y" goto l3800
 
 rem --- Retrieve detail record
 
     dim l0$(25),l1$(64),l2$(32),l3$(22),l4$(40),l[12]
     find record (pot14_dev,key=firm_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$,dom=l3800) pot14a$
-    if pot14a.conv_factor=0 then if pos(poc_linecode.line_type$="ON") pot14a.conv_factor=1 else goto l3800
+    if pot14a.conv_factor=0 then if pos(pom02a.line_type$="ON") pot14a.conv_factor=1 else goto l3800
 
 rem --- Calculate allocation
 
     cost=poe25a.unit_cost
     qty=poe25a.qty_received
-    if qty=0 if poc_linecode.line_type$="O" qty=1 else goto l3800
+    if qty=0 if pom02a.line_type$="O" qty=1 else goto l3800
     precision 2
     iv_extension=qty*cost
     precision i[1]

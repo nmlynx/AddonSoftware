@@ -45,18 +45,18 @@ REM "STATUS     : 0=No error (returned)"
 
     seterr std_error
     setesc std_error
-    enter action$,channels[all],params$[all],params[all],item$[all],w$[all],y$[all],values[all],accounts$[all],amounts[all],qtys[all],status
+    enter action$,channels[all],params$[all],params[all],item$[all],w$[all],y$[all],values[all],accounts$[all],tpls$[all],amounts[all],qtys[all],status
 
 rem --- Retrieve the program path
 
-    pgmdir$=stbl("+dir_pgm",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-    sysinfo_template$=stbl("+sysinfo_tpl",err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+sysinfo",err=*next)
-    milestone=num(stbl("+milestone",err=*next),err=*next)
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
 rem --- Parameters
@@ -72,6 +72,7 @@ rem --- Parameters
     dim gls01a$:tpls$[4]
     dim poe35a$:tpls$[5]
     dim arm10d$:tpls$[6]
+    dim apm10b$:tpls$[7]
     i[0]=params[0]
     i[1]=params[1],g[4]=params[2]
     i[3]=params[3]
@@ -88,10 +89,10 @@ rem --- Parameters
     qty=values[2]
     onhand=values[3]
     if action$="D" 
-        dim w0$:fattr(poe25a$)
+        dim w0$:fattr(poe35a$)
         w0$=w$[0]
     else
-        dim w0$:fattr(poe35a$)
+        dim w0$:fattr(poe25a$)
         w0$=w$[0]
     endif
     
@@ -116,7 +117,7 @@ rem --- Retrieve AP distribution code
     apm10b.ap_dist_code$ = apcode$
 
     find record (apm10_dev,key=(apm10b.firm_id$+apm10b.record_id_b$+apm10b.ap_dist_code$),dom=*next) apm10b$
-    apacct$=(apm10b.gl_ap_acct$ + apm10b.gl_cash_acct$ + apm10b.gl_disc_acct$ + apm10b.gl_ret_acct$)
+    apacct$=(apm10b.gl_ap_acct$)
     apmemo$=name$
 
 rem --- Branch based on action code/line code
