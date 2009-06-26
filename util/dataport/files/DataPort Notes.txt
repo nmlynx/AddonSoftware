@@ -1,3 +1,4 @@
+
 DataPort Notes
 
 IMPORTANT:  Before running DataPort against your version 6/7 data, make sure to run and update all registers, and invoice all Sales Orders for dropship Purchase Orders that have been received.
@@ -6,7 +7,9 @@ Running DataPort
 
 1) Before beginning
 	a. Make sure your data dictionary files from version 6/7 are up-to-date.  Dataport will only port files/fields referenced in the dictionary.
-	b. Make the following changes to the Data Dictionary:  in file GLT-06, remove the 2 fields after the Description in 1$ (POSTING PER and POSTING YEAR), and change Description to have a Y for the separator.
+	b. Make the following changes to the Data Dictionary:  
+		i. in file GLT-06, remove the 2 fields after the Description in 1$ (POSTING PER and POSTING YEAR), and change Description to have a Y for the separator.
+		ii. in file POM-02, change the final field GL EXP ACCT to not have a separator, and add a new field, GL PPV ACCT, to the end of the record, with a separator.
 	c. Ensure that you have a target (destination) directory that contains no data files.
 	d. Ensure that the source directory has all of the files you want to port. It MUST contain the data dictionary files (ddm) as well.
 2) Start up a working version of Addon/Barista.

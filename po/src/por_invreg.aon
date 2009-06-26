@@ -395,7 +395,7 @@ rem --- Check GL posting date
 
     if stbl("+DTWARN_MSG",err=*endif)<>""
         dim pbuf$(width)
-        pbuf$(1)=stbl("+DTWARN_MSG"))
+        pbuf$(1)=stbl("+DTWARN_MSG")
         OutVect!.addItem(pbuf$)
     endif
 
@@ -422,6 +422,8 @@ l2100: rem --- Read history header and original terms
 
     for receiver=1 to number
         dim c0$(22),c1$(160),c[8],xc$(26),terms$(tw)
+        dim pot04a$:fattr(pot04a$)
+        dim apm10c$:fattr(apm10c$)
         receipt$=receivers$(((receiver-1)*14)+1,14)
         find record (pot04_dev,key=firm_id$+receipt$,dom=*next) pot04a$
     l2150:
@@ -460,13 +462,13 @@ l2100: rem --- Read history header and original terms
         read (poe25_dev,key=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$,dom=*next)
     
     l2400: rem --- Read next line item
-    
+   
         k$=key(poe25_dev,end=l3000)
         if pos(poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$=k$)<>1 goto l3000
         read record (poe25_dev) poe25a$
         if poe25a.po_no$<>pot04a.po_no$ goto l2900
         if cvs(pot04a.receiver_no$,3)<>"" if poe25a.receiver_no$<>pot04a.receiver_no$ goto l2900
-    
+  
         rem --- Read history detail record and line code
     
         dim l0$(25),l1$(64),l2$(32),l3$(22),l4$(40),l[12],description$(dw)
@@ -493,6 +495,8 @@ l2100: rem --- Read history header and original terms
     
         dim s0$(22),s1$(60),s2$(64),s3$(40),s4$(21),s6$(g[4]*9),s[12]
         dim u0$(24),u1$(64),u[20]
+        dim ivm01a$:fattr(ivm01a$)
+        dim ivm02a$:fattr(ivm02a$)
         if pom02a.line_type$<>"S" goto l2700
         s0$(1)=firm_id$+pot14a.item_id$
         u0$(1)=firm_id$+pot14a.warehouse_id$+pot14a.item_id$
@@ -507,7 +511,7 @@ l2100: rem --- Read history header and original terms
         gosub l5500
     
     l2800: rem --- Generate GL Recap
-    
+  
         if gl$="N" goto l2900
         action$=""
         account$=""
@@ -516,8 +520,8 @@ l2100: rem --- Read history header and original terms
         item$[6]=s6$;rem not used anymore
         values[0]=extension
         values[1]=poextension
-        values[2]=w[1]
-        values[3]=u[0]
+        values[2]=poe25a.qty_received
+        values[3]=ivm02a.qty_on_hand
         arcode$=ivm02a.ar_dist_code$
         w$[0]=poe25a$
         w$[1]="";rem not used anymore (sending entire poe25a$ rec in w$[0], used to send w1$ here)
@@ -528,7 +532,7 @@ l2100: rem --- Read history header and original terms
         gosub l6900
     
     l2900: rem --- Loop back for next line item
-    
+   
         goto l2400
     
     l3000: rem --- Loop back for next PO record
@@ -592,7 +596,7 @@ l3600: rem --- Generate any additional GL recap postings for the invoice
 
 l3700: rem --- Does GL total match invoice header?
 
-    if total=a[0] goto l3900
+    if total=poe05a.invoice_amt goto l3900
     if l+1>l9 gosub report_heading
     dim pbuf$(width)
     pbuf$(1)="---> ERROR: Invoice Total Does Not Match Sum Of Line Items And/Or Distribution"
