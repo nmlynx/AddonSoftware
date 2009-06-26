@@ -96,6 +96,7 @@ endif
 
 ky_po_rec$=firm_id$+po_no$+receiver_no$
 foundone=0
+line_tot=0
 
 read (pot_recdet_dev,key=ky_po_rec$,dom=*next)
 
