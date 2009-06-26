@@ -75,7 +75,7 @@ while 1
 		if pos(ky$=poe_invdet$)<>1 then break
 		if cvs(poe_invdet.po_no$,3)="" then other=1; continue
 		if poe_invdet.po_no$<>poe_invsel.po_no$ then continue
-		if cvs(poe_invsel.receiver_no$,3)<>"" and cpoe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
+		if cvs(poe_invsel.receiver_no$,3)<>"" and poe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
 		tot_invsel=tot_invsel+round(num(poe_invdet.unit_cost$)*num(poe_invdet.qty_received$),2)
 	wend
 	poe_invsel.total_amount$=str(tot_invsel)

@@ -316,7 +316,7 @@ l2200: rem --- Update Replenishment
     else
         apm06a.ytd_rec_amt=apm06a.ytd_rec_amt+po_extension
         apm06a.ytd_rec_lbs=apm06a.ytd_rec_lbs+(qty*ivm01a.weight)
-        apm06a.ytd_rec_unit=apm06a.ytd_rec_unit+qty   
+        apm06a.ytd_rec_unts=apm06a.ytd_rec_unts+qty   
     endif
     if received$>cvs(apm06a.lstrec_date$,2) apm06a.lstrec_date$=received$
     write record (apm06_dev,key=apm06a.firm_id$+apm06a.vendor_id$+apm06a.buyer_code$) apm06a$
