@@ -407,6 +407,11 @@ l6900: rem --- Call GL Posting Routine
     if action$="D" distaccnt$=glaccounts$[0],distamnt=-distamnt,distqty=-distqty; rem "For GL distribution, Distribution account = AP account, Distribution amount and quantity = AP amount and quantity
     return
 
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+    return
+
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values

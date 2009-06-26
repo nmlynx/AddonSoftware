@@ -84,7 +84,7 @@ rem --- Parameters
     name$=params$[6]
     m0$=params$[7],gls01a$=params$[8],method$=params$[9]
     poc_linecode$=y$[0]
-    ivm01a$=item$[0],ivitem$=ivm01a.item_id$,ivdesc$=ivm01a.item_desc$
+    if item$[0]<>"" then ivm01a$=item$[0],ivitem$=ivm01a.item_id$,ivdesc$=ivm01a.item_desc$
     iv_extension=values[0],po_extension=values[1]
     qty=values[2]
     onhand=values[3]
@@ -100,7 +100,7 @@ rem --- Initializations
 
     dim accounts$[5],amounts[5],qtys[5]
     ref1$=fnmask$(vendor$,m0$)
-    ref2$=w0$(11,10)
+    ref2$=w0.ap_inv_no$
     poacct$=""
     apacct$="",ppvacct$="",adjacct$="",apmemo$="",ivmemo$=""
     poamt=0
@@ -211,7 +211,7 @@ rem --- Invoice distribution
 
     apacct$=params$[10]
     apamt=iv_extension,ivmemo$=name$,ref3$="Misc"
-    if len(cvs(w0$,3))>20 then let ref3$="GL Seq "+w0.line_no$
+    if len(cvs(w0$,3))>20 then let ref3$="GL Seq "+w0.line_no$;rem --- if misc gl dist, won't have line#
 
 done: rem --- Generate GL Recap Postings
 
@@ -224,16 +224,16 @@ done: rem --- Generate GL Recap Postings
     memo$=ivmemo$,amount=poamt,units=poqty
     index=1
     accounts$[index]=account$
-    if amount then gosub glpost
+    if amount<>0 and cvs(account$,3)<>"" then gosub glpost
     account$=ppvacct$
     amount=ppvamt,units=ppvqty
     index=2
     accounts$[index]=account$
-    if amount then gosub glpost
+    if amount<>0 and cvs(account$,3)<>""  then gosub glpost
     account$=adjacct$
     amount=adjamt,units=adjqty
     let index=3,accounts$[index]=account$
-    if amount then gosub glpost
+    if amount<>0 and cvs(account$,3)<>""  then gosub glpost
     let accounts$[4]=ivacct$
 
 done_all: rem --- All done
