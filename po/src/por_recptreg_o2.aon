@@ -138,7 +138,7 @@ l1600: rem --- Print detail line
 
     if l+2>l9 gosub report_heading
     dim pbuf$(width)
-    pbuf$(o[0]+1)=wo$,mark$
+    pbuf$(o[0]+1)=wo$+mark$
     pbuf$(o[1]+1)=poe14a.item_id$
     pbuf$(o[2]+1)=poe14a.unit_measure$
     pbuf$(o[3]+1)=str(poe14a.qty_received:m2$)
