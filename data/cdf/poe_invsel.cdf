@@ -156,6 +156,7 @@ write_poe_invdet:
 	seq=seq+1
 	poe_invdet.line_no$=str(seq:"000")
 	poe_invdet.po_no$=pot_recdet.po_no$
+	poe_invdet.po_int_seq_ref$=pot_recdet.po_int_seq_ref$
 	poe_invdet.po_line_no$=pot_recdet.po_line_no$
 	poe_invdet.receiver_no$=pot_recdet.receiver_no$
 	poe_invdet.po_line_code$=pot_recdet.po_line_code$

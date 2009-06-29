@@ -307,7 +307,7 @@ rem --- Resize masks and set print positions
     o[5]=o[6]-3
     o[4]=o[5]-5
     o[0]=3
-    o[1]=o[0]+4
+    o[1]=o[0]+8
     o[2]=o[1]+3
     o[3]=o[2]+3
 
@@ -363,7 +363,7 @@ l1600: rem --- Retrieve inventory item for S lines
     ivm02a.item_id$=poe14a.item_id$
     code$=""
     begsort$=firm_id$+poe14a.warehouse_id$+poe04a.recpt_date$
-    endsort$=poe04a.vendor_id$+poe14a.receiver_no$+poe14a.po_no$+poe14a.po_line_no$
+    endsort$=poe04a.vendor_id$+poe14a.receiver_no$+poe14a.po_no$+poe14a.internal_seq_no$
     if pom02a.line_type$<>"S" goto l1700
     find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=l3800) ivm01a$
     find record (ivm02_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=l3800) ivm02a$
@@ -390,7 +390,7 @@ l1900: rem --- Standard line
     if l+2>l9 gosub report_heading
     
     dim pbuf$(width)
-    pbuf$(o[0]+1)=poe14a.po_line_no$
+    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
@@ -417,7 +417,7 @@ l2000: rem --- Non-stock line
     if l+2>l9 gosub report_heading
     
     dim pbuf$(width)
-    pbuf$(o[0]+1)=poe14a.po_line_no$
+    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
@@ -441,7 +441,7 @@ l2100: rem --- Vendor part number line
 
     if l+1>l9 gosub report_heading
     dim pbuf$(width)
-    pbuf$(o[0]+1)=poe14a.po_line_no$
+    pbuf$(o[0]+1)=fnisn(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
@@ -454,7 +454,7 @@ l2200: rem --- Message line
 
     if l+1>l9 gosub report_heading
     dim pbuf$(width)    
-    pbuf$(o[0]+1)=poe14a.po_line_no$
+    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.order_memo$
@@ -467,7 +467,7 @@ l2300: rem --- Other type line
 
     if l+2>l9 gosub report_heading
     dim pbuf$(width)        
-    pbuf$(o[0]+1)=poe14a.po_line_no$
+    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[10]+1)=str(poe14a.unit_cost:m3$)
@@ -578,7 +578,7 @@ l3000: rem --- Generate GL Recap Postings
 l3500: rem --- Write sort records
 
     rem begsort$=firm_id$+poe14a.warehouse_id$+poe04a.recpt_date$
-    rem endsort$=poe04a.vendor_id$+poe14a.receiver_no$+poe14a.po_no$+poe14a.po_line_no$
+    rem endsort$=poe04a.vendor_id$+poe14a.receiver_no$+poe14a.po_no$+poe14a.internal_seq_no$
 
     dim pow03a$:fattr(pow03a$),pow04a$:fattr(pow04a$),pow05a$:fattr(pow05a$),pow08a$:fattr(pow08a$),pow09a$:fattr(pow09a$)
 
@@ -593,7 +593,7 @@ l3500: rem --- Write sort records
     pow04a.vendor_id$=poe04a.vendor_id$
     pow04a.receiver_no$=poe14a.receiver_no$
     pow04a.po_no$=poe14a.po_no$
-    pow04a.po_line_no$=poe14a.po_line_no$
+    pow04a.po_int_seq_ref$=poe14a.internal_seq_no$
 
     pow05a.firm_id$=firm_id$
     pow05a.warehouse_id$=poe14a.warehouse_id$
@@ -603,7 +603,7 @@ l3500: rem --- Write sort records
     pow05a.vendor_id$=poe04a.vendor_id$
     pow05a.receiver_no$=poe14a.receiver_no$
     pow05a.po_no$=poe14a.po_no$
-    pow05a.po_line_no$=poe14a.po_line_no$
+    pow05a.po_int_seq_ref$=poe14a.internal_seq_no$
 
     pow08a.firm_id$=firm_id$
     pow08a.warehouse_id$=poe14a.warehouse_id$
@@ -612,7 +612,7 @@ l3500: rem --- Write sort records
     pow08a.vendor_id$=poe04a.vendor_id$
     pow08a.receiver_no$=poe14a.receiver_no$
     pow08a.po_no$=poe14a.po_no$
-    pow08a.po_line_no$=poe14a.po_line_no$
+    pow08a.po_int_seq_ref$=poe14a.internal_seq_no$
 
     pow09a.firm_id$=firm_id$
     pow09a.warehouse_id$=poe14a.warehouse_id$
@@ -622,16 +622,16 @@ l3500: rem --- Write sort records
     pow09a.vendor_id$=poe04a.vendor_id$
     pow09a.receiver_no$=poe14a.receiver_no$
     pow09a.po_no$=poe14a.po_no$
-    pow09a.po_line_no$=poe14a.po_line_no$
+    pow09a.po_int_seq_ref$=poe14a.internal_seq_no$
 
-    if pos(pom02a.line_type$="NO") write record (pow05_dev,key=pow05a.firm_id$+pow05a.warehouse_id$+       pow05a.recpt_date$+pow05a.item_id$+pow05a.order_memo$+pow05a.vendor_id$+pow05a.receiver_no$+       pow05a.po_no$+pow05a.po_line_no$) pow05a$
-    if cvs(pow08a.wo_no$+pow08a.wo_seq_ref$,3)<>"" write record (pow08_dev,key=pow08a.firm_id$+pow08a.warehouse_id$+       pow08a.wo_no$+pow08a.wo_seq_ref$+pow08a.vendor_id$+pow08a.receiver_no$+pow08a.po_no$+pow08a.po_line_no$) pow08a$
-    if cvs(pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$,3)<>"" write record (pow09_dev,key=pow09a.firm_id$+       pow09a.warehouse_id$+pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$+pow09a.vendor_id$+       pow09a.receiver_no$+pow09a.po_no$+pow09a.po_line_no$) pow09a$
+    if pos(pom02a.line_type$="NO") write record (pow05_dev,key=pow05a.firm_id$+pow05a.warehouse_id$+       pow05a.recpt_date$+pow05a.item_id$+pow05a.order_memo$+pow05a.vendor_id$+pow05a.receiver_no$+       pow05a.po_no$+pow05a.po_int_seq_ref$) pow05a$
+    if cvs(pow08a.wo_no$+pow08a.wo_seq_ref$,3)<>"" write record (pow08_dev,key=pow08a.firm_id$+pow08a.warehouse_id$+       pow08a.wo_no$+pow08a.wo_seq_ref$+pow08a.vendor_id$+pow08a.receiver_no$+pow08a.po_no$+pow08a.po_int_seq_ref$) pow08a$
+    if cvs(pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$,3)<>"" write record (pow09_dev,key=pow09a.firm_id$+       pow09a.warehouse_id$+pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$+pow09a.vendor_id$+       pow09a.receiver_no$+pow09a.po_no$+pow09a.po_int_seq_ref$) pow09a$
     if pom02a.line_type$<>"S" goto l3600
     find record (pow03_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$,dom=*next) pow03a$
     pow03a.qty_received=pow03a.qty_received+(poe14a.qty_received*poe14a.conv_factor)
     write record (pow03_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$) pow03a$
-    write record (pow04_dev,key=pow04a.firm_id$+pow04a.warehouse_id$+pow04a.recpt_date$+pow04a.item_id$+       pow04a.vendor_id$+pow04a.receiver_no$+pow04a.po_no$+pow04a.po_line_no$) pow04a$
+    write record (pow04_dev,key=pow04a.firm_id$+pow04a.warehouse_id$+pow04a.recpt_date$+pow04a.item_id$+       pow04a.vendor_id$+pow04a.receiver_no$+pow04a.po_no$+pow04a.po_int_seq_ref$) pow04a$
 
 
 l3600: rem --- Accumulate totals
@@ -689,7 +689,7 @@ rem --- Print list of lines with lot/serial number differences
         dim pbuf$(width)
         pbuf$(o[0]+1)=fnmask$(apm01a.vendor_id$,m0$)+" "+apm01a.vendor_name$
         pbuf$(o[1]+1)=k.receiver_no$
-        pbuf$(o[2]+1)=poe14a.po_no$+"-"+poe14a.po_line_no$
+        pbuf$(o[2]+1)=poe14a.po_no$+"-"+fnisn$(poe14a.internal_seq_no$)
         pbuf$(o[3]+1)=str(lineqty[x]:m2$)
         pbuf$(o[4]+1)=str(factor[x]:m5$)
         pbuf$(o[5]+1)=str(stock:m2$)
@@ -764,6 +764,13 @@ l5200: rem --- Receipt subheading
     let l=l+4
     call pgmdir$+"glc_datecheck.aon",poe04a.recpt_date$,"N",period$,year$,glstatus
     if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,poe04a.recpt_date$,glstatus,l,errors,status
+
+    if stbl("+DTWARN_MSG",err=*endif)<>""
+        dim pbuf$(width)
+        pbuf$(1)=stbl("+DTWARN_MSG")
+        OutVect!.addItem(pbuf$)
+    endif
+
     return
 
 l5400: rem --- Subheading for lot/serial number errors
@@ -849,6 +856,8 @@ rem --- Functions used to retrieve form values
     def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
+
+    def fnisn$(q$)=q$(7)
 
     def fncenter(q$,q)=int((q-len(q$))/2)
 

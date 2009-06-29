@@ -68,7 +68,7 @@ rem --- Branch based on line code
             ppvacct$=ivm01a.gl_ppv_acct$(1,g[4])
             memo$=memo$+" "+description$
             ref2$="PO "+poe14a.po_no$
-            ref3$="Line "+poe14a.po_line_no$;rem "use internal_seq_no instead?
+            ref3$="ISN "+fnisn$(poe14a.internal_seq_no$)
             if method$="S"
                 invamount=iv_extension
                 ppvamount=extension-iv_extension
@@ -96,7 +96,7 @@ rem --- Branch based on line code
             if sf$="Y" then 
                 if cvs(poe14a.wo_no$,2)<>"" then 
                     memo$=memo$+" "+poe14a.order_memo$
-                    ref2$=poe14a.po_no$+poe14a.po_line_no$,ref3$="WO "+poe14a.wo_no$
+                    ref2$=poe14a.po_no$+fnisn$(poe14a.internal_seq_no$),ref3$="WO "+poe14a.wo_no$
 
 rem --- Get WIP/Purchases account for work order receipts
 
@@ -158,6 +158,10 @@ glpost: rem --- Standard G/L Posting Routine
     endif
 
     return
+
+rem --- misc functions
+
+    def fnisn$(q$)=q$(7)
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)

@@ -173,9 +173,9 @@ rem --- Update history detail record
     pot14a.firm_id$=firm_id$
     pot14a.po_no$=poe25a.po_no$
     pot14a.receiver_no$=poe25a.receiver_no$
-    pot14a.po_line_no$=poe25a.po_line_no$
+    pot14a.po_int_seq_ref$=poe25a.po_int_seq_ref$
     found=0
-    find record (pot14_dev,key=pot14a.firm_id$+pot14a.po_no$+pot14a.receiver_no$+pot14a.po_line_no$,dom=l2370) pot14a$
+    find record (pot14_dev,key=pot14a.firm_id$+pot14a.po_no$+pot14a.receiver_no$+pot14a.po_int_seq_ref$,dom=l2370) pot14a$
     pot14a.qty_invoiced=pot14a.qty_invoiced+poe25a.qty_received
     found=1
     write record (pot14_dev) pot14a$
@@ -194,15 +194,13 @@ rem --- Update PO line item
     dim poe12a$:fattr(poe12a$)
     poe12a.firm_id$=firm_id$
     poe12a.po_no$=poe25a.po_no$
-    poe12a.po_line_no$=poe25a.po_line_no$
-    rem --- as of 6/2009, not sure if using po_line_no$ in the receiving and invoicing files
-    rem --- is right... might be better to convert all to use the internal seq # from the po line
-    find record (poe12_dev,key=poe12a.firm_id$+poe12a.po_no$+poe12a.po_line_no$,knum="DISPLAY_KEY",dom=l2500) poe12a$
+    poe12a.internal_seq_no$=poe25a.po_int_seq_ref$
+    find record (poe12_dev,key=poe12a.firm_id$+poe12a.po_no$+poe12a.internal_seq_no$,dom=l2500) poe12a$
     pom02a.firm_id$=firm_id$
     pom02a.po_line_code$=poe12a.po_line_code$
     find record (pom02_dev,key=pom02a.firm_id$+pom02a.po_line_code$,dom=*next) pom02a$
     if found then if pom02a.line_type$<>sv_pom02a.line_type$ then goto l2500
-    if found if pot14a.warehouse_id$+poe14a.item_id$<>poe12a.warehouse_id$+poe12a.item_id$ goto l2500
+    if found if pot14a.warehouse_id$+pot14a.item_id$<>poe12a.warehouse_id$+poe12a.item_id$ goto l2500
     poe12a.qty_invoiced=poe12a.qty_invoiced+poe25a.qty_received
     write record (poe12_dev) poe12a$
 

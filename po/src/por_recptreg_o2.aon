@@ -68,7 +68,7 @@ l600: rem --- Report initializations and print positions
 l650:
     o[11]=width-8
     o[10]=o[11]-6
-    o[9]=o[10]-12
+    o[9]=o[10]-15
     o[8]=o[9]-8
     o[7]=o[8]-m-1
     o[6]=o[7]-11
@@ -109,7 +109,7 @@ rem --- Read receipt header and detail
 
     poe14a.firm_id$=firm_id$
     poe14a.receiver_no$=pow08a.receiver_no$
-    poe14a.po_line_no$=pow08a.po_line_no$
+    poe14a.internal_seq_no$=pow08a.po_int_seq_ref$
 
     gosub l6400
     if status goto l1900
@@ -147,7 +147,7 @@ l1600: rem --- Print detail line
     pbuf$(o[6]+1)=poe14a.location$
     pbuf$(o[7]+1)=fnmask$(poe04a.vendor_id$(1,vendlen),m0$)
     pbuf$(o[8]+1)=poe04a.receiver_no$
-    pbuf$(o[9]+1)=poe14a.po_no$+"-"+poe14a.po_line_no$
+    pbuf$(o[9]+1)=poe14a.po_no$+"-"+fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[10]+1)=complete$
     pbuf$(o[11]+1)=fndate$(poe04a.recpt_date$)
     OutVect!.addItem(pbuf$)
@@ -239,7 +239,7 @@ l2650:
     o[12]=width-8
     o[11]=o[12]-6
     o[10]=o[11]-5
-    o[9]=o[10]-12
+    o[9]=o[10]-15
     o[8]=o[9]-8
     o[7]=o[8]-m-1
     o[6]=o[7]-m1
@@ -284,7 +284,7 @@ l3200: rem --- Read receipt header and detail
 
     poe14a.firm_id$=firm_id$
     poe14a.receiver_no$=pow09a.receiver_no$
-    poe14a.po_line_no$=pow09a.po_line_no$
+    poe14a.internal_seq_no$=pow09a.po_int_seq_ref$
 
     gosub l6400
     if status goto l3900
@@ -319,7 +319,7 @@ rem --- Print detail line
     pbuf$(o[6]+1)=str(po_extension:m1$)
     pbuf$(o[7]+1)=fnmask$(poe04a.vendor_id$(1,vendlen),m0$)
     pbuf$(o[8]+1)=poe04a.receiver_no$
-    pbuf$(o[9]+1)=poe14a.po_no$+"-"+poe14a.po_line_no$
+    pbuf$(o[9]+1)=poe14a.po_no$+"-"+fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[10]+1)=drop$
     pbuf$(o[11]+1)=complete$
     pbuf$(o[12]+1)=fndate$(poe04a.recpt_date$)
@@ -470,7 +470,7 @@ l6400: rem --- Read receipt header and detail
 
     status=11
     find record (poe04_dev,key=poe04a.firm_id$+poe04a.receiver_no$,knum=0,dom=l6690) poe04a$
-    find record (poe14_dev,key=poe14a.firm_id$+poe14a.receiver_no$+poe14a.po_line_no$,knum="DISPLAY_SEQ",dom=l6690) poe14a$
+    find record (poe14_dev,key=poe14a.firm_id$+poe14a.receiver_no$+poe14a.internal_seq_no$,knum=0,dom=l6690) poe14a$
     if pom02a.firm_id$+pom02a.po_line_code$=firm_id$+poe14a.po_line_code$ goto l6500
     dim pom02a$:fattr(pom02a$)
     pom02a.firm_id$=firm_id$
@@ -525,6 +525,8 @@ rem --- Functions used to retrieve form values
     def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
+
+    def fnisn$(q$)=q$(7)
 
     def fncenter(q$,q)=int((q-len(q$))/2)
 
