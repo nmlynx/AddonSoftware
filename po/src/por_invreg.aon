@@ -265,12 +265,16 @@ rem --- Additional file opens
     if gl$="Y"
         files$[32]="glm-01",ids$[32]="GLM_ACCT"
         files$[33]=glw11$,options$[33]="CL"
-        call pgmdir$+"adc_fileopen.aon",action,32,33,files$[all],options$[all],
+        files$[34]="glt-04",ids$[34]="GLE_DAILYDETAIL"
+
+        call pgmdir$+"adc_fileopen.aon",action,32,34,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
         glm01_dev=channels[32]
         glw11_dev=channels[33]
+        glt04_dev=channels[34]
         dim glm01a$:templates$[32]
+        dim glt04a$:templates$[34]
         xref_dev=0
     endif
 
@@ -476,10 +480,10 @@ l2100: rem --- Read history header and original terms
         lc$=poe25a.po_line_code$
         description$(1)=poe25a.order_memo$
         dim pot14a$:fattr(pot14a$)
-        find record (pot14_dev,key=firm_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$,dom=l2540) pot14a$
+        find record (pot14_dev,key=firm_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_int_seq_ref$,dom=l2540) pot14a$
         lc$=pot14a.po_line_code$
     l2540:
-        if cvs(poe25a.po_no$+poe25a.po_line_no$+poe25a.receiver_no$,3)="" then qty=1
+        if cvs(poe25a.po_no$+poe25a.po_int_seq_ref$+poe25a.receiver_no$,3)="" then qty=1
         precision 2
         extension=poe25a.unit_cost*qty
         poextension=poe25a.receipt_cost*qty
@@ -764,7 +768,7 @@ l5900: rem --- Display PO and Receiver
     let l=l+2,first=0
     if cvs(poe25a.po_no$,3)="" goto l5990
     dim pbuf$(width)
-    pbuf$(ol[3]+1)="PO # "+poe25a.po_no$+"-"+poe25a.po_line_no$+" Rec # "+poe25a.receiver_no$
+    pbuf$(ol[3]+1)="PO # "+poe25a.po_no$+"-"+poe25a.po_int_seq_ref$+" Rec # "+poe25a.receiver_no$
     OutVect!.addItem(pbuf$)
     let l=l+1
 l5990:

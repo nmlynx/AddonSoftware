@@ -128,7 +128,7 @@ l1900: rem --- Retrieve receipt detail record
     if poe25a.unit_cost=poe25a.receipt_cost then goto l2400
     dim l0$(25),l1$(64),l2$(32),l3$(22),l4$(40),l[12],description$(dw)
     received$=""
-    find record (pot14_dev,key=firm_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$,dom=l2000) pot14a$
+    find record (pot14_dev,key=firm_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_int_seq_ref$,dom=l2000) pot14a$
     if pot14a.firm_id$+pot14a.po_no$+pot14a.receiver_no$=pot04a.firm_id$+pot04a.po_no$+pot04a.receiver_No$ then goto l2000
     dim pot04a$:fattr(pot04a$)
     find record (pot04_dev,key=pot14a.firm_id$+pot14a.po_no$+pot14a.receiver_no$,dom=l2000) pot04a$
@@ -156,7 +156,7 @@ l2100: rem --- Level breaks?
 l2200: rem --- Standard or Non-stock line
 
     dim pbuf$(width)
-    pbuf$(o[1]+1)=poe25a.po_no$+"-"+poe25a.po_line_no$
+    pbuf$(o[1]+1)=poe25a.po_no$+"-"+poe25a.po_int_seq_ref$
     pbuf$(o[2]+1)=poe25a.receiver_no$
     pbuf$(o[3]+1)=ivm01a.item_id$(1,i[0])
     pbuf$(o[5]+1)=received$
@@ -175,7 +175,7 @@ l2200: rem --- Standard or Non-stock line
 l2300: rem --- Other line
     
     dim pbuf$(width)
-    pbuf$(o[1]+1)=poe25a.po_no$+"-"+poe25a.po_line_no$
+    pbuf$(o[1]+1)=poe25a.po_no$+"-"+poe25a.po_int_seq_ref$
     pbuf$(o[2]+1)=poe25a.receiver_no$
     pbuf$(o[5]+1)=received$
     pbuf$(o[7]+1)=str(poe25a.receipt_cost:m3$)
@@ -218,7 +218,7 @@ rem --- Retrieve line code
 rem --- Retrieve detail record
 
     dim l0$(25),l1$(64),l2$(32),l3$(22),l4$(40),l[12]
-    find record (pot14_dev,key=firm_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_line_no$,dom=l3800) pot14a$
+    find record (pot14_dev,key=firm_id$+poe25a.po_no$+poe25a.receiver_no$+poe25a.po_int_seq_ref$,dom=l3800) pot14a$
     if pot14a.conv_factor=0 then if pos(pom02a.line_type$="ON") pot14a.conv_factor=1 else goto l3800
 
 rem --- Calculate allocation

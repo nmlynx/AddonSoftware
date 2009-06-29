@@ -401,6 +401,7 @@ rem --- current line# to the 12-char one, which in turn has dataport implication
     if pom02a.line_type$="V" and pos01a.v_line_hist$<>"Y" goto l3000; rem "Don't retain vendor part lines in history
     dim pot14a$:fattr(pot14a$)
     call stbl("+DIR_PGM")+"adc_copyfile.aon",poe14a$,pot14a$,status 
+    pot14a.po_int_seq_ref$=poe14a.internal_seq_no$
     pot14a$=field(pot14a$)
     write record (pot14_dev,key=pot14a.firm_id$+pot14a.po_no$+pot14a.receiver_no$) pot14a$
 
@@ -505,7 +506,7 @@ l6100: rem --- Update inventory with receipt quantity
 l6200: rem --- Call standard inventory update program
 
     let item$[0]=firm_id$,item$[1]=poe14a.warehouse_id$,item$[2]=poe14a.item_id$
-    let ref3$=poe14a.po_line_no$,refs$[0]=poe04a.recpt_date$,refs$[1]=poe04a.vendor_id$,refs$[2]=poe14a.po_no$
+    let ref3$=poe14a.internal_seq_no$,refs$[0]=poe04a.recpt_date$,refs$[1]=poe04a.vendor_id$,refs$[2]=poe14a.po_no$
     let refs$[3]=poe14a.receiver_no$,refs$[4]="",refs$[5]=ref3$,refs$[6]=poe14a.po_line_code$
     let refs$[8]=ivacct$,refs$[9]="",refs$[10]="",refs$[11]=""
     let refs$[12]=poe04a.dropship$,refs[0]=qty,refs[1]=cost,refs[2]=ivm02a.cur_price
