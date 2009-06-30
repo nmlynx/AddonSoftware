@@ -31,8 +31,10 @@ rem --- Change an Order into an Invoice
 			callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
 			print "---Set lock"; rem debug
+			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N"); rem debug, forcing the lock off for now, this isn't working correctly
 			user_tpl.old_disc_code$ = ""
 			user_tpl.price_code$ = "Y"
+			order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 			gosub add_to_batch_print
 			callpoint!.setStatus("SAVE;REFRESH")
 		endif
@@ -488,19 +490,23 @@ rem --- Do we need to create a new order number?
 	ord_no$ = callpoint!.getUserInput()
 
 	if cvs(ord_no$, 2) = "" then 
+		print "---ord_no$ is null"; rem debug
 
 		rem --- Option on order no field to assign a new sequence on null must be cleared
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",ord_no$,table_chans$[all]
 		
 		if ord_no$ = "" then
 			callpoint!.setStatus("ABORT")
+			print "---abort"; rem debug
 			break; rem --- exit callpoint
 		else
 			callpoint!.setUserInput(ord_no$)
 			new_seq$ = "Y"
+			print "---new_seq$ set"; rem debug
 		endif
 	else
 		user_tpl.user_entry$ = "Y"
+		print "---ord_no$ is not null"; rem debug
 	endif
 
 rem --- Does order exist?
@@ -519,12 +525,19 @@ rem --- Does order exist?
 		found = 1
 	endif
 
+	rem ---debug
+	if found then 
+		print "---order number found"
+	else
+		print "---order number not found"
+	endif
+
 rem --- A new record must be the next sequence
 
 	if found = 0 and new_seq$ = "N" then
 		msg_id$ = "OP_NEW_ORD_USE_SEQ"
 		gosub disp_message	
-		callpoint!.setFocus("OPE_INVHDR.ORDER_NO"); rem --- doesn't seem to work, goes to customer
+		callpoint!.setFocus("OPE_INVHDR.ORDER_NO")
 		exit; rem --- exit from callpoint
 	endif
 
@@ -646,8 +659,6 @@ rem --- New record, set default
 			callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "N")
 		endif
 
-		callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
-		print "---Set lock"; rem debug
 		user_tpl.price_code$   = ""
 		user_tpl.pricing_code$ = arm02a.pricing_code$
 		user_tpl.order_date$   = sysinfo.system_date$
@@ -656,8 +667,11 @@ rem --- New record, set default
 
 rem --- New or existing order
 
-	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
+	order_no$ = callpoint!.getUserInput()
 	gosub add_to_batch_print
+	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
+	print "---Set lock"; rem debug
+	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N"); rem debug, forcing the lock off for now, not working correctly
 
 rem --- Enable/Disable buttons
 
@@ -931,7 +945,7 @@ locked:
 
 		if msg_opt$="Y"
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
-			callpoint!.setStatus("SAVE")
+			callpoint!.setStatus("SAVE"); rem --- unlock at BWRI doesn't seem to work
 			print "---Clear lock"; rem debug
 		else
 			locked=1
@@ -945,7 +959,12 @@ on_invoice:
 
 	msg_id$="ORD_ON_REG"
 	gosub disp_message
-	locked=1
+
+	if msg_opt$="CANCEL" then
+		locked=1
+		callpoint!.setStatus("ABORT")
+	endif
+
 	goto end_lock
 
 update_stat:
@@ -960,6 +979,7 @@ return
 
 rem ==========================================================================
 add_to_batch_print: rem --- Add to batch print file
+                    rem      IN: order_no$
 rem ==========================================================================
 
 	ope_prntlist_dev = fnget_dev("OPE_PRNTLIST")
@@ -969,9 +989,11 @@ rem ==========================================================================
 	ope_prntlist.ordinv_flag$ = "I"
 	ope_prntlist.ar_type$     = "  "
 	ope_prntlist.customer_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	ope_prntlist.order_no$    = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	ope_prntlist.order_no$    = order_no$
 
 	write record (ope_prntlist_dev) ope_prntlist$
+	print "---Added to print batch"; rem debug
+	print "---order:", ope_prntlist.order_no$
 
 return
 
