@@ -112,32 +112,36 @@ rem ==========================================================================
             methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, p_font!, p_just%, p_background_color!, null(), p_page!)
         methodend
         
+        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjInt p_just%, BBjColor p_background_color!, BBjFormPage p_page!)
+            methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), p_just%, p_background_color!, null(), p_page!)
+        methodend
+        
         method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, Font p_font!, BBjInt p_just%, BBjFormPage p_page!)
             methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, p_font!, p_just%, null(), null(), p_page!)
+        methodend
+                
+        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjColor p_background_color!, BBjFormPage p_page!)
+            methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), 0, p_background_color!, null(), p_page!)
         methodend
         
         method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjInt p_just%, BBjFormPage p_page!)
             methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), p_just%, null(), null(), p_page!)
         methodend
         
-        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, Font p_font!, BBjColor p_background_color!, BBjFormPage p_page!)
-            methodret #setText(p_x%, p_y%, 0, 0, p_text$, p_font!, 0, p_background_color!, null(), p_page!)
-        methodend
-        
-        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, Font p_font!, BBjFormPage p_page!)
-            methodret #setText(p_x%, p_y%, 0, 0, p_text$, p_font!, 0, null(), null(), p_page!)
-        methodend
-        
         method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, BBjColor p_background_color!, BBjColor p_text_color!, BBjFormPage p_page!)
             methodret #setText(p_x%, p_y%, 0, 0, p_text$, null(), 0, p_background_color!, p_text_color!, p_page!)
         methodend
-                
-        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjColor p_background_color!, BBjFormPage p_page!)
-            methodret #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), 0, p_background_color!, null(), p_page!)
+        
+        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, Font p_font!, BBjColor p_background_color!, BBjFormPage p_page!)
+            methodret #setText(p_x%, p_y%, 0, 0, p_text$, p_font!, 0, p_background_color!, null(), p_page!)
         methodend
 
         method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, BBjColor p_background_color!, BBjFormPage p_page!)
             methodret #setText(p_x%, p_y%, 0, 0, p_text$, null(), 0, p_background_color!, null(), p_page!)
+        methodend
+        
+        method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, Font p_font!, BBjFormPage p_page!)
+            methodret #setText(p_x%, p_y%, 0, 0, p_text$, p_font!, 0, null(), null(), p_page!)
         methodend
         
         method public BBjFormPage setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, BBjFormPage p_page!)
@@ -150,16 +154,33 @@ rem ==========================================================================
         
     rem --- Draw a box
        
-        method public BBjFormPage drawBox(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjFormPage p_page!)
+        method public BBjFormPage drawBox(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjColor p_fill!, BBjColor p_line!, BBjFormPage p_page!)
             declare BBjFormFrame frame!
             
             frame! = p_page!.newFrame()
             frame!.setPosition(p_x%, p_y%)
             frame!.setWidth(p_w%)
             frame!.setHeight(p_h%)
+            
+            if p_fill! <> null() then 
+                frame!.setFillColor(p_fill!)
+            endif
+            
+            if p_line! <> null() then 
+                frame!.setLineColor(p_line!)
+            endif
+
             p_page!.add(frame!)
             
             methodret p_page!
+        methodend
+                
+        method public BBjFormPage drawBox(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjColor p_fill!, BBjFormPage p_page!)
+            methodret #drawBox(p_x%, p_y%, p_w%, p_h%, p_fill!, null(), p_page!)
+        methodend
+
+        method public BBjFormPage drawBox(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjFormPage p_page!)
+            methodret #drawBox(p_x%, p_y%, p_w%, p_h%, null(), null(), p_page!)
         methodend
     
     rem --- Draw a line
@@ -226,6 +247,7 @@ rem --- Init PDF printing
     declare BBjColor white!
     declare BBjColor black!
     declare BBjColor light_gray!
+    declare BBjColor very_light_gray!
 
     textfont!   = new Font("Times New Roman", Font.PLAIN, 10)
     boldfont!   = new Font("Arial", Font.BOLD, 10)
@@ -285,6 +307,8 @@ rem --- Setup form page and PDF helper object
 rem --- Boxes and lines
 
     page! = pdf!.drawBox(18, 18, 540, 720, page!); rem x, y, w, h
+    page! = pdf!.drawBox(300, 300, 100, 100, very_light_gray!, page!); rem with background color and border
+    page! = pdf!.drawBox(300, 450, 100, 100, very_light_gray!, very_light_gray!, page!); rem no border, light gray patch
     page! = pdf!.drawVLine(100, 18, 720, page!); rem x, y, height
     page! = pdf!.drawHLine(18, 100, 540, page!); rem x, y, width
     page! = pdf!.drawLine(18, 100, 558, 738, page!); rem x1, y1, x2, y2
