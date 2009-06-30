@@ -279,7 +279,7 @@ printdetail: rem --- Set up variables
         wonum$=poe11a.wo_no$
         woseq$=poe11a.wo_seq_ref$
 
-rem --- Get Drop Ship flag & Line Type
+rem --- Get Line Type
 
     linetype$="N"
         find record (pom02a_dev,key=poe11a_key.firm_id$+poe11a.po_line_code$,dom=get_item_disc) pom02a$
@@ -359,13 +359,11 @@ rem --- Print Line Types 'S' & 'N'
                 l=l+1
             endif
 
-
-
-                endif
+        endif
 
     endif
 
-                return
+    return
 
 assignheads: rem --- Assign headings variables
 
