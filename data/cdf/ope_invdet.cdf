@@ -685,7 +685,7 @@ rem --- Recalc quantities and extended price
 	ordqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
 print "--- BO qty:", boqty; rem debug
-print "---Prev BO:", user_tpl.prev_boqrt
+print "---Prev BO:", user_tpl.prev_boqty
 print "---Ord Qty:", ordqty
 
 	if boqty > ordqty then
