@@ -6,6 +6,14 @@ rem --- Is item code blank?
 		gosub disp_message
 		callpoint!.setFocus("IVM_ITEMMAST.ITEM_ID")
 	endif
+
+	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"),3)="" then 
+		msg_id$="IV_BLANK_DESC"
+		gosub disp_message
+		if msg_opt$="N"
+			callpoint!.setStatus("ABORT")
+		endif	
+	endif
 [[IVM_ITEMMAST.LOTSER_ITEM.AVAL]]
 rem --- Can't change flag is there is QOH
 
