@@ -323,8 +323,8 @@ rem --- Warehouse fields
             if cvs(ivm02a.lstphy_date$,2)<>"" physical$=func.formatDate(ivm02a.lstphy_date$) else physical$=""
             if di$<>"N" or ar$<>"N" then
                 arm10d_key$=firm_id$+"D"+ivm02a.ar_dist_code$
-                arm10d.code_desc$=nf$
-                find record (arm10_dev,key=arm10d_key$,dom=*next) arm10d$
+                arm10d.code_desc$=nf$                  
+                find record (arm10d_dev,key=arm10d_key$,dom=*next) arm10d$
                 dv$="Distribution Code: "+ivm02a.ar_dist_code$+" "+arm10d.code_desc$
             endif
             gosub heading
