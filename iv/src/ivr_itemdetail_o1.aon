@@ -11,18 +11,18 @@ rem --- All Rights Reserved
 
 rem --- Use Statements
 
-	use ::ado_func.src::func
+    use ::ado_func.src::func
 
 rem --- Document initializations
 
-	declare BBjVector OutVect!
-	declare BBjVector HdrVect!
-	declare BBjVector BrkVect!
+    declare BBjVector OutVect!
+    declare BBjVector HdrVect!
+    declare BBjVector BrkVect!
 
     OutVect!=bbjAPI().makeVector()
     HdrVect!=bbjAPI().makeVector()
     BrkVect!=bbjAPI().makeVector()
-	
+    
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -45,7 +45,7 @@ rem --- Report Initializations
     headings$[2]="[HEADER]"
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm01_dev,1,meter_num,status
-	if status = 999 then goto std_exit
+    if status = 999 then goto std_exit
 
 rem ---  column heading
     
@@ -369,9 +369,9 @@ rem --- Prices/Costs
             gosub heading
 
             OutVect!.addItem("Current List:")
-            OutVect!.addItem(ivm02a.pi_cyclecode$)
+            OutVect!.addItem(str(ivm02a.cur_price:m4$) + ivm02a.cur_price_cd$)
             OutVect!.addItem("Prior List:")
-            OutVect!.addItem(str(ivm02a.pri_price:m4$) + ivm02a.cur_price_cd$)
+            OutVect!.addItem(str(ivm02a.pri_price:m4$) + ivm02a.pri_price_cd$)
             xwk = fnblank(columns-4)
             xwk = fnblank(columns)
 
@@ -673,9 +673,9 @@ rem #include std_end.src
 std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,ignore_status
-	if status <> 999 then run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    if status <> 999 then run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
-	
+    
 rem #endinclude std_end.src
 
     end
