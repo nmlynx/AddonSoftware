@@ -89,6 +89,10 @@ rem --- Save old Bar Code and UPC Code for Synonym Maintenance
 
 	user_tpl.old_barcode$=callpoint!.getColumnData("IVM_ITEMMAST.BAR_CODE")
 	user_tpl.old_upc$=callpoint!.getColumnData("IVM_ITEMMAST.UPC_CODE")
+
+rem --- store lot/serialized flag in devObject for use later
+
+	callpoint!.setDevObject("lot_serial_item",callpoint!.getColumnData("IVM_ITEMMAST.LOTSER_ITEM"))
 [[<<DISPLAY>>.ITEM_DESC_SEG_3.AVAL]]
 rem --- Set this section back into desc, if modified
 
@@ -324,6 +328,10 @@ rem --- Add new UPC Code and Bar Code
 
 	user_tpl.old_barcode$=callpoint!.getColumnData("IVM_ITEMMAST.BAR_CODE")
 	user_tpl.old_upc$=callpoint!.getColumnData("IVM_ITEMMAST.UPC_CODE")
+
+rem --- store lot/serialized flag in devObject for use later
+
+	callpoint!.setDevObject("lot_serial_item",callpoint!.getColumnData("IVM_ITEMMAST.LOTSER_ITEM"))
 [[IVM_ITEMMAST.BDEL]]
 rem --- Allow this item to be deleted?
 
