@@ -79,12 +79,12 @@ rem --- Headings and print positions
 
      dim columns$[12,10]
     columns = 13
-    columns$[0,0]="Seq",                columns$[0,1]="C",columns$[0,2]="4"
-    columns$[1,0]="Cd",                 columns$[1,1]="C",columns$[1,2]="8"
-    columns$[2,0]="Wh",                 columns$[2,1]="C",columns$[2,2]="8"
-    columns$[3,0]="Item",               columns$[3,1]="C",columns$[3,2]="31"
+    columns$[0,0]="Seq",                columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]="Cd",                 columns$[1,1]="C",columns$[1,2]="5"
+    columns$[2,0]="Wh",                 columns$[2,1]="C",columns$[2,2]="5"
+    columns$[3,0]="Item",               columns$[3,1]="C",columns$[3,2]="25"
     columns$[4,0]="UM ",                columns$[4,1]="C",columns$[4,2]="3"
-    columns$[5,0]="Date^Required",      columns$[5,1]="C",columns$[5,2]="8"
+    columns$[5,0]="Date^Req'd",      columns$[5,1]="C",columns$[5,2]="5"
     columns$[6,0]="Qty^Ordered",        columns$[6,1]="N",columns$[6,2]=str(len(m2$)),columns$[6,3]=m2$
     columns$[7,0]="Qty In QA",          columns$[7,1]="N",columns$[7,2]=str(len(m2$)),columns$[7,3]=m2$
     columns$[8,0]="Qty^Received",       columns$[8,1]="N",columns$[8,2]=str(len(m2$)); rem *** ,columns$[8,3]=m2$
@@ -134,160 +134,133 @@ rem --- Sorts
     while more
 
         action=pos(printseq$="PAV")
-        sortbypo=1
-        alt_sequence=2
-        by_vendor=3
+        purchase_order_seq=1
+        vendor_alt_seq=2
+        vendor_seq=3
 
         switch action
+            case purchase_order_seq;    rem --- Sort by Purchase Order (primary key)
 
-            case purch_order;    rem --- Sort by Purchase Order
+                    dim poe02a_key$:poe02a_key_pritpl$
+                    if initializing$<>"N"
+                        initializing$="N"
+                        read (poe02_dev,knum=0,key=firm_id$+pofrom$,dir=0,dom=*next)
+                    endif
+                    poe02a_key$=key(poe02_dev,end=done)
+                    if cvs(pothru$,3)<>"" then if poe02a_key.po_no$>pothru$ then goto done
 
-                dim poe02a_key$:poe02a_key_pritpl$
-                if initializing$<>"N"
-                    initializing$="N"
-            
-                    keynum=0
+                    break
 
-                    poe02a_key$=firm_id$+pofrom$
-                    read (poe02_dev,key=poe02a_key$,knum=keynum,dir=0,dom=*next)
-                endif
-
-                poe02a_key$=key(poe02_dev,end=done)
-
-                break
-
-            case alt_sequence;   rem --- Find a POE02 record using alt seq
+            case vendor_alt_seq;     rem --- Sort by alternate sequence
 
                 dim apm01a_key$:apm01a_key_tpl$
-                dim poe02a_key$:poe02a_key_alttpl$
+                dim poe02_vendkey$:poe02a_key_alttpl$ 
 
                 if initializing$<>"N"
                     initializing$="N"
-                    apm01a_key$=firm_id$+altfrom$
-
-                    keynum=1
-
-                    read (apm01_dev2,knum=2,key=apm01a_key$,dom=*next)
-                endif
-
-                while more
-
-                    apm01a_key$=key(apm01_dev2,knum=2,end=done)
-                    if apm01a_key.firm_id$<>firm_id$ goto done
-                    if altthru$<>"" if apm01a_key.alt_sequence$(1,len(altthru$))>altthru$ goto done
-                    apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
-                    read (apm01_dev2,knum=2,key=apm01a_key$); rem "Move ptr
-
-                    read (poe02_dev,key=apm01b_key$,knum=keynum,dom=*next)
-                    poe02a_key$=key(poe02_dev,knum=keynum,end=*continue)
-                    if poe02a_key.firm_id$+poe02a_key.vendor_id$=apm01b_key$ break
-
-                wend
-
-                break
-
-            case by_vendor;  rem --- standard sequence
-
-                dim poe02a_key$:poe02a_key_alttpl$
-
-                if initializing$<>"N"
-                    initializing$="N"
-                    poe02a_key$=firm_id$+vendfrom$
-                    if vendfrom$<>"" then poe02a_key$=firm_id$+vendfrom$+pofrom$
-
-                    keynum=1
-
-                    read (poe02_dev,knum=keynum,key=vend_key$,dir=0,dom=*next)
-
+                    read (apm01_dev2,knum=2,key=firm_id$+altfrom$,dom=*next)
+                    dim poe02a_key$:poe02a_key_pritpl$
                 endif
                 
-                poe02a_key$=key(poe02_dev,knum=keynum,end=done)
+                new_alt_seq_read:
+                if cvs(poe02a_key$,3)=""
+                    apm01a_key$=key(apm01_dev2,end=done)
+                    if apm01a_key.firm_id$<>firm_id$ goto done else read (apm01_dev2,key=apm01a_key$)
+                    if cvs(altthru$,3)<>"" then if apm01a_key.alt_sequence$(1,len(altthru$))>altthru$ goto done
+                    apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
+                    read (poe02_dev2,key=apm01b_key$,knum=1,dom=*next)
+                endif
 
+                poe02_vendkey$=key(poe02_dev2,end=*next);read (poe02_dev2)
+                if poe02_vendkey.firm_id$+poe02_vendkey.vendor_id$<>apm01b_key$
+                    dim poe02a_key$:poe02a_key_pritpl$
+                    goto new_alt_seq_read
+                else   
+                    poe02a_key$=poe02_vendkey.firm_id$+poe02_vendkey.po_no$
+                endif
+                                                      
                 break
 
+            case vendor_seq;    rem --- Sort by vendor (alt key 01)
 
-rem --- Read through PO headers
-              
+                    dim poe02_vendkey$:poe02a_key_alttpl$
+                    dim poe02a_key$:poe02a_key_pritpl$
+                    if initializing$<>"N"
+                        initializing$="N"
+                         read (poe02_dev2,key=firm_id$+vendfrom$,knum=1,dom=*next)
+                    endif
+
+                    poe02_vendkey$=key(poe02_dev2,end=done);read(poe02_dev2)
+                    if vendthru$<>"" then if poe02_vendkey.vendor_id$>vendthru$ then goto done
+
+                    poe02a_key$=poe02_vendkey.firm_id$+poe02_vendkey.po_no$
+
+                    break
+
             case default
-
-                more=0
-                break
+                    goto done
+                    break
 
         swend
 
-        if poe02a_key.firm_id$<>firm_id$ then more=0
-        if !more then break
-
-        while more
-
-            read record (poe02_dev,key=poe02a_key$,knum=keynum) poe02a$
+        if poe02a_key.firm_id$<>firm_id$ then goto done
+        read record (poe02_dev,key=poe02a_key$,knum=keynum) poe02a$
 
 rem --- Test Ranges
 
-            headrecprinted$="N"
-            if pofrom$<>"" and poe02a.po_no$<pofrom$ continue
-            if pothru$<>"" and poe02a.po_no$>pothru$ continue 
-            if vendfrom$<>"" and poe02a.vendor_id$<vendfrom$ continue
-            if vendthru$<>"" and poe02a.vendor_id$>vendthru$ continue
-            if whse$<>"ALL" and poe02a.warehouse_id$<>whse$ continue
+        headrecprinted$="N"
+        if pofrom$<>"" and poe02a.po_no$<pofrom$ continue
+        if pothru$<>"" and poe02a.po_no$>pothru$ continue 
+        if vendfrom$<>"" and poe02a.vendor_id$<vendfrom$ continue
+        if vendthru$<>"" and poe02a.vendor_id$>vendthru$ continue
+        if whse$<>"ALL" and poe02a.warehouse_id$<>whse$ continue
 
 rem --- Header passed tests
 
-                gosub testbreaks
-                headrecprinted$="Y"
+        gosub testbreaks
+        headrecprinted$="Y"
 
 rem --- If any detail have valid whse, print line (& head if needed)
 
-                dim poe12a_key$:poe12a_key_tpl$
-                p12_key$=poe02a.firm_id$+poe02a.po_no$
-                read (poe12_dev,key=p12_key$,dom=*next)
+        dim poe12a_key$:poe12a_key_tpl$
+        p12_key$=poe02a.firm_id$+poe02a.po_no$
+        read (poe12_dev,key=p12_key$,knum="DISPLAY_KEY",dom=*next)
 
 rem --- PO Detail loop
 
-                while more
+        while more
 
-                    poe12a_key$=key(poe12_dev,end=*break)
-                    if poe12a_key.firm_id$+poe12a_key.po_no$<>p12_key$ break
-                    read record (poe12_dev,key=poe12a_key$) poe12a$
-                    rem *** if whse$="ALL" or poe02a.warehouse_id$=whse$ then continue
+            poe12a_key$=key(poe12_dev,end=*break)
+            if poe12a_key.firm_id$+poe12a_key.po_no$<>p12_key$ break
+            read record (poe12_dev,key=poe12a_key$) poe12a$
 
 rem --- Detail passed, so print header if nec & print detail
 
-                    call pgmdir$+"adc_progress.aon","S","","","","",0,poe12_dev,1,meter_num,status
-                    if headrecprinted$="Y"
-                        gosub testbreaks
-                        headrecprinted$="Y"
-                    endif
+            call pgmdir$+"adc_progress.aon","S","","","","",0,poe12_dev,1,meter_num,status
+            if headrecprinted$="Y"
+                gosub testbreaks
+                headrecprinted$="Y"
+            endif
 
-                    gosub printdetail
+            gosub printdetail
 
 rem --- Accumulate totals; then get next detail
 
-                    potot=potot+extension
-                    vendtot=vendtot+extension
-                    grandtot=grandtot+extension
-                    extension=0
-                    extension$=""
+            potot=potot+extension
+            vendtot=vendtot+extension
+            grandtot=grandtot+extension
+            extension=0
+            extension$=""
 
-                wend
+        wend
 
 rem --- Done w/detail for this PO
 
 done_details: 
+
             if headrecprinted$="Y" then gosub pototals
 
-rem --- Loop up for next header record via sort files
-
-             if printseq$<>"A" break
-
-            rem --- See if there's another PO for vend before getting next alt seq
-
-            poe02a_key$=key(poe02_dev,knum=keynum,end=*break)
-            if poe02a_key.vendor_id$=vendor$ then k$=poe02a_key$; continue else break
-
-          wend
-
-      wend
+    wend
 
 done: rem --- All Done
 
@@ -342,7 +315,7 @@ brnch3: rem --- Get extension
 rem --- Format common part of print line
 
     dim pline$(132)
-    pline$(1)=poe12a.po_line_no$+" "+poe12a.po_line_code$+" "+whse_detail$
+    pline$(1)=fnisn$(poe12a.internal_seq_no$)+" "+poe12a.po_line_code$+" "+whse_detail$
 
 rem --- Print Line Types 'M', 'O' & 'V'
 
@@ -351,7 +324,7 @@ rem --- Print Line Types 'M', 'O' & 'V'
         if linetype$="V" pline$(o[3]+1)=memo$(1,20) else pline$(o[3]+1)=memo$
         if linetype$="O" pline$(o[11]+1,m3)=unitcost$,pline$(o[12]+1)=extension$
 
-        OutVect!.addItem(poe12a.po_line_no$)
+        OutVect!.addItem(fnisn$(poe12a.internal_seq_no$))
         OutVect!.addItem(poe12a.po_line_code$)
         OutVect!.addItem(whse_detail$)
 
@@ -377,7 +350,7 @@ rem --- Print Line Types 'S' & 'N'
 
             rem ***  xwk = fnblank(13)
 
-            OutVect!.addItem(poe12a.po_line_no$)
+            OutVect!.addItem(fnisn$(poe12a.internal_seq_no$))
             OutVect!.addItem(poe12a.po_line_code$)
             OutVect!.addItem(whse_detail$)
 
@@ -471,51 +444,50 @@ brnch5:
 
      if printseq$<>"P" then
         xwk = fnblank(1)
-        OutVect!.addItem("Vendor" + $00$ + "B" )
+        OutVect!.addItem("Vendor:" + $00$ + "B" )
         OutVect!.addItem(str(fnmask$(vendor$(1,vendlen),vendomask$)) + $00$ + "B" )
         OutVect!.addItem(vendname$ + $00$ + "B" )
         xwk = fnblank(1)
 
-        OutVect!.addItem("Contact")
+        OutVect!.addItem("Contact:")
         OutVect!.addItem(contact$)
         OutVect!.addItem("PO#:" + $00$ + "B" )
         OutVect!.addItem(ponum$ + $00$ + "B" )
-        OutVect!.addItem("Ordered")
+        OutVect!.addItem("Ordered:")
         OutVect!.addItem(dateord$)
-        OutVect!.addItem("Ack By ")
+        OutVect!.addItem("Ack By: ")
         OutVect!.addItem(poe02a.acknowledge$)
         xwk = fnblank(5)
 
-               OutVect!.addItem("Phone")
+        OutVect!.addItem("Phone:")
         OutVect!.addItem(phone$)
         xwk = fnblank(2)
 
-               OutVect!.addItem("Promised" + dateprom$)
+        OutVect!.addItem("Promised:")
         OutVect!.addItem(dateprom$)
         OutVect!.addItem("Terms: " + poe02a.ap_terms_code$)
         OutVect!.addItem(termsdesc$)
 
-           else
+     else
         xwk = fnblank(13)
 
-        OutVect!.addItem("PO#:" + $00$ + "B" )
+        OutVect!.addItem("PO#: " + $00$ + "B" )
         OutVect!.addItem(ponum$ + $00$ + "B" )
-        OutVect!.addItem("Ordered")
-        OutVect!.addItem(dateord$+" Vendor "+str(fnmask$(vendor$(1,vendlen),vendomask$))+" "+vendname$ + $00$ + "B" )
-
+        xwk=fnblank(1)
+        OutVect!.addItem("Ordered: "+dateord$+" Vendor: "+str(fnmask$(vendor$(1,vendlen),vendomask$))+" "+vendname$ + $00$ + "B" )
         xwk = fnblank(3)
-
-                OutVect!.addItem("Contact")
+        OutVect!.addItem("Contact:")
         OutVect!.addItem(contact$)
-        OutVect!.addItem("Ack By  ")
+        OutVect!.addItem("Ack By:  ")
         OutVect!.addItem(poe02a.acknowledge$)
+        xwk = fnblank(2)
+
+        xwk=fnblank(3)
+        OutVect!.addItem("Promised: "+dateprom$)
         xwk = fnblank(3)
-        OutVect!.addItem("Promised  ")
-        OutVect!.addItem(dateprom$)
-        xwk = fnblank(4)
-        OutVect!.addItem("Phone")
+        OutVect!.addItem("Phone:")
         OutVect!.addItem(phone$)
-        OutVect!.addItem("Terms")
+        OutVect!.addItem("Terms:")
         OutVect!.addItem(poe02a.ap_terms_code$)
         OutVect!.addItem(termsdesc$)
         xwk = fnblank(1)
@@ -558,6 +530,10 @@ calc_extension:
         precision ivprecision
     endif
     return
+
+rem --- misc functions
+
+    def fnisn$(q$)=q$(7)
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
