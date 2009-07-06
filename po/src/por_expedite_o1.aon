@@ -59,8 +59,8 @@ rem --- Headings and print positions
     columns = 12
     columns$[0,0]="Seq",                columns$[0,1]="C",columns$[0,2]="6"
     columns$[1,0]="Wh",                 columns$[1,1]="C",columns$[1,2]="6"
-    columns$[2,0]="Item",               columns$[2,1]="C",columns$[2,2]="20"
-    columns$[3,0]="Description",        columns$[3,1]="C",columns$[3,2]="30"
+    columns$[2,0]="Item",               columns$[2,1]="C",columns$[2,2]="15"
+    columns$[3,0]="Description",        columns$[3,1]="C",columns$[3,2]="20"
     columns$[4,0]="UM",                 columns$[4,1]="C",columns$[4,2]="4"
     columns$[5,0]="Date^Required",      columns$[5,1]="C",columns$[5,2]="12"
     columns$[6,0]="Qty^Ordered",        columns$[6,1]="N",columns$[6,2]=str(len(m2$)),    columns$[6,3]=m2$
@@ -191,13 +191,11 @@ rem --- Set up variables
         baldue$=str(poe12a.qty_ordered-poe12a.qty_received:m2$)
         unitcost$=str(poe12a.unit_cost:m3$)
 
-rem --- Get Drop Ship flag & Line Type
+rem --- Get Line Type
 
         linetype$="N"
-        dropship$="N"
         find record (pom02a_dev,key=poe12a.firm_id$+poe12a.po_line_code$,dom=brnch1) pom02a$
         linetype$=pom02a.line_type$
-        rem *** dropship$=pom02a.dropship$
 
 brnch1: rem --- Get Item Desc for S and N type lines
 
@@ -256,59 +254,20 @@ rem --- Print Line Types 'S' & 'N'
 
             if pos(linetype$="SN")<>0
 
-            OutVect!.addItem(poe12a.po_line_no$)
-            OutVect!.addItem(whse_detail$)
-            OutVect!.addItem(cvs(itemnum$,2))
-            OutVect!.addItem(item_desc$(1,27))
-            OutVect!.addItem(unitmeas$)
-            OutVect!.addItem(datereq$)
-            OutVect!.addItem(qtyord$)
-            OutVect!.addItem(qtyinqa$)
-            OutVect!.addItem(qtyrec$)
-            OutVect!.addItem(baldue$)
-            OutVect!.addItem(unitcost$)
-            OutVect!.addItem(extension$)
+                OutVect!.addItem(poe12a.po_line_no$)
+                OutVect!.addItem(whse_detail$)
+                OutVect!.addItem(cvs(itemnum$,2))
+                OutVect!.addItem(item_desc$(1,27))
+                OutVect!.addItem(unitmeas$)
+                OutVect!.addItem(datereq$)
+                OutVect!.addItem(qtyord$)
+                OutVect!.addItem(qtyinqa$)
+                OutVect!.addItem(qtyrec$)
+                OutVect!.addItem(baldue$)
+                OutVect!.addItem(unitcost$)
+                OutVect!.addItem(extension$)
 
                 l=l+1
-
-dropship: rem --- Print drop ship info if applicable
-
-                if dropship$="Y" 
-                
-                    dim custinfo$(321),shipinfo$(173),custaddr$(120),shipaddr$(120)
-                    custname$="Not On File"
-                    shipname$="Not On File"
-                    find record (arm01a_dev,key=poe12a.firm_id$+poe12a.customer_id$,dom=brnch3) arm01a$
-                    custname$=arm01a.customer_name$
-                    custaddr$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+
-:                               arm01a.city$+arm01a.state_code$+arm01a.zip_code$
-                    call pgmdir$+"adc_address.aon",custaddr$,24,4,9,30
-
-brnch3:
-
-                    find record (arm03a_dev,key=poe12a.firm_id$+poe12a.customer_id$+poe12a.shipto_no$,dom=brnch4) arm03a$
-                    shipname$=arm03a.name$
-                    shipaddr$=arm03a.addr_line_1$+arm03a.addr_line_2$+arm03a.addr_line_3$+
-:                               arm03a.city$+arm03a.state_code$+arm03a.zip_code$
-                    call pgmdir$+"adc_address.aon",shipaddr$,24,4,9,30
-
-brnch4: rem --- Use Shipto address info if available else, use cust addr info
-
-                    dropaddr$=custaddr$
-                    dropname$=custname$
-                    if shipaddr$<>fill(120) dropaddr$=shipaddr$,dropname$=shipname$
-                        xwk = fnblank(14)
-                        OutVect!.addItem("Drop Ship To Customer")
-                        OutVect!.addItem(fnmask$(poe12a.customer_id$,customask$))
-                        xwk = fnblank(1)
-                        OutVect!.addItem("    Order " + poe12a.order_no$)
-                        OutVect!.addItem(poe12a.line_no$)
-                        xwk = fnblank(5)
-                       
-                    l=l+6
-
-                endif
-
             endif
             
         endif
@@ -399,6 +358,51 @@ brnch6:
     OutVect!.addItem(termsdesc$)
 
     l=l+3
+
+    if poe02a.dropship$="Y"
+        dropname$=poe02a.ds_name$
+        dropaddr$=poe02a.ds_addr_line_1$+poe02a.ds_addr_line_2$+poe02a.ds_addr_line_3$+
+:                               poe02a.ds_city$+poe02a.ds_state_cd$+poe02a.ds_zip_code$
+        call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
+
+        xwk = fnblank(14)
+        OutVect!.addItem("Drop Ship To Customer: "+fnmask$(poe02a.customer_id$,customask$)+", Order: " + poe02a.order_no$)
+        xwk = fnblank(9)
+
+        xwk = fnblank(2)
+        OutVect!.addItem(dropname$)
+        xwk=fnblank(9)
+
+        xwk = fnblank(2)
+        OutVect!.addItem(dropaddr$(1,30)) 
+        xwk=fnblank(9)
+
+        l=l+3
+
+        if cvs(dropaddr$(31,30),3)<>""
+            xwk = fnblank(2)
+            OutVect!.addItem(dropaddr$(31,30))
+            xwk=fnblank(9)
+            let l=l+1
+        endif
+
+        if cvs(dropaddr$(61,30),3)<>"" 
+            xwk = fnblank(2)
+            OutVect!.addItem(dropaddr$(61,30))
+            xwk=fnblank(9)
+            let l=l+1
+        endif
+
+        if cvs(dropaddr$(91,30),3)<>""
+            xwk = fnblank(2)
+            OutVect!.addItem(custaddr$(91,30))
+            xwk=fnblank(9)
+            let l=l+1
+        endif
+
+        xwk=fnblank(12)
+
+    endif
     return
 
 pototals: rem --- Print Purchase Order total
@@ -436,6 +440,8 @@ rem --- Functions used to retrieve form values
     def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
+
+    def fnisn$(q$)=q$(7)
 
     def fncenter(q$,q)=int((q-len(q$))/2)
 

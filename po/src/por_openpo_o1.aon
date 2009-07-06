@@ -583,33 +583,40 @@ rem --- Print drop ship info if applicable
             dropaddr$=poe02a.ds_addr_line_1$+poe02a.ds_addr_line_2$+poe02a.ds_addr_line_3$+poe02a.ds_city$+poe02a.ds_state_cd$+poe02a.ds_zip_code$
             call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
 
-            OutVect!.addItem("Dropship to Customer: "+fnmask$(poe02a.customer_id$(1,custlen),customask$))
-            OutVect!.addItem("Order: "+poe02a.order_no$)
-            xwk=fnblank(12)
+            xwk=fnblank(14)
 
+            xwk=fnblank(3)
+            OutVect!.addItem("Dropship to Customer: "+fnmask$(poe02a.customer_id$(1,custlen),customask$)+", Order: "+poe02a.order_no$)
+            xwk=fnblank(10)
+
+            xwk=fnblank(3)
             OutVect!.addItem(dropname$)
-            xwk=fnblank(13)
+            xwk=fnblank(10)
 
+            xwk=fnblank(3)
             OutVect!.addItem(dropaddr$(1,30)) 
-            xwk=fnblank(13)
+            xwk=fnblank(10)
 
             l=l+3
 
             if cvs(dropaddr$(31,30),3)<>""
+                xwk=fnblank(3)
                 OutVect!.addItem(dropaddr$(31,30))
-                xwk=fnblank(13)
+                xwk=fnblank(10)
                 let l=l+1
             endif
 
-            if cvs(dropaddr$(61,30),3)<>"" 
+            if cvs(dropaddr$(61,30),3)<>""
+                xwk=fnblank(3)
                 OutVect!.addItem(dropaddr$(61,30))
-                xwk=fnblank(13)
+                xwk=fnblank(10)
                 let l=l+1
             endif
 
             if cvs(dropaddr$(91,30),3)<>""
+                xwk=fnblank(3)
                 OutVect!.addItem(custaddr$(91,30))
-                xwk=fnblank(13)
+                xwk=fnblank(10)
                 let l=l+1
             endif
 
