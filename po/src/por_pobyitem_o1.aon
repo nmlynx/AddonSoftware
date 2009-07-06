@@ -40,6 +40,7 @@ rem --- Init Data
         printwtot$="N"
         dim itemdesc$(60),whsename$(24),itemnum$(20)
         more=1
+        testdate$=""
 
         call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",poe12a_key_tpl$,rd_table_chans$[all],status$
         call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","WHSE_ITEM",poe12a_key_alttpl$,rd_table_chans$[all],status$
@@ -62,13 +63,13 @@ rem --- Headings and print positions
         columns = 14
         if col_format$="Y" columns=16
         dim columns$[columns,10]
-        columns$[0,0]="Item",                       columns$[0,1]="C",columns$[0,2]=str(ivs01a.item_id_len+1)
+        columns$[0,0]="Item",                       columns$[0,1]="C",columns$[0,2]="8";rem str(ivs01a.item_id_len+1)
         if col_format$="Y" then
             columns$[1,0]="Item Description",       columns$[1,1]="C",columns$[1,2]=str(desclen[1]+desclen[2]+desclen[3])
             columns$[2,0]="WH^ID",                  columns$[2,1]="C",columns$[2,2]="2"
         endif
         columns$[columns-13,0]="PO #",              columns$[columns-13,1]="C",columns$[columns-13,2]="8"
-        columns$[columns-12,0]="Seq",               columns$[columns-12,1]="C",columns$[columns-12,2]="4"
+        columns$[columns-12,0]="Seq",               columns$[columns-12,1]="C",columns$[columns-12,2]="8"
         columns$[columns-11,0]="Vendor",            columns$[columns-11,1]="C",columns$[columns-11,2]=str(len(vendomask$))
         columns$[columns-10,0]="UM",                columns$[columns-10,1]="C",columns$[columns-10,2]="4"
         columns$[columns-9,0]="Date^Required",      columns$[columns-9,1]="C", columns$[columns-9,2]="8"
@@ -80,52 +81,58 @@ rem --- Headings and print positions
         columns$[columns-3,0]="Balance",            columns$[columns-3,1]="N", columns$[columns-3,2]=str(len(m2$)),columns$[columns-3,3]=m2$,columns$[columns-3,10]="T"
         columns$[columns-2,0]="Unit Cost",          columns$[columns-2,1]="N", columns$[columns-2,2]=str(len(m3$)),columns$[columns-2,3]=m3$
         columns$[columns-1,0]="Extension",          columns$[columns-1,1]="N", columns$[columns-1,2]=str(len(m1$)),columns$[columns-1,3]=m1$,columns$[columns-1,10]="T"
-        columns$[columns,0]="Quantity^On Order",    columns$[columns,1]="N",   columns$[columns,2]=str(len(m2$))  ,columns$[columns,3]=m2$
-
-
+        columns$[columns,0]="Quantity^On Order",    columns$[columns,1]="N",   columns$[columns,2]=str(len(m2$)),columns$[columns,3]=m2$
 
 rem --- Position files
 
         call pgmdir$+"adc_progress.aon","N","","","","",0,poe12a_dev,1,meter_num,status
 
+rem --- Build sql statement
+
+    sql_prep$="select poe_podet.firm_id, poe_podet.warehouse_id, poe_podet.item_id, "
+    sql_prep$=sql_prep$+"poe_podet.po_no, poe_podet.internal_seq_no, poe_podet.reqd_date, "
+    sql_prep$=sql_prep$+"poe_podet.promise_date, poe_podet.not_b4_date, "
+    sql_prep$=sql_prep$+"poe_pohdr.vendor_id, poe_pohdr.ord_date "
+    sql_prep$=sql_prep$+"from poe_podet, poe_pohdr "
+
+    where_clause$="where poe_podet.firm_id = '"+firm_id$+"' AND "
+    where_clause$=where_clause$+"poe_podet.firm_id = poe_pohdr.firm_id AND "
+    where_clause$=where_clause$+"poe_podet.po_no = poe_pohdr.po_no"
+
+    if pofrom$<>"" where_clause$=where_clause$+" AND poe_podet.po_no >= '" +pofrom$+ "'"
+    if pothru$<>"" where_clause$=where_clause$+" AND poe_podet.po_no <= '" +pothru$+ "'"
+    if whsefrom$<>"" where_clause$=where_clause$+" AND poe_podet.warehouse_id >= '" +whsefrom$+ "'"
+    if whsethru$<>"" where_clause$=where_clause$+" AND poe_podet.warehouse_id <= '" +whsethru$+ "'"
+    if itemfrom$<>"" where_clause$=where_clause$+" AND poe_podet.item_id >= '" +itemfrom$+ "'"
+    if itemthru$<>"" where_clause$=where_clause$+" AND poe_podet.item_id <= '" +itemthru$+ "'"    
+    if vendfrom$<>"" where_clause$=where_clause$+" AND poe_pohdr.vendor_id >= '" +vendfrom$+ "'"
+    if vendthru$<>"" where_clause$=where_clause$+" AND poe_pohdr.vendor_id <= '" +vendthru$+ "'"
+
+    gosub get_whichdate
+    if testdate$<>""
+        if datefrom$<>"" where_clause$=where_clause$+ " AND "+testdate$+" >= '" + datefrom$+ "'"
+        if datethru$<>"" where_clause$=where_clause$+ " AND "+testdate$+" <= '" + datethru$+ "'"
+    endif
+
+    order_by$=" order by poe_podet.warehouse_id,poe_podet.item_id,poe_podet.po_no,poe_podet.internal_seq_no"
+
+    sql_prep$=sql_prep$ + where_clause$ + order_by$
+    sql_chan=sqlunt
+    sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
+
 rem --- Init Sort File
-
-        if whsefrom$="" firstwhse$=fill(2) else firstwhse$=whsefrom$
-
-        read (poe12a_dev,knum=3,key=firm_id$+firstwhse$+itemfrom$,dom=*next)
-        if itemfrom$<>"" read(poe12a_dev,knum=3,key=firm_id$+firstwhse$+itemfrom$+pofrom$,dom=*next)
 
     while more
 
-        poe12a_key$=key(poe12a_dev,end=*break)
-        if pos(firm_id$=poe12a_key$(1,2))<>1 break
+        read_tpl$=sqlfetch(sql_chan,err=*break)
 
-        rem --- Find corresponding detail line
+rem --- Find corresponding detail line
 
-        find record (poe12a_dev,key=poe12a_key$,dom=*next) poe12a$
-        rem *** if poe12a.firm_id$+poe12a.po_no$+poe12a.po_line_no$<>sortkey$ then continue
-
-rem --- Test PO Detail ranges
-
-        rem *** if poe12a.warehouse_id$+poe12a.item_id$<>poe12a_altkey.warehouse_id$+poe12a_altkey.item_id$ continue
-        if whsefrom$<>"" if poe12a.warehouse_id$<whsefrom$ continue
-        if whsethru$<>"" if poe12a.warehouse_id$>whsethru$ continue
-        if itemfrom$<>"" if poe12a.item_id$<itemfrom$ continue
-        if itemthru$<>"" if poe12a.item_id$>itemthru$ continue
-        if pofrom$<>"" if poe12a.po_no$<pofrom$ continue
-        if pothru$<>"" if poe12a.po_no$>pothru$ continue
-        rem *** if vendfrom$<>"" if poe12a.vendor_id$<vendfrom$ continue
-        rem *** if vendthru$<>"" if poe12a.vendor_id$>vendthru$ continue
-
-                gosub gettestdate_detail
-        if datefrom$<>"" and testdated$<datefrom$ continue
-        if datethru$<>"" and testdated$>datethru$ continue
-
-        if poe02a.po_no$<>poe12a.po_no$ then read record(poe02a_dev,key=poe12a.firm_id$+poe12a.po_no$,dom=*next) poe02a$
-        if vendfrom$<>"" if poe02a.vendor_id$<vendfrom$ continue
-        if vendthru$<>"" if poe02a.vendor_id$>vendthru$ continue
-
-        rem --- Get Line Type
+        read record (poe02a_dev,key=read_tpl.firm_id$+read_tpl.po_no$,dom=*next) poe02a$
+        read record (poe12a_dev,key=read_tpl.firm_id$+read_tpl.po_no$+read_tpl.internal_seq_no$,dom=*next) poe12a$
 
         linetype$="N"
         p02_key$=poe12a.firm_id$+poe12a.po_line_code$
@@ -157,7 +164,7 @@ nextsort: rem --- Accumulate totals; then get next sort file record
         qtyrec=0
         qtyrec$=""
 
-        wend
+    wend
 
 done: rem --- All Done
 
@@ -166,9 +173,9 @@ done: rem --- All Done
         rem *** xwk = fnblank(15)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         xwk = fnblank(1)
-        OutVect!.addItem("Total For Report")  
+        OutVect!.addItem("Total For Report"+$00$+"B")  
         xwk = fnblank(11)
-        OutVect!.addItem(str(grandtot))
+        OutVect!.addItem(str(grandtot:m1$)+$00$+"B")
         OutVect!.addItem("")
         goto std_exit
 
@@ -208,7 +215,7 @@ rem --- Print detail line
             xwk = fnblank(1)
         endif
         OutVect!.addItem(ponum$)
-        OutVect!.addItem(poe12a.po_line_no$)
+        OutVect!.addItem(fnisn$(poe12a.internal_seq_no$))
         OutVect!.addItem(vendor$)
         OutVect!.addItem(unitmeas$)
         OutVect!.addItem(datereq$)
@@ -248,19 +255,22 @@ assignheads: rem --- Assign headings variables
 
         return
 
-gettestdate_detail: rem --- Determine date to use when testing range in detail
+get_whichdate: rem --- Determine date to use when testing range 
 
         action=pos(whichdate$="OPRD")
 
         switch action
+            case 1
+                testdate$="poe_pohdr.ord_date"
+                break
             case 2
-                testdated$=poe12a.promise_date$
+                testdate$="poe_podet.promise_date"
                 break
             case 3
-                testdated$=poe12a.reqd_date$
+                testdate$="poe_podet.reqd_date"
                 break
             case 4
-                testdated$=poe12a.not_b4_date$
+                testdate$="poe_podet.not_b4_date"
                 break
             case default
                 break
@@ -324,7 +334,7 @@ brnch2:
             xwk = fnblank(12)
 
 
-            OutVect!.addItem(str(ivm02a.qty_on_order)+$00$+"B")
+            OutVect!.addItem(str(ivm02a.qty_on_order:m2$)+$00$+"B")
             l=l+1
         endif
 
@@ -333,13 +343,14 @@ brnch2:
 whsetotals: rem --- Print Warehouse total
 
         if col_format$<>"Y" then 
-            rem *** xwk = fnblank(15)
+
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             xwk = fnblank(1)
             OutVect!.addItem("Total For Warehouse " + whse$ + " " + whsename$+$00$+"B")
             xwk = fnblank(11)
-            OutVect!.addItem(str(whsetot)+$00$+"B")
+            OutVect!.addItem(str(whsetot:m1$)+$00$+"B")
             xwk = fnblank(1)
+            xwk = fnblank(15)
             let l=l+1
         endif
 
@@ -355,11 +366,11 @@ itemtotals: rem --- Print Item total
             OutVect!.addItem("Total For Item " + itemnum$(1,itemlen) + " " + itemdesc$+$00$+"B")
             xwk = fnblank(7)
 
-            OutVect!.addItem(str(qtyordtot)+$00$+"B")
-            OutVect!.addItem(str(qtyrectot)+$00$+"B")
-            OutVect!.addItem(str(baltot)+$00$+"B")
+            OutVect!.addItem(str(qtyordtot:m2$)+$00$+"B")
+            OutVect!.addItem(str(qtyrectot:m2$)+$00$+"B")
+            OutVect!.addItem(str(baltot:m2$)+$00$+"B")
             xwk = fnblank(1)
-            OutVect!.addItem(str(itemtot)+$00$+"B")
+            OutVect!.addItem(str(itemtot:m1$)+$00$+"B")
             xwk = fnblank(1)
             let l=l+1
         endif
@@ -374,6 +385,20 @@ calc_extension: rem --- Calc extension and Balance
         let extension=num(unitcost$)*balance,extension$=str(extension:m1$)
         precision ivprecision
         return
+
+rem --- misc functions
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+
+       def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
+rem --- fnisn to display partial ISN (defined 12 char)
+
+    def fnisn$(q$)=q$(7)
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -411,14 +436,7 @@ rem --- Date/time handling functions
         return str(q1$:q2$)
     fnend
 
-rem --- fnBlank : Create blank cells in OutVect!. No return value
 
-       def fnblank(q0)
-        for q1=1 to q0
-            OutVect!.addItem("")
-        next q1
-        return q1
-    fnend
 
 rem #endinclude std_functions.src
 
