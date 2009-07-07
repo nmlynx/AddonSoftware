@@ -1,3 +1,10 @@
+[[OPE_ORDHDR.BWRI]]
+print "Hdr:BWRI"; rem debug
+
+rem --- Unlock order (This doesn't work as desired)
+
+	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "N")
+	print "---Clear lock"; rem debug
 [[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
 print "CUSTOMER_ID:AVAL"; rem debug
 
@@ -211,12 +218,13 @@ rem --- Check for printing in next batch and set
 	if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
 :		callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")="C"
 :	then
-		msg_id$="OP_CR_HOLD_NOPRINT"
+		msg_id$ = "OP_CR_HOLD_NOPRINT"
 	else
+		order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		gosub add_to_batch_print
 		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG","Y")
 		callpoint!.setStatus("SAVE")
-		msg_id$="OP_BATCH_PRINT"
+		msg_id$ = "OP_BATCH_PRINT"
 	endif
 
 	gosub disp_message
@@ -408,7 +416,8 @@ rem --- Do we need to create a new order number?
 
 	if cvs(ord_no$, 2) = "" then 
 
-		rem --- Option on order no field to assign a new sequence on null must be cleared
+	rem --- Option on order no field to assign a new sequence on null must be cleared
+
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",ord_no$,table_chans$[all]
 		
 		if ord_no$ = "" then
@@ -461,14 +470,14 @@ rem --- Existing record
 
 	if found then 
 
-		rem --- Check for void
+	rem --- Check for void
 
 		if ope01a.invoice_type$ = "V" then
 			callpoint!.setStatus("ABORT")
 			exit; rem --- exit from callpoint			
 		endif
 
-		rem --- Check for invoice
+	rem --- Check for invoice
 		
 		if ope01a.invoice_type$ = "I" then
 			msg_id$ = "OP_IS_INVOICE"
@@ -477,7 +486,7 @@ rem --- Existing record
 			exit; rem --- exit from callpoint			
 		endif		
 
-		rem --- Backorder and Credit Hold
+	rem --- Backorder and Credit Hold
 
 		if ope01a.backord_flag$ = "B" then
 			callpoint!.setColumnData("<<DISPLAY>>.BACKORDERED", "Backorder")
@@ -490,12 +499,12 @@ rem --- Existing record
 		user_tpl.old_ship_to$   = ope01a.shipto_no$
 		user_tpl.old_disc_code$ = ope01a.disc_code$
 
-		rem --- Display order total
+	rem --- Display order total
 
 		callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", str(ope01a.total_sales:user_tpl.amount_mask$))
 		print "---Order Total:", ope01a.total_sales
 
-		rem --- Check if reprintable
+	rem --- Check if reprintable
 
 		reprint = 0
 		gosub check_if_reprintable
@@ -520,7 +529,7 @@ rem --- Existing record
 
 		endif
 
-		rem --- Check locked status
+	rem --- Check locked status
 
 		gosub check_lock_flag
 
@@ -529,7 +538,7 @@ rem --- Existing record
 			break; rem --- exit callpoint
 		endif
         
-rem --- Set Codes		
+	rem --- Set Codes		
         
 		price_code$ = "Y"
 		if reprint then callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
@@ -540,7 +549,7 @@ rem --- Set Codes
 
 	else
 
-rem --- New record
+	rem --- New record
 
 		cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 		ord_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
@@ -574,21 +583,26 @@ rem --- New record
 		gosub get_op_params
 
 		if cust_id$ = ars01a.customer_id$
-			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE","Y")
+			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "Y")
         else
 			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "N")
 		endif
 
-		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","Y")
 		user_tpl.price_code$   = ""
 		user_tpl.pricing_code$ = arm02a.pricing_code$
 		user_tpl.order_date$   = sysinfo.system_date$
 
 	endif
 
-rem --- Set lock, add to batch print list
+rem --- Set lock (debug, not working correctly at the moment)
 
-	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "Y")
+	rem callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "Y")
+	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "N"); rem debug, forcing the lock off for now
+	rem callpoint!.setStatus("SAVE")
+
+rem --- Add to batch print list
+
+	order_no$ = callpoint!.getUserInput()
 	gosub add_to_batch_print
 
 rem --- Enable/Disable buttons
@@ -834,10 +848,6 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl$ = field(ordship_tpl$)
 		write record (ordship_dev) ordship_tpl$
 	endif
-
-rem --- Set lock
-
-	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "Y")
 [[OPE_ORDHDR.<CUSTOM>]]
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information
@@ -1051,6 +1061,7 @@ locked:
 
 		if msg_opt$="Y"
 			callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","N")
+			callpoint!.setStatus("SAVE")
 		else
 			locked=1
 		endif
@@ -1166,7 +1177,7 @@ rem ==========================================================================
 			user_tpl.pricing_code$ = ope01a.pricing_code$
 			user_tpl.order_date$   = ope01a.order_date$
 
-rem --- Copy Manual Ship To if any
+		rem --- Copy Manual Ship To if any
 
 			if opt01a.shipto_type$="M" then 
 				dim ope31a$:fnget_tpl$("OPE_ORDSHIP")
@@ -1183,7 +1194,7 @@ rem --- Copy Manual Ship To if any
 				write record (ope31_dev) ope31a$
 			endif
 
-rem --- Copy detail lines
+		rem --- Copy detail lines
 
 			dim opt11a$:fnget_tpl$("OPT_ORDDET")
 			opt11_dev=fnget_dev("OPT_ORDDET")
@@ -1421,7 +1432,8 @@ rem ==========================================================================
 return
 
 rem ==========================================================================
-add_to_batch_print:
+add_to_batch_print: rem --- Add to batch print file
+                    rem      IN: order_no$
 rem ==========================================================================
 
 	ope_prntlist_dev = fnget_dev("OPE_PRNTLIST")
@@ -1431,7 +1443,7 @@ rem ==========================================================================
 	ope_prntlist.ordinv_flag$ = "O"
 	ope_prntlist.ar_type$     = "  "
 	ope_prntlist.customer_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ope_prntlist.order_no$    = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO") 
+	ope_prntlist.order_no$    = order_no$
 
 	write record (ope_prntlist_dev) ope_prntlist$
 
@@ -1674,17 +1686,14 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	user_tpl.dropship_flag$ ="8"
 	user_tpl.ord_tot_1$     ="9"
 
-rem --- Clear variables
+rem --- Set variables for called forms (OPE_ORDLSDET)
 
 	rem callpoint!.setDevObject("cust","")
 	rem callpoint!.setDevObject("ar_type","")
 	rem callpoint!.setDevObject("order","")
-	rem callpoint!.setDevObject("int_seq","")
-	rem callpoint!.setDevObject("wh","")
-	rem callpoint!.setDevObject("item","")
-	rem callpoint!.setDevObject("lsmast_dev",open_chans$[11])
-	rem callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
-	rem callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
+	callpoint!.setDevObject("lsmast_dev",  open_chans$[11])
+	callpoint!.setDevObject("lsmast_tpl",  open_tpls$[11])
+	callpoint!.setDevObject("lotser_flag", ivs01a.lotser_flag$)
 	rem callpoint!.setDevObject("default_linecode",ars01a.line_code$)
 
 rem --- Set Lot/Serial button up properly
