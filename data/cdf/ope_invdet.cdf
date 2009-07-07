@@ -252,10 +252,6 @@ rem --- Is this item lot/serial?
 
 	if ivm_itemmast.lotser_item$ = "Y" and ivm_itemmast.inventoried$ = "Y"
 		callpoint!.setOptionEnabled("LENT",0)
-		callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO"))
-		callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID"))
-		callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_INVDET.ITEM_ID"))
-		callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
 		ar_type$ = "  "
 		cust$    = callpoint!.getColumnData("OPE_INVDET.CUSTOMER_ID")
@@ -263,7 +259,21 @@ rem --- Is this item lot/serial?
 		int_seq$ = callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO")
 
 		if cvs(cust$,2) <> ""
+
+		rem --- Run the Lot/Serial# detail entry form
+		rem      IN: call/enter list
+		rem          the DevObjects set below
+		rem          DevObject("lotser_flag"): set in OPE_ORDHDR
+		rem          DevObject("lsmast_dev") : ditto
+		rem          DevObject("lsmast_tpl") : ditto
+
+			rem callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
+			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
+			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+
 			grid!.focus()
+
 			dim dflt_data$[3,1]
 			dflt_data$[1,0] = "AR_TYPE"
 			dflt_data$[1,1] = ar_type$
@@ -281,7 +291,7 @@ rem --- Is this item lot/serial?
 :				table_chans$[all], 
 :				dflt_data$[all]
 
-rem --- return focus to where we were (Detail line grid)
+		rem --- Return focus to where we were (Detail line grid)
 
 			util.forceEdit(Form!, return_to_row, return_to_col)
 		endif
@@ -440,13 +450,6 @@ rem --- Warehouse and Item must be correct
 	if failed then 
 		callpoint!.setStatus("ABORT")
 	else
-
-	rem --- Set objects (why?)
-
-		rem callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO"))
-		rem callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID"))
-		rem callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_INVDET.ITEM_ID"))
-		rem callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
 	rem --- Clear line type
 
@@ -913,7 +916,6 @@ rem ==========================================================================
 lot_ser_check: rem --- Check for lotted item
                rem      IN: item$
                rem     OUT: lotted$ - Y/N
-               rem          setDevObject - int_seq, wh, item (DISABLED, why needed?)
 rem ==========================================================================
 
 	lotted$="N"
@@ -928,9 +930,6 @@ rem ==========================================================================
 
 			if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
 				lotted$="Y"
-				rem callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO"))
-				rem callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID")
-				rem callpoint!.setDevObject("item",    item$)
 			endif
 		endif
 	endif
