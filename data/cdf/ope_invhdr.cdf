@@ -1663,17 +1663,14 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	user_tpl.dropship_flag$ ="8"
 	user_tpl.ord_tot_1$     ="9"
 
-rem --- Clear variables
+rem --- Set variables for called forms (OPE_ORDLSDET)
 
 	rem callpoint!.setDevObject("cust","")
 	rem callpoint!.setDevObject("ar_type","")
 	rem callpoint!.setDevObject("order","")
-	rem callpoint!.setDevObject("int_seq","")
-	rem callpoint!.setDevObject("wh","")
-	rem callpoint!.setDevObject("item","")
-	rem callpoint!.setDevObject("lsmast_dev",open_chans$[11])
-	rem callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
-	rem callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
+	callpoint!.setDevObject("lsmast_dev",open_chans$[11])
+	callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
+	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
 	rem callpoint!.setDevObject("default_linecode",ars01a.line_code$)
 
 rem --- Set Lot/Serial button up properly
