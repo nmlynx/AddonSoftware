@@ -415,7 +415,7 @@ rem --- Main Read
 
         rem --- OK, There Are Lots
 
-            t9=0
+            total_ls=0
             read (ope21_dev, key=firm_id$+"  "+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$, dom=*next)
 
             while 1
@@ -427,18 +427,18 @@ rem --- Main Read
 
                 if ope21a.qty_ordered then
                     gosub print_lotser_no
-                    t9=t9+ope21a.qty_shipped
+                    total_ls=total_ls+ope21a.qty_shipped
                 endif
             wend
 
-            if t9 < ope11a.qty_shipped then
+            if total_ls < ope11a.qty_shipped then
             rem dim t1$(20,"_"),t[2]
                 ope21a.lotser_no$ = fill(20, "_")
                 ope21a.qty_ordered = 0
                 ope21a.qty_shipped = 0
                 ope21a.unit_cost   = 0
 
-                for y=1 to ope11a.qty_shipped - t9
+                for y=1 to ope11a.qty_shipped - total_ls
                     gosub print_lotser_no
                     if ivs01a.lotser_flag$="L" then break
                 next y
@@ -777,20 +777,30 @@ line_detail: rem --- Item Detail
 
 print_lotser_no: rem --- Serial #'s Here
 
-    return; rem *disabled*
+    if line > maxline-1 then
+        gosub cont
+        if pos(opm02a.line_type$=" SP")<>0 then
+            page! = pdf!.setText(135+2, this_y%, ope11a.item_id$+" (Continued)", page!)
+            line = line + 1
+            this_y% = this_y% + 12
+        endif
+    endif
 
-    if line <= maxline-1 goto l5440
-    gosub cont
-    rem if pos(y0$(25,1)=" SP") print (printer_dev)@(h0+24),w0$(33); let line = line + 1
-l5440: 
-    rem if i3$(17,1)="L" goto l5470
-    rem print (printer_dev)@(h0+24),"S/N: ",t1$(1,i[3])
-    goto l5480
-l5470: 
-    rem print (printer_dev)@(h0+24),"Lot: ",t1$(1,i[3]),"   Shipped: ",
-    rem if t[1]<>0 print (printer_dev)t[1]:m2$ else print (printer_dev)fill(m2,"-")
-l5480: 
+    if ivs01a.lotser_flag$<>"L" then
+        page! = pdf!.setText(135+2, this_y%, "S/N: "+ope21a.lotser_no$, page!)
+    else
+        if ope21a.qty_shipped then 
+            amount$ = str(ope21a.qty_shipped:m2$ )
+        else 
+            amount$ = fill(m2,"_")
+        endif
+        
+        page! = pdf!.setText(135+2, this_y%, "Lot: "+ope21a.lotser_no$+"   Shipped: "+amount$, page!)
+    endif
+
     line = line + 1
+    this_y% = this_y% + 12
+    
     return
 
 print_total: rem --- Total
