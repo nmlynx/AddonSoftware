@@ -237,7 +237,7 @@ rem --- Initial Read
         read (ope04_dev, key=firm_id$+"I"+"  "+cust_id$, dom=*next)
     endif
 
-rem --- Main Read
+rem --- Main Read (Invoices)
 
     while 1
 
@@ -367,11 +367,11 @@ rem --- Main Read
 
         page=0
         gosub report_heading
-        t0=0
+        total_sale=0
         
         read (ope11_dev, key=firm_id$+"  "+ope01a.customer_id$+ope01a.order_no$, knum=3, dom=*next)
 
-    rem --- Detail
+    rem --- Detail lines
 
         while 1
 
@@ -403,7 +403,7 @@ rem --- Main Read
 
         rem --- Total
 
-            t0 = t0 + ope11a.ext_price
+            total_sale = total_sale + ope11a.ext_price
 
         rem --- Any Serial/Lot #'s?
 
@@ -414,40 +414,52 @@ rem --- Main Read
             if ivm01a.lotser_item$<>"Y" then continue
 
         rem --- OK, There Are Lots
-
-            total_ls=0
-            read (ope21_dev, key=firm_id$+"  "+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$, dom=*next)
-
+        
+            page! = pagePrint!
+            orig_line = line
+            
             while 1
-                read record (ope21_dev, end=*break) ope21a$; rem t0$, t1$, t[all]
-                if firm_id$                <> ope21a.firm_id$        then break
-                if ope11a.customer_id$     <> ope21a.customer_id$    then break
-                if ope11a.order_no$        <> ope21a.order_no$       then break
-                if ope11a.internal_seq_no$ <> ope21a.orddet_seq_ref$ then break
 
-                if ope21a.qty_ordered then
-                    gosub print_lotser_no
-                    total_ls=total_ls+ope21a.qty_shipped
+                total_ls = 0
+                line = orig_line
+                
+                read (ope21_dev, key=firm_id$+"  "+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$, dom=*next)
+
+                while 1
+                    read record (ope21_dev, end=*break) ope21a$; rem t0$, t1$, t[all]
+                    if firm_id$                <> ope21a.firm_id$        then break
+                    if ope11a.customer_id$     <> ope21a.customer_id$    then break
+                    if ope11a.order_no$        <> ope21a.order_no$       then break
+                    if ope11a.internal_seq_no$ <> ope21a.orddet_seq_ref$ then break
+
+                    if ope21a.qty_ordered then
+                        gosub print_lotser_no
+                        total_ls=total_ls+ope21a.qty_shipped
+                    endif
+                wend
+
+                if total_ls < ope11a.qty_shipped then
+                rem dim t1$(20,"_"),t[2]
+                    ope21a.lotser_no$ = fill(20, "_")
+                    ope21a.qty_ordered = 0
+                    ope21a.qty_shipped = 0
+                    ope21a.unit_cost   = 0
+
+                    for y=1 to ope11a.qty_shipped - total_ls
+                        gosub print_lotser_no
+                        if ivs01a.lotser_flag$="L" then break
+                    next y
                 endif
+
+                if line+1 <= maxline then
+                    rem print (printer_dev)""
+                    rem line = line + 1
+                endif
+                
+                if page! = pagePDF! then break
+                page! = pagePDF!
+            
             wend
-
-            if total_ls < ope11a.qty_shipped then
-            rem dim t1$(20,"_"),t[2]
-                ope21a.lotser_no$ = fill(20, "_")
-                ope21a.qty_ordered = 0
-                ope21a.qty_shipped = 0
-                ope21a.unit_cost   = 0
-
-                for y=1 to ope11a.qty_shipped - total_ls
-                    gosub print_lotser_no
-                    if ivs01a.lotser_flag$="L" then break
-                next y
-            endif
-
-            if line+1 <= maxline then
-                rem print (printer_dev)""
-                rem line = line + 1
-            endif
 
         wend
 
@@ -730,11 +742,10 @@ line_detail: rem --- Item Detail
     
     page! = pagePrint!
     lines_used = 2
+    this_y% = fnline2y%(line)
 	
     while 1
-    
-        this_y% = int(line*12+12+294+2)
-   
+        
         if pos(opm02a.line_type$="MO")=0 then
             page! = pdf!.setText(0,  this_y%, 45-2, 0, str(ope11a.qty_ordered:m2$), pdf!.RIGHT_JUSTIFY(), page!)
             page! = pdf!.setText(45, this_y%, 45-2, 0, str(ope11a.qty_shipped:m2$), pdf!.RIGHT_JUSTIFY(), page!)
@@ -762,7 +773,7 @@ line_detail: rem --- Item Detail
         endif
         
         if pos(opm02a.line_type$="SP") then
-            page! = pdf!.setText(135+2, this_y%+12, item_desc$, page!)
+            page! = pdf!.setText(135+2, fnline2y%(line+1), item_desc$, page!)
             lines_used = 3
         endif
         
@@ -780,32 +791,30 @@ print_lotser_no: rem --- Serial #'s Here
     if line > maxline-1 then
         gosub cont
         if pos(opm02a.line_type$=" SP")<>0 then
-            page! = pdf!.setText(135+2, this_y%, ope11a.item_id$+" (Continued)", page!)
+            page! = pdf!.setText(135+2, fnline2y%(line), ope11a.item_id$+" (Continued)", page!)
             line = line + 1
-            this_y% = this_y% + 12
         endif
     endif
 
     if ivs01a.lotser_flag$<>"L" then
-        page! = pdf!.setText(135+2, this_y%, "S/N: "+ope21a.lotser_no$, page!)
+        page! = pdf!.setText(135+2, fnline2y%(line), "S/N: "+ope21a.lotser_no$, page!)
     else
         if ope21a.qty_shipped then 
-            amount$ = str(ope21a.qty_shipped:m2$ )
+            amount$ = str(ope21a.qty_shipped:m2$)
         else 
             amount$ = fill(m2,"_")
         endif
         
-        page! = pdf!.setText(135+2, this_y%, "Lot: "+ope21a.lotser_no$+"   Shipped: "+amount$, page!)
+        page! = pdf!.setText(135+2, fnline2y%(line), "Lot: "+ope21a.lotser_no$+"   Shipped: "+amount$, page!)
     endif
 
     line = line + 1
-    this_y% = this_y% + 12
     
     return
 
 print_total: rem --- Total
 
-    if t0<0 then
+    if total_sale<0 then
         sales_or_cr$ = "Credit Amount"
     else
         sales_or_cr$ = "Sales Amount"
@@ -825,8 +834,8 @@ print_total: rem --- Total
         page! = pdf!.setText(387+2, 648+3*12+2, "Freight",    italicfont!, light_gray!, page!)
         page! = pdf!.setText(387+2, 648+4*12+2, "Total Due",  boldfont!,   light_gray!, page!)
         
-        total_amt = t0+ope01a.tax_amount-ope01a.discount_amt+ope01a.freight_amt
-        page! = pdf!.setText(477, 648+0*12+2, 90-2, 0, str(t0:m1$),                   pdf!.RIGHT_JUSTIFY(), light_gray!, page!)     
+        total_amt = total_sale+ope01a.tax_amount-ope01a.discount_amt+ope01a.freight_amt
+        page! = pdf!.setText(477, 648+0*12+2, 90-2, 0, str(total_sale:m1$),           pdf!.RIGHT_JUSTIFY(), light_gray!, page!)     
         page! = pdf!.setText(477, 648+1*12+2, 90-2, 0, str(-ope01a.discount_amt:m1$), pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         page! = pdf!.setText(477, 648+2*12+2, 90-2, 0, str(ope01a.tax_amount:m1$),    pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
         page! = pdf!.setText(477, 648+3*12+2, 90-2, 0, str(ope01a.freight_amt:m1$),   pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
@@ -923,6 +932,10 @@ disp_message: rem --- Display Message Dialog
 :       table_chans$[all]
 
     return   
+
+rem --- Functions
+
+    def fnline2y%(tmp0)=(tmp0*12)+12+294+2
 
 rem #include std_error.src
 
