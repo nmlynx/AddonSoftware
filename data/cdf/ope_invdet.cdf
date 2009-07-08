@@ -263,14 +263,14 @@ rem --- Is this item lot/serial?
 		rem --- Run the Lot/Serial# detail entry form
 		rem      IN: call/enter list
 		rem          the DevObjects set below
-		rem          DevObject("lotser_flag"): set in OPE_ORDHDR
+		rem          DevObject("lotser_flag"): set in OPE_INVHDR
 		rem          DevObject("lsmast_dev") : ditto
 		rem          DevObject("lsmast_tpl") : ditto
 
-			rem callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
-			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
-			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
-			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+			rem callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO"))
+			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID"))
+			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_INVDET.ITEM_ID"))
+			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
 			grid!.focus()
 
