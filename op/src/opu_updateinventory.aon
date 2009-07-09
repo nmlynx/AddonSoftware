@@ -61,11 +61,11 @@ rem --- Open/Lock files
     files$[30]="opt-71",ids$[30]="OPT_SALESCOM"
     files$[31]="poe-08",ids$[31]="POE_LINKED"
     files$[32]="poe-12",ids$[32]="POE_PODET"
-    
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :       ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    
+
     arm01_dev=channels[1]
     arm02_dev=channels[2]
     arm06_dev=channels[3]
@@ -120,15 +120,15 @@ rem --- Retrieve parameter records
 
     find record (ars01a_dev,key=firm_id$+"AR00",err=std_missing_params) ars01a$
     find record (ivs01a_dev,key=firm_id$+"IV00",err=std_missing_params) ivs01a$
-    
+
 rem --- Initializations
 
     more=1
     dim t[15]
-    
+
     call "ivc_itemupdt.aon::init",iv_files[all],ivs01a$,iv_items$[all],iv_refs$[all],iv_refs[all],table_chans$[all],status
     if status = 999 then goto std_exit
-    
+
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","S",sysinfo.task_desc$,"Inventory And General Ledger","","",m0+8,ope04_dev,1,0,status
@@ -145,8 +145,8 @@ rem --- retrieve template for OPE_CREDCUST record key
 
 rem --- retrieve template for OPE_PRNTLIST record key
 
-    rem call sypdir$+"bac_key_template.bbj","OPE_PRNTLIST","PRIMARY",ope04a_key_tpl$,table_chans$[all],status$
-    rem dim ope04a_key$:ope04a_key_tpl$
+rem call sypdir$+"bac_key_template.bbj","OPE_PRNTLIST","PRIMARY",ope04a_key_tpl$,table_chans$[all],status$
+rem dim ope04a_key$:ope04a_key_tpl$
 
 rem --- retrieve template for OPE_ORDDET record key
 
@@ -157,26 +157,26 @@ rem --- retrieve template for OPE_ORDLSDET record key
 
     call sypdir$+"bac_key_template.bbj","OPE_ORDLSDET","PRIMARY",ope21a_key_tpl$,table_chans$[all],status$
     dim ope21a_key$:ope21a_key_tpl$
-    
+
 rem --- retrieve template for ART_INVDET record key
 
     call sypdir$+"bac_key_template.bbj","ART_INVDET","PRIMARY",art11a_key_tpl$,table_chans$[all],status$
     dim art11a_key$:art11a_key_tpl$
-    
+
 rem --- Read next invoice header --- Main Loop Starts
 
     while more
-    
+
         precision 2
         prev_line_code$ = ""
         prev_dist_code$ = ""
-        
+
         read record (ope04_dev, end=*break) ope04a$
         if ope04a.firm_id$+ope04a.ordinv_flag$<>firm_id$+"I" then break
-        
+
         read record (ope01_dev, key=firm_id$+"  "+ope04a.customer_id$+ope04a.order_no$, dom=*continue) ope01a$
         if ope01a.print_status$<>"Y" or (ope01a.lock_status$<>"1" and ope01a.lock_status$<>"2") then continue
-        
+
         if ope01a.cash_sale$="Y" then
             find record (ope41_dev, key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$, dom=*next) ope41a$
         endif
@@ -186,7 +186,7 @@ rem --- Read next invoice header --- Main Loop Starts
         ope01a.lock_status$="2"
         ope01a$ = field(ope01a$)
         write record (ope01_dev) ope01a$
-        
+
         something_backord=0
         something_commit=0
         total_ext=0
@@ -218,7 +218,7 @@ rem --- Read next invoice header --- Main Loop Starts
 
                 if ope01a.cash_sale$="Y" then
                     dim z6$(10*g[4],"0")
-                    find record (arm10_dev, key=firm_id$+"C"+ope41a.cash_rec_cd$, dom=*endif) arm10c$
+                    find record (arm10c_dev, key=firm_id$+"C"+ope41a.cash_rec_cd$, dom=*endif) arm10c$
                     z0$(g[4]+1,g[4])=arm10c.gl_cash_acct$
                     z6$(1)=z0$
                 endif
@@ -229,7 +229,7 @@ rem --- Read next invoice header --- Main Loop Starts
                 arm01a.customer_id$=ope01a.customer_id$
                 arm01a.customer_name$="Unknown Customer"
                 find record (arm01_dev,key=arm01a.firm_id$+arm01a.customer_id$,dom=*next) arm01a$
-                
+
                 if ope01a.cash_sale$="Y" then
                     if cvs(ope41a.customer_name$,2)<>"" then
                         arm01a.customer_name$=ope41a.customer_name$
@@ -250,7 +250,7 @@ rem --- Read next invoice header --- Main Loop Starts
                 read (ope11_dev, key=ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$, dom=*next)
 
             rem --- Read next line item --- inner loop
-            
+
                 while more
                     precision i[2]
                     ope11a_key$=key(ope11_dev,end=*break)
@@ -305,12 +305,12 @@ rem --- Read next invoice header --- Main Loop Starts
                             if r9$="N" and opm02a.line_type$="N" and opm02a.dropship$<>"Y" then gosub retrieve_distribution_code
                             if status<>0 gosub missing_distribtion_code; rem "Order Line Item
                             z0$(6*g[4]+1,2*g[4])=arm10d.gl_inv_acct$; rem "Invoice Ribbon, or Inventory Warehouse Record, or Order Line Item
-                            
+
                             if r9$="N" and opm02a.line_type$="N" and opm02a.dropship$<>"Y" then
                                 z0$(6*g[4]+1,1*g[4])=ivm01a.gl_inv_acct$
                                 z0$(7*g[4]+1,1*g[4])=ivm01a.gl_cogs_acct$
                             endif
-                            
+
                             account$=z0$(6*g[4]+1,g[4])
 
                         rem --- Serialized/Lotted Items
@@ -320,13 +320,14 @@ rem --- Read next invoice header --- Main Loop Starts
                                 ls_qnty=0
                                 cost=ope11a.unit_cost
                                 qnty=ope11a.qty_shipped
-                                
+
                                 if ls$="Y" and ivm01a.lotser_item$="Y" then
-                                    read (ope21_dev,key=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$,dom=*next)
-                                    
+                                    ls_start$ = firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$
+                                    read (ope21_dev, key=ls_start$, dom=*next)
+
                                     while more
                                         ope21a_key$=key(ope21_dev,end=*break)
-                                        if pos(ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$=ope21a_key$)<>1 then break
+                                        if pos(ls_start$=ope21a_key$)<>1 then break
                                         read record (ope21_dev) ope21a$
                                         ls_nbr$=c1$
                                         cost=ope21a.unit_cost
@@ -340,12 +341,12 @@ rem --- Read next invoice header --- Main Loop Starts
                                     rem --- Lot/Serial Invoice History
 
                                         if ls$<>"Y" or ivm01a.lotser_item$<>"Y" then break
-                                        opt21a.firm_id$=ope21a.firm_id$
-                                        opt21a.ar_type$=ope21a.ar_type$
-                                        opt21a.customer_id$=ope21a.customer_id$
-                                        opt21a.ar_inv_no$=ope01a.ar_inv_no$
-                                        opt21a.line_no$=ope21a.line_no$
-                                        opt21a.sequence_no$=ope21a.sequence_no$
+                                        opt21a.firm_id$        = ope21a.firm_id$
+                                        opt21a.ar_type$        = ope21a.ar_type$
+                                        opt21a.customer_id$    = ope21a.customer_id$
+                                        opt21a.ar_inv_no$      = ope01a.ar_inv_no$
+                                        opt21a.orddet_seq_ref$ = ope21a.orddet_seq_ref$
+                                        opt21a.sequence_no$    = ope21a.sequence_no$
                                         opt21a$ = field(opt21a$)
                                         if ih$="Y" then write record (opt21_dev) opt21a$
                                         remove (ope21_dev,key=ope21a_key$)
@@ -367,7 +368,7 @@ rem --- Read next invoice header --- Main Loop Starts
                             units=-ope11a.qty_shipped
                             if ope01a.cash_sale$="Y" then ref3$=ope11a.line_no$+" "+"(Cash)"
                             gosub glpost
-                            
+
                             account$=z0$(7*g[4]+1,g[4])
                             amount=-amount
                             units=-units
@@ -381,19 +382,19 @@ rem --- Read next invoice header --- Main Loop Starts
                             if opm02a.gl_rev_acct$<>fill(g[4],"0") and opm02a.line_type$="O" then
                                 z0$(2*g[4]+1,g[4])=opm02a.gl_rev_acct$
                             endif
-                            
+
                             account$=z0$(1,g[4])
                             amount=ope11a.ext_price,units=0
                             if ope01a.cash_sale$="Y" then account$=z0$(g[4]+1,g[4])
                             gosub glpost
-                            
+
                             account$=z0$(2*g[4]+1,g[4])
                             amount=-amount,units=-ope11a.qty_shipped
                             gosub glpost
-                            
+
                             total_ext=total_ext+ope11a.ext_price
                             total_cost=total_cost+ope11a.unit_cost*ope11a.qty_shipped
-                            
+
                             if ope01a.invoice_date$<=g9$ then
                                 if ope11a.ext_price>0 then t[0]=t[0]+ope11a.ext_price
                                 if ope11a.ext_price<0 then t[1]=t[1]+ope11a.ext_price
@@ -421,13 +422,13 @@ rem --- Read next invoice header --- Main Loop Starts
                         if ope11a.qty_backord<>0 
                             ope11a.qty_ordered=ope11a.qty_backord
                             ope11a.qty_backord=0
-                            
+
                             if opm02a.line_type$="O" and ope11a.ext_price=0 and ope11a.unit_price<>0 then
                                 ope11a.ext_price=round(ope11a.unit_price,2),ope11a.unit_price=0
                                 gosub update_order_detail
                                 continue
                             endif
-                            
+
                             ope11a.qty_shipped=ope11a.qty_ordered
                             ope11a.ext_price=round(ope11a.qty_ordered*ope11a.unit_price,2)
                             gosub update_order_detail
@@ -438,9 +439,9 @@ rem --- Read next invoice header --- Main Loop Starts
                     remove (ope11_dev,key=ope11a_key$,dom=*next)
                     read (ope11_dev,key=ope11a_key$,dom=*next)
                     if po$="Y" then gosub unlink_po
-                    
+
                 wend
-                
+
             rem --- Inner Loop Ends
 
             rem --- Generate AR Open Invoice Records
@@ -465,19 +466,19 @@ rem --- Read next invoice header --- Main Loop Starts
                         art01a.invoice_date$=ope01a.invoice_date$
                         art01a.invoice_type$=ope01a.invoice_type$
                         art01a.job_no$=ope01a.job_no$
-                        
+
                         arm10a.inv_days_due = 0
                         find record (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
                         v=arm10a.inv_days_due
                         call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,art01a.invoice_date$,v,v$,status
                         if status = 999 then exitto std_exit
                         art01a.inv_due_date$=v$
-                        
+
                         v=arm10a.disc_days
                         call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,art01a.invoice_date$,v,v$,status
                         if status = 999 then exitto std_exit
                         art01a.disc_date$=v$
-                        
+
                         art01a.invoice_amt=total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
                         art01a.disc_allowed=(total_ext-ope01a.discount_amt)*arm10a.disc_percent/100
                         art01a$ = field(art01a$)
@@ -493,7 +494,7 @@ rem --- Read next invoice header --- Main Loop Starts
                         art11a.sequence_num$="99"
                         art11a_key$=art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_num$
                         read (art11_dev, key=art11a_key$, dom=ar_open_invoice_detail)
-                        
+
                         extract record (art11_dev, key=art11a_key$) art11a$
                         if art11a.trans_type$="C" then art11a.trans_type$="A"
                         art11a.trans_date$=ope01a.invoice_date$
@@ -514,7 +515,7 @@ rem --- Read next invoice header --- Main Loop Starts
 
                         if start_block then
                             art11a_key$=keyp(art11_dev,end=*endif)
-                            
+
                             if art11a_key.firm_id$+art11a_key.ar_type$+art11a_key.customer_id$+art11a_key.ar_inv_no$ = art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$ then
                                 art11a.sequence_num$=str(num(art11a.sequence_num$)+1:"00")
                             endif
@@ -537,7 +538,7 @@ rem --- Read next invoice header --- Main Loop Starts
                     glt15a.trans_no$=pad(ope01a.invoice_date$,8)(3,6)+"S"
                     glt15a.trans_amt=0
                     find record (glt15_dev,key=glt15a.firm_id$+glt15a.gl_cash_acct$+glt15a.trans_no$,dom=*next) glt15a$
-                    
+
                     glt15a.trans_type$="D"
                     glt15a.posted_code$="O"
                     glt15a.trns_date$=ope01a.invoice_date$
@@ -546,7 +547,7 @@ rem --- Read next invoice header --- Main Loop Starts
                     glt15a$ = field(glt15a$)
                     write record (glt15_dev) glt15a$
                     break
-                    
+
                 wend
 
             rem --- Update arm-02 Customer Summary
@@ -580,14 +581,14 @@ rem --- Read next invoice header --- Main Loop Starts
                     t[11]=t[11]+ope01a.freight_amt
                     t[13]=t[13]+ope01a.discount_amt
                 endif
-                
+
             rem --- Post Tax, Freight And Discount to G/L
 
                 if gl$="Y" then
                     when$=ope01a.invoice_date$
                     ref3$=""
                     units=0
-                    
+
                     if ope01a.cash_sale$<>"Y" then
                         account$=z0$(1,g[4])
                         amount=ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
@@ -602,7 +603,7 @@ rem --- Read next invoice header --- Main Loop Starts
                     account$=z0$(3*g[4]+1,g[4])
                     amount=ope01a.discount_amt
                     gosub glpost
-                    
+
                     account$=z0$(4*g[4]+1,g[4])
                     amount=-ope01a.freight_amt
                     gosub glpost
@@ -625,15 +626,15 @@ rem --- Read next invoice header --- Main Loop Starts
                     arm06a.mtd_cost=arm06a.mtd_cost+total_cost
                     arm06a.ytd_sales=arm06a.ytd_sales+total_ext
                     arm06a.ytd_cost=arm06a.ytd_cost+total_cost
-                    
+
                     if arm06a.mtd_high_crd<credit
                         arm06a.mtd_high_crd=credit; rem "MTD High Credit
                     endif
-                    
+
                     if arm06a.ytd_hi_cred<credit
                         arm06a.ytd_hi_cred=credit; rem "YTD High Credit
                     endif
-                    
+
                 else
                     arm06a.nmtd_sales=arm06a.nmtd_sales+total_ext
                     arm06a.nxt_mtd_cost=arm06a.nxt_mtd_cost+total_cost
@@ -672,7 +673,7 @@ rem --- Read next invoice header --- Main Loop Starts
             remove (ope01_dev, key=ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$, dom=*next)
             if ope02_dev gosub remove_tickler
             remove (ope31_dev, key=ope04a.firm_id$+ope04a.customer_id$+ope04a.order_no$, dom=*next)
-            rem remove (ope51_dev, key=ope04a.firm_id$+ope04a.ar_type$+ope04a.order_no$+ope04a.customer_id$, dom=*next)
+        rem remove (ope51_dev, key=ope04a.firm_id$+ope04a.ar_type$+ope04a.order_no$+ope04a.customer_id$, dom=*next)
         else
             ope01a.ordinv_flag$="O"
             ope01a.invoice_date$=""
@@ -694,7 +695,7 @@ rem --- Read next invoice header --- Main Loop Starts
             else
                 ope01a.backord_flag$=""; rem "Are there B/O items?
             endif
-            
+
             if newshpdt$<>"" then ope01a.shipmnt_date$=newshpdt$
             ope01a$ = field(ope01a$)
             write record (ope01_dev) ope01a$
@@ -706,14 +707,14 @@ rem --- Read next invoice header --- Main Loop Starts
             ope04a.order_no$=ope01a.order_no$
             ope04a$ = field(ope04a$)
             write record (ope04_dev) ope04a$
-            
+
             read (ope04_dev,key=ope04a.firm_id$+ope04a.ordinv_flag$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$,dom=*next)
         endif
 
         if ope01a.cash_sale$="Y" remove (ope41_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
-        
+
     wend
-    
+
 rem --- Main Loop Ends
 
 rem --- End
@@ -746,7 +747,7 @@ rem --- End
     goto std_exit
 
 rem --- Subroutines    
-    
+
 inventory_item_update: rem --- Inventory Item Update
 
     iv_items$[1]=ope11a.warehouse_id$
@@ -765,7 +766,7 @@ inventory_item_update: rem --- Inventory Item Update
     iv_refs[2]=ope11a.unit_price
     call pgmdir$+"ivc_itemupdt.aon","OP",iv_files[all],ivs01a$,iv_items$[all],iv_refs$[all],iv_refs[all],table_chans$[all],iv_status
     if iv_status = 999 then exitto std_exit
-    
+
     return
 
 retrieve_distribution_code: rem --- Retrieve Distribution Code
@@ -775,7 +776,7 @@ retrieve_distribution_code: rem --- Retrieve Distribution Code
     if dist_code$<>prev_dist_code$ then
         prev_dist_code$=dist_code$
         status = 11
-        find record (arm10_dev, key=firm_id$+"D"+dist_code$, dom=*endif) arm10d$
+        find record (arm10d_dev, key=firm_id$+"D"+dist_code$, dom=*endif) arm10d$
         status = 0
     endif
 
@@ -790,7 +791,7 @@ missing_distribtion_code: rem --- Missing Distribution Code
     msg_tokens$[3] = ope01a.order_no$
     msg_tokens$[4] = ope11a.line_no$
     gosub disp_message
-    
+
     return
 
 uncomit_qty_shipped: rem --- Uncommit Quantity Not Shipped Or Backordered
@@ -819,7 +820,7 @@ remove_tickler: rem --- Remove ope-02/ope-03 Credit Manager Tickler File Records
         ope02a_key$=key(ope02_dev,end=*break)
         read (ope02_dev)
         if ope02a_key.firm_id$+ope02a_key.customer_id$<>ope04a.firm_id$+ope04a.customer_id$ then break
-        
+
         if ope02a_key.order_no$=ope04a.order_no$ then 
             remove_record = 1
             break
@@ -842,7 +843,7 @@ update_salestax_history: rem --- Update Sales Tax History
     if ope01a.taxable_amt<0 then art02a.returns = art02a.returns+ope01a.taxable_amt
     art02a$ = field(art02a$)
     write record (art02_dev,key=x$) art02a$
-    
+
     return
 
 calculate_store_tax: rem --- Calculate and store taxes
@@ -857,9 +858,9 @@ calculate_store_tax: rem --- Calculate and store taxes
     tax_amt   = ope01a.tax_amount
     total_tax = 0
     start_block = 1
-    
+
 rem --- Get the main tax code and calculate amount
-    
+
     if start_block then 
         find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*endif) opm06a$
         tax_amt = round(opm06a.tax_rate*ope01a.taxable_amt/100, 2)
@@ -867,21 +868,21 @@ rem --- Get the main tax code and calculate amount
         if opm06a.op_max_limit<>0 and abs(tax_amt)>opm06a.op_max_limit then tax_amt = opm06a.op_max_limit*sgn(tax_amt)
         total_tax = tax_amt
         gosub update_salestax_history
-        
+
         account$ = opm06a.gl_account$
         amount   = -tax_amt
         units    = 0
         gosub glpost
-        
+
         dim opm06a1$:fattr(opm06a$); rem copy of record so original is not mangled
-        
+
     rem --- Get any subsidiary tax codes and add up their amounts
-    
+
         for x9=1 to 10
             precision 4
             tax_code$ = field(opm06a$, "ar_tot_code_"+str(x9:"00"))
             if cvs(tax_code$,2)="" then continue
-            
+
             art02a.tax_code$ = tax_code$
             find record (opm06_dev, key=firm_id$+tax_code$, dom=*continue) opm06a1$
             tax_amt = round(opm06a1.tax_rate*ope01a.taxable_amt/100, 2)
@@ -889,7 +890,7 @@ rem --- Get the main tax code and calculate amount
             if opm06a1.op_max_limit<>0 and abs(tax_amt)>opm06a1.op_max_limit then tax_amt = opm06a1.op_max_limit*sgn(tax_amt)
             total_tax = total_tax+tax_amt
             gosub update_salestax_history
-            
+
             account$ = opm06a1.gl_account$
             amount   = -tax_amt
             units    = 0
@@ -898,34 +899,34 @@ rem --- Get the main tax code and calculate amount
     endif
 
     precision 2
-    
+
 rem --- If there is a difference in the order's tax amount, post it now
-    
+
     if ope01a.tax_amount<>total_tax then
         tax_amt = ope01a.tax_amount-total_tax
-        
+
     rem --- Hold on to original values
-    
+
         y0=total_ext
         y1=ope01a.freight_amt
         y2=ope01a.discount_amt
         y4=ope01a.taxable_amt
-    
+
     rem --- Clear values for posting
-    
+
         total_ext=0
         ope01a.freight_amt=0
         ope01a.discount_amt=0
         ope01a.taxable_amt=0
         gosub update_salestax_history
-        
+
     rem --- Put back original values
-        
+
         total_ext=y0
         ope01a.freight_amt=y1
         ope01a.discount_amt=y2
         ope01a.taxable_amt=y4
-        
+
         account$ = opm06a.gl_account$
         amount   = -tax_amt
         units    = 0
@@ -933,7 +934,7 @@ rem --- If there is a difference in the order's tax amount, post it now
     endif
 
     precision 2
-    
+
     return
 
 glpost: rem --- Standard G/L Posting Routine
@@ -948,7 +949,7 @@ glpost: rem --- Standard G/L Posting Routine
 unlink_po: rem --- Delete PO to order link
 
     start_block = 1
-    
+
     if start_block then 
         find record (poe08_dev,key=firm_id$+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$,knum=1,dom=*endif) poe08a$
         extract record (poe12_dev,key=poe08a.firm_id$+poe08a.po_no$+poe08a.poedet_seq_ref$,dom=*endif) poe12a$
@@ -970,23 +971,23 @@ update_order_detail:
     total_cost_ord = total_cost_ord + round(ope11a.qty_ordered * ope11a.unit_cost, 2)
     if ope11a.est_shp_date$<newshpdt$ or newshpdt$="" then newshpdt$=ope11a.est_shp_date$
     ope11a$ = field(ope11a$)
-    
+
     precision i[2]
     write record (ope11_dev) ope11a$
     precision 2
-    
+
     return
-    
+
 rem #include disp_message.src
 
 disp_message: rem --- Display Message Dialog
 
-	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 
-	return
-	
+    return
+
 rem #endinclude disp_message.src
-    
+
 rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -1043,7 +1044,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
-    
+
 rem --- #endinclude std_end.src
 
     end

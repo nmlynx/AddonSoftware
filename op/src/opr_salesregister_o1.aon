@@ -177,9 +177,9 @@ rem --- Inits
         rem --- Totals
 
             for i=0 to 1
-                if arm10c.trans_type$="$" then let r[0,i]=r[0,i]+ope41a.invoice-amt
-                if arm10c.trans_type$="C" then let r[1,i]=r[1,i]+ope41a.invoice-amt
-                if arm10c.trans_type$="P" then let r[2,i]=r[2,i]+ope41a.invoice-amt
+                if arm10c.trans_type$="$" then r[0,i]=r[0,i]+ope41a.invoice-amt
+                if arm10c.trans_type$="C" then r[1,i]=r[1,i]+ope41a.invoice-amt
+                if arm10c.trans_type$="P" then r[2,i]=r[2,i]+ope41a.invoice-amt
             next i
 
         wend
@@ -193,6 +193,8 @@ rem --- Inits
         next i
 
     endif
+    
+rem --- Next overlay    
 
     update$       = pgmdir$+"opr_salesregister_o2.aon"
     overlay$      = update$
