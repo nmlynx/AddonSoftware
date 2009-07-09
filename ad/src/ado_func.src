@@ -145,7 +145,6 @@ rem ==========================================================================
 
         methodend
 
-
     rem ==========================================================================
     rem --- get number of GL periods from GL param file; nothing sent in, #periods out
     rem ==========================================================================
@@ -251,8 +250,33 @@ rem ==========================================================================
             endif
 
         methodend
+        
+    rem ==========================================================================
+    rem --- Return a percentage, checking for division by zero
+    rem     def fnd(q1,q2)=sgn(q2)*q1*100/(q2+abs(sgn(q2))-1)
+    rem ==========================================================================
+    
+        method public static BBjNumber percentage(BBjNumber p1, BBjNumber p2)
+        
+            if p1 = 0 or p2 = 0 then
+                methodret 0
+            else
+                methodret p1*100/p2
+            endif
 
-
+        methodend
+        
+    rem ==========================================================================
+    rem --- Return Gross Profit Percentage
+    rem     sgn( fnd(s[0]-s[1], s[0]) ) * min( 999.99, abs(fnd(s[0]-s[1], s[0])) )
+    rem ==========================================================================
+    
+        method public static BBjString grossProfit(BBjNumber p_sales, BBjNumber p_cost)
+            gp = round(#percentage(p_sales-p_cost, p_sales), 2)
+            gp = sgn(gp) * min(999.99, abs(gp))
+            methodret str(gp:"##0.00-") 
+        methodend
+        
     classend
 
 rem ==========================================================================
@@ -290,7 +314,7 @@ rem --- fnitem$()
     print "Null description passed..."
     print func.displayDesc("", p[3], p[4], p[5])
     
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
 
 rem --- fnmask$()
 
@@ -300,7 +324,7 @@ rem --- fnmask$()
     print func.alphaMask("111223333", "(###) ##-####")
     print func.alphaMask("1234.56", "-###,###,###.00")
     
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
 
 rem  -- fndate$()
 
@@ -313,7 +337,7 @@ rem  -- fndate$()
     print func.formatDate("short")
     print func.formatDate("")
     
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
 
 rem --- fnlatest$()
 
@@ -326,7 +350,7 @@ rem --- fnlatest$()
     print func.latestDate("20090230", "20090201")
     print func.latestDate("20090202", "junk")
     
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
 
 rem --- hasRecords()
 
@@ -351,7 +375,7 @@ rem --- hasRecords()
         print "does not have records"
     endif
     
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
 
 rem --- isNumber()
 
@@ -372,7 +396,7 @@ rem --- isNumber()
         print x$," is not a number"
     endif
     
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
 
 rem --- isHex
 
@@ -402,7 +426,7 @@ rem --- isHex
         print " is not hex"
     endif
     
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
 
 rem --- minimumNotZero
 
@@ -413,7 +437,38 @@ rem --- minimumNotZero
     print "Expect 1: ", func.minimumNotZero(1, 2)
     print "Expect 1: ", func.minimumNotZero(2, 1)
 
-    input "Press <enter> to continue: ", *
+    rem input "Press <enter> to continue: ", *
+
+rem --- Percentage
+
+    print fill(79, "="), 'lf', "percentage()..."
+    print "Expect 0: ", func.percentage(0, 0)
+    print "Expect 0: ", func.percentage(0, 1)
+    print "Expect 0: ", func.percentage(1, 0)
+    print "Expect 100: ", func.percentage(256, 256)
+    print "Expect 25: ", func.percentage(2, 8)
+    print "Expect 17.65: ", func.percentage(3, 17)
+    print "Expect -200: ", func.percentage(64, -32)
+    print "Expect -200: ", func.percentage(-64, 32)
+    print "Expect 200: ", func.percentage(-64, -32)
+    
+    rem input "Press <enter> to continue: ", *
+    
+rem --- Gross Profit
+
+    print fill(79, "="), 'lf', "grossProfit()..."
+    sale = 19.95, cost = 5.00
+    print "Sale", sale, ", Cost", cost, ", GP% ", func.grossProfit(sale, cost)
+    sale = 19.95, cost = 19.95
+    print "Sale", sale, ", Cost", cost, ", GP% ", func.grossProfit(sale, cost)
+    sale = 19.95, cost = 0
+    print "Sale", sale, ", Cost", cost, ", GP% ", func.grossProfit(sale, cost)
+    sale = 19.95, cost = 40.00
+    print "Sale", sale, ", Cost", cost, ", GP% ", func.grossProfit(sale, cost)
+    sale = 0, cost = 5
+    print "Sale", sale, ", Cost", cost, ", GP% ", func.grossProfit(sale, cost)
+    
+    rem input "Press <enter> to continue: ", *
 
     end
-
+    
