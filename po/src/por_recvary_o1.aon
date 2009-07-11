@@ -13,6 +13,7 @@ rem --- Document initializations
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
@@ -51,16 +52,16 @@ rem --- Headings and print positions
     gosub assignheads
     more=1
     dim columns$[8,10]
-    columns = 8
-    columns$[0,0]="Seq",                  columns$[0,1]="C",columns$[0,2]="7"
+    columns = 9
+    columns$[0,0]="",                     columns$[0,1]="C",columns$[0,2]="7"
     columns$[1,0]="Cd",                   columns$[1,1]="C",columns$[1,2]="8"
     columns$[2,0]="Wh",                   columns$[2,1]="C",columns$[2,2]="6"
     columns$[3,0]="Item",                 columns$[3,1]="C",columns$[3,2]="20"
     columns$[4,0]="Date Received",        columns$[4,1]="C",columns$[4,2]="10"
     columns$[5,0]="Date Required",        columns$[5,1]="C",columns$[5,2]="10"
     columns$[6,0]="Date Promised",        columns$[6,1]="C",columns$[6,2]="10"
-    columns$[7,0]="Variance Req/Rec",     columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=mvar$
-    columns$[8,0]="Variance Prom/Rec",    columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=mvar$
+    columns$[7,0]="Variance Req/Rec",     columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=mvar$,columns$[7,10]="T"
+    columns$[8,0]="Variance Prom/Rec",    columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=mvar$,columns$[8,10]="T"
 
 rem --- Position files
  
@@ -69,7 +70,7 @@ rem --- Position files
 rem --- Build sql statement
 
     sql_prep$="select pot_rechdr.vendor_id, pot_rechdr.po_no, "
-    sql_prep$=sql_prep$+"pot_rechdr.receiver_no, pot_recdet.po_line_no "
+    sql_prep$=sql_prep$+"pot_rechdr.receiver_no, pot_recdet.po_int_seq_ref "
     sql_prep$=sql_prep$+"from pot_rechdr, pot_recdet "
 
     where_clause$="where pot_rechdr.firm_id = '"+firm_id$+"'"
@@ -82,7 +83,7 @@ rem --- Build sql statement
     if datefrom$<>"" where_clause$=where_clause$+" AND pot_rechdr.recpt_date >= '" + datefrom$+ "'"
     if datethru$<>"" where_clause$=where_clause$+" AND pot_rechdr.recpt_date <= '" + datethru$+ "'"
     if whsefor$<>"" where_clause$=where_clause$+" AND pot_recdet.warehouse_id = '"+whsefor$+ "'"
-    order_by$=" order by pot_rechdr.vendor_id, pot_rechdr.recpt_date, pot_rechdr.po_no, pot_rechdr.receiver_no,pot_recdet.po_line_no"
+    order_by$=" order by pot_rechdr.vendor_id, pot_rechdr.recpt_date, pot_rechdr.po_no, pot_rechdr.receiver_no,pot_recdet.po_int_seq_ref"
 
     sql_prep$=sql_prep$ + where_clause$ + order_by$
     sql_chan=sqlunt
@@ -98,12 +99,12 @@ rem --- Read through Sort file
 
         read_tpl$=sqlfetch(sql_chan,err=*break)
         read record (pot04a_dev,key=firm_id$+read_tpl.po_no$+read_tpl.receiver_no$,dom=*break) pot04a$
-        read record (pot14_dev2,key=firm_id$+read_tpl.po_no$+read_tpl.receiver_no$+read_tpl.po_line_no$) pot14a$
+        read record (pot14_dev2,key=firm_id$+read_tpl.po_no$+read_tpl.receiver_no$+read_tpl.po_int_seq_ref$) pot14a$
 
         vendor$=pot04a.vendor_id$
         ponum$=pot04a.po_no$
         receiver$=pot04a.receiver_no$
-        linenum$=pot14a.po_line_no$
+        linenum$=pot14a.po_int_seq_ref$
         dim rcptdate$(8),orddate$(8)
         if pot04a.recpt_date$<>"" rcptdate$=pot04a.recpt_date$
         if pot04a.ord_date$<>"" orddate$=pot04a.ord_date$
@@ -208,6 +209,7 @@ done: rem --- All Done
 
     gosub pototals
     gosub vendtotals
+    TotVect!.addItem(str(OutVect!.size()/columns))
     qwk = fnblank(3)
     OutVect!.addItem("Total For Report")
     qwk = fnblank(3)
@@ -286,6 +288,7 @@ return
 
 vendtotals: rem --- Print Vendor total
 
+    TotVect!.addItem(str(OutVect!.size()/columns))
     qwk = fnblank(3)
     OutVect!.addItem("Total For Vendor "+fnmask$(prevvend$(1,vendlen),vendomask$))
     qwk = fnblank(3)
@@ -298,6 +301,7 @@ return
 
 pototals: rem --- Print PO total
 
+    TotVect!.addItem(str(OutVect!.size()/columns))
     qwk = fnblank(3)
     OutVect!.addItem("Total For PO # "+prevpo$)
     qwk = fnblank(3)
@@ -326,7 +330,7 @@ printline:
     if dateprom$<>fill(8) dprom$=fndate$(dateprom$)
     if reqdate$<>fill(8) qdate$=fndate$(reqdate$)
 
-    OutVect!.addItem("     " + linenum$)
+    OutVect!.addItem("")
     OutVect!.addItem(linecode$)
     OutVect!.addItem(whse$)
     OutVect!.addItem(item$(1,itemlen) + " " + itemdesc$(1,desclen))

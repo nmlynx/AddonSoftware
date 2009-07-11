@@ -78,7 +78,7 @@ rem --- Get next sort record
         whse$=pot24a_key.warehouse_id$
         ponum$=pot24a_key.po_no$
         receiver$=pot24a_key.receiver_no$
-        linenum$=pot24a_key.po_line_no$
+        linenum$=pot24a_key.po_int_seq_ref$
         product$=""
         dim pot04a$:fattr(pot04a$)
         read record (pot04a_dev,key=firm_id$+ponum$+receiver$,dom=*next)pot04a$
