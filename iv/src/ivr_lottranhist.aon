@@ -14,22 +14,22 @@ rem  +-----------------------------------------+
 
 rem --- Retrieve the program path
 
-	pgmdir$=""
-	pgmdir$=stbl("+DIR_PGM",err=*next)
-	sypdir$=""
-	sypdir$=stbl("+DIR_SYP",err=*next)
+    pgmdir$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next)
 
 rem --- Use Statements
 
-	use ::sys/prog/bao_option.bbj::Option
-	use ::ado_func.src::func
+    use ::sys/prog/bao_option.bbj::Option
+    use ::ado_func.src::func
 
 rem --- Document initializations
 
-	declare BBjVector OutVect!
-	declare BBjVector HdrVect!
-	declare BBjVector BrkVect!
-	declare BBjVector TotVect!
+    declare BBjVector OutVect!
+    declare BBjVector HdrVect!
+    declare BBjVector BrkVect!
+    declare BBjVector TotVect!
 
     OutVect!=bbjAPI().makeVector()
     HdrVect!=bbjAPI().makeVector()
@@ -53,55 +53,56 @@ rem --- Retrieve sysinfo data
 
 rem --- Open files
 
-	num_files = 14
-	open_beg  = 1
-	open_end  = num_files
+    num_files = 14
+    open_beg  = 1
+    open_end  = num_files
 	
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
-	open_tables$[1]="APS_PARAMS",    open_opts$[1]="OTA"
-	open_tables$[2]="ARS_PARAMS",    open_opts$[2]="OTA"
-	open_tables$[3]="GLS_PARAMS",    open_opts$[3]="OTA"
-	open_tables$[4]="IVS_PARAMS",    open_opts$[4]="OTA"
-	open_tables$[5]="ARM_CUSTMAST",  open_opts$[5]="OTA"
-	open_tables$[6]="GLM_ACCT",      open_opts$[6]="OTA"
-	open_tables$[7]="IVM_ITEMMAST",  open_opts$[7]="OTA"
-	open_tables$[8]="IVM_LSMASTER",  open_opts$[8]="OTA"
-	open_tables$[9]="IVC_PRODCODE",  open_opts$[9]="OTA"
-	open_tables$[10]="IVC_TRANCODE", open_opts$[10]="OTA"
-	open_tables$[11]="IVC_WHSECODE", open_opts$[11]="OTA"
-	open_tables$[12]="IVT_LSTRANS",  open_opts$[12]="OTA"
-	open_tables$[13]="IVT_LSTRANS",  open_opts$[13]="OA@"
-	
-	gosub open_tables
-	
-	aps01a_dev = num(open_chans$[1])
-	ars01a_dev = num(open_chans$[2])
-	gls01a_dev = num(open_chans$[3])
-	ivs01a_dev = num(open_chans$[4])
-	arm01_dev  = num(open_chans$[5])
-	glm01_dev  = num(open_chans$[6])
-	ivm01_dev  = num(open_chans$[7])
-	ivm07_dev  = num(open_chans$[8])
-	ivm10a_dev = num(open_chans$[9])
-	ivm10b_dev = num(open_chans$[10])
-	ivm10c_dev = num(open_chans$[11])
-	ivt01_dev  = num(open_chans$[12])
-	ivt01_dev2 = num(open_chans$[13])
-	
-	dim aps01a$:open_tpls$[1]
-	dim ars01a$:open_tpls$[2]
-	dim gls01a$:open_tpls$[3]
-	dim ivs01a$:open_tpls$[4]
-	dim ivm01a$:open_tpls$[7]
-	dim ivm07a$:open_tpls$[8]
-	dim ivm10c$:open_tpls$[11]
-	dim ivt01a$:open_tpls$[12]
-	dim ivt01b$:open_tpls$[12]
+    open_tables$[1]="APS_PARAMS",    open_opts$[1]="OTA"
+    open_tables$[2]="ARS_PARAMS",    open_opts$[2]="OTA"
+    open_tables$[3]="GLS_PARAMS",    open_opts$[3]="OTA"
+    open_tables$[4]="IVS_PARAMS",    open_opts$[4]="OTA"
+    open_tables$[5]="ARM_CUSTMAST",  open_opts$[5]="OTA"
+    open_tables$[6]="GLM_ACCT",      open_opts$[6]="OTA"
+    open_tables$[7]="IVM_ITEMMAST",  open_opts$[7]="OTA"
+    open_tables$[8]="IVM_LSMASTER",  open_opts$[8]="OTA"
+    open_tables$[9]="IVC_PRODCODE",  open_opts$[9]="OTA"
+    open_tables$[10]="IVC_TRANCODE", open_opts$[10]="OTA"
+    open_tables$[11]="IVC_WHSECODE", open_opts$[11]="OTA"
+    open_tables$[12]="IVT_LSTRANS",  open_opts$[12]="OTA"
+    open_tables$[13]="IVT_LSTRANS",  open_opts$[13]="OA@"
+
+    gosub open_tables
+
+    aps01a_dev = num(open_chans$[1])
+    ars01a_dev = num(open_chans$[2])
+    gls01a_dev = num(open_chans$[3])
+    ivs01a_dev = num(open_chans$[4])
+    arm01_dev  = num(open_chans$[5])
+    glm01_dev  = num(open_chans$[6])
+    ivm01_dev  = num(open_chans$[7])
+    ivm07_dev  = num(open_chans$[8])
+    ivm10a_dev = num(open_chans$[9])
+    ivm10b_dev = num(open_chans$[10])
+    ivm10c_dev = num(open_chans$[11])
+    ivt01_dev  = num(open_chans$[12])
+    ivt01_dev2 = num(open_chans$[13])
+
+    dim aps01a$:open_tpls$[1]
+    dim ars01a$:open_tpls$[2]
+    dim gls01a$:open_tpls$[3]
+    dim ivs01a$:open_tpls$[4]
+    dim arm01a$:open_tpls$[5]
+    dim ivm01a$:open_tpls$[7]
+    dim ivm07a$:open_tpls$[8]
+    dim ivm10c$:open_tpls$[11]
+    dim ivt01a$:open_tpls$[12]
+    dim ivt01b$:open_tpls$[12]
 	
 rem --- Assign form input values to local variables
 
-	declare Option option!
+    declare Option option!
 
     dim ttypes$[9]
     beg_date$=option!.getOptionData("pick_date_1")
@@ -130,7 +131,7 @@ rem --- Retrieve key template
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVT_LSTRANS","PRIMARY",ivt01_key_tpl$,rd_table_chans$[all],status$
     dim ivt01a_key$:ivt01_key_tpl$
-	dim ivt01alt$:ivt01_key_tpl$
+    dim ivt01alt$:ivt01_key_tpl$
 
 rem --- Retrieve parameter records
 
@@ -173,11 +174,12 @@ rem --- Initializations
 rem --- Check for vendor masterfile
 
     if ap$<>"N" then
-		open_tables$[14]="APM_VENDMAST", open_opts$[14]="OTA"
+        open_end=1
+        open_tables$[1]="APM_VENDMAST", open_opts$[1]="OTA"
         gosub open_tables
-		apm01_dev = num(open_chans$[14])
+	apm01_dev = num(open_chans$[1])
 		
-		find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
+       	find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
         x6=num(aps01a.vendor_size$)
         x7$=aps01a.vendor_output$
     endif
@@ -267,7 +269,7 @@ rem --- column headings
     columns$[7,0]="Balance",                columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
 
     call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",3+p[0],ivt01_dev,1,0,status
-	if status = 999 then goto std_exit
+    if status = 999 then goto std_exit
 
 rem --- Position files
 
