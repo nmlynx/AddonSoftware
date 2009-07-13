@@ -41,7 +41,7 @@ rem --- Retrieve sysinfo data
 	dim sysinfo$:sysinfo_template$
 	sysinfo$=stbl("+SYSINFO")
 	firm_id$=sysinfo.firm_id$
-	
+
 rem --- Sanity check
 
 	status = 911
@@ -158,38 +158,41 @@ rem --- Setup SQL to read through IVM_ITEMMAST
 
 rem --- Get next sort record
 
-	no_of_records = 0
+    no_of_records = 0
 	
-	while more
-
-		sql_rec$=sqlfetch(sql_chan,err=*break)
+    while more
+	sql_rec$=sqlfetch(sql_chan,err=*break)
 		
-		whse$    = sql_rec.warehouse_id$
-		product$ = sql_rec.product_type$
-		item$    = sql_rec.item_id$
+	whse$    = sql_rec.warehouse_id$
+	product$ = sql_rec.product_type$
+	item$    = sql_rec.item_id$
 
 rem --- Read item and warehouse records
 
-		call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
+	call pgmdir$+"adc_progress.aon","S","","",""," ",0,0,1,meter_num,ignore_status
 			
-		find record (itemmast_dev, key=firm_id$+item$,       dom=*continue) itemmast_rec$
-		find record (itemwhse_dev, key=firm_id$+whse$+item$, dom=*continue) itemwhse_rec$
+	find record (itemmast_dev, key=firm_id$+item$,       dom=*continue) itemmast_rec$
+	find record (itemwhse_dev, key=firm_id$+whse$+item$, dom=*continue) itemwhse_rec$
 		
-		if itemmast_rec.stock_level$<>"W" then
-			vendor$=itemmast_rec.vendor_id$
-		else
-			vendor$=itemwhse_rec.vendor_id$
-		endif
+	if itemmast_rec.stock_level$<>"W" then
+            vendor$=itemmast_rec.vendor_id$
+	else
+            vendor$=itemwhse_rec.vendor_id$
+        endif
 		
-		if begvend$<>"" and vendor$<begvend$ then continue
-		if endvend$<>"" and vendor$>endvend$ then continue
-		
-		rem if action$="R" and cvs(itemwhse_rec.cur_price_cd$,2)<>price_code$ then continue
-		if action$ <> "C" and cvs(itemwhse_rec.cur_price_cd$, 2) <> cvs(price_code$, 2) then continue
+	if begvend$<>"" and vendor$<begvend$ then continue
+	if endvend$<>"" and vendor$>endvend$ then continue
+rem if action$="R" and cvs(itemwhse_rec.cur_price_cd$,2)<>price_code$ then continue
+
+	if action$ <> "C" 
+            if len(price_code$)<>0
+                if cvs(itemwhse_rec.cur_price_cd$, 2) <> cvs(price_code$, 2) then continue
+            endif
+        endif    
 
 rem --- Generate price/cost change record
 
-		if action$="C" then 
+	if action$="C" then 
 
             entry_rec.firm_id$      = firm_id$
             entry_rec.effect_date$  = effect_date$
@@ -197,7 +200,7 @@ rem --- Generate price/cost change record
             entry_rec.warehouse_id$ = whse$
             entry_rec.new_cost      = fnpercent_of(itemwhse_rec.unit_cost, percent)
 			
-		else
+	else
           
             if action$="R" then
                
@@ -209,35 +212,35 @@ rem --- Generate price/cost change record
 				
             else
 			
-	            if action$="P" then
+                if action$="P" then
 	                
-	                entry_rec.firm_id$      = firm_id$
-	                entry_rec.price_code$   = price_code$
-	                entry_rec.warehouse_id$ = whse$
-	                entry_rec.unit_price    = fnpercent_of(itemwhse_rec.cur_price, percent)
-
-	            endif
-			endif
+	            entry_rec.firm_id$      = firm_id$
+	            entry_rec.price_code$   = price_code$
+	            entry_rec.warehouse_id$ = whse$
+	            entry_rec.unit_price    = fnpercent_of(itemwhse_rec.cur_price, percent)
+                    entry_rec.item_id$      = item$
+	        endif
+            endif
         endif
 
-		entry_rec$ = field(entry_rec$)
+	entry_rec$ = field(entry_rec$)
         write record (entry_dev) entry_rec$
 		
-		no_of_records = no_of_records + 1
+	no_of_records = no_of_records + 1
 
 rem --- Loop back for next sort record
 
-	wend
+    wend
 
 rem --- All done
 	
-	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
-	status=0
-	goto std_exit
+call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
+status=0
+goto std_exit
 
 rem --- Functions
 
-	def fnpercent_of(q1,q2)=q1+((q1*q2)/100)
+    def fnpercent_of(q1,q2)=q1+((q1*q2)/100)
 	
 rem #include std_error.src
 
