@@ -79,7 +79,7 @@ rem --- Headings and print positions
 
      dim columns$[12,10]
     columns = 13
-    columns$[0,0]="Seq",                columns$[0,1]="C",columns$[0,2]="8"
+    rem --- dropping isn/line# per VARs; columns$[0,0]="Seq",                columns$[0,1]="C",columns$[0,2]="8"
     columns$[1,0]="Cd",                 columns$[1,1]="C",columns$[1,2]="5"
     columns$[2,0]="Wh",                 columns$[2,1]="C",columns$[2,2]="5"
     columns$[3,0]="Item",               columns$[3,1]="C",columns$[3,2]="25"
@@ -472,7 +472,7 @@ brnch5:
         xwk = fnblank(13)
 
         OutVect!.addItem("PO#: " + $00$ + "B" )
-        OutVect!.addItem(ponum$ + $00$ + "B" )
+        OutVect!.addItem("PO#: "+ponum$ + $00$ + "B" )
         xwk=fnblank(1)
         OutVect!.addItem("Ordered: "+dateord$+" Vendor: "+str(fnmask$(vendor$(1,vendlen),vendomask$))+" "+vendname$ + $00$ + "B" )
         xwk = fnblank(3)

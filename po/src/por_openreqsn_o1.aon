@@ -60,7 +60,7 @@ rem --- Headings and print positions
 rem --Colum Heading
         dim columns$[8,10]
             columns=8
-            columns$[0,0]="Seq  Cd  Wh  Item ",     columns$[0,1]="C",columns$[0,2]="30"
+            columns$[0,0]="Cd  Wh  Item ",     columns$[0,1]="C",columns$[0,2]="30"
             columns$[1,0]="Date^Required",          columns$[1,1]="C",columns$[1,2]="10"
             columns$[2,0]="Date^Promied",           columns$[2,1]="C",columns$[2,2]="10"
             columns$[3,0]="Not^Before",             columns$[3,1]="C",columns$[3,2]="15"
@@ -291,7 +291,7 @@ get_item_disc: rem --- Get Item Desc for S and N type lines
         dim itemdesc$(60),x1$(60)
         ivm01a.item_desc$="Not On File"
         find record (ivm01_dev,key=firm_id$+itemnum$,dom=get_ext) ivm01a$
-        ivm01a.item_desc$=fnitem$(x1$,desclen[1],desclen[2],desclen[3])
+        itemdesc$=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
     else
          itemdesc$=memo$
     endif
@@ -309,7 +309,8 @@ rem --- Get Vendor's Part #
 rem --- Format common part of print line
 
         dim pline$(132)
-        pline$(1)=poe11a.po_line_no$+" "+poe11a.po_line_code$+" "+whse_detail$
+        rem --- dropping line# per VARs; pline$(1)=poe11a.po_line_no$+" "+poe11a.po_line_code$+" "+whse_detail$
+        pline$(1)=poe11a.po_line_code$+" "+whse_detail$
 
 rem --- Print Line Types 'M', 'O' & 'V'
 
@@ -328,7 +329,8 @@ rem --- Print Line Types 'S' & 'N'
 
         if pos(linetype$="SN")<>0
 
-            OutVect!.addItem(poe11a.po_line_no$+" "+poe11a.po_line_code$+" "+whse_detail$+" "+itemnum$(1,itemlen))
+            rem --- dropping line# per VARS; OutVect!.addItem(poe11a.po_line_no$+" "+poe11a.po_line_code$+" "+whse_detail$+" "+itemnum$(1,itemlen))
+            OutVect!.addItem(poe11a.po_line_code$+" "+whse_detail$+" "+itemnum$(1,itemlen))
             OutVect!.addItem(datereq$)
             OutVect!.addItem(dateprom$)
             OutVect!.addItem(notb4date$)
@@ -342,7 +344,7 @@ rem --- Print Line Types 'S' & 'N'
             OutVect!.addItem(unitcost$)
             OutVect!.addItem(extension$)
 
-            OutVect!.addItem("     "+itemdesc$(1,40))
+            OutVect!.addItem("     "+itemdesc$)
             if wonum$<>fill(7)
                 OutVect!.addItem("WO: "+wonum$+"-"+woseq$)
             else

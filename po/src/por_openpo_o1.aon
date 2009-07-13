@@ -309,7 +309,8 @@ rem --- Print Line Types 'M', 'O' & 'V'
 
     if pos(linetype$="MOV")<>0
 
-        OutVect!.addItem(poe12a.po_line_no$)
+        rem --- dropping isn/line# per VARS; OutVect!.addItem(poe12a.po_line_no$)
+        OutVect!.addItem("")
         OutVect!.addItem(poe12a.po_line_code$)
         OutVect!.addItem(whse_detail$)
 
@@ -332,7 +333,8 @@ rem --- Print Line Types 'S' & 'N'
 
         if pos(linetype$="SN")=0 return
 
-            OutVect!.addItem(poe12a.po_line_no$)
+            rem --- dropping isn/line# per VARs; OutVect!.addItem(poe12a.po_line_no$)
+            OutVect!.addItem("")
             OutVect!.addItem(poe12a.po_line_code$)
             OutVect!.addItem(whse_detail$)
 
@@ -556,7 +558,7 @@ brnch8:
 
     xwk=fnblank(14)
 
-    OutVect!.addItem("Seq")
+    OutVect!.addItem("");rem was "Seq" - dropping per VARs
     OutVect!.addItem("CD")
     OutVect!.addItem("WH")
     OutVect!.addItem("Item")

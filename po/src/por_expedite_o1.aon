@@ -57,8 +57,8 @@ rem --- Headings and print positions
  
     dim columns$[11,10]
     columns = 12
-    columns$[0,0]="Seq",                columns$[0,1]="C",columns$[0,2]="6"
-    columns$[1,0]="Wh",                 columns$[1,1]="C",columns$[1,2]="6"
+    columns$[0,0]=" ",                columns$[0,1]="C",columns$[0,2]="4"
+    columns$[1,0]="Wh",                 columns$[1,1]="C",columns$[1,2]="10"
     columns$[2,0]="Item",               columns$[2,1]="C",columns$[2,2]="15"
     columns$[3,0]="Description",        columns$[3,1]="C",columns$[3,2]="20"
     columns$[4,0]="UM",                 columns$[4,1]="C",columns$[4,2]="4"
@@ -222,7 +222,8 @@ rem --- Print Line Types 'M', 'O' & 'V'
 
         if pos(linetype$="MOV")<>0
 
-            OutVect!.addItem(poe12a.po_line_no$)
+            OutVect!.addItem("")
+            rem --- dropping isn/line# per VARs; OutVect!.addItem(poe12a.po_line_no$)
             OutVect!.addItem(whse_detail$)
             
             if linetype$="V" then 
@@ -254,7 +255,8 @@ rem --- Print Line Types 'S' & 'N'
 
             if pos(linetype$="SN")<>0
 
-                OutVect!.addItem(poe12a.po_line_no$)
+                OutVect!.addItem("")
+                rem --- dropping isn/line# per VARs; OutVect!.addItem(poe12a.po_line_no$)
                 OutVect!.addItem(whse_detail$)
                 OutVect!.addItem(cvs(itemnum$,2))
                 OutVect!.addItem(item_desc$(1,27))
