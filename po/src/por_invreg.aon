@@ -768,7 +768,8 @@ l5900: rem --- Display PO and Receiver
     let l=l+2,first=0
     if cvs(poe25a.po_no$,3)="" goto l5990
     dim pbuf$(width)
-    pbuf$(ol[3]+1)="PO # "+poe25a.po_no$+"-"+poe25a.po_int_seq_ref$+" Rec # "+poe25a.receiver_no$
+    rem --- taking out isn; pbuf$(ol[3]+1)="PO # "+poe25a.po_no$+"-"+poe25a.po_int_seq_ref$+" Rec # "+poe25a.receiver_no$
+    pbuf$(ol[3]+1)="PO # "+poe25a.po_no$+ " Rec # "+poe25a.receiver_no$
     OutVect!.addItem(pbuf$)
     let l=l+1
 l5990:

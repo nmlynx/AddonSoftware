@@ -390,7 +390,7 @@ l1900: rem --- Standard line
     if l+2>l9 gosub report_heading
     
     dim pbuf$(width)
-    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
+    rem pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
@@ -417,7 +417,7 @@ l2000: rem --- Non-stock line
     if l+2>l9 gosub report_heading
     
     dim pbuf$(width)
-    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
+    rem pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
@@ -441,7 +441,7 @@ l2100: rem --- Vendor part number line
 
     if l+1>l9 gosub report_heading
     dim pbuf$(width)
-    pbuf$(o[0]+1)=fnisn(poe14a.internal_seq_no$)
+    rem pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
@@ -454,7 +454,7 @@ l2200: rem --- Message line
 
     if l+1>l9 gosub report_heading
     dim pbuf$(width)    
-    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
+    rem pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.order_memo$
@@ -467,7 +467,7 @@ l2300: rem --- Other type line
 
     if l+2>l9 gosub report_heading
     dim pbuf$(width)        
-    pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
+    rem pbuf$(o[0]+1)=fnisn$(poe14a.internal_seq_no$)
     pbuf$(o[1]+1)=poe14a.po_line_code$
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[10]+1)=str(poe14a.unit_cost:m3$)
@@ -689,7 +689,7 @@ rem --- Print list of lines with lot/serial number differences
         dim pbuf$(width)
         pbuf$(o[0]+1)=fnmask$(apm01a.vendor_id$,m0$)+" "+apm01a.vendor_name$
         pbuf$(o[1]+1)=k.receiver_no$
-        pbuf$(o[2]+1)=poe14a.po_no$+"-"+fnisn$(poe14a.internal_seq_no$)
+        pbuf$(o[2]+1)=poe14a.po_no$;rem +"-"+fnisn$(poe14a.internal_seq_no$)
         pbuf$(o[3]+1)=str(lineqty[x]:m2$)
         pbuf$(o[4]+1)=str(factor[x]:m5$)
         pbuf$(o[5]+1)=str(stock:m2$)
@@ -724,7 +724,7 @@ rem    if status exitto std_exit
     OutVect!.addItem(pbuf$)
     
     dim pbuf$(width)
-    pbuf$(o[0]+1)="Seq"
+    pbuf$(o[0]+1)="";rem used to be Seq; dropping it per VARs
     pbuf$(o[1]+1)="Cd"
     pbuf$(o[2]+1)="Wh"
     pbuf$(o[3]+1)="Item"
@@ -795,7 +795,7 @@ l5400: rem --- Subheading for lot/serial number errors
     dim pbuf$(width)    
     pbuf$(o[0]+1)="Vendor"
     pbuf$(o[1]+1)="Receiver"
-    pbuf$(o[2]+1)="PO #    Seq"
+    pbuf$(o[2]+1)="PO #       ";rem used to be "PO #    Seq"... dropping seq per VARs
     pbuf$(o[3]+1+m2-10)="Qty Rec'd"
     pbuf$(o[4]+1+m5-7)="Factor"
     pbuf$(o[5]+1+m2-10)="Qty Rec'd"
