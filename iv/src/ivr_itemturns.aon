@@ -62,6 +62,7 @@ rem --- Dimension string templates
 rem --- Assign form input values to local variables
 
     period$=option!.getOptionData("pick_gl_per")
+    period$=str(num(period$):"00")
     year$=option!.getOptionData("pick_year")
     sequence$=option!.getOptionData("pick_listbutton")
     xlimit$=option!.getOptionData("report_sequence")
