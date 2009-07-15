@@ -63,14 +63,14 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    pofrom$=cvs(option!.getOptionData("po_no_01"),3)
-    pothru$=cvs(option!.getOptionData("po_no_02"),3)
+    pofrom$=cvs(option!.getOptionData("po_no_1"),3)
+    pothru$=cvs(option!.getOptionData("po_no_2"),3)
     printseq$=option!.getOptionData("report_sequence")
     vendfrom$=cvs(option!.getOptionData("vendor_id_1"),3)
     vendthru$=cvs(option!.getOptionData("vendor_id_2"),3)
     whse$=cvs(option!.getOptionData("warehouse_id"),3)
-    altfrom$=cvs(option!.getOptionData("alt_sequence_01"),3)
-    altthru$=cvs(option!.getOptionData("alt_sequence_02"),3)
+    altfrom$=cvs(option!.getOptionData("alt_sequence_1"),3)
+    altthru$=cvs(option!.getOptionData("alt_sequence_2"),3)
 
     if whse$="" whse$="ALL"
     if vendfrom$="" vendfrom$=altfrom$
