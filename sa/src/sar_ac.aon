@@ -51,11 +51,6 @@ rem --- Dimension miscellaneous string templates
 
     dim sas01a$:templates$[1]
 
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    value_01$=fnget_fld_data$(table$,"dataname_01")
-
 rem --- Retrieve parameter records
 
     sas01a_key$=firm_id$+"SA00"
@@ -611,7 +606,6 @@ rem --- Functions used to retrieve form values
 :                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
 
 rem --- Miscellaneous functions
 
