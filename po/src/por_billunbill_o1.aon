@@ -97,7 +97,8 @@ positions:
 
 rem --- Progress Bar
 
-    if status goto std_exit
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+
     call pgmdir$+"adc_progress.aon","N","","","","",0,pot04_dev,1,meter_num,status
 
 rem --- Now create the working sql phrase
@@ -109,7 +110,7 @@ rem --- Now create the working sql phrase
     sql_prep1$=sql_prep1$+"from pot_rechdr, apm_vendmast "
     where_clause$="where pot_rechdr.firm_id= '"+firm_id$+"' AND "
     where_clause$=where_clause$+"pot_rechdr.firm_id = apm_vendmast.firm_id AND "
-    where_clause$=where_clause$+"pot_rechdr.vendor_id = apm_vendmast.vendor_id "
+    where_clause$=where_clause$+"pot_rechdr.vendor_id = apm_vendmast.vendor_id AND "
     if printseq$="N" and vendfrom$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id >= '"+vendfrom$+"' AND " 
     if printseq$="N" and vendthru$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id <= '"+vendthru$+"' AND " 
     if printseq$="A" and altfrom$<>"" then where_clause$=where_clause$+"apm_vendmast.alt_sequence >= '"+altfrom$+"' AND " 

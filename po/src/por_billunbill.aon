@@ -115,6 +115,8 @@ rem --- Get key templates
 
 rem --- Loop Starting
 
+        call pgmdir$+"adc_progress.aon","N","","","","",0,0,1,meter_num,status
+
         sql_prep$="select pot_rechdr.firm_id, pot_rechdr.vendor_id, "
         sql_prep$=sql_prep$+"pot_rechdr.po_no, pot_rechdr.receiver_no, "
         sql_prep$=sql_prep$+"pot_rechdr.recpt_date, pot_rechdr.ord_date, pot_recdet.po_line_no, "
@@ -126,7 +128,7 @@ rem --- Loop Starting
         where_clause$=where_clause$+"pot_rechdr.po_no=pot_recdet.po_no AND "
         where_clause$=where_clause$+"pot_rechdr.receiver_no=pot_recdet.receiver_no AND "
         where_clause$=where_clause$+"pot_rechdr.firm_id = apm_vendmast.firm_id AND "
-        where_clause$=where_clause$+"pot_rechdr.vendor_id = apm_vendmast.vendor_id "
+        where_clause$=where_clause$+"pot_rechdr.vendor_id = apm_vendmast.vendor_id AND "
         if whse$<>"" then where_clause$=where_clause$+"pot_recdet.warehouse_id = '"+whse$+"' AND "
         if printseq$="N" and vendfrom$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id >= '"+vendfrom$+"' AND " 
         if printseq$="N" and vendthru$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id <= '"+vendthru$+"' AND " 
