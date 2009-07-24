@@ -1,3 +1,71 @@
+[[SAM_CUSTOMER.ITEM_ID.AVAL]]
+rem --- Enable/Disable Summary button
+	cust_no$=callpoint!.getColumnData("SAM_CUSTOMER.CUSTOMER_ID")
+	prod_type$=callpoint!.getColumnData("SAM_CUSTOMER.PRODUCT_TYPE")
+	item_no$=callpoint!.getUserInput()
+	gosub summ_button
+[[SAM_CUSTOMER.PRODUCT_TYPE.AVAL]]
+rem --- Enable/Disable Summary button
+	cust_no$=callpoint!.getColumnData("SAM_CUSTOMER.CUSTOMER_ID")
+	prod_type$=callpoint!.getUserInput()
+	item_no$=callpoint!.getColumnData("SAM_CUSTOMER.ITEM_ID")
+	gosub summ_button
+[[SAM_CUSTOMER.AOPT-SUMM]]
+rem --- Calculate and display summary info
+	tcst=0
+	tqty=0
+	tsls=0
+	trip_key$=firm_id$+callpoint!.getColumnData("SAM_CUSTOMER.YEAR")+callpoint!.getColumnData("SAM_CUSTOMER.CUSTOMER_ID")
+	prod_type$=callpoint!.getColumnData("SAM_CUSTOMER.PRODUCT_TYPE")
+	item_no$=callpoint!.getColumnData("SAM_CUSTOMER.ITEM_ID")
+	if cvs(prod_type$,2)<>"" 
+		trip_key$=trip_key$+prod_type$
+	else
+		callpoint!.setColumnData("SAM_CUSTOMER.PRODUCT_TYPE","**")
+	endif
+	callpoint!.setColumnData("SAM_CUSTOMER.ITEM_ID","** Summary **")
+
+	sam_dev=	fnget_dev("SAM_CUSTOMER")
+	dim sam_tpl$:fnget_tpl$("SAM_CUSTOMER")
+	dim qty[13],cost[13],sales[13]
+	read(sam_dev,key=trip_key$,dom=*next)
+	while 1
+		read record(sam_dev,end=*break)sam_tpl$
+		if pos(trip_key$=sam_tpl$)<>1 break
+		for x=1 to 13
+			qty[x]=qty[x]+nfield(sam_tpl$,"qty_shipped_"+str(x:"00"))
+			cost[x]=cost[x]+nfield(sam_tpl$,"total_cost_"+str(x:"00"))
+			sales[x]=sales[x]+nfield(sam_tpl$,"total_sales_"+str(x:"00"))
+		next x
+	wend
+	For x=1 to 13
+		tcst=tcst+cost[x]
+		tqty=tqty+qty[x]
+		tsls=tsls+sales[x]
+	next x
+
+rem --- Now display all of these things and disable key fields
+	for x=1 to 13
+		callpoint!.setColumnData("SAM_CUSTOMER.TOTAL_SALES_"+str(x:"00"),str(sales[x]))
+		callpoint!.setColumnData("SAM_CUSTOMER.TOTAL_COST_"+str(x:"00"),str(cost[x]))
+		callpoint!.setColumnData("SAM_CUSTOMER.QTY_SHIPPED_"+str(x:"00"),str(qty[x]))
+	next x
+	callpoint!.setColumnData("<<DISPLAY>>.TCST",str(tcst))
+	callpoint!.setColumnData("<<DISPLAY>>.TQTY",str(tqty))
+	callpoint!.setColumnData("<<DISPLAY>>.TSLS",str(tsls))
+
+	callpoint!.setColumnEnabled("SAM_CUSTOMER.YEAR",0)
+	callpoint!.setColumnEnabled("SAM_CUSTOMER.CUSTOMER_ID",0)
+	callpoint!.setColumnEnabled("SAM_CUSTOMER.PRODUCT_TYPE",0)
+	callpoint!.setColumnEnabled("SAM_CUSTOMER.ITEM_ID",0)
+	callpoint!.setOptionEnabled("SUMM",0)
+	callpoint!.setStatus("REFRESH-CLEAR")
+[[SAM_CUSTOMER.CUSTOMER_ID.AVAL]]
+rem --- Enable/Disable Summary button
+	cust_no$=callpoint!.getUserInput()
+	prod_type$=callpoint!.getColumnData("SAM_CUSTOMER.PRODUCT_TYPE")
+	item_no$=callpoint!.getColumnData("SAM_CUSTOMER.ITEM_ID")
+	gosub summ_button
 [[SAM_CUSTOMER.ARAR]]
 rem --- Create totals
 
@@ -34,6 +102,9 @@ rem --- disable total elements
 	ctl_stat$="I"
 	gosub disable_fields
 	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH")
+
+rem --- Disable Summary Button
+	callpoint!.setOptionEnabled("SUMM",0)
 [[SAM_CUSTOMER.AREC]]
 rem --- Enable key fields
 	ctl_name$="SAM_CUSTOMER.YEAR"
@@ -80,6 +151,24 @@ calc_totals:
 	callpoint!.setColumnData("<<DISPLAY>>.TSLS",str(tsls))
 	callpoint!.setStatus("REFRESH")
 
+	return
+
+rem --- Enable/Disable Summary Button
+summ_button:
+	callpoint!.setOptionEnabled("SUMM",1)
+	if cvs(cust_no$,2)=""
+		callpoint!.setOptionEnabled("SUMM",0)
+	else
+		if cvs(prod_type$,2)=""
+			if cvs(item_no$,2)<>""
+				callpoint!.setOptionEnabled("SUMM",0)
+			endif
+		else
+			if cvs(item_no$,2)<>""
+				callpoint!.setOptionEnabled("SUMM",0)
+			endif
+		endif
+	endif
 	return
 [[SAM_CUSTOMER.AOPT-SALU]]
 rem -- call inquiry program to view Sales Analysis records
@@ -141,6 +230,6 @@ while 1
 	ctl_stat$="D"
 	gosub disable_fields
 	callpoint!.setRecordStatus("CLEAR")
-	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH")
+	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH-CLEAR")
 	break
 wend
