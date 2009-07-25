@@ -25,12 +25,21 @@ rem --- Calculate and display summary info
 	endif
 	callpoint!.setColumnData("SAM_CUSTOMER.ITEM_ID","** Summary **")
 
+rem --- Start progress meter
+	task_id$=info(3,0)
+	Window_Name$="Summarizing"
+	Progress! = bbjapi().getGroupNamespace()
+	Progress!.setValue("+process_task",task_id$+"^C^"+Window_Name$+"^CNC-IND^"+str(n)+"^")
+
 	sam_dev=	fnget_dev("SAM_CUSTOMER")
 	dim sam_tpl$:fnget_tpl$("SAM_CUSTOMER")
 	dim qty[13],cost[13],sales[13]
 	read(sam_dev,key=trip_key$,dom=*next)
 	while 1
 		read record(sam_dev,end=*break)sam_tpl$
+
+		Progress!.getValue("+process_task_"+task_id$,err=*next);break
+	
 		if pos(trip_key$=sam_tpl$)<>1 break
 		for x=1 to 13
 			qty[x]=qty[x]+nfield(sam_tpl$,"qty_shipped_"+str(x:"00"))
@@ -43,6 +52,8 @@ rem --- Calculate and display summary info
 		tqty=tqty+qty[x]
 		tsls=tsls+sales[x]
 	next x
+
+Progress!.setValue("+process_task",task_id$+"^D^")
 
 rem --- Now display all of these things and disable key fields
 	for x=1 to 13
