@@ -29,10 +29,10 @@ rem --- Retrieve sysinfo data
 rem --- Document initializations
 rem --- OutVect! and the other vectors are undeclared in bax_docout.bbj so they must be undeclared here
 
-    rem declare BBjVector OutVect!
-    rem declare BBjVector BrkVect!
-    rem declare BBjVector HdrVect!
-    rem declare BBjVector TotVect!
+    declare BBjVector OutVect!
+    declare BBjVector BrkVect!
+    declare BBjVector HdrVect!
+    declare BBjVector TotVect!
 
     OutVect!=bbjAPI().makeVector()
     BrkVect!=bbjAPI().makeVector()
@@ -359,10 +359,9 @@ ready:
     rem			rep_prog_stamp$=fndate_time$(rd_temp_fin$(27,4))
     rem		endif
 
-    rem --- rdForm! is undeclared in bax_docout.bbj so it must be undeclared here
-    rem     declare BBjTopLevelWindow rdForm!
+        declare BBjTopLevelWindow rdForm!
 
-        call stbl("+DIR_SYP")+"bax_docout.bbj",err=*next,
+        call pgmdir$+"adx_typesafe.aon::docout",
 :           rdForm!,
 :           rd_alias_id$,
 :           rep_date$,
