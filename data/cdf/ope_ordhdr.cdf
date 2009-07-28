@@ -1,3 +1,29 @@
+[[OPE_ORDHDR.BREX]]
+rem --- Credit action
+
+	cust_id$  = cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2)
+	ord_no$   = cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2)
+	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
+	status    = 0
+
+	if user_tpl.credit_installed$="Y" and inv_type$<>"P" and cust_id$<>"" and ord_no$<>"" then
+		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, status
+		if status = 999 then goto std_exit
+		if status = 911 then escape; rem couldn't find order
+	endif
+[[OPE_ORDHDR.AOPT-PRNT]]
+rem --- Print a counter Picking Slip
+
+	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
+	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+	if user_tpl.credit_installed$ <> "Y" and inv_type$ <> "P" then
+		if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+		callpoint!.setStatus("SAVE")
+		call "opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
+		if status = 999 then goto std_exit
+	endif
 [[OPE_ORDHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
@@ -15,7 +41,7 @@ rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
-        gosub check_credit
+		gosub check_credit
 
 		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
 			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
@@ -139,7 +165,7 @@ print "Hdr:ARER"; rem debug
 
 rem --- Set flag
 
-	user_tpl.user_entry$ = "N"; rem user entered an order (not navagated)
+	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
 
@@ -150,9 +176,10 @@ rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
-        gosub check_credit
+      gosub check_credit
 
-		rem --- Only display if user did not enter the customer, that is, used the nav arrows
+	rem --- Only display if user did not enter the customer, that is, used the nav arrows
+
 		if user_tpl.user_entry$ = "N" then
 			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
 				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
@@ -173,6 +200,14 @@ rem --- Display order total
 
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 	print "---Order Total: ", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
+
+rem --- Enable buttons
+
+	if user_tpl.credit_installed$ <> "Y" and callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") <> "P" then
+		callpoint!.setOptionEnabled("PRNT",1)
+	else
+		callpoint!.setOptionEnabled("PRNT",0)
+	endif
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
@@ -720,8 +755,10 @@ rem --- Enable/disable expire date based on value
 
 	if inv_type$ <> "P" then
 		status = -1
+		callpoint!.setOptionEnabled("PRNT",0)
 	else
 		status = 1
+		if user_tpl.credit_installed$ <> "Y" then callpoint!.setOptionEnabled("PRNT",1)
 	endif
 
 	callpoint!.setColumnEnabled("OPE_ORDHDR.EXPIRE_DATE", status)
@@ -899,18 +936,21 @@ return
 
 rem ==========================================================================
 check_credit: rem --- Check credit limit of customer
-              rem      IN: custdet_tpl$ (cust detail record)
+              rem     (ope_db, 5400-5499)
 rem ==========================================================================
 
-	if custdet_tpl.credit_limit and user_tpl.balance>=user_tpl.credit_limit then
+	over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
+
+	if user_tpl.credit_limit<>0 and over_credit_limit=0 and user_tpl.balance>=user_tpl.credit_limit then
    	if user_tpl.credit_installed$ <> "Y" then
       	msg_id$ = "OP_OVER_CREDIT_LIMIT"
-			dim msg_token$[1]
-			msg_token$[1] = str(custdet_tpl.credit_limit:user_tpl.amount_mask$)
+			dim msg_tokens$[1]
+			msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
          gosub disp_message
       endif  
    
 		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Credit Limit Exceeded ***") 
+		callpoint!.setDevObject("over_credit_limit", "1")
    endif
 
 return
@@ -1479,8 +1519,9 @@ return
 print "Hdr:BSHO"; rem debug
 
 rem --- Documentation
+rem     Old s$(1,1) = 0 / 1 -> callpoint!.getDevObject("over_credit_limit") 
 rem     Old s$(7,1) = 0 -> user_tpl.hist_ord$ = "Y" - order came from history
-rem     Old s$(7,1) = 1 -> user_tpl.hist_ord$ = "N"
+rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
@@ -1589,9 +1630,10 @@ rem --- Disable display fields
 	column!.addItem("<<DISPLAY>>.TOT_AGING")
 	callpoint!.setColumnEnabled(column!, -1)
 
-rem --- Save totals object
+rem --- Save display control objects
 
 	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") ); rem do we need this?
+	callpoint!.setDevObject("credit_hold_control", util.getControl(callpoint!, "<<DISPLAY>>.CREDIT_HOLD")); rem used in opc_creditcheck
 
 rem --- Setup user_tpl$
 
@@ -1620,7 +1662,6 @@ rem --- Setup user_tpl$
 :     "pricing_code:c(4), " +
 :     "order_date:c(8), " +
 :     "pick_hold:c(1), " +
-:     "never_checked:u(1), " +
 :     "pgmdir:c(1*), " +
 :     "skip_whse:c(1), " +
 :     "warehouse_id:c(2), " +
@@ -1672,7 +1713,6 @@ rem --- Setup user_tpl$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
 	user_tpl.bo_col            = 8
-	user_tpl.never_checked     = 1
 	user_tpl.is_cash_sale      = 0
 
 rem --- Save the indices of the controls for the Avail Window, setup in AFMC
@@ -1696,7 +1736,11 @@ rem --- Set variables for called forms (OPE_ORDLSDET)
 	callpoint!.setDevObject("lotser_flag", ivs01a.lotser_flag$)
 	rem callpoint!.setDevObject("default_linecode",ars01a.line_code$)
 
-rem --- Set Lot/Serial button up properly
+rem --- Credit Mgmt
+
+	callpoint!.setDevObject("over_credit_limit", "0")
+
+rem --- Set up Lot/Serial button (and others) properly
 
 	switch pos(ivs01a.lotser_flag$="LS")
 		case 1; callpoint!.setOptionText("LENT","Lot Entry"); break
@@ -1709,4 +1753,11 @@ rem --- Set Lot/Serial button up properly
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
-	callpoint!.setOptionEnabled("CRCH",1)
+
+	if user_tpl.credit_installed$ = "Y" then
+		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("CRCH",1)
+	else
+		callpoint!.setOptionEnabled("PRNT",1)
+		callpoint!.setOptionEnabled("CRCH",0)
+	endif

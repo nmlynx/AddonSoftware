@@ -937,29 +937,6 @@ rem ==========================================================================
 return
 
 rem ==========================================================================
-retrieve_row_data: rem *** DEPRECATED (not used)
-rem ==========================================================================
-
-	currow=callpoint!.getValidationRow()
-
-	mod_stat$=callpoint!.getGridRowModifyStatus(currow)
-	new_stat$=callpoint!.getGridRowNewStatus(currow)
-
-	curVect!=gridVect!.getItem(0)
-	dim cur_rec$:dtlg_param$[1,3]
-	cur_rec$=curVect!.getItem(currow)
-
-	undoVect!=gridVect!.getItem(1)
-	dim undo_rec$:dtlg_param$[1,3]
-	undo_rec$=curVect!.getItem(currow)
-
-	diskVect!=gridVect!.getItem(2)
-	dim disk_rec$:dtlg_param$[1,3]
-	disk_rec$=curVect!.getItem(currow)
-
-return
-
-rem ==========================================================================
 uncommit_iv: rem --- Uncommit Inventory
 rem              --- Make sure action$ is set before entry
 rem ==========================================================================
@@ -1008,22 +985,6 @@ print "Det: in uncommit_iv"; rem deebug
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 			endif
 		endif
-	endif
-
-return
-
-rem ==========================================================================
-disable_linecode_whse: rem --- Disable line code and warehouse columns
-                       rem --- These come from parameters and POS records
-rem *** DEPRECATED *** Currently not used
-rem ==========================================================================
-
-	if user_tpl.skip_ln_code$ = "Y" then
-		callpoint!.setColumnEnabled("OPE_INVDET.LINE_CODE", 0)
-	endif
-
-	if user_tpl.skip_whse$ = "Y" then
-		callpoint!.setColumnEnabled("OPE_INVDET.WAREHOUSE_ID", 0)
 	endif
 
 return
@@ -1195,16 +1156,18 @@ rem ==========================================================================
 return
 
 rem ==========================================================================
-credit_exceeded: rem --- Credit Limit Exceeded
+credit_exceeded: rem --- Credit Limit Exceeded (ope_cd, 5500-5599)
 rem ==========================================================================
 
-	if user_tpl.credit_limit and user_tpl.never_checked then
+	already_warned = num(callpoint!.getDevObject("over_credit_limit"))
+
+	if user_tpl.credit_limit <> 0 and !already_warned then
 		msg_id$ = "OP_OVER_CREDIT_LIMIT"
 		dim msg_tokens$[1]
 		msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
 		gosub disp_message
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Over Credit Limit ***")
-		user_tpl.never_checked = 0
+		callpoint!.setDevObject("over_credit_limit", "1")
 	endif
 
 return
