@@ -15,6 +15,10 @@ rem enter ope01_dev,arm02_dev,firm_id$,customer$,credit$,s$,m1$,type
 	declare Callpoint callpoint!
 	
 	enter customer$, table_chans$[all], callpoint!
+    
+rem --- For type checking
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
 
 rem --- Retrieve the program path
 
@@ -22,10 +26,6 @@ rem --- Retrieve the program path
     pgmdir$=stbl("+DIR_PGM",err=*next)
     sypdir$=""
     sypdir$=stbl("+DIR_SYP",err=*next)
-
-rem --- For type checking
-
-	use ::sys/prog/bao_callpoint.bbj::Callpoint
 
 rem --- Retrieve sysinfo data
 
@@ -77,15 +77,15 @@ rem --- Initializations
     more=1
     aging_bucket=num(ars01c.aging_bucket$)
     if aging_bucket=0 then let aging_bucket=5
-    t0=0
-    t1=0
-    t2=0
+    open_ord_amt=0
+    open_bo_amt=0
+    held_ord_amt=0
 
 rem --- Get Customer Detail Record
 
     read record (arm02_dev,key=firm_id$+customer$+"  ",dom=*next) arm02a$
 
-position: rem --- Position file
+rem --- Position file
 
     read (ope01_dev,key=firm_id$+"  "+customer$,dom=*next)
 
@@ -98,50 +98,41 @@ rem --- Total Open Orders
 		
         if pos(ope01a.invoice_type$="PV") = 0 then 
 			if ope01a.invoice_type$="B" then 
-				t1=t1+ope01a.total_sales 
+				open_bo_amt=open_bo_amt+ope01a.total_sales 
 			else 
 				if ope01a.credit_flag$="C" then 
-					t2=t2+ope01a.total_sales 
+					held_ord_amt=held_ord_amt+ope01a.total_sales 
 				else 
-					t0=t0+ope01a.total_sales
+					open_ord_amt=open_ord_amt+ope01a.total_sales
 				endif
 			endif
 		endif
     wend
 
-open_invoices: rem --- Total Open Invoices
+rem --- Total Open Invoices
 
-    t9=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+    total_aging=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
 
 rem --- Total Past Due Invoices
 
-    if aging_bucket=0 t8=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-    if aging_bucket=1 t8=arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-    if aging_bucket=2 t8=arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-    if aging_bucket=3 t8=arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-    if aging_bucket=4 t8=arm02a.aging_90+arm02a.aging_120
-    if aging_bucket=5 t8=arm02a.aging_120
+    if aging_bucket=0 max_past_due=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+    if aging_bucket=1 max_past_due=arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+    if aging_bucket=2 max_past_due=arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+    if aging_bucket=3 max_past_due=arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+    if aging_bucket=4 max_past_due=arm02a.aging_90+arm02a.aging_120
+    if aging_bucket=5 max_past_due=arm02a.aging_120
 
-rem --- Set Check Credit Limit Flag
-
-	credit_check_ok = 0
-	
-    while more
-        if arm02a.cred_hold$="Y" break
-        if arm02a.cred_hold$="E" 
-            credit_check_ok = 1
-            break
-        endif    
-        if ars01c.auto_hold$="Y" and arm02a.credit_limit>0 and arm02a.credit_limit<t9+t0+t1+t2 break
-        if num(ars01c.hold_amount$)>0 
-            if ope01a.total_sales>num(ars01c.hold_amount$) break
-        endif     
-        if t8>num(ars01c.past_due_lim$) break
-        credit_check_ok = 1
-        break
-    wend
-	
-	callpoint!.setDevObject("credit_check_ok", credit_check_ok)
+rem --- Set Check Credit Limit Flag (lines 1600-2299, S$(1,1) is backwards)
+    
+    if  arm02a.cred_hold$="Y" or
+:       max_past_due>ars01c.past_due_lim or
+:       (ars01c.hold_amount and ope01a.total_sales>ars01c.hold_amount) or
+:       (ars01c.auto_hold$="Y" and arm02a.credit_limit and arm02a.credit_limit<total_aging+open_ord_amt+open_bo_amt+held_ord_amt)
+:   then
+        callpoint!.setDevObject("over_credit_limit", "1")
+    else
+        callpoint!.setDevObject("over_credit_limit", "0")
+    endif
 
 rem --- Display	
 
@@ -157,14 +148,14 @@ rem --- Display
 	dflt_data$[8,0] = "CRED_HOLD"
 	
 	dflt_data$[1,1] = str(arm02a.credit_limit)
-	dflt_data$[2,1] = str(t9)
-	dflt_data$[3,1] = str(t0)
-	dflt_data$[4,1] = str(t1)
-	dflt_data$[5,1] = str(t2)
+	dflt_data$[2,1] = str(total_aging)
+	dflt_data$[3,1] = str(open_ord_amt)
+	dflt_data$[4,1] = str(open_bo_amt)
+	dflt_data$[5,1] = str(held_ord_amt)
 	if arm02a.credit_limit > 0 then
-		dflt_data$[6,1] = str(arm02a.credit_limit-t9-t0-t1-t2)
+		dflt_data$[6,1] = str(arm02a.credit_limit-total_aging-open_ord_amt-open_bo_amt-held_ord_amt)
 	endif
-	dflt_data$[7,1] = str(t8)
+	dflt_data$[7,1] = str(max_past_due)
 	dflt_data$[8,1] = arm02a.cred_hold$
 	
 	call sypdir$+"bam_run_prog.bbj", "OPE_CREDITSTATUS", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
