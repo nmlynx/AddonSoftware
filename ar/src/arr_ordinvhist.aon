@@ -50,8 +50,8 @@ rem --- need to use ope files if user selected orders, or opt files if invoice h
     files$[4]="ope-11",options$[4]="OPT",ids$[4]="OPE_ORDDET";rem --- order/inv detail (old are-13)
     files$[5]="ope-21",options$[4]="OPT",ids$[5]="OPE_ORDLSDET";rem --- lot/serial detail file (old are-23)
     files$[6]="opm-02",options$[6]="OPT",ids$[6]="OPC_LINECODE"
-    files$[7]="opt-01",options$[7]="OPT",ids$[7]="OPT_ORDHDR";rem --- inv history hdr (old art-03)
-    files$[8]="opt-11",options$[8]="OPT",ids$[8]="OPT_ORDDET";rem --- inv history dtl (old art-13)
+    files$[7]="opt-01",options$[7]="OPT",ids$[7]="OPT_INVHDR";rem --- inv history hdr (old art-03)
+    files$[8]="opt-11",options$[8]="OPT",ids$[8]="OPT_INVDET";rem --- inv history dtl (old art-13)
     files$[9]="opt-21",options$[9]="OPT",ids$[9]="OPT_INVLSDET";rem --- lot/serial inv history (old art-23)
     files$[10]="ivs_params",options$[10]="OPT",ids$[10]="IVS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],

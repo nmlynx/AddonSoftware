@@ -45,8 +45,8 @@ rem --- Open/Lock files
     files$[10]="ope-41",ids$[10]="OPE_INVCASH"
     files$[11]="opm-02",ids$[11]="OPC_LINECODE"
     files$[12]="opm-09",ids$[12]="OPM_CUSTJOBS"
-    files$[13]="opt-01",ids$[13]="OPT_ORDHDR"
-    files$[14]="opt-11",ids$[14]="OPT_ORDDET"
+    files$[13]="opt-01",ids$[13]="OPT_INVHDR"
+    files$[14]="opt-11",ids$[14]="OPT_INVDET"
     files$[15]="opt-31",ids$[15]="OPT_INVSHIP"
     files$[16]="opt-41",ids$[16]="OPT_INVCASH"
     files$[17]="sam-01",ids$[17]="SAM_CUSTOMER"
@@ -145,15 +145,15 @@ rem --- retrieve template for OPE_ORDDET record key
     dim ope11a_key$:ope11a_key_tpl$
 
 rem --- retrieve template for OPE_ORDHDR record key
-    call sypdir$+"bac_key_template.bbj","OPT_ORDHDR","PRIMARY",opt01a_key_tpl$,table_chans$[all],status$
+    call sypdir$+"bac_key_template.bbj","OPT_INVHDR","PRIMARY",opt01a_key_tpl$,table_chans$[all],status$
     dim opt01a_key$:opt01a_key_tpl$
 
 rem --- retrieve template for OPE_ORDHDR record key (instead for opt-51)
-    call sypdir$+"bac_key_template.bbj","OPT_ORDHDR","ALT_KEY_01",opt01a_altkey01_tpl$,table_chans$[all],status$
+    call sypdir$+"bac_key_template.bbj","OPT_INVHDR","ALT_KEY_01",opt01a_altkey01_tpl$,table_chans$[all],status$
     dim opt01a_altkey1$:opt01a_altkey01_tpl$
 
 rem --- retrieve template for OPE_ORDHDR record key (instead for opt-61)
-    call sypdir$+"bac_key_template.bbj","OPT_ORDHDR","ALT_KEY_02",opt01a_altkey02_tpl$,table_chans$[all],status$
+    call sypdir$+"bac_key_template.bbj","OPT_INVHDR","ALT_KEY_02",opt01a_altkey02_tpl$,table_chans$[all],status$
     dim opt01a_altkey2$:opt01a_altkey02_tpl$
 
 rem --- Continue?

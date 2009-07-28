@@ -1166,7 +1166,7 @@ rem ==========================================================================
 		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :			gui_dev,
 :			Form!,
-:			"OPT_ORDHDR",
+:			"OPT_INVHDR",
 :			"LOOKUP",
 :			table_chans$[all],
 :			key_pfx$,
@@ -1178,7 +1178,7 @@ rem ==========================================================================
 			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :				gui_dev,
 :				Form!,
-:				"OPT_ORDDET",
+:				"OPT_INVDET",
 :				"LOOKUP",
 :				table_chans$[all],
 :				key_pfx_det$,
@@ -1186,8 +1186,8 @@ rem ==========================================================================
 :				rd_key_det$
 
 			if cvs(rd_key_det$,2)<>"" then 
-				opt01_dev = fnget_dev("OPT_ORDHDR")
-				dim opt01a$:fnget_tpl$("OPT_ORDHDR")
+				opt01_dev = fnget_dev("OPT_INVHDR")
+				dim opt01a$:fnget_tpl$("OPT_INVHDR")
 				read record (opt01_dev, key=rd_key$) opt01a$
 				break
 			endif
@@ -1262,8 +1262,8 @@ rem --- Copy Manual Ship To if any
 
 rem --- Copy detail lines
 
-			dim opt11a$:fnget_tpl$("OPT_ORDDET")
-			opt11_dev=fnget_dev("OPT_ORDDET")
+			dim opt11a$:fnget_tpl$("OPT_INVDET")
+			opt11_dev=fnget_dev("OPT_INVDET")
 
 			dim ope11a$:fnget_tpl$("OPE_INVDET")
 			ope11_dev=fnget_dev("OPE_INVDET")
@@ -1513,8 +1513,8 @@ rem --- Open needed files
 	open_tables$[20]="IVM_ITEMACT",  open_opts$[20]="OTA"
 	open_tables$[21]="IVM_ITEMVEND", open_opts$[21]="OTA"
 	open_tables$[22]="IVT_LSTRANS",  open_opts$[22]="OTA"
-	open_tables$[23]="OPT_ORDHDR",   open_opts$[23]="OTA"
-	open_tables$[24]="OPT_ORDDET",   open_opts$[24]="OTA"
+	open_tables$[23]="OPT_INVHDR",   open_opts$[23]="OTA"
+	open_tables$[24]="OPT_INVDET",   open_opts$[24]="OTA"
 	open_tables$[25]="OPE_ORDDET",   open_opts$[25]="OTA"
 	open_tables$[26]="OPT_INVSHIP",  open_opts$[26]="OTA"
 	open_tables$[27]="OPE_CREDCUST", open_opts$[27]="OTA"
