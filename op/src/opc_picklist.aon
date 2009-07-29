@@ -132,9 +132,9 @@ rem --- Inits
     when$=sysinfo.system_date$
     dim headings$[headings],mh0$(36),md0$(6),md1$(40),x4$(400)
     
-    func.setLen1( int(num(param_rec.desc_len_01$)) )
-    func.setLen2( int(num(param_rec.desc_len_02$)) )
-    func.setLen3( int(num(param_rec.desc_len_03$)) )
+    func.setLen1( int(num(params_rec.desc_len_01$)) )
+    func.setLen2( int(num(params_rec.desc_len_02$)) )
+    func.setLen3( int(num(params_rec.desc_len_03$)) )
 
 rem --- Is this company multi-warehouse?
     
@@ -402,34 +402,33 @@ ready:
     call pgmdir$+"adc_progress.aon","N","","","","",0,prntlist_dev,1,meter_num,status
     if status = 999 then goto std_exit
 
-
 rem --- Clear Print Flag
 
-    start_block = 1
+    while 1
+        extract record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*break) ope01a$
+        if (which_ones$="P" and ope01a.invoice_type$<>"S") or (which_ones$="Q" and ope01a.invoice_type$<>"P") then break
 
-    if start_block then
-        extract record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ope01a$
-        if (which_ones$="P" and ope01a.invoice_type$<>"S") or (which_ones$="Q" and ope01a.invoice_type$<>"P") then continue
-
-        if ope01a.reprint_flag$="Y"
+        if ope01a.reprint_flag$="Y" then
             ope01a.reprint_flag$=""
             ope01a.lock_status$="N" 
         else
-            if pos(ope01a.print_status$="B")=0 continue
-            if pos(ope01a.lock_status$="YS12")<>0 continue
+            if pos(ope01a.print_status$="B")=0 then break
+            if pos(ope01a.lock_status$="YS12")<>0 then break
             after$="YES"
             gosub valid_lines
             ope01a.lock_status$="N"
             if print$="YES" and allprint$="YES" then ope01a.print_status$="Y"
         endif
 
-        if ope01a.print_status$<>"Y" ope01a.print_status$="N"
+        if ope01a.print_status$<>"Y" then ope01a.print_status$="N"
         ope01a$=field(ope01a$)
         write record (ordhdr_dev) ope01a$
-    endif
+        
+        break
+    wend
 
     if ope01a.print_status$="Y" then
-        remove (prntlist_dev, key=firm_id$+ope01a.ordinv_flag$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$)
+        remove (prntlist_dev, key=firm_id$+ope01a.ordinv_flag$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$, dom=*next)
     endif
 
 all_done: rem --- Done with update
