@@ -333,10 +333,9 @@ warn_re_picklist: rem --- Warn About Printing Pick Ticket
     if ope01a.print_status$<>"N" and (ope01a.credit_flag$<>"C" or ars01c.pick_hold$="N") then 
         msg_id$ = "OP_PRINT_PICKLIST"
         gosub disp_message
-        escape; rem debug
         if msg_opt$ = "Y" then
             call pgmdir$+"opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
-            if status then escape; rem debug
+            if status = 999 then exitto std-exit
         endif
         rem call pgmdir$+"adc_yesno.aon",1,"New Items Have Been Committed.  Print Pick Ticket Now",2,v$,v3
         rem if v$="N" then warn$=""
