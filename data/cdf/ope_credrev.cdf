@@ -209,27 +209,34 @@ fill_grid:
 	SysGUI!.setRepaintEnabled(1)
 return
 
+rem ==========================================================================
 create_orders_vector:
+rem ==========================================================================
 
-	vectCredit!=SysGUI!.makeVector()
+	vectCredit! = BBjAPI().makeVector()
 	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,cust_len
-	ope03_dev=fnget_dev("OPE_CREDDATE")
+
+	ope03_dev = fnget_dev("OPE_CREDDATE")
 	dim ope03a$:fnget_tpl$("OPE_CREDDATE")
-	ope01_dev=fnget_dev("OPE_ORDHDR")
+	ope01_dev = fnget_dev("OPE_ORDHDR")
 	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
-	arm01_dev=fnget_dev("ARM_CUSTMAST")
+	arm01_dev = fnget_dev("ARM_CUSTMAST")
 	dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+
 	more=1
 	read (ope03_dev,key=firm_id$,dom=*next)
 	rows=0
 
 	while more
-		readrecord (ope03_dev,end=*break)ope03a$
+		read record (ope03_dev, end=*break) ope03a$
 		if pos(firm_id$=ope03a$)<>1 then break
-		read(ope01_dev,key=firm_id$+ope01a.ar_type$+ope03a.customer_id$+ope03a.order_no$,dom=*continue)ope01a$
+		read record (ope01_dev, key=firm_id$+"  "+ope03a.customer_id$+ope03a.order_no$, dom=*continue) ope01a$
+
 		dim arm01a$:fattr(arm01a$)
-		readrecord(arm01_dev,key=firm_id$+ope01a.customer_id$,dom=*next)arm01a$
-rem --- now fill grid
+		read record (arm01_dev, key=firm_id$+ope01a.customer_id$, dom=*next) arm01a$
+
+	rem --- now fill grid
+
 		vectCredit!.addItem(date(jul(ope03a.rev_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
 		vectCredit!.addItem(fnmask$(ope03a.customer_id$(1,cust_len),m0$))
 		vectCredit!.addItem(arm01a.customer_name$)
@@ -238,7 +245,9 @@ rem --- now fill grid
 		vectCredit!.addItem(date(jul(ope01a.shipmnt_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
 		rows=rows+1
 	wend
+
 	callpoint!.setStatus("REFRESH")
+
 return
 
 create_cust_vector:
