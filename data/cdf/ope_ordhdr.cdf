@@ -44,7 +44,7 @@ rem --- Show customer data
 		gosub check_credit
 
 		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
 		endif
 	endif
 
@@ -78,7 +78,7 @@ rem --- Credit check?
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 
 	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
-		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
 	endif
 [[OPE_ORDHDR.BPRK]]
 print "Hdr:BPRK"; rem debug
@@ -182,7 +182,7 @@ rem --- Show customer data
 
 		if user_tpl.user_entry$ = "N" then
 			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!
+				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
 			endif
 		endif
 	endif
@@ -349,7 +349,7 @@ rem --- Remove committments for detail records by calling ATAMO
 
 	ope33_dev = fnget_dev("OPE_ORDSHIP")
 	cashrct_dev = fnget_dev("OPE_INVCASH")
-	ars_cred_dev = fnget_dev("OPE_CREDCUST")
+	creddate_dev = fnget_dev("OPE_CREDDATE")
 
 	ar_type$  = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 	cust$     = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -391,7 +391,7 @@ rem --- Remove committments for detail records by calling ATAMO
 	remove (cashrct_dev, key=firm_id$+ar_type$+cust$+ord$, err=*next)
 
 	if user_tpl.credit_installed$="Y" then
-		remove (ars_cred_dev, key=firm_id$+cust$+ord_date$+ord$, err=*next)	
+		remove (creddate_dev, key=firm_id$+ord_date$+cust$+ord$, err=*next)	
 	endif
 [[OPE_ORDHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
@@ -1553,7 +1553,7 @@ rem --- Open needed files
 	open_tables$[24]="OPT_INVDET",   open_opts$[24]="OTA"
 	open_tables$[25]="OPE_ORDDET",   open_opts$[25]="OTA"
 	open_tables$[26]="OPT_INVSHIP",  open_opts$[26]="OTA"
-	open_tables$[27]="OPE_CREDCUST", open_opts$[27]="OTA"
+	open_tables$[27]="OPE_CREDDATE", open_opts$[27]="OTA"
 	open_tables$[28]="IVC_WHSECODE", open_opts$[28]="OTA"
 	open_tables$[29]="IVS_PARAMS",   open_opts$[29]="OTA"
 	open_tables$[30]="OPE_ORDLSDET", open_opts$[30]="OTA"
