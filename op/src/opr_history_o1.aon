@@ -61,12 +61,12 @@ rem --- 0-4 = LIST,COST,QTY ORDERED,QTY B/O,QTY SHIPPED
             endif
         endif
 
-        if s0$="" then let h4$="First"
-        if s1$="" then let h5$="Last"
-        if s2$="" then let h6$="First"
-        if s3$="" then let h7$="Last"
-        if s4$="" then let h8$="All"
-        if s5$="" then let h9$="All"
+        if s0$="" then let h4$="First" else h4$=fnmask$(s0$(1,m0),m0$)
+        if s1$="" then let h5$="Last" else h5$=fnmask$(s1$(1,m0),m0$)
+        if s2$="" then let h6$="First" else h6$=fndate$(s2$)
+        if s3$="" then let h7$="Last" else h7$=fndate$(s3$)
+        if s4$="" then let h8$="All" else h8$=s4$
+        if s5$="" then let h9$="All" else h9$=s5$
         
         headings$[2]="Beginning Customer : "+h4$+"        Beginning Invoice Date : "+h6$
         headings$[3]="Ending Customer      : "+h5$+"        Ending Invoice Date      : "+h7$
@@ -116,7 +116,6 @@ rem --- retrieve template for OPT_INVDET record key
 rem --- retrieve template for OPT_INVLSDET record key
         call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_INVLSDET","PRIMARY",opt21a_key_tpl$,table_chans$[all],status$
         dim opt21a_key$:opt21a_key_tpl$
-
 
 rem --- Main Loop Starts
         while more
@@ -419,7 +418,7 @@ rem --- Total By Line Type
 order_header: rem --- Order Header
 
         gosub terms_code
-        OutVect!.addItem(fnmask$(opt01a.customer_id$(1,p[0]),ars01a.customer_output$)+" "+arm01a.customer_name$)
+        OutVect!.addItem(fnmask$(opt01a.customer_id$(1,m0),ars01a.customer_output$)+" "+arm01a.customer_name$)
         OutVect!.addItem(opt01a.order_no$)
         OutVect!.addItem(opt01a.ar_inv_no$)
         OutVect!.addItem(fndate$(opt01a.invoice_date$))
@@ -508,10 +507,10 @@ total_freight: rem --- Sales Total Freight Ssles Tax/Invoice Total
 
 serialized_inventory: rem --- Serialized/Lotted Inventory
 
-        read (opt21_dev,key=opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.line_no$,dom=*next)
+        read (opt21_dev,key=opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.orddet_seq_ref$,dom=*next)
         while more
             opt21a_key$=key(opt21_dev,end=*break)
-            if opt21a_key.firm_id$+opt21a_key.ar_type$+opt21a_key.customer_id$+opt21a_key.ar_inv_no$+opt21a_key.line_no$<>opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.line_no$ then break
+            if opt21a_key.firm_id$+opt21a_key.ar_type$+opt21a_key.customer_id$+opt21a_key.ar_inv_no$+opt21a_key.orddet_seq_ref$<>opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.orddet_seq_ref$ then break
             read record (opt21_dev,key=opt21a_key$) opt21a$
             OutVect!.addItem(x2$+" "+opt21a_key.sequence_no$+" "+r1$)
             OutVect!.addItem(str(r0:m2$))
@@ -525,10 +524,10 @@ serialized_inventory: rem --- Serialized/Lotted Inventory
 print_detail: rem --- Print Detail
 
         if pos(opm02a.line_type$="MO")>0 then
-            OutVect!.addItem(opt11a_key.line_no$+"  "+opt11a.line_code$+"  "+opt11a.warehouse_id$+" "+desc$)
+            OutVect!.addItem(opt11a_key.orddet_seq_ref$+"  "+opt11a.line_code$+"  "+opt11a.warehouse_id$+" "+desc$)
             xwk = fnblank(11)
         else
-            OutVect!.addItem(opt11a_key.line_no$+"  "+opt11a.line_code$+" "+opt11a.product_type$+"  "+opt11a.warehouse_id$+"   "+cvs(opt11a.item_id$,3)+" "+desc$)
+            OutVect!.addItem(opt11a_key.orddet_seq_ref$+"  "+opt11a.line_code$+" "+opt11a.product_type$+"  "+opt11a.warehouse_id$+"   "+cvs(opt11a.item_id$,3)+" "+desc$)
             xwk = fnblank(11)
         endif
 
@@ -588,9 +587,9 @@ selected_item: rem --- Check For Selected Item and Minimum GP%
         opt11a_key$=keyp(opt11_dev,end=no_invoice_detail_history)
         if pos((opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$)=opt11a_key$)=1 then 
             
-            m=num(opt11a_key.line_no$)
+            m=num(opt11a_key.orddet_seq_ref$)
             dim l0$[m,7],l0[m,7],l1[1]
-            read (opt11_dev,key=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$+"000",dom=*next)
+            read (opt11_dev,key=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$,dom=*next)
 
             while more
                 opt11a_key$=key(opt11_dev,end=*break)
@@ -620,7 +619,7 @@ selected_item: rem --- Check For Selected Item and Minimum GP%
                 if pos(opm02a.line_type$="SNPO")=0 then continue
                 if s5$<>"" then 
                     if opm02a.line_type$<>"O" then
-                        if opm02a.line_type$<>"N" and s5$=opt11a.item_id$(1,i[0]) then let l$="PRINT"
+                        if opm02a.line_type$<>"N" and s5$=opt11a.item_id$ then let l$="PRINT"
                         if opm02a.line_type$="N" and pos(s5$=opt11a.order_memo$)=1 then let l$="PRINT"
                     endif
                 else
@@ -628,6 +627,9 @@ selected_item: rem --- Check For Selected Item and Minimum GP%
                 endif
 
                 if s6=100 then continue
+                if fnd(opt11a.ext_price-opt11a.unit_cost*opt11a.qty_shipped,opt11a.ext_price) < s6 then
+                    l$=""
+                endif
                 if opm02a.line_type$="O" then
                     let l1[0]=l1[0]+opt11a.ext_price
                     continue
