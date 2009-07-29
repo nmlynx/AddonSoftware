@@ -47,7 +47,7 @@ rem --- Open/Lock files
     files$[15]="ivm-02",ids$[15]="IVM_ITEMWHSE"
     files$[16]="ivs_params",ids$[16]="IVS_PARAMS"
     files$[17]="ope-01",ids$[17]="OPE_ORDHDR"
-    files$[18]="ope-02",ids$[18]="OPE_CREDCUST"
+    files$[18]="ope-03",ids$[18]="OPE_CREDDATE"
     files$[19]="ope-04",ids$[19]="OPE_PRNTLIST"
     files$[20]="ope-11",ids$[20]="OPE_ORDDET"
     files$[21]="ope-21",ids$[21]="OPE_ORDLSDET"
@@ -83,7 +83,7 @@ rem --- Open/Lock files
     ivm02_dev=channels[15]
     ivs01a_dev=channels[16]
     ope01_dev=channels[17]
-    ope02_dev=channels[18]
+    ope03_dev=channels[18]
     ope04_dev=channels[19]
     ope11_dev=channels[20]
     ope21_dev=channels[21]
@@ -108,13 +108,11 @@ rem ops10a$:templates$[26],
 :       art11a$:templates$[10],glm01a$:templates$[11],glt04a$:templates$[12],
 :       glt15a$:templates$[13],ivm01a$:templates$[14],
 :       ivm02a$:templates$[15],ivs01a$:templates$[16],ope01a$:templates$[17],
-:       ope02a$:templates$[18],ope04a$:templates$[19],
+:       ope03a$:templates$[18],ope04a$:templates$[19],
 :       ope11a$:templates$[20],ope21a$:templates$[21],ope31a$:templates$[22],
-:       ope41a$:templates$[23],
-:       opm02a$:templates$[24],opm06a$:templates$[25],
+:       ope41a$:templates$[23],opm02a$:templates$[24],opm06a$:templates$[25],
 :       ops10s$:templates$[27],opt01a$:templates$[28],opt21a$:templates$[29],
 :       opt71a$:templates$[30],poe08a$:templates$[31],poe12a$:templates$[32]
-
 
 rem --- Retrieve parameter records
 
@@ -137,16 +135,6 @@ rem --- Background
 rem --- Position file
 
     read (ope04_dev,key=firm_id$+"I",dom=*next)
-
-rem --- retrieve template for OPE_CREDCUST record key
-
-    call sypdir$+"bac_key_template.bbj","OPE_CREDCUST","PRIMARY",ope02a_key_tpl$,table_chans$[all],status$
-    dim ope02a_key$:ope02a_key_tpl$
-
-rem --- retrieve template for OPE_PRNTLIST record key
-
-rem call sypdir$+"bac_key_template.bbj","OPE_PRNTLIST","PRIMARY",ope04a_key_tpl$,table_chans$[all],status$
-rem dim ope04a_key$:ope04a_key_tpl$
 
 rem --- retrieve template for OPE_ORDDET record key
 
@@ -671,7 +659,7 @@ rem --- Read next invoice header --- Main Loop Starts
 
         if (!something_backord and !something_commit) or ope01a.customer_id$=ars01a.customer_id$ then
             remove (ope01_dev, key=ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$, dom=*next)
-            if ope02_dev gosub remove_tickler
+            if ope03_dev gosub remove_tickler
             remove (ope31_dev, key=ope04a.firm_id$+ope04a.customer_id$+ope04a.order_no$, dom=*next)
         rem remove (ope51_dev, key=ope04a.firm_id$+ope04a.ar_type$+ope04a.order_no$+ope04a.customer_id$, dom=*next)
         else
@@ -811,25 +799,23 @@ rem --- ope-21 lot/serial entries are always shipped
 
     return
 
-remove_tickler: rem --- Remove ope-02/ope-03 Credit Manager Tickler File Records
+remove_tickler: rem --- Remove ope-03 Credit Manager Tickler File Records
 
-    read (ope02_dev,key=ope04a.firm_id$+ope04a.customer_id$,dom=*next)
+    read (ope03_dev, key=ope04a.firm_id$+ope04a.customer_id$+ope04a.order_no$, knum=2, dom=*next)
     remove_record = 0
 
     while more
-        ope02a_key$=key(ope02_dev,end=*break)
-        read (ope02_dev)
-        if ope02a_key.firm_id$+ope02a_key.customer_id$<>ope04a.firm_id$+ope04a.customer_id$ then break
+        read record (ope03_dev, end=*break) ope03a$
+        if ope03a.firm_id$+ope03a.customer_id$<>ope04a.firm_id$+ope04a.customer_id$ then break
 
-        if ope02a_key.order_no$=ope04a.order_no$ then 
+        if ope03a.order_no$=ope04a.order_no$ then 
             remove_record = 1
             break
         endif
     wend
 
     if remove_record then 
-        remove (ope02_dev,key=ope02a_key$)
-        remove (ope03_dev,key=ope02a_key.firm_id$+ope02a_key.rev_date$+ope02a_key.customer_id$+ope02a_key.order_no$,dom=*next)
+        remove (ope03_dev, key=ope03a.firm_id$+ope03a.rev_date$+ope03a.customer_id$+ope03a.order_no$, dom=*next)
     endif
 
     return
