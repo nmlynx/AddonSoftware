@@ -205,8 +205,7 @@ rem --- Print the order?
 	msg_id$="OP_ORDREL"
 	gosub disp_message
 	if msg_opt$="Y"
-		x$=stbl("on_demand","Y"+cust$+ord$)
-		call "opr_oderpicklst.aon",cust$+ord$
+		call "opc_picklist.aon", cust$, ord$, table_chans$[all], status
 	endif
 	callpoint!.setStatus("EXIT")
 
