@@ -212,6 +212,6 @@ while 1
 	ctl_stat$="D"
 	gosub disable_fields
 	callpoint!.setRecordStatus("CLEAR")
-	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH")
+	callpoint!.setStatus("ABLEMAP-ACTIVATE-REFRESH-CLEAR")
 	break
 wend
