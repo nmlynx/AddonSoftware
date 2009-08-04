@@ -6,12 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem --- The following channel references have been identified:
-
-rem --- ivm14a: Channel reference (Line 0243)
-
-rem --------------------------------------------------------------------------------
-
     setesc std_error
     seterr std_error
 
@@ -66,7 +60,7 @@ rem --- Parameters
     dim sa_channels[2],xrefs[nmbr],periods$[13],iv_masks$[3],iv_desc[3]
     call pgmdir$+"sac_pa.aon",action,firm_id$,segments,levels$[all],literals$[all],types$[all],imasks$[all],omasks$[all],prompts$[all],inlen[all],fldlen[all],descchan[all],descrec$[all],descstr[all],descpos[all],desclen[all],sa_channels[all],keylen,xrefs[all],fy$,periods,periods$[all],iv_masks$[all],iv_desc[all],ivm14_dev,status
     if status or segments<1 goto std_exit
-rem     if sa_channels[2] gosub build_xrefs
+
     if action=21
        switch pos(level$="PIC")
             case 1; segments=1
@@ -106,9 +100,6 @@ rem --- Initializations
            case 2; levels$="PI"
            case 3; levels$="PIC"
        swend
-rem        if segments=1 levels$=levels$[2]
-rem        if segments=2 levels$=levels$[2]+levels$[3]
-rem        if segments=3 levels$=levels$[2]+levels$[3]+levels$[1]
     endif
     dim seqs$[3]; let seqs$[1]="Ascending",seqs$[2]="Descending",seqs$[3]="Unsorted",seqs$="ADU"
     dim sus$[2]; let sus$[1]="Sales",sus$[2]="Units",sus$="SU"
@@ -237,7 +228,11 @@ rem --- get correct template for sam-12
     for x=1 to segments
         if literals$[x]<>"" sum_fldlen=sum_fldlen+fldlen[x]
     next x
+
     call pgmdir$+"adc_clearfile.aon",sam12_dev
+    if sam12_dev=0
+        goto std_exit
+    endif
 l6440:
     read (sam01_dev,key=firm_id$+sayear$,dom=*next)
 l6450:
