@@ -211,7 +211,7 @@ printdetail: rem --- Set up variables
     woseq$=pot14a.wo_seq_ref$
     custnum$=pot14a.customer_id$
 
-rem --- Get Drop Ship flag & Line Type
+rem --- Get Dropship flag & Line Type
 
     linetype$="N"
     dropship$="N"
@@ -290,7 +290,7 @@ rem --- Print Line Types 'S' & 'N'
                 l=l+1
             endif
 
-rem --- Print drop ship info if applicable
+rem --- Print dropship info if applicable
 
             if dropship$="Y" 
                 dim custinfo$(321),dropinfo$(173),custaddr$(120),dropaddr$(120)
@@ -308,7 +308,7 @@ brnch3:
 brnch4:
                 if l+6>l9 gosub report_heading
                 a=fnblank(1)
-                OutVect!.addItem("Drop Ship Above Line To Customer")
+                OutVect!.addItem("Dropship Above Line To Customer")
                 OutVect!.addItem(fnmask$(arm01a.customer_id$(1,custlen),customask$))
                 OutVect!.addItem(" Order")
                 OutVect!.addItem(pot14a.order_no$+" "+pot14a.line_no$)

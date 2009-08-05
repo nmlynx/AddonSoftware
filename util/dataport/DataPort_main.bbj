@@ -424,15 +424,15 @@ end_ddm04:
 
         for field=1 to fields
 
-rem --- Check for and warn if PO detail files contain Drop Ship information
+rem --- Check for and warn if PO detail files contain Dropship information
 
         if new_datafile$="poe-11" or new_datafile$="poe-12"
             if cvs(old_fieldlist.name$[field],3)="CUSTOMER_NBR" or	           cvs(old_fieldlist.name$[field],3)="ORDER_NUMBER" or			   cvs(old_fieldlist.name$[field],3)="LINE_NUMBER" or			   cvs(old_fieldlist.name$[field],3)="SHIPTO_NBR"
                 if cvs(field(old_rec$,old_fieldlist.name$[field],err=*continue),3)<>""
                     if new_datafile$="poe-11"
-                        print (err_dev)"There is Drop Ship information in Requisition "+old_rec.req_number$+" in line "+old_rec.po_line_nbr$+" - "+cvs(old_fieldlist.name$[field],3)+"="+cvs(field(old_rec$,old_fieldlist.name$[field]),3)+"."
+                        print (err_dev)"There is Dropship information in Requisition "+old_rec.req_number$+" in line "+old_rec.po_line_nbr$+" - "+cvs(old_fieldlist.name$[field],3)+"="+cvs(field(old_rec$,old_fieldlist.name$[field]),3)+"."
                     else
-                        print (err_dev)"There is Drop Ship information in Purchase Order "+old_rec.po_number$+" in line "+old_rec.po_line_nbr$+" - "+cvs(old_fieldlist.name$[field],3)+"="+cvs(field(old_rec$,old_fieldlist.name$[field]),3)+"."
+                        print (err_dev)"There is Dropship information in Purchase Order "+old_rec.po_number$+" in line "+old_rec.po_line_nbr$+" - "+cvs(old_fieldlist.name$[field],3)+"="+cvs(field(old_rec$,old_fieldlist.name$[field]),3)+"."
                     endif
                     dropship$="Y"
                 endif
@@ -815,11 +815,11 @@ rem    gosub make_printplus
     endif
 
     if dropship$="Y" 
-        rd_meter_data$="Drop ship information exists in the source data. See error file for details."
+        rd_meter_data$="Dropship information exists in the source data. See error file for details."
         rd_meter_total_recs=iff(rdVectPort!=null(),0,rdVectPort!.size())
         rd_meter_action$="LST"
         gosub disp_meter        
-        print "   Drop ship information exists in the ported data. See error file for details."
+        print "   Dropship information exists in the ported data. See error file for details."
     endif
 
 rem --- Populate sequence record(s)

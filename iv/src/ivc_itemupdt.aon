@@ -45,7 +45,7 @@ rem --- [1] = Reference 1      [8] = Transaction Comment
 rem --- [2] = Reference 2      [9] = Finished Item (BI/WI/WO)
 rem --- [3] = Reference 3     [10] = Lot/Serial Location
 rem --- [4] = Reference 4     [11] = Lot/Serial Comment
-rem --- [5] = Sequence Nbr    [12] = Drop Ship Flag
+rem --- [5] = Sequence Nbr    [12] = Dropship Flag
 rem --- [6] = OP/PO Line Code
 rem --- REFS[n]    : Reference Information (input)
 rem --- [0] = Quantity       
@@ -553,7 +553,7 @@ lot_serial_trans: rem --- ivt-01 Lot/Serial Transactions
         ivt01a.lotser_no$=lotser$
         ivt01a.trans_date$=ymd$
         channel=ivt01_dev
-        if dropship then location$="Drop Ship"
+        if dropship then location$="Dropship"
         gosub init_trans_hist_rec
         ivt01a$=field(ivt01a$)
         write record (ivt01_dev) ivt01a$

@@ -107,7 +107,7 @@ l2000: rem --- Read next
     if ope11a.commit_flag$="N" backorder=ope11a.qty_backord else backorder=ope11a.qty_ordered; rem "Item committed?
     if backorder=0 goto l2900
 
-rem --- Drop shipment?
+rem --- Dropshipment?
 
     if firm_id$+ope11a.line_code$=opm02a.firm_id$+opm02a.line_code$ goto l2150
     dim opm02a$:fattr(opm02a$)
