@@ -871,13 +871,13 @@ rem ==========================================================================
 		userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
 		userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
 
-		rem --- Set Drop Ship flag
+		rem --- Set Dropship flag
 
 		dropship_idx = num(user_tpl.dropship_flag$)
 		userObj!.getItem(dropship_idx).setText("")
 
 		if user_tpl.line_dropship$="Y"
-			userObj!.getItem(dropship_idx).setText("**Drop Ship**")
+			userObj!.getItem(dropship_idx).setText("**Dropship**")
 		endif
 
 	endif

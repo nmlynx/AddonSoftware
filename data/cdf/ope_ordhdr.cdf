@@ -331,7 +331,7 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$0000$))
 	userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
-	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Drop Ship text
+	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Dropship text
 [[OPE_ORDHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
@@ -1345,7 +1345,7 @@ rem ==========================================================================
 
 	while 1
 		if pos(opc_linecode.line_type$="SP")=0 then break
-		if opc_linecode.dropship$="Y" or inv_type$="P" then break; REM "Drop ship or quote
+		if opc_linecode.dropship$="Y" or inv_type$="P" then break; rem "Dropship or quote
 		if line_sign>0 then iv_action$="OE" else iv_action$="UC"
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon",iv_action$,iv_files[all],ivs01a$,iv_info$[all],iv_refs$[all],iv_refs[all],table_chans$[all],iv_status
 		break

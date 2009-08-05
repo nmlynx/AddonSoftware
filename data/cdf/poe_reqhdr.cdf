@@ -271,7 +271,7 @@ whse_addr_info: rem --- get and display Warehouse Address Info
 
 return
 
-dropship_shipto: rem --- get and display shipto from Sales Order if drop ship indicated, and OE installed
+dropship_shipto: rem --- get and display shipto from Sales Order if dropship indicated, and OE installed
 
 	ope_ordhdr_dev=fnget_dev("OPE_ORDHDR")
 	arm_custship_dev=fnget_dev("ARM_CUSTSHIP")
