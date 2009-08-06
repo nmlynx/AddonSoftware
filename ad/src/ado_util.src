@@ -6,6 +6,9 @@ rem ==========================================================================
 
     use ::sys/prog/bao_callpoint.bbj::Callpoint
     use ::ado_func.src::func
+    use ::adc_array.aon::ArrayObject
+    
+    use java.util.HashMap
 
     class public util
 
@@ -32,7 +35,11 @@ rem ==========================================================================
         field public static BBjString DisableValue$ = "I"
     rem --- Misc
         field private static BBjInt Resized% = 0
-
+        field private static BBjString Class_Name$ = "util"
+    rem --- table_chans$[all] array fields
+        field private static ArrayObject TableChans!
+        field private static HashMap devs!
+        field private static HashMap tmpls!
 
     rem ==========================================================================
     rem --- Resize a Baritsa window after custom controls have been placed on it.
@@ -698,6 +705,63 @@ rem ==========================================================================
 
         methodend
 
+    rem ==========================================================================
+    rem 
+    rem --- table_chans$[all] as objects
+    rem 
+    rem ==========================================================================
+    
+        method public static void setTableChans(ArrayObject p_table_chans!)
+            #TableChans! = p_table_chans!
+            #devs! = new HashMap()
+            #tmpls! = new HashMap()
+            devs$ = p_table_chans!.getElement(0,0)
+            
+            if devs$<>"" then 
+                for i = 1 to len(devs$) step 20
+                    data_name$ = cvs(devs$(i,17), 2)
+                    #devs!.put(data_name$, devs$(i+17,3))
+                    #tmpls!.put(data_name$, p_table_chans!.getElement(int((i+19)/20), 0))
+                next i
+            endif
+            
+        methodend
+        
+    rem --- Get a device (channel) from a data name
+    
+        method public static BBjInt getDev(BBjString p_data_name$)
+        
+            if #devs! = null() then
+                throw #Class_Name$+": Need to call setTableChans() first", 258
+                methodret 0
+            else
+                if #devs!.containsKey(p_data_name$) then
+                    methodret int(num(#devs!.get(p_data_name$)))
+                else
+                    throw #Class_Name$+": Cannot find "+p_data_name$, 257
+                    methodret 0
+                endif
+            endif
+            
+        methodend
+        
+    rem --- Get a template from a data name
+    
+        method public static BBjString getTmpl(BBjString p_data_name$)
+        
+            if #tmpls! = null() then
+                throw #Class_Name$+": Need to call setTableChans() first", 260
+                methodret ""
+            else
+                if #tmpls!.containsKey(p_data_name$) then
+                    methodret str(#tmpls!.get(p_data_name$))
+                else
+                    throw #Class_Name$+": Cannot find "+p_data_name$, 259
+                    methodret ""
+                endif
+            endif
+            
+        methodend
 
     rem ==========================================================================
     rem
@@ -706,6 +770,7 @@ rem ==========================================================================
     rem ==========================================================================
 
     rem --- Return the detail grid control
+    
         method public static BBjStandardGrid getGrid(BBjTopLevelWindow Form!)
             declare BBjStandardGrid grid!
             grid! = cast(BBjStandardGrid, Form!.getChildWindow(#CHILD_WINDOW_ID%).getControl(#GRID_ID%))
@@ -713,6 +778,7 @@ rem ==========================================================================
         methodend
 
     rem --- Return the child window control
+    
         method public static BBjChildWindow getChild(BBjTopLevelWindow Form!)
             declare BBjChildWindow child!
             child! = cast(BBjChildWindow, Form!.getChildWindow(#CHILD_WINDOW_ID%))
