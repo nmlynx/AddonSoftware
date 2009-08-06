@@ -14,7 +14,7 @@ rem enter ope01_dev,arm02_dev,firm_id$,customer$,credit$,s$,m1$,type
     
 	enter customer$, table_chans$[all], callpoint!, status
     
-rem --- For type checking
+rem --- Use statements and declares
 
 	use ::sys/prog/bao_callpoint.bbj::Callpoint
     
@@ -63,17 +63,12 @@ rem --- Open all files
 	
 rem --- Retrieve parameter records
 
-    ars01a_key$=firm_id$+"AR00"
-    find record (ars01a_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-    ars01c_key$=firm_id$+"AR01"
-    find record (ars01c_dev,key=ars01c_key$,err=std_missing_params) ars01c$
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ars01a_dev,key=firm_id$+"AR00",err=std_missing_params) ars01a$
+    find record (ars01c_dev,key=firm_id$+"AR01",err=std_missing_params) ars01c$
+    find record (ivs01a_dev,key=firm_id$+"IV00",err=std_missing_params) ivs01a$
 
 rem --- Initializations
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","OPE_ORDHDR","PRIMARY",ope01a_key_tpl$,rd_table_chans$[all],status$
-    dim ope01a_key$:ope01a_key_tpl$
     more=1
     aging_bucket=num(ars01c.aging_bucket$)
     if aging_bucket=0 then let aging_bucket=5
@@ -92,10 +87,9 @@ rem --- Position file
 rem --- Total Open Orders
 
     while more
-        ope01a_key$=key(ope01_dev,end=*break)
-        if pos(firm_id$+"  "+customer$=ope01a_key.firm_id$+ope01a_key.ar_type$+ope01a_key.customer_id$)<>1 then break
-        read record (ope01_dev) ope01a$
-		
+        read record (ope01_dev, end=*break) ope01a$
+        if pos(firm_id$+"  "+customer$ = ope01a.firm_id$+"  "+ope01a.customer_id$)<>1 then break
+        
         if pos(ope01a.invoice_type$="PV") = 0 then 
 			if ope01a.invoice_type$="B" then 
 				open_bo_amt=open_bo_amt+ope01a.total_sales 
@@ -108,7 +102,7 @@ rem --- Total Open Orders
 			endif
 		endif
     wend
-
+    
 rem --- Total Open Invoices
 
     total_aging=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
