@@ -9,13 +9,15 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
-    enter cust_id$, order_no$, table_chans$[all], callpoint!, status
+    enter cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 
 rem --- Use statements, declares
 
     use ::sys/prog/bao_callpoint.bbj::Callpoint
     
     declare Callpoint callpoint!
+    declare BBjControl creditHoldControl!
+    declare BBjControl backorderedControl!
 
 rem --- Retrieve the program path
 
@@ -75,8 +77,7 @@ rem --- Retrieve parameter records
 
 rem --- Initialize Data
 
-    o3$=""
-    status$="Credit OK"
+    action$=""
     start_block = 1
     
     if start_block then
@@ -85,45 +86,52 @@ rem --- Initialize Data
         found = 1
     endif
     
-    if !found then 
-        status = 911
-        exit
-    endif
-    
-rem --- Display Left Side
-
-    rem call pgmdir$+"opc_creditmgmnt.aon", ope01a.customer_id$, table_chans$[all], callpoint!, status
+    if !found then goto std_exit
 
 rem --- Has order been printed?
 
+    backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
+
     if ope01a.print_status$ = "Y" then
         status$="This Order Has Been Printed"
-        goto display_form
+        backorderedControl!.setText(status$)
+        callpoint!.setStatus("WAIT")
+        goto std_exit
     endif
 
 rem --- Check For Quotes
 
     if ope01a.invoice_type$="P" then
         status$="This is a Quote"
+        backorderedControl!.setText(status$)
         extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
         ope01a.credit_flag$ = ""
         write record (ope01_dev) ope01a$
-        goto display_form
+        callpoint!.setStatus("WAIT")
+        goto std_exit
+    endif
+    
+rem --- Display Left Side, sets callpoint!.getDevObject("over_credit_limit") 
+
+    if ars01c.display_bal$ <> "A" then
+        call pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+        if status = 999 then goto std_exit
     endif
 
 rem --- Check Terms (ope_df, 1300-1499, s$(1,1) is backwards)
 
-    declare BBjControl creditHoldControl!
-    
     over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
+    status$ = "Missing terms: (" + ope01a.terms_code$ + ")"
     start_block = 1
     
     if start_block then
-        find record (arm10_dev, key=firm_id$+"A"+ope01a.terms_code$, dom=*endif) arm10a$
+        find record (arm10_dev, key=firm_id$+"A"+pad(ope01a.terms_code$,2), dom=*endif) arm10a$
+        status$ = "Terms Code Found"
         
         if arm10a.cred_hold$ = "Y" then 
             over_credit_limit = 1
             callpoint!.setDevObject("over_credit_limit", "1")
+            status$="Customer on hold"
         endif
         
         if !over_credit_limit then 
@@ -136,15 +144,28 @@ rem --- Check Terms (ope_df, 1300-1499, s$(1,1) is backwards)
                 if ope01a.total_sales > 0 then 
                     creditHoldControl! = cast(BBjControl, callpoint!.getDevObject("credit_hold_control"))
                     creditHoldControl!.setText("***Credit Hold***")
+                    status$ = "Over credit limit"
+                else
+                    status$ = "Credit or Zero Total"
                 endif
             endif
         endif
+    endif
+    
+rem --- Reuse backordered text control to display status since it won't show it in the CREDITACTION form
+    
+    if !over_credit_limit or ope01a.total_sales <= 0 then 
+        backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
+        backorderedControl!.setText(status$)
+        print "---Status: ", status$; rem debug
+        callpoint!.setStatus("WAIT")
+        goto final_updates 
     endif
 
 display_form: rem --- Display	
 
 	dim dflt_data$[2,1]
-	dflt_data$[1,0] = "CREDIT_STATUS"
+	dflt_data$[1,0] = "STATUS_MESSAGE"
 	dflt_data$[1,1] = status$
     dflt_data$[2,0] = "AR_TERMS_CODE"
     dflt_data$[2,1] = ope01a.terms_code$
@@ -153,7 +174,9 @@ display_form: rem --- Display
 	
 	call sypdir$+"bam_run_prog.bbj", "OPE_CREDITACTION", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
     
-    credit_action = num(callpoint!.getDevObject("credit_action"))
+    temp$ = str(callpoint!.getDevObject("credit_action"))
+    if temp$="null" or temp$="none" then goto display_form
+    credit_action = num(temp$)
     
     switch credit_action 
 		case 1
@@ -199,9 +222,8 @@ display_form: rem --- Display
 		case 4
         
         rem --- Delete order
-        rem --- (This is currently a no-op.  We have no way of programmatically deleting an order)
         
-            o3$="D"
+            action$="D"
             ope01a.credit_flag$=""
             
 			break
@@ -209,41 +231,7 @@ display_form: rem --- Display
 		case default
 	swend
     
-    goto end_input
-
-rem *** SECTION UNUSED ***
-
-done: rem --- Correct?
-
-    if ui$="W" call pgmdir$+"syc_rs.bbx","",my_context,2006,status$,0,"",status else print @(48,20),status$,
-    v4$="(<Enter>=Continue/<F2>=Line Detail"
-    if c9$(18,1)<>"N" or ope01a.credit_flag$<>"C" v4$=v4$+"/<F1>=Print/<F3>=Select Printer"
-    v4$=v4$+")"
-    v0$="S"
-    v1$="C"
-    v2$=""
-    v3$=""
-    v0=1
-    v1=fnv(v4$)
-    v2=22
-    control_id=i0-i0_done+1
-    if ui$="W" v4$="(<OK>=Continue/<F2>=Line Detail)"
-    rem gosub std_input
-    o3$=""
-done_v3: 
-    on v3 goto l4066,l4066,l4066,l4066,l4066,end_input,cancel,printer_select,printit,done
-l4066: 
-    if v3=3 goto printer_select
-    if v3=1 if c9$(18,1)<>"N" or ope01a.credit_flag$<>"C" o3$="P"
-    if v3=2 o3$="D"
-    if o3$="" then goto end_input
-printit: 
-    o3$="P"; goto end_input
-cancel: 
-
-rem ***
-
-end_input: 
+final_updates: 
 
 rem --- Update Tickler File
 
@@ -251,42 +239,19 @@ rem --- Update Tickler File
 
 rem --- Update order header file
 
-    if pos(o3$="PD")=0 then 
+    if pos(action$="PD")=0 then 
         gosub warn_re_picklist
     endif
     
-    rem ope01a.total_sales=u[0]
-    rem if o3$="P" goto l4500
-    rem if o3$="D" run pgmdir$+"ope_dd.bbx"
     ope01a.lock_status$="N"
     ope01a$ =field(ope01a$)
     write record (ope01_dev) ope01a$
     
     goto std_exit
 
-l4500: rem --- Print (*** not used)
-
-    call pgmdir$+"adc_printer.aon",printer_dev,0,"Print Order "+a0$(11,7),r2$(15,2)+format$,status
-    if status goto display_form
-    if ope01a.print_status$="Y" a0$(100,1)="Y"
-    write record (ope01_dev,key=a0$(1,20)) ope01a$
-    o9$="ope_db.bbx"
-    o9=2
-    run pgmdir$+"opr_pa.bbx"
-
-printer_select: rem --- Printer Select (*** not used)
-
-    dim option$[2]
-    option$[1]="ORDER"
-    call pgmdir$+"syc_qp.bbx",d_action$,option$[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],d_status
-    if option$[1]="EXIT" goto l4660
-    r2$(15,2)=option$[1]
-    if len(option$[1])>2 format$=option$[1](3) else format$=""
-l4660: 
-    prt_name$=r2$(15,2); if cvs(format$,2)<>"" prt_name$=r2$(15,2)+"-"+format$
-    if ui$<>"W" print 'sb',@(40,1),prt_name$,'sf',
-    if ui$="W" void$=sendmsg(sysgui_dev,statusbar,set_text,5,prt_name$,my_context,err=*next)
-    goto display_form
+rem ==========================================================================    
+rem --- Subroutines
+rem ==========================================================================    
 
 update_tickler: rem --- Update Tickler File
 
@@ -335,7 +300,7 @@ warn_re_picklist: rem --- Warn About Printing Pick Ticket
         gosub disp_message
         if msg_opt$ = "Y" then
             call pgmdir$+"opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
-            if status = 999 then exitto std-exit
+            if status = 999 then exitto std_exit
         endif
         rem call pgmdir$+"adc_yesno.aon",1,"New Items Have Been Committed.  Print Pick Ticket Now",2,v$,v3
         rem if v$="N" then warn$=""
@@ -376,8 +341,6 @@ disp_message: rem --- Display Message Dialog
 :       table_chans$[all]
 
     return
-
-
 
 rem #include std_error.src
 
