@@ -859,7 +859,7 @@ rem --- Populate sequence record(s)
 version6_files:
 
     arm10_dev=unt
-    open (arm10_dev)source_folder$+"/"+cvs("arm-10",version_cvs)
+    open (arm10_dev,err=end_of_msgs)source_folder$+"/"+cvs("arm-10",version_cvs)
 
     new_file=unt
     datafile$=cvs("opm-04",8)
@@ -933,7 +933,7 @@ get_opm14_template:
         next x
     wend
 end_of_msgs:
-    close (new_file)
+    close (new_file,err=*next)
     new_file=0
 return
 
@@ -942,7 +942,7 @@ make_masks:
 rem --- First try to create the ars_custdflt record"
 
     sys01_dev=unt
-    open (sys01_dev)source_folder$+"/"+cvs("sys-01",version_cvs)
+    open (sys01_dev,err=no_masks)source_folder$+"/"+cvs("sys-01",version_cvs)
 
     new_file=unt
     datafile$=cvs("ars_custdflt",8)
@@ -1171,6 +1171,7 @@ no_cust_default:
     end_mask:
     wend
 
+    no_masks:
     return
 
 get_new_template:
@@ -1223,7 +1224,9 @@ get_new_template:
     lock (new_file)
     a=msgbox(new_datafile$+" already exists in destination folder. Do you want to overwrite data?",3+32+65536,"DataPort")
     if a=6 then
-       return; rem ' Yes-Overwrite
+       close (new_file)
+       erase destin_folder$+"/"+new_datafile$
+       goto check_for_definition
     endif
     if a=7 then
        goto eof; rem ' No-Skip
