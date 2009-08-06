@@ -7,7 +7,7 @@ rem ==========================================================================
 rem Note: this class is incomplete and not implemented
 
     use ::ado_func.src::func
-    use ::adc_array.aon::Obj4Array
+    use ::adc_array.aon::ArrayObject
 
     class public Picklist
 
@@ -25,8 +25,8 @@ rem Note: this class is incomplete and not implemented
         field public BBjInt MultiWhse% = 0
         field private BBjInt line%
         field public BBjInt MaxLine% = 37
-        field public Obj4Array Headings!
-        field public Obj4Array Columns!
+        field public ArrayObject Headings!
+        field public ArrayObject Columns!
         field private BBjString pgmdir$
         field private BBjTemplatedString ope01a!
         field private BBjString billlto_addr$
