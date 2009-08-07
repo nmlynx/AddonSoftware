@@ -149,8 +149,8 @@ rem ==========================================================================
                         orddet_rec.taxable_amt = orddet_rec.ext_price
                     endif
                 else
-                    if start_block
-                        find record (#ItemMast_dev%, key=#firm_id$+orddet.item_no$, dom=*endif) itemmast_rec$
+                    if start_block then
+                        find record (#ItemMast_dev%, key=#firm_id$+orddet_rec.item_id$, dom=*endif) itemmast_rec$
                         if itemmast_rec.taxable_flag$ = "Y" then orddet_rec.taxable_amt = orddet_rec.ext_price
                     endif
                 endif
