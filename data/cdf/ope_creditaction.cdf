@@ -17,6 +17,7 @@ rem --- Get credit password
 		user_tpl.password$ = cvs(credit_rec.cred_passwd$, 2)
 	endif
 	
+	callpoint!.setDevObject("credit_action", "none")
 [[OPE_CREDITACTION.ARAR]]
 rem --- Display default status
 
@@ -51,14 +52,15 @@ return
 rem --- Make sure everything is entered
 
 	credit_action = num(callpoint!.getColumnData("OPE_CREDITACTION.CREDIT_ACTION"))
-	terms$ = callpoint!.getColumnData("OPE_CREDITACTION.AR_TERMS_CODE")
-	pswd$ = callpoint!.getColumnData("OPE_CREDITACTION.ENTER_CRED_PSWRD")
+	terms$        = callpoint!.getColumnData("OPE_CREDITACTION.AR_TERMS_CODE")
+	pswd$         = callpoint!.getColumnData("OPE_CREDITACTION.ENTER_CRED_PSWRD")
 
 	switch credit_action
 
 	rem --- Hold this order
 
 		case 1
+			callpoint!.setDevObject("credit_action", "1")
 			break
 
 	rem --- Hold all future orders
@@ -69,6 +71,8 @@ rem --- Make sure everything is entered
 				msg_id$ = "OP_INVALID_PASSWD"
 				gosub disp_message
 				callpoint!.setStatus("ABORT")
+			else
+				callpoint!.setDevObject("credit_action", "2")
 			endif
 
 			break
@@ -93,21 +97,26 @@ rem --- Make sure everything is entered
 				abort = 1
 			endif
 
-			if abort then callpoint!.setStatus("ABORT")
+			if abort then 
+				callpoint!.setStatus("ABORT")
+			else
+				callpoint!.setDevObject("credit_action", "3")
+			endif
 
 			break
 
 	rem --- Delete this order
-	rem --- (There is currently no way to do this programmatically so the message just informs the user to do it herself)
 
 		case 4
 
-			rem msg_id$="OP_REALLY_DELETE"
-			rem gosub disp_message
-			rem if msg_opt$<>"Y" then callpoint!.setStatus("ABORT")
-
-			msg_id$ = "OP_PLS_DELETE_ORD"
+			msg_id$="OP_REALLY_DELETE"
 			gosub disp_message
+
+			if msg_opt$<>"Y" then 
+				callpoint!.setStatus("ABORT")
+			else
+				callpoint!.setDevObject("credit_action", "4")
+			endif
 
 			break
 
@@ -116,8 +125,7 @@ rem --- Make sure everything is entered
 	swend
 [[OPE_CREDITACTION.CREDIT_ACTION.AVAL]]
 rem --- Send back credit action response
-
 	
 	credit_action = num(callpoint!.getUserInput())
 	gosub display_status
-	callpoint!.setDevObject("credit_action", callpoint!.getUserInput())
+	callpoint!.setDevObject("credit_action", str(credit_action))
