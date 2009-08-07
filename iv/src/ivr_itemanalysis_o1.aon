@@ -48,6 +48,7 @@ rem --- Initializations
         if base$="S" then h7$="Sold", h8$="Sales"
         headings$[2]="Based On Total "+h8$+" For Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
         more=1
+        recs=0
 
         call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
         call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
@@ -72,18 +73,18 @@ rem --- Report headings
 
 rem --- column heading
 
-		dim columns$[9,10]
-		columns=10
-		columns$[0,0]="Item/Description",       columns$[0,1]="C",   columns$[0,2]="25"
-		columns$[1,0]="Prod^Type",              columns$[1,1]="C",   columns$[1,2]="5"
-		columns$[2,0]="UM",                     columns$[2,1]="C",   columns$[2,2]="5"
-		columns$[3,0]="Units^"+h7$,             columns$[3,1]="N",   columns$[3,2]="10",columns$[3,3]=m2$
-		columns$[4,0]="Units^Cost",             columns$[4,1]="N",   columns$[4,2]="10",columns$[4,3]=m3$
-		columns$[5,0]="Total^"+h8$,             columns$[5,1]="N",   columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
-		columns$[6,0]="Cumulative  ^ pct of "+h8$+"   ",  columns$[6,1]="N",   columns$[6,2]="10"
-		columns$[7,0]="Quantity  ^On Hand",       columns$[7,1]="N",   columns$[7,2]="10",columns$[7,3]=m2$
-		columns$[8,0]="Total^Value",            columns$[8,1]="N",   columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
-		columns$[9,0]="Cumulative  ^ pct of Value   ", columns$[9,1]="N",   columns$[9,2]="10",columns$[9,3]=m7$
+	dim columns$[9,10]
+	columns=10
+	columns$[0,0]="Item/Description",       columns$[0,1]="C",   columns$[0,2]="25"
+	columns$[1,0]="Prod^Type",              columns$[1,1]="C",   columns$[1,2]="5"
+	columns$[2,0]="UM",                     columns$[2,1]="C",   columns$[2,2]="5"
+	columns$[3,0]="Units^"+h7$,             columns$[3,1]="N",   columns$[3,2]="10",columns$[3,3]=m2$
+	columns$[4,0]="Units^Cost",             columns$[4,1]="N",   columns$[4,2]="10",columns$[4,3]=m3$
+	columns$[5,0]="Total^"+h8$,             columns$[5,1]="N",   columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
+	columns$[6,0]="Cumulative  ^ pct of "+h8$+"   ",  columns$[6,1]="N",   columns$[6,2]="10"
+	columns$[7,0]="Quantity  ^On Hand",       columns$[7,1]="N",   columns$[7,2]="10",columns$[7,3]=m2$
+	columns$[8,0]="Total^Value",            columns$[8,1]="N",   columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
+	columns$[9,0]="Cumulative  ^ pct of Value   ", columns$[9,1]="N",   columns$[9,2]="10",columns$[9,3]=m7$
 
 rem --- Loop Starting
 
@@ -216,19 +217,20 @@ rem --- Perform detail line calculations
 
 rem --- Print detail line
 
-			OutVect!.addItem(ivm01a.item_id$)
-			OutVect!.addItem(product$)
-			OutVect!.addItem(um$)
-			OutVect!.addItem(str(usage))
-			OutVect!.addItem(str(cost))
-			OutVect!.addItem(str(item_usage))
-			OutVect!.addItem(percent$)
-			OutVect!.addItem(str(onhand))
-			OutVect!.addItem(str(item_value))
-			OutVect!.addItem(str(value_percent))
-			OutVect!.addItem("  "+description$)
+            OutVect!.addItem(ivm01a.item_id$)
+            OutVect!.addItem(product$)
+            OutVect!.addItem(um$)
+            OutVect!.addItem(str(usage))
+            OutVect!.addItem(str(cost))
+            OutVect!.addItem(str(item_usage))
+            OutVect!.addItem(percent$)
+            OutVect!.addItem(str(onhand))
+            OutVect!.addItem(str(item_value))
+            OutVect!.addItem(str(value_percent))
+            OutVect!.addItem("  "+description$)
             xwk=fnblank(columns-1)
             total_percent=total_percent+item_usage_percent
+            recs=recs+1
 
 rem --- Accumulate totals
 
@@ -254,6 +256,12 @@ rem --- Reached 100% of usage yet?
         wend ; Rem ----Loop Ending
 
 done: rem --- All done
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
 
         done=1
         gosub whsebreak
@@ -395,6 +403,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -450,5 +465,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
