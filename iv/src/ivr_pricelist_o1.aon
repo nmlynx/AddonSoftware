@@ -87,6 +87,7 @@ rem --- Loop Starting
         sqlprep(sql_chan)sql_prep$
         dim read_tpl$:sqltmpl(sql_chan)
         sqlexec(sql_chan)
+        recs=0
 
 rem --- Main Read
 
@@ -144,6 +145,7 @@ rem --- Retrieve warehouse
                 OutVect!.addItem(str(ivm02a.unit_cost))
                 OutVect!.addItem(str(margin))             
             endif
+            recs=recs+1
    
 rem --- Accumulate totals
 
@@ -158,6 +160,12 @@ rem ---- Loop Ending
         wend 
 
 rem --- All done
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
 
         gosub whsebreak
         total$="Report"
@@ -310,6 +318,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
     fnend
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -364,6 +379,12 @@ std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
+
 rem #endinclude std_end.src
 
     end
