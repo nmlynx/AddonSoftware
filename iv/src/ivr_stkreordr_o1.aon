@@ -23,6 +23,7 @@ rem --- Document initializations
 rem --- Initializations
 
         more=1
+        recs=0
 
         if report$="R" headings$[1]="Inventory Reorder Report" else headings$[1]="Inventory Shortage Report"
         headings$[1]=headings$[1]+" By Warehouse"
@@ -65,12 +66,12 @@ rem --- Loop Starting
         sql_prep$=sql_prep$+"ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
         sql_prep$=sql_prep$+"ivm_itemwhse.firm_id=ivm_itemmast.firm_id "
         where_clause$="WHERE ivm_itemwhse.firm_id = '"+firm_id$+"' AND "
-        if beg_whse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id >= '"+beg_whse$+"' AND "
-        if end_whse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id <= '"+end_whse$+"' AND "
-        if beg_prod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type >= '"+beg_prod$+"' AND "
-        if end_prod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type <= '"+end_prod$+"' AND "
-        if beg_item$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id >= '"+beg_item$+"' AND "
-        if end_item$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id <= '"+end_item$+"' AND"
+        if begwhse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id >= '"+begwhse$+"' AND "
+        if endwhse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id <= '"+endwhse$+"' AND "
+        if begprod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type >= '"+begprod$+"' AND "
+        if endprod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type <= '"+endprod$+"' AND "
+        if begitem$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id >= '"+begitem$+"' AND "
+        if enditem$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id <= '"+enditem$+"' AND"
         if type$<>"" where_clause$=where_clause$+"ivm_itemmast.item_type = '"+type$+"'"
 
         where_clause$=cvs(where_clause$,2)
@@ -145,10 +146,17 @@ rem --- Print detail line
             OutVect!.addItem("   "+item_desc$)
             xwk=fnblank(columns-1)
             number=number+1
+            recs=recs+1
 
         wend; rem --- Loop Ending
 
 done: rem --- All done
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
   
         if number>0 goto std_exit
         xwk=fnblank(columns)
@@ -264,6 +272,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -318,5 +333,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
