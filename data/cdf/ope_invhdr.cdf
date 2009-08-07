@@ -9,6 +9,8 @@ rem --- Print a counter Invoice
 		if status = 999 then goto std_exit
 	endif
 [[OPE_INVHDR.BREX]]
+print "Hdr:BREX"; rem debug
+
 rem --- Credit action
 
 	cust_id$  = cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"), 2)
@@ -17,9 +19,9 @@ rem --- Credit action
 	status    = 0
 
 	if user_tpl.credit_installed$="Y" and inv_type$<>"P" and cust_id$<>"" and ord_no$<>"" then
-		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, status
+		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
-		if status = 911 then escape; rem couldn't find order
+		if action$ = "D" then callpoint!.setStatus("DELETE")
 	endif
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
@@ -27,7 +29,7 @@ print "Hdr:BWRI"; rem debug
 rem --- Unlock order (This doesn't work as desired)
 
 	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
-	print "---Clear lock"; rem debug
+
 [[OPE_INVHDR.ASVA]]
 
 [[OPE_INVHDR.AOPT-MINV]]
@@ -190,6 +192,8 @@ rem --- Duplicate Historical Invoice
 		gosub copy_order
 	endif
 [[OPE_INVHDR.AOPT-CRCH]]
+print "Hdr:CRCH"; rem debug
+
 rem --- Credit check?
 
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
@@ -450,7 +454,6 @@ rem --- Show customer data
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
       gosub check_credit
-
 		
 	rem --- Only display if user did not enter the customer, that is, used the nav arrows
 
@@ -473,6 +476,7 @@ rem --- Display Ship to information
 rem --- Display order total
 
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
+	print "---Update Order Total (column data): ", callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")
 
 rem --- Backorder and Credit Hold
 
@@ -577,7 +581,6 @@ rem --- A new record must be the next sequence
 		exit; rem --- exit from callpoint
 	endif
 
-	rem callpoint!.setDevObject("order", ord_no$); rem Needed?
 	user_tpl.hist_ord$ = "N"
 
 rem --- Existing record
@@ -623,6 +626,7 @@ rem --- Existing record
 	rem --- Display order total
 
 		callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", str(ope01a.total_sales:user_tpl.amount_mask$))
+		print "---Update Order Total (disk data):", ope01a.total_sales
 
 	rem --- Check locked status
 
@@ -886,63 +890,6 @@ rem ==========================================================================
 	dim ars01a$:fnget_tpl$("ARS_PARAMS")
 
 	read record (ars01_dev, key=firm_id$+"AR00") ars01a$
-
-return
-
-rem ==========================================================================
-disp_ord_tot: rem --- Display order total
-rem ==========================================================================
-
-	user_tpl.ord_tot=0
-
-	ope11_dev=fnget_dev("OPE_ORDDET")
-	dim ope11a$:fnget_tpl$("OPE_ORDDET")
-
-	opc_linecode_dev=fnget_dev("OPC_LINECODE")
-	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-
-	ivm01_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-
-	ar_type$ = callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
-	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	ord_no$  = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-	read (ope11_dev, key=firm_id$+ar_type$+cust_id$+ord_no$, dom=*next)
-
-	while 1
-		read record (ope11_dev, end=*break) ope11a$
-
-		if ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$ <> 
-:			firm_id$+ar_type$+cust_id$+ord_no$ 
-:		then
-			break
-		endif
-
-		dim opc_linecode$:fattr(opc_linecode$)
-		read record (opc_linecode_dev, key=firm_id$+ope11a.line_code$, dom=*next) opc_linecode$
-
-		if pos(opc_linecode.line_type$="SNP") then 
-			user_tpl.ord_tot = user_tpl.ord_tot + (ope11a.unit_price * ope11a.qty_ordered)
-		else
-			if opc_linecode.line_type$ = "O" then 
-				user_tpl.ord_tot = user_tpl.ord_tot + ope11a.ext_price
-			endif
-		endif
-
-		rem --- this does nothing...
-		dim ivm01a$:fattr(ivm01a$)
-		read record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
-
-		if ivm01a.taxable_flag$="Y" and opc_linecode.taxable_flag$="Y" then 
-			ope11a.taxable_amt = ope11a.ext_price
-		endif
-		rem ---
-
-	wend
-
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", str(user_tpl.ord_tot))
-	callpoint!.setStatus("REFRESH")
 
 return
 
@@ -1530,6 +1477,14 @@ rem --- Open needed files
 	
 gosub open_tables
 
+rem --- Set table_chans$[all] into util object for getDev() and getTmpl()
+
+	declare ArrayObject tableChans!
+
+	call stbl("+DIR_PGM")+"adc_array.aon::str_array2object", table_chans$[all], tableChans!, status
+	if status = 999 then goto std_exit
+	util.setTableChans(tableChans!)
+
 rem --- get AR Params
 
 	dim ars01a$:open_tpls$[4]
@@ -1596,8 +1551,9 @@ rem --- Disable display fields
 
 rem --- Save display control objects
 
-	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") ); rem do we need this?
+	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") )
 	callpoint!.setDevObject("credit_hold_control", util.getControl(callpoint!, "<<DISPLAY>>.CREDIT_HOLD")); rem used in opc_creditcheck
+	callpoint!.setDevObject("backordered_control", util.getControl(callpoint!, "<<DISPLAY>>.BACKORDERED")); rem used in opc_creditcheck
 
 rem --- Setup user_tpl$
     
@@ -1654,6 +1610,8 @@ rem --- Setup user_tpl$
 :		"prev_qty_ord:n(15), " +
 :		"prev_boqty:n(15), " +
 :		"prev_shipqty:n(15), " +
+:		"prev_ext_price:n(15), " +
+:		"prev_ext_cost:n(15), " +
 :		"is_cash_sale:u(1)"
 
 	dim user_tpl$:tpl$
@@ -1742,12 +1700,28 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("CRCH",1)
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+
+rem --- Parse table_chans$[all] into an object
+
+	declare ArrayObject tableChans!
+
+	call pgmdir$+"adc_array.aon::str_array2object", table_chans$[all], tableChans!, status
+	util.setTableChans(tableChans!)
+
+rem --- Order Helper object
+
+	declare OrderHelper ordHelp!
+
+	ordHelp! = new OrderHelper(firm_id$, int(num(ivs01a.precision$)), callpoint!, dtlg_param$[1,3])
+	callpoint!.setDevObject("order_helper_object", ordHelp!)
 [[OPE_INVHDR.AFMC]]
 rem print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
 	use ::ado_util.src::util
+	use ::ado_order.src::OrderHelper
+	use ::adc_array.aon::ArrayObject
 
 rem --- Create Inventory Availability window
 
