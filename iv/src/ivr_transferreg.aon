@@ -147,6 +147,7 @@ rem --- Other initializations
     errors=0
     glstatus=0
     more=1
+    recs=0
 
 rem --- Column headings
 
@@ -302,6 +303,7 @@ rem --- Detail line
 
         whse_total=whse_total+tot_cost
         date_total=date_total+tot_cost
+        recs=recs+1
 		
 rem --- Warn if date is outside the GL period
 
@@ -360,6 +362,12 @@ gl_recap_done:
     wend
 
 rem --- End of register
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
 rem --- Last break
     last_time$="Y"
@@ -655,5 +663,10 @@ rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

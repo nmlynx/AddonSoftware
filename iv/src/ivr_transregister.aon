@@ -160,6 +160,7 @@ rem --- Initializations
     units=0
     errors=0
 	more=1
+        recs=0
 	
     if gl$="Y" then 
 		glh$="GL Account"
@@ -209,10 +210,10 @@ rem --- Column heading
 	columns$[5,0]="Total Cost",  columns$[5,1]="N", columns$[5,2]=str(m1), columns$[5,3]=m1$, columns$[5,10]="T"
 	
 	if gl$<>"Y" then
-		columns$[6,0]="Who",        columns$[6,1]="C", columns$[6,2]="16"
+            columns$[6,0]="Who",        columns$[6,1]="C", columns$[6,2]="16"
 	else
-		columns$[6,0]="GL Account", columns$[6,1]="C", columns$[6,2]=str(glh)
-		columns$[7,0]="Who",        columns$[7,1]="C", columns$[7,2]="16"
+            columns$[6,0]="GL Account", columns$[6,1]="C", columns$[6,2]=str(glh)
+            columns$[7,0]="Who",        columns$[7,1]="C", columns$[7,2]="16"
 	endif
 
 rem --- Additional File Opens
@@ -230,39 +231,39 @@ rem --- Additional File Opens
 	
     if gl$ ="Y" then
         files$[24]="glm-01",ids$[24]="GLM_ACCT"
-		files$[25]=glw11$,ids$[25]="GLE_DAILYDETAIL",options$[25]="CL"
+	files$[25]=glw11$,ids$[25]="GLE_DAILYDETAIL",options$[25]="CL"
     endif
 	
-	action=1,begfile=19,endfile=29
+    action=1,begfile=19,endfile=29
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status then goto std_exit
 	
     ivm07_dev=channels[20]
-	ivm17_dev=channels[21]
+    ivm17_dev=channels[21]
     ivm04_dev=channels[22]
     ivw04_dev=channels[23]
     glm01_dev=channels[24]
-	glw11_dev=channels[25]
+    glw11_dev=channels[25]
 	
 rem --- Lifo/fifo setup
 	
-	dim lf_chans[10]
-	dim lf_tmpls$[10]
-	dim lf_item$[10]
+    dim lf_chans[10]
+    dim lf_tmpls$[10]
+    dim lf_item$[10]
 
-	lf_chans[1]=ivm02_dev
+    lf_chans[1]=ivm02_dev
     lf_chans[2]=ivm04_dev
     lf_chans[3]=ivw04_dev
 	
     lf_tmpls$[1]=templates$[5];  rem ivm-02
-	lf_tmpls$[2]=templates$[22]; rem ivm-04
-	lf_tmpls$[3]=templates$[23]; rem ivw-04
+    lf_tmpls$[2]=templates$[22]; rem ivm-04
+    lf_tmpls$[3]=templates$[23]; rem ivw-04
 	
 rem --- Final inits, Position file
 	
-	prev_trans_no$=""
-	prev_total=0
-	last_time=0
+    prev_trans_no$=""
+    prev_total=0
+    last_time=0
     call pgmdir$+"adc_progress.aon","N","","","","",0,ive01_dev,1,meter_num,status
     read (ive01_dev,key=firm_id$,dom=*next)
 
@@ -280,111 +281,112 @@ rem --- Read next ive-11 detail
         while more
             ive11_key$=key(ive11_dev,end=*break)
             if pos(ive01a.firm_id$ + ive01a.iv_trans_no$ = ive11_key$) <> 1 then break
-			read record (ive11_dev) ive11a$
+            read record (ive11_dev) ive11a$
 
 rem --- Breaks
 
-			if ive11a.iv_trans_no$<>prev_trans_no$ then gosub ref_break
-			call pgmdir$+"adc_progress.aon","S","","","",ive11a.iv_trans_no$,0,0,1,0,ignore_status
+            if ive11a.iv_trans_no$<>prev_trans_no$ then gosub ref_break
+            call pgmdir$+"adc_progress.aon","S","","","",ive11a.iv_trans_no$,0,0,1,0,ignore_status
 
 rem --- Additional Reads
 
-			dim description$(dw)
-			ivm01a.item_desc$="Unknown Item"
-			find record (ivm01_dev,key=firm_id$+ive11a.item_id$,dom=*next) ivm01a$
-			description$=fnitem$(ivm01a.item_desc$, p[3], p[4], p[5])
+            dim description$(dw)
+            ivm01a.item_desc$="Unknown Item"
+            find record (ivm01_dev,key=firm_id$+ive11a.item_id$,dom=*next) ivm01a$
+            description$=fnitem$(ivm01a.item_desc$, p[3], p[4], p[5])
 			
 rem --- Not lotted
 
-			if ls$="N" or ivm01a.lotser_item$<>"Y" or ivm01a.inventoried$<>"Y" then
+            if ls$="N" or ivm01a.lotser_item$<>"Y" or ivm01a.inventoried$<>"Y" then
 			
 rem --- LIFO/FIFO?
 
-				if lf$ = "Y" and ivm10b.trans_type$ <> "C" then
-					lf_item$[1]=ive11a.warehouse_id$
-					lf_item$[2]=ive11a.item_id$
-					lf_date$=ive01a.trans_date$
-					quantity=ive11a.trans_qty
-					cost=ive11a.unit_cost
-					ret_cost=0
-					type$="R"
-					
-					if ivm10b.trans_type$="I" or (ivm10b.trans_type$="A" and quantity<0) then 
-						action$=ivs01a.lifofifo$+"I"
-					else
-						action$=ivs01a.lifofifo$+"R"
-					endif
-					
-					call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],places,abs(quantity),cost,ret_cost,ignore_status
+                if lf$ = "Y" and ivm10b.trans_type$ <> "C" then
+                    lf_item$[1]=ive11a.warehouse_id$
+                    lf_item$[2]=ive11a.item_id$
+                    lf_date$=ive01a.trans_date$
+                    quantity=ive11a.trans_qty
+                    cost=ive11a.unit_cost
+                    ret_cost=0
+                    type$="R"
+
+                    if ivm10b.trans_type$="I" or (ivm10b.trans_type$="A" and quantity<0) then 
+                        action$=ivs01a.lifofifo$+"I"
+                    else
+                        action$=ivs01a.lifofifo$+"R"
+                    endif
+
+                    call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],places,abs(quantity),cost,ret_cost,ignore_status
 					
 rem --- Cost change?
 
-					if ive11a.unit_cost<>ret_cost then
-						if ret_cost then ive11a.unit_cost=ret_cost
-						ive11a.total_cost = round(ive11a.trans_qty*ive11a.unit_cost, 2)
-						ive11a$ = field(ive11a$)
-						write record (ive11_dev) ive11a$
-					endif
-				endif
-			endif
+                    if ive11a.unit_cost<>ret_cost then
+                        if ret_cost then ive11a.unit_cost=ret_cost
+                            ive11a.total_cost = round(ive11a.trans_qty*ive11a.unit_cost, 2)
+                            ive11a$ = field(ive11a$)
+                            write record (ive11_dev) ive11a$
+                        endif
+                    endif
+                endif
 
 rem --- Print detail line
 
-			account$=""
-			lotser$=""
-			prev_total=prev_total+ive11a.total_cost
-			if gl$="Y" then account$=fnmask$(ive11a.gl_account$,gls01a.acct_output$)
-			if ls$="Y" and ivm01a.inventoried$="Y" then lotser$=ive11a.lotser_no$
-			
-			OutVect!.addItem(ive11a.warehouse_id$)
-			OutVect!.addItem(ive11a.item_id$)
-			OutVect!.addItem(description$)
-			OutVect!.addItem(str(ive11a.trans_qty))
-			OutVect!.addItem(str(ive11a.unit_cost))
-			OutVect!.addItem(str(ive11a.total_cost))
-			
-			if gl$<>"Y" then
-				OutVect!.addItem(ive11a.user_id$)
-			else
-				OutVect!.addItem(account$)
-				OutVect!.addItem(ive11a.user_id$)
-			endif
-			
-			if lotser$<>"" then
-				ignore=fnblank(2)
-				OutVect!.addItem(lotser_text$+lotser$)
-				ignore=fnblank(columns-2)
-			endif
+                account$=""
+                lotser$=""
+                prev_total=prev_total+ive11a.total_cost
+                if gl$="Y" then account$=fnmask$(ive11a.gl_account$,gls01a.acct_output$)
+                if ls$="Y" and ivm01a.inventoried$="Y" then lotser$=ive11a.lotser_no$
+
+                OutVect!.addItem(ive11a.warehouse_id$)
+                OutVect!.addItem(ive11a.item_id$)
+                OutVect!.addItem(description$)
+                OutVect!.addItem(str(ive11a.trans_qty))
+                OutVect!.addItem(str(ive11a.unit_cost))
+                OutVect!.addItem(str(ive11a.total_cost))
+
+                if gl$<>"Y" then
+                    OutVect!.addItem(ive11a.user_id$)
+                else
+                    OutVect!.addItem(account$)
+                    OutVect!.addItem(ive11a.user_id$)
+                endif
+
+                if lotser$<>"" then
+                    ignore=fnblank(2)
+                    OutVect!.addItem(lotser_text$+lotser$)
+                    ignore=fnblank(columns-2)
+                endif
+                recs=recs+1
 
 rem --- G/L Distribution
 
-			if gl$="Y" and ivm10b.trans_type$<>"C" and ivm10b.post_gl$<>"N" then 
+                if gl$="Y" and ivm10b.trans_type$<>"C" and ivm10b.post_gl$<>"N" then 
 
 rem --- Distribute by Item?
 
-				account$=ivm01a.gl_inv_acct$
-				
-				if dist_gl_by_item$="Y" then
-					find record (ivm02a_dev,key=firm_id$+ive11a.warehouse_id$+ive11a.item_id$,dom=*endif) ivm02a$
-					find record (arc_distcode_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=*endif) arc_distcode_rec$
-					account$=arc_distcode_rec.gl_inv_acct$
-				endif
+                    account$=ivm01a.gl_inv_acct$
+
+                    if dist_gl_by_item$="Y" then
+                        find record (ivm02a_dev,key=firm_id$+ive11a.warehouse_id$+ive11a.item_id$,dom=*endif) ivm02a$
+                        find record (arc_distcode_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=*endif) arc_distcode_rec$
+                        account$=arc_distcode_rec.gl_inv_acct$
+                    endif
 
 rem --- Post summary record
 
-				gldate$=ive01a.trans_date$
-				memo$=ive11a.item_id$+" "+description$
-				ref1$="Inv Trn "+ive01a.trans_code$
-				ref2$=ive11a.iv_trans_no$
-				ref3$=ive11a.sequence_no$
-				amount=ive11a.total_cost
-				if ivm10b.trans_type$="I" then amount=-amount
-				gosub glrecap
-				account$=ive11a.gl_account$
-				amount=-amount
-				gosub glrecap
-			
-			endif
+                    gldate$=ive01a.trans_date$
+                    memo$=ive11a.item_id$+" "+description$
+                    ref1$="Inv Trn "+ive01a.trans_code$
+                    ref2$=ive11a.iv_trans_no$
+                    ref3$=ive11a.sequence_no$
+                    amount=ive11a.total_cost
+                    if ivm10b.trans_type$="I" then amount=-amount
+                    gosub glrecap
+                    account$=ive11a.gl_account$
+                    amount=-amount
+                    gosub glrecap
+
+                endif
 
 rem --- Loop back for next detail
 
@@ -396,18 +398,24 @@ rem --- Loop back for next header
 
 rem --- End of detail, total
 
-	last_time=1
-	gosub ref_break
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+    last_time=1
+    gosub ref_break
 
 rem --- Print GL recap and run update
 
-	update$="ivu_transregister.aon"
+    update$="ivu_transregister.aon"
 	
     if gl$="Y" then 
-		overlay$=pgmdir$+"glr_recap.aon"
-	else
-		overlay$=update$
-	endif
+        overlay$=pgmdir$+"glr_recap.aon"
+    else
+        overlay$=update$
+    endif
 	
     out_action$="PRT-PDF"
     next_overlay$=overlay$
@@ -605,5 +613,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

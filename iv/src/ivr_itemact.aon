@@ -13,19 +13,19 @@ rem  +-----------------------------------------+
 
 rem --- Use function object, Option object
 
-	use ::ado_func.src::func
-	use ::sys/prog/bao_option.bbj::Option
+    use ::ado_func.src::func
+    use ::sys/prog/bao_option.bbj::Option
 
 rem --- Retrieve the program path
 
-	pgmdir$ = ""
+    pgmdir$ = ""
     pgmdir$ = stbl("+DIR_PGM",err=*next)
 
 rem --- Document initializations
 
-	declare BBjVector OutVect!
-	declare BBjVector BrkVect!
-	declare BBjVector HdrVect!
+    declare BBjVector OutVect!
+    declare BBjVector BrkVect!
+    declare BBjVector HdrVect!
 
     OutVect!=bbjAPI().makeVector()
     BrkVect!=bbjAPI().makeVector()
@@ -73,12 +73,12 @@ rem --- Open files
 rem --- Dimension string templates
 
     dim gls01a$:templates$[1],ivm01a$:templates$[2],ivm02a$:templates$[3],
-:           ivm10a$:templates$[4],ivm12a$:templates$[5],ivs01a$:templates$[6],
-:           ivm10c$:templates$[7]
+:       ivm10a$:templates$[4],ivm12a$:templates$[5],ivs01a$:templates$[6],
+:       ivm10c$:templates$[7]
 
 rem --- Assign form input values to local variables
 
-	declare Option option!
+    declare Option option!
 
     period1$=option!.getOptionData("period_year_1")
     begyear$=period1$(3),begper$=period1$(1,2)
@@ -130,6 +130,7 @@ rem --- Initializations
     period$[1]=endyear$+endper$
     headings$[2]="From Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
     more=1
+    recs=0
 
 rem --- Background
 
@@ -148,7 +149,7 @@ rem --- Report headings
 
 rem ----  column heading
 
-	dw = width - m2*6 - 7 - 5
+    dw = width - m2*6 - 7 - 5
 
     dim columns$[7,10]
     columns=8
@@ -209,13 +210,13 @@ rem --- Level breaks?
 rem --- Retrieve item and activity
 
         dim item$[2]
-		dim activity[12]
-		dim description$(dw)
+        dim activity[12]
+        dim description$(dw)
         find record (ivm01a_dev, key=firm_id$+item$, dom=*continue) ivm01a$
         if type$<>"" and ivm01a.item_type$<>type$ then continue
         description$(1) = func.displayDesc(ivm01a.item_desc$, p[3], p[4], p[5])
         item$[0]=firm_id$
-		item$[1]=whse$
+        item$[1]=whse$
         item$[2]=item$
         action$=""
 
@@ -247,12 +248,19 @@ rem --- Print detail line
         xwk=fnblank(1)
 
         number=number+1
+        recs=recs+1
 
 rem --- Loop back for next record
 
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     if number = 0 then OutVect!.addItem("No Inventory Activity Found")
     goto std_exit
@@ -297,6 +305,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
     fnend
 
 rem #include std_error.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 std_error: rem --- Standard error handler (01Apr2006)
 
@@ -350,5 +365,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     if status=0 then run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
