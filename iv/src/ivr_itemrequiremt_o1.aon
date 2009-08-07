@@ -59,6 +59,7 @@ rem --- Initializations
     if sequence$="B" headings=7
     more=1
     l1=0
+        recs=0
 
 rem --- column heading
 
@@ -249,7 +250,26 @@ rem --- Get next vendor/item record
                 if begbuyer$<>"" if buyer_code$<begbuyer$ continue
                 if endbuyer$<>"" if buyer_code$>endbuyer$ continue
 
+<<<<<<< .mine
+                    if description$<>"" then 
+                        OutVect!.addItem(item$(1,p[0])+"  "+description$)
+                        xwk=fnblank(columns-1)
+                        OutVect!.addItem(h9$)
+                        OutVect!.addItem(venditem$)
+                        xwk=fnblank(columns-4)
+                        OutVect!.addItem(lastdate$)
+                        OutVect!.addItem(lastcost$)
+                        description$=""
+                    endif
+rem --- Print detail line
+                    gosub print_warehouse
+                    recs=recs+1
+                    
+rem --- Loop back for next warehouse
+                wend
+=======
             rem --- Print item heading
+>>>>>>> .r5633
 
                 if description$<>"" then 
                     OutVect!.addItem(item$(1,p[0])+"  "+description$)
@@ -276,12 +296,27 @@ rem --- Get next vendor/item record
 
 done: rem --- All done
 
+<<<<<<< .mine
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
+
+        done=1
+        gosub item_break
+        if number>0 goto std_exit
+        OutVect!.addItem("No Items Found")
+        xwk=fnblank(10)
+        goto std_exit
+=======
     done=1
     gosub item_break
     if number>0 goto std_exit
     OutVect!.addItem("No Items Found")
     xwk=fnblank(11)
     goto std_exit
+>>>>>>> .r5633
 
 print_warehouse: rem --- Print warehouse line
 
@@ -415,6 +450,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -470,4 +512,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
     
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
+
     end
