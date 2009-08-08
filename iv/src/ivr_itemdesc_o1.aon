@@ -45,9 +45,9 @@ rem ----Column Heading
         columns$[3,0]=segment3$,           columns$[3,1]="C",columns$[3,2]=str(p[5])
         if p[4]=0 columns$[2,2]="5"
         if p[5]=0 columns$[3,2]="5"
+        recs=0
 
 rem --- Position files
-
 
         call pgmdir$+"adc_progress.aon","NC",sysinfo.task_desc$,"","Printing","",p[0],ivm01_dev,1,0,ignore_status
         read (ivm01_dev,key=firm_id$+begitem$,dir=0,dom=*next)ivm01a$
@@ -71,12 +71,19 @@ rem --- Print detail line
              if p[4] OutVect!.addItem(ivm01a.item_desc$(p[3]+1,p[4])) else OutVect!.addItem("")
              if p[5] OutVect!.addItem(ivm01a.item_desc$(p[3]+p[4]+1,p[5])) else OutVect!.addItem("")
              number=number+1
+             recs=recs+1
 
 rem --- Loop back for next record
 
         wend
 
 done: rem --- All done
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
 
         xwk=fnblank(5)
         OutVect!.addItem(str(number)+" Items Listed")
@@ -103,6 +110,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         next q1
         return q1
     fnend
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 
@@ -171,5 +185,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

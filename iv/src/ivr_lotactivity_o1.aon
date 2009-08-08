@@ -53,6 +53,7 @@ rem --- Initializations
     period$[0]=begyear$+begper$
     period$[1]=endyear$+endper$
     more=1
+    recs=0
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm07_dev,1,meter_num,status
     if status = 999 then goto std_exit
@@ -201,7 +202,8 @@ rem --- Print detail line by item
             OutVect!.addItem(str(activity[8]))
             OutVect!.addItem(str(activity[7]))
             OutVect!.addItem("")
-            number=number+1              
+            number=number+1
+            recs=recs+1
 
 rem --- Accumulate item totals
 
@@ -237,11 +239,18 @@ rem --- Print detail line by lot/serial number
             OutVect!.addItem(str(activity[8]))
             OutVect!.addItem(str(activity[7]))
             OutVect!.addItem("")
-            number=number+1  
+            number=number+1
+            recs=recs+1
         endif
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     if number<>0 then
         done=1
@@ -333,6 +342,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -388,5 +404,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

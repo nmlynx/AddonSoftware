@@ -10,7 +10,7 @@ rem --- All Rights Reserved
 	
 rem --- Setup SQL to search by item / warehouse within report parameters	
 
-	sql_prep$=""
+    sql_prep$=""
     sql_prep$=sql_prep$+"SELECT ivm_itemwhse.warehouse_id, ivm_itemwhse.item_id "
     sql_prep$=sql_prep$+"  FROM ivm_itemwhse INNER JOIN ivm_itemmast "
     sql_prep$=sql_prep$+"    ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
@@ -24,122 +24,139 @@ rem --- Setup SQL to search by item / warehouse within report parameters
 
     where_clause$=cvs(where_clause$,2)
     if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
-    where_clause$=where_clause$+" ORDER BY ivm_itemwhse.warehouse_id, ivm_itemwhse.item_id"
-    sql_prep$=sql_prep$+where_clause$
+    order_clause$=" ORDER BY ivm_itemwhse.warehouse_id, ivm_itemwhse.item_id"
+    sql_prep$=sql_prep$+where_clause$+order_clause$
 
 rem --- SQL chan end prep
 		
-	sql_chan=sqlunt
+    sql_chan=sqlunt
     sqlopen(sql_chan)stbl("+DBNAME")
     sqlprep(sql_chan)sql_prep$
     dim read_tpl$:sqltmpl(sql_chan)
     sqlexec(sql_chan)
+
+    count_prep$="select count(*) as total_recs "
+    count_prep$=count_prep$+"FROM ivm_itemwhse INNER JOIN ivm_itemmast "
+    count_prep$=count_prep$+"ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
+    count_prep$=count_prep$+"ivm_itemwhse.firm_id=ivm_itemmast.firm_id "
+    count_prep$=count_prep$+where_clause$
+    count_chan=sqlunt
+    sqlopen(count_chan)stbl("+DBNAME")
+    sqlprep(count_chan)count_prep$
+    dim count_tpl$:sqltmpl(count_chan)
+    sqlexec(count_chan)
+    count_tpl$=sqlfetch(count_chan)
+    if count_tpl.total_recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 	
 rem --- Main Read
 
-	prev_item$ = ""
-	dim prev_ivm01a$:fattr(ivm01a$)
-	dim empty$:fattr(ivm01a$)
+    prev_item$ = ""
+    dim prev_ivm01a$:fattr(ivm01a$)
+    dim empty$:fattr(ivm01a$)
 
     while more
         read_tpl$ = sqlfetch(sql_chan, err=*break) 
-		whse$ = read_tpl.warehouse_id$
+        whse$ = read_tpl.warehouse_id$
         item$ = read_tpl.item_id$
 
 rem --- Retrieve item if necessary
 
-		if item$ <> prev_item$ then
-			if prev_item$ <> empty$ then gosub item_calcs
+        if item$ <> prev_item$ then
+            if prev_item$ <> empty$ then gosub item_calcs
 		
-	        ivm01a_key$=firm_id$+item$
-	        find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
+	    ivm01a_key$=firm_id$+item$
+	    find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
 			
-	        if ivm01a.eoq_code$=" "     then ivm01a.eoq_code$="D"
-	        if ivm01a.ord_pnt_code$=" " then ivm01a.ord_pnt_code$="D"
-	        if ivm01a.saf_stk_code$=" " then ivm01a.saf_stk_code$="D"
+	    if ivm01a.eoq_code$=" "     then ivm01a.eoq_code$="D"
+	    if ivm01a.ord_pnt_code$=" " then ivm01a.ord_pnt_code$="D"
+	    if ivm01a.saf_stk_code$=" " then ivm01a.saf_stk_code$="D"
 			
-			description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
-	        weighted=0
-	        average=0
-	        amount=0
-	        number=0
-	        count=0
-		endif
+            description$=fnitem$(ivm01a.item_desc$,p[3],p[4],p[5])
+	    weighted=0
+	    average=0
+	    amount=0
+	    number=0
+	    count=0
+        endif
 		
-		prev_item$   = item$
-		prev_ivm01a$ = ivm01a$
+        prev_item$   = item$
+        prev_ivm01a$ = ivm01a$
 		
 rem --- Retrieve warehouse record
 
-		ivm02a_key$=firm_id$+whse$+item$
-		find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
-		if ivm02a.eoq_code$=" "     then ivm02a.eoq_code$="D"
-		if ivm02a.ord_pnt_code$=" " then ivm02a.ord_pnt_code$="D"
-		if ivm02a.saf_stk_code$=" " then ivm02a.saf_stk_code$="D"
+        ivm02a_key$=firm_id$+whse$+item$
+        find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+        if ivm02a.eoq_code$=" "     then ivm02a.eoq_code$="D"
+        if ivm02a.ord_pnt_code$=" " then ivm02a.ord_pnt_code$="D"
+        if ivm02a.saf_stk_code$=" " then ivm02a.saf_stk_code$="D"
 
 rem --- Calculate annual usage
 
-		dim item$[2]
-		item$[0]=firm_id$
-		item$[1]=ivm02a.warehouse_id$
-		item$[2]=ivm02a.item_id$
+        dim item$[2]
+        item$[0]=firm_id$
+        item$[1]=ivm02a.warehouse_id$
+        item$[2]=ivm02a.item_id$
+
+        action$="W"
+        call pgmdir$+"ivc_usage.aon",action$,ivchannels[all],item$[all],factors[all],day_of_month,baseperiod$,curperiod$,g[0],p[1],actual,estimated,flag$,ignore_status
 		
-		action$="W"
-		call pgmdir$+"ivc_usage.aon",action$,ivchannels[all],item$[all],factors[all],day_of_month,baseperiod$,curperiod$,g[0],p[1],actual,estimated,flag$,ignore_status
+        ivw21a.lead_time       = ivm02a.lead_time
+        ivw21a.usage_qty_01    = actual
+        ivw21a.usage_qty_02    = estimated
+        ivw21a.safety_stock_01 = ivm02a.safety_stock
+        ivw21a.safety_stock_02 = ivm02a.safety_stock
+        ivw21a.order_point_01  = ivm02a.order_point
+        ivw21a.order_point_02  = ivm02a.order_point
+        ivw21a.eoq_01          = ivm02a.eoq
+        ivw21a.eoq_02          = ivm02a.eoq
+        ivw21a.unit_cost       = ivm02a.unit_cost
 		
-		ivw21a.lead_time       = ivm02a.lead_time
-		ivw21a.usage_qty_01    = actual
-		ivw21a.usage_qty_02    = estimated
-		ivw21a.safety_stock_01 = ivm02a.safety_stock
-		ivw21a.safety_stock_02 = ivm02a.safety_stock
-		ivw21a.order_point_01  = ivm02a.order_point
-		ivw21a.order_point_02  = ivm02a.order_point
-		ivw21a.eoq_01          = ivm02a.eoq
-		ivw21a.eoq_02          = ivm02a.eoq
-		ivw21a.unit_cost       = ivm02a.unit_cost
-		
-		safety   = ivw21a.safety_stock_01
-		order    = ivw21a.order_point_01
-		eoq      = ivw21a.eoq_01
-		codes$   = ivm02a.eoq_code$+ivm02a.ord_pnt_code$+ivm02a.saf_stk_code$
-		lead     = ivw21a.lead_time
-		onhand   = abs(ivm02a.qty_on_hand)
-		unitcost = ivm02a.unit_cost
-		amount   = amount+(onhand*unitcost)
-		number   = number+onhand
-		if number then weighted=amount/number
-		count=count+1
-		average=average+unitcost
+        safety   = ivw21a.safety_stock_01
+        order    = ivw21a.order_point_01
+        eoq      = ivw21a.eoq_01
+        codes$   = ivm02a.eoq_code$+ivm02a.ord_pnt_code$+ivm02a.saf_stk_code$
+        lead     = ivw21a.lead_time
+        onhand   = abs(ivm02a.qty_on_hand)
+        unitcost = ivm02a.unit_cost
+        amount   = amount+(onhand*unitcost)
+        number   = number+onhand
+        if number then weighted=amount/number
+        count=count+1
+        average=average+unitcost
 
 rem --- Calculate new safety stock, order point and EOQ
 
-		gosub new_safety_stock
+        gosub new_safety_stock
 
 rem --- Update totals for warehouse/item
 
-		ivw21a.firm_id$        = ivm02a.firm_id$
-		ivw21a.warehouse_id$   = ivm02a.warehouse_id$
-		ivw21a.product_type$   = ivm01a.product_type$
-		ivw21a.item_id$        = ivm02a.item_id$
-		ivw21a.item_desc$      = description$
-		ivw21a.abc_code$       = ivm02a.abc_code$
-		ivw21a.eoq_code$       = ivm02a.eoq_code$
-		ivw21a.ord_pnt_code$   = ivm02a.ord_pnt_code$
-		ivw21a.saf_stk_code$   = ivm02a.saf_stk_code$
-		ivw21a.stock_level$    = ivm01a.stock_level$
-		ivw21a.safety_stock_02 = safety
-		ivw21a.order_point_02  = order
-		ivw21a.eoq_02          = eoq
-		ivw21a$ = field(ivw21a$)
-		write record (ivw21_dev) ivw21a$
+        ivw21a.firm_id$        = ivm02a.firm_id$
+        ivw21a.warehouse_id$   = ivm02a.warehouse_id$
+        ivw21a.product_type$   = ivm01a.product_type$
+        ivw21a.item_id$        = ivm02a.item_id$
+        ivw21a.item_desc$      = description$
+        ivw21a.abc_code$       = ivm02a.abc_code$
+        ivw21a.eoq_code$       = ivm02a.eoq_code$
+        ivw21a.ord_pnt_code$   = ivm02a.ord_pnt_code$
+        ivw21a.saf_stk_code$   = ivm02a.saf_stk_code$
+        ivw21a.stock_level$    = ivm01a.stock_level$
+        ivw21a.safety_stock_02 = safety
+        ivw21a.order_point_02  = order
+        ivw21a.eoq_02          = eoq
+        ivw21a$ = field(ivw21a$)
+        write record (ivw21_dev) ivw21a$
 
 rem --- Accumulate item totals
 
-		ivw11a.usage_qty_01    = ivw11a.usage_qty_01    + ivw21a.usage_qty_01
-		ivw11a.usage_qty_02    = ivw11a.usage_qty_02    + ivw21a.usage_qty_02
-		ivw11a.safety_stock_02 = ivw11a.safety_stock_02 + ivw21a.safety_stock_02
-		ivw11a.order_point_02  = ivw11a.order_point_02  + ivw21a.order_point_02
-		ivw11a.eoq_02          = ivw11a.eoq_02          + ivw21a.eoq_02
+        ivw11a.usage_qty_01    = ivw11a.usage_qty_01    + ivw21a.usage_qty_01
+        ivw11a.usage_qty_02    = ivw11a.usage_qty_02    + ivw21a.usage_qty_02
+        ivw11a.safety_stock_02 = ivw11a.safety_stock_02 + ivw21a.safety_stock_02
+        ivw11a.order_point_02  = ivw11a.order_point_02  + ivw21a.order_point_02
+        ivw11a.eoq_02          = ivw11a.eoq_02          + ivw21a.eoq_02
 
 rem --- Loop back for next record
 
@@ -147,7 +164,7 @@ rem --- Loop back for next record
 	
 rem --- Calculate the last item	
 	
-	if prev_item$ <> "" then gosub item_calcs
+    if prev_item$ <> "" then gosub item_calcs
     
 rem --- Run report overlay
 
@@ -157,14 +174,14 @@ rem --- Run report overlay
 new_safety_stock: rem --- Calculate new safety stock, order point and EOQ
 
     if codes$(1,1)<>"N" and carry and unitcost then 
-		adu = (estimated/g[0]) / 30
-	    if codes$(3,1)<>"N" then safety = fnr(adu*lead*.5)
-	    if codes$(2,1)<>"N" then order = fnr(safety+(adu*lead))
-	    eoq = (2*estimated*setup) / (carry*unitcost)
-	    s   = sgn(eoq)
-		eoq = abs(eoq)
-		eoq = fnr(sqr(eoq)*s)
-	endif
+        adu = (estimated/g[0]) / 30
+        if codes$(3,1)<>"N" then safety = fnr(adu*lead*.5)
+        if codes$(2,1)<>"N" then order = fnr(safety+(adu*lead))
+        eoq = (2*estimated*setup) / (carry*unitcost)
+        s   = sgn(eoq)
+        eoq = abs(eoq)
+        eoq = fnr(sqr(eoq)*s)
+    endif
 	
     return
 
@@ -270,6 +287,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -324,5 +348,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

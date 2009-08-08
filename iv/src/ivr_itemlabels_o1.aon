@@ -14,33 +14,6 @@ rem --- Init Data
     x8$="First"
     if height<6 x9=height else x9=6
     another$="A"
-
-rem --- Open printer
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
-
-Options: rem --- Options
-    more=1
-    while more
-        call pgmdir$+"adc_yesno.aon",0,"Do You Wish To Print "+another$+" Test Pattern",3,v$,v3
-        if v3=4 goto std_exit
-        switch pos(v$="YN")
-        case 1;rem v$="Y"  
-            dim w0$(across*width*6,"X")
-            x0=1
-            gosub Print
-            another$="Another"
-        break
-        case 2; rem v$="N" no more test patterns
-            more=0
-        break
-        case default
-            continue
-        break
-        swend
-    wend
-
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm02_dev,1,meter_num,status
     more=1
 
 rem --- Loop Starting
@@ -68,6 +41,49 @@ rem --- Loop Starting
     sqlprep(sql_chan)sql_prep$
     dim read_tpl$:sqltmpl(sql_chan)
     sqlexec(sql_chan)
+
+    count_prep$="select count(*) as total_recs "
+    count_prep$=count_prep$+"FROM ivm_itemwhse INNER JOIN ivm_itemmast "
+    count_prep$=count_prep$+"ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
+    count_prep$=count_prep$+"ivm_itemwhse.firm_id=ivm_itemmast.firm_id "
+    count_prep$=count_prep$+where_clause$
+    count_chan=sqlunt
+    sqlopen(count_chan,err=*next)stbl("+DBNAME")
+    sqlprep(count_chan)count_prep$
+    dim count_tpl$:sqltmpl(count_chan)
+    sqlexec(count_chan)
+    count_tpl$=sqlfetch(count_chan)
+    if count_tpl.total_recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+rem --- Open printer
+    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+    if status goto std_exit
+
+    while more
+        call pgmdir$+"adc_yesno.aon",0,"Do You Wish To Print "+another$+" Test Pattern",3,v$,v3
+        if v3=4 goto std_exit
+        switch pos(v$="YN")
+        case 1;rem v$="Y"  
+            dim w0$(across*width*6,"X")
+            x0=1
+            gosub Print
+            another$="Another"
+        break
+        case 2; rem v$="N" no more test patterns
+            more=0
+        break
+        case default
+            continue
+        break
+        swend
+    wend
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,ivm02_dev,1,meter_num,status
+    more=1
 
 rem --- Main Read
     while more
@@ -201,6 +217,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -256,5 +279,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

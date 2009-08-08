@@ -42,6 +42,7 @@ rem --- Report Initializations
     when$=sysinfo.system_date$
     clock$=""
     more=1
+    recs=0
     headings$[2]="[HEADER]"
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm01_dev,1,meter_num,status
@@ -142,6 +143,7 @@ print_item_details:
         xwk = fnblank(2)
 
         xwk = fnblank(columns)
+        recs=recs+1
 
 rem --- Alternate item information
       
@@ -549,6 +551,12 @@ rem --- Loop back for next record
 
 done: rem --- All done
 
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     goto std_exit
 
 sub_heading:
@@ -622,6 +630,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -677,5 +692,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
     
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

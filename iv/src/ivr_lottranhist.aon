@@ -199,6 +199,7 @@ rem --- Check for vendor masterfile
 
     if ttype$=all_ttypes$ then all$="Y" else all$="N"
     more=1
+    recs=0
 	
     precision p[2]
     headings=7
@@ -387,12 +388,19 @@ rem --- Print detail line
         wkx=fnblank(3)
         OutVect!.addItem(cvs(desc$[1],2))
         wkx=fnblank(columns-4)
+        recs=recs+1
 
 rem --- Loop back for next record
 
     wend
 
 done: rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     gosub item_break
@@ -595,5 +603,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 	
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
     
-        end
+    end

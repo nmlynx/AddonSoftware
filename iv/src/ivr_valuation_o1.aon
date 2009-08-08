@@ -11,14 +11,14 @@ rem --- All Rights Reserved
 
 rem --- Functions object
 
-	use ::ado_func.src::func
+    use ::ado_func.src::func
 
 rem --- Document initializations
 
-	declare BBjVector OutVect!
-	declare BBjVector HdrVect!
-	declare BBjVector BrkVect!
-	declare BBjVector TotVect!
+    declare BBjVector OutVect!
+    declare BBjVector HdrVect!
+    declare BBjVector BrkVect!
+    declare BBjVector TotVect!
 
     OutVect!=bbjAPI().makeVector()
     HdrVect!=bbjAPI().makeVector()
@@ -62,11 +62,12 @@ rem --- Initializations
     types$[10]="Rec "
     types$[11]="Phys"
     more=1
+    recs=0
 
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,ivm02_dev,1,meter_num,status
-	if status = 999 then goto std_exit
+    if status = 999 then goto std_exit
 
 rem --- Report headings
 
@@ -123,7 +124,7 @@ rem --- Column Headings
             columns$[9,0]="Total^Value",            columns$[9,1]="N",   columns$[9,2]=str(m1), columns$[9,3]=m1$, columns$[9,10]="T"
     endif
 
-	sql_prep$=""
+    sql_prep$=""
     sql_prep$=sql_prep$+"SELECT ivm_itemwhse.item_id, ivm_itemwhse.warehouse_id, ivm_itemmast.product_type "
     sql_prep$=sql_prep$+"  FROM ivm_itemwhse INNER JOIN ivm_itemmast "
     sql_prep$=sql_prep$+"    ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
@@ -190,7 +191,7 @@ rem --- Retrieve item, warehouse and activity
         w[3]=ivm12a.qty_sold, w[4]=ivm12a.qty_issued, w[5]=ivm12a.qty_adjust 
         w[6]=ivm12a.qty_xfer_in, w[7]=ivm12a.qty_xfer_out, w[8]=ivm12a.qty_returned
         call pgmdir$+"ivc_periodqty.aon",selection$,ivm12a$,ignore[all],balance,status
-		if status = 999 then exitto std_exit
+        if status = 999 then exitto std_exit
         if whichqty$="B" quantity=balance
         if format<=3 and include$="N" and quantity=0 then continue
 
@@ -340,6 +341,12 @@ rem --- Loop back for next record
 
 done: rem --- All done
 
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     done=1
     gosub whse_break
     total$="Total For Report"
@@ -399,6 +406,7 @@ print_line: rem --- Print line for formats 4, 5 & 6 (LS &/or LF)
     l1=l1+1
     l2=l2+1
     printed=1
+    recs=recs+1
     return
 
 whse_break: rem --- Warehouse Break
@@ -582,6 +590,13 @@ std_error_release:
 
 rem #endinclude std_error.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
@@ -613,5 +628,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 	
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

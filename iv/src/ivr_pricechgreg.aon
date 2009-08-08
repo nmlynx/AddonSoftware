@@ -173,8 +173,9 @@ rem --- Report inits
     prev_price_code$=""
     prev_whse$=""
     prev_type$=""
-    more = 1
-	
+    more=1
+    recs=0
+
 rem --- Next SQL record
 
     while more
@@ -234,6 +235,7 @@ rem --- Print detail line
 	endif
 		
         number=number+1
+        recs=recs+1
         if pricechg_rec.unit_price<0 then errors=errors+1
 		
         prev_price_code$ = pricechg_rec.price_code$
@@ -245,6 +247,12 @@ rem --- Loop back for next record
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
 	
@@ -404,6 +412,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 rem --- Create a blank line.  "void" is simply a variable; it's there to remind you that this function takes no input
 
 	def fnblank_line(void)=fnblank(columns+1)
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 	
 rem #include std_error.src
 
@@ -460,5 +475,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
