@@ -133,6 +133,7 @@ rem --- Parameters
     sf$="N"
     ls$="N"
     lf$="N"
+    recs=0
 
     vendlen=num(aps01a.vendor_size$)
     i[0]=ivs01a.item_id_len
@@ -404,6 +405,7 @@ l1900: rem --- Standard line
     pbuf$(o[11]+1)=str(po_extension:m1$)
     pbuf$(o[12]+1)=poe14a.location$
     OutVect!.addItem(pbuf$)
+    recs=recs+1
    
     dim pbuf$(width)
     pbuf$(o[3]+1)=description$
@@ -429,6 +431,7 @@ l2000: rem --- Non-stock line
     pbuf$(o[11]+1)=str(po_extension:m1$)
     pbuf$(o[12]+1)=poe14a.location$
     OutVect!.addItem(pbuf$)
+    recs=recs+1
     
     dim pbuf$(width)   
     pbuf$(o[3]+1)=poe14a.order_memo$
@@ -446,6 +449,7 @@ l2100: rem --- Vendor part number line
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.item_id$
     OutVect!.addItem(pbuf$)    
+    recs=recs+1
 
     l=l+1
     goto l2400
@@ -459,6 +463,7 @@ l2200: rem --- Message line
     pbuf$(o[2]+1)=poe14a.warehouse_id$
     pbuf$(o[3]+1)=poe14a.order_memo$
     OutVect!.addItem(pbuf$)    
+    recs=recs+1
 
     l=l+1
     goto l2400
@@ -474,6 +479,7 @@ l2300: rem --- Other type line
     pbuf$(o[11]+1)=str(po_extension:m1$)
     pbuf$(o[12]+1)=poe14a.location$
     OutVect!.addItem(pbuf$)
+    recs=recs+1
     
     dim pbuf$(width)    
     pbuf$(o[3]+1)=poe14a.order_memo$
@@ -507,8 +513,9 @@ rem --- Print detail line
     pbuf$(o[7]+1)=str(poe24a.qty_received:m2$)
     pbuf$(o[10]+1)=str(poe24a.unit_cost:m3$)
     pbuf$(o[11]+1)=str(extension:m1$)
-    OutVect!.addItem(pbuf$)    
+    OutVect!.addItem(pbuf$)
     l=l+1
+    recs=recs+1
     total=total+poe24a.qty_received
     lastseq=num(poe24a.sequence_no$)
     goto l2500
@@ -534,8 +541,8 @@ l2900: rem --- Print lines for missing lot/serial numbers
         lastseq=lastseq+1
         dim pbuf$(width)        
         pbuf$(o[3]+1)=lsdesc$+" "+str(lastseq:"000-")+x$
-        OutVect!.addItem(pbuf$)    
-        
+        OutVect!.addItem(pbuf$)
+        recs=recs+1
     next x
 
 l3000: rem --- Generate GL Recap Postings
@@ -696,10 +703,18 @@ rem --- Print list of lines with lot/serial number differences
         pbuf$(o[6]+1)=str(lsqty[x]:m2$)
         pbuf$(o[7]+1)=str(dif:m2$)
         OutVect!.addItem(pbuf$)
+        recs=recs+1
         let l=l+1
     next x
 
 l4900: rem --- Run next overlay
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     if number=0 goto std_exit
     run pgmdir$+"por_recptreg_o1.aon"
 
@@ -988,5 +1003,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

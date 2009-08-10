@@ -58,6 +58,7 @@ rem --- Initializations
     desc_len_02=num(ivs_params.desc_len_02$)
     desc_len_03=num(ivs_params.desc_len_03$)
     more=1
+    recs=0
 
 rem --- Document columns
 
@@ -288,6 +289,7 @@ rem --- Calculate extensions and branch based on line type
                     OutVect!.addItem(wo$)
                     xwk=fnblank(5)
                     l=l+needed
+                    recs=recs+1
                     break
 
                case non_stock_line
@@ -312,6 +314,7 @@ rem --- Calculate extensions and branch based on line type
                     OutVect!.addItem(wo$)
                     xwk=fnblank(5)
                     l=l+needed
+                    recs=recs+1
                     break
 
             case vend_line
@@ -329,6 +332,7 @@ rem --- Calculate extensions and branch based on line type
                     OutVect!.addItem(wo$)
                     xwk=fnblank(5)
                     l=l+needed
+                    recs=recs+1
                     break
 
             case msg_line
@@ -348,6 +352,7 @@ rem --- Calculate extensions and branch based on line type
                     OutVect!.addItem(wo$)
                     xwk=fnblank(5)
                     l=l+needed
+                    recs=recs+1
                     break
 
             case other_type_line
@@ -376,6 +381,12 @@ rem --- Accumulate totals
     wend;       rem --- Loop back for next header
 
 done: rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     action=pos(sequence$="AVR")
@@ -506,6 +517,7 @@ other_line:
     OutVect!.addItem(wo$)
     xwk=fnblank(5)
     l=l+needed
+    recs=recs+1
     return
 
 rem #include std_functions.src
@@ -546,6 +558,13 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
     fnend
 
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 
@@ -611,5 +630,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
