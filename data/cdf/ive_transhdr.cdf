@@ -1,3 +1,20 @@
+[[IVE_TRANSHDR.BEND]]
+rem --- remove software lock on batch, if batching
+
+	batch$=stbl("+BATCH_NO",err=*next)
+	if num(batch$)<>0
+		lock_table$="ADM_PROCBATCHES"
+		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+		lock_type$="U"
+		lock_status$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,table_chans$[all],lock_status$
+	endif
+[[IVE_TRANSHDR.BTBL]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+callpoint!.setTableColumnAttribute("IVE_TRANSHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
 [[IVE_TRANSHDR.AREA]]
 print "HEADER: after record read (AREA)"; rem debug
 

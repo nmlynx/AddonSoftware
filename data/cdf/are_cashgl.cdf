@@ -1,3 +1,8 @@
+[[ARE_CASHGL.BSHO]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+callpoint!.setTableColumnAttribute("ARE_CASHGL.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[ARE_CASHGL.GL_POST_AMT.AVAL]]
 rem escape;rem post amt aval
 [[ARE_CASHGL.BEND]]

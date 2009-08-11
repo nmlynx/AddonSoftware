@@ -1,3 +1,6 @@
+[[APE_MANCHECKDET.AGCL]]
+rem --- set preset val for batch_no
+callpoint!.setTableColumnAttribute("APE_MANCHECKDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[APE_MANCHECKDET.AUDE]]
 rem --- Recalc totals for header
 	gosub calc_tots

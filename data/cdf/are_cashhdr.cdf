@@ -1,3 +1,21 @@
+[[ARE_CASHHDR.BEND]]
+rem --- remove software lock on batch, if batching
+
+	batch$=stbl("+BATCH_NO",err=*next)
+	if num(batch$)<>0
+		lock_table$="ADM_PROCBATCHES"
+		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+		lock_type$="U"
+		lock_status$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,table_chans$[all],lock_status$
+	endif
+[[ARE_CASHHDR.BTBL]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+callpoint!.setTableColumnAttribute("ARE_CASHHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
+
 [[ARE_CASHHDR.PAYMENT_AMT.BINP]]
 rem --- store value in control prior to input so we'll know at AVAL if it changed
 user_tpl.binp_pay_amt=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
@@ -101,32 +119,38 @@ user_tpl.gl_applied$="0"
 user_tpl.existing_chk$="Y"
 rem --- read thru/store existing are-11 info
 more_dtl=1
-read (are_cashdet_dev,key=callpoint!.getRecordKey(),dom=*next)
+
+are01_key$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+
+:	callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
+:	callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+
+:	callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
+:	callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+
+:	callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
+:	callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+
+:	callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+
+read (are_cashdet_dev,key=are01_key$,dom=*next)
 while more_dtl
 	read record(are_cashdet_dev,end=*break)are11a$
-	if are11a$(1,len(callpoint!.getRecordKey()))=callpoint!.getRecordKey()
-		dim wk$(40)
-		wk$(1)=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
-		wk$(11)=are11a.ar_inv_no$
-		wk$(21)=are11a.apply_amt$
-		wk$(31)=are11a.discount_amt$
-		pymt_dist$=pymt_dist$+wk$
-		existing_dtl$=existing_dtl$+wk$
-	else
-		more_dtl=0
-	endif
+	if pos(are01_key$=are11a$)<>1 then break
+	dim wk$(40)
+	wk$(1)=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
+	wk$(11)=are11a.ar_inv_no$
+	wk$(21)=are11a.apply_amt$
+	wk$(31)=are11a.discount_amt$
+	pymt_dist$=pymt_dist$+wk$
+	existing_dtl$=existing_dtl$+wk$
 wend
+
 rem --- read thru existing are-21's and store total GL amt posted this check
 more_dtl=1
-read(are_cashgl_dev,key=callpoint!.getRecordKey(),dom=*next)
+read(are_cashgl_dev,key=are01_key$,dom=*next)
 while more_dtl
 	read record(are_cashgl_dev,end=*break)are21a$
-	if are21a$(1,len(callpoint!.getRecordKey()))=callpoint!.getRecordKey()
-		gl_applied=gl_applied+num(are21a.gl_post_amt$)
-	else
-		more_dtl=0
-	endif
+	if pos(are01_key$=are21a$)<>1 then break
+	gl_applied=gl_applied+num(are21a.gl_post_amt$)
 wend
+
 if gl_applied
 	Form!.getControl(num(user_tpl.GLind_id$)).setText("* includes GL distributions")
 	Form!.getControl(num(user_tpl.GLstar_id$)).setText("*")
@@ -134,6 +158,7 @@ else
 	Form!.getControl(num(user_tpl.GLind_id$)).setText("")
 	Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 endif
+
 user_tpl.gl_applied$=str(-gl_applied)
 UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
 UserObj!.setItem(num(user_tpl.existing_dtl$),existing_dtl$)
@@ -151,7 +176,7 @@ callpoint!.setStatus("REFRESH")
 [[ARE_CASHHDR.AOPT-OACT]]
 gosub apply_on_acct
 [[ARE_CASHHDR.AOPT-GLED]]
-rem --- change below to "Y" instead of "N" for production
+rem --- call up GL Dist grid if GL installed
 if user_tpl.glint$="Y"
 	gosub gl_distribution
 else
@@ -265,7 +290,7 @@ zbal_chkbox!=Form!.addCheckBox(nxt_ctlID+1,555,72,200,20,"Show zero-balance invo
 asel_chkbox!=Form!.addCheckBox(nxt_ctlID+2,555,92,200,20,"Auto-select by Invoice?",$$)
 gridInvoice!=Form!.addGrid(nxt_ctlID+3,5,160,700,210)
 Form!.addStaticText(nxt_ctlID+4,450,140,200,20,"")
-Form!.addStaticText(nxt_ctlID+5,530,118,20,20,"")
+Form!.addStaticText(nxt_ctlID+5,550,118,20,20,"")
 rem --- store ctl ID's of custom controls				
 user_tpl.OA_chkbox_id$=str(nxt_ctlID)
 user_tpl.zbal_chkbox_id$=str(nxt_ctlID+1)
@@ -457,10 +482,10 @@ rem --- cashhdr, are-01
 :			are01a.customer_id$+are01a.cash_rec_cd$+are11a.ar_check_no$+are01a.reserved_key_02$,dom=*next)are01a$		
 		are01a.payment_amt$=callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT")
 		are01a.cash_check$=callpoint!.getColumnData("ARE_CASHHDR.CASH_CHECK")
-		are01a.aba_no$=callpoint!.getColumnData("ARE_CASHHDR.ABA_NO")		
+		are01a.aba_no$=callpoint!.getColumnData("ARE_CASHHDR.ABA_NO")
+		are01a.batch_no$=stbl("+BATCH_NO")		
 		are01a$=field(are01a$)
-		writerecord(are_cashhdr_dev,key=are01a.firm_id$+are01a.ar_type$+are01a.reserved_key_01$+
-:			are01a.receipt_date$+are01a.customer_id$+are01a.cash_rec_cd$+are11a.ar_check_no$+are01a.reserved_key_02$)are01a$
+		writerecord(are_cashhdr_dev)are01a$
 		apply_amt=num(pymt_dist$(updt_loop+20,10))
 		disc_amt=num(pymt_dist$(updt_loop+30,10))
 rem --- cashdet, are-11
@@ -473,10 +498,9 @@ rem --- cashdet, are-11
 		are11a.apply_amt$=str(apply_amt)
 		are11a.discount_amt$=str(disc_amt)
 		if apply_amt<>0 or disc_amt<>0
+			are11a.batch_no$=stbl("+BATCH_NO")
 			are11a$=field(are11a$)
-			writerecord(are_cashdet_dev,key=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+
-:				are11a.receipt_date$+are11a.customer_id$+are11a.cash_rec_cd$+are11a.ar_check_no$+are11a.reserved_key_02$+
-:				are11a.ar_inv_no$)are11a$
+			writerecord(are_cashdet_dev)are11a$
 		else
 			remove(are_cashdet_dev,key=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+are11a.receipt_date$+
 :				are11a.customer_id$+are11a.cash_rec_cd$+are11a.ar_check_no$+are11a.reserved_key_02$+are11a.ar_inv_no$,dom=*next)

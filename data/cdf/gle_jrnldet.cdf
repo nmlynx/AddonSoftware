@@ -1,3 +1,7 @@
+[[GLE_JRNLDET.AGCL]]
+rem --- set preset val for batch_no
+
+callpoint!.setTableColumnAttribute("GLE_JRNLDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[GLE_JRNLDET.AUDE]]
 rem --- recal/display tots after deleting a grid row
 gosub calc_grid_tots

@@ -1,3 +1,19 @@
+[[APE_MANCHECKHDR.BEND]]
+rem --- remove software lock on batch, if batching
+
+	batch$=stbl("+BATCH_NO",err=*next)
+	if num(batch$)<>0
+		lock_table$="ADM_PROCBATCHES"
+		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+		lock_type$="U"
+		lock_status$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,table_chans$[all],lock_status$
+	endif
+[[APE_MANCHECKHDR.BTBL]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+callpoint!.setTableColumnAttribute("APE_MANCHECKHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[APE_MANCHECKHDR.BWRI]]
 rem --- make sure we have entered mandatory elements of header, and that ap_type/vendor are valid together
 

@@ -198,6 +198,9 @@ rem --- Display defaults for this row
 	rem callpoint!.setStatus("MODIFIED-REFRESH")
 	rem callpoint!.setStatus("REFGRID")
 [[IVE_TRANSDET.AGCL]]
+rem --- set preset val for batch_no
+callpoint!.setTableColumnAttribute("IVE_TRANSDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
 print "after grid clear (AGCL)"; rem debug
 
 	rem --- We'll be using the "util" object throughout.
@@ -303,7 +306,7 @@ rem ==========================================================================
 		ls_no$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
 
 		if user_tpl.this_item_lot_or_ser and ls_no$ <> "" then
-			file_name$ = "IVM_LSMAST"
+			file_name$ = "IVM_LSMASTER"
 			dim ivm07a$:fnget_tpl$(file_name$)
 			find record(fnget_dev(file_name$),key=firm_id$+whse$+item$+ls_no$,dom=*endif) ivm07a$
 			print "lot ", ls_no$, " found"; rem debug
