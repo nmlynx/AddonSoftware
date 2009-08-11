@@ -28,26 +28,32 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
 
 rem --- Assign form input values to local variables
-	
+    
     declare Option option!
     new_price_code$ = option!.getOptionData("NEW_PRICE_CODE")
+
+rem --- get batch# (zero if not batching.CAH)
+
+    batch_no$=stbl("+BATCH_NO",err=*next)
 
 rem --- Open all files
 
     num_files = 7
     open_beg  = 1
     open_end  = num_files
-	
+    
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	
+    
     open_tables$[1]="IVS_PARAMS",   open_opts$[1]="OTA"
-    open_tables$[2]="IVE_PRICECHG", open_opts$[2]="OTAL"
+    open_tables$[2]="IVE_PRICECHG", open_opts$[2]="OTA"
     open_tables$[3]="IVM_ITEMMAST", open_opts$[3]="OTA"
     open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
     open_tables$[5]="IVC_PRODCODE", open_opts$[5]="OTA"
     open_tables$[6]="IVC_WHSECODE", open_opts$[6]="OTA"
     open_tables$[7]="ADM_MODULES",  open_opts$[7]="OTA"
-	
+    
+    if num(batch_no$)=0 then let open_opts$[2]=open_opts$[2]+"L"; rem lock only if not batching    
+    
     gosub open_tables
 
     ivs_params_dev = num( open_chans$[1] )
@@ -63,13 +69,13 @@ rem --- Open all files
     dim itemmast_rec$:open_tpls$[3]
     dim itemwhse_rec$:open_tpls$[4]
     dim prodcode_rec$:open_tpls$[5]
-    dim whsecode_rec$:open_tpls$[6]	
+    dim whsecode_rec$:open_tpls$[6] 
     dim modules_rec$:open_tpls$[7]
-	
+    
 rem --- Parameters
 
     find record (ivs_params_dev, key=firm_id$+"IV00", dom=std_missing_params) ivs_params_rec$
-	
+    
     dim p[5]
     p[0]=ivs_params_rec.item_id_len
     p[1]=num(ivs_params_rec.precision$)
@@ -80,9 +86,8 @@ rem --- Parameters
 rem --- Initializations
 
     precision p[1]
-	
+    
     width=132
-    number=0
     errors=0
     m9$="-###0.00%"
     m9=len(m9$)
@@ -91,20 +96,20 @@ rem --- Initializations
     
 rem --- Print positions
     
-	dim o[5]
+    dim o[5]
     o[5]=width-m4-1
     o[4]=o[5]-m4-9
     o[3]=o[4]-m4-9
     o[2]=o[3]-3
     o[1]=p[0]+1
-	
+    
     dw=p[3]+p[4]+p[5]
     v=o[2]-o[1]
-	
+    
     if dw>v then split=1,dw=o[2]-3 else split = 0
-	
+    
     dim description$(dw)
-	
+    
 rem --- Document initializations
 
     declare BBjVector OutVect!
@@ -116,13 +121,13 @@ rem --- Document initializations
     HdrVect!=BBjAPI().makeVector()
     BrkVect!=BBjAPI().makeVector()
     TotVect!=BBjAPI().makeVector()
-	
+    
     rep_date$=date(0:"%Mz/%Dz/%Yd")
     rep_date_stamp$=date(0:"%Yd%Mz%Dz")
     rep_time$=date(0:"%hz:%mz %p")
     rep_time_stamp$=date(0:"%Hz%mz%sz")
-    rep_prog$=pgm(-2)	
-	
+    rep_prog$=pgm(-2)   
+    
 rem --- Column headings
 
     columns=7
@@ -141,10 +146,11 @@ rem --- Report headings
     headings=3
     dim headings$[headings]
     headings$[0]=sysinfo.firm_name$
-    headings$[1]=sysinfo.task_desc$	
+    headings$[1]=sysinfo.task_desc$ 
+    if num(batch_no$)<>0 then headings$[1]=headings$[1]+ " (Batch: "+batch_no$+")"    
     headings$[headings]="[HEADER]"
 
-rem --- Sort by product type using SQL	
+rem --- Sort by product type using SQL  
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,pricechg_dev,1,meter_num,ignore_status
 
@@ -154,7 +160,7 @@ rem --- Sort by product type using SQL
     sql_prep$ = sql_prep$ + "SELECT ive_pricechg.price_code, ive_pricechg.warehouse_id, ivm_itemmast.product_type, ive_pricechg.item_id "
     sql_prep$ = sql_prep$ + "  FROM ive_pricechg INNER JOIN ivm_itemmast ON ive_pricechg.firm_id = ivm_itemmast.firm_id AND "
     sql_prep$ = sql_prep$ + "       ive_pricechg.item_id = ivm_itemmast.item_id "
-    sql_prep$ = sql_prep$ + " WHERE ive_pricechg.firm_id = '" + firm_id$ + "' "
+    sql_prep$ = sql_prep$ + " WHERE ive_pricechg.firm_id = '" + firm_id$ + "' AND ive_pricechg.batch_no = '" + batch_no$ + "' "
 
     if new_price_code$ <> "" then 
         sql_prep$ = sql_prep$ + "AND ive_pricechg.price_code = '" + new_price_code$ +"' "
@@ -184,8 +190,8 @@ rem --- Next SQL record
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,pricechg_dev,1,meter_num,ignore_status
 
-	pricechg_rec_key$ = firm_id$ + sql_rec.price_code$ + sql_rec.warehouse_id$ + sql_rec.item_id$
-        read record (pricechg_dev, key=pricechg_rec_key$, dom=*continue) pricechg_rec$
+    pricechg_rec_key$ = firm_id$ + batch_no$ + sql_rec.price_code$ + sql_rec.warehouse_id$ + sql_rec.item_id$
+        read record (pricechg_dev, key=pricechg_rec_key$, knum=1, dom=*continue) pricechg_rec$
 
 rem --- Level breaks?
 
@@ -193,10 +199,10 @@ rem --- Level breaks?
             gosub price_code_break
             gosub whse_break
             gosub product_break
-	else
+    else
             if pricechg_rec.warehouse_id$<>prev_whse$ then 
                 gosub whse_break
-		gosub product_break
+        gosub product_break
             else
                 if sql_rec.product_type$<>prev_type$ then 
                     gosub product_break
@@ -208,40 +214,39 @@ rem --- Additional reads
 
         item$=pricechg_rec.item_id$
         whse$=pricechg_rec.warehouse_id$
-	itemmast_rec.item_desc$="(Item Not Found)"
-		
+    itemmast_rec.item_desc$="(Item Not Found)"
+        
         find record (itemmast_dev, key=firm_id$+item$,       dom=*next) itemmast_rec$
         find record (itemwhse_dev, key=firm_id$+whse$+item$, dom=*next) itemwhse_rec$
-		
-	description$(1)=itemmast_rec.item_desc$
+        
+    description$(1)=itemmast_rec.item_desc$
 
 rem --- Print detail line
       
         if split then descr_hold$="" else descr_hold$=description$
-		
-	OutVect!.addItem(pricechg_rec.item_id$)
-	OutVect!.addItem(descr_hold$)
-	OutVect!.addItem(itemmast_rec.unit_of_sale$)
-	OutVect!.addItem( str(itemwhse_rec.pri_price) )
-	OutVect!.addItem(itemwhse_rec.pri_price_cd$)
-	OutVect!.addItem( str(itemwhse_rec.cur_price) )
-	OutVect!.addItem(itemwhse_rec.cur_price_cd$)
-	OutVect!.addItem( str(pricechg_rec.unit_price) )
-		
+        
+    OutVect!.addItem(pricechg_rec.item_id$)
+    OutVect!.addItem(descr_hold$)
+    OutVect!.addItem(itemmast_rec.unit_of_sale$)
+    OutVect!.addItem( str(itemwhse_rec.pri_price) )
+    OutVect!.addItem(itemwhse_rec.pri_price_cd$)
+    OutVect!.addItem( str(itemwhse_rec.cur_price) )
+    OutVect!.addItem(itemwhse_rec.cur_price_cd$)
+    OutVect!.addItem( str(pricechg_rec.unit_price) )
+        
         if split then 
             OutVect!.addItem("")
             OutVect!.addItem(description$)
             ignore = fnblank(6)
-	endif
-		
-        number=number+1
+    endif
+        
         recs=recs+1
         if pricechg_rec.unit_price<0 then errors=errors+1
-		
+        
         prev_price_code$ = pricechg_rec.price_code$
         prev_whse$ = pricechg_rec.warehouse_id$
         prev_type$ = sql_rec.product_type$
-		
+        
 rem --- Loop back for next record
 
     wend
@@ -255,19 +260,14 @@ rem --- All done
     endif
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
-	
-    if !number then
-		OutVect!.addItem("No Price Change Entries Found")
-		ignore = fnblank(7)
-		goto std_exit
-    endif
-	
+        
 rem --- Any negative prices?
 
     if errors then
         msg_id$ = "IV_REG_NEG_PRICES"
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
-		goto std_exit
+        call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+        next_overlay$=""
+        goto std_exit_no_update
     endif
 
 rem --- Run update overlay
@@ -275,30 +275,30 @@ rem --- Run update overlay
 rem --- Values for Price/Cost Update program
     channel = pricechg_dev
     o0 = 0; rem signals a price update
-    first$ = firm_id$ + new_price_code$
+    first$ = firm_id$ + batch_no$ + new_price_code$
     overlay$ = pgmdir$+"ivu_pricecostchgupdt.aon"
-	
+    
 rem --- Print register via DocOut
     out_action$="PRT-PDF"
     next_overlay$=overlay$
     goto std_exit
-	
+    
 price_code_break: rem --- Price Code Break
 
     BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
     HdrVect!.addItem( "For New List Price Code " + sql_rec.price_code$ )
-	
+    
     return
 
 whse_break: rem --- Warehouse Break
 
     whsecode_rec.short_name$="(Not on File)"
     find record (whsecode_dev, key=firm_id$+"C"+pricechg_rec.warehouse_id$, dom=*next) whsecode_rec$
-	
+    
     ignore = fnblank_line(void)
     OutVect!.addItem( "Warehouse "+pricechg_rec.warehouse_id$+" "+cvs(whsecode_rec.short_name$,2) )
     ignore = fnblank(7)
-	
+    
     return
 
 product_break: rem --- Product Break
@@ -309,33 +309,33 @@ product_break: rem --- Product Break
     ignore = fnblank_line(void)
     OutVect!.addItem( "Product " + sql_rec.product_type$ + " " + prodcode_rec.code_desc$ )
     ignore = fnblank(7)
-	
+    
     return
 
-open_tables: rem --- Call open table routine	
+open_tables: rem --- Call open table routine    
 
-	call sypdir$+"bac_open_tables.bbj",
-:		open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		rd_table_chans$[all],
-:		open_batch,
-:		open_status$
+    call sypdir$+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
 
-	if open_status$<>"" then
-		msg_id$="ENTRY_OPEN_ERROR"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=open_status$
-		call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
-		status=912
-		goto std_exit
-	endif
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        call sypdir$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+        status=912
+        goto std_exit_no_report
+    endif
 
-	return
-	
+    return
+    
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -411,7 +411,7 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem --- Create a blank line.  "void" is simply a variable; it's there to remind you that this function takes no input
 
-	def fnblank_line(void)=fnblank(columns+1)
+    def fnblank_line(void)=fnblank(columns+1)
 
 rem #include disp_message.src
 
@@ -419,7 +419,7 @@ disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     return
-	
+    
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -469,16 +469,24 @@ rem #endinclude std_missing_params.src
 
 rem #include std_end.src
 
-std_exit: rem --- Standard program end (01Mar2006)
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    rem run pgmdir$+"ads_process_end.aon",err=*next
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-    release
-rem #endinclude std_end.src
-
 std_exit_no_report:
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    OutVect!=null();rem nothing to print, or some other err such that no report
+    
+std_exit_no_update:
+
+    if num(batch_no$)<>0
+        unlock_key$=firm_id$+stbl("+PROCESS_ID")+stbl("+BATCH_NO")
+        lock_status$=""
+        call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",unlock_key$,"U",rd_table_chans$[all],lock_status$
+    endif
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release
+
+rem #endinclude std_end.src
 
     end
