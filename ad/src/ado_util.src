@@ -727,6 +727,14 @@ rem ==========================================================================
             
         methodend
         
+        method public static BBjInt isTableChansSet()
+            if #TableChans! = null() then
+                methodret 0
+            else
+                methodret 1
+            endif
+        methodend
+        
     rem --- Get a device (channel) from a data name
     
         method public static BBjInt getDev(BBjString p_data_name$)
