@@ -111,8 +111,8 @@ rem --- Now create the working sql phrase
     where_clause$="where pot_rechdr.firm_id= '"+firm_id$+"' AND "
     where_clause$=where_clause$+"pot_rechdr.firm_id = apm_vendmast.firm_id AND "
     where_clause$=where_clause$+"pot_rechdr.vendor_id = apm_vendmast.vendor_id AND "
-    if printseq$="N" and vendfrom$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id >= '"+vendfrom$+"' AND " 
-    if printseq$="N" and vendthru$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id <= '"+vendthru$+"' AND " 
+    if printseq$="V" and vendfrom$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id >= '"+vendfrom$+"' AND " 
+    if printseq$="V" and vendthru$<>"" then where_clause$=where_clause$+"pot_rechdr.vendor_id <= '"+vendthru$+"' AND " 
     if printseq$="A" and altfrom$<>"" then where_clause$=where_clause$+"apm_vendmast.alt_sequence >= '"+altfrom$+"' AND " 
     if printseq$="A" and altthru$<>"" then where_clause$=where_clause$+"apm_vendmast.alt_sequence <= '"+altthru$+"' AND " 
     if datefrom$<>"" then where_clause$=where_clause$+"pot_rechdr.recpt_date >= '"+datefrom$+"' AND "
@@ -291,6 +291,12 @@ rem --- Loop up for next PO/Receiver
 
 done: rem --- All Done
 
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     if l+1>l9 gosub report_heading
     gosub vendtotals
     grandvari=grandrcptamt-grandrcptamt_iv
@@ -388,6 +394,7 @@ printline: rem --- Test breaks
     OutVect!.addItem(rcptamt_iv$)
     OutVect!.addItem(variance$)
     l=l+1
+    recs=recs+1
     dim pline$(132)
     prevvendpo$=vendor$+ponum$
 
@@ -476,6 +483,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -531,5 +545,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

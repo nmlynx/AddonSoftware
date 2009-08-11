@@ -53,6 +53,7 @@ rem --- Headings and print positions
     page=0
     l9=59
     l=l9+1
+    recs=0
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     gosub assignheads
@@ -219,6 +220,7 @@ rem --- Detail passed, so print header if nec & print detail
                             headrecprinted$="Y"
                        endif
                         gosub printdetail
+                        recs=recs+1
 
                     endif
 
@@ -243,6 +245,13 @@ rem --- Done w/detail for this PO
     wend; rem tripread
 
 done: rem --- All Done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     if printseq$<>"P" gosub vendtotals
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     xwk = fnblank(11)
@@ -719,6 +728,13 @@ rem --- Line Feed: Determin Number of cells to add to OutVect!
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -772,5 +788,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

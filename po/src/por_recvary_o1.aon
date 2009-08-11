@@ -51,6 +51,7 @@ rem --- Headings and print positions
     l=l9+1
     gosub assignheads
     more=1
+    recs=0
     dim columns$[8,10]
     columns = 9
     columns$[0,0]="",                     columns$[0,1]="C",columns$[0,2]="7"
@@ -91,7 +92,6 @@ rem --- Build sql statement
     sqlprep(sql_chan)sql_prep$
     dim read_tpl$:sqltmpl(sql_chan)
     sqlexec(sql_chan)
-
 
 rem --- Read through Sort file
 
@@ -191,6 +191,7 @@ rem --- Non-stock description
 brnch1: rem --- Go print the data
 
     gosub printline
+    recs=recs+1
 
 rem --- Accumulate totals; then get next detail
 
@@ -206,6 +207,12 @@ rem --- Loop up for next header record via sort files
     wend
 
 done: rem --- All Done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     gosub pototals
     gosub vendtotals
@@ -387,6 +394,13 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -451,5 +465,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run pgmdir$+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

@@ -39,6 +39,7 @@ rem --- Init Data
     precision ivprecision
     grandtot=0
     more=1
+    recs=0
 
 rem --- Headings and print positions
 
@@ -144,6 +145,7 @@ rem --- Detail passed, so go print header & whole PO
           if printit$="Y"
             gosub testbreaks
             gosub printdetail
+            recs=recs+1
           endif
 
 rem --- Loop up to test next detail record
@@ -153,6 +155,12 @@ rem --- Loop up to test next detail record
     wend
 
 done: rem --- All Done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     gosub pototals
     
@@ -512,6 +520,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -567,5 +582,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
