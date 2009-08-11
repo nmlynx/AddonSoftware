@@ -1,3 +1,5 @@
+[[OPE_INVHDR.ASVA]]
+print "Hdr:ASVA"; rem debug
 [[OPE_INVHDR.AOPT-PRNT]]
 rem --- Print a counter Invoice
 
@@ -18,10 +20,33 @@ rem --- Credit action
 	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
 	status    = 0
 
-	if user_tpl.credit_installed$="Y" and inv_type$<>"P" and cust_id$<>"" and ord_no$<>"" then
+	if cvs(cust_id$, 2)="" or cvs(ord_no$, 2)="" then break; rem --- exit callpoint
+
+	if user_tpl.credit_installed$="Y" and inv_type$<>"P" and user_tpl.cash_sale$ <> "Y" then
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 		if action$ = "D" then callpoint!.setStatus("DELETE")
+	endif
+
+rem --- Cash Transaction
+
+	if user_tpl.cash_sale$ = "Y" then
+
+		dim dflt_data$[2,1]
+		dflt_data$[1,0] = "CUSTOMER_ID"
+		dflt_data$[1,1] = cust_id$
+		dflt_data$[2,0] = "ORDER_NO"
+		dflt_data$[2,1] = ord_no$
+		pfx$ = ""
+
+		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:			"OPE_INVCASH", 
+:			stbl("+USER_ID"), 
+:			"MNT", 
+:			pfx$, 
+:			table_chans$[all], 
+:			dflt_data$[all]
+
 	endif
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
@@ -29,8 +54,6 @@ print "Hdr:BWRI"; rem debug
 rem --- Unlock order (This doesn't work as desired)
 
 	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
-
-[[OPE_INVHDR.ASVA]]
 
 [[OPE_INVHDR.AOPT-MINV]]
 rem --- Change an Order into an Invoice
@@ -275,7 +298,7 @@ rem --- Remove committments for detail records by calling ATAMO
 		endif
 
 		if pos(user_tpl.lotser_flag$="LS") then 
-			ord_seq$ = ope11a.line_no$
+			ord_seq$ = ope11a.internal_seq_no$
 			gosub remove_lot_ser_det
 		endif
 
@@ -444,7 +467,6 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl$ = field(ordship_tpl$)
 		write record (ordship_dev) ordship_tpl$
 	endif
-
 [[OPE_INVHDR.ADIS]]
 rem --- Show customer data
 	
@@ -1064,7 +1086,7 @@ remove_lot_ser_det: rem --- Remove Lot/Serial Detail
                     rem      IN: ar_type$
                     rem          cust$
                     rem          ord$     = order number
-                    rem          ord_seq$ = detail line number
+                    rem          ord_seq$ = internal seq number
 rem ==========================================================================
 
 	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
@@ -1080,7 +1102,7 @@ rem ==========================================================================
 		if ar_type$<>ope21a.ar_type$ then break
 		if cust$<>ope21a.customer_id$ then break
 		if ord$<>ope21a.order_no$ then break
-		if ord_seq$<>ope21a.line_no$ then break
+		if ord_seq$<>ope21a.orddet_seq_ref$ then break
 
 		if opc_linecode.dropship$<>"Y" and inv_type$<>"P" then 
 			wh_id$    = ope11a.warehouse_id$

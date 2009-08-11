@@ -383,7 +383,7 @@ rem --- Remove committments for detail records by calling ATAMO
 		endif
 
 		if pos(user_tpl.lotser_flag$="LS") then 
-			ord_seq$ = ope11a.line_no$
+			ord_seq$ = ope11a.internal_seq_no$
 			gosub remove_lot_ser_det
 		endif
 
@@ -1299,7 +1299,7 @@ remove_lot_ser_det: rem --- Remove Lot/Serial Detail
                     rem      IN: ar_type$
                     rem          cust$
                     rem          ord$     = order number
-                    rem          ord_seq$ = detail line number
+                    rem          ord_seq$ = internal seq number
 rem ==========================================================================
 
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
@@ -1315,7 +1315,7 @@ rem ==========================================================================
 		if ar_type$<>ope21a.ar_type$ then break
 		if cust$<>ope21a.customer_id$ then break
 		if ord$<>ope21a.order_no$ then break
-		if ord_seq$<>ope21a.line_no$ then break
+		if ord_seq$<>ope21a.orddet_seq_ref$ then break
 
 		if opc_linecode.dropship$<>"Y" and inv_type$<>"P" then 
 			wh_id$    = ope11a.warehouse_id$
