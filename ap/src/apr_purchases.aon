@@ -117,6 +117,7 @@ rem --- Initializations
     maxlines=59
     lines=maxlines+1
     more=1
+    recs=0
     when$=sysinfo.system_date$
     clock$=""
     nf$="(Not on File)"
@@ -381,6 +382,7 @@ rem --- Read next invoice history or sort record
                  break
           swend  
           lines=lines+1
+          recs=recs+1
 
           rem --- Generate GL Recap
 
@@ -409,6 +411,12 @@ rem --- Read next invoice history or sort record
     wend
 
 rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     gosub type_break
@@ -617,6 +625,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -673,5 +688,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
