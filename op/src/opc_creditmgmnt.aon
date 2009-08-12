@@ -120,7 +120,7 @@ rem --- Set Check Credit Limit Flag (lines 1600-2299, S$(1,1) is backwards)
     
     if  arm02a.cred_hold$="Y" or
 :       max_past_due>num(ars01c.past_due_lim$) or
-:       (ars01c.hold_amount and ope01a.total_sales>ars01c.hold_amount) or
+:       (num(ars01c.hold_amount$) and ope01a.total_sales>num(ars01c.hold_amount$)) or
 :       (ars01c.auto_hold$="Y" and arm02a.credit_limit and arm02a.credit_limit<total_aging+open_ord_amt+open_bo_amt+held_ord_amt)
 :   then
         callpoint!.setDevObject("over_credit_limit", "1")
