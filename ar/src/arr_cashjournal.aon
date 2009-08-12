@@ -134,6 +134,7 @@ rem --- Initializations
             morecustomers=1
             moreheaders=1
             moredetail=1
+            recs=0
             when$=sysinfo.system_date$
             clock$=""
             artype$=fill(2)
@@ -336,6 +337,7 @@ rem --- Print invoice information
                       customer[2]=customer[2]+art16a.discount_amt
                       totals[1]=totals[1]+art16a.apply_amt
                       totals[2]=totals[2]+art16a.discount_amt
+                      recs=recs+1
 
 rem --- Retrieve cash receipts code record using the code from
 rem --- the receipt header to get the GL cash and discount accounts
@@ -422,6 +424,12 @@ rem --- Loop back for next Customer Master record
     wend
 
 rem --- Print report totals
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
             if export_format$<>"Y"
                 done=1
@@ -614,6 +622,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         return q1
     fnend
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -672,5 +687,10 @@ std_exit_no_update:
 
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
