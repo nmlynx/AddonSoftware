@@ -13,17 +13,6 @@ rem --- Set Invoice Amount
 		callpoint!.setStatus("MODIFIED;REFRESH")
 	endif
 
-rem --- Display change amount
-
-	tendered = num(callpoint!.getColumnData("OPE_INVCASH.TENDERED_AMT"))
-
-	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - invoice_amt))
-	callpoint!.setStatus("REFRESH")
-
-	print "---Tendered:", tendered; rem debug
-	print "---Invoice :", invoice_amt; rem debug
-	print "---Change  :", tendered - invoice_amt; rem debug
-
 rem --- Set customer name default
 
 	if cvs(callpoint!.getColumnData("OPE_INVCASH.CUSTOMER_NAME"), 2) = "" then
@@ -32,6 +21,12 @@ rem --- Set customer name default
 		find record (fnget_dev(file_name$), key=firm_id$+callpoint!.getColumnData("OPE_INVCASH.CUSTOMER_ID")) custmast_rec$
 		callpoint!.setTableColumnAttribute("OPE_INVCASH.CUSTOMER_NAME","DFLT", custmast_rec.customer_name$)
 	endif
+
+rem --- Set change amount
+
+	tendered = num(callpoint!.getColumnData("OPE_INVCASH.TENDERED_AMT"))
+	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - invoice_amt))
+	callpoint!.setStatus("REFRESH")
 [[OPE_INVCASH.ARAR]]
 print "OPE_INVCASH:ARAR"; rem debug
 
@@ -65,21 +60,20 @@ print "OPE_INVCASH.TENDERED_AMT:AVAL"; rem debug
 
 rem --- Tendered enough?
 
-	tendered = num(callpoint!.getUserInput())
-	inv_amt  = num(callpoint!.getColumnData("OPE_INVCASH.INVOICE_AMT"))
+	tendered    = num(callpoint!.getUserInput())
+	invoice_amt = num(callpoint!.getColumnData("OPE_INVCASH.INVOICE_AMT"))
 
-	if tendered < inv_amt then
+	if tendered < invoice_amt then
 		msg_id$ = "OP_TENDER_MORE"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
 
-rem --- Display change amt
+rem --- Set change amount
 
-	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - inv_amt))
+	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - invoice_amt))
 	callpoint!.setStatus("REFRESH")
-	print "---Set change to:", tendered - inv_amt; rem debug
 [[OPE_INVCASH.EXPIRE_DATE.AVAL]]
 print "OPE_INVCASH.EXPIRE_DATE:AVAL"; rem debug
 
