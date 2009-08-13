@@ -136,7 +136,6 @@ rem --- Init PDF printing
     declare Font boldfont!
     declare Font italicfont!
     declare Font largefont!
-    declare BBjAPI myAPI!
     declare BBjColor white!
     declare BBjColor black!
     declare BBjColor light_gray!
@@ -146,10 +145,9 @@ rem --- Init PDF printing
     boldfont!   = new Font("Arial", Font.BOLD, 10)
     largefont!  = new Font("Arial", Font.BOLD, 26)
 
-    myAPI! = BBjAPI()
-    white! = myAPI!.makeColor("WHITE")
-    black! = myAPI!.makeColor("BLACK")
-    light_gray! = myAPI!.makeColor(224, 224, 224)
+    white! = BBjAPI().makeColor("WHITE")
+    black! = BBjAPI().makeColor("BLACK")
+    light_gray! = BBjAPI().makeColor(224, 224, 224)
 
 rem --- Setup PDF printer and print area   
 
@@ -179,7 +177,7 @@ rem --- Create PDF printer, set attributes, and create PDF helper object
     declare BBjForm docPrint!
     declare PDFHelper pdf!
 
-    myBBjPrinter! = myAPI!.getBBjPrinter(1)
+    myBBjPrinter! = BBjAPI().getBBjPrinter(1)
     myBBjPrinter!.setAttributes(requestAttributes!)
     docPrint! = myBBjPrinter!.getForm(0)
     pdf! = new PDFHelper(textfont!)
@@ -227,7 +225,7 @@ rem --- Main Read (no loop, mostly for the breaks)
 
             if ope41_dev then
                 find record (ope41_dev, key=firm_id$+"  "+ope01a.customer_id$+ope01a.order_no$, dom=*endif, err=*endif) ope41a$; rem z0$, z1$
-                find record (arm10c_dev, key=firm_id$+"C"+ope041a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$
+                find record (arm10c_dev, key=firm_id$+"C"+ope41a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$
             endif
         endif
 
@@ -367,15 +365,13 @@ rem --- Main Read (no loop, mostly for the breaks)
 
         rem --- Any Serial/Lot #'s?
 
-        rem i3$ = ivs01a
-
             if pos(ivs01a.lotser_flag$="LS")=0 then continue
             if pos(opm02a.line_type$="PS")=0 then continue
             if ivm01a.lotser_item$<>"Y" then continue
 
         rem --- OK, There Are Lots
 
-            page! = pagePrint!
+            pdf!.setPage(pagePrint!)
             orig_line = line
 
             while 1
@@ -411,8 +407,8 @@ rem --- Main Read (no loop, mostly for the breaks)
                     next y
                 endif
 
-                if page! = pagePDF! then break
-                page! = pagePDF!
+                if pdf!.getPage() = pagePDF! then break
+                pdf!.setPage(pagePDF!)
 
             wend
             
@@ -506,7 +502,7 @@ rem --- Create PDF physical file, if needed
             erase pdf_doc$
         endif
 
-        docPDF! = myAPI!.getBBjPDFForm(pdf_doc$, requestAttributes!)
+        docPDF! = BBjAPI().getBBjPDFForm(pdf_doc$, requestAttributes!)
     wend
 
     line = 0
@@ -518,127 +514,124 @@ rem --- Create pages from both physical and display objects
 
     declare BBjFormPage pagePDF!
     declare BBjFormPage pagePrint!
-    declare BBjFormPage page!
 
     pagePDF!   = docPDF!.createPage()
     pagePrint! = docPrint!.createPage()
 
-rem --- Use page! as a holder object to update both pages.  Start with print object.
-
-    page! = pagePrint!
+    pdf!.setPage(pagePrint!)
 
     while 1
 
-        page! = pdf!.setText(0,10,568,0,"INVOICE",largefont!,pdf!.CENTER_JUSTIFY(),black!,white!,page!)
-        page! = pdf!.setLogo(0,0,185,68,logofile$,page!)
+        pdf!.setText(0,10,568,0,"INVOICE",largefont!,pdf!.CENTER_JUSTIFY(),black!,white!)
+        pdf!.setLogo(0,0,185,68,logofile$)
 
     rem --- Company Address
 
-        page! = pdf!.setText(50,60,comp$(1,address),page!)
-        page! = pdf!.setText(50,72,comp$(31,address),page!)
-        page! = pdf!.setText(50,84,comp$(61,address),page!)
-        page! = pdf!.setText(50,96,comp$(91,address),page!)
+        pdf!.setText(50,60,comp$(1,address))
+        pdf!.setText(50,72,comp$(31,address))
+        pdf!.setText(50,84,comp$(61,address))
+        pdf!.setText(50,96,comp$(91,address))
 
     rem --- Bill To
 
-        page! = pdf!.drawBox(0, 126, 45, 96, light_gray!, light_gray!, page!); rem gray box
-        page! = pdf!.setText(0, 132, 40, 0, "Bill To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        pdf!.drawBox(0, 126, 45, 96, light_gray!, light_gray!); rem gray box
+        pdf!.setText(0, 132, 40, 0, "Bill To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
 
-        page! = pdf!.setText(50, 132, b$(1,address),   page!)
-        page! = pdf!.setText(50, 144, b$(31,address),  page!)
-        page! = pdf!.setText(50, 156, b$(61,address),  page!)
-        page! = pdf!.setText(50, 168, b$(91,address),  page!)    
-        page! = pdf!.setText(50, 180, b$(121,address), page!)
-        page! = pdf!.setText(50, 192, b$(151,address), page!)
+        pdf!.setText(50, 132, b$(1,address))
+        pdf!.setText(50, 144, b$(31,address))
+        pdf!.setText(50, 156, b$(61,address))
+        pdf!.setText(50, 168, b$(91,address))    
+        pdf!.setText(50, 180, b$(121,address))
+        pdf!.setText(50, 192, b$(151,address))
 
     rem --- Ship to
 
-        page! = pdf!.drawBox(284, 126, 45, 96, light_gray!, light_gray!, page!); rem gray box
-        page! = pdf!.drawBox(0, 126, 568, 96, page!); rem outer frame
-        page! = pdf!.setText(284, 132, 40, 0, "Ship To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        pdf!.drawBox(284, 126, 45, 96, light_gray!, light_gray!); rem gray box
+        pdf!.drawBox(0, 126, 568, 96); rem outer frame
+        pdf!.setText(284, 132, 40, 0, "Ship To", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
 
-        page! = pdf!.setText(334, 132, c$(1,address),   page!)
-        page! = pdf!.setText(334, 144, c$(31,address),  page!)
-        page! = pdf!.setText(334, 156, c$(61,address),  page!)
-        page! = pdf!.setText(334, 168, c$(91,address),  page!)    
-        page! = pdf!.setText(334, 180, c$(121,address), page!)
-        page! = pdf!.setText(334, 192, c$(151,address), page!)
+        pdf!.setText(334, 132, c$(1,address))
+        pdf!.setText(334, 144, c$(31,address))
+        pdf!.setText(334, 156, c$(61,address))
+        pdf!.setText(334, 168, c$(91,address))    
+        pdf!.setText(334, 180, c$(121,address))
+        pdf!.setText(334, 192, c$(151,address))
 
     rem --- Info Box
 
-        page! = pdf!.drawBox(424, 24, 66, 72, light_gray!, light_gray!, page!); rem gray box
-        page! = pdf!.drawHLine(424, 48, 144, page!)
-        page! = pdf!.drawHLine(424, 72, 144, page!)
-        page! = pdf!.drawVLine(490, 24,  72, page!)
-        page! = pdf!.drawBox(424, 24, 144, 72, page!); rem outer frame
+        pdf!.drawBox(424, 24, 66, 72, light_gray!, light_gray!); rem gray box
+        pdf!.drawHLine(424, 48, 144)
+        pdf!.drawHLine(424, 72, 144)
+        pdf!.drawVLine(490, 24,  72)
+        pdf!.drawBox(424, 24, 144, 72); rem outer frame
 
-        page! = pdf!.setText(432, 30, 54, 30, "Page",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(432, 54, 54, 54, "Date",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(432, 78, 54, 78, "Invoice #", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        pdf!.setText(432, 30, 54, 30, "Page",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(432, 54, 54, 54, "Date",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(432, 78, 54, 78, "Invoice #", boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
 
-        page! = pdf!.setText(496, 30, str(page), page!)
-        page! = pdf!.setText(496, 54, func.formatDate(ope01a.invoice_date$), page!)
-        page! = pdf!.setText(496, 78, ope01a.ar_inv_no$, page!)
+        pdf!.setText(496, 30, str(page))
+        pdf!.setText(496, 54, func.formatDate(ope01a.invoice_date$))
+        pdf!.setText(496, 78, ope01a.ar_inv_no$)
 
     rem --- Ribbon info
 
-        page! = pdf!.drawBox(0, 234, 568, 14, light_gray!, light_gray!, page!); rem gray bar    
-        page! = pdf!.drawBox(0, 234, 568, 48, page!); rem outer frame
+        pdf!.drawBox(0, 234, 568, 14, light_gray!, light_gray!); rem gray bar    
+        pdf!.drawBox(0, 234, 568, 48); rem outer frame
 
-        page! = pdf!.drawVLine( 72, 234, 48, page!)
-        page! = pdf!.drawVLine(132, 234, 48, page!)
-        page! = pdf!.drawVLine(180, 234, 48, page!)
-        page! = pdf!.drawVLine(204, 234, 28, page!)
-        page! = pdf!.drawHLine(204, 262, 84, page!)
-        page! = pdf!.drawVLine(288, 234, 48, page!)
-        page! = pdf!.drawVLine(378, 234, 48, page!)
-        page! = pdf!.drawVLine(438, 234, 48, page!)
+        pdf!.drawVLine( 72, 234, 48)
+        pdf!.drawVLine(132, 234, 48)
+        pdf!.drawVLine(180, 234, 48)
+        pdf!.drawVLine(204, 234, 28)
+        pdf!.drawHLine(204, 262, 84)
+        pdf!.drawVLine(288, 234, 48)
+        pdf!.drawVLine(378, 234, 48)
+        pdf!.drawVLine(438, 234, 48)
 
-        page! = pdf!.setText(0,     234+2, 0,       0, "Order #",    boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(72,    234+2, 132-72,  0, "Order Date", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(132,   234+2, 180-132, 0, "Cust #",     boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(180+2, 234+2, 204-180, 0, "Sls",        boldfont!, pdf!.LEFT_JUSTIFY(),   light_gray!, page!)
-        page! = pdf!.setText(204,   234+2, 288-204, 0, "P/O Number", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(288,   234+2, 378-288, 0, "Ship Via",   boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(378,   234+2, 438-378, 0, "Ship Date",  boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(438,   234+2, 568-438, 0, "Terms",      boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!, page!)
+        pdf!.setText(0,     234+2, 0,       0, "Order #",    boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(72,    234+2, 132-72,  0, "Order Date", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(132,   234+2, 180-132, 0, "Cust #",     boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(180+2, 234+2, 204-180, 0, "Sls",        boldfont!, pdf!.LEFT_JUSTIFY(),   light_gray!)
+        pdf!.setText(204,   234+2, 288-204, 0, "P/O Number", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(288,   234+2, 378-288, 0, "Ship Via",   boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(378,   234+2, 438-378, 0, "Ship Date",  boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(438,   234+2, 568-438, 0, "Terms",      boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
 
-        page! = pdf!.setText(0,     234+14, 0,       0, ope01a.order_no$,                         pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(72,    234+14, 132-72,  0, func.formatDate(ope01a.order_date$),      pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(132,   234+14, 180-132, 0, func.alphaMask(ope01a.customer_id$, m0$), pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(180+2, 234+14, 204-180, 0, ope01a.slspsn_code$,                      pdf!.LEFT_JUSTIFY(),   page!)
-        page! = pdf!.setText(180+2, 262+2,  288-180, 0, arm10f.code_desc$,                        pdf!.LEFT_JUSTIFY(),   page!)
-        page! = pdf!.setText(204,   234+14, 288-204, 0, ope01a.customer_po_no$,                   pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(288,   234+14, 378-288, 0, ope01a.ar_ship_via$,                      pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(378,   234+14, 438-378, 0, func.formatDate(ope01a.shipmnt_date$),    pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(438,   234+14, 568-438, 0, ope01a.terms_code$,                       pdf!.CENTER_JUSTIFY(), page!)
-        page! = pdf!.setText(438,   262+2,  568-438, 0, arm10a.code_desc$,                        pdf!.CENTER_JUSTIFY(), page!)
+        pdf!.setText(0,     234+14, 0,       0, ope01a.order_no$,                         pdf!.CENTER_JUSTIFY())
+        pdf!.setText(72,    234+14, 132-72,  0, func.formatDate(ope01a.order_date$),      pdf!.CENTER_JUSTIFY())
+        pdf!.setText(132,   234+14, 180-132, 0, func.alphaMask(ope01a.customer_id$, m0$), pdf!.CENTER_JUSTIFY())
+        pdf!.setText(180+2, 234+14, 204-180, 0, ope01a.slspsn_code$,                      pdf!.LEFT_JUSTIFY())
+        pdf!.setText(180+2, 262+2,  288-180, 0, arm10f.code_desc$,                        pdf!.LEFT_JUSTIFY())
+        pdf!.setText(204,   234+14, 288-204, 0, ope01a.customer_po_no$,                   pdf!.CENTER_JUSTIFY())
+        pdf!.setText(288,   234+14, 378-288, 0, ope01a.ar_ship_via$,                      pdf!.CENTER_JUSTIFY())
+        pdf!.setText(378,   234+14, 438-378, 0, func.formatDate(ope01a.shipmnt_date$),    pdf!.CENTER_JUSTIFY())
+        pdf!.setText(438,   234+14, 568-438, 0, ope01a.terms_code$,                       pdf!.CENTER_JUSTIFY())
+        pdf!.setText(438,   262+2,  568-438, 0, arm10a.code_desc$,                        pdf!.CENTER_JUSTIFY())
 
     rem --- Detail box and headings
 
-        page! = pdf!.drawBox(0, 294, 568, 14, light_gray!, light_gray!, page!); rem gray box
-        page! = pdf!.drawBox(0, 648, 568, 72, page!)
-        page! = pdf!.drawBox(387, 648, 181, 72, light_gray!, page!)
-        page! = pdf!.drawVLine(45,  294, 354, page!)
-        page! = pdf!.drawVLine(90,  294, 354, page!)
-        page! = pdf!.drawVLine(135, 294, 354, page!)
-        page! = pdf!.drawVLine(360, 294, 354, page!)
-        page! = pdf!.drawVLine(387, 294, 354, page!)
-        page! = pdf!.drawVLine(477, 294, 426, page!)
-        page! = pdf!.drawBox(0, 294, 568, 354, page!); rem outer frame
+        pdf!.drawBox(0, 294, 568, 14, light_gray!, light_gray!); rem gray box
+        pdf!.drawBox(0, 648, 568, 72)
+        pdf!.drawBox(387, 648, 181, 72, light_gray!)
+        pdf!.drawVLine(45,  294, 354)
+        pdf!.drawVLine(90,  294, 354)
+        pdf!.drawVLine(135, 294, 354)
+        pdf!.drawVLine(360, 294, 354)
+        pdf!.drawVLine(387, 294, 354)
+        pdf!.drawVLine(477, 294, 426)
+        pdf!.drawBox(0, 294, 568, 354); rem outer frame
 
-        page! = pdf!.setText(0,     294+2, 45-2, 0, "Order",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(45,    294+2, 45-2, 0, "Ship",       boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(90,    294+2, 45-2, 0, "B/O",        boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(135+2, 294+2, "Item# / Description", boldfont!,                       light_gray!, page!)
-        page! = pdf!.setText(360+2, 294+2, "UM",                  boldfont!,                       light_gray!, page!)
-        page! = pdf!.setText(387,   294+2, 90-2, 0, "Price",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(477,   294+2, 90-2, 0, "Extended",   boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        pdf!.setText(0,     294+2, 45-2, 0, "Order",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(45,    294+2, 45-2, 0, "Ship",       boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(90,    294+2, 45-2, 0, "B/O",        boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(135+2, 294+2, "Item# / Description", boldfont!,                       light_gray!)
+        pdf!.setText(360+2, 294+2, "UM",                  boldfont!,                       light_gray!)
+        pdf!.setText(387,   294+2, 90-2, 0, "Price",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(477,   294+2, 90-2, 0, "Extended",   boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
 
     rem --- Duplicate what was done on pagePrint!; if both pages have updated, we're done
 
-        if page! = pagePDF! then break
-        page! = pagePDF!
+        if pdf!.getPage() = pagePDF! then break
+        pdf!.setPage(pagePDF!)
 
     wend    
 
@@ -648,45 +641,45 @@ line_detail: rem --- Item Detail
 
     if line+1 > maxline then gosub cont; rem Never split item ID and description
 
-    page! = pagePrint!
+    pdf!.setPage(pagePrint!)
     lines_used = 2
     this_y% = fnline2y%(line)
 
     while 1
 
         if pos(opm02a.line_type$="MO")=0 then
-            page! = pdf!.setText(0,  this_y%, 45-2, 0, str(ope11a.qty_ordered:m2$), pdf!.RIGHT_JUSTIFY(), page!)
-            page! = pdf!.setText(45, this_y%, 45-2, 0, str(ope11a.qty_shipped:m2$), pdf!.RIGHT_JUSTIFY(), page!)
-            page! = pdf!.setText(90, this_y%, 45-2, 0, str(ope11a.qty_backord:m2$), pdf!.RIGHT_JUSTIFY(), page!)
+            pdf!.setText(0,  this_y%, 45-2, 0, str(ope11a.qty_ordered:m2$), pdf!.RIGHT_JUSTIFY())
+            pdf!.setText(45, this_y%, 45-2, 0, str(ope11a.qty_shipped:m2$), pdf!.RIGHT_JUSTIFY())
+            pdf!.setText(90, this_y%, 45-2, 0, str(ope11a.qty_backord:m2$), pdf!.RIGHT_JUSTIFY())
         endif
 
         if pos(opm02a.line_type$="MNO") then
-            page! = pdf!.setText(135+2, this_y%, ope11a.order_memo$, page!)
+            pdf!.setText(135+2, this_y%, ope11a.order_memo$)
         endif
 
         if pos(opm02a.line_type$=" SRDP") then 
-            page! = pdf!.setText(135+9, this_y%, ope11a.item_id$, page!)
+            pdf!.setText(135+9, this_y%, ope11a.item_id$)
         endif
 
         if pos(opm02a.line_type$=" SRDNP") then 
-            page! = pdf!.setText(387, this_y%, 90-2, 0, str(ope11a.unit_price:m3$), pdf!.RIGHT_JUSTIFY(), page!)
+            pdf!.setText(387, this_y%, 90-2, 0, str(ope11a.unit_price:m3$), pdf!.RIGHT_JUSTIFY())
         endif
 
         if opm02a.line_type$<>"M" then 
-            page! = pdf!.setText(477, this_y%, 90-2, 0, str(ope11a.ext_price:m1$), pdf!.RIGHT_JUSTIFY(), page!)
+            pdf!.setText(477, this_y%, 90-2, 0, str(ope11a.ext_price:m1$), pdf!.RIGHT_JUSTIFY())
         endif
 
         if opm02a.line_type$="S" then 
-            page! = pdf!.setText(360+2, this_y%, ivm01a.unit_of_sale$, page!)
+            pdf!.setText(360+2, this_y%, ivm01a.unit_of_sale$)
         endif
 
         if pos(opm02a.line_type$="SP") then
-            page! = pdf!.setText(135+2, fnline2y%(line+1), item_desc$, page!)
+            pdf!.setText(135+2, fnline2y%(line+1), item_desc$)
             lines_used = 3
         endif
 
-        if page! = pagePDF! then break
-        page! = pagePDF!
+        if pdf!.getPage() = pagePDF! then break
+        pdf!.setPage(pagePDF!)
 
     wend
 
@@ -699,13 +692,13 @@ print_lotser_no: rem --- Serial #'s Here
     if line > maxline-1 then
         gosub cont
         if pos(opm02a.line_type$=" SP")<>0 then
-            page! = pdf!.setText(135+2, fnline2y%(line), ope11a.item_id$+" (Continued)", page!)
+            pdf!.setText(135+2, fnline2y%(line), ope11a.item_id$+" (Continued)")
             line = line + 1
         endif
     endif
 
     if ivs01a.lotser_flag$<>"L" then
-        page! = pdf!.setText(135+2, fnline2y%(line), "S/N: "+ope21a.lotser_no$, page!)
+        pdf!.setText(135+2, fnline2y%(line), "S/N: "+ope21a.lotser_no$)
     else
         if ope21a.qty_shipped then 
             amount$ = str(ope21a.qty_shipped:m2$)
@@ -713,7 +706,7 @@ print_lotser_no: rem --- Serial #'s Here
             amount$ = fill(m2,"_")
         endif
 
-        page! = pdf!.setText(135+2, fnline2y%(line), "Lot: "+ope21a.lotser_no$+"   Shipped: "+amount$, page!)
+        pdf!.setText(135+2, fnline2y%(line), "Lot: "+ope21a.lotser_no$+"   Shipped: "+amount$)
     endif
 
     line = line + 1
@@ -728,47 +721,45 @@ print_total: rem --- Total
         sales_or_cr$ = "Sales Amount"
     endif
 
-    page! = pagePrint!
+    pdf!.setPage(pagePrint!)
 
     while 1
 
         gosub messages
+        if ope01a.cash_sale$="Y" then gosub paid_info
 
-    rem if a0$(99,1)="Y" gosub paid_info
-
-        page! = pdf!.setText(387+2, 648+0*12+2, sales_or_cr$, italicfont!, light_gray!, page!)
-        page! = pdf!.setText(387+2, 648+1*12+2, "Discount",   italicfont!, light_gray!, page!) 
-        page! = pdf!.setText(387+2, 648+2*12+2, "Sales Tax",  italicfont!, light_gray!, page!)
-        page! = pdf!.setText(387+2, 648+3*12+2, "Freight",    italicfont!, light_gray!, page!)
-        page! = pdf!.setText(387+2, 648+4*12+2, "Total Due",  boldfont!,   light_gray!, page!)
+        pdf!.setText(387+2, 648+0*12+2, sales_or_cr$, italicfont!, light_gray!)
+        pdf!.setText(387+2, 648+1*12+2, "Discount",   italicfont!, light_gray!) 
+        pdf!.setText(387+2, 648+2*12+2, "Sales Tax",  italicfont!, light_gray!)
+        pdf!.setText(387+2, 648+3*12+2, "Freight",    italicfont!, light_gray!)
+        pdf!.setText(387+2, 648+4*12+2, "Total Due",  boldfont!,   light_gray!)
 
         total_amt = total_sale+ope01a.tax_amount-ope01a.discount_amt+ope01a.freight_amt
-        page! = pdf!.setText(477, 648+0*12+2, 90-2, 0, str(total_sale:m1$),           pdf!.RIGHT_JUSTIFY(), light_gray!, page!)     
-        page! = pdf!.setText(477, 648+1*12+2, 90-2, 0, str(-ope01a.discount_amt:m1$), pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(477, 648+2*12+2, 90-2, 0, str(ope01a.tax_amount:m1$),    pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(477, 648+3*12+2, 90-2, 0, str(ope01a.freight_amt:m1$),   pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
-        page! = pdf!.setText(477, 648+4*12+2, 90-2, 0, str(total_amt:m1$), boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!, page!)
+        pdf!.setText(477, 648+0*12+2, 90-2, 0, str(total_sale:m1$),           pdf!.RIGHT_JUSTIFY(), light_gray!)     
+        pdf!.setText(477, 648+1*12+2, 90-2, 0, str(-ope01a.discount_amt:m1$), pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(477, 648+2*12+2, 90-2, 0, str(ope01a.tax_amount:m1$),    pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(477, 648+3*12+2, 90-2, 0, str(ope01a.freight_amt:m1$),   pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(477, 648+4*12+2, 90-2, 0, str(total_amt:m1$), boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
 
-        if page! = pagePDF! then break
-        page! = pagePDF!
+        if pdf!.getPage() = pagePDF! then break
+        pdf!.setPage(pagePDF!)
     wend
 
     docPDF!.print()
-    rem call pgmdir$+"adc_rptcontrol.aon",callpoint!.getAlias(),ope01a.customer_id$,"C",new_doc_id$,"pdf"
     call pgmdir$+"adc_rptcontrol.aon","OPE_INVHDR",ope01a.customer_id$,"C",new_doc_id$,"pdf"
 
     return
 
 cont: rem --- Continued
 
-    page! = pagePrint!
+    pdf!.setPage(pagePrint!)
 
     while 1
 
-        page! = pdf!.setText(477, 648+2, 91, 0, "(Continued)", italicfont!, pdf!.RIGHT_JUSTIFY(), page!)
+        pdf!.setText(477, 648+2, 91, 0, "(Continued)", italicfont!, pdf!.RIGHT_JUSTIFY())
 
-        if page! = pagePDF! then break
-        page! = pagePDF!
+        if pdf!.getPage() = pagePDF! then break
+        pdf!.setPage(pagePDF!)
     wend
 
     gosub report_heading
@@ -797,7 +788,7 @@ messages: rem --- Print Messages
         rem     mline = 0
         rem endif
 
-            page! = pdf!.setText(0+2, mline*12+648+2, message$(j,40), page!)
+            pdf!.setText(0+2, mline*12+648+2, message$(j,40))
             mline = mline + 1
         next j
     endif
@@ -806,10 +797,20 @@ messages: rem --- Print Messages
 
 paid_info: rem --- Print Paid Info
 
-rem x6$="PAID: "+cvs(y7$(7,20),2)+" "
-rem if y9$(21,1)="P" x6$=x6$+"# "+z0$(31,16)
-rem if y9$(21,1)="C" x6$=x6$+"# "+z0$(24,7)
-rem x6$=x6$+" NAME: "+z1$
+    paid_text$ = "PAID: " + cvs(arm10c.code_desc$,2) + " "
+    
+    if arm10c.trans_type$="P" then 
+        paid_text$ = paid_text$ + "# " + ope41a.payment_id$
+    else
+        if arm10c.trans_type$="C" then 
+            paid_text$ = paid_text$ + "# " + ope41a.ar_check_no$ 
+        endif
+    endif
+    
+    paid_text$ = paid_text$ + " NAME: " + ope41a.customer_name$
+    if mline >=5 then gosub cont
+    pdf!.setText(0+2, 5*12+648+2, paid_text$)
+    
     return
 
 build_msg: rem --- message$ is a string of message details, step 40
