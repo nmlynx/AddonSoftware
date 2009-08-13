@@ -1739,7 +1739,7 @@ rem --- Order Helper object
 	ordHelp! = new OrderHelper(firm_id$, int(num(ivs01a.precision$)), callpoint!, dtlg_param$[1,3])
 	callpoint!.setDevObject("order_helper_object", ordHelp!)
 [[OPE_INVHDR.AFMC]]
-rem print 'show', "Hdr:AFMC"; rem debug
+print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
