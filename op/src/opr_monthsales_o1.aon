@@ -38,6 +38,7 @@ rem --- Document initializations
 
 rem --- Initializations
         more=1
+        recs=0
         dim a[13],t0$(28),t1$(28),x[1],t[8],u[8]
         x0$="First Date"
         x1$="Last Date",page=0,width=132,l9=59,l=l9+1,headings=3
@@ -111,12 +112,11 @@ rem ---  Get Customer Name
         gosub Find_Customer
 
 rem --- Print
-        
 
-        x0=0
-        if opt01a.total_sales<>0 then
-             x0=100*(opt01a.total_sales-opt01a.total_cost)/opt01a.total_sales
-        endif
+       x0=0
+       if opt01a.total_sales<>0 then
+           x0=100*(opt01a.total_sales-opt01a.total_cost)/opt01a.total_sales
+       endif
 
        OutVect!.addItem(opt01a.ar_inv_no$)
        OutVect!.addItem(opt01a.customer_id$)
@@ -133,7 +133,8 @@ rem --- Print
        OutVect!.addItem(arm01a.customer_name$)
        xwk=fnblank(8)
                      
-        l=l+2
+       l=l+2
+       recs=recs+1 
 
 rem --- Totals
 
@@ -146,9 +147,16 @@ rem --- Totals
         t[5]=t[5]+opt01a.comm_amt
         t[6]=t[6]+opt01a.total_sales
         t[7]=t[7]+opt01a.total_cost
- wend
+wend
 
 rem --- Main Loop Ends
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
+
         x0=0
         if t[6]<>0 then  x0=100*(t[6]-t[7])/t[6]
 
@@ -313,6 +321,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem --- #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -370,5 +385,10 @@ std_exit: rem --- Standard program end (01Mar2006)
         run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
         release
 rem --- #endinclude std_end.src
+
+std_exit_no_report:
+
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+        release
 
         end

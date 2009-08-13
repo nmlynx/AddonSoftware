@@ -39,13 +39,14 @@ rem --- Initializations
         rem t0$=""
         more=1
         headings=4
-        dim t[1],o[13],headings$[headings]
+        dim t[1],headings$[headings]
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
         call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0    
         call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
         x$="Detail "
         l0=0
         l1=0
+        recs=0
         if p9$="S" then  x$="Summary "
         h1$=x$+h1$
         clock$=""
@@ -98,26 +99,6 @@ rem --- Report Heading
                columns$[13,0]="Quantity^Available", columns$[13,1]="N",columns$[13,2]="10"
         endif
  
-
-
-
-rem --- Print positions
-
-        o[13]=h0-m2
-        o[12]=o[13]-m2
-        o[11]=o[12]-m2
-        o[10]=o[11]-4
-        o[9]=o[10]-m2
-        o[8]=o[9]-m1
-        o[1]=21
-        o[2]=o[1]+4
-        o[3]=o[2]+3
-        o[4]=o[3]+m0+10
-        o[5]=o[4]+9
-        o[6]=o[5]+9
-        o[7]=o[6]+9
-
-
 rem --- Headings
         if p8$<>"" then
             find record (ivm10_dev,key=firm_id$+"A"+p8$,dom=*next) ivm10a$
@@ -126,7 +107,7 @@ rem --- Headings
             h4$="All Products"
         endif
         more=1
-        dim j$(h0-o[8],"-"),x$(h0)
+        dim x$(h0)
         headings$[0]=n1$
         headings$[1]=h1$
         headings$[2]=h4$
@@ -255,6 +236,7 @@ rem --- Print item stuff?
                 OutVect!.addItem("      " + ivm01a.item_desc$)
                 xwk=fnblank(13)
                 l=l+2
+                recs=recs+1
                 item$=""
             endif
 
@@ -265,6 +247,7 @@ rem --- Print Description for Non-stocks
                  OutVect!.addItem(ope11a.order_memo$)
                  xwk=fnblank(11)
                  l=l+1
+                 recs=recs+1
             endif
 
 rem --- Print detail line
@@ -281,6 +264,7 @@ rem --- Print detail line
                 OutVect!.addItem(ope11a.commit_flag$)
                 xwk=fnblank(3)
                 l=l+1
+                recs=recs+1
     endif
 
 rem --- Accumulate totals
@@ -295,17 +279,23 @@ rem --- Accumulate totals
 
 done: rem --- End
 
-        done=1
-        gosub Warehouse_Break
-        x$="Total For Report"
-                xwk=fnblank(14)
-                TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-                xwk=fnblank(5)
-                OutVect!.addItem(x$)
-                xwk=fnblank(2)
-                OutVect!.addItem(str(total))
-                xwk=fnblank(5)
-        goto std_exit
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+    done=1
+    gosub Warehouse_Break
+    x$="Total For Report"
+    xwk=fnblank(14)
+    TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+    xwk=fnblank(5)
+    OutVect!.addItem(x$)
+    xwk=fnblank(2)
+    OutVect!.addItem(str(total))
+    xwk=fnblank(5)
+    goto std_exit
 
 Warehouse_Break: rem --- Warehouse break
 
@@ -492,6 +482,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -544,5 +541,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

@@ -76,6 +76,7 @@ rem --- Parameters
 rem --- Initializations
 
         more=1
+        recs=0
         dim headings$[3],a[2],t[2],g[2],o[1]
         h0=132
         h=0,headings$[0]=n1$,headings$[1]=n3$
@@ -154,9 +155,8 @@ rem ----------- Print
                 OutVect!.addItem(str(art02a.gross_sales))
                 OutVect!.addItem(str((art02a.gross_sales-art02a.taxable_amt)))
                
-
-
                 l=l+1
+                recs=recs+1
                 l0=l0+1,h3$=""
                 t[0]=t[0]+art02a.taxable_amt
                 g[0]=g[0]+art02a.taxable_amt
@@ -170,6 +170,12 @@ rem --- Loop back for next record
         wend
 
 rem --- All done
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
 
         t9$="E"
         gosub Tax_Code_Breaks
@@ -226,6 +232,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
             next q1
             return q1
         fnend
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem --- #include std_error.src
 
@@ -284,5 +297,10 @@ std_exit: rem --- Standard program end (01Mar2006)
         release
 
 rem --- #endinclude std_end.src
+
+std_exit_no_report:
+
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+        release
 
         end

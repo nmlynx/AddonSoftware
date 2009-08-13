@@ -58,6 +58,7 @@ rem     if o9<>1 and o9<>2 call pgmdir$+"syc_fe.bbx",911; rem O9 was not set by 
     precision i[2]
     h0=0
     more=1
+    recs=0
     call pgmdir$+"adc_getmask.aon","","AR","I","",m0$,0,m0
     call pgmdir$+"adc_getmask.aon","","IV","A","",m1$,0,m1
     call pgmdir$+"adc_getmask.aon","","IV","U","",m2$,0,m2
@@ -214,6 +215,7 @@ rem --- Initial Read
 
         gosub report_heading
         t0=0
+        recs=recs+1
 
     rem --- Position Detail File
 
@@ -346,6 +348,12 @@ rem --- Initial Read
 
 ready: 
 
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     if o9=2 goto std_exit
 
@@ -434,6 +442,10 @@ rem --- Clear Print Flags
 
 all_done: rem --- Done with update
 
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
     goto std_exit
 
 report_heading: rem --- Report Heading
@@ -961,5 +973,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end

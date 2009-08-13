@@ -99,6 +99,7 @@ rem --- Initialize Data
 
     precision num(ivs01a.precision$)
     more=1
+    recs=0
 
 rem --- Initialize Progress Meter
 
@@ -181,6 +182,7 @@ rem --- Header loop
             precision num(ivs01a.precision$)
             write record (ope11_dev,key=ope11a_key$) ope11a$
             new$="YES"; rem "Changed one. Generate pick ticket."
+            recs=recs+1
         wend
 
     Order_End: rem --- End of Order Here
@@ -215,6 +217,13 @@ rem --- Header loop
     wend
 
 rem --- End of orders
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
     t9$="END"
     gosub Order_End
     extract record (ars01_dev,key=firm_id$+n2$+"00") ars01a$
@@ -393,5 +402,10 @@ rem --- fnbasename$: Strip path and optionally the suffix from a file name
         run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
         release
     rem #endinclude std_end.src
+
+std_exit_no_report:
+
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+        release
 
         end

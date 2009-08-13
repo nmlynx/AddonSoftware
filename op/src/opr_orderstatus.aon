@@ -99,6 +99,7 @@ rem --- Initializations
         t0=0
         t1=0,t0$=""
         done=0
+        recs=0
         m8$="(###) ###-####"
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
         call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
@@ -238,6 +239,7 @@ rem --- Print Status Line
         name$=phone$
         phone$=""
         l=l+1
+        recs=recs+1
         number=number+1
         t0=t0+1
         t1=t1+amnt
@@ -250,66 +252,74 @@ print_4:
 
 rem --- End
 
-        done=1
-        gosub customer_break
-        xwk = fnblank(10)
-        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-        xwk = fnblank(1)
-        OutVect!.addItem(str(t0)+"    "+" Total Orders ")
-        xwk = fnblank(6)
-        OutVect!.addItem("Total Amount")
-        OutVect!.addItem(str(t1))
-        goto std_exit
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+    done=1
+    gosub customer_break
+    xwk = fnblank(10)
+    TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+    xwk = fnblank(1)
+    OutVect!.addItem(str(t0)+"    "+" Total Orders ")
+    xwk = fnblank(6)
+    OutVect!.addItem("Total Amount")
+    OutVect!.addItem(str(t1))
+    goto std_exit
 
 display_fields:
 
-        control_id=3000
-        cid_cnt=0
+    control_id=3000
+    cid_cnt=0
 
-        while more
-            if cid_cnt=0 then  disp_inp$=optn$,disp_desc$="All Orders"
-            cid_cnt=cid_cnt+1;  control_id=control_id+1
-            if cid_cnt>i0_done-1 then break
-        wend
+    while more
+        if cid_cnt=0 then  disp_inp$=optn$,disp_desc$="All Orders"
+        cid_cnt=cid_cnt+1;  control_id=control_id+1
+        if cid_cnt>i0_done-1 then break
+    wend
 
-        disp_inp$=""
-        disp_desc$=""
-        return
+    disp_inp$=""
+    disp_desc$=""
+
+    return
 
 customer_break: rem --- Customer break
 
-        if t0$<>"" then
-            if number<=1 then
-                xwk = fnblank(1)
-                OutVect!.addItem(name$)
-                xwk = fnblank(8)
-                l=l+1
-            endif
+    if t0$<>"" then
+        if number<=1 then
+            xwk = fnblank(1)
+            OutVect!.addItem(name$)
+            xwk = fnblank(8)
+            l=l+1
         endif
+    endif
 
-        if done>0 then return
-        t0$=ope01a.customer_id$
-        arm01a.customer_name$="(Not On File)"
-        number=0
-        find record (arm01_dev,key=ope01a.firm_id$+ope01a.customer_id$,dom=*next) arm01a$
-        customer$=fnmask$(ope01a.customer_id$(1,m0),m0$)
-        name$=arm01a.customer_name$
-        call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
-        phone$=cvs(arm01a.phone_no$,2)
-        phone$=str(phone$:phone_mask$,err=*next)
-        l=l+1
-        return
+    if done>0 then return
+    t0$=ope01a.customer_id$
+    arm01a.customer_name$="(Not On File)"
+    number=0
+    find record (arm01_dev,key=ope01a.firm_id$+ope01a.customer_id$,dom=*next) arm01a$
+    customer$=fnmask$(ope01a.customer_id$(1,m0),m0$)
+    name$=arm01a.customer_name$
+    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arm01a.phone_no$,2),"",phone_mask$
+    phone$=cvs(arm01a.phone_no$,2)
+    phone$=str(phone$:phone_mask$,err=*next)
+    l=l+1
+
+    return
 
 
 rem --- Date/time handling functions
 rem #include fndate.src
 
-        def fndate$(q$)
-            q1$=""
-            q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
-            if q1$="" q1$=q$
-            return q1$
-        fnend
+    def fndate$(q$)
+        q1$=""
+        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if q1$="" q1$=q$
+        return q1$
+    fnend
 
 rem #endinclude fndate.src
 
@@ -337,6 +347,13 @@ alpha_fnf:
         if len(q1$)>len(q2$)-q0 then let q1$=q1$(1,len(q2$)-q0)
         return str(q1$:q2$)
         fnend
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 
@@ -395,5 +412,10 @@ std_exit: rem --- Standard program end (01Mar2006)
         release
 
 rem --- #endinclude std_end.src
+
+std_exit_no_report:
+
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+        release
 
         end

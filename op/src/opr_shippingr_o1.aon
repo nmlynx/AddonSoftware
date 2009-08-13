@@ -38,10 +38,15 @@ rem --- Retrieve sysinfo data
 rem --- Initialize Data
 
         more=1
+        recs=0
         headings=4
         dim t[6],c[5],w[16],headings$[headings]
         h1$=n4$
-        h0=132,h=0,l9=59,l=l9+1,t0=0
+        h0=132
+        h=0
+        l9=59
+        l=l9+1
+        t0=0
         if pos("O"=p7$)>0 and pos("R"=p7$)=0 then  p7$=p7$+"R"
 
         while more
@@ -121,74 +126,81 @@ rem --- Accumulate
         while more
             if p9$<>"D" then break
 
-                if l+1>l9 then gosub Print_Item
-                gosub All_WareHouses
+            if l+1>l9 then gosub Print_Item
+            gosub All_WareHouses
 
-                if opw02a.commit_flag$="Y" then
-                    xwk = fnblank(1)
-                    OutVect!.addItem("                                              Drop  "+fnmask$(opw02a.customer_id$,p5$)+"  "+opw02a.order_no$+"  "+opw02a.order_status$+"  "+fndate$(opw02a.est_shp_date$)+"    "+opw02a.commit_flag$)
-                else
-                    xwk = fnblank(1)
-                    OutVect!.addItem("                                                      "+fnmask$(opw02a.customer_id$,p5$)+"  "+opw02a.order_no$+"  "+opw02a.order_status$+"  "+fndate$(opw02a.est_shp_date$)+"    "+opw02a.commit_flag$)
-                endif
+            if opw02a.commit_flag$="Y" then
+                xwk = fnblank(1)
+                OutVect!.addItem("                                              Drop  "+fnmask$(opw02a.customer_id$,p5$)+"  "+opw02a.order_no$+"  "+opw02a.order_status$+"  "+fndate$(opw02a.est_shp_date$)+"    "+opw02a.commit_flag$)
+            else
+                xwk = fnblank(1)
+                OutVect!.addItem("                                                      "+fnmask$(opw02a.customer_id$,p5$)+"  "+opw02a.order_no$+"  "+opw02a.order_status$+"  "+fndate$(opw02a.est_shp_date$)+"    "+opw02a.commit_flag$)
+            endif
 
-                if c[x]<>0 then 
-                                OutVect!.addItem(str(c[0]))
-                                OutVect!.addItem(str(c[1]))
-                                OutVect!.addItem(str(c[2]))
-                                OutVect!.addItem(str(c[3]))
-                                OutVect!.addItem(str(c[4]))
-                                OutVect!.addItem(str(c[5]))
+            if c[x]<>0 then 
+                OutVect!.addItem(str(c[0]))
+                OutVect!.addItem(str(c[1]))
+                OutVect!.addItem(str(c[2]))
+                OutVect!.addItem(str(c[3]))
+                OutVect!.addItem(str(c[4]))
+                OutVect!.addItem(str(c[5]))
 
-
-                                OutVect!.addItem(str(opw02a.qty_ordered))
-                                OutVect!.addItem(str(opw02a.extended_amt))
+                OutVect!.addItem(str(opw02a.qty_ordered))
+                OutVect!.addItem(str(opw02a.extended_amt))
 
                 l1=l1+1
+                recs=recs+1
                 l2=l2+1,l=l+1
                 break
-             endif
+            endif
          wend
      
-                                t[0]=t[0]+c[0]
-                                t[1]=t[1]+c[1]
-                                t[2]=t[2]+c[2]
-                                t[3]=t[3]+c[3]
-                                t[4]=t[4]+c[4]
-                                t[5]=t[5]+c[5]
-                                t[6]=t[6]+opw02a.extended_amt
-                                u0=u0+opw02a.extended_amt
+         t[0]=t[0]+c[0]
+         t[1]=t[1]+c[1]
+         t[2]=t[2]+c[2]
+         t[3]=t[3]+c[3]
+         t[4]=t[4]+c[4]
+         t[5]=t[5]+c[5]
+         t[6]=t[6]+opw02a.extended_amt
+         u0=u0+opw02a.extended_amt
 
-   wend
+    wend
 
 done: rem --- End
 
-                                t9$="E"
-                                gosub Item_Break
-                                xwk = fnblank(10)
-                                TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-                                xwk = fnblank(1)
-                                OutVect!.addItem("                                                                                      "+ "Report Value: ")
-                                xwk = fnblank(7)
-                                OutVect!.addItem(str(u0))
-                                xwk = fnblank(10)
-                                goto std_exit
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+    t9$="E"
+    gosub Item_Break
+    xwk = fnblank(10)
+    TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+    xwk = fnblank(1)
+    OutVect!.addItem("                                                                                      "+ "Report Value: ")
+    xwk = fnblank(7)
+    OutVect!.addItem(str(u0))
+    xwk = fnblank(10)
+    goto std_exit
 
 print_Item: rem --- Print Item
 
-                                if l>l9-2 then l=headings+1
-                                xwk = fnblank(10)
-                                if wh$="" then
-                                     x$="ALL"
-                                else
-                                     x$=opw02a.warehouse_id$
-                                endif
-                                OutVect!.addItem(opw02a.item_iddes$)
-                                OutVect!.addItem(" "+x$+"         "+opw02a.product_type$+"   "+ivm01a.unit_of_sale$+"      "+ivm01a.item_desc$)
-                                xwk = fnblank(8)
-                                l=l+2
-                                l1=0
-                                return
+    if l>l9-2 then l=headings+1
+    xwk = fnblank(10)
+    if wh$="" then
+        x$="ALL"
+    else
+        x$=opw02a.warehouse_id$
+    endif
+    OutVect!.addItem(opw02a.item_iddes$)
+    OutVect!.addItem(" "+x$+"         "+opw02a.product_type$+"   "+ivm01a.unit_of_sale$+"      "+ivm01a.item_desc$)
+    xwk = fnblank(8)
+    l=l+2
+    l1=0
+
+    return
 
 item_Break: rem --- Item Break
        
@@ -324,6 +336,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem --- #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -382,5 +401,10 @@ std_exit: rem --- Standard program end (01Mar2006)
         release
 
 rem --- #endinclude std_end.src
+
+std_exit_no_report:
+
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+        release
 
         end

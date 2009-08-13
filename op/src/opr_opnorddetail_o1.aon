@@ -48,6 +48,7 @@ rem --- Initializations
 
     ctrl=0
     more=1
+    recs=0
     precision num(ivs01a.precision$)
     dim t9[999,3],r[3,4],headings$[headings+1]
     dim s[2],t[2],u[2],h$(h0),y[20]
@@ -259,6 +260,7 @@ rem --- Void
             OutVect!.addItem(" *** VOID ***")
             xwk = fnblank(5) 
             l=l+2
+            recs=recs+1
             continue
 
         endif
@@ -312,6 +314,7 @@ label_five:
                 endif
             endif
             gosub print_detail
+            recs=recs+1
             s[0]=s[0]+price
             s[1]=s[1]+cost
             s[2]=s[2]+ope11a.comm_percent
@@ -367,6 +370,12 @@ rem --- Invoice Totals
 rem --- End of Main Loop
 
 end_of_report: rem --- Order Totals
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     xwk = fnblank(13)
     TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
@@ -501,6 +510,7 @@ ord_header: rem --- Print Order Header
     OutVect!.addItem(w$)
     OutVect!.addItem(ope01a.tax_code$)
     OutVect!.addItem(ope01a.print_status$)
+    recs=recs+1
 
     if ope01a.lock_status$<>"N" then 
         xwk = fnblank(2)
@@ -742,6 +752,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 rem --- #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -800,5 +817,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem --- #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
