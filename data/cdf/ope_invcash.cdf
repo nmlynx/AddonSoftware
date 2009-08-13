@@ -1,3 +1,37 @@
+[[OPE_INVCASH.ADIS]]
+print "OPE_INVCASH:ADIS"; rem debug
+
+rem --- Set Invoice Amount
+
+	tax_amount   = num(callpoint!.getDevObject("tax_amount"))
+	freight_amt  = num(callpoint!.getDevObject("freight_amt"))
+	discount_amt = num(callpoint!.getDevObject("discount_amt"))
+	invoice_amt  = user_tpl.ext_price + tax_amount - discount_amt + freight_amt
+
+	if invoice_amt <> num(callpoint!.getColumnData("OPE_INVCASH.INVOICE_AMT")) then
+		callpoint!.setColumnData("OPE_INVCASH.INVOICE_AMT", str(invoice_amt))
+		callpoint!.setStatus("MODIFIED;REFRESH")
+	endif
+
+rem --- Display change amount
+
+	tendered = num(callpoint!.getColumnData("OPE_INVCASH.TENDERED_AMT"))
+
+	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - invoice_amt))
+	callpoint!.setStatus("REFRESH")
+
+	print "---Tendered:", tendered; rem debug
+	print "---Invoice :", invoice_amt; rem debug
+	print "---Change  :", tendered - invoice_amt; rem debug
+
+rem --- Set customer name default
+
+	if cvs(callpoint!.getColumnData("OPE_INVCASH.CUSTOMER_NAME"), 2) = "" then
+		file_name$ = "ARM_CUSTMAST"
+		dim custmast_rec$:fnget_tpl$(file_name$)
+		find record (fnget_dev(file_name$), key=firm_id$+callpoint!.getColumnData("OPE_INVCASH.CUSTOMER_ID")) custmast_rec$
+		callpoint!.setTableColumnAttribute("OPE_INVCASH.CUSTOMER_NAME","DFLT", custmast_rec.customer_name$)
+	endif
 [[OPE_INVCASH.ARAR]]
 print "OPE_INVCASH:ARAR"; rem debug
 
@@ -27,14 +61,28 @@ rem --- Total detail lines
 	user_tpl.taxable   = ordHelp!.getTaxable()
 	user_tpl.ext_cost  = ordHelp!.getExtCost()
 [[OPE_INVCASH.TENDERED_AMT.AVAL]]
+print "OPE_INVCASH.TENDERED_AMT:AVAL"; rem debug
+
 rem --- Tendered enough?
 
-	if num(callpoint!.getUserInput()) < num(callpoint!.getColumnData("OPE_INVCASH.INVOICE_AMT")) then
+	tendered = num(callpoint!.getUserInput())
+	inv_amt  = num(callpoint!.getColumnData("OPE_INVCASH.INVOICE_AMT"))
+
+	if tendered < inv_amt then
 		msg_id$ = "OP_TENDER_MORE"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
 	endif
+
+rem --- Display change amt
+
+	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - inv_amt))
+	callpoint!.setStatus("REFRESH")
+	print "---Set change to:", tendered - inv_amt; rem debug
 [[OPE_INVCASH.EXPIRE_DATE.AVAL]]
+print "OPE_INVCASH.EXPIRE_DATE:AVAL"; rem debug
+
 rem --- Expiration date can't by more than today
 
 	if callpoint!.getUserInput() > sysinfo.system_date$ then
@@ -43,6 +91,8 @@ rem --- Expiration date can't by more than today
 		callpoint!.setStatus("ABORT")
 	endif
 [[OPE_INVCASH.CASH_REC_CD.AVAL]]
+print "OPE_INVCASH.CASH_REC_CD:AVAL"; rem debug
+
 rem --- Validate cash receipt code
 
 	code$ = callpoint!.getUserInput()
@@ -53,15 +103,6 @@ rem --- Validate cash receipt code
 	if pos(cashcode_rec.trans_type$="$CP")=0 then
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
-	endif
-
-rem --- Set customer name default
-
-	if cvs(callpoint!.getColumnData("OPE_INVCASH.CUSTOMER_NAME"), 2) = "" then
-		file_name$ = "ARM_CUSTMAST"
-		dim custmast_rec$:fnget_tpl$(file_name$)
-		find record (fnget_dev(file_name$), key=firm_id$+callpoint!.getColumnData("OPE_INVCASH.CUSTOMER_ID")) custmast_rec$
-		callpoint!.setTableColumnAttribute("OPE_INVCASH.CUSTOMER_NAME","DFLT", custmast_rec.customer_name$)
 	endif
 
 rem --- Disable fields by trans type
@@ -88,15 +129,6 @@ rem --- Memo or Credit Card#?
 		endif
 	endif
 
-rem --- Set Invoice Amount
-
-	tax_amount   = num(callpoint!.getDevObject("tax_amount"))
-	freight_amt  = num(callpoint!.getDevObject("freight_amt"))
-	discount_amt = num(callpoint!.getDevObject("discount_amt"))
-	invoice_amt  = user_tpl.ext_price + tax_amount - discount_amt + freight_amt
-
-	callpoint!.setColumnData("OPE_INVCASH.INVOICE_AMT", str(invoice_amt))
-
 rem --- Check for discount
 
 	if discount_amt<>0 and cashcode_rec.disc_flag$<>"Y" then
@@ -108,15 +140,11 @@ rem --- Check for discount
 
 rem --- Set default Tendered Amount
 
-	rem IF Y9$(21,1)="P" THEN LET Z[1]=Z[0]; GOTO 6390
-	rem IF Y9$(21,1)="C" THEN IF Z[1]=0 THEN LET Z[1]=U[0]+A[0]-A[2]+A[1]
-
 	terndered_amt = num(callpoint!.getColumnData("OPE_INVCASH.TENDERED_AMT"))
 
 	if cashcode_rec.trans_type$ = "P" or (cashcode_rec.trans_type$ = "C" and terndered_amt = 0) then
 		callpoint!.setTableColumnAttribute("OPE_INVCASH.TENDERED_AMT","DFLT", str(invoice_amt))
 	endif
-
 [[OPE_INVCASH.BSHO]]
 print "OPE_INVCASH:BSHO"; rem debug
 
@@ -141,4 +169,3 @@ rem --- Open files
 rem --- Global string templates
 
 	dim user_tpl$:"ext_price:n(15), taxable:n(15), ext_cost:n(15)"
-
