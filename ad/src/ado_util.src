@@ -36,6 +36,7 @@ rem ==========================================================================
     rem --- Misc
         field private static BBjInt Resized% = 0
         field private static BBjString Class_Name$ = "util"
+        field private static BBjNumber START_BLOCK = 0
     rem --- table_chans$[all] array fields
         field private static ArrayObject TableChans!
         field private static HashMap devs!
@@ -717,8 +718,16 @@ rem ==========================================================================
             if devs$<>"" then 
                 for i = 1 to len(devs$) step 20
                     data_name$ = cvs(devs$(i,17), 2)
-                    #devs!.put(data_name$, devs$(i+17,3))
-                    #tmpls!.put(data_name$, p_table_chans!.getElement(int((i+19)/20), 0))
+                    
+                    if data_name$<>"" then
+                        dev = num(devs$(i+17,3), err=*endif)
+                        tmpl$ = p_table_chans!.getElement(int((i+19)/20), 0)
+                        
+                        if dev and tmpl$<>"" then 
+                            #devs!.put(data_name$, dev)
+                            #tmpls!.put(data_name$, tmpl$)
+                        endif
+                    endif
                 next i
             endif
             
