@@ -6,6 +6,8 @@ rem ==========================================================================
 
     use ::sys/prog/bao_callpoint.bbj::Callpoint
     use ::ado_util.src::util
+    use ::adc_array.aon::ArrayObject
+    
     use java.util.HashMap
 
     class public OrderHelper
@@ -25,14 +27,40 @@ rem ==========================================================================
         field private BBjNumber extPrice
         field private BBjNumber taxable
         field private BBjNumber extCost
+        field private BBjNumber START_BLOCK = 1
     
     rem --- New object
     
-        method public OrderHelper(BBjString p_firm_id$, BBjInt p_precision%, Callpoint p_callpoint!, BBjString p_dtl_tmpl$)
+        method public OrderHelper(BBjString p_firm_id$, ArrayObject pTableChans!, BBjInt p_precision%, Callpoint pCallpoint!, BBjString p_dtl_tmpl$)
+            #setOrderHelper(p_firm_id$, pTableChans!, p_precision%, pCallpoint!, p_dtl_tmpl$)
+        methodend
+        
+        method public OrderHelper(BBjString p_firm_id$, BBjInt p_precision%, Callpoint pCallpoint!, BBjString p_dtl_tmpl$)
+            #setOrderHelper(p_firm_id$, null(), p_precision%, pCallpoint!, p_dtl_tmpl$)
+        methodend
+        
+        method public OrderHelper(BBjString p_firm_id$, BBjInt p_precision%, Callpoint pCallpoint!)
+            #setOrderHelper(p_firm_id$, null(), p_precision%, pCallpoint!, "")
+        methodend
+        
+        method public OrderHelper(BBjString p_firm_id$, Callpoint pCallpoint!)
+            #setOrderHelper(p_firm_id$, null(), 0, pCallpoint!, "")
+        methodend
+        
+        method private void setOrderHelper(BBjString p_firm_id$, ArrayObject pTableChans!, BBjInt p_precision%, Callpoint pCallpoint!, BBjString p_dtl_tmpl$)
+        
             #firm_id$   = p_firm_id$
             #precision% = p_precision%
-            #callpoint! = p_callpoint!
+            #callpoint! = pCallpoint!
             #dtl_tmpl$  = p_dtl_tmpl$
+            
+            if !util.isTableChansSet() then
+                if pTableChans! = null() then
+                    throw #This_Class$+": Pass TableChans! or set table_chans$[all] in util object", 257
+                else
+                    util.setTableChans(pTableChans!)
+                endif
+            endif
             
             data_name$ = "OPC_LINECODE"
             if #LineCode_dev% = 0   then #LineCode_dev% = int(util.getDev(data_name$))
@@ -46,11 +74,23 @@ rem ==========================================================================
             if #ItemMast_dev% = 0   then #ItemMast_dev% = int(util.getDev(data_name$))
             if #ItemMast_tmpl$ = "" then #ItemMast_tmpl$ = util.getTmpl(data_name$)
             
+            if #precision% = 0 then
+                data_name$ = "IVS_PARAMS"
+                dim params_rec$:util.getTmpl(data_name$)
+                find record (util.getDev(data_name$), key=#firm_id$+"IV00") params_rec$
+                #precision% = int(num(params_rec.precision$))
+            endif
+            
         methodend
         
     rem --- Total order totals from passed detail vector
     
         method public BBjNumber totalSales(BBjVector pDtlVect!)
+        
+            if #dtl_tmpl$ = "" then
+                throw #This_Class$+": You must pass the detail template to use this method", 258
+            endif
+        
             precision #precision%
             ttl_sales = 0
             
@@ -80,7 +120,11 @@ rem ==========================================================================
     rem --- Total sales from set detail vector
         
         method public BBjNumber totalSales()
-            methodret #totalSales(#DtlVect!)
+            if #DtlVect! = null() then
+                throw #This_Class$+": Pass in the detail vector or use setDtlVect()", 259
+            else
+                methodret #totalSales(#DtlVect!)
+            endif
         methodend
         
     rem --- Order totals from disk records
@@ -97,7 +141,7 @@ rem ==========================================================================
             
             dim orddet_rec$:#OrdDetail_tmpl$
             dim linecode_rec$:#LineCode_tmpl$
-            dim itemmast_rec$:#LineCode_tmpl$
+            dim itemmast_rec$:#ItemMast_tmpl$
             
         rem --- Begin loop
         
@@ -172,6 +216,26 @@ rem ==========================================================================
             
         methodend
         
+        method public void totalSalesDisk(BBjString p_cust_id$, BBjString p_order_no$)
+        
+            data_name$ = "OPE_ORDHDR"
+            dim ordhdr_rec$:util.getTmpl(data_name$)
+            ordhdr_dev = util.getDev(data_name$)
+            found = 0
+            
+            if #START_BLOCK then
+                find record (ordhdr_dev, key=#firm_id$+"  "+p_cust_id$+p_order_no$, dom=*endif) ordhdr_rec$
+                found = 1
+            endif
+            
+            if found then
+                #totalSalesDisk(p_cust_id$, p_order_no$, ordhdr_rec.invoice_type$)
+            else
+                throw #This_Class$+": totalSalesDisk(): Could not find order "+p_order_no$+" for customer "+p_cust_id$, 260
+            endif
+            
+        methodend
+        
     rem --- Three accessor methods for the return values of totalSalesDisk()
     
         method public BBjNumber getExtPrice()
@@ -199,7 +263,7 @@ rem --- Inits
 	rem use ::ado_util.src::util
     rem use ::sys/prog/bao_callpoint.bbj::Callpoint
 	use ::ado_order.src::OrderHelper
-	use ::adc_array.aon::ArrayObject
+	rem use ::adc_array.aon::ArrayObject
     
 rem === BSHO
 
