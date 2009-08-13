@@ -660,15 +660,12 @@ rem ==========================================================================
 
         force_edit_row_col: 
             throw "util: forceEdit(): Row or column is invalid", 256
-            methodret
 
         force_edit_select: 
             throw "util: forceEdit(): Can't select this cell", 257
-            methodret
 
         force_edit_start: 
             throw "util: forceEdit(): Can't start editing this cell", 258
-            methodret
 
         methodend
 
@@ -741,13 +738,11 @@ rem ==========================================================================
         
             if #devs! = null() then
                 throw #Class_Name$+": Need to call setTableChans() first", 258
-                methodret 0
             else
                 if #devs!.containsKey(p_data_name$) then
                     methodret int(num(#devs!.get(p_data_name$)))
                 else
                     throw #Class_Name$+": Cannot find "+p_data_name$, 257
-                    methodret 0
                 endif
             endif
             
@@ -759,13 +754,11 @@ rem ==========================================================================
         
             if #tmpls! = null() then
                 throw #Class_Name$+": Need to call setTableChans() first", 260
-                methodret ""
             else
                 if #tmpls!.containsKey(p_data_name$) then
                     methodret str(#tmpls!.get(p_data_name$))
                 else
                     throw #Class_Name$+": Cannot find "+p_data_name$, 259
-                    methodret ""
                 endif
             endif
             
