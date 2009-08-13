@@ -1,5 +1,3 @@
-[[OPE_INVHDR.ASVA]]
-print "Hdr:ASVA"; rem debug
 [[OPE_INVHDR.AOPT-PRNT]]
 rem --- Print a counter Invoice
 
@@ -20,7 +18,7 @@ rem --- Credit action
 	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
 	status    = 0
 
-	if cvs(cust_id$, 2)="" or cvs(ord_no$, 2)="" then break; rem --- exit callpoint
+	if cust_id$="" or ord_no$="" then break; rem --- exit callpoint
 
 	if user_tpl.credit_installed$="Y" and inv_type$<>"P" and user_tpl.cash_sale$ <> "Y" then
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
@@ -30,20 +28,24 @@ rem --- Credit action
 
 rem --- Cash Transaction
 
-	if user_tpl.cash_sale$ = "Y" then
+	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
+
+		callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+		callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 
 		dim dflt_data$[2,1]
-		dflt_data$[1,0] = "CUSTOMER_ID"
-		dflt_data$[1,1] = cust_id$
-		dflt_data$[2,0] = "ORDER_NO"
-		dflt_data$[2,1] = ord_no$
-		pfx$ = ""
+		rem dflt_data$[1,0] = "CUSTOMER_ID"
+		rem dflt_data$[1,1] = cust_id$
+		rem dflt_data$[2,0] = "ORDER_NO"
+		rem dflt_data$[2,1] = ord_no$
+		key_pfx$ = firm_id$+"  "+cust_id$+ord_no$
 
 		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :			"OPE_INVCASH", 
 :			stbl("+USER_ID"), 
 :			"MNT", 
-:			pfx$, 
+:			key_pfx$, 
 :			table_chans$[all], 
 :			dflt_data$[all]
 
