@@ -76,8 +76,9 @@ rem --- Get Attributes
 
 rem --- Main Process
 
-    gosub disp_win
-    gosub get_win_settings
+rem --- gosub get_win_settings
+    gosub get_user_settings
+    gosub disp_win    
     gosub def_grids
     gosub resize_win
 
@@ -517,11 +518,14 @@ disp_win:rem --- Display Window
     rdVersion!.selectIndex(0)
 
     rdSource!=rdWindow!.getControl(3010)
+    rdSource!.setText(rd_save_src$)
     rdGoodBackColor!=rdSource!.getBackColor()
-    rdSource!.setBackColor(rdErrorBackColor!)
+    
     rdBtnSource!=rdWindow!.getControl(3011)
+    
     rdTarget!=rdWindow!.getControl(3020)
-    rdTarget!.setBackColor(rdErrorBackColor!)
+    rdTarget!.setText(rd_save_dest$)
+    
     rdBtnTarget!=rdWindow!.getControl(3021)
 
     rdGrdFiles!=rdWindow!.getControl(5000)
@@ -532,7 +536,11 @@ disp_win:rem --- Display Window
     rdBtnProcess!=rdWindow!.getControl(3)
     rdBtnProcess!.setEnabled(0)
     rdBtnExit!=rdWindow!.getControl(2)
-
+    
+    if rd_save_src$<>"" and rd_save_dest$<>""
+        gosub check_files
+    endif
+    
     rd_win_disp$="YES"
 
     return
@@ -597,7 +605,67 @@ save_win_settings:rem --- Save Window Settings
     call rd_dir_syp$+"bac_winsize.bbj",rd_save_win_desc$,"W","",rdWindow!,"SAVE",rd_win_coord[all]
 
     return
+    
+get_user_settings:rem --- Get User Settings
 
+    rd_save_win_desc$=pad("WIN_[DATA_PORT]",20)
+    rd_save_src_desc$=pad("WIN_[DATA_PORT_SRC]",20)
+    rd_save_dest_desc$=pad("WIN_[DATA_PORT_DEST]",20)
+
+    rd_attr_desc$=
+:       rd_save_win_desc$+
+:       rd_save_src_desc$+
+:       rd_save_dest_desc$
+
+    dim rd_set_data$[len(rd_attr_desc$)/20]
+        rd_set_data$[0]=rd_attr_desc$
+
+    call rd_dir_syp$+"bam_config.bbj",rd_file_usr$,"USR","READ",rd_set_data$[all]
+    
+    rd_win_coord$=rd_set_data$[fnstr_pos(rd_save_win_desc$,rd_set_data$[0],20)]
+    if rd_win_coord$="" rd_win_coord$="0,0,0,0"
+
+    dim rd_win_coord[1:4]
+        for rd_curr_coord=1 to 4
+            rd_temp_spos=pos(","=","+rd_win_coord$+",",1,rd_curr_coord)
+            rd_temp_epos=pos(","=","+rd_win_coord$+",",1,rd_curr_coord+1)-1
+            rd_win_coord[rd_curr_coord]=num(rd_win_coord$(rd_temp_spos,rd_temp_epos-rd_temp_spos))
+        next rd_curr_coord
+    
+    rd_save_src$=rd_set_data$[fnstr_pos(rd_save_src_desc$,rd_set_data$[0],20)]
+    rd_save_dest$=rd_set_data$[fnstr_pos(rd_save_dest_desc$,rd_set_data$[0],20)]
+
+    return
+
+save_user_settings:rem --- Save User Settings
+
+    if rdWindow!.getWidth()=0 return
+
+    rd_curr_win_coords$=
+:       str(rdWindow!.getX())+","+
+:       str(rdWindow!.getY())+","+
+:       str(rdWindow!.getWidth())+","+
+:       str(rdWindow!.getHeight())
+
+    rd_attr_desc$=
+:       rd_save_win_desc$+
+:       rd_save_src_desc$+
+:       rd_save_dest_desc$
+
+    dim rd_usr_data$[len(rd_attr_desc$)/20]
+        rd_usr_data$[0]=rd_attr_desc$
+
+    rd_usr_data$[fnstr_pos(rd_save_win_desc$,rd_usr_data$[0],20)]=rd_curr_win_coords$
+
+    if rdSource!.getText()<>"" then rd_save_src$=rdSource!.getText()
+    rd_usr_data$[fnstr_pos(rd_save_src_desc$,rd_usr_data$[0],20)]=rd_save_src$
+    if rdTarget!.getText()<>"" then rd_save_dest$=rdTarget!.getText()
+    rd_usr_data$[fnstr_pos(rd_save_dest_desc$,rd_usr_data$[0],20)]=rd_save_dest$
+    
+    call rd_dir_syp$+"bam_config.bbj",rd_file_usr$,"USR","WRITE",rd_usr_data$[all]
+
+    return
+    
 error_proc:rem --- Error Processing Routine
 
     rd_err_text$=""
@@ -611,6 +679,6 @@ error_proc:rem --- Error Processing Routine
 
 exit_prog:rem --- Exit Program
 
-    if rd_win_disp$="YES" then gosub save_win_settings
+    if rd_win_disp$="YES" then gosub save_user_settings
 
     run rd_dir_syp$+"bas_process_end.bbj"
