@@ -29,7 +29,7 @@ rem --- Credit action
 rem --- Cash Transaction
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
-
+	
 		callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 		callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 		callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
@@ -1739,7 +1739,7 @@ rem --- Order Helper object
 	ordHelp! = new OrderHelper(firm_id$, int(num(ivs01a.precision$)), callpoint!, dtlg_param$[1,3])
 	callpoint!.setDevObject("order_helper_object", ordHelp!)
 [[OPE_INVHDR.AFMC]]
-print 'show', "Hdr:AFMC"; rem debug
+rem print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
