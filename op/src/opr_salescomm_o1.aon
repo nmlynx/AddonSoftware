@@ -62,6 +62,7 @@ rem --- Initializations
         x1$="Ending Date    : "+x1$
         call pgmdir$+"adc_sizemask.aon",m1$,m1,11,13
         more=1
+        recs=0
         times=1
         if option$="B" then
             dim columns$[9,10]
@@ -203,6 +204,7 @@ rem
                 l=l+1
                 l1=l1+1
                 t1=t1+1
+                recs=recs+1
 
 rem --- Accumulate totals
 
@@ -221,43 +223,47 @@ rem --- Accumulate totals
 
 rem --- Next record
 
-   wend
-
-
+    wend
 
 done: rem --- All done
 
-            t9$="E"
-            gosub Salesperson_Break
-            subheading$=""
-            x0=0
-            t0$=""
-            x$="Report Totals"
-            h5$="Report Summary"
-            xwk = fnblank(1)
-            OutVect!.addItem(str(t0)+" Total Salespersons")
-            if option$="P" then
-                xwk = fnblank(9)
-            else
-                xwk = fnblank(8)
-            endif
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
-            if u[6]<>0 then x0=100*(u[6]-u[7])/u[6]
-            if option$="P" then due$=str(u[9])
-            TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-            xwk = fnblank(1)
-            OutVect!.addItem(x$)
-            xwk = fnblank(1)
-            OutVect!.addItem(str(u[6]))
-            OutVect!.addItem(str(u[5]))
-            OutVect!.addItem(str(u[7]))
-            OutVect!.addItem(str(u[6]-u[7]))
-            OutVect!.addItem(str(x0))
-            xwk = fnblank(1)
-            OutVect!.addItem(str(u[8]))
-            if option$="P" then
-                OutVect!.addItem(due$)
-            endif
+    t9$="E"
+    gosub Salesperson_Break
+    subheading$=""
+    x0=0
+    t0$=""
+    x$="Report Totals"
+    h5$="Report Summary"
+    xwk = fnblank(1)
+    OutVect!.addItem(str(t0)+" Total Salespersons")
+    if option$="P" then
+        xwk = fnblank(9)
+    else
+        xwk = fnblank(8)
+    endif
+
+    if u[6]<>0 then x0=100*(u[6]-u[7])/u[6]
+    if option$="P" then due$=str(u[9])
+    TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+    xwk = fnblank(1)
+    OutVect!.addItem(x$)
+    xwk = fnblank(1)
+    OutVect!.addItem(str(u[6]))
+    OutVect!.addItem(str(u[5]))
+    OutVect!.addItem(str(u[7]))
+    OutVect!.addItem(str(u[6]-u[7]))
+    OutVect!.addItem(str(x0))
+    xwk = fnblank(1)
+    OutVect!.addItem(str(u[8]))
+    if option$="P" then
+        OutVect!.addItem(due$)
+    endif
 
 rem --- Averages
 
@@ -462,6 +468,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -515,6 +528,11 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
 

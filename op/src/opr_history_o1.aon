@@ -36,6 +36,7 @@ rem --- Retrieve sysinfo data
 rem --- Initialize Data
 
         more=1
+        recs=0
         ord=0
         ship=0,bo=0,l9=59,l=l9+1,headings=2
         dim r9$(0)
@@ -45,7 +46,8 @@ rem --- Initialize Data
         m8=len(m8$)
         headings$[0]=n1$
         headings$[1]=n4$
-        h0=132,h=0        
+        h0=132
+        h=0        
         t9$=""
         max_pcodes=50; dim t9[max_pcodes,3]; rem "TOTALS BY PRODUCT
         r9$="SPN"
@@ -143,6 +145,7 @@ rem --- Void
                 OutVect!.addItem( opt01a.slspsn_code$)
                 OutVect!.addItem(" *** VOID ***")
                 xwk = fnblank(5)
+                recs=recs+1
 
                 gosub find_customer
                 continue
@@ -252,6 +255,12 @@ rem --- Main Loop Ends
 
 
 done: rem --- Totals
+
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
 
         precision 2
         e9$="E"
@@ -430,6 +439,7 @@ order_header: rem --- Order Header
         OutVect!.addItem(arm10a.ar_terms_code$)
         OutVect!.addItem(opt01a.tax_code$)
         xwk = fnblank(1)
+        recs=recs+1
 
         xwk = fnblank(12)
         OutVect!.addItem("Ln Cd Prd Whs Item")
@@ -772,6 +782,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem --- #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -829,5 +846,10 @@ std_exit: rem --- Standard program end (01Mar2006)
         release
 
 rem --- #endinclude std_end.src
+
+std_exit_no_report:
+
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+        release
 
         end

@@ -75,6 +75,7 @@ rem --- Initializations
     l9=55
     l=l9+1
     headings=5
+    recs=0
     dim headings$[headings],j1$(width),j2$(width,"-"),j3$(width,"=")
     headings$[0]=n1$
     headings$[1]=n3$
@@ -169,7 +170,7 @@ revenue_account: rem --- Find Revenue Account
 
 l2360:
     d0=-opt11a.ext_price
-    if r5$="D" z9$=opt11a.orddet_seq_ref$ else z9$="   "
+    if r5$="D" z9$=opt11a.orddet_seq_ref$ else z9$=fill(len(opt11a.orddet_seq_ref$))
     gosub l6800
     goto l2020
 
@@ -179,7 +180,7 @@ do_accounts: rem --- A/R Account, Cash Account
     find record (arm10d_dev,key=firm_id$+"D"+opt01a.ar_dist_code$,dom=l2700) arm10d$
     if opt01a.cash_sale$="Y" d1$=arm10d.gl_cash_acct$ else d1$=arm10d.gl_ar_acct$
     d0=opt01a.total_sales+opt01a.tax_amount+opt01a.freight_amt-opt01a.discount_amt
-    z9$="   "
+    z9$=fill(len(opt11a.orddet_seq_ref$))
     gosub l6800
 
 rem --- Discount Amount
@@ -187,7 +188,7 @@ rem --- Discount Amount
     if opt01a.discount_amt=0 goto freight_amt
     d1$=arm10d.gl_disc_acct$
     d0=opt01a.discount_amt
-    z9$="   "
+    z9$=fill(len(opt11a.orddet_seq_ref$))
     gosub l6800
 
 freight_amt: rem --- Freight Amount
@@ -195,7 +196,7 @@ freight_amt: rem --- Freight Amount
     if opt01a.freight_amt=0 goto tax_account
     d1$=arm10d.gl_frgt_acct$
     d0=-opt01a.freight_amt
-    z9$="   "
+    z9$=fill(len(opt11a.orddet_seq_ref$))
     gosub l6800
 
 tax_account: rem --- Tax Account
@@ -282,6 +283,7 @@ rem --- Print Invoice Number & Date
     OutVect!.addItem(opt01a.ar_inv_no$)
     OutVect!.addItem(fndate$(opt01a.invoice_date$))
     cur_col=2
+    recs=recs+1
 
 l3650:
     t1$=opt01a.ar_inv_no$
@@ -300,7 +302,7 @@ l3780: rem --- Print
     if cur_col<2
         xwk=fnblank(3-cur_col)
     endif
-    OutVect!.addItem(opw04a.line_no$)
+    OutVect!.addItem(opw04a.orddet_seq_ref$)
     OutVect!.addItem(fnmask$(opw04a.gl_account$(1,g5),g5$))
     OutVect!.addItem(glm01a.gl_acct_desc$)
     if opw04a.gl_post_amt>0 then
@@ -312,6 +314,7 @@ l3780: rem --- Print
     endif
     cur_col=0
     l=l+1
+    recs=recs+1
 l3870:
     if opw04a.gl_post_amt>0
         d1=d1+opw04a.gl_post_amt
@@ -329,6 +332,12 @@ l3900: rem --- End of file?
     if r0$="A" goto l3050
 
 done: rem --- End
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     t9$="E"
     gosub cust_break
@@ -369,6 +378,7 @@ cust_break: rem --- Customer Break
     xwk=fnblank(8)
     cur_col=0
     l=l+3
+    recs=recs+1
 l6100:
     if t9$="E" goto l6190
     dim arm01a$:fattr(arm01a$)
@@ -379,6 +389,7 @@ l6100:
 l6150:
     OutVect!.addItem(x0$)
     cur_col=1
+    recs=recs+1
 l6170:
     t0$=opw04a.customer_id$
     d1=0
@@ -401,6 +412,7 @@ l6200: rem --- Previous Invoice Out Of Balance
     OutVect!.addItem(str(abs(c3)))
     cur_col=0
     l=l+2
+    recs=recs+1
 l6290:
     return
 
@@ -433,6 +445,7 @@ rem --- Summarize Non-Retained Postings
         OutVect!.addItem(str(abs(oob)))
     endif
     cur_col=0
+    recs=recs+1
     if oob>0 d1=d1+oob,d2=d2+oob,d3=d3+oob else c1=c1+oob,c2=c2+oob,c3=c3+oob
 l6495:
     return
@@ -445,10 +458,10 @@ l6800: rem --- Write To Work File
     opw04a2.customer_id$=opt01a.customer_id$
     opw04a2.ar_inv_no$=opt01a.ar_inv_no$
     opw04a2.gl_account$=d1$
-    opw04a2.line_no$=z9$
+    opw04a2.orddet_seq_ref$=z9$
     opw04a2.alt_sequence$=arm01a.alt_sequence$
     find record (opw04_dev,key=firm_id$+opw04a2.ar_type$+opw04a2.customer_id$+
-:                opw04a2.ar_inv_no$+opw04a2.gl_account$+opw04a2.line_no$,dom=*next) opw04a2$
+:                opw04a2.ar_inv_no$+opw04a2.gl_account$+opw04a2.orddet_seq_ref$,dom=*next) opw04a2$
     opw04a2.gl_post_amt=opw04a2.gl_post_amt+d0
     opw04a2$=field(opw04a2$)
     write record (opw04_dev) opw04a2$
@@ -544,6 +557,14 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -598,5 +619,10 @@ std_exit: rem --- Standard program end (01Mar2006)
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
 
     end
