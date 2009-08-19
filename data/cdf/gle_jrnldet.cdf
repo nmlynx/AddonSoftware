@@ -1,3 +1,7 @@
+[[GLE_JRNLDET.ADGE]]
+rem --- set default value for memo lines to the description entered in the header
+
+callpoint!.setTableColumnAttribute("GLE_JRNLDET.GL_POST_MEMO","DFLT",callpoint!.getHeaderColumnData("GLE_JRNLHDR.DESCRIPTION"))
 [[GLE_JRNLDET.AGCL]]
 rem --- set preset val for batch_no
 
