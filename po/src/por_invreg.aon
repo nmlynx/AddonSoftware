@@ -168,6 +168,9 @@ rem --- Parameters
     if cash goto l500
     call pgmdir$+"glc_ctlcreate.aon",err=l500,source$,n2$,glw11$,gl$,status
     if status goto std_exit
+    process_id$=stbl("+PROCESS_ID")
+    batch_no$=stbl("+BATCH_NO")
+    
     if gl$<>"Y" goto l500
     call pgmdir$+"adc_application.aon","SF",info$[all]
     sf$=info$[20]
@@ -263,10 +266,10 @@ rem --- Additional file opens
         pow17_dev=channels[31]
         dim pow17a$:templates$[31]
     endif
-
+    
     if gl$="Y"
         files$[32]="glm-01",ids$[32]="GLM_ACCT"
-        files$[33]=glw11$,options$[33]="CL"
+        files$[33]="glw-11",ids$[33]="GLW_DAILYDETAIL";REM --- not used as of batch implementation; ,options$[33]="CL"
         files$[34]="glt-04",ids$[34]="GLE_DAILYDETAIL"
 
         call pgmdir$+"adc_fileopen.aon",action,32,34,files$[all],options$[all],
@@ -278,6 +281,11 @@ rem --- Additional file opens
         dim glm01a$:templates$[32]
         dim glt04a$:templates$[34]
         xref_dev=0
+        
+        rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
+        rec_pfx$=firm_id$+process_id$+batch_no$
+        call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
+        
     endif
 
     if sf$="Y"

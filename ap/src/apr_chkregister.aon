@@ -104,7 +104,7 @@ rem --- Is General Ledger installed and being used?
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,application$,glw11$,gl$,status
     if status goto std_exit_no_report
     process_id$=stbl("+PROCESS_ID")
-
+    batch_no$=stbl("+BATCH_NO")
 
 rem --- Initializations
 

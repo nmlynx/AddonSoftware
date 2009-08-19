@@ -182,14 +182,24 @@ rem --- Someday these programs should not use g[3] and g[4]
     if start_block then
         call pgmdir$+"glc_ctlcreate.aon",err=*endif,pgm(-2),n2$,glw11$,gl$,status
         if status then goto std_exit
-
-        files$[30]=glw11$,ids$[30]="GLW_DAILYDETAIL",options$[30]="CL"
+        process_id$=stbl("+PROCESS_ID")
+        batch_no$=stbl("+BATCH_NO")
+        
+        files$[30]="glw-11",ids$[30]="GLW_DAILYDETAIL";rem --- no longer using; ,options$[30]="CL"
         call pgmdir$+"adc_fileopen.aon",action,30,30,files$[all],options$[all],
 :           ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
 
         glw11_dev=channels[30]
         dim glw11a$:templates$[30]
+        
+rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
+
+        if gl$="Y"
+            rec_pfx$=firm_id$+process_id$+batch_no$
+            call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
+        endif    
+        
     endif
 
     call pgmdir$+"adc_application.aon","PO",info$[all]

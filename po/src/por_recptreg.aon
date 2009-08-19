@@ -166,6 +166,8 @@ rem --- Parameters
     source$=pgm(-2)
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,n2$,glw11$,gl$,status
     if status goto std_exit
+    process_id$=stbl("+PROCESS_ID")
+    batch_no$=stbl("+BATCH_NO")
 
 rem --- Initializations
 
@@ -265,7 +267,7 @@ rem --- Additional File Opens
 
     if gl$<>"N"
         files$[26]="glm-01",ids$[26]="GLM_ACCT"
-        files$[27]=glw11$,options$[27]="CL"
+        files$[27]="glw-11",ids$[27]="GLW_DAILYDETAIL";rem no longer clearing entire file; ,options$[27]="CL"
 
         call pgmdir$+"adc_fileopen.aon",action,26,27,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -275,6 +277,12 @@ rem --- Additional File Opens
         glw11_dev=channels[27]
 
         dim glm01a$:templates$[26]
+        
+rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
+
+        rec_pfx$=firm_id$+process_id$+batch_no$
+        call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
+        
     endif
 
     if sf$<>"N"
