@@ -101,6 +101,7 @@ gridActivity!.clearMainGrid()
 
 num_codes=codes!.size()
 num_cols=cols!.size()
+any_budget_cols=0
 
 for x=0 to num_cols-1
 	x1=0
@@ -111,6 +112,8 @@ for x=0 to num_cols-1
 			if pos(wcd$(1,1)="024",1)<>0
 				gridActivity!.setRowEditable(x,0)
 				gridActivity!.setCellEditable(x,0,1)
+			else
+				any_budget_cols=any_budget_cols+1
 			endif
 			break
 		else
@@ -134,6 +137,9 @@ if cvs(glm01a.gl_account$,3)<>""
 else
 		callpoint!.setStatus("ABORT")
 endif
+
+rem --- enable 'replicate' button only if we have one or more budget recs
+if any_budget_cols=0 then callpoint!.setOptionEnabled("REPL",0)
 [[GLM_SUMMACTIVITY.AOPT-REPL]]
 gosub replicate_amt
 
@@ -143,6 +149,7 @@ else
 	callpoint!.setMessage("GL_REPLICATE")
 	callpoint!.setStatus("ABORT")
 endif
+
 [[GLM_SUMMACTIVITY.ASIZ]]
 if UserObj!<>null()
 	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
@@ -198,7 +205,7 @@ switch notice.code
 			gridActivity!.setCellText(curr_row,1,vectGLSummary!)
 			gosub update_glm_acctsummary		
 		endif
-rem ---	gosub build_vectActivity
+		gosub check_for_budgets
 	break
 
 	case 8;rem edit start
@@ -406,6 +413,27 @@ replicate_amt:
 			next x
 			gosub calculate_end_bal
 			gridActivity!.setCellText(curr_row,1,vectGLSummary!)
+	endif
+return
+
+check_for_budgets:
+	rem --- do this after accessing/changing the dropdown in column 0; if no budgets selected, disable replicate button
+	numrows=gridActivity!.getNumRows()
+	budgets=0
+	if numrows
+		for x=0 to numrows-1
+			cell_text$=gridActivity!.getCellText(x,0)
+			wk=pos("("=cell_text$,-1,1)
+			if wk<>0
+				code$=cell_text$(wk+1,1)
+				if pos(code$="024")=0 then budgets=budgets+1
+			endif
+		next x 
+	endif
+	if budgets
+		callpoint!.setOptionEnabled("REPL",1)
+	else
+		callpoint!.setOptionEnabled("REPL",0)
 	endif
 return
 
