@@ -54,7 +54,12 @@ rem ==========================================================================
         
     rem --- Set text; this is the full form
     
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, Font p_font!, BBjInt p_just%, BBjColor p_background_color!, BBjColor p_text_color!)
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjString p_text$, Font p_font!, BBjInt p_just%, BBjColor p_background_color!, BBjColor p_text_color!)
+        
+            p_x% = int(p_x)
+            p_y% = int(p_y)
+            p_w% = int(p_w)
+            p_h% = int(p_h)
         
             if #Page! = null() then
                 throw "PDFHelper: setText(): You must setPage() before using this method", 257
@@ -112,53 +117,54 @@ rem ==========================================================================
 
     rem --- These are the setText() method with different signatures
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, Font p_font!, BBjInt p_just%, BBjColor p_background_color!)
-            #setText(p_x%, p_y%, p_w%, p_h%, p_text$, p_font!, p_just%, p_background_color!, null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjString p_text$, Font p_font!, BBjInt p_just%, BBjColor p_background_color!)
+            #setText(p_x, p_y, p_w, p_h, p_text$, p_font!, p_just%, p_background_color!, null())
         methodend
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjInt p_just%, BBjColor p_background_color!)
-            #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), p_just%, p_background_color!, null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjString p_text$, BBjInt p_just%, BBjColor p_background_color!)
+            #setText(p_x, p_y, p_w, p_h, p_text$, null(), p_just%, p_background_color!, null())
         methodend
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, Font p_font!, BBjInt p_just%)
-            #setText(p_x%, p_y%, p_w%, p_h%, p_text$, p_font!, p_just%, null(), null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjString p_text$, Font p_font!, BBjInt p_just%)
+            #setText(p_x, p_y, p_w, p_h, p_text$, p_font!, p_just%, null(), null())
         methodend
                 
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjColor p_background_color!)
-            #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), 0, p_background_color!, null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjString p_text$, BBjColor p_background_color!)
+            #setText(p_x, p_y, p_w, p_h, p_text$, null(), 0, p_background_color!, null())
         methodend
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_text$, BBjInt p_just%)
-            #setText(p_x%, p_y%, p_w%, p_h%, p_text$, null(), p_just%, null(), null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjString p_text$, BBjInt p_just%)
+            #setText(p_x, p_y, p_w, p_h, p_text$, null(), p_just%, null(), null())
         methodend
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, BBjColor p_background_color!, BBjColor p_text_color!)
-            #setText(p_x%, p_y%, 0, 0, p_text$, null(), 0, p_background_color!, p_text_color!)
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjString p_text$, BBjColor p_background_color!, BBjColor p_text_color!)
+            #setText(p_x, p_y, 0, 0, p_text$, null(), 0, p_background_color!, p_text_color!)
         methodend
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, Font p_font!, BBjColor p_background_color!)
-            #setText(p_x%, p_y%, 0, 0, p_text$, p_font!, 0, p_background_color!, null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjString p_text$, Font p_font!, BBjColor p_background_color!)
+            #setText(p_x, p_y, 0, 0, p_text$, p_font!, 0, p_background_color!, null())
         methodend
 
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, BBjColor p_background_color!)
-            #setText(p_x%, p_y%, 0, 0, p_text$, null(), 0, p_background_color!, null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjString p_text$, BBjColor p_background_color!)
+            #setText(p_x, p_y, 0, 0, p_text$, null(), 0, p_background_color!, null())
         methodend
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$, Font p_font!)
-            #setText(p_x%, p_y%, 0, 0, p_text$, p_font!, 0, null(), null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjString p_text$, Font p_font!)
+            #setText(p_x, p_y, 0, 0, p_text$, p_font!, 0, null(), null())
         methodend
         
-        method public void setText(BBjInt p_x%, BBjInt p_y%, BBjString p_text$)
-            #setText(p_x%, p_y%, 0, 0, p_text$, null(), 0, null(), null())
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjString p_text$)
+            #setText(p_x, p_y, 0, 0, p_text$, null(), 0, null(), null())
         methodend
 
-        method public void setText(BBjInt p_x%, BBjNumber p_y, BBjString p_text$)
-            #setText(p_x%, int(p_y), 0, 0, p_text$, null(), 0, null(), null())
-        methodend
-        
     rem --- Draw a box
        
-        method public void drawBox(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjColor p_fill!, BBjColor p_line!)
+        method public void drawBox(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjColor p_fill!, BBjColor p_line!)
+        
+            p_x% = int(p_x)
+            p_y% = int(p_y)
+            p_w% = int(p_w)
+            p_h% = int(p_h)
         
             if #Page! = null() then
                 throw "PDFHelper: drawBox(): You must setPage() before using this method", 257
@@ -183,18 +189,23 @@ rem ==========================================================================
             
         methodend
                 
-        method public void drawBox(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjColor p_fill!)
-            #drawBox(p_x%, p_y%, p_w%, p_h%, p_fill!, null())
+        method public void drawBox(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjColor p_fill!)
+            #drawBox(p_x, p_y, p_w, p_h, p_fill!, null())
         methodend
 
-        method public void drawBox(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%)
-            #drawBox(p_x%, p_y%, p_w%, p_h%, null(), null())
+        method public void drawBox(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h)
+            #drawBox(p_x, p_y, p_w, p_h, null(), null())
         methodend
     
     rem --- Draw a line
     
-        method public void drawLine(BBjInt p_x1%, BBjInt p_y1%, BBjInt p_x2%, BBjInt p_y2%)
-        
+        method public void drawLine(BBjNumber p_x1, BBjNumber p_y1, BBjNumber p_x2, BBjNumber p_y2)
+            
+            p_x1% = int(p_x1)
+            p_y1% = int(p_y1)
+            p_x2% = int(p_x2)
+            p_y2% = int(p_y2)
+
             if #Page! = null() then
                 throw "PDFHelper: drawLine(): You must setPage() before using this method", 257
             endif
@@ -208,18 +219,23 @@ rem ==========================================================================
             
         methodend
         
-        method public void drawVLine(BBjInt p_x%, BBjInt p_y%, BBjInt p_h%)
-            #drawLine(p_x%, p_y%, p_x%, p_y% + p_h%)
+        method public void drawVLine(BBjNumber p_x, BBjNumber p_y, BBjNumber p_h)
+            #drawLine(p_x, p_y, p_x, p_y + p_h)
         methodend
         
-        method public void drawHLine(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%)
-            #drawLine(p_x%, p_y%, p_x% + p_w%, p_y%)
+        method public void drawHLine(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w)
+            #drawLine(p_x, p_y, p_x + p_w, p_y)
         methodend
         
     rem --- Set Logo
     
-        method public void setLogo(BBjInt p_x%, BBjInt p_y%, BBjInt p_w%, BBjInt p_h%, BBjString p_logofile$)
+        method public void setLogo(BBjNumber p_x, BBjNumber p_y, BBjNumber p_w, BBjNumber p_h, BBjString p_logofile$)
         
+            p_x% = int(p_x)
+            p_y% = int(p_y)
+            p_w% = int(p_w)
+            p_h% = int(p_h)
+
             if #Page! = null() then
                 throw "PDFHelper: setLogo(): You must setPage() before using this method", 257
             endif
@@ -349,6 +365,7 @@ rem --- Text
 rem --- Display
 
     docPrint!.preview()
+    stop
     release
 
     end
