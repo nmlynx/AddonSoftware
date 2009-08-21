@@ -33,35 +33,17 @@ rem --- Open/Lock files
     files=30,begfile=5,endfile=15
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     
-    files$[5]="ive-02",      ids$[5]="IVE_TRANSFER"
-    files$[6]="ivm-01",      ids$[6]="IVM_ITEMMAST"
-    files$[7]="ivm-02",      ids$[7]="IVM_ITEMWHSE"
     files$[11]="ivm-12",     ids$[11]="IVM_ITEMACT"
-    files$[13]="ivs_params", ids$[13]="IVS_PARAMS"
     files$[15]="ivt-04",     ids$[15]="IVT_ITEMTRAN"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit_no_update
     
-    ive02_dev  = channels[5]
-    ivm01_dev  = channels[6]
-    ivm02_dev  = channels[7]
     ivm12_dev  = channels[11]
-    ivs01a_dev = channels[13]
     ivt04_dev  = channels[15]
 
-rem --- Dimension string templates
 
-    dim ive02a$:templates$[5]
-    dim ivm01a$:templates$[6]
-    dim ivm02a$:templates$[7]
-    dim ivs01a$:templates$[13]
-
-rem --- Retrieve parameter records
-
-    ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Initializations
 
