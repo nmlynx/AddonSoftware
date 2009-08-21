@@ -239,7 +239,7 @@ label_two:
 :          (pos("B"=s4$)  = 0 or ope01a.backord_flag$ <> "B") and 
 :          (pos("C"=s4$)  = 0 or ope01a.credit_flag$  <> "C") and
 :          (pos("Q"=s4$) <= 0 or ope01a.invoice_type$ <> "P") 
-:		then 
+:       then 
             continue
         endif
 
@@ -442,7 +442,7 @@ rem --- Report Totals
 
 label_six:
 
-    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+rem    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     xwk = fnblank(13)
     xwk = fnblank(13)
     OutVect!.addItem("Line Type Totals")
@@ -536,6 +536,8 @@ ord_header: rem --- Print Order Header
     return
 
 prod_subtotals: rem --- Product subtotals heading
+
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     xwk = fnblank(13)
     OutVect!.addItem("Product Totals")
