@@ -199,7 +199,7 @@ rem --- Populate Stocking Info in Warehouses
 	dim dflt_data$[6,1]
 	dflt_data$[1,0]="ITEM_ID"
 	dflt_data$[1,1]=cp_item_id$
-	ivs10d_dev=fnget_dev("IVS_DEFAULT")
+	ivs10d_dev=fnget_dev("IVS_DEFAULTS")
 	ivs10d_tpl$=fnget_tpl$("IVS_DEFAULTS")
 	dim ivs10d$:ivs10d_tpl$
 	read record (ivs10d_dev,key=firm_id$+"D") ivs10d$
