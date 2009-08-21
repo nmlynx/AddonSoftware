@@ -476,7 +476,7 @@ rem --- Check for minimum line extension
 :	then
 		msg_id$ = "OP_LINE_UNDER_MIN"
 		dim msg_tokens$[1]
-		msg_tokens$ = str(user_tpl.min_line_amt:user_tpl.amount_mask$)
+		msg_tokens$[1] = str(user_tpl.min_line_amt:user_tpl.amount_mask$)
 		gosub disp_message
 	endif
 	
