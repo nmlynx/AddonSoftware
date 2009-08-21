@@ -180,7 +180,7 @@ rem --- Header window record
         wk$="Invoice";if apt01a.mc_inv_flag$="M" then wk$(1,2)="MI Invoice"
         OutVect!.addItem(wk$)
         OutVect!.addItem(fndate$(apt01a.invoice_date$))
-        OutVect!.addItem(fndate$(apt01a.accting_date$))
+        OutVect!.addItem(fndate$(apt01a.inv_due_date$))
         OutVect!.addItem(apt01a.payment_grp$)
         OutVect!.addItem(apt01a.hold_flag$)
         OutVect!.addItem(apt01a.invoice_amt$)
@@ -199,8 +199,8 @@ rem --- Header window record
 next_apt11: rem --- Detail window record
 
         read record (apt11_dev,end=next_apt01) apt11a$
-	if apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ <>
-:		apt11a.firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$ goto next_apt01
+    if apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ <>
+:       apt11a.firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$ goto next_apt01
         detail$="Y"
 
         switch asc(apt11a.trans_type$)
@@ -275,8 +275,8 @@ calc_balance: rem --- Retrieve payment and adjustments
         read (apt11_dev,key=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,dom=*next)
 next_calc_balance:
         read record (apt11_dev,end=end_calc_balance) apt11a$
-	if apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ <>
-:		apt11a.firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$ goto end_calc_balance
+    if apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ <>
+:       apt11a.firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$ goto end_calc_balance
         let found=1
         if apt11a.trans_type$="A" invoice=invoice+num(apt11a.trans_amt$) else applied=applied+num(apt11a.trans_amt$)
         goto next_calc_balance

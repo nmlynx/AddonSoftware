@@ -50,7 +50,7 @@ look_for_invoice:
 	k$=""
 	Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 	apt01_key$=firm_id$+ap_type$+vendor_id$+cvs(inv_no$,3)
-	read(apt01_dev,key=apt01_key$,dom=*next)
+	read(apt01_dev,key=apt01_key$,dir=0,dom=*next)
 	k$=key(apt01_dev,end=*next); read record(apt01_dev)apt01a$
 	if k$(1,len(apt01_key$))=apt01_key$ and cvs(inv_no$,3)<>""
 		rem --- not in ape-01, but IS in apt-01
