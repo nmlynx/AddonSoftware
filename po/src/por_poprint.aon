@@ -566,21 +566,19 @@ rem --- Create pages from both physical and display objects
 
         rem --- Acknowledgement
         pdf!.drawBox(20,246,550,24)
-        pdf!.drawVLine(140,246,24)
-        pdf!.setText(20,252,115,228,"Acknowledged By",boldfont!,pdf!.RIGHT_JUSTIFY())
-        pdf!.setText(200,252,poe02a.acknowledge$)
+        pdf!.drawVLine(260,246,24)
+        pdf!.setText(155,252,100,252,"Acknowledged By",boldfont!,pdf!.RIGHT_JUSTIFY())
+        pdf!.setText(265,252,poe02a.acknowledge$)
 
         rem --- Ribbon
         pdf!.drawBox(20,270,550,24)
         pdf!.drawBox(20,270,550,394)
-        pdf!.drawVLine(80,270,394)
-        pdf!.drawVLine(140,270,394)
+        pdf!.drawVLine(75,270,394)
         pdf!.drawVLine(390,270,394)
         pdf!.drawVLine(470,270,394)
         pdf!.drawVLine(490,270,394)
-        pdf!.setText(15,276,60,276,"Seq",boldfont!,pdf!.RIGHT_JUSTIFY())
-        pdf!.setText(80,276,55,276,"Quantity",boldfont!,pdf!.RIGHT_JUSTIFY())
-        pdf!.setText(145,276,"Item/Description",boldfont!,page!)
+        pdf!.setText(15,276,55,276,"Quantity",boldfont!,pdf!.RIGHT_JUSTIFY())
+        pdf!.setText(80,276,"Item/Description",boldfont!,page!)
         pdf!.setText(335,276,"Date Req'd",boldfont!,page!)
         pdf!.setText(390,276,75,276,"Cost",boldfont!,pdf!.RIGHT_JUSTIFY())
         pdf!.setText(470,276,20,276,"UM",boldfont!,pdf!.CENTER_JUSTIFY())
@@ -634,9 +632,8 @@ print_detail_line: rem --- Print Detail Line
                 
             while 1
 
-                pdf!.setText(15,row,60,row,str(num(poe12a.internal_seq_no$):seq_msk$),pdf!.RIGHT_JUSTIFY())
-                pdf!.setText(80,row,55,row,str(qty:m2$),pdf!.RIGHT_JUSTIFY())
-                pdf!.setText(145,row,poe12a.item_id$)
+                pdf!.setText(15,row,55,row,str(qty:m2$),pdf!.RIGHT_JUSTIFY())
+                pdf!.setText(80,row,poe12a.item_id$)
                 pdf!.setText(345,row,fndate$(poe12a.reqd_date$))
                 pdf!.setText(390,row,75,row,str(poe12a.unit_cost:m3$),pdf!.RIGHT_JUSTIFY())
                 pdf!.setText(470,row,20,row,poe12a.unit_measure$,pdf!.CENTER_JUSTIFY())
@@ -661,9 +658,8 @@ print_detail_line: rem --- Print Detail Line
                 
             while 1        
 
-                pdf!.setText(15,row,60,row,str(num(poe12a.internal_seq_no$):seq_msk$),textfont!,pdf!.RIGHT_JUSTIFY())
-                pdf!.setText(80,row,55,row,str(qty:m2$),textfont!,pdf!.RIGHT_JUSTIFY())
-                pdf!.setText(145,row,poe12a.ns_item_id$)
+                pdf!.setText(15,row,55,row,str(qty:m2$),textfont!,pdf!.RIGHT_JUSTIFY())
+                pdf!.setText(80,row,poe12a.ns_item_id$)
                 pdf!.setText(345,row,fndate$(poe12a.reqd_date$))
                 pdf!.setText(390,row,75,row,str(poe12a.unit_cost:m3$),textfont!,pdf!.RIGHT_JUSTIFY())
                 pdf!.setText(470,row,20,row,poe12a.unit_measure$,textfont!,pdf!.CENTER_JUSTIFY())
@@ -684,8 +680,7 @@ print_detail_line: rem --- Print Detail Line
                 
             while 1                
 
-                pdf!.setText(15,row,60,row,str(num(poe12a.internal_seq_no$):seq_msk$),textfont!,pdf!.RIGHT_JUSTIFY())
-                pdf!.setText(145,row,"Your Item Number "+poe12a.order_memo$)
+                pdf!.setText(80,row,"Your Item Number "+poe12a.order_memo$)
                 l=l+1
                 
                 if pdf!.getPage() = pagePDF! then break
@@ -699,8 +694,7 @@ print_detail_line: rem --- Print Detail Line
                 
             while 1                        
 
-                pdf!.setText(15,row,60,row,str(num(poe12a.internal_seq_no$):seq_msk$),textfont!,pdf!.RIGHT_JUSTIFY())
-                pdf!.setText(145,row,poe12a.order_memo$)
+                pdf!.setText(80,row,poe12a.order_memo$)
                 l=l+1
                 
                 if pdf!.getPage() = pagePDF! then break
@@ -715,8 +709,7 @@ print_detail_line: rem --- Print Detail Line
                 
             while 1                                
 
-                pdf!.setText(15,row,60,row,str(num(poe12a.internal_seq_no$):seq_msk$),textfont!,pdf!.RIGHT_JUSTIFY())
-                pdf!.setText(145,row,poe12a.order_memo$)
+                pdf!.setText(80,row,poe12a.order_memo$)
                 pdf!.setText(345,row,fndate$(poe12a.reqd_date$))            
                 pdf!.setText(390,row,75,row,str(poe12a.unit_cost:m3$),textfont!,pdf!.RIGHT_JUSTIFY())
                 pdf!.setText(490,row,75,row,str(extension:m1$),textfont!,pdf!.RIGHT_JUSTIFY())
@@ -756,7 +749,7 @@ text_only: rem --- Print text only
                 
     while 1
 
-        pdf!.setText(145,row,gen_text$)
+        pdf!.setText(80,row,gen_text$)
         l=l+1
         
         if pdf!.getPage() = pagePDF! then break
