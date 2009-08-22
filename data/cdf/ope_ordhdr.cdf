@@ -166,6 +166,8 @@ print "Hdr:ARER"; rem debug
 rem --- Set flag
 
 	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
 
