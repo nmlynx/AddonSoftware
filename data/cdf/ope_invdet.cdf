@@ -1065,6 +1065,10 @@ rem ===========================================================================
 			failed = 0
 		endif
 
+		if failed then
+			if cvs(item$,2)="" failed = 0
+		endif
+
 		if failed and warn then callpoint!.setMessage("IV_NO_WHSE_ITEM")
 	endif
 
