@@ -1,0 +1,31 @@
+Barista Application Framework - Definition Module
+IVE_TRANSHDR - Inventory Transaction Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVE_TRANSHDR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AREA;BEND;BSHO;BTBL;^^Inventory Transaction Header^Inventory Transaction Header^IVE_TRANSDET^^IVE_TRANSDET;^^BATCH_KEY^^^T^^^^^^S;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVE_TRANSHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BATCH_NO^IVE_TRANSHDR^009^C^3001^ine_batch_no^0^^^2^^N^^^^^BATCH_NO^Batch Entry Control Number^Batch No^Batch No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+IV_TRANS_NO^IVE_TRANSHDR^002^C^3002^ine_iv_trans_no^0^^^3^^Y^^^^^IV_TRANS_NO^Transaction Entry Number^Reference Number^Trans Entry No^C^^E^^^^^^^0^0^^^^^^^^^^^^^1^7^0^^^0000000^0000000^^^#;^30^R^0^Transaction Entry Number^^^
+TRANS_DATE^IVE_TRANSHDR^008^C^3003^ind_trans_date^0^^^5^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^TRANS_DATE^Transaction Date^Fecha de la transacción^Fecha de la trans.^C^1^D^^^^^^^^^^^^^^^^^^^^^6^8^^^^^^^^^^^^Transaction Date^^^
+TRANS_CODE^IVE_TRANSHDR^004^C^3004^dis_trans_code^0^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AINP;AVAL;^F^^TRANS_CODE^Transaction Code^Transaction Code^Trans Cd^C^^E^^^^^+20^-2^0^0^[+FIRM_ID]+"B"+@^IVC_TRANCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Transaction Code^^^
+TRANS_CMT^IVE_TRANSHDR^006^C^3005^ine_trans_cmt^0^^^7^^N^^^^^TRANS_CMT^Transaction Comment^Comment^Trans Cmt^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Transaction Comment^^^
+LOCATION^<<DISPLAY>>^010^D^3006^ine_location^0^^^8^^^^^^^LOCATION^Warehouse Location^Location^^C^^E^^^^^-27^+1^^0^^^^^^^^^^Item Warehouse Values^^^^10^^^^^^AON^^C;^^^^^^^
+QTY_ON_HAND^<<DISPLAY>>^011^D^3007^inn_qty_on_hand^0^^^9^^^^^^^QTY_ON_HAND^Quantity On-Hand^On Hand^^N^^N^^^^^+18^-1^0^0^^^^^^^^^^^^^^7^0^^^^^IV^U^C;^^^0^^^^
+QTY_COMMIT^<<DISPLAY>>^012^D^3008^inn_qty_commit^0^^^10^^^^^^^QTY_COMMIT^Quantity Committed^Committed^^N^^N^^^^^+14^-1^^0^^^^^^^^^^^^^^7^^^^^^IV^U^C;^^^^^^^
+QTY_AVAIL^<<DISPLAY>>^013^D^3009^inn_qty_avail^0^^^11^^^^^^^QTY_AVAIL^Available Quantity^Available^^N^^N^^^^^+14^-1^^0^^^^^^^^^^^^^^7^^^^^^IV^U^C;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVE_TRANSHDR^PRIMARY^IVE_TRANSHDR.FIRM_ID                    IVE_TRANSHDR.IV_TRANS_NO                ^stbl("+FIRM_ID")+IVE_TRANSHDR.IV_TRANS_NO$^stbl("+FIRM_ID")+RD_REC_DATA.IV_TRANS_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.IV_TRANS_NO$                
+{KeyDefsEnd}
+{GridCols}
+002IVE_TRANSHDR.BATCH_NO                   ;003IVE_TRANSHDR.IV_TRANS_NO                ;005IVE_TRANSHDR.TRANS_DATE                 ;006IVE_TRANSHDR.TRANS_CODE                 ;007IVE_TRANSHDR.TRANS_CMT                  ;008<<DISPLAY>>.LOCATION                    ;009<<DISPLAY>>.QTY_ON_HAND                 ;010<<DISPLAY>>.QTY_COMMIT                  ;011<<DISPLAY>>.QTY_AVAIL                   ;
+{GridColsEnd}

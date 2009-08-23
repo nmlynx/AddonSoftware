@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+APC_TYPECODE - AP Type Code
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APC_TYPECODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^AP Type Code^AP Type Code Maintenance^^^^^^^^T^^^^^^A;P;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APC_TYPECODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_A^APC_TYPECODE^002^C^^^^^^2^^Y^^^^^RECORD_ID_A^"A"^A^A^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;P;R;^^^^"A"^"A"^^
+AP_TYPE^APC_TYPECODE^003^C^3001^ine_ap_type^0^^^3^^Y^^^^^AP_TYPE^AP Type^AP Type^Type^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^2^0^^^UU^^^^K;^20^L^0^AP Type^^^
+CODE_DESC^APC_TYPECODE^004^C^3002^ine_code_desc^0^^^4^^N^^^^^CODE_DESC^Code Description^Description^Description^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+AP_DIST_CODE^APC_TYPECODE^005^C^^^^^^5^^N^^^F^^AP_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"B"+@^APC_DISTRIBUTION^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^O;^20^L^0^Distribution Code^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APC_TYPECODE^PRIMARY^APC_TYPECODE.FIRM_ID                    APC_TYPECODE.RECORD_ID_A                APC_TYPECODE.AP_TYPE                    ^stbl("+FIRM_ID")+"A"+APC_TYPECODE.AP_TYPE$^stbl("+FIRM_ID")+"A"+RD_REC_DATA.AP_TYPE$^stbl("+FIRM_ID")                        "A"                                     RD_REC_DATA.AP_TYPE$                    
+{KeyDefsEnd}
+{GridCols}
+003APC_TYPECODE.AP_TYPE                    ;004APC_TYPECODE.CODE_DESC                  ;
+{GridColsEnd}

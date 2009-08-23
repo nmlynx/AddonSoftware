@@ -1,0 +1,39 @@
+Barista Application Framework - Definition Module
+GLW_DAILYDETAIL - Account Detail Posting Record
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLW_DAILYDETAIL^^^^Account Detail Posting Record^Registro de contabilización del detalle de cuentas^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLW_DAILYDETAIL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+JOURNAL_ID^GLW_DAILYDETAIL^004^C^3001^dis_journal_id^0^^^2^^Y^^^F^^JOURNAL_ID^Journal ID Code^Código de ID del libro diario^Cód. de ID del libro diario^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLC_JOURNALCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^AA^^^^30^L^0^Código de ID del libro diario^^^
+GL_ADT_NO^GLW_DAILYDETAIL^005^C^3002^ine_gl_adt_no^0^^^3^^Y^^^^^GL_ADT_NO^GL Audit Control Number^Número de auditoría^N.º de ctrl. de auditoría^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^30^R^^Número de control de auditoría del GL^^^
+SEQ_NO^GLW_DAILYDETAIL^010^C^^^^^^4^^Y^^^^^SEQ_NO^Sequence Number^Sequence Number^Seq No^C^S^H^^^^^^^^^^^^^^^^^^^^^^5^^^^00000^00000^^^^30^R^^Sequence Number^^^
+POSTING_YEAR^GLW_DAILYDETAIL^006^C^3003^ine_posting_year^0^^^5^^Y^^^^^POSTING_YEAR^GL Posting Year^Año de registro del GL^Año de reg.^C^^E^^^^^^^^^^^^^^^^^^^^^^4^^^^0000^^^^^^^^Año de registro del GL^^^
+POSTING_PER^GLW_DAILYDETAIL^007^C^3004^ine_posting_per^0^^^6^^Y^^^^^POSTING_PER^GL Posting Period^Período de registro del GL^Per. de reg.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Período de registro del GL^^^
+TRNS_DATE^GLW_DAILYDETAIL^008^C^3005^ind_trns_date^0^^^7^^Y^^^C^^TRNS_DATE^Transaction Date^Fecha de la transacción^Fecha de la trans.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de la transacción^^^
+GL_ACCOUNT^GLW_DAILYDETAIL^009^C^3006^dis_gl_account^0^^^8^^Y^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta del GL^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^Número de cuenta del GL^^^
+REFERENCE_01^GLW_DAILYDETAIL^011^C^3007^ine_reference^0^^^9^^N^^^^^REFERENCE^Reference^Referencia^Ref.^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Referencia^^^
+REFERENCE_02^GLW_DAILYDETAIL^011^C^3008^ine_reference^0^^^9^^N^^^^^REFERENCE^Reference^Referencia^Ref.^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Referencia^^^
+REFERENCE_03^GLW_DAILYDETAIL^011^C^3009^ine_reference^0^^^9^^N^^^^^REFERENCE^Reference^Referencia^Ref.^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Referencia^^^
+DESCRIPTION^GLW_DAILYDETAIL^012^C^3010^ine_description^0^^^10^^N^^^^^DESCRIPTION^Description^Descripción^Descr.^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^Descripción^^^
+PERIOD^GLW_DAILYDETAIL^013^C^3011^ine_period^0^^^11^^N^^^^^PERIOD^Period^Período^Per.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Período de registro del GL^^^
+YEAR^GLW_DAILYDETAIL^014^C^3012^ine_year^0^^^12^^N^^^^^YEAR^Year^Año^Año^C^3^E^^^^^^^^^^^^^^^^^^^^^^4^^^^0000^^^^^^^^Año de registro del GL^^^
+TRANS_AMT^GLW_DAILYDETAIL^016^C^3013^inn_trans_amt^0^^^13^^N^^^^^TRANS_AMT^Transaction Amount^Monto de la transacción^Monto de la trans.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^###,###.00-^###,###.00-^^A^^^^^Monto de la transacción^^^
+UNITS^GLW_DAILYDETAIL^017^C^3014^inn_units^0^^^14^^N^^^^^UNITS^Units^Unidades^Unidades^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Unidades^^^
+PROCESS_ID^GLW_DAILYDETAIL^002^C^3015^dis_process_id^0^^^15^^Y^^^F^^PROCESS_ID^Process Identification^Identificación del proceso^ID del proceso^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+@^ADM_PROCMASTER^DESCRIPTION^^^^^^^^^^^16^0^^^^^^^^20^L^0^^^^
+BATCH_NO^GLW_DAILYDETAIL^003^C^3016^ine_batch_no^0^^^16^^Y^^^^^BATCH_NO^Batch Entry Control Number^Número de control de entrada de lote^N.º de entrada de lote^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLW_DAILYDETAIL^PRIMARY^GLW_DAILYDETAIL.FIRM_ID                 GLW_DAILYDETAIL.PROCESS_ID              GLW_DAILYDETAIL.BATCH_NO                GLW_DAILYDETAIL.JOURNAL_ID              GLW_DAILYDETAIL.GL_ADT_NO               GLW_DAILYDETAIL.POSTING_YEAR            GLW_DAILYDETAIL.POSTING_PER             GLW_DAILYDETAIL.TRNS_DATE               GLW_DAILYDETAIL.GL_ACCOUNT              GLW_DAILYDETAIL.SEQ_NO                  ^stbl("+FIRM_ID")+GLW_DAILYDETAIL.PROCESS_ID$+GLW_DAILYDETAIL.BATCH_NO$+GLW_DAILYDETAIL.JOURNAL_ID$+GLW_DAILYDETAIL.GL_ADT_NO$+GLW_DAILYDETAIL.POSTING_YEAR$+GLW_DAILYDETAIL.POSTING_PER$+GLW_DAILYDETAIL.TRNS_DATE$+GLW_DAILYDETAIL.GL_ACCOUNT$+GLW_DAILYDETAIL.SEQ_NO$^stbl("+FIRM_ID")+RD_REC_DATA.PROCESS_ID$+RD_REC_DATA.BATCH_NO$+RD_REC_DATA.JOURNAL_ID$+RD_REC_DATA.GL_ADT_NO$+RD_REC_DATA.POSTING_YEAR$+RD_REC_DATA.POSTING_PER$+RD_REC_DATA.TRNS_DATE$+RD_REC_DATA.GL_ACCOUNT$+RD_REC_DATA.SEQ_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.PROCESS_ID$                 RD_REC_DATA.BATCH_NO$                   RD_REC_DATA.JOURNAL_ID$                 RD_REC_DATA.GL_ADT_NO$                  RD_REC_DATA.POSTING_YEAR$               RD_REC_DATA.POSTING_PER$                RD_REC_DATA.TRNS_DATE$                  RD_REC_DATA.GL_ACCOUNT$                 RD_REC_DATA.SEQ_NO$                     
+{KeyDefsEnd}
+{GridCols}
+002GLW_DAILYDETAIL.JOURNAL_ID              ;003GLW_DAILYDETAIL.GL_ADT_NO               ;005GLW_DAILYDETAIL.POSTING_YEAR            ;006GLW_DAILYDETAIL.POSTING_PER             ;007GLW_DAILYDETAIL.TRNS_DATE               ;008GLW_DAILYDETAIL.GL_ACCOUNT              ;009GLW_DAILYDETAIL.REFERENCE               ;010GLW_DAILYDETAIL.DESCRIPTION             ;011GLW_DAILYDETAIL.PERIOD                  ;012GLW_DAILYDETAIL.YEAR                    ;013GLW_DAILYDETAIL.TRANS_AMT               ;014GLW_DAILYDETAIL.UNITS                   ;015GLW_DAILYDETAIL.PROCESS_ID              ;016GLW_DAILYDETAIL.BATCH_NO                ;
+{GridColsEnd}

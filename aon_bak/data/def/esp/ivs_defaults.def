@@ -1,0 +1,44 @@
+Barista Application Framework - Definition Module
+IVS_DEFAULTS - Item Default Values
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVS_DEFAULTS^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Item Default Values^Item Default Values^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVS_DEFAULTS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_D^IVS_DEFAULTS^002^C^^^^^^2^^Y^^^^^RECORD_ID_D^"D"^D^D^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"D"^"D"^^
+PRODUCT_TYPE^IVS_DEFAULTS^003^C^3001^dis_product_type^0^^^3^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^^20^L^^Product Type^^^
+ITEM_CLASS^IVS_DEFAULTS^010^C^3002^dis_item_class^0^^^4^^N^^^F^^ITEM_CLASS^Item Class^Item Class^Item Class^C^^E^^^^^^^^^[+FIRM_ID]+@^IVC_CLASCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Item Class^^^
+BUYER_CODE^IVS_DEFAULTS^007^C^3003^dis_buyer_code^0^^^5^^N^^^F^^BUYER_CODE^Buyer Code^Código de comprador^Cód. de comprador^C^^E^^^^^^^0^0^[+FIRM_ID]+"F"+@^IVC_BUYCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Buyer Code^^^
+AR_DIST_CODE^IVS_DEFAULTS^017^C^3004^dis_ar_dist_code^0^^^6^^N^^^F^^AR_DIST_CODE^Distribution Code^Código de distribución^Cód. de distr.^C^^E^^^^^^^0^0^[+FIRM_ID]+"D"+@^ARC_DISTCODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Distribution Code^^^
+UNIT_OF_SALE^IVS_DEFAULTS^004^C^3005^ine_unit_of_sale^0^^^7^^N^^^^^UNIT_OF_SALE^Unit Of Sale^Unit Of Sale^Unit Of Sale^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Unit Of Sale^^^
+PURCHASE_UM^IVS_DEFAULTS^005^C^3006^ine_purchase_um^0^^^8^^N^^^^^PURCHASE_UM^Unit Of Purchase^Unit Of Purchase^Unit Of Purch^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Unit Of Purchase^^^
+LOTSER_ITEM^IVS_DEFAULTS^008^C^3007^cbx_lotser_item^0^^^9^^N^^^^^LOTSER_ITEM^Lotted or Serialized Item?^Lotted or Serialized Item?^Lot/Ser Item?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Lotted or Serialized Item?^^^
+INVENTORIED^IVS_DEFAULTS^009^C^3008^cbx_inventoried^0^^^10^^N^^^^^INVENTORIED^Inventoried?^Inventoried?^Inventoried?^C^^C^IVS_DEFAULTS.LOTSER_ITEM^Y^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Inventoried?^^^
+STOCK_LEVEL^IVS_DEFAULTS^011^C^^^^^^11^^N^^^^^STOCK_LEVEL^Item Stocking Level [I/W]^Item Stocking Level^Item Stock^C^^L^^^^^+35^-8^^^^^^^^^^^^^^Item                          ~I   ;Warehouse                     ~W   ;^^1^^^^^^^^O;^^^^Item Stocking Level [I/W]^^^
+TAXABLE_FLAG^IVS_DEFAULTS^006^C^3009^cbx_taxable_flag^0^^^12^^N^^^^^TAXABLE_FLAG^Taxable [Y/N]?^Taxable?^Taxable?^C^^C^^^Y;N^^+35^-8^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Taxable [Y/N]?^^^
+ITEM_TYPE^IVS_DEFAULTS^018^C^3010^dis_item_type^0^^^13^^N^^^F^^ITEM_TYPE^Item Type^Item Type^Item Type^C^^E^^^^^^^0^0^[+FIRM_ID]+@^IVC_TYPECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Item Type^^^
+ABC_CODE^IVS_DEFAULTS^012^C^3011^ine_abc_code^0^^^14^^N^^^^^ABC_CODE^ABC Analysis Code^ABC Analysis Code^ABC Analys^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^ABC Analysis Code^^^
+EOQ_CODE^IVS_DEFAULTS^013^C^3012^lbx_eoq_code^0^^^15^^N^^^^^EOQ_CODE^EOQ Code [D/N/E]^EOQ Code^EOQ Code [^C^^L^^^^^^^^^^^^^^^^^^^^Derived                       ~D   ;Entered                       ~E   ;No Recalculation              ~N   ;^^1^^^^^^^^^^^^EOQ Code [D/N/E]^^^
+ORD_PNT_CODE^IVS_DEFAULTS^014^C^3013^lbx_ord_pnt_code^0^^^16^^N^^^^^ORD_PNT_CODE^Order Point Code [D/N/E]^Order Point Code^Order Poin^C^^L^^^^^^^^^^^^^^^^^^^^Derived                       ~D   ;Entered                       ~E   ;No Recalculation              ~N   ;^^1^^^^^^^^^^^^Order Point Code [D/N/E]^^^
+SAF_STK_CODE^IVS_DEFAULTS^015^C^3014^lbx_saf_stk_code^0^^^17^^N^^^^^SAF_STK_CODE^Safety Stock Code [D/N/E]^Safety Stock Code^Safety Sto^C^^L^^^^^^^^^^^^^^^^^^^^Derived                       ~D   ;Entered                       ~E   ;No Recalculation              ~N   ;^^1^^^^^^^^^^^^Safety Stock Code [D/N/E]^^^
+GL_INV_ACCT^IVS_DEFAULTS^020^C^3015^dis_gl_inv_acct^0^^^18^^N^^^F^^GL_INV_ACCT^GL Inventory Account^Inventory^Cta de IV^C^^E^^^^^-35^+4^0^0^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^General Ledger Accounts^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Inventory Account^^^
+GL_COGS_ACCT^IVS_DEFAULTS^021^C^3016^dis_gl_cogs_acct^0^^^19^^N^^^F^^GL_COGS_ACCT^GL Cost Of Goods Account^Cost Of Goods Sold^Cta. COGS^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Cost Of Goods Account^^^
+GL_INV_ADJ^IVS_DEFAULTS^022^C^3017^dis_gl_inv_adj^0^^^20^^N^^^F^^GL_INV_ADJ^GL Inventory Adjustment Acct^Inventory Adjustment^IV Adj Acct^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Inventory Adjustment Acct^^^
+GL_COGS_ADJ^IVS_DEFAULTS^023^C^3018^dis_gl_cogs_adj^0^^^21^^N^^^F^^GL_COGS_ADJ^GL COGS Adjustment Account^COGS Sold Adjustment^Cta. de aj. de COGS^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL COGS Adjustment Account^^^
+GL_PPV_ACCT^IVS_DEFAULTS^024^C^3019^dis_gl_ppv_acct^0^^^22^^N^^^F^^GL_PPV_ACCT^GL Purchase Price Variance^Purchase Price Variance^Cta. PPV^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Purchase Price Variance^^^
+GL_PUR_ACCT^IVS_DEFAULTS^025^C^3020^dis_gl_pur_acct^0^^^23^^N^^^F^^GL_PUR_ACCT^GL Purchase To Account^Purchases^Purch To Acct^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Purchase To Account^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVS_DEFAULTS^PRIMARY^IVS_DEFAULTS.FIRM_ID                    IVS_DEFAULTS.RECORD_ID_D                ^stbl("+FIRM_ID")+"D"^stbl("+FIRM_ID")+"D"^stbl("+FIRM_ID")                        "D"                                     
+{KeyDefsEnd}
+{GridCols}
+003IVS_DEFAULTS.PRODUCT_TYPE               ;004IVS_DEFAULTS.ITEM_CLASS                 ;005IVS_DEFAULTS.BUYER_CODE                 ;006IVS_DEFAULTS.AR_DIST_CODE               ;007IVS_DEFAULTS.UNIT_OF_SALE               ;008IVS_DEFAULTS.PURCHASE_UM                ;009IVS_DEFAULTS.LOTSER_ITEM                ;010IVS_DEFAULTS.INVENTORIED                ;012IVS_DEFAULTS.TAXABLE_FLAG               ;013IVS_DEFAULTS.ITEM_TYPE                  ;014IVS_DEFAULTS.ABC_CODE                   ;015IVS_DEFAULTS.EOQ_CODE                   ;016IVS_DEFAULTS.ORD_PNT_CODE               ;017IVS_DEFAULTS.SAF_STK_CODE               ;018IVS_DEFAULTS.GL_INV_ACCT                ;019IVS_DEFAULTS.GL_COGS_ACCT               ;020IVS_DEFAULTS.GL_INV_ADJ                 ;021IVS_DEFAULTS.GL_COGS_ADJ                ;022IVS_DEFAULTS.GL_PPV_ACCT                ;023IVS_DEFAULTS.GL_PUR_ACCT                ;
+{GridColsEnd}

@@ -1,0 +1,36 @@
+Barista Application Framework - Definition Module
+APM_VENDADDR - Vendor Purchasing Addresses
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APM_VENDADDR^^^^Vendor Purchasing Addresses^Vendor Purchasing Addresses^^^^^^^APM_VENDMAST^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APM_VENDADDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+VENDOR_ID^APM_VENDADDR^002^C^3001^dis_vendor_id^0^^^2^^Y^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vend ID^C^^E^^^^^^^60^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+PURCH_ADDR^APM_VENDADDR^003^C^3002^ine_purch_addr^0^^^3^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AINP;^^^PURCH_ADDR^Vendor Purchase Address Code^Address Code^Cd^C^^E^^^^^^^35^0^^^^^^^^^^^^^^2^0^^^00^^^^^30^R^0^Vendor Purchase Address Code^^^
+NAME^APM_VENDADDR^004^C^3003^ine_name^0^^^4^^N^^^^^NAME^Name^Name^Name^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^^^^^Name^^^
+ADDR_LINE_1^APM_VENDADDR^005^C^3004^ine_addr_line_1^0^^^5^^N^^^^^ADDR_LINE_1^Address Line 1^Address^Address Li^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^Address Line 1^^^
+ADDR_LINE_2^APM_VENDADDR^006^C^3005^ine_addr_line_2^0^^^6^^N^^^^^ADDR_LINE_2^Address Line 2^Address Line 2^Addr 2^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 2^^^
+CITY^APM_VENDADDR^007^C^3006^ine_city^0^^^7^^N^^^^^CITY^City Name^City^City^C^^E^^^^^^^176^^^^^^^^^^^^^^^22^^^^^^^^^^^^City Name^^^
+STATE_CODE^APM_VENDADDR^008^C^3007^ine_state_code^0^^^8^^N^^^^^STATE_CODE^State Code^State^State^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^^^^^State Code^^^
+ZIP_CODE^APM_VENDADDR^009^C^3008^ine_zip_code^0^^^9^^N^^^^^ZIP_CODE^Zip/Postal Code^Zip/Postal^Zip/Postal^C^P^E^^^^^+11^-1^80^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^Zip/Postal Code^^^
+PHONE_NO^APM_VENDADDR^010^C^3009^ine_phone_no^0^^^10^^N^^^^^PHONE_NO^Telephone Number^Telephone^Telephone^C^T^E^^^^^-11^+1^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Telephone Number^^^
+PHONE_EXTEN^APM_VENDADDR^011^C^3010^ine_phone_exten^0^^^11^^N^^^^^PHONE_EXTEN^Phone Extension^Ext^Ext^C^^E^^^^^+16^-1^35^^^^^^^^^^^^^^^4^^^^^^^^^^^^Phone Extension^^^
+FAX_NO^APM_VENDADDR^013^C^3011^ine_fax_no^0^^^12^^N^^^^^FAX_NO^Fax Telephone Number^Fax Phone^Fax Teleph^C^T^E^^^^^-16^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Fax Telephone Number^^^
+CONTACT_NAME^APM_VENDADDR^012^C^3012^ine_contact_name^0^^^13^^N^^^^^CONTACT_NAME^Contact Name^Contact^Contact^C^^E^^^^^^+1^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Contact Name^^^
+FOB^APM_VENDADDR^014^C^3013^ine_fob^0^^^14^^N^^^^^FOB^Free On Board^FOB^FOB^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Free On Board^^^
+AP_SHIP_VIA^APM_VENDADDR^015^C^3014^ine_ap_ship_via^0^^^15^^N^^^^^AP_SHIP_VIA^Vendor Ship Via^Ship Via^Vend Ship Via^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Vendor Ship Via^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APM_VENDADDR^PRIMARY^APM_VENDADDR.FIRM_ID                    APM_VENDADDR.VENDOR_ID                  APM_VENDADDR.PURCH_ADDR                 ^stbl("+FIRM_ID")+APM_VENDADDR.VENDOR_ID$+APM_VENDADDR.PURCH_ADDR$^stbl("+FIRM_ID")+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.PURCH_ADDR$^stbl("+FIRM_ID")                        RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.PURCH_ADDR$                 
+{KeyDefsEnd}
+{GridCols}
+002APM_VENDADDR.VENDOR_ID                  ;003APM_VENDADDR.PURCH_ADDR                 ;004APM_VENDADDR.NAME                       ;005APM_VENDADDR.ADDR_LINE_1                ;006APM_VENDADDR.ADDR_LINE_2                ;007APM_VENDADDR.CITY                       ;008APM_VENDADDR.STATE_CODE                 ;009APM_VENDADDR.ZIP_CODE                   ;010APM_VENDADDR.PHONE_NO                   ;011APM_VENDADDR.PHONE_EXTEN                ;012APM_VENDADDR.FAX_NO                     ;013APM_VENDADDR.CONTACT_NAME               ;014APM_VENDADDR.FOB                        ;015APM_VENDADDR.AP_SHIP_VIA                ;
+{GridColsEnd}

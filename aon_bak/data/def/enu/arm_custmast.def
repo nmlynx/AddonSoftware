@@ -1,0 +1,98 @@
+Barista Application Framework - Definition Module
+ARM_CUSTMAST - Customer Master
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARM_CUSTMAST^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-IDTL;AOPT-ORIV;AREA;AREC;BDEL;BREC;BSHO;^Invoice Detail Inquiry        IDTLM;Order/Invoice History Inquiry ORIVM;^Customer Master^Customer Master^^Customer Comments                       ~ARM_CUSTCMTS    ;Customer Job Number                     ~OPM_CUSTJOBS    ;Customer Master, Fax and Email          ~ARM_EMAILFAX    ;Customer Ship-To Addresses              ~ARM_CUSTSHIP    ;^ARM_CUSTCMTS;ARM_CUSTDET;ARM_CUSTPMTS;ARM_CUSTRPT_CTL;ARM_CUSTSHIP;ARM_EMAILFAX;^^^^^T^^^^^^N;O;V;U;^^^Name and Address;Profile;Aging and Sales Summary;^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARM_CUSTMAST^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+CUSTOMER_ID^ARM_CUSTMAST^002^C^3001^ine_customer_id^0^^^2^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^60^^^^^^^^^^^^^^2^6^^^^^^^I^#;^30^R^^Customer Number^^^
+CUSTOMER_NAME^ARM_CUSTMAST^003^C^3002^ine_customer_name^0^^^3^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^CUSTOMER_NAME^Customer Name^Customer Name^Cust Name^C^^E^^^^^^^240^^^^^^^^^^^^^^1^30^^^^^^^^^^^^Customer Name^^^
+ADDR_LINE_1^ARM_CUSTMAST^004^C^3101^ine_addr_line_1^1^^^4^1^N^^^^^ADDR_LINE_1^Address Line 1^Address^Addr^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^Address Line 1^^^
+ADDR_LINE_2^ARM_CUSTMAST^005^C^3102^ine_addr_line_2^1^^^5^^N^^^^^ADDR_LINE_2^Address Line 2^Address^Addr^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 2^^^
+ADDR_LINE_3^ARM_CUSTMAST^006^C^3103^ine_addr_line_3^1^^^6^^N^^^^^ADDR_LINE_3^Address Line 3^Address^Addr^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 3^^^
+ADDR_LINE_4^ARM_CUSTMAST^015^C^3104^ine_addr_line_4^1^^^7^^N^^^^^ADDR_LINE_4^Address Line 4^Address^Addr^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 4^^^
+CITY^ARM_CUSTMAST^016^C^3105^ine_city^1^^^8^^N^^^^^CITY^City Name^City^City^C^^E^^^^^^^176^^^^^^^^^^^^^^^22^^^^^^^^^^^^City Name^^^
+STATE_CODE^ARM_CUSTMAST^017^C^3106^ine_state_code^1^^^9^^N^^^^^STATE_CODE^State Code^St^State^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^^^^^State Code^^^
+ZIP_CODE^ARM_CUSTMAST^007^C^3107^ine_zip_code^1^^^10^^N^^^^^ZIP_CODE^Zip/Postal Code^Zip Code^Zip^C^P^E^^^^^+10^-1^80^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^Zip/Postal Code^^^
+COUNTRY^ARM_CUSTMAST^022^C^3108^ine_country^1^^^11^^N^^^^^COUNTRY^Country^Country^Ctry^C^^E^^^^^-10^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^Country^^^
+PHONE_NO^ARM_CUSTMAST^008^C^3109^ine_phone_no^1^^^12^^N^^^^^PHONE_NO^Telephone Number^Telephone Number^Tel No^C^T^E^^^^^^+1^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Telephone Number^^^
+PHONE_EXTEN^ARM_CUSTMAST^009^C^3110^ine_phone_exten^1^^^13^^N^^^^^PHONE_EXTEN^Phone Extension^Ext^Ext^C^^E^^^^^+15^-1^35^^^^^^^^^^^^^^^4^^^^^^^^^^^^Ext^^^
+FAX_NO^ARM_CUSTMAST^014^C^3111^ine_fax_no^1^^^14^^N^^^^^FAX_NO^Fax Telephone Number^Fax Number^Fax No^C^T^E^^^^^-15^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Fax Telephone Number^^^
+CONTACT_NAME^ARM_CUSTMAST^019^C^3112^ine_contact_name^1^^^15^^N^^^^^CONTACT_NAME^Contact Name^Contact Name^Cont Name^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Contact Name^^^
+ALT_SEQUENCE^ARM_CUSTMAST^011^C^3113^ine_alt_sequence^1^^^16^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Alternate Sequence^Alt Seq^C^^E^^^^^+34^-11^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Alternate Sequence^^^
+OPENED_DATE^ARM_CUSTMAST^025^C^3114^ind_opened_date^1^^^17^^N^^^C^^OPENED_DATE^Date Opened^Date Opened^Dt Open^C^1^D^^^^^^+1^70^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Opened^^^
+AR_SHIP_VIA^ARM_CUSTMAST^013^C^3115^ine_ar_ship_via^1^^^18^^N^^^^^AR_SHIP_VIA^Customer Ship Via^Customer Ship Via^Cust Ship Via^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Customer Ship Via^^^
+FOB^ARM_CUSTMAST^023^C^3116^ine_fob^1^^^19^^N^^^^^FOB^Free On Board^Free On Board [FOB]^FOB^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Free On Board^^^
+RESALE_NO^ARM_CUSTMAST^010^C^3117^ine_resale_no^1^^^20^^N^^^^^RESALE_NO^Resale Number^Resale Number^Resale No^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Resale Number^^^
+DB_NO^ARM_CUSTMAST^020^C^3118^ine_db_no^1^^^21^^N^^^^^DB_NO^Dunn & Bradstreet Number^DB Number^D&B No^C^^E^^^^^^^72^^^^^^^^^^^^^^^9^^^^^^^^^^^^Dunn & Bradstreet Number^^^
+SIC_CODE^ARM_CUSTMAST^021^C^3119^ine_sic_code^1^^^22^^N^^^^^SIC_CODE^Standard Industry Code^SIC Code^SIC Cd^C^^E^^^^^^^64^^^^^^^^^^^^^^^8^^^^^^^^^20^L^^SIC^^^
+RETAIN_CUST^ARM_CUSTMAST^018^C^3120^cbx_retain_cust^1^^^23^^N^^^^^RETAIN_CUST^Retain?^Retain?^Retain?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Retain?^^^
+CUSTOMER_TYPE^ARM_CUSTDET^035^A^3201^dis_customer_type^2^^^24^2^N^^^F^^CUSTOMER_TYPE^Customer Type^Customer Type^Cust Type^C^^E^^^^^^^35^0^[+FIRM_ID]+"L"+@^ARC_CUSTTYPE^CODE_DESC^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Customer Type^^^
+SLSPSN_CODE^ARM_CUSTDET^036^A^3202^dis_slspsn_code^2^^^25^^N^^^F^^SLSPSN_CODE^Salesperson Code^Salesperson Code^Salespsn Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"F"+@^ARC_SALECODE^CODE_DESC^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Salesperson Code^^^
+AR_TERMS_CODE^ARM_CUSTDET^037^A^3203^dis_ar_terms_code^2^^^26^^N^^^F^^AR_TERMS_CODE^Terms Code^Terms Code^Terms Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^ARC_TERMCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Terms Code^^^
+FRT_TERMS^ARM_CUSTDET^039^A^3204^dis_frt_terms^2^^^27^^N^^^F^^FRT_TERMS^Freight Terms Code^Freight Terms Code^Frt Terms^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^OPM_FRTTERMS^DESCRIPTION^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Freight Terms Code^^^
+TERRITORY^ARM_CUSTDET^040^A^3205^dis_territory^2^^^28^^N^^^F^^TERRITORY^Territory Code^Territory Code^Terr Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"H"+@^ARC_TERRCODE^CODE_DESC^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Territory Code^^^
+AR_DIST_CODE^ARM_CUSTDET^041^A^3206^dis_ar_dist_code^2^^^29^^N^^^F^^AR_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"D"+@^ARC_DISTCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Distribution Code^^^
+MESSAGE_CODE^ARM_CUSTDET^042^A^3207^dis_message_code^2^^^30^^N^^^F^^MESSAGE_CODE^Standard Message Code^Message Code^Msg Code^C^^E^^^^^^^35^0^[+FIRM_ID]+@^OPC_MSG_HDR^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^R^0^Standard Message Code^^^
+PRICING_CODE^ARM_CUSTDET^043^A^3208^dis_pricing_code^2^^^31^^N^^^F^^PRICING_CODE^Customer Pricing Code^Customer Pricing Code^Cust Pricing Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+@^OPC_PRICECDS^CODE_DESC^^^^^^^^^^^4^0^^^UUUU^^^^^20^L^0^Customer Pricing Code^^^
+DISC_CODE^ARM_CUSTDET^044^A^3209^dis_disc_code^2^^^32^^N^^^F^^DISC_CODE^Sales Discount Code^Sales Discount Code^Disc Code^C^^E^^^^^^^35^^[+FIRM_ID]+@^OPC_DISCCODE^CODE_DESC^^^^^^^^^^1^2^^^^^^^^^20^L^0^Sales Discount Code^^^
+LABEL_CODE^ARM_CUSTDET^045^A^3210^ine_label_code^2^^^33^^N^^^^^LABEL_CODE^Label Code^Label Code^Label Cd^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^^^^^Label Code^^^
+TAX_CODE^ARM_CUSTDET^038^A^3211^dis_tax_code^2^^^34^^N^^^F^^OP_TAX_CODE^Tax Code^Tax Code^Tax Cd^C^^E^^^^^+31^-10^70^0^[+FIRM_ID]+@^OPC_TAXCODE^CODE_DESC^^^^^^^^^^1^10^0^^^UUUUUUUUUU^^^^^20^L^0^Tax Code^^^
+AR_CYCLECODE^ARM_CUSTDET^077^A^3212^dis_ar_cyclecode^2^^^35^^N^^^F^^AR_CYCLECODE^AR Cycle Code^Cycle Code^Cycle Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^ARM_CYCLECOD^CODE_DESC^^^^^^^^^^1^2^0^^^UU^^^^^^^0^Cycle Code^^^
+SA_FLAG^ARM_CUSTDET^048^A^3213^lbx_sa_flag^2^^^36^^N^^^^^SA_FLAG^Sales Analysis [N/P/I]^Sales Analysis^SA [N/P/I]^C^^L^^^^^^^113^^^^^^^^^I^^^^Product Level                 ~P   ;Item Level                    ~I   ;No Sales Analysis             ~N   ;^1^1^^^^^^^^^^^^Sales Analysis [N/P/I]^^^
+CREDIT_LIMIT^ARM_CUSTDET^049^A^3214^inn_credit_limit^2^^^37^^N^^^^^CREDIT_LIMIT^Credit Limit^Credit Limit^Cred Lim^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Credit Limit^^^
+CRED_HOLD^ARM_CUSTDET^050^A^3215^lbx_cred_hold^2^^^38^^N^^^^^CRED_HOLD^Credit Hold^Credit Hold^Cred Hold^C^^L^^^^^^^100^0^^^^^^^^^^^^Yes                           ~Y   ;No                            ~N   ;Exempt                        ~E   ;^1^1^0^^^^^^^C;^^^0^Credit Hold [Y/N/E]^^^
+FINANCE_CHG^ARM_CUSTDET^046^A^3216^cbx_finance_chg^2^^^39^^N^^^^^FINANCE_CHG^Finance Charge?^Finance Charge?^Finance Charge?^C^^C^^^Y;N^^^+1^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^Finance Charge?^^^
+STATEMENTS^ARM_CUSTDET^047^A^3217^cbx_statements^2^^^40^^N^^^^^STATEMENTS^Statements?^Statements?^Statements?^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^Statements?^^^
+INV_HIST_FLG^ARM_CUSTDET^051^A^3218^cbx_inv_hist_flg^2^^^41^^N^^^^^INV_HIST_FLG^Retain Detail Invoice History?^Retain Detail Invoice History?^Retain Dtl Inv Hist?^C^^C^^^Y;N^^^^30^0^^^^^^^^Y^^^^^1^1^0^^^^^^^C;^^^0^Retain Detail Invoice History?^^^
+AGING_FUTURE^ARM_CUSTDET^052^A^3301^inn_aging_future^3^^^42^3^N^^^^^AGING_FUTURE^Aging Amount - Future^Future^Aging Fut^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Aging Amount - Future^^^
+AGING_CUR^ARM_CUSTDET^053^A^3302^inn_aging_cur^3^^^43^^N^^^^^AGING_CUR^Aging Amount - Current^Current^Aging Curr^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Aging Amount - Current^^^
+AGING_30^ARM_CUSTDET^054^A^3303^inn_aging_30^3^^^44^^N^^^^^AGING_30^Aging Amount -  30 Days^30 Days^Aging 30^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Aging Amount -  30 Days^^^
+AGING_60^ARM_CUSTDET^055^A^3304^inn_aging_60^3^^^45^^N^^^^^AGING_60^Aging Amount -  60 Days^60 Days^Aging 60^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Aging Amount -  60 Days^^^
+AGING_90^ARM_CUSTDET^056^A^3305^inn_aging_90^3^^^46^^N^^^^^AGING_90^Aging Amount -  90 Days^90 Days^Aging 90^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Aging Amount -  90 Days^^^
+AGING_120^ARM_CUSTDET^057^A^3306^inn_aging_120^3^^^47^^N^^^^^AGING_120^Aging Amount - 120 Days^120 Days^Aging 120^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Aging Amount - 120 Days^^^
+DSP_BALANCE^<<DISPLAY>>^034^D^3307^inn_dsp_balance^3^^^48^^^^^^^YTD_SALES^YTD Sales^Balance^^N^^N^^^^^^^64^^^^^^[ARM_CUSTDET.AGING_FUTURE]+[ARM_CUSTDET.AGING_CUR]+[ARM_CUSTDET.AGING_30]+[ARM_CUSTDET.AGING_60]+[ARM_CUSTDET.AGING_90]+[ARM_CUSTDET.AGING_120]^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+AVG_DAYS^ARM_CUSTPMTS^058^A^3308^inn_avg_days^3^^^49^^N^^^^^AVG_DAYS^Average Days to Pay^Average Days to Pay^Avg DtP^N^^N^^^^^+24^-7^56^^^^^^^^^^^^^^^7^^^^^^^^A;B;^^^^Average Days to Pay^^^
+LSTINV_DATE^ARM_CUSTPMTS^059^A^3309^ind_lstinv_date^3^^^50^^N^^^C^^LSTINV_DATE^Last Invoice Date^Last Invoice Date^Last Inv Date^C^1^D^^^^^^+1^70^^^^^^^^^^^^^^^8^^^^^^^^A;B;^^^^Last Invoice Date^^^
+LSTPAY_DATE^ARM_CUSTPMTS^060^A^3310^ind_lstpay_date^3^^^51^^N^^^C^^LSTPAY_DATE^Last Payment Date^Last Payment Date^Last Pmt Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^A;B;^^^^Last Payment Date^^^
+MTD_SALES^ARM_CUSTPMTS^061^A^3312^inn_mtd_sales^3^^^53^^N^^^^^MTD_SALES^MTD Sales^Sales MTD^MTD Sales^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^MTD Sales^^^
+MTD_COST^ARM_CUSTPMTS^062^A^3313^inn_mtd_cost^3^^^54^^N^^^^^MTD_COST^MTD Cost^Cost MTD^MTD Cst^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^MTD Cost^^^
+DSP_MTD_PROFIT^<<DISPLAY>>^026^D^3314^inn_dsp_mtd_profit^3^^^55^^^^^^^YTD_SALES^YTD Sales^Gross Profit^^N^^N^^^^^^^64^^^^^^[ARM_CUSTPMTS.MTD_SALES]-[ARM_CUSTPMTS.MTD_COST]^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+DSP_MTD_PROF_PCT^<<DISPLAY>>^027^D^3315^inn_dsp_mtd_prof_pct^3^^^56^^^^^^^PCT_VALUE^Percentage display^Gross Profit %^^N^^N^^^^^^^64^^^^^^(([ARM_CUSTPMTS.MTD_SALES]-[ARM_CUSTPMTS.MTD_COST])/[ARM_CUSTPMTS.MTD_SALES])*100^^^^^^^^^7^0^^^##0.00-^##0.00-^AR^^C;^^^0^^^^
+AVG_DAYS_MTD^ARM_CUSTPMTS^063^A^3316^inn_avg_days_mtd^3^^^57^^N^^^^^AVG_DAYS_MTD^Average Days to Pay/MTD^Av Days to Pay MTD^Avg DtP/MTD^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^^A;B;^^^^Average Days to Pay/MTD^^^
+MTD_HIGH_CRD^ARM_CUSTPMTS^064^A^3317^inn_mtd_high_crd^3^^^58^^N^^^^^MTD_HIGH_CRD^MTD High Credit^High Credit MTD^MTD High Cred^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^MTD High Credit^^^
+YTD_SALES^ARM_CUSTPMTS^065^A^3319^inn_ytd_sales^3^^^60^^N^^^^^YTD_SALES^YTD Sales^YTD Sales^YTD Sales^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^YTD Sales^^^
+YTD_COST^ARM_CUSTPMTS^066^A^3320^inn_ytd_cost^3^^^61^^N^^^^^YTD_COST^YTD Cost^YTD Cost^YTD Cst^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^YTD Cost^^^
+DSP_YTD_PROFIT^<<DISPLAY>>^028^D^3321^inn_dsp_ytd_profit^3^^^62^^^^^^^YTD_SALES^YTD Sales^^^N^^N^^^^^^^64^^^^^^[ARM_CUSTPMTS.YTD_SALES]-[ARM_CUSTPMTS.YTD_COST]^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+DSP_YTD_PROF_PCT^<<DISPLAY>>^029^D^3322^inn_dsp_ytd_prof_pct^3^^^63^^^^^^^PCT_VALUE^Percentage display^^^N^^N^^^^^^^64^^^^^^(([ARM_CUSTPMTS.YTD_SALES]-[ARM_CUSTPMTS.YTD_COST])/[ARM_CUSTPMTS.YTD_SALES])*100^^^^^^^^^7^0^^^##0.00-^##0.00-^AR^^C;^^^0^^^^
+AVG_DAYS_YTD^ARM_CUSTPMTS^067^A^3323^inn_avg_days_ytd^3^^^64^^N^^^^^AVG_DAYS_YTD^Average Days to Pay/YTD^Average Days to Pay/YTD^Avg DtP/YTD^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^##0.00-^^A^A;B;L;^^^^Average Days to Pay/YTD^^^
+YTD_HI_CRED^ARM_CUSTPMTS^068^A^3324^inn_ytd_hi_cred^3^^^65^^N^^^^^YTD_HI_CRED^YTD High Credit^YTD High Credit^YTD High Cred^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^YTD High Credit^^^
+PYR_SALES^ARM_CUSTPMTS^069^A^3326^inn_pyr_sales^3^^^67^^N^^^^^PYR_SALES^Prior YTD Sales^Prior YTD Sales^Prior YTD Sales^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Prior YTD Sales^^^
+PRI_YTD_COST^ARM_CUSTPMTS^070^A^3327^inn_pri_ytd_cost^3^^^68^^N^^^^^PRI_YTD_COST^Prior year's YTD Cost^Prior year's YTD Cost^Prior Yr's YTD Cst^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Prior year's YTD Cost^^^
+DSP_PRI_PROFIT^<<DISPLAY>>^030^D^3328^inn_dsp_pri_profit^3^^^69^^^^^^^YTD_SALES^YTD Sales^^^N^^N^^^^^^^64^^^^^^[ARM_CUSTPMTS.PYR_SALES]-[ARM_CUSTPMTS.PRI_YTD_COST]^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+DSP_PRI_PROF_PCT^<<DISPLAY>>^031^D^3329^inn_dsp_pri_prof_pct^3^^^70^^^^^^^PCT_VALUE^Percentage display^^^N^^N^^^^^^^64^^^^^^(([ARM_CUSTPMTS.PYR_SALES]-[ARM_CUSTPMTS.PRI_YTD_COST])/[ARM_CUSTPMTS.PYR_SALES])*100^^^^^^^^^7^0^^^##0.00-^##0.00-^AR^^C;^^^0^^^^
+AVG_DTP_PYTD^ARM_CUSTPMTS^071^A^3330^inn_avg_dtp_pytd^3^^^71^^N^^^^^AVG_DTP_PYTD^Average Days to Pay/Prior YTD^Average Days to Pay/Prior YTD^Avg DtP/Pri YTD^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^^A;B;L;^^^^Average Days to Pay/Prior YTD^^^
+PYR_HI_CRD^ARM_CUSTPMTS^072^A^3331^inn_pyr_hi_crd^3^^^72^^N^^^^^PYR_HI_CRD^Prior YTD High Credit^Prior YTD High Credit^Prior YTD High Cred^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Prior YTD High Credit^^^
+NMTD_SALES^ARM_CUSTPMTS^073^A^3333^inn_nmtd_sales^3^^^74^^N^^^^^NMTD_SALES^Next MTD Sales^Next MTD Sales^NMTD Sales^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Next MTD Sales^^^
+NXT_MTD_COST^ARM_CUSTPMTS^074^A^3334^inn_nxt_mtd_cost^3^^^75^^N^^^^^NXT_MTD_COST^Next MTD Cost^Next MTD Cost^NMTD Cst^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Next MTD Cost^^^
+DSP_NXT_PROFIT^<<DISPLAY>>^032^D^3335^inn_dsp_nxt_profit^3^^^76^^^^^^^YTD_SALES^YTD Sales^^^N^^N^^^^^^^64^^^^^^[ARM_CUSTPMTS.NMTD_SALES]-[ARM_CUSTPMTS.NXT_MTD_COST]^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+DSP_NXT_PROF_PCT^<<DISPLAY>>^033^D^3336^inn_dsp_nxt_prof_pct^3^^^77^^^^^^^PCT_VALUE^Percentage display^^^N^^N^^^^^^^64^^^^^^(([ARM_CUSTPMTS.NMTD_SALES]-[ARM_CUSTPMTS.NXT_MTD_COST])/[ARM_CUSTPMTS.NMTD_SALES])*100^^^^^^^^^7^0^^^##0.00-^##0.00-^AR^^C;^^^0^^^^
+AVG_DTP_NMTD^ARM_CUSTPMTS^075^A^3337^inn_avg_dtp_nmtd^3^^^78^^N^^^^^AVG_DTP_NMTD^Average Days to Pay/Next MTD^Average Days to Pay/Next MTD^Avg DtP/NMTD^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^^A;B;L;^^^^Average Days to Pay/Next MTD^^^
+NMTD_HIGH_CR^ARM_CUSTPMTS^076^A^3338^inn_nmtd_high_cr^3^^^79^^N^^^^^NMTD_HIGH_CR^Next MTD High Credit^Next MTD High Credit^NMTD High Cred^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Next MTD High Credit^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARM_CUSTMAST^PRIMARY^ARM_CUSTMAST.FIRM_ID                    ARM_CUSTMAST.CUSTOMER_ID                ^stbl("+FIRM_ID")+ARM_CUSTMAST.CUSTOMER_ID$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                
+ARM_CUSTDET^PRIMARY^ARM_CUSTDET.FIRM_ID                     ARM_CUSTDET.CUSTOMER_ID                 ARM_CUSTDET.AR_TYPE                     ^stbl("+FIRM_ID")+ARM_CUSTMAST.CUSTOMER_ID$+"  "^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+"  "^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                "  "                                    
+ARM_CUSTPMTS^PRIMARY^ARM_CUSTPMTS.FIRM_ID                    ARM_CUSTPMTS.CUSTOMER_ID                ^stbl("+FIRM_ID")+ARM_CUSTMAST.CUSTOMER_ID$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                
+{KeyDefsEnd}
+{GridCols}
+002ARM_CUSTMAST.CUSTOMER_ID                ;003ARM_CUSTMAST.CUSTOMER_NAME              ;004ARM_CUSTMAST.ADDR_LINE_1                ;005ARM_CUSTMAST.ADDR_LINE_2                ;006ARM_CUSTMAST.ADDR_LINE_3                ;007ARM_CUSTMAST.ADDR_LINE_4                ;008ARM_CUSTMAST.CITY                       ;009ARM_CUSTMAST.STATE_CODE                 ;010ARM_CUSTMAST.ZIP_CODE                   ;011ARM_CUSTMAST.COUNTRY                    ;012ARM_CUSTMAST.PHONE_NO                   ;013ARM_CUSTMAST.PHONE_EXTEN                ;014ARM_CUSTMAST.FAX_NO                     ;015ARM_CUSTMAST.CONTACT_NAME               ;016ARM_CUSTMAST.ALT_SEQUENCE               ;017ARM_CUSTMAST.OPENED_DATE                ;018ARM_CUSTMAST.AR_SHIP_VIA                ;019ARM_CUSTMAST.FOB                        ;020ARM_CUSTMAST.RESALE_NO                  ;021ARM_CUSTMAST.DB_NO                      ;022ARM_CUSTMAST.SIC_CODE                   ;023ARM_CUSTMAST.RETAIN_CUST                ;048<<DISPLAY>>.DSP_BALANCE                 ;055<<DISPLAY>>.DSP_MTD_PROFIT              ;056<<DISPLAY>>.DSP_MTD_PROF_PCT            ;062<<DISPLAY>>.DSP_YTD_PROFIT              ;063<<DISPLAY>>.DSP_YTD_PROF_PCT            ;069<<DISPLAY>>.DSP_PRI_PROFIT              ;070<<DISPLAY>>.DSP_PRI_PROF_PCT            ;076<<DISPLAY>>.DSP_NXT_PROFIT              ;077<<DISPLAY>>.DSP_NXT_PROF_PCT            ;
+{GridColsEnd}

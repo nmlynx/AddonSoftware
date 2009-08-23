@@ -1,0 +1,23 @@
+Barista Application Framework - Definition Module
+ADX_PROCPROG - Program/Process Record
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ADX_PROCPROG^^^^Program/Process Record^Program/Process Record^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+PROGRAM_NAME^ADX_PROCPROG^001^C^3001^ine_program_name^0^^^1^^Y^^^^^PROGRAM_NAME^Program Name^Program Name^Prog Name^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^^^^^Program Name^^^
+PROCESS_ID^ADX_PROCPROG^002^C^3002^dis_process_id^0^^^2^^Y^^^F^^PROCESS_ID^Process Identification^Process Identification^Process ID^C^^E^^^^^^^0^0^^ADM_PROCMASTER^DESCRIPTION^^^^^^^^^^^16^0^^^^^^^^20^L^0^Process Identification^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ADX_PROCPROG^PRIMARY^ADX_PROCPROG.PROGRAM_NAME               ADX_PROCPROG.PROCESS_ID                 ^ADX_PROCPROG.PROGRAM_NAME$+ADX_PROCPROG.PROCESS_ID$^RD_REC_DATA.PROGRAM_NAME$+RD_REC_DATA.PROCESS_ID$^RD_REC_DATA.PROGRAM_NAME$               RD_REC_DATA.PROCESS_ID$                 
+{KeyDefsEnd}
+{GridCols}
+001ADX_PROCPROG.PROGRAM_NAME               ;002ADX_PROCPROG.PROCESS_ID                 ;
+{GridColsEnd}

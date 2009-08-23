@@ -1,0 +1,36 @@
+Barista Application Framework - Definition Module
+OPW_SCHEDULE - Shipping Schedule Work
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPW_SCHEDULE^^^^Shipping Schedule Work^Shipping Schedule Work^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPW_SCHEDULE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+ITEM_IDDES^OPW_SCHEDULE^002^C^3001^ine_item_iddes^0^^^2^^Y^^^^^ITEM_IDDES^Item Number/Description^Item Number/Description^Item No/Desc^C^^E^^^^^^^^^^^^^^^^^^^^^^40^^^^^^^^^^^^Item Number/Description^^^
+WAREHOUSE_ID^OPW_SCHEDULE^003^C^3002^dis_warehouse_id^0^^^3^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ORDER_NO^OPW_SCHEDULE^004^C^3003^ine_order_no^0^^^4^^Y^^^^^ORDER_NO^Sales Order Number^Sales Order Number^Sales Ord No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Sales Order Number^^^
+LINE_NO^OPW_SCHEDULE^005^C^3004^ine_line_no^0^^^5^^Y^^^^^LINE_NO^Detail Line Item Number^Detail Line Item Number^Dtl Line Item No^C^S^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Detail Line Item Number^^^
+AR_TYPE^OPW_SCHEDULE^006^C^^^^^^6^^N^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^AR Type [Not Used]^"  "^^
+CUSTOMER_ID^OPW_SCHEDULE^007^C^3005^dis_customer_id^0^^^7^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^Customer N^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+PRODUCT_TYPE^OPW_SCHEDULE^008^C^3006^dis_product_type^0^^^8^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^^20^L^^Product Type^^^
+LINE_CODE^OPW_SCHEDULE^010^C^3007^dis_line_code^0^^^10^^N^^^F^^LINE_CODE^Line Code^Código de línea^Cód. de línea^C^^E^^^^^^^0^0^[FIRM_ID]+@^OPC_LINECODE^CODE_DESC^^^^^^^^^^^1^0^^^^^^^^^^0^Line Code^^^
+ORDER_STATUS^OPW_SCHEDULE^011^C^3008^ine_order_status^0^^^11^^N^^^^^ORDER_STATUS^Order Status [O/B/C/I/Q/R]^Order Status [O/B/C/I/Q/R]^Ord Status^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Order Status [O/B/C/I/Q/R]^^^
+COMMIT_FLAG^OPW_SCHEDULE^013^C^3009^cbx_commit_flag^0^^^13^^N^^^^^COMMIT_FLAG^Committed?^Committed?^Committed?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Committed?^^^
+EST_SHP_DATE^OPW_SCHEDULE^015^C^3010^ind_est_shp_date^0^^^15^^N^^^C^^EST_SHP_DATE^Estimated Ship Date^Estimated Ship Date^Est Ship Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Estimated Ship Date^^^
+ORDER_DATE^OPW_SCHEDULE^016^C^3011^ind_order_date^0^^^16^^N^^^C^^ORDER_DATE^Order Date^Order Date^Ord Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Order Date^^^
+QTY_ORDERED^OPW_SCHEDULE^017^C^3012^inn_qty_ordered^0^^^17^^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity Ordered^Qty Ord^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^Quantity Ordered^^^
+EXTENDED_AMT^OPW_SCHEDULE^018^C^3013^inn_extended_amt^0^^^18^^N^^^^^EXTENDED_AMT^Extended Amount^Extended Amount^Ext Amt^N^^N^^^^^^^0^0^^^^^^^^^^^^^^15^0^^^^^^A^^^^0^Extended Amount^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPW_SCHEDULE^PRIMARY^OPW_SCHEDULE.FIRM_ID                    OPW_SCHEDULE.ITEM_IDDES                 OPW_SCHEDULE.WAREHOUSE_ID               OPW_SCHEDULE.ORDER_NO                   OPW_SCHEDULE.LINE_NO                    ^stbl("+FIRM_ID")+OPW_SCHEDULE.ITEM_IDDES$+OPW_SCHEDULE.WAREHOUSE_ID$+OPW_SCHEDULE.ORDER_NO$+OPW_SCHEDULE.LINE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.ITEM_IDDES$+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.ORDER_NO$+RD_REC_DATA.LINE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.ITEM_IDDES$                 RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.ORDER_NO$                   RD_REC_DATA.LINE_NO$                    
+{KeyDefsEnd}
+{GridCols}
+002OPW_SCHEDULE.ITEM_IDDES                 ;003OPW_SCHEDULE.WAREHOUSE_ID               ;004OPW_SCHEDULE.ORDER_NO                   ;005OPW_SCHEDULE.LINE_NO                    ;007OPW_SCHEDULE.CUSTOMER_ID                ;008OPW_SCHEDULE.PRODUCT_TYPE               ;010OPW_SCHEDULE.LINE_CODE                  ;011OPW_SCHEDULE.ORDER_STATUS               ;013OPW_SCHEDULE.COMMIT_FLAG                ;015OPW_SCHEDULE.EST_SHP_DATE               ;016OPW_SCHEDULE.ORDER_DATE                 ;017OPW_SCHEDULE.QTY_ORDERED                ;018OPW_SCHEDULE.EXTENDED_AMT               ;
+{GridColsEnd}

@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+POW_QARECREJTOT - QA Receipt Rejection Totals
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POW_QARECREJTOT^^^^QA Receipt Rejection Totals^QA Receipt Rejection Totals^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POW_QARECREJTOT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+REJECT_CODE^POW_QARECREJTOT^002^C^3001^dis_reject_code^0^^^2^^Y^^^F^^REJECT_CODE^Rejection Code^Rejection Code^Rejection Cd^C^^E^^^^^^^0^0^[FIRM_ID]+@^POC_REJCTCOD^DESCRIPTION^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^^^^
+DESCRIPTION^POW_QARECREJTOT^003^C^3002^ine_description^0^^^3^^N^^^^^DESCRIPTION^Description^Descripción^Descr.^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^^^^
+TOT_QTY_REJ^POW_QARECREJTOT^004^C^3003^inn_tot_qty_rej^0^^^4^^N^^^^^TOT_QTY_REJ^Total Quantity Rejected^Total Quantity Rejected^Tot Qty Rejected^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^^^^
+TOT_VAL_REJ^POW_QARECREJTOT^005^C^3004^inn_tot_val_rej^0^^^5^^N^^^^^TOT_VAL_REJ^Total Value Rejected^Total Value Rejected^Tot Value Rejected^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POW_QARECREJTOT^PRIMARY^POW_QARECREJTOT.FIRM_ID                 POW_QARECREJTOT.REJECT_CODE             ^stbl("+FIRM_ID")+POW_QARECREJTOT.REJECT_CODE$^stbl("+FIRM_ID")+RD_REC_DATA.REJECT_CODE$^stbl("+FIRM_ID")                        RD_REC_DATA.REJECT_CODE$                
+{KeyDefsEnd}
+{GridCols}
+002POW_QARECREJTOT.REJECT_CODE             ;003POW_QARECREJTOT.DESCRIPTION             ;004POW_QARECREJTOT.TOT_QTY_REJ             ;005POW_QARECREJTOT.TOT_VAL_REJ             ;
+{GridColsEnd}

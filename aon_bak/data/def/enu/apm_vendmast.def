@@ -1,0 +1,42 @@
+Barista Application Framework - Definition Module
+APM_VENDMAST - Vendor Master
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APM_VENDMAST^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-OINV;AOPT-RHST;ARNF;AWRI;BDEL;BSHO;^Open Invoice Inquiry          OINVM;Receipt History Inquiry       RHSTM;^Vendor Master^Vendor Master^^Vendor Codes and History                ~APM_VENDHIST    ;Vendor Comments                         ~APM_VENDCMTS    ;Vendor Master, Fax & Email              ~APM_EMAILFAX    ;Vendor Purchasing Addresses             ~APM_VENDADDR    ;Vendor Replenishment Detail             ~APM_VENDREPL    ;^APM_EMAILFAX;APM_VENDADDR;APM_VENDCMTS;APM_VENDHIST;APM_VENDREPL;APM_VENDRPT_CTL;^^^^^T^^^^^^O;V;N;U;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APM_VENDMAST^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+VENDOR_ID^APM_VENDMAST^002^C^3001^ine_vendor_id^0^^^2^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AINP;^^^VENDOR_ID^Vendor Number^Vendor ID^Vend ID^C^^E^^^^^^^60^0^^^^^^^^^^^^^1^6^0^^^UUUUUU^^^I^#;^30^R^0^Vendor Number^^^
+VENDOR_NAME^APM_VENDMAST^003^C^3002^ine_vendor_name^0^^^3^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^VENDOR_NAME^Vendor Name^Vendor Name^Vend Name^C^^E^^^^^^^240^^^^^^^^^^^Vendor Information^^^1^30^^^^^^^^^^^^Vendor Name^^^
+ADDR_LINE_1^APM_VENDMAST^004^C^3003^ine_addr_line_1^0^^^4^^N^^^^^ADDR_LINE_1^Address Line 1^Address^Address Li^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^Address Line 1^^^
+ADDR_LINE_2^APM_VENDMAST^005^C^3004^ine_addr_line_2^0^^^5^^N^^^^^ADDR_LINE_2^Address Line 2^Address Line 2^Addr 2^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 2^^^
+CITY^APM_VENDMAST^006^C^3005^ine_city^0^^^6^^N^^^^^CITY^City Name^City^City^C^^E^^^^^^^176^^^^^^^^^^^^^^^22^^^^^^^^^^^^City Name^^^
+STATE_CODE^APM_VENDMAST^007^C^3006^ine_state_code^0^^^7^^N^^^^^STATE_CODE^State Code^State^State^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^^^^^State Code^^^
+ZIP_CODE^APM_VENDMAST^008^C^3007^ine_zip_code^0^^^8^^N^^^^^ZIP_CODE^Zip/Postal Code^Zip^Zip^C^P^E^^^^^+10^-1^80^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^Zip/Postal Code^^^
+PHONE_NO^APM_VENDMAST^009^C^3008^ine_phone_no^0^^^9^^N^^^^^PHONE_NO^Telephone Number^Telephone^Telephone^C^T^E^^^^^-10^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Telephone Number^^^
+PHONE_EXTEN^APM_VENDMAST^010^C^3009^ine_phone_exten^0^^^10^^N^^^^^PHONE_EXTEN^Phone Extension^Ext^Ext^C^^E^^^^^+15^-1^35^^^^^^^^^^^^^^^4^^^^^^^^^^^^Phone Extension^^^
+CONTACT_NAME^APM_VENDMAST^011^C^3010^ine_contact_name^0^^^11^^N^^^^^CONTACT_NAME^Contact Name^Contact^Cont Name^C^^E^^^^^-15^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Contact Name^^^
+ALT_SEQUENCE^APM_VENDMAST^012^C^3011^ine_alt_sequence^0^^^12^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Alternate Sequence^Alt Seq^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Alternate Sequence^^^
+HOLD_FLAG^APM_VENDMAST^014^C^3012^cbx_hold_flag^0^^^13^^N^^^^^HOLD_FLAG^Hold For Manual Release [Y/N]?^Hold Invoices^Hold Invoices^C^^C^^^Y;N^^^+1^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Hold For Manual Release?^^^
+FEDERAL_ID^APM_VENDMAST^015^C^3013^ine_federal_id^0^^^14^^N^^^^^FEDERAL_ID^Federal ID Number^Federal ID Number^Fed ID No^C^^E^^^^^+35^-10^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Federal ID Number^^^
+VENDOR_1099^APM_VENDMAST^016^C^3014^cbx_vendor_1099^0^^^15^^N^^^^^VENDOR_1099^Vendor 1099 Flag^1099?^Vend 1099 Flag^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Vendor 1099 Flag^^^
+VENDOR_ACCT^APM_VENDMAST^017^C^3015^ine_vendor_acct^0^^^16^^N^^^^^VENDOR_ACCT^Vendor Account ID^Acct ID^Vend Acct ID^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Vendor Account ID^^^
+FAX_NO^APM_VENDMAST^018^C^3016^ine_fax_no^0^^^17^^N^^^^^FAX_NO^Fax Telephone Number^Fax Number^Fax Teleph^C^T^E^^^^^^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Fax Telephone Number^^^
+FOB^APM_VENDMAST^019^C^3017^ine_fob^0^^^18^^N^^^^^FOB^Free On Board^Free On Board [FOB]^FOB^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Free On Board^^^
+AP_SHIP_VIA^APM_VENDMAST^020^C^3018^ine_ap_ship_via^0^^^19^^N^^^^^AP_SHIP_VIA^Vendor Ship Via^Ship Via^Vend Ship Via^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Vendor Ship Via^^^
+OPENED_DATE^APM_VENDMAST^022^C^3019^ind_opened_date^0^^^20^^N^^^C^^OPENED_DATE^Date Opened^Date Opened^Dt Open^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;^^^^Date Opened^^^
+TEMP_VEND^APM_VENDMAST^023^C^3020^cbx_temp_vend^0^^^21^^N^^^^^TEMP_VEND^Temporary Vendor^Temporary Vendor^Temporary Vendor^C^^C^^^Y;N^^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APM_VENDMAST^PRIMARY^APM_VENDMAST.FIRM_ID                    APM_VENDMAST.VENDOR_ID                  ^stbl("+FIRM_ID")+APM_VENDMAST.VENDOR_ID$^stbl("+FIRM_ID")+RD_REC_DATA.VENDOR_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.VENDOR_ID$                  
+{KeyDefsEnd}
+{GridCols}
+002APM_VENDMAST.VENDOR_ID                  ;003APM_VENDMAST.VENDOR_NAME                ;004APM_VENDMAST.ADDR_LINE_1                ;005APM_VENDMAST.ADDR_LINE_2                ;006APM_VENDMAST.CITY                       ;007APM_VENDMAST.STATE_CODE                 ;008APM_VENDMAST.ZIP_CODE                   ;009APM_VENDMAST.PHONE_NO                   ;010APM_VENDMAST.PHONE_EXTEN                ;011APM_VENDMAST.CONTACT_NAME               ;012APM_VENDMAST.ALT_SEQUENCE               ;013APM_VENDMAST.HOLD_FLAG                  ;014APM_VENDMAST.FEDERAL_ID                 ;015APM_VENDMAST.VENDOR_1099                ;016APM_VENDMAST.VENDOR_ACCT                ;017APM_VENDMAST.FAX_NO                     ;018APM_VENDMAST.FOB                        ;019APM_VENDMAST.AP_SHIP_VIA                ;020APM_VENDMAST.OPENED_DATE                ;021APM_VENDMAST.TEMP_VEND                  ;
+{GridColsEnd}

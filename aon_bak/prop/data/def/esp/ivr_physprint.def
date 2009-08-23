@@ -1,0 +1,23 @@
+Barista Application Framework - Definition Module
+IVR_PHYSPRINT - Print Count Sheets
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 8.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVR_PHYSPRINT^/usr/local/addon_svn_sandbox/apps/aon/;^ACUS;AREC;ASVA;AWIN;^^Print Count Sheets^Print Count Sheets^^^^^^^^S^^^^^^H;N;U;^^[+DIR_PGM]ivr_physcountsheets.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+WAREHOUSE_ID^IVR_PHYSPRINT^001^C^3001^dis_warehouse_id^0^^1^^N^/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+PRINT_SYS_QTYS^IVR_PHYSPRINT^002^C^3002^cbx_print_sys_qtys^0^^2^^N^^^^^PRINT_SYS_QTYS^Print System Quantities^Print System Quantities?^Print Sys Qtys?^C^^C^^^Y;N^0^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^Print the quantity on hand the system thinks it has for each item?^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVR_PHYSPRINT^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001IVR_PHYSPRINT.WAREHOUSE_ID              ;002IVR_PHYSPRINT.PRINT_SYS_QTYS            ;
+{GridColsEnd}

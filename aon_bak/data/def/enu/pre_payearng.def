@@ -1,0 +1,36 @@
+Barista Application Framework - Definition Module
+PRE_PAYEARNG - Payroll Entry - Earnings
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRE_PAYEARNG^^^^Payroll Entry - Earnings^Payroll Entry - Earnings^^^^^^^PRE_PAYROLL^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+EMPLOYEE_NO^PRE_PAYEARNG^002^C^3001^dis_employee_no^0^^^1^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+CHECK_TYPE^PRE_PAYEARNG^003^C^3002^ine_check_type^0^^^2^^Y^^^^^CHECK_TYPE^Check or Transaction Type^Check or Transaction Type^Chk/Trans Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Check or Transaction Type^^^
+SEQUENCE_NUM^PRE_PAYEARNG^004^C^3003^ine_sequence_num^0^^^3^^Y^^^^^SEQUENCE_NUM^Sequence Number^Sequence Number^Seq No^C^S^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Sequence Number^^^
+CHECK_NO^PRE_PAYEARNG^005^C^3004^ine_check_no^0^^^4^^Y^^^^^CHECK_NO^Check Number^Check Number^Chk No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Check Number^^^
+RECORD_ID_A^PRE_PAYEARNG^006^C^^^^^^5^^Y^^^^^RECORD_ID_A^"A"^A^A^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"A"^"A"^^
+PR_ENTRY_SEQ^PRE_PAYEARNG^007^C^3005^ine_pr_entry_seq^0^^^6^^Y^^^^^PR_ENTRY_SEQ^Payroll Entry Sequence Number^Seq^Seq^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Payroll Entry Sequence Number^^^
+PAY_CODE^PRE_PAYEARNG^008^C^3006^dis_pay_code^0^^^7^^N^^^F^^PAY_CODE^Pay Code^Pay Code^Pay Code^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^PRC_PAYCODE^PR_CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^L^^Pay Code^^^
+TITLE_CODE^PRE_PAYEARNG^009^C^3007^dis_title_code^0^^^8^^N^^^F^^TITLE_CODE^Title Code^Title Code^Title Code^C^^E^^^^^^^^^[+FIRM_ID]+"F"+@^PRC_TITLCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^30^L^^Title Code^^^
+DEPT_CODE^PRE_PAYEARNG^010^C^3008^ine_dept_code^0^^^9^^N^^^^^DEPT_CODE^Department Code^Department Code^Dept Code^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Department Code^^^
+RATE^PRE_PAYEARNG^012^C^3009^inn_rate^0^^^10^^N^^^^^RATE^Rate^Rate^Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Rate^^^
+UNITS^PRE_PAYEARNG^013^C^3010^inn_units^0^^^11^^N^^^^^UNITS^Units^Units^Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Units^^^
+EXTENDED_AMT^PRE_PAYEARNG^014^C^3011^inn_extended_amt^0^^^12^^N^^^^^EXTENDED_AMT^Extended Amount^Extended Amount^Ext Amt^N^^N^^^^^^^0^0^^^^^^^^^^^^^^15^0^^^^^^A^^^^0^Extended Amount^^^
+PR_JOB_NO^PRE_PAYEARNG^015^C^3012^ine_pr_job_no^0^^^13^^N^^^^^PR_JOB_NO^Job Number^Job Number^Job No^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^G;L;^^^^Job Number^^^
+BASE_RATE^PRE_PAYEARNG^016^C^3013^inn_base_rate^0^^^14^^N^^^^^BASE_RATE^Base Pay Rate^Base Pay Rate^Base Pay Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^G;L;^^^^Base Pay Rate^^^
+FIRM_ID^PRE_PAYEARNG^001^C^^^^^^15^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRE_PAYEARNG^PRIMARY^PRE_PAYEARNG.FIRM_ID                    PRE_PAYEARNG.EMPLOYEE_NO                PRE_PAYEARNG.CHECK_TYPE                 PRE_PAYEARNG.SEQUENCE_NUM               PRE_PAYEARNG.CHECK_NO                   PRE_PAYEARNG.RECORD_ID_A                PRE_PAYEARNG.PR_ENTRY_SEQ               ^stbl("+FIRM_ID")+PRE_PAYEARNG.EMPLOYEE_NO$+PRE_PAYEARNG.CHECK_TYPE$+PRE_PAYEARNG.SEQUENCE_NUM$+PRE_PAYEARNG.CHECK_NO$+"A"+PRE_PAYEARNG.PR_ENTRY_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$+RD_REC_DATA.CHECK_TYPE$+RD_REC_DATA.SEQUENCE_NUM$+RD_REC_DATA.CHECK_NO$+"A"+RD_REC_DATA.PR_ENTRY_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                RD_REC_DATA.CHECK_TYPE$                 RD_REC_DATA.SEQUENCE_NUM$               RD_REC_DATA.CHECK_NO$                   "A"                                     RD_REC_DATA.PR_ENTRY_SEQ$               
+{KeyDefsEnd}
+{GridCols}
+001PRE_PAYEARNG.EMPLOYEE_NO                ;002PRE_PAYEARNG.CHECK_TYPE                 ;003PRE_PAYEARNG.SEQUENCE_NUM               ;004PRE_PAYEARNG.CHECK_NO                   ;006PRE_PAYEARNG.PR_ENTRY_SEQ               ;007PRE_PAYEARNG.PAY_CODE                   ;008PRE_PAYEARNG.TITLE_CODE                 ;009PRE_PAYEARNG.DEPT_CODE                  ;010PRE_PAYEARNG.RATE                       ;011PRE_PAYEARNG.UNITS                      ;012PRE_PAYEARNG.EXTENDED_AMT               ;
+{GridColsEnd}

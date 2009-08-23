@@ -1,0 +1,37 @@
+Barista Application Framework - Definition Module
+SFR_WORDTRANS - Work Order Transaction History Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFR_WORDTRANS^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Work Order Transaction History Report^Work Order Transaction History Report^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]sfr_wordtrans.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+REPORT_SEQ^SFR_WORDTRANS^001^C^3001^lbx_report_seq^0^^^1^^N^^^^^REPORT_SEQ^Report Sequence^Report Sequence^Report Sequence^C^^L^^^^^0^0^0^0^^^^^^^^W^^^^Work Order Number             ~W   ;Work Order Type               ~T   ;^^1^^^^^^^^1;2;^^^^^^^
+WAREHOUSE_ID^SFR_WORDTRANS^002^C^3002^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse Code^Whse ID^C^^E^SFR_WORDTRANS.REPORT_SEQ^B^^^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^1;2;^20^L^0^Enter a two-digit warehouse ID^^^
+WO_TYPE_1^SFR_WORDTRANS^003^C^3003^ine_wo_type^0^^^3^^N^^^^^WO_TYPE^Work Order Type^WOType^WO Type^C^^E^SFR_WORDTRANS.REPORT_SEQ^T^^^0^0^0^0^^^^^^^^^^^^^^2^^^^^^^^1;2;^^^^^^^
+WO_TYPE_2^SFR_WORDTRANS^003^C^3004^ine_wo_type^0^^^3^^N^^^^^WO_TYPE^Work Order Type^WOType^WO Type^C^^E^SFR_WORDTRANS.REPORT_SEQ^T^^^0^0^0^0^^^^^^^^^^^^^^2^^^^^^^^1;2;^^^^^^^
+WO_NO_1^SFR_WORDTRANS^004^C^3005^ine_wo_no^0^^^4^^N^^^^^WO_NO^Work Order Number^WO Number^WO No^C^^E^SFR_WORDTRANS.REPORT_SEQ^W^^^0^0^0^0^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+WO_NO_2^SFR_WORDTRANS^004^C^3006^ine_wo_no^0^^^4^^N^^^^^WO_NO^Work Order Number^WO Number^WO No^C^^E^SFR_WORDTRANS.REPORT_SEQ^W^^^0^0^0^0^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+CUSTOMER_ID_1^SFR_WORDTRANS^005^C^3007^dis_customer_id^0^^^5^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^SFR_WORDTRANS.REPORT_SEQ^C^^^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+CUSTOMER_ID_2^SFR_WORDTRANS^005^C^3008^dis_customer_id^0^^^5^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^SFR_WORDTRANS.REPORT_SEQ^C^^^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+BILL_NO_1^SFR_WORDTRANS^006^C^3009^dis_bill_no^0^^^6^^N^^^F^^RPT_BILL_NO^Bill of Materials Number^Bill Number^Bill of Mats No^C^^E^SFR_WORDTRANS.REPORT_SEQ^B^^^0^0^160^0^[+FIRM_ID]+@^BMM_BILLMAST^BILL_NO^^^^^^^^^^^20^0^^^^^^^1;2;^20^L^0^^^^
+BILL_NO_2^SFR_WORDTRANS^006^C^3010^dis_bill_no^0^^^6^^N^^^F^^RPT_BILL_NO^Bill of Materials Number^Bill Number^Bill of Mats No^C^^E^SFR_WORDTRANS.REPORT_SEQ^B^^^0^0^160^0^[+FIRM_ID]+@^BMM_BILLMAST^BILL_NO^^^^^^^^^^^20^0^^^^^^^1;2;^20^L^0^^^^
+REPORT_SEQ1^SFR_WORDTRANS^007^C^3011^lbx_report_seq1^0^^^7^^N^^^^^REPORT_SEQ^Report Sequence^Open/Closed/Both^Report Sequence^C^^L^^^^^0^0^0^0^^^^^^^^B^^^^Open                          ~O   ;Closed                        ~C   ;Both                          ~B   ;^^1^^^^^^^^1;2;^^^^^^^
+TRANS_DATE_START^SFR_WORDTRANS^008^C^3012^ind_trans_date_start^0^^^8^^N^^^C^^TRANS_DATE_START^Transaction Start Date^Starting Date^Start Date^C^1^D^^^^^0^0^0^0^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+TRANS_DATE_END^SFR_WORDTRANS^009^C^3013^ind_trans_date_end^0^^^9^^N^^^C^^TRANS_DATE_END^Transaction End Date^Ending Date^End Date^C^1^D^^^^^0^0^0^0^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+MATERIALS^SFR_WORDTRANS^010^C^3014^cbx_materials^0^^^10^^N^^^^^OPEN^Open?^Materials^Open?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^0^^^^^^^^^^0^^^^
+OPERATIONS^SFR_WORDTRANS^011^C^3015^cbx_operations^0^^^11^^N^^^^^CLOSED^Closed?^Operations^Closed?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^0^^^^^^^^^^0^^^^
+SUBCONTRACTORS^SFR_WORDTRANS^012^C^3016^cbx_subcontractors^0^^^12^^N^^^^^PLANNED^Planned?^SubContractors^Planned?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFR_WORDTRANS^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001SFR_WORDTRANS.REPORT_SEQ                ;002SFR_WORDTRANS.WAREHOUSE_ID              ;003SFR_WORDTRANS.WO_TYPE                   ;004SFR_WORDTRANS.WO_NO                     ;005SFR_WORDTRANS.CUSTOMER_ID               ;006SFR_WORDTRANS.BILL_NO                   ;007SFR_WORDTRANS.REPORT_SEQ1               ;008SFR_WORDTRANS.TRANS_DATE_START          ;009SFR_WORDTRANS.TRANS_DATE_END            ;010SFR_WORDTRANS.MATERIALS                 ;011SFR_WORDTRANS.OPERATIONS                ;012SFR_WORDTRANS.SUBCONTRACTORS            ;
+{GridColsEnd}

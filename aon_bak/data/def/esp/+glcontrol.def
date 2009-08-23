@@ -1,0 +1,155 @@
+Barista Application Framework - Definition Module
++GLCONTROL - GL Posting Control Global
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
++GLCONTROL^^^^GL Posting Control Global^Control global de contabilización de GL^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^+GLCONTROL^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+SYSTEM_ID^+GLCONTROL^002^C^3001^dis_system_id^0^^^2^^N^^^F^^SYSTEM_ID^System ID^Aplicación^Apl.^C^^E^^^^^^^0^0^^ADM_MODULES^SYS_DESC^^^^^^^^^^^11^0^^^00-000000AAA^^^^^^^0^^^^
+POST_GL^+GLCONTROL^003^C^3002^cbx_post_gl^0^^^3^^N^^^^^POST_GL^Post to GL?^¿Registrar en el GL?^¿Registrar en el GL?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+CURRENT_PER^+GLCONTROL^004^C^3003^ine_current_per^0^^^4^^N^^^^^CURRENT_PER^Current Period^Período actual^Per. act.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+CURRENT_YEAR^+GLCONTROL^005^C^3004^ine_current_year^0^^^5^^N^^^^^CURRENT_YEAR^Current Year^Año actual^Año act.^C^3^E^^^^^^^0^0^^^^^^^^^^^^^^4^0^^^0000^^^^^^^^^^^
+JOURNAL_ID^+GLCONTROL^006^C^3005^dis_journal_id^0^^^6^^N^^^F^^JOURNAL_ID^Journal ID Code^Código de ID del libro diario^Cód. de ID del libro diario^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLC_JOURNALCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^AA^^^^30^L^0^Escribir un código válido de ID del libro diario^^^
+GL_ADT_NO^+GLCONTROL^007^C^3006^ine_gl_adt_no^0^^^7^^N^^^^^GL_ADT_NO^GL Audit Control Number^Número de auditoría^N.º de ctrl. de auditoría^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^30^R^^^^^
+UPDATE_FLAG^+GLCONTROL^008^C^3007^cbx_update_flag^0^^^8^^N^^^^^UPDATE_FLAG^Update Flag^Actualizar indicador^Actualizar indicador^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+TOTAL_PERS^+GLCONTROL^009^C^3008^ine_total_pers^0^^^9^^N^^^^^TOTAL_PERS^Total Accounting Periods^Períodos contables totales^Per. cont. totales^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+GL_PERIOD^+GLCONTROL^010^C^3009^ine_gl_period^0^^^10^^N^^^^^GL_PERIOD^Current GL Fiscal Period^Período fiscal actual^Per. fiscal act.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+GL_YEAR^+GLCONTROL^011^C^3010^ind_gl_year^0^^^11^^N^^^C^^GL_YEAR^Current GL Fiscal Year^Año fiscal actual^Año fiscal act.^C^1^D^^^^^^^^^^^^^^^^^^^^^^4^^^^^^^^^^^^^^^
+ACCT_LENGTH^+GLCONTROL^012^C^3011^ine_acct_length^0^^^12^^N^^^^^ACCT_LENGTH^GL Account Number Length^Longitud del número de cuenta del GL^Long. del n.º de cta.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+MAX_ACCT_LEN^+GLCONTROL^013^C^3012^ine_max_acct_len^0^^^13^^N^^^^^MAX_ACCT_LEN^Maximum GL Acct Number Length^Longitud máxima del número de cuenta del GL^Long. máx. del n.º de cta.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+DETAIL_FLAG^+GLCONTROL^014^C^3013^cbx_detail_flag^0^^^14^^N^^^^^DETAIL_FLAG^Post Detail [Y/N]?^¿Registrar detalle?^¿Registrar det?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Y=Registros detallados a partir de sistemas secundarios N=Registros resumidos^^^
+BUDGET_FLAG^+GLCONTROL^015^C^3014^cbx_budget_flag^0^^^15^^N^^^^^BUDGET_FLAG^Use Budgets?^¿Utilizar presupuestos?^¿Utilizar pres?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Y=Ingresar y conservar la información del presupuesto    NN=Presupuestos no utilizados^^^
+UNITS_FLAG^+GLCONTROL^016^C^3015^cbx_units_flag^0^^^16^^N^^^^^UNITS_FLAG^Use Units?^Unidades^Unidades^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Y=Ingresar y conservar unidades N=Unidades no utilizadas^^^
+RETAIN_DET^+GLCONTROL^017^C^3016^cbx_retain_det^0^^^17^^N^^^^^RETAIN_DET^Retain Detail Information?^¿Conservar información detallada?^¿Conservar inf. det?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Y=Conservar historial de transacciones N=descartar transacciones después del detalle diario^^^
+GL_YR_CLOSED^+GLCONTROL^018^C^3017^cbx_gl_yr_closed^0^^^18^^N^^^^^GL_YR_CLOSED^Fiscal Year Closed?^Año fiscal cerrado?^¿Se cerró el año fiscal?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+GL_POST_CODE^+GLCONTROL^019^C^3018^lbx_gl_post_code^0^^^19^^N^^^^^GL_POST_CODE^GL Posting Method [P/D/N]^Método de registro^Mét. de reg. [P/D/N]^C^^L^^^^^^^^^^^^^^^^^^^^Registrar detalle por período~P   ;Registrar detalle por fecha   ~D   ;Sin registros de detalles     ~N   ;^^1^^^^^^^^^^^^P=Registrar detalle por período fiscal/D=registrar detalle por fecha de transacción/N=N.º^^^
+PERMIT_JE^+GLCONTROL^020^C^3019^cbx_permit_je^0^^^20^^N^^^^^PERMIT_JE^Journal Entry [Y/N]?^¿Asiento diario?^¿Asiento diario?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+POST_YR_END^+GLCONTROL^021^C^3020^cbx_post_yr_end^0^^^21^^N^^^^^POST_YR_END^Allow Year End Postings [Y/N]?^¿Permitir registro al cierre del ejercicio?^¿Permitir reg. al cierre del ej.?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+POST_LOCKED^+GLCONTROL^022^C^3021^cbx_post_locked^0^^^22^^N^^^^^POST_LOCKED^Post to Locked Periods [Y/N]?^¿Registrar en períodos bloqueados?^¿Registrar en per. bloqueados?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+GL_AUDIT^+GLCONTROL^023^C^3022^cbx_gl_audit^0^^^23^^N^^^^^GL_AUDIT^Use GL Audit Control [Y/N]?^¿Usar el control de auditoría del GL?^¿Usar el ctrl. de auditoría?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+GL_WORK_FILE^+GLCONTROL^024^C^3023^cbx_gl_work_file^0^^^24^^N^^^^^GL_WORK_FILE^Use GL Work File [Y/N]?^¿Usar archivo de trabajo del GL?^¿Usar archivo de trabajo?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+PRT_GL_SUM^+GLCONTROL^025^C^3024^cbx_prt_gl_sum^0^^^25^^N^^^^^PRT_GL_SUM^Print GL Summary [Y/N]?^¿Imprimir resumen del GL?^¿Impr. resumen?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+DESCRIPTION^+GLCONTROL^026^C^3025^ine_description^0^^^26^^N^^^^^DESCRIPTION^Description^Descripción^Descr.^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^^^^
+TRNS_DATE^+GLCONTROL^027^C^3026^ind_trns_date^0^^^27^^N^^^C^^TRNS_DATE^Transaction Date^Fecha de la transacción^Fecha de la trans.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PERIOD^+GLCONTROL^028^C^3027^ine_period^0^^^28^^N^^^^^PERIOD^Period^Período^Per.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+YEAR^+GLCONTROL^029^C^3028^ine_year^0^^^29^^N^^^^^YEAR^Year^Año^Año^C^3^E^^^^^^^^^^^^^^^^^^^^^^4^^^^0000^^^^^^^^^^^
+PRI_PER_BEG_01^+GLCONTROL^030^C^3029^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_02^+GLCONTROL^030^C^3030^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_03^+GLCONTROL^030^C^3031^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_04^+GLCONTROL^030^C^3032^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_05^+GLCONTROL^030^C^3033^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_06^+GLCONTROL^030^C^3034^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_07^+GLCONTROL^030^C^3035^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_08^+GLCONTROL^030^C^3036^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_09^+GLCONTROL^030^C^3037^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_10^+GLCONTROL^030^C^3038^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_11^+GLCONTROL^030^C^3039^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_12^+GLCONTROL^030^C^3040^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_BEG_13^+GLCONTROL^030^C^3041^ind_pri_per_beg^0^^^30^^N^^^C^^PRI_PER_BEG^Period Begin Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_01^+GLCONTROL^031^C^3042^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_02^+GLCONTROL^031^C^3043^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_03^+GLCONTROL^031^C^3044^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_04^+GLCONTROL^031^C^3045^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_05^+GLCONTROL^031^C^3046^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_06^+GLCONTROL^031^C^3047^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_07^+GLCONTROL^031^C^3048^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_08^+GLCONTROL^031^C^3049^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_09^+GLCONTROL^031^C^3050^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_10^+GLCONTROL^031^C^3051^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_11^+GLCONTROL^031^C^3052^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_12^+GLCONTROL^031^C^3053^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_BEG_13^+GLCONTROL^031^C^3054^ind_cur_per_beg^0^^^31^^N^^^C^^CUR_PER_BEG^Period Begin Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_01^+GLCONTROL^032^C^3055^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_02^+GLCONTROL^032^C^3056^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_03^+GLCONTROL^032^C^3057^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_04^+GLCONTROL^032^C^3058^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_05^+GLCONTROL^032^C^3059^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_06^+GLCONTROL^032^C^3060^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_07^+GLCONTROL^032^C^3061^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_08^+GLCONTROL^032^C^3062^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_09^+GLCONTROL^032^C^3063^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_10^+GLCONTROL^032^C^3064^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_11^+GLCONTROL^032^C^3065^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_12^+GLCONTROL^032^C^3066^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_BEG_13^+GLCONTROL^032^C^3067^ind_nxt_per_beg^0^^^32^^N^^^C^^NXT_PER_BEG^Period Begin Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_01^+GLCONTROL^033^C^3068^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_02^+GLCONTROL^033^C^3069^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_03^+GLCONTROL^033^C^3070^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_04^+GLCONTROL^033^C^3071^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_05^+GLCONTROL^033^C^3072^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_06^+GLCONTROL^033^C^3073^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_07^+GLCONTROL^033^C^3074^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_08^+GLCONTROL^033^C^3075^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_09^+GLCONTROL^033^C^3076^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_10^+GLCONTROL^033^C^3077^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_11^+GLCONTROL^033^C^3078^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_12^+GLCONTROL^033^C^3079^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PRI_PER_END_13^+GLCONTROL^033^C^3080^ind_pri_per_end^0^^^33^^N^^^C^^PRI_PER_END^Period End Date [Prior]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_01^+GLCONTROL^034^C^3081^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_02^+GLCONTROL^034^C^3082^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_03^+GLCONTROL^034^C^3083^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_04^+GLCONTROL^034^C^3084^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_05^+GLCONTROL^034^C^3085^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_06^+GLCONTROL^034^C^3086^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_07^+GLCONTROL^034^C^3087^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_08^+GLCONTROL^034^C^3088^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_09^+GLCONTROL^034^C^3089^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_10^+GLCONTROL^034^C^3090^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_11^+GLCONTROL^034^C^3091^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_12^+GLCONTROL^034^C^3092^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+CUR_PER_END_13^+GLCONTROL^034^C^3093^ind_cur_per_end^0^^^34^^N^^^C^^CUR_PER_END^Period End Date [Current]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_01^+GLCONTROL^035^C^3094^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_02^+GLCONTROL^035^C^3095^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_03^+GLCONTROL^035^C^3096^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_04^+GLCONTROL^035^C^3097^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_05^+GLCONTROL^035^C^3098^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_06^+GLCONTROL^035^C^3099^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_07^+GLCONTROL^035^C^3100^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_08^+GLCONTROL^035^C^3101^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_09^+GLCONTROL^035^C^3102^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_10^+GLCONTROL^035^C^3103^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_11^+GLCONTROL^035^C^3104^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_12^+GLCONTROL^035^C^3105^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+NXT_PER_END_13^+GLCONTROL^035^C^3106^ind_nxt_per_end^0^^^35^^N^^^C^^NXT_PER_END^Period End Date [Next]^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+LOCKED_FLAG_01^+GLCONTROL^036^C^3107^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_02^+GLCONTROL^036^C^3108^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_03^+GLCONTROL^036^C^3109^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_04^+GLCONTROL^036^C^3110^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_05^+GLCONTROL^036^C^3111^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_06^+GLCONTROL^036^C^3112^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_07^+GLCONTROL^036^C^3113^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_08^+GLCONTROL^036^C^3114^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_09^+GLCONTROL^036^C^3115^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_10^+GLCONTROL^036^C^3116^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_11^+GLCONTROL^036^C^3117^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_12^+GLCONTROL^036^C^3118^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+LOCKED_FLAG_13^+GLCONTROL^036^C^3119^cbx_locked_flag^0^^^36^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+APP_PER_BEG^+GLCONTROL^037^C^3120^ind_app_per_beg^0^^^37^^N^^^C^^APP_PER_BEG^App Period Begin Date^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+APP_PER_END^+GLCONTROL^038^C^3121^ind_app_per_end^0^^^38^^N^^^C^^APP_PER_END^App Period End Date^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+GL_PER_BEG^+GLCONTROL^039^C^3122^ind_gl_per_beg^0^^^39^^N^^^C^^GL_PER_BEG^GL Period Begin Date^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+GL_PER_END^+GLCONTROL^040^C^3123^ind_gl_per_end^0^^^40^^N^^^C^^GL_PER_END^GL Period End Date^Fecha de inicio del período^Fecha de in. del per.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PROCESS_ID^+GLCONTROL^041^C^3124^dis_process_id^0^^^41^^N^^^F^^PROCESS_ID^Process Identification^Identificación del proceso^ID del proceso^C^^E^^^^^^^0^0^[+FIRM_ID]+@^ADM_PROCMASTER^DESCRIPTION^^^^^^^^^^^16^0^^^^^^^^20^L^0^^^^
+PROGRAM_NAME^+GLCONTROL^042^C^3125^ine_program_name^0^^^42^^N^^^^^PROGRAM_NAME^Program Name^Nombre del programa^Nombre del progr.^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^^^^^^^^
+USE_SUSPENSE^+GLCONTROL^043^C^3126^cbx_use_suspense^0^^^43^^N^^^^^USE_SUSPENSE^Use Suspense Account [Y/N]?^¿Utilizar cuenta de orden?^¿Utilizar cta. de orden?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+GL_ACCOUNT^+GLCONTROL^044^C^3127^dis_gl_account^0^^^44^^N^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^^^^
+MAX_LIM_STR^+GLCONTROL^045^C^3128^ine_max_lim_str^0^^^45^^N^^^^^MAX_LIM_STR^Maximum Limit [String]^Límite máximo [secuencia]^Lím. máx.^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^^^^
+MAX_BAL_STR^+GLCONTROL^046^C^3129^ine_max_bal_str^0^^^46^^N^^^^^MAX_BAL_STR^Maximum Balance [String]^Saldo máximo [secuencia]^Saldo máx.^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^^^^
+ACCT_OUTPUT^+GLCONTROL^047^C^3130^ine_acct_output^0^^^47^^N^^^^^ACCT_OUTPUT^GL Account Mask [Output]^Máscara de la cuenta del GL^Máscara de la cta.^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^###-####^^^^^^^^^^
+AMOUNT_MASK^+GLCONTROL^048^C^3131^ine_amount_mask^0^^^48^^N^^^^^AMOUNT_MASK^Amount Mask^Máscara del monto^Másc. del monto^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^IMPORTANTE::Asegúrese de que la máscara permita montos negativos.^^^
+UNIT_MASK^+GLCONTROL^049^C^3132^ine_unit_mask^0^^^49^^N^^^^^UNIT_MASK^Unit Mask^Máscara de la unidad^Máscara de la unidad^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^^^^^IMPORTANTE::Asegúrese de que la máscara permita montos negativos.^^^
+PERCENT_MASK^+GLCONTROL^050^C^3133^ine_percent_mask^0^^^50^^N^^^^^PERCENT_MASK^Percent Mask^Máscara del porcentaje^Máscara del %^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^IMPORTANTE::Asegúrese de que la máscara permita montos negativos.^^^
+{ColumnDefsEnd}
+{KeyDefs}
++GLCONTROL^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002+GLCONTROL.SYSTEM_ID                    ;003+GLCONTROL.POST_GL                      ;004+GLCONTROL.CURRENT_PER                  ;005+GLCONTROL.CURRENT_YEAR                 ;006+GLCONTROL.JOURNAL_ID                   ;007+GLCONTROL.GL_ADT_NO                    ;008+GLCONTROL.UPDATE_FLAG                  ;009+GLCONTROL.TOTAL_PERS                   ;010+GLCONTROL.GL_PERIOD                    ;011+GLCONTROL.GL_YEAR                      ;012+GLCONTROL.ACCT_LENGTH                  ;013+GLCONTROL.MAX_ACCT_LEN                 ;014+GLCONTROL.DETAIL_FLAG                  ;015+GLCONTROL.BUDGET_FLAG                  ;016+GLCONTROL.UNITS_FLAG                   ;017+GLCONTROL.RETAIN_DET                   ;018+GLCONTROL.GL_YR_CLOSED                 ;019+GLCONTROL.GL_POST_CODE                 ;020+GLCONTROL.PERMIT_JE                    ;021+GLCONTROL.POST_YR_END                  ;022+GLCONTROL.POST_LOCKED                  ;023+GLCONTROL.GL_AUDIT                     ;024+GLCONTROL.GL_WORK_FILE                 ;025+GLCONTROL.PRT_GL_SUM                   ;026+GLCONTROL.DESCRIPTION                  ;027+GLCONTROL.TRNS_DATE                    ;028+GLCONTROL.PERIOD                       ;029+GLCONTROL.YEAR                         ;030+GLCONTROL.PRI_PER_BEG                  ;031+GLCONTROL.CUR_PER_BEG                  ;032+GLCONTROL.NXT_PER_BEG                  ;033+GLCONTROL.PRI_PER_END                  ;034+GLCONTROL.CUR_PER_END                  ;035+GLCONTROL.NXT_PER_END                  ;036+GLCONTROL.LOCKED_FLAG                  ;037+GLCONTROL.APP_PER_BEG                  ;038+GLCONTROL.APP_PER_END                  ;039+GLCONTROL.GL_PER_BEG                   ;040+GLCONTROL.GL_PER_END                   ;041+GLCONTROL.PROCESS_ID                   ;042+GLCONTROL.PROGRAM_NAME                 ;043+GLCONTROL.USE_SUSPENSE                 ;044+GLCONTROL.GL_ACCOUNT                   ;045+GLCONTROL.MAX_LIM_STR                  ;046+GLCONTROL.MAX_BAL_STR                  ;047+GLCONTROL.ACCT_OUTPUT                  ;048+GLCONTROL.AMOUNT_MASK                  ;049+GLCONTROL.UNIT_MASK                    ;050+GLCONTROL.PERCENT_MASK                 ;
+{GridColsEnd}

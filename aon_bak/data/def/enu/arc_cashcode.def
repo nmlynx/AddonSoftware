@@ -1,0 +1,31 @@
+Barista Application Framework - Definition Module
+ARC_CASHCODE - Cash Receipts Code
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARC_CASHCODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Cash Receipts Code^Cash Receipts Code^^^^^^^^T^^^^^^A;P;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARC_CASHCODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_C^ARC_CASHCODE^002^C^^^^^^2^^Y^^^^^RECORD_ID_C^"C"^C^C^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;P;R;^^^^"C"^"C"^^
+CASH_REC_CD^ARC_CASHCODE^003^C^3001^ine_cash_rec_cd^0^^^3^^Y^^^^^CASH_REC_CD^Cash Receipts Code^Cash Receipt Code^Cash Rec Cd^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^3^0^^^UUU^^^^K;^20^L^0^Cash Receipts Code^^^
+CODE_DESC^ARC_CASHCODE^004^C^3002^ine_code_desc^0^^^4^^N^^^^^CODE_DESC^Code Description^Description^Description^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+CASH_FLAG^ARC_CASHCODE^005^C^3003^cbx_cash_flag^0^^^5^^N^^^^^CASH_FLAG^Cash [Y/N]?^Deposit Amt and Adjustments?^Dep Amt and Adj^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^Additional^^^^1^^^^^^^^^^^^Cash?^^^
+DISC_FLAG^ARC_CASHCODE^006^C^3004^cbx_disc_flag^0^^^6^^N^^^^^DISC_FLAG^Discount [Y/N]?^Discount?^Disc?^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^Discount?^^^
+ARGLBOTH^ARC_CASHCODE^007^C^3005^lbx_arglboth^0^^^7^^N^^^^^ARGLBOTH^Post To AR/GL/BOTH^Post To^Post To^C^^L^^^^^^^111^^^^^^^^^A^^^^Accts Receivable              ~A   ;General Ledger                ~G   ;Both                          ~B   ;^^1^^^^^^^^^^^^AR/GL/Both [A/G/B]^^^
+GL_CASH_ACCT^ARC_CASHCODE^009^C^3006^dis_gl_cash_acct^0^^^8^^N^^^F^^GL_CASH_ACCT^GL Cash Account^Cash Account^Cash Acct^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Cash Account^^^
+GL_DISC_ACCT^ARC_CASHCODE^010^C^3007^dis_gl_disc_acct^0^^^9^^N^^^F^^GL_DISC_ACCT^GL Discount Account^Discount Account^Disc Acct^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Discount Account^^^
+TRANS_TYPE^ARC_CASHCODE^011^C^3008^lbx_trans_type^0^^^10^^N^^^^^TRANS_TYPE^Transaction Type^POS Cash Type^POS Cash Type^C^^L^^^^^^^85^^^^^^^^^^^^^Cash                          ~$   ;Check                         ~C   ;Credit Card                   ~P   ;^^1^^^^U^^^^^^^^Transaction Type^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARC_CASHCODE^PRIMARY^ARC_CASHCODE.FIRM_ID                    ARC_CASHCODE.RECORD_ID_C                ARC_CASHCODE.CASH_REC_CD                ^stbl("+FIRM_ID")+"C"+ARC_CASHCODE.CASH_REC_CD$^stbl("+FIRM_ID")+"C"+RD_REC_DATA.CASH_REC_CD$^stbl("+FIRM_ID")                        "C"                                     RD_REC_DATA.CASH_REC_CD$                
+{KeyDefsEnd}
+{GridCols}
+003ARC_CASHCODE.CASH_REC_CD                ;004ARC_CASHCODE.CODE_DESC                  ;005ARC_CASHCODE.CASH_FLAG                  ;006ARC_CASHCODE.DISC_FLAG                  ;007ARC_CASHCODE.ARGLBOTH                   ;008ARC_CASHCODE.GL_CASH_ACCT               ;009ARC_CASHCODE.GL_DISC_ACCT               ;010ARC_CASHCODE.TRANS_TYPE                 ;
+{GridColsEnd}

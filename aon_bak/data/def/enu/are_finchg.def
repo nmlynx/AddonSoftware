@@ -1,0 +1,34 @@
+Barista Application Framework - Definition Module
+ARE_FINCHG - Finance Charge Entry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARE_FINCHG^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AENA;BEND;BSHO;BTBL;^^Finance Charge Entry^Finance Charge Entry^^^^^BATCH_KEY^^^T^^^^^^N;Q;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARE_FINCHG^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BATCH_NO^ARE_FINCHG^015^C^3001^ine_batch_no^0^^^2^^N^^^^^BATCH_NO^Batch Entry Control Number^Batch No^Batch No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+AR_TYPE^ARE_FINCHG^002^C^^^^^^3^^Y^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^O;^^^^AR Type [Not Used]^"  "^^
+CUSTOMER_ID^ARE_FINCHG^003^C^3002^dis_customer_id^0^^^4^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;BINQ;^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+AR_INV_NO^ARE_FINCHG^004^C^3003^ine_ar_inv_no^0^^^5^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_INV_NO^AR Invoice Number^AR Invoice Number^AR Inv No^C^^E^^^^^^^70^^^^^^^^^^^Additional^^^1^7^^^^UUUUUUU^UUUUUUU^^^#;^30^R^^AR Invoice Number^^^
+AR_DIST_CODE^ARE_FINCHG^005^C^3004^dis_ar_dist_code^0^^^6^^N^^^F^^AR_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"D"+@^ARC_DISTCODE^CODE_DESC^^^^^FC^^^^^^2^0^^^UU^^^^^20^L^0^Distribution Code^^^
+AR_TERMS_CODE^ARE_FINCHG^006^C^3005^dis_ar_terms_code^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^AR_TERMS_CODE^Terms Code^Terms Code^Terms Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^ARC_TERMCODE^CODE_DESC^^^^^FC^^^^^^2^0^^^UU^^^^^20^L^0^Terms Code^^^
+INVOICE_DATE^ARE_FINCHG^010^C^3006^ind_invoice_date^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^INVOICE_DATE^Invoice Date^Invoice Date^Inv Date^C^1^D^^^^^^^70^^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^^^^^Invoice Date^^^
+INV_DUE_DATE^ARE_FINCHG^011^C^3007^ind_inv_due_date^0^^^9^^N^^^C^^INV_DUE_DATE^Invoice Due Date^Invoice Due Date^Inv Due Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^^^^^Invoice Due Date^^^
+DISC_DATE^ARE_FINCHG^012^C^3008^ind_disc_date^0^^^10^^N^^^C^^DISC_DATE^Discount Date^Discount Date^Disc Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^^^^^Discount Date^^^
+INVOICE_TYPE^ARE_FINCHG^008^C^3009^lbx_invoice_type^0^^^11^^N^^^^^INVOICE_TYPE^Invoice Type^Invoice Type^Inv Type^C^^L^^^^^^^105^^^^^^^^^F^^^^Finance Charge                ~F   ;^^1^^^^^^^^C;^^^^Invoice Type^^^
+INVOICE_AMT^ARE_FINCHG^013^C^3010^inn_invoice_amt^0^^^12^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^INVOICE_AMT^Invoice Amount^Invoice Amount^Inv Amt^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Invoice Amount^^^
+DISCOUNT_AMT^ARE_FINCHG^014^C^3011^inn_discount_amt^0^^^13^^N^^^^^DISCOUNT_AMT^Discount Amount^Discount Amount^Disc Amt^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Discount Amount^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARE_FINCHG^PRIMARY^ARE_FINCHG.FIRM_ID                      ARE_FINCHG.AR_TYPE                      ARE_FINCHG.CUSTOMER_ID                  ARE_FINCHG.AR_INV_NO                    ^stbl("+FIRM_ID")+"  "+ARE_FINCHG.CUSTOMER_ID$+ARE_FINCHG.AR_INV_NO$^stbl("+FIRM_ID")+"  "+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.AR_INV_NO$^stbl("+FIRM_ID")                        "  "                                    RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.AR_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002ARE_FINCHG.BATCH_NO                     ;004ARE_FINCHG.CUSTOMER_ID                  ;005ARE_FINCHG.AR_INV_NO                    ;006ARE_FINCHG.AR_DIST_CODE                 ;007ARE_FINCHG.AR_TERMS_CODE                ;008ARE_FINCHG.INVOICE_DATE                 ;009ARE_FINCHG.INV_DUE_DATE                 ;010ARE_FINCHG.DISC_DATE                    ;011ARE_FINCHG.INVOICE_TYPE                 ;012ARE_FINCHG.INVOICE_AMT                  ;013ARE_FINCHG.DISCOUNT_AMT                 ;
+{GridColsEnd}

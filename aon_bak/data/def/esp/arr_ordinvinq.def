@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+ARR_ORDINVINQ - Order or Invoice Inquiry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARR_ORDINVINQ^^^^Order or Invoice Inquiry^Consulta de factura o pedido^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]arr_ordinvinq.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CUSTOMER_ID^ARR_ORDINVINQ^001^C^3001^dis_customer_id^0^^^1^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^^^^
+SUMM_DTL^ARR_ORDINVINQ^002^C^3002^lbx_summ_dtl^0^^^2^^N^^^^^SUMM_DTL^Summary or Detail^Resumen o detalle^Resumen o detalle^C^^L^^^^^^^84^^^^^^^^^D^^^^Detalle                       ~D   ;Resumen                       ~S   ;^^1^^^^^^^^^^^^^^^
+ORD_INV^ARR_ORDINVINQ^003^C^3003^lbx_ord_inv^0^^^3^^N^^^^^ORD_INV^Order or Invoice^Pedido o factura^Pedido o factura^C^^L^^^^^^^78^^^^^^^^^O^^^^Facturas                      ~I   ;Pedidos                       ~O   ;^^1^^^^^^^^^^^^^^^
+BEG_ORD_INV^ARR_ORDINVINQ^004^C^3004^ine_beg_ord_inv^0^^^4^^N^^^^^BEG_ORD_INV^Beginning Order or Invoice^Comienzo de pedido/factura^Fact./Ped. inicial^C^^E^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARR_ORDINVINQ^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001ARR_ORDINVINQ.CUSTOMER_ID               ;002ARR_ORDINVINQ.SUMM_DTL                  ;003ARR_ORDINVINQ.ORD_INV                   ;004ARR_ORDINVINQ.BEG_ORD_INV               ;
+{GridColsEnd}

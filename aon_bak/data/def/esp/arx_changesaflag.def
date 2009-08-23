@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+ARX_CHANGESAFLAG - Change Sales Analysis Flag
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARX_CHANGESAFLAG^^^^Change Sales Analysis Flag^Cambiar indicador de análisis de ventas^^^^^^^^X^^^^^^X;N;U;V;^^[+DIR_PGM]arx_changesaflag.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CUSTOMER_ID_1^ARX_CHANGESAFLAG^001^C^3001^dis_customer_id^0^^^1^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+CUSTOMER_ID_2^ARX_CHANGESAFLAG^001^C^3002^dis_customer_id^0^^^1^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+PICK_LISTBUTTON^ARX_CHANGESAFLAG^002^C^3003^lbx_pick_listbutton^0^^^2^^N^^^^^PICK_LISTBUTTON^Pick Window Listbutton^Nuevo indicador de análisis de ventas^Botón de lista de ventana de sel.^C^^L^^^^^^^113^^^^^^^^^N^^^^Sin análisis de venta        ~N   ;Por producto                  ~P   ;Por artículo                 ~I   ;^^1^^^^^^^^^^^^^^^
+PICK_CHECK^ARX_CHANGESAFLAG^003^C^3004^cbx_pick_check^0^^^3^^N^^^^^PICK_CHECK^Pick Screen Check Box^¿Sobrescribir indicador antiguo?^Cheque^C^^C^^^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARX_CHANGESAFLAG^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001ARX_CHANGESAFLAG.CUSTOMER_ID            ;002ARX_CHANGESAFLAG.PICK_LISTBUTTON        ;003ARX_CHANGESAFLAG.PICK_CHECK             ;
+{GridColsEnd}

@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+APR_COMMENTS - Vendor Comment Listing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APR_COMMENTS^^^^Vendor Comment Listing^Vendor Comment Listing^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]apr_comments.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APR_COMMENTS^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+VENDOR_ID_1^APR_COMMENTS^002^C^3001^dis_vendor_id^0^^^2^^N^^^F^^VENDOR_ID^Vendor Number^Beginning Vendor ID^Beginning Vend ID^C^^E^^^^^^^48^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^1;2;^30^R^0^Enter A Valid Vendor^^^
+VENDOR_ID_2^APR_COMMENTS^002^C^3002^dis_vendor_id^0^^^2^^N^^^F^^VENDOR_ID^Vendor Number^Ending Vendor ID^Ending Vend ID^C^^E^^^^^^^48^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^1;2;^30^R^0^Enter A Valid Vendor^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APR_COMMENTS^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002APR_COMMENTS.VENDOR_ID                  ;
+{GridColsEnd}

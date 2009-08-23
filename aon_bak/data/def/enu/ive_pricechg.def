@@ -1,0 +1,28 @@
+Barista Application Framework - Definition Module
+IVE_PRICECHG - Price Change Entry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVE_PRICECHG^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ADIS;ARAR;BEND;BSHO;BTBL;BWRI;^^Price Change Entry^Price Change Entry^^^^^BATCH_KEY^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVE_PRICECHG^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^1^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BATCH_NO^IVE_PRICECHG^010^C^3001^ine_batch_no^0^^^2^^N^^^^^BATCH_NO^Batch Entry Control Number^Batch No^Batch No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+PRICE_CODE^IVE_PRICECHG^002^C^3002^ine_price_code^0^^^3^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^PRICE_CODE^List Price Code^List Price Code^List Price Cd^C^^E^^^^^^^0^0^^^^^^^^^^^^^1^2^0^^^^^^^^20^L^0^List Price Code^^^
+WAREHOUSE_ID^IVE_PRICECHG^003^C^3003^dis_warehouse_id^0^^^4^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^IVE_PRICECHG^004^C^3004^dis_item_id^0^^^5^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+CUR_PRICE^<<DISPLAY>>^011^D^3005^inn_cur_price^0^^^6^^^^^^^CUR_PRICE^Current Price^Current Price^^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^7^^^^^^IV^P^C;^^^^^^^
+UNIT_PRICE^IVE_PRICECHG^007^C^3006^inn_unit_price^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BINP;^^^UNIT_PRICE^Unit Price^Unit Price^Unit Price^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^P^^^^^Unit Price^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVE_PRICECHG^PRIMARY^IVE_PRICECHG.FIRM_ID                    IVE_PRICECHG.PRICE_CODE                 IVE_PRICECHG.WAREHOUSE_ID               IVE_PRICECHG.ITEM_ID                    ^stbl("+FIRM_ID")+IVE_PRICECHG.PRICE_CODE$+IVE_PRICECHG.WAREHOUSE_ID$+IVE_PRICECHG.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.PRICE_CODE$+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.PRICE_CODE$                 RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002IVE_PRICECHG.BATCH_NO                   ;003IVE_PRICECHG.PRICE_CODE                 ;004IVE_PRICECHG.WAREHOUSE_ID               ;005IVE_PRICECHG.ITEM_ID                    ;006<<DISPLAY>>.CUR_PRICE                   ;007IVE_PRICECHG.UNIT_PRICE                 ;
+{GridColsEnd}

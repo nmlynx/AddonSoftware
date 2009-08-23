@@ -1,0 +1,47 @@
+Barista Application Framework - Definition Module
+SFS_PARAMS - Work Order Parameters
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFS_PARAMS^^^^Work Order Parameters^Work Order Parameters^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFS_PARAMS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+SF^SFS_PARAMS^002^C^^^^^^2^^Y^^^^^SF^"SF"^"SF"^"SF"^C^^E^^^^^^^0^0^^^^^^^^^^^^^^2^0^^^^^^^O;^^^0^"SF"^"SF"^^
+SEQUENCE_00^SFS_PARAMS^003^C^^^^^^3^^Y^^^^^SEQUENCE_00^"00"^0^0^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^"00"^"00"^^
+EMPL_INPUT^SFS_PARAMS^004^C^3001^ine_empl_input^0^^^4^^N^^^^^EMPL_INPUT^Employee Number Mask [Input]^Employee Number Mask^Empl No Mask^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^^^^^Employee Number Mask [Input]^^^
+EMPL_NO_LEN^SFS_PARAMS^005^C^3002^ine_empl_no_len^0^^^5^^N^^^^^EMPL_NO_LEN^Employee Number Size^Employee Number Size^Empl No Size^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Employee Number Size^^^
+MAX_EMPL_NO^SFS_PARAMS^006^C^3003^ine_max_empl_no^0^^^6^^N^^^^^MAX_EMPL_NO^Maximum Employee Number Size^Maximum Employee Number Size^Max Empl No Size^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Maximum Employee Number Size^^^
+BM_INTERFACE^SFS_PARAMS^007^C^3004^cbx_bm_interface^0^^^7^^N^^^^^BM_INTERFACE^Bill of Mat Interface Enabled?^Bill of Mat Interface Enabled?^BOM Interface?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Bill of Mat Interface Enabled?^^^
+AR_INTERFACE^SFS_PARAMS^008^C^3005^cbx_ar_interface^0^^^8^^N^^^^^AR_INTERFACE^Accts Rec Interface Enabled?^Accts Rec Interface Enabled?^AR Interface?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Accts Rec Interface Enabled?^^^
+PO_INTERFACE^SFS_PARAMS^009^C^3006^cbx_po_interface^0^^^9^^N^^^^^PO_INTERFACE^Purch Order Interface Enabled?^Purch Order Interface Enabled?^PO Enabled?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Purch Order Interface Enabled?^^^
+PR_INTERFACE^SFS_PARAMS^010^C^3007^cbx_pr_interface^0^^^10^^N^^^^^PR_INTERFACE^Payroll Interface Enabled?^Payroll Interface Enabled?^PR Enabled?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Interface Enabled?^^^
+LABEL_ACROSS^SFS_PARAMS^011^C^3008^ine_label_across^0^^^11^^N^^^^^LABEL_ACROSS^Number of Labels Across^Number of Labels Across^No of Labels Across^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Number of Labels Across^^^
+LABEL_LENGTH^SFS_PARAMS^012^C^3009^ine_label_length^0^^^12^^N^^^^^LABEL_LENGTH^Vertical Lines Per Label^Vertical Lines Per Label^Lines/Label^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Vertical Lines Per Label^^^
+LABEL_WIDTH^SFS_PARAMS^013^C^3010^ine_label_width^0^^^13^^N^^^^^LABEL_WIDTH^Horizontal Chars Per Label^Horizontal Chars Per Label^Chars/Label^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Vertical Lines Per Label^^^
+PAY_ACTSTD^SFS_PARAMS^014^C^3011^ine_pay_actstd^0^^^14^^N^^^^^PAY_ACTSTD^Use Payroll At Actual Or Std^Use Payroll At Actual Or Std^Use PR At Act/Std^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Use Payroll At Actual Or Std^^^
+OVERHD_TYPE^SFS_PARAMS^015^C^3012^ine_overhd_type^0^^^15^^N^^^^^OVERHD_TYPE^Overhead Calc Type [Fixed/Hr]^Overhead Calc Type^Ovrhd Calc Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Overhead Calc Type [Fixed/Hr]^^^
+TIME_CLK_FLG^SFS_PARAMS^016^C^3013^cbx_time_clk_flg^0^^^16^^N^^^^^TIME_CLK_FLG^Use Time Clock In Entry?^Use Time Clock In Entry?^Use Time Clock?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Use Time Clock In Entry?^^^
+DEF_OVD_RATE^SFS_PARAMS^018^C^3014^ine_def_ovd_rate^0^^^17^^N^^^^^DEF_OVD_RATE^Default Overhead Rate [no BM]^Default Overhead Rate^Def Ovrhd Rate^C^^E^^^^^^^^^^^^^^^^^^^^^^6^^^^^^^^^^^^Default Overhead Rate [no BM]^^^
+TIME_ENTRY_S^SFS_PARAMS^019^C^3015^ine_time_entry_s^0^^^18^^N^^^^^TIME_ENTRY_S^Time Sheet Entry Sequence^Time Sheet Entry Sequence^Time Sheet Entry Seq^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Time Sheet Entry Sequence^^^
+MAX_OP_CODES^SFS_PARAMS^020^C^3016^ine_max_op_codes^0^^^19^^N^^^^^MAX_OP_CODES^Max Nbr of Op Codes/Work Order^Max Nbr of Op Codes/Work Order^Max No of Op Cds/WO^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Max Nbr of Op Codes/Work Order^^^
+PRINT_COSTS^SFS_PARAMS^021^C^3017^cbx_print_costs^0^^^20^^N^^^^^PRINT_COSTS^Print Costs On Traveler?^Print Costs On Traveler?^Prt Taveler Csts?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Print Costs On Traveler?^^^
+CURRENT_PER^SFS_PARAMS^023^C^3018^ine_current_per^0^^^21^^N^^^^^CURRENT_PER^Current Period^Current Period^Curr Prd^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Current Period^^^
+CURRENT_YEAR^SFS_PARAMS^024^C^3019^ine_current_year^0^^^22^^N^^^^^CURRENT_YEAR^Current Year^Current Year^Curr Yr^C^3^E^^^^^^^0^0^^^^^^^^^^^^^^4^0^^^0000^^^^^^^^Current Year^^^
+EMPL_OUTPUT^SFS_PARAMS^025^C^3020^ine_empl_output^0^^^23^^N^^^^^EMPL_OUTPUT^Employee Number Mask [Output]^Employee Number Mask^Empl No Mask^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^^^^^Employee Number Mask [Output]^^^
+AMOUNT_MASK^SFS_PARAMS^026^C^3021^ine_amount_mask^0^^^24^^N^^^^^AMOUNT_MASK^Amount Mask^Amount Mask^Amt Mask^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^Amount Mask^^^
+UNIT_MASK^SFS_PARAMS^027^C^3022^ine_unit_mask^0^^^25^^N^^^^^UNIT_MASK^Unit Mask^Unit Mask^Unit Mask^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^^^^^Unit Mask^^^
+RATE_MASK^SFS_PARAMS^028^C^3023^ine_rate_mask^0^^^26^^N^^^^^RATE_MASK^Rate Mask^Rate Mask^Rate Mask^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^^^^^Rate Mask^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFS_PARAMS^PRIMARY^SFS_PARAMS.FIRM_ID                      SFS_PARAMS.SF                           SFS_PARAMS.SEQUENCE_00                  ^stbl("+FIRM_ID")+"SF"+"00"^stbl("+FIRM_ID")+"SF"+"00"^stbl("+FIRM_ID")                        "SF"                                    "00"                                    
+{KeyDefsEnd}
+{GridCols}
+004SFS_PARAMS.EMPL_INPUT                   ;005SFS_PARAMS.EMPL_NO_LEN                  ;006SFS_PARAMS.MAX_EMPL_NO                  ;007SFS_PARAMS.BM_INTERFACE                 ;008SFS_PARAMS.AR_INTERFACE                 ;009SFS_PARAMS.PO_INTERFACE                 ;010SFS_PARAMS.PR_INTERFACE                 ;011SFS_PARAMS.LABEL_ACROSS                 ;012SFS_PARAMS.LABEL_LENGTH                 ;013SFS_PARAMS.LABEL_WIDTH                  ;014SFS_PARAMS.PAY_ACTSTD                   ;015SFS_PARAMS.OVERHD_TYPE                  ;016SFS_PARAMS.TIME_CLK_FLG                 ;017SFS_PARAMS.DEF_OVD_RATE                 ;018SFS_PARAMS.TIME_ENTRY_S                 ;019SFS_PARAMS.MAX_OP_CODES                 ;020SFS_PARAMS.PRINT_COSTS                  ;021SFS_PARAMS.CURRENT_PER                  ;022SFS_PARAMS.CURRENT_YEAR                 ;023SFS_PARAMS.EMPL_OUTPUT                  ;024SFS_PARAMS.AMOUNT_MASK                  ;025SFS_PARAMS.UNIT_MASK                    ;026SFS_PARAMS.RATE_MASK                    ;
+{GridColsEnd}

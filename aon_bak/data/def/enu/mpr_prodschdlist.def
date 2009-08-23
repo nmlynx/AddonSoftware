@@ -1,0 +1,28 @@
+Barista Application Framework - Definition Module
+MPR_PRODSCHDLIST - Production Schedule Listing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+MPR_PRODSCHDLIST^^^^Production Schedule Listing^Production Schedule Listing^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]mpr_prodschdlist.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FORECAST^MPR_PRODSCHDLIST^001^C^3001^dis_forecast^0^^^1^^N^^^F^^FORECAST^MRP Forecast Type^Forecast Type^MRP Forecast Type^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^MPM_FORECAST^DESCRIPTION_01^^^^^^^^^^1^3^0^^^^^^^^20^L^0^Enter A Valid Forecast Type^^^
+WAREHOUSE_ID^MPR_PRODSCHDLIST^002^C^3002^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse Code^Whse ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Enter A Valid Warehouse Code^^^
+BUYER_CODE^MPR_PRODSCHDLIST^003^C^3003^dis_buyer_code^0^^^3^^N^^^F^^BUYER_CODE^Buyer Code^Buyer Code^Buyer Cd^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"F"+@^IVC_BUYCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Enter A Valid Buyer Code^^^
+ITEM_ID_1^MPR_PRODSCHDLIST^004^C^3004^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Beginning Item^Beginning Item ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter An Item Number^^^
+ITEM_ID_2^MPR_PRODSCHDLIST^004^C^3005^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Ending Item^Ending Item ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter An Item Number^^^
+PERIOD_1^MPR_PRODSCHDLIST^005^C^3006^ine_period^0^^^5^^N^^^^^PERIOD^Period^Beginning Period^Beginning Prd^C^^E^^^^^0^0^0^0^^^^^^^^01^^^^^1^2^^01^09^00^00^^^1;2;^30^R^^Enter The Period To Print^^^
+PERIOD_2^MPR_PRODSCHDLIST^005^C^3007^ine_period^0^^^5^^N^^^^^PERIOD^Period^Ending Period^Ending Prd^C^^E^^^^^0^0^0^0^^^^^^^^01^^^^^1^2^^01^09^00^00^^^1;2;^30^R^^Enter The Period To Print^^^
+{ColumnDefsEnd}
+{KeyDefs}
+MPR_PRODSCHDLIST^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001MPR_PRODSCHDLIST.FORECAST               ;002MPR_PRODSCHDLIST.WAREHOUSE_ID           ;003MPR_PRODSCHDLIST.BUYER_CODE             ;004MPR_PRODSCHDLIST.ITEM_ID                ;005MPR_PRODSCHDLIST.PERIOD                 ;
+{GridColsEnd}

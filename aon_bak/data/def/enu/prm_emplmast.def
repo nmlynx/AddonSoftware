@@ -1,0 +1,55 @@
+Barista Application Framework - Definition Module
+PRM_EMPLMAST - Employee Master
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRM_EMPLMAST^^^^Employee Master^Employee Master^^^^^^^^T^^^^^^N;U;V;^^^Employee Information;^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+EMPLOYEE_NO^PRM_EMPLMAST^002^C^3001^ine_employee_no^0^^^1^^Y^^^^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^^^^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^K;^^^^Employee Number^^^
+EMPL_SURNAME^PRM_EMPLMAST^003^C^3002^ine_empl_surname^0^^^2^^N^^^^^EMPL_SURNAME^Employee Surname^Last Name^Last Name^C^^E^^^^^^^^^^^^^^^^^^^^^^16^^^^^^^^^^^^Employee Surname^^^
+EMPL_GIVNAME^PRM_EMPLMAST^004^C^3003^ine_empl_givname^0^^^3^^N^^^^^EMPL_GIVNAME^Employee Given Name^First Name^First Name^C^^E^^^^^^^^^^^^^^^^^^^^^^14^^^^^^^^^^^^Employee Given Name^^^
+ADDR_LINE_1^PRM_EMPLMAST^005^C^3101^ine_addr_line_1^1^^^4^1^N^^^^^ADDR_LINE_1^Address Line 1^Address^Address^C^^E^^^^^115^^^^^^^^^^^^^^^^^24^^^^^^^^^^^^Address Line 1^^^
+ADDR_LINE_2^PRM_EMPLMAST^006^C^3102^ine_addr_line_2^1^^^5^^N^^^^^ADDR_LINE_2^Address Line 2^Address Line 2^Addr 2^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 2^^^
+CITY^PRM_EMPLMAST^007^C^3103^ine_city^1^^^6^^N^^^^^CITY^City Name^City^City^C^^E^^^^^^^^^^^^^^^^^^^^^^22^^^^^^^^^^^^City Name^^^
+STATE_CODE^PRM_EMPLMAST^008^C^3104^ine_state_code^1^^^7^^N^^^^^STATE_CODE^State Code^State^St^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^State Code^^^
+ZIP_CODE^PRM_EMPLMAST^009^C^3105^ine_zip_code^1^^^8^^N^^^^^ZIP_CODE^Zip/Postal Code^Zip/Postal Code^Zip^C^P^E^^^^^^^0^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^Zip/Postal Code^^^
+HOME_PHONE^PRM_EMPLMAST^010^C^3106^ine_home_phone^1^^^9^^N^^^^^HOME_PHONE^Home Telephone^Home Phone^Home Phone^C^T^E^^^^^^^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Home Telephone^^^
+WORK_PHONE^PRM_EMPLMAST^011^C^3107^ine_work_phone^1^^^10^^N^^^^^WORK_PHONE^Work Telephone^Work Phone^Work Phone^C^T^E^^^^^^^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Work Telephone^^^
+WORK_EXTENS^PRM_EMPLMAST^012^C^3108^ine_work_extens^1^^^11^^N^^^^^WORK_EXTENS^Work Telephone Extension^Ext^Ext^C^^E^^^^^^^^^^^^^^^^^^^^^^4^^^^^^^^^^^^Work Telephone Extension^^^
+SOC_SEC_NO^PRM_EMPLMAST^013^C^3109^ine_soc_sec_no^1^^^12^^N^^^^^SOC_SEC_NO^Social Security Number^Social Security#^SSN^C^^E^^^^^^^^^^^^^^^^^^^^^^9^^^^^^^^^^^^Social Security Number^^^
+EMER_CONTACT^PRM_EMPLMAST^020^C^3110^ine_emer_contact^1^^^13^^N^^^^^EMER_CONTACT^Emergency Contact^Emergency Contact^Emergency Cont^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^^^^^Emergency Contact^^^
+EMER_RELATE^PRM_EMPLMAST^021^C^3111^ine_emer_relate^1^^^14^^N^^^^^EMER_RELATE^Emergency Relation^Relationship^Rel^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Emergency Relation^^^
+EMER_PHONE^PRM_EMPLMAST^022^C^3112^ine_emer_phone^1^^^15^^N^^^^^EMER_PHONE^Emergency Telephone^Emergency Phone^Emerg Phone^C^T^E^^^^^^^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Emergency Telephone^^^
+EMPL_MEMO^PRM_EMPLMAST^028^C^3113^ine_empl_memo^1^^^16^^N^^^^^EMPL_MEMO^Employee Memo^Memo^Memo^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Employee Memo^^^
+UNION_CODE^PRM_EMPLMAST^030^C^3114^dis_union_code^1^^^17^^N^^^F^^UNION_CODE^Union Code^Union Code^Union Cd^C^^E^^^^^^^^^[+FIRM_ID]+"J"+@^PRC_UNNCODE^DESCRIPTION^^^^^^^^^^^3^^^^UUU^^^^^30^L^^Union Code^^^
+ALT_SEQUENCE^PRM_EMPLMAST^014^C^3115^ine_alt_sequence^1^^^18^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Alternate Sequence^Alt Seq^C^^E^^^^^450^-14^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Alternate Sequence^^^
+SEX^PRM_EMPLMAST^015^C^3116^lbx_sex^1^^^19^^N^^^^^SEX^Sex^Gender^Gen^C^^L^^^^^^^^^^^^^^^^^^^^Unknown                       ~    ;Male                          ~M   ;Female                        ~F   ;^^1^^^^^^^^^^^^Sex^^^
+RACE^PRM_EMPLMAST^016^C^3117^ine_race^1^^^20^^N^^^^^RACE^Race^Race^Race^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Race^^^
+MARITAL_STS^PRM_EMPLMAST^017^C^3118^lbx_marital_sts^1^^^21^^N^^^^^MARITAL_STS^Marital Status^Marital Status^Marital Stat^C^^L^^^^^^^^^^^^^^^^^^^^Married                       ~M   ;Single                        ~S   ;^^1^^^^^^^^^^^^Marital Status^^^
+BIRTH_DATE^PRM_EMPLMAST^031^C^3119^ind_birth_date^1^^^22^^N^^^C^^BIRTH_DATE^Birth Date^Birth Date^Birth Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Birth Date^^^
+HIRE_DATE^PRM_EMPLMAST^032^C^3120^ind_hire_date^1^^^23^^N^^^C^^HIRE_DATE^Hire Date^Hire Date^Hire Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Hire Date^^^
+ANNIV_DATE^PRM_EMPLMAST^033^C^3121^ind_anniv_date^1^^^24^^N^^^C^^ANNIV_DATE^Anniversary Date^Anniversary Date^Anniv Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Anniversary Date^^^
+REVIEW_DATE^PRM_EMPLMAST^034^C^3122^ind_review_date^1^^^25^^N^^^C^^REVIEW_DATE^Review Date^Review Date^Review Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Review Date^^^
+TERM_DATE^PRM_EMPLMAST^035^C^3123^ind_term_date^1^^^26^^N^^^C^^TERM_DATE^Termination Date^Termination Date^Term Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Termination Date^^^
+TERM_CODE^PRM_EMPLMAST^019^C^3124^ine_term_code^1^^^27^^N^^^^^TERM_CODE^Termination Code^Termination Code^Term Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^^^^^^^^^Termination Code^^^
+PAY_PERIOD^PRM_EMPLMAST^023^C^3125^lbx_pay_period^1^^^28^^N^^^^^PAY_PERIOD^Pay Period^Pay Period^Pay Prd^C^^L^^^^^^^^^^^^^^^^^^^^Daily                         ~D   ;Weekly                        ~W   ;Bi-Weekly                     ~B   ;Semi-Monthly                  ~S   ;Monthly                       ~M   ;Quarterly                     ~Q   ;Annually                      ~A   ;^^1^^^^^^^^^^^^Pay Period^^^
+DEPT_CODE^PRM_EMPLMAST^024^C^3126^ine_dept_code^1^^^29^^N^^^^^DEPT_CODE^Department Code^Home Department^Home Dept^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Department Code^^^
+NORMAL_TITLE^PRM_EMPLMAST^025^C^3127^ine_normal_title^1^^^30^^N^^^^^NORMAL_TITLE^Normal Title^Normal Title^Normal Title^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Normal Title^^^
+HRLYSALARY^PRM_EMPLMAST^026^C^3128^lbx_hrlysalary^1^^^31^^N^^^^^HRLYSALARY^Hourly/Salaried [H/S]^Hourly/Salaried^Hrly/Salaried [H/S]^C^^L^^^^^^^^^^^^^^^^^^^^Hourly                        ~H   ;Salaried                      ~S   ;^^1^^^^^^^^^^^^Hourly/Salaried [H/S]^^^
+FULL_OR_PART^PRM_EMPLMAST^029^C^3129^lbx_full_or_part^1^^^32^^N^^^^^FULL_OR_PART^Full/Part Time [F/P]^Full/Part Time^Full/Part Time [F/P]^C^^L^^^^^^^^^^^^^^^^^^^^Full-Time                     ~F   ;Part-Time                     ~P   ;^^1^^^^^^^^^^^^Full/Part Time [F/P]^^^
+PENSION_PLAN^PRM_EMPLMAST^027^C^3130^cbx_pension_plan^1^^^33^^N^^^^^PENSION_PLAN^Pension Plan?^Pension Plan?^Pension Plan?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Pension Plan?^^^
+FIRM_ID^PRM_EMPLMAST^001^C^^^^^^34^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRM_EMPLMAST^PRIMARY^PRM_EMPLMAST.FIRM_ID                    PRM_EMPLMAST.EMPLOYEE_NO                ^stbl("+FIRM_ID")+PRM_EMPLMAST.EMPLOYEE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                
+{KeyDefsEnd}
+{GridCols}
+001PRM_EMPLMAST.EMPLOYEE_NO                ;002PRM_EMPLMAST.EMPL_SURNAME               ;003PRM_EMPLMAST.EMPL_GIVNAME               ;004PRM_EMPLMAST.ADDR_LINE_1                ;005PRM_EMPLMAST.ADDR_LINE_2                ;006PRM_EMPLMAST.CITY                       ;007PRM_EMPLMAST.STATE_CODE                 ;008PRM_EMPLMAST.ZIP_CODE                   ;009PRM_EMPLMAST.HOME_PHONE                 ;010PRM_EMPLMAST.WORK_PHONE                 ;011PRM_EMPLMAST.WORK_EXTENS                ;012PRM_EMPLMAST.SOC_SEC_NO                 ;013PRM_EMPLMAST.EMER_CONTACT               ;014PRM_EMPLMAST.EMER_RELATE                ;015PRM_EMPLMAST.EMER_PHONE                 ;016PRM_EMPLMAST.EMPL_MEMO                  ;017PRM_EMPLMAST.UNION_CODE                 ;018PRM_EMPLMAST.ALT_SEQUENCE               ;019PRM_EMPLMAST.SEX                        ;020PRM_EMPLMAST.RACE                       ;021PRM_EMPLMAST.MARITAL_STS                ;022PRM_EMPLMAST.BIRTH_DATE                 ;023PRM_EMPLMAST.HIRE_DATE                  ;024PRM_EMPLMAST.ANNIV_DATE                 ;025PRM_EMPLMAST.REVIEW_DATE                ;026PRM_EMPLMAST.TERM_DATE                  ;027PRM_EMPLMAST.TERM_CODE                  ;028PRM_EMPLMAST.PAY_PERIOD                 ;029PRM_EMPLMAST.DEPT_CODE                  ;030PRM_EMPLMAST.NORMAL_TITLE               ;031PRM_EMPLMAST.HRLYSALARY                 ;032PRM_EMPLMAST.FULL_OR_PART               ;033PRM_EMPLMAST.PENSION_PLAN               ;
+{GridColsEnd}

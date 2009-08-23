@@ -1,0 +1,33 @@
+Barista Application Framework - Definition Module
+GLE_JRNLHDR - Journal Entry Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLE_JRNLHDR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ADIS;BEND;BSHO;BTBL;BWRI;^^Journal Entry Header^Journal Entry Header^GLE_JRNLDET^^GLE_JRNLDET;^^BATCH_KEY^^^T^^^^N^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLE_JRNLHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+BATCH_NO^GLE_JRNLHDR^012^C^3001^ine_batch_no^0^^^2^^N^^^^^BATCH_NO^Batch Entry Control Number^Batch No^Batch No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+JOURNAL_ID^GLE_JRNLHDR^002^C^3002^dis_journal_id^0^^^3^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^JOURNAL_ID^Journal ID Code^Journal ID Code^Journal ID Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLC_JOURNALCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^AA^^^^30^L^0^Enter a Valid Journal ID Code^^^
+JE_TRANS_ID^GLE_JRNLHDR^003^C^3003^ine_je_trans_id^0^^^4^^Y^^^^^JE_TRANS_ID^Journal Entry Transaction ID^Transaction ID^Journal Entry ID^C^^E^^^^^^^0^0^^^^^^^^^^^^^^10^0^^^^^^^^20^L^0^^^^
+DESCRIPTION^GLE_JRNLHDR^004^C^3004^ine_description^0^^^5^^N^^^^^DESCRIPTION^Description^Description^Desc^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^^^^
+CYCLE_CODE^GLE_JRNLHDR^006^C^^^^^^6^^N^^^F^^GL_CYCLECODE^Journal Entry Cycle Code^Journal Entry Cycle Code^Journal Entry Cycle^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLC_CYCLECODE^CODE_DESC^^^^^^^^^^^2^0^^^^^^^O;^20^L^0^Journal Entry Cycle Code^^^
+TRANS_DATE^GLE_JRNLHDR^008^C^3005^ind_trans_date^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^TRANS_DATE^Transaction Date^Transaction Date^Trans Date^C^1^D^^^^^^^^^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^D;^^^^^^^
+REVERSE_DATE^GLE_JRNLHDR^009^C^3006^ind_reverse_date^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^REVERSE_DATE^Reversal Date^Reversal Date^Reversal Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+DEBIT_AMT^<<DISPLAY>>^013^D^3007^inn_debit_amt^0^^^9^^^^^^^DEBIT_AMT^Debit Posting Amount^Debits^Debits^N^^N^^^^^+39^-4^0^^^^^^^^^^^^^^^7^^^^^^GL^A^C;^^^^^^^
+CREDIT_AMT^<<DISPLAY>>^014^D^3008^inn_credit_amt^0^^^10^^^^^^^CREDIT_AMT^Credit Posting Amount^Credits^Credits^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^GL^A^C;^^^^^^^
+BALANCE^<<DISPLAY>>^015^D^3009^inn_balance^0^^^11^^^^^^^TOTAL_AMOUNT^Total Amount^Balance^Balance^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^GL^A^C;^^^^^^^
+UNITS^<<DISPLAY>>^016^D^3010^inn_units^0^^^12^^^^^^^UNITS^Units^Units^Units^N^^N^^^^^+11^-1^^^^^^^^^^^^^^^^7^^^^^^GL^U^C;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLE_JRNLHDR^PRIMARY^GLE_JRNLHDR.FIRM_ID                     GLE_JRNLHDR.JOURNAL_ID                  GLE_JRNLHDR.JE_TRANS_ID                 ^stbl("+FIRM_ID")+GLE_JRNLHDR.JOURNAL_ID$+GLE_JRNLHDR.JE_TRANS_ID$^stbl("+FIRM_ID")+RD_REC_DATA.JOURNAL_ID$+RD_REC_DATA.JE_TRANS_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.JOURNAL_ID$                 RD_REC_DATA.JE_TRANS_ID$                
+{KeyDefsEnd}
+{GridCols}
+002GLE_JRNLHDR.BATCH_NO                    ;003GLE_JRNLHDR.JOURNAL_ID                  ;004GLE_JRNLHDR.JE_TRANS_ID                 ;005GLE_JRNLHDR.DESCRIPTION                 ;007GLE_JRNLHDR.TRANS_DATE                  ;008GLE_JRNLHDR.REVERSE_DATE                ;009<<DISPLAY>>.DEBIT_AMT                   ;010<<DISPLAY>>.CREDIT_AMT                  ;011<<DISPLAY>>.BALANCE                     ;012<<DISPLAY>>.UNITS                       ;
+{GridColsEnd}

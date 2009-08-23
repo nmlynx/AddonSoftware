@@ -1,0 +1,34 @@
+Barista Application Framework - Definition Module
+SFE_WOMATDTL - Material Commit/Issues Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFE_WOMATDTL^^^^Material Commit/Issues Detail^Material Commit/Issues Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFE_WOMATDTL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFE_WOMATDTL^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFE_WOMATDTL^003^C^3002^ine_wo_no^0^^^3^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+MATERIAL_SEQ^SFE_WOMATDTL^004^C^3003^ine_material_seq^0^^^4^^Y^^^^^MATERIAL_SEQ^Materials Sequence Number^Materials Sequence Number^Mats Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Materials Sequence Number^^^
+UNIT_MEASURE^SFE_WOMATDTL^005^C^3004^ine_unit_measure^0^^^5^^N^^^^^UNIT_MEASURE^Unit of Measure^Unit of Measure^Unit of Measure^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Unit of Measure^^^
+WAREHOUSE_ID^SFE_WOMATDTL^007^C^3005^dis_warehouse_id^0^^^7^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^SFE_WOMATDTL^008^C^3006^dis_item_id^0^^^8^^N^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+REQUIRE_DATE^SFE_WOMATDTL^009^C^3007^ind_require_date^0^^^9^^N^^^C^^REQUIRE_DATE^Date Required^Date Required^Date Req^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Required^^^
+QTY_ORDERED^SFE_WOMATDTL^010^C^3008^inn_qty_ordered^0^^^10^^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity Ordered^Qty Ord^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^Quantity Ordered^^^
+TOT_QTY_ISS^SFE_WOMATDTL^011^C^3009^inn_tot_qty_iss^0^^^11^^N^^^^^TOT_QTY_ISS^Total Quantity Issued To Date^Total Quantity Issued To Date^Tot Qty Iss To Date^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Total Quantity Issued To Date^^^
+UNIT_COST^SFE_WOMATDTL^012^C^3010^inn_unit_cost^0^^^12^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+QTY_ISSUED^SFE_WOMATDTL^013^C^3011^inn_qty_issued^0^^^13^^N^^^^^QTY_ISSUED^Quantity Issued^Quantity Issued^Qty Iss^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity Issued^^^
+ISSUE_COST^SFE_WOMATDTL^014^C^3012^inn_issue_cost^0^^^14^^N^^^^^ISSUE_COST^Unit Cost When Issued^Unit Cost When Issued^Unit Cst When Iss^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Unit Cost When Issued^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFE_WOMATDTL^PRIMARY^SFE_WOMATDTL.FIRM_ID                    SFE_WOMATDTL.WO_LOCATION                SFE_WOMATDTL.WO_NO                      SFE_WOMATDTL.MATERIAL_SEQ               ^stbl("+FIRM_ID")+SFE_WOMATDTL.WO_LOCATION$+SFE_WOMATDTL.WO_NO$+SFE_WOMATDTL.MATERIAL_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$+RD_REC_DATA.MATERIAL_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      RD_REC_DATA.MATERIAL_SEQ$               
+{KeyDefsEnd}
+{GridCols}
+002SFE_WOMATDTL.WO_LOCATION                ;003SFE_WOMATDTL.WO_NO                      ;004SFE_WOMATDTL.MATERIAL_SEQ               ;005SFE_WOMATDTL.UNIT_MEASURE               ;007SFE_WOMATDTL.WAREHOUSE_ID               ;008SFE_WOMATDTL.ITEM_ID                    ;009SFE_WOMATDTL.REQUIRE_DATE               ;010SFE_WOMATDTL.QTY_ORDERED                ;011SFE_WOMATDTL.TOT_QTY_ISS                ;012SFE_WOMATDTL.UNIT_COST                  ;013SFE_WOMATDTL.QTY_ISSUED                 ;014SFE_WOMATDTL.ISSUE_COST                 ;
+{GridColsEnd}

@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+POR_REQPRINT - Purchase Requisition Print
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POR_REQPRINT^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;^^Purchase Requisition Print^Purchase Requisition Print^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]por_reqprint.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+REPORT_TYPE^POR_REQPRINT^001^C^3001^lbx_report_type^0^^^1^^N^^^^^REPORT_TYPE^Report Type^Sequence^Rpt Type^C^^L^^^^^^^210^^^^^^^^^N^^^^Requisition                   ~R   ;Vendor                        ~N   ;Vendor Alpha                  ~A   ;Warehouse                     ~W   ;^^1^^^^^^^^^^^^^^^
+MESSAGE_TEXT^POR_REQPRINT^004^C^3002^ine_message_text^0^^^2^^N^^^^^MESSAGE_TEXT^Message Text^Message Text^Msg Text^C^^E^^^^^^^320^^^^^^^^^^^^^^^40^^^^^^^^^^^^^^^
+RESTART^POR_REQPRINT^003^C^3003^cbx_restart^0^^^3^^N^^^^^RESTART^Restart^Restart^Restart^C^^C^POR_REQPRINT.REPORT_TYPE^N^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^^^^
+VENDOR_ID^POR_REQPRINT^002^C^3004^dis_vendor_id^0^^^4^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^VENDOR_ID^Vendor Number^Vendor ID^Vend ID^C^^E^POR_REQPRINT.REPORT_TYPE^N^^^^^48^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^3;^30^R^0^Enter A Valid Vendor^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POR_REQPRINT^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001POR_REQPRINT.REPORT_TYPE                ;002POR_REQPRINT.MESSAGE_TEXT               ;003POR_REQPRINT.RESTART                    ;004POR_REQPRINT.VENDOR_ID                  ;
+{GridColsEnd}

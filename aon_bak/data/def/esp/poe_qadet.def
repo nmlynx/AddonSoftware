@@ -1,0 +1,50 @@
+Barista Application Framework - Definition Module
+POE_QADET - QA Receipt Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POE_QADET^^^^QA Receipt Detail^QA Receipt Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POE_QADET^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECEIVER_NO^POE_QADET^002^C^3001^ine_receiver_no^0^^^2^^Y^^^^^RECEIVER_NO^Receiver Number^Receiver Number^Receiver No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Receiver Number^^^
+PO_NO^POE_QADET^003^C^3002^ine_po_no^0^^^3^^Y^^^^^PO_NO^Purchase Order Number^Número de pedido de compra^N.º de PO^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Purchase Order Number^^^
+PO_LINE_NO^POE_QADET^004^C^3003^ine_po_line_no^0^^^4^^Y^^^^^PO_LINE_NO^Purchase Order Line Number^Purchase Order Line Number^PO Line No^C^S^E^^^^^^^0^0^^^^^^^^^^^^^^3^0^^^000^000^^^^30^R^0^Purchase Order Line Number^^^
+PO_LINE_CODE^POE_QADET^005^C^3004^dis_po_line_code^0^^^5^^N^^^F^^PO_LINE_CODE^Purchase Order Line Code^Purchase Order Line Code^PO Line Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^POC_LINECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Purchase Order Line Code^^^
+LEAD_TIM_FLG^POE_QADET^007^C^3005^cbx_lead_tim_flg^0^^^7^^N^^^^^LEAD_TIM_FLG^Use Line for Lead Time Calc?^Use Line for Lead Time Calc?^Lead Time Calc?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Use Line for Lead Time Calc?^^^
+UNIT_MEASURE^POE_QADET^008^C^3006^ine_unit_measure^0^^^8^^N^^^^^UNIT_MEASURE^Unit of Measure^Unit of Measure^Unit of Measure^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Unit of Measure^^^
+LOCATION^POE_QADET^009^C^3007^ine_location^0^^^9^^N^^^^^LOCATION^Warehouse Location^Warehouse Location^Whse Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Warehouse Location^^^
+SOURCE_CODE^POE_QADET^010^C^3008^ine_source_code^0^^^10^^N^^^^^SOURCE_CODE^Source^Source^Source^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Source^^^
+FORECAST^POE_QADET^011^C^3009^dis_forecast^0^^^11^^N^^^F^^FORECAST^MRP Forecast Type^MRP Forecast Type^MRP Forecast Type^C^^E^^^^^^^0^0^[+FIRM_ID]+@^MPM_FORECAST^DESCRIPTION_01^^^^^^^^^^^3^0^^^^^^^^20^L^0^MRP Forecast Type^^^
+PO_MSG_CODE^POE_QADET^012^C^3010^dis_po_msg_code^0^^^12^^N^^^F^^PO_MSG_CODE^PO Standard Message Code^PO Standard Message Code^PO Std Msg Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^POC_MSGCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^PO Standard Message Code^^^
+UPDATE_FLAG^POE_QADET^013^C^3011^cbx_update_flag^0^^^13^^N^^^^^UPDATE_FLAG^Update Flag^Actualizar indicador^Actualizar indicador^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Update Flag^^^
+REQD_DATE^POE_QADET^015^C^3012^ind_reqd_date^0^^^15^^N^^^C^^REQD_DATE^Date Required^Date Required^Date Req^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Required^^^
+PROMISE_DATE^POE_QADET^016^C^3013^ind_promise_date^0^^^16^^N^^^C^^PROMISE_DATE^Delivery Promised By Date^Delivery Promised By Date^Del Prom By^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Delivery Promised By Date^^^
+NOT_B4_DATE^POE_QADET^017^C^3014^ind_not_b4_date^0^^^17^^N^^^C^^NOT_B4_DATE^Don't Deliver Before Date^Don't Deliver Before Date^Don't Del Bef^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Don't Deliver Before Date^^^
+WO_NO^POE_QADET^018^C^3015^ine_wo_no^0^^^18^^N^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+SEQUENCE_NO^POE_QADET^019^C^3016^ine_sequence_no^0^^^19^^N^^^^^SEQUENCE_NO^Sequence Number^Número de secuencia^N.º de sec.^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Sequence Number^^^
+WAREHOUSE_ID^POE_QADET^020^C^3017^dis_warehouse_id^0^^^20^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^POE_QADET^021^C^3018^dis_item_id^0^^^21^^N^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+ORDER_MEMO^POE_QADET^022^C^3019^ine_order_memo^0^^^22^^N^^^^^ORDER_MEMO^Memo / Non-Stock Description^Memo / Non-Stock Description^Memo/Non-Stock Desc^C^^E^^^^^^^^^^^^^^^^^^^^^^40^^^^^^^^^^^^Memo / Non-Stock Description^^^
+CONV_FACTOR^POE_QADET^025^C^3020^inn_conv_factor^0^^^25^^N^^^^^CONV_FACTOR^Conversion Factor^Conversion Factor^Conv Factor^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^V^^^^^Conversion Factor^^^
+UNIT_COST^POE_QADET^026^C^3021^inn_unit_cost^0^^^26^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+REQ_QTY^POE_QADET^027^C^3022^inn_req_qty^0^^^27^^N^^^^^REQ_QTY^Requisition Quantity^Requisition Quantity^Req Qty^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^Requisition Quantity^^^
+QTY_ORDERED^POE_QADET^028^C^3023^inn_qty_ordered^0^^^28^^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity Ordered^Qty Ord^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^Quantity Ordered^^^
+QA_WIP_QTY^POE_QADET^029^C^3024^inn_qa_wip_qty^0^^^29^^N^^^^^QA_WIP_QTY^QA Work in Process Quantity^QA Work in Process Quantity^QA WIP Qty^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^QA Work in Process Quantity^^^
+QA_REC_QTY^POE_QADET^030^C^3025^inn_qa_rec_qty^0^^^30^^N^^^^^QA_REC_QTY^QA Quantity Received^QA Quantity Received^QA Qty Received^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^QA Quantity Received^^^
+QA_REJ_QTY^POE_QADET^031^C^3026^inn_qa_rej_qty^0^^^31^^N^^^^^QA_REJ_QTY^QA Quantity Rejected^QA Quantity Rejected^QA Qty Rejected^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^QA Quantity Rejected^^^
+QTY_RECEIVED^POE_QADET^032^C^3027^inn_qty_received^0^^^32^^N^^^^^QTY_RECEIVED^Quantity Received^Quantity Received^Qty Received^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity Received^^^
+NS_ITEM_ID^POE_QADET^036^C^3028^ine_ns_item_id^0^^^36^^N^^^^^NS_ITEM_ID^Non-stock Item ID^Non-Stock Item ID^NS Item ID^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^^^0^Enter non-stock Item ID^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POE_QADET^PRIMARY^POE_QADET.FIRM_ID                       POE_QADET.RECEIVER_NO                   POE_QADET.PO_NO                         POE_QADET.PO_LINE_NO                    ^stbl("+FIRM_ID")+POE_QADET.RECEIVER_NO$+POE_QADET.PO_NO$+POE_QADET.PO_LINE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.RECEIVER_NO$+RD_REC_DATA.PO_NO$+RD_REC_DATA.PO_LINE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.RECEIVER_NO$                RD_REC_DATA.PO_NO$                      RD_REC_DATA.PO_LINE_NO$                 
+{KeyDefsEnd}
+{GridCols}
+002POE_QADET.RECEIVER_NO                   ;003POE_QADET.PO_NO                         ;004POE_QADET.PO_LINE_NO                    ;005POE_QADET.PO_LINE_CODE                  ;007POE_QADET.LEAD_TIM_FLG                  ;008POE_QADET.UNIT_MEASURE                  ;009POE_QADET.LOCATION                      ;010POE_QADET.SOURCE_CODE                   ;011POE_QADET.FORECAST                      ;012POE_QADET.PO_MSG_CODE                   ;013POE_QADET.UPDATE_FLAG                   ;015POE_QADET.REQD_DATE                     ;016POE_QADET.PROMISE_DATE                  ;017POE_QADET.NOT_B4_DATE                   ;018POE_QADET.WO_NO                         ;019POE_QADET.SEQUENCE_NO                   ;020POE_QADET.WAREHOUSE_ID                  ;021POE_QADET.ITEM_ID                       ;022POE_QADET.ORDER_MEMO                    ;025POE_QADET.CONV_FACTOR                   ;026POE_QADET.UNIT_COST                     ;027POE_QADET.REQ_QTY                       ;028POE_QADET.QTY_ORDERED                   ;029POE_QADET.QA_WIP_QTY                    ;030POE_QADET.QA_REC_QTY                    ;031POE_QADET.QA_REJ_QTY                    ;032POE_QADET.QTY_RECEIVED                  ;036POE_QADET.NS_ITEM_ID                    ;
+{GridColsEnd}

@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+OPC_MSG_HDR - Standard Message Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPC_MSG_HDR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-LSTG;^Message Code List             LSTGM;^Standard Message Header^Standard Message Header^OPC_MSG_DET^^OPC_MSG_DET;^^^^^T^^^^^^0;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPC_MSG_HDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+MESSAGE_CODE^OPC_MSG_HDR^002^C^3001^ine_message_code^0^^^2^^Y^^^^^MESSAGE_CODE^Standard Message Code^Standard Message Code^Std Msg Cd^C^^E^^^^^^^0^0^^^^^^^^^^^^^1^2^0^^^UU^^^^b;^30^R^0^Standard Message Code^^^
+CODE_DESC^OPC_MSG_HDR^003^C^3002^ine_code_desc^0^^^3^^N^^^^^CODE_DESC^Code Description^Description^Description^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPC_MSG_HDR^PRIMARY^OPC_MSG_HDR.FIRM_ID                     OPC_MSG_HDR.MESSAGE_CODE                ^stbl("+FIRM_ID")+OPC_MSG_HDR.MESSAGE_CODE$^stbl("+FIRM_ID")+RD_REC_DATA.MESSAGE_CODE$^stbl("+FIRM_ID")                        RD_REC_DATA.MESSAGE_CODE$               
+{KeyDefsEnd}
+{GridCols}
+002OPC_MSG_HDR.MESSAGE_CODE                ;003OPC_MSG_HDR.CODE_DESC                   ;
+{GridColsEnd}

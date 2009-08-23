@@ -1,0 +1,354 @@
+rem Callpoint program for IVM_ITEMWHSE - Warehouse Master
+rem Program ivm_itemwhse_cpt.bbj
+
+rem Barista Version 9.0
+rem Copyright (c) 2007-2009 BASIS International Ltd.
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
+	declare Callpoint Callpoint!
+
+	enter
+:		Callpoint!,
+:		bar_tpl$,
+:		BarObj!,
+:		user_tpl$,
+:		UserObj!,
+:		gui_dev,
+:		SysGUI!,
+:		Form!,
+:		rec_data$,
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		GridVect!,
+:		OrigVect!,
+:		hrec_data$[all],
+:		hattr_col$[all],
+:		err=*next
+
+rem --- Directory STBLs
+
+	dir_pgm$=stbl("+DIR_SYP")
+	dir_frm$=stbl("+DIR_FRM")
+	dir_def$=stbl("+DIR_DEF")
+	dir_img$=stbl("+DIR_IMG")
+	dir_wrk$=stbl("+DIR_WRK")
+
+rem --- Retrieve sysinfo Data
+
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_event$=Callpoint!.getCallpointEvent()
+
+	callpoint_event_str$=
+:		pad("IVM_ITEMWHSE.ABC_CODE.AVAL",40)+
+:		pad("IVM_ITEMWHSE.ADIS",40)+
+:		pad("IVM_ITEMWHSE.AOPT-HIST",40)+
+:		pad("IVM_ITEMWHSE.AOPT-IHST",40)+
+:		pad("IVM_ITEMWHSE.AOPT-LIFO",40)+
+:		pad("IVM_ITEMWHSE.BDEL",40)+
+:		pad("IVM_ITEMWHSE.BSHO",40)+
+:		pad("IVM_ITEMWHSE.EOQ.AVAL",40)+
+:		pad("IVM_ITEMWHSE.LEAD_TIME.AVAL",40)+
+:		pad("IVM_ITEMWHSE.MAXIMUM_QTY.AVAL",40)+
+:		pad("IVM_ITEMWHSE.ORDER_POINT.AVAL",40)+
+:		pad("IVM_ITEMWHSE.SAFETY_STOCK.AVAL",40)+
+:		pad("IVM_ITEMWHSE.UNIT_COST.AVAL",40)
+
+	switch fnstr_pos(callpoint_event$,callpoint_event_str$,40)
+		case fnstr_pos(pad("IVM_ITEMWHSE.ABC_CODE.AVAL",40),callpoint_event_str$,40)			
+			if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and callpoint!.getUserInput()<>" " callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.ADIS",40),callpoint_event_str$,40)			
+			rem --- If select in Physical Intentory, location and cycle can't change
+			
+			if callpoint!.getColumnData("IVM_ITEMWHSE.SELECT_PHYS") = "Y" then
+				call stbl("+DIR_SYP")+"bac_message.bbj","IV_PHY_INV_SELECT",msg_tokens$[all],msg_opt$,table_chans$[all]
+			endif
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.AOPT-HIST",40),callpoint_event_str$,40)			
+			iv_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+			iv_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+			rem --- call stbl("+DIR_PGM")+"ivm_itemWhseActivity.aon",
+:				gui_dev,
+:				Form!,
+:				iv_whse_id$,
+:				iv_item_id$,                                       
+:				table_chans$[all]
+			
+			rem --- run dir_pgm$+"ivr_itmWhseAct.aon"
+			call stbl("+DIR_PGM")+"ivr_itmWhseAct.aon",iv_item_id$,iv_whse_id$,table_chans$[all]
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.AOPT-IHST",40),callpoint_event_str$,40)			
+			cp_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+			cp_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+			user_id$=stbl("+USER_ID")
+			dim dflt_data$[4,1]
+			dflt_data$[1,0]="ITEM_ID_1"
+			dflt_data$[1,1]=cp_item_id$
+			dflt_data$[2,0]="ITEM_ID_2"
+			dflt_data$[2,1]=cp_item_id$
+			dflt_data$[3,0]="WAREHOUSE_ID_1"
+			dflt_data$[3,1]=cp_whse_id$
+			dflt_data$[4,0]="WAREHOUSE_ID_2"
+			dflt_data$[4,1]=cp_whse_id$
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:				"IVR_TRANSHIST",
+:				user_id$,
+:				"",
+:				"",
+:				table_chans$[all],
+:				"",
+:				dflt_data$[all]
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.AOPT-LIFO",40),callpoint_event_str$,40)			
+			cp_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+			cp_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+			user_id$=stbl("+USER_ID")
+			dim dflt_data$[4,1]
+			dflt_data$[1,0]="ITEM_ID_1"
+			dflt_data$[1,1]=cp_item_id$
+			dflt_data$[2,0]="ITEM_ID_2"
+			dflt_data$[2,1]=cp_item_id$
+			dflt_data$[3,0]="WAREHOUSE_ID_1"
+			dflt_data$[3,1]=cp_whse_id$
+			dflt_data$[4,0]="WAREHOUSE_ID_2"
+			dflt_data$[4,1]=cp_whse_id$
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:				"IVR_LIFOFIFO",
+:				user_id$,
+:				"",
+:				"",
+:				table_chans$[all],
+:				"",
+:				dflt_data$[all]
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.BDEL",40),callpoint_event_str$,40)			
+			rem --- Allow this warehouse to be deleted?
+			
+				action$ = "W"
+				whse$   = callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+				item$   = callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+			
+				call stbl("+DIR_PGM")+"ivc_deleteitem.aon", action$, whse$, item$, rd_table_chans$[all], status
+				if status then callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.BSHO",40),callpoint_event_str$,40)			
+			rem --- Get IV params
+			
+			ivs01_dev=fnget_dev("IVS_PARAMS")
+			dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+			
+			ivs01a_key$=firm_id$+"IV00"
+			find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+			
+			rem --- Disable Option menu options
+			
+			if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only
+			if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"IVM_LSMASTER;"
+			
+			if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+			
+			rem --- Get item defaults
+			
+			ivs10d_dev = fnget_dev("IVS_DEFAULTS")
+			dim ivs10d$:fnget_tpl$("IVS_DEFAULTS")
+			
+			ivs10d_key$ = firm_id$ + "D"
+			find record(ivs10d_dev, key=ivs10d_key$, dom=*next) ivs10d$
+			
+			callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.BUYER_CODE","DFLT",ivs10d.buyer_code$)
+			callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.AR_DIST_CODE","DFLT",ivs10d.ar_dist_code$)
+			callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.ABC_CODE","DFLT",ivs10d.abc_code$)
+			callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.EOQ_CODE","DFLT",ivs10d.eoq_code$)
+			callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.ORD_PNT_CODE","DFLT",ivs10d.ord_pnt_code$)
+			callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.SAF_STK_CODE","DFLT",ivs10d.saf_stk_code$)
+			
+			rem -- if AR dist by item param is not checked, disable the dist code field
+			if callpoint!.getDevObject("di")<>"Y"
+				callpoint!.setColumnEnabled("AR_DIST_CODE",-1)
+			endif
+			
+			
+			rem --- disable lot/serial master if this isn't a lotted/serialized item
+			if str(callpoint!.getDevObject("lot_serial_item"))<>"Y"
+				callpoint!.setOptionEnabled("IVM_LSMASTER",0)
+			else
+				callpoint!.setOptionEnabled("IVM_LSMASTER",1)
+			endif
+			
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.EOQ.AVAL",40),callpoint_event_str$,40)			
+			if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.LEAD_TIME.AVAL",40),callpoint_event_str$,40)			
+			if num(callpoint!.getUserInput())<0 or fpt(num(callpoint!.getUserInput())) then callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.MAXIMUM_QTY.AVAL",40),callpoint_event_str$,40)			
+			if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.ORDER_POINT.AVAL",40),callpoint_event_str$,40)			
+			if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.SAFETY_STOCK.AVAL",40),callpoint_event_str$,40)			
+			if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("IVM_ITEMWHSE.UNIT_COST.AVAL",40),callpoint_event_str$,40)			
+			rem --- Set default costs from unit cost
+			
+			unit_cost$ = callpoint!.getUserInput()
+			
+			if num( callpoint!.getColumnData("IVM_ITEMWHSE.LANDED_COST") ) = 0 then
+				callpoint!.setColumnData("IVM_ITEMWHSE.LANDED_COST",unit_cost$)
+			endif
+			
+			if num( callpoint!.getColumnData("IVM_ITEMWHSE.LAST_PO_COST") ) = 0 then
+				callpoint!.setColumnData("IVM_ITEMWHSE.LAST_PO_COST",unit_cost$)
+			endif
+			
+			if num( callpoint!.getColumnData("IVM_ITEMWHSE.AVG_COST") ) = 0 then
+				callpoint!.setColumnData("IVM_ITEMWHSE.AVG_COST",unit_cost$)
+			endif
+			
+			if num( callpoint!.getColumnData("IVM_ITEMWHSE.STD_COST") ) = 0 then
+				callpoint!.setColumnData("IVM_ITEMWHSE.STD_COST",unit_cost$)
+			endif
+			
+			if num( callpoint!.getColumnData("IVM_ITEMWHSE.REP_COST") ) = 0 then
+				callpoint!.setColumnData("IVM_ITEMWHSE.REP_COST",unit_cost$)
+			endif
+			
+			callpoint!.setStatus("REFRESH")
+		break
+
+		case default
+		break
+	swend
+
+rem --- All done
+
+	goto std_exit
+
+rem [[IVM_ITEMWHSE.<CUSTOM>]]
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+    
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+    
+std_missing_params_release:
+
+    status=999
+    if pgm(-1)<>pgm(-2) exit 
+    release
+
+rem #endinclude std_missing_params.src
+
+
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
+disp_msg:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bam_message.bbj",gui_dev,msg_title$,msg_text$,msg_defs$,msg_opt$
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call dir_pgm$+"bam_prog_bar.bbj",SysGUI!,Form!,MeterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_data$,meter_action$
+
+	return
+
+rem --- Functions
+
+	def fnstr_pos(str_pos_att0$,str_pos_att1$,str_pos_att1)=int((pos(str_pos_att0$=str_pos_att1$,str_pos_att1)+str_pos_att1-1)/str_pos_att1)
+	def fngett_attr$(gett_attr_att0$)=attr_tbl$[fnstr_pos(gett_attr_att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(getc_attr_att0,getc_attr_att0$)=attr_col$[getc_attr_att0,fnstr_pos(getc_attr_att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(getv_attr_att0$,getv_attr_att1$)=attr_col$[fnstr_pos(getv_attr_att0$,attr_col$[0,1],40),fnstr_pos(getv_attr_att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),0]
+	def fnget_rec_orig$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),1]
+	def fnget_hrec$(hrec_att0$)=hrec_data$[fnstr_pos(hrec_att0$,hrec_data$[0,0],40),0]
+	def fndate$(date_att0$)=date(jul(num(date_att0$(1,4)),num(date_att0$(5,2)),num(date_att0$(7,2))):stbl("+DATE_MASK"))
+	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnget_path$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),1]
+	def fnmdy$(tmp0$)=tmp0$(5,4)+tmp0$(1,4)
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	err_text$=""
+	if tcb(5) and pgm(-1)=pgm(-2) then err_text$=pgm(tcb(5),err=*next)
+	pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+	call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
+	if pos("EXIT"=err_act$) then goto std_error_exit
+	if pos("ESCAPE"=err_act$) then seterr 0;setesc 0
+	if pos("RETRY"=err_act$) then retry
+
+std_error_exit:
+
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ then escape
+
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) then exit
+	release
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+

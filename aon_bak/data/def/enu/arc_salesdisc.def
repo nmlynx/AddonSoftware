@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+ARC_SALESDISC - Sales Discount Code Mx
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARC_SALESDISC^^^^Sales Discount Code Mx^Sales Discount Code^^^^^^^^G^^^^^^A;P;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARC_SALESDISC^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+RECORD_ID_I^ARC_SALESDISC^002^C^3001^ine_record_id_i^0^^^2^^Y^^^^^RECORD_ID_I^"I"^I^I^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^^^^^^"I"^^
+SLS_DISC_CD^ARC_SALESDISC^003^C^3002^ine_sls_disc_cd^0^^^3^^Y^^^^^SLS_DISC_CD^Sales Discount Code^Sales Discount Code^Sales Disc Code^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^2^0^^^^^^^^20^L^0^^^^
+SLS_DISC_DESC^ARC_SALESDISC^004^C^3003^ine_sls_disc_desc^0^^^4^^N^^^^^SLS_DISC_DESC^Sales Discount Description^Description^Description^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^^^^
+SLS_DISC_PRCNT^ARC_SALESDISC^006^C^3004^inn_sls_disc_prcnt^0^^^5^^N^^^^^SLS_DISC_PRCNT^Sales Discount Percent^Sales Discount Percent^Percent^N^^N^^^^^^^42^0^^^^^^^^^^^^^^5^^^^^^^%^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARC_SALESDISC^PRIMARY^ARC_SALESDISC.FIRM_ID                   ARC_SALESDISC.RECORD_ID_I               ARC_SALESDISC.SLS_DISC_CD               ^stbl("+FIRM_ID")+"I"+ARC_SALESDISC.SLS_DISC_CD$^stbl("+FIRM_ID")+"I"+RD_REC_DATA.SLS_DISC_CD$^stbl("+FIRM_ID")                        "I"                                     RD_REC_DATA.SLS_DISC_CD$                
+{KeyDefsEnd}
+{GridCols}
+002ARC_SALESDISC.RECORD_ID_I               ;003ARC_SALESDISC.SLS_DISC_CD               ;004ARC_SALESDISC.SLS_DISC_DESC             ;005ARC_SALESDISC.SLS_DISC_PRCNT            ;
+{GridColsEnd}

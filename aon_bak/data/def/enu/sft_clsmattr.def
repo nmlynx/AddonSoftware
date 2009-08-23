@@ -1,0 +1,37 @@
+Barista Application Framework - Definition Module
+SFT_CLSMATTR - Closed WO Material Transactns
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFT_CLSMATTR^^^^Closed WO Material Transactns^Closed WO Material Transactns^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFT_CLSMATTR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFT_CLSMATTR^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFT_CLSMATTR^003^C^3002^ine_wo_no^0^^^3^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+TRANS_DATE^SFT_CLSMATTR^004^C^3003^ind_trans_date^0^^^4^^Y^^^C^^TRANS_DATE^Transaction Date^Transaction Date^Trans Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Transaction Date^^^
+RECORD_ID_M^SFT_CLSMATTR^005^C^^^^^^5^^Y^^^^^RECORD_ID_M^"M"^M^M^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"M"^"M"^^
+TRANS_SEQ^SFT_CLSMATTR^006^C^3004^ine_trans_seq^0^^^6^^Y^^^^^TRANS_SEQ^Transaction Sequence Number^Transaction Sequence Number^Trans Seq No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^12^0^^^000000000000^^^^^30^R^0^Transaction Sequence Number^^^
+MATERIAL_SEQ^SFT_CLSMATTR^007^C^3005^ine_material_seq^0^^^7^^N^^^^^MATERIAL_SEQ^Materials Sequence Number^Materials Sequence Number^Mats Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Materials Sequence Number^^^
+VENDOR_ID^SFT_CLSMATTR^008^C^3006^dis_vendor_id^0^^^8^^N^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+PO_NO^SFT_CLSMATTR^009^C^3007^ine_po_no^0^^^9^^N^^^^^PO_NO^Purchase Order Number^Purchase Order Number^PO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Purchase Order Number^^^
+PO_LINE_NO^SFT_CLSMATTR^010^C^3008^ine_po_line_no^0^^^10^^N^^^^^PO_LINE_NO^Purchase Order Line Number^Purchase Order Line Number^PO Line No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^3^0^^^000^000^^^^30^R^0^Purchase Order Line Number^^^
+UNIT_MEASURE^SFT_CLSMATTR^011^C^3009^ine_unit_measure^0^^^11^^N^^^^^UNIT_MEASURE^Unit of Measure^Unit of Measure^Unit of Measure^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Unit of Measure^^^
+WAREHOUSE_ID^SFT_CLSMATTR^012^C^3010^dis_warehouse_id^0^^^12^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^SFT_CLSMATTR^013^C^3011^dis_item_id^0^^^13^^N^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+UNITS^SFT_CLSMATTR^014^C^3012^inn_units^0^^^14^^N^^^^^UNITS^Units^Units^Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Units^^^
+UNIT_COST^SFT_CLSMATTR^015^C^3013^inn_unit_cost^0^^^15^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+EXT_COST^SFT_CLSMATTR^016^C^3014^inn_ext_cost^0^^^16^^N^^^^^EXT_COST^Extended Cost^Extended Cost^Ext Cst^N^^N^^^^^^^0^0^^^^^^^^^^^^^^15^0^^^^^^C^^^^0^Extended Cost^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFT_CLSMATTR^PRIMARY^SFT_CLSMATTR.FIRM_ID                    SFT_CLSMATTR.WO_LOCATION                SFT_CLSMATTR.WO_NO                      SFT_CLSMATTR.TRANS_DATE                 SFT_CLSMATTR.RECORD_ID_M                SFT_CLSMATTR.TRANS_SEQ                  ^stbl("+FIRM_ID")+SFT_CLSMATTR.WO_LOCATION$+SFT_CLSMATTR.WO_NO$+SFT_CLSMATTR.TRANS_DATE$+"M"+SFT_CLSMATTR.TRANS_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$+RD_REC_DATA.TRANS_DATE$+"M"+RD_REC_DATA.TRANS_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      RD_REC_DATA.TRANS_DATE$                 "M"                                     RD_REC_DATA.TRANS_SEQ$                  
+{KeyDefsEnd}
+{GridCols}
+002SFT_CLSMATTR.WO_LOCATION                ;003SFT_CLSMATTR.WO_NO                      ;004SFT_CLSMATTR.TRANS_DATE                 ;006SFT_CLSMATTR.TRANS_SEQ                  ;007SFT_CLSMATTR.MATERIAL_SEQ               ;008SFT_CLSMATTR.VENDOR_ID                  ;009SFT_CLSMATTR.PO_NO                      ;010SFT_CLSMATTR.PO_LINE_NO                 ;011SFT_CLSMATTR.UNIT_MEASURE               ;012SFT_CLSMATTR.WAREHOUSE_ID               ;013SFT_CLSMATTR.ITEM_ID                    ;014SFT_CLSMATTR.UNITS                      ;015SFT_CLSMATTR.UNIT_COST                  ;016SFT_CLSMATTR.EXT_COST                   ;
+{GridColsEnd}

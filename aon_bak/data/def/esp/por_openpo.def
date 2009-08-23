@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+POR_OPENPO - Open Purchase Orders
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POR_OPENPO^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;^^Open Purchase Orders^Open Purchase Orders^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]por_openpo.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+REPORT_SEQUENCE^POR_OPENPO^001^C^3001^lbx_report_sequence^0^^^1^^N^^^^^REPORT_SEQUENCE^Report Sequence^Secuencia^Sec.^C^^L^^^^^^^^^^^^^^^^"V"^^^^Vendor                        ~V   ;Vendor Alpha                  ~A   ;Purchase Order                ~P   ;^^1^^^^^^^^^^^^^^^
+PO_NO_1^POR_OPENPO^006^C^3002^ine_po_no^0^^^2^^N^^^^^PO_NO^Purchase Order Number^Purchase Order^N.º de PO^C^^E^POR_OPENPO.REPORT_SEQUENCE^P^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+PO_NO_2^POR_OPENPO^006^C^3003^ine_po_no^0^^^2^^N^^^^^PO_NO^Purchase Order Number^Purchase Order^N.º de PO^C^^E^POR_OPENPO.REPORT_SEQUENCE^P^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+VENDOR_ID_1^POR_OPENPO^002^C^3004^dis_vendor_id^0^^^3^^N^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^POR_OPENPO.REPORT_SEQUENCE^V^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^1;2;^30^R^0^Escribir un proveedor válido^^^
+VENDOR_ID_2^POR_OPENPO^002^C^3005^dis_vendor_id^0^^^3^^N^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^POR_OPENPO.REPORT_SEQUENCE^V^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^1;2;^30^R^0^Escribir un proveedor válido^^^
+ALT_SEQUENCE_1^POR_OPENPO^007^C^3006^ine_alt_sequence^0^^^4^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Alt Sequence^Sec. alt.^C^^E^POR_OPENPO.REPORT_SEQUENCE^A^^^^^^^^^^^^^^^^^^^^10^^^^^^^^1;^^^^^^^
+ALT_SEQUENCE_2^POR_OPENPO^007^C^3007^ine_alt_sequence^0^^^4^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Alt Sequence^Sec. alt.^C^^E^POR_OPENPO.REPORT_SEQUENCE^A^^^^^^^^^^^^^^^^^^^^10^^^^^^^^1;^^^^^^^
+DATE_TYPE^POR_OPENPO^003^C^3008^lbx_date_type^0^^^5^^N^^^^^DATE_TYPE^Date Type^Date Type^Date Type^C^^L^^^^^^^^^^^^^^^^"O"^^^^Date Ordered                  ~O   ;Date Promised                 ~P   ;Date Required                 ~R   ;Don't Deliver Before          ~D   ;^^1^^^^^^^^^^^^^^^
+PICK_DATE_1^POR_OPENPO^004^C^3009^ind_pick_date^0^^^6^^N^^^C^^PICK_DATE^Pick Screen Date YYYYMMDD^Fecha^Fecha^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+PICK_DATE_2^POR_OPENPO^004^C^3010^ind_pick_date^0^^^6^^N^^^C^^PICK_DATE^Pick Screen Date YYYYMMDD^Fecha^Fecha^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+WAREHOUSE_ID^POR_OPENPO^005^C^3011^dis_warehouse_id^0^^^7^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^3;^20^L^0^Enter a two-digit warehouse ID^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POR_OPENPO^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001POR_OPENPO.REPORT_SEQUENCE              ;002POR_OPENPO.PO_NO                        ;003POR_OPENPO.VENDOR_ID                    ;004POR_OPENPO.ALT_SEQUENCE                 ;005POR_OPENPO.DATE_TYPE                    ;006POR_OPENPO.PICK_DATE                    ;007POR_OPENPO.WAREHOUSE_ID                 ;
+{GridColsEnd}

@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+SFW_WOXDATE - Work Orders By Date Sort
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFW_WOXDATE^^^^Work Orders By Date Sort^Work Orders By Date Sort^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFW_WOXDATE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+SELECT_DATE^SFW_WOXDATE^002^C^3001^ind_select_date^0^^^2^^Y^^^C^^SELECT_DATE^Report Selection Date^Report Selection Date^Rpt Sel Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Report Selection Date^^^
+WO_LOCATION^SFW_WOXDATE^003^C^3002^ine_wo_location^0^^^3^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFW_WOXDATE^004^C^3003^ine_wo_no^0^^^4^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFW_WOXDATE^PRIMARY^SFW_WOXDATE.FIRM_ID                     SFW_WOXDATE.SELECT_DATE                 SFW_WOXDATE.WO_LOCATION                 SFW_WOXDATE.WO_NO                       ^stbl("+FIRM_ID")+SFW_WOXDATE.SELECT_DATE$+SFW_WOXDATE.WO_LOCATION$+SFW_WOXDATE.WO_NO$^stbl("+FIRM_ID")+RD_REC_DATA.SELECT_DATE$+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.SELECT_DATE$                RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      
+{KeyDefsEnd}
+{GridCols}
+002SFW_WOXDATE.SELECT_DATE                 ;003SFW_WOXDATE.WO_LOCATION                 ;004SFW_WOXDATE.WO_NO                       ;
+{GridColsEnd}

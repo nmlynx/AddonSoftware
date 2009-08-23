@@ -1,0 +1,29 @@
+Barista Application Framework - Definition Module
+MPX_REQVEND - Requirements By Vendor Xref
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+MPX_REQVEND^^^^Requirements By Vendor Xref^Requirements By Vendor Xref^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^MPX_REQVEND^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+FORECAST^MPX_REQVEND^002^C^3001^dis_forecast^0^^^2^^Y^^^F^^FORECAST^MRP Forecast Type^MRP Forecast Type^MRP Forecast Type^C^^E^^^^^^^0^0^[+FIRM_ID]+@^MPM_FORECAST^DESCRIPTION_01^^^^^^^^^^^3^0^^^^^^^^20^L^0^MRP Forecast Type^^^
+WAREHOUSE_ID^MPX_REQVEND^003^C^3002^dis_warehouse_id^0^^^3^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+VENDOR_ID^MPX_REQVEND^004^C^3003^dis_vendor_id^0^^^4^^Y^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+ITEM_ID^MPX_REQVEND^005^C^3004^dis_item_id^0^^^5^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+TRNS_DATE^MPX_REQVEND^006^C^3005^ind_trns_date^0^^^6^^Y^^^C^^TRNS_DATE^Transaction Date^Transaction Date^Trans Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Transaction Date^^^
+PEG_SOURCE^MPX_REQVEND^007^C^3006^ine_peg_source^0^^^7^^Y^^^^^PEG_SOURCE^Pegging Source [ABCDEFGIJK]^Pegging Source [ABCDEFGIJK]^Pegging Source^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Pegging Source [ABCDEFGIJK]^^^
+SEQ_NO^MPX_REQVEND^008^C^^^^^^8^^Y^^^^^SEQ_NO^Sequence Number^Sequence Number^Seq No^C^S^H^^^^^^^^^^^^^^^^^^^^^^5^^^^00000^00000^^^^30^R^^Sequence Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+MPX_REQVEND^PRIMARY^MPX_REQVEND.FIRM_ID                     MPX_REQVEND.FORECAST                    MPX_REQVEND.WAREHOUSE_ID                MPX_REQVEND.VENDOR_ID                   MPX_REQVEND.ITEM_ID                     MPX_REQVEND.TRNS_DATE                   MPX_REQVEND.PEG_SOURCE                  MPX_REQVEND.SEQ_NO                      ^stbl("+FIRM_ID")+MPX_REQVEND.FORECAST$+MPX_REQVEND.WAREHOUSE_ID$+MPX_REQVEND.VENDOR_ID$+MPX_REQVEND.ITEM_ID$+MPX_REQVEND.TRNS_DATE$+MPX_REQVEND.PEG_SOURCE$+MPX_REQVEND.SEQ_NO$^stbl("+FIRM_ID")+RD_REC_DATA.FORECAST$+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.ITEM_ID$+RD_REC_DATA.TRNS_DATE$+RD_REC_DATA.PEG_SOURCE$+RD_REC_DATA.SEQ_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.FORECAST$                   RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.ITEM_ID$                    RD_REC_DATA.TRNS_DATE$                  RD_REC_DATA.PEG_SOURCE$                 RD_REC_DATA.SEQ_NO$                     
+{KeyDefsEnd}
+{GridCols}
+002MPX_REQVEND.FORECAST                    ;003MPX_REQVEND.WAREHOUSE_ID                ;004MPX_REQVEND.VENDOR_ID                   ;005MPX_REQVEND.ITEM_ID                     ;006MPX_REQVEND.TRNS_DATE                   ;007MPX_REQVEND.PEG_SOURCE                  ;
+{GridColsEnd}

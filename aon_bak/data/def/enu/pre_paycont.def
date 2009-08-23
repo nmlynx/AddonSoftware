@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+PRE_PAYCONT - Payroll Entry - Contributions
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRE_PAYCONT^^^^Payroll Entry - Contributions^Payroll Entry - Contributions^^^^^^^PRE_PAYROLL^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+EMPLOYEE_NO^PRE_PAYCONT^002^C^3001^dis_employee_no^0^^^1^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+CHECK_TYPE^PRE_PAYCONT^003^C^3002^ine_check_type^0^^^2^^Y^^^^^CHECK_TYPE^Check or Transaction Type^Check or Transaction Type^Chk/Trans Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Check or Transaction Type^^^
+SEQUENCE_NUM^PRE_PAYCONT^004^C^3003^ine_sequence_num^0^^^3^^Y^^^^^SEQUENCE_NUM^Sequence Number^Sequence Number^Seq^C^S^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Sequence Number^^^
+CHECK_NO^PRE_PAYCONT^005^C^3004^ine_check_no^0^^^4^^Y^^^^^CHECK_NO^Check Number^Check Number^Check#^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Check Number^^^
+RECORD_ID_D^PRE_PAYCONT^006^C^^^^^^5^^Y^^^^^RECORD_ID_D^"D"^D^D^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"D"^"D"^^
+PR_ENTRY_SEQ^PRE_PAYCONT^007^C^3005^ine_pr_entry_seq^0^^^6^^Y^^^^^PR_ENTRY_SEQ^Payroll Entry Sequence Number^Seq^Seq^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Payroll Entry Sequence Number^^^
+CONTRIB_CODE^PRE_PAYCONT^008^C^3006^dis_contrib_code^0^^^7^^N^^^F^^CONTRIB_CODE^Payroll Contribution Code^Contribution Code^Cont Cd^C^^E^^^^^^^^^[+FIRM_ID]+"D"+@^PRC_CONTCODE^PR_CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^30^L^^Payroll Contribution Code^^^
+BASIS^PRE_PAYCONT^010^C^3007^inn_basis^0^^^8^^N^^^^^BASIS^Basis^Basis^Basis^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Basis^^^
+RATE^PRE_PAYCONT^011^C^3008^inn_rate^0^^^9^^N^^^^^RATE^Rate^Rate^Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Rate^^^
+CONTRIB_AMT^PRE_PAYCONT^012^C^3009^inn_contrib_amt^0^^^10^^N^^^^^CONTRIB_AMT^Contribution Amount^Contribution Amount^Amount^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Contribution Amount^^^
+FIRM_ID^PRE_PAYCONT^001^C^^^^^^11^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRE_PAYCONT^PRIMARY^PRE_PAYCONT.FIRM_ID                     PRE_PAYCONT.EMPLOYEE_NO                 PRE_PAYCONT.CHECK_TYPE                  PRE_PAYCONT.SEQUENCE_NUM                PRE_PAYCONT.CHECK_NO                    PRE_PAYCONT.RECORD_ID_D                 PRE_PAYCONT.PR_ENTRY_SEQ                ^stbl("+FIRM_ID")+PRE_PAYCONT.EMPLOYEE_NO$+PRE_PAYCONT.CHECK_TYPE$+PRE_PAYCONT.SEQUENCE_NUM$+PRE_PAYCONT.CHECK_NO$+"D"+PRE_PAYCONT.PR_ENTRY_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$+RD_REC_DATA.CHECK_TYPE$+RD_REC_DATA.SEQUENCE_NUM$+RD_REC_DATA.CHECK_NO$+"D"+RD_REC_DATA.PR_ENTRY_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                RD_REC_DATA.CHECK_TYPE$                 RD_REC_DATA.SEQUENCE_NUM$               RD_REC_DATA.CHECK_NO$                   "D"                                     RD_REC_DATA.PR_ENTRY_SEQ$               
+{KeyDefsEnd}
+{GridCols}
+001PRE_PAYCONT.EMPLOYEE_NO                 ;002PRE_PAYCONT.CHECK_TYPE                  ;003PRE_PAYCONT.SEQUENCE_NUM                ;004PRE_PAYCONT.CHECK_NO                    ;006PRE_PAYCONT.PR_ENTRY_SEQ                ;007PRE_PAYCONT.CONTRIB_CODE                ;008PRE_PAYCONT.BASIS                       ;009PRE_PAYCONT.RATE                        ;010PRE_PAYCONT.CONTRIB_AMT                 ;
+{GridColsEnd}

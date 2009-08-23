@@ -1,0 +1,93 @@
+Barista Application Framework - Definition Module
+OPE_PRICEQUOTE - Price Quote Inquiry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPE_PRICEQUOTE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-AVLE;BSHO;^Item Availability             AVLEB;^Price Quote Inquiry^Price Quote Inquiry^^^^^^^^S^^^^^^H;W;N;U;V;^^^Pricing Table;Contract Pricing;^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPE_PRICEQUOTE^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^0^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+CUSTOMER_ID^OPE_PRICEQUOTE^002^C^3001^dis_customer_id^0^^^2^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^u;^30^R^^^^^
+ADDR_LINE_1^<<DISPLAY>>^015^D^3002^ine_addr_line_1^0^^^3^^^^^^^ADDR_LINE_1^Address Line 1^^^C^^E^^^^^0^0^^0^^^^^^^^^^^^^^24^^^^^^AON^^C;^^^^^^^
+ADDR_LINE_2^<<DISPLAY>>^016^D^3003^ine_addr_line_2^0^^^4^^^^^^^ADDR_LINE_2^Address Line 2^^^C^^E^^^^^0^0^^0^^^^^^^^^^^^^^24^^^^^^AON^^C;^^^^^^^
+ADDR_LINE_3^<<DISPLAY>>^017^D^3004^ine_addr_line_3^0^^^5^^^^^^^ADDR_LINE_3^Address Line 3^^^C^^E^^^^^0^0^^0^^^^^^^^^^^^^^24^^^^^^AON^^C;^^^^^^^
+ADDR_LINE_4^<<DISPLAY>>^018^D^3005^ine_addr_line_4^0^^^6^^^^^^^ADDR_LINE_4^Address Line 4^^^C^^E^^^^^0^0^^0^^^^^^^^^^^^^^24^^^^^^AON^^C;^^^^^^^
+CITY^<<DISPLAY>>^019^D^3006^ine_city^0^^^7^^^^^^^CITY^City Name^^^C^^E^^^^^0^0^^0^^^^^^^^^^^^^^22^^^^^^AON^^C;^^^^^^^
+STATE_CODE^<<DISPLAY>>^020^D^3007^ine_state_code^0^^^8^^^^^^^STATE_CODE^State Code^^^C^^E^^^^^+18^-1^^0^^^^^^^^^^^^^^2^^^^^^AON^^C;^^^^^^^
+ZIP_CODE^<<DISPLAY>>^024^D^3008^ine_zip_code^0^^^9^^^^^^^ZIP_CODE^Zip/Postal Code^^^C^P^E^^^^^+4^-1^0^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^AD^^C;^^^0^^^^
+PRICING_CODE^OPE_PRICEQUOTE^003^C^3009^dis_pricing_code^0^^^10^^N^^^F^^PRICING_CODE^Customer Pricing Code^Código de fijación de precios del cliente^Cód. de fij. de precios del cl.^C^^E^OPE_PRICEQUOTE.FIRM_ID^z^^0^-22^0^0^0^[+FIRM_ID]+@^OPC_PRICECDS^CODE_DESC^^^^^^^^^^^4^0^^^UUUU^^^^^20^L^0^^^^
+WAREHOUSE_ID^OPE_PRICEQUOTE^004^C^3010^dis_warehouse_id^0^^^11^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^0^^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^u;^20^L^0^Enter a two-digit warehouse ID^^^
+CONTACT_NAME^<<DISPLAY>>^021^D^3011^ine_contact_name^0^^^12^^^^^^^CONTACT_NAME^Contact Name^Contact Name^^C^^E^^^^^+28^-7^^0^^^^^^^^^^^^^^20^^^^^^AON^^C;^^^^^^^
+PHONE_NO^<<DISPLAY>>^022^D^3012^ine_phone_no^0^^^13^^^^^^^PHONE_NO^Telephone Number^Phone Number^^C^T^E^^^^^0^0^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^BAR^^C;^^^0^^^^
+FAX_NO^<<DISPLAY>>^023^D^3013^ine_fax_no^0^^^14^^^^^^^FAX_NO^Fax Telephone Number^Fax Number^^C^T^E^^^^^0^0^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^AON^^C;^^^0^^^^
+ITEM_ID^OPE_PRICEQUOTE^005^C^3014^dis_item_id^0^^^15^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Item ID^C^^E^^^^0^-28^+4^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^u;^20^L^^Enter a valid inventory item^^^
+ITEM_CLASS^OPE_PRICEQUOTE^006^C^3015^dis_item_class^0^^^16^^N^^^F^^ITEM_CLASS^Item Class^Item Class^Item Class^C^^E^OPE_PRICEQUOTE.FIRM_ID^z^^0^0^0^0^0^[+FIRM_ID]+@^IVC_CLASCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^u;^20^L^0^^^^
+CUR_PRICE^OPE_PRICEQUOTE^007^C^3016^inn_cur_price^0^^^17^^N^^^^^CUR_PRICE^Current Price^Current Price^Curr Price^N^^N^OPE_PRICEQUOTE.FIRM_ID^z^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^P^^^^^^^^
+QTY_ON_HAND^OPE_PRICEQUOTE^008^C^3017^inn_qty_on_hand^0^^^18^^N^^^^^QTY_ON_HAND^Quantity On-Hand^Quantity On-Hand^Qty On-Hand^N^^N^OPE_PRICEQUOTE.FIRM_ID^z^^0^+16^-1^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^^^^
+QTY_COMMIT^OPE_PRICEQUOTE^009^C^3018^inn_qty_commit^0^^^19^^N^^^^^QTY_COMMIT^Quantity Committed^Quantity Committed^Qty Committed^N^^N^OPE_PRICEQUOTE.FIRM_ID^z^^0^+16^-1^0^0^^^^^^^^^^^^^^7^^^^^^^U^^^^^^^^
+QTY_AVAIL^<<DISPLAY>>^025^D^3019^inn_qty_avail^0^^^20^^^^^^^QTY_ON_HAND^Quantity On-Hand^Quantity Available^^N^^N^^^^^+16^-1^0^0^^^^^^^^^^^^^^7^0^^^^^IV^U^C;^^^0^^^^
+QTY_ORDERED_01^OPE_PRICEQUOTE^010^C^3101^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_02^OPE_PRICEQUOTE^010^C^3102^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_03^OPE_PRICEQUOTE^010^C^3103^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_04^OPE_PRICEQUOTE^010^C^3104^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_05^OPE_PRICEQUOTE^010^C^3105^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_06^OPE_PRICEQUOTE^010^C^3106^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_07^OPE_PRICEQUOTE^010^C^3107^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_08^OPE_PRICEQUOTE^010^C^3108^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_09^OPE_PRICEQUOTE^010^C^3109^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+QTY_ORDERED_10^OPE_PRICEQUOTE^010^C^3110^inn_qty_ordered^1^^^21^1^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+PCT_VALUE_01^OPE_PRICEQUOTE^011^C^3111^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_02^OPE_PRICEQUOTE^011^C^3112^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_03^OPE_PRICEQUOTE^011^C^3113^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_04^OPE_PRICEQUOTE^011^C^3114^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_05^OPE_PRICEQUOTE^011^C^3115^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_06^OPE_PRICEQUOTE^011^C^3116^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_07^OPE_PRICEQUOTE^011^C^3117^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_08^OPE_PRICEQUOTE^011^C^3118^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_09^OPE_PRICEQUOTE^011^C^3119^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+PCT_VALUE_10^OPE_PRICEQUOTE^011^C^3120^inn_pct_value^1^^^22^^N^^^^^PCT_VALUE^Percentage display^Percent^Visualización de porcentaje^N^^N^^^^0^+16^-10^0^0^^^^^^^^^^^^^^7^0^^^##0.00-^##0.00-^^^C;^^^0^^^^
+UNIT_PRICE_01^OPE_PRICEQUOTE^012^C^3121^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_02^OPE_PRICEQUOTE^012^C^3122^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_03^OPE_PRICEQUOTE^012^C^3123^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_04^OPE_PRICEQUOTE^012^C^3124^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_05^OPE_PRICEQUOTE^012^C^3125^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_06^OPE_PRICEQUOTE^012^C^3126^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_07^OPE_PRICEQUOTE^012^C^3127^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_08^OPE_PRICEQUOTE^012^C^3128^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_09^OPE_PRICEQUOTE^012^C^3129^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+UNIT_PRICE_10^OPE_PRICEQUOTE^012^C^3130^inn_unit_price^1^^^23^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+12^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+PRICE_METH^<<DISPLAY>>^026^D^3131^ine_price_meth^1^^^24^^^^^^^CALLPOINT_MSG^Callpoint Message^Pricing Method^^C^^E^^^^^-28^0^^0^^^^^^^^^^^^^^60^^^^^^ADB^^C;^^^^^^^
+CONTRACT_QTY_01^OPE_PRICEQUOTE^013^C^3201^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_02^OPE_PRICEQUOTE^013^C^3202^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_03^OPE_PRICEQUOTE^013^C^3203^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_04^OPE_PRICEQUOTE^013^C^3204^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_05^OPE_PRICEQUOTE^013^C^3205^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_06^OPE_PRICEQUOTE^013^C^3206^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_07^OPE_PRICEQUOTE^013^C^3207^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_08^OPE_PRICEQUOTE^013^C^3208^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_09^OPE_PRICEQUOTE^013^C^3209^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_QTY_10^OPE_PRICEQUOTE^013^C^3210^inn_contract_qty^2^^^25^2^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity^Qty Ord^N^^N^^^^0^-2^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^^^^
+CONTRACT_PRICE_01^OPE_PRICEQUOTE^014^C^3211^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_02^OPE_PRICEQUOTE^014^C^3212^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_03^OPE_PRICEQUOTE^014^C^3213^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_04^OPE_PRICEQUOTE^014^C^3214^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_05^OPE_PRICEQUOTE^014^C^3215^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_06^OPE_PRICEQUOTE^014^C^3216^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_07^OPE_PRICEQUOTE^014^C^3217^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_08^OPE_PRICEQUOTE^014^C^3218^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_09^OPE_PRICEQUOTE^014^C^3219^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_PRICE_10^OPE_PRICEQUOTE^014^C^3220^inn_contract_price^2^^^26^^N^^^^^UNIT_PRICE^Unit Price^Price^Unit Price^N^^N^^^^0^+13^-10^0^0^^^^^^^^^^^^^^7^^^^^^^P^C;^^^^^^^
+CONTRACT_DESC^<<DISPLAY>>^027^D^3221^ine_contract_desc^2^^^27^^^^^^^CALLPOINT_MSG^Callpoint Message^^^C^^E^^^^^-13^0^^0^^^^^^^^^^^^^^60^^^^^^ADB^^C;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPE_PRICEQUOTE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002OPE_PRICEQUOTE.CUSTOMER_ID              ;003<<DISPLAY>>.ADDR_LINE_1                 ;004<<DISPLAY>>.ADDR_LINE_2                 ;005<<DISPLAY>>.ADDR_LINE_3                 ;006<<DISPLAY>>.ADDR_LINE_4                 ;007<<DISPLAY>>.CITY                        ;008<<DISPLAY>>.STATE_CODE                  ;009<<DISPLAY>>.ZIP_CODE                    ;010OPE_PRICEQUOTE.PRICING_CODE             ;011OPE_PRICEQUOTE.WAREHOUSE_ID             ;012<<DISPLAY>>.CONTACT_NAME                ;013<<DISPLAY>>.PHONE_NO                    ;014<<DISPLAY>>.FAX_NO                      ;015OPE_PRICEQUOTE.ITEM_ID                  ;016OPE_PRICEQUOTE.ITEM_CLASS               ;017OPE_PRICEQUOTE.CUR_PRICE                ;018OPE_PRICEQUOTE.QTY_ON_HAND              ;019OPE_PRICEQUOTE.QTY_COMMIT               ;020<<DISPLAY>>.QTY_AVAIL                   ;021OPE_PRICEQUOTE.QTY_ORDERED              ;022OPE_PRICEQUOTE.PCT_VALUE                ;023OPE_PRICEQUOTE.UNIT_PRICE               ;024<<DISPLAY>>.PRICE_METH                  ;025OPE_PRICEQUOTE.CONTRACT_QTY             ;026OPE_PRICEQUOTE.CONTRACT_PRICE           ;027<<DISPLAY>>.CONTRACT_DESC               ;
+{GridColsEnd}

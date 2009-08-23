@@ -1,0 +1,29 @@
+Barista Application Framework - Definition Module
+GLT_BANKOTHER - Bank Rec Other Transactions
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLT_BANKOTHER^^^^Bank Rec Other Transactions^Otras transacciones de la conciliación bancaria^^^^^^^GLM_BANKMASTER^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLT_BANKOTHER^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL_ACCOUNT^GLT_BANKOTHER^002^C^^^^^^2^^Y^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^G;L;W;^30^L^^Cuenta de efectivo del GL^^^
+TRANS_NO^GLT_BANKOTHER^003^C^3001^ine_trans_no^0^^^3^^Y^^^^^TRANS_NO^Transaction Number^Número de transacción^Número^C^^E^^^^^^^70^^^^^^^^^^^^^^^7^^^^^^^^^^^^Número de transacción^^^
+TRANS_TYPE^GLT_BANKOTHER^004^C^3002^lbx_trans_type^0^^^4^^N^^^^^TRANS_TYPE^Transaction Type^Tipo de transacción^Tipo^C^^L^^^^^^^108^^^^^^^^^^^^^Depósito                     ~D   ;Cargo por servicio            ~S   ;Ajuste                        ~A   ;^^1^^^^U^^^^^^^^Tipo de transacción^^^
+TRNS_DATE^GLT_BANKOTHER^009^C^3003^ind_trns_date^0^^^5^^N^^^C^^TRNS_DATE^Transaction Date^Fecha de la transacción^Fecha de la trans.^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de la transacción^^^
+DESCRIPTION^GLT_BANKOTHER^007^C^3004^ine_description^0^^^6^^N^^^^^DESCRIPTION^Description^Descripción^Descripción^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^^^^^Descripción^^^
+TRANS_AMT^GLT_BANKOTHER^010^C^3005^inn_trans_amt^0^^^7^^N^^^^^TRANS_AMT^Transaction Amount^Monto de la transacción^Monto^N^^N^^^^^^^77^^^^^^^^^^^^^^^7^^^^###,###.00-^###,###.00-^^A^^^^^Monto de la transacción^^^
+POSTED_CODE^GLT_BANKOTHER^005^C^3006^lbx_posted_code^0^^^8^^N^^^^^POSTED_CODE^Posted Code [O/P]^Código registrado^Código^C^^L^^^^^^^80^0^^^^^^^^^^^^Pendiente                     ~O   ;Registrado                    ~P   ;^^1^0^^^^^^^^^^0^Código registrado [O/P]^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLT_BANKOTHER^PRIMARY^GLT_BANKOTHER.FIRM_ID                   GLT_BANKOTHER.GL_ACCOUNT                GLT_BANKOTHER.TRANS_NO                  ^stbl("+FIRM_ID")+GLT_BANKOTHER.GL_ACCOUNT$+GLT_BANKOTHER.TRANS_NO$^stbl("+FIRM_ID")+RD_REC_DATA.GL_ACCOUNT$+RD_REC_DATA.TRANS_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_ACCOUNT$                 RD_REC_DATA.TRANS_NO$                   
+{KeyDefsEnd}
+{GridCols}
+003GLT_BANKOTHER.TRANS_NO                  ;004GLT_BANKOTHER.TRANS_TYPE                ;005GLT_BANKOTHER.TRNS_DATE                 ;006GLT_BANKOTHER.DESCRIPTION               ;007GLT_BANKOTHER.TRANS_AMT                 ;008GLT_BANKOTHER.POSTED_CODE               ;
+{GridColsEnd}

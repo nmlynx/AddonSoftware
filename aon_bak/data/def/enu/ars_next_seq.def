@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+ARS_NEXT_SEQ - Next Sequence Number
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARS_NEXT_SEQ^^^^Next Sequence Number^Next Sequence Number^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+RECORD_ID_N^ARS_NEXT_SEQ^002^C^^^^^^1^^Y^^^^^RECORD_ID_N^"N"^N^N^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"N"^"N"^^
+NXT_CUSTOMER_ID^ARS_NEXT_SEQ^003^C^3001^inn_nxt_customer_id^0^^^2^^N^^^^^NXT_CUSTOMER_ID^Next Automatic Customer Number^Next Auto Customer Number^Nxt Auto Cust No^N^^N^^^^^200^^^^^^^^^^^^^^^^^7^^^^^^^N^^^^^Next Automatic Customer Number^^^
+NXT_SIM_INV^ARS_NEXT_SEQ^004^C^3002^inn_nxt_sim_inv^0^^^3^^N^^^^^NXT_SIM_INV^Next Simple Invoice Number^Next Simple Invoice Number^Nxt Simple Inv No^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Next Simple Invoice Number^^^
+FIRM_ID^ARS_NEXT_SEQ^001^C^^^^^^4^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARS_NEXT_SEQ^PRIMARY^ARS_NEXT_SEQ.FIRM_ID                    ARS_NEXT_SEQ.RECORD_ID_N                ^stbl("+FIRM_ID")+"N"^stbl("+FIRM_ID")+"N"^stbl("+FIRM_ID")                        "N"                                     
+{KeyDefsEnd}
+{GridCols}
+002ARS_NEXT_SEQ.NXT_CUSTOMER_ID            ;003ARS_NEXT_SEQ.NXT_SIM_INV                ;
+{GridColsEnd}

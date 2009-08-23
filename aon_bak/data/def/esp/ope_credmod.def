@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+OPE_CREDMOD - Modify Credit Information
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPE_CREDMOD^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARER;ASVA;^^Modify Credit Information^Modify Credit Information^^^^^^^^S^^^^^^B;D;H;X;N;U;V;^^[+DIR_PGM]adx_dummy.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CRED_HOLD^OPE_CREDMOD^001^C^3001^lbx_cred_hold^0^^^1^^N^^^^^CRED_HOLD^Credit Hold^Suspensión del crédito^Suspensión del créd.^C^^L^^^^0^0^0^0^0^^^^^^^^^^^^Yes                           ~Y   ;No                            ~N   ;Exempt                        ~E   ;^^1^0^^^^^^^^^^0^^^^
+CREDIT_LIMIT^OPE_CREDMOD^002^C^3002^inn_credit_limit^0^^^2^^N^^^^^CREDIT_LIMIT^Credit Limit^Límite de crédito^Lím. de créd.^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+TICKLER_DATE^OPE_CREDMOD^003^C^3003^ind_tickler_date^0^^^3^^N^^^C^^ORD_DATE^Order Date^Tickler Date^Ord Date^C^1^D^^^^0^0^0^0^0^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPE_CREDMOD^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001OPE_CREDMOD.CRED_HOLD                   ;002OPE_CREDMOD.CREDIT_LIMIT                ;003OPE_CREDMOD.TICKLER_DATE                ;
+{GridColsEnd}

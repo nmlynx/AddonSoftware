@@ -1,0 +1,33 @@
+Barista Application Framework - Definition Module
+SFW_VRNCXTYP - Variance Totals By Type Sort
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFW_VRNCXTYP^^^^Variance Totals By Type Sort^Variance Totals By Type Sort^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFW_VRNCXTYP^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFW_VRNCXTYP^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_TYPE^SFW_VRNCXTYP^003^C^3002^ine_wo_type^0^^^3^^Y^^^^^WO_TYPE^Work Order Type^Work Order Type^WO Type^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Type^^^
+WO_CATEGORY^SFW_VRNCXTYP^004^C^3003^lbx_wo_category^0^^^4^^N^^^^^WO_CATEGORY^Work Order Category [I/N/R]^Work Order Category^Work Order^C^^L^^^^^^^^^^^^^^^^^^^^Inventory Item                ~I   ;Non-Stock Item                ~N   ;Recurring/Permanent           ~R   ;^^1^^^^^^^^^^^^Work Order Category [I/N/R]^^^
+STD_HRS^SFW_VRNCXTYP^006^C^3004^inn_std_hrs^0^^^6^^N^^^^^STD_HRS^Standard Hours^Standard Hours^Std Hrs^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Standard Hours^^^
+STD_OPS_TOT^SFW_VRNCXTYP^007^C^3005^inn_std_ops_tot^0^^^7^^N^^^^^STD_OPS_TOT^Standard Operations Total^Standard Operations Total^Std Ops Tot^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Standard Operations Total^^^
+STD_MAT_TOT^SFW_VRNCXTYP^008^C^3006^inn_std_mat_tot^0^^^8^^N^^^^^STD_MAT_TOT^Standard Materials Total^Standard Materials Total^Std Mats Tot^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Standard Materials Total^^^
+STD_SUB_TOT^SFW_VRNCXTYP^009^C^3007^inn_std_sub_tot^0^^^9^^N^^^^^STD_SUB_TOT^Standard Subcontracts Total^Standard Subcontracts Total^Std Subs Tot^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Standard Subcontracts Total^^^
+ACTUAL_HRS^SFW_VRNCXTYP^010^C^3008^inn_actual_hrs^0^^^10^^N^^^^^ACTUAL_HRS^Actual Hours^Actual Hours^Actual Hou^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Actual Hours^^^
+ACT_OPS_TOT^SFW_VRNCXTYP^011^C^3009^inn_act_ops_tot^0^^^11^^N^^^^^ACT_OPS_TOT^Actual Operations Total^Actual Operations Total^Act Ops Tot^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Actual Operations Total^^^
+ACT_MAT_TOT^SFW_VRNCXTYP^012^C^3010^inn_act_mat_tot^0^^^12^^N^^^^^ACT_MAT_TOT^Actual Material Totals^Actual Material Totals^Act Mat Tots^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Actual Material Totals^^^
+ACT_SUB_TOT^SFW_VRNCXTYP^013^C^3011^inn_act_sub_tot^0^^^13^^N^^^^^ACT_SUB_TOT^Actual Subcontracts Total^Actual Subcontracts Total^Act Subs Total^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Actual Subcontracts Total^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFW_VRNCXTYP^PRIMARY^SFW_VRNCXTYP.FIRM_ID                    SFW_VRNCXTYP.WO_LOCATION                SFW_VRNCXTYP.WO_TYPE                    ^stbl("+FIRM_ID")+SFW_VRNCXTYP.WO_LOCATION$+SFW_VRNCXTYP.WO_TYPE$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_TYPE$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_TYPE$                    
+{KeyDefsEnd}
+{GridCols}
+002SFW_VRNCXTYP.WO_LOCATION                ;003SFW_VRNCXTYP.WO_TYPE                    ;004SFW_VRNCXTYP.WO_CATEGORY                ;006SFW_VRNCXTYP.STD_HRS                    ;007SFW_VRNCXTYP.STD_OPS_TOT                ;008SFW_VRNCXTYP.STD_MAT_TOT                ;009SFW_VRNCXTYP.STD_SUB_TOT                ;010SFW_VRNCXTYP.ACTUAL_HRS                 ;011SFW_VRNCXTYP.ACT_OPS_TOT                ;012SFW_VRNCXTYP.ACT_MAT_TOT                ;013SFW_VRNCXTYP.ACT_SUB_TOT                ;
+{GridColsEnd}

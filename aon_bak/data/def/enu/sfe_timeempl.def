@@ -1,0 +1,39 @@
+Barista Application Framework - Definition Module
+SFE_TIMEEMPL - Time Sheet Entry By Employee
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFE_TIMEEMPL^^^^Time Sheet Entry By Employee^Time Sheet Entry By Employee^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFE_TIMEEMPL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+EMPLOYEE_NO^SFE_TIMEEMPL^002^C^3001^dis_employee_no^0^^^2^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+TRANS_DATE^SFE_TIMEEMPL^003^C^3002^ind_trans_date^0^^^3^^Y^^^C^^TRANS_DATE^Transaction Date^Transaction Date^Trans Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Transaction Date^^^
+SEQUENCE_NUM^SFE_TIMEEMPL^004^C^3003^ine_sequence_num^0^^^4^^Y^^^^^SEQUENCE_NUM^Sequence Number^Sequence Number^Seq No^C^S^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Sequence Number^^^
+OP_SEQ^SFE_TIMEEMPL^005^C^3004^ine_op_seq^0^^^5^^N^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+OP_CODE^SFE_TIMEEMPL^006^C^3005^dis_op_code^0^^^6^^N^^^F^^OP_CODE^Operation Code^Operation Code^Op Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^BMC_OPCODES^CODE_DESC^^^^^^^^^^^3^0^^^^^^^^20^L^0^Operation Code^^^
+WO_NO^SFE_TIMEEMPL^007^C^3006^ine_wo_no^0^^^7^^N^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+START_TIME^SFE_TIMEEMPL^009^C^3007^ine_start_time^0^^^9^^N^^^^^START_TIME^Start Time [HHMM]^Start Time [HHMM]^Start Time [HHMM]^C^A^E^^^^^^^^^^^^^^^^^^^^^^4^^^^00:00^00:00^^^^^^^Start Time [HHMM]^^^
+STOP_TIME^SFE_TIMEEMPL^010^C^3008^ine_stop_time^0^^^10^^N^^^^^STOP_TIME^Stop Time [HHMM]^Stop Time [HHMM]^Stop Time [HHMM]^C^A^E^^^^^^^^^^^^^^^^^^^^^^4^^^^00:00^00:00^^^^^^^Stop Time [HHMM]^^^
+PAY_CODE^SFE_TIMEEMPL^011^C^3009^dis_pay_code^0^^^11^^N^^^F^^PAY_CODE^Pay Code^Pay Code^Pay Cd^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^PRC_PAYCODE^PR_CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^L^^Pay Code^^^
+TITLE_CODE^SFE_TIMEEMPL^012^C^3010^dis_title_code^0^^^12^^N^^^F^^TITLE_CODE^Title Code^Title Code^Title Cd^C^^E^^^^^^^^^[+FIRM_ID]+"F"+@^PRC_TITLCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^30^L^^Title Code^^^
+DEPT_CODE^SFE_TIMEEMPL^013^C^3011^ine_dept_code^0^^^13^^N^^^^^DEPT_CODE^Department Code^Department Code^Dept Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Department Code^^^
+HRS^SFE_TIMEEMPL^015^C^3012^inn_hrs^0^^^15^^N^^^^^HRS^Hours^Hours^Hrs^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Hours^^^
+DIRECT_RATE^SFE_TIMEEMPL^016^C^3013^inn_direct_rate^0^^^16^^N^^^^^DIRECT_RATE^Direct Rate^Direct Rate^Dir Rate^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^R^^^^0^Direct Rate^^^
+OVHD_RATE^SFE_TIMEEMPL^017^C^3014^inn_ovhd_rate^0^^^17^^N^^^^^OVHD_RATE^Overhead Rate^Overhead Rate^Ovrhd Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Overhead Rate^^^
+EXTENDED_AMT^SFE_TIMEEMPL^018^C^3015^inn_extended_amt^0^^^18^^N^^^^^EXTENDED_AMT^Extended Amount^Extended Amount^Ext Amt^N^^N^^^^^^^0^0^^^^^^^^^^^^^^15^0^^^^^^A^^^^0^Extended Amount^^^
+SETUP_TIME^SFE_TIMEEMPL^019^C^3016^inn_setup_time^0^^^19^^N^^^^^SETUP_TIME^Setup Time^Setup Time^Setup Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Setup Time^^^
+COMPLETE_QTY^SFE_TIMEEMPL^020^C^3017^inn_complete_qty^0^^^20^^N^^^^^COMPLETE_QTY^Quantity Completed^Quantity Completed^Qty Completed^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Quantity Completed^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFE_TIMEEMPL^PRIMARY^SFE_TIMEEMPL.FIRM_ID                    SFE_TIMEEMPL.EMPLOYEE_NO                SFE_TIMEEMPL.TRANS_DATE                 SFE_TIMEEMPL.SEQUENCE_NUM               ^stbl("+FIRM_ID")+SFE_TIMEEMPL.EMPLOYEE_NO$+SFE_TIMEEMPL.TRANS_DATE$+SFE_TIMEEMPL.SEQUENCE_NUM$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$+RD_REC_DATA.TRANS_DATE$+RD_REC_DATA.SEQUENCE_NUM$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                RD_REC_DATA.TRANS_DATE$                 RD_REC_DATA.SEQUENCE_NUM$               
+{KeyDefsEnd}
+{GridCols}
+002SFE_TIMEEMPL.EMPLOYEE_NO                ;003SFE_TIMEEMPL.TRANS_DATE                 ;004SFE_TIMEEMPL.SEQUENCE_NUM               ;005SFE_TIMEEMPL.OP_SEQ                     ;006SFE_TIMEEMPL.OP_CODE                    ;007SFE_TIMEEMPL.WO_NO                      ;009SFE_TIMEEMPL.START_TIME                 ;010SFE_TIMEEMPL.STOP_TIME                  ;011SFE_TIMEEMPL.PAY_CODE                   ;012SFE_TIMEEMPL.TITLE_CODE                 ;013SFE_TIMEEMPL.DEPT_CODE                  ;015SFE_TIMEEMPL.HRS                        ;016SFE_TIMEEMPL.DIRECT_RATE                ;017SFE_TIMEEMPL.OVHD_RATE                  ;018SFE_TIMEEMPL.EXTENDED_AMT               ;019SFE_TIMEEMPL.SETUP_TIME                 ;020SFE_TIMEEMPL.COMPLETE_QTY               ;
+{GridColsEnd}

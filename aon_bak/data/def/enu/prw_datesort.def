@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+PRW_DATESORT - Date/Employee Sort Record
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRW_DATESORT^^^^Date/Employee Sort Record^Date/Employee Sort Record^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^PRW_DATESORT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+CHECK_DATE^PRW_DATESORT^002^C^3001^ind_check_date^0^^^2^^Y^^^C^^CHECK_DATE^Check Date^Check Date^Chk Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Check Date^^^
+EMPLOYEE_NO^PRW_DATESORT^003^C^3002^dis_employee_no^0^^^3^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRW_DATESORT^PRIMARY^PRW_DATESORT.FIRM_ID                    PRW_DATESORT.CHECK_DATE                 PRW_DATESORT.EMPLOYEE_NO                ^stbl("+FIRM_ID")+PRW_DATESORT.CHECK_DATE$+PRW_DATESORT.EMPLOYEE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.CHECK_DATE$+RD_REC_DATA.EMPLOYEE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.CHECK_DATE$                 RD_REC_DATA.EMPLOYEE_NO$                
+{KeyDefsEnd}
+{GridCols}
+002PRW_DATESORT.CHECK_DATE                 ;003PRW_DATESORT.EMPLOYEE_NO                ;
+{GridColsEnd}

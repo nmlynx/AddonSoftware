@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+APC_PAYMENTGROUP - Payment Group
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APC_PAYMENTGROUP^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Payment Group^Grupo de pago^^^^^^^^T^^^^^^A;P;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APC_PAYMENTGROUP^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_D^APC_PAYMENTGROUP^002^C^^^^^^2^^Y^^^^^RECORD_ID_D^"D"^D^D^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;P;R;^^^^"D"^"D"^^
+PAYMENT_GRP^APC_PAYMENTGROUP^003^C^3001^ine_payment_grp^0^^^3^^Y^^^^^PAYMENT_GRP^Payment Group^Grupo de pago^Grupo^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^2^0^^^UU^^^^K;^20^L^0^Grupo de pago^^^
+CODE_DESC^APC_PAYMENTGROUP^004^C^3002^ine_code_desc^0^^^4^^N^^^^^CODE_DESC^Code Description^Descripción^Descripción^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Descripción del código^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APC_PAYMENTGROUP^PRIMARY^APC_PAYMENTGROUP.FIRM_ID                APC_PAYMENTGROUP.RECORD_ID_D            APC_PAYMENTGROUP.PAYMENT_GRP            ^stbl("+FIRM_ID")+"D"+APC_PAYMENTGROUP.PAYMENT_GRP$^stbl("+FIRM_ID")+"D"+RD_REC_DATA.PAYMENT_GRP$^stbl("+FIRM_ID")                        "D"                                     RD_REC_DATA.PAYMENT_GRP$                
+{KeyDefsEnd}
+{GridCols}
+003APC_PAYMENTGROUP.PAYMENT_GRP            ;004APC_PAYMENTGROUP.CODE_DESC              ;
+{GridColsEnd}

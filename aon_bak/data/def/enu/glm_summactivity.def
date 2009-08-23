@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+GLM_SUMMACTIVITY - Summary Activity Inquiry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_SUMMACTIVITY^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ACUS;AOPT-REPL;AREC;ASIZ;AWIN;^Replicate                     REPLF;^Summary Activity Inquiry^Summary Activity Inquiry^^^^^^^^S^^^^^^F;H;W;d;N;U;V;^[+DIR_PGM]adx_dummy.aon^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLM_SUMMACTIVITY^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+GL_ACCOUNT^GLM_SUMMACTIVITY^002^C^3001^dis_gl_account^0^^^2^^Y^^^^^GL_ACCOUNT^GL Account Number^GL Account^Account^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^C;^30^L^^^^^
+GL_ACCT_TYPE^GLM_SUMMACTIVITY^003^C^3002^lbx_gl_acct_type^0^^^3^^N^^^^^GL_ACCT_TYPE^GL Account Type [A/L/I/C/E]^Account Type^Acct Type^C^^L^^^^^0^0^0^0^^^^^^^^^^^^Asset                         ~A   ;Liability                     ~L   ;Capital                       ~C   ;Income                        ~I   ;Expense                       ~E   ;^^1^^^^^^^^A;B;C;^^^^^^^
+DETAIL_FLAG^GLM_SUMMACTIVITY^004^C^3003^cbx_detail_flag^0^^^4^^N^^^^^DETAIL_FLAG^Post Detail [Y/N]?^Post Detail?^Post Dtl?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^^^^^^^1^^^^^^^^C;^^^^Y=Detailed Postings From Subsystems  N=Summarized Postings^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_SUMMACTIVITY^PRIMARY^GLM_SUMMACTIVITY.FIRM_ID                GLM_SUMMACTIVITY.GL_ACCOUNT             ^stbl("+FIRM_ID")+GLM_SUMMACTIVITY.GL_ACCOUNT$^stbl("+FIRM_ID")+RD_REC_DATA.GL_ACCOUNT$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_ACCOUNT$                 
+{KeyDefsEnd}
+{GridCols}
+002GLM_SUMMACTIVITY.GL_ACCOUNT             ;003GLM_SUMMACTIVITY.GL_ACCT_TYPE           ;004GLM_SUMMACTIVITY.DETAIL_FLAG            ;
+{GridColsEnd}

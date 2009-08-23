@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+IVM_COPYITEM - Copy Item
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVM_COPYITEM^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Copy Item^Copy Item^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]ivm_copyitem.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVM_COPYITEM^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+OLD_ITEM^IVM_COPYITEM^002^C^3001^dis_old_item^0^^^2^^N^^^^^ITEM_ID^Inventory Item ID^Inventory Item ID^Item ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^1^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^C;^20^L^^Enter a valid inventory item^^^
+NEW_ITEM_ID^IVM_COPYITEM^003^C^3002^ine_new_item_id^0^^^3^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^NEW_ITEM_ID^New Inventory Item ID^New Item ID^Item ID^C^^E^^^^^0^0^0^0^^^^^^^^^^^^^1^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^0^Enter a valid inventory item^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVM_COPYITEM^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002IVM_COPYITEM.OLD_ITEM                   ;003IVM_COPYITEM.NEW_ITEM_ID                ;
+{GridColsEnd}

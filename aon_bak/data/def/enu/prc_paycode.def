@@ -1,0 +1,67 @@
+Barista Application Framework - Definition Module
+PRC_PAYCODE - Pay Code
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRC_PAYCODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-CLST;^Code Listing                  CLSTM;^Pay Code^Pay Code^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^PRC_PAYCODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_A^PRC_PAYCODE^002^C^^^^^^2^^Y^^^^^RECORD_ID_A^"A"^A^A^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"A"^"A"^^
+PAY_CODE^PRC_PAYCODE^003^C^3001^ine_pay_code^0^^^3^^Y^^^^^PAY_CODE^Pay Code^Pay Code^Pay Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^2^0^^^UU^^^^K;^30^L^^Pay Code^^^
+PR_CODE_DESC^PRC_PAYCODE^004^C^3002^ine_pr_code_desc^0^^^4^^N^^^^^PR_CODE_DESC^Payroll Code Description^Description^Desc^C^^E^^^^^^^^^^^^^^^^^^^^^^16^^^^^^^^^^^^Payroll Code Description^^^
+REPORT_CODE^PRC_PAYCODE^005^C^3003^ine_report_code^0^^^5^^N^^^^^REPORT_CODE^PR Report Code^Report Code^Rpt Cd^C^^E^^^^^^^^^^^^^^^^^^Additional^^^^2^^^^00^00^^^^^^^PR Report Code^^^
+UNITS_FLAG^PRC_PAYCODE^006^C^3004^cbx_units_flag^0^^^6^^N^^^^^UNITS_FLAG^Use Units?^Units^Units^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Use Units?^^^
+AUTO_DEDUCT^PRC_PAYCODE^007^C^3005^cbx_auto_deduct^0^^^7^^N^^^^^AUTO_DEDUCT^Auto Deduct Flag^Auto Deduct^Auto Deduct^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Auto Deduct Flag^^^
+CALC_TYPE^PRC_PAYCODE^008^C^3006^lbx_calc_type^0^^^8^^N^^^^^CALC_TYPE^PR Calculation Type [F/U/D/N]^Accrual Type^Acc Type^C^^L^^^^^^^^^^^^^^^^^^^^Fixed                         ~F   ;Units                         ~U   ;Dollars                       ~D   ;None                          ~N   ;^^1^^^^^^^^^^^^PR Calculation Type [F/U/D/N]^^^
+ACCR_BASIS^PRC_PAYCODE^009^C^3007^ine_accr_basis^0^^^9^^N^^^^^ACCR_BASIS^Accrual Basis Flag [C/A]^Accrual Basis^Accr Basis^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Accrual Basis Flag [C/A]^^^
+BASIS_TOT_CD^PRC_PAYCODE^010^C^3008^dis_basis_tot_cd^0^^^10^^N^^^F^^BASIS_TOT_CD^PR Basis Total Code^Accrual Total^Acc Tot^C^^E^^^^^^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^^^^^2^^^^00^00^^^^30^R^^PR Basis Total Code^^^
+CALC_RTAMT^PRC_PAYCODE^014^C^3009^inn_calc_rtamt^0^^^11^^N^^^^^CALC_RTAMT^Calculation Rate or Amount^Calculation Rate^Calc Rate/Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Calculation Rate or Amount^^^
+PREM_FACTOR^PRC_PAYCODE^015^C^3010^inn_prem_factor^0^^^12^^N^^^^^PREM_FACTOR^Premium Pay Factor^Premium Rate^Prem Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Premium Pay Factor^^^
+PAY_UNITS^PRC_PAYCODE^016^C^3011^inn_pay_units^0^^^13^^N^^^^^PAY_UNITS^Standard Pay Units^Standard Pay Units^Std Pay Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Standard Pay Units^^^
+ACCR_RAMT^PRC_PAYCODE^017^C^3012^inn_accr_ramt^0^^^14^^N^^^^^ACCR_RAMT^Accrual Rate or Amount^Accrual Rate or Amount^Accr Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Accrual Rate or Amount^^^
+PRODUCTIVE^PRC_PAYCODE^011^C^3013^cbx_productive^0^^^15^^N^^^^^PRODUCTIVE^Productive Flag^Productive Flag^Prodive Flag^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Productive Flag^^^
+SPECIAL_FLAG^PRC_PAYCODE^012^C^3014^cbx_special_flag^0^^^16^^N^^^^^SPECIAL_FLAG^Special Code Flag^Special Code Flag^Special Cd Flag^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Special Code Flag^^^
+PR_TOTAL_TO_01^PRC_PAYCODE^018^C^3015^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_02^PRC_PAYCODE^018^C^3016^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_03^PRC_PAYCODE^018^C^3017^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_04^PRC_PAYCODE^018^C^3018^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_05^PRC_PAYCODE^018^C^3019^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_06^PRC_PAYCODE^018^C^3020^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_07^PRC_PAYCODE^018^C^3021^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_08^PRC_PAYCODE^018^C^3022^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_09^PRC_PAYCODE^018^C^3023^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_TOTAL_TO_10^PRC_PAYCODE^018^C^3024^dis_pr_total_to^0^^^17^^N^^^F^^PR_TOTAL_TO^Payroll Total "To"^Total To^Tot To^C^^E^^^^^80^^^^[+FIRM_ID]+"G"+@^PRC_TOTLCODE^CODE_DESC^^^^^^^Totals^^^^2^^^^00^00^^^^30^R^^Payroll Total "To"^^^
+PR_SPEC_FUNC_01^PRC_PAYCODE^020^C^3025^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_02^PRC_PAYCODE^020^C^3026^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_03^PRC_PAYCODE^020^C^3027^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_04^PRC_PAYCODE^020^C^3028^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_05^PRC_PAYCODE^020^C^3029^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_06^PRC_PAYCODE^020^C^3030^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_07^PRC_PAYCODE^020^C^3031^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_08^PRC_PAYCODE^020^C^3032^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_09^PRC_PAYCODE^020^C^3033^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_SPEC_FUNC_10^PRC_PAYCODE^020^C^3034^ine_pr_spec_func^0^^^18^^N^^^^^PR_SPEC_FUNC^Payroll Special Function^Special Function^Spec^C^^E^^^^^370^-10^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Payroll Special Function^^^
+PR_TOT_OPER_01^PRC_PAYCODE^019^C^3035^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_02^PRC_PAYCODE^019^C^3036^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_03^PRC_PAYCODE^019^C^3037^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_04^PRC_PAYCODE^019^C^3038^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_05^PRC_PAYCODE^019^C^3039^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_06^PRC_PAYCODE^019^C^3040^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_07^PRC_PAYCODE^019^C^3041^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_08^PRC_PAYCODE^019^C^3042^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_09^PRC_PAYCODE^019^C^3043^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+PR_TOT_OPER_10^PRC_PAYCODE^019^C^3044^lbx_pr_tot_oper^0^^^19^^N^^^^^PR_TOT_OPER^Payroll Total Operator^Operator^Op^C^^L^^^^^230^-10^^^^^^^^^^^^^^None                          ~    ;Plus                          ~+   ;Mins                          ~-   ;^^1^^^^^^^^^^^^Payroll Total Operator^^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRC_PAYCODE^PRIMARY^PRC_PAYCODE.FIRM_ID                     PRC_PAYCODE.RECORD_ID_A                 PRC_PAYCODE.PAY_CODE                    ^stbl("+FIRM_ID")+"A"+PRC_PAYCODE.PAY_CODE$^stbl("+FIRM_ID")+"A"+RD_REC_DATA.PAY_CODE$^stbl("+FIRM_ID")                        "A"                                     RD_REC_DATA.PAY_CODE$                   
+{KeyDefsEnd}
+{GridCols}
+003PRC_PAYCODE.PAY_CODE                    ;004PRC_PAYCODE.PR_CODE_DESC                ;005PRC_PAYCODE.REPORT_CODE                 ;006PRC_PAYCODE.UNITS_FLAG                  ;007PRC_PAYCODE.AUTO_DEDUCT                 ;008PRC_PAYCODE.CALC_TYPE                   ;009PRC_PAYCODE.ACCR_BASIS                  ;010PRC_PAYCODE.BASIS_TOT_CD                ;011PRC_PAYCODE.CALC_RTAMT                  ;012PRC_PAYCODE.PREM_FACTOR                 ;013PRC_PAYCODE.PAY_UNITS                   ;014PRC_PAYCODE.ACCR_RAMT                   ;015PRC_PAYCODE.PRODUCTIVE                  ;016PRC_PAYCODE.SPECIAL_FLAG                ;017PRC_PAYCODE.PR_TOTAL_TO                 ;018PRC_PAYCODE.PR_SPEC_FUNC                ;019PRC_PAYCODE.PR_TOT_OPER                 ;
+{GridColsEnd}

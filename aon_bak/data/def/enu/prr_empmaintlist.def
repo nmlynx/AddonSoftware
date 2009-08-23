@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+PRR_EMPMAINTLIST - Payroll Employee Maintenance Listing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRR_EMPMAINTLIST^^^^Payroll Employee Maintenance Listing^Payroll Employee Maintenance Listing^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]prr_empmaintlist.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+OPTION^PRR_EMPMAINTLIST^001^C^3001^lbx_option^0^^^1^^N^^^^^REPORT_OPTION^Report Option^Option^Option^C^^L^^^^^+2^0^0^0^^^^^^^^A^^^^Active                        ~A   ;Terminated                    ~T   ;Both                          ~B   ;^^1^^^^^^^^^^^^^^^
+SEQUENCE^PRR_EMPMAINTLIST^002^C^3002^lbx_sequence^0^^^2^^N^^^^^REPORT_OPTION^Report Option^Sequence^Sequence^C^^L^^^^^0^0^0^0^^^^^^^^N^^^^Alternate Sequence            ~A   ;Numeric Sequence              ~N   ;^^1^^^^^^^^^^^^^^^
+EMPLOYEE_NO_1^PRR_EMPMAINTLIST^003^C^3003^dis_employee_no^0^^^3^^N^^^F^^EMPLOYEE_NO^Employee Number^Beginning Employee Number^Beginning Empl No^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^1;2;^^^^^^^
+EMPLOYEE_NO_2^PRR_EMPMAINTLIST^003^C^3004^dis_employee_no^0^^^3^^N^^^F^^EMPLOYEE_NO^Employee Number^Ending Employee Number^Ending Empl No^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^1;2;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRR_EMPMAINTLIST^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001PRR_EMPMAINTLIST.OPTION                 ;002PRR_EMPMAINTLIST.SEQUENCE               ;003PRR_EMPMAINTLIST.EMPLOYEE_NO            ;
+{GridColsEnd}

@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+POR_CALENDAR - Print Purchase Calendar
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POR_CALENDAR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;ASVA;BSHO;^^Print Purchase Calendar^Print Purchase Calendar^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]por_calendar.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRST_DATE^POR_CALENDAR^001^C^3001^ine_first_date^0^^^1^^N^^^^^REFERENCE^Reference^First day scheduled^First day^C^^E^^^^^0^0^80^0^^^^^^^^^^^^^^10^^^^^^^^C;^^^^^^^
+LAST_DATE^POR_CALENDAR^002^C^3002^ine_last_date^0^^^2^^N^^^^^REFERENCE^Reference^Last day scheduled^Last day^C^^E^^^^^0^0^80^0^^^^^^^^^^^^^^10^^^^^^^^C;^^^^^^^
+BEGINNING_MONTH^POR_CALENDAR^003^C^3003^ine_beginning_month^0^^^3^^N^^^^^MONTH^Month^Begin month^Month^C^^E^POR_CALENDAR.FIRST_DATE^!None^^^0^0^0^0^^^^^^^^^^^^^1^2^^01^12^00^00^^^^30^R^^^^^
+BEGINNING_YEAR^POR_CALENDAR^004^C^3004^ine_beginning_year^0^^^4^^N^^^^^YEAR^Year^Begin year^Year^C^3^E^POR_CALENDAR.FIRST_DATE^!None^^^0^0^0^0^^^^^^^^^^^^^^4^^^^0000^^^^^^^^^^^
+ENDING_MONTH^POR_CALENDAR^005^C^3005^ine_ending_month^0^^^5^^N^^^^^MONTH^Month^End month^Month^C^^E^POR_CALENDAR.LAST_DATE^!None^^^0^0^0^0^^^^^^^^^^^^^1^2^^01^12^00^00^^^^30^R^^^^^
+ENDING_YEAR^POR_CALENDAR^006^C^3006^ine_ending_year^0^^^6^^N^^^^^YEAR^Year^End year^Year^C^3^E^POR_CALENDAR.LAST_DATE^!None^^^0^0^0^0^^^^^^^^^^^^^^4^^^^0000^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POR_CALENDAR^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001POR_CALENDAR.FIRST_DATE                 ;002POR_CALENDAR.LAST_DATE                  ;003POR_CALENDAR.BEGINNING_MONTH            ;004POR_CALENDAR.BEGINNING_YEAR             ;005POR_CALENDAR.ENDING_MONTH               ;006POR_CALENDAR.ENDING_YEAR                ;
+{GridColsEnd}

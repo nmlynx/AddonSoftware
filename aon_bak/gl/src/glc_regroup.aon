@@ -1,0 +1,147 @@
+rem glc - Re-Group glm-10 strings to 5.2 gls-01 'B' structure
+rem Program glc_regroup v8.0.0 13Apr2006 (glc_rg)
+rem Created by adx_progconv.bbx v1.0.0 (04/13/2006 10:03:49)
+
+rem  +-----------------------------------------+
+rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
+rem  |  Copyright (c) 1981-2006 AddonSoftware  |
+rem  |          All Rights Reserved            |
+rem  +-----------------------------------------+
+
+rem --- GLM10_DEV    : Channel of GLM10 (Input)
+rem --- N0$          : Firm ID (Input)
+rem --- BREAKS$      : Acct Number Break String (Returned)
+rem --- DESCRIPTIONS$: Acct Number Break Description String (Returned)
+
+    setesc std_exit
+    seterr std_error
+    enter glm10_dev,firm_id$,breaks$,descriptions$
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    
+rem --- Retrieve templates
+	
+	num_files=1,open_beg=1,open_end=num_files	
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]	
+	open_tables$[1]="GLM_ACCTBREAKS",open_opts$[1]="T"
+	
+	gosub open_tables;rem 'T' option means we're just retrieving template
+    
+    dim glm10a$:open_tpls$[1]
+
+rem --- Initializations
+
+    breaks$="",descriptions$=""
+    more=1
+
+rem --- Position file
+
+    read (glm10_dev,key=firm_id$,err=*next)
+
+rem --- Read through glm-10 and regroup account break and
+rem --- description strings to structure of 5.2 gls-01
+
+    while more
+          k$=key(glm10_dev,end=*break)
+          if pos(firm_id$=k$)<>1 break
+          read record (glm10_dev)glm10a$
+          breaks$=breaks$+pad(glm10a.acct_no_brk$,10)
+          descriptions$=descriptions$+pad(glm10a.acct_bk_desc$,20)
+    wend
+
+rem --- All done
+
+    goto std_exit
+    
+open_tables: rem --- Call open table routine	
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		rd_table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+		status=912
+		goto std_exit
+	endif
+
+	return
+    
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+    exit
+
+rem #endinclude std_exit.src
+
+    end

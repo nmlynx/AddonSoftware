@@ -1,0 +1,28 @@
+Barista Application Framework - Definition Module
+ARU_FINANCECHARG - Generate Finance Charges
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARU_FINANCECHARG^^^^Generate Finance Charges^Generate Finance Charges^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]aru_financecharg.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+INVOICE_DATE^ARU_FINANCECHARG^001^C^3001^ind_invoice_date^0^^^1^^N^^^C^^INVOICE_DATE^Invoice Date^Finance Charge Date^Chg Date^C^1^D^^^^^+4^^70^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+PICK_INTEGER^ARU_FINANCECHARG^002^C^3002^inn_pick_integer^0^^^2^^N^^^^^PICK_INTEGER^Pick Screen Integer^Days Overdue^Days^N^^N^^^^^^^49^0^^^^^^^^^^^^^^8^^^^-#####0^^^^^30^R^^^^^
+PASTDUE_AMT^ARU_FINANCECHARG^003^C^3003^inn_pastdue_amt^0^^^3^^N^^^^^PASTDUE_AMT^Past Due Amount^Minimum Past Due Amount^Past Due^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+PERCENTAGE^ARU_FINANCECHARG^004^C^3004^inn_percentage^0^^^4^^N^^^^^PERCENTAGE^Percentage^Finance Charge Percentage^%^N^^N^^^^^^^49^^^^^^^^^^^^^^^7^^^^###0.00^###0.00^^%^^^^^^^^
+MINIMUM_AMT^ARU_FINANCECHARG^005^C^3005^inn_minimum_amt^0^^^5^^N^^^^^MINIMUM_AMT^Minimum Amount^Minimum Finance Charge Amount^Min Amt^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+AR_DIST_CODE^ARU_FINANCECHARG^006^C^3006^dis_ar_dist_code^0^^^6^^N^^^F^^AR_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"D"+@^ARC_DISTCODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^^^^
+AR_TERMS_CODE^ARU_FINANCECHARG^007^C^3007^dis_ar_terms_code^0^^^7^^N^^^F^^AR_TERMS_CODE^Terms Code^Terms Code^Terms Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^ARC_TERMCODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARU_FINANCECHARG^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001ARU_FINANCECHARG.INVOICE_DATE           ;002ARU_FINANCECHARG.PICK_INTEGER           ;003ARU_FINANCECHARG.PASTDUE_AMT            ;004ARU_FINANCECHARG.PERCENTAGE             ;005ARU_FINANCECHARG.MINIMUM_AMT            ;006ARU_FINANCECHARG.AR_DIST_CODE           ;007ARU_FINANCECHARG.AR_TERMS_CODE          ;
+{GridColsEnd}

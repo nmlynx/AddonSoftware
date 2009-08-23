@@ -1,0 +1,30 @@
+Barista Application Framework - Definition Module
+APR_AGINGREPORT - AP Aging Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APR_AGINGREPORT^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ASVA;^^AP Aging Report^Aging Report^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]apr_agingreport.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+AGING_DATE^APR_AGINGREPORT^001^C^3001^ind_aging_date^0^^^1^^N^^^C^^AGING_DATE^Aging Date^Aging Date^Aging Dt^N^1^D^^^^^^^70^0^^^^^^^^[+SYSTEM_DATE]^^^^^6^8^^^^^^^^^^^^^^^
+REPORT_OPTION^APR_AGINGREPORT^005^C^3002^lbx_report_option^0^^^2^^N^^^^^REPORT_OPTION^Report Option^Age by^Aging Opt^C^^L^^^^^^^109^^^^^^^^^D^^^^Accounting Date               ~A   ;Due Date                      ~D   ;Invoice Date                  ~I   ;^^1^^^^^^^^^^^^^^^
+PICK_CHECK^APR_AGINGREPORT^006^C^3003^cbx_pick_check^0^^^3^^N^^^^^PICK_CHECK^Pick Screen Check Box^Activity Past Aging Date?^Activ Past Age Dt^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+REPORT_SEQUENCE^APR_AGINGREPORT^007^C^3004^lbx_report_sequence^0^^^4^^N^^^^^REPORT_SEQUENCE^Report Sequence^Report Sequence^Seq^C^^L^^^^^^^125^^^^^^^^^V^^^^Alternate Sequence            ~A   ;Vendor ID                     ~V   ;^^1^^^^^^^^^^^^^^^
+REPORT_SUMM_DET^APR_AGINGREPORT^004^C^3005^lbx_report_summ_det^0^^^5^^N^^^^^REPORT_SUMM_DET^Report Summary or Detail^Summary or Detail^Summ or Det^C^^L^^^^^^^74^^^^^^^^^D^^^^Detail                        ~D   ;Summary                       ~S   ;^^1^^^^^^^^^^^^^^^
+REPORT_TYPE^APR_AGINGREPORT^002^C^3006^lbx_report_type^0^^^6^^N^^^^^REPORT_TYPE^Report Type^Period or Days^Per or Days^C^^L^^^^^^^60^^^^^^^^^P^^^^Days                          ~D   ;Period                        ~P   ;^^1^^^^^^^^^^^^^^^
+PICK_INTEGER^APR_AGINGREPORT^003^C^3007^inn_pick_integer^0^^^7^^N^^^^^PICK_INTEGER^Pick Screen Integer^Number of Days^No of Days^N^^N^APR_AGINGREPORT.REPORT_TYPE^D^^^^^35^0^^^^^^^^^^^^^^8^^^^-#####0^^^^^30^R^^^^^
+INCLUDE_DISC^APR_AGINGREPORT^008^C^3008^cbx_include_disc^0^^^8^^N^^^^^INCLUDE_DISC^Include Available Discounts?^Include Available Discounts^Include Discount^C^^C^^^Y;N^^^^30^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+EXPORT_FORMAT^APR_AGINGREPORT^009^C^3009^cbx_export_format^0^^^9^^N^^^^^GENERIC_CHK^Generic checkbox^Export format^Export fmt^C^^C^APR_AGINGREPORT.REPORT_SUMM_DET^D^Y;N^^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APR_AGINGREPORT^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001APR_AGINGREPORT.AGING_DATE              ;002APR_AGINGREPORT.REPORT_OPTION           ;003APR_AGINGREPORT.PICK_CHECK              ;004APR_AGINGREPORT.REPORT_SEQUENCE         ;005APR_AGINGREPORT.REPORT_SUMM_DET         ;006APR_AGINGREPORT.REPORT_TYPE             ;007APR_AGINGREPORT.PICK_INTEGER            ;008APR_AGINGREPORT.INCLUDE_DISC            ;009APR_AGINGREPORT.EXPORT_FORMAT           ;
+{GridColsEnd}

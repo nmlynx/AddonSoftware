@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+GLR_BUDGETUPDATE - Budget Revision Register
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLR_BUDGETUPDATE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Budget Revision Register^Registro de revisión del presupuesto^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]gle_budgetupdate.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+BUDGET_REVS^GLR_BUDGETUPDATE^001^C^3001^lbx_budget_revs^0^^^1^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^BUDGET_REVS^Budget Revision^Revisiones del presupuesto^Revisiones del presupuesto^C^^L^^^^^0^0^0^0^[+FIRM_ID]+@^GLM_BUDGETMASTER^DESCRIPTION^^^^^^^^^^1^2^0^^^^^^^^^^0^Seleccionar el presupuesto para crear^^^
+GL_ACCOUNT_1^GLR_BUDGETUPDATE^002^C^3002^dis_gl_account^0^^^2^^N^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^Adicional^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^Primer número de cuenta del GL^^^
+GL_ACCOUNT_2^GLR_BUDGETUPDATE^002^C^3003^dis_gl_account^0^^^2^^N^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^Adicional^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^Primer número de cuenta del GL^^^
+GL_WILDCARD^GLR_BUDGETUPDATE^003^C^3004^ine_gl_wildcard^0^^^3^^N^^^^^GL_WILDCARD^GL Account Wildcard Mask^Máscara comodín^Máscara comodín^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Máscara comodín de cuentas del GL^^^
+ROUNDING^GLR_BUDGETUPDATE^004^C^3005^lbx_rounding^0^^^4^^N^^^^^ROUNDING^Rounding Factor [C/D/H/T]^Factor de redondeo^Factor de redondeo^C^^L^^^^^^^0^0^^^^^^^^^^^^Centavos                      ~C   ;Dólares                      ~D   ;Cientos                       ~H   ;Miles                         ~T   ;^^1^0^^^^^^^^^^0^^^^
+UPDATE_TYPE^GLR_BUDGETUPDATE^005^C^3006^lbx_update_type^0^^^5^^N^^^^^UPDATE_TYPE^Update Type^Actualizar tipo^Actualizar tipo^C^^L^^^^^^^0^0^^^^^^^^^^^^Año actual                   ~C   ;Próximo año                 ~N   ;^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLR_BUDGETUPDATE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001GLR_BUDGETUPDATE.BUDGET_REVS            ;002GLR_BUDGETUPDATE.GL_ACCOUNT             ;003GLR_BUDGETUPDATE.GL_WILDCARD            ;004GLR_BUDGETUPDATE.ROUNDING               ;005GLR_BUDGETUPDATE.UPDATE_TYPE            ;
+{GridColsEnd}

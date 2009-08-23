@@ -1,0 +1,23 @@
+Barista Application Framework - Definition Module
+IVW_ACTTYPE - Activity Type Lookup
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVW_ACTTYPE^^^^Activity Type Lookup^Activity Type Lookup^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+INV_ACT_COLS^IVW_ACTTYPE^001^C^3001^lbx_inv_act_cols^0^^^1^^Y^^^^^INV_ACT_COLS^Inventory Activity Column Type^Inventory Activity Column Type^IV Act Col Type^C^^L^^^^^^^0^0^^^^^^^^^^^^Quantity Received             ~REC ;Quantity Built                ~BLT ;Quantity Sold                 ~SLD ;Quantity Issued               ~ISS ;Adjustment Quantity           ~ADJ ;Quantity Transferred In       ~XFI ;Quantity Transferred Out      ~XFO ;Quantity Returned             ~RET ;Ending Balance                ~END ;Beginning Balance             ~BEG ;Quantity Received and Built   ~IN  ;Quantity Sold and Issued      ~OUT ;Ending Balance - Beginning    ~USE ;Net Quantity Transferred      ~XFR ;Adjustment Quantity + Returns ~OTH ;^^3^0^^^^^^^^^^0^Inventory Activity Column Type^^^
+INV_ACT_DESC^IVW_ACTTYPE^002^C^3002^ine_inv_act_desc^0^^^2^^Y^^^^^INV_ACT_DESC^I/V Activity Column Descr.^I/V Activity Column Descr.^I/V Act Col Descr.^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^I/V Activity Column Descr.^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVW_ACTTYPE^PRIMARY^IVW_ACTTYPE.INV_ACT_COLS                IVW_ACTTYPE.INV_ACT_DESC                ^IVW_ACTTYPE.INV_ACT_COLS$+IVW_ACTTYPE.INV_ACT_DESC$^RD_REC_DATA.INV_ACT_COLS$+RD_REC_DATA.INV_ACT_DESC$^RD_REC_DATA.INV_ACT_COLS$               RD_REC_DATA.INV_ACT_DESC$               
+{KeyDefsEnd}
+{GridCols}
+001IVW_ACTTYPE.INV_ACT_COLS                ;002IVW_ACTTYPE.INV_ACT_DESC                ;
+{GridColsEnd}

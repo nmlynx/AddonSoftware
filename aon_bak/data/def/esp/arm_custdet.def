@@ -1,0 +1,50 @@
+Barista Application Framework - Definition Module
+ARM_CUSTDET - Customer Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARM_CUSTDET^^^^Customer Detail^Detalle de clientes^^^^^^^ARM_CUSTMAST^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARM_CUSTDET^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+CUSTOMER_ID^ARM_CUSTDET^002^C^3001^dis_customer_id^0^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Número de cliente^^^
+AR_TYPE^ARM_CUSTDET^003^C^^^^^^3^^Y^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^O;^^^^AR Type [Not Used]^"  "^^
+CUSTOMER_TYPE^ARM_CUSTDET^018^C^3201^dis_customer_type^2^^^24^2^N^^^F^^CUSTOMER_TYPE^Customer Type^Tipo de cliente^Tipo de cliente^C^^E^^^^^^^35^0^[+FIRM_ID]+"L"+@^ARC_CUSTTYPE^CODE_DESC^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Tipo de cliente^^^
+SLSPSN_CODE^ARM_CUSTDET^004^C^3202^dis_slspsn_code^2^^^25^^N^^^F^^SLSPSN_CODE^Salesperson Code^Código de vendedor^Cód. de vendedor^C^^E^^^^^^^35^0^[+FIRM_ID]+"F"+@^ARC_SALECODE^CODE_DESC^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Código de vendedor^^^
+AR_TERMS_CODE^ARM_CUSTDET^005^C^3203^dis_ar_terms_code^2^^^26^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^AR_TERMS_CODE^Terms Code^Código de condiciones^Cód. de condiciones^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^ARC_TERMCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Código de condiciones^^^
+TAX_CODE^ARM_CUSTDET^017^C^3204^dis_tax_code^2^^^27^^N^^^F^^OP_TAX_CODE^Tax Code^Código impositivo^Cód. impos.^C^^E^^^^^+31^-10^70^0^[+FIRM_ID]+@^OPC_TAXCODE^CODE_DESC^^^^^^^^^^1^10^0^^^UUUUUUUUUU^^^^^20^L^0^Código impositivo^^^
+FRT_TERMS^ARM_CUSTDET^022^C^3205^dis_frt_terms^2^^^28^^N^^^F^^FRT_TERMS^Freight Terms Code^Código de condiciones de flete^Condic. de flete^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^OPM_FRTTERMS^DESCRIPTION^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Código de condiciones de flete^^^
+TERRITORY^ARM_CUSTDET^013^C^3206^dis_territory^2^^^29^^N^^^F^^TERRITORY^Territory Code^Código de territorio^Cód de territ.^C^^E^^^^^^^35^0^[+FIRM_ID]+"H"+@^ARC_TERRCODE^CODE_DESC^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Código de territorio^^^
+AR_DIST_CODE^ARM_CUSTDET^007^C^3207^dis_ar_dist_code^2^^^30^^N^^^F^^AR_DIST_CODE^Distribution Code^Código de distribución^Cód. de distr.^C^^E^^^^^^^35^0^[+FIRM_ID]+"D"+@^ARC_DISTCODE^CODE_DESC^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Código de distribución^^^
+MESSAGE_CODE^ARM_CUSTDET^016^C^3208^dis_message_code^2^^^31^^N^^^F^^MESSAGE_CODE^Standard Message Code^Código de mensaje^Código de msj.^C^^E^^^^^^^35^0^[+FIRM_ID]+@^OPC_MSG_HDR^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^R^0^Código de mensaje estándar^^^
+PRICING_CODE^ARM_CUSTDET^014^C^3209^dis_pricing_code^2^^^32^^N^^^F^^PRICING_CODE^Customer Pricing Code^Código de fijación de precios del cliente^Cód. de fij. de precios del cl.^C^^E^^^^^^^35^0^[+FIRM_ID]+@^OPC_PRICECDS^CODE_DESC^^^^^^^^^^^4^0^^^UUUU^^^^^20^L^0^Código de fijación de precios del cliente^^^
+DISC_CODE^ARM_CUSTDET^006^C^3210^dis_disc_code^2^^^33^^N^^^F^^DISC_CODE^Sales Discount Code^Código de descuento de ventas^Código de dscto.^C^^E^^^^^^^35^^[+FIRM_ID]+@^OPC_DISCCODE^CODE_DESC^^^^^^^^^^1^2^^^^^^^^^20^L^0^Código de descuento de ventas^^^
+LABEL_CODE^ARM_CUSTDET^015^C^3211^ine_label_code^2^^^34^^N^^^^^LABEL_CODE^Label Code^Código de etiqueta^Cód. de etiqueta^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^^^^^Código de etiqueta^^^
+FINANCE_CHG^ARM_CUSTDET^008^C^3212^cbx_finance_chg^2^^^35^^N^^^^^FINANCE_CHG^Finance Charge?^¿Cargo financiero?^¿Cargo financiero?^C^^C^^^Y;N^^^+1^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^¿Cargo financiero?^^^
+STATEMENTS^ARM_CUSTDET^012^C^3213^cbx_statements^2^^^36^^N^^^^^STATEMENTS^Statements?^¿Estados?^¿Estados?^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^¿Estados?^^^
+AR_CYCLECODE^ARM_CUSTDET^010^C^3214^dis_ar_cyclecode^2^^^37^^N^^^F^^AR_CYCLECODE^AR Cycle Code^Código del ciclo^Cód. del ciclo^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^ARM_CYCLECOD^CODE_DESC^^^^^^^^^^1^2^0^^^UU^^^^^^^0^Código del ciclo^^^
+SA_FLAG^ARM_CUSTDET^009^C^3215^lbx_sa_flag^2^^^38^^N^^^^^SA_FLAG^Sales Analysis [N/P/I]^Análisis de ventas^A.d.v. [N/P/I]^C^^L^^^^^^^113^^^^^^^^^I^^^^Nivel del producto            ~P   ;Nivel de artículo            ~I   ;Sin análisis de venta        ~N   ;^1^1^^^^^^^^^^^^Análisis de ventas [N/P/I]^^^
+CREDIT_LIMIT^ARM_CUSTDET^032^C^3216^inn_credit_limit^2^^^39^^N^^^^^CREDIT_LIMIT^Credit Limit^Límite de crédito^Lím. de créd.^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Límite de crédito^^^
+CRED_HOLD^ARM_CUSTDET^021^C^3217^lbx_cred_hold^2^^^40^^N^^^^^CRED_HOLD^Credit Hold^Suspensión del crédito^Suspensión del créd.^C^^L^^^^^^^100^0^^^^^^^^^^^^Yes                           ~Y   ;No                            ~N   ;Exempt                        ~E   ;^1^1^0^^^^^^^C;^^^0^Retención de crédito [Y/N/E]^^^
+INV_HIST_FLG^ARM_CUSTDET^020^C^3218^cbx_inv_hist_flg^2^^^41^^N^^^^^INV_HIST_FLG^Retain Detail Invoice History?^¿Conservar detalle de historial de facturas?^¿Conservar det. de hist. fact?^C^^C^^^Y;N^^^^30^0^^^^^^^^Y^^^^^1^1^0^^^^^^^C;^^^0^¿Conservar detalle de historial de facturas?^^^
+AGING_FUTURE^ARM_CUSTDET^026^C^3301^inn_aging_future^3^^^42^3^N^^^^^AGING_FUTURE^Aging Amount - Future^Futuro^Antigüedad futura^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Antigüedad: futura^^^
+AGING_CUR^ARM_CUSTDET^027^C^3302^inn_aging_cur^3^^^43^^N^^^^^AGING_CUR^Aging Amount - Current^Actual^Antigüedad actual^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Antigüedad: actual^^^
+AGING_30^ARM_CUSTDET^028^C^3303^inn_aging_30^3^^^44^^N^^^^^AGING_30^Aging Amount -  30 Days^30 días^30 días de antigüedad^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Antigüedad: 30 días^^^
+AGING_60^ARM_CUSTDET^029^C^3304^inn_aging_60^3^^^45^^N^^^^^AGING_60^Aging Amount -  60 Days^60 días^60 días de antigüedad^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Antigüedad: 60 días^^^
+AGING_90^ARM_CUSTDET^030^C^3305^inn_aging_90^3^^^46^^N^^^^^AGING_90^Aging Amount -  90 Days^90 días^90 días de antigüedad^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Antigüedad: 90 días^^^
+AGING_120^ARM_CUSTDET^031^C^3306^inn_aging_120^3^^^47^^N^^^^^AGING_120^Aging Amount - 120 Days^120 días^120 días de antigüedad^N^^N^^^^^^^64^^^^^^^^^^^^^^^7^^^^^^^A^A;B;^^^^Antigüedad: 120 días^^^
+LSTINV_DATE^ARM_CUSTDET^024^C^3307^ind_lstinv_date^3^^^49^^N^^^C^^LSTINV_DATE^Last Invoice Date^Fecha de última factura^Fecha de última de fact.^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de última factura^^^
+LSTPAY_DATE^ARM_CUSTDET^025^C^3308^ind_lstpay_date^3^^^50^^N^^^C^^LSTPAY_DATE^Last Payment Date^Fecha de último pago^Fecha de últ. pago^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de último pago^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARM_CUSTDET^PRIMARY^ARM_CUSTDET.FIRM_ID                     ARM_CUSTDET.CUSTOMER_ID                 ARM_CUSTDET.AR_TYPE                     ^stbl("+FIRM_ID")+ARM_CUSTDET.CUSTOMER_ID$+"  "^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+"  "^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                "  "                                    
+{KeyDefsEnd}
+{GridCols}
+002ARM_CUSTDET.CUSTOMER_ID                 ;024ARM_CUSTDET.CUSTOMER_TYPE               ;025ARM_CUSTDET.SLSPSN_CODE                 ;026ARM_CUSTDET.AR_TERMS_CODE               ;027ARM_CUSTDET.TAX_CODE                    ;028ARM_CUSTDET.FRT_TERMS                   ;029ARM_CUSTDET.TERRITORY                   ;030ARM_CUSTDET.AR_DIST_CODE                ;031ARM_CUSTDET.MESSAGE_CODE                ;032ARM_CUSTDET.PRICING_CODE                ;033ARM_CUSTDET.DISC_CODE                   ;034ARM_CUSTDET.LABEL_CODE                  ;035ARM_CUSTDET.FINANCE_CHG                 ;036ARM_CUSTDET.STATEMENTS                  ;037ARM_CUSTDET.AR_CYCLECODE                ;038ARM_CUSTDET.SA_FLAG                     ;039ARM_CUSTDET.CREDIT_LIMIT                ;040ARM_CUSTDET.CRED_HOLD                   ;041ARM_CUSTDET.INV_HIST_FLG                ;042ARM_CUSTDET.AGING_FUTURE                ;043ARM_CUSTDET.AGING_CUR                   ;044ARM_CUSTDET.AGING_30                    ;045ARM_CUSTDET.AGING_60                    ;046ARM_CUSTDET.AGING_90                    ;047ARM_CUSTDET.AGING_120                   ;049ARM_CUSTDET.LSTINV_DATE                 ;050ARM_CUSTDET.LSTPAY_DATE                 ;
+{GridColsEnd}

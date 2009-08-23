@@ -1,0 +1,50 @@
+Barista Application Framework - Definition Module
+OPE_CREDMAINT - Credit Maintenance
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPE_CREDMAINT^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-COMM;AOPT-DELO;AOPT-IDTL;AOPT-MDAT;AOPT-ORIV;AOPT-RELO;ARER;BEND;BSHO;^Release                       RELOB;Comments                      COMMB;Orders                        ORIVB;Invoices                      IDTLB;Delete                        DELOB;Modify                        MDATB;^Credit Maintenance^Credit Maintenance^^^^^^^^S^^^^^^H;U;W;N;V;^^[+DIR_PGM]adx_dummy.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CUSTOMER_ID^OPE_CREDMAINT^001^C^3001^dis_customer_id^0^^^1^^N^^^^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^C;^30^R^^^^^
+ADDR_LINE_1^OPE_CREDMAINT^002^C^3002^ine_addr_line_1^0^^^2^^N^^^^^ADDR_LINE_1^Address Line 1^Domicilio^Dom.^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^C;^^^^^^^
+ADDR_LINE_2^OPE_CREDMAINT^003^C^3003^ine_addr_line_2^0^^^3^^N^^^^^ADDR_LINE_2^Address Line 2^Línea de domicilio 2^Dom. 2^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^C;L;^^^^^^^
+ADDR_LINE_3^OPE_CREDMAINT^004^C^3004^ine_addr_line_3^0^^^4^^N^^^^^ADDR_LINE_3^Address Line 3^Línea de domicilio 3^Dom. 3^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^C;L;^^^^^^^
+ADDR_LINE_4^OPE_CREDMAINT^005^C^3005^ine_addr_line_4^0^^^5^^N^^^^^ADDR_LINE_4^Address Line 4^Línea de domicilio 4^Dom. 4^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^C;L;^^^^^^^
+CITY^OPE_CREDMAINT^006^C^3006^ine_city^0^^^6^^N^^^^^CITY^City Name^Ciudad^Ciudad^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^22^^^^^^^^C;^^^^^^^
+STATE_CODE^OPE_CREDMAINT^007^C^3007^ine_state_code^0^^^7^^N^^^^^STATE_CODE^State Code^State^Estado^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^2^^^^^^^^C;^^^^^^^
+ZIP_CODE^OPE_CREDMAINT^008^C^3008^ine_zip_code^0^^^8^^N^^^^^ZIP_CODE^Zip/Postal Code^Zip Code^Código postal^C^P^E^^^^0^+9^-1^0^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^C;^^^0^^^^
+COUNTRY^OPE_CREDMAINT^009^C^3009^ine_country^0^^^9^^N^^^^^COUNTRY^Country^País^País^C^^E^^^^0^-9^0^0^0^^^^^^^^^^^^^^24^^^^^^^^C;^^^^^^^
+CONTACT_NAME^OPE_CREDMAINT^010^C^3010^ine_contact_name^0^^^10^^N^^^^^CONTACT_NAME^Contact Name^Nombre de contacto^Nombre de cont.^C^^E^^^^0^^+1^0^0^^^^^^^^^^^^^^20^^^^^^^^C;^^^^^^^
+PHONE_NO^OPE_CREDMAINT^011^C^3011^ine_phone_no^0^^^11^^N^^^^^PHONE_NO^Telephone Number^Número de teléfono^N.º de tel.^C^T^E^^^^0^+30^-9^120^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^C;^^^0^^^^
+PHONE_EXTEN^OPE_CREDMAINT^012^C^3012^ine_phone_exten^0^^^12^^N^^^^^PHONE_EXTEN^Phone Extension^Interno^Int.^C^^E^^^^0^+18^-1^0^0^^^^^^^^^^^^^^4^^^^^^^^C;^^^^^^^
+FAX_NO^OPE_CREDMAINT^013^C^3013^ine_fax_no^0^^^13^^N^^^^^FAX_NO^Fax Telephone Number^Número de fax^N.º de fax^C^T^E^^^^0^-18^^120^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^C;^^^0^^^^
+SLSPSN_CODE^OPE_CREDMAINT^014^C^3014^dis_slspsn_code^0^^^14^^N^^^^^SLSPSN_CODE^Salesperson Code^Código de vendedor^Cód. de vendedor^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+"F"+@^ARC_SALECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^C;^20^L^0^^^^
+AR_TERMS_CODE^OPE_CREDMAINT^015^C^3015^dis_ar_terms_code^0^^^15^^N^^^^^AR_TERMS_CODE^Terms Code^Código de condiciones^Cód. de condiciones^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+"A"+@^ARC_TERMCODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^C;^20^L^0^^^^
+CRED_HOLD^OPE_CREDMAINT^016^C^3016^lbx_cred_hold^0^^^16^^N^^^^^CRED_HOLD^Credit Hold^Suspensión del crédito^Suspensión del créd.^C^^L^^^^0^0^0^0^0^^^^^^^^^^^^Yes                           ~Y   ;No                            ~N   ;Exempt                        ~E   ;^^1^0^^^^^^^C;^^^0^^^^
+AGING_FUTURE^OPE_CREDMAINT^017^C^3017^inn_aging_future^0^^^17^^N^^^^^AGING_FUTURE^Aging Amount - Future^Future^Aging-Future^N^^N^^^^0^^+1^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+AGING_CUR^OPE_CREDMAINT^018^C^3018^inn_aging_cur^0^^^18^^N^^^^^AGING_CUR^Aging Amount - Current^Current^Aging-Curr^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+AGING_30^OPE_CREDMAINT^019^C^3019^inn_aging_30^0^^^19^^N^^^^^AGING_30^Aging Amount -  30 Days^30 Days^Aging-30 Days^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+AGING_60^OPE_CREDMAINT^020^C^3020^inn_aging_60^0^^^20^^N^^^^^AGING_60^Aging Amount -  60 Days^60 Days^Aging-60 Days^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+AGING_90^OPE_CREDMAINT^021^C^3021^inn_aging_90^0^^^21^^N^^^^^AGING_90^Aging Amount -  90 Days^90 Days^Aging-90 Days^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+AGING_120^OPE_CREDMAINT^022^C^3022^inn_aging_120^0^^^22^^N^^^^^AGING_120^Aging Amount - 120 Days^120 Days^Aging-120 Days^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+DSP_BALANCE^<<DISPLAY>>^028^D^3023^inn_dsp_balance^0^^^23^^^^^^^YTD_SALES^YTD Sales^Balance^^N^^N^^^^^0^0^^0^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+CREDIT_LIMIT^OPE_CREDMAINT^023^C^3024^inn_credit_limit^0^^^24^^N^^^^^CREDIT_LIMIT^Credit Limit^Límite de crédito^Lím. de créd.^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+COMMENTS^<<DISPLAY>>^029^D^3025^ced_comments^0^^^25^^^^^^^RECORD_TEXT^Record Text^Comments^^C^^U^^^^^-36^-4^250^80^^^^^^^^^^^^^^512^0^^^^^AON^^C;^^^0^^^^
+REV_DATE^OPE_CREDMAINT^024^C^3026^ind_rev_date^0^^^26^^N^^^^^REV_DATE^Review Date^Tickler Date^Review Date^C^1^D^^^^0^^+4^0^0^^^^^^^^^^^^^^8^^^^^^^^C;^^^^^^^
+ORDER_NO^OPE_CREDMAINT^025^C^3027^ine_order_no^0^^^27^^N^^^^^ORDER_NO^Sales Order Number^Order Number^Sales Ord No^C^^E^^^^0^+16^-1^0^0^^^^^^^^^^^^^^7^^^^0000000^0000000^^^C;^30^R^^^^^
+ORDER_DATE^OPE_CREDMAINT^026^C^3028^ind_order_date^0^^^28^^N^^^^^ORDER_DATE^Order Date^Order Date^Ord Date^C^1^D^^^^0^+14^-1^0^0^^^^^^^^^^^^^^8^^^^^^^^C;^^^^^^^
+SHIPMNT_DATE^OPE_CREDMAINT^027^C^3029^ind_shipmnt_date^0^^^29^^N^^^^^SHIPMNT_DATE^Ship Date^Ship Date^Ship Date^C^1^D^^^^0^+15^-1^0^0^^^^^^^^^^^^^^8^^^^^^^^C;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPE_CREDMAINT^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001OPE_CREDMAINT.CUSTOMER_ID               ;002OPE_CREDMAINT.ADDR_LINE_1               ;003OPE_CREDMAINT.ADDR_LINE_2               ;004OPE_CREDMAINT.ADDR_LINE_3               ;005OPE_CREDMAINT.ADDR_LINE_4               ;006OPE_CREDMAINT.CITY                      ;007OPE_CREDMAINT.STATE_CODE                ;008OPE_CREDMAINT.ZIP_CODE                  ;009OPE_CREDMAINT.COUNTRY                   ;010OPE_CREDMAINT.CONTACT_NAME              ;011OPE_CREDMAINT.PHONE_NO                  ;012OPE_CREDMAINT.PHONE_EXTEN               ;013OPE_CREDMAINT.FAX_NO                    ;014OPE_CREDMAINT.SLSPSN_CODE               ;015OPE_CREDMAINT.AR_TERMS_CODE             ;016OPE_CREDMAINT.CRED_HOLD                 ;017OPE_CREDMAINT.AGING_FUTURE              ;018OPE_CREDMAINT.AGING_CUR                 ;019OPE_CREDMAINT.AGING_30                  ;020OPE_CREDMAINT.AGING_60                  ;021OPE_CREDMAINT.AGING_90                  ;022OPE_CREDMAINT.AGING_120                 ;023<<DISPLAY>>.DSP_BALANCE                 ;024OPE_CREDMAINT.CREDIT_LIMIT              ;025<<DISPLAY>>.COMMENTS                    ;026OPE_CREDMAINT.REV_DATE                  ;027OPE_CREDMAINT.ORDER_NO                  ;028OPE_CREDMAINT.ORDER_DATE                ;029OPE_CREDMAINT.SHIPMNT_DATE              ;
+{GridColsEnd}

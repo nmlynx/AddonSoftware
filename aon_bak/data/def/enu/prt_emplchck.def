@@ -1,0 +1,34 @@
+Barista Application Framework - Definition Module
+PRT_EMPLCHCK - Employee Check History
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRT_EMPLCHCK^^^^Employee Check History^Employee Check History^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^PRT_EMPLCHCK^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+EMPLOYEE_NO^PRT_EMPLCHCK^002^C^3001^dis_employee_no^0^^^2^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+CHECK_NO^PRT_EMPLCHCK^003^C^3002^ine_check_no^0^^^3^^Y^^^^^CHECK_NO^Check Number^Check Number^Chk No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Check Number^^^
+PR_CHK_TYPE^PRT_EMPLCHCK^005^C^3003^ine_pr_chk_type^0^^^5^^N^^^^^PR_CHK_TYPE^Computer/Manual/Reversal/Void^Computer/Manual/Reversal/Void^Sys/Man/Rev/Void^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Computer/Manual/Reversal/Void^^^
+CHECK_DATE^PRT_EMPLCHCK^006^C^3004^ind_check_date^0^^^6^^N^^^C^^CHECK_DATE^Check Date^Check Date^Chk Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Check Date^^^
+CHECK_AMOUNT^PRT_EMPLCHCK^007^C^3005^inn_check_amount^0^^^7^^N^^^^^CHECK_AMOUNT^Check Amount^Check Amount^Chk Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Check Amount^^^
+EARNDEDUCT_01^PRT_EMPLCHCK^008^C^3006^inn_earndeduct^0^^^8^^N^^^^^EARNDEDUCT^Earnings/Deductions^Earnings/Deductions^Earn/Deds^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Earnings/Deductions^^^
+EARNDEDUCT_02^PRT_EMPLCHCK^008^C^3007^inn_earndeduct^0^^^8^^N^^^^^EARNDEDUCT^Earnings/Deductions^Earnings/Deductions^Earn/Deds^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Earnings/Deductions^^^
+EARNDEDUCT_03^PRT_EMPLCHCK^008^C^3008^inn_earndeduct^0^^^8^^N^^^^^EARNDEDUCT^Earnings/Deductions^Earnings/Deductions^Earn/Deds^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Earnings/Deductions^^^
+EARNDEDUCT_04^PRT_EMPLCHCK^008^C^3009^inn_earndeduct^0^^^8^^N^^^^^EARNDEDUCT^Earnings/Deductions^Earnings/Deductions^Earn/Deds^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Earnings/Deductions^^^
+EARNDEDUCT_05^PRT_EMPLCHCK^008^C^3010^inn_earndeduct^0^^^8^^N^^^^^EARNDEDUCT^Earnings/Deductions^Earnings/Deductions^Earn/Deds^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Earnings/Deductions^^^
+EARNDEDUCT_06^PRT_EMPLCHCK^008^C^3011^inn_earndeduct^0^^^8^^N^^^^^EARNDEDUCT^Earnings/Deductions^Earnings/Deductions^Earn/Deds^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Earnings/Deductions^^^
+EARNDEDUCT_07^PRT_EMPLCHCK^008^C^3012^inn_earndeduct^0^^^8^^N^^^^^EARNDEDUCT^Earnings/Deductions^Earnings/Deductions^Earn/Deds^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Earnings/Deductions^^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRT_EMPLCHCK^PRIMARY^PRT_EMPLCHCK.FIRM_ID                    PRT_EMPLCHCK.EMPLOYEE_NO                PRT_EMPLCHCK.CHECK_NO                   ^stbl("+FIRM_ID")+PRT_EMPLCHCK.EMPLOYEE_NO$+PRT_EMPLCHCK.CHECK_NO$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$+RD_REC_DATA.CHECK_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                RD_REC_DATA.CHECK_NO$                   
+{KeyDefsEnd}
+{GridCols}
+002PRT_EMPLCHCK.EMPLOYEE_NO                ;003PRT_EMPLCHCK.CHECK_NO                   ;005PRT_EMPLCHCK.PR_CHK_TYPE                ;006PRT_EMPLCHCK.CHECK_DATE                 ;007PRT_EMPLCHCK.CHECK_AMOUNT               ;008PRT_EMPLCHCK.EARNDEDUCT                 ;
+{GridColsEnd}

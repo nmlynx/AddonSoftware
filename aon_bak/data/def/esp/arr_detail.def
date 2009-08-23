@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+ARR_DETAIL - AR Customer Detail Listing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARR_DETAIL^^^^AR Customer Detail Listing^Lista de detalle de clientes^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]arr_detail.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARR_DETAIL^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+CUSTOMER_ID_1^ARR_DETAIL^002^C^3001^dis_customer_id^0^^^2^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+CUSTOMER_ID_2^ARR_DETAIL^002^C^3002^dis_customer_id^0^^^2^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+PICK_CHECK^ARR_DETAIL^003^C^3003^cbx_pick_check^0^^^3^^N^^^^^PICK_CHECK^Pick Screen Check Box^Incluir comentarios^Comentarios^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARR_DETAIL^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002ARR_DETAIL.CUSTOMER_ID                  ;003ARR_DETAIL.PICK_CHECK                   ;
+{GridColsEnd}

@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+BMX_PACKLIST - Packing List Materials By Op
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+BMX_PACKLIST^^^^Packing List Materials By Op^Packing List Materials By Op^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^BMX_PACKLIST^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+OP_SEQ^BMX_PACKLIST^002^C^3001^ine_op_seq^0^^^2^^Y^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+BILL_NO^BMX_PACKLIST^003^C^3002^dis_bill_no^0^^^3^^Y^^^F^^BILL_NO^Bill of Materials Number^Bill of Materials Number^Bill of Mats No^C^^E^^^^^^^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^^^^^^20^L^0^Bill of Materials Number^^^
+MATERIAL_SEQ^BMX_PACKLIST^004^C^3003^ine_material_seq^0^^^4^^Y^^^^^MATERIAL_SEQ^Materials Sequence Number^Materials Sequence Number^Mats Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Materials Sequence Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+BMX_PACKLIST^PRIMARY^BMX_PACKLIST.FIRM_ID                    BMX_PACKLIST.OP_SEQ                     BMX_PACKLIST.BILL_NO                    BMX_PACKLIST.MATERIAL_SEQ               ^stbl("+FIRM_ID")+BMX_PACKLIST.OP_SEQ$+BMX_PACKLIST.BILL_NO$+BMX_PACKLIST.MATERIAL_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.OP_SEQ$+RD_REC_DATA.BILL_NO$+RD_REC_DATA.MATERIAL_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.OP_SEQ$                     RD_REC_DATA.BILL_NO$                    RD_REC_DATA.MATERIAL_SEQ$               
+{KeyDefsEnd}
+{GridCols}
+002BMX_PACKLIST.OP_SEQ                     ;003BMX_PACKLIST.BILL_NO                    ;004BMX_PACKLIST.MATERIAL_SEQ               ;
+{GridColsEnd}

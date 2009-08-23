@@ -1,0 +1,30 @@
+Barista Application Framework - Definition Module
+GLE_FINANCIALAMT - Financial Report Amounts
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLE_FINANCIALAMT^^^^Financial Report Amounts^Financial Report Amounts^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLE_FINANCIALAMT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL_RPT_NO^GLE_FINANCIALAMT^002^C^3001^dis_gl_rpt_no^0^^^2^^Y^^^F^^GL_RPT_NO^GL Financial Report Number^Financial Report Number^Fin Rpt No^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLM_FINMASTER^GL_RPT_DESC^^^^^^^^^^^2^0^^^00^00^^^^30^R^0^GL Financial Report Number^^^
+GL_RPT_LINE^GLE_FINANCIALAMT^003^C^3002^dis_gl_rpt_line^0^^^3^^Y^^^F^^GL_RPT_LINE^GL Financial Report Line Nbr^Financial Report Line Nbr^Fin Rpt Line No^C^^E^^^^^^^0^0^[+FIRM_ID]+[GL_RPT_NO]+@^GLM_FINDETAIL^GL_LINE_DESC^^^^^^^^^^^4^0^^^0000^0000^^^^30^R^0^GL Financial Report Line Nbr^^^
+GL_PCN_FLAG^GLE_FINANCIALAMT^004^C^3003^ine_gl_pcn_flag^0^^^4^^Y^^^^^GL_PCN_FLAG^Prior, Current or Next [PCN]?^Prior^Prior^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Prior, Current or Next [PCN]?^^^
+GL_PQY_FLAG^GLE_FINANCIALAMT^005^C^3004^ine_gl_pqy_flag^0^^^5^^Y^^^^^GL_PQY_FLAG^Period, Qtr or Year [PQY]?^Period^Prd^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Period, Qtr or Year [PQY]?^^^
+ACTUAL_AMT^GLE_FINANCIALAMT^006^C^3005^inn_actual_amt^0^^^6^^N^^^^^ACTUAL_AMT^Actual Amount^Actual Amount^Act Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Actual Amount^^^
+ACTUAL_UNITS^GLE_FINANCIALAMT^007^C^3006^inn_actual_units^0^^^7^^N^^^^^ACTUAL_UNITS^Actual Units^Actual Units^Act Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Actual Units^^^
+BUDGET_AMT^GLE_FINANCIALAMT^008^C^3007^inn_budget_amt^0^^^8^^N^^^^^BUDGET_AMT^Budget Amount^Budget Amount^Bgt Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Budget Amount^^^
+BUDGET_UNITS^GLE_FINANCIALAMT^009^C^3008^inn_budget_units^0^^^9^^N^^^^^BUDGET_UNITS^Budget Units^Budget Units^Bgt Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Budget Units^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLE_FINANCIALAMT^PRIMARY^GLE_FINANCIALAMT.FIRM_ID                GLE_FINANCIALAMT.GL_RPT_NO              GLE_FINANCIALAMT.GL_RPT_LINE            GLE_FINANCIALAMT.GL_PCN_FLAG            GLE_FINANCIALAMT.GL_PQY_FLAG            ^stbl("+FIRM_ID")+GLE_FINANCIALAMT.GL_RPT_NO$+GLE_FINANCIALAMT.GL_RPT_LINE$+GLE_FINANCIALAMT.GL_PCN_FLAG$+GLE_FINANCIALAMT.GL_PQY_FLAG$^stbl("+FIRM_ID")+RD_REC_DATA.GL_RPT_NO$+RD_REC_DATA.GL_RPT_LINE$+RD_REC_DATA.GL_PCN_FLAG$+RD_REC_DATA.GL_PQY_FLAG$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_RPT_NO$                  RD_REC_DATA.GL_RPT_LINE$                RD_REC_DATA.GL_PCN_FLAG$                RD_REC_DATA.GL_PQY_FLAG$                
+{KeyDefsEnd}
+{GridCols}
+002GLE_FINANCIALAMT.GL_RPT_NO              ;003GLE_FINANCIALAMT.GL_RPT_LINE            ;004GLE_FINANCIALAMT.GL_PCN_FLAG            ;005GLE_FINANCIALAMT.GL_PQY_FLAG            ;006GLE_FINANCIALAMT.ACTUAL_AMT             ;007GLE_FINANCIALAMT.ACTUAL_UNITS           ;008GLE_FINANCIALAMT.BUDGET_AMT             ;009GLE_FINANCIALAMT.BUDGET_UNITS           ;
+{GridColsEnd}

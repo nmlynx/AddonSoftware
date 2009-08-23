@@ -1,0 +1,580 @@
+rem --- PO Receipt Cost Variance Report (Print Overlay)
+rem --- Program por_recvarycost_o1.aon v8.0.0 17Jul2007 (por_ob)
+rem --- Created by adx_codeport.bbx v1.1.5 (07/17/2007 12:50:15)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+    rep_prog$=pgm(-2)
+
+rem --- Init Data
+
+    precision ivprecision
+    dim vendtot[3],prevk$(33),vendor$(6),prevvend$(6)
+    printvtot$="N"
+    printptot$="N"
+    more=1
+
+rem --- Get key templates
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POT_RECDET","PRIMARY",pot14a_key_alttpl$,rd_table_chans$[all],status$
+    dim pot14_key$:pot14a_key_alttpl$
+
+rem --- Headings and print positions
+
+    headings=6
+    dim headings$[headings]
+    width=132
+    page=0
+    l9=59
+    l=l9+1
+    recs=0
+    gosub assignheads
+
+rem --- Columns
+
+    dim columns$[12,10]
+    columns = 13
+    columns$[0,0]="",               columns$[0,1]="C",columns$[0,2]="6"
+    columns$[1,0]="Cd",             columns$[1,1]="C",columns$[1,2]="15"
+    columns$[2,0]="Wh",             columns$[2,1]="C",columns$[2,2]="8"
+    columns$[3,0]="Item",           columns$[3,1]="C",columns$[3,2]="20"
+    columns$[4,0]="Date Required",  columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]="Date Promised",  columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]="UM",             columns$[6,1]="C",columns$[6,2]="8"
+    columns$[7,0]="Qty Ordered",    columns$[7,1]="N",columns$[7,2]="10"
+    columns$[8,0]="Qty Received",   columns$[8,1]="N",columns$[8,2]="10"
+    columns$[9,0]="Order Value",    columns$[9,1]="N",columns$[9,2]="10",columns$[9,10]="T"
+    columns$[10,0]="Receipt Value", columns$[10,1]="N",columns$[10,2]="10",columns$[10,10]="T"
+    columns$[11,0]="Variance",      columns$[11,1]="N",columns$[11,2]="8",columns$[11,10]="T"
+    columns$[12,0]="Vari Ratio",    columns$[12,1]="N",columns$[12,2]="8"
+
+rem --- Progress bar
+
+    call pgmdir$+"adc_progress.aon","N","","","","",0,pot04a_dev,1,meter_num,status
+
+rem --- Build sql statement
+
+    sql_prep$="select pot_rechdr.vendor_id, pot_rechdr.po_no, "
+    sql_prep$=sql_prep$+"pot_rechdr.receiver_no, pot_recdet.po_int_seq_ref "
+    sql_prep$=sql_prep$+"from pot_rechdr, pot_recdet "
+
+    where_clause$="where pot_rechdr.firm_id = '"+firm_id$+"'"
+    where_clause$=where_clause$+" AND pot_recdet.firm_id = '"+firm_id$+"' AND pot_rechdr.po_no = pot_recdet.po_no"
+    where_clause$=where_clause$+" AND pot_rechdr.receiver_no = pot_recdet.receiver_no"
+    if vendfrom$<>"" where_clause$=where_clause$+" AND pot_rechdr.vendor_id >= '" +vendfrom$+ "'"
+    if vendthru$<>"" where_clause$=where_clause$+" AND pot_rechdr.vendor_id <= '" +vendthru$+ "'"
+    if itemfrom$<>"" where_clause$=where_clause$+" AND pot_recdet.item_id >= '" +itemfrom$+ "'"
+    if itemthru$<>"" where_clause$=where_clause$+" AND pot_recdet.item_id <= '" +itemthru$+ "'"
+    if datefrom$<>"" where_clause$=where_clause$+" AND pot_rechdr.recpt_date >= '" + datefrom$+ "'"
+    if datethru$<>"" where_clause$=where_clause$+" AND pot_rechdr.recpt_date <= '" + datethru$+ "'"
+    if whsefor$<>"" where_clause$=where_clause$+" AND pot_recdet.warehouse_id = '"+whsefor$+ "'"
+    order_by$=" order by pot_rechdr.vendor_id, pot_rechdr.recpt_date, pot_rechdr.po_no, pot_rechdr.receiver_no,pot_recdet.po_int_seq_ref"
+
+    sql_prep$=sql_prep$ + where_clause$ + order_by$
+    sql_chan=sqlunt
+    sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
+
+rem --- Read through Sort file
+
+    while more
+        read_tpl$=sqlfetch(sql_chan,err=*break)
+        read record (pot04a_dev,key=firm_id$+read_tpl.po_no$+read_tpl.receiver_no$,dom=*break) pot04a$
+        read record (pot14_dev2,key=firm_id$+read_tpl.po_no$+read_tpl.receiver_no$+read_tpl.po_int_seq_ref$) pot14a$
+        pot14_key.firm_id$=firm_id$
+        pot14_key.po_no$=pot14a.po_no$
+        pot14_key.receiver_no$=pot14a.receiver_no$
+        pot14_key.po_int_seq_ref$=pot14a.po_int_seq_ref$
+
+        vendor$=pot04a.vendor_id$
+        ponum$=pot14_key.po_no$
+        recnum$=pot14_key.receiver_no$
+        linenum$=pot14_key.po_int_seq_ref$
+
+rem --- Get Header & assign variables
+
+        if pot14_key.firm_id$+pot14_key.po_no$+pot14_key.receiver_no$<>prevk$
+
+            prevk$(1)=pot14_key$
+            p04_key$=firm_id$+ponum$+recnum$
+            find record (pot04a_dev,key=p04_key$,dom=*continue) pot04a$
+            dim rcptdate$(8),orddate$(8)
+            if pot04a.recpt_date$<>fill(8) rcptdate$=fndate$(pot04a.recpt_date$)
+            if pot04a.ord_date$<>fill(8) orddate$=fndate$(pot04a.ord_date$)
+
+        endif
+
+rem --- Get detail
+
+rem        p14_key$=p04_key$+linenum$
+rem        find record (pot14a_dev,key=p14_key$,dom=*continue) pot14a$
+        whse$=pot14a.warehouse_id$
+        item$=pot14a.item_id$
+
+rem --- Valid Whse/Item?
+
+rem --- Valid line type (ie S or N)?
+
+        gosub getlinetype
+        if pos(linetype$="SN")=0 continue
+
+rem --- Valid, so assign vars
+
+        call pgmdir$+"adc_progress.aon","S","","","","",0,pot04a_dev,1,meter_num,status
+        linecode$=pot14a.po_line_code$
+        unitmeas$=pot14a.unit_measure$
+        dim dateprom$(8),reqdate$(8)
+        if pot14a.promise_date$<>fill(8) dateprom$=fndate$(pot14a.promise_date$)
+        if pot14a.reqd_date$<>fill(8) reqdate$=fndate$(pot14a.reqd_date$)
+        precision 2
+        qtyord=pot14a.qty_ordered
+        qtyrec=pot14a.qty_received
+        unitcost=pot14a.unit_cost
+        ordval=unitcost*qtyord
+        rcptval=unitcost*qtyrec
+        variance=rcptval-ordval
+        if ordval<>0 varipcnt=variance*100/ordval else varipcnt=0
+        precision ivprecision
+        if varipcnt<minvari continue
+
+rem --- Go test breaks
+
+        gosub testbreaks
+
+rem --- Get Item Desc
+
+        dim itemdesc$(60)
+        if linetype$="S"
+            itemdesc$(1)="(Not On File)"
+            find record (ivm01a_dev,key=firm_id$+pot14a.item_id$,dom=brnch1) ivm01a$
+            itemdesc$(1)=fnitem$(ivm01a.item_desc$,desclen[1],desclen[2],desclen[3])
+
+        else
+rem --- Nonstock description
+
+            itemdesc$(1)=pot14a.order_memo$
+
+        endif
+
+brnch1: rem --- Go print the data
+
+        gosub printline
+        recs=recs+1
+
+rem --- Accumulate totals; then get next detail
+
+        rec_oval=rec_oval+ordval
+        rec_rval=rec_rval+rcptval
+        po_oval=po_oval+ordval
+        po_rval=po_rval+rcptval
+        vendoval=vendoval+ordval
+        vendrval=vendrval+rcptval
+        grandoval=grandoval+ordval
+        grandrval=grandrval+rcptval
+
+rem --- Loop up for next header record via sort files
+
+    wend
+
+done: rem --- All Done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+    gosub rectotals
+    gosub pototals
+    gosub vendtotals
+    grandvari=grandrval-grandoval
+    if grandoval>0 grandvpcnt=grandvari*100/grandoval
+
+    TotVect!.addItem(str(OutVect!.size()/columns))
+    abc=fnblank(7)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" Report ")
+    OutVect!.addItem(str(grandoval:m1$))
+    OutVect!.addItem(str(grandrval:m1$))
+    OutVect!.addItem(str(grandvari:m1$))
+    OutVect!.addItem(str(grandvpcnt:mpcnt$))
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    goto std_exit
+
+assignheads: rem --- Assign headings variables
+
+    dim tmph3$(width),tmph4$(width)
+    if vendfrom$="" vendf$="First" else vendf$=fnmask$(vendfrom$(1,vendlen),vendomask$)
+    if vendthru$="" vendt$="Last" else vendt$=fnmask$(vendthru$(1,vendlen),vendomask$)
+    if datefrom$="" datef$="First" else datef$=fndate$(datefrom$)
+    if datethru$="" datet$="Last" else datet$=fndate$(datethru$)
+    if itemfrom$="" itemf$="First" else itemf$=itemfrom$(1,itemlen)
+    if itemthru$="" itemt$="Last" else itemt$=itemthru$(1,itemlen)
+
+    midh3$="Item: "+itemf$+" Through "+itemt$
+    tmph3$(1)="Vendor: "+vendf$+" To "+vendt$
+    tmph4$(1)="Receipt Date: "+datef$+" To "+datet$
+    if whsefor$="" midh4$="All Warehouses" else midh4$="For Warehouse "+whsefor$
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$+" For Variances Greater Than "+str(minvari:mpcnt$)
+    headings$[2]=tmph3$
+    headings$[3]=tmph4$
+    headings$[4]=midh3$
+    headings$[5]=midh4$
+    return
+
+testbreaks: rem --- Test breaks
+
+    if vendor$<>prevvend$
+        if printptot$="Y" gosub pototals
+        if printvtot$="Y" gosub vendtotals
+        gosub newvendor
+        gosub newpo
+    else
+        if ponum$<>prevpo$
+            if printrtot$="Y" gosub rectotals
+            if printptot$="Y" gosub pototals
+            gosub newpo
+        else
+            if recnum$<>prevrec$
+                if printrtot$="Y" gosub rectotals
+                gosub newrec
+            endif
+        endif
+    endif
+    return
+
+newvendor: rem --- New Vendor
+
+    dim vendtot[3]
+    vendname$="Not On File"
+    prevvend$=vendor$
+    printvtot$="Y"
+    vendoval=0
+    vendrval=0
+    vendvari=0
+    vendvpcnt=0
+    find record (apm01a_dev,key=firm_id$+vendor$,dom=brnch2) apm01a$
+    vendname$=apm01a.vendor_name$
+
+brnch2:
+
+    OutVect!.addItem(fnmask$(vendor$(1,vendlen),vendomask$))
+    OutVect!.addItem(vendname$)
+    abc=fnblank(11)
+    l=l+1
+    return
+
+newrec: rem --- New Receiver
+
+    rec_oval=0
+    rec_rval=0
+    rec_vari=0
+    rec_vpcnt=0
+    prevrec$=recnum$
+    printrtot$="Y"
+    if !fromnewpo
+        OutVect!.addItem("PO #: ")
+        OutVect!.addItem(ponum$)
+        OutVect!.addItem("Receiver #:")
+        OutVect!.addItem(recnum$)
+        OutVect!.addItem("Ordered: ")
+        OutVect!.addItem(orddate$)
+        OutVect!.addItem("Received: ")
+        OutVect!.addItem(rcptdate$)
+        abc=fnblank(5)
+        l=l+1
+    endif
+    return
+
+newpo: rem --- New PO
+
+    po_oval=0
+    po_rval=0
+    po_vari=0
+    po_vpcnt=0
+    prevpo$=ponum$
+    printptot$="Y"
+
+    OutVect!.addItem("PO #: ")
+    OutVect!.addItem(ponum$)
+    OutVect!.addItem("Receiver #:")
+    OutVect!.addItem(recnum$)
+    OutVect!.addItem("Ordered: ")
+    OutVect!.addItem(orddate$)
+    OutVect!.addItem("Received: ")
+    OutVect!.addItem(rcptdate$)
+    abc=fnblank(5)
+
+    l=l+1
+    fromnewpo=1
+    gosub newrec
+    fromnewpo=0
+    return
+
+vendtotals: rem --- Print Vendor total
+
+    vendvari=vendrval-vendoval
+    if vendoval>0 vendvpcnt=vendvari*100/vendoval
+    TotVect!.addItem(str(OutVect!.size()/columns))
+    abc=fnblank(6)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" Vendor ")
+    OutVect!.addItem(fnmask$(prevvend$(1,vendlen),vendomask$))
+    OutVect!.addItem(str(vendoval:m1$))
+    OutVect!.addItem(str(vendrval:m1$))
+    OutVect!.addItem(str(vendvari:m1$))
+    OutVect!.addItem(str(vendvpcnt:mpcnt$))
+    abc=fnblank(13)    
+    l=l+1
+    return
+
+pototals: rem --- Print PO total
+
+    poamt=0,po_vpcnt=0
+    po_vari=po_rval-po_oval
+    if po_oval>0 po_vpcnt=po_vari*100/po_oval
+    TotVect!.addItem(str(OutVect!.size()/columns))
+    abc=fnblank(6)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" PO # ")
+    OutVect!.addItem(prevpo$)
+    OutVect!.addItem(str(po_oval:m1$))
+    OutVect!.addItem(str(po_rval:m1$))
+    OutVect!.addItem(str(po_vari:m1$))
+    OutVect!.addItem(str(po_vpcnt:mpcnt$))
+    abc=fnblank(13)
+    let l=l+1
+    return
+
+rectotals: rem --- Print Rec total
+
+    rec_vpcmt=0
+    let rec_vari=rec_rval-rec_oval
+    if rec_oval>0 rec_vpcnt=rec_vari*100/rec_oval
+    TotVect!.addItem(str(OutVect!.size()/columns))
+    abc=fnblank(6)
+    OutVect!.addItem("Total For")
+    OutVect!.addItem(" Rcpt # ")
+    OutVect!.addItem(prevrec$)
+    OutVect!.addItem(str(rec_oval:m1$))
+    OutVect!.addItem(str(rec_rval:m1$))
+    OutVect!.addItem(str(rec_vari:m1$))
+    OutVect!.addItem(str(rec_vpcnt:mpcnt$))
+    abc=fnblank(13)
+    let l=l+1
+    return
+
+getlinetype: rem --- Get Line Type
+
+    let linetype$="N"
+    p02_key$=pot14a.firm_id$+pot14a.po_line_code$
+    find record (pom02a_dev,key=p02_key$,dom=brnch4) pom02a$
+    let linetype$=pom02a.line_type$
+
+brnch4:
+    return
+
+rem --- Print data line
+printline:
+
+    OutVect!.addItem("")
+    OutVect!.addItem(linecode$)
+    OutVect!.addItem(whse$)
+    OutVect!.addItem(item$(1,itemlen))
+    OutVect!.addItem(reqdate$)
+    OutVect!.addItem(dateprom$)
+    OutVect!.addItem(unitmeas$)
+    OutVect!.addItem(str(qtyord:m2$))
+    OutVect!.addItem(str(qtyrec:m2$))
+    OutVect!.addItem(str(ordval:m1$))
+    OutVect!.addItem(str(rcptval:m1$))
+    OutVect!.addItem(str(variance:m1$))
+    OutVect!.addItem(str(varipcnt:mpcnt$))
+
+    abc=fnblank(3)
+    OutVect!.addItem(itemdesc$)
+    abc=fnblank(9)
+
+    let l=l+2
+    return
+
+rem #include std_functions.src
+rem --- Standard AddonSoftware functions (01Mar2006)
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Miscellaneous functions
+
+    def fncenter(q$,q)=int((q-len(q$))/2)
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)
+        q1$=""
+        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if q1$="" q1$=q$
+        return q1$
+    fnend
+
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
+
+    def fnmask$(q1$,q2$)
+        if q2$="" q2$=fill(len(q1$),"0")
+        return str(-num(q1$,err=*next):q2$,err=*next)
+        q=1
+        q0=0
+        while len(q2$(q))
+              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
+              q=q+1
+        wend
+        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
+        return str(q1$:q2$)
+    fnend
+
+rem --- fnbasename$: Strip path and optionally the suffix from a file name
+
+    def fnbasename$(q$,q0$)
+        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
+        if q then q$=q$(q+1)
+        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
+    return q$
+
+rem --- fnglobal: Return numeric value of passed stbl variable
+
+    def fnglobal(q$,q1)
+        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+        return q1
+    fnend
+
+rem --- fnglobal$: Return string value of passed STBL variable
+
+    def fnglobal$(q$,q1$)
+        q1$=stbl(q$,err=*next)
+        return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
+rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),
+:                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
+
+    end

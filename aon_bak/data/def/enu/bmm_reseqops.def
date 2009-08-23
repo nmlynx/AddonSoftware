@@ -1,0 +1,35 @@
+Barista Application Framework - Definition Module
+BMM_RESEQOPS - Operations Detail Resequencing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+BMM_RESEQOPS^^^^Operations Detail Resequencing^Operations Detail Resequencing^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^BMM_RESEQOPS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BILL_NO^BMM_RESEQOPS^002^C^3001^dis_bill_no^0^^^2^^Y^^^F^^BILL_NO^Bill of Materials Number^Bill of Materials Number^Bill of Mats No^C^^E^^^^^^^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^^^^^^20^L^0^Bill of Materials Number^^^
+OP_SEQ^BMM_RESEQOPS^003^C^3002^ine_op_seq^0^^^3^^Y^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+OP_CODE^BMM_RESEQOPS^004^C^3003^dis_op_code^0^^^4^^N^^^F^^OP_CODE^Operation Code^Operation Code^Op Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^BMC_OPCODES^CODE_DESC^^^^^^^^^^^3^0^^^^^^^^20^L^0^Operation Code^^^
+LINE_TYPE^BMM_RESEQOPS^005^C^3004^ine_line_type^0^^^5^^N^^^^^LINE_TYPE^Line Type^Line Type^Line Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Line Type^^^
+EXT_COMMENTS^BMM_RESEQOPS^006^C^3005^ine_ext_comments^0^^^6^^N^^^^^EXT_COMMENTS^Comments or Message Line^Comments or Message Line^Cmts/Msg Line^C^^E^^^^^^^^^^^^^^^^^^^^^^60^^^^^^^^^^^^Comments or Message Line^^^
+EFFECT_DATE^BMM_RESEQOPS^009^C^3006^ind_effect_date^0^^^9^^N^^^C^^EFFECT_DATE^Date Effective^Date Effective^Date Eff^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Effective^^^
+OBSOLT_DATE^BMM_RESEQOPS^010^C^3007^ind_obsolt_date^0^^^10^^N^^^C^^OBSOLT_DATE^Obsolete Date^Obsolete Date^Obsolete Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Obsolete Date^^^
+HRS_PER_PCE^BMM_RESEQOPS^011^C^3008^inn_hrs_per_pce^0^^^11^^N^^^^^HRS_PER_PCE^Hours Per Piece^Hours Per Piece^Hrs Per Piece^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^H^^^^^Hours Per Piece^^^
+PCS_PER_HOUR^BMM_RESEQOPS^012^C^3009^inn_pcs_per_hour^0^^^12^^N^^^^^PCS_PER_HOUR^Pieces Per Hour^Pieces Per Hour^Pieces Per Hr^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^M^^^^0^Pieces Per Hour^^^
+LABOR_COST^BMM_RESEQOPS^013^C^3010^inn_labor_cost^0^^^13^^N^^^^^LABOR_COST^Labor Cost^Labor Cost^Lab Cst^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Labor Cost^^^
+OVHD_COST^BMM_RESEQOPS^014^C^3011^inn_ovhd_cost^0^^^14^^N^^^^^OVHD_COST^Overhead Cost^Overhead Cost^Ovrhd Cst^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Overhead Cost^^^
+SETUP_TIME^BMM_RESEQOPS^015^C^3012^inn_setup_time^0^^^15^^N^^^^^SETUP_TIME^Setup Time^Setup Time^Setup Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Setup Time^^^
+MOVE_TIME^BMM_RESEQOPS^016^C^3013^inn_move_time^0^^^16^^N^^^^^MOVE_TIME^Move Time^Move Time^Move Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Move Time^^^
+{ColumnDefsEnd}
+{KeyDefs}
+BMM_RESEQOPS^PRIMARY^BMM_RESEQOPS.FIRM_ID                    BMM_RESEQOPS.BILL_NO                    BMM_RESEQOPS.OP_SEQ                     ^stbl("+FIRM_ID")+BMM_RESEQOPS.BILL_NO$+BMM_RESEQOPS.OP_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.BILL_NO$+RD_REC_DATA.OP_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.BILL_NO$                    RD_REC_DATA.OP_SEQ$                     
+{KeyDefsEnd}
+{GridCols}
+002BMM_RESEQOPS.BILL_NO                    ;003BMM_RESEQOPS.OP_SEQ                     ;004BMM_RESEQOPS.OP_CODE                    ;005BMM_RESEQOPS.LINE_TYPE                  ;006BMM_RESEQOPS.EXT_COMMENTS               ;009BMM_RESEQOPS.EFFECT_DATE                ;010BMM_RESEQOPS.OBSOLT_DATE                ;011BMM_RESEQOPS.HRS_PER_PCE                ;012BMM_RESEQOPS.PCS_PER_HOUR               ;013BMM_RESEQOPS.LABOR_COST                 ;014BMM_RESEQOPS.OVHD_COST                  ;015BMM_RESEQOPS.SETUP_TIME                 ;016BMM_RESEQOPS.MOVE_TIME                  ;
+{GridColsEnd}

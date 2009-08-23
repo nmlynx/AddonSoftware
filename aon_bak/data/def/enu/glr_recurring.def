@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+GLR_RECURRING - Recurring JE Register
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLR_RECURRING^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;BSHO;^^Recurring JE Register^Recurring Journal Entry Register^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]glr_recurring.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLR_RECURRING^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+ALL_CYCLES^GLR_RECURRING^002^C^3001^cbx_all_cycles^0^^^2^^N^^^^^GENERIC_CHK^Generic checkbox^All Cycles^All Cycles^C^^C^^^Y;N^0^0^0^20^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+CYCLE_CODE^GLR_RECURRING^003^C^3002^dis_cycle_code^0^^^3^^N^^^F^^GL_CYCLECODE^Journal Entry Cycle Code^Journal Entry Cycle Code^Journal Entry Cycle^C^^E^GLR_RECURRING.ALL_CYCLES^!Y^^^^^0^0^[+FIRM_ID]+@^GLC_CYCLECODE^CODE_DESC^^^^^^^^^^^2^0^^^^^^^^20^L^0^Journal Entry Cycle Code^^^
+POSTING_PER^GLR_RECURRING^004^C^3003^inn_posting_per^0^^^4^^N^^^^^PICK_GL_PER^Pick Window GL Period^Posting Period^Reverse Per^I^^N^^^^0^0^0^0^0^^^^^^^^^^Update Options^^^^2^0^1^^00^00^^^^^^0^^^^
+POSTING_YEAR^GLR_RECURRING^005^C^3004^ine_posting_year^0^^^5^^N^^^^^PICK_YEAR^Pick Window Year^Posting Year^Post Yr^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^4^^^^^^^^^^^^^^^
+REVERSAL_TP^GLR_RECURRING^006^C^3005^lbx_reversal_tp^0^^^6^^N^^^^^GENERIC_LIST^Generic ListButton^Reversal by^Reversal by^C^^L^^^^0^0^0^0^0^^^^^^^^^^^^Calculation                   ~C   ;Date                          ~D   ;^^30^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLR_RECURRING^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002GLR_RECURRING.ALL_CYCLES                ;003GLR_RECURRING.CYCLE_CODE                ;004GLR_RECURRING.POSTING_PER               ;005GLR_RECURRING.POSTING_YEAR              ;006GLR_RECURRING.REVERSAL_TP               ;
+{GridColsEnd}

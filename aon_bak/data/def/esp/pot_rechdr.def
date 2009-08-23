@@ -1,0 +1,54 @@
+Barista Application Framework - Definition Module
+POT_RECHDR - PO Receipt History Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POT_RECHDR^^^^PO Receipt History Header^PO Receipt History Header^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POT_RECHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+PO_NO^POT_RECHDR^002^C^3001^ine_po_no^0^^^2^^Y^^^^^PO_NO^Purchase Order Number^Número de pedido de compra^N.º de PO^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Purchase Order Number^^^
+RECEIVER_NO^POT_RECHDR^003^C^3002^ine_receiver_no^0^^^3^^Y^^^^^RECEIVER_NO^Receiver Number^Receiver Number^Receiver No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Receiver Number^^^
+VENDOR_ID^POT_RECHDR^004^C^3003^dis_vendor_id^0^^^4^^N^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Escribir un proveedor válido^^^
+WAREHOUSE_ID^POT_RECHDR^005^C^3004^dis_warehouse_id^0^^^5^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+PURCH_ADDR^POT_RECHDR^006^C^3005^dis_purch_addr^0^^^6^^N^^^F^^PURCH_ADDR^Vendor Purchase Address Code^Código de domicilio de compra del proveedor^Cód de dom. de venta del prov.^C^^E^^^^^^^0^0^[FIRM_ID]+[VENDOR_ID]+@^APM_VENDADDR^NAME^^^^^^^^^^^2^0^^^00^^^^^30^R^0^Vendor Purchase Address Code^^^
+HOLD_FLAG^POT_RECHDR^008^C^3006^cbx_hold_flag^0^^^8^^N^^^^^HOLD_FLAG^Hold For Manual Release [Y/N]?^¿Retener para emisión manual?^¿Retener para em. man.?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Hold For Manual Release [Y/N]?^^^
+AP_TERMS_CODE^POT_RECHDR^010^C^3007^dis_ap_terms_code^0^^^10^^N^^^F^^AP_TERMS_CODE^AP Terms Code^Código de condiciones^Cód. de condiciones^C^^E^^^^^^^^^[+FIRM_ID]+"C"+@^APC_TERMSCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^20^L^^Terms Code^^^
+PO_FRT_TERMS^POT_RECHDR^012^C^3008^ine_po_frt_terms^0^^^12^^N^^^^^PO_FRT_TERMS^Purchase Order Freight Terms^Purchase Order Freight Terms^PO Freight Terms^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^Purchase Order Freight Terms^^^
+AP_SHIP_VIA^POT_RECHDR^013^C^3009^ine_ap_ship_via^0^^^13^^N^^^^^AP_SHIP_VIA^Vendor Ship Via^Medio de envío del proveedor^Medio de envío del prov.^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^Vendor Ship Via^^^
+ACKNOWLEDGE^POT_RECHDR^014^C^3010^ine_acknowledge^0^^^14^^N^^^^^ACKNOWLEDGE^Acknowledgement [Comments]^Acknowledgement [Comments]^Acknowledge^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Acknowledgement [Comments]^^^
+FOB^POT_RECHDR^015^C^3011^ine_fob^0^^^15^^N^^^^^FOB^Free On Board^Libre a bordo [FOB]^FOB^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^Free On Board^^^
+PO_MSG_CODE^POT_RECHDR^016^C^3012^dis_po_msg_code^0^^^16^^N^^^F^^PO_MSG_CODE^PO Standard Message Code^PO Standard Message Code^PO Std Msg Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^POC_MSGCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^PO Standard Message Code^^^
+REQ_NO^POT_RECHDR^017^C^3013^ine_req_no^0^^^17^^N^^^^^REQ_NO^Requisition Number^Requisition Number^Req No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Requisition Number^^^
+PACKING_LIST^POT_RECHDR^018^C^3014^ine_packing_list^0^^^18^^N^^^^^PACKING_LIST^Packing List Number^Packing List Number^Packing List No^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^^^^^^^^Packing List Number^^^
+REC_COMPLETE^POT_RECHDR^019^C^3015^cbx_rec_complete^0^^^19^^N^^^^^REC_COMPLETE^Received Complete [Y/N]?^Received Complete?^Received Complete?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Received Complete [Y/N]?^^^
+ORD_DATE^POT_RECHDR^021^C^3016^ind_ord_date^0^^^21^^N^^^C^^ORD_DATE^Order Date^Order Date^Ord Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Order Date^^^
+PROMISE_DATE^POT_RECHDR^022^C^3017^ind_promise_date^0^^^22^^N^^^C^^PROMISE_DATE^Delivery Promised By Date^Delivery Promised By Date^Del Prom By^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Delivery Promised By Date^^^
+NOT_B4_DATE^POT_RECHDR^023^C^3018^ind_not_b4_date^0^^^23^^N^^^C^^NOT_B4_DATE^Don't Deliver Before Date^Don't Deliver Before Date^Don't Del Bef^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Don't Deliver Before Date^^^
+REQD_DATE^POT_RECHDR^024^C^3019^ind_reqd_date^0^^^24^^N^^^C^^REQD_DATE^Date Required^Date Required^Date Req^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Required^^^
+RECPT_DATE^POT_RECHDR^025^C^3020^ind_recpt_date^0^^^25^^N^^^C^^RECPT_DATE^Receipt Date^Receipt Date^Rec Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Receipt Date^^^
+DROPSHIP^POT_RECHDR^026^C^3021^cbx_dropship^0^^^26^^N^^^^^DROPSHIP^Dropship [Y/N]?^Dropship?^Dropship?^C^^C^^^Y;N^0^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+CUSTOMER_ID^POT_RECHDR^027^C^3022^dis_customer_id^0^^^27^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^^^^
+ORDER_NO^POT_RECHDR^028^C^3023^ine_order_no^0^^^28^^N^^^^^ORDER_NO^Sales Order Number^Sales Order Number^Sales Ord No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^^^^
+SHIPTO_NO^POT_RECHDR^029^C^3024^ine_shipto_no^0^^^29^^N^^^^^SHIPTO_NO^Customer Ship-To Number^Customer Ship-To Number^Cust Ship-To No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^6^^^^000000^000000^^^^30^R^^^^^
+DS_NAME^POT_RECHDR^030^C^3025^ine_ds_name^0^^^30^^N^^^^^NAME^Name^Nombre^Nombre^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^30^^^^^^^^^^^^^^^
+DS_ADDR_LINE_1^POT_RECHDR^031^C^3026^ine_ds_addr_line_1^0^^^31^^N^^^^^ADDR_LINE_1^Address Line 1^Domicilio^Dom.^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^^^^^^^^
+DS_ADDR_LINE_2^POT_RECHDR^032^C^3027^ine_ds_addr_line_2^0^^^32^^N^^^^^ADDR_LINE_2^Address Line 2^Línea de domicilio 2^Dom. 2^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^^^^^^^^
+DS_ADDR_LINE_3^POT_RECHDR^033^C^3028^ine_ds_addr_line_3^0^^^33^^N^^^^^ADDR_LINE_3^Address Line 3^Línea de domicilio 3^Dom. 3^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^^^^^^^^
+DS_ADDR_LINE_4^POT_RECHDR^034^C^3029^ine_ds_addr_line_4^0^^^34^^N^^^^^ADDR_LINE_4^Address Line 4^Línea de domicilio 4^Dom. 4^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^24^^^^^^^^^^^^^^^
+DS_CITY^POT_RECHDR^035^C^3030^ine_ds_city^0^^^35^^N^^^^^CITY^City Name^Ciudad^Ciudad^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^22^^^^^^^^^^^^^^^
+DS_STATE_CODE^POT_RECHDR^036^C^3031^ine_ds_state_code^0^^^36^^N^^^^^STATE_CODE^State Code^Estado/Provincia^Estado^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^2^^^^^^^^^^^^^^^
+DS_ZIP_CODE^POT_RECHDR^037^C^3032^ine_ds_zip_code^0^^^37^^N^^^^^ZIP_CODE^Zip/Postal Code^Código postal^Código postal^C^P^E^^^^0^0^0^0^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POT_RECHDR^PRIMARY^POT_RECHDR.FIRM_ID                      POT_RECHDR.PO_NO                        POT_RECHDR.RECEIVER_NO                  ^stbl("+FIRM_ID")+POT_RECHDR.PO_NO$+POT_RECHDR.RECEIVER_NO$^stbl("+FIRM_ID")+RD_REC_DATA.PO_NO$+RD_REC_DATA.RECEIVER_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.PO_NO$                      RD_REC_DATA.RECEIVER_NO$                
+{KeyDefsEnd}
+{GridCols}
+002POT_RECHDR.PO_NO                        ;003POT_RECHDR.RECEIVER_NO                  ;004POT_RECHDR.VENDOR_ID                    ;005POT_RECHDR.WAREHOUSE_ID                 ;006POT_RECHDR.PURCH_ADDR                   ;008POT_RECHDR.HOLD_FLAG                    ;010POT_RECHDR.AP_TERMS_CODE                ;012POT_RECHDR.PO_FRT_TERMS                 ;013POT_RECHDR.AP_SHIP_VIA                  ;014POT_RECHDR.ACKNOWLEDGE                  ;015POT_RECHDR.FOB                          ;016POT_RECHDR.PO_MSG_CODE                  ;017POT_RECHDR.REQ_NO                       ;018POT_RECHDR.PACKING_LIST                 ;019POT_RECHDR.REC_COMPLETE                 ;021POT_RECHDR.ORD_DATE                     ;022POT_RECHDR.PROMISE_DATE                 ;023POT_RECHDR.NOT_B4_DATE                  ;024POT_RECHDR.REQD_DATE                    ;025POT_RECHDR.RECPT_DATE                   ;026POT_RECHDR.DROPSHIP                     ;027POT_RECHDR.CUSTOMER_ID                  ;028POT_RECHDR.ORDER_NO                     ;029POT_RECHDR.SHIPTO_NO                    ;030POT_RECHDR.DS_NAME                      ;031POT_RECHDR.DS_ADDR_LINE_1               ;032POT_RECHDR.DS_ADDR_LINE_2               ;033POT_RECHDR.DS_ADDR_LINE_3               ;034POT_RECHDR.DS_ADDR_LINE_4               ;035POT_RECHDR.DS_CITY                      ;036POT_RECHDR.DS_STATE_CODE                ;037POT_RECHDR.DS_ZIP_CODE                  ;
+{GridColsEnd}

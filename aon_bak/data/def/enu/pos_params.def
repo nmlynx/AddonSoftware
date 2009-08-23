@@ -1,0 +1,44 @@
+Barista Application Framework - Definition Module
+POS_PARAMS - Purchase Order Parameters
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POS_PARAMS^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Purchase Order Parameters^Purchase Order Parameters^^^^^^^^T^^^^^^N;U;V;^^^System Parameters;Defaults;^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POS_PARAMS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+PO^POS_PARAMS^002^C^^^^^^2^^Y^^^^^PO^"PO"^PO^PO^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^O;^^^^"PO"^"PO"^^
+SEQUENCE_00^POS_PARAMS^003^C^^^^^^3^^Y^^^^^SEQUENCE_00^"00"^0^0^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^"00"^"00"^^
+LAND_METHOD^POS_PARAMS^014^C^3101^lbx_land_method^1^^^4^1^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^LAND_METHOD^Landed Cost Method [Q/C]^Landed Cost Method^Landed Cst Meth^C^^L^^^^^+4^^0^0^^^^^^^^C^^^^None                          ~N   ;Cost                          ~C   ;Quantity                      ~Q   ;^^1^0^^^^^^^^^^0^Landed Cost Method [Q/C/N]^^^
+DISPLAY_CMTS^POS_PARAMS^007^C^3102^cbx_display_cmts^1^^^5^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^DISPLAY_CMTS^Display Comments?^Display Comments?^Display Cmts?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Display Comments?^^^
+BEG_CMT_LINE^POS_PARAMS^017^C^3103^ine_beg_cmt_line^1^^^6^^N^^^^^BEG_CMT_LINE^Starting Comments Line Number^Starting Comments Line Number^Beg Cmt Line No^C^^E^POS_PARAMS.DISPLAY_CMTS^Y^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Starting Comments Line Number^^^
+END_CMT_LINE^POS_PARAMS^018^C^3104^ine_end_cmt_line^1^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^END_CMT_LINE^Ending Comments Line Number^Ending Comments Line Number^End Cmts Line No^C^^E^POS_PARAMS.DISPLAY_CMTS^Y^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Ending Comments Line Number^^^
+PLAIN_PAPER^POS_PARAMS^006^C^^^^^^8^^N^^^^^PLAIN_PAPER^Plain Paper Form?^Plain Paper Form?^Plain Paper Form?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^L;O;^^^^Plain Paper Form?^^^
+PRT_VDR_ITEM^POS_PARAMS^016^C^3105^cbx_prt_vdr_item^1^^^9^^N^^^^^PRT_VDR_ITEM^Print Vendor Item?^Print Vendor Item?^Prt Vend Item?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Print Vendor Item?^^^
+UPDT_PLAN_WO^POS_PARAMS^022^C^3106^cbx_updt_plan_wo^1^^^10^^N^^^^^UPDT_PLAN_WO^Update Unreleased Work Orders?^Update Unreleased Work Orders?^U/D Unreleased WOs?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Update Unreleased Work Orders?^^^
+M_LINE_HIST^POS_PARAMS^024^C^3107^cbx_m_line_hist^1^^^11^^N^^^^^M_LINE_HIST^Retain PO M-Line Type History?^Retain PO M-Line Type History?^Retain M-Line Hist?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Retain PO M-Line Type History?^^^
+V_LINE_HIST^POS_PARAMS^025^C^3108^cbx_v_line_hist^1^^^12^^N^^^^^V_LINE_HIST^Retain PO V-Line Type History?^Retain PO V-Line Type History?^Ret PO V Type Hist?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Retain PO V-Line Type History?^^^
+AP_SHIP_VIA^POS_PARAMS^008^C^3201^ine_ap_ship_via^2^^^13^2^N^^^^^AP_SHIP_VIA^Vendor Ship Via^Vendor Ship Via^Vend Ship Via^C^^E^^^^^+3^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Vendor Ship Via^^^
+PO_FRT_TERMS^POS_PARAMS^009^C^3202^ine_po_frt_terms^2^^^14^^N^^^^^PO_FRT_TERMS^Purchase Order Freight Terms^Purchase Order Freight Terms^PO Freight Terms^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Purchase Order Freight Terms^^^
+FOB^POS_PARAMS^010^C^3203^ine_fob^2^^^15^^N^^^^^FOB^Free On Board^Free On Board [FOB]^FOB^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Free On Board^^^
+HOLD_FLAG^POS_PARAMS^011^C^3204^cbx_hold_flag^2^^^16^^N^^^^^HOLD_FLAG^Hold For Manual Release [Y/N]?^Hold For Manual Release?^Hold For Man Rel?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Hold For Manual Release [Y/N]?^^^
+PO_REQ_MSG_CODE^POS_PARAMS^012^C^3205^dis_po_req_msg_code^2^^^17^^N^^^F^^PO_MSG_CODE^PO Standard Message Code^PO  Req  Message Code^PO Req  Msg Cd^C^^E^^^^0^0^0^35^0^[+FIRM_ID]+@^POC_MSGCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^PO Req Standard Message Code^^^
+PO_MSG_CODE^POS_PARAMS^013^C^3206^dis_po_msg_code^2^^^18^^N^^^F^^PO_MSG_CODE^PO Standard Message Code^PO Standard Message Code^PO Std Msg Cd^C^^E^^^^0^0^0^35^0^[+FIRM_ID]+@^POC_MSGCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^^^^
+PO_LINE_CODE^POS_PARAMS^015^C^3207^dis_po_line_code^2^^^19^^N^^^F^^PO_LINE_CODE^Purchase Order Line Code^Purchase Order Line Code^PO Line Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+@^POC_LINECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Purchase Order Line Code^^^
+REQ_S_LINECD^POS_PARAMS^019^C^3208^dis_req_s_linecd^2^^^20^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^REQ_S_LINECD^Default Ln Cd 'S' Req Creation^Standard Type Line Code^Def Ln Cd 'S' Req^C^^E^^^^^^^35^0^[+FIRM_ID]+@^POC_LINECODE^CODE_DESC^^^^^^^Requisition Generation Defaults^^^^2^0^^^UU^^^^^20^L^0^Default Ln Cd 'S' Req Creation^^^
+REQ_N_LINECD^POS_PARAMS^020^C^3209^dis_req_n_linecd^2^^^21^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^REQ_N_LINECD^Default Ln Cd 'N' Req Creation^Non-stock Type Line Code^Def Ln Cd 'N' Req^C^^E^^^^^^^35^0^[+FIRM_ID]+@^POC_LINECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Default Ln Cd 'N' Req Creation^^^
+REQ_M_LINECD^POS_PARAMS^021^C^3210^dis_req_m_linecd^2^^^22^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^REQ_M_LINECD^Default Ln Cd 'M' Req Creation^Message Type Line Code^Def Ln Cd 'M' Req^C^^E^^^^^^^35^0^[+FIRM_ID]+@^POC_LINECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Default Ln Cd 'M' Req Creation^^^
+PO_INV_CODE^POS_PARAMS^023^C^3211^dis_po_inv_code^2^^^23^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^PO_INV_CODE^PO Invoicing Default Line Code^Other Type Line Code^PO Inv Def Line Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+@^POC_LINECODE^CODE_DESC^^^^^^^Invoice Entry Default^^^^2^0^^^UU^^^^^20^L^0^PO Invoicing Default Line Code^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POS_PARAMS^PRIMARY^POS_PARAMS.FIRM_ID                      POS_PARAMS.PO                           POS_PARAMS.SEQUENCE_00                  ^stbl("+FIRM_ID")+"PO"+"00"^stbl("+FIRM_ID")+"PO"+"00"^stbl("+FIRM_ID")                        "PO"                                    "00"                                    
+{KeyDefsEnd}
+{GridCols}
+004POS_PARAMS.LAND_METHOD                  ;005POS_PARAMS.DISPLAY_CMTS                 ;006POS_PARAMS.BEG_CMT_LINE                 ;007POS_PARAMS.END_CMT_LINE                 ;009POS_PARAMS.PRT_VDR_ITEM                 ;010POS_PARAMS.UPDT_PLAN_WO                 ;011POS_PARAMS.M_LINE_HIST                  ;012POS_PARAMS.V_LINE_HIST                  ;013POS_PARAMS.AP_SHIP_VIA                  ;014POS_PARAMS.PO_FRT_TERMS                 ;015POS_PARAMS.FOB                          ;016POS_PARAMS.HOLD_FLAG                    ;017POS_PARAMS.PO_REQ_MSG_CODE              ;018POS_PARAMS.PO_MSG_CODE                  ;019POS_PARAMS.PO_LINE_CODE                 ;020POS_PARAMS.REQ_S_LINECD                 ;021POS_PARAMS.REQ_N_LINECD                 ;022POS_PARAMS.REQ_M_LINECD                 ;023POS_PARAMS.PO_INV_CODE                  ;
+{GridColsEnd}

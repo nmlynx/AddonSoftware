@@ -1,0 +1,30 @@
+Barista Application Framework - Definition Module
+GLM_FINMASTER - Financial Report Master
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_FINMASTER^^^^Financial Report Master^Registro maestro del informe financiero^GLM_FINDETAIL^Financial Report Column Record          ~GLM_FINCOLUMNS  ;^GLM_FINCOLUMNS;GLM_FINDETAIL;^^^^^T^^^^^^O;R;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLM_FINMASTER^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL_RPT_NO^GLM_FINMASTER^002^C^3001^ine_gl_rpt_no^0^^^2^^Y^^^^^GL_RPT_NO^GL Financial Report Number^Número de informe^Número de informe^C^^E^^^^^^^35^0^^^^^^^^^^^^^^2^0^^^00^00^^^^30^R^0^Número de informe financiero del GL^^^
+GL_RPT_LINE^GLM_FINMASTER^003^C^^^^^^3^^N^^^F^^GL_RPT_LINE^GL Financial Report Line Nbr^N.º de línea de informe financiero^N.º de línea de inf. fin.^C^^E^^^^^^^0^0^[+FIRM_ID]+[GL_RPT_NO]+@^GLM_FINDETAIL^GL_LINE_DESC^^^^^0000^^^^^^4^0^^^0000^0000^^^O;^30^R^0^N.  de línea de informe financiero del GL^^^
+GL_RPT_DESC^GLM_FINMASTER^004^C^3002^ine_gl_rpt_desc^0^^^4^^N^^^^^GL_RPT_DESC^GL Report Description^Descripción^Descripción^C^^E^^^^^^1^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Descripción de informes del GL^^^
+HEADING_NO^GLM_FINMASTER^005^C^3003^ine_heading_no^0^^^5^^N^^^^^HEADING_NO^Heading Number^N.º de encabezamiento^N.º de encabezamiento^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Número de encabezamiento^^^
+AMOUNT_MASK^GLM_FINMASTER^006^C^3004^ine_amount_mask^0^^^6^^N^^^^^AMOUNT_MASK^Amount Mask^Máscara de dólar^Másc. del monto^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Máscara del monto^^^
+UNIT_MASK^GLM_FINMASTER^007^C^3005^ine_unit_mask^0^^^7^^N^^^^^UNIT_MASK^Unit Mask^Máscara de la unidad^Máscara de la unidad^C^^E^^^^^^^96^^^^^^^^^^^^^^^12^^^^^^^^^^^^Máscara de la unidad^^^
+RATIO_MASK^GLM_FINMASTER^008^C^3006^ine_ratio_mask^0^^^8^^N^^^^^RATIO_MASK^Ratio Mask^Máscara del índice^Máscara del índice^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^^^^^Máscara del índice^^^
+PERCENT_MASK^GLM_FINMASTER^009^C^3007^ine_percent_mask^0^^^9^^N^^^^^PERCENT_MASK^Percent Mask^Máscara del porcentaje^Máscara del %^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Máscara del porcentaje^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_FINMASTER^PRIMARY^GLM_FINMASTER.FIRM_ID                   GLM_FINMASTER.GL_RPT_NO                 ^stbl("+FIRM_ID")+GLM_FINMASTER.GL_RPT_NO$^stbl("+FIRM_ID")+RD_REC_DATA.GL_RPT_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_RPT_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002GLM_FINMASTER.GL_RPT_NO                 ;004GLM_FINMASTER.GL_RPT_DESC               ;005GLM_FINMASTER.HEADING_NO                ;006GLM_FINMASTER.AMOUNT_MASK               ;007GLM_FINMASTER.UNIT_MASK                 ;008GLM_FINMASTER.RATIO_MASK                ;009GLM_FINMASTER.PERCENT_MASK              ;
+{GridColsEnd}

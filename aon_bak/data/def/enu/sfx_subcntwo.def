@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+SFX_SUBCNTWO - Vendor/WO/Subcontract Seq Nmbr
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFX_SUBCNTWO^^^^Vendor/WO/Subcontract Seq Nmbr^Vendor/WO/Subcontract Seq Nmbr^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFX_SUBCNTWO^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_F^SFX_SUBCNTWO^002^C^^^^^^2^^Y^^^^^RECORD_ID_F^"F"^F^F^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"F"^"F"^^
+WO_LOCATION^SFX_SUBCNTWO^003^C^3001^ine_wo_location^0^^^3^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+VENDOR_ID^SFX_SUBCNTWO^004^C^3002^dis_vendor_id^0^^^4^^Y^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+WO_NO^SFX_SUBCNTWO^005^C^3003^ine_wo_no^0^^^5^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+SUBCONT_SEQ^SFX_SUBCNTWO^006^C^3004^ine_subcont_seq^0^^^6^^Y^^^^^SUBCONT_SEQ^Subcontracts Sequence Number^Subcontracts Sequence Number^Subs Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Subcontracts Sequence Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFX_SUBCNTWO^PRIMARY^SFX_SUBCNTWO.FIRM_ID                    SFX_SUBCNTWO.RECORD_ID_F                SFX_SUBCNTWO.WO_LOCATION                SFX_SUBCNTWO.VENDOR_ID                  SFX_SUBCNTWO.WO_NO                      SFX_SUBCNTWO.SUBCONT_SEQ                ^stbl("+FIRM_ID")+"F"+SFX_SUBCNTWO.WO_LOCATION$+SFX_SUBCNTWO.VENDOR_ID$+SFX_SUBCNTWO.WO_NO$+SFX_SUBCNTWO.SUBCONT_SEQ$^stbl("+FIRM_ID")+"F"+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.WO_NO$+RD_REC_DATA.SUBCONT_SEQ$^stbl("+FIRM_ID")                        "F"                                     RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.WO_NO$                      RD_REC_DATA.SUBCONT_SEQ$                
+{KeyDefsEnd}
+{GridCols}
+003SFX_SUBCNTWO.WO_LOCATION                ;004SFX_SUBCNTWO.VENDOR_ID                  ;005SFX_SUBCNTWO.WO_NO                      ;006SFX_SUBCNTWO.SUBCONT_SEQ                ;
+{GridColsEnd}

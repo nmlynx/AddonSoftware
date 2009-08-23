@@ -1,0 +1,31 @@
+Barista Application Framework - Definition Module
+GLE_FINANCIALTOT - Financial Report Totals
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLE_FINANCIALTOT^^^^Financial Report Totals^Totales del informe financiero^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLE_FINANCIALTOT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+TOT_TYPE_CDE^GLE_FINANCIALTOT^002^C^3001^ine_tot_type_cde^0^^^2^^Y^^^^^TOT_TYPE_CDE^Total Type [P/T]^Tipo de total^Tipo de total [P/T]^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Tipo total [P/T]^^^
+TOTAL_NO^GLE_FINANCIALTOT^003^C^3002^ine_total_no^0^^^3^^Y^^^^^TOTAL_NO^Total Number^Número de total^N.º de total^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^^^^Número de total^^^
+GL_PCN_FLAG^GLE_FINANCIALTOT^004^C^3003^ine_gl_pcn_flag^0^^^4^^Y^^^^^GL_PCN_FLAG^Prior, Current or Next [PCN]?^Anterior^Anterior^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^¿Anterior, actual o próximo [PCN]?^^^
+GL_PQY_FLAG^GLE_FINANCIALTOT^005^C^3004^ine_gl_pqy_flag^0^^^5^^Y^^^^^GL_PQY_FLAG^Period, Qtr or Year [PQY]?^Período^Per.^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^¿Período, trim. o año [PQY]?^^^
+GL_UPDT_SEQ^GLE_FINANCIALTOT^006^C^3005^ine_gl_updt_seq^0^^^6^^N^^^^^GL_UPDT_SEQ^GL Report Update Sequence^Secuencia de actualización de informe del GL^Sec. de actualización de inf.^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^0^0^^^^30^R^^Secuencia de actualización de informe del GL^^^
+ACTUAL_AMT^GLE_FINANCIALTOT^007^C^3006^inn_actual_amt^0^^^7^^N^^^^^ACTUAL_AMT^Actual Amount^Monto real^Monto real^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto real^^^
+ACTUAL_UNITS^GLE_FINANCIALTOT^008^C^3007^inn_actual_units^0^^^8^^N^^^^^ACTUAL_UNITS^Actual Units^Unidades reales^Un. reales^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Unidades reales^^^
+BUDGET_AMT^GLE_FINANCIALTOT^009^C^3008^inn_budget_amt^0^^^9^^N^^^^^BUDGET_AMT^Budget Amount^Monto del presupuesto^Monto de pres.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto del presupuesto^^^
+BUDGET_UNITS^GLE_FINANCIALTOT^010^C^3009^inn_budget_units^0^^^10^^N^^^^^BUDGET_UNITS^Budget Units^Unidades del presupuesto^Un. del pres.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Unidades del presupuesto^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLE_FINANCIALTOT^PRIMARY^GLE_FINANCIALTOT.FIRM_ID                GLE_FINANCIALTOT.TOT_TYPE_CDE           GLE_FINANCIALTOT.TOTAL_NO               GLE_FINANCIALTOT.GL_PCN_FLAG            GLE_FINANCIALTOT.GL_PQY_FLAG            ^stbl("+FIRM_ID")+GLE_FINANCIALTOT.TOT_TYPE_CDE$+GLE_FINANCIALTOT.TOTAL_NO$+GLE_FINANCIALTOT.GL_PCN_FLAG$+GLE_FINANCIALTOT.GL_PQY_FLAG$^stbl("+FIRM_ID")+RD_REC_DATA.TOT_TYPE_CDE$+RD_REC_DATA.TOTAL_NO$+RD_REC_DATA.GL_PCN_FLAG$+RD_REC_DATA.GL_PQY_FLAG$^stbl("+FIRM_ID")                        RD_REC_DATA.TOT_TYPE_CDE$               RD_REC_DATA.TOTAL_NO$                   RD_REC_DATA.GL_PCN_FLAG$                RD_REC_DATA.GL_PQY_FLAG$                
+{KeyDefsEnd}
+{GridCols}
+002GLE_FINANCIALTOT.TOT_TYPE_CDE           ;003GLE_FINANCIALTOT.TOTAL_NO               ;004GLE_FINANCIALTOT.GL_PCN_FLAG            ;005GLE_FINANCIALTOT.GL_PQY_FLAG            ;006GLE_FINANCIALTOT.GL_UPDT_SEQ            ;007GLE_FINANCIALTOT.ACTUAL_AMT             ;008GLE_FINANCIALTOT.ACTUAL_UNITS           ;009GLE_FINANCIALTOT.BUDGET_AMT             ;010GLE_FINANCIALTOT.BUDGET_UNITS           ;
+{GridColsEnd}

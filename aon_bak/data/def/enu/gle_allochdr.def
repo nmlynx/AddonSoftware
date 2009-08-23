@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+GLE_ALLOCHDR - Account Allocation Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLE_ALLOCHDR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BEND;BTBL;BWRI;^^Account Allocation Header^Account Allocation Header^GLE_ALLOCDET^^GLE_ALLOCDET;^^BATCH_KEY^^^T^^^^^^G;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLE_ALLOCHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BATCH_NO^GLE_ALLOCHDR^007^C^3001^ine_batch_no^0^^^2^^N^^^^^BATCH_NO^Batch Entry Control Number^Batch No^Batch No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+GL_ACCOUNT^GLE_ALLOCHDR^002^C^3002^dis_gl_account^0^^^3^^Y^^^F^^GL_ACCOUNT^GL Account Number^Source Account^GL Account^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Account Number^^^
+GL_POST_AMT^GLE_ALLOCHDR^004^C^^^^^^4^^N^^^^^GL_POST_AMT^GL Posting Amount^Posting Amount^Post Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^###,###,###.00-^^^A^O;^^^^GL Posting Amount^^^
+UNITS^GLE_ALLOCHDR^005^C^^^^^^5^^N^^^^^UNITS^Units^Units^Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^O;^^^^Units^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLE_ALLOCHDR^PRIMARY^GLE_ALLOCHDR.FIRM_ID                    GLE_ALLOCHDR.GL_ACCOUNT                 ^stbl("+FIRM_ID")+GLE_ALLOCHDR.GL_ACCOUNT$^stbl("+FIRM_ID")+RD_REC_DATA.GL_ACCOUNT$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_ACCOUNT$                 
+{KeyDefsEnd}
+{GridCols}
+002GLE_ALLOCHDR.BATCH_NO                   ;003GLE_ALLOCHDR.GL_ACCOUNT                 ;
+{GridColsEnd}

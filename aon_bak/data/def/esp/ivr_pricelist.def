@@ -1,0 +1,29 @@
+Barista Application Framework - Definition Module
+IVR_PRICELIST - Inventory Price List
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVR_PRICELIST^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Inventory Price List^Inventory Price List^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]ivr_pricelist.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+UNIT_COST_MARG^IVR_PRICELIST^001^C^3001^cbx_unit_cost_marg^0^^^1^^N^^^^^YN_PROMPT^Yes/No Prompt^Include Unit Cost and Margin?^^C^^C^^^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^^^^
+WAREHOUSE_ID_1^IVR_PRICELIST^002^C^3002^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^1;2;^20^L^0^Enter a two-digit warehouse ID^^^
+WAREHOUSE_ID_2^IVR_PRICELIST^002^C^3003^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^1;2;^20^L^0^Enter a two-digit warehouse ID^^^
+PRODUCT_TYPE_1^IVR_PRICELIST^003^C^3004^dis_product_type^0^^^3^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+PRODUCT_TYPE_2^IVR_PRICELIST^003^C^3005^dis_product_type^0^^^3^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+ITEM_ID_1^IVR_PRICELIST^004^C^3006^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+ITEM_ID_2^IVR_PRICELIST^004^C^3007^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+ITEM_TYPE^IVR_PRICELIST^005^C^3008^dis_item_type^0^^^5^^N^^^F^^ITEM_TYPE^Item Type^Item Type^Item Type^C^^E^^^^^^^35^0^[+FIRM_ID]+@^IVC_TYPECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVR_PRICELIST^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001IVR_PRICELIST.UNIT_COST_MARG            ;002IVR_PRICELIST.WAREHOUSE_ID              ;003IVR_PRICELIST.PRODUCT_TYPE              ;004IVR_PRICELIST.ITEM_ID                   ;005IVR_PRICELIST.ITEM_TYPE                 ;
+{GridColsEnd}

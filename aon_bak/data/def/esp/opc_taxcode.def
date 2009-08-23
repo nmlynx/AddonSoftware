@@ -1,0 +1,59 @@
+Barista Application Framework - Definition Module
+OPC_TAXCODE - Tax Code
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPC_TAXCODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;BREC;BSHO;^^Tax Code^Tax Code^^^^^^^^T^^^^^^A;P;V;N;U;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPC_TAXCODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+OP_TAX_CODE^OPC_TAXCODE^002^C^3001^ine_op_tax_code^0^^^2^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OP_TAX_CODE^Tax Code^Código impositivo^Cód. impos.^C^^E^^^^6^^^0^0^^^^^^^^^^^^^1^10^0^^^UUUUUUUUUU^^^^b;^20^L^0^Tax Code^^^
+CODE_DESC^OPC_TAXCODE^004^C^3002^ine_code_desc^0^^^3^^N^^^^^CODE_DESC^Code Description^Descripción^Descripción^C^^E^^^^22^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+TAX_RATE^OPC_TAXCODE^018^C^3003^inn_tax_rate^0^^^4^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OP_TAX_RATE^Tax Rate^Tax Rate^Tax Rate^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^R^^^^0^Tax Rate^^^
+GL_ACCOUNT^OPC_TAXCODE^015^C^3004^dis_gl_account^0^^^5^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BINP;^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^GL Account^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Account Number^^^
+TAX_FRT_FLAG^OPC_TAXCODE^016^C^3005^cbx_tax_frt_flag^0^^^6^^N^^^^^TAX_FRT_FLAG^Freight Taxable?^Freight Taxable?^Freight Taxable?^C^^C^^^Y;N^12^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Freight Taxable?^^^
+OP_MAX_LIMIT^OPC_TAXCODE^019^C^3006^inn_op_max_limit^0^^^7^^N^^^^^OP_MAX_LIMIT^Maximum Limit^Maximum Limit^Max Lim^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^A^^^^0^Maximum Limit^^^
+AR_TOT_CODE_01^OPC_TAXCODE^005^C^3007^ine_ar_tot_code_01^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 01^01^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^AR Tax Total Code^^^
+AR_TOT_CODE_02^OPC_TAXCODE^006^C^3008^ine_ar_tot_code_02^0^^^9^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 02^02^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_03^OPC_TAXCODE^007^C^3009^ine_ar_tot_code_03^0^^^10^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 03^03^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_04^OPC_TAXCODE^008^C^3010^ine_ar_tot_code_04^0^^^11^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 04^04^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_05^OPC_TAXCODE^009^C^3011^ine_ar_tot_code_05^0^^^12^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 05^05^C^^E^^^^3^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_06^OPC_TAXCODE^010^C^3012^ine_ar_tot_code_06^0^^^13^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 06^06^C^^E^^^^3^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_07^OPC_TAXCODE^011^C^3013^ine_ar_tot_code_07^0^^^14^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 07^07^C^^E^^^^3^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_08^OPC_TAXCODE^012^C^3014^ine_ar_tot_code_08^0^^^15^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 08^08^C^^E^^^^3^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_09^OPC_TAXCODE^013^C^3015^ine_ar_tot_code_09^0^^^16^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 09^09^C^^E^^^^3^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+AR_TOT_CODE_10^OPC_TAXCODE^014^C^3016^ine_ar_tot_code_10^0^^^17^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AR_TOT_CODE^AR Tax Total Code^Tax Code 10^10^C^^E^^^^3^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^^^^
+TAX_DESC_01^<<DISPLAY>>^031^D^3017^ine_tax_desc_01^0^^^18^^^^^^^DESC^Description^^^C^^E^^^^^+14^-10^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_02^<<DISPLAY>>^032^D^3018^ine_tax_desc_02^0^^^19^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_03^<<DISPLAY>>^033^D^3019^ine_tax_desc_03^0^^^20^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_04^<<DISPLAY>>^034^D^3020^ine_tax_desc_04^0^^^21^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_05^<<DISPLAY>>^035^D^3021^ine_tax_desc_05^0^^^22^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_06^<<DISPLAY>>^036^D^3022^ine_tax_desc_06^0^^^23^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_07^<<DISPLAY>>^037^D^3023^ine_tax_desc_07^0^^^24^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_08^<<DISPLAY>>^038^D^3024^ine_tax_desc_08^0^^^25^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_09^<<DISPLAY>>^039^D^3025^ine_tax_desc_09^0^^^26^^^^^^^DESC^Description^^^C^^E^^^^^0^0^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_DESC_10^<<DISPLAY>>^040^D^3026^ine_tax_desc_10^0^^^27^^^^^^^DESC^Description^^^C^^E^^^^^0^^180^0^^^^^^^^^^^^^^40^0^^^^^ADB^^C;^^^0^^^^
+TAX_RATE_01^<<DISPLAY>>^020^D^3028^inn_tax_rate_01^0^^^29^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_02^<<DISPLAY>>^021^D^3029^inn_tax_rate_02^0^^^30^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_03^<<DISPLAY>>^022^D^3030^inn_tax_rate_03^0^^^31^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_04^<<DISPLAY>>^023^D^3031^inn_tax_rate_04^0^^^32^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_05^<<DISPLAY>>^024^D^3032^inn_tax_rate_05^0^^^33^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_06^<<DISPLAY>>^025^D^3033^inn_tax_rate_06^0^^^34^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_07^<<DISPLAY>>^026^D^3034^inn_tax_rate_07^0^^^35^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_08^<<DISPLAY>>^027^D^3035^inn_tax_rate_08^0^^^36^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_09^<<DISPLAY>>^028^D^3036^inn_tax_rate_09^0^^^37^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_RATE_10^<<DISPLAY>>^029^D^3037^inn_tax_rate_10^0^^^38^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+TAX_TOTAL^<<DISPLAY>>^030^D^3038^inn_tax_total^0^^^39^^^^^^^OP_TAX_RATE^Tax Rate^^^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^0^^^^^AR^R^C;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPC_TAXCODE^PRIMARY^OPC_TAXCODE.FIRM_ID                     OPC_TAXCODE.OP_TAX_CODE                 ^stbl("+FIRM_ID")+OPC_TAXCODE.OP_TAX_CODE$^stbl("+FIRM_ID")+RD_REC_DATA.OP_TAX_CODE$^stbl("+FIRM_ID")                        RD_REC_DATA.OP_TAX_CODE$                
+{KeyDefsEnd}
+{GridCols}
+002OPC_TAXCODE.OP_TAX_CODE                 ;003OPC_TAXCODE.CODE_DESC                   ;004OPC_TAXCODE.TAX_RATE                    ;005OPC_TAXCODE.GL_ACCOUNT                  ;006OPC_TAXCODE.TAX_FRT_FLAG                ;007OPC_TAXCODE.OP_MAX_LIMIT                ;008OPC_TAXCODE.AR_TOT_CODE_01              ;009OPC_TAXCODE.AR_TOT_CODE_02              ;010OPC_TAXCODE.AR_TOT_CODE_03              ;011OPC_TAXCODE.AR_TOT_CODE_04              ;012OPC_TAXCODE.AR_TOT_CODE_05              ;013OPC_TAXCODE.AR_TOT_CODE_06              ;014OPC_TAXCODE.AR_TOT_CODE_07              ;015OPC_TAXCODE.AR_TOT_CODE_08              ;016OPC_TAXCODE.AR_TOT_CODE_09              ;017OPC_TAXCODE.AR_TOT_CODE_10              ;018<<DISPLAY>>.TAX_DESC_01                 ;019<<DISPLAY>>.TAX_DESC_02                 ;020<<DISPLAY>>.TAX_DESC_03                 ;021<<DISPLAY>>.TAX_DESC_04                 ;022<<DISPLAY>>.TAX_DESC_05                 ;023<<DISPLAY>>.TAX_DESC_06                 ;024<<DISPLAY>>.TAX_DESC_07                 ;025<<DISPLAY>>.TAX_DESC_08                 ;026<<DISPLAY>>.TAX_DESC_09                 ;027<<DISPLAY>>.TAX_DESC_10                 ;029<<DISPLAY>>.TAX_RATE_01                 ;030<<DISPLAY>>.TAX_RATE_02                 ;031<<DISPLAY>>.TAX_RATE_03                 ;032<<DISPLAY>>.TAX_RATE_04                 ;033<<DISPLAY>>.TAX_RATE_05                 ;034<<DISPLAY>>.TAX_RATE_06                 ;035<<DISPLAY>>.TAX_RATE_07                 ;036<<DISPLAY>>.TAX_RATE_08                 ;037<<DISPLAY>>.TAX_RATE_09                 ;038<<DISPLAY>>.TAX_RATE_10                 ;039<<DISPLAY>>.TAX_TOTAL                   ;
+{GridColsEnd}

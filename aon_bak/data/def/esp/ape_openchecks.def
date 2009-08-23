@@ -1,0 +1,33 @@
+Barista Application Framework - Definition Module
+APE_OPENCHECKS - Open Checks
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APE_OPENCHECKS^^^^Open Checks^Cheques abiertos^^^^^^^^T^^^^N^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APE_OPENCHECKS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+AP_TYPE^APE_OPENCHECKS^002^C^3001^dis_ap_type^0^^^2^^Y^^^F^^AP_TYPE^AP Type^Tipo de AP^Tipo de AP^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Escriba un tipo de AP válido.^^^
+CHECK_NO^APE_OPENCHECKS^003^C^3002^ine_check_no^0^^^3^^Y^^^^^CHECK_NO^Check Number^Número de cheque^N.º de ch.^C^^E^^^^^^^70^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^^^^
+VENDOR_ID^APE_OPENCHECKS^004^C^3003^dis_vendor_id^0^^^4^^Y^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^^^^60^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Escribir un proveedor válido^^^
+AP_INV_NO^APE_OPENCHECKS^005^C^3004^ine_ap_inv_no^0^^^5^^Y^^^^^AP_INV_NO^AP Invoice Number^Número de factura de AP^N.º de fact. de AP^C^^E^^^^^^^100^0^^^^^^^^^^^^^^10^0^^^^^^^^20^L^0^^^^
+CHECK_TYPE^APE_OPENCHECKS^007^C^3005^ine_check_type^0^^^6^^N^^^^^CHECK_TYPE^Check or Transaction Type^Tipo de transacción o cheque^Tipo de trans./ch.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+AP_DIST_CODE^APE_OPENCHECKS^008^C^3006^dis_ap_dist_code^0^^^7^^N^^^F^^AP_DIST_CODE^Distribution Code^Código de distribución^Cód. de distr.^C^^E^^^^^^^35^0^[+FIRM_ID]+"B"+@^APC_DISTRIBUTION^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^^^^
+CHECK_DATE^APE_OPENCHECKS^009^C^3007^ind_check_date^0^^^8^^N^^^C^^CHECK_DATE^Check Date^Fecha del cheque^Fecha del ch.^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+VENDOR_NAME^APE_OPENCHECKS^010^C^^^^^^9^^N^^^^^VENDOR_NAME^Vendor Name^Nombre del proveedor^Nombre del prov.^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^O;^^^^^^^
+INVOICE_AMT^APE_OPENCHECKS^011^C^3008^inn_invoice_amt^0^^^10^^N^^^^^INVOICE_AMT^Invoice Amount^Monto de la factura^Monto de la fact.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+DISCOUNT_AMT^APE_OPENCHECKS^012^C^3009^inn_discount_amt^0^^^11^^N^^^^^DISCOUNT_AMT^Discount Amount^Monto de descuento^Monto de dscto.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+RETENTION^APE_OPENCHECKS^013^C^3010^inn_retention^0^^^12^^N^^^^^RETENTION^Retention Amount^Monto de retención^Monto de ret.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APE_OPENCHECKS^PRIMARY^APE_OPENCHECKS.FIRM_ID                  APE_OPENCHECKS.AP_TYPE                  APE_OPENCHECKS.CHECK_NO                 APE_OPENCHECKS.VENDOR_ID                APE_OPENCHECKS.AP_INV_NO                ^stbl("+FIRM_ID")+APE_OPENCHECKS.AP_TYPE$+APE_OPENCHECKS.CHECK_NO$+APE_OPENCHECKS.VENDOR_ID$+APE_OPENCHECKS.AP_INV_NO$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.CHECK_NO$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.AP_INV_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.CHECK_NO$                   RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.AP_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002APE_OPENCHECKS.AP_TYPE                  ;003APE_OPENCHECKS.CHECK_NO                 ;004APE_OPENCHECKS.VENDOR_ID                ;005APE_OPENCHECKS.AP_INV_NO                ;006APE_OPENCHECKS.CHECK_TYPE               ;007APE_OPENCHECKS.AP_DIST_CODE             ;008APE_OPENCHECKS.CHECK_DATE               ;010APE_OPENCHECKS.INVOICE_AMT              ;011APE_OPENCHECKS.DISCOUNT_AMT             ;012APE_OPENCHECKS.RETENTION                ;
+{GridColsEnd}

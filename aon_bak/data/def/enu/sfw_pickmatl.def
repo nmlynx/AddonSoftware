@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+SFW_PICKMATL - Pick List Material Sort
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFW_PICKMATL^^^^Pick List Material Sort^Pick List Material Sort^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFW_PICKMATL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFW_PICKMATL^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFW_PICKMATL^003^C^3002^ine_wo_no^0^^^3^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+OP_SEQ^SFW_PICKMATL^004^C^3003^ine_op_seq^0^^^4^^Y^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+MATERIAL_SEQ^SFW_PICKMATL^006^C^3004^ine_material_seq^0^^^6^^Y^^^^^MATERIAL_SEQ^Materials Sequence Number^Materials Sequence Number^Mats Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Materials Sequence Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFW_PICKMATL^PRIMARY^SFW_PICKMATL.FIRM_ID                    SFW_PICKMATL.WO_LOCATION                SFW_PICKMATL.WO_NO                      SFW_PICKMATL.OP_SEQ                     SFW_PICKMATL.RESERVED_STR               SFW_PICKMATL.MATERIAL_SEQ               ^stbl("+FIRM_ID")+SFW_PICKMATL.WO_LOCATION$+SFW_PICKMATL.WO_NO$+SFW_PICKMATL.OP_SEQ$+SFW_PICKMATL.RESERVED_STR$+SFW_PICKMATL.MATERIAL_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$+RD_REC_DATA.OP_SEQ$+RD_REC_DATA.RESERVED_STR$+RD_REC_DATA.MATERIAL_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      RD_REC_DATA.OP_SEQ$                     RD_REC_DATA.RESERVED_STR$               RD_REC_DATA.MATERIAL_SEQ$               
+{KeyDefsEnd}
+{GridCols}
+002SFW_PICKMATL.WO_LOCATION                ;003SFW_PICKMATL.WO_NO                      ;004SFW_PICKMATL.OP_SEQ                     ;006SFW_PICKMATL.MATERIAL_SEQ               ;
+{GridColsEnd}

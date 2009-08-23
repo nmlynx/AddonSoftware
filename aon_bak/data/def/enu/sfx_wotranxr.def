@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+SFX_WOTRANXR - Work Order Transaction Xref
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFX_WOTRANXR^^^^Work Order Transaction Xref^Work Order Transaction Xref^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFX_WOTRANXR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFX_WOTRANXR^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFX_WOTRANXR^003^C^3002^ine_wo_no^0^^^3^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+TRANS_DATE^SFX_WOTRANXR^004^C^3003^ind_trans_date^0^^^4^^Y^^^C^^TRANS_DATE^Transaction Date^Transaction Date^Trans Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Transaction Date^^^
+RECORD_ID^SFX_WOTRANXR^005^C^3004^ine_record_id^0^^^5^^Y^^^^^RECORD_ID^Record ID^Record ID^Record ID^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Record ID^^^
+TRANS_SEQ^SFX_WOTRANXR^006^C^3005^ine_trans_seq^0^^^6^^Y^^^^^TRANS_SEQ^Transaction Sequence Number^Transaction Sequence Number^Trans Seq No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^12^0^^^000000000000^^^^^30^R^0^Transaction Sequence Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFX_WOTRANXR^PRIMARY^SFX_WOTRANXR.FIRM_ID                    SFX_WOTRANXR.WO_LOCATION                SFX_WOTRANXR.WO_NO                      SFX_WOTRANXR.TRANS_DATE                 SFX_WOTRANXR.RECORD_ID                  SFX_WOTRANXR.TRANS_SEQ                  ^stbl("+FIRM_ID")+SFX_WOTRANXR.WO_LOCATION$+SFX_WOTRANXR.WO_NO$+SFX_WOTRANXR.TRANS_DATE$+SFX_WOTRANXR.RECORD_ID$+SFX_WOTRANXR.TRANS_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$+RD_REC_DATA.TRANS_DATE$+RD_REC_DATA.RECORD_ID$+RD_REC_DATA.TRANS_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      RD_REC_DATA.TRANS_DATE$                 RD_REC_DATA.RECORD_ID$                  RD_REC_DATA.TRANS_SEQ$                  
+{KeyDefsEnd}
+{GridCols}
+002SFX_WOTRANXR.WO_LOCATION                ;003SFX_WOTRANXR.WO_NO                      ;004SFX_WOTRANXR.TRANS_DATE                 ;005SFX_WOTRANXR.RECORD_ID                  ;006SFX_WOTRANXR.TRANS_SEQ                  ;
+{GridColsEnd}

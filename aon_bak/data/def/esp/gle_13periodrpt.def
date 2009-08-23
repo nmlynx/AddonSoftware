@@ -1,0 +1,23 @@
+Barista Application Framework - Definition Module
+GLE_13PERIODRPT - 13 Period Report Selections
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLE_13PERIODRPT^^^^13 Period Report Selections^Selecciones del informe del período 13^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLE_13PERIODRPT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL_RPT_NO^GLE_13PERIODRPT^002^C^3001^dis_gl_rpt_no^0^^^2^^Y^^^F^^GL_RPT_NO^GL Financial Report Number^Número de informe financiero^N.º de inf. fin.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLM_FINMASTER^GL_RPT_DESC^^^^^^^^^^^2^0^^^00^00^^^^30^R^0^Número de informe financiero del GL^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLE_13PERIODRPT^PRIMARY^GLE_13PERIODRPT.FIRM_ID                 GLE_13PERIODRPT.GL_RPT_NO               ^stbl("+FIRM_ID")+GLE_13PERIODRPT.GL_RPT_NO$^stbl("+FIRM_ID")+RD_REC_DATA.GL_RPT_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_RPT_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002GLE_13PERIODRPT.GL_RPT_NO               ;
+{GridColsEnd}

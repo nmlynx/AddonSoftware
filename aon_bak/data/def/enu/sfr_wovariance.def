@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+SFR_WOVARIANCE - Closed WO Variance Report by Period
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFR_WOVARIANCE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Closed WO Variance Report by Period^Closed WO Variance Report by Period^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]sfr_wovariance.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+REPORT_SEQ^SFR_WOVARIANCE^001^C^3001^lbx_report_seq^0^^^1^^N^^^^^REPORT_SEQ^Report Sequence^Report Sequence^Report Sequence^C^^L^^^^^+3^0^0^0^^^^^^^^W^^^^Work Order Number             ~W   ;Work Order Type               ~T   ;^^1^^^^^^^^^^^^^^^
+WAREHOUSE_ID^SFR_WOVARIANCE^002^C^3002^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^SFR_WOVARIANCE.REPORT_SEQ^B^^^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^2^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+WO_TYPE_1^SFR_WOVARIANCE^003^C^3003^ine_wo_type^0^^^3^^N^^^^^WO_TYPE^Work Order Type^Work Order Type^WO Type^C^^E^SFR_WOVARIANCE.REPORT_SEQ^T^^^0^0^0^0^^^^^^^^^^^^^^2^^^^^^^^1;2;^^^^^^^
+WO_TYPE_2^SFR_WOVARIANCE^003^C^3004^ine_wo_type^0^^^3^^N^^^^^WO_TYPE^Work Order Type^Work Order Type^WO Type^C^^E^SFR_WOVARIANCE.REPORT_SEQ^T^^^0^0^0^0^^^^^^^^^^^^^^2^^^^^^^^1;2;^^^^^^^
+WO_NO_1^SFR_WOVARIANCE^004^C^3005^ine_wo_no^0^^^4^^N^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^SFR_WOVARIANCE.REPORT_SEQ^W^^^0^0^0^0^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+WO_NO_2^SFR_WOVARIANCE^004^C^3006^ine_wo_no^0^^^4^^N^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^SFR_WOVARIANCE.REPORT_SEQ^W^^^0^0^0^0^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+CUSTOMER_ID_1^SFR_WOVARIANCE^005^C^3007^dis_customer_id^0^^^5^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^SFR_WOVARIANCE.REPORT_SEQ^C^^^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+CUSTOMER_ID_2^SFR_WOVARIANCE^005^C^3008^dis_customer_id^0^^^5^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^SFR_WOVARIANCE.REPORT_SEQ^C^^^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+BILL_NO_1^SFR_WOVARIANCE^006^C^3009^dis_bill_no^0^^^6^^N^^^F^^RPT_BILL_NO^Bill of Materials Number^Bill Number^Bill of Mats No^C^^E^SFR_WOVARIANCE.REPORT_SEQ^B^^^0^0^160^0^[+FIRM_ID]+@^BMM_BILLMAST^BILL_NO^^^^^^^^^^^20^0^^^^^^^1;2;^20^L^0^^^^
+BILL_NO_2^SFR_WOVARIANCE^006^C^3010^dis_bill_no^0^^^6^^N^^^F^^RPT_BILL_NO^Bill of Materials Number^Bill Number^Bill of Mats No^C^^E^SFR_WOVARIANCE.REPORT_SEQ^B^^^0^0^160^0^[+FIRM_ID]+@^BMM_BILLMAST^BILL_NO^^^^^^^^^^^20^0^^^^^^^1;2;^20^L^0^^^^
+PERIOD^SFR_WOVARIANCE^007^C^3011^ine_period^0^^^7^^N^^^^^PERIOD^Period^Period^Prd^C^^E^^^^^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFR_WOVARIANCE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001SFR_WOVARIANCE.REPORT_SEQ               ;002SFR_WOVARIANCE.WAREHOUSE_ID             ;003SFR_WOVARIANCE.WO_TYPE                  ;004SFR_WOVARIANCE.WO_NO                    ;005SFR_WOVARIANCE.CUSTOMER_ID              ;006SFR_WOVARIANCE.BILL_NO                  ;007SFR_WOVARIANCE.PERIOD                   ;
+{GridColsEnd}

@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+POE_REPSEL - Replenishment Selections
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POE_REPSEL^^^^Replenishment Selections^Replenishment Selections^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POE_REPSEL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+SEQUENCE_NUM^POE_REPSEL^002^C^3001^ine_sequence_num^0^^^2^^Y^^^^^SEQUENCE_NUM^Sequence Number^Número de secuencia^N.º de sec.^C^S^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^C;^30^R^^Sequence Number^^^
+BEG_BUYER^POE_REPSEL^005^C^3002^ine_beg_buyer^0^^^3^^N^^^^^BEG_BUYER^Beginning Buyer Code^Beginning Buyer Code^Beg Buyer Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^^^^^^^^^Beginning Buyer Code^^^
+END_BUYER^POE_REPSEL^006^C^3003^ine_end_buyer^0^^^4^^N^^^^^END_BUYER^Ending Buyer Code^Ending Buyer Code^End Buyer Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^^^^^^^^^Ending Buyer Code^^^
+BEGIN_VEND^POE_REPSEL^003^C^3004^ine_begin_vend^0^^^5^^N^^^^^BEGIN_VEND^Beginning Vendor^Beginning Vendor^Beg Vend^C^^E^^^^^^^^^^^^^^^^^^^^^^6^^^^^^^N^^^^^Beginning Vendor^^^
+ENDING_VEND^POE_REPSEL^004^C^3005^ine_ending_vend^0^^^6^^N^^^^^ENDING_VEND^Ending Vendor^Ending Vendor^End Vend^C^^E^^^^^^^^^^^^^^^^^^^^^^6^^^^^^^N^^^^^Ending Vendor^^^
+BEGREV_DATE^POE_REPSEL^012^C^3006^ind_begrev_date^0^^^8^^N^^^C^^BEGREV_DATE^Beginning Review Date^Beginning Review Date^Beg Review Date^C^1^D^^^^^^^0^0^^^^^^^^^^^^^^8^0^^^^^^^^^^0^Beginning Review Date^^^
+ENDREV_DATE^POE_REPSEL^013^C^3007^ind_endrev_date^0^^^9^^N^^^C^^ENDREV_DATE^Ending Review Date^Ending Review Date^End Review Date^C^1^D^^^^^^^0^0^^^^^^^^^^^^^^8^0^^^^^^^^^^0^Ending Review Date^^^
+FROM_WHSE^POE_REPSEL^009^C^3008^ine_from_whse^0^^^10^^N^^^^^FROM_WHSE^"From" Warehouse ID^From Warehouse ID^From Whse ID^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^"From" Warehouse ID^^^
+THRU_WHSE^POE_REPSEL^010^C^3009^ine_thru_whse^0^^^11^^N^^^^^THRU_WHSE^"Thru" Warehouse ID^Thru Warehouse ID^Thru Whse ID^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^"Thru" Warehouse ID^^^
+REP_COMMENTS^POE_REPSEL^008^C^3010^ine_rep_comments^0^^^12^^N^^^^^REP_COMMENTS^Replenishment Comments^Replenishment Comments^Replenishment Cmts^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^Replenishment Comments^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POE_REPSEL^PRIMARY^POE_REPSEL.FIRM_ID                      POE_REPSEL.SEQUENCE_NUM                 ^stbl("+FIRM_ID")+POE_REPSEL.SEQUENCE_NUM$^stbl("+FIRM_ID")+RD_REC_DATA.SEQUENCE_NUM$^stbl("+FIRM_ID")                        RD_REC_DATA.SEQUENCE_NUM$               
+{KeyDefsEnd}
+{GridCols}
+002POE_REPSEL.SEQUENCE_NUM                 ;003POE_REPSEL.BEG_BUYER                    ;004POE_REPSEL.END_BUYER                    ;005POE_REPSEL.BEGIN_VEND                   ;006POE_REPSEL.ENDING_VEND                  ;008POE_REPSEL.BEGREV_DATE                  ;009POE_REPSEL.ENDREV_DATE                  ;010POE_REPSEL.FROM_WHSE                    ;011POE_REPSEL.THRU_WHSE                    ;012POE_REPSEL.REP_COMMENTS                 ;
+{GridColsEnd}

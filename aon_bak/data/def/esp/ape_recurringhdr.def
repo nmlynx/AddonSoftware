@@ -1,0 +1,43 @@
+Barista Application Framework - Definition Module
+APE_RECURRINGHDR - Recurring Invoice Entry Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APE_RECURRINGHDR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ADIS;AREC;ARNF;BSHO;BTBL;BWRI;^^Recurring Invoice Entry Header^Encabezado de entrada de facturas recurrentes^APE_RECURRINGDET^^APE_RECURRINGDET;^^^^^T^^^^^^R;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APE_RECURRINGHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AP_TYPE^APE_RECURRINGHDR^002^C^3001^dis_ap_type^0^^^2^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^AP_TYPE^AP Type^Tipo de AP^Tipo de AP^C^^E^^^^^-3^^35^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Tipo de AP^^^
+VENDOR_ID^APE_RECURRINGHDR^003^C^3002^dis_vendor_id^0^^^3^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^^^^60^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Número de proveedor^^^
+AP_INV_NO^APE_RECURRINGHDR^004^C^3003^ine_ap_inv_no^0^^^4^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AP_INV_NO^AP Invoice Number^Factura^N.º de fact. de AP^C^^E^^^^^^^100^0^^^^^^^^^^^^^^10^0^^^^^^^^20^L^0^Número de factura de AP^^^
+SEQUENCE_00^APE_RECURRINGHDR^005^C^^^^^^5^^N^^^^^SEQUENCE_00^"00"^0^0^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^"00"^"00"^^
+AP_DIST_CODE^APE_RECURRINGHDR^006^C^3004^dis_ap_dist_code^0^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^AP_DIST_CODE^Distribution Code^Código de distribución^Cód. de distr.^C^^E^^^^^^+1^35^0^[+FIRM_ID]+"B"+@^APC_DISTRIBUTION^CODE_DESC^^^^^^^Información de la factura^^^^2^0^^^UU^^^^^20^L^0^Código de distribución^^^
+PAYMENT_GRP^APE_RECURRINGHDR^007^C^3005^dis_payment_grp^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^PAYMENT_GRP^Payment Group^Grupo de pago^Grupo de pago^C^^E^^^^^^^35^0^[+FIRM_ID]+"D"+@^APC_PAYMENTGROUP^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Grupo de pago^^^
+AP_TERMS_CODE^APE_RECURRINGHDR^008^C^3006^dis_ap_terms_code^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^AP_TERMS_CODE^AP Terms Code^Código de condiciones^Cód. de condiciones^C^^E^^^^^^^35^^[+FIRM_ID]+"C"+@^APC_TERMSCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^20^L^^Código de condiciones^^^
+HOLD_FLAG^APE_RECURRINGHDR^012^C^3007^cbx_hold_flag^0^^^9^^N^^^^^HOLD_FLAG^Hold For Manual Release [Y/N]?^¿Retener para emisión manual?^¿Retener para em. man.?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^¿Retener para emisión manual?^^^
+INVOICE_TYPE^APE_RECURRINGHDR^013^C^^^^^^10^^N^^^^^INVOICE_TYPE^Invoice Type^Tipo de factura^Tipo de fact.^C^^L^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^Tipo de factura^^^
+INVOICE_DATE^APE_RECURRINGHDR^014^C^3008^ind_invoice_date^0^^^11^^N^^^C^^INVOICE_DATE^Invoice Date^Fecha de la factura^Fecha de la fact.^C^1^D^^^^^+29^-4^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de la factura^^^
+ACCTING_DATE^APE_RECURRINGHDR^015^C^3009^ind_accting_date^0^^^12^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^ACCTING_DATE^Accounting Date^Fecha contable^Fecha contab.^C^1^D^^^^^^^80^^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^D;^^^^Fecha contable^^^
+INV_DUE_DATE^APE_RECURRINGHDR^016^C^3010^ind_inv_due_date^0^^^13^^N^^^C^^INV_DUE_DATE^Invoice Due Date^Fecha de vencimiento^Fecha de vcto. de la fact.^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de vencimiento de la factura^^^
+DISC_DATE^APE_RECURRINGHDR^017^C^3011^ind_disc_date^0^^^14^^N^^^C^^DISC_DATE^Discount Date^Fecha de descuento^Fecha de dscto.^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de descuento^^^
+REFERENCE^APE_RECURRINGHDR^010^C^3012^ine_reference^0^^^15^^N^^^^^REFERENCE^Reference^Referencia^Ref.^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Referencia^^^
+AP_INV_MEMO^APE_RECURRINGHDR^011^C^3013^ine_ap_inv_memo^0^^^16^^N^^^^^AP_INV_MEMO^AP Invoice Memo^Memorando^Mem. de la fact. de AP^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^^^^^Memorando de la factura de AP^^^
+INVOICE_AMT^APE_RECURRINGHDR^018^C^3014^inn_invoice_amt^0^^^17^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^INVOICE_AMT^Invoice Amount^Fact./ajuste total^Monto de la fact.^N^^N^^^^^+20^-6^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto de la factura^^^
+NET_INV_AMT^APE_RECURRINGHDR^021^C^3015^inn_net_inv_amt^0^^^18^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^NET_INV_AMT^Net Invoice Amount^Factura neta^Monto neto de fact.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto neto de la factura^^^
+DISCOUNT_AMT^APE_RECURRINGHDR^019^C^3016^inn_discount_amt^0^^^19^^N^^^^^DISCOUNT_AMT^Discount Amount^Descuento^Monto de dscto.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto de descuento^^^
+RETENTION^APE_RECURRINGHDR^020^C^3017^inn_retention^0^^^20^^N^^^^^RETENTION^Retention Amount^Retención^Monto de ret.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto de retención^^^
+DIST_BAL^<<DISPLAY>>^023^D^3018^inn_dist_bal^0^^^21^^^^^^^BALANCE_AMT^Balance Remaining^Saldo de distr.^^N^^N^^^^^0^0^^0^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+COMMENTS^<<DISPLAY>>^022^D^3019^ced_comments^0^^^22^^^^^^^RECORD_TEXT^Record Text^Comentarios^^C^^U^^^^^-20^-10^260^80^^^^^^^^^^^^^^512^0^^^^^AON^^C;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APE_RECURRINGHDR^PRIMARY^APE_RECURRINGHDR.FIRM_ID                APE_RECURRINGHDR.AP_TYPE                APE_RECURRINGHDR.VENDOR_ID              APE_RECURRINGHDR.AP_INV_NO              ^stbl("+FIRM_ID")+APE_RECURRINGHDR.AP_TYPE$+APE_RECURRINGHDR.VENDOR_ID$+APE_RECURRINGHDR.AP_INV_NO$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.AP_INV_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.AP_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002APE_RECURRINGHDR.AP_TYPE                ;003APE_RECURRINGHDR.VENDOR_ID              ;004APE_RECURRINGHDR.AP_INV_NO              ;006APE_RECURRINGHDR.AP_DIST_CODE           ;007APE_RECURRINGHDR.PAYMENT_GRP            ;008APE_RECURRINGHDR.AP_TERMS_CODE          ;009APE_RECURRINGHDR.HOLD_FLAG              ;011APE_RECURRINGHDR.INVOICE_DATE           ;012APE_RECURRINGHDR.ACCTING_DATE           ;013APE_RECURRINGHDR.INV_DUE_DATE           ;014APE_RECURRINGHDR.DISC_DATE              ;015APE_RECURRINGHDR.REFERENCE              ;016APE_RECURRINGHDR.AP_INV_MEMO            ;017APE_RECURRINGHDR.INVOICE_AMT            ;018APE_RECURRINGHDR.NET_INV_AMT            ;019APE_RECURRINGHDR.DISCOUNT_AMT           ;020APE_RECURRINGHDR.RETENTION              ;021<<DISPLAY>>.DIST_BAL                    ;022<<DISPLAY>>.COMMENTS                    ;
+{GridColsEnd}

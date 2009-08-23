@@ -1,0 +1,30 @@
+Barista Application Framework - Definition Module
+OPR_MONTHREG - Monthly Sales Register
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPR_MONTHREG^^^^Monthly Sales Register^Monthly Sales Register^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]opr_salesregr.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+REPORT_SEQUENCE^OPR_MONTHREG^001^C^3001^lbx_report_sequence^0^^^1^^N^^^^^REPORT_SEQUENCE^Report Sequence^Sequence^Seq^C^^L^^^^^+3^^^^^^^^^^^N^^^^Alternate Sequence            ~A   ;Customer ID                   ~N   ;^^1^^^^^^^^^^^^^^^
+CUSTOMER_ID_1^OPR_MONTHREG^002^C^3002^dis_customer_id^0^^^2^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+CUSTOMER_ID_2^OPR_MONTHREG^002^C^3003^dis_customer_id^0^^^2^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+ALT_SEQUENCE_1^OPR_MONTHREG^003^C^3004^ine_alt_sequence^0^^^3^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Secuencia alternativa^Sec. alt.^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^1;2;^^^^^^^
+ALT_SEQUENCE_2^OPR_MONTHREG^003^C^3005^ine_alt_sequence^0^^^3^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Secuencia alternativa^Sec. alt.^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^1;2;^^^^^^^
+INVOICE_DATE_1^OPR_MONTHREG^004^C^3006^ind_invoice_date^0^^^4^^N^^^C^^INVOICE_DATE^Invoice Date^Fecha de la factura^Fecha de la fact.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+INVOICE_DATE_2^OPR_MONTHREG^004^C^3007^ind_invoice_date^0^^^4^^N^^^C^^INVOICE_DATE^Invoice Date^Fecha de la factura^Fecha de la fact.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+REPORT_SUMM_DET^OPR_MONTHREG^005^C^3008^lbx_report_summ_det^0^^^5^^N^^^^^REPORT_SUMM_DET^Report Summary or Detail^Resumen o detalle^Res. o det.^C^^L^^^^^^^^^^^^^^^^S^^^^Detalle                       ~D   ;Resumen                       ~S   ;^^1^^^^^^^^^^^^^^^
+FIRM_ID^OPR_MONTHREG^006^C^^^^^^6^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPR_MONTHREG^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001OPR_MONTHREG.REPORT_SEQUENCE            ;002OPR_MONTHREG.CUSTOMER_ID                ;003OPR_MONTHREG.ALT_SEQUENCE               ;004OPR_MONTHREG.INVOICE_DATE               ;005OPR_MONTHREG.REPORT_SUMM_DET            ;
+{GridColsEnd}

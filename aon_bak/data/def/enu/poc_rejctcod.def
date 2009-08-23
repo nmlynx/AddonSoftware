@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+POC_REJCTCOD - QA Receipt Rejection Codes
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POC_REJCTCOD^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^QA Receipt Rejection Codes^QA Receipt Rejection Codes^POC_REJCTCMT^^POC_REJCTCMT;^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POC_REJCTCOD^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+REJECT_CODE^POC_REJCTCOD^002^C^3001^ine_reject_code^0^^^2^^Y^^^^^REJECT_CODE^Rejection Code^Rejection Code^Rejection Cd^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Rejection Code^^^
+DESCRIPTION^POC_REJCTCOD^003^C^3002^ine_description^0^^^3^^N^^^^^DESCRIPTION^Description^Description^Desc^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^^^^^Description^^^
+RETAIN_REJ^POC_REJCTCOD^004^C^3003^cbx_retain_rej^0^^^4^^N^^^^^RETAIN_REJ^Retain Rejected Qty On Order?^Retain Rejected Qty On Order?^Ret Rej Qty On Ord?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Retain Rejected Qty On Order?^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POC_REJCTCOD^PRIMARY^POC_REJCTCOD.FIRM_ID                    POC_REJCTCOD.REJECT_CODE                ^stbl("+FIRM_ID")+POC_REJCTCOD.REJECT_CODE$^stbl("+FIRM_ID")+RD_REC_DATA.REJECT_CODE$^stbl("+FIRM_ID")                        RD_REC_DATA.REJECT_CODE$                
+{KeyDefsEnd}
+{GridCols}
+002POC_REJCTCOD.REJECT_CODE                ;003POC_REJCTCOD.DESCRIPTION                ;004POC_REJCTCOD.RETAIN_REJ                 ;
+{GridColsEnd}

@@ -1,0 +1,47 @@
+Barista Application Framework - Definition Module
+IVM_LSMASTER - Lot/Serial Number Master
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVM_LSMASTER^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-LHST;AOPT-LLKP;AOPT-LTRN;^Lot/Serial Period History     LHSTM;Lot/Serial Transaction HistoryLTRNM;^Lot/Serial Number Master^Lot/Serial Number Master^^^^^ALT_KEY_03^^IVM_ITEMWHSE^T^^^^^^B;D;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVM_LSMASTER^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+ITEM_ID^IVM_LSMASTER^003^C^3001^dis_item_id^0^^^2^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^200^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+WAREHOUSE_ID^IVM_LSMASTER^002^C^3002^dis_warehouse_id^0^^^3^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^B;V;^20^L^0^Warehouse ID^^^
+LOTSER_NO^IVM_LSMASTER^004^C^3003^ine_lotser_no^0^^^4^^Y^^^^^LOTSER_NO^Lot/Serial Number^Lot/Serial No^Lot/Serial No^C^^E^^^^^^^200^0^^^^^^^^^^Lot Information^^^^20^0^^^^^^^B;^20^L^0^Lot/Serial Number^^^
+CLOSED_FLAG^IVM_LSMASTER^008^C^3004^ine_closed_flag^0^^^5^^N^^^^^CLOSED_FLAG^Closed Flag^Closed Flag^Closed Flag^C^^E^^^^^+36^-1^35^^^^^^^^^^^^^^^1^^^^^^^^B;^^^^Closed Flag^^^
+LS_LOCATION^IVM_LSMASTER^005^C^3005^ine_ls_location^0^^^6^^N^^^^^LS_LOCATION^Lot/Serial Number Location^Lot/Serial Location^Lot/Serial No Loc^C^^E^^^^^-36^^56^^^^^^^^^^^^^^^7^^^^^^^^^^^^Warehouse Location^^^
+LSTPHY_DATE^IVM_LSMASTER^011^C^3006^ind_lstphy_date^0^^^7^^N^^^C^^LSTPHY_DATE^Last Physical Date^Last Phys Date^Last Phys Date^C^1^D^^^^^+36^-1^70^^^^^^^^^^^^^^^8^^^^^^^^B;^^^^Last Physical Date^^^
+VENDOR_ID^IVM_LSMASTER^009^C^3007^dis_vendor_id^0^^^8^^N^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^-36^^48^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^B;G;^30^R^0^Vendor Number^^^
+PHYSICAL_CNT^IVM_LSMASTER^022^C^3008^inn_physical_cnt^0^^^9^^N^^^^^PHYSICAL_CNT^Physical Inventory Count^Last Phys Count^Phys IV Count^N^^N^^^^^+36^-1^56^^^^^^^^^^^^^^^7^^^^^^^U^C;^^^^Physical Inventory Count^^^
+LS_COMMENTS^IVM_LSMASTER^007^C^3009^ine_ls_comments^0^^^10^^N^^^^^LS_COMMENTS^Lot/Serial Number Comment^Lot/Serial Comment^Lot/Serial No Cmt^C^^E^^^^^-36^^320^^^^^^^^^^^^^^^40^^^^^^^^B;G;^^^^Lot/Serial Number Comment^^^
+UNIT_COST^IVM_LSMASTER^023^C^3010^inn_unit_cost^0^^^11^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^70^^^^^^^^^^^Costing^^^^7^^^^^^^C^B;G;^^^^Unit Cost^^^
+LANDED_COST^IVM_LSMASTER^027^C^3011^inn_landed_cost^0^^^12^^N^^^^^LANDED_COST^Landed Cost^Landed Cost^Landed Cst^N^^N^^^^^^^70^^^^^^^^^^^^^^^7^^^^^^^C^B;G;^^^^Landed Cost^^^
+LAST_PO_COST^IVM_LSMASTER^028^C^3012^inn_last_po_cost^0^^^13^^N^^^^^LAST_PO_COST^Last Purchase Cost^Last Purchase Cost^Last Purch Cst^N^^N^^^^^^^70^^^^^^^^^^^^^^^7^^^^^-####.0000^^C^B;G;^^^^Last Purchase Cost^^^
+AVG_COST^IVM_LSMASTER^024^C^3013^inn_avg_cost^0^^^14^^N^^^^^AVG_COST^Average Cost^Average Cost^Avg Cst^N^^N^^^^^+34^-3^70^^^^^^^^^^^^^^^7^^^^^^^C^B;G;^^^^Average Cost^^^
+STD_COST^IVM_LSMASTER^025^C^3014^inn_std_cost^0^^^15^^N^^^^^STD_COST^Standard Cost^Standard Cost^Std Cst^N^^N^^^^^^^70^^^^^^^^^^^^^^^7^^^^^^^C^B;G;^^^^Standard Cost^^^
+REP_COST^IVM_LSMASTER^026^C^3015^inn_rep_cost^0^^^16^^N^^^^^REP_COST^Replacement Cost^Replacement Cost^Replacement Cst^N^^N^^^^^^^70^^^^^^^^^^^^^^^7^^^^^^^C^B;G;^^^^Replacement Cost^^^
+QTY_ON_HAND^IVM_LSMASTER^020^C^3016^inn_qty_on_hand^0^^^17^^N^^^^^QTY_ON_HAND^Quantity On-Hand^Quantity On-Hand^Qty On-Hand^N^^N^^^^^-34^^56^0^^^^^^^^^^Quantities^^^^7^0^^^^^^U^B;G;^^^0^Quantity On-Hand^^^
+QTY_COMMIT^IVM_LSMASTER^021^C^3017^inn_qty_commit^0^^^18^^N^^^^^QTY_COMMIT^Quantity Committed^Quantity Committed^Qty Committed^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^B;G;^^^^Quantity Committed^^^
+LSTREC_DATE^IVM_LSMASTER^012^C^3018^ind_lstrec_date^0^^^19^^N^^^C^^LSTREC_DATE^Last Receipt Date^Receipt^Last Rec Date^C^1^D^^^^^^^70^^^^^^^^^^^Last Transaction Dates^^^^8^^^^^^^^B;G;^^^^Last Receipt Date^^^
+LSTBLT_DATE^IVM_LSMASTER^013^C^3019^ind_lstblt_date^0^^^20^^N^^^C^^LSTBLT_DATE^Last Built Date^Built^Last Built Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;G;^^^^Last Built Date^^^
+LSTSAL_DATE^IVM_LSMASTER^014^C^3020^ind_lstsal_date^0^^^21^^N^^^C^^LSTSAL_DATE^Last Sale Date^Sold^Last Sale Date^C^1^D^^^^^+15^-2^70^^^^^^^^^^^^^^^8^^^^^^^^B;G;^^^^Last Sale Date^^^
+LSTISS_DATE^IVM_LSMASTER^015^C^3021^ind_lstiss_date^0^^^22^^N^^^C^^LSTISS_DATE^Last Issue Date^Issued^Last Issue Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;G;^^^^Last Issue Date^^^
+LSTADJ_DATE^IVM_LSMASTER^016^C^3022^ind_lstadj_date^0^^^23^^N^^^C^^LSTADJ_DATE^Last Adjustment Date^Adjustment^Last Adj Date^C^1^D^^^^^+17^-2^70^^^^^^^^^^^^^^^8^^^^^^^^B;G;^^^^Last Adjustment Date^^^
+LSTXIN_DATE^IVM_LSMASTER^017^C^3023^ind_lstxin_date^0^^^24^^N^^^C^^LSTXIN_DATE^Last Transfer In Date^Transfer In^Last Xfer In Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;G;^^^^Last Transfer In Date^^^
+LSTXOT_DATE^IVM_LSMASTER^018^C^3024^ind_lstxot_date^0^^^25^^N^^^C^^LSTXOT_DATE^Last Transfer Out Date^Transfer Out^Last Xfer Out Date^C^1^D^^^^^+18^-2^70^^^^^^^^^^^^^^^8^^^^^^^^B;G;^^^^Last Transfer Out Date^^^
+LSTRET_DATE^IVM_LSMASTER^019^C^3025^ind_lstret_date^0^^^26^^N^^^C^^LSTRET_DATE^Last Return Date^Returned^Last Ret Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;G;^^^^Last Return Date^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVM_LSMASTER^PRIMARY^IVM_LSMASTER.FIRM_ID                    IVM_LSMASTER.WAREHOUSE_ID               IVM_LSMASTER.ITEM_ID                    IVM_LSMASTER.LOTSER_NO                  ^stbl("+FIRM_ID")+IVM_LSMASTER.WAREHOUSE_ID$+IVM_LSMASTER.ITEM_ID$+IVM_LSMASTER.LOTSER_NO$^stbl("+FIRM_ID")+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.ITEM_ID$+RD_REC_DATA.LOTSER_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.ITEM_ID$                    RD_REC_DATA.LOTSER_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002IVM_LSMASTER.ITEM_ID                    ;003IVM_LSMASTER.WAREHOUSE_ID               ;003{{DESC}}                                ;004IVM_LSMASTER.LOTSER_NO                  ;005IVM_LSMASTER.CLOSED_FLAG                ;006IVM_LSMASTER.LS_LOCATION                ;007IVM_LSMASTER.LSTPHY_DATE                ;009IVM_LSMASTER.PHYSICAL_CNT               ;
+{GridColsEnd}

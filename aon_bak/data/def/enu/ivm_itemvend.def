@@ -1,0 +1,36 @@
+Barista Application Framework - Definition Module
+IVM_ITEMVEND - Item Vendor Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVM_ITEMVEND^^^^Item Vendor Detail^Vendor Detail^^^^^ALT_KEY_01^^IVM_ITEMMAST^T^^^^^^E;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVM_ITEMVEND^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+ITEM_ID^IVM_ITEMVEND^003^C^3001^dis_item_id^0^^^2^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^200^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+VENDOR_ID^IVM_ITEMVEND^002^C^3002^dis_vendor_id^0^^^3^^Y^^^FD^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^60^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^IV_VEND_ITEMS^Vendor Information^^^1^6^0^^^UUUUUU^^^I^V;^30^R^0^Vendor Number^^^
+PRISEC_FLAG^IVM_ITEMVEND^004^C^3003^lbx_prisec_flag^0^^^4^^N^^^^^PRISEC_FLAG^Primary/Secondary Flag [P/S]^Primary/Secondary Flag^Pri/Sec^C^^L^^^^^^^0^0^^^^^^^^S^^^^Primary                       ~P   ;Secondary                     ~S   ;^1^1^0^^^^^^^^^^0^Primary/Secondary Flag [P/S]^^^
+VENDOR_ITEM^IVM_ITEMVEND^007^C^3004^ine_vendor_item^0^^^5^^N^^^^^VENDOR_ITEM^Vendor Item Number^Vendor Item Number^Vend Item No^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Vendor Item Number^^^
+LEAD_TIME^IVM_ITEMVEND^016^C^3005^inn_lead_time^0^^^6^^N^^^^^LEAD_TIME^Lead Time^Lead Time^Lead Time^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^999^^^^^^^^^Lead Time^^^
+BREAK_QTY_01^IVM_ITEMVEND^008^C^3006^inn_break_qty_01^0^^^7^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^0^0^0^^0^^^^^^^^^^Quantity Discounts^^^^7^^^^^^^U^^^^^Break Quantity Level^^^
+UNIT_COST_01^IVM_ITEMVEND^011^C^3007^inn_unit_cost_01^0^^^8^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^0^+25^-1^0^0^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+BREAK_QTY_02^IVM_ITEMVEND^009^C^3008^inn_break_qty_02^0^^^9^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^0^-25^^0^0^^^^^^^^^^^^^^7^^^^^^^U^^^^^^^^
+UNIT_COST_02^IVM_ITEMVEND^012^C^3009^inn_unit_cost_02^0^^^10^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^0^+25^-1^0^0^^^^^^^^^^^^^^7^^^^^^^C^^^^^^^^
+BREAK_QTY_03^IVM_ITEMVEND^010^C^3010^inn_break_qty_03^0^^^11^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^0^-25^^0^0^^^^^^^^^^^^^^7^^^^^^^U^^^^^^^^
+UNIT_COST_03^IVM_ITEMVEND^013^C^3011^inn_unit_cost_03^0^^^12^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^0^+25^-1^0^0^^^^^^^^^^^^^^7^^^^^^^C^^^^^^^^
+LAST_PO_DATE^IVM_ITEMVEND^006^C^3012^ind_last_po_date^0^^^13^^N^^^C^^LAST_PO_DATE^Last Purchase Date^Last Purchase Date^Last Purch Date^C^1^D^^^^^-25^^70^^^^^^^^^^^Last Purchase^^^^8^^^^^^^^^^^^Last Purchase Date^^^
+LAST_PO_COST^IVM_ITEMVEND^014^C^3013^inn_last_po_cost^0^^^14^^N^^^^^LAST_PO_COST^Last Purchase Cost^Last Purchase Cost^Last Purch Cst^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^-####.0000^^C^B;^^^^Last Purchase Cost^^^
+LAST_PO_LEAD^IVM_ITEMVEND^015^C^3014^inn_last_po_lead^0^^^15^^N^^^^^LAST_PO_LEAD^Lead Time for Last P.O.^Lead Time for Last P.O.^Lead Last PO^N^^N^^^^^^^30^^^^^^^^^^^^^^^3^^^999^^^^^B;^^^^Lead Time for Last P.O.^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVM_ITEMVEND^PRIMARY^IVM_ITEMVEND.FIRM_ID                    IVM_ITEMVEND.VENDOR_ID                  IVM_ITEMVEND.ITEM_ID                    ^stbl("+FIRM_ID")+IVM_ITEMVEND.VENDOR_ID$+IVM_ITEMVEND.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002IVM_ITEMVEND.ITEM_ID                    ;003IVM_ITEMVEND.VENDOR_ID                  ;003{{DESC}}                                ;004IVM_ITEMVEND.PRISEC_FLAG                ;005IVM_ITEMVEND.VENDOR_ITEM                ;006IVM_ITEMVEND.LEAD_TIME                  ;007IVM_ITEMVEND.BREAK_QTY_01               ;008IVM_ITEMVEND.UNIT_COST_01               ;009IVM_ITEMVEND.BREAK_QTY_02               ;010IVM_ITEMVEND.UNIT_COST_02               ;011IVM_ITEMVEND.BREAK_QTY_03               ;012IVM_ITEMVEND.UNIT_COST_03               ;013IVM_ITEMVEND.LAST_PO_DATE               ;014IVM_ITEMVEND.LAST_PO_COST               ;015IVM_ITEMVEND.LAST_PO_LEAD               ;
+{GridColsEnd}

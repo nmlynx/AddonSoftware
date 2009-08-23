@@ -1,0 +1,28 @@
+Barista Application Framework - Definition Module
+GLR_SUMMARY - GL Summary Activity Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLR_SUMMARY^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARER;BFMC;^^GL Summary Activity Report^GL Summary Activity Report^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]gle_summary.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+GL_ACCOUNT_1^GLR_SUMMARY^001^C^3001^dis_gl_account^0^^^1^^N^^^F^^GL_ACCOUNT^GL Account Number^Account^Account^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^^^^
+GL_ACCOUNT_2^GLR_SUMMARY^001^C^3002^dis_gl_account^0^^^1^^N^^^F^^GL_ACCOUNT^GL Account Number^Account^Account^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^^^^
+GL_WILDCARD^GLR_SUMMARY^002^C^3003^ine_gl_wildcard^0^^^2^^N^^^^^GL_WILDCARD^GL Account Wildcard Mask^Wildcard Mask^Acct Wildcard Mask^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^^^^
+RECORD_CD_1^<<DISPLAY>>^003^D^3004^lbx_record_cd_1^0^^^3^^^^^^^GENERIC_LIST^Generic ListButton^01^^C^^L^^^^^0^0^200^0^^^^^^^^^^Report Columns^^^^30^0^^^^^BAR^^^^^0^^^^
+RECORD_CD_2^<<DISPLAY>>^004^D^3005^lbx_record_cd_2^0^^^4^^^^^^^GENERIC_LIST^Generic ListButton^02^^C^^L^^^^^0^0^200^0^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+RECORD_CD_3^<<DISPLAY>>^005^D^3006^lbx_record_cd_3^0^^^5^^^^^^^GENERIC_LIST^Generic ListButton^03^^C^^L^^^^^0^0^200^0^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+RECORD_CD_4^<<DISPLAY>>^006^D^3007^lbx_record_cd_4^0^^^6^^^^^^^GENERIC_LIST^Generic ListButton^04^^C^^L^^^^^0^0^200^0^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLR_SUMMARY^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001GLR_SUMMARY.GL_ACCOUNT                  ;002GLR_SUMMARY.GL_WILDCARD                 ;003<<DISPLAY>>.RECORD_CD_1                 ;004<<DISPLAY>>.RECORD_CD_2                 ;005<<DISPLAY>>.RECORD_CD_3                 ;006<<DISPLAY>>.RECORD_CD_4                 ;
+{GridColsEnd}

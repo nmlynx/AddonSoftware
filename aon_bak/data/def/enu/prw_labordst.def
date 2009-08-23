@@ -1,0 +1,28 @@
+Barista Application Framework - Definition Module
+PRW_LABORDST - Labor Distribution
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRW_LABORDST^^^^Labor Distribution^Labor Distribution^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^PRW_LABORDST^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+DEPT_CODE^PRW_LABORDST^002^C^3001^ine_dept_code^0^^^2^^Y^^^^^DEPT_CODE^Department Code^Department Code^Dept Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Department Code^^^
+TITLE_CODE^PRW_LABORDST^003^C^3002^dis_title_code^0^^^3^^Y^^^F^^TITLE_CODE^Title Code^Title Code^Title Cd^C^^E^^^^^^^^^[+FIRM_ID]+"F"+@^PRC_TITLCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^30^L^^Title Code^^^
+EMPLOYEE_NO^PRW_LABORDST^004^C^3003^dis_employee_no^0^^^4^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+PAY_CODE^PRW_LABORDST^005^C^3004^dis_pay_code^0^^^5^^Y^^^F^^PAY_CODE^Pay Code^Pay Code^Pay Cd^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^PRC_PAYCODE^PR_CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^L^^Pay Code^^^
+UNITS^PRW_LABORDST^006^C^3005^inn_units^0^^^6^^N^^^^^UNITS^Units^Units^Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Units^^^
+EXTENDED_AMT^PRW_LABORDST^007^C^3006^inn_extended_amt^0^^^7^^N^^^^^EXTENDED_AMT^Extended Amount^Extended Amount^Ext Amt^N^^N^^^^^^^0^0^^^^^^^^^^^^^^15^0^^^^^^A^^^^0^Extended Amount^^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRW_LABORDST^PRIMARY^PRW_LABORDST.FIRM_ID                    PRW_LABORDST.DEPT_CODE                  PRW_LABORDST.TITLE_CODE                 PRW_LABORDST.EMPLOYEE_NO                PRW_LABORDST.PAY_CODE                   ^stbl("+FIRM_ID")+PRW_LABORDST.DEPT_CODE$+PRW_LABORDST.TITLE_CODE$+PRW_LABORDST.EMPLOYEE_NO$+PRW_LABORDST.PAY_CODE$^stbl("+FIRM_ID")+RD_REC_DATA.DEPT_CODE$+RD_REC_DATA.TITLE_CODE$+RD_REC_DATA.EMPLOYEE_NO$+RD_REC_DATA.PAY_CODE$^stbl("+FIRM_ID")                        RD_REC_DATA.DEPT_CODE$                  RD_REC_DATA.TITLE_CODE$                 RD_REC_DATA.EMPLOYEE_NO$                RD_REC_DATA.PAY_CODE$                   
+{KeyDefsEnd}
+{GridCols}
+002PRW_LABORDST.DEPT_CODE                  ;003PRW_LABORDST.TITLE_CODE                 ;004PRW_LABORDST.EMPLOYEE_NO                ;005PRW_LABORDST.PAY_CODE                   ;006PRW_LABORDST.UNITS                      ;007PRW_LABORDST.EXTENDED_AMT               ;
+{GridColsEnd}

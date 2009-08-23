@@ -1,0 +1,30 @@
+Barista Application Framework - Definition Module
+OPR_SHIPPINGR - Shipping Schedule Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPR_SHIPPINGR^^^^Shipping Schedule Report^Shipping Schedule Report^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]opr_shippingr.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+WAREHOUSE_ID^OPR_SHIPPINGR^001^C^3001^dis_warehouse_id^0^^^1^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^01^^^^^1^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+PRODUCT_TYPE^OPR_SHIPPINGR^002^C^3002^dis_product_type^0^^^2^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^^20^L^^^^^
+OPEN^OPR_SHIPPINGR^003^C^3003^cbx_open^0^^^4^^N^^^^^OPEN^Open?^Open?^Open?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^0^^^^^^^^^^0^^^^
+QUOTED^OPR_SHIPPINGR^004^C^3004^cbx_quoted^0^^^5^^N^^^^^QUOTED^Quoted?^Quoted?^Quoted?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^0^^^^^^^^^^0^^^^
+BACKORDERS^OPR_SHIPPINGR^005^C^3005^cbx_backorders^0^^^6^^N^^^^^BACKORDERS^Allow Backorders [Y/N]?^Backorders?^¿Permitir ped. pend.?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+CREDIT^OPR_SHIPPINGR^006^C^3006^cbx_credit^0^^^7^^N^^^^^REPRINT^Reprint [Y/N]?^Credit^¿Reimprimir?^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+SUMM_DTL^OPR_SHIPPINGR^007^C^3007^lbx_summ_dtl^0^^^8^^N^^^^^SUMM_DTL^Summary or Detail^Resumen o detalle^Resumen o detalle^C^^L^^^^^0^0^0^0^^^^^^^^D^^^^Detalle                       ~D   ;Resumen                       ~S   ;^^1^^^^^^^^^^^^^^^
+AGING_DATE^OPR_SHIPPINGR^008^C^3008^ind_aging_date^0^^^9^^N^^^C^^AGING_DATE^Aging Date^Fecha de antigüedad^Fecha de antig.^N^1^D^^^^^0^0^0^0^^^^^^^^[%PDATE]^^^^^8^8^^^^^^^^^^^^^^^
+DAYS_IN_MTH^OPR_SHIPPINGR^009^C^3009^ine_days_in_mth^0^^^10^^N^^^^^DAYS_IN_MTH^Number Of Days In The Month^Days^Days^N^^E^^^^^0^0^0^0^^^^^^^^15^^^^^^2^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPR_SHIPPINGR^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001OPR_SHIPPINGR.WAREHOUSE_ID              ;002OPR_SHIPPINGR.PRODUCT_TYPE              ;004OPR_SHIPPINGR.OPEN                      ;005OPR_SHIPPINGR.QUOTED                    ;006OPR_SHIPPINGR.BACKORDERS                ;007OPR_SHIPPINGR.CREDIT                    ;008OPR_SHIPPINGR.SUMM_DTL                  ;009OPR_SHIPPINGR.AGING_DATE                ;010OPR_SHIPPINGR.DAYS_IN_MTH               ;
+{GridColsEnd}

@@ -1,0 +1,49 @@
+Barista Application Framework - Definition Module
+OPT_ORDDET - Invoice History Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPT_ORDDET^^^^Invoice History Detail^Invoice History Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPT_ORDDET^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AR_TYPE^OPT_ORDDET^002^C^^^^^^2^^Y^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^AR Type [Not Used]^"  "^^
+CUSTOMER_ID^OPT_ORDDET^003^C^3001^dis_customer_id^0^^^3^^Y^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^Customer N^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+AR_INV_NO^OPT_ORDDET^004^C^3002^ine_ar_inv_no^0^^^4^^Y^^^^^AR_INV_NO^AR Invoice Number^Número de factura de AR^N.º de fact. de AR^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^UUUUUUU^UUUUUUU^^^^30^R^^Sales Order Number^^^
+LINE_NO^OPT_ORDDET^005^C^3003^ine_line_no^0^^^5^^Y^^^^^LINE_NO^Detail Line Item Number^Detail Line Item Number^Dtl Line Item No^C^S^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Detail Line Item Number^^^
+LINE_CODE^OPT_ORDDET^006^C^3004^dis_line_code^0^^^6^^N^^^F^^LINE_CODE^Line Code^Código de línea^Cód. de línea^C^^E^^^^^^^0^0^[FIRM_ID]+@^OPC_LINECODE^CODE_DESC^^^^^^^^^^^1^0^^^^^^^^^^0^Line Code^^^
+MAN_PRICE^OPT_ORDDET^007^C^3005^cbx_man_price^0^^^7^^N^^^^^MAN_PRICE^Manual Price Flag^Manual Price Flag^Man Price Flag^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Manual Price Flag^^^
+PRODUCT_TYPE^OPT_ORDDET^008^C^3006^dis_product_type^0^^^8^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^^20^L^^Product Type^^^
+WAREHOUSE_ID^OPT_ORDDET^010^C^3007^dis_warehouse_id^0^^^10^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^OPT_ORDDET^011^C^3008^dis_item_id^0^^^11^^N^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+ORDER_MEMO^OPT_ORDDET^012^C^3009^ine_order_memo^0^^^12^^N^^^^^ORDER_MEMO^Memo / Non-Stock Description^Memo / Non-Stock Description^Memo/Non-Stock Desc^C^^E^^^^^^^^^^^^^^^^^^^^^^40^^^^^^^^^^^^Memo / Non-Stock Description^^^
+COMMIT_FLAG^OPT_ORDDET^014^C^3010^cbx_commit_flag^0^^^14^^N^^^^^COMMIT_FLAG^Committed?^Committed?^Committed?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Committed?^^^
+PICK_FLAG^OPT_ORDDET^015^C^3011^cbx_pick_flag^0^^^15^^N^^^^^PICK_FLAG^On Pick Ticket [Y/N]?^On Pick Ticket?^On Pick Ticket?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^On Pick Ticket [Y/N]?^^^
+VENDOR_ID^OPT_ORDDET^016^C^3012^dis_vendor_id^0^^^16^^N^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+DROPSHIP^OPT_ORDDET^017^C^3013^cbx_dropship^0^^^17^^N^^^^^DROPSHIP^Drop Ship [Y/N]?^Drop Ship?^Drop Ship?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Drop Ship [Y/N]?^^^
+EST_SHP_DATE^OPT_ORDDET^019^C^3014^ind_est_shp_date^0^^^19^^N^^^C^^EST_SHP_DATE^Estimated Ship Date^Estimated Ship Date^Est Ship Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Estimated Ship Date^^^
+UNIT_COST^OPT_ORDDET^021^C^3015^inn_unit_cost^0^^^21^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+UNIT_PRICE^OPT_ORDDET^022^C^3016^inn_unit_price^0^^^22^^N^^^^^UNIT_PRICE^Unit Price^Unit Price^Unit Price^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^P^^^^^Unit Price^^^
+QTY_ORDERED^OPT_ORDDET^023^C^3017^inn_qty_ordered^0^^^23^^N^^^^^QTY_ORDERED^Quantity Ordered^Quantity Ordered^Qty Orded^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity Ordered^^^
+QTY_BACKORD^OPT_ORDDET^024^C^3018^inn_qty_backord^0^^^24^^N^^^^^QTY_BACKORD^Back-Order Quantity^Back-Order Quantity^Back-Ord Qty^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Back-Order Quantity^^^
+QTY_SHIPPED^OPT_ORDDET^025^C^3019^inn_qty_shipped^0^^^25^^N^^^^^QTY_SHIPPED^Quantity Shipped^Quantity Shipped^Qty Shipped^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity Shipped^^^
+STD_LIST_PRC^OPT_ORDDET^026^C^3020^inn_std_list_prc^0^^^26^^N^^^^^STD_LIST_PRC^Standard List Price^Standard List Price^Std List Price^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^P^^^^^Standard List Price^^^
+EXT_PRICE^OPT_ORDDET^027^C^3021^inn_ext_price^0^^^27^^N^^^^^EXT_PRICE^Extended Price^Precio extendido^Precio ext.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^P^^^^^Extended Price^^^
+TAXABLE_AMT^OPT_ORDDET^028^C^3022^inn_taxable_amt^0^^^28^^N^^^^^TAXABLE_AMT^Taxable Amount^Monto imponible^Monto imp.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Taxable Amount^^^
+DISC_PERCENT^OPT_ORDDET^029^C^3023^inn_disc_percent^0^^^29^^N^^^^^DISC_PERCENT^Discount Percent^Porcentaje de descuento^% de dscto.^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^##0.00#-^##0.00#-^^^^^^^Discount Percent^^^
+COMM_PERCENT^OPT_ORDDET^030^C^3024^inn_comm_percent^0^^^30^^N^^^^^COMM_PERCENT^Commission Percent^Commission Percent^Comm %^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Commission Percent^^^
+COMM_AMT^OPT_ORDDET^031^C^3025^inn_comm_amt^0^^^31^^N^^^^^COMM_AMT^Commission Amount^Commission Amount^Comm Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Commission Amount^^^
+SPL_COMM_PCT^OPT_ORDDET^032^C^3026^inn_spl_comm_pct^0^^^32^^N^^^^^SPL_COMM_PCT^Comm Split % [Future]^Comm Split %^Comm Split %^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Comm Split % [Future]^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPT_ORDDET^PRIMARY^OPT_ORDDET.FIRM_ID                      OPT_ORDDET.AR_TYPE                      OPT_ORDDET.CUSTOMER_ID                  OPT_ORDDET.AR_INV_NO                    OPT_ORDDET.LINE_NO                      ^stbl("+FIRM_ID")+"  "+OPT_ORDDET.CUSTOMER_ID$+OPT_ORDDET.AR_INV_NO$+OPT_ORDDET.LINE_NO$^stbl("+FIRM_ID")+"  "+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.AR_INV_NO$+RD_REC_DATA.LINE_NO$^stbl("+FIRM_ID")                        "  "                                    RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.AR_INV_NO$                  RD_REC_DATA.LINE_NO$                    
+{KeyDefsEnd}
+{GridCols}
+003OPT_ORDDET.CUSTOMER_ID                  ;004OPT_ORDDET.AR_INV_NO                    ;005OPT_ORDDET.LINE_NO                      ;006OPT_ORDDET.LINE_CODE                    ;007OPT_ORDDET.MAN_PRICE                    ;008OPT_ORDDET.PRODUCT_TYPE                 ;010OPT_ORDDET.WAREHOUSE_ID                 ;011OPT_ORDDET.ITEM_ID                      ;012OPT_ORDDET.ORDER_MEMO                   ;014OPT_ORDDET.COMMIT_FLAG                  ;015OPT_ORDDET.PICK_FLAG                    ;016OPT_ORDDET.VENDOR_ID                    ;017OPT_ORDDET.DROPSHIP                     ;019OPT_ORDDET.EST_SHP_DATE                 ;021OPT_ORDDET.UNIT_COST                    ;022OPT_ORDDET.UNIT_PRICE                   ;023OPT_ORDDET.QTY_ORDERED                  ;024OPT_ORDDET.QTY_BACKORD                  ;025OPT_ORDDET.QTY_SHIPPED                  ;026OPT_ORDDET.STD_LIST_PRC                 ;027OPT_ORDDET.EXT_PRICE                    ;028OPT_ORDDET.TAXABLE_AMT                  ;029OPT_ORDDET.DISC_PERCENT                 ;030OPT_ORDDET.COMM_PERCENT                 ;031OPT_ORDDET.COMM_AMT                     ;032OPT_ORDDET.SPL_COMM_PCT                 ;
+{GridColsEnd}

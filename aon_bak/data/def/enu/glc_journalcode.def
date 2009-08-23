@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+GLC_JOURNALCODE - Journal ID Codes
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLC_JOURNALCODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Journal ID Codes^Journal ID Codes^^^^^^^^G^^^^^^A;P;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLC_JOURNALCODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+JOURNAL_ID^GLC_JOURNALCODE^002^C^3001^ine_journal_id^0^^^2^^Y^^^^^JOURNAL_ID^Journal ID Code^Journal ID Code^ID^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^2^0^^^UU^AA^^^K;^30^L^0^Journal ID Code^^^
+CODE_DESC^GLC_JOURNALCODE^003^C^3002^ine_code_desc^0^^^3^^N^^^^^CODE_DESC^Code Description^Description^Description^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+PERMIT_JE^GLC_JOURNALCODE^004^C^3003^cbx_permit_je^0^^^4^^N^^^^^PERMIT_JE^Journal Entry [Y/N]?^Journal Entry?^Jrnl Entry?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Journal Entry?^^^
+POST_YR_END^GLC_JOURNALCODE^005^C^3004^cbx_post_yr_end^0^^^5^^N^^^^^POST_YR_END^Allow Year End Postings [Y/N]?^Allow Year End Postings?^Y/E Adjs?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Allow Year End Postings?^^^
+POST_LOCKED^GLC_JOURNALCODE^006^C^3005^cbx_post_locked^0^^^6^^N^^^^^POST_LOCKED^Post to Locked Periods [Y/N]?^Post to Locked Periods?^Post to Locked?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Post to Locked Periods?^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLC_JOURNALCODE^PRIMARY^GLC_JOURNALCODE.FIRM_ID                 GLC_JOURNALCODE.JOURNAL_ID              ^stbl("+FIRM_ID")+GLC_JOURNALCODE.JOURNAL_ID$^stbl("+FIRM_ID")+RD_REC_DATA.JOURNAL_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.JOURNAL_ID$                 
+{KeyDefsEnd}
+{GridCols}
+002GLC_JOURNALCODE.JOURNAL_ID              ;003GLC_JOURNALCODE.CODE_DESC               ;004GLC_JOURNALCODE.PERMIT_JE               ;005GLC_JOURNALCODE.POST_YR_END             ;006GLC_JOURNALCODE.POST_LOCKED             ;
+{GridColsEnd}

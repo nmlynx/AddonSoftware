@@ -1,0 +1,31 @@
+Barista Application Framework - Definition Module
+PRS_PERIOD - Pay Period Parameters
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRS_PERIOD^^^^Pay Period Parameters^Pay Period Parameters^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+PR^PRS_PERIOD^002^C^^^^^^1^^Y^^^^^PR^"PR"^PR^PR^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^O;^^^^"PR"^^^
+SEQUENCE_01^PRS_PERIOD^003^C^^^^^^2^^Y^^^^^SEQUENCE_01^"01"^1^1^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^"01"^"01"^^
+DEDUCT_PER^PRS_PERIOD^005^C^3001^ine_deduct_per^0^^^3^^N^^^^^DEDUCT_PER^Deduction Period^Deduction Period^Ded Prd^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^0^0^^^^30^R^^Deduction Period^^^
+AUTO_UPDATE^PRS_PERIOD^006^C^3002^cbx_auto_update^0^^^4^^N^^^^^AUTO_UPDATE^Automatic Update?^Automatic Update?^Auto Update?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Automatic Update?^^^
+PAY_PERIODS^PRS_PERIOD^007^C^3003^ine_pay_periods^0^^^5^^N^^^^^PAY_PERIODS^Pay Periods^Pay Periods^Pay Prds^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Pay Periods^^^
+ACCRUAL_DAYS^PRS_PERIOD^009^C^3004^ine_accrual_days^0^^^6^^N^^^^^ACCRUAL_DAYS^Accrual Days^Accrual Days^Accrual Da^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Accrual Days^^^
+NEGATIVE_CHK^PRS_PERIOD^010^C^3005^cbx_negative_chk^0^^^7^^N^^^^^NEGATIVE_CHK^Negative Checks?^Negative Checks?^Negative Chks?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Negative Checks?^^^
+PAY_END_DATE^PRS_PERIOD^012^C^3006^ind_pay_end_date^0^^^8^^N^^^C^^PAY_END_DATE^Payroll Period End Date^Payroll Period End Date^PR Prd End Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Payroll Period End Date^^^
+CHECK_DATE^PRS_PERIOD^013^C^3007^ind_check_date^0^^^9^^N^^^C^^CHECK_DATE^Check Date^Check Date^Chk Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Check Date^^^
+FIRM_ID^PRS_PERIOD^001^C^^^^^^10^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRS_PERIOD^PRIMARY^PRS_PERIOD.FIRM_ID                      PRS_PERIOD.PR                           PRS_PERIOD.SEQUENCE_01                  ^stbl("+FIRM_ID")+PRS_PERIOD.PR$+"01"^stbl("+FIRM_ID")+RD_REC_DATA.PR$+"01"^stbl("+FIRM_ID")                        RD_REC_DATA.PR$                         "01"                                    
+{KeyDefsEnd}
+{GridCols}
+003PRS_PERIOD.DEDUCT_PER                   ;004PRS_PERIOD.AUTO_UPDATE                  ;005PRS_PERIOD.PAY_PERIODS                  ;006PRS_PERIOD.ACCRUAL_DAYS                 ;007PRS_PERIOD.NEGATIVE_CHK                 ;008PRS_PERIOD.PAY_END_DATE                 ;009PRS_PERIOD.CHECK_DATE                   ;
+{GridColsEnd}

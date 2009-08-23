@@ -1,0 +1,43 @@
+Barista Application Framework - Definition Module
+APT_INVOICEHDR - Invoice Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APT_INVOICEHDR^^^^Invoice Header^Invoice Header^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APT_INVOICEHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AP_TYPE^APT_INVOICEHDR^002^C^3001^dis_ap_type^0^^^2^^Y^^^F^^AP_TYPE^AP Type^AP Type^AP Type^C^^E^^^^^^^0^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^AP Type^^^
+VENDOR_ID^APT_INVOICEHDR^003^C^3002^dis_vendor_id^0^^^3^^Y^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+AP_INV_NO^APT_INVOICEHDR^004^C^3003^ine_ap_inv_no^0^^^4^^Y^^^^^AP_INV_NO^AP Invoice Number^AP Invoice Number^AP Inv No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^10^0^^^^^^^^20^L^0^AP Invoice Number^^^
+SEQUENCE_00^APT_INVOICEHDR^005^C^3004^ine_sequence_00^0^^^5^^N^^^^^SEQUENCE_00^"00"^0^0^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^"00"^"00"^^
+AP_DIST_CODE^APT_INVOICEHDR^006^C^3005^dis_ap_dist_code^0^^^6^^N^^^F^^AP_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+"B"+@^APC_DISTRIBUTION^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Distribution Code^^^
+PAYMENT_GRP^APT_INVOICEHDR^007^C^3006^dis_payment_grp^0^^^7^^N^^^F^^PAYMENT_GRP^Payment Group^Payment Group^Pmt Group^C^^E^^^^^^^0^0^[+FIRM_ID]+"D"+@^APC_PAYMENTGROUP^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Payment Group^^^
+AP_TERMS_CODE^APT_INVOICEHDR^008^C^3007^dis_ap_terms_code^0^^^8^^N^^^F^^AP_TERMS_CODE^AP Terms Code^Terms Code^Terms Cd^C^^E^^^^^^^^^[+FIRM_ID]+"C"+@^APC_TERMSCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^20^L^^Terms Code^^^
+REFERENCE^APT_INVOICEHDR^010^C^3008^ine_reference^0^^^10^^N^^^^^REFERENCE^Reference^Reference^Ref^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Reference^^^
+AP_INV_MEMO^APT_INVOICEHDR^011^C^3009^ine_ap_inv_memo^0^^^11^^N^^^^^AP_INV_MEMO^AP Invoice Memo^AP Invoice Memo^AP Inv Memo^C^^E^^^^^^^^^^^^^^^^^^^^^^16^^^^^^^^^^^^AP Invoice Memo^^^
+HOLD_FLAG^APT_INVOICEHDR^012^C^3010^cbx_hold_flag^0^^^12^^N^^^^^HOLD_FLAG^Hold For Manual Release [Y/N]?^Hold For Manual Release?^Hold For Man Rel?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Hold For Manual Release?^^^
+MC_INV_FLAG^APT_INVOICEHDR^013^C^3011^ine_mc_inv_flag^0^^^13^^N^^^^^MC_INV_FLAG^MC Invoice Flag [M]^MC Invoice Flag^MC Inv Flag [M]^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^MC Invoice Flag [M]^^^
+MC_INV_ADJ^APT_INVOICEHDR^014^C^3012^ine_mc_inv_adj^0^^^14^^N^^^^^MC_INV_ADJ^MC Invoice Adjustment Flag [A]^MC Invoice Adjustment Flag^MC Inv Adj Flag [A]^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^MC Invoice Adjustment Flag [A]^^^
+MC_INV_REV^APT_INVOICEHDR^015^C^3013^ine_mc_inv_rev^0^^^15^^N^^^^^MC_INV_REV^MC Invoice Reversal Flag [R]^MC Invoice Reversal Flag^MC Inv Rev Flag [R]^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^MC Invoice Reversal Flag [R]^^^
+INVOICE_DATE^APT_INVOICEHDR^017^C^3014^ind_invoice_date^0^^^17^^N^^^C^^INVOICE_DATE^Invoice Date^Invoice Date^Inv Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Invoice Date^^^
+ACCTING_DATE^APT_INVOICEHDR^018^C^3015^ind_accting_date^0^^^18^^N^^^C^^ACCTING_DATE^Accounting Date^Accounting Date^Accting Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Accounting Date^^^
+INV_DUE_DATE^APT_INVOICEHDR^019^C^3016^ind_inv_due_date^0^^^19^^N^^^C^^INV_DUE_DATE^Invoice Due Date^Invoice Due Date^Inv Due Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Invoice Due Date^^^
+DISC_DATE^APT_INVOICEHDR^020^C^3017^ind_disc_date^0^^^20^^N^^^C^^DISC_DATE^Discount Date^Discount Date^Disc Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Discount Date^^^
+INVOICE_AMT^APT_INVOICEHDR^021^C^3018^inn_invoice_amt^0^^^21^^N^^^^^INVOICE_AMT^Invoice Amount^Invoice Amount^Inv Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Invoice Amount^^^
+DISCOUNT_AMT^APT_INVOICEHDR^022^C^3019^inn_discount_amt^0^^^22^^N^^^^^DISCOUNT_AMT^Discount Amount^Discount Amount^Disc Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Discount Amount^^^
+RETENTION^APT_INVOICEHDR^023^C^3020^inn_retention^0^^^23^^N^^^^^RETENTION^Retention Amount^Retention Amount^Retention Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Retention Amount^^^
+SELECTED_FOR_PAY^APT_INVOICEHDR^024^C^3021^cbx_selected_for_pay^0^^^24^^N^^^^^SELECTED_FOR_PAY^Has inv been selected to pay?^selected^selected^C^^C^^^Y;N^^^^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APT_INVOICEHDR^PRIMARY^APT_INVOICEHDR.FIRM_ID                  APT_INVOICEHDR.AP_TYPE                  APT_INVOICEHDR.VENDOR_ID                APT_INVOICEHDR.AP_INV_NO                ^stbl("+FIRM_ID")+APT_INVOICEHDR.AP_TYPE$+APT_INVOICEHDR.VENDOR_ID$+APT_INVOICEHDR.AP_INV_NO$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.AP_INV_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.AP_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002APT_INVOICEHDR.AP_TYPE                  ;003APT_INVOICEHDR.VENDOR_ID                ;004APT_INVOICEHDR.AP_INV_NO                ;005APT_INVOICEHDR.SEQUENCE_00              ;006APT_INVOICEHDR.AP_DIST_CODE             ;007APT_INVOICEHDR.PAYMENT_GRP              ;008APT_INVOICEHDR.AP_TERMS_CODE            ;010APT_INVOICEHDR.REFERENCE                ;011APT_INVOICEHDR.AP_INV_MEMO              ;012APT_INVOICEHDR.HOLD_FLAG                ;013APT_INVOICEHDR.MC_INV_FLAG              ;014APT_INVOICEHDR.MC_INV_ADJ               ;015APT_INVOICEHDR.MC_INV_REV               ;017APT_INVOICEHDR.INVOICE_DATE             ;018APT_INVOICEHDR.ACCTING_DATE             ;019APT_INVOICEHDR.INV_DUE_DATE             ;020APT_INVOICEHDR.DISC_DATE                ;021APT_INVOICEHDR.INVOICE_AMT              ;022APT_INVOICEHDR.DISCOUNT_AMT             ;023APT_INVOICEHDR.RETENTION                ;024APT_INVOICEHDR.SELECTED_FOR_PAY         ;
+{GridColsEnd}

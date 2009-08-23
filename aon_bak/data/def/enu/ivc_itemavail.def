@@ -1,0 +1,65 @@
+Barista Application Framework - Definition Module
+IVC_ITEMAVAIL - Item Availability
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVC_ITEMAVAIL^^^Warehouse Period History      HISTM;LIFO/FIFO Tier Inquiry        LIFOM;Transaction History           IHSTM;^Item Availability^Item Availability^^Lot/Serial Number Master                ~IVM_LSMASTER    ;^^^ALT_KEY_02^IVM_ITEMWHSE^^G^^^^^^B;D;E;I;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVC_ITEMAVAIL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+ITEM_ID^IVC_ITEMAVAIL^003^C^3001^dis_item_id^0^^^2^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^200^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+WAREHOUSE_ID^IVC_ITEMAVAIL^002^C^3002^dis_warehouse_id^0^^^3^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^V;^20^L^0^Warehouse ID^^^
+LOCATION^IVC_ITEMAVAIL^004^C^3003^ine_location^0^^^4^^N^^^^^LOCATION^Warehouse Location^Warehouse Location^Whse Loc^C^^E^IVM_ITEMWHSE.SELECT_PHYS^!Y^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Warehouse Location^^^
+AR_DIST_CODE^IVC_ITEMAVAIL^006^C^^^^^^5^^N^^^F^^AR_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"D"+@^ARC_DISTCODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^O;^20^L^0^Distribution Code^^^
+PI_CYCLECODE^IVC_ITEMAVAIL^005^C^3004^dis_pi_cyclecode^0^^^6^^N^^^F^^PI_CYCLECODE^Physical Inventory Cycle Code^Physical Inventory Cycle Code^Physical Inventory C^C^^E^IVM_ITEMWHSE.SELECT_PHYS^!Y^^^^^35^0^[+FIRM_ID]+[WAREHOUSE_ID]+@^IVC_PHYSCODE^DESCRIPTION^^^^^^^^^^1^2^0^^^^^^^^20^L^0^Cycle Code^^^
+SPECIAL_ORD^IVC_ITEMAVAIL^018^C^^^^^^7^^N^^^^^SPECIAL_ORD^Special Order Item^Special Order Item^Special Ord Item^C^^C^^^Y;N^^+32^-3^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^Special Order Item^^^
+SELECT_PHYS^IVC_ITEMAVAIL^007^C^^^^^^8^^N^^^^^SELECT_PHYS^Selected for Phys Inventory?^Selected for Phys Inventory?^Sel for Phys IV?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^C;O;^^^^Selected for Phys Inventory?^^^
+LSTPHY_DATE^IVC_ITEMAVAIL^020^C^^^^^^9^^N^^^C^^LSTPHY_DATE^Last Physical Date^Last Phys Date^Last Phys Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Physical Date^^^
+PHYSICAL_CNT^IVC_ITEMAVAIL^038^C^^^^^^10^^N^^^^^PHYSICAL_CNT^Physical Inventory Count^Physical Count^Phys IV Count^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^^^U^B;O;^^^^Physical Inventory Count^^^
+CUR_PRICE^IVC_ITEMAVAIL^039^C^^^^^^11^^N^^^^^CUR_PRICE^Current Price^Current Price^Curr Price^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^P^O;^^^^Current Price^^^
+CUR_PRICE_CD^IVC_ITEMAVAIL^012^C^^^^^^12^^N^^^^^CUR_PRICE_CD^Current Price Code^Current Price Code^Curr Price Cd^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^O;^^^^Current Price Code^^^
+PRI_PRICE^IVC_ITEMAVAIL^040^C^^^^^^13^^N^^^^^PRI_PRICE^Prior Price^Prior Price^Prior Price^N^^N^^^^^+29^-2^56^^^^^^^^^^^^^^^7^^^^^^^P^O;^^^^Prior Price^^^
+PRI_PRICE_CD^IVC_ITEMAVAIL^013^C^^^^^^14^^N^^^^^PRI_PRICE_CD^Prior Price Code^Prior Price Code^Prior Price Cd^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^O;^^^^Prior Price Code^^^
+UNIT_COST^IVC_ITEMAVAIL^041^C^^^^^^15^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^^^C^B;O;^^^^Unit Cost^^^
+LANDED_COST^IVC_ITEMAVAIL^045^C^^^^^^16^^N^^^^^LANDED_COST^Landed Cost^Landed Cost^Landed Cst^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^^^C^B;O;^^^^Landed Cost^^^
+LAST_PO_COST^IVC_ITEMAVAIL^046^C^^^^^^17^^N^^^^^LAST_PO_COST^Last Purchase Cost^Last Purchase Cost^Last Purch Cst^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^-####.0000^^C^B;O;^^^^Last Purchase Cost^^^
+AVG_COST^IVC_ITEMAVAIL^042^C^^^^^^18^^N^^^^^AVG_COST^Average Cost^Average Cost^Avg Cst^N^^N^^^^^^+2^72^^^^^^^^^^^^^^^7^^^^^^^C^B;O;^^^^Average Cost^^^
+STD_COST^IVC_ITEMAVAIL^043^C^^^^^^19^^N^^^^^STD_COST^Standard Cost^Standard Cost^Std Cst^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^^^C^B;O;^^^^Standard Cost^^^
+REP_COST^IVC_ITEMAVAIL^044^C^^^^^^20^^N^^^^^REP_COST^Replacement Cost^Replacement Cost^Replacement Cst^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^^^C^B;O;^^^^Replacement Cost^^^
+QTY_ON_HAND^IVC_ITEMAVAIL^030^C^3005^inn_qty_on_hand^0^^^21^^N^^^^^QTY_ON_HAND^Quantity On-Hand^On-Hand^Qty On-Hand^N^^N^^^^^^^72^0^^^^^^^^^^^^^^7^0^^^^^^U^C;^^^0^Quantity On-Hand^^^
+QTY_ON_ORDER^IVC_ITEMAVAIL^031^C^3006^inn_qty_on_order^0^^^22^^N^^^^^QTY_ON_ORDER^Quantity On-Order^On-Order^Qty On-Ord^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^^^U^C;^^^^Quantity On-Order^^^
+QTY_COMMIT^IVC_ITEMAVAIL^032^C^3007^inn_qty_commit^0^^^23^^N^^^^^QTY_COMMIT^Quantity Committed^Committed^Qty Committed^N^^N^^^^^^^72^^^^^^^^^^^^^^^7^^^^^^^U^C;^^^^Quantity Committed^^^
+QTY_AVAIL^<<DISPLAY>>^050^D^3008^inn_qty_avail^0^^^24^^^^^^^QTY_ON_HAND^Quantity On-Hand^Available^^N^^N^^^^^^^72^^^^^^QTY_ON_HAND-QTY_ON_ORDER^^^^^^^^^7^0^^^^^IV^U^C;^^^0^^^^
+LSTREC_DATE^IVC_ITEMAVAIL^021^C^^^^^^25^^N^^^C^^LSTREC_DATE^Last Receipt Date^Receipt^Last Rec Date^C^1^D^^^^^-29^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Receipt Date^^^
+LSTBLT_DATE^IVC_ITEMAVAIL^022^C^^^^^^26^^N^^^C^^LSTBLT_DATE^Last Built Date^Built^Last Built Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Built Date^^^
+LSTSAL_DATE^IVC_ITEMAVAIL^023^C^^^^^^27^^N^^^C^^LSTSAL_DATE^Last Sale Date^Sold^Last Sale Date^C^1^D^^^^^+14^-2^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Sale Date^^^
+LSTISS_DATE^IVC_ITEMAVAIL^024^C^^^^^^28^^N^^^C^^LSTISS_DATE^Last Issue Date^Issued^Last Issue Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Issue Date^^^
+LSTADJ_DATE^IVC_ITEMAVAIL^025^C^^^^^^29^^N^^^C^^LSTADJ_DATE^Last Adjustment Date^Adjustment^Last Adj Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Adjustment Date^^^
+LSTXIN_DATE^IVC_ITEMAVAIL^026^C^^^^^^30^^N^^^C^^LSTXIN_DATE^Last Transfer In Date^Transfer In^Last Xfer In Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Transfer In Date^^^
+LSTXOT_DATE^IVC_ITEMAVAIL^027^C^^^^^^31^^N^^^C^^LSTXOT_DATE^Last Transfer Out Date^Transfer Out^Last Xfer Out Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Transfer Out Date^^^
+LSTRET_DATE^IVC_ITEMAVAIL^028^C^^^^^^32^^N^^^C^^LSTRET_DATE^Last Return Date^Returned^Last Ret Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^B;O;^^^^Last Return Date^^^
+ABC_CODE^IVC_ITEMAVAIL^014^C^^^^^^33^^N^^^^^ABC_CODE^ABC Analysis Code^ABC Analysis Code^ABC Analys^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^ABC Analysis Code^^^
+BUYER_CODE^IVC_ITEMAVAIL^009^C^^^^^^34^^N^^^F^^BUYER_CODE^Buyer Code^Buyer Code^Buyer Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"F"+@^IVC_BUYCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^O;^20^L^0^Buyer Code^^^
+VENDOR_ID^IVC_ITEMAVAIL^010^C^^^^^^35^^N^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^48^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^O;^30^R^0^Vendor Number^^^
+LEAD_TIME^IVC_ITEMAVAIL^037^C^^^^^^36^^N^^^^^LEAD_TIME^Lead Time^Lead Time^Lead Time^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^^O;^^^^Lead Time^^^
+MAXIMUM_QTY^IVC_ITEMAVAIL^033^C^^^^^^37^^N^^^^^MAXIMUM_QTY^Maximum Quantity^Maximum Quantity^Max Qty^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^O;^^^^Maximum Quantity^^^
+ORDER_POINT^IVC_ITEMAVAIL^034^C^^^^^^38^^N^^^^^ORDER_POINT^Order Point^Order Point^Ord Point^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^O;^^^^Order Point^^^
+ORD_PNT_CODE^IVC_ITEMAVAIL^016^C^^^^^^39^^N^^^^^ORD_PNT_CODE^Order Point Code [D/N/E]^Order Point Code^Order Poin^C^^L^^^^^^^109^^^^^^^^^^^^^Derived                       ~D   ;Entered                       ~E   ;No Recalculation              ~N   ;^^1^^^^^^^^O;^^^^Order Point Code [D/N/E]^^^
+EOQ^IVC_ITEMAVAIL^036^C^^^^^^40^^N^^^^^EOQ^Economic Order Quantity [EOQ]^Economic Order Quantity^EOQ^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^O;^^^^Economic Order Quantity [EOQ]^^^
+EOQ_CODE^IVC_ITEMAVAIL^015^C^^^^^^41^^N^^^^^EOQ_CODE^EOQ Code [D/N/E]^EOQ Code^EOQ Code [^C^^L^^^^^^^109^^^^^^^^^^^^^Derived                       ~D   ;Entered                       ~E   ;No Recalculation              ~N   ;^^1^^^^^^^^O;^^^^EOQ Code [D/N/E]^^^
+SAFETY_STOCK^IVC_ITEMAVAIL^035^C^^^^^^42^^N^^^^^SAFETY_STOCK^Safety Stock^Safety Stock^Safety Stock^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^O;^^^^Safety Stock^^^
+SAF_STK_CODE^IVC_ITEMAVAIL^017^C^^^^^^43^^N^^^^^SAF_STK_CODE^Safety Stock Code [D/N/E]^Safety Stock Code^Safety Sto^C^^L^^^^^^^109^^^^^^^^^^^^^Derived                       ~D   ;Entered                       ~E   ;No Recalculation              ~N   ;^^1^^^^^^^^O;^^^^Safety Stock Code [D/N/E]^^^
+PRODUCT_TYPE^IVC_ITEMAVAIL^049^C^^^^^^44^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^O;^20^L^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVC_ITEMAVAIL^PRIMARY^IVC_ITEMAVAIL.FIRM_ID                   IVC_ITEMAVAIL.WAREHOUSE_ID              IVC_ITEMAVAIL.ITEM_ID                   ^stbl("+FIRM_ID")+IVC_ITEMAVAIL.WAREHOUSE_ID$+IVC_ITEMAVAIL.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002IVC_ITEMAVAIL.ITEM_ID                   ;003IVC_ITEMAVAIL.WAREHOUSE_ID              ;003{{DESC}}                                ;004IVC_ITEMAVAIL.LOCATION                  ;006IVC_ITEMAVAIL.PI_CYCLECODE              ;021IVC_ITEMAVAIL.QTY_ON_HAND               ;022IVC_ITEMAVAIL.QTY_ON_ORDER              ;023IVC_ITEMAVAIL.QTY_COMMIT                ;024<<DISPLAY>>.QTY_AVAIL                   ;
+{GridColsEnd}

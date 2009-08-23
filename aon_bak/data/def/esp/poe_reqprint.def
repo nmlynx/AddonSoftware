@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+POE_REQPRINT - Requisition Print File
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POE_REQPRINT^^^^Requisition Print File^Requisition Print File^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POE_REQPRINT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+VENDOR_ID^POE_REQPRINT^002^C^3001^dis_vendor_id^0^^^2^^Y^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+REQ_NO^POE_REQPRINT^003^C^3002^ine_req_no^0^^^3^^Y^^^^^REQ_NO^Requisition Number^Requisition Number^Req No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Requisition Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POE_REQPRINT^PRIMARY^POE_REQPRINT.FIRM_ID                    POE_REQPRINT.VENDOR_ID                  POE_REQPRINT.REQ_NO                     ^stbl("+FIRM_ID")+POE_REQPRINT.VENDOR_ID$+POE_REQPRINT.REQ_NO$^stbl("+FIRM_ID")+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.REQ_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.REQ_NO$                     
+{KeyDefsEnd}
+{GridCols}
+002POE_REQPRINT.VENDOR_ID                  ;003POE_REQPRINT.REQ_NO                     ;
+{GridColsEnd}

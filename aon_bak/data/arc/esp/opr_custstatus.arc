@@ -1,0 +1,43 @@
+//#charset: UTF-8
+
+// Barista Application Framework - ASCII Resource File
+// OPR_CUSTSTATUS - Order Status Report By Cust
+// Proprietary Information. BASIS International Ltd. All rights reserved.
+
+VERSION "4.0"
+
+WINDOW 1000 "Temporary Title" 10 40 0330 0126
+BEGIN
+    NAME "win_opr_custstatus"
+    MANAGESYSCOLOR
+    KEYBOARDNAVIGATION
+    DIALOGBEHAVIOR
+    EVENTMASK 1136656524
+    INVISIBLE
+    ENTERASTAB
+    
+    CHECKBOX 03001, "Open?", 154, 10, 67, 19
+    BEGIN
+        NAME "cbx_open"
+        NOT OPAQUE
+    END
+    
+    CHECKBOX 03002, "Quoted?", 154, 31, 79, 19
+    BEGIN
+        NAME "cbx_quoted"
+        NOT OPAQUE
+    END
+    
+    CHECKBOX 03003, "Backorders?", 154, 52, 101, 19
+    BEGIN
+        NAME "cbx_backorders"
+        NOT OPAQUE
+    END
+    
+    CHECKBOX 03004, "Credit?", 154, 73, 71, 19
+    BEGIN
+        NAME "cbx_credit"
+        NOT OPAQUE
+    END
+END
+

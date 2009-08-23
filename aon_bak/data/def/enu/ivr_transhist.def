@@ -1,0 +1,40 @@
+Barista Application Framework - Definition Module
+IVR_TRANSHIST - Item Transaction History
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVR_TRANSHIST^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Item Transaction History^Item Transaction History^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]ivr_transhist.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+PICK_DATE_1^IVR_TRANSHIST^001^C^3001^ind_pick_date^0^^^1^^N^^^C^^PICK_DATE^Pick Screen Date YYYYMMDD^Date^Date^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+PICK_DATE_2^IVR_TRANSHIST^001^C^3002^ind_pick_date^0^^^1^^N^^^C^^PICK_DATE^Pick Screen Date YYYYMMDD^Date^Date^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+WAREHOUSE_ID_1^IVR_TRANSHIST^002^C^3003^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^1;2;^20^L^0^Enter a two-digit warehouse ID^^^
+WAREHOUSE_ID_2^IVR_TRANSHIST^002^C^3004^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^1;2;^20^L^0^Enter a two-digit warehouse ID^^^
+PRODUCT_TYPE_1^IVR_TRANSHIST^003^C^3005^dis_product_type^0^^^3^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+PRODUCT_TYPE_2^IVR_TRANSHIST^003^C^3006^dis_product_type^0^^^3^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+ITEM_ID_1^IVR_TRANSHIST^004^C^3007^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+ITEM_ID_2^IVR_TRANSHIST^004^C^3008^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+ITEM_TYPE^IVR_TRANSHIST^005^C^3009^dis_item_type^0^^^5^^N^^^F^^ITEM_TYPE^Item Type^Item Type^Item Type^C^^E^^^^^^^35^0^[+FIRM_ID]+@^IVC_TYPECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^3;^20^L^0^^^^
+TRAN_HST_ALL^IVR_TRANSHIST^006^C^3010^cbx_tran_hst_all^0^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_ALL^Inventory History Tran ALL^ALL transactions^Inventory History Tr^C^^C^^^Y;N^^-10^^30^^^^^^^^^Y^^Transaction Types^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_PO^IVR_TRANSHIST^007^C^3011^cbx_tran_hst_po^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_PO^Inventory History Tran PO^Purchase Orders^Inventory History Tr^C^^C^^^Y;N^^^+1^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_OP^IVR_TRANSHIST^008^C^3012^cbx_tran_hst_op^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_OP^Inventory History Tran OP^Sales^Inventory History Tr^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_IT^IVR_TRANSHIST^009^C^3013^cbx_tran_hst_it^0^^^9^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_IT^Inventory History Tran IT^Inventory Trans^Inventory History Tr^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_PH^IVR_TRANSHIST^010^C^3014^cbx_tran_hst_ph^0^^^10^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_PH^Inventory History Tran PH^Physical Inventory^Inventory History Tr^C^^C^^^Y;N^^+16^-3^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_TI^IVR_TRANSHIST^011^C^3015^cbx_tran_hst_ti^0^^^11^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_TI^Inventory History Tran TI^Transfers In^Inventory History Tr^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_TO^IVR_TRANSHIST^012^C^3016^cbx_tran_hst_to^0^^^12^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_TO^Inventory History Tran TO^Transfers Out^Inventory History Tr^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_WI^IVR_TRANSHIST^013^C^3017^cbx_tran_hst_wi^0^^^13^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_WI^Inventory History Tran WI^WO Issue^Inventory History Tr^C^^C^^^Y;N^^+16^-3^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_WO^IVR_TRANSHIST^014^C^3018^cbx_tran_hst_wo^0^^^14^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_WO^Inventory History Tran WO^WO Receipt^Inventory History Tr^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+TRAN_HST_BM^IVR_TRANSHIST^015^C^3019^cbx_tran_hst_bm^0^^^15^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRAN_HST_BM^Inventory History Tran BM^Bill of Materials Prod^Inventory History Tr^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVR_TRANSHIST^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001IVR_TRANSHIST.PICK_DATE                 ;002IVR_TRANSHIST.WAREHOUSE_ID              ;003IVR_TRANSHIST.PRODUCT_TYPE              ;004IVR_TRANSHIST.ITEM_ID                   ;005IVR_TRANSHIST.ITEM_TYPE                 ;006IVR_TRANSHIST.TRAN_HST_ALL              ;007IVR_TRANSHIST.TRAN_HST_PO               ;008IVR_TRANSHIST.TRAN_HST_OP               ;009IVR_TRANSHIST.TRAN_HST_IT               ;010IVR_TRANSHIST.TRAN_HST_PH               ;011IVR_TRANSHIST.TRAN_HST_TI               ;012IVR_TRANSHIST.TRAN_HST_TO               ;013IVR_TRANSHIST.TRAN_HST_WI               ;014IVR_TRANSHIST.TRAN_HST_WO               ;015IVR_TRANSHIST.TRAN_HST_BM               ;
+{GridColsEnd}

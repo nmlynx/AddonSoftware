@@ -1,0 +1,29 @@
+Barista Application Framework - Definition Module
+ART_SALESTAX - Sales Tax History
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ART_SALESTAX^^^^Sales Tax History^Historial de impuestos sobre las ventas^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ART_SALESTAX^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+TAX_CODE^ART_SALESTAX^002^C^3001^dis_tax_code^0^^^2^^Y^^^F^^OP_TAX_CODE^Tax Code^Código impositivo^Cód. impos.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^CODE_DESC^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^Código impositivo^^^
+YEAR^ART_SALESTAX^003^C^3002^ine_year^0^^^3^^Y^^^^^YEAR^Year^Año^Año^C^3^E^^^^^^^^^^^^^^^^^^^^^^4^^^^0000^^^^^^^^Año^^^
+MONTH^ART_SALESTAX^004^C^3003^ine_month^0^^^4^^Y^^^^^MONTH^Month^Mes^Mes^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Mes^^^
+TAXABLE_AMT^ART_SALESTAX^005^C^3004^inn_taxable_amt^0^^^5^^N^^^^^TAXABLE_AMT^Taxable Amount^Monto imponible^Monto imp.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto imponible^^^
+TAX_AMOUNT^ART_SALESTAX^006^C^3005^inn_tax_amount^0^^^6^^N^^^^^TAX_AMOUNT^Tax Amount^Monto impositivo^Monto impos.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^0^Monto impositivo^^^
+GROSS_SALES^ART_SALESTAX^007^C^3006^inn_gross_sales^0^^^7^^N^^^^^GROSS_SALES^Gross Sales^Ventas brutas^Ventas brutas^N^^N^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^A^^^^^Ventas brutas^^^
+RETURNS^ART_SALESTAX^008^C^3007^inn_returns^0^^^8^^N^^^^^RETURNS^Returns^Devoluciones^Dev.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Devoluciones^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ART_SALESTAX^PRIMARY^ART_SALESTAX.FIRM_ID                    ART_SALESTAX.TAX_CODE                   ART_SALESTAX.YEAR                       ART_SALESTAX.MONTH                      ^stbl("+FIRM_ID")+ART_SALESTAX.TAX_CODE$+ART_SALESTAX.YEAR$+ART_SALESTAX.MONTH$^stbl("+FIRM_ID")+RD_REC_DATA.TAX_CODE$+RD_REC_DATA.YEAR$+RD_REC_DATA.MONTH$^stbl("+FIRM_ID")                        RD_REC_DATA.TAX_CODE$                   RD_REC_DATA.YEAR$                       RD_REC_DATA.MONTH$                      
+{KeyDefsEnd}
+{GridCols}
+002ART_SALESTAX.TAX_CODE                   ;003ART_SALESTAX.YEAR                       ;004ART_SALESTAX.MONTH                      ;005ART_SALESTAX.TAXABLE_AMT                ;006ART_SALESTAX.TAX_AMOUNT                 ;007ART_SALESTAX.GROSS_SALES                ;008ART_SALESTAX.RETURNS                    ;
+{GridColsEnd}

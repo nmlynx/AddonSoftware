@@ -1,0 +1,47 @@
+Barista Application Framework - Definition Module
+IVC_PRICCODE - Pricing Table
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVC_PRICCODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;BWRI;^^Pricing Table^Pricing Table^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVC_PRICCODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_E^IVC_PRICCODE^002^C^^^^^^2^^Y^^^^^RECORD_ID_E^"E"^E^E^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"E"^"E"^^
+ITEM_CLASS^IVC_PRICCODE^003^C^3001^dis_item_class^0^^^3^^Y^^^F^^ITEM_CLASS^Item Class^Item Class^Item Class^C^^E^^^^^^^^^[+FIRM_ID]+@^IVC_CLASCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Item Class^^^
+PRICING_CODE^IVC_PRICCODE^004^C^3002^dis_pricing_code^0^^^4^^Y^^^F^^PRICING_CODE^Customer Pricing Code^Código de fijación de precios del cliente^Cód. de fij. de precios del cl.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_PRICECDS^CODE_DESC^^^^^^^^^^^4^0^^^UUUU^^^^^20^L^0^Customer Pricing Code^^^
+CODE_DESC^IVC_PRICCODE^005^C^3003^ine_code_desc^0^^^5^^N^^^^^CODE_DESC^Code Description^Descripción^Descripción^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+IV_PRICE_MTH^IVC_PRICCODE^006^C^3004^lbx_iv_price_mth^0^^^6^^N^^^^^IV_PRICE_MTH^Pricing Method [L/M/C]^Pricing Method^Pricing Meth^C^^L^^^^^^^0^0^^^^^^^^^^^^Markup from Cost              ~C   ;Markdown from List            ~L   ;Margin over Cost              ~M   ;^1^1^0^^^^^^^^^^0^Pricing Method [L/M/C]^^^
+BREAK_QTY_01^IVC_PRICCODE^007^C^3006^inn_break_qty_01^0^^^8^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^Break Quantity Level^^^
+BREAK_DISC_01^IVC_PRICCODE^017^C^3007^inn_break_disc_01^0^^^9^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^Break Discount Percentage^^^
+BREAK_QTY_02^IVC_PRICCODE^008^C^3008^inn_break_qty_02^0^^^10^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_02^IVC_PRICCODE^018^C^3009^inn_break_disc_02^0^^^11^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_03^IVC_PRICCODE^009^C^3010^inn_break_qty_03^0^^^12^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_03^IVC_PRICCODE^019^C^3011^inn_break_disc_03^0^^^13^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_04^IVC_PRICCODE^010^C^3012^inn_break_qty_04^0^^^14^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_04^IVC_PRICCODE^020^C^3013^inn_break_disc_04^0^^^15^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_05^IVC_PRICCODE^011^C^3014^inn_break_qty_05^0^^^16^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_05^IVC_PRICCODE^021^C^3015^inn_break_disc_05^0^^^17^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_06^IVC_PRICCODE^012^C^3016^inn_break_qty_06^0^^^18^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_06^IVC_PRICCODE^022^C^3017^inn_break_disc_06^0^^^19^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_07^IVC_PRICCODE^013^C^3018^inn_break_qty_07^0^^^20^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_07^IVC_PRICCODE^023^C^3019^inn_break_disc_07^0^^^21^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_08^IVC_PRICCODE^014^C^3020^inn_break_qty_08^0^^^22^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_08^IVC_PRICCODE^024^C^3021^inn_break_disc_08^0^^^23^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_09^IVC_PRICCODE^015^C^3022^inn_break_qty_09^0^^^24^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_09^IVC_PRICCODE^025^C^3023^inn_break_disc_09^0^^^25^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+BREAK_QTY_10^IVC_PRICCODE^016^C^3024^inn_break_qty_10^0^^^26^^N^^^^^BREAK_QTY^Break Quantity Level^Break Quantity Level^Break Qty Level^N^^N^^^^^-15^^80^^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+BREAK_DISC_10^IVC_PRICCODE^026^C^3025^inn_break_disc_10^0^^^27^^N^^^^^BREAK_DISC^Break Discount Percentage^Break Discount Percentage^Break Disc %^N^^N^^^^^+15^-1^80^0^^^^^^^^^^^^^^7^0^^^^^^%^L;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVC_PRICCODE^PRIMARY^IVC_PRICCODE.FIRM_ID                    IVC_PRICCODE.RECORD_ID_E                IVC_PRICCODE.ITEM_CLASS                 IVC_PRICCODE.PRICING_CODE               ^stbl("+FIRM_ID")+"E"+IVC_PRICCODE.ITEM_CLASS$+IVC_PRICCODE.PRICING_CODE$^stbl("+FIRM_ID")+"E"+RD_REC_DATA.ITEM_CLASS$+RD_REC_DATA.PRICING_CODE$^stbl("+FIRM_ID")                        "E"                                     RD_REC_DATA.ITEM_CLASS$                 RD_REC_DATA.PRICING_CODE$               
+{KeyDefsEnd}
+{GridCols}
+003IVC_PRICCODE.ITEM_CLASS                 ;004IVC_PRICCODE.PRICING_CODE               ;005IVC_PRICCODE.CODE_DESC                  ;006IVC_PRICCODE.IV_PRICE_MTH               ;008IVC_PRICCODE.BREAK_QTY_01               ;009IVC_PRICCODE.BREAK_DISC_01              ;010IVC_PRICCODE.BREAK_QTY_02               ;011IVC_PRICCODE.BREAK_DISC_02              ;012IVC_PRICCODE.BREAK_QTY_03               ;013IVC_PRICCODE.BREAK_DISC_03              ;014IVC_PRICCODE.BREAK_QTY_04               ;015IVC_PRICCODE.BREAK_DISC_04              ;016IVC_PRICCODE.BREAK_QTY_05               ;017IVC_PRICCODE.BREAK_DISC_05              ;018IVC_PRICCODE.BREAK_QTY_06               ;019IVC_PRICCODE.BREAK_DISC_06              ;020IVC_PRICCODE.BREAK_QTY_07               ;021IVC_PRICCODE.BREAK_DISC_07              ;022IVC_PRICCODE.BREAK_QTY_08               ;023IVC_PRICCODE.BREAK_DISC_08              ;024IVC_PRICCODE.BREAK_QTY_09               ;025IVC_PRICCODE.BREAK_DISC_09              ;026IVC_PRICCODE.BREAK_QTY_10               ;027IVC_PRICCODE.BREAK_DISC_10              ;
+{GridColsEnd}

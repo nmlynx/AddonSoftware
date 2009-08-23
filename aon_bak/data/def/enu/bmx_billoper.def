@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+BMX_BILLOPER - Operations Cross-Reference
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+BMX_BILLOPER^^^^Operations Cross-Reference^Operations Cross-Reference^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^BMX_BILLOPER^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+OP_CODE^BMX_BILLOPER^002^C^3001^dis_op_code^0^^^2^^Y^^^F^^OP_CODE^Operation Code^Operation Code^Op Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^BMC_OPCODES^CODE_DESC^^^^^^^^^^^3^0^^^^^^^^20^L^0^Operation Code^^^
+BILL_NO^BMX_BILLOPER^003^C^3002^dis_bill_no^0^^^3^^Y^^^F^^BILL_NO^Bill of Materials Number^Bill of Materials Number^Bill of Mats No^C^^E^^^^^^^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^^^^^^20^L^0^Bill of Materials Number^^^
+OP_SEQ^BMX_BILLOPER^004^C^3003^ine_op_seq^0^^^4^^Y^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+BMX_BILLOPER^PRIMARY^BMX_BILLOPER.FIRM_ID                    BMX_BILLOPER.OP_CODE                    BMX_BILLOPER.BILL_NO                    BMX_BILLOPER.OP_SEQ                     ^stbl("+FIRM_ID")+BMX_BILLOPER.OP_CODE$+BMX_BILLOPER.BILL_NO$+BMX_BILLOPER.OP_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.OP_CODE$+RD_REC_DATA.BILL_NO$+RD_REC_DATA.OP_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.OP_CODE$                    RD_REC_DATA.BILL_NO$                    RD_REC_DATA.OP_SEQ$                     
+{KeyDefsEnd}
+{GridCols}
+002BMX_BILLOPER.OP_CODE                    ;003BMX_BILLOPER.BILL_NO                    ;004BMX_BILLOPER.OP_SEQ                     ;
+{GridColsEnd}

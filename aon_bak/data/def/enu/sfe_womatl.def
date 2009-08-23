@@ -1,0 +1,45 @@
+Barista Application Framework - Definition Module
+SFE_WOMATL - WO Material Requirements
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFE_WOMATL^^^^WO Material Requirements^WO Material Requirements^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFE_WOMATL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFE_WOMATL^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFE_WOMATL^003^C^3002^ine_wo_no^0^^^3^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+RECORD_ID_B^SFE_WOMATL^004^C^^^^^^4^^Y^^^^^RECORD_ID_B^"B"^B^B^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"B"^"B"^^
+MATERIAL_SEQ^SFE_WOMATL^005^C^3003^ine_material_seq^0^^^5^^Y^^^^^MATERIAL_SEQ^Materials Sequence Number^Materials Sequence Number^Mats Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Materials Sequence Number^^^
+UNIT_MEASURE^SFE_WOMATL^006^C^3004^ine_unit_measure^0^^^6^^N^^^^^UNIT_MEASURE^Unit of Measure^Unit of Measure^Unit of Measure^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Unit of Measure^^^
+WAREHOUSE_ID^SFE_WOMATL^009^C^3005^dis_warehouse_id^0^^^9^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^SFE_WOMATL^010^C^3006^dis_item_id^0^^^10^^N^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+OP_SEQ^SFE_WOMATL^011^C^3007^ine_op_seq^0^^^11^^N^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+PO_NO^SFE_WOMATL^012^C^3008^ine_po_no^0^^^12^^N^^^^^PO_NO^Purchase Order Number^Purchase Order Number^PO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Purchase Order Number^^^
+PO_LINE_NO^SFE_WOMATL^013^C^3009^ine_po_line_no^0^^^13^^N^^^^^PO_LINE_NO^Purchase Order Line Number^Purchase Order Line Number^PO Line No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^3^0^^^000^000^^^^30^R^0^Purchase Order Line Number^^^
+PO_STATUS^SFE_WOMATL^014^C^3010^ine_po_status^0^^^14^^N^^^^^PO_STATUS^Purchase Order Status Flag^Purchase Order Status Flag^PO Stat Flag^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Purchase Order Status Flag^^^
+LINE_TYPE^SFE_WOMATL^017^C^3011^ine_line_type^0^^^17^^N^^^^^LINE_TYPE^Line Type^Line Type^Line Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Line Type^^^
+EXT_COMMENTS^SFE_WOMATL^018^C^3012^ine_ext_comments^0^^^18^^N^^^^^EXT_COMMENTS^Comments or Message Line^Comments or Message Line^Cmts/Msg Line^C^^E^^^^^^^^^^^^^^^^^^^^^^60^^^^^^^^^^^^Comments or Message Line^^^
+REQUIRE_DATE^SFE_WOMATL^019^C^3013^ind_require_date^0^^^19^^N^^^C^^REQUIRE_DATE^Date Required^Date Required^Date Req^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Required^^^
+UNITS^SFE_WOMATL^020^C^3014^inn_units^0^^^20^^N^^^^^UNITS^Units^Units^Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Units^^^
+UNIT_COST^SFE_WOMATL^021^C^3015^inn_unit_cost^0^^^21^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+TOTAL_UNITS^SFE_WOMATL^022^C^3016^inn_total_units^0^^^22^^N^^^^^TOTAL_UNITS^Total Units^Total Units^Tot Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Total Units^^^
+TOTAL_COST^SFE_WOMATL^023^C^3017^inn_total_cost^0^^^23^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Total Cost Amount^^^
+DIVISOR^SFE_WOMATL^024^C^3018^inn_divisor^0^^^24^^N^^^^^DIVISOR^Divisor^Divisor^Divisor^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^H^^^^^Divisor^^^
+QTY_REQUIRED^SFE_WOMATL^025^C^3019^inn_qty_required^0^^^25^^N^^^^^QTY_REQUIRED^Quantity Required^Quantity Required^Qty Req^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity Required^^^
+ALT_FACTOR^SFE_WOMATL^026^C^3020^inn_alt_factor^0^^^26^^N^^^^^ALT_FACTOR^Alternate Factor^Alternate Factor^Alt Factor^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^M^^^^^Alternate Factor^^^
+UNIT_COST^SFE_WOMATL^027^C^3021^inn_unit_cost^0^^^27^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+SCRAP_FACTOR^SFE_WOMATL^028^C^3022^inn_scrap_factor^0^^^28^^N^^^^^SCRAP_FACTOR^Scrap Factor Percent^Scrap Factor Percent^Scrap Factor %^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^M^^^^^Scrap Factor Percent^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFE_WOMATL^PRIMARY^SFE_WOMATL.FIRM_ID                      SFE_WOMATL.WO_LOCATION                  SFE_WOMATL.WO_NO                        SFE_WOMATL.RECORD_ID_B                  SFE_WOMATL.MATERIAL_SEQ                 ^stbl("+FIRM_ID")+SFE_WOMATL.WO_LOCATION$+SFE_WOMATL.WO_NO$+"B"+SFE_WOMATL.MATERIAL_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$+"B"+RD_REC_DATA.MATERIAL_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      "B"                                     RD_REC_DATA.MATERIAL_SEQ$               
+{KeyDefsEnd}
+{GridCols}
+002SFE_WOMATL.WO_LOCATION                  ;003SFE_WOMATL.WO_NO                        ;005SFE_WOMATL.MATERIAL_SEQ                 ;006SFE_WOMATL.UNIT_MEASURE                 ;009SFE_WOMATL.WAREHOUSE_ID                 ;010SFE_WOMATL.ITEM_ID                      ;011SFE_WOMATL.OP_SEQ                       ;012SFE_WOMATL.PO_NO                        ;013SFE_WOMATL.PO_LINE_NO                   ;014SFE_WOMATL.PO_STATUS                    ;017SFE_WOMATL.LINE_TYPE                    ;018SFE_WOMATL.EXT_COMMENTS                 ;019SFE_WOMATL.REQUIRE_DATE                 ;020SFE_WOMATL.UNITS                        ;021SFE_WOMATL.UNIT_COST                    ;022SFE_WOMATL.TOTAL_UNITS                  ;023SFE_WOMATL.TOTAL_COST                   ;024SFE_WOMATL.DIVISOR                      ;025SFE_WOMATL.QTY_REQUIRED                 ;026SFE_WOMATL.ALT_FACTOR                   ;027SFE_WOMATL.UNIT_COST                    ;028SFE_WOMATL.SCRAP_FACTOR                 ;
+{GridColsEnd}

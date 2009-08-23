@@ -1,0 +1,68 @@
+Barista Application Framework - Definition Module
+ARS_PARAMS - AR Parameters
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARS_PARAMS^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AREC;ARNF;BSHO;^^AR Parameters^AR Parameters^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARS_PARAMS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AR^ARS_PARAMS^002^C^^^^^^2^^Y^^^^^AR^"AR"^AR^AR^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^L;W;^^^^"AR"^"AR"^^
+SEQUENCE_00^ARS_PARAMS^003^C^^^^^^3^^Y^^^^^SEQUENCE_00^"00"^0^0^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^L;W;^30^R^^"00"^"00"^^
+CURRENT_PER^ARS_PARAMS^046^C^3001^ine_current_per^0^^^4^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^CURRENT_PER^Current Period^Current Period^Curr Prd^C^^E^^^^^+5^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Current Period^^^
+CURRENT_YEAR^ARS_PARAMS^047^C^3002^ine_current_year^0^^^5^^N^^^^^CURRENT_YEAR^Current Year^Current Year^Curr Yr^C^3^E^^^^^^^35^0^^^^^^^^^^^^^^4^0^^^0000^^^^^^^^Current Year^^^
+CUSTOMER_INPUT^ARS_PARAMS^004^C^^^^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^CUSTOMER_INPUT^Customer Number Mask [Input]^Customer Mask^Cust Mask^C^^E^^^^^^^80^^^^^^^^^######^^Masks^^^1^10^^^^^^^^G;I;L;O;P;R;W;^^^^Enter # characters, along with optional separator characters.^^^
+AMOUNT_MASK^ARS_PARAMS^049^C^^^^^^7^^N^^^^^AMOUNT_MASK^Amount Mask^Amount Mask^Amt Mask^C^^E^^^^^^^120^^^^^^^^^###,###,##0.00-^^^^^^15^^^^^^^^G;I;L;O;P;R;W;^^^^Amount Mask^^^
+UNIT_MASK^ARS_PARAMS^050^C^^^^^^8^^N^^^^^UNIT_MASK^Unit Mask^Unit Mask^Unit Mask^C^^E^^^^^^^96^^^^^^^^^###,##0-^^^^^^12^^^^^^^^G;I;L;O;P;R;W;^^^^Unit Mask^^^
+RATE_MASK^ARS_PARAMS^051^C^^^^^^9^^N^^^^^RATE_MASK^Rate Mask^Rate Mask^Rate Mask^C^^E^^^^^^^96^^^^^^^^^##,##0.00-^^^^^^12^^^^^^^^G;I;L;O;P;R;W;^^^^Rate Mask^^^
+ZIP_LENGTH^ARS_PARAMS^010^C^^^^^^10^^N^^^^^ZIP_LENGTH^Zip Code Size^Zip Code Size^Zip Cd Size^C^^L^^^^^^^60^^^^^^^^^9^^Settings^^5                             ~5   ;9                             ~9   ;^^1^^^^0^0^^^O;^30^R^^Zip Code Size^^^
+AUTO_NO^ARS_PARAMS^016^C^^^^^^11^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^AUTO_NO^Use Automatic Numbering [Y/N]?^Use Automatic Numbering?^Use Auto No?^C^^C^^^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^O;^^^^Use Automatic Numbering?^^^
+DIST_BY_ITEM^ARS_PARAMS^014^C^3003^cbx_dist_by_item^0^^^12^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^DIST_BY_ITEM^Distribute By Item?^Distribute Sales By Item?^Dist By Item?^C^^C^^^Y;N^^^^30^^^^^^^^^N^^Settings^^^^1^^^^^^^^^^^^Distribute By Item?^^^
+BR_INTERFACE^ARS_PARAMS^017^C^3004^cbx_br_interface^0^^^13^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^BR_INTERFACE^Bank Rec Interface Enabled?^Bank Reconciliation?^Bank Rec^C^^C^^^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^Bank Rec Interface Enabled?^^^
+LABEL_ACROSS^ARS_PARAMS^011^C^3005^ine_label_across^0^^^14^^N^^^^^LABEL_ACROSS^Number of Labels Across^Number of Labels Across^No of Labels Across^C^^E^^^^^^^35^^^^^^^^^01^^Labels^^^^2^^^^00^00^^^^30^R^^Number of Labels Across^^^
+LABEL_WIDTH^ARS_PARAMS^013^C^3006^ine_label_width^0^^^15^^N^^^^^LABEL_WIDTH^Horizontal Chars Per Label^Horizontal Chars  Per Label^Chars/Label^C^^E^^^^^^^35^^^^^^^^^36^^^^^^2^^^^00^00^^^^30^R^^Horizontal Chars Per Label^^^
+LABEL_LENGTH^ARS_PARAMS^012^C^3007^ine_label_length^0^^^16^^N^^^^^LABEL_LENGTH^Vertical Lines Per Label^Vertical Lines Per Label^Lines/Label^C^^E^^^^^^^35^^^^^^^^^06^^^^^^2^^^^00^00^^^^30^R^^Vertical Lines Per Label^^^
+MAX_CUSTOMER_LEN^ARS_PARAMS^006^C^^^^^^17^^N^^^^^MAX_CUSTOMER_LEN^Maximum Customer Number Size^Maximum Customer Number Size^Max Cust No Size^C^^E^^^^^^^^^^^^^^^^06^^^^^^2^^^^00^00^^^L;W;^30^R^^Maximum Customer Number Size^^^
+CUSTOMER_OUTPUT^ARS_PARAMS^048^C^^^^^^18^^N^^^^^CUSTOMER_OUTPUT^Customer Number Mask [Output]^Customer Number Mask^Cust No Mask^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^L;W;^^^^Customer Number Mask [Output]^^^
+MULTI_TYPES^ARS_PARAMS^007^C^^^^^^19^^N^^^^^MULTI_TYPES^Multiple Types [Y/N]?^Multiple Types?^Mult Types?^C^^C^^^Y;N^^^^^^^^^^^^^Y^^^^^^1^^^^^^^^L;W;^^^^Multiple Types?^^^
+CUSTOMER_SIZE^ARS_PARAMS^005^C^^^^^^20^^N^^^^^CUSTOMER_SIZE^Customer Number Size^Customer Number Size^Cust No Size^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^L;W;^30^R^^Customer Number Size^^^
+MULTI_DIST^ARS_PARAMS^008^C^^^^^^21^^N^^^^^MULTI_DIST^Multiple Distributions [Y/N]?^Multiple Distributions?^Mult Distributions?^C^^C^^^Y;N^^^^^^^^^^^^^Y^^^^^^1^^^^^^^^L;W;^^^^Multiple Distributions?^^^
+HOLD_ZERO^ARS_PARAMS^009^C^^^^^^22^^N^^^^^HOLD_ZERO^Hold Zero Invoices?^Hold Zero Invoices?^Hold Zero Invs?^C^^C^^^Y;N^^^^^^^^^^^^^Y^^^^^^1^^^^^^^^L;W;^^^^Hold Zero Invoices?^^^
+JOB_NOS^ARS_PARAMS^015^C^^^^^^23^^N^^^^^JOB_NOS^Use Customer Job Numbers?^Use Customer Job Numbers?^Use Cust Job Nos?^C^^C^^^Y;N^^^^^^^^^^^^^N^^^^^^1^^^^^^^^L;W;^^^^Use Customer Job Numbers?^^^
+CASH_SALE^ARS_PARAMS^018^C^^^^^^24^^N^^^^^CASH_SALE^Cash Sale [Y/N]?^Cash Sale?^Cash Sale?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^L;W;^^^^Cash Sale?^^^
+CUSTOMER_ID^ARS_PARAMS^019^C^^^^^^25^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^L;W;^30^R^^Customer Number^^^
+RETAIN_HIST^ARS_PARAMS^020^C^^^^^^26^^N^^^^^RETAIN_HIST^Retain History [Months]^Retain History^Retain Hist [Mos]^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^L;W;^^^^Retain History [Months]^^^
+BEG_CMT_LINE^ARS_PARAMS^021^C^^^^^^27^^N^^^^^BEG_CMT_LINE^Starting Comments Line Number^Starting Comments Line Number^Beg Cmt Line No^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^L;W;^30^R^^Starting Comments Line Number^^^
+END_CMT_LINE^ARS_PARAMS^022^C^^^^^^28^^N^^^^^END_CMT_LINE^Ending Comments Line Number^Ending Comments Line Number^End Cmts Line No^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^L;W;^30^R^^Ending Comments Line Number^^^
+DROPSHP_COST^ARS_PARAMS^023^C^^^^^^29^^N^^^^^DROPSHP_COST^Enter Cost on Dropship?^Enter Cost on Dropship?^Cst on Dropship?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^L;W;^^^^Enter Cost on Dropship?^^^
+MIN_ORD_AMT^ARS_PARAMS^024^C^^^^^^30^^N^^^^^MIN_ORD_AMT^Minimum Order Amount^Minimum Order Amount^Min Ord Amt^C^^N^^^^^^^0^0^^^^^^^^^^^^^^5^0^^^#0.00^#0.00^^^L;W;^^^0^Minimum Order Amount^^^
+MIN_LINE_AMT^ARS_PARAMS^025^C^^^^^^31^^N^^^^^MIN_LINE_AMT^Minimum Line Amount^Minimum Line Amount^Min Line Amt^C^^N^^^^^^^0^0^^^^^^^^^^^^^^5^0^^^#0.00^#0.00^^^L;W;^^^0^Minimum Line Amount^^^
+SKIP_LN_CODE^ARS_PARAMS^026^C^^^^^^32^^N^^^^^SKIP_LN_CODE^Skip Line Code Entry?^Skip Line Code Entry?^Skip Line Cd Entry?^C^^C^^^Y;N^^^^0^0^^^^^^^^^^^^^^1^0^^^^^^^L;W;^^^0^Skip Line Code Entry?^^^
+LINE_CODE^ARS_PARAMS^027^C^^^^^^33^^N^^^F^^LINE_CODE^Line Code^Line Code^Line Cd^C^^E^^^^^^^0^0^[FIRM_ID]+@^OPC_LINECODE^CODE_DESC^^^^^^^^^^^1^0^^^^^^^L;W;^^^0^Line Code^^^
+DROPSHP_WHSE^ARS_PARAMS^028^C^^^^^^34^^N^^^^^DROPSHP_WHSE^Enter Warehouse on Dropship?^Enter Warehouse on Dropship?^Whse on Dropship?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^L;W;^^^^Enter Warehouse on Dropship?^^^
+BACKORDERS^ARS_PARAMS^029^C^^^^^^35^^N^^^^^BACKORDERS^Allow Backorders [Y/N]?^Allow Backorders?^Allow Back^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^L;W;^^^^Allow Backorders?^^^
+RETAIN_JOBS^ARS_PARAMS^030^C^^^^^^36^^N^^^^^RETAIN_JOBS^Months to Retain Job Numbers^Months to Retain Job Numbers^Mos/Ret Job Nos^C^^E^^^^^^^0^0^^^^^^^^^^^^^^2^0^^^^^^^L;W;^20^R^0^Months to Retain Job Numbers^^^
+MIN_CSH_SALE^ARS_PARAMS^031^C^^^^^^37^^N^^^^^MIN_CSH_SALE^Minimum Cash Sale^Minimum Cash Sale^Min Cash Sale^N^^N^^^^^^^0^0^^^^^^^^^^^^^^5^0^^^##0.00^##0.00^^^L;W;^^^2^Minimum Cash Sale^^^
+REC_PRT_SYS^ARS_PARAMS^033^C^^^^^^38^^N^^^^^REC_PRT_SYS^Receipt Printer on System?^Receipt Printer on System?^Rec Prt on Sys?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^L;W;^^^^Receipt Printer on System?^^^
+CNTR_PRT_PGM^ARS_PARAMS^034^C^^^^^^39^^N^^^^^CNTR_PRT_PGM^Counter Printer Print Program^Counter Printer Print Program^Counter Prt Prog^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^L;W;^^^^Counter Printer Print Program^^^
+INV_HIST_FLG^ARS_PARAMS^036^C^^^^^^40^^N^^^^^INV_HIST_FLG^Retain Detail Invoice History?^Retain Detail Invoice History?^Retain Dtl Inv Hist?^C^^C^^^Y;N^^^^0^0^^^^^^^^Y^^^^^^1^0^^^^^^^L;W;^^^0^Retain Detail Invoice History?^^^
+PRT_GL_DET^ARS_PARAMS^038^C^^^^^^41^^N^^^^^PRT_GL_DET^Print Sales GL Detail?^Print Sales GL Detail?^Prt Sales Dtl?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^L;W;^^^^Print Sales GL Detail?^^^
+COMMIT_DAYS^ARS_PARAMS^040^C^^^^^^42^^N^^^^^COMMIT_DAYS^# of Days/Commit into Future^# of Days/Commit into Future^Future DaysCommit^C^^E^^^^^^^0^0^^^^^^^^^^^^^^3^0^^^^^^^L;W;^^^0^# of Days/Commit into Future^^^
+DEF_SHP_DAYS^ARS_PARAMS^042^C^^^^^^43^^N^^^^^DEF_SHP_DAYS^Default Number of Ship Days^Default Number of Ship Days^Def No of Ship Days^C^^E^^^^^^^0^0^^^^^^^^^^^^^^2^0^^^^^^^L;W;^20^R^0^Default Number of Ship Days^^^
+REC_PRT_PGM^ARS_PARAMS^043^C^^^^^^44^^N^^^^^REC_PRT_PGM^Receipt Printer Print Program^Receipt Printer Print Program^Rec Prt Prt Prog^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^L;W;^^^^Receipt Printer Print Program^^^
+INV_HISTPGM^ARS_PARAMS^044^C^^^^^^45^^N^^^^^INV_HISTPGM^Invoice History Print Program^Invoice History Print Program^Inv Hist Prt Prog^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^L;W;^^^^Invoice History Print Program^^^
+LSTCOM_DATE^ARS_PARAMS^045^C^^^^^^46^^N^^^C^^LSTCOM_DATE^Last Committed Date^Last Committed Date^Last Committed Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^L;W;^^^^Last Committed Date^^^
+DEFAULT_STATION^ARS_PARAMS^052^C^3008^dis_default_station^0^^^52^^N^^^F^^POS_STATION^Point of Sale Station^Point of Sale Station^POS Station^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+@^OPM_POINTOFSALE^DESCRIPTION^^^^^^^^^^^16^0^^^UUUUUUUUUUUUUUUU^^^^^20^L^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARS_PARAMS^PRIMARY^ARS_PARAMS.FIRM_ID                      ARS_PARAMS.AR                           ARS_PARAMS.SEQUENCE_00                  ^stbl("+FIRM_ID")+"AR"+"00"^stbl("+FIRM_ID")+"AR"+"00"^stbl("+FIRM_ID")                        "AR"                                    "00"                                    
+{KeyDefsEnd}
+{GridCols}
+002ARS_PARAMS.AR                           ;003ARS_PARAMS.SEQUENCE_00                  ;004ARS_PARAMS.CURRENT_PER                  ;005ARS_PARAMS.CURRENT_YEAR                 ;012ARS_PARAMS.DIST_BY_ITEM                 ;013ARS_PARAMS.BR_INTERFACE                 ;014ARS_PARAMS.LABEL_ACROSS                 ;015ARS_PARAMS.LABEL_WIDTH                  ;016ARS_PARAMS.LABEL_LENGTH                 ;017ARS_PARAMS.MAX_CUSTOMER_LEN             ;018ARS_PARAMS.CUSTOMER_OUTPUT              ;019ARS_PARAMS.MULTI_TYPES                  ;020ARS_PARAMS.CUSTOMER_SIZE                ;021ARS_PARAMS.MULTI_DIST                   ;022ARS_PARAMS.HOLD_ZERO                    ;023ARS_PARAMS.JOB_NOS                      ;024ARS_PARAMS.CASH_SALE                    ;025ARS_PARAMS.CUSTOMER_ID                  ;026ARS_PARAMS.RETAIN_HIST                  ;027ARS_PARAMS.BEG_CMT_LINE                 ;028ARS_PARAMS.END_CMT_LINE                 ;029ARS_PARAMS.DROPSHP_COST                 ;030ARS_PARAMS.MIN_ORD_AMT                  ;031ARS_PARAMS.MIN_LINE_AMT                 ;032ARS_PARAMS.SKIP_LN_CODE                 ;033ARS_PARAMS.LINE_CODE                    ;034ARS_PARAMS.DROPSHP_WHSE                 ;035ARS_PARAMS.BACKORDERS                   ;036ARS_PARAMS.RETAIN_JOBS                  ;037ARS_PARAMS.MIN_CSH_SALE                 ;038ARS_PARAMS.REC_PRT_SYS                  ;039ARS_PARAMS.CNTR_PRT_PGM                 ;040ARS_PARAMS.INV_HIST_FLG                 ;041ARS_PARAMS.PRT_GL_DET                   ;042ARS_PARAMS.COMMIT_DAYS                  ;043ARS_PARAMS.DEF_SHP_DAYS                 ;044ARS_PARAMS.REC_PRT_PGM                  ;045ARS_PARAMS.INV_HISTPGM                  ;046ARS_PARAMS.LSTCOM_DATE                  ;052ARS_PARAMS.DEFAULT_STATION              ;
+{GridColsEnd}

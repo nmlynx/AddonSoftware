@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+SFW_ISSUXTYP - Material Issues By Type
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFW_ISSUXTYP^^^^Material Issues By Type^Material Issues By Type^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFW_ISSUXTYP^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_TYPE^SFW_ISSUXTYP^002^C^3001^ine_wo_type^0^^^2^^Y^^^^^WO_TYPE^Work Order Type^Work Order Type^WO Type^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Type^^^
+ACT_MAT_TOT^SFW_ISSUXTYP^003^C^3002^inn_act_mat_tot^0^^^3^^N^^^^^ACT_MAT_TOT^Actual Material Totals^Actual Material Totals^Act Mat Tots^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Actual Material Totals^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFW_ISSUXTYP^PRIMARY^SFW_ISSUXTYP.FIRM_ID                    SFW_ISSUXTYP.WO_TYPE                    ^stbl("+FIRM_ID")+SFW_ISSUXTYP.WO_TYPE$^stbl("+FIRM_ID")+RD_REC_DATA.WO_TYPE$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_TYPE$                    
+{KeyDefsEnd}
+{GridCols}
+002SFW_ISSUXTYP.WO_TYPE                    ;003SFW_ISSUXTYP.ACT_MAT_TOT                ;
+{GridColsEnd}

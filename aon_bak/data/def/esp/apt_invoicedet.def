@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+APT_INVOICEDET - Invoice Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APT_INVOICEDET^^^^Invoice Detail^Detalle de facturas^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APT_INVOICEDET^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AP_TYPE^APT_INVOICEDET^002^C^3001^dis_ap_type^0^^^2^^Y^^^F^^AP_TYPE^AP Type^Tipo de AP^Tipo de AP^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Tipo de AP^^^
+VENDOR_ID^APT_INVOICEDET^003^C^3002^dis_vendor_id^0^^^3^^Y^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^N.º de proveedor^C^^E^^^^^^^60^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Número de proveedor^^^
+AP_INV_NO^APT_INVOICEDET^004^C^3003^ine_ap_inv_no^0^^^4^^Y^^^^^AP_INV_NO^AP Invoice Number^Número de factura de AP^N.º de fact. de AP^C^^E^^^^^^^100^0^^^^^^^^^^^^^^10^0^^^^^^^^20^L^0^Número de factura de AP^^^
+SEQUENCE_NUM^APT_INVOICEDET^005^C^3004^ine_sequence_num^0^^^5^^Y^^^^^SEQUENCE_NUM^Sequence Number^Número de secuencia^N.º de sec.^C^S^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Número de secuencia^^^
+TRANS_TYPE^APT_INVOICEDET^006^C^3005^lbx_trans_type^0^^^6^^N^^^^^TRANS_TYPE^Transaction Type^Tipo de transacción^Transacción^C^^L^^^^^^^93^^^^^^^^^^^^^Ajuste                        ~A   ;Computadora                   ~C   ;Manual                        ~M   ;Anulación                    ~R   ;Nulo                          ~V   ;^^1^^^^U^^^^^^^^Tipo de transacción^^^
+TRANS_REF^APT_INVOICEDET^008^C^3006^ine_trans_ref^0^^^7^^N^^^^^TRANS_REF^Transaction Reference^Referencia de la transacción^Ref. de la trans.^C^^E^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^^^^^^Referencia de la transacción^^^
+TRANS_DATE^APT_INVOICEDET^009^C^3007^ind_trans_date^0^^^8^^N^^^C^^TRANS_DATE^Transaction Date^Fecha de la transacción^Fecha de la trans.^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de la transacción^^^
+TRANS_AMT^APT_INVOICEDET^010^C^3008^inn_trans_amt^0^^^9^^N^^^^^TRANS_AMT^Transaction Amount^Monto de la transacción^Monto de la trans.^N^^N^^^^^^^77^^^^^^^^^^^^^^^7^^^^###,###.00-^###,###.00-^^A^^^^^Monto de la transacción^^^
+TRANS_DISC^APT_INVOICEDET^011^C^3009^inn_trans_disc^0^^^10^^N^^^^^TRANS_DISC^Transaction Discount^Descuento de la transacción^Dscto. de la trans.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Descuento de la transacción^^^
+TRANS_RET^APT_INVOICEDET^012^C^3010^inn_trans_ret^0^^^11^^N^^^^^TRANS_RET^Transaction Retention^Retención de la transacción^Retención de la trans.^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Retención de la transacción^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APT_INVOICEDET^PRIMARY^APT_INVOICEDET.FIRM_ID                  APT_INVOICEDET.AP_TYPE                  APT_INVOICEDET.VENDOR_ID                APT_INVOICEDET.AP_INV_NO                APT_INVOICEDET.SEQUENCE_NUM             ^stbl("+FIRM_ID")+APT_INVOICEDET.AP_TYPE$+APT_INVOICEDET.VENDOR_ID$+APT_INVOICEDET.AP_INV_NO$+APT_INVOICEDET.SEQUENCE_NUM$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.AP_INV_NO$+RD_REC_DATA.SEQUENCE_NUM$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.AP_INV_NO$                  RD_REC_DATA.SEQUENCE_NUM$               
+{KeyDefsEnd}
+{GridCols}
+002APT_INVOICEDET.AP_TYPE                  ;003APT_INVOICEDET.VENDOR_ID                ;004APT_INVOICEDET.AP_INV_NO                ;005APT_INVOICEDET.SEQUENCE_NUM             ;006APT_INVOICEDET.TRANS_TYPE               ;007APT_INVOICEDET.TRANS_REF                ;008APT_INVOICEDET.TRANS_DATE               ;009APT_INVOICEDET.TRANS_AMT                ;010APT_INVOICEDET.TRANS_DISC               ;011APT_INVOICEDET.TRANS_RET                ;
+{GridColsEnd}

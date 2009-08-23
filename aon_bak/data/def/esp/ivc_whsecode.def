@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+IVC_WHSECODE - Warehouse Record
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVC_WHSECODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BDEL;BSHO;^^Warehouse Record^Warehouse Record^^^^^^^^T^^^^^^A;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVC_WHSECODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_C^IVC_WHSECODE^002^C^^^^^^2^^Y^^^^^RECORD_ID_C^"C"^C^C^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"C"^"C"^^
+WAREHOUSE_ID^IVC_WHSECODE^003^C^3001^ine_warehouse_id^0^^^3^^Y^^^^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^2^0^^^UU^^^^K;^20^L^0^Warehouse ID^^^
+SHORT_NAME^IVC_WHSECODE^004^C^3002^ine_short_name^0^^^4^^N^^^^^SHORT_NAME^Name^Name^Name^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^Name^^^
+ADDR_LINE_1^IVC_WHSECODE^005^C^3003^ine_addr_line_1^0^^^5^^N^^^^^ADDR_LINE_1^Address Line 1^Address^Address Li^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^Address Line 1^^^
+ADDR_LINE_2^IVC_WHSECODE^006^C^3004^ine_addr_line_2^0^^^6^^N^^^^^ADDR_LINE_2^Address Line 2^Línea de domicilio 2^Dom. 2^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 2^^^
+ADDR_LINE_3^IVC_WHSECODE^007^C^3005^ine_addr_line_3^0^^^7^^N^^^^^ADDR_LINE_3^Address Line 3^Línea de domicilio 3^Dom. 3^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 3^^^
+CITY^IVC_WHSECODE^008^C^3006^ine_city^0^^^8^^N^^^^^CITY^City Name^City^Ciudad^C^^E^^^^^^^176^^^^^^^^^^^^^^^22^^^^^^^^^^^^City Name^^^
+STATE_CODE^IVC_WHSECODE^009^C^3007^ine_state_code^0^^^9^^N^^^^^STATE_CODE^State Code^State^Estado^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^^^^^State Code^^^
+ZIP_CODE^IVC_WHSECODE^011^C^3008^ine_zip_code^0^^^10^^N^^^^^ZIP_CODE^Zip/Postal Code^Código postal^Zip/Postal^C^P^E^^^^^^^80^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^Zip/Postal Code^^^
+PHONE_NO^IVC_WHSECODE^010^C^3009^ine_phone_no^0^^^11^^N^^^^^PHONE_NO^Telephone Number^Número de teléfono^Telephone^C^T^E^^^^^^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Telephone Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVC_WHSECODE^PRIMARY^IVC_WHSECODE.FIRM_ID                    IVC_WHSECODE.RECORD_ID_C                IVC_WHSECODE.WAREHOUSE_ID               ^stbl("+FIRM_ID")+"C"+IVC_WHSECODE.WAREHOUSE_ID$^stbl("+FIRM_ID")+"C"+RD_REC_DATA.WAREHOUSE_ID$^stbl("+FIRM_ID")                        "C"                                     RD_REC_DATA.WAREHOUSE_ID$               
+{KeyDefsEnd}
+{GridCols}
+003IVC_WHSECODE.WAREHOUSE_ID               ;004IVC_WHSECODE.SHORT_NAME                 ;005IVC_WHSECODE.ADDR_LINE_1                ;006IVC_WHSECODE.ADDR_LINE_2                ;007IVC_WHSECODE.ADDR_LINE_3                ;008IVC_WHSECODE.CITY                       ;009IVC_WHSECODE.STATE_CODE                 ;010IVC_WHSECODE.ZIP_CODE                   ;011IVC_WHSECODE.PHONE_NO                   ;
+{GridColsEnd}

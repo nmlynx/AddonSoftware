@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+ARR_COMMENTS - AR Customer Comments Listing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARR_COMMENTS^^^^AR Customer Comments Listing^Lista de comentarios de clientes^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]arr_comments.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARR_COMMENTS^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+DSP_REPORT_SEQ^ARR_COMMENTS^002^C^3001^lbx_dsp_report_seq^0^^^2^^N^^^^^DSP_REPORT_SEQ^REPORT SEQUENCE^Secuencia de informe^Sec. de informe^C^^L^^^^^^^90^^^^^^^^^S^^^^Vendedor                      ~S   ;Territorio                    ~T   ;^^1^^^^^^^^^^^^^^^
+SALESPERSON_1^ARR_COMMENTS^003^C^3002^dis_salesperson^0^^^3^^N^^^F^^SALESPERSON^Salesperson^Beginning Vendedor^Beginning Vendedor^C^^E^ARR_COMMENTS.DSP_REPORT_SEQ^S^^^^^35^^[+FIRM_ID]+"F"+@^ARC_SALECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^1;2;^^^^^^^
+SALESPERSON_2^ARR_COMMENTS^003^C^3003^dis_salesperson^0^^^3^^N^^^F^^SALESPERSON^Salesperson^Ending Vendedor^Ending Vendedor^C^^E^ARR_COMMENTS.DSP_REPORT_SEQ^S^^^^^35^^[+FIRM_ID]+"F"+@^ARC_SALECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^1;2;^^^^^^^
+TERRITORY_1^ARR_COMMENTS^004^C^3004^dis_territory^0^^^4^^N^^^F^^TERRITORY^Territory Code^Beginning Territorio^Beginning Cód de territ.^C^^E^ARR_COMMENTS.DSP_REPORT_SEQ^T^^^^^35^0^[+FIRM_ID]+"H"+@^ARC_TERRCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^1;2;^20^L^0^^^^
+TERRITORY_2^ARR_COMMENTS^004^C^3005^dis_territory^0^^^4^^N^^^F^^TERRITORY^Territory Code^Ending Territorio^Ending Cód de territ.^C^^E^ARR_COMMENTS.DSP_REPORT_SEQ^T^^^^^35^0^[+FIRM_ID]+"H"+@^ARC_TERRCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^1;2;^20^L^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARR_COMMENTS^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002ARR_COMMENTS.DSP_REPORT_SEQ             ;003ARR_COMMENTS.SALESPERSON                ;004ARR_COMMENTS.TERRITORY                  ;
+{GridColsEnd}

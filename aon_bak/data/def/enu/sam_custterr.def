@@ -1,0 +1,69 @@
+Barista Application Framework - Definition Module
+SAM_CUSTTERR - Terr/Customer/Product/Item Record
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SAM_CUSTTERR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AOPT-SUMM;ARAR;AREC;BSHO;^Summary                       SUMMB;^Terr/Customer/Product/Item Record^Terr/Customer/Product/Item Record^^^^^^^^T^^^^^^B;D;W;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SAM_CUSTTERR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+YEAR^SAM_CUSTTERR^002^C^3001^ine_year^0^^^2^^Y^^^^^YEAR^Year^Year^Year^C^3^E^^^^^^^40^^^^^^^^^^^^^^^4^^^^0000^^^^^^^^Year^^^
+TERRITORY^SAM_CUSTTERR^003^C^3002^dis_territory^0^^^3^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^TERRITORY^Territory Code^Territory Code^Terr Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"H"+@^ARC_TERRCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Territory Code^^^
+CUSTOMER_ID^SAM_CUSTTERR^004^C^3003^dis_customer_id^0^^^4^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^CUSTOMER_ID^Customer ID^Customer ID^Customer N^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+PRODUCT_TYPE^SAM_CUSTTERR^005^C^3004^dis_product_type^0^^^5^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^^20^L^^Product Type^^^
+ITEM_ID^SAM_CUSTTERR^006^C^3005^dis_item_id^0^^^6^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^200^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+QTY_SHIPPED_01^SAM_CUSTTERR^007^C^3007^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 01^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_02^SAM_CUSTTERR^007^C^3008^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 02^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_03^SAM_CUSTTERR^007^C^3009^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 03^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_04^SAM_CUSTTERR^007^C^3010^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 04^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_05^SAM_CUSTTERR^007^C^3011^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 05^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_06^SAM_CUSTTERR^007^C^3012^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 06^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_07^SAM_CUSTTERR^007^C^3013^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 07^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_08^SAM_CUSTTERR^007^C^3014^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 08^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_09^SAM_CUSTTERR^007^C^3015^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 09^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_10^SAM_CUSTTERR^007^C^3016^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 10^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_11^SAM_CUSTTERR^007^C^3017^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 11^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_12^SAM_CUSTTERR^007^C^3018^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 12^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+QTY_SHIPPED_13^SAM_CUSTTERR^007^C^3019^inn_qty_shipped^0^^^8^^N^^^^^QTY_SHIPPED^Quantity Shipped^Period 13^Qty Shipped^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^A;B;^^^^Quantity Shipped^^^
+TOTAL_COST_01^SAM_CUSTTERR^008^C^3021^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_02^SAM_CUSTTERR^008^C^3022^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_03^SAM_CUSTTERR^008^C^3023^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_04^SAM_CUSTTERR^008^C^3024^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_05^SAM_CUSTTERR^008^C^3025^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_06^SAM_CUSTTERR^008^C^3026^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_07^SAM_CUSTTERR^008^C^3027^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_08^SAM_CUSTTERR^008^C^3028^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_09^SAM_CUSTTERR^008^C^3029^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_10^SAM_CUSTTERR^008^C^3030^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_11^SAM_CUSTTERR^008^C^3031^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_12^SAM_CUSTTERR^008^C^3032^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_COST_13^SAM_CUSTTERR^008^C^3033^inn_total_cost^0^^^10^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Cost Amount^^^
+TOTAL_SALES_01^SAM_CUSTTERR^009^C^3035^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_02^SAM_CUSTTERR^009^C^3036^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_03^SAM_CUSTTERR^009^C^3037^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_04^SAM_CUSTTERR^009^C^3038^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_05^SAM_CUSTTERR^009^C^3039^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_06^SAM_CUSTTERR^009^C^3040^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_07^SAM_CUSTTERR^009^C^3041^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_08^SAM_CUSTTERR^009^C^3042^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_09^SAM_CUSTTERR^009^C^3043^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_10^SAM_CUSTTERR^009^C^3044^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_11^SAM_CUSTTERR^009^C^3045^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_12^SAM_CUSTTERR^009^C^3046^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TOTAL_SALES_13^SAM_CUSTTERR^009^C^3047^inn_total_sales^0^^^12^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^A^A;B;L;^^^^Total Sales Amount^^^
+TQTY^<<DISPLAY>>^010^D^3048^inn_tqty^0^^^13^^^^^^^QTY_SHIPPED^Quantity Shipped^Totals^^N^^N^^^^^-18^0^80^^^^^^^^^^^^^^^7^^^^^^IV^U^C;^^^^^^^
+TCST^<<DISPLAY>>^011^D^3049^inn_tcst^0^^^14^^^^^^^TOTAL_COST^Total Cost Amount^^^N^^N^^^^^+9^-1^80^^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+TSLS^<<DISPLAY>>^012^D^3050^inn_tsls^0^^^15^^^^^^^TOTAL_SALES^Total Sales Amount^^^N^^N^^^^^+9^-1^80^^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SAM_CUSTTERR^PRIMARY^SAM_CUSTTERR.FIRM_ID                    SAM_CUSTTERR.YEAR                       SAM_CUSTTERR.TERRITORY                  SAM_CUSTTERR.CUSTOMER_ID                SAM_CUSTTERR.PRODUCT_TYPE               SAM_CUSTTERR.ITEM_ID                    ^stbl("+FIRM_ID")+SAM_CUSTTERR.YEAR$+SAM_CUSTTERR.TERRITORY$+SAM_CUSTTERR.CUSTOMER_ID$+SAM_CUSTTERR.PRODUCT_TYPE$+SAM_CUSTTERR.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.YEAR$+RD_REC_DATA.TERRITORY$+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.PRODUCT_TYPE$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.YEAR$                       RD_REC_DATA.TERRITORY$                  RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.PRODUCT_TYPE$               RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002SAM_CUSTTERR.YEAR                       ;003SAM_CUSTTERR.TERRITORY                  ;004SAM_CUSTTERR.CUSTOMER_ID                ;005SAM_CUSTTERR.PRODUCT_TYPE               ;006SAM_CUSTTERR.ITEM_ID                    ;008SAM_CUSTTERR.QTY_SHIPPED                ;010SAM_CUSTTERR.TOTAL_COST                 ;012SAM_CUSTTERR.TOTAL_SALES                ;013<<DISPLAY>>.TQTY                        ;014<<DISPLAY>>.TCST                        ;015<<DISPLAY>>.TSLS                        ;
+{GridColsEnd}

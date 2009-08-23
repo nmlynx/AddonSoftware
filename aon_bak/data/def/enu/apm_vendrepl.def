@@ -1,0 +1,39 @@
+Barista Application Framework - Definition Module
+APM_VENDREPL - Vendor Replenishment Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APM_VENDREPL^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BDEL;BSHO;^^Vendor Replenishment Detail^Vendor Replenishment Detail^^^^^^^APM_VENDMAST^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APM_VENDREPL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+VENDOR_ID^APM_VENDREPL^002^C^3001^dis_vendor_id^0^^^2^^Y^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vend ID^C^^E^^^^^^^60^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^I;^30^R^0^Vendor Number^^^
+BUYER_CODE^APM_VENDREPL^003^C^3002^dis_buyer_code^0^^^3^^Y^^^F^^BUYER_CODE^Buyer Code^Buyer Code^Buyer Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"F"+@^IVC_BUYCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Buyer Code^^^
+PURCH_ADDR^APM_VENDREPL^005^C^3003^dis_purch_addr^0^^^4^^N^^^F^^PURCH_ADDR^Vendor Purchase Address Code^Purchasing Address^Vend Purch Addr Cd^C^^E^^^^^^+1^35^0^[FIRM_ID]+[VENDOR_ID]+@^APM_VENDADDR^NAME^^^^^^^^^^^2^0^^^00^^^^^30^R^0^Vendor Purchase Address Code^^^
+REV_DAYS^APM_VENDREPL^011^C^3004^inn_rev_days^0^^^5^^N^^^^^REV_DAYS^Review Cycle Days^Review Cycle Days^Review Cycle Days^N^^N^^^^^^^30^^^^^^^^^^^^^^^3^^^^^^^^^^^^Review Cycle Days^^^
+NXT_REV_DATE^APM_VENDREPL^009^C^3005^ind_nxt_rev_date^0^^^6^^N^^^C^^NXT_REV_DATE^Next Review Date^Next Review Date^Nxt Review Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^^^^^Next Review Date^^^
+PRI_REV_DATE^APM_VENDREPL^008^C^3006^ind_pri_rev_date^0^^^7^^N^^^^^PRI_REV_DATE^Prior Review Date^Prior Review Date^Prior Review Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^C;^^^^Prior Review Date^^^
+LSTREC_DATE^APM_VENDREPL^010^C^3007^ind_lstrec_date^0^^^8^^N^^^^^LSTREC_DATE^Last Receipt Date^Last Receipt Date^Last Rec Date^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^C;^^^^Last Receipt Date^^^
+YTD_REC_AMT^APM_VENDREPL^015^C^3008^inn_ytd_rec_amt^0^^^9^^N^^^^^YTD_REC_AMT^YTD Receipt Amount^YTD Receipt^YTD Rec Amt^N^^N^^^^^^+1^80^^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^YTD Receipt Amount^^^
+YTD_REC_LBS^APM_VENDREPL^016^C^3009^inn_ytd_rec_lbs^0^^^10^^N^^^^^YTD_REC_LBS^YTD Receipt Lbs^YTD Receipt Lbs^YTD Rec Lbs^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^C;^^^^YTD Receipt Lbs^^^
+YTD_REC_UNTS^APM_VENDREPL^017^C^3010^inn_ytd_rec_unts^0^^^11^^N^^^^^YTD_REC_UNTS^YTD Receipt Units^YTD Receipt Units^YTD Rec Units^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^U^C;^^^^YTD Receipt Units^^^
+PUR_TARG_AMT^APM_VENDREPL^012^C^^^^^^12^^N^^^^^PUR_TARG_AMT^Purchase Target Amount^Purchase Target Amount^Purch Target Amt^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^W;^^^^Purchase Target Amount^^^
+PUR_TARG_LBS^APM_VENDREPL^013^C^^^^^^13^^N^^^^^PUR_TARG_LBS^Purchase Target Lbs^Purchase Target Lbs^Purch Target Lbs^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^W;^^^^Purchase Target Lbs^^^
+PUR_TGT_UNIT^APM_VENDREPL^014^C^^^^^^14^^N^^^^^PUR_TGT_UNIT^Purchase Target Units^Purchase Target Units^Purch Target Units^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^W;^^^^Purchase Target Units^^^
+PUR_TGT_TYPE^APM_VENDREPL^006^C^3011^lbx_pur_tgt_type^0^^^15^^N^^^^^PUR_TGT_TYPE^Purchase Target Type [DWUN]^Purchase Target Type^Purch Target Type^C^^L^^^^^+24^-8^78^^^^^^^^^^^^^Dollars                       ~D   ;Weight                        ~W   ;Units                         ~U   ;No Target                     ~N   ;^^1^^^^^^^^^^^^Purchase Target Type [DWUN]^^^
+NYR_REC_AMT^APM_VENDREPL^018^C^3012^inn_nyr_rec_amt^0^^^16^^N^^^^^NYR_REC_AMT^Next Year Receipt Amount^Target $^Nxt Yr Rec Amt^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^^^^^^Next Year Receipt Amount^^^
+NYR_REC_LBS^APM_VENDREPL^019^C^3013^inn_nyr_rec_lbs^0^^^17^^N^^^^^NYR_REC_LBS^Next Year Receipt Lbs^Target Weight^Nxt Yr Rec Lbs^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^^^^^^Next Year Receipt Lbs^^^
+NYR_REC_UNIT^APM_VENDREPL^020^C^3014^inn_nyr_rec_unit^0^^^18^^N^^^^^NYR_REC_UNIT^Next Year Receipt Units^Target Units^Nxt Yr Rec Units^N^^N^^^^^^^80^^^^^^^^^^^^^^^7^^^^^^^^^^^^Next Year Receipt Units^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APM_VENDREPL^PRIMARY^APM_VENDREPL.FIRM_ID                    APM_VENDREPL.VENDOR_ID                  APM_VENDREPL.BUYER_CODE                 ^stbl("+FIRM_ID")+APM_VENDREPL.VENDOR_ID$+APM_VENDREPL.BUYER_CODE$^stbl("+FIRM_ID")+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.BUYER_CODE$^stbl("+FIRM_ID")                        RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.BUYER_CODE$                 
+{KeyDefsEnd}
+{GridCols}
+002APM_VENDREPL.VENDOR_ID                  ;003APM_VENDREPL.BUYER_CODE                 ;004APM_VENDREPL.PURCH_ADDR                 ;005APM_VENDREPL.REV_DAYS                   ;006APM_VENDREPL.NXT_REV_DATE               ;007APM_VENDREPL.PRI_REV_DATE               ;008APM_VENDREPL.LSTREC_DATE                ;009APM_VENDREPL.YTD_REC_AMT                ;010APM_VENDREPL.YTD_REC_LBS                ;011APM_VENDREPL.YTD_REC_UNTS               ;012APM_VENDREPL.PUR_TARG_AMT               ;013APM_VENDREPL.PUR_TARG_LBS               ;014APM_VENDREPL.PUR_TGT_UNIT               ;015APM_VENDREPL.PUR_TGT_TYPE               ;016APM_VENDREPL.NYR_REC_AMT                ;017APM_VENDREPL.NYR_REC_LBS                ;018APM_VENDREPL.NYR_REC_UNIT               ;
+{GridColsEnd}

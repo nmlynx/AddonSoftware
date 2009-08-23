@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+GLS_EARNINGS - Retained Earnings Account
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLS_EARNINGS^^^^Retained Earnings Account^Cuenta de resultados no asignados^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLS_EARNINGS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL^GLS_EARNINGS^002^C^^^^^^2^^Y^^^^^GL^"GL"^GL^GL^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^W;^^^^"GL"^"GL"^^
+SEQUENCE_01^GLS_EARNINGS^003^C^^^^^^3^^Y^^^^^SEQUENCE_01^"01"^1^1^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^W;^30^R^^"01"^"01"^^
+GL_ACCOUNT^GLS_EARNINGS^004^C^3001^dis_gl_account^0^^^4^^N^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta del GL^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^Número de cuenta del GL^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLS_EARNINGS^PRIMARY^GLS_EARNINGS.FIRM_ID                    GLS_EARNINGS.GL                         GLS_EARNINGS.SEQUENCE_01                ^stbl("+FIRM_ID")+"GL"+"01"^stbl("+FIRM_ID")+"GL"+"01"^stbl("+FIRM_ID")                        "GL"                                    "01"                                    
+{KeyDefsEnd}
+{GridCols}
+002GLS_EARNINGS.GL                         ;003GLS_EARNINGS.SEQUENCE_01                ;004GLS_EARNINGS.GL_ACCOUNT                 ;
+{GridColsEnd}

@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+APE_SELECTIONDET - Payment Selection Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APE_SELECTIONDET^^^^Payment Selection Detail^Payment Selection Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APE_SELECTIONDET^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+PAY_SEL_SEQ^APE_SELECTIONDET^002^C^3001^ine_pay_sel_seq^0^^^2^^Y^^^^^PAY_SEL_SEQ^Payment Selection Sequence^Payment Selection Sequence^Pmt Sel Seq^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Payment Selection Sequence^^^
+CHK_SEL_DESC^APE_SELECTIONDET^003^C^3002^ine_chk_sel_desc^0^^^3^^N^^^^^CHK_SEL_DESC^AP Check Selection Description^AP Check Selection Description^AP Chk Sel Desc^C^^E^^^^^^^^^^^^^^^^^^^^^^60^^^^^^^^^^^^AP Check Selection Description^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APE_SELECTIONDET^PRIMARY^APE_SELECTIONDET.FIRM_ID                APE_SELECTIONDET.PAY_SEL_SEQ            ^stbl("+FIRM_ID")+APE_SELECTIONDET.PAY_SEL_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.PAY_SEL_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.PAY_SEL_SEQ$                
+{KeyDefsEnd}
+{GridCols}
+002APE_SELECTIONDET.PAY_SEL_SEQ            ;003APE_SELECTIONDET.CHK_SEL_DESC           ;
+{GridColsEnd}

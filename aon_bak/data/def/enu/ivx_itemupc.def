@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+IVX_ITEMUPC - UPC Code/Item
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVX_ITEMUPC^^^^UPC Code/Item^UPC Code/Item^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVX_ITEMUPC^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_U^IVX_ITEMUPC^002^C^^^^^^2^^Y^^^^^RECORD_ID_U^"U"^U^U^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"U"^"U"^^
+UPC_CODE^IVX_ITEMUPC^003^C^3001^ine_upc_code^0^^^3^^Y^^^^^UPC_CODE^Inventory Item UPC Code^Inventory Item UPC Code^IV Item UPC Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Inventory Item UPC Code^^^
+ITEM_ID^IVX_ITEMUPC^004^C^3002^dis_item_id^0^^^4^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVX_ITEMUPC^PRIMARY^IVX_ITEMUPC.FIRM_ID                     IVX_ITEMUPC.RECORD_ID_U                 IVX_ITEMUPC.UPC_CODE                    IVX_ITEMUPC.ITEM_ID                     ^stbl("+FIRM_ID")+"U"+IVX_ITEMUPC.UPC_CODE$+IVX_ITEMUPC.ITEM_ID$^stbl("+FIRM_ID")+"U"+RD_REC_DATA.UPC_CODE$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        "U"                                     RD_REC_DATA.UPC_CODE$                   RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+003IVX_ITEMUPC.UPC_CODE                    ;004IVX_ITEMUPC.ITEM_ID                     ;
+{GridColsEnd}

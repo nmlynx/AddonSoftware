@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+IVE_ABCITEM - ABC Analysis By Item
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVE_ABCITEM^^^^ABC Analysis By Item^ABC Analysis By Item^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVE_ABCITEM^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+ITEM_ID^IVE_ABCITEM^002^C^3001^dis_item_id^0^^^2^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+ABC_CODE_01^IVE_ABCITEM^003^C^3002^ine_abc_code^0^^^3^^N^^^^^ABC_CODE^ABC Analysis Code^ABC Analysis Code^ABC Analys^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^ABC Analysis Code^^^
+ABC_CODE_02^IVE_ABCITEM^003^C^3003^ine_abc_code^0^^^3^^N^^^^^ABC_CODE^ABC Analysis Code^ABC Analysis Code^ABC Analys^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^ABC Analysis Code^^^
+ANNUAL_USAGE^IVE_ABCITEM^005^C^3004^inn_annual_usage^0^^^5^^N^^^^^ANNUAL_USAGE^Annual Usage Quantity^Annual Usage Quantity^Annual Use Qty^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Annual Usage Quantity^^^
+QTY_ON_HAND^IVE_ABCITEM^006^C^3005^inn_qty_on_hand^0^^^6^^N^^^^^QTY_ON_HAND^Quantity On-Hand^Quantity On-Hand^Qty On-Hand^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^Quantity On-Hand^^^
+END_BALANCE^IVE_ABCITEM^007^C^3006^inn_end_balance^0^^^7^^N^^^^^END_BALANCE^Ending Balance^Ending Balance^End Bal^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Ending Balance^^^
+UNIT_COST^IVE_ABCITEM^008^C^3007^inn_unit_cost^0^^^8^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Reserved For Addon Use^^^
+ABC_TOTAL_VALUE_01^IVE_ABCITEM^009^C^3008^inn_abc_total_value^0^^^9^^N^^^^^ABC_TOTAL_VALUE^ABC Total Value^ABC Total Value^ABC Total Value^N^^N^^^^^^^0^0^^^^^^^^^^^^^^17^0^^^###########.0000-^###########.0000-^^^^^^0^Total Amount^^^
+ABC_TOTAL_VALUE_02^IVE_ABCITEM^009^C^3009^inn_abc_total_value^0^^^9^^N^^^^^ABC_TOTAL_VALUE^ABC Total Value^ABC Total Value^ABC Total Value^N^^N^^^^^^^0^0^^^^^^^^^^^^^^17^0^^^###########.0000-^###########.0000-^^^^^^0^Total Amount^^^
+ABC_TOTAL_VALUE_03^IVE_ABCITEM^009^C^3010^inn_abc_total_value^0^^^9^^N^^^^^ABC_TOTAL_VALUE^ABC Total Value^ABC Total Value^ABC Total Value^N^^N^^^^^^^0^0^^^^^^^^^^^^^^17^0^^^###########.0000-^###########.0000-^^^^^^0^Total Amount^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVE_ABCITEM^PRIMARY^IVE_ABCITEM.FIRM_ID                     IVE_ABCITEM.ITEM_ID                     ^stbl("+FIRM_ID")+IVE_ABCITEM.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002IVE_ABCITEM.ITEM_ID                     ;003IVE_ABCITEM.ABC_CODE                    ;005IVE_ABCITEM.ANNUAL_USAGE                ;006IVE_ABCITEM.QTY_ON_HAND                 ;007IVE_ABCITEM.END_BALANCE                 ;008IVE_ABCITEM.UNIT_COST                   ;009IVE_ABCITEM.ABC_TOTAL_VALUE             ;
+{GridColsEnd}

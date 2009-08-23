@@ -1,0 +1,283 @@
+rem Callpoint program for GLR_BUDGETREPORT - Budget Revision Report
+rem Program glr_budgetreport_cpt.bbj
+
+rem Barista Version 9.0
+rem Copyright (c) 2007-2009 BASIS International Ltd.
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
+	declare Callpoint Callpoint!
+
+	enter
+:		Callpoint!,
+:		bar_tpl$,
+:		BarObj!,
+:		user_tpl$,
+:		UserObj!,
+:		gui_dev,
+:		SysGUI!,
+:		Form!,
+:		rec_data$,
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		GridVect!,
+:		OrigVect!,
+:		hrec_data$[all],
+:		hattr_col$[all],
+:		err=*next
+
+rem --- Directory STBLs
+
+	dir_pgm$=stbl("+DIR_SYP")
+	dir_frm$=stbl("+DIR_FRM")
+	dir_def$=stbl("+DIR_DEF")
+	dir_img$=stbl("+DIR_IMG")
+	dir_wrk$=stbl("+DIR_WRK")
+
+rem --- Retrieve sysinfo Data
+
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_event$=Callpoint!.getCallpointEvent()
+
+	callpoint_event_str$=
+:		pad("GLR_BUDGETREPORT.ARER",40)+
+:		pad("GLR_BUDGETREPORT.BSHO",40)
+
+	switch fnstr_pos(callpoint_event$,callpoint_event_str$,40)
+		case fnstr_pos(pad("GLR_BUDGETREPORT.ARER",40),callpoint_event_str$,40)			
+			rem look at cols and tps in param rec; translate those to matching entry in the <<DISPLAY>> lists and set selected index
+			
+			codeList!=UserObj!.getItem(num(user_tpl.codeList_ofst$))
+			
+			gls01_dev=fnget_dev("GLS_PARAMS")
+			dim gls01a$:fnget_tpl$("GLS_PARAMS")
+			
+			readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
+			
+			for x=1 to 4
+				cd$=field(gls01a$,"BUD_MN_COLS_"+str(x:"00"))
+				tp$=field(gls01a$,"BUD_MN_TYPE_"+str(x:"00"))
+				cd_tp$="("+cd$+tp$+")"
+				wk_id$=callpoint!.getTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"CTLI")
+				wk_ctl!=Form!.getControl(num(wk_id$))
+				gosub find_code
+				if list_row>=0 wk_ctl!.selectIndex(list_row)
+			next x
+		break
+		case fnstr_pos(pad("GLR_BUDGETREPORT.BSHO",40),callpoint_event_str$,40)			
+			num_files=2
+			dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+			open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+			open_tables$[2]="GLM_RECORDTYPES",open_opts$[2]="OTA"
+			gosub open_tables
+			
+			gls01_dev=num(open_chans$[1])
+			glm18_dev=num(open_chans$[2])
+			
+			dim gls01a$:open_tpls$[1]
+			dim glm18a$:open_tpls$[2]
+			
+			readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
+			
+			rem create list for column zero of grid -- column type drop-down
+			more=1
+			codeList!=SysGUI!.makeVector()
+			codes!=SysGUI!.makeVector()
+			read(glm18_dev,key="",dom=*next)
+			while more
+				readrecord(glm18_dev,end=*break)glm18a$
+				codeList!.addItem(glm18a.rev_title$+"("+glm18a.record_id$+glm18a.amt_or_units$+")")
+				codes!.addItem(glm18a.record_id$+glm18a.amt_or_units$)
+			wend
+			
+			codeList!.insertItem(0,"(none)")
+			
+			for x=1 to 4
+				wk_id$=callpoint!.getTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"CTLI")
+				wk_ctl!=Form!.getControl(num(wk_id$))
+				wk_ctl!.insertItems(0,codeList!)
+			next x
+			
+			rem store desired data in user_tpl
+			tpl_str$="codes_ofst:c(5),codeList_ofst:c(5)"
+			
+			dim user_tpl$:tpl_str$
+			
+			user_tpl.codes_ofst$="0"
+			user_tpl.codeList_ofst$="1"
+			
+			rem store desired vectors/objects in UserObj!
+			UserObj!=SysGUI!.makeVector()
+			
+			UserObj!.addItem(codes!)
+			UserObj!.addItem(codeList!)
+			
+			ctl_stat$=" "
+			ctl_name$="<<DISPLAY>>.BUD_CD_1"
+			gosub disable_fields
+			ctl_name$="<<DISPLAY>>.BUD_CD_2"
+			gosub disable_fields
+			ctl_name$="<<DISPLAY>>.BUD_CD_3"
+			gosub disable_fields
+			ctl_name$="<<DISPLAY>>.BUD_CD_4"
+			gosub disable_fields
+		break
+
+		case default
+		break
+	swend
+
+rem --- All done
+
+	goto std_exit
+
+rem [[GLR_BUDGETREPORT.<CUSTOM>]]
+
+find_code:
+	list_size=codeList!.size()
+	list_row=-1
+	if list_size<>0
+		for wk=0 to list_size-1
+			if pos(cd_tp$=codeList!.getItem(wk))<>0 list_row=wk
+		next wk
+		if list_row=-1 list_row=0
+	endif
+return
+
+disable_fields:
+	rem --- used to disable/enable controls
+	rem --- ctl_name$ sent in with name of control to enable/disable (format "ALIAS.CONTROL_NAME")
+	rem --- ctl_stat$ sent in as D or space, meaning disable/enable, respectively
+
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+
+return
+
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+    
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+    
+std_missing_params_release:
+
+    status=999
+    if pgm(-1)<>pgm(-2) exit 
+    release
+
+rem #endinclude std_missing_params.src
+
+
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
+disp_msg:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bam_message.bbj",gui_dev,msg_title$,msg_text$,msg_defs$,msg_opt$
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call dir_pgm$+"bam_prog_bar.bbj",SysGUI!,Form!,MeterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_data$,meter_action$
+
+	return
+
+rem --- Functions
+
+	def fnstr_pos(str_pos_att0$,str_pos_att1$,str_pos_att1)=int((pos(str_pos_att0$=str_pos_att1$,str_pos_att1)+str_pos_att1-1)/str_pos_att1)
+	def fngett_attr$(gett_attr_att0$)=attr_tbl$[fnstr_pos(gett_attr_att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(getc_attr_att0,getc_attr_att0$)=attr_col$[getc_attr_att0,fnstr_pos(getc_attr_att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(getv_attr_att0$,getv_attr_att1$)=attr_col$[fnstr_pos(getv_attr_att0$,attr_col$[0,1],40),fnstr_pos(getv_attr_att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),0]
+	def fnget_rec_orig$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),1]
+	def fnget_hrec$(hrec_att0$)=hrec_data$[fnstr_pos(hrec_att0$,hrec_data$[0,0],40),0]
+	def fndate$(date_att0$)=date(jul(num(date_att0$(1,4)),num(date_att0$(5,2)),num(date_att0$(7,2))):stbl("+DATE_MASK"))
+	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnget_path$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),1]
+	def fnmdy$(tmp0$)=tmp0$(5,4)+tmp0$(1,4)
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	err_text$=""
+	if tcb(5) and pgm(-1)=pgm(-2) then err_text$=pgm(tcb(5),err=*next)
+	pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+	call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
+	if pos("EXIT"=err_act$) then goto std_error_exit
+	if pos("ESCAPE"=err_act$) then seterr 0;setesc 0
+	if pos("RETRY"=err_act$) then retry
+
+std_error_exit:
+
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ then escape
+
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) then exit
+	release
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+

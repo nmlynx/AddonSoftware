@@ -1,0 +1,40 @@
+Barista Application Framework - Definition Module
+OPM_CUSTJOBS - Customer Job Number
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPM_CUSTJOBS^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Customer Job Number^Customer Job Number^^^^^^^ARM_CUSTMAST^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPM_CUSTJOBS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+CUSTOMER_ID^OPM_CUSTJOBS^002^C^^^^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Customer N^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^O;^30^R^^Customer Number^^^
+JOB_NO^OPM_CUSTJOBS^003^C^3001^ine_job_no^0^^^3^^Y^^^^^JOB_NO^Job Number^Job Number^Job No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^10^0^^^^^^^^^^0^Job Number^^^
+CUSTOMER_NAME^OPM_CUSTJOBS^011^C^3002^ine_customer_name^0^^^4^^N^^^^^CUSTOMER_NAME^Customer Name^Customer Name^Cust Name^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^Customer Name^^^
+ADDR_LINE_1^OPM_CUSTJOBS^012^C^3003^ine_addr_line_1^0^^^5^^N^^^^^ADDR_LINE_1^Address Line 1^Address^Address Li^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^^^^^Address Line 1^^^
+ADDR_LINE_2^OPM_CUSTJOBS^013^C^3004^ine_addr_line_2^0^^^6^^N^^^^^ADDR_LINE_2^Address Line 2^Address Line 2^Addr 2^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Address Line 2^^^
+CITY^OPM_CUSTJOBS^014^C^3005^ine_city^0^^^7^^N^^^^^CITY^City Name^City^City^C^^E^^^^^^^^^^^^^^^^^^^^^^22^^^^^^^^^^^^City Name^^^
+STATE_CODE^OPM_CUSTJOBS^015^C^3006^ine_state_code^0^^^8^^N^^^^^STATE_CODE^State Code^State^St^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^State Code^^^
+ZIP_CODE^OPM_CUSTJOBS^016^C^3007^ine_zip_code^0^^^9^^N^^^^^ZIP_CODE^Zip/Postal Code^Zip^Zip^C^P^E^^^^^^^0^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^Zip/Postal Code^^^
+CONTACT_NAME^OPM_CUSTJOBS^019^C^3008^ine_contact_name^0^^^10^^N^^^^^CONTACT_NAME^Contact Name^Contact^Cont^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Contact Name^^^
+PHONE_NO^OPM_CUSTJOBS^017^C^3009^ine_phone_no^0^^^11^^N^^^^^PHONE_NO^Telephone Number^Phone^Phone^C^T^E^^^^^^^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Telephone Number^^^
+PHONE_EXTEN^OPM_CUSTJOBS^018^C^3010^ine_phone_exten^0^^^12^^N^^^^^PHONE_EXTEN^Phone Extension^Ext^Ext^C^^E^^^^^^^^^^^^^^^^^^^^^^4^^^^^^^^^^^^Phone Extension^^^
+RETAIN_CUST^OPM_CUSTJOBS^007^C^3011^cbx_retain_cust^0^^^13^^N^^^^^RETAIN_CUST^Retain?^Retain?^Retain?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Retain?^^^
+LIEN_DATE^OPM_CUSTJOBS^008^C^3012^ind_lien_date^0^^^14^^N^^^C^^LIEN_DATE^Lien Date^Date^Dt^C^1^D^^^^^^^^^^^^^^^^^^Preliminary Lien Info^^^^8^^^^^^^^^^^^Lien Date^^^
+LIEN_NO^OPM_CUSTJOBS^005^C^3013^ine_lien_no^0^^^15^^N^^^^^LIEN_NO^Lien Number^Lien Number^Lien No^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^^^^^Lien Number^^^
+LIEN_AMOUNT^OPM_CUSTJOBS^020^C^3014^inn_lien_amount^0^^^16^^N^^^^^LIEN_AMOUNT^Lien Amount^Amount^Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Lien Amount^^^
+FST_SHP_DATE^OPM_CUSTJOBS^009^C^3015^ind_fst_shp_date^0^^^17^^N^^^C^^FST_SHP_DATE^First Shipment Date^First Shipment Date^First Ship Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^First Shipment Date^^^
+TOTAL_SALES^OPM_CUSTJOBS^021^C^3016^inn_total_sales^0^^^18^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales to Date^Tot Sls to Dt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Total Sales Amount^^^
+LSTINV_DATE^OPM_CUSTJOBS^010^C^3017^ind_lstinv_date^0^^^19^^N^^^C^^LSTINV_DATE^Last Invoice Date^Last Invoice Date^Last Inv Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Last Invoice Date^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPM_CUSTJOBS^PRIMARY^OPM_CUSTJOBS.FIRM_ID                    OPM_CUSTJOBS.CUSTOMER_ID                OPM_CUSTJOBS.JOB_NO                     ^stbl("+FIRM_ID")+OPM_CUSTJOBS.CUSTOMER_ID$+OPM_CUSTJOBS.JOB_NO$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.JOB_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.JOB_NO$                     
+{KeyDefsEnd}
+{GridCols}
+003OPM_CUSTJOBS.JOB_NO                     ;004OPM_CUSTJOBS.CUSTOMER_NAME              ;005OPM_CUSTJOBS.ADDR_LINE_1                ;006OPM_CUSTJOBS.ADDR_LINE_2                ;007OPM_CUSTJOBS.CITY                       ;008OPM_CUSTJOBS.STATE_CODE                 ;009OPM_CUSTJOBS.ZIP_CODE                   ;010OPM_CUSTJOBS.CONTACT_NAME               ;011OPM_CUSTJOBS.PHONE_NO                   ;012OPM_CUSTJOBS.PHONE_EXTEN                ;013OPM_CUSTJOBS.RETAIN_CUST                ;014OPM_CUSTJOBS.LIEN_DATE                  ;015OPM_CUSTJOBS.LIEN_NO                    ;016OPM_CUSTJOBS.LIEN_AMOUNT                ;017OPM_CUSTJOBS.FST_SHP_DATE               ;018OPM_CUSTJOBS.TOTAL_SALES                ;019OPM_CUSTJOBS.LSTINV_DATE                ;
+{GridColsEnd}

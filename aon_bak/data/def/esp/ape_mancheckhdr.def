@@ -1,0 +1,34 @@
+Barista Application Framework - Definition Module
+APE_MANCHECKHDR - Manual Check Entry Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APE_MANCHECKHDR^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AABO;ADIS;AOPT-AVEN;AOPT-OCHK;AOPT-OINV;AOPT-VCMT;AREA;AREC;ARNF;AWIN;BEND;BSHO;BTBL;BWRI;^Facturas abiertas             OINVB;^Manual Check Entry Header^Encabezado de la entrada de cheque manual^APE_MANCHECKDET^^APE_MANCHECKDET;APE_MANCHECKDIST;^^BATCH_KEY^^^T^^^^^^0;R;W;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APE_MANCHECKHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BATCH_NO^APE_MANCHECKHDR^009^C^3001^ine_batch_no^0^^^2^^N^^^^^BATCH_NO^Batch Entry Control Number^Batch No^Batch No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+AP_TYPE^APE_MANCHECKHDR^002^C^3002^dis_ap_type^0^^^3^^Y^^^F^^AP_TYPE^AP Type^Tipo de AP^Tipo de AP^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^D;^20^L^0^Tipo de AP^^^
+CHECK_NO^APE_MANCHECKHDR^003^C^3003^ine_check_no^0^^^4^^Y^^^^^CHECK_NO^Check Number^N.º de cheque^N.º de ch.^C^^E^^^^^^^70^^^^^^^^^^^^^^1^7^^0000001^^0000000^0000000^^^^30^R^^Número de cheque^^^
+VENDOR_ID^APE_MANCHECKHDR^004^C^3004^dis_vendor_id^0^^^5^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^VENDOR_ID^Vendor Number^Proveedor^N.º de proveedor^C^^E^^^^^^^48^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Número de proveedor^^^
+TRANS_TYPE^APE_MANCHECKHDR^006^C^3005^lbx_trans_type^0^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TRANS_TYPE^Transaction Type^Tipo de trans.^Transacción^C^^L^^^^^^^72^^^^^^^^^M^^^^Manual                        ~M   ;Anulación                    ~R   ;Nulo                          ~V   ;^^1^^^^U^^^^^^^^Tipo de transacción^^^
+CHECK_DATE^APE_MANCHECKHDR^007^C^3006^ind_check_date^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^CHECK_DATE^Check Date^Fecha del cheque^Fecha del ch.^C^1^D^^^^^^^70^^^^^^^^^[+SYSTEM_DATE]^^^^^1^8^^^^^^^^^^^^Fecha del cheque^^^
+VENDOR_NAME^APE_MANCHECKHDR^008^C^^^^^^8^^N^^^^^VENDOR_NAME^Vendor Name^Nombre del proveedor^Nombre del prov.^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^O;^^^^Nombre del proveedor temporario^^^
+DISP_TOT_INV^<<DISPLAY>>^013^D^3008^inn_disp_tot_inv^0^^^10^^^^^^^BALANCE_AMT^Balance Remaining^Facturas^^N^^N^^^^^-1^^56^^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+DISP_TOT_DISC^<<DISPLAY>>^014^D^3009^inn_disp_tot_disc^0^^^11^^^^^^^BALANCE_AMT^Balance Remaining^Descuentos^^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+DISP_TOT_RETEN^<<DISPLAY>>^015^D^3010^inn_disp_tot_reten^0^^^12^^^^^^^BALANCE_AMT^Balance Remaining^Retención^^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+DISP_TOT_CHECK^<<DISPLAY>>^016^D^3011^inn_disp_tot_check^0^^^13^^^^^^^BALANCE_AMT^Balance Remaining^Cheque^^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^AR^A^C;^^^^^^^
+COMMENTS^<<DISPLAY>>^017^D^3012^ced_comments^0^^^14^^^^^^^RECORD_TEXT^Record Text^Comentarios^^C^^U^^^^^+14^-4^260^80^^^^^^^^^^^^^^512^0^^^^^AON^^C;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APE_MANCHECKHDR^PRIMARY^APE_MANCHECKHDR.FIRM_ID                 APE_MANCHECKHDR.AP_TYPE                 APE_MANCHECKHDR.CHECK_NO                APE_MANCHECKHDR.VENDOR_ID               ^stbl("+FIRM_ID")+APE_MANCHECKHDR.AP_TYPE$+APE_MANCHECKHDR.CHECK_NO$+APE_MANCHECKHDR.VENDOR_ID$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.CHECK_NO$+RD_REC_DATA.VENDOR_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.CHECK_NO$                   RD_REC_DATA.VENDOR_ID$                  
+{KeyDefsEnd}
+{GridCols}
+002APE_MANCHECKHDR.BATCH_NO                ;003APE_MANCHECKHDR.AP_TYPE                 ;004APE_MANCHECKHDR.CHECK_NO                ;005APE_MANCHECKHDR.VENDOR_ID               ;006APE_MANCHECKHDR.TRANS_TYPE              ;007APE_MANCHECKHDR.CHECK_DATE              ;010<<DISPLAY>>.DISP_TOT_INV                ;011<<DISPLAY>>.DISP_TOT_DISC               ;012<<DISPLAY>>.DISP_TOT_RETEN              ;013<<DISPLAY>>.DISP_TOT_CHECK              ;014<<DISPLAY>>.COMMENTS                    ;
+{GridColsEnd}

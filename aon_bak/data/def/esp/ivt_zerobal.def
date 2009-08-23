@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+IVT_ZEROBAL - Yesterday's Zero Balance Items
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVT_ZEROBAL^^^^Yesterday's Zero Balance Items^Yesterday's Zero Balance Items^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVT_ZEROBAL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WAREHOUSE_ID^IVT_ZEROBAL^002^C^3001^dis_warehouse_id^0^^^2^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^IVT_ZEROBAL^003^C^3002^dis_item_id^0^^^3^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+WRITTN_DATE^IVT_ZEROBAL^004^C^3003^ind_writtn_date^0^^^4^^N^^^C^^WRITTN_DATE^Date Written^Date Written^Date Written^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Written^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVT_ZEROBAL^PRIMARY^IVT_ZEROBAL.FIRM_ID                     IVT_ZEROBAL.WAREHOUSE_ID                IVT_ZEROBAL.ITEM_ID                     ^stbl("+FIRM_ID")+IVT_ZEROBAL.WAREHOUSE_ID$+IVT_ZEROBAL.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002IVT_ZEROBAL.WAREHOUSE_ID                ;003IVT_ZEROBAL.ITEM_ID                     ;004IVT_ZEROBAL.WRITTN_DATE                 ;
+{GridColsEnd}

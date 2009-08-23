@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+IVR_OPENSO - Open Sales Orders this Item
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVR_OPENSO^^^^Open Sales Orders this Item^Open Sales Orders this Item^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]ivr_openso.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+PICK_DATE_1^IVR_OPENSO^001^C^3001^ind_pick_date^0^^^1^^N^^^C^^PICK_DATE^Pick Screen Date YYYYMMDD^Fecha^Fecha^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+PICK_DATE_2^IVR_OPENSO^001^C^3002^ind_pick_date^0^^^1^^N^^^C^^PICK_DATE^Pick Screen Date YYYYMMDD^Fecha^Fecha^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+WAREHOUSE_ID^IVR_OPENSO^002^C^3003^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^2^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+ITEM_ID^IVR_OPENSO^003^C^3004^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Enter a valid inventory item^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVR_OPENSO^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001IVR_OPENSO.PICK_DATE                    ;002IVR_OPENSO.WAREHOUSE_ID                 ;004IVR_OPENSO.ITEM_ID                      ;
+{GridColsEnd}

@@ -1,0 +1,41 @@
+Barista Application Framework - Definition Module
+SFE_WOOPRTN - WO Operations Requirements
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFE_WOOPRTN^^^^WO Operations Requirements^WO Operations Requirements^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFE_WOOPRTN^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFE_WOOPRTN^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFE_WOOPRTN^003^C^3002^ine_wo_no^0^^^3^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+RECORD_ID_A^SFE_WOOPRTN^004^C^^^^^^4^^Y^^^^^RECORD_ID_A^"A"^A^A^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"A"^"A"^^
+OP_SEQ^SFE_WOOPRTN^005^C^3003^ine_op_seq^0^^^5^^Y^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+OP_CODE^SFE_WOOPRTN^006^C^3004^dis_op_code^0^^^6^^N^^^F^^OP_CODE^Operation Code^Operation Code^Op Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^BMC_OPCODES^CODE_DESC^^^^^^^^^^^3^0^^^^^^^^20^L^0^Operation Code^^^
+CODE_DESC^SFE_WOOPRTN^008^C^3005^ine_code_desc^0^^^8^^N^^^^^CODE_DESC^Code Description^Description^Description^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+LINE_TYPE^SFE_WOOPRTN^011^C^3006^ine_line_type^0^^^11^^N^^^^^LINE_TYPE^Line Type^Line Type^Line Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Line Type^^^
+EXT_COMMENTS^SFE_WOOPRTN^012^C^3007^ine_ext_comments^0^^^12^^N^^^^^EXT_COMMENTS^Comments or Message Line^Comments or Message Line^Cmts/Msg Line^C^^E^^^^^^^^^^^^^^^^^^^^^^60^^^^^^^^^^^^Comments or Message Line^^^
+REQUIRE_DATE^SFE_WOOPRTN^013^C^3008^ind_require_date^0^^^13^^N^^^C^^REQUIRE_DATE^Date Required^Date Required^Date Req^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Required^^^
+RUNTIME_HRS^SFE_WOOPRTN^014^C^3009^inn_runtime_hrs^0^^^14^^N^^^^^RUNTIME_HRS^Run Time In Hours^Run Time In Hours^Run Time In Hrs^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Run Time In Hours^^^
+UNIT_COST^SFE_WOOPRTN^015^C^3010^inn_unit_cost^0^^^15^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+TOTAL_TIME^SFE_WOOPRTN^016^C^3011^inn_total_time^0^^^16^^N^^^^^TOTAL_TIME^Total Time Required In Hours^Total Time Required In Hours^Tot Time Req In Hrs^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Total Time Required In Hours^^^
+TOT_STD_COST^SFE_WOOPRTN^017^C^3012^inn_tot_std_cost^0^^^17^^N^^^^^TOT_STD_COST^Total Standard Cost^Total Standard Cost^Tot Std Cst^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Total Standard Cost^^^
+HRS_PER_PCE^SFE_WOOPRTN^018^C^3013^inn_hrs_per_pce^0^^^18^^N^^^^^HRS_PER_PCE^Hours Per Piece^Hours Per Piece^Hrs Per Piece^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^H^^^^^Hours Per Piece^^^
+PCS_PER_HOUR^SFE_WOOPRTN^019^C^3014^inn_pcs_per_hour^0^^^19^^N^^^^^PCS_PER_HOUR^Pieces Per Hour^Pieces Per Hour^Pieces Per Hr^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^M^^^^0^Pieces Per Hour^^^
+DIRECT_RATE^SFE_WOOPRTN^020^C^3015^inn_direct_rate^0^^^20^^N^^^^^DIRECT_RATE^Direct Rate^Direct Rate^Dir Rate^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^R^^^^0^Direct Rate^^^
+OVHD_RATE^SFE_WOOPRTN^021^C^3016^inn_ovhd_rate^0^^^21^^N^^^^^OVHD_RATE^Overhead Rate^Overhead Rate^Ovrhd Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Overhead Rate^^^
+SETUP_TIME^SFE_WOOPRTN^022^C^3017^inn_setup_time^0^^^22^^N^^^^^SETUP_TIME^Setup Time^Setup Time^Setup Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Setup Time^^^
+MOVE_TIME^SFE_WOOPRTN^023^C^3018^inn_move_time^0^^^23^^N^^^^^MOVE_TIME^Move Time^Move Time^Move Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Move Time^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFE_WOOPRTN^PRIMARY^SFE_WOOPRTN.FIRM_ID                     SFE_WOOPRTN.WO_LOCATION                 SFE_WOOPRTN.WO_NO                       SFE_WOOPRTN.RECORD_ID_A                 SFE_WOOPRTN.OP_SEQ                      ^stbl("+FIRM_ID")+SFE_WOOPRTN.WO_LOCATION$+SFE_WOOPRTN.WO_NO$+"A"+SFE_WOOPRTN.OP_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$+"A"+RD_REC_DATA.OP_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      "A"                                     RD_REC_DATA.OP_SEQ$                     
+{KeyDefsEnd}
+{GridCols}
+002SFE_WOOPRTN.WO_LOCATION                 ;003SFE_WOOPRTN.WO_NO                       ;005SFE_WOOPRTN.OP_SEQ                      ;006SFE_WOOPRTN.OP_CODE                     ;008SFE_WOOPRTN.CODE_DESC                   ;011SFE_WOOPRTN.LINE_TYPE                   ;012SFE_WOOPRTN.EXT_COMMENTS                ;013SFE_WOOPRTN.REQUIRE_DATE                ;014SFE_WOOPRTN.RUNTIME_HRS                 ;015SFE_WOOPRTN.UNIT_COST                   ;016SFE_WOOPRTN.TOTAL_TIME                  ;017SFE_WOOPRTN.TOT_STD_COST                ;018SFE_WOOPRTN.HRS_PER_PCE                 ;019SFE_WOOPRTN.PCS_PER_HOUR                ;020SFE_WOOPRTN.DIRECT_RATE                 ;021SFE_WOOPRTN.OVHD_RATE                   ;022SFE_WOOPRTN.SETUP_TIME                  ;023SFE_WOOPRTN.MOVE_TIME                   ;
+{GridColsEnd}

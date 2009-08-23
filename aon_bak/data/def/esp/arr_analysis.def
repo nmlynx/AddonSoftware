@@ -1,0 +1,30 @@
+Barista Application Framework - Definition Module
+ARR_ANALYSIS - AR Aging Analysis Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARR_ANALYSIS^^^^AR Aging Analysis Report^Informe de análisis de antigüedad^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]arr_analysis.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARR_ANALYSIS^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+REPORT_TYPE^ARR_ANALYSIS^002^C^3001^lbx_report_type^0^^^2^^N^^^^^REPORT_TYPE^Report Type^Base del informe^Base del inf.^C^^L^^^^^+2^^102^^^^^^^^^D^^^^Análisis de antigüedad de sa~A   ;Plazo para pagar en días     ~D   ;^^1^^^^^^^^^^^^^^^
+PICK_INTEGER^ARR_ANALYSIS^003^C^3002^inn_pick_integer^0^^^3^^N^^^^^PICK_INTEGER^Pick Screen Integer^Plazo para pagar en días^Días^N^^N^ARR_ANALYSIS.REPORT_TYPE^D^^^^^63^0^^^^^^^^^^^^^^8^^^^-#####0^^^^^30^R^^^^^
+PICK_LISTBUTTON^ARR_ANALYSIS^004^C^3003^lbx_pick_listbutton^0^^^4^^N^^^^^PICK_LISTBUTTON^Pick Window Listbutton^Período de antigüedad^Botón de lista de ventana de sel.^C^^L^ARR_ANALYSIS.REPORT_TYPE^A^^^^^75^^^^^^^^^F^^^^Futuro                        ~F   ;Actual                        ~C   ;30 días                      ~3   ;60 días                      ~6   ;90 días                      ~9   ;120 días                     ~1   ;^^1^^^^^^^^^^^^^^^
+REPORT_SEQUENCE^ARR_ANALYSIS^005^C^3004^lbx_report_sequence^0^^^5^^N^^^^^REPORT_SEQUENCE^Report Sequence^Secuencia de informe^Sec. de informe^C^^L^^^^^^^125^^^^^^^^^C^^^^Secuencia alternativa         ~A   ;ID del cliente                ~C   ;^^1^^^^^^^^^^^^^^^
+CUSTOMER_ID_1^ARR_ANALYSIS^006^C^3005^dis_customer_id^0^^^6^^N^^^F^^CUSTOMER_ID^Customer ID^Beginning ID del cliente^Beginning ID del cliente^C^^E^ARR_ANALYSIS.REPORT_SEQUENCE^C^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+CUSTOMER_ID_2^ARR_ANALYSIS^006^C^3006^dis_customer_id^0^^^6^^N^^^F^^CUSTOMER_ID^Customer ID^Ending ID del cliente^Ending ID del cliente^C^^E^ARR_ANALYSIS.REPORT_SEQUENCE^C^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+ALT_SEQUENCE_1^ARR_ANALYSIS^007^C^3007^ine_alt_sequence^0^^^7^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Beginning Secuencia alternativa^Beginning Sec. alt.^C^^E^ARR_ANALYSIS.REPORT_SEQUENCE^A^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^1;2;^^^^^^^
+ALT_SEQUENCE_2^ARR_ANALYSIS^007^C^3008^ine_alt_sequence^0^^^7^^N^^^^^ALT_SEQUENCE^Alternate Sequence^Ending Secuencia alternativa^Ending Sec. alt.^C^^E^ARR_ANALYSIS.REPORT_SEQUENCE^A^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^1;2;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARR_ANALYSIS^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002ARR_ANALYSIS.REPORT_TYPE                ;003ARR_ANALYSIS.PICK_INTEGER               ;004ARR_ANALYSIS.PICK_LISTBUTTON            ;005ARR_ANALYSIS.REPORT_SEQUENCE            ;006ARR_ANALYSIS.CUSTOMER_ID                ;007ARR_ANALYSIS.ALT_SEQUENCE               ;
+{GridColsEnd}

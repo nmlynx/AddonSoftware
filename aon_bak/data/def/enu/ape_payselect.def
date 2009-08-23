@@ -1,0 +1,31 @@
+Barista Application Framework - Definition Module
+APE_PAYSELECT - Payment Selection Entry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APE_PAYSELECT^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ACUS;ASIZ;ASVA;AWIN;BSHO;^^Payment Selection Entry^Payment Selection Entry^^^^^^^^S^^^^^^H;W;N;U;V;^^[+DIR_SYP]bas_process_end.bbj^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APE_PAYSELECT^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+SYSTEM_DATE^APE_PAYSELECT^002^C^^^^^^2^^N^^^^^SYSTEM_DATE^Current System Date^Current System Date^Curr Sys Date^C^1^D^^^^^^^^^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^C;O;^^^^^^^
+PAYMENT_GRP^APE_PAYSELECT^003^C^3001^dis_payment_grp^0^^^3^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^PAYMENT_GRP^Payment Group^Payment Group^Pmt Group^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"D"+@^APC_PAYMENTGROUP^CODE_DESC^^^^^^^Filters^^^^2^0^^^UU^^^^^20^L^0^Enter A Valid Payment Group^^^
+AP_TYPE^APE_PAYSELECT^004^C^3002^dis_ap_type^0^^^4^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^AP_TYPE^AP Type^AP Type^AP Type^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Enter A Valid AP Type^^^
+VENDOR_ID^APE_PAYSELECT^005^C^3003^dis_vendor_id^0^^^5^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^VENDOR_ID^Vendor Number^Vendor ID^Vend ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Enter A Valid Vendor^^^
+DUE_DATE_OP^APE_PAYSELECT^007^C^3004^lbx_due_date_op^0^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OPERATOR^Operator^Due Date Operator^Operator^C^^L^^^^^^^0^0^^^^^^^^0^^^^                              ~0   ;Less Than                     ~1   ;Equal To                      ~2   ;Greater Than                  ~3   ;Less Than/Equal To            ~4   ;Greater Than/Equal To         ~5   ;Not Equal                     ~6   ;^^1^0^^^^^^^^^^0^^^^
+DUE_DATE_DT^APE_PAYSELECT^006^C^3005^ind_due_date_dt^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^DUE_DATE^Invoice Due Date^Invoice Due Date^Inv Due Date^C^1^D^APE_PAYSELECT.DUE_DATE_OP^1;2;3;4;5;6^^^+33^-1^0^0^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+DISC_DATE_OP^APE_PAYSELECT^008^C^3006^lbx_disc_date_op^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OPERATOR^Operator^Disc Date Operator^Operator^C^^L^^^^^-33^^0^0^^^^^^^^0^^^^                              ~0   ;Less Than                     ~1   ;Equal To                      ~2   ;Greater Than                  ~3   ;Less Than/Equal To            ~4   ;Greater Than/Equal To         ~5   ;Not Equal                     ~6   ;^^1^0^^^^^^^^^^0^^^^
+DISC_DATE_DT^APE_PAYSELECT^009^C^3007^ind_disc_date_dt^0^^^9^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^C^^DISC_DATE^Discount Date^Discount Date^Disc Date^C^1^D^APE_PAYSELECT.DISC_DATE_OP^1;2;3;4;5;6^^^+33^-1^0^0^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+INCLUDE_DISC^APE_PAYSELECT^010^C^3008^cbx_include_disc^0^^^10^^N^^^^^INCLUDE_DISC^Include Available Discounts?^Take Overdue Discounts?^Take Overdue Disc?^C^^C^^^Y;N^0^0^-5^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APE_PAYSELECT^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+003APE_PAYSELECT.PAYMENT_GRP               ;004APE_PAYSELECT.AP_TYPE                   ;005APE_PAYSELECT.VENDOR_ID                 ;006APE_PAYSELECT.DUE_DATE_OP               ;007APE_PAYSELECT.DUE_DATE_DT               ;008APE_PAYSELECT.DISC_DATE_OP              ;009APE_PAYSELECT.DISC_DATE_DT              ;010APE_PAYSELECT.INCLUDE_DISC              ;
+{GridColsEnd}

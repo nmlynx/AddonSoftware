@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+BMM_RESEQLNK - Operations Link Resequencing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+BMM_RESEQLNK^^^^Operations Link Resequencing^Operations Link Resequencing^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^BMM_RESEQLNK^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BILL_NO^BMM_RESEQLNK^002^C^3001^dis_bill_no^0^^^2^^Y^^^F^^BILL_NO^Bill of Materials Number^Bill of Materials Number^Bill of Mats No^C^^E^^^^^^^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^^^^^^20^L^0^Bill of Materials Number^^^
+OLD_OP_SEQ^BMM_RESEQLNK^003^C^3002^ine_old_op_seq^0^^^3^^Y^^^^^OLD_OP_SEQ^Old Operation Sequence Number^Old Operation Sequence Number^Old Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Old Operation Sequence Number^^^
+NEW_OP_SEQ^BMM_RESEQLNK^004^C^3003^ine_new_op_seq^0^^^4^^N^^^^^NEW_OP_SEQ^New Operation Sequence Number^New Operation Sequence Number^New Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^New Operation Sequence Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+BMM_RESEQLNK^PRIMARY^BMM_RESEQLNK.FIRM_ID                    BMM_RESEQLNK.BILL_NO                    BMM_RESEQLNK.OLD_OP_SEQ                 ^stbl("+FIRM_ID")+BMM_RESEQLNK.BILL_NO$+BMM_RESEQLNK.OLD_OP_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.BILL_NO$+RD_REC_DATA.OLD_OP_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.BILL_NO$                    RD_REC_DATA.OLD_OP_SEQ$                 
+{KeyDefsEnd}
+{GridCols}
+002BMM_RESEQLNK.BILL_NO                    ;003BMM_RESEQLNK.OLD_OP_SEQ                 ;004BMM_RESEQLNK.NEW_OP_SEQ                 ;
+{GridColsEnd}

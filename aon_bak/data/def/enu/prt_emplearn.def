@@ -1,0 +1,42 @@
+Barista Application Framework - Definition Module
+PRT_EMPLEARN - Employee Earnings History
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRT_EMPLEARN^^^^Employee Earnings History^Employee Earnings History^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^PRT_EMPLEARN^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+EMPLOYEE_NO^PRT_EMPLEARN^002^C^3001^dis_employee_no^0^^^2^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+RECORD_ID_A^PRT_EMPLEARN^003^C^^^^^^3^^Y^^^^^RECORD_ID_A^"A"^A^A^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"A"^"A"^^
+PAY_CODE^PRT_EMPLEARN^004^C^3002^dis_pay_code^0^^^4^^Y^^^F^^PAY_CODE^Pay Code^Pay Code^Pay Cd^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^PRC_PAYCODE^PR_CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^L^^Pay Code^^^
+MTD_AMOUNT^PRT_EMPLEARN^005^C^3003^inn_mtd_amount^0^^^5^^N^^^^^MTD_AMOUNT^MTD Amount^MTD Amount^MTD Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^MTD Amount^^^
+QTR_AMT_01^PRT_EMPLEARN^006^C^3004^inn_qtr_amt^0^^^6^^N^^^^^QTR_AMT^Quarter Amount^Quarter Amount^Qtr Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Quarter Amount^^^
+QTR_AMT_02^PRT_EMPLEARN^006^C^3005^inn_qtr_amt^0^^^6^^N^^^^^QTR_AMT^Quarter Amount^Quarter Amount^Qtr Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Quarter Amount^^^
+QTR_AMT_03^PRT_EMPLEARN^006^C^3006^inn_qtr_amt^0^^^6^^N^^^^^QTR_AMT^Quarter Amount^Quarter Amount^Qtr Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Quarter Amount^^^
+QTR_AMT_04^PRT_EMPLEARN^006^C^3007^inn_qtr_amt^0^^^6^^N^^^^^QTR_AMT^Quarter Amount^Quarter Amount^Qtr Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Quarter Amount^^^
+NMTD_AMT^PRT_EMPLEARN^007^C^3008^inn_nmtd_amt^0^^^7^^N^^^^^NMTD_AMT^Next MTD Amount^Next MTD Amount^NMTD Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Next MTD Amount^^^
+MTD_UNITS^PRT_EMPLEARN^008^C^3009^inn_mtd_units^0^^^8^^N^^^^^MTD_UNITS^MTD Units^MTD Units^MTD Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^MTD Units^^^
+QTR_UNITS_01^PRT_EMPLEARN^009^C^3010^inn_qtr_units^0^^^9^^N^^^^^QTR_UNITS^Quarter Units^Quarter Units^Qtr Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quarter Units^^^
+QTR_UNITS_02^PRT_EMPLEARN^009^C^3011^inn_qtr_units^0^^^9^^N^^^^^QTR_UNITS^Quarter Units^Quarter Units^Qtr Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quarter Units^^^
+QTR_UNITS_03^PRT_EMPLEARN^009^C^3012^inn_qtr_units^0^^^9^^N^^^^^QTR_UNITS^Quarter Units^Quarter Units^Qtr Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quarter Units^^^
+QTR_UNITS_04^PRT_EMPLEARN^009^C^3013^inn_qtr_units^0^^^9^^N^^^^^QTR_UNITS^Quarter Units^Quarter Units^Qtr Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quarter Units^^^
+NMTD_UNITS^PRT_EMPLEARN^010^C^3014^inn_nmtd_units^0^^^10^^N^^^^^NMTD_UNITS^Next MTD Units^Next MTD Units^NMTD Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Next MTD Units^^^
+PYR_ACC_AMT^PRT_EMPLEARN^011^C^3015^inn_pyr_acc_amt^0^^^11^^N^^^^^PYR_ACC_AMT^Prior Year Accrued Amount^Prior Year Accrued Amount^Prior Yr Accrued Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Prior Year Accrued Amount^^^
+CYR_ACCR_AMT^PRT_EMPLEARN^012^C^3016^inn_cyr_accr_amt^0^^^12^^N^^^^^CYR_ACCR_AMT^Current Year Accrued Amount^Current Year Accrued Amount^Curr Yr Accrued Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Current Year Accrued Amount^^^
+NYR_ACC_AMT^PRT_EMPLEARN^013^C^3017^inn_nyr_acc_amt^0^^^13^^N^^^^^NYR_ACC_AMT^Next Year Accrued Amount^Next Year Accrued Amount^Nxt Yr Accrued Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Next Year Accrued Amount^^^
+ACCRUAL_RATE^PRT_EMPLEARN^014^C^3018^inn_accrual_rate^0^^^14^^N^^^^^ACCRUAL_RATE^Accrual Rate^Accrual Rate^Accr Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Accrual Rate^^^
+ACCRUAL_USED^PRT_EMPLEARN^015^C^3019^inn_accrual_used^0^^^15^^N^^^^^ACCRUAL_USED^Accrual Used Since Anniversary^Accrual Used Since Anniversary^Accr Used/Anniv^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Accrual Used Since Anniversary^^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRT_EMPLEARN^PRIMARY^PRT_EMPLEARN.FIRM_ID                    PRT_EMPLEARN.EMPLOYEE_NO                PRT_EMPLEARN.RECORD_ID_A                PRT_EMPLEARN.PAY_CODE                   ^stbl("+FIRM_ID")+PRT_EMPLEARN.EMPLOYEE_NO$+"A"+PRT_EMPLEARN.PAY_CODE$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$+"A"+RD_REC_DATA.PAY_CODE$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                "A"                                     RD_REC_DATA.PAY_CODE$                   
+{KeyDefsEnd}
+{GridCols}
+002PRT_EMPLEARN.EMPLOYEE_NO                ;004PRT_EMPLEARN.PAY_CODE                   ;005PRT_EMPLEARN.MTD_AMOUNT                 ;006PRT_EMPLEARN.QTR_AMT                    ;007PRT_EMPLEARN.NMTD_AMT                   ;008PRT_EMPLEARN.MTD_UNITS                  ;009PRT_EMPLEARN.QTR_UNITS                  ;010PRT_EMPLEARN.NMTD_UNITS                 ;011PRT_EMPLEARN.PYR_ACC_AMT                ;012PRT_EMPLEARN.CYR_ACCR_AMT               ;013PRT_EMPLEARN.NYR_ACC_AMT                ;014PRT_EMPLEARN.ACCRUAL_RATE               ;015PRT_EMPLEARN.ACCRUAL_USED               ;
+{GridColsEnd}

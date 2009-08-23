@@ -1,0 +1,33 @@
+Barista Application Framework - Definition Module
+APT_CHECKHISTORY - Check History Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APT_CHECKHISTORY^^^^Check History Detail^Check History Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APT_CHECKHISTORY^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AP_TYPE^APT_CHECKHISTORY^002^C^3001^dis_ap_type^0^^^2^^Y^^^F^^AP_TYPE^AP Type^AP Type^AP Type^C^^E^^^^^^^0^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^AP Type^^^
+CHECK_NO^APT_CHECKHISTORY^003^C^3002^ine_check_no^0^^^3^^Y^^^^^CHECK_NO^Check Number^Check Number^Chk No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Check Number^^^
+VENDOR_ID^APT_CHECKHISTORY^004^C^3003^dis_vendor_id^0^^^4^^Y^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+AP_INV_NO^APT_CHECKHISTORY^005^C^3004^ine_ap_inv_no^0^^^5^^Y^^^^^AP_INV_NO^AP Invoice Number^AP Invoice Number^AP Inv No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^10^0^^^^^^^^20^L^0^AP Invoice Number^^^
+TRANS_TYPE^APT_CHECKHISTORY^007^C^3005^lbx_trans_type^0^^^6^^N^^^^^TRANS_TYPE^Transaction Type^Transaction Type^Transactio^C^^L^^^^^^^^^^^^^^^^^^^^Adjustment                    ~A   ;Computer                      ~C   ;Manual                        ~M   ;Reversal                      ~R   ;Void                          ~V   ;^^1^^^^U^^^^^^^^Transaction Type^^^
+AP_DIST_CODE^APT_CHECKHISTORY^008^C^3006^dis_ap_dist_code^0^^^7^^N^^^F^^AP_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+"B"+@^APC_DISTRIBUTION^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Distribution Code^^^
+CHECK_DATE^APT_CHECKHISTORY^009^C^3007^ind_check_date^0^^^8^^N^^^C^^CHECK_DATE^Check Date^Check Date^Chk Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Check Date^^^
+VENDOR_NAME^APT_CHECKHISTORY^010^C^3008^ine_vendor_name^0^^^9^^N^^^^^VENDOR_NAME^Vendor Name^Vendor Name^Vend Name^C^^E^^^^^^^^^^^^^^^^^^^^^^30^^^^^^^^^^^^Vendor Name^^^
+INVOICE_AMT^APT_CHECKHISTORY^011^C^3009^inn_invoice_amt^0^^^10^^N^^^^^INVOICE_AMT^Invoice Amount^Invoice Amount^Inv Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Invoice Amount^^^
+DISCOUNT_AMT^APT_CHECKHISTORY^012^C^3010^inn_discount_amt^0^^^11^^N^^^^^DISCOUNT_AMT^Discount Amount^Discount Amount^Disc Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Discount Amount^^^
+RETENTION^APT_CHECKHISTORY^013^C^3011^inn_retention^0^^^12^^N^^^^^RETENTION^Retention Amount^Retention Amount^Retention Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Retention Amount^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APT_CHECKHISTORY^PRIMARY^APT_CHECKHISTORY.FIRM_ID                APT_CHECKHISTORY.AP_TYPE                APT_CHECKHISTORY.CHECK_NO               APT_CHECKHISTORY.VENDOR_ID              APT_CHECKHISTORY.AP_INV_NO              ^stbl("+FIRM_ID")+APT_CHECKHISTORY.AP_TYPE$+APT_CHECKHISTORY.CHECK_NO$+APT_CHECKHISTORY.VENDOR_ID$+APT_CHECKHISTORY.AP_INV_NO$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.CHECK_NO$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.AP_INV_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.CHECK_NO$                   RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.AP_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002APT_CHECKHISTORY.AP_TYPE                ;003APT_CHECKHISTORY.CHECK_NO               ;004APT_CHECKHISTORY.VENDOR_ID              ;005APT_CHECKHISTORY.AP_INV_NO              ;006APT_CHECKHISTORY.TRANS_TYPE             ;007APT_CHECKHISTORY.AP_DIST_CODE           ;008APT_CHECKHISTORY.CHECK_DATE             ;009APT_CHECKHISTORY.VENDOR_NAME            ;010APT_CHECKHISTORY.INVOICE_AMT            ;011APT_CHECKHISTORY.DISCOUNT_AMT           ;012APT_CHECKHISTORY.RETENTION              ;
+{GridColsEnd}

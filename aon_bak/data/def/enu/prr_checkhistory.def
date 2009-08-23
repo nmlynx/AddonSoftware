@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+PRR_CHECKHISTORY - Check History Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRR_CHECKHISTORY^^^^Check History Report^Check History Report^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]prr_checkhistory.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FROM_DATE_1^PRR_CHECKHISTORY^001^C^3001^ind_from_date^0^^^1^^N^^^C^^FROM_DATE^From Date^Beginning Date^Beginning From Date^C^1^D^^^^^0^0^0^0^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+FROM_DATE_2^PRR_CHECKHISTORY^001^C^3002^ind_from_date^0^^^1^^N^^^C^^FROM_DATE^From Date^Ending Date^Ending From Date^C^1^D^^^^^0^0^0^0^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+EMPLOYEE_NO_1^PRR_CHECKHISTORY^002^C^3003^dis_employee_no^0^^^2^^N^^^F^^EMPLOYEE_NO^Employee Number^Beginning Employee No^Beginning Empl No^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^1;2;^^^^^^^
+EMPLOYEE_NO_2^PRR_CHECKHISTORY^002^C^3004^dis_employee_no^0^^^2^^N^^^F^^EMPLOYEE_NO^Employee Number^Ending Employee No^Ending Empl No^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^1;2;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRR_CHECKHISTORY^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001PRR_CHECKHISTORY.FROM_DATE              ;002PRR_CHECKHISTORY.EMPLOYEE_NO            ;
+{GridColsEnd}

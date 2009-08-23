@@ -1,0 +1,46 @@
+Barista Application Framework - Definition Module
+CRM_CONTACTS - CRM Contacts
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+CRM_CONTACTS^^^^CRM Contacts^CRM Contacts^^CRM Contact Address                     ~CRM_CONTACT_ADDR;CRM Contact Family                      ~CRM_CONTACT_FAM ;^^^^^CRM_CUSTMAST^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^CRM_CONTACTS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^G;I;^30^R^^^stbl("+FIRM_ID")^^
+CUSTOMER_ID^CRM_CONTACTS^002^C^3001^dis_customer_id^0^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^G;I;^30^R^^^^^
+CONTACT_ID^CRM_CONTACTS^003^C^3002^ine_contact_id^0^^^3^^Y^^^^^CONTACT_ID^Contact ID^Contact ID^Contact ID^C^^E^^^^^^^40^^^^^^^^^^^^^^^4^^^^UUUU^^^^G;I;^20^L^^^^^
+NAME_SALUTATION^CRM_CONTACTS^004^C^3003^ine_name_salutation^0^^^4^^N^^^^^NAME_SALUTATION^Salutation^Salutation^Salut.^C^^E^^^^^^^35^0^^^^^^^^^^^^^^4^^^^^^^^G;^^^^^^^
+NAME_FIRST^CRM_CONTACTS^005^C^3004^ine_name_first^0^^^5^^N^^^^^NAME_FIRST^First Name^First /MI /Last /Suffix^First Name^C^^E^^^^^^^120^0^^^^^^^^^^^^^^20^^^^^^^^^^^^^^^
+NAME_MI^CRM_CONTACTS^007^C^3005^ine_name_mi^0^^^6^^N^^^^^NAME_MI^Middle Init^MI^MI^C^^E^^^^^+13^-1^30^0^^^^^^^^^^^^^^1^^^^^^^^L;^^^^^^^
+NAME_LAST^CRM_CONTACTS^006^C^3006^ine_name_last^0^^^7^^N^^^^^NAME_LAST^Last Name^Last Name^Last Name^C^^E^^^^^+4^-1^180^0^^^^^^^^^^^^^^25^^^^^^^^L;^^^^^^^
+NAME_SUFFIX^CRM_CONTACTS^008^C^3007^ine_name_suffix^0^^^8^^N^^^^^NAME_SUFFIX^Suffix^Suffix^Suffix^C^^E^^^^^+19^-1^60^0^^^^^^^^^^^^^^10^^^^^^^^G;L;^^^^^^^
+NAME^CRM_CONTACTS^009^C^3008^ine_name^0^^^9^^N^^^^^NAME^Name^Name^Name^C^^E^^^^^-36^^240^^^^^^^^^^^^^^^30^^^^^^^^G;^^^^^^^
+TITLE^CRM_CONTACTS^010^C^3009^ine_title^0^^^10^^N^^^^^TITLE^Title^Title^Title^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^^^^
+DEPARTMENT^CRM_CONTACTS^011^C^3010^ine_department^0^^^11^^N^^^^^DEPARTMENT^Department^Department^Dept^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^^^^
+ADDRESS_LINE_1^CRM_CONTACTS^012^C^3011^ine_address_line_1^0^^^12^^N^^^^^ADDRESS_LINE_1^Address Line^Address^Addr Line^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^G;^^^^^^^
+ADDRESS_LINE_2^CRM_CONTACTS^013^C^3012^ine_address_line_2^0^^^13^^N^^^^^ADDRESS_LINE_2^Address Line^Address Line^Addr Line^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^G;L;^^^^^^^
+ADDRESS_LINE_3^CRM_CONTACTS^014^C^3013^ine_address_line_3^0^^^14^^N^^^^^ADDRESS_LINE_3^Address Line^Address Line^Addr Line^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^G;L;^^^^^^^
+CITY^CRM_CONTACTS^015^C^3014^ine_city^0^^^15^^N^^^^^CITY^City Name^City^City^C^^E^^^^^^^176^^^^^^^^^^^^^^^22^^^^^^^^G;^^^^^^^
+STATE_CODE^CRM_CONTACTS^016^C^3015^ine_state_code^0^^^16^^N^^^^^STATE_CODE^State Code^St^St^C^^E^^^^^+21^-1^35^^^^^^^^^^^^^^^2^^^^^^^^G;^^^^^^^
+ZIP_CODE^CRM_CONTACTS^017^C^3016^ine_zip_code^0^^^17^^N^^^^^ZIP_CODE^Zip/Postal Code^Zip^Zip^C^P^E^^^^^+8^-1^80^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^G;^^^0^^^^
+COUNTRY^CRM_CONTACTS^018^C^3017^ine_country^0^^^18^^N^^^^^COUNTRY^Country^Country^Ctry^C^^E^^^^^-29^^192^^^^^^^^^^^^^^^24^^^^^^^^G;^^^^^^^
+PHONE_NO^CRM_CONTACTS^019^C^3018^ine_phone_no^0^^^19^^N^^^^^PHONE_NO^Telephone Number^Telephone No^Tel No^C^T^E^^^^^^+1^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^^^^
+PHONE_EXTEN^CRM_CONTACTS^020^C^3019^ine_phone_exten^0^^^20^^N^^^^^PHONE_EXTEN^Phone Extension^Ext^Ext^C^^E^^^^^+15^-1^35^^^^^^^^^^^^^^^4^^^^^^^^^^^^^^^
+CELL_PHONE_NO^CRM_CONTACTS^021^C^3020^ine_cell_phone_no^0^^^21^^N^^^^^CELL_PHONE_NO^Cellular Number^Cell Number^Cell No^C^T^E^^^^^-15^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^G;^^^0^^^^
+FAX_NO^CRM_CONTACTS^022^C^3021^ine_fax_no^0^^^22^^N^^^^^FAX_NO^Fax Telephone Number^Fax Number^Fax No^C^T^E^^^^^^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^G;^^^0^^^^
+PAGER_NO^CRM_CONTACTS^023^C^3022^ine_pager_no^0^^^23^^N^^^^^PAGER_NO^Pager Number^Pager Number^Pager^C^T^E^^^^^^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^G;^^^0^^^^
+EMAIL_ADDR^CRM_CONTACTS^024^C^3023^ine_email_addr^0^^^24^^N^^^^^EMAIL_ADDR^Email Address^Email Address^Email Addr^C^^E^^^^^^+1^400^^^^^^^^^^^^^^^60^^^^^^^^^^^^^^^
+MESSENGER_ID^CRM_CONTACTS^025^C^3024^ine_messenger_id^0^^^25^^N^^^^^MESSENGER_ID^Instant Messenger ID^Instant Messenger ID^IM ID^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^G;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+CRM_CONTACTS^PRIMARY^CRM_CONTACTS.FIRM_ID                    CRM_CONTACTS.CUSTOMER_ID                CRM_CONTACTS.CONTACT_ID                 ^stbl("+FIRM_ID")+CRM_CONTACTS.CUSTOMER_ID$+CRM_CONTACTS.CONTACT_ID$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.CONTACT_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.CONTACT_ID$                 
+{KeyDefsEnd}
+{GridCols}
+005CRM_CONTACTS.NAME_FIRST                 ;006CRM_CONTACTS.NAME_MI                    ;007CRM_CONTACTS.NAME_LAST                  ;010CRM_CONTACTS.TITLE                      ;011CRM_CONTACTS.DEPARTMENT                 ;019CRM_CONTACTS.PHONE_NO                   ;020CRM_CONTACTS.PHONE_EXTEN                ;024CRM_CONTACTS.EMAIL_ADDR                 ;
+{GridColsEnd}

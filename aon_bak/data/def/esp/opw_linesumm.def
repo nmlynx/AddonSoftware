@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+OPW_LINESUMM - Line Code Summary
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPW_LINESUMM^^^^Line Code Summary^Line Code Summary^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPW_LINESUMM^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AR_TYPE^OPW_LINESUMM^002^C^^^^^^2^^Y^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^AR Type [Not Used]^"  "^^
+LINE_CODE^OPW_LINESUMM^003^C^3001^dis_line_code^0^^^3^^Y^^^F^^LINE_CODE^Line Code^Código de línea^Cód. de línea^C^^E^^^^^^^0^0^[FIRM_ID]+@^OPC_LINECODE^CODE_DESC^^^^^^^^^^^1^0^^^^^^^^^^0^Line Code^^^
+INVOICE_AMT^OPW_LINESUMM^004^C^3002^inn_invoice_amt^0^^^4^^N^^^^^INVOICE_AMT^Invoice Amount^Monto de la factura^Monto de la fact.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Invoice Amount^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPW_LINESUMM^PRIMARY^OPW_LINESUMM.FIRM_ID                    OPW_LINESUMM.AR_TYPE                    OPW_LINESUMM.LINE_CODE                  ^stbl("+FIRM_ID")+"  "+OPW_LINESUMM.LINE_CODE$^stbl("+FIRM_ID")+"  "+RD_REC_DATA.LINE_CODE$^stbl("+FIRM_ID")                        "  "                                    RD_REC_DATA.LINE_CODE$                  
+{KeyDefsEnd}
+{GridCols}
+003OPW_LINESUMM.LINE_CODE                  ;004OPW_LINESUMM.INVOICE_AMT                ;
+{GridColsEnd}

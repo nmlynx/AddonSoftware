@@ -1,0 +1,23 @@
+Barista Application Framework - Definition Module
+IVX_COPYITEM - Copy Item from Warehouse to Warehouse
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVX_COPYITEM^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ASHO;ASVA;^^Copy Item from Warehouse to Warehouse^Copy Item from Warehouse to Warehouse^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]ivx_copyitem.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+WAREHOUSE_FROM^IVX_COPYITEM^001^C^3001^dis_warehouse_from^0^^^1^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+WAREHOUSE_TO^IVX_COPYITEM^002^C^3002^dis_warehouse_to^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVX_COPYITEM^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001IVX_COPYITEM.WAREHOUSE_FROM             ;002IVX_COPYITEM.WAREHOUSE_TO               ;
+{GridColsEnd}

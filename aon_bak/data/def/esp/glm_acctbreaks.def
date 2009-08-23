@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+GLM_ACCTBREAKS - Chart of Accounts Breaks
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_ACCTBREAKS^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Chart of Accounts Breaks^Desglose del catálogo de cuentas^^^^^^^^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLM_ACCTBREAKS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+ACCT_NO_BRK^GLM_ACCTBREAKS^002^C^3001^ine_acct_no_brk^0^^^3^^Y^^^^^ACCT_NO_BRK^Account Number Break^Desglose de número de cuentas^Desglose de cuentas^C^^E^^^^^^^80^0^^^^^^^^^^^^^^10^0^^^^^^I^^^^0^Desglose de número de cuentas^^^
+ACCT_BK_DESC^GLM_ACCTBREAKS^003^C^3002^ine_acct_bk_desc^0^^^4^^N^^^^^ACCT_BK_DESC^GL Account Break Description^Descripción del desglose de cuentas del GL^Descripción^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Descripción del desglose de cuentas del GL^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_ACCTBREAKS^PRIMARY^GLM_ACCTBREAKS.FIRM_ID                  GLM_ACCTBREAKS.ACCT_NO_BRK              ^stbl("+FIRM_ID")+GLM_ACCTBREAKS.ACCT_NO_BRK$^stbl("+FIRM_ID")+RD_REC_DATA.ACCT_NO_BRK$^stbl("+FIRM_ID")                        RD_REC_DATA.ACCT_NO_BRK$                
+{KeyDefsEnd}
+{GridCols}
+003GLM_ACCTBREAKS.ACCT_NO_BRK              ;004GLM_ACCTBREAKS.ACCT_BK_DESC             ;
+{GridColsEnd}

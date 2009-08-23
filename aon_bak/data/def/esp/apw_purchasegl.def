@@ -1,0 +1,28 @@
+Barista Application Framework - Definition Module
+APW_PURCHASEGL - Purchase Journal Sort by GL
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APW_PURCHASEGL^^^^Purchase Journal Sort by GL^Diario de compras ordenadas por GL^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APW_PURCHASEGL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AP_TYPE^APW_PURCHASEGL^002^C^3001^dis_ap_type^0^^^2^^Y^^^F^^AP_TYPE^AP Type^Tipo de AP^Tipo de AP^C^^E^^^^^^^0^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Tipo de AP^^^
+GL_ACCOUNT^APW_PURCHASEGL^003^C^3002^dis_gl_account^0^^^3^^Y^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta del GL^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^Número de cuenta del GL^^^
+VENDOR_ID^APW_PURCHASEGL^004^C^3003^dis_vendor_id^0^^^4^^Y^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^N.º de proveedor^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Número de proveedor^^^
+INVOICE_TYPE^APW_PURCHASEGL^005^C^3004^lbx_invoice_type^0^^^5^^Y^^^^^INVOICE_TYPE^Invoice Type^Tipo de factura^Tipo de fact.^C^^L^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Tipo de factura^^^
+REFERENCE^APW_PURCHASEGL^006^C^3005^ine_reference^0^^^6^^Y^^^^^REFERENCE^Reference^Referencia^Ref.^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Referencia^^^
+ACCTING_DATE^APW_PURCHASEGL^007^C^3006^ind_accting_date^0^^^7^^Y^^^C^^ACCTING_DATE^Accounting Date^Fecha contable^Fecha contab.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha contable^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APW_PURCHASEGL^PRIMARY^APW_PURCHASEGL.FIRM_ID                  APW_PURCHASEGL.AP_TYPE                  APW_PURCHASEGL.GL_ACCOUNT               APW_PURCHASEGL.VENDOR_ID                APW_PURCHASEGL.INVOICE_TYPE             APW_PURCHASEGL.REFERENCE                APW_PURCHASEGL.ACCTING_DATE             ^stbl("+FIRM_ID")+APW_PURCHASEGL.AP_TYPE$+APW_PURCHASEGL.GL_ACCOUNT$+APW_PURCHASEGL.VENDOR_ID$+APW_PURCHASEGL.INVOICE_TYPE$+APW_PURCHASEGL.REFERENCE$+APW_PURCHASEGL.ACCTING_DATE$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.GL_ACCOUNT$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.INVOICE_TYPE$+RD_REC_DATA.REFERENCE$+RD_REC_DATA.ACCTING_DATE$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.GL_ACCOUNT$                 RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.INVOICE_TYPE$               RD_REC_DATA.REFERENCE$                  RD_REC_DATA.ACCTING_DATE$               
+{KeyDefsEnd}
+{GridCols}
+002APW_PURCHASEGL.AP_TYPE                  ;003APW_PURCHASEGL.GL_ACCOUNT               ;004APW_PURCHASEGL.VENDOR_ID                ;005APW_PURCHASEGL.INVOICE_TYPE             ;006APW_PURCHASEGL.REFERENCE                ;007APW_PURCHASEGL.ACCTING_DATE             ;
+{GridColsEnd}

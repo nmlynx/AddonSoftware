@@ -1,0 +1,23 @@
+Barista Application Framework - Definition Module
+ARR_ZEROBALANCE - AR Zero Invoice Purge Register
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARR_ZEROBALANCE^^^^AR Zero Invoice Purge Register^Informe/depuración de facturas con saldo cero^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]arr_zerobalance.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARR_ZEROBALANCE^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+REPORT_DATE^ARR_ZEROBALANCE^002^C^3001^ind_report_date^0^^^2^^N^^^C^^REPORT_DATE^Report Date^Depurar facturas hasta^Fecha de depuración^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^YYYYMMDD^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARR_ZEROBALANCE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002ARR_ZEROBALANCE.REPORT_DATE             ;
+{GridColsEnd}

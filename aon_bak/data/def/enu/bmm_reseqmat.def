@@ -1,0 +1,35 @@
+Barista Application Framework - Definition Module
+BMM_RESEQMAT - Materials Resequencing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+BMM_RESEQMAT^^^^Materials Resequencing^Materials Resequencing^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^BMM_RESEQMAT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BILL_NO^BMM_RESEQMAT^002^C^3001^dis_bill_no^0^^^2^^Y^^^F^^BILL_NO^Bill of Materials Number^Bill of Materials Number^Bill of Mats No^C^^E^^^^^^^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^^^^^^20^L^0^Bill of Materials Number^^^
+MATERIAL_SEQ^BMM_RESEQMAT^003^C^3002^ine_material_seq^0^^^3^^Y^^^^^MATERIAL_SEQ^Materials Sequence Number^Materials Sequence Number^Mats Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Materials Sequence Number^^^
+ITEM_ID^BMM_RESEQMAT^004^C^3003^dis_item_id^0^^^4^^N^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+OP_SEQ^BMM_RESEQMAT^005^C^3004^ine_op_seq^0^^^5^^N^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+LINE_TYPE^BMM_RESEQMAT^006^C^3005^ine_line_type^0^^^6^^N^^^^^LINE_TYPE^Line Type^Line Type^Line Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Line Type^^^
+EXT_COMMENTS^BMM_RESEQMAT^008^C^3006^ine_ext_comments^0^^^8^^N^^^^^EXT_COMMENTS^Comments or Message Line^Comments or Message Line^Cmts/Msg Line^C^^E^^^^^^^^^^^^^^^^^^^^^^60^^^^^^^^^^^^Comments or Message Line^^^
+EFFECT_DATE^BMM_RESEQMAT^010^C^3007^ind_effect_date^0^^^10^^N^^^C^^EFFECT_DATE^Date Effective^Date Effective^Date Eff^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Effective^^^
+OBSOLT_DATE^BMM_RESEQMAT^011^C^3008^ind_obsolt_date^0^^^11^^N^^^C^^OBSOLT_DATE^Obsolete Date^Obsolete Date^Obsolete Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Obsolete Date^^^
+QTY_REQUIRED^BMM_RESEQMAT^012^C^3009^inn_qty_required^0^^^12^^N^^^^^QTY_REQUIRED^Quantity Required^Quantity Required^Qty Req^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity Required^^^
+ALT_FACTOR^BMM_RESEQMAT^013^C^3010^inn_alt_factor^0^^^13^^N^^^^^ALT_FACTOR^Alternate Factor^Alternate Factor^Alt Factor^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^M^^^^^Alternate Factor^^^
+UNIT_COST^BMM_RESEQMAT^014^C^3011^inn_unit_cost^0^^^14^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^^^0^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Unit Cost^^^
+DIVISOR^BMM_RESEQMAT^015^C^3012^inn_divisor^0^^^15^^N^^^^^DIVISOR^Divisor^Divisor^Divisor^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^H^^^^^Divisor^^^
+SCRAP_FACTOR^BMM_RESEQMAT^016^C^3013^inn_scrap_factor^0^^^16^^N^^^^^SCRAP_FACTOR^Scrap Factor Percent^Scrap Factor Percent^Scrap Factor %^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^M^^^^^Scrap Factor Percent^^^
+{ColumnDefsEnd}
+{KeyDefs}
+BMM_RESEQMAT^PRIMARY^BMM_RESEQMAT.FIRM_ID                    BMM_RESEQMAT.BILL_NO                    BMM_RESEQMAT.MATERIAL_SEQ               ^stbl("+FIRM_ID")+BMM_RESEQMAT.BILL_NO$+BMM_RESEQMAT.MATERIAL_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.BILL_NO$+RD_REC_DATA.MATERIAL_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.BILL_NO$                    RD_REC_DATA.MATERIAL_SEQ$               
+{KeyDefsEnd}
+{GridCols}
+002BMM_RESEQMAT.BILL_NO                    ;003BMM_RESEQMAT.MATERIAL_SEQ               ;004BMM_RESEQMAT.ITEM_ID                    ;005BMM_RESEQMAT.OP_SEQ                     ;006BMM_RESEQMAT.LINE_TYPE                  ;008BMM_RESEQMAT.EXT_COMMENTS               ;010BMM_RESEQMAT.EFFECT_DATE                ;011BMM_RESEQMAT.OBSOLT_DATE                ;012BMM_RESEQMAT.QTY_REQUIRED               ;013BMM_RESEQMAT.ALT_FACTOR                 ;014BMM_RESEQMAT.UNIT_COST                  ;015BMM_RESEQMAT.DIVISOR                    ;016BMM_RESEQMAT.SCRAP_FACTOR               ;
+{GridColsEnd}

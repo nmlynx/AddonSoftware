@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+ARR_INVOICES - AR Simple Invoice Printing
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARR_INVOICES^^^^AR Simple Invoice Printing^Impresión de factura^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]arr_invoices.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARR_INVOICES^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+PICK_CHECK^ARR_INVOICES^002^C^3001^cbx_pick_check^0^^^2^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^PICK_CHECK^Pick Screen Check Box^Reinicio^Reinicio^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+PICK_AR_INV_NO^ARR_INVOICES^003^C^3002^dis_pick_ar_inv_no^0^^^3^^N^^^F^^PICK_AR_INV_NO^AR Invoice Number^Número de factura^N.  de fact.^C^^E^ARR_INVOICES.PICK_CHECK^Y^^^^^56^0^[+FIRM_ID]+@^ARE_INVHDR^AR_INV_NO^^^^^^^^^^^7^0^^^UUUUUUU^UUUUUUU^^^^30^R^0^^^^
+PICK_TEXT^ARR_INVOICES^004^C^3003^ine_pick_text^0^^^4^^N^^^^^PICK_TEXT^Pick Screen Text^Mensaje^Msj.^C^^E^^^^^^^400^^^^^^^^^^^^^^^60^^^^^^^^^^^^^^^
+PICK_INTEGER^ARR_INVOICES^005^C^3004^inn_pick_integer^0^^^5^^N^^^^^PICK_INTEGER^Pick Screen Integer^Número de copias^N.º^N^^N^^^^^^^49^0^^^^^^^^1^^^^^^8^^1^^-#####0^^^^^30^R^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARR_INVOICES^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002ARR_INVOICES.PICK_CHECK                 ;003ARR_INVOICES.PICK_AR_INV_NO             ;004ARR_INVOICES.PICK_TEXT                  ;005ARR_INVOICES.PICK_INTEGER               ;
+{GridColsEnd}

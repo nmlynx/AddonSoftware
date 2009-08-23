@@ -1,0 +1,41 @@
+Barista Application Framework - Definition Module
+ARM_CUSTRPT_CTL - Customer Report Control
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARM_CUSTRPT_CTL^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Customer Report Control^Customer Report Control^^^^^^^ARM_CUSTMAST^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARM_CUSTRPT_CTL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+CUSTOMER_ID^ARM_CUSTRPT_CTL^002^C^3001^dis_customer_id^0^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^^^^
+REPORT_ALIAS^ARM_CUSTRPT_CTL^003^C^3002^dis_report_alias^0^^^3^^Y^^^F^^REPORT_ALIAS^Report Alias^Report Alias^Report Alias^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^ADM_RPTCTL^DD_TABLE_ALIAS^^^^^^^^^^^16^0^^^UUUUUUUUUUUUUUUU^UUUUUUUUUUUUUUUU^^^^20^L^0^^^^
+PRINT_YN^ARM_CUSTRPT_CTL^004^C^3003^cbx_print_yn^0^^^4^^N^^^^^GENERIC_CHK^Generic checkbox^Print^Print^C^^C^^^Y;N^^0^0^0^0^^^^^^^^Y^^^^^^1^0^^^^^^^^^^0^^^^
+FAX_YN^ARM_CUSTRPT_CTL^005^C^3004^cbx_fax_yn^0^^^5^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^GENERIC_CHK^Generic checkbox^Fax^Fax^C^^C^^^Y;N^^0^0^0^0^^^^^^^^N^^Fax Information^^^^1^0^^^^^^^^^^0^^^^
+FROM_COMPANY^ARM_CUSTRPT_CTL^007^C^3005^ine_from_company^0^^^6^^N^^^^^TEXT_30^Text entry^From Company^From Co^C^^E^ARM_CUSTRPT_CTL.FAX_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+FROM_NAME^ARM_CUSTRPT_CTL^008^C^3006^ine_from_name^0^^^7^^N^^^^^TEXT_30^Text entry^From Name^From Name^C^^E^ARM_CUSTRPT_CTL.FAX_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+CUSTOMER_NAME^ARM_CUSTRPT_CTL^009^C^3007^ine_customer_name^0^^^8^^N^^^^^CUSTOMER_NAME^Customer Name^Customer Name^Cust Name^C^^E^ARM_CUSTRPT_CTL.FAX_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^^^^^^^^E;^^^^^^^
+FAX_TO^ARM_CUSTRPT_CTL^010^C^3008^ine_fax_to^0^^^9^^N^^^^^FAX_TO^Fax "To" Name[s]^Fax To^Fax To^C^^E^ARM_CUSTRPT_CTL.FAX_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^60^^^^^^^^E;^^^^^^^
+FAX_NOS^ARM_CUSTRPT_CTL^006^C^3009^ine_fax_nos^0^^^10^^N^^^^^FAX_NOS^Fax Number[s]^Fax Number[s]^Fax No[s]^C^^E^ARM_CUSTRPT_CTL.FAX_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^60^^^^^^^^E;^^^^^^^
+FAX_SUBJECT^ARM_CUSTRPT_CTL^011^C^3010^ine_fax_subject^0^^^11^^N^^^^^TEXT_30^Text entry^Subject^Subject^C^^E^ARM_CUSTRPT_CTL.FAX_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+FAX_MESSAGE^ARM_CUSTRPT_CTL^012^C^3011^ine_fax_message^0^^^12^^N^^^^^TEXT_30^Text entry^Message^Message^C^^E^ARM_CUSTRPT_CTL.FAX_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+EMAIL_YN^ARM_CUSTRPT_CTL^013^C^3012^cbx_email_yn^0^^^13^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^GENERIC_CHK^Generic checkbox^Email^Email^C^^C^^^Y;N^^0^0^0^0^^^^^^^^N^^Email Information^^^^1^0^^^^^^^^^^0^^^^
+EMAIL_FROM^ARM_CUSTRPT_CTL^014^C^3013^ine_email_from^0^^^14^^N^^^^^TEXT_30^Text entry^From^From^C^^E^ARM_CUSTRPT_CTL.EMAIL_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+EMAIL_REPLYTO^ARM_CUSTRPT_CTL^015^C^3014^ine_email_replyto^0^^^15^^N^^^^^TEXT_30^Text entry^Reply To^Email Reply^C^^E^ARM_CUSTRPT_CTL.EMAIL_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+EMAIL_TO^ARM_CUSTRPT_CTL^016^C^3015^ine_email_to^0^^^16^^N^^^^^EMAIL_TO^Email "To" Address[es]^To^To^C^^E^ARM_CUSTRPT_CTL.EMAIL_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^60^^^^^^^^E;^^^^^^^
+EMAIL_CC^ARM_CUSTRPT_CTL^017^C^3016^ine_email_cc^0^^^17^^N^^^^^EMAIL_CC^Email "Cc" Address[es]^Cc^Email Cc^C^^E^ARM_CUSTRPT_CTL.EMAIL_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^60^^^^^^^^E;^^^^^^^
+EMAIL_BCC^ARM_CUSTRPT_CTL^018^C^3017^ine_email_bcc^0^^^18^^N^^^^^TEXT_30^Text entry^Bcc^Email Bcc^C^^E^ARM_CUSTRPT_CTL.EMAIL_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+EMAIL_SUBJECT^ARM_CUSTRPT_CTL^019^C^3018^ine_email_subject^0^^^19^^N^^^^^TEXT_30^Text entry^Subject^Subject^C^^E^ARM_CUSTRPT_CTL.EMAIL_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+EMAIL_MESSAGE^ARM_CUSTRPT_CTL^020^C^3019^ine_email_message^0^^^20^^N^^^^^TEXT_30^Text entry^Message^Message^C^^E^ARM_CUSTRPT_CTL.EMAIL_YN^Y^^^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^E;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARM_CUSTRPT_CTL^PRIMARY^ARM_CUSTRPT_CTL.FIRM_ID                 ARM_CUSTRPT_CTL.CUSTOMER_ID             ARM_CUSTRPT_CTL.REPORT_ALIAS            ^stbl("+FIRM_ID")+ARM_CUSTRPT_CTL.CUSTOMER_ID$+ARM_CUSTRPT_CTL.REPORT_ALIAS$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.REPORT_ALIAS$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.REPORT_ALIAS$               
+{KeyDefsEnd}
+{GridCols}
+002ARM_CUSTRPT_CTL.CUSTOMER_ID             ;003ARM_CUSTRPT_CTL.REPORT_ALIAS            ;004ARM_CUSTRPT_CTL.PRINT_YN                ;005ARM_CUSTRPT_CTL.FAX_YN                  ;006ARM_CUSTRPT_CTL.FROM_COMPANY            ;007ARM_CUSTRPT_CTL.FROM_NAME               ;008ARM_CUSTRPT_CTL.CUSTOMER_NAME           ;009ARM_CUSTRPT_CTL.FAX_TO                  ;010ARM_CUSTRPT_CTL.FAX_NOS                 ;011ARM_CUSTRPT_CTL.FAX_SUBJECT             ;012ARM_CUSTRPT_CTL.FAX_MESSAGE             ;013ARM_CUSTRPT_CTL.EMAIL_YN                ;014ARM_CUSTRPT_CTL.EMAIL_FROM              ;015ARM_CUSTRPT_CTL.EMAIL_REPLYTO           ;016ARM_CUSTRPT_CTL.EMAIL_TO                ;017ARM_CUSTRPT_CTL.EMAIL_CC                ;018ARM_CUSTRPT_CTL.EMAIL_BCC               ;019ARM_CUSTRPT_CTL.EMAIL_SUBJECT           ;020ARM_CUSTRPT_CTL.EMAIL_MESSAGE           ;
+{GridColsEnd}

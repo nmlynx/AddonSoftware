@@ -1,0 +1,28 @@
+Barista Application Framework - Definition Module
+IVR_STKSTATUS - Item Stock Status Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVR_STKSTATUS^^^^Item Stock Status Report^Item Stock Status Report^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]ivr_stkstatus.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+WAREHOUSE_ID_1^IVR_STKSTATUS^001^C^3001^dis_warehouse_id^0^^^5^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^1;2;^20^L^0^Enter a two-digit warehouse ID^^^
+WAREHOUSE_ID_2^IVR_STKSTATUS^001^C^3002^dis_warehouse_id^0^^^5^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse^Whse ID^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^1;2;^20^L^0^Enter a two-digit warehouse ID^^^
+PRODUCT_TYPE_1^IVR_STKSTATUS^002^C^3003^dis_product_type^0^^^6^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+PRODUCT_TYPE_2^IVR_STKSTATUS^002^C^3004^dis_product_type^0^^^6^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+ITEM_ID_1^IVR_STKSTATUS^003^C^3005^dis_item_id^0^^^7^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+ITEM_ID_2^IVR_STKSTATUS^003^C^3006^dis_item_id^0^^^7^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+ITEM_TYPE^IVR_STKSTATUS^004^C^3007^dis_item_type^0^^^8^^N^^^F^^ITEM_TYPE^Item Type^Item Type^Item Type^C^^E^^^^^^^35^0^[+FIRM_ID]+@^IVC_TYPECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^3;^20^L^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVR_STKSTATUS^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+005IVR_STKSTATUS.WAREHOUSE_ID              ;006IVR_STKSTATUS.PRODUCT_TYPE              ;007IVR_STKSTATUS.ITEM_ID                   ;008IVR_STKSTATUS.ITEM_TYPE                 ;
+{GridColsEnd}

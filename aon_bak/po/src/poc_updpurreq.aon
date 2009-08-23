@@ -1,0 +1,427 @@
+rem --- Update Purchase Requisition File
+rem --- Program poc_updpurreq.aon v8.0.0 04Apr2008 (poc_ba)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (04/04/2008 11:51:21)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+rem --- INFO$[0]   : Firm ID
+rem --- INFO$[1]   : Vendor #
+rem --- INFO$[2]   : Line Type (S=Stock/N=Non-stock/M=Message)
+rem --- INFO$[3]   : Warehouse ID
+rem --- INFO$[4]   : Date Ordered (YYMMDD)
+rem --- INFO$[5]   : Date Required (YYMMDD)
+rem --- INFO$[6]   : Unit of Measure
+rem --- INFO$[7]   : Source (W=Work Orders/M=MRP/R=Replenishment)
+rem --- INFO$[8]   : MRP Forecast Type
+rem --- INFO$[9]   : Work Order Number (and optional WO seq number)
+rem --- INFO$[10]  : Customer Number
+rem --- INFO$[11]  : Sales Order Number (and optional SO seq number) (not used)
+rem --- INFO$[12]  : Customer Ship-To Number
+rem --- INFO$[13]  : Item Number (Type S)
+rem --- INFO$[14]  : Memo/Non-stock Description
+rem
+rem --- INFO[0]    : Conversion factor (if 0, defaults to 1)
+rem --- INFO[1]    : Unit Cost
+rem --- INFO[2]    : Requisition Qty
+rem
+rem --- DETAILKEY$ : Returned, First string of detail record
+rem --- STATUS     : Returned, error if > 0
+
+rem --- uses alt key on poe_reqhdr to search for existing req this vendor, since vendor no longer part of primary key
+
+
+    setesc std_error
+    seterr std_error
+    enter info$[all],info[all],detailkey$,status
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+	num_files=9,open_beg=1,open_end=num_files
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	open_tables$[1]="APM_VENDMAST", open_opts$[1]="OTA"
+	open_tables$[2]="APM_VENDHIST", open_opts$[2]="OTA"
+	open_tables$[3]="IVS_PARAMS", open_opts$[3]="OTA"
+	open_tables$[4]="POE_REQHDR", open_opts$[4]="OTA"
+	open_tables$[5]="POE_POHDR", open_opts$[5]="OTA"
+	open_tables$[6]="POE_REQDET", open_opts$[6]="OTA"
+	open_tables$[7]="POE_REQPRINT", open_opts$[7]="OTA"
+	open_tables$[8]="POC_LINECODE", open_opts$[8]="OTA"
+	open_tables$[9]="POS_PARAMS", open_opts$[9]="OTA"
+
+	gosub open_tables
+
+	apm_vendmast_dev=num(open_chans$[1])
+	apm_vendhist_dev=num(open_chans$[2])
+	ivs_params_dev=num(open_chans$[3])
+	poe_reqhdr_dev=num(open_chans$[4])
+	poe_pohdr_dev=num(open_chans$[5])
+	poe_reqdet_dev=num(open_chans$[6])
+	poe_reqprint_dev=num(open_chans$[7])
+	poc_linecode_dev=num(open_chans$[8])
+	pos_params_dev=num(open_chans$[9])
+
+	dim apm_vendmast$:open_tpls$[1]
+	dim apm_vendhist$:open_tpls$[2]
+	dim ivs_params$:open_tpls$[3]
+	dim poe_reqhdr$:open_tpls$[4]
+	dim poe_pohdr$:open_tpls$[5]
+	dim poe_reqdet$:open_tpls$[6]
+	dim poe_reqprint$:open_tpls$[7]
+	dim poc_linecode$:open_tpls$[8]
+	dim pos_params$:open_tpls$[9]
+
+rem --- Retrieve parameter records
+
+    find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
+    find record (pos_params_dev,key=firm_id$+"PO00",err=std_missing_params) pos_params$
+
+rem --- Initializations
+
+    dim reqnum$(7),detailkey$(18)
+    dim purchaddrcode$(2),dateprom$(8),notb4date$(8),ack$(20),whseloc$(10)
+    dim firm$(2),linetype$(1),vendor$(6),whse$(2),dateord$(8)
+    dim datereq$(8),termscode$(2),unitmeas$(2)
+    dim source$(1),forcasttype$(3),wonum$(7)
+    dim wonum_seq$(10),custnum$(6),sonum_seq$(10)
+    dim shiptonum$(6),itemnum$(20)
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQHDR","ALT_KEY_01",poe_reqbyvend_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","DISPLAY_SEQ",poe_reqdet_key_tpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_POHDR","ALT_KEY_02",poe_pobyreq_key_tpl$,rd_table_chans$[all],status$
+    dim poe_reqbyvend_key$:poe_reqbyvend_key_tpl$
+    dim poe_reqdet_key$:poe_reqdet_key_tpl$
+    dim poe_pobyreq_key$:poe_pobyreq_key_tpl$
+
+rem --- Assign input params
+    firm$(1)=info$[0]
+    vendor$(1)=info$[1],linetype$(1)=info$[2]
+    whse$(1)=info$[3]
+    dateord$(1)=info$[4],datereq$(1)=info$[5]
+    unitmeas$(1)=info$[6]
+    source$(1)=info$[7]
+    forcasttype$(1)=info$[8]
+    wonum_seq$(1)=info$[9],custnum$(1)=info$[10]
+    sonum_seq$(1)=info$[11]
+    shiptonum$(1)=info$[12],itemnum$(1)=info$[13]
+    memodesc$=info$[14]
+
+rem --- Defaults
+
+    dim po_defaults$(68),vend_defaults$(245)
+    find record (apm_vendmast_dev,key=firm$+vendor$,dom=done_unsuccess) apm_vendmast$
+    vshipvia$=pos_params.ap_ship_via$
+    freightterms$=pos_params.po_frt_terms$
+    fob$=pos_params.fob$
+    hold$=pos_params.hold_flag$
+    reqmsg$=pos_params.po_req_msg_code$
+    if cvs(apm_vendmast.fob$,2)<>"" then let fob$=apm_vendmast.fob$
+    if cvs(apm_vendmast.ap_ship_via$,2)<>"" then let vshipvia$=apm_vendmast.ap_ship_via$
+    gosub linecodes
+
+rem --- init
+
+    places=num(ivs_params.precision$)
+    more=1
+
+rem --- Check poe-01 for existing requisition for this vendor
+
+    precision places;flag=0
+    read (poe_reqhdr_dev,key=firm$+vendor$,knum="ALT_KEY_01",dom=*next)
+
+        while more
+	    read record (poe_reqhdr_dev,end=*break)poe_reqhdr$
+    	if poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$<>firm$+vendor$ then break
+    	if poe_reqhdr.dropship$="Y" then continue
+    	gosub findspot
+    	flag=1
+    	break
+    wend
+
+    if !flag
+        gosub getterms
+        gosub buildheader
+    endif
+
+rem --- Build and write detail record
+
+    poe_reqdet.po_line_code$=linecode$
+    poe_reqdet.reqd_date$=datereq$
+    poe_reqdet.promise_date$=dateprom$
+    poe_reqdet.not_b4_date$=notb4date$ 
+    poe_reqdet.lead_tim_flg$=line4lead$ 
+    poe_reqdet.unit_measure$=unitmeas$
+    poe_reqdet.location$=whseloc$
+    poe_reqdet.source_code$=source$
+    poe_reqdet.forecast$=forcasttype$
+
+    poe_reqdet.wo_no$=wonum_seq$(1,7)
+    poe_reqdet.wo_seq_ref$=wonum_seq$(8,3)
+    poe_reqdet.warehouse_id$=whse$
+
+    if linetype$="S" then poe_reqdet.item_id$=itemnum$ else gosub get_memodesc
+    if linetype$<>"M"
+        poe_reqdet.conv_factor=info[0]
+        poe_reqdet.unit_cost=info[1]
+        poe_reqdet.req_qty=info[2]
+        if linetype$="N" then poe_reqdet.conv_factor=0; rem "No conversion factor for non stock
+    endif
+
+    while more 
+
+        write record (poe_reqdet_dev) poe_reqdet$
+        if !(linetype$<>"M" or len(cvs(memodesc$,2))=0)
+           gosub get_memodesc
+           gosub findspot;rem --- additional write for memo info
+        else 
+            break
+        endif
+
+    wend 
+
+done: rem --- Done - Successful
+
+rem --- Update print file
+
+    poe_reqprint.firm_id$=poe_reqdet_key.firm_id$
+    poe_reqprint.vendor_id$=poe_reqhdr.vendor_id$
+    poe_reqprint.req_no$=poe_reqdet_key.req_no$
+
+    write record (poe_reqprint_dev) poe_reqprint$
+    goto std_exit
+
+done_unsuccess: rem --- Done - Unsuccessful
+
+    if status=0 then let status=1
+    goto std_exit
+
+rem --- At least 1 req (non-dropship) exists for vendor, so find spot for new req line
+findspot: rem --- (Add to 1st req if possible, next if not, ... etc)
+
+    while more
+        read (poe_reqdet_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.req_no$+$ff$,knum="DISPLAY_SEQ",dom=*next)
+        poe_reqdet_key$=keyp(poe_reqdet_dev,end=wontfit)
+
+        if !looping 
+            if poe_reqdet_key.firm_id$+poe_reqdet_key.req_no$<>poe_reqhdr.firm_id$+poe_reqhdr.req_no$ 
+                poe_reqdet.firm_id$=poe_reqhdr.firm_id$
+                poe_reqdet.req_no$=poe_reqhdr.req_no$
+                poe_reqdet.po_line_no$="001";rem found hdr w/ no dtl
+                gosub get_internal_seq_no
+                poe_reqdet.internal_seq_no$=int_seq_no$
+				break
+			else
+                flag=1
+            endif
+        endif
+
+        if !flag then
+           seq=num(poe_reqdet_key.po_line_no$)+1
+           if seq<=999 
+                poe_reqdet.firm_id$=poe_reqdet_key.firm_id$
+                poe_reqdet.req_no$=poe_reqdet_key.req_no$
+                poe_reqdet.po_line_no$=str(seq:"000")
+                gosub get_internal_seq_no
+                poe_reqdet.internal_seq_no$=int_seq_no$
+                break
+           endif
+        else
+            if pos(poe_reqhdr.firm_id$+poe_reqhdr.req_no$=poe_reqdet_key$)=1 then
+                seq=num(poe_reqdet_key.po_line_no$)+1
+                if seq<=999 
+                    poe_reqdet.firm_id$=poe_reqdet_key.firm_id$
+                    poe_reqdet.req_no$=poe_reqdet_key.req_no$
+                    poe_reqdet.po_line_no$=str(seq:"000")
+                    gosub get_internal_seq_no
+					poe_reqdet.internal_seq_no$=int_seq_no$
+                    break
+                endif
+           endif
+        endif
+
+    getnexthead: rem --- Get next req from header file
+
+        read record(poe_reqhdr_dev,end=wontfit)poe_reqhdr$
+        if poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$=firm$+vendor$ 
+        	if poe_reqhdr.dropship$<>"Y"
+        		looping=1;continue
+        	else
+        		goto getnexthead
+			endif
+		endif
+
+		    wontfit: rem --- couldn't find room in existing reqs
+
+        gosub buildheader
+        break
+
+    wend
+
+    looping=0
+    return
+
+getterms: rem --- Get Terms code from apm_vendhist (apm-02)
+
+    read (apm_vendhist_dev,key=firm$+vendor$,dom=*next)
+    read record (apm_vendhist_dev,end=*next) apm_vendhist$
+    if pos(firm$+vendor$=apm_vendhist$)=1 then termscode$=apm_vendhist.ap_terms_code$
+    return
+
+get_internal_seq_no:
+
+	call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",int_seq_no$,rd_table_chans$[all]
+
+	return
+
+buildheader: rem --- Build header record and write it to poe-01
+
+rem --- get 'next req #'; increment and write back
+
+	call stbl("+DIR_SYP")+"bas_sequences.bbj","REQ_NO",seq_id$,rd_table_chans$[all]
+
+	rem --- make header
+
+    reqnum$=seq_id$
+    poe_reqhdr.firm_id$=firm$
+    poe_reqhdr.vendor_id$=vendor$
+    poe_reqhdr.req_no$=reqnum$
+    poe_reqhdr.warehouse_id$=whse$
+    poe_reqhdr.purch_addr$=purchaddrcode$
+    poe_reqhdr.ord_date$=dateord$
+    poe_reqhdr.promise_date$=dateprom$
+    poe_reqhdr.not_b4_date$=notb4date$
+    poe_reqhdr.reqd_date$=datereq$
+    poe_reqhdr.hold_flag$=hold$
+    poe_reqhdr.terms_code$=termscode$
+    poe_reqhdr.po_frt_terms$=freightterms$
+    poe_reqhdr.ap_ship_via$=vshipvia$
+    poe_reqhdr.acknowledge$=ack$
+    poe_reqhdr.fob$=fob$
+    poe_reqhdr.po_msg_code$=reqmsg$
+
+    write record (poe_reqhdr_dev) poe_reqhdr$
+
+    poe_reqdet.firm_id$=poe_reqhdr.firm_id$
+	poe_reqdet.req_no$=poe_reqhdr.req_no$
+	poe_reqdet.po_line_no$="001"
+    gosub get_internal_seq_no
+	poe_reqdet.internal_seq_no$=int_seq_no$
+
+    return
+
+linecodes: rem --- Assign line code info based on line type defaults
+
+    dim line4lead$(1),linecode$(2)
+    on pos(linetype$="SNM") goto stype,stype,ntype,mtype
+stype:
+    linecode$=pos_params.req_s_linecd$; rem "Standard item type
+    goto getline4lead
+ntype:
+    linecode$=pos_params.req_n_linecd$; rem "Non-stock item type
+    goto getline4lead
+mtype:
+    linecode$=pos_params.req_m_linecd$; rem "Message line type
+    goto getline4lead
+getline4lead:
+    find record (poc_linecode_dev,key=firm$+linecode$,dom=*next) poc_linecode$
+    line4lead$(1)=poc_linecode.lead_tim_flg$
+    return
+
+get_memodesc: rem --- Get Next 40 Characters (Maximum) Of Message
+
+    if len(cvs(memodesc$,2))<=40 
+        poe_reqdet.order_memo$=cvs(memodesc$,1)
+        memodesc$=""
+        return
+    endif
+
+rem --- Split Message At Last Word Boundary Before 40 Characters
+
+    memodesc$=cvs(memodesc$,1)+fill(40)
+    wb=pos(" "=memodesc$(1,41),-1)
+    if wb=0 then let wb=41
+    poe_reqdet.order_memo$=memodesc$(1,wb-1)
+    memodesc$=cvs(memodesc$(wb),2)
+    return
+
+open_tables: rem --- Call open table routine	
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+		status=912
+		goto std_exit
+	endif
+
+	return
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),                                str(err:"000"),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+    exit
+
+rem #endinclude std_exit.src
+
+    end

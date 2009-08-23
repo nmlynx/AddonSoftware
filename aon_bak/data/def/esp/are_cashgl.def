@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+ARE_CASHGL - Cash Receipts GL Entry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARE_CASHGL^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BEND;BSHO;^^Cash Receipts GL Entry^Entrada de recibos de efectivo del GL^^^^^^^ARE_CASHHDR^G^^^^^^S;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARE_CASHGL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AR_TYPE^ARE_CASHGL^002^C^^^^^^2^^Y^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^AR Type [Not Used]^"  "^^
+RESERVED_KEY_01^ARE_CASHGL^003^C^^^^^^3^^Y^^^^^RESERVED_KEY_01^Reserved Key String^Reserved Key String^Res Key Str^C^^H^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^20^L^0^Reserved For Addon Use^^^
+RECEIPT_DATE^ARE_CASHGL^004^C^3001^ind_receipt_date^0^^^4^^Y^^^C^^RECEIPT_DATE^Receipt Date^Fecha de recibo^Fecha de rec.^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^0^^^^^^^G;^^^^Fecha de recibo^^^
+CUSTOMER_ID^ARE_CASHGL^005^C^3002^dis_customer_id^0^^^5^^Y^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^G;^30^R^^Número de cliente^^^
+CASH_REC_CD^ARE_CASHGL^006^C^3003^dis_cash_rec_cd^0^^^6^^Y^^^F^^CASH_REC_CD^Cash Receipts Code^Código de recibo de efectivo^Cód. de rec. de efectivo^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^ARC_CASHCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^G;^20^L^0^Código de recibos de efectivo^^^
+AR_CHECK_NO^ARE_CASHGL^007^C^3004^ine_ar_check_no^0^^^7^^Y^^^^^AR_CHECK_NO^Check Number^Número de cheque^N.º de ch.^C^^E^^^^^^^70^^^^^^^^^^^^^^^7^^^^^^^^G;^20^L^^Número de cheque^^^
+RESERVED_KEY_02^ARE_CASHGL^008^C^^^^^^8^^Y^^^^^RESERVED_KEY_02^Reserved Key String^Reserved Key String^Res Key Str^C^^H^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^20^L^0^Reserved For Addon Use^^^
+GL_ACCOUNT^ARE_CASHGL^009^C^3005^dis_gl_account^0^^^9^^Y^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta del GL^C^^E^^^^^^^100^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^1^10^^^^UUUUUUUUUU^^^I^V;^30^L^^Número de cuenta del GL^^^
+GL_POST_AMT^ARE_CASHGL^011^C^3006^inn_gl_post_amt^0^^^10^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^GL_POST_AMT^GL Posting Amount^Monto^Monto^N^^N^^^^^^^105^^^^^^^^^^^^^^^7^^^^###,###,###.00-^^^A^^^^^Monto de registro del GL^^^
+BATCH_NO^ARE_CASHGL^012^C^^^^^^12^^N^^^^^BATCH_NO^Batch Entry Control Number^Número de control de entrada de lote^N.º de entrada de lote^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^O;^30^R^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARE_CASHGL^PRIMARY^ARE_CASHGL.FIRM_ID                      ARE_CASHGL.AR_TYPE                      ARE_CASHGL.RESERVED_KEY_01              ARE_CASHGL.RECEIPT_DATE                 ARE_CASHGL.CUSTOMER_ID                  ARE_CASHGL.CASH_REC_CD                  ARE_CASHGL.AR_CHECK_NO                  ARE_CASHGL.RESERVED_KEY_02              ARE_CASHGL.GL_ACCOUNT                   ^stbl("+FIRM_ID")+"  "+ARE_CASHGL.RESERVED_KEY_01$+ARE_CASHGL.RECEIPT_DATE$+ARE_CASHGL.CUSTOMER_ID$+ARE_CASHGL.CASH_REC_CD$+ARE_CASHGL.AR_CHECK_NO$+ARE_CASHGL.RESERVED_KEY_02$+ARE_CASHGL.GL_ACCOUNT$^stbl("+FIRM_ID")+"  "+RD_REC_DATA.RESERVED_KEY_01$+RD_REC_DATA.RECEIPT_DATE$+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.CASH_REC_CD$+RD_REC_DATA.AR_CHECK_NO$+RD_REC_DATA.RESERVED_KEY_02$+RD_REC_DATA.GL_ACCOUNT$^stbl("+FIRM_ID")                        "  "                                    RD_REC_DATA.RESERVED_KEY_01$            RD_REC_DATA.RECEIPT_DATE$               RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.CASH_REC_CD$                RD_REC_DATA.AR_CHECK_NO$                RD_REC_DATA.RESERVED_KEY_02$            RD_REC_DATA.GL_ACCOUNT$                 
+{KeyDefsEnd}
+{GridCols}
+009ARE_CASHGL.GL_ACCOUNT                   ;009{{DESC}}                                ;010ARE_CASHGL.GL_POST_AMT                  ;
+{GridColsEnd}

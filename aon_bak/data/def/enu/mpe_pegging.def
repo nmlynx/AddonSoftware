@@ -1,0 +1,44 @@
+Barista Application Framework - Definition Module
+MPE_PEGGING - Pegging Transaction Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+MPE_PEGGING^^^^Pegging Transaction Detail^Pegging Transaction Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^MPE_PEGGING^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+FORECAST^MPE_PEGGING^002^C^3001^dis_forecast^0^^^2^^Y^^^F^^FORECAST^MRP Forecast Type^MRP Forecast Type^MRP Forecast Type^C^^E^^^^^^^0^0^[+FIRM_ID]+@^MPM_FORECAST^DESCRIPTION_01^^^^^^^^^^^3^0^^^^^^^^20^L^0^MRP Forecast Type^^^
+WAREHOUSE_ID^MPE_PEGGING^003^C^3002^dis_warehouse_id^0^^^3^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+ITEM_ID^MPE_PEGGING^004^C^3003^dis_item_id^0^^^4^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+TRNS_DATE^MPE_PEGGING^005^C^3004^ind_trns_date^0^^^5^^Y^^^C^^TRNS_DATE^Transaction Date^Transaction Date^Trans Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Transaction Date^^^
+SOURCE_CODE^MPE_PEGGING^006^C^3005^ine_source_code^0^^^6^^Y^^^^^SOURCE_CODE^Source^Source^Source^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Source^^^
+SEQ_NO^MPE_PEGGING^007^C^^^^^^7^^Y^^^^^SEQ_NO^Sequence Number^Sequence Number^Seq No^C^S^H^^^^^^^^^^^^^^^^^^^^^^5^^^^00000^00000^^^^30^R^^Sequence Number^^^
+FINISH_ITEM^MPE_PEGGING^008^C^3006^ine_finish_item^0^^^8^^N^^^^^FINISH_ITEM^Finished Good Item Number^Finished Good Item Number^Fin Good Item No^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Finished Good Item Number^^^
+ORDER_NO^MPE_PEGGING^009^C^3007^ine_order_no^0^^^9^^N^^^^^ORDER_NO^Sales Order Number^Sales Order Number^Sales Ord No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Sales Order Number^^^
+CUSTOMER_ID^MPE_PEGGING^010^C^3008^dis_customer_id^0^^^10^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Customer N^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+VENDOR_ID^MPE_PEGGING^011^C^3009^dis_vendor_id^0^^^11^^N^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+PO_NO^MPE_PEGGING^012^C^3010^ine_po_no^0^^^12^^N^^^^^PO_NO^Purchase Order Number^Purchase Order Number^PO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Purchase Order Number^^^
+WO_NO^MPE_PEGGING^013^C^3011^ine_wo_no^0^^^13^^N^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+WO_TYPE^MPE_PEGGING^014^C^3012^ine_wo_type^0^^^14^^N^^^^^WO_TYPE^Work Order Type^Work Order Type^WO Type^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Type^^^
+WO_STATUS^MPE_PEGGING^015^C^3013^ine_wo_status^0^^^15^^N^^^^^WO_STATUS^Work Order Status [P/O/Q/C]^Work Order Status^WO Stat^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Work Order Status [P/O/Q/C]^^^
+MRP_TYPE^MPE_PEGGING^016^C^3014^ine_mrp_type^0^^^16^^N^^^^^MRP_TYPE^A=Purchase Item/B=Production^A=Purchase Item/B=Production^MRP Type^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^A=Purchase Item/B=Production^^^
+REQD_DATE^MPE_PEGGING^018^C^3015^ind_reqd_date^0^^^18^^N^^^C^^REQD_DATE^Date Required^Date Required^Date Req^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Required^^^
+GROSS_REQ^MPE_PEGGING^020^C^3016^inn_gross_req^0^^^20^^N^^^^^GROSS_REQ^Gross Required^Gross Required^Gross Req^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Gross Required^^^
+QTY_ON_ORDER^MPE_PEGGING^021^C^3017^inn_qty_on_order^0^^^21^^N^^^^^QTY_ON_ORDER^Quantity On-Order^Quantity On-Order^Qty On-Ord^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity On-Order^^^
+QTY_ON_HAND^MPE_PEGGING^022^C^3018^inn_qty_on_hand^0^^^22^^N^^^^^QTY_ON_HAND^Quantity On-Hand^Quantity On-Hand^Qty On-Hand^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^Quantity On-Hand^^^
+NET_REQUIRED^MPE_PEGGING^023^C^3019^inn_net_required^0^^^23^^N^^^^^NET_REQUIRED^Net Required^Net Required^Net Req^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Net Required^^^
+PLANNED_REL^MPE_PEGGING^024^C^3020^inn_planned_rel^0^^^24^^N^^^^^PLANNED_REL^Planned Release Qty on PO/WO^Planned Release Qty on PO/WO^Plan PO/WO Rel Qty^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Planned Release Qty on PO/WO^^^
+PLANNED_REC^MPE_PEGGING^025^C^3021^inn_planned_rec^0^^^25^^N^^^^^PLANNED_REC^Planned Receipt Qty on PO/WO^Planned Receipt Qty on PO/WO^Plan PO/WO Rec Qty^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Planned Receipt Qty on PO/WO^^^
+{ColumnDefsEnd}
+{KeyDefs}
+MPE_PEGGING^PRIMARY^MPE_PEGGING.FIRM_ID                     MPE_PEGGING.FORECAST                    MPE_PEGGING.WAREHOUSE_ID                MPE_PEGGING.ITEM_ID                     MPE_PEGGING.TRNS_DATE                   MPE_PEGGING.SOURCE_CODE                 MPE_PEGGING.SEQ_NO                      ^stbl("+FIRM_ID")+MPE_PEGGING.FORECAST$+MPE_PEGGING.WAREHOUSE_ID$+MPE_PEGGING.ITEM_ID$+MPE_PEGGING.TRNS_DATE$+MPE_PEGGING.SOURCE_CODE$+MPE_PEGGING.SEQ_NO$^stbl("+FIRM_ID")+RD_REC_DATA.FORECAST$+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.ITEM_ID$+RD_REC_DATA.TRNS_DATE$+RD_REC_DATA.SOURCE_CODE$+RD_REC_DATA.SEQ_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.FORECAST$                   RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.ITEM_ID$                    RD_REC_DATA.TRNS_DATE$                  RD_REC_DATA.SOURCE_CODE$                RD_REC_DATA.SEQ_NO$                     
+{KeyDefsEnd}
+{GridCols}
+002MPE_PEGGING.FORECAST                    ;003MPE_PEGGING.WAREHOUSE_ID                ;004MPE_PEGGING.ITEM_ID                     ;005MPE_PEGGING.TRNS_DATE                   ;006MPE_PEGGING.SOURCE_CODE                 ;008MPE_PEGGING.FINISH_ITEM                 ;009MPE_PEGGING.ORDER_NO                    ;010MPE_PEGGING.CUSTOMER_ID                 ;011MPE_PEGGING.VENDOR_ID                   ;012MPE_PEGGING.PO_NO                       ;013MPE_PEGGING.WO_NO                       ;014MPE_PEGGING.WO_TYPE                     ;015MPE_PEGGING.WO_STATUS                   ;016MPE_PEGGING.MRP_TYPE                    ;018MPE_PEGGING.REQD_DATE                   ;020MPE_PEGGING.GROSS_REQ                   ;021MPE_PEGGING.QTY_ON_ORDER                ;022MPE_PEGGING.QTY_ON_HAND                 ;023MPE_PEGGING.NET_REQUIRED                ;024MPE_PEGGING.PLANNED_REL                 ;025MPE_PEGGING.PLANNED_REC                 ;
+{GridColsEnd}

@@ -1,0 +1,23 @@
+Barista Application Framework - Definition Module
+ADM_RPTCTL - Report Print, Email, Fax Control
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ADM_RPTCTL^^^^Report Print, Email, Fax Control^Report Print, Email, Fax Control^^^^^^^^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ADM_RPTCTL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+DD_TABLE_ALIAS^ADM_RPTCTL^002^C^3001^dis_dd_table_alias^0^^^2^^Y^^^F^^DD_TABLE_ALIAS^Table Alias^Table Alias^Table Alias^C^^E^^^^^0^0^0^0^^DDM_TABLES^DD_ALIAS_DESC^^^^^^^^^^^16^0^^^UUUUUUUUUUUUUUUU^^^^V;^20^L^0^Enter the table alias^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ADM_RPTCTL^PRIMARY^ADM_RPTCTL.FIRM_ID                      ADM_RPTCTL.DD_TABLE_ALIAS               ^stbl("+FIRM_ID")+ADM_RPTCTL.DD_TABLE_ALIAS$^stbl("+FIRM_ID")+RD_REC_DATA.DD_TABLE_ALIAS$^stbl("+FIRM_ID")                        RD_REC_DATA.DD_TABLE_ALIAS$             
+{KeyDefsEnd}
+{GridCols}
+002ADM_RPTCTL.DD_TABLE_ALIAS               ;002{{DESC}}                                ;
+{GridColsEnd}

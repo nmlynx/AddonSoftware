@@ -1,0 +1,36 @@
+Barista Application Framework - Definition Module
+CRM_ACTIVITIES - CRM Activities
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+CRM_ACTIVITIES^^^^CRM Activities^CRM Activities^^^^^^^CRM_CUSTMAST^G^^^^N^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^CRM_ACTIVITIES^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+CUSTOMER_ID^CRM_ACTIVITIES^002^C^3001^dis_customer_id^0^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^^^^
+TRANS_DATE_STAMP^CRM_ACTIVITIES^003^C^3002^ind_trans_date_stamp^0^^^3^^Y^^^^^TRANS_DATE_STAMP^Transaction Date^Transaction Date^Trans Date^N^6^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+TRANS_TIME_STAMP^CRM_ACTIVITIES^004^C^3003^ine_trans_time_stamp^0^^^4^^Y^^^^^TRANS_TIME_STAMP^Transaction Time Stamp^Transaction Time^Trans Time^C^8^E^^^^^^^60^^^^^^^^^^^^^^^6^^^^00:00:00^00:00:00^^^^^^^^^^
+ACTIVITY_TYPE^CRM_ACTIVITIES^005^C^3004^lbx_activity_type^0^^^5^^N^^^^^ACTIVITY_TYPE^Activity Type^Activity Type^Act Type^C^A^L^^^^^^^104^0^^^^^^^^^^^^Telephone Call                ~T   ;Meeting                       ~M   ;Presentation                  ~P   ;Offsite Meeting               ~O   ;^^1^^^^^^^^^^^^^^^
+ACTIVITY_DATE^CRM_ACTIVITIES^006^C^3005^ind_activity_date^0^^^6^^N^^^C^^ACTIVITY_DATE^Activity Date^Activity Date^Act Date^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^^^^^^^^^^^^^^^
+ACTIVITY_TIME^CRM_ACTIVITIES^007^C^3006^ine_activity_time^0^^^7^^N^^^^^ACTIVITY_TIME^Activity Time^Activity Time^Act Time^C^A^E^^^^^^^64^^^^^^^^^^^^^^^6^^^^00:00:00^^^^^^^^^^^
+DURATION^CRM_ACTIVITIES^008^C^3007^inn_duration^0^^^8^^N^^^^^DURATION^Activity Duration^Duration^Dur^N^^N^^^^^^^30^0^^^^^^^^^^^^^^4^^^^###0^^^^^^^^^^^
+PRIORITY^CRM_ACTIVITIES^009^C^3008^ine_priority^0^^^9^^N^^^^^PRIORITY^Priority Code^Priority Code^Priority Cd^C^^E^^^^^^^35^^^^^^^^^^^^^High                          ~H   ;Medium                        ~M   ;Low                           ~L   ;^^1^^^^^^^^^^^^^^^
+ALARM^CRM_ACTIVITIES^010^C^3009^cbx_alarm^0^^^10^^N^^^^^ALARM^Display Alarm?^Display Alarm?^Alarm?^C^^C^^^Y;N^^^^30^0^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+STATUS_FLAG^CRM_ACTIVITIES^011^C^3010^lbx_status_flag^0^^^11^^N^^^^^STATUS_FLAG^Activity Status^Activity Status^Status^C^^L^^^^^^^80^^^^^^^^^^^^^Open                          ~O   ;In Process                    ~I   ;Pending                       ~P   ;Closed                        ~C   ;^^1^^^^^^^^^^^^^^^
+ACT_LOCATION^CRM_ACTIVITIES^012^C^3011^ine_act_location^0^^^12^^N^^^^^ACT_LOCATION^Activity Location^Activity Location^Loc^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^^^^
+USER_ID^CRM_ACTIVITIES^013^C^3012^dis_user_id^0^^^13^^N^^^F^^USER_ID^User ID^User ID^User ID^C^^E^^^^^^^150^0^^ADM_USER^NAME^^^^^stbl["+USER_ID"]^^^^^^16^0^^^UUUUUUUUUUUUUUUU^^^^H;^20^L^0^^^^
+PRIVATE^CRM_ACTIVITIES^014^C^3013^cbx_private^0^^^14^^N^^^^^PRIVATE^Private Record?^Private Record?^Priv?^C^^C^^^Y;N^^^^30^0^^^^^^^^N^^^^^^1^^^^^^^^^^^^Is this a private record for this user?^^^
+COMMENT^CRM_ACTIVITIES^015^C^3014^ine_comment^0^^^15^^N^^^^^COMMENT^Comment^Comment^Comment^C^^E^^^^^^^320^^^^^^^^^^^^^^^40^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+CRM_ACTIVITIES^PRIMARY^CRM_ACTIVITIES.FIRM_ID                  CRM_ACTIVITIES.CUSTOMER_ID              CRM_ACTIVITIES.TRANS_DATE_STAMP         CRM_ACTIVITIES.TRANS_TIME_STAMP         ^stbl("+FIRM_ID")+CRM_ACTIVITIES.CUSTOMER_ID$+CRM_ACTIVITIES.TRANS_DATE_STAMP$+CRM_ACTIVITIES.TRANS_TIME_STAMP$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.TRANS_DATE_STAMP$+RD_REC_DATA.TRANS_TIME_STAMP$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.TRANS_DATE_STAMP$           RD_REC_DATA.TRANS_TIME_STAMP$           
+{KeyDefsEnd}
+{GridCols}
+002CRM_ACTIVITIES.CUSTOMER_ID              ;003CRM_ACTIVITIES.TRANS_DATE_STAMP         ;004CRM_ACTIVITIES.TRANS_TIME_STAMP         ;005CRM_ACTIVITIES.ACTIVITY_TYPE            ;006CRM_ACTIVITIES.ACTIVITY_DATE            ;007CRM_ACTIVITIES.ACTIVITY_TIME            ;008CRM_ACTIVITIES.DURATION                 ;009CRM_ACTIVITIES.PRIORITY                 ;010CRM_ACTIVITIES.ALARM                    ;011CRM_ACTIVITIES.STATUS_FLAG              ;012CRM_ACTIVITIES.ACT_LOCATION             ;013CRM_ACTIVITIES.USER_ID                  ;014CRM_ACTIVITIES.PRIVATE                  ;015CRM_ACTIVITIES.COMMENT                  ;
+{GridColsEnd}

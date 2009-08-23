@@ -1,0 +1,29 @@
+Barista Application Framework - Definition Module
+APR_CASHREQUIRE - AP Cash Requirements Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APR_CASHREQUIRE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ASVA;^^AP Cash Requirements Report^Cash Requirements Report^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]apr_cashrequire.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APR_CASHREQUIRE^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+AGING_DATE^APR_CASHREQUIRE^002^C^3001^ind_aging_date^0^^^2^^N^^^C^^AGING_DATE^Aging Date^Aging Date^Aging Dt^N^1^D^^^^^^^80^0^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^^^^^^^^
+REPORT_OPTION^APR_CASHREQUIRE^006^C^3002^lbx_report_option^0^^^3^^N^^^^^REPORT_OPTION^Report Option^Age by^Aging Opt^C^^L^^^^^^^109^^^^^^^^^D^^^^Accounting Date               ~A   ;Due Date                      ~D   ;Invoice Date                  ~I   ;^^1^^^^^^^^^^^^^^^
+REPORT_SEQUENCE^APR_CASHREQUIRE^007^C^3003^lbx_report_sequence^0^^^4^^N^^^^^REPORT_SEQUENCE^Report Sequence^Report Sequence^Seq^C^^L^^^^^^^125^^^^^^^^^V^^^^Vendor ID                     ~V   ;Alternate Sequence            ~A   ;^^1^^^^^^^^^^^^^^^
+REPORT_SUMM_DET^APR_CASHREQUIRE^005^C^3004^lbx_report_summ_det^0^^^5^^N^^^^^REPORT_SUMM_DET^Report Summary or Detail^Summary or Detail^Summ or Det^C^^L^^^^^^^74^^^^^^^^^D^^^^Detail                        ~D   ;Summary                       ~S   ;^^1^^^^^^^^^^^^^^^
+REPORT_TYPE^APR_CASHREQUIRE^003^C^3005^lbx_report_type^0^^^6^^N^^^^^REPORT_TYPE^Report Type^Period or Days^Prd or Days^C^^L^^^^^^^60^^^^^^^^^P^^^^Period                        ~P   ;Days                          ~D   ;^^1^^^^^^^^^^^^^^^
+PICK_INTEGER^APR_CASHREQUIRE^004^C^3006^inn_pick_integer^0^^^7^^N^^^^^PICK_INTEGER^Pick Screen Integer^Number of Days^No of Days^N^^N^APR_CASHREQUIRE.REPORT_TYPE^D^^^^^35^0^^^^^^^^^^^^^^8^^^^-#####0^^^^^30^R^^^^^
+EXPORT_FORMAT^APR_CASHREQUIRE^008^C^3007^cbx_export_format^0^^^8^^N^^^^^GENERIC_CHK^Generic checkbox^Export format^Export fmt^C^^C^APR_CASHREQUIRE.REPORT_SUMM_DET^D^Y;N^^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APR_CASHREQUIRE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002APR_CASHREQUIRE.AGING_DATE              ;003APR_CASHREQUIRE.REPORT_OPTION           ;004APR_CASHREQUIRE.REPORT_SEQUENCE         ;005APR_CASHREQUIRE.REPORT_SUMM_DET         ;006APR_CASHREQUIRE.REPORT_TYPE             ;007APR_CASHREQUIRE.PICK_INTEGER            ;008APR_CASHREQUIRE.EXPORT_FORMAT           ;
+{GridColsEnd}

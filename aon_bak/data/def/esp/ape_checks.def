@@ -1,0 +1,35 @@
+Barista Application Framework - Definition Module
+APE_CHECKS - Computer Check Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APE_CHECKS^^^^Computer Check Detail^Detalle de cheques generados electrónicamente^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+AP_TYPE^APE_CHECKS^002^C^3001^dis_ap_type^0^^^1^^Y^^^F^^AP_TYPE^AP Type^Tipo de AP^Tipo de AP^C^^E^^^^^^^0^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Tipo de AP^^^
+VENDOR_ID^APE_CHECKS^003^C^3002^dis_vendor_id^0^^^2^^Y^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Número de proveedor^^^
+AP_INV_NO^APE_CHECKS^004^C^3003^ine_ap_inv_no^0^^^3^^Y^^^^^AP_INV_NO^AP Invoice Number^Número de factura de AP^N.º de fact. de AP^C^^E^^^^^^^0^0^^^^^^^^^^^^^^10^0^^^^^^^^20^L^0^Número de factura de AP^^^
+REFERENCE^APE_CHECKS^006^C^3004^ine_reference^0^^^4^^N^^^^^REFERENCE^Reference^Referencia^Ref.^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Referencia^^^
+AP_INV_MEMO^APE_CHECKS^007^C^3005^ine_ap_inv_memo^0^^^5^^N^^^^^AP_INV_MEMO^AP Invoice Memo^Memorando de la factura de AP^Mem. de la fact. de AP^C^^E^^^^^^^^^^^^^^^^^^^^^^16^^^^^^^^^^^^Memorando de la factura de AP^^^
+CHECK_NO^APE_CHECKS^008^C^3006^ine_check_no^0^^^6^^N^^^^^CHECK_NO^Check Number^Número de cheque^N.º de ch.^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Número de cheque^^^
+INVOICE_DATE^APE_CHECKS^009^C^3007^ind_invoice_date^0^^^7^^N^^^C^^INVOICE_DATE^Invoice Date^Fecha de la factura^Fecha de la fact.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de la factura^^^
+INV_DUE_DATE^APE_CHECKS^010^C^3008^ind_inv_due_date^0^^^8^^N^^^C^^INV_DUE_DATE^Invoice Due Date^Fecha de vencimiento de la factura^Fecha de vcto. de la fact.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de vencimiento de la factura^^^
+DISC_DATE^APE_CHECKS^011^C^3009^ind_disc_date^0^^^9^^N^^^C^^DISC_DATE^Discount Date^Fecha de descuento^Fecha de dscto.^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Fecha de descuento^^^
+INVOICE_AMT^APE_CHECKS^012^C^3010^inn_invoice_amt^0^^^10^^N^^^^^INVOICE_AMT^Invoice Amount^Monto de la factura^Monto de la fact.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto de la factura^^^
+DISCOUNT_AMT^APE_CHECKS^013^C^3011^inn_discount_amt^0^^^11^^N^^^^^DISCOUNT_AMT^Discount Amount^Monto de descuento^Monto de dscto.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto de descuento^^^
+RETENTION^APE_CHECKS^014^C^3012^inn_retention^0^^^12^^N^^^^^RETENTION^Retention Amount^Monto de retención^Monto de ret.^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto de retención^^^
+ORIG_INV_AMT^APE_CHECKS^015^C^3013^inn_orig_inv_amt^0^^^13^^N^^^^^ORIG_INV_AMT^Original Invoice Amount^Monto de la factura original^Monto de la fact. original^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Monto de la factura original^^^
+FIRM_ID^APE_CHECKS^001^C^^^^^^14^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+APE_CHECKS^PRIMARY^APE_CHECKS.FIRM_ID                      APE_CHECKS.AP_TYPE                      APE_CHECKS.VENDOR_ID                    APE_CHECKS.AP_INV_NO                    ^stbl("+FIRM_ID")+APE_CHECKS.AP_TYPE$+APE_CHECKS.VENDOR_ID$+APE_CHECKS.AP_INV_NO$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.AP_INV_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.AP_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+001APE_CHECKS.AP_TYPE                      ;002APE_CHECKS.VENDOR_ID                    ;003APE_CHECKS.AP_INV_NO                    ;004APE_CHECKS.REFERENCE                    ;005APE_CHECKS.AP_INV_MEMO                  ;006APE_CHECKS.CHECK_NO                     ;007APE_CHECKS.INVOICE_DATE                 ;008APE_CHECKS.INV_DUE_DATE                 ;009APE_CHECKS.DISC_DATE                    ;010APE_CHECKS.INVOICE_AMT                  ;011APE_CHECKS.DISCOUNT_AMT                 ;012APE_CHECKS.RETENTION                    ;013APE_CHECKS.ORIG_INV_AMT                 ;
+{GridColsEnd}

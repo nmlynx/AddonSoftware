@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+APR_PURCHASES - AP Purchase Journal
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APR_PURCHASES^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;^^AP Purchase Journal^Purchase Journal^^^^^^^^S^^^^^^H;X;N;U;V;^^[+DIR_PGM]apr_purchases.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APR_PURCHASES^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+PERIOD^APR_PURCHASES^003^C^3001^ine_period^0^^^2^^N^^^^^PERIOD^Period^Period^Prd^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+YEAR^APR_PURCHASES^004^C^3002^ine_year^0^^^3^^N^^^^^YEAR^Year^Year^Year^C^3^E^^^^^^^35^^^^^^^^^^^^^^^4^^^^0000^^^^^^^^^^^
+REPORT_SEQUENCE^APR_PURCHASES^002^C^3003^lbx_report_sequence^0^^^4^^N^^^^^REPORT_SEQUENCE^Report Sequence^Sequence^Seq^C^^L^^^^^^^126^^^^^^^^^V^^^^Alternate Sequence            ~A   ;Distribution Account          ~D   ;Vendor ID                     ~V   ;^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APR_PURCHASES^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002APR_PURCHASES.PERIOD                    ;003APR_PURCHASES.YEAR                      ;004APR_PURCHASES.REPORT_SEQUENCE           ;
+{GridColsEnd}

@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+APR_RECEIPTS - Receipt History Inquiry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APR_RECEIPTS^^^^Receipt History Inquiry^Receipt History Inquiry^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]apr_receipts.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+VENDOR_ID^APR_RECEIPTS^001^C^3001^dis_vendor_id^0^^^1^^N^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vend ID^C^^E^^^^^^^48^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Enter A Valid Vendor^^^
+SUMM_DTL^APR_RECEIPTS^002^C^3002^lbx_summ_dtl^0^^^2^^N^^^^^SUMM_DTL^Summary or Detail^Summary or Detail^Summary or Detail^C^^L^^^^^^^74^^^^^^^^^S^^^^Detail                        ~D   ;Summary                       ~S   ;^^1^^^^^^^^^^^^^^^
+PO_NO^APR_RECEIPTS^003^C^3003^ine_po_no^0^^^3^^N^^^^^PO_NO^Purchase Order Number^Purchase Order Number^PO No^C^^E^^^^^^^56^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APR_RECEIPTS^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001APR_RECEIPTS.VENDOR_ID                  ;002APR_RECEIPTS.SUMM_DTL                   ;003APR_RECEIPTS.PO_NO                      ;
+{GridColsEnd}

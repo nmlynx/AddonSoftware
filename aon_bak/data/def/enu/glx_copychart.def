@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+GLX_COPYCHART - Copy Chart of Accounts
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLX_COPYCHART^^^^Copy Chart of Accounts^Copy Chart of Accounts^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]glx_copychart.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+COMPANY_ID_FROM^GLX_COPYCHART^001^C^3001^dis_company_id_from^0^^^1^^N^^^F^^COMPANY_ID^Company ID^From Company ID^Comp ID^C^^E^^^^^^^35^0^^ADM_FIRMS^FIRM_NAME^^^^^^^^^^^2^0^^^00^00^^^^30^R^^^^^
+COMPANY_ID_TO^GLX_COPYCHART^002^C^3002^dis_company_id_to^0^^^2^^N^^^F^^COMPANY_ID^Company ID^To Company ID^Comp ID^C^^E^^^^^^^35^0^^ADM_FIRMS^FIRM_NAME^^^^^^^^^^^2^0^^^00^00^^^^30^R^^^^^
+GL_ACCOUNT_1^GLX_COPYCHART^003^C^3003^dis_gl_account^0^^^3^^N^^^F^^GL_ACCOUNT^GL Account Number^GL Account^Account^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^^^^
+GL_ACCOUNT_2^GLX_COPYCHART^003^C^3004^dis_gl_account^0^^^3^^N^^^F^^GL_ACCOUNT^GL Account Number^GL Account^Account^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^^^^
+GL_WILDCARD^GLX_COPYCHART^004^C^3005^ine_gl_wildcard^0^^^4^^N^^^^^GL_WILDCARD^GL Account Wildcard Mask^Account Wildcard Mask^Acct Wildcard Mask^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^^^^
+YN_PROMPT^GLX_COPYCHART^005^C^3006^cbx_yn_prompt^0^^^5^^N^^^^^YN_PROMPT^Yes/No Prompt^Overwrite?^^C^^C^^^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLX_COPYCHART^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001GLX_COPYCHART.COMPANY_ID_FROM           ;002GLX_COPYCHART.COMPANY_ID_TO             ;003GLX_COPYCHART.GL_ACCOUNT                ;004GLX_COPYCHART.GL_WILDCARD               ;005GLX_COPYCHART.YN_PROMPT                 ;
+{GridColsEnd}

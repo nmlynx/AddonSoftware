@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+OPE_CREDITACTION - Credit Action for an Order / Invoice
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPE_CREDITACTION^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;ASVA;BSHO;^^Credit Action for an Order / Invoice^Credit Action^^^^^^^^S^^^^^^H;N;U;V;^^[+DIR_PGM]adx_dummy.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+STATUS_MESSAGE^OPE_CREDITACTION^001^C^3001^ine_status_message^0^^^1^^N^^^^^DESCRIPTION^Description^Message^Desc^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^30^^^^^^^^C;^^^^^^^
+CREDIT_STATUS^OPE_CREDITACTION^002^C^3002^ine_credit_status^0^^^2^^N^^^^^CREDIT_STATUS^Display an Order's Credit Stat^Credit Status^Stat^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^C;^^^0^^^^
+CREDIT_ACTION^OPE_CREDITACTION^003^C^3003^rad_credit_action^0^^^3^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^03003;03004;03005;03006;^CREDIT_ACTION^Credit Action to Take^Credit Action to Take^Action^C^^R^^^^0^0^0^0^0^^^^^^^^1^^^^Hold This Order               ~1   ;Hold All Future Orders        ~2   ;Release This Order            ~3   ;Delete This Order             ~4   ;^^20^0^^^^^^^^^^0^^^^
+AR_TERMS_CODE^OPE_CREDITACTION^004^C^3007^dis_ar_terms_code^0^^^4^^N^^^F^^AR_TERMS_CODE^Terms Code^Terms Code^Terms Cd^C^^E^OPE_CREDITACTION.CREDIT_ACTION^3^^0^0^0^0^0^[+FIRM_ID]+"A"+@^ARC_TERMCODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^E;^20^L^0^^^^
+ENTER_CRED_PSWRD^OPE_CREDITACTION^005^C^3008^edp_enter_cred_pswrd^0^^^5^^N^^^^^ENTER_CRED_PSWRD^Enter Credit Password^Enter Password^Password^C^^E^OPE_CREDITACTION.CREDIT_ACTION^2;3^^0^0^0^0^0^^^^^^^^^^^^^^6^0^^^XXXXXX^^^^p;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPE_CREDITACTION^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001OPE_CREDITACTION.STATUS_MESSAGE         ;002OPE_CREDITACTION.CREDIT_STATUS          ;003OPE_CREDITACTION.CREDIT_ACTION          ;004OPE_CREDITACTION.AR_TERMS_CODE          ;005OPE_CREDITACTION.ENTER_CRED_PSWRD       ;
+{GridColsEnd}

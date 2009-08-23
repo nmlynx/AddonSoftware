@@ -1,0 +1,35 @@
+Barista Application Framework - Definition Module
+SFE_WOLOTSER - Work Order Lot/Serial Numbers
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFE_WOLOTSER^^^^Work Order Lot/Serial Numbers^Work Order Lot/Serial Numbers^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFE_WOLOTSER^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WO_LOCATION^SFE_WOLOTSER^002^C^3001^ine_wo_location^0^^^2^^Y^^^^^WO_LOCATION^Work Order Location [Not Used]^Work Order Location^WO Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Work Order Location [Not Used]^^^
+WO_NO^SFE_WOLOTSER^003^C^3002^ine_wo_no^0^^^3^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+SEQUENCE_NO^SFE_WOLOTSER^004^C^3003^ine_sequence_no^0^^^4^^Y^^^^^SEQUENCE_NO^Sequence Number^Sequence Number^Seq No^C^S^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Sequence Number^^^
+CLOSED_FLAG^SFE_WOLOTSER^005^C^3004^ine_closed_flag^0^^^5^^N^^^^^CLOSED_FLAG^Closed Flag^Closed Flag^Closed Flag^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Closed Flag^^^
+WO_LS_CMT^SFE_WOLOTSER^007^C^3005^ine_wo_ls_cmt^0^^^7^^N^^^^^WO_LS_CMT^WO Lot/Serial WIP Comment^WO Lot/Serial WIP Comment^WO Lot/Ser WIP Cmt^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^WO Lot/Serial WIP Comment^^^
+COMPLETE_FLG^SFE_WOLOTSER^008^C^3006^cbx_complete_flg^0^^^8^^N^^^^^COMPLETE_FLG^Completion Flag^Completion Flag^Completion Flag^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Completion Flag^^^
+LOTSER_NO^SFE_WOLOTSER^010^C^3007^ine_lotser_no^0^^^10^^N^^^^^LOTSER_NO^Lot/Serial Number^Lot/Serial Number^Lot/Serial No^C^^E^^^^^^^0^0^^^^^^^^^^^^^^20^0^^^^^^^^20^L^0^Lot/Serial Number^^^
+CLOSED_DATE^SFE_WOLOTSER^011^C^3008^ind_closed_date^0^^^11^^N^^^C^^CLOSED_DATE^Date Closed^Date Closed^Date Closed^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Date Closed^^^
+SCH_PROD_QTY^SFE_WOLOTSER^012^C^3009^inn_sch_prod_qty^0^^^12^^N^^^^^SCH_PROD_QTY^Scheduled Production Quantity^Scheduled Production Quantity^Sched Prod Qty^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Scheduled Production Quantity^^^
+QTY_CLS_TODT^SFE_WOLOTSER^014^C^3010^inn_qty_cls_todt^0^^^14^^N^^^^^QTY_CLS_TODT^Quantity Closed to Date^Quantity Closed to Date^Qty Closed to Date^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Quantity Closed to Date^^^
+CLS_CST_TODT^SFE_WOLOTSER^015^C^3011^inn_cls_cst_todt^0^^^15^^N^^^^^CLS_CST_TODT^Closed Cost to Date^Closed Cost to Date^Closed Cst to Date^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Closed Cost to Date^^^
+CLS_INP_QTY^SFE_WOLOTSER^016^C^3012^inn_cls_inp_qty^0^^^16^^N^^^^^CLS_INP_QTY^Quantity Closed This Entry^Quantity Closed This Entry^Qty Closed/Entry^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Quantity Closed This Entry^^^
+CLOSED_COST^SFE_WOLOTSER^017^C^3013^inn_closed_cost^0^^^17^^N^^^^^CLOSED_COST^Closed Cost^Closed Cost^Closed Cst^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Closed Cost^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFE_WOLOTSER^PRIMARY^SFE_WOLOTSER.FIRM_ID                    SFE_WOLOTSER.WO_LOCATION                SFE_WOLOTSER.WO_NO                      SFE_WOLOTSER.SEQUENCE_NO                ^stbl("+FIRM_ID")+SFE_WOLOTSER.WO_LOCATION$+SFE_WOLOTSER.WO_NO$+SFE_WOLOTSER.SEQUENCE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.WO_LOCATION$+RD_REC_DATA.WO_NO$+RD_REC_DATA.SEQUENCE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.WO_LOCATION$                RD_REC_DATA.WO_NO$                      RD_REC_DATA.SEQUENCE_NO$                
+{KeyDefsEnd}
+{GridCols}
+002SFE_WOLOTSER.WO_LOCATION                ;003SFE_WOLOTSER.WO_NO                      ;004SFE_WOLOTSER.SEQUENCE_NO                ;005SFE_WOLOTSER.CLOSED_FLAG                ;007SFE_WOLOTSER.WO_LS_CMT                  ;008SFE_WOLOTSER.COMPLETE_FLG               ;010SFE_WOLOTSER.LOTSER_NO                  ;011SFE_WOLOTSER.CLOSED_DATE                ;012SFE_WOLOTSER.SCH_PROD_QTY               ;014SFE_WOLOTSER.QTY_CLS_TODT               ;015SFE_WOLOTSER.CLS_CST_TODT               ;016SFE_WOLOTSER.CLS_INP_QTY                ;017SFE_WOLOTSER.CLOSED_COST                ;
+{GridColsEnd}

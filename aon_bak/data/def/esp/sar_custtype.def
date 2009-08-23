@@ -1,0 +1,38 @@
+Barista Application Framework - Definition Module
+SAR_CUSTTYPE - Sales Analysis by Cust Type
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SAR_CUSTTYPE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;ASVA;BFMC;BSHO;^^Sales Analysis by Cust Type^Sales Analysis by Cust Type^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]sar_custtype.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CURRENT_PER^SAR_CUSTTYPE^001^C^3001^ine_current_per^0^^^1^^N^^^^^CURRENT_PER^Current Period^Período actual^Per. act.^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^^^
+CURRENT_YEAR^SAR_CUSTTYPE^002^C^3002^ine_current_year^0^^^2^^N^^^^^CURRENT_YEAR^Current Year^Año actual^Año act.^C^3^E^^^^^^^35^0^^^^^^^^^^^^^^4^0^^^0000^^^^^^^^^^^
+SA_LEVEL^SAR_CUSTTYPE^003^C^3003^lbx_sa_level^0^^^3^^N^^^^^SA_LEVEL^Sales Analysis Level [N/P/I]^Sales Analysis Level^SA Level^C^^L^^^^^^^103^^^^^^^^^^^^^Customer Type                 ~C   ;Product Type                  ~P   ;Item                          ~I   ;^^1^^^^^^^^^^^^^^^
+SEQ_SA^SAR_CUSTTYPE^004^C^3004^lbx_seq_sa^0^^^4^^N^^^^^SEQ_SA^Sales Analysis Sequence^Sales Analysis Sequence^SA Seq^C^^L^^^^^^^85^^^^^^^^^U^^^^Ascending                     ~A   ;Descending                    ~D   ;Unsorted                      ~U   ;^^1^^^^^^^^^^^^^^^
+CUSTOMER_TYPE_1^SAR_CUSTTYPE^005^C^3005^dis_customer_type^0^^^5^^N^^^F^^CUSTOMER_TYPE^Customer Type^Tipo de cliente^Tipo de cliente^C^^E^^^^^^^35^0^[+FIRM_ID]+"L"+@^ARC_CUSTTYPE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^1;2;^20^L^0^^^^
+CUSTOMER_TYPE_2^SAR_CUSTTYPE^005^C^3006^dis_customer_type^0^^^5^^N^^^F^^CUSTOMER_TYPE^Customer Type^Tipo de cliente^Tipo de cliente^C^^E^^^^^^^35^0^[+FIRM_ID]+"L"+@^ARC_CUSTTYPE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^1;2;^20^L^0^^^^
+PRODUCT_TYPE_1^SAR_CUSTTYPE^006^C^3007^dis_product_type^0^^^6^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+PRODUCT_TYPE_2^SAR_CUSTTYPE^006^C^3008^dis_product_type^0^^^6^^N^^^F^^PRODUCT_TYPE^Product Type^Product Type^Prod Type^C^^E^^^^^^^35^^[+FIRM_ID]+"A"+@^IVC_PRODCODE^CODE_DESC^^^^^^^^^^^3^^^^UUU^^^^1;2;^20^L^^^^^
+ITEM_ID_1^SAR_CUSTTYPE^007^C^3009^dis_item_id^0^^^7^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+ITEM_ID_2^SAR_CUSTTYPE^007^C^3010^dis_item_id^0^^^7^^N^^^F^^ITEM_ID^Inventory Item ID^Item ID^Item ID^C^^E^^^^^^^160^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^1;2;^20^L^^Enter a valid inventory item^^^
+TWLVE_PER_REPORT^SAR_CUSTTYPE^008^C^3011^cbx_twlve_per_report^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^TWLVE_PER_REPORT^12 Period Report^12 Period Report^12 Period Report^C^^C^^^Y;N^^^^30^0^^^^^^^^N^^^^^^1^0^^^^^^^^^^0^^^^
+SALES_UNITS^SAR_CUSTTYPE^009^C^3012^lbx_sales_units^0^^^9^^N^^^^^SALES_UNITS^Sales or Units^Sales or Units^Sales or Units^C^^L^SAR_CUSTTYPE.TWLVE_PER_REPORT^Y^^^^^60^^^^^^^^^^^^^Sales                         ~S   ;Units                         ~U   ;^^1^^^^^^^^^^^^Sales or Units^^^
+MTD^SAR_CUSTTYPE^010^C^3013^cbx_mtd^0^^^10^^N^^^^^MTD^Month To Date Indicator^MTD^MTD^C^^C^SAR_CUSTTYPE.TWLVE_PER_REPORT^N^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+YTD^SAR_CUSTTYPE^011^C^3014^cbx_ytd^0^^^11^^N^^^^^YTD^Year To Date Indicator^YTD^YTD^C^^C^SAR_CUSTTYPE.TWLVE_PER_REPORT^N^Y;N^^+6^-1^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+PRIOR^SAR_CUSTTYPE^012^C^3015^cbx_prior^0^^^12^^N^^^^^PRIOR^Prior Year Indicator^Prior^Prior^C^^C^SAR_CUSTTYPE.TWLVE_PER_REPORT^N^Y;N^^+6^-1^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+PAGE_BREAK^SAR_CUSTTYPE^013^C^3016^cbx_page_break^0^^^13^^N^^^^^PAGE_BREAK^Page Break?^¿Salto de página?^¿Salto de página?^C^^C^^^Y;N^^-12^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^^^^
+INC_ZERO_SLS^SAR_CUSTTYPE^014^C^3017^cbx_inc_zero_sls^0^^^14^^N^^^^^INC_ZERO_SLS^Include 0 Sales Lines?^Include 0 Sales Lines?^Include 0 Sales Line^C^^C^^^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SAR_CUSTTYPE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001SAR_CUSTTYPE.CURRENT_PER                ;002SAR_CUSTTYPE.CURRENT_YEAR               ;003SAR_CUSTTYPE.SA_LEVEL                   ;004SAR_CUSTTYPE.SEQ_SA                     ;005SAR_CUSTTYPE.CUSTOMER_TYPE              ;006SAR_CUSTTYPE.PRODUCT_TYPE               ;007SAR_CUSTTYPE.ITEM_ID                    ;008SAR_CUSTTYPE.TWLVE_PER_REPORT           ;009SAR_CUSTTYPE.SALES_UNITS                ;010SAR_CUSTTYPE.MTD                        ;011SAR_CUSTTYPE.YTD                        ;012SAR_CUSTTYPE.PRIOR                      ;013SAR_CUSTTYPE.PAGE_BREAK                 ;014SAR_CUSTTYPE.INC_ZERO_SLS               ;
+{GridColsEnd}

@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+POE_LINKED - Purchase Orders Linked to O/P
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POE_LINKED^^^^Purchase Orders Linked to O/P^Purchase Orders Linked to O/P^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POE_LINKED^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+PO_NO^POE_LINKED^002^C^3001^ine_po_no^0^^^2^^Y^^^^^PO_NO^Purchase Order Number^Número de pedido de compra^N.º de PO^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Purchase Order Number^^^
+POEDET_SEQ_REF^POE_LINKED^003^C^3002^ine_poedet_seq_ref^0^^^3^^Y^^^^^SEQ_REF^Sequence Reference Number^Sequence Ref Number^Sequence Ref Number^C^^E^^^^^^^0^0^^^^^^^^^^^^^^12^0^^^^^^^^30^R^0^Purchase Order Line Number^^^
+CUSTOMER_ID^POE_LINKED^004^C^3003^dis_customer_id^0^^^4^^N^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^Customer N^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+ORDER_NO^POE_LINKED^005^C^3004^ine_order_no^0^^^5^^N^^^^^ORDER_NO^Sales Order Number^Sales Order Number^Sales Ord No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Sales Order Number^^^
+OPEDET_SEQ_REF^POE_LINKED^006^C^3005^ine_opedet_seq_ref^0^^^6^^N^^^^^SEQ_REF^Sequence Reference Number^Sequence Ref Number^Sequence Ref Number^C^^E^^^^^^^0^0^^^^^^^^^^^^^^12^0^^^^^^^^30^R^0^Detail Line Item Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POE_LINKED^PRIMARY^POE_LINKED.FIRM_ID                      POE_LINKED.PO_NO                        POE_LINKED.POEDET_SEQ_REF               ^stbl("+FIRM_ID")+POE_LINKED.PO_NO$+POE_LINKED.POEDET_SEQ_REF$^stbl("+FIRM_ID")+RD_REC_DATA.PO_NO$+RD_REC_DATA.POEDET_SEQ_REF$^stbl("+FIRM_ID")                        RD_REC_DATA.PO_NO$                      RD_REC_DATA.POEDET_SEQ_REF$             
+{KeyDefsEnd}
+{GridCols}
+002POE_LINKED.PO_NO                        ;003POE_LINKED.POEDET_SEQ_REF               ;004POE_LINKED.CUSTOMER_ID                  ;005POE_LINKED.ORDER_NO                     ;006POE_LINKED.OPEDET_SEQ_REF               ;
+{GridColsEnd}

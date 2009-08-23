@@ -1,0 +1,36 @@
+Barista Application Framework - Definition Module
+GLM_BUDGETMASTER - Budget Revisions
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_BUDGETMASTER^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ADEL;AOPT-BREV;ASHO;AWRI;BWRI;^Crear presupuesto             BREVF;^Budget Revisions^Revisiones del presupuesto^^^^^^^^T^^^^^^V;W;N;U;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLM_BUDGETMASTER^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+BUDGET_CODE^GLM_BUDGETMASTER^002^C^3001^ine_budget_code^0^^^2^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^BUDGET_CODE^Budget Revision Code^Código de revisión^Cód. de rev. del pres.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^^^^^Código de revisión del presupuesto^^^
+AMT_OR_UNITS^GLM_BUDGETMASTER^003^C^3002^lbx_amt_or_units^0^^^3^^Y^^^^^AMT_OR_UNITS^Amounts or Units [A/U]^Montos o unidades^Montos/Un.^C^^L^^^^^^^79^^^^^^^^^^^^^Montos                        ~A   ;Unidades                      ~U   ;^1^1^^^^^^^^^^^^Montos o unidades [A/U]^^^
+DESCRIPTION^GLM_BUDGETMASTER^004^C^3003^ine_description^0^^^4^^N^^^^^DESCRIPTION^Description^Descripción^Descr.^C^^E^^^^^^^240^^^^^^^^^^^^^^1^30^^^^^^^^^^^^Descripción^^^
+REV_TITLE^GLM_BUDGETMASTER^005^C^3004^ine_rev_title^0^^^5^^N^^^^^REV_TITLE^Revision Column Title^Título de la columna^Tít. de la col. de rev.^C^^E^^^^^^^120^^^^^^^^^^^^^^1^15^^^^^^^^^^^^Título de la columna de revisión^^^
+REVISION_SRC^GLM_BUDGETMASTER^007^C^3005^lbx_revision_src^0^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^REVISION_SRC^Budget Revision Source Cd^Fuente de revisión^Orig. de revisión del presupuesto^C^^L^^^^^^^0^0^^GLM_RECORDTYPES^DESCRIPTION^^^^^^^Información adicional^^^3^3^0^^^^^^^^^^0^Fuente^^^
+GL_ACCOUNT_1^GLM_BUDGETMASTER^014^C^3006^dis_gl_account^0^^^7^^N^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^Primer número de cuenta del GL^^^
+GL_ACCOUNT_2^GLM_BUDGETMASTER^014^C^3007^dis_gl_account^0^^^7^^N^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^1;2;^30^L^^Primer número de cuenta del GL^^^
+GL_WILDCARD^GLM_BUDGETMASTER^015^C^3008^ine_gl_wildcard^0^^^9^^N^^^^^GL_WILDCARD^GL Account Wildcard Mask^Máscara comodín^Máscara comodín^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Máscara comodín de cuentas del GL^^^
+AMT_OR_PCT^GLM_BUDGETMASTER^008^C^3009^lbx_amt_or_pct^0^^^10^^N^^^^^AMT_OR_PCT^Amount or Percentage [A/P]^Monto/porcentaje^Monto/%^C^^L^^^^^^^0^0^^^^^^^^A^^^^Monto                         ~A   ;Porcentaje                    ~P   ;^^1^0^^^^^^^^^^0^Monto o porcentaje [A/P]^^^
+AMTPCT_VAL^GLM_BUDGETMASTER^017^C^3010^inn_amtpct_val^0^^^11^^N^^^^^AMTPCT_VAL^Amount/Percentage Value^Valor^Valor del monto/%^N^^N^^^^^^^56^^^^^^^^^0^^^^^^7^^^^^^^^^^^^Valor del monto/porcentaje^^^
+OVERWRITE^GLM_BUDGETMASTER^009^C^3011^cbx_overwrite^0^^^12^^N^^^^^OVERWRITE^Overwrite Existing Records?^¿sobrescribir^¿Sobrescribir?^C^^C^^^Y;N^^^^30^^^^^^^^^N^^^^^^1^^^^^^^^^^^^¿Sobrescribir registros existentes?^^^
+ROUNDING^GLM_BUDGETMASTER^010^C^3012^lbx_rounding^0^^^13^^N^^^^^ROUNDING^Rounding Factor [C/D/H/T]^Factor de redondeo^Factor de redondeo^C^^L^^^^^^^0^0^^^^^^^^C^^^^Centavos                      ~C   ;Dólares                      ~D   ;Cientos                       ~H   ;Miles                         ~T   ;^^1^0^^^^^^^^^^0^Factor de redondeo [C/D/H/T]^^^
+CREATED_DATE^GLM_BUDGETMASTER^012^C^3013^ind_created_date^0^^^14^^N^^^^^CREATED_DATE^Date Created^Fecha de creación^Fecha de creación^C^1^D^^^^^^^80^^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^C;^^^^Fecha de creación^^^
+LSTREV_DATE^GLM_BUDGETMASTER^013^C^3014^ind_lstrev_date^0^^^15^^N^^^^^LSTREV_DATE^Last Revision Date^Última revisión^Fecha de última rev.^C^1^D^^^^^^^80^^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^C;^^^^Fecha de última revisión^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_BUDGETMASTER^PRIMARY^GLM_BUDGETMASTER.FIRM_ID                GLM_BUDGETMASTER.BUDGET_CODE            GLM_BUDGETMASTER.AMT_OR_UNITS           ^stbl("+FIRM_ID")+GLM_BUDGETMASTER.BUDGET_CODE$+GLM_BUDGETMASTER.AMT_OR_UNITS$^stbl("+FIRM_ID")+RD_REC_DATA.BUDGET_CODE$+RD_REC_DATA.AMT_OR_UNITS$^stbl("+FIRM_ID")                        RD_REC_DATA.BUDGET_CODE$                RD_REC_DATA.AMT_OR_UNITS$               
+{KeyDefsEnd}
+{GridCols}
+002GLM_BUDGETMASTER.BUDGET_CODE            ;003GLM_BUDGETMASTER.AMT_OR_UNITS           ;004GLM_BUDGETMASTER.DESCRIPTION            ;005GLM_BUDGETMASTER.REV_TITLE              ;006GLM_BUDGETMASTER.REVISION_SRC           ;007GLM_BUDGETMASTER.GL_ACCOUNT             ;009GLM_BUDGETMASTER.GL_WILDCARD            ;010GLM_BUDGETMASTER.AMT_OR_PCT             ;011GLM_BUDGETMASTER.AMTPCT_VAL             ;012GLM_BUDGETMASTER.OVERWRITE              ;013GLM_BUDGETMASTER.ROUNDING               ;014GLM_BUDGETMASTER.CREATED_DATE           ;015GLM_BUDGETMASTER.LSTREV_DATE            ;
+{GridColsEnd}

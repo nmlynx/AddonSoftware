@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+IVC_CLASCODE - Item Class Master
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVC_CLASCODE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BDEL;BSHO;^^Item Class Master^Item Class Master^^^^^^^^T^^^^^^A;P;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVC_CLASCODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+ITEM_CLASS^IVC_CLASCODE^002^C^3001^ine_item_class^0^^^2^^Y^^^^^ITEM_CLASS^Item Class^Item Class^Item Class^C^^E^^^^^^^35^^^^^^^^^^^^^^1^3^0^^^UUU^^^^^20^L^0^Item Class^^^
+CODE_DESC^IVC_CLASCODE^003^C^3002^ine_code_desc^0^^^3^^N^^^^^CODE_DESC^Code Description^Description^Description^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVC_CLASCODE^PRIMARY^IVC_CLASCODE.FIRM_ID                    IVC_CLASCODE.ITEM_CLASS                 ^stbl("+FIRM_ID")+IVC_CLASCODE.ITEM_CLASS$^stbl("+FIRM_ID")+RD_REC_DATA.ITEM_CLASS$^stbl("+FIRM_ID")                        RD_REC_DATA.ITEM_CLASS$                 
+{KeyDefsEnd}
+{GridCols}
+002IVC_CLASCODE.ITEM_CLASS                 ;003IVC_CLASCODE.CODE_DESC                  ;
+{GridColsEnd}

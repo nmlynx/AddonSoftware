@@ -1,0 +1,27 @@
+Barista Application Framework - Definition Module
+POR_POEXPEDITE - PO Expediting Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POR_POEXPEDITE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ASVA;^^PO Expediting Report^PO Expediting Report^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]por_expedite.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+PO_NO_1^POR_POEXPEDITE^001^C^3001^ine_po_no^0^^^1^^N^^^^^PO_NO^Purchase Order Number^Número de pedido de compra^N.º de PO^C^^E^^^^^+5^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+PO_NO_2^POR_POEXPEDITE^001^C^3002^ine_po_no^0^^^1^^N^^^^^PO_NO^Purchase Order Number^Número de pedido de compra^N.º de PO^C^^E^^^^^+5^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+VENDOR_ID_1^POR_POEXPEDITE^002^C^3003^dis_vendor_id^0^^^2^^N^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^1;2;^30^R^0^Escribir un proveedor válido^^^
+VENDOR_ID_2^POR_POEXPEDITE^002^C^3004^dis_vendor_id^0^^^2^^N^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^1;2;^30^R^0^Escribir un proveedor válido^^^
+PICK_DATE^POR_POEXPEDITE^003^C^3005^ind_pick_date^0^^^3^^N^^^C^^PICK_DATE^Pick Screen Date YYYYMMDD^Expedite Thru Date^Expedite Thru Date^C^1^D^^^^^^^^^^^^^^^^[+SYSTEM_DATE]^^^^^^8^^^^^^^^^^^^^^^
+WAREHOUSE_ID^POR_POEXPEDITE^004^C^3006^dis_warehouse_id^0^^^4^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^3;^20^L^0^Enter a two-digit warehouse ID^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POR_POEXPEDITE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001POR_POEXPEDITE.PO_NO                    ;002POR_POEXPEDITE.VENDOR_ID                ;003POR_POEXPEDITE.PICK_DATE                ;004POR_POEXPEDITE.WAREHOUSE_ID             ;
+{GridColsEnd}

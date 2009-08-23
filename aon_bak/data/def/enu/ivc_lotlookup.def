@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+IVC_LOTLOOKUP - Inventory Lot Lookup
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVC_LOTLOOKUP^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ACUS;AREC;ASIZ;AWIN;^^Inventory Lot Lookup^Inventory Lot Lookup^^^^^^^^S^^^^^^F;H;d;N;U;V;^[+DIR_PGM]adx_dummy.aon^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVC_LOTLOOKUP^001^C^^^^^^1^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^0^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+ITEM_ID^IVC_LOTLOOKUP^002^C^3001^dis_item_id^0^^^2^^N^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Item ID^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Enter a valid inventory item^^^
+WAREHOUSE_ID^IVC_LOTLOOKUP^003^C^3002^dis_warehouse_id^0^^^3^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^0^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+LOTS_TO_DISP^IVC_LOTLOOKUP^004^C^3003^lbx_lots_to_disp^0^^^4^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^GENERIC_LIST^Generic ListButton^Lots to display^Disp lots^C^^L^^^^0^0^0^0^0^^^^^^^^^^^^All                           ~A   ;Closed                        ~C   ;Open                          ~O   ;>Zero                         ~Z   ;^^30^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVC_LOTLOOKUP^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002IVC_LOTLOOKUP.ITEM_ID                   ;003IVC_LOTLOOKUP.WAREHOUSE_ID              ;004IVC_LOTLOOKUP.LOTS_TO_DISP              ;
+{GridColsEnd}

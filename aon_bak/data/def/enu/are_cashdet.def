@@ -1,0 +1,33 @@
+Barista Application Framework - Definition Module
+ARE_CASHDET - Cash Receipts Entry Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARE_CASHDET^^^^Cash Receipts Entry Detail^Cash Receipts Entry Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARE_CASHDET^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AR_TYPE^ARE_CASHDET^002^C^^^^^^2^^Y^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^G;^^^^AR Type [Not Used]^"  "^^
+RESERVED_KEY_01^ARE_CASHDET^003^C^^^^^^3^^Y^^^^^RESERVED_KEY_01^Reserved Key String^Reserved Key String^Res Key Str^C^^H^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^20^L^0^Reserved For Addon Use^^^
+RECEIPT_DATE^ARE_CASHDET^004^C^3001^ind_receipt_date^0^^^4^^Y^^^C^^RECEIPT_DATE^Receipt Date^Receipt Date^Rec Date^C^1^D^^^^^^^80^^^^^^^^^^^^^^^8^0^^^^^^^G;^^^^Receipt Date^^^
+CUSTOMER_ID^ARE_CASHDET^005^C^3002^dis_customer_id^0^^^5^^Y^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^G;^30^R^^Customer Number^^^
+CASH_REC_CD^ARE_CASHDET^006^C^3003^dis_cash_rec_cd^0^^^6^^Y^^^F^^CASH_REC_CD^Cash Receipts Code^Cash Receipt Code^Cash Rec Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+"C"+@^ARC_CASHCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^G;^20^L^0^Cash Receipts Code^^^
+AR_CHECK_NO^ARE_CASHDET^007^C^3004^ine_ar_check_no^0^^^7^^Y^^^^^AR_CHECK_NO^Check Number^Check Number^Chk No^C^^E^^^^^^^70^^^^^^^^^^^^^^^7^^^^^^^^G;^20^L^^Check Number^^^
+RESERVED_KEY_02^ARE_CASHDET^008^C^^^^^^8^^Y^^^^^RESERVED_KEY_02^Reserved Key String^Reserved Key String^Res Key Str^C^^H^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^20^L^0^Reserved For Addon Use^^^
+AR_INV_NO^ARE_CASHDET^009^C^3005^ine_ar_inv_no^0^^^9^^Y^^^^^AR_INV_NO^AR Invoice Number^Invoice^Invoice^C^^E^^^^^^^70^^^^^^^^^^^^^^^7^^^^UUUUUUU^UUUUUUU^^^^30^R^^AR Invoice Number^^^
+APPLY_AMT^ARE_CASHDET^011^C^3006^inn_apply_amt^0^^^10^^N^^^^^APPLY_AMT^Cash Applied^Applied^Applied^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Cash Applied^^^
+DISCOUNT_AMT^ARE_CASHDET^012^C^3007^inn_discount_amt^0^^^11^^N^^^^^DISCOUNT_AMT^Discount Amount^Discount Amount^Disc Amt^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^A^^^^^^^^
+BATCH_NO^ARE_CASHDET^013^C^3008^ine_batch_no^0^^^13^^N^^^^^BATCH_NO^Batch Entry Control Number^Batch Entry Control Number^Batch Entry No^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^^30^R^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARE_CASHDET^PRIMARY^ARE_CASHDET.FIRM_ID                     ARE_CASHDET.AR_TYPE                     ARE_CASHDET.RESERVED_KEY_01             ARE_CASHDET.RECEIPT_DATE                ARE_CASHDET.CUSTOMER_ID                 ARE_CASHDET.CASH_REC_CD                 ARE_CASHDET.AR_CHECK_NO                 ARE_CASHDET.RESERVED_KEY_02             ARE_CASHDET.AR_INV_NO                   ^stbl("+FIRM_ID")+"  "+ARE_CASHDET.RESERVED_KEY_01$+ARE_CASHDET.RECEIPT_DATE$+ARE_CASHDET.CUSTOMER_ID$+ARE_CASHDET.CASH_REC_CD$+ARE_CASHDET.AR_CHECK_NO$+ARE_CASHDET.RESERVED_KEY_02$+ARE_CASHDET.AR_INV_NO$^stbl("+FIRM_ID")+"  "+RD_REC_DATA.RESERVED_KEY_01$+RD_REC_DATA.RECEIPT_DATE$+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.CASH_REC_CD$+RD_REC_DATA.AR_CHECK_NO$+RD_REC_DATA.RESERVED_KEY_02$+RD_REC_DATA.AR_INV_NO$^stbl("+FIRM_ID")                        "  "                                    RD_REC_DATA.RESERVED_KEY_01$            RD_REC_DATA.RECEIPT_DATE$               RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.CASH_REC_CD$                RD_REC_DATA.AR_CHECK_NO$                RD_REC_DATA.RESERVED_KEY_02$            RD_REC_DATA.AR_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+009ARE_CASHDET.AR_INV_NO                   ;010ARE_CASHDET.APPLY_AMT                   ;011ARE_CASHDET.DISCOUNT_AMT                ;013ARE_CASHDET.BATCH_NO                    ;
+{GridColsEnd}

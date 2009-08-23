@@ -1,0 +1,50 @@
+Barista Application Framework - Definition Module
+GLM_FINDETAIL - Financial Report Detail Record
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_FINDETAIL^^^^Financial Report Detail Record^Financial Report Detail Record^^^^^^^GLM_FINMASTER^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLM_FINDETAIL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL_RPT_NO^GLM_FINDETAIL^002^C^^^^^^2^^Y^^^F^^GL_RPT_NO^GL Financial Report Number^Financial Report Number^Fin Rpt No^C^^E^^^^^^^35^0^[+FIRM_ID]+@^GLM_FINMASTER^GL_RPT_DESC^^^^^^^^^^^2^0^^^00^00^^^O;^30^R^0^GL Financial Report Number^^^
+GL_RPT_LINE^GLM_FINDETAIL^003^C^3001^ine_gl_rpt_line^0^^^3^^Y^^^^^GL_RPT_LINE^GL Financial Report Line Nbr^Financial Report Line Nbr^Line #^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^0000^0000^^^^30^R^0^GL Financial Report Line Nbr^^^
+LINE_TYPE^GLM_FINDETAIL^004^C^3002^lbx_line_type^0^^^4^^N^^^^^LINE_TYPE_LIST^Line Type^Line Type^Type^C^^L^^^^^^^89^0^^^^^^^^^^^^Heading                       ~H   ;Detail                        ~D   ;Total                         ~T   ;Non-Printing                  ~N   ;Beginning                     ~B   ;Change                        ~C   ;^^1^0^^^^^^^^^^0^Line Type^^^
+GL_LINE_DESC^GLM_FINDETAIL^005^C^3003^ine_gl_line_desc^0^^^5^^N^^^^^GL_LINE_DESC^GL Report Line Description^Line Description^Description^C^^E^^^^^^^280^^^^^^^^^^^^^^^35^^^^^^^^^^^^GL Report Line Description^^^
+DEFAULT_POS^GLM_FINDETAIL^006^C^3004^ine_default_pos^0^^^6^^N^^^^^DEFAULT_POS^Default Print Position^Default Print Position^Prnt Pos^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Default Print Position^^^
+EDITING_CODE^GLM_FINDETAIL^007^C^3005^ine_editing_code^0^^^7^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^EDITING_CODE^Editing [S/U/D/P/-/C/F/$]^Editing [S/U/D/P/-/C/F/$]^Editing^C^^E^^^^^^^40^^^^^^^^^^^^^^^5^^^^^^^^^^^^Editing [S/U/D/P/-/C/F/$]^^^
+INPUT_TOTAL^GLM_FINDETAIL^008^C^3006^ine_input_total^0^^^8^^N^^^^^INPUT_TOTAL^Input Total Number^Input Total Number^Input Tot#^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Input Total Number^^^
+INPUT_PERCNT^GLM_FINDETAIL^009^C^3007^ine_input_percnt^0^^^9^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^INPUT_PERCNT^Input Percentage Number^Input Percentage Number^Input %^C^^E^^^^^^^35^0^^^^^^^^^^^^^^3^0^^^000^000^^%^^30^R^0^Input Percentage Number^^^
+ACCUM_PCT^GLM_FINDETAIL^010^C^3008^cbx_accum_pct^0^^^10^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^ACCUM_PCT^Accumulate Percent [Y/N]?^Accumulate Percent?^Accum^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^Accumulate Percent?^^^
+GL_UPDT_SEQ^GLM_FINDETAIL^011^C^^^^^^11^^N^^^^^GL_UPDT_SEQ^GL Report Update Sequence^GL Report Update Sequence^Rpt Update Seq^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^0^0^^^O;^30^R^^GL Report Update Sequence^^^
+OUTPUT_TOTAL_01^GLM_FINDETAIL^013^C^3009^ine_output_total_01^0^^^12^^N^^^^^OUTPUT_TOTAL_01^Output Total Number1^Output Total Number^Tot #^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+OUTPUT_OPER_01^GLM_FINDETAIL^018^C^3010^lbx_output_oper_01^0^^^13^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OUTPUT_OPER_01^Output Total Operator [+ or -]^Output Total Operator^Oper^C^^L^GLM_FINDETAIL.OUTPUT_TOTAL_01^!000^^^^^35^0^^^^^^^^^^^^+                             ~+   ;-                             ~-   ;^^1^0^^^^^^^^^^0^^^^
+OUTPUT_TOTAL_02^GLM_FINDETAIL^014^C^3011^ine_output_total_02^0^^^14^^N^^^^^OUTPUT_TOTAL_02^Output Total Number2^Output Total Number^Tot #^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+OUTPUT_OPER_02^GLM_FINDETAIL^019^C^3012^lbx_output_oper_02^0^^^15^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OUTPUT_OPER_01^Output Total Operator [+ or -]^Output Total Operator^Oper^C^^L^GLM_FINDETAIL.OUTPUT_TOTAL_02^!000^^^^^35^0^^^^^^^^^^^^+                             ~+   ;-                             ~-   ;^^1^0^^^^^^^^^^0^^^^
+OUTPUT_TOTAL_03^GLM_FINDETAIL^015^C^3013^ine_output_total_03^0^^^16^^N^^^^^OUTPUT_TOTAL_03^Output Total Number3^Output Total Number^Tot #^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+OUTPUT_OPER_03^GLM_FINDETAIL^020^C^3014^lbx_output_oper_03^0^^^17^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OUTPUT_OPER_01^Output Total Operator [+ or -]^Output Total Operator^Oper^C^^L^GLM_FINDETAIL.OUTPUT_TOTAL_03^!000^^^^^35^0^^^^^^^^^^^^+                             ~+   ;-                             ~-   ;^^1^0^^^^^^^^^^0^^^^
+OUTPUT_TOTAL_04^GLM_FINDETAIL^016^C^3015^ine_output_total_04^0^^^18^^N^^^^^OUTPUT_TOTAL_04^Output Total Number4^Output Total Number^Tot #^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+OUTPUT_OPER_04^GLM_FINDETAIL^021^C^3016^lbx_output_oper_04^0^^^19^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OUTPUT_OPER_01^Output Total Operator [+ or -]^Output Total Operator^Oper^C^^L^GLM_FINDETAIL.OUTPUT_TOTAL_04^!000^^^^^35^0^^^^^^^^^^^^+                             ~+   ;-                             ~-   ;^^1^0^^^^^^^^^^0^^^^
+OUTPUT_TOTAL_05^GLM_FINDETAIL^017^C^3017^ine_output_total_05^0^^^20^^N^^^^^OUTPUT_TOTAL_05^Output Total Number5^Output Total Number^Tot #^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+OUTPUT_OPER_05^GLM_FINDETAIL^022^C^3018^lbx_output_oper_05^0^^^21^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^OUTPUT_OPER_01^Output Total Operator [+ or -]^Operator^Oper^C^^L^GLM_FINDETAIL.OUTPUT_TOTAL_05^!000^^^^^35^0^^^^^^^^^^^^+                             ~+   ;-                             ~-   ;^^1^0^^^^^^^^^^0^^^^
+GL_RPT_COL_01^GLM_FINDETAIL^023^C^3019^ine_gl_rpt_col_01^0^^^22^^N^^^^^GL_RPT_COL_01^GL Financial Report Column 01^1^Col 1^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+GL_RPT_COL_02^GLM_FINDETAIL^024^C^3020^ine_gl_rpt_col_02^0^^^23^^N^^^^^GL_RPT_COL_02^GL Financial Report Column 02^2^Col 2^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+GL_RPT_COL_03^GLM_FINDETAIL^025^C^3021^ine_gl_rpt_col_03^0^^^24^^N^^^^^GL_RPT_COL_03^GL Financial Report Column 03^3^Col 3^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+GL_RPT_COL_04^GLM_FINDETAIL^026^C^3022^ine_gl_rpt_col_04^0^^^25^^N^^^^^GL_RPT_COL_04^GL Financial Report Column 04^4^Col 4^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+GL_RPT_COL_05^GLM_FINDETAIL^027^C^3023^ine_gl_rpt_col_05^0^^^26^^N^^^^^GL_RPT_COL_05^GL Financial Report Column 05^5^Col 5^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+GL_RPT_COL_06^GLM_FINDETAIL^028^C^3024^ine_gl_rpt_col_06^0^^^27^^N^^^^^GL_RPT_COL_06^GL Financial Report Column 06^6^Col 6^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+GL_RPT_COL_07^GLM_FINDETAIL^029^C^3025^ine_gl_rpt_col_07^0^^^28^^N^^^^^GL_RPT_COL_07^GL Financial Report Column 07^7^Col 7^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+GL_RPT_COL_08^GLM_FINDETAIL^030^C^3026^ine_gl_rpt_col_08^0^^^29^^N^^^^^GL_RPT_COL_08^GL Financial Report Column 08^8^Col 8^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_FINDETAIL^PRIMARY^GLM_FINDETAIL.FIRM_ID                   GLM_FINDETAIL.GL_RPT_NO                 GLM_FINDETAIL.GL_RPT_LINE               ^stbl("+FIRM_ID")+GLM_FINDETAIL.GL_RPT_NO$+GLM_FINDETAIL.GL_RPT_LINE$^stbl("+FIRM_ID")+RD_REC_DATA.GL_RPT_NO$+RD_REC_DATA.GL_RPT_LINE$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_RPT_NO$                  RD_REC_DATA.GL_RPT_LINE$                
+{KeyDefsEnd}
+{GridCols}
+003GLM_FINDETAIL.GL_RPT_LINE               ;004GLM_FINDETAIL.LINE_TYPE                 ;005GLM_FINDETAIL.GL_LINE_DESC              ;006GLM_FINDETAIL.DEFAULT_POS               ;007GLM_FINDETAIL.EDITING_CODE              ;008GLM_FINDETAIL.INPUT_TOTAL               ;009GLM_FINDETAIL.INPUT_PERCNT              ;010GLM_FINDETAIL.ACCUM_PCT                 ;012GLM_FINDETAIL.OUTPUT_TOTAL_01           ;013GLM_FINDETAIL.OUTPUT_OPER_01            ;014GLM_FINDETAIL.OUTPUT_TOTAL_02           ;015GLM_FINDETAIL.OUTPUT_OPER_02            ;016GLM_FINDETAIL.OUTPUT_TOTAL_03           ;017GLM_FINDETAIL.OUTPUT_OPER_03            ;018GLM_FINDETAIL.OUTPUT_TOTAL_04           ;019GLM_FINDETAIL.OUTPUT_OPER_04            ;020GLM_FINDETAIL.OUTPUT_TOTAL_05           ;021GLM_FINDETAIL.OUTPUT_OPER_05            ;022GLM_FINDETAIL.GL_RPT_COL_01             ;023GLM_FINDETAIL.GL_RPT_COL_02             ;024GLM_FINDETAIL.GL_RPT_COL_03             ;025GLM_FINDETAIL.GL_RPT_COL_04             ;026GLM_FINDETAIL.GL_RPT_COL_05             ;027GLM_FINDETAIL.GL_RPT_COL_06             ;028GLM_FINDETAIL.GL_RPT_COL_07             ;029GLM_FINDETAIL.GL_RPT_COL_08             ;
+{GridColsEnd}

@@ -1,0 +1,29 @@
+Barista Application Framework - Definition Module
+OPE_CREDITSTATUS - Customer Credit Status
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPE_CREDITSTATUS^^^^Customer Credit Status^Customer Credit Status^^^^^^^^S^^^^^^H;U;w;N;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CREDIT_LIMIT^OPE_CREDITSTATUS^001^C^3001^inn_credit_limit^0^^^2^^N^^^^^CREDIT_LIMIT^Credit Limit^Credit Limit^Cred Lim^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^A^C;^^^^^^^
+OPEN_AR_INVS^OPE_CREDITSTATUS^002^C^3002^inn_open_ar_invs^0^^^3^^N^^^^^OPEN_AR_INVS^Open AR Invoices^Open Invoices^Open AR Invoices^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^^^^A^C;^^^0^^^^
+OPEN_ORDERS^OPE_CREDITSTATUS^003^C^3003^inn_open_orders^0^^^4^^N^^^^^OPEN_ORDERS^Open Sales Orders^Open Orders^Open Sales Orders^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^^^^A^C;^^^0^^^^
+OPEN_BOS^OPE_CREDITSTATUS^004^C^3004^inn_open_bos^0^^^5^^N^^^^^OPEN_BOS^Open Back Orders^Open B/O's^Open Back Orders^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^^^^A^C;^^^0^^^^
+ORDERS_HELD^OPE_CREDITSTATUS^005^C^3005^inn_orders_held^0^^^6^^N^^^^^ORDERS_HELD^Held Sales Orders^Held Orders^Held Sales Orders^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^^^^A^C;^^^0^^^^
+CREDIT_LEFT^OPE_CREDITSTATUS^006^C^3006^inn_credit_left^0^^^7^^N^^^^^CREDIT_LEFT^Customer Credit Available^Credit Left^Customer Credit Avai^N^^N^^^^0^0^+1^0^0^^^^^^^^^^^^^^7^0^^^^^^A^C;^^^0^^^^
+OVER_MAX_DAYS^OPE_CREDITSTATUS^007^C^3007^inn_over_max_days^0^^^8^^N^^^^^OVER_MAX_DAYS^Amount Over Max Aging Days^Over Max Days^Amount Over Max Agin^N^^N^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^^^^A^C;^^^0^^^^
+CRED_HOLD^OPE_CREDITSTATUS^008^C^3008^lbx_cred_hold^0^^^9^^N^^^^^CRED_HOLD^Credit Hold^Customer Hold^Cred Hold^C^^L^^^^0^0^0^0^0^^^^^^^^^^^^Yes                           ~Y   ;No                            ~N   ;Exempt                        ~E   ;^^1^0^^^^^^^C;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPE_CREDITSTATUS^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+002OPE_CREDITSTATUS.CREDIT_LIMIT           ;003OPE_CREDITSTATUS.OPEN_AR_INVS           ;004OPE_CREDITSTATUS.OPEN_ORDERS            ;005OPE_CREDITSTATUS.OPEN_BOS               ;006OPE_CREDITSTATUS.ORDERS_HELD            ;007OPE_CREDITSTATUS.CREDIT_LEFT            ;008OPE_CREDITSTATUS.OVER_MAX_DAYS          ;009OPE_CREDITSTATUS.CRED_HOLD              ;
+{GridColsEnd}

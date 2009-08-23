@@ -1,0 +1,33 @@
+Barista Application Framework - Definition Module
+APM_PAYADDR - Vendor Pay-to Address
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APM_PAYADDR^^^^Vendor Pay-to Address^Domicilio de pago al proveedor^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APM_PAYADDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+VENDOR_ID^APM_PAYADDR^002^C^3001^dis_vendor_id^0^^^2^^Y^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Escribir un proveedor válido^^^
+PAY_TO_NAME^APM_PAYADDR^003^C^3002^ine_pay_to_name^0^^^3^^N^^^^^PAY_TO_NAME^Pay To Name^Nombre del destinatario del pago^Nombre del destinatario del pago^C^^E^^^^^^^0^0^^^^^^^^^^^^^^30^0^^^^^^^^^^0^^^^
+ADDR_LINE_1^APM_PAYADDR^004^C^3003^ine_addr_line_1^0^^^4^^N^^^^^ADDR_LINE_1^Address Line 1^Domicilio^Dom.^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^^^^^^^^
+ADDR_LINE_2^APM_PAYADDR^005^C^3004^ine_addr_line_2^0^^^5^^N^^^^^ADDR_LINE_2^Address Line 2^Línea de domicilio 2^Dom. 2^C^^E^^^^^^^^^^^^^^^^^^^^^^24^^^^^^^^^^^^^^^
+CITY^APM_PAYADDR^006^C^3005^ine_city^0^^^6^^N^^^^^CITY^City Name^Ciudad^Ciudad^C^^E^^^^^^^^^^^^^^^^^^^^^^22^^^^^^^^^^^^^^^
+STATE_CODE^APM_PAYADDR^007^C^3006^ine_state_code^0^^^7^^N^^^^^STATE_CODE^State Code^Estado/Provincia^Estado^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^^^^
+ZIP_CODE^APM_PAYADDR^008^C^3007^ine_zip_code^0^^^8^^N^^^^^ZIP_CODE^Zip/Postal Code^Código postal^Código postal^C^P^E^^^^^^^0^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^^^^
+PHONE_NO^APM_PAYADDR^009^C^3008^ine_phone_no^0^^^9^^N^^^^^PHONE_NO^Telephone Number^Número de teléfono^N.º de tel.^C^T^E^^^^^^^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^^^^
+PHONE_EXTEN^APM_PAYADDR^010^C^3009^ine_phone_exten^0^^^10^^N^^^^^PHONE_EXTEN^Phone Extension^Interno^Int.^C^^E^^^^^^^^^^^^^^^^^^^^^^4^^^^^^^^^^^^^^^
+CONTACT_NAME^APM_PAYADDR^011^C^3010^ine_contact_name^0^^^11^^N^^^^^CONTACT_NAME^Contact Name^Nombre de contacto^Nombre de cont.^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^^^^
+FAX_NO^APM_PAYADDR^012^C^3011^ine_fax_no^0^^^12^^N^^^^^FAX_NO^Fax Telephone Number^Número de fax^N.º de fax^C^T^E^^^^^^^0^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APM_PAYADDR^PRIMARY^APM_PAYADDR.FIRM_ID                     APM_PAYADDR.VENDOR_ID                   ^stbl("+FIRM_ID")+APM_PAYADDR.VENDOR_ID$^stbl("+FIRM_ID")+RD_REC_DATA.VENDOR_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.VENDOR_ID$                  
+{KeyDefsEnd}
+{GridCols}
+002APM_PAYADDR.VENDOR_ID                   ;003APM_PAYADDR.PAY_TO_NAME                 ;004APM_PAYADDR.ADDR_LINE_1                 ;005APM_PAYADDR.ADDR_LINE_2                 ;006APM_PAYADDR.CITY                        ;007APM_PAYADDR.STATE_CODE                  ;008APM_PAYADDR.ZIP_CODE                    ;009APM_PAYADDR.PHONE_NO                    ;010APM_PAYADDR.PHONE_EXTEN                 ;011APM_PAYADDR.CONTACT_NAME                ;012APM_PAYADDR.FAX_NO                      ;
+{GridColsEnd}

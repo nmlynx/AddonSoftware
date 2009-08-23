@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+ARM_CUSTCMTS - Customer Comments
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARM_CUSTCMTS^^^^Customer Comments^Customer Comments^^^^^^^ARM_CUSTMAST^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARM_CUSTCMTS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+CUSTOMER_ID^ARM_CUSTCMTS^002^C^^^^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^O;^30^R^^Customer Number^^^
+SEQUENCE_NUM^ARM_CUSTCMTS^003^C^3001^ine_sequence_num^0^^^3^^Y^^^^^SEQUENCE_NUM^Sequence Number^Sequence Number^Seq No^C^S^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Sequence Number^^^
+STD_COMMENTS^ARM_CUSTCMTS^004^C^3002^ine_std_comments^0^^^4^^N^^^^^STD_COMMENTS^Comments Line^Comments Line^Cmts Line^C^^E^^^^^^^384^^^^^^^^^^^^^^^48^^^^^^^^^^^^Comments Line^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARM_CUSTCMTS^PRIMARY^ARM_CUSTCMTS.FIRM_ID                    ARM_CUSTCMTS.CUSTOMER_ID                ARM_CUSTCMTS.SEQUENCE_NUM               ^stbl("+FIRM_ID")+ARM_CUSTCMTS.CUSTOMER_ID$+ARM_CUSTCMTS.SEQUENCE_NUM$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.SEQUENCE_NUM$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.SEQUENCE_NUM$               
+{KeyDefsEnd}
+{GridCols}
+003ARM_CUSTCMTS.SEQUENCE_NUM               ;004ARM_CUSTCMTS.STD_COMMENTS               ;
+{GridColsEnd}

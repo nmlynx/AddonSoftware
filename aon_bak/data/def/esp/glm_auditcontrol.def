@@ -1,0 +1,38 @@
+Barista Application Framework - Definition Module
+GLM_AUDITCONTROL - GL Posting Control - Restricted
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_AUDITCONTROL^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;^^GL Posting Control - Restricted^Control de contabilización del GL^^^^^^ADM_AUDITCONTROL^^T^^^^N^^B;D;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLM_AUDITCONTROL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+PROCESS_ID^GLM_AUDITCONTROL^002^C^3001^dis_process_id^0^^^2^^Y^^^F^^PROCESS_ID^Process Identification^Identificación del proceso^ID del proceso^C^^E^^^^^+1^^160^0^[+FIRM_ID]+@^ADM_PROCMASTER^DESCRIPTION^^^^^^^^^^^16^0^^^^^^^^20^L^0^^^^
+SEQUENCE_NO^GLM_AUDITCONTROL^003^C^3002^dis_sequence_no^0^^^3^^Y^^^F^^SEQ_NUM^GL Process Dtl Seq No^Número de secuencia^Número de secuencia^C^^E^^^^^^^35^0^[PROCESS_ID]+@^ADM_PROCDETAIL^DESCRIPTION^^^^^^^^^^^3^0^^^000^000^^^^^^0^^^^
+PROCESS_ALIAS^GLM_AUDITCONTROL^004^C^3003^dis_process_alias^0^^^4^^N^^^^^PROCESS_ALIAS^Process Alias/Table Name^Alias de proceso/Nombre de tabla^Alias de proceso^C^^E^^^^^^^160^0^@+[PROCESS_ID]+[SEQUENCE_NO]^ADM_PROCDETAIL^DESCRIPTION^ALT_KEY_01^^^^^^^^^^16^0^^^^^^^A;B;C;^20^L^0^^^^
+PROCESS_PROGRAM^GLM_AUDITCONTROL^005^C^3004^dis_process_program^0^^^5^^N^^^^^PROCESS_PROGRAM^Process Program Name^Nombre del programa^Nombre del progr.^C^^E^^^^^^^192^0^@+[PROCESS_ID]+[SEQUENCE_NO]^ADM_PROCDETAIL^DESCRIPTION^ALT_KEY_02^^^^^^^^^^24^0^^^^^^^A;B;C;^20^L^0^^^^
+JOURNAL_ID^GLM_AUDITCONTROL^006^C^3005^dis_journal_id^0^^^6^^N^^^F^^JOURNAL_ID^Journal ID Code^ID de libro diario^Cód. de ID del libro diario^C^^E^^^^^^^35^0^[+FIRM_ID]+@^GLC_JOURNALCODE^CODE_DESC^^^^^^^Detalles^^^1^2^0^^^UU^AA^^^^30^L^0^Escribir un código válido de ID del libro diario^^^
+GL_AUDIT^GLM_AUDITCONTROL^012^C^3006^cbx_gl_audit^0^^^7^^N^^^^^GL_AUDIT^Use GL Audit Control [Y/N]?^¿Utiliza números de auditoría?^¿Usar el ctrl. de auditoría?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^C;^^^^^^^
+AUDIT_NUMBER^GLM_AUDITCONTROL^017^C^3007^inn_audit_number^0^^^8^^N^^^^^AUDIT_NUMBER^Audit Number^Número de última auditoría^Número de auditoría^N^^N^ADM_AUDITCONTROL.GL_AUDIT^^^^^^55^0^^^^^^^^^^^^^^7^^^^0000000^0000000^^^C;^^^^^^^
+GL_WORK_FILE^GLM_AUDITCONTROL^013^C^3008^cbx_gl_work_file^0^^^9^^N^^^^^GL_WORK_FILE^Use GL Work File [Y/N]?^¿Usar archivo de trabajo del GL?^¿Usar archivo de trabajo?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^C;^^^^^^^
+FILE_NAME^GLM_AUDITCONTROL^011^C^^^^^^10^^N^^^^^FILE_NAME^File Name^Nombre de archivo resumido^Nombre del archivo^C^^E^ADM_AUDITCONTROL.GL_WORK_FILE^Y^^^^^48^^^^^^^^^^^^^^^6^^^^^^^^O;^^^^^^^
+PRT_GL_SUM^GLM_AUDITCONTROL^015^C^3009^cbx_prt_gl_sum^0^^^11^^N^^^^^PRT_GL_SUM^Print GL Summary [Y/N]?^¿Imprimir resumen del GL?^¿Impr. resumen?^C^^C^GLM_AUDITCONTROL.GL_WORK_FILE^Y^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+GL_POST_MEMO^GLM_AUDITCONTROL^016^C^3010^ine_gl_post_memo^0^^^12^^N^^^^^GL_POST_MEMO^GL Posting Memo^Memorando de registro resumido^Mem. de reg.^C^^E^^^^^^^240^0^^^^^^^^^^^^^^30^0^^^^^^^^^^0^^^^
+DETAIL_LEVEL^GLM_AUDITCONTROL^014^C^3011^lbx_detail_level^0^^^13^^N^^^^^DETAIL_LEVEL^GL Posting Detail Level^Nivel de detalle^Nivel de det. de reg.^C^^L^^^^^^^159^^^^^^^^^A^^^^Registrar transacciones de det~Y   ;Registrar transacciones de res~N   ;Registro basado en la cuenta d~A   ;^^1^^^^^^^^^^^^^^^
+LSTUSE_DATE^GLM_AUDITCONTROL^007^C^3012^ind_lstuse_date^0^^^14^^N^^^^^LSTUSE_DATE^Date Last Used^Usado por última vez^Fecha de última utilización^C^1^D^^^^^^^70^0^^^^^^^^^^^^^^8^0^^^^^^^C;^^^0^^^^
+LSTUSE_TIME^GLM_AUDITCONTROL^008^C^3013^ine_lstuse_time^0^^^15^^N^^^^^LSTUSE_TIME^Time Last Used^Hora de última utilización^Hora de última utilización^C^A^E^^^^^+8^-1^40^0^^^^^^^^^^^^^^4^0^^^00:00^00:00^^^C;L;^^^0^^^^
+LSTUPD_DATE^GLM_AUDITCONTROL^009^C^3014^ind_lstupd_date^0^^^16^^N^^^^^LSTUPD_DATE^Date Last Updated^Última actualización^Fecha de última actualización^C^1^D^^^^^-8^^70^^^^^^^^^^^^^^^8^^^^^^^^C;^^^^^^^
+LSTUPD_TIME^GLM_AUDITCONTROL^010^C^3015^ine_lstupd_time^0^^^17^^N^^^^^LSTUPD_TIME^Time Last Updated^Hora de última actualización^Hora de última actualización^C^A^E^^^^^+8^-1^40^^^^^^^^^^^^^^^4^^^^00:00^00:00^^^C;L;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_AUDITCONTROL^PRIMARY^GLM_AUDITCONTROL.FIRM_ID                GLM_AUDITCONTROL.PROCESS_ID             GLM_AUDITCONTROL.SEQUENCE_NO            ^stbl("+FIRM_ID")+GLM_AUDITCONTROL.PROCESS_ID$+GLM_AUDITCONTROL.SEQUENCE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.PROCESS_ID$+RD_REC_DATA.SEQUENCE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.PROCESS_ID$                 RD_REC_DATA.SEQUENCE_NO$                
+{KeyDefsEnd}
+{GridCols}
+002GLM_AUDITCONTROL.PROCESS_ID             ;003GLM_AUDITCONTROL.SEQUENCE_NO            ;004GLM_AUDITCONTROL.PROCESS_ALIAS          ;005GLM_AUDITCONTROL.PROCESS_PROGRAM        ;006GLM_AUDITCONTROL.JOURNAL_ID             ;007GLM_AUDITCONTROL.GL_AUDIT               ;008GLM_AUDITCONTROL.AUDIT_NUMBER           ;009GLM_AUDITCONTROL.GL_WORK_FILE           ;011GLM_AUDITCONTROL.PRT_GL_SUM             ;012GLM_AUDITCONTROL.GL_POST_MEMO           ;013GLM_AUDITCONTROL.DETAIL_LEVEL           ;014GLM_AUDITCONTROL.LSTUSE_DATE            ;015GLM_AUDITCONTROL.LSTUSE_TIME            ;016GLM_AUDITCONTROL.LSTUPD_DATE            ;017GLM_AUDITCONTROL.LSTUPD_TIME            ;
+{GridColsEnd}

@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+PRM_EMPLCMNT - Employee Comments
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRM_EMPLCMNT^^^^Employee Comments^Employee Comments^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+EMPLOYEE_NO^PRM_EMPLCMNT^002^C^3001^dis_employee_no^0^^^1^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+SEQUENCE_NUM^PRM_EMPLCMNT^003^C^^^^^^2^^Y^^^^^SEQUENCE_NUM^Sequence Number^Sequence Number^Seq No^C^S^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^L;W;^30^R^^Sequence Number^^^
+STD_COMMENTS^PRM_EMPLCMNT^004^C^3002^ine_std_comments^0^^^3^^N^^^^^STD_COMMENTS^Comments Line^Comments Line^Cmts Line^C^^E^^^^^^^^^^^^^^^^^^^^^^48^^^^^^^^^^^^Comments Line^^^
+FIRM_ID^PRM_EMPLCMNT^001^C^^^^^^4^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRM_EMPLCMNT^PRIMARY^PRM_EMPLCMNT.FIRM_ID                    PRM_EMPLCMNT.EMPLOYEE_NO                PRM_EMPLCMNT.SEQUENCE_NUM               ^stbl("+FIRM_ID")+PRM_EMPLCMNT.EMPLOYEE_NO$+PRM_EMPLCMNT.SEQUENCE_NUM$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$+RD_REC_DATA.SEQUENCE_NUM$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                RD_REC_DATA.SEQUENCE_NUM$               
+{KeyDefsEnd}
+{GridCols}
+001PRM_EMPLCMNT.EMPLOYEE_NO                ;002PRM_EMPLCMNT.SEQUENCE_NUM               ;003PRM_EMPLCMNT.STD_COMMENTS               ;
+{GridColsEnd}

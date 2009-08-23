@@ -1,0 +1,31 @@
+Barista Application Framework - Definition Module
+APE_INVOICEDET - Invoice Entry Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+APE_INVOICEDET^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ADEL;AGCL;AUDE;^^Invoice Entry Detail^Detalle de entrada de facturas^^^^^^^APE_INVOICEHDR^G^^Invoice_Entry^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^APE_INVOICEDET^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AP_TYPE^APE_INVOICEDET^002^C^3001^dis_ap_type^0^^^2^^Y^^^F^^AP_TYPE^AP Type^Tipo de AP^Tipo de AP^C^^E^^^^^^^35^0^[+FIRM_ID]+"A"+@^APC_TYPECODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^G;^20^L^0^Tipo de AP^^^
+VENDOR_ID^APE_INVOICEDET^003^C^3002^dis_vendor_id^0^^^3^^Y^^^F^^VENDOR_ID^Vendor Number^ID del proveedor^ID del prov.^C^^E^^^^^^^60^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^G;^30^R^0^Número de proveedor^^^
+AP_INV_NO^APE_INVOICEDET^004^C^3003^ine_ap_inv_no^0^^^4^^Y^^^^^AP_INV_NO^AP Invoice Number^Número de factura de AP^N.º de fact. de AP^C^^E^^^^^^^100^0^^^^^^^^^^^^^^10^0^^^^^^^G;^20^L^0^Número de factura de AP^^^
+SEQUENCE_NUM^APE_INVOICEDET^005^C^3004^ine_sequence_num^0^^^5^^Y^^^^^SEQUENCE_NUM^Sequence Number^Número de secuencia^Sec.^C^S^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^G;^30^R^^Número de secuencia^^^
+GL_ACCOUNT^APE_INVOICEDET^006^C^3005^dis_gl_account^0^^^6^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BINP;^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta^C^^E^^^^^^^80^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^1^10^^^^UUUUUUUUUU^^^I^V;^30^L^^Número de cuenta del GL^^^
+MISCELLANEA^APE_INVOICEDET^008^C^3006^ine_miscellanea^0^^^7^^N^^^^^MISCELLANEA^Miscellaneous Stuff^Varios^Varios^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^^^^^Varios^^^
+GL_POST_AMT^APE_INVOICEDET^009^C^3007^inn_gl_post_amt^0^^^8^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVEC;BINP;^^^GL_POST_AMT^GL Posting Amount^Monto de registro^Monto^N^^N^^^^^^^105^^^^^^^^^^^^^^^7^^^^###,###,###.00-^^^A^^^^^Monto de registro del GL^^^
+UNITS^APE_INVOICEDET^010^C^3008^inn_units^0^^^9^^N^^^^^UNITS^Units^Unidades^Unidades^N^^N^^^^^^^56^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Unidades^^^
+BATCH_NO^APE_INVOICEDET^011^C^3009^ine_batch_no^0^^^11^^N^^^^^BATCH_NO^Batch Entry Control Number^Número de control de entrada de lote^N.º de entrada de lote^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^7^0^^^0000000^0000000^^^G;^30^R^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+APE_INVOICEDET^PRIMARY^APE_INVOICEDET.FIRM_ID                  APE_INVOICEDET.AP_TYPE                  APE_INVOICEDET.VENDOR_ID                APE_INVOICEDET.AP_INV_NO                APE_INVOICEDET.SEQUENCE_NUM             ^stbl("+FIRM_ID")+APE_INVOICEDET.AP_TYPE$+APE_INVOICEDET.VENDOR_ID$+APE_INVOICEDET.AP_INV_NO$+APE_INVOICEDET.SEQUENCE_NUM$^stbl("+FIRM_ID")+RD_REC_DATA.AP_TYPE$+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.AP_INV_NO$+RD_REC_DATA.SEQUENCE_NUM$^stbl("+FIRM_ID")                        RD_REC_DATA.AP_TYPE$                    RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.AP_INV_NO$                  RD_REC_DATA.SEQUENCE_NUM$               
+{KeyDefsEnd}
+{GridCols}
+006APE_INVOICEDET.GL_ACCOUNT               ;006{{DESC}}                                ;007APE_INVOICEDET.MISCELLANEA              ;008APE_INVOICEDET.GL_POST_AMT              ;009APE_INVOICEDET.UNITS                    ;
+{GridColsEnd}

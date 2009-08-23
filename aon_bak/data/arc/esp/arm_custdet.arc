@@ -1,0 +1,583 @@
+//#charset: UTF-8
+
+// Barista Application Framework - ASCII Resource File
+// ARM_CUSTDET - Customer Detail
+// Proprietary Information. BASIS International Ltd. All rights reserved.
+
+VERSION "4.0"
+
+WINDOW 1000 "Temporary Title" 10 40 0824 0231
+BEGIN
+    NAME "win_arm_custdet"
+    MANAGESYSCOLOR
+    KEYBOARDNAVIGATION
+    DIALOGBEHAVIOR
+    EVENTMASK 1136656524
+    INVISIBLE
+    ENTERASTAB
+    
+    STATICTEXT 02001, "ID del cliente:", 75, 13, 78, 16
+    BEGIN
+        NOT OPAQUE
+        JUSTIFICATION 32768
+        NAME "txt_customer_id"
+    END
+    
+    INPUTE 03001, "", 156, 10, 60, 19
+    BEGIN
+        NAME "ine_customer_id"
+        CLIENTEDGE
+        PASSENTER
+        HIGHLIGHT
+        PADCHARACTER 0
+        MAXLENGTH 6
+    END
+    
+    STATICTEXT 04001, "", 242, 14, 200, 15
+    BEGIN
+        NOT OPAQUE
+        NOT WORDWRAP
+        NAME "dis_customer_id"
+        FOREGROUNDCOLOR RGB(0,0,96)
+    END
+    TOOLBUTTON 20001, "", 216, 10, 20, 19
+    BEGIN
+        NAME "tbnf_customer_id"
+    END
+END
+
+STATICTEXT 02201, "Tipo de cliente:", 64, 13, 89, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_customer_type"
+END
+
+INPUTE 03201, "", 156, 10, 35, 19
+BEGIN
+    NAME "ine_customer_type"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UUU"
+END
+
+STATICTEXT 04201, "", 217, 14, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_customer_type"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20201, "", 191, 10, 20, 19
+BEGIN
+    NAME "tbnf_customer_type"
+END
+
+STATICTEXT 02202, "Código de vendedor:", 30, 34, 123, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_slspsn_code"
+END
+
+INPUTE 03202, "", 156, 31, 35, 19
+BEGIN
+    NAME "ine_slspsn_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UUU"
+END
+
+STATICTEXT 04202, "", 217, 35, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_slspsn_code"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20202, "", 191, 31, 20, 19
+BEGIN
+    NAME "tbnf_slspsn_code"
+END
+
+STATICTEXT 02203, "Código de condiciones:", 15, 55, 138, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_ar_terms_code"
+END
+
+INPUTE 03203, "", 156, 52, 35, 19
+BEGIN
+    NAME "ine_ar_terms_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UU"
+END
+
+STATICTEXT 04203, "", 217, 56, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_ar_terms_code"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20203, "", 191, 52, 20, 19
+BEGIN
+    NAME "tbnf_ar_terms_code"
+END
+
+STATICTEXT 02204, "Código impositivo:", 414, -134, 111, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_tax_code"
+END
+
+INPUTE 03204, "", 528, -137, 70, 19
+BEGIN
+    NAME "ine_tax_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UUUUUUUUUU"
+END
+
+STATICTEXT 04204, "", 624, -133, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_tax_code"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20204, "", 598, -137, 20, 19
+BEGIN
+    NAME "tbnf_tax_code"
+END
+
+STATICTEXT 02205, "Código de condiciones de flete:", 341, -113, 184, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_frt_terms"
+END
+
+INPUTE 03205, "", 528, -116, 35, 19
+BEGIN
+    NAME "ine_frt_terms"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UUU"
+END
+
+STATICTEXT 04205, "", 589, -112, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_frt_terms"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20205, "", 563, -116, 20, 19
+BEGIN
+    NAME "tbnf_frt_terms"
+END
+
+STATICTEXT 02206, "Código de territorio:", 404, -92, 121, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_territory"
+END
+
+INPUTE 03206, "", 528, -95, 35, 19
+BEGIN
+    NAME "ine_territory"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UUU"
+END
+
+STATICTEXT 04206, "", 589, -91, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_territory"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20206, "", 563, -95, 20, 19
+BEGIN
+    NAME "tbnf_territory"
+END
+
+STATICTEXT 02207, "Código de distribución:", 387, -71, 138, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_ar_dist_code"
+END
+
+INPUTE 03207, "", 528, -74, 35, 19
+BEGIN
+    NAME "ine_ar_dist_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UU"
+END
+
+STATICTEXT 04207, "", 589, -70, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_ar_dist_code"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20207, "", 563, -74, 20, 19
+BEGIN
+    NAME "tbnf_ar_dist_code"
+END
+
+STATICTEXT 02208, "Código de mensaje:", 410, -50, 115, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_message_code"
+END
+
+INPUTE 03208, "", 528, -53, 35, 19
+BEGIN
+    NAME "ine_message_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UU"
+END
+
+STATICTEXT 04208, "", 589, -49, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_message_code"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20208, "", 563, -53, 20, 19
+BEGIN
+    NAME "tbnf_message_code"
+END
+
+STATICTEXT 02209, "Código de fijación de precios del cliente:", 288, -29, 237, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_pricing_code"
+END
+
+INPUTE 03209, "", 528, -32, 35, 19
+BEGIN
+    NAME "ine_pricing_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UUUU"
+END
+
+STATICTEXT 04209, "", 589, -28, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_pricing_code"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20209, "", 563, -32, 20, 19
+BEGIN
+    NAME "tbnf_pricing_code"
+END
+
+STATICTEXT 02210, "Código de descuento de ventas:", 337, -8, 188, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_disc_code"
+END
+
+INPUTE 03210, "", 528, -11, 35, 19
+BEGIN
+    NAME "ine_disc_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MAXLENGTH 2
+END
+
+STATICTEXT 04210, "", 589, -7, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_disc_code"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20210, "", 563, -11, 20, 19
+BEGIN
+    NAME "tbnf_disc_code"
+END
+
+STATICTEXT 02211, "Código de etiqueta:", 411, 13, 114, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_label_code"
+END
+
+INPUTE 03211, "", 528, 10, 35, 19
+BEGIN
+    NAME "ine_label_code"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MAXLENGTH 2
+END
+
+CHECKBOX 03212, "¿Cargo financiero?", 526, 52, 140, 19
+BEGIN
+    NAME "cbx_finance_chg"
+    NOT OPAQUE
+END
+
+CHECKBOX 03213, "¿Estados?", 526, 73, 87, 19
+BEGIN
+    NAME "cbx_statements"
+    NOT OPAQUE
+END
+
+STATICTEXT 02214, "Código del ciclo:", 428, 97, 97, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_ar_cyclecode"
+END
+
+INPUTE 03214, "", 528, 94, 35, 19
+BEGIN
+    NAME "ine_ar_cyclecode"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PADCHARACTER 0
+    MASK "UU"
+END
+
+STATICTEXT 04214, "", 589, 98, 200, 15
+BEGIN
+    NOT OPAQUE
+    NOT WORDWRAP
+    NAME "dis_ar_cyclecode"
+    FOREGROUNDCOLOR RGB(0,0,96)
+END
+TOOLBUTTON 20214, "", 563, 94, 20, 19
+BEGIN
+    NAME "tbnf_ar_cyclecode"
+END
+
+STATICTEXT 02215, "Análisis de ventas:", 417, 118, 108, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_sa_flag"
+END
+
+LISTBUTTON 03215, "", 528, 115, 113, 300
+BEGIN
+    NAME "lbx_sa_flag"
+    SELECTIONHEIGHT 19
+    CLIENTEDGE
+END
+
+STATICTEXT 02216, "Límite de crédito:", 424, 139, 101, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_credit_limit"
+END
+INPUTN 03216, "", 528, 136, 64, 19
+BEGIN
+    NAME "inn_credit_limit"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    MASK "######0-"
+END
+
+STATICTEXT 02217, "Suspensión del crédito:", 388, 160, 137, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_cred_hold"
+END
+
+LISTBUTTON 03217, "", 528, 157, 100, 300
+BEGIN
+    NAME "lbx_cred_hold"
+    SELECTIONHEIGHT 19
+    CLIENTEDGE
+    READONLY
+    NOT TABTRAVERSABLE
+END
+
+CHECKBOX 03218, "¿Conservar detalle de historial de facturas?", 526, 178, 283, 19
+BEGIN
+    NAME "cbx_inv_hist_flg"
+    NOT OPAQUE
+    READONLY
+    NOT TABTRAVERSABLE
+END
+
+END
+
+STATICTEXT 02301, "Futuro:", 111, 13, 42, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_aging_future"
+END
+INPUTN 03301, "", 156, 10, 64, 19
+BEGIN
+    NAME "inn_aging_future"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    MASK "######0-"
+END
+
+STATICTEXT 02302, "Actual:", 113, 34, 40, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_aging_cur"
+END
+INPUTN 03302, "", 156, 31, 64, 19
+BEGIN
+    NAME "inn_aging_cur"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    MASK "######0-"
+END
+
+STATICTEXT 02303, "30 días:", 107, 55, 46, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_aging_30"
+END
+INPUTN 03303, "", 156, 52, 64, 19
+BEGIN
+    NAME "inn_aging_30"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    MASK "######0-"
+END
+
+STATICTEXT 02304, "60 días:", 107, 76, 46, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_aging_60"
+END
+INPUTN 03304, "", 156, 73, 64, 19
+BEGIN
+    NAME "inn_aging_60"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    MASK "######0-"
+END
+
+STATICTEXT 02305, "90 días:", 107, 97, 46, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_aging_90"
+END
+INPUTN 03305, "", 156, 94, 64, 19
+BEGIN
+    NAME "inn_aging_90"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    MASK "######0-"
+END
+
+STATICTEXT 02306, "120 días:", 100, 118, 53, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_aging_120"
+END
+INPUTN 03306, "", 156, 115, 64, 19
+BEGIN
+    NAME "inn_aging_120"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    MASK "######0-"
+END
+
+STATICTEXT 02307, "Fecha de última factura:", 14, 139, 139, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_lstinv_date"
+END
+
+INPUTD 03307, "", 156, 136, 85, 19
+BEGIN
+    NAME "ind_lstinv_date"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PLUSMINUS
+END
+TOOLBUTTON 21307, "", 241, 136, 20, 19
+BEGIN
+    NAME "tbnc_lstinv_date"
+END
+
+STATICTEXT 02308, "Fecha de último pago:", 25, 160, 128, 16
+BEGIN
+    NOT OPAQUE
+    JUSTIFICATION 32768
+    NAME "txt_lstpay_date"
+END
+
+INPUTD 03308, "", 156, 157, 85, 19
+BEGIN
+    NAME "ind_lstpay_date"
+    CLIENTEDGE
+    PASSENTER
+    HIGHLIGHT
+    PLUSMINUS
+END
+TOOLBUTTON 21308, "", 241, 157, 20, 19
+BEGIN
+    NAME "tbnc_lstpay_date"
+END
+
+END
+

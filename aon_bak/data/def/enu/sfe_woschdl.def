@@ -1,0 +1,30 @@
+Barista Application Framework - Definition Module
+SFE_WOSCHDL - Schedule Detail
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+SFE_WOSCHDL^^^^Schedule Detail^Schedule Detail^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^SFE_WOSCHDL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+OP_CODE^SFE_WOSCHDL^002^C^3001^dis_op_code^0^^^2^^Y^^^F^^OP_CODE^Operation Code^Operation Code^Op Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^BMC_OPCODES^CODE_DESC^^^^^^^^^^^3^0^^^^^^^^20^L^0^Operation Code^^^
+SCHED_DATE^SFE_WOSCHDL^003^C^3002^ind_sched_date^0^^^3^^Y^^^C^^SCHED_DATE^Schedule Date^Schedule Date^Sched Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Schedule Date^^^
+WO_NO^SFE_WOSCHDL^004^C^3003^ine_wo_no^0^^^4^^Y^^^^^WO_NO^Work Order Number^Work Order Number^WO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Work Order Number^^^
+OP_SEQ^SFE_WOSCHDL^005^C^3004^ine_op_seq^0^^^5^^Y^^^^^OP_SEQ^Operation Sequence Number^Operation Sequence Number^Op Seq No^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Operation Sequence Number^^^
+QUEUE_TIME^SFE_WOSCHDL^008^C^3005^inn_queue_time^0^^^8^^N^^^^^QUEUE_TIME^Queue Time^Queue Time^Queue Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^^^^^^Queue Time^^^
+SETUP_TIME^SFE_WOSCHDL^009^C^3006^inn_setup_time^0^^^9^^N^^^^^SETUP_TIME^Setup Time^Setup Time^Setup Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Setup Time^^^
+RUNTIME_HRS^SFE_WOSCHDL^010^C^3007^inn_runtime_hrs^0^^^10^^N^^^^^RUNTIME_HRS^Run Time In Hours^Run Time In Hours^Run Time In Hrs^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^C^^^^^Run Time In Hours^^^
+MOVE_TIME^SFE_WOSCHDL^011^C^3008^inn_move_time^0^^^11^^N^^^^^MOVE_TIME^Move Time^Move Time^Move Time^N^^N^^^^^^^^^^^^^^^^^^^^^^5^^^^^^^U^^^^^Move Time^^^
+{ColumnDefsEnd}
+{KeyDefs}
+SFE_WOSCHDL^PRIMARY^SFE_WOSCHDL.FIRM_ID                     SFE_WOSCHDL.OP_CODE                     SFE_WOSCHDL.SCHED_DATE                  SFE_WOSCHDL.WO_NO                       SFE_WOSCHDL.OP_SEQ                      ^stbl("+FIRM_ID")+SFE_WOSCHDL.OP_CODE$+SFE_WOSCHDL.SCHED_DATE$+SFE_WOSCHDL.WO_NO$+SFE_WOSCHDL.OP_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.OP_CODE$+RD_REC_DATA.SCHED_DATE$+RD_REC_DATA.WO_NO$+RD_REC_DATA.OP_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.OP_CODE$                    RD_REC_DATA.SCHED_DATE$                 RD_REC_DATA.WO_NO$                      RD_REC_DATA.OP_SEQ$                     
+{KeyDefsEnd}
+{GridCols}
+002SFE_WOSCHDL.OP_CODE                     ;003SFE_WOSCHDL.SCHED_DATE                  ;004SFE_WOSCHDL.WO_NO                       ;005SFE_WOSCHDL.OP_SEQ                      ;008SFE_WOSCHDL.QUEUE_TIME                  ;009SFE_WOSCHDL.SETUP_TIME                  ;010SFE_WOSCHDL.RUNTIME_HRS                 ;011SFE_WOSCHDL.MOVE_TIME                   ;
+{GridColsEnd}

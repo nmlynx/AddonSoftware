@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+GLX_ACCTXREF - Account Cross Reference
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLX_ACCTXREF^^^^Account Cross Reference^Account Cross Reference^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLX_ACCTXREF^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_A^GLX_ACCTXREF^002^C^^^^^^2^^Y^^^^^RECORD_ID_A^"A"^A^A^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^"A"^"A"^^
+GL_ACCT_DESC^GLX_ACCTXREF^003^C^3001^ine_gl_acct_desc^0^^^3^^Y^^^^^GL_ACCT_DESC^GL Account Description^Account Description^Acct Desc^C^^E^^^^^^^^^^^^^^^^^^^^^^35^^^^^^^^^^^^GL Account Description^^^
+GL_ACCOUNT^GLX_ACCTXREF^004^C^3002^dis_gl_account^0^^^4^^Y^^^F^^GL_ACCOUNT^GL Account Number^GL Account^GL Account^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^^30^L^^GL Account Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLX_ACCTXREF^PRIMARY^GLX_ACCTXREF.FIRM_ID                    GLX_ACCTXREF.RECORD_ID_A                GLX_ACCTXREF.GL_ACCT_DESC               GLX_ACCTXREF.GL_ACCOUNT                 ^stbl("+FIRM_ID")+"A"+GLX_ACCTXREF.GL_ACCT_DESC$+GLX_ACCTXREF.GL_ACCOUNT$^stbl("+FIRM_ID")+"A"+RD_REC_DATA.GL_ACCT_DESC$+RD_REC_DATA.GL_ACCOUNT$^stbl("+FIRM_ID")                        "A"                                     RD_REC_DATA.GL_ACCT_DESC$               RD_REC_DATA.GL_ACCOUNT$                 
+{KeyDefsEnd}
+{GridCols}
+003GLX_ACCTXREF.GL_ACCT_DESC               ;004GLX_ACCTXREF.GL_ACCOUNT                 ;
+{GridColsEnd}

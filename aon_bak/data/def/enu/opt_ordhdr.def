@@ -1,0 +1,63 @@
+Barista Application Framework - Definition Module
+OPT_ORDHDR - Invoice History Header
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPT_ORDHDR^^^^Invoice History Header^Invoice History Header^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^OPT_ORDHDR^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+AR_TYPE^OPT_ORDHDR^002^C^^^^^^2^^Y^^^^^AR_TYPE^AR Type [Not Used]^AR Type^AR Type [N^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^AR Type [Not Used]^"  "^^
+CUSTOMER_ID^OPT_ORDHDR^003^C^3001^dis_customer_id^0^^^3^^Y^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Customer N^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+AR_INV_NO^OPT_ORDHDR^004^C^3002^ine_ar_inv_no^0^^^4^^Y^^^^^AR_INV_NO^AR Invoice Number^AR Invoice Number^AR Inv No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^UUUUUUU^UUUUUUU^^^^30^R^^AR Invoice Number^^^
+INVOICE_TYPE^OPT_ORDHDR^006^C^3003^lbx_invoice_type^0^^^6^^N^^^^^INVOICE_TYPE^Invoice Type^Invoice Type^Inv Type^C^^L^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Invoice Type^^^
+ORDINV_FLAG^OPT_ORDHDR^007^C^3004^ine_ordinv_flag^0^^^7^^N^^^^^ORDINV_FLAG^Order Or Invoice [O/I]^Order Or Invoice^Ord/Inv [O/I]^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Order Or Invoice [O/I]^^^
+BACKORD_FLAG^OPT_ORDHDR^008^C^3005^ine_backord_flag^0^^^8^^N^^^^^BACKORD_FLAG^Backorder Flag [B]^Backorder Flag^Back Ord Flag^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Backorder Flag [B]^^^
+AR_SHIP_VIA^OPT_ORDHDR^010^C^3006^ine_ar_ship_via^0^^^10^^N^^^^^AR_SHIP_VIA^Customer Ship Via^Customer Ship Via^Cust Ship Via^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Customer Ship Via^^^
+ORDER_NO^OPT_ORDHDR^011^C^3007^ine_order_no^0^^^11^^N^^^^^ORDER_NO^Sales Order Number^Sales Order Number^Sales Ord No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Sales Order Number^^^
+MISC_NO^OPT_ORDHDR^012^C^3008^ine_misc_no^0^^^12^^N^^^^^MISC_NO^Miscellaneous Number^Miscellaneous Number^Misc No^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^^^^^Miscellaneous Number^^^
+SLSPSN_CODE^OPT_ORDHDR^013^C^3009^dis_slspsn_code^0^^^13^^N^^^F^^SLSPSN_CODE^Salesperson Code^Salesperson Code^Salespsn Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+"F"+@^ARC_SALECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Salesperson Code^^^
+TERMS_CODE^OPT_ORDHDR^014^C^3010^dis_terms_code^0^^^14^^N^^^F^^TERMS_CODE^Terms Code^Terms Code^Terms Cd^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^ARC_TERMCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^20^L^^Terms Code^^^
+DISC_CODE^OPT_ORDHDR^015^C^3011^dis_disc_code^0^^^15^^N^^^F^^DISC_CODE^Sales Discount Code^Sales Discount Code^Disc Code^C^^E^^^^^^^^^[+FIRM_ID]+@^OPC_DISCCODE^CODE_DESC^^^^^^^^^^^2^^^^^^^^^20^L^0^Sales Discount Code^^^
+AR_DIST_CODE^OPT_ORDHDR^016^C^3012^dis_ar_dist_code^0^^^16^^N^^^F^^AR_DIST_CODE^Distribution Code^Distribution Code^Dist Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+"D"+@^ARC_DISTCODE^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^20^L^0^Distribution Code^^^
+PRINT_STATUS^OPT_ORDHDR^017^C^3013^ine_print_status^0^^^17^^N^^^^^PRINT_STATUS^Print Status^Print Status^Print Stat^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Print Status^^^
+LOCK_STATUS^OPT_ORDHDR^018^C^3014^ine_lock_status^0^^^18^^N^^^^^LOCK_STATUS^Lock Status^Lock Status^Lock Stat^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Lock Status^^^
+MESSAGE_CODE^OPT_ORDHDR^019^C^3015^dis_message_code^0^^^19^^N^^^F^^MESSAGE_CODE^Standard Message Code^Standard Message Code^Std Msg Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_MSG_HDR^CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^R^0^Standard Message Code^^^
+TERRITORY^OPT_ORDHDR^020^C^3016^dis_territory^0^^^20^^N^^^F^^TERRITORY^Territory Code^Territory Code^Terr Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+"H"+@^ARC_TERRCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Territory Code^^^
+PRICE_CODE^OPT_ORDHDR^021^C^3017^ine_price_code^0^^^21^^N^^^^^PRICE_CODE^List Price Code^List Price Code^List Price Cd^C^^E^^^^^^^0^0^^^^^^^^^^^^^^2^0^^^^^^^^20^L^0^List Price Code^^^
+TAX_CODE^OPT_ORDHDR^023^C^3018^dis_tax_code^0^^^23^^N^^^F^^OP_TAX_CODE^Tax Code^Tax Code^Tax Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_TAXCODE^CODE_DESC^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^Tax Code^^^
+PRICING_CODE^OPT_ORDHDR^024^C^3019^dis_pricing_code^0^^^24^^N^^^F^^PRICING_CODE^Customer Pricing Code^Customer Pricing Code^Cust Pricing Cd^C^^E^^^^^^^0^0^[+FIRM_ID]+@^OPC_PRICECDS^CODE_DESC^^^^^^^^^^^4^0^^^UUUU^^^^^20^L^0^Customer Pricing Code^^^
+JOB_NO^OPT_ORDHDR^025^C^3020^dis_job_no^0^^^25^^N^^^F^^JOB_NO^Job Number^Job Number^Job No^C^^E^^^^^^^0^0^[FIRM_ID]+[CUSTOMER_ID]+@^OPM_CUSTJOBS^CUSTOMER_NAME^^^^^^^^^^^10^0^^^^^^^^^^0^Job Number^^^
+ORD_TAKEN_BY^OPT_ORDHDR^026^C^3021^ine_ord_taken_by^0^^^26^^N^^^^^ORD_TAKEN_BY^Order Taken By^Order Taken By^Ord Taken By^C^^E^^^^^^^0^0^^^^^^^^^^^^^^16^0^^^^^^^^^^0^Order Taken By^^^
+CASH_SALE^OPT_ORDHDR^027^C^3022^cbx_cash_sale^0^^^27^^N^^^^^CASH_SALE^Cash Sale [Y/N]?^Cash Sale?^Cash Sale?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Cash Sale [Y/N]?^^^
+REPRINT_FLAG^OPT_ORDHDR^028^C^3023^ine_reprint_flag^0^^^28^^N^^^^^REPRINT_FLAG^Reprint Flag^Reprint Flag^RePrt Flag^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Reprint Flag^^^
+CREDIT_FLAG^OPT_ORDHDR^029^C^3024^ine_credit_flag^0^^^29^^N^^^^^CREDIT_FLAG^Credit Hold Status^Credit Hold Status^Cred Hold Stat^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^^^^^Credit Hold Status^^^
+SHIPTO_NO^OPT_ORDHDR^030^C^3025^dis_shipto_no^0^^^30^^N^^^F^^AR_SHIPTO_NO^Customer Ship-To Number^Customer Ship-To Number^Cust Ship-To No^C^^E^^^^^^^0^0^[FIRM_ID]+[CUSTOMER_ID]+@^ARM_CUSTSHIP^NAME^^^^^^^^^^^6^0^^^000000^000000^^^^30^R^0^Customer Ship-To Number^^^
+CUSTOMER_PO_NO^OPT_ORDHDR^032^C^3026^ine_customer_po_no^0^^^32^^N^^^^^CUSTOMER_PO_NO^Customer Purchase Order Number^Customer Purchase Order Number^Cust PO No^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Customer Purchase Order Number^^^
+CUSTOMER_REL_NO^OPT_ORDHDR^033^C^3027^ine_customer_rel_no^0^^^33^^N^^^^^CUSTOMER_REL_NO^Customer Release Number^Customer Release Number^Cust Release No^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Customer Release Number^^^
+INVOICE_DATE^OPT_ORDHDR^035^C^3028^ind_invoice_date^0^^^35^^N^^^C^^INVOICE_DATE^Invoice Date^Invoice Date^Inv Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Invoice Date^^^
+SHIPMNT_DATE^OPT_ORDHDR^036^C^3029^ind_shipmnt_date^0^^^36^^N^^^C^^SHIPMNT_DATE^Ship Date^Ship Date^Ship Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Ship Date^^^
+ORDER_DATE^OPT_ORDHDR^037^C^3030^ind_order_date^0^^^37^^N^^^C^^ORDER_DATE^Order Date^Order Date^Ord Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Order Date^^^
+EXPIRE_DATE^OPT_ORDHDR^038^C^3031^ind_expire_date^0^^^38^^N^^^C^^EXPIRE_DATE^Expiration Date^Expiration Date^Exp Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Expiration Date^^^
+TAX_AMOUNT^OPT_ORDHDR^040^C^3032^inn_tax_amount^0^^^40^^N^^^^^TAX_AMOUNT^Tax Amount^Tax Amount^Tax Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^0^Tax Amount^^^
+FREIGHT_AMT^OPT_ORDHDR^041^C^3033^inn_freight_amt^0^^^41^^N^^^^^FREIGHT_AMT^Freight Amount^Freight Amount^Freight Amt^N^^N^^^^^^^0^0^^^^^^^^^^^^^^7^0^^^^^^A^^^^0^Freight Amount^^^
+DISCOUNT_AMT^OPT_ORDHDR^042^C^3034^inn_discount_amt^0^^^42^^N^^^^^DISCOUNT_AMT^Discount Amount^Discount Amount^Disc Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Discount Amount^^^
+COMM_PERCENT^OPT_ORDHDR^043^C^3035^inn_comm_percent^0^^^43^^N^^^^^COMM_PERCENT^Commission Percent^Commission Percent^Comm %^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Commission Percent^^^
+TAXABLE_AMT^OPT_ORDHDR^044^C^3036^inn_taxable_amt^0^^^44^^N^^^^^TAXABLE_AMT^Taxable Amount^Taxable Amount^Taxable Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Taxable Amount^^^
+COMM_AMT^OPT_ORDHDR^045^C^3037^inn_comm_amt^0^^^45^^N^^^^^COMM_AMT^Commission Amount^Commission Amount^Comm Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Commission Amount^^^
+TOTAL_SALES^OPT_ORDHDR^046^C^3038^inn_total_sales^0^^^46^^N^^^^^TOTAL_SALES^Total Sales Amount^Total Sales Amount^Tot Sales Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Total Sales Amount^^^
+TOTAL_COST^OPT_ORDHDR^047^C^3039^inn_total_cost^0^^^47^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Total Cost Amount^^^
+SHIPTO_TYPE^OPT_ORDHDR^050^C^3040^lbx_shipto_type^0^^^50^^N^^^^^SHIPTO_TYPE^Ship To^Ship To^Ship To^C^^L^^^^^0^0^0^0^^^^^^^^^^^^Bill To                       ~B   ;Ship To Code                  ~S   ;Manual Ship To                ~M   ;^^1^0^^^^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPT_ORDHDR^PRIMARY^OPT_ORDHDR.FIRM_ID                      OPT_ORDHDR.AR_TYPE                      OPT_ORDHDR.CUSTOMER_ID                  OPT_ORDHDR.AR_INV_NO                    ^stbl("+FIRM_ID")+"  "+OPT_ORDHDR.CUSTOMER_ID$+OPT_ORDHDR.AR_INV_NO$^stbl("+FIRM_ID")+"  "+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.AR_INV_NO$^stbl("+FIRM_ID")                        "  "                                    RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.AR_INV_NO$                  
+{KeyDefsEnd}
+{GridCols}
+003OPT_ORDHDR.CUSTOMER_ID                  ;004OPT_ORDHDR.AR_INV_NO                    ;006OPT_ORDHDR.INVOICE_TYPE                 ;007OPT_ORDHDR.ORDINV_FLAG                  ;008OPT_ORDHDR.BACKORD_FLAG                 ;010OPT_ORDHDR.AR_SHIP_VIA                  ;011OPT_ORDHDR.ORDER_NO                     ;012OPT_ORDHDR.MISC_NO                      ;013OPT_ORDHDR.SLSPSN_CODE                  ;014OPT_ORDHDR.TERMS_CODE                   ;015OPT_ORDHDR.DISC_CODE                    ;016OPT_ORDHDR.AR_DIST_CODE                 ;017OPT_ORDHDR.PRINT_STATUS                 ;018OPT_ORDHDR.LOCK_STATUS                  ;019OPT_ORDHDR.MESSAGE_CODE                 ;020OPT_ORDHDR.TERRITORY                    ;021OPT_ORDHDR.PRICE_CODE                   ;023OPT_ORDHDR.TAX_CODE                     ;024OPT_ORDHDR.PRICING_CODE                 ;025OPT_ORDHDR.JOB_NO                       ;026OPT_ORDHDR.ORD_TAKEN_BY                 ;027OPT_ORDHDR.CASH_SALE                    ;028OPT_ORDHDR.REPRINT_FLAG                 ;029OPT_ORDHDR.CREDIT_FLAG                  ;030OPT_ORDHDR.SHIPTO_NO                    ;032OPT_ORDHDR.CUSTOMER_PO_NO               ;033OPT_ORDHDR.CUSTOMER_REL_NO              ;035OPT_ORDHDR.INVOICE_DATE                 ;036OPT_ORDHDR.SHIPMNT_DATE                 ;037OPT_ORDHDR.ORDER_DATE                   ;038OPT_ORDHDR.EXPIRE_DATE                  ;040OPT_ORDHDR.TAX_AMOUNT                   ;041OPT_ORDHDR.FREIGHT_AMT                  ;042OPT_ORDHDR.DISCOUNT_AMT                 ;043OPT_ORDHDR.COMM_PERCENT                 ;044OPT_ORDHDR.TAXABLE_AMT                  ;045OPT_ORDHDR.COMM_AMT                     ;046OPT_ORDHDR.TOTAL_SALES                  ;047OPT_ORDHDR.TOTAL_COST                   ;050OPT_ORDHDR.SHIPTO_TYPE                  ;
+{GridColsEnd}

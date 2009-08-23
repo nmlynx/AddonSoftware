@@ -1,0 +1,41 @@
+Barista Application Framework - Definition Module
+ARM_CUSTSHIP - Customer Ship-To Addresses
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARM_CUSTSHIP^^^^Customer Ship-To Addresses^Domicilios de destinatarios de envío del cliente^^^^^^^ARM_CUSTMAST^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARM_CUSTSHIP^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+CUSTOMER_ID^ARM_CUSTSHIP^002^C^3001^dis_customer_id^0^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^ID del cliente^C^^E^^^^^+3^^60^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Número de cliente^^^
+SHIPTO_NO^ARM_CUSTSHIP^003^C^3002^ine_shipto_no^0^^^3^^Y^^^^^AR_SHIPTO_NO^Customer Ship-To Number^Número de destinatario de envío del cliente^N.º de dest. de envío del cliente^C^^E^^^^^^^60^0^^^^^^^^^^Perfil del destinatario de envío^^^^6^0^^^000000^000000^^^^30^R^0^Número de destinatario de envío del cliente^^^
+NAME^ARM_CUSTSHIP^004^C^3003^ine_name^0^^^4^^N^^^^^NAME^Name^Nombre destinatario de envío^Nombre^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^^^^^Nombre^^^
+ADDR_LINE_1^ARM_CUSTSHIP^005^C^3004^ine_addr_line_1^0^^^5^^N^^^^^ADDR_LINE_1^Address Line 1^Domicilio^Domicilio^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^Línea de domicilio 1^^^
+ADDR_LINE_2^ARM_CUSTSHIP^006^C^3005^ine_addr_line_2^0^^^6^^N^^^^^ADDR_LINE_2^Address Line 2^Línea de domicilio 2^Dom. 2^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Línea de domicilio 2^^^
+ADDR_LINE_3^ARM_CUSTSHIP^007^C^3006^ine_addr_line_3^0^^^7^^N^^^^^ADDR_LINE_3^Address Line 3^Línea de domicilio 3^Dom. 3^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Línea de domicilio 3^^^
+ADDR_LINE_4^ARM_CUSTSHIP^008^C^3007^ine_addr_line_4^0^^^8^^N^^^^^ADDR_LINE_4^Address Line 4^Línea de domicilio 4^Dom. 4^C^^E^^^^^^^192^^^^^^^^^^^^^^^24^^^^^^^^L;^^^^Línea de domicilio 4^^^
+CITY^ARM_CUSTSHIP^009^C^3008^ine_city^0^^^9^^N^^^^^CITY^City Name^Ciudad^Ciudad^C^^E^^^^^^^176^^^^^^^^^^^^^^^22^^^^^^^^^^^^Nombre de la ciudad^^^
+STATE_CODE^ARM_CUSTSHIP^010^C^3009^ine_state_code^0^^^10^^N^^^^^STATE_CODE^State Code^Estado/Provincia^Estado^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^^^^^^^^^Código de estado^^^
+ZIP_CODE^ARM_CUSTSHIP^011^C^3010^ine_zip_code^0^^^11^^N^^^^^ZIP_CODE^Zip/Postal Code^Código postal^Código Postal^C^P^E^^^^^+13^-1^80^0^^^^^^^^^^^^^^9^0^^^UUUUUUUUU^^^^^^^0^Código postal^^^
+COUNTRY^ARM_CUSTSHIP^020^C^3011^ine_country^0^^^12^^N^^^^^COUNTRY^Country^País^País^C^^E^^^^^-13^^192^^^^^^^^^^^^^^^24^^^^^^^^^^^^País^^^
+CONTACT_NAME^ARM_CUSTSHIP^014^C^3012^ine_contact_name^0^^^13^^N^^^^^CONTACT_NAME^Contact Name^Nombre de contacto^Nombre de cont.^C^^E^^^^^+36^-8^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Nombre de contacto^^^
+PHONE_NO^ARM_CUSTSHIP^012^C^3013^ine_phone_no^0^^^14^^N^^^^^PHONE_NO^Telephone Number^Número de teléfono^Teléfono^C^T^E^^^^^^^112^0^^^^^^^^^^^^^^20^0^^^00000000000000000000^^^^^^^0^Número de teléfono^^^
+PHONE_EXTEN^ARM_CUSTSHIP^013^C^3014^ine_phone_exten^0^^^15^^N^^^^^PHONE_EXTEN^Phone Extension^Int.^Int.^C^^E^^^^^+15^-1^35^^^^^^^^^^^^^^^4^^^^^^^^^^^^Interno del teléfono^^^
+TERRITORY^ARM_CUSTSHIP^016^C^3015^dis_territory^0^^^16^^N^^^F^^TERRITORY^Territory Code^Código de territorio^Cód de territ.^C^^E^^^^^-15^^35^0^[+FIRM_ID]+"H"+@^ARC_TERRCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Código de territorio^^^
+TAX_CODE^ARM_CUSTSHIP^017^C^3016^dis_tax_code^0^^^17^^N^^^F^^OP_TAX_CODE^Tax Code^Código impositivo^Cód. impos.^C^^E^^^^^^^35^0^[+FIRM_ID]+@^OPC_TAXCODE^CODE_DESC^^^^^^^^^^^10^0^^^UUUUUUUUUU^^^^^20^L^0^Código impositivo^^^
+SLSPSN_CODE^ARM_CUSTSHIP^015^C^3017^dis_slspsn_code^0^^^18^^N^^^F^^SLSPSN_CODE^Salesperson Code^Código de vendedor^Cód. de vendedor^C^^E^^^^^^^35^0^[+FIRM_ID]+"F"+@^ARC_SALECODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^^20^L^0^Código de vendedor^^^
+DB_NO^ARM_CUSTSHIP^018^C^3018^ine_db_no^0^^^19^^N^^^^^DB_NO^Dunn & Bradstreet Number^Número de Dunn & Bradstreet^N.º de D&B^C^^E^^^^^^^72^^^^^^^^^^^^^^^9^^^^^^^^^^^^Número de Dunn & Bradstreet^^^
+SIC_CODE^ARM_CUSTSHIP^019^C^3019^ine_sic_code^0^^^20^^N^^^^^SIC_CODE^Standard Industry Code^Código de SIC^Cód. de SIC^C^^E^^^^^^^64^^^^^^^^^^^^^^^8^^^^^^^^^20^L^^Código de industria estándar^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARM_CUSTSHIP^PRIMARY^ARM_CUSTSHIP.FIRM_ID                    ARM_CUSTSHIP.CUSTOMER_ID                ARM_CUSTSHIP.SHIPTO_NO                  ^stbl("+FIRM_ID")+ARM_CUSTSHIP.CUSTOMER_ID$+ARM_CUSTSHIP.SHIPTO_NO$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.SHIPTO_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.SHIPTO_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002ARM_CUSTSHIP.CUSTOMER_ID                ;003ARM_CUSTSHIP.SHIPTO_NO                  ;004ARM_CUSTSHIP.NAME                       ;005ARM_CUSTSHIP.ADDR_LINE_1                ;006ARM_CUSTSHIP.ADDR_LINE_2                ;007ARM_CUSTSHIP.ADDR_LINE_3                ;008ARM_CUSTSHIP.ADDR_LINE_4                ;009ARM_CUSTSHIP.CITY                       ;010ARM_CUSTSHIP.STATE_CODE                 ;011ARM_CUSTSHIP.ZIP_CODE                   ;012ARM_CUSTSHIP.COUNTRY                    ;013ARM_CUSTSHIP.CONTACT_NAME               ;014ARM_CUSTSHIP.PHONE_NO                   ;015ARM_CUSTSHIP.PHONE_EXTEN                ;016ARM_CUSTSHIP.TERRITORY                  ;017ARM_CUSTSHIP.TAX_CODE                   ;018ARM_CUSTSHIP.SLSPSN_CODE                ;019ARM_CUSTSHIP.DB_NO                      ;020ARM_CUSTSHIP.SIC_CODE                   ;
+{GridColsEnd}

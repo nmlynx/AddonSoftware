@@ -1,0 +1,35 @@
+Barista Application Framework - Definition Module
+IVW_ABCWHSE - ABC Analysis By Warehouse
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVW_ABCWHSE^^^^ABC Analysis By Warehouse^ABC Analysis By Warehouse^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVW_ABCWHSE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+WAREHOUSE_ID^IVW_ABCWHSE^002^C^3001^dis_warehouse_id^0^^^2^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+RECIP_SIGN^IVW_ABCWHSE^003^C^3002^ine_recip_sign^0^^^3^^Y^^^^^RECIP_SIGN^Sign Of Receiprocal Amount^Sign Of Receiprocal Amount^Receiprocal Amt^C^^E^^^^^0^0^0^0^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+RECIP_AMOUNT^IVW_ABCWHSE^004^C^3003^ine_recip_amount^0^^^4^^Y^^^^^RECIP_AMOUNT^Reciprical Amount^Reciprical Amount^Reciprical Amt^C^^E^^^^^0^0^0^0^^^^^^^^^^^^^^17^^^^^^^^^^^^^^^
+ITEM_ID^IVW_ABCWHSE^005^C^3004^dis_item_id^0^^^5^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Item ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Enter a valid inventory item^^^
+ABC_CODE_01^IVW_ABCWHSE^006^C^3005^ine_abc_code^0^^^6^^N^^^^^ABC_CODE^ABC Analysis Code^ABC Analysis Code^ABC Cd^C^^E^^^^^0^0^0^0^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+ABC_CODE_02^IVW_ABCWHSE^006^C^3006^ine_abc_code^0^^^6^^N^^^^^ABC_CODE^ABC Analysis Code^ABC Analysis Code^ABC Cd^C^^E^^^^^0^0^0^0^^^^^^^^^^^^^^1^^^^^^^^^^^^^^^
+ANNUAL_USAGE^IVW_ABCWHSE^008^C^3007^inn_annual_usage^0^^^8^^N^^^^^ANNUAL_USAGE^Annual Usage Quantity^Annual Usage Quantity^Annual Use Qty^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^^^^^^^^
+QTY_ON_HAND^IVW_ABCWHSE^009^C^3008^inn_qty_on_hand^0^^^9^^N^^^^^QTY_ON_HAND^Quantity On-Hand^Quantity On-Hand^Qty On-Hand^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^7^0^^^^^^U^^^^0^^^^
+END_BALANCE^IVW_ABCWHSE^010^C^3009^inn_end_balance^0^^^10^^N^^^^^END_BALANCE^Ending Balance^Ending Balance^End Bal^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^^^^^^^^
+UNIT_COST^IVW_ABCWHSE^011^C^3010^inn_unit_cost^0^^^11^^N^^^^^UNIT_COST^Unit Cost^Unit Cost^Unit Cost^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^C^^^^^^^^
+ABC_TOTAL_VALUE_01^IVW_ABCWHSE^012^C^3011^inn_abc_total_value^0^^^12^^N^^^^^ABC_TOTAL_VALUE^ABC Total Value^ABC Total Value^ABC Total Value^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^17^0^^^###########.0000-^###########.0000-^^^^^^0^^^^
+ABC_TOTAL_VALUE_02^IVW_ABCWHSE^012^C^3012^inn_abc_total_value^0^^^12^^N^^^^^ABC_TOTAL_VALUE^ABC Total Value^ABC Total Value^ABC Total Value^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^17^0^^^###########.0000-^###########.0000-^^^^^^0^^^^
+ABC_TOTAL_VALUE_03^IVW_ABCWHSE^012^C^3013^inn_abc_total_value^0^^^12^^N^^^^^ABC_TOTAL_VALUE^ABC Total Value^ABC Total Value^ABC Total Value^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^17^0^^^###########.0000-^###########.0000-^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVW_ABCWHSE^PRIMARY^IVW_ABCWHSE.FIRM_ID                     IVW_ABCWHSE.WAREHOUSE_ID                IVW_ABCWHSE.RECIP_SIGN                  IVW_ABCWHSE.RECIP_AMOUNT                IVW_ABCWHSE.ITEM_ID                     ^stbl("+FIRM_ID")+IVW_ABCWHSE.WAREHOUSE_ID$+IVW_ABCWHSE.RECIP_SIGN$+IVW_ABCWHSE.RECIP_AMOUNT$+IVW_ABCWHSE.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.RECIP_SIGN$+RD_REC_DATA.RECIP_AMOUNT$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.RECIP_SIGN$                 RD_REC_DATA.RECIP_AMOUNT$               RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002IVW_ABCWHSE.WAREHOUSE_ID                ;003IVW_ABCWHSE.RECIP_SIGN                  ;004IVW_ABCWHSE.RECIP_AMOUNT                ;005IVW_ABCWHSE.ITEM_ID                     ;006IVW_ABCWHSE.ABC_CODE                    ;008IVW_ABCWHSE.ANNUAL_USAGE                ;009IVW_ABCWHSE.QTY_ON_HAND                 ;010IVW_ABCWHSE.END_BALANCE                 ;011IVW_ABCWHSE.UNIT_COST                   ;012IVW_ABCWHSE.ABC_TOTAL_VALUE             ;
+{GridColsEnd}

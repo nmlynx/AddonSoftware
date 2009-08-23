@@ -1,0 +1,32 @@
+Barista Application Framework - Definition Module
+POM_MAKECAL - Make Purchase Order Calendar
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POM_MAKECAL^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AREC;^^Make Purchase Order Calendar^Make Purchase Order Calendar^^^^^^^^S^^^^^^H;N;U;V;^^[+DIR_PGM]pom_makecal.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+LAST_SCHED_DT^POM_MAKECAL^001^C^3001^ind_last_sched_dt^0^^^1^^N^^^^^LAST_SCHED_DT^Last Scheduled Date^Last Scheduled Date^Last Scheduled Date^C^1^D^^^^0^0^0^0^0^^^^^^^^^^^^^^8^0^^^^^^^C;^^^0^^^^
+FIRST_SCHED_DT^POM_MAKECAL^002^C^3002^ind_first_sched_dt^0^^^2^^N^^^C^^FIRST_SCHED_DT^First Scheduled Date^First Scheduled Date^First Scheduled Date^C^1^D^^^^0^0^0^0^0^^^^^^^^^^^^^^8^0^^^^^^^^^^0^^^^
+NUM_WEEKS^POM_MAKECAL^003^C^3003^inn_num_weeks^0^^^3^^N^^^^^NUM_WEEKS^Number of weeks^Number of weeks^Number of weeks^N^^N^^^^0^0^0^0^0^^^^^^^^52^^^^^^3^0^1^999^000^000^^^^^^0^^^^
+OMIT_02^POM_MAKECAL^005^C^3004^cbx_omit_02^0^^^4^^N^^^^^GENERIC_CHK^Generic checkbox^Omit Mondays^Omit Mon^C^^C^^^Y;N^0^0^0^0^0^^^^^^^^^^Day(s) to Omit^^^^1^0^^^^^^^^^^0^^^^
+OMIT_03^POM_MAKECAL^006^C^3005^cbx_omit_03^0^^^5^^N^^^^^GENERIC_CHK^Generic checkbox^Omit Tuesdays^Omit Tue^C^^C^^^Y;N^0^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+OMIT_04^POM_MAKECAL^007^C^3006^cbx_omit_04^0^^^6^^N^^^^^GENERIC_CHK^Generic checkbox^Omit Wednesdays^Omit Wed^C^^C^^^Y;N^0^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+OMIT_05^POM_MAKECAL^008^C^3007^cbx_omit_05^0^^^7^^N^^^^^GENERIC_CHK^Generic checkbox^Omit Thursdays^Omit Thu^C^^C^^^Y;N^0^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+OMIT_06^POM_MAKECAL^009^C^3008^cbx_omit_06^0^^^8^^N^^^^^GENERIC_CHK^Generic checkbox^Omit Fridays^Omit Fri^C^^C^^^Y;N^0^0^0^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+OMIT_01^POM_MAKECAL^004^C^3009^cbx_omit_01^0^^^9^^N^^^^^GENERIC_CHK^Generic checkbox^Omit Sundays^Omit Sun^C^^C^^^Y;N^0^0^+2^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+OMIT_07^POM_MAKECAL^010^C^3010^cbx_omit_07^0^^^10^^N^^^^^GENERIC_CHK^Generic checkbox^Omit Saturdays^Omit Sat^C^^C^^^Y;N^0^^-2^0^0^^^^^^^^^^^^^^1^0^^^^^^^^^^0^^^^
+FILENAME^POM_MAKECAL^011^C^^^^^^11^^N^^^^^TEXT_30^Text entry^Text entry^Text entry^C^^E^^^^0^0^0^0^0^^^^^^^^^^^^^^30^0^^^^^^^O;^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POM_MAKECAL^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001POM_MAKECAL.LAST_SCHED_DT               ;002POM_MAKECAL.FIRST_SCHED_DT              ;003POM_MAKECAL.NUM_WEEKS                   ;004POM_MAKECAL.OMIT_02                     ;005POM_MAKECAL.OMIT_03                     ;006POM_MAKECAL.OMIT_04                     ;007POM_MAKECAL.OMIT_05                     ;008POM_MAKECAL.OMIT_06                     ;009POM_MAKECAL.OMIT_01                     ;010POM_MAKECAL.OMIT_07                     ;
+{GridColsEnd}

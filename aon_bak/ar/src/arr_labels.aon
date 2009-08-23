@@ -1,0 +1,336 @@
+rem --- Customer Label Printing
+rem --- Program arr_labels v8.0.0 24Dec2006 (arr_eb)
+rem --- Created by adx_codeport.bbx v1.1.5 (12/24/2006 01:43:35)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright (c) 1981-2007 AddonSoftware
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    files=3,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ars_params",ids$[1]="ARS_PARAMS"
+    files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+    files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    ars01_dev=channels[1]
+    arm01_dev=channels[2]
+    arm02_dev=channels[3]
+
+rem --- Dimension string templates
+
+    dim ars01a$:templates$[1]
+    dim arm01a$:templates$[2]
+    dim arm02a$:templates$[3]
+
+rem --- Assign form input values to local variables
+
+    sequence$=option!.getOptionData("REPORT_SEQUENCE")
+    labels$=option!.getOptionData("PICK_INTEGER")
+    restart$=option!.getOptionData("PICK_CHECK")
+    labelcode$=option!.getOptionData("LABEL_CODE")
+    begcustomer$=option!.getOptionData("CUSTOMER_ID_1")
+    endcustomer$=option!.getOptionData("CUSTOMER_ID_2")
+    begalt$=option!.getOptionData("ALT_SEQUENCE_1")
+    endalt$=option!.getOptionData("ALT_SEQUENCE_2")
+    begzip$=option!.getOptionData("ZIP_CODE_1")
+    endzip$=option!.getOptionData("ZIP_CODE_2")
+    labels=num(labels$)
+    col_format$=option!.getOptionData("COL_FORMAT")
+
+rem --- Retrieve parameter records
+
+    ars01a_key$=firm_id$+"AR00"
+    find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    across=num(ars01a.label_across$)
+    length=num(ars01a.label_length$)
+    width=num(ars01a.label_width$)
+
+rem --- See if we're going to be running any labels
+
+    count_prep$="select count(*) as total_recs "
+    count_prep$=count_prep$+"FROM arm_custmast, arm_custdet "
+    count_prep$=count_prep$+"WHERE arm_custmast.firm_id = '"+firm_id$+"' AND "
+    count_prep$=count_prep$+"arm_custdet.firm_id = arm_custmast.firm_id "
+    if begcustomer$<>"" count_prep$=count_prep$+"AND arm_custmast.customer_id >= '"+begcustomer$+"' "
+    if endcustomer$<>"" count_prep$=count_prep$+"AND arm_custmast.customer_id <= '"+endcustomer$+"' "
+    if begalt$<>"" count_prep$=count_prep$+"AND arm_custmast.alt_sequence >= '"+begalt$+"' "
+    if endalt$<>"" count_prep$=count_prep$+"AND arm_custmast.alt_sequence <= '"+endalt$+"' "
+    if begzip$<>"" count_prep$=count_prep$+"AND arm_custmast.zip_code >= '"+begzip$+"' "
+    if endzip$<>"" count_prep$=count_prep$+"AND arm_custmast.zip_code <= '"+endzip$+"' "
+    if labelcode$<>"" count_prep$=count_prep$+"AND arm_custdet.label_code = '"+labelcode$+"' "
+    count_prep$=cvs(count_prep$,2)
+
+    count_chan=sqlunt
+    sqlopen(count_chan,err=*next)stbl("+DBNAME")
+    sqlprep(count_chan)count_prep$
+    dim count_tpl$:sqltmpl(count_chan)
+    sqlexec(count_chan)
+    count_tpl$=sqlfetch(count_chan)
+    if count_tpl.total_recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+rem --- Document initializations
+    if col_format$="Y"
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+        rep_prog$=pgm(-2)
+
+	columns=5
+	dim columns$[columns,10]
+
+        columns$[0,0]="Name",columns$[0,1]="C",columns$[0,2]="30"
+        columns$[1,0]="Address 1",columns$[1,1]="C",columns$[1,2]="30"
+        columns$[2,0]="Address 2",columns$[2,1]="C",columns$[2,2]="30"
+        columns$[3,0]="Address 3",columns$[3,1]="C",columns$[3,2]="30"
+        columns$[4,0]="Address 4",columns$[4,1]="C",columns$[4,2]="30"
+        columns$[5,0]="Address 5",columns$[5,1]="C",columns$[5,2]="30"
+
+        headings=4
+        dim headings$[headings]
+        headings$[0]=sysinfo.firm_name$
+        headings$[1]=sysinfo.task_desc$
+        headings$[2]=range$
+        if sequence$="N" headings$[3]="by Customer ID"
+:       else if sequence$="A" headings$[3]="by Alternate Sequence"
+:       else if sequence$="Z" headings$[3]="by Zip Code"
+    endif    
+
+rem --- Initializations
+    dim label$(across*width*6),linefeeds$(length,$0A$)
+    answer$="Y"
+    msg_id$="PRINT_TEST_PATTERN"
+    more=1
+    first=1
+    lines=6
+    if length<6 lines=length
+    offset=0
+    keynum=0
+    begvalue$=begcustomer$
+    endvalue$=endcustomer$
+    keyfield$="CUSTOMER_ID"
+    if sequence$="A"
+       keynum=2
+       begvalue$=begalt$
+       endvalue$=endalt$
+       keyfield$="ALT_SEQUENCE"
+    endif
+    if sequence$="Z"
+       keynum=3
+       begvalue$=begzip$
+       endvalue$=endzip$
+       keyfield$="ZIP_CODE"
+    endif
+    begvalue$=cvs(begvalue$,2)
+    endvalue=len(endvalue$)
+    if col_format$="Y"
+        if begvalue$="" beg_out$="First" else beg_out$=begvalue$
+        if endvalue$="" end_out$="Last" else end_out$=endvalue$
+        headings$[4]="From "+beg_out$+" Through "+end_out$
+    endif
+
+rem --- Open the printer unless doing export format (which goes thru docout)
+
+    if col_format$<>"Y"
+
+rem --- Print test patterns until the user is satisfied
+
+        while answer$="Y"
+            dim msg_tokens$[1]
+            msg_opt$=""
+            gosub disp_message
+            if msg_opt$<>"Y" break
+
+        rem --- Print test pattern
+
+            call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+            if status exitto std_exit            
+            dim label$(across*width*6,"X")
+            printed_across=1
+            gosub label
+            close(printer_dev)
+            msg_id$="ANOTHER_PATTERN"
+        wend
+        if msg_opt$="C" goto std_exit
+
+        close(printer_dev,err=*next)
+        call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+        if status goto std_exit       
+    endif
+    
+rem --- Start the progress meter and position the file
+
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
+    read record (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dir=0,dom=*next)arm01a$
+
+rem --- Read next Customer Master (arm-01) record
+
+    while more
+          read record (arm01_dev,end=*break)arm01a$
+          if arm01a.firm_id$<>firm_id$ break
+          if endvalue$<>"" if cvs(field(arm01a$,keyfield$),3)>endvalue$ break
+          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          dim arm02a$:fattr(arm02a$)
+          read record (arm02_dev,key=arm01a.firm_id$+arm01a.customer_id$+"  ") arm02a$
+          if cvs(labelcode$,3)<>""
+            if cvs(arm02a.label_code$,3)<>cvs(labelcode$,3) continue
+          endif
+
+          rem --- Print the label(s) for this customer
+
+          printed=1
+          while printed<=labels
+                printed=printed+1
+                if printed_across>=across gosub label
+                printed_across=printed_across+1
+                address$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+
+:                        arm01a.addr_line_4$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$
+                call pgmdir$+"adc_address.aon",address$,24,5,9,30
+                if col_format$<>"Y"
+                    label$(width*(printed_across-1)+1,width)=arm01a.customer_name$
+                    label$(width*(across+printed_across-1)+1,width)=address$(1,30)
+                    label$(width*(2*across+printed_across-1)+1,width)=address$(31,30)
+                    label$(width*(3*across+printed_across-1)+1,width)=address$(61,30)
+                    label$(width*(4*across+printed_across-1)+1,width)=address$(91,30)
+                    label$(width*(5*across+printed_across-1)+1,width)=address$(121,30)
+                endif    
+                if col_format$="Y"
+                    OutVect!.addItem(arm01a.customer_name$)
+                    OutVect!.addItem(address$(1,30))
+                    OutVect!.addItem(address$(31,30))
+                    OutVect!.addItem(address$(61,30))
+                    OutVect!.addItem(address$(91,30))
+                    OutVect!.addItem(address$(121,30))
+                endif
+          wend
+
+          rem --- Loop back for next customer master
+
+    wend
+
+rem --- All done
+
+    gosub label
+    goto std_exit
+
+label: rem --- Print the label(s)
+
+    if printed_across=0 or col_format$="Y" return
+    if first 
+       for x=1 to length
+           print (printer_dev) ""
+       next x
+       first=0
+    endif
+    for x=0 to lines-1
+        print (printer_dev) @(offset),label$(x*across*width+1,across*width)
+    next x
+    if length>4 print (printer_dev) linefeeds$(1,length-5)
+    printed_across=0
+    label$(1)=""
+    return
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
+rem --- Functions
+
+rem --- Functions used to retrieve form values
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
+:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
+
+    end

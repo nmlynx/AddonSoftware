@@ -1,0 +1,47 @@
+Barista Application Framework - Definition Module
+IVM_ITEMPRIC - Contract Pricing Master
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVM_ITEMPRIC^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BWRI;^^Contract Pricing Master^Contract Pricing Master^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVM_ITEMPRIC^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+CUSTOMER_ID^IVM_ITEMPRIC^002^C^3001^dis_customer_id^0^^^2^^Y^^^F^^CUSTOMER_ID^Customer ID^ID del cliente^Customer N^C^^E^^^^^^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^Customer Number^^^
+ITEM_ID^IVM_ITEMPRIC^003^C^3002^dis_item_id^0^^^3^^Y^^^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+CODE_DESC^IVM_ITEMPRIC^004^C^3003^ine_code_desc^0^^^4^^N^^^^^CODE_DESC^Code Description^Comments^Cmts^C^^E^^^^^^^^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+FROM_DATE^IVM_ITEMPRIC^006^C^3004^ind_from_date^0^^^5^^N^^^C^^FROM_DATE^From Date^Start Date^Starts^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^From Date^^^
+THRU_DATE^IVM_ITEMPRIC^007^C^3005^ind_thru_date^0^^^6^^N^^^C^^THRU_DATE^Thru Date^Stop Date^Stops^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Thru Date^^^
+BREAK_QTY_01^IVM_ITEMPRIC^008^C^3006^inn_break_qty_01^0^^^7^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Qty^N^^N^^^^0^-1^+1^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^Break Quantity Level^^^
+UNIT_PRICE_01^IVM_ITEMPRIC^018^C^3007^inn_unit_price_01^0^^^8^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^Unit Price^^^
+BREAK_QTY_02^IVM_ITEMPRIC^009^C^3008^inn_break_qty_02^0^^^9^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_02^IVM_ITEMPRIC^019^C^3009^inn_unit_price_02^0^^^10^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_03^IVM_ITEMPRIC^010^C^3010^inn_break_qty_03^0^^^11^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_03^IVM_ITEMPRIC^020^C^3011^inn_unit_price_03^0^^^12^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_04^IVM_ITEMPRIC^011^C^3012^inn_break_qty_04^0^^^13^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_04^IVM_ITEMPRIC^021^C^3013^inn_unit_price_04^0^^^14^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_05^IVM_ITEMPRIC^012^C^3014^inn_break_qty_05^0^^^15^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_05^IVM_ITEMPRIC^022^C^3015^inn_unit_price_05^0^^^16^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_06^IVM_ITEMPRIC^013^C^3016^inn_break_qty_06^0^^^17^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_06^IVM_ITEMPRIC^023^C^3017^inn_unit_price_06^0^^^18^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_07^IVM_ITEMPRIC^014^C^3018^inn_break_qty_07^0^^^19^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_07^IVM_ITEMPRIC^024^C^3019^inn_unit_price_07^0^^^20^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_08^IVM_ITEMPRIC^015^C^3020^inn_break_qty_08^0^^^21^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_08^IVM_ITEMPRIC^025^C^3021^inn_unit_price_08^0^^^22^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_09^IVM_ITEMPRIC^016^C^3022^inn_break_qty_09^0^^^23^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_09^IVM_ITEMPRIC^026^C^3023^inn_unit_price_09^0^^^24^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+BREAK_QTY_10^IVM_ITEMPRIC^017^C^3024^inn_break_qty_10^0^^^25^^N^^^^^BREAK_QTY^Break Quantity Level^Quantity #P^Break Qty Level^N^^N^^^^0^-17^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^L;^^^^^^^
+UNIT_PRICE_10^IVM_ITEMPRIC^027^C^3025^inn_unit_price_10^0^^^26^^N^^^^^UNIT_PRICE^Unit Price^Unit Price #P^Unit Price^N^^N^^^^0^+17^-1^0^0^^^^^^^^^^^^^^7^^^^^^^P^L;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVM_ITEMPRIC^PRIMARY^IVM_ITEMPRIC.FIRM_ID                    IVM_ITEMPRIC.CUSTOMER_ID                IVM_ITEMPRIC.ITEM_ID                    ^stbl("+FIRM_ID")+IVM_ITEMPRIC.CUSTOMER_ID$+IVM_ITEMPRIC.ITEM_ID$^stbl("+FIRM_ID")+RD_REC_DATA.CUSTOMER_ID$+RD_REC_DATA.ITEM_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.CUSTOMER_ID$                RD_REC_DATA.ITEM_ID$                    
+{KeyDefsEnd}
+{GridCols}
+002IVM_ITEMPRIC.CUSTOMER_ID                ;003IVM_ITEMPRIC.ITEM_ID                    ;004IVM_ITEMPRIC.CODE_DESC                  ;005IVM_ITEMPRIC.FROM_DATE                  ;006IVM_ITEMPRIC.THRU_DATE                  ;007IVM_ITEMPRIC.BREAK_QTY_01               ;008IVM_ITEMPRIC.UNIT_PRICE_01              ;009IVM_ITEMPRIC.BREAK_QTY_02               ;010IVM_ITEMPRIC.UNIT_PRICE_02              ;011IVM_ITEMPRIC.BREAK_QTY_03               ;012IVM_ITEMPRIC.UNIT_PRICE_03              ;013IVM_ITEMPRIC.BREAK_QTY_04               ;014IVM_ITEMPRIC.UNIT_PRICE_04              ;015IVM_ITEMPRIC.BREAK_QTY_05               ;016IVM_ITEMPRIC.UNIT_PRICE_05              ;017IVM_ITEMPRIC.BREAK_QTY_06               ;018IVM_ITEMPRIC.UNIT_PRICE_06              ;019IVM_ITEMPRIC.BREAK_QTY_07               ;020IVM_ITEMPRIC.UNIT_PRICE_07              ;021IVM_ITEMPRIC.BREAK_QTY_08               ;022IVM_ITEMPRIC.UNIT_PRICE_08              ;023IVM_ITEMPRIC.BREAK_QTY_09               ;024IVM_ITEMPRIC.UNIT_PRICE_09              ;025IVM_ITEMPRIC.BREAK_QTY_10               ;026IVM_ITEMPRIC.UNIT_PRICE_10              ;
+{GridColsEnd}

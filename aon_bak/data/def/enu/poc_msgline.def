@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+POC_MSGLINE - Purchase Order Message Lines
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POC_MSGLINE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BSHO;^^Purchase Order Message Lines^Purchase Order Message Lines^^^^^^^POC_MSGCODE^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POC_MSGLINE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+PO_MSG_CODE^POC_MSGLINE^002^C^3001^dis_po_msg_code^0^^^2^^Y^^^F^^PO_MSG_CODE^PO Standard Message Code^PO Standard Message Code^PO Std Msg Cd^C^^E^^^^^^^35^0^[+FIRM_ID]+@^POC_MSGCODE^CODE_DESC^^^^^^^^^^^3^0^^^UUU^^^^G;^20^L^0^PO Standard Message Code^^^
+SEQUENCE_NUM^POC_MSGLINE^003^C^3002^ine_sequence_num^0^^^3^^Y^^^^^SEQUENCE_NUM^Sequence Number^Sequence Number^Seq No^C^S^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^G;^30^R^^Sequence Number^^^
+MESSAGE_TEXT^POC_MSGLINE^004^C^3003^ine_message_text^0^^^4^^N^^^^^MESSAGE_TEXT^Message Text^Message Text^Msg Text^C^^E^^^^^^^320^^^^^^^^^^^^^^^40^^^^^^^^^^^^Message Text^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POC_MSGLINE^PRIMARY^POC_MSGLINE.FIRM_ID                     POC_MSGLINE.PO_MSG_CODE                 POC_MSGLINE.SEQUENCE_NUM                ^stbl("+FIRM_ID")+POC_MSGLINE.PO_MSG_CODE$+POC_MSGLINE.SEQUENCE_NUM$^stbl("+FIRM_ID")+RD_REC_DATA.PO_MSG_CODE$+RD_REC_DATA.SEQUENCE_NUM$^stbl("+FIRM_ID")                        RD_REC_DATA.PO_MSG_CODE$                RD_REC_DATA.SEQUENCE_NUM$               
+{KeyDefsEnd}
+{GridCols}
+004POC_MSGLINE.MESSAGE_TEXT                ;
+{GridColsEnd}

@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+BMR_BILLMATAVAIL - Bill of Material Availability Inquiry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+BMR_BILLMATAVAIL^^^^Bill of Material Availability Inquiry^Bill of Material Availability Inquiry^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]bmr_billmatavail.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+BILL_NO^BMR_BILLMATAVAIL^001^C^3001^dis_bill_no^0^^^1^^N^^^F^^RPT_BILL_NO^Bill of Materials Number^Bill Number^Bill No^C^^E^^^^^0^0^160^0^[+FIRM_ID]+@^BMM_BILLMAST^BILL_NO^^^^^^^^^^^20^0^^^^^^^^20^L^0^^^^
+QTY_REQUIRED^BMR_BILLMATAVAIL^002^C^3002^inn_qty_required^0^^^2^^N^^^^^QTY_REQUIRED^Quantity Required^Quantity Required^Qty Req^N^^N^^^^^0^0^0^0^^^^^^^^^^^^^^7^^^^^^^U^1;2;^^^^^^^
+PROD_DATE^BMR_BILLMATAVAIL^003^C^3003^ind_prod_date^0^^^3^^N^^^C^^PROD_DATE^Production Date^Production Date^Prod Date^C^1^D^^^^^0^0^0^0^^^^^^^^^^^^^^8^^^^^^^^1;2;^^^^^^^
+WAREHOUSE_ID^BMR_BILLMATAVAIL^004^C^3004^dis_warehouse_id^0^^^4^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^2^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+{ColumnDefsEnd}
+{KeyDefs}
+BMR_BILLMATAVAIL^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001BMR_BILLMATAVAIL.BILL_NO                ;002BMR_BILLMATAVAIL.QTY_REQUIRED           ;003BMR_BILLMATAVAIL.PROD_DATE              ;004BMR_BILLMATAVAIL.WAREHOUSE_ID           ;
+{GridColsEnd}

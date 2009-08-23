@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+ADE_EXECWIP - Work In Process Totals
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ADE_EXECWIP^^^^Work In Process Totals^Work In Process Totals^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ADE_EXECWIP^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+FULL_YEAR^ADE_EXECWIP^002^C^3001^ine_full_year^0^^^2^^Y^^^^^FULL_YEAR^Four Digit Year [YYYY]^Four Digit Year [YYYY]^Four Digit Yr [YYYY]^C^^E^^^^^^^^^^^^^^^^^^^^^^4^^^^0000^0000^^^^30^R^^Four Digit Year [YYYY]^^^
+MONTH^ADE_EXECWIP^003^C^3002^ine_month^0^^^3^^Y^^^^^MONTH^Month^Month^Month^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^Month^^^
+TOT_WIP_AMT^ADE_EXECWIP^005^C^3003^inn_tot_wip_amt^0^^^5^^N^^^^^TOT_WIP_AMT^Total Work In Process Amt^Total Work In Process Amt^Tot WIP Amt^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Total Work In Process Amt^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ADE_EXECWIP^PRIMARY^ADE_EXECWIP.FIRM_ID                     ADE_EXECWIP.FULL_YEAR                   ADE_EXECWIP.MONTH                       ^stbl("+FIRM_ID")+ADE_EXECWIP.FULL_YEAR$+ADE_EXECWIP.MONTH$^stbl("+FIRM_ID")+RD_REC_DATA.FULL_YEAR$+RD_REC_DATA.MONTH$^stbl("+FIRM_ID")                        RD_REC_DATA.FULL_YEAR$                  RD_REC_DATA.MONTH$                      
+{KeyDefsEnd}
+{GridCols}
+002ADE_EXECWIP.FULL_YEAR                   ;003ADE_EXECWIP.MONTH                       ;005ADE_EXECWIP.TOT_WIP_AMT                 ;
+{GridColsEnd}

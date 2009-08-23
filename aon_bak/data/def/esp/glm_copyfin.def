@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+GLM_COPYFIN - Copy Financial Statements
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_COPYFIN^^^^Copy Financial Statements^Copia de los estados financieros^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]glm_copyfin.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FROM_FIRM_ID^GLM_COPYFIN^001^C^3001^dis_from_firm_id^0^^^1^^N^^^F^^COMPANY_ID^Company ID^Del ID de la empresa^ID de la empr.^C^^E^^^^^^^0^0^^ADM_FIRMS^FIRM_NAME^^^^^^^^^^^2^0^01^99^00^00^^^^30^R^^^^^
+FROM_GL_RPT_NO^GLM_COPYFIN^002^C^3002^dis_from_gl_rpt_no^0^^^2^^N^^^F^^GL_RPT_NO^GL Financial Report Number^Del número de informe^N.º de inf. fin.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLM_FINMASTER^GL_RPT_DESC^^^^^^^^^^^2^0^^^00^00^^^^30^R^0^^^^
+TO_FIRM_ID^GLM_COPYFIN^003^C^3003^dis_to_firm_id^0^^^3^^N^^^F^^COMPANY_ID^Company ID^Al ID de la empresa^ID de la empr.^C^^E^^^^^^^0^0^^ADM_FIRMS^FIRM_NAME^^^^^^^^^^^2^0^01^99^00^00^^^^30^R^^^^^
+TO_GL_RPT_NO^GLM_COPYFIN^004^C^3004^ine_to_gl_rpt_no^0^^^4^^N^^^^^TO_GL_RPT_NO^To GL Report Number^Al número de informe^Al número de informe del GL^C^^E^^^^^^^0^0^^^^^^^^^^^^^^2^0^^^00^00^^^^30^R^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_COPYFIN^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001GLM_COPYFIN.FROM_FIRM_ID                ;002GLM_COPYFIN.FROM_GL_RPT_NO              ;003GLM_COPYFIN.TO_FIRM_ID                  ;004GLM_COPYFIN.TO_GL_RPT_NO                ;
+{GridColsEnd}

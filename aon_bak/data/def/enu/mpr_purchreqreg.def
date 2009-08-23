@@ -1,0 +1,25 @@
+Barista Application Framework - Definition Module
+MPR_PURCHREQREG - Purchase Requisition Register
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+MPR_PURCHREQREG^^^^Purchase Requisition Register^Purchase Requisition Register^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]mpr_purchreqreg.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FORECAST^MPR_PURCHREQREG^001^C^3001^dis_forecast^0^^^1^^N^^^F^^FORECAST^MRP Forecast Type^MRP Forecast Type^MRP Forecast Type^C^^E^^^^^0^0^0^0^[+FIRM_ID]+@^MPM_FORECAST^DESCRIPTION_01^^^^^B2Q^^^^^^3^0^^^^^^^^20^L^0^^^^
+WAREHOUSE_ID^MPR_PURCHREQREG^002^C^3002^dis_warehouse_id^0^^^2^^N^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^0^0^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^01^^^^^1^2^0^^^UU^^^^^20^L^0^Enter a two-digit warehouse ID^^^
+REPORT_DATE_1^MPR_PURCHREQREG^003^C^3003^ind_report_date^0^^^3^^N^^^C^^REPORT_DATE^Report Date^Beginning Report Date^Beginning Rpt Dt^C^1^D^^^^^0^0^0^0^^^^^^^^^^^^^^8^^^^YYYYMMDD^^^^1;2;^^^^^^^
+REPORT_DATE_2^MPR_PURCHREQREG^003^C^3004^ind_report_date^0^^^3^^N^^^C^^REPORT_DATE^Report Date^Ending Report Date^Ending Rpt Dt^C^1^D^^^^^0^0^0^0^^^^^^^^^^^^^^8^^^^YYYYMMDD^^^^1;2;^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+MPR_PURCHREQREG^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001MPR_PURCHREQREG.FORECAST                ;002MPR_PURCHREQREG.WAREHOUSE_ID            ;003MPR_PURCHREQREG.REPORT_DATE             ;
+{GridColsEnd}

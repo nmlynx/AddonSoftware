@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+GLM_COFINASSIGN - Consolidated Assignments
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLM_COFINASSIGN^^^^Consolidated Assignments^Asignación del informe financiero consolidado^^^^^^^GLM_ACCT^G^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLM_COFINASSIGN^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL_ACCOUNT^GLM_COFINASSIGN^002^C^3001^dis_gl_account^0^^^2^^Y^^^F^^GL_ACCOUNT^GL Account Number^Cuenta del GL^Cuenta del GL^C^^E^^^^^^^^^[+FIRM_ID]+@^GLM_ACCT^GL_ACCT_DESC^^^^^^^^^^^10^^^^UUUUUUUUUU^^^I^V;^30^L^^Número de cuenta del GL^^^
+ASSIGN_NO^GLM_COFINASSIGN^003^C^3002^ine_assign_no^0^^^3^^Y^^^^^ASSIGN_NO^Financial Report Assignmnt Nbr^N.  de asignac. de informe financiero^N.º de asign.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^N.  de asignac. de informe financiero^^^
+GL_CO_RPT_NO^GLM_COFINASSIGN^004^C^3003^dis_gl_co_rpt_no^0^^^4^^N^^^F^^GL_CO_RPT_NO^GL Cons. Financial Report No^Número de informe financiero^N.º de inf. fin.^C^^E^^^^^^^0^0^"99"+@^GLM_FINMASTER^GL_RPT_DESC^^^^^^^^^^^2^0^^^00^00^^^V;^30^R^0^Número de informe financiero del GL^^^
+GL_CO_RPT_LINE^GLM_COFINASSIGN^005^C^3004^dis_gl_co_rpt_line^0^^^5^^N^^^F^^GL_CO_RPT_LINE^GL Cons. Financial Report Line^N.º de línea de informe financiero^N.º de línea de inf. fin.^C^^E^^^^^^^0^0^"99"+[GL_CO_RPT_NO]+@^GLM_FINDETAIL^GL_LINE_DESC^^^^^^^^^^^4^0^^^0000^0000^^^V;^30^R^0^N.  de línea de informe financiero del GL^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLM_COFINASSIGN^PRIMARY^GLM_COFINASSIGN.FIRM_ID                 GLM_COFINASSIGN.GL_ACCOUNT              GLM_COFINASSIGN.ASSIGN_NO               ^stbl("+FIRM_ID")+GLM_COFINASSIGN.GL_ACCOUNT$+GLM_COFINASSIGN.ASSIGN_NO$^stbl("+FIRM_ID")+RD_REC_DATA.GL_ACCOUNT$+RD_REC_DATA.ASSIGN_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.GL_ACCOUNT$                 RD_REC_DATA.ASSIGN_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002GLM_COFINASSIGN.GL_ACCOUNT              ;002{{DESC}}                                ;003GLM_COFINASSIGN.ASSIGN_NO               ;004GLM_COFINASSIGN.GL_CO_RPT_NO            ;004{{DESC}}                                ;005GLM_COFINASSIGN.GL_CO_RPT_LINE          ;005{{DESC}}                                ;
+{GridColsEnd}

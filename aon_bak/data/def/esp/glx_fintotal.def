@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+GLX_FINTOTAL - Financial Total/Report Sort
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLX_FINTOTAL^^^^Financial Total/Report Sort^Total financiero/clasificación del informe^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+INPUT_TOTAL^GLX_FINTOTAL^001^C^3001^ine_input_total^0^^^1^^Y^^^^^INPUT_TOTAL^Input Total Number^Número total de entrada^N.º total de entrada^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^^30^R^^Número total de entrada^^^
+GL_RPT_NO^GLX_FINTOTAL^002^C^3002^dis_gl_rpt_no^0^^^2^^Y^^^F^^GL_RPT_NO^GL Financial Report Number^Número de informe financiero^N.º de inf. fin.^C^^E^^^^^^^0^0^[+FIRM_ID]+@^GLM_FINMASTER^GL_RPT_DESC^^^^^^^^^^^2^0^^^00^00^^^^30^R^0^Número de informe financiero del GL^^^
+GL_RPT_LINE^GLX_FINTOTAL^003^C^3003^dis_gl_rpt_line^0^^^3^^Y^^^F^^GL_RPT_LINE^GL Financial Report Line Nbr^N.º de línea de informe financiero^N.º de línea de inf. fin.^C^^E^^^^^^^0^0^[+FIRM_ID]+[GL_RPT_NO]+@^GLM_FINDETAIL^GL_LINE_DESC^^^^^^^^^^^4^0^^^0000^0000^^^^30^R^0^N.  de línea de informe financiero del GL^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLX_FINTOTAL^PRIMARY^GLX_FINTOTAL.INPUT_TOTAL                GLX_FINTOTAL.GL_RPT_NO                  GLX_FINTOTAL.GL_RPT_LINE                ^GLX_FINTOTAL.INPUT_TOTAL$+GLX_FINTOTAL.GL_RPT_NO$+GLX_FINTOTAL.GL_RPT_LINE$^RD_REC_DATA.INPUT_TOTAL$+RD_REC_DATA.GL_RPT_NO$+RD_REC_DATA.GL_RPT_LINE$^RD_REC_DATA.INPUT_TOTAL$                RD_REC_DATA.GL_RPT_NO$                  RD_REC_DATA.GL_RPT_LINE$                
+{KeyDefsEnd}
+{GridCols}
+001GLX_FINTOTAL.INPUT_TOTAL                ;002GLX_FINTOTAL.GL_RPT_NO                  ;003GLX_FINTOTAL.GL_RPT_LINE                ;
+{GridColsEnd}

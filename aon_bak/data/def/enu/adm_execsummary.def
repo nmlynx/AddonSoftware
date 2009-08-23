@@ -1,0 +1,31 @@
+Barista Application Framework - Definition Module
+ADM_EXECSUMMARY - Executive Summary Definitions
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ADM_EXECSUMMARY^^^^Executive Summary Definitions^Executive Summary Definitions^^^^^^^^T^^^^N^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ADM_EXECSUMMARY^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+SUMMARY_ID^ADM_EXECSUMMARY^002^C^3001^ine_summary_id^0^^^2^^Y^^^^^SUMMARY_ID^Exec Summary ID^Summary ID^Summary ID^C^^E^^^^^+1^^160^0^^^^^^^^^^^^^^16^0^^^UUUUUUUUUUUUUUUU^^^^^20^L^0^^^^
+SUMMARY_DESC^ADM_EXECSUMMARY^003^C^3002^ine_summary_desc^0^^^3^^N^^^^^DESCRIPTION^Description^Description^Desc^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^^^^^^^^
+MENU_DESC^ADM_EXECSUMMARY^007^C^3003^ine_menu_desc^0^^^4^^N^^^^^DESCRIPTION^Description^Menu Description^Menu Desc^C^^E^^^^^^^240^^^^^^^^^^^^^^^30^^^^^^^^^^^^^^^
+SUMMARY_TYPE^ADM_EXECSUMMARY^004^C^3004^lbx_summary_type^0^^^5^^N^^^^^SUMMARY_TYPE^Summary Type^Summary Type^Type^C^^L^^^^^^+1^75^0^^^^^^^^C^^^^Menu                          ~M   ;Category                      ~C   ;^^1^0^^^^^^^^^^^^^^
+SUMMARY_EXPAND^ADM_EXECSUMMARY^006^C^3005^cbx_summary_expand^0^^^6^^N^^^^^SUMMARY_EXPAND^Expand Summary Category^Expand Summary Category^Exp^C^^C^ADM_EXECSUMMARY.SUMMARY_TYPE^M^Y;N^^^^30^0^^^^^^^^N^^^^^^1^0^^^^^^^^^^0^^^^
+SUMMARY_ID_PAR^ADM_EXECSUMMARY^005^C^3006^dis_summary_id_par^0^^^7^^N^^^F^^SUMMARY_ID^Exec Summary ID^Parent Summary ID^Par Summ ID^C^^E^ADM_EXECSUMMARY.SUMMARY_TYPE^C^^^^^128^0^[FIRM_ID]+@^ADM_EXECSUMMARY^SUMMARY_DESC^^^^^^^^^^^16^0^^^UUUUUUUUUUUUUUUU^^^^^20^L^0^^^^
+PROG_PATH_UD^ADM_EXECSUMMARY^008^C^3007^ine_prog_path_ud^0^^^8^^N^^^^^PROGRAM_PATH^Program Directory Pathname^Update Program Path^Update Prog Path^C^^E^ADM_EXECSUMMARY.SUMMARY_TYPE^C^^^^^400^^^^^^^^^^^^^^^50^^^^^^^^^^^^^^^
+PROG_PATH_DISP^ADM_EXECSUMMARY^009^C^3008^ine_prog_path_disp^0^^^9^^N^^^^^PROGRAM_PATH^Program Directory Pathname^Display Program Path^Display Prog Path^C^^E^ADM_EXECSUMMARY.SUMMARY_TYPE^C^^^^^400^^^^^^^^^^^^^^^50^^^^^^^^^^^^^^^
+SUMMARY_CD^ADM_EXECSUMMARY^010^C^3009^ine_summary_cd^0^^^10^^N^^^^^SUMMARY_CD^Exec Summary Category Code^Summary Category Cd^Cat Cd^C^^E^ADM_EXECSUMMARY.SUMMARY_TYPE^C^^^^^50^0^^^^^^^^^^^^^^5^0^^^UUUUU^^^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ADM_EXECSUMMARY^PRIMARY^ADM_EXECSUMMARY.FIRM_ID                 ADM_EXECSUMMARY.SUMMARY_ID              ^stbl("+FIRM_ID")+ADM_EXECSUMMARY.SUMMARY_ID$^stbl("+FIRM_ID")+RD_REC_DATA.SUMMARY_ID$^stbl("+FIRM_ID")                        RD_REC_DATA.SUMMARY_ID$                 
+{KeyDefsEnd}
+{GridCols}
+002ADM_EXECSUMMARY.SUMMARY_ID              ;003ADM_EXECSUMMARY.SUMMARY_DESC            ;004ADM_EXECSUMMARY.MENU_DESC               ;005ADM_EXECSUMMARY.SUMMARY_TYPE            ;006ADM_EXECSUMMARY.SUMMARY_EXPAND          ;007ADM_EXECSUMMARY.SUMMARY_ID_PAR          ;008ADM_EXECSUMMARY.PROG_PATH_UD            ;009ADM_EXECSUMMARY.PROG_PATH_DISP          ;010ADM_EXECSUMMARY.SUMMARY_CD              ;
+{GridColsEnd}

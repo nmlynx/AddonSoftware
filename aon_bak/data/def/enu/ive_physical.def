@@ -1,0 +1,33 @@
+Barista Application Framework - Definition Module
+IVE_PHYSICAL - Physical Inventory Entry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+IVE_PHYSICAL^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ADIS;ARAR;BSHO;^^Physical Inventory Entry^Physical Inventory Entry^^^^^^^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^IVE_PHYSICAL^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+WAREHOUSE_ID^IVE_PHYSICAL^002^C^3001^dis_warehouse_id^0^^^2^^Y^^^F^^WAREHOUSE_ID^Warehouse ID^Warehouse ID^Whse ID^C^^E^^^^^^^0^0^[+FIRM_ID]+"C"+@^IVC_WHSECODE^SHORT_NAME^^^^^^^^^^1^2^0^^^UU^^^^^20^L^0^Warehouse ID^^^
+PI_CYCLECODE^IVE_PHYSICAL^003^C^3002^dis_pi_cyclecode^0^^^3^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^PI_CYCLECODE^Physical Inventory Cycle Code^Cycle Code^Cycle^C^^E^^^^^^^0^0^[+FIRM_ID]+[WAREHOUSE_ID]+@^IVC_PHYSCODE^DESCRIPTION^^^^^^^^^^1^2^0^^^^^^^^20^L^0^Cycle Code^^^
+LOCATION^IVE_PHYSICAL^004^C^3003^ine_location^0^^^4^^Y^^^^^LOCATION^Warehouse Location^Warehouse Location^Whse Loc^C^^E^^^^^^^^^^^^^^^^^^^^^^10^^^^^^^^C;^^^^Warehouse Location^^^
+ITEM_ID^IVE_PHYSICAL^005^C^3004^dis_item_id^0^^^5^^Y^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^F^^ITEM_ID^Inventory Item ID^Inventory Item ID^Inventory^C^^E^^^^^^^^^[+FIRM_ID]+@^IVM_ITEMMAST^ITEM_DESC^^^^^^^.^^^^20^0^^^UUUUUUUUUUUUUUUUUUUU^^^^^20^L^^Inventory Item Number^^^
+LOTSER_NO^IVE_PHYSICAL^006^C^3005^ine_lotser_no^0^^^6^^Y^^^^^LOTSER_NO^Lot/Serial Number^Lot/Serial Number^Lot/Serial No^C^^E^<<CALLPOINT>>^B^^^^^0^0^^^^^^^^^^^^^^20^0^^^^^^^^20^L^0^Lot/Serial Number^^^
+CUTOFF_DATE^IVE_PHYSICAL^012^C^3006^ind_cutoff_date^0^^^7^^N^^^^^CUTOFF_DATE^Cutoff Date^Cutoff Date^Cutoff Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^C;^^^^Cutoff Date^^^
+FREEZE_QTY^IVE_PHYSICAL^013^C^3007^inn_freeze_qty^0^^^8^^N^^^^^FREEZE_QTY^Freeze Quantity^System Quantity^Freeze Qty^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^C;^^^^Freeze Quantity^^^
+ACT_PHYS_CNT^IVE_PHYSICAL^014^C^3008^inn_act_phys_cnt^0^^^9^^N^^^^^ACT_PHYS_CNT^Actual Physical Count^Count Total^Total^N^^N^^^^^^+1^^^^^^^^^^^^^^^^7^^^^^^^U^C;^^^^Actual Physical Count^^^
+COUNT_STRING^IVE_PHYSICAL^011^C^3009^ine_count_string^0^^^10^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^AVAL;^^^COUNT_STRING^Count String^Physical Count^Phys Count^C^^E^^^^^^-2^^^^^^^^^^^^^^^^50^^^^^^^^^^^^Count String^^^
+ENTERED_FLAG^IVE_PHYSICAL^008^C^^^^^^11^^N^^^^^ENTERED_FLAG^Physical Count Entered?^Physical Count Entered?^Phys Count Entered?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^W;^^^^Physical Count Entered?^^^
+LOTSER_ITEM^IVE_PHYSICAL^009^C^^^^^^12^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BINP;^^^LOTSER_ITEM^Lotted or Serialized Item?^Lotted or Serialized Item?^Lot/Ser Item?^C^^C^^^Y;N^^^^^^^^^^^^^^^^^^^1^^^^^^^^W;^^^^Lotted or Serialized Item?^^^
+{ColumnDefsEnd}
+{KeyDefs}
+IVE_PHYSICAL^PRIMARY^IVE_PHYSICAL.FIRM_ID                    IVE_PHYSICAL.WAREHOUSE_ID               IVE_PHYSICAL.PI_CYCLECODE               IVE_PHYSICAL.LOCATION                   IVE_PHYSICAL.ITEM_ID                    IVE_PHYSICAL.LOTSER_NO                  ^stbl("+FIRM_ID")+IVE_PHYSICAL.WAREHOUSE_ID$+IVE_PHYSICAL.PI_CYCLECODE$+IVE_PHYSICAL.LOCATION$+IVE_PHYSICAL.ITEM_ID$+IVE_PHYSICAL.LOTSER_NO$^stbl("+FIRM_ID")+RD_REC_DATA.WAREHOUSE_ID$+RD_REC_DATA.PI_CYCLECODE$+RD_REC_DATA.LOCATION$+RD_REC_DATA.ITEM_ID$+RD_REC_DATA.LOTSER_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.WAREHOUSE_ID$               RD_REC_DATA.PI_CYCLECODE$               RD_REC_DATA.LOCATION$                   RD_REC_DATA.ITEM_ID$                    RD_REC_DATA.LOTSER_NO$                  
+{KeyDefsEnd}
+{GridCols}
+002IVE_PHYSICAL.WAREHOUSE_ID               ;003IVE_PHYSICAL.PI_CYCLECODE               ;004IVE_PHYSICAL.LOCATION                   ;005IVE_PHYSICAL.ITEM_ID                    ;006IVE_PHYSICAL.LOTSER_NO                  ;007IVE_PHYSICAL.CUTOFF_DATE                ;008IVE_PHYSICAL.FREEZE_QTY                 ;009IVE_PHYSICAL.ACT_PHYS_CNT               ;010IVE_PHYSICAL.COUNT_STRING               ;011IVE_PHYSICAL.ENTERED_FLAG               ;012IVE_PHYSICAL.LOTSER_ITEM                ;
+{GridColsEnd}

@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+GLR_BALANCE - Balance Sheet
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLR_BALANCE^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ARAR;AWIN;^^Balance Sheet^Balance general^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]glr_balance.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+PICK_GL_PER^GLR_BALANCE^001^C^3001^inn_pick_gl_per^0^^^1^^N^^^^^PICK_GL_PER^Pick Window GL Period^Para período^Período del GL^I^^N^^^^^^^35^0^^^^^^^^^^^^^^2^0^01^99^00^00^^^^^^0^^^^
+PICK_YEAR^GLR_BALANCE^002^C^3002^ine_pick_year^0^^^2^^N^^^^^PICK_YEAR^Pick Window Year^Para año^Año act.^C^^E^^^^^^^35^0^^^^^^^^^^^^^^4^^1950^2100^^^^^^^^^^^^
+YN_PROMPT^GLR_BALANCE^003^C^3003^cbx_yn_prompt^0^^^3^^N^^^^^YN_PROMPT^Yes/No Prompt^Incluir número de cuenta^^C^^C^^^Y;N^^^^30^^^^^^^^^Y^^^^^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLR_BALANCE^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001GLR_BALANCE.PICK_GL_PER                 ;002GLR_BALANCE.PICK_YEAR                   ;003GLR_BALANCE.YN_PROMPT                   ;
+{GridColsEnd}

@@ -1,0 +1,34 @@
+Barista Application Framework - Definition Module
+PRE_DAYTIME - Daily Time Entry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+PRE_DAYTIME^^^^Daily Time Entry^Daily Time Entry^PRE_DAYTIME^^^^^^^T^^^^^^N;U;V;^^^Detail;^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+EMPLOYEE_NO^PRE_DAYTIME^002^C^3001^dis_employee_no^0^^^1^^Y^^^F^^EMPLOYEE_NO^Employee Number^Employee Number^Empl No^C^^E^^^^^^^^^[+FIRM_ID]+@^PRM_EMPLMAST^EMPL_SURNAME^^^^^^^^^^^9^^^^UUUUUUUUU^^^N^^^^^Employee Number^^^
+DISP_HOURS^<<DISPLAY>>^014^D^3002^inn_disp_hours^0^^^2^^^^^^^PICK_NO^Pick Screen Numeric^Hours^Hours^N^^N^^^^^^+1^0^^^^^^^^^^^^^^^8^^^^-######.00^^AON^^^30^R^^^^^
+DISP_EARNINGS^<<DISPLAY>>^015^D^3003^inn_disp_earnings^0^^^3^^^^^^^PICK_NO^Pick Screen Numeric^Earnings^Earnings^N^^N^^^^^250^-1^0^^^^^^^^^^^^^^^8^^^^-######.00^^AON^^^30^R^^^^^
+PR_TIME_SEQ^PRE_DAYTIME^003^C^3101^ine_pr_time_seq^1^^^4^1^Y^^^^^PR_TIME_SEQ^Payroll Time Entry Sequence^Seq^Seq^C^^E^^^^^^^^^^^^^^^^^^^^^^3^^^^000^000^^^V;^30^R^^Payroll Time Entry Sequence^^^
+TRANS_DATE^PRE_DAYTIME^009^C^3102^ind_trans_date^1^^^5^^N^^^C^^TRANS_DATE^Transaction Date^Transaction Date^Trans Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Transaction Date^^^
+PAY_CODE^PRE_DAYTIME^005^C^3103^dis_pay_code^1^^^6^^N^^^F^^PAY_CODE^Pay Code^Pay Code^Pay Cd^C^^E^^^^^^^^^[+FIRM_ID]+"A"+@^PRC_PAYCODE^PR_CODE_DESC^^^^^^^^^^^2^0^^^UU^^^^^30^L^^Pay Code^^^
+TITLE_CODE^PRE_DAYTIME^006^C^3104^dis_title_code^1^^^7^^N^^^F^^TITLE_CODE^Title Code^Title Code^Title Cd^C^^E^^^^^^^^^[+FIRM_ID]+"F"+@^PRC_TITLCODE^CODE_DESC^^^^^^^^^^^2^^^^UU^^^^^30^L^^Title Code^^^
+RATE^PRE_DAYTIME^011^C^3105^inn_rate^1^^^8^^N^^^^^RATE^Rate^Rate^Rate^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^R^^^^^Rate^^^
+DEPT_CODE^PRE_DAYTIME^007^C^3106^ine_dept_code^1^^^9^^N^^^^^DEPT_CODE^Department Code^Department Code^Dept Cd^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^^^^^Department Code^^^
+UNITS^PRE_DAYTIME^012^C^3107^inn_units^1^^^10^^N^^^^^UNITS^Units^Units^Units^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^U^^^^^Units^^^
+EXTENDED_AMT^PRE_DAYTIME^013^C^3108^inn_extended_amt^1^^^11^^N^^^^^EXTENDED_AMT^Extended Amount^Extended Amount^Ext Amt^N^^N^^^^^^^0^0^^^^^^^^^^^^^^15^0^^^^^^A^^^^0^Extended Amount^^^
+PR_JOB_NO^PRE_DAYTIME^010^C^3109^ine_pr_job_no^1^^^12^^N^^^^^PR_JOB_NO^Job Number^Job Number^Job No^C^^E^^^^^^^^^^^^^^^^^^^^^^12^^^^^^^^G;L;^^^^Job Number^^^
+FIRM_ID^PRE_DAYTIME^001^C^^^^^^13^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+PRE_DAYTIME^PRIMARY^PRE_DAYTIME.FIRM_ID                     PRE_DAYTIME.EMPLOYEE_NO                 PRE_DAYTIME.PR_TIME_SEQ                 ^stbl("+FIRM_ID")+PRE_DAYTIME.EMPLOYEE_NO$+PRE_DAYTIME.PR_TIME_SEQ$^stbl("+FIRM_ID")+RD_REC_DATA.EMPLOYEE_NO$+RD_REC_DATA.PR_TIME_SEQ$^stbl("+FIRM_ID")                        RD_REC_DATA.EMPLOYEE_NO$                RD_REC_DATA.PR_TIME_SEQ$                
+{KeyDefsEnd}
+{GridCols}
+001PRE_DAYTIME.EMPLOYEE_NO                 ;002<<DISPLAY>>.DISP_HOURS                  ;003<<DISPLAY>>.DISP_EARNINGS               ;004PRE_DAYTIME.PR_TIME_SEQ                 ;004{{DESC}}                                ;005PRE_DAYTIME.TRANS_DATE                  ;006PRE_DAYTIME.PAY_CODE                    ;007PRE_DAYTIME.TITLE_CODE                  ;008PRE_DAYTIME.RATE                        ;009PRE_DAYTIME.DEPT_CODE                   ;010PRE_DAYTIME.UNITS                       ;011PRE_DAYTIME.EXTENDED_AMT                ;
+{GridColsEnd}

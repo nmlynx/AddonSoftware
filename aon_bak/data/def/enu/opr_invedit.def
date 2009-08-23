@@ -1,0 +1,29 @@
+Barista Application Framework - Definition Module
+OPR_INVEDIT - Invoice Edit Report
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+OPR_INVEDIT^^^^Invoice Edit Report^Invoice Edit Report^^^^^^^^S^^^^^^X;N;U;V;^^[+DIR_PGM]opr_invoiceedit.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CUSTOMER_ID_1^OPR_INVEDIT^001^C^3001^dis_customer_id^0^^^1^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^175^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+CUSTOMER_ID_2^OPR_INVEDIT^001^C^3002^dis_customer_id^0^^^1^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^175^^^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^1;2;^30^R^^^^^
+ORDER_NO_1^OPR_INVEDIT^002^C^3003^ine_order_no^0^^^2^^N^^^^^ORDER_NO^Sales Order Number^Sales Order Number^Sales Ord No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+ORDER_NO_2^OPR_INVEDIT^002^C^3004^ine_order_no^0^^^2^^N^^^^^ORDER_NO^Sales Order Number^Sales Order Number^Sales Ord No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^1;2;^30^R^^^^^
+ORD_TAKEN_BY^OPR_INVEDIT^003^C^3005^ine_ord_taken_by^0^^^3^^N^^^^^ORD_TAKEN_BY^Order Taken By^Order Entered By^Ord Entered By^C^^E^^^^^^^0^0^^^^^^^^^^^^^^16^0^^^^^^^3;^^^0^^^^
+OPR_PRINT_STATUS^OPR_INVEDIT^004^C^3006^lbx_opr_print_status^0^^^4^^N^^^^^OPR_PRINT_STATUS^Print Status^Print Status^Print Stat^C^^L^^^^^^^0^0^^^^^^^^U^^^^Printed                       ~P   ;Unprinted                     ~U   ;All                           ~A   ;^^1^0^^^^^^^^^^0^^^^
+PICK_CHECK^OPR_INVEDIT^005^C^3007^cbx_pick_check^0^^^5^^N^^^^^PICK_CHECK^Pick Screen Check Box^Page Break^Pg Break^C^^C^^^Y;N^^^^^^^^^^^^^N^^^^^^1^^^^^^^^^^^^^^^
+FIRM_ID^OPR_INVEDIT^006^C^^^^^^6^^N^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+{ColumnDefsEnd}
+{KeyDefs}
+OPR_INVEDIT^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001OPR_INVEDIT.CUSTOMER_ID                 ;002OPR_INVEDIT.ORDER_NO                    ;003OPR_INVEDIT.ORD_TAKEN_BY                ;004OPR_INVEDIT.OPR_PRINT_STATUS            ;005OPR_INVEDIT.PICK_CHECK                  ;
+{GridColsEnd}

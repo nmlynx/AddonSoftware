@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+MPW_DATETOT - Report Totals By Date
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+MPW_DATETOT^^^^Report Totals By Date^Report Totals By Date^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^MPW_DATETOT^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+PLAN_DATE^MPW_DATETOT^002^C^3001^ind_plan_date^0^^^2^^Y^^^C^^PLAN_DATE^Plan Date^Plan Date^Plan Date^C^1^D^^^^^^^^^^^^^^^^^^^^^^8^^^^^^^^^^^^Plan Date^^^
+TOTAL_COST^MPW_DATETOT^003^C^3002^inn_total_cost^0^^^3^^N^^^^^TOTAL_COST^Total Cost Amount^Total Cost Amount^Total Cost^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Total Cost Amount^^^
+TOTAL_TIME^MPW_DATETOT^004^C^3003^inn_total_time^0^^^4^^N^^^^^TOTAL_TIME^Total Time Required In Hours^Total Time Required In Hours^Tot Time Req In Hrs^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^^^^^^Total Time Required In Hours^^^
+LABOR_COST^MPW_DATETOT^005^C^3004^inn_labor_cost^0^^^5^^N^^^^^LABOR_COST^Labor Cost^Labor Cost^Lab Cst^N^^N^^^^^^^^^^^^^^^^^^^^^^7^^^^^^^A^^^^^Labor Cost^^^
+{ColumnDefsEnd}
+{KeyDefs}
+MPW_DATETOT^PRIMARY^MPW_DATETOT.FIRM_ID                     MPW_DATETOT.PLAN_DATE                   ^stbl("+FIRM_ID")+MPW_DATETOT.PLAN_DATE$^stbl("+FIRM_ID")+RD_REC_DATA.PLAN_DATE$^stbl("+FIRM_ID")                        RD_REC_DATA.PLAN_DATE$                  
+{KeyDefsEnd}
+{GridCols}
+002MPW_DATETOT.PLAN_DATE                   ;003MPW_DATETOT.TOTAL_COST                  ;004MPW_DATETOT.TOTAL_TIME                  ;005MPW_DATETOT.LABOR_COST                  ;
+{GridColsEnd}

@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+POW_QABYVEN - QA Receipts By Vendor
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+POW_QABYVEN^^^^QA Receipts By Vendor^QA Receipts By Vendor^^^^^^^^X^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^POW_QABYVEN^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+VENDOR_ID^POW_QABYVEN^002^C^3001^dis_vendor_id^0^^^2^^Y^^^F^^VENDOR_ID^Vendor Number^Vendor ID^Vendor Num^C^^E^^^^^^^0^0^[+FIRM_ID]+@^APM_VENDMAST^VENDOR_NAME^^^^^^^^^^^6^0^^^UUUUUU^^^I^^30^R^0^Vendor Number^^^
+RECEIVER_NO^POW_QABYVEN^003^C^3002^ine_receiver_no^0^^^3^^Y^^^^^RECEIVER_NO^Receiver Number^Receiver Number^Receiver No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Receiver Number^^^
+PO_NO^POW_QABYVEN^004^C^3003^ine_po_no^0^^^4^^Y^^^^^PO_NO^Purchase Order Number^Purchase Order Number^PO No^C^^E^^^^^^^^^^^^^^^^^^^^^^7^^^^0000000^0000000^^^^30^R^^Purchase Order Number^^^
+PO_LINE_NO^POW_QABYVEN^005^C^3004^ine_po_line_no^0^^^5^^Y^^^^^PO_LINE_NO^Purchase Order Line Number^Purchase Order Line Number^PO Line No^C^S^E^^^^^^^0^0^^^^^^^^^^^^^^3^0^^^000^000^^^^30^R^0^Purchase Order Line Number^^^
+{ColumnDefsEnd}
+{KeyDefs}
+POW_QABYVEN^PRIMARY^POW_QABYVEN.FIRM_ID                     POW_QABYVEN.VENDOR_ID                   POW_QABYVEN.RECEIVER_NO                 POW_QABYVEN.PO_NO                       POW_QABYVEN.PO_LINE_NO                  ^stbl("+FIRM_ID")+POW_QABYVEN.VENDOR_ID$+POW_QABYVEN.RECEIVER_NO$+POW_QABYVEN.PO_NO$+POW_QABYVEN.PO_LINE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.VENDOR_ID$+RD_REC_DATA.RECEIVER_NO$+RD_REC_DATA.PO_NO$+RD_REC_DATA.PO_LINE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.VENDOR_ID$                  RD_REC_DATA.RECEIVER_NO$                RD_REC_DATA.PO_NO$                      RD_REC_DATA.PO_LINE_NO$                 
+{KeyDefsEnd}
+{GridCols}
+002POW_QABYVEN.VENDOR_ID                   ;003POW_QABYVEN.RECEIVER_NO                 ;004POW_QABYVEN.PO_NO                       ;005POW_QABYVEN.PO_LINE_NO                  ;
+{GridColsEnd}

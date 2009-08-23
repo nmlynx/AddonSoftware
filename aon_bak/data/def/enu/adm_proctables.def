@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+ADM_PROCTABLES - Process Tables
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ADM_PROCTABLES^^^^Process Tables^Process Tables^^^^^^^ADM_PROCMASTER^G^^^^N^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ADM_PROCTABLES^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^0^0^0^0^0^^^^^^^^^^^^^^2^^^^00^00^^^^30^R^^^stbl("+FIRM_ID")^^
+PROCESS_ID^ADM_PROCTABLES^002^C^^^^^^2^^Y^^^F^^PROCESS_ID^Process Identification^Process Identification^Process ID^C^^E^^^^^^^160^0^[+FIRM_ID]+@^ADM_PROCMASTER^DESCRIPTION^^^^^^^^^^^16^0^^^^^^^O;^20^L^0^^^^
+SEQUENCE_NO^ADM_PROCTABLES^003^C^^^^^^3^^Y^^^^^SEQUENCE_NO^Sequence Number^Sequence Number^Seq No^C^S^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^000^000^^^O;^30^R^^^^^
+DD_TABLE_ALIAS^ADM_PROCTABLES^004^C^3001^dis_dd_table_alias^0^^^4^^N^^^F^^DD_TABLE_ALIAS^Table Alias^Table Alias^Table Alias^C^^E^^^^^^^160^0^^DDM_TABLES^DD_ALIAS_DESC^^^^^^^^^^^16^0^^^UUUUUUUUUUUUUUUU^^^^V;^20^L^0^Enter the table alias^^^
+DD_FILE_NAME^ADM_PROCTABLES^005^C^3002^ine_dd_file_name^0^^^5^^N^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^BINP;^^^DD_FILE_NAME^Disk File Name^Disk File Name^File Name^C^^E^^^^^^^56^^^^^^^^^^^^^^^30^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ADM_PROCTABLES^PRIMARY^ADM_PROCTABLES.FIRM_ID                  ADM_PROCTABLES.PROCESS_ID               ADM_PROCTABLES.SEQUENCE_NO              ^stbl("+FIRM_ID")+ADM_PROCTABLES.PROCESS_ID$+ADM_PROCTABLES.SEQUENCE_NO$^stbl("+FIRM_ID")+RD_REC_DATA.PROCESS_ID$+RD_REC_DATA.SEQUENCE_NO$^stbl("+FIRM_ID")                        RD_REC_DATA.PROCESS_ID$                 RD_REC_DATA.SEQUENCE_NO$                
+{KeyDefsEnd}
+{GridCols}
+004ADM_PROCTABLES.DD_TABLE_ALIAS           ;004{{DESC}}                                ;005ADM_PROCTABLES.DD_FILE_NAME             ;
+{GridColsEnd}

@@ -1,0 +1,24 @@
+Barista Application Framework - Definition Module
+ARR_INVDETAIL - Invoice Detail Inquiry
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARR_INVDETAIL^^^^Invoice Detail Inquiry^Invoice Detail Inquiry^^^^^^^^S^^^^^^N;U;V;^^[+DIR_PGM]arr_invdetail.aon^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+CUSTOMER_ID^ARR_INVDETAIL^001^C^3001^dis_customer_id^0^^^1^^N^^^F^^CUSTOMER_ID^Customer ID^Customer ID^Cust ID^C^^E^^^^^^^48^^[+FIRM_ID]+@^ARM_CUSTMAST^CUSTOMER_NAME^^^^^^^^^^^6^^^^^^^I^^30^R^^^^^
+AR_INV_NO^ARR_INVDETAIL^002^C^3002^ine_ar_inv_no^0^^^2^^N^^^^^AR_INV_NO^AR Invoice Number^AR Invoice Number^AR Inv No^C^^E^^^^^^^56^^^^^^^^^^^^^^^7^^^^UUUUUUU^UUUUUUU^^^^30^R^^^^^
+PD_UNPD_BOTH^ARR_INVDETAIL^003^C^3003^lbx_pd_unpd_both^0^^^3^^N^^^^^PD_UNPD_BOTH^Paid/Unpaid/Both Indicator^Paid/Unpaid/Both^Paid/Unpd/Both^C^^L^^^^^^^70^^^^^^^^^B^^^^Paid                          ~P   ;Unpaid                        ~U   ;Both                          ~B   ;^^1^^^^^^^^^^^^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARR_INVDETAIL^PRIMARY^^^^
+{KeyDefsEnd}
+{GridCols}
+001ARR_INVDETAIL.CUSTOMER_ID               ;002ARR_INVDETAIL.AR_INV_NO                 ;003ARR_INVDETAIL.PD_UNPD_BOTH              ;
+{GridColsEnd}

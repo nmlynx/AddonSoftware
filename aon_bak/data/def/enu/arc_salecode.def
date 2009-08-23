@@ -1,0 +1,26 @@
+Barista Application Framework - Definition Module
+ARC_SALECODE - Salesperson Code
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+ARC_SALECODE^^^^Salesperson Code^Salesperson Code^^^^^^^^T^^^^^^A;P;N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^ARC_SALECODE^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+RECORD_ID_F^ARC_SALECODE^002^C^^^^^^2^^Y^^^^^RECORD_ID_F^"F"^F^F^C^^E^^^^^^^^^^^^^^^^^^^^^^1^^^^^^^^O;P;R;^^^^"F"^"F"^^
+SLSPSN_CODE^ARC_SALECODE^003^C^3001^ine_slspsn_code^0^^^3^^Y^^^^^SLSPSN_CODE^Salesperson Code^Salesperson Code^Salespsn Cd^C^^E^^^^^^^35^0^^^^^^^^^^^^^1^3^0^^^UUU^^^^K;^20^L^0^Salesperson Code^^^
+CODE_DESC^ARC_SALECODE^004^C^3002^ine_code_desc^0^^^4^^N^^^^^CODE_DESC^Code Description^Description^Description^C^^E^^^^^^^160^^^^^^^^^^^^^^^20^^^^^^^^^^^^Code Description^^^
+COMM_RATE^ARC_SALECODE^006^C^3003^inn_comm_rate^0^^^5^^N^^^^^COMM_RATE^Commission Rate^Commission Rate^Comm Rate^N^^N^^^^^^^56^^^^^^^^^^^Additional^^^^7^^^^-##0.00%^-##0.00%^^^^^^^Commission Rate^^^
+{ColumnDefsEnd}
+{KeyDefs}
+ARC_SALECODE^PRIMARY^ARC_SALECODE.FIRM_ID                    ARC_SALECODE.RECORD_ID_F                ARC_SALECODE.SLSPSN_CODE                ^stbl("+FIRM_ID")+"F"+ARC_SALECODE.SLSPSN_CODE$^stbl("+FIRM_ID")+"F"+RD_REC_DATA.SLSPSN_CODE$^stbl("+FIRM_ID")                        "F"                                     RD_REC_DATA.SLSPSN_CODE$                
+{KeyDefsEnd}
+{GridCols}
+003ARC_SALECODE.SLSPSN_CODE                ;004ARC_SALECODE.CODE_DESC                  ;005ARC_SALECODE.COMM_RATE                  ;
+{GridColsEnd}

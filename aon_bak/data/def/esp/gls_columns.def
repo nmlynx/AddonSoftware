@@ -1,0 +1,129 @@
+Barista Application Framework - Definition Module
+GLS_COLUMNS - Default Display Columns
+Proprietary Information. BASIS International Ltd. All rights reserved.
+Version: 9.0
+Charset: UTF-8
+
+{TableAttrs}
+ALID;CPGM;CPRO;AOPT;DESC;WINT;DTLG;DTLW;DTLD;DTLX;DKNM;ATAB;PTAB;FTYP;FIMG;HELP;IDEF;IKEY;NOTE;OPTS;PCAL;PRUN;TABG;
+{TableDefs}
+GLS_COLUMNS^../apps/aon/;/usr/local/addon_svn_sandbox/apps/aon/;^ADIS;BFMC;BWAR;^^Default Display Columns^Columnas de vista predeterminada^^^^^^GLS_PARAMS^^T^^^^^^N;U;V;^^^^
+{TableDefsEnd}
+{ColumnAttrs}
+DVAR;DTAL;CSEQ;VTYP;CTLI;CTLN;CTLC;DCHN;DINQ;TIND;TABG;RKEY;CPGM;CPRO;BTNS;RADG;ETYP;DESC;LABL;LABS;DTYP;STYP;CTYP;ABLC;ABLV;CDAT;COLW;CTLX;CTLY;CTLW;CTLH;DKEY;DTAB;DCOL;DKNM;CALC;DCOM;DEXP;DFLT;DRLE;GHDR;HELP;LDAT;MINL;MAXL;MAXR;MINV;MAXV;MSKI;MSKO;MSKS;MSKT;OPTS;PADC;PADJ;PREC;PROM;PVAL;SDLG;
+{ColumnDefs}
+FIRM_ID^GLS_COLUMNS^001^C^^^^^^1^^Y^^^^^FIRM_ID^Firm ID^Firm ID^Firm ID^C^^H^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Firm ID^stbl("+FIRM_ID")^^
+GL^GLS_COLUMNS^002^C^^^^^^2^^Y^^^^^GL^"GL"^GL^GL^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^^^^^O;^^^^"GL"^"GL"^^
+SEQUENCE_00^GLS_COLUMNS^003^C^^^^^^3^^Y^^^^^SEQUENCE_00^"00"^0^0^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^"00"^"00"^^
+CURRENT_PER^GLS_COLUMNS^006^C^^^^^^4^^N^^^^^CURRENT_PER^Current Period^Período actual^Per. act.^C^^E^^^^^^^35^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Período actual^^^
+CURRENT_YEAR^GLS_COLUMNS^010^C^^^^^^5^^N^^^^^CURRENT_YEAR^Current Year^Año actual^Año act.^C^3^E^^^^^^^35^0^^^^^^^^^^^^^^4^0^1950^2100^0000^^^^O;^^^^Año actual^^^
+TOTAL_PERS^GLS_COLUMNS^005^C^^^^^^6^^N^^^^^TOTAL_PERS^Total Accounting Periods^Períodos totales^Per. cont. totales^C^^E^^^^^450^-2^35^^^^^^^^^^^^^^^2^^^^00^00^^^C;L;W;^30^R^^Períodos contables totales^^^
+GL_YR_CLOSED^GLS_COLUMNS^083^C^^^^^^7^^N^^^^^GL_YR_CLOSED^Fiscal Year Closed?^¿Se cerró el año fiscal anterior?^¿Se cerró el año fiscal?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^C;L;W;^^^^Año fiscal cerrado?^^^
+ACCT_INPUT^GLS_COLUMNS^004^C^^^^^^8^^N^^^^^ACCT_INPUT^GL Account Mask [Input]^Máscara de la cuenta^Máscara de la cta.^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^O;^^^^Máscara de la cuenta del GL [entrada]^^^
+ACCT_OUTPUT^GLS_COLUMNS^102^C^^^^^^9^^N^^^^^ACCT_OUTPUT^GL Account Mask [Output]^Máscara de la cuenta del GL^Máscara de la cta.^C^^E^^^^^^^^^^^^^^^^^^^^^^15^^^^^###-####^^^O;^^^^Máscara de la cuenta del GL [salida]^^^
+AMOUNT_MASK^GLS_COLUMNS^103^C^^^^^^10^^N^^^^^AMOUNT_MASK^Amount Mask^Máscara del monto^Másc. del monto^C^^E^^^^^^^120^^^^^^^^^^^^^^^15^^^^^^^^O;^^^^Máscara del monto^^^
+UNIT_MASK^GLS_COLUMNS^104^C^^^^^^11^^N^^^^^UNIT_MASK^Unit Mask^Máscara de unidades^Máscara de la unidad^C^^E^^^^^^^96^^^^^^^^^^^^^^^12^^^^^^^^O;^^^^Máscara de la unidad^^^
+PERCENT_MASK^GLS_COLUMNS^105^C^^^^^^12^^N^^^^^PERCENT_MASK^Percent Mask^Máscara del porcentaje^Máscara del %^C^^E^^^^^^^80^^^^^^^^^^^^^^^10^^^^^^^^O;^^^^Máscara del porcentaje^^^
+GL_POST_CODE^GLS_COLUMNS^084^C^^^^^^13^^N^^^^^GL_POST_CODE^GL Posting Method [P/D/N]^Método de registro^Mét. de reg. [P/D/N]^C^^L^^^^^^^128^^^^^^^^^^^^^Registrar detalle por fecha   ~D   ;Registrar detalle por período~P   ;Sin registros de detalles     ~N   ;^^1^^^^^^^^O;^^^^Método de registro del GL [P/D/N]^^^
+DETAIL_FLAG^GLS_COLUMNS^078^C^^^^^^14^^N^^^^^DETAIL_FLAG^Post Detail [Y/N]?^¿Registrar transacciones de detalles?^Registrar det.^C^^C^^^Y;N^^-1^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^¿Registrar detalle?^^^
+RETAIN_DET^GLS_COLUMNS^081^C^^^^^^15^^N^^^^^RETAIN_DET^Retain Detail Information?^¿Conservar historial de transacciones?^¿Conservar inf. det?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^¿Conservar información detallada?^^^
+BUDGET_FLAG^GLS_COLUMNS^079^C^^^^^^16^^N^^^^^BUDGET_FLAG^Use Budgets?^¿Utilizar presupuestos?^¿Utilizar pres?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^¿Utilizar presupuestos?^^^
+UNITS_FLAG^GLS_COLUMNS^080^C^^^^^^17^^N^^^^^UNITS_FLAG^Use Units?^¿Utilizar unidades?^Unidades^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^¿Utilizar unidades?^^^
+PER_ENDING_01^GLS_COLUMNS^052^C^^^^^^18^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Cierre del período N.# P^Fecha de cierre del per.^C^^E^^^^^100^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^Fecha de cierre del período [MMDD]^^^
+PERIOD_NAME_01^GLS_COLUMNS^012^C^^^^^^19^^N^^^^^PERIOD_NAME^Period Name^Nombre^Nombre del per.^C^^E^^^^^200^-13^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^Nombre del período^^^
+ABBR_NAME_01^GLS_COLUMNS^025^C^^^^^^20^^N^^^^^ABBR_NAME^Abbreviated Period Name^Abrev.^Nombre abrev.^C^^E^^^^^385^-13^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^Nombre del período abreviado^^^
+LOCKED_FLAG_01^GLS_COLUMNS^038^C^^^^^^21^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^450^-13^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^¿Bloqueado?^^^
+LOCKED_DATE_01^GLS_COLUMNS^065^C^^^^^^22^^N^^^C^^LOCKED_DATE^Date Locked^Fecha^Fecha bloqueada^C^1^D^^^^^560^-13^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^Fecha bloqueada^^^
+ACCT_MN_COLS_01^GLS_COLUMNS^085^C^^^^^^23^^N^^^^^ACCT_MN_COLS^Account Maintenance Columns^ID de columna N.# P^Col. de manten. de ctas.^C^^E^^^^^130^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^Columnas de mantenimiento de cuentas^^^
+ACCT_MN_TYPE_01^GLS_COLUMNS^089^C^^^^^^24^^N^^^^^ACCT_MN_TYPE^Account Maintenance Types [AU]^Tipo^Tipos de manten. de ctas.^C^^E^^^^^220^-4^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^Tipos de mantenimiento de cuentas [AU]^^^
+BUD_MN_COLS_01^GLS_COLUMNS^093^C^^^^^^25^^N^^^^^BUD_MN_COLS^Budget Maintenance Columns^ID de columna N.# P^Col. de mant. del pres.^C^^E^^^^^130^^35^^^^^^^^^^^Mantenimiento del presupuesto^^^^1^^^^^^^^O;^^^^Columnas de mantenimiento del presupuesto^^^
+BUD_MN_TYPE_01^GLS_COLUMNS^097^C^^^^^^26^^N^^^^^BUD_MN_TYPE^Budget Maintenance Types [AU]^Tipo^Tipos de mant. de. pres.^C^^E^^^^^220^-4^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^Tipos de mantenimiento del presupuesto [AU]^^^
+ACCT_LENGTH^GLS_COLUMNS^008^C^^^^^^27^^N^^^^^ACCT_LENGTH^GL Account Number Length^Longitud del número de cuenta del GL^Long. del n.º de cta.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Longitud del número de cuenta del GL^^^
+MAX_ACCT_LEN^GLS_COLUMNS^009^C^^^^^^28^^N^^^^^MAX_ACCT_LEN^Maximum GL Acct Number Length^Longitud máxima del número de cuenta del GL^Long. máx. del n.º de cta.^C^^E^^^^^^^^^^^^^^^^^^^^^^2^^^^00^00^^^O;^30^R^^Longitud máxima del número de cuenta del GL^^^
+PERIOD_NAME_02^GLS_COLUMNS^013^C^^^^^^29^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_03^GLS_COLUMNS^014^C^^^^^^30^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_04^GLS_COLUMNS^015^C^^^^^^31^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_05^GLS_COLUMNS^016^C^^^^^^32^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_06^GLS_COLUMNS^017^C^^^^^^33^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_07^GLS_COLUMNS^018^C^^^^^^34^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_08^GLS_COLUMNS^019^C^^^^^^35^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_09^GLS_COLUMNS^020^C^^^^^^36^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_10^GLS_COLUMNS^021^C^^^^^^37^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_11^GLS_COLUMNS^022^C^^^^^^38^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_12^GLS_COLUMNS^023^C^^^^^^39^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+PERIOD_NAME_13^GLS_COLUMNS^024^C^^^^^^40^^N^^^^^PERIOD_NAME^Period Name^Nombre del período^Nombre del per.^C^^E^^^^^^^128^^^^^^^^^^^^^^^16^^^^^^^^O;^^^^^^^
+ABBR_NAME_02^GLS_COLUMNS^026^C^^^^^^41^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_03^GLS_COLUMNS^027^C^^^^^^42^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_04^GLS_COLUMNS^028^C^^^^^^43^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_05^GLS_COLUMNS^029^C^^^^^^44^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_06^GLS_COLUMNS^030^C^^^^^^45^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_07^GLS_COLUMNS^031^C^^^^^^46^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_08^GLS_COLUMNS^032^C^^^^^^47^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_09^GLS_COLUMNS^033^C^^^^^^48^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_10^GLS_COLUMNS^034^C^^^^^^49^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_11^GLS_COLUMNS^035^C^^^^^^50^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_12^GLS_COLUMNS^036^C^^^^^^51^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+ABBR_NAME_13^GLS_COLUMNS^037^C^^^^^^52^^N^^^^^ABBR_NAME^Abbreviated Period Name^Nombre del período abreviado^Nombre abrev.^C^^E^^^^^^^35^^^^^^^^^^^^^^^3^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_02^GLS_COLUMNS^039^C^^^^^^53^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_03^GLS_COLUMNS^040^C^^^^^^54^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_04^GLS_COLUMNS^041^C^^^^^^55^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_05^GLS_COLUMNS^042^C^^^^^^56^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_06^GLS_COLUMNS^043^C^^^^^^57^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_07^GLS_COLUMNS^044^C^^^^^^58^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_08^GLS_COLUMNS^045^C^^^^^^59^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_09^GLS_COLUMNS^046^C^^^^^^60^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_10^GLS_COLUMNS^047^C^^^^^^61^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_11^GLS_COLUMNS^048^C^^^^^^62^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_12^GLS_COLUMNS^049^C^^^^^^63^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+LOCKED_FLAG_13^GLS_COLUMNS^050^C^^^^^^64^^N^^^^^LOCKED_FLAG^Locked [Y/N]?^¿Bloqueado?^¿Bloqueado?^C^^C^^^Y;N^^^^30^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+PER_ENDING_02^GLS_COLUMNS^053^C^^^^^^65^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_03^GLS_COLUMNS^054^C^^^^^^66^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_04^GLS_COLUMNS^055^C^^^^^^67^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_05^GLS_COLUMNS^056^C^^^^^^68^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_06^GLS_COLUMNS^057^C^^^^^^69^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_07^GLS_COLUMNS^058^C^^^^^^70^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_08^GLS_COLUMNS^059^C^^^^^^71^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_09^GLS_COLUMNS^060^C^^^^^^72^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_10^GLS_COLUMNS^061^C^^^^^^73^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_11^GLS_COLUMNS^062^C^^^^^^74^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_12^GLS_COLUMNS^063^C^^^^^^75^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+PER_ENDING_13^GLS_COLUMNS^064^C^^^^^^76^^N^^^^^PER_ENDING^Period Ending Date [MMDD]^Fecha de cierre del período [MMDD]^Fecha de cierre del per.^C^^E^^^^^^^40^0^^^^^^^^^^^^^^4^0^^^00/00^^^^O;^30^R^0^^^^
+LOCKED_DATE_02^GLS_COLUMNS^066^C^^^^^^77^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_03^GLS_COLUMNS^067^C^^^^^^78^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_04^GLS_COLUMNS^068^C^^^^^^79^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_05^GLS_COLUMNS^069^C^^^^^^80^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_06^GLS_COLUMNS^070^C^^^^^^81^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_07^GLS_COLUMNS^071^C^^^^^^82^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_08^GLS_COLUMNS^072^C^^^^^^83^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_09^GLS_COLUMNS^073^C^^^^^^84^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_10^GLS_COLUMNS^074^C^^^^^^85^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_11^GLS_COLUMNS^075^C^^^^^^86^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_12^GLS_COLUMNS^076^C^^^^^^87^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+LOCKED_DATE_13^GLS_COLUMNS^077^C^^^^^^88^^N^^^C^^LOCKED_DATE^Date Locked^Fecha bloqueada^Fecha bloqueada^C^1^D^^^^^^^70^^^^^^^^^^^^^^^8^^^^^^^^O;^^^^^^^
+ACCT_MN_COLS_02^GLS_COLUMNS^086^C^^^^^^89^^N^^^^^ACCT_MN_COLS^Account Maintenance Columns^Columnas de mantenimiento de cuentas^Col. de manten. de ctas.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+ACCT_MN_COLS_03^GLS_COLUMNS^087^C^^^^^^90^^N^^^^^ACCT_MN_COLS^Account Maintenance Columns^Columnas de mantenimiento de cuentas^Col. de manten. de ctas.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+ACCT_MN_COLS_04^GLS_COLUMNS^088^C^^^^^^91^^N^^^^^ACCT_MN_COLS^Account Maintenance Columns^Columnas de mantenimiento de cuentas^Col. de manten. de ctas.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+ACCT_MN_TYPE_02^GLS_COLUMNS^090^C^^^^^^92^^N^^^^^ACCT_MN_TYPE^Account Maintenance Types [AU]^Tipos de mantenimiento de cuentas^Tipos de manten. de ctas.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+ACCT_MN_TYPE_03^GLS_COLUMNS^091^C^^^^^^93^^N^^^^^ACCT_MN_TYPE^Account Maintenance Types [AU]^Tipos de mantenimiento de cuentas^Tipos de manten. de ctas.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+ACCT_MN_TYPE_04^GLS_COLUMNS^092^C^^^^^^94^^N^^^^^ACCT_MN_TYPE^Account Maintenance Types [AU]^Tipos de mantenimiento de cuentas^Tipos de manten. de ctas.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+BUD_MN_COLS_02^GLS_COLUMNS^094^C^^^^^^95^^N^^^^^BUD_MN_COLS^Budget Maintenance Columns^Columnas de mantenimiento del presupuesto^Col. de mant. del pres.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+BUD_MN_COLS_03^GLS_COLUMNS^095^C^^^^^^96^^N^^^^^BUD_MN_COLS^Budget Maintenance Columns^Columnas de mantenimiento del presupuesto^Col. de mant. del pres.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+BUD_MN_COLS_04^GLS_COLUMNS^096^C^^^^^^97^^N^^^^^BUD_MN_COLS^Budget Maintenance Columns^Columnas de mantenimiento del presupuesto^Col. de mant. del pres.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+BUD_MN_TYPE_02^GLS_COLUMNS^098^C^^^^^^98^^N^^^^^BUD_MN_TYPE^Budget Maintenance Types [AU]^Tipos de mantenimiento del presupuesto^Tipos de mant. de. pres.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+BUD_MN_TYPE_03^GLS_COLUMNS^099^C^^^^^^99^^N^^^^^BUD_MN_TYPE^Budget Maintenance Types [AU]^Tipos de mantenimiento del presupuesto^Tipos de mant. de. pres.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+BUD_MN_TYPE_04^GLS_COLUMNS^100^C^^^^^^100^^N^^^^^BUD_MN_TYPE^Budget Maintenance Types [AU]^Tipos de mantenimiento del presupuesto^Tipos de mant. de. pres.^C^^E^^^^^^^35^^^^^^^^^^^^^^^1^^^^^^^^O;^^^^^^^
+RECORD_CD_1^<<DISPLAY>>^106^D^3001^lbx_record_cd_1^0^^^101^^^^^^^GENERIC_LIST^Generic ListButton^^Código 1^C^^L^^^^^-7^0^200^^^^^^^^^^^Códigos de registro^^^^30^0^^^^^BAR^^^^^0^^^^
+RECORD_CD_2^<<DISPLAY>>^107^D^3002^lbx_record_cd_2^0^^^102^^^^^^^GENERIC_LIST^Generic ListButton^^Código 2^C^^L^^^^^0^0^200^^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+RECORD_CD_3^<<DISPLAY>>^108^D^3003^lbx_record_cd_3^0^^^103^^^^^^^GENERIC_LIST^Generic ListButton^^Código 3^C^^L^^^^^0^0^200^^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+RECORD_CD_4^<<DISPLAY>>^109^D^3004^lbx_record_cd_4^0^^^104^^^^^^^GENERIC_LIST^Generic ListButton^^Código 4^C^^L^^^^^0^0^200^^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+BUD_CD_1^<<DISPLAY>>^110^D^3005^lbx_bud_cd_1^0^^^105^^^^^^^GENERIC_LIST^Generic ListButton^^Cód. de presup. 1^C^^L^^^^^0^0^200^^^^^^^^^^^Códigos del presupuesto^^^^30^0^^^^^BAR^^^^^0^^^^
+BUD_CD_2^<<DISPLAY>>^111^D^3006^lbx_bud_cd_2^0^^^106^^^^^^^GENERIC_LIST^Generic ListButton^^Cód. de presup. 2^C^^L^^^^^0^0^200^^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+BUD_CD_3^<<DISPLAY>>^112^D^3007^lbx_bud_cd_3^0^^^107^^^^^^^GENERIC_LIST^Generic ListButton^^Cód. de presup. 3^C^^L^^^^^0^0^200^^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+BUD_CD_4^<<DISPLAY>>^113^D^3008^lbx_bud_cd_4^0^^^108^^^^^^^GENERIC_LIST^Generic ListButton^^Cód. de presup. 4^C^^L^^^^^0^0^200^^^^^^^^^^^^^^^30^0^^^^^BAR^^^^^0^^^^
+{ColumnDefsEnd}
+{KeyDefs}
+GLS_COLUMNS^PRIMARY^GLS_COLUMNS.FIRM_ID                     GLS_COLUMNS.GL                          GLS_COLUMNS.SEQUENCE_00                 ^stbl("+FIRM_ID")+"GL"+"00"^stbl("+FIRM_ID")+"GL"+"00"^stbl("+FIRM_ID")                        "GL"                                    "00"                                    
+{KeyDefsEnd}
+{GridCols}
+006GLS_COLUMNS.TOTAL_PERS                  ;007GLS_COLUMNS.GL_YR_CLOSED                ;101<<DISPLAY>>.RECORD_CD_1                 ;102<<DISPLAY>>.RECORD_CD_2                 ;103<<DISPLAY>>.RECORD_CD_3                 ;104<<DISPLAY>>.RECORD_CD_4                 ;105<<DISPLAY>>.BUD_CD_1                    ;106<<DISPLAY>>.BUD_CD_2                    ;107<<DISPLAY>>.BUD_CD_3                    ;108<<DISPLAY>>.BUD_CD_4                    ;
+{GridColsEnd}
