@@ -1,3 +1,8 @@
+[[POE_REQDET.REQ_QTY.BINP]]
+if callpoint!.getDevObject("line_type")="O"  
+	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_REQDET.REQ_QTY",0)
+	callpoint!.setFocus("POE_REQDET.UNIT_COST")
+endif
 [[POE_REQDET.BDGX]]
 rem -- loop thru gridVect; if there are any lines not marked deleted, set the callpoint!.setDevObject("dtl_posted") to Y
 
@@ -233,6 +238,13 @@ if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs
 
 
 endif
+
+if callpoint!.getDevObject("line_type")="O" 
+	callpoint!.setColumnData("POE_REQDET.REQ_QTY","1")
+else
+	callpoint!.setColumnData("POE_REQDET.REQ_QTY","")
+endif
+
 [[POE_REQDET.REQ_QTY.AVAL]]
 rem --- call poc.ua to retrieve unit cost from ivm-05, at least that's what v6 did here
 rem --- send in: R/W for retrieve or write

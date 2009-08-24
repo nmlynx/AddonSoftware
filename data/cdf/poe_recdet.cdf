@@ -1,3 +1,8 @@
+[[POE_RECDET.QTY_ORDERED.BINP]]
+if callpoint!.getDevObject("line_type")="O"  
+	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_RECDET.QTY_ORDERED",0)
+	callpoint!.setFocus("POE_RECDET.UNIT_COST")
+endif
 [[POE_RECDET.QTY_RECEIVED.AVAL]]
 
 gosub update_header_tots
@@ -480,6 +485,12 @@ rem if cvs(callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID"),3)="" or cvs(call
 		callpoint!.setColumnData("POE_RECDET.WO_NO","")
 		callpoint!.setColumnData("POE_RECDET.WO_SEQ_REF","")
 
+endif
+
+if callpoint!.getDevObject("line_type")="O" 
+	callpoint!.setColumnData("POE_RECDET.QTY_ORDERED","1")
+else
+	callpoint!.setColumnData("POE_RECDET.QTY_ORDERED","")
 endif
 [[POE_RECDET.ITEM_ID.AVAL]]
 rem --- Item ID - After Column Validataion

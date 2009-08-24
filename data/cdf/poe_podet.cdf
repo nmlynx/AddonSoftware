@@ -1,3 +1,8 @@
+[[POE_PODET.QTY_ORDERED.BINP]]
+if callpoint!.getDevObject("line_type")="O"  
+	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.QTY_ORDERED",0)
+	callpoint!.setFocus("POE_PODET.UNIT_COST")
+endif
 [[POE_PODET.BDEL]]
 rem --- before delete; check to see if this row is disabled (as it will be if there have been any receipts)...if so don't allow delete
 rem --- otherwise, reverse the OO quantity in ivm-02
@@ -420,6 +425,12 @@ rem if cvs(callpoint!.getColumnData("POE_PODET.WAREHOUSE_ID"),3)="" or cvs(callp
 		callpoint!.setColumnData("POE_PODET.WO_NO","")
 		callpoint!.setColumnData("POE_PODET.WO_SEQ_REF","")
 
+endif
+
+if callpoint!.getDevObject("line_type")="O" 
+	callpoint!.setColumnData("POE_PODET.QTY_ORDERED","1")
+else
+	callpoint!.setColumnData("POE_PODET.QTY_ORDERED","")
 endif
 [[POE_PODET.ITEM_ID.AVAL]]
 rem --- Item ID - After Column Validataion
