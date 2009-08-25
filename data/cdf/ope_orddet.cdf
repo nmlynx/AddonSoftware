@@ -92,7 +92,7 @@ rem --- Commit inventory
 rem --- Is this row deleted?
 
 	if callpoint!.getGridRowModifyStatus( callpoint!.getValidationRow() ) <> "Y" then 
-		break; rem --- exit callpoint
+		goto awri_update_hdr; rem --- exit callpoint
 	endif
 
 rem --- Get current and prior values
@@ -175,7 +175,7 @@ rem --- Commit quantity for current item and warehouse
 
 	endif
 
-rem --- Update header
+awri_update_hdr: rem --- Update header
 
 	gosub disp_grid_totals
 
