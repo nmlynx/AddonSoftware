@@ -427,7 +427,6 @@ rem --- Set Defaults
 	gosub whse_addr_info
 	callpoint!.setColumnData("POE_POHDR.ORD_DATE",sysinfo.system_date$)
 	callpoint!.setColumnData("POE_POHDR.AP_TERMS_CODE",apm02a.ap_terms_code$)
-	callpoint!.setColumnData("POE_POHDR.REQD_DATE",sysinfo.system_date$)
 	callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$)
 	callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$)
 	callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$)
@@ -437,7 +436,7 @@ rem --- Set Defaults
 gosub whse_addr_info
 [[POE_POHDR.REQD_DATE.AVAL]]
 tmp$=callpoint!.getUserInput()
-if tmp$<callpoint!.getColumnData("POE_POHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
+if tmp$<>"" and tmp$<callpoint!.getColumnData("POE_POHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
 [[POE_POHDR.NOT_B4_DATE.AVAL]]
 not_b4_date$=cvs(callpoint!.getUserInput(),2)
 if not_b4_date$<>"" then
