@@ -163,13 +163,14 @@ done: rem --- All done
 
 check_detail: rem --- Check for unlinked detail lines
 
-    read (detail_dev,key="",dom=*next)
+    read (detail_dev,key=firm_id$,dom=*next)
 
 rem --- Read next detail
 
     while more
 
         detail_key$=key(detail_dev,end=*break)
+        if detail_key.firm_id$<>firm_id$ then break
         hdr_key$=""
         read (detail_dev)
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
