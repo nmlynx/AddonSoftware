@@ -1,3 +1,5 @@
+[[OPE_ORDHDR.AREA]]
+
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
@@ -210,6 +212,9 @@ rem --- Enable buttons
 	else
 		callpoint!.setOptionEnabled("PRNT",0)
 	endif
+
+rem --- Calculate Taxes
+	gosub tax_calc
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
@@ -1458,6 +1463,54 @@ rem ==========================================================================
 	wend
 
 return 
+
+rem ==========================================================================
+tax_calc: rem " --- Calculate Multilevel Taxes"
+rem ==========================================================================
+
+	opc_taxcode_dev=fnget_dev("OPC_TAXCODE")
+	dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+	readrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),dom=*next)opc_taxcode$
+	taxable_amt=num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
+	if taxable_amt<>0
+		taxable_amt=taxable_amt-NEWDISC*taxable_amt/100
+	endif
+	if opc_taxcode.tax_frt_flag$="Y"
+		taxable_amt=taxable_amt+num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	endif
+	tax_amt=0
+	max_limit=opc_taxcode.op_max_limit
+	X2=opc_taxcode.tax_rate*taxable_amt/100
+	tax_rate=opc_taxcode.tax_rate
+	X2=X2*1
+	tax_amt=X2
+	if max_limit<>0 AND ABS(X2)>max_limit
+		tax_rate=tax_rate-opc_taxcode.tax_rate
+		tax_amt=tax_amt-X2
+		X2=max_limit*SGN(X2)
+	endif
+	tax_amt=X2
+	for x=1 to 10
+		if cvs(field(opc_taxcode$,"ar_tot_code_"+str(x:"00")),2)="" continue
+		dim opc_taxcode1$:fattr(opc_tax_code$)
+		readrecord (opc_taxcode_dev,key=firm_id$+field(opc_taxcode$,"ar_tot_code_"+str(x:"00")),dom=*continue)opc_taxcode1$
+		X2=opc_taxcode1.tax_rate*taxable_amt/100
+		tax_rate=tax_rate+opc_taxcode1.tax_rate
+		X2=X2*1
+		tax_amt=tax_amt+X2
+		IF max_limit<>0 AND ABS(X2)>max_limit
+			tax_rate=tax_rate-opc_taxcode1.tax_rate
+			tax_amt=tax_amt-X2
+			X2=max_limit*SGN(X2)
+		endif
+		tax_amt=tax_amt+X2
+	next x
+rem escape jpb still working on taxes - 8/24/09
+	round_tax_amt=round(tax_rate*taxable_amt/100)-round(tax_amt); rem "Correct penny rounding errors
+	tot_tax_amt=tot_tax_amt+round_tax_amt
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tot_tax_amt))
+	callpoint!.setStatus("REFRESH")
+	return
 [[OPE_ORDHDR.BSHO]]
 print "Hdr:BSHO"; rem debug
 
