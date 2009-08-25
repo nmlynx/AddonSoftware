@@ -637,13 +637,13 @@ print_detail_line: rem --- Print Detail Line
                 pdf!.setText(345,row,fndate$(poe12a.reqd_date$))
                 pdf!.setText(390,row,75,row,str(poe12a.unit_cost:m3$),pdf!.RIGHT_JUSTIFY())
                 pdf!.setText(470,row,20,row,poe12a.unit_measure$,pdf!.CENTER_JUSTIFY())
-                pdf!.setText(490,row,75,row,str(extension:m1$),pdf!.RIGHT_JUSTIFY())
-                l=l+1
+                pdf!.setText(490,row,75,row,str(extension:m1$),pdf!.RIGHT_JUSTIFY())                
                 
                 if pdf!.getPage() = pagePDF! then break
                 pdf!.setPage(pagePDF!)
             wend
-
+            l=l+1
+            
             gen_text$=fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
             gosub text_only
             if cvs(ivm05a.vendor_item$,2)<>""
@@ -664,11 +664,11 @@ print_detail_line: rem --- Print Detail Line
                 pdf!.setText(390,row,75,row,str(poe12a.unit_cost:m3$),textfont!,pdf!.RIGHT_JUSTIFY())
                 pdf!.setText(470,row,20,row,poe12a.unit_measure$,textfont!,pdf!.CENTER_JUSTIFY())
                 pdf!.setText(490,row,75,row,str(extension:m1$),textfont!,pdf!.RIGHT_JUSTIFY())
-                l=l+1
                 
                 if pdf!.getPage() = pagePDF! then break
                 pdf!.setPage(pagePDF!)
             wend                
+            l=l+1
 
             gen_text$=poe12a.order_memo$
             gosub text_only
@@ -681,11 +681,11 @@ print_detail_line: rem --- Print Detail Line
             while 1                
 
                 pdf!.setText(80,row,"Your Item Number "+poe12a.order_memo$)
-                l=l+1
                 
                 if pdf!.getPage() = pagePDF! then break
                 pdf!.setPage(pagePDF!)
             wend                
+            l=l+1
                 
             break
         case message_line; rem --- Print Message Line
@@ -695,11 +695,11 @@ print_detail_line: rem --- Print Detail Line
             while 1                        
 
                 pdf!.setText(80,row,poe12a.order_memo$)
-                l=l+1
                 
                 if pdf!.getPage() = pagePDF! then break
                 pdf!.setPage(pagePDF!)
             wend                
+            l=l+1
                                 
             break
 
@@ -713,11 +713,11 @@ print_detail_line: rem --- Print Detail Line
                 pdf!.setText(345,row,fndate$(poe12a.reqd_date$))            
                 pdf!.setText(390,row,75,row,str(poe12a.unit_cost:m3$),textfont!,pdf!.RIGHT_JUSTIFY())
                 pdf!.setText(490,row,75,row,str(extension:m1$),textfont!,pdf!.RIGHT_JUSTIFY())
-                l=l+1
                 
                 if pdf!.getPage() = pagePDF! then break
                 pdf!.setPage(pagePDF!)
             wend                
+            l=l+1
                 
             break
 
@@ -750,11 +750,11 @@ text_only: rem --- Print text only
     while 1
 
         pdf!.setText(80,row,gen_text$)
-        l=l+1
         
         if pdf!.getPage() = pagePDF! then break
         pdf!.setPage(pagePDF!)
     wend
+    l=l+1
         
 
     return
@@ -778,6 +778,8 @@ print_total: rem --- Total
         
         rem --- tack ship-from at end of PO, if used
         if cvs(s$,3)<>""
+            gen_text$="";rem blank before
+            gosub text_only
             gen_text$="Ship from: "+shipfrom$
             gosub text_only
             for sx=1 to len(s$) step 35
