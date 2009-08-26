@@ -72,7 +72,7 @@ rem ==========================================================================
                 this_ctrl! = cast(BBjControl, controls!.getItem(i))
                 type = this_ctrl!.getControlType()
 
-            rem --- Group boxes dimesions can mess up the calculation
+            rem --- Group boxes dimensions can mess up the calculation
                 if type = #GROUP_BOX% then continue
 
             rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottom
@@ -333,59 +333,39 @@ rem ==========================================================================
         methodend
 
     rem --- One column (no vector)
-        method public static void ableGridColumn(BBjTopLevelWindow Form!, BBjInt col%, BBjInt able%)
+        method public static void ableGridColumn(BBjTopLevelWindow Form!, BBjNumber col, BBjInt able%)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
-            cols!.addItem(col%)
+            cols!.addItem(int(col))
             #ableGridColumns(Form!, cols!, able%)
         methodend
 
     rem --- One column (no vector) for customer grid
-        method public static void ableGridColumn(BBjStandardGrid grid!, BBjInt col%, BBjInt able%)
+        method public static void ableGridColumn(BBjStandardGrid grid!, BBjNumber col, BBjInt able%)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
-            cols!.addItem(col%)
+            cols!.addItem(int(col))
             #ableGridColumns(grid!, cols!, able%)
-        methodend
-
-    rem --- Disable one column
-        method public static void disableGridColumn(BBjTopLevelWindow Form!, BBjInt col%)
-            #ableGridColumn(Form!, col%, #DISABLE%)
-        methodend
-
-    rem --- Disable one column, custom grid
-        method public static void disableGridColumn(BBjStandardGrid grid!, BBjInt col%)
-            #ableGridColumn(grid!, col%, #DISABLE%)
         methodend
 
     rem --- Disable, Allow number (as opposed to Int)
         method public static void disableGridColumn(BBjTopLevelWindow Form!, BBjNumber col)
-            if col >= 0 then #disableGridColumn(Form!, int(col))
+            if col >= 0 then #ableGridColumn(Form!, col, #DISABLE%)
         methodend
 
     rem --- Disable, Allow number (as opposed to Int), custom grid
         method public static void disableGridColumn(BBjStandardGrid grid!, BBjNumber col)
-            if col >= 0 then #disableGridColumn(grid!, int(col))
-        methodend
-
-    rem --- Assume Enable
-        method public static void enableGridColumn(BBjTopLevelWindow Form!, BBjInt col%)
-            #ableGridColumn(Form!, col%, #ENABLE%)
-        methodend
-
-    rem --- Assume Enable, custom grid
-        method public static void enableGridColumn(BBjStandardGrid grid!, BBjInt col%)
-            #ableGridColumn(grid!, col%, #ENABLE%)
+            if col >= 0 then #ableGridColumn(grid!, col, #DISABLE%)
         methodend
 
     rem --- Enable, Allow number (as opposed to Int)
         method public static void enableGridColumn(BBjTopLevelWindow Form!, BBjNumber col)
-            if col >= 0 then #enableGridColumn(Form!, int(col))
+            if col >= 0 then #ableGridColumn(Form!, col, #ENABLE%)
         methodend
 
     rem --- Enable, Allow number (as opposed to Int), custom grid
         method public static void enableGridColumn(BBjStandardGrid grid!, BBjNumber col)
-            if col >= 0 then #enableGridColumn(grid!, int(col))
+            if col >= 0 then #ableGridColumn(grid!, col, #ENABLE%)
         methodend
 
     rem --- Accessor methods for ENABLE/DISABLE
@@ -407,10 +387,10 @@ rem ==========================================================================
     rem 	pass it manually.
     rem ==========================================================================
 
-        method public static void ableGridCells(BBjTopLevelWindow Form!, BBjVector cols!, BBjInt able%, BBjInt row%)
+        method public static void ableGridCells(BBjTopLevelWindow Form!, BBjVector cols!, BBjInt able%, BBjNumber row)
             declare BBjStandardGrid grid!
             grid! = #getGridAbleColors(Form!)
-            #ableGridCellsWork(grid!, cols!, able%, row%)
+            #ableGridCellsWork(grid!, cols!, able%, row)
         methodend
 
     rem ==========================================================================
@@ -420,9 +400,9 @@ rem ==========================================================================
     rem 	grid yourself, so you pass the grid object instead of the Form!
     rem ==========================================================================	
 
-        method public static void ableGridCells(BBjStandardGrid grid!, BBjVector cols!, BBjInt able%, BBjInt row%)
+        method public static void ableGridCells(BBjStandardGrid grid!, BBjVector cols!, BBjInt able%, BBjNumber row)
             #setGridAbleColors(grid!)
-            #ableGridCellsWork(grid!, cols!, able%, row%)
+            #ableGridCellsWork(grid!, cols!, able%, row)
         methodend
 
     rem ==========================================================================	
@@ -431,8 +411,10 @@ rem ==========================================================================
     rem 	This method does most of the actual work.
     rem ==========================================================================
 
-        method protected static void ableGridCellsWork(BBjStandardGrid grid!, BBjVector cols!, BBjInt able%, BBjInt row%)	
+        method protected static void ableGridCellsWork(BBjStandardGrid grid!, BBjVector cols!, BBjInt able%, BBjNumber row)	
 
+            row% = int(row)
+        
             if row% = -1 then
                 row = grid!.getSelectedRow()
             else
@@ -474,12 +456,12 @@ rem ==========================================================================
 
     rem --- Disable several cells, pass row
         method public static void disableGridCells(BBjTopLevelWindow Form!,  BBjVector cols!, BBjNumber row)
-            #ableGridCells(Form!, cols!, #DISABLE%, int(row))
+            #ableGridCells(Form!, cols!, #DISABLE%, row)
         methodend
 
     rem --- Disable several cells, pass row, custom grid
         method public static void disableGridCells(BBjStandardGrid grid!,  BBjVector cols!, BBjNumber row)
-            #ableGridCells(grid!, cols!, #DISABLE%, int(row))
+            #ableGridCells(grid!, cols!, #DISABLE%, row)
         methodend
 
     rem --- Enable several cells, default row
@@ -494,88 +476,68 @@ rem ==========================================================================
 
     rem --- Enable several cells, pass row
         method public static void enableGridCells(BBjTopLevelWindow Form!,  BBjVector cols!, BBjNumber row)
-            #ableGridCells(Form!, cols!, #ENABLE%, int(row))
+            #ableGridCells(Form!, cols!, #ENABLE%, row)
         methodend
 
     rem --- Enable several cells, pass row, custom grid
         method public static void enableGridCells(BBjStandardGrid grid!,  BBjVector cols!, BBjNumber row)
-            #ableGridCells(grid!, cols!, #ENABLE%, int(row))
+            #ableGridCells(grid!, cols!, #ENABLE%, row)
         methodend
 
     rem --- One cell (no vector)
-        method public static void ableGridCell(BBjTopLevelWindow Form!, BBjInt col%, BBjInt able%, BBjInt row%)
+        method public static void ableGridCell(BBjTopLevelWindow Form!, BBjNumber col, BBjInt able%, BBjNumber row)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
-            cols!.addItem(col%)
-            #ableGridCells(Form!, cols!, able%, row%)
+            cols!.addItem(int(col))
+            #ableGridCells(Form!, cols!, able%, row)
         methodend
 
     rem --- One cell (no vector), custom grid
-        method public static void ableGridCell(BBjStandardGrid grid!, BBjInt col%, BBjInt able%, BBjInt row%)
+        method public static void ableGridCell(BBjStandardGrid grid!, BBjNumber col, BBjInt able%, BBjNumber row)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
-            cols!.addItem(col%)
-            #ableGridCells(grid!, cols!, able%, row%)
+            cols!.addItem(int(col))
+            #ableGridCells(grid!, cols!, able%, row)
         methodend
 
     rem --- Disable one cell, default row
-        method public static void disableGridCell(BBjTopLevelWindow Form!, BBjInt col%)
-            #ableGridCell(Form!, col%, #DISABLE%, -1)
+        method public static void disableGridCell(BBjTopLevelWindow Form!, BBjNumber col)
+            #ableGridCell(Form!, col, #DISABLE%, -1)
         methodend
 
     rem --- Disable one cell, default row, custom grid
-        method public static void disableGridCell(BBjStandardGrid grid!, BBjInt col%)
-            #ableGridCell(grid!, col%, #DISABLE%, -1)
+        method public static void disableGridCell(BBjStandardGrid grid!, BBjNumber col)
+            #ableGridCell(grid!, col, #DISABLE%, -1)
         methodend
 
     rem --- Disable one cell, pass row
-        method public static void disableGridCell(BBjTopLevelWindow Form!, BBjInt col%, BBjNumber row)
-            #ableGridCell(Form!, col%, #DISABLE%, int(row))
+        method public static void disableGridCell(BBjTopLevelWindow Form!, BBjNumber col, BBjNumber row)
+            #ableGridCell(Form!, col, #DISABLE%, row)
         methodend
 
     rem --- Disable one cell, pass row, custom grid
-        method public static void disableGridCell(BBjStandardGrid grid!, BBjInt col%, BBjNumber row)
-            #ableGridCell(grid!, col%, #DISABLE%, int(row))
-        methodend
-
-    rem --- Disable, Allow number (as opposed to Int)
-        method public static void disableGridCell(BBjTopLevelWindow Form!, BBjNumber col)
-            if col >=0 then #disableGridCell(Form!, int(col))
-        methodend
-
-    rem --- Disable, Allow number (as opposed to Int), custom grid
-        method public static void disableGridCell(BBjStandardGrid grid!, BBjNumber col)
-            if col >=0 then #disableGridCell(grid!, int(col))
+        method public static void disableGridCell(BBjStandardGrid grid!, BBjNumber col, BBjNumber row)
+            #ableGridCell(grid!, col, #DISABLE%, row)
         methodend
 
     rem --- Enable one cell, default row
-        method public static void enableGridCell(BBjTopLevelWindow Form!, BBjInt col%)
-            #ableGridCell(Form!, col%, #ENABLE%, -1)
+        method public static void enableGridCell(BBjTopLevelWindow Form!, BBjNumber col)
+            #ableGridCell(Form!, col, #ENABLE%, -1)
         methodend
 
     rem --- Enable one cell, default row, custom grid
-        method public static void enableGridCell(BBjStandardGrid grid!, BBjInt col%)
-            #ableGridCell(grid!, col%, #ENABLE%, -1)
+        method public static void enableGridCell(BBjStandardGrid grid!, BBjNumber col)
+            #ableGridCell(grid!, col, #ENABLE%, -1)
         methodend
 
     rem --- Enable one cell, pass row
-        method public static void enableGridCell(BBjTopLevelWindow Form!, BBjInt col%, BBjNumber row)
-            #ableGridCell(Form!, col%, #ENABLE%, int(row))
+        method public static void enableGridCell(BBjTopLevelWindow Form!, BBjNumber col, BBjNumber row)
+            #ableGridCell(Form!, col, #ENABLE%, row)
         methodend
 
     rem --- Enable one cell, pass row, custom grid
-        method public static void enableGridCell(BBjStandardGrid grid!, BBjInt col%, BBjNumber row)
-            #ableGridCell(grid!, col%, #ENABLE%, int(row))
-        methodend
-
-    rem --- Enable, Allow number (as opposed to Int)
-        method public static void enableGridCell(BBjTopLevelWindow Form!, BBjNumber col)
-            if col >=0 then #enableGridCell(Form!, int(col))
-        methodend
-
-    rem --- Enable, Allow number (as opposed to Int), custom grid
-        method public static void enableGridCell(BBjStandardGrid grid!, BBjNumber col)
-            if col >=0 then #enableGridCell(grid!, int(col))
+        method public static void enableGridCell(BBjStandardGrid grid!, BBjNumber col, BBjNumber row)
+            #ableGridCell(grid!, col, #ENABLE%, row)
         methodend
 
 
