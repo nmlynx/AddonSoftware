@@ -6,6 +6,8 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2009 AddonSoftware
 rem --- All Rights Reserved
 
+rem --- Old documentation
+
 rem --- o9$ = return program
 rem --- o9  = 1 - batch print from opr_ga.bbx p3$(65,10)
 rem               cust_id$ = first customer ID
@@ -51,17 +53,6 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:stbl("+SYSINFO_TPL")
     sysinfo$=stbl("+SYSINFO")
     firm_id$=sysinfo.firm_id$
-
-rem --- Sanity
-
-    if o9<1 or o9>3 then
-        msg_id$ = "OP_BAD_PRINT_FLAG"
-        dim msg_tokens$[2]
-        msg_tokens$[1] = str(o9)
-        msg_tokens$[1] = pgm(-2)
-        gosub disp_message
-        goto std_exit
-    endif
 
 rem --- Derive/set path and filename for logo to go on form
 
