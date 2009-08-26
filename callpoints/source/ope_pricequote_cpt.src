@@ -1,0 +1,364 @@
+rem Callpoint program for OPE_PRICEQUOTE - Price Quote Inquiry
+rem Program ope_pricequote_cpt.bbj
+
+rem Barista Version 9.0
+rem Copyright (c) 2007-2009 BASIS International Ltd.
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
+	declare Callpoint Callpoint!
+
+	enter
+:		Callpoint!,
+:		bar_tpl$,
+:		BarObj!,
+:		user_tpl$,
+:		UserObj!,
+:		gui_dev,
+:		SysGUI!,
+:		Form!,
+:		rec_data$,
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		GridVect!,
+:		OrigVect!,
+:		hrec_data$[all],
+:		hattr_col$[all],
+:		err=*next
+
+rem --- Directory STBLs
+
+	dir_pgm$=stbl("+DIR_SYP")
+	dir_frm$=stbl("+DIR_FRM")
+	dir_def$=stbl("+DIR_DEF")
+	dir_img$=stbl("+DIR_IMG")
+	dir_wrk$=stbl("+DIR_WRK")
+
+rem --- Retrieve sysinfo Data
+
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_event$=Callpoint!.getCallpointEvent()
+
+	callpoint_event_str$=
+:		pad("OPE_PRICEQUOTE.AOPT-AVLE",40)+
+:		pad("OPE_PRICEQUOTE.BSHO",40)+
+:		pad("OPE_PRICEQUOTE.CUSTOMER_ID.AVAL",40)+
+:		pad("OPE_PRICEQUOTE.ITEM_ID.AVAL",40)+
+:		pad("OPE_PRICEQUOTE.WAREHOUSE_ID.AVAL",40)
+
+	switch fnstr_pos(callpoint_event$,callpoint_event_str$,40)
+		case fnstr_pos(pad("OPE_PRICEQUOTE.AOPT-AVLE",40),callpoint_event_str$,40)			
+			rem -- call inquiry program to view Sales Analysis records
+			syspgmdir$=stbl("+DIR_SYP",err=*next)
+			key_pfx$=firm_id$
+			if cvs(callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),2) <>"" then
+				key_pfx$=key_pfx$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
+				call syspgmdir$+"bam_inquiry.bbj",
+:					gui_dev,
+:					Form!,
+:					"IVC_ITEMAVAIL",
+:					"VIEW",
+:					table_chans$[all],
+:					key_pfx$,
+:					"ALT_KEY_02",
+:					""
+			endif
+		break
+		case fnstr_pos(pad("OPE_PRICEQUOTE.BSHO",40),callpoint_event_str$,40)			
+			num_files=8
+			dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+			open_tables$[1]="ARM_CUSTMAST",open_opts$[1]="OTA"
+			open_tables$[2]="ARM_CUSTDET",open_opts$[2]="OTA"
+			open_tables$[3]="OPC_PRICECDS",open_opts$[3]="OTA"
+			open_tables$[4]="IVM_ITEMWHSE",open_opts$[4]="OTA"
+			open_tables$[5]="IVC_PRICCODE",open_opts$[5]="OTA"
+			open_tables$[6]="IVM_ITEMMAST",open_opts$[6]="OTA"
+			open_tables$[7]="IVM_ITEMPRIC",open_opts$[7]="OTA"
+			open_tables$[8]="IVC_WHSECODE",open_opts$[8]="OTA"
+			gosub open_tables
+			arm01_dev=num(open_chans$[1]),arm01_tpl$=open_tpls$[1]
+			arm02_dev=num(open_chans$[2]),arm02_tpl$=open_tpls$[2]
+			opm05_dev=num(open_chans$[3]),opm05_tpl$=open_tpls$[3]
+			ivm02_dev=num(open_chans$[4]),ivm02_tpl$=open_tpls$[4]
+			ivcprice_dev=num(open_chans$[5]),ivcprice_tpl$=open_tpls$[5]
+			ivm01_dev=num(open_chans$[6]),ivm01_tpl$=open_tpls$[6]
+			ivm06_dev=num(open_chans$[7]),ivm06_tpl$=open_tpls$[7]
+			ivcwhse_dev=num(open_chans$[8]),ivcwhse_tpl$=open_tpls$[8]
+			
+		break
+		case fnstr_pos(pad("OPE_PRICEQUOTE.CUSTOMER_ID.AVAL",40),callpoint_event_str$,40)			
+			arm01_dev=fnget_dev("ARM_CUSTMAST")
+			dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+			arm02_dev=fnget_dev("ARM_CUSTDET")
+			dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+			ar_type$="  "
+			opm05_dev=fnget_dev("OPC_PRICECDS")
+			dim opm05a$:fnget_tpl$("OPC_PRICECDS")
+			while 1
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_1","")
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_2","")
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_3","")
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_4","")
+				callpoint!.setColumnData("<<DISPLAY>>.CITY","")
+				callpoint!.setColumnData("<<DISPLAY>>.FAX_NO","")
+				callpoint!.setColumnData("<<DISPLAY>>.PHONE_NO","")
+				callpoint!.setColumnData("<<DISPLAY>>.STATE_CODE","")
+				callpoint!.setColumnData("<<DISPLAY>>.ZIP_CODE","")
+				callpoint!.setColumnData("<<DISPLAY>>.CONTACT_NAME","")
+				callpoint!.setColumnData("OPE_PRICEQUOTE.PRICING_CODE","")
+				readrecord(arm01_dev,key=firm_id$+callpoint!.getUserInput(),err=*break)arm01a$
+				readrecord(arm02_dev,key=firm_id$+callpoint!.getUserInput()+ar_type$)arm02a$
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_1",arm01a.addr_line_1$)
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_2",arm01a.addr_line_2$)
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_3",arm01a.addr_line_3$)
+				callpoint!.setColumnData("<<DISPLAY>>.ADDR_LINE_4",arm01a.addr_line_4$)
+				callpoint!.setColumnData("<<DISPLAY>>.CITY",arm01a.city$)
+				callpoint!.setColumnData("<<DISPLAY>>.FAX_NO",arm01a.fax_no$)
+				callpoint!.setColumnData("<<DISPLAY>>.PHONE_NO",arm01a.phone_no$)
+				callpoint!.setColumnData("<<DISPLAY>>.STATE_CODE",arm01a.state_code$)
+				callpoint!.setColumnData("<<DISPLAY>>.ZIP_CODE",arm01a.zip_code$)
+				callpoint!.setColumnData("<<DISPLAY>>.CONTACT_NAME",arm01a.contact_name$)
+				callpoint!.setColumnData("OPE_PRICEQUOTE.PRICING_CODE",arm02a.pricing_code$)
+				break
+			wend
+			cust_id$=callpoint!.getUserInput()
+			wh$=callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")
+			item$=callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
+			gosub build_arrays
+			callpoint!.setStatus("REFRESH")
+		break
+		case fnstr_pos(pad("OPE_PRICEQUOTE.ITEM_ID.AVAL",40),callpoint_event_str$,40)			
+			rem --- Validate Warehouse for this Item
+			ivm01_dev=fnget_dev("IVM_ITEMMAST")
+			dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+			readrecord(ivm01_dev,key=firm_id$+callpoint!.getUserInput())ivm01a$
+			ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+			dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+			valid_wh$="Y"
+			while 1
+				readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")+
+:						callpoint!.getUserInput(),dom=*next)ivm02a$;break
+				valid_wh$="N"
+				break
+			wend
+			if valid_wh$="N"
+				callpoint!.setMessage("IV_NO_ITEM_WH")
+				callpoint!.setStatus("ABORT")
+			else
+				callpoint!.setColumnData("OPE_PRICEQUOTE.ITEM_CLASS",ivm01a.item_class$)
+				callpoint!.setColumnData("OPE_PRICEQUOTE.CUR_PRICE",str(ivm02a.cur_price))
+				callpoint!.setColumnData("<<DISPLAY>>.QTY_AVAIL",str(ivm02a.qty_on_hand-ivm02a.qty_commit))
+				callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_COMMIT",str(ivm02a.qty_commit))
+				callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_ON_HAND",str(ivm02a.qty_on_hand))
+				cust_id$=callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")
+				wh$=callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")
+				item$=callpoint!.getUserInput()
+				gosub build_arrays
+				callpoint!.setStatus("REFRESH")
+			endif
+		break
+		case fnstr_pos(pad("OPE_PRICEQUOTE.WAREHOUSE_ID.AVAL",40),callpoint_event_str$,40)			
+			rem --- Fill arrays
+			cust_id$=callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")
+			wh$=callpoint!.getUserInput()
+			item$=callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
+			gosub build_arrays
+		break
+
+		case default
+		break
+	swend
+
+rem --- All done
+
+	goto std_exit
+
+rem [[OPE_PRICEQUOTE.<CUSTOM>]]
+
+rem --- Build Pricing records
+build_arrays:
+	if cvs(cust_id$,2)="" or cvs(wh$,2)="" or cvs(item$,2)=""
+		for x=1 to 10
+			callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_ORDERED_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.PCT_VALUE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.UNIT_PRICE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),"")
+			callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC","")
+		next x
+	else
+		arm01_dev=fnget_dev("ARM_CUSTDET")
+		dim arm01a$:fnget_tpl$("ARM_CUSTDET")
+		ivcprice_dev=fnget_dev("IVC_PRICCODE")
+		dim ivcprice$:fnget_tpl$("IVC_PRICCODE")
+		arm02_dev=fnget_dev("ARM_CUSTDET")
+		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+		ivm01_dev=fnget_dev("IVM_ITEMMAST")
+		dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+		ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+		dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+		ivm06_dev=fnget_dev("IVM_ITEMPRIC")
+		dim ivm06a$:fnget_tpl$("IVM_ITEMPRIC")
+		precision 9
+		readrecord(arm02_dev,key=firm_id$+cust_id$+"  ")arm02a$
+		readrecord(ivm02_dev,key=firm_id$+wh$+item$)ivm02a$
+		readrecord(ivm01_dev,key=firm_id$+item$)ivm01a$
+		readrecord (ivcprice_dev,key=firm_id$+"E"+ivm01a.item_class$+arm02a.pricing_code$,dom=*next)ivcprice$
+		listprice=ivm02a.cur_price*(100-ivcprice.break_disc_01)/100
+		callpoint!.setColumnData("OPE_PRICEQUOTE.UNIT_PRICE_01",str(listprice))
+		description$=cvs(ivcprice.code_desc$,2)
+
+rem --- Method for pricing
+		x$=" (Unknown Pricing Method)"
+		if ivcprice.iv_price_mth$="C" x$=" (Mark-Up Over Cost)"
+		if ivcprice.iv_price_mth$="L" x$=" (Mark-Down From List)"
+		if ivcprice.iv_price_mth$="M" x$=" (Margin Over Cost)"
+		description$=description$+x$
+
+rem --- Display pricing table"
+		callpoint!.setColumnData("<<DISPLAY>>.PRICE_METH",description$)
+		for x=1 to 10
+			price=0
+			percent=0
+			cost=ivm02a.unit_cost
+			if nfield(ivcprice$,"BREAK_QTY_"+str(x:"00"))<>0 or nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))<>0
+				percent=nfield(ivcprice$,"BREAK_DISC_"+str(x:"00"))
+				gosub determine_price
+			endif
+			callpoint!.setColumnData("OPE_PRICEQUOTE.QTY_ORDERED_"+str(x:"00"),str(nfield(ivcprice$,"BREAK_QTY_"+str(x:"00"))))
+			callpoint!.setColumnData("OPE_PRICEQUOTE.PCT_VALUE_"+str(x:"00"),str(percent))
+			callpoint!.setColumnData("OPE_PRICEQUOTE.UNIT_PRICE_"+str(x:"00"),str(price))
+		next x
+
+rem --- Display Contract Price"
+		for x=1 to 10
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),"")
+			callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),"")
+			callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC","")
+		next x
+		while 1
+			readrecord(ivm06_dev,key=firm_id$+cust_id$+item$,dom=*break)ivm06a$
+			description$=cvs(ivm06a.code_desc$,2)
+			description$=description$+" (From "+fndate$(ivm06a.from_date$)+" Through "+fndate$(ivm06a.thru_date$)+")"
+			callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC",description$)
+			for x=1 to 10
+				callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),str(nfield(ivm06a$,"BREAK_QTY_"+str(x:"00"))))
+				callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_PRICE_"+str(x:"00"),str(nfield(ivm06a$,"UNIT_PRICE_"+str(x:"00"))))
+			next x
+			break
+		wend
+		callpoint!.setStatus("REFRESH")
+	endif
+return
+
+rem --- Determine Price
+determine_price:
+	if ivcprice.iv_price_mth$="C"
+		factor=percent/100
+		price=cost+cost*factor
+	endif
+	if ivcprice.iv_price_mth$="L"
+		factor=percent/100
+		price=ivm02a.cur_price-ivm02a.cur_price*factor
+	endif
+	if ivcprice.iv_price_mth$="M"
+		factor=100/(100-percent)
+		price=cost*factor
+	endif
+return
+
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
+disp_msg:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bam_message.bbj",gui_dev,msg_title$,msg_text$,msg_defs$,msg_opt$
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call dir_pgm$+"bam_prog_bar.bbj",SysGUI!,Form!,MeterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_data$,meter_action$
+
+	return
+
+rem --- Functions
+
+	def fnstr_pos(str_pos_att0$,str_pos_att1$,str_pos_att1)=int((pos(str_pos_att0$=str_pos_att1$,str_pos_att1)+str_pos_att1-1)/str_pos_att1)
+	def fngett_attr$(gett_attr_att0$)=attr_tbl$[fnstr_pos(gett_attr_att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(getc_attr_att0,getc_attr_att0$)=attr_col$[getc_attr_att0,fnstr_pos(getc_attr_att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(getv_attr_att0$,getv_attr_att1$)=attr_col$[fnstr_pos(getv_attr_att0$,attr_col$[0,1],40),fnstr_pos(getv_attr_att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),0]
+	def fnget_rec_orig$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),1]
+	def fnget_hrec$(hrec_att0$)=hrec_data$[fnstr_pos(hrec_att0$,hrec_data$[0,0],40),0]
+	def fndate$(date_att0$)=date(jul(num(date_att0$(1,4)),num(date_att0$(5,2)),num(date_att0$(7,2))):stbl("+DATE_MASK"))
+	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnget_path$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),1]
+	def fnmdy$(tmp0$)=tmp0$(5,4)+tmp0$(1,4)
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	err_text$=""
+	if tcb(5) and pgm(-1)=pgm(-2) then err_text$=pgm(tcb(5),err=*next)
+	pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+	call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
+	if pos("EXIT"=err_act$) then goto std_error_exit
+	if pos("ESCAPE"=err_act$) then seterr 0;setesc 0
+	if pos("RETRY"=err_act$) then retry
+
+std_error_exit:
+
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ then escape
+
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) then exit
+	release
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+

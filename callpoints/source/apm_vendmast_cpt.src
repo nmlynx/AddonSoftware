@@ -1,0 +1,414 @@
+rem Callpoint program for APM_VENDMAST - Vendor Master
+rem Program apm_vendmast_cpt.bbj
+
+rem Barista Version 9.0
+rem Copyright (c) 2007-2009 BASIS International Ltd.
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
+	declare Callpoint Callpoint!
+
+	enter
+:		Callpoint!,
+:		bar_tpl$,
+:		BarObj!,
+:		user_tpl$,
+:		UserObj!,
+:		gui_dev,
+:		SysGUI!,
+:		Form!,
+:		rec_data$,
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		GridVect!,
+:		OrigVect!,
+:		hrec_data$[all],
+:		hattr_col$[all],
+:		err=*next
+
+rem --- Directory STBLs
+
+	dir_pgm$=stbl("+DIR_SYP")
+	dir_frm$=stbl("+DIR_FRM")
+	dir_def$=stbl("+DIR_DEF")
+	dir_img$=stbl("+DIR_IMG")
+	dir_wrk$=stbl("+DIR_WRK")
+
+rem --- Retrieve sysinfo Data
+
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_event$=Callpoint!.getCallpointEvent()
+
+	callpoint_event_str$=
+:		pad("APM_VENDMAST.AOPT-OINV",40)+
+:		pad("APM_VENDMAST.AOPT-RHST",40)+
+:		pad("APM_VENDMAST.ARNF",40)+
+:		pad("APM_VENDMAST.AWRI",40)+
+:		pad("APM_VENDMAST.BDEL",40)+
+:		pad("APM_VENDMAST.BSHO",40)+
+:		pad("APM_VENDMAST.VENDOR_ID.AINP",40)+
+:		pad("APM_VENDMAST.VENDOR_NAME.AVAL",40)
+
+	switch fnstr_pos(callpoint_event$,callpoint_event_str$,40)
+		case fnstr_pos(pad("APM_VENDMAST.AOPT-OINV",40),callpoint_event_str$,40)			
+			rem Open Invoice Inquiry
+			cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+			user_id$=stbl("+USER_ID")
+			dim dflt_data$[2,1]
+			dflt_data$[1,0]="VENDOR_ID"
+			dflt_data$[1,1]=cp_vendor_id$
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			                       "APR_VENDINV",
+:			                       user_id$,
+:			                   	  "",
+:			                       "",
+:			                       table_chans$[all],
+:			                       "",
+:			                       dflt_data$[all]
+			
+		break
+		case fnstr_pos(pad("APM_VENDMAST.AOPT-RHST",40),callpoint_event_str$,40)			
+			rem Receipt History Inquiry
+			if user_tpl.po_installed$="Y"
+				cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+				user_id$=stbl("+USER_ID")
+				dim dflt_data$[2,1]
+				dflt_data$[1,0]="VENDOR_ID"
+				dflt_data$[1,1]=cp_vendor_id$
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:				                       "APR_RECEIPTS",
+:				                       user_id$,
+:				                   	  "",
+:				                       "",
+:				                       table_chans$[all],
+:				                       "",
+:				                       dflt_data$[all]
+			else
+				msg_id$="AP_NOPO"
+				gosub disp_message
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDMAST.ARNF",40),callpoint_event_str$,40)			
+			rem --- Set Date Opened
+				callpoint!.setColumnData("APM_VENDMAST.OPENED_DATE",sysinfo.system_date$)
+		break
+		case fnstr_pos(pad("APM_VENDMAST.AWRI",40),callpoint_event_str$,40)			
+			rem --- Code input if new customer
+				cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+				apm02_dev=fnget_dev("APM_VENDHIST")
+				apm02_key$=""
+				while apm02_key$=""
+					read(apm02_dev,key=firm_id$+cp_vendor_id$,dom=*next)
+					apm02_key$=key(apm02_dev,end=*next)
+					if apm02_key$<>""
+						if pos(firm_id$+cp_vendor_id$=apm02_key$)<>1
+							apm02_key$=""
+						else
+							break
+						endif
+					endif
+					user_id$=stbl("+USER_ID")
+					dim dflt_data$[2,1]
+					dflt_data$[1,0]="VENDOR_ID"
+					dflt_data$[1,1]=cp_vendor_id$
+					call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:						"APM_VENDHIST",
+:						user_id$,
+:						"",
+:						"",
+:						table_chans$[all],
+:						"",
+:						dflt_data$[all]
+				wend
+		break
+		case fnstr_pos(pad("APM_VENDMAST.BDEL",40),callpoint_event_str$,40)			
+			rem --- can delete vendor and assoc recs (apm01/02/05/06/08/09/14/15) unless
+			rem --- vendor referenced in inventory, or
+			rem --- open invoice or open retention amts in apm-02 <>  0, or 
+			rem --- vendor present in ape-01 or apt-01
+			can_delete$=""
+			vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+			if cvs(vendor_id$,3)<>""
+				if user_tpl.iv_installed$="Y"
+					num_files=1
+					dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+					open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA"
+					gosub open_tables
+					ivm01_dev=num(open_chans$[1])
+					
+					iv_key$=""
+					read(ivm01_dev,key=firm_id$+vendor_id$,knum=3,dom=*next)
+					iv_key$=key(ivm01_dev,end=*next)
+					if pos(firm_id$+vendor_id$=iv_key$)=1 can_delete$="N"
+				endif
+				if can_delete$=""
+					apm02_dev=fnget_dev("APM_VENDHIST")
+					ape01_dev=fnget_dev("APE_INVOICEHDR")
+					apt01_dev=fnget_dev("APT_INVOICEHDR")
+					morehist=1
+					dim apm02a$:fnget_tpl$("APM_VENDHIST")
+					read(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
+					while morehist
+						readrecord(apm02_dev,end=*break)apm02a$
+						if apm02a.firm_id$+apm02a.vendor_id$=firm_id$+vendor_id$
+							if num(apm02a.open_invs$)<>0 or num(apm02a.open_ret$)<>0 can_delete$="N"
+							wk$=""
+							read(ape01_dev,key=firm_id$+apm02a.ap_type$+vendor_id$,dom=*next)
+							wk$=key(ape01_dev,end=*next)
+							if pos(firm_id$+apm02a.ap_type$+vendor_id$=wk$)=1 can_delete$="N"
+							wk$=""
+							read(apt01_dev,key=firm_id$+apm02a.ap_type$+vendor_id$,dom=*next)
+							wk$=key(apt01_dev,end=*next)
+							if pos(firm_id$+apm02a.ap_type$+vendor_id$=wk$)=1 can_delete$="N"
+						else
+							morehist=0
+						endif
+					wend
+				endif
+				if can_delete$="N"
+					msg_id$="AP_VEND_ACTIVE"
+					gosub disp_message
+					callpoint!.setStatus("ABORT")
+				endif
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDMAST.BSHO",40),callpoint_event_str$,40)			
+			rem --- Open/Lock files
+			 
+				files=6,begfile=1,endfile=files
+				dim files$[files],options$[files],chans$[files],templates$[files]
+				files$[1]="APE_INVOICEHDR";rem --- ape-01
+				files$[2]="APT_INVOICEHDR";rem --- apt-01
+				files$[3]="APT_INVOICEDET";rem --- apt-11
+				files$[4]="APS_PARAMS";rem --- aps-01
+				files$[5]="GLS_PARAMS";rem --- gls-01
+				files$[6]="IVS_PARAMS";rem --- ivs-01
+				for wkx=begfile to endfile
+					options$[wkx]="OTA"
+				next wkx
+				call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:			                                   chans$[all],templates$[all],table_chans$[all],batch,status$
+			if status$<>"" then
+				remove_process_bar:
+				bbjAPI!=bbjAPI()
+				rdFuncSpace!=bbjAPI!.getGroupNamespace()
+				rdFuncSpace!.setValue("+build_task","OFF")
+				release
+			endif
+				aps01_dev=num(chans$[4])	
+				gls01_dev=num(chans$[5])
+				ivs01_dev=num(chans$[6])
+			rem --- Dimension miscellaneous string templates
+				dim aps01a$:templates$[4],gls01a$:templates$[5],ivs01c$:templates$[6]
+			rem --- Retrieve parameter data
+				dim info$[20]
+				aps01a_key$=firm_id$+"AP00"
+				find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
+				gls01a_key$=firm_id$+"GL00"
+				find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
+				call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
+				iv$=info$[20]
+				if iv$<>"Y" aps01a.use_replen$="N"
+				
+				call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
+				gl$=info$[9];rem --- gl interface?
+				
+				call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
+				po$=info$[20];rem --- po installed?
+				if po$="N" aps01a.use_replen$="N"
+				dim user_tpl$:"app:c(2),gl_interface:c(1),po_installed:c(1),iv_installed:c(1),"+
+:					"multi_types:c(1),multi_dist:c(1),ret_flag:c(1),use_replen:c(1),"+
+:					"gl_total_pers:c(2),gl_current_per:c(2),gl_current_year:c(4),gl_acct_len:c(2),gl_max_len:c(2)"
+				user_tpl.app$="AP",user_tpl.gl_interface$=gl$,user_tpl.po_installed$=po$,user_tpl.iv_installed$=iv$,
+:					user_tpl.multi_types$=aps01a.multi_types$,user_tpl.multi_dist$=aps01a.multi_dist$,
+:					user_tpl.ret_flag$=aps01a.ret_flag$,user_tpl.use_replen$=aps01a.use_replen$,
+:					user_tpl.gl_total_pers$=gls01a.total_pers$,user_tpl.gl_current_per$=gls01a.current_per$,
+:					user_tpl.gl_current_year$=gls01a.current_year$,user_tpl.gl_max_len$=gls01a.max_acct_len$
+				rem --- used to also open ivm-03 if iv$="Y", but using alt keys on ivm-01 instead
+				rem --- knum=3 is firm/vendor/item, knum=9 is firm/buyer/vendor/item
+				if po$="Y"
+					files=5,begfile=1,endfile=files
+					dim files$[files],options$[files],chans$[files],templates$[files]
+					files$[1]="POC_LINECODE";rem --- pom-02
+					files$[2]="POT_RECHDR";rem --- pot-04
+					files$[3]="POT_INVHDR";rem --- pot-05
+					files$[4]="POT_RECDET";rem --- pot-14
+					files$[5]="POT_INVDET";rem --- pot-25
+					for wkx=begfile to endfile
+						options$[wkx]="OTA"
+					next wkx
+					call stbl("+DIR_SYP")+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:				                                   chans$[all],templates$[all],table_chans$[all],batch,status$
+					if status$<>"" then
+						bbjAPI!=bbjAPI()
+						rdFuncSpace!=bbjAPI!.getGroupNamespace()
+						rdFuncSpace!.setValue("+build_task","OFF")
+						release
+					endif
+				endif
+			rem --- set enable_str$ to list of aliases in popup to enable -- enabled by default, so only include specific enable request
+			rem --- set disable_str$ to list of all aliases in popup to disable (format alias_name;alias_name;alias_name)
+			if user_tpl.use_replen$<>"Y"
+				enable_str$=""
+				disable_str$="APM_VENDREPL"
+				call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDMAST.VENDOR_ID.AINP",40),callpoint_event_str$,40)			
+			if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
+		break
+		case fnstr_pos(pad("APM_VENDMAST.VENDOR_NAME.AVAL",40),callpoint_event_str$,40)			
+			rem --- if no alt sequence is set, default it to vendor name
+			if cvs(callpoint!.getColumnData("APM_VENDMAST.ALT_SEQUENCE"),3)=""
+				alt_seq$=callpoint!.getUserInput()
+				alt_seq_len=num(callpoint!.getTableColumnAttribute("APM_VENDMAST.ALT_SEQUENCE","MAXL"))
+				if len(alt_seq$)>alt_seq_len
+					alt_seq$=alt_seq$(1,alt_seq_len)
+				endif
+				callpoint!.setColumnData("APM_VENDMAST.ALT_SEQUENCE",alt_seq$)
+				callpoint!.setStatus("REFRESH")
+			endif
+		break
+
+		case default
+		break
+	swend
+
+rem --- All done
+
+	goto std_exit
+
+rem [[APM_VENDMAST.<CUSTOM>]]
+
+disable_fields:
+	rem --- used to disable/enable controls depending on parameter settings
+	rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP-REFRESH")
+return
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+    
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+    
+std_missing_params_release:
+
+    status=999
+    if pgm(-1)<>pgm(-2) exit 
+    release
+
+rem #endinclude std_missing_params.src
+
+
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
+disp_msg:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bam_message.bbj",gui_dev,msg_title$,msg_text$,msg_defs$,msg_opt$
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call dir_pgm$+"bam_prog_bar.bbj",SysGUI!,Form!,MeterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_data$,meter_action$
+
+	return
+
+rem --- Functions
+
+	def fnstr_pos(str_pos_att0$,str_pos_att1$,str_pos_att1)=int((pos(str_pos_att0$=str_pos_att1$,str_pos_att1)+str_pos_att1-1)/str_pos_att1)
+	def fngett_attr$(gett_attr_att0$)=attr_tbl$[fnstr_pos(gett_attr_att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(getc_attr_att0,getc_attr_att0$)=attr_col$[getc_attr_att0,fnstr_pos(getc_attr_att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(getv_attr_att0$,getv_attr_att1$)=attr_col$[fnstr_pos(getv_attr_att0$,attr_col$[0,1],40),fnstr_pos(getv_attr_att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),0]
+	def fnget_rec_orig$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),1]
+	def fnget_hrec$(hrec_att0$)=hrec_data$[fnstr_pos(hrec_att0$,hrec_data$[0,0],40),0]
+	def fndate$(date_att0$)=date(jul(num(date_att0$(1,4)),num(date_att0$(5,2)),num(date_att0$(7,2))):stbl("+DATE_MASK"))
+	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnget_path$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),1]
+	def fnmdy$(tmp0$)=tmp0$(5,4)+tmp0$(1,4)
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	err_text$=""
+	if tcb(5) and pgm(-1)=pgm(-2) then err_text$=pgm(tcb(5),err=*next)
+	pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+	call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
+	if pos("EXIT"=err_act$) then goto std_error_exit
+	if pos("ESCAPE"=err_act$) then seterr 0;setesc 0
+	if pos("RETRY"=err_act$) then retry
+
+std_error_exit:
+
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ then escape
+
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) then exit
+	release
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+

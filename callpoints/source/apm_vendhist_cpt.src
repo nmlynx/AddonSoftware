@@ -1,0 +1,348 @@
+rem Callpoint program for APM_VENDHIST - Vendor Codes and History
+rem Program apm_vendhist_cpt.bbj
+
+rem Barista Version 9.0
+rem Copyright (c) 2007-2009 BASIS International Ltd.
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
+	declare Callpoint Callpoint!
+
+	enter
+:		Callpoint!,
+:		bar_tpl$,
+:		BarObj!,
+:		user_tpl$,
+:		UserObj!,
+:		gui_dev,
+:		SysGUI!,
+:		Form!,
+:		rec_data$,
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		GridVect!,
+:		OrigVect!,
+:		hrec_data$[all],
+:		hattr_col$[all],
+:		err=*next
+
+rem --- Directory STBLs
+
+	dir_pgm$=stbl("+DIR_SYP")
+	dir_frm$=stbl("+DIR_FRM")
+	dir_def$=stbl("+DIR_DEF")
+	dir_img$=stbl("+DIR_IMG")
+	dir_wrk$=stbl("+DIR_WRK")
+
+rem --- Retrieve sysinfo Data
+
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_event$=Callpoint!.getCallpointEvent()
+
+	callpoint_event_str$=
+:		pad("APM_VENDHIST.AENA",40)+
+:		pad("APM_VENDHIST.AP_DIST_CODE.AVAL",40)+
+:		pad("APM_VENDHIST.AP_DIST_CODE.BINP",40)+
+:		pad("APM_VENDHIST.AP_TYPE.AVAL",40)+
+:		pad("APM_VENDHIST.AP_TYPE.BINP",40)+
+:		pad("APM_VENDHIST.ARAR",40)+
+:		pad("APM_VENDHIST.BDEL",40)+
+:		pad("APM_VENDHIST.BSHO",40)+
+:		pad("APM_VENDHIST.PAYMENT_GRP.AVAL",40)
+
+	switch fnstr_pos(callpoint_event$,callpoint_event_str$,40)
+		case fnstr_pos(pad("APM_VENDHIST.AENA",40),callpoint_event_str$,40)			
+			rem --- see if interfacing to GL
+				call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
+				gl$=info$[9];rem --- gl interface?
+			
+			if gl$<>"Y"
+				ctl_name$="APM_VENDHIST.GL_ACCOUNT"
+				ctl_stat$="I"
+				gosub disable_fields
+			endif
+			
+			rem escape; rem  before disable reten
+			rem if user_tpl.ret_flag$="N" 
+			rem	ctl_name$="APM_VENDHIST.OPEN_RET"
+			rem	ctl_stat$="I"
+			rem	gosub disable_fields
+			rem endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.AP_DIST_CODE.AVAL",40),callpoint_event_str$,40)			
+			if user_tpl.multi_dist$<>"Y"
+			
+				if cvs(callpoint!.getUserInput(),3)<>"" callpoint!.setStatus("ABORT")
+			
+			endif
+			if callpoint!.getUserInput()=""
+				callpoint!.setUserInput("  ")
+				callpoint!.setStatus("REFRESH")
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.AP_DIST_CODE.BINP",40),callpoint_event_str$,40)			
+			if user_tpl$.multi_dist$<>"Y" 
+			
+				callpoint!.setColumnData("APM_VENDHIST.AP_DIST_CODE","  ")
+				callpoint!.setStatus("REFRESH")
+			
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.AP_TYPE.AVAL",40),callpoint_event_str$,40)			
+			if user_tpl.multi_types$<>"Y"
+			
+				if cvs(callpoint!.getUserInput(),3)<>"" callpoint!.setStatus("ABORT")
+			
+			endif
+			if callpoint!.getUserInput()=""
+				callpoint!.setUserInput("  ")
+				callpoint!.setStatus("REFRESH")
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.AP_TYPE.BINP",40),callpoint_event_str$,40)			
+			if user_tpl$.multi_types$<>"Y" 
+			
+				callpoint!.setColumnData("APM_VENDHIST.AP_TYPE","  ")
+				callpoint!.setStatus("REFRESH")
+			
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.ARAR",40),callpoint_event_str$,40)			
+			if user_tpl.multi_types$<>"Y"
+				callpoint!.setColumnData("APM_VENDHIST.AP_TYPE","  ")
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.BDEL",40),callpoint_event_str$,40)			
+			rem --- disallow deletion of apm-02 if any of the buckets are non-zero, or if referenced in apt-01 (open invoices)
+			
+			can_delete$=""
+			
+			if num(callpoint!.getColumnData("APM_VENDHIST.OPEN_INVS"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.OPEN_RET"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.YTD_PURCH"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.PYR_PURCH"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.NYR_PURCH"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.YTD_DISCS"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.PRI_YR_DISCS"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.NYR_DISC"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.YTD_PAYMENTS"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.PYR_PAYMENTS"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.NYR_PAYMENTS"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.CUR_CAL_PMTS"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.PRI_CAL_PMT"))<>0 or
+:				num(callpoint!.getColumnData("APM_VENDHIST.NXT_CYR_PMTS"))<>0
+			 
+				can_delete$="N"
+			
+			endif
+			
+			if can_delete$=""
+				ape01_dev=fnget_dev("APE_INVOICEHDR")
+				apt01_dev=fnget_dev("APT_INVOICEHDR")
+			
+				wky$=firm_id$+callpoint!.getColumnData("APM_VENDHIST.AP_TYPE")+callpoint!.getColumnData("APM_VENDHIST.VENDOR_ID")
+				wk$=""
+				read(ape01_dev,key=wky$,dom=*next)
+				wk$=key(ape01_dev,end=*next)
+				if pos(wky$=wk$)=1 can_delete$="N"
+				wk$=""
+				read(apt01_dev,key=wky$,dom=*next)
+				wk$=key(apt01_dev,end=*next)
+				if pos(wky$=wk$)=1 can_delete$="N"		
+			endif
+			
+			if can_delete$="N"
+				msg_id$="AP_VEND_ACTIVE"
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.BSHO",40),callpoint_event_str$,40)			
+			rem --- Retrieve miscellaneous templates
+			
+			
+				files=1,begfile=1,endfile=files
+				dim ids$[files],templates$[files]
+				ids$[1]="aps-01A:APS_PARAMS";rem  aps-01
+				
+				call stbl("+DIR_PGM")+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+			        if status goto std_exit
+			
+			rem --- Dimension miscellaneous string templates
+			
+				dim aps01a$:templates$[1]
+			
+			rem --- Retrieve parameter data
+			
+				aps01_dev=fnget_dev("APS_PARAMS")
+				aps01a_key$=firm_id$+"AP00"
+				find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
+			
+			rem -- store info needed for validation, etc., in user_tpl$
+				dim user_tpl$:"multi_types:c(1),multi_dist:c(1),ret_flag:c(1)"
+				user_tpl.multi_types$=aps01a.multi_types$
+				user_tpl.multi_dist$=aps01a.multi_dist$
+				user_tpl.ret_flag$=aps01a.ret_flag$
+			
+			if user_tpl.multi_types$<>"Y"
+				ctl_name$="APM_VENDHIST.AP_TYPE"
+				ctl_stat$="I"
+				gosub disable_fields
+			else
+				ctl_name$="APM_VENDHIST.AP_TYPE"
+				ctl_stat$=" "
+				gosub disable_fields
+			endif
+		break
+		case fnstr_pos(pad("APM_VENDHIST.PAYMENT_GRP.AVAL",40),callpoint_event_str$,40)			
+			if callpoint!.getUserInput()=""
+				callpoint!.setUserInput("  ")
+				callpoint!.setStatus("REFRESH")
+			endif
+		break
+
+		case default
+		break
+	swend
+
+rem --- All done
+
+	goto std_exit
+
+rem [[APM_VENDHIST.<CUSTOM>]]
+
+disable_fields:
+	rem --- used to disable/enable controls depending on parameter settings
+	rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+
+return
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
+:                                   str(err:"000"),rd_err_text$,rd_err_act$
+
+std_missing_params_exit:
+    
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+    
+std_missing_params_release:
+
+    status=999
+    if pgm(-1)<>pgm(-2) exit 
+    release
+
+rem #endinclude std_missing_params.src
+
+
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
+disp_msg:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bam_message.bbj",gui_dev,msg_title$,msg_text$,msg_defs$,msg_opt$
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call dir_pgm$+"bam_prog_bar.bbj",SysGUI!,Form!,MeterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_data$,meter_action$
+
+	return
+
+rem --- Functions
+
+	def fnstr_pos(str_pos_att0$,str_pos_att1$,str_pos_att1)=int((pos(str_pos_att0$=str_pos_att1$,str_pos_att1)+str_pos_att1-1)/str_pos_att1)
+	def fngett_attr$(gett_attr_att0$)=attr_tbl$[fnstr_pos(gett_attr_att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(getc_attr_att0,getc_attr_att0$)=attr_col$[getc_attr_att0,fnstr_pos(getc_attr_att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(getv_attr_att0$,getv_attr_att1$)=attr_col$[fnstr_pos(getv_attr_att0$,attr_col$[0,1],40),fnstr_pos(getv_attr_att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),0]
+	def fnget_rec_orig$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),1]
+	def fnget_hrec$(hrec_att0$)=hrec_data$[fnstr_pos(hrec_att0$,hrec_data$[0,0],40),0]
+	def fndate$(date_att0$)=date(jul(num(date_att0$(1,4)),num(date_att0$(5,2)),num(date_att0$(7,2))):stbl("+DATE_MASK"))
+	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnget_path$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),1]
+	def fnmdy$(tmp0$)=tmp0$(5,4)+tmp0$(1,4)
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	err_text$=""
+	if tcb(5) and pgm(-1)=pgm(-2) then err_text$=pgm(tcb(5),err=*next)
+	pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+	call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
+	if pos("EXIT"=err_act$) then goto std_error_exit
+	if pos("ESCAPE"=err_act$) then seterr 0;setesc 0
+	if pos("RETRY"=err_act$) then retry
+
+std_error_exit:
+
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ then escape
+
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) then exit
+	release
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+

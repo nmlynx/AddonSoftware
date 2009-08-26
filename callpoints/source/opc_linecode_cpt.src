@@ -1,0 +1,317 @@
+rem Callpoint program for OPC_LINECODE - Order Processing Line Codes
+rem Program opc_linecode_cpt.bbj
+
+rem Barista Version 9.0
+rem Copyright (c) 2007-2009 BASIS International Ltd.
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
+	declare Callpoint Callpoint!
+
+	enter
+:		Callpoint!,
+:		bar_tpl$,
+:		BarObj!,
+:		user_tpl$,
+:		UserObj!,
+:		gui_dev,
+:		SysGUI!,
+:		Form!,
+:		rec_data$,
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		GridVect!,
+:		OrigVect!,
+:		hrec_data$[all],
+:		hattr_col$[all],
+:		err=*next
+
+rem --- Directory STBLs
+
+	dir_pgm$=stbl("+DIR_SYP")
+	dir_frm$=stbl("+DIR_FRM")
+	dir_def$=stbl("+DIR_DEF")
+	dir_img$=stbl("+DIR_IMG")
+	dir_wrk$=stbl("+DIR_WRK")
+
+rem --- Retrieve sysinfo Data
+
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_event$=Callpoint!.getCallpointEvent()
+
+	callpoint_event_str$=
+:		pad("OPC_LINECODE.ARAR",40)+
+:		pad("OPC_LINECODE.AR_DIST_CODE.AVAL",40)+
+:		pad("OPC_LINECODE.BREA",40)+
+:		pad("OPC_LINECODE.BSHO",40)+
+:		pad("OPC_LINECODE.DROPSHIP.AVAL",40)+
+:		pad("OPC_LINECODE.MESSAGE_TYPE.BINP",40)+
+:		pad("OPC_LINECODE.PROD_TYPE_PR.AVAL",40)
+
+	switch fnstr_pos(callpoint_event$,callpoint_event_str$,40)
+		case fnstr_pos(pad("OPC_LINECODE.ARAR",40),callpoint_event_str$,40)			
+			rem --- Re-enable all fields
+			
+				dim dctl$[7],dmap$[7]
+				dctl$[1]="GL_REV_ACCT"
+				dctl$[2]="TAXABLE_FLAG"
+				dctl$[3]="DROPSHIP"
+				dctl$[4]="PRODUCT_TYPE"
+				dctl$[5]="AR_DIST_CODE"
+				dctl$[6]="PROD_TYPE_PR"
+				dctl$[7]="MESSAGE_TYPE"
+				line_type$=callpoint!.getColumnData("OPC_LINECODE.LINE_TYPE")
+				if user_tpl.gl$<>"Y"
+					dmap$[1]="I"
+				endif
+				if rec_data.line_type$ = "O"
+					dmap$[3]="I"
+					dmap$[5]="I"
+					dmap$[7]="I"
+				endif
+				if rec_data.line_type$="M"
+					dmap$[1]="I"
+					dmap$[2]="I"
+					dmap$[3]="I"
+					dmap$[4]="I"
+					dmap$[5]="I"
+					dmap$[6]="I"
+				endif
+				if rec_data.line_type$="N"
+					dmap$[1]="I"
+					dmap$[7]="I"
+				endif
+				if rec_data.line_type$="S"
+					dmap$[1]="I"
+					dmap$[4]="I"
+					dmap$[5]="I"
+					dmap$[6]="I"
+					dmap$[7]="I"
+				endif
+				if rec_data.line_type$="P"
+					dmap$[1]="I"
+					dmap$[7]="I"
+				endif
+				if rec_data.dropship$="Y"
+					dmap$[5]=""
+				endif
+				if rec_data.prod_type_pr$<>"D"
+					dmap$[4]="I"
+				endif
+				gosub disable_ctls
+			
+			rem --- Either fill or blank out 3 G/L display fields
+			
+				if user_tpl.gl$="Y"
+					if cvs(rec_data.ar_dist_code$,2)=""
+						callpoint!.setColumnData("<<DISPLAY>>.GL_COGS_ACCT","")
+						callpoint!.setColumnData("<<DISPLAY>>.GL_INV_ACCT","")
+						callpoint!.setColumnData("<<DISPLAY>>.GL_SLS_ACCT","")
+					else
+						dim dist_tpl$:user_tpl.dist_tpl$
+						read record (user_tpl.dist_dev,key=firm_id$+"D"+rec_data.ar_dist_code$,dom=*next) dist_tpl$
+						callpoint!.setColumnData("<<DISPLAY>>.GL_SLS_ACCT",dist_tpl.gl_sls_acct$)
+						callpoint!.setColumnData("<<DISPLAY>>.GL_INV_ACCT",dist_tpl.gl_inv_acct$)
+						callpoint!.setColumnData("<<DISPLAY>>.GL_COGS_ACCT",dist_tpl.gl_cogs_acct$)
+					endif
+				endif
+		break
+		case fnstr_pos(pad("OPC_LINECODE.AR_DIST_CODE.AVAL",40),callpoint_event_str$,40)			
+			rem --- Either fill or blank out 3 G/L display fields
+				dist_code$=callpoint!.getUserInput()
+				if user_tpl.gl$="Y"
+					if cvs(dist_code$,2)=""
+						callpoint!.setColumnData("<<DISPLAY>>.GL_COGS_ACCT","")
+						callpoint!.setColumnData("<<DISPLAY>>.GL_INV_ACCT","")
+						callpoint!.setColumnData("<<DISPLAY>>.GL_SLS_ACCT","")
+					else
+						dim dist_tpl$:user_tpl.dist_tpl$
+						read record (user_tpl.dist_dev,key=firm_id$+"D"+dist_code$,dom=*next) dist_tpl$
+						callpoint!.setColumnData("<<DISPLAY>>.GL_SLS_ACCT",dist_tpl.gl_sls_acct$)
+						callpoint!.setColumnData("<<DISPLAY>>.GL_INV_ACCT",dist_tpl.gl_inv_acct$)
+						callpoint!.setColumnData("<<DISPLAY>>.GL_COGS_ACCT",dist_tpl.gl_cogs_acct$)
+					endif
+					callpoint!.setStatus("REFRESH")
+				endif
+		break
+		case fnstr_pos(pad("OPC_LINECODE.BREA",40),callpoint_event_str$,40)			
+			rem --- re-enable all fields
+				dim dctl$[7],dmap$[7]
+				dctl$[1]="GL_REV_ACCT"
+				dctl$[2]="TAXABLE_FLAG"
+				dctl$[3]="DROPSHIP"
+				dctl$[4]="PRODUCT_TYPE"
+				dctl$[5]="AR_DIST_CODE"
+				dctl$[6]="PROD_TYPE_PR"
+				dctl$[7]="MESSAGE_TYPE"
+				gosub disable_ctls
+		break
+		case fnstr_pos(pad("OPC_LINECODE.BSHO",40),callpoint_event_str$,40)			
+			rem --- Open Distribution Code file
+				num_files=1
+				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+				open_tables$[1]="ARC_DISTCODE",open_opts$[1]="OTA"
+				gosub open_tables
+				arc_dist_dev=num(open_chans$[1]),arc_dist_tpl$=open_tpls$[1]
+			rem --- setup for G/L Parameter
+				call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
+				dim user_tpl$:"gl:c(1),dist_dev:n(4),dist_tpl:c(500)"
+				user_tpl.gl$=info$[9]
+				user_tpl.dist_dev=arc_dist_dev
+				user_tpl.dist_tpl$=arc_dist_tpl$
+		break
+		case fnstr_pos(pad("OPC_LINECODE.DROPSHIP.AVAL",40),callpoint_event_str$,40)			
+			rem --- Check Distribution Code
+				if line_type$="S" and callpoint!.getUserInput()="N"
+					callpoint!.setColumnData("OPC_LINECODE.AR_DIST_CODE","")
+					callpoint!.setStatus("REFRESH")
+				endif
+		break
+		case fnstr_pos(pad("OPC_LINECODE.MESSAGE_TYPE.BINP",40),callpoint_event_str$,40)			
+			rem --- Set default type
+				if message_type$=" "
+					callpoint!.setColumnData("OPC_LINECODE.MESSAGE_TYPE","B")
+					callpoint!.setStatus("REFRESH")
+				endif
+		break
+		case fnstr_pos(pad("OPC_LINECODE.PROD_TYPE_PR.AVAL",40),callpoint_event_str$,40)			
+			rem --- Maybe disable Product Type
+				dctl$="PRODUCT_TYPE"
+				if callpoint!.getUserInput()<>"D"
+					dmap$="I"
+				else
+					if pos(line_type$="NOP")=0
+						dmap$="I"
+					else
+						dmap$=""
+					endif
+				endif
+				gosub disable_ctl
+		break
+
+		case default
+		break
+	swend
+
+rem --- All done
+
+	goto std_exit
+
+rem [[OPC_LINECODE.<CUSTOM>]]
+
+disable_ctls:rem --- disable selected controls
+for dctl=1 to 7
+	dctl$=dctl$[dctl]
+	wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=dmap$[dctl]
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
+next dctl
+return
+disable_ctl:rem --- disable selected controls
+	wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=dmap$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
+return
+
+
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
+disp_msg:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bam_message.bbj",gui_dev,msg_title$,msg_text$,msg_defs$,msg_opt$
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call dir_pgm$+"bam_prog_bar.bbj",SysGUI!,Form!,MeterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_data$,meter_action$
+
+	return
+
+rem --- Functions
+
+	def fnstr_pos(str_pos_att0$,str_pos_att1$,str_pos_att1)=int((pos(str_pos_att0$=str_pos_att1$,str_pos_att1)+str_pos_att1-1)/str_pos_att1)
+	def fngett_attr$(gett_attr_att0$)=attr_tbl$[fnstr_pos(gett_attr_att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(getc_attr_att0,getc_attr_att0$)=attr_col$[getc_attr_att0,fnstr_pos(getc_attr_att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(getv_attr_att0$,getv_attr_att1$)=attr_col$[fnstr_pos(getv_attr_att0$,attr_col$[0,1],40),fnstr_pos(getv_attr_att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),0]
+	def fnget_rec_orig$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),1]
+	def fnget_hrec$(hrec_att0$)=hrec_data$[fnstr_pos(hrec_att0$,hrec_data$[0,0],40),0]
+	def fndate$(date_att0$)=date(jul(num(date_att0$(1,4)),num(date_att0$(5,2)),num(date_att0$(7,2))):stbl("+DATE_MASK"))
+	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnget_path$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),1]
+	def fnmdy$(tmp0$)=tmp0$(5,4)+tmp0$(1,4)
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	err_text$=""
+	if tcb(5) and pgm(-1)=pgm(-2) then err_text$=pgm(tcb(5),err=*next)
+	pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+	call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
+	if pos("EXIT"=err_act$) then goto std_error_exit
+	if pos("ESCAPE"=err_act$) then seterr 0;setesc 0
+	if pos("RETRY"=err_act$) then retry
+
+std_error_exit:
+
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ then escape
+
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) then exit
+	release
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+

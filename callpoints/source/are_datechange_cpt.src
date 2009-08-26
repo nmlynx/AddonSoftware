@@ -1,0 +1,258 @@
+rem Callpoint program for ARE_DATECHANGE - Invoice Date Change Entry
+rem Program are_datechange_cpt.bbj
+
+rem Barista Version 9.0
+rem Copyright (c) 2007-2009 BASIS International Ltd.
+rem All Rights Reserved
+
+	seterr std_error
+	setesc std_error
+
+	use ::sys/prog/bao_callpoint.bbj::Callpoint
+	declare Callpoint Callpoint!
+
+	enter
+:		Callpoint!,
+:		bar_tpl$,
+:		BarObj!,
+:		user_tpl$,
+:		UserObj!,
+:		gui_dev,
+:		SysGUI!,
+:		Form!,
+:		rec_data$,
+:		table_chans$[all],
+:		dtlg_param$[all],
+:		GridVect!,
+:		OrigVect!,
+:		hrec_data$[all],
+:		hattr_col$[all],
+:		err=*next
+
+rem --- Directory STBLs
+
+	dir_pgm$=stbl("+DIR_SYP")
+	dir_frm$=stbl("+DIR_FRM")
+	dir_def$=stbl("+DIR_DEF")
+	dir_img$=stbl("+DIR_IMG")
+	dir_wrk$=stbl("+DIR_WRK")
+
+rem --- Retrieve sysinfo Data
+
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	firm_id$=sysinfo.firm_id$
+
+rem --- Callpoints and tables handled by this program
+
+	callpoint_event$=Callpoint!.getCallpointEvent()
+
+	callpoint_event_str$=
+:		pad("ARE_DATECHANGE.AR_INV_NO_VER.AVAL",40)+
+:		pad("ARE_DATECHANGE.AR_TERMS_CODE.AVAL",40)+
+:		pad("ARE_DATECHANGE.AWIN",40)+
+:		pad("ARE_DATECHANGE.BSHO",40)+
+:		pad("ARE_DATECHANGE.BWRI",40)+
+:		pad("ARE_DATECHANGE.INVOICE_DATE.AVAL",40)
+
+	switch fnstr_pos(callpoint_event$,callpoint_event_str$,40)
+		case fnstr_pos(pad("ARE_DATECHANGE.AR_INV_NO_VER.AVAL",40),callpoint_event_str$,40)			
+				msg_id$="AR_INV_NO"
+				dim msg_tokens$[1]
+				msg_opt$=""
+				dim art_invhdr$:user_tpl.art_invhdr_tpl$
+				firm_id$=callpoint!.getColumnData("ARE_DATECHANGE.FIRM_ID")
+				ar_type$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TYPE")
+				cust_id$=callpoint!.getColumnData("ARE_DATECHANGE.CUSTOMER_ID")
+				inv_no$=callpoint!.getUserInput()
+				readrecord(user_tpl.art_invhdr_chn,key=firm_id$+ar_type$+cust_id$+inv_no$+"00",dom=invalid_inv)art_invhdr$
+				msg_id$=""
+				callpoint!.setColumnData("ARE_DATECHANGE.AR_TERMS_CODE",art_invhdr.ar_terms_code$)
+				callpoint!.setColumnData("ARE_DATECHANGE.DISCOUNT_AMT",str(art_invhdr.disc_allowed))
+				callpoint!.setColumnData("ARE_DATECHANGE.DISC_DATE",art_invhdr.disc_date$)
+				callpoint!.setColumnData("ARE_DATECHANGE.INVOICE_AMT",str(art_invhdr.invoice_amt))
+				callpoint!.setColumnData("ARE_DATECHANGE.INVOICE_DATE",art_invhdr.invoice_date$)
+				callpoint!.setColumnData("ARE_DATECHANGE.INVOICE_TYPE",art_invhdr.invoice_type$)
+				callpoint!.setColumnData("ARE_DATECHANGE.INV_DUE_DATE",art_invhdr.inv_due_date$)
+				callpoint!.setStatus("ABLEMAP-REFRESH")
+			
+			invalid_inv:
+				if msg_id$<>"" then
+					gosub disp_message
+					escape
+				endif
+		break
+		case fnstr_pos(pad("ARE_DATECHANGE.AR_TERMS_CODE.AVAL",40),callpoint_event_str$,40)			
+			rem --- recalculate due and discount dates
+				tmp_inv_date$=callpoint!.getColumnData("ARE_DATECHANGE.INVOICE_DATE")
+				tmp_term_code$=callpoint!.getUserInput()
+				gosub recalc_dates
+		break
+		case fnstr_pos(pad("ARE_DATECHANGE.AWIN",40),callpoint_event_str$,40)			
+			rem --- Open/Lock files
+			files=1,begfile=1,endfile=1
+			dim files$[files],options$[files],chans$[files],templates$[files]
+			files$[1]="ARE_DATECHANGE";rem --- "are-06"
+			for wkx=begfile to endfile
+				options$[wkx]="OTA"
+			next wkx
+			call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:			                                   chans$[all],templates$[all],table_chans$[all],batch,status$
+			if status$<>"" then
+				remove_process_bar:
+				bbjAPI!=bbjAPI()
+				rdFuncSpace!=bbjAPI!.getGroupNamespace()
+				rdFuncSpace!.setValue("+build_task","OFF")
+				release
+			endif
+			are_datechange_dev=num(chans$[1])
+		break
+		case fnstr_pos(pad("ARE_DATECHANGE.BSHO",40),callpoint_event_str$,40)			
+			num_files=2
+			dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+			open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA"
+			open_tables$[2]="ARC_TERMCODE",open_opts$[2]="OTA"
+			gosub open_tables
+			dim user_tpl$:"art_invhdr_tpl:c("+str(len(open_tpls$[1]))+"*),art_invhdr_chn:n(3*)"
+			user_tpl.art_invhdr_chn=num(open_chans$[1])
+			user_tpl.art_invhdr_tpl$=open_tpls$[1]
+		break
+		case fnstr_pos(pad("ARE_DATECHANGE.BWRI",40),callpoint_event_str$,40)			
+			rem --- Abort if record not a valid invoice
+				art_invhdr_dev=fnget_dev("ART_INVHDR")
+				find record (art_invhdr_dev,key=firm_id$+
+:					callpoint!.getColumnData("ARE_DATECHANGE.AR_TYPE")+
+:					callpoint!.getColumnData("ARE_DATECHANGE.CUSTOMER_ID")+
+:					callpoint!.getColumnData("ARE_DATECHANGE.AR_INV_NO_VER")+"00",dom=*next);goto valid_inv
+				callpoint!.setMessage("AR_INV_NO")
+				callpoint!.setStatus("ABORT")
+			valid_inv:
+				arc_temcode_dev=fnget_dev("ARC_TERMCODE")
+				find record (arc_temcode_dev,key=firm_id$+"A"+
+:					pad(callpoint!.getColumnData("ARE_DATECHANGE.AR_TERMS_CODE"),2),dom=*next);goto valid_terms
+				callpoint!.setMessage("INVALID_TERMS")
+				callpoint!.setStatus("ABORT")
+			valid_terms:	
+		break
+		case fnstr_pos(pad("ARE_DATECHANGE.INVOICE_DATE.AVAL",40),callpoint_event_str$,40)			
+			rem --- recalculate due and discount dates
+				tmp_inv_date$=callpoint!.getUserInput()
+				tmp_term_code$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TERMS_CODE")
+				gosub recalc_dates
+		break
+
+		case default
+		break
+	swend
+
+rem --- All done
+
+	goto std_exit
+
+rem [[ARE_DATECHANGE.<CUSTOM>]]
+
+recalc_dates:
+	rem --- tmp_term_code$ and tmp_inv_date$ set prior to gosub
+	arc_termcode_dev=fnget_dev("ARC_TERMCODE")
+	dim arc_termcode$:fnget_tpl$("ARC_TERMCODE")
+	while 1
+		readrecord (arc_termcode_dev,key=firm_id$+"A"+tmp_term_code$,dom=*break)arc_termcode$
+		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,tmp_inv_date$,
+:			arc_termcode.inv_days_due,due$,status
+		callpoint!.setColumnData("ARE_DATECHANGE.INV_DUE_DATE",due$)
+		readrecord (arc_termcode_dev,key=firm_id$+"A"+tmp_term_code$,dom=*break)arc_termcode$
+		call stbl("+DIR_PGM")+"adc_duedate.aon",arc_termcode.prox_or_days$,tmp_inv_date$,
+:			arc_termcode.disc_days,due$,status
+		callpoint!.setColumnData("ARE_DATECHANGE.DISC_DATE",due$)
+		callpoint!.setStatus("REFRESH")
+		break
+	wend
+	return
+
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+
+disp_msg:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bam_message.bbj",gui_dev,msg_title$,msg_text$,msg_defs$,msg_opt$
+
+	return
+
+disp_meter:rem --- Display Progress Meter
+
+	call dir_pgm$+"bam_prog_bar.bbj",SysGUI!,Form!,MeterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_data$,meter_action$
+
+	return
+
+rem --- Functions
+
+	def fnstr_pos(str_pos_att0$,str_pos_att1$,str_pos_att1)=int((pos(str_pos_att0$=str_pos_att1$,str_pos_att1)+str_pos_att1-1)/str_pos_att1)
+	def fngett_attr$(gett_attr_att0$)=attr_tbl$[fnstr_pos(gett_attr_att0$,attr_def_tbl$[0,0],5)]
+	def fngetc_attr$(getc_attr_att0,getc_attr_att0$)=attr_col$[getc_attr_att0,fnstr_pos(getc_attr_att0$,attr_def_col$[0,0],5)]
+	def fngetv_attr$(getv_attr_att0$,getv_attr_att1$)=attr_col$[fnstr_pos(getv_attr_att0$,attr_col$[0,1],40),fnstr_pos(getv_attr_att1$,attr_def_col$[0,0],5)]
+	def fnget_rec$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),0]
+	def fnget_rec_orig$(get_rec_att0$)=rec_data$[fnstr_pos(get_rec_att0$,rec_data$[0,0],40),1]
+	def fnget_hrec$(hrec_att0$)=hrec_data$[fnstr_pos(hrec_att0$,hrec_data$[0,0],40),0]
+	def fndate$(date_att0$)=date(jul(num(date_att0$(1,4)),num(date_att0$(5,2)),num(date_att0$(7,2))):stbl("+DATE_MASK"))
+	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnget_path$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),1]
+	def fnmdy$(tmp0$)=tmp0$(5,4)+tmp0$(1,4)
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+	err_text$=""
+	if tcb(5) and pgm(-1)=pgm(-2) then err_text$=pgm(tcb(5),err=*next)
+	pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
+	call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
+	if pos("EXIT"=err_act$) then goto std_error_exit
+	if pos("ESCAPE"=err_act$) then seterr 0;setesc 0
+	if pos("RETRY"=err_act$) then retry
+
+std_error_exit:
+
+	master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=std_error_release)
+	if cvs(sysinfo.user_id$,2)=master_user$ then escape
+
+std_error_release:
+
+	status=999
+	if pgm(-1)<>pgm(-2) then exit
+	release
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+	exit
+
