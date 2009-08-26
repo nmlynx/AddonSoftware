@@ -20,6 +20,25 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
+rem --- Get user approval to proceed
+
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit_no_update
+    
 
 rem --- Open/Lock files
 
@@ -27,61 +46,48 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="ivm-02",ids$[2]="IVM_ITEMWHSE"
     files$[3]="poe-12",ids$[3]="POE_PODET"
-    files$[4]="poe-42",ids$[3]="POE_POBYITEM"
-    files$[5]="sfe-01",ids$[3]="SFE_WOMASTR"
+    files$[5]="sfe-01",ids$[5]="SFE_WOMASTR"
     files$[6]="IVS_PARAMS",ids$[6]=files$[6]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     
     ivm02_dev=channels[2]
     poe12_dev=channels[3]
-    poe42_dev=channels[4]
     sfe01_dev=channels[5]
     ivs01a_dev=channels[6]
+    
 rem --- Dimension string templates
 
-    dim ivm02a$:templates$[2],poe12a$:templates$[3],poe42a$:templates$[4],
+    dim ivm02a$:templates$[2],poe12a$:templates$[3],
 :       sfe01a$:templates$[5],ivs01a$:templates$[6]
-
-
-
-rem --- Assign form input values to local variables
-
-    table$=fnget_table$("")
-    rebuild_qty$=fnget_fld_data$(table$,"rebuild_Qty")
 
 rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
     find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    
-
 
 rem --- Parameters
 
     dim p[1],info$[20]
-    n2$="IV"
-    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-    p[0]=num(ivs01a.item_nbr_len$)
+    p[0]=num(ivs01a.item_id_len$)
     p[1]=num(ivs01a.precision$)
     call pgmdir$+"adc_application.aon","PO",info$[all]
     po$=info$[20]
     call pgmdir$+"adc_application.aon","SF",info$[all]
     sf$=info$[20]
     
+    if po$<>"Y" and sf$<>"Y"
+        msg_id$="IV_REBUILD_OO"
+        gosub disp_message
+        goto std_exit_no_update
+    endif
+    
  
 rem --- Initializations
 
         precision num(ivs01a.precision$)
         more=1
-
-
-rem --- Options
-
-        v4$="Do You Wish To Rebuild Inventory On-Order Quantities"
-        call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
-        if v$<>"YES" goto std_exit
 
 rem --- Position warehouse file
 
@@ -90,11 +96,11 @@ rem --- Position warehouse file
         gosub Update_Screen
         read (ivm02_dev,key=firm_id$,dom=*next)
 
-rem --- Clear ivm-02 On Hand
+rem --- Clear ivm-02 On Order
         while more
             ivm02a_key$=key(ivm02_dev,end=*break)
-            if pos(firm_id$=k$)<>1 break
-            call pgmdir$+"adc_progress.aon","S","","","",ivm02a_key.warehouse_id$+" "+ivm02a_key.Item_id$,0,0,1,meter_num,status
+            if pos(firm_id$=ivm02a_key$)<>1 break
+            call pgmdir$+"adc_progress.aon","S","","","",ivm02a.warehouse_id$+" "+ivm02a.item_id$,0,0,1,meter_num,status
             extract record (ivm02_dev,key=ivm02a_key$) ivm02a$
             ivm02a.qty_on_order=0
             write record (ivm02_dev,key=ivm02a_key$) ivm02a$
@@ -106,22 +112,22 @@ rem --- Purchase Orders
             x$="Purchase Order On-Order Quantities"
             x=3+p[0]
             gosub Update_Screen
-            read (poe42_dev,key=firm_id$,dom=*next)
+            read (poe12_dev,key=firm_id$,knum=1,dom=*next)
+        
+rem --- Read next PO record; use knum=1, po's by item
+            while more
+                read record(poe12_dev,end=*break)poe12a$
+                if pos(firm_id$=poe12a$)<>1 break
+                if cvs(poe12a.item_id$,3)="" then continue
+                call pgmdir$+"adc_progress.aon","S","","","",poe12a.item_id$,0,poe12_dev,1,meter_num,status
+                ivm02a_key$=ivm02a.firm_id$+poe12a.warehouse_id$+poe12a.item_id$
+                extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+                ivm02a.qty_on_order=ivm02a.qty_on_order+((poe12a.qty_ordered-poe12a.qty_received)*poe12a.conv_factor)
+                ivm02a$=field(ivm02a$)
+                write record (ivm02_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$) ivm02a$
+            wend
         endif
-rem --- Read next PO sort record
-        while more
-            poe42a_key$=key(poe42_dev,end=*break)
-            if pos(firm_id$=poe42a_key$)<>1 break
-            read (poe42_dev)
-            call pgmdir$+"adc_progress.aon","S","","","",poe42a_key.item_id$,0,poe12_dev,1,meter_num,status
-            poe12a_key$=poe42a_key.firm_id$+poe42a_key.vendor_id$+poe42a_key.po_no$+poe42a_key.po_line_no$
-            find record (poe12a_dev,key=poe12a_key$,dom=*continue) poe12a$
-            ivm02a_key$=ivmo2a.firm_id$+poe12a.warehouse_id$+poe12a.item_id$
-            extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
-            ivm02a.qty_on_order=ivm02a.qty_on_order+((poe12a.qty_ordered-poe12a.qty_received)*poe12a.conv_factor)
-            write record (ivm02_dev,key=ivm02a.firmid$+ivm02a.warehouse_id$+ivm02a.item_id$) ivm02a$
-        wend
-
+        
 rem --- Work Orders
 
         if sf$="Y" then
@@ -134,7 +140,7 @@ rem --- Read next work order
             while more
                 sfe01a_key$=key(sfe01_dev,end=*break)
                 if pos(firm_id$=sfe01a_key$)<>1 break
-                call pgmdir$+"adc_progress.aon","S","","","",sfe01a_key.wo_no$,0,sfe01_dev,1,meter_num,status
+                call pgmdir$+"adc_progress.aon","S","","","",sfe01a.wo_no$,0,sfe01_dev,1,meter_num,status
                 read record (sfe01_dev) sfe01a$
 
 rem --- Is it open?
@@ -148,26 +154,25 @@ rem --- Update warehouse
                 ivm02a_key$=sfe01a.firm_id$+sfe01a.warehouse_id$+sfe01a.item_id$
                 extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
                 ivm02a.qty_on_order=ivm02a.qty_on_order+(sfe01a.sch_prd_qty-sfe01a.qty_cls_todt)
+                ivm02a$=field(ivm02a$)                
                 write record (ivm02_dev,key=ivm02a_key$) ivm02a$
             wend
         endif
+        
 done: rem --- All done
 
         goto std_exit
-    endif
-
-rem --- PO or WO must be installed
-
-    dim message$[1]
-    message$[0]="Inventory On-Order Quantities Can Only Exist If The Purchase Order And/Or"
-    message$[1]="Shop Floor Control System(s) Are Installed (<Enter>=Continue"
-    call pgmdir$+"adc_stdmessage.aon",2,message$[all],1,-1,-1,v$,v3
-    goto std_exit
+    
 
 Update_Screen: rem --- Update screen
 
-    call pgmdir$+"adc_progress.aon","N","","","Updating","",x,0,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","","",0,0,1,meter_num,status
     return
+    
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return        
 
 rem #include std_error.src
 
@@ -219,6 +224,14 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
