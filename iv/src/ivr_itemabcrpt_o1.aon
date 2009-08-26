@@ -37,6 +37,7 @@ init_data: rem --- Initializations
     action$="W"
     item$[0]=firm_id$
     items=0
+    whse_recs=0
     sql_chan1=sqlunt
     sqlopen(sql_chan1)stbl("+DBNAME")
 
@@ -72,10 +73,10 @@ rem --- Main Loop starting
 
 rem --- Position warehouse xref
 
-		sql_prep$=""
+        sql_prep$=""
         sql_prep$=sql_prep$+"SELECT firm_id, item_id, warehouse_id "
-		sql_prep$=sql_prep$+"  FROM ivm_itemwhse "
-		sql_prep$=sql_prep$+" WHERE firm_id = '"+firm_id$+"' AND item_id = '"+ivm01a.item_id$+"'"        
+        sql_prep$=sql_prep$+"  FROM ivm_itemwhse "
+        sql_prep$=sql_prep$+" WHERE firm_id = '"+firm_id$+"' AND item_id = '"+ivm01a.item_id$+"'"        
         if begwhse$<>"" then sql_prep$=sql_prep$+" AND warehouse_id >= '"+begwhse$+"'"
         if endwhse$<>"" then sql_prep$=sql_prep$+" AND warehouse_id <= '"+endwhse$+"'"
 
@@ -87,6 +88,7 @@ rem --- Inner Loop starting
 
         while more
             whse_tpl$=sqlfetch(sql_chan1,err=*break)
+            whse_recs=whse_recs+1
             whse$=whse_tpl.warehouse_id$
             item$=whse_tpl.item_id$
             
@@ -204,20 +206,20 @@ rem --- Done with warehouses
 
 rem --- Update item totals
 
-		ivw07a$=field(ivw07a$)
+        ivw07a$=field(ivw07a$)
         write record (ivw07_dev,key=ivw07a_key$) ivw07a$
 
-		ivs10i_key.firm_id$=firm_id$
-		ivs10i_key.record_id_i$="I"
-		ivs10i.firm_id$=firm_id$
-		ivs10i.record_id_i$="I"
+        ivs10i_key.firm_id$=firm_id$
+        ivs10i_key.record_id_i$="I"
+        ivs10i.firm_id$=firm_id$
+        ivs10i.record_id_i$="I"
         ivs10i.period$=ivs01a.current_per$
         ivs10i.year$=ivs01a.current_year$
         ivs10i.run_date$=when$
 
-		dim ivs10i[3]
-		ivs10i0$=ivs10i.firm_id$+ivs10i.record_id_i$
-		ivs10i1$=ivs10i.period$+ivs10i.year$+ivs10i.run_date$
+        dim ivs10i[3]
+        ivs10i0$=ivs10i.firm_id$+ivs10i.record_id_i$
+        ivs10i1$=ivs10i.period$+ivs10i.year$+ivs10i.run_date$
         find record (ivs10i_dev,key=ivs10i_key$,dom=*next) ivs10i$
 		
         ivs10i.total_value_01=ivs10i.total_value_01+ivw07a.abc_total_value_01
@@ -226,10 +228,10 @@ rem --- Update item totals
         items=items+1
         ivs10i.total_items=items
 
-		ivs10i[0]=ivs10i[0]+ivw07a.abc_total_value_01
-		ivs10i[1]=ivs10i[1]+ivw07a.abc_total_value_02
-		ivs10i[2]=ivs10i[2]+ivw07a.abc_total_value_03
-		ivs10i[3]=ivs10i[3]+1
+        ivs10i[0]=ivs10i[0]+ivw07a.abc_total_value_01
+        ivs10i[1]=ivs10i[1]+ivw07a.abc_total_value_02
+        ivs10i[2]=ivs10i[2]+ivw07a.abc_total_value_03
+        ivs10i[3]=ivs10i[3]+1
         ivs10i$=field(ivs10i$)
         write record (ivs10i_dev,key=ivs10i_key$) ivs10i$
         remove (ive07_dev,key=ive07a_key$,dom=*next)
@@ -239,6 +241,12 @@ rem --- Loop back for next item
     wend; rem --- Main Loop Ending
 
 done: rem --- Done with generation loop
+
+    if whse_recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     source=ive07_dev
     if pos(level$="IB")>0 gosub remove_records
@@ -433,6 +441,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -488,4 +503,8 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 rem #endinclude std_end.src
 
+std_exit_no_report:
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    release
     end
