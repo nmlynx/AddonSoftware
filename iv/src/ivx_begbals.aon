@@ -27,12 +27,8 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
     files$[3]="ivm-02",ids$[3]="IVM_ITEMWHSE"
-    files$[4]="ivm-03",ids$[4]="IVX_ITEMPROD"
     files$[5]="ivm-07",ids$[5]="IVM_LSMASTER"
-    files$[6]="IVC_PRODCODE",ids$[6]=files$[7]
     files$[7]="ivm-12",ids$[7]="IVM_ITEMACT"
-    files$[8]="ivm-14",ids$[8]="IVM_ITEMSYN"
-    files$[9]="ivm-15",ids$[9]="IVC_TYPECODE"
     files$[10]="ivm-17",ids$[10]="IVM_LSACT"
     files$[11]="ivt-01",ids$[11]="IVT_LSTRANS"
     files$[12]="ivt-04",ids$[12]="IVT_ITEMTRAN"
@@ -40,404 +36,196 @@ rem --- Open/Lock files
     files$[14]="IVS_PARAMS",ids$[14]=files$[14]
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     ivm01_dev=channels[2]
     ivm02_dev=channels[3]
-    ivm03_dev=channels[4]
     ivm07_dev=channels[5]
-    ivm10a_dev=channels[6]
     ivm12_dev=channels[7]
-    ivm14_dev=channels[8]
-    ivm15_dev=channels[9]
     ivm17_dev=channels[10]
     ivt01_dev=channels[11]
     ivt04_dev=channels[12]
-    gls01a_dev=channels[13]
-    ivs01a_dev=channels[14]
+    gls01_dev=channels[13]
+    ivs01_dev=channels[14]
 
 rem --- Dimension string templates
 
-    dim ivm01a$:templates$[2],ivm02a$:templates$[3],ivm03a$:templates$[4],
-:       ivm07a$:templates$[5],ivm10a$:templates$[6],ivm12a$:templates$[7],
-:       ivm14a$:templates$[8],ivm15a$:templates$[9],ivm17a$:templates$[10],
+    dim ivm01a$:templates$[2],ivm02a$:templates$[3],
+:       ivm07a$:templates$[5],ivm12a$:templates$[7],
+:       ivm17a$:templates$[10],
 :       ivt01a$:templates$[11],ivt04a$:templates$[12],gls01a$:templates$[13],
 :       ivs01a$:templates$[14]
 
-
-
 rem --- Assign form input values to local variables
 
-    table$=fnget_table$("")
-    perid$=fnget_fld_data$(table$,"period")
-    year$=fnget_fld_data$(table$,"year")
-    begwhse$=fnget_fld_data$(table$,"whse_id_1")
-    endwhse$=fnget_fld_data$(table$,"whse_id_2")
-    begprod$=fnget_fld_data$(table$,"prod_id_1")
-    endprod$=fnget_fld_data$(table$,"prod_id_2")
-    begitem$=fnget_fld_data$(table$,"item_1")
-    enditem$=fnget_fld_data$(table$,"item_2")
-    itemtype$=fnget_fld_data$(table$,"item_type")
-    rebuildlot$=fnget_fld_data$(table$,"rebuildlot")
-    beglot$=fnget_fld_data$(table$,"lot_1")
-    endlot$=fnget_fld_data$(table$,"lot_2")
+    period_yr$=option!.getOptionData("period_year")
+    begwhse$=option!.getOptionData("warehouse_id_1")
+    endwhse$=option!.getOptionData("warehouse_id_2")
+    begprod$=option!.getOptionData("product_type_1")
+    endprod$=option!.getOptionData("product_type_2")
+    begitem$=option!.getOptionData("item_id_1")
+    enditem$=option!.getOptionData("item_id_2")
+    itemtype$=option!.getOptionData("item_type")
+    rebuildlot$=option!.getOptionData("rebuild_lots")
+    beglot$=option!.getOptionData("lotser_no_1")
+    endlot$=option!.getOptionData("lotser_no_2")
     
-
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
-    find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     
-
 rem --- Parameters
 
     dim p[5],g[1],g3$(325)
-    n2$="IV"
-    ls$="N"
-    find record (ivs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
     p[0]=ivs01a.item_id_len
     p[1]=num(ivs01a.precision$)
     p[2]=ivs01a.ls_no_len
-    p[3]=num(ivs01a.DESC_LEN$)
-    p[4]=num(ivs01a.DESC_LEN$)
-    p[5]=num(ivs01a.DESC_LEN$)
+    p[3]=num(ivs01a.desc_len_01$)
+    p[4]=num(ivs01a.desc_len_02$)
+    p[5]=num(ivs01a.desc_len_03$)
     g[0]=num(gls01a.total_pers$)
-    if pos(ivs01a.DESC_LEN$="SL")>0 ls$="Y"
+    if pos(ivs01a.lotser_flag$="SL")>0 ls$="Y"
 
 rem --- Initializations
 
     precision num(ivs01a.precision$)
-    dim files[15],params$[3],options$[7],l0$(44),l1$(96),l[12]
-    rem dim a0$(22),a2$(64),b0$(24),b1$(64),b[20]
-    files[1]=ivm01_dev
-    files[10]=ivm10_dev
-    files[14]=ivm14_dev
-    params$[0]=firm_id$
-    params$[1]=i1$
-    params$[2]=i2$
-    params$[3]=i3$
     m9$="00"
-    period$=ivs01a.current_per$
-    year$=ivs01a.current_year$
-    include$="Y"
-    beglot$=""
-    endlot$=""
-    files[15]=ivm15_dev
-
-rem --- Additional file opens
-
-    if ls$="Y" then
-        call pgmdir$+"adc_fileopen.aon",1,9,11,files$[all],fileoptions$[all],channels[all],batch,status
-        if status goto std_exit
-        ivm07_dev=channels[9]
-        ivm17_dev=channels[10]
-        ivt01_dev=channels[11]
-    endif
-
-rem --- Display Resource
-
-    dim resparams$[20],resparams[20]
-    resparams$[0]=pgm(-2)
-    call pgmdir$+"syc_ra.bbx","",resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
-    if status goto std_exit
-    gosub display_fields
-
-period: rem --- Period
-
-    v0$="N"
-    v1$="C"
-    v2$=period$
-    v3$=m9$
-    v0=2
-    v1=40
-    v2=3
-    i0=0
-    v4$="Enter The Period To Rebuild Balances For (1 Through "+str(g[0])+")",control_id=3000
-    on v3 goto Period_flow,period,flow_control,period,flow_control,Period_flow,flow_control
-Period_flow:
-    if v<1 or v>g[0] goto period
-    period$=str(v:m9$)
-    period=v
-    gosub d_period
-    goto flow_control
-
-year: rem --- Year
-
-    v0$="D"
-    v1$="CY"
-    v2$=year$
-    v3$=""
-    v0=2
-    v1=40
-    v2=4
-    v4$="Enter The Year To Rebuild Balances For"
-    control_id=3001
+    period$=period_yr$(1,2)
+    year$=period_yr$(3,4)
+    more=1
     
-    on v3 goto year_flow,year,flow_control,year,flow_control,year_flow,flow_control
-year_flow:
-    if v$="" goto year
-    year$=v$
-    gosub d_year
-    goto flow_control
-
-ivc_input: rem --- Process standard input
-
-    call pgmdir$+"ivc_ib.bbx","I","D",40,5,files[all],params$[all],options$[all],my_context,i0,1,i0_done,validate,v3
-    on v3 goto ivc_input_flow,ivc_input,flow_control,ivc_input,flow_control,ivc_input_flow,flow_control
-ivc_input_flow:
-    goto flow_control
-
-rebuild_lot: rem --- Rebuild Lot/Serial Beginning Balances?
-
-    if ls$="N" goto flow_control
-    v4$="Rebuild Lot/Serial Beginning Balances (Y/N)?"
-    v0$="Y"
-    v1$="C"
-    v2$=include$
-    v3$=""
-    v0=1
-    v1=40
-    v2=12
-    control_id=3009
-    on v3 goto rebuild_lot_flow,rebuild_lot,flow_control,rebuild_lot,flow_control,rebuild_lot_flow,flow_control
-rebuild_lot_flow:
-    include$=v$
-    v$=""
-    goto flow_control
-
-begin_lot: rem --- Beginning Lot/Serial Number
-
-    if ls$="N" goto flow_control
-    v4$="Enter The Beginning Lot/Serial Number (<F1>=First)"
-    x$=""
-    control_id=3010
-    v0$="S"
-    v1$="KCE"
-    v2$=beglot$
-    v3$=""
-    v0=p[2]
-    v1=40
-    v2=13
-    if include$="N" goto LotSerial_No_Flow
-    on v3 goto LotSerial_No_Call,LotSerial_No,flow_control,begin_lot,flow_control,LotSerial_No_Call,flow_control
-LotSerial_No:
-    v$=""
-    if endlot$<>"" and v$>endlot$ goto begin_lot
-LotSerial_No_Call:
-    beglot$=v$
-    x$="First"
-LotSerial_No_Flow:
-    gosub d_lot
-    goto flow_control
-
-end_lot: rem --- Ending Lot/Serial Number
-
-    if ls$="N" goto flow_control
-    v4$="Enter The Ending Lot/Serial Number (<F1>=Last)"
-    x$=""
-    control_id=3011
-    v0$="S"
-    v1$="KCE"
-    v2$=endlot$
-    v3$=""
-    v0=p[2]
-    v1=40
-    v2=14
-    if include$="N" goto end_lot_flow
-    on v3 goto end_lot_call,end_lot_assign,flow_control,end_lot,flow_control,end_lot_call,flow_control
-end_lot_assign:
-    v$=""
-end_lot_call:
-    endlot$=v$
-    x$="Last"
-    if beglot$<>"" if endlot$<beglot$ goto end_lot
-    if endlot$<>"" x$=endlot$
-end_lot_flow:
-    gosub d_lot
-    goto flow_control
-
-flow_control: rem --- Flow Control
-
-    switch v3
-    case 0
-    case 1
-    case 3; let i0=i0+1; break
-    case 2
-    if i0<i0_nonkey1 i0=max(0,i0-1) else i0=max(i0_nonkey1,i0-1)
-    break
-    case default; exitto done_v3
-    swend
-next_field:
-    on i0 goto period,year,ivc_input,ivc_input,ivc_input,ivc_input,ivc_input,ivc_input,ivc_input,rebuild_lot,begin_lot,end_lot,done
-
-done: rem --- Correct?
-
-    if validate then
-        validate=0
-    else
-        v0$="S"
-        v1$="KC"
-        v2$="Y"
-        v3$=""
-        v4$="ITAC=Y"
-        v0=6
-        v1=0
-        v2=22
-        control_id=i0-i0_done+1
-done_v3:
-        on v3 goto done_test,done,done,done,cancel,validate_input,cancel,done
-done_test:
-        on pos(v$="YN") goto flow_control,validate_input,do_nonkey1
-validate_input:
-        validate=1
-        old_control_id=0
-do_nonkey1:
-        v3=0
-        i0=i0_nonkey1
-        goto next_field
-cancel:
-        goto std_exit
-    endif
-end_input: rem --- Run Overlay
-
 rem --- Update initializations
 
     period=num(period$)
-    year=fnyy_year(year$)
-    call pgmdir$+"adc_perioddates.aon",sys01_dev,period,year,when$,x$,status
-    begwhse$=options$[1]
-    endwhse$=options$[2]
-    begprod$=options$[3]
-    endprod$=options$[4]
-    begitem$=options$[5]
-    enditem$=options$[6]
-    type$=options$[7]
-    first$=firm_id$+"C"
-    k$=first$+begwhse$
-    if include$="N" ls$="N"
+    year=num(year$)
+    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,when$,x$,status
+    if rebuildlot$="N" ls$="N"
     call pgmdir$+"adc_progress.aon","N","","","Updating","",7+p[0],0,1,meter_num,status
-    read (ivm03_dev,key=ivm03c_key$,dom=*next)
+    
+rem --- Setup SQL to search by item/prod/warehouse within report parameters (i.e. old ivm-03C)    
 
-rem --- Get next sort record
+    sql_prep$=""
+    sql_prep$=sql_prep$+"SELECT ivm_itemwhse.warehouse_id, ivm_itemmast.product_type, ivm_itemwhse.item_id "
+    sql_prep$=sql_prep$+"  FROM ivm_itemwhse INNER JOIN ivm_itemmast "
+    sql_prep$=sql_prep$+"    ON ivm_itemwhse.item_id=ivm_itemmast.item_id AND "
+    sql_prep$=sql_prep$+"       ivm_itemwhse.firm_id=ivm_itemmast.firm_id "
+    where_clause$="       WHERE ivm_itemwhse.firm_id = '"+firm_id$+"' AND "
+    if begwhse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id >= '"+begwhse$+"' AND "
+    if endwhse$<>"" where_clause$=where_clause$+"ivm_itemwhse.warehouse_id <= '"+endwhse$+"' AND "    
+    if begprod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type >= '"+begprod$+"' AND "
+    if endprod$<>"" where_clause$=where_clause$+"ivm_itemmast.product_type <= '"+endprod$+"' AND "
+    if begitem$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id >= '"+begitem$+"' AND "
+    if enditem$<>"" where_clause$=where_clause$+"ivm_itemwhse.item_id <= '"+enditem$+"' AND "
+    if itemtype$<>"" where_clause$=where_clause$+"ivm_itemmast.item_type = '"+itemtype$+"' "
+
+    where_clause$=cvs(where_clause$,2)
+    if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
+    order_clause$=" ORDER BY ivm_itemwhse.warehouse_id, ivm_itemwhse.item_id"
+    sql_prep$=sql_prep$+where_clause$+order_clause$
+
+rem --- SQL chan end prep
+
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
+
+rem --- Fetch next SQL rec
+
     while more
-        ivm03c_key$=key(ivm03_dev,end=std_exit)
-        if pos(first$=ivm03c_key$)<>1 goto std_exit
-        whse$=ivm03c_key.warehouse_id$
-        product$=ivm03c_key.product_type$
-        item$=ivm03c_key.item_id$
+    
+        read_tpl$ = sqlfetch(sql_chan, err=*break) 
+        whse$ = read_tpl.warehouse_id$
+        item$ = read_tpl.item_id$
+        product$ = read_tpl.product_type$
 
-rem --- By Warehouse: Valid Warehouse/Product/Item?
-
-        if endwhse$<>"" if whse$>endwhse$ goto std_exit
-        if begprod$<>"" then 
-            if product$<begprod$ then
-                read (ivm03_dev,key=ivm03c_key.firm_id$+ivm03ca_key.record_id_c$+
-:                   ivm03c_key.warehouse_id$+begprod$,dom=*continue)
-                continue
-            endif
-        endif    
-        if endprod$<>"" then
-            if product$>endprod$ then
-                read (ivm03_dev,key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+
-:                   ivm03c_key.warehouse_id$+$FF$,dom=*continue)
-                continue
-            endif
-        endif 
-        if begitem$<>"" then
-            if item$<begitem$ then
-                read (ivm03_dev,key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+
-:                   ivm03c_key.warehouse_id$+ivm03c_key.product_type$+begitem$,dir=0,dom=*continue)
-                continue
-            endif
-        endif 
-        if enditem$<>"" then
-            if item$>enditem$ then
-                read (ivm03_dev,key=ivm03c_key.firm_id$+ivm03c_key.record_id_c$+
-:                   ivm03c_key.warehouse_id$+ivm03c_key.product_type$+$FF$,dom=*continue)
-                continue
-            endif
-        endif 
-        x$=whse$+" "+product$+" "+item$(1,p[0])
 rem --- Update ivt-04 beginning balance
 
-        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,meter_num,status
-        read (ivm03_dev)
-        rem dim w0$(32),w1$(96),w2$(16),w[4],c0$(28),c[12]
+rem        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         ivm01a_key$=firm_id$+item$
         ivm02a_key$=firm_id$+whse$+item$
         ivm12a_key$=firm_id$+whse$+item$+year$+period$
         w3$=""
-        find record (ivm01a_dev,key=ivm01a_key$,dom=*continue) ivm01a$
-        find record (ivm02a_dev,key=ivm02a_key$,dom=*continue) ivm02a$
-        find record (ivm12a_dev,key=ivm12a_key$,dom=*continue) ivm12a$
-        ivt04a_key$=ivm02a.firmid$+ivm02a.warehouse_id$+ivm02a.item_id$+when$+"00000"
-        location$=ivm02a.Location$
-        qty=ivm02a.qty_on_hand
+        find record (ivm01_dev,key=ivm01a_key$,dom=*continue) ivm01a$
+        find record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
+        find record (ivm12_dev,key=ivm12a_key$,dom=*continue) ivm12a$
+        location$=ivm02a.location$
+        qty=ivm12a.beg_balance
         cost=ivm02a.unit_cost
-        gosub Transaction_History
-        write record (ivt04_dev,key=ivt04a_key$) ivt04a$
+        gosub init_ivt04
+        write record (ivt04_dev) ivt04a$
         if ls$="N" continue
-        if include$="N" continue
-        read (ivm07_dev,key=ivm02a.firmid$+ivm02a.warehouse_id$+ivm02a.item_id$,dom=*next)
+        if rebuildlot$="N" continue
+        read (ivm07_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$+beglot$,dir=0,dom=*next)
         while more
 
-            let ivm07a_key$=key(ivm07_dev,end=*continue)
-            if pos(ivm02a.firmid$+ivm02a.warehouse_id$+ivm02a.item_id$=ivm07a_key$)<>1  continue
-            rem dim l0$(44),l1$(96),l[12],w0$(52),w1$(96),w2$(16),w[4],c0$(48),c[12]
-            let ivm17a_key$=ivm07a_key$+year$+period$
-            read record (ivm07_dev) ivm07a$
-            find record (ivm17a_dev,key=ivm17a_key$,dom=*next) ivm17a$
-            let ivt01a_key$=ivm07a_key$+when$+"00000",location$=ivm07a.inv_location$,qty=ivm17a.beg_balance,cost=ivm07a.qty_on_hand
-            gosub Transaction_History
-            write record (ivt01_dev,key=ivt01a_key$) ivt01a$
+            read record (ivm07_dev,end=*break)ivm07a$
+            if pos(ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$=ivm07a$)<>1 then break
+            if cvs(beglot$,3)<>"" and cvs(ivm07a.lotser_no$,3) < cvs(beglot$,3) then continue
+            if cvs(endlot$,3)<>"" and cvs(ivm07a.lotser_no$,3) > cvs(endlot$,3) then break
+            let ivm17a_key$=ivm07a.firm_id$+ivm07a.warehouse_id$+ivm07a.item_id$+ivm07a.lotser_no$+year$+period$
+            dim ivm17a$:fattr(ivm17a$)
+            find record (ivm17_dev,key=ivm17a_key$,dom=*next) ivm17a$
+            location$=ivm07a.ls_location$,qty=ivm17a.beg_balance,cost=ivm07a.unit_cost
+            gosub init_ivt01
+            write record (ivt01_dev) ivt01a$
         wend
 
      wend
+     
+rem --- done
 
-display_fields: rem --- Display Fields
+    goto std_exit
 
-    let x3$="First",x4$="Last"
-    gosub d_period
-    gosub d_year
-    call pgmdir$+"ivc_ib.bbx","D","D",40,5,files[all],params$[all],options$[all],my_context,1,1,i0_done,validate,v3
-    if ls$="Y" then
-        if beglot$<>"" x3$=beglot$
-        if endlot$<>"" x4$=endlot$
-        if include$="N" x3$="",x4$=""
-        call pgmdir$+"syc_rs.bbx","",my_context,3009,include$,0,"",ignore_statu
-        call pgmdir$+"syc_rs.bbx","",my_context,13010,x3$,0,"",ignore_statu
-        call pgmdir$+"syc_rs.bbx","",my_context,13011,x4$,0,"",ignore_statu
-    endif
+rem --- Initialize IVT-01/IVT-04 Transaction_History Records
+
+init_ivt01:
+    dim ivt01a$:fattr(ivt01a$)
+    ivt01a.firm_id$=firm_id$
+    ivt01a.warehouse_id$=ivm07a.warehouse_id$
+    ivt01a.item_id$=ivm07a.item_id$
+    ivt01a.lotser_no$=ivm07a.lotser_no$
+    ivt01a.trans_date$=when$
+    ivt01a.iv_hist_seq$="00000"
+    ivt01a.trans_source$="BB"
+    ivt01a.unit_measure$=ivm01a_unit_of_sale$
+    ivt01a.location$=location$
+    ivt01a.system_date$=sysinfo.system_date$
+    ivt01a.user_id$=stbl("+USER_ID",err=*next)
+    ivt01a.system_time$=fntime$(q$)
+    ivt01a.terminal_id$=fid(0)
+    ivt01a.trans_qty=qty
+    ivt01a.unit_cost=cost
+    
     return
 
-d_lot: rem --- Display Lot/Serial Number
-
-    if v$="" x0$="",x1$=x$ else x0$=v$,x1$=""
-    call pgmdir$+"syc_rs.bbx","",my_context,control_id,x0$,0,"",ignore_status
-    call pgmdir$+"syc_rs.bbx","",my_context,10000+control_id,x1$,0,"",ignore_status
+init_ivt04:
+    dim ivt04a$:fattr(ivt04a$)
+    ivt04a.firm_id$=firm_id$
+    ivt04a.warehouse_id$=ivm02a.warehouse_id$
+    ivt04a.item_id$=ivm02a.item_id$
+    ivt04a.trans_date$=when$
+    ivt04a.iv_hist_seq$="00000"
+    ivt04a.trans_source$="BB"
+    ivt04a.unit_measure$=ivm01a_unit_of_sale$
+    ivt04a.location$=location$
+    ivt04a.system_date$=sysinfo.system_date$
+    ivt04a.user_id$=stbl("+USER_ID",err=*next)
+    ivt04a.system_time$=fntime$(q$)
+    ivt04a.terminal_id$=fid(0)
+    ivt04a.trans_qty=qty
+    ivt04a.unit_cost=cost
+        
     return
+    
+disp_message:rem --- Display Message Dialog
 
-d_period: rem --- Display Period (month)
-
-    let v=0,v=num(period$,err=*next),period$=str(v:m9$)
-    if v=0 x0$="",x1$="First" else x0$=str(v:m9$),x1$=gls01a.period_name$
-    call pgmdir$+"syc_rs.bbx","",my_context,3000,x0$,0,"",ignore_status
-    call pgmdir$+"syc_rs.bbx","",my_context,13000,x1$,0,"",ignore_status
-    return
-
-d_year: rem --- Display year
-
-    call pgmdir$+"syc_rs.bbx","",my_context,3001,fnyy$(year$),0,"",ignore_statu
-    return
-rem --- Initialize IVT-01/IVT-04 Transaction_History Record
-Transaction_History:
-   rem  dim w1$(96),w2$(16),w[4]
-    let ivt01a.trans_date$="BB",ivt01a.unit_measure$=ivm01a_unit_of_sale$,ivt01a.location$=location$
-    let ivt01a.system_date$=sysinfo.system_date$,ivt01a.operator_id$=sysinfo.user_id$,ivt01a.system_time$=fnclock$(q$)
-    let ivt01a.terminal_id$=fid(0),ivt01a.trans_qty=qty,ivt01a.unit_cost=cost
-    return
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return    
+    
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -553,8 +341,15 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
