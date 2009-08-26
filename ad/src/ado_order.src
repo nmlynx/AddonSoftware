@@ -24,6 +24,9 @@ rem ==========================================================================
         field private BBjInt ItemMast_dev% = 0
         field private BBjString ItemMast_tmpl$ = ""
         field public BBjVector DtlVect!
+        field public BBjString Cust_id$
+        field public BBjString Order_no$
+        field public BBjString Inv_type$
         field private BBjNumber extPrice
         field private BBjNumber taxable
         field private BBjNumber extCost
@@ -131,13 +134,16 @@ rem ==========================================================================
     
         method public void totalSalesDisk(BBjString p_cust_id$, BBjString p_order_no$, BBjString p_inv_type$)
         
+            #Cust_id$  = p_cust_id$
+            #Order_no$ = p_order_no$
+            #Inv_type$ = p_inv_type$
+        
             precision #precision%
             
-            ext_price   = 0
-            taxable     = 0
-            ext_cost    = 0
-            more        = 1
-            start_block = 1
+            ext_price = 0
+            taxable   = 0
+            ext_cost  = 0
+            more      = 1
             
             dim orddet_rec$:#OrdDetail_tmpl$
             dim linecode_rec$:#LineCode_tmpl$
@@ -154,7 +160,7 @@ rem ==========================================================================
                 if orddet_rec.order_no$    <> p_order_no$ then break
                 found = 0
                 
-                if start_block then
+                if #START_BLOCK then
                     find record (#LineCode_dev%, key=#firm_id$+orddet_rec.line_code$, dom=*endif) linecode_rec$
                     found = 1
                 endif
@@ -193,7 +199,7 @@ rem ==========================================================================
                         orddet_rec.taxable_amt = orddet_rec.ext_price
                     endif
                 else
-                    if start_block then
+                    if #START_BLOCK then
                         find record (#ItemMast_dev%, key=#firm_id$+orddet_rec.item_id$, dom=*endif) itemmast_rec$
                         if itemmast_rec.taxable_flag$ = "Y" then orddet_rec.taxable_amt = orddet_rec.ext_price
                     endif
@@ -218,22 +224,40 @@ rem ==========================================================================
         
         method public void totalSalesDisk(BBjString p_cust_id$, BBjString p_order_no$)
         
-            data_name$ = "OPE_ORDHDR"
-            dim ordhdr_rec$:util.getTmpl(data_name$)
-            ordhdr_dev = util.getDev(data_name$)
-            found = 0
-            
-            if #START_BLOCK then
-                find record (ordhdr_dev, key=#firm_id$+"  "+p_cust_id$+p_order_no$, dom=*endif) ordhdr_rec$
-                found = 1
-            endif
-            
-            if found then
-                #totalSalesDisk(p_cust_id$, p_order_no$, ordhdr_rec.invoice_type$)
+            if #Inv_type$ <> "" then
+                #totalSalesDisk(p_cust_id$, p_order_no$, #Inv_type$)
             else
-                throw #This_Class$+": totalSalesDisk(): Could not find order "+p_order_no$+" for customer "+p_cust_id$, 260
+                data_name$ = "OPE_ORDHDR"
+                dim ordhdr_rec$:util.getTmpl(data_name$)
+                ordhdr_dev = util.getDev(data_name$)
+                found = 0
+                
+                if #START_BLOCK then
+                    find record (ordhdr_dev, key=#firm_id$+"  "+p_cust_id$+p_order_no$, dom=*endif) ordhdr_rec$
+                    found = 1
+                endif
+                
+                if found then
+                    #totalSalesDisk(p_cust_id$, p_order_no$, ordhdr_rec.invoice_type$)
+                else
+                    throw #This_Class$+": totalSalesDisk(): Could not find order """+p_order_no$+""" for customer """+p_cust_id$+"""", 260
+                endif
             endif
             
+        methodend
+        
+        method public void totalSalesDisk()
+        
+            if #Cust_id$ <> "" and #Order_no$ <> "" then
+                if #Inv_type$ <> "" then
+                    #totalSalesDisk(#Cust_id$, #Order_no$, #Inv_type$)
+                else
+                    #totalSalesDisk(#Cust_id$, #Order_no$)
+                endif
+            else
+                throw #This_Class$+": totalSalesDisk(): You must setCust_id() and setOrder_no() before calling this method", 261
+            endif
+        
         methodend
         
     rem --- Three accessor methods for the return values of totalSalesDisk()
