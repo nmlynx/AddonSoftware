@@ -107,7 +107,7 @@ rem --- Check For Quotes
         extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
         ope01a.credit_flag$ = ""
         write record (ope01_dev) ope01a$
-        callpoint!.setStatus("WAIT")
+        callpoint!.setStatus("WAIT:1")
         goto std_exit
     endif
     
