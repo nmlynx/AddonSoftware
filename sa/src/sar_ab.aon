@@ -31,26 +31,24 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-02",ids$[1]="ARM_CUSTDET"
     files$[2]="ivm-14",ids$[2]="IVM_ITEMSYN"
     files$[3]="sam-01",ids$[3]="SAM_CUSTOMER"
-    files$[4]="sam-12",ids$[4]="SAM_CUSTTERR"
-    files$[5]="sas_params",ids$[5]="SAS_PARAMS"
+    files$[4]="sas_params",ids$[4]="SAS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     arm02_dev=channels[1]
     ivm14_dev=channels[2]
     sam01_dev=channels[3]
-    sam12_dev=channels[4]
-    sas01_dev=channels[5]
+    sas01_dev=channels[4]
 
 rem --- Dimension string templates
 
     dim arm02a$:templates$[1],ivm14a$:templates$[2],sam01a$:templates$[3]
-    dim sam12a$:templates$[4],sas01a$:templates$[5]
+    dim sas01a$:templates$[4]
 
 rem --- Parameters
 
@@ -174,6 +172,18 @@ rem --- Build begsegs[3] and endsegs[3]
 rem --- Run Report Overlay
 
     if action=12 
+        files=1,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="sam-12",ids$[1]="SAM_CUSTTERR"
+        call pgmdir$+"adc_fileopen.aon",action1,begfile,endfile,files$[all],options$[all],
+:                                       ids$[all],templates$[all],channels[all],batch,status
+        if status goto std_exit
+        sam12_dev=channels[1]
+
+rem --- Dimension string templates
+
+        dim sam12a$:templates$[1]
+
         gosub build_sam12
         sam00_dev=sam12_dev
         sam_dev=sam12_dev
