@@ -442,7 +442,7 @@ order_header: rem --- Order Header
         recs=recs+1
 
         xwk = fnblank(12)
-        OutVect!.addItem("Ln Cd Prd Whs Item")
+        OutVect!.addItem("Cd Prd Whs Item")
         OutVect!.addItem("Ord")
         OutVect!.addItem("B/O")
         OutVect!.addItem("Ship")
@@ -534,10 +534,10 @@ serialized_inventory: rem --- Serialized/Lotted Inventory
 print_detail: rem --- Print Detail
 
         if pos(opm02a.line_type$="MO")>0 then
-            OutVect!.addItem(opt11a_key.orddet_seq_ref$+"  "+opt11a.line_code$+"  "+opt11a.warehouse_id$+" "+desc$)
+            OutVect!.addItem(opt11a.line_code$+"       "+opt11a.warehouse_id$+" "+desc$)
             xwk = fnblank(11)
         else
-            OutVect!.addItem(opt11a_key.orddet_seq_ref$+"  "+opt11a.line_code$+" "+opt11a.product_type$+"  "+opt11a.warehouse_id$+"   "+cvs(opt11a.item_id$,3)+" "+desc$)
+            OutVect!.addItem(opt11a.line_code$+"   "+opt11a.product_type$+"  "+opt11a.warehouse_id$+"   "+cvs(opt11a.item_id$,3)+" "+desc$)
             xwk = fnblank(11)
         endif
 
