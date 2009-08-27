@@ -18,9 +18,9 @@
 			<ASC_VERSION_ID id="ddm_tables.ope_creditaction">9.0</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ope_creditaction">N</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ope_creditaction">20090710</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ope_creditaction">20090804</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ope_creditaction">20090804</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ope_creditaction">150914</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ope_creditaction">20090825</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ope_creditaction">20090825</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ope_creditaction">162514</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.ope_creditaction">/devel/main/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.ope_creditaction">S</DD_ATTR_FTYP>
 			<DD_ATTR_PRUN id="ddm_tables.ope_creditaction">[+DIR_PGM]adx_dummy.aon</DD_ATTR_PRUN>
@@ -48,12 +48,16 @@
 			<DD_TABLE_ALIAS id="ddm_table_opts.ope_creditactionh">OPE_CREDITACTION</DD_TABLE_ALIAS>
 			<DD_ATTR_OPTS id="ddm_table_opts.ope_creditactionh">H</DD_ATTR_OPTS>
 		</RECORD>
+		<RECORD id="ddm_table_opts.ope_creditactionx">
+			<DD_TABLE_ALIAS id="ddm_table_opts.ope_creditactionx">OPE_CREDITACTION</DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.ope_creditactionx">X</DD_ATTR_OPTS>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
 		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
 		<RECORD id="ddm_table_tpls.ope_creditaction">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.ope_creditaction">OPE_CREDITACTION</DD_TABLE_ALIAS>
-			<DD_TABLE_TPL id="ddm_table_tpls.ope_creditaction">status_message:c(30*),credit_status:c(30*),credit_action:c(20*),ar_terms_code:c(2*),enter_cred_pswrd:c(6*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.ope_creditaction">status_message:c(30*),credit_status:c(30*),credit_action:c(20*),ar_terms_code:c(2*),enter_cred_pswrd:c(6*),print_after_rel:c(1*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -164,6 +168,26 @@
 			<DD_ATTR_MLAN id="ddm_table_cols.ope_creditaction005">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.ope_creditaction005">6</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.ope_creditaction005">5</DD_ATTR_TIND>
+		</RECORD>
+		<RECORD id="ddm_table_cols.ope_creditaction006">
+			<DD_TABLE_ALIAS id="ddm_table_cols.ope_creditaction006">OPE_CREDITACTION</DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.ope_creditaction006">006</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.ope_creditaction006">PRINT_AFTER_REL </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.ope_creditaction006">PRINT_AFTER_REL </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.ope_creditaction006">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.ope_creditaction006">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.ope_creditaction006">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ope_creditaction006">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.ope_creditaction006">20090825</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.ope_creditaction006">20090825</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.ope_creditaction006">0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX id="ddm_table_cols.ope_creditaction006">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.ope_creditaction006">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_cols.ope_creditaction006">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.ope_creditaction006">0</DD_ATTR_CTLH>
+			<DD_ATTR_MLAN id="ddm_table_cols.ope_creditaction006">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.ope_creditaction006">1</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.ope_creditaction006">6</DD_ATTR_TIND>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cpro">
@@ -338,6 +362,28 @@
 			<DD_ATTR_MAXR id="ddm_elements.enter_cred_pswrd">0</DD_ATTR_MAXR>
 			<DD_ATTR_MINL id="ddm_elements.enter_cred_pswrd">0</DD_ATTR_MINL>
 			<DD_ATTR_PREC id="ddm_elements.enter_cred_pswrd">0</DD_ATTR_PREC>
+		</RECORD>
+		<RECORD id="ddm_elements.print_after_rel">
+			<DD_DATA_NAME id="ddm_elements.print_after_rel">PRINT_AFTER_REL </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.print_after_rel">Print After Release</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.print_after_rel">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.print_after_rel">1</DD_DATA_LENGTH>
+			<ASC_COMP_ID id="ddm_elements.print_after_rel">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.print_after_rel">OP </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.print_after_rel">N</LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.print_after_rel">20090825</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.print_after_rel">20090825</DD_LSTREV_DATE>
+			<DD_ATTR_BLNK id="ddm_elements.print_after_rel">N</DD_ATTR_BLNK>
+			<DD_ATTR_CDAT id="ddm_elements.print_after_rel">Y;N</DD_ATTR_CDAT>
+			<DD_ATTR_CTLW id="ddm_elements.print_after_rel">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.print_after_rel">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.print_after_rel">C</DD_ATTR_CTYP>
+			<DD_ATTR_LABL id="ddm_elements.print_after_rel">Print After Release</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.print_after_rel">Print After Release</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.print_after_rel">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.print_after_rel">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.print_after_rel">0</DD_ATTR_MINL>
+			<DD_ATTR_PREC id="ddm_elements.print_after_rel">0</DD_ATTR_PREC>
 		</RECORD>
 	</ALIAS>
 </OPE_CREDITACTION>
