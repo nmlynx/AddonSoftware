@@ -182,7 +182,7 @@ print "SHIPTO:BINP"; rem debug
 
 rem --- Save old value
 
-	user_tpl.old_ship_to$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	user_tpl.prev_ship_to$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 [[OPE_ORDHDR.APFE]]
 print "Hdr:APFE"; rem debug
 
@@ -281,9 +281,6 @@ rem --- Backorder and Credit Hold
 	if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG") = "C" then
 		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "Credit Hold")
 	endif
-
-	user_tpl.old_ship_to$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-	user_tpl.old_disc_code$ = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
 
 rem --- Enable buttons
 
@@ -530,7 +527,7 @@ rem --- Remove manual ship-record, if necessary
 	cust_id$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord_no$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 
-	if user_tpl.old_ship_to$ = "000099" and ship_to_no$ <> "000099" then
+	if user_tpl.prev_ship_to$ = "000099" and ship_to_no$ <> "000099" then
 		remove (fnget_dev("OPE_ORDSHIP"), key=firm_id$+cust_id$+ord_no$, dom=*next)
 	endif
 
