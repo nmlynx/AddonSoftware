@@ -222,12 +222,6 @@ rem --- Set header total amounts
 
 		callpoint!.setStatus("MODIFIED;REFRESH")
 
-		rem print "---Call ordHelp!.totalSalesDisk()..."; rem debug
-		rem print "---total sales:", ordHelp!.getExtPrice()
-		rem print "---taxable_amt:", ordHelp!.getTaxable()
-		rem print "---total cost :", ordHelp!.getExtCost()
-		rem print "---Header totals set from disk"
-
 	endif
 
 
@@ -434,10 +428,15 @@ rem --- Set item price if item and whse exist
 		endif
 	endif
 
-rem --- Set previous amounts for header totals
+rem --- Set previous values
 
-	user_tpl.prev_ext_price = num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
-	user_tpl.prev_ext_cost  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST")) * num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	user_tpl.prev_ext_price  = num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
+	user_tpl.prev_ext_cost   = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST")) * num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+	user_tpl.prev_item$      = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	user_tpl.prev_qty_ord    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	user_tpl.prev_boqty      = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
+	user_tpl.prev_shipqty    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 
 rem --- Set buttons
 
@@ -446,18 +445,24 @@ rem --- Set buttons
 [[OPE_ORDDET.AGRE]]
 print "Det:AGRE"; rem debug
 
-rem --- Clear new detail line flag
+rem --- Clear/set flags
 
 	user_tpl.new_detail = 0
+
+	if callpoint!.getRecordStatus() <> "M" then 
+		break; rem --- exit callpoint
+	endif
+
+	user_tpl.detail_modified = 1
 
 rem --- What is extended price?
 
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 
 	if pos(user_tpl.line_type$="SNP") then
-		ext_price = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) * unit_price
+		ext_price = round( num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) * unit_price, 2 )
 	else
-		ext_price = num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
+		ext_price = round( num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE")), 2 )
 	endif
 
 rem --- Has customer credit been exceeded?
@@ -782,6 +787,7 @@ calc_grid_totals: rem --- Roll thru all detail line, totaling ext_price
 rem ==========================================================================
 
 	rem print "Det:in calc_grid_totals"; rem debug
+	rem Does rolling through the vector still make sense?
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )

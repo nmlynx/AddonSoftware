@@ -1,18 +1,80 @@
-[[OPE_ORDHDR.AREA]]
 
+[[OPE_ORDHDR.AREA]]
+print "Hdr:AREA"; rem debug
+
+rem --- Reset all previous values
+
+	user_tpl.prev_line_code$   = ""
+	user_tpl.prev_item$        = ""
+	user_tpl.prev_qty_ord      = 0
+	user_tpl.prev_boqty        = 0
+	user_tpl.prev_shipqty      = 0
+	user_tpl.prev_ext_price    = 0
+	user_tpl.prev_taxable      = 0
+	user_tpl.prev_ext_cost     = 0
+	user_tpl.prev_disc_code$   = ""
+	user_tpl.prev_ship_to$     = ""
+	user_tpl.prev_sales_total  = 0
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
 rem --- Credit action
 
-	cust_id$ = cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2)
-	ord_no$  = cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2)
+	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
+		cust_id$ = cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2)
+		ord_no$  = cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2)
 
-	if user_tpl.credit_installed$="Y" and cust_id$<>"" and ord_no$<>"" then
-		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
-		if status = 999 then goto std_exit
-		if action$ = "D" then callpoint!.setStatus("DELETE")
+		if user_tpl.credit_installed$="Y" and cust_id$<>"" and ord_no$<>"" then
+			callpoint!.setDevObject("run_by", "order")
+			callpoint!.setDevObject("cust_id", cust_id$)
+			callpoint!.setDevObject("order_no", ord_no$)
+			call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
+			if status = 999 then goto std_exit
+			if action$ = "D" then callpoint!.setStatus("DELETE")
+		endif
 	endif
+
+rem --- Order totals, call form
+
+	dim dflt_data$[4,1]
+	dflt_data$[1,0] = "TOTAL_SALES"
+	dflt_data$[1,1] = callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
+	dflt_data$[2,0] = "DISCOUNT_AMT"
+	dflt_data$[2,1] = callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")
+	dflt_data$[3,0] = "TAX_AMOUNT"
+	dflt_data$[3,1] = callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")
+	dflt_data$[4,0] = "FREIGHT_AMT"
+	dflt_data$[4,1] = callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"OPE_ORDTOTALS", 
+:		stbl("+USER_ID"), 
+:		"", 
+:		"", 
+:		table_chans$[all],
+:		"", 
+:		dflt_data$[all],
+:		user_tpl$,
+:		UserObj!
+
+rem --- Set return values
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	callpoint!.setColumnData( "OPE_ORDHDR.TOTAL_SALES", str( ordHelp!.getExtPrice() ))
+	callpoint!.setColumnData( "OPE_ORDHDR.TOTAL_COST", str( ordHelp!.getExtCost() ))
+	if ordHelp!.getTaxable() = 0 then callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT", "0")
+
+	freight_amt$  = str(callpoint!.getDevObject("freight_amt"))
+	discount_amt$ = str(callpoint!.getDevObject("discount_amt"))
+	tax_amount$   = str(callpoint!.getDevObject("tax_amount"))
+
+	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",  freight_amt$)
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", discount_amt$)
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   tax_amount$)
+
+	rem callpoint!.setStatus("SAVE;REFRESH")
+	callpoint!.setStatus("REFRESH")
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Print a counter Picking Slip
 
@@ -23,7 +85,7 @@ rem --- Print a counter Picking Slip
 	if user_tpl.credit_installed$ <> "Y" and inv_type$ <> "P" then
 		if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
 		callpoint!.setStatus("SAVE")
-		call "opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
+		call stbl("+DIR_PGM")+"opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
 		if status = 999 then goto std_exit
 	endif
 [[OPE_ORDHDR.BWRI]]
@@ -58,6 +120,11 @@ rem --- Enable buttons
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
 	endif
+
+rem --- Set customer in OrderHelper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setCust_id(cust_id$)
 [[OPE_ORDHDR.SLSPSN_CODE.AVAL]]
 rem --- Set Commission Percent
 
@@ -205,16 +272,38 @@ rem --- Display order total
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 	print "---Update Order Total (columnd data): ", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
 
+rem --- Backorder and Credit Hold
+
+	if callpoint!.getColumnData("OPE_ORDHDR.BACKORD_FLAG") = "B" then
+		callpoint!.setColumnData("<<DISPLAY>>.BACKORDERED", "Backorder")
+	endif
+
+	if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG") = "C" then
+		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "Credit Hold")
+	endif
+
+	user_tpl.old_ship_to$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	user_tpl.old_disc_code$ = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
+
 rem --- Enable buttons
 
-	if user_tpl.credit_installed$ <> "Y" and callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") <> "P" then
+	if user_tpl.credit_installed$ <> "Y" 									and 
+:		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") <> "P" 	and
+:		callpoint!.getRecordStatus() <> "M" 								and 
+:		user_tpl.detail_modified = 0
+:	then
 		callpoint!.setOptionEnabled("PRNT",1)
 	else
 		callpoint!.setOptionEnabled("PRNT",0)
 	endif
 
-rem --- Calculate Taxes
-	gosub tax_calc
+rem --- Set all previous values
+
+	user_tpl.prev_taxable      = num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
+	user_tpl.prev_ext_cost     = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST"))
+	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
+	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
@@ -529,24 +618,6 @@ rem --- Existing record
 			exit; rem --- exit from callpoint			
 		endif		
 
-	rem --- Backorder and Credit Hold
-
-		if ope01a.backord_flag$ = "B" then
-			callpoint!.setColumnData("<<DISPLAY>>.BACKORDERED", "Backorder")
-		endif
-
-		if ope01a.credit_flag$ = "C" then
-			callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "Credit Hold")
-		endif
-
-		user_tpl.old_ship_to$   = ope01a.shipto_no$
-		user_tpl.old_disc_code$ = ope01a.disc_code$
-
-	rem --- Display order total
-
-		callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", str(ope01a.total_sales:user_tpl.amount_mask$))
-		print "---Update Order Total (disk data):", ope01a.total_sales
-
 	rem --- Check if reprintable
 
 		reprint = 0
@@ -664,6 +735,11 @@ rem --- Enable/Disable buttons
 	endif
 
 	callpoint!.setStatus("REFRESH")
+
+rem --- Set order in OrderHelper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setOrder_no(ord_no$)
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 
@@ -852,6 +928,11 @@ rem --- Convert Quote?
 			endif
 		endif
 	endif
+
+rem --- Set type in OrderHelper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setInv_type(inv_type$)
 [[OPE_ORDHDR.CUSTOMER_ID.AINP]]
 print "CUSTOMER_ID:AINP"; rem debug
 
@@ -1521,7 +1602,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=36
+	num_files=38
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
    open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -1559,6 +1640,8 @@ rem --- Open needed files
 	open_tables$[34]="OPE_PRNTLIST", open_opts$[34]="OTA"
 	open_tables$[35]="OPM_POINTOFSALE",open_opts$[35]="OTA"
 	open_tables$[36]="ARC_SALECODE", open_opts$[36]="OTA"
+	open_tables$[37]="OPC_DISCCODE", open_opts$[37]="OTA"
+	open_tables$[38]="OPC_TAXCODE",  open_opts$[38]="OTA"
 
 	gosub open_tables
 
@@ -1674,8 +1757,6 @@ rem --- Setup user_tpl$
 :     "cur_row:n(5), " +
 :     "skip_ln_code:c(1), " +
 :     "hist_ord:c(1), " +
-:     "old_ship_to:c(1*), " +
-:     "old_disc_code:c(1*), "+
 :     "cash_sale:c(1), " +
 :     "cash_cust:c(6), " +
 :     "bo_col:u(1), " +
@@ -1696,8 +1777,13 @@ rem --- Setup user_tpl$
 :		"prev_boqty:n(15), " +
 :		"prev_shipqty:n(15), " +
 :		"prev_ext_price:n(15), " +
+:		"prev_taxable:n(15), " +
 :		"prev_ext_cost:n(15), " +
-:		"is_cash_sale:u(1)" 
+:     "prev_disc_code:c(1*), "+
+:     "prev_ship_to:c(1*), " +
+:		"prev_sales_total:n(15), " +
+:		"is_cash_sale:u(1), " +
+:		"detail_modified:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -1721,6 +1807,19 @@ rem --- Setup user_tpl$
 	user_tpl.cur_row           = -1
 	user_tpl.bo_col            = 8
 	user_tpl.is_cash_sale      = 0
+	user_tpl.detail_modified   = 0
+
+	user_tpl.prev_line_code$   = ""
+	user_tpl.prev_item$        = ""
+	user_tpl.prev_qty_ord      = 0
+	user_tpl.prev_boqty        = 0
+	user_tpl.prev_shipqty      = 0
+	user_tpl.prev_ext_price    = 0; rem used in detail section to hold the line extension 
+	user_tpl.prev_taxable      = 0
+	user_tpl.prev_ext_cost     = 0
+	user_tpl.prev_disc_code$   = ""
+	user_tpl.prev_ship_to$     = ""
+	user_tpl.prev_sales_total  = 0; rem used in totals section to hold the order sale total
 
 rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 
