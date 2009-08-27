@@ -48,6 +48,28 @@ rem ==========================================================================
 	callpoint!.setStatus("REFRESH")
 
 return
+
+rem ==========================================================================
+print_doc: rem --- Print Counter Order or Invoice
+rem ==========================================================================
+
+	run_by$   = callpoint!.getDevObject("run_by")
+	cust_id$  = callpoint!.getDevObject("cust_id")
+	order_no$ = callpoint!.getDevObject("order_no")
+
+	if cvs(cust_id$,2) <> "" and cvs(order_no$, 2) <> "" then
+		if run_by$ = "order" then
+			call stbl("+DIR_PGM")+"opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
+			if status = 999 then goto std_exit
+		else
+			if run_by$ = "invoice" then
+				call stbl("+DIR_PGM")+"opc_invoice.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+				if status = 999 then goto std_exit
+			endif
+		endif
+	endif
+
+	return
 [[OPE_CREDITACTION.ASVA]]
 rem --- Make sure everything is entered
 
@@ -100,6 +122,10 @@ rem --- Make sure everything is entered
 			if abort then 
 				callpoint!.setStatus("ABORT")
 			else
+				if callpoint!.getColumnData("OPE_CREDITACTION.PRINT_AFTER_REL") = "Y" then
+					gosub print_doc
+				endif
+
 				callpoint!.setDevObject("credit_action", "3")
 			endif
 
