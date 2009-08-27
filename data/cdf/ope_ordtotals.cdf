@@ -99,7 +99,7 @@ print "OPE_ORDTOTALS:ASVA"; rem debug
 
 rem --- Send back the entered values
 
-rem (Doesn't get here is you click the close button "x")
+rem (Doesn't get here if you click the close button "x")
 
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
