@@ -654,16 +654,27 @@ rem ==========================================================================
     rem ==========================================================================
 
         method public static BBjControl getControl(Callpoint callpoint!, BBjString data_name$)
+            methodret #getControl(null(), callpoint!, data_name$)
+        methodend
+        
+        method public static BBjControl getControl(BBjTopLevelWindow Form!, Callpoint callpoint!, BBjString data_name$)
 
             declare BBjSysGui sysGui!
             sysGui! = BBjAPI().getSysGui()
-
+            
+            if Form! = null() then
+                form_context = 0
+            else    
+                form_context = Form!.getContextID()
+            endif
+            
             control_context = num( callpoint!.getTableColumnAttribute(data_name$, "CTLC") )
             control_id      = num( callpoint!.getTableColumnAttribute(data_name$, "CTLI") )
 
-            methodret sysGui!.getWindow(control_context).getControl(control_id)
+            methodret sysGui!.getWindow(control_context+form_context).getControl(control_id)
 
         methodend
+        
 
     rem ==========================================================================
     rem 
