@@ -505,7 +505,7 @@ rem --- Setup user_tpl$
 	dim user_tpl$:"sa:c(1)," +
 :                "desc_len_01:n(1*), desc_len_02:n(1*), desc_len_03:n(1*)," +
 :                "prev_desc_seg_1:c(1*), prev_desc_seg_2:c(1*), prev_desc_seg_3:c(1*)," +
-:		"old_upc:c(1*),old_barcode:c(1*)"
+:                "old_upc:c(1*),old_barcode:c(1*)"
 
 	user_tpl.sa$=sa$
 
@@ -517,7 +517,7 @@ rem --- Set user labels and lengths for description segments
 
 	util.changeText(Form!, "Segment Description 1:", cvs(ivs01a.user_desc_lb_01$, 2) + ":")
 	callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_1", "MAXL", str(user_tpl.desc_len_01))
-	first_desc!=util.getControl(callpoint!,"<<DISPLAY>>.ITEM_DESC_SEG_1")
+	first_desc!=util.getControl(Form!,callpoint!,"<<DISPLAY>>.ITEM_DESC_SEG_1")
 	first_desc!.setMask(fill(user_tpl.desc_len_01,"X"))
 
 	if cvs(ivs01a.user_desc_lb_02$, 2) <> "" then
@@ -528,7 +528,7 @@ rem --- Set user labels and lengths for description segments
 
 	if user_tpl.desc_len_02 <> 0 then
 		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_2", "MAXL", str(user_tpl.desc_len_02))
-		second_desc!=util.getControl(callpoint!,"<<DISPLAY>>.ITEM_DESC_SEG_2")
+		second_desc!=util.getControl(Form!,callpoint!,"<<DISPLAY>>.ITEM_DESC_SEG_2")
 		second_desc!.setMask(fill(user_tpl.desc_len_02,"X"))
 	else
 		callpoint!.setColumnEnabled("<<DISPLAY>>.ITEM_DESC_SEG_2", -1)
@@ -542,7 +542,7 @@ rem --- Set user labels and lengths for description segments
 
 	if user_tpl.desc_len_03 <>0 then
 		callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_3", "MAXL", str(user_tpl.desc_len_03))
-		third_desc!=util.getControl(callpoint!,"<<DISPLAY>>.ITEM_DESC_SEG_3")
+		third_desc!=util.getControl(Form!,callpoint!,"<<DISPLAY>>.ITEM_DESC_SEG_3")
 		third_desc!.setMask(fill(user_tpl.desc_len_03,"X"))
 	else
 		callpoint!.setColumnEnabled("<<DISPLAY>>.ITEM_DESC_SEG_3", -1)
