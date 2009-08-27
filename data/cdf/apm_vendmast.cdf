@@ -1,3 +1,8 @@
+[[APM_VENDMAST.BWRI]]
+if num(callpoint!.getUserInput(),err=*endif)=0 
+	callpoint!.setMessage("INPUT_ERR_MAIN")
+	callpoint!.setStatus("ABORT")
+endif
 [[APM_VENDMAST.AWRI]]
 rem --- Code input if new customer
 	cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
@@ -30,7 +35,10 @@ rem --- Code input if new customer
 rem --- Set Date Opened
 	callpoint!.setColumnData("APM_VENDMAST.OPENED_DATE",sysinfo.system_date$)
 [[APM_VENDMAST.VENDOR_ID.AINP]]
-if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
+if num(callpoint!.getUserInput(),err=*endif)=0
+	callpoint!.setMessage("INPUT_ERR_MAIN")
+	callpoint!.setStatus("ABORT")
+endif
 [[APM_VENDMAST.BDEL]]
 rem --- can delete vendor and assoc recs (apm01/02/05/06/08/09/14/15) unless
 rem --- vendor referenced in inventory, or
