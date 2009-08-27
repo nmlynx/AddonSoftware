@@ -20,10 +20,29 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+    
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+
+rem --- Get user approval to proceed
+
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit_no_update
+    
 
 rem --- Open/Lock files
 
-    files=12,begfile=1,endfile=files
+    files=14,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="ivm-02",ids$[2]="IVM_ITEMMAST"
     files$[3]="ivm-07",ids$[3]="IVM_LSMASTER"
@@ -34,11 +53,13 @@ rem --- Open/Lock files
     files$[8]="opm-02",ids$[8]="OPC_LINECODE"
     files$[9]="sfe-01",ids$[9]="SFE_WOMASTR"
     files$[10]="sfe-23",ids$[10]="SFE_WOMATDTL"
-    files$[11]="sym-06",ids$[11]="SYM_FIRMS"
     files$[12]="IVS_PARAMS",ids$[12]=files$[12]
+    files$[13]="ARS_PARAMS",ids$[13]=files$[13]
+    files$[14]="SFS_PARAMS",ids$[14]=files$[14]
+    
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     ivm02_dev=channels[2]
     ivm07_dev=channels[3]
     ope01_dev=channels[4]
@@ -48,29 +69,40 @@ rem --- Open/Lock files
     opm02_dev=channels[8]
     sfe01_dev=channels[9]
     sfe23_dev=channels[10]
-    sym06_dev=channels[11]
-    ivs01a_dev=channels[12]
+    ivs01_dev=channels[12]
+    ars01_dev=channels[13]
+    sfs01_dev=channels[14]
+    
 
 rem --- Dimension string templates
 
     dim ivm02a$:templates$[2],ivm07a$:templates$[3],ope01a$:templates$[4],
 :       ope11a$:templates$[5],ope21a$:templates$[6],ope61a$:templates$[7],
 :       opm02a$:templates$[8],sfe01a$:templates$[9],sfe23a$:templates$[10],
-:       sym06a$:templates$[11],ivs01a$:templates$[12]
+:       ivs01a$:templates$[12],ars01a$:templates$[13],sfs01a$:templates$[14]
 
 rem --- Retrieve parameter records
 
+    op_firm_id$="N"
+    wo_firm_id$="N"
+    iv_firm_id$="N"
+    ls_firm_id$="N"
+
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$   
-
-rem --- Parameters
-
+    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$ 
+    iv_firm_id$="Y"
+    if pos(ivs01a.lotser_flag$="LS")>0 ls_firm_id$="Y" else ls_firm_id$="N"
+    i0=num(ivs01a.item_id_len$)
+    precision num(ivs01a.precision$)
     
-    n1$=sysinfo.firm_name$
-    n2$="IV"
+    find (ars01_dev,key=firm_id$+"AR00",dom=*next); op_firm_id$="Y"
+    find (sfs01_dev,key=firm_id$+"SF00",dom=*next); wo_firm_id$="Y"
+    
+rem --- Parameters
+   
     dim info$[20]
     call pgmdir$+"adc_application.aon","IV",info$[all]
-    if info$[3]<>"Y" goto std_exit
+    if info$[3]<>"Y" goto std_exit_no_update
     dim info$[20]
     call pgmdir$+"adc_application.aon","OP",info$[all]
     op$=info$[3]
@@ -80,6 +112,7 @@ rem --- Parameters
 
 rem --- Initialize Data
 
+    more=1
     width=47
     blanks$=fill(width)
     dim entry$[4]
@@ -90,17 +123,7 @@ rem --- Initialize Data
 rem --- Verify no IV transactions/transfers & no L/S Materials Issues
 
     gosub entryfiles
-    if index<>0 goto std_exit
-
-rem --- Get user approval to proceed
-
-    msg_id$="AON_RUN_QUERY"
-    dim x$:stbl("+SYSINFO_TPL")
-    dim msg_tokens$[1]
-    x$=stbl("+SYSINFO")                                                            
-    msg_tokens$[1]=x.task_desc$
-    gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit
+    if index<>0 goto std_exit_no_update
 
 rem --- Background
 
@@ -109,164 +132,115 @@ rem --- Background
 rem --- Clear ivm-02 Committed
 
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-    firm_id$=""
-Read_ivm02:
+    
     read (ivm02_dev,key=firm_id$,dom=*next)
     while more
-        ivm02a_key$=key(ivm02_dev,end=*break)
-        if ivm02a_key.firm_id$=firm_id$ then
-            read record (ivm02_dev) ivm02a$
-            ivm02a.quantity_commit=0
-            ivm02a$=field(ivm02a$)
-            write record (ivm02_dev) ivm02a$
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            continue
-        endif
-        firm_id$=ivm02a_key.firm_id$
-        gosub getivparams
-        if iv_firm_id$="Y" goto Read_ivm02
-        if num(firm_id$)>=99 break
-        read (ivm02_dev,key=str(num(ivm02a_key.firm_id$)+1:"00"),dom=*next)
+        read record (ivm02_dev,end=*break)ivm02a$
+        if ivm02a.firm_id$<>firm_id$ then break
+        ivm02a.quantity_commit=0
+        ivm02a$=field(ivm02a$)
+        write record (ivm02_dev) ivm02a$
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
     wend
 
-clear_ivm07: rem --- Clear ivm-07 Committed
+rem --- Clear ivm-07 Committed
 
     if ivm07_dev<>0 then
         call pgmdir$+"adc_progress.aon","S","","","",blanks$,0,0,1,meter_num,status
-        firm_id$="" 
         read (ivm07_dev,key=firm_id$,dom=*next)
         while more
-            ivm07_key$=key(ivm07_dev,end=clear_ivm07)
-            if ivm07a.firm_id$=firm_id$ then
-                read record (ivm07_dev) ivm07a$
-                ivm07a.qty_commit=0
-                ivm07a$=field(ivm07a$)
-                write record (ivm07_dev) ivm07a$
-                call pgmdir$+"adc_progress.aon","S","","","",ivm02a_key.firm_id$+" "+ivm02a_key.warehouse_id$+" "+ivm02a_key.item_id$+""+ivm02a_key.item_id$,0,0,1,meter_num,status
-                continue
-            endif
-            firm_id$= ivm07a.firm_id$
-            gosub getivparams
-            if iv_firm_id$="Y" continue
-            if num(firm_id$)>=99 break
-            read (ivm07_dev,key=str(num(ivm07a.firm_id$)+1:"00"),dom=*next)
+            read record (ivm07_dev,end=*break)ivm07a$
+            if ivm07a.firm_id$<>firm_id$ then break
+            ivm07a.qty_commit=0
+            ivm07a$=field(ivm07a$)
+            write record (ivm07_dev) ivm07a$
+            call pgmdir$+"adc_progress.aon","S","","","",ivm02a_key.firm_id$+" "+ivm02a_key.warehouse_id$+" "+ivm02a_key.item_id$+""+ivm02a_key.item_id$,0,0,1,meter_num,status
         wend
     endif
+    
 rem --- Rebuild From ope-11 Committed
 
-    if op$="N" then
+    if op$="Y" 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        rem dim b1$(64),b[17]
-        firm_id$=""
-Read_ope11:
+
         read (ope11_dev,key=firm_id$,dom=*next)
 
-rem --- ope-11 Main Read
+        rem --- ope-11 Main Read
         while more
-            ope11a_key$=key(ope11_dev,end=*break)
-            if ope11a_key$=firm_id$ then
-                find record (ope01a_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$,dom=headerless) ope01a$; rem "Check header records for quotes
-                goto Header
-headerless:
-                read (ope11_dev,key=ope11a_key$); rem "Move ptr
-                continue
-Header:
-                if ope01a.invoice_type$="P" qote$="Y" else qote$="N"
-                read record (ope11_dev) ope11a$
-                find record (opm02a_dev,key=firm_id$+ope11a.line_code$,dom=*continue) opm02a$
-                if pos(opm02a.line_type$="MNO")<>0 continue
-                if opm02a.dropship$="N" then
-                    if qote$="N" or opm02.commit_flag$="Y" then
-                        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-                        read record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$,dom=*continue) ivm02a$
-                        ivm02a.qty_commit=ivm02a.qty_commit+ope11a.qty_ordered
-                        ivm02a$=field(ivm02a$)
-                        write record (ivm02_dev)ivm02a$
-                    endif
+            read record (ope11_dev,end=*break)ope11a$
+            if ope11a.firm_id$<>firm_id$ then break
+            find record (ope01a_dev,key=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$,dom=*continue) ope01a$; rem "Check header records for quotes
+            if ope01a.invoice_type$="P" then quote$="Y" else quote$="N"
+            find record (opm02a_dev,key=firm_id$+ope11a.line_code$,dom=*continue) opm02a$
+            if pos(opm02a.line_type$="MNO")<>0 then continue
+            if opm02a.dropship$="N" 
+                if quote$="N" or opm02.commit_flag$="Y" 
+                    call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+                    read record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$,dom=*continue) ivm02a$
+                    ivm02a.qty_commit=ivm02a.qty_commit+ope11a.qty_ordered
+                    ivm02a$=field(ivm02a$)
+                    write record (ivm02_dev)ivm02a$
                 endif
-                continue
-            endif
-rem --- Next ope-11 Firm
-
-            firm_id$=ope11a_key.firm_id$
-            gosub getivparams
-            if iv_firm_id$="Y" and op_firm_id$="Y" goto Read_ope11
-            if num(firm_id$)>=99 break
-            read (ope11_dev,key=str(num(ope11a_key.firm_id$)+1:"00"),dom=*next)
+            endif                            
         wend
     endif
+    
 rem --- Rebuild From ope-21 Committed
 
-    if op$="N" or ope21_dev<> 0 then
+    if op$="Y" 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         dim t[2]
-        firm_id$=""
-        ope11a_key$=""
-Read_ope21:
+        dim ope11a$:fattr(ope11a$)
         read (ope21_dev,key=firm_id$,dom=*next)
 
-rem --- ope-21 Main Read
+        rem --- ope-21 Main Read
         while more
-            ope21a_key$=key(ope21_dev,end=*break)
-            if ope21a_key.firm_id$=firm_id$ then
-                read record (ope21_dev) ope21a$
-                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-                if pos(ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$+ope21a_key.line_no$=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.line_no$)<>1 find record (ope11_dev,key=ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$+ope21a_key.line_no$,dom=Remove_ope21) ope11a$
-                read record (ivm07_dev,key=firm_id$+ope11a.warehouse_id$+t1$,dom=Remove_ope21) ivm07a$
-                 ivm07a.qty_commit= ivm07a.qty_commit+t[0]
-                write record (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+ivm07a.item_id$+ivm07a.lotser_no$) ivm07a$
-                continue
-
-Remove_ope21: rem --- Remove Unmatched ope-21 Records
-
-                remove (ope21_dev,key=ope21a_key$)
-                continue
-            endif      
-
-rem --- Next ope-21 Firm
-
-            firm_id$=ope21a_key.firm_id$
-            gosub getivparams
-            if iv_firm_id$="Y" and ls_firm_id$="Y" and op_firm_id$="Y" goto Read_ope21
-            if num(firm_id$)>=99  break
-            read (ope21_dev,key=str(num(ope21a_key.firm_id$)+1:"00"),dom=*next)
+            read record (ope21_dev,end=*break)ope21a$
+            if ope21a.firm_id$<>firm_id$ then break
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+            rem --- make sure this ord lsdet rec has corres. ord det rec... if not, remove
+            if pos(ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+
+:               ope21a.orddet_seq_ref$=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$
+:               ope11a.internal_seq_no$)<>1 
+                    found=0
+                    find record (ope11_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$,dom=*next) ope11a$;found=1
+                    if !found then remove (ope21_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$+ope21a.sequence_no$,dom=*continue)    
+            endif    
+            found=0    
+            read record (ivm07_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$+ope21a.lotser_no$,dom=*next) ivm07a$;found=1
+            if !found 
+                remove (ope21_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$+ope21a.sequence_no$,dom=*continue)    
+            else
+                ivm07a.qty_commit=ivm07a.qty_commit+ope21a.qty_ordered
+                ivm07a$=field(ivm07a$)
+                write record (ivm07_dev) ivm07a$
+            endif
         wend
     endif
+    
 rem --- Rebuild From sfe-23 Committed
 
-    if wo$="N" then
+    if wo$="Y" then
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        firm_id$=""
-Read_sfe21:
         read (sfe23_dev,key=firm_id$,dom=*next)
 
-rem --- sfe-23 Main Read
+        rem --- sfe-23 Main Read
         while more
-            sfe23a_key$=key(sfe23_dev,end=*break)
-            if  sfe23a_key$.firm_id$=firm_id$ then
-                read record (sfe23_dev) sfe23a$
-                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-                read record (sfe01_dev,key=sfe23a_key.firm_id$+sfe23a_key.work_location$+sfe23a_key.work_no$,dom=Remove_sfe23) sfe01a$
+            read record (sfe23_dev,end=*break)sfe23a$
+            if sfe23a$.firm_id$<>firm_id$ then break
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+            found=0
+            read record (sfe01_dev,key=sfe23a.firm_id$+sfe23a.work_location$+sfe23a.work_no$,dom=*next) sfe01a$;found=1
+            if !found
+                remove (sfe23_dev,key=sfe23a.firm_id$+sfe23a.work_location$+sfe23a.work_no$+sfe23a.material_seq$,dom=*continue)
+            else
                 if sfe01a.work_status$<>"C" then
                     read record (ivm02_dev,key=firm_id$+sfe23a.warehouse_id$,dom=*continue) ivm02a$
                     ivm02a.qty_commit=ivm02a.qty_commit+max(0,sfe23a.qty_ordered-sfe23a.tot_qty_iss)
-                    write record (ivm02_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$) ivm02a$
-                    continue
+                    ivm02a$=field(ivm02a$)
+                    write record (ivm02_dev) ivm02a$                    
                 endif
-
-Remove_sfe23: rem --- Remove Unmatched and Closed sfe-23 Records
-
-                remove (sfe23_dev,key=sfe23a_key$,dom=*continue)
-                continue
             endif
-
-rem --- Next sfe-23 Firm
-
-            firm_id$=sfe23a_key.firm_id$
-            gosub getivparams
-            if iv_firm_id$="Y" and wo_firm_id$="Y" goto Read_sfe21
-            if num(firm_id$)>=99 break
-            read (sfe23_dev,key=str(num(sfe23a_key.firm_id$)+1:"00"),dom=*next)
         wend
     endif
 
@@ -278,24 +252,26 @@ entryfiles: rem --- Make sure appropriate entry files are empty
 
     index=0
     number=4
-    dim message$[number]
-    read (sym06_dev,key="",dom=*next)
-    while more
-        sym06_key$=key(sym06_dev,end=*break)
-        read record (sym06_dev,key=sym06_key$) sym06a$
-        for x=1 to 3
-            filename$=entry$[x]
-            batch=0
-            if filename$<>"" then
-                call pgmdir$+"adc_batchempty",firm06$,filename$,description$,batch,status
-                if status gosub Entry_File
-                if index=number break
-            endif
-        next x
-    wend  
+    dim msg_tokens$[number]
+    for x=1 to 3
+        filename$=entry$[x]
+        batch=0
+        if filename$<>"" then
+            files=1,begfile=1,endfile=files
+            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+            files$[1]=filename$
+            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:               ids$[all],templates$[all],channels[all],batch,status
+            if status then goto std_exit_no_update
+            x$=fin(num(channels[1]))
+            keys_used=dec(x$(77,4))        
+            if keys_used gosub Entry_File
+            close (channels[1])
+        endif
+    next x
     if index<>0 then
-        message$[index]=fill(20)+"Press <Enter> To Continue"
-        call pgmdir$+"adc_stdmessage.aon",3,message$[all],index,-1,-1,v$,v3
+        msg_id$="IV_REBUILD_COM"
+        gosub disp_message
     endif
     return
 
@@ -303,51 +279,29 @@ Entry_File: rem --- Entry file contains records
 
     on x goto EntryFile_Rtn,transaction,transfer,materials,EntryFile_Rtn
 transaction:
-    message$[index]="Inventory Transaction Register and Update must be run for Firm "+firm06$+"."
+    msg_tokens$[index]="Inventory Transaction Register and Update must be run."+$0A$
     index=index+1
     break
 transfer:
-    message$[index]="Inventory Transfer Register and Update must be runfor Firm "+firm06$+"."
+    msg_tokens$[index]="Inventory Transfer Register and Update must be run."+$0A$
     index=index+1
     break
 materials:
-    find (ads01_dev,key=sym06_key.firm_id$+"SF00",dom=EntryFile_Rtn); rem "Verify WO installedfor this Firm
-    find record (ivs01a_dev,key=sym06_key.firm_id$+"IV00",dom=EntryFile_Rtn) ivs01a$; rem "Verify IVinstalled for this Firm
+    find (sfs01_dev,key=firm_id$+"SF00",dom=EntryFile_Rtn); rem "Verify WO installedfor this Firm
+    find record (ivs01a_dev,key=firm_id$+"IV00",dom=EntryFile_Rtn) ivs01a$; rem "Verify IVinstalled for this Firm
     if pos(ivs01a.lotser_flag$="LS")<>0 then
-        message$[index]="Materials Issues Register and Update must be run for Firm "+firm06$+"."
+        msg_tokens$[index]="Materials Issues Register and Update must be run."+$0A$
         index=index+1
     endif
 EntryFile_Rtn:
     return
 
-getivparams: rem --- Next Firm's Inventory Parameters
-
-    iv_firm_id$="N"
-    ls_firm_id$="N"
-    op_firm_id$="N"
-    wo_firm_id$="N"
-    find record (ivs01a_dev,key=firm_id$+"IV00",dom=*break) ivs01a$
-    iv_firm_id$="Y"
-    if pos(ivs01a.lotser_flag$="LS")>0 ls_firm_id$="Y" else ls_firm_id$="N"
-    i0=num(ivs01a.item_id_len$)
-    precision num(ivs01a.precision$)
-
-rem --- Next Firm's Order Processing Parameters
-
-    find (ars01_dev,key=firm_id$+"AR00",dom=*break)
-    let op_firm_id$="Y"
-
-rem --- Next Firm's Work Order Parameters
-    find (sfs01_dev,key=firm_id$+"SF00",dom=*break)
-    let wo_firm_id$="Y"
-
-    return
 
 disp_message:rem --- Display Message Dialog
 
-	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 
-	return
+    return
 
 rem #include std_error.src
 
@@ -399,8 +353,15 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
