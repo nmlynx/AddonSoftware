@@ -15,7 +15,7 @@ rem --- Calculate and display summary info
 	tsls=0
 	trip_key$=firm_id$+callpoint!.getColumnData("SAM_NONSTOCK.YEAR")+callpoint!.getColumnData("SAM_NONSTOCK.PRODUCT_TYPE")
 	item_no$=callpoint!.getColumnData("SAM_NONSTOCK.NONSTOCK_NO")
-	callpoint!.setColumnData("SAM_NONSTOCK.NONSTOCK_NO","** Summary **")
+	callpoint!.setColumnData("SAM_NONSTOCK.NONSTOCK_NO","")
 
 rem --- Start progress meter
 	task_id$=info(3,0)

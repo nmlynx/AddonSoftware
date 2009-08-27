@@ -27,9 +27,9 @@ rem --- Calculate and display summary info
 	if cvs(prod_type$,2)<>"" 
 		trip_key$=trip_key$+prod_type$
 	else
-		callpoint!.setColumnData("SAM_VENDOR.PRODUCT_TYPE","**")
+		callpoint!.setColumnData("SAM_VENDOR.PRODUCT_TYPE","")
 	endif
-	callpoint!.setColumnData("SAM_VENDOR.ITEM_ID","** Summary **")
+	callpoint!.setColumnData("SAM_VENDOR.ITEM_ID","")
 
 rem --- Start progress meter
 	task_id$=info(3,0)

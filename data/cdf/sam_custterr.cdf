@@ -40,12 +40,12 @@ rem --- Calculate and display summary info
 		if cvs(prod_type$,2)<>"" 
 			trip_key$=trip_key$+prod_type$
 		else
-			callpoint!.setColumnData("SAM_CUSTTERR.PRODUCT_TYPE","**")
+			callpoint!.setColumnData("SAM_CUSTTERR.PRODUCT_TYPE","")
 		endif
 	else
-		callpoint!.setColumnData("SAM_CUSTTERR.CUSTOMER_ID","******")
+		callpoint!.setColumnData("SAM_CUSTTERR.CUSTOMER_ID","")
 	endif
-	callpoint!.setColumnData("SAM_CUSTTERR.ITEM_ID","** Summary **")
+	callpoint!.setColumnData("SAM_CUSTTERR.ITEM_ID","")
 
 rem --- Start progress meter
 	task_id$=info(3,0)
@@ -89,6 +89,7 @@ rem --- Now display all of these things and disable key fields
 	callpoint!.setColumnData("<<DISPLAY>>.TSLS",str(tsls))
 
 	callpoint!.setColumnEnabled("SAM_CUSTTERR.YEAR",0)
+	callpoint!.setColumnEnabled("SAM_CUSTTERR.TERRITORY",0)
 	callpoint!.setColumnEnabled("SAM_CUSTTERR.CUSTOMER_ID",0)
 	callpoint!.setColumnEnabled("SAM_CUSTTERR.PRODUCT_TYPE",0)
 	callpoint!.setColumnEnabled("SAM_CUSTTERR.ITEM_ID",0)
