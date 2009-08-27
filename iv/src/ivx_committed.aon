@@ -44,7 +44,7 @@ rem --- Open/Lock files
 
     files=14,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[2]="ivm-02",ids$[2]="IVM_ITEMMAST"
+    files$[2]="ivm-02",ids$[2]="IVM_ITEMWHSE"
     files$[3]="ivm-07",ids$[3]="IVM_LSMASTER"
     files$[4]="ope-01",ids$[4]="OPE_ORDHDR"
     files$[5]="ope-11",ids$[5]="OPE_ORDDET"
@@ -89,7 +89,7 @@ rem --- Retrieve parameter records
     ls_firm_id$="N"
 
     ivs01a_key$=firm_id$+"IV00"
-    find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$ 
+    find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$ 
     iv_firm_id$="Y"
     if pos(ivs01a.lotser_flag$="LS")>0 ls_firm_id$="Y" else ls_firm_id$="N"
     i0=num(ivs01a.item_id_len$)
@@ -137,7 +137,7 @@ rem --- Clear ivm-02 Committed
     while more
         read record (ivm02_dev,end=*break)ivm02a$
         if ivm02a.firm_id$<>firm_id$ then break
-        ivm02a.quantity_commit=0
+        ivm02a.qty_commit=0
         ivm02a$=field(ivm02a$)
         write record (ivm02_dev) ivm02a$
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -154,14 +154,14 @@ rem --- Clear ivm-07 Committed
             ivm07a.qty_commit=0
             ivm07a$=field(ivm07a$)
             write record (ivm07_dev) ivm07a$
-            call pgmdir$+"adc_progress.aon","S","","","",ivm02a_key.firm_id$+" "+ivm02a_key.warehouse_id$+" "+ivm02a_key.item_id$+""+ivm02a_key.item_id$,0,0,1,meter_num,status
+            call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         wend
     endif
     
 rem --- Rebuild From ope-11 Committed
 
     if op$="Y" 
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
         read (ope11_dev,key=firm_id$,dom=*next)
 
@@ -169,14 +169,14 @@ rem --- Rebuild From ope-11 Committed
         while more
             read record (ope11_dev,end=*break)ope11a$
             if ope11a.firm_id$<>firm_id$ then break
-            find record (ope01a_dev,key=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$,dom=*continue) ope01a$; rem "Check header records for quotes
+            find record (ope01_dev,key=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$,dom=*continue) ope01a$; rem "Check header records for quotes
             if ope01a.invoice_type$="P" then quote$="Y" else quote$="N"
-            find record (opm02a_dev,key=firm_id$+ope11a.line_code$,dom=*continue) opm02a$
+            find record (opm02_dev,key=firm_id$+ope11a.line_code$,dom=*continue) opm02a$
             if pos(opm02a.line_type$="MNO")<>0 then continue
             if opm02a.dropship$="N" 
-                if quote$="N" or opm02.commit_flag$="Y" 
+                if quote$="N" or ope11a.commit_flag$="Y" 
                     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-                    read record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$,dom=*continue) ivm02a$
+                    read record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$,dom=*continue) ivm02a$
                     ivm02a.qty_commit=ivm02a.qty_commit+ope11a.qty_ordered
                     ivm02a$=field(ivm02a$)
                     write record (ivm02_dev)ivm02a$
@@ -188,7 +188,7 @@ rem --- Rebuild From ope-11 Committed
 rem --- Rebuild From ope-21 Committed
 
     if op$="Y" 
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         dim t[2]
         dim ope11a$:fattr(ope11a$)
         read (ope21_dev,key=firm_id$,dom=*next)
@@ -204,11 +204,13 @@ rem --- Rebuild From ope-21 Committed
 :               ope11a.internal_seq_no$)<>1 
                     found=0
                     find record (ope11_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$,dom=*next) ope11a$;found=1
-                    if !found then remove (ope21_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$+ope21a.sequence_no$,dom=*continue)    
+                    if !found 
+                        remove (ope21_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$+ope21a.sequence_no$,dom=*continue)    
+                    endif
             endif    
             found=0    
             read record (ivm07_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$+ope21a.lotser_no$,dom=*next) ivm07a$;found=1
-            if !found 
+            if !found
                 remove (ope21_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$+ope21a.sequence_no$,dom=*continue)    
             else
                 ivm07a.qty_commit=ivm07a.qty_commit+ope21a.qty_ordered
@@ -252,7 +254,7 @@ entryfiles: rem --- Make sure appropriate entry files are empty
 
     index=0
     number=4
-    dim msg_tokens$[number]
+    dim msg_tokens$[1]
     for x=1 to 3
         filename$=entry$[x]
         batch=0
@@ -263,7 +265,7 @@ entryfiles: rem --- Make sure appropriate entry files are empty
             call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :               ids$[all],templates$[all],channels[all],batch,status
             if status then goto std_exit_no_update
-            x$=fin(num(channels[1]))
+            x$=fin(channels[1])
             keys_used=dec(x$(77,4))        
             if keys_used gosub Entry_File
             close (channels[1])
@@ -277,23 +279,26 @@ entryfiles: rem --- Make sure appropriate entry files are empty
 
 Entry_File: rem --- Entry file contains records
 
-    on x goto EntryFile_Rtn,transaction,transfer,materials,EntryFile_Rtn
-transaction:
-    msg_tokens$[index]="Inventory Transaction Register and Update must be run."+$0A$
-    index=index+1
-    break
-transfer:
-    msg_tokens$[index]="Inventory Transfer Register and Update must be run."+$0A$
-    index=index+1
-    break
-materials:
-    find (sfs01_dev,key=firm_id$+"SF00",dom=EntryFile_Rtn); rem "Verify WO installedfor this Firm
-    find record (ivs01a_dev,key=firm_id$+"IV00",dom=EntryFile_Rtn) ivs01a$; rem "Verify IVinstalled for this Firm
-    if pos(ivs01a.lotser_flag$="LS")<>0 then
-        msg_tokens$[index]="Materials Issues Register and Update must be run."+$0A$
-        index=index+1
-    endif
-EntryFile_Rtn:
+    switch x
+        case 1;rem transaction
+            msg_tokens$[1]=msg_tokens$[1]+"Inventory Transaction Register and Update must be run."+$0A$
+            index=index+1
+        break
+        case 2; rem transfer
+            msg_tokens$[1]=msg_tokens$[1]+"Inventory Transfer Register and Update must be run."+$0A$
+            index=index+1
+        break
+        case 3; rem materials
+            find (sfs01_dev,key=firm_id$+"SF00",dom=*break); rem "Verify WO installedfor this Firm
+            find record (ivs01a_dev,key=firm_id$+"IV00",dom=*break) ivs01a$; rem "Verify IVinstalled for this Firm
+            if pos(ivs01a.lotser_flag$="LS")<>0 then
+                msg_tokens$[1]=msg_tokens$[1]+"Materials Issues Register and Update must be run."+$0A$
+                index=index+1
+            endif
+        break
+        case default
+        break
+    swend   
     return
 
 
