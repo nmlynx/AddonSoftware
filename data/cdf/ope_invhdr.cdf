@@ -145,7 +145,7 @@ rem --- Change an Order into an Invoice
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
 			print "---Set lock"; rem debug
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N"); rem debug, forcing the lock off for now, this isn't working correctly
-			user_tpl.old_disc_code$ = ""
+			user_tpl.prev_disc_code$ = ""
 			user_tpl.price_code$ = "Y"
 			order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 			gosub add_to_batch_print
@@ -214,7 +214,7 @@ rem --- Remove manual ship-record, if necessary
 	cust_id$    = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	ord_no$     = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
-	if user_tpl.old_ship_to$ = "000099" and ship_to_no$ <> "000099" then
+	if user_tpl.prev_ship_to$ = "000099" and ship_to_no$ <> "000099" then
 		remove (fnget_dev("OPE_ORDSHIP"), key=firm_id$+cust_id$+ord_no$, dom=*next)
 	endif
 
@@ -250,7 +250,7 @@ rem --- Set flag
 [[OPE_INVHDR.SHIPTO_NO.BINP]]
 rem --- Save old value
 
-	user_tpl.old_ship_to$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+	user_tpl.prev_ship_to$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
 [[OPE_INVHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
 
@@ -577,9 +577,6 @@ rem --- Backorder and Credit Hold
 		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "Credit Hold")
 	endif
 
-	user_tpl.old_ship_to$   = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
-	user_tpl.old_disc_code$ = callpoint!.getColumnData("OPE_INVHDR.DISC_CODE")
-
 rem --- Enable buttons
 
 	if user_tpl.credit_installed$ <> "Y"	and 
@@ -593,11 +590,11 @@ rem --- Enable buttons
 
 rem --- Set all previous values
 
-	user_tpl.prev_taxable      = num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
-	user_tpl.prev_ext_cost     = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST"))
-	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
-	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
+	user_tpl.prev_taxable      = num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
+	user_tpl.prev_ext_cost     = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_COST"))
+	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_INVHDR.DISC_CODE")
+	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
 [[OPE_INVHDR.ORDER_NO.AVAL]]
 print "Hdr:ORDER_NO.AVAL"; rem debug
 
@@ -1496,7 +1493,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=38
+	num_files=39
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -1536,6 +1533,7 @@ rem --- Open needed files
 	open_tables$[36]="ARC_SALECODE", open_opts$[36]="OTA"
 	open_tables$[37]="OPC_DISCCODE", open_opts$[37]="OTA"
 	open_tables$[38]="OPC_TAXCODE",  open_opts$[38]="OTA"
+	open_tables$[39]="OPE_ORDHDR",   open_opts$[39]="OTA"
 	
 gosub open_tables
 
