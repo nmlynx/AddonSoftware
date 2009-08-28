@@ -1,3 +1,5 @@
+[[IVE_TRANSDET.BWRI]]
+
 [[IVE_TRANSDET.AGRN]]
 print "after grid row entry (AGRN)"; rem debug
 
@@ -565,6 +567,20 @@ rem --- Check the transaction qty
 	endif
 [[IVE_TRANSDET.AGRE]]
 print "after grid row exit (AGRE)"; rem debug
+
+rem --- Check for Lot/Serial number entry
+	item_id$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	if cvs(item_id$,3) <> ""
+		ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+		dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+		readrecord(ivm_itemmast_dev,key=firm_id$+item_id$)ivm_itemmast$
+		if ivm_itemmast.inventoried$="Y" and ivm_itemmast.lotser_item$="Y"
+			if cvs(callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO"),3)=""
+				callpoint!.setMessage("OP_MISSING_LOTSER_NO")
+				callpoint!.setStatus("ABORT")
+			endif
+		endif
+	endif
 
 rem --- Is this row deleted?
 
