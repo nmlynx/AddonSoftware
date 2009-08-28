@@ -32,6 +32,12 @@ rem --- Print a counter Invoice
 [[OPE_INVHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
+rem --- Is record deleted?
+
+	if user_tpl.record_deleted then
+		break; rem --- exit callpoint
+	endif
+
 rem --- Credit action
 
 	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
@@ -241,6 +247,10 @@ rem --- Remove from ope-04
 	remove (ope_prntlist_dev,key=firm_id$+"O"+"  "+
 :		callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),dom=*next)
+
+rem --- Set flag
+
+	user_tpl.record_deleted = 1
 [[OPE_INVHDR.ARER]]
 rem --- Set flag
 
@@ -1675,7 +1685,8 @@ rem --- Setup user_tpl$
 :     "prev_ship_to:c(1*), " +
 :		"prev_sales_total:n(15), " +
 :		"is_cash_sale:u(1), " +
-:		"detail_modified:u(1)"
+:		"detail_modified:u(1), " +
+:		"record_deleted:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -1700,6 +1711,7 @@ rem --- Setup user_tpl$
 	user_tpl.bo_col            = 8
 	user_tpl.is_cash_sale      = 0
 	user_tpl.detail_modified   = 0
+	user_tpl.record_deleted    = 0
 
 	user_tpl.prev_line_code$   = ""
 	user_tpl.prev_item$        = ""
