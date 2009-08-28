@@ -59,7 +59,7 @@ rem ==========================================================================
 
 	if cvs(cust_id$,2) <> "" and cvs(order_no$, 2) <> "" then
 		if run_by$ = "order" then
-			call stbl("+DIR_PGM")+"opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
+			call stbl("+DIR_PGM")+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 			if status = 999 then goto std_exit
 		else
 			if run_by$ = "invoice" then
