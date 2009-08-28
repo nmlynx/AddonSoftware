@@ -38,46 +38,6 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
-rem --- Credit action
-
-	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
-		cust_id$  = cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"), 2)
-		ord_no$   = cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"), 2)
-		inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
-		status    = 0
-
-		if cust_id$="" or ord_no$="" then break; rem --- exit callpoint
-
-		if user_tpl.credit_installed$="Y" and inv_type$<>"P" and user_tpl.cash_sale$ <> "Y" then
-			callpoint!.setDevObject("run_by", "invoice")
-			callpoint!.setDevObject("cust_id", cust_id$)
-			callpoint!.setDevObject("order_no", ord_no$)
-			call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
-			if status = 999 then goto std_exit
-			if action$ = "D" then callpoint!.setStatus("DELETE")
-		endif
-	endif
-
-rem --- Cash Transaction
-
-	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
-	
-		callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
-		callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-		callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-
-		key_pfx$ = firm_id$+"  "+cust_id$+ord_no$
-
-		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:			"OPE_INVCASH", 
-:			stbl("+USER_ID"), 
-:			"MNT", 
-:			key_pfx$, 
-:			table_chans$[all], 
-:			dflt_data$[all]
-
-	endif
-
 rem --- Invoice totals, call form
 
 	dim dflt_data$[4,1]
@@ -119,6 +79,47 @@ rem --- Set return values
 
 	rem callpoint!.setStatus("SAVE;REFRESH")
 	callpoint!.setStatus("REFRESH")
+
+rem --- Credit action
+
+	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
+		cust_id$  = cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"), 2)
+		ord_no$   = cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"), 2)
+		inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
+		status    = 0
+
+		if cust_id$="" or ord_no$="" then break; rem --- exit callpoint
+
+		if user_tpl.credit_installed$="Y" and inv_type$<>"P" and user_tpl.cash_sale$ <> "Y" then
+			callpoint!.setDevObject("run_by", "invoice")
+			callpoint!.setDevObject("cust_id", cust_id$)
+			callpoint!.setDevObject("order_no", ord_no$)
+			call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
+			if status = 999 then goto std_exit
+			if action$ = "D" then callpoint!.setStatus("DELETE")
+		endif
+	endif
+
+rem --- Cash Transaction
+
+	rem if user_tpl.cash_sale$ = "Y" then
+	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
+	
+		callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+		callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+
+		key_pfx$ = firm_id$+"  "+cust_id$+ord_no$
+
+		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:			"OPE_INVCASH", 
+:			stbl("+USER_ID"), 
+:			"MNT", 
+:			key_pfx$, 
+:			table_chans$[all], 
+:			dflt_data$[all]
+
+	endif
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
