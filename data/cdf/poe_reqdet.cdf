@@ -68,7 +68,10 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 	ok_to_write$="Y"
 
 	if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="" or 
-:		cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" then ok_to_write$="N"
+:		cvs(callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID"),3)="" 
+		ok_to_write$="N"
+		focus_column$="POE_REQDET.PO_LINE_CODE"
+	endif
 
 	if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="SD")<>0 
 		if cvs(callpoint!.getColumnData("POE_REQDET.ITEM_ID"),3)="" or
@@ -77,15 +80,16 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 :		num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
 :		cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 
 			ok_to_write$="N"
+			focus_column$="POE_REQDET.ITEM_ID"
 		endif
 	endif
 
 	if cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="N" 
-		if cvs(callpoint!.getColumnData("POE_REQDET.NS_ITEM_ID"),3)="" or
-:		num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
+		if num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
 :		num(callpoint!.getColumnData("POE_REQDET.REQ_QTY"))<=0 or
 :		cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
 			ok_to_write$="N"
+			focus_column$="POE_REQDET.ORDER_MEMO"
 		endif
 	endif
 
@@ -93,22 +97,30 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 		if num(callpoint!.getColumnData("POE_REQDET.UNIT_COST"))<0 or
 :		cvs(callpoint!.getColumnData("POE_REQDET.REQD_DATE"),3)="" 	
 			ok_to_write$="N"
+			focus_column$="POE_REQDET.ORDER_MEMO"
 		endif
 	endif
 
-	if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="MNOV")<>0 then
-:		if cvs(callpoint!.getColumnData("POE_REQDET.ORDER_MEMO"),3)="" then ok_to_write$="N"
+	if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="MNOV")<>0 
+		if cvs(callpoint!.getColumnData("POE_REQDET.ORDER_MEMO"),3)="" 
+			ok_to_write$="N"
+			focus_column$="POE_REQDET.ORDER_MEMO"
+		endif
+	endif
 
 	if callpoint!.getHeaderColumnData("POE_REQHDR.DROPSHIP")="Y" and callpoint!.getDevObject("OP_installed")="Y"
 		if pos(cvs(callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE"),3)="DSNO")<>0
-			if cvs(callpoint!.getColumnData("POE_REQDET.SO_INT_SEQ_REF"),3)="" then ok_to_write$="N"
+			if cvs(callpoint!.getColumnData("POE_REQDET.SO_INT_SEQ_REF"),3)="" 
+				ok_to_write$="N"
+				focus_column$="POE_REQDET.SO_INT_SEQ_REF"
+			endif
 		endif
 	endif
 
 	if ok_to_write$<>"Y"
 		msg_id$="PO_REQD_DET"
 		gosub disp_message
-		callpoint!.setStatus("ABORT")
+		callpoint!.setFocus(num(callpoint!.getValidationRow()),focus_column$)
 	endif
 
 	rem -- now loop thru entire gridVect to make sure SO line reference, if used, isn't used >1 time
@@ -124,7 +136,10 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 				rec$=dtl!.getItem(x)
 				if cvs(rec.so_int_seq_ref$,3)<>""
 					if pos(rec.so_int_seq_ref$+"^"=so_lines_referenced$)<>0 
-						dup_so_lines$="Y"
+						msg_id$="PO_DUP_SO_LINE"
+						gosub disp_message
+						callpoint!.setFocus(num(callpoint!.getValidationRow()),"POE_REQDET.SO_INT_SEQ_REF")
+						break
 					else
 						so_lines_referenced$=so_lines_referenced$+rec.so_int_seq_ref$+"^"
 					endif
@@ -132,13 +147,6 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 			endif
 		next x
 	endif
-
-	if dup_so_lines$="Y"
-		msg_id$="PO_DUP_SO_LINE"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
-
 
 endif
 [[POE_REQDET.ITEM_ID.AINV]]
