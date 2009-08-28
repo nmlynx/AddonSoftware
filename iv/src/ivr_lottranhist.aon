@@ -285,7 +285,6 @@ rem --- Get next record
         tran_date$=ivt01a_key.trans_date$
         whse$=ivt01a_key.warehouse_id$
         item$=ivt01a_key.item_id$
-        read (ivt01_dev)
 
 rem --- Valid Warehouse/Item?
 
@@ -318,7 +317,7 @@ rem --- Open or Closed Lots?
 
 rem --- Valid Product/Type/Date?
 
-        read record (ivt01_dev) ivt01a$
+        read record (ivt01_dev,key=ivt01a_key$) ivt01a$
         if all$<>"Y" if pos(ivt01a.trans_source$=ttype$,2)=0 then continue
         if ivt01a.trans_source$="BB" then continue
 
