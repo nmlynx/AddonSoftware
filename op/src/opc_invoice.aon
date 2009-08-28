@@ -482,6 +482,7 @@ order_update: rem --- Update order's status
     ope01a.lock_status$  = "N"
     ope01a$ = field(ope01a$)
     write record (ope01_dev) ope01a$
+    callpoint!.setStatus("STEORIG")
 
     return
 
