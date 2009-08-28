@@ -153,8 +153,45 @@ rem ==========================================================================
                         break
                     endif
                 else
-
                     if pos(p_text$ = this_ctrl!.getText()) then
+                        found = 1
+                        break
+                    endif
+                endif
+            next i
+
+            if found then
+                methodret this_ctrl!
+            else
+                methodret null()
+            endif
+
+        methodend
+
+    rem ==========================================================================
+    rem 	Find a control from its control ID
+    rem ==========================================================================
+
+        method public static BBjControl findControlByID(BBjWindow Form!, BBjInt p_id%)
+
+            declare BBjVector controls!
+            declare BBjControl this_ctrl!
+
+            controls! = Form!.getAllControls()
+            found = 0
+
+            for i = 0 to controls!.size() - 1
+                this_ctrl! = cast(BBjControl, controls!.getItem(i))
+
+                if this_ctrl!.getControlType() = #CHILD_WINDOW%
+                    this_ctrl! = #findControlByID( cast(BBjWindow, this_ctrl!), p_id% ) 
+
+                    if this_ctrl! <> null() then
+                        found = 1
+                        break
+                    endif
+                else
+                    if p_id% = this_ctrl!.getID() then
                         found = 1
                         break
                     endif
@@ -654,25 +691,28 @@ rem ==========================================================================
     rem ==========================================================================
 
         method public static BBjControl getControl(Callpoint callpoint!, BBjString data_name$)
-            methodret #getControl(null(), callpoint!, data_name$)
-        methodend
         
-        method public static BBjControl getControl(BBjTopLevelWindow Form!, Callpoint callpoint!, BBjString data_name$)
-
             declare BBjSysGui sysGui!
             sysGui! = BBjAPI().getSysGui()
-            
-            if Form! = null() then
-                form_context = 0
-            else    
-                form_context = Form!.getContextID()
-            endif
             
             control_context = num( callpoint!.getTableColumnAttribute(data_name$, "CTLC") )
             control_id      = num( callpoint!.getTableColumnAttribute(data_name$, "CTLI") )
 
-            methodret sysGui!.getWindow(control_context+form_context).getControl(control_id)
-
+            methodret sysGui!.getWindow(control_context).getControl(control_id)
+            
+        methodend
+        
+    rem ==========================================================================
+    rem 
+    rem --- In some situations, callpoint! does not return the correct context for
+    rem --- the control.  Then we have to search the whole form! and child windows
+    rem --- for the control.
+    rem
+    rem ==========================================================================
+        
+        method public static BBjControl getControl(BBjTopLevelWindow Form!, Callpoint callpoint!, BBjString data_name$)
+            control_id% = int(num( callpoint!.getTableColumnAttribute(data_name$, "CTLI") ))
+            methodret #findControlByID(form!, control_id%)
         methodend
         
 
