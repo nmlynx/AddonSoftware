@@ -107,7 +107,8 @@ rem --- Check For Quotes
         extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
         ope01a.credit_flag$ = ""
         write record (ope01_dev) ope01a$
-        callpoint!.setStatus("WAIT:1")
+        callpoint!.setStatus("WAIT:2")
+        callpoint!.setStatus("STEORIG")
         goto std_exit
     endif
     
@@ -187,6 +188,7 @@ display_form: rem --- Display
             ope01a.credit_flag$ = "C"
             ope01a$ = field(ope01a$)
             write record (ope01_dev) ope01a$
+            callpoint!.setStatus("STEORIG")
             
 			break
             
@@ -203,6 +205,7 @@ display_form: rem --- Display
             ope01a.credit_flag$ = "C"
             ope01a$ = field(ope01a$)
             write record (ope01_dev) ope01a$
+            callpoint!.setStatus("STEORIG")
 
 			break
             
@@ -246,6 +249,7 @@ rem --- Update order header file
     ope01a.lock_status$="N"
     ope01a$ =field(ope01a$)
     write record (ope01_dev) ope01a$
+    callpoint!.setStatus("STEORIG")
     
     goto std_exit
 
@@ -299,7 +303,7 @@ warn_re_picklist: rem --- Warn About Printing Pick Ticket
         msg_id$ = "OP_PRINT_PICKLIST"
         gosub disp_message
         if msg_opt$ = "Y" then
-            call pgmdir$+"opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
+            call pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
             if status = 999 then exitto std_exit
         endif
         rem call pgmdir$+"adc_yesno.aon",1,"New Items Have Been Committed.  Print Pick Ticket Now",2,v$,v3
