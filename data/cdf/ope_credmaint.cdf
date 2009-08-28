@@ -205,7 +205,7 @@ rem --- Print the order?
 	msg_id$="OP_ORDREL"
 	gosub disp_message
 	if msg_opt$="Y"
-		call "opc_picklist.aon", cust$, ord$, table_chans$[all], status
+		call stbl("+DIR_PGM")+"opc_picklist.aon", cust$, ord$, callpoint!, table_chans$[all], status
 	endif
 	callpoint!.setStatus("EXIT")
 
