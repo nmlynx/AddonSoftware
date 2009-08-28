@@ -18,7 +18,16 @@ rem --- Reset all previous values
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
+rem --- Is record deleted?
+
+	if user_tpl.record_deleted then
+		break; rem --- exit callpoint
+	endif
+
 rem --- Credit action
+
+	print "---header modified? ", callpoint!.getRecordStatus(); rem debug
+	print "---detail modified?", user_tpl.detail_modified; rem debug
 
 	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
 		cust_id$ = cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2)
@@ -85,7 +94,7 @@ rem --- Print a counter Picking Slip
 	if user_tpl.credit_installed$ <> "Y" and inv_type$ <> "P" then
 		if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
 		callpoint!.setStatus("SAVE")
-		call stbl("+DIR_PGM")+"opc_picklist.aon", cust_id$, order_no$, table_chans$[all], status
+		call stbl("+DIR_PGM")+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 		if status = 999 then goto std_exit
 	endif
 [[OPE_ORDHDR.BWRI]]
@@ -363,6 +372,10 @@ rem --- Remove from ope-04
 	remove (ope_prntlist_dev,key=firm_id$+"O"+"  "+
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
+
+rem --- Set flag
+
+	user_tpl.record_deleted = 1
 [[OPE_ORDHDR.ORDER_DATE.AVAL]]
 rem --- Set user template info
 
@@ -1238,6 +1251,7 @@ rem ==========================================================================
 			ope01a.total_sales     = ope01a.total_sales*line_sign
 
 			write record (ope01_dev) ope01a$
+			callpoint!.setStatus("STEORIG")
 
 			user_tpl.price_code$   = ope01a.price_code$
 			user_tpl.pricing_code$ = ope01a.pricing_code$
@@ -1780,7 +1794,8 @@ rem --- Setup user_tpl$
 :     "prev_ship_to:c(1*), " +
 :		"prev_sales_total:n(15), " +
 :		"is_cash_sale:u(1), " +
-:		"detail_modified:u(1)"
+:		"detail_modified:u(1), " +
+:		"record_deleted:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -1805,6 +1820,7 @@ rem --- Setup user_tpl$
 	user_tpl.bo_col            = 8
 	user_tpl.is_cash_sale      = 0
 	user_tpl.detail_modified   = 0
+	user_tpl.record_deleted    = 0
 
 	user_tpl.prev_line_code$   = ""
 	user_tpl.prev_item$        = ""
