@@ -9,11 +9,14 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
-    enter cust_id$, order_no$, table_chans$[all], status
+    enter cust_id$, order_no$, callpoint!, table_chans$[all], status
 
 rem --- Use statements
 
     use ::ado_func.src::func
+    use ::sys/prog/bao_callpoint.bbj::Callpoint
+    
+    declare Callpoint callpoint!
 
 rem --- Retrieve the program path
 
@@ -340,7 +343,6 @@ rem --- Read header
 
     wend
 
-
         if ope01a.reprint_flag$="Y"
             ope01a.print_status$=reprint$,ope01a.reprint_flag$=""
         else
@@ -356,11 +358,11 @@ rem --- Read header
         ope01a.lock_status$="N"
         ope01a$=field(ope01a$)
         write record (ordhdr_dev) ope01a$
+        callpoint!.setStatus("STEORIG")
 
         if ope01a.print_status$="Y"
             remove (prntlist_dev,key=firm_id$+ope01a.ordinv_flag$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
         endif                
-
 
 ready: 
 
@@ -423,6 +425,7 @@ rem --- Clear Print Flag
         if ope01a.print_status$<>"Y" then ope01a.print_status$="N"
         ope01a$=field(ope01a$)
         write record (ordhdr_dev) ope01a$
+        callpoint!.setStatus("STEORIG")
         
         break
     wend
