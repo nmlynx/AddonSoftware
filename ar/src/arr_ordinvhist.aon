@@ -357,14 +357,22 @@ print_totals: rem --- Add totals to display page
 nomore: rem --- Display last page
 
     if found goto finished
-    dim message$[1]
-    let message$[0]="No transactions found (<Enter>=Continue)"
-    call pgmdir$+"adc_stdmessage.aon",3,message$[all],0,-1,-1,ignore$,v3
+    rd_msg_id$="AD_NORECS"
+    dim rd_msg_tokens$[1]
+    rd_msg_opt$=""
+    gosub disp_message
 
 finished: rem --- All done
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     goto std_exit
+
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",rd_msg_id$,rd_msg_tokens$[all],rd_msg_opt$,rd_table_chans$[all]
+
+	return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
