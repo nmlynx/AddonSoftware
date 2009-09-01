@@ -1,4 +1,14 @@
 [[OPE_INVHDR.INVOICE_TYPE.AVAL]]
+rem --- Enable/disable expire date based on value
+
+	inv_type$ = callpoint!.getUserInput()
+
+	if inv_type$ <> "P" then
+		callpoint!.setColumnEnabled("OPE_INVHDR.EXPIRE_DATE", -1)
+	else
+		callpoint!.setColumnEnabled("OPE_INVHDR.EXPIRE_DATE", 1)
+	endif
+
 rem --- Set type in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
@@ -22,12 +32,11 @@ rem --- Reset all previous values
 [[OPE_INVHDR.AOPT-PRNT]]
 rem --- Print a counter Invoice
 
-	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-	if cust_id$<>"" and order_no$<>"" then
-		call stbl("+DIR_PGM")+"opc_invoice.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
-		if status = 999 then goto std_exit
+	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" then
+		gosub do_picklist
+	else
+		gosub do_credit_action
+		if action$ = "R" or action$ = "Q" then gosub do_picklist
 	endif
 [[OPE_INVHDR.BREX]]
 print "Hdr:BREX"; rem debug
@@ -83,21 +92,7 @@ rem --- Set return values
 rem --- Credit action
 
 	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
-		cust_id$  = cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"), 2)
-		ord_no$   = cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"), 2)
-		inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
-		status    = 0
-
-		if cust_id$="" or ord_no$="" then break; rem --- exit callpoint
-
-		if user_tpl.credit_installed$="Y" and inv_type$<>"P" and user_tpl.cash_sale$ <> "Y" then
-			callpoint!.setDevObject("run_by", "invoice")
-			callpoint!.setDevObject("cust_id", cust_id$)
-			callpoint!.setDevObject("order_no", ord_no$)
-			call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
-			if status = 999 then goto std_exit
-			if action$ = "D" then callpoint!.setStatus("DELETE")
-		endif
+		gosub do_credit_action
 	endif
 
 rem --- Cash Transaction
@@ -258,6 +253,9 @@ rem --- Set flag
 	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
+	callpoint!.setOptionEnabled("RPRT",0)
+	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("CRCH",0)
 [[OPE_INVHDR.SHIPTO_NO.BINP]]
 rem --- Save old value
 
@@ -590,14 +588,7 @@ rem --- Backorder and Credit Hold
 
 rem --- Enable buttons
 
-	if user_tpl.credit_installed$ <> "Y"	and 
-:		callpoint!.getRecordStatus() <> "M"	and 
-:		user_tpl.detail_modified = 0
-:	then
-		callpoint!.setOptionEnabled("PRNT",1)
-	else
-		callpoint!.setOptionEnabled("PRNT",0)
-	endif
+	callpoint!.setOptionEnabled("PRNT",1)
 
 rem --- Set all previous values
 
@@ -811,6 +802,8 @@ rem --- Enable Duplicate buttons, printer
 			callpoint!.setOptionEnabled("PRNT",1)
 		endif
 	endif
+
+	callpoint!.setOptionEnabled("CRCH",1)
 
 rem --- Set customer in OrderHelper object
 
@@ -1430,6 +1423,39 @@ rem ==========================================================================
    callpoint!.setStatus("SAVE")
 
 	return 
+
+rem ==========================================================================
+do_credit_action: rem --- Launch the credit action program / form
+rem ==========================================================================
+
+	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	ord_no$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(ord_no$, 2) <> "" then
+		callpoint!.setDevObject("run_by", "invoice")
+		callpoint!.setDevObject("cust_id", cust_id$)
+		callpoint!.setDevObject("order_no", ord_no$)
+		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
+		if status = 999 then goto std_exit
+		if action$ = "D" then callpoint!.setStatus("DELETE")	
+	endif
+
+	return
+
+rem ==========================================================================
+do_picklist: rem --- Print a Pick List
+rem ==========================================================================
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "Y")
+	callpoint!.setStatus("SAVE")
+	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+	if status = 999 then goto std_exit
+
+	return
 [[OPE_INVHDR.ASHO]]
 print "Hdr:ASHO"; rem debug
 
@@ -1786,9 +1812,14 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
-	callpoint!.setOptionEnabled("CRCH",1)
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+
+	if user_tpl.credit_installed$ = "Y" then
+		callpoint!.setOptionEnabled("CRCH",1)
+	else
+		callpoint!.setOptionEnabled("CRCH",0)
+	endif
 
 rem --- Parse table_chans$[all] into an object
 
