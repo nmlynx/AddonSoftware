@@ -10,7 +10,7 @@ rem --- All Rights Reserved
     seterr std_error
 
     enter cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
-
+    
 rem --- Use statements, declares
 
     use ::sys/prog/bao_callpoint.bbj::Callpoint
@@ -95,7 +95,7 @@ rem --- Has order been printed?
     if ope01a.print_status$ = "Y" then
         status$="This Order Has Been Printed"
         backorderedControl!.setText(status$)
-        callpoint!.setStatus("WAIT")
+        action$ = "R"
         goto std_exit
     endif
 
@@ -107,8 +107,8 @@ rem --- Check For Quotes
         extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
         ope01a.credit_flag$ = ""
         write record (ope01_dev) ope01a$
-        callpoint!.setStatus("WAIT:2")
-        callpoint!.setStatus("STEORIG")
+        callpoint!.setStatus("SETORIG")
+        action$ = "Q"
         goto std_exit
     endif
     
@@ -158,7 +158,6 @@ rem --- Reuse backordered text control to display status since it won't show it 
     if !over_credit_limit or ope01a.total_sales <= 0 then 
         backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
         backorderedControl!.setText(status$)
-        print "---Status: ", status$; rem debug
         callpoint!.setStatus("WAIT")
         goto final_updates 
     endif
@@ -188,7 +187,7 @@ display_form: rem --- Display
             ope01a.credit_flag$ = "C"
             ope01a$ = field(ope01a$)
             write record (ope01_dev) ope01a$
-            callpoint!.setStatus("STEORIG")
+            callpoint!.setStatus("SETORIG")
             
 			break
             
@@ -205,7 +204,7 @@ display_form: rem --- Display
             ope01a.credit_flag$ = "C"
             ope01a$ = field(ope01a$)
             write record (ope01_dev) ope01a$
-            callpoint!.setStatus("STEORIG")
+            callpoint!.setStatus("SETORIG")
 
 			break
             
@@ -249,7 +248,7 @@ rem --- Update order header file
     ope01a.lock_status$="N"
     ope01a$ =field(ope01a$)
     write record (ope01_dev) ope01a$
-    callpoint!.setStatus("STEORIG")
+    callpoint!.setStatus("SETORIG")
     
     goto std_exit
 
