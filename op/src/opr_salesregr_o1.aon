@@ -6,14 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem -------------- Errors, Warnings and Conversion Information ---------------------
-
-rem --- The following error(s) were encountered during the conversion:
-
-rem --- The following IOLIST's were removed from this program:
-
-rem --- glm01a: iolist *,x1$(1)
-
     seterr std_error
     setesc std_error
 
@@ -87,17 +79,17 @@ rem --- Initializations
 
 rem -- Column heading
 
-    dim columns$[7,10]
-    columns = 7,cur_col=0
+    dim columns$[6,10]
+    columns = 6,cur_col=0
 
     columns$[0,0]="Customer No & Name", columns$[0,1]="C",columns$[0,2]="30"
     columns$[1,0]="Inv.No",             columns$[1,1]="C",columns$[1,2]="8"
     columns$[2,0]="Inv.Date",           columns$[2,1]="C",columns$[2,2]="10"
-    columns$[3,0]="Line.No",            columns$[3,1]="C",columns$[3,2]="8"
-    columns$[4,0]="G.L.No.",            columns$[4,1]="C",columns$[4,2]="8"
-    columns$[5,0]="Description",        columns$[5,1]="C",columns$[5,2]="25"
-    columns$[6,0]="Debit",              columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
-    columns$[7,0]="Credit",             columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
+rem columns$[3,0]="Line.No",            columns$[3,1]="C",columns$[3,2]="8"
+    columns$[3,0]="G.L.No.",            columns$[3,1]="C",columns$[3,2]="8"
+    columns$[4,0]="Description",        columns$[4,1]="C",columns$[4,2]="25"
+    columns$[5,0]="Debit",              columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
+    columns$[6,0]="Credit",             columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
 
 rem --- Background
 
@@ -302,7 +294,7 @@ l3780: rem --- Print
     if cur_col<2
         xwk=fnblank(3-cur_col)
     endif
-    OutVect!.addItem(opw04a.orddet_seq_ref$)
+rem    OutVect!.addItem(opw04a.orddet_seq_ref$)
     OutVect!.addItem(fnmask$(opw04a.gl_account$(1,g5),g5$))
     OutVect!.addItem(glm01a.gl_acct_desc$)
     if opw04a.gl_post_amt>0 then
@@ -333,24 +325,26 @@ l3900: rem --- End of file?
 
 done: rem --- End
 
-    if recs=0
-        msg_id$="DOC_OUTPUT_NODATA"
-        gosub disp_message
-        goto std_exit_no_report
-    endif
+    if r5$<>"S"
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit_no_report
+        endif
+    endif    
 
     t9$="E"
     gosub cust_break
     if r5$<>"D" goto l4100
 
-    xwk=fnblank(16)
+    xwk=fnblank(14)
     TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
     OutVect!.addItem("Grand Total : ")
     if d2-abs(c2)<>0 then
-        xwk=fnblank(4)
+        xwk=fnblank(3)
         OutVect!.addItem("***")
     else
-        xwk=fnblank(5)
+        xwk=fnblank(4)
     endif
     OutVect!.addItem(str(d2))
     OutVect!.addItem(str(abs(c2)))
@@ -369,13 +363,13 @@ cust_break: rem --- Customer Break
     if t0$="" goto l6100
     if d3-abs(c3)<>0 gosub l6200
     if r5$<>"D" goto l6100
-    xwk=fnblank(8)
+    xwk=fnblank(7)
     TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
     OutVect!.addItem("Customer "+fnmask$(t0$(1,m0),m0$)+" Total: ")
-    xwk=fnblank(5)
+    xwk=fnblank(4)
     OutVect!.addItem(str(d1))
     OutVect!.addItem(str(abs(c1)))
-    xwk=fnblank(8)
+    xwk=fnblank(7)
     cur_col=0
     l=l+3
     recs=recs+1
@@ -404,8 +398,8 @@ l6200: rem --- Previous Invoice Out Of Balance
     gosub l6400
     if d3-abs(c3)=0 goto l6290
     if r5$<>"D" goto l6290
-    if cur_col<5
-        xwk=fnblank(5-cur_col)
+    if cur_col<4
+        xwk=fnblank(4-cur_col)
     endif
     OutVect!.addItem("**")
     OutVect!.addItem(str(d3))
@@ -434,7 +428,7 @@ rem --- Summarize Non-Retained Postings
     if cur_col<3
         xwk=fnblank(3-cur_col)
     endif
-    OutVect!.addItem("???")
+    rem OutVect!.addItem("???")
     OutVect!.addItem(d1$)
     OutVect!.addItem("***Detail Not Retained***")
     if oob>0
