@@ -1,5 +1,57 @@
+[[OPE_ORDDET.QTY_ORDERED.AVAL]]
+print "Det:QTY_ORDERED.AVAL"; rem debug
+
+rem --- Set shipped and back ordered
+
+	qty_ord    = num(callpoint!.getUserInput())
+	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+
+	if qty_ord<>user_tpl.prev_qty_ord or unit_price = 0 then
+
+		if qty_ord<>user_tpl.prev_qty_ord then
+			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+
+			if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" or
+:				callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P"
+:			then
+				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
+			else
+				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
+			endif
+		endif
+
+	rem --- Recalc quantities and extended price
+
+		if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
+			gosub pricing
+		endif
+
+	endif
+
+	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	gosub disp_ext_amt
+
+rem --- Update header
+
+	gosub disp_grid_totals
+
+rem --- Set Lot/Serial button up properly
+
+	gosub able_lot_button
+
+rem --- Set Recalc Price button
+
+	gosub enable_repricing
+
+rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
+
+	if lotted$="Y" then
+		rem debug, *** do lotted logic
+	endif
 [[OPE_ORDDET.QTY_BACKORD.BINP]]
-user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
+rem --- Set previous qty
+
+	user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
 [[OPE_ORDDET.QTY_SHIPPED.BINP]]
 user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 [[OPE_ORDDET.QTY_ORDERED.BINP]]
@@ -51,7 +103,7 @@ rem --- Set product types for certain line types
 [[OPE_ORDDET.EXT_PRICE.AVAL]]
 rem --- Round 
 
-	callpoint!.setUserInput( str(round(num(callpoint!.getUserInput()), 2)) )
+	callpoint!.setUserInput( str(round( num(callpoint!.getUserInput()), 2)) )
 [[OPE_ORDDET.WAREHOUSE_ID.AVEC]]
 print "Det:WAREHOUSE_ID.AVEC"; rem debug
 
@@ -374,14 +426,6 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 		action$="UC"
 		gosub uncommit_iv
 	endif
-[[OPE_ORDDET.UNIT_PRICE.AVEC]]
-rem --- Update header
-
-	gosub disp_grid_totals
-
-rem --- Recalc and display extended price
-
-	gosub disp_ext_amt
 [[OPE_ORDDET.AGRN]]
 print "Det:AGRN"; rem debug
 
@@ -460,7 +504,7 @@ rem --- What is extended price?
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 
 	if pos(user_tpl.line_type$="SNP") then
-		ext_price = round( num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) * unit_price, 2 )
+		ext_price = round( num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED")) * unit_price, 2 )
 	else
 		ext_price = round( num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE")), 2 )
 	endif
@@ -591,6 +635,8 @@ rem 		call stbl("+DIR_PGM")+"opc_pc.aon",op_chans[all],firm_id$,whs$,item$,listc
 rem 		callpoint!.setUserInput(str(price))
 rem 	endif
 
+	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	unit_price  = num(callpoint!.getUserInput())
 	gosub disp_ext_amt
 	gosub disp_grid_totals
 [[OPE_ORDDET.AUDE]]
@@ -646,62 +692,6 @@ rem --- Check item/warehouse combination and setup values
 			callpoint!.setStatus("REFRESH")
 		endif
 	endif
-[[OPE_ORDDET.QTY_ORDERED.AVEC]]
-print "Det:QTY_ORDERED.AVEC"; rem debug
-
-rem --- Set shipped and back ordered
-
-	qty_ord    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
-
-	if qty_ord<>user_tpl.prev_qty_ord or unit_price = 0 then
-
-		if qty_ord<>user_tpl.prev_qty_ord then
-			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
-
-			if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" or
-:				callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P"
-:			then
-				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
-			else
-				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
-			endif
-		endif
-
-rem --- Recalc quantities and extended price
-
-		if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
-			gosub pricing
-		endif
-
-		gosub disp_ext_amt
-
-	endif
-
-rem --- Update header
-
-	gosub disp_grid_totals
-
-rem --- Set Lot/Serial button up properly
-
-	gosub able_lot_button
-
-rem --- Set Recalc Price button
-
-	gosub enable_repricing
-
-rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
-
-	if lotted$="Y" then
-		rem debug, *** do lotted logic
-	endif
-[[OPE_ORDDET.ADIS]]
-rem ---display extended price
-	ordqty=num(rec_data.qty_ordered)
-	unit_price=num(rec_data.unit_price)
-	new_ext_price=ordqty*unit_price
-	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE",str(new_ext_price))
-	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 print "Det:QTY_SHIPPED.AVAL"; rem debug
 
@@ -733,8 +723,11 @@ print "---Ordered:", ordqty
 		endif
 	endif
 
-rem --- update header
+rem --- Update header
 
+	qty_shipped = shipqty
+	unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	gosub disp_ext_amt
 	gosub disp_grid_totals
 [[OPE_ORDDET.QTY_BACKORD.AVAL]]
 print "Det:QTY_BACKORD.AVAL"; rem debug
@@ -752,13 +745,15 @@ rem --- Recalc quantities and extended price
 		break; rem --- exit callpoint
 	endif
 
-	if boqty = 0 and !user_tpl.new_detail then
-		callpoint!.setUserInput(str(ordqty))
-		boqty = ordqty
+	if boqty = 0 then
+		callpoint!.setUserInput("0")
+		boqty = 0
 	endif
 
 	if boqty <> user_tpl.prev_boqty then
-		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(ordqty - boqty))
+		qty_shipped = ordqty - boqty
+		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
+		unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 		gosub disp_ext_amt
 	endif
 
@@ -774,9 +769,9 @@ rem ==========================================================================
 
 	tamt! = UserObj!.getItem(num(user_tpl.ord_tot_1$))
 	tamt!.setValue(user_tpl.ord_tot)
-	print "Update Order Totals (user_tpl):", user_tpl.ord_tot; rem debug
-	rem callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", user_tpl.ord_tot$)
-	rem callpoint!.setStatus("REFRESH")
+	print "Update Order Totals (vector):", user_tpl.ord_tot; rem debug
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", user_tpl.ord_tot$)
+	callpoint!.setStatus("REFRESH")
 
 return
 
@@ -851,6 +846,8 @@ rem ==========================================================================
 
 rem --- Recalc and display extended price
 
+	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	unit_price = price
 	gosub disp_ext_amt
 
 return
@@ -1142,12 +1139,13 @@ return
 
 rem ==========================================================================
 disp_ext_amt: rem --- Calculate and display the extended amount
+              rem      IN: qty_shipped
+              rem          unit_price
+              rem     OUT: ext_price set
 rem ==========================================================================
 
-	ord_qty    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
-	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(ord_qty * unit_price))
-	print "---Ext price set to", ord_qty * unit_price; rem debug
+	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(qty_shipped * unit_price))
+	print "---Ext price set to", qty_shipped * unit_price; rem debug
 	callpoint!.setStatus("MODIFIED;REFRESH")
 
 return
