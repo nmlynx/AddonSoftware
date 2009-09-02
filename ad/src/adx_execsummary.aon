@@ -49,7 +49,7 @@ rem --- Valid values are:
 rem --- 0 = No diagnostics
 rem --- 1 = Show syswindow and prompt at phase entry/exit
 
-    debug=1;rem cah
+    debug=0;rem cah
     if debug print 'show'
 
 rem --- Open/Lock files
@@ -974,6 +974,7 @@ rem --- than using the the common subroutines that the other applications use.
             amountvar$="inv_oh_bydt"
             gosub summary_data
             rec$=field(rec$)
+
             write record (ade09_dev) rec$
 
             rem --- Create records for future months out until the last
@@ -1003,6 +1004,7 @@ rem --- than using the the common subroutines that the other applications use.
                 amountvar$="inv_oh_bydt"
                 gosub summary_data
                 rec$=field(rec$)
+
                 write record (ade09_dev) rec$
             wend
 
@@ -1224,7 +1226,7 @@ rem ---------------------------------------------------------------------
 rem ---------------------------------------------------------------------
 rem --- Phase 10: Consolidation
 rem ---------------------------------------------------------------------
-escape;rem consolidation
+rem escape;rem consolidation
 rem --- Initializations
 
     firm99$="99"
@@ -1358,6 +1360,9 @@ rem --- For each Executive Summary (ade-xx) file
 
             dim firm99rec$:fattr(firmnnrec$)
             firm99_key$=firm99$+firmnnrec.full_year$+firmnnrec.month$
+            firm99rec.firm_id$=firm99$
+            firm99rec.full_year$=firmnnrec.full_year$
+            firm99rec.month$=firmnnrec.month$
             find record (channel,key=firm99_key$,dom=*next) firm99rec$
 
             rem --- Transfer numeric values to working arrays
@@ -1387,7 +1392,8 @@ rem --- For each Executive Summary (ade-xx) file
                 if using_lines field firm99rec$,linesvar$+"_"+str(x:"00")=cons_lines[x]
             next x
             firm99rec$=field(firm99rec$)
-            write (channel) firm99rec$
+
+            write record (channel) firm99rec$
 
             rem --- Reposition file and loop back for next record
 
@@ -1427,6 +1433,7 @@ update_record: rem --- Update the current Executive Summary record
     units=0
     action$="U"
     gosub summary_data
+
     write record (channel) rec$
     return
 
@@ -1576,6 +1583,7 @@ update_inventory: rem --- Update current and future inventory records with
                 next y
                 action$="U"
                 gosub summary_data
+
                 write record (ade09_dev,key=k$) rec$
             wend
         next x1
