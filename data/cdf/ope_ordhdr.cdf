@@ -24,6 +24,14 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
+rem --- Are both Customer and Order entered?
+
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2) = "" or 
+:		cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = ""
+:	then
+		break; rem --- exit callpoint
+	endif
+
 rem --- Credit action
 
 	print "---header modified? ", callpoint!.getRecordStatus(); rem debug

@@ -47,6 +47,14 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
+rem --- Are both Customer and Order entered?
+
+	if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"), 2) = "" or 
+:		cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"), 2) = ""
+:	then
+		break; rem --- exit callpoint
+	endif
+
 rem --- Invoice totals, call form
 
 	dim dflt_data$[4,1]
