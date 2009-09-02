@@ -81,7 +81,7 @@ rem --- Set return values
 	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   tax_amount$)
 
 	rem callpoint!.setStatus("SAVE;REFRESH")
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setStatus("REFRESH;SETORIG")
 [[OPE_ORDHDR.AOPT-PRNT]]
 print "Hdr:AOPT:PRNT"; rem debug
 
@@ -305,6 +305,12 @@ rem --- Set all previous values
 	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
 	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
+
+rem --- Set type in OrderHelper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE"))
+
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
