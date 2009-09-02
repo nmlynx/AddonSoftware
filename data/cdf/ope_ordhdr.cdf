@@ -748,15 +748,6 @@ rem --- Set order in OrderHelper object
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 
-	callpoint!.setColumnData("<<DISPLAY>>.SNAME","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD3","")
-	callpoint!.setColumnData("<<DISPLAY>>.SADD4","")
-	callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
-	callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
-	callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
-
 	ship_to_type$ = callpoint!.getUserInput()
 	ship_to_no$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	cust_id$      = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -1083,7 +1074,7 @@ rem ==========================================================================
 
 		ordship_dev=fnget_dev("OPE_ORDSHIP")
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
-		read record (ordship_dev, key=firm_id$+cust_id$+ord_no$, dom=no_manual) ordship_tpl$
+		read record (ordship_dev, key=firm_id$+cust_id$+ord_no$, dom=*endif) ordship_tpl$
 
 		callpoint!.setColumnData("<<DISPLAY>>.SNAME",ordship_tpl.name$)
 		callpoint!.setColumnData("<<DISPLAY>>.SADD1",ordship_tpl.addr_line_1$)
@@ -1093,7 +1084,6 @@ rem ==========================================================================
 		callpoint!.setColumnData("<<DISPLAY>>.SCITY",ordship_tpl.city$)
 		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",ordship_tpl.state_code$)
 		callpoint!.setColumnData("<<DISPLAY>>.SZIP",ordship_tpl.zip_code$)
-	no_manual:
 	endif
 
 	callpoint!.setStatus("REFRESH")
