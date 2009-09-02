@@ -264,7 +264,7 @@ rem --- Set header total amounts
 		callpoint!.setHeaderColumnData( "OPE_INVHDR.TAXABLE_AMT", str(ordHelp!.getTaxable()) )
 		callpoint!.setHeaderColumnData( "OPE_INVHDR.TOTAL_COST",  str(ordHelp!.getExtCost()) )
 
-		callpoint!.setStatus("MODIFIED;REFRESH")
+		callpoint!.setStatus("MODIFIED;REFRESH;SETORIG")
 
 	endif
 [[OPE_INVDET.AGCL]]
