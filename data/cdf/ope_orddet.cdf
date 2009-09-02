@@ -30,17 +30,8 @@ rem --- Set shipped and back ordered
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	gosub disp_ext_amt
-
-rem --- Update header
-
 	gosub disp_grid_totals
-
-rem --- Set Lot/Serial button up properly
-
 	gosub able_lot_button
-
-rem --- Set Recalc Price button
-
 	gosub enable_repricing
 
 rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
@@ -53,7 +44,9 @@ rem --- Set previous qty
 
 	user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
 [[OPE_ORDDET.QTY_SHIPPED.BINP]]
-user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+rem --- Set previous amount
+
+	user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 [[OPE_ORDDET.QTY_ORDERED.BINP]]
 print "Det:QTY.ORDERED:BINP"; rem debug
 
@@ -104,6 +97,7 @@ rem --- Set product types for certain line types
 rem --- Round 
 
 	callpoint!.setUserInput( str(round( num(callpoint!.getUserInput()), 2)) )
+	gosub disp_grid_totals
 [[OPE_ORDDET.WAREHOUSE_ID.AVEC]]
 print "Det:WAREHOUSE_ID.AVEC"; rem debug
 
@@ -611,10 +605,10 @@ rem 	g!.setCellEditable(r,5,0)
 rem 	g!.setCellBackColor(r,5,disable_color!)
 rem endif
 [[OPE_ORDDET.EXT_PRICE.AVEC]]
-rem --- Update header
-
-	gosub disp_grid_totals
+	
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
+print "Det:UNIT_PRICE:AVAL"; rem debug
+
 rem --- See if this should be repriced
 rem 	if num(callpoint!.getUserInput())<0
 rem 		dim op_chans[6]
@@ -755,11 +749,9 @@ rem --- Recalc quantities and extended price
 		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
 		unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 		gosub disp_ext_amt
+		gosub disp_grid_totals
 	endif
 
-rem --- Update header
-
-	gosub disp_grid_totals
 [[OPE_ORDDET.<CUSTOM>]]
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
@@ -768,30 +760,27 @@ rem ==========================================================================
 	gosub calc_grid_totals
 
 	tamt! = UserObj!.getItem(num(user_tpl.ord_tot_1$))
-	tamt!.setValue(user_tpl.ord_tot)
-	print "Update Order Totals (vector):", user_tpl.ord_tot; rem debug
-	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", user_tpl.ord_tot$)
+	tamt!.setValue(ttl_ext_price)
+	print "Update Order Totals (vector):", ttl_ext_price; rem debug
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
 
-return
+	return
 
 rem ==========================================================================
 calc_grid_totals: rem --- Roll thru all detail line, totaling ext_price
-                  rem     OUT: user_tpl.ord_tot
-                  rem          ttl_ext_price
+                  rem     OUT: ttl_ext_price
 rem ==========================================================================
 
-	rem print "Det:in calc_grid_totals"; rem debug
+	print "Det:in calc_grid_totals"; rem debug
 	rem Does rolling through the vector still make sense?
+	rem Yes, to get the total before it's written to disk
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
-	user_tpl.ord_tot = ttl_ext_price
+	print "---Total Sales:", ttl_ext_price; rem debug
 
-	rem print "---Total Sales:", ttl_ext_price; rem debug
-	rem print "---setting user_tpl.ord_tot from detail vector..."; rem debug
-
-return
+	return
 
 rem ==========================================================================
 pricing: rem --- Call Pricing routine
@@ -850,7 +839,7 @@ rem --- Recalc and display extended price
 	unit_price = price
 	gosub disp_ext_amt
 
-return
+	return
 
 rem ==========================================================================
 set_avail: rem --- Set data in Availability window
@@ -905,7 +894,7 @@ rem ==========================================================================
 
 	endif
 
-return
+	return
 
 rem ==========================================================================
 clear_avail: rem --- Clear Availability Window
@@ -919,7 +908,7 @@ rem ==========================================================================
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
 
-return
+	return
 
 rem ==========================================================================
 check_new_row: rem --- Check to see if we're on a new row, *** DEPRECATED, see AGCL
@@ -933,7 +922,7 @@ rem ==========================================================================
 		gosub set_avail
 	endif
 
-return
+	return
 
 rem ==========================================================================
 lot_ser_check: rem --- Check for lotted item
@@ -957,7 +946,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 uncommit_iv: rem --- Uncommit Inventory
@@ -1010,7 +999,7 @@ print "Det: in uncommit_iv"; rem deebug
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 disable_by_linetype: rem --- Set enable/disable based on line type
@@ -1048,7 +1037,7 @@ rem --- Disable / enable unit cost
 		endif
 	endif
 
-return
+	return
 
 rem ===========================================================================
 check_item_whse: rem --- Check that a warehouse record exists for this item
@@ -1079,26 +1068,26 @@ rem ===========================================================================
 		if failed and warn then callpoint!.setMessage("IV_NO_WHSE_ITEM")
 	endif
 
-return
+	return
 
 rem ==========================================================================
 clear_all_numerics: rem --- Clear all order detail numeric fields
 rem ==========================================================================
 
-		callpoint!.setColumnData("OPE_ORDDET.UNIT_COST", "0")
-		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", "0")
-		callpoint!.setColumnData("OPE_ORDDET.QTY_ORDERED", "0")
-		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
-		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
-		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", "0")
-		callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", "0")
-		callpoint!.setColumnData("OPE_ORDDET.TAXABLE_AMT", "0")
-		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", "0")
-		callpoint!.setColumnData("OPE_ORDDET.COMM_PERCENT", "0")
-		callpoint!.setColumnData("OPE_ORDDET.COMM_AMT", "0")
-		callpoint!.setColumnData("OPE_ORDDET.SPL_COMM_PCT", "0")
+	callpoint!.setColumnData("OPE_ORDDET.UNIT_COST", "0")
+	callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", "0")
+	callpoint!.setColumnData("OPE_ORDDET.QTY_ORDERED", "0")
+	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+	callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
+	callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", "0")
+	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", "0")
+	callpoint!.setColumnData("OPE_ORDDET.TAXABLE_AMT", "0")
+	callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", "0")
+	callpoint!.setColumnData("OPE_ORDDET.COMM_PERCENT", "0")
+	callpoint!.setColumnData("OPE_ORDDET.COMM_AMT", "0")
+	callpoint!.setColumnData("OPE_ORDDET.SPL_COMM_PCT", "0")
 
-return
+	return
 
 rem ==========================================================================
 enable_repricing: rem --- Enable the Recalc Pricing button
@@ -1115,7 +1104,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 able_lot_button: rem --- Enable/disable Lot/Serial button
@@ -1135,7 +1124,7 @@ rem ==========================================================================
 		callpoint!.setOptionEnabled("LENT",0)
 	endif
 
-return
+	return
 
 rem ==========================================================================
 disp_ext_amt: rem --- Calculate and display the extended amount
@@ -1148,7 +1137,7 @@ rem ==========================================================================
 	print "---Ext price set to", qty_shipped * unit_price; rem debug
 	callpoint!.setStatus("MODIFIED;REFRESH")
 
-return
+	return
 
 rem ==========================================================================
 set_item_taxable: rem --- Set the item taxable flag
@@ -1166,7 +1155,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 credit_exceeded: rem --- Credit Limit Exceeded (ope_dd, 5500-5599)
@@ -1183,7 +1172,7 @@ rem ==========================================================================
 		callpoint!.setDevObject("over_credit_limit", "1")
 	endif
 
-return
+	return
 
 rem ==========================================================================
 able_backorder: rem --- All the factors for enabling or disabling back orders
@@ -1203,7 +1192,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return
+	return
 
 
 rem ==========================================================================
