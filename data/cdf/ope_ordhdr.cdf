@@ -1557,7 +1557,12 @@ rem ==========================================================================
 		callpoint!.setDevObject("order_no", ord_no$)
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
-		if action$ = "D" then callpoint!.setStatus("DELETE")	
+
+		if action$ = "D" then 
+			callpoint!.setStatus("DELETE")
+		else	
+			callpoint!.setStatus("STEORIG")
+		endif
 	endif
 
 	return
