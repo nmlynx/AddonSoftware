@@ -132,7 +132,7 @@ rem --- Inits
 
             find record (ope41_dev,key=opw41a_key.firm_id$+opw41a_key.ar_type$+opw41a_key.customer_id$+opw41a_key.order_no$,dom=*continue) ope41a$
         rem dim x1$(30)
-            find record (arm10_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
+            find record (arm10c_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
 
         rem --- Get Customer
 
@@ -143,7 +143,7 @@ rem --- Inits
                 b1$=arm01a.customer_name$
             endif
 
-            if ars10a.cash_sale$="Y" then
+            if ars01a.cash_sale$="Y" then
                 if ope41a.customer_id$=ars01a.customer_id$ then
                     if cvs(ope41a.customer_name$,2)<>"" then
                         b1$=ope41a.customer_name$
@@ -177,9 +177,9 @@ rem --- Inits
         rem --- Totals
 
             for i=0 to 1
-                if arm10c.trans_type$="$" then r[0,i]=r[0,i]+ope41a.invoice-amt
-                if arm10c.trans_type$="C" then r[1,i]=r[1,i]+ope41a.invoice-amt
-                if arm10c.trans_type$="P" then r[2,i]=r[2,i]+ope41a.invoice-amt
+                if arm10c.trans_type$="$" then r[0,i]=r[0,i]+ope41a.invoice_amt
+                if arm10c.trans_type$="C" then r[1,i]=r[1,i]+ope41a.invoice_amt
+                if arm10c.trans_type$="P" then r[2,i]=r[2,i]+ope41a.invoice_amt
             next i
 
         wend
