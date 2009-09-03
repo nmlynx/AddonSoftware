@@ -122,7 +122,7 @@ rem glw11a$:templates$[7],
 :       ivm04a$:templates$[9],ivs01a$:templates$[10],ivw04a$:templates$[11],
 :       ivw05a$:templates$[12],ope01a$:templates$[13],ope04a$:templates$[14],
 :       ope11a$:templates$[15],ope21a$:templates$[16],ope41a$:templates$[17],
-:       opm02a$:templates$[18],opm06a$:templates$[19],ops10a$:templates$[20],
+:       opm02a$:templates$[18],opm06a$:templates$[19],ops10s$:templates$[20],
 :       opw11a$:templates$[22],opw21a$:templates$[23],
 :       opw31a$:templates$[24],opw41a$:templates$[25],sas01a$:templates$[26],
 :       glm03a$:templates$[27],arm10f$:templates$[28],arm10h$:templates$[29]
@@ -212,6 +212,18 @@ rem --- Clear trans for this firm/process/batch from glw-11 work file (if not ba
     endif
 
     find record (ops10_dev,key=firm_id$+"S",dom=*next) ops10s$
+    v[0]=ops10s.mtd_sales
+    v[1]=ops10s.mtd_returns
+    v[2]=ops10s.mtd_tax
+    v[3]=ops10s.mtd_freight
+    v[4]=ops10s.mtd_cost
+    v[5]=ops10s.mtd_discount
+    v[8]=ops10s.nmtd_sales
+    v[9]=ops10s.nmtd_returns
+    v[10]=ops10s.nmtd_tax
+    v[11]=ops10s.nxt_mtd_frgt
+    v[12]=ops10s.nxt_mtd_cost
+    v[13]=ops10s.nxt_mtd_disc
 
 rem --- Initialize Data
 
