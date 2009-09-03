@@ -99,7 +99,7 @@ rem --- Set return values
 
 rem --- Credit action
 
-	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
+	if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
 		gosub do_credit_action
 	endif
 

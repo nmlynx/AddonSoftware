@@ -34,10 +34,7 @@ rem --- Are both Customer and Order entered?
 
 rem --- Credit action
 
-	print "---header modified? ", callpoint!.getRecordStatus(); rem debug
-	print "---detail modified?", user_tpl.detail_modified; rem debug
-
-	if callpoint!.getRecordStatus() <> "M" and !user_tpl.detail_modified then
+	if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
 		gosub do_credit_action
 	endif
 
