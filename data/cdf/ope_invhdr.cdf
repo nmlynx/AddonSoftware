@@ -33,10 +33,10 @@ rem --- Reset all previous values
 rem --- Print a counter Invoice
 
 	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" then
-		gosub do_picklist
+		gosub do_invoice
 	else
 		gosub do_credit_action
-		if action$ = "R" or action$ = "Q" then gosub do_picklist
+		if action$ = "R" or action$ = "Q" then gosub do_invoice
 	endif
 [[OPE_INVHDR.BREX]]
 print "Hdr:BREX"; rem debug
@@ -842,7 +842,7 @@ rem ==========================================================================
 	callpoint!.setColumnData("<<DISPLAY>>.BSTATE", custmast_tpl.state_code$)
 	callpoint!.setColumnData("<<DISPLAY>>.BZIP",   custmast_tpl.zip_code$)
 
-return
+	return
 
 rem ==========================================================================
 display_aging: rem --- Display customer aging
@@ -871,7 +871,7 @@ rem ==========================================================================
 
 	user_tpl.credit_limit = custdet_tpl.credit_limit
 
-return
+	return
 
 rem ==========================================================================
 check_credit: rem --- Check credit limit of customer
@@ -892,7 +892,7 @@ rem ==========================================================================
 		callpoint!.setDevObject("over_credit_limit", "1")
    endif
 
-return
+	return
 
 rem ==========================================================================
 ship_to_info: rem --- Get and display Bill To Information
@@ -946,7 +946,7 @@ rem ==========================================================================
 
 	callpoint!.setStatus("REFRESH")
 
-return
+	return
 
 rem ==========================================================================
 get_op_params:
@@ -957,7 +957,7 @@ rem ==========================================================================
 
 	read record (ars01_dev, key=firm_id$+"AR00") ars01a$
 
-return
+	return
 
 rem ==========================================================================
 disp_cust_comments: rem --- Display customer comments
@@ -980,7 +980,7 @@ rem ==========================================================================
 	callpoint!.setColumnData("<<DISPLAY>>.comments", cmt_text$)
 	callpoint!.setStatus("REFRESH")
 
-return
+	return
 
 rem ==========================================================================
 check_lock_flag: rem --- Check manual record lock
@@ -1032,7 +1032,7 @@ update_stat:
 
 end_lock:
 
-return
+	return
 
 rem ==========================================================================
 add_to_batch_print: rem --- Add to batch print file
@@ -1052,7 +1052,7 @@ rem ==========================================================================
 	print "---Added to print batch"; rem debug
 	print "---order:", ope_prntlist.order_no$
 
-return
+	return
 
 rem ==========================================================================
 check_print_flag: rem --- Check print flag
@@ -1097,7 +1097,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return 
+	return 
 
 rem ==========================================================================
 update_totals: rem --- Update Order/Invoice Totals & Commit Inventory
@@ -1123,7 +1123,7 @@ rem ==========================================================================
 		break
 	wend
 
-return
+	return
 
 rem ==========================================================================
 remove_lot_ser_det: rem --- Remove Lot/Serial Detail
@@ -1164,7 +1164,7 @@ rem ==========================================================================
 		remove (ope21_dev, key=firm_id$+ar_type$+cust$+ord$+ord_seq$+ope21a.sequence_no$)
 	wend
 
-return
+	return
 
 rem ==========================================================================
 copy_order: rem --- Duplicate or Credit Historical Invoice
@@ -1364,7 +1364,7 @@ rem --- Copy detail lines
 
 	endif
 
-return
+	return
 
 rem ==========================================================================
 pricing: rem --- Call Pricing routine
@@ -1418,7 +1418,7 @@ rem ==========================================================================
 		ope11a.std_list_prc = (price*100)/(100-disc)
 	endif
 
-return
+	return
 
 rem ==========================================================================
 unlock_order: REM --- Unlock Order
@@ -1443,21 +1443,24 @@ rem ==========================================================================
 		callpoint!.setDevObject("order_no", ord_no$)
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
-		if action$ = "D" then callpoint!.setStatus("DELETE")	
+
+		if action$ = "D" then 
+			callpoint!.setStatus("DELETE")
+		else	
+			callpoint!.setStatus("STEORIG")
+		endif
 	endif
 
 	return
 
 rem ==========================================================================
-do_picklist: rem --- Print a Pick List
+do_invoice: rem --- Print an Invoice
 rem ==========================================================================
 
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
-	if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "Y")
-	callpoint!.setStatus("SAVE")
-	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+	call user_tpl.pgmdir$+"opc_invoice.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
 
 	return
