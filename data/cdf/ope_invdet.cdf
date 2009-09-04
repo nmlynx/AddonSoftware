@@ -308,16 +308,13 @@ rem --- Save current row/column so we'll know where to set focus when we return 
 
 rem --- Go get Lot Numbers
 
-	ivm_itemmast_dev = fnget_dev("IVM_ITEMMAST")
-	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
-
 	item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
-	read record (ivm_itemmast_dev, key=firm_id$+item$, dom=*next) ivm_itemmast$
+	gosub lot_ser_check
 
 rem --- Is this item lot/serial?
 
-	if ivm_itemmast.lotser_item$ = "Y" and ivm_itemmast.inventoried$ = "Y"
-		callpoint!.setOptionEnabled("LENT",0)
+	if lotted$ = "Y"
+		rem callpoint!.setOptionEnabled("LENT",0)
 
 		ar_type$ = "  "
 		cust$    = callpoint!.getColumnData("OPE_INVDET.CUSTOMER_ID")
