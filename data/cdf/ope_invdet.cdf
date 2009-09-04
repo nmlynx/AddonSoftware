@@ -1,3 +1,10 @@
+[[OPE_INVDET.QTY_ORDERED.AVEC]]
+print "Det:QTY_ORDERED.AVEC"; rem debug
+
+rem --- Enable buttons
+
+	gosub able_lot_button
+	gosub enable_repricing
 [[OPE_INVDET.QTY_ORDERED.AVAL]]
 rem --- Set shipped and back ordered
 
@@ -29,8 +36,6 @@ rem --- Set shipped and back ordered
 	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
 	gosub disp_ext_amt
 	gosub disp_grid_totals
-	gosub able_lot_button
-	gosub enable_repricing
 
 rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
 
@@ -308,14 +313,12 @@ rem --- Save current row/column so we'll know where to set focus when we return 
 
 rem --- Go get Lot Numbers
 
-	item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+	item_id$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
 	gosub lot_ser_check
 
 rem --- Is this item lot/serial?
 
-	if lotted$ = "Y"
-		rem callpoint!.setOptionEnabled("LENT",0)
-
+	if lotted$ = "Y" then
 		ar_type$ = "  "
 		cust$    = callpoint!.getColumnData("OPE_INVDET.CUSTOMER_ID")
 		order$   = callpoint!.getColumnData("OPE_INVDET.ORDER_NO")
@@ -330,7 +333,7 @@ rem --- Is this item lot/serial?
 		rem          DevObject("lsmast_dev") : ditto
 		rem          DevObject("lsmast_tpl") : ditto
 
-			rem callpoint!.setDevObject("int_seq", callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO"))
+			callpoint!.setDevObject("from",    "invoice_entry")
 			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID"))
 			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_INVDET.ITEM_ID"))
 			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
@@ -414,7 +417,7 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 [[OPE_INVDET.AGRN]]
 print "Det:AGRN"; rem debug
 
-rem (fires regardles of new or existing row)
+rem (Fires regardles of new or existing row.  Use user_tpl.new_detail to distinguish the two)
 
 rem --- Set line type
 
@@ -469,8 +472,10 @@ rem --- Set previous values
 
 rem --- Set buttons
 
-	gosub enable_repricing
-	gosub able_lot_button
+	if !user_tpl.new_detail then
+		gosub enable_repricing
+		gosub able_lot_button
+	endif
 [[OPE_INVDET.AGRE]]
 print "Det:AGRE"; rem debug
 
@@ -912,30 +917,6 @@ rem ==========================================================================
 return
 
 rem ==========================================================================
-lot_ser_check: rem --- Check for lotted item
-               rem      IN: item$
-               rem     OUT: lotted$ - Y/N
-rem ==========================================================================
-
-	lotted$="N"
-
-	if cvs(item_id$, 2)<>"" and pos(user_tpl.lotser_flag$ = "LS") then 
-		ivm01_dev=fnget_dev("IVM_ITEMMAST")
-		dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-		start_block = 1
-
-		if start_block then
-			read record (ivm01_dev, key=firm_id$+item$, dom=*endif) ivm01a$
-
-			if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
-				lotted$="Y"
-			endif
-		endif
-	endif
-
-return
-
-rem ==========================================================================
 uncommit_iv: rem --- Uncommit Inventory
 rem              --- Make sure action$ is set before entry
 rem ==========================================================================
@@ -1095,23 +1076,44 @@ return
 
 rem ==========================================================================
 able_lot_button: rem --- Enable/disable Lot/Serial button
-                 rem      IN: item$ (for lot_ser_check)
+                 rem      IN: item_id$ (for lot_ser_check)
 rem ==========================================================================
 
-	item$   = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+	item_id$   = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
 	qty_ord = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 	gosub lot_ser_check
 
-	if pos(user_tpl.lotser_flag$ = "LS") and 
-:		qty_ord <> 0                      and
-:		lotted$ = "Y"
-:	then
+	if lotted$ = "Y" and qty_ord <> 0 then
 		callpoint!.setOptionEnabled("LENT",1)
 	else
 		callpoint!.setOptionEnabled("LENT",0)
 	endif
 
-return
+	return
+
+rem ==========================================================================
+lot_ser_check: rem --- Check for lotted item
+               rem      IN: item_id$
+               rem     OUT: lotted$ - Y/N
+rem ==========================================================================
+
+	lotted$="N"
+
+	if cvs(item_id$, 2)<>"" and pos(user_tpl.lotser_flag$ = "LS") then 
+		ivm01_dev=fnget_dev("IVM_ITEMMAST")
+		dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+		start_block = 1
+
+		if start_block then
+			read record (ivm01_dev, key=firm_id$+item_id$, dom=*endif) ivm01a$
+
+		rem --- In Invoice Entry, non-inventoried lotted/serial can enter lots
+
+			if ivm01a.lotser_item$="Y" then lotted$="Y"
+		endif
+	endif
+
+	return
 
 rem ==========================================================================
 disp_ext_amt: rem --- Calculate and display the extended amount
