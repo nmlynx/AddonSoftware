@@ -279,7 +279,7 @@ rem --- Display Ship to information
 rem --- Display order total
 
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
-	print "---Update Order Total (columnd data): ", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
+	print "---Update Order Total (column data): ", callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
 
 rem --- Backorder and Credit Hold
 
@@ -307,7 +307,6 @@ rem --- Set type in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE"))
-
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
