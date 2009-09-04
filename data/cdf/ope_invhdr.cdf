@@ -1796,8 +1796,6 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
-	callpoint!.setDevObject("lsmast_dev",open_chans$[11])
-	callpoint!.setDevObject("lsmast_tpl",open_tpls$[11])
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
 
 rem --- Credit Mgmt
