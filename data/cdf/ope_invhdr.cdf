@@ -112,19 +112,21 @@ rem --- Cash Transaction
 		callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 		callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 
+		cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		ord_no$  = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 		key_pfx$ = firm_id$+"  "+cust_id$+ord_no$
 
 		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :			"OPE_INVCASH", 
 :			stbl("+USER_ID"), 
-:			"MNT", 
+:			"", 
 :			key_pfx$, 
 :			table_chans$[all], 
 :			dflt_data$[all]
 
 	endif
 
-	callpoint!.setStatus("STEORIG")
+	callpoint!.setStatus("SETORIG")
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
@@ -1447,7 +1449,7 @@ rem ==========================================================================
 		if action$ = "D" then 
 			callpoint!.setStatus("DELETE")
 		else	
-			callpoint!.setStatus("STEORIG")
+			callpoint!.setStatus("SETORIG")
 		endif
 	endif
 
