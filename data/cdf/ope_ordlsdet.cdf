@@ -114,22 +114,47 @@ rem --- Set Lot/Serial button up properly
 		case 2; callpoint!.setOptionText("LLOK","Serial Lookup"); break
 		case default; callpoint!.setOptionEnabled("LLOK",0); break
 	swend
+
+rem --- Set a flag for non-inventoried items when in Invoice Entry
+
+	dim user_tpl$:"invoice_noninventory:u(1)"
+	item$ = callpoint!.getDevObject("item")
+
+	if callpoint!.getDevObject("from") = "invoice_entry" 
+		file_name$="IVM_ITEMMAST"
+		dim itemmast_rec$:fnget_tpl$(file_name$)
+		find record (fnget_dev(file_name$), key=firm_id$+item$, dom=*endif) itemmast_rec$
+		if itemmast_rec.inventoried$ = "N" then user_tpl.invoice_noninventory = 1
+	endif
+
+rem --- No Serial/lot lookup for non-invent items
+	
+	if user_tpl.invoice_noninventory then callpoint!.setOptionEnabled("LLOK", 0)
 [[OPE_ORDLSDET.AOPT-LLOK]]
-	rem jpb grid! = Form!.getChildWindow(1109).getControl(5900)
+rem --- Non-inventoried item from Invoice Entry do not has to exist
+
+	if user_tpl.invoice_noninventory then
+		break; rem --- exit callpoint
+	endif
 
 rem --- Set data for the lookup form
 
 	wh$ = callpoint!.getDevObject("wh")
 	item$ = callpoint!.getDevObject("item")
-	lsmast_dev = num(callpoint!.getDevObject("lsmast_dev"))
-	dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
+	rem lsmast_dev = num(callpoint!.getDevObject("lsmast_dev"))
+	rem dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
+
+	file_name$="IVM_LSMASTER"
+	lsmast_dev = fnget_dev(file_name$)
+	dim lsmast_tpl$:fnget_tpl$(file_name$)
 
 rem --- See if there are any open lots
+rem     Comming from Invoice Entry with a non-inventoried item is an exception
 
 	read (lsmast_dev, key=firm_id$+wh$+item$+" ", knum=4, dom=*next)
 	lsmast_key$=key(lsmast_dev, end=*next)
 
-	if pos(firm_id$+wh$+item$+" " = lsmast_key$) = 1 then 
+	if pos(firm_id$+wh$+item$+" " = lsmast_key$) = 1 or user_tpl.invoice_noninventory then
 		dim dflt_data$[3,1]
 		dflt_data$[1,0] = "ITEM_ID"
 		dflt_data$[1,1] = item$
@@ -159,14 +184,24 @@ rem --- See if there are any open lots
 		gosub disp_message
 	endif
 [[OPE_ORDLSDET.LOTSER_NO.AVAL]]
+rem --- Non-inventoried item from Invoice Entry do not has to exist
+
+	if user_tpl.invoice_noninventory then
+		break; rem --- exit callpoint
+	endif
+
 rem --- Validate open lot number
 
 	wh$    = callpoint!.getDevObject("wh")
 	item$  = callpoint!.getDevObject("item")
    ls_no$ = callpoint!.getUserInput()
 
-	lsmast_dev = num(callpoint!.getDevObject("lsmast_dev"))
-	dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
+	rem lsmast_dev = num(callpoint!.getDevObject("lsmast_dev"))
+	rem dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
+
+	file_name$="IVM_LSMASTER"
+	lsmast_dev = fnget_dev(file_name$)
+	dim lsmast_tpl$:fnget_tpl$(file_name$)
 
 	got_rec$ = "N"
 	start_block = 1
