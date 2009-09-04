@@ -14,9 +14,12 @@ rem --- Now check for Sales Line quantity
 
 	gosub check_avail
 [[OPE_ORDLSDET.BEND]]
-rem --- Check total quantity from all lines against ordered quantity
+rem --- Check total quantity from all lines against ordered quantity and shipped
 
-	lot_qty=0
+	declare BBjVector GridVect!
+
+	lot_qty  = 0
+	lot_ship = 0
 	dim gridrec$:fattr(rec_data$)
 	numrecs=GridVect!.size()
 
@@ -25,7 +28,8 @@ rem --- Check total quantity from all lines against ordered quantity
 			gridrec$=GridVect!.getItem(reccnt)
 
 			if cvs(gridrec$,3) <> "" and callpoint!.getGridRowDeleteStatus(reccnt) <> "Y" then 
-				lot_qty = lot_qty + gridrec.qty_ordered
+				lot_qty  = lot_qty  + gridrec.qty_ordered
+				lot_ship = lot_ship + gridrec.qty_shipped
 			endif
 		next reccnt
 	endif
@@ -47,6 +51,10 @@ rem --- Warn that selected lot/serial#'s does not match order qty
 		gosub disp_message
 		if msg_opt$ = "N" then callpoint!.setStatus("ABORT")
 	endif
+
+rem --- Send back qty shipped
+
+	callpoint!.setDevObject("total_shipped", str(lot_ship))
 [[OPE_ORDLSDET.<CUSTOM>]]
 rem ==========================================================================
 check_avail: rem --- Check for available quantity
@@ -58,8 +66,9 @@ rem ==========================================================================
 	item$   = callpoint!.getDevObject("item")
 	ls_no$  = callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO")
 
-	lsmast_dev = num(callpoint!.getDevObject("lsmast_dev"))
-	dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
+	file_name$="IVM_LSMASTER"
+	lsmast_dev = fnget_dev(file_name$)
+	dim lsmast_tpl$:fnget_tpl$(file_name$)
 	start_block = 1
 
 	if start_block then
@@ -141,12 +150,7 @@ rem --- Set data for the lookup form
 
 	wh$ = callpoint!.getDevObject("wh")
 	item$ = callpoint!.getDevObject("item")
-	rem lsmast_dev = num(callpoint!.getDevObject("lsmast_dev"))
-	rem dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
-
-	file_name$="IVM_LSMASTER"
-	lsmast_dev = fnget_dev(file_name$)
-	dim lsmast_tpl$:fnget_tpl$(file_name$)
+	lsmast_dev = fnget_dev("IVM_LSMASTER")
 
 rem --- See if there are any open lots
 rem     Comming from Invoice Entry with a non-inventoried item is an exception
@@ -165,17 +169,27 @@ rem     Comming from Invoice Entry with a non-inventoried item is an exception
 
 	rem --- Call the lookup form
 	rem      IN: call/enter list
-	rem     OUT: DevObject("selected_lot"): The lot/serial# selected for this item
+	rem     OUT: DevObject("selected_lot")      : The lot/serial# selected for this item
 	rem          DevObject("selected_lot_avail"): The amount select for this lot, or 1 for serial#
+	rem          DevObject("selected_lot_cost") : The cost of the selected lot
 
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj","IVC_LOTLOOKUP",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"IVC_LOTLOOKUP",
+:			stbl("+USER_ID"),
+:			"",
+:			"",
+:			table_chans$[all],
+:			"",
+:			dflt_data$[all]
 
 	rem --- Set the detail grid to the data selected in the lookup
 
 		if callpoint!.getDevObject("selected_lot") <> null() then 
 			callpoint!.setColumnData( "OPE_ORDLSDET.LOTSER_NO", str(callpoint!.getDevObject("selected_lot")) )
 			lot_avail = num(callpoint!.getDevObject("selected_lot_avail"))
+			lot_cost  = num(callpoint!.getDevObject("selected_lot_cost"))
 			callpoint!.setColumnData("OPE_ORDLSDET.QTY_ORDERED", str(lot_avail))
+			callpoint!.setColumnData("OPE_ORDLSDET.UNIT_COST", str(lot_cost))
 			callpoint!.setStatus("MODIFIED;REFRESH")
 		endif
 
@@ -195,9 +209,6 @@ rem --- Validate open lot number
 	wh$    = callpoint!.getDevObject("wh")
 	item$  = callpoint!.getDevObject("item")
    ls_no$ = callpoint!.getUserInput()
-
-	rem lsmast_dev = num(callpoint!.getDevObject("lsmast_dev"))
-	rem dim lsmast_tpl$:callpoint!.getDevObject("lsmast_tpl")
 
 	file_name$="IVM_LSMASTER"
 	lsmast_dev = fnget_dev(file_name$)
