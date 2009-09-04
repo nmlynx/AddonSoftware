@@ -1235,7 +1235,7 @@ rem ==========================================================================
 			ope01a.total_sales     = ope01a.total_sales*line_sign
 
 			write record (ope01_dev) ope01a$
-			callpoint!.setStatus("STEORIG")
+			callpoint!.setStatus("SETORIG")
 
 			user_tpl.price_code$   = ope01a.price_code$
 			user_tpl.pricing_code$ = ope01a.pricing_code$
@@ -1561,7 +1561,7 @@ rem ==========================================================================
 		if action$ = "D" then 
 			callpoint!.setStatus("DELETE")
 		else	
-			callpoint!.setStatus("STEORIG")
+			callpoint!.setStatus("SETORIG")
 		endif
 	endif
 
