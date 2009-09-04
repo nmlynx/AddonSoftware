@@ -1057,7 +1057,7 @@ rem ===========================================================================
 		
 		if start_block then
 			failed = 1
-			find record (ivm02_dev, key=firm_id$+wh$+item$, dom=*endif) ivm02a$
+			find record (ivm02_dev, key=firm_id$+wh$+item$, knum=0, dom=*endif) ivm02a$
 			failed = 0
 		endif
 
