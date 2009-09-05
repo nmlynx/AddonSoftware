@@ -1,5 +1,5 @@
 [[APM_VENDMAST.BWRI]]
-if num(callpoint!.getUserInput(),err=*endif)=0 
+if num(callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID"),err=*endif)=0 
 	callpoint!.setMessage("INPUT_ERR_MAIN")
 	callpoint!.setStatus("ABORT")
 endif
