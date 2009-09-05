@@ -37,7 +37,6 @@ rem --- Set shipped and back ordered
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	gosub disp_ext_amt
-	gosub disp_grid_totals
 
 rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
 
@@ -335,8 +334,6 @@ rem --- Is this item lot/serial?
 		rem      IN: call/enter list
 		rem          the DevObjects set below
 		rem          DevObject("lotser_flag"): set in OPE_ORDHDR
-		rem          DevObject("lsmast_dev") : ditto
-		rem          DevObject("lsmast_tpl") : ditto
 
 			callpoint!.setDevObject("from",    "order_entry")
 			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
@@ -361,6 +358,13 @@ rem --- Is this item lot/serial?
 :				lot_pfx$, 
 :				table_chans$[all], 
 :				dflt_data$[all]
+
+		rem --- Updated qty shipped, extension
+
+			qty_shipped = num(callpoint!.getDevObject("total_shipped"))
+			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
+			unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+			gosub disp_ext_amt
 
 		rem --- Return focus to where we were (Detail line grid)
 
@@ -639,7 +643,7 @@ rem 	endif
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	unit_price  = num(callpoint!.getUserInput())
 	gosub disp_ext_amt
-	gosub disp_grid_totals
+
 [[OPE_ORDDET.AUDE]]
 print "Det:AUDE"; rem debug
 
@@ -729,7 +733,7 @@ rem --- Update header
 	qty_shipped = shipqty
 	unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	gosub disp_ext_amt
-	gosub disp_grid_totals
+
 [[OPE_ORDDET.QTY_BACKORD.AVAL]]
 print "Det:QTY_BACKORD.AVAL"; rem debug
 
@@ -756,9 +760,7 @@ rem --- Recalc quantities and extended price
 		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
 		unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 		gosub disp_ext_amt
-		gosub disp_grid_totals
 	endif
-
 [[OPE_ORDDET.<CUSTOM>]]
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
@@ -1141,7 +1143,8 @@ rem ==========================================================================
 
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(qty_shipped * unit_price))
 	print "---Ext price set to", qty_shipped * unit_price; rem debug
-	callpoint!.setStatus("MODIFIED;REFRESH")
+	gosub disp_grid_totals
+	callpoint!.setStatus("MODIFIED")
 
 	return
 
