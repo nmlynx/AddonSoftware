@@ -282,19 +282,22 @@ remove_tickler:
 return
 [[OPE_CREDMAINT.AOPT-COMM]]
 rem --- Comment Maintenance
+
 	gosub update_tickler
 	cust_id$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
 	user_id$=stbl("+USER_ID")
+
 	dim dflt_data$[2,1]
 	dflt_data$[1,0]="CUSTOMER_ID"
 	dflt_data$[1,1]=cust_id$
+
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:                       "ARM_CUSTCMTS",
-:                       user_id$,
-:                   	"MNT",
-:                       firm_id$+cust_id$,
-:                       table_chans$[all],
-:                       "",
-:                       dflt_data$[all]
+:		"ARM_CUSTCMTS",
+:		user_id$,
+:		"MNT",
+:		firm_id$+cust_id$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 
 	gosub disp_cust_comments
