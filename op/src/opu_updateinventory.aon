@@ -522,10 +522,10 @@ rem --- Read next invoice header --- Main Loop Starts
 
                     if br$<>"Y" then break
                     glt15a.firm_id$=firm_id$
-                    glt15a.gl_cash_acct$=z6$(g[4]+1,g[4])
+                    glt15a.gl_account$=z6$(g[4]+1,g[4])
                     glt15a.trans_no$=pad(ope01a.invoice_date$,8)(3,6)+"S"
                     glt15a.trans_amt=0
-                    find record (glt15_dev,key=glt15a.firm_id$+glt15a.gl_cash_acct$+glt15a.trans_no$,dom=*next) glt15a$
+                    find record (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$,dom=*next) glt15a$
 
                     glt15a.trans_type$="D"
                     glt15a.posted_code$="O"
@@ -583,7 +583,7 @@ rem --- Read next invoice header --- Main Loop Starts
                         gosub glpost
                     else
                         account$=z0$(g[4]+1,g[4])
-                        amount=ope01a.tax_amount+ope01a.freight_amt-ope01a.discout_amt
+                        amount=ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
                         ref3$="Cash Sale"
                         gosub glpost
                     endif
