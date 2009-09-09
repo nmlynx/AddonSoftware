@@ -1401,7 +1401,7 @@ rem ==========================================================================
 	pc_files[5] = fnget_dev("ARS_PARAMS")
 	pc_files[6] = ivs01_dev
 
-	call stbl("+DIR_PGM")+"opc_pc.aon",pc_files[all],firm_id$,wh$,item$,user_tpl.price_code$,cust$,
+	call stbl("+DIR_PGM")+"opc_pricing.aon",pc_files[all],firm_id$,wh$,item$,user_tpl.price_code$,cust$,
 :		user_tpl.order_date$,user_tpl.pricing_code$,ordqty,typeflag$,price,disc,status
 	if status=999 then exitto std_exit
 
