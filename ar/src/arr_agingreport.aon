@@ -396,7 +396,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
                 rem --- Include credit?
 
-                if nocredits if amount<0 continue
+                if credits$<>"Y" if amount<0 continue
 
                 rem --- Assign the proper date for aging purposes
 
