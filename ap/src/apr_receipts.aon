@@ -305,6 +305,12 @@ nextpot04: rem --- Loop up for next PO/Receiver
 
 no_more_receipts: rem --- No more Receipts
 
+    if polines=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit
+    endif
+
     if po_found
 	if polines>1 gosub pototal
 	gosub reporttotal
@@ -497,6 +503,13 @@ rem --- Create blank line in OutVect! (no return value wanted or needed)
     fnend
 
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 

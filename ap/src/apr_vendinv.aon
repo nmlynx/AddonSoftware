@@ -231,6 +231,12 @@ apt11_loop: rem --- Loop back for next invoice
 
 no_more_invoices: rem --- No more invoices
 
+        if recs=0
+            msg_id$="DOC_OUTPUT_NODATA"
+            gosub disp_message
+            goto std_exit
+        endif
+
         if inv_found
             gosub inv_total
             gosub vendor_total
@@ -362,6 +368,13 @@ rem --- Create blank line in OutVect! (no return value wanted or needed)
     fnend
 
 rem #endinclude std_functions.src
+
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_error.src
 
