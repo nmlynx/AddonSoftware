@@ -401,11 +401,16 @@ rem --- Set defaults for new record
 
 	callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "N")
 	callpoint!.setColumnData("OPE_ORDDET.EST_SHP_DATE", ship_date$)
-	
+
+	print "---Ship Date: ", ship_date$; rem debug
+	print "---Commit   : ", user_tpl.def_commit$; rem debug	
+
 	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
+		print "---Commit = No"; rem debug
  		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "N")
 		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", 0)
 	else
+		print "---Commit = Yes"; rem debug
 		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y")
  	endif
 
