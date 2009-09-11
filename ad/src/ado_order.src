@@ -59,7 +59,7 @@ rem ==========================================================================
             
             if !util.isTableChansSet() then
                 if pTableChans! = null() then
-                    throw #This_Class$+": Pass TableChans! or set table_chans$[all] in util object", 257
+                    throw #This_Class$+": setOrderHelper(): Pass TableChans! or set table_chans$[all] in util object", 257
                 else
                     util.setTableChans(pTableChans!)
                 endif
@@ -91,11 +91,11 @@ rem ==========================================================================
         method public BBjNumber totalSales(BBjVector pDtlVect!)
         
             if #dtl_tmpl$ = "" then
-                throw #This_Class$+": You must pass the detail template to use this method", 258
+                throw #This_Class$+": totalSales(): You must pass the detail template to use this method", 258
             endif
             
             if #Inv_type$ = "" then
-                throw #This_Class$+": You must setInv_type() (header invoice type) before you use this method", 259
+                throw #This_Class$+": totalSales(): You must setInv_type() (header invoice type) before you use this method", 259
             endif
         
             precision #precision%
@@ -132,7 +132,7 @@ rem ==========================================================================
         
         method public BBjNumber totalSales()
             if #DtlVect! = null() then
-                throw #This_Class$+": Pass in the detail vector or use setDtlVect()", 260
+                throw #This_Class$+": totalSales(): Pass in the detail vector or use setDtlVect()", 260
             else
                 methodret #totalSales(#DtlVect!)
             endif
