@@ -13,13 +13,13 @@ rem enter ope01_dev,arm02_dev,firm_id$,customer$,credit$,s$,m1$,type
     seterr std_error
     
 	enter customer$, table_chans$[all], callpoint!, status
-    
+
 rem --- Use statements and declares
 
+    declare Callpoint callpoint!
+    
 	use ::sys/prog/bao_callpoint.bbj::Callpoint
     
-   	declare Callpoint callpoint!
-
 rem --- Retrieve the program path
 
 	pgmdir$=""
@@ -123,9 +123,9 @@ rem --- Set Check Credit Limit Flag (lines 1600-2299, S$(1,1) is backwards)
 :       (num(ars01c.hold_amount$) and ope01a.total_sales>num(ars01c.hold_amount$)) or
 :       (ars01c.auto_hold$="Y" and arm02a.credit_limit and arm02a.credit_limit<total_aging+open_ord_amt+open_bo_amt+held_ord_amt)
 :   then
-        callpoint!.setDevObject("over_credit_limit", "1")
+        if callpoint! <> null() then callpoint!.setDevObject("over_credit_limit", "1")
     else
-        callpoint!.setDevObject("over_credit_limit", "0")
+        if callpoint! <> null() then callpoint!.setDevObject("over_credit_limit", "0")
     endif
 
 rem --- Display	
