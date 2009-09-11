@@ -1,3 +1,23 @@
+[[OPE_ORDDET.LINE_CODE.AVEC]]
+rem --- Display totals
+	
+	gosub disp_grid_totals
+[[OPE_ORDDET.UNIT_PRICE.AVEC]]
+rem --- Display totals
+	
+	gosub disp_grid_totals
+[[OPE_ORDDET.QTY_SHIPPED.AVEC]]
+rem --- Display totals
+	
+	gosub disp_grid_totals
+[[OPE_ORDDET.QTY_BACKORD.AVEC]]
+rem --- Display totals
+	
+	gosub disp_grid_totals
+[[OPE_ORDDET.EXT_PRICE.AVEC]]
+rem --- Display totals
+	
+	gosub disp_grid_totals
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
 print "Det:QTY_ORDERED.AVEC"; rem debug
 
@@ -5,6 +25,10 @@ rem --- Enable buttons
 
 	gosub able_lot_button
 	gosub enable_repricing
+
+rem --- Display totals
+	
+	gosub disp_grid_totals
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
 print "Det:QTY_ORDERED.AVAL"; rem debug
 
@@ -101,7 +125,7 @@ rem --- Set product types for certain line types
 rem --- Round 
 
 	callpoint!.setUserInput( str(round( num(callpoint!.getUserInput()), 2)) )
-	gosub disp_grid_totals
+
 [[OPE_ORDDET.WAREHOUSE_ID.AVEC]]
 print "Det:WAREHOUSE_ID.AVEC"; rem debug
 
@@ -619,8 +643,6 @@ rem else
 rem 	g!.setCellEditable(r,5,0)
 rem 	g!.setCellBackColor(r,5,disable_color!)
 rem endif
-[[OPE_ORDDET.EXT_PRICE.AVEC]]
-	
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
 print "Det:UNIT_PRICE:AVAL"; rem debug
 
@@ -647,7 +669,6 @@ rem 	endif
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	unit_price  = num(callpoint!.getUserInput())
 	gosub disp_ext_amt
-
 [[OPE_ORDDET.AUDE]]
 print "Det:AUDE"; rem debug
 
@@ -737,7 +758,6 @@ rem --- Update header
 	qty_shipped = shipqty
 	unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	gosub disp_ext_amt
-
 [[OPE_ORDDET.QTY_BACKORD.AVAL]]
 print "Det:QTY_BACKORD.AVAL"; rem debug
 
@@ -774,9 +794,10 @@ rem ==========================================================================
 
 	tamt! = UserObj!.getItem(num(user_tpl.ord_tot_1$))
 	tamt!.setValue(ttl_ext_price)
-	print "Update Order Totals (vector):", ttl_ext_price; rem debug
+	print "---Update Order Totals (vector):", ttl_ext_price; rem debug
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
+	print "---Set Total Sales (header tab) and REFRESHed"; rem debug
 
 	return
 
@@ -1154,8 +1175,8 @@ rem ==========================================================================
 
 	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(qty_shipped * unit_price))
 	print "---Ext price set to", qty_shipped * unit_price; rem debug
-	gosub disp_grid_totals
 	callpoint!.setStatus("MODIFIED")
+	rem --- gosub disp_grid_totals --- can't go here because the status of MODIFIED hasn't taken effect
 
 	return
 
@@ -1253,7 +1274,6 @@ rem --- Has line code changed?
 		endif
 
 		gosub clear_all_numerics
-		gosub disp_grid_totals
 		gosub clear_avail
 
 	endif
