@@ -1217,6 +1217,12 @@ rem --- Has line code changed?
 		callpoint!.setColumnData("OPE_INVDET.VENDOR_ID", "")
 		callpoint!.setColumnData("OPE_INVDET.DROPSHIP", "")
 
+		if opc_linecode.line_type$="O" then
+			if cvs(callpoint!.getColumnData("OPE_INVDET.ORDER_MEMO"),3) = "" then
+				callpoint!.setColumnData("OPE_INVDET.ORDER_MEMO",opc_linecode.code_desc$)
+			endif
+		endif
+
 		gosub clear_all_numerics
 		gosub disp_grid_totals
 		gosub clear_avail

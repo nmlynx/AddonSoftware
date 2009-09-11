@@ -495,7 +495,6 @@ rem --- Set buttons
 		gosub enable_repricing
 		gosub able_lot_button
 	endif
-
 [[OPE_ORDDET.AGRE]]
 print "Det:AGRE"; rem debug
 
@@ -1011,6 +1010,7 @@ rem ==========================================================================
 			user_tpl.line_taxable$  = opc_linecode.taxable_flag$
 			user_tpl.line_dropship$ = opc_linecode.dropship$
 		endif
+
 	endif
 
 rem --- Disable / enable unit cost
@@ -1239,6 +1239,12 @@ rem --- Has line code changed?
 		callpoint!.setColumnData("OPE_ORDDET.PICK_FLAG", "")
 		callpoint!.setColumnData("OPE_ORDDET.VENDOR_ID", "")
 		callpoint!.setColumnData("OPE_ORDDET.DROPSHIP", "")
+
+		if opc_linecode.line_type$="O" then
+			if cvs(callpoint!.getColumnData("OPE_ORDDET.ORDER_MEMO"),3) = "" then
+				callpoint!.setColumnData("OPE_ORDDET.ORDER_MEMO",opc_linecode.code_desc$)
+			endif
+		endif
 
 		gosub clear_all_numerics
 		gosub disp_grid_totals
