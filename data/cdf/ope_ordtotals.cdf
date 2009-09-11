@@ -45,7 +45,7 @@ rem --- A discount code or amount has been previously entered and the discount a
 	if (user_tpl.prev_disc_code$ <> "" or ordhdr_rec.discount_amt <> 0) and 
 :		(user_tpl.prev_sales_total = 0 or ordhdr_rec.discount_amt <> old_disc_per * user_tpl.prev_sales_total / 100)
 :	then 
-		rem saved_new_disc = new_disc_per
+		saved_new_disc = new_disc_per
 
 		if user_tpl.prev_sales_total <> 0 then 
 			disc_per_in = calc_prev_disc_per
@@ -97,12 +97,21 @@ rem --- Save freight and discount
 [[OPE_ORDTOTALS.ASVA]]
 print "OPE_ORDTOTALS:ASVA"; rem debug
 
-rem --- Send back the entered values
-
 rem (Doesn't get here if you click the close button "x")
+
+rem --- Send back the entered values (doesn't matter is BREX can't save)
 
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	
+rem --- If called from BREX the record is already saved, so save the values here
+
+	gosub get_ordhdr_rec
+	ordhdr_rec.tax_amount   = num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))
+	ordhdr_rec.freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	ordhdr_rec.discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record(ordhdr_dev) ordhdr_rec$
 	
 	print "OPE_ORDTOTALS:END"; rem debug
 [[OPE_ORDTOTALS.FREIGHT_AMT.AVAL]]
@@ -116,7 +125,7 @@ rem --- Save freight and recalculate tax
 	if ordHelp!.getExtPrice() <> 0 then 
 		disc_per_in = 100 * discount_amt / ordHelp!.getExtPrice()
 	else
-		disc_pre_in = 0
+		disc_per_in = 0
 	endif
 
 	gosub get_sales_tax
@@ -133,7 +142,7 @@ rem --- Save discount and recalculate tax
 	if ordHelp!.getExtPrice() <> 0 then 
 		disc_per_in = 100 * discount_amt / ordHelp!.getExtPrice()
 	else
-		disc_pre_in = 0
+		disc_per_in = 0
 	endif
 
 	gosub get_sales_tax
@@ -214,6 +223,7 @@ rem --- Correct penny rounding errors
 
 rem ==========================================================================
 get_sales_tax: rem --- Get sales tax
+               rem      IN: ordhdr_rec.tax_code$
                rem     OUT: taxcode_rec$
 rem ==========================================================================
 
@@ -227,12 +237,15 @@ rem ==========================================================================
 
 rem ==========================================================================
 get_ordhdr_rec: rem --- Get order header record and order helper object
+                rem     OUT: ordHelp!
+                rem          ordhdr_rec$
 rem ==========================================================================
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))	
 
 	file_name$ = "OPE_ORDHDR"
 	dim ordhdr_rec$:fnget_tpl$(file_name$)
-	find record (fnget_dev(file_name$), key=firm_id$+"  "+ordHelp!.getCust_id()+ordHelp!.getOrder_no()) ordhdr_rec$
+	ordhdr_dev = fnget_dev(file_name$)
+	find record (ordhdr_dev, key=firm_id$+"  "+ordHelp!.getCust_id()+ordHelp!.getOrder_no()) ordhdr_rec$
 
 	return
