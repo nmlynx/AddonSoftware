@@ -790,7 +790,13 @@ rem ==========================================================================
 	rem Yes, to get the total before it's written to disk
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
+
+	if ordHelp!.getInv_type() = "" then
+		ttl_ext_price = 0
+	else
+		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
+	endif
+
 	print "---Total Sales:", ttl_ext_price; rem debug
 
 	return

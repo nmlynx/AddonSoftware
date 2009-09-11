@@ -772,7 +772,12 @@ calc_grid_totals: rem --- Roll thru all detail line, totaling ext_price
 rem ==========================================================================
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
+
+	if ordHelp!.getInv_type() = "" then
+		ttl_ext_price = 0
+	else
+		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
+	endif
 
 return
 
