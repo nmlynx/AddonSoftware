@@ -67,6 +67,8 @@ rem ==========================================================================
 				if status = 999 then goto std_exit
 			endif
 		endif
+
+		callpoint!.setDevObject("document_printed", "Y")
 	endif
 
 	return
