@@ -30,14 +30,17 @@ rem --- Reset all previous values
 	user_tpl.prev_ship_to$     = ""
 	user_tpl.prev_sales_total  = 0
 [[OPE_INVHDR.AOPT-PRNT]]
+print "Hdr:AOPT.PRNT"; rem debug
+
 rem --- Print a counter Invoice
 
 	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" then
 		gosub do_invoice
 	else
 		gosub do_credit_action
-		if action$ = "R" or action$ = "Q" then gosub do_invoice
 	endif
+
+	print "---Print Status: ", callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"); rem debug
 [[OPE_INVHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
@@ -127,6 +130,11 @@ rem --- Cash Transaction
 	endif
 
 	callpoint!.setStatus("SETORIG")
+
+rem --- Check Print Status, debug
+
+	print "---Print Status: ", callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"); rem debug
+	escape; rem debug
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
@@ -135,6 +143,8 @@ rem --- Unlock order (This doesn't work as desired)
 	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
 
 [[OPE_INVHDR.AOPT-MINV]]
+print "Hdr:APOT:MINV"; rem debug
+
 rem --- Change an Order into an Invoice
 
 	gosub check_print_flag
@@ -156,6 +166,7 @@ rem --- Change an Order into an Invoice
 			callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "I")
 			callpoint!.setColumnData("OPE_INVHDR.INVOICE_DATE", sysinfo.system_date$)
 			callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
+			print "---Print Status: N"; rem debug
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
 			print "---Set lock"; rem debug
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N"); rem debug, forcing the lock off for now, this isn't working correctly
@@ -741,6 +752,7 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.DISC_CODE",arm02a.disc_code$)
 		callpoint!.setColumnData("OPE_INVHDR.AR_DIST_CODE",arm02a.ar_dist_code$)
 		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS","N")
+		print "---Print Status: N"; rem debug
 		callpoint!.setColumnData("OPE_INVHDR.MESSAGE_CODE",arm02a.message_code$)
 		callpoint!.setColumnData("OPE_INVHDR.TERRITORY",arm02a.territory$)
 		callpoint!.setColumnData("OPE_INVHDR.ORDER_DATE",sysinfo.system_date$)
@@ -1062,6 +1074,8 @@ check_print_flag: rem --- Check print flag
                   rem          printed$ = Y/N
 rem ==========================================================================
 
+	print "Hdr:in check_print_flag"; rem debug
+
 	printed$ = "N"
 	locked = 0
 	ar_type$      = callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
@@ -1089,6 +1103,7 @@ rem ==========================================================================
 					locked=1
 				else
 					callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
+					print "---Print Status: N"; rem debug
 					callpoint!.setStatus("SAVE")
 					printed$ = "Y"
 					gosub add_to_batch_print
@@ -1435,6 +1450,8 @@ rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
 rem ==========================================================================
 
+	print "Hdr:in do_credit_action"; rem debug
+
 	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	ord_no$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
@@ -1451,7 +1468,15 @@ rem ==========================================================================
 		else	
 			callpoint!.setStatus("SETORIG")
 		endif
+
+		if str(callpoint!.getDevObject("document_printed")) = "Y" then 
+			callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+		endif
+
 	endif
+
+	print "---action$: ", action$; rem debug
+	print "Hdr:exit do_credit_action"; rem debug
 
 	return
 
@@ -1459,11 +1484,15 @@ rem ==========================================================================
 do_invoice: rem --- Print an Invoice
 rem ==========================================================================
 
+	print "Hdr:do_invoice"; rem debug
+
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
 	call user_tpl.pgmdir$+"opc_invoice.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
+	callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+	print "---Print Status: Y"; rem debug
 
 	return
 [[OPE_INVHDR.ASHO]]
