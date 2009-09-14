@@ -1,12 +1,3 @@
-[[ADM_PROCBATCHMNT.BREX]]
-rem --- unlock this process/batch record 
-
-batch_no$=callpoint!.getColumnData("ADM_PROCBATCHMNT.BATCH_NO")
-process_id$=callpoint!.getColumnData("ADM_PROCBATCHMNT.PROCESS_ID")
-
-lock_key$=firm_id$+process_id$+batch_no$
-lock_status$=""
-call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",lock_key$,"U",table_chans$[all],lock_status$
 [[ADM_PROCBATCHMNT.BNEX]]
 
 [[ADM_PROCBATCHMNT.PROCESS_ID.AVAL]]
@@ -98,16 +89,6 @@ if callpoint!.getDevObject("can_delete")="NO"
 	callpoint!.setStatus("ABORT")
 endif
 [[ADM_PROCBATCHMNT.ADIS]]
-rem --- lock this process/batch record 
-
-batch_no$=callpoint!.getColumnData("ADM_PROCBATCHMNT.BATCH_NO")
-process_id$=callpoint!.getColumnData("ADM_PROCBATCHMNT.PROCESS_ID")
-
-lock_key$=firm_id$+process_id$+batch_no$
-lock_status$=""
-call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",lock_key$,"L",table_chans$[all],lock_status$
-
-if lock_status$<>"" then callpoint!.setStatus("NEWREC")
 
 rem ---  don't allow delete if this batch is referenced in entry files
 

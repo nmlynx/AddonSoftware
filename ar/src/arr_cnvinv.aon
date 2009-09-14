@@ -6,8 +6,8 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-rem --- This register/update combination is used for both the Finance
-rem --- Charge Register and the Conversion Invoice Register.
+rem --- This register is used for Conversion Invoices
+rem --- The update (aru_otherentry.aon) is the same as for Fin Chgs.
 
     seterr std_error
     setesc std_error
@@ -439,7 +439,7 @@ std_exit_no_update:
     if num(batch_no$)<>0
         unlock_key$=firm_id$+stbl("+PROCESS_ID")+stbl("+BATCH_NO")
         lock_status$=""
-        call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",unlock_key$,"U",rd_table_chans$[all],lock_status$
+        call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",unlock_key$,"U","",rd_table_chans$[all],lock_status$
     endif
 
 std_exit: rem --- Standard program end (01Mar2006)
