@@ -1,3 +1,31 @@
+[[OPE_CREDREV.AOPT-NEWC]]
+rem --- Add Tickler
+
+	callpoint!.setDevObject("tick_date","")
+	callpoint!.setDevObject("customer_id","")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"OPE_CREDTICK",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all]
+
+	tick_date$=callpoint!.getDevObject("tick_date")
+	customer_id$=callpoint!.getDevObject("customer_id")
+
+rem --- Update Credit changes to master file
+	if cvs(customer_id$,3)<>""
+		ope03_dev=fnget_dev("OPE_CREDDATE")
+		dim ope03a$:fnget_tpl$("OPE_CREDDATE")
+		ope03a.firm_id$=firm_id$
+		ope03a.rev_date$=tick_date$
+		ope03a.customer_id$=customer_id$
+		ope03a$=field(ope03a$)
+		writerecord(ope03_dev)ope03a$
+	endif
+	gosub create_cust_vector
+	gosub fill_grid
+	callpoint!.setOptionEnabled("NEWC",1)
 [[OPE_CREDREV.AOPT-SELR]]
 rem --- Run appropriate form
 	if user_tpl.cur_sel$="O"
@@ -13,11 +41,13 @@ rem --- Change selection
 		user_tpl.cur_sel$="C"
 		gosub create_cust_vector
 		gosub fill_grid
+		callpoint!.setOptionEnabled("NEWC",1)
 	endif
 	if user_tpl.cur_sel$="C" and callpoint!.getUserInput()="O"
 		user_tpl.cur_sel$="O"
 		gosub create_orders_vector
 		gosub fill_grid
+		callpoint!.setOptionEnabled("NEWC",0)
 	endif
 [[OPE_CREDREV.ACUS]]
 rem process custom event -- used in this pgm to select/de-select checkboxes in grid
@@ -383,3 +413,6 @@ rem --- misc other init
 rem --- set callbacks - processed in ACUS callpoint
 	gridCredit!.setCallback(gridCredit!.ON_GRID_DOUBLE_CLICK,"custom_event")
 	gridCredit!.setCallback(gridCredit!.ON_GRID_ENTER_KEY,"custom_event")
+
+rem --- verify New Tickler is disabled	
+	callpoint!.setOptionEnabled("NEWC",0)
