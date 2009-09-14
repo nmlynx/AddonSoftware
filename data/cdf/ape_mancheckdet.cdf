@@ -1,3 +1,6 @@
+[[APE_MANCHECKDET.AGRE]]
+gosub calc_tots
+gosub disp_tots
 [[APE_MANCHECKDET.AGCL]]
 rem --- set preset val for batch_no
 callpoint!.setTableColumnAttribute("APE_MANCHECKDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
@@ -151,6 +154,7 @@ if apt01a$(1,len(apt01ak1$))=apt01ak1$
 	wend
 	callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_DATE",apt01a.invoice_date$)
 	callpoint!.setColumnData("APE_MANCHECKDET.AP_DIST_CODE",apt01a.ap_dist_code$)
+
 	rem --- disable inv date/dist code, leaving only inv amt/disc amt enabled for open invoice
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
@@ -174,6 +178,7 @@ callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_AMT",str(inv_amt))
 callpoint!.setColumnData("APE_MANCHECKDET.DISCOUNT_AMT",str(disc_amt))
 callpoint!.setColumnData("APE_MANCHECKDET.RETENTION",str(ret_amt))
 callpoint!.setColumnData("APE_MANCHECKDET.NET_PAID_AMT",str(inv_amt-disc_amt-ret_amt))
+
 callpoint!.setStatus("MODIFIED-REFRESH")
 end_of_inv_aval:
 [[APE_MANCHECKDET.<CUSTOM>]]
