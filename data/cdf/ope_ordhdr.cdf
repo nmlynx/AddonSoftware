@@ -88,7 +88,6 @@ rem --- Print a counter Picking Slip
 		gosub do_picklist
 	else
 		gosub do_credit_action
-		if action$ = "R" or action$ = "Q" then gosub do_picklist
 	endif
 [[OPE_ORDHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
@@ -1562,6 +1561,11 @@ rem ==========================================================================
 		else	
 			callpoint!.setStatus("SETORIG")
 		endif
+
+		if str(callpoint!.getDevObject("document_printed")) = "Y" then 
+			callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
+		endif
+
 	endif
 
 	return
@@ -1579,6 +1583,7 @@ rem ==========================================================================
 	callpoint!.setStatus("SAVE")
 	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
+	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 
 	return
 [[OPE_ORDHDR.BSHO]]
