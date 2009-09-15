@@ -15,6 +15,14 @@ rem --- All Rights Reserved
     next_overlay$="";rem --- clear next_var and outvect! so adc_process_end doesn't loop...i.e., don't run anything after this
     if OutVect!<>null() then OutVect!=null()
 
+rem --- Check for missing information
+
+    if missing_data <> 0 then
+        msg_id$ = "OP_MISSING_LOTSER_NO"
+        gosub disp_message
+        goto no_to_update
+    endif
+
 rem --- Retrieve the program path
 
     pgmdir$=""

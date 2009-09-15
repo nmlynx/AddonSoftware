@@ -255,6 +255,7 @@ rem --- Initialize Data
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1
     errors=0
     glstatus=0
+    missing_data=0
 
     dim columns$[11,10]
     columns = 11
@@ -557,6 +558,7 @@ rem --- Main Read
                 OutVect!.addItem("   **** Warning! Missing Serial Numbers for item: "+items$(x,20))
                 xwk = fnblank(11)
                 l=l+1
+                missing_data=missing_data+1
             next x
         endif
 
@@ -613,7 +615,6 @@ rem --- Main Read
 
         if ope01a.tax_amount<>0 then
             precision 4
-            dim tax$(60)
             tax0=0
             tax1=0
             tax=ope01a.tax_amount
@@ -622,7 +623,6 @@ rem --- Main Read
 
             if start_block = 1 then
                 find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*endif) opm06a$
-                tax$(1) = opm06a.firm_id$+" "+opm06a.tax_code$+opm06a.code_desc$
                 tax = tax0*ope01a.taxable_amt/100
 
                 precision 2
@@ -635,19 +635,8 @@ rem --- Main Read
 
                 for x9=1 to 10
                     precision 4
-                rem x1$=tax$(26+2*(x9-1),2)
-                rem maybe a better way is to do this with the FIELD function
-                    if x9=1 then x1$=opm06a.ar_tot_code_1$
-                    if x9=2 then x1$=opm06a.ar_tot_code_2$
-                    if x9=3 then x1$=opm06a.ar_tot_code_3$
-                    if x9=4 then x1$=opm06a.ar_tot_code_4$
-                    if x9=5 then x1$=opm06a.ar_tot_code_5$
-                    if x9=6 then x1$=opm06a.ar_tot_code_6$
-                    if x9=7 then x1$=opm06a.ar_tot_code_7$
-                    if x9=8 then x1$=opm06a.ar_tot_code_8$
-                    if x9=9 then x1$=opm06a.ar_tot_code_9$
-                    if x9=10 then x1$=opm06a.ar_tot_code_10$
-                    if x1$="  " then continue
+                    x1$=field(opm06a$,"ar_tot_code_"+str(x9:"00"))
+                    if cvs(x1$,3)="" then continue
                     dim y5$(4),y6$(60)
                     tax0 = 0
                     tax1 = 0
