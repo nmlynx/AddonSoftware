@@ -1,4 +1,6 @@
-
+[[OPE_ORDHDR.ARAR]]
+rem --- set order date
+	user_tpl.order_date$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
 [[OPE_ORDHDR.AREA]]
 print "Hdr:AREA"; rem debug
 
