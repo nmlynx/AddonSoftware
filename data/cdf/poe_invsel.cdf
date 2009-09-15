@@ -31,7 +31,6 @@ rem print 'show';rem debug
 use ::ado_util.src::util
 [[POE_INVSEL.RECEIVER_NO.AVAL]]
 gosub accum_receiver_tot; rem accumulate total for po/receiver# entered
-
 [[POE_INVSEL.<CUSTOM>]]
 receiver_already_selected:
 rem --- given a po/receiver (or po w/ no receiver) see if it's already in gridvect
@@ -124,7 +123,7 @@ if pos(".AVAL"=event$)<>0
 		disp_info$="Ordered: "+fndate$(pot_rechdr.ord_date$)+", Received: "+fndate$(pot_rechdr.recpt_date$)+", Terms: "+pot_rechdr.ap_terms_code$+"("+cvs(apc_termscode.code_desc$,3)+")"
 		callpoint!.setColumnData("POE_INVSEL.TOTAL_AMOUNT",str(line_tot))
 		rem callpoint!.setColumnData("<<DISPLAY>>.DISP_REC_INFO",disp_info$)
-		callpoint!.setStatus("REFRESH")
+REM		callpoint!.setStatus("REFRESH"); rem --- tabbing to new grid row wasn't working until this was rem'd ?
 	else
 		msg_id$="PO_REC_INVOICED"
 		gosub disp_message
