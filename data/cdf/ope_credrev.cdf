@@ -14,7 +14,7 @@ rem --- Add Tickler
 	customer_id$=callpoint!.getDevObject("customer_id")
 
 rem --- Update Credit changes to master file
-	if cvs(customer_id$,3)<>""
+	if cvs(customer_id$,3)<>"" and cvs(tick_date$,3)<>""
 		ope03_dev=fnget_dev("OPE_CREDDATE")
 		dim ope03a$:fnget_tpl$("OPE_CREDDATE")
 		ope03a.firm_id$=firm_id$
