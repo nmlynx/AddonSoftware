@@ -131,10 +131,7 @@ rem --- Cash Transaction
 
 	callpoint!.setStatus("SETORIG")
 
-rem --- Check Print Status, debug
 
-	print "---Print Status: ", callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"); rem debug
-	escape; rem debug
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
