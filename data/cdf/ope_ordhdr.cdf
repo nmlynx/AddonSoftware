@@ -1341,7 +1341,7 @@ rem ==========================================================================
 					ope11a.warehouse_id$ = user_tpl.def_whse$
 				endif
 
-				call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",int_seq_no$,rd_table_chans$[all]
+				call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",int_seq_no$,table_chans$[all]
 				ope11a.internal_seq_no$=int_seq_no$
 				disp_line_no=disp_line_no+1
 				line_no_mask$=callpoint!.getDevObject("line_no_mask")

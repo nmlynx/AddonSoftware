@@ -1303,6 +1303,8 @@ rem --- Copy detail lines
 			opc_linecode_dev = fnget_dev("OPC_LINECODE")
 			dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 
+			disp_line_no=0
+
 			while 1
 				read record (opt11_dev, end=*break) opt11a$
 
@@ -1366,6 +1368,12 @@ rem --- Copy detail lines
 :				then
 					ope11a.warehouse_id$ = user_tpl.def_whse$
 				endif
+
+				call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",int_seq_no$,table_chans$[all]
+				ope11a.internal_seq_no$=int_seq_no$
+				disp_line_no=disp_line_no+1
+				line_no_mask$=callpoint!.getDevObject("line_no_mask")
+				ope11a.line_no$=str(disp_line_no:line_no_mask$)
 
 				ope11a$ = field(ope11a$)
 				write record (ope11_dev) ope11a$
@@ -1864,6 +1872,12 @@ rem --- Order Helper object
 
 	ordHelp! = new OrderHelper(firm_id$, int(num(ivs01a.precision$)), callpoint!, dtlg_param$[1,3])
 	callpoint!.setDevObject("order_helper_object", ordHelp!)
+
+rem --- get mask for display sequence number used in detail lines (needed when creating duplicate/credit)
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","LINE_NO","","","",line_no_mask$,0,0
+	callpoint!.setDevObject("line_no_mask",line_no_mask$)
+
 [[OPE_INVHDR.AFMC]]
 rem print 'show', "Hdr:AFMC"; rem debug
 
