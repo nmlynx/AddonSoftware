@@ -612,7 +612,7 @@ missing_record_error: rem --- Missing record
     msg_tokens$[1] = item$
     msg_tokens$[2] = whse$
     msg_tokens$[3] = pgm(-2)
-    gosub disp_message
+    rem gosub disp_message
     status=11
     goto std_exit
 
@@ -621,7 +621,7 @@ no_item_error: rem --- No inventory item passed
     msg_id$="IV_NO_ITEM_PASSED_IN"
     dim msg_tokens$[1]
     msg_tokens$[1] = pgm(-2)
-    gosub disp_message
+    rem gosub disp_message
     status=901
     goto std_exit
 
