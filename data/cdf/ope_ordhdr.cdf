@@ -619,7 +619,7 @@ rem --- Existing record
 
 	rem --- Check for invoice
 		
-		if ope01a.invoice_type$ = "I" then
+		if ope01a.ordinv_flag$ = "I" then
 			msg_id$ = "OP_IS_INVOICE"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
