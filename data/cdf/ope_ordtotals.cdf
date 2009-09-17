@@ -172,7 +172,7 @@ tax_calc: rem --- Calculate tax amount
 rem ==========================================================================
 
 	if ordHelp!.getTaxable() <> 0 then 
-		ordhdr_rec.taxable_amt = disc_per_in * ordHelp!.getTaxable() / 100
+		ordhdr_rec.taxable_amt = ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100
 	else
 		ordhdr_rec.taxable_amt = 0
 	endif
