@@ -1,5 +1,3 @@
-[[IVE_TRANSDET.BWRI]]
-
 [[IVE_TRANSDET.AGRN]]
 print "after grid row entry (AGRN)"; rem debug
 
@@ -53,20 +51,23 @@ ls_not_found:
 	rem --- Check lot/serial quantities
 
 	gosub test_ls
+	if failed then callpoint!.setStatus("ABORT")
 [[IVE_TRANSDET.LOTSER_NO.BINP]]
 print "in LOTSER_NO.BINP"; rem debug
+goto skip_loc; rem --- per bugzilla bug 3418, always invoking lot lookup so user can pick existing lot for Receipt/negative adjust, if desired.
+rem --- Should user enter a lot or look it up?
 
-rem --- Should user enter a lot of look it up?
-
-	rem --- Receipts and negative Adjustments require new lot entry
+	rem --- Receipts and positive Adjustments require new lot entry (i.e., incoming)
+	rem --- isn't it possible something could come back (a positive adjustment) into an existing lot?
 
 	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty < 0 ) then 
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0 ) then 
 		print "Trans Type: ", user_tpl.trans_type$
 		print "Receipt or negative Adjustment, exitting..."
 		break; rem --- exit callpoint
 	endif
 
+skip_loc:
 rem --- Call the lot lookup window and set default lot, lot location, lot comment and qty
 
 	rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
@@ -126,6 +127,17 @@ rem --- Call the lot lookup window and set default lot, lot location, lot commen
 [[IVE_TRANSDET.BUDE]]
 print "before record undelete (BUDE)"; rem debug
 
+trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+
+rem --- Issue and Commit type transactionscommit
+rem --- Receipts and *positive* Adjustments (incoming) do not commit
+rem --- *negative* Adjustments DO commit, as they are the same as an issue
+
+if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
+	print "Receipts don't commit"; rem debug
+	break; rem --- exit callpoint
+endif
+
 rem --- Re-commit quantity
 
 	status = 999
@@ -140,20 +152,33 @@ rem --- Re-commit quantity
 	if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
 		print "re-committing item ", curr_item$, ", amount", curr_qty; rem debug
 
-		rem --- Adjustments reverse the commitment
-		if user_tpl.trans_type$ = "A" then 
-			refs[0] = -curr_qty 
-		else 
-			refs[0] = curr_qty
-		endif
-
 		items$[1] = curr_whse$
 		items$[2] = curr_item$
 		items$[3] = curr_lotser$
+
+		rem --- Adjustments reverse the commitment
+		rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
+		if user_tpl.trans_type$ = "A" then
+			refs[0] = -curr_qty
+		else
+			refs[0] = curr_qty
+		endif
+
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 [[IVE_TRANSDET.BDEL]]
 print "before record delete (BDEL)"; rem debug
+
+trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+
+rem --- Issue and Commit type transactions un-commit
+rem --- Receipts and *positive* Adjustments (incoming) do not un-commit
+rem --- *negative* Adjustments DO un-commit, as they are the same as an issue
+
+if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
+	print "Receipts don't commit"; rem debug
+	break; rem --- exit callpoint
+endif
 
 rem --- Uncommit quantity
 
@@ -169,16 +194,18 @@ rem --- Uncommit quantity
 	if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
 		print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
 
-		rem --- Adjustments reverse the commitment
-		if user_tpl.trans_type$ = "A" then 
-			refs[0] = -curr_qty 
-		else 
-			refs[0] = curr_qty
-		endif
-
 		items$[1] = curr_whse$
 		items$[2] = curr_item$
 		items$[3] = curr_lotser$
+
+		rem --- Adjustments reverse the commitment
+		rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
+		if user_tpl.trans_type$ = "A" then
+			refs[0] = -curr_qty
+		else
+			refs[0] = curr_qty
+		endif
+
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 [[IVE_TRANSDET.AREC]]
@@ -281,6 +308,17 @@ rem ==========================================================================
 		qoh    = ivm02a.qty_on_hand
 		commit = ivm02a.qty_commit
 
+		curr_qty=num(callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY"))
+
+		rem --- if passing back thru existing row, need to adjust commit qty in ivm-02/07 by amt on this line (i.e., already committed)
+		if pos(user_tpl.trans_type$="IC")<>0 and curr_qty<>0
+			commit=commit-curr_qty
+		endif
+		
+		if user_tpl.trans_type$="A" and curr_qty<0
+			commit=commit+curr_qty
+		endif
+print "ivm02 commit: ",commit;rem debug
 		user_tpl.avail  = qoh - commit
 		user_tpl.commit = commit
 		user_tpl.qoh    = qoh
@@ -319,6 +357,15 @@ rem ==========================================================================
 			qoh    = ivm07a.qty_on_hand
 			commit = ivm07a.qty_commit
 
+			rem --- if passing back thru existing row, need to adjust commit qty in ivm-02/07 by amt on this line (i.e., already committed)
+			if pos(user_tpl.trans_type$="IC")<>0 and curr_qty<>0
+				commit=commit-curr_qty
+			endif
+			
+			if user_tpl.trans_type$="A" and curr_qty<0
+				commit=commit+curr_qty
+			endif
+print "ivm07 commit: ",commit;rem debug
 			user_tpl.ls_found = 1
 			user_tpl.avail    = qoh - commit
 			user_tpl.commit   = commit
@@ -386,7 +433,7 @@ rem ==========================================================================
 		goto test_qty_err
 	endif
 	
-	rem --- Issuse and Receipts can't be negative
+	rem --- Issues and Receipts can't be negative
 	if (user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R") and trans_qty < 0 then
 		msg_id$ = "IV_QTY_NEGATIVE"
 		goto test_qty_err
@@ -563,7 +610,8 @@ rem --- Check the transaction qty
 		if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
 			util.enableGridCell(Form!, 10); rem --- Cost
 		endif
-
+	else
+		callpoint!.setStatus("ABORT")
 	endif
 [[IVE_TRANSDET.AGRE]]
 print "after grid row exit (AGRE)"; rem debug
@@ -577,7 +625,7 @@ rem --- Check for Lot/Serial number entry
 		if ivm_itemmast.inventoried$="Y" and ivm_itemmast.lotser_item$="Y"
 			if cvs(callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO"),3)=""
 				callpoint!.setMessage("OP_MISSING_LOTSER_NO")
-				callpoint!.setStatus("ABORT")
+				callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.LOTSER_NO")
 			endif
 		endif
 	endif
@@ -598,7 +646,7 @@ rem --- Tests to make sure trans qty is correct
 
 		gosub test_ls
 		if failed then
-			callpoint!.setStatus("ABORT")
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.TRANS_QTY")
 			break; rem --- exit callpoint
 		endif
 
@@ -607,7 +655,7 @@ rem --- Tests to make sure trans qty is correct
 		trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 		gosub test_qty
 		if failed then
-			callpoint!.setStatus("ABORT")
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.TRANS_QTY")
 			break; rem --- exit callpoint
 		endif
 
@@ -615,9 +663,11 @@ rem --- Tests to make sure trans qty is correct
 
 rem --- Commit inventory
 
-	rem --- Receipts do not commit
+	rem --- Issue and Commit type transactions commit
+	rem --- Receipts and *positive* Adjustments (incoming) do not commit
+	rem --- *negative* Adjustments DO commit, as they are the same as an issue
 
-	if user_tpl.trans_type$ = "R" then 
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
 		print "Receipts don't commit"; rem debug
 		break; rem --- exit callpoint
 	endif
@@ -711,6 +761,7 @@ rem --- Commit inventory
 				items$[3] = prior_lotser$
 				
 				rem --- Adjustments reverse the commitment
+				rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)		
 				if user_tpl.trans_type$ = "A" then
 					refs[0] = -prior_qty
 				else
@@ -731,7 +782,14 @@ rem --- Commit inventory
 			items$[1] = curr_whse$
 			items$[2] = curr_item$
 			items$[3] = curr_lotser$
-			refs[0]   = curr_qty 
+
+			rem --- Adjustments reverse the commitment
+			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
+			if user_tpl.trans_type$ = "A" then
+				refs[0] = -curr_qty
+			else
+				refs[0] = curr_qty
+			endif
 
 			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 			if status then 
@@ -753,8 +811,17 @@ rem --- Commit inventory
 			print "committing new or current item and warehouse..."; rem debug
 			items$[1] = curr_whse$
 			items$[2] = curr_item$
-			items$[3] = curr_lotser$
-			refs[0]   = curr_qty - prior_qty
+			items$[3] = curr_lotser$			
+
+			rem --- Adjustments reverse the commitment
+			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)	
+			rem --- example: curr_qty=-3, prior_qty=-5; we've committed 5
+			rem --- so now we want to commit -(-3-(-5)), or -2, so committed will be 3
+			if user_tpl.trans_type$ = "A" then
+				refs[0] = -(curr_qty - prior_qty)
+			else
+				refs[0] = curr_qty - prior_qty
+			endif
 
 			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 			if status then 
@@ -767,7 +834,6 @@ rem --- Commit inventory
 		print "done committing"; rem debug
 
 	endif
-[[IVE_TRANSDET.BGDR]]
 
 [[IVE_TRANSDET.ITEM_ID.AVAL]]
 print "in ITEM_ID After Column Validation (AVAL)"; rem debug

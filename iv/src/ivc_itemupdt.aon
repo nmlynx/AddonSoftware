@@ -700,7 +700,7 @@ update_comtd_on_order: rem --- Update IVM-02/IVM-07 committed and on order
     endif
 
     if !(dropship) then 
-        if pos(action$="CO,IC,II,OE,OP,TO,WI",3) then 
+        if pos(action$="CO,IC,II,OE,OP,TO,WI",3) or (action$="IA" and qty<0) then 
             ivmwk.qty_commit=ivmwk.qty_commit+qty
         else 
             if action$="UC" then 

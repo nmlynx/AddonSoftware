@@ -186,10 +186,12 @@ rem --- Initializations
         glh=0
     endif
     
-    dim headings$[5]
+    dim headings$[2]
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
-    if num(batch_no$)<>0 then headings$[1]=headings$[1]+ " (Batch: "+batch_no$+")"    
+    if num(batch_no$)<>0 then headings$[1]=headings$[1]+ " (Batch: "+batch_no$+")"   
+    headings$[2]="[HEADER]"
+    
     glstatus=0
     places=p[2]
     
@@ -458,21 +460,21 @@ rem --- Print GL recap and run update
 trans_heading: rem --- Trans Heading
 
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-    headings$[2]="Reference: "+ive01a.iv_trans_no$
-    headings$[3]="Transaction Code: "+ive01a.trans_code$+" "+ivm10b.code_desc$
-    headings$[4]="Transaction Date: "+fndate$(ive01a.trans_date$)
-    headings$[5]="Comment: "+ive01a.trans_cmt$
-    HdrVect!.addItem(headings$[2])
-    HdrVect!.addItem(headings$[3])
-    HdrVect!.addItem(headings$[4])
-    HdrVect!.addItem(headings$[5])
+    HdrVect!.addItem("Reference: "+ive01a.iv_trans_no$+" (Code: "+ive01a.trans_code$+" "+ivm10b.code_desc$+")")
+    
+    OutVect!.addItem("Transaction Date: "+fndate$(ive01a.trans_date$))
+    xwk=fnblank(columns)
+    OutVect!.addItem("Comment: "+ive01a.trans_cmt$)
+    xwk=fnblank(columns)
+    
+    xwk=fnblank(columns+1)
     
    if gl$="Y" call pgmdir$+"glc_datecheck.aon",ive01a.trans_date$,"N",period$,year$,glstatus
    if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,ive01a.trans_date$,glstatus,lines,errors,status
 
    if stbl("+DTWARN_MSG",err=*endif)<>""
        OutVect!.addItem(stbl("+DTWARN_MSG"))
-       xwk=fnblank(7)
+       xwk=fnblank(columns-1)
    endif
     
     return
