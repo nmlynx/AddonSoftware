@@ -1,3 +1,12 @@
+[[OPE_INVDET.UNIT_PRICE.BINP]]
+rem --- Has a valid whse/item been entered?
+
+	if user_tpl.item_wh_failed then
+		item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+		wh$   = callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID")
+		warn  = 1
+		gosub check_item_whse
+	endif
 [[OPE_INVDET.EXT_PRICE.AVEC]]
 rem --- Display totals
 	
@@ -75,14 +84,41 @@ print "Det:QTY.ORDERED:BINP"; rem debug
 rem --- Get prev qty
 
 	user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
+
+rem --- Has a valid whse/item been entered?
+
+	if user_tpl.item_wh_failed then
+		item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+		wh$   = callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID")
+		warn  = 1
+		gosub check_item_whse
+	endif
 [[OPE_INVDET.QTY_SHIPPED.BINP]]
 rem --- Set previous amount
 
 	user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+
+rem --- Has a valid whse/item been entered?
+
+	if user_tpl.item_wh_failed then
+		item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+		wh$   = callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID")
+		warn  = 1
+		gosub check_item_whse
+	endif
 [[OPE_INVDET.QTY_BACKORD.BINP]]
 rem --- Set previous qty
 
 	user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_BACKORD"))
+
+rem --- Has a valid whse/item been entered?
+
+	if user_tpl.item_wh_failed then
+		item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+		wh$   = callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID")
+		warn  = 1
+		gosub check_item_whse
+	endif
 [[OPE_INVDET.BWRI]]
 print "Det:BWRI"; rem debug
 
@@ -671,20 +707,18 @@ rem --- Check item/warehouse combination, Set Available
 
 	item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
 	wh$   = callpoint!.getUserInput()
-	warn  = 1
+	warn  = 0
 
-rem Item probably isn't set yet, but we don't know
+rem --- Item probably isn't set yet, but we don't know thag for sure
 
-	if cvs(item$, 2)<>"" then
-		gosub check_item_whse
-		if !failed then gosub set_avail
-	endif
+	gosub check_item_whse
+	if !failed then gosub set_avail
+
 [[OPE_INVDET.ITEM_ID.AVAL]]
 print "Det:ITEM_ID.AVAL"; rem debug
 
 rem --- Check item/warehouse combination and setup values
 
-	start_block = 1
 	item$ = callpoint!.getUserInput()
 	wh$   = callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID")
 
@@ -692,19 +726,18 @@ rem --- Check item/warehouse combination and setup values
 		gosub clear_all_numerics
 	endif
 
-	if cvs(item$, 2)<>"" then
-		warn = 1
-		gosub check_item_whse
+	warn = 0
+	gosub check_item_whse
 
-		if !failed then 
-			gosub set_avail
-			callpoint!.setColumnData("OPE_INVDET.UNIT_COST", ivm02a.unit_cost$)
-			callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", ivm02a.cur_price$)
-			callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", ivm01a.product_type$)
-			user_tpl.item_price = ivm02a.cur_price
-			callpoint!.setStatus("REFRESH")
-		endif
+	if !user_tpl.item_wh_failed then 
+		gosub set_avail
+		callpoint!.setColumnData("OPE_INVDET.UNIT_COST", ivm02a.unit_cost$)
+		callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", ivm02a.cur_price$)
+		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", ivm01a.product_type$)
+		user_tpl.item_price = ivm02a.cur_price
+		callpoint!.setStatus("REFRESH")
 	endif
+
 [[OPE_INVDET.ADIS]]
 rem ---display extended price
 	ordqty=num(rec_data.qty_ordered)
@@ -1042,31 +1075,31 @@ check_item_whse: rem --- Check that a warehouse record exists for this item
                  rem      IN: wh$
                  rem          item$
                  rem          warn    (1=warn if failed, 0=no warning)
-                 rem     OUT: failed  (true/false)
+                 rem     OUT: user_tpl.item_wh_failed
                  rem          ivm02_dev
                  rem          ivm02a$ 
 rem ===========================================================================
+
+	user_tpl.item_wh_failed = 0
 
 	if pos(user_tpl.line_type$="SP") then
 		file$ = "IVM_ITEMWHSE"
 		ivm02_dev = fnget_dev(file$)
 		dim ivm02a$:fnget_tpl$(file$)
-		start_block = 1
+		user_tpl.item_wh_failed = 1
 		
-		if start_block then
-			failed = 1
+		if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
 			find record (ivm02_dev, key=firm_id$+wh$+item$, dom=*endif) ivm02a$
-			failed = 0
+			user_tpl.item_wh_failed = 0
 		endif
 
-		if failed then
-			if cvs(item$,2)="" failed = 0
+		if user_tpl.item_wh_failed and warn then 
+			callpoint!.setMessage("IV_NO_WHSE_ITEM")
+			callpoint!.setStatus("ABORT")
 		endif
-
-		if failed and warn then callpoint!.setMessage("IV_NO_WHSE_ITEM")
 	endif
 
-return
+	return
 
 rem ==========================================================================
 clear_all_numerics: rem --- Clear all order detail numeric fields
@@ -1253,6 +1286,7 @@ rem --- Has line code changed?
 
 		gosub clear_all_numerics
 		gosub clear_avail
+		user_tpl.item_wh_failed = 1
 
 	endif
 

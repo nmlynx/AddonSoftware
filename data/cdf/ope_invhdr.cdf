@@ -1757,7 +1757,8 @@ rem --- Setup user_tpl$
 :		"prev_sales_total:n(15), " +
 :		"is_cash_sale:u(1), " +
 :		"detail_modified:u(1), " +
-:		"record_deleted:u(1)"
+:		"record_deleted:u(1), " +
+:		"item_wh_failed:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -1783,6 +1784,7 @@ rem --- Setup user_tpl$
 	user_tpl.is_cash_sale      = 0
 	user_tpl.detail_modified   = 0
 	user_tpl.record_deleted    = 0
+	user_tpl.item_wh_failed    = 1
 
 	user_tpl.prev_line_code$   = ""
 	user_tpl.prev_item$        = ""
@@ -1877,7 +1879,6 @@ rem --- get mask for display sequence number used in detail lines (needed when c
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","LINE_NO","","","",line_no_mask$,0,0
 	callpoint!.setDevObject("line_no_mask",line_no_mask$)
-
 [[OPE_INVHDR.AFMC]]
 rem print 'show', "Hdr:AFMC"; rem debug
 
