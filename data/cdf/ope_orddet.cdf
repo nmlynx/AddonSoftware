@@ -800,8 +800,9 @@ rem --- Recalc quantities and extended price
 
 	boqty  = num(callpoint!.getUserInput())
 	ordqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	qtyshipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 
-	if boqty > ordqty then
+	if boqty > ordqty - qtyshipped then
 		callpoint!.setUserInput(str(user_tpl.prev_boqty))
 		msg_id$ = "BO_EXCEEDS_ORD"
 		gosub disp_message
