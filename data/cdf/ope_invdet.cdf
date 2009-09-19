@@ -539,6 +539,9 @@ rem --- Set buttons
 		gosub enable_repricing
 		gosub able_lot_button
 	endif
+
+rem --- Set availability info
+	gosub set_avail
 [[OPE_INVDET.AGRE]]
 print "Det:AGRE"; rem debug
 
@@ -737,7 +740,6 @@ rem --- Check item/warehouse combination and setup values
 		user_tpl.item_price = ivm02a.cur_price
 		callpoint!.setStatus("REFRESH")
 	endif
-
 [[OPE_INVDET.ADIS]]
 rem ---display extended price
 	ordqty=num(rec_data.qty_ordered)
@@ -931,23 +933,22 @@ rem ==========================================================================
 		avail$[4] = str(ivm02a.qty_on_order)
 		avail$[5] = ivm10c.short_name$
 		avail$[6] = ivm01a.item_type$
+	endif
 
-		userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[1])
-		userObj!.getItem(num(user_tpl.avail_comm$)).setText(avail$[2])
-		userObj!.getItem(num(user_tpl.avail_avail$)).setText(avail$[3])
-		userObj!.getItem(num(user_tpl.avail_oo$)).setText(avail$[4])
-		userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
-		userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[1])
+	userObj!.getItem(num(user_tpl.avail_comm$)).setText(avail$[2])
+	userObj!.getItem(num(user_tpl.avail_avail$)).setText(avail$[3])
+	userObj!.getItem(num(user_tpl.avail_oo$)).setText(avail$[4])
+	userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
+	userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
 
-		rem --- Set Dropship flag
+	rem --- Set Dropship flag
 
-		dropship_idx = num(user_tpl.dropship_flag$)
-		userObj!.getItem(dropship_idx).setText("")
+	dropship_idx = num(user_tpl.dropship_flag$)
+	userObj!.getItem(dropship_idx).setText("")
 
-		if user_tpl.line_dropship$="Y"
-			userObj!.getItem(dropship_idx).setText("**Dropship**")
-		endif
-
+	if user_tpl.line_dropship$="Y"
+		userObj!.getItem(dropship_idx).setText("**Dropship**")
 	endif
 
 return
