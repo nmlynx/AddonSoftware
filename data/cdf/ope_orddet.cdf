@@ -212,6 +212,7 @@ rem --- Get current and prior values
 	curr_whse$ = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	curr_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 	curr_qty   = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	line_ship_date$=callpoint!.getColumnData("OPE_ORDDET.EST_SHP_DATE")
 
 	prior_whse$ = callpoint!.getColumnUndoData("OPE_ORDDET.WAREHOUSE_ID")
 	prior_item$ = callpoint!.getColumnUndoData("OPE_ORDDET.ITEM_ID")
@@ -244,9 +245,11 @@ rem --- Uncommit prior item and warehouse
 				refs[0]   = prior_qty
 
 				print "---Uncommit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
-				
-				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+
+				if line_ship_date$<=user_tpl.def_commit$				
+					call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+					if status then exitto std_exit
+				endif
 			endif
 
 rem --- Commit quantity for current item and warehouse
@@ -258,8 +261,10 @@ rem --- Commit quantity for current item and warehouse
 
 				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
-				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if line_ship_date$<=user_tpl.def_commit$				
+					call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+					if status then exitto std_exit
+				endif
 			endif
 
 		endif
@@ -279,8 +284,10 @@ rem --- Commit quantity for current item and warehouse
 
 				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
-				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if line_ship_date$<=user_tpl.def_commit$
+					call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+					if status then exitto std_exit
+				endif
 			endif
 
 		endif
@@ -1022,6 +1029,7 @@ print "Det: in uncommit_iv"; rem deebug
 	wh$      = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	item$    = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 	ord_qty  = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	line_ship_date$=callpoint!.getColumnData("OPE_ORDDET.EST_SHP_DATE")
 
 	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty then
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
@@ -1032,7 +1040,9 @@ print "Det: in uncommit_iv"; rem deebug
 		refs[0]=ord_qty
 
 		if ivm_itemmast.lotser_item$<>"Y" or ivm_itemmast.inventoried$<>"Y" then
-			call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if line_ship_date$<=user_tpl.def_commit$
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			endif
 		else
 			found_lot=0
 			read (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+seq$, dom=*next)
@@ -1042,13 +1052,17 @@ print "Det: in uncommit_iv"; rem deebug
 				if pos(firm_id$+ar_type$+cust$+order$+seq$=ope_ordlsdet$)<>1 then break
 				items$[3] = ope_ordlsdet.lotser_no$
 				refs[0]   = ope_ordlsdet.qty_ordered
-				call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if line_ship_date$<=user_tpl.def_commit$
+					call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				endif
 				remove (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+seq$+ope_ordlsdet.sequence_no$)
 				found_lot=1
 			wend
 
 			if found_lot=0
-				call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if line_ship_date$<=user_tpl.def_commit$
+					call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				endif
 			endif
 		endif
 	endif
