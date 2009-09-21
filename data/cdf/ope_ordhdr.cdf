@@ -34,6 +34,12 @@ rem --- Are both Customer and Order entered?
 		break; rem --- exit callpoint
 	endif
 
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
+		break; rem --- exit callpoint
+	endif
+
 rem --- Credit action
 
 	if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then

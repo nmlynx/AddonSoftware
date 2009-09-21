@@ -58,6 +58,12 @@ rem --- Are both Customer and Order entered?
 		break; rem --- exit callpoint
 	endif
 
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
+		break; rem --- exit callpoint
+	endif
+
 rem --- Invoice totals, call form
 
 	dim dflt_data$[4,1]
@@ -130,7 +136,6 @@ rem --- Cash Transaction
 	endif
 
 	callpoint!.setStatus("SETORIG")
-
 
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
