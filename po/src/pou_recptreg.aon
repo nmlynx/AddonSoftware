@@ -96,7 +96,7 @@ rem --- Initializations
     
     call pgmdir$+"ivc_itemupdt.aon::init",files[all],ivs01a$,item$[all],refs$[all],refs[all],rd_table_chans$[all],ignore_status
     
-    if replenishment$="Y" call pgmdir$+"adc_perioddates.aon",gls01_dev,num(gls01a.total_pers$),num(ivs01a.current_year$),x1$,yearend$,status
+    if replenishment$="Y" call pgmdir$+"adc_perioddates.aon",gls01a_dev,num(gls01a.total_pers$),num(ivs01a.current_year$),x1$,yearend$,status
     qty=0
     cost=0
     po_extension=0
