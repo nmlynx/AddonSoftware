@@ -1,3 +1,62 @@
+[[POE_RECDET.AOPT-LENT]]
+rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
+
+	declare BBjStandardGrid grid!
+	grid! = util.getGrid(Form!)
+	return_to_row = grid!.getSelectedRow()
+	return_to_col = grid!.getSelectedColumn()
+
+rem --- Go get Lot Numbers
+
+	item_id$ = callpoint!.getColumnData("POE_RECDET.ITEM_ID")
+rem	gosub lot_ser_check
+
+rem --- Is this item lot/serial?
+
+	ivm_itemmast=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+
+	read record (ivm_itemmast,key=firm_id$+item_id$,dom=*break)ivm_itemmast$
+
+	if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
+	
+		receiver_no$   = callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
+		po_int_seq_ref$ = callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
+		po_no$=callpoint!.getColumnData("POE_RECDET.PO_NO")
+		unit_cost$=callpoint!.getColumnData("POE_RECDET.UNIT_COST")
+		qty_received=num(callpoint!.getColumnData("POE_RECDET.QTY_RECEIVED"))
+
+		grid!.focus()
+		dim dflt_data$[4,1]
+		dflt_data$[1,0] = "RECEIVER_NO"
+		dflt_data$[1,1] = receiver_no$
+		dflt_data$[2,0] = "PO_INT_SEQ_REF"
+		dflt_data$[2,1] = po_int_seq_ref$
+		dflt_data$[3,0]="PO_NO"
+		dflt_data$[3,1]=po_no$
+		dflt_data$[4,0]="UNIT_COST"
+		dflt_data$[4,1]=unit_cost$
+
+		callpoint!.setDevObject("ls_po_no",po_no$)
+		callpoint!.setDevObject("ls_unit_cost",unit_cost$)
+		callpoint!.setDevObject("ls_qty_received",qty_received)
+
+		lot_pfx$ = firm_id$+receiver_no$+po_int_seq_ref$
+
+		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:			"POE_RECLSDET", 
+:			stbl("+USER_ID"), 
+:			"MNT", 
+:			lot_pfx$, 
+:			table_chans$[all], 
+:			dflt_data$[all]
+
+		callpoint!.setStatus("ACTIVATE")
+
+		rem --- Return focus to where we were (Detail line grid)
+
+		util.forceEdit(Form!, return_to_row, return_to_col)
+	endif
 [[POE_RECDET.QTY_ORDERED.BINP]]
 if callpoint!.getDevObject("line_type")="O"  
 	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_RECDET.QTY_ORDERED",0)
@@ -359,6 +418,9 @@ callpoint!.setDevObject("cost_this_row",callpoint!.getColumnData("POE_RECDET.UNI
 rem print "AGRN "
 rem print "qty this row: ",callpoint!.getDevObject("qty_this_row")
 rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
+
+item_id$=callpoint!.getColumnData("POE_RECDET.ITEM_ID")
+gosub enable_serial
 [[POE_RECDET.UNIT_COST.AVAL]]
 gosub update_header_tots
 callpoint!.setDevObject("cost_this_row",num(callpoint!.getUserInput()))
@@ -508,6 +570,9 @@ gosub validate_whse_item
 if pos("ABORT"=callpoint!.getStatus())<>0
 	callpoint!.setUserInput("")
 endif
+
+item_id$=callpoint!.getUserInput()
+gosub enable_serial
 [[POE_RECDET.<CUSTOM>]]
 update_line_type_info:
 
@@ -642,3 +707,20 @@ call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs
 if status then exitto std_exit
 
 return
+
+rem --- Enable/Disable Serial Button
+enable_serial:
+
+rem "IN: item_id$
+
+	ivm_itemmast=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+
+	callpoint!.setOptionEnabled("LENT",0)
+	read record (ivm_itemmast,key=firm_id$+item_id$,dom=*return)ivm_itemmast$
+
+	if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
+		callpoint!.setOptionEnabled("LENT",1)
+	endif
+
+	return

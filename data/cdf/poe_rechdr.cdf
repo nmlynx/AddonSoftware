@@ -303,7 +303,7 @@ rem --- inits
 	use ::ado_util.src::util
 
 rem --- Open Files
-	num_files=14
+	num_files=15
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -319,6 +319,7 @@ rem --- Open Files
 	open_tables$[12]="IVM_ITEMSYN",open_opts$[12]="OTA"
 	open_tables$[13]="APM_VENDCMTS",open_opts$[13]="OTA"
 	open_tables$[14]="POE_RECLSDET",open_opts$[14]="OTA"
+	open_tables$[15]="IVS_PARAMS",open_opts$[15]="OTA"
 
 	gosub open_tables
 
@@ -331,6 +332,7 @@ rem --- Open Files
 	poe_pohdr_dev=num(open_chans$[7]),poe_pohdr_tpl$=open_tpls$[7]
 	poe_podet_dev=num(open_chans$[8]),poe_podet_tpl$=open_tpls$[8]
 	pot_rechdr_dev=num(open_chans$[9]),pot_rechdr_tpl$=open_tpls$[9]
+	ivs01_dev=num(open_chans$[15]),ivs01a_tpl$=open_tpls$[15]
 
 rem --- call adc_application to see if OE is installed; if so, open a couple tables for potential use if linking PO to SO for dropship
 
@@ -418,6 +420,18 @@ call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"PO",glw11$,gl$,stat
 if status<>0 then release
 
 callpoint!.setDevObject("gl_installed",gl$)
+
+rem --- Set up Lot/Serial button properly
+
+	dim ivs01a$:ivs01a_tpl$
+	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
+	switch pos(ivs01a.lotser_flag$="LS")
+		case 1; callpoint!.setOptionText("LENT","Lot Entry"); break
+		case 2; callpoint!.setOptionText("LENT","Serial Entry"); break
+		case default; break
+	swend
+
+	callpoint!.setOptionEnabled("LENT",0)
 [[POE_RECHDR.PURCH_ADDR.AVAL]]
 vendor_id$=callpoint!.getColumnData("POE_RECHDR.VENDOR_ID")
 purch_addr$=callpoint!.getUserInput()
