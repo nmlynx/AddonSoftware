@@ -42,9 +42,13 @@ rem --- Are both Customer and Order entered?
 
 rem --- Credit action
 
-	if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
+	rem if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
 		gosub do_credit_action
-	endif
+	rem endif
+
+	rem There has been much discussion about whether to launch credit action only
+	rem when the order is modified, but the problem remains that is you want to 
+	rem to release a credit help order, you would have to modify it first.
 
 rem --- Order totals, call form
 
@@ -1029,6 +1033,8 @@ check_credit: rem --- Check credit limit of customer
               rem     (ope_db, 5400-5499)
 rem ==========================================================================
 
+	print "Hdr:in check_credit..."; rem debug
+
 	over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
 
 	if user_tpl.credit_limit<>0 and over_credit_limit=0 and user_tpl.balance>=user_tpl.credit_limit then
@@ -1042,6 +1048,8 @@ rem ==========================================================================
 		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Credit Limit Exceeded ***") 
 		callpoint!.setDevObject("over_credit_limit", "1")
    endif
+
+	print "out"; rem debug
 
 	return
 
@@ -1560,7 +1568,7 @@ rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
 rem ==========================================================================
 
-	print "Hdr:in do_credit_action"; rem debug
+	print "Hdr:in do_credit_action..."; rem debug
 
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -1586,13 +1594,15 @@ rem ==========================================================================
 
 	endif
 
+	print "out"; rem debug
+
 	return
 
 rem ==========================================================================
 do_picklist: rem --- Print a Pick List
 rem ==========================================================================
 
-	print "Hdr:in do_picklist"; rem debug
+	print "Hdr:in do_picklist..."; rem debug
 
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
@@ -1602,6 +1612,8 @@ rem ==========================================================================
 	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
 	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
+
+	print "out"; rem debug
 
 	return
 [[OPE_ORDHDR.BSHO]]

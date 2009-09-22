@@ -108,9 +108,11 @@ rem --- Set return values
 
 rem --- Credit action
 
-	if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
+	rem if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
 		gosub do_credit_action
-	endif
+	rem endif
+
+	rem Need to get to credit action even if nothing has been modified
 
 rem --- Cash Transaction
 
@@ -136,7 +138,6 @@ rem --- Cash Transaction
 	endif
 
 	callpoint!.setStatus("SETORIG")
-
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
