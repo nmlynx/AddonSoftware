@@ -849,11 +849,10 @@ rem --- Return 1 if valid date, 0 if invalid
 rem --- fnl$: return greater of two dates, or spaces if both dates null/empty
 
     def fnl$(q1$,q2$)
-        if cvs(q1$,2)="" dim q1$(8,"Z")
-        if cvs(q2$,2)="" dim q2$(8,"Z")
+        if cvs(q1$,2)="" dim q1$(8)
+        if cvs(q2$,2)="" dim q2$(8)
         q$=q1$
         if q2$>q1$ q$=q2$
-        if pos("Z"<>q$)=0 dim q$(8)
         return q$
     fnend
 
