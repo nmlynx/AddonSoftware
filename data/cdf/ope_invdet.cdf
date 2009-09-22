@@ -548,8 +548,9 @@ print "Det:AGRE"; rem debug
 rem --- Clear/set flags
 
 	user_tpl.new_detail = 0
+	this_row = callpoint!.getValidationRow()
 
-	if callpoint!.getRecordStatus() <> "M" then 
+	if callpoint!.getGridRowNewStatus(this_row) <> "Y" and callpoint!.getGridRowModifyStatus(this_row) <> "Y" then
 		break; rem --- exit callpoint
 	endif
 
@@ -1083,21 +1084,24 @@ check_item_whse: rem --- Check that a warehouse record exists for this item
 rem ===========================================================================
 
 	user_tpl.item_wh_failed = 0
+	this_row = callpoint!.getValidationRow()
 
-	if pos(user_tpl.line_type$="SP") then
-		file$ = "IVM_ITEMWHSE"
-		ivm02_dev = fnget_dev(file$)
-		dim ivm02a$:fnget_tpl$(file$)
-		user_tpl.item_wh_failed = 1
-		
-		if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
-			find record (ivm02_dev, key=firm_id$+wh$+item$, dom=*endif) ivm02a$
-			user_tpl.item_wh_failed = 0
-		endif
+	if callpoint!.getGridRowDeleteStatus(this_row) <> "Y" then
+		if pos(user_tpl.line_type$="SP") then
+			file$ = "IVM_ITEMWHSE"
+			ivm02_dev = fnget_dev(file$)
+			dim ivm02a$:fnget_tpl$(file$)
+			user_tpl.item_wh_failed = 1
+			
+			if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
+				find record (ivm02_dev, key=firm_id$+wh$+item$, dom=*endif) ivm02a$
+				user_tpl.item_wh_failed = 0
+			endif
 
-		if user_tpl.item_wh_failed and warn then 
-			callpoint!.setMessage("IV_NO_WHSE_ITEM")
-			callpoint!.setStatus("ABORT")
+			if user_tpl.item_wh_failed and warn then 
+				callpoint!.setMessage("IV_NO_WHSE_ITEM")
+				callpoint!.setStatus("ABORT")
+			endif
 		endif
 	endif
 

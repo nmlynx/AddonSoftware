@@ -163,7 +163,6 @@ rem --- Set product types for certain line types
 rem --- Round 
 
 	callpoint!.setUserInput( str(round( num(callpoint!.getUserInput()), 2)) )
-
 [[OPE_ORDDET.WAREHOUSE_ID.AVEC]]
 print "Det:WAREHOUSE_ID.AVEC"; rem debug
 
@@ -574,7 +573,12 @@ rem --- Clear/set flags
 
 	user_tpl.new_detail = 0
 
-	if callpoint!.getRecordStatus() <> "M" then 
+	this_row = callpoint!.getValidationRow()
+	print "---This Row:", this_row; rem debug
+	print "---getGridRowNewStatus: ", callpoint!.getGridRowNewStatus(this_row); rem debug
+	print "---getGridRowModifyStatus: ", callpoint!.getGridRowModifyStatus(this_row); rem debug
+
+	if callpoint!.getGridRowNewStatus(this_row) <> "Y" and callpoint!.getGridRowModifyStatus(this_row) <> "Y" then
 		break; rem --- exit callpoint
 	endif
 
@@ -594,7 +598,9 @@ rem --- Has customer credit been exceeded?
 
 	gosub calc_grid_totals
 	
+	print "---over credit limit?"; rem debug
 	if user_tpl.balance - user_tpl.prev_ext_price + ttl_ext_price > user_tpl.credit_limit then 
+		print "---yes"; rem debug
 		gosub credit_exceeded
 	endif
 
@@ -840,10 +846,10 @@ rem ==========================================================================
 
 	tamt! = UserObj!.getItem(num(user_tpl.ord_tot_1$))
 	tamt!.setValue(ttl_ext_price)
-	print "---Update Order Totals (vector):", ttl_ext_price; rem debug
+	rem print "---Update Order Totals (vector):", ttl_ext_price; rem debug
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
-	print "---Set Total Sales (header tab) and REFRESHed"; rem debug
+	rem print "---Set Total Sales (header tab) and REFRESHed"; rem debug
 
 	return
 
@@ -864,7 +870,8 @@ rem ==========================================================================
 		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
 	endif
 
-	print "---Total Sales:", ttl_ext_price; rem debug
+	print "---Total Sales (from vector):", ttl_ext_price; rem debug
+	print "out"; rem debug
 
 	return
 
@@ -1014,7 +1021,7 @@ uncommit_iv: rem --- Uncommit Inventory
              rem --- Make sure action$ is set before entry
 rem ==========================================================================
 
-print "Det: in uncommit_iv"; rem deebug
+	print "Det: in uncommit_iv"; rem debug
 
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
@@ -1067,6 +1074,8 @@ print "Det: in uncommit_iv"; rem deebug
 		endif
 	endif
 
+	print "out"; rem debug
+
 	return
 
 rem ==========================================================================
@@ -1118,24 +1127,35 @@ check_item_whse: rem --- Check that a warehouse record exists for this item
                  rem          ivm02a$ 
 rem ===========================================================================
 
+	print "Det:in check_item_whse..."; rem debug
+
 	user_tpl.item_wh_failed = 0
+	this_row = callpoint!.getValidationRow()
 
-	if pos(user_tpl.line_type$="SP") then
-		file$ = "IVM_ITEMWHSE"
-		ivm02_dev = fnget_dev(file$)
-		dim ivm02a$:fnget_tpl$(file$)
-		user_tpl.item_wh_failed = 1
-		
-		if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
-			find record (ivm02_dev, key=firm_id$+wh$+item$, knum=0, dom=*endif) ivm02a$
-			user_tpl.item_wh_failed = 0
-		endif
+	print "---This Row:", this_row; rem debug
+	print "---Grid Row Delete Status: ", callpoint!.getGridRowDeleteStatus(this_row); rem debug
 
-		if user_tpl.item_wh_failed and warn then 
-			callpoint!.setMessage("IV_NO_WHSE_ITEM")
-			callpoint!.setStatus("ABORT")
+	if callpoint!.getGridRowDeleteStatus(this_row) <> "Y" then
+		if pos(user_tpl.line_type$="SP") then
+			print "---checking..."; rem debug
+			file$ = "IVM_ITEMWHSE"
+			ivm02_dev = fnget_dev(file$)
+			dim ivm02a$:fnget_tpl$(file$)
+			user_tpl.item_wh_failed = 1
+			
+			if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
+				find record (ivm02_dev, key=firm_id$+wh$+item$, knum=0, dom=*endif) ivm02a$
+				user_tpl.item_wh_failed = 0
+			endif
+
+			if user_tpl.item_wh_failed and warn then 
+				callpoint!.setMessage("IV_NO_WHSE_ITEM")
+				callpoint!.setStatus("ABORT")
+			endif
 		endif
 	endif
+
+	print "out"; rem debug
 
 	return
 
@@ -1254,7 +1274,10 @@ rem ==========================================================================
 credit_exceeded: rem --- Credit Limit Exceeded (ope_dd, 5500-5599)
 rem ==========================================================================
 
+	print "Det:in credit_exceeded..."; rem debug
 	already_warned = num(callpoint!.getDevObject("over_credit_limit"))
+	print "---Already warned?", already_warned; rem debug
+	print "---Credit limit zero?", user_tpl.credit_limit; rem debug
 
 	if user_tpl.credit_limit <> 0 and !already_warned then
 		msg_id$ = "OP_OVER_CREDIT_LIMIT"
@@ -1264,6 +1287,8 @@ rem ==========================================================================
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Over Credit Limit ***")
 		callpoint!.setDevObject("over_credit_limit", "1")
 	endif
+
+	print "out"; rem debug
 
 	return
 
