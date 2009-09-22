@@ -108,6 +108,9 @@ rem ==========================================================================
                 for i = 0 to pDtlVect!.size() - 1
                     dtl_rec$ = str(pDtlVect!.getItem(i))
                     
+                    rem --- GridRowDeleteStatus() does not return the correct status because the vector it's based on isn't built
+                    rem print "---GridRowDeleteStatus row(", i, "): """, #callpoint!.getGridRowDeleteStatus(i), """"
+                    
                     if cvs(dtl_rec$, 2) <> "" and #callpoint!.getGridRowDeleteStatus(i) <> "Y" then 
                         read record (#LineCode_dev%, key=#firm_id$+dtl_rec.line_code$, dom=*endif) linecode_rec$
                         
