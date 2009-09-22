@@ -43,7 +43,7 @@ rem --- Change discount?
 rem --- A discount code or amount has been previously entered and the discount amt doesn't match the old discount percentage
 
 	if (user_tpl.prev_disc_code$ <> "" or ordhdr_rec.discount_amt <> 0) and 
-:		(user_tpl.prev_sales_total = 0 or ordhdr_rec.discount_amt <> old_disc_per * user_tpl.prev_sales_total / 100)
+:		(user_tpl.prev_sales_total = 0 or round(ordhdr_rec.discount_amt) <> round(old_disc_per * user_tpl.prev_sales_total / 100))
 :	then 
 		saved_new_disc = new_disc_per
 
