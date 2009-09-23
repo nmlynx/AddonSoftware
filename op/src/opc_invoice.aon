@@ -533,7 +533,7 @@ rem --- Create pages from both physical and display objects
 
     while 1
 
-        pdf!.setText(0,10,568,0,"INVOICE",largefont!,pdf!.CENTER_JUSTIFY(),black!,white!)
+        pdf!.setText(220,10,128,0,"INVOICE",largefont!,pdf!.CENTER_JUSTIFY(),black!,white!)
         pdf!.setLogo(0,0,185,68,logofile$)
 
     rem --- Company Address
@@ -592,22 +592,14 @@ rem --- Create pages from both physical and display objects
         pdf!.drawBox(0, 234, 568, 14, light_gray!, light_gray!); rem gray bar    
         pdf!.drawBox(0, 234, 568, 48); rem outer frame
 
-        pdf!.drawVLine( 66, 234, 48)
-        pdf!.drawVLine( 98, 234, 28)
-        pdf!.drawHLine( 98, 262, 190)
-
-        pdf!.drawVLine(288, 234, 48)
-        pdf!.drawVLine(378, 234, 48)
-        pdf!.drawVLine(438, 234, 48)
-
-        pdf!.setText(0,     234+2, 132-72,  0, "Order Date", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(2,     234+2, 132-72,  0, "Order Date", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
         pdf!.setText(66+2,  234+2, 204-180, 0, "Sls",        boldfont!, pdf!.LEFT_JUSTIFY(),   light_gray!)
         pdf!.setText(96,    234+2, 288-204, 0, "P/O Number", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
 
 
         pdf!.setText(288,   234+2, 378-288, 0, "Ship Via",   boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
         pdf!.setText(378,   234+2, 438-378, 0, "Ship Date",  boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
-        pdf!.setText(438,   234+2, 568-438, 0, "Terms",      boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(438,   234+2, 568-440, 0, "Terms",      boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
         
         pdf!.setText(0,     234+14, 132-72,  0, func.formatDate(ope01a.order_date$),      pdf!.CENTER_JUSTIFY())
         pdf!.setText(66+2,  234+14, 204-172, 0, ope01a.slspsn_code$,                      pdf!.LEFT_JUSTIFY())
@@ -620,26 +612,33 @@ rem --- Create pages from both physical and display objects
         pdf!.setText(438,   234+14, 568-438, 0, ope01a.terms_code$,                       pdf!.CENTER_JUSTIFY())
         pdf!.setText(438,   262+2,  568-438, 0, arm10a.code_desc$,                        pdf!.CENTER_JUSTIFY())
 
+        pdf!.drawVLine( 66, 234, 48)
+        pdf!.drawVLine( 98, 234, 28)
+        pdf!.drawHLine( 98, 262, 190)
+        pdf!.drawVLine(288, 234, 48)
+        pdf!.drawVLine(378, 234, 48)
+        pdf!.drawVLine(438, 234, 48)
+
     rem --- Detail box and headings
 
-        pdf!.drawBox(0, 294, 568, 14, light_gray!, light_gray!); rem gray box
-        pdf!.drawBox(0, 648, 568, 72)
+        pdf!.drawBox(0,   294, 568, 14, light_gray!, light_gray!); rem gray box
+        pdf!.drawBox(0,   648, 568, 72)
         pdf!.drawBox(387, 648, 181, 72, light_gray!)
-        pdf!.drawVLine(45,  294, 354)
-        pdf!.drawVLine(90,  294, 354)
-        pdf!.drawVLine(135, 294, 354)
-        pdf!.drawVLine(360, 294, 354)
-        pdf!.drawVLine(387, 294, 354)
-        pdf!.drawVLine(477, 294, 426)
-        pdf!.drawBox(0, 294, 568, 354); rem outer frame
+        pdf!.drawBox(0,   294, 568, 354); rem outer frame
 
-        pdf!.setText(0,     294+2, 45-2, 0, "Order",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+        pdf!.setText(2,     294+2, 45-2, 0, "Order",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
         pdf!.setText(45,    294+2, 45-2, 0, "Ship",       boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
         pdf!.setText(90,    294+2, 45-2, 0, "B/O",        boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
         pdf!.setText(135+2, 294+2, "Item# / Description", boldfont!,                       light_gray!)
         pdf!.setText(360+2, 294+2, "UM",                  boldfont!,                       light_gray!)
         pdf!.setText(387,   294+2, 90-2, 0, "Price",      boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
         pdf!.setText(477,   294+2, 90-2, 0, "Extended",   boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+
+        pdf!.drawVLine(45,  294, 354)
+        pdf!.drawVLine(90,  294, 354)
+        pdf!.drawVLine(135, 294, 354)
+        pdf!.drawVLine(360, 294, 354)
+        pdf!.drawVLine(387, 294, 354)
 
     rem --- Duplicate what was done on pagePrint!; if both pages have updated, we're done
 
@@ -753,6 +752,8 @@ print_total: rem --- Total
         pdf!.setText(477, 648+2*12+2, 90-2, 0, str(ope01a.tax_amount:m1$),    pdf!.RIGHT_JUSTIFY(), light_gray!)
         pdf!.setText(477, 648+3*12+2, 90-2, 0, str(ope01a.freight_amt:m1$),   pdf!.RIGHT_JUSTIFY(), light_gray!)
         pdf!.setText(477, 648+4*12+2, 90-2, 0, str(total_amt:m1$), boldfont!, pdf!.RIGHT_JUSTIFY(), light_gray!)
+
+        pdf!.drawVLine(477, 294, 426)
 
         if pdf!.getPage() = pagePDF! then break
         pdf!.setPage(pagePDF!)
