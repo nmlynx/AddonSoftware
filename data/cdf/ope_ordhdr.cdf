@@ -260,6 +260,58 @@ rem --- Set flag
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
 
+rem --- Check if reprintable
+
+	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	ord_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	reprint  = 0
+	gosub check_if_reprintable
+
+	if reprintable then 
+		msg_id$="OP_REPRINT_ORDER"
+		gosub disp_message
+		
+		if msg_opt$ = "Y" then
+			if user_tpl.credit_installed$ = "Y" and 
+:				user_tpl.pick_hold$ = "N" 			and 
+:				callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG") = "C" 
+:			then
+				msg_id$="OP_ORD_ON_CR_HOLD"
+			else
+				msg_id$="OP_ORD_PRINT_BATCH"
+				reprint = 1
+			endif
+
+			gosub disp_message
+		else
+			callpoint!.setStatus("ABORT")	
+			break; rem --- exit callpoint		
+		endif
+
+	endif
+
+rem --- Check locked status
+
+	gosub check_lock_flag
+
+	if locked=1 then 
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
+
+rem --- Set Codes		
+        
+	if reprint then 
+		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
+		gosub add_to_batch_print
+	endif
+
+	user_tpl.price_code$   = callpoint!.getColumnUndoData("OPE_ORDHDR.PRICE_CODE")
+	user_tpl.pricing_code$ = callpoint!.getColumnData("OPE_ORDHDR.PRICING_CODE")
+	user_tpl.order_date$   = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
+
 rem --- Show customer data
 	
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -672,8 +724,11 @@ rem --- Existing record
         
 	rem --- Set Codes		
         
-		price_code$ = "Y"
-		if reprint then callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+		if reprint then 
+			callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+			callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
+			gosub add_to_batch_print
+		endif
 
 		user_tpl.price_code$   = ope01a.price_code$
 		user_tpl.pricing_code$ = ope01a.pricing_code$

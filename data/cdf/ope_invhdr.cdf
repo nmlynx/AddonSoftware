@@ -561,6 +561,24 @@ rem --- Write/Remove manual ship to file
 		write record (ordship_dev) ordship_tpl$
 	endif
 [[OPE_INVHDR.ADIS]]
+rem --- Check locked status
+
+	gosub check_lock_flag
+
+	if locked then
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
+
+rem --- Check Print flag
+
+	gosub check_print_flag
+
+	if locked then
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
+
 rem --- Show customer data
 	
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
@@ -614,6 +632,12 @@ rem --- Set all previous values
 	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_INVHDR.DISC_CODE")
 	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
 	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
+
+rem --- Set other codes
+        
+	user_tpl.price_code$   = callpoint!.getColumnData("OPE_INVHDR.PRICE_CODE")
+	user_tpl.pricing_code$ = callpoint!.getColumnData("OPE_INVHDR.PRICING_CODE")
+	user_tpl.order_date$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_DATE")
 
 rem --- Set type in OrderHelper object
 
