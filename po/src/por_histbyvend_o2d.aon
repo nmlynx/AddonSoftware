@@ -59,14 +59,14 @@ rem --- Columns
     dim columns$[8,3]
     columns = 9
     columns$[0,0]="PO Receipt^Date                       Seq     Cd     Wh",    columns$[0,1]="C",columns$[0,2]="25"
-    columns$[1,0]="Item",                               columns$[1,1]="C",columns$[1,2]="25"
-    columns$[2,0]="Date Required",                      columns$[2,1]="C",columns$[2,2]="12"
-    columns$[3,0]="Location",                           columns$[3,1]="C",columns$[3,2]="12"
-    columns$[4,0]="Conv^UM     Factor",                      columns$[4,1]="C",columns$[4,2]="12"
-    columns$[5,0]="Qty Ordered",                        columns$[5,1]="C",columns$[5,2]="12"
-    columns$[6,0]="Qty Received",                       columns$[6,1]="C",columns$[6,2]="15"
-    columns$[7,0]="Unit Cost",                          columns$[7,1]="C",columns$[7,2]="10"
-    columns$[8,0]="Extension",                          columns$[8,1]="C",columns$[8,2]="10"
+    columns$[1,0]="Item",                columns$[1,1]="C",columns$[1,2]="25"
+    columns$[2,0]="Date Required",       columns$[2,1]="C",columns$[2,2]="12"
+    columns$[3,0]="Location",            columns$[3,1]="C",columns$[3,2]="12"
+    columns$[4,0]="Conv^UM     Factor",  columns$[4,1]="C",columns$[4,2]="12"
+    columns$[5,0]="           Qty Ordered",    columns$[5,1]="C",columns$[5,2]="12"
+    columns$[6,0]="                 Qty Received",   columns$[6,1]="C",columns$[6,2]="15"
+    columns$[7,0]="         Unit Cost",      columns$[7,1]="C",columns$[7,2]="10"
+    columns$[8,0]="         Extension",      columns$[8,1]="C",columns$[8,2]="10"
 
 positions:
 
@@ -84,7 +84,7 @@ positions:
     o[12]=o[11]+m3+1
 
     if o[12]+15>=width
-        o[12]=width-m1
+    o[12]=width-m1
         o[11]=o[12]-m3
         o[10]=o[11]-m2
         o[9]=o[10]-m2
@@ -272,10 +272,10 @@ rem --- Print Line Types 'S' & 'N'
             OutVect!.addItem(location$)
             if linetype$="S" OutVect!.addItem(unitmeas$+" "+convfact$) 
 :           else OutVect!.addItem(unitmeas$)
-            OutVect!.addItem(qtyord$)
-            OutVect!.addItem(qtyrec$)
-            OutVect!.addItem(unitcost$)
-            OutVect!.addItem(extension$)
+            OutVect!.addItem(qtyord$+$00$+"R")
+            OutVect!.addItem(qtyrec$+$00$+"R")
+            OutVect!.addItem(unitcost$+$00$+"R")
+            OutVect!.addItem(extension$+$00$+"R")
 
            if wonum$<>fill(7)
                 a=fnblank(1)
@@ -473,7 +473,7 @@ vendtotals: rem --- Print Vendor total
     a=fnblank(6)
     OutVect!.addItem("Total For Vendor")
     OutVect!.addItem(fnmask$(vendor$(1,vendlen),vendomask$))
-    OutVect!.addItem(str(vendtot:m1$))
+    OutVect!.addItem(str(vendtot:m1$)+$00$+"R")
     l=l+1
     return
 
@@ -484,7 +484,7 @@ pototals: rem --- Print PO total
     a=fnblank(6)
     OutVect!.addItem("Total For PO #")
     OutVect!.addItem(ponum$)
-    OutVect!.addItem(str(potot:m1$))
+    OutVect!.addItem(str(potot:m1$)+$00$+"R")
     l=l+1
     return
 
@@ -495,7 +495,7 @@ rcpttotals: rem --- Print Receiver Total
     a=fnblank(6)
     OutVect!.addItem("Total For Receiver # ")
     OutVect!.addItem(receivernum$)
-    OutVect!.addItem(str(rcpttot:m1$))
+    OutVect!.addItem(str(rcpttot:m1$)+$00$+"R")
     let l=l+1
     return
 
