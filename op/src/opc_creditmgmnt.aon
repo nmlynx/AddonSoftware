@@ -9,6 +9,8 @@ rem --- All Rights Reserved
 rem --- Below is the old enter list
 rem enter ope01_dev,arm02_dev,firm_id$,customer$,credit$,s$,m1$,type
 
+rem --- stbl("!batch") is used when calling this from Commit and Release Future Orders
+
     setesc std_error
     seterr std_error
     
@@ -117,6 +119,9 @@ rem --- Total Past Due Invoices
     if aging_bucket=5 max_past_due=arm02a.aging_120
 
 rem --- Set Check Credit Limit Flag (lines 1600-2299, S$(1,1) is backwards)
+escape;rem jpb
+    batch$=""
+    batch$=stbl("!batch",err=*next)
     
     if  arm02a.cred_hold$="Y" or
 :       max_past_due>num(ars01c.past_due_lim$) or
@@ -124,12 +129,14 @@ rem --- Set Check Credit Limit Flag (lines 1600-2299, S$(1,1) is backwards)
 :       (ars01c.auto_hold$="Y" and arm02a.credit_limit and arm02a.credit_limit<total_aging+open_ord_amt+open_bo_amt+held_ord_amt)
 :   then
         if callpoint! <> null() then callpoint!.setDevObject("over_credit_limit", "1")
+        if batch$<>"" batch$="B"
     else
         if callpoint! <> null() then callpoint!.setDevObject("over_credit_limit", "0")
     endif
 
 rem --- Display	
 
+    if batch$=""
 	dim dflt_data$[8,1]
 	
 	dflt_data$[1,0] = "CREDIT_LIMIT"
@@ -153,9 +160,12 @@ rem --- Display
 	dflt_data$[8,1] = arm02a.cred_hold$
 	
 	call sypdir$+"bam_run_prog.bbj", "OPE_CREDITSTATUS", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
-	
+
+    endif
+    
 rem --- All done
-	
+
+    if batch$<>"" x$=stbl("!batch",batch$)
     goto std_exit
 	
 open_tables: rem --- Open tables
