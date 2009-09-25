@@ -1,3 +1,6 @@
+[[OPE_ORDHDR.AREC]]
+rem --- Clear availability information
+	gosub clear_avail
 [[OPE_ORDHDR.ARAR]]
 rem --- set order date
 	user_tpl.order_date$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
@@ -370,6 +373,10 @@ rem --- Set type in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE"))
+
+rem --- clear availability
+
+	gosub clear_avail
 [[OPE_ORDHDR.BOVE]]
 print "Hdr:BOVE"; rem debug
 
@@ -436,6 +443,10 @@ rem --- Remove from ope-04
 rem --- Set flag
 
 	user_tpl.record_deleted = 1
+
+rem --- clear availability
+
+	gosub clear_avail
 [[OPE_ORDHDR.ORDER_DATE.AVAL]]
 rem --- Set user template info
 
@@ -1669,6 +1680,19 @@ rem ==========================================================================
 	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 
 	print "out"; rem debug
+
+	return
+
+rem ==========================================================================
+clear_avail: rem --- Clear Availability Information
+rem ==========================================================================
+
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_avail$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 
 	return
 [[OPE_ORDHDR.BSHO]]

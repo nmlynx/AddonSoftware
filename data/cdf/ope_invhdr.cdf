@@ -1,3 +1,7 @@
+[[OPE_INVHDR.AREC]]
+rem --- clear availability
+
+	gosub clear_avail
 [[OPE_INVHDR.INVOICE_TYPE.AVAL]]
 rem --- Enable/disable expire date based on value
 
@@ -264,6 +268,10 @@ rem --- Remove from ope-04
 rem --- Set flag
 
 	user_tpl.record_deleted = 1
+
+rem --- clear availability
+
+	gosub clear_avail
 [[OPE_INVHDR.ARER]]
 rem --- Set flag
 
@@ -643,6 +651,10 @@ rem --- Set type in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE"))
+
+rem --- clear availability
+
+	gosub clear_avail
 [[OPE_INVHDR.ORDER_NO.AVAL]]
 print "Hdr:ORDER_NO.AVAL"; rem debug
 
@@ -1528,6 +1540,19 @@ rem ==========================================================================
 	if status = 999 then goto std_exit
 	callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
 	print "---Print Status: Y"; rem debug
+
+	return
+
+rem ==========================================================================
+clear_avail: rem --- Clear Availability Information
+rem ==========================================================================
+
+	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_avail$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
+	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
 
 	return
 [[OPE_INVHDR.ASHO]]
