@@ -119,7 +119,7 @@ rem --- Total Past Due Invoices
     if aging_bucket=5 max_past_due=arm02a.aging_120
 
 rem --- Set Check Credit Limit Flag (lines 1600-2299, S$(1,1) is backwards)
-escape;rem jpb
+
     batch$=""
     batch$=stbl("!batch",err=*next)
     
