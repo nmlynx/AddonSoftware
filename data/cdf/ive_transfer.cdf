@@ -478,7 +478,7 @@ display_ext: rem --- Display total cost
 rem ===========================================================================
 
 	cost = num( callpoint!.getColumnData("IVE_TRANSFER.UNIT_COST") )
-	callpoint!.setColumnData("IVE_TRANSFER.EXT_COST", str( cost*qty:user_tpl.cost_mask$ ))
+	callpoint!.setColumnData("IVE_TRANSFER.EXT_COST", str( cost*qty))
 	callpoint!.setStatus("MODIFIED-REFRESH")
 
 return
