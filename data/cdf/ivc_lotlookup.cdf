@@ -120,7 +120,7 @@ rem --- Create Lot Information window
 	callpoint!.setDevObject("issued_id",  str(15109))
 
 	lotWin!.addStaticText(15101,95,25,175,15,"",$0000$)
-	lotWin!.addStaticText(15102,95,45,175,15,"",$0000$)
+	lotWin!.addStaticText(15102,95,45,275,15,"",$0000$)
 	lotWin!.addStaticText(15103,95,65,75,15,"",$0000$)
 	lotWin!.addStaticText(15109,260,65,75,15,"",$0000$)
 
