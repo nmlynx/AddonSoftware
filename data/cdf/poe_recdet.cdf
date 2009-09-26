@@ -235,7 +235,29 @@ if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
 :		lot_pfx$, 
 :		table_chans$[all], 
 :		dflt_data$[all]
+	if callpoint!.getDevObject("lot_or_serial")="S"
+		ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
+		dim ivm_lsmaster$:fnget_tpl$("IVM_LSMASTER")
+		poe_reclsdet_dev=fnget_dev("POE_RECLSDET")
+		dim poe_reclsdet$:fnget_tpl$("POE_RECLSDET")
+		rcvr_no$=callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
+		int_seq$=callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
+		wh$=callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID")
+		item$=callpoint!.getColumnData("POE_RECDET.ITEM_ID")
 
+		read(poe_reclsdet_dev,key=firm_id$+rcvr_no$+int_seq$,dom=*next)
+		while 1
+			poe_reclsdet_key$=key(poe_reclsdet_dev,end=*break)
+			if pos(firm_id$+rcvr_no$+int_seq$=poe_reclsdet_key$)<>1 break
+			readrecord(poe_reclsdet_dev,key=poe_reclsdet_key$)poe_reclsdet$
+			readrecord(ivm_lsmaster_dev,key=firm_id$+wh$+item$+poe_reclsdet.lotser_no$,dom=*continue)ivm_lsmaster$
+			if ivm_lsmaster.qty_on_hand>0
+				remove (poe_reclsdet_dev,key=poe_reclsdet_key$)
+				msg_id$="IV_SER_ZERO_QOH"
+				gosub disp_message
+			endif
+		wend
+	endif
 	callpoint!.setStatus("ACTIVATE")
 
 endif
