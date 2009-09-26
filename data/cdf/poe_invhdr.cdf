@@ -304,6 +304,7 @@ disp_vendor_comments:
 	
 	rem --- You must pass in vendor_id$ because we don't know whether it's verified or not
 	cmt_text$=""
+
 	apm09_dev=fnget_dev("APM_VENDCMTS")
 	dim apm09a$:fnget_tpl$("APM_VENDCMTS")
 	apm09_key$=firm_id$+vendor_id$
@@ -314,6 +315,8 @@ disp_vendor_comments:
 		 
 		if apm09a.firm_id$ = firm_id$ and apm09a.vendor_id$ = vendor_id$ then
 			cmt_text$ = cmt_text$ + cvs(apm09a.std_comments$,3)+$0A$
+		else
+			break
 		endif				
 	wend
 	callpoint!.setColumnData("<<DISPLAY>>.comments",cmt_text$)
@@ -453,6 +456,7 @@ gosub get_vendor_history
 if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y"
 	msg_id$="AP_NOHIST"
 	gosub disp_message
+	callpoint!.setStatus("ABORT")
 endif
 [[POE_INVHDR.NET_INV_AMT.AVAL]]
 rem re-calc discount amount based on net x disc %
