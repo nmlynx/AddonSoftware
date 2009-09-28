@@ -74,7 +74,6 @@ rem --- Retrieve parameter records
     call "adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call "adc_getmask.aon","","GL","A","",m1$,0,m1
     call "adc_getmask.aon","","GL","U","",m2$,0,m2
-    acctlen=num(gls01a.acct_length$)
     mp=13
     headings=4
     inquiry$=cvs(inquiry$,2)
@@ -125,7 +124,7 @@ rem --- Summary Report Heading
 
         columns=5
         dim columns$[5,10]
-        columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(acctlen),columns$[0,3]=m0$
+        columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(m0),columns$[0,3]=m0$
         columns$[1,0]="Date",columns$[1,1]="C",columns$[1,2]="10"
         columns$[2,0]="Jrnl",columns$[2,1]="C",columns$[2,2]="50"
         columns$[3,0]="Debits",columns$[3,1]="N",columns$[3,2]=str(len(m1$)),columns$[3,3]=m1$,columns$[3,10]="T"
@@ -140,7 +139,7 @@ rem --- Detail Report Heading
 
         columns=10
         dim columns$[10,10]
-        columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(acctlen),columns$[0,3]=m0$
+        columns$[0,0]="Account",columns$[0,1]="C",columns$[0,2]=str(m0),columns$[0,3]=m0$
         columns$[1,0]="Date",columns$[1,1]="C",columns$[1,2]="10"
         columns$[2,0]="Jrnl",columns$[2,1]="C",columns$[2,2]="5"
         columns$[3,0]="Audit #",columns$[3,1]="C",columns$[3,2]="10"
@@ -159,9 +158,9 @@ rem --- Initialize report headings
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
     if cvs(begacct$,2)="" x$="First Account"
-:                    else x$="Account "+fnmask$(begacct$(1,acctlen),m0$)
+:                    else x$="Account "+fnmask$(begacct$(1,m0),m0$)
     if cvs(endacct$,2)="" y$="Last Account"
-:                    else y$="Account "+fnmask$(endacct$(1,acctlen),m0$)
+:                    else y$="Account "+fnmask$(endacct$(1,m0),m0$)
     x$="From "+x$+" Through "+y$
     if cvs(wildcard$,2)<>"" then x$=x$+" (Wildcard "+$22$+cvs(wildcard$,2)+$22$+")"
     headings$[2]=x$
@@ -422,7 +421,7 @@ account_break: rem --- Account number break
         total$="Account total"
         x$="",y$=""
     else
-        total$="Total For Account "+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
+        total$="Total For Account "+fnmask$(glm01a.gl_account$(1,m0),m0$)
     endif
     debits=at[0]
     credits=at[1]
@@ -459,7 +458,7 @@ new_account: rem --- New account
     glm01a.gl_acct_desc$="(Not On File)"
     glm01_key$=glm01a.firm_id$+glm01a.gl_account$
     find record (glm01_dev,key=glm01_key$,dom=*next)glm01a$
-    h0$=fnmask$(glm01a.gl_account$(1,acctlen),m0$)+" "+glm01a.gl_acct_desc$
+    h0$=fnmask$(glm01a.gl_account$(1,m0),m0$)+" "+glm01a.gl_acct_desc$
     export_acct$=glm01a.gl_account$
     export_desc$=glm01a.gl_acct_desc$
 
@@ -635,7 +634,7 @@ wildcard: rem --- Test account number against specified wildcard mask
     status=0
     if wildcard$="" return
     if wildcard<>len(wildcard$) wildcard=len(wildcard$)
-    x$=fnmask$(glt06a.gl_account$(1,acctlen),m0$)
+    x$=fnmask$(glt06a.gl_account$(1,m0),m0$)
     for x=1 to wildcard
         if wildcard$(x,1)="?" continue
         if x$(x,1)<>wildcard$(x,1) status=1

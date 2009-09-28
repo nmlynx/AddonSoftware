@@ -46,10 +46,9 @@ rem --- Retrieve parameter records
 
     gls01a_key$=sysinfo.firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
     glyear=num(gls01a.current_year$)
-    acctlen=num(gls01a.acct_length$)
     headings=3
     break$=""
     desc$=""
@@ -111,19 +110,15 @@ rem --- Print positions
 
 rem --- Which glm-02 record?
     
-    closed=pos(gls01a.gl_yr_closed$="NY")
-    switch closed
-           case 1
-                if year=glyear record$="4"
-                if year=glyear-1 record$="0"
-                if year=glyear-2 record$="2"
-           break
-           case 2
-               if year=glyear record$="0"
-               if year=glyear-1 record$="2"
-               if year=glyear+1 record$="4"
-           break
-    swend
+    if gls01a.gl_yr_closed$ = "Y" then 
+        if year=glyear record$="4"
+        if year=glyear-1 record$="0"
+        if year=glyear-2 record$="2"
+    else
+        if year=glyear record$="0"
+        if year=glyear-1 record$="2"
+        if year=glyear+1 record$="4"
+    endif
 
 rem --- Document columns
 
@@ -202,7 +197,7 @@ rem --- Read next glm-01 record
 
           rem --- Print detail line
 
-          OutVect!.addItem(fnmask$(glm01a.gl_account$(1,acctlen),m0$))
+          OutVect!.addItem(fnmask$(glm01a.gl_account$(1,m0),m0$))
           OutVect!.addItem(glm01a.gl_acct_desc$(1,w))
           for x=0 to 5
                if d[x] 
