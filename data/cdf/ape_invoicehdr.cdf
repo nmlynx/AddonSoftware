@@ -237,8 +237,8 @@ gosub get_vendor_history
 if vend_hist$="" and user_tpl.multi_types$="Y"
 	msg_id$="AP_NOHIST"
 	gosub disp_message
+	callpoint!.setStatus("CLEAR;NEWREC")
 endif
-
 [[APE_INVOICEHDR.ACCTING_DATE.AVAL]]
 rem make sure accting date is in an appropriate GL period
 gl$=user_tpl.glint$
