@@ -37,7 +37,7 @@ rem --- Open/Lock files
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status goto std_exit_no_update
     glm01_dev1=channels[1]
     glm01_dev2=channels[2]
     glm11_dev1=channels[3]
@@ -159,6 +159,11 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -208,6 +213,13 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
 
     call stbl("+DIR_PGM")+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
