@@ -121,6 +121,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
                 invoice$=ape03a.ap_inv_no$(1,6)+x$(4)
                 k$=ape03a.firm_id$+ape03a.ap_type$+ape03a.vendor_id$+invoice$
                 find record (apt01_dev,key=k$,dom=*break)
+                wrong=1
           wend 
 
           rem --- Copy the invoice header to the entry file and write the record
