@@ -97,7 +97,8 @@ dim adm_proctables$:fnget_tpl$("ADM_PROCTABLES")
 
 read (adm_proctables_dev,key=firm_id$+process_id$,dom=*next)
 callpoint!.setDevObject("can_delete","")
-if lock_status$<>"" then callpoint!.setDevObject("can_delete","NO")
+batch_no$=callpoint!.getColumnData("ADM_PROCBATCHMNT.BATCH_NO")
+process_id$=callpoint!.getColumnData("ADM_PROCBATCHMNT.PROCESS_ID")
 
 form_opts$=callpoint!.getTableAttribute("OPTS")
 
