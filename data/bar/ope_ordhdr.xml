@@ -234,6 +234,18 @@
 			<DD_KEY_DESC id="ddm_keys.ope_ordhdr01">Open Orders By Order No</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.ope_ordhdr01">ALT_KEY_01      </DD_KEY_ID>
 		</RECORD>
+		<RECORD id="ddm_keys.ope_ordhdr02">
+			<DD_TABLE_ALIAS id="ddm_keys.ope_ordhdr02">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.ope_ordhdr02">02</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.ope_ordhdr02">Firm, AR_Type, Ordinv_Flag, Cust_ID</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.ope_ordhdr02">ORDINV_FLAG     </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.ope_ordhdr03">
+			<DD_TABLE_ALIAS id="ddm_keys.ope_ordhdr03">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.ope_ordhdr03">03</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.ope_ordhdr03">Firm, Type, Cust, OrdInv</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.ope_ordhdr03">FACO            </DD_KEY_ID>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
 		<ID id="ddm_key_segs">DDM_KEY_SEGS</ID>
@@ -296,6 +308,54 @@
 			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0104">01</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0104">04</DD_SEGMENT_SEQ>
 			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0104">CUSTOMER_ID     </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0200">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0200">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0200">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0200">00</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0200">FIRM_ID         </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0201">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0201">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0201">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0201">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0201">AR_TYPE         </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0202">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0202">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0202">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0202">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0202">ORDINV_FLAG     </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0203">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0203">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0203">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0203">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0203">CUSTOMER_ID     </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0300">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0300">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0300">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0300">00</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0300">FIRM_ID         </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0301">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0301">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0301">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0301">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0301">AR_TYPE         </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0302">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0302">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0302">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0302">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0302">CUSTOMER_ID     </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.ope_ordhdr0303">
+			<DD_TABLE_ALIAS id="ddm_key_segs.ope_ordhdr0303">OPE_ORDHDR      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.ope_ordhdr0303">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.ope_ordhdr0303">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.ope_ordhdr0303">ORDINV_FLAG     </DD_SEGMENT_COL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
