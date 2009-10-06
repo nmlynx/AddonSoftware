@@ -8,9 +8,6 @@ gosub disable_fields
 ctl_name$="APE_RECURRINGHDR.NET_INV_AMT"
 ctl_stat$=""
 gosub disable_fields
-[[APE_RECURRINGHDR.BTBL]]
-rem --- Get Batch information
-call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),""
 [[APE_RECURRINGHDR.AREC]]
 Form!.getControl(num(user_tpl.open_inv_textID$)).setText("")
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
