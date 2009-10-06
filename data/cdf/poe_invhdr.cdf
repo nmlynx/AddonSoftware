@@ -456,7 +456,7 @@ gosub get_vendor_history
 if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y"
 	msg_id$="AP_NOHIST"
 	gosub disp_message
-	callpoint!.setStatus("ABORT")
+	callpoint!.setStatus("CLEAR-NEWREC")
 endif
 [[POE_INVHDR.NET_INV_AMT.AVAL]]
 rem re-calc discount amount based on net x disc %
