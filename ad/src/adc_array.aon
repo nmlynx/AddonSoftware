@@ -23,7 +23,6 @@ rem ==========================================================================
     declare ArrayObject out!
     declare BBjVector a!
     
-    out! = new ArrayObject(d!)
     a! = BBjAPI().makeVector()
     
     for i=d.d0base% to d.d0elem% + d.d0base% - 1
@@ -42,7 +41,7 @@ rem ==========================================================================
         endif
     next i
     
-    out!.setData(a!)
+    out! = new ArrayObject(d!, a!)
     
     exit
     
@@ -109,7 +108,6 @@ rem ==========================================================================
     rem declare ArrayObject out!
     rem declare BBjVector a!
     
-    out! = new ArrayObject(d!)
     a! = BBjAPI().makeVector()
     
     for i=d.d0base% to d.d0elem% + d.d0base% - 1
@@ -128,7 +126,7 @@ rem ==========================================================================
         endif
     next i
     
-    out!.setData(a!)
+    out! = new ArrayObject(d!, a!)
     
     exit
     
@@ -191,22 +189,28 @@ rem ==========================================================================
         field public BBjInt D1_base%
         field public BBjInt D2_elements%
         field public BBjInt D2_base%
-        field public BBjVector Data!
+        field private BBjVector Data!
         
     rem --- Constructor
         
-        method public ArrayObject(BBjTemplatedString d!)
+        method public ArrayObject(BBjTemplatedString pDim!, BBjVector pData!)
         
-            #Dimensions%  = int(d!.getFieldAsNumber("dims"))
-            #D0_elements% = int(d!.getFieldAsNumber("d0elem"))
-            #D0_base%     = int(d!.getFieldAsNumber("d0base"))
-            #D1_elements% = int(d!.getFieldAsNumber("d1elem"))
-            #D1_base%     = int(d!.getFieldAsNumber("d1base"))
-            #D2_elements% = int(d!.getFieldAsNumber("d2elem"))
-            #D2_base%     = int(d!.getFieldAsNumber("d2base"))
+            #Dimensions%  = int(pDim!.getFieldAsNumber("dims"))
+            #D0_elements% = int(pDim!.getFieldAsNumber("d0elem"))
+            #D0_base%     = int(pDim!.getFieldAsNumber("d0base"))
+            #D1_elements% = int(pDim!.getFieldAsNumber("d1elem"))
+            #D1_base%     = int(pDim!.getFieldAsNumber("d1base"))
+            #D2_elements% = int(pDim!.getFieldAsNumber("d2elem"))
+            #D2_base%     = int(pDim!.getFieldAsNumber("d2base"))
             
-            #Data! = BBjAPI().makeVector()
+            #Data! = pData!
             
+        methodend
+        
+    rem --- Accessor to data
+        
+        method public BBjVector getData()
+            methodret #Data!
         methodend
         
     rem --- List data (diagnostic)
