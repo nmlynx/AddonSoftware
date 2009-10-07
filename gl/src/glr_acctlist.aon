@@ -44,8 +44,7 @@ rem --- Parameters
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     rem m0$=gls01a.acct_output$ -- getting mask from Barista masks file instead
-    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,0
-    acctlen=num(gls01a.acct_length$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     break$=""
     desc$=""
     call pgmdir$+"glc_regroup.aon",glm10_dev,firm_id$,break$,desc$
@@ -85,9 +84,9 @@ rem --- Account range heading
 
     x$="From "
     y$=""
-    if begacct$="" y$="First",x$=x$+y$+" Account"       else y$=fnmask$(begacct$(1,acctlen),m0$),x$=x$+"Account "+y$
+    if begacct$="" y$="First",x$=x$+y$+" Account"       else y$=fnmask$(begacct$(1,m0),m0$),x$=x$+"Account "+y$
     x$=x$+" Through ",y$=""
-    if endacct$="" y$="Last",x$=x$+y$+" Account"      else y$=fnmask$(endacct$(1,acctlen),m0$),x$=x$+"Account "+y$
+    if endacct$="" y$="Last",x$=x$+y$+" Account"      else y$=fnmask$(endacct$(1,m0),m0$),x$=x$+"Account "+y$
     headings$[2]=x$
 
 rem --- Document columns
@@ -95,7 +94,7 @@ rem --- Document columns
     columns=2
     dim columns$[2,3]
     columns$[0,0]="Type",columns$[0,1]="C",columns$[0,2]="30"
-    columns$[1,0]="Account",columns$[1,1]="C",columns$[1,2]=str(acctlen)
+    columns$[1,0]="Account",columns$[1,1]="C",columns$[1,2]=str(m0)
     columns$[2,0]="Description",columns$[2,1]="C",columns$[2,2]="30"
 
 rem --- Open printer, start progress meter and position files
@@ -165,8 +164,8 @@ rem --- All done
 
 subheading: rem --- Subheading
 
-	xwk=fnblank(3)
-	OutVect!.addItem(h3$)    
+    xwk=fnblank(3)
+    OutVect!.addItem(h3$)    
     h3$=""
     return
 
@@ -175,7 +174,7 @@ wildcard: rem --- Test account number against specified wildcard mask
     status=0
     if wildcard$="" return
     if wildcard<>len(wildcard$) wildcard=len(wildcard$)
-    x$=fnmask$(glm01a.gl_account$(1,acctlen),m0$)
+    x$=fnmask$(glm01a.gl_account$(1,m0),m0$)
     for x=1 to wildcard
         if wildcard$(x,1)="?" continue
         if x$(x,1)<>wildcard$(x,1) status=1

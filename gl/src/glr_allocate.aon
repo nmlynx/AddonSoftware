@@ -97,7 +97,6 @@ rem --- Retrieve parameter records
         m0$=gls01a.acct_output$
         m1$=gls01a.amount_mask$
         m2$=gls01a.unit_mask$
-        acctlen=num(gls01a.acct_length$)
         m4$="##0.00%"
         m4=len(m4$)
         call pgmdir$+"adc_sizemask.aon",m2$,m2,7,10
@@ -105,6 +104,7 @@ rem --- Retrieve parameter records
         if cvs(period$,2)="" period$=gls01a.current_per$
         if cvs(year$,2)="" year$=gls01a.current_year$
 
+        call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
 
 rem --- Initializations
 
@@ -202,7 +202,7 @@ rem --- Print header
           if gls01a.units_flag$="Y" units$=str(gle03a.units:m2$)
          
             abc=fnblank(6)
-            OutVect!.addItem(fnmask$(glm01a.gl_account$(1,acctlen),m0$))
+            OutVect!.addItem(fnmask$(glm01a.gl_account$(1,m0),m0$))
             OutVect!.addItem("")
             OutVect!.addItem(glm01a.gl_acct_desc$)
             OutVect!.addItem("")
@@ -256,7 +256,7 @@ print_detail: rem --- Print a record
 :                                         units=gle13a.units
 
                 OutVect!.addItem("")
-                OutVect!.addItem(fnmask$(glm01a.gl_account$(1,acctlen),m0$))
+                OutVect!.addItem(fnmask$(glm01a.gl_account$(1,m0),m0$))
                 OutVect!.addItem(glm01a.gl_acct_desc$)
                 OutVect!.addItem (str(gle13a.percentage))
                 OutVect!.addItem (str(gle13a.gl_post_amt))
@@ -280,7 +280,7 @@ print_detail: rem --- Print a record
                 memo$=glm03a.code_desc$
                 amount=gle13a.gl_post_amt
                 ref1$="Target"
-                ref2$=fnmask$(gle03a.gl_account$(1,acctlen),m0$)
+                ref2$=fnmask$(gle03a.gl_account$(1,m0),m0$)
                 ref3$="Line "+gle13a.line_no$
                 gosub glrecap
 
