@@ -193,8 +193,7 @@ endif
 rem "check vend hist file to be sure this vendor/ap type ok together; also make sure all key fields are entered
 
 dont_write$=""
-if cvs(callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE"),3)="" or
-:	cvs(callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID"),3)="" or
+if cvs(callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID"),3)="" or
 :	cvs(callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO"),3)="" then dont_write$="Y"
 
 vendor_id$ = callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
