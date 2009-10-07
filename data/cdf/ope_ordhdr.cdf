@@ -125,6 +125,7 @@ rem --- Show customer data
 
 		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
 			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
 
@@ -166,6 +167,7 @@ rem --- Credit check?
 
 	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
 		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+		callpoint!.setStatus("ACTIVATE")
 	endif
 [[OPE_ORDHDR.BPRK]]
 print "Hdr:BPRK"; rem debug
@@ -329,6 +331,7 @@ rem --- Show customer data
 		if user_tpl.user_entry$ = "N" then
 			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
 				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+				callpoint!.setStatus("ACTIVATE")
 			endif
 		endif
 	endif
