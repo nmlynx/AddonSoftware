@@ -389,14 +389,14 @@ detail: rem --- Print an invoice detail line
     tmp=fntext2(70,tmp_line,58,tmp_line,linedate$,textfont!,left_justify,page!)
     tmp=fntext(120,tmp_line,are15a.description$,textfont!,page!)
     tmp=fntext2(352,tmp_line,60,tmp_line,str(are15a.units:m2$),textfont!,right_justify,page!)
-    tmp=fntext2(424,tmp_line,60,tmp_line,str(are15a.unit_price:m3$),textfont!,right_justify,page!)
+    tmp=fntext2(424,tmp_line,60,tmp_line,str(are15a.unit_price:m1$),textfont!,right_justify,page!)
     tmp=fntext2(490,tmp_line,66,tmp_line,str(are15a.ext_price:m1$),textfont!,right_justify,page!)
 
-    lines=lines+2
 
     if page!=pagePDF! or pagePDF!=null() then break
     page!=pagePDF!
     wend
+    lines=lines+2
 
 return
 
