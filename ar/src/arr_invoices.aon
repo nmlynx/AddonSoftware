@@ -194,7 +194,7 @@ rem --- Read next Invoice Header (are-05) record
         read record (are05_dev,end=*break) are05a$
         if are05a.firm_id$<>firm_id$ break
         recs=recs+1
-        if restart$<>"N" if are05a$(1,len(invoice$))<invoice$ goto next_wend
+        if restart$<>"N" if are05a$(1,len(invoice$))<invoice$ then continue
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
         rem --- Skip voided invoices
@@ -243,53 +243,52 @@ rem --- Read next Invoice Header (are-05) record
 
         for copy=1 to copies
 
-                 pagePDF!=docPDF!.createPage()
-                 pagePrint!=docPrint!.createPage()
+            pagePDF!=docPDF!.createPage()
+            pagePrint!=docPrint!.createPage()
 
-          rem --- Print the invoice heading
+            rem --- Print the invoice heading
 
             page=0
-        lines=0
-        total=0
-        gosub heading
+            lines=0
+            total=0
+            gosub heading
 
-        rem --- Position the Invoice Detail (are-15) file
+            rem --- Position the Invoice Detail (are-15) file
 
-        read (are15_dev,key=invoice$,dom=*next)
+            read (are15_dev,key=invoice$,dom=*next)
 
-        rem --- Read the next Invoice Detail (are-15) record
+            rem --- Read the next Invoice Detail (are-15) record
 
-        while moredetail
-            k$=key(are15_dev,end=*break)
-            if pos(invoice$=k$)<>1 break
-            read record (are15_dev) are15a$
-            total=total+are15a.ext_price
-            memo=are15a.units+are15a.ext_price=0
-            if len(are15a.trns_date$)=8 then
-                linedate$=fndate$(are15a.trns_date$)
-            else
-                linedate$=are15a.trns_date$
-            endif
-            rem --- Print the detail line
+            while moredetail
+                k$=key(are15_dev,end=*break)
+                if pos(invoice$=k$)<>1 break
+                read record (are15_dev) are15a$
+                total=total+are15a.ext_price
+                memo=are15a.units+are15a.ext_price=0
+                if len(are15a.trns_date$)=8 then
+                    linedate$=fndate$(are15a.trns_date$)
+                else
+                    linedate$=are15a.trns_date$
+                endif
+                rem --- Print the detail line
 
-            if lines+4>maxlines gosub overflow
-            if memo gosub memo else gosub detail
+                if lines+4>maxlines gosub overflow
+                if memo gosub memo else gosub detail
 
-next_wend:
-        wend
+            wend
 
-        rem --- Print the total and move on to the next copy
+            rem --- Print the total and move on to the next copy
 
-        gosub totals
-        next copy
+            gosub totals
+        next copy               
 
-     rem --- Write Print Status and Loop back for next Invoice Header
+        rem --- Write Print Status and Loop back for next Invoice Header
 
         are05a.print_status$="Y"
         are05a$=field(are05a$)
         write record(are05_dev)are05a$
 
-     wend
+    wend
 
 rem --- All done
 
@@ -374,7 +373,7 @@ heading: rem --- Print the invoice heading
 
     lines=0
 
-    if page!=pagePDF! then break
+    if page!=pagePDF! or pagePDF!=null() then break
     page!=pagePDF!
     wend
 
@@ -395,7 +394,7 @@ detail: rem --- Print an invoice detail line
 
     lines=lines+2
 
-    if page!=pagePDF! then break
+    if page!=pagePDF! or pagePDF!=null() then break
     page!=pagePDF!
     wend
 
@@ -413,7 +412,7 @@ memo: rem --- Print a memo line
 
     lines=lines+1
 
-    if page!=pagePDF! then break
+    if page!=pagePDF! or pagePDF!=null() then break
     page!=pagePDF!
     wend
 
@@ -430,7 +429,7 @@ totals: rem --- Print the invoice total
     tmp=fntext2(490,688,66,688,str(total:m1$),textfont!,right_justify,page!)
     tmp=fntext(70,688,message$,textfont!,page!)
 
-    if page!=pagePDF! then break
+    if page!=pagePDF! or pagePDF!=null() then break
     page!=pagePDF!
     wend
 
