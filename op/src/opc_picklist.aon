@@ -371,31 +371,29 @@ rem --- Read header
 ready: 
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
+    
+    if OutVect! = null() or OutVect!.size() = 0 then goto std_exit
 
-    if OutVect!<>null() and OutVect!.size() then
+    declare BBjTopLevelWindow rdForm!
 
-        declare BBjTopLevelWindow rdForm!
-
-        call pgmdir$+"adx_typesafe.aon::docout",
-:           rdForm!,
-:           rd_alias_id$,
-:           rep_date$,
-:           rep_date_stamp$,
-:           rep_time$,
-:           rep_time_stamp$,
-:           rep_prog_stamp$,
-:           headings$[all],
-:           columns$[all],
-:           OutVect!,
-:           BrkVect!,
-:           HdrVect!,
-:           TotVect!,
-:           out_types$,
-:           out_action$,
-:           out_status$,
-:           table_chans$[all]
-
-    endif
+    call pgmdir$+"adx_typesafe.aon::docout",
+:       rdForm!,
+:       rd_alias_id$,
+:       rep_date$,
+:       rep_date_stamp$,
+:       rep_time$,
+:       rep_time_stamp$,
+:       rep_prog_stamp$,
+:       headings$[all],
+:       columns$[all],
+:       OutVect!,
+:       BrkVect!,
+:       HdrVect!,
+:       TotVect!,
+:       out_types$,
+:       out_action$,
+:       out_status$,
+:       table_chans$[all]
 
     OutVect!=null()
 
