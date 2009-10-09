@@ -52,6 +52,7 @@ rem --- Set this user's or param's default POS station
 	endif
 [[OPE_ORDDATES.BEND]]
 print "ORDDATES:BEND"; rem debug
+release; rem --- if ditching this form, don't run order entry either, just release
 [[OPE_ORDDATES.ARAR]]
 print "ORDDATES:ARAR"; rem debug
 

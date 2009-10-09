@@ -1,3 +1,5 @@
+[[OPE_INVSTATION.BEND]]
+release; rem --- if ditching this form, don't run invoice entry either, just release
 [[OPE_INVSTATION.DEF_STATION.AVAL]]
 rem --- set STBL
 
