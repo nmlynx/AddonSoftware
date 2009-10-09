@@ -1,3 +1,9 @@
+[[OPE_ORDLSDET.QTY_ORDERED.AVAL]]
+rem ---- if serial (as opposed to lots), qty must be one.
+
+if callpoint!.getDevObject("lotser_flag")="S"
+	callpoint!.setUserInput("1")
+endif
 [[OPE_ORDLSDET.AGRE]]
 rem --- Check if Serial and validate quantity
 
@@ -139,6 +145,10 @@ rem --- Set a flag for non-inventoried items when in Invoice Entry
 rem --- No Serial/lot lookup for non-invent items
 	
 	if user_tpl.invoice_noninventory then callpoint!.setOptionEnabled("LLOK", 0)
+
+rem --- set default qty to 1 for serialized
+
+	if callpoint!.getDevObject("lotser_flag")="S" then callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_ORDERED","DFLT","1")
 [[OPE_ORDLSDET.AOPT-LLOK]]
 rem --- Non-inventoried item from Invoice Entry do not has to exist
 
