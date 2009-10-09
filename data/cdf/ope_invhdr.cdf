@@ -127,9 +127,9 @@ rem --- Cash Transaction
 		callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 		callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 
-		cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		ord_no$  = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-		key_pfx$ = firm_id$+"  "+cust_id$+ord_no$
+		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+		key_pfx$  = firm_id$+"  "+cust_id$+order_no$
 
 		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :			"OPE_INVCASH", 
@@ -205,7 +205,7 @@ rem -- Deal with which Ship To type
 	ship_to_type$ = callpoint!.getUserInput()
 	ship_to_no$   = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
 	cust_id$      = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	ord_no$       = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	order_no$     = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
 	gosub ship_to_info
 
@@ -235,10 +235,10 @@ rem --- Remove manual ship-record, if necessary
 
 	ship_to_no$ = callpoint!.getUserInput()
 	cust_id$    = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	ord_no$     = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	order_no$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
 	if user_tpl.prev_ship_to$ = "000099" and ship_to_no$ <> "000099" then
-		remove (fnget_dev("OPE_ORDSHIP"), key=firm_id$+cust_id$+ord_no$, dom=*next)
+		remove (fnget_dev("OPE_ORDSHIP"), key=firm_id$+cust_id$+order_no$, dom=*next)
 	endif
 
 rem --- Display Ship to information
@@ -544,19 +544,19 @@ rem --- Restrict lookup to orders
 [[OPE_INVHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 
-	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	ord_no$  = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	cust_id$    = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	ordship_dev = fnget_dev("OPE_ORDSHIP")
 	
 	if callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE") <> "M" then 
-		remove (ordship_dev,key=firm_id$+cust_id$+ord_no$,dom=*next)
+		remove (ordship_dev,key=firm_id$+cust_id$+order_no$,dom=*next)
 	else
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
-		read record (ordship_dev, key=firm_id$+cust_id$+ord_no$ ,dom=*next) ordship_tpl$
+		read record (ordship_dev, key=firm_id$+cust_id$+order_no$ ,dom=*next) ordship_tpl$
 
 		ordship_tpl.firm_id$     = firm_id$
 		ordship_tpl.customer_id$ = cust_id$
-		ordship_tpl.order_no$    = ord_no$
+		ordship_tpl.order_no$    = order_no$
 		ordship_tpl.name$        = callpoint!.getColumnData("<<DISPLAY>>.SNAME")
 		ordship_tpl.addr_line_1$ = callpoint!.getColumnData("<<DISPLAY>>.SADD1")
 		ordship_tpl.addr_line_2$ = callpoint!.getColumnData("<<DISPLAY>>.SADD2")
@@ -613,7 +613,7 @@ rem --- Display Ship to information
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	ship_to_no$   = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
-	ord_no$       = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	order_no$     = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	gosub ship_to_info
 
 rem --- Display order total
@@ -664,26 +664,26 @@ rem --- Do we need to create a new order number?
 
 	new_seq$ = "N"
 	user_tpl.user_entry$ = "N"
-	ord_no$ = callpoint!.getUserInput()
+	order_no$ = callpoint!.getUserInput()
 
-	if cvs(ord_no$, 2) = "" then 
-		print "---ord_no$ is null"; rem debug
+	if cvs(order_no$, 2) = "" then 
+		print "---order_no$ is null"; rem debug
 
 		rem --- Option on order no field to assign a new sequence on null must be cleared
-		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",ord_no$,table_chans$[all]
+		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",order_no$,table_chans$[all]
 		
-		if ord_no$ = "" then
+		if order_no$ = "" then
 			callpoint!.setStatus("ABORT")
 			print "---abort"; rem debug
 			break; rem --- exit callpoint
 		else
-			callpoint!.setUserInput(ord_no$)
+			callpoint!.setUserInput(order_no$)
 			new_seq$ = "Y"
 			print "---new_seq$ set"; rem debug
 		endif
 	else
 		user_tpl.user_entry$ = "Y"
-		print "---ord_no$ is not null"; rem debug
+		print "---order_no$ is not null"; rem debug
 	endif
 
 rem --- Does order exist?
@@ -698,7 +698,7 @@ rem --- Does order exist?
 	start_block = 1
 
 	if start_block then
-		find record (ope01_dev, key=firm_id$+ar_type$+cust_id$+ord_no$, dom=*endif) ope01a$
+		find record (ope01_dev, key=firm_id$+ar_type$+cust_id$+order_no$, dom=*endif) ope01a$
 		found = 1
 	endif
 
@@ -771,8 +771,8 @@ rem --- New record, set default
 		call stbl("+DIR_SYP")+"bas_sequences.bbj", "INVOICE_NO", invoice_no$, table_chans$[all]
 		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", invoice_no$)
 
-      cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		ord_no$  = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+      cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","S")
         
 		arm02_dev = fnget_dev("ARM_CUSTDET")
@@ -835,7 +835,7 @@ rem --- Enable/Disable buttons
 rem --- Set order in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setOrder_no(ord_no$)
+	ordHelp!.setOrder_no(order_no$)
 [[OPE_INVHDR.CUSTOMER_ID.AVAL]]
 rem --- Show customer data
 	
@@ -955,7 +955,7 @@ ship_to_info: rem --- Get and display Bill To Information
               rem      IN: cust_id$
               rem          ship_to_type$
               rem          ship_to_no$
-              rem          ord_no$
+              rem          order_no$
 rem ==========================================================================
 
 	if ship_to_type$<>"M" then
@@ -988,7 +988,7 @@ rem ==========================================================================
 
 		ordship_dev = fnget_dev("OPE_ORDSHIP")
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
-		read record (ordship_dev, key=firm_id$+cust_id$+ord_no$, dom=*endif) ordship_tpl$
+		read record (ordship_dev, key=firm_id$+cust_id$+order_no$, dom=*endif) ordship_tpl$
 
 		callpoint!.setColumnData("<<DISPLAY>>.SNAME",ordship_tpl.name$)
 		callpoint!.setColumnData("<<DISPLAY>>.SADD1",ordship_tpl.addr_line_1$)
@@ -1504,13 +1504,13 @@ rem ==========================================================================
 
 	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	ord_no$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
-	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(ord_no$, 2) <> "" then
+	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
 		callpoint!.setDevObject("run_by", "invoice")
 		callpoint!.setDevObject("cust_id", cust_id$)
-		callpoint!.setDevObject("order_no", ord_no$)
-		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
+		callpoint!.setDevObject("order_no", order_no$)
+		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 
 		if action$ = "D" then 
