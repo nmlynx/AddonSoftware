@@ -449,6 +449,17 @@ rem ==========================================================================
 		endif
 	endif
 
+	rem --- Furthermore, Issues/Receipts must be qty 1 if serialized
+	rem --- the BINP for qty sets 1 as a default, but need to check again here to make sure user didn't type something else
+	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
+		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
+			if trans_qty <> 1 then
+				msg_id$ = "IV_SERIAL_ONE"
+				goto test_qty_err
+			endif
+		endif
+	endif
+
 	rem --- At this point, if the item is lotted or serialied, the qty is ok
 	if user_tpl.this_item_lot_or_ser then goto test_qty_end
 
