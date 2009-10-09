@@ -58,6 +58,20 @@ rem ==========================================================================
 	order_no$ = callpoint!.getDevObject("order_no")
 
 	if cvs(cust_id$,2) <> "" and cvs(order_no$, 2) <> "" then
+
+	rem --- Mark order/invoice as released
+
+		file_name$="OPE_ORDHDR"
+		ordhdr_dev = fnget_dev(file_name$)
+		dim ordhdr_rec$:fnget_tpl$(file_name$)
+		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+		ordhdr_rec.credit_flag$ = "R"
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")
+
+	rem --- Which print program to run?
+
 		if run_by$ = "order" then
 			call stbl("+DIR_PGM")+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 			if status = 999 then goto std_exit
