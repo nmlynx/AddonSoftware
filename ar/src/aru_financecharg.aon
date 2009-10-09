@@ -197,7 +197,7 @@ customer_break: rem --- Customer break
           duplicate=1
           if op$<>"Y"  
              while duplicate
-                   call stbl("+DIR_SYP")+"bas_sequences.bbj","AR_INV_NO",invoice$,rd_table_chans$[all]
+                   call stbl("+DIR_SYP")+"bas_sequences.bbj","AR_INV_NO",invoice$,rd_table_chans$[all],"QUIET"
                    k$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+invoice$+art01a.sequence_00$
                    find (art01_dev,key=k$,dom=*next); continue
                    k$=art01a.firm_id$+invoice$
@@ -210,7 +210,7 @@ customer_break: rem --- Customer break
 
           if op$="Y"
              while duplicate
-                   call stbl("+DIR_SYP")+"bas_sequences.bbj","INVOICE_NO",invoice$,rd_table_chans$[all]
+                   call stbl("+DIR_SYP")+"bas_sequences.bbj","INVOICE_NO",invoice$,rd_table_chans$[all],"QUIET"
                    k$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+invoice$+art01a.sequence_00$
                    find (art01_dev,key=k$,dom=*next); continue
                    k$=art01a.firm_id$+invoice$
