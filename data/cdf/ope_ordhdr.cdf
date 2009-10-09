@@ -102,7 +102,9 @@ rem --- Print a counter Picking Slip
 	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" then
 		gosub do_picklist
 	else
+		gosub check_print_status
 		gosub do_credit_action
+		if action$ = "X" then gosub do_picklist
 	endif
 [[OPE_ORDHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
@@ -265,37 +267,6 @@ rem --- Set flag
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
 
-rem --- Check if reprintable
-
-	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-	ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
-	reprint  = 0
-	gosub check_if_reprintable
-
-	if reprintable then 
-		msg_id$="OP_REPRINT_ORDER"
-		gosub disp_message
-		
-		if msg_opt$ = "Y" then
-			if user_tpl.credit_installed$ = "Y" and 
-:				user_tpl.pick_hold$ = "N" 			and 
-:				callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG") = "C" 
-:			then
-				msg_id$="OP_ORD_ON_CR_HOLD"
-			else
-				msg_id$="OP_ORD_PRINT_BATCH"
-				reprint = 1
-			endif
-
-			gosub disp_message
-		else
-			callpoint!.setStatus("ABORT")	
-			break; rem --- exit callpoint		
-		endif
-
-	endif
-
 rem --- Check locked status
 
 	gosub check_lock_flag
@@ -305,13 +276,42 @@ rem --- Check locked status
 		break; rem --- exit callpoint
 	endif
 
-rem --- Set Codes		
-        
-	if reprint then 
-		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
-		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
-		gosub add_to_batch_print
+rem --- Reprint order?
+
+	if callpoint!.getColumnData("OPE_ORDHDR.REPRINT_FLAG") <> "Y" then
+		cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		ar_type$  = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+		reprint   = 0
+		gosub check_if_reprintable
+
+		if reprintable then 
+			msg_id$="OP_REPRINT_ORDER"
+			gosub disp_message
+			
+			if msg_opt$ = "Y" then
+				if user_tpl.credit_installed$ = "Y" and 
+:					user_tpl.pick_hold$ = "N" 			and 
+:					callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG") = "C" 
+:				then
+					msg_id$="OP_ORD_ON_CR_HOLD"
+				else
+					msg_id$="OP_ORD_PRINT_BATCH"
+					callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+					callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
+					gosub add_to_batch_print
+				endif
+
+				gosub disp_message
+			else
+				callpoint!.setStatus("NEWREC")
+			endif
+
+		endif
+
 	endif
+
+rem --- Set Codes	
 
 	user_tpl.price_code$   = callpoint!.getColumnUndoData("OPE_ORDHDR.PRICE_CODE")
 	user_tpl.pricing_code$ = callpoint!.getColumnData("OPE_ORDHDR.PRICING_CODE")
@@ -342,7 +342,7 @@ rem --- Display Ship to information
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	ship_to_no$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-	ord_no$       = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	order_no$       = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub ship_to_info
 
 rem --- Display order total
@@ -612,10 +612,10 @@ rem --- Remove manual ship-record, if necessary
 
 	ship_to_no$ = callpoint!.getUserInput()
 	cust_id$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	order_no$   = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 
 	if user_tpl.prev_ship_to$ = "000099" and ship_to_no$ <> "000099" then
-		remove (fnget_dev("OPE_ORDSHIP"), key=firm_id$+cust_id$+ord_no$, dom=*next)
+		remove (fnget_dev("OPE_ORDSHIP"), key=firm_id$+cust_id$+order_no$, dom=*next)
 	endif
 
 rem --- Display Ship to information
@@ -629,19 +629,19 @@ rem --- Do we need to create a new order number?
 
 	new_seq$ = "N"
 	user_tpl.user_entry$ = "N"
-	ord_no$ = callpoint!.getUserInput()
+	order_no$ = callpoint!.getUserInput()
 
-	if cvs(ord_no$, 2) = "" then 
+	if cvs(order_no$, 2) = "" then 
 
 	rem --- Option on order no field to assign a new sequence on null must be cleared
 
-		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",ord_no$,table_chans$[all]
+		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",order_no$,table_chans$[all]
 		
-		if ord_no$ = "" then
+		if order_no$ = "" then
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit callpoint
 		else
-			callpoint!.setUserInput(ord_no$)
+			callpoint!.setUserInput(order_no$)
 			new_seq$ = "Y"
 		endif
 	else
@@ -650,7 +650,7 @@ rem --- Do we need to create a new order number?
 
 rem debug
 print "   new_seq: ", new_seq$
-print "    ord_no: ", ord_no$
+print "  order_no: ", order_no$
 print "user_entry: ", user_tpl.user_entry$
 
 rem --- Does order exist?
@@ -665,7 +665,7 @@ rem --- Does order exist?
 	start_block = 1
 
 	if start_block then
-		find record (ope01_dev, key=firm_id$+ar_type$+cust_id$+ord_no$, dom=*endif) ope01a$
+		find record (ope01_dev, key=firm_id$+ar_type$+cust_id$+order_no$, dom=*endif) ope01a$
 		found = 1
 	endif
 
@@ -702,31 +702,6 @@ rem --- Existing record
 			exit; rem --- exit from callpoint			
 		endif		
 
-	rem --- Check if reprintable
-
-		reprint = 0
-		gosub check_if_reprintable
-
-		if reprintable then 
-			msg_id$="OP_REPRINT_ORDER"
-			gosub disp_message
-			
-			if msg_opt$ = "Y" then
-				if user_tpl.credit_installed$ = "Y" and user_tpl.pick_hold$ = "N" and ope01a.credit_flag$ = "C" then
-					msg_id$="OP_ORD_ON_CR_HOLD"
-				else
-					msg_id$="OP_ORD_PRINT_BATCH"
-					reprint = 1
-				endif
-
-				gosub disp_message
-			else
-				callpoint!.setStatus("ABORT")	
-				break; rem --- exit callpoint		
-			endif
-
-		endif
-
 	rem --- Check locked status
 
 		gosub check_lock_flag
@@ -735,15 +710,36 @@ rem --- Existing record
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit callpoint
 		endif
+
+	rem --- Check if reprintable
+
+		if callpoint!.getColumnData("OPE_ORDHDR.REPRINT_FLAG") <> "Y" then
+			reprint = 0
+			gosub check_if_reprintable
+
+			if reprintable then 
+				msg_id$="OP_REPRINT_ORDER"
+				gosub disp_message
+				
+				if msg_opt$ = "Y" then
+					if user_tpl.credit_installed$ = "Y" and user_tpl.pick_hold$ = "N" and ope01a.credit_flag$ = "C" then
+						msg_id$="OP_ORD_ON_CR_HOLD"
+					else
+						msg_id$="OP_ORD_PRINT_BATCH"
+						callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+						callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
+						gosub add_to_batch_print
+					endif
+
+					gosub disp_message
+				else
+					callpoint!.setStatus("NEWREC")
+				endif
+			endif
+		endif
         
 	rem --- Set Codes		
         
-		if reprint then 
-			callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
-			callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
-			gosub add_to_batch_print
-		endif
-
 		user_tpl.price_code$   = ope01a.price_code$
 		user_tpl.pricing_code$ = ope01a.pricing_code$
 		user_tpl.order_date$   = ope01a.order_date$
@@ -752,8 +748,8 @@ rem --- Existing record
 
 	rem --- New record
 
-		cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-		ord_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		cust_id$   = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
 
 		arm02_dev=fnget_dev("ARM_CUSTDET")
@@ -826,14 +822,14 @@ rem --- Enable/Disable buttons
 rem --- Set order in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setOrder_no(ord_no$)
+	ordHelp!.setOrder_no(order_no$)
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 
 	ship_to_type$ = callpoint!.getUserInput()
 	ship_to_no$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	cust_id$      = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$       = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	order_no$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 
 	gosub ship_to_info
 
@@ -1023,19 +1019,19 @@ print "Hdr:AWRI"; rem debug
 
 rem --- Write/Remove manual ship to file
 
-	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	cust_id$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$   = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	ordship_dev = fnget_dev("OPE_ORDSHIP")
 	
 	if callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE") <> "M" then 
-		remove (ordship_dev, key=firm_id$+cust_id$+ord_no$, dom=*next)
+		remove (ordship_dev, key=firm_id$+cust_id$+order_no$, dom=*next)
 	else
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
-		read record (ordship_dev, key=firm_id$+cust_id$+ord_no$, dom=*next) ordship_tpl$
+		read record (ordship_dev, key=firm_id$+cust_id$+order_no$, dom=*next) ordship_tpl$
 
 		ordship_tpl.firm_id$     = firm_id$
 		ordship_tpl.customer_id$ = cust_id$
-		ordship_tpl.order_no$    = ord_no$
+		ordship_tpl.order_no$    = order_no$
 		ordship_tpl.name$        = callpoint!.getColumnData("<<DISPLAY>>.SNAME")
 		ordship_tpl.addr_line_1$ = callpoint!.getColumnData("<<DISPLAY>>.SADD1")
 		ordship_tpl.addr_line_2$ = callpoint!.getColumnData("<<DISPLAY>>.SADD2")
@@ -1127,7 +1123,7 @@ ship_to_info: rem --- Get and display Bill To Information
               rem      IN: ship_to_type$
               rem          cust_id$
               rem          ship_to_no$
-              rem          ord_no$
+              rem          order_no$
 rem ==========================================================================
 
 	if ship_to_type$<>"M" then 
@@ -1160,7 +1156,7 @@ rem ==========================================================================
 
 		ordship_dev=fnget_dev("OPE_ORDSHIP")
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
-		read record (ordship_dev, key=firm_id$+cust_id$+ord_no$, dom=*endif) ordship_tpl$
+		read record (ordship_dev, key=firm_id$+cust_id$+order_no$, dom=*endif) ordship_tpl$
 
 		callpoint!.setColumnData("<<DISPLAY>>.SNAME",ordship_tpl.name$)
 		callpoint!.setColumnData("<<DISPLAY>>.SADD1",ordship_tpl.addr_line_1$)
@@ -1610,7 +1606,7 @@ rem ==========================================================================
 check_if_reprintable: rem --- Are There Reprintable Detail Lines? 
                       rem      IN: ar_type$
                       rem          cust_id$
-                      rem          ord_no$
+                      rem          order_no$
                       rem     OUT: reprintable = 1/0
 rem ==========================================================================
 
@@ -1618,11 +1614,11 @@ rem ==========================================================================
 	
 	ope11_dev = fnget_dev("OPE_ORDDET")
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
-	read (ope11_dev, key=firm_id$+ar_type$+cust_id$+ord_no$, dom=*next)
+	read (ope11_dev, key=firm_id$+ar_type$+cust_id$+order_no$, dom=*next)
 
 	while 1
 		read record (ope11_dev, end=*break) ope11a$
-		if pos(firm_id$+ar_type$+cust_id$+ord_no$ = ope11a$) <> 1 then break
+		if pos(firm_id$+ar_type$+cust_id$+order_no$ = ope11a$) <> 1 then break
 
 		if ope11a.pick_flag$ = "Y" then 
 			reprintable = 1
@@ -1635,20 +1631,22 @@ rem ==========================================================================
 
 rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
+                  rem     OUT: action$
 rem ==========================================================================
 
 	print "Hdr:in do_credit_action..."; rem debug
 
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	ord_no$   = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	action$   = "X"; rem Never called opc_creditaction.aon
 
-	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(ord_no$, 2) <> "" then
+	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
 		print "---pass"; rem debug
 		callpoint!.setDevObject("run_by", "order")
 		callpoint!.setDevObject("cust_id", cust_id$)
-		callpoint!.setDevObject("order_no", ord_no$)
-		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, ord_no$, table_chans$[all], callpoint!, action$, status
+		callpoint!.setDevObject("order_no", order_no$)
+		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 
 		if action$ = "D" then 
@@ -1676,8 +1674,21 @@ rem ==========================================================================
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 
-	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
-	callpoint!.setStatus("SAVE")
+	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
+		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+
+	rem --- Write flag to file so opc_picklist can see it
+
+		file_name$ = "OPE_ORDHDR"
+		ordhdr_dev = fnget_dev(file_name$)
+		dim ordhdr_rec$:fnget_tpl$(file_name$)
+		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+		ordhdr_rec.reprint_flag$ = "Y"
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")
+	endif
+
 	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
 	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
@@ -1696,6 +1707,29 @@ rem ==========================================================================
 	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
+
+	return
+
+rem ==========================================================================
+check_print_status: rem --- Set print status to N and write
+rem ==========================================================================
+
+	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then
+		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
+		cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+	rem --- Write flag to file so opc_creditaction can see it
+
+		file_name$ = "OPE_ORDHDR"
+		ordhdr_dev = fnget_dev(file_name$)
+		dim ordhdr_rec$:fnget_tpl$(file_name$)
+		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+		ordhdr_rec.print_status$ = "N"
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")
+	endif
 
 	return
 [[OPE_ORDHDR.BSHO]]
