@@ -87,16 +87,22 @@ rem --- Initialize Data
     endif
     
     if !found then goto std_exit
-
+    
+    backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
+    
 rem --- Has order been printed?
 
-    backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
-
     if ope01a.print_status$ = "Y" then
-        status$="This Order Has Been Printed"
-        backorderedControl!.setText(status$)
-        action$ = "R"
-        goto std_exit
+    
+        rem --- Exit silently
+    
+        rem msg_id$="OP_PRINTED_CREDIT"
+        rem gosub disp_message
+        
+        rem if msg_opt$ = "N" then
+            action$ = "R"
+            goto std_exit
+        rem endif
     endif
 
 rem --- Check For Quotes
@@ -158,7 +164,7 @@ rem --- Reuse backordered text control to display status since it won't show it 
     if !over_credit_limit or ope01a.total_sales <= 0 then 
         backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
         backorderedControl!.setText(status$)
-        callpoint!.setStatus("WAIT")
+        wait 1
         goto final_updates 
     endif
 
@@ -173,7 +179,7 @@ display_form: rem --- Display
     credit_action = 0
 	
 	call sypdir$+"bam_run_prog.bbj", "OPE_CREDITACTION", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
-    
+
     temp$ = str(callpoint!.getDevObject("credit_action"))
     if temp$="null" or temp$="none" then goto display_form
     credit_action = num(temp$)
@@ -183,11 +189,8 @@ display_form: rem --- Display
         
         rem --- Hold order
         
-            extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
-            ope01a.credit_flag$ = "C"
-            ope01a$ = field(ope01a$)
-            write record (ope01_dev) ope01a$
-            callpoint!.setStatus("SETORIG")
+            credit_flag_in$ = "C"
+            gosub update_order_header
             
 			break
             
@@ -200,11 +203,8 @@ display_form: rem --- Display
             arm02a$ = field(arm02a$)
             write record (arm02_dev,key=c0$) arm02a$
             
-            extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
-            ope01a.credit_flag$ = "C"
-            ope01a$ = field(ope01a$)
-            write record (ope01_dev) ope01a$
-            callpoint!.setStatus("SETORIG")
+            credit_flag_in$ = "C"
+            gosub update_order_header
 
 			break
             
@@ -216,7 +216,8 @@ display_form: rem --- Display
             
             if terms$<>"null" then
                 find record (arm10_dev, key=firm_id$+"A"+terms$, dom=*endif) arm10a$
-                ope01a.credit_flag$="R"
+                credit_flag_in$ = "R"
+                gosub update_order_header
             endif
         
 			break
@@ -310,6 +311,18 @@ warn_re_picklist: rem --- Warn About Printing Pick Ticket
     endif
 
     return
+    
+update_order_header: rem --- Set credit flag in order header file
+                     rem      IN: credit_flag_in$
+
+    extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
+    ope01a.credit_flag$ = credit_flag_in$
+    ope01a$ = field(ope01a$)
+    write record (ope01_dev) ope01a$
+    callpoint!.setStatus("SETORIG")
+    
+    return
+    
 
 open_tables: rem --- Open tables
 
