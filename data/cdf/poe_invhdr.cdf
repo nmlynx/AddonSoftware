@@ -1,3 +1,53 @@
+[[POE_INVHDR.AABO]]
+rem --- user has elected not to save record (we are NOT in immediate write, so save takes care of header and detail at once)
+rem --- if rec_data$ is empty (i.e., new record never written), make sure no GL Dists are left orphaned (i.e., remove them)
+
+if callpoint!.getRecordMode()="A"
+	poe_invgl=fnget_dev("POE_INVGL")
+	k$=""
+	invgl_key$=callpoint!.getColumnData("POE_INVHDR.FIRM_ID")+
+:		callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
+:		callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+
+:		callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+
+	read (poe_invgl,key=invgl_key$,dom=*next)
+	while 1
+		k$=key(poe_invgl,end=*break)
+		if pos(invgl_key$=k$)<>1 then break
+		remove (poe_invgl,key=k$)	
+	wend	
+endif
+[[POE_INVHDR.BREX]]
+rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
+
+if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
+	msg_id$="PO_INV_NOT_DIST"
+	gosub disp_message
+
+endif
+[[POE_INVHDR.APFE]]
+rem --- when re-entering primary form, enable GL button
+rem --- only enable invoice detail button if we've already written some poe_invdet records
+
+callpoint!.setOptionEnabled("GDIS",1)
+
+poe_invdet=fnget_dev("POE_INVDET")
+
+k$=""
+invdet_key$=callpoint!.getColumnData("POE_INVHDR.FIRM_ID")+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
+:	callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+
+
+read (poe_invdet,key=invdet_key$,dom=*next)
+k$=key(poe_invdet,end=*next)
+if pos(invdet_key$=k$)=1
+	callpoint!.setOptionEnabled("INVD",1)
+else
+	callpoint!.setOptionEnabled("INVD",0)
+endif
+[[POE_INVHDR.BPFX]]
+callpoint!.setOptionEnabled("INVD",0)
+callpoint!.setOptionEnabled("GDIS",0)
 [[POE_INVHDR.AOPT-GDIS]]
 pfx$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
 dim dflt_data$[3,1]
@@ -36,6 +86,17 @@ if gridVect!.size()
 			endif
 		next x
 	endif
+endif
+
+callpoint!.setOptionEnabled("INVD",1)
+callpoint!.setOptionEnabled("GDIS",1)
+
+rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
+
+if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
+	msg_id$="PO_INV_NOT_DIST"
+	gosub disp_message
+
 endif
 [[POE_INVHDR.AOPT-INVD]]
 pfx$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
@@ -270,6 +331,8 @@ endif
 if callpoint!.getDevObject("retention")="N" 
 	callpoint!.setColumnEnabled("POE_INVHDR.RETENTION",-1)
 endif
+callpoint!.setOptionEnabled("INVD",0)
+callpoint!.setOptionEnabled("GDIS",0)
 [[POE_INVHDR.<CUSTOM>]]
 vendor_info: rem --- get and display Vendor Information
 	apm01_dev=fnget_dev("APM_VENDMAST")
@@ -479,8 +542,7 @@ rem --- check vend hist file to be sure this vendor/ap type ok together; also ma
 
 dont_write$=""
 
-if cvs(callpoint!.getColumnData("POE_INVHDR.AP_TYPE"),3)="" or
-:	cvs(callpoint!.getColumnData("POE_INVHDR.VENDOR_ID"),3)="" or
+if cvs(callpoint!.getColumnData("POE_INVHDR.VENDOR_ID"),3)="" or
 :	cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),3)="" then dont_write$="Y"
 
 vendor_id$ = callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
@@ -494,13 +556,7 @@ if dont_write$="Y"
 	callpoint!.setStatus("ABORT")
 endif
 
-rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
 
-if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
-	msg_id$="AP_NOT_DIST"
-	gosub disp_message
-	if msg_opt$="N" then callpoint!.setStatus("ABORT")
-endif
 [[POE_INVHDR.AREC]]
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
 callpoint!.setDevObject("inv_amt","")
@@ -511,6 +567,9 @@ rem --- Re-enable disabled fields
 callpoint!.setColumnEnabled("POE_INVHDR.AP_DIST_CODE",1)
 callpoint!.setColumnEnabled("POE_INVHDR.INV_DATE",1)
 callpoint!.setColumnEnabled("POE_INVHDR.NET_INV_AMT",1)
+rem --- disable opt buttons
+callpoint!.setOptionEnabled("INVD",0)
+callpoint!.setOptionEnabled("GDIS",0)
 [[POE_INVHDR.INV_DATE.AVAL]]
 invdate$=callpoint!.getUserInput()
 terms_cd$=callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE")
