@@ -184,7 +184,7 @@ rem --- Someday these programs should not use g[3] and g[4]
         if status then goto std_exit
         process_id$=stbl("+PROCESS_ID")
         batch_no$=stbl("+BATCH_NO")
-        
+
         files$[30]="glw-11",ids$[30]="GLW_DAILYDETAIL";rem --- no longer using; ,options$[30]="CL"
         call pgmdir$+"adc_fileopen.aon",action,30,30,files$[all],options$[all],
 :           ids$[all],templates$[all],channels[all],batch,status
@@ -553,6 +553,11 @@ rem --- Main Read
         if gl$="Y" then call pgmdir$+"glc_datecheck.aon",ope01a.invoice_date$,"N",period$,year$,glstatus
         if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,ope01a.invoice_date$,glstatus,l,errors,status
 
+        if stbl("+DTWARN_MSG",err=*endif)<>""
+            OutVect!.addItem(stbl("+DTWARN_MSG"))
+            xwk=fnblank(11)
+        endif
+
         if items$<>"" then
             for x=1 to len(items$) step 20
                 OutVect!.addItem("   **** Warning! Missing Serial Numbers for item: "+items$(x,20))
@@ -753,7 +758,6 @@ rem --- Totals
     xwk = fnblank(8)
 
 rem --- Run overlay
-
     if ars01a.cash_sale$<>"N" then
         update$       = pgmdir$+"opr_salesregister_o1.aon"
         overlay$      = update$
