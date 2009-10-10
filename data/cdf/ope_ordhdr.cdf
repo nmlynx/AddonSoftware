@@ -109,10 +109,14 @@ rem --- Print a counter Picking Slip
 [[OPE_ORDHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
-rem --- Unlock order (This doesn't work as desired)
+rem --- Has customer and order number been entered?
 
-	callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "N")
+	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 
+	if cvs(cust_id$, 2) = "" or cvs(order_no$, 2) = "" then
+		callpoint!.setStatus("ABORT")
+	endif
 [[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
 print "CUSTOMER_ID:AVAL"; rem debug
 
