@@ -332,13 +332,17 @@ rem --- Read next invoice header --- Main Loop Starts
                                     rem --- Lot/Serial Invoice History
 
                                         if ls$<>"Y" or ivm01a.lotser_item$<>"Y" then break
-                                        opt21a.firm_id$        = ope21a.firm_id$
-                                        opt21a.ar_type$        = ope21a.ar_type$
-                                        opt21a.customer_id$    = ope21a.customer_id$
-                                        opt21a.ar_inv_no$      = ope01a.ar_inv_no$
-                                        opt21a.orddet_seq_ref$ = ope21a.orddet_seq_ref$
-                                        opt21a.sequence_no$    = ope21a.sequence_no$
-                                        opt21a$ = field(opt21a$)
+rem                                        opt21a.firm_id$        = ope21a.firm_id$
+rem                                        opt21a.ar_type$        = ope21a.ar_type$
+rem                                        opt21a.customer_id$    = ope21a.customer_id$
+rem                                        opt21a.ar_inv_no$      = ope01a.ar_inv_no$
+rem                                        opt21a.orddet_seq_ref$ = ope21a.orddet_seq_ref$
+rem                                        opt21a.sequence_no$    = ope21a.sequence_no$
+                                        
+                                        dim opt21a$:fattr(opt21a$)
+                                        call stbl("+DIR_PGM")+"adc_copyfile.aon",ope21a$,opt21a$,status
+                                        opt21a.ar_inv_no$=ope01a.ar_inv_no$
+                                                                               
                                         if ih$="Y" then write record (opt21_dev) opt21a$
                                         remove (ope21_dev,key=ope21a_key$)
                                     wend

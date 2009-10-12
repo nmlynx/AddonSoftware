@@ -279,17 +279,23 @@ rem --- Main read
 
         rem --- Write Invoice History Detail
 
-            opt11a.firm_id$=ope11a.firm_id$
-            opt11a.ar_type$=ope11a.ar_type$
-            opt11a.customer_id$=ope11a.customer_id$
+rem            opt11a.firm_id$=ope11a.firm_id$
+rem            opt11a.ar_type$=ope11a.ar_type$
+rem            opt11a.customer_id$=ope11a.customer_id$
+rem            opt11a.ar_inv_no$=ope01a.ar_inv_no$
+rem            opt11a.orddet_seq_ref$=ope11a.internal_seq_no$
+rem            opt11a.line_code$=ope11a.line_code$
+rem            opt11a.man_price$=ope11a.man_price$
+rem            opt11a.product_type$=ope11a.product_type$
+rem            opt11a.reserved_str$=ope11a.reserved_str$
+rem            opt11a.warehouse_id$=ope11a.warehouse_id$
+rem            opt11a.item_id$=ope11a.item_id$
+
+            dim opt11a$:fattr(opt11a$)
+            call stbl("+DIR_PGM")+"adc_copyfile.aon",ope11a$,opt11a$,status
             opt11a.ar_inv_no$=ope01a.ar_inv_no$
             opt11a.orddet_seq_ref$=ope11a.internal_seq_no$
-            opt11a.line_code$=ope11a.line_code$
-            opt11a.man_price$=ope11a.man_price$
-            opt11a.product_type$=ope11a.product_type$
-            opt11a.reserved_str$=ope11a.reserved_str$
-            opt11a.warehouse_id$=ope11a.warehouse_id$
-            opt11a.item_id$=ope11a.item_id$
+            
             write record (opt11_dev) opt11a$
 
         rem ---Get Line Type
@@ -601,10 +607,10 @@ rem #include disp_message.src
 
 disp_message: rem --- Display Message Dialog
 
-	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 
-	return
-	
+    return
+    
 rem #endinclude disp_message.src
 
 rem --- #include std_error.src
