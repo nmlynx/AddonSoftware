@@ -218,7 +218,7 @@ rem --- Validate open lot number
 
 	wh$    = callpoint!.getDevObject("wh")
 	item$  = callpoint!.getDevObject("item")
-   ls_no$ = callpoint!.getUserInput()
+ 	ls_no$ = callpoint!.getUserInput()
 
 	file_name$="IVM_LSMASTER"
 	lsmast_dev = fnget_dev(file_name$)
@@ -243,5 +243,9 @@ rem --- Validate open lot number
 			callpoint!.setStatus("ABORT")
 		else
 	endif
+
+	callpoint!.setColumnData("OPE_ORDLSDET.QTY_ORDERED", lsmast_tpl.qty_on_hand$)
+	callpoint!.setColumnData("OPE_ORDLSDET.UNIT_COST", lsmast_tpl.unit_cost$)
+	callpoint!.setStatus("REFRESH")
 [[OPE_ORDLSDET.LOTSER_NO.AINQ]]
 escape; rem ainq
