@@ -1050,6 +1050,11 @@ rem --- #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
