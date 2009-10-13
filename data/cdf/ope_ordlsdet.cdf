@@ -1,3 +1,38 @@
+[[OPE_ORDLSDET.AUDE]]
+rem --- re-commit lot/serial if undeleting an existing (not new) row
+
+if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())<>"Y"
+
+	rem --- Initialize inventory item update
+
+	status=999
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	if status then exitto std_exit
+
+	commit_lot$=callpoint!.getColumnUndoData("OPE_ORDLSDET.LOTSER_NO")
+	commit_qty=num(callpoint!.getColumnUndoData("OPE_ORDLSDET.QTY_ORDERED"))
+	increasing=1
+
+	gosub commit_lots
+endif
+[[OPE_ORDLSDET.BDEL]]
+rem --- if not a new row, uncommit the lot/serial
+
+if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())<>"Y"
+
+	rem --- Initialize inventory item update
+
+	status=999
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	if status then exitto std_exit
+
+	commit_lot$=callpoint!.getColumnUndoData("OPE_ORDLSDET.LOTSER_NO")
+	commit_qty=num(callpoint!.getColumnUndoData("OPE_ORDLSDET.QTY_ORDERED"))
+	increasing=0
+
+	gosub commit_lots
+
+endif
 [[OPE_ORDLSDET.QTY_ORDERED.AVAL]]
 rem ---- if serial (as opposed to lots), qty must be one.
 
@@ -5,6 +40,7 @@ if callpoint!.getDevObject("lotser_flag")="S"
 	callpoint!.setUserInput("1")
 endif
 [[OPE_ORDLSDET.AGRE]]
+
 rem --- Check if Serial and validate quantity
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED"))
@@ -15,12 +51,14 @@ rem --- Check if Serial and validate quantity
 
 rem --- Now check for Sales Line quantity
 
-	line_qty = num(callpoint!.getDevObject("ord_qty"))
-	lot_qty  = qty_ordered
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or
+:	   callpoint!.getGridRowModifyStatus(callpoint!.getValidationRow())="Y" then
+		line_qty = num(callpoint!.getDevObject("ord_qty"))
+		lot_qty  = qty_ordered
 
-	gosub check_avail
-	if aborted then break; rem --- exit callpoint
-
+		gosub check_avail
+		if aborted then break; rem --- exit callpoint
+	endif
 
 rem --- commit lots if inventoried and not a dropship or quote
 rem --- set 'increasing' to 0 if uncommitting prev lot/committing new one, or 1 if just doing new one
