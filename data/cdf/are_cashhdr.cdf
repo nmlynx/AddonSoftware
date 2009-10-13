@@ -1,3 +1,27 @@
+[[ARE_CASHHDR.AABO]]
+rem --- user has elected to not save changes -- remove any are_cashgl recs already added (don't want orphans)
+
+key_pfx$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
+:	callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
+:	callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
+:	callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+
+rem --- read thru are-21's just written (if any) and remove them
+rem --- alternative might be to set "no_out" flag and just give a warning, then  ABORT, but
+rem --- while BEND has an ABORT, BREX doesn't, so if user wasn't closing, but just moving on, ABORT won't be seen
+
+are_cashgl_dev=fnget_dev("ARE_CASHGL")
+dim are21a$:fnget_tpl$("ARE_CASHGL")
+
+read(are_cashgl_dev,key=key_pfx$,dom=*next)
+while 1	
+	ky$=key(are_cashgl_dev,end=*break)
+	read record(are_cashgl_dev,key=ky$)are21a$
+	if are21a$(1,len(key_pfx$))=key_pfx$ 
+		remove (are_cashgl_dev,key=ky$)	
+	endif
+wend
+	
 [[ARE_CASHHDR.BEND]]
 rem --- remove software lock on batch, if batching
 
@@ -10,6 +34,7 @@ rem --- remove software lock on batch, if batching
 		lock_disp$=""
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,table_chans$[all],lock_status$
 	endif
+
 [[ARE_CASHHDR.BTBL]]
 rem --- Get Batch information
 

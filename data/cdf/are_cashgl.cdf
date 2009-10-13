@@ -6,6 +6,10 @@ callpoint!.setTableColumnAttribute("ARE_CASHGL.BATCH_NO","PVAL",$22$+stbl("+BATC
 [[ARE_CASHGL.GL_POST_AMT.AVAL]]
 rem escape;rem post amt aval
 [[ARE_CASHGL.BEND]]
+rem --- used to prevent user from getting out of GL grid until they posted something... not sure why
+rem --- so rem'd the message and abort lines below rather than ripping out all code, 
+rem --- (just in case we remember why we did this) 
+
 num_recs=gridVect!.size()
 dim wkrec$:fattr(rec_data$)
 msg_id$=""
@@ -19,7 +23,7 @@ if num_recs
 		endif
 	next wk
 	if msg_id$<>""
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
+rem		gosub disp_message
+rem		callpoint!.setStatus("ABORT")
 	endif
 endif
