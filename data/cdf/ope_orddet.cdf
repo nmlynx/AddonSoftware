@@ -407,6 +407,8 @@ rem --- Is this item lot/serial?
 			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
 			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
 			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+			callpoint!.setDevObject("dropship_line",user_tpl.line_dropship$)
+			callpoint!.setDevObject("invoice_type",str(callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")))
 
 			grid!.focus()
 
@@ -1227,6 +1229,7 @@ rem ==========================================================================
 
 		if start_block then
 			read record (ivm01_dev, key=firm_id$+item_id$, dom=*endif) ivm01a$
+			callpoint!.setDevObject("inventoried",ivm01a.inventoried$)
 
 		rem --- In Invoice Entry, non-inventoried lotted/serial can enter lots
 

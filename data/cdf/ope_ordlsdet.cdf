@@ -19,6 +19,50 @@ rem --- Now check for Sales Line quantity
 	lot_qty  = qty_ordered
 
 	gosub check_avail
+	if aborted then break; rem --- exit callpoint
+
+
+rem --- commit lots if inventoried and not a dropship or quote
+rem --- set 'increasing' to 0 if uncommitting prev lot/committing new one, or 1 if just doing new one
+
+	rem --- Is this row deleted?
+
+	if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" then 
+
+		if callpoint!.getDevObject("invoice_type")<>"P" and callpoint!.getDevObject("dropship_line")<>"Y" and callpoint!.getDevObject("inventoried")="Y"
+
+			rem --- Get current and prior values
+
+			curr_lot$ = callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO")
+			curr_qty   = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED"))
+
+			prior_lot$ = callpoint!.getColumnUndoData("OPE_ORDLSDET.LOTSER_NO")
+			prior_qty   = num(callpoint!.getColumnUndoData("OPE_ORDLSDET.QTY_ORDERED"))
+
+			rem --- Has there been any change?
+
+			if curr_lot$ <> prior_lot$ or  curr_qty  <> prior_qty then
+
+				rem --- Initialize inventory item update
+
+				status=999
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+
+				commit_lot$=prior_lot$
+				commit_qty=prior_qty
+				increasing=0
+				if cvs(prior_lot$,3)<>"" gosub commit_lots
+
+				commit_lot$=curr_lot$
+				commit_qty=curr_qty
+				increasing=1
+				gosub commit_lots
+
+			endif
+		endif
+	endif
+ 
 [[OPE_ORDLSDET.BEND]]
 rem --- Check total quantity from all lines against ordered quantity and shipped
 
@@ -66,8 +110,10 @@ rem ==========================================================================
 check_avail: rem --- Check for available quantity
              rem      IN: line_qty 
 	          rem          lot_qty 
+	     rem    OUT:  aborted - true/false
 rem ==========================================================================
 
+	aborted=0
 	wh$     = callpoint!.getDevObject("wh")
 	item$   = callpoint!.getDevObject("item")
 	ls_no$  = callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO")
@@ -86,6 +132,7 @@ rem ==========================================================================
 			msg_id$ = "IV_QTY_OVER_AVAIL"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
+			aborted=1
 		endif
 	endif
 
@@ -121,6 +168,33 @@ rem --- Serial numbers can only have a quantity of 1 or -1
 	endif
 
 return
+
+rem ==========================================================================
+commit_lots: rem --- commit lots
+                  rem       IN: commit_lot$
+                  rem            commit_qty
+                  rem            increasing - 0/1 to back out old/commit new
+rem ==========================================================================
+rem --- this routine uncommits warehouse (since already committed when entering detail line), then re-commits warehouse and commits lot/serial master
+	wh$=callpoint!.getDevObject("wh")
+	item$=callpoint!.getDevObject("item")
+
+	items$[1]=wh$
+	items$[2]=item$
+	items$[3]=""
+
+	refs[0]=commit_qty
+	if increasing then action$="UC" else let action$="OE" 
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	if status then exitto std_exit
+
+	items$[3]=commit_lot$
+
+	if increasing then action$="OE" else let action$="UC" 
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	if status then exitto std_exit
+
+return
 [[OPE_ORDLSDET.BSHO]]
 rem --- Set Lot/Serial button up properly
 
@@ -146,9 +220,12 @@ rem --- No Serial/lot lookup for non-invent items
 	
 	if user_tpl.invoice_noninventory then callpoint!.setOptionEnabled("LLOK", 0)
 
-rem --- set default qty to 1 for serialized
+rem --- set default qty to qty_ord for lotted, 1 for serialized
 
+	callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_ORDERED","DFLT",str(callpoint!.getDevObject("ord_qty")))
 	if callpoint!.getDevObject("lotser_flag")="S" then callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_ORDERED","DFLT","1")
+	callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_SHIPPED","DFLT",str(callpoint!.getDevObject("ord_qty")))
+	if callpoint!.getDevObject("lotser_flag")="S" then callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_SHIPPED","DFLT","1")
 [[OPE_ORDLSDET.AOPT-LLOK]]
 rem --- Non-inventoried item from Invoice Entry do not has to exist
 

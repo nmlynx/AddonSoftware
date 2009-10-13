@@ -377,7 +377,7 @@ rem --- Go get Lot Numbers
 rem --- Is this item lot/serial?
 
 	if lotted$ = "Y" then
-		ar_type$ = "  "
+		ar_type$ = callpoint!.getColumnData("OPE_INVDET.AR_TYPE")
 		cust$    = callpoint!.getColumnData("OPE_INVDET.CUSTOMER_ID")
 		order$   = callpoint!.getColumnData("OPE_INVDET.ORDER_NO")
 		int_seq$ = callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO")
@@ -393,16 +393,20 @@ rem --- Is this item lot/serial?
 			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID"))
 			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_INVDET.ITEM_ID"))
 			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
+			callpoint!.setDevObject("dropship_line",user_tpl.line_dropship$)
+			callpoint!.setDevObject("invoice_type",str(callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE")))
 
 			grid!.focus()
 
-			dim dflt_data$[3,1]
+			dim dflt_data$[4,1]
 			dflt_data$[1,0] = "AR_TYPE"
 			dflt_data$[1,1] = ar_type$
 			dflt_data$[2,0] = "CUSTOMER_ID"
 			dflt_data$[2,1] = cust$
 			dflt_data$[3,0] = "ORDER_NO"
 			dflt_data$[3,1] = order$
+			dflt_data$[4,0]="ORDDET_SEQ_REF"
+			dflt_data$[4,1]=int_seq$
 			lot_pfx$ = firm_id$+ar_type$+cust$+order$+int_seq$
 
 			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
@@ -1175,6 +1179,7 @@ rem ==========================================================================
 
 		if start_block then
 			read record (ivm01_dev, key=firm_id$+item_id$, dom=*endif) ivm01a$
+			callpoint!.setDevObject("inventoried",ivm01a.inventoried$)
 
 		rem --- In Invoice Entry, non-inventoried lotted/serial can enter lots
 
