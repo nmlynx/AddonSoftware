@@ -10,8 +10,7 @@ rem  +-----------------------------------------+
 
 rem --- NOTE: Since batching changed w/ Addon via Barista, we no longer have
 rem ---       batched entry files.  
-rem ---       This pgm just deletes the glw-11 work file, if applicable, 
-rem ---       and batch control entry in adm_procbatches.
+rem ---       This pgm just deletes batch record from adm_procbatches.
 
 rem --- STATUS      : 0=No Error (Returned)
 
@@ -34,33 +33,28 @@ rem --- Batched Process?
 
     status=0
     batch_no$=stbl("+BATCH_NO")
+    process_id$=stbl("+PROCESS_ID")
     batch=num(batch_no$)
     if batch=0 goto std_exit
 
 rem --- Open Files
 
-    files=2,begfile=1,endfile=files
+    files=1,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="adm-49",ids$[1]="ADM_PROCBATCHES"
-    files$[2]="adm-49",ids$[2]="ADM_PROCBATCHES"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     
     adm49_dev=channels[1]
-    adm49_dev2=channels[2]
     
     dim adm49a$:templates$[1]
 
 
 rem --- Remove Batch Records
 
-    read (adm49_dev2,key=firm_id$+batch_no$,knum=1,err=*next)
-    k$=key(adm49_dev2,end=std_exit)
-    if pos(firm_id$+batch_no$=k$)<>1 then goto std_exit
-    read record (adm49_dev2)adm49a$
-    remove (adm49_dev,key=adm49a.firm_id$+adm49a.process_id$+adm49a.batch_no$,err=*next)
+    remove (adm49_dev,key=firm_id$+process_id$+batch_no$,err=*next)
 
 done: rem --- Exit - Normal
 
