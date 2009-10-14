@@ -19,7 +19,7 @@ endif
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
 
-order_lines!=callpoint!.getDevObject("so_lines_list")
+order_list!=callpoint!.getDevObject("so_lines_list")
 ldat$=callpoint!.getDevObject("so_ldat")
 
 if ldat$<>""
@@ -28,7 +28,7 @@ if ldat$<>""
 	g!=callpoint!.getDevObject("dtl_grid")
 	c!=g!.getColumnListControl(num(callpoint!.getDevObject("so_seq_ref_col")))
 	c!.removeAllItems()
-	c!.insertItems(0,order_lines!)
+	c!.insertItems(0,order_list!)
 	g!.setColumnListControl(num(callpoint!.getDevObject("so_seq_ref_col")),c!)	
 else
 	callpoint!.setColumnEnabled(-1,"POE_REQDET.SO_INT_SEQ_REF",0)
@@ -194,7 +194,7 @@ if cvs(callpoint!.getUserInput(),3)<>""
 :			table_chans$[all],firm_id$,"PRIMARY",return_key$,filter_defs$[all],search_defs$[all]
 		if cvs(return_key$,3)<>""
 			callpoint!.setUserInput(return_key.item_id$)	
-			callpoint!.setStatus("")
+			callpoint!.setStatus("ACTIVATE")
 		else
 			callpoint!.setStatus("ABORT")
 		endif
