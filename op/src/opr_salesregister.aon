@@ -429,7 +429,7 @@ rem --- Main Read
             if ope11a_key.order_no$    <> ope01a.order_no$    then break
             read record (ope11_dev) ope11a$
         rem dim y0$(32),y1$(12)
-            find record (opm02_dev,key=firm_id$+ope11a.line_code$,dom=*next) opm02a$
+            find record (opm02_dev,key=firm_id$+ope11a.line_code$,dom=*next) opm02a$; rem y0$, y1$
 
             if opm02a.dropship$<>"Y" or ars01a.dropshp_cost$<>"Y" then
                 if pos(opm02a.line_type$="PS")>0 and ope11a.qty_shipped<>0 then 
@@ -496,7 +496,7 @@ rem --- Main Read
             rem --- Other Charges Here
 
                 if opm02a.line_type$="O" then
-                    y9$(21,10)=y1$(1,10)
+                    y9$(21,10)=opm02a.gl_rev_acct$
 
                 now_post: rem --- Now Post Debit/Credit
 
