@@ -597,6 +597,7 @@ apply_on_acct:
 		gosub update_cashhdr_cashdet_cashbal
 	endif
 	callpoint!.setStatus("RECORD:["+firm_id$+
+:		callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")+
 :		callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
 :		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+
 :		callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
