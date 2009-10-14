@@ -495,7 +495,6 @@ rem --- line.
                 endif
 
                 rem --- Print detail line
-
                 rem if lines+1>maxlines gosub customer_heading
 
                 if col_format$="Y"
@@ -621,7 +620,8 @@ rem --- line.
 
                 lines=lines+2                
                 printed=0
-				customer_printed=1
+                customer_printed=1
+                recs=recs+1
 
           wend  
 
@@ -730,13 +730,13 @@ customer_heading: rem --- Print customer subheading
 salesperson: rem --- Salesperson break
     
     if col_format$="Y" return
-	prev_salesperson=(lastcode$<>"" and customer_printed)
-	
+    prev_salesperson=(lastcode$<>"" and customer_printed)
+    
     while prev_salesperson
         x$="Total for "+salesperson$
 
         for x=0 to maxperiods
-			s[maxperiods+1]=s[maxperiods+1]+s[x]
+            s[maxperiods+1]=s[maxperiods+1]+s[x]
         next x
 
         rem if type$="D" if lines+2>maxlines gosub customer_heading 
@@ -770,7 +770,7 @@ salesperson: rem --- Salesperson break
 
         lines=lines+2
         prev_salesperson=0
-		customer_printed=0
+        customer_printed=0
 
     wend
 
