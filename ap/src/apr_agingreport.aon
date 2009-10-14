@@ -80,7 +80,7 @@ rem --- Assign form input values to local variables
         rd_alias_id$=rd_alias_id$+"X"
     endif
     
-	days=num(days$,err=*next)
+    days=num(days$,err=*next)
     method=pos(method$="PD")
     sorting=sequence$="A"
     detail=level$="D"
@@ -215,17 +215,22 @@ rem --- Determine period beginning and ending dates based on the aging method se
 		case bydays
 			begdates$=""
 			enddates$=""
-			
-			for x=0 to 3
-				newdate$=""
-				difference=(-days)*(x+1)-1
-				call pgmdir$+"adc_daydates.aon",agingdate$,newdate$,difference
-				begdates$=begdates$+newdate$
-				newdate$=""
-				difference=(-days)*x
-				call pgmdir$+"adc_daydates.aon",agingdate$,newdate$,difference
-				enddates$=enddates$+newdate$
+                        
+                        rem setup the asked for report date as the date to start the count back with (plus the increment)       
+                        thisdate=jul(num(agingdate$(1,4)),num(agingdate$(5,2)),num(agingdate$(7,2))) + 1
+
+                        rem build the end & start date strings from curr to previous dates
+                        for x=0 to 3
+                                enddate$=date(thisdate-1,"%Y%Mz%Dz")
+                                rem count back # days specified in the entry screen
+                                thisdate=thisdate-days
+                                rem this gets us the start date for this period
+                                begdate$=date(thisdate,"%Y%Mz%Dz")
+                                enddates$=enddates$+enddate$
+                                begdates$=begdates$+begdate$    
 			next x
+                                
+
 			
 		break
 
@@ -469,6 +474,8 @@ rem --- Read next Invoice Header (apt-01) record
 
 		printed=printed+1
 		period=pos(dateused$>enddates$,8)
+
+                rem --- if the dateused is not greater than any of the end dates, put to first
 		if period=0 then period=4 else period=int(period/8)
 
 		rem --- Accumulate totals
