@@ -138,6 +138,12 @@ else
 	ctl_stat$=" "
 	gosub disable_fields
 endif
+
+if user_tpl.multi_dist$="Y"
+	callpoint!.setColumnEnabled("APM_VENDHIST.AP_DIST_CODE",1)
+else
+	callpoint!.setColumnEnabled("APM_VENDHIST.AP_DIST_CODE",-1)
+endif
 [[APM_VENDHIST.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
