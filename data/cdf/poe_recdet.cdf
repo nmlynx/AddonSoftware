@@ -51,6 +51,31 @@ rem --- Is this item lot/serial?
 :			table_chans$[all], 
 :			dflt_data$[all]
 
+		if callpoint!.getDevObject("lot_or_serial")="S"
+			ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
+			dim ivm_lsmaster$:fnget_tpl$("IVM_LSMASTER")
+			poe_reclsdet_dev=fnget_dev("POE_RECLSDET")
+			dim poe_reclsdet$:fnget_tpl$("POE_RECLSDET")
+			rcvr_no$=callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
+			int_seq$=callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
+			wh$=callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID")
+			item$=callpoint!.getColumnData("POE_RECDET.ITEM_ID")
+
+			read(poe_reclsdet_dev,key=firm_id$+rcvr_no$+int_seq$,dom=*next)
+			while 1
+				poe_reclsdet_key$=key(poe_reclsdet_dev,end=*break)
+				if pos(firm_id$+rcvr_no$+int_seq$=poe_reclsdet_key$)<>1 break
+				readrecord(poe_reclsdet_dev,key=poe_reclsdet_key$)poe_reclsdet$
+				readrecord(ivm_lsmaster_dev,key=firm_id$+wh$+item$+poe_reclsdet.lotser_no$,dom=*continue)ivm_lsmaster$
+				if ivm_lsmaster.qty_on_hand>0
+					remove (poe_reclsdet_dev,key=poe_reclsdet_key$)
+					msg_id$="IV_SER_ZERO_QOH"
+					gosub disp_message
+				endif
+			wend
+		endif
+
+
 		callpoint!.setStatus("ACTIVATE")
 
 		rem --- Return focus to where we were (Detail line grid)
@@ -497,7 +522,7 @@ wend
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
 
-order_lines!=callpoint!.getDevObject("so_lines_list")
+order_list!=callpoint!.getDevObject("so_lines_list")
 ldat$=callpoint!.getDevObject("so_ldat")
 
 if ldat$<>""
@@ -506,7 +531,7 @@ if ldat$<>""
 	g!=callpoint!.getDevObject("dtl_grid")
 	c!=g!.getColumnListControl(num(callpoint!.getDevObject("so_seq_ref_col")))
 	c!.removeAllItems()
-	c!.insertItems(0,order_lines!)
+	c!.insertItems(0,order_list!)
 	g!.setColumnListControl(num(callpoint!.getDevObject("so_seq_ref_col")),c!)	
 else
 	callpoint!.setColumnEnabled(-1,"POE_RECDET.SO_INT_SEQ_REF",0)
