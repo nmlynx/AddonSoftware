@@ -99,7 +99,10 @@ print "Hdr:AOPT:PRNT"; rem debug
 
 rem --- Print a counter Picking Slip
 
-	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" then
+	if user_tpl.credit_installed$ <> "Y" or 
+:		user_tpl.pick_hold$ = "Y"         or
+:		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" 
+:	then
 		gosub do_picklist
 	else
 		gosub check_print_status
