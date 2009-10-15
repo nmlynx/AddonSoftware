@@ -227,8 +227,8 @@ rem --- Read next transaction history (glt-06) record
 
           gosub wildcard
           if status continue
-		  
-		  nothing_to_print=0
+          
+          nothing_to_print=0
 
           rem --- Level breaks?
 
@@ -299,31 +299,33 @@ rem --- All Done
     if nothing_to_print
         msg_id$="DOC_OUTPUT_NODATA"
         gosub disp_message
-        goto std_exit_no_report
+        OutVect!=null()  
+        goto std_exit
+rem        goto std_exit_no_report
     endif
 
     done=1
     gosub account_break
-	
-	if nothing_to_print then
-		if detail$ = "D" then
-			ignore = fnblank(4)
-			OutVect!.addItem("Nothing to print within these parameters")
-			ignore = fnblank(6)
-		else
-			ignore = fnblank(2)
-			OutVect!.addItem("Nothing to print within these parameters")
-			ignore = fnblank(3)
-		endif
-	else
-		total$="Total For Report"
-		debits=rt[0]
-		credits=rt[1]
-		units=rt[2]
-		amount=debits+credits
-		if amount<>0 then gosub print_totals
-	endif
-	
+    
+    if nothing_to_print then
+        if detail$ = "D" then
+            ignore = fnblank(4)
+            OutVect!.addItem("Nothing to print within these parameters")
+            ignore = fnblank(6)
+        else
+            ignore = fnblank(2)
+            OutVect!.addItem("Nothing to print within these parameters")
+            ignore = fnblank(3)
+        endif
+    else
+        total$="Total For Report"
+        debits=rt[0]
+        credits=rt[1]
+        units=rt[2]
+        amount=debits+credits
+        if amount<>0 then gosub print_totals
+    endif
+    
     goto std_exit
 
 account_heading: rem --- Account Heading
