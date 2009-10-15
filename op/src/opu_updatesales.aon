@@ -344,6 +344,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem ---Customer
 
             if sas01a.by_customer$="Y" and pos(arm02a.sa_flag$="PI")<>0 and pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam01a$:fattr(sam01a$)
                 find record (sam01_dev, key=firm_id$+year$+ope01a.customer_id$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam01a$
                 
                 sam01a.firm_id$=firm_id$
@@ -364,6 +365,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem ---Territory
 
             if sas01a.by_territory$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam02a$:fattr(sam02a$)
                 find record (sam02_dev, key=firm_id$+year$+ope01a.territory$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam02a$
                 
                 sam02a.firm_id$=firm_id$
@@ -384,6 +386,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem ---Salesperson
 
             if sas01a.by_salespsn$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam03a$:fattr(sam03a$)
                 find record (sam03_dev, key=firm_id$+year$+ope01a.slspsn_code$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam03a$
                 
                 sam03a.firm_id$=firm_id$
@@ -404,6 +407,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem ---Customer Type
 
             if sas01a.by_customer_type$="Y" and pos(arm02a.sa_flag$="PI")<>0 and pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam04a$:fattr(sam04a$)
                 find record (sam04_dev, key=firm_id$+year$+arm02a.customer_type$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam04a$
 
                 sam04a.firm_id$=firm_id$
@@ -424,6 +428,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem ---Ship-To
 
             if sas01a.by_shipto$="Y" or pos(arm02a.sa_flag$="PI")<>0 or pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam05a$:fattr(sam05a$)
                 find record (sam05_dev, key=firm_id$+year$+ope01a.customer_id$+ope01a.shipto_no$+ope11a.item_id$, dom=*next) sam05a$
 
                 sam05a.firm_id$=firm_id$
@@ -444,6 +449,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem ---Standard Industry Code
 
             if sas01a.by_sic_code$="Y" and pos(ivm01a.sa_level$="PI")<>0 and cvs(arm01a.sic_code$,2)<>"" then
+                dim sam06a$:fattr(sam06a$)
                 find record (sam06_dev, key=firm_id$+year$+arm01a.sic_code$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam06a$
                 
                 sam06a.firm_id$=firm_id$
@@ -464,6 +470,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem --- Product Type
 
             if sas01a.by_product$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam07a$:fattr(sam07a$)
                 find record (sam07_dev, key=firm_id$+year$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam07a$
                 
                 sam07a.firm_id$=firm_id$
@@ -483,6 +490,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem --- Warehouse
 
             if sas01a.by_whse$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam08a$:fattr(sam08a$)
                 find record (sam08_dev, key=firm_id$+year$+ope11a.warehouse_id$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam08a$
                 
                 sam08a.firm_id$=firm_id$
@@ -503,6 +511,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem --- Stocking Vendor
 
             if sas01a.by_vendor$="Y" and pos(ivm01a.sa_level$="PI")<>0 and cvs(vendor$,2)<>"" then
+                dim sam09a$:fattr(sam09a$)
                 find record (sam09_dev, key=firm_id$+year$+vendor$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam09a$
 
                 sam09a.firm_id$=firm_id$
@@ -523,6 +532,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem --- Distribution Code
 
             if sas01a.by_dist_code$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
+                dim sam10a$:fattr(sam10a$)
                 find record (sam10_dev, key=firm_id$+year$+ope01a.ar_dist_code$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam10a$
 
                 sam10a.firm_id$=firm_id$
@@ -543,6 +553,7 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem --- Non-Stock
 
             if sas01a.by_nonstock$="Y" and opm02a.line_type$="N" then
+                dim sam11a$:fattr(sam11a$)
                 find record (sam11_dev, key=firm_id$+year$+ope11a.product_type$+ope11a.order_memo$, dom=*next) sam11a$
 
                 sam11a.firm_id$=firm_id$
