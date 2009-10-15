@@ -30,7 +30,15 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:stbl("+SYSINFO_TPL")
     sysinfo$=stbl("+SYSINFO")
     firm_id$=sysinfo.firm_id$
-   
+    
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+
+    if rd_alias_id$=""
+        rd_alias_id$=pgm(-2)
+        rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+        rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+    endif
+    
 rem --- Open all files
 
     num_files = 17
