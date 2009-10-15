@@ -33,6 +33,14 @@ rem --- Retrieve sysinfo data
         sysinfo$=stbl("+SYSINFO",err=*next)
         milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
+        
+rem --- set rd_alias_id$, if needed, for DocOut Settings
+
+        if rd_alias_id$=""
+            rd_alias_id$=pgm(-2)
+            rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+            rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+        endif
 
 rem --- Open/Lock files
 
