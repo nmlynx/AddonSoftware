@@ -1907,6 +1907,7 @@ rem --- Setup user_tpl$
 :     "cash_sale:c(1), " +
 :     "cash_cust:c(6), " +
 :     "bo_col:u(1), " +
+:		"prod_type_col:u(1), " +
 :     "allow_bo:c(1), " +
 :     "amount_mask:c(1*)," +
 :     "line_taxable:c(1), " +
@@ -1954,11 +1955,15 @@ rem --- Setup user_tpl$
 	user_tpl.lotser_flag$      = ivs01a.lotser_flag$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
-	user_tpl.bo_col            = 8
 	user_tpl.is_cash_sale      = 0
 	user_tpl.detail_modified   = 0
 	user_tpl.record_deleted    = 0
 	user_tpl.item_wh_failed    = 1
+
+rem --- Columns for the util disableCell() method
+
+	user_tpl.bo_col            = 9
+	user_tpl.prod_type_col     = 1
 
 	user_tpl.prev_line_code$   = ""
 	user_tpl.prev_item$        = ""
