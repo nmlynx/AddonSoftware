@@ -1,3 +1,11 @@
+[[OPE_ORDDET.AGDR]]
+print "Det:AGDR"; rem debug
+
+rem --- Disable by line type
+
+	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+	gosub disable_by_linetype
+
 [[OPE_ORDDET.UNIT_PRICE.BINP]]
 rem --- Has a valid whse/item been entered?
 
@@ -298,21 +306,6 @@ awri_update_hdr: rem --- Update header
 	gosub disp_grid_totals
 
 rem input "Det:Done with AWRI: ", *; rem debug
-[[OPE_ORDDET.AGDS]]
-print "Det:AGDS"; rem debug
-
-rem --- Disable Back orders if necessary
-
-	cust_id$   = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
-	cash_sale$ = callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE")
-
-	if user_tpl.allow_bo$ = "N"        or
-:		pos(user_tpl.line_type$ = "MO") or
-:		cash_sale$ = "Y"
-:	then
-		util.disableGridColumn(Form!, user_tpl.bo_col)
-		print "---BO Disabled"; rem debug
-	else
 [[OPE_ORDDET.BDGX]]
 print "Det:BDGX"; rem debug
 
@@ -508,7 +501,7 @@ print "Det:AGRN"; rem debug
 
 rem (Fires regardles of new or existing row.  Use user_tpl.new_detail to distinguish the two)
 
-rem --- Set line type
+rem --- Disable by line type
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
@@ -1086,6 +1079,12 @@ disable_by_linetype: rem --- Set enable/disable based on line type
                      rem      IN: line_code$
 rem ==========================================================================
 
+	print "in disable_by_linetype..."; rem debug
+	print "---getValidRow() =", callpoint!.getValidRow(); rem debug
+
+	user_tpl.line_type$ = ""
+	user_tpl.line_taxable$ = ""
+	user_tpl.line_dropship$ = ""
 	start_block = 1
 
 	if cvs(line_code$,2) <> "" then
@@ -1116,6 +1115,40 @@ rem --- Disable / enable unit cost
 			endif
 		endif
 	endif
+
+rem --- Product Type Processing
+
+	if opc_linecode.prod_type_pr$ <> "E" then
+		callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", 0)
+		util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
+		print "---disabled prod type"; rem debug
+
+		if opc_linecode.prod_type_pr$ = "D" then
+			callpoint!.setTableColumnAttribute("OPE_ORDDET.PRODUCT_TYPE","DFLT", opc_linecode.product_type$)
+			print "---set default prod type"; rem debug
+		endif	
+	else
+		callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", user_tpl.prod_type_col)
+		util.enableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
+		print "---enabled prod type"; rem debug
+	endif
+
+rem --- Disable Back orders if necessary
+
+	if user_tpl.allow_bo$ = "N"        or
+:		pos(user_tpl.line_type$ = "MO") or
+:		callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE") = "Y"
+:	then
+		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
+		util.disableGridCell(Form!, user_tpl.bo_col, callpoint!.getValidRow())
+		print "---disabled backorder"; rem debug
+	else
+		callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 1)
+		util.enableGridCell(Form!, user_tpl.bo_col, callpoint!.getValidRow())
+		print "---enabled backorder"; rem debug
+	endif
+
+	print "out"; rem debug
 
 	return
 
