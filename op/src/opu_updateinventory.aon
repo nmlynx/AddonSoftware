@@ -320,7 +320,7 @@ rem --- Read next invoice header --- Main Loop Starts
                                         ope21a_key$=key(ope21_dev,end=*break)
                                         if pos(ls_start$=ope21a_key$)<>1 then break
                                         read record (ope21_dev) ope21a$
-                                        ls_nbr$=c1$
+                                        ls_nbr$=ope21a.lotser_no$
                                         cost=ope21a.unit_cost
                                         qnty=ope21a.qty_shipped
                                         ls_qnty=ls_qnty+qnty
