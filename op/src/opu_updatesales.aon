@@ -343,7 +343,7 @@ rem            opt11a.item_id$=ope11a.item_id$
 
         rem ---Customer
 
-            if sas01a.by_customer$="Y" and pos(arm02a.sa_flag$="PI")<>0 and pos(ivm01a.sa_level$="PI")=0 then
+            if sas01a.by_customer$="Y" and pos(arm02a.sa_flag$="PI")<>0 and pos(ivm01a.sa_level$="PI")<>0 then
                 find record (sam01_dev, key=firm_id$+year$+ope01a.customer_id$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam01a$
                 
                 sam01a.firm_id$=firm_id$
@@ -463,7 +463,7 @@ rem            opt11a.item_id$=ope11a.item_id$
 
         rem --- Product Type
 
-            if sas01a.by_product$="Y" or pos(ivm01a.sa_level$="PI")<>0 then
+            if sas01a.by_product$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 find record (sam07_dev, key=firm_id$+year$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam07a$
                 
                 sam07a.firm_id$=firm_id$
@@ -482,7 +482,7 @@ rem            opt11a.item_id$=ope11a.item_id$
 
         rem --- Warehouse
 
-            if sas01a.by_whse$="Y" or pos(ivm01a.sa_level$="PI")<>0 then
+            if sas01a.by_whse$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 find record (sam08_dev, key=firm_id$+year$+ope11a.warehouse_id$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam08a$
                 
                 sam08a.firm_id$=firm_id$
@@ -502,7 +502,7 @@ rem            opt11a.item_id$=ope11a.item_id$
 
         rem --- Stocking Vendor
 
-            if sas01a.by_vendor$="Y" or pos(ivm01a.sa_level$="PI")<>0 or cvs(vendor$,2)<>"" then
+            if sas01a.by_vendor$="Y" and pos(ivm01a.sa_level$="PI")<>0 and cvs(vendor$,2)<>"" then
                 find record (sam09_dev, key=firm_id$+year$+vendor$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam09a$
 
                 sam09a.firm_id$=firm_id$
@@ -522,7 +522,7 @@ rem            opt11a.item_id$=ope11a.item_id$
 
         rem --- Distribution Code
 
-            if sas01a.by_dist_code$="Y" or pos(ivm01a.sa_level$="PI")<>0 then
+            if sas01a.by_dist_code$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 find record (sam10_dev, key=firm_id$+year$+ope01a.ar_dist_code$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam10a$
 
                 sam10a.firm_id$=firm_id$
@@ -542,7 +542,7 @@ rem            opt11a.item_id$=ope11a.item_id$
 
         rem --- Non-Stock
 
-            if sas01a.by_nonstock$="Y" or opm02a.line_type$="N" then
+            if sas01a.by_nonstock$="Y" and opm02a.line_type$="N" then
                 find record (sam11_dev, key=firm_id$+year$+ope11a.product_type$+ope11a.order_memo$, dom=*next) sam11a$
 
                 sam11a.firm_id$=firm_id$
