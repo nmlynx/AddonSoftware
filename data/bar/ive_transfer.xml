@@ -18,14 +18,24 @@
 			<ASC_LICENSE_ID id="ddm_tables.ive_transfer">1C8D8E9B77DD1B4EFFDB9BAD84A73775</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ive_transfer">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ive_transfer">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ive_transfer">20090924</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ive_transfer">20090924</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ive_transfer">221936</DD_LSTSYNC_TIME>
-			<DD_ATTR_CPGM id="ddm_tables.ive_transfer">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_LSTREV_DATE id="ddm_tables.ive_transfer">20091015</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ive_transfer">20091015</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ive_transfer">173354</DD_LSTSYNC_TIME>
+			<DD_ATTR_CPGM id="ddm_tables.ive_transfer">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.ive_transfer">BATCH_KEY</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.ive_transfer">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.ive_transfer">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.ive_transfer">Inventory Transfers Entry</DD_ATTR_WINT>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_aopt">
+		<ID id="ddm_table_aopt">DDM_TABLE_AOPT</ID>
+		<RECORD id="ddm_table_aopt.ive_transfer01">
+			<DD_TABLE_ALIAS id="ddm_table_aopt.ive_transfer01">IVE_TRANSFER    </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_aopt.ive_transfer01">01</DD_ATTR_SEQ>
+			<DD_ATTR_AOPT id="ddm_table_aopt.ive_transfer01">Lot Lookup</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT_CD id="ddm_table_aopt.ive_transfer01">LOTS</DD_ATTR_AOPT_CD>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.ive_transfer01">B</DD_ATTR_AOPT_FM>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
@@ -37,6 +47,10 @@
 		<RECORD id="ddm_table_cpro.ive_transferadis">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ive_transferadis">IVE_TRANSFER    </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ive_transferadis">ADIS</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.ive_transferaopt">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.ive_transferaopt">IVE_TRANSFER    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.ive_transferaopt">AOPT-LOTS</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_table_cpro.ive_transferarec">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ive_transferarec">IVE_TRANSFER    </DD_TABLE_ALIAS>
@@ -61,6 +75,13 @@
 		<RECORD id="ddm_table_cpro.ive_transferbwri">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ive_transferbwri">IVE_TRANSFER    </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ive_transferbwri">BWRI</DD_ATTR_CPRO>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_opts">
+		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
+		<RECORD id="ddm_table_opts.ive_transferw">
+			<DD_TABLE_ALIAS id="ddm_table_opts.ive_transferw">IVE_TRANSFER    </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.ive_transferw">W</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -235,7 +256,7 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ive_transfer002">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ive_transfer002">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ive_transfer002">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer002">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer002">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLW id="ddm_table_cols.ive_transfer002">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.ive_transfer002">0</DD_ATTR_CTLH>
 			<DD_ATTR_LABL id="ddm_table_cols.ive_transfer002">From Warehouse</DD_ATTR_LABL>
@@ -254,7 +275,7 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ive_transfer003">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ive_transfer003">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ive_transfer003">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer003">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer003">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_LABL id="ddm_table_cols.ive_transfer003">Transfer Date</DD_ATTR_LABL>
 			<DD_ATTR_MINL id="ddm_table_cols.ive_transfer003">6</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.ive_transfer003">8</DD_ATTR_MAXL>
@@ -271,7 +292,7 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ive_transfer004">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ive_transfer004">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ive_transfer004">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer004">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer004">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLW id="ddm_table_cols.ive_transfer004">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.ive_transfer004">0</DD_ATTR_CTLH>
 			<DD_ATTR_GHDR id="ddm_table_cols.ive_transfer004">New Warehouse</DD_ATTR_GHDR>
@@ -291,7 +312,7 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ive_transfer005">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ive_transfer005">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ive_transfer005">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer005">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer005">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_LABS id="ddm_table_cols.ive_transfer005">Inventory</DD_ATTR_LABS>
 			<DD_ATTR_MINL id="ddm_table_cols.ive_transfer005">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.ive_transfer005">20</DD_ATTR_MAXL>
@@ -309,9 +330,10 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.ive_transfer006">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ive_transfer006">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ive_transfer006">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer006">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer006">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLW id="ddm_table_cols.ive_transfer006">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.ive_transfer006">0</DD_ATTR_CTLH>
+			<DD_ATTR_MINL id="ddm_table_cols.ive_transfer006">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.ive_transfer006">20</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ive_transfer006">Lot/Serial Number</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.ive_transfer006">7</DD_ATTR_TIND>
@@ -326,7 +348,7 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.ive_transfer007">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.ive_transfer007">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ive_transfer007">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer007">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer007">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_LABL id="ddm_table_cols.ive_transfer007">Reference</DD_ATTR_LABL>
 			<DD_ATTR_MAXL id="ddm_table_cols.ive_transfer007">6</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ive_transfer007">Inventory Transfer Reference</DD_ATTR_PROM>
@@ -358,7 +380,7 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.ive_transfer009">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ive_transfer009">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ive_transfer009">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer009">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.ive_transfer009">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DFLT id="ddm_table_cols.ive_transfer009">1</DD_ATTR_DFLT>
 			<DD_ATTR_MAXL id="ddm_table_cols.ive_transfer009">7</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ive_transfer009">Transaction Quantity</DD_ATTR_PROM>
@@ -460,11 +482,6 @@
 			<DD_TABLE_ALIAS id="ddm_column_cpro.ive_transferlotser_noaval">IVE_TRANSFER    </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.ive_transferlotser_noaval">LOTSER_NO       </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.ive_transferlotser_noaval">AVAL</DD_ATTR_CPRO>
-		</RECORD>
-		<RECORD id="ddm_column_cpro.ive_transferlotser_nobinp">
-			<DD_TABLE_ALIAS id="ddm_column_cpro.ive_transferlotser_nobinp">IVE_TRANSFER    </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_cpro.ive_transferlotser_nobinp">LOTSER_NO       </DD_DVAR_NAME>
-			<DD_ATTR_CPRO id="ddm_column_cpro.ive_transferlotser_nobinp">BINP</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_column_cpro.ive_transferinv_xfer_nobinp">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.ive_transferinv_xfer_nobinp">IVE_TRANSFER    </DD_TABLE_ALIAS>
@@ -725,7 +742,7 @@
 			<ASC_PROD_ID id="ddm_elements.batch_no">AD </ASC_PROD_ID>
 			<LOCALIZATION_EX id="ddm_elements.batch_no">N</LOCALIZATION_EX>
 			<DD_CREATE_DATE id="ddm_elements.batch_no">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.batch_no">20090916</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.batch_no">20090714</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_elements.batch_no">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.batch_no">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.batch_no">E</DD_ATTR_CTYP>
