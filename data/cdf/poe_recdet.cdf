@@ -1,3 +1,12 @@
+[[POE_RECDET.PO_LINE_CODE.AVEC]]
+if callpoint!.getDevObject("line_type")="O" 
+	callpoint!.setColumnData("POE_RECDET.QTY_ORDERED","1")
+	callpoint!.setColumnData("POE_RECDET.QTY_RECEIVED","1")
+else
+	callpoint!.setColumnData("POE_RECDET.QTY_ORDERED","")
+endif
+
+callpoint!.setStatus("REFRESH")
 [[POE_RECDET.AOPT-LENT]]
 rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
 
@@ -605,11 +614,7 @@ rem if cvs(callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID"),3)="" or cvs(call
 
 endif
 
-if callpoint!.getDevObject("line_type")="O" 
-	callpoint!.setColumnData("POE_RECDET.QTY_ORDERED","1")
-else
-	callpoint!.setColumnData("POE_RECDET.QTY_ORDERED","")
-endif
+
 [[POE_RECDET.ITEM_ID.AVAL]]
 rem --- Item ID - After Column Validataion
 
