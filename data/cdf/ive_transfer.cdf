@@ -1,3 +1,40 @@
+[[IVE_TRANSFER.AOPT-LOTS]]
+rem --- Call the lot lookup window and set default lot
+
+rem --- Set data for the lookup form
+item$ = callpoint!.getColumnData("IVE_TRANSFER.ITEM_ID")
+whse$ = callpoint!.getColumnData("IVE_TRANSFER.WAREHOUSE_ID")
+
+if item$ <> "" and whse$ <> "" then 
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0] = "ITEM_ID"
+	dflt_data$[1,1] = item$
+	dflt_data$[2,0] = "WAREHOUSE_ID"
+	dflt_data$[2,1] = whse$
+	dflt_data$[3,0] = "LOTS_TO_DISP"
+	dflt_data$[3,1] = "O"; rem --- Open lots only
+
+	rem --- Call the lookup form
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "IVC_LOTLOOKUP",
+:	                       stbl("+USER_ID"),
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
+
+	rem --- Set the detail grid to the data selected in the lookup
+	if callpoint!.getDevObject("selected_lot") <> null() then
+		callpoint!.setColumnData( "IVE_TRANSFER.LOTSER_NO", str(callpoint!.getDevObject("selected_lot"))  )
+		user_tpl.avail = num( callpoint!.getDevObject("selected_lot_avail") )
+		callpoint!.setStatus("MODIFIED-REFRESH")
+	endif
+else
+	callpoint!.setMessage("IV_NO_ITEM_WHSE")
+	callpoint!.setStatus("ABORT")
+endif
 [[IVE_TRANSFER.BEND]]
 rem --- remove software lock on batch, if batching
 
@@ -121,8 +158,8 @@ print "in AREC (After New Record)"; rem debug
 
 rem --- Do record inits here
 
-	util.disableField(callpoint!, "IVE_TRANSFER.LOTSER_NO")
-
+rem	util.disableField(callpoint!, "IVE_TRANSFER.LOTSER_NO")
+	callpoint!.setColumnEnabled("IVE_TRANSFER.LOTSER_NO",0)
 	user_tpl.avail = 0
 	user_tpl.prev_qty = 0
 	user_tpl.this_item_is_lot_ser% = 0
@@ -155,50 +192,6 @@ rem --- Validate entered lot/serial#
 		qty = num( callpoint!.getColumnData("IVE_TRANSFER.TRANS_QTY") )
 		gosub display_ext
 	endif
-[[IVE_TRANSFER.LOTSER_NO.BINP]]
-print "in LOTSRE_NO.BINP"; rem debug
-
-rem --- Call the lot lookup window and set default lot
-
-	rem --- Set data for the lookup form
-	item$ = callpoint!.getColumnData("IVE_TRANSFER.ITEM_ID")
-	whse$ = callpoint!.getColumnData("IVE_TRANSFER.WAREHOUSE_ID")
-
-	if item$ = "" or whse$ = "" then 
-		callpoint!.setMessage("IV_NO_ITEM_WHSE")
-		callpoint!.setStatus("ABORT")
-		goto lotser_no_binp_exit
-	endif
-
-	dim dflt_data$[3,1]
-	dflt_data$[1,0] = "ITEM_ID"
-	dflt_data$[1,1] = item$
-	dflt_data$[2,0] = "WAREHOUSE_ID"
-	dflt_data$[2,1] = whse$
-	dflt_data$[3,0] = "LOTS_TO_DISP"
-	dflt_data$[3,1] = "O"; rem --- Open lots only
-
-	rem --- Call the lookup form
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	                       "IVC_LOTLOOKUP",
-:	                       stbl("+USER_ID"),
-:	                       "",
-:	                       "",
-:	                       table_chans$[all],
-:	                       "",
-:	                       dflt_data$[all]
-
-	rem --- Set the detail grid to the data selected in the lookup
-	if callpoint!.getDevObject("selected_lot") <> null() then
-		callpoint!.setColumnData( "IVE_TRANSFER.LOTSER_NO", str(callpoint!.getDevObject("selected_lot"))  )
-		user_tpl.avail = num( callpoint!.getDevObject("selected_lot_avail") )
-		callpoint!.setStatus("MODIFIED-REFRESH")
-	endif
-
-	rem --- Bring focus back to this field
-	util.forceFocus(callpoint!, "IVE_TRANSFER.LOTSER_NO")
-
-lotser_no_binp_exit:
 [[IVE_TRANSFER.ITEM_ID.AVAL]]
 print "in ITEM_ID.AVAL"; rem debug
 
@@ -237,7 +230,8 @@ rem --- To be thorough we would check both warehouse/item records, but version 7
 	gosub set_ls_flags
 
 	if user_tpl.this_item_is_lot_ser% then
-		util.enableField(callpoint!, "IVE_TRANSFER.LOTSER_NO")
+rem		util.enableField(callpoint!, "IVE_TRANSFER.LOTSER_NO")
+		callpoint!.setColumnEnabled("IVE_TRANSFER.LOTSER_NO",1)
 	else
 
 		rem --- Not lotted or serialized
