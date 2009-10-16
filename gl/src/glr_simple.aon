@@ -113,7 +113,7 @@ rem --- Initializations
 
 rem --- Which glm-02 record?
     
-    if gls01a.gl_yr_closed$ = "Y" then 
+    if gls01a.gl_yr_closed$ <> "Y" then 
         if year=glyear record$="4"
         if year=glyear-1 record$="0"
         if year=glyear-2 record$="2"
