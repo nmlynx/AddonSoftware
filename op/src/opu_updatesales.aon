@@ -310,9 +310,12 @@ rem            opt11a.item_id$=ope11a.item_id$
         rem ---Commission Detail and Last Price
 
             if opm02a.line_type$<>"N" then 
-                opt81a.firm_id$ = firm_id$
+                dim opt81a$:fattr(opt81a$)
+                opt81a.firm_id$     = firm_id$
                 opt81a.customer_id$ = opt11a.customer_id$
-                opt81a.item_id$ = opt11a.item_id$
+                opt81a.item_id$     = opt11a.item_id$
+                opt81a.unit_price   = ope11a.unit_price
+                opt81a.unit_cost    = ope11a.unit_cost
                 write record (opt81_dev) opt81a$
             endif
             
