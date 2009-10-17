@@ -192,14 +192,15 @@ rem --- Someday these programs should not use g[3] and g[4]
 
         glw11_dev=channels[30]
         dim glw11a$:templates$[30]
-        
-rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
+
+    rem --- Clear trans for this firm/process/batch from glw-11 work file 
+    rem --- If not batching, batch_no$ is zero, and will clear all recs this firm/process
 
         if gl$="Y"
             rec_pfx$=firm_id$+process_id$+batch_no$
             call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
         endif    
-        
+
     endif
 
     call pgmdir$+"adc_application.aon","PO",info$[all]
@@ -386,18 +387,28 @@ rem --- Main Read
     rem --- Determine GL Accounts
 
         dim y2$(80,"0"),y9$(80,"0")
+
+    rem (1,10)  = Discount, Cash
+    rem (11,10) = Freight
+    rem (21,10) = Inventory Adjustment, Sales
+    rem (31,10) = Inventory
+    rem (41,10) = Cost of Goods
+    rem (51,10) = Cost of Goods Adjustment
+    rem (61,10) = Inventory
+    rem (71,10) = Cost of Goods
+
         start_block = 1
 
         if start_block then
             find record (arm10d_dev, key=firm_id$+"D"+ope01a.ar_dist_code$, dom=*endif) arm10d$
             y2$(1)=pad(arm10d.gl_disc_acct$, 10) +
-:                  pad(arm10d.gl_frgt_acct$, 10) +
-:                  pad(arm10d.gl_inv_adj$, 10) +  
-:                  pad(arm10d.gl_inv_acct$, 10) +
-:                  pad(arm10d.gl_cogs_acct$, 10) +
-:                  pad(arm10d.gl_cogs_adj$, 10) +  
-:                  pad(arm10d.gl_ppv_acct$, 10) +
-:                  pad(arm10d.gl_purc_acct$, 10)
+:               pad(arm10d.gl_frgt_acct$, 10) +
+:               pad(arm10d.gl_inv_adj$, 10) +  
+:               pad(arm10d.gl_inv_acct$, 10) +
+:               pad(arm10d.gl_cogs_acct$, 10) +
+:               pad(arm10d.gl_cogs_adj$, 10) +  
+:               pad(arm10d.gl_ppv_acct$, 10) +
+:               pad(arm10d.gl_purc_acct$, 10)
         endif
 
         y9$(1,10)=y2$(1,10)
@@ -428,7 +439,6 @@ rem --- Main Read
             if ope11a_key.customer_id$ <> ope01a.customer_id$ then break
             if ope11a_key.order_no$    <> ope01a.order_no$    then break
             read record (ope11_dev) ope11a$
-        rem dim y0$(32),y1$(12)
             find record (opm02_dev,key=firm_id$+ope11a.line_code$,dom=*next) opm02a$; rem y0$, y1$
 
             if opm02a.dropship$<>"Y" or ars01a.dropshp_cost$<>"Y" then
@@ -461,7 +471,9 @@ rem --- Main Read
                     if opm02a.dropship$="Y" then goto non_stock
 
                     if ars01a.dist_by_item$="N" then 
-                        y9$(21,10)=y2$(21,10),y9$(61,20)=d6$
+                        y9$(21,10) = y2$(21,10)
+                        y9$(61,10) = ivm01a.gl_inv_acct$
+                        y9$(71,10) = ivm01a.gl_cogs_acct$
                         goto now_post; rem "Distribute by Customer
                     endif
 
@@ -476,6 +488,7 @@ rem --- Main Read
             rem --- Non-Stock & 'P' Types Here
 
                 if pos(opm02a.line_type$="NP")<>0 then
+
                 non_stock: 
 
                     if ars01a.dist_by_item$="N" and opm02a.line_type$="N" then
@@ -497,31 +510,31 @@ rem --- Main Read
 
                 if opm02a.line_type$="O" then
                     y9$(21,10)=opm02a.gl_rev_acct$
+                endif
 
-                now_post: rem --- Now Post Debit/Credit
+            now_post: rem --- Now Post Debit/Credit
 
-                    precision 2
-                    ref3$    = ope11a.internal_seq_no$
-                    account$ = y9$(21,10)
-                    amount   = -ope11a.ext_price
-                    if ope01a.cash_sale$="Y" then ref3$=ope11a.line_no$+" (Cash)"
+                precision 2
+                ref3$    = ope11a.internal_seq_no$
+                account$ = y9$(21,10)
+                amount   = -ope11a.ext_price
+                if ope01a.cash_sale$="Y" then ref3$=ope11a.line_no$+" (Cash)"
+                gosub glrecap
+
+                account$ = y9$(1,10)
+                amount   = ope11a.ext_price
+                gosub glrecap
+
+                if opm02a.line_type$<>"O" and ope11a.unit_cost*ope11a.qty_shipped<>0 then
+                    account$ = y9$(61,10)
+                    amount   = (-ope11a.unit_cost)*ope11a.qty_shipped
                     gosub glrecap
 
-                    account$ = y9$(1,10)
-                    amount   = ope11a.ext_price
+                    account$ = y9$(71,10)
+                    amount   = ope11a.unit_cost*ope11a.qty_shipped
+                    if validlncd$<>"" then account$=ab2$(111,10)
                     gosub glrecap
-
-                    if opm02a.line_type$<>"O" and ope11a.unit_cost*ope11a.qty_shipped<>0 then
-                        account$ = y9$(61,10)
-                        amount   = (-ope11a.unit_cost)*ope11a.qty_shipped
-                        gosub glrecap
-
-                        account$ = y9$(71,10)
-                        amount   = ope11a.unit_cost*ope11a.qty_shipped
-                        if validlncd$<>"" then account$=ab2$(111,10)
-                        gosub glrecap
-                    endif
-                endif   
+                endif
             endif
 
             precision 4
@@ -626,7 +639,7 @@ rem --- Main Read
             taxttl=0
             start_block = 1
 
-            if start_block = 1 then
+            if start_block then
                 find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*endif) opm06a$
                 tax = tax0*ope01a.taxable_amt/100
 
@@ -642,7 +655,6 @@ rem --- Main Read
                     precision 4
                     x1$=field(opm06a$,"ar_tot_code_"+str(x9:"00"))
                     if cvs(x1$,3)="" then continue
-                    dim y5$(4),y6$(60)
                     tax0 = 0
                     tax1 = 0
                     tax  = 0
@@ -758,6 +770,7 @@ rem --- Totals
     xwk = fnblank(8)
 
 rem --- Run overlay
+
     if ars01a.cash_sale$<>"N" then
         update$       = pgmdir$+"opr_salesregister_o1.aon"
         overlay$      = update$
@@ -832,6 +845,7 @@ rem --- Report On Tier Cost For Sold Items
     ivw05a.line_no$=ope11a.line_no$
     ivw05a$ = field(ivw05a$)
     write record (ivw05_dev) ivw05a$
+
     return
 
 cal_cur_item_cost: rem --- Calculate Current Item Cost
@@ -848,12 +862,12 @@ rem dim d2$(62),d[20],h[2]
         find record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*endif) ivm01a$
         found = 1
     endif
-    
+
     if !found then
         items$ = items$ + pad(ope11a.item_id$, 20)
         return
     endif
-    
+
     find record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$,dom=*next) ivm02a$
     if ivm02a.unit_cost then icost=ivm02a.unit_cost
     if lf$="Y" then gosub lifo_fifo
@@ -868,13 +882,13 @@ rem dim d2$(62),d[20],h[2]
             ope21a_key$=key(ope21_dev,end=*break)
             if pos(ls_start$=ope21a_key$) <> 1 then break
             read record (ope21_dev) ope21a$
-            
+
             if ivm01a.inventoried$<>"Y" then 
                 ope21a.unit_cost=icost
                 ope21a$ = field(ope21a$)
                 write record (ope21_dev) ope21a$; rem "Reset cost if not inventoried
             endif
-            
+
             total_shipped  = total_shipped  + ope21a.qty_shipped
             total_ext_cost = total_ext_cost + ope21a.qty_shipped*ope21a.unit_cost
         wend
@@ -965,7 +979,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
-    
+
 rem #endinclude std_end.src
 
     end
