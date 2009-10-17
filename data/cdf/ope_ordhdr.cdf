@@ -154,19 +154,12 @@ rem --- Set customer in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setCust_id(cust_id$)
 [[OPE_ORDHDR.SLSPSN_CODE.AVAL]]
+print "Hdr:SLSPSN_CODE.AVAL"; rem debug
+
 rem --- Set Commission Percent
 
-	file$ = "ARC_SALECODE"
-	salecode_dev = fnget_dev(file$)
-	dim salecode_rec$:fnget_tpl$(file$)
 	slsp$ = callpoint!.getUserInput()
-	start_block = 1
-
-	if start_block then
-		find record (salecode_dev, key=firm_id$+"E"+slsp$, dom=*endif) salecode_rec$
-		callpoint!.setColumnData("OPE_ORDHDR.COMM_PERCENT", salescode_rec.comm_percent$)
-		callpoint!.setStatus("REFRESH")
-	endif
+	gosub get_comm_percent
 [[OPE_ORDHDR.AOPT-CRCH]]
 print "Hdr:AOPT:CRCH"; rem debug
 
@@ -384,7 +377,7 @@ rem --- Set type in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE"))
 
-rem --- clear availability
+rem --- Clear availability
 
 	gosub clear_avail
 [[OPE_ORDHDR.BOVE]]
@@ -484,7 +477,7 @@ rem --- Create Empty Availability window
 	mwin!=cwin!.getControl(15999)
 	mwin!.setSize(grid!.getWidth(), mwin!.getHeight())
 [[OPE_ORDHDR.AFMC]]
-rem print 'show', "Hdr:AFMC"; rem debug
+print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
@@ -783,6 +776,9 @@ rem --- Existing record
 		callpoint!.setColumnData("OPE_ORDHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.PRICING_CODE",arm02a.pricing_code$)
 		callpoint!.setColumnData("OPE_ORDHDR.ORD_TAKEN_BY",sysinfo.user_id$)
+
+		slsp$ = arm02a.slspsn_code$
+		gosub get_comm_percent
 
 		gosub get_op_params
 
@@ -1736,6 +1732,25 @@ rem ==========================================================================
 		ordhdr_rec$ = field(ordhdr_rec$)
 		write record (ordhdr_dev) ordhdr_rec$
 		callpoint!.setStatus("SETORIG")
+	endif
+
+	return
+
+rem ==========================================================================
+get_comm_percent: rem --- Get commission percent from salesperson file
+                  rem      IN: slsp$ - salesperson code
+rem ==========================================================================
+
+	file$ = "ARC_SALECODE"
+	salecode_dev = fnget_dev(file$)
+	dim salecode_rec$:fnget_tpl$(file$)
+
+	start_block = 1
+
+	if start_block then
+		find record (salecode_dev, key=firm_id$+"F"+slsp$, dom=*endif) salecode_rec$
+		callpoint!.setColumnData("OPE_ORDHDR.COMM_PERCENT", salecode_rec.comm_rate$)
+		callpoint!.setStatus("REFRESH")
 	endif
 
 	return

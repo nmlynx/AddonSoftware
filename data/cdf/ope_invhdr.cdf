@@ -192,17 +192,8 @@ rem --- Change an Order into an Invoice
 [[OPE_INVHDR.SLSPSN_CODE.AVAL]]
 rem --- Set Commission Percent
 
-	file$ = "ARC_SALECODE"
-	salecode_dev = fnget_dev(file$)
-	dim salecode_rec$:fnget_tpl$(file$)
 	slsp$ = callpoint!.getUserInput()
-	start_block = 1
-
-	if start_block then
-		find record (salecode_dev, key=firm_id$+"E"+slsp$, dom=*endif) salecode_rec$
-		callpoint!.setColumnData("OPE_INVHDR.COMM_PERCENT", salescode_rec.comm_percent$)
-		callpoint!.setStatus("REFRESH")
-	endif
+	gosub get_comm_percent
 [[OPE_INVHDR.SHIPTO_TYPE.AVAL]]
 rem -- Deal with which Ship To type
 
@@ -658,7 +649,7 @@ rem --- Set type in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE"))
 
-rem --- clear availability
+rem --- Clear availability
 
 	gosub clear_avail
 [[OPE_INVHDR.ORDER_NO.AVAL]]
@@ -804,6 +795,9 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_INVHDR.PRICING_CODE",arm02a.pricing_code$)
       callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
+
+		slsp$ = arm02a.slspsn_code$
+		gosub get_comm_percent
 
 		gosub get_op_params
 
@@ -1560,6 +1554,25 @@ rem ==========================================================================
 	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
 	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
+
+	return
+
+rem ==========================================================================
+get_comm_percent: rem --- Get commission percent from salesperson file
+                  rem      IN: slsp$ - salesperson code
+rem ==========================================================================
+
+	file$ = "ARC_SALECODE"
+	salecode_dev = fnget_dev(file$)
+	dim salecode_rec$:fnget_tpl$(file$)
+
+	start_block = 1
+
+	if start_block then
+		find record (salecode_dev, key=firm_id$+"F"+slsp$, dom=*endif) salecode_rec$
+		callpoint!.setColumnData("OPE_INVHDR.COMM_PERCENT", salecode_rec.comm_rate$)
+		callpoint!.setStatus("REFRESH")
+	endif
 
 	return
 [[OPE_INVHDR.ASHO]]
