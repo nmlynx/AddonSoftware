@@ -195,22 +195,30 @@ rem --- Read next invoice header --- Main Loop Starts
                 if status = 999 then exitto std_exit
 
             rem --- Retrieve Distribution Code
-            rem --- (g[4] is set to 10 in opr_salesregister.aon.  Someday remove the need for z0$)
+            rem --- (Someday remove the need for z0$)
 
-                dim z0$(10*g[4])
+                dim z0$(100)
                 dist_code$=ope01a.ar_dist_code$
                 gosub retrieve_distribution_code
-                z0$(1)=arm10d.gl_ar_acct$+arm10d.gl_cash_acct$+arm10d.gl_sls_acct$+arm10d.gl_disc_acct$+
-:                   arm10d.gl_frgt_acct$+arm10d.gl_inv_adj$+arm10d.gl_inv_acct$+arm10d.gl_cogs_acct$+
-:                   arm10d.gl_cogs_adj$+arm10d.gl_ppv_acct$
+                z0$(1) = 
+:                   pad(arm10d.gl_ar_acct$, 10) +
+:                   pad(arm10d.gl_cash_acct$, 10) +
+:                   pad(arm10d.gl_sls_acct$, 10) +
+:                   pad(arm10d.gl_disc_acct$, 10) +
+:                   pad(arm10d.gl_frgt_acct$, 10) +
+:                   pad(arm10d.gl_inv_adj$, 10) +
+:                   pad(arm10d.gl_inv_acct$, 10) +
+:                   pad(arm10d.gl_cogs_acct$, 10) +
+:                   pad(arm10d.gl_cogs_adj$, 10) +
+:                   pad(arm10d.gl_ppv_acct$, 10)
                 z9$=z0$
 
             rem --- Retrieve Cash Receipts Code
 
                 if ope01a.cash_sale$="Y" then
-                    dim z6$(10*g[4],"0")
+                    dim z6$(100,"0")
                     find record (arm10c_dev, key=firm_id$+"C"+ope41a.cash_rec_cd$, dom=*endif) arm10c$
-                    z0$(g[4]+1,g[4])=arm10c.gl_cash_acct$
+                    z0$(11,10)=arm10c.gl_cash_acct$
                     z6$(1)=z0$
                 endif
 
@@ -245,7 +253,7 @@ rem --- Read next invoice header --- Main Loop Starts
                 while more
                     precision i[2]
                     ope11a_key$=key(ope11_dev,end=*break)
-                    if ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$<>ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$ then break
+                    if ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$ <> ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$ then break
                     read record (ope11_dev) ope11a$
                     z0$(1)=z9$
                     ref3$=ope11a.line_no$
@@ -257,7 +265,7 @@ rem --- Read next invoice header --- Main Loop Starts
 
                     if ope11a.line_code$<>prev_line_code$ then
                         prev_line_code$=ope11a.line_code$
-                        opm02a.gl_rev_acct$=fill(g[4],"0")
+                        opm02a.gl_rev_acct$=fill(10,"0")
                         find record (opm02_dev,key=firm_id$+ope11a.line_code$,dom=*next) opm02a$
                     endif
 
@@ -286,7 +294,7 @@ rem --- Read next invoice header --- Main Loop Starts
                             gosub retrieve_distribution_code
 
                             if status=0 then
-                                z0$(2*g[4]+1,g[4])=arm10d.gl_cash_acct$
+                                z0$(21,10)=arm10d.gl_cash_acct$
                             else
                                 gosub missing_distribtion_code
                             endif
@@ -295,14 +303,15 @@ rem --- Read next invoice header --- Main Loop Starts
 
                             if r9$="N" and opm02a.line_type$="N" and opm02a.dropship$<>"Y" then gosub retrieve_distribution_code
                             if status<>0 gosub missing_distribtion_code; rem "Order Line Item
-                            z0$(6*g[4]+1,2*g[4])=arm10d.gl_inv_acct$; rem "Invoice Ribbon, or Inventory Warehouse Record, or Order Line Item
+                            z0$(61,10)=arm10d.gl_inv_acct$; rem "Invoice Ribbon, or Inventory Warehouse Record, or Order Line Item
+                            z0$(71,10)=arm10d.gl_cogs_acct$
 
                             if r9$="N" and opm02a.line_type$="N" and opm02a.dropship$<>"Y" then
-                                z0$(6*g[4]+1,1*g[4])=ivm01a.gl_inv_acct$
-                                z0$(7*g[4]+1,1*g[4])=ivm01a.gl_cogs_acct$
+                                z0$(61,10)=ivm01a.gl_inv_acct$
+                                z0$(71,10)=ivm01a.gl_cogs_acct$
                             endif
 
-                            account$=z0$(6*g[4]+1,g[4])
+                            account$=z0$(61,10)
 
                         rem --- Serialized/Lotted Items
 
@@ -332,17 +341,17 @@ rem --- Read next invoice header --- Main Loop Starts
                                     rem --- Lot/Serial Invoice History
 
                                         if ls$<>"Y" or ivm01a.lotser_item$<>"Y" then break
-rem                                        opt21a.firm_id$        = ope21a.firm_id$
-rem                                        opt21a.ar_type$        = ope21a.ar_type$
-rem                                        opt21a.customer_id$    = ope21a.customer_id$
-rem                                        opt21a.ar_inv_no$      = ope01a.ar_inv_no$
-rem                                        opt21a.orddet_seq_ref$ = ope21a.orddet_seq_ref$
-rem                                        opt21a.sequence_no$    = ope21a.sequence_no$
-                                        
+                                    rem opt21a.firm_id$        = ope21a.firm_id$
+                                    rem opt21a.ar_type$        = ope21a.ar_type$
+                                    rem opt21a.customer_id$    = ope21a.customer_id$
+                                    rem opt21a.ar_inv_no$      = ope01a.ar_inv_no$
+                                    rem opt21a.orddet_seq_ref$ = ope21a.orddet_seq_ref$
+                                    rem opt21a.sequence_no$    = ope21a.sequence_no$
+
                                         dim opt21a$:fattr(opt21a$)
                                         call stbl("+DIR_PGM")+"adc_copyfile.aon",ope21a$,opt21a$,status
                                         opt21a.ar_inv_no$=ope01a.ar_inv_no$
-                                                                               
+
                                         if ih$="Y" then write record (opt21_dev) opt21a$
                                         remove (ope21_dev,key=ope21a_key$)
                                     wend
@@ -364,7 +373,7 @@ rem                                        opt21a.sequence_no$    = ope21a.seque
                             if ope01a.cash_sale$="Y" then ref3$=ope11a.line_no$+" "+"(Cash)"
                             gosub glpost
 
-                            account$=z0$(7*g[4]+1,g[4])
+                            account$=z0$(71,10)
                             amount=-amount
                             units=-units
                             gosub glpost
@@ -374,16 +383,16 @@ rem                                        opt21a.sequence_no$    = ope21a.seque
 
                         precision 2
                         if pos(opm02a.line_type$<>"M") then
-                            if opm02a.gl_rev_acct$<>fill(g[4],"0") and opm02a.line_type$="O" then
-                                z0$(2*g[4]+1,g[4])=opm02a.gl_rev_acct$
+                            if opm02a.gl_rev_acct$<>fill(10,"0") and opm02a.line_type$="O" then
+                                z0$(21,10)=opm02a.gl_rev_acct$
                             endif
 
-                            account$=z0$(1,g[4])
+                            account$=z0$(1,10)
                             amount=ope11a.ext_price,units=0
-                            if ope01a.cash_sale$="Y" then account$=z0$(g[4]+1,g[4])
+                            if ope01a.cash_sale$="Y" then account$=z0$(11,10)
                             gosub glpost
 
-                            account$=z0$(2*g[4]+1,g[4])
+                            account$=z0$(21,10)
                             amount=-amount,units=-ope11a.qty_shipped
                             gosub glpost
 
@@ -436,15 +445,15 @@ rem                                        opt21a.sequence_no$    = ope21a.seque
                     if po$="Y" then gosub unlink_po
 
                 wend
-                
+
             rem --- Check if the dropship data need to be removed from the PO header
-                
+
                 if unlink_po then
                     extract record (poe02_dev, key=poe08a.firm_id$+poe08a.po_no$, dom=*endif) poe02a$
                     poe02a.customer_id$ = ""
                     poe02a.order_no$ = ""
                     poe02a.dropship$ = "N"
-                    rem poe02a.shipto_no$ = ""; rem this was in the old code, but I think it's wrong
+                rem poe02a.shipto_no$ = ""; rem this was in the old code, but I think it's wrong
                     poe02a$ = field(poe02a$)
                     write record (poe02_dev) poe02a$
                     unlink = 0
@@ -542,7 +551,7 @@ rem                                        opt21a.sequence_no$    = ope21a.seque
 
                     if br$<>"Y" then break
                     glt15a.firm_id$=firm_id$
-                    glt15a.gl_account$=z6$(g[4]+1,g[4])
+                    glt15a.gl_account$=z6$(11,10)
                     glt15a.trans_no$=pad(ope01a.invoice_date$,8)(3,6)+"S"
                     glt15a.trans_amt=0
                     find record (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$,dom=*next) glt15a$
@@ -598,21 +607,21 @@ rem                                        opt21a.sequence_no$    = ope21a.seque
                     units=0
 
                     if ope01a.cash_sale$<>"Y" then
-                        account$=z0$(1,g[4])
+                        account$=z0$(1,10)
                         amount=ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
                         gosub glpost
                     else
-                        account$=z0$(g[4]+1,g[4])
+                        account$=z0$(11,10)
                         amount=ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
                         ref3$="Cash Sale"
                         gosub glpost
                     endif
 
-                    account$=z0$(3*g[4]+1,g[4])
+                    account$=z0$(31,10)
                     amount=ope01a.discount_amt
                     gosub glpost
 
-                    account$=z0$(4*g[4]+1,g[4])
+                    account$=z0$(41,10)
                     amount=-ope01a.freight_amt
                     gosub glpost
                 endif
@@ -665,14 +674,22 @@ rem                                        opt21a.sequence_no$    = ope21a.seque
         opt01a$ = field(opt01a$)
         write record (opt01_dev) opt01a$
 
-        opt71a.firm_id$=opt01a.firm_id$
-        opt71a.ar_type$=opt01a.ar_type$
-        opt71a.slspsn_code$=opt01a.slspsn_code$
-        opt71a.ar_inv_no$=opt01a.ar_inv_no$
-        opt71a.customer_id$=opt01a.customer_id$
-        opt71a.invoice_type$=opt01a.invoice_type$
-        opt71a.invoice_date$=opt01a.invoice_date$
-        opt71a$ = field(opt71a$)
+    rem --- Update Commissions file
+
+        dim opt71a$:fattr(opt71a$)
+
+        opt71a.firm_id$      = ope01a.firm_id$
+        opt71a.ar_type$      = ope01a.ar_type$
+        opt71a.slspsn_code$  = ope01a.slspsn_code$
+        opt71a.ar_inv_no$    = ope01a.ar_inv_no$
+        opt71a.customer_id$  = ope01a.customer_id$
+        opt71a.invoice_type$ = ope01a.invoice_type$
+        opt71a.invoice_date$ = ope01a.invoice_date$
+        opt71a.comm_percent  = ope01a.comm_percent
+        opt71a.comm_amt      = ope01a.comm_amt
+        opt71a.total_sales   = ope01a.total_sales
+        opt71a.total_cost    = ope01a.total_cost
+
         write record (opt71_dev) opt71a$
 
         if ope01a.invoice_type$="V" then something_backord=0,something_commit=0
@@ -959,15 +976,15 @@ unlink_po: rem --- Delete PO to order link
 
     if start_block then 
         find record (poe08_dev,key=firm_id$+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$,knum=1,dom=*endif) poe08a$
-        
+
     rem --- Only sales order sequence number is kept in the PO detail line
-    
+
         extract record (poe12_dev, key=poe08a.firm_id$+poe08a.po_no$+poe08a.poedet_seq_ref$, dom=*endif) poe12a$
         poe12a.so_int_seq_ref$ = ""
         poe12a$ = field(poe12a$)
         write record (poe12_dev) poe12a$
         unlink_po = 1
-        
+
         remove (poe08_dev, key=poe08a.firm_id$+poe08a.po_no$+poe08a.poedet_seq_ref$)
     endif
 
