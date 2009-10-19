@@ -88,8 +88,8 @@ rem --- Determine starting/ending dates for report period
 
 rem --- Open printer, start progress meter and position file
 
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto std_exit
+rem    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
+rem    if status goto std_exit
     call pgmdir$+"adc_progress.aon","N","","","","",0,gle04_dev,1,0,ignore_status
     read (gle04_dev,key=firm_id$,dom=*next)
 
