@@ -116,7 +116,7 @@ rem --- Dimension string templates
 
 rem glw11a$:templates$[7],
 
-    dim arm01a$:templates$[1],arm10c$:templates$[2],arm10d$:templates$[3],
+    dim arm01a$:templates$[1],arm10c$:templates$[2],arm10d$:templates$[3],arm10d0$:templates$[3],
 :       ars01a$:templates$[4],glm01a$:templates$[5],gls01a$:templates$[6],
 :       ivm01a$:templates$[7],ivm02a$:templates$[8],
 :       ivm04a$:templates$[9],ivs01a$:templates$[10],ivw04a$:templates$[11],
@@ -339,9 +339,6 @@ rem --- Main Read
         read record (ope01_dev, key=firm_id$+"  "+ope04a$.customer_id$+ope04a.order_no$, dom=*continue) ope01a$
         if ope01a.print_status$<>"Y" or pos(ope01a.lock_status$="12")<>0 then continue
 
-        z7$=""
-        z8$=""
-
         if ope01a.cash_sale$="Y" then
             find record (ope41_dev, key=firm_id$+"  "+ope01a.customer_id$+ope01a.order_no$, dom=*next) ope41a$
         endif
@@ -386,35 +383,24 @@ rem --- Main Read
 
     rem --- Determine GL Accounts
 
-        dim y2$(80,"0"),y9$(80,"0")
+        dim y9$(80,"0")
 
-    rem (1,10)  = Discount, Cash
-    rem (11,10) = Freight
-    rem (21,10) = Inventory Adjustment, Sales
-    rem (31,10) = Inventory
-    rem (41,10) = Cost of Goods
-    rem (51,10) = Cost of Goods Adjustment
+    rem (1,10)  = AR
+    rem (11,10) = Cash
+    rem (21,10) = Sales
+    rem (31,10) = Discount
+    rem (41,10) = Freight
+    rem (51,10) = Inventory Adjustment
     rem (61,10) = Inventory
-    rem (71,10) = Cost of Goods
+    rem (71,10) = Cost of Goods Sold
 
-        start_block = 1
+        find record (arm10d_dev, key=firm_id$+"D"+ope01a.ar_dist_code$, dom=*next) arm10d0$
 
-        if start_block then
-            find record (arm10d_dev, key=firm_id$+"D"+ope01a.ar_dist_code$, dom=*endif) arm10d$
-            y2$(1)=pad(arm10d.gl_disc_acct$, 10) +
-:               pad(arm10d.gl_frgt_acct$, 10) +
-:               pad(arm10d.gl_inv_adj$, 10) +  
-:               pad(arm10d.gl_inv_acct$, 10) +
-:               pad(arm10d.gl_cogs_acct$, 10) +
-:               pad(arm10d.gl_cogs_adj$, 10) +  
-:               pad(arm10d.gl_ppv_acct$, 10) +
-:               pad(arm10d.gl_purc_acct$, 10)
-        endif
+        y9$(1,10)  = arm10d0.gl_ar_acct$
+        y9$(31,10) = arm10d0.gl_disc_acct$
+        y9$(41,10) = arm10d0.gl_frgt_acct$
 
-        y9$(1,10)=y2$(1,10)
-        y9$(31,20)=y2$(31,20)
-
-        if ope01a.cash_sale$="Y" and len(z7$)>=24 then
+        if ope01a.cash_sale$="Y" then
             find record (arm10d_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
             y9$(1,10)=arm10c.gl_cash_acct$
         endif
@@ -471,7 +457,7 @@ rem --- Main Read
                     if opm02a.dropship$="Y" then goto non_stock
 
                     if ars01a.dist_by_item$="N" then 
-                        y9$(21,10) = y2$(21,10)
+                        y9$(21,10) = arm10d0.gl_sls_acct$
                         y9$(61,10) = ivm01a.gl_inv_acct$
                         y9$(71,10) = ivm01a.gl_cogs_acct$
                         goto now_post; rem "Distribute by Customer
@@ -479,9 +465,9 @@ rem --- Main Read
 
                     find record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$,dom=*next) ivm02a$
                     find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=*next) arm10d$
-                    y9$(21,10)=arm10d.gl_sls_acct$
-                    y9$(61,10)=arm10d.gl_inv_acct$
-                    y9$(71,10)=arm10d.gl_cogs_acct$
+                    y9$(21,10) = arm10d.gl_sls_acct$
+                    y9$(61,10) = arm10d.gl_inv_acct$
+                    y9$(71,10) = arm10d.gl_cogs_acct$
                     goto now_post
                 endif 
 
@@ -492,16 +478,16 @@ rem --- Main Read
                 non_stock: 
 
                     if ars01a.dist_by_item$="N" and opm02a.line_type$="N" then
-                        y9$(21,10)=y2$(21,10)
-                        y9$(61,10)=y2$(61,10)
-                        y9$(71,10)=y2$(71,10)
+                        y9$(21,10) = arm10d0.gl_sls_acct$
+                        y9$(61,10) = arm10d0.gl_inv_acct$
+                        y9$(71,10) = arm10d0.gl_cogs_acct$
                         goto now_post
                     endif
 
                     find record (arm10d_dev,key=firm_id$+"D"+opm02a$.ar_dist_code$,dom=*next) arm10d$
-                    y9$(21,10)=arm10d.gl_sls_acct$
-                    y9$(61,10)=arm10d.gl_inv_acct$
-                    y9$(71,10)=arm10d.gl_cogs_acct$
+                    y9$(21,10) = arm10d.gl_sls_acct$
+                    y9$(61,10) = arm10d.gl_inv_acct$
+                    y9$(71,10) = arm10d.gl_cogs_acct$
                     goto now_post
 
                 endif

@@ -294,15 +294,18 @@ rem --- Read next invoice header --- Main Loop Starts
                             gosub retrieve_distribution_code
 
                             if status=0 then
-                                z0$(21,10)=arm10d.gl_cash_acct$
+                                z0$(21,10)=arm10d.gl_sls_acct$
                             else
                                 gosub missing_distribtion_code
                             endif
 
                         rem --- Inventory & COGS Accounts
 
-                            if r9$="N" and opm02a.line_type$="N" and opm02a.dropship$<>"Y" then gosub retrieve_distribution_code
-                            if status<>0 gosub missing_distribtion_code; rem "Order Line Item
+                            if r9$="N" and opm02a.line_type$="N" and opm02a.dropship$<>"Y" then 
+                                gosub retrieve_distribution_code
+                                if status<>0 gosub missing_distribtion_code; rem "Order Line Item
+                            endif
+                            
                             z0$(61,10)=arm10d.gl_inv_acct$; rem "Invoice Ribbon, or Inventory Warehouse Record, or Order Line Item
                             z0$(71,10)=arm10d.gl_cogs_acct$
 
