@@ -81,7 +81,7 @@ rem --- Assign form input values to local variables
     summ_dtl$=fnget_fld_data$(table$,"SUMM_DTL")
     ord_inv$=fnget_fld_data$(table$,"ORD_INV")
     beg_ord_inv$=fnget_fld_data$(table$,"BEG_ORD_INV")
-
+    
 rem --- Get masks
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,m0
@@ -89,18 +89,28 @@ rem --- Get masks
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",m4$,0,m4
+    
+    if len(cust_id$) >= m0 then
+        cust_id_display$ = fnmask$(cust_id$(1,m0),m0$)
+    else
+        if cust_id$ = "" then
+            cust_id_display$ = "(All)"
+        else
+            cust_id_display$ = cust_id$
+        endif
+    endif
 
     switch pos(ord_inv$="OI")
         case 1
             w3$="Order",w4$="Invoice",w5$="Ord Date",history$=""
-            title1$="Open Orders, Customer "+fnmask$(cust_id$(1,m0),m0$),title2$="Beginning with "
+            title1$="Open Orders, Customer "+cust_id_display$,title2$="Beginning with "
             if ord_inv_no$<>"" title2$=title2$+"order# "+ord_inv_no$ else title2$=title2$+"First Order"
             header_channel=ope01_dev,detail_channel=ope11_dev,lot_channel=ope21_dev
             dim hdrrec$:fattr(ope01a$),dtlrec$:fattr(ope11a$),lotrec$:fattr(ope21a$)
         break
         case 2
             w3$="Invoice",w4$="Order",w5$="Inv Date",history$="Y"
-            title1$="Invoice History, Customer "+fnmask$(cust_id$(1,m0),m0$),title2$="Beginning with "
+            title1$="Invoice History, Customer "+cust_id_display$,title2$="Beginning with "
             if ord_inv_no$<>"" title2$=title2$+"invoice# "+ord_inv_no$ else title2$=title2$+"First Invoice"
             header_channel=opt01_dev,detail_channel=opt11_dev,lot_channel=opt21_dev
             dim hdrrec$:fattr(opt01a$),dtlrec$:fattr(opt11a$),lotrec$:fattr(opt21a$)
