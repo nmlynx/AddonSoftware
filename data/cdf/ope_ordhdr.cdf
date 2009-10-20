@@ -80,9 +80,9 @@ rem --- Set return values
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
-	callpoint!.setColumnData( "OPE_ORDHDR.TOTAL_SALES", str( ordHelp!.getExtPrice() ))
-	callpoint!.setColumnData( "OPE_ORDHDR.TOTAL_COST", str( ordHelp!.getExtCost() ))
-	if ordHelp!.getTaxable() = 0 then callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT", "0")
+	callpoint!.setColumnData( "OPE_ORDHDR.TOTAL_SALES", str(ordHelp!.getExtPrice()) )
+	callpoint!.setColumnData( "OPE_ORDHDR.TOTAL_COST",  str(ordHelp!.getExtCost()) )
+	callpoint!.setColumnData( "OPE_ORDHDR.TAXABLE_AMT", str(ordHelp!.getTaxable()) )
 
 	freight_amt$  = str(callpoint!.getDevObject("freight_amt"))
 	discount_amt$ = str(callpoint!.getDevObject("discount_amt"))
@@ -303,8 +303,6 @@ rem --- Reprint order?
 				endif
 
 				gosub disp_message
-			else
-				callpoint!.setStatus("NEWREC")
 			endif
 
 		endif
