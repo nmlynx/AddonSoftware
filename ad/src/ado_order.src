@@ -12,7 +12,7 @@ rem ==========================================================================
 
     class public OrderHelper
     
-        field private BBjString This_Class$ = "OrderHelper"
+        field private BBjString ClassName$ = "OrderHelper"
         field private BBjString firm_id$
         field private BBjInt precision% = 2
         field private Callpoint callpoint!
@@ -59,7 +59,7 @@ rem ==========================================================================
             
             if !util.isTableChansSet() then
                 if pTableChans! = null() then
-                    throw #This_Class$+": setOrderHelper(): Pass TableChans! or set table_chans$[all] in util object", 257
+                    throw #ClassName$+": setOrderHelper(): Pass TableChans! or set table_chans$[all] in util object", 257
                 else
                     util.setTableChans(pTableChans!)
                 endif
@@ -91,11 +91,11 @@ rem ==========================================================================
         method public BBjNumber totalSales(BBjVector pDtlVect!)
         
             if #dtl_tmpl$ = "" then
-                throw #This_Class$+": totalSales(): You must pass the detail template to use this method", 258
+                throw #ClassName$+": totalSales(): You must pass the detail template to use this method", 258
             endif
             
             if #Inv_type$ = "" then
-                throw #This_Class$+": totalSales(): You must setInv_type() (header invoice type) before you use this method", 259
+                throw #ClassName$+": totalSales(): You must setInv_type() (header invoice type) before you use this method", 259
             endif
         
             precision #precision%
@@ -135,7 +135,7 @@ rem ==========================================================================
         
         method public BBjNumber totalSales()
             if #DtlVect! = null() then
-                throw #This_Class$+": totalSales(): Pass in the detail vector or use setDtlVect()", 260
+                throw #ClassName$+": totalSales(): Pass in the detail vector or use setDtlVect()", 260
             else
                 methodret #totalSales(#DtlVect!)
             endif
@@ -246,7 +246,7 @@ rem ==========================================================================
                 if found then
                     #totalSalesDisk(p_cust_id$, p_order_no$, ordhdr_rec.invoice_type$)
                 else
-                    throw #This_Class$+": totalSalesDisk(): Could not find order """+p_order_no$+""" for customer """+p_cust_id$+"""", 261
+                    throw #ClassName$+": totalSalesDisk(): Could not find order """+p_order_no$+""" for customer """+p_cust_id$+"""", 261
                 endif
             endif
             
@@ -261,7 +261,7 @@ rem ==========================================================================
                     #totalSalesDisk(#Cust_id$, #Order_no$)
                 endif
             else
-                throw #This_Class$+": totalSalesDisk(): You must setCust_id() and setOrder_no() before calling this method", 262
+                throw #ClassName$+": totalSalesDisk(): You must setCust_id() and setOrder_no() before calling this method", 262
             endif
         
         methodend
