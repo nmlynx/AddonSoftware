@@ -122,7 +122,7 @@ rem --- Header loop
         write record (ope01_dev,key=ope01a_key$) ope01a$
 
     rem --- Process Lines Here
-escape;rem jpb
+    
         read (ope11_dev,key=firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
         
         while more
@@ -196,7 +196,7 @@ escape;rem jpb
                 read record (arm02_dev,key=firm_id$+ope01a.customer_id$+ope01a.ar_type$,dom=Credit_Initialize)arm02a$
                 x$=stbl("!batch","Y")
                 call pgmdir$+"opc_creditmgmnt.aon", customer_id$, table_chans$[all], null(), status
-escape;rem jpb
+
                 batch$=stbl("!batch")
                 x$=stbl("!CLEAR","!batch")
                 if batch$="B"
@@ -211,7 +211,7 @@ escape;rem jpb
                 
             Credit_Initialize: 
 
-                if credit$<>"1" goto Bad_Credit; REM "Credit Not Okay
+                if credit$<>"1" goto Bad_Credit; REM Credit Not Okay
                 readrecord (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=Update_Print)arm10a$
                 if arm10a.cred_hold$="Y" goto Bad_Credit
 
