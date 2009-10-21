@@ -272,24 +272,6 @@ rem --- See if Auto Numbering in effect
 		endif
 	endif
 [[IVM_ITEMMAST.AWRI]]
-rem --- Populate ivm-02 with Product Type
-
-	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
-	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
-
-	item$      = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-	prod_type$ = callpoint!.getColumnData("IVM_ITEMMAST.PRODUCT_TYPE")
-
-	read (ivm02_dev, key=firm_id$+item$, knum=2, dom=*next) 
-
-	while 1
-		read record (ivm02_dev, end=*break) ivm02a$
-		if ivm02a.firm_id$<>firm_id$ or ivm02a.item_id$<>item$ then break
-		ivm02a.product_type$ = prod_type$
-		ivm02a$ = field(ivm02a$)
-		write record (ivm02_dev) ivm02a$
-	wend
-
 rem --- Write synonyms of the Item Number, UPC Code and Bar Code
 	ivm_itemsyn_dev=fnget_dev("IVM_ITEMSYN")
 	dim ivm_itemsyn$:fnget_tpl$("IVM_ITEMSYN")
