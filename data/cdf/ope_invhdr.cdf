@@ -38,11 +38,7 @@ print "Hdr:AOPT.PRNT"; rem debug
 
 rem --- Print a counter Invoice
 
-	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" then
-		gosub do_invoice
-	else
-		gosub do_credit_action
-	endif
+	gosub do_invoice
 
 	print "---Print Status: ", callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"); rem debug
 [[OPE_INVHDR.BREX]]
