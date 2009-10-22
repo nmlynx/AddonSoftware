@@ -6,6 +6,15 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
+rem --- Important Note!  
+rem 
+rem     This program still does a lot of work to post to the G/L Daily Detail (glt-04).
+rem     We are now using the postings from the G/L recap made in opr_salesregister.
+rem     I have left a lot of the G/L posting code in this program so we can compare 
+rem     it with the register code and make changes if necessary.
+rem 
+rem     Make any changes to the G/L posting in opr_salesregister, not here!
+
     setesc std_error
     seterr std_error
 
@@ -374,12 +383,12 @@ rem --- Read next invoice header --- Main Loop Starts
                             amount=(-ope11a.unit_cost)*ope11a.qty_shipped
                             units=-ope11a.qty_shipped
                             if ope01a.cash_sale$="Y" then ref3$=ope11a.line_no$+" "+"(Cash)"
-                            gosub glpost
+                            rem gosub glpost
 
                             account$=z0$(71,10)
                             amount=-amount
                             units=-units
-                            gosub glpost
+                            rem gosub glpost
                         endif
 
                     rem --- G/L Sales Distribution
@@ -393,11 +402,11 @@ rem --- Read next invoice header --- Main Loop Starts
                             account$=z0$(1,10)
                             amount=ope11a.ext_price,units=0
                             if ope01a.cash_sale$="Y" then account$=z0$(11,10)
-                            gosub glpost
+                            rem gosub glpost
 
                             account$=z0$(21,10)
                             amount=-amount,units=-ope11a.qty_shipped
-                            gosub glpost
+                            rem gosub glpost
 
                             total_ext=total_ext+ope11a.ext_price
                             total_cost=total_cost+ope11a.unit_cost*ope11a.qty_shipped
@@ -612,21 +621,21 @@ rem --- Read next invoice header --- Main Loop Starts
                     if ope01a.cash_sale$<>"Y" then
                         account$=z0$(1,10)
                         amount=ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
-                        gosub glpost
+                        rem gosub glpost
                     else
                         account$=z0$(11,10)
                         amount=ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
                         ref3$="Cash Sale"
-                        gosub glpost
+                        rem gosub glpost
                     endif
 
                     account$=z0$(31,10)
                     amount=ope01a.discount_amt
-                    gosub glpost
+                    rem gosub glpost
 
                     account$=z0$(41,10)
                     amount=-ope01a.freight_amt
-                    gosub glpost
+                    rem gosub glpost
                 endif
 
             rem --- Write Taxes, Sales Tax GL Account Update
@@ -771,7 +780,15 @@ rem --- End
     ops10s$ = field(ops10s$)
 
     write record (ops10_dev) ops10s$
-    if gl$="Y" then call pgmdir$+"glc_ctlupdate.aon",status
+
+rem --- Post the G/L Recap from the Sales Register directly to the Daily Detail
+    
+    if gl$="Y" then 
+       call pgmdir$+"glc_update.aon",glm01_dev,glt04_dev,glw11_dev,status
+       call pgmdir$+"glc_ctlupdate.aon",status
+       call pgmdir$+"glc_ctldelete.aon",status
+    endif
+    
     goto std_exit
 
 rem --- Subroutines    
@@ -898,7 +915,7 @@ rem --- Get the main tax code and calculate amount
         account$ = opm06a.gl_account$
         amount   = -tax_amt
         units    = 0
-        gosub glpost
+        rem gosub glpost
 
         dim opm06a1$:fattr(opm06a$); rem copy of record so original is not mangled
 
@@ -920,7 +937,7 @@ rem --- Get the main tax code and calculate amount
             account$ = opm06a1.gl_account$
             amount   = -tax_amt
             units    = 0
-            gosub glpost
+            rem gosub glpost
         next x9
     endif
 
@@ -956,7 +973,7 @@ rem --- If there is a difference in the order's tax amount, post it now
         account$ = opm06a.gl_account$
         amount   = -tax_amt
         units    = 0
-        gosub glpost
+        rem gosub glpost
     endif
 
     precision 2
@@ -964,11 +981,14 @@ rem --- If there is a difference in the order's tax amount, post it now
     return
 
 glpost: rem --- Standard G/L Posting Routine
+        rem *** DISABLED ***
+        rem We are using what's posted in opr_salesregister to post to glt14
+        rem If changes need to be made to the GL posting, make them there
 
-    if gl$="Y" then
-        call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,glt14_dev,account$,when$,ref1$,ref2$,ref3$,memo$,amount,units,status
-        if status = 999 then exitto std_exit
-    endif
+    rem if gl$="Y" then
+        rem call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,glt14_dev,account$,when$,ref1$,ref2$,ref3$,memo$,amount,units,status
+        rem if status = 999 then exitto std_exit
+    rem endif
 
     return
 
