@@ -179,7 +179,7 @@ rem --- Read header
             gosub disp_message
             p8$=msg_opt$
         endif
-
+        
         if ope01a.print_status$="Y" then 
             gosub is_still_printed
         endif
@@ -215,17 +215,17 @@ rem --- Read header
     rem --- Ship-To
 
         dim c1$(255),c$(159)
-        if cvs(ope01a.shipto_no$,2)=""
+        if ope01a.shipto_type$="B" then 
             arm03a.name$(1,4)="SAME",c$(1,81)=""
         else
-            if ope01a.shipto_no$="000099"
+            if ope01a.shipto_type$="M" then 
                 if start_block then
                     find record (ordship_dev,key=firm_id$+ope01a.customer_id$+ope01a.order_no$,dom=*endif) ope31a$
                     c$=ope31a.addr_line_1$+ope31a.addr_line_2$+ope31a.addr_line_3$+ope31a.addr_line_4$+ope31a.city$+ope31a.state_code$+ope31a.zip_code$
                     arm03a.name$=ope31a.name$
                 endif
             else
-                if start_block then 
+                if ope01a.shipto_type$="S" then 
                     find record (custship_dev,key=firm_id$+ope01a.customer_id$+ope01a.shipto_no$,dom=*endif) arm03a$
                     c$=arm03a.addr_line_1$+arm03a.addr_line_2$+arm03a.addr_line_3$+arm03a.addr_line_4$+arm03a.city$+arm03a.country$
                 endif
@@ -356,7 +356,8 @@ rem --- Read header
     wend
 
         if ope01a.reprint_flag$="Y"
-            ope01a.print_status$=reprint$,ope01a.reprint_flag$=""
+            ope01a.print_status$=reprint$
+            ope01a.reprint_flag$=""
         else
             if print$="YES" and allprint$="YES"
                 ope01a.print_status$="Y"
