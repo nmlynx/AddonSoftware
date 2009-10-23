@@ -291,53 +291,57 @@ rem --- Main Read (Invoices)
         pdf_doc$    = ""
         call sypdir$+"bac_documents.bbj", new_doc_id$, "", "", "I", "PDF", docdir$, "pdf", option!.getAlias(), "C", ope01a.customer_id$, rd_table_chans$[all], "DOC_ID"
 
-    rem --- Heading
+    rem --- Heading (bill-to address)
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
         if status = 999 then exitto std_exit
 
-        dim b$(150)
-        dim arm01a1$:fattr(arm01a1$)
-        arm01a1.customer_id$ = "Not On File"
+        declare BBjTemplatedString arm01!
+        declare BBjTemplatedString arm03!
+        declare BBjTemplatedString ope31!
+        
+        arm01! = BBjAPI().makeTemplatedString(fattr(arm01a1$))
+        ope31! = BBjAPI().makeTemplatedString(fattr(ope31a$))
+        arm03! = BBjAPI().makeTemplatedString(fattr(arm03a$))
+        
+        dim b$(5*address)
+        found = 0
         start_block = 1
 
         if start_block then
-            read record (arm01_dev, key=firm_id$+ope01a.customer_id$, dom=*endif) arm01a1$
-            b$ = arm01a1.addr_line_1$ + arm01a1.addr_line_2$ + arm01a1.addr_line_3$ + arm01a1.addr_line_4$ + arm01a1.city$ + arm01a1.state_code$ + arm01a1.zip_code$; rem  b1$(31,72)+b1$(179,48)+b1$(103,9)
-            call pgmdir$+"adc_address.aon",b$,24,5,p[2],30
+            read record (arm01_dev, key=firm_id$+ope01a.customer_id$, dom=*endif) arm01!
+            b$ = func.formatAddress(arm01!, address, 5)
+            b$ = pad(func.alphaMask(arm01!.getFieldAsString("CUSTOMER_ID"), m0$),address) + b$
+            found = 1
         endif
-
-        b$ = pad(func.alphaMask(arm01a1.customer_id$,m0$), address) + b$
+        
+        if !found then
+            b$ = pad("Customer not found", address*6)
+        endif
 
     rem --- Ship-To
 
         c$ = b$
-        dim arm03a$:fattr(arm03a$)
+        start_block = 1
 
-        if cvs(ope01a.shipto_no$, 2) <> ""  and  ope01a.shipto_no$ <> "000099" then 
+        if ope01a.shipto_type$ = "M" then 
             shipto$ = ""
-            start_block = 1
 
             if start_block then
-                find record (ope31_dev, key=firm_id$+ope01a.customer_id$+ope01a.order_no$, dom=*endif) ope31a$
-                c$ = ope31a.addr_line_1$ + ope31a.addr_line_2$ + ope31a.addr_line_3$ + ope31a.addr_line_4$ + ope31a.city$ + ope31a.state_code$ + ope31a.zip_code$; rem d1$(31,81)
-
-                arm03a.name$ = ope31a.name$
+                find record (ope31_dev, key=firm_id$+ope01a.customer_id$+ope01a.order_no$, dom=*endif) ope31!
+                c$ = func.formatAddress(ope31!, address, 6)
             endif
 
-            call pgmdir$+"adc_address.aon",c$,24,3,p[2],30
-            c$ = pad(arm03a.name$, address) + c$
             read (ope01_dev, key=firm_id$+"  "+ope01a.customer_id$+ope01a.order_no$, dom=*next)
         else
-            shipto$ = ""
-            start_block = 1
+            if ope01a.shipto_type$ = "S" then
+                shipto$ = ""
 
-            if start_block then
-                find record (arm03_dev,key=firm_id$+ope01a.customer_id$+ope01a.shipto_no$, dom=*endif) arm03a$; rem c1$
-                shipto$=ope01a.shipto_no$
-                c$ = arm03a.addr_line_1$ + arm03a.addr_line_2$ + arm03a.addr_line_3$ + arm03a.addr_line_4$ + arm03a.city$ + arm03a.state$ + arm03a.zip_code$; rem c1$(31,81)
-                call pgmdir$+"adc_address.aon",c$,24,3,p[2],30
-                c$ = pad(arm03a.name$, address) + c$
+                if start_block then
+                    find record (arm03_dev,key=firm_id$+ope01a.customer_id$+ope01a.shipto_no$, dom=*endif) arm03!
+                    c$ = func.formatAddress(arm03!, address, 6)
+                    shipto$ = ope01a.shipto_no$
+                endif
             endif
         endif
 
