@@ -1,5 +1,5 @@
 rem --- Sales Register Update (Sales Analysis And History)
-rem --- Program opu_ca v8.0.0 08Feb2008 (opu_ca)
+rem --- Program opu_updatesales.aon v8.0.0 08Feb2008 (opu_ca)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (02/08/2008 10:10:02)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -229,11 +229,18 @@ rem --- Main read
         if ih$="Y" and arm02a.inv_hist_flg$="Y" then
             find record (ope31_dev,key=ope01a.firm_id$+ope01a.customer_id$+ope01a.order_no$,dom=*endif) ope31a$
 
-            opt31a.firm_id$=ope31a.firm_id$
-            opt31a.customer_id$=ope31a.customer_id$
-            opt31a.ar_inv_no$=ope31a.ar_inv_no$
-            opt31a.ar_inv_no$=ope31a.ar_inv_no$
-            opt31a$ = field(opt31a$)
+            opt31a.firm_id$     = ope31a.firm_id$
+            opt31a.customer_id$ = ope31a.customer_id$
+            opt31a.ar_inv_no$   = ope01a.ar_inv_no$
+            opt31a.name$        = ope31a.name$
+            opt31a.addr_line_1$ = ope31a.addr_line_1$
+            opt31a.addr_line_2$ = ope31a.addr_line_2$
+            opt31a.addr_line_3$ = ope31a.addr_line_3$
+            opt31a.addr_line_4$ = ope31a.addr_line_4$
+            opt31a.city$        = ope31a.city$
+            opt31a.state_code$  = ope31a.state_code$
+            opt31a.zip_code$    = ope31a.zip_code$
+            opt31a$             = field(opt31a$)
             
             write record (opt31_dev) opt31a$
         endif
