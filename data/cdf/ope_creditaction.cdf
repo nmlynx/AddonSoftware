@@ -52,20 +52,21 @@ return
 rem ==========================================================================
 print_doc: rem --- Print Counter Order or Invoice
 rem ==========================================================================
-
+	
 	run_by$   = callpoint!.getDevObject("run_by")
 	cust_id$  = callpoint!.getDevObject("cust_id")
 	order_no$ = callpoint!.getDevObject("order_no")
 
 	if cvs(cust_id$,2) <> "" and cvs(order_no$, 2) <> "" then
 
-	rem --- Mark order/invoice as released
+	rem --- Mark order/invoice as released and needs to be reprinted
 
 		file_name$="OPE_ORDHDR"
 		ordhdr_dev = fnget_dev(file_name$)
 		dim ordhdr_rec$:fnget_tpl$(file_name$)
 		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-		ordhdr_rec.credit_flag$ = "R"
+		ordhdr_rec.credit_flag$  = "R"
+		ordhdr_rec.reprint_flag$ = "Y"
 		ordhdr_rec$ = field(ordhdr_rec$)
 		write record (ordhdr_dev) ordhdr_rec$
 		callpoint!.setStatus("SETORIG")
@@ -165,6 +166,7 @@ rem --- Make sure everything is entered
 		case default
 
 	swend
+
 [[OPE_CREDITACTION.CREDIT_ACTION.AVAL]]
 rem --- Send back credit action response
 	
