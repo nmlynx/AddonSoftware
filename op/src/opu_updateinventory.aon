@@ -283,8 +283,10 @@ rem --- Read next invoice header --- Main Loop Starts
                     rem --- Retrieve Inventory Item
 
                         precision i[2]
+                        
                         if pos(opm02a.line_type$="SPN")<>0 then
                             find record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next) ivm01a$
+                            
                             if opm02a.line_type$<>"N" then
                                 find record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$,dom=*endif) ivm02a$
                                 dist_code$=ivm02a.ar_dist_code$
