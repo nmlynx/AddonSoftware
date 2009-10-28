@@ -131,7 +131,8 @@ rem --- get application record in order to get form icon
 
 rem --- Main Process
 
-    gosub find_gaps
+    gosub find_gaps1;rem "jpb
+rem    gosub find_gaps
     gosub get_calendar_boundaries
     gosub disp_win
     gosub get_user_settings
@@ -375,6 +376,101 @@ get_calendar_boundaries:
 
     return
 
+find_gaps1: rem " --- Display Unscheduled Gaps in Calendar
+    gap$=""
+    GapVect!=SysGUI!.makeVector()  
+    dim pom_calendar$:fattr(pom_calendar$)
+    read(pom_calendar_dev,key=firm_id$,dom=*next)
+
+    while 1
+        readrecord(pom_calendar_dev,end=*break)pom_calendar$
+        if pom_calendar.firm_id$<>firm_id$ then break
+        day_status$=""
+        for x=1 to pom_calendar.days_in_mth
+            if field(pom_calendar$,"day_status_"+str(x:"00"))="" field pom_calendar$,"day_status_"+str(x:"00")=" "
+            day_status$=day_status$+field(pom_calendar$,"day_status_"+str(x:"00"))
+        next x
+        last_month$=pom_calendar.year$+pom_calendar.month$+str(pom_calendar.days_in_mth:"00")
+        if pom_calendar.month$="02"
+            nxt_date$=""
+            call stbl("+DIR_PGM")+"adc_daydates.aon",last_month$(1,4)+"0301",nxt_date$,-1
+            last_month$=nxt_date$
+            pom_calendar.days_in_mth=num(last_month$(7,2))
+        endif
+        x0=pos(" "<>day_status$)
+l6150:
+        x1=pos(" "=day_status$(x0,pom_calendar.days_in_mth+1-x0))
+        if x1=0 goto rem_months
+        gap$=gap$+pom_calendar.year$+pom_calendar.month$+str(x0+x1-1:"00")
+        x2=pos(" "<>day_status$(x0+x1-1,pom_calendar.days_in_mth+1-(x0+x1)))
+        if x2=0 goto rem_months
+        gap$=gap$+pom_calendar.year$+pom_calendar.month$+str(x0+x1+x2-3:"00")
+        x0=x0+x1+x2-2
+        goto l6150
+
+rem_months: rem " --- Process remaining months
+        k$=key(pom_calendar_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        if pom_calendar.month$="02"
+            nxt_date$=""
+            call stbl("+DIR_PGM")+"adc_daydates.aon",last_month$(1,4)+"0301",nxt_date$,-1
+            last_month$=nxt_date$
+            pom_calendar.days_in_mth=num(last_month$(7,2))
+        endif
+        nxt_date$=""
+        call stbl("+DIR_PGM")+"adc_daydates.aon",last_month$,nxt_date$,1
+        if len(nxt_date$)<>8 break
+        if nxt_date$(1,6)<>k$(3,6)
+            if mod(len(gap$),16)=0 gap$=gap$+nxt_date$
+        endif
+        readrecord (pom_calendar_dev,key=k$)pom_calendar$
+        day_status$=""
+        for x=1 to pom_calendar.days_in_mth
+            if field(pom_calendar$,"day_status_"+str(x:"00"))="" field pom_calendar$,"day_status_"+str(x:"00")=" "
+            day_status$=day_status$+field(pom_calendar$,"day_status_"+str(x:"00"))
+        next x
+        last_month$=pom_calendar.year$+pom_calendar.month$+str(pom_calendar.days_in_mth:"00")
+        if mod(len(gap$),16)>0 goto l6290
+        if pom_calendar.day_status_01$<>" " goto l6340
+        gap$=gap$+pom_calendar.year$+pom_calendar.month$+"01"+pom_calendar.year$+pom_calendar_month$+str(pos(" "<>day_status$)-1:"00")
+        x0=pos(" "<>day_status$)
+        goto l6350
+l6290:
+        if pom_calendar.day_status_01$=" " goto l6330
+        nxt_mnth$=""
+        call stbl("+DIR_PGM")+"adc_daydates.aon",pom_calendar.year$+pom_calendar.month$+"01",nxt_mnth$,-1
+        if len(nxt_mnth$)<>8 break
+        gap$=gap$+nxt_mnth$
+        x0=1
+        goto l6350
+l6330:
+        gap$=gap$+pom_calendar.year$+pom_calendar.month$+str(pos(" "<>day_status$)-1:"00")
+        x0=pos(" "<>day_status$)
+        goto l6350
+l6340:
+        x0=1
+l6350:
+        x1=pos(" "=day_status$(x0,pom_calendar.days_in_mth+1-x0))
+        if x1=0 goto rem_months
+        gap$=gap$+pom_calendar.year$+pom_calendar.month$+str(x0+x1-1:"00")
+        x2=pos(" "<>day_status$(x0+x1-1,pom_calendar.days_in_mth+1-(x0+x1)))
+        if x2=0 goto rem_months
+        gap$=gap$+pom_calendar.year$+pom_calendar.month$+str(x0+x1+x2-3:"00")
+        x0=x0+x1+x2-2
+        goto l6350
+    wend
+
+    if mod(len(gap$),16)<>0 gap$=gap$(1,len(gap$)-8)
+    if len(gap$)<>0
+        for x=1 to len(gap$) step 16
+            gap_start$=gap$(x+4,2)+"/"+gap$(x+6,2)+"/"+gap$(x,4)
+            gap_stop$=gap$(x+12,2)+"/"+gap$(x+14,2)+"/"+gap$(x+8,4)
+            gosub load_GapVect
+        next x
+    endif
+
+    return
+
 find_gaps:rem --- find gaps (unsched days) between begin/end dates
 rem --- this logic is complicated... in v6/7 all day statuses were in a single string
 rem --- w/ v8, all are separate templated fields.  So we look at each day, mark start of
@@ -404,6 +500,7 @@ rem --- the start of gap date, and need set stop dates until we hit a non-space 
         for curr_day=1 to pom_calendar.days_in_mth
             day_stat$=field(pom_calendar$,"DAY_STATUS_"+str(curr_day:"00"))
             if cvs(day_stat$,3)=""
+if pom_calendar.month$="07" and curr_day=29 escape
                 if start_of_gap=1
                     if num(pom_calendar.year$+pom_calendar.month$)-num(last_key$)>1
                         wk_date$=last_key$+day_str$(num(last_key$(5,2))*2-1,2)
@@ -455,6 +552,7 @@ load_GapVect:
     endif
     gap_start$=""
     gap_stop$=""
+
     return
 
 validate_date:
