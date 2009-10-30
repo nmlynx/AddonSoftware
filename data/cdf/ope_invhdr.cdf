@@ -1,3 +1,21 @@
+[[OPE_INVHDR.AOPT-RPRT]]
+rem --- Check for printing in next batch and set
+
+	if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
+:		callpoint!.getColumnData("OPE_INVHDR.CREDIT_FLAG")="C"
+:	then
+		msg_id$ = "OP_CR_HOLD_NOPRINT"
+	else
+		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+		gosub add_to_batch_print
+		callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG","Y")
+		callpoint!.setStatus("SAVE")
+		msg_id$ = "OP_BATCH_PRINT"
+	endif
+
+	dim msg_tokens$[1]
+	msg_tokens$[1] = "invoice"
+	gosub disp_message
 [[OPE_INVHDR.AREC]]
 rem --- clear availability
 

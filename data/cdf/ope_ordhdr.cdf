@@ -107,7 +107,12 @@ rem --- Print a counter Picking Slip
 	else
 		gosub check_print_status
 		gosub do_credit_action
-		if action$ = "X" then gosub do_picklist
+
+		if action$ = "X" then 
+			gosub do_picklist
+		else
+			print "---Not printing because of credit action"; rem debug
+		endif
 	endif
 [[OPE_ORDHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
@@ -340,7 +345,7 @@ rem --- Display Ship to information
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	ship_to_no$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
-	order_no$       = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	order_no$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub ship_to_info
 
 rem --- Display order total
@@ -361,6 +366,7 @@ rem --- Backorder and Credit Hold
 rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT",1)
+	callpoint!.setOptionEnabled("RPRT",1)
 
 rem --- Set all previous values
 
@@ -432,6 +438,8 @@ rem --- Check for printing in next batch and set
 		msg_id$ = "OP_BATCH_PRINT"
 	endif
 
+	dim msg_tokens$[1]
+	msg_tokens$[1] = "order"
 	gosub disp_message
 [[OPE_ORDHDR.ADEL]]
 rem --- Remove from ope-04
@@ -1635,7 +1643,7 @@ do_credit_action: rem --- Launch the credit action program / form
                   rem     OUT: action$
 rem ==========================================================================
 
-	print "Hdr:in do_credit_action..."; rem debug
+	print "in do_credit_action..."; rem debug
 
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
@@ -1643,12 +1651,14 @@ rem ==========================================================================
 	action$   = "X"; rem Never called opc_creditaction.aon
 
 	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
-		print "---pass"; rem debug
+		print "---do action..."; rem debug
 		callpoint!.setDevObject("run_by", "order")
 		callpoint!.setDevObject("cust_id", cust_id$)
 		callpoint!.setDevObject("order_no", order_no$)
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
+
+		print "---action$ = """,action$,""""
 
 		if action$ = "D" then 
 			callpoint!.setStatus("DELETE")
@@ -1670,7 +1680,7 @@ rem ==========================================================================
 do_picklist: rem --- Print a Pick List
 rem ==========================================================================
 
-	print "Hdr:in do_picklist..."; rem debug
+	print "in do_picklist..."; rem debug
 
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
@@ -1715,7 +1725,10 @@ rem ==========================================================================
 check_print_status: rem --- Set print status to N and write
 rem ==========================================================================
 
+	print "in check_print_status..."; rem debug
+
 	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then
+		print "---Setting print status to ""N"""
 		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
 		cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 		order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
@@ -1731,6 +1744,8 @@ rem ==========================================================================
 		write record (ordhdr_dev) ordhdr_rec$
 		callpoint!.setStatus("SETORIG")
 	endif
+
+	print "out"; rem debug
 
 	return
 
@@ -2023,6 +2038,7 @@ rem --- Set up Lot/Serial button (and others) properly
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("ADDL",0)
 
 	if user_tpl.credit_installed$ = "Y" then
 		callpoint!.setOptionEnabled("CRCH",1)
