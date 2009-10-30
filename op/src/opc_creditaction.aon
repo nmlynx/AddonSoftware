@@ -241,10 +241,6 @@ rem --- Update Tickler File
     gosub update_tickler
 
 rem --- Update order header file
-
-    if pos(action$="PD")=0 then 
-        gosub warn_re_picklist
-    endif
     
     ope01a.lock_status$="N"
     ope01a$ =field(ope01a$)
@@ -297,21 +293,6 @@ rem --- Update tickler file with new record
     
     return
 
-warn_re_picklist: rem --- Warn About Printing Pick Ticket
-
-    if ope01a.print_status$<>"N" and (ope01a.credit_flag$<>"C" or ars01c.pick_hold$="N") then 
-        msg_id$ = "OP_PRINT_PICKLIST"
-        gosub disp_message
-        if msg_opt$ = "Y" then
-            call pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
-            if status = 999 then exitto std_exit
-        endif
-        rem call pgmdir$+"adc_yesno.aon",1,"New Items Have Been Committed.  Print Pick Ticket Now",2,v$,v3
-        rem if v$="N" then warn$=""
-    endif
-
-    return
-    
 update_order_header: rem --- Set credit flag in order header file
                      rem      IN: credit_flag_in$
 
@@ -321,8 +302,7 @@ update_order_header: rem --- Set credit flag in order header file
     write record (ope01_dev) ope01a$
     callpoint!.setStatus("SETORIG")
     
-    return
-    
+    return  
 
 open_tables: rem --- Open tables
 
