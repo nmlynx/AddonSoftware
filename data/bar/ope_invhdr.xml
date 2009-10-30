@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.ope_invhdr">F53A7424F3BEF6BD46B6940B29F57F46</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ope_invhdr">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ope_invhdr">20090501</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ope_invhdr">20091022</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ope_invhdr">20091022</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ope_invhdr">151646</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ope_invhdr">20091030</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ope_invhdr">20091030</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ope_invhdr">104836</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.ope_invhdr">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.ope_invhdr">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.ope_invhdr">zzzz</DD_ATTR_SLEV>
@@ -32,7 +32,7 @@
 		<RECORD id="ddm_table_aopt.ope_invhdr01">
 			<DD_TABLE_ALIAS id="ddm_table_aopt.ope_invhdr01">OPE_INVHDR      </DD_TABLE_ALIAS>
 			<DD_ATTR_SEQ id="ddm_table_aopt.ope_invhdr01">01</DD_ATTR_SEQ>
-			<DD_ATTR_AOPT id="ddm_table_aopt.ope_invhdr01">Dupe Invoice</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT id="ddm_table_aopt.ope_invhdr01">Duplicate Invoice</DD_ATTR_AOPT>
 			<DD_ATTR_AOPT_CD id="ddm_table_aopt.ope_invhdr01">DINV</DD_ATTR_AOPT_CD>
 			<DD_ATTR_AOPT_FM id="ddm_table_aopt.ope_invhdr01">F</DD_ATTR_AOPT_FM>
 		</RECORD>
@@ -60,9 +60,16 @@
 		<RECORD id="ddm_table_aopt.ope_invhdr05">
 			<DD_TABLE_ALIAS id="ddm_table_aopt.ope_invhdr05">OPE_INVHDR      </DD_TABLE_ALIAS>
 			<DD_ATTR_SEQ id="ddm_table_aopt.ope_invhdr05">05</DD_ATTR_SEQ>
-			<DD_ATTR_AOPT id="ddm_table_aopt.ope_invhdr05">Print</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT id="ddm_table_aopt.ope_invhdr05">Print Now</DD_ATTR_AOPT>
 			<DD_ATTR_AOPT_CD id="ddm_table_aopt.ope_invhdr05">PRNT</DD_ATTR_AOPT_CD>
 			<DD_ATTR_AOPT_FM id="ddm_table_aopt.ope_invhdr05">F</DD_ATTR_AOPT_FM>
+		</RECORD>
+		<RECORD id="ddm_table_aopt.ope_invhdr06">
+			<DD_TABLE_ALIAS id="ddm_table_aopt.ope_invhdr06">OPE_INVHDR      </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_aopt.ope_invhdr06">06</DD_ATTR_SEQ>
+			<DD_ATTR_AOPT id="ddm_table_aopt.ope_invhdr06">Reprint Next Run</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT_CD id="ddm_table_aopt.ope_invhdr06">RPRT</DD_ATTR_AOPT_CD>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.ope_invhdr06">F</DD_ATTR_AOPT_FM>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
@@ -81,7 +88,7 @@
 		</RECORD>
 		<RECORD id="ddm_table_cpro.ope_invhdraopt">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_invhdraopt">OPE_INVHDR      </DD_TABLE_ALIAS>
-			<DD_ATTR_CPRO id="ddm_table_cpro.ope_invhdraopt">AOPT-PRNT</DD_ATTR_CPRO>
+			<DD_ATTR_CPRO id="ddm_table_cpro.ope_invhdraopt">AOPT-RPRT</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_table_cpro.ope_invhdrapfe">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ope_invhdrapfe">OPE_INVHDR      </DD_TABLE_ALIAS>
@@ -173,10 +180,6 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_opts">
 		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
-		<RECORD id="ddm_table_opts.ope_invhdr0">
-			<DD_TABLE_ALIAS id="ddm_table_opts.ope_invhdr0">OPE_INVHDR      </DD_TABLE_ALIAS>
-			<DD_ATTR_OPTS id="ddm_table_opts.ope_invhdr0">0</DD_ATTR_OPTS>
-		</RECORD>
 		<RECORD id="ddm_table_opts.ope_invhdrg">
 			<DD_TABLE_ALIAS id="ddm_table_opts.ope_invhdrg">OPE_INVHDR      </DD_TABLE_ALIAS>
 			<DD_ATTR_OPTS id="ddm_table_opts.ope_invhdrg">G</DD_ATTR_OPTS>
@@ -192,6 +195,10 @@
 		<RECORD id="ddm_table_opts.ope_invhdrw">
 			<DD_TABLE_ALIAS id="ddm_table_opts.ope_invhdrw">OPE_INVHDR      </DD_TABLE_ALIAS>
 			<DD_ATTR_OPTS id="ddm_table_opts.ope_invhdrw">W</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_table_opts.ope_invhdro">
+			<DD_TABLE_ALIAS id="ddm_table_opts.ope_invhdro">OPE_INVHDR      </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.ope_invhdro">o</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tabg">
