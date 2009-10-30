@@ -205,7 +205,8 @@ rem --- Retrieve ivm-01 Item Master
 rem --- ivm-01 Item Master
 
     if dropship=0 and last<>0
-        ivm01a.lstrec_date$ = fnl$(ivm01a.lstrec_date$, ymd$)
+        field ivm01a$, last$[last] = fnl$( field(ivm01a$,last$[last]), ymd$ )
+rem        ivm01a.lstrec_date$ = fnl$(ivm01a.lstrec_date$, ymd$)
         ivm01a$=field(ivm01a$)
         write record (ivm01_dev) ivm01a$
     endif
