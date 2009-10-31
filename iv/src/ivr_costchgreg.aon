@@ -31,7 +31,15 @@ rem --- Assign form input values to local variables
     
     declare Option option!
     effect_date$ = option!.getOptionData("EFFECT_DATE")
-    
+
+rem --- Test Effective Date against System Date
+
+	if effect_date$ > sysinfo.system_date$
+		msg_id$="IV_COST_CHG_BAD_DATE"
+		gosub disp_message
+		goto std_exit
+	endif
+
 rem --- get batch# (zero if not batching.CAH)
 
     batch_no$=stbl("+BATCH_NO",err=*next)
