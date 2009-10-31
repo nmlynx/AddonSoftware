@@ -365,6 +365,16 @@ open_tables: rem --- Call the open tables routine
 
     return  
     
+disp_message: rem --- Display a message
+
+	call sypdir$+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+	
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
