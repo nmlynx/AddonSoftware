@@ -51,6 +51,22 @@ rem --- Initialize arguments in case of an early exit
     status=0
     module_id$=application$
 
+    rem --- Retrieve miscellaneous templates
+
+    files=2,begfile=1,endfile=files
+    dim ids$[files],templates$[files]               
+    ids$[1]="+GLCONTROL"
+    ids$[2]="+PROCESS"
+    call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
+    if status break
+
+    rem --- Dimension miscellaneous string templates
+
+    dim process$:templates$[2]
+    glcontrol_tpl$=templates$[1]
+    dim glcontrol$:glcontrol_tpl$
+    x$=stbl("+GLCONTROL_TPL",glcontrol_tpl$)              
+
 rem --- Remaining initializations
 
     dim msg$[1]
@@ -105,20 +121,6 @@ rem --- Remaining initializations
           dim gls01a$:templates$[1],aps01a$:templates$[2],ars01a$:templates$[3],gls01d$:templates$[4]
           dim ivs01a$:templates$[5],prs01a$:templates$[6],sfs01a$:templates$[7]
           dim adm19a$:templates$[8],glm03a$:templates$[9],glm06a$:templates$[10]
-
-          rem --- Retrieve miscellaneous templates
-
-          files=2,begfile=1,endfile=files
-          dim ids$[files],templates$[files]               
-          ids$[1]="+GLCONTROL"
-          ids$[2]="+PROCESS"
-          call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-          if status break
-
-          rem --- Dimension miscellaneous string templates
-
-          dim process$:templates$[2]
-          glcontrol_tpl$=templates$[1]
 
           num_files=1
           dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -255,7 +257,6 @@ rem --- or returned.
           rem --- Initialize posting control global variable (+GLCONTROL) with
           rem --- values from the parameter records
 
-          dim glcontrol$:glcontrol_tpl$
           glcontrol.firm_id$=firm_id$
           glcontrol.system_id$=adm04_key$
           glcontrol.post_gl$=adm04a.post_gl$
@@ -298,7 +299,7 @@ rem --- or returned.
           glcontrol.amount_mask$=glm1$
           call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",glm2$,0,0
           glcontrol.unit_mask$=glm2$
-          call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","P","",glm30$,0,0
+          call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","P","",glm3$,0,0
           glcontrol.percent_mask$=glm3$
 
           rem --- Set posting control global variable (+GLCONTROL) fields based 
@@ -418,7 +419,6 @@ rem --- or returned.
           rem --- Create +GLCONTROL and +GLCONTROL_TPL stbl variables
 
           x$=stbl("+GLCONTROL",glcontrol$)
-          x$=stbl("+GLCONTROL_TPL",glcontrol_tpl$)          
 
           rem --- Posting control is in place and no errors were encountered
 
