@@ -1,3 +1,22 @@
+[[OPE_ORDTOTALS.BEND]]
+print "OPE_ORDTOTALS:BEND"; rem debug
+
+rem --- Send back the entered values
+
+	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	
+rem --- If called from the detail's BREX, the record is already saved, so save the values here
+
+	gosub get_ordhdr_rec
+	ordhdr_rec.tax_amount   = num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))
+	ordhdr_rec.freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	ordhdr_rec.discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record(ordhdr_dev) ordhdr_rec$
+	callpoint!.setStatus("SETORIG")
+	
+	print "OPE_ORDTOTALS:END"; rem debug
 [[OPE_ORDTOTALS.ARAR]]
 print "OPE_ORDTOTALS:ARAR"; rem debug
 
@@ -31,7 +50,7 @@ rem --- Get previous and current discounts
 	print "---Prev Sales Total:", user_tpl.prev_sales_total; rem debug
 
 	if user_tpl.prev_sales_total <> 0 then
-		calc_prev_disc_per = 100 * ordhdr_rec.discount_amt / user_tpl.prev_sales_total
+		calc_prev_disc_per = round(100 * ordhdr_rec.discount_amt / user_tpl.prev_sales_total, 2)
 	else
 		calc_prev_disc_per = 0
 	endif
@@ -43,7 +62,7 @@ rem --- Change discount?
 rem --- A discount code or amount has been previously entered and the discount amt doesn't match the old discount percentage
 
 	if (user_tpl.prev_disc_code$ <> "" or ordhdr_rec.discount_amt <> 0) and 
-:		(user_tpl.prev_sales_total = 0 or round(ordhdr_rec.discount_amt) <> round(old_disc_per * user_tpl.prev_sales_total / 100))
+:		(user_tpl.prev_sales_total = 0 or ordhdr_rec.discount_amt <> round(old_disc_per * user_tpl.prev_sales_total / 100, 2))
 :	then 
 		saved_new_disc = new_disc_per
 
@@ -55,14 +74,14 @@ rem --- A discount code or amount has been previously entered and the discount a
 
 		if ordHelp!.getExtPrice() <> user_tpl.prev_sales_total	or 
 :			ordhdr_rec.disc_code$ <> user_tpl.prev_disc_code$		or
-:			disc_per_in * ordHelp!.getExtPrice() / 100 <> ordhdr_rec.discount_amt
+:			round(disc_per_in * ordHelp!.getExtPrice() / 100, 2) <> ordhdr_rec.discount_amt
 :		then
 			gosub tax_calc
 			rem gosub display_fields
 
 		rem --- Replace discounts?
 
-			new_disc_amt = saved_new_disc * ordHelp!.getExtPrice() / 100
+			new_disc_amt = round(saved_new_disc * ordHelp!.getExtPrice() / 100, 2)
 
 			msg_id$ = "OP_REPLACE_DISC"
 			dim msg_tokens$[4]
@@ -77,7 +96,7 @@ rem --- A discount code or amount has been previously entered and the discount a
 		endif
 	endif
 
-	if msg_opt$ <> "N" then ordhdr_rec.discount_amt = new_disc_per * ordHelp!.getExtPrice() / 100
+	if msg_opt$ <> "N" then ordhdr_rec.discount_amt = round(new_disc_per * ordHelp!.getExtPrice() / 100, 2)
 	print "---New discount percent  :", new_disc_per; rem debug
 	print "---Total Sales (ExtPrice):", ordHelp!.getExtPrice(); rem debug
 	print "---Total Discount Amount :", ordhdr_rec.discount_amt; rem debug
@@ -98,22 +117,6 @@ rem --- Save freight and discount
 print "OPE_ORDTOTALS:ASVA"; rem debug
 
 rem (Doesn't get here if you click the close button "x")
-
-rem --- Send back the entered values (doesn't matter is BREX can't save)
-
-	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
-	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
-	
-rem --- If called from BREX the record is already saved, so save the values here
-
-	gosub get_ordhdr_rec
-	ordhdr_rec.tax_amount   = num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))
-	ordhdr_rec.freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
-	ordhdr_rec.discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record(ordhdr_dev) ordhdr_rec$
-	
-	print "OPE_ORDTOTALS:END"; rem debug
 [[OPE_ORDTOTALS.FREIGHT_AMT.AVAL]]
 rem --- Save freight and recalculate tax
 
@@ -123,7 +126,7 @@ rem --- Save freight and recalculate tax
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
 
 	if ordHelp!.getExtPrice() <> 0 then 
-		disc_per_in = 100 * discount_amt / ordHelp!.getExtPrice()
+		disc_per_in = round(100 * discount_amt / ordHelp!.getExtPrice(), 2)
 	else
 		disc_per_in = 0
 	endif
@@ -140,7 +143,7 @@ rem --- Save discount and recalculate tax
 	user_tpl.prev_sales_total = ordHelp!.getExtPrice()
 
 	if ordHelp!.getExtPrice() <> 0 then 
-		disc_per_in = 100 * discount_amt / ordHelp!.getExtPrice()
+		disc_per_in = round(100 * discount_amt / ordHelp!.getExtPrice(), 2)
 	else
 		disc_per_in = 0
 	endif
@@ -172,7 +175,7 @@ tax_calc: rem --- Calculate tax amount
 rem ==========================================================================
 
 	if ordHelp!.getTaxable() <> 0 then 
-		ordhdr_rec.taxable_amt = ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100
+		ordhdr_rec.taxable_amt = round(ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100, 2)
 	else
 		ordhdr_rec.taxable_amt = 0
 	endif
