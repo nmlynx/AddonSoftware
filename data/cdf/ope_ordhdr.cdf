@@ -93,7 +93,7 @@ rem --- Set return values
 	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   tax_amount$)
 
 	rem callpoint!.setStatus("SAVE;REFRESH")
-	callpoint!.setStatus("REFRESH;SETORIG")
+	callpoint!.setStatus("REFRESH;SETORIG"); rem --- We need a way to save immediately to disk, bug 3800
 [[OPE_ORDHDR.AOPT-PRNT]]
 print "Hdr:AOPT:PRNT"; rem debug
 
