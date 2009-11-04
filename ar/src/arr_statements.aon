@@ -76,12 +76,25 @@ rem --- Assign form input values to local variables
     customer_id$  = option!.getOptionData("CUSTOMER_ID"); rem not used
     alt_sequence$ = option!.getOptionData("ALT_SEQUENCE"); rem not used
     doublespace$  = option!.getOptionData("PICK_CHECK")
-	
+
     minimum=num(minimum$)
     period=num(period$,err=*next)
     spacing=2
     if doublespace$="N" then spacing=1
-
+	if pos(option$="SR")
+		if sequence$="C"
+			begcust$=customer_id$
+			endcust$=customer_id$
+		else
+			begalt$=alt_sequence$
+			endalt$=alt_sequence$
+		endif
+	endif
+	if option$="R"
+		endcust$=""
+		endalt$=""
+	endif
+	
 rem --- Retrieve parameter records
 
     ars01a_key$=firm_id$+"AR00"
@@ -169,24 +182,28 @@ rem --- Determine 30 day aging period dates
 rem --- Start progress meter and position Customer Master (arm-01) file
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
-	
-    k$=firm_id$
-    if len(begvalue$)>1 then k$=begvalue$(1,len(begvalue$)-1)+$FF$
-    read (arm01_dev,knum=keynum,key=k$,dom=*next)
-	
-    if pos(option$="RS")
-        read (arm01_dev,knum=keynum,key=begvalue$,dom=*proceed)
-        k$=keyp(arm01_dev,err=*proceed)
-        read (arm01_dev,knum=keynum,key=k$,dom=*proceed)
-    endif
+
+        read (arm01_dev,knum=keynum,key=firm_id$,dom=*proceed)
 
 rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
     while morecustomers
-        k$=key(arm01_dev,knum=keynum,end=*break)
-        if pos(firm_id$=k$)<>1 break
 
-        read record (arm01_dev,knum=keynum,key=k$) arm01a$
+		if option$="S" morecustomers=0
+		
+        if pos(option$="RS")
+        	if first_pass=0
+	        	read record (arm01_dev,knum=keynum,key=firm_id$+begvalue$,dom=read_next_cust) arm01a$
+	        	goto bypass_read
+	        endif	
+        endif
+        
+read_next_cust:
+		read record (arm01_dev,end=*break)arm01a$
+
+bypass_read:
+		first_pass=1
+		if firm_id$<>arm01a.firm_id$ break
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         if sequence$="C" if endvalue$<>"" if arm01a.customer_id$>endvalue$ break
         if sequence$="A" if endvalue$<>"" if arm01a.alt_sequence$>endvalue$ break
@@ -197,6 +214,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 rem --- Does this customer meet the selection criteria?
 
         if arm02a.statements$<>"Y" continue
+
         if territory$<>"" if arm02a.territory$<>territory$ continue
         if cycle$<>"" if arm02a.ar_cyclecode$<>cycle$ continue
 
