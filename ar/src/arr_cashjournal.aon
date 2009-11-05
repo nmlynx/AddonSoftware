@@ -254,6 +254,7 @@ rem --- Position Cash Receipts History Header (art-06) file
 rem --- Read next Cash Receipt History Header (art-06) record
 
           while moreheaders
+
                 k$=key(art06_dev,end=*break)
                 if pos(keyprefix$=k$)<>1 break
                 read record (art06_dev) art06a$
@@ -391,6 +392,7 @@ rem --- Print GL distribution information
                       OutVect!.addItem(fnmask$(art26a.gl_account$(1,account_length),g0$))
                       OutVect!.addItem(str(art26a.gl_post_amt))
                       detail=1
+                      recs=recs+1
                       customer[4]=customer[4]+art26a.gl_post_amt
                       totals[4]=totals[4]+art26a.gl_post_amt
 
@@ -503,6 +505,7 @@ customer_break: rem --- Customer break
                   OutVect!.addItem(str(customer[3]))
                   OutVect!.addItem("")
                   OutVect!.addItem(str(customer[4]))
+                  recs=recs+1
                   break
             wend
             if done return
@@ -512,6 +515,7 @@ customer_break: rem --- Customer break
                 xwk=fnblank(columns+1)
                 OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+" "+arm01a.customer_name$+" "+arm01a.alt_sequence$)
                 xwk=fnblank(columns)
+                recs=recs+1
             endif
             return
 
