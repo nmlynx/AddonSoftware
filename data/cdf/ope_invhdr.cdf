@@ -724,7 +724,7 @@ rem --- A new record must be the next sequence
 		msg_id$ = "OP_NEW_ORD_USE_SEQ"
 		gosub disp_message	
 		callpoint!.setFocus("OPE_INVHDR.ORDER_NO")
-		exit; rem --- exit from callpoint
+		break; rem --- exit from callpoint
 	endif
 
 	user_tpl.hist_ord$ = "N"
@@ -737,7 +737,7 @@ rem --- Existing record
 
 		if ope01a.invoice_type$ = "V" then
 			callpoint!.setStatus("ABORT")
-			exit; rem --- exit from callpoint			
+			break; rem --- exit from callpoint			
 		endif
 
 	rem --- Check for quote
@@ -746,7 +746,7 @@ rem --- Existing record
 			msg_id$ = "OP_IS_QUOTE"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
-			exit; rem --- exit from callpoint			
+			break; rem --- exit from callpoint			
 		endif		
 
 	rem --- Check locked status

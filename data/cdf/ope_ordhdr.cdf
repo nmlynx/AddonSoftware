@@ -93,7 +93,7 @@ rem --- Set return values
 	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   tax_amount$)
 
 	rem callpoint!.setStatus("SAVE;REFRESH")
-	callpoint!.setStatus("REFRESH;SETORIG")
+	callpoint!.setStatus("REFRESH;SETORIG"); rem --- We need a way to save immediately to disk, bug 3800
 [[OPE_ORDHDR.AOPT-PRNT]]
 print "Hdr:AOPT:PRNT"; rem debug
 
@@ -683,7 +683,7 @@ rem --- A new record must be the next sequence
 		msg_id$ = "OP_NEW_ORD_USE_SEQ"
 		gosub disp_message	
 		callpoint!.setFocus("OPE_ORDHDR.ORDER_NO")
-		exit; rem --- exit from callpoint
+		break; rem --- exit from callpoint
 	endif
 
 	user_tpl.hist_ord$ = "N"
@@ -696,7 +696,7 @@ rem --- Existing record
 
 		if ope01a.invoice_type$ = "V" then
 			callpoint!.setStatus("ABORT")
-			exit; rem --- exit from callpoint			
+			break; rem --- exit from callpoint			
 		endif
 
 	rem --- Check for invoice
@@ -705,7 +705,7 @@ rem --- Existing record
 			msg_id$ = "OP_IS_INVOICE"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
-			exit; rem --- exit from callpoint			
+			break; rem --- exit from callpoint			
 		endif		
 
 	rem --- Check locked status
