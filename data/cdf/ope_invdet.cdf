@@ -1,7 +1,7 @@
 [[OPE_INVDET.AOPT-ADDL]]
 rem --- Additional Options
 
-	if user_tpl.line_type$ = "M" then exit; rem --- exit callpoint
+	if user_tpl.line_type$ = "M" then break; rem --- exit callpoint
 
 	declare BBjTemplatedString a!
 
