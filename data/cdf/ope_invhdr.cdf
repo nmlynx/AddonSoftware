@@ -200,6 +200,7 @@ rem --- Change an Order into an Invoice
 			order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 			gosub add_to_batch_print
 			callpoint!.setStatus("SAVE;REFRESH")
+			callpoint!.setOptionEnabled("MINV",0)
 		endif
 		
 	endif
@@ -340,15 +341,19 @@ rem --- Enable / Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",1)
 
-	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)="" then
+	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
 		callpoint!.setOptionEnabled("MINV",0)
 		callpoint!.setOptionEnabled("PRNT",0)
 	else
-		callpoint!.setOptionEnabled("MINV",1)
+		if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
+			callpoint!.setOptionEnabled("MINV",1)
+		else
+			callpoint!.setOptionEnabled("MINV",0)
+		endif
 		
-		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)="" then
+		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
 			callpoint!.setOptionEnabled("PRNT",0)
 		else
 			callpoint!.setOptionEnabled("PRNT",1)
@@ -579,6 +584,8 @@ rem --- Write/Remove manual ship to file
 		write record (ordship_dev) ordship_tpl$
 	endif
 [[OPE_INVHDR.ADIS]]
+print "Hdr:ADIS"; rem debug
+
 rem --- Check locked status
 
 	gosub check_lock_flag
@@ -643,6 +650,12 @@ rem --- Backorder and Credit Hold
 rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT",1)
+
+	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
+		callpoint!.setOptionEnabled("MINV",0)
+	else
+		callpoint!.setOptionEnabled("MINV",1)
+	endif
 
 rem --- Set all previous values
 
@@ -775,7 +788,7 @@ rem --- Existing record
   
 	else
 
-rem --- New record, set default
+	rem --- New record, set default
 
 		call stbl("+DIR_SYP")+"bas_sequences.bbj", "INVOICE_NO", invoice_no$, table_chans$[all]
 		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", invoice_no$)
@@ -825,6 +838,8 @@ rem --- New record, set default
 		user_tpl.pricing_code$ = arm02a.pricing_code$
 		user_tpl.order_date$   = sysinfo.system_date$
 
+		callpoint!.setOptionEnabled("MINV",1)
+
 	endif
 
 rem --- New or existing order
@@ -839,7 +854,6 @@ rem --- Enable/Disable buttons
 
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
-	callpoint!.setOptionEnabled("MINV",1)
 	callpoint!.setOptionEnabled("PRNT",1)
 
 	callpoint!.setStatus("MODIFIED;REFRESH")
