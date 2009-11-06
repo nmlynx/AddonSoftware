@@ -47,7 +47,7 @@ rem --- OutVect! and the other vectors are undeclared in bax_docout.bbj so they 
 
 rem --- Retrieve template for OPM_CUSTJOBS record key
 
-    if on_demand$="N" o9=1
+    if on_demand$="N" then o9=1
     call sypdir$+"bac_key_template.bbj","OPE_PRNTLIST","PRIMARY",ope04a_key_tpl$,table_chans$[all],status$
     dim ope04a_key$:ope04a_key_tpl$
 
@@ -130,22 +130,19 @@ rem --- Initial Read
         read (ope04_dev)
         if ope04a_key.firm_id$+ope04a_key.ordinv_flag$<>firm_id$+"O" break
         find record (ope01_dev,key=ope04a_key.firm_id$+ope04a_key.ar_type$+ope04a_key.customer_id$+ope04a_key.order_no$,dom=Remove_bad) ope01a$
-        if (which_ones$="P" and ope01a.invoice_type$<>"S") or (which_ones$="Q" and ope01a.invoice_type$<>"P") continue
+        if (which_ones$="P" and ope01a.invoice_type$<>"S") or (which_ones$="Q" and ope01a.invoice_type$<>"P") then continue
 
     On_Demand: rem --- Here for on-demand printing
 
-        if ope01a.print_status$="Y" gosub is_still_printed
-        if ope01a.reprint_flag$="Y" reprint$=ope01a.print_status$,ope01a.print_status$="N"
-        if pos(ope01a.print_status$="Y")<>0 continue
-        if o9=1 and pos(ope01a.lock_status$="YS12") continue
-        if ope01a.invoice_type$="V" continue
-        if ars01c.sys_install$="Y"
-            if ope01a.credit_flag$="C" and ars01c.pick_hold$="N"
-                continue
-            endif
-        endif
+        if ope01a.print_status$="Y" then gosub is_still_printed
+        if ope01a.reprint_flag$="Y" then reprint$=ope01a.print_status$, ope01a.print_status$="N"
+        if pos(ope01a.print_status$="Y")<>0 then continue
+        if o9=1 and pos(ope01a.lock_status$="YS12") then continue
+        if ope01a.invoice_type$="V" then continue
+        if ars01c.sys_install$="Y" and ope01a.credit_flag$="C" and ars01c.pick_hold$="N" then continue
         after$="NO"; gosub valid_lines
-        if print$="NO" continue
+        if print$="NO" then continue
+        
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         goto heading
 
