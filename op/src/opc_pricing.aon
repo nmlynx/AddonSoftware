@@ -150,7 +150,7 @@ rem --- Get Item Class
 
     mark_up_cost: rem --- Mark-Up From Cost
 
-        price = ivm02a.unit_cost + ivm02a.unit_cost * (perc / 100)
+        price = round(ivm02a.unit_cost + ivm02a.unit_cost * (perc / 100), 2)
         if ivm02a.cur_price = 0 then break
         disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
         break
@@ -158,14 +158,14 @@ rem --- Get Item Class
     margin_over_cost: rem --- Margin Over Cost
 
         if perc >= 100 then break; rem --- No such thing as 100% margin unless cost=0
-        price = ivm02a.unit_cost * 100 / (100 - perc)
+        price = round(ivm02a.unit_cost * 100 / (100 - perc), 2)
         if ivm02a.cur_price = 0 then break
         disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
         break
 
     mark_down_list_price: rem --- Mark-Down List Price
 
-        price = ivm02a.cur_price - ivm02a.cur_price * (perc / 100)
+        price = round(ivm02a.cur_price - ivm02a.cur_price * (perc / 100), 2)
         disc = perc
         break
     wend
