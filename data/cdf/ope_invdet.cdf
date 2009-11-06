@@ -731,10 +731,10 @@ rem --- Set price and discount
 	disc_per   = num(callpoint!.getColumnData("OPE_INVDET.DISC_PERCENT"))
 	
 	if std_price then
-		callpoint!.setColumnData("OPE_INVDET.DISC_PERCENT", str(100 - unit_price * 100 / std_price))
+		callpoint!.setColumnData("OPE_INVDET.DISC_PERCENT", str(round(100 - unit_price * 100 / std_price, 2)) )
 	else
 		if disc_per <> 100 then
-			callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", str(unit_price * 100 / (100 - disc_per)) )
+			callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", str(round(unit_price * 100 / (100 - disc_per), 2)) )
 		endif
 	endif
 	
@@ -983,7 +983,7 @@ rem ==========================================================================
 	if disc=100 then
 		callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", str(user_tpl.item_price))
 	else
-		callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", str((price*100)/(100-disc)) )
+		callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", str( round((price*100) / (100-disc), 2) ))
 	endif
 
 rem --- Recalc and display extended price
