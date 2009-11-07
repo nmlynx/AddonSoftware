@@ -123,6 +123,7 @@ rem    errors=0
     if m<8 m=8
     process_id$=stbl("+PROCESS_ID")
     batch_no$=stbl("+BATCH_NO")
+    recs=0
 
 rem --- column headings
 
@@ -238,6 +239,7 @@ rem             xwk=fnblank(6)
 rem             lf$=""
 rem          endif
           l1=l1+1
+          recs=recs+1
           
 rem --- Print reference information?
 
@@ -279,6 +281,12 @@ rem --- Print reference information?
     wend
 
 rem --- All Done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     done=1
     if sequence$="A" gosub journal_break
@@ -600,6 +608,10 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+std_exit_no_report:
+
     release
 
 rem #endinclude std_end.src
