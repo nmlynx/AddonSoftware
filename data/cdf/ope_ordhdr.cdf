@@ -108,7 +108,7 @@ rem --- Print a counter Picking Slip
 		gosub check_print_status
 		gosub do_credit_action
 
-		if action$ = "X" then 
+		if action$ = "X" or action$ = "" then 
 			gosub do_picklist
 		else
 			print "---Not printing because of credit action"; rem debug
@@ -1687,18 +1687,18 @@ rem ==========================================================================
 
 	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
 		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+	endif
 
 	rem --- Write flag to file so opc_picklist can see it
 
-		file_name$ = "OPE_ORDHDR"
-		ordhdr_dev = fnget_dev(file_name$)
-		dim ordhdr_rec$:fnget_tpl$(file_name$)
-		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-		ordhdr_rec.reprint_flag$ = "Y"
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		callpoint!.setStatus("SETORIG")
-	endif
+	file_name$ = "OPE_ORDHDR"
+	ordhdr_dev = fnget_dev(file_name$)
+	dim ordhdr_rec$:fnget_tpl$(file_name$)
+	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+	ordhdr_rec.reprint_flag$ = "Y"
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+	callpoint!.setStatus("SETORIG")
 
 	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
