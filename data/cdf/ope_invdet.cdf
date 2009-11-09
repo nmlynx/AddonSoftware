@@ -1173,16 +1173,13 @@ rem --- Product Type Processing
 	if opc_linecode.prod_type_pr$ <> "E" then
 		callpoint!.setColumnEnabled("OPE_INVDET.PRODUCT_TYPE", 0)
 		util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
-		print "---disabled prod type"; rem debug
 
 		if opc_linecode.prod_type_pr$ = "D" then
 			callpoint!.setTableColumnAttribute("OPE_INVDET.PRODUCT_TYPE","DFLT", opc_linecode.product_type$)
-			print "---set default prod type"; rem debug
 		endif	
 	else
 		callpoint!.setColumnEnabled("OPE_INVDET.PRODUCT_TYPE", user_tpl.prod_type_col)
 		util.enableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
-		print "---enabled prod type"; rem debug
 	endif
 
 rem --- Disable Back orders if necessary
@@ -1193,11 +1190,9 @@ rem --- Disable Back orders if necessary
 :	then
 		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
 		util.disableGridCell(Form!, user_tpl.bo_col, callpoint!.getValidRow())
-		print "---disabled backorder"; rem debug
 	else
 		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 1)
 		util.enableGridCell(Form!, user_tpl.bo_col, callpoint!.getValidRow())
-		print "---enabled backorder"; rem debug
 	endif
 
 return
