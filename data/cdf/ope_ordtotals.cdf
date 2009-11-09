@@ -47,7 +47,7 @@ rem --- Get previous and current discounts
 	find record (disccode_dev, key=firm_id$+user_tpl.prev_disc_code$, dom=*next) disccode_rec$
 	old_disc_per = disccode_rec.disc_percent
 
-	print "---Prev Sales Total:", user_tpl.prev_sales_total; rem debug
+	rem print "---Prev Sales Total:", user_tpl.prev_sales_total; rem debug
 
 	if user_tpl.prev_sales_total <> 0 then
 		calc_prev_disc_per = round(100 * ordhdr_rec.discount_amt / user_tpl.prev_sales_total, 2)
@@ -97,9 +97,9 @@ rem --- A discount code or amount has been previously entered and the discount a
 	endif
 
 	if msg_opt$ <> "N" then ordhdr_rec.discount_amt = round(new_disc_per * ordHelp!.getExtPrice() / 100, 2)
-	print "---New discount percent  :", new_disc_per; rem debug
-	print "---Total Sales (ExtPrice):", ordHelp!.getExtPrice(); rem debug
-	print "---Total Discount Amount :", ordhdr_rec.discount_amt; rem debug
+	rem print "---New discount percent  :", new_disc_per; rem debug
+	rem print "---Total Sales (ExtPrice):", ordHelp!.getExtPrice(); rem debug
+	rem print "---Total Discount Amount :", ordhdr_rec.discount_amt; rem debug
 	callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
 	user_tpl.prev_sales_total = ordHelp!.getExtPrice()
 
