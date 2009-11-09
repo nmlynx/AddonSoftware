@@ -302,7 +302,7 @@ rem --- Run update overlay
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 
     if errors
-        gosub Display_Message
+       gosub disp_message 
         if special_flag$<>"Y" then update$=""
     endif
 
