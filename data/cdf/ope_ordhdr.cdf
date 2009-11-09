@@ -104,12 +104,14 @@ rem --- Print a counter Picking Slip
 :		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" 
 :	then
 		gosub do_picklist
+		callpoint!.setStatus("NEWREC")
 	else
 		gosub check_print_status
 		gosub do_credit_action
 
 		if action$ = "X" or action$ = "" then 
 			gosub do_picklist
+			callpoint!.setStatus("NEWREC")
 		else
 			print "---Not printing because of credit action"; rem debug
 		endif
