@@ -164,7 +164,6 @@ rem --- Read next Vendor Master (apm-01) record
 
                 rem --- Print invoices
 
-                balance=0
                 x$=""
                 if retention$="Y" x$="Retention"
                 vendor$=apm02a.firm_id$+apm02a.ap_type$+apm02a.vendor_id$
@@ -219,6 +218,7 @@ rem --- Read next Vendor Master (apm-01) record
                             if cvs(thrudate$,2)<>"" 
                                 if apt11a.trans_date$>thrudate$ continue
                             endif    
+
                             detail=1
                             type$=apt11a.trans_type$
                             amount$=""
@@ -264,6 +264,7 @@ rem --- Read next Vendor Master (apm-01) record
               xwk=fnblank(2)
               total=total+balance
               xwk=fnblank(10)
+              balance=0
           endif
           
     wend
