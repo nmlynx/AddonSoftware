@@ -341,6 +341,89 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 [[OPE_INVHDR.BDEL]]
+rem --- Retain Order?
+
+	msg_id$ = "OP_RETAIN_ORDER"
+	gosub disp_message
+
+	if msg_opt$ = "Y" then
+
+	rem --- Reprint order"
+
+		msg_id$ = "OP_REPRINT_ALSO"
+		gosub disp_message
+		reprint$ = msg_opt$
+
+	rem --- Invoice History Header
+
+		file_name$      = "OPT_INVHDR"
+		opt_invhdr_dev  = fnget_dev(file_name$)
+		opt_invhdr_tpl$ = fnget_tpl$(file_name$)
+		dim opt_invhdr_rec$:opt_invhdr_tpl$
+
+		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+		read record (opt_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*next) opt_invhdr_rec$
+		ope_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
+		opt_invhdr_rec.invoice_type$ = "V"
+
+		opt_invhdr_rec$ = field(opt_invhdr_rec$)
+		write record (opt_invhdr_dev) opt_invhdr_rec$
+
+	rem --- Reset Invoice record to Order
+
+		file_name$      = "OPE_INVHDR"
+		ope_invhdr_dev  = fnget_dev(file_name$)
+		ope_invhdr_tpl$ = fnget_tpl$(file_name$)
+		dim ope_invhdr_rec$:ope_invhdr_tpl$
+
+		read record (ope_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ope_invhdr_rec$
+		ope_invhdr_rec$ = util.copyFields(ope_invhdr_tpl$, callpoint!)
+
+		ope_invhdr_rec.ar_inv_no$ = ""
+		ope_invhdr_rec.ordinv_flag$ = "O"
+		ope_invhdr_rec.print_status$ = "Y"
+		ope_invhdr_rec.lock_status$ = "N"
+		ope_invhdr_rec.tax_amount = 0
+		ope_invhdr_rec.freight_amt = 0
+		ope_invhdr_rec.discount_amt = 0
+		
+		if reprint$ = "Y" then
+			ope_invhdr_rec.reprint_flag$ = "Y"
+		else
+			ope_invhdr_rec.reprint_flag$ = ""
+		endif
+
+		ope_invhdr_rec$ = field(ope_invhdr_rec$)
+		write record (ope_invhdr_dev) ope_invhdr_rec$
+
+	rem --- Reset the print file
+
+		file_name$ = "OPE_PRNTLIST"
+		prntlist_dev = fnget_dev(file_name$)
+		dim prntlist_rec$:fnget_tpl$(file_name$)
+
+		remove (prntlist_dev, key=firm_id$+"I  "+cust_id$+order_no$, dom=*next)
+
+		if reprint$ = "Y" then
+			prntlist_rec.firm_id$     = firm_id$
+			prntlist_rec.ordinv_flag$ = "O"
+			prntlist_rec.customer_id$ = cust_id$
+			prntlist_rec.order_no$    = order_no$
+
+			write record (prntlist_dev) prntlist_rec$
+		endif
+
+	rem --- All Done
+
+		callpoint!.setStatus("NEWREC")
+		break; rem --- exit callpoint
+
+rem --- End Retain Order
+
+	endif
+
 rem --- Remove committments for detail records by calling ATAMO
 
 	ope11_dev = fnget_dev("OPE_INVDET")
