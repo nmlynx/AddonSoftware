@@ -34,8 +34,8 @@ rem ==========================================================================
         field public static BBjString EnableValue$ = ""
         field public static BBjString DisableValue$ = "I"
     rem --- Misc
-        field private static BBjInt Resized% = 0
-        field private static BBjString Class_Name$ = "util"
+        field private static BBjInt resized% = 0
+        field private static BBjString className$ = "util"
         field private static BBjNumber START_BLOCK = 0
     rem --- table_chans$[all] array fields
         field private static ArrayObject TableChans!
@@ -101,7 +101,7 @@ rem ==========================================================================
             new_width = min( screen_width, new_width + #ExtraWidth% )
             new_height = min( screen_height, new_height + #ExtraHeight% )
             Form!.setSize(new_width, new_height)
-            #Resized% = 1
+            #resized% = 1
 
         rem --- Will the form still fit on the screen?
             new_position = 0
@@ -126,7 +126,7 @@ rem ==========================================================================
 
     rem --- Has this form been resized?
         method public static BBjInt alreadyResized()
-            methodret #Resized%
+            methodret #resized%
         methodend
 
 
@@ -759,12 +759,12 @@ rem ==========================================================================
         method public static BBjInt getDev(BBjString p_data_name$)
         
             if #devs! = null() then
-                throw #Class_Name$+": Need to call setTableChans() first", 258
+                throw #className$+": Need to call setTableChans() first", 258
             else
                 if #devs!.containsKey(p_data_name$) then
                     methodret int(num(#devs!.get(p_data_name$)))
                 else
-                    throw #Class_Name$+": Cannot find "+p_data_name$, 257
+                    throw #className$+": Cannot find "+p_data_name$, 257
                 endif
             endif
             
@@ -775,16 +775,45 @@ rem ==========================================================================
         method public static BBjString getTmpl(BBjString p_data_name$)
         
             if #tmpls! = null() then
-                throw #Class_Name$+": Need to call setTableChans() first", 260
+                throw #className$+": Need to call setTableChans() first", 260
             else
                 if #tmpls!.containsKey(p_data_name$) then
                     methodret str(#tmpls!.get(p_data_name$))
                 else
-                    throw #Class_Name$+": Cannot find "+p_data_name$, 259
+                    throw #className$+": Cannot find "+p_data_name$, 259
                 endif
             endif
             
         methodend
+        
+    rem ==========================================================================
+    rem
+    rem --- Copy Barista column data to string template
+    rem 
+    rem ==========================================================================
+    
+        method public static BBjString copyFields(BBjString p_tmpl$, Callpoint callpoint!)
+        
+            col_list$ = callpoint!.getTableColumns()
+            alias$    = callpoint!.getAlias()
+            p_tmpl$   = cvs(p_tmpl$, 4)
+            dim rec$:p_tmpl$
+            
+            for i=1 to len(col_list$) step 40
+                col$ = cvs(col_list$(i, 40), 2)
+                if pos(alias$ = col$) <> 1 then continue
+                p = pos("." = col$)
+                name$ = col$(p+1)
+                
+                if pos("," + name$ + ":" = "," + p_tmpl$) then
+                    field rec$, name$ = callpoint!.getColumnData(col$)
+                endif
+            next i
+        
+            methodret rec$
+            
+        methodend
+   
 
     rem ==========================================================================
     rem
