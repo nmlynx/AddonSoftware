@@ -12,7 +12,7 @@ rem ==========================================================================
 
     class public OrderHelper
     
-        field private BBjString ClassName$ = "OrderHelper"
+        field private BBjString className$ = "OrderHelper"
         field private BBjString firm_id$
         field private BBjInt precision% = 2
         field private Callpoint callpoint!
@@ -59,7 +59,7 @@ rem ==========================================================================
             
             if !util.isTableChansSet() then
                 if pTableChans! = null() then
-                    throw #ClassName$+": setOrderHelper(): Pass TableChans! or set table_chans$[all] in util object", 257
+                    throw #className$+": setOrderHelper(): Pass TableChans! or set table_chans$[all] in util object", 257
                 else
                     util.setTableChans(pTableChans!)
                 endif
@@ -91,11 +91,11 @@ rem ==========================================================================
         method public BBjNumber totalSales(BBjVector pDtlVect!)
         
             if #dtl_tmpl$ = "" then
-                throw #ClassName$+": totalSales(): You must pass the detail template to use this method", 258
+                throw #className$+": totalSales(): You must pass the detail template to use this method", 258
             endif
             
             if #Inv_type$ = "" then
-                throw #ClassName$+": totalSales(): You must setInv_type() (header invoice type) before you use this method", 259
+                throw #className$+": totalSales(): You must setInv_type() (header invoice type) before you use this method", 259
             endif
         
             precision #precision%
@@ -135,7 +135,7 @@ rem ==========================================================================
         
         method public BBjNumber totalSales()
             if #DtlVect! = null() then
-                throw #ClassName$+": totalSales(): Pass in the detail vector or use setDtlVect()", 260
+                throw #className$+": totalSales(): Pass in the detail vector or use setDtlVect()", 260
             else
                 methodret #totalSales(#DtlVect!)
             endif
@@ -246,7 +246,7 @@ rem ==========================================================================
                 if found then
                     #totalSalesDisk(p_cust_id$, p_order_no$, ordhdr_rec.invoice_type$)
                 else
-                    throw #ClassName$+": totalSalesDisk(): Could not find order """+p_order_no$+""" for customer """+p_cust_id$+"""", 261
+                    throw #className$+": totalSalesDisk(): Could not find order """+p_order_no$+""" for customer """+p_cust_id$+"""", 261
                 endif
             endif
             
@@ -261,7 +261,7 @@ rem ==========================================================================
                     #totalSalesDisk(#Cust_id$, #Order_no$)
                 endif
             else
-                throw #ClassName$+": totalSalesDisk(): You must setCust_id() and setOrder_no() before calling this method", 262
+                throw #className$+": totalSalesDisk(): You must setCust_id() and setOrder_no() before calling this method", 262
             endif
         
         methodend
@@ -274,6 +274,10 @@ rem ==========================================================================
         
         method public BBjNumber getTaxable()
             methodret #taxable
+        methodend
+        
+        method public void setTaxable(BBjNumber p_in)
+            #taxable = p_in
         methodend
         
         method public BBjNumber getExtCost()
