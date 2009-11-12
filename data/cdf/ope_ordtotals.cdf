@@ -54,6 +54,7 @@ rem --- A discount code or amount has been previously entered and the discount a
 	if (user_tpl.prev_disc_code$ <> "" or ordhdr_rec.discount_amt <> 0) and 
 :		(user_tpl.prev_sales_total = 0 or round(ordhdr_rec.discount_amt, 2) <> round(old_disc_per * user_tpl.prev_sales_total / 100, 2))
 :	then 
+
 		saved_new_disc = new_disc_per
 
 		if user_tpl.prev_sales_total <> 0 then 
@@ -62,7 +63,7 @@ rem --- A discount code or amount has been previously entered and the discount a
 			disc_per_in = old_disc_per
 		endif
 
-		if ordHelp!.getExtPrice() <> user_tpl.prev_sales_total	or 
+		if ordHelp!.getExtPrice() <> user_tpl.prev_sales_total 	or 
 :			ordhdr_rec.disc_code$ <> user_tpl.prev_disc_code$		or
 :			round(disc_per_in * ordHelp!.getExtPrice() / 100, 2) <> ordhdr_rec.discount_amt
 :		then
@@ -72,17 +73,19 @@ rem --- A discount code or amount has been previously entered and the discount a
 		rem --- Replace discounts?
 
 			new_disc_amt = round(saved_new_disc * ordHelp!.getExtPrice() / 100, 2)
-
-			msg_id$ = "OP_REPLACE_DISC"
-			dim msg_tokens$[4]
-			msg_tokens$[1] = cvs( str(disc_per_in:"##0.00-"), 3) + "%"
-			msg_tokens$[2] = cvs( str(ordhdr_rec.discount_amt:amount_mask$), 3)
-			msg_tokens$[3] = cvs( str(new_disc_per:"##0.00-"), 3) + "%"
-			msg_tokens$[4] = cvs( str(new_disc_amt:amount_mask$), 3)
-			gosub disp_message
-
-			if msg_opt$ = "N" then new_disc_per = disc_per_in
 			
+			if disc_per_in<>new_disc_per or ordhdr_rec.discount_amt<>new_disc_amt
+
+				msg_id$ = "OP_REPLACE_DISC"
+				dim msg_tokens$[4]
+				msg_tokens$[1] = cvs( str(disc_per_in:"##0.00-"), 3) + "%"
+				msg_tokens$[2] = cvs( str(ordhdr_rec.discount_amt:amount_mask$), 3)
+				msg_tokens$[3] = cvs( str(new_disc_per:"##0.00-"), 3) + "%"
+				msg_tokens$[4] = cvs( str(new_disc_amt:amount_mask$), 3)
+				gosub disp_message
+
+				if msg_opt$ = "N" then new_disc_per = disc_per_in
+			endif
 		endif
 	endif
 
@@ -159,7 +162,7 @@ display_fields: rem --- Display fields ***NOT USED***
                 rem          ordHelp! with totalSalesDisk() calculated
 rem ==========================================================================
 
-	callpoint!.setColumnData("OPE_ORDTOTALS.TOTAL_SALES",  str( ordHelp!.getExtPrice() ))
+	callpoint!.setColumnData("OPE_ORDTOTALS.TOTAL_SALES",  str(ordHelp!.getExtPrice()) )
 	callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
 	callpoint!.setColumnData("OPE_ORDTOTALS.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
 	callpoint!.setColumnData("OPE_ORDTOTALS.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
@@ -257,6 +260,11 @@ get_ordhdr_rec: rem --- Get order header record and order helper object
                 rem     OUT: ordHelp!
                 rem          ordhdr_rec$
 rem ==========================================================================
+
+rem --- Note: although the order header record is retrieved and used, it is 
+rem     not written back to disk.  This is done in the callers (OPE_ORDHDR and
+rem     OPE_INVHDR).  The values are passed back via the ordHelp! object or
+rem     the DevObject method.
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))	
 
