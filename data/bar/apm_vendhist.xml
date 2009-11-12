@@ -19,8 +19,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.apm_vendhist">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.apm_vendhist">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.apm_vendhist">20091013</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.apm_vendhist">20090701</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.apm_vendhist">141136</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.apm_vendhist">20091111</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.apm_vendhist">164028</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.apm_vendhist">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.apm_vendhist">T</DD_ATTR_FTYP>
 			<DD_ATTR_PTAB id="ddm_tables.apm_vendhist">APM_VENDMAST    </DD_ATTR_PTAB>
@@ -63,6 +63,18 @@
 			<DD_KEY_DESC id="ddm_keys.apm_vendhist00">Primary</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.apm_vendhist00">PRIMARY         </DD_KEY_ID>
 		</RECORD>
+		<RECORD id="ddm_keys.apm_vendhist01">
+			<DD_TABLE_ALIAS id="ddm_keys.apm_vendhist01">APM_VENDHIST    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.apm_vendhist01">01</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.apm_vendhist01">Vendor ID, Firm ID</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.apm_vendhist01">VENDOR_FIRM_ID  </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.apm_vendhist02">
+			<DD_TABLE_ALIAS id="ddm_keys.apm_vendhist02">APM_VENDHIST    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.apm_vendhist02">02</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.apm_vendhist02">Firm ID, Vendor ID</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.apm_vendhist02">FIRM_VENDOR_ID  </DD_KEY_ID>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
 		<ID id="ddm_key_segs">DDM_KEY_SEGS</ID>
@@ -92,6 +104,54 @@
 			<DD_SEGMENT_POS id="ddm_key_segs.apm_vendhist0003">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.apm_vendhist0003">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.apm_vendhist0003">0</DD_SEGMENT_LEN>
+		</RECORD>
+		<RECORD id="ddm_key_segs.apm_vendhist0101">
+			<DD_TABLE_ALIAS id="ddm_key_segs.apm_vendhist0101">APM_VENDHIST    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.apm_vendhist0101">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.apm_vendhist0101">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.apm_vendhist0101">VENDOR_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.apm_vendhist0101">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.apm_vendhist0101">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.apm_vendhist0101">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.apm_vendhist0101">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.apm_vendhist0101">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.apm_vendhist0101">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.apm_vendhist0102">
+			<DD_TABLE_ALIAS id="ddm_key_segs.apm_vendhist0102">APM_VENDHIST    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.apm_vendhist0102">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.apm_vendhist0102">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.apm_vendhist0102">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.apm_vendhist0102">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.apm_vendhist0102">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.apm_vendhist0102">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.apm_vendhist0102">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.apm_vendhist0102">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.apm_vendhist0102">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.apm_vendhist0201">
+			<DD_TABLE_ALIAS id="ddm_key_segs.apm_vendhist0201">APM_VENDHIST    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.apm_vendhist0201">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.apm_vendhist0201">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.apm_vendhist0201">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.apm_vendhist0201">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.apm_vendhist0201">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.apm_vendhist0201">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.apm_vendhist0201">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.apm_vendhist0201">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.apm_vendhist0201">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.apm_vendhist0202">
+			<DD_TABLE_ALIAS id="ddm_key_segs.apm_vendhist0202">APM_VENDHIST    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.apm_vendhist0202">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.apm_vendhist0202">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.apm_vendhist0202">VENDOR_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.apm_vendhist0202">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.apm_vendhist0202">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.apm_vendhist0202">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.apm_vendhist0202">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.apm_vendhist0202">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.apm_vendhist0202">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">

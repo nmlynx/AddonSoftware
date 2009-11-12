@@ -16,11 +16,11 @@
 			<ASC_LICENSE_ID id="ddm_tables.glm_acct">7BF72C176100CB915982E0D83A98F97E</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.glm_acct">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.glm_acct">20060703</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.glm_acct">20091110</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.glm_acct">20091102</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.glm_acct">235938</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.glm_acct">20090630</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.glm_acct">20091111</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.glm_acct">163818</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.glm_acct">/dev/apps/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_FTYP id="ddm_tables.glm_acct">T</DD_ATTR_FTYP>
+			<DD_ATTR_FTYP id="ddm_tables.glm_acct">G</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.glm_acct">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.glm_acct">Account Master</DD_ATTR_WINT>
 		</RECORD>
@@ -89,6 +89,10 @@
 			<DD_TABLE_ALIAS id="ddm_table_opts.glm_accta">GLM_ACCT        </DD_TABLE_ALIAS>
 			<DD_ATTR_OPTS id="ddm_table_opts.glm_accta">A</DD_ATTR_OPTS>
 		</RECORD>
+		<RECORD id="ddm_table_opts.glm_accto">
+			<DD_TABLE_ALIAS id="ddm_table_opts.glm_accto">GLM_ACCT        </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.glm_accto">O</DD_ATTR_OPTS>
+		</RECORD>
 		<RECORD id="ddm_table_opts.glm_acctp">
 			<DD_TABLE_ALIAS id="ddm_table_opts.glm_acctp">GLM_ACCT        </DD_TABLE_ALIAS>
 			<DD_ATTR_OPTS id="ddm_table_opts.glm_acctp">P</DD_ATTR_OPTS>
@@ -102,7 +106,7 @@
 		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
 		<RECORD id="ddm_table_tpls.glm_acct">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.glm_acct">GLM_ACCT        </DD_TABLE_ALIAS>
-			<DD_FILE_NAME id="ddm_table_tpls.glm_acct">       </DD_FILE_NAME>
+			<DD_FILE_NAME id="ddm_table_tpls.glm_acct">glm-01</DD_FILE_NAME>
 			<DD_TABLE_TPL id="ddm_table_tpls.glm_acct">firm_id:c(2),gl_account:c(10*),gl_acct_desc:c(35),gl_acct_type:c(1),detail_flag:c(1),reserved_str:c(27*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
@@ -119,6 +123,12 @@
 			<DD_KEY_NUMBER id="ddm_keys.glm_acct01">01</DD_KEY_NUMBER>
 			<DD_KEY_DESC id="ddm_keys.glm_acct01">Description/GL Account</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.glm_acct01">ALT_KEY_01      </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.glm_acct02">
+			<DD_TABLE_ALIAS id="ddm_keys.glm_acct02">GLM_ACCT        </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.glm_acct02">02</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.glm_acct02">Account, Firm</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.glm_acct02">ACCOUNT_FIRM    </DD_KEY_ID>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
@@ -158,6 +168,30 @@
 			<DD_KEY_NUMBER id="ddm_key_segs.glm_acct0103">01</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.glm_acct0103">03</DD_SEGMENT_SEQ>
 			<DD_SEGMENT_COL id="ddm_key_segs.glm_acct0103">GL_ACCOUNT      </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.glm_acct0201">
+			<DD_TABLE_ALIAS id="ddm_key_segs.glm_acct0201">GLM_ACCT        </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.glm_acct0201">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.glm_acct0201">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.glm_acct0201">GL_ACCOUNT</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.glm_acct0201">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.glm_acct0201">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.glm_acct0201">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.glm_acct0201">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.glm_acct0201">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.glm_acct0201">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.glm_acct0202">
+			<DD_TABLE_ALIAS id="ddm_key_segs.glm_acct0202">GLM_ACCT        </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.glm_acct0202">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.glm_acct0202">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.glm_acct0202">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.glm_acct0202">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.glm_acct0202">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.glm_acct0202">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.glm_acct0202">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.glm_acct0202">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.glm_acct0202">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
