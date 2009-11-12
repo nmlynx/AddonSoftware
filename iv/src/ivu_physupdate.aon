@@ -192,6 +192,11 @@ rem ------ End of Main Loop
 
 rem --- All done
 
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
     goto std_exit
 
 lot_ser_item_break: rem --- Lotted/Serialized Item Break, update item warehouse 
