@@ -247,12 +247,16 @@ rem --- Headings and print positions
     endif
 
     if export_format$="Y"
-        columns=14
+    	if summary
+    		columns=9
+    	else	
+	        columns=14
+	    endif    
         dim columns$[columns,10]
         columns$[0,0]="Vendor ID",          columns$[0,1]="C",columns$[0,2]="10"
         columns$[1,0]="Name",               columns$[1,1]="C",columns$[1,2]="20"
-        columns$[2,0]="Phone",              columns$[2,1]="C",columns$[2,2]="10"        
-        columns$[3,0]="Alt Seq",            columns$[3,1]="C",columns$[3,2]="10"        
+        columns$[2,0]="Phone",              columns$[2,1]="C",columns$[2,2]="10"
+        columns$[3,0]="Alt Seq",            columns$[3,1]="C",columns$[3,2]="10"
     else
         columns=12
         dim columns$[columns,10]
@@ -261,11 +265,13 @@ rem --- Headings and print positions
 
     endif    
 
-    columns$[columns-10,0]=head2$,               columns$[columns-10,1]="C",columns$[columns-10,2]="8"
-    columns$[columns-9,0]=head3$,               columns$[columns-9,1]="C",columns$[columns-9,2]="8"
-    columns$[columns-8,0]=head4$,               columns$[columns-8,1]="C",columns$[columns-8,2]="8"
-    columns$[columns-7,0]=head5$,               columns$[columns-7,1]="C",columns$[columns-7,2]="3"
-    columns$[columns-6,0]=head6$,               columns$[columns-6,1]="C",columns$[columns-6,2]="3"
+	if summary=0
+    	columns$[columns-10,0]=head2$,               columns$[columns-10,1]="C",columns$[columns-10,2]="8"
+	    columns$[columns-9,0]=head3$,               columns$[columns-9,1]="C",columns$[columns-9,2]="8"
+	    columns$[columns-8,0]=head4$,               columns$[columns-8,1]="C",columns$[columns-8,2]="8"
+	    columns$[columns-7,0]=head5$,               columns$[columns-7,1]="C",columns$[columns-7,2]="3"
+	    columns$[columns-6,0]=head6$,               columns$[columns-6,1]="C",columns$[columns-6,2]="3"
+	endif    
     columns$[columns-5,0]="Past Due",           columns$[columns-5,1]="N",columns$[columns-5,2]=str(len(m1$)-2),columns$[columns-5,3]=m1$,columns$[columns-5,10]="T"
     columns$[columns-4,0]=date1$,               columns$[columns-4,1]="N",columns$[columns-4,2]=str(len(m1$)-2),columns$[columns-4,3]=m1$,columns$[columns-4,10]="T"
     columns$[columns-3,0]=date2$,              columns$[columns-3,1]="N",columns$[columns-3,2]=str(len(m1$)-2),columns$[columns-3,3]=m1$,columns$[columns-3,10]="T"
@@ -419,7 +425,7 @@ rem --- Read next Invoice Header (apt-01) record
                 endif
           wend
 
-          rem --- No reason to continue if it's a sero balance invoice
+          rem --- No reason to continue if it's a zero balance invoice
 
           if it[0]=0 continue
 
@@ -608,6 +614,25 @@ vendor_break: rem --- Vendor break
                 Outvect!.addItem(str(totamt))
                 lines=lines+2
              endif
+            else
+ 			  if printed
+                totamt=0
+                for x=0 to 4
+                    totamt=totamt+vt[x]
+                next x
+    
+                OutVect!.addItem(apm01a.vendor_id$)
+                OutVect!.addItem(apm01a.vendor_name$)
+                OutVect!.addItem(phone$)
+                OutVect!.addItem(apm01a.alt_sequence$)
+                Outvect!.addItem(str(vt[0]))
+                Outvect!.addItem(str(vt[1]))
+                Outvect!.addItem(str(vt[2]))
+                Outvect!.addItem(str(vt[3]))
+                Outvect!.addItem(str(vt[4]))
+                Outvect!.addItem(str(totamt))
+                lines=lines+1
+              endif  
             endif
           endif
           break
