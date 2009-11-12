@@ -834,15 +834,15 @@ Print_Totals: rem --- Print Totals
 
         OutVect!.addItem("")
         dim out$(80)
-        out$(h0+80-10)="Extension"
+        out$(h0+73-10)="Extension"
         OutVect!.addItem(out$)
         dim out$(80)
 
-        out$(h0+80-m1)=fill(m1-1,"=")
+        out$(h0+73-m1)=fill(m1-1,"=")
         OutVect!.addItem(out$)
         dim out$(80)
-        out$(h0+71-m1)="Total:"
-        out$(h0+80-m1)=str(total:m1$)
+        out$(h0+64-m1)="Total:"
+        out$(h0+73-m1)=str(total:m1$)
         OutVect!.addItem(out$)
         l=l+4
     endif
