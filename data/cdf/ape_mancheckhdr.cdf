@@ -295,15 +295,22 @@ if callpoint!.getUserInput()="M"
 endif
 [[APE_MANCHECKHDR.CHECK_DATE.AVAL]]
 print "in check date aval"
+
 gl$=user_tpl.glint$
 ckdate$=callpoint!.getUserInput()
-if gl$="Y" 
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",ckdate$,"Y",per$,yr$,status
-	if status>99
-		callpoint!.setStatus("ABORT")
-	else
-		user_tpl.glyr$=yr$
-		user_tpl.glper$=per$
+
+if gl$="Y"
+	if user_tpl.glyr$<>""
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",ckdate$,"N",per$,yr$,status
+		if user_tpl.glyr$<>yr$ or user_tpl.glper$<>per$
+			call stbl("+DIR_PGM")+"glc_datecheck.aon",ckdate$,"Y",per$,yr$,status
+			if status>99
+				callpoint!.setStatus("ABORT")
+			else
+				user_tpl.glyr$=yr$
+				user_tpl.glper$=per$
+			endif
+		endif
 	endif
 endif
 [[APE_MANCHECKHDR.AOPT-VCMT]]
