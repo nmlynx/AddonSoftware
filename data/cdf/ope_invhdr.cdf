@@ -86,6 +86,14 @@ rem --- Are both Customer and Order entered?
 		break; rem --- exit callpoint
 	endif
 
+rem --- Credit action
+
+	rem if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
+		gosub do_credit_action
+	rem endif
+
+	rem Need to get to credit action even if nothing has been modified
+
 rem --- Invoice totals, call form
 
 	dim dflt_data$[4,1]
@@ -109,32 +117,37 @@ rem --- Invoice totals, call form
 :		user_tpl$,
 :		UserObj!
 
-rem --- Set return values
+rem --- Get disk record
+
+	file_name$  = "OPE_ORDHDR"
+	ordhdr_dev  = fnget_dev(file_name$)
+	ordhdr_tpl$ = fnget_tpl$(file_name$)
+	dim ordhdr_rec$:ordhdr_tpl$
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+
+rem --- Copy in any form data that's changed
+
+	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+
+rem --- Set fields from the Order Totals form and write back
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
-	callpoint!.setColumnData( "OPE_INVHDR.TOTAL_SALES", str(ordHelp!.getExtPrice()) )
-	callpoint!.setColumnData( "OPE_INVHDR.TOTAL_COST",  str(ordHelp!.getExtCost()) )
-	callpoint!.setColumnData( "OPE_INVHDR.TAXABLE_AMT", str(ordHelp!.getTaxable()) )
+	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
+	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
+	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
+	ordhdr_rec.freight_amt  = num(callpoint!.getDevObject("freight_amt"))
+	ordhdr_rec.discount_amt = num(callpoint!.getDevObject("discount_amt"))
+	ordhdr_rec.tax_amount   = num(callpoint!.getDevObject("tax_amount"))
 
-	freight_amt$  = str(callpoint!.getDevObject("freight_amt"))
-	discount_amt$ = str(callpoint!.getDevObject("discount_amt"))
-	tax_amount$   = str(callpoint!.getDevObject("tax_amount"))
+	print "---Freight Amt", num(callpoint!.getDevObject("freight_amt")); rem debug
 
-	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",  freight_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", discount_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   tax_amount$)
-
-	rem callpoint!.setStatus("SAVE;REFRESH")
-	callpoint!.setStatus("REFRESH;SETORIG")
-
-rem --- Credit action
-
-	rem if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
-		gosub do_credit_action
-	rem endif
-
-	rem Need to get to credit action even if nothing has been modified
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
 
 rem --- Cash Transaction
 

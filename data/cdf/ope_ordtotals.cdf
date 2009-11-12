@@ -1,20 +1,9 @@
 [[OPE_ORDTOTALS.BEND]]
 print "OPE_ORDTOTALS:BEND"; rem debug
 
-rem --- Send back the entered values
+rem (not called if the Run button pushed)
 
-	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
-	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
-	
-rem --- If called from the detail's BREX, the record is already saved, so save the values here
-
-	gosub get_ordhdr_rec
-	ordhdr_rec.tax_amount   = num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))
-	ordhdr_rec.freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
-	ordhdr_rec.discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record(ordhdr_dev) ordhdr_rec$
-	callpoint!.setStatus("SETORIG")
+	gosub send_back_values
 	
 	print "OPE_ORDTOTALS:END"; rem debug
 [[OPE_ORDTOTALS.ARAR]]
@@ -58,11 +47,12 @@ rem --- Get previous and current discounts
 rem --- Change discount?
 
 	msg_opt$ = ""
+	disc_per_in = 0
 
 rem --- A discount code or amount has been previously entered and the discount amt doesn't match the old discount percentage
 
 	if (user_tpl.prev_disc_code$ <> "" or ordhdr_rec.discount_amt <> 0) and 
-:		(user_tpl.prev_sales_total = 0 or ordhdr_rec.discount_amt <> round(old_disc_per * user_tpl.prev_sales_total / 100, 2))
+:		(user_tpl.prev_sales_total = 0 or round(ordhdr_rec.discount_amt, 2) <> round(old_disc_per * user_tpl.prev_sales_total / 100, 2))
 :	then 
 		saved_new_disc = new_disc_per
 
@@ -106,18 +96,28 @@ rem --- A discount code or amount has been previously entered and the discount a
 rem --- Show Discount, Tax & Cash Receipt
 
 	user_tpl.prev_disc_code$ = ordhdr_rec.disc_code$
+
+	if disp_per_in = 0 then
+		if ordHelp!.getExtPrice() <> 0 then 
+			disc_per_in = round(100 * ordhdr_rec.discount_amt / ordHelp!.getExtPrice(), 2)
+		else
+			disc_per_in = 0
+		endif
+	endif
+
 	gosub tax_calc
 	rem gosub display_fields
-
-rem --- Save freight and discount
-
-	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
-	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
 [[OPE_ORDTOTALS.ASVA]]
 print "OPE_ORDTOTALS:ASVA"; rem debug
 
 rem (Doesn't get here if you click the close button "x")
+
+	gosub send_back_values
+
+	print "OPE_ORDTOTALS:END"; rem debug
 [[OPE_ORDTOTALS.FREIGHT_AMT.AVAL]]
+print "OPE_ORDTOTALS:FREIGHT_AMT.AVAL"; rem debug
+
 rem --- Save freight and recalculate tax
 
 	gosub get_ordhdr_rec
@@ -134,6 +134,8 @@ rem --- Save freight and recalculate tax
 	gosub get_sales_tax
 	gosub tax_calc
 [[OPE_ORDTOTALS.DISCOUNT_AMT.AVAL]]
+print "OPE_ORDTOTALS:DISCOUNT_AMT.AVAL"; rem debug
+
 rem --- Save discount and recalculate tax
 
 	gosub get_ordhdr_rec
@@ -174,15 +176,26 @@ tax_calc: rem --- Calculate tax amount
           rem          taxcode dev, rec$, and rec2$
 rem ==========================================================================
 
+	print "in tax_calc..."; rem debug
+	print "---Taxable Amt in:", ordHelp!.getTaxable(); rem debug
+
 	if ordHelp!.getTaxable() <> 0 then 
 		ordhdr_rec.taxable_amt = round(ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100, 2)
 	else
 		ordhdr_rec.taxable_amt = 0
 	endif
 
-	if taxcode_rec.tax_frt_flag$ = "Y" then ordhdr_rec.taxable_amt = ordhdr_rec.taxable_amt + ordhdr_rec.freight_amt
+	print "---Taxable Amt after discount (", disc_per_in, "):", ordhdr_rec.taxable_amt; rem debug
+
+	if taxcode_rec.tax_frt_flag$ = "Y" then 
+		ordhdr_rec.taxable_amt = ordhdr_rec.taxable_amt + ordhdr_rec.freight_amt
+		print "---Taxable Amt plus Freight (", ordhdr_rec.freight_amt, "):", ordhdr_rec.taxable_amt; rem debug
+	endif
+
 	ordhdr_rec.tax_amount = 0
 	tax_amt = round(taxcode_rec.tax_rate * ordhdr_rec.taxable_amt / 100, 2)
+
+	print "---Tax Amt: ", tax_amt; rem debug
 	
 	if taxcode_rec.op_max_limit <> 0 and abs(tax_amt) > taxcode_rec.op_max_limit then
 		tax_amt = taxcode_rec.op_max_limit * sgn(tax_amt)
@@ -209,7 +222,7 @@ rem ==========================================================================
 		endif
 
 		ordhdr_rec.tax_amount = ordhdr_rec.tax_amount + tax_amt
-		print "---Tax code ", tax_code$, ", amount:", tax_amt; rem debug
+		print "---Level :", i, ", Tax code ", tax_code$, ", amount:", tax_amt; rem debug
 	next i
 
 rem --- Correct penny rounding errors
@@ -221,7 +234,8 @@ rem --- Correct penny rounding errors
 	callpoint!.setDevObject("tax_amount", ordhdr_rec.tax_amount$)
 	callpoint!.setStatus("REFRESH")
 	print "---Total tax amount:", ordhdr_rec.tax_amount; rem debug
-	
+	print "out"; rem debug	
+
 	return
 
 rem ==========================================================================
@@ -250,5 +264,15 @@ rem ==========================================================================
 	dim ordhdr_rec$:fnget_tpl$(file_name$)
 	ordhdr_dev = fnget_dev(file_name$)
 	find record (ordhdr_dev, key=firm_id$+"  "+ordHelp!.getCust_id()+ordHelp!.getOrder_no()) ordhdr_rec$
+
+	return
+
+rem ==========================================================================
+send_back_values: rem --- Send back the entered values
+rem ==========================================================================
+
+	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))
 
 	return
