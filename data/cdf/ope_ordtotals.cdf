@@ -159,7 +159,7 @@ display_fields: rem --- Display fields ***NOT USED***
                 rem          ordHelp! with totalSalesDisk() calculated
 rem ==========================================================================
 
-	callpoint!.setColumnData("OPE_ORDTOTALS.TOTAL_SALES",  str( ordHelp!.getExtPrice() ))
+	callpoint!.setColumnData("OPE_ORDTOTALS.TOTAL_SALES",  str(ordHelp!.getExtPrice()) )
 	callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
 	callpoint!.setColumnData("OPE_ORDTOTALS.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
 	callpoint!.setColumnData("OPE_ORDTOTALS.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
@@ -257,6 +257,11 @@ get_ordhdr_rec: rem --- Get order header record and order helper object
                 rem     OUT: ordHelp!
                 rem          ordhdr_rec$
 rem ==========================================================================
+
+rem --- Note: although the order header record is retrieved and used, it is 
+rem     not written back to disk.  This is done in the callers (OPE_ORDHDR and
+rem     OPE_INVHDR).  The values are passed back via the ordHelp! object or
+rem     the DevObject method.
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))	
 
