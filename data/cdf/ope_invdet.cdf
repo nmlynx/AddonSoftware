@@ -298,6 +298,7 @@ rem --- Reprice
 		if qty_ord then 
 			gosub pricing
 			callpoint!.setColumnData("OPE_INVDET.MAN_PRICE", "N")
+			gosub manual_price_flag
 		endif
 	endif
 [[OPE_INVDET.STD_LIST_PRC.AVAL]]
@@ -921,7 +922,7 @@ rem ==========================================================================
 	callpoint!.setHeaderColumnData("OPE_INVHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
 
-return
+	return
 
 rem ==========================================================================
 calc_grid_totals: rem --- Roll thru all detail line, totaling ext_price
@@ -936,7 +937,7 @@ rem ==========================================================================
 		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
 	endif
 
-return
+	return
 
 rem ==========================================================================
 pricing: rem --- Call Pricing routine
@@ -994,7 +995,9 @@ rem --- Recalc and display extended price
 	unit_price = price
 	gosub disp_ext_amt
 
-return
+	user_tpl.prev_unitprice = unit_price
+
+	return
 
 rem ==========================================================================
 set_avail: rem --- Set data in Availability window
@@ -1088,7 +1091,7 @@ rem ==========================================================================
 		gosub set_avail
 	endif
 
-return
+	return
 
 rem ==========================================================================
 uncommit_iv: rem --- Uncommit Inventory
@@ -1141,7 +1144,7 @@ print "Det: in uncommit_iv"; rem deebug
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 disable_by_linetype: rem --- Set enable/disable based on line type
@@ -1209,7 +1212,7 @@ rem --- Disable Back orders if necessary
 		util.enableGridCell(Form!, user_tpl.bo_col, callpoint!.getValidRow())
 	endif
 
-return
+	return
 
 rem ===========================================================================
 check_item_whse: rem --- Check that a warehouse record exists for this item
@@ -1296,7 +1299,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 able_lot_button: rem --- Enable/disable Lot/Serial button
@@ -1352,7 +1355,7 @@ rem ==========================================================================
 	callpoint!.setStatus("MODIFIED")
 	rem --- gosub disp_grid_totals --- can't go here because the status of MODIFIED hasn't taken effect
 
-return
+	return
 
 rem ==========================================================================
 set_item_taxable: rem --- Set the item taxable flag
@@ -1370,7 +1373,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 credit_exceeded: rem --- Credit Limit Exceeded (ope_cd, 5500-5599)
@@ -1387,7 +1390,7 @@ rem ==========================================================================
 		callpoint!.setDevObject("over_credit_limit", "1")
 	endif
 
-return
+	return
 
 rem ==========================================================================
 able_backorder: rem --- All the factors for enabling or disabling back orders
@@ -1407,7 +1410,7 @@ rem ==========================================================================
 		endif
 	endif
 
-return
+	return
 
 rem ==========================================================================
 check_if_tax: rem --- Check If Taxable
