@@ -190,6 +190,7 @@ display_form: rem --- Display
         rem --- Hold order
         
             credit_flag_in$ = "C"
+            action$ = "O"
             gosub update_order_header
             
 			break
@@ -204,6 +205,7 @@ display_form: rem --- Display
             write record (arm02_dev,key=c0$) arm02a$
             
             credit_flag_in$ = "C"
+            action$ = "C"
             gosub update_order_header
 
 			break
