@@ -103,8 +103,6 @@ rem --- Set fields from the Order Totals form and write back
 	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
 	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
 
-	print "---Freight Amt", num(callpoint!.getDevObject("freight_amt")); rem debug
-
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
 [[OPE_ORDHDR.AOPT-PRNT]]

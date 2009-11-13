@@ -296,11 +296,17 @@ rem --- Set item tax flag
 
 	gosub set_item_taxable
 [[OPE_ORDDET.AOPT-RCPR]]
+print "Det:AOPT.RCPR"; rem debug
+
 rem --- Reprice
 
 	if pos(user_tpl.line_type$="SP") then
 		qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-		if qty_ord then gosub pricing
+
+		if qty_ord then 
+			gosub pricing
+			callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "N")
+		endif
 	endif
 [[OPE_ORDDET.STD_LIST_PRC.AVAL]]
 rem --- Disable Recalc Price button
@@ -310,6 +316,7 @@ rem --- Disable Recalc Price button
 rem --- Enable the Recalc Price button
 
 	callpoint!.setOptionEnabled("RCPR",1)
+
 [[OPE_ORDDET.AWRI]]
 print "Det:AWRI"; rem debug
 
@@ -660,6 +667,7 @@ rem --- Set previous values
 	user_tpl.prev_qty_ord    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	user_tpl.prev_boqty      = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
 	user_tpl.prev_shipqty    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	user_tpl.prev_unitprice  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 
 rem --- Set buttons
 
@@ -792,28 +800,22 @@ rem --- Set header order totals
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
 print "Det:UNIT_PRICE:AVAL"; rem debug
 
-rem --- See if this should be repriced
-rem 	if num(callpoint!.getUserInput())<0
-rem 		dim op_chans[6]
-rem 		op_chans[1]=fnget_dev("IVM_ITEMMAST")
-rem 		op_chans[2]=fnget_dev("IVM_ITEMWHSE")
-rem 		op_chans[4]=fnget_dev("IVM_ITEMPRIC")
-rem 		op_chans[5]=fnget_dev("ARS_PARAMS")
-rem 		op_chans[6]=fnget_dev("IVS_PARAMS")
-rem 		whs$=callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
-rem 		item$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-rem 		listcd$=""
-rem 		cust$=callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
-rem 		date$=user_tpl.order_date$
-rem 		priccd$=user_tpl.price_code$
-rem 		ordqty=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-rem 		type_price$=""
-rem 		call stbl("+DIR_PGM")+"opc_pc.aon",op_chans[all],firm_id$,whs$,item$,listcd$,cust$,date$,priccd$,ordqty,type_price$,price,disc,status
-rem 		callpoint!.setUserInput(str(price))
-rem 	endif
+rem --- Set Manual Price flag and round price
+	
+	unit_price = round(num(callpoint!.getUserInput()), 2)
+	callpoint!.setUserInput(str(unit_price))
+
+	if pos(user_tpl.line_type$="SP") and 
+:		user_tpl.prev_unitprice 		and 
+:		unit_price <> user_tpl.prev_unitprice 
+:	then 
+		callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "Y")
+		gosub manual_price_flag
+	endif
+
+rem --- Display Extended Price
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
-	unit_price  = num(callpoint!.getUserInput())
 	gosub disp_ext_amt
 [[OPE_ORDDET.AUDE]]
 print "Det:AUDE"; rem debug
@@ -935,7 +937,7 @@ rem ==========================================================================
 
 	gosub calc_grid_totals
 
-	tamt! = UserObj!.getItem(num(user_tpl.ord_tot_1$))
+	tamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
 	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
@@ -1065,20 +1067,31 @@ rem ==========================================================================
 		avail$[6] = ivm01a.item_type$
 	endif
 
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText(avail$[1])
-	userObj!.getItem(num(user_tpl.avail_comm$)).setText(avail$[2])
-	userObj!.getItem(num(user_tpl.avail_avail$)).setText(avail$[3])
-	userObj!.getItem(num(user_tpl.avail_oo$)).setText(avail$[4])
-	userObj!.getItem(num(user_tpl.avail_wh$)).setText(avail$[5])
-	userObj!.getItem(num(user_tpl.avail_type$)).setText(avail$[6])
+	userObj!.getItem(user_tpl.avail_oh).setText(avail$[1])
+	userObj!.getItem(user_tpl.avail_comm).setText(avail$[2])
+	userObj!.getItem(user_tpl.avail_avail).setText(avail$[3])
+	userObj!.getItem(user_tpl.avail_oo).setText(avail$[4])
+	userObj!.getItem(user_tpl.avail_wh).setText(avail$[5])
+	userObj!.getItem(user_tpl.avail_type).setText(avail$[6])
 
-	rem --- Set Dropship flag
+	if user_tpl.line_dropship$ = "Y" then
+		userObj!.getItem(user_tpl.dropship_flag).setText("**Dropship**")
+	else
+		userObj!.getItem(user_tpl.dropship_flag).setText("")
+	endif
 
-	dropship_idx = num(user_tpl.dropship_flag$)
-	userObj!.getItem(dropship_idx).setText("")
+	gosub manual_price_flag
 
-	if user_tpl.line_dropship$="Y"
-		userObj!.getItem(dropship_idx).setText("**Dropship**")
+	return
+
+rem ==========================================================================
+manual_price_flag: rem --- Set manual price flag
+rem ==========================================================================
+
+	if callpoint!.getColumnData("OPE_ORDDET.MAN_PRICE") = "Y" then 
+		userObj!.getItem(user_tpl.manual_price).setText("**Manual Price**")
+	else
+		userObj!.getItem(user_tpl.manual_price).setText("")
 	endif
 
 	return
@@ -1087,13 +1100,14 @@ rem ==========================================================================
 clear_avail: rem --- Clear Availability Window
 rem ==========================================================================
 
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_avail$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
-	userObj!.getItem(num(user_tpl.dropship_flag$)).setText("")
+	userObj!.getItem(user_tpl.avail_oh).setText("")
+	userObj!.getItem(user_tpl.avail_comm).setText("")
+	userObj!.getItem(user_tpl.avail_avail).setText("")
+	userObj!.getItem(user_tpl.avail_oo).setText("")
+	userObj!.getItem(user_tpl.avail_wh).setText("")
+	userObj!.getItem(user_tpl.avail_type).setText("")
+	userObj!.getItem(user_tpl.dropship_flag).setText("")
+	userObj!.getItem(user_tpl.manual_price).setText("")
 
 	return
 
