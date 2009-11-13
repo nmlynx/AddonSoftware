@@ -646,7 +646,7 @@ rem --- Set previous values
 	user_tpl.prev_qty_ord    = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 	user_tpl.prev_boqty      = num(callpoint!.getColumnData("OPE_INVDET.QTY_BACKORD"))
 	user_tpl.prev_shipqty    = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
-	user_tpl.prev_unitprice  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	user_tpl.prev_unitprice  = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
 
 rem --- Set buttons
 
@@ -1056,7 +1056,7 @@ rem ==========================================================================
 manual_price_flag: rem --- Set manual price flag
 rem ==========================================================================
 
-	if callpoint!.getColumnData("OPE_ORDDET.MAN_PRICE") = "Y" then 
+	if callpoint!.getColumnData("OPE_INVDET.MAN_PRICE") = "Y" then 
 		userObj!.getItem(user_tpl.manual_price).setText("**Manual Price**")
 	else
 		userObj!.getItem(user_tpl.manual_price).setText("")
