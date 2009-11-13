@@ -60,9 +60,24 @@ rem --- Print a counter Invoice
 		gosub make_invoice
 	endif
 
-	gosub do_invoice
-	print "---Print Status: ", callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"); rem debug
-	callpoint!.setStatus("NEWREC")
+	if user_tpl.credit_installed$ <> "Y" then
+		gosub do_invoice
+		callpoint!.setStatus("NEWREC")
+	else
+		gosub check_print_status
+		gosub do_credit_action
+
+		if action$ = "X" or action$ = "" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS")<>"Y" then 
+			gosub do_invoice
+			callpoint!.setStatus("NEWREC")
+		else
+			print "---Not printing because of credit action"; rem debug
+		endif
+	endif
+
+
+
+
 [[OPE_INVHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
@@ -1568,6 +1583,35 @@ rem ==========================================================================
    callpoint!.setStatus("SAVE")
 
 	return 
+
+rem ==========================================================================
+check_print_status: rem --- Set print status to N and write
+rem ==========================================================================
+
+	print "in check_print_status..."; rem debug
+
+	if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then
+		print "---Setting print status to ""N"""
+		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
+		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	rem --- Write flag to file so opc_creditaction can see it
+
+		file_name$ = "OPE_ORDHDR"
+		ordhdr_dev = fnget_dev(file_name$)
+		dim ordhdr_rec$:fnget_tpl$(file_name$)
+		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+		ordhdr_rec.print_status$ = "N"
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")
+	endif
+
+	print "out"; rem debug
+
+	return
+
 
 rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
