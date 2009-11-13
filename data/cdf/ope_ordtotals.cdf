@@ -234,7 +234,6 @@ rem --- Correct penny rounding errors
 	if adj_amt then print "---Adjustment amount:", adj_amt; rem debug
 	if adj_amt then ordhdr_rec.tax_amount = ordhdr_rec.tax_amount + adj_amt
 	callpoint!.setColumnData("OPE_ORDTOTALS.TAX_AMOUNT", ordhdr_rec.tax_amount$)
-	callpoint!.setDevObject("tax_amount", ordhdr_rec.tax_amount$)
 	callpoint!.setStatus("REFRESH")
 	print "---Total tax amount:", ordhdr_rec.tax_amount; rem debug
 	print "out"; rem debug	
@@ -263,8 +262,7 @@ rem ==========================================================================
 
 rem --- Note: although the order header record is retrieved and used, it is 
 rem     not written back to disk.  This is done in the callers (OPE_ORDHDR and
-rem     OPE_INVHDR).  The values are passed back via the ordHelp! object or
-rem     the DevObject method.
+rem     OPE_INVHDR).  The values are passed back via the ordHelp! object 
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))	
 
@@ -282,5 +280,10 @@ rem ==========================================================================
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
 	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	ordHelp!.setFreight(   num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT")) )
+	ordHelp!.setDiscount(  num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT")) )
+	ordHelp!.setTaxAmount( num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT")) )
 
 	return
