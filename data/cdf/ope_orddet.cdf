@@ -306,6 +306,7 @@ rem --- Reprice
 		if qty_ord then 
 			gosub pricing
 			callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "N")
+			gosub manual_price_flag
 		endif
 	endif
 [[OPE_ORDDET.STD_LIST_PRC.AVAL]]
@@ -1023,6 +1024,8 @@ rem --- Recalc and display extended price
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	unit_price = price
 	gosub disp_ext_amt
+
+	user_tpl.prev_unitprice = unit_price
 
 	print "---Price Out:", price
 	print "---Discount :", disc
