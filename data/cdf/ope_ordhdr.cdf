@@ -99,9 +99,9 @@ rem --- Set fields from the Order Totals form and write back
 	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
 	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
 	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
-	ordhdr_rec.freight_amt  = num(callpoint!.getDevObject("freight_amt"))
-	ordhdr_rec.discount_amt = num(callpoint!.getDevObject("discount_amt"))
-	ordhdr_rec.tax_amount   = num(callpoint!.getDevObject("tax_amount"))
+	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
+	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
+	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
 
 	print "---Freight Amt", num(callpoint!.getDevObject("freight_amt")); rem debug
 
@@ -534,7 +534,8 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$0000$))
 	userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
-	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Dropship text
+	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Dropship text (8)
+	userObj!.addItem(mwin!.addStaticText(15108,695,40,160,15,"",$0000$)); rem Manual Price  (9)
 [[OPE_ORDHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
@@ -1727,12 +1728,14 @@ rem ==========================================================================
 clear_avail: rem --- Clear Availability Information
 rem ==========================================================================
 
-	userObj!.getItem(num(user_tpl.avail_oh$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_comm$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_avail$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_oo$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_wh$)).setText("")
-	userObj!.getItem(num(user_tpl.avail_type$)).setText("")
+	userObj!.getItem(user_tpl.avail_oh).setText("")
+	userObj!.getItem(user_tpl.avail_comm).setText("")
+	userObj!.getItem(user_tpl.avail_avail).setText("")
+	userObj!.getItem(user_tpl.avail_oo).setText("")
+	userObj!.getItem(user_tpl.avail_wh).setText("")
+	userObj!.getItem(user_tpl.avail_type).setText("")
+	userObj!.getItem(user_tpl.dropship_flag).setText("")
+	userObj!.getItem(user_tpl.manual_price).setText("")
 
 	return
 
@@ -1928,14 +1931,15 @@ rem --- Setup user_tpl$
 :     "line_type:c(1), " +
 :     "dropship_whse:c(1), " +
 :     "def_whse:c(10), " +
-:     "avail_oh:c(5), " +
-:     "avail_comm:c(5), " +
-:     "avail_avail:c(5), " +
-:     "avail_oo:c(5), " +
-:     "avail_wh:c(5), " +
-:     "avail_type:c(5*), " +
-:     "dropship_flag:c(5*), " +
-:     "ord_tot_1:c(5*), " +
+:     "avail_oh:u(1), " +
+:     "avail_comm:u(1), " +
+:     "avail_avail:u(1), " +
+:     "avail_oo:u(1), " +
+:     "avail_wh:u(1), " +
+:     "avail_type:u(1), " +
+:     "dropship_flag:u(1), " +
+:		"manual_price:u(1), " +
+:     "ord_tot_obj:u(1), " +
 :     "price_code:c(2), " +
 :     "pricing_code:c(4), " +
 :     "order_date:c(8), " +
@@ -1973,6 +1977,7 @@ rem --- Setup user_tpl$
 :     "prev_disc_code:c(1*), "+
 :     "prev_ship_to:c(1*), " +
 :		"prev_sales_total:n(15), " +
+:		"prev_unitprice:n(15), " +
 :		"is_cash_sale:u(1), " +
 :		"detail_modified:u(1), " +
 :		"record_deleted:u(1), " +
@@ -2019,17 +2024,19 @@ rem --- Columns for the util disableCell() method
 	user_tpl.prev_disc_code$   = ""
 	user_tpl.prev_ship_to$     = ""
 	user_tpl.prev_sales_total  = 0; rem used in totals section to hold the order sale total
+	user_tpl.prev_unitprice    = 0
 
 rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 
-	user_tpl.avail_oh$      ="2"
-	user_tpl.avail_comm$    ="3"
-	user_tpl.avail_avail$   ="4"
-	user_tpl.avail_oo$      ="5"
-	user_tpl.avail_wh$      ="6"
-	user_tpl.avail_type$    ="7"
-	user_tpl.dropship_flag$ ="8"
-	user_tpl.ord_tot_1$     ="9"
+	user_tpl.avail_oh      = 2
+	user_tpl.avail_comm    = 3
+	user_tpl.avail_avail   = 4
+	user_tpl.avail_oo      = 5
+	user_tpl.avail_wh      = 6
+	user_tpl.avail_type    = 7
+	user_tpl.dropship_flag = 8
+	user_tpl.manual_price  = 9
+	user_tpl.ord_tot_obj   = 10; rem set here in BSHO
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
