@@ -205,6 +205,11 @@ rem --- Initialize Data
     zip_len = num(ars01a.zip_length$)
 
     dim headings$[headings]
+    
+    call pgmdir$+"adc_getmask.aon","","AR","I","",m0$,0,m0
+    call pgmdir$+"adc_getmask.aon","","AR","A","",m1$,0,m1
+    call pgmdir$+"adc_getmask.aon","","AR","U","",m2$,0,m2
+    call pgmdir$+"adc_getmask.aon","","AR","R","",m3$,0,m3    
 
     price_mask$=m3$
     ext_mask$=m1$
