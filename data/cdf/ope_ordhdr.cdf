@@ -29,6 +29,13 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
+rem --- Is flag down?
+
+	if !user_tpl.do_end_of_form then
+		user_tpl.do_end_of_form = 1
+		break; rem --- exit callpoint
+	endif	
+
 rem --- Are both Customer and Order entered?
 
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2) = "" or 
@@ -114,17 +121,36 @@ rem --- Print a counter Picking Slip
 :		user_tpl.pick_hold$ = "Y"         or
 :		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" 
 :	then
+
+	rem --- No need to check credit first
+
 		gosub do_picklist
+		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("NEWREC")
 	else
-		gosub check_print_status
+
+	rem --- Can't print until released from credit
+
+		gosub force_print_status
 		gosub do_credit_action
 
-		if action$ = "X" or action$ = "" then 
+		if action$ = "X" or (action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "N") then 
+
+		rem --- Couldn't do credit action or released from credit but didn't print
+
 			gosub do_picklist
+			user_tpl.do_end_of_form = 0
 			callpoint!.setStatus("NEWREC")
 		else
-			print "---Not printing because of credit action"; rem debug
+			if action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
+
+			rem --- Released from credit and did print
+
+				user_tpl.do_end_of_form = 0
+				callpoint!.setStatus("NEWREC")
+			else
+				print "---Not printing because there was no credit action"; rem debug
+			endif
 		endif
 	endif
 [[OPE_ORDHDR.BWRI]]
@@ -496,7 +522,7 @@ rem --- Create Empty Availability window
 	mwin!=cwin!.getControl(15999)
 	mwin!.setSize(grid!.getWidth(), mwin!.getHeight())
 [[OPE_ORDHDR.AFMC]]
-rem print 'show', "Hdr:AFMC"; rem debug
+print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
@@ -1672,7 +1698,7 @@ rem ==========================================================================
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 
-		print "---action$ = """,action$,""""
+		print "---action$ = """, action$, """"; rem debug
 
 		if action$ = "D" then 
 			callpoint!.setStatus("DELETE")
@@ -1738,29 +1764,31 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
-check_print_status: rem --- Set print status to N and write
+force_print_status: rem --- Force print status to N and write
 rem ==========================================================================
 
-	print "in check_print_status..."; rem debug
+	print "in force_print_status..."; rem debug
 
 	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then
-		print "---Setting print status to ""N"""
 		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
-		cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-		order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-
-	rem --- Write flag to file so opc_creditaction can see it
-
-		file_name$ = "OPE_ORDHDR"
-		ordhdr_dev = fnget_dev(file_name$)
-		dim ordhdr_rec$:fnget_tpl$(file_name$)
-		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-		ordhdr_rec.print_status$ = "N"
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		callpoint!.setStatus("SETORIG")
 	endif
 
+rem --- Write flag to file so opc_creditaction can see it
+
+	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+	file_name$ = "OPE_ORDHDR"
+	ordhdr_dev = fnget_dev(file_name$)
+	dim ordhdr_rec$:fnget_tpl$(file_name$)
+
+	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+	ordhdr_rec.print_status$ = callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+
+	callpoint!.setStatus("SETORIG")
+	print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	print "out"; rem debug
 
 	return
@@ -1979,7 +2007,8 @@ rem --- Setup user_tpl$
 :		"is_cash_sale:u(1), " +
 :		"detail_modified:u(1), " +
 :		"record_deleted:u(1), " +
-:		"item_wh_failed:u(1)"
+:		"item_wh_failed:u(1), " +
+:		"do_end_of_form:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2005,6 +2034,7 @@ rem --- Setup user_tpl$
 	user_tpl.detail_modified   = 0
 	user_tpl.record_deleted    = 0
 	user_tpl.item_wh_failed    = 1
+	user_tpl.do_end_of_form    = 1
 
 rem --- Columns for the util disableCell() method
 

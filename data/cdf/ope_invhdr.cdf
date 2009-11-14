@@ -51,6 +51,10 @@ rem --- Reset all previous values
 	user_tpl.prev_disc_code$   = ""
 	user_tpl.prev_ship_to$     = ""
 	user_tpl.prev_sales_total  = 0
+
+rem --- Reset flags
+
+	user_tpl.picklist_warned = 0
 [[OPE_INVHDR.AOPT-PRNT]]
 print "Hdr:AOPT.PRNT"; rem debug
 
@@ -61,23 +65,40 @@ rem --- Print a counter Invoice
 	endif
 
 	if user_tpl.credit_installed$ <> "Y" then
+
+	rem --- No need to check credit first
+
 		gosub do_invoice
+		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("NEWREC")
 	else
-		gosub check_print_status
-		gosub do_credit_action
 
-		if action$ = "X" or action$ = "" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS")<>"Y" then 
+	rem --- Can't print until released from credit
+
+		gosub force_print_status
+		gosub do_credit_action
+		print "---Print Status: """, callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"), """"; rem debug
+
+		if action$ = "X" or (action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "N") then 
+
+		rem --- Couldn't do credit action or released from credit but didn't print
+
 			gosub do_invoice
+			user_tpl.do_end_of_form = 0
 			callpoint!.setStatus("NEWREC")
 		else
-			print "---Not printing because of credit action"; rem debug
+			if action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then 
+
+			rem --- Released from credit and did print
+
+				print "---Release and printed, starting new record..."; rem debug
+				user_tpl.do_end_of_form = 0
+				callpoint!.setStatus("NEWREC")
+			else
+				print "---Not printing because there was no credit action"; rem debug
+			endif
 		endif
 	endif
-
-
-
-
 [[OPE_INVHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
@@ -86,6 +107,13 @@ rem --- Is record deleted?
 	if user_tpl.record_deleted then
 		break; rem --- exit callpoint
 	endif
+
+rem --- Is flag down?
+
+	if !user_tpl.do_end_of_form then
+		user_tpl.do_end_of_form = 1
+		break; rem --- exit callpoint
+	endif	
 
 rem --- Are both Customer and Order entered?
 
@@ -367,6 +395,8 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 [[OPE_INVHDR.BDEL]]
+print "Hdr:BDEL"; rem debug
+
 rem --- Retain Order?
 
 	msg_id$ = "OP_RETAIN_ORDER"
@@ -380,7 +410,7 @@ rem --- Retain Order?
 		gosub disp_message
 		reprint$ = msg_opt$
 
-	rem --- Invoice History Header
+	rem --- Invoice History Header, set to void
 
 		file_name$      = "OPT_INVHDR"
 		opt_invhdr_dev  = fnget_dev(file_name$)
@@ -396,6 +426,7 @@ rem --- Retain Order?
 
 		opt_invhdr_rec$ = field(opt_invhdr_rec$)
 		write record (opt_invhdr_dev) opt_invhdr_rec$
+		print "---Wrote Invoice History header..."; rem debug
 
 	rem --- Reset Invoice record to Order
 
@@ -414,15 +445,27 @@ rem --- Retain Order?
 		ope_invhdr_rec.tax_amount = 0
 		ope_invhdr_rec.freight_amt = 0
 		ope_invhdr_rec.discount_amt = 0
+
+		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", "")
+		callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "O")
+		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+		callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
+		callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT", "0")
+		callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", "0")
+		callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", "0")
 		
 		if reprint$ = "Y" then
 			ope_invhdr_rec.reprint_flag$ = "Y"
+			callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "Y")
 		else
 			ope_invhdr_rec.reprint_flag$ = ""
+			callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "")
 		endif
 
 		ope_invhdr_rec$ = field(ope_invhdr_rec$)
 		write record (ope_invhdr_dev) ope_invhdr_rec$
+		callpoint!.setStatus("SETORIG")
+		print "---Wrote Invoice->Order header..."; rem debug
 
 	rem --- Reset the print file
 
@@ -441,8 +484,11 @@ rem --- Retain Order?
 			write record (prntlist_dev) prntlist_rec$
 		endif
 
+		print "---Reset Print file..."; rem debug
+
 	rem --- All Done
 
+		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("NEWREC")
 		break; rem --- exit callpoint
 
@@ -1210,9 +1256,11 @@ rem ==========================================================================
 	ordinv_flag$  = callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")
 
 	print "---Print status: """, print_status$, """"; rem debug
+	print "---picklist_warned flag:", user_tpl.picklist_warned; rem debug
 		 
 	if ordinv_flag$ = "O" then 
-		if print_status$ <> "Y" then 
+		if print_status$ <> "Y" and !user_tpl.picklist_warned then 
+			user_tpl.picklist_warned = 1
 			msg_id$ = "OP_PICKLIST_NOT_DONE"
 			gosub disp_message
 
@@ -1398,6 +1446,7 @@ rem ==========================================================================
 			ope01a.total_sales     = ope01a.total_sales*line_sign
 
 			write record (ope01_dev) ope01a$
+			callpoint!.setStatus("SETORIG")
 
 			user_tpl.price_code$   = ope01a.price_code$
 			user_tpl.pricing_code$ = ope01a.pricing_code$
@@ -1585,33 +1634,34 @@ rem ==========================================================================
 	return 
 
 rem ==========================================================================
-check_print_status: rem --- Set print status to N and write
+force_print_status: rem --- Force print status to N and write
 rem ==========================================================================
 
-	print "in check_print_status..."; rem debug
+	print "in force_print_status..."; rem debug
 
 	if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then
-		print "---Setting print status to ""N"""
 		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
-		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-	rem --- Write flag to file so opc_creditaction can see it
-
-		file_name$ = "OPE_ORDHDR"
-		ordhdr_dev = fnget_dev(file_name$)
-		dim ordhdr_rec$:fnget_tpl$(file_name$)
-		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-		ordhdr_rec.print_status$ = "N"
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		callpoint!.setStatus("SETORIG")
 	endif
 
+rem --- Write flag to file so opc_creditaction can see it
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	file_name$ = "OPE_ORDHDR"
+	ordhdr_dev = fnget_dev(file_name$)
+	dim ordhdr_rec$:fnget_tpl$(file_name$)
+
+	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+	ordhdr_rec.print_status$ = callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS")
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+
+	callpoint!.setStatus("SETORIG")
+	print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	print "out"; rem debug
 
 	return
-
 
 rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
@@ -1643,7 +1693,7 @@ rem ==========================================================================
 
 	endif
 
-	print "---action$: ", action$; rem debug
+	print "---action$: """, action$, """"; rem debug
 	print "out"; rem debug
 
 	return
@@ -2002,7 +2052,9 @@ rem --- Setup user_tpl$
 :		"is_cash_sale:u(1), " +
 :		"detail_modified:u(1), " +
 :		"record_deleted:u(1), " +
-:		"item_wh_failed:u(1)"
+:		"item_wh_failed:u(1), " +
+:		"do_end_of_form:u(1), " +
+:		"picklist_warned:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2028,6 +2080,8 @@ rem --- Setup user_tpl$
 	user_tpl.detail_modified   = 0
 	user_tpl.record_deleted    = 0
 	user_tpl.item_wh_failed    = 1
+	user_tpl.do_end_of_form    = 1
+	user_tpl.picklist_warned   = 0
 
 rem --- Columns for the util disableCell() method
 
@@ -2084,7 +2138,7 @@ rem --- Set variables for called forms (OPE_ORDLSDET)
 
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
 
-rem --- Credit Mgmt
+rem --- Credit Mgmt 
 
 	callpoint!.setDevObject("over_credit_limit", "0")
 
@@ -2168,4 +2222,3 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
 	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Dropship text (8)
 	userObj!.addItem(mwin!.addStaticText(15108,695,40,160,15,"",$0000$)); rem Manual Price  (9)
-
