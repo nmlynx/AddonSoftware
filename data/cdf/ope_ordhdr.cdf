@@ -522,7 +522,7 @@ rem --- Create Empty Availability window
 	mwin!=cwin!.getControl(15999)
 	mwin!.setSize(grid!.getWidth(), mwin!.getHeight())
 [[OPE_ORDHDR.AFMC]]
-print 'show', "Hdr:AFMC"; rem debug
+rem print 'show', "Hdr:AFMC"; rem debug
 
 rem --- Inits
 
