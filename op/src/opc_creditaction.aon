@@ -100,7 +100,7 @@ rem --- Has order/invoice been printed?
         rem gosub disp_message
         
         rem if msg_opt$ = "N" then
-            action$ = "R"
+            action$ = "S"
             goto std_exit
         rem endif
     endif
@@ -190,7 +190,7 @@ display_form: rem --- Display
         rem --- Hold order
         
             credit_flag_in$ = "C"
-            action$ = "O"
+            action$ = "H"
             gosub update_order_header
             
 			break
@@ -219,6 +219,7 @@ display_form: rem --- Display
             if terms$<>"null" then
                 find record (arm10_dev, key=firm_id$+"A"+terms$, dom=*endif) arm10a$
                 credit_flag_in$ = "R"
+                action$ = "R"
                 gosub update_order_header
             endif
         
