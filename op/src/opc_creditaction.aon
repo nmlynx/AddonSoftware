@@ -72,7 +72,7 @@ rem --- Open needed files
 rem --- Retrieve parameter records
 
     find record (ars01a_dev, key=firm_id$+"AR00", err=std_missing_params) ars01a$
-    find record (ars01c_dev, key=firm_id$+"AR01", err=std_missing_params) ars01c$; rem c9$
+    find record (ars01c_dev, key=firm_id$+"AR01", err=std_missing_params) ars01c$
     find record (ivs01a_dev, key=firm_id$+"IV00", err=std_missing_params) ivs01a$
 
 rem --- Initialize Data
@@ -90,7 +90,7 @@ rem --- Initialize Data
     
     backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
     
-rem --- Has order been printed?
+rem --- Has order/invoice been printed?
 
     if ope01a.print_status$ = "Y" then
     
@@ -100,7 +100,7 @@ rem --- Has order been printed?
         rem gosub disp_message
         
         rem if msg_opt$ = "N" then
-            action$ = "R"
+            action$ = "S"
             goto std_exit
         rem endif
     endif
@@ -118,7 +118,7 @@ rem --- Check For Quotes
         goto std_exit
     endif
     
-rem --- Display Left Side, sets callpoint!.getDevObject("over_credit_limit") 
+rem --- Display credit info, sets callpoint!.getDevObject("over_credit_limit") 
 
     if ars01c.display_bal$ <> "A" then
         call pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
@@ -190,7 +190,7 @@ display_form: rem --- Display
         rem --- Hold order
         
             credit_flag_in$ = "C"
-            action$ = "O"
+            action$ = "H"
             gosub update_order_header
             
 			break
@@ -219,6 +219,7 @@ display_form: rem --- Display
             if terms$<>"null" then
                 find record (arm10_dev, key=firm_id$+"A"+terms$, dom=*endif) arm10a$
                 credit_flag_in$ = "R"
+                action$ = "R"
                 gosub update_order_header
             endif
         
