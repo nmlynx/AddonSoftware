@@ -1350,6 +1350,7 @@ rem ==========================================================================
 			ope01a.freight_amt     = ope01a.freight_amt*line_sign
 			ope01a.invoice_date$   = user_tpl.def_ship$
 			ope01a.invoice_type$   = "S"
+			ope01a.lock_status$ = "N"
 			ope01a.order_date$     = sysinfo.system_date$
 			ope01a.order_no$       = seq_id$
 			ope01a.ordinv_flag$    = "O"
