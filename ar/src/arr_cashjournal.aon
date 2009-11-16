@@ -275,7 +275,7 @@ rem --- Print the Cash Receipt Header
 
 rem --- Position Cash Receipts History Detail (art-16) file
 
-                receipt$=art06a.firm_id$+art06a.ar_type$+art06a.reserved_str$+
+                receipt$=art06a.firm_id$+art06a.ar_type$+art06a.reserved_key_01$+
 :                        art06a.customer_id$+art06a.receipt_date$+art06a.cash_rec_cd$+
 :                        art06a.ar_check_no$
                 read (art16_dev,key=receipt$,dom=*next)
@@ -338,6 +338,8 @@ rem --- Print invoice information
                       customer[2]=customer[2]+art16a.discount_amt
                       totals[1]=totals[1]+art16a.apply_amt
                       totals[2]=totals[2]+art16a.discount_amt
+                      cust_balance=cust_balance+balance
+                      rept_balance=rept_balance+balance
                       recs=recs+1
 
 rem --- Retrieve cash receipts code record using the code from
@@ -443,7 +445,8 @@ rem --- Print report totals
                 OutVect!.addItem(x$)
                 xwk=fnblank(3)
                 OutVect!.addItem(str(totals[0]))
-                xwk=fnblank(2)
+                xwk=fnblank(1)
+                outVect!.addItem(str(rept_balance))
                 OutVect!.addItem(str(totals[1]))
                 OutVect!.addItem(str(totals[2]))
                 OutVect!.addItem(str(totals[3]))
@@ -499,7 +502,8 @@ customer_break: rem --- Customer break
                   OutVect!.addItem(x$)
                   xwk=fnblank(3)
                   OutVect!.addItem(str(customer[0]))
-                  xwk=fnblank(2)
+                  xwk=fnblank(1)
+                  outVect!.addItem(str(cust_balance))
                   OutVect!.addItem(str(customer[1]))
                   OutVect!.addItem(str(customer[2]))
                   OutVect!.addItem(str(customer[3]))
@@ -510,6 +514,7 @@ customer_break: rem --- Customer break
             wend
             if done return
             dim customer[4]
+            cust_balance=0
             customer$=art06a.customer_id$
             if export_format$<>"Y"
                 xwk=fnblank(columns+1)
