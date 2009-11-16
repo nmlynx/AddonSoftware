@@ -552,7 +552,9 @@ rem --- Disable skipped columns (debug: disabled, line code won't be set yet)
 
 rem --- Backorder is zero and disabled on a new record
 
-	user_tpl.new_detail = 1
+	rem user_tpl.new_detail = 1
+	rem The above is not reliable; use callpoint!.getRecordMode()
+
 	callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
 	callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
 
@@ -594,7 +596,7 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 [[OPE_INVDET.AGRN]]
 print "Det:AGRN"; rem debug
 
-rem (Fires regardles of new or existing row.  Use user_tpl.new_detail to distinguish the two)
+rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
 
 rem --- Disable by line type
 
@@ -650,7 +652,9 @@ rem --- Set previous values
 
 rem --- Set buttons
 
-	if !user_tpl.new_detail then
+	rem if !user_tpl.new_detail then...
+
+	if callpoint!.getRecordMode() = "C" then
 		gosub enable_repricing
 		gosub able_lot_button
 		gosub enable_addl_opts
@@ -664,7 +668,8 @@ print "Det:AGRE"; rem debug
 
 rem --- Clear/set flags
 
-	user_tpl.new_detail = 0
+	rem user_tpl.new_detail = 0
+
 	this_row = callpoint!.getValidationRow()
 
 	if callpoint!.getGridRowNewStatus(this_row) <> "Y" and callpoint!.getGridRowModifyStatus(this_row) <> "Y" then
@@ -869,10 +874,12 @@ print "---Ordered:", ordqty
 
 	if user_tpl.allow_bo$ = "N" or cash_sale$ = "Y" then
 		callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
+		callpoint!.setStatus("REFRESH")
 		print "---BO set to zero"; rem debug
 	else
 		if user_tpl.prev_shipqty <> shipqty then
 			callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", str(max(0, ordqty - shipqty)) )
+			callpoint!.setStatus("REFRESH")
 			print "---BO set to", max(0, ordqty - shipqty); rem debug
 		endif
 	endif
@@ -891,21 +898,21 @@ rem --- Recalc quantities and extended price
 	ordqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 	qtyshipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
-	if boqty > ordqty - qtyshipped then
-		callpoint!.setUserInput(str(user_tpl.prev_boqty))
-		msg_id$ = "BO_EXCEEDS_ORD"
-		gosub disp_message
-		callpoint!.setStatus("ABORT-REFRESH")
-		break; rem --- exit callpoint
-	endif
-
 	if boqty = 0 then
-		callpoint!.setUserInput("0")
-		boqty = 0
+		user_tpl.prev_boqty = 0
 	endif
 
 	if boqty <> user_tpl.prev_boqty then
 		qty_shipped = ordqty - boqty
+
+		if qty_shipped < 0 then
+			callpoint!.setUserInput(str(user_tpl.prev_boqty))
+			msg_id$ = "BO_EXCEEDS_ORD"
+			gosub disp_message
+			callpoint!.setStatus("ABORT-REFRESH")
+			break; rem --- exit callpoint
+		endif
+
 		callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_shipped))
 		unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
 		gosub disp_ext_amt
@@ -1405,7 +1412,9 @@ rem ==========================================================================
 	else
 		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 1)
 
-		if user_tpl.new_detail then
+		rem if user_tpl.new_detail then...
+
+		if callpoint!.getRecordMode() = "A" then
 			callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
 		endif
 	endif
