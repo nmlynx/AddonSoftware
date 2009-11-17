@@ -270,6 +270,24 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+
+rem --- Check Ship-to's
+
+	shipto_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+
+	if shipto_type$ = "S" and cvs(callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO"), 2) = "" then
+		msg_id$ = "OP_SHIPTO_NO_MISSING"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	else
+		if shipto_type$ = "M" and cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"), 2) = "" then
+			msg_id$ = "OP_MAN_SHIPTO_NEEDED"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
+	endif
 [[OPE_ORDHDR.BNEK]]
 print "Hdr:BNEK"; rem debug
 
