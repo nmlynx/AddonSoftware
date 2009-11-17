@@ -40,32 +40,31 @@ if callpoint!.getDevObject("lotser_flag")="S"
 	callpoint!.setUserInput("1")
 endif
 [[OPE_ORDLSDET.AGRE]]
+rem --- Check quantities, do commits if this row isn't deleted
 
-rem --- Check if Serial and validate quantity
+if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" then
 
-	qty_shipped = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED"))
-	qty_ordered = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED"))
+	rem --- Check if Serial and validate quantity
 
-	gosub valid_quantities
-	if aborted then break; rem --- exit callpoint
+		qty_shipped = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED"))
+		qty_ordered = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED"))
 
-rem --- Now check for Sales Line quantity
-
-	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or
-:	   callpoint!.getGridRowModifyStatus(callpoint!.getValidationRow())="Y" then
-		line_qty = num(callpoint!.getDevObject("ord_qty"))
-		lot_qty  = qty_ordered
-
-		gosub check_avail
+		gosub valid_quantities
 		if aborted then break; rem --- exit callpoint
-	endif
 
-rem --- commit lots if inventoried and not a dropship or quote
-rem --- set 'increasing' to 0 if uncommitting prev lot/committing new one, or 1 if just doing new one
+	rem --- Now check for Sales Line quantity
 
-	rem --- Is this row deleted?
+		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or
+:		   callpoint!.getGridRowModifyStatus(callpoint!.getValidationRow())="Y" then
+			line_qty = num(callpoint!.getDevObject("ord_qty"))
+			lot_qty  = qty_ordered
 
-	if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" then 
+			gosub check_avail
+			if aborted then break; rem --- exit callpoint
+		endif
+
+	rem --- commit lots if inventoried and not a dropship or quote
+	rem --- set 'increasing' to 0 if uncommitting prev lot/committing new one, or 1 if just doing new one
 
 		if callpoint!.getDevObject("invoice_type")<>"P" and callpoint!.getDevObject("dropship_line")<>"Y" and callpoint!.getDevObject("inventoried")="Y"
 
@@ -99,7 +98,7 @@ rem --- set 'increasing' to 0 if uncommitting prev lot/committing new one, or 1 
 
 			endif
 		endif
-	endif
+endif
  
 [[OPE_ORDLSDET.BEND]]
 rem --- Check total quantity from all lines against ordered quantity and shipped
