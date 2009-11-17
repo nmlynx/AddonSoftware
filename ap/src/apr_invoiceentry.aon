@@ -137,6 +137,7 @@ rem --- Initializations
         moreheaders=1
         moredetail=1
         recs=0
+        gl_recs=0
         when$=sysinfo.system_date$
         clock$=""
         nf$="(Not on File)"
@@ -486,7 +487,7 @@ rem --- Destroy the progress meter and run the next overlay
     endif
 
     overlay$=update$
-    if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
+    if gl$="Y" and gl_recs>0 overlay$=pgmdir$+"glr_recap.aon"
     out_action$="PRT-PDF"
     next_overlay$=overlay$
     if update$=""
@@ -568,6 +569,7 @@ glrecap: rem --- Standard GL Recap Routine
 
     if gl$="Y" call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,notused,account$,gldate$,
 :                                            ref1$,ref2$,ref3$,memo$,amount,units,status
+	if amount<>0 and units<>0 gl_recs=gl_recs+1
     return
 
 Display_Message: rem --- Display Message Routine
