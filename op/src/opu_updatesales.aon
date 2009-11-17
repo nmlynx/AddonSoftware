@@ -355,13 +355,23 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_customer$="Y" and pos(arm02a.sa_flag$="PI")<>0 and pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam01a$:fattr(sam01a$)
-                find record (sam01_dev, key=firm_id$+year$+ope01a.customer_id$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam01a$
                 
                 sam01a.firm_id$=firm_id$
                 sam01a.year$=year$
                 sam01a.customer_id$=ope01a.customer_id$                
                 sam01a.product_type$=ope11a.product_type$
                 sam01a.item_id$=ope11a.item_id$
+
+                if arm02a.sa_flag$="P" or sas01a.customer_lev$="P" then 
+                    sam01a.item_id$(1)=""
+                endif
+                
+                if sas01a.customer_lev$="C" then 
+                    sam01a.product_type$=""
+                    sam01a.item_id$(1)=""
+                endif
+                
+                find record (sam01_dev, key=sam01a.firm_id$+sam01a.year$+sam01a.customer_id$+sam01a.product_type$+sam01a.item_id$, dom=*next) sam01a$             
                 
                 field sam01a$, "qty_shipped_" + str(period:"00") = nfield(sam01a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam01a$, "total_cost_" + str(period:"00") = nfield(sam01a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -376,7 +386,6 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_territory$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam02a$:fattr(sam02a$)
-                find record (sam02_dev, key=firm_id$+year$+ope01a.territory$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam02a$
                 
                 sam02a.firm_id$=firm_id$
                 sam02a.year$=year$                
@@ -384,6 +393,17 @@ rem            opt11a.item_id$=ope11a.item_id$
                 sam02a.product_type$=ope11a.product_type$
                 sam02a.item_id$=ope11a.item_id$  
                 
+                if ivm01a.sa_level$="P" or sas01a.terrcode_lev$="P" then 
+                    sam02a.item_id$(1)=""
+                endif
+                
+                if sas01a.terrcode_lev$="T" then 
+                    sam02a.product_type$=""
+                    sam02a.item_id$(1)=""
+                endif               
+                
+                find record (sam02_dev, key=sam02a.firm_id$+sam02a.year$+sam02a.territory$+sam02a.product_type$+sam02a.item_id$, dom=*next) sam02a$
+                                
                 field sam02a$, "qty_shipped_" + str(period:"00") = nfield(sam02a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam02a$, "total_cost_" + str(period:"00") = nfield(sam02a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
                 field sam02a$, "total_sales_" + str(period:"00") = nfield(sam02a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
@@ -397,14 +417,24 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_salespsn$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam03a$:fattr(sam03a$)
-                find record (sam03_dev, key=firm_id$+year$+ope01a.slspsn_code$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam03a$
                 
                 sam03a.firm_id$=firm_id$
                 sam03a.year$=year$                
                 sam03a.slspsn_code$=ope01a.slspsn_code$
                 sam03a.product_type$=ope11a.product_type$
                 sam03a.item_id$=ope11a.item_id$                
-                
+ 
+                if ivm01a.sa_level$="P" or sas01a.salespsn_lev$="P" then 
+                 sam03a.item_id$(1)=""
+                endif
+
+                if sas01a.salespsn_lev$="S" then 
+                 sam03a.product_type$=""
+                 sam03a.item_id$(1)=""
+                endif               
+
+                find record (sam03_dev, key=sam03a.firm_id$+sam03a.year$+sam03a.slspsn_code$+sam03a.product_type$+sam03a.item_id$, dom=*next) sam03a$
+                               
                 field sam03a$, "qty_shipped_" + str(period:"00") = nfield(sam03a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam03a$, "total_cost_" + str(period:"00") = nfield(sam03a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
                 field sam03a$, "total_sales_" + str(period:"00") = nfield(sam03a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
@@ -418,13 +448,23 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_customer_type$="Y" and pos(arm02a.sa_flag$="PI")<>0 and pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam04a$:fattr(sam04a$)
-                find record (sam04_dev, key=firm_id$+year$+arm02a.customer_type$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam04a$
 
                 sam04a.firm_id$=firm_id$
                 sam04a.year$=year$                
                 sam04a.customer_type$=arm02a.customer_type$
                 sam04a.product_type$=ope11a.product_type$
-                sam04a.item_id$=ope11a.item_id$                
+                sam04a.item_id$=ope11a.item_id$   
+                
+                if ivm01a.sa_level$="P" or sas01a.custtype_lev$="P" then 
+                 sam04a.item_id$(1)=""
+                endif
+
+                if sas01a.custtype_lev$="C" then 
+                 sam04a.product_type$=""
+                 sam04a.item_id$(1)=""
+                endif               
+                
+                find record (sam04_dev, key=sam04a.firm_id$+sam04a.year$+sam04a.customer_type$+sam04a.product_type$+sam04a.item_id$, dom=*next) sam04a$
                 
                 field sam04a$, "qty_shipped_" + str(period:"00") = nfield(sam04a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam04a$, "total_cost_" + str(period:"00") = nfield(sam04a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -439,13 +479,23 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_shipto$="Y" or pos(arm02a.sa_flag$="PI")<>0 or pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam05a$:fattr(sam05a$)
-                find record (sam05_dev, key=firm_id$+year$+ope01a.customer_id$+ope01a.shipto_no$+ope11a.item_id$, dom=*next) sam05a$
 
                 sam05a.firm_id$=firm_id$
                 sam05a.year$=year$                
                 sam05a.customer_id$=ope01a.customer_id$
                 sam05a.shipto_no$=ope01a.shipto_no$
-                sam05a.item_id$=ope11a.item_id$                
+                sam05a.item_id$=ope11a.item_id$  
+                
+                if sas01a.shipto_lev$="S" then 
+                 sam05a.item_id$(1)=""
+                endif
+
+                if sas01a.shipto_lev$="C" then 
+                 sam05a.shipto_no$=""
+                 sam05a.item_id$(1)=""
+                endif               
+                
+                find record (sam05_dev, key=sam05a.firm_id$+sam05a.year$+sam05a.customer_id$+sam05a.shipto_no$+sam05a.item_id$, dom=*next) sam05a$
                 
                 field sam05a$, "qty_shipped_" + str(period:"00") = nfield(sam05a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam05a$, "total_cost_" + str(period:"00") = nfield(sam05a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -460,13 +510,23 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_sic_code$="Y" and pos(ivm01a.sa_level$="PI")<>0 and cvs(arm01a.sic_code$,2)<>"" then
                 dim sam06a$:fattr(sam06a$)
-                find record (sam06_dev, key=firm_id$+year$+arm01a.sic_code$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam06a$
                 
                 sam06a.firm_id$=firm_id$
                 sam06a.year$=year$                
                 sam06a.sic_code$=arm01a.sic_code$
                 sam06a.product_type$=ope11a.product_type$
-                sam06a.item_id$=ope11a.item_id$                
+                sam06a.item_id$=ope11a.item_id$ 
+                
+                if ivm01a.sa_level$="P" or sas01a.sic_code_lev$="P" then 
+                 sam06a.item_id$(1)=""
+                endif
+
+                if sas01a.sic_code_lev$="C" then 
+                 sam06a.product_type$=""
+                 sam06a.item_id$(1)=""
+                endif                               
+
+                find record (sam06_dev, key=sam06a.firm_id$+sam06a.year$+sam06a.sic_code$+sam06a.product_type$+sam06a.item_id$, dom=*next) sam06a$
                 
                 field sam06a$, "qty_shipped_" + str(period:"00") = nfield(sam06a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam06a$, "total_cost_" + str(period:"00") = nfield(sam06a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -481,12 +541,17 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_product$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam07a$:fattr(sam07a$)
-                find record (sam07_dev, key=firm_id$+year$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam07a$
                 
                 sam07a.firm_id$=firm_id$
                 sam07a.year$=year$                
                 sam07a.product_type$=ope11a.product_type$
                 sam07a.item_id$=ope11a.item_id$ 
+
+                if ivm01a.sa_level$="P" or sas01a.product_lev$="P" then 
+                 sam07a.item_id$(1)=""
+                endif
+
+                find record (sam07_dev, key=sam07a.firm_id$+sam07a.year$+sam07a.product_type$+sam07a.item_id$, dom=*next) sam07a$
                 
                 field sam07a$, "qty_shipped_" + str(period:"00") = nfield(sam07a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam07a$, "total_cost_" + str(period:"00") = nfield(sam07a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -501,13 +566,23 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_whse$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam08a$:fattr(sam08a$)
-                find record (sam08_dev, key=firm_id$+year$+ope11a.warehouse_id$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam08a$
                 
                 sam08a.firm_id$=firm_id$
                 sam08a.year$=year$                
                 sam08a.warehouse_id$=ope11a.warehouse_id$
                 sam08a.product_type$=ope11a.product_type$
-                sam08a.item_id$=ope11a.item_id$                
+                sam08a.item_id$=ope11a.item_id$   
+                
+                if ivm01a.sa_level$="P" or sas01a.whse_lev$="P" then 
+                 sam08a.item_id$(1)=""
+                endif
+
+                if sas01a.whse_lev$="W" then 
+                 sam08a.product_type$=""
+                 sam08a.item_id$(1)=""
+                endif                               
+                
+                find record (sam08_dev, key=sam08a.firm_id$+sam08a.year$+sam08a.warehouse_id$+sam08a.product_type$+sam08a.item_id$, dom=*next) sam08a$
 
                 field sam08a$, "qty_shipped_" + str(period:"00") = nfield(sam08a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam08a$, "total_cost_" + str(period:"00") = nfield(sam08a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -522,13 +597,23 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_vendor$="Y" and pos(ivm01a.sa_level$="PI")<>0 and cvs(vendor$,2)<>"" then
                 dim sam09a$:fattr(sam09a$)
-                find record (sam09_dev, key=firm_id$+year$+vendor$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam09a$
 
                 sam09a.firm_id$=firm_id$
                 sam09a.year$=year$                
                 sam09a.vendor_id$=vendor$
                 sam09a.product_type$=ope11a.product_type$
-                sam09a.item_id$=ope11a.item_id$                
+                sam09a.item_id$=ope11a.item_id$
+                
+                if ivm01a.sa_level$="P" or sas01a.vendor_lev$="P" then 
+                 sam09a.item_id$(1)=""
+                endif
+
+                if sas01a.vendor_lev$="V" then 
+                 sam09a.product_type$=""
+                 sam09a.item_id$(1)=""
+                endif                                               
+
+                find record (sam09_dev, key=sam09a.firm_id$+sam09a.year$+sam09a.vendor_id$+sam09a.product_type$+sam09a.item_id$, dom=*next) sam09a$
 
                 field sam09a$, "qty_shipped_" + str(period:"00") = nfield(sam09a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam09a$, "total_cost_" + str(period:"00") = nfield(sam09a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -543,13 +628,23 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_dist_code$="Y" and pos(ivm01a.sa_level$="PI")<>0 then
                 dim sam10a$:fattr(sam10a$)
-                find record (sam10_dev, key=firm_id$+year$+ope01a.ar_dist_code$+ope11a.product_type$+ope11a.item_id$, dom=*next) sam10a$
 
                 sam10a.firm_id$=firm_id$
                 sam10a.year$=year$                
                 sam10a.ar_dist_code$=ope01a.ar_dist_code$
                 sam10a.product_type$=ope11a.product_type$
                 sam10a.item_id$=ope11a.item_id$                
+
+                if ivm01a.sa_level$="P" or sas01a.distcode_lev$="P" then 
+                 sam10a.item_id$(1)=""
+                endif
+
+                if sas01a.distcode_lev$="D" then 
+                 sam10a.product_type$=""
+                 sam10a.item_id$(1)=""
+                endif                                               
+
+                find record (sam10_dev, key=sam10a.firm_id$+sam10a.year$+sam10a.ar_dist_code$+sam10a.product_type$+sam10a.item_id$, dom=*next) sam10a$
 
                 field sam10a$, "qty_shipped_" + str(period:"00") = nfield(sam10a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam10a$, "total_cost_" + str(period:"00") = nfield(sam10a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
@@ -564,12 +659,17 @@ rem            opt11a.item_id$=ope11a.item_id$
 
             if sas01a.by_nonstock$="Y" and opm02a.line_type$="N" then
                 dim sam11a$:fattr(sam11a$)
-                find record (sam11_dev, key=firm_id$+year$+ope11a.product_type$+ope11a.order_memo$, dom=*next) sam11a$
 
                 sam11a.firm_id$=firm_id$
                 sam11a.year$=year$                
                 sam11a.product_type$=ope11a.product_type$
                 sam11a.nonstock_no$=ope11a.order_memo$
+
+                if sas01a.nonstock_lev$="P" then 
+                 sam11a.nonstock_no$(1)=""
+                endif
+                
+                find record (sam11_dev, key=sam11a.firm_id$+sam11a.year$+sam11a.product_type$+sam11a.nonstock_no$, dom=*next) sam11a$
 
                 field sam11a$, "qty_shipped_" + str(period:"00") = nfield(sam11a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
                 field sam11a$, "total_cost_" + str(period:"00") = nfield(sam11a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
