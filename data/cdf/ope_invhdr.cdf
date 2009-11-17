@@ -364,6 +364,8 @@ rem --- Credit check?
 		callpoint!.setStatus("ACTIVATE")
 	endif
 [[OPE_INVHDR.APFE]]
+print "Hdr:APFE"; rem debug
+
 rem --- Enable / Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",1)
@@ -371,22 +373,23 @@ rem --- Enable / Disable buttons
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
-		callpoint!.setOptionEnabled("MINV",0)
 		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("MINV",0)
 	else
-		if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
-			callpoint!.setOptionEnabled("MINV",1)
-		else
-			callpoint!.setOptionEnabled("MINV",0)
-		endif
-		
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
 			callpoint!.setOptionEnabled("PRNT",0)
 		else
 			callpoint!.setOptionEnabled("PRNT",1)
+
+			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
+				callpoint!.setOptionEnabled("MINV",1)	
+			endif
 		endif
 	endif
+
 [[OPE_INVHDR.BPFX]]
+print "Hdr:BPFX"; rem debug
+
 rem --- Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",0)
@@ -394,6 +397,8 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+
+	print "---Make Invoice disabled"; rem debug
 [[OPE_INVHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
