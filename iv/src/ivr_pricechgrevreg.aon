@@ -424,7 +424,6 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    rem run pgmdir$+"ads_process_end.aon",err=*next
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
@@ -432,6 +431,7 @@ rem #endinclude std_end.src
 std_exit_no_report:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
-    release
+    OutVect!=null()
+    goto std_exit
 
     end
