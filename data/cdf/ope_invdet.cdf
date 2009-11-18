@@ -572,7 +572,7 @@ rem --- Set defaults for new record
 	
 	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
  		callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "N")
-		callpoint!.setColumnEnabled("OPE_INVDET.QTY_SHIPPED", "0")
+		callpoint!.setColumnEnabled("OPE_INVDET.QTY_SHIPPED", 0)
 	else
 		callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "Y")
  	endif
