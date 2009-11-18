@@ -453,6 +453,10 @@ rem --- Set detail defaults and disabled columns
 		gosub set_avail	
 	endif
 
+	rem --- override min value of .001 on unit_price element; for order/invoice entry, unit price can be zero
+
+	callpoint!.setTableColumnAttribute("OPE_INVDET.UNIT_PRICE","MINV","0")
+
 rem --- Did we change rows?
 
 	currRow = callpoint!.getValidationRow()
