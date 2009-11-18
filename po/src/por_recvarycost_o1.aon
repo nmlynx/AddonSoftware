@@ -575,6 +575,7 @@ rem #endinclude std_end.src
 std_exit_no_report:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
-    release
+    OutVect!=null()
+    goto std_exit
 
     end
