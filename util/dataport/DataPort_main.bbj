@@ -12,6 +12,10 @@ rem --- the Addon dictionary files ddm-01, ddm-03 and ddm-04 and then
 rem --- copied to Addon 8 data files after performing date format changes.
 rem --- Normalization of data files will also be done in this program.
 rem
+
+use java.util.Iterator
+
+
 rem --- Dictionary file templates
 dim ddm01$:"data_name:c(12*),description:c(30),lstrev:c(6),data_type:c(1),reserved_str:c(68*),fld_length:n(3*),display_len:n(3*),reserved_num:n(1*)"
 dim ddm03$:"file_name:c(6),record_id:c(1*),description:c(30),reserved_str:c(33*),reserved_num:n(3*)"
@@ -196,6 +200,23 @@ while 1
    endif
 wend
 close (field_translations)
+
+rem --- read new_field_defaults into hash map
+
+new_field_defaults! = new java.util.HashMap()
+dim new_field_defaults$:"filename:c(16*=124),fieldname:c(16*=124),default_value:c(16*=)"
+new_field_defaults = unt
+open (new_field_defaults)filedir$+"new_field_defaults"
+while 1
+   read (new_field_defaults,end=*break)new_field_defaults$
+   if len(new_field_defaults$) then
+      keyval$ = cvs(new_field_defaults.filename$,7)+"."+cvs(new_field_defaults.fieldname$,3)
+      dataval$ = cvs(new_field_defaults.default_value$,7)
+      new_field_defaults!.put(keyval$,dataval$)
+   endif
+wend
+close (new_field_defaults)
+
 
 rem --- read po file names into hash map
 
@@ -1418,6 +1439,22 @@ check_for_definition:
           escape
        endif
     endif
+
+    rem --- see if this table has any new fields (i.e., that weren't in v6)
+    rem --- if so, set default value based on new_field_defaults flat file
+    rem --- new_rec$ only dim'd once/file, so setting the values once here should carry into every record
+    if source_version=6
+        new_rec_fields!=new_field_defaults!.keySet().iterator()
+        while new_rec_fields!.hasNext()
+            new_rec_field$ = str(new_rec_fields!.next())
+            if pos(cvs(table_alias$,3)=new_rec_field$)=1
+                new_rec_value$=new_field_defaults!.get(new_rec_field$)
+                new_rec_fieldname$=new_rec_field$(pos("."=new_rec_field$)+1)
+                field new_rec$,new_rec_fieldname$=new_rec_value$
+            endif
+        wend
+    endif
+    
 return
 
 undefined_file:
