@@ -79,9 +79,9 @@ rem --- Print a counter Invoice
 		gosub do_credit_action
 		print "---Print Status: """, callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"), """"; rem debug
 
-		if action$ = "X" or (action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "N") then 
+		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "N") then 
 
-		rem --- Couldn't do credit action or released from credit but didn't print
+		rem --- Couldn't do credit action, or did credit action w/ no problem, or released from credit but didn't print
 
 			gosub do_invoice
 			user_tpl.do_end_of_form = 0

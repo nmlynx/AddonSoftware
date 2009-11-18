@@ -165,27 +165,28 @@ rem --- Reuse backordered text control to display status since it won't show it 
         backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
         backorderedControl!.setText(status$)
         wait 1
+        action$="U"
         goto final_updates 
     endif
 
-display_form: rem --- Display	
+display_form: rem --- Display   
 
-	dim dflt_data$[2,1]
-	dflt_data$[1,0] = "STATUS_MESSAGE"
-	dflt_data$[1,1] = status$
+    dim dflt_data$[2,1]
+    dflt_data$[1,0] = "STATUS_MESSAGE"
+    dflt_data$[1,1] = status$
     dflt_data$[2,0] = "AR_TERMS_CODE"
     dflt_data$[2,1] = ope01a.terms_code$
     
     credit_action = 0
-	
-	call sypdir$+"bam_run_prog.bbj", "OPE_CREDITACTION", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
+    
+    call sypdir$+"bam_run_prog.bbj", "OPE_CREDITACTION", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]   
 
     temp$ = str(callpoint!.getDevObject("credit_action"))
     if temp$="null" or temp$="none" then goto display_form
     credit_action = num(temp$)
     
     switch credit_action 
-		case 1
+        case 1
         
         rem --- Hold order
         
@@ -193,9 +194,9 @@ display_form: rem --- Display
             action$ = "H"
             gosub update_order_header
             
-			break
+            break
             
-		case 2
+        case 2
         
         rem --- Hold The Customer
         
@@ -208,9 +209,9 @@ display_form: rem --- Display
             action$ = "C"
             gosub update_order_header
 
-			break
+            break
             
-		case 3
+        case 3
         
         rem --- Release this order
         
@@ -223,19 +224,19 @@ display_form: rem --- Display
                 gosub update_order_header
             endif
         
-			break
+            break
             
-		case 4
+        case 4
         
         rem --- Delete order
         
             action$="D"
             ope01a.credit_flag$=""
             
-			break
+            break
             
-		case default
-	swend
+        case default
+    swend
     
 final_updates: 
 
