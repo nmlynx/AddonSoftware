@@ -265,11 +265,12 @@ rem ==========================================================================
 				read record (apm01_dev, key=firm_id$+
 :					gridInvoices!.getCellText(row_no,3), dom=*next) apm01a$
 
-				if apm01a.hold_flag$="Y" then
-					msg_id$="AP_VEND_HOLD"
-					gosub disp_message
-					break
-				endif
+rem --- Following lines removed to allow payment of open invoices for a held vendor
+rem				if apm01a.hold_flag$="Y" then
+rem					msg_id$="AP_VEND_HOLD"
+rem					gosub disp_message
+rem					break
+rem				endif
 
 				read record (apt01_dev, key=firm_id$+
 :					gridInvoices!.getCellText(row_no,2)+
@@ -823,13 +824,14 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 						read record(apm01_dev, key=firm_id$+
 :							gridInvoices!.getCellText(curr_row,3), dom=*next) apm01a$
 
-						if apm01a.hold_flag$="Y" then 
-							gridInvoices!.setCellText(curr_row,9,str(0))
-							gridInvoices!.setCellText(curr_row,10,str(0))
-							msg_id$="AP_VEND_HOLD"
-							gosub disp_message
-							break
-						endif
+rem --- Following lines removed to allow payment of open invoices for a held vendor
+rem						if apm01a.hold_flag$="Y" then 
+rem							gridInvoices!.setCellText(curr_row,9,str(0))
+rem							gridInvoices!.setCellText(curr_row,10,str(0))
+rem							msg_id$="AP_VEND_HOLD"
+rem							gosub disp_message
+rem							break
+rem						endif
 
 						read record(apt01_dev, key=firm_id$+
 :							gridInvoices!.getCellText(curr_row,2)+
@@ -912,13 +914,14 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 						read record (apm01_dev, key=firm_id$+
 :							gridInvoices!.getCellText(curr_row,3), dom=*next) apm01a$
 
-						if apm01a.hold_flag$="Y" then 
-							gridInvoices!.setCellText(curr_row,9,str(0))
-							gridInvoices!.setCellText(curr_row,10,str(0))
-							msg_id$="AP_VEND_HOLD"
-							gosub disp_message
-							break
-						endif
+rem --- Following lines removed to allow payment of open invoices for a held vendor
+rem						if apm01a.hold_flag$="Y" then 
+rem							gridInvoices!.setCellText(curr_row,9,str(0))
+rem							gridInvoices!.setCellText(curr_row,10,str(0))
+rem							msg_id$="AP_VEND_HOLD"
+rem							gosub disp_message
+rem							break
+rem						endif
 
 						read record (apt01_dev, key=firm_id$+
 :							gridInvoices!.getCellText(curr_row,2)+
