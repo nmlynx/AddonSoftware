@@ -134,9 +134,9 @@ rem --- Print a counter Picking Slip
 		gosub force_print_status
 		gosub do_credit_action
 
-		if action$ = "X" or (action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "N") then 
+		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "N") then 
 
-		rem --- Couldn't do credit action or released from credit but didn't print
+		rem --- Couldn't do credit action, or did credit action w/ no problem, or released from credit but didn't print
 
 			gosub do_picklist
 			user_tpl.do_end_of_form = 0
