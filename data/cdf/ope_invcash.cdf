@@ -116,31 +116,37 @@ rem --- Validate cash receipt code
 
 rem --- Disable fields and set minimums by trans type
 
-	if cashcode_rec.trans_type$ <> "C" then 		
-		callpoint!.setColumnEnabled("OPE_INVCASH.AR_CHECK_NO", 0)
-	else
+	if cashcode_rec.trans_type$ = "C" then 		
+		callpoint!.setColumnEnabled("OPE_INVCASH.AR_CHECK_NO", 1)
+		callpoint!.setColumnEnabled("OPE_INVCASH.EXPIRE_DATE", 0)
+		callpoint!.setColumnEnabled("OPE_INVCASH.PAYMENT_ID", 1)
 		callpoint!.setTableColumnAttribute("OPE_INVCASH.AR_CHECK_NO","MINL","1")
 		callpoint!.setTableColumnAttribute("OPE_INVCASH.PAYMENT_ID","MINL","1")
-	endif
-
-	if cashcode_rec.trans_type$ <> "P" then 		
-		callpoint!.setColumnEnabled("OPE_INVCASH.EXPIRE_DATE", 0)
 	else
-		callpoint!.setTableColumnAttribute("OPE_INVCASH.EXPIRE_DATE","MINL","1")
-		callpoint!.setTableColumnAttribute("OPE_INVCASH.PAYMENT_ID","MINL","1")
-	endif
-
-	if cashcode_rec.trans_type$ = "$" then
-		callpoint!.setColumnEnabled("OPE_INVCASH.PAYMENT_ID", 0)
+		if cashcode_rec.trans_type$ = "P" then 		
+			callpoint!.setColumnEnabled("OPE_INVCASH.EXPIRE_DATE", 1)
+			callpoint!.setColumnEnabled("OPE_INVCASH.AR_CHECK_NO", 0)
+			callpoint!.setColumnEnabled("OPE_INVCASH.PAYMENT_ID", 1)
+			callpoint!.setTableColumnAttribute("OPE_INVCASH.EXPIRE_DATE","MINL","1")
+			callpoint!.setTableColumnAttribute("OPE_INVCASH.PAYMENT_ID","MINL","1")
+		else
+			if cashcode_rec.trans_type$ = "$" then
+				callpoint!.setColumnEnabled("OPE_INVCASH.PAYMENT_ID", 0)
+				callpoint!.setColumnEnabled("OPE_INVCASH.AR_CHECK_NO", 0)
+				callpoint!.setColumnEnabled("OPE_INVCASH.EXPIRE_DATE", 0)
+			endif
+		endif
 	endif
 
 rem --- Memo or Credit Card#?
 
 	if cashcode_rec.trans_type$ = "C" then 
 		util.changeText(Form!, "Credit Card or ABA No", "ABA No")
+		util.changeText(Form!, "Credit Card No", "ABA No")
 	else
 		if cashcode_rec.trans_type$ = "P" then
 			util.changeText(Form!, "Credit Card or ABA No", "Credit Card No")
+			util.changeText(Form!, "ABA No", "Credit Card No")
 		endif
 	endif
 
@@ -184,4 +190,3 @@ rem --- Open files
 rem --- Global string templates
 
 	dim user_tpl$:"ext_price:n(15), taxable:n(15), ext_cost:n(15)"
-

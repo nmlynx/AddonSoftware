@@ -1,3 +1,9 @@
+[[OPE_INVHDR.AOPT-CASH]]
+rem --- Customer wants to pay cash so launch Cash Transaction
+
+	gosub get_cash
+	user_tpl.do_end_of_form = 0
+	callpoint!.setStatus("SETORIG;NEWREC")
 [[OPE_INVHDR.AOPT-RPRT]]
 rem --- Check for printing in next batch and set
 
@@ -194,23 +200,7 @@ rem --- Cash Transaction
 
 	rem if user_tpl.cash_sale$ = "Y" then
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
-	
-		callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
-		callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-		callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-
-		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-		key_pfx$  = firm_id$+"  "+cust_id$+order_no$
-
-		call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:			"OPE_INVCASH", 
-:			stbl("+USER_ID"), 
-:			"", 
-:			key_pfx$, 
-:			table_chans$[all], 
-:			dflt_data$[all]
-
+		gosub get_cash
 	endif
 
 	callpoint!.setStatus("SETORIG")
@@ -318,6 +308,7 @@ rem --- Set flag
 	callpoint!.setOptionEnabled("RPRT",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("CASH",0)
 [[OPE_INVHDR.SHIPTO_NO.BINP]]
 rem --- Save old value
 
@@ -378,15 +369,16 @@ rem --- Enable / Disable buttons
 	else
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
 			callpoint!.setOptionEnabled("PRNT",0)
+			callpoint!.setOptionEnabled("CASH",0)
 		else
 			callpoint!.setOptionEnabled("PRNT",1)
+			callpoint!.setOptionEnabled("CASH",1)
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
 				callpoint!.setOptionEnabled("MINV",1)	
 			endif
 		endif
 	endif
-
 [[OPE_INVHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
 
@@ -397,6 +389,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("CASH",0)
 
 	print "---Make Invoice disabled"; rem debug
 
@@ -800,12 +793,13 @@ rem --- Backorder and Credit Hold
 
 rem --- Enable buttons
 
-	callpoint!.setOptionEnabled("PRNT",1)
+	callpoint!.setOptionEnabled("PRNT", 1)
+	callpoint!.setOptionEnabled("CASH", 1)
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
-		callpoint!.setOptionEnabled("MINV",0)
+		callpoint!.setOptionEnabled("MINV", 0)
 	else
-		callpoint!.setOptionEnabled("MINV",1)
+		callpoint!.setOptionEnabled("MINV", 1)
 	endif
 
 rem --- Set all previous values
@@ -973,9 +967,10 @@ rem --- New or existing order
 
 rem --- Enable/Disable buttons
 
-	callpoint!.setOptionEnabled("DINV",0)
-	callpoint!.setOptionEnabled("CINV",0)
-	callpoint!.setOptionEnabled("PRNT",1)
+	callpoint!.setOptionEnabled("DINV", 0)
+	callpoint!.setOptionEnabled("CINV", 0)
+	callpoint!.setOptionEnabled("PRNT", 1)
+	callpoint!.setOptionEnabled("CASH", 1)
 
 	callpoint!.setStatus("MODIFIED;REFRESH")
 
@@ -1009,6 +1004,7 @@ rem --- Enable Duplicate buttons, printer
 	else
 		if cust_id$<>"" then 
 			callpoint!.setOptionEnabled("PRNT",1)
+			callpoint!.setOptionEnabled("CASH",1)
 		endif
 	endif
 
@@ -1815,6 +1811,28 @@ rem ==========================================================================
 	print "out"; rem debug
 
 	return
+
+rem ==========================================================================
+get_cash: rem --- Launch the Cash Transaction form
+rem ==========================================================================
+
+	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	key_pfx$  = firm_id$+"  "+cust_id$+order_no$
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"OPE_INVCASH", 
+:		stbl("+USER_ID"), 
+:		"", 
+:		key_pfx$, 
+:		table_chans$[all], 
+:		dflt_data$[all]
+
+	return
 [[OPE_INVHDR.ASHO]]
 print "Hdr:ASHO"; rem debug
 
@@ -2182,6 +2200,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("CASH",0)
 
 	if user_tpl.credit_installed$ = "Y" then
 		callpoint!.setOptionEnabled("CRCH",1)
