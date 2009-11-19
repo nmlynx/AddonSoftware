@@ -270,6 +270,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("RPRT",0)
 
 rem --- Check Ship-to's
 
