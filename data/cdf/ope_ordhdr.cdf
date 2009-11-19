@@ -255,11 +255,13 @@ print "Hdr:APFE"; rem debug
 rem --- Enable button
 
 	callpoint!.setOptionEnabled("CRCH",1)
+	callpoint!.setOptionEnabled("RPRT",1)
 
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
 		callpoint!.setOptionEnabled("PRNT",1)
+
 	endif
 [[OPE_ORDHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
