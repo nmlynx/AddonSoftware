@@ -86,15 +86,15 @@ rem     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1
     columns=11
 
     columns$[0,0]="Customer^Number Name ",  columns$[0,1]="C",  columns$[0,2]="15"
-    columns$[1,0]="Order^Number",           columns$[1,1]="N",  columns$[1,2]="12", columns$[1,10]="T"
-    columns$[2,0]="Invoice^Number",         columns$[2,1]="N",  columns$[2,2]="10", columns$[2,10]="T"
-    columns$[3,0]="Invoice^Date",           columns$[3,1]="N",  columns$[3,2]="10", columns$[3,10]="T"
-    columns$[4,0]="By",                     columns$[4,1]="N",  columns$[4,2]="9",  columns$[4,10]="T"
-    columns$[5,0]="Sls",                    columns$[5,1]="N",  columns$[5,2]="9",  columns$[5,10]="T"
+    columns$[1,0]="Order^Number",           columns$[1,1]="N",  columns$[1,2]="12",  columns$[1,10]="T"
+    columns$[2,0]="Invoice^Number",         columns$[2,1]="N",  columns$[2,2]="10",  columns$[2,10]="T"
+    columns$[3,0]="Invoice^Date",           columns$[3,1]="N",  columns$[3,2]="10",  columns$[3,10]="T"
+    columns$[4,0]="By",                     columns$[4,1]="N",  columns$[4,2]="9",   columns$[4,10]="T"
+    columns$[5,0]="Sls",                    columns$[5,1]="N",  columns$[5,2]="9",   columns$[5,10]="T"
     columns$[6,0]="P.O^Number",             columns$[6,1]="C",  columns$[6,2]="12"
-    columns$[7,0]="Ship Via",               columns$[7,1]="N",  columns$[7,2]="12", columns$[7,10]="T"
-    columns$[8,0]="Dist^Code",              columns$[8,1]="N",  columns$[8,2]="6",  columns$[8,10]="T"
-    columns$[9,0]="Terms",                  columns$[9,1]="N",  columns$[9,2]="10", columns$[9,10]="T"
+    columns$[7,0]="Ship Via",               columns$[7,1]="N",  columns$[7,2]="12",  columns$[7,10]="T"
+    columns$[8,0]="Dist^Code",              columns$[8,1]="N",  columns$[8,2]="6",   columns$[8,10]="T"
+    columns$[9,0]="Terms",                  columns$[9,1]="N",  columns$[9,2]="10",  columns$[9,10]="T"
     columns$[10,0]="Tax^Code",              columns$[10,1]="N", columns$[10,2]="10", columns$[10,10]="T"
     columns$[11,0]="Prntd?",                columns$[11,1]="N", columns$[11,2]="10"
 
@@ -109,7 +109,7 @@ rem --- Headings
     headings$[4]="Beginning Customer : "+h4$+"      "+"Beginning Order #: "+h6$
     headings$[5]="Ending Customer     : "+h5$+"      "+"Ending Order     #: "+h7$
 
-    rt$="Report Totals"
+    rt$="Report Totals"+$00$+"R"
     
 rem --- Print positions
 
@@ -195,7 +195,13 @@ rem --- Main Loop Starts
 
         while more
             ope11a_key$=key(ope11_dev,end=*break)
-            if ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$<>ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$ then break
+            
+            if  ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$ <> 
+:               ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$ 
+:           then 
+                break
+            endif
+            
             read record (ope11_dev) ope11a$
             desc$=ope11a.order_memo$
             start_block = 1
@@ -292,7 +298,7 @@ rem --- Totals
     OutVect!.addItem(str(bot:m2$))
     OutVect!.addItem(str(shipt:m2$))
     xwk=fnblank(2)
-    OutVect!.addItem("Sales Total:")
+    OutVect!.addItem("Sales Total:"+$00$+"R")
     OutVect!.addItem(str(u[0]:m1$))
     OutVect!.addItem(str(u[1]:m1$))
     OutVect!.addItem(str(u[0]-u[1]:m1$))
@@ -300,18 +306,18 @@ rem --- Totals
     xwk=fnblank(1)
 
     xwk=fnblank(6)
-    OutVect!.addItem("Sales Discount")
+    OutVect!.addItem("Sales Discount"+$00$+"R")
     OutVect!.addItem(str(-t[2]:m1$))
     xwk=fnblank(4)
 
     xwk=fnblank(6)
-    OutVect!.addItem("Freight")
-    OutVect!.addItem(str(-t[1]:m1$))
+    OutVect!.addItem("Freight"+$00$+"R")
+    OutVect!.addItem(str(t[1]:m1$))
     xwk=fnblank(4)
 
     xwk=fnblank(6)
-    OutVect!.addItem("Sales Tax")
-    OutVect!.addItem(str(-t[4]:m1$))
+    OutVect!.addItem("Sales Tax"+$00$+"R")
+    OutVect!.addItem(str(t[4]:m1$))
     xwk=fnblank(4)
 
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
@@ -461,7 +467,7 @@ order_header: rem --- Order Header
 
     xwk=fnblank(7)
     OutVect!.addItem("Gross")
-    OutVect!.addItem("Extended")
+    OutVect!.addItem("Ext'd")
     xwk=fnblank(3)
 
     OutVect!.addItem("Cd Prd Whs Item")
@@ -579,7 +585,13 @@ print_detail: rem --- Print Detail
     OutVect!.addItem(desc$+$00$+"L")
     xwk=fnblank(10)
 
-    if pos(opm02a.line_type$="SP")<>0 and pos(ivs01a.lotser_flag$="SL")<>0 and ivm01a.lotser_item$="Y" then gosub serialized_inventory
+    if  pos(opm02a.line_type$="SP") <> 0   and 
+:       pos(ivs01a.lotser_flag$="SL") <> 0 and 
+:       ivm01a.lotser_item$="Y" 
+:   then 
+        gosub serialized_inventory
+    endif
+    
     return
 
 find_customer: rem --- Find Customer
@@ -597,9 +609,11 @@ lifo_fifo: rem --- LIFO/FIFO
         return
     endif
     ret_cost=ope11a.unit_cost
+    
     if opm02a.dropship$="Y" or pos(opm02a.line_type$="SP")=0 then
         return
     endif
+    
     lf_channels[0]=ivm04_dev
     lf_channels[1]=ivw04_dev
     lf_channels[2]=ivm02_dev
@@ -609,7 +623,19 @@ lifo_fifo: rem --- LIFO/FIFO
     lf_item$[0]=firm_id$
     lf_item$[1]=ope11a.warehouse_id$
     lf_item$[2]=ope11a.item_id$
-    call pgmdir$+"ivc_lifofifo.aon",lf_action$,"R",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],i[1],abs(ope11a.qty_shipped),ope11a.unit_cost,ret_cost,status
+    
+    call pgmdir$+"ivc_lifofifo.aon",
+:       lf_action$,
+:       "R",
+:       lf_date$,
+:       lf_channels[all],
+:       lf_tmpls$[all],
+:       lf_item$[all],
+:       i[1],
+:       abs(ope11a.qty_shipped),
+:       ope11a.unit_cost,
+:       ret_cost,
+:       status
 
     return
 
@@ -634,6 +660,7 @@ terms_code: rem --- Terms Code
     arm10a.code_desc$=nf$
     find record (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
     w$=arm10a.code_desc$
+    
     return
 
 rem --- fnBlank : Create blank cells in OutVect!. No return value
