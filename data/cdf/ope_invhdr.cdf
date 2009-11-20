@@ -1,9 +1,13 @@
 [[OPE_INVHDR.AOPT-CASH]]
-rem --- Customer wants to pay cash so launch Cash Transaction
+rem --- Customer wants to pay cash; Launch invoice totals first
+
+	gosub invoice_totals
+
+rem --- Now launch Cash Transaction
 
 	gosub get_cash
 	user_tpl.do_end_of_form = 0
-	callpoint!.setStatus("SETORIG;NEWREC")
+	callpoint!.setStatus("NEWREC")
 [[OPE_INVHDR.AOPT-RPRT]]
 rem --- Check for printing in next batch and set
 
@@ -143,58 +147,9 @@ rem --- Credit action
 
 	rem Need to get to credit action even if nothing has been modified
 
-rem --- Invoice totals, call form
+rem --- Invoice totals, call form and write values back to file
 
-	dim dflt_data$[4,1]
-	dflt_data$[1,0] = "TOTAL_SALES"
-	dflt_data$[1,1] = callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")
-	dflt_data$[2,0] = "DISCOUNT_AMT"
-	dflt_data$[2,1] = callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")
-	dflt_data$[3,0] = "TAX_AMOUNT"
-	dflt_data$[3,1] = callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT")
-	dflt_data$[4,0] = "FREIGHT_AMT"
-	dflt_data$[4,1] = callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")
-
-	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:		"OPE_ORDTOTALS", 
-:		stbl("+USER_ID"), 
-:		"", 
-:		"", 
-:		table_chans$[all],
-:		"", 
-:		dflt_data$[all],
-:		user_tpl$,
-:		UserObj!
-
-rem --- Get disk record
-
-	file_name$  = "OPE_ORDHDR"
-	ordhdr_dev  = fnget_dev(file_name$)
-	ordhdr_tpl$ = fnget_tpl$(file_name$)
-	dim ordhdr_rec$:ordhdr_tpl$
-
-	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-
-rem --- Copy in any form data that's changed
-
-	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
-
-rem --- Set fields from the Order Totals form and write back
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-
-	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
-	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
-	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
-	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
-	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
-	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
-
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
+	gosub invoice_totals
 
 rem --- Cash Transaction
 
@@ -202,8 +157,6 @@ rem --- Cash Transaction
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
 		gosub get_cash
 	endif
-
-	callpoint!.setStatus("SETORIG")
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
 
@@ -1836,6 +1789,72 @@ rem ==========================================================================
 :		key_pfx$, 
 :		table_chans$[all], 
 :		dflt_data$[all]
+
+	return
+
+rem ==========================================================================
+invoice_totals: rem --- Invoice totals, call form
+rem ==========================================================================
+
+	dim dflt_data$[4,1]
+	dflt_data$[1,0] = "TOTAL_SALES"
+	dflt_data$[1,1] = callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")
+	dflt_data$[2,0] = "DISCOUNT_AMT"
+	dflt_data$[2,1] = callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")
+	dflt_data$[3,0] = "TAX_AMOUNT"
+	dflt_data$[3,1] = callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT")
+	dflt_data$[4,0] = "FREIGHT_AMT"
+	dflt_data$[4,1] = callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"OPE_ORDTOTALS", 
+:		stbl("+USER_ID"), 
+:		"", 
+:		"", 
+:		table_chans$[all],
+:		"", 
+:		dflt_data$[all],
+:		user_tpl$,
+:		UserObj!
+
+rem --- Copy changed values back to disk: Get disk record
+
+	file_name$  = "OPE_ORDHDR"
+	ordhdr_dev  = fnget_dev(file_name$)
+	ordhdr_tpl$ = fnget_tpl$(file_name$)
+	dim ordhdr_rec$:ordhdr_tpl$
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+
+rem --- Copy in any form data that's changed
+
+	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+
+rem --- Set fields from the Order Totals form and write back
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
+	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
+	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
+	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
+	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
+	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
+
+	callpoint!.setColumnData("OPE_INVHDR.TOTAL_SALES",  ordhdr_rec.total_sales$)
+	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",   ordhdr_rec.total_cost$)
+	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",  ordhdr_rec.taxable_amt$)
+	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
+	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
+
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+
+	callpoint!.setStatus("SETORIG")
 
 	return
 [[OPE_INVHDR.ASHO]]

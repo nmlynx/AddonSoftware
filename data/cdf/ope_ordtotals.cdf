@@ -136,6 +136,7 @@ rem --- Save freight and recalculate tax
 
 	gosub get_sales_tax
 	gosub tax_calc
+	callpoint!.setStatus("REFRESH")
 [[OPE_ORDTOTALS.DISCOUNT_AMT.AVAL]]
 print "OPE_ORDTOTALS:DISCOUNT_AMT.AVAL"; rem debug
 
@@ -155,6 +156,7 @@ rem --- Save discount and recalculate tax
 
 	gosub get_sales_tax
 	gosub tax_calc
+	callpoint!.setStatus("REFRESH")
 [[OPE_ORDTOTALS.<CUSTOM>]]
 rem ==========================================================================
 display_fields: rem --- Display fields ***NOT USED***
