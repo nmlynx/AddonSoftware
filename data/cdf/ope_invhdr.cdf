@@ -372,7 +372,7 @@ rem --- Enable / Disable buttons
 			callpoint!.setOptionEnabled("CASH",0)
 		else
 			callpoint!.setOptionEnabled("PRNT",1)
-			callpoint!.setOptionEnabled("CASH",1)
+			if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH",1)
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
 				callpoint!.setOptionEnabled("MINV",1)	
@@ -796,7 +796,7 @@ rem --- Backorder and Credit Hold
 rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT", 1)
-	callpoint!.setOptionEnabled("CASH", 1)
+	if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH", 1)
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
 		callpoint!.setOptionEnabled("MINV", 0)
@@ -972,7 +972,7 @@ rem --- Enable/Disable buttons
 	callpoint!.setOptionEnabled("DINV", 0)
 	callpoint!.setOptionEnabled("CINV", 0)
 	callpoint!.setOptionEnabled("PRNT", 1)
-	callpoint!.setOptionEnabled("CASH", 1)
+	if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH", 1)
 
 	callpoint!.setStatus("MODIFIED;REFRESH")
 
@@ -1006,7 +1006,7 @@ rem --- Enable Duplicate buttons, printer
 	else
 		if cust_id$<>"" then 
 			callpoint!.setOptionEnabled("PRNT",1)
-			callpoint!.setOptionEnabled("CASH",1)
+			if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH",1)
 		endif
 	endif
 
