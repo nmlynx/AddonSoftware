@@ -337,6 +337,7 @@ rem --- Check locked status
 	gosub check_lock_flag
 
 	if locked=1 then 
+		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
@@ -774,6 +775,7 @@ rem --- Existing record
 		gosub check_lock_flag
 
 		if locked=1 then 
+			user_tpl.do_end_of_form = 0
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit callpoint
 		endif

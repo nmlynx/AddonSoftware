@@ -735,6 +735,7 @@ rem --- Check locked status
 	gosub check_lock_flag
 
 	if locked then
+		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
@@ -744,6 +745,7 @@ rem --- Check Print flag
 	gosub check_print_flag
 
 	if locked then
+		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
@@ -1207,6 +1209,7 @@ locked:
 			print "---Clear lock"; rem debug
 		else
 			locked=1
+
 		endif
 
 	endif
@@ -1221,6 +1224,7 @@ on_invoice:
 	if msg_opt$="CANCEL" then
 		locked=1
 		callpoint!.setStatus("ABORT")
+
 	endif
 
 	goto end_lock
@@ -1230,6 +1234,7 @@ update_stat:
 	msg_id$="INVOICE_IN_UPDATE"
 	gosub disp_message
 	locked=1
+
 
 end_lock:
 
