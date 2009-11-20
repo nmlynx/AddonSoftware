@@ -401,7 +401,7 @@ rem --- Main Read
         y9$(41,10) = arm10d0.gl_frgt_acct$
 
         if ope01a.cash_sale$="Y" then
-            find record (arm10d_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
+            find record (arm10c_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
             y9$(1,10)=arm10c.gl_cash_acct$
         endif
 
