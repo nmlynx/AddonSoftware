@@ -516,12 +516,12 @@ rem --- Is this item lot/serial?
 		rem          the DevObjects set below
 		rem          DevObject("lotser_flag"): set in OPE_ORDHDR
 
-			callpoint!.setDevObject("from",    "order_entry")
-			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
-			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
-			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-			callpoint!.setDevObject("dropship_line",user_tpl.line_dropship$)
-			callpoint!.setDevObject("invoice_type",str(callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")))
+			callpoint!.setDevObject("from",          "order_entry")
+			callpoint!.setDevObject("wh",            callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
+			callpoint!.setDevObject("item",          callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
+			callpoint!.setDevObject("ord_qty",       callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+			callpoint!.setDevObject("dropship_line", user_tpl.line_dropship$)
+			callpoint!.setDevObject("invoice_type",  callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE"))
 
 			grid!.focus()
 
@@ -542,12 +542,21 @@ rem --- Is this item lot/serial?
 :				table_chans$[all], 
 :				dflt_data$[all]
 
-		rem --- Updated qty shipped, extension
+		rem --- Updated qty shipped, backordered, extension
 
 			qty_shipped = num(callpoint!.getDevObject("total_shipped"))
+			qty_ordered = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+			unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
-			unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+
+			if qty_ordered > 0 then
+				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(max(qty_ordered - qty_shipped, 0)) )
+			else
+				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(min(qty_ordered - qty_shipped, 0)) )
+			endif
+
 			gosub disp_ext_amt
+			callpoint!.setStatus("REFRESH")
 
 		rem --- Return focus to where we were (Detail line grid)
 
