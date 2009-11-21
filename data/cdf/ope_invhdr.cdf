@@ -838,6 +838,8 @@ rem --- Existing record
 	rem --- Check for void
 
 		if ope01a.invoice_type$ = "V" then
+			msg_id$="OP_ORDINV_VOID"
+			gosub disp_message
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit from callpoint			
 		endif

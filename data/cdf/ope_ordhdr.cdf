@@ -716,10 +716,10 @@ rem --- Do we need to create a new order number?
 		user_tpl.user_entry$ = "Y"
 	endif
 
-rem debug
-print "   new_seq: ", new_seq$
-print "  order_no: ", order_no$
-print "user_entry: ", user_tpl.user_entry$
+	rem debug
+	print "   new_seq: ", new_seq$
+	print "  order_no: ", order_no$
+	print "user_entry: ", user_tpl.user_entry$
 
 rem --- Does order exist?
 
@@ -737,7 +737,7 @@ rem --- Does order exist?
 		found = 1
 	endif
 
-print "     found:", found; rem debug
+	print "     found:", found; rem debug
 
 rem --- A new record must be the next sequence
 
@@ -757,6 +757,8 @@ rem --- Existing record
 	rem --- Check for void
 
 		if ope01a.invoice_type$ = "V" then
+			msg_id$="OP_ORDINV_VOID"
+			gosub disp_message
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit from callpoint			
 		endif
