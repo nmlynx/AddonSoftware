@@ -1,3 +1,9 @@
+[[APE_MANCHECKHDR.VENDOR_ID.BINP]]
+rem --- set devObject with AP Type and a temp vend indicator, so if we decide to set up a temporary vendor from here,
+rem --- we'll know which AP type to use, and we can automatically set the temp vendor flag in the vendor master
+
+callpoint!.setDevObject("passed_in_temp_vend","Y")
+callpoint!.setDevObject("passed_in_AP_type",callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE"))
 [[APE_MANCHECKHDR.BEND]]
 rem --- remove software lock on batch, if batching
 
@@ -271,6 +277,7 @@ return
 		if user_tpl.multi_types$="Y"
 			msg_id$="AP_NOHIST"
 			gosub disp_message
+			callpoint!.setStatus("CLEAR;NEWREC")
 		endif
 	endif
 [[APE_MANCHECKHDR.TRANS_TYPE.AVAL]]

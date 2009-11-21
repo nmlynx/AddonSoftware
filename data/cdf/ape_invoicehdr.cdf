@@ -1,3 +1,9 @@
+[[APE_INVOICEHDR.VENDOR_ID.BINP]]
+rem --- set devObject with AP Type and a temp vend indicator, so if we decide to set up a temporary vendor from here,
+rem --- we'll know which AP type to use, and we can automatically set the temp vendor flag in the vendor master
+
+callpoint!.setDevObject("passed_in_temp_vend","Y")
+callpoint!.setDevObject("passed_in_AP_type",callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE"))
 [[APE_INVOICEHDR.BEND]]
 rem --- remove software lock on batch, if batching
 
