@@ -869,6 +869,11 @@ rem --- New record, set default
       cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","S")
+
+		rem --- Set default invoice type in OrderHelper object
+
+		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+		ordHelp!.setInv_type("S")
         
 		arm02_dev = fnget_dev("ARM_CUSTDET")
 		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
