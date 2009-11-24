@@ -823,6 +823,11 @@ rem --- Existing record
 		order_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
 
+		rem --- Set dflt invoice type in OrderHelper object
+
+		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+		ordHelp!.setInv_type("S")
+
 		arm02_dev=fnget_dev("ARM_CUSTDET")
 		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
 		read record (arm02_dev, key=firm_id$+cust_id$+"  ", dom=*next) arm02a$
