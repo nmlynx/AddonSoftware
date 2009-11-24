@@ -119,10 +119,9 @@ done: rem --- End
                         OutVect!.addItem(str(t0)+"  "+"Total Jobs")
                         xwk=fnblank(9)
            else
-                        xwk=fnblank(10)
-                        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-                        OutVect!.addItem(str(t0)+"  "+"Total Jobs")
-                        xwk=fnblank(9)
+				        msg_id$="DOC_OUTPUT_NODATA"
+				        gosub disp_message
+				        goto std_exit_no_report
            endif
              
         goto std_exit
@@ -223,6 +222,13 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
     fnend
 rem --- #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+    
 rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -280,5 +286,11 @@ std_exit: rem --- Standard program end (01Mar2006)
         release
 
 rem --- #endinclude std_end.src
+
+std_exit_no_report:
+
+        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+	    OutVect!=null()
+	    goto std_exit
 
         end
