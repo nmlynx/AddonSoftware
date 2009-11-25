@@ -174,6 +174,12 @@ print "Hdr:APOT:MINV"; rem debug
 rem --- Make order into an invoice
 
 	gosub make_invoice
+
+	if locked then
+		user_tpl.do_end_of_form = 0
+		callpoint!.setStatus("ABORT;NEWREC")
+		break; rem --- exit callpoint
+	endif
 [[OPE_INVHDR.SLSPSN_CODE.AVAL]]
 rem --- Set Commission Percent
 
@@ -694,14 +700,15 @@ rem --- Check locked status
 	endif
 
 rem --- Check Print flag
+rem --- rem'ing entire routine per VAR discussion; only check print flag when making an invoice (make invoice button)
 
-	gosub check_print_flag
+rem	gosub check_print_flag
 
-	if locked then
-		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
-	endif
+rem	if locked then
+rem		user_tpl.do_end_of_form = 0
+rem		callpoint!.setStatus("ABORT")
+rem		break; rem --- exit callpoint
+rem	endif
 
 rem --- Show customer data
 	
