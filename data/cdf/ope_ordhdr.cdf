@@ -580,8 +580,9 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$0000$))
 	userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
-	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Dropship text (8)
-	userObj!.addItem(mwin!.addStaticText(15108,695,40,160,15,"",$0000$)); rem Manual Price  (9)
+ 	userObj!.addItem(mwin!.addStaticText(15107,695,20,75,15,"",$0000$)); rem Dropship text (8)
+	userObj!.addItem(mwin!.addStaticText(15108,695,35,160,15,"",$0000$)); rem Manual Price  (9)
+ 	userObj!.addItem(mwin!.addStaticText(15109,695,50,160,15,"",$0000$)); rem Alt/Super (10)
 [[OPE_ORDHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
@@ -1791,6 +1792,7 @@ rem ==========================================================================
 	userObj!.getItem(user_tpl.avail_type).setText("")
 	userObj!.getItem(user_tpl.dropship_flag).setText("")
 	userObj!.getItem(user_tpl.manual_price).setText("")
+	userObj!.getItem(user_tpl.alt_super).setText("")
 
 	return
 
@@ -1995,7 +1997,8 @@ rem --- Setup user_tpl$
 :     "avail_wh:u(1), " +
 :     "avail_type:u(1), " +
 :     "dropship_flag:u(1), " +
-:		"manual_price:u(1), " +
+:     "manual_price:u(1), " +
+:     "alt_super:u(1), " +
 :     "ord_tot_obj:u(1), " +
 :     "price_code:c(2), " +
 :     "pricing_code:c(4), " +
@@ -2095,7 +2098,8 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	user_tpl.avail_type    = 7
 	user_tpl.dropship_flag = 8
 	user_tpl.manual_price  = 9
-	user_tpl.ord_tot_obj   = 10; rem set here in BSHO
+	user_tpl.alt_super = 10
+	user_tpl.ord_tot_obj   = 11; rem set here in BSHO
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
