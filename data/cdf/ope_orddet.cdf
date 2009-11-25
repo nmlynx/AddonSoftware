@@ -133,6 +133,8 @@ rem --- Display totals
 rem --- Display totals
 	
 	gosub disp_grid_totals
+
+
 [[OPE_ORDDET.QTY_BACKORD.AVEC]]
 rem --- Display totals
 	
@@ -232,7 +234,6 @@ rem --- Has a valid whse/item been entered?
 		warn  = 1
 		gosub check_item_whse
 	endif
-
 
 [[OPE_ORDDET.ITEM_ID.BINP]]
 user_tpl.prev_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
@@ -461,12 +462,12 @@ rem --- Set detail defaults and disabled columns
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.LINE_CODE","DFLT", user_tpl.line_code$)
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID","DFLT", user_tpl.warehouse_id$)
 
-	if user_tpl.skip_ln_code$ = "Y" then
-		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.LINE_CODE", 0)
-	endif
+rem	if user_tpl.skip_ln_code$ = "Y" then
+rem		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.LINE_CODE", 0)
+rem	endif
 
 	if user_tpl.skip_whse$ = "Y" then
-		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.WAREHOUSE_ID", 0)
+rem		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.WAREHOUSE_ID", 0)
 		item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 		wh$   = user_tpl.warehouse_id$
 		gosub set_avail	
