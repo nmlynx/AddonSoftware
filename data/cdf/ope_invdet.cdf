@@ -1068,6 +1068,22 @@ rem ==========================================================================
 		userObj!.getItem(user_tpl.dropship_flag).setText("")
 	endif
 
+ 	if good_item$="Y"
+ 		switch pos(ivm01a.alt_sup_flag$="AS")
+ 			case 1
+ 				userObj!.getItem(user_tpl.alt_super).setText("Alternate: "+cvs(ivm01a.alt_sup_item$,3))
+ 			break
+ 			case 2
+ 				userObj!.getItem(user_tpl.alt_super).setText("Superseded: "+cvs(ivm01a.alt_sup_item$,3))
+ 			break
+ 			case default
+ 				userObj!.getItem(user_tpl.alt_super).setText("")
+ 			break
+ 		swend
+	else
+		userObj!.getItem(user_tpl.alt_super).setText("")
+ 	endif
+
 	gosub manual_price_flag
 
 	return
@@ -1096,6 +1112,7 @@ rem ==========================================================================
 	userObj!.getItem(user_tpl.avail_type).setText("")
 	userObj!.getItem(user_tpl.dropship_flag).setText("")
 	userObj!.getItem(user_tpl.manual_price).setText("")
+	userObj!.getItem(user_tpl.alt_super).setText("")
 
 return
 
