@@ -308,7 +308,7 @@ no_more_receipts: rem --- No more Receipts
     if polines=0
         msg_id$="DOC_OUTPUT_NODATA"
         gosub disp_message
-        goto std_exit
+        goto std_exit_no_report
     endif
 
     if po_found
@@ -567,4 +567,9 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 rem #endinclude std_end.src
 
+std_exit_no_report:
+
+    OutVect!=null()
+    goto std_exit
+    
     end
