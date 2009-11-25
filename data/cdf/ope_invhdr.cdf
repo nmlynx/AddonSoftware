@@ -2168,7 +2168,7 @@ rem --- Setup user_tpl$
 rem --- Columns for the util disableCell() method
 
 	user_tpl.bo_col            = 9
-	user_tpl.prod_type_col     = 1
+	user_tpl.prod_type_col     = 5
 
 	user_tpl.prev_line_code$   = ""
 	user_tpl.prev_item$        = ""

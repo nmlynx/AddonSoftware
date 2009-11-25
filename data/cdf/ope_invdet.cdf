@@ -442,12 +442,12 @@ rem --- Set detail defaults and disabled columns
 	callpoint!.setTableColumnAttribute("OPE_INVDET.LINE_CODE","DFLT", user_tpl.line_code$)
 	callpoint!.setTableColumnAttribute("OPE_INVDET.WAREHOUSE_ID","DFLT", user_tpl.warehouse_id$)
 
-	if user_tpl.skip_ln_code$ = "Y" then
-		callpoint!.setColumnEnabled(-1, "OPE_INVDET.LINE_CODE", 0)
-	endif
+rem	if user_tpl.skip_ln_code$ = "Y" then
+rem		callpoint!.setColumnEnabled(-1, "OPE_INVDET.LINE_CODE", 0)
+rem	endif
 
 	if user_tpl.skip_whse$ = "Y" then
-		callpoint!.setColumnEnabled(-1, "OPE_INVDET.WAREHOUSE_ID", 0)
+rem		callpoint!.setColumnEnabled(-1, "OPE_INVDET.WAREHOUSE_ID", 0)
 		item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
 		wh$   = user_tpl.warehouse_id$
 		gosub set_avail	
