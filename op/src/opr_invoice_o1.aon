@@ -674,6 +674,10 @@ rem --- Create pages from both physical and display objects
             pdf!.setText(496, 102, 54, 102, "DUPLICATE", boldfont!, pdf!.CENTER_JUSTIFY())
         endif
         
+    rem --- Ad hoc message
+    
+        pdf!.setText(76, 108, 416, 0, adhoc_message$, italicfont!, pdf!.CENTER_JUSTIFY())
+        
     rem --- Ribbon info
 
         pdf!.drawBox(0, 234, 568, 14, light_gray!, light_gray!); rem gray bar    
