@@ -149,6 +149,10 @@ rem ==========================================================================
             #setText(p_x, p_y, 0, 0, p_text$, null(), 0, p_background_color!, null())
         methodend
         
+        method public void setText(BBjNumber p_x, BBjNumber p_y, BBjString p_text$, Font p_font!, BBjInt p_just%)
+            #setText(p_x, p_y, 0, 0, p_text$, p_font!, p_just%, null(), null())
+        methodend
+        
         method public void setText(BBjNumber p_x, BBjNumber p_y, BBjString p_text$, Font p_font!)
             #setText(p_x, p_y, 0, 0, p_text$, p_font!, 0, null(), null())
         methodend
