@@ -489,6 +489,8 @@ rem --- Did we change rows?
 		gosub set_avail
 	endif
 [[OPE_ORDDET.AOPT-LENT]]
+print "Det:AOPT.LENT"; rem debug
+
 rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
 
 	declare BBjStandardGrid grid!
@@ -534,6 +536,7 @@ rem --- Is this item lot/serial?
 			dflt_data$[3,1] = order$
 			lot_pfx$ = firm_id$+ar_type$+cust$+order$+int_seq$
 
+			print "---Launch OPE_ORDLSDET..."; rem debug
 			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :				"OPE_ORDLSDET", 
 :				stbl("+USER_ID"), 
@@ -541,6 +544,7 @@ rem --- Is this item lot/serial?
 :				lot_pfx$, 
 :				table_chans$[all], 
 :				dflt_data$[all]
+			print "---back for OPE_ORDLSDET"; rem debug
 
 		rem --- Updated qty shipped, backordered, extension
 
