@@ -64,6 +64,7 @@ rem --- Assign form input values to local variables
     endvendor$=Option!.getOptionData("VENDOR_ID_2")
     thrudate$=Option!.getOptionData("REPORT_DATE")
     export_fmt$=Option!.getOptionData("EXPORT_FMT")
+    vend_type$=Option!.getOptionData("VENDOR_TYPE")
 
 rem --- Retrieve parameter records
 
@@ -149,6 +150,9 @@ rem --- Read next Vendor Master (apm-01) record
           if pos(firm_id$=apm01_key$)<>1 break
           read record (apm01_dev,key=apm01_key$) apm01a$
           if endvendor$<>"" if apm01a.vendor_id$>endvendor$ break
+          
+          if vend_type$="P" and apm01a.temp_vend$="Y" then continue
+          if vend_type$="T" and apm01a.temp_vend$<>"Y" then continue          
 
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status 
 

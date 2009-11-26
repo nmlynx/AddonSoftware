@@ -58,6 +58,7 @@ rem --- Assign form input values to local variables
     begzip$=Option!.getOptionData("ZIP_CODE_1")
     endzip$=Option!.getOptionData("ZIP_CODE_2")
     labels=num(labels$)
+    vend_type$=Option!.getOptionData("VENDOR_TYPE")
 
 rem --- Retrieve parameter records
 
@@ -136,6 +137,9 @@ rem --- Read next Vendor Master (apm-01) record
              vendfield$=pad(cvs(field(apm01a$,keyfield$),3),endvaluelen)
              if vendfield$>endvalue$ break
           endif
+          
+          if vend_type$="P" and apm01a.temp_vend$="Y" then continue
+          if vend_type$="T" and apm01a.temp_vend$<>"Y" then continue
           
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 

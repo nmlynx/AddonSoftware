@@ -48,6 +48,7 @@ rem --- Assign form input values to local variables
 
     period$=Option!.getOptionData("PERIOD")
     year$=Option!.getOptionData("YEAR")
+    vend_type$=Option!.getOptionData("VENDOR_TYPE")
     year=num(year$)
     period=num(period$)
     call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
@@ -63,12 +64,12 @@ rem --- Retrieve parameter records
     call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
     m0=len(m0$)
     m1=len(m1$)
-    headings=2
-    if multitypes headings=3
+    headings=3
+    if multitypes headings=4
 
 rem --- Initializations
 
-    dim headings$[2],types$[4],m5$(7,"0"),underline$(m1,"-")
+    dim headings$[headings],types$[4],m5$(7,"0"),underline$(m1,"-")
     dim h[8],o[8],detail[3],totals[3],at[3],rt[3]
     vm=max(m0,8)
     done=0
@@ -86,7 +87,20 @@ rem --- Initializations
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+" For Period "+str(period)+" From "+fndate$(begdate$)+
 :                " Through "+fndate$(enddate$)
-    if multitypes then headings$[2]="[HEADER]"
+
+    if vend_type$="A" then
+        headings$[2]="All Vendors"
+    endif
+    
+    if vend_type$="P" then
+        headings$[2]="Permanent Vendors Only"
+    endif
+
+    if vend_type$="T" then
+        headings$[2]="Temporary Vendors Only"
+    endif
+
+    if multitypes then headings$[3]="[HEADER]"
     types$[0]="Unknown"
     types$[1]="Void"
     types$[2]="Reversal"
@@ -166,6 +180,13 @@ rem --- Read the next Check History (apt-05) record
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           if apt05a.check_date$<begdate$ continue
           if apt05a.check_date$>enddate$ continue
+          
+          rem --- extra apm01 read here to facilitate including/skipping vendors based on temp vend flag
+          if vend_type$<>"A"
+              read record (apm01_dev,key=firm_id$+apt05a.vendor_id$,dom=*continue)apm01a$
+              if (vend_type$="P" and apm01a.temp_vend$="Y") or (vend_type$="T" and apm01a.temp_vend$<>"Y") then continue
+          endif
+          
 
           rem --- Level breaks
 
@@ -450,6 +471,6 @@ std_exit_no_report:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
     OutVect!=null()
-	goto std_exit
+    goto std_exit
 
     end
