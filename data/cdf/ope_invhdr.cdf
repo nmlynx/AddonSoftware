@@ -1,7 +1,13 @@
+[[OPE_INVHDR.AOPT-TTLS]]
+rem --- Launch the totals form
+
+	gosub do_totals
+	user_tpl.do_totals_form = 0
+	callpoint!.setStatus("NEWREC")
 [[OPE_INVHDR.AOPT-CASH]]
 rem --- Customer wants to pay cash; Launch invoice totals first
 
-	gosub invoice_totals
+	gosub do_totals
 
 rem --- Now launch Cash Transaction
 
@@ -149,7 +155,8 @@ rem --- Credit action
 
 rem --- Invoice totals, call form and write values back to file
 
-	gosub invoice_totals
+	if user_tpl.do_totals_form then gosub do_totals
+	user_tpl.do_totals_form = 1
 
 rem --- Cash Transaction
 
@@ -268,6 +275,7 @@ rem --- Set flag
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("CASH",0)
+	callpoint!.setOptionEnabled("TTLS",0)
 [[OPE_INVHDR.SHIPTO_NO.BINP]]
 rem --- Save old value
 
@@ -331,6 +339,7 @@ rem --- Enable / Disable buttons
 			callpoint!.setOptionEnabled("CASH",0)
 		else
 			callpoint!.setOptionEnabled("PRNT",1)
+			callpoint!.setOptionEnabled("TTLS",1)
 			if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH",1)
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
@@ -349,6 +358,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
+	callpoint!.setOptionEnabled("TTLS",0)
 
 	print "---Make Invoice disabled"; rem debug
 
@@ -756,6 +766,7 @@ rem --- Backorder and Credit Hold
 rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT", 1)
+	callpoint!.setOptionEnabled("TTLS",1)
 	if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH", 1)
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
@@ -1808,8 +1819,10 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
-invoice_totals: rem --- Invoice totals, call form
+do_totals: rem --- Run the totals form and write back
 rem ==========================================================================
+
+rem --- Call the form
 
 	dim dflt_data$[4,1]
 	dflt_data$[1,0] = "TOTAL_SALES"
@@ -1868,7 +1881,6 @@ rem --- Set fields from the Order Totals form and write back
 
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
-
 	callpoint!.setStatus("SETORIG")
 
 	return
@@ -2136,7 +2148,8 @@ rem --- Setup user_tpl$
 :		"record_deleted:u(1), " +
 :		"item_wh_failed:u(1), " +
 :		"do_end_of_form:u(1), " +
-:		"picklist_warned:u(1)"
+:		"picklist_warned:u(1), " +
+:		"do_totals_form:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2164,6 +2177,7 @@ rem --- Setup user_tpl$
 	user_tpl.item_wh_failed    = 1
 	user_tpl.do_end_of_form    = 1
 	user_tpl.picklist_warned   = 0
+	user_tpl.do_totals_form    = 1
 
 rem --- Columns for the util disableCell() method
 
@@ -2242,12 +2256,13 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
+	callpoint!.setOptionEnabled("TTLS",0)
 
-	if user_tpl.credit_installed$ = "Y" then
-		callpoint!.setOptionEnabled("CRCH",1)
-	else
+	rem if user_tpl.credit_installed$ = "Y" then
+	rem 	callpoint!.setOptionEnabled("CRCH",1)
+	rem else
 		callpoint!.setOptionEnabled("CRCH",0)
-	endif
+	rem endif
 
 rem --- Parse table_chans$[all] into an object
 
