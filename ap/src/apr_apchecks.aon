@@ -67,7 +67,7 @@ rem --- Retrieve parameter records
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_length
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
-
+    
 rem --- Set A/P Type if multiple types not installed
 
     if aps01a.multi_types$<>"Y"
@@ -378,7 +378,6 @@ check_face: rem --- Print Check
     apw01a.check_date$=check_date$
     apw01a.vendor_id$=t1$(3,6)
     apw01a.ap_inv_no$=t2.ap_inv_no$
-    if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
     if aps01a.multi_types$="Y" remove (apw01_dev,key=firm_id$+"  "+apw01a.check_no$,dom=*next)
     write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
 
