@@ -277,7 +277,13 @@ rem --- Main read
 
         while more
             ope11a_key$=key(ope11_dev,end=*break)
-            if ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$<>ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$ then break
+            
+            if  ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$ <> 
+:               ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$ 
+:           then 
+                break
+            endif
+            
             read record (ope11_dev) ope11a$
             
             if lf$="Y" then
