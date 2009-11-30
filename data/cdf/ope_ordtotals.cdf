@@ -1,3 +1,9 @@
+[[OPE_ORDTOTALS.AWIN]]
+rem --- Resize form if necessary
+
+	use ::ado_util.src::util
+
+	util.resizeWindow(Form!, Sysgui!)
 [[OPE_ORDTOTALS.BEND]]
 print "OPE_ORDTOTALS:BEND"; rem debug
 
