@@ -402,7 +402,7 @@ user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
 user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"misc_entry:c(1),post_closed:c(1),units_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"existing_tran:c(1),open_check:c(1),existing_invoice:c(1),reuse_chk:c(1),"
-user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),"
+user_tpl_str$=user_tpl_str$+"dflt_ap_type:c(2),dflt_dist_cd:c(2),dflt_gl_account:c(10),"
 user_tpl_str$=user_tpl_str$+"tinv_vpos:c(1),tdisc_vpos:c(1),tret_vpos:c(1),tchk_vpos:c(1),"
 user_tpl_str$=user_tpl_str$+"ap_type_vpos:c(1),vendor_id_vpos:c(1),ape22_dev1:n(5)"
 dim user_tpl$:user_tpl_str$
@@ -477,6 +477,7 @@ aps01a_key$=firm_id$+"AP00"
 find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
 user_tpl.amt_msk$=aps01a.amount_mask$
 user_tpl.multi_types$=aps01a.multi_types$
+user_tpl.dflt_ap_type$=aps01a.ap_type$
 user_tpl.multi_dist$=aps01a.multi_dist$
 user_tpl.ret_flag$=aps01a.ret_flag$
 user_tpl.misc_entry$=aps01a.misc_entry$
@@ -577,6 +578,12 @@ c!.setColumnEditable(1,1)
 c!.setColumnEditable(6,0)
 c!.setColumnEditable(7,0)
 if user_tpl.multi_dist$="N" c!.setColumnEditable(2,0)
+
+rem --- if not multi-type then set the defalut AP Type
+if user_tpl.multi_types$="N" then
+	callpoint!.setColumnData("APE_MANCHECKHDR.AP_TYPE",user_tpl.dflt_ap_type$)
+endif
+
 [[APE_MANCHECKHDR.AREA]]
 print "Head: AREA (After Record Read)"; rem debug
 print "open_check$ is reset"; rem debug
