@@ -22,6 +22,7 @@ rem ==========================================================================
         field private static BBjInt CHILD_WINDOW% = 2
         field private static BBjInt GROUP_BOX% = 21
         field private static BBjInt PUSH_BUTTON% = 11
+        field private static BBjInt LIST_BUTTON% = 19
         field private static BBjInt ENABLE% = 1
         field private static BBjInt DISABLE% = 0
     rem --- These IDs are set by Barista
@@ -59,49 +60,96 @@ rem ==========================================================================
             declare java.awt.Dimension ScreenSize!
             declare BBjControl this_ctrl!
 
-            controls!     = Form!.getAllControls()
-            ScreenSize!   = SysGUI!.getSystemMetrics().getScreenSize()
-            screen_width  = ScreenSize!.width - #LessWidth%
-            screen_height = ScreenSize!.height - #LessHeight%
-            new_width = 0
-            new_height = 0
+            controls!      = Form!.getAllControls()
+            ScreenSize!    = SysGUI!.getSystemMetrics().getScreenSize()
+            screen_width   = ScreenSize!.width - #LessWidth%
+            screen_height  = ScreenSize!.height - #LessHeight%
+            new_width      = 0
+            new_height     = 0
             no_buttons_yet = 1
+            extra_height   = #ExtraHeight%
+            
+            rem debug
+            declare java.util.HashMap type!
+            type! = new java.util.HashMap()
+            type!.put(1, "Top level window")
+            type!.put(2, "Child window with border")
+            type!.put(7, "Child window without border")
+            type!.put(11, "Push button control")
+            type!.put(12, "Radio button control")
+            type!.put(13, "Check box control")
+            type!.put(14, "Horizontal scroll bar control")
+            type!.put(15, "Vertical scroll bar control")
+            type!.put(16, "Edit control")
+            type!.put(17, "Static text control")
+            type!.put(18, "List box control")
+            type!.put(19, "List button control")
+            type!.put(20, "List edit control")
+            type!.put(21, "Group box control")
+            type!.put(22, "Custom edit control")
+            type!.put(100, "Menu item")
+            type!.put(101, "Checkable menu item")
+            type!.put(102, "Status bar control")
+            type!.put(103, "Tool button control")
+            type!.put(104, "INPUTE control")
+            type!.put(105, "INPUTN control")
+            type!.put(106, "Tab control")
+            type!.put(107, "Grid control")
+            type!.put(108, "Iamge control")
+            type!.put(109, "Tree control")
+            type!.put(112, "Progress controls")
+            type!.put(114, "INPUTD controls")
+            
+            rem print 'show'; rem debug
 
         rem --- Roll throught all controls, setting the max width and height
             for i=0 to controls!.size() - 1
                 this_ctrl! = cast(BBjControl, controls!.getItem(i))
                 type = this_ctrl!.getControlType()
+                
+                print "type", type, ", ", type!.get(type); rem debug
 
             rem --- Group boxes dimensions can mess up the calculation
                 if type = #GROUP_BOX% then continue
 
             rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottom
                 if type = #PUSH_BUTTON% then
+                
+                    print "x, y, w, h:", this_ctrl!.getX(), ", ", this_ctrl!.getY(), ", ", this_ctrl!.getWidth(), ", ", this_ctrl!.getHeight(); rem debug
+                    print "text, if any: ", this_ctrl!.getText(); rem debug
 
-                    if no_buttons_yet then
-                        #ExtraHeight% = #ExtraHeight% + int(this_ctrl!.getHeight()) + 5
+                    if no_buttons_yet and this_ctrl!.getX() > 0 and this_ctrl!.getY() > 0 then
+                        extra_height = extra_height + int(this_ctrl!.getHeight()) + 25
                         no_buttons_yet = 0
+                        print "adding extra height"; rem debug
                     endif
 
                 else
 
                 rem --- Most controls go here
                     new_width  = max( new_width,  this_ctrl!.getX() + this_ctrl!.getWidth() )
-                    new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
+                    if type <> #LIST_BUTTON% then new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
+                    print "x, y, w, h:", this_ctrl!.getX(), ", ", this_ctrl!.getY(), ", ", this_ctrl!.getWidth(), ", ", this_ctrl!.getHeight(); rem debug
+                    print "text, if any: ", this_ctrl!.getText(); rem debug
 
                 endif
+                
+                rem input "<enter> to continue: ", *; rem debug
+                
             next i
 
-        rem --- If the current form fits or is bigger, we're done
-            if Form!.getWidth() >= new_width + #ExtraWidth% and Form!.getHeight() >= new_height + #ExtraHeight% then
+        rem --- If the current form fits or is bigger, we're done (except if there's buttons)
+            if Form!.getWidth() >= new_width + #ExtraWidth% and Form!.getHeight() >= new_height + extra_height then
+                print "form is bigger tha calculated size, exitting"; rem debug
                 methodret
             endif
 
         rem --- Set new size, but not bigger than the screen
             new_width = min( screen_width, new_width + #ExtraWidth% )
-            new_height = min( screen_height, new_height + #ExtraHeight% )
+            new_height = min( screen_height, new_height + extra_height )
             Form!.setSize(new_width, new_height)
             #resized% = 1
+            print "Resizing form..."; rem debug
 
         rem --- Will the form still fit on the screen?
             new_position = 0
@@ -121,7 +169,9 @@ rem ==========================================================================
             if new_position then
                 Form!.setLocation(form_x, form_y)
             endif
-
+            
+            rem input "<enter> to continue: ", *; rem debug
+            
         methodend
 
     rem --- Has this form been resized?
