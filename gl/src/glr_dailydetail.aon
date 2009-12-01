@@ -91,6 +91,7 @@ rem --- Document initializations
 rem --- Initializations
 
     dim headings$[headings],o[12],at[2],dt[2],jt[2],rt[2],xt[2]
+    if pagebreak$="Y" dim headings$[headings+1]
     number=0
     more=1
     keynum=0
@@ -186,6 +187,8 @@ rem --- Build report headings
         headings$[4]=val$
     fi
 
+	if pagebreak$="Y" headings$[6]="[HEADER]"
+	
 rem --- Start the progress meter
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glt04_dev,1,meter_num,status
@@ -434,7 +437,10 @@ audit_break: rem --- Audit number break
     credits=at[1]
     units=at[2]
     gosub print_totals
-    if pagebreak$="N" goto new_audit
+    if pagebreak$<>"Y"
+    	xwk=fnblank(7)
+    	goto new_audit
+    endif
     gosub journal_subheading
 
 new_audit: rem --- New audit number
@@ -447,6 +453,9 @@ new_audit: rem --- New audit number
     x$=cvs(t2$(1,7),2)
     if x$="" x$="NONE"
     h2$="Audit Number "+x$+" - Period "+t2$(12,2)+" ("+period_name$+" "+t2$(8,4)+")"
+    xwk=fnblank(2)
+    OutVect!.addItem(h2$+$00$+"B")
+    xwk=fnblank(4)
     return
 
 account_break: rem --- Account number break
@@ -468,6 +477,8 @@ new_account: rem --- New account
 journal_subheading: rem --- Build journal subheading
 
     h1$="Journal "+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(h1$)
     return
 
 wildcard: rem --- Test account number against specified wildcard mask
