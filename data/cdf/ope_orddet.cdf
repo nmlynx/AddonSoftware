@@ -767,8 +767,13 @@ rem --- Warehouse and Item must be correct
 
 	gosub check_item_whse	
 
-	if failed then 
-		callpoint!.setStatus("ABORT")
+	if user_tpl.item_wh_failed then 
+
+rem		callpoint!.setStatus("ABORT")
+
+		rem --- using this instead to force focus if item/whse invalid -- i.e., don't let user leave corrupt row
+		callpoint!.setFocus(this_row,"OPE_ORDDET.ITEM_ID")
+
 	else
 
 	rem --- Clear line type
@@ -866,8 +871,7 @@ rem --- Check item/warehouse combination, Set Available
 rem --- Item probably isn't set yet, but we don't know for sure
 
 	gosub check_item_whse
-	if !failed then gosub set_avail
-
+	if !user_tpl.item_wh_failed then gosub set_avail
 [[OPE_ORDDET.ITEM_ID.AVAL]]
 print "Det:ITEM_ID.AVAL"; rem debug
 
@@ -1014,7 +1018,7 @@ rem ==========================================================================
 	warn = 0
 	gosub check_item_whse
 
-	if failed then 
+	if user_tpl.item_wh_failed then 
 		callpoint!.setStatus("ABORT")
 		return
 	endif
@@ -1385,7 +1389,7 @@ rem ==========================================================================
 		warn  = 0
 		gosub check_item_whse
 
-		if !failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
+		if !user_tpl.item_wh_failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
 			callpoint!.setOptionEnabled("ADDL",1)
 		endif
 	endif
@@ -1402,7 +1406,7 @@ rem ==========================================================================
 		warn  = 0
 		gosub check_item_whse
 
-		if !failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
+		if !user_tpl.item_wh_failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
 			callpoint!.setOptionEnabled("RCPR",1)
 		endif
 	endif
