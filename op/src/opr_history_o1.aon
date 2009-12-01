@@ -137,7 +137,7 @@ rem --- Heading
 
 rem --- Void
 
-                OutVect!.addItem(opt01a.customer_id$+ars01a.customer_output$+" "+arm01a.customer_name$)
+                OutVect!.addItem(fnmask$(opt01a.customer_id$(1,m0),m0$)+" "+arm01a.customer_name$)
                 OutVect!.addItem(opt01a.order_no$)
                 OutVect!.addItem(opt01a.ar_inv_no$)
                 OutVect!.addItem(fndate$(opt01a.invoice_date$))
@@ -271,7 +271,7 @@ done: rem --- Totals
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         xwk = fnblank(2)
         OutVect!.addItem("****Report Totals: ")
-        OutVect!.addItem("Sales Total: "+" "+str(t[0]))
+        OutVect!.addItem("Sales Total:")
         xwk = fnblank(3)
         OutVect!.addItem(str(u[3]:m1$))
         xwk = fnblank(1)
@@ -361,7 +361,8 @@ rem --- Totals By Product
 rem --- Total By Line Type
 
         dim t[1]
-
+        
+        xwk=fnblank(12)
         OutVect!.addItem("*** Line Type Total ***")
         xwk = fnblank(11)
         OutVect!.addItem("Description")
@@ -375,38 +376,38 @@ rem --- Total By Line Type
 
         if r[0,0]<>0 or r[0,1]<>0 or r[0,2]<>0 or r[0,3]<>0 or r[0,4]<>0 then
             OutVect!.addItem("Standard Items")
-            OutVect!.addItem(str(r[0,2]))
-            OutVect!.addItem(str(r[0,3]))
-            OutVect!.addItem(str(r[0,4]))
-            OutVect!.addItem(str(r[0,0]))
-            OutVect!.addItem(str(r[0,1]))
+            OutVect!.addItem(str(r[0,2]:m2$))
+            OutVect!.addItem(str(r[0,3]:m2$))
+            OutVect!.addItem(str(r[0,4]:m2$))
+            OutVect!.addItem(str(r[0,0]:m1$))
+            OutVect!.addItem(str(r[0,1]:m1$))
             xwk = fnblank(6)
         endif
 
         if r[1,0]<>0 or r[1,1]<>0 or r[1,2]<>0 or r[1,3]<>0 or r[1,4]<>0 then
             OutVect!.addItem("Promotional Items")
-            OutVect!.addItem(str(r[1,2]))
-            OutVect!.addItem(str(r[1,3]))
-            OutVect!.addItem(str(r[1,4]))
-            OutVect!.addItem(str(r[1,0]))
-            OutVect!.addItem(str(r[1,1]))
+            OutVect!.addItem(str(r[1,2]:m2$))
+            OutVect!.addItem(str(r[1,3]:m2$))
+            OutVect!.addItem(str(r[1,4]:m2$))
+            OutVect!.addItem(str(r[1,0]:m1$))
+            OutVect!.addItem(str(r[1,1]:m1$))
             xwk = fnblank(6)
         endif
 
         if r[2,1]<>0 or r[2,0]<>0 or r[2,2]<>0 or r[2,3]<>0 or r[2,4]<>0 then
             OutVect!.addItem("Non-Stock Items")
-            OutVect!.addItem(str(r[2,2]))
-            OutVect!.addItem(str(r[2,3]))
-            OutVect!.addItem(str(r[2,4]))
-            OutVect!.addItem(str(r[2,0]))
-            OutVect!.addItem(str(r[2,1]))
+            OutVect!.addItem(str(r[2,2]:m2$))
+            OutVect!.addItem(str(r[2,3]:m2$))
+            OutVect!.addItem(str(r[2,4]:m2$))
+            OutVect!.addItem(str(r[2,0]:m1$))
+            OutVect!.addItem(str(r[2,1]:m1$))
             xwk = fnblank(6)
         endif
 
         if r[3,0]<>0 then 
             OutVect!.addItem("Other Charges")
             xwk = fnblank(3)
-            OutVect!.addItem(str(r[3,0]))
+            OutVect!.addItem(str(r[3,0]:m1$))
             xwk = fnblank(7)
         endif
 
@@ -418,8 +419,8 @@ rem --- Total By Line Type
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem("Report Totals: ")
         xwk = fnblank(3)
-        OutVect!.addItem(str(t[0]))
-        OutVect!.addItem(str(t[1]))
+        OutVect!.addItem(str(t[0]:m1$))
+        OutVect!.addItem(str(t[1]:m1$))
         xwk = fnblank(6)
 
         goto std_exit
@@ -427,7 +428,7 @@ rem --- Total By Line Type
 order_header: rem --- Order Header
 
         gosub terms_code
-        OutVect!.addItem(fnmask$(opt01a.customer_id$(1,m0),ars01a.customer_output$)+" "+arm01a.customer_name$)
+        OutVect!.addItem(fnmask$(opt01a.customer_id$(1,m0),m0$)+" "+arm01a.customer_name$)
         OutVect!.addItem(opt01a.order_no$)
         OutVect!.addItem(opt01a.ar_inv_no$)
         OutVect!.addItem(fndate$(opt01a.invoice_date$))
@@ -850,7 +851,7 @@ rem --- #endinclude std_end.src
 std_exit_no_report:
 
         call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
-	    OutVect!=null()
-	    goto std_exit
+        OutVect!=null()
+        goto std_exit
 
         end
