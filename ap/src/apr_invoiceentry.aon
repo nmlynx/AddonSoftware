@@ -150,7 +150,7 @@ rem --- Initializations
         headings$[0]=sysinfo.firm_name$
         headings$[1]=sysinfo.task_desc$
         if num(batch_no$)<>0 then headings$[1]=headings$[1]+ " (Batch: "+batch_no$+")"
-        headings$[2]="[HEADER]" 
+        if multitypes then headings$[2]="[HEADER]" 
         h2$=""
         h3$="Discount"
         if retention 
@@ -569,7 +569,7 @@ glrecap: rem --- Standard GL Recap Routine
 
     if gl$="Y" call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,notused,account$,gldate$,
 :                                            ref1$,ref2$,ref3$,memo$,amount,units,status
-	if amount<>0 and units<>0 gl_recs=gl_recs+1
+    if amount<>0 or units<>0 gl_recs=gl_recs+1
     return
 
 Display_Message: rem --- Display Message Routine
