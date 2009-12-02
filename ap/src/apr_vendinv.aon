@@ -63,11 +63,10 @@ rem --- Retrieve parameter records
         find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
 
 rem --- Set A/P Type if multiple types not installed
-
+	
         if aps01a.multi_types$<>"Y"
-            aptype$=fattr(apt01a$,"AP_TYPE")
-            aptype_len=dec(aptype$(10,2))
-            dim ap_type$(aptype_len)
+	    rem ' use the ap_type from aps_params
+            ap_type$=aps01a.ap_type$
         endif
         
 rem --- Initializations
@@ -235,7 +234,7 @@ no_more_invoices: rem --- No more invoices
         if recs=0
             msg_id$="DOC_OUTPUT_NODATA"
             gosub disp_message
-            goto std_exit
+            goto std_exit_no_report
         endif
 
         if inv_found
@@ -433,4 +432,9 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 rem #endinclude std_end.src
 
+std_exit_no_report:
+
+    OutVect!=null()
+    goto std_exit
+    
     end
