@@ -82,7 +82,9 @@ callpoint!.setStatus("REFRESH")
 fixed_periods$=callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")
 days_in_per=num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))
 start_date$=callpoint!.getUserInput()
-gosub calc_dates_fixed
+if callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")="Y"
+	gosub calc_dates_fixed
+endif
 callpoint!.setStatus("REFRESH")
 [[ARR_AGINGREPORT.<CUSTOM>]]
 calc_dates_fixed:rem --- Calculate Aging Dates
@@ -117,7 +119,7 @@ rem --- fixed_periods$,days_in_per,start_date$ being set prior to gosub
 	new_date$=date(jul(prev_date$,"%Yd%Mz%Dz")-1:"%Yd%Mz%Dz")
 	callpoint!.setColumnData("ARR_AGINGREPORT.AGEDATE_120_THRU",new_date$)
 return
-calc_dates1: 
+calc_dates1:
 	rem --- tmp_cur_from$ set prior to gosub
 	days_in_per=num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))
 	if days_in_per=0 days_in_per=30
