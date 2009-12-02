@@ -68,6 +68,8 @@ rem --- Assign form input values to local variables
     sequence$=Option!.getOptionData("REPORT_SEQUENCE")
     year$=Option!.getOptionData("YEAR")
     export_format$=Option!.getOptionData("EXPORT_FORMAT")
+    vend_type$=Option!.getOptionData("VENDOR_TYPE")
+    
     if export_format$="Y"
         rd_alias_id$=Option!.getAlias()    
         if len(rd_alias_id$)>15 rd_alias_id$=rd_alias_id$(1,15)
@@ -93,8 +95,8 @@ rem --- Retrieve parameter records
     m1=len(m1$)
     call pgmdir$+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
     g0=len(g0$)
-    headings=3
-    if multitypes headings=4
+    headings=4
+    if multitypes headings=5
 
 rem --- Is General Ledger installed?
 
@@ -145,7 +147,20 @@ rem --- Initializations
        channel=apw05_dev
        headings$[1]=headings$[1]+" By Alternate Sequence"
     endif
-    if multitypes headings$[3]="[HEADER]"
+    
+    if vend_type$="A" then
+        headings$[3]="All Vendors"
+    endif
+    
+    if vend_type$="P" then
+        headings$[3]="Permanent Vendors Only"
+    endif
+
+    if vend_type$="T" then
+        headings$[3]="Temporary Vendors Only"
+    endif
+    
+    if multitypes headings$[4]="[HEADER]"
     altseq$=""
     lasttype$=""
     lastvendor$=""
@@ -265,6 +280,7 @@ rem --- Sort Check History (apt-05) by vendor ID or alternate sequence
                 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
                 if apt05a.check_date$<begdate$ continue
                 if apt05a.check_date$>enddate$ continue
+                
 
                 rem --- Initialize and write sort record
 
@@ -326,6 +342,12 @@ rem --- Start progress meter and position the driver file
 
           if apt05a.check_date$<begdate$ continue
           if apt05a.check_date$>enddate$ continue
+          
+          rem --- extra apm01 read here to facilitate including/skipping vendors based on temp vend flag
+          if vend_type$<>"A"
+              read record (apm01_dev,key=firm_id$+apt05a.vendor_id$,dom=*continue)apm01a$
+              if (vend_type$="P" and apm01a.temp_vend$="Y") or (vend_type$="T" and apm01a.temp_vend$<>"Y") then continue
+          endif          
 
           rem --- Level breaks
 
@@ -809,6 +831,7 @@ rem #endinclude std_end.src
 std_exit_no_report:
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
-    release
+    OutVect!=null()
+    goto std_exit
 
     end
