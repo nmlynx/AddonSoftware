@@ -1,3 +1,9 @@
+[[APE_INVOICEHDR.VENDOR_ID.BINP]]
+rem --- set devObject with AP Type and a temp vend indicator, so if we decide to set up a temporary vendor from here,
+rem --- we'll know which AP type to use, and we can automatically set the temp vendor flag in the vendor master
+
+callpoint!.setDevObject("passed_in_temp_vend","Y")
+callpoint!.setDevObject("passed_in_AP_type",callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE"))
 [[APE_INVOICEHDR.BEND]]
 rem --- remove software lock on batch, if batching
 
@@ -162,6 +168,11 @@ gosub disable_fields
 ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
 ctl_stat$=""
 gosub disable_fields
+
+rem --- if not multi-type then set the defalut AP Type
+if user_tpl.multi_types$="N" then
+	callpoint!.setColumnData("APE_INVOICEHDR.AP_TYPE",user_tpl.dflt_ap_type$)
+endif
 [[APE_INVOICEHDR.BWRI]]
 rem --- fully distributed?
 gl$=user_tpl.glint$
@@ -427,7 +438,7 @@ dim aps01a$:templates$[6],gls01a$:templates$[7]
 user_tpl_str$="glint:c(1),glyr:c(4),glper:c(2),gl_tot_pers:c(2),"
 user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),units_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"misc_entry:c(1),inv_in_ape01:c(1),inv_in_apt01:c(1),"
-user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),dflt_terms_cd:c(2),dflt_pymt_grp:c(2),"
+user_tpl_str$=user_tpl_str$+"dflt_dist_cd:c(2),dflt_gl_account:c(10),dflt_ap_type:c(2),dflt_terms_cd:c(2),dflt_pymt_grp:c(2),"
 user_tpl_str$=user_tpl_str$+"disc_pct:c(5),dist_bal_ofst:c(1),inv_amt:c(10),tot_dist:c(10),open_inv_textID:c(5),"
 user_tpl_str$=user_tpl_str$+"dflt_acct_date:c(8)"
 dim user_tpl$:user_tpl_str$
@@ -474,9 +485,10 @@ user_tpl.glper$=gls01a.current_per$
 user_tpl.gl_tot_pers$=gls01a.total_pers$
 rem --- may need to disable some ctls based on params
 if user_tpl.multi_types$="N" 
+	user_tpl.dflt_ap_type$=aps01a.ap_type$
 	apm10_dev=fnget_dev("APC_TYPECODE")
 	dim apm10a$:fnget_tpl$("APC_TYPECODE")
-	readrecord (apm10_dev,key=firm_id$+"  ",dom=*next)apm10a$
+	readrecord (apm10_dev,key=firm_id$+user_tpl.dflt_ap_type$,dom=*next)apm10a$
 	user_tpl.dflt_dist_cd$=apm10a.ap_dist_code$
 	ctl_name$="APE_INVOICEHDR.AP_TYPE"
 	ctl_stat$="I"
