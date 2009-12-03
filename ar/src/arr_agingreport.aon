@@ -743,11 +743,11 @@ salesperson: rem --- Salesperson break
         if type$="S" if lines+2>maxlines gosub increment_lines 
 
         if type$="D" 
-        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+	        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
-        abc=fnblank(1)
-        OutVect!.addItem(x$)
-        abc=fnblank(4)
+	        abc=fnblank(1)
+	        OutVect!.addItem(x$)
+	        abc=fnblank(4)
         endif 
 
         if type$="S" 
@@ -769,11 +769,10 @@ salesperson: rem --- Salesperson break
         OutVect!.addItem(str(s[6]))
 
         lines=lines+2
-        prev_salesperson=0
-        customer_printed=0
-
+        break
     wend
-
+    
+    
     if done return
 
     dim arm10f$:fattr(arm10f$),s[maxperiods+1]
@@ -785,10 +784,21 @@ salesperson: rem --- Salesperson break
     find record (arm10_dev,key=k$,dom=*next) arm10f$
     lastcode$=arm10f.slspsn_code$
     salesperson$="Salesperson "+arm10f.slspsn_code$+" "+arm10f.code_desc$
-    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-    HdrVect!.addItem(salesperson$)
-    lines=maxlines+1
 
+    if last_code$="" or prev_salesperson
+    	if customer_printed=0
+    		if BrkVect!.size()>0
+    			BrkVect!.removeItem(BrkVect!.size()-1)
+    			HdrVect!.removeItem(HdrVect!.size()-1)
+    		endif
+    	endif
+
+	    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+	    HdrVect!.addItem(salesperson$)
+	endif    
+    lines=maxlines+1
+    prev_salesperson=0
+    customer_printed=0
     return
 
 rem --- Functions
