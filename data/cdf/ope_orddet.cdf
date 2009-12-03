@@ -133,6 +133,8 @@ rem --- Display totals
 rem --- Display totals
 	
 	gosub disp_grid_totals
+
+
 [[OPE_ORDDET.QTY_BACKORD.AVEC]]
 rem --- Display totals
 	
@@ -232,7 +234,6 @@ rem --- Has a valid whse/item been entered?
 		warn  = 1
 		gosub check_item_whse
 	endif
-
 
 [[OPE_ORDDET.ITEM_ID.BINP]]
 user_tpl.prev_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
@@ -461,12 +462,12 @@ rem --- Set detail defaults and disabled columns
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.LINE_CODE","DFLT", user_tpl.line_code$)
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.WAREHOUSE_ID","DFLT", user_tpl.warehouse_id$)
 
-	if user_tpl.skip_ln_code$ = "Y" then
-		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.LINE_CODE", 0)
-	endif
+rem	if user_tpl.skip_ln_code$ = "Y" then
+rem		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.LINE_CODE", 0)
+rem	endif
 
 	if user_tpl.skip_whse$ = "Y" then
-		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.WAREHOUSE_ID", 0)
+rem		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.WAREHOUSE_ID", 0)
 		item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 		wh$   = user_tpl.warehouse_id$
 		gosub set_avail	
@@ -489,6 +490,8 @@ rem --- Did we change rows?
 		gosub set_avail
 	endif
 [[OPE_ORDDET.AOPT-LENT]]
+print "Det:AOPT.LENT"; rem debug
+
 rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
 
 	declare BBjStandardGrid grid!
@@ -516,12 +519,12 @@ rem --- Is this item lot/serial?
 		rem          the DevObjects set below
 		rem          DevObject("lotser_flag"): set in OPE_ORDHDR
 
-			callpoint!.setDevObject("from",    "order_entry")
-			callpoint!.setDevObject("wh",      callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
-			callpoint!.setDevObject("item",    callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
-			callpoint!.setDevObject("ord_qty", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
-			callpoint!.setDevObject("dropship_line",user_tpl.line_dropship$)
-			callpoint!.setDevObject("invoice_type",str(callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")))
+			callpoint!.setDevObject("from",          "order_entry")
+			callpoint!.setDevObject("wh",            callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID"))
+			callpoint!.setDevObject("item",          callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"))
+			callpoint!.setDevObject("ord_qty",       callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+			callpoint!.setDevObject("dropship_line", user_tpl.line_dropship$)
+			callpoint!.setDevObject("invoice_type",  callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE"))
 
 			grid!.focus()
 
@@ -534,6 +537,7 @@ rem --- Is this item lot/serial?
 			dflt_data$[3,1] = order$
 			lot_pfx$ = firm_id$+ar_type$+cust$+order$+int_seq$
 
+			print "---Launch OPE_ORDLSDET..."; rem debug
 			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :				"OPE_ORDLSDET", 
 :				stbl("+USER_ID"), 
@@ -541,13 +545,23 @@ rem --- Is this item lot/serial?
 :				lot_pfx$, 
 :				table_chans$[all], 
 :				dflt_data$[all]
+			print "---back for OPE_ORDLSDET"; rem debug
 
-		rem --- Updated qty shipped, extension
+		rem --- Updated qty shipped, backordered, extension
 
 			qty_shipped = num(callpoint!.getDevObject("total_shipped"))
+			qty_ordered = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+			unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
-			unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+
+			if qty_ordered > 0 then
+				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(max(qty_ordered - qty_shipped, 0)) )
+			else
+				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(min(qty_ordered - qty_shipped, 0)) )
+			endif
+
 			gosub disp_ext_amt
+			callpoint!.setStatus("REFRESH")
 
 		rem --- Return focus to where we were (Detail line grid)
 
@@ -626,7 +640,7 @@ print "Det:AGRN"; rem debug
 
 rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
 
-rem --- Disable by line type
+rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
@@ -753,8 +767,13 @@ rem --- Warehouse and Item must be correct
 
 	gosub check_item_whse	
 
-	if failed then 
-		callpoint!.setStatus("ABORT")
+	if user_tpl.item_wh_failed then 
+
+rem		callpoint!.setStatus("ABORT")
+
+		rem --- using this instead to force focus if item/whse invalid -- i.e., don't let user leave corrupt row
+		callpoint!.setFocus(this_row,"OPE_ORDDET.ITEM_ID")
+
 	else
 
 	rem --- Clear line type
@@ -852,8 +871,7 @@ rem --- Check item/warehouse combination, Set Available
 rem --- Item probably isn't set yet, but we don't know for sure
 
 	gosub check_item_whse
-	if !failed then gosub set_avail
-
+	if !user_tpl.item_wh_failed then gosub set_avail
 [[OPE_ORDDET.ITEM_ID.AVAL]]
 print "Det:ITEM_ID.AVAL"; rem debug
 
@@ -1000,7 +1018,7 @@ rem ==========================================================================
 	warn = 0
 	gosub check_item_whse
 
-	if failed then 
+	if user_tpl.item_wh_failed then 
 		callpoint!.setStatus("ABORT")
 		return
 	endif
@@ -1095,6 +1113,22 @@ rem ==========================================================================
 		userObj!.getItem(user_tpl.dropship_flag).setText("")
 	endif
 
+ 	if good_item$="Y"
+ 		switch pos(ivm01a.alt_sup_flag$="AS")
+ 			case 1
+ 				userObj!.getItem(user_tpl.alt_super).setText("Alternate: "+cvs(ivm01a.alt_sup_item$,3))
+ 			break
+ 			case 2
+ 				userObj!.getItem(user_tpl.alt_super).setText("Superseded: "+cvs(ivm01a.alt_sup_item$,3))
+ 			break
+ 			case default
+ 				userObj!.getItem(user_tpl.alt_super).setText("")
+ 			break
+ 		swend
+	else
+		userObj!.getItem(user_tpl.alt_super).setText("")
+ 	endif
+
 	gosub manual_price_flag
 
 	return
@@ -1123,6 +1157,7 @@ rem ==========================================================================
 	userObj!.getItem(user_tpl.avail_type).setText("")
 	userObj!.getItem(user_tpl.dropship_flag).setText("")
 	userObj!.getItem(user_tpl.manual_price).setText("")
+	userObj!.getItem(user_tpl.alt_super).setText("")
 
 	return
 
@@ -1354,7 +1389,7 @@ rem ==========================================================================
 		warn  = 0
 		gosub check_item_whse
 
-		if !failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
+		if !user_tpl.item_wh_failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
 			callpoint!.setOptionEnabled("ADDL",1)
 		endif
 	endif
@@ -1371,7 +1406,7 @@ rem ==========================================================================
 		warn  = 0
 		gosub check_item_whse
 
-		if !failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
+		if !user_tpl.item_wh_failed and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) then
 			callpoint!.setOptionEnabled("RCPR",1)
 		endif
 	endif

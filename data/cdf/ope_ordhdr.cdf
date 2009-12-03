@@ -1,5 +1,14 @@
+[[OPE_ORDHDR.AOPT-TTLS]]
+print "Hdr:AOPT:TTLS"; rem debug
+
+rem --- Launch the totals form
+
+	gosub do_totals
+	user_tpl.do_totals_form = 0
+	rem callpoint!.setStatus("NEWREC")
 [[OPE_ORDHDR.AREC]]
 rem --- Clear availability information
+	
 	gosub clear_avail
 [[OPE_ORDHDR.ARAR]]
 rem --- set order date
@@ -62,56 +71,9 @@ rem --- Credit action
 
 rem --- Order totals, call form
 
-	dim dflt_data$[4,1]
-	dflt_data$[1,0] = "TOTAL_SALES"
-	dflt_data$[1,1] = callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
-	dflt_data$[2,0] = "DISCOUNT_AMT"
-	dflt_data$[2,1] = callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")
-	dflt_data$[3,0] = "TAX_AMOUNT"
-	dflt_data$[3,1] = callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")
-	dflt_data$[4,0] = "FREIGHT_AMT"
-	dflt_data$[4,1] = callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")
+	if user_tpl.do_totals_form then gosub do_totals
+	user_tpl.do_totals_form = 1
 
-	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:		"OPE_ORDTOTALS", 
-:		stbl("+USER_ID"), 
-:		"", 
-:		"", 
-:		table_chans$[all],
-:		"", 
-:		dflt_data$[all],
-:		user_tpl$,
-:		UserObj!
-
-rem --- Get disk record
-
-	file_name$  = "OPE_ORDHDR"
-	ordhdr_dev  = fnget_dev(file_name$)
-	ordhdr_tpl$ = fnget_tpl$(file_name$)
-	dim ordhdr_rec$:ordhdr_tpl$
-
-	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-
-	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-
-rem --- Copy in any form data that's changed
-
-	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
-
-rem --- Set fields from the Order Totals form and write back
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-
-	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
-	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
-	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
-	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
-	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
-	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
-
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
 [[OPE_ORDHDR.AOPT-PRNT]]
 print "Hdr:AOPT:PRNT"; rem debug
 
@@ -255,11 +217,13 @@ print "Hdr:APFE"; rem debug
 rem --- Enable button
 
 	callpoint!.setOptionEnabled("CRCH",1)
+	callpoint!.setOptionEnabled("RPRT",1)
+	callpoint!.setOptionEnabled("PRNT",1)
+	callpoint!.setOptionEnabled("TTLS",1)
 
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
-		callpoint!.setOptionEnabled("PRNT",1)
 	endif
 [[OPE_ORDHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
@@ -270,6 +234,8 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("RPRT",0)
+	callpoint!.setOptionEnabled("TTLS",0)
 
 rem --- Check Ship-to's
 
@@ -326,6 +292,7 @@ rem --- Set flag
 	callpoint!.setOptionEnabled("RPRT",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("TTLS",0)
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
 
@@ -334,6 +301,7 @@ rem --- Check locked status
 	gosub check_lock_flag
 
 	if locked=1 then 
+		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
@@ -366,9 +334,7 @@ rem --- Reprint order?
 
 				gosub disp_message
 			endif
-
 		endif
-
 	endif
 
 rem --- Set Codes	
@@ -424,6 +390,7 @@ rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT",1)
 	callpoint!.setOptionEnabled("RPRT",1)
+	callpoint!.setOptionEnabled("TTLS",1)
 
 rem --- Set all previous values
 
@@ -433,10 +400,13 @@ rem --- Set all previous values
 	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 
-rem --- Set type in OrderHelper object
+rem --- Set OrderHelper object fields
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setCust_id(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"))
+	ordHelp!.setOrder_no(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE"))
+	print "---OrderHelper object fields set"; rem debug
 
 rem --- Clear availability
 
@@ -576,8 +546,9 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15104,295,40,75,15,"",$8000$))
 	userObj!.addItem(mwin!.addStaticText(15105,490,25,75,15,"",$0000$))
 	userObj!.addItem(mwin!.addStaticText(15106,490,40,75,15,"",$0000$))
-	userObj!.addItem(mwin!.addStaticText(15107,695,25,75,15,"",$0000$)); rem Dropship text (8)
-	userObj!.addItem(mwin!.addStaticText(15108,695,40,160,15,"",$0000$)); rem Manual Price  (9)
+ 	userObj!.addItem(mwin!.addStaticText(15107,695,20,75,15,"",$0000$)); rem Dropship text (8)
+	userObj!.addItem(mwin!.addStaticText(15108,695,35,160,15,"",$0000$)); rem Manual Price  (9)
+ 	userObj!.addItem(mwin!.addStaticText(15109,695,50,160,15,"",$0000$)); rem Alt/Super (10)
 [[OPE_ORDHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
@@ -712,10 +683,10 @@ rem --- Do we need to create a new order number?
 		user_tpl.user_entry$ = "Y"
 	endif
 
-rem debug
-print "   new_seq: ", new_seq$
-print "  order_no: ", order_no$
-print "user_entry: ", user_tpl.user_entry$
+	rem debug
+	print "   new_seq: ", new_seq$
+	print "  order_no: ", order_no$
+	print "user_entry: ", user_tpl.user_entry$
 
 rem --- Does order exist?
 
@@ -733,7 +704,7 @@ rem --- Does order exist?
 		found = 1
 	endif
 
-print "     found:", found; rem debug
+	print "     found:", found; rem debug
 
 rem --- A new record must be the next sequence
 
@@ -753,6 +724,8 @@ rem --- Existing record
 	rem --- Check for void
 
 		if ope01a.invoice_type$ = "V" then
+			msg_id$="OP_ORDINV_VOID"
+			gosub disp_message
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit from callpoint			
 		endif
@@ -771,11 +744,14 @@ rem --- Existing record
 		gosub check_lock_flag
 
 		if locked=1 then 
+			user_tpl.do_end_of_form = 0
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit callpoint
 		endif
 
-	rem --- Check if reprintable
+	rem --- Check if reprintable ***DISABLED***
+
+	goto end_of_reprintable
 
 		if callpoint!.getColumnData("OPE_ORDHDR.REPRINT_FLAG") <> "Y" then
 			reprint = 0
@@ -797,10 +773,13 @@ rem --- Existing record
 
 					gosub disp_message
 				else
-					callpoint!.setStatus("NEWREC")
+					rem callpoint!.setStatus("NEWREC")
+					rem break; rem ---- exit callpoint
 				endif
 			endif
 		endif
+
+end_of_reprintable:
         
 	rem --- Set Codes		
         
@@ -815,6 +794,11 @@ rem --- Existing record
 		cust_id$   = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 		order_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
+
+		rem --- Set dflt invoice type in OrderHelper object
+
+		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+		ordHelp!.setInv_type("S")
 
 		arm02_dev=fnget_dev("ARM_CUSTDET")
 		dim arm02a$:fnget_tpl$("ARM_CUSTDET")
@@ -1165,7 +1149,7 @@ check_credit: rem --- Check credit limit of customer
               rem     (ope_db, 5400-5499)
 rem ==========================================================================
 
-	print "Hdr:in check_credit..."; rem debug
+	print "in check_credit..."; rem debug
 
 	over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
 
@@ -1779,6 +1763,7 @@ rem ==========================================================================
 	userObj!.getItem(user_tpl.avail_type).setText("")
 	userObj!.getItem(user_tpl.dropship_flag).setText("")
 	userObj!.getItem(user_tpl.manual_price).setText("")
+	userObj!.getItem(user_tpl.alt_super).setText("")
 
 	return
 
@@ -1829,6 +1814,66 @@ rem ==========================================================================
 		callpoint!.setStatus("REFRESH")
 	endif
 
+	return
+
+rem ==========================================================================
+do_totals: rem --- Run the totals form and write back
+rem ==========================================================================
+
+rem --- Call the form
+
+	dim dflt_data$[4,1]
+	dflt_data$[1,0] = "TOTAL_SALES"
+	dflt_data$[1,1] = callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
+	dflt_data$[2,0] = "DISCOUNT_AMT"
+	dflt_data$[2,1] = callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")
+	dflt_data$[3,0] = "TAX_AMOUNT"
+	dflt_data$[3,1] = callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")
+	dflt_data$[4,0] = "FREIGHT_AMT"
+	dflt_data$[4,1] = callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"OPE_ORDTOTALS", 
+:		stbl("+USER_ID"), 
+:		"", 
+:		"", 
+:		table_chans$[all],
+:		"", 
+:		dflt_data$[all],
+:		user_tpl$,
+:		UserObj!
+
+rem --- Get disk record
+
+	file_name$  = "OPE_ORDHDR"
+	ordhdr_dev  = fnget_dev(file_name$)
+	ordhdr_tpl$ = fnget_tpl$(file_name$)
+	dim ordhdr_rec$:ordhdr_tpl$
+
+	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+
+rem --- Copy in any form data that's changed
+
+	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+
+rem --- Set fields from the Order Totals form and write back
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
+	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
+	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
+	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
+	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
+	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
+
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+	callpoint!.setStatus("SETORIG")
+	
 	return
 [[OPE_ORDHDR.BSHO]]
 print "Hdr:BSHO"; rem debug
@@ -1983,7 +2028,8 @@ rem --- Setup user_tpl$
 :     "avail_wh:u(1), " +
 :     "avail_type:u(1), " +
 :     "dropship_flag:u(1), " +
-:		"manual_price:u(1), " +
+:     "manual_price:u(1), " +
+:     "alt_super:u(1), " +
 :     "ord_tot_obj:u(1), " +
 :     "price_code:c(2), " +
 :     "pricing_code:c(4), " +
@@ -2027,7 +2073,10 @@ rem --- Setup user_tpl$
 :		"detail_modified:u(1), " +
 :		"record_deleted:u(1), " +
 :		"item_wh_failed:u(1), " +
-:		"do_end_of_form:u(1)"
+:		"do_end_of_form:u(1), " +
+:		"do_totals_form:u(1), " +
+:		"disc_code:c(1*), " +
+:		"tax_code:c(1*)"
 
 	dim user_tpl$:tpl$
 
@@ -2054,11 +2103,12 @@ rem --- Setup user_tpl$
 	user_tpl.record_deleted    = 0
 	user_tpl.item_wh_failed    = 1
 	user_tpl.do_end_of_form    = 1
+	user_tpl.do_totals_form    = 1
 
 rem --- Columns for the util disableCell() method
 
 	user_tpl.bo_col            = 9
-	user_tpl.prod_type_col     = 1
+	user_tpl.prod_type_col     = 5
 
 	user_tpl.prev_line_code$   = ""
 	user_tpl.prev_item$        = ""
@@ -2083,7 +2133,8 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	user_tpl.avail_type    = 7
 	user_tpl.dropship_flag = 8
 	user_tpl.manual_price  = 9
-	user_tpl.ord_tot_obj   = 10; rem set here in BSHO
+	user_tpl.alt_super = 10
+	user_tpl.ord_tot_obj   = 11; rem set here in BSHO
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
@@ -2108,12 +2159,13 @@ rem --- Set up Lot/Serial button (and others) properly
 	callpoint!.setOptionEnabled("RPRT",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("ADDL",0)
+	callpoint!.setOptionEnabled("TTLS",0)
 
-	if user_tpl.credit_installed$ = "Y" then
-		callpoint!.setOptionEnabled("CRCH",1)
-	else
+	rem if user_tpl.credit_installed$ = "Y" then
+	rem 	callpoint!.setOptionEnabled("CRCH",1)
+	rem else
 		callpoint!.setOptionEnabled("CRCH",0)
-	endif
+	rem endif
 
 rem --- Parse table_chans$[all] into an object
 
