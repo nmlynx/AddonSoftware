@@ -240,6 +240,7 @@ rem --- Initialize Data
     clock$=""
     when$=sysinfo.system_date$
     nothing_posted = 1
+    no_records_prev_posted = 1
     dim t[6],u[6]
 
     if seq$="" then
@@ -337,7 +338,12 @@ rem --- Main Read
         if ope04a.firm_id$ <> firm_id$ or ope04a.ordinv_flag$ <> "I" then break
 
         read record (ope01_dev, key=firm_id$+"  "+ope04a$.customer_id$+ope04a.order_no$, dom=*continue) ope01a$
-        if ope01a.print_status$<>"Y" or pos(ope01a.lock_status$="12")<>0 then continue
+        if ope01a.print_status$<>"Y" then continue
+        
+        if pos(ope01a.lock_status$="12")<>0 then 
+            no_records_prev_posted = 0
+            continue
+        endif
 
         if ope01a.cash_sale$="Y" then
             find record (ope41_dev, key=firm_id$+"  "+ope01a.customer_id$+ope01a.order_no$, dom=*next) ope41a$
@@ -401,7 +407,7 @@ rem --- Main Read
         y9$(41,10) = arm10d0.gl_frgt_acct$
 
         if ope01a.cash_sale$="Y" then
-            find record (arm10d_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
+            find record (arm10c_dev,key=firm_id$+"C"+ope41a.cash_rec_cd$,dom=*next) arm10c$
             y9$(1,10)=arm10c.gl_cash_acct$
         endif
 
@@ -685,7 +691,7 @@ rem --- Main Read
 
 rem --- Totals
 
-    if nothing_posted then
+    if nothing_posted and no_records_prev_posted then
         msg_id$ = "OP_NOTHING_POSTED"
         gosub disp_message
         goto std_exit

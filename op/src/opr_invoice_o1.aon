@@ -173,8 +173,8 @@ rem --- Setup PDF printer and print area
     requestAttributes!.add(OrientationRequested.PORTRAIT)
 
     units = MediaPrintableArea.INCH
-    x! = new Float(0.5).floatValue()
-    y! = new Float(0.5).floatValue()
+    x! = new Float(0.25).floatValue()
+    y! = new Float(0.25).floatValue()
     w! = new Float(8.0).floatValue()
     h! = new Float(10.5).floatValue()
     a! = new MediaPrintableArea(x!,y!,w!,h!,units)
@@ -673,6 +673,10 @@ rem --- Create pages from both physical and display objects
         if o9=3 then
             pdf!.setText(496, 102, 54, 102, "DUPLICATE", boldfont!, pdf!.CENTER_JUSTIFY())
         endif
+        
+    rem --- Ad hoc message
+    
+        pdf!.setText(76, 108, 416, 0, adhoc_message$, italicfont!, pdf!.CENTER_JUSTIFY())
         
     rem --- Ribbon info
 
