@@ -640,7 +640,7 @@ print "Det:AGRN"; rem debug
 
 rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
 
-rem --- Disable by line type
+rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
