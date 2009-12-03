@@ -3,7 +3,7 @@ rem --- Launch the totals form
 
 	gosub do_totals
 	user_tpl.do_totals_form = 0
-	callpoint!.setStatus("NEWREC")
+	rem callpoint!.setStatus("NEWREC")
 [[OPE_INVHDR.AOPT-CASH]]
 rem --- Customer wants to pay cash; Launch invoice totals first
 
@@ -789,9 +789,11 @@ rem --- Set other codes
 	user_tpl.pricing_code$ = callpoint!.getColumnData("OPE_INVHDR.PRICING_CODE")
 	user_tpl.order_date$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_DATE")
 
-rem --- Set type in OrderHelper object
+rem --- Set OrderHelper object fields
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setCust_id(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"))
+	ordHelp!.setOrder_no(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE"))
 
 rem --- Clear availability
@@ -2149,7 +2151,9 @@ rem --- Setup user_tpl$
 :		"item_wh_failed:u(1), " +
 :		"do_end_of_form:u(1), " +
 :		"picklist_warned:u(1), " +
-:		"do_totals_form:u(1)"
+:		"do_totals_form:u(1), " +
+:		"disc_code:c(1*), " +
+:		"tax_code:c(1*)"
 
 	dim user_tpl$:tpl$
 

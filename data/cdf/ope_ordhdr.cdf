@@ -5,7 +5,7 @@ rem --- Launch the totals form
 
 	gosub do_totals
 	user_tpl.do_totals_form = 0
-	callpoint!.setStatus("NEWREC")
+	rem callpoint!.setStatus("NEWREC")
 [[OPE_ORDHDR.AREC]]
 rem --- Clear availability information
 	
@@ -334,9 +334,7 @@ rem --- Reprint order?
 
 				gosub disp_message
 			endif
-
 		endif
-
 	endif
 
 rem --- Set Codes	
@@ -402,10 +400,13 @@ rem --- Set all previous values
 	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 
-rem --- Set type in OrderHelper object
+rem --- Set OrderHelper object fields
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setCust_id(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"))
+	ordHelp!.setOrder_no(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE"))
+	print "---OrderHelper object fields set"; rem debug
 
 rem --- Clear availability
 
@@ -748,7 +749,9 @@ rem --- Existing record
 			break; rem --- exit callpoint
 		endif
 
-	rem --- Check if reprintable
+	rem --- Check if reprintable ***DISABLED***
+
+	goto end_of_reprintable
 
 		if callpoint!.getColumnData("OPE_ORDHDR.REPRINT_FLAG") <> "Y" then
 			reprint = 0
@@ -770,10 +773,13 @@ rem --- Existing record
 
 					gosub disp_message
 				else
-					callpoint!.setStatus("NEWREC")
+					rem callpoint!.setStatus("NEWREC")
+					rem break; rem ---- exit callpoint
 				endif
 			endif
 		endif
+
+end_of_reprintable:
         
 	rem --- Set Codes		
         
@@ -1143,7 +1149,7 @@ check_credit: rem --- Check credit limit of customer
               rem     (ope_db, 5400-5499)
 rem ==========================================================================
 
-	print "Hdr:in check_credit..."; rem debug
+	print "in check_credit..."; rem debug
 
 	over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
 
@@ -2068,7 +2074,9 @@ rem --- Setup user_tpl$
 :		"record_deleted:u(1), " +
 :		"item_wh_failed:u(1), " +
 :		"do_end_of_form:u(1), " +
-:		"do_totals_form:u(1)"
+:		"do_totals_form:u(1), " +
+:		"disc_code:c(1*), " +
+:		"tax_code:c(1*)"
 
 	dim user_tpl$:tpl$
 
