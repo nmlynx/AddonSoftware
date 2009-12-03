@@ -408,11 +408,12 @@ date_break: rem --- Date break
     if sequence$="A" goto date_break_exit
     if t0$="" goto new_date
     gosub account_break
-    gosub journal_break
     total$="Totals For "+fndate$(t0$)
     debits=dt[0]
     credits=dt[1]
     gosub print_totals
+    gosub journal_break        
+
 
 new_date: rem --- New date
 
@@ -426,7 +427,7 @@ date_break_exit:
 
 journal_break: rem --- Journal break
 
-    if t1$="" goto new_journal
+    if t1$="" then goto new_journal
     if sequence$="A" gosub period_break
 
 new_journal: rem --- New Sequence
@@ -454,7 +455,7 @@ period_break: rem --- Period break
     debits=at[0]
     credits=at[1]
     gosub print_totals
-
+    
 new_period: rem --- New period
 
     if done goto period_break_exit
