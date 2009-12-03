@@ -181,7 +181,7 @@ rem ==========================================================================
 
     class public ArrayObject
     
-        field private BBjString This_Class$ = "ArrayObject"
+        field private BBjString className$ = "ArrayObject"
         field public BBjInt Dimensions%
         field public BBjInt D0_elements%
         field public BBjInt D0_base%
@@ -189,7 +189,7 @@ rem ==========================================================================
         field public BBjInt D1_base%
         field public BBjInt D2_elements%
         field public BBjInt D2_base%
-        field private BBjVector Data!
+        field private BBjVector data!
         
     rem --- Constructor
         
@@ -203,21 +203,21 @@ rem ==========================================================================
             #D2_elements% = int(pDim!.getFieldAsNumber("d2elem"))
             #D2_base%     = int(pDim!.getFieldAsNumber("d2base"))
             
-            #Data! = pData!
+            #data! = pData!
             
         methodend
         
     rem --- Accessor to data
         
         method public BBjVector getData()
-            methodret #Data!
+            methodret #data!
         methodend
         
     rem --- List data (diagnostic)
     
         method public void listData()
-            for i = 0 to #Data!.size() -1
-                print str(i), ": ", #Data!.getItem(i)
+            for i = 0 to #data!.size() -1
+                print str(i), ": ", #data!.getItem(i)
             next i
         methodend
         
@@ -225,38 +225,38 @@ rem ==========================================================================
         
         method public BBjString getElement(BBjInt p_elem%)
             if #Dimensions% <> 1 then
-                throw #This_Class$ + ": Array is not one dimensional", 42
+                throw #className$ + ": Array is not one dimensional", 42
             endif
             
             if p_elem% - #D0_base% > #D0_elements% - 1 then
-                throw #This_Class$ + ": Element is out of range, " + str(p_elem% - #D0_base%) + " > " + str(#D0_elements% - 1), 42
+                throw #className$ + ": Element is out of range, " + str(p_elem% - #D0_base%) + " > " + str(#D0_elements% - 1), 42
             endif
             
             if p_elem% - #D0_base% < 0 then
-                throw #This_Class$ + ": Element is out of range, " + str(p_elem% - #D0_base%) + " < 0", 42
+                throw #className$ + ": Element is out of range, " + str(p_elem% - #D0_base%) + " < 0", 42
             endif
             
-            methodret str(#Data!.getItem(p_elem% - #D0_base%))
+            methodret str(#data!.getItem(p_elem% - #D0_base%))
         methodend
         
     rem --- Get an element from a two-dimentional array
     
         method public BBjString getElement(BBjInt p_d0elem%, BBjInt p_d1elem%)
             if #Dimensions% <> 2 then
-                throw #This_Class$ + ": Array is not two dimensional", 42
+                throw #className$ + ": Array is not two dimensional", 42
             endif
 
-            methodret str(#Data!.getItem((p_d0elem% - #D0_base%) * #D1_elements% + p_d1elem% - #D1_base%))
+            methodret str(#data!.getItem((p_d0elem% - #D0_base%) * #D1_elements% + p_d1elem% - #D1_base%))
         methodend
         
     rem --- Get an element from a three-dimentional array
     
         method public BBjString getElement(BBjInt p_d0elem%, BBjInt p_d1elem%, BBjInt p_d2elem%)
             if #Dimensions% <> 3 then
-                throw #This_Class$ + ": Array is not three dimensional", 42
+                throw #className$ + ": Array is not three dimensional", 42
             endif
 
-            methodret str(#Data!.getItem((p_d0elem% - #D0_base%) * #D0_elements% * #D1_elements% + (p_d1elem% - #D1_base%) * #D1_elements% + p_d2elem% - #D2_base%))
+            methodret str(#data!.getItem((p_d0elem% - #D0_base%) * #D0_elements% * #D1_elements% + (p_d1elem% - #D1_base%) * #D1_elements% + p_d2elem% - #D2_base%))
         methodend
         
     classend

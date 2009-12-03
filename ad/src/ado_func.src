@@ -585,8 +585,8 @@ rem --- Forrmat Address
     dim rec$:table_tpl$
     
     while 1
-        read record (open_chan, end=*break) rec!; rem rec$
-        rem rec!.setString(rec$)
+        read record (open_chan, end=*break) rec$
+        rec!.setString(rec$)
         block$ = func.formatAddress(rec!, 30, 6)
         
         for i=1 to 180 step 30
