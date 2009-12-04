@@ -107,7 +107,7 @@ rem ==========================================================================
                 this_ctrl! = cast(BBjControl, controls!.getItem(i))
                 type = this_ctrl!.getControlType()
                 
-                print "type", type, ", ", type!.get(type); rem debug
+                rem print "type", type, ", ", type!.get(type); rem debug
 
             rem --- Group boxes dimensions can mess up the calculation
                 if type = #GROUP_BOX% then continue
@@ -115,13 +115,13 @@ rem ==========================================================================
             rem --- Push Buttons (e.g. "OK", "Cancel") need extra room at the bottom
                 if type = #PUSH_BUTTON% then
                 
-                    print "x, y, w, h:", this_ctrl!.getX(), ", ", this_ctrl!.getY(), ", ", this_ctrl!.getWidth(), ", ", this_ctrl!.getHeight(); rem debug
-                    print "text, if any: ", this_ctrl!.getText(); rem debug
+                    rem print "x, y, w, h:", this_ctrl!.getX(), ", ", this_ctrl!.getY(), ", ", this_ctrl!.getWidth(), ", ", this_ctrl!.getHeight(); rem debug
+                    rem print "text, if any: ", this_ctrl!.getText(); rem debug
 
                     if no_buttons_yet and this_ctrl!.getX() > 0 and this_ctrl!.getY() > 0 then
                         extra_height = extra_height + int(this_ctrl!.getHeight()) + 25
                         no_buttons_yet = 0
-                        print "adding extra height"; rem debug
+                        rem print "adding extra height"; rem debug
                     endif
 
                 else
@@ -129,8 +129,8 @@ rem ==========================================================================
                 rem --- Most controls go here
                     new_width  = max( new_width,  this_ctrl!.getX() + this_ctrl!.getWidth() )
                     if type <> #LIST_BUTTON% then new_height = max( new_height, this_ctrl!.getY() + this_ctrl!.getHeight() )
-                    print "x, y, w, h:", this_ctrl!.getX(), ", ", this_ctrl!.getY(), ", ", this_ctrl!.getWidth(), ", ", this_ctrl!.getHeight(); rem debug
-                    print "text, if any: ", this_ctrl!.getText(); rem debug
+                    rem print "x, y, w, h:", this_ctrl!.getX(), ", ", this_ctrl!.getY(), ", ", this_ctrl!.getWidth(), ", ", this_ctrl!.getHeight(); rem debug
+                    rem print "text, if any: ", this_ctrl!.getText(); rem debug
 
                 endif
                 
@@ -140,7 +140,7 @@ rem ==========================================================================
 
         rem --- If the current form fits or is bigger, we're done (except if there's buttons)
             if Form!.getWidth() >= new_width + #ExtraWidth% and Form!.getHeight() >= new_height + extra_height then
-                print "form is bigger tha calculated size, exitting"; rem debug
+                rem print "form is bigger tha calculated size, exitting"; rem debug
                 methodret
             endif
 
@@ -149,7 +149,7 @@ rem ==========================================================================
             new_height = min( screen_height, new_height + extra_height )
             Form!.setSize(new_width, new_height)
             #resized% = 1
-            print "Resizing form..."; rem debug
+            rem print "Resizing form..."; rem debug
 
         rem --- Will the form still fit on the screen?
             new_position = 0

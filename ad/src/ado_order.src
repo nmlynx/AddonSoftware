@@ -147,6 +147,7 @@ rem ==========================================================================
     rem --- Order totals from disk records
     
         method public void totalSalesDisk(BBjString p_cust_id$, BBjString p_order_no$, BBjString p_inv_type$)
+            rem print #className$+": void totalSalesDisk(BBjString, BBjString, BBjString)"; rem debug
         
             #Cust_id$  = p_cust_id$
             #Order_no$ = p_order_no$
@@ -217,6 +218,7 @@ rem ==========================================================================
                 orddet_rec$ = field(orddet_rec$)
                 write record (#OrdDetail_dev%) orddet_rec$
                 
+                rem print "--- Extended Price:", orddet_rec.ext_price; rem debug
                 ext_price = ext_price + orddet_rec.ext_price
                 taxable   = taxable   + orddet_rec.taxable_amt
                 ext_cost  = ext_cost  + orddet_rec.unit_cost * orddet_rec.qty_shipped
@@ -281,6 +283,20 @@ rem ==========================================================================
         
         method public BBjNumber getExtCost()
             methodret #extCost
+        methodend
+        
+    rem --- Clear values for a new order
+    
+        method public void newOrder()
+            #Cust_id$ = ""
+            #Order_no$ = ""
+            #Inv_type$ = ""
+            #extPrice = 0
+            #taxable = 0
+            #extCost = 0
+            #Freight = 0
+            #Discount = 0
+            #TaxAmount = 0
         methodend
     
     classend
