@@ -1694,10 +1694,18 @@ rem ==========================================================================
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 
+		if pos(action$="HC")<>0 then
+			callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","C")
+		else
+			if action$="R" then
+				callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","R")	
+			else
+				callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","")			
+			endif
+		endif
+
 		if action$ = "D" then 
 			callpoint!.setStatus("DELETE")
-		else	
-			callpoint!.setStatus("SETORIG")
 		endif
 
 		if str(callpoint!.getDevObject("document_printed")) = "Y" then 

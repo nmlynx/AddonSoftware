@@ -299,6 +299,9 @@ rem --- Update tickler file with new record
 
 update_order_header: rem --- Set credit flag in order header file
                      rem      IN: credit_flag_in$
+return
+rem --- shouldn't need this routine anymore
+rem --- setting credit flag in callpoint object upon return to order/invoice entry instead
 
     extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
     ope01a.credit_flag$ = credit_flag_in$

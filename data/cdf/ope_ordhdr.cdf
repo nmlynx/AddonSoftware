@@ -1716,10 +1716,18 @@ rem ==========================================================================
 
 		print "---action$ = """, action$, """"; rem debug
 
+		if pos(action$="HC")<>0 then
+			callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
+		else
+			if action$="R" then
+				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","R")	
+			else
+				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","")			
+			endif
+		endif
+
 		if action$ = "D" then 
 			callpoint!.setStatus("DELETE")
-		else	
-			callpoint!.setStatus("SETORIG")
 		endif
 
 		if str(callpoint!.getDevObject("document_printed")) = "Y" then 
