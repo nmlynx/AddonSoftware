@@ -117,8 +117,24 @@ rem reportDir$=reportDir$+"testing/";rem testing SQL vs SPROC driven; rem this f
     filename$ = reportDir$ + reportBaseName$ + ".jasper"
 
     declare BBJasperReport report!
+    
+rem --- Check for user authentication
+
+    url_user$="&user=guest"
+    if stbl("!DSUDDB",err=*endif)<>"" then
+        url_user$=""
+    endif
+
+    dbname$ = stbl("+DBNAME")
+    dbname_api$ = stbl("+DBNAME_API")
+    if pos("jdbc:"=cvs(dbname$,8))=1 then
+        url$ = dbname$+url_user$
+    else
+        url$ = "jdbc:basis:localhost?database="+dbname_api$+url_user$
+    endif
         
-    report! = new BBJasperReport(filename$,"jdbc:basis:localhost?database="+stbl("+DBNAME")+"&user=guest")
+rem report! = new BBJasperReport(filename$,"jdbc:basis:localhost?database="+stbl("+DBNAME")+"&user=guest")
+    report! = new BBJasperReport(filename$,url$)
     report!.putParams(params!)
 
     locale$ = stbl("!LOCALE")
