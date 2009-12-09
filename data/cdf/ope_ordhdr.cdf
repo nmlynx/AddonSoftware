@@ -63,7 +63,6 @@ rem --- Order totals, call form
 
 	if user_tpl.do_totals_form then gosub do_totals
 	user_tpl.do_totals_form = 1
-
 [[OPE_ORDHDR.AOPT-PRNT]]
 print "Hdr:AOPT:PRNT"; rem debug
 
@@ -697,9 +696,9 @@ rem --- Do we need to create a new order number?
 	endif
 
 	rem debug
-	print "   new_seq: ", new_seq$
-	print "  order_no: ", order_no$
-	print "user_entry: ", user_tpl.user_entry$
+	rem print "   new_seq: ", new_seq$
+	rem print "  order_no: ", order_no$
+	rem print "user_entry: ", user_tpl.user_entry$
 
 rem --- Does order exist?
 
@@ -717,7 +716,7 @@ rem --- Does order exist?
 		found = 1
 	endif
 
-	print "     found:", found; rem debug
+	rem print "     found:", found; rem debug
 
 rem --- A new record must be the next sequence
 
@@ -975,10 +974,50 @@ rem --- Enable/disable expire date based on value
 
 	inv_type$ = callpoint!.getUserInput()
 
-	if inv_type$ <> "P" then
+	if inv_type$ = "S" then
 		callpoint!.setColumnEnabled("OPE_ORDHDR.EXPIRE_DATE", -1)
 	else
 		callpoint!.setColumnEnabled("OPE_ORDHDR.EXPIRE_DATE", 1)
+	endif
+
+rem --- Void this order
+
+	if inv_type$ = "V" then
+		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "")
+		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
+		callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG", "I")
+
+	rem --- Add to batch print
+
+		ope_prntlist_dev = fnget_dev("OPE_PRNTLIST")
+		dim ope_prntlist$:fnget_tpl$("OPE_PRNTLIST")
+
+		ope_prntlist.firm_id$     = firm_id$
+		ope_prntlist.ordinv_flag$ = "I"
+		ope_prntlist.ar_type$     = "  "
+		ope_prntlist.customer_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		ope_prntlist.order_no$    = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+		write record (ope_prntlist_dev) ope_prntlist$
+
+	rem --- Save and exit
+
+		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE", "V")
+
+		ordhdr_dev   = fnget_dev("OPE_ORDHDR")
+		ordhdr_tmpl$ = fnget_tpl$("OPE_ORDHDR")
+		dim ordhdr_rec$:ordhdr_tmpl$
+
+		cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		
+		find record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+		ordhdr_rec$ = util.copyFields(ordhdr_tmpl$, callpoint!)
+		write record (ordhdr_dev) ordhdr_rec$
+
+		user_tpl.do_end_of_form = 0
+		callpoint!.setStatus("NEWREC")
+		break; rem --- exit callpoint
 	endif
 
 rem --- Convert Quote?

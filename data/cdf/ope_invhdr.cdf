@@ -41,14 +41,60 @@ rem --- clear availability
 
 	gosub clear_avail
 [[OPE_INVHDR.INVOICE_TYPE.AVAL]]
+print "Hdr:INVOICE_TYPE.AVAL"; rem debug
+
 rem --- Enable/disable expire date based on value
 
 	inv_type$ = callpoint!.getUserInput()
+	print "---Invoice Type: ", inv_type$; rem debug
 
-	if inv_type$ <> "P" then
+	if inv_type$ = "S" then
 		callpoint!.setColumnEnabled("OPE_INVHDR.EXPIRE_DATE", -1)
 	else
 		callpoint!.setColumnEnabled("OPE_INVHDR.EXPIRE_DATE", 1)
+	endif
+
+rem --- Void this order
+
+	if inv_type$ = "V" then
+		print "---Set flags and status"; rem debug
+		callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "")
+		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+		callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "I")
+
+	rem --- Add to batch print
+
+		print "---Add to Print List"; rem debug
+		ope_prntlist_dev = fnget_dev("OPE_PRNTLIST")
+		dim ope_prntlist$:fnget_tpl$("OPE_PRNTLIST")
+
+		ope_prntlist.firm_id$     = firm_id$
+		ope_prntlist.ordinv_flag$ = "I"
+		ope_prntlist.ar_type$     = "  "
+		ope_prntlist.customer_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		ope_prntlist.order_no$    = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+		write record (ope_prntlist_dev) ope_prntlist$
+
+	rem --- Save and exit
+
+		print "---Set type to ""V"" and exit"; rem debug
+		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE", "V")
+
+		invhdr_dev   = fnget_dev("OPE_INVHDR")
+		invhdr_tmpl$ = fnget_tpl$("OPE_INVHDR")
+		dim invhdr_rec$:invhdr_tmpl$
+
+		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+		
+		find record (invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) invhdr_rec$
+		invhdr_rec$ = util.copyFields(invhdr_tmpl$, callpoint!)
+		write record (invhdr_dev) invhdr_rec$
+
+		user_tpl.do_end_of_form = 0
+		callpoint!.setStatus("NEWREC")
+		break; rem --- exit callpoint
 	endif
 
 rem --- Set type in OrderHelper object
@@ -847,6 +893,12 @@ rem --- Does order exist?
 	if start_block then
 		find record (ope01_dev, key=firm_id$+ar_type$+cust_id$+order_no$, dom=*endif) ope01a$
 		found = 1
+	endif
+
+	rem debug
+	if found then 
+		print "---Invoice found"
+		print "---Invoice Type: ", ope01a.invoice_type$
 	endif
 
 rem --- A new record must be the next sequence
