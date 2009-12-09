@@ -21,8 +21,10 @@ print "BEND"; rem debug
 
 rem (not called if the Run button pushed)
 
-	gosub send_back_values
+rem --- The thought here is that is the user pushes the "x" button, we should abandon the changes
+rem gosub send_back_values
 	
+	print "---changes NOT updated"; rem debug
 	print "OPE_ORDTOTALS:END"; rem debug
 [[OPE_ORDTOTALS.ARAR]]
 print "OPE_ORDTOTALS:ARAR"; rem debug
@@ -82,9 +84,10 @@ rem --- Change discount?
 
 rem --- Calculate and display Discount and Tax
 
-	freight_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
 
-	gosub calc_disc_per
+	rem gosub calc_disc_per
 	gosub get_sales_tax
 	gosub tax_calc
 	gosub display_fields
@@ -95,6 +98,7 @@ rem (Doesn't get here if you click the close button "x")
 
 	gosub send_back_values
 
+	print "---changes updated"; rem debug
 	print "OPE_ORDTOTALS:END"; rem debug
 [[OPE_ORDTOTALS.FREIGHT_AMT.AVAL]]
 print "FREIGHT_AMT.AVAL"; rem debug
@@ -106,7 +110,7 @@ rem --- Save freight and recalculate tax
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
 	callpoint!.setColumnData("OPE_ORDTOTALS.FREIGHT_AMT", str(freight_amt))
 
-	gosub calc_disc_per
+	rem gosub calc_disc_per
 	gosub get_sales_tax
 	gosub tax_calc
 	gosub display_fields
@@ -119,7 +123,7 @@ rem --- Save discount and recalculate tax
 	discount_amt = num(callpoint!.getUserInput())
 	freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 
-	gosub calc_disc_per
+	rem gosub calc_disc_per
 	gosub get_sales_tax
 	gosub tax_calc
 	gosub display_fields
@@ -127,27 +131,41 @@ rem --- Save discount and recalculate tax
 [[OPE_ORDTOTALS.<CUSTOM>]]
 rem ==========================================================================
 tax_calc: rem --- Calculate tax amount
-          rem      IN: disc_per_in
+          rem      IN: discount_amt
           rem          ordHelp!
           rem          taxcode dev, rec$, and rec2$
+          rem     OUT: tax_amount
 rem ==========================================================================
 
-	if ordHelp!.getTaxable() <> 0 then 
-		taxable_amt = round(ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100, 2)
-	else
-		taxable_amt = 0
-	endif
+	print "in tax_calc..."; rem debug
+	print "---taxable amount in:", ordHelp!.getTaxable(); rem debug
+	print "---discount amount in:", discount_amt
+
+	rem if ordHelp!.getTaxable() <> 0 then 
+	rem 	taxable_amt = round(ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100, 2)
+	rem else
+	rem 	taxable_amt = 0
+	rem endif
+
+	taxable_amt = max(ordHelp!.getTaxable() - discount_amt, 0)
+	print "---taxable amount after discount:", taxable_amt; rem debug
 
 	if taxcode_rec.tax_frt_flag$ = "Y" then 
 		taxable_amt = taxable_amt + num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 	endif
 
+	rem print "---taxable amount after tax freight:", taxable_amt; rem debug
+
 	tax_amount = 0
 	tax_calc = round(taxcode_rec.tax_rate * taxable_amt / 100, 2)
+
+	print "---Top level tax amount:", tax_calc; rem debug
 
 	if taxcode_rec.op_max_limit <> 0 and abs(tax_calc) > taxcode_rec.op_max_limit then
 		tax_calc = taxcode_rec.op_max_limit * sgn(tax_calc)
 	endif
+
+	rem print "---tax amount after limit:", tax_calc; rem debug
 
 	tax_amount = tax_calc
 
@@ -164,8 +182,12 @@ rem ==========================================================================
 		tax_amount = tax_amount + tax_calc
 	next i
 
+	print "---tax amount after all levels:", tax_amount; rem debug
+
 	callpoint!.setColumnData("OPE_ORDTOTALS.TAX_AMOUNT", str(tax_amount))
 	callpoint!.setStatus("REFRESH")
+
+	print "out"; rem debug
 
 	return
 
@@ -213,6 +235,7 @@ rem ==========================================================================
 calc_disc_per: rem --- Calculate discount percent
                rem      IN: discount_amt
                rem     OUT: disc_per_in
+rem *** NOTE! *** disc_per_in is currently not used; was used in tax_calc
 rem ==========================================================================
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
