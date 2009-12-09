@@ -1,3 +1,7 @@
+[[OPE_INVHDR.DISC_CODE.AVAL]]
+rem --- Set discount code for use in Order Totals
+
+	user_tpl.disc_code$ = callpoint!.getUserInput()
 [[OPE_INVHDR.AOPT-TTLS]]
 rem --- Launch the totals form
 
@@ -51,26 +55,6 @@ rem --- Set type in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getUserInput())
-[[OPE_INVHDR.AREA]]
-print "Hdr:AREA"; rem debug
-
-rem --- Reset all previous values
-
-	user_tpl.prev_line_code$   = ""
-	user_tpl.prev_item$        = ""
-	user_tpl.prev_qty_ord      = 0
-	user_tpl.prev_boqty        = 0
-	user_tpl.prev_shipqty      = 0
-	user_tpl.prev_ext_price    = 0
-	user_tpl.prev_taxable      = 0
-	user_tpl.prev_ext_cost     = 0
-	user_tpl.prev_disc_code$   = ""
-	user_tpl.prev_ship_to$     = ""
-	user_tpl.prev_sales_total  = 0
-
-rem --- Reset flags
-
-	user_tpl.picklist_warned = 0
 [[OPE_INVHDR.AOPT-PRNT]]
 print "Hdr:AOPT.PRNT"; rem debug
 
@@ -266,7 +250,7 @@ rem --- clear availability
 
 	gosub clear_avail
 [[OPE_INVHDR.ARER]]
-rem --- Set flag
+rem --- Set flags
 
 	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
 	callpoint!.setOptionEnabled("DINV",0)
@@ -276,6 +260,29 @@ rem --- Set flag
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
+
+rem --- Clear order helper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.newOrder()
+
+rem --- Reset all previous values
+
+	user_tpl.prev_line_code$   = ""
+	user_tpl.prev_item$        = ""
+	user_tpl.prev_qty_ord      = 0
+	user_tpl.prev_boqty        = 0
+	user_tpl.prev_shipqty      = 0
+	user_tpl.prev_ext_price    = 0
+	user_tpl.prev_taxable      = 0
+	user_tpl.prev_ext_cost     = 0
+	user_tpl.prev_disc_code$   = ""
+	user_tpl.prev_ship_to$     = ""
+	user_tpl.prev_sales_total  = 0
+
+rem --- Reset flags
+
+	user_tpl.picklist_warned = 0
 [[OPE_INVHDR.SHIPTO_NO.BINP]]
 rem --- Save old value
 
@@ -788,6 +795,8 @@ rem --- Set other codes
 	user_tpl.price_code$   = callpoint!.getColumnData("OPE_INVHDR.PRICE_CODE")
 	user_tpl.pricing_code$ = callpoint!.getColumnData("OPE_INVHDR.PRICING_CODE")
 	user_tpl.order_date$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_DATE")
+	user_tpl.disc_code$    = callpoint!.getColumnData("OPE_INVHDR.DISC_CODE")
+	user_tpl.new_order     = 0
 
 rem --- Set OrderHelper object fields
 
@@ -1880,6 +1889,7 @@ rem --- Set fields from the Order Totals form and write back
 	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
 	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
 	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
+	callpoint!.setStatus("REFRESH")
 
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
@@ -2153,7 +2163,8 @@ rem --- Setup user_tpl$
 :		"picklist_warned:u(1), " +
 :		"do_totals_form:u(1), " +
 :		"disc_code:c(1*), " +
-:		"tax_code:c(1*)"
+:		"tax_code:c(1*), " +
+:		"new_order:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2182,6 +2193,7 @@ rem --- Setup user_tpl$
 	user_tpl.do_end_of_form    = 1
 	user_tpl.picklist_warned   = 0
 	user_tpl.do_totals_form    = 1
+	user_tpl.new_order         = 0
 
 rem --- Columns for the util disableCell() method
 

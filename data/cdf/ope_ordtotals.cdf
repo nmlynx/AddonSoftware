@@ -31,15 +31,11 @@ rem --- Get order helper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))	
 
-rem --- Get upper level sales tax
-	
-	gosub get_sales_tax
-
 rem --- Get Amount mask
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",amount_mask$,0,mask_len
 
-rem --- Get previous and current discounts
+rem --- Get current discounts
 
 	file_name$ = "OPC_DISCCODE"
 	disccode_dev = fnget_dev(file_name$)
@@ -48,74 +44,48 @@ rem --- Get previous and current discounts
 	find record (disccode_dev, key=firm_id$+user_tpl.disc_code$, dom=*next) disccode_rec$
 	new_disc_per = disccode_rec.disc_percent
 
-	find record (disccode_dev, key=firm_id$+user_tpl.prev_disc_code$, dom=*next) disccode_rec$
-	old_disc_per = disccode_rec.disc_percent
-	discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	prev_disc_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	new_disc_amt = round(new_disc_per * ordHelp!.getExtPrice() / 100, 2)
 
 	if user_tpl.prev_sales_total <> 0 then
-		calc_prev_disc_per = round(100 * discount_amt / user_tpl.prev_sales_total, 2)
+		prev_disc_per = round(100 * prev_disc_amt / user_tpl.prev_sales_total, 2)
 	else
-		calc_prev_disc_per = 0
+		prev_disc_per = 0
 	endif
 
 rem --- Change discount?
 
-	msg_opt$ = ""
-	disc_per_in = 0
+	print "---New order?", user_tpl.new_order; rem debug
 
-rem --- A discount code or amount has been previously entered and the discount amt doesn't match the old discount percentage
-
-	if (user_tpl.prev_disc_code$ <> "" or discount_amt <> 0) and 
-:		(user_tpl.prev_sales_total = 0 or round(discount_amt, 2) <> round(old_disc_per * user_tpl.prev_sales_total / 100, 2))
-:	then 
-
-		saved_new_disc = new_disc_per
-
-		if user_tpl.prev_sales_total <> 0 then 
-			disc_per_in = calc_prev_disc_per
+	if new_disc_amt <> prev_disc_amt then
+		if user_tpl.new_order then
+			discount_amt = new_disc_amt
+			callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT", str(discount_amt))
 		else
-			disc_per_in = old_disc_per
-		endif
-
-		if ordHelp!.getExtPrice() <> user_tpl.prev_sales_total 	or 
-:			user_tpl.disc_code$    <> user_tpl.prev_disc_code$		or
-:			round(disc_per_in * ordHelp!.getExtPrice() / 100, 2) <> discount_amt
-:		then
-			gosub tax_calc
-			rem gosub display_fields
 
 		rem --- Replace discounts?
 
-			new_disc_amt = round(saved_new_disc * ordHelp!.getExtPrice() / 100, 2)
-			
-			if disc_per_in<>new_disc_per or discount_amt<>new_disc_amt then
+			msg_id$ = "OP_REPLACE_DISC"
+			dim msg_tokens$[4]
+			msg_tokens$[1] = cvs( str(prev_disc_per:"##0.00-"), 3) + "%"
+			msg_tokens$[2] = cvs( str(prev_disc_amt:amount_mask$), 3)
+			msg_tokens$[3] = cvs( str(new_disc_per:"##0.00-"), 3) + "%"
+			msg_tokens$[4] = cvs( str(new_disc_amt:amount_mask$), 3)
+			gosub disp_message
 
-				msg_id$ = "OP_REPLACE_DISC"
-				dim msg_tokens$[4]
-				msg_tokens$[1] = cvs( str(disc_per_in:"##0.00-"), 3) + "%"
-				msg_tokens$[2] = cvs( str(discount_amt:amount_mask$), 3)
-				msg_tokens$[3] = cvs( str(new_disc_per:"##0.00-"), 3) + "%"
-				msg_tokens$[4] = cvs( str(new_disc_amt:amount_mask$), 3)
-				gosub disp_message
-
-				if msg_opt$ = "N" then new_disc_per = disc_per_in
+			if msg_opt$ = "Y" then
+				discount_amt = new_disc_amt
+				callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT", str(discount_amt))
 			endif
 		endif
 	endif
 
-	if msg_opt$ <> "N" then discount_amt = round(new_disc_per * ordHelp!.getExtPrice() / 100, 2)
-	callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT", str(discount_amt))
-	user_tpl.prev_sales_total = ordHelp!.getExtPrice()
+rem --- Calculate and display Discount and Tax
 
-rem --- Calculate and display Discount, Tax & Cash Receipt
-
-	user_tpl.prev_disc_code$ = user_tpl.disc_code$
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 
-	if disp_per_in = 0 then
-		gosub calc_disc_per
-	endif
-
+	gosub calc_disc_per
+	gosub get_sales_tax
 	gosub tax_calc
 	gosub display_fields
 [[OPE_ORDTOTALS.ASVA]]
@@ -209,27 +179,6 @@ rem ==========================================================================
 	dim taxcode_rec$:fnget_tpl$(file_name$)
 	dim taxcode_rec2$:fnget_tpl$(file_name$)
 	find record (taxcode_dev, key=firm_id$+user_tpl.tax_code$, dom=*next) taxcode_rec$
-
-	return
-
-rem ==========================================================================
-get_ordhdr_rec: rem --- Get order header record and order helper object
-                rem     OUT: ordHelp!
-                rem          ordhdr_rec$
-rem ==========================================================================
-
-	escape; rem debug
-
-rem --- Note: although the order header record is retrieved and used, it is 
-rem     not written back to disk.  This is done in the callers (OPE_ORDHDR and
-rem     OPE_INVHDR).  The values are passed back via the ordHelp! object.
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))	
-
-	file_name$ = "OPE_ORDHDR"
-	dim ordhdr_rec$:fnget_tpl$(file_name$)
-	ordhdr_dev = fnget_dev(file_name$)
-	find record (ordhdr_dev, key=firm_id$+"  "+ordHelp!.getCust_id()+ordHelp!.getOrder_no()) ordhdr_rec$
 
 	return
 
