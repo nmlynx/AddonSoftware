@@ -112,7 +112,7 @@ rem --- Retrieve parameter records
 rem --- Initializations
 
     dim headings$[8],o[12]
-    dim pt[4],pr[4],rt[4],rr[4],at[4],ar[4],vt[3],vr[4],it[2]
+    dim pt[4],pr[4],rt[4],rr[4],at[4],ar[4],vt[4],vr[4],it[2]
 
     typebreak_flag = 0; rem -- Flag for  typebreak  
 
@@ -266,31 +266,43 @@ rem --- Headings and print positions
         head6$="H"
     endif
 
-    if export_format$="Y" then
-        columns=14
-        dim columns$[columns,10]
-        columns$[0,0]="Vendor ID",          columns$[0,1]="C",columns$[0,2]="10"
-        columns$[1,0]="Name",               columns$[1,1]="C",columns$[1,2]="20"
-        columns$[2,0]="Phone",              columns$[2,1]="C",columns$[2,2]="10"        
-        columns$[3,0]="Alt Seq",            columns$[3,1]="C",columns$[3,2]="10"        
+	if export_format$="Y" then
+		if detail then
+	       	columns=14
+		else
+	    	columns=9
+		endif
+		
+       	dim columns$[columns,10]
+       	columns$[0,0]="Vendor ID",          columns$[0,1]="C",columns$[0,2]="8"
+       	columns$[1,0]="Name",               columns$[1,1]="C",columns$[1,2]="20"
+       	columns$[2,0]="Phone",              columns$[2,1]="C",columns$[2,2]="10"        
+       	columns$[3,0]="Alt Seq",            columns$[3,1]="C",columns$[3,2]="10"        
     else
-        columns=12
+    	if detail then
+        	columns=12
+        else
+        	columns=7
+		endif
         dim columns$[columns,10]
         columns$[0,0]="Vendor ID^Name",          columns$[0,1]="C",columns$[0,2]="20"
         columns$[1,0]="Alt Seq^Phone",           columns$[1,1]="C",columns$[1,2]="10"
     endif
-    
-    columns$[columns-10,0]=head2$,  columns$[columns-10,1]="C", columns$[columns-10,2]="8"
-    columns$[columns-9,0]=head3$,   columns$[columns-9,1]="C",  columns$[columns-9,2]="8"
-    columns$[columns-8,0]=head4$,   columns$[columns-8,1]="C",  columns$[columns-8,2]="8"
-    columns$[columns-7,0]=head5$,   columns$[columns-7,1]="C",  columns$[columns-7,2]="3"
-    columns$[columns-6,0]=head6$,   columns$[columns-6,1]="C",  columns$[columns-6,2]="3"
-    columns$[columns-5,0]="Future", columns$[columns-5,1]="N",  columns$[columns-5,2]=str(m1-2), columns$[columns-5,3]=m1$, columns$[columns-5,10]="T"
-    columns$[columns-4,0]=date1$,   columns$[columns-4,1]="N",  columns$[columns-4,2]=str(m1-2), columns$[columns-4,3]=m1$, columns$[columns-4,10]="T"
-    columns$[columns-3,0]=date2$,   columns$[columns-3,1]="N",  columns$[columns-3,2]=str(m1-2), columns$[columns-3,3]=m1$, columns$[columns-3,10]="T"
-    columns$[columns-2,0]=date3$,   columns$[columns-2,1]="N",  columns$[columns-2,2]=str(m1-2), columns$[columns-2,3]=m1$, columns$[columns-2,10]="T"
-    columns$[columns-1,0]=date4$,   columns$[columns-1,1]="N",  columns$[columns-1,2]=str(m1-2), columns$[columns-1,3]=m1$, columns$[columns-1,10]="T"
-    columns$[columns,0]="Total",    columns$[columns,1]="N",    columns$[columns,2]=str(m1-2),   columns$[columns,3]=m1$,   columns$[columns,10]="T"
+
+	if summary=0
+	    columns$[columns-10,0]=head2$,  columns$[columns-10,1]="C", columns$[columns-10,2]="8"
+	    columns$[columns-9,0]=head3$,   columns$[columns-9,1]="C",  columns$[columns-9,2]="8"
+	    columns$[columns-8,0]=head4$,   columns$[columns-8,1]="C",  columns$[columns-8,2]="8"
+	    columns$[columns-7,0]=head5$,   columns$[columns-7,1]="C",  columns$[columns-7,2]="3"
+	    columns$[columns-6,0]=head6$,   columns$[columns-6,1]="C",  columns$[columns-6,2]="3"
+	endif
+	
+    columns$[columns-5,0]="Future", columns$[columns-5,1]="N",  columns$[columns-5,2]=str(m1-3), columns$[columns-5,3]=m1$, columns$[columns-5,10]="T"
+    columns$[columns-4,0]=date1$,   columns$[columns-4,1]="N",  columns$[columns-4,2]=str(m1-3), columns$[columns-4,3]=m1$, columns$[columns-4,10]="T"
+    columns$[columns-3,0]=date2$,   columns$[columns-3,1]="N",  columns$[columns-3,2]=str(m1-3), columns$[columns-3,3]=m1$, columns$[columns-3,10]="T"
+    columns$[columns-2,0]=date3$,   columns$[columns-2,1]="N",  columns$[columns-2,2]=str(m1-3), columns$[columns-2,3]=m1$, columns$[columns-2,10]="T"
+    columns$[columns-1,0]=date4$,   columns$[columns-1,1]="N",  columns$[columns-1,2]=str(m1-3), columns$[columns-1,3]=m1$, columns$[columns-1,10]="T"
+    columns$[columns,0]="Total",    columns$[columns,1]="N",    columns$[columns,2]=str(m1-3),   columns$[columns,3]=m1$,   columns$[columns,10]="T"
 
 rem --- Define print positions
 
@@ -438,7 +450,7 @@ rem --- Read next Invoice Header (apt-01) record
 			read record (apt11_dev) apt11a$
 			if cvs(apt11a.trans_type$,2)="" then continue
 			if include=0 and apt11a.trans_date$>agingdate$ then continue
-			
+
 			it[0]=it[0]+apt11a.trans_amt
 			it[1]=it[1]+apt11a.trans_disc
 			it[2]=it[2]+apt11a.trans_ret
@@ -476,6 +488,7 @@ rem --- Read next Invoice Header (apt-01) record
 		period=pos(dateused$>enddates$,8)
 
                 rem --- if the dateused is not greater than any of the end dates, put to first
+
 		if period=0 then period=4 else period=int(period/8)
 
 		rem --- Accumulate totals
@@ -647,7 +660,6 @@ vendor_break: rem --- Vendor break
 			OutVect!.addItem(apm01a.vendor_name$)
 			OutVect!.addItem(phone$)
 
-			xwk = fnblank(5)
 			OutVect!.addItem(str(vt[0]))
 			OutVect!.addItem(str(vt[1]))
 			OutVect!.addItem(str(vt[2]))
@@ -657,7 +669,27 @@ vendor_break: rem --- Vendor break
 
 			lines=lines+2
 		endif
-		
+
+		if summary and export_format$="Y" and printed
+			totamt=0
+			
+			for x=0 to 4
+				totamt=totamt+vt[x]
+			next x
+
+			OutVect!.addItem(apm01a.vendor_id$)
+			OutVect!.addItem(apm01a.vendor_name$)
+			OutVect!.addItem(phone$)
+			OutVect!.addItem(apm01a.alt_sequence$)
+			OutVect!.addItem(str(vt[0]))
+			OutVect!.addItem(str(vt[1]))
+			OutVect!.addItem(str(vt[2]))
+			OutVect!.addItem(str(vt[3]))
+			OutVect!.addItem(str(vt[4]))
+			OutVect!.addItem(str(totamt))
+
+			lines=lines+1
+		endif
 	endif	
 	
     if !(done) then 
