@@ -19,7 +19,9 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
-    milestone=num(stbl("+MILESTONE"))
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
 
 rem --- Open/Lock files
 
@@ -114,7 +116,7 @@ rem --- Document columns
 
 rem --- Start progress meter and position file
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,apm01_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","APM_VENDMAST","","","",0,apm01_dev,1,meter_num,status
     while begvend$<>""
           read (apm01_dev,key=firm_id$+begvend$)
           read (apm01_dev,dir=-1,err=*next)
@@ -133,7 +135,7 @@ rem --- Get next key
         
         record_count=record_count+1
         if mod(record_count,milestone)=0 
-:            call pgmdir$+"adc_progress.aon","S","","","","",0,apm01_dev,1,meter_num,status
+:            call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
         rem --- Format output fields
 
