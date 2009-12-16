@@ -21,7 +21,11 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
-
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next))
+    total_recs=0
+    
 rem --- Open/Lock files
 
     files=5,begfile=1,endfile=files
@@ -206,7 +210,7 @@ rem --- Determine which years for GL summary (glm-02) records
 
 rem --- Start progress meter
 
-    call stbl("+DIR_PGM")+"adc_progress.aon","NC","","","","",0,glt06_dev,1,meter_num,status
+    call stbl("+DIR_PGM")+"adc_progress.aon","NC","GLT_TRANSDETAIL","","","",0,glt06_dev,1,meter_num,status
     glt06_key$=firm_id$
     if cvs(begacct$,2)<>"" then glt06_key$=glt06_key$+begacct$
     read (glt06_dev,key=glt06_key$,dom=*next)
@@ -218,7 +222,8 @@ rem --- Read next transaction history (glt-06) record
           k$=key(glt06_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
           read record (glt06_dev,key=k$)glt06a$
-          call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           transdate$=glt06a.posting_year$+glt06a.posting_per$
           if endacct$<>"" if glt06a.gl_account$>endacct$ break
           if transdate$<starting$ continue
@@ -745,7 +750,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     close (glm02_dev,err=*next)
     close (glm03_dev,err=*next)
     close (glt06_dev,err=*next)
-    run stbl("+DIR_PGM")+menu$,err=*next
+
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 
