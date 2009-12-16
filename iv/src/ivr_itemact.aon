@@ -45,8 +45,11 @@ rem --- Retrieve sysinfo data
     firm_name$=sysinfo.firm_name$
     task_desc$=sysinfo.task_desc$
     sys_date$=sysinfo.system_date$
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next))
 
-rem --- Open files
+    rem --- Open files
 
     files=7,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
@@ -131,10 +134,11 @@ rem --- Initializations
     headings$[2]="From Period "+begper$+" "+begyear$+" Through Period "+endper$+" "+endyear$
     more=1
     recs=0
+    total_recs=0
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",7+p[0],ivm01a_dev,1,0,status
+    call pgmdir$+"adc_progress.aon","N","IVM_ITEMMAST","","Printing","",7+p[0],ivm01a_dev,1,0,status
     if status = 999 then goto std_exit
 
 rem --- Report headings
@@ -197,11 +201,11 @@ rem --- Main Read
         whse$     = read_tpl.warehouse_id$
         product$  = read_tpl.product_type$
         item$     = read_tpl.item_id$
-        x$ = whse$+" "+product$+" "+item$(1,p[0])
 
 rem --- Level breaks?
 
-        call pgmdir$+"adc_progress.aon","S","","","",x$,0,0,1,meter_num,status
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
         if status = 999 then exitto std_exit
 
         if whse$<>t0$ gosub whse_break

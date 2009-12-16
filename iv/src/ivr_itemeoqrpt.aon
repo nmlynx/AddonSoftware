@@ -14,10 +14,13 @@ rem --- Retrieve the program path
 
 rem --- Retrieve sysinfo data
 
-    dim sysinfo$:stbl("+SYSINFO_TPL")
-    sysinfo$=stbl("+SYSINFO")
-    rem milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
+
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next))
 
 rem --- Open/Lock files
 
@@ -79,9 +82,8 @@ rem --- Retrieve parameter records
     find record (ivs01b_dev,key=ivs01b_key$,err=std_missing_params) ivs01b$
     ivs01c_key$=firm_id$+"IV02"
     find record (ivs01c_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
-  
 
-rem --- Parameters
+    rem --- Parameters
 
     dim p[5],g[1],i[1],percents[25],factors[25],ivchannels[20]
     p[0]=ivs01a.item_id_len
