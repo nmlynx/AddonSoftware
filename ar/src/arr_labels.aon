@@ -18,8 +18,10 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)    
 
 rem --- Open/Lock files
 
@@ -103,8 +105,8 @@ rem --- Document initializations
         rep_time_stamp$=date(0:"%Hz%mz%sz")
         rep_prog$=pgm(-2)
 
-	columns=5
-	dim columns$[columns,10]
+    columns=5
+    dim columns$[columns,10]
 
         columns$[0,0]="Name",columns$[0,1]="C",columns$[0,2]="30"
         columns$[1,0]="Address 1",columns$[1,1]="C",columns$[1,2]="30"
@@ -135,6 +137,7 @@ rem --- Initializations
     keynum=0
     begvalue$=begcustomer$
     endvalue$=endcustomer$
+    total_recs=0
     keyfield$="CUSTOMER_ID"
     if sequence$="A"
        keynum=2
@@ -187,7 +190,7 @@ rem --- Print test patterns until the user is satisfied
     
 rem --- Start the progress meter and position the file
 
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
     read record (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dir=0,dom=*next)arm01a$
 
 rem --- Read next Customer Master (arm-01) record
@@ -196,7 +199,8 @@ rem --- Read next Customer Master (arm-01) record
           read record (arm01_dev,end=*break)arm01a$
           if arm01a.firm_id$<>firm_id$ break
           if endvalue$<>"" if cvs(field(arm01a$,keyfield$),3)>endvalue$ break
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           dim arm02a$:fattr(arm02a$)
           read record (arm02_dev,key=arm01a.firm_id$+arm01a.customer_id$+"  ") arm02a$
           if cvs(labelcode$,3)<>""
