@@ -490,6 +490,8 @@ rem    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     OutVect!.addItem(str(t[0]:m1$)+$00$+"R")
     OutVect!.addItem(str(t[1]:m1$)+$00$+"R")
     xwk = fnblank(6)
+    
+    out_action$="FORMAT"
     goto std_exit
 
 ord_header: rem --- Print Order Header
@@ -522,19 +524,19 @@ ord_header: rem --- Print Order Header
     endif
 
     xwk = fnblank(13)
-    OutVect!.addItem("Ln    Cd    Whs")
-    OutVect!.addItem("Prd")
-    OutVect!.addItem("Item")
-    OutVect!.addItem("Order "+$00$+"R")
-    OutVect!.addItem("Back Order "+$00$+"R")
-    OutVect!.addItem("Ship "+$00$+"R")
-    OutVect!.addItem("Disc pct"+$00$+"R")
-    OutVect!.addItem("Price "+$00$+"R")
-    OutVect!.addItem("Ext. Price "+$00$+"R")
-    OutVect!.addItem("Cost "+$00$+"R")
-    OutVect!.addItem("Extended Cost "+$00$+"R")
-    OutVect!.addItem("Profit "+$00$+"R")
-    OutVect!.addItem("GP%"+$00$+"R")
+    OutVect!.addItem("Ln    Cd    Whs"+$00$+"B")
+    OutVect!.addItem("Prd"+$00$+"B")
+    OutVect!.addItem("Item"+$00$+"B")
+    OutVect!.addItem("Order "+$00$+"RB")
+    OutVect!.addItem("Back Order "+$00$+"RB")
+    OutVect!.addItem("Ship "+$00$+"RB")
+    OutVect!.addItem("Disc pct"+$00$+"RB")
+    OutVect!.addItem("Price "+$00$+"RB")
+    OutVect!.addItem("Ext. Price "+$00$+"RB")
+    OutVect!.addItem("Cost "+$00$+"RB")
+    OutVect!.addItem("Extended Cost "+$00$+"RB")
+    OutVect!.addItem("Profit "+$00$+"RB")
+    OutVect!.addItem("GP%"+$00$+"RB")
 
     return
 
