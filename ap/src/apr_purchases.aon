@@ -30,8 +30,10 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)    
 
 rem --- Open/Lock files
 
@@ -121,6 +123,8 @@ rem --- Initializations
     recs=0
     when$=sysinfo.system_date$
     clock$=""
+    total_recs=0
+    
     nf$="(Not on File)"
     lasttype$=""
     lastacct$=""
@@ -290,7 +294,7 @@ rem --- Sort Invoice History (apt-02) by alternate sequence
 rem --- Start progress meter and position the driver file
 
     sequence=pos(sequence$="ADV")
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,apt02_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","NC","APT_INVOICEDIST","","","",0,apt02_dev,1,meter_num,status
     if pos(sequence$="VD") then read (apt02_dev,key=firm_id$,knum=keynum,dom=*next)
 
 rem --- Read next invoice history or sort record
@@ -332,7 +336,8 @@ rem --- Read next invoice history or sort record
             if (vend_type$="P" and apm01a.temp_vend$="Y") or (vend_type$="T" and apm01a.temp_vend$<>"Y") then continue
         endif
           
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
         rem --- Level breaks
 

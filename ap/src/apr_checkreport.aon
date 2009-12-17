@@ -18,8 +18,10 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)    
 
 rem --- Open/Lock files
 
@@ -84,6 +86,8 @@ rem --- Initializations
     when$=sysinfo.system_date$
     clock$=""
     nf$="(Not on File)"
+    total_recs=0
+    
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+" For Period "+str(period)+" From "+fndate$(begdate$)+
 :                " Through "+fndate$(enddate$)
@@ -168,7 +172,7 @@ rem --- Open printer, start progress meter and position the file
 
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,apt05_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","NC","APT_CHECKHISTORY","","","",0,apt05_dev,1,meter_num,status
     read (apt05_dev,key=firm_id$,dom=*next)
 
 rem --- Read the next Check History (apt-05) record
@@ -177,7 +181,8 @@ rem --- Read the next Check History (apt-05) record
           k$=key(apt05_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
           read record (apt05_dev) apt05a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if apt05a.check_date$<begdate$ continue
           if apt05a.check_date$>enddate$ continue
           
