@@ -22,9 +22,13 @@ rem --- Retrieve the program path
 
 rem --- Retrieve sysinfo data
 
-    dim sysinfo$:stbl("+SYSINFO_TPL")
-    sysinfo$=stbl("+SYSINFO")
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
+
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next))
 
 rem --- Open/Lock files
 
@@ -114,7 +118,7 @@ rem --- Run report overlay
 
     run pgmdir$+"opr_invoiceedit_o1.aon"
 
-    rem --- #include std_error.src
+rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
 
