@@ -50,7 +50,8 @@ rem --- Options
 
 rem --- Position File
 
-    call pgmdir$+"adc_progress.aon","N",title$,"","","",m0,glw03_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","update bals","","",m0,glw03_dev,1,meter_num,status
+    total_recs=0
     read (glw03_dev,key=firm_id$,dom=*next)
 
 rem --- Read next glw-03 record
@@ -59,7 +60,8 @@ rem --- Read next glw-03 record
           k$=key(glw03_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
           read record (glw03_dev,key=k$)glw03a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
           rem --- Retrieve glm-02 record
 
@@ -74,12 +76,15 @@ rem --- Read next glw-03 record
 rem --- All done
 
     if prompt$="Y"
-        call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
         msg_id$="UPDATE_COMPLETE"
         dim msg_tokens$[1]
         msg_opt$=""
         gosub disp_message
-        endif
+    endif
+    
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    wait 1;rem --- give this progress meter a chance to clear before displaying next one
+    
     run program$,err=std_exit
 
 disp_message: rem --- Display Message Dialog
