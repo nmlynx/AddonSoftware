@@ -23,7 +23,7 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
     
     milestone=50
-    milestone=num(stbl("+MILESTONE",err=*next))
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     total_recs=0
     
 rem --- Open/Lock files
