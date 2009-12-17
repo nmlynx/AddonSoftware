@@ -177,6 +177,7 @@ rem --- Initializations
     errors=0
     more=1
     recs=0
+    glrecap$="N"
     
     if gl$="Y" then 
         glh$="GL Account"
@@ -449,6 +450,11 @@ rem --- Print GL recap and run update
         overlay$=update$
     endif
     
+rem --- Only run recap if transactions generated gl entries
+    if glrecap$="N"
+    	overlay$=update$
+    endif
+    
     out_action$="PRT-PDF"
     next_overlay$=overlay$
     if update$=""
@@ -507,6 +513,7 @@ glrecap: rem --- Standard G/L Recap Routine
     if gl$="Y" then
         call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,not_used,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
         if status then goto std_exit_no_report
+        glrecap$="Y"
     endif
     
     return
