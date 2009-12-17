@@ -53,21 +53,22 @@ rem --- Initializations
 
 rem --- Start progress meter
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,glm01_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","GLM_ACCT","roll years","","",0,glm01_dev,1,meter_num,status
+    total_recs=0
 
 rem --- Disallow 'M'enu option in Error Routine
 
     exit_ctrl=1
 
 rem --- Position File
-
     read (glm01_dev,key=firm_id$,dom=*next)
 
 rem --- Read next glm-02 record
 
     while more
         glm01_key$=key(glm01_dev,end=done)
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
         if pos(firm_id$=glm01_key$)<>1 goto done
         read (glm01_dev)
 
@@ -222,11 +223,13 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+
     msg_id$="UPDATE_COMPLETE"
     dim msg_tokens$[1]
     msg_opt$=""
     gosub disp_message
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    
     run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
