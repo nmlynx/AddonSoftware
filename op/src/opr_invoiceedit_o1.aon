@@ -35,6 +35,7 @@ rem --- Initialize Data
 
     more=1
     recs=0
+    total_recs=0
     precision i[1]
     
     func.setLen1(int(i[3]))
@@ -51,7 +52,7 @@ rem --- Initialize Data
     m9$="###.0%",clock$="",when$=sysinfo.system_date$
     
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
-rem     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1  
+rem call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1  
     call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,m1,0  
     call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,m2,0
     call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,m3,0
@@ -129,7 +130,7 @@ rem --- Retrieve templates
 
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,ope01_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","OPE_ORDHDR","","","",0,ope01_dev,1,meter_num,status
     if status = 999 goto std_exit
 
 rem --- Initial Read
@@ -141,12 +142,13 @@ rem --- Main Loop Starts
     while more
         ope01a_key$=key(ope01_dev,end=*break)
         
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
+        if status = 999 then goto std_exit
+        
         if pos(firm_id$+"  "=ope01a_key$)<>1 then break
         if thru_cust$<>"" and ope01a_key.firm_id$+ope01a_key.ar_type$+ope01a_key.customer_id$>firm_id$+"  "+thru_cust$ then break
         if thru_ord$<>"" and ope01a_key.order_no$>thru_ord$ then break
-        
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        if status = 999 then exitto std_exit
         
         read record (ope01_dev,key=ope01a_key$) ope01a$
         if ope01a.ordinv_flag$<>"I" or ope01a.ar_inv_no$=fill(len(ope01a.ar_inv_no$)) then continue
