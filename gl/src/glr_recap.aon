@@ -124,6 +124,8 @@ rem    errors=0
     process_id$=stbl("+PROCESS_ID")
     batch_no$=stbl("+BATCH_NO")
     recs=0
+    total_recs=0
+    if milestone=0 then milestone=50
 
 rem --- column headings
 
@@ -162,7 +164,7 @@ rem --- Build heading strings
 rem --- Display Resource
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glw11_dev,1,0,status
+    call pgmdir$+"adc_progress.aon","NC","","GL recap","","",0,glw11_dev,1,0,status
 
 rem --- Report Headings
 
@@ -190,7 +192,8 @@ rem --- Get next glw-11 key
 rem --- Read next glw-11 record
 
           read record (glw11_dev,key=k$)glw11a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
 rem --- Level breaks?
 

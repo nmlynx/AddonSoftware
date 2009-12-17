@@ -21,7 +21,10 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
-
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)  
+    
 rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
@@ -104,6 +107,7 @@ rem --- Initializations
     h1$=""
     h2$=""
     recs=0
+    total_recs=0
 
 rem --- Document columns
 
@@ -187,11 +191,11 @@ rem --- Build report headings
         headings$[4]=val$
     fi
 
-	if pagebreak$="Y" headings$[6]="[HEADER]"
-	
+    if pagebreak$="Y" headings$[6]="[HEADER]"
+    
 rem --- Start the progress meter
 
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glt04_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,glt04_dev,1,meter_num,status;rem --- don't include filename here since file is locked; causes pause in adc_progress while SQL stmts time out on err 0
     k$=firm_id$+journal$
     if sequence$="D" k$=firm_id$+begdate$
     read (glt04_dev,key=k$,knum=keynum,dom=*next)
@@ -206,7 +210,8 @@ rem --- Read next daily detail record
           recs=recs+1
           read record (glt04_dev,key=k$)glt04a$
 
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
           rem --- Range tests
 
@@ -438,8 +443,8 @@ audit_break: rem --- Audit number break
     units=at[2]
     gosub print_totals
     if pagebreak$<>"Y"
-    	xwk=fnblank(7)
-    	goto new_audit
+        xwk=fnblank(7)
+        goto new_audit
     endif
     gosub journal_subheading
 
@@ -623,7 +628,7 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
-
+    
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 

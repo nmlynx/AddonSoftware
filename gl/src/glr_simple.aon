@@ -26,6 +26,9 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)        
 
 rem --- Open/Lock files
 
@@ -95,6 +98,8 @@ rem --- Initializations
     l=l9+1
     o[1]=h0-m1
     o[0]=o[1]-m1-1
+    total_recs=0
+    
     mtdhdr$=""
     ytdhdr$=""
     period=num(begper$)
@@ -142,7 +147,7 @@ rem --- Document columns
 
 rem --- Start progress meter
 
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,glm01_dev,1,0,status
+    call pgmdir$+"adc_progress.aon","NC","GLM_ACCT","sorting","","",0,glm01_dev,1,0,status
     read (glm01_dev,key=firm_id$,dom=*next)
 
 rem --- Read through account masters and build sort based on account type
@@ -172,12 +177,17 @@ rem --- and chart of accounts breaks.
           glw02_key$=glw02a.firm_id$+glw02a.gl_acct_type$+glw02a.acct_no_brk$+glw02a.gl_account$
           glw02a$=field(glw02a$)
           write record (glw02_dev,key=glw02_key$) glw02a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
     wend
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    wait 1; rem give first progress meter a chance to clear; less confusing to the eye
+    
 rem --- Position sort file
 
     break$=chartbreaks$
+    total_recs=0
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,glw02_dev,1,0,status;rem file is locked, so don't send in filename$ or sql in adc_progress pauses waiting for err 0  
     read (glw02_dev,key=firm_id$,dom=*next)
 
 rem --- Read next sort record
@@ -186,6 +196,9 @@ rem --- Read next sort record
           k$=key(glw02_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
           read record (glw02_dev) glw02a$
+
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
           rem --- Retrieve account master and account summary records
 
