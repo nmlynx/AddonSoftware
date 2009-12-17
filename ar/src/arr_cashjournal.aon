@@ -30,8 +30,11 @@ rem --- Retrieve sysinfo data
             sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
             dim sysinfo$:sysinfo_template$
             sysinfo$=stbl("+SYSINFO",err=*next)
-            milestone=num(stbl("+MILESTONE",err=*next),err=*next)
             firm_id$=sysinfo.firm_id$
+            
+            milestone=50
+            milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+
 
 rem --- Open/Lock files
 
@@ -143,6 +146,8 @@ rem --- Initializations
             keynum=0
             begvalue$=begcust$
             endvalue$=endcust$
+            total_recs=0
+            
             headings$[0]=sysinfo.firm_name$
             headings$[1]=sysinfo.task_desc$+" By Customer ID"
             if sequence$="A"
@@ -231,7 +236,7 @@ rem --- Dimension string templates
 
 rem --- Start progress meter and position Customer Master (arm-01) file
 
-            call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
+            call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
             k$=firm_id$
             read (arm01_dev,knum=keynum,key=k$+begvalue$,dir=0,dom=*next)
 
@@ -241,7 +246,8 @@ rem --- Read next Customer Master (arm-01) record
           k$=key(arm01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
           read record (arm01_dev,knum=keynum,key=k$) arm01a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if sequence$="C" if endvalue$<>"" if arm01a.customer_id$>endvalue$ break
           if sequence$="A" if endvalue$<>"" if arm01a.alt_sequence$>endvalue$ break
           printed=0

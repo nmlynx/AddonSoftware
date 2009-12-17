@@ -27,8 +27,10 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)        
 
 rem --- Open/Lock files
 
@@ -107,6 +109,8 @@ rem --- Initializations
     clock$=""
     artype$=fill(2)
     nf$="(Not on File)"
+    total_recs=0
+    
     keynum=0
     begvalue$=begcust$
     endvalue$=endcust$
@@ -168,7 +172,7 @@ rem --- Define print positions
 rem --- Open printer, start progress meter and position Customer Master (arm-01) file
 
     read(arm01_dev,key=firm_id$,knum=keynum,dom=*next)
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
     k$=firm_id$
     while begvalue$<>""
         read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dom=no_find)
@@ -191,7 +195,8 @@ rem --- Read next Customer Master (arm-01) record
           endif
           if endvalue$<>"" if k$(3,endvalue)>endvalue$ break
           read record (arm01_dev,knum=keynum,key=k$) arm01a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+          total_recs=total_recs+1
+          if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if sequence$="C" if endvalue$<>"" if arm01a.customer_id$>endvalue$ break
           if sequence$="A" if endvalue$<>"" if arm01a.alt_sequence$>endvalue$ break
 

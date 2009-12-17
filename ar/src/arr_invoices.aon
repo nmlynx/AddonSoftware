@@ -23,8 +23,10 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+    
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)    
 
 rem --- Derive/set path and filename for logo to go on form
 
@@ -110,6 +112,7 @@ rem --- Initializations
     msg_id$="PRINT_TEST_PATTERN"
     nf$="(Not on file)"
     recs=0
+    total_recs=0
 
 rem --- Initialize print positions
 
@@ -182,7 +185,7 @@ docPrint!=myBBjPrinter!.getForm(0)
 
 rem --- Start progress meter and position header file
 
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,are05_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","NC","ARE_INVHDR","","","",0,are05_dev,1,meter_num,status
     k$=firm_id$
     if restart$<>"N" k$=k$+invoice$(1,max(0,len(invoice$)-1)),invoice$=firm_id$+invoice$
     read (are05_dev,key=k$,dom=*next)
@@ -195,8 +198,9 @@ rem --- Read next Invoice Header (are-05) record
         if are05a.firm_id$<>firm_id$ break
         recs=recs+1
         if restart$<>"N" if are05a$(1,len(invoice$))<invoice$ then continue
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
+        
         rem --- Skip voided invoices
 
         if are05a.sim_inv_type$="V" continue
