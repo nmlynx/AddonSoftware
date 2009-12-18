@@ -84,12 +84,12 @@ rem --- Change discount?
 
 rem --- Calculate and display Discount and Tax
 
-	freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	callpoint!.setColumnData("OPE_ORDTOTALS.TAX_AMOUNT", str(tax_amount))
 
-	rem gosub calc_disc_per
-	gosub get_sales_tax
-	gosub tax_calc
 	gosub display_fields
 [[OPE_ORDTOTALS.ASVA]]
 print "ASVA"; rem debug
@@ -106,13 +106,12 @@ print "FREIGHT_AMT.AVAL"; rem debug
 rem --- Save freight and recalculate tax
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	freight_amt  = num(callpoint!.getUserInput())
-	discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getUserInput())
 	callpoint!.setColumnData("OPE_ORDTOTALS.FREIGHT_AMT", str(freight_amt))
+	discount_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	callpoint!.setColumnData("OPE_ORDTOTALS.TAX_AMOUNT", str(tax_amount))
 
-	rem gosub calc_disc_per
-	gosub get_sales_tax
-	gosub tax_calc
 	gosub display_fields
 [[OPE_ORDTOTALS.DISCOUNT_AMT.AVAL]]
 print "DISCOUNT_AMT.AVAL"; rem debug
@@ -121,11 +120,11 @@ rem --- Save discount and recalculate tax
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	discount_amt = num(callpoint!.getUserInput())
-	freight_amt  = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT", str(discount_amt))
+	freight_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	callpoint!.setColumnData("OPE_ORDTOTALS.TAX_AMOUNT", str(tax_amount))
 
-	rem gosub calc_disc_per
-	gosub get_sales_tax
-	gosub tax_calc
 	gosub display_fields
 	
 [[OPE_ORDTOTALS.<CUSTOM>]]
@@ -221,6 +220,7 @@ display_fields: rem --- Display net sales and subtotal
                 rem      IN: discount_amt
                 rem          ordHelp!
                 rem          freight_amt
+                rem          tax_amount
 rem ==========================================================================
 
 	tax_amt = num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))

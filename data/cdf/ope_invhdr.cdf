@@ -80,16 +80,8 @@ rem --- Void this order
 
 		print "---Set type to ""V"" and exit"; rem debug
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE", "V")
-
-		invhdr_dev   = fnget_dev("OPE_INVHDR")
-		invhdr_tmpl$ = fnget_tpl$("OPE_INVHDR")
-		dim invhdr_rec$:invhdr_tmpl$
-
-		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-		
-		find record (invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) invhdr_rec$
-		invhdr_rec$ = util.copyFields(invhdr_tmpl$, callpoint!)
+		gosub get_disk_rec
+		ordhdr_rec$ = field(ordhdr_rec$)
 		write record (invhdr_dev) invhdr_rec$
 
 		user_tpl.do_end_of_form = 0
@@ -183,10 +175,22 @@ rem --- Credit action
 
 	rem Need to get to credit action even if nothing has been modified
 
-rem --- Invoice totals, call form and write values back to file
+rem --- Order totals, call form if flag up
 
-	if user_tpl.do_totals_form then gosub do_totals
-	user_tpl.do_totals_form = 1
+	if user_tpl.do_totals_form then 
+		gosub do_totals
+	else
+
+	rem --- We still need to calculate taxes and write it back
+		
+		discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub get_disk_rec
+		ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		user_tpl.do_totals_form = 1
+	endif
 
 rem --- Cash Transaction
 
@@ -850,6 +854,7 @@ rem --- Set OrderHelper object fields
 	ordHelp!.setCust_id(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"))
 	ordHelp!.setOrder_no(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"))
 	ordHelp!.setInv_type(callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE"))
+	ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
 
 rem --- Clear availability
 
@@ -981,6 +986,8 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_INVHDR.PRICING_CODE",arm02a.pricing_code$)
       callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
+
+		ordHelp!.setTaxCode(arm02a.tax_code$)
 
 		slsp$ = arm02a.slspsn_code$
 		gosub get_comm_percent
@@ -1916,7 +1923,40 @@ rem --- Call the form
 :		user_tpl$,
 :		UserObj!
 
-rem --- Copy changed values back to disk: Get disk record
+rem --- Get disk record with updated form data
+
+	gosub get_disk_rec
+
+rem --- Set fields from the Order Totals form and write back
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
+	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
+	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
+	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
+	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
+	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
+
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+	callpoint!.setStatus("SETORIG")
+
+	callpoint!.setColumnData("OPE_INVHDR.TOTAL_SALES",  ordhdr_rec.total_sales$)
+	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",   ordhdr_rec.total_cost$)
+	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",  ordhdr_rec.taxable_amt$)
+	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
+	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
+	callpoint!.setStatus("REFRESH")
+
+	return
+
+rem ==========================================================================
+get_disk_rec: rem --- Get disk record, update with current form data
+              rem     OUT: ordhdr_rec$, updated
+              rem          ordhdr_dev
+rem ==========================================================================
 
 	file_name$  = "OPE_ORDHDR"
 	ordhdr_dev  = fnget_dev(file_name$)
@@ -1931,29 +1971,6 @@ rem --- Copy changed values back to disk: Get disk record
 rem --- Copy in any form data that's changed
 
 	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
-
-rem --- Set fields from the Order Totals form and write back
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-
-	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
-	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
-	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
-	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
-	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
-	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
-
-	callpoint!.setColumnData("OPE_INVHDR.TOTAL_SALES",  ordhdr_rec.total_sales$)
-	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",   ordhdr_rec.total_cost$)
-	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",  ordhdr_rec.taxable_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
-	callpoint!.setStatus("REFRESH")
-
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
-	callpoint!.setStatus("SETORIG")
 
 	return
 [[OPE_INVHDR.ASHO]]
