@@ -139,9 +139,8 @@ rem ==========================================================================
 		for wk=0 to vectInvoices!.size()-1 step gridInvoices!.getNumColumns()
 			if vectInvoices!.getItem(wk) = "Y" then 
 				gridInvoices!.setCellStyle(wk / gridInvoices!.getNumColumns(), 0, SysGUI!.GRID_STYLE_CHECKED)
-			else
-				gridInvoices!.setCellText(wk / gridInvoices!.getNumColumns(), 0, "")
 			endif
+			gridInvoices!.setCellText(wk / gridInvoices!.getNumColumns(), 0, "")
 		next wk
 
 		gridInvoices!.resort()
