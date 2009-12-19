@@ -17,22 +17,31 @@ rem ==========================================================================
         field private BBjInt precision% = 2
         field private Callpoint callpoint!
         field private BBjString dtl_tmpl$
-        field private BBjInt LineCode_dev% = 0
-        field private BBjString LineCode_tmpl$ = ""
-        field private BBjInt OrdDetail_dev% = 0
-        field private BBjString OrdDetail_tmpl$ = ""
-        field private BBjInt ItemMast_dev% = 0
-        field private BBjString ItemMast_tmpl$ = ""
+        
+        field private BBjInt lineCodeDev% = 0
+        field private BBjString lineCodeTmpl$ = ""
+        field private BBjInt ordDetailDev% = 0
+        field private BBjString ordDetailTmpl$ = ""
+        field private BBjInt itemMastDev% = 0
+        field private BBjString itemMastTmpl$ = ""
+        field private BBjInt taxcodeDev% = 0
+        field private BBjString taxcodeTmpl$ = ""
+        field private BBjString taxcodeData$ = ""
+        
         field public BBjVector DtlVect!
         field public BBjString Cust_id$
         field public BBjString Order_no$
         field public BBjString Inv_type$
+        field public BBjString TaxCode$ = ""
+        
         field private BBjNumber extPrice
         field private BBjNumber taxable
         field private BBjNumber extCost
+        
         field public BBjNumber Freight
         field public BBjNumber Discount
         field public BBjNumber TaxAmount
+        
         field private BBjNumber START_BLOCK = 1
     
     rem --- New object
@@ -69,16 +78,20 @@ rem ==========================================================================
             endif
             
             data_name$ = "OPC_LINECODE"
-            if #LineCode_dev% = 0   then #LineCode_dev% = int(util.getDev(data_name$))
-            if #LineCode_tmpl$ = "" then #LineCode_tmpl$ = util.getTmpl(data_name$)
+            if #lineCodeDev% = 0   then #lineCodeDev% = int(util.getDev(data_name$))
+            if #lineCodeTmpl$ = "" then #lineCodeTmpl$ = util.getTmpl(data_name$)
             
             data_name$ = "OPE_ORDDET"
-            if #OrdDetail_dev% = 0   then #OrdDetail_dev% = int(util.getDev(data_name$))
-            if #OrdDetail_tmpl$ = "" then #OrdDetail_tmpl$ = util.getTmpl(data_name$)
+            if #ordDetailDev% = 0   then #ordDetailDev% = int(util.getDev(data_name$))
+            if #ordDetailTmpl$ = "" then #ordDetailTmpl$ = util.getTmpl(data_name$)
             
             data_name$ = "IVM_ITEMMAST"
-            if #ItemMast_dev% = 0   then #ItemMast_dev% = int(util.getDev(data_name$))
-            if #ItemMast_tmpl$ = "" then #ItemMast_tmpl$ = util.getTmpl(data_name$)
+            if #itemMastDev% = 0   then #itemMastDev% = int(util.getDev(data_name$))
+            if #itemMastTmpl$ = "" then #itemMastTmpl$ = util.getTmpl(data_name$)
+            
+            data_name$ = "OPC_TAXCODE"
+            if #taxcodeDev% = 0   then #taxcodeDev% = int(util.getDev(data_name$))
+            if #taxcodeTmpl$ = "" then #taxcodeTmpl$ = util.getTmpl(data_name$)
             
             if #precision% = 0 then
                 data_name$ = "IVS_PARAMS"
@@ -105,7 +118,7 @@ rem ==========================================================================
             ttl_sales = 0
             
             dim dtl_rec$:#dtl_tmpl$
-            dim linecode_rec$:#LineCode_tmpl$
+            dim linecode_rec$:#lineCodeTmpl$
             
             if pDtlVect! <> null() and pDtlVect!.size() then
                 for i = 0 to pDtlVect!.size() - 1
@@ -115,7 +128,7 @@ rem ==========================================================================
                     rem print "---GridRowDeleteStatus row(", i, "): """, #callpoint!.getGridRowDeleteStatus(i), """"
                     
                     if cvs(dtl_rec$, 2) <> "" and #callpoint!.getGridRowDeleteStatus(i) <> "Y" then 
-                        read record (#LineCode_dev%, key=#firm_id$+dtl_rec.line_code$, dom=*endif) linecode_rec$
+                        read record (#lineCodeDev%, key=#firm_id$+dtl_rec.line_code$, dom=*endif) linecode_rec$
                         
                         if dtl_rec.commit_flag$ = "Y" or #Inv_type$ = "P" then
                             if pos(linecode_rec.line_type$="SPN") then
@@ -160,16 +173,16 @@ rem ==========================================================================
             ext_cost  = 0
             more      = 1
             
-            dim orddet_rec$:#OrdDetail_tmpl$
-            dim linecode_rec$:#LineCode_tmpl$
-            dim itemmast_rec$:#ItemMast_tmpl$
+            dim orddet_rec$:#ordDetailTmpl$
+            dim linecode_rec$:#lineCodeTmpl$
+            dim itemmast_rec$:#itemMastTmpl$
             
         rem --- Begin loop
         
-            read (#OrdDetail_dev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$, dom=*next)
+            read (#ordDetailDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$, dom=*next)
             
             while more
-                read record (#OrdDetail_dev%, end=*break) orddet_rec$
+                read record (#ordDetailDev%, end=*break) orddet_rec$
                 if orddet_rec.firm_id$     <> #firm_id$ then break
                 if orddet_rec.customer_id$ <> p_cust_id$ then break
                 if orddet_rec.order_no$    <> p_order_no$ then break
@@ -177,7 +190,7 @@ rem ==========================================================================
                 found = 0
                 
                 if #START_BLOCK then
-                    find record (#LineCode_dev%, key=#firm_id$+orddet_rec.line_code$, dom=*endif) linecode_rec$
+                    find record (#lineCodeDev%, key=#firm_id$+orddet_rec.line_code$, dom=*endif) linecode_rec$
                     found = 1
                 endif
                 
@@ -213,7 +226,7 @@ rem ==========================================================================
                     print "---Line type ""S"" or ""P"""; rem debug
                     
                     if #START_BLOCK then
-                        find record (#ItemMast_dev%, key=#firm_id$+orddet_rec.item_id$, dom=*endif) itemmast_rec$
+                        find record (#itemMastDev%, key=#firm_id$+orddet_rec.item_id$, dom=*endif) itemmast_rec$
                         print "---Found item"; rem debug
                         
                         if itemmast_rec.taxable_flag$ = "Y" then 
@@ -226,7 +239,7 @@ rem ==========================================================================
                 print "---Taxable amount:", orddet_rec.taxable_amt; rem debug
                 
                 orddet_rec$ = field(orddet_rec$)
-                write record (#OrdDetail_dev%) orddet_rec$
+                write record (#ordDetailDev%) orddet_rec$
                 
                 rem print "--- Extended Price:", orddet_rec.ext_price; rem debug
                 ext_price = ext_price + orddet_rec.ext_price
@@ -307,6 +320,90 @@ rem ==========================================================================
             #Freight = 0
             #Discount = 0
             #TaxAmount = 0
+        methodend
+        
+    rem --- Calculate Tax Amount
+    
+        method public BBjNumber calculateTax(BBjNumber p_discount_amt, BBjNumber p_freight_amt)
+        
+            print #className$+ ": BBjNumber calculateTax(p_discount_amt, p_freight_amt)"; rem debug
+            
+            if #TaxCode$ = "" then 
+                throw #className$ + ": calculateTax(): #TaxCode is null", 263
+            endif
+            
+            print "---taxable amount in:", #getTaxable(); rem debug
+
+            rem if ordHelp!.getTaxable() <> 0 then 
+            rem 	taxable_amt = round(ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100, 2)
+            rem else
+            rem 	taxable_amt = 0
+            rem endif
+            
+        rem --- Get taxcode record, if necessary
+        
+            dim taxcode_rec$:#taxcodeTmpl$
+            dim taxcode_rec2$:#taxcodeTmpl$
+            
+            if #taxcodeData$ = "" then
+                found = 0
+                
+                if #START_BLOCK then
+                    find record (#taxcodeDev%, key=#firm_id$+#TaxCode$, err=*endif) taxcode_rec$
+                    #taxcodeData$ = taxcode_rec$
+                    found = 1
+                endif
+            else
+                taxcode_rec$ = #taxcodeData$
+            endif
+            
+            if #taxcodeData$ = "" and !found then
+                throw #className$ + ": calculateTax(): tax code """ + #TaxCode$ + """ not found", 11
+            endif
+            
+        rem --- Changes to taxable amount
+
+            taxable_amt = max(#getTaxable() - p_discount_amt, 0)
+            print "---taxable amount after discount:", taxable_amt; rem debug
+
+            if taxcode_rec.tax_frt_flag$ = "Y" then 
+                taxable_amt = taxable_amt + p_freight_amt
+            endif
+
+            rem print "---taxable amount after tax freight:", taxable_amt; rem debug
+
+            tax_amount = 0
+            tax_calc = round(taxcode_rec.tax_rate * taxable_amt / 100, 2)
+
+            print "---Top level tax amount:", tax_calc; rem debug
+
+            if taxcode_rec.op_max_limit <> 0 and abs(tax_calc) > taxcode_rec.op_max_limit then
+                tax_calc = taxcode_rec.op_max_limit * sgn(tax_calc)
+            endif
+
+            rem print "---tax amount after limit:", tax_calc; rem debug
+
+            tax_amount = tax_calc
+
+        rem --- Do multi-level taxes
+            
+            for i=1 to 10
+                tax_code$ = field(taxcode_rec$, "AR_TOT_CODE_" + str(i:"00"))
+                if cvs(tax_code$,2) = "" then continue
+                find record (#taxcodeDev%, key=firm_id$+tax_code$, dom=*continue) taxcode_rec2$
+                tax_calc = round(taxcode_rec2.tax_rate * taxable_amt / 100, 2)
+
+                if taxcode_rec2.op_max_limit <> 0 and abs(tax_calc) > taxcode_rec2.op_max_limit then
+                    tax_calc = taxcode_rec2.op_max_limit * sgn(tax_calc)
+                endif
+
+                tax_amount = tax_amount + tax_calc
+            next i
+
+            print "---tax amount after all levels:", tax_amount; rem debug
+            print "out"; rem debug
+            
+            methodret tax_amount
         methodend
     
     classend
