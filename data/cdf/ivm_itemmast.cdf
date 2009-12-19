@@ -102,7 +102,7 @@ rem --- Set this section back into desc, if modified
 	if seg$ <> user_tpl.prev_desc_seg_3$ then
 		desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03) = seg$
 		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$)
-		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03))
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$))
 		callpoint!.setStatus("MODIFIED;REFRESH")
 	endif
 [[<<DISPLAY>>.ITEM_DESC_SEG_2.AVAL]]
@@ -114,7 +114,7 @@ rem --- Set this section back into desc, if modified
 	if seg$ <> user_tpl.prev_desc_seg_2$ then
 		desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02) = seg$
 		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$)
-		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03))
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$))
 		callpoint!.setStatus("MODIFIED;REFRESH")
 	endif
 [[<<DISPLAY>>.ITEM_DESC_SEG_1.AVAL]]
@@ -126,7 +126,7 @@ rem --- Set this section back into desc, if modified
 	if seg$ <> user_tpl.prev_desc_seg_1$ then
 		desc$(1, user_tpl.desc_len_01) = seg$
 		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$)
-		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03))
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$))
 		callpoint!.setStatus("MODIFIED;REFRESH")
 	endif
 [[IVM_ITEMMAST.MSRP.AVAL]]
@@ -491,9 +491,15 @@ rem --- Setup user_tpl$
 
 	user_tpl.sa$=sa$
 
+rem --- Setup description lengths
+
 	user_tpl.desc_len_01 = num(ivs01a.desc_len_01$)
 	user_tpl.desc_len_02 = num(ivs01a.desc_len_02$)
 	user_tpl.desc_len_03 = num(ivs01a.desc_len_03$)
+
+	func.setLen1(int(user_tpl.desc_len_01))
+	func.setLen2(int(user_tpl.desc_len_02))
+	func.setLen3(int(user_tpl.desc_len_03))
 
 rem --- Set user labels and lengths for description segments 
 
