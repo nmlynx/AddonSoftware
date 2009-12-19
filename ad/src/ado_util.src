@@ -13,32 +13,46 @@ rem ==========================================================================
     class public util
 
     rem --- width/height for adjusting window
+    
         field public static BBjInt ExtraWidth% = 10
         field public static BBjInt ExtraHeight% = 10
+        
     rem --- width/height for adjusting screen
+    
         field public static BBjInt LessWidth% = 40
         field public static BBjInt LessHeight% = 40
+        
     rem --- Constants
+    
         field private static BBjInt CHILD_WINDOW% = 2
         field private static BBjInt GROUP_BOX% = 21
         field private static BBjInt PUSH_BUTTON% = 11
         field private static BBjInt LIST_BUTTON% = 19
         field private static BBjInt ENABLE% = 1
         field private static BBjInt DISABLE% = 0
-    rem --- These IDs are set by Barista
-        field private static BBjInt CHILD_WINDOW_ID% = 1109
+        
+    rem --- ID(s) set by Barista
+    
         field private static BBjInt GRID_ID% = 5900
+        
     rem --- Enable/Disable colors for grid cells
+    
         field public static BBjColor EnableColor!
         field public static BBjColor DisableColor!
+        
     rem --- Enable/Disable values for maintenance forms
+    
         field public static BBjString EnableValue$ = ""
         field public static BBjString DisableValue$ = "I"
+        
     rem --- Misc
+    
         field private static BBjInt resized% = 0
         field private static BBjString className$ = "util"
         field private static BBjNumber START_BLOCK = 0
+        
     rem --- table_chans$[all] array fields
+    
         field private static ArrayObject TableChans!
         field private static HashMap devs!
         field private static HashMap tmpls!
@@ -70,8 +84,8 @@ rem ==========================================================================
             extra_height   = #ExtraHeight%
             
             rem debug
-            declare java.util.HashMap type!
-            type! = new java.util.HashMap()
+            declare HashMap type!
+            type! = new HashMap()
             type!.put(1, "Top level window")
             type!.put(2, "Child window with border")
             type!.put(7, "Child window without border")
@@ -874,17 +888,17 @@ rem ==========================================================================
     rem --- Return the detail grid control
     
         method public static BBjStandardGrid getGrid(BBjTopLevelWindow Form!)
-            declare BBjStandardGrid grid!
-            grid! = cast(BBjStandardGrid, Form!.getChildWindow(#CHILD_WINDOW_ID%).getControl(#GRID_ID%))
-            methodret grid!
+            declare BBjChildWindow child!
+            child! = #getChild(Form!)
+            methodret cast(BBjStandardGrid, child!.getControl(#GRID_ID%))
         methodend
 
     rem --- Return the child window control
     
         method public static BBjChildWindow getChild(BBjTopLevelWindow Form!)
-            declare BBjChildWindow child!
-            child! = cast(BBjChildWindow, Form!.getChildWindow(#CHILD_WINDOW_ID%))
-            methodret child!
+            detail_grid_win% = 1109
+            detail_grid_win% = int( num(stbl("+DETAIL_GRID_WIN", err=*next)) )
+            methodret cast(BBjChildWindow, Form!.getChildWindow(detail_grid_win%))
         methodend
 
 
