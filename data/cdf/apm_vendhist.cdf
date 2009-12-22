@@ -5,7 +5,7 @@ if callpoint!.getUserInput()=""
 endif
 [[APM_VENDHIST.ARAR]]
 if user_tpl.multi_types$<>"Y"
-	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE","  ")
+	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE",user_tpl.dflt_ap_type$)
 endif
 [[APM_VENDHIST.BDEL]]
 rem --- disallow deletion of apm-02 if any of the buckets are non-zero, or if referenced in apt-01 (open invoices)
@@ -124,10 +124,11 @@ rem --- Retrieve parameter data
 	find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$ 
 
 rem -- store info needed for validation, etc., in user_tpl$
-	dim user_tpl$:"multi_types:c(1),multi_dist:c(1),ret_flag:c(1)"
+	dim user_tpl$:"multi_types:c(1),multi_dist:c(1),ret_flag:c(1),dflt_ap_type:c(2)"
 	user_tpl.multi_types$=aps01a.multi_types$
 	user_tpl.multi_dist$=aps01a.multi_dist$
 	user_tpl.ret_flag$=aps01a.ret_flag$
+ 	user_tpl.dflt_ap_type$=aps01a.ap_type$
 
 if user_tpl.multi_types$<>"Y"
 	ctl_name$="APM_VENDHIST.AP_TYPE"
