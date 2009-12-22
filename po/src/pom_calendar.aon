@@ -110,9 +110,9 @@ rem --- Get SysGUI Object
     HdrText!=SysGUI!.makeColor(160,160,160)
     ClosedColor!=SysGUI!.makeColor(153,153,153)
     HolidayColor!=SysGUI!.makeColor(182,214,245)
-
+	
     DayVect!=SysGUI!.makeVector()
-
+	
     dim gui_event$:tmpl(gui_dev)
     dim notify_base$:noticetpl(0,0)
 
@@ -122,6 +122,16 @@ rem --- Get Attributes
         attr_def_col$=attr_def_col$[0,0]
         attr_def_tbl$=attr_def_tbl$[0,0]
 
+rem --- If current month doesn't exist, create an empty current month
+
+	while 1
+		try_mo=curr_mo
+	    try_yr=curr_yr	
+		read record(pom_calendar_dev,key=firm_id$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)pom_calendar$;break
+		gosub create_new_month
+		break
+	wend
+		
 rem --- get application record in order to get form icon
 
     readrecord(adm_modules,key=pad(lic_feature$,11),dom=*next)adm_modules$
@@ -138,6 +148,8 @@ rem    gosub find_gaps
     gosub get_user_settings
     gosub def_grids
     gosub display_date
+    gosub display_calendar
+    gosub display_data
     gosub resize_win
 
     Window!.setVisible(1)
@@ -156,10 +168,28 @@ event_ctl:rem --- Event Control
     popmenu_stat2!.setCallback(popmenu_stat2!.ON_POPUP_ITEM_SELECT,"adjust_status")
     popmenu_stat3!.setCallback(popmenu_stat3!.ON_POPUP_ITEM_SELECT,"adjust_status")
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
+    childGrid!.setCallback(childGrid!.ON_KEYPRESS,"keypress");rem jpb
 
 SysGUI!.flushEvents()
 
     process_events,err=*same
+
+keypress:rem --- Check for C, W, H jpb
+
+escape
+	char_pressed$=getKeyChar()
+	switch char_pressed$
+		case "C"; rem Closed
+		break
+		case "W"; rem Work Day
+		break
+		case "H"; rem "Holiday
+		break
+		default
+		break
+	swend
+	
+return
 
 adjust_date:rem --- Adjust Date
 
@@ -338,6 +368,7 @@ adjust_status:
 update_pom_calendar:
 
     dim pom_calendar$:fattr(pom_calendar$)
+
     extractrecord(pom_calendar_dev,key=firm_id$+str(curr_yr:"0000")+str(curr_mo:"00"))pom_calendar$
     field pom_calendar$,"DAY_STATUS_"+str(num(change_day$):"00")=change_stat$
     pom_calendar$=field(pom_calendar$)
@@ -358,7 +389,9 @@ find_gap:
 get_calendar_boundaries:
    
     dim pom_calendar$:fattr(pom_calendar$)
+
     read(pom_calendar_dev,key=firm_id$,dom=*next)
+
     k$=key(pom_calendar_dev,err=*next);readrecord(pom_calendar_dev,key=k$)pom_calendar$
     if pom_calendar.firm_id$<>firm_id$ 
         first_date$="None"
@@ -366,6 +399,7 @@ get_calendar_boundaries:
         first_date$=pom_calendar.month$+"/"+pom_calendar.year$
     endif
     dim pom_calendar$:fattr(pom_calendar$)
+
     read(pom_calendar_dev,key=firm_id$+$ff$,dom=*next)
     k$=keyp(pom_calendar_dev,err=*next);readrecord(pom_calendar_dev,key=k$)pom_calendar$
     if pom_calendar.firm_id$<>firm_id$
@@ -450,6 +484,7 @@ l6330:
 l6340:
         x0=1
 l6350:
+		if x0=0 x0=1
         x1=pos(" "=day_status$(x0,pom_calendar.days_in_mth+1-x0))
         if x1=0 goto rem_months
         gap$=gap$+pom_calendar.year$+pom_calendar.month$+str(x0+x1-1:"00")
@@ -500,7 +535,6 @@ rem --- the start of gap date, and need set stop dates until we hit a non-space 
         for curr_day=1 to pom_calendar.days_in_mth
             day_stat$=field(pom_calendar$,"DAY_STATUS_"+str(curr_day:"00"))
             if cvs(day_stat$,3)=""
-if pom_calendar.month$="07" and curr_day=29 escape
                 if start_of_gap=1
                     if num(pom_calendar.year$+pom_calendar.month$)-num(last_key$)>1
                         wk_date$=last_key$+day_str$(num(last_key$(5,2))*2-1,2)
@@ -562,18 +596,18 @@ rem --- see if curr_mo/curr_yr is in calendar; option to create if not
 
     read record(pom_calendar_dev,key=firm_id$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)pom_calendar$
     if cvs(pom_calendar.year$,3)=""
-        msg_id$="PO_NO_CAL"
-        msg_opt$=""
-        gosub disp_message
-        if msg_opt$="Y"
+rem        msg_id$="PO_NO_CAL"
+rem        msg_opt$=""
+rem        gosub disp_message
+rem        if msg_opt$="Y"
             curr_yr=try_yr
             curr_mo=try_mo
             gosub create_new_month
         endif
-    else
+rem    else
         curr_yr=try_yr
         curr_mo=try_mo
-    endif
+rem    endif
 
     return
 
@@ -640,7 +674,6 @@ disp_win:rem --- Display Window
     BtnNextMo!=Window!.getControl(103)
     BtnNextYr!=Window!.getControl(104)
     BtnCurrMo!=Window!.getControl(105)
-
     CurrDate!=Window!.getControl(106)
 
     FirstDate!=Window!.getControl(109)
