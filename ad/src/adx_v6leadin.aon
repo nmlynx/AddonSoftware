@@ -50,7 +50,7 @@ rem --- Save BBx Standard !EDIT Parameters
         x$=stbl("!STERMS",err=*break)
         good=1
         break
-    wend
+    wend	
 
     while good=0
         x$=stbl("!EDIT",err=*next)
@@ -102,7 +102,7 @@ rem --- Set terminal record
     if sys01_0$(13,2)="  " then
         sys01_0$(13,2)="PF"
         sys01_0$(25,1)=" "
-    endif
+    endif	
 
     x$=sys_date$(5,4)+sys_date$(3,2)
     sys01_0$(7,3)=fnd$(x$),sys01_0$(18,6)=fnyy_yy21$(fnm$(x$))
