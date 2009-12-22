@@ -110,9 +110,9 @@ rem --- Get SysGUI Object
     HdrText!=SysGUI!.makeColor(160,160,160)
     ClosedColor!=SysGUI!.makeColor(153,153,153)
     HolidayColor!=SysGUI!.makeColor(182,214,245)
-	
+    
     DayVect!=SysGUI!.makeVector()
-	
+    
     dim gui_event$:tmpl(gui_dev)
     dim notify_base$:noticetpl(0,0)
 
@@ -124,14 +124,14 @@ rem --- Get Attributes
 
 rem --- If current month doesn't exist, create an empty current month
 
-	while 1
-		try_mo=curr_mo
-	    try_yr=curr_yr	
-		read record(pom_calendar_dev,key=firm_id$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)pom_calendar$;break
-		gosub create_new_month
-		break
-	wend
-		
+    while 1
+        try_mo=curr_mo
+        try_yr=curr_yr  
+        read record(pom_calendar_dev,key=firm_id$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)pom_calendar$;break
+        gosub create_new_month
+        break
+    wend
+        
 rem --- get application record in order to get form icon
 
     readrecord(adm_modules,key=pad(lic_feature$,11),dom=*next)adm_modules$
@@ -141,8 +141,8 @@ rem --- get application record in order to get form icon
 
 rem --- Main Process
 
-    gosub find_gaps1;rem "jpb
-rem    gosub find_gaps
+rem    gosub find_gaps1;rem "jpb
+    gosub find_gaps
     gosub get_calendar_boundaries
     gosub disp_win
     gosub get_user_settings
@@ -177,18 +177,18 @@ SysGUI!.flushEvents()
 keypress:rem --- Check for C, W, H jpb
 
 escape
-	char_pressed$=getKeyChar()
-	switch char_pressed$
-		case "C"; rem Closed
-		break
-		case "W"; rem Work Day
-		break
-		case "H"; rem "Holiday
-		break
-		default
-		break
-	swend
-	
+    char_pressed$=getKeyChar()
+    switch char_pressed$
+        case "C"; rem Closed
+        break
+        case "W"; rem Work Day
+        break
+        case "H"; rem "Holiday
+        break
+        default
+        break
+    swend
+    
 return
 
 adjust_date:rem --- Adjust Date
@@ -484,7 +484,7 @@ l6330:
 l6340:
         x0=1
 l6350:
-		if x0=0 x0=1
+        if x0=0 x0=1
         x1=pos(" "=day_status$(x0,pom_calendar.days_in_mth+1-x0))
         if x1=0 goto rem_months
         gap$=gap$+pom_calendar.year$+pom_calendar.month$+str(x0+x1-1:"00")
@@ -537,6 +537,8 @@ rem --- the start of gap date, and need set stop dates until we hit a non-space 
             if cvs(day_stat$,3)=""
                 if start_of_gap=1
                     if num(pom_calendar.year$+pom_calendar.month$)-num(last_key$)>1
+                        rem - if at start of new gap, but this yr/mo not contig w/ previous, adjust begin dt for the gap
+                        rem - then put prev start/stop into gapVect!, and begin tracking gap
                         wk_date$=last_key$+day_str$(num(last_key$(5,2))*2-1,2)
                         call stbl("+DIR_PGM")+"adc_daydates.aon",wk_date$,nxt_date$,1
                         gosub load_GapVect
@@ -545,12 +547,16 @@ rem --- the start of gap date, and need set stop dates until we hit a non-space 
                         last_key$=pom_calendar.year$+pom_calendar.month$
                         start_of_gap=0
                     else
+                        rem - if at start of new gap and this rec is contiguous w/ previous,
+                        rem - put prev start/stop into gapVect! and begin tracking gap
                         gosub load_GapVect
                         gap_start$=pom_calendar.year$+pom_calendar.month$+str(curr_day:"00")
                         gap_stop$=gap_start$
                         start_of_gap=0
                     endif
                 else
+                    rem - start_of_gap<>1, meaning we're in the middle of tracking a gap
+                    rem - just update the gap_stop$
                     gap_stop$=pom_calendar.year$+pom_calendar.month$+str(curr_day:"00")
                 endif
             else
@@ -560,10 +566,11 @@ rem --- the start of gap date, and need set stop dates until we hit a non-space 
                     start_of_gap=1
                     first_rec=0
                 else
-                    rem --- if first day of new month, and gap isn't closed, get end date
+                    rem --- if first day of new month is non-space, and gap isn't closed, get end date for gap
                     if curr_day=1 and start_of_gap=0
                         wk_date$=pom_calendar.year$+pom_calendar.month$+str(curr_day:"00")
                         call stbl("+DIR_PGM")+"adc_daydates.aon",wk_date$,prev_date$,-1
+                        last_key$=prev_date$(1,6)
                         gap_stop$=prev_date$
                         start_of_gap=1
                     endif
