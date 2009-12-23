@@ -170,7 +170,6 @@ event_ctl:rem --- Event Control
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
     gridCal!.setCallback(gridCal!.ON_GRID_KEYPRESS,"keypress")
     gridCal!.setCallback(gridCal!.ON_GRID_RIGHT_MOUSE_DOWN,"getcell")    
-rem	gridCal!.setCallback(gridCal!.ON_POPUP_REQUEST,"setcell")    
 	GridCal!.setPopupMenu(popmenuStat!)
 
 
@@ -179,14 +178,7 @@ rem	gridCal!.setCallback(gridCal!.ON_POPUP_REQUEST,"setcell")
     process_events;rem ,err=*same
 
 getcell:
-escape
 
-	Event!=SysGUI!.getLastEvent()
-	gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
-	return
-	
-setcell:
-escape;rem jpb
 	Event!=SysGUI!.getLastEvent()
 	gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
 	return
