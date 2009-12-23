@@ -170,43 +170,43 @@ event_ctl:rem --- Event Control
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
     gridCal!.setCallback(gridCal!.ON_GRID_KEYPRESS,"keypress")
     gridCal!.setCallback(gridCal!.ON_GRID_RIGHT_MOUSE_DOWN,"getcell")    
-	GridCal!.setPopupMenu(popmenuStat!)
+    GridCal!.setPopupMenu(popmenuStat!)
 
 
-	SysGUI!.flushEvents()
+    SysGUI!.flushEvents()
 
-    process_events;rem ,err=*same
+    process_events,err=*same
 
 getcell:
 
-	Event!=SysGUI!.getLastEvent()
-	gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
-	return
-	
+    Event!=SysGUI!.getLastEvent()
+    gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
+    return
+    
 keypress:rem --- Check for C, W, H
 
-	Event!=SysGUI!.getLastEvent()
-	char_pressed=Event!.getKeyCode()
-	switch char_pressed
-		case 67; rem Closed
-		case 99
-			pop_opt$="Closed"
-			gosub set_status
-		break
-		case 87; rem Work Day
-		case 119
-			pop_opt$="Workday"
-			gosub set_status		
-		break
-		case 72; rem "Holiday
-		case 104
-			pop_opt$="Holiday"
-			gosub set_status
-		break
-		default
-		break
-	swend
-	
+    Event!=SysGUI!.getLastEvent()
+    char_pressed=Event!.getKeyCode()
+    switch char_pressed
+        case 67; rem Closed
+        case 99
+            pop_opt$="Closed"
+            gosub set_status
+        break
+        case 87; rem Work Day
+        case 119
+            pop_opt$="Workday"
+            gosub set_status        
+        break
+        case 72; rem "Holiday
+        case 104
+            pop_opt$="Holiday"
+            gosub set_status
+        break
+        default
+        break
+    swend
+    
 return
 
 adjust_date:rem --- Adjust Date
