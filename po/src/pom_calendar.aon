@@ -168,27 +168,53 @@ event_ctl:rem --- Event Control
     popmenu_stat2!.setCallback(popmenu_stat2!.ON_POPUP_ITEM_SELECT,"adjust_status")
     popmenu_stat3!.setCallback(popmenu_stat3!.ON_POPUP_ITEM_SELECT,"adjust_status")
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
-    childGrid!.setCallback(childGrid!.ON_KEYPRESS,"keypress");rem jpb
+    gridCal!.setCallback(gridCal!.ON_GRID_KEYPRESS,"keypress")
+    gridCal!.setCallback(gridCal!.ON_GRID_RIGHT_MOUSE_DOWN,"getcell")    
+rem	gridCal!.setCallback(gridCal!.ON_POPUP_REQUEST,"setcell")    
+	GridCal!.setPopupMenu(popmenuStat!)
 
-SysGUI!.flushEvents()
 
-    process_events,err=*same
+	SysGUI!.flushEvents()
 
-keypress:rem --- Check for C, W, H jpb
+    process_events;rem ,err=*same
 
+getcell:
 escape
-    char_pressed$=getKeyChar()
-    switch char_pressed$
-        case "C"; rem Closed
-        break
-        case "W"; rem Work Day
-        break
-        case "H"; rem "Holiday
-        break
-        default
-        break
-    swend
-    
+
+	Event!=SysGUI!.getLastEvent()
+	gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
+	return
+	
+setcell:
+escape;rem jpb
+	Event!=SysGUI!.getLastEvent()
+	gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
+	return
+	
+keypress:rem --- Check for C, W, H
+
+	Event!=SysGUI!.getLastEvent()
+	char_pressed=Event!.getKeyCode()
+	switch char_pressed
+		case 67; rem Closed
+		case 99
+			pop_opt$="Closed"
+			gosub set_status
+		break
+		case 87; rem Work Day
+		case 119
+			pop_opt$="Workday"
+			gosub set_status		
+		break
+		case 72; rem "Holiday
+		case 104
+			pop_opt$="Holiday"
+			gosub set_status
+		break
+		default
+		break
+	swend
+	
 return
 
 adjust_date:rem --- Adjust Date
@@ -326,7 +352,7 @@ adjust_status:
     gui_event$=SysGUI!.getLastEventString()
     popCtl!=popmenuStat!.getMenuItem(gui_event.y)
     pop_opt$=popCtl!.getText()
-
+set_status:
     if pop_opt$="Closed"
         useColor!=ClosedColor!
         change_stat$="C"
@@ -750,7 +776,6 @@ def_grids:rem --- Define Grid
     popmenu_stat2!.setBackColor(HolidayColor!)
     popmenu_stat3! = popmenuStat!.addMenuItem(-203,"Workday")
     popmenu_stat3!.setBackColor(DayColor!)
-    GridCal!.setPopupMenu(popmenuStat!)
 
     return
 
