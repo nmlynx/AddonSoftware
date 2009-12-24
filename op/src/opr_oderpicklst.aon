@@ -32,11 +32,11 @@ rem --- Open/Lock files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
     files$[3]="arm-03",ids$[3]="ARM_CUSTSHIP"
-    files$[4]="ARC_TERMCODE",ids$[4]="ARC_TERMCODE"
+    files$[4]="arc_termcode",ids$[4]="ARC_TERMCODE"
     files$[5]="ivm-01",ids$[5]="IVM_ITEMMAST"
     files$[6]="ivm-02",ids$[6]="IVM_ITEMWHSE"
-    files$[7]="IVC_WHSECODE",ids$[7]=files$[7]
-    files$[8]= "ope-01",ids$[8]="OPE_ORDHDR"
+    files$[7]="ivc_whsecode",ids$[7]=IVC_WHSECODE"
+    files$[8]="ope-01",ids$[8]="OPE_ORDHDR"
     files$[9]="ope-04",ids$[9]="OPE_PRNTLIST"
     files$[10]="ope-11",ids$[10]="OPE_ORDDET"
     files$[11]="ope-21",ids$[11]="OPE_ORDLSDET"
@@ -45,10 +45,10 @@ rem files$[13]="opm_pointofsale",ids$[13]="OPM_POINTOFSALE"
     files$[14]="opm-02",ids$[14]="OPC_LINECODE"
     files$[15]="opm-04",ids$[15]="OPC_MSG_HDR"
     files$[16]="opm-14",ids$[16]="OPC_MSG_DET"
-    files$[17]="ARS_PARAMS",ids$[17]=files$[17]
-    files$[18]="ARS_CREDIT",ids$[18]=files$[18]
-    files$[19]="IVS_PARAMS",ids$[19]=files$[19]
-    files$[20]="ARC_SALECODE",ids$[20]=files$[20]
+    files$[17]="ars_params",ids$[17]="ARS_PARAMS"
+    files$[18]="ars_credit",ids$[18]="ARS_CREDIT"
+    files$[19]="ivs_params",ids$[19]="IVS_PARAMS"
+    files$[20]="arc_salecode",ids$[20]="ARC_SALECODE"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :       ids$[all],templates$[all],channels[all],batch,status
