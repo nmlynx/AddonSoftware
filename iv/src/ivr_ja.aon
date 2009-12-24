@@ -30,11 +30,11 @@ rem --- Open/Lock files
     files$[4]="ivm-02",ids$[4]="IVM_ITEMWHSE"
     files$[5]="ivm-03",ids$[5]="IVX_ITEMPROD"
     files$[6]="ivm-07",ids$[6]="IVM_LSMASTER"
-    files$[7]="IVC_PRODCODE",ids$[7]=files$[7] 
+    files$[7]="ivc_prodcode",ids$[7]="IVC_PRODCODE" 
     files$[8]="ivm-14",ids$[8]="IVM_ITEMSYN"
     files$[9]="ivw-06",ids$[9]="IVX_COSTXREF"
-    files$[10]="IVC_WHSECODE",ids$[10]=files$[10]
-    files$[11]="IVS_PARAMS",ids$[11]=files$[11]
+    files$[10]="ivc_whsecode",ids$[10]="IVC_WHSECODE"
+    files$[11]="ivs_params",ids$[11]="IVS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
