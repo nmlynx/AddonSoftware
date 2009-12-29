@@ -78,7 +78,7 @@ open_file_loop:
     retry_value=1
     for x=begfile to endfile
         channels[x]=0
-        basename$=cvs(files$[x],2+8)
+        basename$=cvs(files$[x],2)
         pathname$=basename$
         basepath$=pathname$
         filedir$=datadir$
