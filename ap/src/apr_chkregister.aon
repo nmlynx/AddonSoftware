@@ -694,7 +694,9 @@ std_exit: rem --- Standard program end (01Mar2006)
 
 std_exit_no_report:
 
-    release
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    OutVect!=null()
+    goto std_exit
 
 rem #endinclude std_end.src
 
