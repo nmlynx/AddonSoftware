@@ -68,11 +68,13 @@ rem --- Get Terminal ID
     user$=""
     tsk=0
     temp$="USERID="+cvs(user_id$,7)+","
-
+	if pos(","=temp$) temp$=temp$(1,pos(","=temp$)-1)
+	if pos(" "=temp$) temp$=temp$(1,pos(" "=temp$)-1)
+	
     while 1
         tsk$=tsk(tsk,err=*break)
 
-        if pos( cvs(temp$,7) = cvs(tsk.modes$,7)+"," ) = 0 then 
+        if pos(cvs(temp$,7) = cvs(tsk.modes$,7)) = 0 then 
             tsk=tsk+1
             continue
         endif
@@ -81,8 +83,9 @@ rem --- Get Terminal ID
         legacy=pos("LEGACYID="=cvs(tsk.modes$,7))
 
         if legacy>0 then
-            user$=tsk.modes$(legacy+9)+","
-            user$=user$(1,pos(","=user$)-1)
+            user$=tsk.modes$(legacy+9)
+            if pos(","=user$) user$=user$(1,pos(","=user$)-1)
+            if pos(" "=user$) user$=user$(1,pos(" "=user$)-1)
         endif
 
         break
@@ -147,6 +150,13 @@ rem --- Set function keys
 
     call "SYC.FK",status
 
+rem --- print header boxes
+
+	call "SYC.WC",0,0,47,3,0,0,0
+	call "SYC.WC",0,0,33,3,47,0,0
+	print 'sb',@(3,1),program$," ",desc$,@(49),day,@(58),fne$(q$),
+	print @(49,0)," ADD+ON Software v6",@(68,1),fid(0),'sf',
+
 rem --- Run next program
 
     x$=stbl("!CLEAR","!PROCESS",err=*next)
@@ -156,6 +166,8 @@ rem --- Run next program
     release
 
 rem --- functions
+
+	def fne$(q$)=date(0:"%hz:%mz %p")
 
     def fnm$(q$)=q$(5,2)+q$(1,4)
 
