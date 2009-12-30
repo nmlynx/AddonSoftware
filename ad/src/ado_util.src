@@ -384,6 +384,7 @@ rem ==========================================================================
     rem ==========================================================================	
 
     rem --- Get the Barista grid and set enable/disable colors
+    
         method protected static BBjStandardGrid getGridAbleColors(BBjTopLevelWindow Form!)
         
             declare BBjStandardGrid grid!
@@ -396,6 +397,7 @@ rem ==========================================================================
         methodend
 
     rem --- Set a grid's enable/disable colors 
+    
         method public static void setGridAbleColors(BBjStandardGrid grid!)
 
             if #EnableColor! = null() then
@@ -414,26 +416,31 @@ rem ==========================================================================
     rem ==========================================================================	
 
     rem --- Disable several columns
+    
         method public static void disableGridColumns(BBjTopLevelWindow Form!,  BBjVector cols!)
             #ableGridColumns(Form!, cols!, #DISABLE%)
         methodend
 
     rem --- Disable several columns, custom grid
+    
         method public static void disableGridColumns(BBjStandardGrid grid!,  BBjVector cols!)
             #ableGridColumns(grid!, cols!, #DISABLE%)
         methodend
 
     rem --- Enable several columns
+    
         method public static void enableGridColumns(BBjTopLevelWindow Form!,  BBjVector cols!)
             #ableGridColumns(Form!, cols!, #ENABLE%)
         methodend
 
     rem --- Enable several columns, custom grid
+    
         method public static void enableGridColumns(BBjStandardGrid grid!,  BBjVector cols!)
             #ableGridColumns(grid!, cols!, #ENABLE%)
         methodend
 
     rem --- One column (no vector)
+    
         method public static void ableGridColumn(BBjTopLevelWindow Form!, BBjNumber col, BBjInt able%)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
@@ -442,6 +449,7 @@ rem ==========================================================================
         methodend
 
     rem --- One column (no vector) for customer grid
+    
         method public static void ableGridColumn(BBjStandardGrid grid!, BBjNumber col, BBjInt able%)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
@@ -450,26 +458,31 @@ rem ==========================================================================
         methodend
 
     rem --- Disable, Allow number (as opposed to Int)
+    
         method public static void disableGridColumn(BBjTopLevelWindow Form!, BBjNumber col)
             if col >= 0 then #ableGridColumn(Form!, col, #DISABLE%)
         methodend
 
     rem --- Disable, Allow number (as opposed to Int), custom grid
+    
         method public static void disableGridColumn(BBjStandardGrid grid!, BBjNumber col)
             if col >= 0 then #ableGridColumn(grid!, col, #DISABLE%)
         methodend
 
     rem --- Enable, Allow number (as opposed to Int)
+    
         method public static void enableGridColumn(BBjTopLevelWindow Form!, BBjNumber col)
             if col >= 0 then #ableGridColumn(Form!, col, #ENABLE%)
         methodend
 
     rem --- Enable, Allow number (as opposed to Int), custom grid
+    
         method public static void enableGridColumn(BBjStandardGrid grid!, BBjNumber col)
             if col >= 0 then #ableGridColumn(grid!, col, #ENABLE%)
         methodend
 
     rem --- Accessor methods for ENABLE/DISABLE
+    
         method public static BBjInt DISABLE()
             methodret #DISABLE%
         methodend
@@ -546,46 +559,55 @@ rem ==========================================================================
     rem ==========================================================================	
 
     rem --- Disable several cells, default row
+    
         method public static void disableGridCells(BBjTopLevelWindow Form!,  BBjVector cols!)
             #ableGridCells(Form!, cols!, #DISABLE%, -1)
         methodend
 
     rem --- Disable several cells, default row, custom grid
+    
         method public static void disableGridCells(BBjStandardGrid grid!,  BBjVector cols!)
             #ableGridCells(grid!, cols!, #DISABLE%, -1)
         methodend
 
     rem --- Disable several cells, pass row
+    
         method public static void disableGridCells(BBjTopLevelWindow Form!,  BBjVector cols!, BBjNumber row)
             #ableGridCells(Form!, cols!, #DISABLE%, row)
         methodend
 
     rem --- Disable several cells, pass row, custom grid
+    
         method public static void disableGridCells(BBjStandardGrid grid!,  BBjVector cols!, BBjNumber row)
             #ableGridCells(grid!, cols!, #DISABLE%, row)
         methodend
 
     rem --- Enable several cells, default row
+    
         method public static void enableGridCells(BBjTopLevelWindow Form!,  BBjVector cols!)
             #ableGridCells(Form!, cols!, #ENABLE%, -1)
         methodend
 
     rem --- Enable several cells, default row, custom grid
+    
         method public static void enableGridCells(BBjStandardGrid grid!,  BBjVector cols!)
             #ableGridCells(grid!, cols!, #ENABLE%, -1)
         methodend
 
     rem --- Enable several cells, pass row
+    
         method public static void enableGridCells(BBjTopLevelWindow Form!,  BBjVector cols!, BBjNumber row)
             #ableGridCells(Form!, cols!, #ENABLE%, row)
         methodend
 
     rem --- Enable several cells, pass row, custom grid
+    
         method public static void enableGridCells(BBjStandardGrid grid!,  BBjVector cols!, BBjNumber row)
             #ableGridCells(grid!, cols!, #ENABLE%, row)
         methodend
 
     rem --- One cell (no vector)
+    
         method public static void ableGridCell(BBjTopLevelWindow Form!, BBjNumber col, BBjInt able%, BBjNumber row)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
@@ -594,6 +616,7 @@ rem ==========================================================================
         methodend
 
     rem --- One cell (no vector), custom grid
+    
         method public static void ableGridCell(BBjStandardGrid grid!, BBjNumber col, BBjInt able%, BBjNumber row)
             declare BBjVector cols!
             cols! = BBjAPI().makeVector()
@@ -602,41 +625,49 @@ rem ==========================================================================
         methodend
 
     rem --- Disable one cell, default row
+    
         method public static void disableGridCell(BBjTopLevelWindow Form!, BBjNumber col)
             #ableGridCell(Form!, col, #DISABLE%, -1)
         methodend
 
     rem --- Disable one cell, default row, custom grid
+    
         method public static void disableGridCell(BBjStandardGrid grid!, BBjNumber col)
             #ableGridCell(grid!, col, #DISABLE%, -1)
         methodend
 
     rem --- Disable one cell, pass row
+    
         method public static void disableGridCell(BBjTopLevelWindow Form!, BBjNumber col, BBjNumber row)
             #ableGridCell(Form!, col, #DISABLE%, row)
         methodend
 
     rem --- Disable one cell, pass row, custom grid
+    
         method public static void disableGridCell(BBjStandardGrid grid!, BBjNumber col, BBjNumber row)
             #ableGridCell(grid!, col, #DISABLE%, row)
         methodend
 
     rem --- Enable one cell, default row
+    
         method public static void enableGridCell(BBjTopLevelWindow Form!, BBjNumber col)
             #ableGridCell(Form!, col, #ENABLE%, -1)
         methodend
 
     rem --- Enable one cell, default row, custom grid
+    
         method public static void enableGridCell(BBjStandardGrid grid!, BBjNumber col)
             #ableGridCell(grid!, col, #ENABLE%, -1)
         methodend
 
     rem --- Enable one cell, pass row
+    
         method public static void enableGridCell(BBjTopLevelWindow Form!, BBjNumber col, BBjNumber row)
             #ableGridCell(Form!, col, #ENABLE%, row)
         methodend
 
     rem --- Enable one cell, pass row, custom grid
+    
         method public static void enableGridCell(BBjStandardGrid grid!, BBjNumber col, BBjNumber row)
             #ableGridCell(grid!, col, #ENABLE%, row)
         methodend
@@ -677,11 +708,13 @@ rem ==========================================================================
         methodend
 
     rem --- Disable several fields
+    
         method public static void disableFields(Callpoint callpoint!, BBjVector fields!)
             #ableFields(callpoint!, fields!, #DisableValue$)
         methodend
 
     rem --- Disable one field
+    
         method public static void disableField(Callpoint callpoint!, BBjString fld$)
             declare BBjVector fields!
             fields! = BBjAPI().makeVector()
@@ -690,11 +723,13 @@ rem ==========================================================================
         methodend
 
     rem --- Enable several fields
+    
         method public static void enableFields(Callpoint callpoint!, BBjVector fields!)
             #ableFields(callpoint!, fields!, #EnableValue$)
         methodend
 
     rem --- Enable one field
+    
         method public static void enableField(Callpoint callpoint!, BBjString fld$)
             declare BBjVector fields!
             fields! = BBjAPI().makeVector()
@@ -798,7 +833,8 @@ rem ==========================================================================
                     
                     if data_name$<>"" then
                         dev = num(devs$(i+17,3), err=*endif)
-                        tmpl$ = p_table_chans!.getElement(int((i+19)/20), 0)
+                        rem tmpl$ = p_table_chans!.getElement(int((i+19)/20), 0)
+                        tmpl$ = p_table_chans!.getElement(int(dev), 0)
                         
                         if dev and tmpl$<>"" then 
                             #devs!.put(data_name$, dev)
@@ -828,7 +864,7 @@ rem ==========================================================================
                 if #devs!.containsKey(p_data_name$) then
                     methodret int(num(#devs!.get(p_data_name$)))
                 else
-                    throw #className$+": Cannot find "+p_data_name$, 257
+                    throw #className$+": getDev(): Cannot find "+p_data_name$, 11
                 endif
             endif
             
@@ -844,7 +880,7 @@ rem ==========================================================================
                 if #tmpls!.containsKey(p_data_name$) then
                     methodret str(#tmpls!.get(p_data_name$))
                 else
-                    throw #className$+": Cannot find "+p_data_name$, 259
+                    throw #className$+": getTmpl(): Cannot find "+p_data_name$, 11
                 endif
             endif
             
@@ -877,7 +913,6 @@ rem ==========================================================================
             methodret rec$
             
         methodend
-   
 
     rem ==========================================================================
     rem
