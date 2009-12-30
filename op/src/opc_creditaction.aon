@@ -1,4 +1,4 @@
-rem --- Order Entry/Credit Check
+rem --- Order Entry/Credit Action
 rem --- Program opc_creditaction v8.0.0 10Jul2009 (ope_df)
 rem --- Created by adx_codeport.bbj v1.1.5 (07/10/2009 11:17:11)
 
@@ -14,8 +14,11 @@ rem --- All Rights Reserved
 rem --- Use statements, declares
 
     use ::sys/prog/bao_callpoint.bbj::Callpoint
+    use ::ado_order.src::OrderHelper
+    use ::ado_util.src::util
     
     declare Callpoint callpoint!
+    declare OrderHelper ordHelp!
     declare BBjControl creditHoldControl!
     declare BBjControl backorderedControl!
 
@@ -68,12 +71,12 @@ rem --- Open needed files
     dim ope11a$:open_tpls$[8]
     dim opm02a$:open_tpls$[9]
     dim ars01c$:open_tpls$[10]
+    
+    ope01a_tmpl$ = open_tpls$[5]; rem save header template
 
-rem --- Retrieve parameter records
+rem --- Retrieve parameter record(s)
 
-    find record (ars01a_dev, key=firm_id$+"AR00", err=std_missing_params) ars01a$
     find record (ars01c_dev, key=firm_id$+"AR01", err=std_missing_params) ars01c$
-    find record (ivs01a_dev, key=firm_id$+"IV00", err=std_missing_params) ivs01a$
 
 rem --- Initialize Data
 
@@ -110,24 +113,38 @@ rem --- Check For Quotes
     if ope01a.invoice_type$="P" then
         status$="This is a Quote"
         backorderedControl!.setText(status$)
+        
         extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
+        util.copyFields(ope01a_tmpl$, callpoint!)
         ope01a.credit_flag$ = ""
         write record (ope01_dev) ope01a$
         callpoint!.setStatus("SETORIG")
+        
         action$ = "Q"
         goto std_exit
     endif
     
-rem --- Display credit info, sets callpoint!.getDevObject("over_credit_limit") 
+rem --- Get over credit limit flag
 
-    if ars01c.display_bal$ <> "A" then
-        call pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+    if ars01c.display_bal$ <> "A" and callpoint!.getDevObject("credit_status_done") <> "Y" then
+    
+    rem --- Display credit management (status), sets callpoint!.getDevObject("over_credit_limit") 
+    
+        call pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
         if status = 999 then goto std_exit
+        over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
+        credit_hold_reason$ = str(callpoint!.getDevObject("credit_hold_reason"))
+    else
+    
+    rem --- Otherwise, call the order helper method directly
+    
+        ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+        over_credit_limit = ordHelp!.setOverCreditLimit()
+        credit_hold_reason$ = ordHelp!.getCreditHoldReason()
     endif
 
 rem --- Check Terms (ope_df, 1300-1499, s$(1,1) is backwards)
 
-    over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
     status$ = "Missing terms: (" + ope01a.terms_code$ + ")"
     start_block = 1
     
@@ -173,7 +190,7 @@ display_form: rem --- Display
 
     dim dflt_data$[2,1]
     dflt_data$[1,0] = "STATUS_MESSAGE"
-    dflt_data$[1,1] = status$
+    dflt_data$[1,1] = credit_hold_reason$;  rem status$
     dflt_data$[2,0] = "AR_TERMS_CODE"
     dflt_data$[2,1] = ope01a.terms_code$
     
@@ -190,10 +207,7 @@ display_form: rem --- Display
         
         rem --- Hold order
         
-            credit_flag_in$ = "C"
             action$ = "H"
-            gosub update_order_header
-            
             break
             
         case 2
@@ -205,10 +219,7 @@ display_form: rem --- Display
             arm02a$ = field(arm02a$)
             write record (arm02_dev,key=c0$) arm02a$
             
-            credit_flag_in$ = "C"
             action$ = "C"
-            gosub update_order_header
-
             break
             
         case 3
@@ -218,10 +229,9 @@ display_form: rem --- Display
             terms$ = str(callpoint!.getDevObject("new_terms_code"))
             
             if terms$<>"null" then
-                find record (arm10_dev, key=firm_id$+"A"+terms$, dom=*endif) arm10a$
-                credit_flag_in$ = "R"
                 action$ = "R"
-                gosub update_order_header
+            else
+                rem action$ = ?
             endif
         
             break
@@ -232,10 +242,10 @@ display_form: rem --- Display
         
             action$="D"
             ope01a.credit_flag$=""
-            
             break
             
         case default
+            rem action$ = ?
     swend
     
 final_updates: 
@@ -245,8 +255,11 @@ rem --- Update Tickler File
     gosub update_tickler
 
 rem --- Update order header file
-    
-    ope01a.lock_status$="N"
+
+    save_credit_flag$ = ope01a.credit_flag$
+    util.copyFields(ope01a_tmpl$, callpoint!)
+    ope01a.credit_flag$ = save_credit_flag$
+    ope01a.lock_status$ = "N"
     ope01a$ =field(ope01a$)
     write record (ope01_dev) ope01a$
     callpoint!.setStatus("SETORIG")
@@ -296,20 +309,6 @@ rem --- Update tickler file with new record
     endif
     
     return
-
-update_order_header: rem --- Set credit flag in order header file
-                     rem      IN: credit_flag_in$
-return
-rem --- shouldn't need this routine anymore
-rem --- setting credit flag in callpoint object upon return to order/invoice entry instead
-
-    extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$) ope01a$
-    ope01a.credit_flag$ = credit_flag_in$
-    ope01a$ = field(ope01a$)
-    write record (ope01_dev) ope01a$
-    callpoint!.setStatus("SETORIG")
-    
-    return  
 
 open_tables: rem --- Open tables
 
