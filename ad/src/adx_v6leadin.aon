@@ -26,10 +26,10 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    open (1)"SYS-01"
-    open (2)"SYM-02"
-    sys01_dev=1
-    sym02_dev=2
+    sys01_dev = unt
+    open (sys01_dev)"SYS-01"
+    sym02_dev = unt
+    open (sym02_dev)"SYM-02"
 
 rem --- IOLists
 
@@ -63,27 +63,27 @@ rem --- Save BBx Standard !EDIT Parameters
 
 rem --- Get Terminal ID
 
-    dim tsk$:"type:u(1),*:u(1),alias:c(1*=0),*:c(1*=0),*:c(1*=0),modes:c(1*=0)"
+    dim task$:"type:u(1),*:u(1),alias:c(1*=0),*:c(1*=0),*:c(1*=0),modes:c(1*=0)"
 
     user$=""
-    tsk=0
+    tsk_no=0
     temp$="USERID="+cvs(user_id$,7)+","
 	if pos(","=temp$) temp$=temp$(1,pos(","=temp$)-1)
 	if pos(" "=temp$) temp$=temp$(1,pos(" "=temp$)-1)
 	
     while 1
-        tsk$=tsk(tsk,err=*break)
+        task$=tsk(tsk_no,err=*break)
 
-        if pos(cvs(temp$,7) = cvs(tsk.modes$,7)) = 0 then 
-            tsk=tsk+1
+        if pos(cvs(temp$,7) = cvs(task.modes$,7)) = 0 then 
+            tsk_no=tsk_no+1
             continue
         endif
 
-        setterm tsk.alias$
-        legacy=pos("LEGACYID="=cvs(tsk.modes$,7))
+        setterm task.alias$
+        legacy=pos("LEGACYID="=cvs(task.modes$,7))
 
         if legacy>0 then
-            user$=tsk.modes$(legacy+9)
+            user$=task.modes$(legacy+9)
             if pos(","=user$) user$=user$(1,pos(","=user$)-1)
             if pos(" "=user$) user$=user$(1,pos(" "=user$)-1)
         endif
@@ -164,7 +164,7 @@ rem --- Run next program
 
     run program$,err=*next
     release
-
+   
 rem --- functions
 
 	def fne$(q$)=date(0:"%hz:%mz %p")
