@@ -18,7 +18,6 @@ rem --- Clear availability information
 rem --- Set data
 
 	user_tpl.order_date$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
-
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
@@ -133,6 +132,7 @@ print "CUSTOMER_ID:AVAL"; rem debug
 rem --- Show customer data
 	
 	cust_id$ = callpoint!.getUserInput()
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
@@ -140,7 +140,7 @@ rem --- Show customer data
 		gosub check_credit
 
 		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
 			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
@@ -170,12 +170,14 @@ rem --- Set Commission Percent
 [[OPE_ORDHDR.AOPT-CRCH]]
 print "Hdr:AOPT:CRCH"; rem debug
 
-rem --- Credit check?
+rem --- Do credit status (management)?
 
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 
 	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
-		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
+		callpoint!.setDevObject("credit_status_done", "Y")
 		callpoint!.setStatus("ACTIVATE")
 	endif
 [[OPE_ORDHDR.BPRK]]
@@ -288,6 +290,9 @@ print "Hdr:ARER"; rem debug
 rem --- Set flags
 
 	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
+
+	callpoint!.setDevObject("credit_status_done", "N")
+
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("RPRT",0)
@@ -359,17 +364,10 @@ rem --- Reprint order?
 		endif
 	endif
 
-rem --- Set Codes	
-
-	user_tpl.price_code$   = callpoint!.getColumnUndoData("OPE_ORDHDR.PRICE_CODE")
-	user_tpl.pricing_code$ = callpoint!.getColumnData("OPE_ORDHDR.PRICING_CODE")
-	user_tpl.order_date$   = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
-	user_tpl.disc_code$    = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
-	user_tpl.new_order     = 0
-
 rem --- Show customer data
 	
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
@@ -380,7 +378,7 @@ rem --- Show customer data
 
 		if user_tpl.user_entry$ = "N" then
 			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
 				callpoint!.setStatus("ACTIVATE")
 			endif
 		endif
@@ -423,6 +421,14 @@ rem --- Set all previous values
 	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
 	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	user_tpl.prev_sales_total  = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
+
+rem --- Set codes	and flags
+
+	user_tpl.price_code$   = callpoint!.getColumnData("OPE_ORDHDR.PRICE_CODE")
+	user_tpl.pricing_code$ = callpoint!.getColumnData("OPE_ORDHDR.PRICING_CODE")
+	user_tpl.order_date$   = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
+	user_tpl.disc_code$    = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
+	user_tpl.new_order     = 0
 
 rem --- Set OrderHelper object fields
 
@@ -1755,8 +1761,8 @@ rem ==========================================================================
 	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
 		print "---do action..."; rem debug
 		callpoint!.setDevObject("run_by", "order")
-		callpoint!.setDevObject("cust_id", cust_id$)
-		callpoint!.setDevObject("order_no", order_no$)
+		rem callpoint!.setDevObject("cust_id", cust_id$)
+		rem callpoint!.setDevObject("order_no", order_no$)
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 
@@ -1767,6 +1773,8 @@ rem ==========================================================================
 		else
 			if action$="R" then
 				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","R")	
+				terms$ = str(callpoint!.getDevObject("new_terms_code"))
+				callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE", terms$)
 			else
 				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","")			
 			endif
@@ -1970,7 +1978,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=38
+	num_files=39
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
    open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -2010,6 +2018,7 @@ rem --- Open needed files
 	open_tables$[36]="ARC_SALECODE", open_opts$[36]="OTA"
 	open_tables$[37]="OPC_DISCCODE", open_opts$[37]="OTA"
 	open_tables$[38]="OPC_TAXCODE",  open_opts$[38]="OTA"
+	open_tables$[39]="OPE_ORDHDR",   open_opts$[38]="OTA"
 
 	gosub open_tables
 
