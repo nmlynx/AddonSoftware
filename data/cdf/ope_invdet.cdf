@@ -667,9 +667,10 @@ rem --- Set buttons
 
 	rem if !user_tpl.new_detail then...
 
+	gosub able_lot_button
+
 	if callpoint!.getRecordMode() = "C" then
 		gosub enable_repricing
-		gosub able_lot_button
 		gosub enable_addl_opts
 	endif
 
