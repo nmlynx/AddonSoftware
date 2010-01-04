@@ -29,13 +29,13 @@ rem --- Open/Lock files
     files=10,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
-    files$[3]="ARC_SALECODE",ids$[3]=files$[3]
+    files$[3]="arc_salecode",ids$[3]="ARC_SALECODE"
     files$[4]="art-01",ids$[4]="ART_INVHDR"
     files$[5]="art-11",ids$[5]="ART_INVDET"
     files$[6]="opt-41",ids$[6]="OPT_INVCASH"
     files$[7]="opt-71",ids$[7]="OPT_SALESCOM"
-    files$[8]="ARS_PARAMS",ids$[8]=files$[8]
-    files$[9]="IVS_PARAMS",ids$[9]=files$[9]
+    files$[8]="ars_params",ids$[8]="ARS_PARAMS"
+    files$[9]="ivs_params",ids$[9]="IVS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :       ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
