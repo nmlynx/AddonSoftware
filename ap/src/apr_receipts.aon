@@ -26,14 +26,14 @@ rem --- Open/Lock files
 
     files=8,begfile=1,endfile=files
     dim files$[files],options$[files],chans$[files],templates$[files]
-    files$[1]="APS_PARAMS";rem --- aps-01"
-    files$[2]="IVM_ITEMMAST";rem --- ivm-01"
-    files$[3]="POC_LINECODE";rem --- pom-02"
-    files$[4]="POT_RECHDR";rem --- pot-04"
-    files$[5]="POT_INVHDR";rem --- pot-05"
-    files$[6]="POT_RECDET";rem --- pot-14"
-    files$[7]="POT_INVDET";rem --- pot-25"
-    files$[8]="IVS_PARAMS";rem --- ivs-01
+    files$[1]="aps_params";rem --- aps-01"
+    files$[2]="ivm_itemmast";rem --- ivm-01"
+    files$[3]="poc_linecode";rem --- pom-02"
+    files$[4]="pot_rechdr";rem --- pot-04"
+    files$[5]="pot_invhdr";rem --- pot-05"
+    files$[6]="pot_recdet";rem --- pot-14"
+    files$[7]="pot_invdet";rem --- pot-25"
+    files$[8]="ivs_params";rem --- ivs-01
     for wkx=begfile to endfile
 	options$[wkx]="OTA"
     next wkx
@@ -308,7 +308,7 @@ no_more_receipts: rem --- No more Receipts
     if polines=0
         msg_id$="DOC_OUTPUT_NODATA"
         gosub disp_message
-        goto std_exit
+        goto std_exit_no_report
     endif
 
     if po_found
@@ -567,4 +567,9 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 rem #endinclude std_end.src
 
+std_exit_no_report:
+
+    OutVect!=null()
+    goto std_exit
+    
     end
