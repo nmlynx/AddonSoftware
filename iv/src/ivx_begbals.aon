@@ -32,8 +32,8 @@ rem --- Open/Lock files
     files$[10]="ivm-17",ids$[10]="IVM_LSACT"
     files$[11]="ivt-01",ids$[11]="IVT_LSTRANS"
     files$[12]="ivt-04",ids$[12]="IVT_ITEMTRAN"
-    files$[13]="GLS_PARAMS",ids$[13]=files$[13]
-    files$[14]="IVS_PARAMS",ids$[14]=files$[14]
+    files$[13]="gls_params",ids$[13]="GLS_PARAMS"
+    files$[14]="ivs_params",ids$[14]="IVS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit_no_update
