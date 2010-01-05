@@ -15,7 +15,7 @@ rem --- stbl("!batch") is used when calling this from Commit and Release Future 
     seterr std_error
 
     enter customer$, order$, table_chans$[all], callpoint!, status
-
+    
 rem --- Use statements and declares
 
     use ::sys/prog/bao_callpoint.bbj::Callpoint
@@ -56,44 +56,35 @@ rem --- Open all files
 
     gosub open_tables
 
-    arm02_dev  = num(open_chans$[1])
-    rem ars01a_dev = num(open_chans$[2])
-    rem ivs01a_dev = num(open_chans$[3])
-    ope01_dev  = num(open_chans$[4])
-    rem ars01c_dev = num(open_chans$[5])
-
-    dim arm02a$:open_tpls$[1]
-    rem dim ars01a$:open_tpls$[2]
-    rem dim ivs01a$:open_tpls$[3]
-    dim ope01a$:open_tpls$[4]
-    rem dim ars01c$:open_tpls$[5]
-
 rem --- Set opened files into util class for future use
     
 	call stbl("+DIR_PGM")+"adc_array.aon::str_array2object", table_chans$[all], tableChans!, status
 	if status = 999 then goto std_exit
 	util.setTableChans(tableChans!)    
 
-rem --- Retrieve parameter records
-
-    rem find record (ars01a_dev,key=firm_id$+"AR00",err=std_missing_params) ars01a$
-    rem find record (ars01c_dev,key=firm_id$+"AR01",err=std_missing_params) ars01c$
-    rem find record (ivs01a_dev,key=firm_id$+"IV00",err=std_missing_params) ivs01a$
-
-rem --- Determine if over credit limit
+rem --- Determine if over credit limit 
 
     if callpoint! <> null() then
         ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-        over_credit_limit = ordHelp!.setOverCreditLimit()
-        callpoint!.setDevObject("over_credit_limit", str(over_credit_limit))
-        callpoint!.setDevObject("credit_hold_reason", ordHelp!.getCreditHoldReason())
+        
+    rem --- If credit limit isn't set, call OrderHelper method
+        
+        if ordHelp!.getOverCreditLimit() = -1 then
+            over_credit_limit = ordHelp!.setOverCreditLimit()
+        else
+            over_credit_limit = ordHelp!.getOverCreditLimit()
+        endif
+        
     else
+    
+    rem --- Set credit limit w/o the callpoint object
+    
         ordHelp! = new OrderHelper(firm_id$, null())
         over_credit_limit = ordHelp!.setOverCreditLimit(customer$, order$)
     endif
     
     batch$ = ""
-    batch$ = stbl("batch", err=*next)
+    batch$ = stbl("!batch", err=*next)
     
 rem --- Display	
 
@@ -115,7 +106,7 @@ rem --- Display
         dflt_data$[4,1] = str(ordHelp!.getOpenBoAmount())
         dflt_data$[5,1] = str(ordHelp!.getHeldOrderAmount())
 
-        if ordHelp!.getCreditLimit() > 0 then
+        if over_credit_limit then
             dflt_data$[6,1] = str(ordHelp!.getCreditLimit()-ordHelp!.getTotalAging()-ordHelp!.getOpenOrderAmount()-ordHelp!.getOpenBoAmount()-ordHelp!.getHeldOrderAmount())
         endif
 
@@ -127,7 +118,11 @@ rem --- Display
     endif
 
 rem --- All done
-
+     
+    if callpoint! <> null() then 
+        callpoint!.setDevObject("credit_status_done", "Y")
+    endif
+    
     goto std_exit
 
 open_tables: rem --- Open tables
