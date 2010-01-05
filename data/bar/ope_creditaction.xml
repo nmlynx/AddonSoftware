@@ -18,9 +18,9 @@
 			<ASC_VERSION_ID id="ddm_tables.ope_creditaction">9.0</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ope_creditaction">N</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ope_creditaction">20090710</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ope_creditaction">20091023</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ope_creditaction">20091023</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ope_creditaction">165046</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ope_creditaction">20091230</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ope_creditaction">20091113</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ope_creditaction">174244</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.ope_creditaction">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.ope_creditaction">S</DD_ATTR_FTYP>
 			<DD_ATTR_PRUN id="ddm_tables.ope_creditaction">[+DIR_PGM]adx_dummy.aon</DD_ATTR_PRUN>
@@ -57,7 +57,7 @@
 		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
 		<RECORD id="ddm_table_tpls.ope_creditaction">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.ope_creditaction">OPE_CREDITACTION</DD_TABLE_ALIAS>
-			<DD_TABLE_TPL id="ddm_table_tpls.ope_creditaction">status_message:c(30*),credit_status:c(30*),credit_action:c(20*),ar_terms_code:c(2*),enter_cred_pswrd:c(6*),print_after_rel:c(1*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.ope_creditaction">status_message:c(100*),credit_status:c(30*),credit_action:c(20*),ar_terms_code:c(2*),enter_cred_pswrd:c(6*),print_after_rel:c(1*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -65,7 +65,7 @@
 		<RECORD id="ddm_table_cols.ope_creditaction001">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ope_creditaction001">OPE_CREDITACTION</DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.ope_creditaction001">001</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.ope_creditaction001">DESCRIPTION     </DD_DATA_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.ope_creditaction001">STATUS_MESSAGE  </DD_DATA_NAME>
 			<DD_DVAR_NAME id="ddm_table_cols.ope_creditaction001">STATUS_MESSAGE  </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ope_creditaction001">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ope_creditaction001">0</DD_COL_OCCURS>
@@ -256,22 +256,26 @@
 	</ALIAS>
 	<ALIAS id="ddm_elements">
 		<ID id="ddm_elements">DDM_ELEMENTS</ID>
-		<RECORD id="ddm_elements.description">
-			<DD_DATA_NAME id="ddm_elements.description">DESCRIPTION     </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.description">Description                   </DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.description">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.description">30</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.description"> </DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.description">Y</DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.description">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.description">BAR</ASC_PROD_ID>
-			<DD_CREATE_DATE id="ddm_elements.description">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.description">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CTYP id="ddm_elements.description">E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOM id="ddm_elements.description">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.description">            </DD_ATTR_DEXP>
-			<DD_ATTR_LABL id="ddm_elements.description">Description</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.description">Desc</DD_ATTR_LABS>
+		<RECORD id="ddm_elements.status_message">
+			<DD_DATA_NAME id="ddm_elements.status_message">STATUS_MESSAGE  </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.status_message">Credit Status Message</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.status_message">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.status_message">100</DD_DATA_LENGTH>
+			<ASC_COMP_ID id="ddm_elements.status_message">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.status_message">OP </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.status_message">N</LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.status_message">20091230</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.status_message">20091230</DD_LSTREV_DATE>
+			<DD_ATTR_BLNK id="ddm_elements.status_message">N</DD_ATTR_BLNK>
+			<DD_ATTR_CTLW id="ddm_elements.status_message">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.status_message">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.status_message">E</DD_ATTR_CTYP>
+			<DD_ATTR_LABL id="ddm_elements.status_message">Credit Status Message</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.status_message">Credit Status Messag</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.status_message">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.status_message">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.status_message">0</DD_ATTR_MINL>
+			<DD_ATTR_PREC id="ddm_elements.status_message">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.credit_status">
 			<DD_DATA_NAME id="ddm_elements.credit_status">CREDIT_STATUS   </DD_DATA_NAME>
