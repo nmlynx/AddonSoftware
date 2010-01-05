@@ -23,12 +23,14 @@ rem ==========================================================================
     rem --- Read-only fields for setOverCreditLimit()
         
         field private BBjNumber CreditLimit
+        field private BBjInt OverCreditLimit%
         field private BBjNumber TotalAging
         field private BBjNumber OpenOrderAmount
         field private BBjNumber OpenBoAmount
         field private BBjNumber HeldOrderAmount
         field private BBjNumber MaxPastDue
         field private BBjString CreditHold$
+        field private BBjString TermsCreditHold$
         field private BBjString CreditHoldReason$
         
         field private Callpoint callpoint!
@@ -49,6 +51,8 @@ rem ==========================================================================
         field private BBjInt taxcodeDev%
         field private BBjString taxcodeTmpl$
         field private BBjString taxcodeData$
+        field private BBjInt termsCodeDev%
+        field private BBjString termsCodeTmpl$
         
         field public BBjVector DtlVect!
         field public BBjString Cust_id$
@@ -92,6 +96,8 @@ rem ==========================================================================
             #precision% = p_precision%
             #callpoint! = pCallpoint!
             #dtl_tmpl$  = p_dtl_tmpl$
+            
+            #OverCreditLimit% = -1
             
             if !util.isTableChansSet() then
                 if pTableChans! = null() then
@@ -168,7 +174,6 @@ rem ==========================================================================
     rem --- Order totals from disk records
     
         method public void totalSalesDisk(BBjString p_cust_id$, BBjString p_order_no$, BBjString p_inv_type$)
-            print #className$+": void totalSalesDisk(p_cust_id$, p_order_no$, p_inv_type$)"; rem debug
         
         rem --- Files
         
@@ -217,7 +222,6 @@ rem ==========================================================================
                 if orddet_rec.firm_id$     <> #firm_id$ then break
                 if orddet_rec.customer_id$ <> p_cust_id$ then break
                 if orddet_rec.order_no$    <> p_order_no$ then break
-                print "---Line: ", orddet_rec.line_no$; rem debug
                 found = 0
                 
                 if #START_BLOCK then
@@ -250,29 +254,22 @@ rem ==========================================================================
                 
                 if linecode_rec.line_type$ <> "S" and linecode_rec.line_type$ <> "P" then
                     if linecode_rec.taxable_flag$ = "Y" then
-                        print "---Line type not ""S"" and not ""P"" and linecode_rec.taxable_flag$ = ""Y"""; rem debug
                         orddet_rec.taxable_amt = orddet_rec.ext_price
                     endif
                 else
-                    print "---Line type ""S"" or ""P"""; rem debug
                     
                     if #START_BLOCK then
                         find record (#itemMastDev%, key=#firm_id$+orddet_rec.item_id$, dom=*endif) itemmast_rec$
-                        print "---Found item"; rem debug
                         
                         if itemmast_rec.taxable_flag$ = "Y" then 
-                            print "---itemmast_rec.taxable_flag$ = ""Y"""; rem debug
                             orddet_rec.taxable_amt = orddet_rec.ext_price
                         endif
                     endif
                 endif
                 
-                print "---Taxable amount:", orddet_rec.taxable_amt; rem debug
-                
                 orddet_rec$ = field(orddet_rec$)
                 write record (#ordDetailDev%) orddet_rec$
                 
-                rem print "--- Extended Price:", orddet_rec.ext_price; rem debug
                 ext_price = ext_price + orddet_rec.ext_price
                 taxable   = taxable   + orddet_rec.taxable_amt
                 ext_cost  = ext_cost  + orddet_rec.unit_cost * orddet_rec.qty_shipped
@@ -375,8 +372,6 @@ rem ==========================================================================
     
         method public BBjNumber calculateTax(BBjNumber p_discount_amt, BBjNumber p_freight_amt)
         
-            print #className$+ ": BBjNumber calculateTax(p_discount_amt, p_freight_amt)"; rem debug
-            
         rem --- Files
         
             if #taxcodeDev% = 0 then 
@@ -390,14 +385,6 @@ rem ==========================================================================
             if #TaxCode$ = "" then 
                 throw #className$ + ": calculateTax(): #TaxCode is null", 263
             endif
-            
-            print "---taxable amount in:", #getTaxable(); rem debug
-
-            rem if ordHelp!.getTaxable() <> 0 then 
-            rem 	taxable_amt = round(ordHelp!.getTaxable() - disc_per_in * ordHelp!.getTaxable() / 100, 2)
-            rem else
-            rem 	taxable_amt = 0
-            rem endif
             
         rem --- Get taxcode record, if necessary
         
@@ -423,24 +410,17 @@ rem ==========================================================================
         rem --- Changes to taxable amount
 
             taxable_amt = max(#getTaxable() - p_discount_amt, 0)
-            print "---taxable amount after discount:", taxable_amt; rem debug
 
             if taxcode_rec.tax_frt_flag$ = "Y" then 
                 taxable_amt = taxable_amt + p_freight_amt
             endif
 
-            rem print "---taxable amount after tax freight:", taxable_amt; rem debug
-
             tax_amount = 0
             tax_calc = round(taxcode_rec.tax_rate * taxable_amt / 100, 2)
-
-            print "---Top level tax amount:", tax_calc; rem debug
 
             if taxcode_rec.op_max_limit <> 0 and abs(tax_calc) > taxcode_rec.op_max_limit then
                 tax_calc = taxcode_rec.op_max_limit * sgn(tax_calc)
             endif
-
-            rem print "---tax amount after limit:", tax_calc; rem debug
 
             tax_amount = tax_calc
 
@@ -458,11 +438,9 @@ rem ==========================================================================
 
                 tax_amount = tax_amount + tax_calc
             next i
-
-            print "---tax amount after all levels:", tax_amount; rem debug
-            print "out"; rem debug
             
             methodret tax_amount
+            
         methodend
         
     rem --- Is there a Credit Hold or over credit limit condition?
@@ -490,6 +468,12 @@ rem ==========================================================================
                 #ordHeaderTmpl$ = util.getTmpl(data_name$)
             endif
             
+            if #termsCodeDev% = 0 then
+                data_name$ = "ARC_TERMCODE"
+                #termsCodeDev%  = int(util.getDev(data_name$))
+                #termsCodeTmpl$ = util.getTmpl(data_name$)
+            endif
+            
         rem --- Parameters
             
             if #agingBucket% = 0 then 
@@ -508,10 +492,20 @@ rem ==========================================================================
             read record (#custDetailDev%, key=#firm_id$+p_cust_id$+"  ") cust_det_rec$
             #CreditLimit = cust_det_rec.credit_limit
             #CreditHold$ = cust_det_rec.cred_hold$
+            
+        rem --- Get this order header
+        
+            dim ord_head_rec$:#ordHeaderTmpl$
+            read record (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$) ord_head_rec$
+            
+        rem --- Get order terms record
+        
+            dim terms_code_rec$:#termsCodeTmpl$
+            read record (#termsCodeDev%, key=#firm_id$+"A"+ord_head_rec.terms_code$) terms_code_rec$
+            #TermsCreditHold$ = terms_code_rec.cred_hold$
 
         rem --- Position file
             
-            dim ord_head_rec$:#ordHeaderTmpl$
             read (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$, dom=*next)
 
         rem --- Total Open Orders
@@ -561,35 +555,45 @@ rem ==========================================================================
             aging_and_open = #TotalAging+#OpenOrderAmount+#OpenBoAmount+#HeldOrderAmount
             
             if  #CreditHold$ = "Y" or
+:               #TermsCreditHold$ = "Y" or            
 :               #MaxPastDue > #pastDueLimit or
 :               ( #holdAmount and this_total_sale > #holdAmount ) or
 :               ( #autoHold$="Y" and #CreditLimit and #CreditLimit < aging_and_open )
 :           then
-                over_credit_limit% = 1
+                #OverCreditLimit% = 1
                 if batch$<>"" then batch$="B"
                 
                 if #CreditHold$ = "Y" then
                     #CreditHoldReason$ = "Customer is on Credit Hold"
                 else
-                    if #MaxPastDue > #pastDueLimit then
-                        #CreditHoldReason$ = "Past Due Amount (" + str(#MaxPastDue) + ") exceeds maximum (" + str(#pastDueLimit) + ")"
+                    if #TermsCreditHold$ = "Y" then
+                        #CreditHoldReason$ = "Credit hold from Terms Code"
                     else
-                        if #holdAmount and this_total_sale > #holdAmount then
-                            #CreditHoldReason$ = "This order's amount (" + str(this_total_sale) + ") exceeds the Hold Amount (" + str(#holdAmount) + ")"
+                        if #MaxPastDue > #pastDueLimit then
+                            #CreditHoldReason$ = "Past Due Amount (" + str(#MaxPastDue) + ") exceeds maximum (" + str(#pastDueLimit) + ")"
                         else
-                            if #autoHold$="Y" and #CreditLimit and #CreditLimit < aging_and_open then
-                                #CreditHoldReason$ = "Aging plus Open amount (" + str(aging_and_open) + ") exceeds Credit Limit (" + str(#CreditLimit) + ")"
+                            if #holdAmount and this_total_sale > #holdAmount then
+                                #CreditHoldReason$ = "This order's amount (" + str(this_total_sale) + ") exceeds the Hold Amount (" + str(#holdAmount) + ")"
+                            else
+                                if #autoHold$="Y" and #CreditLimit and #CreditLimit < aging_and_open then
+                                    #CreditHoldReason$ = "Aging plus Open amount (" + str(aging_and_open) + ") exceeds Credit Limit (" + str(#CreditLimit) + ")"
+                                endif
                             endif
                         endif
                     endif
                 endif
             else
-                over_credit_limit% = 0
+                #OverCreditLimit% = 0
             endif
             
             if batch$<>"" then ignore$=stbl("!batch",batch$)
+            
+        rem --- Position Order Header back at the original order
+        
+            read (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$) 
     
-            methodret over_credit_limit%
+            methodret #OverCreditLimit%
+            
         methodend
         
         method public BBjInt setOverCreditLimit()
@@ -607,6 +611,10 @@ rem ==========================================================================
     
         method public BBjNumber getCreditLimit()
             methodret #CreditLimit
+        methodend
+        
+        method public BBjInt getOverCreditLimit()
+            methodret #OverCreditLimit%
         methodend
         
         method public BBjNumber getTotalAging()
@@ -631,6 +639,10 @@ rem ==========================================================================
         
         method public BBjString getCreditHold()
             methodret #CreditHold$
+        methodend
+        
+        method public BBjString getTermsCreditHold()
+            methodret #TermsCreditHold$
         methodend
         
         method public BBjString getCreditHoldReason()
