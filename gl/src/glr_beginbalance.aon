@@ -192,15 +192,15 @@ rem --- Read next account master
 
           rem --- Calculate beginning balance
 
-          amount=0
-          units=0
+          amount=a[0]
+          units=u[0]
           for x=1 to total_pers
               amount=amount+a[x]
               if gls01a.units_flag$="Y" units=units+u[x]
           next x
 
-          rem --- Don't create a beginning balance record for asset, liability,
-          rem --- capital or retained earnings account.
+          rem --- Don't create a beginning balance record if this is not an asset, liability,
+          rem --- or capital acct, or if it IS the retained earnings account.
 
           if pos(glm01a.gl_acct_type$="ALC")=0 goto totals
           if glm01a.gl_account$=gls01b.gl_account$ goto totals

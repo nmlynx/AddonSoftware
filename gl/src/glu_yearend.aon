@@ -66,21 +66,21 @@ rem --- Position File
 rem --- Read next glm-02 record
 
     while more
-        glm01_key$=key(glm01_dev,end=done)
+        read record (glm01_dev,end=*break)glm01a$
         total_recs=total_recs+1
         if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
-        if pos(firm_id$=glm01_key$)<>1 goto done
-        read (glm01_dev)
+        if glm01a.firm_id$<>firm_id$ then break
 
 rem --- Roll glm-02 records
 
         for x=1 to begrec
     
 rem --- Retrieve glm-02 record
-    
+
             dim glm02a$:fattr(glm02a$)
-            glm02_key$=glm01_key$+begrec$(x,1)
-            read record (glm02_dev,key=glm02_key$,dom=*next) glm02a$
+            glm02a.firm_id$=firm_id$,glm02a.gl_account$=glm01a.gl_account$
+            glm02a.record_id$=begrec$(x,1)
+            read record (glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$,dom=*next) glm02a$
 
             glm02a.record_id$=endrec$(x,1)
             write record (glm02_dev,key=glm02_key$) glm02a$
@@ -88,8 +88,8 @@ rem --- Retrieve glm-02 record
 rem --- Remove next year records after roll
     
             if pos(begrec$(x,1)="45")=0 continue
-            glm02_key$(len(glm02_key$),1)=begrec$(x,1)
-            remove (glm02_dev,key=glm02_key$,dom=*next)
+            glm02a.record_id$=begrec$(x,1)            
+            remove (glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$,dom=*next)
     
         next x
 
