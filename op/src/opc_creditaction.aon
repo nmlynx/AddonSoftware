@@ -128,60 +128,32 @@ rem --- Get over credit limit flag
 
     if ars01c.display_bal$ <> "A" and callpoint!.getDevObject("credit_status_done") <> "Y" then
     
-    rem --- Display credit management (status), sets callpoint!.getDevObject("over_credit_limit") 
+    rem --- Display credit management (status)
     
         call pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
         if status = 999 then goto std_exit
-        over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
-        credit_hold_reason$ = str(callpoint!.getDevObject("credit_hold_reason"))
+    endif
+    
+    ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+    over_credit_limit = ordHelp!.setOverCreditLimit()
+    credit_hold_reason$ = ordHelp!.getCreditHoldReason()
+
+rem --- Is credit ok?
+
+    status$ = ""
+    
+    if !over_credit_limit then
+        status$="Credit is OK"
     else
-    
-    rem --- Otherwise, call the order helper method directly
-    
-        ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-        over_credit_limit = ordHelp!.setOverCreditLimit()
-        credit_hold_reason$ = ordHelp!.getCreditHoldReason()
-    endif
-
-rem --- Check Terms (ope_df, 1300-1499, s$(1,1) is backwards)
-
-    status$ = "Missing terms: (" + ope01a.terms_code$ + ")"
-    start_block = 1
-    
-    if start_block then
-        find record (arm10_dev, key=firm_id$+"A"+pad(ope01a.terms_code$,2), dom=*endif) arm10a$
-        status$ = "Terms Code Found"
-        
-        if arm10a.cred_hold$ = "Y" then 
-            over_credit_limit = 1
-            callpoint!.setDevObject("over_credit_limit", "1")
-            status$="Customer on hold"
-        endif
-        
-        if !over_credit_limit then 
-            ope01a.credit_flag$=""
-            status$="Credit is OK"
-        else
-            if ope01a.credit_flag$="R" then 
-                status$="Order is Released"
-            else
-                if ope01a.total_sales > 0 then 
-                    creditHoldControl! = cast(BBjControl, callpoint!.getDevObject("credit_hold_control"))
-                    creditHoldControl!.setText("***Credit Hold***")
-                    status$ = "Over credit limit"
-                else
-                    status$ = "Credit or Zero Total"
-                endif
-            endif
+        if ope01a.credit_flag$="R" then 
+            status$="Order is Released"
         endif
     endif
     
-rem --- Reuse backordered text control to display status since it won't show it in the CREDITACTION form
+rem --- Use Credit Hold text control to display status since it won't show it in the CREDITACTION form
     
-    if !over_credit_limit or ope01a.total_sales <= 0 then 
-        backorderedControl! = cast(BBjControl, callpoint!.getDevObject("backordered_control"))
+    if status$ <> "" then 
         backorderedControl!.setText(status$)
-        wait 1
         action$="U"
         goto final_updates 
     endif
@@ -190,7 +162,7 @@ display_form: rem --- Display
 
     dim dflt_data$[2,1]
     dflt_data$[1,0] = "STATUS_MESSAGE"
-    dflt_data$[1,1] = credit_hold_reason$;  rem status$
+    dflt_data$[1,1] = credit_hold_reason$
     dflt_data$[2,0] = "AR_TERMS_CODE"
     dflt_data$[2,1] = ope01a.terms_code$
     
@@ -263,6 +235,8 @@ rem --- Update order header file
     ope01a$ =field(ope01a$)
     write record (ope01_dev) ope01a$
     callpoint!.setStatus("SETORIG")
+    
+    callpoint!.setDevObject("credit_action_done", "Y")
     
     goto std_exit
 
