@@ -271,10 +271,6 @@ rem --- Set variables for called forms (OPE_ORDLSDET)
 
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
 
-rem --- Credit Mgmt 
-
-	callpoint!.setDevObject("over_credit_limit", "0")
-
 rem --- Set up Lot/Serial button (and others) properly
 
 	switch pos(ivs01a.lotser_flag$="LS")
