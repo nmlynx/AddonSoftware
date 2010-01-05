@@ -65,8 +65,11 @@ rem --- Read next glw-03 record
 
           rem --- Retrieve glm-02 record
 
-          glm02_key$=firm_id$+glw03a.gl_account$+"4"
-          find record (glm02_dev,key=b0$,dom=*next)glm02a$
+          dim glm02a$:fattr(glm02a$)
+          glm02a.firm_id$=firm_id$
+          glm02a.gl_account$=glw03a.gl_account$
+          glm02a.record_id$="4"
+          find record (glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$,dom=*next)glm02a$
           glm02a.begin_amt=glw03a.begin_amt
           glm02a.begin_units=glw03a.begin_units
           glm02a$=field(glm02a$)
