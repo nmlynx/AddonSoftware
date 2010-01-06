@@ -690,9 +690,7 @@ rem --- Read next invoice header --- Main Loop Starts
         remove (ope04_dev,key=firm_id$+"I  "+ope04a.customer_id$+ope04a.order_no$,dom=*next)
 
 		opt01a$=ope01a$
-		opt01a$=ope01a$
         opt01a.ar_inv_no$=ope01a.ar_inv_no$
-        opt01a.lock_status$="2"
         opt01a.lock_status$="2"
         opt01a.order_no$=ope01a.order_no$
         opt01a.total_sales=total_ext
