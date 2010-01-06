@@ -1495,18 +1495,13 @@ rem ==========================================================================
 credit_exceeded: rem --- Credit Limit Exceeded (ope_dd, 5500-5599)
 rem ==========================================================================
 
-	rem print "in credit_exceeded..."; rem debug
-	already_warned = num(callpoint!.getDevObject("over_credit_limit"))
-	rem print "---Already warned?", already_warned; rem debug
-	rem print "---Credit limit zero?", user_tpl.credit_limit; rem debug
-
-	if user_tpl.credit_limit <> 0 and !already_warned then
+	if user_tpl.credit_limit <> 0 and !user_tpl.credit_limit_warned then
 		msg_id$ = "OP_OVER_CREDIT_LIMIT"
 		dim msg_tokens$[1]
 		msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
 		gosub disp_message
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Over Credit Limit ***")
-		callpoint!.setDevObject("over_credit_limit", "1")
+		user_tpl.credit_limit_warned = 1
 	endif
 
 	rem print "out"; rem debug

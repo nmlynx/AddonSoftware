@@ -1,3 +1,53 @@
+[[OPE_INVHDR.ARAR]]
+print "Hdr:ARAR"; rem debug
+
+rem --- Set flags
+
+	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
+
+	callpoint!.setDevObject("credit_status_done", "N")
+	callpoint!.setDevObject("credit_action_done", "N")
+
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
+	callpoint!.setOptionEnabled("RPRT",0)
+	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("CRAT",0)
+	callpoint!.setOptionEnabled("TTLS",0)
+
+rem --- Clear order helper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.newOrder()
+
+rem --- Reset all previous values
+
+	user_tpl.prev_line_code$   = ""
+	user_tpl.prev_item$        = ""
+	user_tpl.prev_qty_ord      = 0
+	user_tpl.prev_boqty        = 0
+	user_tpl.prev_shipqty      = 0
+	user_tpl.prev_ext_price    = 0
+	user_tpl.prev_taxable      = 0
+	user_tpl.prev_ext_cost     = 0
+	user_tpl.prev_disc_code$   = ""
+	user_tpl.prev_ship_to$     = ""
+	user_tpl.prev_sales_total  = 0
+
+	user_tpl.new_order = 1
+	user_tpl.credit_limit_warned = 0
+[[OPE_INVHDR.AOPT-CRAT]]
+print "Hdr:AOPT:CRAT"; rem debug
+
+rem --- Do Credit Action
+
+	gosub do_credit_action
+
+	if action$ <> "U" then
+		user_tpl.do_end_of_form = 0			
+		callpoint!.setStatus("NEWREC")
+	end
 [[OPE_INVHDR.DISC_CODE.AVAL]]
 rem --- Set discount code for use in Order Totals
 
@@ -167,29 +217,19 @@ rem --- Are both Customer and Order entered?
 		break; rem --- exit callpoint
 	endif
 
+rem --- Calculate taxes and write it back
+
+	discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub get_disk_rec
+	ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+
 rem --- Credit action
 
-	rem if callpoint!.getRecordStatus() = "M" or user_tpl.detail_modified then
+	if ordHelp!.setOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
 		gosub do_credit_action
-	rem endif
-
-	rem Need to get to credit action even if nothing has been modified
-
-rem --- Order totals, call form if flag up
-
-	if user_tpl.do_totals_form then 
-		gosub do_totals
-	else
-
-	rem --- We still need to calculate taxes and write it back
-		
-		discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-		gosub get_disk_rec
-		ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		user_tpl.do_totals_form = 1
 	endif
 
 rem --- Cash Transaction
@@ -208,6 +248,24 @@ rem --- Has customer and order number been entered?
 
 	if cvs(cust_id$, 2) = "" or cvs(order_no$, 2) = "" then
 		callpoint!.setStatus("ABORT")
+	endif
+
+rem --- Check Ship-to's
+
+	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
+
+	if shipto_type$ = "S" and cvs(callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO"), 2) = "" then
+		msg_id$ = "OP_SHIPTO_NO_MISSING"
+		gosub disp_message
+		rem callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	else
+		if shipto_type$ = "M" and cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"), 2) = "" then
+			msg_id$ = "OP_MAN_SHIPTO_NEEDED"
+			gosub disp_message
+			rem callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
 	endif
 [[OPE_INVHDR.AOPT-MINV]]
 print "Hdr:APOT:MINV"; rem debug
@@ -299,40 +357,6 @@ rem --- Set flag
 rem --- clear availability
 
 	gosub clear_avail
-[[OPE_INVHDR.ARER]]
-rem --- Set flags
-
-	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
-	callpoint!.setOptionEnabled("DINV",0)
-	callpoint!.setOptionEnabled("CINV",0)
-	callpoint!.setOptionEnabled("RPRT",0)
-	callpoint!.setOptionEnabled("PRNT",0)
-	callpoint!.setOptionEnabled("CRCH",0)
-	callpoint!.setOptionEnabled("CASH",0)
-	callpoint!.setOptionEnabled("TTLS",0)
-
-rem --- Clear order helper object
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.newOrder()
-
-rem --- Reset all previous values
-
-	user_tpl.prev_line_code$   = ""
-	user_tpl.prev_item$        = ""
-	user_tpl.prev_qty_ord      = 0
-	user_tpl.prev_boqty        = 0
-	user_tpl.prev_shipqty      = 0
-	user_tpl.prev_ext_price    = 0
-	user_tpl.prev_taxable      = 0
-	user_tpl.prev_ext_cost     = 0
-	user_tpl.prev_disc_code$   = ""
-	user_tpl.prev_ship_to$     = ""
-	user_tpl.prev_sales_total  = 0
-
-rem --- Reset flags
-
-	user_tpl.picklist_warned = 0
 [[OPE_INVHDR.SHIPTO_NO.BINP]]
 rem --- Save old value
 
@@ -370,12 +394,14 @@ rem --- Duplicate Historical Invoice
 [[OPE_INVHDR.AOPT-CRCH]]
 print "Hdr:CRCH"; rem debug
 
-rem --- Credit check?
+rem --- Do credit status (management)
 
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"); rem can be null
 
 	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
-		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
+		callpoint!.setDevObject("credit_status_done", "Y")
 		callpoint!.setStatus("ACTIVATE")
 	endif
 [[OPE_INVHDR.APFE]]
@@ -384,6 +410,7 @@ print "Hdr:APFE"; rem debug
 rem --- Enable / Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",1)
+	gosub enable_credit_action
 
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
 		callpoint!.setOptionEnabled("DINV",1)
@@ -410,32 +437,13 @@ print "Hdr:BPFX"; rem debug
 rem --- Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("CRAT",0)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
-
-	print "---Make Invoice disabled"; rem debug
-
-rem --- Check Ship-to's
-
-	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
-
-	if shipto_type$ = "S" and cvs(callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO"), 2) = "" then
-		msg_id$ = "OP_SHIPTO_NO_MISSING"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
-	else
-		if shipto_type$ = "M" and cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"), 2) = "" then
-			msg_id$ = "OP_MAN_SHIPTO_NEEDED"
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			break; rem --- exit callpoint
-		endif
-	endif
 [[OPE_INVHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
@@ -780,20 +788,12 @@ rem	endif
 rem --- Show customer data
 	
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
       gosub check_credit
-		
-	rem --- Only display if user did not enter the customer, that is, used the nav arrows
-
-		if user_tpl.user_entry$ = "N" then
-			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
-				callpoint!.setStatus("ACTIVATE")
-			endif
-		endif
 	endif
 
 	gosub disp_cust_comments
@@ -1029,17 +1029,25 @@ rem --- Set order in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setOrder_no(order_no$)
 [[OPE_INVHDR.CUSTOMER_ID.AVAL]]
-rem --- Show customer data
-	
+rem --- Display customer
+
 	cust_id$ = callpoint!.getUserInput()
 	gosub display_customer
+
+rem --- Set customer in OrderHelper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setCust_id(cust_id$)
+
+rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
       gosub check_credit
 
 		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, table_chans$[all], callpoint!, status
+			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
+			callpoint!.setDevObject("credit_status_done", "Y")
 			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
@@ -1059,11 +1067,9 @@ rem --- Enable Duplicate buttons, printer
 	endif
 
 	callpoint!.setOptionEnabled("CRCH",1)
+	gosub enable_credit_action
 
-rem --- Set customer in OrderHelper object
 
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setCust_id(cust_id$)
 [[OPE_INVHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 
@@ -1127,9 +1133,7 @@ check_credit: rem --- Check credit limit of customer
               rem     (ope_cb, 5400-5499)
 rem ==========================================================================
 
-	over_credit_limit = num(callpoint!.getDevObject("over_credit_limit"))
-
-	if user_tpl.credit_limit<>0 and over_credit_limit and user_tpl.balance>=user_tpl.credit_limit then
+	if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and user_tpl.balance>=user_tpl.credit_limit then
    	if user_tpl.credit_installed$ <> "Y" then
       	msg_id$ = "OP_OVER_CREDIT_LIMIT"
 			dim msg_tokens$[1]
@@ -1138,7 +1142,7 @@ rem ==========================================================================
       endif  
    
 		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Credit Limit Exceeded ***") 
-		callpoint!.setDevObject("over_credit_limit", "1")
+		user_tpl.credit_limit_warned = 1
    endif
 
 	return
@@ -1737,6 +1741,22 @@ rem --- Write flag to file so opc_creditaction can see it
 	return
 
 rem ==========================================================================
+enable_credit_action:
+rem ==========================================================================
+
+	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
+		callpoint!.setOptionEnabled("CRAT",1)
+	else
+		callpoint!.setOptionEnabled("CRAT",0)
+	endif
+
+	return
+
+rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
 rem ==========================================================================
 
@@ -1748,8 +1768,6 @@ rem ==========================================================================
 
 	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
 		callpoint!.setDevObject("run_by", "invoice")
-		callpoint!.setDevObject("cust_id", cust_id$)
-		callpoint!.setDevObject("order_no", order_no$)
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 
@@ -1757,7 +1775,9 @@ rem ==========================================================================
 			callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","C")
 		else
 			if action$="R" then
-				callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","R")	
+				callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","R")
+				terms$ = str(callpoint!.getDevObject("new_terms_code"))
+				callpoint!.setColumnData("OPE_INVHDR.TERMS_CODE", terms$)
 			else
 				callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","")			
 			endif
@@ -2041,13 +2061,12 @@ rem --- Create Empty Availability window
 print "Hdr:BSHO"; rem debug
 
 rem --- Documentation
-rem     Old s$(1,1) = 0 / 1 -> callpoint!.getDevObject("over_credit_limit") 
 rem     Old s$(7,1) = 0 -> user_tpl.hist_ord$ = "Y" - order came from history
 rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=39
+	num_files=40
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -2088,6 +2107,7 @@ rem --- Open needed files
 	open_tables$[37]="OPC_DISCCODE", open_opts$[37]="OTA"
 	open_tables$[38]="OPC_TAXCODE",  open_opts$[38]="OTA"
 	open_tables$[39]="OPE_ORDHDR",   open_opts$[39]="OTA"
+	open_tables$[40]="ARC_TERMCODE", open_opts$[40]="OTA"
 	
 gosub open_tables
 
@@ -2241,7 +2261,8 @@ rem --- Setup user_tpl$
 :		"do_totals_form:u(1), " +
 :		"disc_code:c(1*), " +
 :		"tax_code:c(1*), " +
-:		"new_order:u(1)"
+:		"new_order:u(1), " +
+:		"credit_limit_warned:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2271,6 +2292,7 @@ rem --- Setup user_tpl$
 	user_tpl.picklist_warned   = 0
 	user_tpl.do_totals_form    = 1
 	user_tpl.new_order         = 0
+	user_tpl.credit_limit_warned = 0
 
 rem --- Columns for the util disableCell() method
 
@@ -2328,10 +2350,6 @@ rem --- Set variables for called forms (OPE_ORDLSDET)
 
 	callpoint!.setDevObject("lotser_flag",ivs01a.lotser_flag$)
 
-rem --- Credit Mgmt 
-
-	callpoint!.setDevObject("over_credit_limit", "0")
-
 rem --- Set up Lot/Serial button (and others) properly
 
 	switch pos(ivs01a.lotser_flag$="LS")
@@ -2350,12 +2368,8 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
-
-	rem if user_tpl.credit_installed$ = "Y" then
-	rem 	callpoint!.setOptionEnabled("CRCH",1)
-	rem else
-		callpoint!.setOptionEnabled("CRCH",0)
-	rem endif
+	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("CRAT",0)
 
 rem --- Parse table_chans$[all] into an object
 
