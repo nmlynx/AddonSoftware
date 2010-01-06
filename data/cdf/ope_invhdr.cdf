@@ -397,9 +397,9 @@ print "Hdr:CRCH"; rem debug
 rem --- Do credit status (management)
 
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"); rem can be null
 
-	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
+	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
 		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
 		callpoint!.setDevObject("credit_status_done", "Y")
 		callpoint!.setStatus("ACTIVATE")
@@ -794,15 +794,6 @@ rem --- Show customer data
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
       gosub check_credit
-		
-	rem --- Only display if user did not enter the customer, that is, used the nav arrows
-
-		if user_tpl.user_entry$ = "N" then
-			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
-				callpoint!.setStatus("ACTIVATE")
-			endif
-		endif
 	endif
 
 	gosub disp_cust_comments
@@ -1038,18 +1029,25 @@ rem --- Set order in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setOrder_no(order_no$)
 [[OPE_INVHDR.CUSTOMER_ID.AVAL]]
-rem --- Show customer data
-	
+rem --- Display customer
+
 	cust_id$ = callpoint!.getUserInput()
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	gosub display_customer
+
+rem --- Set customer in OrderHelper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setCust_id(cust_id$)
+
+rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
       gosub check_credit
 
 		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
+			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
+			callpoint!.setDevObject("credit_status_done", "Y")
 			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
@@ -1071,10 +1069,7 @@ rem --- Enable Duplicate buttons, printer
 	callpoint!.setOptionEnabled("CRCH",1)
 	gosub enable_credit_action
 
-rem --- Set customer in OrderHelper object
 
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setCust_id(cust_id$)
 [[OPE_INVHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
 

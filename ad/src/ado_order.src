@@ -453,6 +453,7 @@ rem ==========================================================================
             #OpenOrderAmount = 0
             #OpenBoAmount = 0
             #HeldOrderAmount = 0
+            this_total_sale = 0
             
         rem --- Files
         
@@ -493,16 +494,20 @@ rem ==========================================================================
             #CreditLimit = cust_det_rec.credit_limit
             #CreditHold$ = cust_det_rec.cred_hold$
             
-        rem --- Get this order header
+        rem --- Get this order header (if order isn't null)
         
             dim ord_head_rec$:#ordHeaderTmpl$
-            read record (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$) ord_head_rec$
             
-        rem --- Get order terms record
-        
-            dim terms_code_rec$:#termsCodeTmpl$
-            read record (#termsCodeDev%, key=#firm_id$+"A"+ord_head_rec.terms_code$) terms_code_rec$
-            #TermsCreditHold$ = terms_code_rec.cred_hold$
+            if p_order_no$ <> "" then
+                read record (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$) ord_head_rec$
+                
+            rem --- Get order terms record
+            
+                dim terms_code_rec$:#termsCodeTmpl$
+                read record (#termsCodeDev%, key=#firm_id$+"A"+ord_head_rec.terms_code$) terms_code_rec$
+                #TermsCreditHold$ = terms_code_rec.cred_hold$
+            
+            endif
 
         rem --- Position file
             
@@ -517,7 +522,7 @@ rem ==========================================================================
                     break
                 endif
                 
-                if ord_head_rec.order_no$ = p_order_no$ then
+                if p_order_no$ <> "" and ord_head_rec.order_no$ = p_order_no$ then
                     this_total_sale = ord_head_rec.total_sales 
                 endif
 
@@ -557,8 +562,8 @@ rem ==========================================================================
             if  #CreditHold$ = "Y" or
 :               #TermsCreditHold$ = "Y" or            
 :               #MaxPastDue > #pastDueLimit or
-:               ( #holdAmount and this_total_sale > #holdAmount ) or
-:               ( #autoHold$="Y" and #CreditLimit and #CreditLimit < aging_and_open )
+:               ( this_total_sale and #holdAmount and this_total_sale > #holdAmount ) or
+:               ( #autoHold$="Y" and #CreditLimit and aging_and_open > #CreditLimit )
 :           then
                 #OverCreditLimit% = 1
                 if batch$<>"" then batch$="B"
@@ -572,10 +577,10 @@ rem ==========================================================================
                         if #MaxPastDue > #pastDueLimit then
                             #CreditHoldReason$ = "Past Due Amount (" + str(#MaxPastDue) + ") exceeds maximum (" + str(#pastDueLimit) + ")"
                         else
-                            if #holdAmount and this_total_sale > #holdAmount then
+                            if this_total_sale and #holdAmount and this_total_sale > #holdAmount then
                                 #CreditHoldReason$ = "This order's amount (" + str(this_total_sale) + ") exceeds the Hold Amount (" + str(#holdAmount) + ")"
                             else
-                                if #autoHold$="Y" and #CreditLimit and #CreditLimit < aging_and_open then
+                                if #autoHold$="Y" and #CreditLimit and aging_and_open > #CreditLimit then
                                     #CreditHoldReason$ = "Aging plus Open amount (" + str(aging_and_open) + ") exceeds Credit Limit (" + str(#CreditLimit) + ")"
                                 endif
                             endif
@@ -588,23 +593,38 @@ rem ==========================================================================
             
             if batch$<>"" then ignore$=stbl("!batch",batch$)
             
-        rem --- Position Order Header back at the original order
-        
-            read (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$) 
+        rem --- Position Order Header back at the original order 
+            
+            if p_order_no$ <> "" then
+                read (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$)
+            endif
     
             methodret #OverCreditLimit%
             
         methodend
         
-        method public BBjInt setOverCreditLimit()
-            cust_id$ = #Cust_id$
-            order_no$ = #Order_no$
+    rem --- Set credit limit: set customer (order can be null)
+
+        method public BBjInt setOverCreditLimit(BBjString p_cust_id$)
+            #Cust_id$ = p_cust_id$ 
             
-            if cust_id$ = "" or order_no$ = "" then
-                throw #className$ + ": setOverCreditLimit(): You must setCust_id() and setOrder_no() before calling this method", 11
+            if cust_id$ = "" then
+                throw #className$ + ": setOverCreditLimit(): You must setCust_id() before calling this method", 11
             endif
             
-            methodret #setOverCreditLimit(cust_id$, order_no$)
+            methodret #setOverCreditLimit(p_cust_id$, #Order_no$)
+        methodend
+
+    rem --- Set Credit Limit: use fields if set (order can be null
+
+        method public BBjInt setOverCreditLimit()
+            cust_id$ = #Cust_id$
+            
+            if cust_id$ = "" then
+                throw #className$ + ": setOverCreditLimit(): You must setCust_id() before calling this method", 11
+            endif
+            
+            methodret #setOverCreditLimit(cust_id$, #Order_no$)
         methodend
         
     rem --- Accessor methods for setOverCreditLimit()
