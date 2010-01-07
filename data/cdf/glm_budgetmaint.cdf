@@ -328,6 +328,8 @@ return
 
 #include std_missing_params.src
 [[GLM_BUDGETMAINT.BSHO]]
+use ::ado_util.src::util
+
 num_files=3
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
@@ -416,4 +418,4 @@ UserObj!.addItem(tps!)
 rem format the grid, and set first column to be a pull-down
 gosub format_gridBudgets
 gosub set_column1_list
-
+util.resizeWindow(Form!, SysGUI!)
