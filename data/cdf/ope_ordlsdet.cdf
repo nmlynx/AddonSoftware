@@ -84,69 +84,34 @@ rem --- Set shipped default
 	callpoint!.setStatus("REFRESH")
 	print "---REFRESH"; rem debug
 [[OPE_ORDLSDET.AGRE]]
-<<<<<<< .mine
 print "AGRE"; rem debug
-=======
-rem --- Check quantities, do commits if this row isn't deleted
->>>>>>> .r6423
 
-<<<<<<< .mine
 rem --- Check quantities, do commits if this row isn't deleted
-=======
-if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" then
->>>>>>> .r6423
 
-<<<<<<< .mine
 	if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" then
-=======
-	rem --- Check if Serial and validate quantity
->>>>>>> .r6423
 
-<<<<<<< .mine
 	rem --- Check if Serial and validate quantity
-=======
-		qty_shipped = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED"))
-		qty_ordered = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED"))
->>>>>>> .r6423
 
-<<<<<<< .mine
 		qty_shipped = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED"))
 		qty_ordered = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED"))
 
 		gosub valid_quantities
-=======
-		gosub valid_quantities
->>>>>>> .r6423
 		if aborted then break; rem --- exit callpoint
 
 	rem --- Now check for Sales Line quantity
 
-<<<<<<< .mine
 		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())    = "Y" or
 :		   callpoint!.getGridRowModifyStatus(callpoint!.getValidationRow()) = "Y" 
 :		then
 			line_qty = num(callpoint!.getDevObject("ord_qty"))
 			lot_qty  = qty_ordered
-=======
-		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or
-:		   callpoint!.getGridRowModifyStatus(callpoint!.getValidationRow())="Y" then
-			line_qty = num(callpoint!.getDevObject("ord_qty"))
-			lot_qty  = qty_ordered
->>>>>>> .r6423
 
 			gosub check_avail
 			if aborted then break; rem --- exit callpoint
 		endif
 
-<<<<<<< .mine
 	rem --- Commit lots if inventoried and not a dropship or quote
 	rem --- Set 'increasing' to 0 if uncommitting prev lot/committing new one, or 1 if just doing new one
-=======
-	rem --- commit lots if inventoried and not a dropship or quote
-	rem --- set 'increasing' to 0 if uncommitting prev lot/committing new one, or 1 if just doing new one
-
-		if callpoint!.getDevObject("invoice_type")<>"P" and callpoint!.getDevObject("dropship_line")<>"Y" and callpoint!.getDevObject("inventoried")="Y"
->>>>>>> .r6423
 
 		if callpoint!.getDevObject("invoice_type")  <> "P" and 
 :			callpoint!.getDevObject("dropship_line") <> "Y" and 
@@ -191,7 +156,7 @@ if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" the
 				callpoint!.setDevObject("committed_now", CommittedNow!)
 			endif
 		endif
-endif
+	endif
  
 [[OPE_ORDLSDET.BEND]]
 print "BEND"; rem debug
