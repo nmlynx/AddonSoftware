@@ -106,6 +106,7 @@ rem --- Calculate taxes and write it back
 	ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
+	callpoint!.setStatus("SETORIG")
 
 rem --- Credit action
 
