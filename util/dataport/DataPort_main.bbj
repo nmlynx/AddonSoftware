@@ -9,7 +9,7 @@ rem  +-----------------------------------------+
 rem
 rem --- This overlay creates templates for version 6/7 data files using
 rem --- the Addon dictionary files ddm-01, ddm-03 and ddm-04 and then
-rem --- copied to Addon 8 data files after performing date format changes.
+rem --- copies to Addon 8 data files after performing date format changes.
 rem --- Normalization of data files will also be done in this program.
 rem
 
@@ -814,6 +814,7 @@ end_read_normalize_xref:
 rem --- Now go populate masks and sequences
 
     if source_version=6 gosub version6_files
+    if source_version=7 gosub version7_files
     gosub make_masks
         
     if temp_vend_ok$="N"
@@ -890,7 +891,207 @@ rem --- Populate sequence record(s)
 
     release
 
+version7_files:
+
+    ops10_dev=unt
+    open (ops10_dev,err=endof_v7cash_sales)source_folder$+"/"+cvs("ops-10",version_cvs)
+    
+    new_file=unt
+    datafile$=cvs("ars_mtdcash",8)
+    table_alias$="ARS_MTDCASH"
+    open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_v7cash_template
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then goto start_v7cash
+    new_file=unt
+    open (new_file)destin_folder$+"/"+datafile$
+
+get_v7cash_template:
+
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",new_file
+    dim ids$[1],templates$[1]
+    ids$[1]="ARS_MTDCASH"
+    call stbl("+DIR_PGM")+"adc_template.aon",1,1,ids$[all],templates$[all],status
+    if status 
+        print "   Could not find v8 template file for ARS_MTDCASH. File skipped."
+        print (err_dev) "Could not find v8 template file for ARS_MTDCASH. File skipped."
+        goto start_v7cash
+    endif
+    dim new_rec$:templates$[1]
+    while 1
+    	k$=key(ops10_dev,end=*break)
+    	if k$(3,1)<>"C" 
+    	    read(ops10_dev)
+    	    continue
+    	endif    
+    	dim ops10[6]
+    	read(ops10_dev,key=k$)ops10_0$,ops10[all]
+    	new_rec.firm_id$=k$(1,2)
+    	new_rec.record_id_c$="C"
+    	new_rec.mtd_cash=ops10[0]
+    	new_rec.mtd_csh_disc=ops10[1]
+    	new_rec.mtd_csh_gl=ops10[2]
+    	new_rec.nxt_mtd_cash=ops10[3]
+    	new_rec.nmtd_cash_ds=ops10[4]
+    	new_rec.nmtd_cashgl=ops10[5]
+    	new_rec$=field(new_rec$)
+    	writerecord(new_file)new_rec$
+    wend
+    
+start_v7cash:
+
+    new_file=unt
+    datafile$=cvs("ops_mtdsales",8)
+    table_alias$="OPS_MTDSALES"
+    open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_v7sales_template
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then goto endof_v7cash_sales
+    new_file=unt
+    open (new_file)destin_folder$+"/"+datafile$
+
+get_v7sales_template:
+
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",new_file
+    dim ids$[1],templates$[1]
+    ids$[1]="OPS_MTDSALES"
+    call stbl("+DIR_PGM")+"adc_template.aon",1,1,ids$[all],templates$[all],status
+    if status 
+        print "   Could not find v8 template file for OPS_MTDSALES. File skipped."
+        print (err_dev) "Could not find v8 template file for OPS_MTDSALES. File skipped."
+        goto endof_v7cash_sales
+    endif
+    dim new_rec$:templates$[1]
+    read(ops10_dev,key="",dom=*next)
+    while 1
+    	k$=key(ops10_dev,end=*break)
+    	if k$(3,1)<>"S" 
+    		read(ops10_dev)
+    		continue
+    	endif	
+    	dim ops10[15]
+    	read(ops10_dev,key=k$)ops10_0$,ops10[all]
+    	new_rec.firm_id$=k$(1,2)
+    	new_rec.record_id_s$="S"
+    	new_rec.mtd_sales=ops10[0]
+    	new_rec.mtd_returns=ops10[1]
+    	new_rec.mtd_tax=ops10[2]
+    	new_rec.mtd_freight=ops10[3]
+    	new_rec.mtd_cost=ops10[4]
+    	new_rec.mtd_discount=ops10[5]
+    	new_rec.mtd_csh_sale=ops10[6]
+    	new_rec.nmtd_sales=ops10[8]
+    	new_rec.nmtd_returns=ops10[9]
+    	new_rec.nmtd_tax=ops10[10]
+    	new_rec.nxt_mtd_frgt=ops10[11]
+    	new_rec.nxt_mtd_cost=ops10[12]
+    	new_rec.nxt_mtd_disc=ops10[13]
+    	new_rec.nmtd_cashsl=ops10[14]
+    	new_rec$=field(new_rec$)
+    	writerecord(new_file)new_rec$
+    wend
+
+endof_v7cash_sales:
+
+    return
+    
 version6_files:
+
+    ars10_dev=unt
+    open (ars10_dev,err=endof_v6cash_sales)source_folder$+"/"+cvs("ars-10",version_cvs)
+    
+    new_file=unt
+    datafile$=cvs("ars_mtdcash",8)
+    table_alias$="ARS_MTDCASH"
+    open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_v6cash_template
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then goto start_v6cash
+    new_file=unt
+    open (new_file)destin_folder$+"/"+datafile$
+
+get_v6cash_template:
+
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",new_file
+    dim ids$[1],templates$[1]
+    ids$[1]="ARS_MTDCASH"
+    call stbl("+DIR_PGM")+"adc_template.aon",1,1,ids$[all],templates$[all],status
+    if status 
+        print "   Could not find v8 template file for ARS_MTDCASH. File skipped."
+        print (err_dev) "Could not find v8 template file for ARS_MTDCASH. File skipped."
+        goto start_v6cash
+    endif
+    dim new_rec$:templates$[1]
+    while 1
+    	k$=key(ars10_dev,end=*break)
+    	if k$(3,1)<>"C" 
+    	    read(ars10_dev)
+    	    continue
+    	endif    
+    	dim ars10[6]
+    	read(ars10_dev,key=k$)ars10_0$,ars10[all]
+    	new_rec.firm_id$=k$(1,2)
+    	new_rec.record_id_c$="C"
+    	new_rec.mtd_cash=ars10[0]
+    	new_rec.mtd_csh_disc=ars10[1]
+    	new_rec.mtd_csh_gl=ars10[2]
+    	new_rec.nxt_mtd_cash=ars10[3]
+    	new_rec.nmtd_cash_ds=ars10[4]
+    	new_rec.nmtd_cashgl=ars10[5]
+    	new_rec$=field(new_rec$)
+    	writerecord(new_file)new_rec$
+    wend
+    
+start_v6cash:
+
+    new_file=unt
+    datafile$=cvs("ops_mtdsales",8)
+    table_alias$="OPS_MTDSALES"
+    open (new_file,err=*next)destin_folder$+"/"+datafile$;goto get_v6sales_template
+    call stbl("+DIR_SYP")+"bac_create_table.bbj",table_alias$,destin_folder$+"/"+datafile$,rd_table_chans$[all],"CREATE",status$
+    if len(status$) then goto endof_v6cash_sales
+    new_file=unt
+    open (new_file)destin_folder$+"/"+datafile$
+
+get_v6sales_template:
+
+    call stbl("+DIR_PGM")+"adc_clearfile.aon",new_file
+    dim ids$[1],templates$[1]
+    ids$[1]="OPS_MTDSALES"
+    call stbl("+DIR_PGM")+"adc_template.aon",1,1,ids$[all],templates$[all],status
+    if status 
+        print "   Could not find v8 template file for OPS_MTDSALES. File skipped."
+        print (err_dev) "Could not find v8 template file for OPS_MTDSALES. File skipped."
+        goto endof_v6cash_sales
+    endif
+    dim new_rec$:templates$[1]
+    read(ars10_dev,key="",dom=*next)
+    while 1
+    	k$=key(ars10_dev,end=*break)
+    	if k$(3,1)<>"S" 
+    		read(ars10_dev)
+    		continue
+    	endif	
+    	dim ars10[15]
+    	read(ars10_dev,key=k$)ars10_0$,ars10[all]
+    	new_rec.firm_id$=k$(1,2)
+    	new_rec.record_id_s$="S"
+    	new_rec.mtd_sales=ars10[0]
+    	new_rec.mtd_returns=ars10[1]
+    	new_rec.mtd_tax=ars10[2]
+    	new_rec.mtd_freight=ars10[3]
+    	new_rec.mtd_cost=ars10[4]
+    	new_rec.mtd_discount=ars10[5]
+    	new_rec.mtd_csh_sale=ars10[6]
+    	new_rec.nmtd_sales=ars10[8]
+    	new_rec.nmtd_returns=ars10[9]
+    	new_rec.nmtd_tax=ars10[10]
+    	new_rec.nxt_mtd_frgt=ars10[11]
+    	new_rec.nxt_mtd_cost=ars10[12]
+    	new_rec.nxt_mtd_disc=ars10[13]
+    	new_rec.nmtd_cashsl=ars10[14]
+    	new_rec$=field(new_rec$)
+    	writerecord(new_file)new_rec$
+    wend
+
+endof_v6cash_sales:
 
     arm10_dev=unt
     open (arm10_dev,err=end_of_msgs)source_folder$+"/"+cvs("arm-10",version_cvs)
