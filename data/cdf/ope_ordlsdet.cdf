@@ -88,7 +88,8 @@ print "AGRE"; rem debug
 
 rem --- Check quantities, do commits if this row isn't deleted
 
-	if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" then
+	if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" and
+:		cvs(callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO"),3)<>"" then
 
 	rem --- Check if Serial and validate quantity
 
@@ -519,7 +520,7 @@ rem --- Set defaults
 
 	if num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED")) = 0 then
 		if callpoint!.getDevObject("lotser_flag")="S" then 
-			callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_ORDERED","DFLT","1")
+			callpoint!.setColumnData("OPE_ORDLSDET.QTY_ORDERED","1")
 			user_tpl.left_to_ord = user_tpl.left_to_ord - 1
 		else
 			ord_qty = min(lsmast_tpl.qty_on_hand, user_tpl.left_to_ord)
@@ -532,9 +533,9 @@ rem --- Set defaults
 
 	if num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_SHIPPED")) = 0 then
 		if callpoint!.getDevObject("lotser_flag")="S" then
-			callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_SHIPPED","DFLT","1")
+			callpoint!.setColumnData("OPE_ORDLSDET.QTY_SHIPPED","1")
 		else
-			callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_SHIPPED","DFLT", str(ord_qty))
+			callpoint!.setColumnData("OPE_ORDLSDET.QTY_SHIPPED", str(ord_qty))
 		endif
 	endif
 
