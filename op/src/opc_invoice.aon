@@ -371,7 +371,7 @@ rem --- Main Read (no loop, mostly for the breaks)
 
             if pos(opm02a.line_type$=" SP") then
                 find record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
-                item_desc$ = pad( func.displayDesc(ivm01a.item_desc$), desclen )
+                item_desc$ = func.displayDesc(ivm01a.item_desc$)
             endif
 
             if opm02a.line_type$="M" and pos(opm02a.message_type$="BI ")=0 then continue
