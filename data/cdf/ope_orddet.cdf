@@ -967,12 +967,15 @@ rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
 
+	print "Det:in disp_grid_totals..."; rem debug
 	gosub calc_grid_totals
 
 	tamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
 	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
+	print "---Updated order total and Total Sales (tab)", ttl_ext_price; rem debug
+	print "out"
 
 	return
 
@@ -981,20 +984,22 @@ calc_grid_totals: rem --- Roll thru all detail line, totaling ext_price
                   rem     OUT: ttl_ext_price
 rem ==========================================================================
 
-	rem print "Det:in calc_grid_totals"; rem debug
+	print "Det:in calc_grid_totals"; rem debug
 	rem Does rolling through the vector still make sense?
-	rem Yes, to get the total before it's written to disk
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
 	if ordHelp!.getInv_type() = "" then
 		ttl_ext_price = 0
 	else
-		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
+		rem ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
+		ordHelp!.totalSalesDisk()
+		ttl_ext_price = ordHelp!.getExtPrice()
 	endif
 
 	rem print "---Total Sales (from vector):", ttl_ext_price; rem debug
-	rem print "out"; rem debug
+	print "---Total Sales (from disk):", ttl_ext_price; rem debug
+	print "out"; rem debug
 
 	return
 
@@ -1512,8 +1517,6 @@ rem ==========================================================================
 able_backorder: rem --- All the factors for enabling or disabling back orders
 rem ==========================================================================
 
-    print "in able_backorder..."; rem debug
-
 	if user_tpl.allow_bo$ = "N" or 
 :		pos(user_tpl.line_type$="MO") or
 :		callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" or
@@ -1531,8 +1534,6 @@ rem ==========================================================================
 		endif
 	endif
     
-    print "out"; rem debug
-
 	return
 
 rem ==========================================================================
