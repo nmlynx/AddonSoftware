@@ -1215,8 +1215,6 @@ check_credit: rem --- Check credit limit of customer
               rem     (ope_db, 5400-5499)
 rem ==========================================================================
 
-	print "in check_credit..."; rem debug
-
 	if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and user_tpl.balance>=user_tpl.credit_limit then
    	if user_tpl.credit_installed$ <> "Y" then
       	msg_id$ = "OP_OVER_CREDIT_LIMIT"
@@ -1228,8 +1226,6 @@ rem ==========================================================================
 		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Credit Limit Exceeded ***") 
 		user_tpl.credit_limit_warned = 1
    endif
-
-	print "out"; rem debug
 
 	return
 
@@ -1766,20 +1762,15 @@ do_credit_action: rem --- Launch the credit action program / form
                   rem     OUT: action$
 rem ==========================================================================
 
-	print "in do_credit_action..."; rem debug
-
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	action$   = "X"; rem Never called opc_creditaction.aon
 
 	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
-		print "---do action..."; rem debug
 		callpoint!.setDevObject("run_by", "order")
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
-
-		print "---action$ = """, action$, """"; rem debug
 
 		if pos(action$="HC")<>0 then
 			callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
@@ -1802,8 +1793,6 @@ rem ==========================================================================
 		endif
 
 	endif
-
-	print "out"; rem debug
 
 	return
 
