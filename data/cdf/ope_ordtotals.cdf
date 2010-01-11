@@ -12,10 +12,20 @@ rem --- Get order header record and totals
 	file_name$ = "OPE_ORDHDR"
 	dim ordhdr_rec$:fnget_tpl$(file_name$)
 	ordhdr_dev = fnget_dev(file_name$)
-	find record (ordhdr_dev, key=firm_id$+"  "+ordHelp!.getCust_id()+ordHelp!.getOrder_no()) ordhdr_rec$
+	found = 0
+	start_block = 1
 
-	user_tpl.disc_code$ = ordhdr_rec.disc_code$
-	user_tpl.tax_code$  = ordhdr_rec.tax_code$
+	if start_block then
+		find record (ordhdr_dev, key=firm_id$+"  "+ordHelp!.getCust_id()+ordHelp!.getOrder_no(), dom=*endif) ordhdr_rec$
+		found = 1
+	endif
+
+	if found then
+		user_tpl.disc_code$ = ordhdr_rec.disc_code$
+		user_tpl.tax_code$  = ordhdr_rec.tax_code$
+	else
+		callpoint!.setStatus("EXIT")
+	endif
 [[OPE_ORDTOTALS.BEND]]
 print "BEND"; rem debug
 
