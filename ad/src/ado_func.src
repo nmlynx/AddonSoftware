@@ -389,8 +389,8 @@ rem --- fnitem$()
     p[5] = 20
     dim desc$(60)
     desc$(1) = "Foo: Segment 1"
-    desc$(21) = "Segement 2"
-    desc$(41) = "Segement 3"
+    desc$(21) = "Segment 2"
+    desc$(41) = "Segment 3"
     print func.displayDesc(desc$, p[3], p[4], p[5])
 
     print "Zero lengths passed..."
@@ -399,7 +399,19 @@ rem --- fnitem$()
     print "Null description passed..."
     print func.displayDesc("", p[3], p[4], p[5])
     
-    rem input "Press <enter> to continue: ", *
+    print "Set description lengths..."
+    func.setLen1(10)
+    func.setLen2(15)
+    func.setLen3(20)
+    print "Expect 10:", func.getLen1()
+    print "Expect 15:", func.getLen2()
+    print "Expect 20:", func.getLen3()
+    desc$(1, 10) = "Segment 1"
+    desc$(11, 15) = "Segment 2"
+    desc$(26, 20) = "Segment 3"
+    print func.displayDesc(desc$)
+    
+    input "Press <enter> to continue: ", *
 
 rem --- fnmask$()
 
