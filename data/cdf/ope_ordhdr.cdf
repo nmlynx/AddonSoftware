@@ -103,10 +103,13 @@ rem --- Calculate taxes and write it back
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	gosub get_disk_rec
-	ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
-	callpoint!.setStatus("SETORIG")
+
+	if record_found then
+		ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")
+	endif
 
 rem --- Credit action
 
@@ -1951,7 +1954,8 @@ rem --- Set fields from the Order Totals form and write back
 
 rem ==========================================================================
 get_disk_rec: rem --- Get disk record, update with current form data
-              rem     OUT: ordhdr_rec$, updated
+              rem     OUT: record_found - true/false (1/0)
+              rem          ordhdr_rec$, updated (if record found)
               rem          ordhdr_dev
 rem ==========================================================================
 
@@ -1962,12 +1966,17 @@ rem ==========================================================================
 
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	record_found = 0
+	start_block = 1
 
-	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+	if start_block then
+		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ordhdr_rec$
+		record_found = 1
 
-rem --- Copy in any form data that's changed
+	rem --- Copy in any form data that's changed
 
-	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+	endif
 
 	return
 [[OPE_ORDHDR.BSHO]]
