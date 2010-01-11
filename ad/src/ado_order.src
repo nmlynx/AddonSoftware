@@ -500,13 +500,16 @@ rem ==========================================================================
             dim ord_head_rec$:#ordHeaderTmpl$
             
             if p_order_no$ <> "" then
-                read record (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$) ord_head_rec$
+                read record (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$, dom=*endif) ord_head_rec$
                 
             rem --- Get order terms record
             
                 dim terms_code_rec$:#termsCodeTmpl$
-                read record (#termsCodeDev%, key=#firm_id$+"A"+ord_head_rec.terms_code$) terms_code_rec$
-                #TermsCreditHold$ = terms_code_rec.cred_hold$
+                
+                if #START_BLOCK then
+                    read record (#termsCodeDev%, key=#firm_id$+"A"+ord_head_rec.terms_code$, dom=*endif) terms_code_rec$
+                    #TermsCreditHold$ = terms_code_rec.cred_hold$
+                endif
             
             endif
 
@@ -597,7 +600,7 @@ rem ==========================================================================
         rem --- Position Order Header back at the original order 
             
             if p_order_no$ <> "" then
-                read (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$)
+                read (#ordHeaderDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$, dom=*endif)
             endif
     
             methodret #OverCreditLimit%
@@ -607,11 +610,11 @@ rem ==========================================================================
     rem --- Set credit limit: set customer (order can be null)
 
         method public BBjInt setOverCreditLimit(BBjString p_cust_id$)
-            #Cust_id$ = p_cust_id$ 
-            
-            if cust_id$ = "" then
-                throw #className$ + ": setOverCreditLimit(): You must setCust_id() before calling this method", 11
+            if p_cust_id$ = "" then
+                throw #className$ + ": setOverCreditLimit(): You pass the customer ID when calling this method", 11
             endif
+            
+            #Cust_id$ = p_cust_id$ 
             
             methodret #setOverCreditLimit(p_cust_id$, #Order_no$)
         methodend
