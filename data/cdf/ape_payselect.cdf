@@ -571,46 +571,65 @@ rem --- Update apt-01 (remove/write) based on what's checked in the grid
 	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
 
 	if vectInvoicesMaster!.size()
-		call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
+rem --- First check to see if user_tpl.ap_check_seq$ is Y and multiple AP Types are selected
+		aptypes$=""
+		if user_tpl.ap_check_seq$="Y"
+			for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
+				if vectInvoicesMaster!.getItem(row+1)="Y"
+					if aptypes$<>""
+						if vectInvoicesMaster!.getItem(row+3)<>aptypes$
+							callpoint!.setMessage("AP_NO_SELECT")
+							aptypes$="ABORT"
+						endif
+					else
+						aptypes$=vectInvoicesMaster!.getItem(row+3)
+					endif
+				endif
+			next row
+		endif
 
-		for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
-			vend$ = vectInvoicesMaster!.getItem(row+4)
-			gosub strip_dashes
-			apt01_key$=firm_id$+vectInvoicesMaster!.getItem(row+3)+
-:							   vend$+
-:							   vectInvoicesMaster!.getItem(row+6)
-			read record (apt01_dev, key=apt01_key$) apt01a$
-			amt_to_pay   = num(vectInvoicesMaster!.getItem(row+9))
-			disc_to_take = num(vectInvoicesMaster!.getItem(row+10))
+		if aptypes$<>"ABORT"
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
 
-			if vectInvoicesMaster!.getItem(row+1)<>"Y"
-				apt01a.selected_for_pay$="N"
-				remove (ape04_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
-			else
-				apt01a.selected_for_pay$="Y"
-				dim ape04a$:fattr(ape04a$)
+			for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
+				vend$ = vectInvoicesMaster!.getItem(row+4)
+				gosub strip_dashes
+				apt01_key$=firm_id$+vectInvoicesMaster!.getItem(row+3)+
+:								   vend$+
+:								   vectInvoicesMaster!.getItem(row+6)
+				read record (apt01_dev, key=apt01_key$) apt01a$
+				amt_to_pay   = num(vectInvoicesMaster!.getItem(row+9))
+				disc_to_take = num(vectInvoicesMaster!.getItem(row+10))
 
-				ape04a.firm_id$      = firm_id$
-				ape04a.ap_type$      = apt01a.ap_type$
-				ape04a.vendor_id$    = apt01a.vendor_id$
-				ape04a.ap_inv_no$    = apt01a.ap_inv_no$
-				ape04a.reference$    = apt01a.reference$
-				ape04a.ap_inv_memo$  = apt01a.ap_inv_memo$
-				ape04a.invoice_date$ = apt01a.invoice_date$
-				ape04a.inv_due_date$ = apt01a.inv_due_date$
-				ape04a.disc_date$    = apt01a.disc_date$
-				ape04a.invoice_amt   = amt_to_pay
-				ape04a.discount_amt  = disc_to_take
-				ape04a.retention     = apt01a.retention
-				ape04a.orig_inv_amt  = amt_to_pay; rem --- added this 3/18/08, but not sure if it's the right way to set it.CAH
+				if vectInvoicesMaster!.getItem(row+1)<>"Y"
+					apt01a.selected_for_pay$="N"
+					remove (ape04_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
+				else
+					apt01a.selected_for_pay$="Y"
+					dim ape04a$:fattr(ape04a$)
 
-				ape04a$=field(ape04a$)
-				write record (ape04_dev) ape04a$
-			endif
+					ape04a.firm_id$      = firm_id$
+					ape04a.ap_type$      = apt01a.ap_type$
+					ape04a.vendor_id$    = apt01a.vendor_id$
+					ape04a.ap_inv_no$    = apt01a.ap_inv_no$
+					ape04a.reference$    = apt01a.reference$
+					ape04a.ap_inv_memo$  = apt01a.ap_inv_memo$
+					ape04a.invoice_date$ = apt01a.invoice_date$
+					ape04a.inv_due_date$ = apt01a.inv_due_date$
+					ape04a.disc_date$    = apt01a.disc_date$
+					ape04a.invoice_amt   = amt_to_pay
+					ape04a.discount_amt  = disc_to_take
+					ape04a.retention     = apt01a.retention
+					ape04a.orig_inv_amt  = amt_to_pay; rem --- added this 3/18/08, but not sure if it's the right way to set it.CAH
 
-			apt01a$ = field(apt01a$)
-			write record (apt01_dev) apt01a$
-		next row
+					ape04a$=field(ape04a$)
+					write record (ape04_dev) ape04a$
+				endif
+
+				apt01a$ = field(apt01a$)
+				write record (apt01_dev) apt01a$
+			next row
+		endif
 	endif
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
@@ -643,6 +662,10 @@ rem --- Dimension string templates
 
 	dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$,ape04a$:ape04_tpl$
 	dim ape01a$:ape01_tpl$,aps_params$:aps_params_tpl$
+
+rem --- Get parameter record
+
+	readrecord(aps_params,key=firm_id$+"AP00")aps_params$
 
 rem --- See if Check Printing has already been started
 
@@ -697,7 +720,8 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 :		"vectInvoicesOfst:c(5), " +
 :		"vectInvoicesMasterOfst:c(5), " +
 :		"MasterCols:n(5), " +
-:		"retention_col:u(1)"
+:		"retention_col:u(1), " +
+:		"ap_check_seq:c(1)"
 	dim user_tpl$:user_tpl_str$
 
 	UserObj! = BBjAPI().makeVector()
@@ -713,6 +737,7 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	user_tpl.gridInvoicesRows$ = "10"
 	user_tpl.MasterCols = 16
 	user_tpl.retention_col = 12
+	user_tpl.ap_check_seq$=aps_params.ap_check_seq$
 
 	gosub format_grid
 	util.resizeWindow(Form!, SysGui!)

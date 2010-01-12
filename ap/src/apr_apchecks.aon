@@ -524,13 +524,6 @@ ap_type_break: rem --- AP Type Break
     while more
         t9$="A"
         gosub new_vendor
-rem jpb This is where we need to preview the first batch and start a new instance of the printer object
-rem		if t0$<>""
-rem	       	if aps01.ap_check_seq$ = "Y"
-rem	        	doc!.preview()
-rem	        	doc!=myBBjPrinter!.getForm(0)
-rem	        endif	
-rem		endif
         t0$=ape04a.ap_type$
         t1$=""
         t9$=""
