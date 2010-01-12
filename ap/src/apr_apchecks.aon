@@ -524,6 +524,13 @@ ap_type_break: rem --- AP Type Break
     while more
         t9$="A"
         gosub new_vendor
+rem jpb This is where we need to preview the first batch and start a new instance of the printer object
+rem		if t0$<>""
+rem	       	if aps01.ap_check_seq$ = "Y"
+rem	        	doc!.preview()
+rem	        	doc!=myBBjPrinter!.getForm(0)
+rem	        endif	
+rem		endif
         t0$=ape04a.ap_type$
         t1$=""
         t9$=""
@@ -534,13 +541,14 @@ ap_type_break: rem --- AP Type Break
 
 rem --- New Checks
 
-        if aps01a.ap_check_seq$ <> "N" then
+        if aps01a.ap_check_seq$ = "Y" then
 			dim msg_tokens$[1]
 			find record (apm10_dev,key=firm_id$+"A"+t0$,dom=*next) apm10a$
 			msg_id$="AP_CHECKS"
 			msg_tokens$[1]=cvs(apm10a.code_desc$,3)
 			gosub disp_message
 		endif
+	break
     wend
 
     return
