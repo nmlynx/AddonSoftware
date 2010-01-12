@@ -20,6 +20,7 @@ rem --- Retrieve sysinfo data
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
+    firm_name$=sysinfo.firm_name$
     user_id$=sysinfo.user_id$
     sys_date$=sysinfo.system_date$
     program$=argv(argc - 1)
@@ -70,7 +71,7 @@ rem --- Get Terminal ID
     temp$="USERID="+cvs(user_id$,7)+","
 	if pos(","=temp$) temp$=temp$(1,pos(","=temp$)-1)
 	if pos(" "=temp$) temp$=temp$(1,pos(" "=temp$)-1)
-	
+    
     while 1
         task$=tsk(tsk_no,err=*break)
 
@@ -94,8 +95,9 @@ rem --- Get Terminal ID
 rem --- Set terminal record
 
     terminal$="T"+FID(0)
+    userkey$=user$+fill(3),userkey$=userkey$(1,3)
     find (sys01_dev,key=terminal$,dom=*next)iol=sys01t
-    find (sym02_dev,key=user$,dom=*next)iol=sym02a
+    find (sym02_dev,key=userkey$,dom=*next)iol=sym02a
     sys01_0$(4,3)=user$
     sys01_0$(10,3)=""
     sys01_0$(16,2)=firm_id$
@@ -129,7 +131,7 @@ rem --- Create !SCREEN
 rem --- Create !COLOR
 
     color$(1)=sym02_1$(41,60),color$(81)=sym02_1$(41,60)
-
+    
     for x=1 to 51 step 10
         c$=color$(x,10)
         m$=""
@@ -145,18 +147,28 @@ rem --- Create !COLOR
     next x
 
     color$=stbl("!COLOR",color$)
-
+    
 rem --- Set function keys
 
     call "SYC.FK",status
 
 rem --- print header boxes
 
+        bg$=cvs(color$(1,10), 2)
+        fg$=cvs(color$(11,10), 2)
+        PRINT (0,ERR=*next)'BACKGR',bg$,fg$,'DEFAULT','CS',
+
 	call "SYC.WC",0,0,47,3,0,0,0
 	call "SYC.WC",0,0,33,3,47,0,0
 	print 'sb',@(3,1),program$," ",desc$,@(49),day,@(58),fne$(q$),
 	print @(49,0)," ADD+ON Software v6",@(68,1),fid(0),'sf',
 
+rem --- get firm name and update the header
+
+	if cvs(firm_name$,3)<>"" then
+		print 'sb',@(2,0)," ",cvs(firm_name$,3)," ",
+	endif
+	
 rem --- Run next program
 
     x$=stbl("!CLEAR","!PROCESS",err=*next)
