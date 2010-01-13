@@ -1,11 +1,17 @@
+[[APM_VENDHIST.ADIS]]
+rem --- If new record and multi A/P Types, only display default A/P Type rec
+if user_tpl.multi_types$<>"Y"
+	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE",user_tpl.dflt_ap_type$)
+	gosub display_default_rec
+[[APM_VENDHIST.AREC]]
+rem --- If new record and multi A/P Types, only display default A/P Type rec
+if user_tpl.multi_types$<>"Y"
+	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE",user_tpl.dflt_ap_type$)
+	gosub display_default_rec
 [[APM_VENDHIST.PAYMENT_GRP.AVAL]]
 if callpoint!.getUserInput()=""
 	callpoint!.setUserInput("  ")
 	callpoint!.setStatus("REFRESH")
-endif
-[[APM_VENDHIST.ARAR]]
-if user_tpl.multi_types$<>"Y"
-	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE",user_tpl.dflt_ap_type$)
 endif
 [[APM_VENDHIST.BDEL]]
 rem --- disallow deletion of apm-02 if any of the buckets are non-zero, or if referenced in apt-01 (open invoices)
@@ -134,6 +140,7 @@ if user_tpl.multi_types$<>"Y"
 	ctl_name$="APM_VENDHIST.AP_TYPE"
 	ctl_stat$="I"
 	gosub disable_fields
+	callpoint!.setColumnData("APM_VENDHIST.AP_TYPE",user_tpl.dflt_ap_type$)
 else
 	ctl_name$="APM_VENDHIST.AP_TYPE"
 	ctl_stat$=" "
@@ -157,6 +164,21 @@ disable_fields:
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 
+return
+
+display_default_rec:
+
+	apm_vendhist_dev=fnget_dev("APM_VENDHIST")
+	dim apm_vendhist_tpl$:fnget_tpl$("APM_VENDHIST")
+	while 1
+		readrecord(apm_vendhist_dev,key=firm_id$+
+:			callpoint!.getColumnData("APM_VENDHIST.VENDOR_ID")+
+:			user_tpl.dflt_ap_type$,dom=*break)apm_vendhist_tpl$
+		callpoint!.setStatus("RECORD:["+firm_id$+
+:			callpoint!.getColumnData("APM_VENDHIST.VENDOR_ID")+
+:			user_tpl.dflt_ap_type$+"]")
+		break
+	wend
 return
 
 #include std_missing_params.src
