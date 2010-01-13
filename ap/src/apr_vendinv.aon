@@ -62,13 +62,6 @@ rem --- Retrieve parameter records
         aps01a_key$=firm_id$+"AP00"
         find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
 
-rem --- Set A/P Type if multiple types not installed
-	
-        if aps01a.multi_types$<>"Y"
-	    rem ' use the ap_type from aps_params
-            ap_type$=aps01a.ap_type$
-        endif
-        
 rem --- Initializations
 
         recs=0
@@ -148,16 +141,35 @@ position_apt01: rem --- Position apt-01
         baltotal=0
         dim apt01ak0$:apt01a_key0$
         dim k$:apt01a_key0$
-        apt01ak0.firm_id$=firm_id$,apt01ak0.ap_type$=ap_type$,apt01ak0.vendor_id$=vendor_id$,apt01ak0.ap_inv_no$=beg_inv_no$
+        apt01ak0.firm_id$=firm_id$
+        if aps01a.multi_types$="Y" and cvs(ap_type$,2)<>""
+        	apt01ak0.ap_type$=ap_type$
+        	apt01ak0.vendor_id$=vendor_id$
+        	apt01ak0.ap_inv_no$=beg_inv_no$
+		endif
         read record (apt01_dev,key=apt01ak0$,dir=0,dom=*next) apt01a$
 
 next_apt01: rem --- Read next invoice
 
         k$=key(apt01_dev,end=no_more_invoices)
         if pos(firm_id$=k$)<>1 goto no_more_invoices
-        if k.ap_type$<>ap_type$ goto no_more_invoices
-        if k.vendor_id$<>vendor_id$ goto no_more_invoices
-
+        if aps01a.multi_types$="Y" and cvs(ap_type$,2)<>""
+	        if k.ap_type$<>ap_type$ goto no_more_invoices
+	    endif
+	    if aps01a.multi_types$="Y" and cvs(ap_type$,2)<>""
+        	if cvs(vendor_id$,2)<>""
+        		if k.vendor_id$<>vendor_id$ goto no_more_invoices
+        	endif	
+        endif
+        if (aps01a.multi_types$="Y" and cvs(ap_type$,2)="") or aps01a.multi_types$="N"
+        	if cvs(vendor_id$,2)<>"" 
+        		if k.vendor_id$<>vendor_id$
+        			read(apt01_dev)
+        			goto next_apt01
+        		endif	
+        	endif	
+        endif
+        
 rem --- Invoice header
 
         read record (apt01_dev,key=k$) apt01a$
