@@ -270,7 +270,7 @@ calc_ext_cost: rem --- Calculate and display extended cost
                rem --- OUT: Extended cost calculated and displayed
 rem ==========================================================================
 
-	callpoint!.setColumnData("IVE_TRANSDET.TOTAL_COST", str(unit_cost * trans_qty) )
+	callpoint!.setColumnData("IVE_TRANSDET.TOTAL_COST", str( round(unit_cost * trans_qty, 2) ))
 	print "Updated total cost"; rem debug
 	callpoint!.setStatus("REFRESH")
 	rem callpoint!.setStatus("MODIFIED-REFRESH")
