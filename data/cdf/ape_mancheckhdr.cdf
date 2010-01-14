@@ -67,6 +67,8 @@ rem --- one or more ape-12 recs, then come back to main form and abort, which wo
 		next reccnt		
 	endif
 [[APE_MANCHECKHDR.AOPT-OINV]]
+print "Head: AOPT:OINV"; rem debug
+
 rem -- call inquiry program to view open invoices this vendor
 rem -- only allow if trans_type is manual (vs reversal/void)
 
@@ -74,8 +76,13 @@ trans_type$ = callpoint!.getColumnData("APE_MANCHECKHDR.TRANS_TYPE")
 ap_type$    = callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
 vendor_id$  = callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
 
+rem debug
+print "---trans type: ", trans_type$
+print "---ap type   : """, ap_type$, """"
+print "---vendor id : """, vendor_id$, """"
+
 if trans_type$ = "M" then 
-	if ap_type$ <> "" and vendor_id$ <> "" then
+	if cvs(ap_type$, 2) <> "" and cvs(vendor_id$, 2) <> "" then
 		key_pfx$ = firm_id$ + ap_type$ + vendor_id$
 		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :			gui_dev,
@@ -86,37 +93,52 @@ if trans_type$ = "M" then
 :			key_pfx$,
 :			"PRIMARY",
 :			rd_key$
-		if rd_key$<>""
+
+		print "---rd_key: """, rd_key$, """"; rem debug
+
+		if rd_key$ <> "" then
 			apt01_dev=fnget_dev("APT_INVOICEHDR")
 			dim apt01a$: fnget_tpl$("APT_INVOICEHDR")
 			apt11_dev=fnget_dev("APT_INVOICEDET")
 			dim apt11a$:fnget_tpl$("APT_INVOICEDET")
 			ape22_dev1=user_tpl.ape22_dev1
 			dim ape22a$:fnget_tpl$("APE_MANCHECKDET")
+
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","APE_MANCHECKDET","ALT_KEY_01",ape22_key1$,rd_table_chans$[all],status$
+
 			while 1
-				readrecord(apt01_dev,key=rd_key$,dom=*break)apt01a$
+				read record (apt01_dev, key=rd_key$, dom=*break) apt01a$
+				print "---found rd_key$ (apt-01)..."; rem debug
+
 				if apt01a.selected_for_pay$="Y"
 					callpoint!.setMessage("AP_INV_IN_USE:Check")
 					break
 				endif
+
 				dim ape22_key$:ape22_key1$
-				read(ape22_dev1,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,knum=1,dom=*next)
-				ape22_key$=key(ape22_dev1,end=*next)
+				read (ape22_dev1, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, knum=1, dom=*next)
+				ape22_key$ = key(ape22_dev1, end=*break)
+
 				if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$=ape22_key$)=1 and
 :					ape22_key.check_no$<>callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
 					callpoint!.setMessage("AP_INV_IN_USE:Manual Check")
 					break
 				endif
+
+				print "---Found an ape22 key..."; rem debug
 				apt01_key$=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$
 				inv_amt=num(apt01a.invoice_amt$)
 				disc_amt=num(apt01a.discount_amt$)
 				ret_amt=num(apt01a.retention$)
+
 				apt11_key$=apt01_key$
 				read(apt11_dev,key=apt11_key$,dom=*next)
+
 				while 1
-					readrecord(apt11_dev,end=*break)apt11a$
-					if apt11a$(1,len(apt11_key$))=apt11_key$
+					read record(apt11_dev, end=*break) apt11a$
+
+					if apt11a$(1,len(apt11_key$)) = apt11_key$ then
+						print "---Found an apt11 key..."; rem debug
 						inv_amt=inv_amt+num(apt11a.trans_amt$)
 						disc_amt=disc_amt+num(apt11a.trans_disc$)
 						ret_amt=ret_amt+num(apt11a.trans_ret$)
@@ -124,6 +146,7 @@ if trans_type$ = "M" then
 						break
 					endif
 				wend
+
 				ape22a.firm_id$=firm_id$
 				ape22a.ap_type$=apt01a.ap_type$
 				ape22a.check_no$=callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
@@ -138,14 +161,19 @@ if trans_type$ = "M" then
 				ape22a.net_paid_amt=inv_amt-disc_amt-ret_amt
 				ape22_key$=firm_id$+ape22a.ap_type$+ape22a.check_no$+ape22a.vendor_id$+ape22a.ap_inv_no$+"00"
 				ape22a$=field(ape22a$)
-				writerecord(ape22_dev1,key=ape22a_key$)ape22a$
+
+				write record (ape22_dev1) ape22a$
+				print "---Wrote ape22 record"
+
 				ape02_key$=firm_id$+ape22a.ap_type$+callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")+ape22a.vendor_id$
 				callpoint!.setStatus("RECORD:["+ape02_key$+"]")
 				gosub calc_tots
+
 				callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_INV",str(tinv))
 			   callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_DISC",str(tdisc))
 				callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_RETEN",str(tret))
 				callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_CHECK",str(tinv-tdisc-tret))
+
 				break
 			wend
 		endif
@@ -357,7 +385,7 @@ c!.setColumnEditable(6,0)
 c!.setColumnEditable(7,0)
 if user_tpl.multi_types$="N" c!.setColumnEditable(2,0)
 [[APE_MANCHECKHDR.AWIN]]
-rem --- print 'show',; rem debug
+rem print 'show',; rem debug
 
 rem --- Open/Lock files
 files=30,begfile=1,endfile=12

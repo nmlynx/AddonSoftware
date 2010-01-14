@@ -94,57 +94,73 @@ if apt01a$(1,len(apt01ak1$))<>apt01ak1$ and num(callpoint!.getUserInput())<>0
 endif
 callpoint!.setStatus("MODIFIED-REFRESH")
 [[APE_MANCHECKDET.AP_INV_NO.AVAL]]
+print "Det: AP_INV_NO.AVAL"; rem debug
+
+rem --- Look for Open Invoice
+
 apt_invoicehdr_dev=fnget_dev("APT_INVOICEHDR")
 apt_invoicedet_dev=fnget_dev("APT_INVOICEDET")
 dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
 dim apt11a$:fnget_tpl$("APT_INVOICEDET")
-inv_amt=0,disc_amt=0,ret_amt=0
-ap_type$=field(apt01a$,"AP_TYPE")
-vendor_id$=field(apt01a$,"VENDOR_ID")
-ap_type$(1)=UserObj!.getItem(num(user_tpl.ap_type_vpos$)).getText()
-vendor_id$(1)=UserObj!.getItem(num(user_tpl.vendor_id_vpos$)).getText()
-apt01ak1$=firm_id$+ap_type$+vendor_id$+callpoint!.getUserInput()
-apt11ak1$=apt01ak1$(1,len(apt01ak1$)-2)
-ape22_dev1=user_tpl.ape22_dev1
+
+inv_amt=0
+disc_amt=0
+ret_amt=0
+
+ap_type$    = callpoint!.getHeaderColumnData("APE_MANCHECKHDR.AP_TYPE")
+vendor_id$  = callpoint!.getHeaderColumnData("APE_MANCHECKHDR.VENDOR_ID")
+invoice_no$ = callpoint!.getUserInput()
+check_no$   = callpoint!.getHeaderColumnData("APE_MANCHECKHDR.CHECK_NO")
+
+ape02_key$ = firm_id$ + ap_type$ + check_no$ + vendor_id$
+apt01ak1$ = firm_id$ + ap_type$ + vendor_id$ + invoice_no$ 
+print "---apt01 key: """, apt01ak1$, """"; rem debug
+ape22_dev1 = user_tpl.ape22_dev1
 call stbl("+DIR_SYP")+"bac_key_template.bbj","APE_MANCHECKDET","ALT_KEY_01",ape22_key1$,rd_table_chans$[all],status$
-readrecord(apt_invoicehdr_dev,key=apt01ak1$,dom=*next)apt01a$
-if apt01a$(1,len(apt01ak1$))=apt01ak1$
-	if apt01a.selected_for_pay$="Y"
+read record (apt_invoicehdr_dev, key=apt01ak1$, dom=*next) apt01a$
+
+if pos(apt01ak1$ = apt01a$) = 1 then
+
+rem --- Open Invoice record found
+
+	print "---open invoice record found..."; rem debug
+
+	if apt01a.selected_for_pay$ = "Y" then
 		callpoint!.setMessage("AP_INV_IN_USE:Check")
-		ape02_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
-:						callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+
-:						callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")
 		callpoint!.setStatus("ABORT-RECORD:["+ape02_key$+"]")
 		goto end_of_inv_aval
 	endif
-	if apt01a.hold_flag$="Y"
+
+	if apt01a.hold_flag$ = "Y" then
 		callpoint!.setMessage("AP_INV_HOLD")
-		ape02_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
-:						callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+
-:						callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")
 		callpoint!.setStatus("ABORT-RECORD:["+ape02_key$+"]")
 		goto end_of_inv_aval		
 	endif
+
+	print "---not select for pay; not on hold..."; rem debug
+
 	dim ape22_key$:ape22_key1$
-	read(ape22_dev1,key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$,knum=1,dom=*next)
-		ape22_key$=key(ape22_dev1,end=*next)
+	read (ape22_dev1, key=firm_id$+ap_type$+vendor_id$+invoice_no$, knum=1, dom=*next)
+	ape22_key$ = key(ape22_dev1, end=*next)
+
 	if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$=ape22_key$)=1 and
-:		ape22_key.check_no$<>callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")
+:		ape22_key.check_no$<>check_no$
+:	then
 		callpoint!.setMessage("AP_INV_IN_USE:Manual Check")
-		ape02_key$=firm_id$+callpoint!.getColumnData("APE_MANCHECKDET.AP_TYPE")+
-:						callpoint!.getColumnData("APE_MANCHECKDET.CHECK_NO")+
-:						callpoint!.getColumnData("APE_MANCHECKDET.VENDOR_ID")
 		callpoint!.setStatus("ABORT-RECORD:["+ape02_key$+"]")
 		goto end_of_inv_aval
 	endif
+
 	inv_amt=num(apt01a.invoice_amt$)
 	disc_amt=num(apt01a.discount_amt$)
 	ret_amt=num(apt01a.retention$)
 	more_dtl=1
-	read(apt_invoicedet_dev,key=apt11ak1$,dom=*next)							
+	read (apt_invoicedet_dev, key=apt11ak1$, dom=*next)	
+						
 	while more_dtl
-		readrecord(apt_invoicedet_dev,end=*next)apt11a$
-		if apt11a$(1,len(apt11ak1$))=apt11ak1$
+		read record (apt_invoicedet_dev, end=*break) apt11a$
+
+		if pos(apt11ak1$ = apt11a$) = 1 then 
 			inv_amt=inv_amt+num(apt11a.trans_amt$)
 			disc_amt=disc_amt+num(apt11a.trans_disc$)
 			ret_amt=ret_amt+num(apt11a.trans_ret$)			
@@ -152,20 +168,26 @@ if apt01a$(1,len(apt01ak1$))=apt01ak1$
 			more_dtl=0
 		endif
 	wend
+
 	callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_DATE",apt01a.invoice_date$)
 	callpoint!.setColumnData("APE_MANCHECKDET.AP_DIST_CODE",apt01a.ap_dist_code$)
 
-	rem --- disable inv date/dist code, leaving only inv amt/disc amt enabled for open invoice
+rem --- disable inv date/dist code, leaving only inv amt/disc amt enabled for open invoice
+
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
 	c!.setColumnEditable(1,0)
 	c!.setColumnEditable(2,0)
 	c!.startEdit(c!.getSelectedRow(),4)
+
 else
-	rem --- enable inv date/dist code if on invoice not in open invoice file
-	rem --- also have user confirm that the invoice wasn't found in Open Invoice file
+
+rem --- enable inv date/dist code if on invoice not in open invoice file
+rem --- also have user confirm that the invoice wasn't found in Open Invoice file
+
 	msg_id$="AP_EXT_INV"
 	gosub disp_message
+
 	w!=Form!.getChildWindow(1109)
 	c!=w!.getControl(5900)
 	c!.setColumnEditable(1,1)
@@ -173,13 +195,16 @@ else
 	c!.startEdit(c!.getSelectedRow(),1)
 	callpoint!.setColumnData("APE_MANCHECKDET.AP_DIST_CODE",user_tpl.dflt_dist_cd$)
 	callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_DATE",callpoint!.getHeaderColumnData("APE_MANCHECKHDR.CHECK_DATE"))
+
 endif
+
 callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_AMT",str(inv_amt))
 callpoint!.setColumnData("APE_MANCHECKDET.DISCOUNT_AMT",str(disc_amt))
 callpoint!.setColumnData("APE_MANCHECKDET.RETENTION",str(ret_amt))
 callpoint!.setColumnData("APE_MANCHECKDET.NET_PAID_AMT",str(inv_amt-disc_amt-ret_amt))
 
 callpoint!.setStatus("MODIFIED-REFRESH")
+
 end_of_inv_aval:
 [[APE_MANCHECKDET.<CUSTOM>]]
 calc_tots:
