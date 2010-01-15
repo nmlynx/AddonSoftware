@@ -1,3 +1,107 @@
+[[POE_INVHDR.BTBL]]
+rem --- Open/Lock files
+files=15,begfile=1,endfile=files
+dim files$[files],options$[files],chans$[files],templates$[files]
+
+files$[1]="APM_VENDCMTS";rem --- "apm-09
+files$[2]="APM_VENDMAST";rem --- "apm-01"
+files$[3]="APM_VENDHIST";rem --- "apm-02"
+files$[4]="APS_PARAMS";rem --- "aps-01"
+files$[5]="GLS_PARAMS";rem --- "gls-01"
+files$[6]="POS_PARAMS";rem --- "pos-01"
+files$[7]="IVS_PARAMS";rem --- "ivs-01"
+files$[8]="POE_POHDR";rem --- "poe-02"
+files$[9]="POE_PODET";rem --- "poe-12"
+files$[10]="POT_RECHDR";rem --- "pot-04"
+files$[11]="POT_RECDET";rem --- "pot-14"
+files$[12]="APT_INVOICEHDR";rem --- "apt-01"
+files$[13]="IVM_ITEMMAST";rem --- "ivm-01"
+files$[14]="POC_LINECODE";rem --- "pom-02"
+files$[15]="APC_TERMSCODE"
+
+for wkx=begfile to endfile
+	options$[wkx]="OTA"
+next wkx
+call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:	begfile,
+:	endfile,
+:	files$[all],
+:	options$[all],
+:	chans$[all],
+:	templates$[all],
+:	table_chans$[all],
+:	batch,
+:	status$
+
+if status$<>"" then
+	remove_process_bar:
+	bbjAPI!=bbjAPI()
+	rdFuncSpace!=bbjAPI!.getGroupNamespace()
+	rdFuncSpace!.setValue("+build_task","OFF")
+	release
+endif
+
+aps01_dev=num(chans$[4])
+gls01_dev=num(chans$[5])
+pos01_dev=num(chans$[6])
+ivs01_dev=num(chans$[7])
+
+dim aps01a$:templates$[4],gls01a$:templates$[5],pos01a$:templates$[6],ivs01a$:templates$[7]
+
+
+rem --- Additional File Opens
+gl$="N"
+status=0
+source$=pgm(-2)
+call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"PO",glw11$,gl$,status
+if status<>0 goto std_exit
+callpoint!.setDevObject("gl_int",gl$)
+callpoint!.setDevObject("glworkfile",glw11$)
+if gl$="Y"
+   files=2,begfile=1,endfile=2
+   dim files$[files],options$[files],chans$[files],templates$[files]
+   files$[1]="GLM_ACCT",options$[1]="OTA";rem --- "glm-01"
+   files$[2]=glw11$,options$[2]="OTAS";rem --- s means no err if tmplt not found
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:	begfile,
+:	endfile,
+:	files$[all],
+:	options$[all],
+:	chans$[all],
+:	templates$[all],
+:	table_chans$[all],
+:	batch,
+:	status$
+	if status$<>"" then
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+		release
+	endif
+endif
+rem --- Retrieve parameter data
+               
+aps01a_key$=firm_id$+"AP00"
+find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
+
+callpoint!.setDevObject("multi_types",aps01a.multi_types$)
+callpoint!.setDevObject("multi_dist",aps01a.multi_dist$)
+callpoint!.setDevObject("retention",aps01a.ret_flag$)
+
+gls01a_key$=firm_id$+"GL00"
+find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+callpoint!.setDevObject("units_flag",gls01a.units_flag$)
+callpoint!.setDevObject("gl_year",gls01a.current_year$)
+callpoint!.setDevObject("gl_per",gls01a.current_per$)
+callpoint!.setDevObject("gl_tot_pers",gls01a.total_pers$)
+
+
+call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_INVSEL","PRIMARY",poe_invsel_key_tpl$,table_chans$[all],status$
+callpoint!.setDevObject("poe_invsel_key",poe_invsel_key_tpl$)
+
+if aps01a.multi_types$<>"Y"
+	callpoint!.setTableColumnAttribute("POE_INVHDR.AP_TYPE","PVAL",$22$+aps01a.ap_type$+$22$)
+endif
 [[POE_INVHDR.AABO]]
 rem --- user has elected not to save record (we are NOT in immediate write, so save takes care of header and detail at once)
 rem --- if rec_data$ is empty (i.e., new record never written), make sure no GL Dists are left orphaned (i.e., remove them)
@@ -202,106 +306,6 @@ while 1
 	break
 wend
 [[POE_INVHDR.BSHO]]
-rem --- Open/Lock files
-files=15,begfile=1,endfile=files
-dim files$[files],options$[files],chans$[files],templates$[files]
-
-files$[1]="APM_VENDCMTS";rem --- "apm-09
-files$[2]="APM_VENDMAST";rem --- "apm-01"
-files$[3]="APM_VENDHIST";rem --- "apm-02"
-files$[4]="APS_PARAMS";rem --- "aps-01"
-files$[5]="GLS_PARAMS";rem --- "gls-01"
-files$[6]="POS_PARAMS";rem --- "pos-01"
-files$[7]="IVS_PARAMS";rem --- "ivs-01"
-files$[8]="POE_POHDR";rem --- "poe-02"
-files$[9]="POE_PODET";rem --- "poe-12"
-files$[10]="POT_RECHDR";rem --- "pot-04"
-files$[11]="POT_RECDET";rem --- "pot-14"
-files$[12]="APT_INVOICEHDR";rem --- "apt-01"
-files$[13]="IVM_ITEMMAST";rem --- "ivm-01"
-files$[14]="POC_LINECODE";rem --- "pom-02"
-files$[15]="APC_TERMSCODE"
-
-for wkx=begfile to endfile
-	options$[wkx]="OTA"
-next wkx
-call stbl("+DIR_SYP")+"bac_open_tables.bbj",
-:	begfile,
-:	endfile,
-:	files$[all],
-:	options$[all],
-:	chans$[all],
-:	templates$[all],
-:	table_chans$[all],
-:	batch,
-:	status$
-
-if status$<>"" then
-	remove_process_bar:
-	bbjAPI!=bbjAPI()
-	rdFuncSpace!=bbjAPI!.getGroupNamespace()
-	rdFuncSpace!.setValue("+build_task","OFF")
-	release
-endif
-
-aps01_dev=num(chans$[4])
-gls01_dev=num(chans$[5])
-pos01_dev=num(chans$[6])
-ivs01_dev=num(chans$[7])
-
-dim aps01a$:templates$[4],gls01a$:templates$[5],pos01a$:templates$[6],ivs01a$:templates$[7]
-
-
-rem --- Additional File Opens
-gl$="N"
-status=0
-source$=pgm(-2)
-call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"PO",glw11$,gl$,status
-if status<>0 goto std_exit
-callpoint!.setDevObject("gl_int",gl$)
-callpoint!.setDevObject("glworkfile",glw11$)
-if gl$="Y"
-   files=2,begfile=1,endfile=2
-   dim files$[files],options$[files],chans$[files],templates$[files]
-   files$[1]="GLM_ACCT",options$[1]="OTA";rem --- "glm-01"
-   files$[2]=glw11$,options$[2]="OTAS";rem --- s means no err if tmplt not found
-	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
-:	begfile,
-:	endfile,
-:	files$[all],
-:	options$[all],
-:	chans$[all],
-:	templates$[all],
-:	table_chans$[all],
-:	batch,
-:	status$
-	if status$<>"" then
-		bbjAPI!=bbjAPI()
-		rdFuncSpace!=bbjAPI!.getGroupNamespace()
-		rdFuncSpace!.setValue("+build_task","OFF")
-		release
-	endif
-endif
-rem --- Retrieve parameter data
-               
-aps01a_key$=firm_id$+"AP00"
-find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-
-callpoint!.setDevObject("multi_types",aps01a.multi_types$)
-callpoint!.setDevObject("multi_dist",aps01a.multi_dist$)
-callpoint!.setDevObject("retention",aps01a.ret_flag$)
-
-gls01a_key$=firm_id$+"GL00"
-find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-callpoint!.setDevObject("units_flag",gls01a.units_flag$)
-callpoint!.setDevObject("gl_year",gls01a.current_year$)
-callpoint!.setDevObject("gl_per",gls01a.current_per$)
-callpoint!.setDevObject("gl_tot_pers",gls01a.total_pers$)
-
-
-call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_INVSEL","PRIMARY",poe_invsel_key_tpl$,table_chans$[all],status$
-callpoint!.setDevObject("poe_invsel_key",poe_invsel_key_tpl$)
-
 rem --- add static label for displaying date/amount if pulling up open invoice
 inv_no!=fnget_control!("POE_INVHDR.AP_INV_NO")
 inv_no_x=inv_no!.getX()
@@ -359,6 +363,12 @@ rem --- set vendor_id$ and ap_type$ before coming in
 		callpoint!.setDevObject("dflt_gl_account", apm02a.gl_account$)
 		callpoint!.setDevObject("dflt_terms_cd", apm02a.ap_terms_code$)
 		callpoint!.setDevObject("dflt_pymt_grp", apm02a.payment_grp$)
+		vend_hist$="Y"
+	else
+		callpoint!.setDevObject("dflt_dist_cd", "")
+		callpoint!.setDevObject("dflt_gl_account", "")
+		callpoint!.setDevObject("dflt_terms_cd", "")
+		callpoint!.setDevObject("dflt_pymt_grp", "")
 		vend_hist$="Y"
 	endif
 return
@@ -512,7 +522,7 @@ endif
 [[POE_INVHDR.VENDOR_ID.AVAL]]
 vendor_id$ = callpoint!.getUserInput()
 ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
-
+escape;rem ? ap_type$
 gosub vendor_info
 gosub disp_vendor_comments
 gosub get_vendor_history
