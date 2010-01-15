@@ -18,14 +18,24 @@
 			<ASC_LICENSE_ID id="ddm_tables.ape_mancheckdet">4D092546C643C76EE5050E60ADDC7272</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ape_mancheckdet">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ape_mancheckdet">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ape_mancheckdet">20100112</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ape_mancheckdet">20100112</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ape_mancheckdet">143340</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ape_mancheckdet">20100115</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ape_mancheckdet">20100115</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ape_mancheckdet">084326</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.ape_mancheckdet">../apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.ape_mancheckdet">G</DD_ATTR_FTYP>
 			<DD_ATTR_PTAB id="ddm_tables.ape_mancheckdet">APE_MANCHECKHDR </DD_ATTR_PTAB>
 			<DD_ATTR_SLEV id="ddm_tables.ape_mancheckdet">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.ape_mancheckdet">Manual Check Entry Inv Detail</DD_ATTR_WINT>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_aopt">
+		<ID id="ddm_table_aopt">DDM_TABLE_AOPT</ID>
+		<RECORD id="ddm_table_aopt.ape_mancheckdet01">
+			<DD_TABLE_ALIAS id="ddm_table_aopt.ape_mancheckdet01">APE_MANCHECKDET </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_aopt.ape_mancheckdet01">01</DD_ATTR_SEQ>
+			<DD_ATTR_AOPT id="ddm_table_aopt.ape_mancheckdet01">Open Invoice</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT_CD id="ddm_table_aopt.ape_mancheckdet01">OINV</DD_ATTR_AOPT_CD>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.ape_mancheckdet01">B</DD_ATTR_AOPT_FM>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
@@ -42,6 +52,10 @@
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ape_mancheckdetagre">APE_MANCHECKDET </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ape_mancheckdetagre">AGRE</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_table_cpro.ape_mancheckdetaopt">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.ape_mancheckdetaopt">APE_MANCHECKDET </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.ape_mancheckdetaopt">AOPT-OINV</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.ape_mancheckdetaude">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ape_mancheckdetaude">APE_MANCHECKDET </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ape_mancheckdetaude">AUDE</DD_ATTR_CPRO>
@@ -49,6 +63,14 @@
 		<RECORD id="ddm_table_cpro.ape_mancheckdetbdel">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.ape_mancheckdetbdel">APE_MANCHECKDET </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.ape_mancheckdetbdel">BDEL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.ape_mancheckdetbdgx">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.ape_mancheckdetbdgx">APE_MANCHECKDET </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.ape_mancheckdetbdgx">BDGX</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.ape_mancheckdetbgds">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.ape_mancheckdetbgds">APE_MANCHECKDET </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.ape_mancheckdetbgds">BGDS</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_dtld">
@@ -505,6 +527,11 @@
 			<DD_TABLE_ALIAS id="ddm_column_cpro.ape_mancheckdetap_inv_noaval">APE_MANCHECKDET </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.ape_mancheckdetap_inv_noaval">AP_INV_NO       </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.ape_mancheckdetap_inv_noaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.ape_mancheckdetap_inv_nobinp">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.ape_mancheckdetap_inv_nobinp">APE_MANCHECKDET </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.ape_mancheckdetap_inv_nobinp">AP_INV_NO       </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.ape_mancheckdetap_inv_nobinp">BINP</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_column_cpro.ape_mancheckdetinvoice_amtaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.ape_mancheckdetinvoice_amtaval">APE_MANCHECKDET </DD_TABLE_ALIAS>
