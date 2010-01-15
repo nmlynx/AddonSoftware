@@ -767,6 +767,18 @@ rem ==========================================================================
             throw "util: forceEdit(): Can't start editing this cell", 258
 
         methodend
+        
+    rem --- Force focus but use the selected row
+    
+        method public static void forceEdit(BBjTopLevelWindow Form!, BBjNumber col)
+            row = #getGrid(Form!).getSelectedRow()
+            
+            if row = -1 then
+                throw "util: forceEdit(): No row is selected", 259
+            endif
+            
+            #forceEdit(Form!, row, col)
+        methodend
 
 
     rem ==========================================================================
@@ -859,7 +871,7 @@ rem ==========================================================================
         method public static BBjInt getDev(BBjString p_data_name$)
         
             if #devs! = null() then
-                throw #className$+": Need to call setTableChans() first", 258
+                throw #className$+": Need to call setTableChans() first", 260
             else
                 if #devs!.containsKey(p_data_name$) then
                     methodret int(num(#devs!.get(p_data_name$)))
@@ -875,7 +887,7 @@ rem ==========================================================================
         method public static BBjString getTmpl(BBjString p_data_name$)
         
             if #tmpls! = null() then
-                throw #className$+": Need to call setTableChans() first", 260
+                throw #className$+": Need to call setTableChans() first", 261
             else
                 if #tmpls!.containsKey(p_data_name$) then
                     methodret str(#tmpls!.get(p_data_name$))
