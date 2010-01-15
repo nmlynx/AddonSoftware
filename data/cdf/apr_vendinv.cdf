@@ -1,3 +1,9 @@
+[[APR_VENDINV.ARAR]]
+rem --- Default the AP Type if multi-type is N
+if user_tpl.multi_type$="N"
+	callpoint!.setColumnData("APR_VENDINV.AP_TYPE",user_tpl.ap_type$)
+	callpoint!.setStatus("REFRESH")
+endif
 [[APR_VENDINV.<CUSTOM>]]
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
@@ -40,6 +46,9 @@ endif
 aps01_dev=num(chans$[1])
 dim aps01a$:templates$[1]
 readrecord(aps01_dev,key=firm_id$+"AP00")aps01a$
+dim user_tpl$:"multi_type:c(1),ap_type:c(2)"
+user_tpl.multi_type$=aps01a.multi_types$
+user_tpl.ap_type$=aps01a.ap_type$
 
 rem --- may need to disable some ctls based on params
 
