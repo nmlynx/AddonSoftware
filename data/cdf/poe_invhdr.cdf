@@ -522,7 +522,7 @@ endif
 [[POE_INVHDR.VENDOR_ID.AVAL]]
 vendor_id$ = callpoint!.getUserInput()
 ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
-escape;rem ? ap_type$
+
 gosub vendor_info
 gosub disp_vendor_comments
 gosub get_vendor_history
