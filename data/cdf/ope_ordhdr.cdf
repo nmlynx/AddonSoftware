@@ -282,17 +282,27 @@ rem --- Save old value
 [[OPE_ORDHDR.APFE]]
 print "Hdr:APFE"; rem debug
 
-rem --- Enable button
+rem --- Enable buttons as appropriate
 
-	callpoint!.setOptionEnabled("CRCH",1)
-	gosub enable_credit_action
-	callpoint!.setOptionEnabled("RPRT",1)
-	callpoint!.setOptionEnabled("PRNT",1)
-	callpoint!.setOptionEnabled("TTLS",1)
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)<>""
+		callpoint!.setOptionEnabled("CRCH",1)
+		gosub enable_credit_action
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
-		callpoint!.setOptionEnabled("DINV",1)
-		callpoint!.setOptionEnabled("CINV",1)
+		if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
+			callpoint!.setOptionEnabled("DINV",1)
+			callpoint!.setOptionEnabled("CINV",1)
+			callpoint!.setOptionEnabled("RPRT",0)
+			callpoint!.setOptionEnabled("PRNT",0)
+			callpoint!.setOptionEnabled("TTLS",0)
+			callpoint!.setOptionEnabled("CRAT",0)
+		else
+			callpoint!.setOptionEnabled("DINV",0)
+			callpoint!.setOptionEnabled("CINV",0)
+			callpoint!.setOptionEnabled("RPRT",1)
+			callpoint!.setOptionEnabled("PRNT",1)
+			callpoint!.setOptionEnabled("TTLS",1)
+			callpoint!.setOptionEnabled("CRAT",1)
+		endif
 	endif
 [[OPE_ORDHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
