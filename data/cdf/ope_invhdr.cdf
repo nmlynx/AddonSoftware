@@ -1016,12 +1016,10 @@ rem --- New or existing order
 	rem callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
 	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N"); rem debug, forcing the lock off for now, not working correctly
 
-rem --- Enable/Disable buttons
+rem --- Disable buttons
 
 	callpoint!.setOptionEnabled("DINV", 0)
 	callpoint!.setOptionEnabled("CINV", 0)
-	callpoint!.setOptionEnabled("PRNT", 1)
-	if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH", 1)
 
 	callpoint!.setStatus("MODIFIED;REFRESH")
 
@@ -1060,16 +1058,10 @@ rem --- Enable Duplicate buttons, printer
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
 		callpoint!.setOptionEnabled("DINV", 1)
 		callpoint!.setOptionEnabled("CINV", 1)
-	else
-		if cust_id$<>"" then 
-			callpoint!.setOptionEnabled("PRNT",1)
-			if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH",1)
-		endif
 	endif
 
 	callpoint!.setOptionEnabled("CRCH",1)
 	gosub enable_credit_action
-
 
 [[OPE_INVHDR.CUSTOMER_ID.AINP]]
 rem --- If cash customer, get correct customer number
