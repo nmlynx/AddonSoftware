@@ -320,14 +320,16 @@ rem --- Loop Starting
                 gosub lock_unlock_record
             endif
             read record (poe01_dev,key=firm_id$+req_no$,dom=*continue) poe01a$
-            lock_unlock$="L"
-            lock_key$=firm_id$+req_no$
-            gosub lock_unlock_record
-            if rd_lock_status$<>"" then lock_key$=""; continue
+            if single_vendor_id$=""
+                lock_unlock$="L"
+                lock_key$=firm_id$+req_no$
+                gosub lock_unlock_record
+                if rd_lock_status$<>"" then lock_key$=""; continue
+            endif
             page=0
             l=l9+1
         else
-            if lock_key$="" then continue
+            if single_vendor_id$="" and lock_key$="" then continue
         endif
         if vendor_id$<>t0$ then
             gosub print_total
@@ -396,10 +398,10 @@ rem --- All done
     endif
     
     gosub print_total
-    lock_unlock$="U"
-    lock_key$=firm_id$+poe01a.req_no$
-    gosub lock_unlock_record
-    
+    if lock_key$<>""
+        lock_unlock$="U"
+        gosub lock_unlock_record
+    endif
     doc!.preview()
 
 update: rem --- Update print file?
