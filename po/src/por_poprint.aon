@@ -362,9 +362,21 @@ rem --- Loop Starting
        
         if po_no$<>poe02a.po_no$ then 
             gosub print_total
-            read record (poe02_dev,key=firm_id$+po_no$,dom=*continue) poe02a$
+            if cvs(poe02a.po_no$,3)<>"" and lock_key$<>""
+                lock_unlock$="U"
+                gosub lock_unlock_record
+            endif
+            read record (poe02_dev,key=firm_id$+po_no$,dom=*continue) poe02a$            
+            if single_vendor_id$=""
+                lock_unlock$="L"
+                lock_key$=firm_id$+po_no$
+                gosub lock_unlock_record
+                if rd_lock_status$<>"" then lock_key$=""; continue
+            endif            
             page=0
             l=l9+1
+        else
+            if single_vendor_id$="" and lock_key$="" then continue
         endif
         if vendor_id$<>t0$ then
             gosub print_total
@@ -439,6 +451,10 @@ rem --- All done
     endif
 
     gosub print_total
+    if lock_key$<>""
+        lock_unlock$="U"
+        gosub lock_unlock_record
+    endif
 
     docPrint!.preview()
 
@@ -972,6 +988,14 @@ nomsg: rem --- No message
 get_row: rem " --- Return Current Row"
     row=int(286+l*12)
     return
+    
+lock_unlock_record:
+
+    rd_lock_status$=""
+    call stbl("+DIR_SYP")+"bac_lock_record.bbj","POE_POHDR",lock_key$,lock_unlock$,"",rd_table_chans$[all],rd_lock_status$
+
+    return
+    
     
 disp_message:rem --- Display Message Dialog
 
