@@ -369,7 +369,7 @@ rem --- set vendor_id$ and ap_type$ before coming in
 		callpoint!.setDevObject("dflt_gl_account", "")
 		callpoint!.setDevObject("dflt_terms_cd", "")
 		callpoint!.setDevObject("dflt_pymt_grp", "")
-		vend_hist$="Y"
+		vend_hist$=""
 	endif
 return
 
@@ -526,6 +526,7 @@ ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
 gosub vendor_info
 gosub disp_vendor_comments
 gosub get_vendor_history
+
 if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y"
 	msg_id$="AP_NOHIST"
 	gosub disp_message
