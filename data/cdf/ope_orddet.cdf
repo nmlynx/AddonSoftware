@@ -1,9 +1,24 @@
+[[OPE_ORDDET.WAREHOUSE_ID.BINP]]
+rem --- Enable repricing, options, lots
+
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 [[OPE_ORDDET.AOPT-ADDL]]
 print "Det:AOPT.ADDL"; rem debug
 
 rem --- Additional Options
 
 	if user_tpl.line_type$ = "M" then break; rem --- exit callpoint
+
+rem --- Save current row/column so we'll know where to set focus when we return
+
+	declare BBjStandardGrid grid!
+	grid! = util.getGrid(Form!)
+	return_to_row = grid!.getSelectedRow()
+	return_to_col = grid!.getSelectedColumn()
+
+rem --- Setup a templated string to pass information back and forth from form
 
 	declare BBjTemplatedString a!
 
@@ -47,6 +62,8 @@ rem --- Additional Options
 	callpoint!.setDevObject("additional_options", a!)
 
 	orig_commit$ = callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")
+
+rem --- Call form
 
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_ADDL_OPTS", 
@@ -105,6 +122,10 @@ rem --- Need to commit?
 	gosub disp_ext_amt
 
 	callpoint!.setStatus("REFRESH")
+
+rem --- Return focus to where we were (Detail line grid)
+
+	util.forceEdit(Form!, return_to_row, return_to_col)
 [[OPE_ORDDET.AGDR]]
 print "Det:AGDR"; rem debug
 
@@ -113,6 +134,12 @@ rem --- Disable by line type
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
 [[OPE_ORDDET.UNIT_PRICE.BINP]]
+rem --- Enable repricing, options, lots
+
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
+
 rem --- Has a valid whse/item been entered?
 
 	if user_tpl.item_wh_failed then
@@ -194,9 +221,12 @@ rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
 		rem debug, *** do lotted logic
 	endif
 [[OPE_ORDDET.QTY_BACKORD.BINP]]
-rem --- Set previous qty
+rem --- Set previous qty / enable repricing, options, lots
 
 	user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_BACKORD"))
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 
 rem --- Has a valid whse/item been entered?
 
@@ -207,9 +237,12 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_ORDDET.QTY_SHIPPED.BINP]]
-rem --- Set previous amount
+rem --- Set previous amount / enable repricing, options, lots
 
 	user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 
 rem --- Has a valid whse/item been entered?
 
@@ -220,11 +253,12 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_ORDDET.QTY_ORDERED.BINP]]
-print "Det:QTY.ORDERED:BINP"; rem debug
+rem --- Get prev qty / enable repricing, options, lots
 
-rem --- Get prev qty
-
-	user_tpl.prev_qty_ord   = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 
 rem --- Has a valid whse/item been entered?
 
@@ -234,11 +268,20 @@ rem --- Has a valid whse/item been entered?
 		warn  = 1
 		gosub check_item_whse
 	endif
-
 [[OPE_ORDDET.ITEM_ID.BINP]]
-user_tpl.prev_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+rem --- Set previous item / enable repricing, options, lot
+
+	user_tpl.prev_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 [[OPE_ORDDET.LINE_CODE.BINP]]
-user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+rem --- Set previous value / enable repricing, options, lots
+
+	user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 [[OPE_ORDDET.BWRI]]
 print "Det:BWRI"; rem debug
 
@@ -299,26 +342,41 @@ rem --- Set item tax flag
 [[OPE_ORDDET.AOPT-RCPR]]
 print "Det:AOPT.RCPR"; rem debug
 
-rem --- Reprice
+rem --- Are things set for a reprice?
+
+	print "---Line type: """, user_tpl.line_type$, """"; rem debug
 
 	if pos(user_tpl.line_type$="SP") then
 		qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+		print "---Qty ordered:", qty_ord; rem debug
 
 		if qty_ord then 
+
+		rem --- Save current row/column so we'll know where to set focus when we return
+
+			declare BBjStandardGrid grid!
+			grid! = util.getGrid(Form!)
+			return_to_row = grid!.getSelectedRow()
+			return_to_col = grid!.getSelectedColumn()
+
+		rem --- Do repricing
+
 			gosub pricing
 			callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "N")
 			gosub manual_price_flag
+
+		rem --- Return focus to where we were (Detail line grid)
+
+			util.forceEdit(Form!, return_to_row, return_to_col)
+
 		endif
 	endif
-[[OPE_ORDDET.STD_LIST_PRC.AVAL]]
-rem --- Disable Recalc Price button
-
-	callpoint!.setOptionEnabled("RCPR",0)
 [[OPE_ORDDET.STD_LIST_PRC.BINP]]
-rem --- Enable the Recalc Price button
+rem --- Enable the Recalc Price button, Additional Options, Lots
 
-	callpoint!.setOptionEnabled("RCPR",1)
-
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 [[OPE_ORDDET.AWRI]]
 print "Det:AWRI"; rem debug
 
@@ -967,15 +1025,15 @@ rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
 
-	print "Det:in disp_grid_totals..."; rem debug
+	rem print "Det:in disp_grid_totals..."; rem debug
 	gosub calc_grid_totals
 
 	tamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
 	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
-	print "---Updated order total and Total Sales (tab)", ttl_ext_price; rem debug
-	print "out"
+	rem print "---Updated order total and Total Sales (tab)", ttl_ext_price; rem debug
+	rem print "out"
 
 	return
 
@@ -984,7 +1042,7 @@ calc_grid_totals: rem --- Roll thru all detail line, totaling ext_price
                   rem     OUT: ttl_ext_price
 rem ==========================================================================
 
-	print "Det:in calc_grid_totals"; rem debug
+	rem print "Det:in calc_grid_totals..."; rem debug
 	rem Does rolling through the vector still make sense?
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
@@ -998,8 +1056,8 @@ rem ==========================================================================
 	endif
 
 	rem print "---Total Sales (from vector):", ttl_ext_price; rem debug
-	print "---Total Sales (from disk):", ttl_ext_price; rem debug
-	print "out"; rem debug
+	rem print "---Total Sales (from disk):", ttl_ext_price; rem debug
+	rem print "out"; rem debug
 
 	return
 
@@ -1017,6 +1075,7 @@ rem ==========================================================================
 	ord$  = callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
 
 	if cvs(item$, 2)="" or cvs(wh$, 2)="" then 
+		print "---No item or WH, exiting"
 		callpoint!.setStatus("ABORT")
 		return
 	endif
@@ -1025,6 +1084,7 @@ rem ==========================================================================
 	gosub check_item_whse
 
 	if user_tpl.item_wh_failed then 
+		print "---Item/WH don't match, exiting"
 		callpoint!.setStatus("ABORT")
 		return
 	endif
@@ -1037,13 +1097,26 @@ rem ==========================================================================
 	pc_files[5] = fnget_dev("ARS_PARAMS")
 	pc_files[6] = fnget_dev("IVS_PARAMS")
 
-	call stbl("+DIR_PGM")+"opc_pricing.aon",pc_files[all],firm_id$,wh$,item$,user_tpl.price_code$,cust$,
-:		user_tpl.order_date$,user_tpl.pricing_code$,qty_ord,typeflag$,price,disc,status
+	call stbl("+DIR_PGM")+"opc_pricing.aon",
+:		pc_files[all],
+:		firm_id$,
+:		wh$,
+:		item$,
+:		user_tpl.price_code$,
+:		cust$,
+:		user_tpl.order_date$,
+:		user_tpl.pricing_code$,
+:		qty_ord,typeflag$,
+:		price,
+:		disc,
+:		status
+
 	if status=999 then exitto std_exit
 
 	if price=0 then
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
+		callpoint!.setStatus("ACTIVATE")
 	else
 		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", str(round(price, 2)) )
 		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", str(disc))
@@ -1055,6 +1128,9 @@ rem ==========================================================================
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str( round((price*100) / (100-disc), 2) ))
 	endif
 
+	callpoint!.setStatus("REFRESH")
+	rem callpoint!.setStatus("REFRESH:<_column_id>")
+
 rem --- Recalc and display extended price
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
@@ -1063,10 +1139,11 @@ rem --- Recalc and display extended price
 
 	user_tpl.prev_unitprice = unit_price
 
+	rem debug
 	print "---Price Out:", price
 	print "---Discount :", disc
 	print "---Type Flag: ", typeflag$
-	print "out"; rem debug
+	print "out"
 
 	return
 
@@ -1406,6 +1483,9 @@ rem ==========================================================================
 enable_repricing: rem --- Enable the Recalc Pricing button
 rem ==========================================================================
 
+	print "in enable_repricing..."; rem debug
+	print "---Line type: """, user_tpl.line_type$, """"; rem debug
+
 	if pos(user_tpl.line_type$="SP") then 
 		item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 		wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
@@ -1416,6 +1496,8 @@ rem ==========================================================================
 			callpoint!.setOptionEnabled("RCPR",1)
 		endif
 	endif
+
+	print "out"; rem debug
 
 	return
 
