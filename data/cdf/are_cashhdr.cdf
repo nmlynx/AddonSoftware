@@ -351,6 +351,7 @@ gridInvoice!.setCallback(gridInvoice!.ON_GRID_EDIT_START,"custom_event")
 gridInvoice!.setCallback(gridInvoice!.ON_GRID_EDIT_STOP,"custom_event")
 gridInvoice!.setCallback(gridInvoice!.ON_GRID_SELECT_ROW,"custom_event")
 gridInvoice!.setCallback(gridInvoice!.ON_GRID_SELECT_COLUMN,"custom_event")
+gridInvoice!.setCallback(gridInvoice!.ON_GRID_KEY_PRESS,"custom_event")
 OA_chkbox!.setCallback(OA_chkbox!.ON_CHECK_OFF,"custom_event")
 OA_chkbox!.setCallback(OA_chkbox!.ON_CHECK_ON,"custom_event")
 zbal_chkbox!.setCallback(zbal_chkbox!.ON_CHECK_OFF,"custom_event")
@@ -463,8 +464,7 @@ return
 check_required_fields:
 	if cvs(callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE"),3)="" or 
 :		cvs(callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO"),3)=""
+:		cvs(callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD"),3)="" 
 		if data_present$="NO-MSG"
 			msg_id$="AR_REQ_DATA"
 			gosub disp_message
@@ -1043,6 +1043,7 @@ process_gridInvoice_event:
 	clicked_row=dec(notice.row$)
 	pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
 	if vectInvoice!.size()=0 then return
+
 	switch dec(notice.code$)
 		case 7;rem --- edit stop
 			rem --- only column 8 and 9 are enabled (except for checkbox at 0); 8=pay, 9=discount
@@ -1114,6 +1115,15 @@ process_gridInvoice_event:
 				gosub invoice_chk_onoff
 				gridInvoice!.setSelectedColumn(1)
 				Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
+			endif
+		break
+		case 12;rem --- grid_key_press (allow space-bar toggle of checkbox)
+			if notice.wparam=32 
+				inv_onoff=gridInvoice!.getCellState(clicked_row,0)
+				if inv_onoff=0 inv_onoff=1 else inv_onoff=0;rem --- toggle
+				gosub invoice_chk_onoff
+				gridInvoice!.setSelectedColumn(1)
+				Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)			
 			endif
 		break
 		case 2;rem --- selected column
