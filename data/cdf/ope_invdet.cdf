@@ -1,7 +1,22 @@
+[[OPE_INVDET.WAREHOUSE_ID.BINP]]
+rem --- Enable repricing, options, lots
+
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 [[OPE_INVDET.AOPT-ADDL]]
 rem --- Additional Options
 
 	if user_tpl.line_type$ = "M" then break; rem --- exit callpoint
+
+rem --- Save current row/column so we'll know where to set focus when we return
+
+	declare BBjStandardGrid grid!
+	grid! = util.getGrid(Form!)
+	return_to_row = grid!.getSelectedRow()
+	return_to_col = grid!.getSelectedColumn()
+
+rem --- Setup a templated string to pass information back and forth from form
 
 	declare BBjTemplatedString a!
 
@@ -45,6 +60,8 @@ rem --- Additional Options
 	callpoint!.setDevObject("additional_options", a!)
 
 	orig_commit$ = callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG")
+
+rem --- Call form
 
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_ADDL_OPTS", 
@@ -103,12 +120,22 @@ rem --- Need to commit?
 	gosub disp_ext_amt
 
 	callpoint!.setStatus("REFRESH")
+
+rem --- Return focus to where we were (Detail line grid)
+
+	util.forceEdit(Form!, return_to_row, return_to_col)
 [[OPE_INVDET.AGDR]]
 rem --- Disable by line type
 
 	line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
 	gosub disable_by_linetype
 [[OPE_INVDET.UNIT_PRICE.BINP]]
+rem --- Enable repricing, options, lots
+
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
+
 rem --- Has a valid whse/item been entered?
 
 	if user_tpl.item_wh_failed then
@@ -186,15 +213,26 @@ rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
 		rem debug, *** do lotted logic
 	endif
 [[OPE_INVDET.LINE_CODE.BINP]]
-user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
-[[OPE_INVDET.ITEM_ID.BINP]]
-user_tpl.prev_item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
-[[OPE_INVDET.QTY_ORDERED.BINP]]
-print "Det:QTY.ORDERED:BINP"; rem debug
+rem --- Set previous value / enable repricing, options, lots
 
-rem --- Get prev qty
+	user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
+[[OPE_INVDET.ITEM_ID.BINP]]
+rem --- Set previous item / enable repricing, options, lot
+
+	user_tpl.prev_item$ = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
+[[OPE_INVDET.QTY_ORDERED.BINP]]
+rem --- Get prev qty / enable repricing, options, lots
 
 	user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 
 rem --- Has a valid whse/item been entered?
 
@@ -205,9 +243,12 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_INVDET.QTY_SHIPPED.BINP]]
-rem --- Set previous amount
+rem --- Set previous amount / enable repricing, options, lots
 
 	user_tpl.prev_shipqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 
 rem --- Has a valid whse/item been entered?
 
@@ -218,9 +259,12 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_INVDET.QTY_BACKORD.BINP]]
-rem --- Set previous qty
+rem --- Set previous qty / enable repricing, options, lots
 
 	user_tpl.prev_boqty = num(callpoint!.getColumnData("OPE_INVDET.QTY_BACKORD"))
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 
 rem --- Has a valid whse/item been entered?
 
@@ -288,27 +332,38 @@ rem --- Set item tax flag
 
 	gosub set_item_taxable
 [[OPE_INVDET.AOPT-RCPR]]
-print "Det:AOPT.RCPR"; rem debug
-
-rem --- Reprice
+rem --- Are things set for a reprice?
 
 	if pos(user_tpl.line_type$="SP") then
 		qty_ord = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
 		if qty_ord then 
+
+		rem --- Save current row/column so we'll know where to set focus when we return
+
+			declare BBjStandardGrid grid!
+			grid! = util.getGrid(Form!)
+			return_to_row = grid!.getSelectedRow()
+			return_to_col = grid!.getSelectedColumn()
+
+		rem --- Do repricing
+
 			gosub pricing
 			callpoint!.setColumnData("OPE_INVDET.MAN_PRICE", "N")
 			gosub manual_price_flag
+
+		rem --- Return focus to where we were (Detail line grid)
+
+			util.forceEdit(Form!, return_to_row, return_to_col)
+
 		endif
 	endif
-[[OPE_INVDET.STD_LIST_PRC.AVAL]]
-rem --- Disable Recalc Price button
-
-	callpoint!.setOptionEnabled("RCPR",0)
 [[OPE_INVDET.STD_LIST_PRC.BINP]]
-rem --- Enable the Recalc Price button
+rem --- Enable the Recalc Price button, Additional Options, Lots
 
-	callpoint!.setOptionEnabled("RCPR",1)
+	gosub enable_repricing
+	gosub enable_addl_opts
+	gosub able_lot_button
 [[OPE_INVDET.AWRI]]
 print "Det:AWRI"; rem debug
 
@@ -993,13 +1048,27 @@ rem ==========================================================================
 	pc_files[5] = fnget_dev("ARS_PARAMS")
 	pc_files[6] = fnget_dev("IVS_PARAMS")
 
-	call stbl("+DIR_PGM")+"opc_pricing.aon",pc_files[all],firm_id$,wh$,item$,user_tpl.price_code$,cust$,
-:		user_tpl.order_date$,user_tpl.pricing_code$,qty_ord,typeflag$,price,disc,status
+	call stbl("+DIR_PGM")+"opc_pricing.aon",
+:		pc_files[all],
+:		firm_id$,
+:		wh$,
+:		item$,
+:		user_tpl.price_code$,
+:		cust$,
+:		user_tpl.order_date$,
+:		user_tpl.pricing_code$,
+:		qty_ord,
+:		typeflag$,
+:		price,
+:		disc,
+:		status
+
 	if status=999 then exitto std_exit
 
 	if price=0 then
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
+		callpoint!.setStatus("ACTIVATE")
 	else
 		callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE", str(round(price, 2)) )
 		callpoint!.setColumnData("OPE_INVDET.DISC_PERCENT", str(disc))
@@ -1010,6 +1079,8 @@ rem ==========================================================================
 	else
 		callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", str( round((price*100) / (100-disc), 2) ))
 	endif
+
+	callpoint!.setStatus("REFRESH")
 
 rem --- Recalc and display extended price
 
