@@ -198,7 +198,11 @@ rem --- Set shipped and back ordered
 
 	rem --- Recalc quantities and extended price
 
-		if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
+		rem if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
+		if user_tpl.line_type$ <> "N" and
+:			callpoint!.getColumnData("OPE_INVDET.MAN_PRICE") <> "Y" and
+:			( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
+:		then
 			gosub pricing
 		endif
 
@@ -1080,7 +1084,8 @@ rem ==========================================================================
 		callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", str( round((price*100) / (100-disc), 2) ))
 	endif
 
-	callpoint!.setStatus("REFRESH")
+	rem callpoint!.setStatus("REFRESH")
+	callpoint!.setStatus("REFRESH:UNIT_PRICE")
 
 rem --- Recalc and display extended price
 

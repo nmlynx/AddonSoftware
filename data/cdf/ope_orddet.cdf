@@ -190,9 +190,12 @@ rem --- Set shipped and back ordered
 	qty_ord    = num(callpoint!.getUserInput())
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 
-	if qty_ord<>user_tpl.prev_qty_ord or unit_price = 0 then
+	print "---Qty<>prev? ", qty_ord<>user_tpl.prev_qty_ord; rem debug
+	print "---Unit Price:", unit_price; rem debug
 
-		if qty_ord<>user_tpl.prev_qty_ord then
+	if qty_ord <> user_tpl.prev_qty_ord or unit_price = 0 then
+
+		if qty_ord <> user_tpl.prev_qty_ord then
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 
 			if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" or
@@ -206,7 +209,11 @@ rem --- Set shipped and back ordered
 
 	rem --- Recalc quantities and extended price
 
-		if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
+		rem if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
+		if user_tpl.line_type$ <> "N" and
+:			callpoint!.getColumnData("OPE_ORDDET.MAN_PRICE") <> "Y" and
+:			( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
+:		then
 			gosub pricing
 		endif
 
@@ -253,9 +260,12 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_ORDDET.QTY_ORDERED.BINP]]
+print "Det:QTY_ORDERED.BINP"; rem debug
+
 rem --- Get prev qty / enable repricing, options, lots
 
 	user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+	print "---Prev Qty set"; rem debug
 	gosub enable_repricing
 	gosub enable_addl_opts
 	gosub able_lot_button
@@ -513,6 +523,7 @@ rem --- Set header total amounts
 
 	
 [[OPE_ORDDET.AGCL]]
+rem print 'show',; rem debug
 print "Det:AGCL"; rem debug
 
 rem --- Set detail defaults and disabled columns
@@ -838,6 +849,7 @@ rem		callpoint!.setStatus("ABORT")
 	rem --- Clear line type
 
 		user_tpl.line_type$ = ""
+		print "---Line Type cleared"; rem debug
 
 	endif
 
@@ -1129,8 +1141,8 @@ rem ==========================================================================
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str( round((price*100) / (100-disc), 2) ))
 	endif
 
-	callpoint!.setStatus("REFRESH")
-	rem callpoint!.setStatus("REFRESH:<_column_id>")
+	rem callpoint!.setStatus("REFRESH")
+	callpoint!.setStatus("REFRESH:UNIT_PRICE")
 
 rem --- Recalc and display extended price
 
@@ -1327,7 +1339,7 @@ disable_by_linetype: rem --- Set enable/disable based on line type
                      rem      IN: line_code$
 rem ==========================================================================
 
-	rem print "in disable_by_linetype..."; rem debug
+	print "in disable_by_linetype..."; rem debug
 	rem print "---getValidRow() =", callpoint!.getValidRow(); rem debug
 
 	user_tpl.line_type$ = ""
@@ -1346,6 +1358,7 @@ rem ==========================================================================
 			user_tpl.line_type$     = opc_linecode.line_type$
 			user_tpl.line_taxable$  = opc_linecode.taxable_flag$
 			user_tpl.line_dropship$ = opc_linecode.dropship$
+			print "---Line Type set (", user_tpl.line_type$, ")"; rem debug
 		endif
 
 	endif
@@ -1396,7 +1409,7 @@ rem --- Disable Back orders if necessary
 		rem print "---enabled backorder"; rem debug
 	endif
 
-	rem print "out"; rem debug
+	print "out"; rem debug
 
 	return
 
