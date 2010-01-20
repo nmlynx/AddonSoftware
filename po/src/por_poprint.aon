@@ -246,7 +246,12 @@ rem --- Create PDF printer, set attributes, and create PDF helper object
     declare BBjForm docPrint!
     declare PDFHelper pdf!
     
-    myBBjPrinter! = myAPI!.getBBjPrinter(1)
+    myBBjPrinter!=myAPI!.getBBjPrinter(1,err=*next)
+    if myBBjPrinter!=null()
+        msg_id$="AD_NOPRINTER"
+        gosub disp_message
+        goto std_exit
+    endif
     myBBjPrinter!.setAttributes(requestAttributes!)
     docPrint! = myBBjPrinter!.getForm(0)
     pdf! = new PDFHelper(textfont!)

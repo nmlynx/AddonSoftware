@@ -187,7 +187,13 @@ rem --- Create PDF printer, set attributes, and create PDF helper object
     declare BBjForm docPrint!
     declare PDFHelper pdf!
     
-    myBBjPrinter! = myAPI!.getBBjPrinter(1)
+    myBBjPrinter! = myAPI!.getBBjPrinter(1,err=*next)
+    if myBBjPrinter!=null()
+        msg_id$="AD_NOPRINTER"
+        gosub disp_message
+        goto std_exit
+    endif
+    
     myBBjPrinter!.setAttributes(requestAttributes!)
     docPrint! = myBBjPrinter!.getForm(0)
     pdf! = new PDFHelper(textfont!)
@@ -588,13 +594,13 @@ rem --- Create PDF physical file, if needed
     while pdf_doc$ = ""
         prtr_dev = unt
         pdf_doc$ = docdir$ + new_doc_id$ + ".pdf"
-		start_block = 1
-		
-		if start_block
-			open (prtr_dev,err=*endif)pdf_doc$
-			close (prtr_dev)
-			erase pdf_doc$
-		endif
+        start_block = 1
+        
+        if start_block
+            open (prtr_dev,err=*endif)pdf_doc$
+            close (prtr_dev)
+            erase pdf_doc$
+        endif
 
         docPDF! = myAPI!.getBBjPDFForm(pdf_doc$, requestAttributes!)
     wend
@@ -743,7 +749,7 @@ line_detail: rem --- Item Detail
     pdf!.setPage(pagePrint!)
     lines_used = 2
     this_y% = fnline2y%(line)
-	
+    
     while 1
         
         if pos(opm02a.line_type$="MO")=0 then
@@ -854,7 +860,7 @@ print_total: rem --- Total
 cont: rem --- Continued
   
     pdf!.setPage(pagePrint!)
-	
+    
     while 1
 
         pdf!.setText(477, 648+2, 91, 0, "(Continued)", italicfont!, pdf!.RIGHT_JUSTIFY())
