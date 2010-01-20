@@ -1106,7 +1106,8 @@ rem ==========================================================================
 :		cust$,
 :		user_tpl.order_date$,
 :		user_tpl.pricing_code$,
-:		qty_ord,typeflag$,
+:		qty_ord,
+:		typeflag$,
 :		price,
 :		disc,
 :		status
