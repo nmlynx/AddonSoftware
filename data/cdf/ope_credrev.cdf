@@ -1,3 +1,7 @@
+[[OPE_CREDREV.AOPT-CRED]]
+rem --- get curr row from grid and launch credit maint
+
+	gosub launch_cred_maint
 [[OPE_CREDREV.AOPT-NEWC]]
 rem --- Add Tickler
 
@@ -62,21 +66,31 @@ dim gui_event$:tmpl(gui_dev)
 dim notify_base$:noticetpl(0,0)
 gui_event$=SysGUI!.getLastEventString()
 ctl_ID=dec(gui_event.ID$)
+
 if ctl_ID=num(user_tpl.gridCreditCtlID$)
+
 	if gui_event.code$="N"
 		notify_base$=notice(gui_dev,gui_event.x%)
 		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
 		notice$=notify_base$
 	endif
 
+	gosub launch_cred_maint
+
+endif
+[[OPE_CREDREV.<CUSTOM>]]
+rem --- launch Credit Maint for selected row========================================
+
+launch_cred_maint:
+
 	gridCredit!=UserObj!.getItem(num(user_tpl.gridCreditOffset$))
 	numcols=gridCredit!.getNumColumns()
 	vectCredit!=UserObj!.getItem(num(user_tpl.vectCreditOffset$))
-	curr_row=dec(notice.row$)
-	curr_col=dec(notice.col$)
+	curr_row=gridCredit!.getSelectedRow()
+
 	cust_no$=gridCredit!.getCellText(curr_row,1)
 	cust$=cust_no$
-	gosub strip_dashes
+
 	callpoint!.setDevObject("tick_date",gridCredit!.getCellText(curr_row,0))
 	callpoint!.setDevObject("order",gridCredit!.getCellText(curr_row,3))
 	callpoint!.setDevObject("ord_date",gridCredit!.getCellText(curr_row,4))
@@ -153,7 +167,7 @@ if ctl_ID=num(user_tpl.gridCreditCtlID$)
 :		"",
 :		dflt_data$[all]
 
-rem --- redisplay grid
+	rem --- redisplay grid
 	if user_tpl.cur_sel$="C"
 		gosub create_cust_vector
 		gosub fill_grid
@@ -162,9 +176,10 @@ rem --- redisplay grid
 		gosub create_orders_vector
 		gosub fill_grid
 	endif
-endif
-break
-[[OPE_CREDREV.<CUSTOM>]]
+
+return
+
+rem ====================================================================
 format_grid:
 
 dim attr_def_col_str$[0,0]
@@ -183,6 +198,7 @@ attr_credit_col$[1,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=stbl("+DATE_MASK"
 attr_credit_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="CUST_NO"
 attr_credit_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Customer"
 attr_credit_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+attr_credit_col$[2,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("custmask"))
 
 attr_credit_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="CUST_NAME"
 attr_credit_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Name"
@@ -244,7 +260,6 @@ create_orders_vector:
 rem ==========================================================================
 
 	vectCredit! = BBjAPI().makeVector()
-	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,cust_len
 
 	ope03_dev = fnget_dev("OPE_CREDDATE")
 	dim ope03a$:fnget_tpl$("OPE_CREDDATE")
@@ -268,7 +283,7 @@ rem ==========================================================================
 	rem --- now fill grid
 
 		vectCredit!.addItem(date(jul(ope03a.rev_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
-		vectCredit!.addItem(fnmask$(ope03a.customer_id$(1,cust_len),m0$))
+		vectCredit!.addItem(ope03a.customer_id$)
 		vectCredit!.addItem(arm01a.customer_name$)
 		vectCredit!.addItem(ope03a.order_no$)
 		vectCredit!.addItem(date(jul(ope01a.order_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
@@ -283,7 +298,7 @@ return
 create_cust_vector:
 
 	vectCredit!=SysGUI!.makeVector()
-	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,cust_len
+
 	ope03_dev=fnget_dev("OPE_CREDDATE")
 	dim ope03a$:fnget_tpl$("OPE_CREDDATE")
 	arm01_dev=fnget_dev("ARM_CUSTMAST")
@@ -300,7 +315,7 @@ create_cust_vector:
 		readrecord(arm01_dev,key=firm_id$+ope03a.customer_id$,dom=*next)arm01a$
 rem --- now fill grid
 		vectCredit!.addItem(date(jul(ope03a.rev_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
-		vectCredit!.addItem(fnmask$(ope03a.customer_id$(1,cust_len),m0$))
+		vectCredit!.addItem(ope03a.customer_id$)
 		vectCredit!.addItem(arm01a.customer_name$)
 		vectCredit!.addItem("")
 		vectCredit!.addItem("")
@@ -339,16 +354,6 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 		return str(q1$:q2$)
 	fnend
 
-strip_dashes:
-rem --- Strip dashes from Customer Number and pad with zeroes if necessary
-	new_cust$=""
-	for dashes=1 to len(cust$)
-		if cust$(dashes,1)<>"-" new_cust$=new_cust$+cust$(dashes,1)
-	next dashes
-	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","","",0,cust_len
-	cust$=pad(new_cust$,cust_len,"L","0")
-return
-
 #include std_missing_params.src
 [[OPE_CREDREV.AWIN]]
 rem --- Build custom form
@@ -379,6 +384,11 @@ rem --- Check Parameters
 
 	read record (ars01c_dev,key=firm_id$+"AR01",dom=std_missing_params)ars01c$
 	if ars01c.sys_install$<>"Y" release
+
+rem --- get customer mask
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,cust_len
+	callpoint!.setDevObject("custmask",m0$)
 
 rem --- add grid to store credit holds, with checkboxes for user to select one only
 
@@ -414,5 +424,6 @@ rem --- set callbacks - processed in ACUS callpoint
 	gridCredit!.setCallback(gridCredit!.ON_GRID_DOUBLE_CLICK,"custom_event")
 	gridCredit!.setCallback(gridCredit!.ON_GRID_ENTER_KEY,"custom_event")
 
-rem --- verify New Tickler is disabled	
+rem --- verify New Tickler is disabled and Cred Maint enabled
 	callpoint!.setOptionEnabled("NEWC",0)
+	callpoint!.setOptionEnabled("CRED",1)
