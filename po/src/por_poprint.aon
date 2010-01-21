@@ -380,6 +380,11 @@ rem --- Loop Starting
             endif            
             page=0
             l=l9+1
+            rem --- call bac_documents.bbj to get back document ID
+            new_doc_id$=""
+            pdf_doc$=""
+            call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,"","","I","PDF",docdir$,
+:              "pdf",alias_id$,"V",vendor_id$,rd_table_chans$[all],"DOC_ID"                            
         else
             if single_vendor_id$="" and lock_key$="" then continue
         endif
@@ -398,12 +403,6 @@ rem --- Loop Starting
         if poe02a.ap_terms_code$<>t2$ then gosub terms_break
         gosub shipto_break;rem --- loads dropship or warehouse address into a$
         
-        rem --- call bac_documents.bbj to get back document ID
-        new_doc_id$=""
-        pdf_doc$=""
-        call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,"","","I","PDF",docdir$,
-:          "pdf",alias_id$,"V",vendor_id$,rd_table_chans$[all],"DOC_ID"                
-
         find record (poe12_dev,key=firm_id$ + po_no$ + internal_seq_no$,dom=*continue) poe12a$
 
         if poe12a.po_line_code$ <> t4$ gosub line_code_break
