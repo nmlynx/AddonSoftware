@@ -210,12 +210,6 @@ rem --- Set shipped and back ordered
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
 	gosub disp_ext_amt
-
-rem --- Remove lot records if qty goes to 0 (lotted$ set in able_lot_button)
-
-	if lotted$="Y" then
-		rem debug, *** do lotted logic
-	endif
 [[OPE_INVDET.LINE_CODE.BINP]]
 rem --- Set previous value / enable repricing, options, lots
 
@@ -794,15 +788,44 @@ rem --- Warehouse and Item must be correct
 	gosub check_item_whse	
 
 	if user_tpl.item_wh_failed then 
-rem		callpoint!.setStatus("ABORT")
+		rem callpoint!.setStatus("ABORT")
 		rem --- using this instead to force focus if item/whse invalid -- i.e., don't let user leave corrupt row
 		callpoint!.setFocus(this_row,"OPE_INVDET.ITEM_ID")
+		break; rem --- exit callpoint
 	else
 
 	rem --- Clear line type
 
 		user_tpl.line_type$ = ""
 
+	endif
+
+rem --- Does the total of lot/serial# match the qty ordered?
+
+	item_id$ = item$
+	gosub lot_ser_check
+
+	if lotted$ = "Y" and user_tpl.lotser_flag$ <> "N" then
+		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+		lot_ser_total = ordHelp!.totalLotSerialAmount( callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO") )
+		qty_ord = num( callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED") )
+
+		if lot_ser_total <> qty_ord then
+			if user_tpl.lotser_flag$ = "L" then
+				lot_ser$ = "Lots"
+			else
+				lot_ser$ = "Serial Numbers"
+			endif
+		
+			msg_id$ = "OP_LOT_SER_TOTAL"
+			dim msg_tokens$[2]
+			msg_tokens$[0] = str(qty_ord)
+			msg_tokens$[1] = lot_ser$
+			msg_tokens$[2] = str(lot_ser_total)
+			gosub disp_message
+			rem callpoint!.setFocus(this_row,"OPE_INVDET.QTY_ORDERED")
+			rem break; rem --- exit callpoint
+		endif
 	endif
 
 rem --- Set taxable amount
@@ -1419,6 +1442,7 @@ rem ==========================================================================
 rem ==========================================================================
 able_lot_button: rem --- Enable/disable Lot/Serial button
                  rem      IN: item_id$ (for lot_ser_check)
+                 rem     OUT: lotted$
 rem ==========================================================================
 
 	item_id$   = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
