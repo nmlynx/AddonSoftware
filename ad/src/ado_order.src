@@ -53,6 +53,8 @@ rem ==========================================================================
         field private BBjString taxcodeData$
         field private BBjInt termsCodeDev%
         field private BBjString termsCodeTmpl$
+        field private BBjInt lotSerialDev%
+        field private BBjString lotSerialTmpl$
         
         field public BBjVector DtlVect!
         field public BBjString Cust_id$
@@ -327,7 +329,49 @@ rem ==========================================================================
             endif
         
         methodend
+    
+    rem --- Get total quantity of assigned lots/serial numbers for an order and line
+    
+        method public BBjNumber totalLotSerialAmount(BBjString p_cust_id$, BBjString p_order_no$, BBjString p_seq_no$)
         
+            if #lotSerialDev% = 0 then
+                data_name$ = "OPE_ORDLSDET"
+                #lotSerialDev%  = int(util.getDev(data_name$))
+                #lotSerialTmpl$ = util.getTmpl(data_name$)
+            endif
+
+            #Cust_id$  = p_cust_id$
+            #Order_no$ = p_order_no$
+            ttl_lot_serial = 0
+            more = 1
+            dim ordlsdet_rec$:#lotSerialTmpl$
+        
+            read (#lotSerialDev%, key=#firm_id$+"  "+p_cust_id$+p_order_no$+p_seq_no$, dom=*next)
+            
+            while more
+                read record (#lotSerialDev%, end=*break) ordlsdet_rec$
+                if ordlsdet_rec.firm_id$        <> #firm_id$   then break
+                if ordlsdet_rec.customer_id$    <> p_cust_id$  then break
+                if ordlsdet_rec.order_no$       <> p_order_no$ then break
+                if ordlsdet_rec.orddet_seq_ref$ <> p_seq_no$   then break
+                
+                ttl_lot_serial = ttl_lot_serial + ordlsdet_rec.qty_ordered
+            wend
+            
+            methodret ttl_lot_serial
+        
+        methodend
+        
+        method public BBjNumber totalLotSerialAmount(BBjString p_seq_no$)
+        
+            if #Cust_id$ <> "" and #Order_no$ <> "" then
+                methodret #totalLotSerialAmount(#Cust_id$, #Order_no$, p_seq_no$)
+            else
+                throw #className$+": totalLotSerialAmount(): You must setCust_id() and setOrder_no() before calling this method", 262
+            endif
+            
+        methodend
+    
     rem --- Get precision
     
         method private void getPrecision()
