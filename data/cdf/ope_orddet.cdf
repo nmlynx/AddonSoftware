@@ -362,12 +362,9 @@ rem --- Are things set for a reprice?
 
 		if qty_ord then 
 
-		rem --- Save current row/column so we'll know where to set focus when we return
+		rem --- Save current column so we'll know where to set focus when we return
 
-			declare BBjStandardGrid grid!
-			grid! = util.getGrid(Form!)
-			return_to_row = grid!.getSelectedRow()
-			return_to_col = grid!.getSelectedColumn()
+			return_to_col = util.getGrid(Form!).getSelectedColumn()
 
 		rem --- Do repricing
 
@@ -376,9 +373,11 @@ rem --- Are things set for a reprice?
 			gosub manual_price_flag
 
 		rem --- Return focus to where we were (Detail line grid)
+		rem --- unless the Enter Price message was displayed
 
-			util.forceEdit(Form!, return_to_row, return_to_col)
-
+			if !enter_price_message then
+				util.forceEdit(Form!, return_to_col)
+			endif
 		endif
 	endif
 [[OPE_ORDDET.STD_LIST_PRC.BINP]]
@@ -536,15 +535,11 @@ rem		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.LINE_CODE", 0)
 rem	endif
 
 	if user_tpl.skip_whse$ = "Y" then
-rem		callpoint!.setColumnEnabled(-1, "OPE_ORDDET.WAREHOUSE_ID", 0)
+		rem callpoint!.setColumnEnabled(-1, "OPE_ORDDET.WAREHOUSE_ID", 0)
 		item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 		wh$   = user_tpl.warehouse_id$
 		gosub set_avail	
 	endif
-
-	rem --- override min value of .001 on unit_price element; for order/invoice entry, unit price can be zero
-
-	callpoint!.setTableColumnAttribute("OPE_ORDDET.UNIT_PRICE","MINV","0")
 
 rem --- Did we change rows?
 
@@ -1107,9 +1102,12 @@ rem ==========================================================================
 pricing: rem --- Call Pricing routine
          rem      IN: qty_ord
          rem     OUT: price (UNIT_PRICE), disc (DISC_PERCENT), STD_LINE_PRC
+         rem          enter_price_message (0/1)
 rem ==========================================================================
 
 	print "in pricing..."; rem debug
+
+	enter_price_message = 0
 
 	wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
@@ -1159,7 +1157,8 @@ rem ==========================================================================
 	if price=0 then
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
-		callpoint!.setStatus("ACTIVATE")
+		util.forceEdit(Form!, user_tpl.unit_price_col)
+		enter_price_message = 1
 	else
 		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", str(round(price, 2)) )
 		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", str(disc))
