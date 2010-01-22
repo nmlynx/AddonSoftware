@@ -2222,6 +2222,7 @@ rem --- Setup user_tpl$
 :		"cash_cust:c(6), " +
 :		"bo_col:u(1), " +
 :		"prod_type_col:u(1), " +
+:		"unit_price_col:u(1), " +
 :		"allow_bo:c(1), " +
 :		"amount_mask:c(1*)," +
 :		"line_taxable:c(1), " +
@@ -2291,6 +2292,7 @@ rem --- Columns for the util disableCell() method
 
 	user_tpl.bo_col            = 9
 	user_tpl.prod_type_col     = 5
+	user_tpl.unit_price_col    = 8
 
 	user_tpl.prev_line_code$   = ""
 	user_tpl.prev_item$        = ""
