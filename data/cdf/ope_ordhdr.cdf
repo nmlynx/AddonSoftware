@@ -172,7 +172,7 @@ rem --- Has customer and order number been entered?
 
 rem --- Check Ship-to's
 
-	if !user_tpl.shipto_warned then
+	rem if !user_tpl.shipto_warned then
 		shipto_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 		shipto_var$  = "OPE_ORDHDR.SHIPTO_NO"
 
@@ -193,7 +193,7 @@ rem --- Check Ship-to's
 				break; rem --- exit callpoint
 			endif
 		endif
-	endif
+	rem endif
 [[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
 print "CUSTOMER_ID:AVAL"; rem debug
 	
