@@ -627,7 +627,7 @@ rem --- Is previous record not a quote and not void?
 			read record (ope01_dev, key=p_key$) ope01a$
 
 			if ope01a.firm_id$ = firm_id$ then 
-				if ope01a.ordinv_flag$ <> "P" and ope01a.invoice_type$ <> "V" then
+				if ope01a.invoice_type$ <> "P" and ope01a.invoice_type$ <> "V" then
 					break
 				else
 					read (ope01_dev, dir=-1, end=*endif)
