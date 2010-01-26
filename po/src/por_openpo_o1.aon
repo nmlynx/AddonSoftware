@@ -532,7 +532,7 @@ newpo: rem --- New PO
 brnch6: 
 
     find record (apm05a_dev,key=firm_id$+vendor$+poe02a.purch_addr$,dom=brnch7) apm05a$
-    paddrdesc$=apm05a.name(1,24)
+    paddrdesc$=apm05a.name$(1,24)
 
 brnch7: 
 
@@ -559,8 +559,14 @@ brnch8:
     OutVect!.addItem(poe02a.fob$)
     OutVect!.addItem("")
     OutVect!.addItem(shpwhsdesc$)
-
-    xwk=fnblank(14)
+    
+    if cvs(paddrdesc$,3)<>""
+        xwk=fnblank(4)
+        OutVect!.addItem("Purch From: "+paddrdesc$)
+        xwk=fnblank(9)
+    else
+        xwk=fnblank(14)
+    endif
 
     OutVect!.addItem("");rem was "Seq" - dropping per VARs
     OutVect!.addItem("CD")
