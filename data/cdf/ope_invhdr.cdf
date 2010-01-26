@@ -254,7 +254,7 @@ rem --- Has customer and order number been entered?
 
 rem --- Check Ship-to's
 
-	if !user_tpl.shipto_warned then
+	rem if !user_tpl.shipto_warned then
 		shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 		shipto_var$  = "OPE_INVHDR.SHIPTO_NO"
 
@@ -275,7 +275,7 @@ rem --- Check Ship-to's
 				break; rem --- exit callpoint
 			endif
 		endif
-	endif
+	rem endif
 [[OPE_INVHDR.AOPT-MINV]]
 print "Hdr:APOT:MINV"; rem debug
 
