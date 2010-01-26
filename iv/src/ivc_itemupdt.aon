@@ -137,7 +137,7 @@ rem --- Parameters
     p[0]=ivs01a.item_id_len
     p[1]=num(ivs01a.precision$)
     p[2]=ivs01a.ls_no_len
-    ls=pos(ivs01a.lotser_flag$="LS")
+    ls_flag=pos(ivs01a.lotser_flag$="LS")
     lf=pos(ivs01a.lifofifo$="LF")
     current_per$=ivs01a.current_per$
     current_year$=ivs01a.current_year$
@@ -200,13 +200,13 @@ rem --- Retrieve ivm-01 Item Master
 
     ivm01k0$=firm_id$+item$
     find record (ivm01_dev,key=ivm01k0$,dom=missing_record_error) ivm01a$
-    if ls then ls = (ivm01a.lotser_item$ = "Y")
+    if ls_flag then ls = (ivm01a.lotser_item$ = "Y")
 
 rem --- ivm-01 Item Master
 
     if dropship=0 and last<>0
         field ivm01a$, last$[last] = fnl$( field(ivm01a$,last$[last]), ymd$ )
-rem        ivm01a.lstrec_date$ = fnl$(ivm01a.lstrec_date$, ymd$)
+        rem ivm01a.lstrec_date$ = fnl$(ivm01a.lstrec_date$, ymd$)
         ivm01a$=field(ivm01a$)
         write record (ivm01_dev) ivm01a$
     endif
@@ -230,11 +230,13 @@ rem --- Adjust remaining fields
 
     location$=ivm02a.location$
     if action$="PI" then ivm02a.landed_cost=refs[4]
+    
     if action$="PH" and cvs(lotser$,2)="" then 
         ivm02a.lstphy_date$=ymd$
         ivm02a.select_phys$="N"
         ivm02a.physical_cnt=refs[5]
     endif
+    
     ivm02a$=field(ivm02a$)
     write record (ivm02_dev) ivm02a$
 
@@ -841,6 +843,7 @@ rem --- Functions used to retrieve form values
 rem --- Date/time handling functions
 
 rem --- Return 1 if valid date, 0 if invalid
+
     def fndate(q$)
         q=0
         q=jul(q$, "%Yl%Mz%Dz", err=*next)
