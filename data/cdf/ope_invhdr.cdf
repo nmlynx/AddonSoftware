@@ -37,6 +37,7 @@ rem --- Reset all previous values
 
 	user_tpl.new_order = 1
 	user_tpl.credit_limit_warned = 0
+	user_tpl.shipto_warned = 0
 [[OPE_INVHDR.AOPT-CRAT]]
 print "Hdr:AOPT:CRAT"; rem debug
 
@@ -253,19 +254,26 @@ rem --- Has customer and order number been entered?
 
 rem --- Check Ship-to's
 
-	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
+	if !user_tpl.shipto_warned then
+		shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
+		shipto_var$  = "OPE_INVHDR.SHIPTO_NO"
 
-	if shipto_type$ = "S" and cvs(callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO"), 2) = "" then
-		msg_id$ = "OP_SHIPTO_NO_MISSING"
-		gosub disp_message
-		rem callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
-	else
-		if shipto_type$ = "M" and cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"), 2) = "" then
-			msg_id$ = "OP_MAN_SHIPTO_NEEDED"
+		if shipto_type$ = "S" and cvs(callpoint!.getColumnData(shipto_var$), 2) = "" then
+			msg_id$ = "OP_SHIPTO_NO_MISSING"
 			gosub disp_message
-			rem callpoint!.setStatus("ABORT")
+			callpoint!.setFocus(shipto_var$)
+			user_tpl.shipto_warned = 1
 			break; rem --- exit callpoint
+		else
+			ship_addr1_var$ = "<<DISPLAY>>.SADD1"
+
+			if shipto_type$ = "M" and cvs(callpoint!.getColumnData(ship_addr1_var$), 2) = "" then
+				msg_id$ = "OP_MAN_SHIPTO_NEEDED"
+				gosub disp_message
+				callpoint!.setFocus(ship_addr1_var$)
+				user_tpl.shipto_warned = 1
+				break; rem --- exit callpoint
+			endif
 		endif
 	endif
 [[OPE_INVHDR.AOPT-MINV]]
@@ -2256,7 +2264,8 @@ rem --- Setup user_tpl$
 :		"disc_code:c(1*), " +
 :		"tax_code:c(1*), " +
 :		"new_order:u(1), " +
-:		"credit_limit_warned:u(1)"
+:		"credit_limit_warned:u(1), " +
+:		"shipto_warned:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2287,6 +2296,7 @@ rem --- Setup user_tpl$
 	user_tpl.do_totals_form    = 1
 	user_tpl.new_order         = 0
 	user_tpl.credit_limit_warned = 0
+	user_tpl.shipto_warned     = 0
 
 rem --- Columns for the util disableCell() method
 
