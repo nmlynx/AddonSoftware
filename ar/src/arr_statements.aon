@@ -145,7 +145,13 @@ rem --- Open the printer
     center_justify=2
 
     myAPI!=BBjAPI()
-    myBBjPrinter!=myAPI!.getBBjPrinter(1)
+    myBBjPrinter!=myAPI!.getBBjPrinter(1,err=*next)
+    if myBBjPrinter!=null()
+        msg_id$="AD_NOPRINTER"
+        gosub disp_message
+        goto std_exit
+    endif
+    
     myBBjPDFPrinter!=BBjAPI()
 
     myBBjPrinter!.setAttributes(requestAttributes!)

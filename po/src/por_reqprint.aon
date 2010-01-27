@@ -184,7 +184,13 @@ rem --- Open the printer
 
     rem --- create file
     myAPI!=BBjAPI()
-    myBBjPrinter!=myAPI!.getBBjPrinter(1)
+    myBBjPrinter!=myAPI!.getBBjPrinter(1,err=*next)
+    if myBBjPrinter!=null()
+        msg_id$="AD_NOPRINTER"
+        gosub disp_message
+        goto std_exit
+    endif
+    
 
     REM Create a set of request attributes
     LET requestAttributes!=new javax.print.attribute.HashPrintRequestAttributeSet()
