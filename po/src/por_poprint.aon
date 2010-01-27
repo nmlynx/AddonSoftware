@@ -364,22 +364,23 @@ rem --- Loop Starting
         vendor_id$=read_tpl.vendor_id$
         whse_id$=read_tpl.warehouse_id$
         internal_seq_no$=read_tpl.internal_seq_no$
-       
-        if po_no$<>poe02a.po_no$ then 
+
+        if po_no$<>poe02a.po_no$ then
+        
             gosub print_total
             if cvs(poe02a.po_no$,3)<>"" and lock_key$<>""
                 lock_unlock$="U"
                 gosub lock_unlock_record
             endif
-            read record (poe02_dev,key=firm_id$+po_no$,dom=*continue) poe02a$            
+            page=0
+            l=l9+1            
+            read record (poe02_dev,key=firm_id$+po_no$,dom=*continue) poe02a$ 
             if single_vendor_id$=""
                 lock_unlock$="L"
                 lock_key$=firm_id$+po_no$
                 gosub lock_unlock_record
                 if rd_lock_status$<>"" then lock_key$=""; continue
             endif            
-            page=0
-            l=l9+1
             rem --- call bac_documents.bbj to get back document ID
             new_doc_id$=""
             pdf_doc$=""
