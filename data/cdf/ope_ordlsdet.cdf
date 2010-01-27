@@ -1,10 +1,7 @@
-[[OPE_ORDLSDET.QTY_ORDERED.BINP]]
-print "QTY_ORDERED.BINP"; rem debug
-
-rem --- Set previous amount
+[[OPE_ORDLSDET.AGRN]]
+rem --- keep track of starting qty for this line, so we can accurately check avail qty minus what's already been committed
 
 	user_tpl.prev_ord = num(callpoint!.getColumnData("OPE_ORDLSDET.QTY_ORDERED"))
-	print "---Prev Ord:", user_tpl.prev_ord; rem debug
 [[OPE_ORDLSDET.AUDE]]
 print "AUDE"; rem debug
 
