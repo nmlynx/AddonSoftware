@@ -93,6 +93,10 @@ rem --- Save old Bar Code and UPC Code for Synonym Maintenance
 rem --- store lot/serialized flag in devObject for use later
 
 	callpoint!.setDevObject("lot_serial_item",callpoint!.getColumnData("IVM_ITEMMAST.LOTSER_ITEM"))
+
+rem --- set flag in devObject to say we're not on a new record
+
+	callpoint!.setDevObject("new_rec","N")
 [[<<DISPLAY>>.ITEM_DESC_SEG_3.AVAL]]
 rem --- Set this section back into desc, if modified
 
@@ -314,6 +318,45 @@ rem --- Add new UPC Code and Bar Code
 rem --- store lot/serialized flag in devObject for use later
 
 	callpoint!.setDevObject("lot_serial_item",callpoint!.getColumnData("IVM_ITEMMAST.LOTSER_ITEM"))
+
+rem --- if this is a newly added record, launch warehouse/stocking, vendors, and synonymns forms
+
+	if callpoint!.getDevObject("new_rec")="Y"
+
+		user_id$=stbl("+USER_ID")
+		dim dflt_data$[2,1]
+		dflt_data$[1,0]="ITEM_ID"
+		dflt_data$[1,1]=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+		key_pfx$=firm_id$+callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"IVM_ITEMWHSE",
+:			user_id$,
+:			"",
+:			key_pfx$,
+:			table_chans$[all],
+:			"",
+:			dflt_data$[all]
+
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"IVM_ITEMVEND",
+:			user_id$,
+:			"",
+:			key_pfx$,
+:			table_chans$[all],
+:			"",
+:			dflt_data$[all]
+
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"IVM_ITEMSYN",
+:			user_id$,
+:			"",
+:			key_pfx$,
+:			table_chans$[all],
+:			"",
+:			dflt_data$[all]
+
+	endif
+
 [[IVM_ITEMMAST.BDEL]]
 rem --- Allow this item to be deleted?
 
@@ -379,7 +422,12 @@ rem -- Get default values for new record from ivs-10D, IVS_DEFAULTS
 		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL", ivm10a.sa_level$)
 	endif
 
+	
 	callpoint!.setStatus("REFRESH")
+
+rem --- set flag in devObject to say we're on a new record
+
+	callpoint!.setDevObject("new_rec","Y")
 [[IVM_ITEMMAST.WEIGHT.AVAL]]
 if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 callpoint!.setStatus("ABORT")
 [[IVM_ITEMMAST.ASHO]]
