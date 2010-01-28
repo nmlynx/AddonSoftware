@@ -362,6 +362,7 @@ rem --- Remove from ope-04
 rem --- Set flag
 
 	user_tpl.record_deleted = 1
+	user_tpl.first_read     = 1
 
 rem --- clear availability
 
@@ -628,6 +629,7 @@ rem --- Is previous record not a quote and not void?
 
 			if ope01a.firm_id$ = firm_id$ then 
 				if ope01a.invoice_type$ <> "P" and ope01a.invoice_type$ <> "V" then
+					user_tpl.first_read = 0
 					break
 				else
 					read (ope01_dev, dir=-1, end=*endif)
@@ -636,8 +638,16 @@ rem --- Is previous record not a quote and not void?
 			endif
 		endif
 
-		rem --- If EOF or past firm, rewind to last record in this firm
-		read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
+	rem --- If EOF or past firm, rewind to last record in this firm, unless it's the first read
+
+		if user_tpl.first_read then
+			msg_id$ = "OP_ALL_WRONG_TYPE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
+		endif
 	wend
 [[OPE_INVHDR.BNEK]]
 rem --- Is next record not a quote and not void?
@@ -645,53 +655,34 @@ rem --- Is next record not a quote and not void?
 	file_name$ = "OPE_INVHDR"
 	ope01_dev = fnget_dev(file_name$)
 	dim ope01a$:fnget_tpl$(file_name$)
-	dim first_rec$:fnget_tpl$(file_name$)
 	start_block = 1
-	first_time  = 1
 
 	while 1
 		if start_block then
 			read record (ope01_dev, dir=0, end=*endif) ope01a$
 
-		rem --- Get first record
-			if first_time then
-				first_rec$ = ope01a$
-				first_time = 0
-			else
-
-			rem --- Is this the first record again?
-				if firm_id$            = first_rec.firm_id$     and 
-:					ope01a.customer_id$ = first_rec.customer_id$ and 
-:					ope01a.order_no$    = first_rec.order_no$
-:				then
-					exitto bnek_none_found
-				endif
-			endif
-
-		rem --- The wrong firm will "fall thru"
 			if ope01a.firm_id$ = firm_id$ then
 				if ope01a.invoice_type$ <> "P" and ope01a.invoice_type$ <> "V" then
-					break; rem --- found a good record
+					user_tpl.first_read = 0
+					break
 				else
 					read (ope01_dev, end=*endif)
-					continue; rem --- look again
+					continue
 				endif
 			endif
 		endif
 
-	rem --- If EOF or wrong firm, rewind to first record of the firm
-		read (ope01_dev, key=firm_id$, dom=*next)
+	rem --- If EOF or wrong firm, rewind to first record of the firm, unless it's the first read
+		
+		if user_tpl.first_read then
+			msg_id$ = "OP_ALL_WRONG_TYPE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			read (ope01_dev, key=firm_id$, dom=*next)
+		endif
 	wend
-
-	goto bnek_done
-
-bnek_none_found:
-
-	msg_id$ = "OP_ALL_WRONG_TYPE"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
-
-bnek_done:
 [[OPE_INVHDR.SHIPTO_TYPE.BINP]]
 rem --- Do we need to create a new order number?
 
@@ -770,6 +761,10 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl$ = field(ordship_tpl$)
 		write record (ordship_dev) ordship_tpl$
 	endif
+
+rem --- Set flag
+
+	user_tpl.first_read = 0
 [[OPE_INVHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
 
@@ -2265,7 +2260,8 @@ rem --- Setup user_tpl$
 :		"tax_code:c(1*), " +
 :		"new_order:u(1), " +
 :		"credit_limit_warned:u(1), " +
-:		"shipto_warned:u(1)"
+:		"shipto_warned:u(1), " +
+:		"first_read:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2297,6 +2293,7 @@ rem --- Setup user_tpl$
 	user_tpl.new_order         = 0
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned     = 0
+	user_tpl.first_read        = 1
 
 rem --- Columns for the util disableCell() method
 
