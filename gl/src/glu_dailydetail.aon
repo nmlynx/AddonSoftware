@@ -68,7 +68,7 @@ rem --- Start progress meter and position files
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glt04_dev,1,0,ignore_status
-    read (glt04_dev,key=firm_id$,dom=*next)
+    read (glt04_dev,key=firm_id$,dom=*next,knum=0)
 
 rem --- Get next glt-04 record
 
@@ -176,7 +176,7 @@ rem          if gls01a.retain_det$<>"Y" goto remove_detail
 
           remove_detail: rem --- Remove daily detail record
 
-          remove (glt04_dev,key=glt04_key$,dom=*next)
+          remove (glt04_dev,key=glt04_key$)
 
           rem --- Loop back for next record
 
