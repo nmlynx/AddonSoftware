@@ -270,6 +270,7 @@ rem --- Is previous record an order and not void?
 
 			if ope01a.firm_id$ = firm_id$ then 
 				if ope01a.ordinv_flag$ = "O" and ope01a.invoice_type$ <> "V" then
+					user_tpl.first_read = 0
 					break
 				else
 					read (ope01_dev, dir=-1, end=*endif)
@@ -278,8 +279,16 @@ rem --- Is previous record an order and not void?
 			endif
 		endif
 
-		rem --- If EOF or past firm, rewind to last record in this firm
-		read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
+	rem --- If EOF or past firm, rewind to last record in this firm, unless it's the first read
+
+		if user_tpl.first_read then
+			msg_id$ = "OP_ALL_WRONG_TYPE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
+		endif
 	wend
 [[OPE_ORDHDR.SHIPTO_NO.BINP]]
 print "SHIPTO:BINP"; rem debug
@@ -340,6 +349,7 @@ rem --- Is next record an order and not void?
 
 			if ope01a.firm_id$ = firm_id$ then
 				if ope01a.ordinv_flag$ = "O" and ope01a.invoice_type$ <> "V" then
+					user_tpl.first_read = 0
 					break
 				else
 					read (ope01_dev, end=*endif)
@@ -348,8 +358,16 @@ rem --- Is next record an order and not void?
 			endif
 		endif
 
-		rem --- If EOF or wrong firm, rewind to first record of the firm
-		read (ope01_dev, key=firm_id$, dom=*next)
+	rem --- If EOF or wrong firm, rewind to first record of the firm, unless it's the first read
+		
+		if user_tpl.first_read then
+			msg_id$ = "OP_ALL_WRONG_TYPE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			read (ope01_dev, key=firm_id$, dom=*next)
+		endif
 	wend
 [[OPE_ORDHDR.ADIS]]
 print "Hdr:ADIS"; rem debug
@@ -529,9 +547,10 @@ rem --- Remove from ope-04
 :		callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),dom=*next)
 
-rem --- Set flag
+rem --- Set flags
 
 	user_tpl.record_deleted = 1
+	user_tpl.first_read     = 1
 
 rem --- clear availability
 
@@ -1182,6 +1201,10 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl$ = field(ordship_tpl$)
 		write record (ordship_dev) ordship_tpl$
 	endif
+
+rem --- Set flag
+
+	user_tpl.first_read = 0
 [[OPE_ORDHDR.<CUSTOM>]]
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information
@@ -2203,7 +2226,8 @@ rem --- Setup user_tpl$
 :		"tax_code:c(1*), " +
 :		"new_order:u(1), " +
 :		"credit_limit_warned:u(1), " +
-:		"shipto_warned:u(1)"
+:		"shipto_warned:u(1), " +
+:		"first_read:u(1)"
 
 	dim user_tpl$:tpl$
 
@@ -2234,6 +2258,7 @@ rem --- Setup user_tpl$
 	user_tpl.new_order         = 0
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned     = 0
+	user_tpl.first_read        = 1
 
 rem --- Columns for the util disableCell() method
 
