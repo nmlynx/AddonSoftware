@@ -320,7 +320,6 @@ rem --- Read header
             while more
                 read record (ordlsdet_dev, end=*break) ope21a$
                 if pos(ls_start$=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$)<>1 break
-                read record (ordlsdet_dev) ope21a$
 
                 if ope21a.qty_ordered then
                     lotser_no$ = ope21a.lotser_no$
@@ -702,7 +701,7 @@ valid_lines: rem --- Look for valid lines here
                 endif
             endif
         endif
-
+        
         if ope01a.reprint_flag$<>"Y" and ope11a.pick_flag$="Y" continue; rem "Not a reprint and already printed for selected warehouse(s)
         if ope01a.reprint_flag$="Y" and ope11a.pick_flag$<>"Y" continue; rem "A reprint and not printed yet for selected warehouse(s)
 
