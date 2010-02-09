@@ -1525,7 +1525,7 @@ rem ==========================================================================
 			user_tpl.pricing_code$ = ope01a.pricing_code$
 			user_tpl.order_date$   = ope01a.order_date$
 
-rem --- Copy Manual Ship To if any
+		rem --- Copy Manual Ship To if any
 
 			if opt01a.shipto_type$="M" then 
 				dim ope31a$:fnget_tpl$("OPE_ORDSHIP")
@@ -1542,7 +1542,7 @@ rem --- Copy Manual Ship To if any
 				write record (ope31_dev) ope31a$
 			endif
 
-rem --- Copy detail lines
+		rem --- Copy detail lines
 
 			dim opt11a$:fnget_tpl$("OPT_INVDET")
 			opt11_dev=fnget_dev("OPT_INVDET")
@@ -1714,24 +1714,17 @@ rem ==========================================================================
 
 	if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then
 		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
+
+	rem --- Write flag to file so opc_creditaction can see it
+
+		gosub get_disk_rec
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+
+		callpoint!.setStatus("SETORIG")
+		print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	endif
 
-rem --- Write flag to file so opc_creditaction can see it
-
-	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-	file_name$ = "OPE_ORDHDR"
-	ordhdr_dev = fnget_dev(file_name$)
-	dim ordhdr_rec$:fnget_tpl$(file_name$)
-
-	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-	ordhdr_rec.print_status$ = callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS")
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
-
-	callpoint!.setStatus("SETORIG")
-	print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	print "out"; rem debug
 
 	return

@@ -404,6 +404,7 @@ rem --- Reprint order?
 				else
 					msg_id$="OP_ORD_PRINT_BATCH"
 					callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+					print "---Reprint_flag set to Y"; rem debug
 					callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
 					gosub add_to_batch_print
 				endif
@@ -532,6 +533,7 @@ rem --- Check for printing in next batch and set
 		order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		gosub add_to_batch_print
 		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG","Y")
+		print "---Reprint_flag set to Y"; rem debug
 		callpoint!.setStatus("SAVE")
 		msg_id$ = "OP_BATCH_PRINT"
 	endif
@@ -839,6 +841,7 @@ rem --- Existing record
 					else
 						msg_id$="OP_ORD_PRINT_BATCH"
 						callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
+						print "---Reprint_flag set to Y"; rem debug
 						callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
 						gosub add_to_batch_print
 					endif
@@ -1780,7 +1783,6 @@ rem ==========================================================================
 			reprintable = 1
 			break
 		endif
-		
 	wend
 
 	return 
@@ -1846,23 +1848,17 @@ rem ==========================================================================
 
 	print "in do_picklist..."; rem debug
 
-	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-
 	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
 		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
-	endif
+		print "---Reprint_flag set to Y"; rem debug
 
 	rem --- Write flag to file so opc_picklist can see it
 
-	file_name$ = "OPE_ORDHDR"
-	ordhdr_dev = fnget_dev(file_name$)
-	dim ordhdr_rec$:fnget_tpl$(file_name$)
-	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-	ordhdr_rec.reprint_flag$ = "Y"
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
-	callpoint!.setStatus("SETORIG")
+		gosub get_disk_rec
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")
+	endif
 
 	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
@@ -1896,24 +1892,17 @@ rem ==========================================================================
 
 	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then
 		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
+
+	rem --- Write flag to file so opc_creditaction can see it
+
+		gosub get_disk_rec
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+
+		callpoint!.setStatus("SETORIG")
+		print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	endif
 
-rem --- Write flag to file so opc_creditaction can see it
-
-	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-
-	file_name$ = "OPE_ORDHDR"
-	ordhdr_dev = fnget_dev(file_name$)
-	dim ordhdr_rec$:fnget_tpl$(file_name$)
-
-	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
-	ordhdr_rec.print_status$ = callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
-
-	callpoint!.setStatus("SETORIG")
-	print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	print "out"; rem debug
 
 	return
