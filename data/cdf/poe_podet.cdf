@@ -251,8 +251,7 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 	endif
 
 	if cvs(callpoint!.getColumnData("POE_PODET.PO_LINE_CODE"),3)="N" 
-		if cvs(callpoint!.getColumnData("POE_PODET.NS_ITEM_ID"),3)="" or
-:		num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))<0 or
+		if num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))<0 or
 :		num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))<=0 or
 :		cvs(callpoint!.getColumnData("POE_PODET.REQD_DATE"),3)="" 	
 			ok_to_write$="N"
