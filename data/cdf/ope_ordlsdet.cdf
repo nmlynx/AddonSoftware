@@ -86,7 +86,8 @@ print "AGRE"; rem debug
 rem --- Check quantities, do commits if this row isn't deleted
 
 	if callpoint!.getGridRowDeleteStatus( callpoint!.getValidationRow() ) <> "Y" and
-:		cvs(callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO"),3)<>"" then
+:		cvs( callpoint!.getColumnData("OPE_ORDLSDET.LOTSER_NO"), 3)        <> "" 
+:	then
 
 	rem --- Check if Serial and validate quantity
 
@@ -98,8 +99,8 @@ rem --- Check quantities, do commits if this row isn't deleted
 
 	rem --- Now check for Sales Line quantity
 
-		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())    = "Y" or
-:		   callpoint!.getGridRowModifyStatus(callpoint!.getValidationRow()) = "Y" 
+		if callpoint!.getGridRowNewStatus( callpoint!.getValidationRow() )    = "Y" or
+:		   callpoint!.getGridRowModifyStatus( callpoint!.getValidationRow() ) = "Y" 
 :		then
 			line_qty = num(callpoint!.getDevObject("ord_qty"))
 			lot_qty  = qty_ordered
@@ -232,6 +233,7 @@ check_avail: rem --- Check for available quantity
              rem      IN: line_qty 
 	          rem          lot_qty 
 	          rem    OUT:  aborted - true/false
+             rem          committedNow!
 rem ==========================================================================
 
 	aborted = 0
@@ -314,6 +316,7 @@ commit_lots: rem --- Commit lots
              rem      IN: commit_lot$
              rem          commit_qty
              rem          increasing - 0/1 to back out old/commit new
+             rem     OUT: committedNow!
 rem ==========================================================================
 
 rem --- This routine uncommits warehouse (since already committed when entering detail line)
@@ -444,17 +447,45 @@ rem --- See if there are any open lots
 :			dflt_data$[all]
 		print "---back from IVC_LOTLOOKUP..."; rem debug
 
-	rem --- Set the detail grid to the data selected in the lookup
+	rem --- Test lot and available qty
 
 		if callpoint!.getDevObject("selected_lot") <> null() then 
-			print "---Back from IVC_LOTLOOKUP, lot selected..."; rem debug
-			callpoint!.setColumnData( "OPE_ORDLSDET.LOTSER_NO", str(callpoint!.getDevObject("selected_lot")) )
+			ls_no$ = str(callpoint!.getDevObject("selected_lot"))
+			committedNow! = cast(HashMap, callpoint!.getDevObject("committed_now"))
 
+			if callpoint!.getDevObject("lotser_flag") = "S" then
+				lot_ser$ = "Serial Number"
+			else
+				lot_ser$ = "Lot"
+			endif
+
+			if committedNow!.containsKey(ls_no$) then
+				msg_id$ = "OP_LOT_SELECTED"
+				dim msg_tokens$[1]
+				msg_tokens$[1] = lot_ser$
+				gosub disp_message
+				break; rem --- exit callpoint
+			endif
+			
+			print "---lot selected..."; rem debug
 			lot_avail = num(callpoint!.getDevObject("selected_lot_avail"))
-			lot_cost  = num(callpoint!.getDevObject("selected_lot_cost"))
-			ord_qty   = min(lot_avail, user_tpl.left_to_ord)
 
-			callpoint!.setColumnData("OPE_ORDLSDET.QTY_ORDERED", str(ord_qty))
+			if !lot_avail then
+				msg_id$ = "OP_LOT_NONE_AVAIL"
+				dim msg_tokens$[1]
+				msg_tokens$[1] = lot_ser$
+				gosub disp_message
+				break; rem --- exit callpoint
+			endif
+
+		rem --- Set the detail grid to the data selected in the lookup
+
+			print "---lot qty available:", lot_avail; rem debug
+			lot_cost = num(callpoint!.getDevObject("selected_lot_cost"))
+			ord_qty  = min(lot_avail, user_tpl.left_to_ord)
+
+			callpoint!.setColumnData( "OPE_ORDLSDET.LOTSER_NO", ls_no$ )
+			callpoint!.setColumnData( "OPE_ORDLSDET.QTY_ORDERED", str(ord_qty) )
 			rem callpoint!.setTableColumnAttribute("OPE_ORDLSDET.QTY_SHIPPED","DFLT", str(ord_qty))
 			print "---Set qty ord:", ord_qty; rem debug
 
@@ -475,7 +506,7 @@ rem --- See if there are any open lots
 [[OPE_ORDLSDET.LOTSER_NO.AVAL]]
 print "LOTSER_NO.AVAL"; rem debug
 
-rem --- Non-inventoried item from Invoice Entry do not has to exist
+rem --- Non-inventoried items from Invoice Entry do not have to exist
 
 	if user_tpl.invoice_noninventory then
 		break; rem --- exit callpoint
