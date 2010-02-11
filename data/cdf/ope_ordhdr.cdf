@@ -1890,19 +1890,16 @@ rem ==========================================================================
 
 	print "in force_print_status..."; rem debug
 
-	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then
-		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
+	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
 
-	rem --- Write flag to file so opc_creditaction can see it
+rem --- Write flag to file so opc_creditaction can see it
 
-		gosub get_disk_rec
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
+	gosub get_disk_rec
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
 
-		callpoint!.setStatus("SETORIG")
-		print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
-	endif
-
+	callpoint!.setStatus("SETORIG")
+	print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	print "out"; rem debug
 
 	return
