@@ -165,7 +165,6 @@ rem --- Display totals
 	
 	gosub disp_grid_totals
 
-
 [[OPE_ORDDET.QTY_BACKORD.AVEC]]
 rem --- Display totals
 	
@@ -197,30 +196,39 @@ rem --- Set shipped and back ordered
 	print "---Qty<>prev? ", qty_ord<>user_tpl.prev_qty_ord; rem debug
 	print "---Unit Price:", unit_price; rem debug
 
-	if qty_ord <> user_tpl.prev_qty_ord or unit_price = 0 then
+	if qty_ord = 0 then
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
 
-		if qty_ord <> user_tpl.prev_qty_ord then
-			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+	if qty_ord < 0 then
+		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
+		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+		rem callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", 0)
+		rem callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
+		util.disableGridColumn(Form!, user_tpl.bo_col)
+		util.disableGridColumn(Form!, user_tpl.shipped_col)
+	endif
 
-			if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" or
-:				callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P"
-:			then
-				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
-			else
-				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
-			endif
-		endif
+	if qty_ord <> user_tpl.prev_qty_ord then
+		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 
-	rem --- Recalc quantities and extended price
-
-		rem if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
-		if user_tpl.line_type$ <> "N" and
-:			callpoint!.getColumnData("OPE_ORDDET.MAN_PRICE") <> "Y" and
-:			( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
+		if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" or
+:			callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P"
 :		then
-			gosub pricing
+			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
+		else
+			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
 		endif
+	endif
 
+rem --- Recalc quantities and extended price
+
+	if user_tpl.line_type$ <> "N" and
+:		callpoint!.getColumnData("OPE_ORDDET.MAN_PRICE") <> "Y" and
+:		( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
+:	then
+		gosub pricing
 	endif
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
@@ -789,6 +797,13 @@ rem --- Clear/set flags
 	print "---Passed Grid Row Status tests..."; rem debug
 	user_tpl.detail_modified = 1
 
+rem --- Returns
+
+	if num( callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED") ) < 0 then
+		callpoint!.setColumnData( "OPE_ORDDET.QTY_SHIPPED", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED") )
+		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+	endif
+
 rem --- What is extended price?
 
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
@@ -1000,9 +1015,9 @@ rem --- recalc quantities and extended price
 	ordqty     = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	cash_sale$ = callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE")
 
-print "---Shipped:", shipqty; rem debug
-print "---Prev   :", user_tpl.prev_shipqty
-print "---Ordered:", ordqty
+	print "---Shipped:", shipqty; rem debug
+	print "---Prev   :", user_tpl.prev_shipqty
+	print "---Ordered:", ordqty
 
 	if shipqty > ordqty then 
 		callpoint!.setUserInput(str(user_tpl.prev_shipqty))
@@ -1377,6 +1392,8 @@ rem ==========================================================================
 	start_block = 1
 
 	if cvs(line_code$,2) <> "" then
+		print "---line code is blank"; rem debug
+
 		file$ = "OPC_LINECODE"
 		dim opc_linecode$:fnget_tpl$(file$)
 
@@ -1389,7 +1406,6 @@ rem ==========================================================================
 			user_tpl.line_dropship$ = opc_linecode.dropship$
 			print "---Line Type set (", user_tpl.line_type$, ")"; rem debug
 		endif
-
 	endif
 
 rem --- Disable / enable unit cost
@@ -1408,15 +1424,17 @@ rem --- Disable / enable unit cost
 
 rem --- Product Type Processing
 
-	if opc_linecode.prod_type_pr$ <> "E" then
-		callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", 0)
-		util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
-		rem print "---disabled prod type"; rem debug
+	if cvs(line_code$,2) <> "" then
+		if opc_linecode.prod_type_pr$ <> "E" then
+			callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", 0)
+			util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
+			rem print "---disabled prod type"; rem debug
 
-		if opc_linecode.prod_type_pr$ = "D" then
-			callpoint!.setTableColumnAttribute("OPE_ORDDET.PRODUCT_TYPE","DFLT", opc_linecode.product_type$)
-			rem print "---set default prod type"; rem debug
-		endif	
+			if opc_linecode.prod_type_pr$ = "D" then
+				callpoint!.setTableColumnAttribute("OPE_ORDDET.PRODUCT_TYPE","DFLT", opc_linecode.product_type$)
+				rem print "---set default prod type"; rem debug
+			endif	
+		endif
 	else
 		callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", user_tpl.prod_type_col)
 		util.enableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())

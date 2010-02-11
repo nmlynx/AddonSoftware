@@ -182,30 +182,41 @@ rem --- Set shipped and back ordered
 	qty_ord    = num(callpoint!.getUserInput())
 	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
 
-	if qty_ord<>user_tpl.prev_qty_ord or unit_price = 0 then
+	if qty_ord = 0 then
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
 
-		if qty_ord<>user_tpl.prev_qty_ord then
-			callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
+	if qty_ord < 0 then
+		callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_ord))
+		callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
+		rem callpoint!.setColumnEnabled("OPE_INVDET.QTY_SHIPPED", 0)
+		rem callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
+		util.disableGridColumn(Form!, user_tpl.bo_col)
+		util.disableGridColumn(Form!, user_tpl.shipped_col)
+	endif
 
-			if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" or
-:				callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") = "P"
-:			then
-				callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_ord))
-			else
-				callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", "0")
-			endif
-		endif
 
-	rem --- Recalc quantities and extended price
 
-		rem if qty_ord and unit_price = 0 and user_tpl.line_type$ <> "N" then
-		if user_tpl.line_type$ <> "N" and
-:			callpoint!.getColumnData("OPE_INVDET.MAN_PRICE") <> "Y" and
-:			( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
+	if qty_ord<>user_tpl.prev_qty_ord then
+		callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
+
+		if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" or
+:			callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") = "P"
 :		then
-			gosub pricing
+			callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_ord))
+		else
+			callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", "0")
 		endif
+	endif
 
+rem --- Recalc quantities and extended price
+
+	if user_tpl.line_type$ <> "N" and
+:		callpoint!.getColumnData("OPE_INVDET.MAN_PRICE") <> "Y" and
+:		( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
+:	then
+		gosub pricing
 	endif
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
@@ -739,6 +750,13 @@ rem --- Clear/set flags
 	endif
 
 	user_tpl.detail_modified = 1
+
+rem --- Returns
+
+	if num( callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED") ) < 0 then
+		callpoint!.setColumnData( "OPE_INVDET.QTY_SHIPPED", callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED") )
+		callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
+	endif
 
 rem --- What is extended price?
 
@@ -1324,13 +1342,15 @@ rem --- Disable / enable unit cost
 
 rem --- Product Type Processing
 
-	if opc_linecode.prod_type_pr$ <> "E" then
-		callpoint!.setColumnEnabled("OPE_INVDET.PRODUCT_TYPE", 0)
-		util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
+	if cvs(line_code$,2) <> "" then
+		if opc_linecode.prod_type_pr$ <> "E" then
+			callpoint!.setColumnEnabled("OPE_INVDET.PRODUCT_TYPE", 0)
+			util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
 
-		if opc_linecode.prod_type_pr$ = "D" then
-			callpoint!.setTableColumnAttribute("OPE_INVDET.PRODUCT_TYPE","DFLT", opc_linecode.product_type$)
-		endif	
+			if opc_linecode.prod_type_pr$ = "D" then
+				callpoint!.setTableColumnAttribute("OPE_INVDET.PRODUCT_TYPE","DFLT", opc_linecode.product_type$)
+			endif	
+		endif
 	else
 		callpoint!.setColumnEnabled("OPE_INVDET.PRODUCT_TYPE", user_tpl.prod_type_col)
 		util.enableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
