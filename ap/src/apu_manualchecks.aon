@@ -379,7 +379,7 @@ rem --- Create a Record for Each Transaction
     apt11a.trans_disc=ape22a.discount_amt
     apt11a.trans_type$="S"
     apt11a.trans_date$=ape02a.check_date$
-    apt11a.trans_ref$="Invoice"
+    apt11a.trans_ref$=Translate!.getTranslation("AON_INVOICE")
 
     rem --- the write record had a DOM= to itself ... removed for now.CH
     write record (apt11_dev,key=apt11_key$+apt11.sequence_num$) apt11a$

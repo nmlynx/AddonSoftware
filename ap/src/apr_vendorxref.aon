@@ -68,8 +68,8 @@ rem --- Define print positions
 
 rem --- Report headings
 
-    buffer$(o[0])="Vendor ID Sequence"
-    buffer$(o[1])="Alternate Sequence"
+    buffer$(o[0])=Translate!.getTranslation("AON_VENDOR_ID_SEQUENCE")
+    buffer$(o[1])=Translate!.getTranslation("AON_ALTERNATE_SEQUENCE")
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
     headings$[3]=buffer$
@@ -127,7 +127,7 @@ rem --- All done
 
     if lines+2>maxlines gosub report_heading
     print (printer_dev) ""
-    print (printer_dev) records," Vendor(s) Listed"
+    print (printer_dev) records,Translate!.getTranslation("AON__VENDOR(S)_LISTED")
     goto std_exit
 
 report_heading: rem --- Report Heading
