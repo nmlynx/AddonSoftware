@@ -15,6 +15,12 @@ rem --- STATUS  : 0=No error (Returned)
     setesc std_exit
     enter firm_id$,status
 
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)

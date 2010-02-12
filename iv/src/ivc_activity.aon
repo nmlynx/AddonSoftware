@@ -16,6 +16,12 @@ rem --- STATUS      : 0=No Error (Returned)
     seterr std_error
     setesc std_error
     enter selection$,description$,title$,status
+    
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
 
 rem --- Retrieve the program path
 

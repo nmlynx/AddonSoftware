@@ -21,6 +21,12 @@ rem --- STATUS : 0=No Error (Returned)
     setesc std_error
     enter action$,status
 
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+    
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)

@@ -36,6 +36,12 @@ rem --- DESCRIPTION$[n]: Three line description block (returned)
     setesc std_error
     enter trans$,channels[all],params[all],masks$[all],type$,description$[all]
 
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+
 rem --- use statements
 
 	use ::ado_func.src::func

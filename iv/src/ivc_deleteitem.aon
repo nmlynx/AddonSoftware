@@ -17,6 +17,12 @@ rem  status          : 0=No Error (out)
     seterr std_error
     setesc std_error
     enter action$, whse$, item$, rd_table_chans$[all], status
+    
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
 
 rem --- Retrieve the program path
 

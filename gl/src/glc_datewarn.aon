@@ -18,7 +18,7 @@ rem --- lines      : Line counter (Input)
 rem --- errors     : Total number of errors (Input/Returned)
 rem --- status     : 0=No error (Returned)
 
-rem --- Note: Translate!.getTranslation("AON_ERRORS") is initialized at the start of the register that
+rem --- Note: "errors" is initialized at the start of the register that
 rem --- calls this routine and passed back and forth, so it will be the
 rem --- total number of errors in the entire register.
 
@@ -26,6 +26,12 @@ rem --- total number of errors in the entire register.
     seterr std_error
     enter printer_dev,when$,number,lines,errors,status
 
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+    
 rem --- Initializations
 
     error=0

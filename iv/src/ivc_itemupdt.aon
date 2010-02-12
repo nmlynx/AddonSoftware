@@ -72,6 +72,12 @@ rem * status            - returns zero for no error
     seterr std_error
     setesc std_error
     enter action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+    
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
 
 rem --- Retrieve the program path
 
