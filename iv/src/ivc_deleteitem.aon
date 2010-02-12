@@ -217,16 +217,16 @@ set_err_msg: rem --- Set message when STATUS<>0
     if status=0 goto delete_item
     msg_id$="IV_NO_DELETE"
     dim msg_tokens$[1]
-    if status=1 msg_tokens$[1]="This Item has been selected for Physical Inventory."
-    if status=2 msg_tokens$[1]="Warehouse quantities exist for this Inventory Item."
-    if status=3 msg_tokens$[1]="Sales Orders for this Inventory Item currently exist."
-    if status=4 msg_tokens$[1]="Purchase Requisitions exist for this Inventory Item."
-    if status=5 msg_tokens$[1]="Work Orders for this Inventory Item currently exist."
-    if status=6 msg_tokens$[1]="This Item is required for an existing Work Order."
-    if status=7 msg_tokens$[1]="This Item is also a Bill of Materials Master Bill."
-    if status=8 msg_tokens$[1]="This Item is also a Bill of Materials Component."
-    if status=9 msg_tokens$[1]="Warehouse activity exists for the current period."
-    if status=10 msg_tokens$[1]="Warehouse activity exists for the next period."
+    if status=1 msg_tokens$[1]=Translate!.getTranslation("AON_THIS_ITEM_HAS_BEEN_SELECTED_FOR_PHYSICAL_INVENTORY.")
+    if status=2 msg_tokens$[1]=Translate!.getTranslation("AON_WAREHOUSE_QUANTITIES_EXIST_FOR_THIS_INVENTORY_ITEM.")
+    if status=3 msg_tokens$[1]=Translate!.getTranslation("AON_SALES_ORDERS_FOR_THIS_INVENTORY_ITEM_CURRENTLY_EXIST.")
+    if status=4 msg_tokens$[1]=Translate!.getTranslation("AON_PURCHASE_REQUISITIONS_EXIST_FOR_THIS_INVENTORY_ITEM.")
+    if status=5 msg_tokens$[1]=Translate!.getTranslation("AON_WORK_ORDERS_FOR_THIS_INVENTORY_ITEM_CURRENTLY_EXIST.")
+    if status=6 msg_tokens$[1]=Translate!.getTranslation("AON_THIS_ITEM_IS_REQUIRED_FOR_AN_EXISTING_WORK_ORDER.")
+    if status=7 msg_tokens$[1]=Translate!.getTranslation("AON_THIS_ITEM_IS_ALSO_A_BILL_OF_MATERIALS_MASTER_BILL.")
+    if status=8 msg_tokens$[1]=Translate!.getTranslation("AON_THIS_ITEM_IS_ALSO_A_BILL_OF_MATERIALS_COMPONENT.")
+    if status=9 msg_tokens$[1]=Translate!.getTranslation("AON_WAREHOUSE_ACTIVITY_EXISTS_FOR_THE_CURRENT_PERIOD.")
+    if status=10 msg_tokens$[1]=Translate!.getTranslation("AON_WAREHOUSE_ACTIVITY_EXISTS_FOR_THE_NEXT_PERIOD.")
     gosub disp_message
     goto done
 
