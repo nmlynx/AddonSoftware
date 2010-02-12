@@ -122,9 +122,6 @@ rem --- Retrieve templates
     call sypdir$+"bac_key_template.bbj","OPE_ORDHDR","PRIMARY",ope01a_key_tpl$,table_chans$[all],status$
     dim ope01a_key$:ope01a_key_tpl$
 
-    call sypdir$+"bac_key_template.bbj","OPE_ORDDET","PRIMARY",ope11a_key_tpl$,table_chans$[all],status$
-    dim ope11a_key$:ope11a_key_tpl$
-
     call sypdir$+"bac_key_template.bbj","OPE_ORDLSDET","PRIMARY",ope21a_key_tpl$,table_chans$[all],status$
     dim ope21a_key$:ope21a_key_tpl$
 
@@ -193,18 +190,17 @@ rem --- Main Loop Starts
 
     rem --- Detail
 
-        read (ope11_dev,key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
+        read (ope11_dev, knum=3, key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$, dom=*next)
 
         while more
-            ope11a_key$=key(ope11_dev,end=*break)
+            read record (ope11_dev, end=*break) ope11a$
             
-            if  ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$ <> 
+            if  ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$ <> 
 :               ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$ 
 :           then 
                 break
             endif
             
-            read record (ope11_dev) ope11a$
             desc$=ope11a.order_memo$
             start_block = 1
             
