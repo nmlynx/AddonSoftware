@@ -14,6 +14,12 @@ rem  +-----------------------------------------+
 rem --- Call/Enter
 
     enter gl_account$
+    
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
 
 rem --- Retrieve the program path
 
