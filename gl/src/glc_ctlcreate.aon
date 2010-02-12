@@ -133,10 +133,10 @@ rem --- Remaining initializations
 
           action=1
           status=999
-          message$="The GL parameter record is missing for this firm."
+          message$=Translate!.getTranslation("AON_THE_GL_PARAMETER_RECORD_IS_MISSING_FOR_THIS_FIRM.")
           k$=firm_id$+"GL00"
           find record (gls01_dev,key=k$,err=*break) gls01a$
-rem       message$="The GL suspense account record is missing for this firm."
+rem       message$=Translate!.getTranslation("AON_THE_GL_SUSPENSE_ACCOUNT_RECORD_IS_MISSING_FOR_THIS_FIRM.")
           k$=firm_id$+"GL03"
           find record (gls01d_dev,key=k$,err=*next) gls01d$
 
@@ -151,13 +151,13 @@ rem       message$="The GL suspense account record is missing for this firm."
           rem --- Retrieve application (adm-04) record for the calling application
           
           adm04_key$=app_comp$+pad(application$,3)
-          message$="Missing application record for "+adm04_key$+"."
+          message$=Translate!.getTranslation("AON_MISSING_APPLICATION_RECORD_FOR_")+adm04_key$+"."
           find record (adm04_dev,key=adm04_key$,dom=*break) adm04a$
 
           rem --- Retrieve the current period and year for the calling application
 
           rec$=""
-          message$="No parameter record exists for the "+module$+" application."
+          message$=Translate!.getTranslation("AON_NO_PARAMETER_RECORD_EXISTS_FOR_THE_")+module$+Translate!.getTranslation("AON__APPLICATION.")
           if module$="AP" dim rec$:fattr(aps01a$);param_dev=aps01_dev
           if module$="AR" dim rec$:fattr(ars01a$);param_dev=ars01_dev
           if module$="GL" dim rec$:fattr(gls01a$);param_dev=gls01_dev
@@ -237,8 +237,8 @@ rem --- or returned.
           while process
                 action=1
                 status=12
-                message$="The Posting Control record for this task is missing. Use the"+$0A$+
-:                        "Process Maintenance task to define the parameters for this task."
+                message$=Translate!.getTranslation("AON_THE_POSTING_CONTROL_RECORD_FOR_THIS_TASK_IS_MISSING._USE_THE")+$0A$+
+:                        Translate!.getTranslation("AON_PROCESS_MAINTENANCE_TASK_TO_DEFINE_THE_PARAMETERS_FOR_THIS_TASK.")
                 value$=""
                 if keynum=1 value$=firm_id$+process_table$
                 if keynum=2 value$=firm_id$+program_name$
@@ -336,7 +336,7 @@ rem --- or returned.
              glcontrol.gl_audit$="N"
              glcontrol.gl_work_file$="Y"
              glcontrol.prt_gl_sum$="N"
-             glcontrol.description$="Summarized GL Posting"
+             glcontrol.description$=Translate!.getTranslation("AON_SUMMARIZED_GL_POSTING")
           endif
 
           rem --- Some fields should be overriden by Journal ID code (glm-03) values
@@ -439,19 +439,19 @@ error_message: rem --- Disable GL if an error was encountered and display any me
 
     gl$="N"
     debug=pos("YES"=stbl("+DEV_MODE",err=*next))
-    if debug message$=message$+$0A$+$0A$+" Note: Debug mode is active. Retry will remove "+
-:                     "error trapping "+$0A$+"and place the program into console mode."
+    if debug message$=message$+$0A$+$0A$+Translate!.getTranslation("AON__NOTE:_DEBUG_MODE_IS_ACTIVE._RETRY_WILL_REMOVE_")+
+:                     Translate!.getTranslation("AON_ERROR_TRAPPING_")+$0A$+Translate!.getTranslation("AON_AND_PLACE_THE_PROGRAM_INTO_CONSOLE_MODE.")
 
     rem --- Display the error message
 
     icon=16
     buttons=5
     default=256
-    title$="Error Processing"
+    title$=Translate!.getTranslation("AON_ERROR_PROCESSING")
     x=msgbox(message$,buttons+icon+default,title$,err=*return)
     if x<>4 return
     if debug
-       print "Error ",err,"/Line ",tcb(5)
+       print Translate!.getTranslation("AON_ERROR_"),err,Translate!.getTranslation("AON_/LINE_"),tcb(5)
        escape
     endif
     return

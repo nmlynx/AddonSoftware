@@ -236,29 +236,29 @@ message: rem --- Display warning/error message if verification requested
 
     if status=0 or verify$<>"Y" goto done
     dim message$[1]
-    part1$="The current "+glcontrol.system_id$(9)+" period is "+str(apperiod)+
-:          " ("+fndate$(glcontrol.app_per_beg$)+" to "+fndate$(glcontrol.app_per_end$)+")."
-    part2$="The "+fndate$(yyyymmdd$)+" date "
+    part1$=Translate!.getTranslation("AON_THE_CURRENT_")+glcontrol.system_id$(9)+Translate!.getTranslation("AON__PERIOD_IS_")+str(apperiod)+
+:          " ("+fndate$(glcontrol.app_per_beg$)+Translate!.getTranslation("AON__TO_")+fndate$(glcontrol.app_per_end$)+")."
+    part2$=Translate!.getTranslation("AON_THE_")+fndate$(yyyymmdd$)+Translate!.getTranslation("AON__DATE_")
     switch status
            case 1
-                part2$=part2$+"occurs prior to the current period."
+                part2$=part2$+Translate!.getTranslation("AON_OCCURS_PRIOR_TO_THE_CURRENT_PERIOD.")
            break
            case 2
-                part2$=part2$+"occurs after the next period."
+                part2$=part2$+Translate!.getTranslation("AON_OCCURS_AFTER_THE_NEXT_PERIOD.")
            break
            case 3 
-                part1$="The current GL period is "+str(glperiod)+" ("+fndate$(glcontrol.gl_per_beg$)+
-:                      " to "+fndate$(glcontrol,gl_per_end$)+")."
-                part2$=part2$+"falls into a prior GL period."
+                part1$=Translate!.getTranslation("AON_THE_CURRENT_GL_PERIOD_IS_")+str(glperiod)+" ("+fndate$(glcontrol.gl_per_beg$)+
+:                      Translate!.getTranslation("AON__TO_")+fndate$(glcontrol,gl_per_end$)+")."
+                part2$=part2$+Translate!.getTranslation("AON_FALLS_INTO_A_PRIOR_GL_PERIOD.")
            break
            case 101 
-                part2$=part2$+"is not in the prior, current or next GL year."
+                part2$=part2$+Translate!.getTranslation("AON_IS_NOT_IN_THE_PRIOR,_CURRENT_OR_NEXT_GL_YEAR.")
            break
            case 102
-                part2$=part2$+"falls into a locked GL period."
+                part2$=part2$+Translate!.getTranslation("AON_FALLS_INTO_A_LOCKED_GL_PERIOD.")
            break
            case 103 
-                part2$=part2$+"falls into a closed fiscal year."
+                part2$=part2$+Translate!.getTranslation("AON_FALLS_INTO_A_CLOSED_FISCAL_YEAR.")
            break
     swend
     message$[0]=part1$+$0A$+part2$
