@@ -1,3 +1,11 @@
+[[IVM_ITEMMAST.AOPT-LOOK]]
+rem --- call the custom item lookup form, so we can look for an item by product type, synonym, etc.
+
+select_key$=""
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","IVC_ITEMLOOKUP",stbl("+USER_ID"),"MNT","",table_chans$[all]
+select_key$=str(bbjapi().getObjectTable().get("find_item"))
+if select_key$="null" then select_key$=""
+if select_key$<>"" then callpoint!.setStatus("RECORD:["+select_key$+"]")
 [[IVM_ITEMMAST.BWRI]]
 rem --- Is item code blank?
 
@@ -780,4 +788,3 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	table_chans$[all],
 :	"",
 :	dflt_data$[all]
-
