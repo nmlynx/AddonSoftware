@@ -675,9 +675,9 @@ line_detail: rem --- Item Detail
     while 1
 
         if pos(opm02a.line_type$="MO")=0 then
-            pdf!.setText(0,  this_y%, 45-2, 0, str(ope11a.qty_ordered:m2$), pdf!.RIGHT_JUSTIFY())
-            pdf!.setText(45, this_y%, 45-2, 0, str(ope11a.qty_shipped:m2$), pdf!.RIGHT_JUSTIFY())
-            pdf!.setText(90, this_y%, 45-2, 0, str(ope11a.qty_backord:m2$), pdf!.RIGHT_JUSTIFY())
+            pdf!.setText(0,  this_y%, 45-2, 0, str(ope11a.qty_ordered), pdf!.RIGHT_JUSTIFY())
+            pdf!.setText(45, this_y%, 45-2, 0, str(ope11a.qty_shipped), pdf!.RIGHT_JUSTIFY())
+            pdf!.setText(90, this_y%, 45-2, 0, str(ope11a.qty_backord), pdf!.RIGHT_JUSTIFY())
         endif
 
         if pos(opm02a.line_type$="MNO") then
