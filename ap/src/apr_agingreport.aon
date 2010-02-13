@@ -580,9 +580,9 @@ print_total: rem --- Print totals
 
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     OutVect!.addItem(total$)
-    
-    if export_format$="Y"
-        xwk=fnblank(8)
+   
+	if summary
+        xwk=fnblank(9)
     else
         xwk=fnblank(6)
     endif    
