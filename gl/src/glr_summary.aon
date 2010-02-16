@@ -126,8 +126,10 @@ rem --- Document columns
     rem was [1,2]=str(len(m1$)), but that overflows onto another page
 
     for x=2 to columns-1
-        columns$[x,0]=Translate!.getTranslation("AON_PER_")+str(x-1:"00")+"^"+field(gls01a$,"abbr_name_"+str(x-1:"00")),columns$[x,1]="N",columns$[x,2]=str(m1),columns$[x,3]=m1$
-    next x
+        columns$[x,0]=Translate!.getTranslation("AON_PER_")+str(x-1:"00")+"^"+field(gls01a$,"abbr_name_"+str(x-1:"00")),columns$[x,1]="N",columns$[x,2]="8",columns$[x,3]=m1$
+		rem --- above used to set columns$[x,2] to str(m1), but that causes overflow onto another page
+		rem --- hard-code '8' makes it work 'out of the box' w/o needing to adjust columns manually
+	next x
     columns$[columns,0]=Translate!.getTranslation("AON_ENDING"),columns$[columns,1]="N",columns$[columns,2]="10",columns$[columns,3]=m1$
 
 
