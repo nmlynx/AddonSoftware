@@ -158,6 +158,7 @@ rem --- Print a counter Invoice
 	rem --- No need to check credit first
 
 		gosub do_invoice
+		print "---Printed, starting new record..."; rem debug
 		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("NEWREC")
 	else
@@ -173,6 +174,7 @@ rem --- Print a counter Invoice
 		rem --- Couldn't do credit action, or did credit action w/ no problem, or released from credit but didn't print
 
 			gosub do_invoice
+			print "---Printed in header, starting new record..."; rem debug
 			user_tpl.do_end_of_form = 0
 			callpoint!.setStatus("NEWREC")
 		else
@@ -1031,6 +1033,8 @@ rem --- Set order in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setOrder_no(order_no$)
 [[OPE_INVHDR.CUSTOMER_ID.AVAL]]
+print "Hdr:CUSTOMER_ID.AVAL"; rem debug
+
 rem --- Display customer
 
 	cust_id$ = callpoint!.getUserInput()
@@ -1065,8 +1069,9 @@ rem --- Enable Duplicate buttons, printer
 
 	callpoint!.setOptionEnabled("CRCH",1)
 	gosub enable_credit_action
-
 [[OPE_INVHDR.CUSTOMER_ID.AINP]]
+print "Hdr:CUSTOMER_ID.AINP"; rem debug
+
 rem --- If cash customer, get correct customer number
 
 	if user_tpl.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" then
@@ -1800,6 +1805,8 @@ rem ==========================================================================
 	call user_tpl.pgmdir$+"opc_invoice.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
 	callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+	msg_id$ = "OP_INVOICE_DONE"
+	gosub disp_message
 	print "---Print Status: Y"; rem debug
 	print "out"; rem debug
 
