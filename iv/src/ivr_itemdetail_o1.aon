@@ -515,18 +515,18 @@ rem --- Next item
             gosub heading
             OutVect!.addItem("Level 1 Quantity:")
             OutVect!.addItem(str(ivm05a.break_qty_01:m2$))
-            OutVect!.addItem("Level 1 Cost:")
-            OutVect!.addItem(str(ivm05a.unit_cost_01:m3$))
-
             OutVect!.addItem("Level 2 Quantity:")
             OutVect!.addItem(str(ivm05a.break_qty_02:m2$))
-            OutVect!.addItem("Level 1 Cost:")
-            OutVect!.addItem(str(ivm05a.unit_cost_02:m3$))
-
-            OutVect!.addItem("Level 2 Quantity:")
+            OutVect!.addItem("Level 3 Quantity:")
             OutVect!.addItem(str(ivm05a.break_qty_03:m2$))
+			
             OutVect!.addItem("Level 1 Cost:")
+            OutVect!.addItem(str(ivm05a.unit_cost_01:m3$))
+            OutVect!.addItem("Level 2 Cost:")
+            OutVect!.addItem(str(ivm05a.unit_cost_02:m3$))
+            OutVect!.addItem("Level 3 Cost:")
             OutVect!.addItem(str(ivm05a.unit_cost_03:m3$))
+			
             xwk=fnblank(columns)
 
             x$="Last Purchase"
