@@ -118,7 +118,7 @@ rem --- Initializations
     dim o[10],item[6],cycle[6],report[6],lf_chans[2],lf_tmpls$[2]
     width=132
     done=0
-    if ls$="Y" then lsh$="Lot/Serial Number" else lsh$=""
+    if ls$="Y" then lsh$=Translate!.getTranslation("AON_LOT/SERIAL_NUMBER") else lsh$=""
     more=1
 	detail_printed = 0
 	item_printed = 0
@@ -138,10 +138,10 @@ rem --- Retrieve warehouse and build HEADINGS$
 	headings=3
 	dim headings$[headings]
     headings$[0] = sysinfo.firm_name$
-    headings$[1] = sysinfo.task_desc$ + " For Warehouse " + whse$ + " " + cvs(whsecode_rec.short_name$,2)
+    headings$[1] = sysinfo.task_desc$ + Translate!.getTranslation("AON__FOR_WAREHOUSE_") + whse$ + " " + cvs(whsecode_rec.short_name$,2)
 	headings$[2] = "[HEADER]"
 	
-	rem if quantity$="Y" then sqh$="Quantity"; rem used?
+	rem if quantity$="Y" then sqh$=Translate!.getTranslation("AON_QUANTITY"); rem used?
 
 rem --- Print positions
 
@@ -179,19 +179,19 @@ rem --- Column headings
     columns=9
     dim columns$[columns,10]
 
-    columns$[0,0] = "Item",           columns$[0,1] = "C", columns$[0,2] = str(dw)
+    columns$[0,0] = Translate!.getTranslation("AON_ITEM"),           columns$[0,1] = "C", columns$[0,2] = str(dw)
     columns$[1,0] = lsh$,             columns$[1,1] = "C", columns$[1,2] = str( iff(lsh$="", 0, p[2]) ); rem Lot/Serial#
     columns$[2,0] = "UM",             columns$[2,1] = "C", columns$[2,2] = "2"
-	columns$[3,0] = "Location",       columns$[3,1] = "C", columns$[3,2] = "10"
-    columns$[4,0] = "Physical^Qty",   columns$[4,1] = "N", columns$[4,2] = str(m2), columns$[4,3] = m2$, columns$[4,10] = "T"
-	columns$[5,0] = "Physical^Value", columns$[5,1] = "N", columns$[5,2] = str(m1), columns$[5,3] = m1$, columns$[5,10] = "T"
-	columns$[6,0] = "System^Qty",     columns$[6,1] = "N", columns$[6,2] = str(m2), columns$[6,3] = m2$, columns$[6,10] = "T"
-	columns$[7,0] = "System^Value",   columns$[7,1] = "N", columns$[7,2] = str(m1), columns$[7,3] = m1$, columns$[7,10] = "T"
-	columns$[8,0] = "Variance^Qty",   columns$[8,1] = "N", columns$[8,2] = str(m2), columns$[8,3] = m2$, columns$[8,10] = "T"
-	columns$[9,0] = "Variance^Value", columns$[9,1] = "N", columns$[9,2] = str(m1), columns$[9,3] = m1$, columns$[9,10] = "T"
+	columns$[3,0] = Translate!.getTranslation("AON_LOCATION"),       columns$[3,1] = "C", columns$[3,2] = "10"
+    columns$[4,0] = Translate!.getTranslation("AON_PHYSICAL^QTY"),   columns$[4,1] = "N", columns$[4,2] = str(m2), columns$[4,3] = m2$, columns$[4,10] = "T"
+	columns$[5,0] = Translate!.getTranslation("AON_PHYSICAL^VALUE"), columns$[5,1] = "N", columns$[5,2] = str(m1), columns$[5,3] = m1$, columns$[5,10] = "T"
+	columns$[6,0] = Translate!.getTranslation("AON_SYSTEM^QTY"),     columns$[6,1] = "N", columns$[6,2] = str(m2), columns$[6,3] = m2$, columns$[6,10] = "T"
+	columns$[7,0] = Translate!.getTranslation("AON_SYSTEM^VALUE"),   columns$[7,1] = "N", columns$[7,2] = str(m1), columns$[7,3] = m1$, columns$[7,10] = "T"
+	columns$[8,0] = Translate!.getTranslation("AON_VARIANCE^QTY"),   columns$[8,1] = "N", columns$[8,2] = str(m2), columns$[8,3] = m2$, columns$[8,10] = "T"
+	columns$[9,0] = Translate!.getTranslation("AON_VARIANCE^VALUE"), columns$[9,1] = "N", columns$[9,2] = str(m1), columns$[9,3] = m1$, columns$[9,10] = "T"
 	
     rem                                                                 @(o[5]),ph$,                         @(o[7]),sh$,                         @(o[9]),vh$
-    rem @(o[0]),"Item", @(o[2]),lsh$, @(o[3]),"UM", @(o[4]),"Location", @(o[5]+m2-9),qh$, @(o[6]+m1-12),th$, @(o[7]+m2-9),qh$, @(o[8]+m1-12),th$, @(o[9]+m2-9),qh$, @(o[10]+m1-12),th$
+    rem @(o[0]),Translate!.getTranslation("AON_ITEM"), @(o[2]),lsh$, @(o[3]),"UM", @(o[4]),Translate!.getTranslation("AON_LOCATION"), @(o[5]+m2-9),qh$, @(o[6]+m1-12),th$, @(o[7]+m2-9),qh$, @(o[8]+m1-12),th$, @(o[9]+m2-9),qh$, @(o[10]+m1-12),th$
 
 rem --- Position cycle file
 
@@ -242,7 +242,7 @@ rem --- Retrieve lot/serial master
 				
                 if cvs(physical_rec.lotser_no$,2)="" then
                     if physical_rec.freeze_qty <> 0 then physical_rec.lotser_item$ = "Y"; rem --- Count always entered for Missing (why?)
-                    physical_rec.lotser_no$   = "Missing"
+                    physical_rec.lotser_no$   = Translate!.getTranslation("AON_MISSING")
                     lsmaster_rec.ls_location$ = ".........."
                 endif
 				
@@ -262,7 +262,7 @@ rem --- Calculate total value and variance
             t[5] = t[1]-t[3]
             mark$=""
 			
-            if ls$<>"Y" and cvs(physical_rec.lotser_no$,2)<>"None" and physical_rec.lotser_item$<>"Y" then 
+            if ls$<>"Y" and cvs(physical_rec.lotser_no$,2)<>Translate!.getTranslation("AON_NONE") and physical_rec.lotser_item$<>"Y" then 
 				rem t[6]=1
 				mark$="*"
             endif
@@ -342,7 +342,7 @@ rem Do last break
 	if cycle_printed > 1 then
 		nl=1
 		dim totals$[5]
-		total$="Register "
+		total$=Translate!.getTranslation("AON_REGISTER_")
 		totals$[1]=str(report[1])
 		totals$[3]=str(report[3])
 		totals$[5]=str(report[5])
@@ -373,7 +373,7 @@ item_head: rem --- Item subheading (lotted/serialized)
     rem print (printer_dev)@(o[0]),physical_rec.item_id$,@(o[3]),itemmast_rec.unit_of_sale$,@(o[4]),physical_rec.location$," ",continued$
     rem print (printer_dev)@(o[1]),"   ",description$
     l=l+2
-    continued$ = "(Continued)"
+    continued$ = Translate!.getTranslation("AON_(CONTINUED)")
     last$ = firm_id$ + whse_id$ + cycle_code$ + location$ + item_id$
 	
     return
@@ -385,7 +385,7 @@ cycle_break: rem --- Cycle Break
 		
 		nl=1
         dim totals$[5]
-        total$="Cycle Code "+prev_cycle$
+        total$=Translate!.getTranslation("AON_CYCLE_CODE_")+prev_cycle$
         totals$[1]=str(cycle[1])
         totals$[3]=str(cycle[3])
         totals$[5]=str(cycle[5])
@@ -404,7 +404,7 @@ cycle_break: rem --- Cycle Break
 		cycle_printed = cycle_printed + 1
 		
 		BrkVect!.addItem( str(OutVect!.size()/(columns+1)) )
-		HdrVect!.addItem( "Cycle Code " + prev_cycle$ + " - Physical Date " + fndate$(physcode_rec.cutoff_date$) )
+		HdrVect!.addItem( Translate!.getTranslation("AON_CYCLE_CODE_") + prev_cycle$ + Translate!.getTranslation("AON__-_PHYSICAL_DATE_") + fndate$(physcode_rec.cutoff_date$) )
 
 	endif
 	
@@ -414,7 +414,7 @@ item_break: rem --- Item Break
 
     if prev_item$ <> "" and detail_printed > 1 then 
         dim totals$[5]
-        total$="Item "+prev_item$
+        total$=Translate!.getTranslation("AON_ITEM_")+prev_item$
 		nl=0
 		warning=0
         totals$[0]=str(item[0])
@@ -432,7 +432,7 @@ item_break: rem --- Item Break
 		dim description$(dw)
 		dim item[6]
 		itemmast_key$ = firm_id$ + item_id$
-		itemmast_rec.item_desc$ = "(Not On File)"
+		itemmast_rec.item_desc$ = Translate!.getTranslation("AON_(NOT_ON_FILE)")
 		prev_item$ = item_id$
 		itemwhse_key$ = firm_id$ + whse_id$ + item_id$
 		itemwhse_rec.unit_cost = 0
@@ -471,7 +471,7 @@ print_line: rem --- Print total line
 	
 	TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 	OutVect!.addItem("")
-	OutVect!.addItem("**Totals For " + total$)
+	OutVect!.addItem(Translate!.getTranslation("AON_**TOTALS_FOR_") + total$)
 	ignore = fnblank(2)
 	OutVect!.addItem(totals$[0])
 	OutVect!.addItem(totals$[1])
@@ -482,12 +482,12 @@ print_line: rem --- Print total line
 	
 	ignore = fnblank_line(void)
 	
-    rem print (printer_dev)@(o[1]),"Totals For ",total$,@(o[5]),totals$[0],@(o[6]),totals$[1],@(o[7]),totals$[2],@(o[8]),totals$[3],@(o[9]),totals$[4],@(o[10]),totals$[5]
+    rem print (printer_dev)@(o[1]),Translate!.getTranslation("AON_TOTALS_FOR_"),total$,@(o[5]),totals$[0],@(o[6]),totals$[1],@(o[7]),totals$[2],@(o[8]),totals$[3],@(o[9]),totals$[4],@(o[10]),totals$[5]
     
 	if warning then
         ignore = fnblank_line(void)
 		OutVect!.addItem("")
-		OutVect!.addItem("WARNING: " + str(warning) + " Item(s) Not Entered For" + total$)
+		OutVect!.addItem("WARNING: " + str(warning) + Translate!.getTranslation("AON__ITEM(S)_NOT_ENTERED_FOR") + total$)
         ignore = fnblank(8)
     endif
 	
@@ -610,7 +610,7 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
         return void
     fnend
 
-rem --- Create a blank line.  "void" is simply a variable; it's there to remind you that this function takes no input
+rem --- Create a blank line.  'void' is simply a variable; it's there to remind you that this function takes no input
 
 	def fnblank_line(void)=fnblank(columns+1)
 
