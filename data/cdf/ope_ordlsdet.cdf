@@ -506,9 +506,15 @@ rem --- See if there are any open lots
 [[OPE_ORDLSDET.LOTSER_NO.AVAL]]
 print "LOTSER_NO.AVAL"; rem debug
 
-rem --- Non-inventoried items from Invoice Entry do not have to exist
+rem --- Non-inventoried items from Invoice Entry do not have to exist (but can't be blank)
 
 	if user_tpl.invoice_noninventory then
+		if cvs( callpoint!.getUserInput(), 2 ) = "" then
+			msg_id$ = "IV_SERLOT_BLANK"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+
 		break; rem --- exit callpoint
 	endif
 
