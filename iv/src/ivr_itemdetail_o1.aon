@@ -515,18 +515,18 @@ rem --- Next item
             gosub heading
             OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_1_QUANTITY:"))
             OutVect!.addItem(str(ivm05a.break_qty_01:m2$))
-            OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_1_COST:"))
-            OutVect!.addItem(str(ivm05a.unit_cost_01:m3$))
-
             OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_2_QUANTITY:"))
             OutVect!.addItem(str(ivm05a.break_qty_02:m2$))
-            OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_1_COST:"))
-            OutVect!.addItem(str(ivm05a.unit_cost_02:m3$))
-
-            OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_2_QUANTITY:"))
+            OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_3_QUANTITY:"))
             OutVect!.addItem(str(ivm05a.break_qty_03:m2$))
+ 			
             OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_1_COST:"))
+            OutVect!.addItem(str(ivm05a.unit_cost_01:m3$))
+            OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_2_COST:"))
+            OutVect!.addItem(str(ivm05a.unit_cost_02:m3$))
+            OutVect!.addItem(Translate!.getTranslation("AON_LEVEL_3_COST:"))
             OutVect!.addItem(str(ivm05a.unit_cost_03:m3$))
+ 
             xwk=fnblank(columns)
 
             x$=Translate!.getTranslation("AON_LAST_PURCHASE")
