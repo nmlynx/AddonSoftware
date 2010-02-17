@@ -1894,15 +1894,21 @@ rem ==========================================================================
 get_cash: rem --- Launch the Cash Transaction form
 rem ==========================================================================
 
+	custmast_dev = fnget_dev("ARM_CUSTMAST")
+	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
+	find record (custmast_dev, key=firm_id$+cust_id$) custmast_tpl$
+
 	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 
-	dim dflt_data$[2,1]
+	dim dflt_data$[3,1]
 	dflt_data$[1,0]="INVOICE_DATE"
 	dflt_data$[1,1]=callpoint!.getColumnData("OPE_INVHDR.INVOICE_DATE")
 	dflt_data$[2,0]="AR_INV_NO"
 	dflt_data$[2,1]=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+	dflt_data$[3,0]="CUSTOMER_NAME"
+	dflt_data$[3,1]=custmast_tpl.customer_name$
 
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
