@@ -1898,6 +1898,12 @@ rem ==========================================================================
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="INVOICE_DATE"
+	dflt_data$[1,1]=callpoint!.getColumnData("OPE_INVHDR.INVOICE_DATE")
+	dflt_data$[2,0]="AR_INV_NO"
+	dflt_data$[2,1]=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	key_pfx$  = firm_id$+"  "+cust_id$+order_no$
@@ -1908,6 +1914,7 @@ rem ==========================================================================
 :		"", 
 :		key_pfx$, 
 :		table_chans$[all], 
+:		"",
 :		dflt_data$[all]
 
 	return
