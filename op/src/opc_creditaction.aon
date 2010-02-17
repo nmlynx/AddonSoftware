@@ -167,6 +167,8 @@ display_form: rem --- Display
     dflt_data$[2,1] = ope01a.terms_code$
     
     credit_action = 0
+    callpoint!.setDevObject("cust_id", cust_id$)
+    callpoint!.setDevObject("order_no", order_no$)
     
     call sypdir$+"bam_run_prog.bbj", "OPE_CREDITACTION", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]   
 
