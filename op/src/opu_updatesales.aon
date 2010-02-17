@@ -22,6 +22,14 @@ rem --- Check for missing information
         gosub disp_message
         goto no_to_update
     endif
+    
+rem --- Check for out-of-balance
+
+    if balance <> 0 then
+        msg_id$ = "OP_REGISTER_OOB"
+        gosub disp_message
+        goto no_to_update
+    endif
 
 rem --- Retrieve the program path
 
