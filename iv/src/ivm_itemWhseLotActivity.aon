@@ -16,6 +16,12 @@ rem --- Enter Arguments
 :               iv_lot_id$,
 :		rd_table_chans$[all]
 
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+
 misc_vars:rem --- Misc Variables
 
 	rd_dir_pgm$=stbl("+DIR_SYP")

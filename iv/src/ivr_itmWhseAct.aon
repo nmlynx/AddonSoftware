@@ -23,6 +23,12 @@ rem --- Enter Arguments
 :		iv_whse_id$,
 :		rd_table_chans$[all]
 
+rem --- Get Translator Object
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+
 rem --- Retrieve the program path
 
     dir_pgm$=stbl("+DIR_PGM",err=*next)
