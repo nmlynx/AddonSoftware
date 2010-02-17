@@ -555,9 +555,9 @@ serialized_inventory: rem --- Serialized/Lotted Inventory
         read record (ope21_dev,key=ope21a_key$) ope21a$
         
         OutVect!.addItem("  "+lot_ser$+" "+ope21a_key.sequence_no$+" "+ope21a.lotser_no$)
-        OutVect!.addItem(str(r0:m2$))
-        OutVect!.addItem(str(r1:m2$))
-        OutVect!.addItem(str(r2:m3$))
+        OutVect!.addItem(str(ope21a.qty_ordered:m2$))
+		OutVect!.addItem("")
+        OutVect!.addItem(str(ope21a.qty_shipped:m2$))
         xwk=fnblank(8)
     wend
 
@@ -670,8 +670,8 @@ average_item_cost: rem --- Get Average Of Serialized/Lotted Item Cost
     while more
         read record (ope21_dev, end=*break) ope21a$
         if ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$ <> start_ls$ then break
-        ser_cost=ser_cost+r1*r2
-        ser_qty=ser_qty+r1
+        ser_cost=ser_cost+ope21a.qty_shipped*ope21a.unit_cost
+        ser_qty=ser_qty+ope21a.qty_shipped
     wend
 
     return
