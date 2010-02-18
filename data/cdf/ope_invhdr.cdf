@@ -1802,11 +1802,14 @@ rem ==========================================================================
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
-	call user_tpl.pgmdir$+"opc_invoice.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+	call user_tpl.pgmdir$+"opc_invoice.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
+
 	callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+
 	msg_id$ = "OP_INVOICE_DONE"
 	gosub disp_message
+
 	print "---Print Status: Y"; rem debug
 	print "out"; rem debug
 
