@@ -116,10 +116,10 @@ rem --- Assign form input values to local variables
     enddate$=option!.getOptionData("pick_date_2")
     pagebreak$=option!.getOptionData("page_break")
     
-    if datetype$="O" datetitle$="Date Ordered",comp_date_field$="ORD_DATE"
-	if datetype$="P" datetitle$="Date Promised",comp_date_field$="PROMISE_DATE"
-	if datetype$="R" datetitle$="Date Required",comp_date_field$="REQD_DATE"
-	if datetype$="D" datetitle$="Not Before Date",comp_date_field$="NOT_B4_DATE"
+    if datetype$="O" datetitle$=Translate!.getTranslation("AON_DATE_ORDERED"),comp_date_field$="ORD_DATE"
+	if datetype$="P" datetitle$=Translate!.getTranslation("AON_DATE_PROMISED"),comp_date_field$="PROMISE_DATE"
+	if datetype$="R" datetitle$=Translate!.getTranslation("AON_DATE_REQUIRED"),comp_date_field$="REQD_DATE"
+	if datetype$="D" datetitle$=Translate!.getTranslation("AON_NOT_BEFORE_DATE"),comp_date_field$="NOT_B4_DATE"
 
 
 rem --- Retrieve parameter records
