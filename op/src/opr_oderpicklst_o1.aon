@@ -252,7 +252,7 @@ rem --- Initial Read
                 endif
             endif
 
-            if opm02a.line_type$<>"M" and pos(opm02a.message_type$=" BO")<>0 then 
+            if opm02a.line_type$<>"M" or pos(opm02a.message_type$=" BO")<>0 then 
                 gosub details_items
             endif
 
