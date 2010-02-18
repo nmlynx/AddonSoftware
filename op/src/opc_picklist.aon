@@ -299,7 +299,7 @@ rem --- Read header
                 endif
             endif
 
-            if opm02a.line_type$<>"M" and pos(opm02a.message_type$=" BO")<>0 then 
+            if opm02a.line_type$<>"M" or pos(opm02a.message_type$=" BO")<>0 then 
                 gosub details_items
             endif
 
@@ -545,7 +545,7 @@ rem    out$(1)=ope11a_key.internal_seq_no$
     endif
 
     if pos(opm02a.line_type$="MO")<>0
-        out$(h0+29)=ope11a.order_memo$
+        out$(h0+29)=ope11a.order_memo$		
     endif  
 
     if opm02a.line_type$="N"
