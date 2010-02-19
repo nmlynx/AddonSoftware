@@ -151,12 +151,12 @@ else
 endif
 
 [[GLM_SUMMACTIVITY.ASIZ]]
-if UserObj!<>null()
+ if UserObj!<>null()
 	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 	gridActivity!.setSize(Form!.getWidth()-(gridActivity!.getX()*2),Form!.getHeight()-(gridActivity!.getY()+40))
-	gridActivity!.setFitToGrid(1)
+	rem --- not using... don't want grid to make tiny columns, but use scrollbar instead...  gridActivity!.setFitToGrid(1)
 
-endif
+ endif
 [[GLM_SUMMACTIVITY.ACUS]]
 rem process custom event
 rem see basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
@@ -264,14 +264,16 @@ format_gridActivity:
 	dim attr_grid_col$[def_grid_cols,len(attr_def_col_str$[0,0])/5]
 	m1$=user_tpl.amt_mask$
 
+
 	attr_grid_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="RECORD TP"
 	attr_grid_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Record Type"
-	attr_grid_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
+	attr_grid_col$[1,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
+	attr_grid_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="100"
 
 	attr_grid_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="BEGIN BAL"
 	attr_grid_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Beginning"
 	attr_grid_col$[2,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_grid_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="12"
+	attr_grid_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="80"
 	attr_grid_col$[2,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	nxt_col=3
@@ -281,14 +283,14 @@ format_gridActivity:
 		attr_grid_col$[nxt_col+x,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PER "+str(x+1)
 		attr_grid_col$[nxt_col+x,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=per_name!.getItem(x)
 		attr_grid_col$[nxt_col+x,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-		attr_grid_col$[nxt_col+x,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="12"
+		attr_grid_col$[nxt_col+x,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="80"
 		attr_grid_col$[nxt_col+x,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 	next x
 
 	attr_grid_col$[nxt_col+x,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="END BAL"
 	attr_grid_col$[nxt_col+x,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Ending"
 	attr_grid_col$[nxt_col+x,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_grid_col$[nxt_col+x,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="12"
+	attr_grid_col$[nxt_col+x,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="80"
 	attr_grid_col$[nxt_col+x,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 	attr_grid_col$[nxt_col+x,fnstr_pos("OPTS",attr_def_col_str$[0,0],5)]="C"
 
@@ -301,7 +303,7 @@ format_gridActivity:
 
 	attr_disp_col$=attr_grid_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridActivity!,"DESC-COLH-ROWH-EDIT-LINES-LIGHT-HIGHO-CELL-SIZEC",num_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridActivity!,"DESC-COLH-ROWH-EDIT-LINES-LIGHT-HIGHO-CELL",num_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_grid_col$[all]
 
 return
