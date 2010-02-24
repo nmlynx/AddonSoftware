@@ -78,7 +78,7 @@ rem ==========================================================================
 			if status = 999 then goto std_exit
 		else
 			if run_by$ = "invoice" then
-				call stbl("+DIR_PGM")+"opc_invoice.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+				call stbl("+DIR_PGM")+"opc_invoice.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
 				if status = 999 then goto std_exit
 			endif
 		endif
