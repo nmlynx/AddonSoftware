@@ -382,6 +382,18 @@ rem --- Check locked status
 		break; rem --- exit callpoint
 	endif
 
+rem --- Is order being processed?
+
+	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "B" then
+		msg_id$="OP_ORDINV_IN_PROCESS"
+		dim msg_tokens$[1]
+		msg_tokens$[1] = "Order"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		user_tpl.do_end_of_form = 0
+		break; rem --- exit callpoint
+	endif
+
 rem --- Reprint order?
 
 	if callpoint!.getColumnData("OPE_ORDHDR.REPRINT_FLAG") <> "Y" then
