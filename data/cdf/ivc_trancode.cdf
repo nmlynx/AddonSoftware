@@ -14,7 +14,7 @@ read (ive01_dev,key=firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE")
 k$=key(ive01_dev,end=*next)
 if pos(firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE")=k$)=1
 	dim msg_tokens$[1]
-	msg_tokens$[1]="This Transaction Code is referenced by one or more open Transaction Entries."
+	msg_tokens$[1]=Translate!.getTranslation("AON_THIS_TRANSACTION_CODE_IS_REFERENCED_BY_ONE_OR_MORE_OPEN_TRANSACTION_ENTRIES.")
 	msg_id$="IV_NO_DELETE"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")

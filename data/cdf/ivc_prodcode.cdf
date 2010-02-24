@@ -10,7 +10,7 @@ read (ivm01_dev,key=firm_id$+prod_type$,knum=2,dom=*next)
 k$="", k$=key(ivm01_dev,err=*next)
 if pos(firm_id$+prod_type$=k$)=1
 	dim msg_tokens$[1]
-	msg_tokens$[1]="This Product Type is assigned to one or more Inventory items."
+	msg_tokens$[1]=Translate!.getTranslation("AON_THIS_PRODUCT_TYPE_IS_ASSIGNED_TO_ONE_OR_MORE_INVENTORY_ITEMS.")
 	msg_id$="IV_NO_DELETE"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")

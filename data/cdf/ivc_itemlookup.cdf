@@ -12,7 +12,7 @@ rem --- since files were forced open on new channels, close to keep tidy
 	gosub open_tables
 	
 [[IVC_ITEMLOOKUP.SEARCH_KEY.AVAL]]
-rem --- set search key/file according to user's selection in the "search by" listbutton.
+rem --- set search key/file according to user's selection in the 'search by' listbutton.
 rem --- and search text entered here.
 rem --- load/display grid
 

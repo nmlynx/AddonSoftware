@@ -19,7 +19,7 @@ rem --- Check glm-02 for activity
 			if nfield(glm02a$,"period_units_"+str(x:"00"))<>0 okay$="N"
 		next x
 		if okay$="N"
-			reason$="Account Summary"
+			reason$=Translate!.getTranslation("AON_ACCOUNT_SUMMARY")
 			break
 		endif
 	wend
@@ -32,7 +32,7 @@ rem --- Check glt-06 for history
 			glt06_key$=key(glt06_dev,end=*break)
 			if pos(firm_id$+this_acct$=glt06_key$)=1
 				okay$="N"
-				reason$="Transaction History"
+				reason$=Translate!.getTranslation("AON_TRANSACTION_HISTORY")
 			endif
 			break
 		wend
@@ -46,7 +46,7 @@ rem ---Check Journal Entries for activity
 			gle11_key$=key(gle11_dev,end=*break)
 			if pos(firm_id$+this_acct$=gle11_key$)=1
 				okay$="N"
-				reason$="Journal Entry"
+				reason$=Translate!.getTranslation("AON_JOURNAL_ENTRY")
 			endif
 			break
 		wend
@@ -60,7 +60,7 @@ rem ---Check Recurring Journal Entries for activity
 			gle12_key$=key(gle12_dev,end=*break)
 			if pos(firm_id$+this_acct$=gle12_key$)=1
 				okay$="N"
-				reason$="Recurring Journal Entry"
+				reason$=Translate!.getTranslation("AON_RECURRING_JOURNAL_ENTRY")
 			endif
 			break
 		wend
@@ -74,7 +74,7 @@ rem ---Check Allocation Detail for activity
 			gle13_key$=key(gle13_dev,end=*break)
 			if pos(firm_id$+this_acct$=gle13_key$)=1
 				okay$="N"
-				reason$="Account Allocation"
+				reason$=Translate!.getTranslation("AON_ACCOUNT_ALLOCATION")
 			endif
 			break
 		wend
@@ -84,7 +84,7 @@ rem ---Check Allocation Detail for activity
 				gle13_key$=key(gle13_dev,end=*break)
 				if pos(firm_id$+this_acct$=gle13_key$)=1
 					okay$="N"
-					reason$="Account Allocation"
+					reason$=Translate!.getTranslation("AON_ACCOUNT_ALLOCATION")
 				endif
 				break
 			wend
@@ -99,7 +99,7 @@ rem ---Check Daily Detail for activity
 			glt04_key$=key(glt04_dev,end=*break)
 			if pos(firm_id$+this_acct$=glt04_key$)=1
 				okay$="N"
-				reason$="Daily Detail"
+				reason$=Translate!.getTranslation("AON_DAILY_DETAIL")
 			endif
 			break
 		wend
@@ -112,7 +112,7 @@ rem --- Check Retained Earnings Account
 		read record(gls_earnings_dev,key=firm_id$+"GL01")gls01b$
 		if gls01b.gl_account$=this_acct$
 			okay$="N"
-			reason$="Retained Earnings Account"
+			reason$=Translate!.getTranslation("AON_RETAINED_EARNINGS_ACCOUNT")
 		endif
 	endif
 
