@@ -1799,8 +1799,13 @@ rem ==========================================================================
 
 	print "in do_invoice..."; rem debug
 
-	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+rem --- Make sure everything's written back to disk
+
+	gosub get_disk_rec
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+
+rem --- Call printing program
 
 	call user_tpl.pgmdir$+"opc_invoice.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
@@ -1897,6 +1902,8 @@ rem ==========================================================================
 get_cash: rem --- Launch the Cash Transaction form
 rem ==========================================================================
 
+	print "Hdr: in get_cash..."; rem debug
+
 	custmast_dev = fnget_dev("ARM_CUSTMAST")
 	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
 	find record (custmast_dev, key=firm_id$+cust_id$) custmast_tpl$
@@ -1917,6 +1924,8 @@ rem ==========================================================================
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	key_pfx$  = firm_id$+"  "+cust_id$+order_no$
 
+	print "---Calling cash form..."; rem debug
+
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_INVCASH", 
 :		stbl("+USER_ID"), 
@@ -1925,6 +1934,17 @@ rem ==========================================================================
 :		table_chans$[all], 
 :		"",
 :		dflt_data$[all]
+
+	print "---Setting cash sale flag"; rem debug
+	callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "Y")
+
+rem --- Write flag to disk
+
+	gosub get_disk_rec
+	if ordhdr_rec.cash_sale$ <> "Y" then escape; rem debug
+	ordhdr_rec$ = field(ordhdr_rec$)
+	write record (ordhdr_dev) ordhdr_rec$
+	print "out"; rem debug
 
 	return
 
@@ -1987,7 +2007,10 @@ rem --- Set fields from the Order Totals form and write back
 rem ==========================================================================
 get_disk_rec: rem --- Get disk record, update with current form data
               rem     OUT: ordhdr_rec$, updated
+              rem          ordhdr_tpl$
               rem          ordhdr_dev
+              rem          cust_id$
+              rem          order_no$
 rem ==========================================================================
 
 	file_name$  = "OPE_ORDHDR"
