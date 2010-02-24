@@ -382,18 +382,6 @@ rem --- Check locked status
 		break; rem --- exit callpoint
 	endif
 
-rem --- Is order being processed?
-
-	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "B" then
-		msg_id$="OP_ORDINV_IN_PROCESS"
-		dim msg_tokens$[1]
-		msg_tokens$[1] = "Order"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		user_tpl.do_end_of_form = 0
-		break; rem --- exit callpoint
-	endif
-
 rem --- Reprint order?
 
 	if callpoint!.getColumnData("OPE_ORDHDR.REPRINT_FLAG") <> "Y" then
@@ -1359,43 +1347,39 @@ check_lock_flag: rem --- Check manual record lock
 rem ==========================================================================
 
 	locked=0
-	on pos( callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS") = "NYS12" ) goto 
-:		end_lock,end_lock,locked,on_invoice,update_stat,update_stat
 
-locked:
+	switch pos( callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS") = "NYS12" )
+		case 2
+			msg_id$="ORD_LOCKED"
+			dim msg_tokens$[1]
 
-	msg_id$="ORD_LOCKED"
-	dim msg_tokens$[1]
+			if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")="B" then 
+				msg_tokens$[1]=" by Batch Printing"
+				gosub disp_message
 
-	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")="B" then 
-		msg_tokens$[1]=" by Batch Print."
-		gosub disp_message
+				if msg_opt$="Y"
+					callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","N")
+					callpoint!.setStatus("SAVE")
+				else
+					locked=1
+				endif
+			endif
 
-		if msg_opt$="Y"
-			callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","N")
-			callpoint!.setStatus("SAVE")
-		else
+			break
+
+		case 3
+			msg_id$="ORD_ON_REG"
+			gosub disp_message
 			locked=1
-		endif
+			break
 
-	endif
-
-	goto end_lock
-
-on_invoice:
-
-	msg_id$="ORD_ON_REG"
-	gosub disp_message
-	locked=1
-	goto end_lock
-
-update_stat:
-
-	msg_id$="INVOICE_IN_UPDATE"
-	gosub disp_message
-	locked=1
-
-end_lock:
+		case 4
+		case 5
+			msg_id$="INVOICE_IN_UPDATE"
+			gosub disp_message
+			locked=1
+			break
+	swend
 
 	return
 

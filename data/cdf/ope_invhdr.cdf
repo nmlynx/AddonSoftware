@@ -791,24 +791,6 @@ rem		callpoint!.setStatus("ABORT")
 rem		break; rem --- exit callpoint
 rem	endif
 
-rem --- Is order/invoice being processed?
-
-	if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "B" then
-		msg_id$="OP_ORDINV_IN_PROCESS"
-		dim msg_tokens$[1]
-
-		if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "O" then
-			msg_tokens$[1] = "Order"
-		else
-			msg_tokens$[1] = "Invoice"
-		endif
-
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		user_tpl.do_end_of_form = 0
-		break; rem --- exit callpoint
-	endif
-
 rem --- Show customer data
 	
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
