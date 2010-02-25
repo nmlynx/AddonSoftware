@@ -1347,43 +1347,39 @@ check_lock_flag: rem --- Check manual record lock
 rem ==========================================================================
 
 	locked=0
-	on pos( callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS") = "NYS12" ) goto 
-:		end_lock,end_lock,locked,on_invoice,update_stat,update_stat
 
-locked:
+	switch pos( callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS") = "NYS12" )
+		case 2
+			msg_id$="ORD_LOCKED"
+			dim msg_tokens$[1]
 
-	msg_id$="ORD_LOCKED"
-	dim msg_tokens$[1]
+			if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")="B" then 
+				msg_tokens$[1]=" by Batch Printing"
+				gosub disp_message
 
-	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")="B" then 
-		msg_tokens$[1]=" by Batch Print."
-		gosub disp_message
+				if msg_opt$="Y"
+					callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","N")
+					callpoint!.setStatus("SAVE")
+				else
+					locked=1
+				endif
+			endif
 
-		if msg_opt$="Y"
-			callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS","N")
-			callpoint!.setStatus("SAVE")
-		else
+			break
+
+		case 3
+			msg_id$="ORD_ON_REG"
+			gosub disp_message
 			locked=1
-		endif
+			break
 
-	endif
-
-	goto end_lock
-
-on_invoice:
-
-	msg_id$="ORD_ON_REG"
-	gosub disp_message
-	locked=1
-	goto end_lock
-
-update_stat:
-
-	msg_id$="INVOICE_IN_UPDATE"
-	gosub disp_message
-	locked=1
-
-end_lock:
+		case 4
+		case 5
+			msg_id$="INVOICE_IN_UPDATE"
+			gosub disp_message
+			locked=1
+			break
+	swend
 
 	return
 
@@ -1813,15 +1809,30 @@ rem ==========================================================================
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	action$   = "X"; rem Never called opc_creditaction.aon
 
+rem --- Should we call Credit Action?
+
 	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
 		callpoint!.setDevObject("run_by", "order")
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
 
+	rem --- Delete the order
+
+		if action$ = "D" then 
+			callpoint!.setStatus("DELETE")
+			return
+		endif
+
 		if pos(action$="HC")<>0 then
+
+		rem --- Order on hold
+
 			callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
 		else
 			if action$="R" then
+
+			rem --- Order released
+
 				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","R")	
 				terms$ = str(callpoint!.getDevObject("new_terms_code"))
 				callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE", terms$)
@@ -1830,13 +1841,18 @@ rem ==========================================================================
 			endif
 		endif
 
-		if action$ = "D" then 
-			callpoint!.setStatus("DELETE")
-		endif
+	rem --- Order was printed within the credit action program
 
 		if str(callpoint!.getDevObject("document_printed")) = "Y" then 
 			callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 		endif
+
+	rem --- Write these flags back to the disk
+
+		gosub get_disk_rec
+		ordhdr_rec$ = field(ordhdr_rec$)
+		write record (ordhdr_dev) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")		
 
 	endif
 
