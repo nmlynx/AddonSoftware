@@ -1584,6 +1584,7 @@ rem ==========================================================================
 lot_ser_check: rem --- Check for lotted item
                rem      IN: item_id$
                rem     OUT: lotted$ - Y/N
+               rem          DevObject "inventoried"
 rem ==========================================================================
 
 	lotted$="N"
