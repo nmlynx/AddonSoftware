@@ -442,11 +442,11 @@ rem --- Display order total
 rem --- Backorder and Credit Hold
 
 	if callpoint!.getColumnData("OPE_ORDHDR.BACKORD_FLAG") = "B" then
-		callpoint!.setColumnData("<<DISPLAY>>.BACKORDERED", "Backorder")
+		callpoint!.setColumnData("<<DISPLAY>>.BACKORDERED", Translate!.getTranslation("AON_BACKORDER"))
 	endif
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG") = "C" then
-		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "Credit Hold")
+		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_CREDIT_HOLD"))
 	endif
 
 rem --- Enable buttons
@@ -539,7 +539,7 @@ rem --- Check for printing in next batch and set
 	endif
 
 	dim msg_tokens$[1]
-	msg_tokens$[1] = "order"
+	msg_tokens$[1] = Translate!.getTranslation("AON_ORDER")
 	gosub disp_message
 [[OPE_ORDHDR.ADEL]]
 rem --- Remove from ope-04
@@ -599,14 +599,14 @@ rem --- Create Inventory Availability window
 	cxt    = SysGUI!.getAvailableContext()
 
 	mwin! = child!.addChildWindow(15000, 0, 10, 100, 75, "", $00000800$, cxt)
-	mwin!.addGroupBox(15999, 0, 5, grid!.getWidth(), 65, "Inventory Availability", $$)
+	mwin!.addGroupBox(15999, 0, 5, grid!.getWidth(), 65, Translate!.getTranslation("AON_INVENTORY_AVAILABILITY"), $$)
 
-	mwin!.addStaticText(15001,15,25,75,15,"On Hand:",$$)
-	mwin!.addStaticText(15002,15,40,75,15,"Committed:",$$)
-	mwin!.addStaticText(15003,215,25,75,15,"Available:",$$)
-	mwin!.addStaticText(15004,215,40,75,15,"On Order:",$$)
-	mwin!.addStaticText(15005,415,25,75,15,"Warehouse:",$$)
-	mwin!.addStaticText(15006,415,40,75,15,"Type:",$$)
+	mwin!.addStaticText(15001,15,25,75,15,Translate!.getTranslation("AON_ON_HAND:"),$$)
+	mwin!.addStaticText(15002,15,40,75,15,Translate!.getTranslation("AON_COMMITTED:"),$$)
+	mwin!.addStaticText(15003,215,25,75,15,Translate!.getTranslation("AON_AVAILABLE:"),$$)
+	mwin!.addStaticText(15004,215,40,75,15,Translate!.getTranslation("AON_ON_ORDER:"),$$)
+	mwin!.addStaticText(15005,415,25,75,15,Translate!.getTranslation("AON_WAREHOUSE:"),$$)
+	mwin!.addStaticText(15006,415,40,75,15,Translate!.getTranslation("AON_TYPE:"),$$)
 
 rem --- Save controls in the global userObj! (vector)
 
@@ -1270,7 +1270,7 @@ rem ==========================================================================
          gosub disp_message
       endif  
    
-		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", "*** Credit Limit Exceeded ***") 
+		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_***_CREDIT_LIMIT_EXCEEDED_***")) 
 		user_tpl.credit_limit_warned = 1
    endif
 
@@ -1300,7 +1300,7 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SSTATE",custship_tpl.state_code$)
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP",custship_tpl.zip_code$)
 		else
-			callpoint!.setColumnData("<<DISPLAY>>.SNAME","Same")
+			callpoint!.setColumnData("<<DISPLAY>>.SNAME",Translate!.getTranslation("AON_SAME"))
 			callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
 			callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
 			callpoint!.setColumnData("<<DISPLAY>>.SADD3","")
@@ -1354,7 +1354,7 @@ rem ==========================================================================
 			dim msg_tokens$[1]
 
 			if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS")="B" then 
-				msg_tokens$[1]=" by Batch Printing"
+				msg_tokens$[1]=Translate!.getTranslation("AON__BY_BATCH_PRINTING")
 				gosub disp_message
 
 				if msg_opt$="Y"
@@ -2303,8 +2303,8 @@ rem --- Set variables for called forms (OPE_ORDLSDET)
 rem --- Set up Lot/Serial button (and others) properly
 
 	switch pos(ivs01a.lotser_flag$="LS")
-		case 1; callpoint!.setOptionText("LENT","Lot Entry"); break
-		case 2; callpoint!.setOptionText("LENT","Serial Entry"); break
+		case 1; callpoint!.setOptionText("LENT",Translate!.getTranslation("AON_LOT_ENTRY")); break
+		case 2; callpoint!.setOptionText("LENT",Translate!.getTranslation("AON_SERIAL_ENTRY")); break
 		case default; break
 	swend
 

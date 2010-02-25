@@ -55,10 +55,10 @@ build_arrays:
 		description$=cvs(ivcprice.code_desc$,2)
 
 rem --- Method for pricing
-		x$=" (Unknown Pricing Method)"
-		if ivcprice.iv_price_mth$="C" x$=" (Mark-Up Over Cost)"
-		if ivcprice.iv_price_mth$="L" x$=" (Mark-Down From List)"
-		if ivcprice.iv_price_mth$="M" x$=" (Margin Over Cost)"
+		x$=Translate!.getTranslation("AON__(UNKNOWN_PRICING_METHOD)")
+		if ivcprice.iv_price_mth$="C" x$=Translate!.getTranslation("AON__(MARK-UP_OVER_COST)")
+		if ivcprice.iv_price_mth$="L" x$=Translate!.getTranslation("AON__(MARK-DOWN_FROM_LIST)")
+		if ivcprice.iv_price_mth$="M" x$=Translate!.getTranslation("AON__(MARGIN_OVER_COST)")
 		description$=description$+x$
 
 rem --- Display pricing table"
@@ -85,9 +85,9 @@ rem --- Display Contract Price"
 		while 1
 			readrecord(ivm06_dev,key=firm_id$+cust_id$+item$,dom=*break)ivm06a$
 			description$=cvs(ivm06a.code_desc$,2)
-			if cvs(ivm06a.from_date$,2)="" from_date$="First Date" else from_date$=fndate$(ivm06a.from_date$)
-			if cvs(ivm06a.thru_date$,2)="" thru_date$="Last Date" else thru_date$=fndate$(ivm06a.thru_date$)
-			description$=description$+" (From "+from_date$+" Through "+thru_date$+")"
+			if cvs(ivm06a.from_date$,2)="" from_date$=Translate!.getTranslation("AON_FIRST_DATE") else from_date$=fndate$(ivm06a.from_date$)
+			if cvs(ivm06a.thru_date$,2)="" thru_date$=Translate!.getTranslation("AON_LAST_DATE") else thru_date$=fndate$(ivm06a.thru_date$)
+			description$=description$+Translate!.getTranslation("AON__(FROM_")+from_date$+Translate!.getTranslation("AON__THROUGH_")+thru_date$+")"
 			callpoint!.setColumnData("<<DISPLAY>>.CONTRACT_DESC",description$)
 			for x=1 to 10
 				callpoint!.setColumnData("OPE_PRICEQUOTE.CONTRACT_QTY_"+str(x:"00"),str(nfield(ivm06a$,"BREAK_QTY_"+str(x:"00"))))
