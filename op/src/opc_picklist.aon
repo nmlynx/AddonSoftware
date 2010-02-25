@@ -957,6 +957,9 @@ print_footer: rem --- print total (if including prices), comments and carton/wei
 		pdf!.setPage(pagePDF!)
 
 	wend
+	
+	docPDF!.print()
+    call pgmdir$+"adc_rptcontrol.aon", alias$, ope01a.customer_id$, "C", new_doc_id$, "pdf"
 		
     return
 	
