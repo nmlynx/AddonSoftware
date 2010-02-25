@@ -36,13 +36,13 @@ rem --- Make sure invoice is not in either ape-04 (Check file) or ape-22 (Manual
 	vendor_id$=callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
 	inv_no$=callpoint!.getUserInput()
 	read(ape04_dev,key=firm_id$+ap_type$+vendor_id$+inv_no$,dom=check_manual)
-	in_check_file$="Check"
+	in_check_file$=Translate!.getTranslation("AON_CHECK")
 	goto abort_entry
 check_manual:
 	read(ape22_dev,key=firm_id$+ap_type$+vendor_id$+inv_no$,knum=1,dom=*next)
 	ape22_key$=key(ape22_dev,end=look_for_invoice)
 	if pos(firm_id$+ap_type$+vendor_id$+inv_no$=ape22_key$)<>1 goto look_for_invoice
-	in_check_file$="Manual Check"
+	in_check_file$=Translate!.getTranslation("AON_MANUAL_CHECK")
 	goto abort_entry
 abort_entry:
 	dim msg_tokens$[1]
@@ -93,7 +93,7 @@ look_for_invoice:
 		ctl_name$="APE_INVOICEHDR.NET_INV_AMT"
 		ctl_stat$="D"
 		gosub disable_fields
-		Form!.getControl(num(user_tpl.open_inv_textID$)).setText("Adjust Open Invoice: "+$0A$+fndate$(apt01a.invoice_date$)+
+		Form!.getControl(num(user_tpl.open_inv_textID$)).setText(Translate!.getTranslation("AON_ADJUST_OPEN_INVOICE:_")+$0A$+fndate$(apt01a.invoice_date$)+
 :			",  "+str(num(apt01a.invoice_amt$):user_tpl.amt_msk$))
 		callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 	else

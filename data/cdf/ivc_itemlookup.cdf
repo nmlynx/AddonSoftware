@@ -118,15 +118,15 @@ rem ---  Set up grid
 	ctlw_pos = fnstr_pos("CTLW", attr_def_col_str$[0,0], 5)
 	
 	attr_grid_col$[1,dvar_pos]="SEARCH_KEY"
-	attr_grid_col$[1,labs_pos]="Search Key"
+	attr_grid_col$[1,labs_pos]=Translate!.getTranslation("AON_SEARCH_KEY")
 	attr_grid_col$[1,ctlw_pos]="125"
 
 	attr_grid_col$[2,dvar_pos]="ITEM_NO"
-	attr_grid_col$[2,labs_pos]="Item"
+	attr_grid_col$[2,labs_pos]=Translate!.getTranslation("AON_ITEM")
 	attr_grid_col$[2,ctlw_pos]="125"	
 
 	attr_grid_col$[3,dvar_pos]="DESC"
-	attr_grid_col$[3,labs_pos]="Description"
+	attr_grid_col$[3,labs_pos]=Translate!.getTranslation("AON_DESCRIPTION")
 	attr_grid_col$[3,ctlw_pos]="125"	
 	
 	for curr_attr=1 to def_grid_cols
@@ -155,22 +155,22 @@ rem --- Create Item Information window
 	infoWin!=form!.addChildWindow(15000, w.x, w.y, w.w, w.h, "", $00000800$, cxt)
 	SysGUI!.setContext(cxt)
 
-	infoWin!.addGroupBox(15999,5,5,415,220,"Inventory Detail",$$)
+	infoWin!.addGroupBox(15999,5,5,415,220,Translate!.getTranslation("AON_INVENTORY_DETAIL"),$$)
 	
-	infoWin!.addStaticText(15001,10,25,75,15,"Product Type:",$8000$)
+	infoWin!.addStaticText(15001,10,25,75,15,Translate!.getTranslation("AON_PRODUCT_TYPE:"),$8000$)
 
-	infoWin!.addStaticText(15003,10,65,75,15,"Unit of Sale:",$8000$)
-	infoWin!.addStaticText(15004,10,85,75,15,"Weight:",$8000$)
+	infoWin!.addStaticText(15003,10,65,75,15,Translate!.getTranslation("AON_UNIT_OF_SALE:"),$8000$)
+	infoWin!.addStaticText(15004,10,85,75,15,Translate!.getTranslation("AON_WEIGHT:"),$8000$)
 
 	infoWin!.addStaticText(15005,200,25,75,15,"",$8000$)
-	infoWin!.addStaticText(15006,200,45,75,15,"Last Receipt:",$8000$)
-	infoWin!.addStaticText(15007,200,65,75,15,"Last Issue:",$8000$)
-	infoWin!.addStaticText(15008,200,85,75,15,"Lot/Serialized?:",$8000$)
+	infoWin!.addStaticText(15006,200,45,75,15,Translate!.getTranslation("AON_LAST_RECEIPT:"),$8000$)
+	infoWin!.addStaticText(15007,200,65,75,15,Translate!.getTranslation("AON_LAST_ISSUE:"),$8000$)
+	infoWin!.addStaticText(15008,200,85,75,15,Translate!.getTranslation("AON_LOT/SERIALIZED?:"),$8000$)
 
-	infoWin!.addStaticText(15009,10,125,75,15,"On hand:",$8000$)
-	infoWin!.addStaticText(15010,10,145,75,15,"Committed:",$8000$)
-	infoWin!.addStaticText(15011,10,165,75,15,"Available:",$8000$)
-	infoWin!.addStaticText(15012,10,185,75,15,"On Order:",$8000$)
+	infoWin!.addStaticText(15009,10,125,75,15,Translate!.getTranslation("AON_ON_HAND:"),$8000$)
+	infoWin!.addStaticText(15010,10,145,75,15,Translate!.getTranslation("AON_COMMITTED:"),$8000$)
+	infoWin!.addStaticText(15011,10,165,75,15,Translate!.getTranslation("AON_AVAILABLE:"),$8000$)
+	infoWin!.addStaticText(15012,10,185,75,15,Translate!.getTranslation("AON_ON_ORDER:"),$8000$)
 
 	rem --- above are labels, now add static text fields for data
 	callpoint!.setDevObject("prod_tp",  str(15101))
@@ -367,10 +367,10 @@ rem --- get/display Inventory Detail info
 	w!.setText(ivm_itemmast.weight$)
 	switch pos(ivm_itemmast.alt_sup_flag$="AS")
 		case 1
-			as_prompt$="Alternate:"
+			as_prompt$=Translate!.getTranslation("AON_ALTERNATE:")
 		break
 		case 2
-			as_prompt$="Superseded:"
+			as_prompt$=Translate!.getTranslation("AON_SUPERSEDED:")
 		break
 		case default
 			as_prompt$=""
@@ -386,10 +386,10 @@ rem --- get/display Inventory Detail info
 	w!.setText(func.formatDate(ivm_itemmast.lstiss_date$))
 	switch pos(ls$="LS")
 		case 1
-			ls_text$="Lotted"
+			ls_text$=Translate!.getTranslation("AON_LOTTED")
 		break
 		case 2
-			ls_text$="Serialized"
+			ls_text$=Translate!.getTranslation("AON_SERIALIZED")
 		break
 		case default
 			ls_text$=""

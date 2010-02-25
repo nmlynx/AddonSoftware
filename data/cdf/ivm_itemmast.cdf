@@ -559,15 +559,15 @@ rem --- Setup description lengths
 
 rem --- Set user labels and lengths for description segments 
 
-	util.changeText(Form!, "Segment Description 1:", cvs(ivs01a.user_desc_lb_01$, 2) + ":")
+	util.changeText(Form!, Translate!.getTranslation("AON_SEGMENT_DESCRIPTION_1:"), cvs(ivs01a.user_desc_lb_01$, 2) + ":")
 	callpoint!.setTableColumnAttribute("<<DISPLAY>>.ITEM_DESC_SEG_1", "MAXL", str(user_tpl.desc_len_01))
 	first_desc!=util.getControl(Form!,callpoint!,"<<DISPLAY>>.ITEM_DESC_SEG_1")
 	first_desc!.setMask(fill(user_tpl.desc_len_01,"X"))
 
 	if cvs(ivs01a.user_desc_lb_02$, 2) <> "" then
-		util.changeText(Form!, "Segment Description 2:", cvs(ivs01a.user_desc_lb_02$, 2) + ":")
+		util.changeText(Form!, Translate!.getTranslation("AON_SEGMENT_DESCRIPTION_2:"), cvs(ivs01a.user_desc_lb_02$, 2) + ":")
 	else
-		util.changeText(Form!, "Segment Description 2:", "")
+		util.changeText(Form!, Translate!.getTranslation("AON_SEGMENT_DESCRIPTION_2:"), "")
 	endif
 
 	if user_tpl.desc_len_02 <> 0 then
@@ -579,9 +579,9 @@ rem --- Set user labels and lengths for description segments
 	endif
 
 	if cvs(ivs01a.user_desc_lb_03$, 2) <> "" then 
-		util.changeText(Form!, "Segment Description 3:", cvs(ivs01a.user_desc_lb_03$, 2) + ":")
+		util.changeText(Form!, Translate!.getTranslation("AON_SEGMENT_DESCRIPTION_3:"), cvs(ivs01a.user_desc_lb_03$, 2) + ":")
 	else
-		util.changeText(Form!, "Segment Description 3:", "")
+		util.changeText(Form!, Translate!.getTranslation("AON_SEGMENT_DESCRIPTION_3:"), "")
 	endif
 
 	if user_tpl.desc_len_03 <>0 then
