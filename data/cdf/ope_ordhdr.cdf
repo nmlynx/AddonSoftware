@@ -1876,7 +1876,7 @@ rem ==========================================================================
 		callpoint!.setStatus("SETORIG")
 	endif
 
-	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+	call user_tpl.pgmdir$+"opc_picklist.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
 	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 
