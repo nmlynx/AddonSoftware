@@ -427,8 +427,8 @@ rem --- Set up Lot/Serial button properly
 	dim ivs01a$:ivs01a_tpl$
 	readrecord(ivs01_dev,key=firm_id$+"IV00")ivs01a$
 	switch pos(ivs01a.lotser_flag$="LS")
-		case 1; callpoint!.setOptionText("LENT","Lot Entry"); break
-		case 2; callpoint!.setOptionText("LENT","Serial Entry"); break
+		case 1; callpoint!.setOptionText("LENT",Translate!.getTranslation("AON_LOT_ENTRY")); break
+		case 2; callpoint!.setOptionText("LENT",Translate!.getTranslation("AON_SERIAL_ENTRY")); break
 		case default; break
 	swend
 
@@ -607,7 +607,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 			read record (ivm_itemmast_dev,key=firm_id$+ope_orddet.item_id$,dom=*next)ivm_itemmast$
 			order_lines!.addItem(ope_orddet.internal_seq_no$)
 			order_items!.addItem(ope_orddet.item_id$)
-			order_list!.addItem("Item: "+cvs(ope_orddet.item_id$,3)+" "+cvs(ivm_itemmast.display_desc$,3))
+			order_list!.addItem(Translate!.getTranslation("AON_ITEM:_")+cvs(ope_orddet.item_id$,3)+" "+cvs(ivm_itemmast.display_desc$,3))
 		endif
 	wend
 
