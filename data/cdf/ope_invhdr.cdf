@@ -67,6 +67,15 @@ rem --- Customer wants to pay cash; Launch invoice totals first
 rem --- Now launch Cash Transaction
 
 	gosub get_cash
+
+rem --- Do we need to print an invoice first?
+
+	if callpoint!.getDevObject( "print_invoice" ) = "Y" then
+		gosub do_invoice
+	endif
+
+rem --- Now start a new record
+
 	user_tpl.do_end_of_form = 0
 	callpoint!.setStatus("NEWREC")
 [[OPE_INVHDR.AOPT-RPRT]]
