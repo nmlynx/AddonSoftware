@@ -36,7 +36,7 @@ readrecord(sas_params_chn,key=firm_id$+"SA00")sas_params$
 if sas_params.by_customer$<>"Y"
 	msg_id$="INVALID_SA"
 	dim msg_tokens$[1]
-	msg_tokens$[1]="Customer"
+	msg_tokens$[1]=Translate!.getTranslation("AON_CUSTOMER")
 	gosub disp_message
 	bbjAPI!=bbjAPI()
 	rdFuncSpace!=bbjAPI!.getGroupNamespace()
@@ -75,7 +75,7 @@ endif
 	if sas01a.by_customer$<>"Y"
 		msg_id$="INVALID_SA"
 		dim msg_tokens$[1]
-		msg_tokens$[1]="Customer"
+		msg_tokens$[1]=Translate!.getTranslation("AON_CUSTOMER")
 		gosub disp_message
 		bbjAPI!=bbjAPI()
 		rdFuncSpace!=bbjAPI!.getGroupNamespace()

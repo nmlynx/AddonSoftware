@@ -103,7 +103,7 @@ scan_source:rem --- Scan Source Directory and build vectors to populate gridFile
 						gridVect!.insertItem(gridVect!.size()-8,"")
 						gridVect!.insertItem(gridVect!.size()-8,ddm03_dev_00$(1,6))
 						gridVect!.insertItem(gridVect!.size()-8,"")
-						gridVect!.insertItem(gridVect!.size()-8,"Multiple Record Types")
+						gridVect!.insertItem(gridVect!.size()-8,Translate!.getTranslation("AON_MULTIPLE_RECORD_TYPES"))
 						gridVect!.setItem(gridVect!.size()-7,indent$+ddm03_dev_00$(1,6))
 						recs_found=recs_found+1
 					endif
@@ -288,15 +288,15 @@ attr_col$[1,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 attr_col$[1,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
 
 attr_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="FILE_ID"
-attr_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="File ID"
+attr_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_FILE_ID")
 attr_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
 attr_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="REC_ID"
-attr_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Rec ID"
+attr_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_REC_ID")
 attr_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
 attr_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DESC"
-attr_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Description"
+attr_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_DESCRIPTION")
 attr_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="300"
 
 for curr_attr=1 to def_cols

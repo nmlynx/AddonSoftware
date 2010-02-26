@@ -11,9 +11,9 @@ rem --- open files
 
 rem --- create list for available levels
 
-	ldat_list$=pad("Vendor",20)+"~"+"V;"
-	if pos(sas01a.vendor_lev$="PI") ldat_list$=ldat_list$+pad("Product",20)+"~"+"P;"
-	if pos(sas01a.vendor_lev$="I") ldat_list$=ldat_list$+pad("Item",20)+"~"+"I;"
+	ldat_list$=pad(Translate!.getTranslation("AON_VENDOR"),20)+"~"+"V;"
+	if pos(sas01a.vendor_lev$="PI") ldat_list$=ldat_list$+pad(Translate!.getTranslation("AON_PRODUCT"),20)+"~"+"P;"
+	if pos(sas01a.vendor_lev$="I") ldat_list$=ldat_list$+pad(Translate!.getTranslation("AON_ITEM"),20)+"~"+"I;"
 
 	callpoint!.setTableColumnAttribute("SAR_VENDOR.SA_LEVEL","LDAT",ldat_list$)
 [[SAR_VENDOR.ASVA]]
@@ -54,7 +54,7 @@ readrecord(sas_params_chn,key=firm_id$+"SA00")sas_params$
 if sas_params.by_vendor$<>"Y"
 	msg_id$="INVALID_SA"
 	dim msg_tokens$[1]
-	msg_tokens$[1]="Vendor"
+	msg_tokens$[1]=Translate!.getTranslation("AON_VENDOR")
 	gosub disp_message
 	bbjAPI!=bbjAPI()
 	rdFuncSpace!=bbjAPI!.getGroupNamespace()
@@ -76,7 +76,7 @@ user_tpl.high_level$=sas_params.vendor_lev$
 	if sas01a.by_vendor$<>"Y"
 		msg_id$="INVALID_SA"
 		dim msg_tokens$[1]
-		msg_tokens$[1]="Vendor"
+		msg_tokens$[1]=Translate!.getTranslation("AON_VENDOR")
 		gosub disp_message
 		bbjAPI!=bbjAPI()
 		rdFuncSpace!=bbjAPI!.getGroupNamespace()
