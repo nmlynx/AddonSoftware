@@ -19,6 +19,7 @@ rem ==========================================================================
         field private BBjNumber pastDueLimit
         field private BBjNumber holdAmount
         field private BBjString autoHold$
+        field public BBjString LotSerialFlag$
 
     rem --- Read-only fields for setOverCreditLimit()
 
@@ -55,6 +56,8 @@ rem ==========================================================================
         field private BBjString termsCodeTmpl$
         field private BBjInt lotSerialDev%
         field private BBjString lotSerialTmpl$
+        field private BBjInt ivsParamsDev% 
+        field private BBjString ivsParamsTmpl$ 
 
         field public BBjVector DtlVect!
         field public BBjString Cust_id$
@@ -721,6 +724,58 @@ rem ==========================================================================
 
         method public BBjString getCreditHoldReason()
             methodret #CreditHoldReason$
+        methodend
+        
+    rem --- Is this item lotted or serialized?
+    
+        method public BBjInt isLottedSerial(BBjString p_item_id$)
+        
+            lotted% = 0
+
+            if cvs(p_item_id$, 2)<>"" and pos(#getLotSerialFlag() = "LS") then 
+                if #itemMastDev% = 0 then
+                    data_name$ = "IVM_ITEMMAST"
+                    #itemMastDev%  = int(util.getDev(data_name$))
+                    #itemMastTmpl$ = util.getTmpl(data_name$)
+                endif
+                
+                dim itemMastRec$:#itemMastTmpl$
+                start_block = 1
+
+                if start_block then
+                    read record (#itemMastDev%, key=#firm_id$+p_item_id$, dom=*endif) itemMastRec$
+
+                    if itemMastRec.lotser_item$="Y" then
+                        lotted% = 1
+                    endif
+                endif
+            endif        
+            
+            methodret lotted%
+        
+        methodend
+        
+    rem --- Get Lotted/Serliazed flag from parameters
+    
+        method public BBjString getLotSerialFlag()
+        
+            if #LotSerialFlag$ <> "" then 
+                methodret #LotSerialFlag$
+            endif
+
+            if #ivsParamsDev% = 0 then
+                data_name$ = "IVS_PARAMS"
+                #ivsParamsDev%  = int(util.getDev(data_name$))
+                #ivsParamsTmpl$ = util.getTmpl(data_name$)
+            endif
+            
+            dim ivsParamsRec$:#ivsParamsTmpl$
+            
+            read record (#ivsParamsDev%, key=firm_id$+"IV00") ivsParamsRec$
+            #LotSerialFlag$ = ivsParamsRec.lotser_flag$
+            
+            methodret #LotSerialFlag$
+        
         methodend
 
     classend
