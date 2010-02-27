@@ -1081,7 +1081,7 @@ comments: rem --- comments
 
 is_still_printed: rem --- Verify if Pick Ticket is still printed
 
-    read (orddet_dev, key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,knum=0 dom=*next)
+    read (orddet_dev, key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,knum=0,dom=*next)
 
     while more
         flag=0
