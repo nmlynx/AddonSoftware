@@ -1,3 +1,8 @@
+[[OPE_INVHDR.TAX_CODE.AVAL]]
+rem --- Set code in the Order Helper object
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"))
 [[OPE_INVHDR.ARAR]]
 print "Hdr:ARAR"; rem debug
 

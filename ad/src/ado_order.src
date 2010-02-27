@@ -51,7 +51,6 @@ rem ==========================================================================
         field private BBjString custDetailTmpl$
         field private BBjInt taxcodeDev%
         field private BBjString taxcodeTmpl$
-        field private BBjString taxcodeData$
         field private BBjInt termsCodeDev%
         field private BBjString termsCodeTmpl$
         field private BBjInt lotSerialDev%
@@ -437,19 +436,14 @@ rem ==========================================================================
             dim taxcode_rec$:#taxcodeTmpl$
             dim taxcode_rec2$:#taxcodeTmpl$
 
-            if #taxcodeData$ = "" then
-                found = 0
+            found = 0
 
-                if #START_BLOCK then
-                    find record (#taxcodeDev%, key=#firm_id$+#TaxCode$, err=*endif) taxcode_rec$
-                    #taxcodeData$ = taxcode_rec$
-                    found = 1
-                endif
-            else
-                taxcode_rec$ = #taxcodeData$
+            if #START_BLOCK then
+                find record (#taxcodeDev%, key=#firm_id$+#TaxCode$, err=*endif) taxcode_rec$
+                found = 1
             endif
 
-            if #taxcodeData$ = "" and !found then
+            if !found then
                 throw #className$ + ": calculateTax(): tax code """ + #TaxCode$ + """ not found", 11
             endif
 
