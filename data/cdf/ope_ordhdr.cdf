@@ -121,7 +121,7 @@ rem --- Calculate taxes and write it back
 
 rem --- Credit action
 
-	if ordHelp!.setOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
+	if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
 		gosub do_credit_action
 	endif
 
