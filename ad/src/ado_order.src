@@ -21,7 +21,7 @@ rem ==========================================================================
         field private BBjString autoHold$
         field public BBjString LotSerialFlag$
 
-    rem --- Read-only fields for setOverCreditLimit()
+    rem --- Read-only fields for calcOverCreditLimit()
     rem --- Order Credit Limit? 1=yes, 0=no, -1=has not been set
 
         field private BBjNumber CreditLimit
@@ -513,7 +513,7 @@ rem ==========================================================================
 
     rem --- Is there a Credit Hold or over credit limit condition?
 
-        method public BBjInt setOverCreditLimit(BBjString p_cust_id$, BBjString p_order_no$)
+        method public BBjInt calcOverCreditLimit(BBjString p_cust_id$, BBjString p_order_no$)
 
         rem --- Inits
 
@@ -676,29 +676,29 @@ rem ==========================================================================
 
     rem --- Set credit limit: set customer (order can be null)
 
-        method public BBjInt setOverCreditLimit(BBjString p_cust_id$)
+        method public BBjInt calcOverCreditLimit(BBjString p_cust_id$)
             if p_cust_id$ = "" then
-                throw #className$ + ": setOverCreditLimit(): You pass the customer ID when calling this method", 11
+                throw #className$ + ": calcOverCreditLimit(): You pass the customer ID when calling this method", 11
             endif
 
             #setCust_id(p_cust_id$)
 
-            methodret #setOverCreditLimit(p_cust_id$, #Order_no$)
+            methodret #calcOverCreditLimit(p_cust_id$, #Order_no$)
         methodend
 
     rem --- Set Credit Limit: use fields if set (order can be null)
 
-        method public BBjInt setOverCreditLimit()
+        method public BBjInt calcOverCreditLimit()
             cust_id$ = #Cust_id$
 
             if cust_id$ = "" then
-                throw #className$ + ": setOverCreditLimit(): You must setCust_id() before calling this method", 11
+                throw #className$ + ": calcOverCreditLimit(): You must setCust_id() before calling this method", 11
             endif
 
-            methodret #setOverCreditLimit(cust_id$, #Order_no$)
+            methodret #calcOverCreditLimit(cust_id$, #Order_no$)
         methodend
 
-    rem --- Accessor methods for setOverCreditLimit()
+    rem --- Accessor methods for calcOverCreditLimit()
 
         method public BBjNumber getCreditLimit()
             methodret #CreditLimit
