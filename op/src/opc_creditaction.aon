@@ -104,6 +104,7 @@ rem --- Has order/invoice been printed?
         
         rem if msg_opt$ = "N" then
             action$ = "S"
+            backorderedControl!.setText("Order/Invoice is Printed")
             goto std_exit
         rem endif
     endif
@@ -122,6 +123,14 @@ rem --- Check For Quotes
         
         action$ = "Q"
         goto std_exit
+    endif
+    
+rem --- Credit memos don't get processed
+
+    if ope01a.total_sales <=0 then
+        action$ = "M"
+        backorderedControl!.setText("Credit Memo: no processing")
+        goto final_updates
     endif
     
 rem --- Get over credit limit flag

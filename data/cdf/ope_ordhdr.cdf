@@ -1880,7 +1880,10 @@ rem --- Should we call Credit Action?
 
 				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","R")	
 				terms$ = str(callpoint!.getDevObject("new_terms_code"))
-				callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE", terms$)
+
+				if terms$ <> "" then
+					callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE", terms$)
+				endif
 			else
 				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","")			
 			endif
