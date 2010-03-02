@@ -10,6 +10,13 @@ rem --- All Rights Reserved
     rem --- on demand from w/in po entry
     enter single_vendor_id$,single_po_no$,err=*next
 
+    seterr end_instantiate
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+    Translate! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+
+end_instantiate:
+
     seterr std_error
     setesc std_error
     
