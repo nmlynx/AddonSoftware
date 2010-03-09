@@ -130,6 +130,13 @@ rem --- Assign form input values to local variables
     ttypes$[8]=option!.getOptionData("tran_hst_wo")
     ttypes$[9]=option!.getOptionData("tran_hst_bm")
 
+	if ttypes$[0]="N" and ttypes$[1]="N" and ttypes$[2]="N" and ttypes$[3]="N" and ttypes$[4]="N" and 
+:	   ttypes$[5]="N" and ttypes$[6]="N" and ttypes$[7]="N" and ttypes$[8]="N" and ttypes$[9]="N"
+		msg_id$="AD_NORECS"
+		gosub disp_message
+		goto std_exit_no_report
+	endif
+	
 rem --- Retrieve key template
 
     call stbl("+DIR_SYP")+"bac_key_template.bbj","IVT_LSTRANS","PRIMARY",ivt01_key_tpl$,rd_table_chans$[all],status$
@@ -463,7 +470,10 @@ print_totals: rem --- Print Totals
         net_ext=net_ext+item_ext[(x+3)/4]
     next x
 
-    if all$<>"Y" then wkx=fnblank(columns);return
+    if all$<>"Y"
+    	wkx=fnblank(columns)
+    	goto end_totals
+    endif
     xwk=fnblank(3)
     OutVect!.addItem(Translate!.getTranslation("AON____NET_CHANGE"))
     OutVect!.addItem(str(net_qty))
@@ -471,6 +481,7 @@ print_totals: rem --- Print Totals
     OutVect!.addItem(str(net_ext))
     OutVect!.addItem("")
     wkx=fnblank(columns)
+end_totals:    
     dim item_qty[9],item_ext[9]
     item_tot$=""
     net_qty=0
