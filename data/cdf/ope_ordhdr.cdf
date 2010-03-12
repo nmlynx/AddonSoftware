@@ -74,6 +74,8 @@ rem --- Reset all previous values
 	user_tpl.new_order = 1
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned = 0
+
+	callpoint!.setDevObject("reprintable",0)
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
@@ -183,10 +185,11 @@ rem --- Print a counter Picking Slip
 
 	rem --- Can't print until released from credit
 
-		gosub force_print_status
+rem		gosub force_print_status; rem --- don't think I want to do this, causes problems downstream
 		gosub do_credit_action
 
-		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "N") then 
+rem		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "N") then 
+		if pos(action$ = "XUS") or (action$ = "R" and str(callpoint!.getDevObject("document_printed")) <> "Y") then 
 
 		rem --- Couldn't do credit action, or did credit action w/ no problem, or released from credit but didn't print
 
@@ -194,7 +197,8 @@ rem --- Print a counter Picking Slip
 			user_tpl.do_end_of_form = 0
 			callpoint!.setStatus("NEWREC")
 		else
-			if action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
+rem			if action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
+			if action$ = "R" and str(callpoint!.getDevObject("document_printed")) = "Y" then 
 
 			rem --- Released from credit and did print
 
@@ -362,7 +366,7 @@ rem --- Enable buttons as appropriate
 		else
 			callpoint!.setOptionEnabled("DINV",0)
 			callpoint!.setOptionEnabled("CINV",0)
-			callpoint!.setOptionEnabled("RPRT",1)
+			callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
 			callpoint!.setOptionEnabled("CRAT",1)
@@ -437,28 +441,8 @@ rem --- Reprint order?
 		ar_type$  = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 		reprint   = 0
 		gosub check_if_reprintable
-
-		if reprintable then 
-			msg_id$="OP_REPRINT_ORDER"
-			gosub disp_message
-			
-			if msg_opt$ = "Y" then
-				if user_tpl.credit_installed$ = "Y" and 
-:					user_tpl.pick_hold$ = "N" 			and 
-:					callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG") = "C" 
-:				then
-					msg_id$="OP_ORD_ON_CR_HOLD"
-				else
-					msg_id$="OP_ORD_PRINT_BATCH"
-					callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
-					print "---Reprint_flag set to Y"; rem debug
-					callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
-					gosub add_to_batch_print
-				endif
-
-				gosub disp_message
-			endif
-		endif
+	else
+		callpoint!.setDevObject("reprintable",1)
 	endif
 
 rem --- Show customer data
@@ -499,7 +483,7 @@ rem --- Backorder and Credit Hold
 rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT",1)
-	callpoint!.setOptionEnabled("RPRT",1)
+	callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
 	callpoint!.setOptionEnabled("TTLS",1)
 
 rem --- Set all previous values
@@ -1809,7 +1793,7 @@ check_if_reprintable: rem --- Are There Reprintable Detail Lines?
                       rem      IN: ar_type$
                       rem          cust_id$
                       rem          order_no$
-                      rem     OUT: reprintable = 1/0
+                      rem     OUT: reprintable = 1/0 (stored in devObject)
 rem ==========================================================================
 
 	reprintable = 0
@@ -1827,6 +1811,8 @@ rem ==========================================================================
 			break
 		endif
 	wend
+
+	callpoint!.setDevObject("reprintable",reprintable)
 
 	return 
 
@@ -1926,7 +1912,7 @@ rem ==========================================================================
 		callpoint!.setStatus("SETORIG")
 	endif
 
-	call user_tpl.pgmdir$+"opc_picklist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+	call user_tpl.pgmdir$+"opc_picklist.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
 	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 
