@@ -1916,6 +1916,9 @@ rem ==========================================================================
 	if status = 999 then goto std_exit
 	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 
+	msg_id$ = "OP_PICKLIST_DONE"
+	gosub disp_message
+
 	print "out"; rem debug
 
 	return
