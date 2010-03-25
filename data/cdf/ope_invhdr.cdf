@@ -515,6 +515,25 @@ rem --- Disable buttons
 [[OPE_INVHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
+rem --- Invoice History Header, set to void
+
+	file_name$      = "OPT_INVHDR"
+	opt_invhdr_dev  = fnget_dev(file_name$)
+	opt_invhdr_tpl$ = fnget_tpl$(file_name$)
+	dim opt_invhdr_rec$:opt_invhdr_tpl$
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	opt_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
+	opt_invhdr_rec.invoice_type$ = "V"
+
+	opt_invhdr_rec$ = field(opt_invhdr_rec$)
+	if cvs(opt_invhdr_rec.ar_inv_no$,2)<>""
+		write record (opt_invhdr_dev) opt_invhdr_rec$
+		print "---Wrote Invoice History header..."; rem debug
+	endif
+
 rem --- Retain Order?
 
 	msg_id$ = "OP_RETAIN_ORDER"
@@ -527,24 +546,6 @@ rem --- Retain Order?
 		msg_id$ = "OP_REPRINT_ALSO"
 		gosub disp_message
 		reprint$ = msg_opt$
-
-	rem --- Invoice History Header, set to void
-
-		file_name$      = "OPT_INVHDR"
-		opt_invhdr_dev  = fnget_dev(file_name$)
-		opt_invhdr_tpl$ = fnget_tpl$(file_name$)
-		dim opt_invhdr_rec$:opt_invhdr_tpl$
-
-		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-		read record (opt_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*next) opt_invhdr_rec$
-		ope_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
-		opt_invhdr_rec.invoice_type$ = "V"
-
-		opt_invhdr_rec$ = field(opt_invhdr_rec$)
-		write record (opt_invhdr_dev) opt_invhdr_rec$
-		print "---Wrote Invoice History header..."; rem debug
 
 	rem --- Reset Invoice record to Order
 
