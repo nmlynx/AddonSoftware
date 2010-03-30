@@ -206,7 +206,7 @@ rem --- Set Sales Anaylsis Year
 l950: rem --- Position Sort File Pointer
 
     if action=21
-        read (sam_dev,key=firm_id$+sayear$,knum=1,dom=*next)
+        read (sam_dev,key=firm_id$+sayear$,knum="AO_PRD_ITM_CST",dom=*next)
     endif
 
     if action<>21
@@ -281,7 +281,7 @@ l1500: rem --- Next Sales Analysis Record
     sam00_k$=sam_k$
 
     if action=21
-        read (sam00_dev,key=sam00_k$,knum=1,dom=l1600) iol=sam00a
+        read (sam00_dev,key=sam00_k$,knum="AO_PRD_ITM_CST",dom=l1600) iol=sam00a
     endif
 
     if action<>21

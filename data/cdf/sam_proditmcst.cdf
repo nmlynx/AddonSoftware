@@ -41,11 +41,11 @@ rem --- Start progress meter
 	dim sam_tpl$:fnget_tpl$("SAM_PRODITMCST")
 	dim qty[13],cost[13],sales[13]
 
-	read(sam_dev,key=trip_key$,knum="ALT_KEY_01",dom=*next)
+	read(sam_dev,key=trip_key$,knum="AO_PRD_ITM_CST",dom=*next)
 	while 1
 		sam_key$=key(sam_dev,end=*break)
 		if pos(trip_key$=sam_key$)<>1 break
-		read record(sam_dev,knum="ALT_KEY_01",key=sam_key$)sam_tpl$
+		read record(sam_dev,knum="AO_PRD_ITM_CST",key=sam_key$)sam_tpl$
 
 		Progress!.getValue("+process_task_"+task_id$,err=*next);break
 
