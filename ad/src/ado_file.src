@@ -19,7 +19,7 @@ rem ==========================================================================
         field private BBjInt eof% = -1
         field private BBjNumber notFound
         
-        field private static HashMap openFiles!
+        field private static HashMap openFiles! = new HashMap()
         
     rem --- Constants
         
@@ -42,14 +42,17 @@ rem ==========================================================================
             #setBaristaTables()
 
             found = 0
-            alias$ = p_alias$
+            alias$ = cvs( p_alias$, 2 )
             
             while !found
+            
+            rem --- Get table data by alias
+            
                 if #START_BLOCK then
                     read (#ddmTablesChan%, key=pad(p_alias$, 16), dom=*endif ) *, file_desc$, file_name$, file_path$
                     found = 1
                     #fileName$ = file_name$
-                    #fileAlias$ = file_alias$
+                    #fileAlias$ = alias$
                     #fileDesc$ = file_desc$
                     
                     if pos( "[" = file_path$ ) = 1 and pos( "]" = file_path$ ) = len(file_path$) then
@@ -61,6 +64,8 @@ rem ==========================================================================
                     endif
                 endif
                 
+            rem --- If this is a data file name, lookup the alias and retry
+                
                 if !found then
                     file_name$ = alias$
                     read (#ddmTablesChan%, knum=2, key=pad(file_name$, 30, $00$), dom=*next)
@@ -69,7 +74,7 @@ rem ==========================================================================
                     eof = 0
                     
                     if pos(pad(file_name$, 30, $00$) = k$) = 1 then
-                        alias$ = k$(31,16)
+                        alias$ = cvs( k$(31,16), 2 )
                     else
                         throw "FileObject: could not find """ + file_name$ + """ in ddm_tables.bat", 11
                     endif
@@ -80,16 +85,18 @@ rem ==========================================================================
                 endif
             wend
             
+        rem --- Get the table template and setup record object
+            
             found = 0
             
             if #START_BLOCK then
-                read (#ddmTableTplsChan%, key=pad(p_alias$, 16), dom=*endif ) *, *, file_tmpl$
+                read (#ddmTableTplsChan%, key=pad(alias$, 16), dom=*endif ) *, *, file_tmpl$
                 found = 1
                 #fileTmpl$ = file_tmpl$
             endif
             
             if !found then
-                throw "FileObject: could not find template for """ + p_alias$ + """ in ddm_table_tpls.bat", 11
+                throw "FileObject: could not find template for """ + alias$ + """ in ddm_table_tpls.bat", 11
             endif
             
             #fileRec! = BBjAPI().makeTemplatedString(#fileTmpl$)
@@ -102,15 +109,10 @@ rem ==========================================================================
     
         method public static FileObject getInstance(BBjString p_alias$)
         
-            declare FileObject this_file!
-            this_file! = new FileObject( p_alias$ )
-            
-            if #openFiles! = null() then #openFiles! = new HashMap()
-            
             if #openFiles!.containsKey( p_alias$ ) then
                 methodret cast( FileObject, #openFiles!.get( p_alias$ ) )
             else
-                methodret #openFile( this_file! )
+                methodret #openFile( new FileObject( p_alias$ ) )
             endif
             
         methodend
