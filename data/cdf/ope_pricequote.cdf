@@ -17,7 +17,7 @@ if cvs(callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),2) <>"" then
 :		"VIEW",
 :		table_chans$[all],
 :		key_pfx$,
-:		"ALT_KEY_02",
+:		"AO_ITEM_WH",
 :		""
 endif
 [[OPE_PRICEQUOTE.<CUSTOM>]]
@@ -116,16 +116,18 @@ determine_price:
 return
 [[OPE_PRICEQUOTE.ITEM_ID.AVAL]]
 rem --- Validate Warehouse for this Item
+
 ivm01_dev=fnget_dev("IVM_ITEMMAST")
-dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-readrecord(ivm01_dev,key=firm_id$+callpoint!.getUserInput())ivm01a$
 ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
-valid_wh$="Y"
+
+valid_wh$="N"
 while 1
+	readrecord(ivm01_dev,key=firm_id$+callpoint!.getUserInput(),dom=*break)ivm01a$
 	readrecord(ivm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_PRICEQUOTE.WAREHOUSE_ID")+
-:			callpoint!.getUserInput(),dom=*next)ivm02a$;break
-	valid_wh$="N"
+:			callpoint!.getUserInput(),dom=*break)ivm02a$
+	valid_wh$="Y"
 	break
 wend
 if valid_wh$="N"
