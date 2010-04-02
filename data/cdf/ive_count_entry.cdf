@@ -168,8 +168,9 @@ rem --- Get record if this isn't a lotted/serial item
 				else
 					gosub display_record
 				endif
-			endif
 
+			endif
+	
 		endif
 
 	endif
@@ -255,6 +256,8 @@ print "in check_item_whse"; rem debug
 
 	if user_tpl.this_item_lot_ser then
 		callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_NO", 1)
+	else
+		callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_NO", 0)
 	endif
 
 	whse_file$ = "IVM_ITEMWHSE"
