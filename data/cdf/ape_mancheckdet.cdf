@@ -61,7 +61,7 @@ rem -- only allow if trans_type is manual (vs reversal/void)
 
 				call stbl("+DIR_SYP")+"bac_key_template.bbj",
 :					"APE_MANCHECKDET",
-:					"ALT_KEY_01",
+:					"AO_VEND_INV",
 :					ape22_key1_tmpl$,
 :					table_chans$[all],
 :					status$
@@ -258,7 +258,7 @@ rem --- Look for Open Invoice
 
 	call stbl("+DIR_SYP")+"bac_key_template.bbj",
 :		"APE_MANCHECKDET",
-:		"ALT_KEY_01",
+:		"AO_VEND_INV",
 :		ape22_key1_tmpl$,
 :		table_chans$[all],
 :		status$
