@@ -276,7 +276,7 @@ rem --- Clear trans for this firm/process/batch from glw-11 work file (if not ba
 rem --- Open printer, start progress meter and position header file
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,ape02_dev,1,meter_num,status
-    read (ape02_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
+    read (ape02_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
 
 rem --- Read next Manual Check Header (ape-02) record
 

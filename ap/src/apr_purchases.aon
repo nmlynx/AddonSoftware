@@ -150,12 +150,12 @@ rem --- Initializations
     
     if sequence$="D" then 
        headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_DISTRIBUTION_ACCOUNT")
-       keynum=1
+       keynum$="AO_GLACCT_VEND"
     endif
     
     if sequence$="V" then 
        headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_VENDOR")
-       keynum=0
+       keynum$="PRIMARY"
     endif
     
     if sequence$="A" then 
@@ -295,7 +295,7 @@ rem --- Start progress meter and position the driver file
 
     sequence=pos(sequence$="ADV")
     call pgmdir$+"adc_progress.aon","NC","APT_INVOICEDIST","","","",0,apt02_dev,1,meter_num,status
-    if pos(sequence$="VD") then read (apt02_dev,key=firm_id$,knum=keynum,dom=*next)
+    if pos(sequence$="VD") then read (apt02_dev,key=firm_id$,knum=keynum$,dom=*next)
 
 rem --- Read next invoice history or sort record
 
