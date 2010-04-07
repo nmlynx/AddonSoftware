@@ -179,15 +179,15 @@ rem --- If alternate vendors are being included then a list of then must be comp
         itemvendors=0
         if include$="Y" then 
 
-            read (ivm01_dev,key=firm_id$+ivm02a.item_id$,knum=4,dom=*next)
+            read (ivm01_dev,key=firm_id$+ivm02a.item_id$,knum="AO_ITEM_VEND",dom=*next)
 
 rem --- Cycle through other vendors for this item and build list
 
             dim ivm01a_key$:ivm01a_altkey04_tpl$
             while more
-                ivm01a_key$=key(ivm01_dev,knum=4,end=*break)
+                ivm01a_key$=key(ivm01_dev,knum="AO_ITEM_VEND",end=*break)
                 if pos(firm_id$=ivm01a_key$)<>0 and ivm01a_key.item_id$=ivm02a.item_id$ then
-                    read record (ivm01_dev,key=ivm01a_key$,knum=4,dom=*break) ivm01a1$
+                    read record (ivm01_dev,key=ivm01a_key$,knum="AO_ITEM_VEND",dom=*break) ivm01a1$
                     itemvendors$=itemvendors$+ivm01a1.vendor_id$
                     itemvendors=itemvendors+1
                 else
