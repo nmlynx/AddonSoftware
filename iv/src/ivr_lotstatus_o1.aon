@@ -84,19 +84,19 @@ rem --- Column Headings
 rem --- Position file
 
     if sequence$="I" then
-        keynum=0
+        keynum$="PRIMARY"
         ivm07a_key$=firm_id$+begwhse$
         if begwhse$<>"" and begitem$<>"" ivm07a_key$=ivm07a_key$+begitem$+beglot$
     endif
 
     if sequence$="L" then
-        keynum=1
+        keynum$="AO_LOT_WH_ITEM"
         ivm07a_key$=firm_id$+beglot$
         if beglot$<>"" and begwhse$<>"" ivm07a_key$=ivm07a_key$+begwhse$+begitem$
     endif
 
     found_first=0
-    read (ivm07_dev,key=ivm07a_key$,knum=keynum,dom=*next)ivm07a$;found_first=1
+    read (ivm07_dev,key=ivm07a_key$,knum=keynum$,dom=*next)ivm07a$;found_first=1
 
 rem --- Next record
 
@@ -109,18 +109,18 @@ rem --- Next record
         if sequence$="I"
             if pos(firm_id$=ivm07a.firm_id$)<>1 then break
             if endwhse$<>"" and ivm07a.warehouse_id$>endwhse$ then break
-            if begitem$<>"" and ivm07a.item_id$<begitem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+begitem$,knum=keynum,dom=*continue);continue
-            if enditem$<>"" and ivm07a.item_id$>enditem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+$FF$,knum=keynum,dom=*continue);continue
-            if beglot$<>"" and ivm07a.lotser_no$<beglot$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+ivm07a.item_id$+beglot$,knum=keynum,dom=*continue);continue
-            if endlot$<>"" and ivm07a.lotser_no$>endlot$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+ivm07a.item_id$+$FF$,knum=keynum,dom=*continue);continue
+            if begitem$<>"" and ivm07a.item_id$<begitem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+begitem$,knum=keynum$,dom=*continue);continue
+            if enditem$<>"" and ivm07a.item_id$>enditem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+$FF$,knum=keynum$,dom=*continue);continue
+            if beglot$<>"" and ivm07a.lotser_no$<beglot$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+ivm07a.item_id$+beglot$,knum=keynum$,dom=*continue);continue
+            if endlot$<>"" and ivm07a.lotser_no$>endlot$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.warehouse_id$+ivm07a.item_id$+$FF$,knum=keynum$,dom=*continue);continue
             x$=ivm07a.warehouse_id$+" "+ivm07a.item_id$+" "+ivm07a.lotser_no$
         else
             if pos(firm_id$=ivm07a.firm_id$)<>1 then break
             if endlot$<>"" if ivm07a.lotser_no$>endlot$ then break
-            if begwhse$<>"" and ivm07a.warehouse_id$<begwhse$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+begwhse$,knum=keynum,dom=*continue);continue
-            if endwhse$<>"" and ivm07a.warehouse_id$>endwhse$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+$FF$,knum=keynum,dom=*continue);continue
-            if begitem$<>"" and ivm07a.item_id$<begitem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+ivm07a.warehouse_id$+begitem$,knum=keynum,dom=*continue);continue
-            if enditem$<>"" and ivm07a.item_id$>enditem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+ivm07a.warehouse_id$+$FF$,knum=keynum,dom=*continue);continue
+            if begwhse$<>"" and ivm07a.warehouse_id$<begwhse$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+begwhse$,knum=keynum$,dom=*continue);continue
+            if endwhse$<>"" and ivm07a.warehouse_id$>endwhse$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+$FF$,knum=keynum$,dom=*continue);continue
+            if begitem$<>"" and ivm07a.item_id$<begitem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+ivm07a.warehouse_id$+begitem$,knum=keynum$,dom=*continue);continue
+            if enditem$<>"" and ivm07a.item_id$>enditem$ then read (ivm07_dev,key=ivm07a.firm_id$+ivm07a.lotser_no$+ivm07a.warehouse_id$+$FF$,knum=keynum$,dom=*continue);continue
             x$=ivm07a.item_id$+" "+ivm07a.warehouse_id$+" "+ivm07a.lotser_no$
         endif
 

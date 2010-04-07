@@ -318,7 +318,7 @@ accum_total_whse: rem --- Accumulate warehouse totals
     dim activity[12]
     let ivm02a_key$=firm_id$+item$+whse$,items$[0]=firm_id$,items$[1]=whse$,items$[2]=item$
     let cost=0,usage=0,onhand=0
-    find record (ivm02a_dev,key=ivm02a_key$,knum=2,dom=call_accum_total_whse) ivm02a$
+    find record (ivm02a_dev,key=ivm02a_key$,knum="AO_ITEM_WH",dom=call_accum_total_whse) ivm02a$
     let onhand=ivm02a.qty_on_hand,cost=ivm02a.unit_cost
 call_accum_total_whse: 
     call pgmdir$+"ivc_whseact.aon",action$,files[all],items$[all],periods$[all],activity[all],status

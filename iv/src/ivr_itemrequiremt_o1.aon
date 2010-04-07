@@ -411,7 +411,7 @@ retrieve_whse: rem --- Retrieve warehouse record
     dim ivm02a$:ivm02a_tpl$
     let ivm02a_key$=firm_id$+whse$+item$,items$[1]=whse$,items$[2]=item$
     let location$="",available=0,point=0,eoq=0,onhand=0,committed=0,ordered=0
-    find record (ivm02a_dev,key=ivm02a_key$,knum=0,dom=item_whse_usage) ivm02a$
+    find record (ivm02a_dev,key=ivm02a_key$,knum="PRIMARY",dom=item_whse_usage) ivm02a$
     let location$=ivm02a.location$,onhand=ivm02a.qty_on_hand,committed=ivm02a.qty_commit,ordered=ivm02a.qty_on_order
     let available=onhand-committed,point=ivm02a.order_point,eoq=ivm02a.eoq
 item_whse_usage: 

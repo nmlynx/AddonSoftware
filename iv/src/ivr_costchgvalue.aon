@@ -247,7 +247,7 @@ rem --- Next SQL record
         call pgmdir$+"adc_progress.aon","S","","","","",0,costchg_dev,1,meter_num,ignore_status
         
         costchg_key$ = firm_id$ + batch_no$ + sql_rec.effect_date$ + sql_rec.warehouse_id$ + sql_rec.item_id$
-        read record (costchg_dev, key=costchg_key$, knum=1, dom=*continue) costchg_rec$
+        read record (costchg_dev, key=costchg_key$, knum="BATCH_KEY", dom=*continue) costchg_rec$
         
 rem --- Additional reads
 

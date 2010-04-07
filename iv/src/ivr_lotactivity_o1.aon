@@ -103,7 +103,7 @@ rem --- Position lot/serial master
     if sequence$="L" then
         ivm08a_key$=firm_id$+beglot$
         if beglot$<>"" and begwhse$<>"" ivm08a_key$=ivm08a_key$+begwhse$+begitem$
-        read (ivm07_dev, knum=1, key=ivm08a_key$, dom=*next)
+        read (ivm07_dev, knum="AO_LOT_WH_ITEM", key=ivm08a_key$, dom=*next)
     endif
 
 rem --- Get next lot/serial master
