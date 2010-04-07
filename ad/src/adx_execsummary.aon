@@ -857,15 +857,15 @@ rem --- than using the the common subroutines that the other applications use.
 
                 rem --- Position Warehouse Detail (ivm-02) file
 
-                read (ivm02_dev,key=item$,knum=2,dom=*next)
+                read (ivm02_dev,key=item$,knum="AO_ITEM_WH",dom=*next)
 
                 rem --- Read next Warehouse Detail (ivm-02) record
                 rem --- and accumulate quantities
 
                 while 1
-                    k$=key(ivm02_dev,knum=2,end=*break)
+                    k$=key(ivm02_dev,knum="AO_ITEM_WH",end=*break)
                     if pos(item$=k$)<>1 break
-                    read record (ivm02_dev,key=k$,knum=2) ivm02a$
+                    read record (ivm02_dev,key=k$,knum="AO_ITEM_WH") ivm02a$
                     warehouse$=firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$
                     cost=ivm02a.unit_cost
                     qty_onhand=ivm02a.qty_on_hand
