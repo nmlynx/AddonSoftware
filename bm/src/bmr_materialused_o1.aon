@@ -65,13 +65,13 @@ rem --- Background
 
 rem --- Initial Read
 
-        extractrecord (bmm02_dev,key=firm_id$+itemfrom$,knum=1,dom=*next)
+        extractrecord (bmm02_dev,key=firm_id$+itemfrom$,knum="AO_ITEM_BILL",dom=*next)
 
 rem --- Main Loop
 
     while more
         dim bmm02a_key$:bmm02a_key_tpl$
-        bmm02a_key$=key(bmm02_dev,knum=1,end=done)
+        bmm02a_key$=key(bmm02_dev,knum="AO_ITEM_BILL",end=done)
         readrecord (bmm02_dev)bmm02a$
 
 rem --- Breaks

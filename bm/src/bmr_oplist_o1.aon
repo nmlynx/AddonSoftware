@@ -63,12 +63,12 @@ rem --- Background
 
 rem --- Initial Read
 
-        extractrecord (bmm03a_dev,key=firm_id$+opfrom$,knum=1,dom=*next)
+        extractrecord (bmm03a_dev,key=firm_id$+opfrom$,knum="AO_OPCODE_BILL",dom=*next)
         
 rem --- Read Where Used File
 
         while more         
-            bmm03a_key$=key(bmm03a_dev,knum=1,end=done)
+            bmm03a_key$=key(bmm03a_dev,knum="AO_OPCODE_BILL",end=done)
             readrecord (bmm03a_dev)bmm03a$
             
 rem --- Breaks
