@@ -122,13 +122,13 @@ rem retrieve template for OPE_ORDDET record key
 
 rem --- Position File
 
-    read (ope11_dev,key=firm_id$+p6$,KNum=1,dom=*next)
+    read (ope11_dev,key=firm_id$+p6$,knum="AO_WH_ITEM_ORD",dom=*next)
 
 rem --- Next ope-61 record
 
     while more
 
-        ope11a_altkey01$=key(ope11_dev,KNum=1,end=*break)
+        ope11a_altkey01$=key(ope11_dev,knum="AO_WH_ITEM_ORD",end=*break)
 
         total_recs=total_recs+1
         if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status

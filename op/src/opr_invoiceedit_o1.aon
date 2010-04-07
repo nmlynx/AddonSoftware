@@ -190,7 +190,7 @@ rem --- Main Loop Starts
 
     rem --- Detail
 
-        read (ope11_dev, knum=3, key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$, dom=*next)
+        read (ope11_dev, knum="AO_CUST_PRD_LINE", key=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$, dom=*next)
 
         while more
             read record (ope11_dev, end=*break) ope11a$

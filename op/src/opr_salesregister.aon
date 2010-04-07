@@ -326,8 +326,8 @@ rem --- gosub sort_by_invno
 
 rem --- Initial Read
 
-    if seq$="C" keynum=0 else keynum=1
-    read (ope04_dev, key=firm_id$+"I", knum=keynum, dom=*next)
+    if seq$="C" keynum$="PRIMARY" else keynum$="ORDER_BY_CUST"
+    read (ope04_dev, key=firm_id$+"I", knum=keynum$, dom=*next)
 
 rem --- Main Read
 
