@@ -294,7 +294,7 @@ rem --- Final inits, Position file
     prev_total=0
     last_time=0
     call pgmdir$+"adc_progress.aon","N","","","","",0,ive01_dev,1,meter_num,status
-    read (ive01_dev,key=firm_id$+batch_no$,knum=3,dom=*next)
+    read (ive01_dev,key=firm_id$+batch_no$,knum="AO_BATCH_TRCD",dom=*next)
 
 rem --- Read next ive-01 header
 

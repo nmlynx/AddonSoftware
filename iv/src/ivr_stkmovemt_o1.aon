@@ -138,7 +138,7 @@ rem --- Main Read
         item$[0]=firm_id$
         item$[2]=item$
         item$[1]=whse$,action$=""
-        find record (ivm02_dev,key=ivm02a_key$,knum=0,dom=*continue) ivm02a$
+        find record (ivm02_dev,key=ivm02a_key$,knum="PRIMARY",dom=*continue) ivm02a$
         call pgmdir$+"ivc_whseinfo.aon",action$,ivchannels[all],item$[all],whse$[all],whse[all],value,status,rd_table_chans$[all]
         call pgmdir$+"ivc_usage.aon","W",ivchannels[all],item$[all],factors[all],day_of_mth,period$+year$,ivs01a.current_per$+ivs01a.current_year$,g[0],p[1],usage,estimated,flag$,status
         if flag$<>"" usage=estimated

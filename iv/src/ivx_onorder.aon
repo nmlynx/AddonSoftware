@@ -112,9 +112,9 @@ rem --- Purchase Orders
             x$=Translate!.getTranslation("AON_PURCHASE_ORDER_ON-ORDER_QUANTITIES")
             x=3+p[0]
             gosub Update_Screen
-            read (poe12_dev,key=firm_id$,knum=1,dom=*next)
+            read (poe12_dev,key=firm_id$,knum="ITEM_PO",dom=*next)
         
-rem --- Read next PO record; use knum=1, po's by item
+rem --- Read next PO record; use knum=ITEM_PO, po's by item
             while more
                 read record(poe12_dev,end=*break)poe12a$
                 if pos(firm_id$=poe12a$)<>1 break

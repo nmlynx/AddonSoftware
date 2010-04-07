@@ -96,7 +96,7 @@ rem --- Initialize update arrays
 
 rem --- Position file
 
-    read (ive02_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
+    read (ive02_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
 
 rem --- Loop starts
 

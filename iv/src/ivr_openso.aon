@@ -105,7 +105,7 @@ rem --- Position files
     call stbl("+DIR_PGM")+"adc_progress.aon","NC","","","","",0,ope11_dev,1,meter_num,status
 	if status = 999 then goto std_exit
 
-    read (ope11_dev,key=firm_id$+whse$+begitem$,knum=1,dom=*next)
+    read (ope11_dev,key=firm_id$+whse$+begitem$,knum="AO_WH_ITEM_ORD",dom=*next)
 	
     while 1
         ope11k1$=key(ope11_dev,end=*break)

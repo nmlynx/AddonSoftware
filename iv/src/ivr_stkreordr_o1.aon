@@ -115,7 +115,7 @@ rem --- Main Read
         item$[0]=firm_id$
         item$[2]=item$
         item$[1]=whse$,action$=""
-        find record (ivm02_dev,key=ivm02a_key$,knum=0,dom=*continue) ivm02a$
+        find record (ivm02_dev,key=ivm02a_key$,knum="PRIMARY",dom=*continue) ivm02a$
         call pgmdir$+"ivc_whseinfo.aon",action$,ivchannels[all],item$[all],whse$[all],w[all],value,status,rd_table_chans$[all]
         if report$="R" and w[0]+w[1]-w[2]>w[4] then continue
         if report$="S" and w[0]+w[1]-w[2]>=w[5] then continue

@@ -191,7 +191,7 @@ rem --- Next SQL record
         call pgmdir$+"adc_progress.aon","S","","","","",0,pricechg_dev,1,meter_num,ignore_status
 
     pricechg_rec_key$ = firm_id$ + batch_no$ + sql_rec.price_code$ + sql_rec.warehouse_id$ + sql_rec.item_id$
-        read record (pricechg_dev, key=pricechg_rec_key$, knum=1, dom=*continue) pricechg_rec$
+        read record (pricechg_dev, key=pricechg_rec_key$, knum="BATCH_KEY", dom=*continue) pricechg_rec$
 
 rem --- Level breaks?
 
