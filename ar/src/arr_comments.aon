@@ -104,13 +104,13 @@ rem --- Initializations
     clock$=""
     lastcode$=""
     nf$=Translate!.getTranslation("AON_(NOT_ON_FILE)")
-    keynum=1
+    keynum$="AO_SLSMN_CUST"
     begvalue$=begsales$
     total_recs=0
     
     x$=Translate!.getTranslation("AON__BY_SALESPERSON")
     if sequence$="T"
-       keynum=2
+       keynum$="AO_TERR_CUST"
        begvalue$=begterr$
        x$=Translate!.getTranslation("AON__BY_TERRITORY")
        if begterr$="" range$=Translate!.getTranslation("AON_FROM_FIRST_THROUGH_") else range$=Translate!.getTranslation("AON_FROM_")+begterr$+Translate!.getTranslation("AON__THROUGH_")
@@ -134,14 +134,14 @@ rem --- Initialize print positions
 rem --- Start progress meter and position Customer Master file
 
     call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
-    read (arm02_dev,knum=keynum,key=firm_id$+begvalue$,dom=*next)
+    read (arm02_dev,knum=keynum$,key=firm_id$+begvalue$,dom=*next)
 
 rem --- Read next Customer Detail (arm-02) record
 
     while moreheaders
-          arm02_key$=key(arm02_dev,knum=keynum,end=*break)
+          arm02_key$=key(arm02_dev,knum=keynum$,end=*break)
           if pos(firm_id$=arm02_key$)<>1 break
-          read record (arm02_dev,knum=keynum,key=arm02_key$) arm02a$
+          read record (arm02_dev,knum=keynum$,key=arm02_key$) arm02a$
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
@@ -306,8 +306,7 @@ std_error: rem --- Standard error handler (01Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_error_exit)
-    call stbl("DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
 :                                str(err),rd_err_text$,rd_err_act$
     if pos("EXIT"=rd_err_act$) goto std_error_exit
     if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
@@ -327,16 +326,13 @@ rem #endinclude std_error.src
 
 rem #include std_missing_params.src
 
-std_missing_params: rem --- Standard missing parameter handler (01Apr2006)
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
 
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
     call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
 :                                   str(err),rd_err_text$,rd_err_act$
-    if pos("EXIT"=rd_err_act$) goto std_missing_params_exit
-    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$) retry
 std_missing_params_exit:
     master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
     sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)

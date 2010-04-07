@@ -271,11 +271,11 @@ rem --- Open printer and start progress meter
 
 rem --- Sort the cash receipts if the register is by receipt code
 
-    if sequence$="C" key_no=3 else key_no=2
+    if sequence$="C" key_no$="AO_BATCH_RECCD" else key_no$="AO_BATCH_RECTDAT"
 
 rem --- Position the driver file
 
-    read (are01_dev,key=firm_id$+batch_no$,knum=key_no,dom=*next)
+    read (are01_dev,key=firm_id$+batch_no$,knum=key_no$,dom=*next)
 
 rem --- Read the next Cash Receipt Header (are-01) record
 

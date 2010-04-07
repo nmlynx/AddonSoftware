@@ -143,7 +143,7 @@ rem --- Initializations
             artype$=fill(2)
             nf$=Translate!.getTranslation("AON_(NOT_ON_FILE)")
             reserved$=" "
-            keynum=0
+            keynum$="PRIMARY"
             begvalue$=begcust$
             endvalue$=endcust$
             total_recs=0
@@ -151,7 +151,7 @@ rem --- Initializations
             headings$[0]=sysinfo.firm_name$
             headings$[1]=sysinfo.task_desc$+Translate!.getTranslation("AON__BY_CUSTOMER_ID")
             if sequence$="A"
-               keynum=2
+               keynum$="AO_ALTSEQ_CUST"
                begvalue$=begalt$
                endvalue$=endalt$
                headings$[1]=sysinfo.task_desc$+Translate!.getTranslation("AON__BY_ALTERNATE_SEQUENCE")
@@ -238,14 +238,14 @@ rem --- Start progress meter and position Customer Master (arm-01) file
 
             call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
             k$=firm_id$
-            read (arm01_dev,knum=keynum,key=k$+begvalue$,dir=0,dom=*next)
+            read (arm01_dev,knum=keynum$,key=k$+begvalue$,dir=0,dom=*next)
 
 rem --- Read next Customer Master (arm-01) record
 
     while morecustomers
           k$=key(arm01_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
-          read record (arm01_dev,knum=keynum,key=k$) arm01a$
+          read record (arm01_dev,knum=keynum$,key=k$) arm01a$
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if sequence$="C" if endvalue$<>"" if arm01a.customer_id$>endvalue$ break

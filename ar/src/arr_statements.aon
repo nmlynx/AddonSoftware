@@ -167,12 +167,12 @@ rem --- Initializations
     moreheaders=1
     moredetail=1
     artype$=fill(2)
-    keynum=0
+    keynum$="PRIMARY"
     begvalue$=begcust$; rem not set
     endvalue$=endcust$; rem not set
     
     if sequence$="A" then 
-        keynum=2
+        keynum$="AO_ALTSEQ_CUST"
         begvalue$=begalt$; rem not set
         endvalue$=endalt$; rem not set
     endif
@@ -193,7 +193,7 @@ rem --- Start progress meter and position Customer Master (arm-01) file
 
     call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
 
-        read (arm01_dev,knum=keynum,key=firm_id$,dom=*proceed)
+        read (arm01_dev,knum=keynum$,key=firm_id$,dom=*proceed)
 
 rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
@@ -203,7 +203,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
         
         if pos(option$="RS")
             if first_pass=0
-                read record (arm01_dev,knum=keynum,key=firm_id$+begvalue$,dom=read_next_cust) arm01a$
+                read record (arm01_dev,knum=keynum$,key=firm_id$+begvalue$,dom=read_next_cust) arm01a$
                 goto bypass_read
             endif   
         endif

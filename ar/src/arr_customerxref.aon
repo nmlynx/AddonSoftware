@@ -100,8 +100,8 @@ rem --- Open the printer, start the progress meter and position the file
     call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
     if status goto std_exit
     call pgmdir$+"adc_progress.aon","NC","","","","",0,arm01_dev1,1,meter_num,status
-    read (arm01_dev1,knum=0,key=firm_id$,dom=*next)
-    read (arm01_dev2,knum=2,key=firm_id$,dom=*next)
+    read (arm01_dev1,knum="PRIMARY",key=firm_id$,dom=*next)
+    read (arm01_dev2,knum="AO_ALTSEQ_CUST",key=firm_id$,dom=*next)
 
 rem --- Read the next Customer Header (arm-01) record
 
@@ -110,18 +110,18 @@ rem --- Read the next Customer Header (arm-01) record
 
           rem --- By customer ID 
 
-          k$=key(arm01_dev1,knum=0,end=*break)
+          k$=key(arm01_dev1,knum="PRIMARY",end=*break)
           if pos(firm_id$=k$)<>1 break
-          read record (arm01_dev1,key=k$,knum=0) arm01a$
+          read record (arm01_dev1,key=k$,knum="PRIMARY") arm01a$
           buffer$(o[0])=fnmask$(arm01a.customer_id$(1,customer_size),m0$)+" "+arm01a.customer_name$
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           records=records+1
 
           rem --- By alternate sequence
 
-          k$=key(arm01_dev2,knum=2,end=*break)
+          k$=key(arm01_dev2,knum="AO_ALTSEQ_CUST",end=*break)
           if pos(firm_id$=k$)<>1 break
-          read record (arm01_dev2,key=k$,knum=2) arm01a$
+          read record (arm01_dev2,key=k$,knum="AO_ALTSEQ_CUST") arm01a$
           buffer$(o[1]-1)=" "+arm01a.alt_sequence$+" "+fnmask$(arm01a.customer_id$(1,customer_size),m0$)+
 :                         " "+arm01a.customer_name$
 

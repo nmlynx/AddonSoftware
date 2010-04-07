@@ -74,7 +74,7 @@ rem --- Initializations
     m8$="(###) ###-####"
     more=1
     recs=0
-    keynum=0
+    keynum$="PRIMARY"
     begvalue$=begcust$
     endvalue$=endcust$
     total_recs=0
@@ -83,7 +83,7 @@ rem --- Initializations
     headings$[1]=sysinfo.task_desc$
     headings$[2]=Translate!.getTranslation("AON_BY_CUSTOMER_ID")
     if sequence$="A"
-       keynum=2
+       keynum$="AO_ALTSEQ_CUST"
        begvalue$=begalt$
        endvalue$=endalt$
        beghead$=begvalue$
@@ -114,10 +114,10 @@ rem --- Document columns
 
 rem --- Start progress meter and position file
 
-    read(arm01_dev,key=firm_id$,knum=keynum,dom=*next)
+    read(arm01_dev,key=firm_id$,knum=keynum$,dom=*next)
     call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
     while begvalue$<>""
-        read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dom=*next)
+        read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum$,dom=*next)
         read (arm01_dev,dir=-1,err=*next)
         beg_value$=begvalue$
         begvalue$=""
@@ -126,7 +126,7 @@ rem --- Start progress meter and position file
 rem --- Read next Customer Master (arm-01) record
 
     while more
-          k$=key(arm01_dev,knum=keynum,end=*break)
+          k$=key(arm01_dev,knum=keynum$,end=*break)
           if pos(firm_id$=k$)<>1 break
           if beg_value$<>"" 
             if k$(3,len(cvs(beg_value$,2)))<beg_value$

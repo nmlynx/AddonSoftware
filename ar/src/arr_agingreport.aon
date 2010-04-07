@@ -182,12 +182,12 @@ rem --- Underline for subtotals and totals
 
 rem --- Set table and index values based on the option and sequence specified by the user
 
-    keynum=0
+    keynum$="PRIMARY"
     channel=arm01_dev
     channel_name$="ARM_CUSTMAST"
-    if sequence$="A" keynum=2
+    if sequence$="A" keynum$="AO_ALTSEQ_CUST"
     if option$="S"
-       keynum=1
+       keynum$="AO_TERR_CUST"
        channel=arm02_dev
        channel_name$="ARM_CUSTDET"
     endif
@@ -317,17 +317,17 @@ rem --- column headings
 rem --- Start progress meter and position customer file
 
     call pgmdir$+"adc_progress.aon","NC",channel_name$,"","","",0,channel,1,meter_num,status
-    read (channel,knum=keynum,key=firm_id$,dom=*next)
+    read (channel,knum=keynum$,key=firm_id$,dom=*next)
 
 rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
     while morecustomers
-          k$=key(channel,knum=keynum,end=*break)
+          k$=key(channel,knum=keynum$,end=*break)
           if pos(firm_id$=k$)<>1 break
 
           if option$="C"
              dim arm02a$:fattr(arm02a$)
-             read record (arm01_dev,knum=keynum,key=k$) arm01a$
+             read record (arm01_dev,knum=keynum$,key=k$) arm01a$
              arm02a.firm_id$=arm01a.firm_id$
              arm02a.customer_id$=arm01a.customer_id$
              arm02a.ar_type$=artype$
@@ -337,7 +337,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           endif
 
           if option$="S"
-             read record (arm02_dev,knum=keynum,key=k$) arm02a$
+             read record (arm02_dev,knum=keynum$,key=k$) arm02a$
              arm01a.firm_id$=arm02a.firm_id$
              arm01a.customer_id$=arm02a.customer_id$
              arm01_key$=arm01a.firm_id$+arm01a.customer_id$

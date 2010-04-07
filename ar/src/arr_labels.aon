@@ -134,19 +134,19 @@ rem --- Initializations
     lines=6
     if length<6 lines=length
     offset=0
-    keynum=0
+    keynum$="PRIMARY"
     begvalue$=begcustomer$
     endvalue$=endcustomer$
     total_recs=0
     keyfield$="CUSTOMER_ID"
     if sequence$="A"
-       keynum=2
+       keynum$="AO_ALTSEQ_CUST"
        begvalue$=begalt$
        endvalue$=endalt$
        keyfield$="ALT_SEQUENCE"
     endif
     if sequence$="Z"
-       keynum=3
+       keynum$="AO_ZIP_CUST"
        begvalue$=begzip$
        endvalue$=endzip$
        keyfield$="ZIP_CODE"
@@ -191,7 +191,7 @@ rem --- Print test patterns until the user is satisfied
 rem --- Start the progress meter and position the file
 
     call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
-    read record (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dir=0,dom=*next)arm01a$
+    read record (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum$,dir=0,dom=*next)arm01a$
 
 rem --- Read next Customer Master (arm-01) record
 

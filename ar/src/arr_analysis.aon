@@ -111,13 +111,13 @@ rem --- Initializations
     nf$=Translate!.getTranslation("AON_(NOT_ON_FILE)")
     total_recs=0
     
-    keynum=0
+    keynum$="PRIMARY"
     begvalue$=begcust$
     endvalue$=endcust$
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$+Translate!.getTranslation("AON__BY_CUSTOMER_ID")
     if sequence$="A"
-       keynum=2
+       keynum$="AO_ALTSEQ_CUST"
        begvalue$=begalt$
        endvalue$=endalt$
        headings$[1]=sysinfo.task_desc$+Translate!.getTranslation("AON__BY_ALTERNATE_SEQUENCE")
@@ -171,11 +171,11 @@ rem --- Define print positions
 
 rem --- Open printer, start progress meter and position Customer Master (arm-01) file
 
-    read(arm01_dev,key=firm_id$,knum=keynum,dom=*next)
+    read(arm01_dev,key=firm_id$,knum=keynum$,dom=*next)
     call pgmdir$+"adc_progress.aon","NC","ARM_CUSTMAST","","","",0,arm01_dev,1,meter_num,status
     k$=firm_id$
     while begvalue$<>""
-        read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum,dom=no_find)
+        read (arm01_dev,key=firm_id$+cvs(begvalue$,2),knum=keynum$,dom=no_find)
         read (arm01_dev,dir=-1,err=*next)
 no_find:
         beg_value$=begvalue$
@@ -185,7 +185,7 @@ no_find:
 rem --- Read next Customer Master (arm-01) record
 
     while morecustomers
-          k$=key(arm01_dev,knum=keynum,end=*break)
+          k$=key(arm01_dev,knum=keynum$,end=*break)
           if pos(firm_id$=k$)<>1 break
           if beg_value$<>"" 
             if k$(3,len(cvs(beg_value$,2)))<beg_value$
@@ -194,7 +194,7 @@ rem --- Read next Customer Master (arm-01) record
             endif
           endif
           if endvalue$<>"" if k$(3,endvalue)>endvalue$ break
-          read record (arm01_dev,knum=keynum,key=k$) arm01a$
+          read record (arm01_dev,knum=keynum$,key=k$) arm01a$
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if sequence$="C" if endvalue$<>"" if arm01a.customer_id$>endvalue$ break
