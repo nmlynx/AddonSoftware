@@ -98,8 +98,8 @@ rem --- Initializations
     if pagebreak$="Y" dim headings$[headings+1]
     number=0
     more=1
-    keynum=0
-    if sequence$="D" keynum=1
+    keynum$="PRIMARY"
+    if sequence$="D" keynum$="AO_TRDAT_PROCESS"
     t0$=""
     t1$=""
     t2$=""
@@ -199,7 +199,7 @@ rem --- Start the progress meter
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glt04_dev,1,meter_num,status;rem --- don't include filename here since file is locked; causes pause in adc_progress while SQL stmts time out on err 0
     k$=firm_id$+journal$
     if sequence$="D" k$=firm_id$+begdate$
-    read (glt04_dev,key=k$,knum=keynum,dom=*next)
+    read (glt04_dev,key=k$,knum=keynum$,dom=*next)
 
 rem --- Read next daily detail record
             

@@ -219,16 +219,18 @@ rem --- or returned.
 
     while more
 
-    rem --- Is this table/program part of a process? Note that keynum is
+    rem --- Is this table/program part of a process? Note that keynum$ is
     rem --- set here and used below when retrieving the posting control 
     rem --- record which also has table/program alternate keys.
 
         notprocess=1
-        keynum=1
+        keynum$="AO_ALIAS_PROCESS"
+        keynum_19$="AO_AO_TABLE_PROCESS"
         value$=firm_id$+process_table$
         gosub get_process
         if notprocess
-            keynum=2
+            keynum$="AO_PROG_PROCESS"
+            keynum_19$="AO_PROG_PROCESS"
             value$=firm_id$+program_name$
             gosub get_process
         endif
@@ -247,11 +249,11 @@ rem --- or returned.
             message$=Translate!.getTranslation("AON_THE_POSTING_CONTROL_RECORD_FOR_THIS_TASK_IS_MISSING._USE_THE")+$0A$+
 :               Translate!.getTranslation("AON_PROCESS_MAINTENANCE_TASK_TO_DEFINE_THE_PARAMETERS_FOR_THIS_TASK.")
             value$=""
-            if keynum=1 value$=firm_id$+process_table$
-            if keynum=2 value$=firm_id$+program_name$
+            if keynum$="AO_ALIAS_PROCESS" value$=firm_id$+process_table$
+            if keynum$="AO_PROG_PROCESS" value$=firm_id$+program_name$
             value$=value$+process_id$
-            read (glm06_dev,key=value$,knum=keynum,dom=*next)
-            k$=key(glm06_dev,knum=keynum,err=*break)
+            read (glm06_dev,key=value$,knum=keynum$,dom=*next)
+            k$=key(glm06_dev,knum=keynum$,err=*break)
             if pos(value$=k$)<>1 break
             find record (glm06_dev,key=k$) glm06a$
             action=0
@@ -477,7 +479,7 @@ get_process: rem --- Using the firm id and the table/program name, attempt to re
 rem --- process id and sequence number from the process detail (adm-19) file.
 
     k$=""
-    read (adm19_dev,key=value$,knum=keynum,dom=*next)
+    read (adm19_dev,key=value$,knum=keynum_19$,dom=*next)
     k$=key(adm19_dev,end=*next)
 
     if pos(value$=k$)=1 

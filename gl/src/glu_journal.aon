@@ -71,7 +71,7 @@ rem --- Start up progress meter
 
 rem --- Position gle-01
 
-    read (gle01_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
+    read (gle01_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
 
 rem --- Read through the work file and post the records to the daily detail file
 

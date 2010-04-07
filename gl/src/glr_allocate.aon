@@ -154,7 +154,7 @@ rem --- Get posting date, retrieve journal record and position file
         glm03_key$=firm_id$+glcontrol.journal_id$
         glm03a.code_desc$=Translate!.getTranslation("AON_UNKNOWN_JOURNAL_ID")
         find record (glm03_dev,key=glm03_key$,dom=*next)glm03a$
-        read (gle03_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
+        read (gle03_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
  
 rem --- Get next gle-03 record
 

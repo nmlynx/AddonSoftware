@@ -175,7 +175,7 @@ rem --- Document columns
 init_prog_meter: rem --- Initialize the progress meter and position the file
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,gle01_dev,1,meter_num,status
-    read (gle01_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
+    read (gle01_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
 
 rem --- Loop through Journal Entry Header records
 

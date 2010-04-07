@@ -68,7 +68,7 @@ rem --- Start progress meter and position files
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     call pgmdir$+"adc_progress.aon","NC","","","","",0,glt04_dev,1,0,ignore_status
-    read (glt04_dev,key=firm_id$,dom=*next,knum=0)
+    read (glt04_dev,key=firm_id$,dom=*next,knum="PRIMARY")
 
 rem --- Get next glt-04 record
 
