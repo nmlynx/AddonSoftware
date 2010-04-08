@@ -1537,7 +1537,7 @@ convert_po_files:
                     addr_file$="opt-31"
                     open (opt_invship_dev,err=addr_open_err)destin_folder$+"/"+addr_file$
                     while 1
-                        read record (opt_invhdr_dev,key=po_hdr_rec.firm_id$+opt_invhdr.ar_type$+po_hdr_rec.customer_id$+po_hdr_rec.order_no$,knum=3,dom=*break)opt_invhdr$
+                        read record (opt_invhdr_dev,key=po_hdr_rec.firm_id$+opt_invhdr.ar_type$+po_hdr_rec.customer_id$+po_hdr_rec.order_no$,knum="AO_CUST_ORD",dom=*break)opt_invhdr$
                         read record (opt_invship_dev,key=po_hdr_rec.firm_id$+po_hdr_rec.customer_id$+opt_invhdr.ar_inv_no$,dom=*break)rec$
                         po_hdr_rec.ds_name$=rec.name$            
                         gosub fill_dropship_address
