@@ -106,14 +106,14 @@ rem --- Setup
 
     if p7$="A" then
 rem --- Alternate Sequence
-        read (prm01_dev,key=firm_id$,knum=1,dom=*next)
+        read (prm01_dev,key=firm_id$,knum="AO_SURNAME_EMP",dom=*next)
 
 rem --- Main Read
         while more
-            prm01a_altkey01$=key(prm01_dev,knum=1,end=*break)
+            prm01a_altkey01$=key(prm01_dev,knum="AO_SURNAME_EMP",end=*break)
             if prm01a_altkey01.firm_id$<>firm_id$ then break
-            read (prm01_dev,knum=1)
-            find record (prm01_dev,key=firm_id$+prm01a_altkey01.empl_surname$+prm01a_altkey01.employee_no$,knum=1,dom=*continue) prm01a$
+            read (prm01_dev,knum="AO_SURNAME_EMP")
+            find record (prm01_dev,key=firm_id$+prm01a_altkey01.empl_surname$+prm01a_altkey01.employee_no$,knum="AO_SURNAME_EMP",dom=*continue) prm01a$
 rem --- Setup
 
             gosub first_last_name
