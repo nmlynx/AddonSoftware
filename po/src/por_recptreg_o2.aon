@@ -469,8 +469,8 @@ l6390:
 l6400: rem --- Read receipt header and detail
 
     status=11
-    find record (poe04_dev,key=poe04a.firm_id$+poe04a.receiver_no$,knum=0,dom=l6690) poe04a$
-    find record (poe14_dev,key=poe14a.firm_id$+poe14a.receiver_no$+poe14a.internal_seq_no$,knum=0,dom=l6690) poe14a$
+    find record (poe04_dev,key=poe04a.firm_id$+poe04a.receiver_no$,knum="PRIMARY",dom=l6690) poe04a$
+    find record (poe14_dev,key=poe14a.firm_id$+poe14a.receiver_no$+poe14a.internal_seq_no$,knum="PRIMARY",dom=l6690) poe14a$
     if pom02a.firm_id$+pom02a.po_line_code$=firm_id$+poe14a.po_line_code$ goto l6500
     dim pom02a$:fattr(pom02a$)
     pom02a.firm_id$=firm_id$

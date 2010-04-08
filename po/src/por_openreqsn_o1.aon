@@ -117,7 +117,7 @@ rem --- Sorts
                 
                 if initializing$<>"N"
                     initializing$="N"
-                    read (poe01_dev2,knum=1,key=firm_id$+vendfrom$,dom=*next)                    
+                    read (poe01_dev2,knum="AO_VEND_REQ",key=firm_id$+vendfrom$,dom=*next)                    
                 endif
 
                 poe01_vendkey$=key(poe01_dev2,end=done);read(poe01_dev2)
@@ -133,7 +133,7 @@ rem --- Sorts
 
                 if initializing$<>"N"
                     initializing$="N"
-                    read (apm01_dev2,knum=2,key=firm_id$+altfrom$,dom=*next)
+                    read (apm01_dev2,knum="AO_ALTSEQ_VEND",key=firm_id$+altfrom$,dom=*next)
                     dim poe01a_key$:poe01a_key_pritpl$
                 endif
 
@@ -143,7 +143,7 @@ rem --- Sorts
                     if apm01a_key.firm_id$<>firm_id$ goto done else read (apm01_dev2,key=apm01a_key$)
                     if cvs(altthru$,3)<>"" then if apm01a_key.alt_sequence$(1,len(altthru$))>altthru$ goto done
                     apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
-                    read (poe01_dev2,key=apm01b_key$,knum=1,dom=*next)
+                    read (poe01_dev2,key=apm01b_key$,knum="AO_VEND_REQ",dom=*next)
                 endif
 
                 poe01_vendkey$=key(poe01_dev2,end=*next);read (poe01_dev2)
@@ -163,7 +163,7 @@ rem --- Sorts
                 
                 if initializing$<>"N"
                     initializing$="N"
-                    read (poe01_dev,key=firm_id$+reqfrom$,knum=0,dir=0,dom=*next)
+                    read (poe01_dev,key=firm_id$+reqfrom$,knum="PRIMARY",dir=0,dom=*next)
                 endif
                 
             rem --- Read through req headers
@@ -206,7 +206,7 @@ rem --- Sorts
         dim poe11a_key$:poe11a_key_tpl$
 
         p11_key$=poe01a.firm_id$+poe01a.req_no$
-        read (poe11_dev,key=p11_key$,knum="DISPLAY_SEQ",dom=*next)
+        read (poe11_dev,key=p11_key$,knum="AO_REQ_LINE",dom=*next)
 
     rem --- Test Req Detail date range
 
@@ -483,7 +483,7 @@ newvendor: rem --- New Vendor
     vendor$=poe01a.vendor_id$
     printvtot$="Y"
     a01_key$=firm_id$+vendor$
-    find record (apm01_dev,knum=0,key=a01_key$,dom=brnch4) apm01a$
+    find record (apm01_dev,knum="PRIMARY",key=a01_key$,dom=brnch4) apm01a$
     vendname$=apm01a.vendor_name$
 
 brnch4: 

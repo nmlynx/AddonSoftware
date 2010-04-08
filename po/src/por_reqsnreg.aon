@@ -171,7 +171,7 @@ rem --- Sort requisition file
     poe_reqhdr.vendor_id$=begvend$
     if cvs(begvend$,2)<>"" then poe_reqhdr.req_no$=begreq$
     flag=0
-    read (poe_reqhdr_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$,knum=1,dom=sort_req_file)
+    read (poe_reqhdr_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$,knum="AO_VEND_REQ",dom=sort_req_file)
     flag=1
     poe_reqhdr_key1$=keyp(poe_reqhdr_dev,end=done)
 

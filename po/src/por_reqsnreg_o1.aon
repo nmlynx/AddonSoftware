@@ -191,13 +191,13 @@ rem --- Position files
             apm_vendmast.vendor_id$=pow_reqregreq.vendor_id$
         endif
         
-        find record (poe_reqhdr_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$,knum=1,dom=*continue) poe_reqhdr$
+        find record (poe_reqhdr_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.vendor_id$+poe_reqhdr.req_no$,knum="AO_VEND_REQ",dom=*continue) poe_reqhdr$
         find record (apm_vendmast_dev,key=apm_vendmast.firm_id$+apm_vendmast.vendor_id$,dom=*next) apm_vendmast$
         gosub req_subheading
 
 rem --- Position detail file
 
-        read (poe_reqdet_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.req_no$,knum="DISPLAY_SEQ",dom=*next); rem requisition detail
+        read (poe_reqdet_dev,key=poe_reqhdr.firm_id$+poe_reqhdr.req_no$,knum="AO_REQ_LINE",dom=*next); rem requisition detail
 
         while more; rem --- Begin loop for detail file
 

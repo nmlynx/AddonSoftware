@@ -91,7 +91,7 @@ l1000: rem --- Get next record
 
 rem --- Position ope-11, alt_key_01, (old ope-61) Orders by Item
 
-    read (ope11_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$,knum=1,dom=*next)
+    read (ope11_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$,knum="AO_WH_ITEM_ORD",dom=*next)
 
 l2000: rem --- Read next 
 

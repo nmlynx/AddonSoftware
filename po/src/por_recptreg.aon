@@ -323,7 +323,7 @@ rem --- Resize masks and set print positions
 rem --- Position file
 
     call pgmdir$ + "adc_progress.aon","N","","","","",0,poe04_dev,1,meter_num,status
-    read (poe04_dev,key=firm_id$,knum=1,dom=*next)
+    read (poe04_dev,key=firm_id$,knum="AO_VEND_RCVR_PO",dom=*next)
 l1000: rem --- Read next header
 
     k$=key(poe04_dev,end=done)
@@ -694,8 +694,8 @@ rem --- Print list of lines with lot/serial number differences
         let k$=dif$[x]
         dim poe04a$:fattr(poe04a$)
         dim poe14a$:fattr(poe14a$)
-        read record (poe14_dev,key=k.firm_id$+k.receiver_no$+k.internal_seq_no$,knum=0)poe14a$
-        read record (poe04_dev,key=k.firm_id$+k.receiver_no$,knum=0)poe04a$
+        read record (poe14_dev,key=k.firm_id$+k.receiver_no$+k.internal_seq_no$,knum="PRIMARY")poe14a$
+        read record (poe04_dev,key=k.firm_id$+k.receiver_no$,knum="PRIMARY")poe04a$
         apm01a.firm_id$=firm_id$,apm01a.vendor_id$=poe04a.vendor_id$
         find record (apm01_dev,key=apm01a.firm_id$+apm01a.vendor_id$,dom=*next) apm01a$
     l4640:

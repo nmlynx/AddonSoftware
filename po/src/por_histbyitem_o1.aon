@@ -66,12 +66,12 @@ rem --- Position files
     if begitem$<>"" first$=first$+begwhse$
 
     dim pot24a_key$:pot14a_key_itemtpl$
-    read (pot14_dev2,knum=1,key=first$,dom=*next)
+    read (pot14_dev2,knum="ITEM_WHSE",key=first$,dom=*next)
 
 rem --- Get next sort record
 
     while more
-        pot24a_key$=key(pot14_dev2,knum=1,end=*break)
+        pot24a_key$=key(pot14_dev2,knum="ITEM_WHSE",end=*break)
         item$=pot24a_key.item_id$
         whse$=pot24a_key.warehouse_id$
         ponum$=pot24a_key.po_no$
@@ -103,12 +103,12 @@ rem --- Get next sort record
 
     this_item_first_whse: rem --- Skip to beginning whse for this item
 
-        read (pot14_dev2,key=firm_id$+pot24a_key.item_id$+begwhse$,knum=1,dom=*continue)
+        read (pot14_dev2,key=firm_id$+pot24a_key.item_id$+begwhse$,knum="ITEM_WHSE",dom=*continue)
         continue
 
     next_item: rem --- Skip to next item
 
-        read (pot14_dev2,key=firm_id$+pot24a_key.item_id$+$FF$,knum=1,dom=*continue)
+        read (pot14_dev2,key=firm_id$+pot24a_key.item_id$+$FF$,knum="ITEM_WHSE",dom=*continue)
         continue
 
     breaks: rem --- Breaks?

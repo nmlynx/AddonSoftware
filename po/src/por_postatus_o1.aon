@@ -140,7 +140,7 @@ rem --- Sorts
 
                 if initializing$<>"N"
                     initializing$="N"
-                    read (poe02_dev,knum=0,key=firm_id$+pofrom$,dir=0,dom=*next)
+                    read (poe02_dev,knum="PRIMARY",key=firm_id$+pofrom$,dir=0,dom=*next)
                 endif
 
                 poe02a_key$=key(poe02_dev,end=done)
@@ -154,7 +154,7 @@ rem --- Sorts
 
                 if initializing$<>"N"
                     initializing$="N"
-                    read (apm01_dev2,knum=2,key=firm_id$+altfrom$,dom=*next)
+                    read (apm01_dev2,knum="AO_ALTSEQ_VEND",key=firm_id$+altfrom$,dom=*next)
                     dim poe02a_key$:poe02a_key_pritpl$
                 endif
 
@@ -165,7 +165,7 @@ rem --- Sorts
                     if apm01a_key.firm_id$<>firm_id$ goto done else read (apm01_dev2,key=apm01a_key$)
                     if cvs(altthru$,3)<>"" then if apm01a_key.alt_sequence$(1,len(altthru$))>altthru$ goto done
                     apm01b_key$=apm01a_key.firm_id$+apm01a_key.vendor_id$
-                    read (poe02_dev2,key=apm01b_key$,knum=1,dom=*next)
+                    read (poe02_dev2,key=apm01b_key$,knum="AO_VEND_PO",dom=*next)
                 endif
 
                 poe02_vendkey$=key(poe02_dev2,end=*next);read (poe02_dev2)
@@ -185,7 +185,7 @@ rem --- Sorts
 
                 if initializing$<>"N"
                     initializing$="N"
-                    read (poe02_dev2,key=firm_id$+vendfrom$,knum=1,dom=*next)
+                    read (poe02_dev2,key=firm_id$+vendfrom$,knum="AO_VEND_PO",dom=*next)
                 endif
 
                 poe02_vendkey$=key(poe02_dev2,end=done);read(poe02_dev2)
@@ -201,7 +201,7 @@ rem --- Sorts
         swend
 
         if poe02a_key.firm_id$<>firm_id$ then goto done
-        read record (poe02_dev,key=poe02a_key$,knum=keynum) poe02a$
+        read record (poe02_dev,key=poe02a_key$,knum="PRIMARY") poe02a$ ;rem "was knum=keynum, but keynum never defined
 
     rem --- Test Ranges
 
