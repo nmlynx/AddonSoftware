@@ -463,7 +463,7 @@ rem ==========================================================================
 	itemwhse_dev = fnget_dev(file$)
 	dim itemwhse_rec$:fnget_tpl$(file$)
 
-	read (itemwhse_dev, key=firm_id$+item$, knum=2, dom=*next)
+	read (itemwhse_dev, key=firm_id$+item$, knum="AO_ITEM_WH", dom=*next)
 	qoh = 0
 
 	while 1

@@ -418,7 +418,7 @@ rem --- Set data for the lookup form
 
 rem --- See if there are any open lots
 
-	read (lsmast_dev, key=firm_id$+wh$+item$+" ", knum=4, dom=*next)
+	read (lsmast_dev, key=firm_id$+wh$+item$+" ", knum="AO_WH_ITM_FLAG", dom=*next)
 	lsmast_key$=key(lsmast_dev, end=*next)
 
 	if pos(firm_id$+wh$+item$+" " = lsmast_key$) = 1 then

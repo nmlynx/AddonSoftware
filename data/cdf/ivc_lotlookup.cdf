@@ -285,9 +285,9 @@ rem ==========================================================================
 
 	get_lot$=callpoint!.getDevObject("selected_lot")
 
-	rem --- added knum=0 to below, because if user typed their own lot#, Barista validation logic would
-	rem --- have used knum=3...
-	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),knum=0,dom=*next)
+	rem --- added knum="PRIMARY" to below, because if user typed their own lot#, Barista validation logic would
+	rem --- have used knum="AO_ITEM_WH_LOT"...
+	read (ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+cvs(get_lot$,3),knum="PRIMARY",dom=*next)
 
 	lotWin!=callpoint!.getDevObject("lotInfo")	
 

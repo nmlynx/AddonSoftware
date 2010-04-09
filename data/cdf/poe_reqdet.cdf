@@ -346,7 +346,7 @@ validate_whse_item:
 	
 	if change_flag and cvs(item_id$,2)<>"" then
 rem	if cvs(item_id$,2)<>"" then
-		read record (ivm_itemwhse_dev,key=firm_id$+whse$+item_id$,knum=0,dom=missing_warehouse) ivm_itemwhse$
+		read record (ivm_itemwhse_dev,key=firm_id$+whse$+item_id$,knum="PRIMARY",dom=missing_warehouse) ivm_itemwhse$
 		ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 		dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
 		read record(ivm_itemmast_dev,key=firm_id$+item_id$)ivm_itemmast$

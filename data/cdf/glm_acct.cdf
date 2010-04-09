@@ -41,7 +41,7 @@ rem --- Check glt-06 for history
 rem ---Check Journal Entries for activity
 	if okay$="Y"
 		gle11_dev=fnget_dev("GLE_JRNLDET")
-		read (gle11_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+		read (gle11_dev,key=firm_id$+this_acct$,knum="BY ACCOUNT",dom=*next)
 		while 1
 			gle11_key$=key(gle11_dev,end=*break)
 			if pos(firm_id$+this_acct$=gle11_key$)=1
@@ -55,7 +55,7 @@ rem ---Check Journal Entries for activity
 rem ---Check Recurring Journal Entries for activity
 	if okay$="Y"
 		gle12_dev=fnget_dev("GLE_RECJEDET")
-		read (gle12_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+		read (gle12_dev,key=firm_id$+this_acct$,knum="BY ACCOUNT",dom=*next)
 		while 1
 			gle12_key$=key(gle12_dev,end=*break)
 			if pos(firm_id$+this_acct$=gle12_key$)=1
@@ -79,7 +79,7 @@ rem ---Check Allocation Detail for activity
 			break
 		wend
 		if okay$="Y"
-			read (gle13_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+			read (gle13_dev,key=firm_id$+this_acct$,knum="AO_DEST_ACCT",dom=*next)
 			while 1
 				gle13_key$=key(gle13_dev,end=*break)
 				if pos(firm_id$+this_acct$=gle13_key$)=1
@@ -94,7 +94,7 @@ rem ---Check Allocation Detail for activity
 rem ---Check Daily Detail for activity
 	if okay$="Y"
 		glt04_dev=fnget_dev("GLE_DAILYDETAIL")
-		read (glt04_dev,key=firm_id$+this_acct$,knum=1,dom=*next)
+		read (glt04_dev,key=firm_id$+this_acct$,knum="AO_TRDAT_PROCESS",dom=*next)
 		while 1
 			glt04_key$=key(glt04_dev,end=*break)
 			if pos(firm_id$+this_acct$=glt04_key$)=1

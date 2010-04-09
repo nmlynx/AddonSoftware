@@ -21,7 +21,7 @@ switch pos(search_by$="ISTV")
 	case 1; rem by item
 		search_dev=fnget_dev("@IVM_ITEMMAST")
 		dim searchrec$:fnget_tpl$("@IVM_ITEMMAST")
-		search_knum=0
+		search_knum$="PRIMARY"
 		search_text$=callpoint!.getUserInput()
 		search_field$="ITEM_ID"
 		gosub load_and_display_grid
@@ -29,7 +29,7 @@ switch pos(search_by$="ISTV")
 	case 2; rem by synonym
 		search_dev=fnget_dev("@IVM_ITEMSYN")
 		dim searchrec$:fnget_tpl$("@IVM_ITEMSYN")
-		search_knum=0
+		search_knum$="PRIMARY"
 		search_text$=callpoint!.getUserInput()
 		search_field$="ITEM_SYNONYM"
 		gosub load_and_display_grid
@@ -37,7 +37,7 @@ switch pos(search_by$="ISTV")
 	case 3; rem by product type
 		search_dev=fnget_dev("@IVM_ITEMMAST")
 		dim searchrec$:fnget_tpl$("@IVM_ITEMMAST")
-		search_knum=2
+		search_knum$="AO_PROD_ITEM"
 		search_text$=callpoint!.getUserInput()
 		search_field$="PRODUCT_TYPE"
 		gosub load_and_display_grid
@@ -267,7 +267,7 @@ load_and_display_grid:
 
 	vectSearch!=SysGUI!.makeVector()
 	
-	read (search_dev,key=firm_id$+cvs(search_text$,3),knum=search_knum,dom=*next)
+	read (search_dev,key=firm_id$+cvs(search_text$,3),knum=search_knum$,dom=*next)
 
 	while 1 
 		read record (search_dev,end=*break) searchrec$		
@@ -340,7 +340,7 @@ rem --- get/display Inventory Detail info
 	read record (ivs_params_dev,key=firm_id$+"IV00",dom=*next)ivs_params$
 	ls$=ivs_params.lotser_flag$
 
-	read (ivm_itemwhse_dev,key=callpoint!.getDevObject("find_item"),knum=2,dom=*next)
+	read (ivm_itemwhse_dev,key=callpoint!.getDevObject("find_item"),knum="AO_ITEM_WH",dom=*next)
 	on_hand=0
 	committed=0
 	available=0

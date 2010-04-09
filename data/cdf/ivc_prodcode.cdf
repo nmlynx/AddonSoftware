@@ -6,7 +6,7 @@ ivs_defaults=fnget_dev("IVS_DEFAULTS")
 dim ivs_defaults$:fnget_tpl$("IVS_DEFAULTS")
 prod_type$ = callpoint!.getColumnData("IVC_PRODCODE.PRODUCT_TYPE")
 
-read (ivm01_dev,key=firm_id$+prod_type$,knum=2,dom=*next)
+read (ivm01_dev,key=firm_id$+prod_type$,knum="AO_PROD_ITEM",dom=*next)
 k$="", k$=key(ivm01_dev,err=*next)
 if pos(firm_id$+prod_type$=k$)=1
 	dim msg_tokens$[1]

@@ -10,7 +10,7 @@ endif
 rem -- don't allow delete of trans code if it's in use in ive_transhdr
 ive01_dev=fnget_dev("IVE_TRANSHDR")
 k$=""
-read (ive01_dev,key=firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE"),knum=1,dom=*next)
+read (ive01_dev,key=firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE"),knum="AO_TRANCD_TRNO",dom=*next)
 k$=key(ive01_dev,end=*next)
 if pos(firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE")=k$)=1
 	dim msg_tokens$[1]

@@ -1459,7 +1459,7 @@ rem ===========================================================================
 			user_tpl.item_wh_failed = 1
 			
 			if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
-				find record (ivm02_dev, key=firm_id$+wh$+item$, knum=0, dom=*endif) ivm02a$
+				find record (ivm02_dev, key=firm_id$+wh$+item$, knum="PRIMARY", dom=*endif) ivm02a$
 				user_tpl.item_wh_failed = 0
 			endif
 

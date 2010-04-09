@@ -39,7 +39,7 @@ rem --- Make sure invoice is not in either ape-04 (Check file) or ape-22 (Manual
 	in_check_file$=Translate!.getTranslation("AON_CHECK")
 	goto abort_entry
 check_manual:
-	read(ape22_dev,key=firm_id$+ap_type$+vendor_id$+inv_no$,knum=1,dom=*next)
+	read(ape22_dev,key=firm_id$+ap_type$+vendor_id$+inv_no$,knum="AO_VEND_INV",dom=*next)
 	ape22_key$=key(ape22_dev,end=look_for_invoice)
 	if pos(firm_id$+ap_type$+vendor_id$+inv_no$=ape22_key$)<>1 goto look_for_invoice
 	in_check_file$=Translate!.getTranslation("AON_MANUAL_CHECK")
