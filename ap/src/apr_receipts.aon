@@ -364,10 +364,10 @@ loop_getord_rec:
 end_getord_rec:
     return
 
-getinv: rem --- Get invoice data - now uses index on pot25 (knum=1, keyname=INVBYPO)
+getinv: rem --- Get invoice data - now uses index on pot25 (knum="INVBYPO", keyname=INVBYPO)
 
     dim xref$(37),c0$(20),c1$(64),d0$(23),d1$(31),d[4],invbypo$:invbypo_key$
-    if samerec=0 read (pot25_dev,key=pot04a.firm_id$+pot04a.vendor_id$+pot04a.po_no$+pot04a.receiver_no$,knum=1,dom=*next)
+    if samerec=0 read (pot25_dev,key=pot04a.firm_id$+pot04a.vendor_id$+pot04a.po_no$+pot04a.receiver_no$,knum="INVBYPO",dom=*next)
 loop_getinv:
 
     let invbypo$=key(pot25_dev,end=end_of_pot25)
