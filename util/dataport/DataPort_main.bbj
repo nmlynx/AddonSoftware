@@ -308,32 +308,10 @@ next_file:
     if pos("dd"=cvs(datafile$,8))=1 then goto next_file
     if pos("w-"=cvs(datafile$,8))=3 then goto next_file
     if pos("sh"=cvs(datafile$,8))=1 then goto next_file
+    if pos("ivm-03"=cvs(datafile$,8)=1 then goto next_file
 
     print "Data file: ",datafile$
     print (log_dev)"Data file: ",datafile$
-
-    if cvs(datafile$,8)="ivm-03" then
-        rem ' create the v8 ivm-03
-        old_ivm03$=source_folder$+"/"+datafile$
-        old_ivm03=unt
-        open (old_ivm03)old_ivm03$
-        new_ivm03$=destin_folder$+"/"+cvs(datafile$,8)
-        fid$=fid(old_ivm03)
-        fid$=fid$(1,8)+new_ivm03$
-        erase new_ivm03$,err=*next
-        file fid$
-        new_ivm03=unt
-        open (new_ivm03)new_ivm03$
-        lock (new_ivm03)
-        while 1
-            k$=key(old_ivm03,end=*break)
-            readrecord(old_ivm03,end=*break)rec$
-            writerecord(new_ivm03,key=k$)rec$
-        wend
-        close (old_ivm03)
-        close (new_ivm03)
-        goto next_file
-    endif; rem ivm-03
 
     if cvs(datafile$,8)="sys-01" then
        normalize_sys01=1
