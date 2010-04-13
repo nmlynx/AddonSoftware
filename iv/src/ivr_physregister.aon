@@ -16,9 +16,18 @@ rem --- Retrieve the program path
     sypdir$=""
     sypdir$=stbl("+DIR_SYP",err=*next)
 
-rem --- Use for type checking
+rem --- Use and declares for type checking
 
     use ::sys/prog/bao_option.bbj::Option
+    use ::bbtranslator.bbj::BBTranslator
+    
+    declare BBTranslator Translate!
+    declare Option option!
+    declare BBjObjectTable ot!
+    declare BBjVector OutVect!
+    declare BBjVector HdrVect!
+    declare BBjVector BrkVect!
+    declare BBjVector TotVect!
 
 rem --- Retrieve sysinfo data
 
@@ -34,11 +43,7 @@ rem --- Run Update?
 
 rem --- Assign form input values to local variables
 
-    declare Option option!
-    declare BBjObjectTable ot!
-
     whse$ = option!.getOptionData("WAREHOUSE_ID")	
-
     ot! = BBjAPI().getObjectTable()
     selected_all = num( ot!.get("IVR_PHYSREG.SELECTED_ALL") )
 
@@ -158,11 +163,6 @@ rem --- Print positions
 
 rem --- Document initializations
 
-    declare BBjVector OutVect!
-    declare BBjVector HdrVect!
-    declare BBjVector BrkVect!
-    declare BBjVector TotVect!
-
     OutVect!=BBjAPI().makeVector()
     HdrVect!=BBjAPI().makeVector()
     BrkVect!=BBjAPI().makeVector()
@@ -250,7 +250,7 @@ rem --- Get next cycle
         rem --- Calculate total value and variance
 
             dim t[6]
-        rem if physical_rec.lotser_item$ <> "Y" then physical_rec.act_phys_cnt = physical_rec.freeze_qty; rem why?
+            if physical_rec.entered_flag$ <> "Y" then physical_rec.act_phys_cnt = physical_rec.freeze_qty
             t[0] = physical_rec.act_phys_cnt
             t[1] = t[0]*cost
             t[2] = physical_rec.freeze_qty
