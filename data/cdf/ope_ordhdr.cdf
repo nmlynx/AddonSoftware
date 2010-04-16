@@ -2070,10 +2070,10 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=40
+	num_files=41
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
-   open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
+	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
 	open_tables$[2]="ARM_CUSTSHIP",  open_opts$[2]="OTA"
 	open_tables$[3]="OPE_ORDSHIP",   open_opts$[3]="OTA"
 	open_tables$[4]="ARS_PARAMS",    open_opts$[4]="OTA"
@@ -2112,6 +2112,7 @@ rem --- Open needed files
 	open_tables$[38]="OPC_TAXCODE",  open_opts$[38]="OTA"
 	open_tables$[39]="OPE_ORDHDR",   open_opts$[39]="OTA"
 	open_tables$[40]="ARC_TERMCODE", open_opts$[40]="OTA"
+	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
 
 	gosub open_tables
 
