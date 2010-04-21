@@ -168,7 +168,7 @@
 		</band>
 	</pageHeader>
 	<detail>
-		<band height="159">
+		<band height="172">
 			<textField>
 				<reportElement x="84" y="14" width="80" height="13"/>
 				<textElement>
@@ -444,6 +444,17 @@
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression class="java.lang.String"><![CDATA["VendorDetail_mast_fax.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport>
+				<reportElement positionType="Float" x="2" y="157" width="530" height="10" isRemoveLineWhenBlank="true"/>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="VENDOR_ID">
+					<subreportParameterExpression><![CDATA[$F{VENDOR_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA["VendorDetail_replenish.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
