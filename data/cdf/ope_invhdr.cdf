@@ -536,6 +536,27 @@ rem --- Invoice History Header, set to void
 		print "---Wrote Invoice History header..."; rem debug
 	endif
 
+rem --- Has a record been written
+
+	file_name$      = "OPE_INVHDR"
+	ope_invhdr_dev  = fnget_dev(file_name$)
+	ope_invhdr_tpl$ = fnget_tpl$(file_name$)
+	dim ope_invhdr_rec$:ope_invhdr_tpl$
+	start_block = 1
+	found = 0
+
+	if start_block then
+		read record (ope_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ope_invhdr_rec$
+		found = 1
+	endif
+
+	if !found then		
+		print "---Break out of BDEL"; rem debug
+		user_tpl.do_end_of_form = 0
+		callpoint!.setStatus("NEWREC")
+		break; rem --- exit callpoint
+	endif
+
 rem --- Retain Order?
 
 	msg_id$ = "OP_RETAIN_ORDER"
@@ -551,12 +572,6 @@ rem --- Retain Order?
 
 	rem --- Reset Invoice record to Order
 
-		file_name$      = "OPE_INVHDR"
-		ope_invhdr_dev  = fnget_dev(file_name$)
-		ope_invhdr_tpl$ = fnget_tpl$(file_name$)
-		dim ope_invhdr_rec$:ope_invhdr_tpl$
-
-		read record (ope_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ope_invhdr_rec$
 		ope_invhdr_rec$ = util.copyFields(ope_invhdr_tpl$, callpoint!)
 
 		ope_invhdr_rec.ar_inv_no$ = ""
@@ -609,6 +624,7 @@ rem --- Retain Order?
 
 	rem --- All Done
 
+		print "---Break out of BDEL"; rem debug
 		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("NEWREC")
 		break; rem --- exit callpoint
@@ -2115,6 +2131,8 @@ get_disk_rec: rem --- Get disk record, update with current form data
               rem          order_no$
 rem ==========================================================================
 
+	print "in: get_disk_rec..."; rem debug
+
 	file_name$  = "OPE_ORDHDR"
 	ordhdr_dev  = fnget_dev(file_name$)
 	ordhdr_tpl$ = fnget_tpl$(file_name$)
@@ -2123,11 +2141,27 @@ rem ==========================================================================
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 
-	read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$) ordhdr_rec$
+	found = 0
+	start_block = 1
+
+	if start_block then
+		read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ordhdr_rec$
+		found = 1
+	endif
 
 rem --- Copy in any form data that's changed
 
 	ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+
+rem debug --- This is a Barista kludge
+
+	if !found then 
+		write record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ordhdr_rec$
+		callpoint!.setStatus("SETORIG")
+	endif
+
+	print "---Record found: ", iff(found, "yes", "no"); rem debug
+	print "out"; rem debug
 
 	return
 [[OPE_INVHDR.ASHO]]
