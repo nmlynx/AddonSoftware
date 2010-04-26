@@ -215,6 +215,8 @@ rem --- Is record deleted?
 
 rem --- Is flag down?
 
+	print "---Should BREX be run? ", iff(user_tpl.do_end_of_form, "yes", "no"); rem debug
+
 	if !user_tpl.do_end_of_form then
 		user_tpl.do_end_of_form = 1
 		break; rem --- exit callpoint
@@ -343,7 +345,7 @@ rem --- Make order into an invoice
 
 	if locked then
 		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("ABORT;NEWREC")
+		callpoint!.setStatus("NEWREC")
 		break; rem --- exit callpoint
 	endif
 [[OPE_INVHDR.SLSPSN_CODE.AVAL]]
@@ -847,6 +849,19 @@ rem --- Check Print flag
 		break; rem --- exit callpoint
 	endif
 
+rem --- Check for order, force to an Invoice
+
+	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "O" then
+
+		gosub make_invoice
+
+		if locked then
+			user_tpl.do_end_of_form = 0
+			rem callpoint!.setStatus("NEWREC")
+			break; rem --- exit callpoint
+		endif
+	endif
+
 rem --- Show customer data
 	
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
@@ -932,7 +947,8 @@ rem --- Do we need to create a new order number?
 
 	if cvs(order_no$, 2) = "" then 
 
-		rem --- Option on order no field to assign a new sequence on null must be cleared
+	rem --- Option on order no field to assign a new sequence on null must be cleared
+
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","ORDER_NO",order_no$,table_chans$[all]
 		
 		if order_no$ = "" then
@@ -960,12 +976,6 @@ rem --- Does order exist?
 	if start_block then
 		find record (ope01_dev, key=firm_id$+ar_type$+cust_id$+order_no$, dom=*endif) ope01a$
 		found = 1
-	endif
-
-	rem debug
-	if found then 
-		print "---Invoice found"
-		print "---Invoice Type: ", ope01a.invoice_type$
 	endif
 
 rem --- A new record must be the next sequence
@@ -1001,6 +1011,19 @@ rem --- Existing record
 			break; rem --- exit from callpoint			
 		endif		
 
+	rem --- Check for order, force to an Invoice
+
+		if ope01a.invoice_type$ = "O" then
+
+			gosub make_invoice
+
+			if locked then
+				user_tpl.do_end_of_form = 0
+				rem callpoint!.setStatus("NEWREC")
+				break; rem --- exit callpoint
+			endif
+		endif
+
 	rem --- Set Codes
 	        
 		user_tpl.price_code$   = ope01a.price_code$
@@ -1012,13 +1035,18 @@ rem --- New record, set default
 	else
 
 		call stbl("+DIR_SYP")+"bas_sequences.bbj", "INVOICE_NO", invoice_no$, table_chans$[all]
+
+		if invoice_no$ = "" then
+			callpoint!.setStatus("ABORT")
+		endif
+
 		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", invoice_no$)
 
       cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","S")
 
-		rem --- Set default invoice type in OrderHelper object
+	rem --- Set default invoice type in OrderHelper object
 
 		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 		ordHelp!.setInv_type("S")
@@ -1947,6 +1975,8 @@ rem ==========================================================================
 		
 		if inv_no$ = "" then
 			callpoint!.setStatus("ABORT")
+			locked = 1
+			print "---No to new invoice number"; rem debug
 		else
 			callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", inv_no$)
 			callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "I")
