@@ -692,7 +692,7 @@ rem --- Remove committments for detail records by calling ATAMO
 		remove (creddate_dev, key=firm_id$+ord_date$+cust$+ord$, err=*next)	
 	endif
 [[OPE_INVHDR.BPRK]]
-rem --- Is previous record not a quote and not void?
+rem --- Previous record must be an invoice
 
 	file_name$ = "OPE_INVHDR"
 	ope01_dev = fnget_dev(file_name$)
@@ -705,7 +705,7 @@ rem --- Is previous record not a quote and not void?
 			read record (ope01_dev, key=p_key$) ope01a$
 
 			if ope01a.firm_id$ = firm_id$ then 
-				if ope01a.invoice_type$ <> "P" and ope01a.invoice_type$ <> "V" then
+				if ope01a.invoice_type$ = "S" and ope01a.ordinv_flag$ = "I" then
 					user_tpl.first_read = 0
 					break
 				else
@@ -727,7 +727,7 @@ rem --- Is previous record not a quote and not void?
 		endif
 	wend
 [[OPE_INVHDR.BNEK]]
-rem --- Is next record not a quote and not void?
+rem --- Next record must be an invoice 
 
 	file_name$ = "OPE_INVHDR"
 	ope01_dev = fnget_dev(file_name$)
@@ -739,7 +739,7 @@ rem --- Is next record not a quote and not void?
 			read record (ope01_dev, dir=0, end=*endif) ope01a$
 
 			if ope01a.firm_id$ = firm_id$ then
-				if ope01a.invoice_type$ <> "P" and ope01a.invoice_type$ <> "V" then
+				if ope01a.invoice_type$ = "S" and ope01a.ordinv_flag$ = "I" then
 					user_tpl.first_read = 0
 					break
 				else
@@ -1412,6 +1412,7 @@ rem ==========================================================================
 	ope_prntlist.customer_id$ = cust_id$
 	ope_prntlist.order_no$    = order_no$
 
+	ope_prntlist$ = field(ope_prntlist$)
 	write record (ope_prntlist_dev) ope_prntlist$
 	print "---Added to print batch"; rem debug
 	print "---order:", ope_prntlist.order_no$
