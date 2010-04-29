@@ -1,0 +1,182 @@
+rem --- File name: ivc_itemsyn.aon
+rem --- This program is used to encapsulate item synonym processing
+
+rem ==========================================================================
+grid_entry: rem --- Used in grid entry in PO and OE
+rem ==========================================================================
+
+    enter
+
+rem --- Inits
+
+    use ::ado_util.src::util
+    use ::sys/prog/bao_callpoint.bbj::Callpoint
+
+    declare Callpoint callpoint!
+    declare BBjStandardGrid grid!
+    declare BBjTopLevelWindow Form!
+
+    grid! = util.getGrid(Form!)
+    return_to_row = grid!.getSelectedRow()
+    return_to_col = grid!.getSelectedColumn()    
+
+    user_input$ = callpoint!.getUserInput()
+        
+rem --- Did user enter anything?
+
+    if cvs(user_input$, 3) = "" then 
+        callpoint!.setStatus("ABORT")
+        exit
+    endif
+
+rem --- Open file
+    
+    gosub open_syn_file
+
+rem --- Look for no more than two synonyms   
+
+    gosub find_two_syn
+
+rem --- Only one was found so set input and we're done    
+
+    if found_count = 1 then
+        callpoint!.setUserInput(found_item$)
+        callpoint!.clearStatus()
+        exit
+    endif
+
+rem --- None or more that one found, so display inquiry grid   
+    
+    gosub display_inquiry
+
+rem --- Put focus back where is was befor calling the inquiry program
+
+    util.forceEdit(Form!, return_to_row, return_to_col)
+    exit
+    
+rem ==========================================================================
+option_entry: rem --- Used in report option entry forms
+rem ==========================================================================
+
+    enter
+    
+rem --- Inits
+
+    user_input$ = callpoint!.getUserInput()
+        
+rem --- Did user enter anything?
+
+    if cvs(user_input$, 3) = "" then 
+        callpoint!.setStatus("ABORT")
+        exit
+    endif
+    
+rem --- Open file    
+    
+    gosub open_syn_file  
+    
+rem --- Look for no more than two synonyms   
+
+    gosub find_two_syn
+
+rem --- Only one was found so set input and we're done    
+
+    if found_count = 1 then
+        callpoint!.setUserInput(found_item$)
+        callpoint!.clearStatus()
+        exit
+    endif
+
+rem --- None or more that one found, so display inquiry grid   
+    
+    gosub display_inquiry
+    
+    exit
+
+
+rem ==========================================================================
+rem --- Subroutines
+rem ==========================================================================
+
+open_syn_file: rem --- Set channel and record template
+
+    call stbl("+DIR_SYP")+"bac_open_table.bbj", 
+:       "IVM_ITEMSYN", 
+:       "OTA", 
+:       table_chans$[all], 
+:       ivm_itemsyn_dev, 
+:       ivm_itemsyn_tpl$, 
+:       proc_mssg$
+
+    dim ivm_itemsyn$:ivm_itemsyn_tpl$
+
+    return
+    
+find_two_syn: rem --- Find no more than two synonyms
+
+    read_count = 0
+    found_count = 0
+    found_item$ = ""
+
+    read (ivm_itemsyn_dev, key=firm_id$+user_input$, dom=*next)
+
+    while read_count < 2
+        read record (ivm_itemsyn_dev, end=*break) ivm_itemsyn$
+
+        if ivm_itemsyn.firm_id$ = firm_id$ and ivm_itemsyn.item_synonym$ = user_input$ then 
+        rem if ivm_itemsyn.firm_id$ = firm_id$ and pos( cvs(user_input$, 2+4) = cvs(ivm_itemsyn.item_synonym$, 4) ) = 1 then 
+            found_count = found_count + 1
+            found_item$ = ivm_itemsyn.item_id$
+        endif
+
+        read_count = read_count + 1
+    wend
+    
+    return
+
+display_inquiry:
+
+rem --- None of more than one synonym was found, so call the inquiry program
+rem --- First get the return key template for the inquiry program
+
+    call stbl("+DIR_SYP")+"bac_key_template.bbj", 
+:       "IVM_ITEMSYN", 
+:       "PRIMARY", 
+:       key_tpl$, 
+:       table_chans$[all], 
+:       rd_stat$
+
+    dim return_key$:key_tpl$
+    dim search_defs$[2]
+
+    search_defs$[0] = "IVM_ITEMSYN.ITEM_SYNONYM"
+    search_defs$[1] = callpoint!.getRawUserInput()
+    search_defs$[2] = "A"
+    
+rem --- Call the type-safe interface for bam_inquiry
+    
+    rem call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+    call "adx_typesafe.aon::inquiry",
+:       gui_dev,
+:       Form!,
+:       "IVM_ITEMSYN",
+:       "LOOKUP",
+:       table_chans$[all],
+:       firm_id$,
+:       "PRIMARY",
+:       return_key$,
+:       filter_defs$[all],
+:       search_defs$[all]
+
+rem --- Set inquiry key to user input; abort if nothing selected
+
+    if cvs(return_key$,3) <> "" then
+        callpoint!.setUserInput(return_key.item_id$)	
+        callpoint!.setStatus("ACTIVATE")
+    else
+        callpoint!.setStatus("ABORT")
+    endif
+    
+    return
+    
+    end
