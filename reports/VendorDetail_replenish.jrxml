@@ -54,17 +54,23 @@
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{BUYER_CODE}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="105" y="14" width="69" height="13"/>
+				<reportElement x="105" y="14" width="69" height="13">
+					<printWhenExpression><![CDATA[new Boolean (!$F{PRI_REV_DATE}.trim().isEmpty())]]></printWhenExpression>
+				</reportElement>
 				<textElement/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{PRI_REV_DATE}.substring(4,6)+"/"+$F{PRI_REV_DATE}.substring(6)+"/"+$F{PRI_REV_DATE}.substring(0,4)]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="105" y="28" width="69" height="13"/>
+				<reportElement x="105" y="28" width="69" height="13">
+					<printWhenExpression><![CDATA[new Boolean (!$F{NXT_REV_DATE}.trim().isEmpty())]]></printWhenExpression>
+				</reportElement>
 				<textElement/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{NXT_REV_DATE}.substring(4,6)+"/"+$F{NXT_REV_DATE}.substring(6)+"/"+$F{NXT_REV_DATE}.substring(0,4)]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="105" y="41" width="69" height="13"/>
+				<reportElement x="105" y="41" width="69" height="13">
+					<printWhenExpression><![CDATA[new Boolean (!$F{LSTREC_DATE}.trim().isEmpty())]]></printWhenExpression>
+				</reportElement>
 				<textElement/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{LSTREC_DATE}.substring(4,6)+"/"+$F{LSTREC_DATE}.substring(6)+"/"+$F{LSTREC_DATE}.substring(0,4)]]></textFieldExpression>
 			</textField>
