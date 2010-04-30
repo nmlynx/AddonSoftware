@@ -3,8 +3,7 @@ print "Det:ITEM_ID.AINV"; rem debug
 
 rem --- Check for item synonyms
 
-	call "ivc_itemsyn.aon::grid_entry"
-
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
 [[OPE_ORDDET.WAREHOUSE_ID.BINP]]
 print "Det:WAREHOUSE_ID.BINP"; rem debug
 

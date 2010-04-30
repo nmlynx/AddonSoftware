@@ -152,7 +152,7 @@ endif
 [[POE_REQDET.ITEM_ID.AINV]]
 rem --- Item synonym processing
  
-	call "ivc_itemsyn.aon::grid_entry"
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
      
 [[POE_REQDET.AGCL]]
 rem print 'show';rem debug
