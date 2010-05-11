@@ -8,7 +8,15 @@ else
 endif
 [[IVC_TRANCODE.BDEL]]
 rem -- don't allow delete of trans code if it's in use in ive_transhdr
-ive01_dev=fnget_dev("IVE_TRANSHDR")
+
+	files=1,begfile=1,endfile=files
+	dim files$[files],options$[files],chans$[files],templates$[files]
+	files$[1]="IVE_TRANSHDR",options$[1]="OTA"
+
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:                                 chans$[all],templates$[all],table_chans$[all],batch,status$
+
+ive01_dev=num(chans$[1])
 k$=""
 read (ive01_dev,key=firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE"),knum="AO_TRANCD_TRNO",dom=*next)
 k$=key(ive01_dev,end=*next)
@@ -73,10 +81,10 @@ return
 #include std_missing_params.src
 [[IVC_TRANCODE.BSHO]]
 rem --- Open/Lock Files
-	files=2,begfile=1,endfile=files
+	files=1,begfile=1,endfile=files
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="IVS_PARAMS",options$[1]="OTA"
-	files$[2]="IVE_TRANSHDR",options$[2]="OTA"
+
 	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
 	if status$<>"" then
