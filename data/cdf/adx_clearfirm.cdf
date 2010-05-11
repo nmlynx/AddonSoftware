@@ -1,3 +1,35 @@
+[[ADX_CLEARFIRM.AOPT-CLRF]]
+rem --- Open/Lock files
+escape
+	vectFiles! = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
+	numcols = num(user_tpl.gridFilesCols$)
+	if vectFiles!.size() > 0
+		for curr_row=0 to vectFiles!.size()/(num(user_tpl.gridFilesCols$))-1
+			if vectFiles!.getItem(cur_row*numcols)="Y"
+				num_files=1
+				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+				open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
+				open_opts$[1]="OTASN"
+				gosub open_tables
+				table_dev=num(open_chans$[1])
+				if cvs(firm$,2)=""
+					call "adc_clearfile.aon",table_dev
+				else
+					call "adc_clearpartial.aon","",table_dev,firm_id$,status
+				endif
+				open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
+				open_opts$[1]="CX"
+				gosub open_tables
+			endif
+		next curr_row
+		if cvs(firm$,2)=""
+			prompt$="All firms cleared for selected tables."
+			x=msgbox(prompt$,64,task_description$)
+		else
+			prompt$="Selected tables cleared for firm "+firm_id$+"."
+			x=msgbox(prompt$,64,task_description$)
+		endif
+	endif
 [[ADX_CLEARFIRM.FIRM_ID_ENTRY.AVAL]]
 rem --- Set number of recs for firm selected
 
@@ -6,9 +38,13 @@ rem --- Set number of recs for firm selected
 [[ADX_CLEARFIRM.ASC_PROD_ID.AVAL]]
 rem --- Set Filter
 	gosub filter_recs
+	firm$=cvs(callpoint!.getColumnData("ADX_CLEARFIRM.FIRM_ID_ENTRY"),3)
+	gosub set_firm_recs
 [[ADX_CLEARFIRM.ASC_COMP_ID.AVAL]]
 rem --- Set Filter
 	gosub filter_recs
+	firm$=cvs(callpoint!.getColumnData("ADX_CLEARFIRM.FIRM_ID_ENTRY"),3)
+	gosub set_firm_recs
 [[ADX_CLEARFIRM.ACUS]]
 rem --- Process custom event
 rem --- Select/de-select checkboxes in grid
@@ -163,7 +199,11 @@ rem --- fill with File information
 		checkout=-1
 		checkout=lcheckout(feature$,version$,err=*next)
 		if err=99 checkout=lcheckout(feature$,version$,err=*next)
-		if err=0 or err=100 modules$=modules$+pad(adm_modules_tpl.asc_prod_id$,3)
+		if checkout=1 or err=0 or err=100
+			if pos(adm_modules_tpl.asc_comp_id$+adm_modules_tpl.asc_prod_id$="01007514ADB01007514DDB01007514SQB",11)=0
+				modules$=modules$+pad(adm_modules_tpl.asc_prod_id$,3)
+			endif
+		endif
 		if  checkout<>-1 lcheckin(checkout,err=*next)
 	wend
 
@@ -179,9 +219,12 @@ rem --- fill with File information
 			open_tables$[1]=cvs(ddm_tables.dd_table_alias$,2),open_opts$[1]="OTASN"
 			gosub open_tables
 			table_chn=num(open_chans$[1]),table_tpl$=open_tpls$[1]
+
 			if table_chn >0
 				table_fin$=xfin(table_chn)
-				close(table_chn)
+				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+				open_tables$[1]=cvs(ddm_tables.dd_table_alias$,2),open_opts$[1]="CX"
+				gosub open_tables
 				tot_recs=0
 				if pos(ddm_tables.dd_alias_type$="VMX")>0
 					tot_recs=dec(table_fin$(77,4))
@@ -395,6 +438,8 @@ rem ==========================================================================
 					wend
 					sqlclose(sql_chan)
 				endif
+				open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3),open_opts$[1]="CX"
+				gosub open_tables
 			endif
 		next curr_row
 	endif
@@ -403,7 +448,7 @@ rem ==========================================================================
 
 	gosub fill_grid
 
-
+	return
 rem ==========================================================================
 rem --- Functions
 rem ==========================================================================
@@ -488,3 +533,5 @@ rem --- Set callbacks - processed in ACUS callpoint
 	gridFiles!.setCallback(gridFiles!.ON_GRID_KEY_PRESS,"custom_event")
 	gridFiles!.setCallback(gridFiles!.ON_GRID_MOUSE_UP,"custom_event")
 	gridFiles!.setCallback(gridFiles!.ON_GRID_EDIT_STOP,"custom_event")
+
+	callpoint!.setOptionEnabled("CLRF",1)
