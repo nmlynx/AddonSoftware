@@ -27,6 +27,16 @@ if pos(firm_id$+callpoint!.getColumnData("IVC_TRANCODE.TRANS_CODE")=k$)=1
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
 endif
+
+rem --- now close trans hdr file to avoid err 0 if someone tries to run register
+	files=1,begfile=1,endfile=files
+	dim files$[files],options$[files],chans$[files],templates$[files]
+	files$[1]="IVE_TRANSHDR",options$[1]="C"
+
+	call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
+:                                 chans$[all],templates$[all],table_chans$[all],batch,status$
+
+
 [[IVC_TRANCODE.BREC]]
 rem --- re-enable Post to G/L flag (unless GL not installed)
 	if user_tpl.gl_installed$="Y"
