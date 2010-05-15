@@ -69,7 +69,7 @@ rem ==========================================================================
 rem --- Inits
 
     user_input$ = callpoint!.getUserInput()
-        
+
 rem --- Did user enter anything?
 
     if cvs(user_input$, 3) = "" then 
@@ -80,7 +80,7 @@ rem --- Did user enter anything?
 rem --- Open file    
     
     gosub open_syn_file  
-    
+
 rem --- Look for no more than two synonyms   
 
     gosub find_two_syn
@@ -93,10 +93,10 @@ rem --- Only one was found so set input and we're done
         exit
     endif
 
-rem --- None or more that one found, so display inquiry grid   
-    
+rem --- None or more that one found, so display inquiry grid
+
     gosub display_inquiry
-    
+
     exit
 
 
@@ -145,39 +145,37 @@ display_inquiry:
 rem --- None of more than one synonym was found, so call the inquiry program
 rem --- First get the return key template for the inquiry program
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj", 
-:       "IVM_ITEMSYN", 
-:       "PRIMARY", 
-:       key_tpl$, 
-:       table_chans$[all], 
-:       rd_stat$
-
-    dim return_key$:key_tpl$
-    dim search_defs$[2]
-
-    search_defs$[0] = "IVM_ITEMSYN.ITEM_SYNONYM"
-    search_defs$[1] = callpoint!.getRawUserInput()
-    search_defs$[2] = "A"
     
 rem --- Call the type-safe interface for bam_inquiry
-    
-    rem call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-    call "adx_typesafe.aon::inquiry",
-:       gui_dev,
-:       Form!,
-:       "IVM_ITEMSYN",
-:       "LOOKUP",
+
+	callpoint!.setDevObject("default_meth","S")
+	callpoint!.setDevObject("default_start",callpoint!.getRawUserInput())
+
+      call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:       "IVC_ITEMLOOKUP",
+:		stbl("+USER_ID"),
+:		"",
+:		"",
 :       table_chans$[all],
-:       firm_id$,
-:       "PRIMARY",
-:       return_key$,
-:       filter_defs$[all],
-:       search_defs$[all]
+:       ""
+
+	return_key!=callpoint!.getDevObject("find_item")	
+	if return_key!=null() or len(return_key!)=0
+		return_key$=""
+	else
+		return_key$=return_key!
+		return_key$=return_key$(3)
+	endif
+
+	callpoint!.setDevObject("default_meth","")
+	callpoint!.setDevObject("default_start","")
+	callpoint!.setDevObject("find_item","")
+	callpoint!.setDevObject("selected_item","")
 
 rem --- Set inquiry key to user input; abort if nothing selected
 
     if cvs(return_key$,3) <> "" then
-        callpoint!.setUserInput(return_key.item_id$)	
+        callpoint!.setUserInput(return_key$)	
         callpoint!.setStatus("ACTIVATE")
     else
         callpoint!.setStatus("ABORT")
