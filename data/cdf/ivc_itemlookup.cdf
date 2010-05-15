@@ -1,3 +1,7 @@
+[[IVC_ITEMLOOKUP.ASVA]]
+rem --- set find_item only if OK is clicked
+
+callpoint!.setDevObject("find_item",callpoint!.getDevObject("selected_item"))
 [[IVC_ITEMLOOKUP.BEND]]
 rem --- since files were forced open on new channels, close to keep tidy
 
@@ -60,6 +64,21 @@ swend
 [[IVC_ITEMLOOKUP.ARER]]
 rem --- set default search type to I (by item)
 callpoint!.setColumnData("IVC_ITEMLOOKUP.SEARCH_BY","I")
+
+dflt_meth!=callpoint!.getDevObject("default_meth")
+if dflt_meth!<>null() callpoint!.setColumnData("IVC_ITEMLOOKUP.SEARCH_BY",dflt_meth!)
+
+dflt_start!=callpoint!.getDevObject("default_start")
+if dflt_start!<>null! 
+	callpoint!.setColumnData("IVC_ITEMLOOKUP.SEARCH_KEY",dflt_start!)
+	search_dev=fnget_dev("@IVM_ITEMSYN")
+	dim searchrec$:fnget_tpl$("@IVM_ITEMSYN")
+	search_knum$="PRIMARY"
+	search_text$=dflt_start!
+	search_field$="ITEM_SYNONYM"
+	gosub load_and_display_grid
+endif
+
 callpoint!.setStatus("REFRESH")
 [[IVC_ITEMLOOKUP.AWIN]]
 rem --- open files
@@ -252,7 +271,7 @@ rem --- Get the control ID of the event
 		switch notice.code
 			case 19; rem grid_key_press
 			case 14; rem grid_mouse_up
-				callpoint!.setDevObject("find_item",firm_id$+gridSearch!.getCellText(curr_row,1))
+				callpoint!.setDevObject("selected_item",firm_id$+gridSearch!.getCellText(curr_row,1))
 				gosub get_inventory_detail		
 			break
 		swend
@@ -340,7 +359,7 @@ rem --- get/display Inventory Detail info
 	read record (ivs_params_dev,key=firm_id$+"IV00",dom=*next)ivs_params$
 	ls$=ivs_params.lotser_flag$
 
-	read (ivm_itemwhse_dev,key=callpoint!.getDevObject("find_item"),knum="AO_ITEM_WH",dom=*next)
+	read (ivm_itemwhse_dev,key=callpoint!.getDevObject("selected_item"),knum="AO_ITEM_WH",dom=*next)
 	on_hand=0
 	committed=0
 	available=0
@@ -348,7 +367,7 @@ rem --- get/display Inventory Detail info
 
 	while 1
 		read record(ivm_itemwhse_dev,end=*break)ivm_itemwhse$
-		if pos(ivm_itemwhse.firm_id$+ivm_itemwhse.item_id$=callpoint!.getDevObject("find_item"))<>1 then break
+		if pos(ivm_itemwhse.firm_id$+ivm_itemwhse.item_id$=callpoint!.getDevObject("selected_item"))<>1 then break
 		on_hand=on_hand+ivm_itemwhse.qty_on_hand
 		committed=committed+ivm_itemwhse.qty_commit
 		on_order=on_order+ivm_itemwhse.qty_on_order
@@ -357,7 +376,7 @@ rem --- get/display Inventory Detail info
 
 	infoWin!=callpoint!.getDevObject("infoWin")
 
-	read record (ivm_itemmast_dev,key=callpoint!.getDevObject("find_item"),dom=*next)ivm_itemmast$
+	read record (ivm_itemmast_dev,key=callpoint!.getDevObject("selected_item"),dom=*next)ivm_itemmast$
 	
 	w!=infoWin!.getControl( num( callpoint!.getDevObject("prod_tp") ) )
 	w!.setText(ivm_itemmast.product_type$)
