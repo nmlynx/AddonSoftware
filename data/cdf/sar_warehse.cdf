@@ -1,3 +1,7 @@
+[[SAR_WAREHSE.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAR_WAREHSE.BFMC]]
 rem --- open files
 	num_files=2

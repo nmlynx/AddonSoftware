@@ -1,3 +1,7 @@
+[[OPE_PRICEQUOTE.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[OPE_PRICEQUOTE.WAREHOUSE_ID.AVAL]]
 rem --- Fill arrays
 cust_id$=callpoint!.getColumnData("OPE_PRICEQUOTE.CUSTOMER_ID")

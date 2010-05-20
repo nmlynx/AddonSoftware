@@ -1,3 +1,7 @@
+[[SAR_PRODITMCST.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAR_PRODITMCST.ASVA]]
 rem --- Check selected level against allowable level
 	allow=pos(user_tpl.high_level$=user_tpl.sa_levels$)
