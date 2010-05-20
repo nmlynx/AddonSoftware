@@ -1,3 +1,7 @@
+[[IVE_TRANSDET.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
 [[IVE_TRANSDET.AGRN]]
 print "after grid row entry (AGRN)"; rem debug
 

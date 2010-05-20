@@ -1,3 +1,7 @@
+[[SAM_CUSTSHIP.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAM_CUSTSHIP.ITEM_ID.AVAL]]
 rem --- Enable/Disable Summary button
 	cust_no$=callpoint!.getColumnData("SAM_CUSTSHIP.CUSTOMER_ID")

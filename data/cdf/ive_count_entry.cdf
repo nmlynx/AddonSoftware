@@ -1,3 +1,7 @@
+[[IVE_COUNT_ENTRY.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[IVE_COUNT_ENTRY.PI_CYCLECODE.BINQ]]
 rem --- Restrict lookup to printed cycles
 

@@ -1,3 +1,7 @@
+[[SAM_DISTCODE.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAM_DISTCODE.PRODUCT_TYPE.AVAL]]
 rem --- Enable/Disable Summary button
 	dist_code$=callpoint!.getColumnData("SAM_DISTCODE.AR_DIST_CODE")

@@ -1,3 +1,7 @@
+[[SAM_CUSTSIC.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAM_CUSTSIC.ITEM_ID.AVAL]]
 rem --- Enable/Disable Summary button
 	sic_code$=callpoint!.getColumnData("SAM_CUSTSIC.SIC_CODE")

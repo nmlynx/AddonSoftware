@@ -1,3 +1,7 @@
+[[SAM_CUSTTYPE.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAM_CUSTTYPE.PRODUCT_TYPE.AVAL]]
 rem --- Enable/Disable Summary button
 	cust_type$=callpoint!.getColumnData("SAM_CUSTTYPE.CUSTOMER_TYPE")

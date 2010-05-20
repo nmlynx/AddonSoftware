@@ -1,3 +1,7 @@
+[[IVE_TRANSFER.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[IVE_TRANSFER.AOPT-LOTS]]
 rem --- Call the lot lookup window and set default lot
 

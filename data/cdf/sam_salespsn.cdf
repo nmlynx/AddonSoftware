@@ -1,3 +1,7 @@
+[[SAM_SALESPSN.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAM_SALESPSN.ITEM_ID.AVAL]]
 rem --- Enable/Disable Summary button
 	slsmn_no$=callpoint!.getColumnData("SAM_SALESPSN.SLSPSN_CODE")

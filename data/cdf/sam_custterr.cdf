@@ -1,3 +1,7 @@
+[[SAM_CUSTTERR.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAM_CUSTTERR.CUSTOMER_ID.AVAL]]
 rem --- Enable/Disable Summary button
 	terr$=callpoint!.getColumnData("SAM_CUSTTERR.TERRITORY")

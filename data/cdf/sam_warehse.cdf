@@ -1,3 +1,7 @@
+[[SAM_WAREHSE.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SAM_WAREHSE.ITEM_ID.AVAL]]
 rem --- Enable/Disable Summary button
 	whse$=callpoint!.getColumnData("SAM_WAREHSE.WAREHOUSE_ID")
