@@ -1,11 +1,12 @@
 [[ADX_CLEARFIRM.AOPT-CLRF]]
 rem --- Open/Lock files
-escape
 	vectFiles! = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
 	numcols = num(user_tpl.gridFilesCols$)
+	firm$=callpoint!.getColumnData("ADX_CLEARFIRM.FIRM_ID_ENTRY")
+
 	if vectFiles!.size() > 0
 		for curr_row=0 to vectFiles!.size()/(num(user_tpl.gridFilesCols$))-1
-			if vectFiles!.getItem(cur_row*numcols)="Y"
+			if vectFiles!.getItem(curr_row*numcols)="Y"
 				num_files=1
 				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 				open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
@@ -13,20 +14,35 @@ escape
 				gosub open_tables
 				table_dev=num(open_chans$[1])
 				if cvs(firm$,2)=""
+					open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
+					open_opts$[1]="CX"
+					gosub open_tables
 					call "adc_clearfile.aon",table_dev
 				else
-					call "adc_clearpartial.aon","",table_dev,firm_id$,status
+					call "adc_clearpartial.aon","N",table_dev,firm$,status
+					open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
+					open_opts$[1]="CX"
+					gosub open_tables
 				endif
-				open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
-				open_opts$[1]="CX"
-				gosub open_tables
 			endif
 		next curr_row
+
+		callpoint!.setColumnData("ADX_CLEARFIRM.ASC_COMP_ID","")
+		callpoint!.setColumnData("ADX_CLEARFIRM.ASC_PROD_ID","")
+		callpoint!.setColumnData("ADX_CLEARFIRM.FIRM_ID_ENTRY","")
+		callpoint!.setStatus("REFRESH")
+
+		vectFiles!.clear()
+		vectFilesMaster! = BBjAPI().makeVector()
+
+		gosub create_reports_vector
+		gosub fill_grid
+
 		if cvs(firm$,2)=""
-			prompt$="All firms cleared for selected tables."
+			prompt$="All firms cleared for selected table(s)."
 			x=msgbox(prompt$,64,task_description$)
 		else
-			prompt$="Selected tables cleared for firm "+firm_id$+"."
+			prompt$="Selected table(s) cleared for firm "+firm_id$+"."
 			x=msgbox(prompt$,64,task_description$)
 		endif
 	endif
@@ -190,8 +206,10 @@ rem --- fill with File information
 
 	adm_modules_dev=fnget_dev("ADM_MODULES")
 	dim adm_modules_tpl$:fnget_tpl$("ADM_MODULES")
+	read (adm_modules_dev,key="",dom=*next)
 
 	modules$=""
+
 	while 1
 		read record(adm_modules_dev,end=*break) adm_modules_tpl$
 		feature$=cvs(adm_modules_tpl.asc_comp_id$,2)+cvs(adm_modules_tpl.asc_prod_id$,2)
@@ -225,6 +243,7 @@ rem --- fill with File information
 				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 				open_tables$[1]=cvs(ddm_tables.dd_table_alias$,2),open_opts$[1]="CX"
 				gosub open_tables
+if ddm_tables.dd_table_alias$="APC_PAYMENTGROUP" escape
 				tot_recs=0
 				if pos(ddm_tables.dd_alias_type$="VMX")>0
 					tot_recs=dec(table_fin$(77,4))
@@ -293,7 +312,6 @@ rem ==========================================================================
 rem ==========================================================================
 filter_recs: rem --- Set grid vector based on filters
 rem ==========================================================================
-
 	vectFilesMaster! = UserObj!.getItem(num(user_tpl.vectFilesMasterOffset$))
 	vectFiles! = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
 	vect_size = num(vectFilesMaster!.size())
