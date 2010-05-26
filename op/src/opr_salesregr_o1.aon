@@ -99,7 +99,7 @@ l1050:
 
     arm01_key$=key(arm01_dev,end=l3000)
     if pos(firm_id$=arm01_key$)<>1 goto l3000
-    if r2$<>"" and arm01_key$(3,len(r2$))>r2$ goto l3000
+    if r2$<>"" and arm01_key$(3,len(cvs(r2$,2)))>cvs(r2$,2) goto l3000
     dim arm01a$:fattr(arm01a$)
     read record(arm01_dev,key=arm01_key$,knum=arm_key_num$)arm01a$
 
@@ -258,7 +258,7 @@ rem --- Breaks
         if r0$="N"
             if opw04a.customer_id$>r2$ goto done
         else
-            if opw04a.alt_sequence$>r2$ goto done
+            if opw04a.alt_sequence$(1,len(cvs(r2$,2)))>cvs(r2$,2) goto done
         endif
     endif    
 
