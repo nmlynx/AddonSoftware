@@ -1,6 +1,8 @@
 [[ADX_CLEARFIRM.AOPT-CLRF]]
 rem --- Open/Lock files
-	vectFiles! = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
+
+	vectFiles! = callpoint!.getDevObject("vectFiles")
+	vectFilesMaster! = callpoint!.getDevObject("vectFilesMaster")
 	numcols = num(user_tpl.gridFilesCols$)
 	firm$=callpoint!.getColumnData("ADX_CLEARFIRM.FIRM_ID_ENTRY")
 
@@ -33,7 +35,9 @@ rem --- Open/Lock files
 		callpoint!.setStatus("REFRESH")
 
 		vectFiles!.clear()
-		vectFilesMaster! = BBjAPI().makeVector()
+		vectFilesMaster!.clear()
+		callpoint!.setDevObject("vectFiles",vectFiles!)
+		callpoint!.setDevObject("vectFilesMaster",vectFilesMaster!)
 
 		gosub create_reports_vector
 		gosub fill_grid
@@ -42,7 +46,7 @@ rem --- Open/Lock files
 			prompt$="All firms cleared for selected table(s)."
 			x=msgbox(prompt$,64,task_description$)
 		else
-			prompt$="Selected table(s) cleared for firm "+firm_id$+"."
+			prompt$="Selected table(s) cleared for firm "+firm$+"."
 			x=msgbox(prompt$,64,task_description$)
 		endif
 	endif
@@ -82,10 +86,10 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		notice$=notify_base$
 	endif
 
-	gridFiles! = UserObj!.getItem(num(user_tpl.gridFilesOffset$))
+	gridFiles! = callpoint!.getDevObject("gridFiles")
 	numcols = gridFiles!.getNumColumns()
-	vectFiles! = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
-	vectFilesMaster! = UserObj!.getItem(num(user_tpl.vectFilesMasterOffset$))
+	vectFiles! = callpoint!.getDevObject("vectFiles")
+	vectFilesMaster! = callpoint!.getDevObject("vectFilesMaster")
 	curr_row = dec(notice.row$)
 	curr_col = dec(notice.col$)
 
@@ -163,7 +167,8 @@ fill_grid: rem --- Fill the grid with data in vectFiles!
 rem ==========================================================================
 
 	SysGUI!.setRepaintEnabled(0)
-	gridFiles! = UserObj!.getItem(num(user_tpl.gridFilesOffset$))
+	gridFiles! = callpoint!.getDevObject("gridFiles")
+	vectFiles! = callpoint!.getDevObject("vectFiles")
 	minrows = num(user_tpl.gridFilesRows$)
 
 	if vectFiles!.size() then
@@ -243,7 +248,7 @@ rem --- fill with File information
 				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 				open_tables$[1]=cvs(ddm_tables.dd_table_alias$,2),open_opts$[1]="CX"
 				gosub open_tables
-if ddm_tables.dd_table_alias$="APC_PAYMENTGROUP" escape
+
 				tot_recs=0
 				if pos(ddm_tables.dd_alias_type$="VMX")>0
 					tot_recs=dec(table_fin$(77,4))
@@ -280,9 +285,9 @@ rem ==========================================================================
 
 	SysGUI!.setRepaintEnabled(0)
 
-	gridFiles!       = UserObj!.getItem(num(user_tpl.gridFilesOffset$))
-	vectFiles!       = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
-	vectFilesMaster! = UserObj!.getItem(num(user_tpl.vectFilesMasterOffset$))
+	gridFiles! = callpoint!.getDevObject("gridFiles")
+	vectFiles! = callpoint!.getDevObject("vectFiles")
+	vectFilesMaster! = callpoint!.getDevObject("vectFilesMaster")
 
 	TempRows! = gridFiles!.getSelectedRows()
 	numcols   = gridFiles!.getNumColumns()
@@ -312,8 +317,8 @@ rem ==========================================================================
 rem ==========================================================================
 filter_recs: rem --- Set grid vector based on filters
 rem ==========================================================================
-	vectFilesMaster! = UserObj!.getItem(num(user_tpl.vectFilesMasterOffset$))
-	vectFiles! = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
+	vectFilesMaster! = callpoint!.getDevObject("vectFilesMaster")
+	vectFiles! = callpoint!.getDevObject("vectFiles")
 	vect_size = num(vectFilesMaster!.size())
 
 	if vect_size then 
@@ -366,8 +371,8 @@ rem ==========================================================================
 			endif
 		next x
 
-		UserObj!.setItem(num(user_tpl.vectFilesMasterOffset$),vectFilesMaster!)
-		UserObj!.setItem(num(user_tpl.vectFilesOffset$),vectFiles!)
+		callpoint!.setDevObject("vectFilesMaster",vectFilesMaster!)
+		callpoint!.setDevObject("vectFiles",vectFiles!)
 		gosub fill_grid
 	endif
 
@@ -381,9 +386,9 @@ rem ==========================================================================
 
 	SysGUI!.setRepaintEnabled(0)
 
-	gridFiles!       = UserObj!.getItem(num(user_tpl.gridFilesOffset$))
-	vectFiles!       = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
-	vectFilesMaster! = UserObj!.getItem(num(user_tpl.vectFilesMasterOffset$))
+	gridFiles! = callpoint!.getDevObject("gridFiles")
+	vectFiles! = callpoint!.getDevObject("vectFiles")
+	vectFilesMaster! = callpoint!.getDevObject("vectFilesMaster")
 
 	TempRows! = gridFiles!.getSelectedRows()
 	numcols   = gridFiles!.getNumColumns()
@@ -425,8 +430,8 @@ set_firm_recs:
 rem ==========================================================================
 
 	SysGUI!.setRepaintEnabled(0)
-	vectFiles!       = UserObj!.getItem(num(user_tpl.vectFilesOffset$))
-	vectFilesMaster! = UserObj!.getItem(num(user_tpl.vectFilesMasterOffset$))
+	vectFiles! = callpoint!.getDevObject("vectFiles")
+	vectFilesMaster! = callpoint!.getDevObject("vectFilesMaster")
 
 	TempRows! = vectFiles!
 	numcols   = num(user_tpl.gridFilesCols$)
@@ -503,12 +508,9 @@ rem --- Open/Lock files
 
 	gosub open_tables
 
-	user_tpl_str$ = "gridFilesOffset:c(5), " +
-:		"gridFilesCols:c(5), " +
+	user_tpl_str$ = "gridFilesCols:c(5), " +
 :		"gridFilesRows:c(5), " +
 :		"gridFilesCtlID:c(5)," +
-:		"vectFilesOffset:c(5), " +
-:		"vectFilesMasterOffset:c(5), " +
 :		"MasterCols:n(5)"
 	dim user_tpl$:user_tpl_str$
 
@@ -528,14 +530,9 @@ rem --- Open/Lock files
 	gosub format_grid
 	util.resizeWindow(Form!, SysGui!)
 
-	UserObj!.addItem(gridFiles!)
-	user_tpl.gridFilesOffset$="0"
-
-	UserObj!.addItem(vectFiles!); rem --- vector of filtered recs from Files
-	user_tpl.vectFilesOffset$="1"
-
-	UserObj!.addItem(vectFilesMaster!); rem --- vector of all Files
-	user_tpl.vectFilesMasterOffset$="2"
+	callpoint!.setDevObject("gridFiles",gridFiles!)
+	callpoint!.setDevObject("vectFiles",vectFiles!)
+	callpoint!.setDevObject("vectFilesMaster",vectFilesMaster!)
 
 rem --- Misc other init
 
