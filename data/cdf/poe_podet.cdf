@@ -193,8 +193,7 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 		if cvs(callpoint!.getColumnData("POE_PODET.ITEM_ID"),3)="" or
 :		num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))<=0 or
 :		num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))<0 or
-:		num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))<=0 or
-:		cvs(callpoint!.getColumnData("POE_PODET.REQD_DATE"),3)="" 
+:		num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))<=0
 			ok_to_write$="N"
 			focus_column$="POE_PODET.ITEM_ID"
 		endif
@@ -202,16 +201,14 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 
 	if cvs(callpoint!.getColumnData("POE_PODET.PO_LINE_CODE"),3)="N" 
 		if num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))<0 or
-:		num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))<=0 or
-:		cvs(callpoint!.getColumnData("POE_PODET.REQD_DATE"),3)="" 	
+:		num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))<=0
 			ok_to_write$="N"
 			focus_column$="POE_PODET.ORDER_MEMO"
 		endif
 	endif
 
 	if cvs(callpoint!.getColumnData("POE_PODET.PO_LINE_CODE"),3)="O" 
-		if num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))<0 or
-:		cvs(callpoint!.getColumnData("POE_PODET.REQD_DATE"),3)="" 	
+		if num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))<0
 			ok_to_write$="N"
 			focus_column$="POE_PODET.ORDER_MEMO"
 		endif
