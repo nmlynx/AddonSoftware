@@ -7,7 +7,7 @@ rem --- Open/Lock files
 	firm$=callpoint!.getColumnData("ADX_CLEARFIRM.FIRM_ID_ENTRY")
 
 	if vectFiles!.size() > 0
-		for curr_row=0 to vectFiles!.size()/(num(user_tpl.gridFilesCols$))-1
+		for curr_row=0 to vectFiles!.size()/(numcols)-1
 			if vectFiles!.getItem(curr_row*numcols)="Y"
 				num_files=1
 				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -207,28 +207,7 @@ rem --- fill with File information
 	read (ddm_tables_dev,key="",dom=*next)
 	rows=0
 
-	rem --- Checkout the licenses for each module to make sure we can open the tables.
-
-	adm_modules_dev=fnget_dev("ADM_MODULES")
-	dim adm_modules_tpl$:fnget_tpl$("ADM_MODULES")
-	read (adm_modules_dev,key="",dom=*next)
-
-	modules$=""
-
-	while 1
-		read record(adm_modules_dev,end=*break) adm_modules_tpl$
-		feature$=cvs(adm_modules_tpl.asc_comp_id$,2)+cvs(adm_modules_tpl.asc_prod_id$,2)
-		version$=cvs(adm_modules_tpl.version_id$,3)
-		checkout=-1
-		checkout=lcheckout(feature$,version$,err=*next)
-		if err=99 checkout=lcheckout(feature$,version$,err=*next)
-		if checkout=1 or err=0 or err=100
-			if pos(adm_modules_tpl.asc_comp_id$+adm_modules_tpl.asc_prod_id$="01007514ADB01007514DDB01007514SQB",11)=0
-				modules$=modules$+pad(adm_modules_tpl.asc_prod_id$,3)
-			endif
-		endif
-		if  checkout<>-1 lcheckin(checkout,err=*next)
-	wend
+	modules$=callpoint!.getDevObject("modules")
 
 	while 1
 		read record (ddm_tables_dev, end=*break) ddm_tables$
@@ -275,8 +254,42 @@ rem --- fill with File information
 		endif
 	wend
 
+	callpoint!.setDevObject("vectFiles",vectFiles!)
+	callpoint!.setDevObject("vectFilesMaster",vectFilesMaster!)
 	callpoint!.setStatus("REFRESH")
 	
+	return
+
+rem ==========================================================================
+checkout_licenses: rem --- checkout licenses each module
+rem ==========================================================================
+
+
+	rem --- Checkout the licenses for each module to make sure we can open the tables.
+
+	adm_modules_dev=fnget_dev("ADM_MODULES")
+	dim adm_modules_tpl$:fnget_tpl$("ADM_MODULES")
+	read (adm_modules_dev,key="",dom=*next)
+
+	modules$=""
+
+	while 1
+		read record(adm_modules_dev,end=*break) adm_modules_tpl$
+		feature$=cvs(adm_modules_tpl.asc_comp_id$,2)+cvs(adm_modules_tpl.asc_prod_id$,2)
+		version$=cvs(adm_modules_tpl.version_id$,3)
+		checkout=-1
+		checkout=lcheckout(feature$,version$,err=*next)
+		if err=99 checkout=lcheckout(feature$,version$,err=*next)
+		if checkout=1 or err=0 or err=100
+			if pos(adm_modules_tpl.asc_comp_id$+adm_modules_tpl.asc_prod_id$="01007514ADB01007514DDB01007514SQB",11)=0
+				modules$=modules$+pad(adm_modules_tpl.asc_prod_id$,3)
+			endif
+		endif
+		if  checkout<>-1 lcheckin(checkout,err=*next)
+	wend
+
+	callpoint!.setDevObject("modules",modules$)
+
 	return
 
 rem ==========================================================================
@@ -291,6 +304,7 @@ rem ==========================================================================
 
 	TempRows! = gridFiles!.getSelectedRows()
 	numcols   = gridFiles!.getNumColumns()
+	any_checked$="N"
 
 	if TempRows!.size() > 0 then
 		for curr_row=1 to TempRows!.size()
@@ -306,9 +320,12 @@ rem ==========================================================================
 
 			else
 				gridFiles!.setCellState(row_no,0,0)
+				vectFiles!.setItem(row_no * numcols, "N")
 			endif
 		next curr_row
 	endif
+
+	gosub enable_button
 
 	SysGUI!.setRepaintEnabled(1)
 
@@ -371,9 +388,31 @@ rem ==========================================================================
 			endif
 		next x
 
+		gosub enable_button
+
 		callpoint!.setDevObject("vectFilesMaster",vectFilesMaster!)
 		callpoint!.setDevObject("vectFiles",vectFiles!)
 		gosub fill_grid
+	endif
+
+	return
+
+rem ==========================================================================
+enable_button:
+rem ==========================================================================
+	numcols = num(user_tpl.gridFilesCols$)
+	if vectFiles!.size() > 0 then
+		for curr_row=1 to vectFiles!.size()/(numcols)-1
+			if vectFiles!.getItem(curr_row*numcols)="Y"
+				any_checked$="Y"
+			endif
+		next curr_row
+	endif
+
+	if any_checked$="Y"
+		callpoint!.setOptionEnabled("CLRF",1)
+	else
+		callpoint!.setOptionEnabled("CLRF",0)
 	endif
 
 	return
@@ -417,9 +456,12 @@ rem ==========================================================================
 
 			else
 				gridFiles!.setCellState(row_no,0,0)
+				vectFiles!.setItem(row_no * numcols, "N")
 			endif
 		next curr_row
 	endif
+
+	gosub enable_button
 
 	SysGUI!.setRepaintEnabled(1)
 
@@ -540,6 +582,7 @@ rem --- Misc other init
 	gridFiles!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridFiles!.setTabAction(gridFiles!.GRID_NAVIGATE_GRID)
 
+	gosub checkout_licenses
 	gosub create_reports_vector
 	gosub fill_grid
 
@@ -549,4 +592,4 @@ rem --- Set callbacks - processed in ACUS callpoint
 	gridFiles!.setCallback(gridFiles!.ON_GRID_MOUSE_UP,"custom_event")
 	gridFiles!.setCallback(gridFiles!.ON_GRID_EDIT_STOP,"custom_event")
 
-	callpoint!.setOptionEnabled("CLRF",1)
+	callpoint!.setOptionEnabled("CLRF",0)
