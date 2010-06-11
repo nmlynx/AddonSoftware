@@ -127,7 +127,7 @@ rem --- Check For Quotes
     
 rem --- Credit memos don't get processed
 
-    if ope01a.total_sales <=0 then
+    if num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")) <=0 then
         action$ = "M"
         backorderedControl!.setText("Credit Memo: no processing")
         goto final_updates
