@@ -18,8 +18,9 @@ rem --- Retrieve the program path
 rem --- Get user ID from program args
 
     user$ = ""
+    user$ = stbl("+USER_ID", err=*next)
 	
-	if argc > 1
+	if argc > 1 and user$ = "" then
 		for curr_argv = 1 to argc - 1
 			temp_argv$ = argv(curr_argv)
             
