@@ -603,6 +603,7 @@ rem --- Is this item lot/serial?
 			callpoint!.setDevObject("ord_qty",       callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 			callpoint!.setDevObject("dropship_line", user_tpl.line_dropship$)
 			callpoint!.setDevObject("invoice_type",  callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE"))
+			callpoint!.setDevObject("unit_cost",       callpoint!.getColumnData("OPE_ORDDET.UNIT_COST"))
 
 			grid!.focus()
 
