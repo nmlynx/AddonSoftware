@@ -59,7 +59,7 @@ ls_not_found:
 [[IVE_TRANSDET.LOTSER_NO.BINP]]
 print "in LOTSER_NO.BINP"; rem debug
 rem --- per bugzilla bug 3418, always invoking lot lookup so user can pick existing lot for Receipt/negative adjust, if desired.
-rem --- per bugzilla bug 4326
+rem --- per bugzilla bug 4326, a) deal with receipt type and determine lot/serial lookup flag based on transaction type
 			
 	rem --- Should user enter a lot or look it up?
 			
