@@ -1,8 +1,29 @@
+[[OPE_ORDHDR.BWAR]]
+rem --- Calculate Taxes
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
+		break; rem --- exit callpoint
+	endif
+	
+	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
 [[OPE_ORDHDR.TAX_CODE.AVAL]]
 rem --- Set code in the Order Helper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"))
+	ordHelp!.setTaxCode(callpoint!.getUserInput());rem ColumnData("OPE_ORDHDR.TAX_CODE"))
+
+rem --- Calculate Taxes
+
+	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
+	callpoint!.setStatus("REFRESH")
 [[OPE_ORDHDR.AOPT-CRAT]]
 print "Hdr:AOPT:CRAT"; rem debug
 
@@ -108,16 +129,16 @@ rem --- Are both Customer and Order entered?
 
 rem --- Calculate taxes and write it back
 	
-	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
-	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-	gosub get_disk_rec
+rem jpb	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+rem jpb	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+rem jpb	gosub get_disk_rec
 
-	if record_found then
-		ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		callpoint!.setStatus("SETORIG")
-	endif
+rem jpb	if record_found then
+rem jpb		ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+rem jpb		ordhdr_rec$ = field(ordhdr_rec$)
+rem jpb		write record (ordhdr_dev) ordhdr_rec$
+rem jpb		callpoint!.setStatus("SETORIG")
+rem jpb	endif
 
 rem --- Credit action
 
@@ -138,7 +159,7 @@ rem --- Print a counter Picking Slip
 
 		gosub do_picklist
 		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("NEWREC")
+rem jpb		callpoint!.setStatus("NEWREC")
 	else
 
 	rem --- Can't print until released from credit
@@ -153,7 +174,7 @@ rem		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_
 
 			gosub do_picklist
 			user_tpl.do_end_of_form = 0
-			callpoint!.setStatus("NEWREC")
+rem jpb			callpoint!.setStatus("NEWREC")
 		else
 rem			if action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
 			if action$ = "R" and str(callpoint!.getDevObject("document_printed")) = "Y" then 
@@ -203,6 +224,7 @@ rem --- Check Ship-to's
 			endif
 		endif
 	rem endif
+
 [[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
 print "CUSTOMER_ID:AVAL"; rem debug
 	
@@ -1057,12 +1079,13 @@ rem --- Void this order
 	rem --- Save and exit
 
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE", "V")
-		gosub get_disk_rec
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
+rem jpb		gosub get_disk_rec
+rem jpb		ordhdr_rec$ = field(ordhdr_rec$)
+rem jpb		write record (ordhdr_dev) ordhdr_rec$
 
 		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("NEWREC")
+rem jpb		callpoint!.setStatus("NEWREC")
+		callpoint!.setStatus("SAVE");rem jpb
 		break; rem --- exit callpoint
 	endif
 
@@ -1843,10 +1866,11 @@ rem --- Should we call Credit Action?
 
 	rem --- Write these flags back to the disk
 
-		gosub get_disk_rec
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		callpoint!.setStatus("SETORIG")		
+rem jpb		gosub get_disk_rec
+rem jpb		ordhdr_rec$ = field(ordhdr_rec$)
+rem jpb		write record (ordhdr_dev) ordhdr_rec$
+rem jpb		callpoint!.setStatus("SETORIG")		
+		callpoint!.setStatus("SAVE");rem jpb
 
 	endif
 
@@ -1864,18 +1888,20 @@ rem ==========================================================================
 
 	rem --- Write flag to file so opc_picklist can see it
 
-		gosub get_disk_rec
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		callpoint!.setStatus("SETORIG")
+rem jpb		gosub get_disk_rec
+rem jpb		ordhdr_rec$ = field(ordhdr_rec$)
+rem jpb		write record (ordhdr_dev) ordhdr_rec$
+rem jpb		callpoint!.setStatus("SETORIG")
 	endif
 
 	call user_tpl.pgmdir$+"opc_picklist.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
-	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 
 	msg_id$ = "OP_PICKLIST_DONE"
 	gosub disp_message
+
+	callpoint!.setStatus("SAVE")
+	callpoint!.setStatus("RECORD:"+firm_id$+"  "+cust_id$+order_no$)
 
 	print "out"; rem debug
 
@@ -1907,11 +1933,12 @@ rem ==========================================================================
 
 rem --- Write flag to file so opc_creditaction can see it
 
-	gosub get_disk_rec
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
+rem jpb	gosub get_disk_rec
+rem jpb	ordhdr_rec$ = field(ordhdr_rec$)
+rem jpb	write record (ordhdr_dev) ordhdr_rec$
 
-	callpoint!.setStatus("SETORIG")
+rem jpb	callpoint!.setStatus("SETORIG")
+	callpoint!.setStatus("SAVE")
 	print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
 	print "out"; rem debug
 
@@ -1965,30 +1992,38 @@ rem --- Call the form
 
 rem --- Get disk record with updated form data
 
-	gosub get_disk_rec
+rem jpb	gosub get_disk_rec
 
 rem --- Set fields from the Order Totals form and write back
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
-	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
-	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
-	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
-	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
-	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
-	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
+rem jpb	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
+rem jpb	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
+rem jpb	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
+rem jpb	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
+rem jpb	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
+rem jpb	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
 
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
-	callpoint!.setStatus("SETORIG")
+rem jpb	ordhdr_rec$ = field(ordhdr_rec$)
+rem jpb	write record (ordhdr_dev) ordhdr_rec$
+rem jpb	callpoint!.setStatus("SETORIG")
 
-	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",  ordhdr_rec.total_sales$)
-	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",   ordhdr_rec.total_cost$)
-	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",  ordhdr_rec.taxable_amt$)
-	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
-	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
-	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
-	callpoint!.setStatus("REFRESH")
+rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",  ordhdr_rec.total_sales$)
+rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",   ordhdr_rec.total_cost$)
+rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",  ordhdr_rec.taxable_amt$)
+rem jpb	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
+rem jpb	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
+rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
+rem jpb	callpoint!.setStatus("REFRESH")
+
+	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",  str(ordHelp!.getExtPrice()))
+	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",   str(ordHelp!.getExtCost()))
+	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",  str(ordHelp!.getTaxable()))
+	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",  str(ordHelp!.getFreight()))
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", str(ordHelp!.getDiscount()))
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   str(ordHelp!.getTaxAmount()))
+	callpoint!.setStatus("SAVE")
 	
 	return
 
@@ -2015,7 +2050,7 @@ rem ==========================================================================
 
 	rem --- Copy in any form data that's changed
 
-		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+rem		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
 	endif
 
 	return
