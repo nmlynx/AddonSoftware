@@ -1028,7 +1028,7 @@ rem ==========================================================================
 	if ordHelp!.getInv_type() = "" then
 		ttl_ext_price = 0
 	else
-		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
+		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
 	endif
 
 	return

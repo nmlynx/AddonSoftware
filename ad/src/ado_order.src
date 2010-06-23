@@ -135,7 +135,7 @@ rem ==========================================================================
 
     rem --- Total order totals from passed detail vector
 
-        method public BBjNumber totalSales(BBjVector pDtlVect!)
+        method public BBjNumber totalSales(BBjVector pDtlVect!, Callpoint callpoint!)
 
             if #dtl_tmpl$ = "" then
                 throw #className$+": totalSales(): You must pass the detail template to use this method", 258
@@ -164,7 +164,7 @@ rem ==========================================================================
 
                 rem --- GridRowDeleteStatus() does not return the correct status because the vector it's based on isn't built
 
-                    if cvs(dtl_rec$, 2) <> "" and #callpoint!.getGridRowDeleteStatus(i) <> "Y" then 
+                    if cvs(dtl_rec$, 2) <> "" and callpoint!.getGridRowDeleteStatus(i) <> "Y" then 
                         read record (#lineCodeDev%, key=#firm_id$+dtl_rec.line_code$, dom=*endif) linecode_rec$
 
                         if dtl_rec.commit_flag$ = "Y" or #Inv_type$ = "P" then

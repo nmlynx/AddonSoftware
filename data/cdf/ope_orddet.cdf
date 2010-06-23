@@ -1063,6 +1063,7 @@ rem ==========================================================================
 	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setStatus("REFRESH")
+
 	rem print "---Updated order total and Total Sales (tab)", ttl_ext_price; rem debug
 	rem print "out"
 
@@ -1081,9 +1082,10 @@ rem ==========================================================================
 	if ordHelp!.getInv_type() = "" then
 		ttl_ext_price = 0
 	else
-		rem ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)) )
-		ordHelp!.totalSalesDisk()
-		ttl_ext_price = ordHelp!.getExtPrice()
+		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
+
+rem		ordHelp!.totalSalesDisk()
+rem		ttl_ext_price = ordHelp!.getExtPrice()
 	endif
 
 	rem print "---Total Sales (from vector):", ttl_ext_price; rem debug
