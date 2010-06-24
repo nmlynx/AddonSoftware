@@ -19,15 +19,20 @@ rem --- Get user ID from program args
 
     user$ = ""
     user$ = stbl("+USER_ID", err=*next)
-	
-	if argc > 1 and user$ = "" then
+    manual$ = "n"
+
+	if argc > 1 then
 		for curr_argv = 1 to argc - 1
 			temp_argv$ = argv(curr_argv)
             
 			if pos("-u" = temp_argv$) = 1 then 
                 user$ = stbl("+USER_ID", temp_argv$(3))
-                break
             endif
+            
+            if temp_argv$ = "manual" then
+                manual$ = "y"
+            endif
+            
 		next curr_argv
 	endif
     
@@ -72,7 +77,7 @@ rem --- Set Baritsa default printer
 
 rem  --- Only display message if running stand-alone
 
-	if pos("DEFAULT_PRINTER"=sysinfo.menu_option_id$)<>0 then 
+	if manual$ = "y" then 
 		msg_id$ = "AD_PRINTER_UPDATE"
 		gosub disp_message
 	endif
