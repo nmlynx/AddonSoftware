@@ -1056,16 +1056,28 @@ rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
 
-	rem print "Det:in disp_grid_totals..."; rem debug
 	gosub calc_grid_totals
 
 	tamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
 	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(ttl_ext_price))
+	disc_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	sub_tot = num(callpoint!.getHeaderColumnData("<<DISPLAY>>.SUBTOTAL"))
+	tax_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TAX_AMOUNT"))
+	freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	sub_tot = ttl_ext_price - disc_amt
+	net_sales = sub_tot + tax_amt + freight_amt
+	totamt! = UserObj!.getItem(num(callpoint!.getDevObject("total_sales_disp")))
+	totamt!.setValue(ttl_ext_price)
+	subamt! = UserObj!.getItem(num(callpoint!.getDevObject("subtot_disp")))
+	subamt!.setValue(sub_tot)
+	netamt! = UserObj!.getItem(num(callpoint!.getDevObject("net_sales_disp")))
+	netamt!.setValue(net_sales)
 
-	rem print "---Updated order total and Total Sales (tab)", ttl_ext_price; rem debug
-	rem print "out"
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
+	callpoint!.setStatus("REFRESH")
 
 	return
 

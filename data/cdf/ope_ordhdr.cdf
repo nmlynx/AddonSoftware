@@ -2184,6 +2184,9 @@ rem --- Disable display fields
 rem --- Save display control objects
 
 	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") )
+	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.SUBTOTAL") )
+	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.NET_SALES") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.TOTAL_SALES") )
 	callpoint!.setDevObject("credit_hold_control", util.getControl(callpoint!, "<<DISPLAY>>.CREDIT_HOLD")); rem used in opc_creditcheck
 	callpoint!.setDevObject("backordered_control", util.getControl(callpoint!, "<<DISPLAY>>.BACKORDERED")); rem used in opc_creditcheck
 
@@ -2192,50 +2195,50 @@ rem --- Setup user_tpl$
 	tpl$ = 
 :		"credit_installed:c(1), " +
 :		"balance:n(15), " +
-:     "credit_limit:n(15), " +
-:     "display_bal:c(1), " +
-:     "ord_tot:n(15), " +
-:     "def_ship:c(8), " + 
-:     "def_commit:c(8), " +
-:     "blank_whse:c(1), " +
-:     "line_code:c(1), " +
-:     "line_type:c(1), " +
-:     "dropship_whse:c(1), " +
-:     "def_whse:c(10), " +
-:     "avail_oh:u(1), " +
-:     "avail_comm:u(1), " +
-:     "avail_avail:u(1), " +
-:     "avail_oo:u(1), " +
-:     "avail_wh:u(1), " +
-:     "avail_type:u(1), " +
-:     "dropship_flag:u(1), " +
-:     "manual_price:u(1), " +
-:     "alt_super:u(1), " +
-:     "ord_tot_obj:u(1), " +
-:     "price_code:c(2), " +
-:     "pricing_code:c(4), " +
-:     "order_date:c(8), " +
-:     "pick_hold:c(1), " +
-:     "pgmdir:c(1*), " +
-:     "skip_whse:c(1), " +
-:     "warehouse_id:c(2), " +
-:     "user_entry:c(1), " +
-:     "cur_row:n(5), " +
-:     "skip_ln_code:c(1), " +
-:     "hist_ord:c(1), " +
-:     "cash_sale:c(1), " +
-:     "cash_cust:c(6), " +
-:     "bo_col:u(1), " +
+:		"credit_limit:n(15), " +
+:		"display_bal:c(1), " +
+:		"ord_tot:n(15), " +
+:		"def_ship:c(8), " + 
+:		"def_commit:c(8), " +
+:		"blank_whse:c(1), " +
+:		"line_code:c(1), " +
+:		"line_type:c(1), " +
+:		"dropship_whse:c(1), " +
+:		"def_whse:c(10), " +
+:		"avail_oh:u(1), " +
+:		"avail_comm:u(1), " +
+:		"avail_avail:u(1), " +
+:		"avail_oo:u(1), " +
+:		"avail_wh:u(1), " +
+:		"avail_type:u(1), " +
+:		"dropship_flag:u(1), " +
+:		"manual_price:u(1), " +
+:		"alt_super:u(1), " +
+:		"ord_tot_obj:u(1), " +
+:		"price_code:c(2), " +
+:		"pricing_code:c(4), " +
+:		"order_date:c(8), " +
+:		"pick_hold:c(1), " +
+:		"pgmdir:c(1*), " +
+:		"skip_whse:c(1), " +
+:		"warehouse_id:c(2), " +
+:		"user_entry:c(1), " +
+:		"cur_row:n(5), " +
+:		"skip_ln_code:c(1), " +
+:		"hist_ord:c(1), " +
+:		"cash_sale:c(1), " +
+:		"cash_cust:c(6), " +
+:		"bo_col:u(1), " +
 :		"shipped_col:u(1), " +
 :		"prod_type_col:u(1), " +
 :		"unit_price_col:u(1), " +
-:     "allow_bo:c(1), " +
-:     "amount_mask:c(1*)," +
-:     "line_taxable:c(1), " +
-:     "item_taxable:c(1), " +
-:     "min_line_amt:n(5), " +
-:     "min_ord_amt:n(5), " +
-:     "item_price:n(15), " +
+:		"allow_bo:c(1), " +
+:		"amount_mask:c(1*)," +
+:		"line_taxable:c(1), " +
+:		"item_taxable:c(1), " +
+:		"min_line_amt:n(5), " +
+:		"min_ord_amt:n(5), " +
+:		"item_price:n(15), " +
 :		"line_dropship:c(1), " +
 :		"dropship_cost:c(1), " +
 :		"lotser_flag:c(1), " +
@@ -2248,8 +2251,8 @@ rem --- Setup user_tpl$
 :		"prev_ext_price:n(15), " +
 :		"prev_taxable:n(15), " +
 :		"prev_ext_cost:n(15), " +
-:     "prev_disc_code:c(1*), "+
-:     "prev_ship_to:c(1*), " +
+:		"prev_disc_code:c(1*), "+
+:		"prev_ship_to:c(1*), " +
 :		"prev_sales_total:n(15), " +
 :		"prev_unitprice:n(15), " +
 :		"is_cash_sale:u(1), " +
@@ -2328,6 +2331,10 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	user_tpl.manual_price  = 9
 	user_tpl.alt_super     = 10
 	user_tpl.ord_tot_obj   = 11; rem set here in BSHO
+
+	callpoint!.setDevObject("subtot_disp","12")
+	callpoint!.setDevObject("net_sales_disp","13")
+	callpoint!.setDevObject("total_sales_disp","14")
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
