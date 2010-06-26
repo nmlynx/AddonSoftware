@@ -435,7 +435,7 @@ rem ==========================================================================
 
     rem --- Calculate Tax Amount
 
-        method public BBjNumber calculateTax(BBjNumber p_discount_amt, BBjNumber p_freight_amt)
+        method public BBjNumber calculateTax(BBjNumber p_discount_amt, BBjNumber p_freight_amt, BBjNumber p_taxable)
 
         rem --- Files
 
@@ -479,6 +479,18 @@ rem ==========================================================================
                 endif
             endif
 
+        rem --- New taxable amount - jpb
+        
+            if p_taxable > 0 then
+                taxable_amt = max(p_taxable - p_discount_amt, 0)
+            else
+                if p_taxable < 0 then
+                    taxable_amt = min(p_taxable - p_discount_amt, 0)
+                else
+                    taxable_amt = 0
+                endif
+            endif
+            
             if taxcode_rec.tax_frt_flag$ = "Y" then 
                 taxable_amt = taxable_amt + p_freight_amt
             endif

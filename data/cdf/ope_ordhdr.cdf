@@ -9,19 +9,19 @@ rem --- Calculate Taxes
 	
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt,num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")))
 	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
 [[OPE_ORDHDR.TAX_CODE.AVAL]]
 rem --- Set code in the Order Helper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setTaxCode(callpoint!.getUserInput());rem ColumnData("OPE_ORDHDR.TAX_CODE"))
+	ordHelp!.setTaxCode(callpoint!.getUserInput())
 
 rem --- Calculate Taxes
 
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt)
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt,num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")))
 	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
 	callpoint!.setStatus("REFRESH")
 [[OPE_ORDHDR.AOPT-CRAT]]
