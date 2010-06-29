@@ -47,6 +47,11 @@ rem --- Get Amount mask
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",amount_mask$,0,mask_len
 
+rem --- Set Current Discount amount and Freight anount from Dev Objects
+
+	callpoint!.setColumnData("OPE_ORDTOTALS.DISCOUNT_AMT",str(callpoint!.getDevObject("disc_amt")))
+	callpoint!.setColumnData("OPE_ORDTOTALS.FREIGHT_AMT",str(callpoint!.getDevObject("frt_amt")))
+
 rem --- Get current discounts
 
 	file_name$ = "OPC_DISCCODE"
@@ -223,6 +228,8 @@ rem ==========================================================================
 	ordHelp!.setDiscount(  num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT")) )
 	ordHelp!.setTaxAmount( num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT")) )
 
+	callpoint!.setDevObject("disc_amt",callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
+	callpoint!.setDevObject("frt_amt",callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 	return
 
 rem ==========================================================================

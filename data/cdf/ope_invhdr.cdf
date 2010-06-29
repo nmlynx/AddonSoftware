@@ -2083,6 +2083,11 @@ rem --- Call the form
 	dflt_data$[4,0] = "FREIGHT_AMT"
 	dflt_data$[4,1] = callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")
 
+rem --- Set Dev Objects for use in the form
+
+	callpoint!.setDevObject("disc_amt",str(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")))
+	callpoint!.setDevObject("frt_amt",str(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")))
+
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_ORDTOTALS", 
 :		stbl("+USER_ID"), 
@@ -2094,32 +2099,17 @@ rem --- Call the form
 :		user_tpl$,
 :		UserObj!
 
-rem --- Get disk record with updated form data
-
-	gosub get_disk_rec
-
 rem --- Set fields from the Order Totals form and write back
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
-	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
-	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
-	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
-	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
-	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
-	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
-
-	ordhdr_rec$ = field(ordhdr_rec$)
-	write record (ordhdr_dev) ordhdr_rec$
-	callpoint!.setStatus("SETORIG")
-
-	callpoint!.setColumnData("OPE_INVHDR.TOTAL_SALES",  ordhdr_rec.total_sales$)
-	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",   ordhdr_rec.total_cost$)
-	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",  ordhdr_rec.taxable_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
-	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setColumnData("OPE_INVHDR.TOTAL_SALES",  str(ordHelp!.getExtPrice()))
+	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",   str(ordHelp!.getExtCost()))
+	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",  str(ordHelp!.getTaxable()))
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", str(callpoint!.getDevObject("disc_amt")))
+	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", str(callpoint!.getDevObject("frt_amt")))
+	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   str(ordHelp!.getTaxAmount()))
+	callpoint!.setStatus("SAVE")
 
 	return
 

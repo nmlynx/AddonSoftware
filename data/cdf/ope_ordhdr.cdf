@@ -1979,6 +1979,11 @@ rem --- Call the form
 	dflt_data$[4,0] = "FREIGHT_AMT"
 	dflt_data$[4,1] = callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")
 
+rem --- Set Dev Objects for use in the form
+
+	callpoint!.setDevObject("disc_amt",str(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")))
+	callpoint!.setDevObject("frt_amt",str(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")))
+
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_ORDTOTALS", 
 :		stbl("+USER_ID"), 
@@ -1990,38 +1995,15 @@ rem --- Call the form
 :		user_tpl$,
 :		UserObj!
 
-rem --- Get disk record with updated form data
-
-rem jpb	gosub get_disk_rec
-
 rem --- Set fields from the Order Totals form and write back
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
-rem jpb	ordhdr_rec.total_sales  = ordHelp!.getExtPrice()
-rem jpb	ordhdr_rec.total_cost   = ordHelp!.getExtCost()
-rem jpb	ordhdr_rec.taxable_amt  = ordHelp!.getTaxable()
-rem jpb	ordhdr_rec.freight_amt  = ordHelp!.getFreight()
-rem jpb	ordhdr_rec.discount_amt = ordHelp!.getDiscount()
-rem jpb	ordhdr_rec.tax_amount   = ordHelp!.getTaxAmount()
-
-rem jpb	ordhdr_rec$ = field(ordhdr_rec$)
-rem jpb	write record (ordhdr_dev) ordhdr_rec$
-rem jpb	callpoint!.setStatus("SETORIG")
-
-rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",  ordhdr_rec.total_sales$)
-rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",   ordhdr_rec.total_cost$)
-rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",  ordhdr_rec.taxable_amt$)
-rem jpb	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",  ordhdr_rec.freight_amt$)
-rem jpb	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", ordhdr_rec.discount_amt$)
-rem jpb	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   ordhdr_rec.tax_amount$)
-rem jpb	callpoint!.setStatus("REFRESH")
-
 	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",  str(ordHelp!.getExtPrice()))
 	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",   str(ordHelp!.getExtCost()))
 	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",  str(ordHelp!.getTaxable()))
-	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",  str(ordHelp!.getFreight()))
-	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", str(ordHelp!.getDiscount()))
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", str(callpoint!.getDevObject("disc_amt")))
+	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT", str(callpoint!.getDevObject("frt_amt")))
 	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   str(ordHelp!.getTaxAmount()))
 	callpoint!.setStatus("SAVE")
 	
