@@ -189,6 +189,7 @@ rem --- Print a counter Invoice
 
 		gosub force_print_status
 		gosub do_credit_action
+
 		print "---Print Status: """, callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"), """"; rem debug
 
 		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "N") then 
@@ -1862,6 +1863,12 @@ rem ==========================================================================
 rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
 rem ==========================================================================
+
+rem --- Invoicing should never check credit. Assumes that the product has shipped so we'd better invoice it.
+
+	action$="U"
+
+	return
 
 	print "in do_credit_action..."; rem debug
 
