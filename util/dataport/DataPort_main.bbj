@@ -571,6 +571,12 @@ rem --- Set all Retain Customer flags to Y
             value$="Y"
         endif
 
+rem --- Set all Retain Job flags to Y
+
+        if old_fieldlist.name$[field]="RETAIN_JOB"
+            value$="Y"
+        endif
+		
 rem --- set Inventory auto number flag
 
         if datafile$="sys-01"
