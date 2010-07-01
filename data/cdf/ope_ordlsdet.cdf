@@ -220,7 +220,8 @@ rem --- Warn that selected lot/serial#'s does not match order qty
 
 		msg_tokens$[3] = str(callpoint!.getDevObject("ord_qty"))
 		gosub disp_message
-		if msg_opt$ = "N" then callpoint!.setStatus("ABORT")
+		callpoint!.setDevObject("total_shipped","0")
+		break
 	endif
 
 rem --- Send back qty shipped
