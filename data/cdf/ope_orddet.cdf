@@ -1074,9 +1074,18 @@ rem ==========================================================================
 	subamt!.setValue(sub_tot)
 	netamt! = UserObj!.getItem(num(callpoint!.getDevObject("net_sales_disp")))
 	netamt!.setValue(net_sales)
+	taxamt! = UserObj!.getItem(num(callpoint!.getDevObject("tax_amt_disp")))
+	taxamt!.setValue(ttl_tax)
 
+rem --- Only activate the next 2 lines if you have enabled the Total Cost amount on the Totals tab
+rem	costamt! = UserObj!.getItem(num(callpoint!.getDevObject("total_cost")))
+rem	costamt!.setValue(ttl_ext_cost)
+
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_COST",str(ttl_ext_cost))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.TAX_AMOUNT", str(ttl_tax))
+
 	callpoint!.setStatus("REFRESH")
 
 	return
@@ -1087,22 +1096,22 @@ calc_grid_totals: rem --- Roll thru all detail line, totaling ext_price
 rem ==========================================================================
 
 	rem print "Det:in calc_grid_totals..."; rem debug
-	rem Does rolling through the vector still make sense?
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
 	if ordHelp!.getInv_type() = "" then
 		ttl_ext_price = 0
+		ttl_ext_cost = 0
+		ttl_taxable = 0
 	else
 		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
-
-rem		ordHelp!.totalSalesDisk()
-rem		ttl_ext_price = ordHelp!.getExtPrice()
+		ttl_ext_cost = ordHelp!.totalCost( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
+		ttl_taxable = ordHelp!.totalTaxable( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
 	endif
 
-	rem print "---Total Sales (from vector):", ttl_ext_price; rem debug
-	rem print "---Total Sales (from disk):", ttl_ext_price; rem debug
-	rem print "out"; rem debug
+	disc_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	ttl_tax = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable)
 
 	return
 

@@ -9,7 +9,8 @@ rem --- Calculate Taxes
 	
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt,num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")))
+	taxable_amt = num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt, taxable_amt)
 	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
 [[OPE_ORDHDR.TAX_CODE.AVAL]]
 rem --- Set code in the Order Helper object
@@ -2169,6 +2170,9 @@ rem --- Save display control objects
 	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.SUBTOTAL") )
 	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.NET_SALES") )
 	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.TOTAL_SALES") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.TOTAL_COST") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.TAX_AMOUNT") )
+
 	callpoint!.setDevObject("credit_hold_control", util.getControl(callpoint!, "<<DISPLAY>>.CREDIT_HOLD")); rem used in opc_creditcheck
 	callpoint!.setDevObject("backordered_control", util.getControl(callpoint!, "<<DISPLAY>>.BACKORDERED")); rem used in opc_creditcheck
 
@@ -2317,6 +2321,8 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	callpoint!.setDevObject("subtot_disp","12")
 	callpoint!.setDevObject("net_sales_disp","13")
 	callpoint!.setDevObject("total_sales_disp","14")
+	callpoint!.setDevObject("total_cost","15")
+	callpoint!.setDevObject("tax_amt_disp","16")
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 

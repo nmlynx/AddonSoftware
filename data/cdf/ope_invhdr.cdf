@@ -2,7 +2,15 @@
 rem --- Set code in the Order Helper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"))
+	ordHelp!.setTaxCode(callpoint!.getUserInput())
+
+rem --- Calculate Taxes
+
+	discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt,num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT")))
+	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount))
+	callpoint!.setStatus("REFRESH")
 [[OPE_INVHDR.ARAR]]
 print "Hdr:ARAR"; rem debug
 
@@ -2349,6 +2357,12 @@ rem --- Disable display fields
 rem --- Save display control objects
 
 	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") )
+	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.SUBTOTAL") )
+	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.NET_SALES") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_INVHDR.TOTAL_SALES") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_INVHDR.TOTAL_COST") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_INVHDR.TAX_AMOUNT") )
+
 	callpoint!.setDevObject("credit_hold_control", util.getControl(callpoint!, "<<DISPLAY>>.CREDIT_HOLD")); rem used in opc_creditcheck
 	callpoint!.setDevObject("backordered_control", util.getControl(callpoint!, "<<DISPLAY>>.BACKORDERED")); rem used in opc_creditcheck
 
@@ -2367,16 +2381,16 @@ rem --- Setup user_tpl$
 :		"line_type:c(1), " +
 :		"dropship_whse:c(1), " +
 :		"def_whse:c(10), " +
-:     "avail_oh:u(1), " +
-:     "avail_comm:u(1), " +
-:     "avail_avail:u(1), " +
-:     "avail_oo:u(1), " +
-:     "avail_wh:u(1), " +
-:     "avail_type:u(1), " +
-:     "dropship_flag:u(1), " +
+:		"avail_oh:u(1), " +
+:		"avail_comm:u(1), " +
+:		"avail_avail:u(1), " +
+:		"avail_oo:u(1), " +
+:		"avail_wh:u(1), " +
+:		"avail_type:u(1), " +
+:		"dropship_flag:u(1), " +
 :		"manual_price:u(1), " +
 :		"alt_super:u(1), " +
-:     "ord_tot_obj:u(1), " +
+:		"ord_tot_obj:u(1), " +
 :		"price_code:c(2), " +
 :		"pricing_code:c(4), " +
 :		"order_date:c(8), " +
@@ -2413,8 +2427,8 @@ rem --- Setup user_tpl$
 :		"prev_ext_price:n(15), " +
 :		"prev_taxable:n(15), " +
 :		"prev_ext_cost:n(15), " +
-:     "prev_disc_code:c(1*), "+
-:     "prev_ship_to:c(1*), " +
+:		"prev_disc_code:c(1*), "+
+:		"prev_ship_to:c(1*), " +
 :		"prev_sales_total:n(15), " +
 :		"prev_unitprice:n(15), " +
 :		"is_cash_sale:u(1), " +
@@ -2443,7 +2457,7 @@ rem --- Setup user_tpl$
 	user_tpl.skip_ln_code$     = ars01a.skip_ln_code$
 	user_tpl.cash_sale$        = ars01a.cash_sale$
 	user_tpl.cash_cust$        = ars01a.customer_id$
-   user_tpl.allow_bo$         = ars01a.backorders$
+	user_tpl.allow_bo$         = ars01a.backorders$
 	user_tpl.dropship_cost$    = ars01a.dropshp_cost$
 	user_tpl.min_ord_amt       = num(ars01a.min_ord_amt$)
 	user_tpl.min_line_amt      = num(ars01a.min_line_amt$)
@@ -2516,6 +2530,12 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	user_tpl.manual_price  = 9
 	user_tpl.alt_super = 10
 	user_tpl.ord_tot_obj   = 11; rem set here in BSHO
+
+	callpoint!.setDevObject("subtot_disp","12")
+	callpoint!.setDevObject("net_sales_disp","13")
+	callpoint!.setDevObject("total_sales_disp","14")
+	callpoint!.setDevObject("total_cost","15")
+	callpoint!.setDevObject("tax_amt_disp","16")
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
