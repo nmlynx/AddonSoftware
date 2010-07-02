@@ -228,6 +228,7 @@ rem ==========================================================================
 	ordHelp!.setDiscount(  num(callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT")) )
 	ordHelp!.setTaxAmount( num(callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT")) )
 
+	callpoint!.setDevObject("tax_amt",callpoint!.getColumnData("OPE_ORDTOTALS.TAX_AMOUNT"))
 	callpoint!.setDevObject("disc_amt",callpoint!.getColumnData("OPE_ORDTOTALS.DISCOUNT_AMT"))
 	callpoint!.setDevObject("frt_amt",callpoint!.getColumnData("OPE_ORDTOTALS.FREIGHT_AMT"))
 	return

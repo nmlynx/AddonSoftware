@@ -51,6 +51,8 @@ rem --- Reset all previous values
 	user_tpl.new_order = 1
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned = 0
+
+	gosub disp_totals
 [[OPE_INVHDR.AOPT-CRAT]]
 print "Hdr:AOPT:CRAT"; rem debug
 
@@ -66,6 +68,18 @@ rem --- Do Credit Action
 rem --- Set discount code for use in Order Totals
 
 	user_tpl.disc_code$ = callpoint!.getUserInput()
+
+	file_name$ = "OPC_DISCCODE"
+	disccode_dev = fnget_dev(file_name$)
+	dim disccode_rec$:fnget_tpl$(file_name$)
+
+	find record (disccode_dev, key=firm_id$+user_tpl.disc_code$, dom=*next) disccode_rec$
+	new_disc_per = disccode_rec.disc_percent
+
+	new_disc_amt = round(disccode_rec.disc_percent * num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")) / 100, 2)
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(new_disc_amt))
+
+	gosub disp_totals
 [[OPE_INVHDR.AOPT-TTLS]]
 rem --- Launch the totals form
 
@@ -2123,11 +2137,19 @@ rem --- Set fields from the Order Totals form and write back
 	callpoint!.setColumnData("OPE_INVHDR.TOTAL_SALES",  str(ordHelp!.getExtPrice()))
 	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",   str(ordHelp!.getExtCost()))
 	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",  str(ordHelp!.getTaxable()))
-	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", str(callpoint!.getDevObject("disc_amt")))
-	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", str(callpoint!.getDevObject("frt_amt")))
-	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   str(ordHelp!.getTaxAmount()))
-	callpoint!.setStatus("SAVE")
 
+	total_amt=num(ordHelp!.getExtPrice())
+	disc_amt=num(callpoint!.getDevObject("disc_amt"))
+	tax_amt=num(callpoint!.getDevObject("tax_amt"))
+	frt_amt=num(callpoint!.getDevObject("frt_amt"))
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", str(disc_amt))
+	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL",str(total_amt - disc_amt))
+	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   str(tax_amt))
+	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", str(frt_amt))
+	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES",str((total_amt - disc_amt) + tax_amt + frt_amt))
+
+	callpoint!.setStatus("SAVE")
+	
 	return
 
 rem ==========================================================================
@@ -2170,6 +2192,25 @@ rem debug --- This is a Barista kludge
 
 	print "---Record found: ", iff(found, "yes", "no"); rem debug
 	print "out"; rem debug
+
+	return
+
+rem ==========================================================================
+disp_totals: rem --- Get order totals and display, save header totals
+rem ==========================================================================
+
+	ttl_ext_price = num(callpoint!.getColumnData("<<DISPLAY>>.ORDER_TOT"))
+	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	tax_amt = num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	sub_tot = ttl_ext_price - disc_amt
+	net_sales = sub_tot + tax_amt + freight_amt
+
+	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",str(ttl_ext_cost))
+	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
+	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
+
+	callpoint!.setStatus("REFRESH")
 
 	return
 [[OPE_INVHDR.ASHO]]
