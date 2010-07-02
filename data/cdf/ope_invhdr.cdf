@@ -502,12 +502,17 @@ print "Hdr:APFE"; rem debug
 
 rem --- Enable / Disable buttons
 
-	callpoint!.setOptionEnabled("CRCH",1)
+	callpoint!.setOptionEnabled("CRCH",0)
 	gosub enable_credit_action
 
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
-		callpoint!.setOptionEnabled("DINV",1)
-		callpoint!.setOptionEnabled("CINV",1)
+		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = ""
+			callpoint!.setOptionEnabled("DINV",0)
+			callpoint!.setOptionEnabled("CINV",0)
+		else
+			callpoint!.setOptionEnabled("DINV",1)
+			callpoint!.setOptionEnabled("CINV",1)
+		endif
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("MINV",0)
 	else
@@ -517,6 +522,7 @@ rem --- Enable / Disable buttons
 		else
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
+			callpoint!.setOptionEnabled("CRCH",1)
 			if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH",1)
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
