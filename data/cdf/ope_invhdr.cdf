@@ -1973,6 +1973,8 @@ get_comm_percent: rem --- Get commission percent from salesperson file
                   rem      IN: slsp$ - salesperson code
 rem ==========================================================================
 
+return;rem --- Remove this line if the client decides they want to see the Commission percent
+
 	file$ = "ARC_SALECODE"
 	salecode_dev = fnget_dev(file$)
 	dim salecode_rec$:fnget_tpl$(file$)
