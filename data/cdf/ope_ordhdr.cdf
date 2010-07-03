@@ -2016,7 +2016,7 @@ rem --- Set fields from the Order Totals form and write back
 	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT", str(frt_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES",str((total_amt - disc_amt) + tax_amt + frt_amt))
 
-	callpoint!.setStatus("SAVE")
+	callpoint!.setStatus("REFRESH-SAVE")
 	
 	return
 
