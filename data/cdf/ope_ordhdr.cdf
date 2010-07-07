@@ -40,6 +40,18 @@ rem --- Do Credit Action
 rem --- Set discount code for use in Order Totals
 
 	user_tpl.disc_code$ = callpoint!.getUserInput()
+
+	file_name$ = "OPC_DISCCODE"
+	disccode_dev = fnget_dev(file_name$)
+	dim disccode_rec$:fnget_tpl$(file_name$)
+
+	find record (disccode_dev, key=firm_id$+user_tpl.disc_code$, dom=*next) disccode_rec$
+	new_disc_per = disccode_rec.disc_percent
+
+	new_disc_amt = round(disccode_rec.disc_percent * num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")) / 100, 2)
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(new_disc_amt))
+
+	gosub disp_totals
 [[OPE_ORDHDR.AOPT-TTLS]]
 print "Hdr:AOPT:TTLS"; rem debug
 
@@ -98,6 +110,8 @@ rem --- Reset all previous values
 	user_tpl.shipto_warned = 0
 
 	callpoint!.setDevObject("reprintable",0)
+
+	gosub disp_totals
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
@@ -1865,12 +1879,6 @@ rem --- Should we call Credit Action?
 			callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
 		endif
 
-	rem --- Write these flags back to the disk
-
-rem jpb		gosub get_disk_rec
-rem jpb		ordhdr_rec$ = field(ordhdr_rec$)
-rem jpb		write record (ordhdr_dev) ordhdr_rec$
-rem jpb		callpoint!.setStatus("SETORIG")		
 		callpoint!.setStatus("SAVE");rem jpb
 
 	endif
@@ -1885,14 +1893,6 @@ rem ==========================================================================
 
 	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
 		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
-		print "---Reprint_flag set to Y"; rem debug
-
-	rem --- Write flag to file so opc_picklist can see it
-
-rem jpb		gosub get_disk_rec
-rem jpb		ordhdr_rec$ = field(ordhdr_rec$)
-rem jpb		write record (ordhdr_dev) ordhdr_rec$
-rem jpb		callpoint!.setStatus("SETORIG")
 	endif
 
 	call user_tpl.pgmdir$+"opc_picklist.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
@@ -1950,6 +1950,8 @@ get_comm_percent: rem --- Get commission percent from salesperson file
                   rem      IN: slsp$ - salesperson code
 rem ==========================================================================
 
+return; rem --- Remove this line if the Commission Percent is desired by the client
+
 	file$ = "ARC_SALECODE"
 	salecode_dev = fnget_dev(file$)
 	dim salecode_rec$:fnget_tpl$(file$)
@@ -2003,10 +2005,18 @@ rem --- Set fields from the Order Totals form and write back
 	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",  str(ordHelp!.getExtPrice()))
 	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",   str(ordHelp!.getExtCost()))
 	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",  str(ordHelp!.getTaxable()))
-	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", str(callpoint!.getDevObject("disc_amt")))
-	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT", str(callpoint!.getDevObject("frt_amt")))
-	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   str(ordHelp!.getTaxAmount()))
-	callpoint!.setStatus("SAVE")
+
+	total_amt=num(ordHelp!.getExtPrice())
+	disc_amt=num(callpoint!.getDevObject("disc_amt"))
+	tax_amt=num(callpoint!.getDevObject("tax_amt"))
+	frt_amt=num(callpoint!.getDevObject("frt_amt"))
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", str(disc_amt))
+	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL",str(total_amt - disc_amt))
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   str(tax_amt))
+	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT", str(frt_amt))
+	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES",str((total_amt - disc_amt) + tax_amt + frt_amt))
+
+	callpoint!.setStatus("REFRESH-SAVE")
 	
 	return
 
@@ -2035,6 +2045,25 @@ rem ==========================================================================
 
 rem		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
 	endif
+
+	return
+
+rem ==========================================================================
+disp_totals: rem --- Get order totals and display, save header totals
+rem ==========================================================================
+
+	ttl_ext_price = num(callpoint!.getColumnData("<<DISPLAY>>.ORDER_TOT"))
+	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	tax_amt = num(callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	sub_tot = ttl_ext_price - disc_amt
+	net_sales = sub_tot + tax_amt + freight_amt
+
+	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",str(ttl_ext_cost))
+	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
+	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
+
+	callpoint!.setStatus("REFRESH")
 
 	return
 [[OPE_ORDHDR.BSHO]]
