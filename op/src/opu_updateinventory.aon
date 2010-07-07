@@ -699,7 +699,7 @@ rem --- Read next invoice header --- Main Loop Starts
         write record (opt01_dev) opt01a$
 
     rem --- Update Commissions file
-		if ope01a.invoice_type$="V" then
+		if ope01a.invoice_type$<>"V" then
 			dim opt71a$:fattr(opt71a$)
 
 			opt71a.firm_id$      = ope01a.firm_id$
