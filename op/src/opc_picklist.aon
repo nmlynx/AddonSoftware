@@ -304,6 +304,11 @@ rem --- Main Read
 		else
 			read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=std_exit) ope01a$
 		endif
+
+rem --- Set Firm ID for Credit Review and Release orders
+		if cvs(ope01a.firm_id$,3)=""
+			ope01a.firm_id$ = firm_id$
+		endif
 		
         if type = on_demand and ope01a.invoice_type$="S" then
             msg_id$="OP_PRINTPRICES"
