@@ -1403,11 +1403,8 @@ on_invoice:
 	msg_id$="ORD_ON_REG"
 	gosub disp_message
 
-	if msg_opt$="CANCEL" then
-		locked=1
-		callpoint!.setStatus("ABORT")
-
-	endif
+	locked=1
+	callpoint!.setStatus("ABORT")
 
 	goto end_lock
 
@@ -1884,11 +1881,12 @@ rem ==========================================================================
 do_credit_action: rem --- Launch the credit action program / form
 rem ==========================================================================
 
-rem --- Invoicing should never check credit. Assumes that the product has shipped so we'd better invoice it.
+rem --- Invoicing should only allow this if already on Credit Hold.
 
-	action$="U"
-
-	return
+	if callpoint!.getColumnData("OPE_INVHDR.CREDIT_FLAG") <> "C"
+		action$="U"
+		return
+	endif
 
 	print "in do_credit_action..."; rem debug
 
