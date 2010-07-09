@@ -1,3 +1,17 @@
+[[OPE_INVHDR.AOPT-CRCH]]
+print "Hdr:AOPT:CRCH"; rem debug
+
+rem --- Do credit status (management)
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"); rem can be null
+
+	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
+		print "---about to start credit management"; rem debug
+		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
+		callpoint!.setDevObject("credit_status_done", "Y")
+		callpoint!.setStatus("ACTIVATE")
+	endif
 [[OPE_INVHDR.TAX_CODE.AVAL]]
 rem --- Set code in the Order Helper object
 
@@ -53,17 +67,6 @@ rem --- Reset all previous values
 	user_tpl.shipto_warned = 0
 
 	gosub disp_totals
-[[OPE_INVHDR.AOPT-CRAT]]
-print "Hdr:AOPT:CRAT"; rem debug
-
-rem --- Do Credit Action
-
-	gosub do_credit_action
-
-	if action$ <> "U" then
-		user_tpl.do_end_of_form = 0			
-		callpoint!.setStatus("NEWREC")
-	end
 [[OPE_INVHDR.DISC_CODE.AVAL]]
 rem --- Set discount code for use in Order Totals
 
@@ -483,19 +486,6 @@ rem --- Duplicate Historical Invoice
 :			callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		line_sign=1
 		gosub copy_order
-	endif
-[[OPE_INVHDR.AOPT-CRCH]]
-print "Hdr:CRCH"; rem debug
-
-rem --- Do credit status (management)
-
-	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"); rem can be null
-
-	if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ <> "N" and cvs(cust_id$, 2) <> "" then
-		call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, order_no$, table_chans$[all], callpoint!, status
-		callpoint!.setDevObject("credit_status_done", "Y")
-		callpoint!.setStatus("ACTIVATE")
 	endif
 [[OPE_INVHDR.APFE]]
 print "Hdr:APFE"; rem debug
@@ -1882,6 +1872,10 @@ do_credit_action: rem --- Launch the credit action program / form
 rem ==========================================================================
 
 rem --- Invoicing should only allow this if already on Credit Hold.
+
+rem --- The following line will prevent credit action from ever being called.
+action$="U"
+return
 
 	if callpoint!.getColumnData("OPE_INVHDR.CREDIT_FLAG") <> "C"
 		action$="U"
