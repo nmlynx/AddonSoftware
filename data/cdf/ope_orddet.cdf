@@ -135,8 +135,6 @@ rem --- Return focus to where we were (Detail line grid)
 
 	util.forceEdit(Form!, return_to_row, return_to_col)
 [[OPE_ORDDET.AGDR]]
-print "Det:AGDR"; rem debug
-
 rem --- Disable by line type
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
@@ -307,8 +305,6 @@ rem --- Set previous value / enable repricing, options, lots
 	gosub enable_addl_opts
 	gosub able_lot_button
 [[OPE_ORDDET.BWRI]]
-print "Det:BWRI"; rem debug
-
 rem --- Set values based on line type
 
 	file$ = "OPC_LINECODE"
@@ -401,8 +397,6 @@ rem --- Enable the Recalc Price button, Additional Options, Lots
 	gosub enable_addl_opts
 	gosub able_lot_button
 [[OPE_ORDDET.AWRI]]
-print "Det:AWRI"; rem debug
-
 rem --- Commit inventory
 
 rem --- Is this row deleted?
@@ -504,8 +498,6 @@ awri_update_hdr: rem --- Update header
 
 rem input "Det:Done with AWRI: ", *; rem debug
 [[OPE_ORDDET.BDGX]]
-print "Det:BDGX"; rem debug
-
 rem --- Disable detail-only buttons
 
 	callpoint!.setOptionEnabled("LENT",0)
@@ -536,9 +528,6 @@ rem --- Set header total amounts
 
 	
 [[OPE_ORDDET.AGCL]]
-rem print 'show',; rem debug
-print "Det:AGCL"; rem debug
-
 rem --- Set detail defaults and disabled columns
 
 	callpoint!.setTableColumnAttribute("OPE_ORDDET.LINE_CODE","DFLT", user_tpl.line_code$)
@@ -648,8 +637,6 @@ rem --- Is this item lot/serial?
 		endif
 	endif
 [[OPE_ORDDET.BUDE]]
-print "Det:BUDE"; rem debug
-
 rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 
 	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y"
@@ -657,8 +644,6 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.AREC]]
-print "Det:AREC"; rem debug
-
 rem --- Disable skipped columns (debug: disabled, line code won't be set yet)
 
 	rem line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
@@ -706,8 +691,6 @@ rem --- Buttons start disabled
 	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("ADDL",0)
 [[OPE_ORDDET.BDEL]]
-print "Det:BDEL"; rem debug
-
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
 	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y"
@@ -715,8 +698,6 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.AGRN]]
-print "Det:AGRN"; rem debug
-
 rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
 
 rem --- Disable by line type (Needed because Barista is skipping Line Code)
@@ -786,8 +767,6 @@ rem --- Set availability info
 
 	gosub set_avail
 [[OPE_ORDDET.AGRE]]
-print "Det:AGRE"; rem debug
-
 rem --- Clear/set flags
 
 	rem user_tpl.new_detail = 0
@@ -906,17 +885,16 @@ rem --- Set amounts for non-commited "other" type detail lines
 	endif
 
 rem --- Set header order totals
+rem escape
+	gosub disp_grid_totals
 
-	total_sales = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_SALES"))
-	total_cost  = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_COST"))
-	ext_cost    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) * num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST"))
+rem	total_sales = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_SALES"))
+rem	total_cost  = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_COST"))
+rem	ext_cost    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) * num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST"))
 
-	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(total_sales + ext_price - user_tpl.prev_ext_price))
-	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_COST",  str(total_cost  + ext_cost  - user_tpl.prev_ext_cost))
+rem	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(total_sales + ext_price - user_tpl.prev_ext_price))
+rem	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_COST",  str(total_cost  + ext_cost  - user_tpl.prev_ext_cost))
 	callpoint!.setStatus("MODIFIED;REFRESH")
-
-	rem print "---Total sales set:", num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_SALES")); rem debug
-	rem print "---Total cost set :", num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_COST")); rem debug
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
 print "Det:UNIT_PRICE:AVAL"; rem debug
 
@@ -938,14 +916,10 @@ rem --- Display Extended Price
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	gosub disp_ext_amt
 [[OPE_ORDDET.AUDE]]
-print "Det:AUDE"; rem debug
-
 rem --- redisplay totals
 
 	gosub disp_grid_totals
 [[OPE_ORDDET.ADEL]]
-print "Det:ADEL"; rem debug
-
 rem --- redisplay totals
 
 	gosub disp_grid_totals
@@ -1074,6 +1048,7 @@ rem ==========================================================================
 	subamt!.setValue(sub_tot)
 	netamt! = UserObj!.getItem(num(callpoint!.getDevObject("net_sales_disp")))
 	netamt!.setValue(net_sales)
+rem escape;rem jpb ? netamt!.getValue()
 	taxamt! = UserObj!.getItem(num(callpoint!.getDevObject("tax_amt_disp")))
 	taxamt!.setValue(ttl_tax)
 
@@ -1428,8 +1403,9 @@ rem --- Product Type Processing
 
 	if cvs(line_code$,2) <> "" then
 		if opc_linecode.prod_type_pr$ <> "E" then
-			callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", 0)
-			util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
+			callpoint!.setColumnEnabled(num(callpoint!.getValidRow()),"OPE_ORDDET.PRODUCT_TYPE", 0)
+rem	jpb		callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", 0)
+rem			util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
 			rem print "---disabled prod type"; rem debug
 
 			if opc_linecode.prod_type_pr$ = "D" then
