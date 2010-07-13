@@ -1653,6 +1653,7 @@ rem ==========================================================================
 		msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
 		gosub disp_message
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_***_OVER_CREDIT_LIMIT_***"))
+		callpoint!.setHeaderColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
 		user_tpl.credit_limit_warned = 1
 	endif
 
