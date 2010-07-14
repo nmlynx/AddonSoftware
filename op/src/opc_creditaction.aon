@@ -140,7 +140,8 @@ rem --- Get over credit limit flag
     ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
     over_credit_limit = ordHelp!.calcOverCreditLimit()
     credit_hold_reason$ = ordHelp!.getCreditHoldReason()
-
+	if callpoint!.getColumnData("CREDIT_FLAG") = "C" over_credit_limit = 1
+	
 rem --- Is credit ok?
 
     status$ = ""

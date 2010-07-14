@@ -161,8 +161,6 @@ rem --- Credit action
 		gosub do_credit_action
 	endif
 [[OPE_ORDHDR.AOPT-PRNT]]
-print "Hdr:AOPT:PRNT"; rem debug
-
 rem --- Print a counter Picking Slip
 
 	if user_tpl.credit_installed$ <> "Y" or 
@@ -174,12 +172,10 @@ rem --- Print a counter Picking Slip
 
 		gosub do_picklist
 		user_tpl.do_end_of_form = 0
-rem jpb		callpoint!.setStatus("NEWREC")
 	else
 
 	rem --- Can't print until released from credit
 
-rem		gosub force_print_status; rem --- don't think I want to do this, causes problems downstream
 		gosub do_credit_action
 
 rem		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "N") then 
@@ -189,7 +185,7 @@ rem		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_
 
 			gosub do_picklist
 			user_tpl.do_end_of_form = 0
-rem jpb			callpoint!.setStatus("NEWREC")
+
 		else
 rem			if action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
 			if action$ = "R" and str(callpoint!.getDevObject("document_printed")) = "Y" then 

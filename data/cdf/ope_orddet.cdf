@@ -885,15 +885,9 @@ rem --- Set amounts for non-commited "other" type detail lines
 	endif
 
 rem --- Set header order totals
-rem escape
+
 	gosub disp_grid_totals
 
-rem	total_sales = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_SALES"))
-rem	total_cost  = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TOTAL_COST"))
-rem	ext_cost    = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) * num(callpoint!.getColumnData("OPE_ORDDET.UNIT_COST"))
-
-rem	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(total_sales + ext_price - user_tpl.prev_ext_price))
-rem	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_COST",  str(total_cost  + ext_cost  - user_tpl.prev_ext_cost))
 	callpoint!.setStatus("MODIFIED;REFRESH")
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
 print "Det:UNIT_PRICE:AVAL"; rem debug
@@ -1038,17 +1032,16 @@ rem ==========================================================================
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(ttl_ext_price))
 	disc_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	sub_tot = num(callpoint!.getHeaderColumnData("<<DISPLAY>>.SUBTOTAL"))
-	tax_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.TAX_AMOUNT"))
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	sub_tot = ttl_ext_price - disc_amt
-	net_sales = sub_tot + tax_amt + freight_amt
+	net_sales = sub_tot + ttl_tax + freight_amt
 	totamt! = UserObj!.getItem(num(callpoint!.getDevObject("total_sales_disp")))
 	totamt!.setValue(ttl_ext_price)
 	subamt! = UserObj!.getItem(num(callpoint!.getDevObject("subtot_disp")))
 	subamt!.setValue(sub_tot)
 	netamt! = UserObj!.getItem(num(callpoint!.getDevObject("net_sales_disp")))
 	netamt!.setValue(net_sales)
-rem escape;rem jpb ? netamt!.getValue()
+
 	taxamt! = UserObj!.getItem(num(callpoint!.getDevObject("tax_amt_disp")))
 	taxamt!.setValue(ttl_tax)
 
@@ -1632,8 +1625,6 @@ rem ==========================================================================
 		callpoint!.setHeaderColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
 		user_tpl.credit_limit_warned = 1
 	endif
-
-	rem print "out"; rem debug
 
 	return
 
