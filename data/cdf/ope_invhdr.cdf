@@ -536,45 +536,31 @@ rem --- Disable buttons
 [[OPE_INVHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
-rem --- Invoice History Header, set to void
-
-	file_name$      = "OPT_INVHDR"
-	opt_invhdr_dev  = fnget_dev(file_name$)
-	opt_invhdr_tpl$ = fnget_tpl$(file_name$)
-	dim opt_invhdr_rec$:opt_invhdr_tpl$
-
-	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-	opt_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
-	opt_invhdr_rec.invoice_type$ = "V"
-
-	opt_invhdr_rec$ = field(opt_invhdr_rec$)
-	if cvs(opt_invhdr_rec.ar_inv_no$,2)<>""
-		write record (opt_invhdr_dev) opt_invhdr_rec$
-		print "---Wrote Invoice History header..."; rem debug
-	endif
+rem --- Set table variables
+	file_name$ = "OPE_PRNTLIST"
+	prntlist_dev = fnget_dev(file_name$)
+	dim prntlist_rec$:fnget_tpl$(file_name$)
 
 rem --- Has a record been written
 
-	file_name$      = "OPE_INVHDR"
-	ope_invhdr_dev  = fnget_dev(file_name$)
-	ope_invhdr_tpl$ = fnget_tpl$(file_name$)
-	dim ope_invhdr_rec$:ope_invhdr_tpl$
-	start_block = 1
-	found = 0
+rem	file_name$      = "OPE_INVHDR"
+rem	ope_invhdr_dev  = fnget_dev(file_name$)
+rem	ope_invhdr_tpl$ = fnget_tpl$(file_name$)
+rem	dim ope_invhdr_rec$:ope_invhdr_tpl$
+rem	start_block = 1
+rem	found = 0
 
-	if start_block then
-		read record (ope_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ope_invhdr_rec$
-		found = 1
-	endif
+rem	if start_block then
+rem		read record (ope_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ope_invhdr_rec$
+rem		found = 1
+rem	endif
 
-	if !found then		
-		print "---Break out of BDEL"; rem debug
-		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("NEWREC")
-		break; rem --- exit callpoint
-	endif
+rem	if !found then		
+rem		print "---Break out of BDEL"; rem debug
+rem		user_tpl.do_end_of_form = 0
+rem		callpoint!.setStatus("NEWREC")
+rem		break; rem --- exit callpoint
+rem	endif
 
 rem --- Retain Order?
 
@@ -582,6 +568,25 @@ rem --- Retain Order?
 	gosub disp_message
 
 	if msg_opt$ = "Y" then
+
+	rem --- Invoice History Header, set to void
+
+		file_name$      = "OPT_INVHDR"
+		opt_invhdr_dev  = fnget_dev(file_name$)
+		opt_invhdr_tpl$ = fnget_tpl$(file_name$)
+		dim opt_invhdr_rec$:opt_invhdr_tpl$
+
+		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+		opt_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
+		opt_invhdr_rec.invoice_type$ = "V"
+
+		opt_invhdr_rec$ = field(opt_invhdr_rec$)
+		if cvs(opt_invhdr_rec.ar_inv_no$,2)<>""
+				write record (opt_invhdr_dev) opt_invhdr_rec$
+			print "---Wrote Invoice History header..."; rem debug
+		endif
 
 	rem --- Reprint order"
 
@@ -624,10 +629,6 @@ rem --- Retain Order?
 
 	rem --- Reset the print file
 
-		file_name$ = "OPE_PRNTLIST"
-		prntlist_dev = fnget_dev(file_name$)
-		dim prntlist_rec$:fnget_tpl$(file_name$)
-
 		remove (prntlist_dev, key=firm_id$+"I  "+cust_id$+order_no$, dom=*next)
 
 		if reprint$ = "Y" then
@@ -650,6 +651,18 @@ rem --- Retain Order?
 
 rem --- End Retain Order
 
+	else
+
+rem --- Retain Order is No
+
+		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","V")
+		prntlist_rec.firm_id$     = firm_id$
+		prntlist_rec.ordinv_flag$ = "I"
+		prntlist_rec.customer_id$ = cust_id$
+		prntlist_rec.order_no$    = order_no$
+		callpoint!.setStatus("SAVE-NEWREC-REFRESH")
+
+		write record (prntlist_dev) prntlist_rec$
 	endif
 
 rem --- Remove committments for detail records by calling ATAMO
@@ -2054,6 +2067,7 @@ rem ==========================================================================
 
 	custmast_dev = fnget_dev("ARM_CUSTMAST")
 	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
+	cust_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	find record (custmast_dev, key=firm_id$+cust_id$) custmast_tpl$
 
 	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
@@ -2068,7 +2082,6 @@ rem ==========================================================================
 	dflt_data$[3,0]="CUSTOMER_NAME"
 	dflt_data$[3,1]=custmast_tpl.customer_name$
 
-	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	key_pfx$  = firm_id$+"  "+cust_id$+order_no$
 
