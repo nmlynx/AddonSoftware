@@ -132,7 +132,7 @@ rem --- Background
 
 rem --- Initial Read
 
-    read (ope01_dev,key=firm_id$+"  "+from_cust$+from_ord$,dom=*next)
+    read (ope01_dev,key=firm_id$+"  "+from_cust$,dom=*next)
 
 rem --- Main Loop Starts
 
@@ -145,9 +145,10 @@ rem --- Main Loop Starts
         
         if pos(firm_id$+"  "=ope01a_key$)<>1 then break
         if thru_cust$<>"" and ope01a_key.firm_id$+ope01a_key.ar_type$+ope01a_key.customer_id$>firm_id$+"  "+thru_cust$ then break
+		if from_ord$<>"" and ope01a_key.order_no$<from_ord$ then continue
         if thru_ord$<>"" and ope01a_key.order_no$>thru_ord$ then break
         
-        read record (ope01_dev,key=ope01a_key$) ope01a$
+		read record (ope01_dev,key=ope01a_key$) ope01a$
         if ope01a.ordinv_flag$<>"I" or ope01a.ar_inv_no$=fill(len(ope01a.ar_inv_no$)) then continue
         if taken_by$<>"" and ope01a.ord_taken_by$<>taken_by$ then continue
         
