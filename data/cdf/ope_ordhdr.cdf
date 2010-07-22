@@ -3,10 +3,10 @@ rem --- Calculate Taxes
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
-	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" or user_tpl.do_end_of_form = 0 then
 		break; rem --- exit callpoint
 	endif
-	
+
 	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	taxable_amt = num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
