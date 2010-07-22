@@ -148,6 +148,13 @@ rem --- Main Loop Starts
 		if from_ord$<>"" and ope01a_key.order_no$<from_ord$ then continue
         if thru_ord$<>"" and ope01a_key.order_no$>thru_ord$ then break
         
+rem --- Check to see if record is in use in Invoice Entry
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj","OPE_INVHDR",ope01a_key$,"C","",0,table_chans$[all],lock_stat$
+		if lock_stat$="ERR_LOCKED"
+			read(ope01_dev)
+			continue
+		endif
+		
 		read record (ope01_dev,key=ope01a_key$) ope01a$
         if ope01a.ordinv_flag$<>"I" or ope01a.ar_inv_no$=fill(len(ope01a.ar_inv_no$)) then continue
         if taken_by$<>"" and ope01a.ord_taken_by$<>taken_by$ then continue
