@@ -249,7 +249,6 @@ rem --- Inits
     total = 0
     start_block = 1
 	line = 0
-	maxline = 32
 	
     call pgmdir$+"adc_getmask.aon","","AR","I","",m0$,0,m0
     call pgmdir$+"adc_getmask.aon","","IV","A","",m1$,0,m1
@@ -316,6 +315,13 @@ rem --- Set Firm ID for Credit Review and Release orders
             print_prices$=msg_opt$
         endif
         
+rem --- set number of lines to print
+		if ope01a.invoice_type$="S" then
+			maxline = 32		
+		else
+			maxline = 26
+		endif
+		
         if ope01a.print_status$="Y" then 
             gosub is_still_printed
         endif
@@ -934,17 +940,17 @@ print_footer: rem --- print total (if including prices), comments and carton/wei
 	if ope01a.invoice_type$="S"
 		bottom_margin = 570
 	else
-		bottom_margin = 630
+		bottom_margin = 640
 	endif
 	
-	if fnline2y%(line) > bottom_margin then gosub cont; rem --- keep comments and carton/weight grid on same page (maybe don't have to be, but looks better)
-   
+		if fnline2y%(line) > bottom_margin then gosub cont; rem --- keep comments and carton/weight grid on same page (maybe don't have to be, but looks better)
+	
 	pdf!.setPage(pagePrint!)
-    this_y% = fnline2y%(line)
+	this_y% = fnline2y%(line)
 
 	while 1
 	
-	    pdf!.drawBox(2, bottom_margin, 564, 712-bottom_margin, light_gray!, light_gray!)  
+		pdf!.drawBox(2, bottom_margin, 564, 712-bottom_margin, light_gray!, light_gray!)  
 	 
 		gosub comments
 		
