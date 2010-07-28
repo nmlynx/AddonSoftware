@@ -775,6 +775,7 @@ rem --- Clear/set flags
 
 	rem user_tpl.new_detail = 0
 
+	round_precision = num(callpoint!.getDevObject("precision"))
 	this_row = callpoint!.getValidationRow()
 	print "---This Row:", this_row; rem debug
 	print "---getGridRowNewStatus: ", callpoint!.getGridRowNewStatus(this_row); rem debug
@@ -872,7 +873,7 @@ rem --- Set price and discount
 		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", str(round(100 - unit_price * 100 / std_price, 2)) )
 	else
 		if disc_per <> 100 then
-			callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str(round(unit_price * 100 / (100 - disc_per), 2)) )
+			callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str(round(unit_price * 100 / (100 - disc_per), round_precision)) )
 		endif
 	endif
 	
@@ -897,8 +898,8 @@ rem --- Set header order totals
 print "Det:UNIT_PRICE:AVAL"; rem debug
 
 rem --- Set Manual Price flag and round price
-	
-	unit_price = round(num(callpoint!.getUserInput()), 2)
+	round_precision = num(callpoint!.getDevObject("precision"))
+	unit_price = round(num(callpoint!.getUserInput()),round_precision)
 	callpoint!.setUserInput(str(unit_price))
 
 	if pos(user_tpl.line_type$="SP") and 
@@ -1094,6 +1095,7 @@ pricing: rem --- Call Pricing routine
          rem          enter_price_message (0/1)
 rem ==========================================================================
 
+	round_precision = num(callpoint!.getDevObject("precision"))
 	print "in pricing..."; rem debug
 
 	enter_price_message = 0
@@ -1149,14 +1151,14 @@ rem ==========================================================================
 		util.forceEdit(Form!, user_tpl.unit_price_col)
 		enter_price_message = 1
 	else
-		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", str(round(price, 2)) )
+		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", str(round(price, round_precision)) )
 		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", str(disc))
 	endif
 
 	if disc=100 then
 		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str(user_tpl.item_price))
 	else
-		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str( round((price*100) / (100-disc), 2) ))
+		callpoint!.setColumnData("OPE_ORDDET.STD_LIST_PRC", str( round((price*100) / (100-disc), round_precision) ))
 	endif
 
 	rem callpoint!.setStatus("REFRESH")

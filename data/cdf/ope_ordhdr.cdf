@@ -1090,13 +1090,9 @@ rem --- Void this order
 	rem --- Save and exit
 
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE", "V")
-rem jpb		gosub get_disk_rec
-rem jpb		ordhdr_rec$ = field(ordhdr_rec$)
-rem jpb		write record (ordhdr_dev) ordhdr_rec$
 
 		user_tpl.do_end_of_form = 0
-rem jpb		callpoint!.setStatus("NEWREC")
-		callpoint!.setStatus("SAVE");rem jpb
+		callpoint!.setStatus("SAVE")
 		break; rem --- exit callpoint
 	endif
 
@@ -2348,6 +2344,7 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	callpoint!.setDevObject("total_sales_disp","14")
 	callpoint!.setDevObject("total_cost","15")
 	callpoint!.setDevObject("tax_amt_disp","16")
+	callpoint!.setDevObject("precision",ivs01a.precision$)
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
