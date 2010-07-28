@@ -473,6 +473,7 @@ rem --- set number of lines to print
 
 		rem --- Any Serial/Lot #'s?
 
+			if ope01a.invoice_type$ = "P" then continue
             if pos(params_rec.lotser_flag$="LS")=0 then continue
             if pos(opm02a.line_type$=" SRDP")=0 then continue
             if ivm01a.lotser_item$<>"Y" then continue
