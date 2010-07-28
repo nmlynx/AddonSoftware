@@ -416,6 +416,10 @@ rem --- Get current and prior values
 	prior_item$ = callpoint!.getColumnUndoData("OPE_ORDDET.ITEM_ID")
 	prior_qty   = num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_ORDERED"))
 
+rem --- Don't commit or uncommit Quotes
+
+	if callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" goto awri_update_hdr
+
 rem --- Has there been any change?
 
 	if	curr_whse$ <> prior_whse$ or 
@@ -1298,6 +1302,7 @@ rem ==========================================================================
 	ope_ordlsdet_dev=fnget_dev("OPE_ORDLSDET")
 	dim ope_ordlsdet$:fnget_tpl$("OPE_ORDLSDET")
 
+	ord_type$ = callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")
 	cust$    = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 	ar_type$ = callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
 	order$   = callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
@@ -1307,7 +1312,7 @@ rem ==========================================================================
 	ord_qty  = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	line_ship_date$=callpoint!.getColumnData("OPE_ORDDET.EST_SHP_DATE")
 
-	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty then
+	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty and ord_type$<>"P" then
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 		read record (ivm_itemmast_dev, key=firm_id$+item$, dom=*next) ivm_itemmast$
 
@@ -1397,8 +1402,6 @@ rem --- Product Type Processing
 	if cvs(line_code$,2) <> "" then
 		if opc_linecode.prod_type_pr$ <> "E" then
 			callpoint!.setColumnEnabled(num(callpoint!.getValidRow()),"OPE_ORDDET.PRODUCT_TYPE", 0)
-rem	jpb		callpoint!.setColumnEnabled("OPE_ORDDET.PRODUCT_TYPE", 0)
-rem			util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
 			rem print "---disabled prod type"; rem debug
 
 			if opc_linecode.prod_type_pr$ = "D" then
