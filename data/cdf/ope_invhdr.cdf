@@ -1,3 +1,84 @@
+[[OPE_INVHDR.AOPT-UINV]]
+rem --- Invoice History Header, set to void
+
+	file_name$      = "OPT_INVHDR"
+	opt_invhdr_dev  = fnget_dev(file_name$)
+	opt_invhdr_tpl$ = fnget_tpl$(file_name$)
+	dim opt_invhdr_rec$:opt_invhdr_tpl$
+	file_name$      = "OPE_INVHDR"
+	ope_invhdr_dev  = fnget_dev(file_name$)
+	ope_invhdr_tpl$ = fnget_tpl$(file_name$)
+	dim ope_invhdr_rec$:ope_invhdr_tpl$
+	file_name$ = "OPE_PRNTLIST"
+	prntlist_dev = fnget_dev(file_name$)
+	dim prntlist_rec$:fnget_tpl$(file_name$)
+
+	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	opt_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
+	opt_invhdr_rec.invoice_type$ = "V"
+
+	opt_invhdr_rec$ = field(opt_invhdr_rec$)
+	if cvs(opt_invhdr_rec.ar_inv_no$,2)<>""
+		write record (opt_invhdr_dev) opt_invhdr_rec$
+	endif
+
+rem --- Reprint order"
+
+	msg_id$ = "OP_REPRINT_ALSO"
+	gosub disp_message
+	reprint$ = msg_opt$
+
+rem --- Reset Invoice record to Order
+
+	ope_invhdr_rec$ = util.copyFields(ope_invhdr_tpl$, callpoint!)
+
+	ope_invhdr_rec.ar_inv_no$ = ""
+	ope_invhdr_rec.ordinv_flag$ = "O"
+	ope_invhdr_rec.print_status$ = "Y"
+	ope_invhdr_rec.lock_status$ = "N"
+	ope_invhdr_rec.tax_amount = 0
+	ope_invhdr_rec.freight_amt = 0
+	ope_invhdr_rec.discount_amt = 0
+
+	callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", "")
+	callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "O")
+	callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
+	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT", "0")
+	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", "0")
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", "0")
+		
+	if reprint$ = "Y" then
+		ope_invhdr_rec.reprint_flag$ = "Y"
+		callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "Y")
+	else
+		ope_invhdr_rec.reprint_flag$ = ""
+		callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "")
+	endif
+
+	ope_invhdr_rec$ = field(ope_invhdr_rec$)
+	write record (ope_invhdr_dev) ope_invhdr_rec$
+	callpoint!.setStatus("SETORIG")
+
+rem --- Reset the print file
+
+	remove (prntlist_dev, key=firm_id$+"I  "+cust_id$+order_no$, dom=*next)
+
+	if reprint$ = "Y" then
+		prntlist_rec.firm_id$     = firm_id$
+		prntlist_rec.ordinv_flag$ = "O"
+		prntlist_rec.customer_id$ = cust_id$
+		prntlist_rec.order_no$    = order_no$
+
+		write record (prntlist_dev) prntlist_rec$
+	endif
+
+rem --- All Done
+
+	user_tpl.do_end_of_form = 0
+	callpoint!.setStatus("NEWREC")
 [[OPE_INVHDR.AOPT-CRCH]]
 print "Hdr:AOPT:CRCH"; rem debug
 
@@ -438,12 +519,19 @@ rem --- Set user template info
 
 	user_tpl.order_date$=callpoint!.getUserInput()
 [[OPE_INVHDR.ADEL]]
-rem --- Remove from ope-04
+rem --- Remove invoice from ope-04 and rewrite as order (void)
 
 	ope_prntlist_dev=fnget_dev("OPE_PRNTLIST")
+	dim ope_prntlist$:fnget_tpl$("OPE_PRNTLIST")
 	remove (ope_prntlist_dev,key=firm_id$+"O"+"  "+
 :		callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")+
 :		callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),dom=*next)
+	ope_prntlist.firm_id$=firm_id$
+	ope_prntlist.ordinv_flag$="I"
+	ope_prntlist.customer_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	ope_prntlist.order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	ope_prntlist$=field(ope_prntlist$)
+	write record (ope_prntlist_dev)ope_prntlist$
 
 rem --- Set flag
 
@@ -453,6 +541,18 @@ rem --- Set flag
 rem --- clear availability
 
 	gosub clear_avail
+
+	file_name$ = "OPE_INVHDR"
+	ope01_dev = fnget_dev(file_name$)
+	ope01_tpl$=fnget_tpl$(file_name$)
+	dim ope01a$:ope01_tpl$
+	ope01a$ = util.copyFields(ope01_tpl$, callpoint!)
+	ope01a.sequence_000$="000"
+	ope01a.invoice_type$ = "V"
+	ope01a.print_status$="Y"
+
+	ope01a$ = field(ope01a$)
+	write record (ope01_dev) ope01a$
 [[OPE_INVHDR.SHIPTO_NO.BINP]]
 rem --- Save old value
 
@@ -505,6 +605,7 @@ rem --- Enable / Disable buttons
 		endif
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("MINV",0)
+		callpoint!.setOptionEnabled("UINV",1)
 	else
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
 			callpoint!.setOptionEnabled("PRNT",0)
@@ -517,6 +618,7 @@ rem --- Enable / Disable buttons
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
 				callpoint!.setOptionEnabled("MINV",1)	
+				callpoint!.setOptionEnabled("UINV",0)
 			endif
 		endif
 	endif
@@ -530,6 +632,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("MINV",0)
+	callpoint!.setOptionEnabled("UINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
@@ -541,129 +644,16 @@ rem --- Set table variables
 	prntlist_dev = fnget_dev(file_name$)
 	dim prntlist_rec$:fnget_tpl$(file_name$)
 
-rem --- Has a record been written
-
-rem	file_name$      = "OPE_INVHDR"
-rem	ope_invhdr_dev  = fnget_dev(file_name$)
-rem	ope_invhdr_tpl$ = fnget_tpl$(file_name$)
-rem	dim ope_invhdr_rec$:ope_invhdr_tpl$
-rem	start_block = 1
-rem	found = 0
-
-rem	if start_block then
-rem		read record (ope_invhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*endif) ope_invhdr_rec$
-rem		found = 1
-rem	endif
-
-rem	if !found then		
-rem		print "---Break out of BDEL"; rem debug
-rem		user_tpl.do_end_of_form = 0
-rem		callpoint!.setStatus("NEWREC")
-rem		break; rem --- exit callpoint
-rem	endif
-
-rem --- Retain Order?
-
-	msg_id$ = "OP_RETAIN_ORDER"
-	gosub disp_message
-
-	if msg_opt$ = "Y" then
-
-	rem --- Invoice History Header, set to void
-
-		file_name$      = "OPT_INVHDR"
-		opt_invhdr_dev  = fnget_dev(file_name$)
-		opt_invhdr_tpl$ = fnget_tpl$(file_name$)
-		dim opt_invhdr_rec$:opt_invhdr_tpl$
-
-		cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-		opt_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
-		opt_invhdr_rec.invoice_type$ = "V"
-
-		opt_invhdr_rec$ = field(opt_invhdr_rec$)
-		if cvs(opt_invhdr_rec.ar_inv_no$,2)<>""
-				write record (opt_invhdr_dev) opt_invhdr_rec$
-			print "---Wrote Invoice History header..."; rem debug
-		endif
-
-	rem --- Reprint order"
-
-		msg_id$ = "OP_REPRINT_ALSO"
-		gosub disp_message
-		reprint$ = msg_opt$
-
-	rem --- Reset Invoice record to Order
-
-		ope_invhdr_rec$ = util.copyFields(ope_invhdr_tpl$, callpoint!)
-
-		ope_invhdr_rec.ar_inv_no$ = ""
-		ope_invhdr_rec.ordinv_flag$ = "O"
-		ope_invhdr_rec.print_status$ = "Y"
-		ope_invhdr_rec.lock_status$ = "N"
-		ope_invhdr_rec.tax_amount = 0
-		ope_invhdr_rec.freight_amt = 0
-		ope_invhdr_rec.discount_amt = 0
-
-		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", "")
-		callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "O")
-		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
-		callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
-		callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT", "0")
-		callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", "0")
-		callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", "0")
-		
-		if reprint$ = "Y" then
-			ope_invhdr_rec.reprint_flag$ = "Y"
-			callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "Y")
-		else
-			ope_invhdr_rec.reprint_flag$ = ""
-			callpoint!.setColumnData("OPE_INVHDR.REPRINT_FLAG", "")
-		endif
-
-		ope_invhdr_rec$ = field(ope_invhdr_rec$)
-		write record (ope_invhdr_dev) ope_invhdr_rec$
-		callpoint!.setStatus("SETORIG")
-		print "---Wrote Invoice->Order header..."; rem debug
-
-	rem --- Reset the print file
-
-		remove (prntlist_dev, key=firm_id$+"I  "+cust_id$+order_no$, dom=*next)
-
-		if reprint$ = "Y" then
-			prntlist_rec.firm_id$     = firm_id$
-			prntlist_rec.ordinv_flag$ = "O"
-			prntlist_rec.customer_id$ = cust_id$
-			prntlist_rec.order_no$    = order_no$
-
-			write record (prntlist_dev) prntlist_rec$
-		endif
-
-		print "---Reset Print file..."; rem debug
-
-	rem --- All Done
-
-		print "---Break out of BDEL"; rem debug
-		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("NEWREC")
-		break; rem --- exit callpoint
-
-rem --- End Retain Order
-
-	else
-
 rem --- Retain Order is No
 
-		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","V")
-		prntlist_rec.firm_id$     = firm_id$
-		prntlist_rec.ordinv_flag$ = "I"
-		prntlist_rec.customer_id$ = cust_id$
-		prntlist_rec.order_no$    = order_no$
-		callpoint!.setStatus("SAVE-NEWREC-REFRESH")
+	callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","V")
+	prntlist_rec.firm_id$     = firm_id$
+	prntlist_rec.ordinv_flag$ = "I"
+	prntlist_rec.customer_id$ = cust_id$
+	prntlist_rec.order_no$    = order_no$
+	callpoint!.setStatus("SAVE-NEWREC-REFRESH")
 
-		write record (prntlist_dev) prntlist_rec$
-	endif
+	write record (prntlist_dev) prntlist_rec$
 
 rem --- Remove committments for detail records by calling ATAMO
 
@@ -953,8 +943,10 @@ rem --- Enable buttons
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
 		callpoint!.setOptionEnabled("MINV", 0)
+		callpoint!.setOptionEnabled("UINV",1)
 	else
 		callpoint!.setOptionEnabled("MINV", 1)
+		callpoint!.setOptionEnabled("UINV",0)
 	endif
 
 rem --- Set all previous values
@@ -1090,7 +1082,7 @@ rem --- New record, set default
 
 		callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", invoice_no$)
 
-      cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	        cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE","S")
 
@@ -1143,6 +1135,7 @@ rem --- New record, set default
 		user_tpl.order_date$   = sysinfo.system_date$
 
 		callpoint!.setOptionEnabled("MINV",1)
+		callpoint!.setOptionEnabled("UINV",0)
 
 	endif
 
@@ -2050,6 +2043,7 @@ rem ==========================================================================
 			order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 			gosub add_to_batch_print
 			callpoint!.setOptionEnabled("MINV",0)
+			callpoint!.setOptionEnabled("UINV",1)
 			callpoint!.setStatus("SAVE;REFRESH")
 		endif
 		
@@ -2597,6 +2591,7 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	callpoint!.setDevObject("total_sales_disp","14")
 	callpoint!.setDevObject("total_cost","15")
 	callpoint!.setDevObject("tax_amt_disp","16")
+	callpoint!.setDevObject("precision",ivs01a.precision$)
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
@@ -2617,6 +2612,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
 	callpoint!.setOptionEnabled("MINV",0)
+	callpoint!.setOptionEnabled("UINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
