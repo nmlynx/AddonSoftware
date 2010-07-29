@@ -223,7 +223,7 @@ rem --- Check to see if record is in use in Invoice Entry
                         if ivm02a.unit_cost<>0 then  ope11a.unit_cost=ivm02a.unit_cost
                         if ivs01a.lifofifo$<>"N" then
                             gosub lifo_fifo
-                            ope11a.unit_cost=ret_cost
+                            if ope11a.qty_shipped<>0 ope11a.unit_cost=ret_cost
                         endif
                     endif
                 endif
