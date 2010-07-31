@@ -605,7 +605,7 @@ rem --- Enable / Disable buttons
 		endif
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("MINV",0)
-		callpoint!.setOptionEnabled("UINV",1)
+		callpoint!.setOptionEnabled("UINV",0)
 	else
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
 			callpoint!.setOptionEnabled("PRNT",0)
@@ -621,6 +621,9 @@ rem --- Enable / Disable buttons
 				callpoint!.setOptionEnabled("UINV",0)
 			endif
 		endif
+	if callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")="I"
+		callpoint!.setOptionEnabled("UINV",1)
+	endif
 	endif
 [[OPE_INVHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
@@ -1115,7 +1118,7 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.ORDER_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_INVHDR.PRICING_CODE",arm02a.pricing_code$)
-      callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
+		callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
 
 		ordHelp!.setTaxCode(arm02a.tax_code$)
 
