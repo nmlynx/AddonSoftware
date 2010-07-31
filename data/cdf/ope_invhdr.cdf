@@ -619,11 +619,10 @@ rem --- Enable / Disable buttons
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
 				callpoint!.setOptionEnabled("MINV",1)	
 				callpoint!.setOptionEnabled("UINV",0)
+			else
+				callpoint!.setOptionEnabled("UINV",1)
 			endif
 		endif
-	if callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")="I"
-		callpoint!.setOptionEnabled("UINV",1)
-	endif
 	endif
 [[OPE_INVHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
@@ -911,7 +910,7 @@ rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
-      gosub check_credit
+		gosub check_credit
 	endif
 
 	gosub disp_cust_comments
@@ -942,6 +941,7 @@ rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT", 1)
 	callpoint!.setOptionEnabled("TTLS",1)
+	callpoint!.setOptionEnabled("UINV",1)
 	if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH", 1)
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
