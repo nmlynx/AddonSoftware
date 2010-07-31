@@ -179,7 +179,7 @@ rem --- Print a counter Picking Slip
 		gosub do_credit_action
 
 rem		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "N") then 
-		if pos(action$ = "XUS") or (action$ = "R" and str(callpoint!.getDevObject("document_printed")) <> "Y") then 
+		if pos(action$ = "XUS") or (pos(action$ = "RM") and str(callpoint!.getDevObject("document_printed")) <> "Y") then 
 
 		rem --- Couldn't do credit action, or did credit action w/ no problem, or released from credit but didn't print
 
