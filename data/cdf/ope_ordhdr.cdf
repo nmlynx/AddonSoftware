@@ -1112,6 +1112,7 @@ rem --- Convert Quote?
 
 			if msg_opt$ = "Y" then 
 				callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
+				callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
 				ope11_dev        = fnget_dev("OPE_ORDDET")
 				ivs01_dev        = fnget_dev("IVS_PARAMS")
 				opc_linecode_dev = fnget_dev("OPC_LINECODE")
@@ -1134,8 +1135,7 @@ rem --- Convert Quote?
 
 					if pos(firm_id$+ar_type$+cust$+ord$=ope11a.firm_id$+
 :						ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$)<>1 
-:              then
-						break
+:						break
 					endif
 
 					read record (opc_linecode_dev, key=firm_id$+ope11a.line_code$, dom=*continue) opc_linecode$
@@ -1158,7 +1158,7 @@ rem --- Convert Quote?
 						endif
 					endif
 
-					if pos(opc_linecode.line_type$="SP")>0 and opc_linecode.dropship$<>"N" and
+					if pos(opc_linecode.line_type$="SP")>0 and opc_linecode.dropship$<>"Y" and
 :						ope11a.commit_flag$<>"N"
 :					then
 						wh_id$    = ope11a.warehouse_id$
