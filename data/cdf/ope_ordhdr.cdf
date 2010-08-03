@@ -823,7 +823,7 @@ rem --- Existing record
 		if ope01a.invoice_type$ = "V" then
 			msg_id$="OP_ORDINV_VOID"
 			gosub disp_message
-			callpoint!.setStatus("ABORT")
+			callpoint!.setStatus("NEWREC")
 			break; rem --- exit from callpoint			
 		endif
 
@@ -832,7 +832,7 @@ rem --- Existing record
 		if ope01a.ordinv_flag$ = "I" then
 			msg_id$ = "OP_IS_INVOICE"
 			gosub disp_message
-			callpoint!.setStatus("ABORT")
+			callpoint!.setStatus("NEWREC")
 			break; rem --- exit from callpoint			
 		endif		
 
