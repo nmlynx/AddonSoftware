@@ -1051,7 +1051,7 @@ rem --- Existing record
 		if ope01a.invoice_type$ = "P" then
 			msg_id$ = "OP_IS_QUOTE"
 			gosub disp_message
-			callpoint!.setStatus("ABORT")
+			callpoint!.setStatus("NEWREC")
 			break; rem --- exit from callpoint			
 		endif		
 
