@@ -59,7 +59,8 @@ rem --- Launch the totals form
 
 	gosub do_totals
 	user_tpl.do_totals_form = 0
-	rem callpoint!.setStatus("NEWREC")
+
+	callpoint!.setStatus("REFRESH")
 [[OPE_ORDHDR.AREC]]
 rem --- Clear availability information
 	

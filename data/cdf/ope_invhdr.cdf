@@ -169,7 +169,8 @@ rem --- Launch the totals form
 
 	gosub do_totals
 	user_tpl.do_totals_form = 0
-	rem callpoint!.setStatus("NEWREC")
+
+	callpoint!.setStatus("REFRESH")
 [[OPE_INVHDR.AOPT-CASH]]
 rem --- Customer wants to pay cash; Launch invoice totals first
 
@@ -2156,7 +2157,7 @@ rem --- Set fields from the Order Totals form and write back
 	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", str(frt_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES",str((total_amt - disc_amt) + tax_amt + frt_amt))
 
-	callpoint!.setStatus("SAVE")
+	callpoint!.setStatus("REFRESH-SAVE")
 	
 	return
 
