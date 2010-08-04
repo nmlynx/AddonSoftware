@@ -1068,42 +1068,15 @@ rem --- Enable/disable expire date based on value
 		callpoint!.setColumnEnabled("OPE_ORDHDR.EXPIRE_DATE", 1)
 	endif
 
-rem --- Void this order
-
-	if inv_type$ = "V" then
-		callpoint!.setColumnData("OPE_ORDHDR.LOCK_STATUS", "")
-		callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
-		callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG", "I")
-
-	rem --- Add to batch print
-
-		ope_prntlist_dev = fnget_dev("OPE_PRNTLIST")
-		dim ope_prntlist$:fnget_tpl$("OPE_PRNTLIST")
-
-		ope_prntlist.firm_id$     = firm_id$
-		ope_prntlist.ordinv_flag$ = "I"
-		ope_prntlist.ar_type$     = "  "
-		ope_prntlist.customer_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-		ope_prntlist.order_no$    = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-
-		write record (ope_prntlist_dev) ope_prntlist$
-
-	rem --- Save and exit
-
-		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE", "V")
-
-		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("SAVE")
-		break; rem --- exit callpoint
-	endif
-
 rem --- Convert Quote?
 
 	if rec_data.invoice_type$="S" then 
 		if inv_type$="P" then 
 			msg_id$="OP_NO_CONVERT"
 			gosub disp_message
-			callpoint!.setStatus("ABORT-REFRESH")
+			callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
+			callpoint!.setStatus("REFRESH:OPE_ORDHDR.INVOICE_TYPE-ABORT")
+			callpoint!.setUserInput("S")
 		endif
 	else
 		if rec_data.invoice_type$="P" and inv_type$="S" then 
