@@ -411,10 +411,12 @@ rem --- Get current and prior values
 	curr_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 	curr_qty   = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	line_ship_date$=callpoint!.getColumnData("OPE_ORDDET.EST_SHP_DATE")
+	curr_commit$=callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")
 
 	prior_whse$ = callpoint!.getColumnUndoData("OPE_ORDDET.WAREHOUSE_ID")
 	prior_item$ = callpoint!.getColumnUndoData("OPE_ORDDET.ITEM_ID")
 	prior_qty   = num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_ORDERED"))
+	prior_commit$=callpoint!.getColumnUndoData("OPE_ORDDET.COMMIT_FLAG")
 
 rem --- Don't commit or uncommit Quotes
 
@@ -422,9 +424,10 @@ rem --- Don't commit or uncommit Quotes
 
 rem --- Has there been any change?
 
-	if	curr_whse$ <> prior_whse$ or 
-:		curr_item$ <> prior_item$ or 
-:		curr_qty   <> prior_qty
+	if	(curr_whse$ <> prior_whse$ or 
+:		 curr_item$ <> prior_item$ or 
+:		 curr_qty   <> prior_qty) and
+:		curr_commit$ = prior_commit$
 :	then
 
 rem --- Initialize inventory item update
@@ -494,6 +497,43 @@ rem --- Commit quantity for current item and warehouse
 
 		endif
 
+	endif
+
+rem --- Only do the next if the commit flag has been changed
+	if curr_commit$ <> prior_commit$
+
+rem --- Initialize inventory item update
+		status=999
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then exitto std_exit
+
+rem --- Flag changed from Commit to Uncommit: uncommit previous
+
+		if curr_commit$ ="N" and prior_commit$ = "Y"
+
+rem --- Uncommit prior quantity
+
+			if prior_qty<>0 then
+				items$[1] = prior_whse$
+				items$[2] = prior_item$
+				refs[0]   = prior_qty
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+		endif
+
+		if curr_commit$ = "Y" and prior_commit$ <> "Y"
+
+rem --- Commit current quantity
+
+			if curr_qty<>0 then
+				items$[1] = curr_whse$
+				items$[2] = curr_item$
+				refs[0]   = curr_qty 
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then exitto std_exit
+			endif
+		endif
 	endif
 
 awri_update_hdr: rem --- Update header
