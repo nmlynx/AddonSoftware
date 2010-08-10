@@ -20,7 +20,7 @@
 			<DD_CREATE_DATE id="ddm_tables.prt_empltax">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.prt_empltax">20100727</DD_LSTREV_DATE>
 			<DD_LSTSYNC_DATE id="ddm_tables.prt_empltax">20100727</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.prt_empltax">002000</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_TIME id="ddm_tables.prt_empltax">002144</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP id="ddm_tables.prt_empltax">T</DD_ATTR_FTYP>
 			<DD_ATTR_PTAB id="ddm_tables.prt_empltax">PRM_EMPLMAST    </DD_ATTR_PTAB>
 			<DD_ATTR_SLEV id="ddm_tables.prt_empltax">zzzz</DD_ATTR_SLEV>
@@ -32,7 +32,7 @@
 		<RECORD id="ddm_table_tpls.prt_empltax">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.prt_empltax">PRT_EMPLTAX     </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.prt_empltax">prt-21</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.prt_empltax">firm_id:c(2),employee_no:c(9),record_id_c:c(1),tax_code:c(2),tax_tbl_code:c(3),no_std_ded:c(2),no_item_ded:c(2),repadd_flag:c(1),pctamt_flag:c(1),pers_taken:c(5),reserved_str:c(20*),mtd_gross:n(7*),qtr_gross_01:n(7*),qtr_gross_02:n(7*),qtr_gross_03:n(7*),qtr_gross_04:n(7*),nmtd_gross:n(7*),mtd_taxable:n(7*),qtr_taxable_01:n(7*),qtr_taxable_02:n(7*),qtr_taxable_03:n(7*),qtr_taxable_04:n(7*),nmtd_taxable:n(7*),mtd_tax:n(7*),quarter_tax_01:n(7*),quarter_tax_02:n(7*),quarter_tax_03:n(7*),quarter_tax_04:n(7*),nmtd_tax:n(7*),tax_rate:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.prt_empltax">firm_id:c(2),employee_no:c(9),record_id_c:c(1),tax_code:c(2),tax_tbl_code:c(3),no_std_ded:c(2),no_item_ded:c(2),repadd_flag:c(1),pctamt_flag:c(1),pers_taken:c(5),reserved_str:c(20*),mtd_gross:n(7*),qtr_gross_01:n(7*),qtr_gross_02:n(7*),qtr_gross_03:n(7*),qtr_gross_04:n(7*),nmtd_gross:n(7*),mtd_taxable:n(7*),qtr_taxable_01:n(7*),qtr_taxable_02:n(7*),qtr_taxable_03:n(7*),qtr_taxable_04:n(7*),nmtd_taxable:n(7*),mtd_tax:n(7*),quarter_tax_01:n(7*),quarter_tax_02:n(7*),quarter_tax_03:n(7*),quarter_tax_04:n(7*),nmtd_tax:n(7*),tax_rate:n(12*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -920,19 +920,25 @@
 		</RECORD>
 		<RECORD id="ddm_elements.tax_rate">
 			<DD_DATA_NAME id="ddm_elements.tax_rate">TAX_RATE        </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.tax_rate">Tax Rate                      </DD_DESCRIPTION>
+			<DD_DESCRIPTION id="ddm_elements.tax_rate">Tax Rate</DD_DESCRIPTION>
 			<DD_DATA_TYPE id="ddm_elements.tax_rate">N</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.tax_rate">7</DD_DATA_LENGTH>
+			<DD_DATA_LENGTH id="ddm_elements.tax_rate">12</DD_DATA_LENGTH>
 			<DD_MASK_TYPE id="ddm_elements.tax_rate">R</DD_MASK_TYPE>
 			<ASC_COMP_ID id="ddm_elements.tax_rate">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.tax_rate">PR </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.tax_rate">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.tax_rate">20060328</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.tax_rate">20100809</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.tax_rate">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.tax_rate">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.tax_rate">N</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM id="ddm_elements.tax_rate">            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP id="ddm_elements.tax_rate">            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL id="ddm_elements.tax_rate">Tax Rate</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.tax_rate">Tax Rate</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.tax_rate">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.tax_rate">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.tax_rate">0</DD_ATTR_MINL>
+			<DD_ATTR_PREC id="ddm_elements.tax_rate">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.ytd_gross">
 			<DD_DATA_NAME id="ddm_elements.ytd_gross">YTD_GROSS       </DD_DATA_NAME>
