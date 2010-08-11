@@ -9,9 +9,46 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
-rem --- Use statements
+rem --- Inits
 
     use ::ado_func.src::func
+    use ::sys/prog/bao_option.bbj::Option
+    use ::bbtranslator.bbj::BBTranslator
+    use ::ado_pdf.src::PDFHelper
+    
+    use java.awt.Font
+    use java.awt.Color
+    use javax.print.attribute.HashPrintRequestAttributeSet
+    use javax.print.attribute.standard.MediaPrintableArea
+    use java.lang.Float
+    use java.awt.Dimension
+    
+    declare Option option!
+    declare BBTranslator Translate!
+    declare Font textfont!
+    declare Font boldfont!
+    declare Font largefont!
+    declare BBjForm docPrint!
+    declare BBjFormPage pagePrint!
+    declare BBjFormPage page!
+    declare Color red!
+    declare Color white!
+    declare Color grey!
+    declare HashPrintRequestAttributeSet requestAttributes!
+    declare MediaPrintableArea a!
+    declare Float x!
+    declare Float y!
+    declare Float w!
+    declare Float h!
+    declare BBjPrinter myBBjPrinter!
+    declare BBjForm docPDF!
+    declare BBjFormPage pagePDF!
+    declare BBjTemplatedString rec!
+    declare BBjFormParagraph tmp!
+    declare Font tmp_font!
+    declare Dimension tmpdim!
+    declare BBjFormImage logo!
+    declare PDFHelper pdf!
 
 rem --- Retrieve the program path
 
@@ -82,9 +119,9 @@ rem --- Retrieve parameter records
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ars01b_key$=firm_id$+"AR02"
     find record (ars_report_dev,key=ars01b_key$,err=std_missing_params) ars01b$
-    remit$=ars01b.remit_addr_1$+ars01b.remit_addr_2$+ars01b.remit_city$+ars01b.remit_state$+ars01b.remit_zip$
-    call pgmdir$+"adc_address.aon",remit$,24,3,9,address
-    remit$=ars01b.name$+remit$
+    rec! = BBjAPI().makeTemplatedString( templates$[6] )
+    rec!.setString(ars01b$)
+    remit$ = func.formatAddress(rec!, 30, 4)
 
     call pgmdir$+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     call pgmdir$+"adc_getmask.aon","","AR","A","",m1$,0,0
@@ -154,43 +191,41 @@ rem    limit=maxlines-4
 
 rem --- Open the printer
 
-    let textfont!= new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
-    let boldfont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,10)
-    let largefont!=new java.awt.Font("Arial",java.awt.Font.BOLD,26)
+    textfont!  = new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
+    boldfont!  = new java.awt.Font("Times New Roman",java.awt.Font.BOLD,10)
+    largefont! = new java.awt.Font("Arial",java.awt.Font.BOLD,26)
 
-    red!=new java.awt.Color(red)
-    white!=new java.awt.Color(white)
-    grey!=new java.awt.Color(grey)
+    red!   = new java.awt.Color(red)
+    white! = new java.awt.Color(white)
+    grey!  = new java.awt.Color(grey)
 
-    LET requestAttributes!=new javax.print.attribute.HashPrintRequestAttributeSet()
+    requestAttributes!=new javax.print.attribute.HashPrintRequestAttributeSet()
     requestAttributes!.add(javax.print.attribute.standard.MediaSizeName.NA_LETTER)
     requestAttributes!.add(javax.print.attribute.standard.OrientationRequested.PORTRAIT)
 
     units=javax.print.attribute.standard.MediaPrintableArea.INCH
     x!=new java.lang.Float(0.25).floatValue()
     y!=new java.lang.Float(0.25).floatValue()
-    w!=new java.lang.Float(8.8).floatValue()
+    w!=new java.lang.Float(8.0).floatValue()
     h!=new java.lang.Float(10.5).floatValue()
     a!=new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
 
     requestAttributes!.add(a!)
 
-    left_justify=0
-    right_justify=1
-    center_justify=2
+    left_justify%=0
+    right_justify%=1
+    center_justify%=2
 
-    myAPI!=BBjAPI()
-    myBBjPrinter!=myAPI!.getBBjPrinter(1,err=*next)
-    if myBBjPrinter!=null()
-        msg_id$="AD_NOPRINTER"
+    myBBjPrinter! = BBjAPI().getBBjPrinter(1,err=*next)
+    if myBBjPrinter! = null()
+        msg_id$ = "AD_NOPRINTER"
         gosub disp_message
         goto std_exit
     endif
 
-    myBBjPDFPrinter!=BBjAPI()
-
     myBBjPrinter!.setAttributes(requestAttributes!)
     docPrint!=myBBjPrinter!.getForm(0)
+    pdf! = new PDFHelper(textfont!)
 
 rem --- Start progress meter and position header file
 
@@ -216,6 +251,7 @@ rem --- Read next Invoice Header (are-05) record
 
     rem --- Initialize invoice header fields
     rem --- first call bac_documents.bbj to get back document ID
+    
         call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,"","","I","PDF",docdir$,
 :           "pdf",option!.getAlias(),"C",are05a.customer_id$,table_chans$[all],"DOC_ID"
 
@@ -224,8 +260,9 @@ rem --- Read next Invoice Header (are-05) record
         open (prtr_dev,err=printer)pdf_doc$
         close (prtr_dev)
         erase pdf_doc$
+        
     printer: 
-        docPDF!=myBBjPDFPrinter!.getBBjPDFForm(pdf_doc$,requestAttributes!)
+        docPDF!=BBjAPI().getBBjPDFForm(pdf_doc$,requestAttributes!)
 
         invoice$=are05a.firm_id$+are05a.ar_inv_no$
         invoice_date$=func.formatDate(are05a.inv_date$)
@@ -240,7 +277,7 @@ rem --- Read next Invoice Header (are-05) record
         k$=arm01a.firm_id$+arm01a.customer_id$ 
         find record (arm01_dev,key=k$,dom=*next) arm01a$
 
-        declare BBjTemplatedString rec!
+        
         rec! = BBjAPI().makeTemplatedString( fattr(arm01a$) )
         rec!.setString(arm01a$)
         address$ = func.formatAddress(rec!, 30, 7)
@@ -286,6 +323,7 @@ rem --- Read next Invoice Header (are-05) record
                 else
                     linedate$=are15a.trns_date$
                 endif
+                
             rem --- Print the detail line
 
                 if lines+4>maxlines gosub overflow
@@ -323,73 +361,79 @@ heading: rem --- Print the invoice heading
 
     page=page+1
     page!=pagePrint!
+    pdf!.setPage(pagePrint!)
 
     while 1
 
     rem --- Header
-        tmp=fntext2(0,10,568,10,"INVOICE",largefont!,center_justify,page!)
-        tmp=fnlogo(page!)
+        pdf!.setText(0,10,568,10,"INVOICE",largefont!,center_justify%)
+        rem pdf!.setLogo(0,0,185,68,logo!)
 
     rem --- Company Address
 
-        tmp=fntext(50,60,remit$(1,address),textfont!,page!)
-        tmp=fntext(50,72 ,remit$(31,address),textfont!,page!)
-        tmp=fntext(50,84 ,remit$(61,address),textfont!,page!)
-        tmp=fntext(50,96,remit$(91,address),textfont!,page!)
+        pdf!.setText(50,60,remit$(1,address),textfont!)
+        pdf!.setText(50,72,remit$(31,address),textfont!)
+        pdf!.setText(50,84,remit$(61,address),textfont!)
+        pdf!.setText(50,96,remit$(91,address),textfont!)
 
     rem --- Sold To
-        tmp=fnbox(20,126,550,96,page!)
-        tmp=fnline(65,126,65,222,page!)
-        tmp=fntext2(20,132,40,132,Translate!.getTranslation("AON_SOLD_TO"),boldfont!,right_justify,page!)
-        tmp=fntext(70,132,arm01a.customer_name$,textfont!,page!)
-        tmp=fntext(70,144,address$(31,address),textfont!,page!)
-        tmp=fntext(70,156,address$(61,address),textfont!,page!)
-        tmp=fntext(70,168,address$(91,address),textfont!,page!)    
-        tmp=fntext(70,180,address$(121,address),textfont!,page!)
-        tmp=fntext(70,192,address$(151,address),textfont!,page!)
-        tmp=fntext(70,204,address$(181,address),textfont!,page!)
+    
+        pdf!.drawBox(20,126,550,96)
+        pdf!.drawLine(65,126,65,222)
+        pdf!.setText(20,132,40,132,Translate!.getTranslation("AON_SOLD_TO"),boldfont!,right_justify%)
+        pdf!.setText(70,132,address$(1,address),textfont!)
+        pdf!.setText(70,144,address$(31,address),textfont!)
+        pdf!.setText(70,156,address$(61,address),textfont!)
+        pdf!.setText(70,168,address$(91,address),textfont!)    
+        pdf!.setText(70,180,address$(121,address),textfont!)
+        pdf!.setText(70,192,address$(151,address),textfont!)
+        pdf!.setText(70,204,address$(181,address),textfont!)
 
     rem --- Info Box 
-        tmp=fnline(424,126,424,222,page!)
-        tmp=fnline(424,150,570,150,page!)
-        tmp=fnline(424,174,570,174,page!)
-        tmp=fnline(424,198,570,198,page!)
-        tmp=fntext2(432,132,54,132,Translate!.getTranslation("AON_PAGE"),boldfont!,right_justify,page!)
-        tmp=fntext2(432,156,54,132,Translate!.getTranslation("AON_DATE"),boldfont!,right_justify,page!)
-        tmp=fntext2(432,180,54,132,Translate!.getTranslation("AON_CUSTOMER"),boldfont!,right_justify,page!)
-        tmp=fntext2(432,204,54,132,Translate!.getTranslation("AON_INVOICE"),boldfont!,right_justify,page!)
+    
+        pdf!.drawLine(424,126,424,222)
+        pdf!.drawLine(424,150,570,150)
+        pdf!.drawLine(424,174,570,174)
+        pdf!.drawLine(424,198,570,198)
+        pdf!.setText(432,132,54,132,Translate!.getTranslation("AON_PAGE"),boldfont!,right_justify%)
+        pdf!.setText(432,156,54,132,Translate!.getTranslation("AON_DATE"),boldfont!,right_justify%)
+        pdf!.setText(432,180,54,132,Translate!.getTranslation("AON_CUSTOMER"),boldfont!,right_justify%)
+        pdf!.setText(432,204,54,132,Translate!.getTranslation("AON_INVOICE"),boldfont!,right_justify%)
 
-        tmp=fnline(490,126,490,222,page!)
-        tmp=fntext(496,132,str(page),textfont!,page!)
-        tmp=fntext(496,156,invoice_date$,textfont!,page!)
-        tmp=fntext(496,180,func.alphaMask(arm01a.customer_id$(1,customer_size),m0$),textfont!,page!)
-        tmp=fntext(496,204,are05a.ar_inv_no$,textfont!,page!)
+        pdf!.drawLine(490,126,490,222)
+        pdf!.setText(496,132,str(page),textfont!)
+        pdf!.setText(496,156,invoice_date$,textfont!)
+        pdf!.setText(496,180,func.alphaMask(arm01a.customer_id$(1,customer_size),m0$),textfont!)
+        pdf!.setText(496,204,are05a.ar_inv_no$,textfont!)
 
     rem --- Terms
-        tmp=fnbox(20,222,550,24,page!)
-        tmp=fnline(65,222,65,246,page!)
-        tmp=fntext2(20,228,40,228,Translate!.getTranslation("AON_TERMS"),boldfont!,right_justify,page!)
-        tmp=fntext(70,228,arm10a.code_desc$,textfont!,page!)
+    
+        pdf!.drawBox(20,222,550,24)
+        pdf!.drawLine(65,222,65,246)
+        pdf!.setText(20,228,40,228,Translate!.getTranslation("AON_TERMS"),boldfont!,right_justify%)
+        pdf!.setText(70,228,arm10a.code_desc$,textfont!)
 
     rem --- Ribbon
-        tmp=fnbox(20,246,550,24,page!)
-        tmp=fnbox(20,246,550,436,page!)
-        tmp=fnline(65,246,65,682,page!)
-        tmp=fnline(115,246,115,682,page!)
-        tmp=fnline(370,246,370,682,page!)
-        tmp=fnline(424,246,424,682,page!)
-        tmp=fnline(490,246,490,682,page!)
-        tmp=fntext2(20,252,36,252,Translate!.getTranslation("AON_SEQ"),boldfont!,right_justify,page!)
-        tmp=fntext2(70,252,58,252,Translate!.getTranslation("AON_DATE"),boldfont!,left_justify,page!)
-        tmp=fntext(120,252,Translate!.getTranslation("AON_MEMO"),boldfont!,page!)
-        tmp=fntext2(352,252,60,252,Translate!.getTranslation("AON_QTY"),boldfont!,right_justify,page!)
-        tmp=fntext2(424,252,60,252,Translate!.getTranslation("AON_PRICE"),boldfont!,right_justify,page!)
-        tmp=fntext2(490,252,66,252,Translate!.getTranslation("AON_EXTENSION"),boldfont!,right_justify,page!)
+    
+        pdf!.drawBox(20,246,550,24)
+        pdf!.drawBox(20,246,550,436)
+        pdf!.drawLine(65,246,65,682)
+        pdf!.drawLine(115,246,115,682)
+        pdf!.drawLine(370,246,370,682)
+        pdf!.drawLine(424,246,424,682)
+        pdf!.drawLine(490,246,490,682)
+        pdf!.setText(20,252,36,252,Translate!.getTranslation("AON_SEQ"),boldfont!,right_justify%)
+        pdf!.setText(70,252,58,252,Translate!.getTranslation("AON_DATE"),boldfont!,left_justify%)
+        pdf!.setText(120,252,Translate!.getTranslation("AON_MEMO"),boldfont!)
+        pdf!.setText(352,252,60,252,Translate!.getTranslation("AON_QTY"),boldfont!,right_justify%)
+        pdf!.setText(424,252,60,252,Translate!.getTranslation("AON_PRICE"),boldfont!,right_justify%)
+        pdf!.setText(490,252,66,252,Translate!.getTranslation("AON_EXTENSION"),boldfont!,right_justify%)
 
         lines=0
 
         if page!=pagePDF! or pagePDF!=null() then break
         page!=pagePDF!
+        pdf!.setPage(pagePDF!)
     wend
 
     return
@@ -397,19 +441,21 @@ heading: rem --- Print the invoice heading
 detail: rem --- Print an invoice detail line
 
     page!=pagePrint!
+    pdf!.setPage(pagePrint!)
+    
     while 1
 
         tmp_line=264+((lines+1)*12)
-        tmp=fntext2(20,tmp_line,36,tmp_line,are15a.line_no$,textfont!,right_justify,page!)
-        tmp=fntext2(70,tmp_line,58,tmp_line,linedate$,textfont!,left_justify,page!)
-        tmp=fntext(120,tmp_line,are15a.description$,textfont!,page!)
-        tmp=fntext2(352,tmp_line,60,tmp_line,str(are15a.units:m2$),textfont!,right_justify,page!)
-        tmp=fntext2(424,tmp_line,60,tmp_line,str(are15a.unit_price:m1$),textfont!,right_justify,page!)
-        tmp=fntext2(490,tmp_line,66,tmp_line,str(are15a.ext_price:m1$),textfont!,right_justify,page!)
-
+        pdf!.setText(20,tmp_line,36,tmp_line,are15a.line_no$,textfont!,right_justify%)
+        pdf!.setText(70,tmp_line,58,tmp_line,linedate$,textfont!,left_justify%)
+        pdf!.setText(120,tmp_line,are15a.description$,textfont!)
+        pdf!.setText(352,tmp_line,60,tmp_line,str(are15a.units:m2$),textfont!,right_justify%)
+        pdf!.setText(424,tmp_line,60,tmp_line,str(are15a.unit_price:m1$),textfont!,right_justify%)
+        pdf!.setText(490,tmp_line,66,tmp_line,str(are15a.ext_price:m1$),textfont!,right_justify%)
 
         if page!=pagePDF! or pagePDF!=null() then break
         page!=pagePDF!
+        pdf!.setPage(pagePDF!)
     wend
     lines=lines+2
 
@@ -418,17 +464,20 @@ detail: rem --- Print an invoice detail line
 memo: rem --- Print a memo line
 
     page!=pagePrint!
+    pdf!.setPage(pagePrint!)
+    
     while 1
 
         tmp_line=264+((lines+1)*12)
-        tmp=fntext2(20,tmp_line,36,tmp_line,are15a.line_no$,textfont!,center_justify,page!)
-        tmp=fntext2(60,tmp_line,58,tmp_line,linedate$,textfont!,center_justify,page!)
-        tmp=fntext(120,tmp_line,are15a.description$,textfont!,page!)
+        pdf!.setText(20,tmp_line,36,tmp_line,are15a.line_no$,textfont!,center_justify%)
+        pdf!.setText(60,tmp_line,58,tmp_line,linedate$,textfont!,center_justify%)
+        pdf!.setText(120,tmp_line,are15a.description$,textfont!)
 
         lines=lines+1
 
         if page!=pagePDF! or pagePDF!=null() then break
         page!=pagePDF!
+        pdf!.setPage(pagePDF!)
     wend
 
     return
@@ -436,16 +485,19 @@ memo: rem --- Print a memo line
 totals: rem --- Print the invoice total
 
     page!=pagePrint!
+    pdf!.setPage(pagePrint!)
+    
     while 1
 
-        tmp=fnbox(424,682,146,24,page!)
-        tmp=fnline(490,682,490,708,page!)
-        tmp=fntext2(424,688,60,688,Translate!.getTranslation("AON_TOTAL"),boldfont!,right_justify,page!)
-        tmp=fntext2(490,688,66,688,str(total:m1$),textfont!,right_justify,page!)
-        tmp=fntext(70,688,message$,textfont!,page!)
+        pdf!.drawBox(424,682,146,24)
+        pdf!.drawLine(490,682,490,708)
+        pdf!.setText(424,688,60,688,Translate!.getTranslation("AON_TOTAL"),boldfont!,right_justify%)
+        pdf!.setText(490,688,66,688,str(total:m1$),textfont!,right_justify%)
+        pdf!.setText(70,688,message$,textfont!)
 
         if page!=pagePDF! or pagePDF!=null() then break
         page!=pagePDF!
+        pdf!.setPage(pagePDF!)
     wend
 
     docPDF!.print()
@@ -455,93 +507,17 @@ totals: rem --- Print the invoice total
 
 overflow: rem --- Multi-page invoice
 
-    tmp=fntext2(490,688,66,688,Translate!.getTranslation("AON_CONTINUED"),textfont!,right_justify,page!)
+    pdf!.setText(490,688,66,688,Translate!.getTranslation("AON_CONTINUED"),textfont!,right_justify%)
     pagePDF!=docPDF!.createPage()
     pagePrint!=docPrint!.createPage()
     gosub heading
+    
     return
 
 disp_message: rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     return
-
-rem --- Functions
-
-rem --- fntext: Form Text command
-
-    def fntext(tmp_x,tmp_y,tmp_text$,tmp_font!,page!)
-        tmp_text$=cvs(tmp_text$,3)
-        tmp!.destroy(err=*next)
-        tmp!=page!.newParagraph()
-        tmp!.setHorizontalFill(1)
-        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
-        tmp!.setText(tmp_text$)
-        tmp!.setFont(tmp_font!)
-        page!.add(tmp!)
-        return(1)
-    fnend
-
-rem --- fntext2: Form Text command
-
-    def fntext2(tmp_x,tmp_y,tmp_x2,tmp_y2,tmp_text$,tmp_font!,tmp_just,page!)
-        tmp_text$=cvs(tmp_text$,3)
-        tmp!.destroy(err=*next)
-        tmp!=page!.newParagraph()
-        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
-        if tmp_just then tmp!.setSize(tmp_x2,tmp_y2)
-        if tmp_just=1 then tmp!.setHorizontalAlignment(tmp!.RIGHT_JUSTIFIED)
-        if tmp_just=2 then tmp!.setHorizontalAlignment(tmp!.CENTER_JUSTIFIED)
-        tmp!.setText(tmp_text$)
-        tmp!.setFont(tmp_font!)
-        page!.add(tmp!)
-        return(1)
-    fnend
-
-rem --- fnbox: Form Box command
-
-    def fnbox(tmp_x,tmp_y,tmp_w,tmp_h,page!)
-        tmp!=page!.newFrame()
-        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
-        tmp!.setWidth(tmp_w)
-        tmp!.setHeight(tmp_h)
-        page!.add(tmp!)
-        return(1)
-    fnend
-
-rem --- fnline: Form Line command
-
-    def fnline(tmp_x,tmp_y,tmp_w,tmp_h,page!)
-        tmp!=page!.newLine()
-        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
-        tmp!.setWidth(tmp_w)
-        tmp!.setHeight(tmp_h)
-        page!.add(tmp!)
-        return(1)
-    fnend
-
-rem --- fnframe: Form Frame command
-
-    def fnframe(tmp_x,tmp_y,tmp_x2,tmp_y2,page!)
-        tmp!=page!.newFrame()
-        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
-        tmpdim!=new java.awt.Dimension(tmp_x2,tmp_y2)
-        tmp!.setSize(tmpdim!)
-        page!.add(tmp!)
-        return(1)
-    fnend
-
-rem --- fnlogo: Put logo on page
-
-    def fnlogo(page!)
-        logo!=page!.newImage()
-        logo!.setURL(logofile$,err=*next)
-        logo!.setPosition(new java.awt.Point(0,0))
-        logo!.setWidth(185)
-        logo!.setHeight(68)
-        page!.add(logo!)
-        return(1)
-    fnend
 
 rem #include std_error.src
 
