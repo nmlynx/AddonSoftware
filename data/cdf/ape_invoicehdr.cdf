@@ -419,7 +419,6 @@ rem #endinclude fnget_control.src
 #include std_missing_params.src
 [[APE_INVOICEHDR.BSHO]]
 rem --- Open/Lock files
-rem --- test comment
 files=9,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="APT_INVOICEHDR";rem --- "apt-01"
