@@ -109,6 +109,25 @@ rem --- Calculate Taxes
 [[OPE_INVHDR.ARAR]]
 print "Hdr:ARAR"; rem debug
 
+rem --- Check for void
+
+	if callpoint!.getColumnData("INVOICE_TYPE") = "V" then
+		msg_id$="OP_ORDINV_VOID"
+		gosub disp_message
+		callpoint!.setStatus("NEWREC")
+		break; rem --- exit from callpoint			
+	endif
+
+rem --- Check for quote
+		
+	if callpoint!.getColumnData("INVOICE_TYPE") = "P" then
+		msg_id$ = "OP_IS_QUOTE"
+		gosub disp_message
+		callpoint!.setStatus("NEWREC")
+		sysGUI!.flushEvents(err=*next)
+		break; rem --- exit from callpoint			
+	endif		
+
 rem --- Set flags
 
 	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
@@ -748,7 +767,8 @@ rem --- Previous record must be an invoice
 			callpoint!.setStatus("ABORT")
 			break
 		else
-			read (ope01_dev, key=firm_id$+$ff$, dom=*next, end=*break)
+			read (ope01_dev, key=firm_id$+$ff$, dom=*break, end=*break)
+			break
 		endif
 	wend
 [[OPE_INVHDR.BNEK]]
@@ -782,7 +802,8 @@ rem --- Next record must be an invoice
 			callpoint!.setStatus("ABORT")
 			break
 		else
-			read (ope01_dev, key=firm_id$, dom=*next)
+			read (ope01_dev, key=firm_id$, dom=*break)
+			break
 		endif
 	wend
 [[OPE_INVHDR.SHIPTO_TYPE.BINP]]
@@ -898,7 +919,6 @@ rem --- Check for order, force to an Invoice
 
 		if locked then
 			user_tpl.do_end_of_form = 0
-			rem callpoint!.setStatus("NEWREC")
 			break; rem --- exit callpoint
 		endif
 	endif
@@ -907,6 +927,12 @@ rem --- Show customer data
 	
 	cust_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	if cvs(cust_id$,3)=""
+		callpoint!.setStatus("NEWREC")
+		break
+	endif
+
 	gosub display_customer
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
