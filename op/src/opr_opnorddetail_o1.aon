@@ -567,7 +567,7 @@ rem    read (ope21_dev,key=ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.cu
 
     while more
         ope21a_key$=key(ope21_dev,end=*break)
-        if pos(ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a.internal_seq_no$=ope21a_key)<>1 then break
+        if pos(ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a.internal_seq_no$=ope21a_key$)<>1 then break
 rem        if ope21a_key.firm_id$+ope21a_key.ar_type$+ope21a_key.customer_id$+ope21a_key.order_no$+ope21a_key.orddet_seq_ref$<>ope11a_key.firm_id$+ope11a_key.ar_type$+ope11a_key.customer_id$+ope11a_key.order_no$+ope11a_key.internal_seq_no$ then break
         read record (ope21_dev,key=ope21a_key$) ope21a$
 
