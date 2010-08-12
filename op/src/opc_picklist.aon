@@ -22,9 +22,9 @@ on_demand: rem --- Entry point for on-denamd picklist
     type = 1	
     goto done_with_enter
     
-batch_pick: rem --- Batch printing of invoices
+batch_pick: rem --- Batch printing of orders
 
-    enter custIds!, orderNos!, option!, table_chans$[all], status
+    enter custIds!, orderNos!, option!, printed_orders$, table_chans$[all], status
     
     type = 2	
 	
@@ -33,7 +33,7 @@ done_with_enter:
 rem --- Types of calls
 
     on_demand  = 1
-    batch_pick  = 2	
+    batch_pick  = 2
 	
 rem --- Use statements and Declares
 
@@ -249,7 +249,6 @@ rem --- Inits
     total = 0
     start_block = 1
 	line = 0
-	maxline = 32
 	
     call pgmdir$+"adc_getmask.aon","","AR","I","",m0$,0,m0
     call pgmdir$+"adc_getmask.aon","","IV","A","",m1$,0,m1
@@ -302,9 +301,10 @@ rem --- Main Read
 		if type = on_demand
 			ope01a$ = util.copyFields(fattr(ope01a$), callpoint!)
 		else
+			if pos(cust_id$+order_no$=printed_orders$,len(cust_id$)+len(order_no$))=0 goto next_read
 			read record (ordhdr_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=std_exit) ope01a$
 		endif
-
+		
 rem --- Set Firm ID for Credit Review and Release orders
 		if cvs(ope01a.firm_id$,3)=""
 			ope01a.firm_id$ = firm_id$
@@ -316,6 +316,13 @@ rem --- Set Firm ID for Credit Review and Release orders
             print_prices$=msg_opt$
         endif
         
+rem --- set number of lines to print
+		if ope01a.invoice_type$="S" then
+			maxline = 32		
+		else
+			maxline = 26
+		endif
+		
         if ope01a.print_status$="Y" then 
             gosub is_still_printed
         endif
@@ -467,6 +474,7 @@ rem --- Set Firm ID for Credit Review and Release orders
 
 		rem --- Any Serial/Lot #'s?
 
+			if ope01a.invoice_type$ = "P" then continue
             if pos(params_rec.lotser_flag$="LS")=0 then continue
             if pos(opm02a.line_type$=" SRDP")=0 then continue
             if ivm01a.lotser_item$<>"Y" then continue
@@ -527,7 +535,8 @@ rem --- Set Firm ID for Credit Review and Release orders
         nothing_printed = 0		
 
     rem --- End of picklist/quote
-	
+
+next_read:	
 	next next_item
 
 display: rem --- Display PDF
@@ -598,11 +607,13 @@ rem --- Clear Print Flags
 
 			read record (prntlist_dev,end=*break)ope04a$
 			if ope04a.firm_id$+ope04a.ordinv_flag$<>firm_id$+"O" break
+			if pos(ope04a.customer_id$+ope04a.order_no$=printed_orders$,len(ope04a.customer_id$)+len(ope04a.order_no$))=0 continue
 			call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 			if status = 999 then exitto std_exit
 			start_block = 1
 
 			if start_block then
+				if pos(ope04a.customer_id$+ope04a.order_no$=printed_orders$,len(ope04a.customer_id$)+len(ope04a.order_no$))=0 continue
 				extract record (ordhdr_dev, key=ope04a.firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$, dom=*endif) ope01a$
 				if (which_ones$="P" and ope01a.invoice_type$<>"S") or (which_ones$="Q" and ope01a.invoice_type$<>"P") then continue
 
@@ -934,17 +945,17 @@ print_footer: rem --- print total (if including prices), comments and carton/wei
 	if ope01a.invoice_type$="S"
 		bottom_margin = 570
 	else
-		bottom_margin = 630
+		bottom_margin = 640
 	endif
 	
-	if fnline2y%(line) > bottom_margin then gosub cont; rem --- keep comments and carton/weight grid on same page (maybe don't have to be, but looks better)
-   
+		if fnline2y%(line) > bottom_margin then gosub cont; rem --- keep comments and carton/weight grid on same page (maybe don't have to be, but looks better)
+	
 	pdf!.setPage(pagePrint!)
-    this_y% = fnline2y%(line)
+	this_y% = fnline2y%(line)
 
 	while 1
 	
-	    pdf!.drawBox(2, bottom_margin, 564, 712-bottom_margin, light_gray!, light_gray!)  
+		pdf!.drawBox(2, bottom_margin, 564, 712-bottom_margin, light_gray!, light_gray!)  
 	 
 		gosub comments
 		
