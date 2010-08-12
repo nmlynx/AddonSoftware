@@ -164,9 +164,14 @@ rem --- Credit action
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Print a counter Picking Slip
 
+	arm02_dev=fnget_dev("ARM_CUSTDET")
+	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+	read record (arm02_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+"  ",dom=*next) arm02a$
+
 	if user_tpl.credit_installed$ <> "Y" or 
 :		user_tpl.pick_hold$ = "Y"         or
-:		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" 
+:		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "P" or
+:		arm02a.cred_hold$="E"
 :	then
 
 	rem --- No need to check credit first
@@ -1252,17 +1257,23 @@ check_credit: rem --- Check credit limit of customer
               rem     (ope_db, 5400-5499)
 rem ==========================================================================
 
-	if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and user_tpl.balance>=user_tpl.credit_limit then
-   	if user_tpl.credit_installed$ <> "Y" then
-      	msg_id$ = "OP_OVER_CREDIT_LIMIT"
-			dim msg_tokens$[1]
-			msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
-         gosub disp_message
-      endif  
-   
-		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_***_CREDIT_LIMIT_EXCEEDED_***")) 
-		user_tpl.credit_limit_warned = 1
-   endif
+	arm02_dev=fnget_dev("ARM_CUSTDET")
+	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+	read record (arm02_dev,key=firm_id$+cust_id$+"  ",dom=*next) arm02a$
+
+	if arm02a.cred_hold$<>"E"
+		if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and user_tpl.balance>=user_tpl.credit_limit then
+   			if user_tpl.credit_installed$ <> "Y" then
+			      	msg_id$ = "OP_OVER_CREDIT_LIMIT"
+				dim msg_tokens$[1]
+				msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
+				gosub disp_message
+			endif  
+
+			callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_***_CREDIT_LIMIT_EXCEEDED_***")) 
+			user_tpl.credit_limit_warned = 1
+		endif
+	endif
 
 	return
 

@@ -1661,16 +1661,20 @@ rem ==========================================================================
 credit_exceeded: rem --- Credit Limit Exceeded (ope_dd, 5500-5599)
 rem ==========================================================================
 
-	if user_tpl.credit_limit <> 0 and !user_tpl.credit_limit_warned then
-		msg_id$ = "OP_OVER_CREDIT_LIMIT"
-		dim msg_tokens$[1]
-		msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
-		gosub disp_message
-		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_***_OVER_CREDIT_LIMIT_***"))
-		callpoint!.setHeaderColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
-		user_tpl.credit_limit_warned = 1
+	arm02_dev=fnget_dev("ARM_CUSTDET")
+	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+	read record (arm02_dev,key=firm_id$+callpoint!.getHeaderColumnData("OPE_ORDHDR.CUSTOMER_ID")+"  ",dom=*next) arm02a$
+	if arm02a.cred_hold$<>"E"
+		if user_tpl.credit_limit <> 0 and !user_tpl.credit_limit_warned then
+			msg_id$ = "OP_OVER_CREDIT_LIMIT"
+			dim msg_tokens$[1]
+			msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
+			gosub disp_message
+			callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_***_OVER_CREDIT_LIMIT_***"))
+			callpoint!.setHeaderColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
+			user_tpl.credit_limit_warned = 1
+		endif
 	endif
-
 	return
 
 rem ==========================================================================
