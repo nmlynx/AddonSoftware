@@ -323,7 +323,7 @@ rem --- set number of lines to print
 			maxline = 26
 		endif
 		
-        if ope01a.print_status$="Y" then 
+        if ope01a.print_status$="Y" and type = batch_pick then 
             gosub is_still_printed
         endif
 
@@ -332,13 +332,15 @@ rem --- set number of lines to print
             ope01a.print_status$ = "N"
         endif
 
-        if ope01a.print_status$="Y" then continue
+        if ope01a.print_status$="Y" and type = batch_pick then continue
         if ope01a.invoice_type$="V" then continue
         if credit_rec.sys_install$="Y" and ope01a.credit_flag$="C" and credit_rec.pick_hold$="N" then continue
 
         after$="NO"
-        gosub valid_lines
-        if print$="NO" then continue
+		if type = batch_pick then
+			gosub valid_lines
+			if print$="NO" then continue
+		endif	
 		
     rem --- Get a barista document ID
     
@@ -558,28 +560,17 @@ nothing_printed:
 rem --- Updates and final processing
 
     if type = on_demand 
-	
-	    after$="YES"
-        gosub valid_lines
 
-        if ope01a.reprint_flag$="Y"
-            ope01a.print_status$=reprint$
-            ope01a.reprint_flag$=""
-        else
-            if print$="YES" and allprint$="YES"
-                ope01a.print_status$="Y"
-            endif
-        endif
-
-        if ope01a.print_status$<>"Y"
-            ope01a.print_status$="N"
-        endif  
-
+		after$="YES"
+		ope01a.print_status$="Y"
+		ope01a.reprint_flag$="Y"
+		callpoint!.setColumnData("PRINT_STATUS","Y")
+		callpoint!.setColumnData("REPRINT_FLAG","Y")
+		
         ope01a.lock_status$="N";rem --- really?  If on-demand, I'll be returning to OE w/ order up... shouldn't it be locked?
-		if status <> 999 and type = on_demand ope01a.print_status$="Y"
+
 		ope01a$=field(ope01a$)
 		write record (ordhdr_dev) ope01a$
-rem        callpoint!.setStatus("SETORIG")
 
         if ope01a.print_status$="Y"
             remove (prntlist_dev,key=firm_id$+ope01a.ordinv_flag$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)

@@ -206,9 +206,10 @@ display_form: rem --- Display
         rem --- Release this order
         
             terms$ = str(callpoint!.getDevObject("new_terms_code"))
-            
+
             if terms$<>"null" then
                 action$ = "R"
+				callpoint!.setColumnData("CREDIT_FLAG","R")
             else
                 rem action$ = ?
             endif
