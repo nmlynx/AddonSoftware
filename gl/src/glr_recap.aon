@@ -218,7 +218,7 @@ rem --- Get next glw-11 key
         amount=glw11a.trans_amt
         if amount>=0 debits=amount,debit$=str(amount)
         if amount<0 credits=amount,credit$=str(abs(amount))
-        memo$=gl_post_memo$
+        memo$=glw11a.description$
         ref1$=glw11a.reference_01$
         ref2$=glw11a.reference_02$
         ref3$=glw11a.reference_03$
