@@ -187,7 +187,7 @@ rem --- Check total quantity from all lines against ordered quantity and shipped
 
 			rem --- Check available
 
-				if callpoint!.getGridRowNewStatus(reccnt)    = "Y" or
+				if callpoint!.getGridRowNewStatus(reccnt) = "Y" or
 :				   callpoint!.getGridRowModifyStatus(reccnt) = "Y" 
 :				then
 					lot_qty  = qty_ordered
@@ -220,14 +220,15 @@ rem --- Warn that selected lot/serial#'s does not match order qty
 
 		msg_tokens$[3] = str(callpoint!.getDevObject("ord_qty"))
 		gosub disp_message
-		callpoint!.setDevObject("total_shipped","0")
-		break
+		callpoint!.setDevObject("total_shipped",str(lot_qty))
 	endif
 
 rem --- Send back qty shipped
 
-	print "---Setting DevObject total_shipped:", lot_ship; rem debug
 	callpoint!.setDevObject("total_shipped", str(lot_ship))
+	if lot_qty>num(callpoint!.getDevObject("ord_qty")) then
+		callpoint!.setStatus("ABORT")
+	endif
 [[OPE_ORDLSDET.<CUSTOM>]]
 rem ==========================================================================
 check_avail: rem --- Check for available quantity
