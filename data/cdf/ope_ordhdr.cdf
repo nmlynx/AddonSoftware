@@ -116,6 +116,22 @@ rem --- Reset all previous values
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
 
+rem --- Are both Customer and Order entered?
+
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2) = "" or 
+:		cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = ""
+:	then
+		callpoint!.setStatus("EXIT")
+		break; rem --- exit callpoint
+	endif
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
+		callpoint!.setStatus("EXIT")
+		break; rem --- exit callpoint
+	endif
+
 rem --- Is record deleted?
 
 	if user_tpl.record_deleted then
@@ -128,20 +144,6 @@ rem --- Is flag down?
 		user_tpl.do_end_of_form = 1
 		break; rem --- exit callpoint
 	endif	
-
-rem --- Are both Customer and Order entered?
-
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2) = "" or 
-:		cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = ""
-:	then
-		break; rem --- exit callpoint
-	endif
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-
-	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
-		break; rem --- exit callpoint
-	endif
 
 rem --- Calculate taxes and write it back
 	
