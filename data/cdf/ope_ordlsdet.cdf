@@ -52,7 +52,7 @@ rem --- If not a new row, uncommit the lot/serial
 [[OPE_ORDLSDET.QTY_ORDERED.AVAL]]
 print "QTY_ORDERED.AVAL"; rem debug
 
-rem ---- If serial (as opposed to lots), qty must be 1 ot -1
+rem ---- If serial (as opposed to lots), qty must be 1 or -1
 
 	qty_ordered = num(callpoint!.getUserInput())
 	gosub there_can_be_only_one
@@ -63,6 +63,34 @@ rem ---- If serial (as opposed to lots), qty must be 1 ot -1
 	endif
 
 	print "---Not aborted"; rem debug
+
+rem --- Check quantity ordered against what's available on the Lot
+
+	file_name$ = "IVM_LSMASTER"
+	lsmast_dev = fnget_dev(file_name$)
+	dim lsmast_tpl$:fnget_tpl$(file_name$)
+	wh$     = callpoint!.getDevObject("wh")
+	item$   = callpoint!.getDevObject("item")
+ 	ls_no$  = callpoint!.getColumnData("LOTSER_NO")
+
+	got_rec$ = "N"
+	start_block = 1
+
+	if start_block then
+		read record (lsmast_dev, key=firm_id$+wh$+item$+ls_no$, dom=*endif) lsmast_tpl$
+		got_rec$ = "Y"
+	endif
+
+	if got_rec$="Y"
+		if lsmast_tpl.qty_on_hand - lsmast_tpl.qty_commit - qty_ordered < 0
+			dim msg_tokens$[1]
+			msg_tokens$[0]=str(lsmast_tpl.qty_on_hand - lsmast_tpl.qty_commit)
+			msg_id$="IV_QTY_OVER_AVAIL"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
+	endif
 
 rem --- Update qty left to order
 
@@ -572,6 +600,13 @@ rem --- Validate open lot number
 
 	if lsmast_tpl.closed_flag$ = "C" and ord_qty > 0 then
 		msg_id$ = "IV_SERLOT_CLOSED"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
+
+	if lsmast_tpl.qty_on_hand - lsmast_tpl.qty_commit <= 0
+		msg_id$="IV_LOT_NO_AVAIL"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
