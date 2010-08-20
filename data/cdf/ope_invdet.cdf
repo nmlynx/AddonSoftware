@@ -1056,7 +1056,9 @@ rem ==========================================================================
 	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_INVHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(ttl_ext_price))
-	disc_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	discamt! = UserObj!.getItem(num(callpoint!.getDevObject("disc_amt_disp")))
+	discamt!.setValue(disc_amt)
+
 	sub_tot = num(callpoint!.getHeaderColumnData("<<DISPLAY>>.SUBTOTAL"))
 	tax_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.TAX_AMOUNT"))
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
@@ -1101,7 +1103,19 @@ rem ==========================================================================
 		ttl_taxable = ordHelp!.totalTaxable( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
 	endif
 
-	disc_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+rem --- Calculate Discount Amount
+	disc_code$=callpoint!.getDevObject("disc_code")
+
+	file_name$ = "OPC_DISCCODE"
+	disccode_dev = fnget_dev(file_name$)
+	dim disccode_rec$:fnget_tpl$(file_name$)
+
+	find record (disccode_dev, key=firm_id$+disc_code$, dom=*next) disccode_rec$
+	new_disc_per = disccode_rec.disc_percent
+
+	disc_amt = round(disccode_rec.disc_percent * ttl_ext_price / 100, 2)
+	callpoint!.setHeaderColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt))
+
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	ttl_tax = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable)
 

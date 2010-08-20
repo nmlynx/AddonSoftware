@@ -165,12 +165,14 @@ rem --- Reset all previous values
 	user_tpl.new_order = 1
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned = 0
+	callpoint!.setDevObject("disc_code",callpoint!.getColumnData("OPE_INVHDR.DISC_CODE"))
 
 	gosub disp_totals
 [[OPE_INVHDR.DISC_CODE.AVAL]]
 rem --- Set discount code for use in Order Totals
 
 	user_tpl.disc_code$ = callpoint!.getUserInput()
+	callpoint!.setDevObject("disc_code",user_tpl.disc_code$)
 
 	file_name$ = "OPC_DISCCODE"
 	disccode_dev = fnget_dev(file_name$)
@@ -183,13 +185,6 @@ rem --- Set discount code for use in Order Totals
 	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(new_disc_amt))
 
 	gosub disp_totals
-[[OPE_INVHDR.AOPT-TTLS]]
-rem --- Launch the totals form
-
-	gosub do_totals
-	user_tpl.do_totals_form = 0
-
-	callpoint!.setStatus("REFRESH")
 [[OPE_INVHDR.AOPT-CASH]]
 rem --- Customer wants to pay cash; Launch invoice totals first
 
@@ -2449,6 +2444,7 @@ rem --- Save display control objects
 	UserObj!.addItem( util.getControl(callpoint!, "OPE_INVHDR.TOTAL_SALES") )
 	UserObj!.addItem( util.getControl(callpoint!, "OPE_INVHDR.TOTAL_COST") )
 	UserObj!.addItem( util.getControl(callpoint!, "OPE_INVHDR.TAX_AMOUNT") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_INVHDR.DISCOUNT_AMT") )
 
 	callpoint!.setDevObject("credit_hold_control", util.getControl(callpoint!, "<<DISPLAY>>.CREDIT_HOLD")); rem used in opc_creditcheck
 	callpoint!.setDevObject("backordered_control", util.getControl(callpoint!, "<<DISPLAY>>.BACKORDERED")); rem used in opc_creditcheck
@@ -2624,6 +2620,7 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	callpoint!.setDevObject("total_cost","15")
 	callpoint!.setDevObject("tax_amt_disp","16")
 	callpoint!.setDevObject("precision",ivs01a.precision$)
+	callpoint!.setDevObject("disc_amt_disp","17")
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
