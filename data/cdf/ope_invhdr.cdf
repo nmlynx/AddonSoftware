@@ -913,7 +913,6 @@ rem --- Check for order, force to an Invoice
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "O" then
 
 		gosub make_invoice
-
 		if locked then
 			user_tpl.do_end_of_form = 0
 			break; rem --- exit callpoint
@@ -1086,7 +1085,6 @@ rem --- Existing record
 
 			if locked then
 				user_tpl.do_end_of_form = 0
-				rem callpoint!.setStatus("NEWREC")
 				break; rem --- exit callpoint
 			endif
 		endif
@@ -2053,7 +2051,7 @@ rem ==========================================================================
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","INVOICE_NO",inv_no$,table_chans$[all]
 		
 		if inv_no$ = "" then
-			callpoint!.setStatus("ABORT")
+			callpoint!.setStatus("NEWREC")
 			locked = 1
 			print "---No to new invoice number"; rem debug
 		else
