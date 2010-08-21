@@ -41,6 +41,7 @@ rem --- Reset Invoice record to Order
 	ope_invhdr_rec.tax_amount = 0
 	ope_invhdr_rec.freight_amt = 0
 	ope_invhdr_rec.discount_amt = 0
+	ope_invhdr_rec.invoice_date$=""
 
 	callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", "")
 	callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "O")
@@ -49,6 +50,7 @@ rem --- Reset Invoice record to Order
 	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT", "0")
 	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", "0")
 	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", "0")
+	callpoint!.setColumnData("OPE_INVHDR.INVOICE_DATE","")
 		
 	if reprint$ = "Y" then
 		ope_invhdr_rec.reprint_flag$ = "Y"
