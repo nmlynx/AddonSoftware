@@ -242,41 +242,6 @@ rem --- Enable/disable expire date based on value
 		callpoint!.setColumnEnabled("OPE_INVHDR.EXPIRE_DATE", 1)
 	endif
 
-rem --- Void this order
-
-	if inv_type$ = "V" then
-		print "---Set flags and status"; rem debug
-		callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "")
-		callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
-		callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "I")
-
-	rem --- Add to batch print
-
-		print "---Add to Print List"; rem debug
-		ope_prntlist_dev = fnget_dev("OPE_PRNTLIST")
-		dim ope_prntlist$:fnget_tpl$("OPE_PRNTLIST")
-
-		ope_prntlist.firm_id$     = firm_id$
-		ope_prntlist.ordinv_flag$ = "I"
-		ope_prntlist.ar_type$     = "  "
-		ope_prntlist.customer_id$ = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-		ope_prntlist.order_no$    = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-		write record (ope_prntlist_dev) ope_prntlist$
-
-	rem --- Save and exit
-
-		print "---Set type to ""V"" and exit"; rem debug
-		callpoint!.setColumnData("OPE_INVHDR.INVOICE_TYPE", "V")
-		gosub get_disk_rec
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (invhdr_dev) invhdr_rec$
-
-		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("NEWREC")
-		break; rem --- exit callpoint
-	endif
-
 rem --- Set type in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
