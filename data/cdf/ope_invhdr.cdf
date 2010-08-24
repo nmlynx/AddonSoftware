@@ -1166,14 +1166,18 @@ rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
-      gosub check_credit
+		gosub check_credit
 
-		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
-			callpoint!.setDevObject("credit_status_done", "Y")
-			callpoint!.setStatus("ACTIVATE")
+		if callpoint!.getDevObject("current_customer") <> cust_id$
+			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
+				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
+				callpoint!.setDevObject("credit_status_done", "Y")
+				callpoint!.setStatus("ACTIVATE")
+			endif
 		endif
 	endif
+
+	callpoint!.setDevObject("current_customer",cust_id$)
 
 	gosub disp_cust_comments
 
@@ -2631,6 +2635,10 @@ rem --- get mask for display sequence number used in detail lines (needed when c
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","LINE_NO","","","",line_no_mask$,0,0
 	callpoint!.setDevObject("line_no_mask",line_no_mask$)
+
+rem --- Set object for which customer number is being shown
+
+	callpoint!.setDevObject("current_customer","")
 [[OPE_INVHDR.AFMC]]
 rem print 'show', "Hdr:AFMC"; rem debug
 
