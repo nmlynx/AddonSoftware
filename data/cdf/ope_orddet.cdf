@@ -1424,7 +1424,7 @@ rem ==========================================================================
 	start_block = 1
 
 	if cvs(line_code$,2) <> "" then
-		print "---line code is blank"; rem debug
+		print "---line code is "+ line_code$+ " and came from line "+str(tcb(8)); rem debug
 
 		file$ = "OPC_LINECODE"
 		dim opc_linecode$:fnget_tpl$(file$)
