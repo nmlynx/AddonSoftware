@@ -40,6 +40,7 @@ rem --- Do Credit Action
 rem --- Set discount code for use in Order Totals
 
 	user_tpl.disc_code$ = callpoint!.getUserInput()
+	callpoint!.setDevObject("disc_code",user_tpl.disc_code$)
 
 	file_name$ = "OPC_DISCCODE"
 	disccode_dev = fnget_dev(file_name$)
@@ -52,15 +53,6 @@ rem --- Set discount code for use in Order Totals
 	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(new_disc_amt))
 
 	gosub disp_totals
-[[OPE_ORDHDR.AOPT-TTLS]]
-print "Hdr:AOPT:TTLS"; rem debug
-
-rem --- Launch the totals form
-
-	gosub do_totals
-	user_tpl.do_totals_form = 0
-
-	callpoint!.setStatus("REFRESH")
 [[OPE_ORDHDR.AREC]]
 rem --- Clear availability information
 	
@@ -111,10 +103,27 @@ rem --- Reset all previous values
 	user_tpl.shipto_warned = 0
 
 	callpoint!.setDevObject("reprintable",0)
+	callpoint!.setDevObject("disc_code",callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE"))
 
 	gosub disp_totals
 [[OPE_ORDHDR.BREX]]
 print "Hdr:BREX"; rem debug
+
+rem --- Are both Customer and Order entered?
+
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2) = "" or 
+:		cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = ""
+:	then
+		callpoint!.setStatus("EXIT")
+		break; rem --- exit callpoint
+	endif
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
+		callpoint!.setStatus("EXIT")
+		break; rem --- exit callpoint
+	endif
 
 rem --- Is record deleted?
 
@@ -128,20 +137,6 @@ rem --- Is flag down?
 		user_tpl.do_end_of_form = 1
 		break; rem --- exit callpoint
 	endif	
-
-rem --- Are both Customer and Order entered?
-
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"), 2) = "" or 
-:		cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = ""
-:	then
-		break; rem --- exit callpoint
-	endif
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-
-	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
-		break; rem --- exit callpoint
-	endif
 
 rem --- Calculate taxes and write it back
 	
@@ -256,12 +251,16 @@ rem --- Show customer data
 		gosub display_aging
 		gosub check_credit
 
-		if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
-			call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
-			callpoint!.setDevObject("credit_status_done", "Y")
-			callpoint!.setStatus("ACTIVATE")
+		if callpoint!.getDevObject("current_customer") <> cust_id$
+			if user_tpl.credit_installed$ = "Y" and user_tpl.display_bal$ = "A" then
+				call user_tpl.pgmdir$+"opc_creditmgmnt.aon", cust_id$, "", table_chans$[all], callpoint!, status
+				callpoint!.setDevObject("credit_status_done", "Y")
+				callpoint!.setStatus("ACTIVATE")
+			endif
 		endif
 	endif
+
+	callpoint!.setDevObject("current_customer",cust_id$)
 
 	gosub disp_cust_comments
 
@@ -1814,7 +1813,8 @@ rem ==========================================================================
 
 rem --- Should we call Credit Action?
 
-	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
+	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" and
+:			callpoint!.getColumnData("CREDIT_FLAG") <> "R" then
 		callpoint!.setDevObject("run_by", "order")
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
 		if status = 999 then goto std_exit
@@ -1855,6 +1855,8 @@ rem --- Should we call Credit Action?
 
 		callpoint!.setStatus("SAVE");rem jpb
 
+	else
+		action$ = "U"
 	endif
 
 	return
@@ -2175,6 +2177,7 @@ rem --- Save display control objects
 	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.TOTAL_SALES") )
 	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.TOTAL_COST") )
 	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.TAX_AMOUNT") )
+	UserObj!.addItem( util.getControl(callpoint!, "OPE_ORDHDR.DISCOUNT_AMT") )
 
 	callpoint!.setDevObject("credit_hold_control", util.getControl(callpoint!, "<<DISPLAY>>.CREDIT_HOLD")); rem used in opc_creditcheck
 	callpoint!.setDevObject("backordered_control", util.getControl(callpoint!, "<<DISPLAY>>.BACKORDERED")); rem used in opc_creditcheck
@@ -2327,6 +2330,7 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	callpoint!.setDevObject("total_cost","15")
 	callpoint!.setDevObject("tax_amt_disp","16")
 	callpoint!.setDevObject("precision",ivs01a.precision$)
+	callpoint!.setDevObject("disc_amt_disp","17")
 
 rem --- Set variables for called forms (OPE_ORDLSDET)
 
@@ -2369,3 +2373,7 @@ rem --- get mask for display sequence number used in detail lines (needed when c
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","LINE_NO","","","",line_no_mask$,0,0
 	callpoint!.setDevObject("line_no_mask",line_no_mask$)
+
+rem --- Set object for which customer number is being shown
+
+	callpoint!.setDevObject("current_customer","")

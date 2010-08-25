@@ -1075,7 +1075,9 @@ rem ==========================================================================
 	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(ttl_ext_price))
-	disc_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	discamt! = UserObj!.getItem(num(callpoint!.getDevObject("disc_amt_disp")))
+	discamt!.setValue(disc_amt)
+rem	disc_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	sub_tot = num(callpoint!.getHeaderColumnData("<<DISPLAY>>.SUBTOTAL"))
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	sub_tot = ttl_ext_price - disc_amt
@@ -1122,7 +1124,20 @@ rem ==========================================================================
 		ttl_taxable = ordHelp!.totalTaxable( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
 	endif
 
-	disc_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+rem --- Calculate Discount Amount
+	disc_code$=callpoint!.getDevObject("disc_code")
+
+	file_name$ = "OPC_DISCCODE"
+	disccode_dev = fnget_dev(file_name$)
+	dim disccode_rec$:fnget_tpl$(file_name$)
+
+	find record (disccode_dev, key=firm_id$+disc_code$, dom=*next) disccode_rec$
+	new_disc_per = disccode_rec.disc_percent
+
+	disc_amt = round(disccode_rec.disc_percent * ttl_ext_price / 100, 2)
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt))
+
+rem	disc_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	ttl_tax = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable)
 
@@ -1409,7 +1424,7 @@ rem ==========================================================================
 	start_block = 1
 
 	if cvs(line_code$,2) <> "" then
-		print "---line code is blank"; rem debug
+		print "---line code is "+ line_code$+ " and came from "+callpoint!.getCallpointEvent(); rem debug
 
 		file$ = "OPC_LINECODE"
 		dim opc_linecode$:fnget_tpl$(file$)
