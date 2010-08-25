@@ -82,7 +82,9 @@ rem --- Determine if over credit limit
     rem --- Set credit limit w/o the callpoint object
     
         ordHelp! = new OrderHelper(firm_id$, null())
-        over_credit_limit = ordHelp!.calcOverCreditLimit(customer$, order$)
+		ordHelp!.setCust_id(customer$)
+		ordHelp!.setOrder_no(order$)
+        over_credit_limit = ordHelp!.calcOverCreditLimit()
     endif
     
     batch$ = ""
@@ -114,13 +116,6 @@ rem --- Display
 
         dflt_data$[7,1] = str(ordHelp!.getMaxPastDue())
         dflt_data$[8,1] = ordHelp!.getCreditHold()
-
-rem --- Set data directly from the file instead of using stale data from the object
-
-		dim arm_custdet$:arm_custdet_tpl$
-		read record (arm_custdet_dev,key=firm_id$+customer$+"  ",dom=*next)arm_custdet$
-		dflt_data$[1,1] = arm_custdet.credit_limit$
-		dflt_data$[8,1] = arm_custdet.cred_hold$
 
         call sypdir$+"bam_run_prog.bbj", "OPE_CREDITSTATUS", stbl("+USER_ID"), "", "", table_chans$[all], "", dflt_data$[all]	
 
