@@ -56,6 +56,7 @@ rem call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1
     call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,m1,0  
     call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,m2,0
     call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,m3,0
+	call pgmdir$+"adc_getmask.aon","","IV","P",imask$,m4$,m4,0
     
     m8=len(m8$)
     m9=len(m9$)
@@ -307,7 +308,7 @@ rem --- Totals
     OutVect!.addItem("Sales Total:"+$00$+"R")
     OutVect!.addItem(str(u[0]:m1$)+$00$+"R")
     OutVect!.addItem(str(u[1]:m3$)+$00$+"R")
-    OutVect!.addItem(str(u[0]-u[1]:m3$)+$00$+"R")
+    OutVect!.addItem(str(u[0]-u[1]:m4$)+$00$+"R")
     OutVect!.addItem(func.grossProfit(u[0], u[1])+$00$+"R")
     xwk=fnblank(1)
 
@@ -359,7 +360,7 @@ rem --- Totals By Product
             OutVect!.addItem(str(t9[x0,3]:m2$)+$00$+"R")
             OutVect!.addItem(str(t9[x0,0]:m1$)+$00$+"R")
             OutVect!.addItem(str(t9[x0,1]:m3$)+$00$+"R")
-            OutVect!.addItem(str(t9[x0,0]-t9[x0,1]:m3$)+$00$+"R")
+            OutVect!.addItem(str(t9[x0,0]-t9[x0,1]:m4$)+$00$+"R")
             OutVect!.addItem(func.grossProfit(t9[x0,0], t9[x0,1])+$00$+"R")
             xwk=fnblank(6)
 
@@ -375,7 +376,7 @@ rem --- Totals By Product
     OutVect!.addItem(str(t[3]:m2$)+$00$+"R")
     OutVect!.addItem(str(t[0]:m1$)+$00$+"R")
     OutVect!.addItem(str(t[1]:m3$)+$00$+"R")
-    OutVect!.addItem(str(t[0]-t[1]:m3$)+$00$+"R")
+    OutVect!.addItem(str(t[0]-t[1]:m4$)+$00$+"R")
     OutVect!.addItem(func.grossProfit(t[0], t[1])+$00$+"R")
     xwk=fnblank(6)
     
@@ -509,7 +510,7 @@ sales_total: rem --- Sales Total/Freight/Sales Tax/Invoice Total
     OutVect!.addItem("Sales Total"+$00$+"R")
     OutVect!.addItem(str(s[0]:m1$)+$00$+"R")
     OutVect!.addItem(str(s[1]:m3$)+$00$+"R")
-    OutVect!.addItem(str(s[0]-s[1]:m3$)+$00$+"R")
+    OutVect!.addItem(str(s[0]-s[1]:m4$)+$00$+"R")
     OutVect!.addItem(func.grossProfit(s[0], s[1])+$00$+"R")
     OutVect!.addItem("")
 
@@ -603,7 +604,7 @@ rem --- First line
 		OutVect!.addItem(str(ope11a.unit_cost:m3$)+$00$+"R")
 		OutVect!.addItem(str(ope11a.ext_price:m1$)+$00$+"R")
 		OutVect!.addItem(str(ope11a.unit_cost*ope11a.qty_shipped:m3$)+$00$+"R")
-		OutVect!.addItem(str(ope11a.ext_price-(ope11a.unit_cost*ope11a.qty_shipped):m3$)+$00$+"R")
+		OutVect!.addItem(str(ope11a.ext_price-(ope11a.unit_cost*ope11a.qty_shipped):m4$)+$00$+"R")
 		OutVect!.addItem(func.grossProfit(ope11a.ext_price, ope11a.unit_cost*ope11a.qty_shipped)+$00$+"R")
 		OutVect!.addItem("")
 	endif
@@ -617,7 +618,7 @@ rem --- First line
 		xwk=fnblank(5)
 		OutVect!.addItem(str(ope11a.ext_price:m1$)+$00$+"R")
 		xwk=fnblank(1)
-		OutVect!.addItem(str(ope11a.ext_price-(ope11a.unit_cost*ope11a.qty_shipped):m3$)+$00$+"R")
+		OutVect!.addItem(str(ope11a.ext_price-(ope11a.unit_cost*ope11a.qty_shipped):m4$)+$00$+"R")
 		xwk=fnblank(2)
 	endif
 	
