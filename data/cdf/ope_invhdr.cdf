@@ -1,3 +1,23 @@
+[[OPE_INVHDR.DISCOUNT_AMT.AVAL]]
+rem --- Recalculate Totals
+
+	disc_amt = num(callpoint!.getUserInput())
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub disp_totals
+[[OPE_INVHDR.FREIGHT_AMT.AVAL]]
+rem --- Recalculate Totals
+
+	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getUserInput())
+	gosub disp_totals
+[[OPE_INVHDR.FREIGHT_AMT.BINP]]
+rem --- Now we've been on the Totals tab
+
+	callpoint!.setDevObject("was_on_tot_tab","Y")
+[[OPE_INVHDR.DISCOUNT_AMT.BINP]]
+rem --- Now we've been on the Totals tab
+
+	callpoint!.setDevObject("was_on_tot_tab","Y")
 [[OPE_INVHDR.AOPT-UINV]]
 rem --- Invoice History Header, set to void
 
@@ -38,9 +58,6 @@ rem --- Reset Invoice record to Order
 	ope_invhdr_rec.ordinv_flag$ = "O"
 	ope_invhdr_rec.print_status$ = "Y"
 	ope_invhdr_rec.lock_status$ = "N"
-	ope_invhdr_rec.tax_amount = 0
-	ope_invhdr_rec.freight_amt = 0
-	ope_invhdr_rec.discount_amt = 0
 	ope_invhdr_rec.invoice_date$=""
 
 	callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", "")
@@ -111,6 +128,8 @@ rem --- Calculate Taxes
 [[OPE_INVHDR.ARAR]]
 print "Hdr:ARAR"; rem debug
 
+	callpoint!.setDevObject("was_on_tot_tab","N")
+
 rem --- Check for void
 
 	if callpoint!.getColumnData("INVOICE_TYPE") = "V" then
@@ -169,6 +188,8 @@ rem --- Reset all previous values
 	user_tpl.shipto_warned = 0
 	callpoint!.setDevObject("disc_code",callpoint!.getColumnData("OPE_INVHDR.DISC_CODE"))
 
+	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub disp_totals
 [[OPE_INVHDR.DISC_CODE.AVAL]]
 rem --- Set discount code for use in Order Totals
@@ -186,6 +207,8 @@ rem --- Set discount code for use in Order Totals
 	new_disc_amt = round(disccode_rec.disc_percent * num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")) / 100, 2)
 	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(new_disc_amt))
 
+	disc_amt = new_disc_amt
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub disp_totals
 [[OPE_INVHDR.AOPT-CASH]]
 rem --- Customer wants to pay cash; Launch invoice totals first
@@ -228,6 +251,7 @@ rem --- Check for printing in next batch and set
 rem --- clear availability
 
 	gosub clear_avail
+	callpoint!.setDevObject("was_on_tot_tab","N")
 [[OPE_INVHDR.INVOICE_TYPE.AVAL]]
 print "Hdr:INVOICE_TYPE.AVAL"; rem debug
 
@@ -2092,7 +2116,7 @@ rem ==========================================================================
 rem --- Write flag to disk
 
 	gosub get_disk_rec
-	if ordhdr_rec.cash_sale$ <> "Y" then escape; rem debug
+
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
 	print "out"; rem debug
@@ -2198,12 +2222,12 @@ rem debug --- This is a Barista kludge
 
 rem ==========================================================================
 disp_totals: rem --- Get order totals and display, save header totals
+rem IN: disc_amt
+rem IN: freight_amt
 rem ==========================================================================
 
 	ttl_ext_price = num(callpoint!.getColumnData("<<DISPLAY>>.ORDER_TOT"))
-	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	tax_amt = num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
-	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	sub_tot = ttl_ext_price - disc_amt
 	net_sales = sub_tot + tax_amt + freight_amt
 
@@ -2345,6 +2369,8 @@ rem --- get AR Params
 
 	dim ars01a$:open_tpls$[4]
 	read record (num(open_chans$[4]), key=firm_id$+"AR00") ars01a$
+	if ars01a.op_totals_warn$="" ars01a.op_totals_warn$="4"
+	callpoint!.setDevObject("totals_warn",ars01a.op_totals_warn$)
 
 	dim ars_credit$:open_tpls$[7]
 	read record (num(open_chans$[7]), key=firm_id$+"AR01") ars_credit$
