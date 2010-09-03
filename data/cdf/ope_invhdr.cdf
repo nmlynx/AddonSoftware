@@ -101,6 +101,11 @@ rem --- All Done
 [[OPE_INVHDR.AOPT-CRCH]]
 print "Hdr:AOPT:CRCH"; rem debug
 
+rem --- Force totalling open orders for credit status
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	ordHelp!.forceTotalOpenOrders()
+
 rem --- Do credit status (management)
 
 	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
