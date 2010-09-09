@@ -371,7 +371,7 @@ print_totals: rem --- Add totals to display page
         found=1,l=l+1
     endif
 
-    if history$="Y" x$=Translate!.getTranslation("AON_INVOICE") else x$=Translate!.getTranslation("AON_ORDER")
+    if history$="Y" x$=Translate!.getTranslation("AON_INVOICE") else x$=Translate!.getTranslation("AON_ORDER_U")
     xwk=fnblank(8)
     OutVect!.addItem(x$+Translate!.getTranslation("AON__TOTAL:"))
     OutVect!.addItem(str(hdrrec.total_sales+hdrrec.tax_amount+hdrrec.freight_amt-hdrrec.discount_amt:m1$))
