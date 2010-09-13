@@ -19,9 +19,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.ivm_itemwhse">46A8D21149542FF2287ED5E9A98B817C</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ivm_itemwhse">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ivm_itemwhse">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ivm_itemwhse">20100831</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ivm_itemwhse">20100831</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ivm_itemwhse">142144</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ivm_itemwhse">20100913</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ivm_itemwhse">20100901</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ivm_itemwhse">093650</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.ivm_itemwhse">/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.ivm_itemwhse">AO_ITEM_WH</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.ivm_itemwhse">T</DD_ATTR_FTYP>
@@ -758,6 +758,7 @@
 			<DD_ATTR_CTLY id="ddm_table_cols.ivm_itemwhse030">+3</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_cols.ivm_itemwhse030">72</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.ivm_itemwhse030">0</DD_ATTR_CTLH>
+			<DD_ATTR_DRLE id="ddm_table_cols.ivm_itemwhse030">IV_QTY_ON_HAND</DD_ATTR_DRLE>
 			<DD_ATTR_LABL id="ddm_table_cols.ivm_itemwhse030">On-Hand</DD_ATTR_LABL>
 			<DD_ATTR_MAXL id="ddm_table_cols.ivm_itemwhse030">7</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.ivm_itemwhse030">Quantity On-Hand</DD_ATTR_PROM>
@@ -2435,6 +2436,17 @@
 	</ALIAS>
 	<ALIAS id="ddm_drill_defs">
 		<ID id="ddm_drill_defs">DDM_DRILL_DEFS</ID>
+		<RECORD id="ddm_drill_defs.iv_qty_on_hand">
+			<DRILL_DEF_ID id="ddm_drill_defs.iv_qty_on_hand">IV_QTY_ON_HAND  </DRILL_DEF_ID>
+			<DESCRIPTION id="ddm_drill_defs.iv_qty_on_hand">IV Qty On Hand</DESCRIPTION>
+			<DD_ATTR_DTAB id="ddm_drill_defs.iv_qty_on_hand">IVT_ITEMTRAN    </DD_ATTR_DTAB>
+			<DD_ATTR_DKNM id="ddm_drill_defs.iv_qty_on_hand">PRIMARY         </DD_ATTR_DKNM>
+			<DD_ATTR_DKEY id="ddm_drill_defs.iv_qty_on_hand">[FIRM_ID]+[WAREHOUSE_ID]+[ITEM_ID]</DD_ATTR_DKEY>
+			<ASC_COMP_ID id="ddm_drill_defs.iv_qty_on_hand">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_drill_defs.iv_qty_on_hand">IV </ASC_PROD_ID>
+			<DD_FILTER_COL_01 id="ddm_drill_defs.iv_qty_on_hand">TRANS_SOURCE    </DD_FILTER_COL_01>
+			<DD_FILTER_DEF_01 id="ddm_drill_defs.iv_qty_on_hand"><>'BB'</DD_FILTER_DEF_01>
+		</RECORD>
 		<RECORD id="ddm_drill_defs.po_qty_on_ord">
 			<DRILL_DEF_ID id="ddm_drill_defs.po_qty_on_ord">PO_QTY_ON_ORD   </DRILL_DEF_ID>
 			<DESCRIPTION id="ddm_drill_defs.po_qty_on_ord">PO Quantity On Order</DESCRIPTION>
@@ -2453,7 +2465,7 @@
 			<ASC_COMP_ID id="ddm_drill_defs.wo_qty_on_ord">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_drill_defs.wo_qty_on_ord">SF </ASC_PROD_ID>
 			<DD_FILTER_COL_01 id="ddm_drill_defs.wo_qty_on_ord">WO_STATUS       </DD_FILTER_COL_01>
-			<DD_FILTER_DEF_01 id="ddm_drill_defs.wo_qty_on_ord"><>'C'</DD_FILTER_DEF_01>
+			<DD_FILTER_DEF_01 id="ddm_drill_defs.wo_qty_on_ord">='O'</DD_FILTER_DEF_01>
 		</RECORD>
 		<RECORD id="ddm_drill_defs.op_qty_committed">
 			<DRILL_DEF_ID id="ddm_drill_defs.op_qty_committed">OP_QTY_COMMITTED</DRILL_DEF_ID>
