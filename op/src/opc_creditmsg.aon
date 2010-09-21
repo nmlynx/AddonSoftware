@@ -7,16 +7,19 @@ rem --- All Rights Reserved
 	setesc std_error
 	seterr std_error
 
-	enter hdr_det$,callpoint!
+	enter hdr_det$,callpoint!,UserObj!
 
 	rem hdr_det$		H=Header, D=Detail (input)
 	rem callpoint!		callpoint object (input)
 
-rem --- Use statements, declares
+rem --- Use statements, declares, init variables
 
     use ::sys/prog/bao_callpoint.bbj::Callpoint
     
     declare Callpoint callpoint!
+
+	backordered$=""
+	credit$=""
 
 rem --- Get Translator Object
 
@@ -74,6 +77,10 @@ rem --- Now set the 2 fields in the header
 		callpoint!.setColumnData("<<DISPLAY>>.BACKORDERED", backordered$)
 		callpoint!.setColumnData("<<DISPLAY>>.CREDIT_HOLD", credit$)
 	else
+		backord_disp!=UserObj!.getItem(num(callpoint!.getDevObject("backord_disp")))
+		credit_disp!=UserObj!.getItem(num(callpoint!.getDevObject("credit_disp")))
+		backord_disp!.setText(backordered$)
+		credit_disp!.setText(credit$)
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.BACKORDERED", backordered$)
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", credit$)
 	endif

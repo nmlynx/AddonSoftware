@@ -381,6 +381,15 @@ print "Det:AWRI"; rem debug
 
 rem --- Commit inventory
 
+rem --- Turn off the print flag in the header?
+
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) = "Y" or
+:	   callpoint!.getGridRowModifyStatus(callpoint!.getValidationRow()) ="Y" or
+:	   callpoint!.getGridRowDeleteStatus(callpoint!.getValidationRow()) = "Y"
+		callpoint!.setHeaderColumnData("OPE_INVHDR.PRINT_STATUS","N")
+		callpoint!.setDevObject("msg_printed","N")
+	endif
+
 rem --- Is this row deleted?
 
 	if callpoint!.getGridRowModifyStatus( callpoint!.getValidationRow() ) <> "Y" then 
@@ -1084,6 +1093,12 @@ rem	costamt!.setValue(ttl_ext_cost)
 
 	callpoint!.setStatus("REFRESH")
 
+	cm$=callpoint!.getDevObject("msg_credit_memo")
+
+	if cm$="Y" and ttl_ext_price>=0 callpoint!.setDevObject("msg_credit_memo","N")
+	if cm$<>"Y" and ttl_ext_price<0 callpoint!.setDevObject("msg_credit_memo","Y")
+	call user_tpl.pgmdir$+"opc_creditmsg.aon","D",callpoint!,UserObj!
+
 	return
 
 rem ==========================================================================
@@ -1609,6 +1624,7 @@ rem ==========================================================================
 		msg_tokens$[1] = str(user_tpl.credit_limit:user_tpl.amount_mask$)
 		gosub disp_message
 		callpoint!.setHeaderColumnData("<<DISPLAY>>.CREDIT_HOLD", Translate!.getTranslation("AON_***_OVER_CREDIT_LIMIT_***"))
+		callpoint!.setDevObject("msg_exceeded","Y")
 		user_tpl.credit_limit_warned = 1
 	endif
 
