@@ -156,9 +156,14 @@ rem --- Check for user authentication
     if stbl("!DSUDDB",err=*endif)<>"" then
         url_user$=""
     endif
-
-    dbname_api$ = stbl("+DBNAME_API")
-    url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+	
+	dbname$ = stbl("+DBNAME")
+    if pos("jdbc:"=cvs(dbname$,8))=1 then
+        url$ = dbname$+url_user$
+    else
+        rem url$ = "jdbc:basis:localhost?database="+dbname_api$+url_user$
+		url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname$+url_user$+dbssl$+dbtimeout$
+    endif
   
     report! = new BBJasperReport(filename$,url$)
     report!.putParams(params!)
