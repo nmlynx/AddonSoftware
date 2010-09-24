@@ -982,11 +982,6 @@ rem --- Display Ship to information
 	order_no$     = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	gosub ship_to_info
 
-rem --- Display order total
-
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
-	print "---Update Order Total (column data): ", callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")
-
 rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT", 1)
@@ -2204,7 +2199,7 @@ rem --- Set fields from the Order Totals form and write back
 	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   str(tax_amt))
 	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", str(frt_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES",str((total_amt - disc_amt) + tax_amt + frt_amt))
-
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str((total_amt - disc_amt) + tax_amt + frt_amt))
 	callpoint!.setStatus("REFRESH-SAVE")
 	
 	return
@@ -2258,7 +2253,7 @@ rem IN: disc_amt
 rem IN: freight_amt
 rem ==========================================================================
 
-	ttl_ext_price = num(callpoint!.getColumnData("<<DISPLAY>>.ORDER_TOT"))
+	ttl_ext_price = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
 	tax_amt = num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 	sub_tot = ttl_ext_price - disc_amt
 	net_sales = sub_tot + tax_amt + freight_amt
@@ -2266,6 +2261,7 @@ rem ==========================================================================
 	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",str(ttl_ext_cost))
 	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
 	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(net_sales))
 
 	callpoint!.setStatus("REFRESH")
 

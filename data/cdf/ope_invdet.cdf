@@ -1061,10 +1061,7 @@ disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
 	gosub calc_grid_totals
 
-	tamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
-	tamt!.setValue(ttl_ext_price)
 	callpoint!.setHeaderColumnData("OPE_INVHDR.TOTAL_SALES", str(ttl_ext_price))
-	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(ttl_ext_price))
 	discamt! = UserObj!.getItem(num(callpoint!.getDevObject("disc_amt_disp")))
 	discamt!.setValue(disc_amt)
 
@@ -1079,6 +1076,9 @@ rem ==========================================================================
 	subamt!.setValue(sub_tot)
 	netamt! = UserObj!.getItem(num(callpoint!.getDevObject("net_sales_disp")))
 	netamt!.setValue(net_sales)
+	tamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
+	tamt!.setValue(net_sales)
+
 	taxamt! = UserObj!.getItem(num(callpoint!.getDevObject("tax_amt_disp")))
 	taxamt!.setValue(ttl_tax)
 
@@ -1090,6 +1090,7 @@ rem	costamt!.setValue(ttl_ext_cost)
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
 	callpoint!.setHeaderColumnData("OPE_INVHDR.TAX_AMOUNT", str(ttl_tax))
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(net_sales))
 
 	callpoint!.setStatus("REFRESH")
 
