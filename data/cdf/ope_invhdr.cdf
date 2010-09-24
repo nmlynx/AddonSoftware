@@ -10,6 +10,9 @@ rem --- Recalculate Totals
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getUserInput())
 	gosub disp_totals
+
+rem --- Unremark this next line if we ever get around to fixing bug 4797 which blocks 4753 which this line should solve
+rem	callpoint!.setFocus("OPE_INVHDR.DISCOUNT_AMT")
 [[OPE_INVHDR.FREIGHT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
 
