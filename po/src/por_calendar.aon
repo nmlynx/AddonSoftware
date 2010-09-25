@@ -97,10 +97,14 @@ rem --- Check for user authentication
 	
 	dbname$ = stbl("+DBNAME")
 	dbname_api$ = stbl("+DBNAME_API")
-    if pos("jdbc:"=cvs(dbname$,8))=1 then
+    if pos("jdbc:apache"=cvs(dbname$,8))=1 then
         url$ = dbname$
     else
-		url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+		if pos("jdbc:"=cvs(dbname$,8))=1 then			
+			url$=dbname$+url_user$
+		else
+			url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+		endif
     endif	
        
     report! = new BBJasperReport(filename$,url$)
