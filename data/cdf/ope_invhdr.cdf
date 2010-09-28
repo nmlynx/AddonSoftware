@@ -1,7 +1,15 @@
 [[OPE_INVHDR.DISCOUNT_AMT.AVAL]]
-rem --- Recalculate Totals
+rem --- Discount Amount cannot exceed Total Sales Amount
 
 	disc_amt = num(callpoint!.getUserInput())
+	total_sales = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
+	if disc_amt > total_sales then
+		disc_amt = total_sales
+		callpoint!.setUserInput(str(disc_amt))
+	endif
+
+rem --- Recalculate Totals
+
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub disp_totals
 [[OPE_INVHDR.FREIGHT_AMT.AVAL]]
