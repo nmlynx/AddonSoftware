@@ -3,7 +3,7 @@ rem --- Recalculate totals
 
 	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getUserInput())
-
+	gosub calculate_tax
 	gosub disp_totals
 
 rem --- Unremark this next line if we ever get around to fixing bug 4797 which blocks 4753 which this line should solve
@@ -20,9 +20,8 @@ rem --- Discount Amount cannot exceed Total Sales Amount
 
 rem --- Recalculate totals
 
-	disc_amt = num(callpoint!.getUserInput())
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-
+	gosub calculate_tax
 	gosub disp_totals
 [[OPE_ORDHDR.DISCOUNT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
@@ -133,7 +132,6 @@ rem --- Reset all previous values
 	user_tpl.prev_boqty        = 0
 	user_tpl.prev_shipqty      = 0
 	user_tpl.prev_ext_price    = 0
-	user_tpl.prev_taxable      = 0
 	user_tpl.prev_ext_cost     = 0
 	user_tpl.prev_disc_code$   = ""
 	user_tpl.prev_ship_to$     = ""
@@ -557,7 +555,6 @@ rem --- Enable buttons
 
 rem --- Set all previous values
 
-	user_tpl.prev_taxable      = num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
 	user_tpl.prev_ext_cost     = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST"))
 	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE")
 	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
@@ -2128,6 +2125,20 @@ rem ==========================================================================
 	callpoint!.setDevObject("msg_released","")
 
 	return
+
+rem ==========================================================================
+calculate_tax: rem --- Calculate and display Tax Amount
+rem IN: disc_amt
+rem IN: freight_amt
+rem ==========================================================================
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	tax_amount = ordHelp!.calculateTax(disc_amt, freight_amt,num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")))
+
+	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
+	callpoint!.setStatus("REFRESH")
+
+	return
 [[OPE_ORDHDR.BSHO]]
 print "Hdr:BSHO"; rem debug
 
@@ -2394,7 +2405,6 @@ rem --- Columns for the util disableCell() method
 	user_tpl.prev_boqty        = 0
 	user_tpl.prev_shipqty      = 0
 	user_tpl.prev_ext_price    = 0; rem used in detail section to hold the line extension 
-	user_tpl.prev_taxable      = 0
 	user_tpl.prev_ext_cost     = 0
 	user_tpl.prev_disc_code$   = ""
 	user_tpl.prev_ship_to$     = ""
