@@ -1,0 +1,224 @@
+rem ==========================================================================
+rem --- adx_copyaon.aon 
+rem --- Copy aon directory and sub-directories from one location to another,
+rem --- with or without data files.
+rem --- 
+rem --- AddonSoftware Version 10.0
+rem --- Copyright © 2010, BASIS International, Ltd.
+rem --- All Rights Reserved
+rem ==========================================================================
+
+    setesc std_error
+    seterr std_error
+
+rem - wgh: setup input for local unit testing
+
+    use ::sys/prog/bao_option.bbj::Option
+
+    declare BBjAPI myBBjAPI!
+    declare BBjVector OptionData!
+    declare Option Option!
+
+    TableColumns$=pad("TEST.NEW_INSTALL_LOCATION",40)
+    TableColumns$=TableColumns$+pad("TEST.UPGRADE",40)
+    TableColumns$=TableColumns$+pad("TEST.NEXT_PROGRAM",40)
+    
+    myBBjAPI! = BBjAPI()
+    OptionData!=myBBjAPI!.makeVector()
+    OptionData!.addItem("/aon_test")
+    OptionData!.addItem("1")
+    OptionData!.addItem("")
+
+    Option!=new Option("TEST",TableColumns$,OptionData!)
+    
+rem --- Assign form input values to local variables
+
+    newLocation$=Option!.getOptionData("NEW_INSTALL_LOCATION") + "/"
+    upgrade=num(Option!.getOptionData("UPGRADE"))
+    nextProgram$=Option!.getOptionData("NEXT_PROGRAM")
+
+rem --- Set oldLocation to aon directory under the current download directory
+
+    sep$ = File.separator
+    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
+    oldLocation$ = bbjHome$ + sep$ + "apps" + sep$ + "aon"
+
+oldLocation$="/aon_dev/aon"; rem - wgh
+    
+rem --- Recursively copy oldLocation to newLocation
+
+    declare CopyAonDir utility!
+    utility! = new CopyAonDir(upgrade)
+    utility!.copyAonDirectory(oldLocation$, newLocation$)
+    
+done: rem --- Run next program if present
+
+    if(cvs(nextProgram$,3)<>"") then
+        run stbl("+DIR_PGM",err=*next)+nextProgram$,err=*next
+    endif
+    goto std_exit
+    
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+
+rem /**
+rem  * Utility Class for recursively copying aon directory, skipping specific
+rem  * pre-defined directories and files.
+rem  */
+    use java.io.File
+    use java.util.Vector
+    
+    declare File source!
+    declare File target!
+
+    class public CopyAonDir
+        field private BBjNumber BLOCKSIZE = 2^20
+        field private BBjNumber skipDataFiles = 0
+        field private Vector skipDirs! = new Vector()
+
+        rem --- constructor
+        method public CopyAonDir(BBjNumber skipDataFiles)
+            #skipDataFiles = skipDataFiles
+            
+            rem --- don't copy these directories, skip them
+            rem --- CVS
+            rem --- .svn
+            rem --- callpoints
+            rem --- data/arc
+            rem --- data/def
+            sep$ = File.separator
+            #skipDirs!.add(sep$+"CVS")
+            #skipDirs!.add(sep$+".svn")
+            #skipDirs!.add(sep$+"callpoints")
+            #skipDirs!.add(sep$+"data"+sep$+"arc")
+            #skipDirs!.add(sep$+"data"+sep$+"def")
+        methodend
+
+        rem /**
+        rem  * Recursively copy aon directory.
+        rem  *
+        rem  * Recursively copies aon directory for old location to new location, 
+        rem  * skipping specific pre-defined directories and files.
+        rem  *
+        rem  * @param BBjString oldLocation$
+        rem  * @param BBjString newLocation$
+        rem  */
+        method public void copyAonDirectory(BBjString oldLocation$, BBjString newLocation$)
+            #copyAonDirectory(new File(oldLocation$), new File(newLocation$))
+        methodend
+
+        rem /**
+        rem  * Recursively copy aon directory.
+        rem  *
+        rem  * Recursively copies aon directory from source File to target File, 
+        rem  * skipping specific pre-defined directories and files.
+        rem  *
+        rem  * @param File sourceFile
+        rem  * @param File targetFile
+        rem  */
+        method public void copyAonDirectory(File source!, File target!)
+    
+            rem -- recursively process directories and copy files
+            if(source!.isDirectory()) then
+            
+                rem --- skip this directory?
+                if(#skipDirectory(source!))then
+                    methodret
+                endif
+            
+                rem --- create new directory if it doesn't exist
+                if(! target!.exists()) then
+                    target!.mkdirs()
+                endif
+
+                rem --- get list of what is in the source dir, and process it
+                declare Vector fileVector!
+                fileVector! = new Vector(java.util.Arrays.asList(source!.list()))
+                if(fileVector!.size()>0) then
+                    for i=0 to fileVector!.size()-1
+                        #copyAonDirectory(new File(source!, cast(BBjString, fileVector!.get(i))), new File(target!, cast(BBjString, fileVector!.get(i))))
+                    next i
+                endif
+                
+            else
+            
+                rem --- for upgrades, skip data files in data directory
+                if(#skipDataFiles) then
+                    parent$ = source!.getParent()
+                    if(cast(BBjString ,parent$).endsWith(cast(BBjString, File.separator + "data"))) then
+                        methodret
+                    endif
+                endif
+                
+                rem --- copy file
+                sourceChan=unt
+                open (sourceChan,isz=-1)source!.getPath()
+                targetChan=unt
+                open (targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
+                while 1
+                    readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
+                    writerecord(targetChan)record$
+                wend
+                close (sourceChan)
+                close (targetChan)
+               
+            endif
+        methodend
+
+        rem /**
+        rem  * Skip copy of some aon directories.
+        rem  *
+        rem  * @param File sourceDirectory
+        rem  *
+        rem  * @return BBjInt (1=true  false=0)
+        rem  */
+        method public BBjInt skipDirectory(File source!)
+            skipDir% = 0
+            
+            if(source!.isDirectory()) then
+                path$ = source!.getPath()
+                for i=0 to #skipDirs!.size()-1
+                    if(cast(BBjString, path$).endsWith(cast(BBjString, #skipDirs!.get(i)))) then
+                        skipDir% = 1
+                        break
+                    endif
+                next i
+            endif
+            
+            methodret skipDir%
+        methodend
+        
+    classend
+    
+    end
