@@ -42,8 +42,6 @@ rem --- Set oldLocation to aon directory under the current download directory
     sep$ = File.separator
     bbjHome$=java.lang.System.getProperty("basis.BBjHome")
     oldLocation$ = bbjHome$ + sep$ + "apps" + sep$ + "aon"
-
-oldLocation$="/aon_dev/aon"; rem - wgh
     
 rem --- Recursively copy oldLocation to newLocation
 
@@ -183,15 +181,15 @@ rem  */
                 
                 rem --- copy file
                 sourceChan=unt
-                open (sourceChan,isz=-1)source!.getPath()
+                open(sourceChan,isz=-1)source!.getPath()
                 targetChan=unt
-                open (targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
+                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
                 while 1
                     readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
                     writerecord(targetChan)record$
                 wend
-                close (sourceChan)
-                close (targetChan)
+                close(sourceChan)
+                close(targetChan)
                
             endif
         methodend
