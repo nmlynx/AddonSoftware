@@ -704,11 +704,6 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.AREC]]
-rem --- Disable skipped columns (debug: disabled, line code won't be set yet)
-
-	rem line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	rem gosub disable_by_linetype
-
 rem --- Backorder is zero and disabled on a new record
 
 	rem user_tpl.new_detail = 1
@@ -750,6 +745,10 @@ rem --- Buttons start disabled
 	callpoint!.setOptionEnabled("LENT",0)
 	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("ADDL",0)
+
+rem --- Force focus on Line Code since Barista is skipping it
+
+	callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_ORDDET.LINE_CODE")
 [[OPE_ORDDET.BDEL]]
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
@@ -762,8 +761,9 @@ rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to 
 
 rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
-	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	gosub disable_by_linetype
+	rem --- now AREC is forcing focus on Line Code
+	rem line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+	rem gosub disable_by_linetype
 
 rem --- Disable cost if necessary
 
