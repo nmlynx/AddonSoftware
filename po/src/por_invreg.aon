@@ -22,6 +22,7 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
 
 rem --- Document initializations
+    poe05Keys!=bbjAPI().makeVector()
     OutVect!=bbjAPI().getSysGui().makeVector()
     HdrVect!=bbjAPI().getSysGui().makeVector()
     BrkVect!=bbjAPI().getSysGui().makeVector()
@@ -349,6 +350,19 @@ l1000: rem --- Read next header
     x$=fnmask$(poe05a.vendor_id$(1,p[0]),m0$)+" "+poe05a.ap_inv_no$
     if aptype x$=poe05a.ap_type$+" "+x$
     call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+rem --- Skip if open in PO Invoice Entry
+
+    call stbl("+DIR_SYP")+"bac_lock_record.bbj","POE_INVHDR",k$,"C","",0,table_chans$[all],lock_stat$
+    if lock_stat$="ERR_LOCKED"
+        goto l1000
+    endif
+
+rem --- Soft lock record so it cannot be opened in PO Invoice Entry before update is completed,
+rem --- and keep list of these soft locked records to be processed in the update.
+
+    call stbl("+DIR_SYP")+"bac_lock_record.bbj","POE_INVHDR",k$,"L","",0,table_chans$[all],lock_stat$
+    poe05Keys!.addItem(k$)
 
 rem --- Level breaks?
 
