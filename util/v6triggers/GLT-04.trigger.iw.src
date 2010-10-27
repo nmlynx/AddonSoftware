@@ -1,0 +1,206 @@
+rem ' catch writes to the GL Daily Detail file in Add-On 6.0 GLT-04
+rem ' and write to the Barista Add-On Daily Detail file glt-04
+
+seterr handle_err
+
+rem ' set opts
+SETOPTS $0800C02000002040$
+
+rem ' if this is removed, be sure to remove the write to trace in the error handler
+trace = unt
+open(trace,mode="O_TRUNC")"/mnt/data/basisaon/aon/trig_trace/trace-GLT-04.log"
+settrace(trace)
+
+rem '----set globals
+trash$=stbl("PARALLEL_ADDON","YES")
+trash$=stbl("ADDON_TRIG_LGNG","YES")
+trash$=stbl("ADDON_TRIG_LOG","/mnt/data/basisaon/aon/ADATA/")
+                           
+rem '----production
+trash$=stbl("ADDON_NEWGL","/mnt/data/basisaon/barista/aon/")
+
+trash$=stbl("ADDON_OLDGL","/mnt/data/basisaon/aon/ADATA/")
+
+rem '----declares
+Declare BBjTriggerData trigger!
+
+rem '----user defined functions
+
+rem '----FNYY21_YY$ Un-Convert 21st Century 2-Char Year to 2-Char Year"
+def FNYY21_YY$(Q1$)
+let Q3$=" 01234567890123456789",Q1$(1,1)=Q3$(POS(Q1$(1,1)=" 0123456789ABCDEFGHIJ"))
+return Q1$
+fnend
+
+rem '----get the trigger data
+trigger! = BBJAPI().getFileSystem().getTriggerData()
+write(trace)trigger!.getFilename()
+
+rem '----is logging turned on?
+logging = 0
+if stbl("ADDON_TRIG_LGNG",err=*next)="YES" then logging = 1 
+if logging then
+    log = unt
+    open(log,mode="O_APPEND")stbl("ADDON_TRIG_LOG")+"GLT-04.trigger.log"
+fi
+
+rem '----is parallel mode set?
+parallel = 0
+if stbl("PARALLEL_ADDON",err=*next)="YES" then parallel = 1
+if parallel then
+    oldGLT04 = unt
+    rem ' open(oldGLT04,mode="TRIGGER")stbl("ADDON_OLDGL")+"GLT-04"
+    open(oldGLT04,mode="TRIGGER")trigger!.getFilename()
+fi
+
+rem '----template for the GLT-04 record being caught
+intemp$="FIRM_ID:C(2),JOURNAL_ID:C(2),GL_ADT_NBR:C(7),POSTING_YEAR_1:C(2),POSTING_PER_1:C(2),"
+intemp$=intemp$+"GL_POST_DATE:C(6),GL_ACCOUNT:C(10),GL_POST_SEQ:C(5*=10),REFERENCE_1:C(10),"
+intemp$=intemp$+"REFERENCE_2:C(10),REFERENCE_3:C(10),GL_POST_MEMO:C(30),POSTING_PER_2:C(2),"
+intemp$=intemp$+"POSTING_YEAR_2:C(2*=10),DEALER_STR:C(1*=10),GL_POST_AMT:N(7*=10),UNITS:N(7*=10),"
+intemp$=intemp$+"DEALER_NUM_1:N(1*=10),DEALER_NUM_2:N(1*=10),DEALER_NUM_3:N(1*=10)"
+dim inRec$:intemp$
+
+rem '----template for the glt-04 being written in 9.12
+outtemp$="FIRM_ID:C(2),PROCESS_ID:C(16),BATCH_NO:C(7),JOURNAL_ID:C(2),GL_ADT_NO:C(7),"
+outtemp$=outtemp$+"POSTING_YEAR:C(4),POSTING_PER:C(2),TRNS_DATE:C(8),GL_ACCOUNT:C(10),"
+outtemp$=outtemp$+"SEQ_NO:C(5*=10),REFERENCE_1:C(10),REFERENCE_2:C(10),REFERENCE_3:C(10),"
+outtemp$=outtemp$+"DESCRIPTION:C(30),PERIOD:C(2),"
+outtemp$=outtemp$+"YEAR:C(4*=10),DEALER_STR:C(1*=10),TRANS_AMT:N(7*=10),UNITS:N(7*=10),"
+outtemp$=outtemp$+"DEALER_NUM_1:N(1*=10),DEALER_NUM_2:N(1*=10),DEALER_NUM_3:N(1*=10)"
+dim outRec$:outtemp$
+
+rem '----get the write buffer into the template
+inRec$ = trigger!.getWriteBuffer()
+inRec$ = field(inRec$)
+
+rem ' roll back any summarized amount when running parallel
+if parallel then
+    oldGLT04_key$ = inRec.FIRM_ID$ + inRec.JOURNAL_ID$ + inRec.GL_ADT_NBR$ + inRec.POSTING_YEAR_1$ 
+    oldGLT04_key$ = oldGLT04_key$ + inRec.POSTING_PER_1$ + inRec.GL_POST_DATE$ + inRec.GL_ACCOUNT$
+    oldGLT04_key$ = oldGLT04_key$ + inRec.GL_POST_SEQ$
+    dim chkRec$:intemp$
+    summaryFound = 0
+    read record(oldGLT04,key=oldGLT04_key$,DOM=*next)chkRec$; summaryFound = 1
+    if summaryFound then
+        rem ' roll back the previous summary amount
+        newGL_Post_Amt = inRec.GL_POST_AMT - chkRec.GL_POST_AMT
+    fi
+fi
+
+rem '----assign the data
+outRec.FIRM_ID$ = inRec.FIRM_ID$
+
+rem '----these fields are added in rev 9.12
+outRec.PROCESS_ID$ = fill(16," ")
+outRec.BATCH_NO$ = fill(7," ")
+
+outRec.JOURNAL_ID$ = inRec.JOURNAL_ID$
+outRec.GL_ADT_NO$ = inRec.GL_ADT_NBR$
+
+outRec.POSTING_YEAR$ = "20" + FNYY21_YY$(inRec.POSTING_YEAR_1$)
+outRec.POSTING_PER$ = inRec.POSTING_PER_1$
+
+outRec.TRNS_DATE$ = "20" + FNYY21_YY$(inRec.GL_POST_DATE$(1,2)) + inRec.GL_POST_DATE$(3,4)
+
+outRec.GL_ACCOUNT$ = inRec.GL_ACCOUNT$
+
+rem ' will be set right before the write
+rem ' outRec.SEQ_NO$ = inRec.GL_POST_SEQ$
+
+outRec.REFERENCE_1$ = inRec.REFERENCE_1$
+outRec.REFERENCE_2$ = inRec.REFERENCE_2$
+outRec.REFERENCE_3$ = inRec.REFERENCE_3$
+outRec.DESCRIPTION$ = inRec.GL_POST_MEMO$
+
+rem ' the period and year again
+outRec.PERIOD$ = outRec.POSTING_PER$
+outRec.YEAR$ = outRec.POSTING_YEAR$
+
+outRec.DEALER_STR$ = inRec.DEALER_STR$
+
+rem ' if parallel and a summary exists use the rolled back amount
+if parallel and summaryFound then
+    outRec.TRANS_AMT = newGL_Post_Amt
+else
+    outRec.TRANS_AMT = inRec.GL_POST_AMT
+fi
+outRec.UNITS = inRec.UNITS
+outRec.DEALER_NUM_1 = inRec.DEALER_NUM_1
+outRec.DEALER_NUM_2 = inRec.DEALER_NUM_2
+outRec.DEALER_NUM_3 = inRec.DEALER_NUM_3
+
+rem '----open the target output file and the Account Master file
+outRec = unt
+open(outRec)stbl("ADDON_NEWGL")+"glt-04"
+master = unt
+open(master)stbl("ADDON_NEWGL")+"glm-01"
+
+rem '----summary or detail?
+mastTemp$="FIRM_ID:C(2),GL_ACCOUNT:C(10*=10),GL_ACCT_DESC:C(35),GL_ACCT_TYPE:C(1),"
+mastTemp$=mastTemp$+ "DETAIL_FLAG:C(1),RESERVED_STR:C(27*=10)"
+dim mastRec$:mastTemp$
+detail$="Y"
+mastFound = 0
+read record(master,key=outRec.FIRM_ID$+outRec.GL_ACCOUNT$,dom=*next)mastRec$; mastFound = 1
+if mastFound then
+    if mastRec.detail_flag$ = "N" then 
+        detail$ = "N"
+    fi
+fi
+
+rem '----build a short key
+key$ = outRec.FIRM_ID$ + outRec.PROCESS_ID$ + outRec.BATCH_NO$ + outRec.JOURNAL_ID$ + outRec.GL_ADT_NO$ 
+key$ = key$ + outRec.POSTING_YEAR$ + outRec.POSTING_PER$ + outRec.TRNS_DATE$ + outRec.GL_ACCOUNT$
+
+rem '----set the sequence number
+if detail$ = "N" then
+    dim sumRec$:outtemp$
+    rem ' use sequence 00001
+    key$ = key$ + "00001"
+    recordFound = 0
+    read record(outRec,key = key$, dom=*next)sumRec$; recordFound = 1
+    if recordFound then
+        rem ' add the existing amout to the incoming amount
+        outRec.TRANS_AMT = outRec.TRANS_AMT + sumRec.TRANS_AMT
+        outRec.SEQ_NO$ = sumRec.SEQ_NO$
+    else
+        rem ' the first summariezed transaction just use seq 1
+        outRec.SEQ_NO$ = "00001"
+    fi
+else
+    rem ' detail = Y, find the next seq number
+    seq_no = 0
+    keylen = len(key$)
+    tryKey$=key$+$FF$
+    read (outRec,key=tryKey$,dom=*next)
+    k$=keyp(outRec,end=set_seq)
+    if k$(1,keylen) = key$ then seq_no = num(k$(keylen+1))
+    set_seq:
+    outRec.SEQ_NO$ = str(seq_no + 1:"00000")
+fi
+
+rem '----write the data
+write record(outRec)outRec$
+close(outRec)
+
+rem '----if parallel write the old file
+if parallel 
+    rem ' outKey$=inRec.FIRM_ID$ + inRec.JOURNAL_ID$ + inRec.GL_ADT_NBR$ + inRec.POSTING_YEAR_1$ + inRec.POSTING_PER_1$
+    rem ' outKey$=inRec.GL_POST_DATE$ + inRec.GL_ACCOUNT$ + inRec.GL_POST_SEQ$
+    write record(oldGLT04,key=oldGLT04_key$)inRec$
+    close(oldGLT04)
+fi
+
+rem '----if logging write the log
+if logging
+    inRec$ = cvs(inRec$,16)
+    write(log)"GLT04 " + date(0,"%Y%Mz%Dz %Hz%Mz%sz") + " " + inRec$
+    close(log)
+fi
+
+end
+
+handle_err:
+    write (trace)"error: " + str(err) + " line " + str(tcb(5)) + " errmsg " + errmes(-1)
+    throw "An error " + str(err) + " occurred on line " + str(tcb(5)) + " of the trigger GLT-04.trigger.iw.src.", 275

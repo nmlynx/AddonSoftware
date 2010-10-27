@@ -1,0 +1,66 @@
+rem ' instead of write trigger on GLT-05
+rem ' we simply want to discard the write unless running parallel
+
+seterr handle_err
+
+rem ' set opts
+SETOPTS $0800C02000002040$
+
+trace = unt
+open(trace,mode="O_TRUNC")"/mnt/data/basisaon/aon/trig_trace/trace-GLT-05.log"
+settrace(trace)
+
+rem '----set globals
+trash$=stbl("PARALLEL_ADDON","YES")
+trash$=stbl("ADDON_TRIG_LGNG","YES")
+trash$=stbl("ADDON_TRIG_LOG","/mnt/data/basisaon/aon/ADATA/")
+                           
+rem '----production
+trash$=stbl("ADDON_NEWGL","/mnt/data/basisaon/barista/aon/")
+
+trash$=stbl("ADDON_OLDGL","/mnt/data/basisaon/aon/ADATA/")
+
+rem '----declares
+Declare BBjTriggerData trigger!
+
+rem ' template for the GLT-05 record
+temp$="FIRM_ID:C(2),GL_POST_DATE:C(6),JOURNAL_ID:C(2),GL_ACCOUNT:C(10),GL_ADT_NBR:C(7),"
+temp$=temp$+"POSTING_YEAR:C(2),POSTING_PER:C(2),GL_POST_SEQ:C(5*=10)"
+dim inRec$:temp$
+
+rem '----get the trigger data
+trigger! = BBJAPI().getFileSystem().getTriggerData()
+inRec$ = trigger!.getWriteBuffer()
+inRec$ = field(inRec$)
+
+rem '----is parallel mode set?
+parallel = 0
+if stbl("PARALLEL_ADDON",err=*next)="YES" then parallel = 1
+if parallel then
+    oldGLT05 = unt
+    rem ' open(oldGLT05,mode="TRIGGER")stbl("ADDON_OLDGL")+"GLT-05"
+    open(oldGLT05,mode="TRIGGER")trigger!.getFilename()
+    outKey$=inRec.FIRM_ID$ + inRec.GL_POST_DATE$ + inRec.JOURNAL_ID$ + inRec.GL_ACCOUNT$ + inRec.GL_ADT_NBR$
+    outKey$=outKey$ + inRec.POSTING_YEAR$ + inRec.POSTING_PER$ + inRec.GL_POST_SEQ$
+    write record(oldGLT05,key=outKey$)inRec$
+    close(oldGLT05)
+fi
+
+rem '----is logging turned on?
+logging = 0
+if stbl("ADDON_TRIG_LGNG",err=*next)="YES" then logging = 1 
+if logging then
+    log = unt
+    open(log,mode="O_APPEND")stbl("ADDON_TRIG_LOG")+"GLT-04.trigger.log"
+    inRec$ = cvs(inRec$,16)
+    write(log)"GLT05 " + date(0,"%Y%Mz%Dz %Hz%Mz%sz") + " " + inRec$
+    close(log)
+fi
+
+end
+
+handle_err:
+    write (trace)"error: " + str(err) + " line " + str(tcb(5))
+    throw "An error " + str(err) + " occurred on line " + str(tcb(5)) + " of the trigger GLT-05.trigger.iw.src.", 275
+
+
