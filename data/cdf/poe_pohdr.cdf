@@ -1,3 +1,54 @@
+[[POE_POHDR.PO_NO.AINP]]
+rem --- enable Create PO from Req button
+
+	callpoint!.setOptionEnabled("CRPO",1)
+[[POE_POHDR.AOPT-CRPO]]
+rem --- Lookup requisiton
+rem --- Can't have Barista do the lookup because it also validates, which fails after req is deleted when po is created.
+
+	po_no$=cvs(callpoint!.getColumnData("POE_POHDR.PO_NO"),3)
+	vendor_id$=cvs(callpoint!.getColumnData("POE_POHDR.VENDOR_ID"),3)
+
+	if po_no$=""
+		msg_id$="PO_INVAL_PO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	else
+		rd_key$ = ""
+		if vendor_id$=""
+			key_pfx$  = firm_id$
+			key_id$   = "PRIMARY"
+		else
+			key_pfx$  = firm_id$ + vendor_id$
+			key_id$   = "AO_VEND_REQ"
+		endif
+
+		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:			gui_dev,
+:			Form!,
+:			"POE_REQHDR",
+:			"LOOKUP",
+:			table_chans$[all],
+:			key_pfx$,
+:			key_id$,
+:			rd_key$
+
+		if rd_key$<>"" then 
+			if vendor_id$=""
+				req_no$=rd_key$(3)
+			else
+				req_no$=rd_key$(9)
+			endif
+			callpoint!.setColumnData("POE_POHDR.REQ_NO",req_no$)
+			callpoint!.setStatus("REFRESH")
+		endif
+	endif
+[[POE_POHDR.BPFX]]
+rem --- disable buttons
+
+	callpoint!.setOptionEnabled("CRPO",0)
+	callpoint!.setOptionEnabled("QPRT",0)
+	callpoint!.setOptionEnabled("DPRT",0)
 [[POE_POHDR.ORD_DATE.AVAL]]
 ord_date$=cvs(callpoint!.getUserInput(),2)
 req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
@@ -23,24 +74,31 @@ if cvs(callpoint!.getRawUserInput(),3)<>""
 	endif
 endif
 [[POE_POHDR.AOPT-DPRT]]
-rem --- on-demand PO print
+rem --- PO changes must be saved before on-demand PO print
 
-vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
-po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+	if callpoint!.getRecordStatus()="M" then
+		msg_id$="PO_SAVE_REQUIRED"
+		gosub disp_message
+	else
+		vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
+		po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
 
-gosub queue_for_printing
-
-if cvs(vendor_id$,3)<>"" and cvs(po_no$,3)<>""
-
-	gosub queue_for_printing
-	call "por_poprint.aon",vendor_id$,po_no$	
-
-endif
+		if cvs(vendor_id$,3)<>"" and cvs(po_no$,3)<>""
+			gosub queue_for_printing
+			call "por_poprint.aon",vendor_id$,po_no$	
+		endif
+	endif
 [[POE_POHDR.AOPT-QPRT]]
-gosub queue_for_printing
+rem --- PO number and vendor ID required for printing PO
 
-msg_id$="PO_QPRT"
-gosub disp_message
+	vendor_id$=callpoint!.getColumnData("POE_POHDR.VENDOR_ID")
+	po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+
+	if cvs(vendor_id$,3)<>"" and cvs(po_no$,3)<>""
+		gosub queue_for_printing
+		msg_id$="PO_QPRT"
+		gosub disp_message
+	endif
 [[POE_POHDR.BDEL]]
 rem --- don't allow deletion if any detail line on the PO has a non-zero qty received
 rem --- otherwise, give option to retain requisition (if applicable), reverse OO quantity, delete print and link records
@@ -284,6 +342,19 @@ tamt!.setValue(total_amt)
 rem --- check dtl_posted flag to see if dropship fields should be disabled
 
 gosub enable_dropship_fields 
+
+rem --- enable/disable buttons
+
+	po_no$=cvs(callpoint!.getColumnData("POE_POHDR.PO_NO"),3)
+	vendor_id$=cvs(callpoint!.getColumnData("POE_POHDR.VENDOR_ID"),3)
+
+	if po_no$<>""
+		callpoint!.setOptionEnabled("QPRT",1)
+		callpoint!.setOptionEnabled("DPRT",1)
+		if vendor_id$<>""
+			callpoint!.setOptionEnabled("CRPO",0)
+		endif
+	endif
 [[POE_POHDR.AWRI]]
 rem --- need to put out poe_poprint record
 
@@ -291,9 +362,28 @@ gosub queue_for_printing
 
 
 [[POE_POHDR.REQ_NO.AVAL]]
+rem --- Validate requisition number
+rem --- Can't have Barista validate since req is deleted after po is created.
+
+	req_no$=cvs(callpoint!.getUserInput(),3)
+	valid_req=1
+
+	if req_no$<>""
+		valid_req=0
+		poe_reqhdr_dev=fnget_dev("POE_REQHDR")
+		find (poe_reqhdr_dev,key=firm_id$+req_no$,dom=*endif) 
+		valid_req=1
+	endif
+
+	if !(valid_req)
+		msg_id$="PO_INVAL_REQ_LK"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+
 rem --- Load PO from requisition
 
-if cvs(callpoint!.getUserInput(),3)<>""
+if req_no$<>"" and valid_req
 
 	msg_id$="PO_CREATE_REQ"
 	gosub disp_message
