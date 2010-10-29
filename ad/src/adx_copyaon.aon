@@ -11,31 +11,8 @@ rem ==========================================================================
     setesc std_error
     seterr std_error
 
-rem - wgh: setup input for local unit testing
-
-    use ::sys/prog/bao_option.bbj::Option
-
-    declare BBjAPI myBBjAPI!
-    declare BBjVector OptionData!
-    declare Option Option!
-
-    TableColumns$=pad("TEST.NEW_INSTALL_LOCATION",40)
-    TableColumns$=TableColumns$+pad("TEST.UPGRADE",40)
-    TableColumns$=TableColumns$+pad("TEST.NEXT_PROGRAM",40)
-    
-    myBBjAPI! = BBjAPI()
-    OptionData!=myBBjAPI!.makeVector()
-    OptionData!.addItem("/aon_test")
-    OptionData!.addItem("1")
-    OptionData!.addItem("")
-
-    Option!=new Option("TEST",TableColumns$,OptionData!)
-    
-rem --- Assign form input values to local variables
-
-    newLocation$=Option!.getOptionData("NEW_INSTALL_LOCATION") + "/aon"
+    newLocation$=Option!.getOptionData("NEW_INSTALL_LOC") + "/aon"
     upgrade=num(Option!.getOptionData("UPGRADE"))
-    nextProgram$=Option!.getOptionData("NEXT_PROGRAM")
 
 rem --- Set oldLocation to aon directory under the current download directory
 
@@ -49,11 +26,8 @@ rem --- Recursively copy oldLocation to newLocation
     utility! = new CopyAonDir(upgrade)
     utility!.copyAonDirectory(oldLocation$, newLocation$)
     
-done: rem --- Run next program if present
+done: rem --- Done, ready to exit
 
-    if(cvs(nextProgram$,3)<>"") then
-        run stbl("+DIR_PGM",err=*next)+nextProgram$,err=*next
-    endif
     goto std_exit
     
 rem #include std_error.src
