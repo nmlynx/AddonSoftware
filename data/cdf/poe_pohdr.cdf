@@ -450,12 +450,12 @@ if req_no$<>"" and valid_req
 			rem --- Update work order?
 
 			if callpoint!.getDevObject("SF_installed")<>"N" and pos(poc_linecode.line_type$="NS")<>0 and cvs(poe_podet.wo_no$,2)<>""
-	escape;rem logic not yet exercised - poc_wa not yet debugged
+				rem logic not yet exercised - poc_wa not yet debugged
 				sfe_womatl_dev=fnget_dev("SFE_WOMATL")
 				sfe_wosubcnt_dev=fnget_dev("SFE_WOSUBCNT")
 				oldwo$=poe_podet.wo_no$+poe_podet.wo_seq_ref$
 				newwo$=oldwo$,po$=poe_podet.po_no$+poe_podet.internal_seq_no$
-				call stbl("+DIR_PGM")+"poc_wa.bbx",sfe_womatl_dev,sfe_wosubcnt_dev,firm_id$,po$,"P",poc_linecode.code_desc$,oldwo$,newwo$,i[1],status
+				rem call stbl("+DIR_PGM")+"poc_wa.bbx",sfe_womatl_dev,sfe_wosubcnt_dev,firm_id$,po$,"P",poc_linecode.code_desc$,oldwo$,newwo$,i[1],status
 			endif
 
 			rem --- Update PO to OP link
