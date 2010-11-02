@@ -982,8 +982,8 @@ rem --- Check item/warehouse combination and setup values
 			callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", ivm01a.product_type$)
 		endif
 		user_tpl.item_price = ivm02a.cur_price
-		if pos(user_tpl.line_type$="SP") and num(ivm02a.unit_cost$)<>0 and (user_tpl.line_dropship$<>"Y" or user_tpl.dropship_cost$<>"Y")
-			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST",0)
+		if pos(user_tpl.line_type$="SP") and num(ivm02a.unit_cost$)=0 or (user_tpl.line_dropship$="Y" and user_tpl.dropship_cost$="Y")
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.UNIT_COST",1)
 		endif
 		callpoint!.setStatus("REFRESH")
 	endif
@@ -1436,7 +1436,7 @@ rem --- Disable / enable unit cost
 				callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 1)
 			else
 				rem --- Standard or sPecial line
-				rem --- note: when item id is entered, cost will get disabled in that AVAL if S or P and cost <> 0
+				rem --- note: when item id is entered, cost will get enabled in that AVAL if S or P and cost = 0 (or if dropshippable)
 				callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 0)
 			endif
 		endif
