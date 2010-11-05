@@ -10,5 +10,4 @@ Notes:
 
 There is an outstanding BBj issue with Configuration (Bugzilla #17369). When triggers are set up in EM there is one config file for all triggers. This can be a problem for a site that has triggers for multiple systems. In the case of Barista Addon running along side another non-Barista application that also has triggers and it's own config. In this case you may need to set some STBLs and/or specify pathnames directly in the trigger source.
 
- 
-
+Additional notes concerning this folder and the src directory underneath. Any files with an extension of .trigger in this directory may be used in a standard production Barista/Version 6 environment. You will find at least one file in the src directory with extensions of .src that match each .trigger file. These files (both the .trigger and .src) are usable with a standard install of Barista and version 6 in a hybrid environment. The .trigger file(s) should be placed in the same directory as the version 6 data files, and the .src file(s) should be placed in a src directory directly underneath the version 6 data directory. Currently (as of 2/4/2010) there are not enough triggers to install and have working properly as a whole. They are being stored here in order to keep them in the repository. We are working on the Payroll triggers first. Once complete, the Manufacturing system will be worked on.
