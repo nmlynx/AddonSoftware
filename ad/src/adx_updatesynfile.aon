@@ -12,56 +12,55 @@ rem ==========================================================================
 
 rem - wgh: setup input for local unit testing
 
-    use ::sys/prog/bao_option.bbj::Option
+rem    use ::sys/prog/bao_option.bbj::Option
 
-    declare BBjAPI myBBjAPI!
-    declare BBjVector OptionData!
-    declare Option Option!
+rem    declare BBjAPI myBBjAPI!
+rem    declare BBjVector OptionData!
+rem    declare Option Option!
 
-    TableColumns$=pad("TEST.NEW_INSTALL_LOCATION",40)
-    TableColumns$=TableColumns$+pad("TEST.ARDATA",40)
-    TableColumns$=TableColumns$+pad("TEST.GLDATA",40)
-    TableColumns$=TableColumns$+pad("TEST.OLD_INSTALL_LOCATION",40)
-    TableColumns$=TableColumns$+pad("TEST.OLD_SYN_NAME",40)
-    TableColumns$=TableColumns$+pad("TEST.UPGRADE",40)
-    TableColumns$=TableColumns$+pad("TEST.NEXT_PROGRAM",40)
+rem    TableColumns$=pad("TEST.NEW_INSTALL_LOC",40)
+rem    TableColumns$=TableColumns$+pad("TEST.ARDATA",40)
+rem    TableColumns$=TableColumns$+pad("TEST.GLDATA",40)
+rem    TableColumns$=TableColumns$+pad("TEST.OLD_SYN_FILE",40)
+rem    TableColumns$=TableColumns$+pad("TEST.UPGRADE",40)
     
-    myBBjAPI! = BBjAPI()
-    OptionData!=myBBjAPI!.makeVector()
-    OptionData!.addItem("/aon_test")
-    OptionData!.addItem("/aon_test/aon/ardata")
-    OptionData!.addItem("/aon_test/aon/gldata")
-    OptionData!.addItem("/aon_mods")
-    OptionData!.addItem("addon_old.syn")
-    OptionData!.addItem("1")
-    OptionData!.addItem("")
+rem    myBBjAPI! = BBjAPI()
+rem    OptionData!=myBBjAPI!.makeVector()
+rem    OptionData!.addItem("/aon_test")
+rem    OptionData!.addItem("/aon_test/aon/ardata")
+rem    OptionData!.addItem("/aon_test/aon/gldata")
+rem    OptionData!.addItem("/aon_mods/aon/config/addon_old.syn")
+rem    OptionData!.addItem("1")
 
-    Option!=new Option("TEST",TableColumns$,OptionData!)
+rem    Option!=new Option("TEST",TableColumns$,OptionData!)
     
 rem --- Assign form input values to local variables
 
-    newLocation$=Option!.getOptionData("NEW_INSTALL_LOCATION") + "/aon"
-    oldLocation$=Option!.getOptionData("OLD_INSTALL_LOCATION") + "/aon"
-    oldSynName$=Option!.getOptionData("OLD_SYN_NAME")
+    updateSynFile$=Option!.getOptionData("UPDATE_SYN_FILE")
+    oldSynFile$=Option!.getOptionData("OLD_SYN_FILE")
     upgrade=num(Option!.getOptionData("UPGRADE"))
-    nextProgram$=Option!.getOptionData("NEXT_PROGRAM")
-
+    
     rem --- new data location for each licensed module
     use java.util.HashMap
     declare HashMap dataMap!
+    use ::sys/prog/bao_option.bbj::Option
+    declare Option Option!
     dataMap!= Option!.getOptionMap()
+    
+rem --- Get aon directory location from addon.syn file
+	aonDir$=updateSynFile$(1, pos("/aon/config/"=updateSynFile$)+3)
     
 rem --- Get new version from addon.syn file
 
     synVersion$ = "0000"
-    synFilePath$ = newLocation$ + "/config/addon.syn"
+    synFilePath$ = updateSynFile$
     gosub get_syn_version
     newVersion$ = synVersion$
-    
+
 rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
 
     search$ = "../apps/aon"
-    replace$ = newLocation$
+    replace$ = aonDir$
     stbLine$ = "STBL=SET +"
     stbLen = len(stbLine$)
     cfgLine$ = "CFG=+"
@@ -69,19 +68,21 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
 
     rem --- copy addon.syn file to addon_vnnnn.syn (where nnnn=new version)
     sourceChan=unt
-    open(sourceChan,isz=-1)newLocation$ + "/config/addon.syn"
+    open(sourceChan,isz=-1)updateSynFile$
     targetChan=unt
-    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newLocation$ + "/config/addon_v" + newVersion$ + ".syn"
+    newSynFile$=aonDir$ + "/config/addon_v" + newVersion$ + ".syn"
+    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newSynFile$
     while 1
         read(sourceChan,end=*break)record$
-        rem --- replace "../apps/aon" in paths with newLocation$
+        rem --- replace "../apps/aon" in paths with aonDir$
         gosub search_replace
 
         rem --- replace data paths in STBL DATA lines
         if(pos(stbLine$=record$) = 1) then
             data$ = record$(stbLen + 1, pos("="=record$(stbLen + 1)) - 1)
             if(dataMap!.containsKey(data$)) then
-                record$ = stbLine$ + data$ + "=" + cast(BBjString, dataMap!.get(data$)) + "/"
+                record$ = stbLine$ + data$ + "=" + cast(BBjString, dataMap!.get(data$))
+                if pos(record$(len(record$))="/\")=0 then record$=record$ +  "/"
             endif
         endif
 
@@ -89,7 +90,8 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
         if(pos(cfgLine$=record$) = 1) then
             data$ = record$(cfgLen + 1, pos("="=record$(cfgLen + 1)) - 1)
             if(dataMap!.containsKey(data$)) then
-                record$ = cfgLine$ + data$ + "=" + cast(BBjString, dataMap!.get(data$)) + "/"
+                record$ = cfgLine$ + data$ + "=" + cast(BBjString, dataMap!.get(data$))
+                if pos(record$(len(record$))="/\")=0 then record$=record$ +  "/"
             endif
         endif
         
@@ -99,23 +101,24 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     close(targetChan)
 
     rem --- remove addon.syn now that we're done with it
-    rename newLocation$ + "/config/addon.syn" to newLocation$ + "/config/addon.syn.bak", err=*next
+    rename updateSynFile$ to updateSynFile$ + ".bak", err=*next
 
 rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
 
     if(upgrade) then
         rem --- get old version from old .syn file
         synVersion$ = ""
-        synFilePath$ = oldLocation$ + "/config/" + oldSynName$
+        synFilePath$ = oldSynFile$
         gosub get_syn_version
         oldVersion$ = synVersion$
 
-        rem --- copy old .syn file to addon_vNNNN.syn in new install location (where NNNN=old version)
-        BLOCKSIZE = 2^20
+        rem --- copy old .syn file to addon_vNNNN.syn.bak in new install location (where NNNN=old version)
+        BLOCKSIZE = 1024
         sourceChan=unt
-        open(sourceChan,isz=-1)oldLocation$ + "/config/" + oldSynName$
+        open(sourceChan,isz=-1)oldSynFile$
         targetChan=unt
-        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newLocation$ + "/config/addon_v" + oldVersion$ + ".syn.bak"
+        bakOldSynFile$=aonDir$ + "/config/addon_v" + oldVersion$ + ".syn.bak"
+        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")bakOldSynFile$
         while 1
             readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
             writerecord(targetChan)record$
@@ -129,7 +132,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
         declare HashMap oldMap!
         oldMap! = new HashMap()
         oldChan=unt
-        open(oldChan,isz=-1)newLocation$ + "/config/addon_v" + oldVersion$ + ".syn.bak"
+        open(oldChan,isz=-1)bakOldSynFile$
         while 1
             read(oldChan,end=*break)record$
             if(pos("="=record$)) then
@@ -150,7 +153,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
         declare ArrayList newList!
         newList! = new ArrayList()
         newChan=unt
-        open(newChan,isz=-1)newLocation$ + "/config/addon_v" + newVersion$ + ".syn"
+        open(newChan,isz=-1)newSynFile$
         while 1
             read(newChan,end=*break)record$
             newList!.add(record$)
@@ -309,7 +312,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
         
         rem --- overwrite addon_vnnn.syn file with new addon_vnnn.syn ArrayList
         newChan=unt
-        open(newChan,isz=-1,mode="O_CREATE,O_TRUNC")newLocation$ + "/config/addon_v" + newVersion$ + ".syn"
+        open(newChan,isz=-1,mode="O_CREATE,O_TRUNC")newSynFile$
         for i=0 to newList!.size()-1
             newRec$ = cast(BBjString, newList!.get(i))
             if(cvs(newRec$,3)="") then
@@ -325,9 +328,6 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
     
 done: rem --- Run next program if present
 
-    if(cvs(nextProgram$,3)<>"") then
-        run stbl("+DIR_PGM",err=*next)+nextProgram$,err=*next
-    endif
     goto std_exit
 
 get_syn_version: rem --- Get version from SYS line in addon.syn file
