@@ -11,10 +11,10 @@ rem ==========================================================================
 
 rem --- OLDLOCATION$ : Location of source aon directory being copied (Input)
 rem --- NEWLOCATION$ : Location of target aon directory (Input)
-rem --- UPGRADE      : 0=Not an upgrade so copy data/1=Upgrade so don't copy data (Input)
-rem --- HELP         : 0=Do not copy AddonHelp.jar/1=Copy AddonHelp.jar (Input)
+rem --- UPGRADE%     : 0=Not an upgrade so copy data/1=Upgrade so don't copy data (Input)
+rem --- HELP%        : 0=Do not copy AddonHelp.jar/1=Copy AddonHelp.jar (Input)
 rem --- RDFORM!      : Parent BBjTopLevelWindow object, the form (Input)
-rem --- WAIT4OK      : Wait for user's OK when done, 0=don't wait/1=wait (Input)
+rem --- WAIT4OK%     : Wait for user's OK when done, 0=don't wait/1=wait (Input)
 rem --- STATUS       : Status code/0=No error (Returned)
 
     declare BBjTopLevelWindow rdForm!
@@ -129,7 +129,7 @@ rem  */
         rem  * @param BBjInt helpFile
         rem  */
         method public void copyAonDirectory(BBjString oldLocation$, BBjString newLocation$, BBjInt skipDataFiles%, BBjInt helpFile%)
-            if skipDataFiles then meter_total_recs = 7900
+            if skipDataFiles then meter_total_recs = 2000
             #meter! = #createProgressMeter()
             #openLog(skipDataFiles, oldLocation$, newLocation$)
 
