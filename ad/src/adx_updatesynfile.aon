@@ -38,7 +38,7 @@ rem --- Assign form input values to local variables
 
     updateSynFile$=Option!.getOptionData("UPDATE_SYN_FILE")
     oldSynFile$=Option!.getOptionData("OLD_SYN_FILE")
-    upgrade=num(Option!.getOptionData("UPGRADE"))
+    upgrade%=int(num(Option!.getOptionData("UPGRADE")))
     
     rem --- new data location for each licensed module
     use java.util.HashMap
@@ -47,15 +47,24 @@ rem --- Assign form input values to local variables
     declare Option Option!
     dataMap!= Option!.getOptionMap()
     
+rem --- Flip directory path separators
+    filePath$=updateSynFile$
+    gosub fix_path
+    updateSynFile$=filePath$
+
+    filePath$=oldSynFile$
+    gosub fix_path
+    oldSynFile$=filePath$
+
 rem --- Get aon directory location from addon.syn file
-	aonDir$=updateSynFile$(1, pos("/aon/config/"=updateSynFile$)+3)
+	aonDir$=updateSynFile$(1, pos("/config/"=updateSynFile$)-1)
     
 rem --- Get new version from addon.syn file
 
     synVersion$ = "0000"
     synFilePath$ = updateSynFile$
     gosub get_syn_version
-    newVersion$ = synVersion$
+    newVersion$ = "_v"+synVersion$
 
 rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
 
@@ -65,12 +74,27 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     stbLen = len(stbLine$)
     cfgLine$ = "CFG=+"
     cfgLen = len(cfgLine$)
+    
+    rem --- insure unique file name for addon_vnnnn.syn
+    oldName$=updateSynFile$(pos("/"=updateSynFile$,-1)+1)
+    oldBase$=oldName$
+    if pos(".syn"=oldBase$) then oldBase$=oldBase$(1,pos(".syn"=oldBase$)-1)
+    if pos("_v"=oldBase$) then oldBase$=oldBase$(1,pos("_v"=oldBase$)-1)
+    
+    newSynFile$=aonDir$ + "/config/" + oldBase$ + newVersion$ + ".syn"
+    i=0
+    testChan=unt
+    while 1
+        open(testChan,err=*break)newSynFile$
+        close(testChan)
+        i=i+1
+        newSynFile$=aonDir$ + "/config/" + oldBase$ + newVersion$ + "_" + str(i) + ".syn"
+    wend
 
     rem --- copy addon.syn file to addon_vnnnn.syn (where nnnn=new version)
     sourceChan=unt
     open(sourceChan,isz=-1)updateSynFile$
     targetChan=unt
-    newSynFile$=aonDir$ + "/config/addon_v" + newVersion$ + ".syn"
     open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newSynFile$
     while 1
         read(sourceChan,end=*break)record$
@@ -105,19 +129,35 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
 
 rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
 
-    if(upgrade) then
+    if(upgrade%) then
         rem --- get old version from old .syn file
         synVersion$ = ""
         synFilePath$ = oldSynFile$
         gosub get_syn_version
-        oldVersion$ = synVersion$
+        oldVersion$ = "_V"+synVersion$
+    
+        rem --- insure unique file name for addon_VNNNN.syn.bak
+        oldName$=oldSynFile$(pos("/"=oldSynFile$,-1)+1)
+        oldBase$=oldName$
+        if pos(".syn"=oldBase$) then oldBase$=oldBase$(1,pos(".syn"=oldBase$)-1)
+        if pos("_v"=oldBase$) then oldBase$=oldBase$(1,pos("_v"=oldBase$)-1)
+        if pos("_V"=oldBase$) then oldBase$=oldBase$(1,pos("_V"=oldBase$)-1)
+    
+        bakOldSynFile$=aonDir$ + "/config/" + oldBase$ + oldVersion$ + ".syn.bak"
+        i=0
+        testChan=unt
+        while 1
+            open(testChan,err=*break)bakOldSynFile$
+            close(testChan)
+            i=i+1
+            bakOldSynFile$=aonDir$ + "/config/" + oldBase$ + oldVersion$ + "_" + str(i) + ".syn.bak"
+        wend
 
-        rem --- copy old .syn file to addon_vNNNN.syn.bak in new install location (where NNNN=old version)
+        rem --- copy old .syn file to addon_VNNNN.syn.bak in new install location (where NNNN=old version)
         BLOCKSIZE = 1024
         sourceChan=unt
         open(sourceChan,isz=-1)oldSynFile$
         targetChan=unt
-        bakOldSynFile$=aonDir$ + "/config/addon_v" + oldVersion$ + ".syn.bak"
         open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")bakOldSynFile$
         while 1
             readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
@@ -197,6 +237,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
                                 oldKey$ = oldRec$(1, pos(";"=oldRec$))
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
+                                    if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
@@ -222,6 +263,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
                                 oldKey$ = oldRec$(pos + 1, pos("="=oldRec$(pos)) - 1)
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
+                                    if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
@@ -234,6 +276,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
                                 oldKey$ = oldRec$(pos("/aon/"=oldRec$))
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
+                                    if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
@@ -246,6 +289,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
                                 oldKey$ = oldRec$(1, pos("="=oldRec$,1,2))
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
+                                    if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
@@ -256,6 +300,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
                                 oldRec$ = cast(BBjString, oldList!.get(j))
                                 if(oldRec$ = newRec$) then
                                     oldList!.remove(j)
+                                    if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
@@ -330,7 +375,16 @@ done: rem --- Run next program if present
 
     goto std_exit
 
+fix_path: rem --- Flip directory path separators
+    pos=pos("\"=filePath$)
+    while pos
+        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
+    wend
+    return
+
 get_syn_version: rem --- Get version from SYS line in addon.syn file
+    parsed=0
     synChan=unt
     open(synChan,isz=-1)synFilePath$
     while 1
@@ -343,11 +397,14 @@ get_syn_version: rem --- Get version from SYS line in addon.syn file
             startPos = pos(start$=record$)
             end$ = " - "
             endPos = pos(end$=record$(startPos + startLen))
-            synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
-            rem -- remove decimal point
-            dotPos = pos("."=synVersion$)
-            if(dotPos) then
-                synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
+            if startPos>0 and endPos>0
+                parsed=1
+                synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
+                rem -- remove decimal point
+                dotPos = pos("."=synVersion$)
+                if(dotPos) then
+                    synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
+                endif
             endif
             break
         endif

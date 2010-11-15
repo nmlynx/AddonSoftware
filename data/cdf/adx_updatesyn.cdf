@@ -9,8 +9,17 @@ rem --- Validate update syn file
 	update_syn$ = callpoint!.getUserInput()
 	gosub validate_update_syn
 
+rem --- Set defaults for data STBLs
 	if success
-		path$=update_syn$(1, pos("/aon/config/"=update_syn$)+3)
+		pos=pos("\"=update_syn$)
+		while pos
+			update_syn$=update_syn$(1, pos-1)+"/"+update_syn$(pos+1)
+			pos=pos("\"=update_syn$)
+		wend
+
+		path$=""
+		if pos("/config/"=update_syn$)
+			path$=update_syn$(1, pos("/config/"=update_syn$)-1)
 
 		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.ADDATA"),3)="" 
 			callpoint!.setColumnData("ADX_UPDATESYN.ADDATA",path$+"/data/")
