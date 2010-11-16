@@ -5,6 +5,9 @@ rem --- Recalculate totals
 	freight_amt = num(callpoint!.getUserInput())
 
 	gosub disp_totals
+
+rem --- Unremark this next line if we ever get around to fixing bug 4797 which blocks 4753 which this line should solve
+rem	callpoint!.setFocus("OPE_ORDHDR.DISCOUNT_AMT")
 [[OPE_ORDHDR.DISCOUNT_AMT.AVAL]]
 rem --- Recalculate totals
 
