@@ -94,7 +94,7 @@ rem -- only allow if trans_type is manual (vs reversal/void)
 			
 					rem callpoint!.setTableColumnAttribute("APE_MANCHECKDET.AP_INV_NO","DFLT",apt01a.ap_inv_no$)
 					callpoint!.setColumnData("APE_MANCHECKDET.AP_INV_NO",apt01a.ap_inv_no$)
-					callpoint!.setStatus("ACTIVATE;REFRESH")
+					callpoint!.setStatus("REFRESH")
 					util.forceEdit(Form!, 0); rem start editing the invoice number on this row
 
 				rem --- Total open invoice amounts
