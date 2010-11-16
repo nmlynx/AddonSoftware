@@ -581,7 +581,7 @@ rem --- Set header total amounts
 		callpoint!.setHeaderColumnData( "OPE_ORDHDR.TAXABLE_AMT", str(ordHelp!.getTaxable()) )
 		callpoint!.setHeaderColumnData( "OPE_ORDHDR.TOTAL_COST",  str(ordHelp!.getExtCost()) )
 
-		callpoint!.setStatus("MODIFIED;REFRESH;SETORIG")
+		callpoint!.setStatus("REFRESH;SETORIG")
 
 	endif
 
