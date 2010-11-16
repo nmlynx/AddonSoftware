@@ -832,7 +832,7 @@ queue_for_printing:
 
 return
 
-validate_dates:
+validate_dates: rem --- validate dates
 
 	bad_date = 0
 
