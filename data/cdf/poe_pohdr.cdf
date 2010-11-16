@@ -1,3 +1,10 @@
+[[POE_POHDR.ORD_DATE.AVAL]]
+ord_date$=cvs(callpoint!.getUserInput(),2)
+req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
+promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
+not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
+
+gosub validate_dates
 [[POE_POHDR.PO_NO.AVAL]]
 rem --- don't allow user to assign new PO# -- use Barista seq#
 rem --- if user made null entry (to assign next seq automatically) then getRawUserInput() will be empty
@@ -435,22 +442,26 @@ rem --- Set Defaults
 [[POE_POHDR.WAREHOUSE_ID.AVAL]]
 gosub whse_addr_info
 [[POE_POHDR.REQD_DATE.AVAL]]
-tmp$=callpoint!.getUserInput()
-if tmp$<>"" and tmp$<callpoint!.getColumnData("POE_POHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
-[[POE_POHDR.NOT_B4_DATE.AVAL]]
-not_b4_date$=cvs(callpoint!.getUserInput(),2)
-ord_date$=callpoint!.getColumnData("POE_POHDR.ORD_DATE")
-req_date$=callpoint!.getColumnData("POE_POHDR.REQD_DATE")
+ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
+req_date$=cvs(callpoint!.getUserInput(),2)
 promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
+not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
 
-if not_b4_date$<>"" then
-	if not_b4_date$<ord_date$ then callpoint!.setStatus("ABORT")
-	if cvs(req_date$,2)<>"" and not_b4_date$>req_date$ then callpoint!.setStatus("ABORT")
-	if cvs(promise_date$,2)<>"" and not_b4_date$>promise_date$ then callpoint!.setStatus("ABORT")
-endif
+gosub validate_dates
+[[POE_POHDR.NOT_B4_DATE.AVAL]]
+ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
+req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
+promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
+not_b4_date$=cvs(callpoint!.getUserInput(),2)
+
+gosub validate_dates
 [[POE_POHDR.PROMISE_DATE.AVAL]]
-tmp$=cvs(callpoint!.getUserInput(),2)
-if tmp$<>"" and tmp$<callpoint!.getColumnData("POE_POHDR.ORD_DATE") then callpoint!.setStatus("ABORT")
+ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
+req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
+promise_date$=cvs(callpoint!.getUserInput(),2)
+not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
+
+gosub validate_dates
 [[POE_POHDR.BSHO]]
 rem print 'show';rem debug
 rem --- inits
@@ -818,5 +829,42 @@ queue_for_printing:
 	poe_poprint.po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
 
 	writerecord (poe_poprint_dev)poe_poprint$
+
+return
+
+validate_dates:
+
+	bad_date = 0
+
+	if ord_date$<>"" and req_date$<>"" and ord_date$>req_date$ then
+		bad_date = 1
+	endif
+
+	if ord_date$<>"" and promise_date$<>"" and ord_date$>promise_date$ then
+		bad_date = 1
+	endif
+
+	if ord_date$<>"" and not_b4_date$<>"" and ord_date$>not_b4_date$ then
+		bad_date = 1
+	endif
+
+	if req_date$<>"" and promise_date$<>"" and req_date$<promise_date$ then
+		bad_date = 1
+	endif
+
+	if req_date$<>"" and not_b4_date$<>"" and req_date$<not_b4_date$ then
+		bad_date = 1
+	endif
+
+	if promise_date$<>"" and not_b4_date$<>"" and promise_date$<not_b4_date$ then
+		bad_date = 1
+	endif
+
+	if bad_date then
+		msg_id$="INVALID_DATE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+
 
 return
