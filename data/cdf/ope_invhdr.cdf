@@ -8,15 +8,17 @@ rem --- Discount Amount cannot exceed Total Sales Amount
 		callpoint!.setUserInput(str(disc_amt))
 	endif
 
-rem --- Recalculate Totals
+rem --- Recalculate Tax Amount and Totals
 
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub calculate_tax
 	gosub disp_totals
 [[OPE_INVHDR.FREIGHT_AMT.AVAL]]
-rem --- Recalculate Totals
+rem --- Recalculate Tax Amount and Totals
 
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getUserInput())
+	gosub calculate_tax
 	gosub disp_totals
 
 rem --- Unremark this next line if we ever get around to fixing bug 4797 which blocks 4753 which this line should solve
@@ -193,7 +195,6 @@ rem --- Reset all previous values
 	user_tpl.prev_boqty        = 0
 	user_tpl.prev_shipqty      = 0
 	user_tpl.prev_ext_price    = 0
-	user_tpl.prev_taxable      = 0
 	user_tpl.prev_ext_cost     = 0
 	user_tpl.prev_disc_code$   = ""
 	user_tpl.prev_ship_to$     = ""
@@ -1010,7 +1011,6 @@ rem --- Enable buttons
 
 rem --- Set all previous values
 
-	user_tpl.prev_taxable      = num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
 	user_tpl.prev_ext_cost     = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_COST"))
 	user_tpl.prev_disc_code$   = callpoint!.getColumnData("OPE_INVHDR.DISC_CODE")
 	user_tpl.prev_ship_to$     = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
@@ -2292,6 +2292,20 @@ rem ==========================================================================
 	callpoint!.setDevObject("msg_released","")
 
 	return
+
+rem ==========================================================================
+calculate_tax: rem --- Calculate and display Tax Amount
+rem IN: disc_amt
+rem IN: freight_amt
+rem ==========================================================================
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	tax_amount = ordHelp!.calculateTax(disc_amt, freight_amt,num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT")))
+
+	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount))
+	callpoint!.setStatus("REFRESH")
+
+	return
 [[OPE_INVHDR.ASHO]]
 print "Hdr:ASHO"; rem debug
 
@@ -2624,7 +2638,6 @@ rem --- Columns for the util disableCell() method
 	user_tpl.prev_boqty        = 0
 	user_tpl.prev_shipqty      = 0
 	user_tpl.prev_ext_price    = 0; rem used in detail section to hold the line extension 
-	user_tpl.prev_taxable      = 0
 	user_tpl.prev_ext_cost     = 0
 	user_tpl.prev_disc_code$   = ""
 	user_tpl.prev_ship_to$     = ""
