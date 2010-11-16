@@ -9,6 +9,15 @@ rem --- Recalculate totals
 rem --- Unremark this next line if we ever get around to fixing bug 4797 which blocks 4753 which this line should solve
 rem	callpoint!.setFocus("OPE_ORDHDR.DISCOUNT_AMT")
 [[OPE_ORDHDR.DISCOUNT_AMT.AVAL]]
+rem --- Discount Amount cannot exceed Total Sales Amount
+
+	disc_amt = num(callpoint!.getUserInput())
+	total_sales = num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
+	if disc_amt > total_sales then
+		disc_amt = total_sales
+		callpoint!.setUserInput(str(disc_amt))
+	endif
+
 rem --- Recalculate totals
 
 	disc_amt = num(callpoint!.getUserInput())
