@@ -2359,7 +2359,8 @@ rem --- Setup user_tpl$
 :		"new_order:u(1), " +
 :		"credit_limit_warned:u(1), " +
 :		"shipto_warned:u(1), " +
-:		"first_read:u(1)"
+:		"first_read:u(1), " +
+:		"line_prod_type_pr:c(1)"
 
 	dim user_tpl$:tpl$
 
