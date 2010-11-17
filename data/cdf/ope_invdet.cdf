@@ -677,7 +677,7 @@ rem --- Backorder is zero and disabled on a new record
 	rem The above is not reliable; use callpoint!.getRecordMode()
 
 	callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
-	callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
+	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 0)
 
 rem --- Set defaults for new record
 
@@ -689,7 +689,7 @@ rem --- Set defaults for new record
 	
 	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
  		callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "N")
-		callpoint!.setColumnEnabled("OPE_INVDET.QTY_SHIPPED", 0)
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_SHIPPED", 0)
 	else
 		callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "Y")
  	endif
@@ -732,7 +732,7 @@ rem --- Disable by line type (Needed because Barista is skipping Line Code)
 rem --- Disable cost if necessary
 
 	if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_INVDET.UNIT_COST")) then
-		callpoint!.setColumnEnabled("OPE_INVDET.UNIT_COST", 0)
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 0)
 	endif
 
 rem --- Set enable/disable based on line type
@@ -742,7 +742,7 @@ rem --- Set enable/disable based on line type
 rem --- Disable Shipped?
 
 	if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" then
-		callpoint!.setColumnEnabled("OPE_INVDET.QTY_SHIPPED", 0)
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_SHIPPED", 0)
 	endif
 
 rem --- Set item tax flag
@@ -978,8 +978,13 @@ rem --- Check item/warehouse combination and setup values
 		gosub set_avail
 		callpoint!.setColumnData("OPE_INVDET.UNIT_COST", ivm02a.unit_cost$)
 		callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC", ivm02a.cur_price$)
-		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", ivm01a.product_type$)
+		if pos(user_tpl.line_prod_type_pr$="DN")=0
+			callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", ivm01a.product_type$)
+		endif
 		user_tpl.item_price = ivm02a.cur_price
+		if pos(user_tpl.line_type$="SP") and num(ivm02a.unit_cost$)<>0 and (user_tpl.line_dropship$<>"Y" or user_tpl.dropship_cost$<>"Y")
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST",0)
+		endif
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPE_INVDET.ADIS]]
@@ -1385,13 +1390,16 @@ print "Det: in uncommit_iv"; rem deebug
 
 rem ==========================================================================
 disable_by_linetype: rem --- Set enable/disable based on line type
-                     rem --- These work from the CALLPOINT enable in the form
-                     rem      IN: line_code$
+	rem --- <<CALLPOINT>> enable in item#, memo, ordered qty, price, shipped and ext price fields on form handles enable/disable
+	rem --- 	based strictly on line type, via the callpoint!.sertStatus("ENABLE:"+opc_linecode.line_type$) command.
+	rem --- Unit cost, product tp and backordered qty are enabled/disabled directly in callpoint code based on additional conditions.		
+	rem      IN: line_code$
 rem ==========================================================================
 
 	user_tpl.line_type$ = ""
 	user_tpl.line_taxable$ = ""
 	user_tpl.line_dropship$ = ""
+	user_tpl.line_prod_type_pr$ = ""
 	start_block = 1
 
 	if cvs(line_code$,2) <> "" then
@@ -1405,50 +1413,54 @@ rem ==========================================================================
 			user_tpl.line_type$     = opc_linecode.line_type$
 			user_tpl.line_taxable$  = opc_linecode.taxable_flag$
 			user_tpl.line_dropship$ = opc_linecode.dropship$
+			user_tpl.line_prod_type_pr$ = opc_linecode.prod_type_pr$
 		endif
 	endif
 
 rem --- Disable / enable unit cost
 
 	if pos(user_tpl.line_type$="NSP") = 0 then
-		callpoint!.setColumnEnabled("OPE_INVDET.UNIT_COST", 0)
+		rem --- always disable cost if line type Memo or Other
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 0)
 	else
-		if user_tpl.line_dropship$ = "Y" and user_tpl.dropship_cost$ = "N" then
-			callpoint!.setColumnEnabled("OPE_INVDET.UNIT_COST", 0)
+		if user_tpl.line_dropship$ = "Y"
+			if user_tpl.dropship_cost$ = "N" then
+				rem --- if a drop-shippable line code, but enter codst on drop-ship param isn't set, disable, else enable cost
+				callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 0)
+			else
+				callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 1)
+			endif
 		else
-			if pos(user_tpl.line_type$="SP") and num(callpoint!.getColumnData("OPE_INVDET.UNIT_COST")) = 0
-				callpoint!.setColumnEnabled("OPE_INVDET.UNIT_COST", 0)
+			if user_tpl.line_type$="N"
+				rem --- always have cost enabled for Nonstock
+				callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 1)
+			else
+				rem --- Standard or sPecial line
+				rem --- note: when item id is entered, cost will get disabled in that AVAL if S or P and cost <> 0
+				callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST", 0)
 			endif
 		endif
 	endif
 
 rem --- Product Type Processing
 
-	if cvs(line_code$,2) <> "" then
-		if opc_linecode.prod_type_pr$ <> "E" then
-			callpoint!.setColumnEnabled("OPE_INVDET.PRODUCT_TYPE", 0)
-			util.disableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
-
-			if opc_linecode.prod_type_pr$ = "D" then
-				callpoint!.setTableColumnAttribute("OPE_INVDET.PRODUCT_TYPE","DFLT", opc_linecode.product_type$)
-			endif	
+	if cvs(line_code$,2) <> "" 
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.PRODUCT_TYPE", 0)
+		if opc_linecode.prod_type_pr$ = "E" 
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.PRODUCT_TYPE", 1)
 		endif
-	else
-		callpoint!.setColumnEnabled("OPE_INVDET.PRODUCT_TYPE", user_tpl.prod_type_col)
-		util.enableGridCell(Form!, user_tpl.prod_type_col, callpoint!.getValidRow())
 	endif
 
 rem --- Disable Back orders if necessary
 
 	if user_tpl.allow_bo$ = "N"        or
 :		pos(user_tpl.line_type$ = "MO") or
-:		callpoint!.getHeaderColumnData("OPE_INVHDR.CASH_SALE") = "Y"
-:	then
-		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
-		util.disableGridCell(Form!, user_tpl.bo_col, callpoint!.getValidRow())
+:		callpoint!.getHeaderColumnData("OPE_INVHDR.CASH_SALE") = "Y" or
+:		callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" 
+
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 0)
 	else
-		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 1)
-		util.enableGridCell(Form!, user_tpl.bo_col, callpoint!.getValidRow())
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 1)
 	endif
 
 	return
@@ -1640,9 +1652,9 @@ rem ==========================================================================
 :		callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" or
 :		user_tpl.is_cash_sale
 :	then
-		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 0)
 	else
-		callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 1)
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 1)
 
 		rem if user_tpl.new_detail then...
 
@@ -1718,3 +1730,12 @@ rem --- Has line code changed?
 rem --- Disable / Enable Backorder
 
 	gosub able_backorder
+
+rem --- set Product Type if indicated by line code record
+
+	if opc_linecode.prod_type_pr$ = "D" 
+		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", opc_linecode.product_type$)
+	endif	
+	if opc_linecode.prod_type_pr$ = "N"
+		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", "")
+	endif
