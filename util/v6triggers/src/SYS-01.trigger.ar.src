@@ -68,7 +68,7 @@ rem		goto return_default
 							sys01$=sys01$+"vend_size:c(2),max_size:c(2*=10),mult_types:c(1),"
 							sys01$=sys01$+"mult_dist:c(1),ret:c(1),cash:c(1),hold_zero:c(1),"
 							sys01$=sys01$+"check_seq:c(1),check_memo:c(1),stub_dist:c(1),"
-							sys01$=sys01$+"zip_size:c(1),labels:c(6):misc:c(1),bank_rec:c(1),"
+							sys01$=sys01$+"zip_size:c(1),labels:c(6),misc:c(1),bank_rec:c(1),"
 							sys01$=sys01$+"post_closed:c(1),auto_num:c(1),reserved_1:c(1),"
 							sys01$=sys01$+"repl:c(1),comm_start:c(2),comm_end:c(2),reserved_2:c(10*=10),"
 							sys01$=sys01$+"cur_per:c(2),cur_yr:c(2*=10),vend_mask:c(10*=10),"
@@ -80,15 +80,39 @@ rem		goto return_default
 							system_dev=unt
 							open (system_dev,err=throw_error)apdir$+filename$
 							read record(system_dev,key=ky$,dom=return_default)tpl$
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","AP","I",acct_mask_in$,acct_mask$,0,acctlen,"N"
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","AP","A","",amt_mask$,0,0,"N"
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","AP","U","",unit_mask$,0,0,"N"
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","AP","R","",rate_mask$,0,0,"N"
 							sys01.firm_id$=tpl.firm_id$
 							sys01.type$=tpl.ap$
 							sys01.zero$=tpl.sequence_00$
-							sys01.vend_in_mask$=tpl.vendor_input$
-							sys01.vend_size$=tpl.vendor_size$
+							sys01.vend_in_mask$=acct_mask_in$
+							sys01.vend_size$=str(acctlen)
 							sys01.max_size$=tpl.max_vendor_len$
 							sys01.mult_types$=tpl.multi_types$
-							sys01.mult_dist=tpl.multi_dist$
+							sys01.mult_dist$=tpl.multi_dist$
 							sys01.ret$=tpl.ret_flag$
+							sys01.cash$=tpl.cash_basis$
+							sys01.hold_zero$=tpl.hold_zero$
+							sys01.check_seq$=tpl.ap_check_seq$
+							sys01.check_memo$=tpl.ap_chk_memo$
+							sys01.stub_dist$=tpl.ap_chk_dist$
+							sys01.zip_size$=tpl.zip_length$
+							sys01.labels$=tpl.label_across$+tpl.label_length$+tpl.label_width$
+							sys01.misc$=tpl.misc_entry$
+							sys01.bank_rec$=tpl.br_interface$
+							sys01.post_closed$=tpl.post_closed$
+							sys01.auto_num$=tpl.auto_no$
+							sys01.repl$=tpl.use_replen$
+							sys01.comm_start$=tpl.beg_cmt_line$
+							sys01.comm_end$=tpl.end_cmt_line$
+							sys01.cur_per$=tpl.current_per$
+							sys01.cur_yr$=fnyy$(tpl.current_year$(3,2))
+							sys01.vend_mask$=acct_mask$
+							sys01.amt_mask$=amt_mask$
+							sys01.unit_mask$=unit_mask$
+							sys01.rate_mask$=rate_mask$
 							return_default$="N"
 							break
 						case ky$(5,2)="01"
@@ -98,8 +122,6 @@ rem		goto return_default
 						case default
 							break
 					swend
-				case ky$(3,2) = "AR"
-					break
 				case ky$(3,2) = "GL"
 					switch (BBjAPI().TRUE)
 						case ky$(5,2)="00"
@@ -191,8 +213,7 @@ rem		goto return_default
 						case default
 							break
 					swend
-					break
-				case default:
+				case default
 					break
 			swend
 		endif
