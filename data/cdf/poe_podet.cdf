@@ -1,8 +1,3 @@
-[[POE_PODET.QTY_ORDERED.BINP]]
-if callpoint!.getDevObject("line_type")="O"  
-	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.QTY_ORDERED",0)
-	callpoint!.setFocus("POE_PODET.UNIT_COST")
-endif
 [[POE_PODET.BDEL]]
 rem --- before delete; check to see if this row is disabled (as it will be if there have been any receipts)...if so don't allow delete
 rem --- otherwise, reverse the OO quantity in ivm-02
@@ -382,12 +377,6 @@ rem if cvs(callpoint!.getColumnData("POE_PODET.WAREHOUSE_ID"),3)="" or cvs(callp
 		callpoint!.setColumnData("POE_PODET.WO_SEQ_REF","")
 
 endif
-
-if callpoint!.getDevObject("line_type")="O" 
-	callpoint!.setColumnData("POE_PODET.QTY_ORDERED","1")
-else
-	callpoint!.setColumnData("POE_PODET.QTY_ORDERED","")
-endif
 [[POE_PODET.ITEM_ID.AVAL]]
 rem --- Item ID - After Column Validataion
 
@@ -406,7 +395,86 @@ update_line_type_info:
 		po_line_code$=callpoint!.getColumnData("POE_PODET.PO_LINE_CODE")
 	endif
 	read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
-	callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
+
+rem --- Manually enable/disable fields based on Line Type
+
+rem	callpoint!.setStatus("ENABLE:"+poc_linecode.line_type$)
+	switch pos(poc_linecode.line_type$="SNOMV")
+		case 1; rem Standard
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NS_ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ITEM_ID",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ORDER_MEMO",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_MEASURE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.CONV_FACTOR",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.QTY_ORDERED",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_COST",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.LOCATION",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.REQD_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PROMISE_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NOT_B4_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PO_MSG_CODE",1)
+			break
+		case 2; rem Non-stock
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NS_ITEM_ID",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ORDER_MEMO",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_MEASURE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.CONV_FACTOR",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.QTY_ORDERED",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_COST",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.LOCATION",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.REQD_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PROMISE_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NOT_B4_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PO_MSG_CODE",1)
+			break
+		case 3; rem Other
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NS_ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ORDER_MEMO",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_MEASURE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.CONV_FACTOR",0)
+			callpoint!.setColumnData("POE_PODET.QTY_ORDERED","1")
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.QTY_ORDERED",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_COST",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.LOCATION",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.REQD_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PROMISE_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NOT_B4_DATE",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PO_MSG_CODE",1)
+			callpoint!.setStatus("REFGRID")
+			break
+		case 4; rem Memo
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NS_ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ORDER_MEMO",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_MEASURE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.CONV_FACTOR",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.QTY_ORDERED",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_COST",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.LOCATION",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.REQD_DATE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PROMISE_DATE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NOT_B4_DATE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PO_MSG_CODE",0)
+			break
+		case 5; rem Vendor Part Number
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NS_ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ITEM_ID",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.ORDER_MEMO",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_MEASURE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.CONV_FACTOR",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.QTY_ORDERED",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.UNIT_COST",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.LOCATION",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.REQD_DATE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PROMISE_DATE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.NOT_B4_DATE",0)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"POE_PODET.PO_MSG_CODE",0)
+			break
+		case default; rem everything else
+			break
+	swend
 	callpoint!.setDevObject("line_type",poc_linecode.line_type$)
 
 return
