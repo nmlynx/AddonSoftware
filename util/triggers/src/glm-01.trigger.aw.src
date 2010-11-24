@@ -1,0 +1,59 @@
+rem after write
+rem This trigger assumes that it is being used in a non-modified Barista and Addon
+rem Version 6 environment. If there have been any modifications to these systems,
+rem be sure to thoroughly examine this trigger and test changes.
+
+	setopts $080872202c2e$
+
+	seterr throw_error
+
+rem ---  Get the Trigger object from the BBj File System
+
+    td! = BBjAPI().getFileSystem().getTriggerData()
+
+	gl_rec$="firm_id:c(2),gl_account:c(10*=10),gl_acct_desc:c(35),gl_acct_type:c(1),"
+	gl_rec$=gl_rec$+"detail_flag:c(1),reserved_1:c(27*=10)"
+	dim gl_rec$:gl_rec$
+	
+	gl_rec$=td!.getWriteBuffer()
+
+rem --- Open v6 G/L Master file and Sort files
+
+	aon_data$=stbl("+V6DATA",err=std_exit)
+	glm01_dev=unt
+	open (glm01_dev,err=throw_error) aon_data$+"GLM-01"
+	glm04_dev=unt
+	open (glm04_dev,err=throw_error) aon_data$+"GLM-04"
+
+	glm01_rec$="firm_id:c(2),gl_account:c(10*=10),gl_acct_desc:c(35),gl_acct_type:c(1),"
+	glm01_rec$=glm01_rec$+"detail_flag:c(1),reserved_1:c(3*=10)"
+	dim glm01_rec$:glm01_rec$
+
+	glm04_rec$="firm_id:c(2),rec_id:c(1),gl_acct_desc:c(35),gl_account:c(10)"
+	dim glm04_rec$:glm04_rec$
+
+rem --- Set data in output record
+
+	glm01_rec.firm_id$=gl_rec.firm_id$
+	glm01_rec.gl_account$=gl_rec.gl_account$
+	glm01_rec.gl_acct_desc$=gl_rec.gl_acct_desc$
+	glm01_rec.gl_acct_type$=gl_rec.gl_acct_type$
+	glm01_rec.detail_flag$=gl_rec.detail_flag$
+	glm01_rec$=field(glm01_rec$)
+	write record (glm01_dev,key=glm01_rec.firm_id$+glm01_rec.gl_account$) glm01_rec$+$0a$
+	
+	glm04_rec.firm_id$=gl_rec.firm_id$
+	glm04_rec.rec_id$="A"
+	glm04_rec.gl_acct_desc$=gl_rec.gl_acct_desc$
+	glm04_rec.gl_account$=gl_rec.gl_account$
+	glm04_rec$=field(glm04_rec$)
+	write record (glm04_dev,key=glm04_rec$) glm04_rec$
+
+	goto std_exit
+
+throw_error:
+
+	throw lst(pgm(tcb(5))) , err
+	goto std_exit
+	
+std_exit:
