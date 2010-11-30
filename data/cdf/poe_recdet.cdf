@@ -667,6 +667,7 @@ validate_whse_item:
 		if num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR"))=0 then callpoint!.setColumnData("POE_RECDET.CONV_FACTOR",str(1))
 		if cvs(callpoint!.getColumnData("POE_RECDET.LOCATION"),2)="" then callpoint!.setColumnData("POE_RECDET.LOCATION","STOCK")
 		callpoint!.setColumnData("POE_RECDET.UNIT_COST",str(num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR"))*ivm_itemwhse.unit_cost))
+		callpoint!.setStatus("REFRESH")
 	endif
 return
 	

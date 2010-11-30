@@ -327,7 +327,6 @@ validate_whse_item:
 	endif
 	
 	if change_flag and cvs(item_id$,2)<>"" then
-rem	if cvs(item_id$,2)<>"" then
 		read record (ivm_itemwhse_dev,key=firm_id$+whse$+item_id$,knum="PRIMARY",dom=missing_warehouse) ivm_itemwhse$
 		ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 		dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
@@ -337,6 +336,7 @@ rem	if cvs(item_id$,2)<>"" then
 		if num(callpoint!.getColumnData("POE_REQDET.CONV_FACTOR"))=0 then callpoint!.setColumnData("POE_REQDET.CONV_FACTOR",str(1))
 		if cvs(callpoint!.getColumnData("POE_REQDET.LOCATION"),2)="" then callpoint!.setColumnData("POE_REQDET.LOCATION","STOCK")
 		callpoint!.setColumnData("POE_REQDET.UNIT_COST",str(num(callpoint!.getColumnData("POE_REQDET.CONV_FACTOR"))*ivm_itemwhse.unit_cost))
+		callpoint!.setStatus("REFRESH")
 	endif
 return
 		
