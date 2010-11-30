@@ -163,6 +163,10 @@ rem  */
             
                 rem --- create new directory if it doesn't exist
                 if(! target!.exists()) then
+                    target!.setExecutable(true)
+                    target!.setWritable(true)
+                    target!.setReadable(true)
+                    target!.mkdirs()
                     target!.mkdirs()
                 endif
 
@@ -319,6 +323,10 @@ rem  */
             declare File logDir!
             logDir! = new File(logDir$)
             if(! logDir!.exists()) then
+                logDir!.setExecutable(true)
+                logDir!.setWritable(true)
+                logDir!.setReadable(true)
+                logDir!.mkdirs()
                 logDir!.mkdirs()
             endif
 

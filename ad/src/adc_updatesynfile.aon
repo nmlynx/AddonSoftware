@@ -554,6 +554,9 @@ open_log:rem --- Open log file
     declare File logDir!
     logDir! = new File(logDir$)
     if(! logDir!.exists()) then
+        logDir!.setExecutable(true)
+        logDir!.setWriteable(true)
+        logDir!.setReadable(true)
         logDir!.mkdirs()
     endif
 
