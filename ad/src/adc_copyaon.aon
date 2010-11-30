@@ -129,7 +129,7 @@ rem  */
         rem  * @param BBjInt helpFile
         rem  */
         method public void copyAonDirectory(BBjString oldLocation$, BBjString newLocation$, BBjInt skipDataFiles%, BBjInt helpFile%)
-            if skipDataFiles then meter_total_recs = 2000
+            if skipDataFiles then #meter_total_recs = 2000
             #meter! = #createProgressMeter()
             #openLog(skipDataFiles, oldLocation$, newLocation$)
 
