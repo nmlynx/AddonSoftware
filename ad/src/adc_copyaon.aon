@@ -163,11 +163,10 @@ rem  */
             
                 rem --- create new directory if it doesn't exist
                 if(! target!.exists()) then
-                    target!.setExecutable(true)
-                    target!.setWritable(true)
-                    target!.setReadable(true)
                     target!.mkdirs()
-                    target!.mkdirs()
+                    target!.setExecutable(1,0)
+                    target!.setWritable(1,0)
+                    target!.setReadable(1,0)
                 endif
 
                 rem --- get list of what is in the source dir, and process it
@@ -318,16 +317,26 @@ rem  */
         rem  */
         method private void openLog(BBjNumber skipDataFiles, BBjString oldLocation$, BBjString newLocation$)
             logDir$ = newLocation$ + "/logs"
+            appDir$ = newLocation$
+
+            rem --- create top-level directory (aon) at new location, and make sure it's writable
+            declare File appDir!
+            appDir! = new File(appDir$)
+            if (! appDir!.exists()) then
+                appDir!.mkdirs()
+                appDir!.setExecutable(1,0)
+                appDir!.setReadable(1,0)
+                appDir!.setWritable(1,0)
+            endif
             
             rem --- create logs directory at new location
             declare File logDir!
             logDir! = new File(logDir$)
             if(! logDir!.exists()) then
-                logDir!.setExecutable(true)
-                logDir!.setWritable(true)
-                logDir!.setReadable(true)
                 logDir!.mkdirs()
-                logDir!.mkdirs()
+                logDir!.setExecutable(1,0)
+                logDir!.setWritable(1,0)
+                logDir!.setReadable(1,0)
             endif
 
             rem --- create and open log file
