@@ -348,6 +348,12 @@ endif
 callpoint!.setDevObject("qty_this_row",0)
 callpoint!.setDevObject("cost_this_row",0)
 
+rem --- set dates from Header
+
+callpoint!.setColumnData("POE_PODET.NOT_B4_DATE",callpoint!.getHeaderColumnData("POE_POHDR.NOT_B4_DATE"))
+callpoint!.setColumnData("POE_PODET.REQD_DATE",callpoint!.getHeaderColumnData("POE_POHDR.REQD_DATE"))
+callpoint!.setColumnData("POE_PODET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_POHDR.PROMISE_DATE"))
+
 callpoint!.setFocus(num(callpoint!.getValidationRow()),"POE_PODET.PO_LINE_CODE")
 [[POE_PODET.WAREHOUSE_ID.AVAL]]
 rem --- Warehouse ID - After Validataion
