@@ -18,6 +18,6 @@ SYS-01 System Control
 
 +Barista/Addon triggers currently defined for Payroll:
 
-In addition, there is one trigger that should be placed on the Barista/Addon database.  The .trigger file should be placed in the same directory as the Barista/Addon data files, and the corresponding .src files should be placed in a src directory directly underneath the Barista/Addon data directory.
+In addition, there is one trigger that should be placed on the Barista/Addon database.  The .trigger file should be placed in the same directory as the corresponding Barista/Addon data files, and the related .src files should be placed in a src directory directly underneath the Barista/Addon data directory.
 
 GLM-01 Account Master
