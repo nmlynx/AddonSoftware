@@ -376,6 +376,9 @@ callpoint!.setColumnData("POE_PODET.REQD_DATE",callpoint!.getHeaderColumnData("P
 callpoint!.setColumnData("POE_PODET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_POHDR.PROMISE_DATE"))
 
 callpoint!.setFocus(num(callpoint!.getValidationRow()),"POE_PODET.PO_LINE_CODE")
+
+rem --- Make sure new grid row is enabled
+util.enableGridRow(Form!,num(callpoint!.getValidationRow()))
 [[POE_PODET.WAREHOUSE_ID.AVAL]]
 rem --- Warehouse ID - After Validataion
 rem --- this code was already here... is it right?

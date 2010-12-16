@@ -1,3 +1,6 @@
+[[POE_INVSEL.AREC]]
+rem --- Make sure new grid row is enabled
+util.enableGridRow(Form!,num(callpoint!.getValidationRow()))
 [[POE_INVSEL.AGDR]]
 rem --- don't allow change on existing invsel row... user can delete/add
 util.disableGridRow(Form!,num(callpoint!.getValidationRow()))
