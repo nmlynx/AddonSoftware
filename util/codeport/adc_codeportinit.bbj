@@ -136,7 +136,7 @@ param_check:
     
 rem --- build file and template lists from passed iolists
     for x=1 to iolists
-        let rec$=iolists$[x],p=pos(":"=rec$),rec$=rec$(1,p-1)
+        let rec$=iolists$[x],p=pos(":"=rec$),rec$=pad(rec$(1,p-1),6)
         p=pos("sys"=rec$);if p then goto next_iolist
         if rec$(3,3)="s01" then
             x$=rec$(1,3)+"-"+rec$(4,3)
