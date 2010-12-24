@@ -23,7 +23,7 @@ rem --- Open v6 IV Lot/Serial Master Sort
 	dim ivm08_rec$:ivm08_rec$
 
 rem --- Set data in output record
-escape
+
 	tpl_dev=unt
 	open (tpl_dev,err=throw_error) wkdir$+"ddm_table_tpls.dat"
 	read (tpl_dev,key=pad("IVM_LSMASTER",16),dom=throw_error) *,*,ls_rec$
