@@ -18,7 +18,7 @@ rem --- Given the v6 or 7 tokenized .lbl file, this program uses bbjlst, making 
 
 rem --- From there, this program opens/reads xxx_xx.lst and loads it into a lines$[] array for further text manipulation
 rem --- Control then continues on into adx_codeportlbls and adx_codeporterrs programs, 
-rem ---     where lines$[] array is finally saved as source in outputdir$ as newname$ (xxx_xx plus the extension specified in the option entry form).
+rem ---     where lines$[] array is finally saved as source in outputdir$ as newfile$ (xxx_xx plus the extension specified in the option entry form).
 rem --- Before moving on to next program or at the end, lblfile$ and lstfile$ are removed from outputdir$, leaving only the new source file.
 
 rem --- Initializations
@@ -404,7 +404,7 @@ return
 rem --- Call adc_codeportint.bbx to perform initializations
 initializations: 
     gosub disp_meter
-    let options$[1]=basename$,options$[2]=newname$,options$[3]=when$
+    let options$[1]=basename$,options$[2]=newfile$,options$[3]=when$
     let options$[4]=utility$,options$[5]=version$,options$[6]=arguments$
     call "adc_codeportinit.bbj",action,options$[all],lines$[all],numlines,iolists$[all],iolists
 return 
