@@ -21,8 +21,7 @@ rem --- Recalculate Tax Amount and Totals
 	gosub calculate_tax
 	gosub disp_totals
 
-rem --- Unremark this next line if we ever get around to fixing bug 4797 which blocks 4753 which this line should solve
-rem	callpoint!.setFocus("OPE_INVHDR.DISCOUNT_AMT")
+	callpoint!.setFocus("OPE_INVHDR.DISCOUNT_AMT")
 [[OPE_INVHDR.FREIGHT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
 
@@ -1229,7 +1228,7 @@ rem --- Display customer
 	custdet_dev = fnget_dev("ARM_CUSTDET")
 	dim custdet_tpl$:fnget_tpl$("ARM_CUSTDET")
 
-	find record (custdet_dev, key=firm_id$+cust_id$+"  ") custdet_tpl$
+	find record (custdet_dev, key=firm_id$+cust_id$+"  ",dom=*next) custdet_tpl$
 
 rem --- Set customer in OrderHelper object
 
@@ -1284,7 +1283,7 @@ rem ==========================================================================
 
 	custmast_dev = fnget_dev("ARM_CUSTMAST")
 	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
-	find record (custmast_dev, key=firm_id$+cust_id$) custmast_tpl$
+	find record (custmast_dev, key=firm_id$+cust_id$,dom=*next) custmast_tpl$
 
 	callpoint!.setColumnData("<<DISPLAY>>.BADD1",  custmast_tpl.addr_line_1$)
 	callpoint!.setColumnData("<<DISPLAY>>.BADD2",  custmast_tpl.addr_line_2$)
@@ -1304,7 +1303,7 @@ rem ==========================================================================
 	custdet_dev = fnget_dev("ARM_CUSTDET")
 	dim custdet_tpl$:fnget_tpl$("ARM_CUSTDET")
 
-	find record (custdet_dev, key=firm_id$+cust_id$+"  ") custdet_tpl$
+	find record (custdet_dev, key=firm_id$+cust_id$+"  ",dom=*next) custdet_tpl$
 
 	user_tpl.balance = custdet_tpl.aging_future+
 :		custdet_tpl.aging_cur+
@@ -2120,7 +2119,7 @@ rem ==========================================================================
 	custmast_dev = fnget_dev("ARM_CUSTMAST")
 	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
 	cust_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	find record (custmast_dev, key=firm_id$+cust_id$) custmast_tpl$
+	find record (custmast_dev, key=firm_id$+cust_id$,dom=*next) custmast_tpl$
 
 	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
