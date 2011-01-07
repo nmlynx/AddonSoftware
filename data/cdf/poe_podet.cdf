@@ -375,7 +375,7 @@ callpoint!.setColumnData("POE_PODET.NOT_B4_DATE",callpoint!.getHeaderColumnData(
 callpoint!.setColumnData("POE_PODET.REQD_DATE",callpoint!.getHeaderColumnData("POE_POHDR.REQD_DATE"))
 callpoint!.setColumnData("POE_PODET.PROMISE_DATE",callpoint!.getHeaderColumnData("POE_POHDR.PROMISE_DATE"))
 
-callpoint!.setFocus(num(callpoint!.getValidationRow()),"POE_PODET.PO_LINE_CODE")
+rem forced focus removed when bug 3999 fixed.CAH callpoint!.setFocus(num(callpoint!.getValidationRow()),"POE_PODET.PO_LINE_CODE")
 
 rem --- Make sure new grid row is enabled
 util.enableGridRow(Form!,num(callpoint!.getValidationRow()))

@@ -706,9 +706,9 @@ rem --- Buttons start disabled
 	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("ADDL",0)
 
-rem --- Force focus on Line Code since Barista is skipping it
+rem --- Force focus on Line Code since Barista is skipping it (rem'd since Barista bug 3999 fixed)
 
-	callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.LINE_CODE")
+rem	callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.LINE_CODE")
 [[OPE_INVDET.BDEL]]
 print "Det:BDEL"; rem debug
 
