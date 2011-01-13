@@ -161,26 +161,6 @@ rem --- Has a valid whse/item been entered?
 		warn  = 1
 		gosub check_item_whse
 	endif
-[[OPE_ORDDET.UNIT_PRICE.AVEC]]
-rem --- Display totals
-
-if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnUndoData("OPE_ORDDET.UNIT_PRICE"))
-	gosub disp_grid_totals
-[[OPE_ORDDET.QTY_SHIPPED.AVEC]]
-rem --- Display totals
-
-if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_SHIPPED"))
-	gosub disp_grid_totals
-[[OPE_ORDDET.QTY_BACKORD.AVEC]]
-rem --- Display totals
-
-if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_BACKORD"))
-	gosub disp_grid_totals
-[[OPE_ORDDET.EXT_PRICE.AVEC]]
-rem --- Display totals
-
-if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnUndoData("OPE_ORDDET.EXT_PRICE"))
-	gosub disp_grid_totals
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
 print "Det:QTY_ORDERED.AVEC"; rem debug
 
@@ -189,11 +169,6 @@ rem --- Enable buttons
 	gosub able_lot_button
 	gosub enable_repricing
 	gosub enable_addl_opts
-
-rem --- Display totals
-
-if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnUndoData("OPE_ORDDET.QTY_ORDERED"))
-	gosub disp_grid_totals
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
 print "Det:QTY_ORDERED.AVAL"; rem debug
 
@@ -1103,7 +1078,7 @@ rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
 
-	gosub calc_grid_totals
+	gosub calculate_discount
 
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
 	discamt! = UserObj!.getItem(num(callpoint!.getDevObject("disc_amt_disp")))
@@ -1148,8 +1123,6 @@ rem ==========================================================================
 calculate_discount: rem --- Calculate Discount Amount
 rem ==========================================================================
 
-	gosub calc_grid_totals
-
 	disc_code$=callpoint!.getDevObject("disc_code")
 
 	file_name$ = "OPC_DISCCODE"
@@ -1157,11 +1130,18 @@ rem ==========================================================================
 	dim disccode_rec$:fnget_tpl$(file_name$)
 
 	find record (disccode_dev, key=firm_id$+disc_code$, dom=*next) disccode_rec$
-	new_disc_per = disccode_rec.disc_percent
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	if ordHelp!.getInv_type() = "" then
+		ttl_ext_price = 0
+	else
+		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
+	endif
 
 	disc_amt = round(disccode_rec.disc_percent * ttl_ext_price / 100, 2)
-rem if disc_amt = 0 escape;rem jpb ttl_ext_price, disc_code, disccode_rec.disc_percent
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt))
+
+	gosub calc_grid_totals
 
 	return
 
