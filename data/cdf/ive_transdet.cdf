@@ -434,6 +434,7 @@ test_qty: rem --- Test whether the transaction quantity is valid
 rem ==========================================================================
 
 	failed = 0
+	insufficient=0
 	dim msg_tokens$[0]
 	
 	rem --- Can never be zero
@@ -480,7 +481,9 @@ rem ==========================================================================
 :	then
 		msg_id$ = "IV_QTY_OVER_AVAIL"
 		msg_tokens$[0] = str(user_tpl.avail)
+		insufficient=1
 		goto test_qty_err
+		endif
 	endif
 
 	rem --- Check committed
@@ -496,7 +499,11 @@ rem ==========================================================================
 test_qty_err: rem --- Failed
 
 	gosub disp_message
-	failed = 1
+	if insufficient = 1 and pos("PASSVALID"=msg_opt$)<>0
+		failed = 0
+	else
+		failed = 1
+	endif
 
 test_qty_end:
 
@@ -508,6 +515,7 @@ test_ls: rem --- Test whether lot/serial# quantities are valid
 rem ==========================================================================
 
 	failed = 0
+	insufficient=1
 	if !(user_tpl.this_item_lot_or_ser) then goto test_ls_end
 	dim msg_tokens$[0]
 	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
@@ -528,6 +536,7 @@ rem ==========================================================================
 :		abs(trans_qty) > user_tpl.avail 
 :	then
 		msg_id$ = "IV_QTY_OVER_AVAIL"
+		insufficient=1
 		msg_tokens$[0] = str( user_tpl.avail )
 		goto test_ls_err
 	endif
@@ -555,7 +564,11 @@ rem ==========================================================================
 test_ls_err: rem --- Failed
 
 	gosub disp_message
-	failed = 1
+	if insufficient=1 and pos("PASSVALID"=msg_opt$)<>0
+		failed = 0
+	else
+		failed = 1
+	endif
 
 test_ls_end:
 
