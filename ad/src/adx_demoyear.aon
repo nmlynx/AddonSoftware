@@ -138,13 +138,19 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
             continue
         endif
         
-        sql_prep$="SELECT dd_table_alias, dd_dvar_name, dd_col_occurs FROM ddm_table_cols WHERE dd_data_name='" + dataName$ + "' order by dd_table_alias"
         sql_chan=sqlunt
         sqlopen(sql_chan)stbl("+DBNAME")
+        sql_prep$="SELECT dd_table_alias, dd_dvar_name, dd_col_occurs FROM ddm_table_cols WHERE dd_data_name='" + dataName$ + "' order by dd_table_alias"
         sqlprep(sql_chan)sql_prep$
         dim select_tpl$:sqltmpl(sql_chan)
         sqlexec(sql_chan)
 
+        rem --- Initialize once outside of loop
+        sql_chan2=sqlunt
+        sqlopen(sql_chan2)stbl("+DBNAME")
+        files=1,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        
         while 1
             select_tpl$=sqlfetch(sql_chan,err=*break) 
             tableAlias$=select_tpl.dd_table_alias$
@@ -154,8 +160,6 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
             
             rem --- Get attributes for this table
             sql_prep2$="SELECT dd_file_name, dd_alias_type, asc_comp_id, asc_prod_id FROM ddm_tables WHERE dd_table_alias='" + tableAlias$ + "'"
-            sql_chan2=sqlunt
-            sqlopen(sql_chan2)stbl("+DBNAME")
             sqlprep(sql_chan2)sql_prep2$
             dim select_tpl2$:sqltmpl(sql_chan2)
             sqlexec(sql_chan2)
@@ -228,8 +232,6 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
             
             rem --- Create/open new empty file for the updated table, and get it's template
             rem --- Can't use bac_open_tables.bbj because some files may not allow auto create
-            files=1,begfile=1,endfile=files
-            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
             files$[1]=filename$,options$[1]="M",ids$[1]=cvs(tableAlias$,3); rem M=Make if not found regardless of system installation
             call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -306,12 +308,12 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
             rem --- Close channels we're finished with for now
             close(table_dev,err=*next)
             close(tmp_dev,err=*next)
-            sqlclose(sql_chan2,err=*next)
             
             rem --- Erase tmp_file
             erase datdir$+"tmp_"+filename$,err=*next
         wend
         
+        sqlclose(sql_chan2,err=*next)
         sqlclose(sql_chan,err=*next)
         meter_proc_recs=meter_proc_recs+1
     wend
@@ -319,7 +321,7 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
 done: rem --- All done
     
     rem --- Stop progress meter
-                
+                    
     meter_text$=""
     meter_proc_recs=meter_total_recs
     meter_action$="LST-END"
