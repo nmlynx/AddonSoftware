@@ -703,6 +703,14 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 [[OPE_INVDET.AGRN]]
 print "Det:AGRN"; rem debug
 
+rem --- Disable Line Code if existing record
+
+	if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) = ""
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.LINE_CODE", 0)
+	else
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.LINE_CODE", 1)
+	endif
+
 rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
 
 rem --- Disable by line type (Needed because Barista is skipping Line Code)
