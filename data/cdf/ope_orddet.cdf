@@ -738,6 +738,14 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 [[OPE_ORDDET.AGRN]]
 rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
 
+rem --- Disable Line Code if existing record
+
+	if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) = ""
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.LINE_CODE", 0)
+	else
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.LINE_CODE", 1)
+	endif
+
 rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
 	rem --- now AREC is forcing focus on Line Code
