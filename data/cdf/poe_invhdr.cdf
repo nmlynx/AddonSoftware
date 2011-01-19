@@ -345,6 +345,7 @@ if callpoint!.getDevObject("retention")="N"
 endif
 callpoint!.setOptionEnabled("INVD",0)
 callpoint!.setOptionEnabled("GDIS",0)
+callpoint!.setOptionEnabled("INVB",0)
 [[POE_INVHDR.<CUSTOM>]]
 vendor_info: rem --- get and display Vendor Information
 	apm01_dev=fnget_dev("APM_VENDMAST")
