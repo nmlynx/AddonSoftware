@@ -231,20 +231,12 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
             endif
             
             rem --- Create/open new empty file for the updated table, and get it's template
-            rem --- Can't use bac_open_tables.bbj because some files may not allow auto create
-            files$[1]=filename$,options$[1]="M",ids$[1]=cvs(tableAlias$,3); rem M=Make if not found regardless of system installation
-            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-            if status
-                rem --- Log progress
-                meter_action$="MTR-LST"
-                gosub disp_meter
-                print(log_dev)meter_text$+" error, cannot create new file"
-                
-                continue
-            endif
-            table_dev=channels[1]
-            dim table_tpl$:templates$[1]
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1] = cvs(tableAlias$,3), open_opts$[1] = "OTA"
+            gosub open_tables
+            table_dev = num(open_chans$[1])
+            dim table_tpl$:open_tpls$[1]
             
             rem --- Log progress
             meter_text$=cvs(dataName$,3)+": "+cvs(tableAlias$,3)+"."+cvs(dvarName$,3)
@@ -306,7 +298,8 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
             wend
 
             rem --- Close channels we're finished with for now
-            close(table_dev,err=*next)
+            open_tables$[1] = cvs(tableAlias$,3), open_opts$[1] = "CX"
+            gosub open_tables
             close(tmp_dev,err=*next)
             
             rem --- Erase tmp_file
