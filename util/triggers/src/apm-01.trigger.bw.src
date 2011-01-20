@@ -87,6 +87,9 @@ rem --- Functions
 
 	rem --- Pack CCYYMMDD into a 3 character version 6 date format
 	def fnpackdate$(q$)
+		if len(q$)<> 8 or cvs(q$,3)=""
+			return "   "
+		endif
 		m1$=chr(num(q$(5,2))+32)
 		d1$=chr(num(q$(7,2))+32)
 		if q$(1,2)="19"
