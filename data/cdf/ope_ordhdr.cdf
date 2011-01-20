@@ -1522,14 +1522,15 @@ rem ==========================================================================
 			ope01_dev = fnget_dev("OPE_ORDHDR")
 			dim ope01a$:fnget_tpl$("OPE_ORDHDR")
 			call stbl("+DIR_PGM")+"adc_copyfile.aon",opt01a$,ope01a$,status
-
 			ope01a.ar_inv_no$      = ""
 			ope01a.backord_flag$   = ""
 			ope01a.comm_amt        = ope01a.comm_amt*line_sign
 			ope01a.customer_po_no$ = ""
 			ope01a.discount_amt    = ope01a.discount_amt*line_sign
+			callpoint!.setDevObject("disc_amt",str(ope01a.discount_amt))
 			ope01a.expire_date$    = ""
 			ope01a.freight_amt     = ope01a.freight_amt*line_sign
+			callpoint!.setDevObject("frt_amt",str(ope01a.freight_amt))
 			ope01a.invoice_date$   = user_tpl.def_ship$
 			ope01a.invoice_type$   = "S"
 			ope01a.lock_status$ = "N"

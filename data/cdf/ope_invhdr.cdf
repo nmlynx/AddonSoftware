@@ -3,9 +3,17 @@ rem --- Discount Amount cannot exceed Total Sales Amount
 
 	disc_amt = num(callpoint!.getUserInput())
 	total_sales = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
-	if disc_amt > total_sales then
-		disc_amt = total_sales
-		callpoint!.setUserInput(str(disc_amt))
+
+	if total_sales > 0
+		if disc_amt > total_sales then
+			disc_amt = total_sales
+			callpoint!.setUserInput(str(disc_amt))
+		endif
+	else
+		if disc_amt < total_sales then
+			disc_amt = total_sales
+			callpoint!.setUserInput(str(disc_amt))
+		endif
 	endif
 
 rem --- Recalculate Tax Amount and Totals
@@ -1699,8 +1707,10 @@ rem ==========================================================================
 			ope01a.comm_amt        = ope01a.comm_amt*line_sign
 			ope01a.customer_po_no$ = ""
 			ope01a.discount_amt    = ope01a.discount_amt*line_sign
+			callpoint!.setDevObject("disc_amt",str(ope01a.discount_amt))
 			ope01a.expire_date$    = ""
 			ope01a.freight_amt     = ope01a.freight_amt*line_sign
+			callpoint!.setDevObject("frt_amt",str(ope01a.freight_amt))
 			ope01a.invoice_date$   = user_tpl.def_ship$
 			ope01a.invoice_type$   = "S"
 			ope01a.lock_status$ = "N"
