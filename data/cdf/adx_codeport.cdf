@@ -119,16 +119,22 @@ rem --- source_dir$ is incoming
   	open(source_dir_dev)source_dir$
 
  	gridVect!=SysGUI!.makeVector()
+	all_files$=""
 	recs_found=0
 
 	while 1
 		readrecord(source_dir_dev,end=*break)dir_file$
 		if pos("."=dir_file$)=1 then continue	
 		if pos("/"=dir_file$)<>0 then continue
-		gridVect!.addItem("")
-		gridVect!.addItem(dir_file$)
-		recs_found=recs_found+1
+		all_files$=all_files$+pad(dir_file$,10)
 	wend
+
+	all_files$=ssort(all_files$,10)
+	for xwk=0 to len(all_files$)-1 step 10
+		gridVect!.addItem("");rem for checkbox
+		gridVect!.addItem(cvs(all_files$(xwk+1,10),3))
+		recs_found=recs_found+1
+	next xwk
 
 	gridFiles!=callpoint!.getDevObject("gridFiles")
 	gridFiles!.setNumRows(0)
