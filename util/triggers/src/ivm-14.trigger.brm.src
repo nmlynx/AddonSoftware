@@ -14,28 +14,27 @@ rem ---  Get the Trigger object from the BBj File System
 	aon_dir$=stbl("+V6DATA",err=std_exit)
 	wkdir$=stbl("+DIR_BRD",err=std_exit)
 
-rem --- Open v6 IV Lot/Serial Master Sort
+rem --- Open v6 IV Synonym table
 
-	ivm08_dev=unt
-	open (ivm08_dev,err=throw_error) aon_dir$+"IVM-08"
+	ivm14_dev=unt
+	open (ivm14_dev,err=throw_error) aon_dir$+"IVM-14"
 
-	ivm08_rec$="firm_id:c(2),lotser_no:c(20),warehouse_id:c(2),item_id:c(20)"
-	dim ivm08_rec$:ivm08_rec$
+	ivm14_rec$="firm_id:c(2),item_synonym:c(20),item_id:c(20)"
+	dim ivm14_rec$:ivm14_rec$
 
 rem --- Set data in output record
 
 	tpl_dev=unt
 	open (tpl_dev,err=throw_error) wkdir$+"ddm_table_tpls.dat"
-	read (tpl_dev,key=pad("IVM_LSMASTER",16),dom=throw_error) *,*,ls_rec$
-	dim ls_key$:ls_rec$
+	read (tpl_dev,key=pad("IVM_ITEMSYN",16),dom=throw_error) *,*,syn_rec$
+	dim syn_key$:syn_rec$
 	
-	ls_key$=td!.getKey()+$0a$
-	
-	ivm08_rec.firm_id$=ls_key.firm_id$
-	ivm08_rec.lotser_no$=ls_key.lotser_no$
-	ivm08_rec.warehouse_id$=ls_key.warehouse_id$
-	ivm08_rec.item_id$=ls_key.item_id$
-	remove (ivm08_dev,key=ivm08_rec$,dom=*next)
+	syn_key$=td!.getKey()+$0a$
+
+	ivm14_rec.firm_id$=syn_key.firm_id$
+	ivm14_rec.item_synonym$=syn_key.item_synonym$
+	ivm14_rec.item_id$=syn_key.item_id$
+	remove (ivm14_dev,key=ivm14_rec$,dom=*next)
 	
 	goto std_exit
 
