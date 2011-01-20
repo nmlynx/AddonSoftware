@@ -19,6 +19,7 @@ rem ---  Get the Trigger object from the BBj File System
 	apdir$ = myns!.getValue("apdata")
 	ardir$ = myns!.getValue("ardata")
 	gldir$ = myns!.getValue("gldata")
+	ivdir$ = myns!.getValue("ivdata")
 	pgmdir$ = myns!.getValue("pgmdir")
 	
 	x$=stbl("+SYSINFO_TPL",myns!.getValue("sysinfo_tpl"))
@@ -292,6 +293,71 @@ rem		goto return_default
 							sys01.amt_mask$=amt_mask$
 							sys01.unit_mask$=unit_mask$
 							sys01.pct_mask$=pct_mask$
+							return_default$="N"
+							break
+						case default
+							break
+					swend
+					break
+				case default
+					break
+				case ky$(3,2) = "IV"
+					switch (BBjAPI().TRUE)
+						case ky$(5,2)="00"
+							sys01$="firm_id:c(2),type:c(2),zero:c(2*=10),item_mask_in:c(15*=10),"
+							sys01$=sys01$+"item_size:c(2),vend_prod_size:c(2),precision:c(1),"
+							sys01$=sys01$+"reserved_1:c(1),lot_len:c(2),desc1_len:c(2),desc2_len:c(2),"
+							sys01$=sys01$+"desc3_len:c(2),desc1:c(12),desc2:c(12),desc3:c(12),"
+							sys01$=sys01$+"desc1_mast:c(1),desc2_mast:c(1),desc3_mast:c(1*=10),mult_wh:c(1),"
+							sys01$=sys01$+"reserved_2:c(1),lf_code:c(1),reserved_3:c(2),wh_id:c(2),"
+							sys01$=sys01$+"cost_method:c(1),auto_num_flag:c(1),labels_across:c(2),"
+							sys01$=sys01$+"labels_vert:c(2),labels_horiz:c(2),reserved_4:c(1),"
+							sys01$=sys01$+"lot_ser:c(1),reserved_5:c(3*=10),"
+							sys01$=sys01$+"cur_per:c(2),cur_yr:c(2*=10),item_mask:c(10*=10),"
+							sys01$=sys01$+"amt_mask:c(15*=10),unit_mask:c(12*=10),cost_mask:c(12*=10),"
+							sys01$=sys01$+"rate_mask:c(12*=10)"
+							dim sys01$:sys01$
+							alias$="IVS_PARAMS"
+							filename$="ivs_params"
+							gosub get_template
+							system_dev=unt
+							open (system_dev,err=throw_error)ivdir$+filename$
+							read record(system_dev,key=ky$,dom=return_default)tpl$
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","IV","A","",amt_mask$,0,0,"N"
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","IV","U","",unit_mask$,0,0,"N"
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","IV","C","",cost_mask$,0,0,"N"
+							call pgmdir$+"adc_getmask.aon::enter_with_flag","","IV","R","",rate_mask$,0,0,"N"
+							sys01.firm_id$=tpl.firm_id$
+							sys01.type$="IV"
+							sys01.zero$="00"
+							sys01.item_size$=tpl.item_id_len$
+							sys01.vend_prod_size$=tpl.vendor_prd_len$
+							sys01.precision$=tpl.precision$
+							sys01.lot_len$=tpl.ls_no_len$
+							sys01.desc1_len$=tpl.desc_len_01$
+							sys01.desc2_len$=tpl.desc_len_02$
+							sys01.desc3_len$=tpl.desc_len_03$
+							sys01.desc1$=tpl.user_desc_lb_01$
+							sys01.desc2$=tpl.user_desc_lb_02$
+							sys01.desc3$=tpl.user_desc_lb_03$
+							sys01.desc1_mast$=tpl.master_flag_01$
+							sys01.desc2_mast$=tpl.master_flag_02$
+							sys01.desc3_mast$=tpl.master_flag_03$
+							sys01.mult_wh$=tpl.multi_whse$
+							sys01.lf_code$=tpl.lifofifo$
+							sys01.wh_id$=tpl.warehouse_id$
+							sys01.cost_method$=tpl.cost_method$
+							sys01.auto_num_flag$=tpl.auto_no_iv$
+							sys01.labels_across$=tpl.label_across$
+							sys01.labels_vert$=tpl.label_length$
+							sys01.labels_horiz$=tpl.label_width$
+							sys01.lot_ser$=tpl.lotser_flag$
+							sys01.cur_per$=tpl.current_per$
+							sys01.cur_yr$=fnyy$(tpl.current_year$(3,2))
+							sys01.amt_mask$=amt_mask$
+							sys01.unit_mask$=unit_mask$
+							sys01.cost_mask$=cost_mask$
+							sys01.rate_mask$=rate_mask$
 							return_default$="N"
 							break
 						case default
