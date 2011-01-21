@@ -1476,18 +1476,19 @@ on_invoice:
 
 	msg_id$="ORD_ON_REG"
 	gosub disp_message
-
-	locked=1
-	callpoint!.setStatus("ABORT")
-
+	if pos("PASSVALID"=msg_opt$)=0
+		locked=1
+		callpoint!.setStatus("ABORT")
+	endif
 	goto end_lock
 
 update_stat:
 
 	msg_id$="INVOICE_IN_UPDATE"
 	gosub disp_message
-	locked=1
-
+	if pos("PASSVALID"=msg_opt$)=0
+		locked=1
+	endif
 
 end_lock:
 
