@@ -205,6 +205,16 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
             endif
             close(test_dev)
             
+            rem --- Skip if date must remain constant
+            if filename$="ADM_VATRATES_DTL"
+                rem --- Log progress
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$+" skipped, dates must remain constant"
+                
+                continue
+            endif
+            
             rem --- Rename file to tmp_file
             error=1
             rename datdir$+filename$ to "tmp_"+filename$,err=*next; error=0
