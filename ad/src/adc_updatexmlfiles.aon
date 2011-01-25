@@ -202,7 +202,7 @@ rem  */
         
             rem --- Validate directory
             if dir! = null() or !dir!.exists() or !dir!.isDirectory() or dir!.list() = null()
-                exit
+                methodret
             endif
             
             declare Vector fileVector!
@@ -222,7 +222,7 @@ rem  */
                 for i=0 to fileVector!.size()-1
                     name$ = cast(BBjString, fileVector!.get(i))
                     xml! = new File(dir!, name$)
-        
+                    
                     rem --- update adm_modules~*.xml files (consolidated and non-consolidated)
                     if cast(BBjString, name$).matches("adm_modules~\[01007514..\]\.xml") or
 :                      cast(BBjString, name$).matches("adm_modules~01007514..\.xml")
