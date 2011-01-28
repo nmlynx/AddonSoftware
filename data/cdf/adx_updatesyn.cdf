@@ -58,6 +58,7 @@ rem --- Get new version from SYS line of download addon.syn file
 	synChan=unt
 	open(synChan,isz=-1, err=file_not_found)download_loc$ + "/config/addon.syn"
 
+    synVersion$ = "0000"
 	while 1
 		read(synChan,end=*break)record$
 		rem --- locate SYS line
@@ -68,12 +69,21 @@ rem --- Get new version from SYS line of download addon.syn file
 			startPos = pos(start$=record$)
 			end$ = " - "
 			endPos = pos(end$=record$(startPos + startLen))
-			synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
-			rem -- remove decimal point
-			dotPos = pos("."=synVersion$)
-			if(dotPos) then
-				synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
-			endif
+            if startPos>0 and endPos>0
+                parsed=1
+                synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
+                rem -- remove decimal point
+                dotPos = pos("."=synVersion$)
+                if(dotPos) then
+                    synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
+                endif
+				rem --- Replace blanks with underscores
+				pos=pos(" "=synVersion$)
+				while pos
+					synVersion$=synVersion$(1, pos-1)+"_"+synVersion$(pos+1)
+					pos=pos(" "=synVersion$)
+				wend
+            endif
 			break
 		endif
 	wend

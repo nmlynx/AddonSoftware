@@ -509,6 +509,12 @@ get_syn_version: rem --- Get version from SYS line in addon.syn file
                 if(dotPos) then
                     synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
                 endif
+				rem --- Replace blanks with underscores
+				pos=pos(" "=synVersion$)
+				while pos
+					synVersion$=synVersion$(1, pos-1)+"_"+synVersion$(pos+1)
+					pos=pos(" "=synVersion$)
+				wend
             endif
             break
         endif
