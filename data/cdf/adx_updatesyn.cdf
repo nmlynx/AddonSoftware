@@ -1,3 +1,7 @@
+[[ADX_UPDATESYN.BSHO]]
+rem --- Initialize update source syn file value so can tell later if it's been changed
+
+	callpoint!.setDevObject("prev_update_syn_file","")
 [[ADX_UPDATESYN.OLD_SYN_FILE.AVAL]]
 rem --- Validate old syn file
 
@@ -10,7 +14,10 @@ rem --- Validate update syn file
 	gosub validate_update_syn
 
 rem --- Set defaults for data STBLs
-	if success
+	if success and cvs(update_syn$,3)<>cvs(callpoint!.getDevObject("prev_update_syn_file"),3)
+		rem --- Capture update source syn file value so can tell later if it's been changed
+		callpoint!.setDevObject("prev_update_syn_file",update_syn$)
+
 		pos=pos("\"=update_syn$)
 		while pos
 			update_syn$=update_syn$(1, pos-1)+"/"+update_syn$(pos+1)
@@ -21,30 +28,18 @@ rem --- Set defaults for data STBLs
 		if pos("/config/"=update_syn$)
 			path$=update_syn$(1, pos("/config/"=update_syn$)-1)
 
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.ADDATA"),3)="" 
-			callpoint!.setColumnData("ADX_UPDATESYN.ADDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.APDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.APDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.ARDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.ARDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.BMDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.BMDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.GLDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.GLDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.IVDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.IVDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.MPDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.MPDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.OPDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.OPDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.PODATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.PODATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.PRDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.PRDATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.SADATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.SADATA",path$+"/data/")
-		if cvs(callpoint!.getColumnData("ADX_UPDATESYN.SFDATA"),3)=""
-			callpoint!.setColumnData("ADX_UPDATESYN.SFDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.ADDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.APDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.ARDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.BMDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.GLDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.IVDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.MPDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.OPDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.PODATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.PRDATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.SADATA",path$+"/data/")
+		callpoint!.setColumnData("ADX_UPDATESYN.SFDATA",path$+"/data/")
 
 		callpoint!.setStatus("REFRESH")
 	endif
