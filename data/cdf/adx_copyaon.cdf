@@ -52,6 +52,8 @@ file_not_found:
 [[ADX_COPYAON.<CUSTOM>]]
 validate_aon_dir: rem --- Validate directory for aon new install location
 
+	abort=0
+
 	rem --- Remove trailing slashes (/ and \) from aon new install location
 
 	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
@@ -72,6 +74,7 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 		callpoint!.setColumnData("ADX_COPYAON.NEW_INSTALL_LOC", new_loc$)
 		callpoint!.setFocus("ADX_COPYAON.NEW_INSTALL_LOC")
 		callpoint!.setStatus("ABORT")
+		abort=1
 		return
 	endif
 
@@ -93,6 +96,7 @@ location_used:
 	callpoint!.setColumnData("ADX_COPYAON.NEW_INSTALL_LOC", new_loc$)
 	callpoint!.setFocus("ADX_COPYAON.NEW_INSTALL_LOC")
 	callpoint!.setStatus("ABORT")
+	abort=1
 
 	return
 
@@ -121,6 +125,7 @@ rem --- Validate directory for aon new install location
 	new_loc$ = callpoint!.getColumnData("ADX_COPYAON.NEW_INSTALL_LOC")
 	gosub validate_aon_dir
 	callpoint!.setColumnData("ADX_COPYAON.NEW_INSTALL_LOC", new_loc$)
+	if abort then callpoint!.setStatus("ABORT")
 [[ADX_COPYAON.NEW_INSTALL_LOC.AVAL]]
 rem --- Validate directory for aon new install location
 

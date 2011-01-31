@@ -117,7 +117,7 @@ validate_update_syn: rem --- Validate update syn file
 
 	testFile$=update_syn$
 	gosub verify_syn_file_ext
-	if msg_opt$="C"
+	if !syn_ok
 		callpoint!.setFocus("ADX_UPDATESYN.UPDATE_SYN_FILE")
 		callpoint!.setStatus("ABORT")
 		return
@@ -139,6 +139,8 @@ validate_update_syn: rem --- Validate update syn file
 
 validate_old_syn: rem --- Validate old syn file
 
+	success=0
+
 	rem --- File must exist
 
 	testFile$=old_syn$
@@ -149,11 +151,11 @@ validate_old_syn: rem --- Validate old syn file
 		return
 	endif
 
-	rem --- File should end with .syn extension
+	rem --- File must end with .syn extension
 
 	testFile$=old_syn$
 	gosub verify_syn_file_ext
-	if msg_opt$="C"
+	if !syn_ok
 		callpoint!.setFocus("ADX_UPDATESYN.OLD_SYN_FILE")
 		callpoint!.setStatus("ABORT")
 		return
@@ -168,6 +170,8 @@ validate_old_syn: rem --- Validate old syn file
 		callpoint!.setStatus("ABORT")
 		return
 	endif
+
+	success=1
 
 	return
 
@@ -192,12 +196,13 @@ file_missing:
 
 verify_syn_file_ext: rem --- Verify file extension is .syn
 
-	msg_opt$=""
+	syn_ok=1
 	if len(testFile$)<4 or testFile$(len(testFile$)-3)<>".syn"
 		msg_id$="AD_WRONG_FILE_EXT"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=".syn"
 		gosub disp_message
+		syn_ok=0
 	endif
 
 	return
@@ -226,10 +231,12 @@ rem --- Validate update syn file
 
 	update_syn$ = callpoint!.getColumnData("ADX_UPDATESYN.UPDATE_SYN_FILE")
 	gosub validate_update_syn
+	if !success then callpoint!.setStatus("ABORT")
 
 rem --- Validate old syn file
 
 	if num(callpoint!.getColumnData("ADX_UPDATESYN.UPGRADE"))
 		old_syn$ = callpoint!.getColumnData("ADX_UPDATESYN.OLD_SYN_FILE")
 		gosub validate_old_syn
+		if !success then callpoint!.setStatus("ABORT")
 	endif
