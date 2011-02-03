@@ -78,14 +78,9 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 		return
 	endif
 
-	rem --- Cannot be currently used by Barista/Addon
+	rem --- Cannot be currently used by Addon
 
 	testChan=unt
-	open(testChan, err=test_file_2)new_loc$ + "/barista/sys"
-	close(testChan)
-	goto location_used
-
-test_file_2:
 	open(testChan, err=*return)new_loc$ + "/aon/data"
 	close(testChan)
 
