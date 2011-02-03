@@ -321,7 +321,7 @@ rem --- Set product types for certain line types
 [[OPE_ORDDET.EXT_PRICE.AVAL]]
 rem --- Round 
 
-	if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnData("OPE_ORDDET.EXT.PRICE"))
+	if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
 		callpoint!.setUserInput( str(round( num(callpoint!.getUserInput()), 2)) )
 	endif
 [[OPE_ORDDET.WAREHOUSE_ID.AVEC]]
