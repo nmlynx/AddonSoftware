@@ -10,13 +10,12 @@ REM ========================================================================
 REM USE and Declares
 REM ========================================================================
     
-    chdir "../demos/DigitalDashboard/"
     
-    use ::../Common/BBjAreaChart.bbj::BBjAreaChart
-    use ::../Common/BBjDialChart.bbj::BBjDialChart
-    use ::../Common/BBjGaugeChart.bbj::BBjGaugeChart
-    use ::../Common/BBjImageManipulator.bbj::BBjImageManipulator
-    use ::../Workbench/UIManager.bbj::UIManager
+    use ::BBjAreaChart.bbj::BBjAreaChart
+    use ::BBjDialChart.bbj::BBjDialChart
+    use ::BBjGaugeChart.bbj::BBjGaugeChart
+    use ::BBjImageManipulator.bbj::BBjImageManipulator
+    use ::UIManager.bbj::UIManager
     
     use org.jfree.data.category.DefaultCategoryDataset
     use org.jfree.chart.JFreeChart
@@ -54,6 +53,17 @@ REM Common information
 REM ========================================================================
 
     REM set environment
+
+    REM add to the prefix to find the graphic controls custom objects
+    bbjhome$ = System.getProperty("basis.BBjHome") + "/"
+    imageshome$ = bbjhome$ + "demos/DigitalDashboard/images/"
+    location1$ = bbjhome$  + "demos/Common/"
+    if pos(" " = location1$) <> 0 then location1$ = chr(34) + location1$ + chr(34)
+    location2$ = bbjhome$ + "demos/Workbench/"
+    if pos(" " = location2$) <> 0 then location2$ = chr(34) + location2$ + chr(34)
+    prefix$ = pfx
+    prefix$ = prefix$ + " " + location1$ + " " + location2$
+    prefix prefix$
     
     REM Open the BBj SysGUI Channel
     sysgui!=BBjAPI().openSysGui("X0") 
@@ -117,7 +127,7 @@ REM ========================================================================
     label!.setFont(font!)
     inputDStart! = win!.addInputD(win!.getAvailableControlID(), 105, 10, 80, 20, $$, "%Yl-%Mz-%Dz", "", jul(year,month,startDay), jul(year,month,startDay))
     inputDStart!.setFont(font!)
-    buttonStartLookup! = win!.addButton(win!.getAvailableControlID(), 190, 7, 26, 26, "BITMAP=" + dsk("")+ dir("") + "images/binoculars.png")
+    buttonStartLookup! = win!.addButton(win!.getAvailableControlID(), 190, 7, 26, 26, "BITMAP=" + imageshome$ + "binoculars.png")
     buttonStartLookup!.setFont(font!)
     buttonStartLookup!.setCallback(buttonStartLookup!.ON_BUTTON_PUSH, "SELECT_START_DATE")
 
@@ -125,7 +135,7 @@ REM ========================================================================
     label!.setFont(font!)
     inputDFinish! = win!.addInputD(win!.getAvailableControlID(), 330, 10, 80, 20, $$, "%Yl-%Mz-%Dz", "", 0, jul(year,month,endDay))
     inputDFinish!.setFont(font!)
-    buttonFinishLookup! = win!.addButton(win!.getAvailableControlID(), 415, 7, 26, 26, "BITMAP=" + dsk("")+ dir("") + "images/binoculars.png")
+    buttonFinishLookup! = win!.addButton(win!.getAvailableControlID(), 415, 7, 26, 26, "BITMAP=" + imageshome$ + "binoculars.png")
     buttonFinishLookup!.setFont(font!)
     buttonFinishLookup!.setCallback(buttonFinishLookup!.ON_BUTTON_PUSH, "SELECT_FINISH_DATE")
 
@@ -143,37 +153,37 @@ REM ========================================================================
     buttonQueryDatabase! = win!.addButton(win!.getAvailableControlID(), winWidth - 185, 5, 175, 65, "Query DB")
     imageScaleFactor = .9
     imageSize = int(imageScaleFactor * buttonQueryDatabase!.getHeight())
-    imageManip! = new BBjImageManipulator(dsk("")+ dir("") + "images/querydatabase.png")
+    imageManip! = new BBjImageManipulator(imageshome$ + "querydatabase.png")
     buttonQueryDatabase!.setImage(imageManip!.getScaledImagePreserveAspectRatio(imageSize,0))
     buttonQueryDatabase!.setFont(font!)
     buttonQueryDatabase!.setCallback(buttonQueryDatabase!.ON_BUTTON_PUSH, "QUERY_DATABASE")
  
-    buttonChartPie! = win!.addButton(win!.getAvailableControlID(), 495, 5, 50, 30, "BITMAP=" + dsk("")+ dir("") + "images/piechart0.png")
+    buttonChartPie! = win!.addButton(win!.getAvailableControlID(), 495, 5, 50, 30, "BITMAP=" + imageshome$ + "piechart0.png")
     buttonChartPie!.setName("piechart")
     buttonChartPie!.setCallback(buttonChartPie!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartPie!.setCallback(buttonChartPie!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartPie!.setCallback(buttonChartPie!.ON_BUTTON_PUSH, "MOUSE_CLICK")
-    buttonChartLine! = win!.addButton(win!.getAvailableControlID(), 555, 5, 50, 30, "BITMAP=" + dsk("")+ dir("") + "images/linechart0.png")
+    buttonChartLine! = win!.addButton(win!.getAvailableControlID(), 555, 5, 50, 30, "BITMAP=" + imageshome$ + "linechart0.png")
     buttonChartLine!.setName("linechart")
     buttonChartLine!.setCallback(buttonChartLine!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartLine!.setCallback(buttonChartLine!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartLine!.setCallback(buttonChartLine!.ON_BUTTON_PUSH, "MOUSE_CLICK")
-    buttonChartBar! = win!.addButton(win!.getAvailableControlID(), 615, 5, 50, 30, "BITMAP=" + dsk("")+ dir("") + "images/barchart0.png")
+    buttonChartBar! = win!.addButton(win!.getAvailableControlID(), 615, 5, 50, 30, "BITMAP=" + imageshome$ + "barchart0.png")
     buttonChartBar!.setName("barchart")
     buttonChartBar!.setCallback(buttonChartBar!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartBar!.setCallback(buttonChartBar!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartBar!.setCallback(buttonChartBar!.ON_BUTTON_PUSH, "MOUSE_CLICK")
-    buttonChartDial! = win!.addButton(win!.getAvailableControlID(), 495, 40, 50, 30, "BITMAP=" + dsk("")+ dir("") + "images/dialchart0.png")
+    buttonChartDial! = win!.addButton(win!.getAvailableControlID(), 495, 40, 50, 30, "BITMAP=" + imageshome$ + "dialchart0.png")
     buttonChartDial!.setName("dialchart")
     buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartDial!.setCallback(buttonChartDial!.ON_BUTTON_PUSH, "MOUSE_CLICK")
-    buttonChartGauge! = win!.addButton(win!.getAvailableControlID(), 555, 40, 50, 30, "BITMAP=" + dsk("")+ dir("") + "images/gaugechart0.png")
+    buttonChartGauge! = win!.addButton(win!.getAvailableControlID(), 555, 40, 50, 30, "BITMAP=" + imageshome$ + "gaugechart0.png")
     buttonChartGauge!.setName("gaugechart")
     buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartGauge!.setCallback(buttonChartGauge!.ON_BUTTON_PUSH, "MOUSE_CLICK")
-    buttonChartArea! = win!.addButton(win!.getAvailableControlID(), 615, 40, 50, 30, "BITMAP=" + dsk("")+ dir("") + "images/areachart0.png")
+    buttonChartArea! = win!.addButton(win!.getAvailableControlID(), 615, 40, 50, 30, "BITMAP=" + imageshome$ + "areachart0.png")
     buttonChartArea!.setName("areachart")
     buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_EXIT, "MOUSE_EXIT")
@@ -211,7 +221,7 @@ MOUSE_ENTER:
     declare BBjServerEvent e!
     e! = sysgui!.getLastEvent()
     control! = e!.getControl()
-    control!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + control!.getName() + "1.png"))
+    control!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ +  control!.getName() + "1.png"))
     return
 
 
@@ -220,7 +230,7 @@ MOUSE_EXIT:
     e! = sysgui!.getLastEvent()
     control! = e!.getControl()
     if currentChartType$ <> control!.getName() then
-        control!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + control!.getName() + "0.png"))
+        control!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + control!.getName() + "0.png"))
     endif
     return
 
@@ -235,12 +245,12 @@ MOUSE_CLICK:
 
 
 SET_CHART_TYPE:
-    buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartLine!.getName() + "0.png"))
-    buttonChartBar!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartBar!.getName() + "0.png"))
-    buttonChartPie!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartPie!.getName() + "0.png"))
-    buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartDial!.getName() + "0.png"))
-    buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartArea!.getName() + "0.png"))
-    buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartGauge!.getName() + "0.png"))
+    buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "0.png"))
+    buttonChartBar!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartBar!.getName() + "0.png"))
+    buttonChartPie!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartPie!.getName() + "0.png"))
+    buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "0.png"))
+    buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "0.png"))
+    buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "0.png"))
     DialChartWindow!.setVisible(0,err=*NEXT)
     AreaChartWindow!.setVisible(0,err=*NEXT)
     BarChartWindow!.setVisible(0,err=*NEXT)
@@ -249,32 +259,32 @@ SET_CHART_TYPE:
     GaugeChartWindow!.setVisible(0,err=*NEXT)
 
     if currentChartType$ = "linechart" then
-        buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartLine!.getName() + "1.png"))
+        buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "1.png"))
         LineChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "barchart" then
-        buttonChartBar!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartBar!.getName() + "1.png"))
+        buttonChartBar!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartBar!.getName() + "1.png"))
         BarChartWindow!.setVisible(1,err=*NEXT)
     endif 
     
     if currentChartType$ = "piechart" then
-        buttonChartPie!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartPie!.getName() + "1.png"))
+        buttonChartPie!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartPie!.getName() + "1.png"))
         PieChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "dialchart" then
-        buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartDial!.getName() + "1.png"))
+        buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "1.png"))
         DialChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "areachart" then
-        buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartArea!.getName() + "1.png"))
+        buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "1.png"))
         AreaChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "gaugechart" then
-        buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(dsk("")+ dir("") + "images/" + buttonChartGauge!.getName() + "1.png"))
+        buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "1.png"))
         GaugeChartWindow!.setVisible(1,err=*NEXT)
     endif
 
