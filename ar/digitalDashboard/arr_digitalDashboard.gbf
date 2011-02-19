@@ -3,8 +3,8 @@ Creation Date=2007-05-30
 Creation Time=6:44:18
 Event Set=LEGACY
 Generator Program=gb_func
-Last Build Date=2011-02-11
-Last Build Time=12:49:0
+Last Build Date=2011-02-18
+Last Build Time=18:53:15
 Precision=99
 Program Name=arr_digitalDashboard
 Remarks=Yes
@@ -12,18 +12,20 @@ Resource File=arr_digitalDashboard.arc
 Show Forms=All
 
 [Init]
-use ::../Workbench/UIManager.bbj::UIManager
-rem declare BBjPieChart pieChart1!
-rem declare BBjBarChart barChart1!
+use ::UIManager.bbj::UIManager
+
 declare BBjTopLevelWindow window!
 declare UIManager uiManager!
 declare BBjListButton year!
 
 REM - modify the standard environment
-    addPrefix$="../demos/Common/"
-    oldPrefix$=pfx
-    newPrefix$=oldPrefix$+" "+addPrefix$
-    prefix newPrefix$
+    REM add to the prefix to find the support custom objects
+    bbjhome$ = System.getProperty("basis.BBjHome") + "/"
+    location$ = bbjhome$ + "demos/Workbench/"
+    if pos(" " = location$) <> 0 then location$ = chr(34) + location$ + chr(34)
+    prefix$ = pfx
+    prefix$ = prefix$ + " " + location$
+    prefix prefix$
 
 REM - Get the window
     window! = cast(BBjTopLevelWindow,BBjAPI().getSysGui().getWindow(0))
