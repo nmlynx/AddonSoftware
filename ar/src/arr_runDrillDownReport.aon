@@ -23,8 +23,10 @@ REM ========================================================================
 REM Common information
 REM ========================================================================
 
-	rem ' set the environment
-	addPrefix$="../utils/reporting/bbjasper/"
+	REM add to the prefix to find the support custom objects needed
+	bbjhome$ = System.getProperty("basis.BBjHome") + "/"
+	addPrefix$=bbjhome$ + "utils/reporting/bbjasper/"
+	if pos(" " = addPrefix$) <> 0 then addPrefix$ = chr(34) + addPrefix$ + chr(34)
 	oldPrefix$=pfx
 	newPrefix$=oldPrefix$+" "+addPrefix$
 	prefix newPrefix$
