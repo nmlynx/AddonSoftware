@@ -122,7 +122,8 @@ rem  */
             if upgrade%
                 rem --- copy non-branded sync xml files from provided location
                 rem --- (aonDir$ path separators already flipped to "/")
-                #copyXmlFiles(new File(syncBackupDir$), new File(aonDir$(1,pos("/"=aonDir$,-1))+"barista/admin_backup"))
+                #copyXmlFiles(new File(syncBackupDir$), new File(aonDir$(1,pos("/"=aonDir$,-1))+"/data/sync")); rem ... pre-v11
+rem ... for v11                #copyXmlFiles(new File(syncBackupDir$), new File(aonDir$(1,pos("/"=aonDir$,-1))+"barista/admin_backup"))
                 rem --- copy branded consolidated (not non-consolidated) sync xml files
                 rem --- (prior to v11.0 branded consolidated sync xml files were in data/sync directory,
                 rem ---  and non-consolidated sync xml files were deleted when consolidated files were created)
@@ -132,7 +133,8 @@ rem  */
                 if !oldBackupDir!.exists() or !oldBackupDir!.isDirectory()
                     oldBackupDir! = new File(oldSyncLoc$)
                 endif
-                #copyXmlFiles(oldBackupDir!, new File(aonDir$ + "/data/admin_backup"))
+                #copyXmlFiles(oldBackupDir!, new File(aonDir$ + "/data/sync")); rem ... pre-v11
+rem ... for v11                #copyXmlFiles(oldBackupDir!, new File(aonDir$ + "/data/admin_backup"))
             endif
             
             rem --- update xml files in data/sync dir
