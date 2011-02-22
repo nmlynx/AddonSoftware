@@ -1,3 +1,6 @@
+[[OPE_INVDET.LINE_CODE.AVEC]]
+rem --- Line code may not be displayed correctly when selected via arrow key instead of mouse
+	callpoint!.setStatus("REFRESH:LINE_CODE")
 [[OPE_INVDET.ITEM_ID.AINV]]
 rem --- Item synonym processing
 
