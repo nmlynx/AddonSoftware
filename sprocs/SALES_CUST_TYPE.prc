@@ -23,8 +23,40 @@ sql$ = sql$ + "WHERE t1.firm_id = '" + firm_id$ + "' AND SUBSTRING(t1.INVOICE_DA
 sql$ = sql$ + "GROUP BY t2.CUSTOMER_TYPE, t3.CODE_DESC "
 sql$ = sql$ + "ORDER BY total_sales DESC "
 
+rem ' build database url and open sql channel
+dbserver$="localhost"
+dbsqlport$=":2001"
+dbtimeout$="&socket_timeout=5000"
+
+dbserver$=stbl("+DBSERVER",err=*next)
+dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+dbssl=num(stbl("+DBSSL",err=*next))
+dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
+
+if dbssl
+	dbssl$="&ssl=true"
+else
+	dbssl$="&ssl=false"
+endif
+
+url_user$="&user=guest"
+if stbl("!DSUDDB",err=*endif)<>"" then
+	url_user$=""
+endif
+
+dbname$ = stbl("+DBNAME")
+dbname_api$ = stbl("+DBNAME_API")
+if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+	url$ = dbname$
+else
+	if pos("jdbc:"=cvs(dbname$,8))=1 then			
+		url$=dbname$+url_user$
+	else
+		url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+	endif
+endif
 chan = sqlunt
-sqlopen(chan)"AddonSoftware"
+sqlopen(chan)url$
 sqlprep(chan)sql$
 dim irec$:sqltmpl(chan)
 sqlexec(chan)
