@@ -34,9 +34,38 @@ REM ========================================================================
 	REM Open the BBj SysGUI Channel
 	sysgui!=BBjAPI().openSysGui("X0") 
 
-	REM ' Initialization
-	connectString$ = stbl("+DBNAME")
-	connectString$ = connectString$ + "&user=guest"
+	rem ' build the database URL
+	dbserver$="localhost"
+	dbsqlport$=":2001"
+	dbtimeout$="&socket_timeout=5000"
+
+	dbserver$=stbl("+DBSERVER",err=*next)
+	dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+	dbssl=num(stbl("+DBSSL",err=*next))
+	dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
+
+	if dbssl
+		dbssl$="&ssl=true"
+	else
+		dbssl$="&ssl=false"
+	endif
+
+	url_user$="&user=guest"
+	if stbl("!DSUDDB",err=*endif)<>"" then
+		url_user$=""
+	endif
+
+	dbname$ = stbl("+DBNAME")
+	dbname_api$ = stbl("+DBNAME_API")
+	if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+		url$ = dbname$
+	else
+		if pos("jdbc:"=cvs(dbname$,8))=1 then			
+			url$=dbname$+url_user$
+		else
+			url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+		endif
+	endif
 
 	REM ' get firm and firm name
 	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -168,7 +197,7 @@ startSalesByCustType:
 
 	reportName$ = stbl("+DIR_REPORTS") + "SalesByCustType.jasper"
 
-	BBjReport! = new BBJasperReport(reportName$, connectString$)
+	BBjReport! = new BBJasperReport(reportName$, url$)
 
 	BBjReport!.putParam("FIRM_ID","01")
 
@@ -198,7 +227,7 @@ startSalesCustTypeCust:
 
 	reportName$ = stbl("+DIR_REPORTS") + "SalesCustTypeCust.jasper"
 
-	BBjReport! = new BBJasperReport(reportName$, connectString$)
+	BBjReport! = new BBJasperReport(reportName$, url$)
 
 	month = listbuttonM!.getSelectedIndex()
 	month$ = str(month + 1:"00")
@@ -230,8 +259,8 @@ REM ========================================================================
 startSaleByCustomer:
 
 	reportName$ = stbl("+DIR_REPORTS") + "SalesByCustomer.jasper"
-
-	BBjReport! = new BBJasperReport(reportName$, connectString$)
+	
+	BBjReport! = new BBJasperReport(reportName$, url$)
 
 	month = listbuttonM!.getSelectedIndex()
 	month$ = str(month + 1:"00")
@@ -239,6 +268,9 @@ startSaleByCustomer:
 	year$ = listbuttonY!.getItemAt(year)
 
 	cust_type$ = cvs(listButtonT!.getItemAt(listbuttonT!.getSelectedIndex()),3)
+	ppos = pos(" " = cust_type$)
+	if ppos <> 0 then cust_type$ = cust_type$(1,ppos-1)
+
 	customer$ = cvs(listbuttonC!.getItemAt(listbuttonC!.getSelectedIndex()),3)
 	customer_nbr$ = customer$(1,6)
 	cust_name$ = customer$(8)
@@ -267,7 +299,7 @@ startSalesInvoiceDetails:
 
 	reportName$ = stbl("+DIR_REPORTS") + "SalesInvoiceDetails.jasper"
 
-	BBjReport! = new BBJasperReport(reportName$, connectString$)
+	BBjReport! = new BBJasperReport(reportName$, url$)
 
 	month = listbuttonM!.getSelectedIndex()
 	month$ = str(month + 1:"00")
@@ -275,6 +307,9 @@ startSalesInvoiceDetails:
 	year$ = listbuttonY!.getItemAt(year)
 
 	cust_type$ = cvs(listButtonT!.getItemAt(listbuttonT!.getSelectedIndex()),3)
+	ppos = pos(" " = cust_type$)
+	if ppos <> 0 then cust_type$ = cust_type$(1,ppos-1)
+
 	customer$ = cvs(listbuttonC!.getItemAt(listbuttonC!.getSelectedIndex()),3)
 	customer_nbr$ = customer$(1,6)
 	cust_name$ = customer$(8)
@@ -315,7 +350,7 @@ load_cust_type_list:
 	sql$ = sql$ + "WHERE t1.firm_id = '" + firm_id$ + "' "
 	sql$ = sql$ + "ORDER BY t1.customer_type"
 	
-	rs! = BBJAPI().createSQLRecordSet(connectString$,"",sql$)
+	rs! = BBJAPI().createSQLRecordSet(url$,"",sql$)
 	
 	count = 0
 	listbuttonT!.insertItemAt(count, "None")
@@ -369,7 +404,7 @@ housekeep_customer:
 		sql$ = sql$ + "WHERE t1.firm_id = '" + firm_id$ + "' AND t2.customer_type = '" + cust_type$ + "' "
 		sql$ = sql$ + "ORDER BY t1.customer_id"
 		
-		rs! = BBJAPI().createSQLRecordSet(connectString$,"",sql$)
+		rs! = BBJAPI().createSQLRecordSet(url$,"",sql$)
 	
 		count = 0
 		listbuttonC!.insertItemAt(count, "None")
@@ -428,7 +463,7 @@ housekeep_invoices:
 			sql$ = sql$ + "WHERE t1.firm_id = '" + firm_id$ + "' AND t1.customer_id = '" + customer$ + "' AND SUBSTRING(t1.INVOICE_DATE, 5, 2) = '" + month$ + "' AND SUBSTRING(t1.INVOICE_DATE, 1, 4) = '" + year$ + "' "
 			sql$ = sql$ + "ORDER BY t1.ar_inv_no"
 
-			rs! = BBJAPI().createSQLRecordSet(connectString$,"",sql$)
+			rs! = BBJAPI().createSQLRecordSet(url$,"",sql$)
 
 			count = 0
 			listbuttonI!.insertItemAt(count, "None")
