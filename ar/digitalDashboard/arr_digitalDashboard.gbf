@@ -3,8 +3,8 @@ Creation Date=2007-05-30
 Creation Time=6:44:18
 Event Set=LEGACY
 Generator Program=gb_func
-Last Build Date=2011-02-18
-Last Build Time=18:53:15
+Last Build Date=2011-02-23
+Last Build Time=8:23:33
 Precision=99
 Program Name=arr_digitalDashboard
 Remarks=Yes
@@ -72,10 +72,40 @@ REM - set the year selections
 REM - Open a JDBC connection
     chan = sqlunt
     rem ' ******************************************************
-    rem ' connect string should be in a config file
+    rem ' build the database URL
     rem ' ******************************************************
-    sqlConnectStr$ = stbl("+DBNAME")
-    sqlopen(chan)sqlConnectStr$
+    dbserver$="localhost"
+    dbsqlport$=":2001"
+    dbtimeout$="&socket_timeout=5000"
+  
+    dbserver$=stbl("+DBSERVER",err=*next)
+    dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+    dbssl=num(stbl("+DBSSL",err=*next))
+    dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
+    
+    if dbssl
+        dbssl$="&ssl=true"
+    else
+        dbssl$="&ssl=false"
+    endif
+
+    url_user$="&user=guest"
+    if stbl("!DSUDDB",err=*endif)<>"" then
+        url_user$=""
+    endif
+	
+    dbname$ = stbl("+DBNAME")
+    dbname_api$ = stbl("+DBNAME_API")
+    if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+        url$ = dbname$
+    else
+	if pos("jdbc:"=cvs(dbname$,8))=1 then			
+            url$=dbname$+url_user$
+	else
+            url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+	endif
+    endif
+    sqlopen(chan)url$
 
 REM - create a hashmap for the month names
 
