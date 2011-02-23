@@ -65,20 +65,50 @@ REM ========================================================================
     prefix$ = prefix$ + " " + location1$ + " " + location2$
     prefix prefix$
     
-    REM Open the BBj SysGUI Channel
+    rem ' Open the BBj SysGUI Channel
     sysgui!=BBjAPI().openSysGui("X0") 
 
-    REM ' Initialization
-    dbURL$=stbl("+DBNAME")
+    rem ' set the database URL
+    dbserver$="localhost"
+    dbsqlport$=":2001"
+    dbtimeout$="&socket_timeout=5000"
+  
+    dbserver$=stbl("+DBSERVER",err=*next)
+    dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+    dbssl=num(stbl("+DBSSL",err=*next))
+    dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
+    
+    if dbssl
+        dbssl$="&ssl=true"
+    else
+        dbssl$="&ssl=false"
+    endif
 
-    REM ' get firm and firm name
+    url_user$="&user=guest"
+    if stbl("!DSUDDB",err=*endif)<>"" then
+        url_user$=""
+    endif
+	
+    dbname$ = stbl("+DBNAME")
+    dbname_api$ = stbl("+DBNAME_API")
+    if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+        url$ = dbname$
+    else
+	if pos("jdbc:"=cvs(dbname$,8))=1 then			
+		url$=dbname$+url_user$
+	else
+		url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+	endif
+    endif
+
+    rem ' get firm and firm name
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
     firm_name$=sysinfo.firm_name$
     
-    REM set start and end date
+    rem ' set start and end date
     year = num(date(0:"%Y"))
     month = num(date(0:"%M"))
     startDay = 1
@@ -94,9 +124,9 @@ REM ========================================================================
          endDay = 28
     endif
     
-    REM Database connection string
+    rem ' open sql channel 
     chan = sqlunt
-    sqlopen(chan)dbURL$
+    sqlopen(chan)url$
 
     declare HashMap months!
     months! = new HashMap()
