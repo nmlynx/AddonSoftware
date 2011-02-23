@@ -22,10 +22,41 @@ sql$ = sql$ + "t1.invoice_amt FROM ART_INVHDR t1 "
 sql$ = sql$ + "WHERE firm_id = '" + firm_id$ + "' AND CUSTOMER_ID = '" + customer_nbr$ + "' AND SUBSTRING(t1.INVOICE_DATE, 5, 2) = '" + month$ + "' and SUBSTRING(t1.INVOICE_DATE, 1, 4) = '" +year$ + "' "
 sql$ = sql$ + "ORDER BY t1.ar_inv_no"
 
-connectStr$="AddonSoftware"
+rem ' build the database url
+dbserver$="localhost"
+dbsqlport$=":2001"
+dbtimeout$="&socket_timeout=5000"
+
+dbserver$=stbl("+DBSERVER",err=*next)
+dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+dbssl=num(stbl("+DBSSL",err=*next))
+dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
+
+if dbssl
+	dbssl$="&ssl=true"
+else
+	dbssl$="&ssl=false"
+endif
+
+url_user$="&user=guest"
+if stbl("!DSUDDB",err=*endif)<>"" then
+	url_user$=""
+endif
+
+dbname$ = stbl("+DBNAME")
+dbname_api$ = stbl("+DBNAME_API")
+if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+	url$ = dbname$
+else
+	if pos("jdbc:"=cvs(dbname$,8))=1 then			
+		url$=dbname$+url_user$
+	else
+		url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+	endif
+endif
 mode$="mode=PROCEDURE"
 
-rs! = BBJAPI().createSQLRecordSet(connectStr$,mode$,sql$)
+rs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 
 sp!.setRecordSet(rs!)
 
