@@ -341,7 +341,7 @@ rem  */
 						if(stblMap!.containsKey(stbl$)) then
 							aList! = cast(ArrayList, stblMap!.get(stbl$))
 							target$=cast(BBjString, aList!.get(1))
-							record$ = record$(1, pos("="=record$,2)) + target$
+							record$ = record$(1, pos("="=record$,1,2)) + target$
 						endif
 						break
 					case key$ = "PREFIX"
