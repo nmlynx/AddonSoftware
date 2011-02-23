@@ -366,12 +366,12 @@ rem  */
 					case key$ = "CFG"
 						rem --- replace CFG path with new path for corresponding STBL
 						xpos = pos("="=record$)
-						ypos = pos("="=record$, 2)
+						ypos = pos("="=record$,1,2)
 						stbl$ = record$(xpos+1, ypos - xpos - 1)
 						if(stblMap!.containsKey(stbl$)) then
 							aList! = cast(ArrayList, stblMap!.get(stbl$))
 							target$=cast(BBjString, aList!.get(1))
-							record$ = record$(1, xpos) + target$
+							record$ = record$(1, ypos) + target$
 						endif
 						break
 					case default
