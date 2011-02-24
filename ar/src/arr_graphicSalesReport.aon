@@ -348,8 +348,8 @@ REM ========================================================================
     inputDFinish$ = fnstripdashes$(inputDFinish!.getText())
     
     rem ' load the salepserson list for the given period
-    sql$ = "SELECT T2.SLSPSN_CODE, T3.CODE_DESC AS SLSPSN_NAME, ROUND(SUM(T1.INVOICE_AMT),0) AS TOTAL_SALES "
-    sql$ = sql$ + "FROM ART_INVHDR T1 "
+    sql$ = "SELECT T2.SLSPSN_CODE, T3.CODE_DESC AS SLSPSN_NAME, ROUND(SUM(T1.TOTAL_SALES),0) AS TOTAL_SALES "
+    sql$ = sql$ + "FROM OPT_INVHDR T1 "
     sql$ = sql$ + "INNER JOIN ARM_CUSTDET T2 ON T1.FIRM_ID = T2.FIRM_ID AND T1.CUSTOMER_ID = T2.CUSTOMER_ID "
     sql$ = sql$ + "INNER JOIN ARC_SALECODE T3 ON T2.FIRM_ID = T3.FIRM_ID AND T2.SLSPSN_CODE = T3.SLSPSN_CODE "
     sql$ = sql$ + "WHERE T1.FIRM_ID = '" + firm_id$ + "' AND (T1.INVOICE_DATE BETWEEN '" + inputDStart$ + "' AND '" + inputDFinish$ + "') "
@@ -391,8 +391,8 @@ REM ========================================================================
         salesperson$ = iteratorSalesperson!.next()
 
         REM Contstruct an SQL Query that retrieves total sales for the specified salesperson by date
-	sql$ = "SELECT CAST(INVOICE_DATE AS SQL_CHAR) AS INVDATE, SUM(INVOICE_AMT) AS TOTAL_SALES "
-	sql$ = sql$ + "FROM ART_INVHDR T1 "
+	sql$ = "SELECT CAST(INVOICE_DATE AS SQL_CHAR) AS INVDATE, SUM(TOTAL_SALES) AS TOTAL_SALES "
+	sql$ = sql$ + "FROM OPT_INVHDR T1 "
 	sql$ = sql$ + "INNER JOIN ARM_CUSTDET T2 ON T1.FIRM_ID = T2.FIRM_ID AND T1.CUSTOMER_ID = T2.CUSTOMER_ID "
 	sql$ = sql$ + "WHERE T1.FIRM_ID = '" + firm_id$ + "' AND (T1.INVOICE_DATE BETWEEN '" + inputDStart$ + "' AND '" + inputDFinish$ + "') AND T2.SLSPSN_CODE = '" + salespersonCode!.get(salesperson$+"_code") + "' "
 	sql$ = sql$ + "GROUP BY T1.INVOICE_DATE "
