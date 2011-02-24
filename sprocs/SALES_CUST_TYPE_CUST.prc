@@ -16,7 +16,7 @@ month$ = sp!.getParameter("MONTH")
 year$ = sp!.getParameter("YEAR")
 
 rem ' set up the sql query
-sql$ = "SELECT SUM(t1.invoice_amt) AS total_sales, t1.customer_id, t3.customer_name, t3.contact_name FROM ART_INVHDR t1 "
+sql$ = "SELECT SUM(t1.total_sales) AS total_sales, t1.customer_id, t3.customer_name, t3.contact_name FROM OPT_INVHDR t1 "
 sql$ = sql$ + "INNER JOIN ARM_CUSTDET t2 ON t1.firm_id = t2.firm_id AND t1.customer_id = t2.customer_id "
 sql$ = sql$ + "INNER JOIN ARM_CUSTMAST t3 on t2.firm_id = t3.firm_id AND t2.customer_id = t3.customer_id "
 sql$ = sql$ + "WHERE t1.firm_id = '" + firm_id$ + "' AND t2.customer_type = '" + cust_type$ + "' AND SUBSTRING(t1.INVOICE_DATE, 5, 2) = '" + month$ + "' and SUBSTRING(t1.INVOICE_DATE, 1, 4) = '" + year$ + "' "
