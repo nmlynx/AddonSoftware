@@ -18,7 +18,7 @@ year$ = sp!.getParameter("YEAR")
 rem ' set up the sql query
 sql$ = "SELECT t1.ar_inv_no as ar_inv_nbr, "
 sql$ = sql$ + "CONCAT(CONCAT(CONCAT(CONCAT(SUBSTRING(t1.invoice_date, 5, 2), '/'), SUBSTRING(t1.invoice_date, 7, 2)), '/'), SUBSTRING(t1.invoice_date, 1, 4)) AS invoice_date, "
-sql$ = sql$ + "t1.invoice_amt FROM ART_INVHDR t1 "
+sql$ = sql$ + "t1.total_sales as invoice_amt FROM OPT_INVHDR t1 "
 sql$ = sql$ + "WHERE firm_id = '" + firm_id$ + "' AND CUSTOMER_ID = '" + customer_nbr$ + "' AND SUBSTRING(t1.INVOICE_DATE, 5, 2) = '" + month$ + "' and SUBSTRING(t1.INVOICE_DATE, 1, 4) = '" +year$ + "' "
 sql$ = sql$ + "ORDER BY t1.ar_inv_no"
 
