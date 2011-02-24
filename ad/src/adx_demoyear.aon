@@ -191,8 +191,8 @@ rem --- Query ddm_table_cols table to get aliases of tables where the selected e
 
             rem --- Skip if file not found
             found=0
-            filename$=cvs(fileName$,11)
-            if filename$="" then filename$=cvs(tableAlias$,3)
+            filename$=cvs(fileName$,3)
+            if filename$="" then filename$=cvs(tableAlias$,11)
             test_dev=unt
             open(test_dev,err=*next)datdir$+filename$; found=1
             if !found
