@@ -3,8 +3,8 @@ Creation Date=2007-05-30
 Creation Time=6:44:18
 Event Set=LEGACY
 Generator Program=gb_func
-Last Build Date=2011-02-23
-Last Build Time=8:23:33
+Last Build Date=2011-02-24
+Last Build Time=12:0:48
 Precision=99
 Program Name=arr_digitalDashboard
 Remarks=Yes
@@ -259,8 +259,8 @@ REM - Monthly sales per SalesRep
     SalesRepsA! = new java.util.ArrayList()
 
     rem ' load the salepserson list for the given period
-    sql$ = "SELECT T2.SLSPSN_CODE, T3.CODE_DESC AS SLSPSN_NAME, ROUND(SUM(T1.INVOICE_AMT),0) AS TOTAL "
-    sql$ = sql$ + "FROM ART_INVHDR T1 "
+    sql$ = "SELECT T2.SLSPSN_CODE, T3.CODE_DESC AS SLSPSN_NAME, ROUND(SUM(T1.TOTAL_SALES),0) AS TOTAL "
+    sql$ = sql$ + "FROM OPT_INVHDR T1 "
     sql$ = sql$ + "INNER JOIN ARM_CUSTDET T2 ON T1.FIRM_ID = T2.FIRM_ID AND T1.CUSTOMER_ID = T2.CUSTOMER_ID "
     sql$ = sql$ + "INNER JOIN ARC_SALECODE T3 ON T2.FIRM_ID = T3.FIRM_ID AND T2.SLSPSN_CODE = T3.SLSPSN_CODE "
     sql$ = sql$ + "WHERE T1.FIRM_ID = '" + firm_id$ + "' AND (T1.INVOICE_DATE BETWEEN '" + monthBeginDate$ + "' AND '" + monthEndDate$ + "') "
@@ -306,8 +306,8 @@ REM - Monthly sales per Customer type
     rem ' sql$ = "select trim(first_name) + ' ' + trim(last_name) as name from customer order by cust_num"
 
     rem ' load the customer type list for the given period
-    sql$ = "SELECT t2.CUSTOMER_TYPE, t3.CODE_DESC AS CUST_TYPE_DESC, round(sum(t1.INVOICE_AMT),0) as TOTAL "
-    sql$ = sql$ + "FROM ART_INVHDR t1 "
+    sql$ = "SELECT t2.CUSTOMER_TYPE, t3.CODE_DESC AS CUST_TYPE_DESC, round(sum(t1.TOTAL_SALES),0) as TOTAL "
+    sql$ = sql$ + "FROM OPT_INVHDR t1 "
     sql$ = sql$ + "INNER JOIN ARM_CUSTDET t2 ON t1.FIRM_ID = t2.FIRM_ID and t1.CUSTOMER_ID = t2.CUSTOMER_ID "
     sql$ = sql$ + "INNER JOIN ARC_CUSTTYPE t3 on t2.FIRM_ID = t3.FIRM_ID and t2.CUSTOMER_TYPE = t3.CUSTOMER_TYPE "
     sql$ = sql$ + "WHERE t1.FIRM_ID = '" + firm_id$ + "' and (t1.INVOICE_DATE BETWEEN '" + monthBeginDate$ + "' AND '" + monthEndDate$ + "') "
@@ -342,7 +342,7 @@ REM - Monthly sales per Customer type
 REM - Sales Year To Date
     dim m[12]
 
-    sql$ = "SELECT SUBSTRING(INVOICE_DATE, 5, 2) as MONTH, SUM(INVOICE_AMT) AS TOTAL FROM ART_INVHDR "
+    sql$ = "SELECT SUBSTRING(INVOICE_DATE, 5, 2) as MONTH, SUM(TOTAL_SALES) AS TOTAL FROM OPT_INVHDR "
     sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and (INVOICE_DATE BETWEEN '" + yearStartDate$ + "' AND '" + monthEndDate$ + "') "
     sql$ = sql$ + "GROUP BY SUBSTRING(INVOICE_DATE, 5, 2) ORDER BY MONTH"
     
