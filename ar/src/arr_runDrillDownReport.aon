@@ -459,7 +459,7 @@ housekeep_invoices:
 			year$ = listbuttonY!.getItemAt(year)
 
 			sql$ = "SELECT t1.ar_inv_no as ar_inv_nbr, "
-			sql$ = sql$ + "CONCAT(CONCAT(CONCAT(CONCAT(SUBSTRING(t1.invoice_date, 5, 2), '/'), SUBSTRING(t1.invoice_date, 7, 2)), '/'), SUBSTRING(t1.invoice_date, 1, 4)) AS inv_date FROM ART_INVHDR t1 "
+			sql$ = sql$ + "CONCAT(CONCAT(CONCAT(CONCAT(SUBSTRING(t1.invoice_date, 5, 2), '/'), SUBSTRING(t1.invoice_date, 7, 2)), '/'), SUBSTRING(t1.invoice_date, 1, 4)) AS inv_date FROM OPT_INVHDR t1 "
 			sql$ = sql$ + "WHERE t1.firm_id = '" + firm_id$ + "' AND t1.customer_id = '" + customer$ + "' AND SUBSTRING(t1.INVOICE_DATE, 5, 2) = '" + month$ + "' AND SUBSTRING(t1.INVOICE_DATE, 1, 4) = '" + year$ + "' "
 			sql$ = sql$ + "ORDER BY t1.ar_inv_no"
 
