@@ -11,12 +11,12 @@ rem ==========================================================================
 
 rem --- SOURCESYN$   : Absolute path to the application's current syn file (Input)
 rem --- TARGETSYN$   : Absolute path to the application's syn file being created (Input)
-rem --- STBLMAP!     : HashMap of ArrayLists keyed by STBLs from current syn file (Input)
-rem ---              :     ArrayList (0) = current (source) value of STBL
-rem ---              :     ArrayList (1) = new (target) value of STBL
-rem --- PFXLIST!     : ArrayList (order is important) of ArrayLists of PREFIXs from current syn file (Input)
-rem ---              :     ArrayList (0) = current (source) value of PREFIX
-rem ---              :     ArrayList (1) = new (target) value of PREFIX
+rem --- STBLMAP!     : HashMap of ArrayLists keyed by SYSSTBL/STBLs from current syn file (Input)
+rem ---              :     ArrayList (0) = current (source) value of SYSSTBL/STBL
+rem ---              :     ArrayList (1) = new (target) value of SYSSTBL/STBL
+rem --- PFXLIST!     : ArrayList (order is important) of ArrayLists of SYSPFX/PREFIXs from current syn file (Input)
+rem ---              :     ArrayList (0) = current (source) value of SYSPFX/PREFIX
+rem ---              :     ArrayList (1) = new (target) value of SYSPFX/PREFIX
 rem --- RDFORM!      : Parent BBjTopLevelWindow object, the form (Input)
 rem --- WAIT4OK%     : Wait for user's OK when done, 0=don't wait/1=wait (Input)
 rem --- STATUS       : Status code/0=No error (Returned)
@@ -166,7 +166,7 @@ rem  */
                 target$=cast(BBjString, aList!.get(1))
 				nextSource! = new File(source$)
 				#log("")
-				meter_text$ = "copy STBL: " + key$
+				meter_text$ = "copy SYSSTBL/STBL: " + key$
 				#incrementProgressMeter(meter_text$)
 				#log(meter_text$)
 				rem --- skip if already copied
@@ -185,7 +185,7 @@ rem  */
                 target$=cast(BBjString, aList!.get(1))
 				nextSource! = new File(source$)
 				#log("")
-				meter_text$ = "copy PREFIX: " + source$
+				meter_text$ = "copy SYSPFX/PREFIX: " + source$
 				#incrementProgressMeter(meter_text$)
 				#log(meter_text$)
 				rem --- skip if already copied
@@ -300,7 +300,7 @@ rem  */
         rem /**
         rem  * Update syn file.
         rem  *
-        rem  * Update DIR, APROD, STBL, PREFIX and CFG lines in syn file 
+        rem  * Update SYSDIR/DIR, SYSAPP/APROD, SYSSTBL/STBL, SYSPFX/PREFIX and SYSCFG/CFG lines in syn file 
 		rem  * to point to new directories.
         rem  *
         rem  * @param BBjString synFile$
@@ -321,63 +321,70 @@ rem  */
 			open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")synFile$ + ".tmp"
 			while 1
 				read(sourceChan,end=*break)record$
-                key$ = record$(1, pos("="=record$) - 1)
-				switch (BBjAPI().TRUE)
-					case key$ = "DIR"
-						rem --- replace DIR path with new directory
-						record$ = record$(1, pos("="=record$)) + newDir$
-						break
-					case key$ = "APROD"
-						rem --- update APROD path with new direcotry
-						xpos = pos("/prop/"=record$)
-						tail$ = record$(xpos+1)
-						head$ = record$(1, pos(";"=record$(1, xpos), -1))
-						record$ = head$ + newDir$ + tail$
-						break
-					case key$ = "STBL"
-						rem --- replace STBL path with new path
-						xpos = pos(" "=record$)
-						stbl$ = record$(xpos+1, pos("="=record$(xpos+1)) - 1)
-						if(stblMap!.containsKey(stbl$)) then
-							aList! = cast(ArrayList, stblMap!.get(stbl$))
-							target$=cast(BBjString, aList!.get(1))
-							record$ = record$(1, pos("="=record$,1,2)) + target$
-						endif
-						break
-					case key$ = "PREFIX"
-						rem --- replace PREFIX path with new path
-						xpos = pos("="=record$)
-						path$  = record$(xpos+1)
-						currentPath! = new File(path$)
-						rem --- locate current path in array of PREFIXs, and replace with new path
-						iter!=pfxList!.iterator()
-						while iter!.hasNext()
-							aList! = cast(ArrayList, iter!.next())
-							source$=cast(BBjString, aList!.get(0))
-							target$=cast(BBjString, aList!.get(1))
-							nextPath! = new File(source$)
-							rem --- is this the correct path to replace with?
-							if (nextPath!.getAbsolutePath() = currentPath!.getAbsolutePath())
-								record$ = record$(1, xpos) + target$
-								break
+				if(pos("="=record$)) then
+					key$ = record$(1, pos("="=record$) - 1)
+					switch (BBjAPI().TRUE)
+						case key$ = "DIR"
+						case key$ = "SYSDIR"
+							rem --- replace SYSDIR/DIR path with new directory
+							record$ = record$(1, pos("="=record$)) + newDir$
+							break
+						case key$ = "APROD"
+						case key$ = "SYSAPP"
+							rem --- update SYSAPP/APROD path with new direcotry
+							xpos = pos("/prop/"=record$)
+							tail$ = record$(xpos+1)
+							head$ = record$(1, pos(";"=record$(1, xpos), -1))
+							record$ = head$ + newDir$ + tail$
+							break
+						case key$ = "STBL"
+						case key$ = "SYSSTBL"
+							rem --- replace SYSSTBL/STBL path with new path
+							xpos = pos(" "=record$)
+							stbl$ = record$(xpos+1, pos("="=record$(xpos+1)) - 1)
+							if(stblMap!.containsKey(stbl$)) then
+								aList! = cast(ArrayList, stblMap!.get(stbl$))
+								target$=cast(BBjString, aList!.get(1))
+								record$ = record$(1, pos("="=record$,1,2)) + target$
 							endif
-						wend
-						break
-					case key$ = "CFG"
-						rem --- replace CFG path with new path for corresponding STBL
-						xpos = pos("="=record$)
-						ypos = pos("="=record$,1,2)
-						stbl$ = record$(xpos+1, ypos - xpos - 1)
-						if(stblMap!.containsKey(stbl$)) then
-							aList! = cast(ArrayList, stblMap!.get(stbl$))
-							target$=cast(BBjString, aList!.get(1))
-							record$ = record$(1, ypos) + target$
-						endif
-						break
-					case default
-						rem --- other lines, no change
-						break
-				swend                    
+							break
+						case key$ = "PREFIX"
+						case key$ = "SYSPFX"
+							rem --- replace SYSPFX/PREFIX path with new path
+							xpos = pos("="=record$)
+							path$  = record$(xpos+1)
+							currentPath! = new File(path$)
+							rem --- locate current path in array of PREFIXs, and replace with new path
+							iter!=pfxList!.iterator()
+							while iter!.hasNext()
+								aList! = cast(ArrayList, iter!.next())
+								source$=cast(BBjString, aList!.get(0))
+								target$=cast(BBjString, aList!.get(1))
+								nextPath! = new File(source$)
+								rem --- is this the correct path to replace with?
+								if (nextPath!.getAbsolutePath() = currentPath!.getAbsolutePath())
+									record$ = record$(1, xpos) + target$
+									break
+								endif
+							wend
+							break
+						case key$ = "CFG"
+						case key$ = "SYSCFG"
+							rem --- replace SYSCFG/CFG path with new path for corresponding STBL
+							xpos = pos("="=record$)
+							ypos = pos("="=record$,1,2)
+							stbl$ = record$(xpos+1, ypos - xpos - 1)
+							if(stblMap!.containsKey(stbl$)) then
+								aList! = cast(ArrayList, stblMap!.get(stbl$))
+								target$=cast(BBjString, aList!.get(1))
+								record$ = record$(1, ypos) + target$
+							endif
+							break
+						case default
+							rem --- other lines, no change
+							break
+					swend
+				endif
         
 				write(targetChan)record$
 				#log(record$)

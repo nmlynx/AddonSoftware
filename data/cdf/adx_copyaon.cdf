@@ -1,40 +1,41 @@
 [[ADX_COPYAON.AREC]]
 rem --- Initialize aon new install location
 rem --- Default to /aon_prod/vnnnn (where nnnn=new version)
-rem --- Get new version from SYS line of download addon.syn file
+rem --- Get new version from SYS and SYSCOPY lines of download addon.syn file
 
 	bbjHome$ = System.getProperty("basis.BBjHome")
 	download_loc$ = bbjHome$ + "/apps/aon"
 	synChan=unt
 	open(synChan,isz=-1, err=file_not_found)download_loc$ + "/config/addon.syn"
 
-    synVersion$ = "0000"
+	synVersion$ = "0000"
+	parsed = 0
 	while 1
 		read(synChan,end=*break)record$
-		rem --- locate SYS line
-		if(pos("SYS="=record$) = 1) then
-			rem --- parse version from SYS line
+		rem --- locate SYS and SYSCOPY lines
+		if(pos("SYS="=record$) = 1 or pos("SYSCOPY="=record$) = 1) then
+			rem --- parse version from SYS and SYSCOPY lines
 			start$ = "^Version "
 			startLen = len(start$)
 			startPos = pos(start$=record$)
 			end$ = " - "
 			endPos = pos(end$=record$(startPos + startLen))
-            if startPos>0 and endPos>0
-                parsed=1
-                synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
-                rem -- remove decimal point
-                dotPos = pos("."=synVersion$)
-                if(dotPos) then
-                    synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
-                endif
+			if startPos>0 and endPos>0
+				parsed=1
+				synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
+				rem -- remove decimal point
+				dotPos = pos("."=synVersion$)
+				if(dotPos) then
+					synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
+				endif
 				rem --- Replace blanks with underscores
 				pos=pos(" "=synVersion$)
 				while pos
 					synVersion$=synVersion$(1, pos-1)+"_"+synVersion$(pos+1)
 					pos=pos(" "=synVersion$)
 				wend
-            endif
-			break
+			endif
+			if parsed then break
 		endif
 	wend
 	close(synChan)

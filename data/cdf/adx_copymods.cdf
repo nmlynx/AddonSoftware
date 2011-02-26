@@ -68,14 +68,16 @@ rem --- Build hash of STBL source and target values and array of PREFIX source a
 	numCols=num(callpoint!.getDevObject("def_rpts_cols"))
 
 	for i=0 to vectRows!.size() step numCols
-		if cvs(gridStbls!.getCellText(i/numCols,0),3)="STBL"
+		type$=cvs(gridStbls!.getCellText(i/numCols,0),3)
+
+		if type$="STBL" or type$="SYSSTBL"
 			aList!=new ArrayList()
 			aList!.add(gridStbls!.getCellText(i/numCols,2)); rem --- source value
 			aList!.add(gridStbls!.getCellText(i/numCols,3)); rem --- target value
 			stblMap!.put(gridStbls!.getCellText(i/numCols,1), aList!)
 		endif
 
-		if cvs(gridStbls!.getCellText(i/numCols,0),3)="PREFIX"
+		if type$="PREFIX" or type$="SYSPFX"
 			aList!=new ArrayList()
 			aList!.add(gridStbls!.getCellText(i/numCols,2)); rem --- source value
 			aList!.add(gridStbls!.getCellText(i/numCols,3)); rem --- target value
@@ -112,23 +114,35 @@ rem --- Validate source syn file
 
 		rem --- Set default for target syn file to MODS_DIR/vnnnn/config/MODS_SYN.syn
 		rem --- Get vnnnn from VERSION_ID in the ADM_MODULES table
-		rem --- Where ASC_COMP_ID comes from the ACOMP line of source syn file
-		rem --- And ASC_PROD_ID comes from the APROG line of source syn file
+		rem --- Where ASC_COMP_ID comes from the SYSCOMP/ACOMP line of source syn file
+		rem --- And ASC_PROD_ID comes from the SYSAPP/APROG line of source syn file
 		synVersion$="00",comp_id$="",prod_id$=""
 		synChan=unt
 		open(synChan,isz=-1, err=file_not_found)source_syn$
 		while 1
 			read(synChan,end=*break)record$
-			rem --- locate ACOMP line
-			if(pos("ACOMP="=record$) = 1) then
-				rem --- parse ASC_COMP_ID from ACOMP line
-				comp_id$=record$(7, pos(";"=record$(7))-1)
+			if(pos("="=record$)) then
+				key$=record$(1,pos("="=record$)-1)
+
+				rem --- locate lines to parse
+				switch (BBjAPI().TRUE)
+					case key$ = "ACOMP"
+					case key$ = "SYSCOMP"
+						rem --- parse ASC_COMP_ID from SYSCOMP/ACOMP line
+						xpos=len(key$)+2
+						comp_id$=record$(xpos, pos(";"=record$(xpos))-1)
+						break
+					case key$ = "APROD"
+					case key$ = "SYSAPP"
+						rem --- parse ASC_PROD_ID from SYSAPP/APROD line
+						xpos=len(key$)+2
+						prod_id$=record$(xpos, pos(";"=record$(xpos))-1)
+						break
+					case default
+						break
+				swend                    
 			endif
-			rem --- locate APROD line
-			if(pos("APROD="=record$) = 1) then
-				rem --- parse ASC_PROD_ID from APROD line
-				prod_id$=record$(7, pos(";"=record$(7))-1)
-			endif
+			if comp_id$<>"" and prod_id$<>"" then break
 		wend
 		close(synChan)
 
@@ -275,18 +289,14 @@ create_reports_vector: rem --- Create a vector of STBLs from the source syn file
 	open(synDev,isz=-1,err=*next)testfile$; more=1
 
 	vectRows!=SysGUI!.makeVector()
-	stbLine$="STBL=SET "
-	stbLen=len(stbLine$)
-	pfxLine$="PREFIX="
-	pfxLen=len(pfxLine$)
-
 	while more
 		read(synDev,end=*break)record$
 
-		rem --- process STBL lines
-		if(pos(stbLine$=record$) = 1) then
-			stbl$ = record$(stbLen+1, pos("="=record$(stbLen+1))-1)
-			source_value$=cvs(record$(stbLen+pos("="=record$(stbLen+1))+1),3)
+		rem --- process SYSSTBL/STBL lines
+		if(pos("STBL="=record$) = 1 or pos("SYSSTBL="=record$) = 1) then
+			xpos = pos(" "=record$)
+			stbl$ = record$(xpos+1, pos("="=record$(xpos+1))-1)
+			source_value$=cvs(record$(pos("="=record$,1,2)+1),3)
 			gosub source_target_value
 			vectRows!.addItem("STBL")
 			vectRows!.addItem(stbl$)
@@ -294,9 +304,9 @@ create_reports_vector: rem --- Create a vector of STBLs from the source syn file
 			vectRows!.addItem(target_value$)
 		endif
 
-		rem --- process PREFIX lines
-		if(pos(pfxLine$=record$) = 1) then
-			source_value$=cvs(record$(stbLen+1),3)
+		rem --- process SYSPFX/PREFIX lines
+		if(pos("PREFIX"=record$) = 1 or pos("SYSPFX"=record$) = 1) then
+			source_value$=cvs(record$(pos("="=record$)+1),3)
 			gosub source_target_value
 			vectRows!.addItem("PREFIX")
 			vectRows!.addItem("")

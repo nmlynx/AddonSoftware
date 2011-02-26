@@ -68,12 +68,6 @@ rem --- Get new version from addon.syn file
     newVersion$ = "_v"+synVersion$
 
 rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
-    search$ = "../apps/aon"
-    replace$ = aonDir$
-    stbLine$ = "STBL=SET +"
-    stbLen = len(stbLine$)
-    cfgLine$ = "CFG=+"
-    cfgLen = len(cfgLine$)
     
     rem --- insure unique file name for addon_vnnnn.syn
     oldName$=updateSynFile$
@@ -116,32 +110,37 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     print(log_dev)meter_text$
 
     rem --- copy addon.syn file to addon_vnnnn.syn (where nnnn=new version)
+    search$ = "../apps/aon"
+    replace$ = aonDir$
+
     sourceChan=unt
     open(sourceChan,isz=-1)updateSynFile$
     targetChan=unt
     open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newSynFile$
     while 1
         read(sourceChan,end=*break)record$
+
         rem --- replace "../apps/aon" in paths with aonDir$
         gosub search_replace
 
-        rem --- replace data paths in STBL DATA lines
-        if(pos(stbLine$=record$) = 1) then
-            data$ = record$(stbLen + 1, pos("="=record$(stbLen + 1)) - 1)
-            if(dataMap!.containsKey(data$)) then
-                record$ = stbLine$ + data$ + "=" + cast(BBjString, dataMap!.get(data$))
-                if pos(record$(len(record$))="/\")=0 then record$=record$ +  "/"
-            endif
-        endif
-
-        rem --- replace data paths in CFG DATA lines
-        if(pos(cfgLine$=record$) = 1) then
-            data$ = record$(cfgLen + 1, pos("="=record$(cfgLen + 1)) - 1)
-            if(dataMap!.containsKey(data$)) then
-                record$ = cfgLine$ + data$ + "=" + cast(BBjString, dataMap!.get(data$))
-                if pos(record$(len(record$))="/\")=0 then record$=record$ +  "/"
-            endif
-        endif
+        rem --- replace data paths in specific lines
+		key$ = record$(1, pos("="=record$) - 1)
+		switch (BBjAPI().TRUE)
+			case key$ = "STBL"
+			case key$ = "SYSSTBL"
+			case key$ = "CFG"
+			case key$ = "SYSCFG"
+				rem --- replace data paths in STBL, SYSSTBL, CFG and SYSCFG lines
+				xpos = pos("+"=record$)
+				data$ = record$(xpos + 1, pos("="=record$(xpos + 1)) - 1)
+				if(dataMap!.containsKey(data$)) then
+					record$ = record$(1, xpos) + data$ + "=" + cast(BBjString, dataMap!.get(data$))
+				endif
+				break
+			case default
+				rem --- other lines ... skip
+				break
+		swend                    
         
         write(targetChan)record$
         print(log_dev)record$
@@ -219,57 +218,53 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
         gosub disp_meter
         print(log_dev)meter_text$
         
-        rem --- drop from old .syn HashMap lines that already exist in new addon_vnnn.syn ArrayList
+        rem --- drop unwanted lines from old .syn HashMap and new addon_vnnn.syn ArrayList
         for i=0 to newList!.size()-1
             newRec$ = cast(BBjString, newList!.get(i))
             if(pos("="=newRec$)) then
                 key$ = newRec$(1, pos("="=newRec$) - 1)
-                if(oldMap!.containsKey(key$)) then
+				gosub get_old_key
+                if(oldKey$<>"") then
+					key$ = oldKey$
                     oldList! = cast(ArrayList, oldMap!.get(key$))
 
                     switch (BBjAPI().TRUE)
                         case key$ = "ACOMP"
-                            rem --- drop ACOMP lines from old List
-                            oldList! = new ArrayList()
-                            oldMap!.put(key$, oldList!)
-                            print(log_dev)"drop old ACOMP lines"
-                            break
+                        case key$ = "SYSCOMP"
                         case key$ = "DIR"
-                            rem --- drop DIR lines from old List
-                            oldList! = new ArrayList()
-                            oldMap!.put(key$, oldList!)
-                            print(log_dev)"drop old DIR lines"
-                            break
+                        case key$ = "SYSDIR"
                         case key$ = "SYS"
-                            rem --- drop SYS lines from old List
-                            oldList! = new ArrayList()
-                            oldMap!.put(key$, oldList!)
-                            print(log_dev)"drop old SYS lines"
-                            break
+                        case key$ = "SYSID"
                         case key$ = "MENU"
-                            rem --- drop MENU lines from old List
+                        case key$ = "SYSMENU"
+                            rem --- drop line from old List
                             oldList! = new ArrayList()
                             oldMap!.put(key$, oldList!)
-                            print(log_dev)"drop old MENU lines"
+                            print(log_dev)"drop old "+key$+" line"
                             break
                         case key$ = "APROD"
-                            rem --- if new APROD line exists in old List, drop it from old List
-                            newKey$ = newRec$(1, pos(";"=newRec$))
+                        case key$ = "SYSAPP"
+                            rem --- if new APROD or SYSAPP line exists in old List, drop it from old List
+							xpos = pos("="=newRec$)
+                            newKey$ = newRec$(xpos + 1, pos(";"=newRec$(xpos + 1)) - 1)
+							if oldList!.size() = 0 then break
                             for j=0 to oldList!.size()-1
                                 oldRec$ = cast(BBjString, oldList!.get(j))
-                                oldKey$ = oldRec$(1, pos(";"=oldRec$))
+								ypos = pos("="=oldRec$)
+                                oldKey$ = oldRec$(ypos + 1, pos(";"=oldRec$(ypos + 1)) - 1)
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
-                                    print(log_dev)"drop old APROD line: "+oldKey$
+                                    print(log_dev)"drop old SYSAPP/APROD line: "+oldKey$
                                     if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
                             break
                         case key$ = "STBL"
-                            pos = pos(" "=newRec$)
-                            newKey$ = newRec$(pos + 1, pos("="=newRec$(pos)) - 1)
-                            rem --- drop these STBL lines from NEW List
+                        case key$ = "SYSSTBL"
+                            xpos = pos(" "=newRec$)
+                            newKey$ = newRec$(xpos + 1, pos("="=newRec$(xpos + 1)) - 1)
+                            rem --- drop these STBL and SYSSTBL lines from NEW List
                             if(pos("+DOC_DIR_"=newKey$) = 1 or
 :                              pos("+SHOW_PRINTERS"=newKey$) = 1 or
 :                              pos("+AON_IMAGES"=newKey$) = 1 or
@@ -277,72 +272,87 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
 :                              pos("+FORM_LOGO"=newKey$) = 1 or
 :                              pos("+MDI_TITLE"=newKey$) = 1) then
                                 newList!.set(i, ""); rem - can't remove while looping over the list
-                                print(log_dev)"drop new STBL line: "+newKey$
+                                print(log_dev)"drop new SYSSTBL/STBL line: "+newKey$
                                 break
                             endif
 
-                            rem --- if new STBL line exists in old List, drop it from old List
+                            rem --- if new STBL or SYSSTBL line exists in old List, drop it from old List
+							if oldList!.size() = 0 then break
                             for j=0 to oldList!.size()-1
                                 oldRec$ = cast(BBjString, oldList!.get(j))
-                                pos = pos(" "=oldRec$)
-                                oldKey$ = oldRec$(pos + 1, pos("="=oldRec$(pos)) - 1)
+                                xpos = pos(" "=oldRec$)
+                                oldKey$ = oldRec$(xpos + 1, pos("="=oldRec$(xpos + 1)) - 1)
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
-                                    print(log_dev)"drop old STBL line: "+oldKey$
+                                    print(log_dev)"drop old SYSSTBL/STBL line: "+oldKey$
                                     if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
                             break
                         case key$ = "PREFIX"
-                            rem --- if new PREFIX line exists in old List, drop it from old List
-                            newKey$ = newRec$(pos("/aon/"=newRec$))
+                        case key$ = "SYSPFX"
+                            rem --- if new PREFIX or SYSPFX line exists in old List, drop it from old List
+                            newKey$ = cvs(newRec$(pos("/aon/"=newRec$)),3)
+							if oldList!.size() = 0 then break
                             for j=0 to oldList!.size()-1
                                 oldRec$ = cast(BBjString, oldList!.get(j))
-                                oldKey$ = oldRec$(pos("/aon/"=oldRec$))
+                                oldKey$ = cvs(oldRec$(pos("/aon/"=oldRec$)),3)
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
-                                    print(log_dev)"drop old PREFIX line: "+oldKey$
+                                    print(log_dev)"drop old SYSPFX/PREFIX line: "+oldKey$
                                     if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
                             break
                         case key$ = "CFG"
-                            rem --- if new CFG line exists in old List, drop it from old List
-                            newKey$ = newRec$(1, pos("="=newRec$,1,2))
+                        case key$ = "SYSCFG"
+                            rem --- if new CFG or SYSCFG line exists in old List, drop it from old List
+							xpos = pos("="=newRec$)
+                            newKey$ = newRec$(xpos + 1, pos("="=newRec$(xpos + 1)) - 1)
+							if oldList!.size() = 0 then break
                             for j=0 to oldList!.size()-1
                                 oldRec$ = cast(BBjString, oldList!.get(j))
-                                oldKey$ = oldRec$(1, pos("="=oldRec$,1,2))
+								ypos = pos("="=oldRec$)
+                                oldKey$ = oldRec$(ypos + 1, pos("="=oldRec$(ypos + 1)) - 1)
                                 if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
-                                    print(log_dev)"drop old CFG line: "+oldKey$
+                                    print(log_dev)"drop old SYSCFG/CFG line: "+oldKey$
                                     if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
                             break
                         case key$ = "LANG"
-                            rem --- if new LANG line exists in old List, drop it from old List
+                        case key$ = "SYSLANG"
+                            rem --- if new LANG or SYSLANG line exists in old List, drop it from old List
+                            newKey$ = cvs(newRec$(pos("="=newRec$) + 1),3)
+							if oldList!.size() = 0 then break
                             for j=0 to oldList!.size()-1
                                 oldRec$ = cast(BBjString, oldList!.get(j))
-                                if(oldRec$ = newRec$) then
+                                oldKey$ = cvs(oldRec$(pos("="=oldRec$) + 1),3)
+                                if(oldKey$ = newKey$) then
                                     oldList!.remove(j)
-                                    print(log_dev)"drop old LANG line: "+oldKey$
+                                    print(log_dev)"drop old SYSLANG/LANG line: "+oldKey$
                                     if oldList!.size() = 0 then oldMap!.remove(key$)
                                     break
                                 endif
                             next j
                             break
                         case key$ = "DEVICE"
-                            rem --- if new DEVICE line exists in old List, drop it from NEW List
-                            newKey$ = newRec$(1, pos(" "=newRec$,1,2))
+                        case key$ = "SYSDEVICE"
+						rem --- if new DEVICE or SYSDEVICE line exists in old List, drop it from NEW List
+							xpos = pos(" "=newRec$)
+                            newKey$ = newRec$(xpos + 1, pos(" "=newRec$(xpos + 1)) - 1)
+							if oldList!.size() = 0 then break
                             for j=0 to oldList!.size()-1
                                 oldRec$ = cast(BBjString, oldList!.get(j))
-                                oldKey$ = oldRec$(1, pos(" "=oldRec$,1,2))
+								ypos = pos(" "=oldRec$)
+                                oldKey$ = oldRec$(ypos + 1, pos(" "=oldRec$(ypos + 1)) - 1)
                                 if(oldKey$ = newKey$) then
                                     newList!.set(i, ""); rem - can't remove while looping over the list
-                                    print(log_dev)"drop new DEVICE line: "+newKey$
+                                    print(log_dev)"drop new SYSDEVICE/DEVICE line: "+newKey$
                                     break
                                 endif
                             next j
@@ -353,7 +363,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
                     swend                    
                     
                 else
-                    rem --- this addon_vnnn.syn line does not exist old .syn, so leave it as-is
+                    rem --- this addon_vnnn.syn line does not exist old in .syn, so leave it as-is
                 endif
             endif
         next i
@@ -368,17 +378,19 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
             oldList! = cast(ArrayList, oldMap!.get(key$))
             rem --- insert old list in front of similar lines in new list
             inserted = 0
-            for i=0 to newList!.size()-1
-                newRec$ = cast(BBjString, newList!.get(i))
-                if(pos("="=newRec$)) then
-                    newKey$ = newRec$(1, pos("="=newRec$) - 1)
-                    if(newKey$ = key$) then
-                        newList!.addAll(i, oldList!)
-                        inserted = 1
-                        break
-                    endif
-                endif
-            next i
+			if oldList!.size() > 0 then 
+				for i=0 to newList!.size()-1
+					newRec$ = cast(BBjString, newList!.get(i))
+					if(pos("="=newRec$)) then
+						newKey$ = newRec$(1, pos("="=newRec$) - 1)
+						if(newKey$ = key$) then
+							newList!.addAll(i, oldList!)
+							inserted = 1
+							break
+						endif
+					endif
+				next i
+			endif
             rem --- didn't find line in new list, so add it to the end
             if(!inserted) then
                 newList!.addAll(oldList!)
@@ -454,15 +466,15 @@ fix_path: rem --- Flip directory path separators
     wend
     return
 
-get_syn_version: rem --- Get version from SYS line in addon.syn file
+get_syn_version: rem --- Get version from SYS and SYSCOPY lines in addon.syn file
     parsed=0
     synChan=unt
     open(synChan,isz=-1)synFilePath$
     while 1
         read(synChan,end=*break)record$
-        rem --- locate SYS line
-        if(pos("SYS="=record$) = 1) then
-            rem --- parse version from SYS line
+        rem --- locate SYS and SYSCOPY lines
+        if(pos("SYS="=record$) = 1 or pos("SYSCOPY="=record$) = 1) then
+            rem --- parse version from SYS and SYSCOPY lines
             start$ = "^Version "
             startLen = len(start$)
             startPos = pos(start$=record$)
@@ -483,7 +495,7 @@ get_syn_version: rem --- Get version from SYS line in addon.syn file
 					pos=pos(" "=synVersion$)
 				wend
             endif
-            break
+            if parsed then break
         endif
     wend
     close(synChan)
@@ -498,6 +510,84 @@ search_replace: rem --- Search record$ for search$, and replace with replace$
     if(pos(search$=record$)) then gosub search_replace
     return
 
+	
+get_old_key: rem --- Convert key$ from newList! to oldKey$ in oldMap!
+	oldKey$=""
+	rem --- Check oldMap for key$
+	if(oldMap!.containsKey(key$)) then
+		oldKey$=key$
+	else
+		rem --- Didn't find key$ in oldMap, so check the alternate key name
+		altKey$=""
+		switch (BBjAPI().TRUE)
+			case key$ = "ACOMP"
+				altKey$="SYSCOMP"
+				break
+			case key$ = "SYSCOMP"
+				altKey$="ACOMP"
+				break
+			case key$ = "DIR"
+				altKey$="SYSDIR"
+				break
+			case key$ = "SYSDIR"
+				altKey$="DIR"
+				break
+			case key$ = "SYS"
+				altKey$="SYSID"
+				break
+			case key$ = "SYSID"
+				altKey$="SYS"
+				break
+			case key$ = "MENU"
+				altKey$="SYSMENU"
+				break
+			case key$ = "SYSMENU"
+				altKey$="MENU"
+				break
+			case key$ = "APROD"
+				altKey$="SYSAPP"
+				break
+			case key$ = "SYSAPP"
+				altKey$="APROD"
+				break
+			case key$ = "STBL"
+				altKey$="SYSSTBL"
+				break
+			case key$ = "SYSSTBL"
+				altKey$="STBL"
+				break
+			case key$ = "PREFIX"
+				altKey$="SYSPFX"
+				break
+			case key$ = "SYSPFX"
+				altKey$="PREFIX"
+				break
+			case key$ = "CFG"
+				altKey$="SYSCFG"
+				break
+			case key$ = "SYSCFG"
+				altKey$="CFG"
+				break
+			case key$ = "LANG"
+				altKey$="SYSLANG"
+				break
+			case key$ = "SYSLANG"
+				altKey$="LANG"
+				break
+			case key$ = "DEVICE"
+				altKey$="SYSDEVICE"
+				break
+			case key$ = "SYSDEVICE"
+				altKey$="DEVICE"
+				break
+			case default
+				break
+		swend                    
+		if(oldMap!.containsKey(altKey$)) then oldKey$=altKey$
+	endif
+
+	return
+	
 disp_meter:rem --- Display Progress Meter
 
     rem --- sysGUI! is not declared in bam_prog_bar.bbj, so can't declare it here
