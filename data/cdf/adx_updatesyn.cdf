@@ -44,46 +44,34 @@ rem --- Set defaults for data STBLs
 		callpoint!.setStatus("REFRESH")
 	endif
 [[ADX_UPDATESYN.AREC]]
-rem --- Initialize update addon.syn file to the one in default upgrade directory
-rem --- Default upgrade directory is /aon_prod/vnnnn (where nnnn=new version)
-rem --- Get new version from SYS line of download addon.syn file
+rem --- Initialize aon new install location
+rem --- Default to /aon_prod/vnnnn (where nnnn=new version)
+rem --- Get vnnnn from VERSION_ID in the ADM_MODULES table
 
-	bbjHome$ = System.getProperty("basis.BBjHome")
-	download_loc$ = bbjHome$ + "/apps/aon"
-	synChan=unt
-	open(synChan,isz=-1, err=file_not_found)download_loc$ + "/config/addon.syn"
+	synVersion$="00"
+	comp_id$=STBL("+AON_APPCOMPANY")
+	prod_id$="AD"
 
-    synVersion$ = "0000"
+	sql_chan=sqlunt
+	sqlopen(sql_chan)stbl("+DBNAME")
+	sql_prep$="SELECT version_id FROM adm_modules"
+	sql_prep$=sql_prep$+" WHERE asc_comp_id='" + comp_id$ + "' and asc_prod_id='" + prod_id$ + "'"
+	sqlprep(sql_chan)sql_prep$
+	dim select_tpl$:sqltmpl(sql_chan)
+	sqlexec(sql_chan)
 	while 1
-		read(synChan,end=*break)record$
-		rem --- locate SYS line
-		if(pos("SYS="=record$) = 1) then
-			rem --- parse version from SYS line
-			start$ = "^Version "
-			startLen = len(start$)
-			startPos = pos(start$=record$)
-			end$ = " - "
-			endPos = pos(end$=record$(startPos + startLen))
-            if startPos>0 and endPos>0
-                parsed=1
-                synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
-                rem -- remove decimal point
-                dotPos = pos("."=synVersion$)
-                if(dotPos) then
-                    synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
-                endif
-				rem --- Replace blanks with underscores
-				pos=pos(" "=synVersion$)
-				while pos
-					synVersion$=synVersion$(1, pos-1)+"_"+synVersion$(pos+1)
-					pos=pos(" "=synVersion$)
-				wend
-            endif
-			break
-		endif
+		select_tpl$=sqlfetch(sql_chan,err=*break) 
+		synVersion$=cvs(select_tpl.version_id$,3)
 	wend
-	close(synChan)
+	sqlclose(sql_chan)
 
+	rem --- Remove decimal point from version
+	dotPos = pos("."=synVersion$)
+	if(dotPos) then
+		synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
+	endif
+
+	synChan=unt
 	update_syn$ = "/aon_prod/v" + synVersion$ + "/aon/config/addon.syn"
 	open(synChan,isz=-1, err=file_not_found)update_syn$
 	close(synChan)
