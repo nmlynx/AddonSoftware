@@ -109,18 +109,49 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     gosub disp_meter
     print(log_dev)meter_text$
 
-    rem --- copy addon.syn file to addon_vnnnn.syn (where nnnn=new version)
-    search$ = "../apps/aon"
-    replace$ = aonDir$
-
+	rem --- Get aon path from DIR and SYSDIR lines.
+	rem --- It must be replaced everywhere with current aon path.
+    search$ = ""
     sourceChan=unt
+    open(sourceChan,isz=-1)updateSynFile$
+    while 1
+        read(sourceChan,end=*break)record$
+
+        rem --- get path from SYSDIR/DIR line
+		key$ = record$(1, pos("="=record$) - 1)
+		switch (BBjAPI().TRUE)
+			case key$ = "DIR"
+			case key$ = "SYSDIR"
+				xpos = pos("="=record$)
+				search$= cvs(record$(xpos+1),3)
+				break
+			case default
+				rem --- other lines ... skip
+				break
+		swend
+		if search$<>"" then break
+    wend
+    close(sourceChan)
+	if search$="" then search$="../apps/aon/"; rem --- make sure search$ isn't blank
+
+	rem --- Make sure replacement path has a trailing slash
+    replace$ = aonDir$
+	if pos(replace$(len(replace$))="/\")=0
+		if pos("/"=replace$)
+			replace$=replace$+"/"
+		else
+			replace$=replace$+"\"
+		endif
+	endif
+
+    rem --- copy addon.syn file to addon_vnnnn.syn (where nnnn=new version)
     open(sourceChan,isz=-1)updateSynFile$
     targetChan=unt
     open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newSynFile$
     while 1
         read(sourceChan,end=*break)record$
 
-        rem --- replace "../apps/aon" in paths with aonDir$
+        rem --- replace DIR paths with aonDir$
         gosub search_replace
 
         rem --- replace data paths in specific lines
@@ -431,9 +462,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
     print(log_dev)meter_text$
 
     rem --- save backup of addon_vnnnn.syn
-    sourceChan=unt
     open(sourceChan,isz=-1)newSynFile$
-    targetChan=unt
     open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newSynFile$+".bak"
     while 1
         read(sourceChan,end=*break)record$
@@ -466,39 +495,28 @@ fix_path: rem --- Flip directory path separators
     wend
     return
 
-get_syn_version: rem --- Get version from SYS and SYSCOPY lines in addon.syn file
-    parsed=0
-    synChan=unt
-    open(synChan,isz=-1)synFilePath$
-    while 1
-        read(synChan,end=*break)record$
-        rem --- locate SYS and SYSCOPY lines
-        if(pos("SYS="=record$) = 1 or pos("SYSCOPY="=record$) = 1) then
-            rem --- parse version from SYS and SYSCOPY lines
-            start$ = "^Version "
-            startLen = len(start$)
-            startPos = pos(start$=record$)
-            end$ = " - "
-            endPos = pos(end$=record$(startPos + startLen))
-            if startPos>0 and endPos>0
-                parsed=1
-                synVersion$ = cvs(record$(startPos + startLen, endPos - 1),3)
-                rem -- remove decimal point
-                dotPos = pos("."=synVersion$)
-                if(dotPos) then
-                    synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
-                endif
-				rem --- Replace blanks with underscores
-				pos=pos(" "=synVersion$)
-				while pos
-					synVersion$=synVersion$(1, pos-1)+"_"+synVersion$(pos+1)
-					pos=pos(" "=synVersion$)
-				wend
-            endif
-            if parsed then break
-        endif
-    wend
-    close(synChan)
+get_syn_version: rem --- Get version from VERSION_ID in the ADM_MODULES table
+	comp_id$=STBL("+AON_APPCOMPANY")
+	prod_id$="AD"
+
+	sql_chan=sqlunt
+	sqlopen(sql_chan)stbl("+DBNAME")
+	sql_prep$="SELECT version_id FROM adm_modules"
+	sql_prep$=sql_prep$+" WHERE asc_comp_id='" + comp_id$ + "' and asc_prod_id='" + prod_id$ + "'"
+	sqlprep(sql_chan)sql_prep$
+	dim select_tpl$:sqltmpl(sql_chan)
+	sqlexec(sql_chan)
+	while 1
+		select_tpl$=sqlfetch(sql_chan,err=*break) 
+		synVersion$=cvs(select_tpl.version_id$,3)
+	wend
+	sqlclose(sql_chan)
+
+	rem --- Remove decimal point from version
+	dotPos = pos("."=synVersion$)
+	if(dotPos) then
+		synVersion$ = synVersion$(1, dotPos - 1) + synVersion$(dotPos + 1)
+	endif
     return
     
 search_replace: rem --- Search record$ for search$, and replace with replace$
