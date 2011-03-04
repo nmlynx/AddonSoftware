@@ -1071,6 +1071,7 @@ rem --- Disable Ship To fields
 	column!.addItem("<<DISPLAY>>.SCITY")
 	column!.addItem("<<DISPLAY>>.SSTATE")
 	column!.addItem("<<DISPLAY>>.SZIP")
+	column!.addItem("<<DISPLAY>>.SCNTRY_ID")
 
 	if ship_to_type$="M"
 		status = 1
@@ -1271,6 +1272,7 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl.city$        = callpoint!.getColumnData("<<DISPLAY>>.SCITY")
 		ordship_tpl.state_code$  = callpoint!.getColumnData("<<DISPLAY>>.SSTATE")
 		ordship_tpl.zip_code$    = callpoint!.getColumnData("<<DISPLAY>>.SZIP")
+		ordship_tpl.cntry_id$    = callpoint!.getColumnData("<<DISPLAY>>.SCNTRY_ID")
 
 		ordship_tpl$ = field(ordship_tpl$)
 		write record (ordship_dev) ordship_tpl$
@@ -1296,6 +1298,7 @@ rem ==========================================================================
 	callpoint!.setColumnData("<<DISPLAY>>.BCITY",  custmast_tpl.city$)
 	callpoint!.setColumnData("<<DISPLAY>>.BSTATE", custmast_tpl.state_code$)
 	callpoint!.setColumnData("<<DISPLAY>>.BZIP",   custmast_tpl.zip_code$)
+	callpoint!.setColumnData("<<DISPLAY>>.BCNTRY_ID",   custmast_tpl.cntry_id$)
 
 	return
 
@@ -1376,6 +1379,7 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SCITY",custship_tpl.city$)
 			callpoint!.setColumnData("<<DISPLAY>>.SSTATE",custship_tpl.state_code$)
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP",custship_tpl.zip_code$)
+			callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID",custship_tpl.cntry_id$)
 		else
 			callpoint!.setColumnData("<<DISPLAY>>.SNAME",Translate!.getTranslation("AON_SAME"))
 			callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
@@ -1385,6 +1389,7 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SCITY","")
 			callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
+			callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID","")
 		endif
 
 	else
@@ -1401,6 +1406,7 @@ rem ==========================================================================
 		callpoint!.setColumnData("<<DISPLAY>>.SCITY",ordship_tpl.city$)
 		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",ordship_tpl.state_code$)
 		callpoint!.setColumnData("<<DISPLAY>>.SZIP",ordship_tpl.zip_code$)
+		callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID",ordship_tpl.cntry_id$)
 	endif
 
 	callpoint!.setStatus("REFRESH")
@@ -2237,6 +2243,7 @@ rem --- Disable display fields
 	column!.addItem("<<DISPLAY>>.BCITY")
 	column!.addItem("<<DISPLAY>>.BSTATE")
 	column!.addItem("<<DISPLAY>>.BZIP")
+	column!.addItem("<<DISPLAY>>.BCNTRY_ID")
 	column!.addItem("<<DISPLAY>>.ORDER_TOT")
 
 	if ars01a.job_nos$<>"Y" then 
@@ -2254,6 +2261,7 @@ rem --- Disable display fields
 	column!.addItem("<<DISPLAY>>.SCITY")
 	column!.addItem("<<DISPLAY>>.SSTATE")
 	column!.addItem("<<DISPLAY>>.SZIP")
+	column!.addItem("<<DISPLAY>>.SCNTRY_ID")
 	callpoint!.setColumnEnabled(column!, -1)
 
 	column!.addItem("<<DISPLAY>>.AGING_FUTURE")
