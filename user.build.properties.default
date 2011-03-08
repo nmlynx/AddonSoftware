@@ -1,0 +1,60 @@
+# user.build.properties.default
+#--------------------------------------------------------------------------
+# Template for the user.build.properties file, providing user-specific build
+# properties file for the Barista build and package.
+#
+# This file defines all the properties necessary for the BASIS Ant-based
+# master build system to build and package Barista.
+#
+# Do not make changes to this file, since it is only an example and is ignored
+# by the Ant build scripts.  Instead, make a copy of this file and call it
+# user.build.properties, then adjust the values of these properties as required
+# in order to configure your local system for using Ant to build BBj.
+#
+# Any property defined here can be overridden by redefining it inside a
+# user.build.properties file located together with a build.xml file anywhere
+# else in the com.basis tree.  This is because user.build.properties files
+# found in a local directory are always loaded before the "master"
+# com/basis/user.build.properties file.  Once a property has been defined, it
+# cannot be redefined by any subsequent *.build.properties file.
+#
+# NOTE: All directory path properties must use forward slashes '/' as the
+#       file separator character.  Ant does not recognize the backslash '\'
+#       character as a valid file separator character on Windows machines.
+#
+# Java source and output parent destination directories.  If *.java source
+# files and *.class compiled files are kept in the same directory, the
+# values for src and build should be identical.  The src and build values
+# represent only the part of the directory path that varies from one
+# developer's configuration to another.  They MUST NOT include any part
+# of the package name (for example, C:/dev/src/com is not acceptable).
+#--------------------------------------------------------------------------
+
+# Base directories
+#-----------------
+base.build=<DevelopmentArea>
+
+# Checked out Addon
+#-----------------
+src.dir=${base.build}/src
+
+# Checked out BBj (all that is needed is the install directory)
+#-----------------
+bbj.src.dir=${src.dir}
+
+# Where to store the build
+#-----------------
+build.dir=${base.build}/bld
+
+# Where to install BBj
+#-----------------
+install.dir=${base.build}/install
+
+# Where the built/installed BBj jars are found (<BBjHome>/lib)
+#-----------------
+bbj.jars.dir=${base.build}/lib
+bbj.pkgs.dir=${base.build}/packages
+
+# Where to find the docs
+#-----------------
+docpub.dir=${base.build}/docpub
