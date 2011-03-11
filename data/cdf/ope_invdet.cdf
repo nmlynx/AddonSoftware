@@ -1620,11 +1620,10 @@ rem ==========================================================================
 	previous_ext_price = num(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE"))
 	callpoint!.setColumnData("OPE_INVDET.EXT_PRICE", str(round(qty_shipped * unit_price, 2)) )
 	gosub check_if_tax
+	gosub disp_grid_totals
 	if previous_ext_price <> round(qty_shipped * unit_price, 2)
-		callpoint!.setStatus("MODIFIED")
+		callpoint!.setStatus("MODIFIED;REFRESH")
 	endif
-
-	rem --- gosub disp_grid_totals --- can't go here because the status of MODIFIED hasn't taken effect
 
 	return
 

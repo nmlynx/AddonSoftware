@@ -3,17 +3,9 @@ rem --- Discount Amount cannot exceed Total Sales Amount
 
 	disc_amt = num(callpoint!.getUserInput())
 	total_sales = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
-
-	if total_sales > 0
-		if disc_amt > total_sales then
-			disc_amt = total_sales
-			callpoint!.setUserInput(str(disc_amt))
-		endif
-	else
-		if disc_amt < total_sales then
-			disc_amt = total_sales
-			callpoint!.setUserInput(str(disc_amt))
-		endif
+	if (total_sales >= 0 and disc_amt > total_sales) or (total_sales < 0 and disc_amt < total_sales) then
+		disc_amt = total_sales
+		callpoint!.setUserInput(str(disc_amt))
 	endif
 
 rem --- Recalculate Tax Amount and Totals
