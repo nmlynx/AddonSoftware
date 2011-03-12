@@ -689,6 +689,27 @@ rem --- Enable / Disable buttons
 rem --- Set Backordered text field
 
 	call user_tpl.pgmdir$+"opc_creditmsg.aon","H",callpoint!,UserObj!
+
+rem --- Set MODIFIED if totals were changed in the grid
+
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),3)<>"" 
+:	and cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),3)<>""
+:	and str(callpoint!.getDevObject("discount_amt"))<>"null"
+:	and str(callpoint!.getDevObject("freight_amt"))<>"null"
+:	and str(callpoint!.getDevObject("tax_amount"))<>"null"
+:	and str(callpoint!.getDevObject("taxable_amt"))<>"null"
+:	and str(callpoint!.getDevObject("total_cost"))<>"null"
+:	and str(callpoint!.getDevObject("total_sales"))<>"null" then
+
+		if num(callpoint!.getDevObject("discount_amt"))<>num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+:		or num(callpoint!.getDevObject("freight_amt"))<>num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+:		or num(callpoint!.getDevObject("tax_amount"))<>num(callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT"))
+:		or num(callpoint!.getDevObject("taxable_amt"))<>num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
+:		or num(callpoint!.getDevObject("total_cost"))<>num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST"))
+:		or num(callpoint!.getDevObject("total_sales"))<>num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")) then
+			callpoint!.setStatus("MODIFIED")
+		endif
+	endif	
 [[OPE_INVHDR.BPFX]]
 print "Hdr:BPFX"; rem debug
 
@@ -703,6 +724,17 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
+
+rem --- Capture current totals so we can tell later if they were changed in the grid
+
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),3)<>"" and cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),3)<>""
+		callpoint!.setDevObject("discount_amt",callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		callpoint!.setDevObject("freight_amt",callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		callpoint!.setDevObject("tax_amount",callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT"))
+		callpoint!.setDevObject("taxable_amt",callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
+		callpoint!.setDevObject("total_cost",callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST"))
+		callpoint!.setDevObject("total_sales",callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
+	endif
 [[OPE_INVHDR.BDEL]]
 print "Hdr:BDEL"; rem debug
 
@@ -1036,6 +1068,15 @@ rem --- Set OrderHelper object fields
 rem --- Clear availability
 
 	gosub clear_avail
+
+rem --- Capture current totals so we can tell later if they were changed in the grid
+
+	callpoint!.setDevObject("discount_amt",callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	callpoint!.setDevObject("freight_amt",callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	callpoint!.setDevObject("tax_amount",callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT"))
+	callpoint!.setDevObject("taxable_amt",callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT"))
+	callpoint!.setDevObject("total_cost",callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST"))
+	callpoint!.setDevObject("total_sales",callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 [[OPE_INVHDR.ORDER_NO.AVAL]]
 print "Hdr:ORDER_NO.AVAL"; rem debug
 
