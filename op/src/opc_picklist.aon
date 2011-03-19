@@ -330,7 +330,7 @@ rem --- Set Firm ID for Credit Review and Release orders
 			ope01a.firm_id$ = firm_id$
 		endif
 		
-        if type = on_demand and ope01a.invoice_type$="S" then
+        if type = on_demand then
             msg_id$="OP_PRINTPRICES"
             gosub disp_message
             print_prices$=msg_opt$
