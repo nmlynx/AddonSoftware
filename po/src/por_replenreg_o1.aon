@@ -284,7 +284,10 @@ rem    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,page,w
     dim pbuf$(width)
     pbuf$(fncenter(comment$,width))=comment$
     OutVect!.addItem(pbuf$)
-
+	if comment$<>""
+		OutVect!.addItem("")
+	endif
+	
     rem    print (printer_dev) @(fncenter(comment$,width)),comment$
     l=l+1
     return
