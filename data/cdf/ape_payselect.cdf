@@ -1024,12 +1024,11 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		rem --- Discount Amount
 
 		if curr_col = 9 then 
-				x=curr_row
 				inv_amt  = num(gridInvoices!.getCellText(curr_row,8))
 				disc_amt = num(gridInvoices!.getCellText(curr_row,9))
 				pmt_amt  = num(gridInvoices!.getCellText(curr_row,10))
 				retent_amt = num(gridInvoices!.getCellText(curr_row,11))
-				orig_inv_amt = num(vectInvoicesMaster!.getItem((x*user_tpl.MasterCols)+16))
+				orig_inv_amt = num(vectInvoicesMaster!.getItem((curr_row*user_tpl.MasterCols)+16))
 
 				if sgn(disc_amt) <> sgn(orig_inv_amt) then 
 					disc_amt = abs(disc_amt) * sgn(orig_inv_amt)
@@ -1108,35 +1107,30 @@ rem						endif
 		rem --- Payment Amount
 
 			if curr_col=10
-				x=curr_row
 				inv_amt  = num(gridInvoices!.getCellText(curr_row,8))
 				disc_amt = num(gridInvoices!.getCellText(curr_row,9))
 				pmt_amt  = num(gridInvoices!.getCellText(curr_row,10))
 				retent_amt = num(gridInvoices!.getCellText(curr_row,11))
-				orig_inv_amt = num(vectInvoicesMaster!.getItem((x*user_tpl.MasterCols)+16))
+				orig_inv_amt = num(vectInvoicesMaster!.getItem((curr_row*user_tpl.MasterCols)+16))
 					
 				if sgn(pmt_amt) <> sgn(orig_inv_amt) then 
 					pmt_amt = abs(pmt_amt) * sgn(orig_inv_amt)
 					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
 				endif
 
-				if abs(pmt_amt) <> abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt) then 
-					if abs(pmt_amt) > abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt) then 
-						pmt_amt = (abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt)) * sgn(orig_inv_amt)
-						gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
-					endif
-					inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
-					gridInvoices!.setCellText(curr_row,8,str(inv_amt))
-				endif
-
-				if pmt_amt=0 then 
-					disc_amt=0
-					pmt_amt=0
-					gridInvoices!.setCellText(curr_row,9,str(disc_amt))
+				if abs(pmt_amt) > abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt) then 
+					pmt_amt = (abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt)) * sgn(orig_inv_amt)
 					gridInvoices!.setCellText(curr_row,10,str(pmt_amt))
 				endif
 
-				if pmt_amt<>0 then 
+				if pmt_amt=0 then
+					rem --- de-select payment
+					if gridInvoices!.getCellState(curr_row,0) = 1 then 
+						x=curr_row
+						gosub switch_value
+						curr_row=x
+					endif
+				else
 					if gridInvoices!.getCellState(curr_row,0)=0 then 
 						read record (apm01_dev, key=firm_id$+
 :							gridInvoices!.getCellText(curr_row,3), dom=*next) apm01a$
@@ -1172,19 +1166,10 @@ rem						endif
 :							str(pmt_amt)
 :						)
 					endif
-				else
-					if gridInvoices!.getCellState(curr_row,0)=1
-						gridInvoices!.setCellState(curr_row,0,0)
-						dummy = fn_setmast_flag(
-:							vectInvoices!.getItem(curr_row*numcols+2),
-:							vectInvoices!.getItem(curr_row*numcols+3),
-:							vectInvoices!.getItem(curr_row*numcols+5),
-:							"N",
-:							"0"
-:						)
-					endif
 				endif
 
+				inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
+				gridInvoices!.setCellText(curr_row,8,str(inv_amt))
 				vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+9,str(disc_amt))
 				vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+10,str(pmt_amt))
 				dummy = fn_setmast_amts(
