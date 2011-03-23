@@ -1,3 +1,7 @@
+[[IVE_TRANSDET.ADGE]]
+rem --- Setup for whether to test at end of line
+
+	callpoint!.setDevObject("qty_ok","")
 [[IVE_TRANSDET.ARAR]]
 rem --- Setup for whether to test at end of line
 
@@ -225,6 +229,12 @@ rem --- Uncommit quantity
 print "after new record (AREC)"; rem debug
 
 rem --- Display defaults for this row
+
+	if cvs(callpoint!.getColumnData("IVE_TRANSDET.USER_ID"),2)=""
+		dim sysinfo$:stbl("+SYSINFO_TPL")
+		sysinfo$=stbl("+SYSINFO")
+		callpoint!.setColumnData("IVE_TRANSDET.USER_ID",sysinfo.user_id$)
+	endif
 
 	if user_tpl.multi_whse$ <> "Y" then
 		callpoint!.setColumnData("IVE_TRANSDET.WAREHOUSE_ID",user_tpl.warehouse_id$)
