@@ -193,6 +193,7 @@ rem ==========================================================================
 			apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 			apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 		wend
+		if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 	rem --- override discount and payment amounts if already in ape04 (computer checks)
 
@@ -308,6 +309,7 @@ rem				endif
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 				wend
+				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,1)
 
@@ -358,6 +360,7 @@ rem				endif
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 				wend
+				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,0)
 				gridInvoices!.setCellText(row_no, 8, str(str(apt01a.invoice_amt - apt01a.retention - apt01a.discount_amt)))
@@ -621,6 +624,7 @@ rem				endif
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 				wend
+				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,1)
 
@@ -670,6 +674,7 @@ rem				endif
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 				wend
+				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,0)
 				gridInvoices!.setCellText(row_no, 8, str(str(apt01a.invoice_amt - apt01a.retention - apt01a.discount_amt)))
