@@ -55,7 +55,7 @@ rem --- Flip directory path separators
     oldSynFile$=filePath$
 
 rem --- Get aon directory location from addon.syn file
-	aonDir$=updateSynFile$(1, pos("/config/"=updateSynFile$)-1)
+	aonDir$=updateSynFile$(1, pos("/config/"=updateSynFile$,-1)-1)
     
 rem --- Open log file
     location$ = aonDir$

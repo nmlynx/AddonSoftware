@@ -234,7 +234,7 @@ rem  */
             rem --- Get mods directory location from path
             if pos("/config/"=path$)
                 rem --- mods directory contains config directory
-                modsDir$=path$(1, pos("/config/"=path$))
+                modsDir$=path$(1, pos("/config/"=path$,-1))
             else
                 rem --- config directory not found, so use directory holding syn file
                     modsDir$=path$(1, pos("/"=path$,-1))

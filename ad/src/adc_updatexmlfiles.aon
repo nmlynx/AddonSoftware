@@ -299,11 +299,11 @@ rem ... for v11                #copyXmlFiles(oldBackupDir!, new File(aonDir$ + "
 
             rem --- Get aon directory location from path
             if pos("/aon/"=path$+"/")
-                aonDir$=path$(1, pos("/aon/"=path$+"/") + len("/aon") - 1)
+                aonDir$=path$(1, pos("/aon/"=path$+"/",-1) + len("/aon") - 1)
             else
                 rem --- aon directory not found, so use directory containing the data directory
                 if pos("/data/"=path$+"/")
-                    aonDir$=path$(1, pos("/data/"=path$+"/") - 1)
+                    aonDir$=path$(1, pos("/data/"=path$+"/",-1) - 1)
                 endif
             endif
             methodret aonDir$

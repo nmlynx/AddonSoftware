@@ -100,7 +100,7 @@ verify_not_download_loc: rem --- Verify not using current download location
 
 	loc_ok=1
 	bbjHome$ = System.getProperty("basis.BBjHome")
-	if pos(bbjHome$=testLoc$)=1
+	if pos(bbjHome$+"/"=testLoc$)=1 or pos(bbjHome$+"\"=testLoc$)=1
 		msg_id$="AD_INSTALL_LOC_BAD"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=bbjHome$
