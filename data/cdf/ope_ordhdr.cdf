@@ -271,26 +271,12 @@ rem --- Has customer and order number been entered?
 
 rem --- Check Ship-to's
 
-		shipto_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
-		shipto_var$  = "OPE_ORDHDR.SHIPTO_NO"
-
-		if shipto_type$ = "S" and cvs(callpoint!.getColumnData(shipto_var$), 2) = "" then
-			msg_id$ = "OP_SHIPTO_NO_MISSING"
-			gosub disp_message
-			callpoint!.setFocus(shipto_var$)
-			user_tpl.shipto_warned = 1
-			break; rem --- exit callpoint
-		else
-			ship_addr1_var$ = "<<DISPLAY>>.SADD1"
-
-			if shipto_type$ = "M" and cvs(callpoint!.getColumnData(ship_addr1_var$), 2) = "" then
-				msg_id$ = "OP_MAN_SHIPTO_NEEDED"
-				gosub disp_message
-				callpoint!.setFocus(ship_addr1_var$)
-				user_tpl.shipto_warned = 1
-				break; rem --- exit callpoint
-			endif
-		endif
+	shipto_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	shipto_no$  = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
+	gosub check_shipto
+	if user_tpl.shipto_warned
+		break; rem --- exit callpoint
+	endif
 
 rem --- Check to see if we need to go to the totals tab
 
@@ -851,18 +837,27 @@ rem --- Duplicate Historical Invoice
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 print "SHIPTO:AVAL"; rem debug
 
+rem --- Check Ship-to's
+
+	shipto_no$  = callpoint!.getUserInput()
+	shipto_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	gosub check_shipto
+	if user_tpl.shipto_warned
+		break; rem --- exit callpoint
+	endif
+
 rem --- Remove manual ship-record, if necessary
 
-	ship_to_no$ = callpoint!.getUserInput()
 	cust_id$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$   = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 
-	if user_tpl.prev_ship_to$ = "000099" and ship_to_no$ <> "000099" then
+	if user_tpl.prev_ship_to$ = "000099" and shipto_no$ <> "000099" then
 		remove (fnget_dev("OPE_ORDSHIP"), key=firm_id$+cust_id$+order_no$, dom=*next)
 	endif
 
 rem --- Display Ship to information
 
+	ship_to_no$  = callpoint!.getUserInput()
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	gosub ship_to_info
 [[OPE_ORDHDR.ORDER_NO.AVAL]]
@@ -1102,7 +1097,16 @@ rem --- Disable Ship To fields
 
 	declare BBjVector column!
 	column! = BBjAPI().makeVector()
+	
+	column!.addItem("OPE_ORDHDR.SHIPTO_NO")
+	if ship_to_type$="S"
+		status = 1
+	else
+		status = -1
+	endif
+	callpoint!.setColumnEnabled(column!, status)
 
+	column!.clear()
 	column!.addItem("<<DISPLAY>>.SNAME")
 	column!.addItem("<<DISPLAY>>.SADD1")
 	column!.addItem("<<DISPLAY>>.SADD2")
@@ -1421,6 +1425,7 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP",custship_tpl.zip_code$)
 			callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID",custship_tpl.cntry_id$)
 		else
+			callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_NO","")
 			callpoint!.setColumnData("<<DISPLAY>>.SNAME",Translate!.getTranslation("AON_SAME"))
 			callpoint!.setColumnData("<<DISPLAY>>.SADD1","")
 			callpoint!.setColumnData("<<DISPLAY>>.SADD2","")
@@ -1433,6 +1438,8 @@ rem ==========================================================================
 		endif
 
 	else
+
+		callpoint!.setColumnData("OPE_ORDHDR.SHIPTO_NO","")
 
 		ordship_dev=fnget_dev("OPE_ORDSHIP")
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
@@ -2182,6 +2189,30 @@ rem ==========================================================================
 	callpoint!.setStatus("REFRESH")
 
 	return
+
+rem ==========================================================================
+check_shipto: rem --- Check Ship-to's
+rem IN: shipto_type$
+rem IN: shipto_no$
+rem ==========================================================================
+
+	user_tpl.shipto_warned = 0
+	if shipto_type$ = "S" and cvs(shipto_no$, 2) = "" then
+		msg_id$ = "OP_SHIPTO_NO_MISSING"
+		gosub disp_message
+		callpoint!.setFocus("OPE_ORDHDR.SHIPTO_NO")
+		user_tpl.shipto_warned = 1
+	else
+		ship_addr1_var$ = "<<DISPLAY>>.SADD1"
+		if shipto_type$ = "M" and cvs(callpoint!.getColumnData(ship_addr1_var$), 2) = "" then
+			msg_id$ = "OP_MAN_SHIPTO_NEEDED"
+			gosub disp_message
+			callpoint!.setFocus(ship_addr1_var$)
+			user_tpl.shipto_warned = 1
+		endif
+	endif
+		
+	return
 [[OPE_ORDHDR.BSHO]]
 print "Hdr:BSHO"; rem debug
 
@@ -2302,8 +2333,6 @@ rem --- Disable display fields
 	column!.addItem("<<DISPLAY>>.SSTATE")
 	column!.addItem("<<DISPLAY>>.SZIP")
 	column!.addItem("<<DISPLAY>>.SCNTRY_ID")
-	callpoint!.setColumnEnabled(column!, -1)
-
 	column!.addItem("<<DISPLAY>>.AGING_FUTURE")
 	column!.addItem("<<DISPLAY>>.AGING_CUR")
 	column!.addItem("<<DISPLAY>>.AGING_30")
