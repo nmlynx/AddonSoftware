@@ -1047,9 +1047,9 @@ rem --- Recalc quantities and extended price
 		user_tpl.prev_boqty = 0
 	endif
 
-	if boqty <> user_tpl.prev_boqty then
-		qty_shipped = ordqty - boqty
+	qty_shipped = ordqty - boqty
 
+	if boqty <> user_tpl.prev_boqty then
 		if qty_shipped < 0 then
 			callpoint!.setUserInput(str(user_tpl.prev_boqty))
 			msg_id$ = "BO_EXCEEDS_ORD"
@@ -1057,11 +1057,11 @@ rem --- Recalc quantities and extended price
 			callpoint!.setStatus("ABORT-REFRESH")
 			break; rem --- exit callpoint
 		endif
-
-		callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_shipped))
-		unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
-		gosub disp_ext_amt
 	endif
+
+	callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_shipped))
+	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	gosub disp_ext_amt
 [[OPE_INVDET.<CUSTOM>]]
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
@@ -1620,10 +1620,8 @@ rem ==========================================================================
 	previous_ext_price = num(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE"))
 	callpoint!.setColumnData("OPE_INVDET.EXT_PRICE", str(round(qty_shipped * unit_price, 2)) )
 	gosub check_if_tax
-	if previous_ext_price <> round(qty_shipped * unit_price, 2)
-		gosub disp_grid_totals
-		callpoint!.setStatus("MODIFIED;REFRESH")
-	endif
+	gosub disp_grid_totals
+	callpoint!.setStatus("MODIFIED;REFRESH")
 
 	return
 
