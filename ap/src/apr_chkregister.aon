@@ -139,7 +139,9 @@ rem --- Initializations
     endif
     if multitypes then headings$[2]="[HEADER]"
     recs=0
-
+    voids=0
+    non_voids=0
+    
 rem --- set rd_alias_id$, if needed, for DocOut Settings
     
     if rd_alias_id$=""
@@ -492,7 +494,7 @@ rem --- Destroy the progress meter and run the next overlay
     endif
 
     overlay$=update$
-    if gl$="Y" overlay$=pgmdir$+"glr_recap.aon"
+    if gl$="Y" and non_voids>0 overlay$=pgmdir$+"glr_recap.aon"
 
 rem --- run overlay$,err=std_exit
 
@@ -579,6 +581,7 @@ glrecap: rem --- Standard GL Recap Routine
 
     if gl$="Y" call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,notused,account$,gldate$,
 :                                            ref1$,ref2$,ref3$,memo$,amount,units,status
+    non_voids=non_voids+1
     return
 
 Display_Message: rem --- Display Message Routine
