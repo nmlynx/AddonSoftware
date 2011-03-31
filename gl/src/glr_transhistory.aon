@@ -640,7 +640,7 @@ wildcard: rem --- Test account number against specified wildcard mask
     status=0
     if wildcard$="" return
     if wildcard<>len(wildcard$) wildcard=len(wildcard$)
-    x$=fnmask$(glt06a.gl_account$(1,m0),m0$)
+    x$=glt06a.gl_account$
     for x=1 to wildcard
         if wildcard$(x,1)="?" continue
         if x$(x,1)<>wildcard$(x,1) status=1
