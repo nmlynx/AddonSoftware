@@ -7,6 +7,7 @@ rem --- Recalculate totals
 	gosub disp_totals
 
 	callpoint!.setFocus("OPE_ORDHDR.DISCOUNT_AMT")
+	callpoint!.setDevObject("was_on_tot_tab","Y")
 [[OPE_ORDHDR.DISCOUNT_AMT.AVAL]]
 rem --- Discount Amount cannot exceed Total Sales Amount
 
@@ -22,6 +23,7 @@ rem --- Recalculate totals
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	gosub calculate_tax
 	gosub disp_totals
+	callpoint!.setDevObject("was_on_tot_tab","Y")
 [[OPE_ORDHDR.DISCOUNT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
 
@@ -93,6 +95,7 @@ rem --- Clear availability information
 	
 	gosub clear_avail
 	callpoint!.setDevObject("was_on_tot_tab","N")
+	callpoint!.setDevObject("details_changed","N")
 
 	gosub init_msgs
 [[OPE_ORDHDR.ARAR]]
@@ -101,7 +104,14 @@ print "Hdr:ARAR"; rem debug
 rem --- Set data
 
 	user_tpl.order_date$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
-	callpoint!.setDevObject("was_on_tot_tab","N")
+
+	idx=form!.getControl(num(stbl("+TAB_CTL"))).getSelectedIndex()
+	if idx<>2
+		callpoint!.setDevObject("was_on_tot_tab","N")
+	else
+		callpoint!.setDevObject("was_on_tot_tab","Y")
+	endif
+	callpoint!.setDevObject("details_changed","N")
 
 rem --- Set flags
 
@@ -281,16 +291,17 @@ rem --- Check Ship-to's
 rem --- Check to see if we need to go to the totals tab
 
 rem --- Force focus on the Totals tab
-goto no_warn;rem jpb Work on this for bug 4717
+
 	if pos(callpoint!.getDevObject("totals_warn")="24")>0
-		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0 then
-			callpoint!.setMessage("OP_TOTALS_TAB")
-			callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
-			callpoint!.setStatus("ABORT")
-			break
+		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
+			if callpoint!.getDevObject("details_changed")="Y"
+				callpoint!.setMessage("OP_TOTALS_TAB")
+				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
+				callpoint!.setStatus("ABORT")
+				break
+			endif
 		endif
 	endif
-no_warn:
 [[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
 print "CUSTOMER_ID:AVAL"; rem debug
 	
@@ -2551,9 +2562,10 @@ rem --- get mask for display sequence number used in detail lines (needed when c
 	call stbl("+DIR_PGM")+"adc_getmask.aon","LINE_NO","","","",line_no_mask$,0,0
 	callpoint!.setDevObject("line_no_mask",line_no_mask$)
 
-rem --- Set object for which customer number is being shown
+rem --- Set object for which customer number is being shown and that details haven't changed
 
 	callpoint!.setDevObject("current_customer","")
+	callpoint!.setDevObject("details_changed","N")
 
 rem --- setup message_tpl$
 

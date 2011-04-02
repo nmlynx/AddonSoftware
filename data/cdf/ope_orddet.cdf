@@ -534,6 +534,8 @@ awri_update_hdr: rem --- Update header
 
 	gosub disp_grid_totals
 
+	callpoint!.setDevObject("details_changed","Y")
+
 rem input "Det:Done with AWRI: ", *; rem debug
 [[OPE_ORDDET.BDGX]]
 rem --- Disable detail-only buttons
@@ -973,10 +975,14 @@ rem --- Display Extended Price
 rem --- redisplay totals
 
 	gosub disp_grid_totals
+
+	callpoint!.setDevObject("details_changed","Y")
 [[OPE_ORDDET.ADEL]]
 rem --- redisplay totals
 
 	gosub disp_grid_totals
+
+	callpoint!.setDevObject("details_changed","Y")
 [[OPE_ORDDET.WAREHOUSE_ID.AVAL]]
 print "Det:WAREHOUSE_ID.AVAL"; rem debug
 

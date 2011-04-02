@@ -798,6 +798,7 @@ rem --- Clear/set flags
 	endif
 
 	user_tpl.detail_modified = 1
+	callpoint!.setDevObject("details_changed","Y")
 
 rem --- Returns
 
@@ -942,12 +943,16 @@ print "Det:AUDE"; rem debug
 rem --- redisplay totals
 
 	gosub disp_grid_totals
+
+	callpoint!.setDevObject("details_changed","Y")
 [[OPE_INVDET.ADEL]]
 print "Det:ADEL"; rem debug
 
 rem --- redisplay totals
 
 	gosub disp_grid_totals
+
+	callpoint!.setDevObject("details_changed","Y")
 [[OPE_INVDET.WAREHOUSE_ID.AVAL]]
 print "Det:WAREHOUSE_ID.AVAL"; rem debug
 
