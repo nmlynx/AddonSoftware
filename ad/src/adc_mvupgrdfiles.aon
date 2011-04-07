@@ -82,6 +82,7 @@ rem --- Process each file in source dir
 		declare File file!
 		declare File target!
 		declare File sourceFile!
+		declare File targetFile!
 		for i=0 to fileVector!.size()-1
 			fileName$ = cast(BBjString, fileVector!.get(i))
 			file! = new File(source!, fileName$)
@@ -116,6 +117,7 @@ rem --- Process each file in source dir
 			if len(path$)>1 and path$(1,1)="[" and path$(len(path$),1)="]" then
 				path$=stbl(path$(2,len(path$)-2))
 			endif
+			target!=new File(path$)
 			if target!.getAbsolutePath()=source!.getAbsolutePath() then
 				rem --- don't move, it's already where it belongs
 				meter_text$=fileName$
@@ -129,10 +131,11 @@ rem --- Process each file in source dir
 				else
 					rem --- move (rename) this one
 					meter_text$=fileName$+" -- moved to "+path$
-            
 					rem --- create new directory if it doesn't exist
 					FileObject.makeDirs(target!)
-					sourceFile!.renameTo(new File(target!, fileName$))
+					targetFile!=new File(target!, fileName$)
+					targetFile!.delete()
+					sourceFile!.renameTo(targetFile!)
 				endif
 			endif
 
