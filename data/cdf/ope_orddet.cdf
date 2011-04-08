@@ -753,9 +753,10 @@ rem --- Disable Line Code if existing record
 
 rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
-	rem --- now AREC is forcing focus on Line Code
-	rem line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	rem gosub disable_by_linetype
+	if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) = ""
+		line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+		gosub disable_by_linetype
+	endif
 
 rem --- Disable cost if necessary
 
@@ -899,7 +900,8 @@ rem --- Warehouse and Item must be correct
 		rem callpoint!.setStatus("ABORT")
 
 		rem --- using this instead to force focus if item/whse invalid -- i.e., don't let user leave corrupt row
-		callpoint!.setFocus(this_row,"OPE_ORDDET.ITEM_ID")
+		callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_ORDDET.ITEM_ID")
+rem		callpoint!.setFocus(this_row,"OPE_ORDDET.ITEM_ID")
 		break; rem --- exit callpoint
 
 	else
@@ -1470,6 +1472,12 @@ rem ============================================================================
 	user_tpl.line_prod_type_pr$ = ""
 	start_block = 1
 
+	if callpoint!.getCallpointEvent()="OPE_ORDDET.LINE_CODE.AVAL"
+		line_code$=callpoint!.getUserInput()
+	else
+		line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+	endif
+
 	if cvs(line_code$,2) <> "" then
 		print "---line code is "+ line_code$+ " and came from "+callpoint!.getCallpointEvent(); rem debug
 
@@ -1485,6 +1493,12 @@ rem ============================================================================
 			user_tpl.line_dropship$ = opc_linecode.dropship$
 			user_tpl.line_prod_type_pr$ = opc_linecode.prod_type_pr$
 			print "---Line Type set (", user_tpl.line_type$, ")"; rem debug
+
+			if pos(opc_linecode.line_type$="SP")>0 and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))<>0
+				callpoint!.setOptionEnabled("RCPR",1)
+			else
+				callpoint!.setOptionEnabled("RCPR",0)
+			endif
 		endif
 	endif
 

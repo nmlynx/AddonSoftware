@@ -718,9 +718,10 @@ rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to 
 
 rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
-	rem --- now AREC is forcing focus on Line Code
-	rem line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
-	rem gosub disable_by_linetype
+	if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) = ""
+		line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
+		gosub disable_by_linetype
+	endif
 
 rem --- Disable cost if necessary
 
@@ -1422,6 +1423,12 @@ rem ==========================================================================
 	user_tpl.line_prod_type_pr$ = ""
 	start_block = 1
 
+	if callpoint!.getCallpointEvent()="OPE_INVDET.LINE_CODE.AVAL"
+		line_code$=callpoint!.getUserInput()
+	else
+		line_code$=callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
+	endif
+
 	if cvs(line_code$,2) <> "" then
 		file$ = "OPC_LINECODE"
 		dim opc_linecode$:fnget_tpl$(file$)
@@ -1434,6 +1441,12 @@ rem ==========================================================================
 			user_tpl.line_taxable$  = opc_linecode.taxable_flag$
 			user_tpl.line_dropship$ = opc_linecode.dropship$
 			user_tpl.line_prod_type_pr$ = opc_linecode.prod_type_pr$
+
+			if pos(opc_linecode.line_type$="SP")>0 and num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))<>0
+				callpoint!.setOptionEnabled("RCPR",1)
+			else
+				callpoint!.setOptionEnabled("RCPR",0)
+			endif
 		endif
 	endif
 
