@@ -505,9 +505,10 @@ rem --- Force focus on the Totals tab
 
 	if pos(callpoint!.getDevObject("totals_warn")="34")>0
 		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
-			if callpoint!.getDevObject("details_changed")="Y"
+			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")=""
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_INVHDR.FREIGHT_AMT")
+				callpoint!.setDevObject("was_on_tot_tab","Y")
 				callpoint!.setStatus("ABORT")
 				break
 			endif
@@ -843,6 +844,18 @@ rem --- Remove committments for detail records by calling ATAMO
 		remove (creddate_dev, key=firm_id$+ord_date$+cust$+ord$, err=*next)	
 	endif
 [[OPE_INVHDR.BPRK]]
+	if pos(callpoint!.getDevObject("totals_warn")="24")>0
+		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
+			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")=""
+				callpoint!.setMessage("OP_TOTALS_TAB")
+				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
+				callpoint!.setDevObject("was_on_tot_tab","Y")
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
+	endif
+
 rem --- Previous record must be an invoice
 
 	file_name$ = "OPE_INVHDR"
@@ -879,6 +892,18 @@ rem --- Previous record must be an invoice
 		endif
 	wend
 [[OPE_INVHDR.BNEK]]
+	if pos(callpoint!.getDevObject("totals_warn")="24")>0
+		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
+			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")=""
+				callpoint!.setMessage("OP_TOTALS_TAB")
+				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
+				callpoint!.setDevObject("was_on_tot_tab","Y")
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
+	endif
+
 rem --- Next record must be an invoice 
 
 	file_name$ = "OPE_INVHDR"
@@ -2844,6 +2869,7 @@ rem --- Set object for which customer number is being shown and that details hav
 
 	callpoint!.setDevObject("current_customer","")
 	callpoint!.setDevObject("details_changed","N")
+	callpoint!.setDevObject("rcpr_row","")
 
 rem --- setup message_tpl$
 

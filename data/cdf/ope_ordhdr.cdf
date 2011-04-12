@@ -294,9 +294,10 @@ rem --- Force focus on the Totals tab
 
 	if pos(callpoint!.getDevObject("totals_warn")="24")>0
 		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
-			if callpoint!.getDevObject("details_changed")="Y"
+			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")=""
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
+				callpoint!.setDevObject("was_on_tot_tab","Y")
 				callpoint!.setStatus("ABORT")
 				break
 			endif
@@ -378,6 +379,18 @@ rem --- Do credit status (management)
 	endif
 [[OPE_ORDHDR.BPRK]]
 print "Hdr:BPRK"; rem debug
+
+	if pos(callpoint!.getDevObject("totals_warn")="24")>0
+		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
+			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")=""
+				callpoint!.setMessage("OP_TOTALS_TAB")
+				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
+				callpoint!.setDevObject("was_on_tot_tab","Y")
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
+	endif
 
 rem --- Is previous record an order and not void?
 
@@ -492,6 +505,18 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 	endif
 [[OPE_ORDHDR.BNEK]]
 print "Hdr:BNEK"; rem debug
+
+	if pos(callpoint!.getDevObject("totals_warn")="24")>0
+		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
+			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")=""
+				callpoint!.setMessage("OP_TOTALS_TAB")
+				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
+				callpoint!.setDevObject("was_on_tot_tab","Y")
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
+	endif
 
 rem --- Is next record an order and not void?
 
@@ -2566,6 +2591,7 @@ rem --- Set object for which customer number is being shown and that details hav
 
 	callpoint!.setDevObject("current_customer","")
 	callpoint!.setDevObject("details_changed","N")
+	callpoint!.setDevObject("rcpr_row","")
 
 rem --- setup message_tpl$
 

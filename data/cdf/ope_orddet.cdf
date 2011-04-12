@@ -364,15 +364,10 @@ rem --- Are things set for a reprice?
 		rem --- Do repricing
 
 			gosub pricing
+			callpoint!.setDevObject("rcpr_row",str(callpoint!.getValidationRow()))
 			callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "N")
 			gosub manual_price_flag
 
-		rem --- Return focus to where we were (Detail line grid)
-		rem --- unless the Enter Price message was displayed
-
-			if !enter_price_message then
-				util.forceEdit(Form!, return_to_col)
-			endif
 		endif
 	endif
 [[OPE_ORDDET.STD_LIST_PRC.BINP]]
@@ -428,7 +423,7 @@ rem --- Initialize inventory item update
 
 		status=999
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then exitto std_exit
+		if status then goto awri_update_hdr
 
 rem --- Items or warehouses are different: uncommit previous
 
@@ -447,7 +442,7 @@ rem --- Uncommit prior item and warehouse
 
 				if line_ship_date$<=user_tpl.def_commit$				
 					call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-					if status then exitto std_exit
+					if status then goto awri_update_hdr
 				endif
 			endif
 
@@ -462,7 +457,7 @@ rem --- Commit quantity for current item and warehouse
 
 				if line_ship_date$<=user_tpl.def_commit$				
 					call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-					if status then exitto std_exit
+					if status then goto awri_update_hdr
 				endif
 			endif
 
@@ -485,7 +480,7 @@ rem --- Commit quantity for current item and warehouse
 
 				if line_ship_date$<=user_tpl.def_commit$
 					call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-					if status then exitto std_exit
+					if status then goto awri_update_hdr
 				endif
 			endif
 
@@ -499,7 +494,7 @@ rem --- Only do the next if the commit flag has been changed
 rem --- Initialize inventory item update
 		status=999
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then exitto std_exit
+		if status then goto awri_update_hdr
 
 rem --- Flag changed from Commit to Uncommit: uncommit previous
 
@@ -512,7 +507,7 @@ rem --- Uncommit prior quantity
 				items$[2] = prior_item$
 				refs[0]   = prior_qty
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if status then goto awri_update_hdr
 			endif
 		endif
 
@@ -525,7 +520,7 @@ rem --- Commit current quantity
 				items$[2] = curr_item$
 				refs[0]   = curr_qty 
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if status then goto awri_update_hdr
 			endif
 		endif
 	endif
@@ -534,7 +529,9 @@ awri_update_hdr: rem --- Update header
 
 	gosub disp_grid_totals
 
-	callpoint!.setDevObject("details_changed","Y")
+	if callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") <> "P" 
+		callpoint!.setDevObject("details_changed","Y")
+	endif
 
 rem input "Det:Done with AWRI: ", *; rem debug
 [[OPE_ORDDET.BDGX]]
@@ -743,6 +740,15 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 [[OPE_ORDDET.AGRN]]
 rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
 
+rem --- See if we're coming back from Recalc button
+
+	if callpoint!.getDevObject("rcpr_row") <> ""
+		callpoint!.setFocus(num(callpoint!.getDevObject("rcpr_row")),"OPE_ORDDET.UNIT_PRICE")
+		callpoint!.setDevObject("rcpr_row","")
+		callpoint!.setDevObject("details_changed","Y")
+		break
+	endif
+
 rem --- Disable Line Code if existing record
 
 	if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) = ""
@@ -900,8 +906,7 @@ rem --- Warehouse and Item must be correct
 		rem callpoint!.setStatus("ABORT")
 
 		rem --- using this instead to force focus if item/whse invalid -- i.e., don't let user leave corrupt row
-		callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_ORDDET.ITEM_ID")
-rem		callpoint!.setFocus(this_row,"OPE_ORDDET.ITEM_ID")
+		callpoint!.setFocus(this_row,"OPE_ORDDET.ITEM_ID")
 		break; rem --- exit callpoint
 
 	else

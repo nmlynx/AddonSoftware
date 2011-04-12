@@ -340,15 +340,10 @@ rem --- Are things set for a reprice?
 		rem --- Do repricing
 
 			gosub pricing
+			callpoint!.setDevObject("rcpr_row",str(callpoint!.getValidationRow()))
 			callpoint!.setColumnData("OPE_INVDET.MAN_PRICE", "N")
 			gosub manual_price_flag
 
-		rem --- Return focus to where we were (Detail line grid)
-		rem --- unless the Enter Price message was displayed
-
-			if !enter_price_message then
-				util.forceEdit(Form!, return_to_col)
-			endif
 		endif
 	endif
 [[OPE_INVDET.STD_LIST_PRC.BINP]]
@@ -401,7 +396,7 @@ rem --- Initialize inventory item update
 
 		status=999
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then exitto std_exit
+		if status then goto awri_update_hdr
 
 rem --- Items or warehouses are different: uncommit previous
 
@@ -419,7 +414,7 @@ rem --- Uncommit prior item and warehouse
 				print "---Uncommit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 				
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if status then goto awri_update_hdr
 			endif
 
 rem --- Commit quantity for current item and warehouse
@@ -432,7 +427,7 @@ rem --- Commit quantity for current item and warehouse
 				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if status then goto awri_update_hdr
 			endif
 
 		endif
@@ -453,7 +448,7 @@ rem --- Commit quantity for current item and warehouse
 				print "-----Commit: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
 
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if status then goto awri_update_hdr
 			endif
 
 		endif
@@ -466,7 +461,7 @@ rem --- Only do the next if the commit flag has been changed
 rem --- Initialize inventory item update
 		status=999
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then exitto std_exit
+		if status then goto awri_update_hdr
 
 rem --- Flag changed from Commit to Uncommit: uncommit previous
 
@@ -479,7 +474,7 @@ rem --- Uncommit prior quantity
 				items$[2] = prior_item$
 				refs[0]   = prior_qty
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if status then goto awri_update_hdr
 			endif
 		endif
 
@@ -492,14 +487,18 @@ rem --- Commit current quantity
 				items$[2] = curr_item$
 				refs[0]   = curr_qty 
 				call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then exitto std_exit
+				if status then goto awri_update_hdr
 			endif
 		endif
 	endif
 
+awri_update_hdr: rem --- Update header
+
 rem --- Update header
 
 	gosub disp_grid_totals
+
+	callpoint!.setDevObject("details_changed","Y")
 
 rem input "Det:Done with AWRI: ", *; rem debug
 [[OPE_INVDET.BDGX]]
@@ -607,7 +606,7 @@ rem --- Is this item lot/serial?
 			dflt_data$[2,1] = cust$
 			dflt_data$[3,0] = "ORDER_NO"
 			dflt_data$[3,1] = order$
-			dflt_data$[4,0]="ORDDET_SEQ_REF"
+			dflt_data$[4,0]="INVDET_SEQ_REF"
 			dflt_data$[4,1]=int_seq$
 			lot_pfx$ = firm_id$+ar_type$+cust$+order$+int_seq$
 
@@ -705,6 +704,15 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 	gosub calculate_discount
 [[OPE_INVDET.AGRN]]
 print "Det:AGRN"; rem debug
+
+rem --- See if we're coming back from Recalc button
+
+	if callpoint!.getDevObject("rcpr_row") <> ""
+		callpoint!.setFocus(num(callpoint!.getDevObject("rcpr_row")),"OPE_INVDET.UNIT_PRICE")
+		callpoint!.setDevObject("rcpr_row","")
+		callpoint!.setDevObject("details_changed","Y")
+		break
+	endif
 
 rem --- Disable Line Code if existing record
 
@@ -991,7 +999,7 @@ rem --- Check item/warehouse combination and setup values
 		endif
 		user_tpl.item_price = ivm02a.cur_price
 		if pos(user_tpl.line_type$="SP") and num(ivm02a.unit_cost$)=0 or (user_tpl.line_dropship$="Y" and user_tpl.dropship_cost$="Y")
-			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.UNIT_COST",1)
+			callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.UNIT_COST",1)
 		endif
 		callpoint!.setStatus("REFRESH")
 	endif
