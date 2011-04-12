@@ -192,16 +192,10 @@ remove_trailing_slash: rem --- rem --- Remove trailing slashes (/ and \) from ne
 	return
 
 verify_not_download_loc: rem --- Verify not using current download location
-	rem --- Some needed improvements
-	rem --- Doesn't handle . or .. relative paths
-	rem --- Doesn't handle symbolic links
-	rem --- / vs \ may be an issue
-	rem --- Should be case insensitive for Windows
-	rem --- basis.BBjHome includes the Windows drive id
 
 	loc_ok=1
 	bbjHome$ = System.getProperty("basis.BBjHome")
-	if pos(bbjHome$+"/"=testLoc$)=1 or pos(bbjHome$+"\"=testLoc$)=1
+	if ((new File(testLoc$)).getAbsolutePath()).toLowerCase().startsWith((new File(bbjHome$)).getAbsolutePath().toLowerCase()+File.separator)
 		msg_id$="AD_INSTALL_LOC_BAD"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=bbjHome$
