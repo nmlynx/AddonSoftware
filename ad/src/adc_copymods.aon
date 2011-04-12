@@ -10,7 +10,7 @@ rem ==========================================================================
 
 
 rem --- SOURCESYN$   : Absolute path to the application's current syn file (Input)
-rem --- TARGETSYN$   : Absolute path to the application's syn file being created (Input)
+rem --- TARGETDIR$   : Absolute path to where application is being created (Input)
 rem --- STBLMAP!     : HashMap of ArrayLists keyed by SYSSTBL/STBLs from current syn file (Input)
 rem ---              :     ArrayList (0) = current (source) value of SYSSTBL/STBL
 rem ---              :     ArrayList (1) = new (target) value of SYSSTBL/STBL
@@ -30,7 +30,7 @@ rem --- STATUS       : Status code/0=No error (Returned)
 
     seterr std_error
     setesc std_error
-    enter sourceSyn$,targetSyn$,stblMap!,pfxList!,rdForm!,wait4ok%,status
+    enter sourceSyn$,targetDir$,stblMap!,pfxList!,rdForm!,wait4ok%,status
 
 rem --- Initializations
 
@@ -40,7 +40,7 @@ rem --- Copy a custom mods project from one location to another
 
     declare CopyCustomMods utility!
     utility! = new CopyCustomMods(rdForm!, wait4ok%)
-    utility!.copyMods(sourceSyn$, targetSyn$, stblMap!, pfxList!)
+    utility!.copyMods(sourceSyn$, targetDir$, stblMap!, pfxList!)
     
 done: rem --- All done
     
@@ -121,16 +121,16 @@ rem  */
         rem  * syn and XML files in new location. 
         rem  *
         rem  * @param BBjString sourceSyn$
-        rem  * @param BBjString targetSyn$
+        rem  * @param BBjString targetDir$
         rem  * @param HashMap stblMap!
         rem  * @param ArrayList pfxList!
         rem  */
-        method public void copyMods(BBjString sourceSyn$, BBjString targetSyn$, HashMap stblMap!, ArrayList pfxList!)
+        method public void copyMods(BBjString sourceSyn$, BBjString targetDir$, HashMap stblMap!, ArrayList pfxList!)
 			
 			rem --- Start progress meter and log
 			#meter_total_recs = #meter_total_recs + stblMap!.size() + pfxList!.size()
 			#meter! = #createProgressMeter()
-            #openLog(sourceSyn$, targetSyn$, stblMap!, pfxList!)
+            #openLog(sourceSyn$, targetDir$, stblMap!, pfxList!)
 
             rem --- Parse <mods_dir> from source syn path.
 			declare File modsDir!
@@ -141,9 +141,9 @@ rem  */
             #incrementProgressMeter(meter_text$)
             #log(meter_text$)
 
-            rem --- Parse <mods_dir> from target syn path.
-            targetDir$ = #parseModsPath(targetSyn$)
-			meter_text$ = "target dir: " + targetDir$
+            rem --- Parse syn filename from source syn path.
+			targetSyn$ = targetDir$ + "/config/" + #parseFileName(sourceSyn$)
+			meter_text$ = "target syn: " + targetSyn$
             #incrementProgressMeter(meter_text$)
             #log(meter_text$)
 
@@ -240,6 +240,31 @@ rem  */
                     modsDir$=path$(1, pos("/"=path$,-1))
             endif
             methodret modsDir$
+        methodend
+
+        rem /**
+        rem  * Parse file name from given path.
+        rem  *
+        rem  * @param BBjString path$
+        rem  * @return BBjString filename$
+        rem  */
+        method private BBjString parseFileName(BBjString path$)
+            filename$ = ""
+
+            rem --- Flip directory path separators to "/"
+            pos=pos("\"=path$)
+            while pos
+                path$=path$(1, pos-1)+"/"+path$(pos+1)
+                pos=pos("\"=path$)
+            wend
+
+            rem --- Get mods directory location from path
+            if pos("/"=path$)
+                filename$=path$(pos("/"=path$,-1)+1)
+            else
+				filename$ = path$
+            endif
+            methodret filename$
         methodend
 
         rem /**
@@ -564,16 +589,13 @@ rem  */
         rem  * Open log file.
         rem  *
         rem  * @param BBjString sourceSyn$
-        rem  * @param BBjString targetSyn$
+        rem  * @param BBjString targetDir$
         rem  * @param HashMap stblMap!
         rem  * @param ArrayList pfxList!
         rem  */
-        method private void openLog(BBjString sourceSyn$, BBjString targetSyn$, HashMap stblMap!, ArrayList pfxList!)
-            rem --- log directory is under aon at same level as data directory
-            modsDir$ = #parseModsPath(targetSyn$)
-            logDir$ = modsDir$ + "/logs"
-            
+        method private void openLog(BBjString sourceSyn$, BBjString targetDir$, HashMap stblMap!, ArrayList pfxList!)
             rem --- create logs directory at new location
+            logDir$ = targetDir$ + "/logs"
             FileObject.makeDirs(new File(logDir$))
 
             rem --- create and open log file
@@ -586,7 +608,7 @@ rem  */
             rem --- write log header info
             print(#log_dev)"Updatexml log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
             print(#log_dev)"Source syn file: " + sourceSyn$
-            print(#log_dev)"Target syn file: " + targetSyn$
+            print(#log_dev)"Target syn file: " + targetDir$
 
             rem --- write STBL info
             declare Iterator iter!
