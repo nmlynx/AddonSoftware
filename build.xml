@@ -74,6 +74,7 @@
         <!-- Clear out stuff from last install -->
         <delete file="${build.dir}/installBBj.jar"/>
         <delete dir="${addon.build.dir}"/>
+        <delete dir="${barista.build.dir}"/>
         <delete dir="${install.dir}"/>
     </target>
 
@@ -221,7 +222,7 @@
     <target name="syncAddon">
         <!-- Run BBj session to sync AddonSoftware -->
         <exec executable="${install.dir}/bin/bbj">
-            <arg value="-tIO"/>
+            <env key="DISPLAY" value=":0.0"/>
             <arg value="-q"/>
             <arg value="-WD${barista.bbj.dir}"/>
             <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
@@ -300,7 +301,7 @@
         <delete dir="${install.dir}"/>
 
         <!-- Unzip the BASIS installer -->
-        <unzip src="${bbj.pkgs.dir}/installer.jar" dest="${bbj.pkgs.dir}"/>
+        <unjar src="${bbj.pkgs.dir}/installer.jar" dest="${bbj.pkgs.dir}"/>
 
         <!-- Jar up the install into an installable jar -->
         <jar destfile="${build.dir}/installBBj.jar">
@@ -372,7 +373,7 @@
 
         <copy preserveLastModified="true"
               todir="${barista.build.dir}">
-              <fileset dir="${src.dir}/apps/aon/documentation"
+              <fileset dir="${src.dir}/documentation"
                        includes="readme.htm,relnotes.htm"/>
         </copy>
     </target>
@@ -386,8 +387,8 @@
     <target name="jar">
         <!-- Jar it up - package_addon.jar -->
         <jar destfile="${build.dir}/package_addon.jar">
-             <fileset dir="${addon.build.dir}"
-                      includes="**,*" />
+             <fileset dir="${build.dir}"
+                      includes="apps/aon/" />
         </jar>
     </target>
     <!-- End of jar Addon -->
@@ -408,7 +409,8 @@
     <!-- ====================================== -->
     <!-- build Addon  -->
     <target name="build"
-            depends="installBBj,
+            depends="clean,
+                     installBBj,
                      installAddon,
                      startBBj,
                      syncAddon,
