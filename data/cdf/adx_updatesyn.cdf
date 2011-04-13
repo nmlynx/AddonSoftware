@@ -1,4 +1,8 @@
 [[ADX_UPDATESYN.BSHO]]
+rem --- Declare Java classes used
+
+	use java.io.File
+
 rem --- Initialize update source syn file value so can tell later if it's been changed
 
 	callpoint!.setDevObject("prev_update_syn_file","")

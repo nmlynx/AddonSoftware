@@ -1,3 +1,7 @@
+[[ADX_UPDATEXML.BSHO]]
+rem --- Declare Java classes used
+
+	use java.io.File
 [[ADX_UPDATEXML.UPGRADE.AINP]]
 rem --- Enable/disable input field for backup sync location
 

@@ -1,3 +1,7 @@
+[[ADX_COPYAON.BSHO]]
+rem --- Declare Java classes used
+
+	use java.io.File
 [[ADX_COPYAON.AREC]]
 rem --- Initialize aon new install location
 rem --- Default to /aon_prod/vnnnn (where nnnn=new version)
