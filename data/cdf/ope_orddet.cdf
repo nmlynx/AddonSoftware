@@ -529,8 +529,15 @@ awri_update_hdr: rem --- Update header
 
 	gosub disp_grid_totals
 
+	file$ = "OPC_LINECODE"
+	dim opc_linecode$:fnget_tpl$(file$)
+	line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+	find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
+
 	if callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE") <> "P" 
-		callpoint!.setDevObject("details_changed","Y")
+		if opc_linecode.line_type$<>"M"
+			callpoint!.setDevObject("details_changed","Y")
+		endif
 	endif
 
 rem input "Det:Done with AWRI: ", *; rem debug

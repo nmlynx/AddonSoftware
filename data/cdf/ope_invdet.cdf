@@ -498,7 +498,14 @@ rem --- Update header
 
 	gosub disp_grid_totals
 
-	callpoint!.setDevObject("details_changed","Y")
+	file$ = "OPC_LINECODE"
+	dim opc_linecode$:fnget_tpl$(file$)
+	line_code$=callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
+	find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
+
+	if opc_linecode.line_type$<>"M"
+		callpoint!.setDevObject("details_changed","Y")
+	endif
 
 rem input "Det:Done with AWRI: ", *; rem debug
 [[OPE_INVDET.BDGX]]
