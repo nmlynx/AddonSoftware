@@ -1,0 +1,171 @@
+rem --- adx_rmfirmxmls.aon
+rem --- Remove non-firm 99 ads_masks~*.xml and ads_sequences~*.xml files
+rem --- in the aon/data/sync directory.
+
+rem --- AddonSoftware Version 11.0
+rem --- Copyright (c) 1981-2011 AddonSoftware
+rem --- All Rights Reserved
+
+    use java.io.File
+	use java.util.Vector
+	use java.util.Iterator
+
+    seterr std_error
+    setesc std_error
+
+rem --- Initializations
+	dataDir$=stbl("+DIR_DAT",err=*next)
+	sypdir$=stbl("+DIR_SYP",err=*next)
+	declare File aFile!
+	declare Iterator iter!
+
+rem --- Open File(s)
+	
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADS_AUTOLAUNCH",   open_opts$[1]="OTA"
+
+	gosub open_tables
+
+    ads_autolaunch  = num(open_chans$[1])
+    dim ads_autolaunch$:open_tpls$[1]
+
+rem --- Get non-firm 99 ads_masks~*.xml files in aon/data/sync directory
+	declare File syncDir!
+	syncDir! = new File(dataDir$ + "/sync")
+	declare Vector masksFiles!
+	masksFiles! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new MasksFilter())))
+
+rem --- Remove non-firm 99 ads_masks~*.xml files in aon/data/sync directory
+	iter! = masksFiles!.iterator()
+	while iter!.hasNext()
+		aFile! = cast(File, iter!.next())
+		aFile!.delete()
+	wend
+
+rem --- Get non-firm 99 ads_sequences~*.xml files in aon/data/sync directory
+	declare Vector sequencesFiles!
+	sequencesFiles! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new SequencesFilter())))
+
+rem --- Remove non-firm 99 ads_masks~*.xml files in aon/data/sync directory
+
+rem --- Remove non-firm 99 ads_masks~*.xml files in aon/data/sync directory
+	iter! = sequencesFiles!.iterator()
+	while iter!.hasNext()
+		aFile! = cast(File, iter!.next())
+		aFile!.delete()
+	wend
+	
+done: rem --- All done
+	rem --- Update AutoLaunch Status
+    extract record (ads_autolaunch, key="RMFIRMXMLS") ads_autolaunch$
+    ads_autolaunch.process_status$="C"
+    ads_autolaunch.trans_date$=date(0:"%Yl%Mz%Dz")
+    ads_autolaunch.trans_time$=date(0:"%Hz%mz%sz")
+    ads_autolaunch$ = field(ads_autolaunch$)
+    write record (ads_autolaunch) ads_autolaunch$
+
+    goto std_exit
+
+open_tables: rem --- Open Tables
+
+	call sypdir$+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		rd_table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>""
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		goto std_exit
+	endif
+
+	return
+
+disp_message: rem --- Display Message Dialog
+
+	call sypdir$+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),err_text$,err_act$
+    if pos("EXIT"=err_act$) goto std_error_exit
+    if pos("ESCAPE"=err_act$) seterr 0;setesc 0
+    if pos("RETRY"=err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+	
+    run sypdir$+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+
+rem /**
+rem  * FilenameFilter Class to filter ads_masks~*.xml files excluding
+rem  * ads_masks~99*.xml files.
+rem  */
+
+    class public MasksFilter implements java.io.FilenameFilter
+
+        method public boolean accept(File dir!, String file!)
+			if file!.startsWith("ads_masks~") and !file!.startsWith("ads_masks~99") and file!.endsWith(".xml")
+				methodret Boolean.valueOf("true")
+			else
+				methodret Boolean.valueOf("false")
+			endif
+        methodend
+        
+    classend
+
+rem /**
+rem  * FilenameFilter Class to filter ads_sequences~*.xml files excluding
+rem  * ads_sequences~99*.xml files.
+rem  */
+
+    class public SequencesFilter implements java.io.FilenameFilter
+
+        method public boolean accept(File dir!, String file!)
+			if file!.startsWith("ads_sequences~") and !file!.startsWith("ads_sequences~99") and file!.endsWith(".xml")
+				methodret Boolean.valueOf("true")
+			else
+				methodret Boolean.valueOf("false")
+			endif
+        methodend
+        
+    classend
+
+    end
+
