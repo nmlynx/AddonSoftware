@@ -1,3 +1,15 @@
+[[BMM_BILLMAT.AREC]]
+rem --- Default Line Number to something
+
+rem escape
+[[BMM_BILLMAT.ITEM_ID.AVAL]]
+rem --- Component must not be the same as the Master Bill
+
+	if callpoint!.getUserInput() = callpoint!.getColumnData("BMM_BILLMAT.BILL_NO")
+		msg_id$="BM_BAD_COMP_ITEM"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 [[BMM_BILLMAT.AGRN]]
 rem --- Display Net Quantity
 
@@ -47,18 +59,25 @@ rem --- divisor:			input
 rem --- scrap_fact:		input
 rem ===================================================================
 
+	mask$=callpoint!.getDevObject("unit_mask")
 	yield_pct=callpoint!.getDevObject("yield")
 	net_qty=BmUtils.netQuantityRequired(qty_req,alt_fact,divisor,yield_pct,scrap_fact)
-	callpoint!.setColumnData("BMM_BILLMAT.NET_REQUIRED",str(net_qty))
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setColumnData("BMM_BILLMAT.NET_REQUIRED",str(net_qty:mask$))
+	callpoint!.setStatus("REFRESH-SAVE")
 
 	return
 [[BMM_BILLMAT.BSHO]]
 rem --- Setup java class for Derived Data Element
 
-use ::bmo_BmUtils.aon::BmUtils
-declare BmUtils bmUtils!
-[[BMM_BILLMAT.ITEM_ID.AINV]]
-rem --- Item synonym processing
+	use ::bmo_BmUtils.aon::BmUtils
+	declare BmUtils bmUtils!
 
-	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
+rem --- Set DevObject for Net Quantity mask
+
+	pgmdir$=stbl("+DIR_PGM",err=*next)
+	call pgmdir$+"adc_getmask.aon","","IV","U","",m2$,0,m2
+	callpoint!.setDevObject("unit_mask",m2$)
+[[BMM_BILLMAT.ITEM_ID.AINV]]
+rem --- Check for item synonyms
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
