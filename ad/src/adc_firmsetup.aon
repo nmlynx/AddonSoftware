@@ -55,11 +55,9 @@ rem --- Initializations
 	aonDir$=dataDir$(1, pos("/data"=dataDir$,-1)-1)
 	
 	rem --- Get aon/data directory under the current download directory
-	if !demodata% then
-		sep$ = java.io.File.separator
-		bbjHome$=java.lang.System.getProperty("basis.BBjHome")
-		oldData$ = bbjHome$ + sep$ + "apps" + sep$ + "aon" + sep$ + "data"
-	endif
+	sep$ = java.io.File.separator
+	bbjHome$=java.lang.System.getProperty("basis.BBjHome")
+	oldData$ = bbjHome$ + sep$ + "apps" + sep$ + "aon" + sep$ + "data"
 
 rem --- Count files to process so can size progress meter
 	declare File dataDir!
