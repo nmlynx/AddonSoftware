@@ -32,12 +32,12 @@ class public AO_BmUtils
 		endif
 	methodend
 	
-	method public static BBjNumber netHoursRequired(BBjNumber hrsPerPiece,
-:													BBjNumber dirRate, 
-:													BBjNumber pcsPerHour, 
-:													BBjNumber yieldPct, 
-:													BBjNumber setupTime
-:													BBjNumber lotSize)
+	method public static BBjNumber directCost	(BBjNumber hrsPerPiece,
+:												BBjNumber dirRate, 
+:												BBjNumber pcsPerHour, 
+:												BBjNumber yieldPct, 
+:												BBjNumber setupTime,
+:												BBjNumber lotSize)
 		if pcsPerHour = 0
 			pcsPerHour = 1
 		endif
