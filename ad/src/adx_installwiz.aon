@@ -33,7 +33,7 @@ rem --- Recursively copy oldLocation to newLocation
     bbjHome$=java.lang.System.getProperty("basis.BBjHome")
     oldLocation$ = bbjHome$ + sep$ + "apps" + sep$ + "aon"
 
-    call pgmdir$+"adc_copyaon.aon",oldLocation$,newLocation$,!copyData%,help%,rdForm!,0,status
+    call pgmdir$+"adc_copyaon.aon",oldLocation$,newLocation$,copyData%,help%,rdForm!,0,status
     
 rem --- Update new addon.syn file
 
