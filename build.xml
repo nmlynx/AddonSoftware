@@ -132,19 +132,29 @@
         </copy>
 
         <!-- Addon Docs -->
+        <mkdir  dir="${docpub.dir}"/>
+        <ant dir="${bbj.src.dir}/install"
+             antfile="build-artifacts.xml"
+             target="help_addon">
+             <property name="doc.dir" value="${docpub.dir}"/>
+        </ant>
+
+        <mkdir  dir="${addon.bbj.dir}/help/WebHelp"/>
+        <untar src="${docpub.dir}/docbaristahtml.tar.gz"
+               compression="gzip"
+               dest="${addon.bbj.dir}/help/WebHelp">
+        </untar>
+
+        <move preserveLastModified="true"
+              file="${docpub.dir}/addonhelp.jar"
+              tofile="${addon.bbj.dir}/help/AddonHelp.jar">
+        </move>
+
         <copy preserveLastModified="true"
               todir="${addon.bbj.dir}">
               <fileset dir="${src.dir}/documentation"
                        includes="readme.htm,
                                  relnotes.htm"/>
-        </copy>
-        <copy preserveLastModified="true"
-              todir="${addon.bbj.dir}/help">
-              <fileset dir="${docpub.dir}/AddonHelp"
-                       includes="WebHelp/*,
-                                 WebHelp/**"/>
-              <!-- Must have a registered version of the help docs -->
-              <fileset file="${docpub.dir}/AddonHelp.jar"/>
         </copy>
     </target>
     <!-- End of installAddon -->
