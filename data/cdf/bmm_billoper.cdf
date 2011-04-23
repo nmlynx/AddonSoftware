@@ -1,3 +1,20 @@
+[[BMM_BILLOPER.OP_CODE.AVAL]]
+rem --- Setup default data for new S type line
+
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y"
+		bmm08=fnget_dev("BMC_OPCODES")
+		dim bmm08$:fnget_tpl$("BMC_OPCODES")
+		op_code$=callpoint!.getUserInput()
+		read record (bmm08,key=firm_id$+op_code$,dom=*next)bmm08$
+		callpoint!.setColumnData("BMM_BILLOPER.MOVE_TIME",bmm08.move_time$)
+		callpoint!.setColumnData("BMM_BILLOPER.PCS_PER_HOUR",bmm08.pcs_per_hour$)
+		callpoint!.setColumnData("BMM_BILLOPER.SETUP_TIME",bmm08.setup_time$)
+		callpoint!.setColumnData("BMM_BILLOPER.HRS_PER_PCE","1")
+		hrs_pc=1
+		pc_hr=bmm08.pcs_per_hour
+		setup=bmm08.setup_time
+		gosub calc_hours
+	endif
 [[BMM_BILLOPER.AGRN]]
 rem --- Display Total Hours
 
@@ -53,6 +70,7 @@ rem ===================================================================
 	callpoint!.setColumnData("BMM_BILLOPER.DIRECT_COST",str(direct_cost:mask$))
 	callpoint!.setColumnData("BMM_BILLOPER.OVHD_COST",str(oh_cost:mask$))
 	callpoint!.setColumnData("BMM_BILLOPER.TOT_COST",str(direct_cost+oh_cost:mask$))
+	callpoint!.setColumnData("BMM_BILLOPER.QUEUE_TIME",bmm08.queue_time$)
 	callpoint!.setStatus("REFRESH")
 
 	return

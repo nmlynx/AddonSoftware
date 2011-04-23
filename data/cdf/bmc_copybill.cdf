@@ -3,7 +3,6 @@ rem --- Check for item synonyms
 
 	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[BMC_COPYBILL.BSHO]]
-num_files=1
 rem --- Open tables for copying
 
 	num_files=10
