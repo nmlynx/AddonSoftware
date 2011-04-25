@@ -310,7 +310,7 @@ rem  */
 					FileObject.makeDirs(targetParent!)
 				endif
                 targetChan=unt
-                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
+                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getAbsolutePath()
                 while 1
                     readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
                     writerecord(targetChan)record$
@@ -352,7 +352,7 @@ rem  */
 						case key$ = "DIR"
 						case key$ = "SYSDIR"
 							rem --- replace SYSDIR/DIR path with new directory
-							record$ = record$(1, pos("="=record$)) + newDir$
+							record$ = record$(1, pos("="=record$)) + newDir$ + "/"
 							break
 						case key$ = "APROD"
 						case key$ = "SYSAPP"
@@ -360,7 +360,7 @@ rem  */
 							xpos = pos("/prop/"=record$)
 							tail$ = record$(xpos+1)
 							head$ = record$(1, pos(";"=record$(1, xpos), -1))
-							record$ = head$ + newDir$ + tail$
+							record$ = head$ + newDir$ + "/" + tail$
 							break
 						case key$ = "STBL"
 						case key$ = "SYSSTBL"
