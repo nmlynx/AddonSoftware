@@ -123,8 +123,8 @@ rem  */
             if upgrade%
                 rem --- copy non-branded sync xml files from provided location
                 rem --- (aonDir$ path separators already flipped to "/")
-                #copyFiles(new File(syncBackupDir$), new File(aonDir$ + "/data/sync"), new XmlFilter()); rem ... pre-v11
-rem ... for v11                #copyFiles(new File(syncBackupDir$), new File(aonDir$ + "barista/admin_backup"), new XmlFilter())
+rem                #copyFiles(new File(syncBackupDir$), new File(aonDir$ + "/data/sync"), new XmlFilter()); rem ... pre-v11
+                #copyFiles(new File(syncBackupDir$), new File(aonDir$(1,pos("/"=aonDir$,-1)) + "barista/admin_backup"), new XmlFilter())
 
                 rem --- copy branded consolidated (not non-consolidated) sync xml files
                 rem --- (prior to v11.0 branded consolidated sync xml files were in data/sync directory,
@@ -135,8 +135,8 @@ rem ... for v11                #copyFiles(new File(syncBackupDir$), new File(aon
                 if !oldBackupDir!.exists() or !oldBackupDir!.isDirectory()
                     oldBackupDir! = new File(oldSyncLoc$)
                 endif
-                #copyFiles(oldBackupDir!, new File(aonDir$ + "/data/sync"), new XmlFilter()); rem ... pre-v11
-rem ... for v11                #copyFiles(oldBackupDir!, new File(aonDir$ + "/data/admin_backup"), new XmlFilter())
+rem                #copyFiles(oldBackupDir!, new File(aonDir$ + "/data/sync"), new XmlFilter()); rem ... pre-v11
+                #copyFiles(oldBackupDir!, new File(aonDir$ + "/data/admin_backup"), new XmlFilter())
 
 				rem --- copy old ads_masks~*.xml files, except ads_masks~99*.xml files
 				rem --- (starting with v11.00 non-consolidated sync xml files will not be deleted when consolidated files are created)
