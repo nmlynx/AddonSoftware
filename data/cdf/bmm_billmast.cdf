@@ -4,12 +4,19 @@ rem --- Go run the Copy form
 	callpoint!.setDevObject("master_bill",callpoint!.getColumnData("BMM_BILLMAST.BILL_NO"))
 	callpoint!.setDevObject("lotsize",num(callpoint!.getColumnData("BMM_BILLMAST.STD_LOT_SIZE")))
 
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="PROD_DATE"
+	dflt_data$[1,1]=stbl("+SYSTEM_DATE")
+	dflt_data$[2,0]="WAREHOUSE_ID"
+	dflt_data$[2,1]=callpoint!.getDevObject("dflt_whse")
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"BME_TOTALS",
 :		stbl("+USER_ID"),
 :		"MNT",
 :		"",
-:		table_chans$[all]
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[BMM_BILLMAST.STD_LOT_SIZE.AVAL]]
 rem --- Set devobject
 
