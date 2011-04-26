@@ -17,20 +17,25 @@ rem --- Validate new config location
 		break
 	endif
 
-	rem --- Update grid
-	vectRows!=callpoint!.getDevObject("vectRows")
-	if vectRows!.size()>0 then
-		numCols=num(callpoint!.getDevObject("def_rpts_cols"))
-		for i=0 to vectRows!.size()-1 step numCols
-			source_value$=vectRows!.getItem(i+2)
-			if cvs(vectRows!.getItem(i+3),3)="" then
-				gosub source_target_value
-				vectRows!.setItem(i+3, target_value$)
-			endif
-		next i
+	if cvs(config_loc$,3)<>cvs(callpoint!.getDevObject("prev_config_loc"),3)
+		rem --- Capture current config location value so can tell later if it's been changed
+		callpoint!.setDevObject("prev_config_loc",config_loc$)
 
-		gosub fill_grid
-		util.resizeWindow(Form!, SysGui!)
+		rem --- Update grid
+		vectRows!=callpoint!.getDevObject("vectRows")
+		if vectRows!.size()>0 then
+			numCols=num(callpoint!.getDevObject("def_rpts_cols"))
+			for i=0 to vectRows!.size()-1 step numCols
+				source_value$=vectRows!.getItem(i+2)
+				if cvs(vectRows!.getItem(i+3),3)="" then
+					gosub source_target_value
+					vectRows!.setItem(i+3, target_value$)
+				endif
+			next i
+
+			gosub fill_grid
+			util.resizeWindow(Form!, SysGui!)
+		endif
 	endif
 [[ADX_COPYMODS.ASIZ]]
 rem --- Resize the grid
@@ -128,8 +133,9 @@ rem --- Declare Java classes used
 	use java.util.ArrayList
 	use java.util.HashMap
 
-rem --- Initialize current source syn file value so can tell later if it's been changed
+rem --- Initialize current values so can tell later if they've been changed
 	callpoint!.setDevObject("prev_src_syn_file","")
+	callpoint!.setDevObject("prev_config_loc","")
 [[ADX_COPYMODS.SOURCE_SYN_FILE.AVAL]]
 rem --- Validate source syn file
 
@@ -533,22 +539,6 @@ validate_config_loc: rem --- Validate new config location
 
 	source_syn$=callpoint!.getColumnData("ADX_COPYMODS.SOURCE_SYN_FILE")
 	if ((new File(source_syn$)).getAbsolutePath()).toLowerCase().startsWith((new File(config_loc$)).getAbsolutePath().toLowerCase()+File.separator)
-		msg_id$="AD_INSTALL_LOC_USED"
-		gosub disp_message
-		callpoint!.setColumnData("ADX_COPYMODS.NEW_CONFIG_LOC", config_loc$)
-		callpoint!.setFocus("ADX_COPYMODS.NEW_CONFIG_LOC")
-		callpoint!.setStatus("ABORT")
-		abort=1
-		return
-	endif
-
-	rem --- Cannot be currently used by Addon
-
-	exists=0
-	testChan=unt
-	open(testChan, err=*next)config_loc$ + "/aon/data"; exists=1
-	close(testChan)
-	if exists
 		msg_id$="AD_INSTALL_LOC_USED"
 		gosub disp_message
 		callpoint!.setColumnData("ADX_COPYMODS.NEW_CONFIG_LOC", config_loc$)
