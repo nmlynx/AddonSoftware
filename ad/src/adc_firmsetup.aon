@@ -426,8 +426,11 @@ done: rem --- All done
     goto std_exit
 
 fix_path: rem --- Flip directory path separators
-    while pos("\"=filePath$)
+
+    pos=pos("\"=filePath$)
+    while pos
         filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
     wend
     return
 	
