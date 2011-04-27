@@ -9,7 +9,7 @@ rem --- All Rights Reserved
 rem ==========================================================================
 
 rem --- DATADIR$    : Absolute path to the aon/data directory (Input)
-rem --- NEWFIRM$    : New firm ID (Input)
+rem --- NEWFIRM$    : New firm ID, not required when with demo data (Input)
 rem --- DEMODATA%   : 0=Without demo data/1=With demo data (Input)
 rem --- RDFORM!     : Parent BBjTopLevelWindow object, the form (Input)
 rem --- WAIT4OK%    : Wait for user's OK when done, 0=don't wait/1=wait (Input)
@@ -66,17 +66,19 @@ rem --- Count files to process so can size progress meter
 	rem --- Count requiredFiles!
 	meterSize=requiredFiles!.size()
 
-	rem --- Get/count ads_masks~99*.xml files in aon/data/sync directory
-	declare File syncDir!
-	declare Vector masks99Files!
-	syncDir! = new File(dataDir$ + "/sync")
-	masks99Files! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new Masks99Filter())))
-	meterSize=meterSize+masks99Files!.size()
+	if cvs(newFirm$,3)<>"" then 
+		rem --- Get/count ads_masks~99*.xml files in aon/data/sync directory
+		declare File syncDir!
+		declare Vector masks99Files!
+		syncDir! = new File(dataDir$ + "/sync")
+		masks99Files! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new Masks99Filter())))
+		meterSize=meterSize+masks99Files!.size()
 
-	rem --- Get/count ads_sequences~99*.xml files in aon/data/sync directory
-	declare Vector sequences99Files!
-	sequences99Files! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new Sequences99Filter())))
-	meterSize=meterSize+sequences99Files!.size()
+		rem --- Get/count ads_sequences~99*.xml files in aon/data/sync directory
+		declare Vector sequences99Files!
+		sequences99Files! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new Sequences99Filter())))
+		meterSize=meterSize+sequences99Files!.size()
+	endif
 	
 	if !demodata% then
 		rem --- Count requiredFiles! again
@@ -227,30 +229,32 @@ rem --- Process requiredFiles!
 			wend
 		endif
 		
-		rem --- Copy firm 99 to new firm
-		write_dev=unt
-		open(write_dev)aFile!.getPath()
-		read(file_dev,key="99",dom=*next)
-		while 1
-			key$=key(file_dev,err=*break)
-			if len(key$)>=2 and key$(1,2)="99"
-				readrecord(file_dev,key=key$)record$
-				writerecord(write_dev,key=newFirm$+key$(3),dom=*next)newFirm$+record$(3)
-			else
-				read(file_dev,end=*break)
-			endif
-		wend
+		rem --- Copy firm 99 to new firm, if new firm not blank
+		if cvs(newFirm$,3)<>"" then 
+			write_dev=unt
+			open(write_dev)aFile!.getPath()
+			read(file_dev,key="99",dom=*next)
+			while 1
+				key$=key(file_dev,err=*break)
+				if len(key$)>=2 and key$(1,2)="99"
+					readrecord(file_dev,key=key$)record$
+					writerecord(write_dev,key=newFirm$+key$(3),dom=*next)newFirm$+record$(3)
+				else
+					read(file_dev,end=*break)
+				endif
+			wend
 
-		rem --- Close files
-		close(write_dev)
-		close(file_dev)
-    
-		rem --- Increment progress meter
-		meter_text$="copied firm 99 to "+newFirm$+": "+aFile!.getPath()
-		meter_proc_recs=meter_proc_recs+1
-		meter_action$="MTR-LST"
-		gosub disp_meter
-		print(log_dev)meter_text$
+			rem --- Close files
+			close(write_dev)
+			close(file_dev)
+		
+			rem --- Increment progress meter
+			meter_text$="copied firm 99 to "+newFirm$+": "+aFile!.getPath()
+			meter_proc_recs=meter_proc_recs+1
+			meter_action$="MTR-LST"
+			gosub disp_meter
+			print(log_dev)meter_text$
+		endif
 	wend
 
 	rem --- When not using demo data, remove ads_masks~01*.xml files 
@@ -289,48 +293,50 @@ rem --- Process requiredFiles!
 		wend
 	endif
 
-rem --- Process ads_masks99Files!
-	print(log_dev)""
-	print(log_dev)"process sync ads_masks~99*.xml files"
-	iter! = masks99Files!.iterator()
-	while iter!.hasNext()
-		aFile! = cast(File, iter!.next())
-	
-		rem --- Copy firm 99 to new firm
-		if aFile!.getName().startsWith("ads_masks~99") then
-			source$=aFile!.getPath()
-			target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
-					
-			rem --- copy source file to target file, making necessary updates
-			sourceChan=unt
-			open(sourceChan,isz=-1)source$
-			targetChan=unt
-			open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target$
-			while 1
-				read(sourceChan,end=*break)record$
+rem --- Process ads_masks99Files!, if new firm not blank
+	if cvs(newFirm$,3)<>"" then 
+		print(log_dev)""
+		print(log_dev)"process sync ads_masks~99*.xml files"
+		iter! = masks99Files!.iterator()
+		while iter!.hasNext()
+			aFile! = cast(File, iter!.next())
+		
+			rem --- Copy firm 99 to new firm
+			if aFile!.getName().startsWith("ads_masks~99") then
+				source$=aFile!.getPath()
+				target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
+						
+				rem --- copy source file to target file, making necessary updates
+				sourceChan=unt
+				open(sourceChan,isz=-1)source$
+				targetChan=unt
+				open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target$
+				while 1
+					read(sourceChan,end=*break)record$
 
-				rem --- replace firm ID in <FIRM_ID> lines
-				if(pos("<FIRM_ID>"=record$)) then
-					x = pos("<FIRM_ID>"=record$) + len("<FIRM_ID>")
-					line$ = record$(1,x-1)
-					line$ = line$ + newFirm$
-					line$ = line$ + record$(x+2)
-					record$ = line$
-				endif
+					rem --- replace firm ID in <FIRM_ID> lines
+					if(pos("<FIRM_ID>"=record$)) then
+						x = pos("<FIRM_ID>"=record$) + len("<FIRM_ID>")
+						line$ = record$(1,x-1)
+						line$ = line$ + newFirm$
+						line$ = line$ + record$(x+2)
+						record$ = line$
+					endif
 
-				write(targetChan)record$
-			wend
-			close(sourceChan)
-			close(targetChan)
+					write(targetChan)record$
+				wend
+				close(sourceChan)
+				close(targetChan)
 
-			rem --- Increment progress meter
-			meter_text$="copied firm 99 to "+newFirm$+": "+target$
-			meter_proc_recs=meter_proc_recs+1
-			meter_action$="MTR-LST"
-			gosub disp_meter
-			print(log_dev)meter_text$
-		endif
-	wend
+				rem --- Increment progress meter
+				meter_text$="copied firm 99 to "+newFirm$+": "+target$
+				meter_proc_recs=meter_proc_recs+1
+				meter_action$="MTR-LST"
+				gosub disp_meter
+				print(log_dev)meter_text$
+			endif
+		wend
+	endif
 
 	rem --- When not using demo data, remove ads_sequences~01*.xml files 
 	if !demodata% then
@@ -369,47 +375,49 @@ rem --- Process ads_masks99Files!
 	endif
 
 rem --- Process ads_sequences99Files!
-	print(log_dev)""
-	print(log_dev)"process sync ads_sequences~99*.xml files"
-	iter! = sequences99Files!.iterator()
-	while iter!.hasNext()
-		aFile! = cast(File, iter!.next())
-	
-		rem --- Copy firm 99 to new firm
-		if aFile!.getName().startsWith("ads_sequences~99") then
-			source$=aFile!.getPath()
-			target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
-					
-			rem --- copy source file to target file, making necessary updates
-			sourceChan=unt
-			open(sourceChan,isz=-1)source$
-			targetChan=unt
-			open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target$
-			while 1
-				read(sourceChan,end=*break)record$
+	if cvs(newFirm$,3)<>"" then 
+		print(log_dev)""
+		print(log_dev)"process sync ads_sequences~99*.xml files"
+		iter! = sequences99Files!.iterator()
+		while iter!.hasNext()
+			aFile! = cast(File, iter!.next())
 
-				rem --- replace firm ID in <FIRM_ID> lines
-				if(pos("<FIRM_ID>"=record$)) then
-					x = pos("<FIRM_ID>"=record$) + len("<FIRM_ID>")
-					line$ = record$(1,x-1)
-					line$ = line$ + newFirm$
-					line$ = line$ + record$(x+2)
-					record$ = line$
-				endif
+			rem --- Copy firm 99 to new firm
+			if aFile!.getName().startsWith("ads_sequences~99") then
+				source$=aFile!.getPath()
+				target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
+						
+				rem --- copy source file to target file, making necessary updates
+				sourceChan=unt
+				open(sourceChan,isz=-1)source$
+				targetChan=unt
+				open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target$
+				while 1
+					read(sourceChan,end=*break)record$
 
-				write(targetChan)record$
-			wend
-			close(sourceChan)
-			close(targetChan)
+					rem --- replace firm ID in <FIRM_ID> lines
+					if(pos("<FIRM_ID>"=record$)) then
+						x = pos("<FIRM_ID>"=record$) + len("<FIRM_ID>")
+						line$ = record$(1,x-1)
+						line$ = line$ + newFirm$
+						line$ = line$ + record$(x+2)
+						record$ = line$
+					endif
 
-			rem --- Increment progress meter
-			meter_text$="copied firm 99 to "+newFirm$+": "+target$
-			meter_proc_recs=meter_proc_recs+1
-			meter_action$="MTR-LST"
-			gosub disp_meter
-			print(log_dev)meter_text$
-		endif
-	wend
+					write(targetChan)record$
+				wend
+				close(sourceChan)
+				close(targetChan)
+
+				rem --- Increment progress meter
+				meter_text$="copied firm 99 to "+newFirm$+": "+target$
+				meter_proc_recs=meter_proc_recs+1
+				meter_action$="MTR-LST"
+				gosub disp_meter
+				print(log_dev)meter_text$
+			endif
+		wend
+	endif
     
 done: rem --- All done
     
