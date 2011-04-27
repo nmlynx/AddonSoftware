@@ -70,11 +70,11 @@ rem --- Get new version from addon.syn file
 rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     
     rem --- insure unique file name for addon_vnnnn.syn
-    oldName$=updateSynFile$
+    oldName$=updateSynFile$(pos("/"=updateSynFile$,-1)+1)
     if pos(".syn"=oldName$) then oldName$=oldName$(1,pos(".syn"=oldName$)-1)
     if pos("_v"=oldName$) then oldName$=oldName$(1,pos("_v"=oldName$)-1)
     
-    newSynFile$=oldName$ + newVersion$ + ".syn"
+    newSynFile$=aonDir$+ "/config/" + oldName$ + newVersion$ + ".syn"
     i=0
     testChan=unt
     while 1
@@ -520,12 +520,14 @@ get_syn_version: rem --- Get version from VERSION_ID in the ADM_MODULES table
     return
     
 search_replace: rem --- Search record$ for search$, and replace with replace$
-    pos = pos(search$=record$)
-    if(pos) then
-        record$ = record$(1, pos - 1) + replace$ + record$(pos + len(search$))
-    endif
-    
-    if(pos(search$=record$)) then gosub search_replace
+	if search$<>replace$
+		pos = pos(search$=record$)
+		if(pos) then
+			record$ = record$(1, pos - 1) + replace$ + record$(pos + len(search$))
+		endif
+		
+		if(pos(search$=record$)) then gosub search_replace
+		endif
     return
 
 	
