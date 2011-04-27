@@ -80,6 +80,16 @@ validate_firm_id: rem -- Validate new firm ID with demo data
 
 	abort=0
 
+	rem --- Firm is required unless with demo data
+	if firm_id$="" and !copy_data then
+		msg_id$="AD_FIRM_WO_DEMO"
+		gosub disp_message
+		callpoint!.setFocus(focus$)
+		callpoint!.setStatus("ABORT")
+		abort=1
+		return
+	endif
+
 	rem --- Cannot use firm 99
 	if firm_id$="99" then
 		msg_id$="AD_FIRM_ID_BAD"
