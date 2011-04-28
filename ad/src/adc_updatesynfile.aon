@@ -96,7 +96,7 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
         
         if syn% or bak%
             i=i+1
-            newSynFile$=oldName$ + newVersion$ + "_" + str(i) + ".syn"
+            newSynFile$=aonDir$+ "/config/" + oldName$ + newVersion$ + "_" + str(i) + ".syn"
         else
             break
         endif
@@ -133,9 +133,9 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     wend
     close(sourceChan)
 	if search$="" then search$="../apps/aon/"; rem --- make sure search$ isn't blank
-	declare File search!
-	search! = new File(search$)
-	search$ = search!.getAbsolutePath()
+declare File search!
+search! = new File(search$)
+search$ = search!.getAbsolutePath()
 
 	rem --- Make sure replacement path has a trailing slash
     replace$ = aonDir$
@@ -146,9 +146,9 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
 			replace$=replace$+"\"
 		endif
 	endif
-	declare File replace!
-	replace! = new File(replace$)
-	replace$ = replace!.getAbsolutePath()
+declare File replace!
+replace! = new File(replace$)
+replace$ = replace!.getAbsolutePath()
 
     rem --- copy addon.syn file to addon_vnnnn.syn (where nnnn=new version)
     open(sourceChan,isz=-1)updateSynFile$
@@ -478,6 +478,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
     close(targetChan)
 
     rem --- rename addon_vnnnn.syn back to original addon.syn
+	erase updateSynFile$, err=*next
     rename newSynFile$ to updateSynFile$, err=*next
     
 done: rem --- All done
