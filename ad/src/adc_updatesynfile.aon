@@ -133,9 +133,6 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     wend
     close(sourceChan)
 	if search$="" then search$="../apps/aon/"; rem --- make sure search$ isn't blank
-declare File search!
-search! = new File(search$)
-search$ = search!.getAbsolutePath()
 
 	rem --- Make sure replacement path has a trailing slash
     replace$ = aonDir$
@@ -146,9 +143,6 @@ search$ = search!.getAbsolutePath()
 			replace$=replace$+"\"
 		endif
 	endif
-declare File replace!
-replace! = new File(replace$)
-replace$ = replace!.getAbsolutePath()
 
     rem --- copy addon.syn file to addon_vnnnn.syn (where nnnn=new version)
     open(sourceChan,isz=-1)updateSynFile$
@@ -527,14 +521,12 @@ get_syn_version: rem --- Get version from VERSION_ID in the ADM_MODULES table
     return
     
 search_replace: rem --- Search record$ for search$, and replace with replace$
-	if search$<>replace$
-		pos = pos(search$=record$)
-		if(pos) then
-			record$ = record$(1, pos - 1) + replace$ + record$(pos + len(search$))
-		endif
-		
-		if(pos(search$=record$)) then gosub search_replace
-		endif
+	rem --- Assumes only one occurrence of search$ per line so don't have 
+	rem --- to deal with situation where pos(search$=replace$)>0
+	pos = pos(search$=record$)
+	if(pos) then
+		record$ = record$(1, pos - 1) + replace$ + record$(pos + len(search$))
+	endif
     return
 
 	
