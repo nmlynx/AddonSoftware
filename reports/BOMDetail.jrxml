@@ -4,8 +4,8 @@
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
-	<parameter name="FROM_BILL" class="java.lang.String"/>
-	<parameter name="THRU_BILL" class="java.lang.String"/>
+	<parameter name="BILL_NO_1" class="java.lang.String"/>
+	<parameter name="BILL_NO_2" class="java.lang.String"/>
 	<parameter name="FIRM_NAME" class="java.lang.String"/>
 	<parameter name="DOC_NO" class="java.lang.String"/>
 	<parameter name="DATE_REP" class="java.lang.String"/>
@@ -270,6 +270,9 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{FROM_BIL
 			</subreport>
 			<subreport>
 				<reportElement positionType="Float" x="0" y="119" width="555" height="13"/>
+				<subreportParameter name="PROD_DATE">
+					<subreportParameterExpression><![CDATA[$P{PROD_DATE}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>
