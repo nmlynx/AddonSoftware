@@ -188,6 +188,7 @@ rem --- Rename addon.syn to addon_vnnnn.syn, and update paths
     print(log_dev)meter_text$
 
     rem --- rename original addon.syn now that we're done with it, save as a backup
+	erase updateSynFile$ + ".bak", err=*next
     rename updateSynFile$ to updateSynFile$ + ".bak", err=*next
 
 rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn

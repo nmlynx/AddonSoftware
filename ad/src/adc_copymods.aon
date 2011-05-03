@@ -418,8 +418,10 @@ rem  */
 			close(targetChan)
 	
 			rem --- rename original syn as a backup
+			erase synFile$ + ".bak", err=*next
 			rename synFile$ to synFile$ + ".bak", err=*next
 			rem --- rename temporary syn as original syn
+			erase synFile$, err=*next
 			rename synFile$ + ".tmp" to synFile$, err=*next
         methodend
 
