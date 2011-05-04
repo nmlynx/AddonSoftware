@@ -15,7 +15,7 @@
 	<queryString>
 		<![CDATA[select firm_id, bill_no, drawing_no, drawing_rev, bill_rev, phantom_bill, source_code, unit_measure, lstrvs_date, lstact_date, create_date, est_yield, std_lot_size, ivm_itemmast.item_desc as itemdesc from bmm_billmast
 left join ivm_itemmast on bmm_billmast.firm_id = ivm_itemmast.firm_id and bmm_billmast.bill_no = ivm_itemmast.item_id
-where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{FROM_BILL} and bmm_billmast.bill_no <= $P{THRU_BILL}]]>
+where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_1} and bmm_billmast.bill_no <= $P{BILL_NO_2}]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String"/>
 	<field name="BILL_NO" class="java.lang.String"/>

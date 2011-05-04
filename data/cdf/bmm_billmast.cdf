@@ -1,3 +1,21 @@
+[[BMM_BILLMAST.AOPT-HCPY]]
+rem --- Go run the Hard Copy form
+
+	callpoint!.setDevObject("master_bill",callpoint!.getColumnData("BMM_BILLMAST.BILL_NO"))
+
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="PROD_DATE"
+	dflt_data$[1,1]=stbl("+SYSTEM_DATE")
+	dflt_data$[2,0]="INCLUDE_COMMENT"
+	dflt_data$[2,1]="Y"
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"BMM_DETAILLIST",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[BMM_BILLMAST.AOPT-TOTL]]
 rem --- Go run the Copy form
 

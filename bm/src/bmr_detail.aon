@@ -27,7 +27,7 @@ rem --- Open files
 
     num_files=9
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="BMS_PARAMS",     open_opts$[1]="OTA"
+    open_tables$[1]="IVS_PARAMS",     open_opts$[1]="OTA"
     open_tables$[2]="IVM_ITEMMAST",   open_opts$[2]="OTA"
     open_tables$[3]="BMM_BILLMAT",   open_opts$[3]="OTA"
     open_tables$[4]="IVM_ITEMWHSE",   open_opts$[4]="OTA"
@@ -39,8 +39,8 @@ rem --- Open files
 
     gosub open_tables
 
-    bms_params_dev=num(open_chans$[1])
-    dim bms_params$:open_tpls$[1]
+    ivs_params_dev=num(open_chans$[1])
+    dim ivs_params$:open_tpls$[1]
 
 rem --- Close files after ensuring they exist
 
@@ -57,17 +57,22 @@ rem --- Close files after ensuring they exist
 
     gosub open_tables
 
-rem --- retrieve retention value from param file
+rem --- Get default warehouse
 
-    readrecord(bms_params_dev,key=firm_id$+"BM00",dom=*next)bms_params$
-    
+	read record (ivs_params_dev,key=firm_id$+"IV00") ivs_params$
+	params!.put("WHSE",ivs_params.warehouse_id$)
+
 rem --- Set additional params
 
     params!.put("FIRM_ID",firm_id$)
 	params!.put("FIRM_NAME",firm_name$)
     params!.put("BARISTA_WD",dir(""))
-    if params!.get("BILL_NO_2")="" then params!.put("BILL_NO_2","~~~~~~")    
-    if params!.get("PICK_CHECK")="Y"
+	bill_from$=callpoint!.getDevObject("bill_from")
+	bill_thru$=callpoint!.getDevObject("bill_thru")
+	params!.put("BILL_NO_1",bill_from$)
+	params!.put("BILL_NO_2",bill_thru$)
+    if cvs(bill_thru$,2)="" then params!.put("BILL_NO_2","~~~~~~")    
+    if params!.get("INCLUDE_COMMENT")="Y"
         params!.put("COMMENT_YN","Y")
     else
         params!.put("COMMENT_YN","N")
@@ -171,7 +176,7 @@ rem --- Event Control
 
     process_events,err=*same
 
-    release
+	release
 
 connect_err:rem --- Connection Error
 
