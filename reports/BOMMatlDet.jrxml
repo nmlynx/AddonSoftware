@@ -96,7 +96,14 @@ where $P{FIRM_ID} = firm_id and $P{BILL_NO} = bill_no]]>
 	<detail>
 		<band height="26" splitType="Stretch">
 			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
-new Boolean (!$P{PROD_DATE}.trim().isEmpty())]]></printWhenExpression>
+((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $F{OBSOLT_DATE}.trim().isEmpty()) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    !$F{OBSOLT_DATE}.trim().isEmpty() &&
+    $P{PROD_DATE} < $F{OBSOLT_DATE}))]]></printWhenExpression>
 			<textField>
 				<reportElement x="0" y="0" width="23" height="13"/>
 				<textElement/>
@@ -174,7 +181,15 @@ new Boolean (!$P{PROD_DATE}.trim().isEmpty())]]></printWhenExpression>
 			</textField>
 		</band>
 		<band height="13">
-			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} =="M") && new Boolean (!$P{PROD_DATE}.trim().isEmpty())]]></printWhenExpression>
+			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} =="M") &&
+((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $F{OBSOLT_DATE}.trim().isEmpty()) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    !$F{OBSOLT_DATE}.trim().isEmpty() &&
+    $P{PROD_DATE} < $F{OBSOLT_DATE}))]]></printWhenExpression>
 			<textField>
 				<reportElement x="0" y="0" width="23" height="13"/>
 				<textElement/>

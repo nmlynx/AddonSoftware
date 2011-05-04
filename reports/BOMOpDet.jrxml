@@ -7,7 +7,7 @@
 	<parameter name="BILL_NO" class="java.lang.String"/>
 	<parameter name="PROD_DATE" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select firm_id, bill_no, op_seq, op_code, line_type, ext_comments, hrs_per_pce, pcs_per_hour, setup_time, move_time, direct_cost, ovhd_cost, tot_cost, bmc_opcodes.queue_time as queue, bmc_opcodes.code_desc as codedesc, bmc_opcodes.direct_rate as direct_rate
+		<![CDATA[select firm_id, bill_no, op_seq, op_code, line_type, ext_comments, hrs_per_pce, pcs_per_hour, setup_time, move_time, direct_cost, ovhd_cost, tot_cost, effect_date, obsolt_date, bmc_opcodes.queue_time as queue, bmc_opcodes.code_desc as codedesc, bmc_opcodes.direct_rate as direct_rate
 from bmm_billoper
 left join bmc_opcodes on bmm_billoper.firm_id = bmc_opcodes.firm_id and bmm_billoper.op_code = bmc_opcodes.op_code
 where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
@@ -25,6 +25,8 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 	<field name="DIRECT_COST" class="java.math.BigDecimal"/>
 	<field name="OVHD_COST" class="java.math.BigDecimal"/>
 	<field name="TOT_COST" class="java.math.BigDecimal"/>
+	<field name="EFFECT_DATE" class="java.lang.String"/>
+	<field name="OBSOLT_DATE" class="java.lang.String"/>
 	<field name="QUEUE" class="java.math.BigDecimal"/>
 	<field name="CODEDESC" class="java.lang.String"/>
 	<field name="DIRECT_RATE" class="java.math.BigDecimal"/>
@@ -115,7 +117,15 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 	</columnHeader>
 	<detail>
 		<band height="26" splitType="Stretch">
-			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") && new Boolean (!$P{PROD_DATE}.trim().isEmpty())]]></printWhenExpression>
+			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
+((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $F{OBSOLT_DATE}.trim().isEmpty()) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    !$F{OBSOLT_DATE}.trim().isEmpty() &&
+    $P{PROD_DATE} < $F{OBSOLT_DATE}))]]></printWhenExpression>
 			<textField>
 				<reportElement x="0" y="0" width="23" height="13"/>
 				<textElement/>
@@ -183,7 +193,15 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 			</textField>
 		</band>
 		<band height="13">
-			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "M") && new Boolean (!$P{PROD_DATE}.trim().isEmpty())]]></printWhenExpression>
+			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "M") &&
+((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $F{OBSOLT_DATE}.trim().isEmpty()) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    !$F{OBSOLT_DATE}.trim().isEmpty() &&
+    $P{PROD_DATE} < $F{OBSOLT_DATE}))]]></printWhenExpression>
 			<textField>
 				<reportElement x="0" y="0" width="23" height="13"/>
 				<textElement/>
