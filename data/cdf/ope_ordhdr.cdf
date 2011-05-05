@@ -298,7 +298,7 @@ rem --- Force focus on the Totals tab
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
 				callpoint!.setDevObject("was_on_tot_tab","Y")
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ABORT-ACTIVATE")
 				break
 			endif
 		endif
@@ -386,7 +386,7 @@ print "Hdr:BPRK"; rem debug
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
 				callpoint!.setDevObject("was_on_tot_tab","Y")
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ABORT-ACTIVATE")
 				break
 			endif
 		endif
@@ -512,7 +512,7 @@ print "Hdr:BNEK"; rem debug
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
 				callpoint!.setDevObject("was_on_tot_tab","Y")
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ABORT-ACTIVATE")
 				break
 			endif
 		endif

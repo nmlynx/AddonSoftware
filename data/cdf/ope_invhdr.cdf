@@ -509,7 +509,7 @@ rem --- Force focus on the Totals tab
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_INVHDR.FREIGHT_AMT")
 				callpoint!.setDevObject("was_on_tot_tab","Y")
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ABORT-ACTIVATE")
 				break
 			endif
 		endif
@@ -850,7 +850,7 @@ rem --- Remove committments for detail records by calling ATAMO
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
 				callpoint!.setDevObject("was_on_tot_tab","Y")
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ABORT-ACTIVATE")
 				break
 			endif
 		endif
@@ -898,7 +898,7 @@ rem --- Previous record must be an invoice
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
 				callpoint!.setDevObject("was_on_tot_tab","Y")
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ABORT-ACTIVATE")
 				break
 			endif
 		endif
