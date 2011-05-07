@@ -1,3 +1,23 @@
+[[BMM_BILLMAST.AOPT-AINQ]]
+rem --- Go run the Availability Inquiry form
+
+	callpoint!.setDevObject("master_bill",callpoint!.getColumnData("BMM_BILLMAST.BILL_NO"))
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="QTY_REQUIRED"
+	dflt_data$[1,1]="1"
+	dflt_data$[2,0]="PROD_DATE"
+	dflt_data$[2,1]=stbl("+SYSTEM_DATE")
+	dflt_data$[3,0]="WAREHOUSE_ID"
+	dflt_data$[3,1]=callpoint!.getDevObject("dflt_whse")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"BMM_AVAILABILITY",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[BMM_BILLMAST.AOPT-HCPY]]
 rem --- Go run the Hard Copy form
 
