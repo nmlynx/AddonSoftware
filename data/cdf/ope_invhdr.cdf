@@ -2,6 +2,7 @@
 rem --- Discount Amount cannot exceed Total Sales Amount
 
 	disc_amt = num(callpoint!.getUserInput())
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",disc_amt)
 	total_sales = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
 	if (total_sales >= 0 and disc_amt > total_sales) or (total_sales < 0 and disc_amt < total_sales) then
 		disc_amt = total_sales
@@ -256,6 +257,7 @@ rem --- Set discount code for use in Order Totals
 
 	user_tpl.disc_code$ = callpoint!.getUserInput()
 	callpoint!.setDevObject("disc_code",user_tpl.disc_code$)
+	callpoint!.setColumnData("OPE_ORDHDR.DISC_CODE",user_tpl.disc_code$)
 
 	file_name$ = "OPC_DISCCODE"
 	disccode_dev = fnget_dev(file_name$)
