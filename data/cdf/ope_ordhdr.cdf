@@ -1241,6 +1241,11 @@ rem --- Convert Quote?
 			gosub disp_message
 
 			if msg_opt$ = "Y" then 
+				rem --- Print pick list in next batch
+				order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+				gosub add_to_batch_print
+				callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG","")
+	
 				callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS","N")
 				callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE","S")
 				ope11_dev        = fnget_dev("OPE_ORDDET")
