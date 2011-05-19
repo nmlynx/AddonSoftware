@@ -269,6 +269,7 @@ rem --- Set discount code for use in Order Totals
 
 	disc_amt = new_disc_amt
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub calculate_tax
 	gosub disp_totals
 [[OPE_INVHDR.AOPT-CASH]]
 rem --- Customer wants to pay cash; Launch invoice totals first

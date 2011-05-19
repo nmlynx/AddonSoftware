@@ -88,7 +88,7 @@ rem --- Set discount code for use in Order Totals
 
 	disc_amt = new_disc_amt
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-
+	gosub calculate_tax
 	gosub disp_totals
 [[OPE_ORDHDR.AREC]]
 rem --- Clear availability information
