@@ -2,7 +2,7 @@
 rem --- Discount Amount cannot exceed Total Sales Amount
 
 	disc_amt = num(callpoint!.getUserInput())
-	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt))
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 	total_sales = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
 	if (total_sales >= 0 and disc_amt > total_sales) or (total_sales < 0 and disc_amt < total_sales) then
 		disc_amt = total_sales
