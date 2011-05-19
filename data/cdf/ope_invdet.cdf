@@ -1174,7 +1174,7 @@ rem ==========================================================================
 	endif
 
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
-	ttl_tax = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable)
+	ttl_tax = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable, ttl_ext_price)
 
 	return
 
