@@ -1314,6 +1314,10 @@ rem --- Convert Quote?
 				callpoint!.setDevObject("msg_quote","N")
 				callpoint!.setDevObject("msg_printed","N")
 				call user_tpl.pgmdir$+"opc_creditmsg.aon","H",callpoint!,UserObj!
+
+				rem --- Reload detail grid with updated ope-11 (ope_orddet) records
+				write record(fnget_dev("OPE_ORDHDR"),key=firm_id$+ar_type$+cust$+ord$)rec_data$
+				callpoint!.setStatus("RECORD:["+firm_id$+ar_type$+cust$+ord$+"]")
 			endif
 		endif
 	endif
