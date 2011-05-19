@@ -1316,8 +1316,8 @@ rem --- Convert Quote?
 				callpoint!.setDevObject("msg_printed","N")
 				call user_tpl.pgmdir$+"opc_creditmsg.aon","H",callpoint!,UserObj!
 
-				rem --- Save current ope_ordhdr, and reload detail grid with updated ope-11 (ope_orddet) records
-				callpoint!.setStatus("SAVE-RECORD:["+firm_id$+ar_type$+cust$+ord$+"]")
+				rem --- Reload detail grid with updated ope-11 (ope_orddet) records
+				callpoint!.setStatus("REFGRID")
 			endif
 		endif
 	endif
