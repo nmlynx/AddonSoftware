@@ -498,7 +498,7 @@ rem  */
                             if(pos(startLocalPath$=record$)) then
                                 #log("      <<< " + record$)
                                 line$ = record$(1,pos(startLocalPath$=record$) + startLocalPathLen - 1)
-                                line$ = line$ + projectDir$ + "prop/"
+                                line$ = line$ + projectDir$ + "/prop/"
                                 line$ = line$ + record$(pos(endLocalPath$=record$, -1))
                                 record$ = line$
                                 #log("      >>> " + record$)
@@ -508,7 +508,7 @@ rem  */
                             if(pos(startDdMountDir$=record$)) then
                                 #log("      <<< " + record$)
                                 line$ = record$(1,pos(startDdMountDir$=record$) + startDdMountDirLen - 1)
-                                line$ = line$ + projectDir$
+                                line$ = line$ + projectDir$ + "/"
                                 line$ = line$ + record$(pos(endDdMountDir$=record$, -1))
                                 record$ = line$
                                 #log("      >>> " + record$)
