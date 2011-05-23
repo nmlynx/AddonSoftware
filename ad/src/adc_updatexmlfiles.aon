@@ -237,8 +237,8 @@ rem                #copyFiles(oldBackupDir!, new File(aonDir$ + "/data/sync"), n
                     xml! = new File(dir!, name$)
                     
                     rem --- update adm_modules~*.xml files (consolidated and non-consolidated)
-                    if cast(BBjString, name$).matches("adm_modules~\[01007514..\]\.xml") or
-:                      cast(BBjString, name$).matches("adm_modules~01007514..\.xml")
+                    if cast(BBjString, name$).matches("adm_modules~\[01007514\w*\]\.xml") or
+:                      cast(BBjString, name$).matches("adm_modules~01007514\w*\.xml")
                         #incrementProgressMeter("updating: " + xml!.getPath())
                         #log("UPDATED: " + xml!.getPath())
                         
