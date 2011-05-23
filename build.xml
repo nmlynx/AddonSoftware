@@ -310,6 +310,14 @@
         <delete file="${build.dir}/installBBj.jar"/>
         <delete dir="${install.dir}"/>
 
+        <!-- Get the BBj packages -->
+        <mkdir  dir="${bbj.pkgs.dir}"/>
+        <ant dir="${bbj.src.dir}/install"
+             antfile="build-artifacts.xml"
+             target="pkgs">
+             <property name="pkg.dir" value="${bbj.pkgs.dir}"/>
+        </ant>
+
         <!-- Unzip the BASIS installer -->
         <unjar src="${bbj.pkgs.dir}/BBjInstaller.jar" dest="${bbj.pkgs.dir}"/>
 
