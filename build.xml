@@ -140,13 +140,13 @@
         </ant>
 
         <mkdir  dir="${addon.bbj.dir}/help/WebHelp"/>
-        <untar src="${docpub.dir}/docbaristahtml.tar.gz"
+        <untar src="${docpub.dir}/docaddonhtml.tar.gz"
                compression="gzip"
                dest="${addon.bbj.dir}/help/WebHelp">
         </untar>
 
         <move preserveLastModified="true"
-              file="${bbj.jars.dir}/addonhelp.jar"
+              file="${docpub.dir}/addonhelp.jar"
               tofile="${addon.bbj.dir}/help/AddonHelp.jar">
         </move>
 
