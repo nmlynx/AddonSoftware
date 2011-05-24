@@ -3,6 +3,7 @@ rem --- Refill grid
 
 	wh$=callpoint!.getUserInput()
 	qty_req=num(callpoint!.getColumnData("BMM_AVAILABILITY.QTY_REQUIRED"))
+	prod_date$=callpoint!.getColumnData("BMM_AVAILABILITY.PROD_DATE")
 	gosub create_reports_vector
 	gosub fill_grid
 [[BMM_AVAILABILITY.QTY_REQUIRED.AVAL]]
@@ -10,6 +11,7 @@ rem --- Refill grid
 
 	wh$=callpoint!.getColumnData("BMM_AVAILABILITY.WAREHOUSE_ID")
 	qty_req=num(callpoint!.getUserInput())
+	prod_date$=callpoint!.getColumnData("BMM_AVAILABILITY.PROD_DATE")
 	gosub create_reports_vector
 	gosub fill_grid
 [[BMM_AVAILABILITY.PROD_DATE.AVAL]]
@@ -17,6 +19,7 @@ rem --- Refill grid
 
 	wh$=callpoint!.getColumnData("BMM_AVAILABILITY.WAREHOUSE_ID")
 	qty_req=num(callpoint!.getColumnData("BMM_AVAILABILITY.QTY_REQUIRED"))
+	prod_date$=callpoint!.getUserInput()
 	gosub create_reports_vector
 	gosub fill_grid
 [[BMM_AVAILABILITY.<CUSTOM>]]
@@ -43,6 +46,7 @@ rem ==========================================================================
 	attr_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SUB_BILL"
 	attr_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Sub"
 	attr_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="3"
+	attr_col$[3,fnstr_pos("PADJ",attr_def_col_str$[0,0],5)]="R"
 
 	attr_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ITEM"
 	attr_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Item"
@@ -89,7 +93,7 @@ rem ==========================================================================
 
 	attr_disp_col$=attr_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridAvail!,"COLH-LINES-LIGHT-AUTO-SIZEC",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridAvail!,"COLH-LINES-LIGHT-AUTO",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_col$[all]
 
 	gridAvail!.setEditable(0)
@@ -100,6 +104,7 @@ rem ==========================================================================
 create_reports_vector: rem --- Create a vector from the file to fill the grid
 rem --- wh$: input
 rem --- qty_req: input
+rem --- prod_date$: input
 rem ==========================================================================
 
 	vectAvail! = BBjAPI().makeVector()
@@ -110,6 +115,7 @@ rem ==========================================================================
 	dim ivm02$:fnget_tpl$("IVM_ITEMWHSE")
 	bmm02_dev=fnget_dev("BMM_BILLMAT")
 	dim bmm02$:fnget_tpl$("BMM_BILLMAT")
+	bmm01_dev=fnget_dev("BMM_BILLMAST")
 
 	yield_pct=callpoint!.getDevObject("yield")
 
@@ -121,20 +127,30 @@ rem ==========================================================================
 		read record (bmm02_dev, end=*break) bmm02$
 		if pos(firm_id$+item$=bmm02$)<>1 then break
 		if bmm02.line_type$<>"S" continue
+		if cvs(bmm02.effect_date$,2)<>"" and bmm02.effect_date$<prod_date$ continue
+		if cvs(bmm02.obsolt_date$,2)<>"" and bmm02.obsolt_date$>prod_date$ continue
+
 		rem --- Now fill vectors
 
 		read record(ivm02_dev,key=firm_id$+wh$+item$,dom=*next) ivm02$
 		dim ivm01$:fattr(ivm01$)
 		find record(ivm01_dev,key=firm_id$+bmm02.item_id$,dom=*next) ivm01$
 		avail=ivm02.qty_on_hand-ivm02.qty_commit
+		net_qty=BmUtils.netQuantityRequired(bmm02.qty_required,bmm02.alt_factor,bmm02.divisor,yield_pct,bmm02.scrap_factor)
+		sub_bill$=""
+		read record(bmm01_dev,key=firm_id$+bmm02.item_id$,dom=*next);sub_bill$="*"
 
 		vectAvail!.addItem(bmm02.material_seq$);rem 0
-		vectAvail!.addItem(""); rem 1
-		vectAvail!.addItem(""); rem 2 - Sub Bill flag
+
+		if avail>=net_qty*qty_req
+			vectAvail!.addItem(" ")
+		else
+			vectAvail!.addItem("**")
+		endif
+		vectAvail!.addItem(sub_bill$); rem 2 - Sub Bill flag
 		vectAvail!.addItem(bmm02.item_id$); rem 3
 		vectAvail!.addItem(ivm01.item_desc$); rem 4 - Description
-		net_qty=BmUtils.netQuantityRequired(qty_req,bmm02.alt_factor,bmm02.divisor,yield_pct,bmm02.scrap_factor)
-		vectAvail!.addItem(str(net_qty)); rem 5 - Qty Req'd
+		vectAvail!.addItem(str(net_qty*qty_req)); rem 5 - Qty Req'd
 		vectAvail!.addItem(str(ivm02.qty_on_hand)); rem 6 - On Hand
 		vectAvail!.addItem(str(ivm02.qty_commit)); rem 7 - Committed
 		vectAvail!.addItem(str(avail)); rem 8 - Available
@@ -201,12 +217,13 @@ rem --- Open/Lock files
 	use ::ado_util.src::util
 	use ::ado_func.src::func
 
-	num_files=3
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA"
 	open_tables$[2]="IVM_ITEMWHSE",open_opts$[2]="OTA"
 	open_tables$[3]="BMM_BILLMAT",open_opts$[3]="OTA"
+	open_tables$[4]="BMM_BILLMAT",open_opts$[4]="OTA"
 
 	gosub open_tables
 
@@ -222,7 +239,7 @@ rem --- Add grid to store Availability
 	UserObj! = BBjAPI().makeVector()
 
 	nxt_ctlID = util.getNextControlID()
-	gridAvail! = Form!.addGrid(nxt_ctlID,30,100,660,280); rem --- ID, x, y, width, height
+	gridAvail! = Form!.addGrid(nxt_ctlID,30,100,460,280); rem --- ID, x, y, width, height
 
 	user_tpl.gridCtlID$ = str(nxt_ctlID)
 	user_tpl.gridCols$ = "10"
@@ -239,11 +256,11 @@ rem --- Add grid to store Availability
 
 rem --- Misc other init
 
-	gridAvail!.setColumnEditable(0,1)
 	gridAvail!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridAvail!.setTabAction(gridAvail!.GRID_NAVIGATE_GRID)
 
 	wh$=callpoint!.getDevObject("dflt_whse")
 	qty_req=1
+	prod_date$=stbl("+SYSTEM_DATE")
 	gosub create_reports_vector
 	gosub fill_grid
