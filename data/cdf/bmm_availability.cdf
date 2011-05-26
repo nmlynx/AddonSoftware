@@ -37,53 +37,54 @@ rem ==========================================================================
 
 	attr_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SEQ"
 	attr_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Seq"
-	attr_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="10"
+	attr_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="40"
 
 	attr_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="OVERAGE"
 	attr_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Over"
-	attr_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="3"
+	attr_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="40"
+	attr_col$[2,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 
 	attr_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SUB_BILL"
 	attr_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Sub"
-	attr_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="3"
-	attr_col$[3,fnstr_pos("PADJ",attr_def_col_str$[0,0],5)]="R"
+	attr_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="40"
+	attr_col$[3,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 
 	attr_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ITEM"
 	attr_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Item"
-	attr_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="15"
+	attr_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="120"
 
 	attr_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DESC"
 	attr_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Desc"
-	attr_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
+	attr_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="200"
 
 	attr_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="QTY_REQ"
 	attr_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Qty Req'd"
 	attr_col$[6,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="15"
+	attr_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="70"
 	attr_col$[6,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ON_HAND"
 	attr_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="On Hand"
 	attr_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="15"
+	attr_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="70"
 	attr_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="COMMIT"
 	attr_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Committed"
 	attr_col$[8,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="15"
+	attr_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="70"
 	attr_col$[8,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AVAIL"
 	attr_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Available"
 	attr_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="15"
+	attr_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="70"
 	attr_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ONORD"
 	attr_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="On Order"
 	attr_col$[10,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="15"
+	attr_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="70"
 	attr_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	for curr_attr=1 to def_cols
@@ -95,6 +96,7 @@ rem ==========================================================================
 
 	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridAvail!,"COLH-LINES-LIGHT-AUTO",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_col$[all]
+	gridAvail!.setFitToGrid(gridAvail!.AUTO_RESIZE_LAST_COLUMN)
 
 	gridAvail!.setEditable(0)
 
@@ -127,8 +129,8 @@ rem ==========================================================================
 		read record (bmm02_dev, end=*break) bmm02$
 		if pos(firm_id$+item$=bmm02$)<>1 then break
 		if bmm02.line_type$<>"S" continue
-		if cvs(bmm02.effect_date$,2)<>"" and bmm02.effect_date$<prod_date$ continue
-		if cvs(bmm02.obsolt_date$,2)<>"" and bmm02.obsolt_date$>prod_date$ continue
+		if cvs(bmm02.effect_date$,2)<>"" and bmm02.effect_date$>prod_date$ continue
+		if cvs(bmm02.obsolt_date$,2)<>"" and bmm02.obsolt_date$<prod_date$ continue
 
 		rem --- Now fill vectors
 
@@ -145,7 +147,7 @@ rem ==========================================================================
 		if avail>=net_qty*qty_req
 			vectAvail!.addItem(" ")
 		else
-			vectAvail!.addItem("**")
+			vectAvail!.addItem("*")
 		endif
 		vectAvail!.addItem(sub_bill$); rem 2 - Sub Bill flag
 		vectAvail!.addItem(bmm02.item_id$); rem 3
@@ -200,7 +202,7 @@ rem ===================================================================
 	return
 [[BMM_AVAILABILITY.ASIZ]]
 rem --- Resize the grid
-
+break
 	if UserObj!<>null() then
 		gridAvail!=UserObj!.getItem(num(user_tpl.gridOfst$))
 		gridAvail!.setColumnWidth(0,10)
@@ -239,7 +241,7 @@ rem --- Add grid to store Availability
 	UserObj! = BBjAPI().makeVector()
 
 	nxt_ctlID = util.getNextControlID()
-	gridAvail! = Form!.addGrid(nxt_ctlID,30,100,460,280); rem --- ID, x, y, width, height
+	gridAvail! = Form!.addGrid(nxt_ctlID,10,100,800,280); rem --- ID, x, y, width, height
 
 	user_tpl.gridCtlID$ = str(nxt_ctlID)
 	user_tpl.gridCols$ = "10"
