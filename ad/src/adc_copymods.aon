@@ -361,11 +361,13 @@ rem  */
 							break
 						case key$ = "APROD"
 						case key$ = "SYSAPP"
-							rem --- update SYSAPP/APROD path with new direcotry
+						rem --- update SYSAPP/APROD path with new direcotry
 							xpos = pos("/prop/"=record$)
-							tail$ = record$(xpos+1)
-							head$ = record$(1, pos(";"=record$(1, xpos), -1))
-							record$ = head$ + newDir$ + "/" + tail$
+							if xpos then
+								tail$ = record$(xpos+1)
+								head$ = record$(1, pos(";"=record$(1, xpos), -1))
+								record$ = head$ + newDir$ + "/" + tail$
+							endif
 							break
 						case key$ = "STBL"
 						case key$ = "SYSSTBL"
