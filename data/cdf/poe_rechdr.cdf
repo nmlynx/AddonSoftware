@@ -1,3 +1,13 @@
+[[POE_RECHDR.BDEL]]
+rem --- custom delete message
+	msg_id$="PO_DELETE_REC"
+	gosub disp_message
+	if msg_opt$="N" then
+		callpoint!.setStatus("ABORT")
+	endif
+[[POE_RECHDR.BDEQ]]
+rem --- suppress default Barista message
+	callpoint!.setStatus("QUIET")
 [[POE_RECHDR.RECPT_DATE.AVAL]]
 rem --- check receipt date
 if callpoint!.getDevObject("gl_installed")="Y"
