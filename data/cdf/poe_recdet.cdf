@@ -363,11 +363,6 @@ if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"
 			focus_column$="POE_RECDET.UNIT_COST"
 			translate$="AON_UNIT_COST"
 		endif
-		if ok_to_write$="Y" and cvs(callpoint!.getColumnData("POE_RECDET.REQD_DATE"),3)="" 
-			ok_to_write$="N"
-			focus_column$="POE_RECDET.REQD_DATE"
-			translate$="AON_DATE_REQUIRED"
-		endif
 	endif
 
 	if ok_to_write$="Y" and cvs(callpoint!.getColumnData("POE_RECDET.PO_LINE_CODE"),3)="N" 
