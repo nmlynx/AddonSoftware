@@ -1,4 +1,14 @@
-[[BMM_BILLMAT.AGDR]]
+[[BMM_BILLMAT.AGRE]]
+rem --- Display Net Quantity
+
+	qty_req=num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))
+	alt_fact=num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))
+	divisor=num(callpoint!.getColumnData("BMM_BILLMAT.DIVISOR"))
+	scrap_fact=num(callpoint!.getColumnData("BMM_BILLMAT.SCRAP_FACTOR"))
+	gosub calc_net
+	item$=callpoint!.getColumnData("BMM_BILLMAT.ITEM_ID")
+	gosub check_sub
+[[BMM_BILLMAT.BGDR]]
 rem --- Display Net Quantity
 
 	qty_req=num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))
@@ -79,12 +89,9 @@ rem --- divisor:			input
 rem --- scrap_fact:		input
 rem ===================================================================
 
-	mask$=callpoint!.getDevObject("unit_mask")
 	yield_pct=callpoint!.getDevObject("yield")
 	net_qty=BmUtils.netQuantityRequired(qty_req,alt_fact,divisor,yield_pct,scrap_fact)
-	callpoint!.setColumnData("BMM_BILLMAT.NET_REQUIRED",str(net_qty:mask$))
-rem	callpoint!.setStatus("SAVE")
-
+	callpoint!.setColumnData("<<DISPLAY>>.NET_REQD",str(net_qty))
 	return
 
 rem ===================================================================
@@ -104,8 +111,7 @@ rem ===================================================================
 	wend
 	open_opts$[1]="CX[2_]"
 	gosub open_tables
-	callpoint!.setColumnData("BMM_BILLMAT.SUB_BILL",sub_bill$)
-rem	callpoint!.setStatus("REFRESH")
+	callpoint!.setColumnData("<<DISPLAY>>.SUB_BILL",sub_bill$,1)
 
 	return
 [[BMM_BILLMAT.BSHO]]
@@ -113,12 +119,6 @@ rem --- Setup java class for Derived Data Element
 
 	use ::bmo_BmUtils.aon::BmUtils
 	declare BmUtils bmUtils!
-
-rem --- Set DevObject for Net Quantity mask
-
-	pgmdir$=stbl("+DIR_PGM",err=*next)
-	call pgmdir$+"adc_getmask.aon","","IV","U","",m2$,0,m2
-	callpoint!.setDevObject("unit_mask",m2$)
 
 rem --- Open files for later use
 

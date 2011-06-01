@@ -1,3 +1,11 @@
+[[BMM_BILLOPER.BGDR]]
+rem --- Display Total Hours
+
+	hrs_pc=num(callpoint!.getColumnData("BMM_BILLOPER.HRS_PER_PCE"))
+	pc_hr=num(callpoint!.getColumnData("BMM_BILLOPER.PCS_PER_HOUR"))
+	setup=num(callpoint!.getColumnData("BMM_BILLOPER.SETUP_TIME"))
+	op_code$=callpoint!.getColumnData("BMM_BILLOPER.OP_CODE")
+	gosub calc_hours
 [[BMM_BILLOPER.OP_CODE.AVAL]]
 rem --- Setup default data for new S type line
 
@@ -15,14 +23,6 @@ rem --- Setup default data for new S type line
 		setup=bmm08.setup_time
 		gosub calc_hours
 	endif
-[[BMM_BILLOPER.AGRN]]
-rem --- Display Total Hours
-
-	hrs_pc=num(callpoint!.getColumnData("BMM_BILLOPER.HRS_PER_PCE"))
-	pc_hr=num(callpoint!.getColumnData("BMM_BILLOPER.PCS_PER_HOUR"))
-	setup=num(callpoint!.getColumnData("BMM_BILLOPER.SETUP_TIME"))
-	op_code$=callpoint!.getColumnData("BMM_BILLOPER.OP_CODE")
-	gosub calc_hours
 [[BMM_BILLOPER.SETUP_TIME.AVAL]]
 rem --- Display Total Hours
 
@@ -66,12 +66,11 @@ rem ===================================================================
 	lot_size=callpoint!.getDevObject("lotsize")
 	direct_cost=BmUtils.directCost(hrs_pc,direct_rate,pc_hr,yield_pct,setup,lot_size)
 	oh_cost=direct_cost*oh_rate
-	callpoint!.setColumnData("BMM_BILLOPER.DIRECT_RATE",str(direct_rate:mask$))
-	callpoint!.setColumnData("BMM_BILLOPER.DIRECT_COST",str(direct_cost:mask$))
-	callpoint!.setColumnData("BMM_BILLOPER.OVHD_COST",str(oh_cost:mask$))
-	callpoint!.setColumnData("BMM_BILLOPER.TOT_COST",str(direct_cost+oh_cost:mask$))
-	callpoint!.setColumnData("BMM_BILLOPER.QUEUE_TIME",bmm08.queue_time$)
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setColumnData("<<DISPLAY>>.DIRECT_RATE",str(direct_rate))
+	callpoint!.setColumnData("<<DISPLAY>>.DIRECT_COST",str(direct_cost))
+	callpoint!.setColumnData("<<DISPLAY>>.OVHD_COST",str(oh_cost))
+	callpoint!.setColumnData("<<DISPLAY>>.TOT_COST",str(direct_cost+oh_cost))
+	callpoint!.setColumnData("<<DISPLAY>>.QUEUE_TIME",bmm08.queue_time$)
 
 	return
 [[BMM_BILLOPER.BSHO]]
