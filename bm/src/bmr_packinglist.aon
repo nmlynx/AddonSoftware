@@ -6,8 +6,8 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-        setesc std_error
-        seterr std_error
+       setesc std_error
+       seterr std_error
 
 rem --- Retrieve the program path
 
@@ -53,15 +53,26 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-        dim bmm01a$:templates$[1],bms01a$:templates$[2],ivm01a$:templates$[3],
-:           ivm14a$:templates$[4],ivs01a$:templates$[5]
+        dim bmm01a$:templates$[1]
+        dim bms01a$:templates$[2]
+        dim ivm01a$:templates$[3]
+        dim ivm14a$:templates$[4]
+        dim ivs01a$:templates$[5]
 
 rem --- Assign form input values to local variables
 
-        billfrom$=Option!.getOptionData("bill_no_1")
-        billthru$=Option!.getOptionData("bill_no_2")
+        billfrom$=Option!.getOptionData("BILL_NO_1")
+        billthru$=Option!.getOptionData("BILL_NO_2")
         pdate$=Option!.getOptionData("report_date")
-        
+rem   -  if no entry for last, plug with ~~~
+       if cvs(billthru$,1)="" then
+            let billthru$=fill(len(billthru$),"~")
+       endif
+
+       if cvs(pdate$,1)=""  then
+           let pdate$=date(0,"%Yl%Mz%Dz")
+       endif
+
 rem --- Retrieve parameter records
 
         bms01a_key$=firm_id$+"BM00"
@@ -71,7 +82,7 @@ rem --- Retrieve parameter records
 
 rem --- Parameters
 
-        dim p[2],desc[3],params[3]
+        dim p[2], desc[3], params[3]
         desc[1]=num(ivs01a.desc_len_01$)
         desc[2]=num(ivs01a.desc_len_02$)
         desc[3]=num(ivs01a.desc_len_03$) 
@@ -103,14 +114,12 @@ rem --- Init Data
         if pdate$="" then pdate$=sysinfo.system_date$
 
 rem --- Print Loop
-
         extractrecord (bmm01_dev,key=firm_id$+billfrom$,dom=*next) bmm01a$
         
-rem --- Main Read
+rem --- Main Read ----------------------------------
 main_read:
-rem while more  
         bmm01a_key$=key(bmm01_dev,end=std_exit)
-        if pos(firm_id$=bmm01a_key$)<>1 then goto std_exit
+        if bmm01a_key$(1,2)<>firm_id$ then goto std_exit
         read record (bmm01_dev,key=bmm01a_key$) bmm01a$
         if billthru$<>"" and bmm01a.bill_no$>billthru$ then goto std_exit            
 
@@ -123,9 +132,8 @@ rem --- Print packing list
         call pgmdir$+"bmc_packinglist.aon",action$,printer_dev,bmm01a.bill_no$,h,pdate$,OutVect!,status
         if status then goto std_exit
 
-rem wend ;-- When returned back from the called program bmc_packinglist.aon, 
-rem --  it shows error 'wend without while'. So disbled while - wend and used goto statement
-goto main_read                
+rem while/wend -- gets an error after the CALL to bmc_packinglist.aon , so use GOTO for loop
+        goto main_read                
 
 
 
@@ -219,7 +227,7 @@ rem #endinclude std_error.src
 rem #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
-
+    escape
     rd_err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)

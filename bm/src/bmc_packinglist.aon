@@ -79,40 +79,42 @@ rem --- Read
         findrecord (bmm01_dev,key=firm_id$+bill_no$,dom=std_exit) bmm01a$
 
 rem --- Heading
-
+        out_action$="FORMAT"
         find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
-        OutVect!.addItem("Bill Number: "+bill_no$)
+        OutVect!.addItem("Bill Number: "+cvs(bill_no$,1+2))
         xwk=fnblank(4)
 
         OutVect!.addItem("Description: "+ivm01a.ITEM_DESC$(1,min(desc[1],36)))
-        xwk=fnblank(3)
+        xwk=fnblank(1)
+        OutVect!.addItem("Drawing Revision:"+bmm01a.DRAWING_REV$)
+        xwk=fnblank(1)
         OutVect!.addItem("Phantom Bill?: "+bmm01a.PHANTOM_BILL$)
 
         xwk=fnblank(1)
         OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34)))
-        xwk=fnblank(2)
+        OutVect!.addItem("Revision Code: "+bmm01a.BILL_REV$)
+        xwk=fnblank(1)
         OutVect!.addItem("Unit Of Measure: "+bmm01a.UNIT_MEASURE$)
 
-        xwk=fnblank(1)
+        OutVect!.addItem("Drawing Number: "+bmm01a.DRAWING_NO$)
         OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32)))
-        xwk=fnblank(2)
+        OutVect!.addItem("Created: "+fndate$(bmm01a.CREATE_DATE$))
+        xwk=fnblank(1)
         OutVect!.addItem("Estimated Yield %: "+str(bmm01a.EST_YIELD:"##0.00"))
 
-        OutVect!.addItem("Drawing Number: "+bmm01a.DRAWING_NO$)
-        xwk=fnblank(3)
+      
+        xwk=fnblank(2)
+        OutVect!.addItem("Revised: "+fndate$(bmm01a.LSTRVS_DATE$))
+        xwk=fnblank(1)
         OutVect!.addItem("Standard Lot Size: "+str(bmm01a.STD_LOT_SIZE))
 
-        OutVect!.addItem("Drawing Revision:"+bmm01a.DRAWING_REV$)
-        OutVect!.addItem("Revision Code: "+bmm01a.BILL_REV$)
-        OutVect!.addItem("Created: "+fndate$(bmm01a.CREATE_DATE$))
-        OutVect!.addItem("Revised: "+fndate$(bmm01a.LSTRVS_DATE$))
+        xwk=fnblank(4)
         OutVect!.addItem("As Of: "+fndate$(pdate$))
 
-        OutVect!.addItem(fill(40,"-"))
-        OutVect!.addItem(fill(20,"-"))
-        OutVect!.addItem(fill(20,"-"))
-        OutVect!.addItem(fill(20,"-"))
-        OutVect!.addItem(fill(25,"-"))
+rem --- top dashed lines are just visually confusing...
+        xwk=fnblank(5)
+        
+  
         OutVect!.addItem(fill(20," ")+"Op Seq")
         OutVect!.addItem("Component")
         OutVect!.addItem("U/M")
@@ -165,9 +167,9 @@ rem --- Print Detail
         OutVect!.addItem(bmm02a.ITEM_ID$(1,p[0]))
         OutVect!.addItem(bmm02a.UNIT_MEASURE$)
         OutVect!.addItem(str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$))
-        OutVect!.addItem(fill(10,"_"))
+        OutVect!.addItem(fill(13,"_"))
         xwk=fnblank(1)
-        OutVect!.addItem(ivm01a.ITEM_DESC$)
+        OutVect!.addItem("    "+ivm01a.ITEM_DESC$)
         xwk=fnblank(3)
 
 rem --- Serial/Lot Numbers
