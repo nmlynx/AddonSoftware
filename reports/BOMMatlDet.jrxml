@@ -7,8 +7,10 @@
 	<parameter name="BILL_NO" class="java.lang.String"/>
 	<parameter name="WHSE" class="java.lang.String"/>
 	<parameter name="PROD_DATE" class="java.lang.String"/>
+	<parameter name="EST_YIELD" class="java.math.BigDecimal"/>
 	<queryString>
-		<![CDATA[select firm_id, bill_no, material_seq, item_id, op_seq, line_type, unit_measure, ext_comments, effect_date, obsolt_date, qty_required, alt_factor, divisor, scrap_factor, net_required, sub_bill, ivm_itemmast.item_desc as itemdesc, ivm_itemwhse.unit_cost as unitcost from bmm_billmat
+		<![CDATA[select firm_id, bill_no, material_seq, bmm_billmat.item_id, op_seq, line_type, unit_measure, ext_comments, effect_date, obsolt_date, qty_required, alt_factor, divisor, scrap_factor, ivm_itemmast.item_desc as itemdesc, ivm_itemwhse.unit_cost as unitcost from bmm_billmat
+inner join (select count(firm_id) as bom_count from bmm_billmast where bmm_billmast.firm_id = $P{FIRM_ID}) on $P{FIRM_ID} = firm_id
 left join ivm_itemmast on bmm_billmat.firm_id = ivm_itemmast.firm_id and bmm_billmat.item_id = ivm_itemmast.item_id
 left join ivm_itemwhse on bmm_billmat.firm_id = ivm_itemwhse.firm_id and ivm_itemwhse.warehouse_id = $P{WHSE} and ivm_itemwhse.item_id = bmm_billmat.item_id
 where $P{FIRM_ID} = firm_id and $P{BILL_NO} = bill_no]]>
@@ -27,12 +29,19 @@ where $P{FIRM_ID} = firm_id and $P{BILL_NO} = bill_no]]>
 	<field name="ALT_FACTOR" class="java.math.BigDecimal"/>
 	<field name="DIVISOR" class="java.math.BigDecimal"/>
 	<field name="SCRAP_FACTOR" class="java.math.BigDecimal"/>
-	<field name="NET_REQUIRED" class="java.math.BigDecimal"/>
-	<field name="SUB_BILL" class="java.lang.String"/>
 	<field name="ITEMDESC" class="java.lang.String"/>
 	<field name="UNITCOST" class="java.math.BigDecimal"/>
 	<variable name="TOTAL_COST" class="java.math.BigDecimal">
-		<variableExpression><![CDATA[$F{UNITCOST} * $F{NET_REQUIRED}]]></variableExpression>
+		<variableExpression><![CDATA[$F{UNITCOST} * 10000*$F{QTY_REQUIRED}*$F{ALT_FACTOR}/
+    ($F{DIVISOR}*$P{EST_YIELD}*(100-$F{SCRAP_FACTOR}))]]></variableExpression>
+	</variable>
+	<variable name="TOT_MAT_COST" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$V{TOTAL_COST}]]></variableExpression>
+	</variable>
+	<variable name="NET_REQUIRED" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[10000*$F{QTY_REQUIRED}*$F{ALT_FACTOR}/
+    ($F{DIVISOR}*$P{EST_YIELD}*(100-$F{SCRAP_FACTOR}))]]></variableExpression>
+		<initialValueExpression><![CDATA[new BigDecimal(0.000)]]></initialValueExpression>
 	</variable>
 	<background>
 		<band splitType="Stretch"/>
@@ -159,7 +168,7 @@ where $P{FIRM_ID} = firm_id and $P{BILL_NO} = bill_no]]>
 				<textElement/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{UNIT_MEASURE}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.00">
+			<textField pattern="#,##0.000">
 				<reportElement x="407" y="0" width="50" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{UNITCOST}]]></textFieldExpression>
@@ -172,7 +181,7 @@ where $P{FIRM_ID} = firm_id and $P{BILL_NO} = bill_no]]>
 			<textField pattern="#,##0.000">
 				<reportElement x="457" y="13" width="55" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{NET_REQUIRED}]]></textFieldExpression>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{NET_REQUIRED}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.0000">
 				<reportElement x="484" y="0" width="50" height="13"/>

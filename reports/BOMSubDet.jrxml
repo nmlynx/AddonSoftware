@@ -31,7 +31,12 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 	<variable name="TOTAL_COST" class="java.math.BigDecimal">
 		<variableExpression><![CDATA[$F{UNIT_COST} * $F{QTY_REQUIRED}]]></variableExpression>
 	</variable>
-	<variable name="NET_QTY" class="java.math.BigDecimal"/>
+	<variable name="NET_QTY" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{DIVISOR} == 0 ? 0 : $F{QTY_REQUIRED} * $F{ALT_FACTOR} / $F{DIVISOR}]]></variableExpression>
+	</variable>
+	<variable name="TOT_SUB_COST" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$V{TOTAL_COST}]]></variableExpression>
+	</variable>
 	<background>
 		<band splitType="Stretch"/>
 	</background>

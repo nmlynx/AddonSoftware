@@ -31,6 +31,10 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 	<field name="EST_YIELD" class="java.math.BigDecimal"/>
 	<field name="STD_LOT_SIZE" class="java.math.BigDecimal"/>
 	<field name="ITEMDESC" class="java.lang.String"/>
+	<variable name="TOT_MAT_COST" class="java.math.BigDecimal"/>
+	<variable name="TOT_DIR_COST" class="java.math.BigDecimal"/>
+	<variable name="TOT_OH_COST" class="java.math.BigDecimal"/>
+	<variable name="TOT_SUB_COST" class="java.math.BigDecimal"/>
 	<group name="BILL_NO" isStartNewPage="true">
 		<groupExpression><![CDATA[$F{BILL_NO}]]></groupExpression>
 		<groupHeader>
@@ -130,7 +134,7 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="167" splitType="Stretch">
+		<band height="145" splitType="Stretch">
 			<staticText>
 				<reportElement x="0" y="8" width="100" height="13"/>
 				<textElement textAlignment="Right"/>
@@ -217,7 +221,7 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 				<text><![CDATA[Creation Date:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="113" y="70" width="70" height="13">
+				<reportElement mode="Transparent" x="113" y="70" width="70" height="13">
 					<printWhenExpression><![CDATA[new Boolean (!$F{LSTRVS_DATE}.trim().isEmpty())]]></printWhenExpression>
 				</reportElement>
 				<textElement/>
@@ -238,52 +242,65 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{CREATE_DATE}.substring(4,6)+"/"+$F{CREATE_DATE}.substring(6)+"/"+$F{CREATE_DATE}.substring(0,4)]]></textFieldExpression>
 			</textField>
 			<subreport>
-				<reportElement positionType="Float" x="0" y="93" width="555" height="13"/>
+				<reportElement positionType="Float" mode="Transparent" x="0" y="93" width="555" height="13"/>
 				<subreportParameter name="WHSE">
 					<subreportParameterExpression><![CDATA[$P{WHSE}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PROD_DATE">
+					<subreportParameterExpression><![CDATA[$P{PROD_DATE}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="PROD_DATE">
-					<subreportParameterExpression><![CDATA[$P{PROD_DATE}]]></subreportParameterExpression>
+				<subreportParameter name="EST_YIELD">
+					<subreportParameterExpression><![CDATA[$F{EST_YIELD}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="BILL_NO">
 					<subreportParameterExpression><![CDATA[$F{BILL_NO}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<returnValue subreportVariable="TOT_MAT_COST" toVariable="TOT_MAT_COST"/>
 				<subreportExpression class="java.lang.String"><![CDATA["BOMMatlDet.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement positionType="Float" x="0" y="106" width="555" height="13"/>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="PROD_DATE">
 					<subreportParameterExpression><![CDATA[$P{PROD_DATE}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="FIRM_ID">
-					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				<subreportParameter name="EST_YIELD">
+					<subreportParameterExpression><![CDATA[$F{EST_YIELD}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="BILL_NO">
 					<subreportParameterExpression><![CDATA[$F{BILL_NO}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="STD_LOT_SIZE">
+					<subreportParameterExpression><![CDATA[$F{STD_LOT_SIZE}]]></subreportParameterExpression>
+				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<returnValue subreportVariable="TOT_DIR_COST" toVariable="TOT_DIR_COST"/>
+				<returnValue subreportVariable="TOT_OH_COST" toVariable="TOT_OH_COST"/>
 				<subreportExpression class="java.lang.String"><![CDATA["BOMOpDet.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport>
 				<reportElement positionType="Float" x="0" y="119" width="555" height="13"/>
-				<subreportParameter name="FIRM_ID">
-					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
-				</subreportParameter>
 				<subreportParameter name="PROD_DATE">
 					<subreportParameterExpression><![CDATA[$P{PROD_DATE}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="BILL_NO">
 					<subreportParameterExpression><![CDATA[$F{BILL_NO}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<returnValue subreportVariable="TOT_SUB_COST" toVariable="TOT_SUB_COST"/>
 				<subreportExpression class="java.lang.String"><![CDATA["BOMSubDet.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport>
-				<reportElement positionType="Float" x="0" y="145" width="555" height="13">
+				<reportElement positionType="Float" x="0" y="132" width="555" height="13">
 					<printWhenExpression><![CDATA[$P{COMMENT_YN}.equals( "Y" )]]></printWhenExpression>
 				</reportElement>
 				<subreportParameter name="FIRM_ID">
@@ -295,17 +312,6 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression class="java.lang.String"><![CDATA["BOMComments.jasper"]]></subreportExpression>
 			</subreport>
-			<subreport>
-				<reportElement positionType="Float" x="0" y="132" width="555" height="13"/>
-				<subreportParameter name="FIRM_ID">
-					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="BILL_NO">
-					<subreportParameterExpression><![CDATA[$F{BILL_NO}]]></subreportParameterExpression>
-				</subreportParameter>
-				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression class="java.lang.String"><![CDATA["BOMTotal.jasper"]]></subreportExpression>
-			</subreport>
 		</band>
 	</detail>
 	<columnFooter>
@@ -315,6 +321,30 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 		<band splitType="Stretch"/>
 	</pageFooter>
 	<summary>
-		<band splitType="Stretch"/>
+		<band height="13" splitType="Stretch">
+			<subreport>
+				<reportElement positionType="Float" x="0" y="0" width="555" height="13"/>
+				<subreportParameter name="TOT_MAT_COST">
+					<subreportParameterExpression><![CDATA[$V{TOT_MAT_COST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TOT_DIR_COST">
+					<subreportParameterExpression><![CDATA[$V{TOT_DIR_COST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BILL_NO">
+					<subreportParameterExpression><![CDATA[$F{BILL_NO}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TOT_OH_COST">
+					<subreportParameterExpression><![CDATA[$V{TOT_OH_COST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TOT_SUB_COST">
+					<subreportParameterExpression><![CDATA[$V{TOT_SUB_COST}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA["BOMTotal.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
 	</summary>
 </jasperReport>
