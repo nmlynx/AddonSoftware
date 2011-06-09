@@ -347,7 +347,7 @@ rem --- For upgrades, merge old .syn file into new addon_vnnnn.syn
 							if oldList!.size() = 0 then break
                             for j=0 to oldList!.size()-1
                                 oldRec$ = cast(BBjString, oldList!.get(j))
-								if oldRec$="" then continue
+								if pos("/aon/"=oldRec$)=0 then continue
                                 oldKey$ = cvs(oldRec$(pos("/aon/"=oldRec$)),3)
                                 if(oldKey$ = newKey$) then
                                     oldList!.set(j, ""); rem - can't remove while looping over the list
