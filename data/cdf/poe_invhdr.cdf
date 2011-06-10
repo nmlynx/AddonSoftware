@@ -1,3 +1,17 @@
+[[POE_INVHDR.AP_TYPE.AVAL]]
+ap_type$=callpoint!.getUserInput()
+if ap_type$=""
+	ap_type$="  "
+	callpoint!.setUserInput(ap_type$)
+	callpoint!.setStatus("REFRESH")
+endif
+
+apm10_dev=fnget_dev("APC_TYPECODE")
+dim apm10a$:fnget_tpl$("APC_TYPECODE")
+readrecord (apm10_dev,key=firm_id$+"A"+ap_type$,dom=*next)apm10a$
+if cvs(apm10a$,2)<>""
+	callpoint!.setDevObject("dflt_dist_cd",apm10a.ap_dist_code$)
+endif
 [[POE_INVHDR.ADEL]]
 rem -- setting a delete flag so we know in BREX not to bother checking if out of balance
 
@@ -98,6 +112,7 @@ endif
 
 callpoint!.setDevObject("multi_types",aps01a.multi_types$)
 callpoint!.setDevObject("multi_dist",aps01a.multi_dist$)
+callpoint!.setDevObject("dflt_dist_cd", aps01a.ap_dist_code$)
 callpoint!.setDevObject("retention",aps01a.ret_flag$)
 
 rem --- check to see if main GL param rec (firm/GL/00) exists; if not, tell user to set it up first
@@ -349,10 +364,6 @@ callpoint!.setDevObject("dist_bal_control",dist_bal!)
 
 rem --- may need to disable some ctls based on params
 if callpoint!.getDevObject("multi_types")="N" 
-	apm10_dev=fnget_dev("APC_TYPECODE")
-	dim apm10a$:fnget_tpl$("APC_TYPECODE")
-	readrecord (apm10_dev,key=firm_id$+"  ",dom=*next)apm10a$
-	callpoint!.setDevObject("dflt_dist_cd",apm10a.ap_dist_code$)
 	callpoint!.setColumnEnabled("POE_INVHDR.AP_TYPE",-1)
 endif
 if callpoint!.getDevObject("multi_dist")="N" 
@@ -392,7 +403,6 @@ rem --- set vendor_id$ and ap_type$ before coming in
 		callpoint!.setDevObject("dflt_pymt_grp", apm02a.payment_grp$)
 		vend_hist$="Y"
 	else
-		callpoint!.setDevObject("dflt_dist_cd", "")
 		callpoint!.setDevObject("dflt_gl_account", "")
 		callpoint!.setDevObject("dflt_terms_cd", "")
 		callpoint!.setDevObject("dflt_pymt_grp", "")
@@ -602,7 +612,6 @@ callpoint!.setDevObject("tot_dist","")
 callpoint!.setDevObject("tot_gl","")
 callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL","0")
 rem --- Re-enable disabled fields
-callpoint!.setColumnEnabled("POE_INVHDR.AP_DIST_CODE",1)
 callpoint!.setColumnEnabled("POE_INVHDR.INV_DATE",1)
 callpoint!.setColumnEnabled("POE_INVHDR.NET_INV_AMT",1)
 rem --- disable opt buttons
