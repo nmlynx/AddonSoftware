@@ -1677,7 +1677,7 @@ rem ==========================================================================
 	qty_ord  = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	gosub lot_ser_check
 
-	if lotted$ = "Y" and callpoint!.getDevObject("inventoried")="Y" and qty_ord <> 0 and callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
+	if lotted$ = "Y" and qty_ord <> 0 and callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
 		callpoint!.setOptionEnabled("LENT",1)
 	else
 		callpoint!.setOptionEnabled("LENT",0)
