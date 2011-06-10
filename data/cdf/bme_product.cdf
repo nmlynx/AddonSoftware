@@ -120,7 +120,7 @@ rem --- Get Unit of Sale
 [[BME_PRODUCT.BSHO]]
 rem --- Open files
 
-	num_files=5
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA"
 	open_tables$[2]="IVM_ITEMWHSE",open_opts$[2]="OTA"
