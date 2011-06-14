@@ -115,17 +115,17 @@ rem --- top dashed lines are just visually confusing...
         xwk=fnblank(5)
         
   
-        OutVect!.addItem(fill(20," ")+"Op Seq")
+        OutVect!.addItem("Op Seq")
         OutVect!.addItem("Component")
         OutVect!.addItem("U/M")
-        OutVect!.addItem("Quantity")
+        OutVect!.addItem("Quantity"+$00$+"R")
         OutVect!.addItem("Picked")
-        OutVect!.addItem(fill(40,"-"))
-        OutVect!.addItem(fill(20,"-"))
-        OutVect!.addItem(fill(20,"-"))
-        OutVect!.addItem(fill(20,"-"))
-        OutVect!.addItem(fill(25,"-"))
-
+        OutVect!.addItem(fill(10,"_"))
+        OutVect!.addItem(fill(45,"_"))
+        OutVect!.addItem(fill(8,"_"))
+        OutVect!.addItem(fill(30,"_")+$00$+"R")
+        OutVect!.addItem(fill(15,"_"))
+		xvk=fnblank(5)
 
 rem --- Detail
 
@@ -166,7 +166,7 @@ rem --- Print Detail
         OutVect!.addItem(fill(20," ")+bmm02a.OP_SEQ$)
         OutVect!.addItem(bmm02a.ITEM_ID$(1,p[0]))
         OutVect!.addItem(bmm02a.UNIT_MEASURE$)
-        OutVect!.addItem(str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$))
+        OutVect!.addItem(str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$)+$00$+"R")
         OutVect!.addItem(fill(13,"_"))
         xwk=fnblank(1)
         OutVect!.addItem("    "+ivm01a.ITEM_DESC$)

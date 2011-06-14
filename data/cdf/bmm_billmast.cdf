@@ -1,3 +1,21 @@
+[[BMM_BILLMAST.AOPT-PLST]]
+rem --- Go run the Pick List form
+
+	bill_no$=callpoint!.getColumnData("BMM_BILLMAST.BILL_NO")
+
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="BILL_NO_1"
+	dflt_data$[1,1]=bill_no$
+	dflt_data$[2,0]="BILL_NO_2"
+	dflt_data$[2,1]=bill_no$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"BMR_PACKINGLIST",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[BMM_BILLMAST.AOPT-AINQ]]
 rem --- Go run the Availability Inquiry form
 
@@ -63,6 +81,7 @@ rem --- Set devobject
 rem --- Set DevObject
 
 	item$=callpoint!.getUserInput()
+	if cvs(item$,3)="" break
 	callpoint!.setDevObject("master_bill",item$)
 
 rem --- set defaults for new record
