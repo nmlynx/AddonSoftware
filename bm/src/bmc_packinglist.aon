@@ -61,6 +61,7 @@ rem --- Parameters
         desc[3]=num(ivs01a.desc_len_03$) 
         p[0]=ivs01a.item_id_len
         precision num(ivs01a.precision$)
+		call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
 
 rem --- Init Data
 
@@ -137,15 +138,15 @@ rem --- Main Loop Starts
 
         bmm02a_altkey$=key(bmm02_dev,knum="AO_OPSEQ_BILL",end=*break)
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        if first_time$="Y" then let first_time$="N",t0$=bmm02a_altkey.OP_SEQ$
+        if first_time$="Y" then let first_time$="N",t0$=bmm02a_altkey.op_seq$
         read record (bmm02_dev,key=bmm02a_altkey$,knum="AO_OPSEQ_BILL") bmm02a$
-        if pos(bmm01a.FIRM_ID$+bmm01a.BILL_NO$=bmm02a.FIRM_ID$+bmm02a.BILL_NO$+bmm02a.MATERIAL_SEQ$)<>1 then break
-        if cvs(bmm02a.EFFECT_DATE$,3)<>"" and bmm02a.EFFECT_DATE$>pdate$ then continue
-        if cvs(bmm02a.OBSOLT_DATE$,3)<>"" and bmm02a.OBSOLT_DATE$<=pdate$ then continue
+        if pos(bmm01a.firm_id$+bmm01a.bill_no$=bmm02a.firm_id$+bmm02a.bill_no$+bmm02a.material_seq$)<>1 then break
+        if cvs(bmm02a.effect_date$,3)<>"" and bmm02a.effect_date$>pdate$ then continue
+        if cvs(bmm02a.obsolt_date$,3)<>"" and bmm02a.obsolt_date$<=pdate$ then continue
 
-        if bmm02a.LINE_TYPE$<>"S" then
+        if bmm02a.line_type$<>"S" then
             xwk=fnblank(1)
-            OutVect!.addItem(bmm02a.EXT_COMMENTS$)
+            OutVect!.addItem(bmm02a.ext_comments$)
             xwk=fnblank(3)
             continue
         endif
@@ -153,35 +154,35 @@ rem --- Main Loop Starts
 rem --- Standard Item
 
         r0$=" "
-        find (bmm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=addl_reads)
+        find (bmm01_dev,key=firm_id$+bmm02a.item_id$,dom=addl_reads)
         r0$="*"
 
 addl_reads: rem --- Additional Reads
 
-        find record (ivm01_dev,key=firm_id$+bmm02a.ITEM_ID$,dom=*next) ivm01a$
-        ivm01a.ITEM_DESC$=fnitem$(ivm01a.ITEM_DESC$,desc[1],desc[2],desc[3])
+        find record (ivm01_dev,key=firm_id$+bmm02a.item_id$,dom=*next) ivm01a$
+        ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
 
 rem --- Print Detail
 
-        OutVect!.addItem(fill(20," ")+bmm02a.OP_SEQ$)
-        OutVect!.addItem(bmm02a.ITEM_ID$(1,p[0]))
-        OutVect!.addItem(bmm02a.UNIT_MEASURE$)
-        OutVect!.addItem(str(fnqty(bmm02a.QTY_REQUIRED,bmm02a.ALT_FACTOR,bmm02a.DIVISOR,bmm01a.EST_YIELD,bmm02a.SCRAP_FACTOR):bms01a.HRQTY_MASK$)+$00$+"R")
+        OutVect!.addItem(bmm02a.op_seq$)
+        OutVect!.addItem(bmm02a.item_id$(1,p[0]))
+        OutVect!.addItem(bmm02a.unit_measure$)
+        OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor):m2$)+$00$+"R")
         OutVect!.addItem(fill(13,"_"))
         xwk=fnblank(1)
-        OutVect!.addItem("    "+ivm01a.ITEM_DESC$)
+        OutVect!.addItem("    "+ivm01a.item_desc$)
         xwk=fnblank(3)
 
 rem --- Serial/Lot Numbers
 
-        if ivm01a.LOTSER_ITEM$<>"Y" or ivs01a.LOTSER_FLAG$="N" then continue
-        if ivs01a.LOTSER_FLAG$="S" then
+        if ivm01a.lotser_item$<>"Y" or ivs01a.lotser_flag$="N" then continue
+        if ivs01a.lotser_flag$="S" then
             x$="Serial Number: "
         else
             x$="Lot Number: "
         endif
-        if ivs01a.LOTSER_FLAG$="L" and bmm02a.QTY_REQUIRED>5 then bmm02a.QTY_REQUIRED=5
-        for i=1 to bmm02a.QTY_REQUIRED
+        if ivs01a.lotser_flag$="L" and bmm02a.qty_required>5 then bmm02a.qty_required=5
+        for i=1 to bmm02a.qty_required
             xwk=fnblank(1)
             OutVect!.addItem(x$+fill(30,"_"))
             xwk=fnblank(3)
