@@ -1581,7 +1581,8 @@ rem ==========================================================================
 		warn  = 0
 		gosub check_item_whse
 
-		if !user_tpl.item_wh_failed and num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED")) then
+		if (!user_tpl.item_wh_failed and num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))) or
+:		user_tpl.line_type$ <> "O" then
 			callpoint!.setOptionEnabled("ADDL",1)
 		endif
 	endif
