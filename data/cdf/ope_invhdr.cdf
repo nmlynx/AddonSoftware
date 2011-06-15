@@ -2293,6 +2293,7 @@ rem --- Set Dev Objects for use in the form
 
 	callpoint!.setDevObject("disc_amt",str(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")))
 	callpoint!.setDevObject("frt_amt",str(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")))
+	callpoint!.setDevObject("taxable_amt",callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
 
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_ORDTOTALS", 
