@@ -1045,7 +1045,9 @@ rem --- Check Print flag
 	gosub check_print_flag
 
 	if locked then
+		rem --- invoice locked so skip it and start a new one
 		user_tpl.do_end_of_form = 0
+		callpoint!.clearStatus()
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
