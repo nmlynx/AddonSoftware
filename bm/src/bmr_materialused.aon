@@ -80,8 +80,7 @@ rem --- Init Data
         l9=59
         l=l9+1
         m0=p[0]
-        p1$=bms01a.hrqty_mask$
-        p1=len(p1$)
+		call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
         if m0<6 then let m0=6
         dim dashes$(80,"-")
 
