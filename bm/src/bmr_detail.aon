@@ -28,14 +28,14 @@ rem --- Open files
     num_files=9
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="IVS_PARAMS",     open_opts$[1]="OTA"
-    open_tables$[2]="IVM_ITEMMAST",   open_opts$[2]="OTA"
-    open_tables$[3]="BMM_BILLMAT",   open_opts$[3]="OTA"
-    open_tables$[4]="IVM_ITEMWHSE",   open_opts$[4]="OTA"
-    open_tables$[5]="BMM_BILLOPER",   open_opts$[5]="OTA"
-    open_tables$[6]="BMC_OPCODES",   open_opts$[6]="OTA"
-    open_tables$[7]="BMM_BILLSUB",   open_opts$[7]="OTA"
-    open_tables$[8]="APM_VENDMAST",   open_opts$[8]="OTA"
-    open_tables$[9]="BMM_BILLCMTS",   open_opts$[9]="OTA"
+    open_tables$[2]="IVM_ITEMMAST",   open_opts$[2]="OTA[2_]"
+    open_tables$[3]="BMM_BILLMAT",   open_opts$[3]="OTA[2_]"
+    open_tables$[4]="IVM_ITEMWHSE",   open_opts$[4]="OTA[2_]"
+    open_tables$[5]="BMM_BILLOPER",   open_opts$[5]="OTA[2_]"
+    open_tables$[6]="BMC_OPCODES",   open_opts$[6]="OTA[2_]"
+    open_tables$[7]="BMM_BILLSUB",   open_opts$[7]="OTA[2_]"
+    open_tables$[8]="APM_VENDMAST",   open_opts$[8]="OTA[2_]"
+    open_tables$[9]="BMM_BILLCMTS",   open_opts$[9]="OTA[2_]"
 
     gosub open_tables
 
@@ -46,14 +46,14 @@ rem --- Close files after ensuring they exist
 
     num_files=8
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="IVM_ITEMMAST",   open_opts$[1]="CX"
-    open_tables$[2]="BMM_BILLMAT",   open_opts$[2]="CX"
-    open_tables$[3]="IVM_ITEMWHSE",   open_opts$[3]="CX"
-    open_tables$[4]="BMM_BILLOPER",   open_opts$[4]="CX"
-    open_tables$[5]="BMC_OPCODES",   open_opts$[5]="CX"
-    open_tables$[6]="BMM_BILLSUB",   open_opts$[6]="CX"
-    open_tables$[7]="APM_VENDMAST",   open_opts$[7]="CX"
-    open_tables$[8]="BMM_BILLCMTS",   open_opts$[8]="CX"
+    open_tables$[1]="IVM_ITEMMAST",   open_opts$[1]="CX[2_]"
+    open_tables$[2]="BMM_BILLMAT",   open_opts$[2]="CX[2_]"
+    open_tables$[3]="IVM_ITEMWHSE",   open_opts$[3]="CX[2_]"
+    open_tables$[4]="BMM_BILLOPER",   open_opts$[4]="CX[2_]"
+    open_tables$[5]="BMC_OPCODES",   open_opts$[5]="CX[2_]"
+    open_tables$[6]="BMM_BILLSUB",   open_opts$[6]="CX[2_]"
+    open_tables$[7]="APM_VENDMAST",   open_opts$[7]="CX[2_]"
+    open_tables$[8]="BMM_BILLCMTS",   open_opts$[8]="CX[2_]"
 
     gosub open_tables
 
