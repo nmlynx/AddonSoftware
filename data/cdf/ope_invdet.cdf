@@ -1,3 +1,18 @@
+[[OPE_INVDET.QTY_SHIPPED.AVEC]]
+rem --- Extend price now that grid vector has been updated
+	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	gosub disp_ext_amt
+[[OPE_INVDET.QTY_BACKORD.AVEC]]
+rem --- Extend price now that grid vector has been updated
+	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	gosub disp_ext_amt
+[[OPE_INVDET.UNIT_PRICE.AVEC]]
+rem --- Extend price now that grid vector has been updated
+	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	gosub disp_ext_amt
 [[OPE_INVDET.LINE_CODE.AVEC]]
 rem --- Line code may not be displayed correctly when selected via arrow key instead of mouse
 	callpoint!.setStatus("REFRESH:LINE_CODE")
@@ -152,10 +167,12 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_INVDET.QTY_ORDERED.AVEC]]
-print "Det:QTY_ORDERED.AVEC"; rem debug
+rem --- Extend price now that grid vector has been updated
+	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	gosub disp_ext_amt
 
 rem --- Enable buttons
-
 	gosub able_lot_button
 	gosub enable_repricing
 	gosub enable_addl_opts
@@ -163,7 +180,6 @@ rem --- Enable buttons
 rem --- Set shipped and back ordered
 
 	qty_ord    = num(callpoint!.getUserInput())
-	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
 
 	if qty_ord = 0 then
 		callpoint!.setStatus("ABORT")
@@ -195,6 +211,7 @@ rem --- Set shipped and back ordered
 
 rem --- Recalc quantities and extended price
 
+	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
 	if user_tpl.line_type$ <> "N" and
 :		callpoint!.getColumnData("OPE_INVDET.MAN_PRICE") <> "Y" and
 :		( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
@@ -202,8 +219,9 @@ rem --- Recalc quantities and extended price
 		gosub pricing
 	endif
 
-	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
-	gosub disp_ext_amt
+rem --- Don't extend price until grid vector has been updated
+	rem qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	rem gosub disp_ext_amt
 [[OPE_INVDET.LINE_CODE.BINP]]
 rem --- Set previous value / enable repricing, options, lots
 
@@ -931,8 +949,6 @@ rem --- Set header order totals
 	print "---Total sales set:", num(callpoint!.getHeaderColumnData("OPE_INVHDR.TOTAL_SALES")); rem debug
 	print "---Total cost set :", num(callpoint!.getHeaderColumnData("OPE_INVHDR.TOTAL_COST")); rem debug
 [[OPE_INVDET.UNIT_PRICE.AVAL]]
-print "Det:UNIT_PRICE:AVAL"; rem debug
-
 rem --- Set Manual Price flag and round price
 
 	round_precision = num(callpoint!.getDevObject("precision"))	
@@ -949,10 +965,9 @@ rem --- Set Manual Price flag and round price
 		gosub manual_price_flag
 	endif
 
-rem --- Display Extended Price
-
-	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
-	gosub disp_ext_amt
+rem --- Don't extend price until grid vector has been updated
+	rem qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	rem gosub disp_ext_amt
 [[OPE_INVDET.AUDE]]
 print "Det:AUDE"; rem debug
 
@@ -1050,14 +1065,11 @@ print "---Ordered:", ordqty
 		endif
 	endif
 
-rem --- Update header
-
-	qty_shipped = shipqty
-	unit_price  = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
-	gosub disp_ext_amt
+rem --- Don't extend price until grid vector has been updated
+	rem qty_shipped = shipqty
+	rem unit_price  = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	rem gosub disp_ext_amt
 [[OPE_INVDET.QTY_BACKORD.AVAL]]
-print "Det:QTY_BACKORD.AVAL"; rem debug
-
 rem --- Recalc quantities and extended price
 
 	boqty  = num(callpoint!.getUserInput())
@@ -1081,8 +1093,10 @@ rem --- Recalc quantities and extended price
 	endif
 
 	callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_shipped))
-	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
-	gosub disp_ext_amt
+
+rem --- Don't extend price until grid vector has been updated
+	rem unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	rem gosub disp_ext_amt
 [[OPE_INVDET.<CUSTOM>]]
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals

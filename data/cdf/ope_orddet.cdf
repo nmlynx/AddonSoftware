@@ -1,3 +1,18 @@
+[[OPE_ORDDET.QTY_SHIPPED.AVEC]]
+rem --- Extend price now that grid vector has been updated
+	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	gosub disp_ext_amt
+[[OPE_ORDDET.QTY_BACKORD.AVEC]]
+rem --- Extend price now that grid vector has been updated
+	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	gosub disp_ext_amt
+[[OPE_ORDDET.UNIT_PRICE.AVEC]]
+rem --- Extend price now that grid vector has been updated
+	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	gosub disp_ext_amt
 [[OPE_ORDDET.LINE_CODE.AVEC]]
 rem --- Line code may not be displayed correctly when selected via arrow key instead of mouse
 	callpoint!.setStatus("REFRESH:LINE_CODE")
@@ -165,23 +180,19 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
-print "Det:QTY_ORDERED.AVEC"; rem debug
+rem --- Extend price now that grid vector has been updated
+	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	gosub disp_ext_amt
 
 rem --- Enable buttons
-
 	gosub able_lot_button
 	gosub enable_repricing
 	gosub enable_addl_opts
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
-print "Det:QTY_ORDERED.AVAL"; rem debug
-
 rem --- Set shipped and back ordered
 
 	qty_ord    = num(callpoint!.getUserInput())
-	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
-
-	print "---Qty<>prev? ", qty_ord<>user_tpl.prev_qty_ord; rem debug
-	print "---Unit Price:", unit_price; rem debug
 
 	if qty_ord = 0 then
 		callpoint!.setStatus("ABORT")
@@ -209,8 +220,9 @@ rem --- Set shipped and back ordered
 		endif
 	endif
 
-rem --- Recalc quantities and extended price
+rem --- Recalc quantities
 
+	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	if user_tpl.line_type$ <> "N" and
 :		callpoint!.getColumnData("OPE_ORDDET.MAN_PRICE") <> "Y" and
 :		( (qty_ord and qty_ord <> user_tpl.prev_qty_ord) or unit_price = 0 )
@@ -218,8 +230,9 @@ rem --- Recalc quantities and extended price
 		gosub pricing
 	endif
 
-	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
-	gosub disp_ext_amt
+rem --- Don't extend price until grid vector has been updated
+	rem qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	rem gosub disp_ext_amt
 [[OPE_ORDDET.QTY_BACKORD.BINP]]
 rem --- Set previous qty / enable repricing, options, lots
 
@@ -601,8 +614,6 @@ rem --- Did we change rows?
 		gosub set_avail
 	endif
 [[OPE_ORDDET.AOPT-LENT]]
-print "Det:AOPT.LENT"; rem debug
-
 rem --- Save current row/column so we'll know where to set focus when we return from lot lookup
 
 	declare BBjStandardGrid grid!
@@ -964,8 +975,6 @@ rem --- Set header order totals
 
 	callpoint!.setStatus("MODIFIED;REFRESH")
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
-print "Det:UNIT_PRICE:AVAL"; rem debug
-
 rem --- Set Manual Price flag and round price
 	round_precision = num(callpoint!.getDevObject("precision"))
 	unit_price = round(num(callpoint!.getUserInput()),round_precision)
@@ -981,10 +990,9 @@ rem --- Set Manual Price flag and round price
 		gosub manual_price_flag
 	endif
 
-rem --- Display Extended Price
-
-	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
-	gosub disp_ext_amt
+rem --- Don't extend price until grid vector has been updated
+	rem qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+	rem gosub disp_ext_amt
 [[OPE_ORDDET.AUDE]]
 rem --- redisplay totals
 
@@ -1039,17 +1047,11 @@ rem --- Check item/warehouse combination and setup values
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
-print "Det:QTY_SHIPPED.AVAL"; rem debug
-
 rem --- recalc quantities and extended price
 
 	shipqty    = num(callpoint!.getUserInput())
 	ordqty     = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	cash_sale$ = callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE")
-
-	print "---Shipped:", shipqty; rem debug
-	print "---Prev   :", user_tpl.prev_shipqty
-	print "---Ordered:", ordqty
 
 	if shipqty > ordqty then
 		callpoint!.setUserInput(str(user_tpl.prev_shipqty))
@@ -1062,23 +1064,18 @@ rem --- recalc quantities and extended price
 	if user_tpl.allow_bo$ = "N" or cash_sale$ = "Y" then
 		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 		callpoint!.setStatus("REFRESH")
-		print "---BO set to zero"; rem debug
 	else
 		if user_tpl.prev_shipqty <> shipqty then
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(max(0, ordqty - shipqty)) )
 			callpoint!.setStatus("REFRESH")
-			print "---BO set to", max(0, ordqty - shipqty); rem debug
 		endif
 	endif
 
-rem --- Update header
-
-	qty_shipped = shipqty
-	unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
-	gosub disp_ext_amt
+rem --- Don't extend price until grid vector has been updated
+	rem qty_shipped = shipqty
+	rem unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	rem gosub disp_ext_amt
 [[OPE_ORDDET.QTY_BACKORD.AVAL]]
-print "Det:QTY_BACKORD.AVAL"; rem debug
-
 rem --- Recalc quantities and extended price
 
 	boqty  = num(callpoint!.getUserInput())
@@ -1102,8 +1099,10 @@ rem --- Recalc quantities and extended price
 	endif
 
 	callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
-	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
-	gosub disp_ext_amt
+
+rem --- Don't extend price until grid vector has been updated
+	rem unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
+	rem gosub disp_ext_amt
 [[OPE_ORDDET.<CUSTOM>]]
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
@@ -1156,6 +1155,7 @@ rem ==========================================================================
 
 	rem --- Don't update discount unless extended price has changed,
 	rem --- otherwise might overwrite manually entered discount.
+	disc_amt=num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	if user_tpl.prev_ext_price<>num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
 		disc_code$=callpoint!.getDevObject("disc_code")
 
@@ -1175,8 +1175,6 @@ rem ==========================================================================
 		disc_amt = round(disccode_rec.disc_percent * ttl_ext_price / 100, 2)
 		callpoint!.setHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt))
 	endif
-
-	disc_amt=num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	gosub calc_grid_totals
 
 	return
