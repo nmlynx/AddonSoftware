@@ -683,6 +683,20 @@ rem --- Is this item lot/serial?
 				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(min(qty_ordered - qty_shipped, 0)) )
 			endif
 
+			rem --- Grid vector must be updated before updating the discount amount
+			declare BBjVector dtlVect!
+			dtlVect!=cast(BBjVector, GridVect!.getItem(0))
+			dim dtl_rec$:dtlg_param$[1,3]
+			dtl_rec$=cast(BBjString, dtlVect!.getItem(callpoint!.getValidationRow()))
+			if dtl_rec.qty_shipped=qty_shipped
+				qty_shipped_changed=0
+			else
+				dtl_rec.qty_shipped=qty_shipped
+				qty_shipped_changed=1
+				dtlVect!.setItem(callpoint!.getValidationRow(),dtl_rec$)
+				GridVect!.setItem(0,dtlVect!)
+			endif
+
 			gosub disp_ext_amt
 			callpoint!.setStatus("REFRESH")
 
@@ -704,12 +718,10 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 rem --- Backorder is zero and disabled on a new record
 
 	rem user_tpl.new_detail = 1
-	rem The above is not reliable; use callpoint!.getRecordMode()
+	rem The above is not reliable; use callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())
 
 	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
 	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_BACKORD", 0)
-   print "---New record"; rem debug
-   print "---BO qty cleared"; rem debug
 
 rem --- Set defaults for new record
 
@@ -719,15 +731,10 @@ rem --- Set defaults for new record
 	callpoint!.setColumnData("OPE_ORDDET.MAN_PRICE", "N")
 	callpoint!.setColumnData("OPE_ORDDET.EST_SHP_DATE", ship_date$)
 
-	rem print "---Ship Date: ", ship_date$; rem debug
-	rem print "---Commit   : ", user_tpl.def_commit$; rem debug	
-
 	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
-		rem print "---Commit = No"; rem debug
  		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "N")
 		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_SHIPPED", 0)
 	else
-		rem print "---Commit = Yes"; rem debug
 		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y")
  	endif
 
@@ -756,7 +763,7 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
 	gosub calculate_discount
 [[OPE_ORDDET.AGRN]]
-rem (Fires regardles of new or existing row.  Use callpoint!.getRecordMode() to distinguish the two)
+rem (Fires regardles of new or existing row.  Use callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) to distinguish the two)
 
 rem --- See if we're coming back from Recalc button
 
@@ -835,7 +842,7 @@ rem --- Set buttons
 
 	gosub able_lot_button
 
-	if callpoint!.getRecordMode() = "C" then
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) <> "Y" then
 		gosub enable_repricing
 		gosub enable_addl_opts
 	endif
@@ -1153,10 +1160,13 @@ rem ==========================================================================
 calculate_discount: rem --- Calculate Discount Amount
 rem ==========================================================================
 
-	rem --- Don't update discount unless extended price has changed,
-	rem --- otherwise might overwrite manually entered discount.
+	rem --- Don't update discount unless extended price has changed, otherwise might overwrite manually entered discount.
+	rem --- Must always update for a new or deleted record, or when from lot/serial entry and qty_shipped was changed.
 	disc_amt=num(callpoint!.getHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
-	if user_tpl.prev_ext_price<>num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
+	if user_tpl.prev_ext_price<>num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE")) or 
+:	callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or
+:	callpoint!.getGridRowDeleteStatus(callpoint!.getValidationRow())="Y" or
+:	(callpoint!.getEvent()="AOPT-LENT" and qty_shipped_changed) then
 		disc_code$=callpoint!.getDevObject("disc_code")
 
 		file_name$ = "OPC_DISCCODE"
@@ -1784,7 +1794,7 @@ rem ==========================================================================
 
 		rem if user_tpl.new_detail then...
 
-		if callpoint!.getRecordMode() = "A" then
+		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) = "Y" then
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
          print "---BO qty cleared"; rem debug
 		endif

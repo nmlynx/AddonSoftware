@@ -690,7 +690,6 @@ rem --- Return Taxable Amount from detail line vector
             rem --- get Credit Management Parameters
             declare HashMap map! 
             map! = #getCreditManagementParams()
-            wgh$ = cast(BBjString, map!.get("AGING_BUCKET"))
             agingBucket% = int(num(cast(BBjString, map!.get("AGING_BUCKET"))))
             pastDueLimit = num(cast(BBjString, map!.get("PAST_DUE_LIM")))
             holdAmount = num(cast(BBjString, map!.get("HOLD_AMOUNT")))
