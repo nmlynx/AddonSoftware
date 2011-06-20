@@ -499,8 +499,7 @@ new_account: rem --- New GL info
     glm01a.gl_acct_desc$=glm01a.gl_account$+Translate!.getTranslation("AON__(NOT_ON_FILE)")
     glm01_key$=firm_id$+glm01a.gl_account$
     glstatus=104
-    find record (glm01_dev,key=glm01_key$,dom=*next)glm01a$
-    glstatus=0
+    find record (glm01_dev,key=glm01_key$,dom=*next)glm01a$; glstatus=0
     description$(1)=glm01a.gl_acct_desc$
     t3$=glw11a.trns_date$+glw11a.gl_account$
     l1=0
