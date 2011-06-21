@@ -115,6 +115,7 @@ rem --- Initializations
     more=1
     number=0
 rem    errors=0
+	gl_acct_missing=0
     done=0
     l9=59
     l=l9+1
@@ -504,7 +505,10 @@ new_account: rem --- New GL info
     t3$=glw11a.trns_date$+glw11a.gl_account$
     l1=0
     if number>0 lf$="Y"
-    if glstatus>99 errors=errors+1
+    if glstatus>99
+		gl_acct_missing=gl_acct_missing+1
+		glstatus=0
+	endif
     
 account_break_exit: 
 
