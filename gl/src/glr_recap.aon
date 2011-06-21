@@ -115,7 +115,6 @@ rem --- Initializations
     more=1
     number=0
 rem    errors=0
-	gl_acct_missing=0
     done=0
     l9=59
     l=l9+1
@@ -268,6 +267,7 @@ rem --- Get next glw-11 key
             xwk=fnblank(2)
             OutVect!.addItem(stbl("+DTWARN_MSG"))
             xwk=fnblank(3)
+			x$=stbl("+DTWARN_MSG","")
         endif
 
     rem --- Accumulate totals
@@ -340,10 +340,7 @@ date_errors: rem --- Any GL transaction date errors detected in lead overlay?
 
 register_errors: rem --- Register errors
 
-    msg_id$="AON_REG_ERRS"
-    gosub disp_message
-    if pos("PASSVALID"=msg_opt$)=0 goto remove_locks_and_exit
-    errors=0
+    errors=errors+1
 
 next_overlay: rem --- Run update overlay
 
@@ -505,10 +502,7 @@ new_account: rem --- New GL info
     t3$=glw11a.trns_date$+glw11a.gl_account$
     l1=0
     if number>0 lf$="Y"
-    if glstatus>99
-		gl_acct_missing=gl_acct_missing+1
-		glstatus=0
-	endif
+    if glstatus>99 errors=errors+1
     
 account_break_exit: 
 
