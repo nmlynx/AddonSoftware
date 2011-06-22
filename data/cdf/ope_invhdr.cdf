@@ -337,7 +337,15 @@ rem --- Set type in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getUserInput())
 [[OPE_INVHDR.AOPT-PRNT]]
-print "Hdr:AOPT.PRNT"; rem debug
+rem --- Get cash if needed for cash transaction
+
+	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
+		gosub check_cash_due
+		if cash_due then
+			gosub do_totals
+			gosub get_cash
+		endif
+	endif
 
 rem --- Print a counter Invoice
 
@@ -345,13 +353,13 @@ rem --- Print a counter Invoice
 		gosub make_invoice
 	endif
 
-	if user_tpl.credit_installed$ <> "Y" then
+	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
 
 	rem --- No need to check credit first
 
 		gosub do_invoice
-		print "---Printed, starting new record..."; rem debug
 		user_tpl.do_end_of_form = 0
+		callpoint!.clearStatus()
 		callpoint!.setStatus("NEWREC")
 	else
 
@@ -367,25 +375,21 @@ rem --- Print a counter Invoice
 		rem --- Couldn't do credit action, or did credit action w/ no problem, or released from credit but didn't print
 
 			gosub do_invoice
-			print "---Printed in header, starting new record..."; rem debug
 			user_tpl.do_end_of_form = 0
+			callpoint!.clearStatus()
 			callpoint!.setStatus("NEWREC")
 		else
 			if action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then 
 
 			rem --- Released from credit and did print
 
-				print "---Release and printed, starting new record..."; rem debug
 				user_tpl.do_end_of_form = 0
+				callpoint!.clearStatus()
 				callpoint!.setStatus("NEWREC")
-			else
-				print "---Not printing because there was no credit action"; rem debug
 			endif
 		endif
 	endif
 [[OPE_INVHDR.BREX]]
-print "Hdr:BREX"; rem debug
-
 rem --- Are both Customer and Order entered?
 
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"), 2) = "" or 
@@ -408,9 +412,18 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
-rem --- Is flag down?
+rem --- Make sure cash entered for cash transaction
 
-	print "---Should BREX be run? ", iff(user_tpl.do_end_of_form, "yes", "no"); rem debug
+	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y"  then
+		rem --- ope_invcash balance due must be zero before exiting
+		gosub check_cash_due
+		while cash_due
+			gosub get_cash
+			gosub check_cash_due
+		wend
+	endif
+
+rem --- Is flag down?
 
 	if !user_tpl.do_end_of_form then
 		user_tpl.do_end_of_form = 1
@@ -475,13 +488,6 @@ rem --- Does the total of lot/serial# match the qty shipped for each detail line
 				endif
 			next row
 		endif
-	endif
-
-rem --- Cash Transaction
-
-	rem if user_tpl.cash_sale$ = "Y" then
-	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
-		gosub get_cash
 	endif
 [[OPE_INVHDR.BWRI]]
 print "Hdr:BWRI"; rem debug
@@ -1289,12 +1295,6 @@ rem --- New record, set default
 
 		gosub get_op_params
 
-		if cust_id$ = ars01a.customer_id$
-			callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "Y")
-		else 
-			callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "N")
-		endif
-
 		user_tpl.price_code$   = ""
 		user_tpl.pricing_code$ = arm02a.pricing_code$
 		user_tpl.order_date$   = sysinfo.system_date$
@@ -1340,6 +1340,14 @@ rem --- Set customer in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setCust_id(cust_id$)
 
+rem --- The cash customer?
+
+	if user_tpl.cash_sale$="Y" and cust_id$ = user_tpl.cash_cust$
+		callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "Y")
+	else
+		callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "N")
+	endif
+
 rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") <> "Y" then 
@@ -1377,7 +1385,6 @@ rem --- If cash customer, get correct customer number
 	if user_tpl.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" then
 		callpoint!.setColumnData("OPE_INVHDR.CUSTOMER_ID", user_tpl.cash_cust$)
 		callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "Y")
-		user_tpl.is_cash_sale = 1
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPE_INVHDR.<CUSTOM>]]
@@ -1619,8 +1626,6 @@ rem ==========================================================================
 
 	ope_prntlist$ = field(ope_prntlist$)
 	write record (ope_prntlist_dev) ope_prntlist$
-	print "---Added to print batch"; rem debug
-	print "---order:", ope_prntlist.order_no$
 
 	return
 
@@ -1629,8 +1634,6 @@ check_print_flag: rem --- Check print flag
                   rem     OUT: locked = 1/0
 rem ==========================================================================
 
-	print "in check_print_flag..."; rem debug
-
 	locked = 0
 	ar_type$      = callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
 	cust_id$      = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
@@ -1638,8 +1641,6 @@ rem ==========================================================================
 	print_status$ = callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS")
 	ordinv_flag$  = callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")
 
-	print "---Print status: """, print_status$, """"; rem debug
-	print "---picklist_warned flag:", user_tpl.picklist_warned; rem debug
 		 
 	if ordinv_flag$ = "O" then 
 		if print_status$ <> "Y" and !user_tpl.picklist_warned then 
@@ -1663,7 +1664,6 @@ rem ==========================================================================
 					locked=1
 				else
 					callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
-					print "---Print Status: N"; rem debug
 					callpoint!.setStatus("SAVE")
 					gosub add_to_batch_print
 				endif
@@ -1672,8 +1672,6 @@ rem ==========================================================================
 			endif
 		endif
 	endif
-
-	print "out"; rem debug
 
 	return 
 
@@ -2183,8 +2181,6 @@ rem ==========================================================================
 make_invoice: rem --- Change an Order into an Invoice
 rem ==========================================================================
 
-	print "in make_invoice..."; rem debug
-
 	gosub check_print_flag
 
 	if !locked and 
@@ -2200,15 +2196,12 @@ rem ==========================================================================
 		if inv_no$ = "" then
 			callpoint!.setStatus("NEWREC")
 			locked = 1
-			print "---No to new invoice number"; rem debug
 		else
 			callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO", inv_no$)
 			callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG", "I")
 			callpoint!.setColumnData("OPE_INVHDR.INVOICE_DATE", sysinfo.system_date$)
 			callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "N")
-			print "---Print Status: N"; rem debug
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "Y")
-			print "---Set lock"; rem debug
 			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N"); rem debug, forcing the lock off for now, this isn't working correctly
 			user_tpl.prev_disc_code$ = ""
 			user_tpl.price_code$ = "Y"
@@ -2221,15 +2214,11 @@ rem ==========================================================================
 		
 	endif
 
-	print "out"; rem debug
-
 	return
 
 rem ==========================================================================
 get_cash: rem --- Launch the Cash Transaction form
 rem ==========================================================================
-
-	print "Hdr: in get_cash..."; rem debug
 
 	custmast_dev = fnget_dev("ARM_CUSTMAST")
 	dim custmast_tpl$:fnget_tpl$("ARM_CUSTMAST")
@@ -2251,8 +2240,6 @@ rem ==========================================================================
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	key_pfx$  = firm_id$+"  "+cust_id$+order_no$
 
-	print "---Calling cash form..."; rem debug
-
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_INVCASH", 
 :		stbl("+USER_ID"), 
@@ -2262,7 +2249,6 @@ rem ==========================================================================
 :		"",
 :		dflt_data$[all]
 
-	print "---Setting cash sale flag"; rem debug
 	callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "Y")
 
 rem --- Write flag to disk
@@ -2271,7 +2257,6 @@ rem --- Write flag to disk
 
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
-	print "out"; rem debug
 
 	return
 
@@ -2446,6 +2431,26 @@ rem ==========================================================================
 		endif
 	endif
 		
+	return
+
+
+rem ==========================================================================
+check_cash_due: rem --- Check ope_invcash balance due
+rem OUT: cash_due
+rem ==========================================================================
+
+	cash_due=1
+	cashrct_dev = fnget_dev("OPE_INVCASH")
+	dim cashrct$:fnget_tpl$("OPE_INVCASH")
+	ar_type$  = callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
+	cust$     = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	ord$      = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	readrecord (cashrct_dev, key=firm_id$+ar_type$+cust$+ord$, err=*next)cashrct$
+	if cvs(cashrct.customer_id$,2)<>"" then
+		if cashrct.tendered_amt>=cashrct.invoice_amt then cash_due=0
+	endif
+
 	return
 [[OPE_INVHDR.ASHO]]
 print "Hdr:ASHO"; rem debug
@@ -2720,13 +2725,11 @@ rem --- Setup user_tpl$
 :		"prev_ship_to:c(1*), " +
 :		"prev_sales_total:n(15), " +
 :		"prev_unitprice:n(15), " +
-:		"is_cash_sale:u(1), " +
 :		"detail_modified:u(1), " +
 :		"record_deleted:u(1), " +
 :		"item_wh_failed:u(1), " +
 :		"do_end_of_form:u(1), " +
 :		"picklist_warned:u(1), " +
-:		"do_totals_form:u(1), " +
 :		"disc_code:c(1*), " +
 :		"tax_code:c(1*), " +
 :		"new_order:u(1), " +
@@ -2755,13 +2758,11 @@ rem --- Setup user_tpl$
 	user_tpl.lotser_flag$      = ivs01a.lotser_flag$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
-	user_tpl.is_cash_sale      = 0
 	user_tpl.detail_modified   = 0
 	user_tpl.record_deleted    = 0
 	user_tpl.item_wh_failed    = 1
 	user_tpl.do_end_of_form    = 1
 	user_tpl.picklist_warned   = 0
-	user_tpl.do_totals_form    = 1
 	user_tpl.new_order         = 0
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned     = 0

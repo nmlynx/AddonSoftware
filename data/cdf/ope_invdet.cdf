@@ -1737,7 +1737,7 @@ rem ==========================================================================
 	if user_tpl.allow_bo$ = "N" or 
 :		pos(user_tpl.line_type$="MO") or
 :		callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" or
-:		user_tpl.is_cash_sale
+:		callpoint!.getHeaderColumnData("OPE_INVHDR.CASH_SALE") = "Y"
 :	then
 		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 0)
 	else

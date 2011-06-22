@@ -307,8 +307,6 @@ rem --- Force focus on the Totals tab
 		endif
 	endif
 [[OPE_ORDHDR.CUSTOMER_ID.AVAL]]
-print "CUSTOMER_ID:AVAL"; rem debug
-	
 	cust_id$ = callpoint!.getUserInput()
 	gosub display_customer
 
@@ -321,6 +319,14 @@ rem --- Set customer in OrderHelper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setCust_id(cust_id$)
+
+rem --- The cash customer?
+
+	if user_tpl.cash_sale$="Y" and cust_id$ = user_tpl.cash_cust$
+		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "Y")
+       else
+		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "N")
+	endif
 
 rem --- Show customer data
 
@@ -946,8 +952,6 @@ rem --- Does order exist?
 		found = 1
 	endif
 
-	rem print "     found:", found; rem debug
-
 rem --- A new record must be the next sequence
 
 	if found = 0 and new_seq$ = "N" then
@@ -1077,12 +1081,6 @@ end_of_reprintable:
 		gosub get_comm_percent
 
 		gosub get_op_params
-
-		if cust_id$ = ars01a.customer_id$
-			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "Y")
-        else
-			callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "N")
-		endif
 
 		user_tpl.price_code$   = ""
 		user_tpl.pricing_code$ = arm02a.pricing_code$
@@ -1334,7 +1332,6 @@ rem --- If cash customer, get correct customer number
 	if user_tpl.cash_sale$="Y" and cvs(callpoint!.getUserInput(),1+2+4)="C" then
 		callpoint!.setColumnData("OPE_ORDHDR.CUSTOMER_ID", user_tpl.cash_cust$)
 		callpoint!.setColumnData("OPE_ORDHDR.CASH_SALE", "Y")
-		user_tpl.is_cash_sale = 1
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPE_ORDHDR.AWRI]]
@@ -2471,12 +2468,10 @@ rem --- Setup user_tpl$
 :		"prev_ship_to:c(1*), " +
 :		"prev_sales_total:n(15), " +
 :		"prev_unitprice:n(15), " +
-:		"is_cash_sale:u(1), " +
 :		"detail_modified:u(1), " +
 :		"record_deleted:u(1), " +
 :		"item_wh_failed:u(1), " +
 :		"do_end_of_form:u(1), " +
-:		"do_totals_form:u(1), " +
 :		"disc_code:c(1*), " +
 :		"tax_code:c(1*), " +
 :		"new_order:u(1), " +
@@ -2505,12 +2500,10 @@ rem --- Setup user_tpl$
 	user_tpl.lotser_flag$      = ivs01a.lotser_flag$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
-	user_tpl.is_cash_sale      = 0
 	user_tpl.detail_modified   = 0
 	user_tpl.record_deleted    = 0
 	user_tpl.item_wh_failed    = 1
 	user_tpl.do_end_of_form    = 1
-	user_tpl.do_totals_form    = 1
 	user_tpl.new_order         = 0
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned     = 0
