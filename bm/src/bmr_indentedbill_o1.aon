@@ -175,20 +175,20 @@ print_parts: rem --- Print Parts
                     endif
                     if bmm02a.divisor=0 then let bmm02a.divisor=1
                     OutVect!.addItem(dots$+str(cur_level:"0"))
-                    OutVect!.addItem(bmm02a.item_id$)
+					OutVect!.addItem(bmm02a.item_id$)
                     OutVect!.addItem(ivdesc$)
                     OutVect!.addItem(um$)
                     value=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
                     OutVect!.addItem(str(value))
-                    if showcost$="Y" then 
-                        value=bms01a.mat_factor*ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
+                    if showcost$="Y" then
+                        value=ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
                         OutVect!.addItem(str(value))
                         xwk=fnblank(columns-6)
                     else
                         xwk=fnblank(columns-5)
                     endif  
                 endif
-                mat_cost[cur_level-1]=mat_cost[cur_level-1]+bms01a.mat_factor*ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
+                mat_cost[cur_level-1]=mat_cost[cur_level-1]+ivm02a.unit_cost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)
                 continue
               endif
             endif
@@ -235,35 +235,14 @@ sub_totals: rem --- Sub Totals
                     OutVect!.addItem(str(lab_qty[cur_level]*mat_qty[cur_level]))
                     OutVect!.addItem(str(sub_qty[cur_level]))
                 endif
-                if bms01a.mat_factor<>1 and cur_level<>1 then 
-                    if cur_level<level then 
-                        if showcost$="Y" then
-                            xwk=fnblank(3)
-                            OutVect!.addItem("Factored Total:")
-                            xwk=fnblank(2)
-                            OutVect!.addItem(str(bms01a.mat_factor*mat_cost[cur_level]*mat_qty[cur_level]))
-                            OutVect!.addItem(str(lab_qty[cur_level]*mat_qty[cur_level]))
-                            OutVect!.addItem(str(bms01a.mat_factor*lab_cost[cur_level]*mat_qty[cur_level]))
-                            OutVect!.addItem(str(sub_qty[cur_level]))
-                            OutVect!.addItem(str(sub_cost[cur_level]))
-                            OutVect!.addItem(str(bms01a.mat_factor*(mat_cost[cur_level]*mat_qty[cur_level]+lab_cost[cur_level]*mat_qty[cur_level]+sub_cost[cur_level])))
-                        else
-                            xwk=fnblank(3)
-                            OutVect!.addItem("Factored Total:")
-                            xwk=fnblank(2)
-                            OutVect!.addItem(str(lab_qty[cur_level]*mat_qty[cur_level]))
-                            OutVect!.addItem(str(sub_qty[cur_level]))
-                        endif
-                    endif
-                endif
             endif
 
 rem --- Do the Next Level
 
             if cur_level=1 then goto main_read
-            lab_cost[cur_level-1]=lab_cost[cur_level-1]+bms01a.mat_factor*lab_cost[cur_level]*mat_qty[cur_level]
-            mat_cost[cur_level-1]=mat_cost[cur_level-1]+bms01a.mat_factor*mat_cost[cur_level]*mat_qty[cur_level]
-            lab_qty[cur_level-1]=lab_qty[cur_level-1]+lab_qty[cur_level]*mat_qty[cur_level]*bms01a.mat_factor
+            lab_cost[cur_level-1]=lab_cost[cur_level-1]+lab_cost[cur_level]*mat_qty[cur_level]
+            mat_cost[cur_level-1]=mat_cost[cur_level-1]+mat_cost[cur_level]*mat_qty[cur_level]
+            lab_qty[cur_level-1]=lab_qty[cur_level-1]+lab_qty[cur_level]*mat_qty[cur_level]
             sub_cost[cur_level-1]=sub_cost[cur_level-1]+sub_cost[cur_level]
             lab_cost[cur_level]=0
             mat_cost[cur_level]=0,lab_qty[cur_level]=0
@@ -322,7 +301,11 @@ printing:
 
             if first=1 then OutVect!.addItem("")
             OutVect!.addItem(dots$+str(cur_level:"0"))
-            OutVect!.addItem(subbill$+k$(3))
+			if cur_level=1
+				OutVect!.addItem(subbill$+k$(3)+$00$+"B")
+			else
+				OutVect!.addItem(subbill$+k$(3))
+			endif
             levelprinted=1
             OutVect!.addItem(ivdesc$)
             OutVect!.addItem(um$)
@@ -399,7 +382,7 @@ rem --- Functions used to retrieve form values
 rem --- Miscellaneous functions
 
     def fncenter(q$,q)=int((q-len(q$))/2)
-    def fnqty(q1,q2,q3,q4,qQ5)=10000*q1*q2/(q3*q4*(100-q5))
+    def fnqty(q1,q2,q3,q4,q5)=10000*q1*q2/(q3*q4*(100-q5))
     def fnop1(q1,q2,q3,q4,q5,q6)=100*(q1*q2/q3)/q4+q5*q2/q6
     def fnopqty(q1,q2,q3,q4,q5)=100*(q1/q2)/q3+q4/q5
 
@@ -510,6 +493,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+	out_action$="FORMAT"
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

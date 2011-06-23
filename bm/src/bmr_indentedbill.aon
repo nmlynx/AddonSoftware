@@ -63,7 +63,7 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-        level$=Option!.getOptionData("security_lev")
+        level$=Option!.getOptionData("level_selection")
         level=num(level$)
         showcost$=Option!.getOptionData("include_costinfo")
         billfrom$=Option!.getOptionData("bill_no_1")
@@ -103,7 +103,10 @@ rem --- Init Data
         m1=len(m1$)
         m2=len(m2$)
         m3=len(m3$)
-        if level$="" then level=9
+        if level$="0"
+			level=9
+			level$="9"
+		endif
         if pdate$="" pdate$=sysinfo.system_date$
         dim description$[1],field[1],position[1],length[1]
         number=1
