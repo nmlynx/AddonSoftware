@@ -88,7 +88,7 @@ printing: rem --- Print
             xwk=fnblank(1)
             OutVect!.addItem(bmm01a.bill_no$)
             OutVect!.addItem(ivm01a.item_desc$(1,30))
-            OutVect!.addItem(fndate$(bmm03a.effect_date$)) 
+            OutVect!.addItem(fndate$(cvs(bmm03a.effect_date$,3))) 
             OutVect!.addItem(fndate$(bmm03a.obsolt_date$)) 
             OutVect!.addItem(str(bmm03a.hrs_per_pce))
             OutVect!.addItem(str(bmm03a.pcs_per_hour))
