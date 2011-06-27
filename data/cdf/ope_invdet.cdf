@@ -141,6 +141,10 @@ rem --- Need to commit?
 	unit_price  = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
 	gosub disp_ext_amt
 
+	gosub able_lot_button
+	gosub able_backorder
+	gosub able_qtyshipped
+
 	callpoint!.setStatus("REFRESH")
 
 rem --- Return focus to where we were (Detail line grid)
@@ -189,8 +193,6 @@ rem --- Set shipped and back ordered
 	if qty_ord < 0 then
 		callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(qty_ord))
 		callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
-		rem callpoint!.setColumnEnabled("OPE_INVDET.QTY_SHIPPED", 0)
-		rem callpoint!.setColumnEnabled("OPE_INVDET.QTY_BACKORD", 0)
 		util.disableGridColumn(Form!, user_tpl.bo_col)
 		util.disableGridColumn(Form!, user_tpl.shipped_col)
 	endif
@@ -715,9 +717,10 @@ rem --- Set defaults for new record
 		callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "Y")
  	endif
 
-rem --- Enable/disable backorder
+rem --- Enable/disable backorder and qty shipped
 
 	gosub able_backorder
+	gosub able_qtyshipped
 
 	callpoint!.setStatus("REFRESH")
 
@@ -782,9 +785,7 @@ rem --- Set enable/disable based on line type
 
 rem --- Disable Shipped?
 
-	if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" then
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_SHIPPED", 0)
-	endif
+	gosub able_qtyshipped
 
 rem --- Set item tax flag
 
@@ -1463,43 +1464,29 @@ print "Det: in uncommit_iv"; rem deebug
 
 rem ==========================================================================
 disable_by_linetype: rem --- Set enable/disable based on line type
-	rem --- <<CALLPOINT>> enable in item#, memo, ordered qty, price, shipped and ext price fields on form handles enable/disable
-	rem --- 	based strictly on line type, via the callpoint!.sertStatus("ENABLE:"+opc_linecode.line_type$) command.
-	rem --- Unit cost, product tp and backordered qty are enabled/disabled directly in callpoint code based on additional conditions.		
+	rem --- <<CALLPOINT>> enable in item#, memo, ordered, price and ext price on form handles enable/disable
+	rem --- based strictly on line type, via the callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$) command.
+	rem --- cost, product type, backordered and shipped are enabled/disabled directly based on additional conditions
 	rem      IN: line_code$
 rem ==========================================================================
 
-	user_tpl.line_type$ = ""
-	user_tpl.line_taxable$ = ""
-	user_tpl.line_dropship$ = ""
-	user_tpl.line_prod_type_pr$ = ""
-	start_block = 1
+	file$ = "OPC_LINECODE"
+	dim opc_linecode$:fnget_tpl$(file$)
+	find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
+	callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+	rem --- Shouldn't be possible to have a bad line_code$ at this point.
+	rem --- If it happens, add error trap to send to OPE_INVDDET.LINE_CODE.
 
-	if callpoint!.getCallpointEvent()="OPE_INVDET.LINE_CODE.AVAL"
-		line_code$=callpoint!.getUserInput()
+	callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+	user_tpl.line_type$     = opc_linecode.line_type$
+	user_tpl.line_taxable$  = opc_linecode.taxable_flag$
+	user_tpl.line_dropship$ = opc_linecode.dropship$
+	user_tpl.line_prod_type_pr$ = opc_linecode.prod_type_pr$
+
+	if pos(opc_linecode.line_type$="SP")>0 and num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))<>0
+		callpoint!.setOptionEnabled("RCPR",1)
 	else
-		line_code$=callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
-	endif
-
-	if cvs(line_code$,2) <> "" then
-		file$ = "OPC_LINECODE"
-		dim opc_linecode$:fnget_tpl$(file$)
-
-		if start_block then
-			find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
-			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
-
-			user_tpl.line_type$     = opc_linecode.line_type$
-			user_tpl.line_taxable$  = opc_linecode.taxable_flag$
-			user_tpl.line_dropship$ = opc_linecode.dropship$
-			user_tpl.line_prod_type_pr$ = opc_linecode.prod_type_pr$
-
-			if pos(opc_linecode.line_type$="SP")>0 and num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))<>0
-				callpoint!.setOptionEnabled("RCPR",1)
-			else
-				callpoint!.setOptionEnabled("RCPR",0)
-			endif
-		endif
+		callpoint!.setOptionEnabled("RCPR",0)
 	endif
 
 rem --- Disable / enable unit cost
@@ -1538,15 +1525,11 @@ rem --- Product Type Processing
 
 rem --- Disable Back orders if necessary
 
-	if user_tpl.allow_bo$ = "N"        or
-:		pos(user_tpl.line_type$ = "MO") or
-:		callpoint!.getHeaderColumnData("OPE_INVHDR.CASH_SALE") = "Y" or
-:		callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" 
+	gosub able_backorder
 
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 0)
-	else
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_BACKORD", 1)
-	endif
+rem --- Disable qty shipped if necessary
+
+	gosub able_qtyshipped
 
 	return
 
@@ -1640,7 +1623,6 @@ rem ==========================================================================
 
 rem ==========================================================================
 able_lot_button: rem --- Enable/disable Lot/Serial button
-                 rem      IN: item_id$ (for lot_ser_check)
                  rem     OUT: lotted$
 rem ==========================================================================
 
@@ -1648,7 +1630,10 @@ rem ==========================================================================
 	qty_ord = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 	gosub lot_ser_check
 
-	if lotted$ = "Y" and qty_ord <> 0 then
+	if lotted$ = "Y" and qty_ord <> 0 and 
+:	callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE")<>"P" and
+:	callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" 
+:	then
 		callpoint!.setOptionEnabled("LENT",1)
 	else
 		callpoint!.setOptionEnabled("LENT",0)
@@ -1753,6 +1738,22 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
+able_qtyshipped: rem --- All the factors for enabling or disabling qty shipped
+rem ==========================================================================
+rem wgh
+
+	if pos(user_tpl.line_type$="NSP") and
+:	callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y"
+:	then
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_SHIPPED", 1)
+	else
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_SHIPPED", 0)
+	endif
+
+    
+	return
+
+rem ==========================================================================
 check_if_tax: rem --- Check If Taxable
 rem ==========================================================================
 
@@ -1814,9 +1815,10 @@ rem --- Has line code changed?
 
 	endif
 
-rem --- Disable / Enable Backorder
+rem --- Disable / Enable Backorder and Qty Shipped
 
 	gosub able_backorder
+	gosub able_qtyshipped
 
 rem --- set Product Type if indicated by line code record
 

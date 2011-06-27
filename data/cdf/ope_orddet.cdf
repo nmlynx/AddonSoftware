@@ -16,13 +16,6 @@ rem --- Extend price now that grid vector has been updated
 [[OPE_ORDDET.LINE_CODE.AVEC]]
 rem --- Line code may not be displayed correctly when selected via arrow key instead of mouse
 	callpoint!.setStatus("REFRESH:LINE_CODE")
-[[OPE_ORDDET.LINE_CODE.AINP]]
-print "Det:LINE_CODE:AINP"; rem debug
-
-rem --- Grab and print what's in the input buffer
-
-	line_code$ = callpoint!.getUserInput()
-	print "Here's the pre-validate value of UserInput: ",line_code$
 [[OPE_ORDDET.ITEM_ID.AINV]]
 print "Det:ITEM_ID.AINV"; rem debug
 
@@ -140,8 +133,8 @@ rem --- Need to commit?
 			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")))
 
 			if user_tpl.line_type$ = "O" and 
-:				num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE")) = 0 and 
-:				num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE")) 
+:			num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE")) = 0 and 
+:			num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE")) 
 :			then
 				callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE")))
 				callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", "0")
@@ -153,6 +146,10 @@ rem --- Need to commit?
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	gosub disp_ext_amt
+
+	gosub able_lot_button
+	gosub able_backorder
+	gosub able_qtyshipped
 
 	callpoint!.setStatus("REFRESH")
 
@@ -202,8 +199,6 @@ rem --- Set shipped and back ordered
 	if qty_ord < 0 then
 		callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
 		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
-		rem callpoint!.setColumnEnabled("OPE_ORDDET.QTY_SHIPPED", 0)
-		rem callpoint!.setColumnEnabled("OPE_ORDDET.QTY_BACKORD", 0)
 		util.disableGridColumn(Form!, user_tpl.bo_col)
 		util.disableGridColumn(Form!, user_tpl.shipped_col)
 	endif
@@ -358,11 +353,7 @@ rem --- Set item tax flag
 
 	gosub set_item_taxable
 [[OPE_ORDDET.AOPT-RCPR]]
-print "Det:AOPT.RCPR"; rem debug
-
 rem --- Are things set for a reprice?
-
-	print "---Line type: """, user_tpl.line_type$, """"; rem debug
 
 	if pos(user_tpl.line_type$="SP") then
 		qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
@@ -733,14 +724,14 @@ rem --- Set defaults for new record
 
 	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
  		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "N")
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_SHIPPED", 0)
 	else
 		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y")
  	endif
 
-rem --- Enable/disable backorder
+rem --- Enable/disable backorder and qty shipped
 
 	gosub able_backorder
+	gosub able_qtyshipped
 
 	callpoint!.setStatus("REFRESH")
 
@@ -801,9 +792,7 @@ rem --- Set enable/disable back order
 
 rem --- Disable Shipped?
 
-	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" then
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_SHIPPED", 0)
-	endif
+	gosub able_qtyshipped
 
 rem --- Set item tax flag
 
@@ -939,7 +928,6 @@ rem --- Warehouse and Item must be correct
 	rem --- Clear line type
 
 		user_tpl.line_type$ = ""
-		print "---Line Type cleared"; rem debug
 
 	endif
 
@@ -1481,50 +1469,29 @@ rem ==========================================================================
 
 rem =============================================================================
 disable_by_linetype: rem --- Set enable/disable based on line type
-		rem --- <<CALLPOINT>> enable in item#, memo, ordered, price, shipped and ext price on form handles enable/disable
+		rem --- <<CALLPOINT>> enable in item#, memo, ordered, price and ext price on form handles enable/disable
 		rem --- based strictly on line type, via the callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$) command.
-		rem --- cost, product type and backordered are enabled/disabled directly based on additional conditions
+		rem --- cost, product type, backordered and shipped are enabled/disabled directly based on additional conditions
 		rem      IN: line_code$
-
 rem =============================================================================
 
-	print "in disable_by_linetype..."; rem debug
-	rem print "---getValidRow() =", callpoint!.getValidRow(); rem debug
+	file$ = "OPC_LINECODE"
+	dim opc_linecode$:fnget_tpl$(file$)
+	find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*next) opc_linecode$
+	rem --- Shouldn't be possible to have a bad line_code$ at this point.
+	rem --- If it happens, add error trap to send to OPE_ORDDET.LINE_CODE.
 
-	user_tpl.line_type$ = ""
-	user_tpl.line_taxable$ = ""
-	user_tpl.line_dropship$ = ""
-	user_tpl.line_prod_type_pr$ = ""
-	start_block = 1
+	callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+	user_tpl.line_type$     = opc_linecode.line_type$
+	user_tpl.line_taxable$  = opc_linecode.taxable_flag$
+	user_tpl.line_dropship$ = opc_linecode.dropship$
+	user_tpl.line_prod_type_pr$ = opc_linecode.prod_type_pr$
+	print "---Line Type set (", user_tpl.line_type$, ")"; rem debug
 
-	if callpoint!.getCallpointEvent()="OPE_ORDDET.LINE_CODE.AVAL"
-		line_code$=callpoint!.getUserInput()
+	if pos(opc_linecode.line_type$="SP")>0 and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))<>0
+		callpoint!.setOptionEnabled("RCPR",1)
 	else
-		line_code$=callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	endif
-
-	if cvs(line_code$,2) <> "" then
-		print "---line code is "+ line_code$+ " and came from "+callpoint!.getCallpointEvent(); rem debug
-
-		file$ = "OPC_LINECODE"
-		dim opc_linecode$:fnget_tpl$(file$)
-
-		if start_block then
-			find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
-			callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
-
-			user_tpl.line_type$     = opc_linecode.line_type$
-			user_tpl.line_taxable$  = opc_linecode.taxable_flag$
-			user_tpl.line_dropship$ = opc_linecode.dropship$
-			user_tpl.line_prod_type_pr$ = opc_linecode.prod_type_pr$
-			print "---Line Type set (", user_tpl.line_type$, ")"; rem debug
-
-			if pos(opc_linecode.line_type$="SP")>0 and num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))<>0
-				callpoint!.setOptionEnabled("RCPR",1)
-			else
-				callpoint!.setOptionEnabled("RCPR",0)
-			endif
-		endif
+		callpoint!.setOptionEnabled("RCPR",0)
 	endif
 
 rem --- Disable/enable unit cost (can't just enable/disable this field by line type)
@@ -1562,14 +1529,10 @@ rem --- Product Type Processing
 	endif
 
 rem --- Disable Back orders if necessary
+	gosub able_backorder
 
-	if user_tpl.allow_bo$ = "N" or pos(user_tpl.line_type$ = "MO") or callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE") = "Y" or callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N"
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_BACKORD", 0)
-	else
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_BACKORD", 1)
-	endif
-
-	print "out"; rem debug
+rem --- Disable qty shipped if necessary
+	gosub able_qtyshipped
 
 	return
 
@@ -1680,7 +1643,6 @@ rem ==========================================================================
 
 rem ==========================================================================
 able_lot_button: rem --- Enable/disable Lot/Serial button
-                 rem      IN: item_id$ (for lot_ser_check)
                  rem     OUT: lotted$
 rem ==========================================================================
 
@@ -1688,7 +1650,10 @@ rem ==========================================================================
 	qty_ord  = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	gosub lot_ser_check
 
-	if lotted$ = "Y" and qty_ord <> 0 and callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
+	if lotted$ = "Y" and qty_ord <> 0 and 
+:	callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" and
+:	callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" 
+:	then
 		callpoint!.setOptionEnabled("LENT",1)
 	else
 		callpoint!.setOptionEnabled("LENT",0)
@@ -1784,21 +1749,33 @@ able_backorder: rem --- All the factors for enabling or disabling back orders
 rem ==========================================================================
 
 	if user_tpl.allow_bo$ = "N" or 
-:		pos(user_tpl.line_type$="MO") or
-:		callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" or
-:		callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE") = "Y"
+:	pos(user_tpl.line_type$="MO") or
+:	callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "N" or
+:	callpoint!.getHeaderColumnData("OPE_ORDHDR.CASH_SALE") = "Y"
 :	then
 		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_BACKORD", 0)
 	else
 		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_BACKORD", 1)
 
-		rem if user_tpl.new_detail then...
-
 		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) = "Y" then
 			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
-         print "---BO qty cleared"; rem debug
 		endif
 	endif
+    
+	return
+
+rem ==========================================================================
+able_qtyshipped: rem --- All the factors for enabling or disabling qty shipped
+rem ==========================================================================
+
+	if pos(user_tpl.line_type$="NSP") and
+:	callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y"
+:	then
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_SHIPPED", 1)
+	else
+		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.QTY_SHIPPED", 0)
+	endif
+
     
 	return
 
@@ -1831,8 +1808,6 @@ rem ==========================================================================
 
 	use ::ado_util.src::util
 [[OPE_ORDDET.LINE_CODE.AVAL]]
-print "Det:LINE_CODE:AVAL"; rem debug
-
 rem --- Set enable/disable based on line type
 
 	line_code$ = callpoint!.getUserInput()
@@ -1864,9 +1839,10 @@ rem --- Has line code changed?
 
 	endif
 
-rem --- Disable / Enable Backorder
+rem --- Disable / Enable Backorder and Qty Shipped
 
 	gosub able_backorder
+	gosub able_qtyshipped
 
 rem --- set Product Type if indicated by line code record
 
