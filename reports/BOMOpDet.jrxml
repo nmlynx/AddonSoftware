@@ -8,6 +8,7 @@
 	<parameter name="PROD_DATE" class="java.lang.String"/>
 	<parameter name="STD_LOT_SIZE" class="java.math.BigDecimal"/>
 	<parameter name="EST_YIELD" class="java.math.BigDecimal"/>
+	<parameter name="ALL_DATES" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select firm_id, bill_no, op_seq, op_code, line_type, ext_comments, hrs_per_pce, pcs_per_hour, setup_time, move_time, effect_date, obsolt_date, bmc_opcodes.queue_time as queue, bmc_opcodes.code_desc as codedesc, bmc_opcodes.direct_rate as direct_rate, bmc_opcodes.ovhd_factor as ovhd_factor
 from bmm_billoper
@@ -152,14 +153,15 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 	<detail>
 		<band height="26" splitType="Stretch">
 			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
-((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
     $P{PROD_DATE} > $F{EFFECT_DATE} &&
     $F{OBSOLT_DATE}.trim().isEmpty()) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
     $P{PROD_DATE} > $F{EFFECT_DATE} &&
     !$F{OBSOLT_DATE}.trim().isEmpty() &&
-    $P{PROD_DATE} < $F{OBSOLT_DATE}))]]></printWhenExpression>
+    $P{PROD_DATE} < $F{OBSOLT_DATE})) ||
+$P{ALL_DATES} == "Y")]]></printWhenExpression>
 			<textField>
 				<reportElement x="0" y="0" width="23" height="13"/>
 				<textElement/>
@@ -227,15 +229,44 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 			</textField>
 		</band>
 		<band height="13">
+			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
+$P{ALL_DATES} == "Y"]]></printWhenExpression>
+			<textField>
+				<reportElement x="312" y="0" width="71" height="13"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{OBSOLT_DATE} == ""  ?
+    "00/00/00" :
+    $F{OBSOLT_DATE}.substring(4,6)+"/"+$F{OBSOLT_DATE}.substring(6)+"/"+$F{OBSOLT_DATE}.substring(0,4)]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="150" y="0" width="71" height="13"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{EFFECT_DATE} == "        "  ?
+    "00/00/00" :
+    $F{EFFECT_DATE}.substring(4,6)+"/"+$F{EFFECT_DATE}.substring(6)+"/"+$F{EFFECT_DATE}.substring(0,4)]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="63" y="0" width="82" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Effective Date:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="231" y="0" width="75" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Obsolete Date:]]></text>
+			</staticText>
+		</band>
+		<band height="13">
 			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "M") &&
-((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
     $P{PROD_DATE} > $F{EFFECT_DATE} &&
     $F{OBSOLT_DATE}.trim().isEmpty()) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
     $P{PROD_DATE} > $F{EFFECT_DATE} &&
     !$F{OBSOLT_DATE}.trim().isEmpty() &&
-    $P{PROD_DATE} < $F{OBSOLT_DATE}))]]></printWhenExpression>
+    $P{PROD_DATE} < $F{OBSOLT_DATE})) ||
+$P{ALL_DATES} == "Y")]]></printWhenExpression>
 			<textField>
 				<reportElement x="0" y="0" width="23" height="13"/>
 				<textElement/>
@@ -246,6 +277,34 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 				<textElement/>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{EXT_COMMENTS}]]></textFieldExpression>
 			</textField>
+		</band>
+		<band height="13">
+			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "M") &&
+$P{ALL_DATES} == "Y"]]></printWhenExpression>
+			<staticText>
+				<reportElement x="231" y="0" width="75" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Obsolete Date:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="150" y="0" width="71" height="13"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{EFFECT_DATE} == "        "  ?
+    "00/00/00" :
+    $F{EFFECT_DATE}.substring(4,6)+"/"+$F{EFFECT_DATE}.substring(6)+"/"+$F{EFFECT_DATE}.substring(0,4)]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="312" y="0" width="71" height="13"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{OBSOLT_DATE} == ""  ?
+    "00/00/00" :
+    $F{OBSOLT_DATE}.substring(4,6)+"/"+$F{OBSOLT_DATE}.substring(6)+"/"+$F{OBSOLT_DATE}.substring(0,4)]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="63" y="0" width="82" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Effective Date:]]></text>
+			</staticText>
 		</band>
 	</detail>
 	<columnFooter>

@@ -77,6 +77,12 @@ rem --- Set additional params
     else
         params!.put("COMMENT_YN","N")
     endif
+	if cvs(params!.get("PROD_DATE"),3)=""
+		params!.put("ALL_DATES","Y")
+	else
+		params!.put("ALL_DATES","N")
+	endif
+
 rem --- Make Document Archive Record and Get ID
 
     rep_date$=date(0:stbl("+DATE_MASK"))
