@@ -1285,12 +1285,6 @@ rem --- Recalc and display extended price
 
 	user_tpl.prev_unitprice = unit_price
 
-	rem debug
-	print "---Price Out:", price
-	print "---Discount :", disc
-	print "---Type Flag: ", typeflag$
-	print "out"
-
 	return
 
 rem ==========================================================================
@@ -1692,13 +1686,14 @@ rem ==========================================================================
 rem ==========================================================================
 disp_ext_amt: rem --- Calculate and display the extended amount
               rem      IN: qty_shipped
-              rem          unit_price
+              rem           unit_price
               rem     OUT: ext_price set
 rem ==========================================================================
 
-	previous_ext_price = num(callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
-	callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(round(qty_shipped * unit_price, 2)) )
-	rem print "---Ext price set to", qty_shipped * unit_price; rem debug
+rem wgh
+	if pos(user_tpl.line_type$="NSP")
+		callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(round(qty_shipped * unit_price, 2)) )
+	endif
 	gosub check_if_tax
 	gosub disp_grid_totals
 	callpoint!.setStatus("MODIFIED;REFRESH")
