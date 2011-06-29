@@ -1,3 +1,15 @@
+[[BMM_BILLMAT.OBSOLT_DATE.AVAL]]
+rem --- Check for valid dates
+
+	eff_date$=callpoint!.getColumnData("BMM_BILLMAT.EFFECT_DATE")
+	obs_date$=callpoint!.getUserInput()
+	gosub check_dates
+[[BMM_BILLMAT.EFFECT_DATE.AVAL]]
+rem --- Check for valid dates
+
+	eff_date$=callpoint!.getUserInput()
+	obs_date$=callpoint!.getColumnData("BMM_BILLMAT.OBSOLT_DATE")
+	gosub check_dates
 [[BMM_BILLMAT.AGRE]]
 rem --- Display Net Quantity
 
@@ -112,6 +124,22 @@ rem ===================================================================
 	open_opts$[1]="CX[2_]"
 	gosub open_tables
 	callpoint!.setColumnData("<<DISPLAY>>.SUB_BILL",sub_bill$,1)
+
+	return
+
+rem ===================================================================
+check_dates:
+rem eff_date$	input
+rem obs_date$	input
+rem ===================================================================
+
+	if cvs(obs_date$,3)<>""
+		if obs_date$<=eff_date$
+			msg_id$="BM_EFF_OBS"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 
 	return
 [[BMM_BILLMAT.BSHO]]

@@ -1,3 +1,15 @@
+[[BMM_BILLOPER.EFFECT_DATE.AVAL]]
+rem --- Check for valid dates
+
+	eff_date$=callpoint!.getUserInput()
+	obs_date$=callpoint!.getColumnData("BMM_BILLOPER.OBSOLT_DATE")
+	gosub check_dates
+[[BMM_BILLOPER.OBSOLT_DATE.AVAL]]
+rem --- Check for valid dates
+
+	eff_date$=callpoint!.getColumnData("BMM_BILLOPER.EFFECT_DATE")
+	obs_date$=callpoint!.getUserInput()
+	gosub check_dates
 [[BMM_BILLOPER.BGDR]]
 rem --- Display Total Hours
 
@@ -71,6 +83,22 @@ rem ===================================================================
 	callpoint!.setColumnData("<<DISPLAY>>.OVHD_COST",str(oh_cost))
 	callpoint!.setColumnData("<<DISPLAY>>.TOT_COST",str(direct_cost+oh_cost))
 	callpoint!.setColumnData("<<DISPLAY>>.QUEUE_TIME",bmm08.queue_time$)
+
+	return
+
+rem ===================================================================
+check_dates:
+rem eff_date$	input
+rem obs_date$	input
+rem ===================================================================
+
+	if cvs(obs_date$,3)<>""
+		if obs_date$<=eff_date$
+			msg_id$="BM_EFF_OBS"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 
 	return
 [[BMM_BILLOPER.BSHO]]

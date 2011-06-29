@@ -1,3 +1,15 @@
+[[BMM_BILLSUB.OBSOLT_DATE.AVAL]]
+rem --- Check for valid dates
+
+	eff_date$=callpoint!.getColumnData("BMM_BILLSUB.EFFECT_DATE")
+	obs_date$=callpoint!.getUserInput()
+	gosub check_dates
+[[BMM_BILLSUB.EFFECT_DATE.AVAL]]
+rem --- Check for valid dates
+
+	eff_date$=callpoint!.getUserInput()
+	obs_date$=callpoint!.getColumnData("BMM_BILLSUB.OBSOLT_DATE")
+	gosub check_dates
 [[BMM_BILLSUB.ALT_FACTOR.AVAL]]
 rem --- Display Net Qty and Total Cost
 
@@ -44,6 +56,22 @@ rem ===================================================================
 
 	callpoint!.setColumnData("<<DISPLAY>>.NET_QTY",str(net_qty))
 	callpoint!.setColumnData("<<DISPLAY>>.TOTAL_COST",str(total_cost))
+
+	return
+
+rem ===================================================================
+check_dates:
+rem eff_date$	input
+rem obs_date$	input
+rem ===================================================================
+
+	if cvs(obs_date$,3)<>""
+		if obs_date$<=eff_date$
+			msg_id$="BM_EFF_OBS"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 
 	return
 [[BMM_BILLSUB.BGDR]]
