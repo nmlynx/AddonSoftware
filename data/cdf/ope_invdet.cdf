@@ -1,3 +1,8 @@
+[[OPE_INVDET.EXT_PRICE.AVEC]]
+rem --- Extend price now that grid vector has been updated
+	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	gosub disp_ext_amt
 [[OPE_INVDET.QTY_SHIPPED.AVEC]]
 rem --- Extend price now that grid vector has been updated
 	unit_price = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
@@ -108,23 +113,24 @@ rem --- Write back here
 rem --- Need to commit?
 
 	if callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") <> "P" then
-		if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" then
+		if orig_commit$ = "Y" and callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" then
 			if user_tpl.line_type$ <> "O" then
 				callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
 				callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", "0")
 				callpoint!.setColumnData("OPE_INVDET.EXT_PRICE", "0")
 				callpoint!.setColumnData("OPE_INVDET.TAXABLE_AMT", "0")
 			else
-				if num(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE")) then
-					callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE", str(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE")))
-					callpoint!.setColumnData("OPE_INVDET.EXT_PRICE", "0")
-					callpoint!.setColumnData("OPE_INVDET.TAXABLE_AMT", "0")
-				endif
+				callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE", str(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE")))
+				callpoint!.setColumnData("OPE_INVDET.EXT_PRICE", "0")
+				callpoint!.setColumnData("OPE_INVDET.TAXABLE_AMT", "0")
 			endif
 		endif
 
 		if orig_commit$ = "N" and callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" then
 			callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED", str(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED")))
+			if user_tpl.line_taxable$ = "Y" and ( pos(user_tpl.line_type$ = "OMN") or user_tpl.item_taxable$ = "Y" ) then 
+				callpoint!.setColumnData("OPE_INVDET.TAXABLE_AMT", str(ext_price))
+			endif
 
 			if user_tpl.line_type$ = "O" and 
 :				num(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE")) = 0 and 
@@ -136,6 +142,23 @@ rem --- Need to commit?
 			endif
 		endif
 	endif
+
+	rem --- Grid vector must be updated before updating Totals tab
+	declare BBjVector dtlVect!
+	dtlVect!=cast(BBjVector, GridVect!.getItem(0))
+	dim dtl_rec$:dtlg_param$[1,3]
+	dtl_rec$=cast(BBjString, dtlVect!.getItem(callpoint!.getValidationRow()))
+	dtl_rec.commit_flag$=callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG")
+	dtl_rec.est_shp_date$=callpoint!.getColumnData("OPE_INVDET.EST_SHP_DATE")
+	dtl_rec.std_list_prc=num(callpoint!.getColumnData("OPE_INVDET.STD_LIST_PRC"))
+	dtl_rec.disc_percent=num(callpoint!.getColumnData("OPE_INVDET.DISC_PERCENT"))
+	dtl_rec.unit_price=num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
+	dtl_rec.qty_backord=num(callpoint!.getColumnData("OPE_INVDET.QTY_BACKORD"))
+	dtl_rec.qty_shipped=num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
+	dtl_rec.ext_price=num(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE"))
+	dtl_rec.taxable_amt=num(callpoint!.getColumnData("OPE_INVDET.TAXABLE_AMT"))
+	dtlVect!.setItem(callpoint!.getValidationRow(),dtl_rec$)
+	GridVect!.setItem(0,dtlVect!)
 
 	qty_shipped = num(callpoint!.getColumnData("OPE_INVDET.QTY_SHIPPED"))
 	unit_price  = num(callpoint!.getColumnData("OPE_INVDET.UNIT_PRICE"))
@@ -327,6 +350,17 @@ rem --- Round
 
 	if num(callpoint!.getUserInput()) <> num(callpoint!.getColumnData("OPE_INVDET.EXT_PRICE"))
 		callpoint!.setUserInput( str(round( num(callpoint!.getUserInput()), 2)) )
+	endif
+
+rem --- For uncommitted "O" line types, move ext_price to unit_price until committed
+	if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" and user_tpl.line_type$ = "O" then
+		rem --- Don't overwrite existing unit_price with zero
+		if num(callpoint!.getUserInput()) then
+			callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE", callpoint!.getUserInput())
+			callpoint!.setUserInput("0")
+			callpoint!.setColumnData("OPE_INVDET.TAXABLE_AMT", "0")
+			callpoint!.setStatus("REFRESH")
+		endif
 	endif
 [[OPE_INVDET.WAREHOUSE_ID.AVEC]]
 print "Det:WAREHOUSE_ID.AVEC"; rem debug
@@ -734,8 +768,6 @@ rem --- Force focus on Line Code since Barista is skipping it (rem'd since Baris
 
 rem	callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.LINE_CODE")
 [[OPE_INVDET.BDEL]]
-print "Det:BDEL"; rem debug
-
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
 	if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG")="Y"
@@ -1597,8 +1629,10 @@ rem ==========================================================================
 		gosub check_item_whse
 
 		if (!user_tpl.item_wh_failed and num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))) or
-:		user_tpl.line_type$ <> "O" then
+:		user_tpl.line_type$ = "O" then
 			callpoint!.setOptionEnabled("ADDL",1)
+		else
+			callpoint!.setOptionEnabled("ADDL",0)
 		endif
 	endif
 
@@ -1741,7 +1775,6 @@ rem ==========================================================================
 rem ==========================================================================
 able_qtyshipped: rem --- All the factors for enabling or disabling qty shipped
 rem ==========================================================================
-rem wgh
 
 	if pos(user_tpl.line_type$="NSP") and
 :	callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y"
@@ -1803,6 +1836,12 @@ rem --- Has line code changed?
 		callpoint!.setColumnData("OPE_INVDET.PICK_FLAG", "")
 		callpoint!.setColumnData("OPE_INVDET.VENDOR_ID", "")
 		callpoint!.setColumnData("OPE_INVDET.DROPSHIP", "")
+
+		if inv_type$ = "P" or callpoint!.getHeaderColumnData("OPE_ORDHDR.SHIPMNT_DATE") > user_tpl.def_commit$ then
+ 			callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "N")
+		else
+			callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "Y")
+	 	endif
 
 		if opc_linecode.line_type$="O" then
 			if cvs(callpoint!.getColumnData("OPE_INVDET.ORDER_MEMO"),3) = "" then
