@@ -412,15 +412,19 @@ rem --- Is record deleted?
 		break; rem --- exit callpoint
 	endif
 
-rem --- Make sure cash entered for cash transaction
+rem --- Make sure cash entered for cash sale
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y"  then
-		rem --- ope_invcash balance due must be zero before exiting
-		gosub check_cash_due
-		while cash_due
-			gosub get_cash
+		rem --- skip if total cash sale is zero
+		if num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))<>0 then
+			rem --- ope_invcash balance due must be zero before exiting
 			gosub check_cash_due
-		wend
+			while cash_due
+				gosub get_cash
+				gosub check_cash_due
+rem wgh ... allow deleting a cash invoice when cash hasn't been received
+			wend
+		endif
 	endif
 
 rem --- Is flag down?
