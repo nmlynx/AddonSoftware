@@ -422,7 +422,17 @@ rem --- Make sure cash entered for cash sale
 			while cash_due
 				gosub get_cash
 				gosub check_cash_due
-rem wgh ... allow deleting a cash invoice when cash hasn't been received
+
+				rem --- allow deleting a cash invoice when cash hasn't been received
+				if cash_due and cashrct.tendered_amt=0 then
+					msg_id$ = "CASH_OR_DELETE"
+					gosub disp_message
+					if msg_opt$="D" then
+						callpoint!.clearStatus()
+						callpoint!.setStatus("DELETE")
+						break
+					endif
+				endif
 			wend
 		endif
 	endif
@@ -782,8 +792,6 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 		callpoint!.setDevObject("total_sales",callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
 	endif
 [[OPE_INVHDR.BDEL]]
-print "Hdr:BDEL"; rem debug
-
 rem --- Set table variables
 	file_name$ = "OPE_PRNTLIST"
 	prntlist_dev = fnget_dev(file_name$)
