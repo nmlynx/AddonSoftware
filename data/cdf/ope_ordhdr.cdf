@@ -2104,60 +2104,6 @@ return; rem --- Remove this line if the Commission Percent is desired by the cli
 	return
 
 rem ==========================================================================
-do_totals: rem --- Run the totals form and write back
-rem ==========================================================================
-
-rem --- Call the form
-
-	dim dflt_data$[4,1]
-	dflt_data$[1,0] = "TOTAL_SALES"
-	dflt_data$[1,1] = callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")
-	dflt_data$[2,0] = "DISCOUNT_AMT"
-	dflt_data$[2,1] = callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")
-	dflt_data$[3,0] = "TAX_AMOUNT"
-	dflt_data$[3,1] = callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")
-	dflt_data$[4,0] = "FREIGHT_AMT"
-	dflt_data$[4,1] = callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")
-
-rem --- Set Dev Objects for use in the form
-
-	callpoint!.setDevObject("disc_amt",str(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")))
-	callpoint!.setDevObject("frt_amt",str(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")))
-
-	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:		"OPE_ORDTOTALS", 
-:		stbl("+USER_ID"), 
-:		"", 
-:		"", 
-:		table_chans$[all],
-:		"", 
-:		dflt_data$[all],
-:		user_tpl$,
-:		UserObj!
-
-rem --- Set fields from the Order Totals form and write back
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-
-	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",  str(ordHelp!.getExtPrice()))
-	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",   str(ordHelp!.getExtCost()))
-	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",  str(ordHelp!.getTaxable()))
-
-	total_amt=num(ordHelp!.getExtPrice())
-	disc_amt=num(callpoint!.getDevObject("disc_amt"))
-	tax_amt=num(callpoint!.getDevObject("tax_amt"))
-	frt_amt=num(callpoint!.getDevObject("frt_amt"))
-	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT", str(disc_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL",str(total_amt - disc_amt))
-	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",   str(tax_amt))
-	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT", str(frt_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES",str((total_amt - disc_amt) + tax_amt + frt_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str((total_amt - disc_amt) + tax_amt + frt_amt))
-	callpoint!.setStatus("REFRESH-SAVE")
-	
-	return
-
-rem ==========================================================================
 get_disk_rec: rem --- Get disk record, update with current form data
               rem     OUT: record_found - true/false (1/0)
               rem          ordhdr_rec$, updated (if record found)

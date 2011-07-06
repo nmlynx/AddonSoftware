@@ -1,3 +1,67 @@
+[[OPE_INVHDR.TAX_AMOUNT.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.TOTAL_SALES.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.CUSTOMER_REL_NO.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.CUSTOMER_PO_NO.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.TERMS_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.TERRITORY.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.TAX_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.SLSPSN_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.SHIPMNT_DATE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.PRICING_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.PRICE_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.ORDER_DATE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.MISC_NO.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.MESSAGE_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.JOB_NO.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.INVOICE_TYPE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.INVOICE_DATE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.EXPIRE_DATE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.DISC_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.AR_SHIP_VIA.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+[[OPE_INVHDR.AR_DIST_CODE.BINP]]
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
+
 [[OPE_INVHDR.DISCOUNT_AMT.AVAL]]
 rem --- Discount Amount cannot exceed Total Sales Amount
 
@@ -28,10 +92,16 @@ rem --- Recalculate Tax Amount and Totals
 rem --- Now we've been on the Totals tab
 
 	callpoint!.setDevObject("was_on_tot_tab","Y")
+
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
 [[OPE_INVHDR.DISCOUNT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
 
 	callpoint!.setDevObject("was_on_tot_tab","Y")
+
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
 [[OPE_INVHDR.AOPT-UINV]]
 rem --- Invoice History Header, set to void
 
@@ -274,11 +344,7 @@ rem --- Set discount code for use in Order Totals
 	gosub calculate_tax
 	gosub disp_totals
 [[OPE_INVHDR.AOPT-CASH]]
-rem --- Customer wants to pay cash; Launch invoice totals first
-
-	gosub do_totals
-
-rem --- Now launch Cash Transaction
+rem --- Launch Cash Transaction
 
 	gosub get_cash
 
@@ -342,7 +408,6 @@ rem --- Get cash if needed for cash transaction
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
 		gosub check_cash_due
 		if cash_due then
-			gosub do_totals
 			gosub get_cash
 		endif
 	endif
@@ -674,6 +739,9 @@ rem --- clear availability
 rem --- Save old value
 
 	user_tpl.prev_ship_to$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
 [[OPE_INVHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
 
@@ -730,7 +798,7 @@ rem --- Enable / Disable buttons
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
 			callpoint!.setOptionEnabled("CRCH",1)
-			if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH",1)
+			gosub able_cash_sale
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
 				callpoint!.setOptionEnabled("MINV",1)	
@@ -975,6 +1043,9 @@ rem --- Do we need to create a new order number?
 			callpoint!.setStatus("REFRESH")
 		endif
 	endif
+
+rem --- Enable/Disable Cash Sale button
+	gosub able_cash_sale
 [[OPE_INVHDR.BOVE]]
 rem --- Restrict lookup to orders
 
@@ -1112,7 +1183,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("PRNT", 1)
 	callpoint!.setOptionEnabled("TTLS",1)
 	callpoint!.setOptionEnabled("UINV",1)
-	if user_tpl.cash_sale$="Y" then callpoint!.setOptionEnabled("CASH", 1)
+	gosub able_cash_sale
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
 		callpoint!.setOptionEnabled("MINV", 0)
@@ -2273,61 +2344,6 @@ rem --- Write flag to disk
 	return
 
 rem ==========================================================================
-do_totals: rem --- Run the totals form and write back
-rem ==========================================================================
-
-rem --- Call the form
-
-	dim dflt_data$[4,1]
-	dflt_data$[1,0] = "TOTAL_SALES"
-	dflt_data$[1,1] = callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")
-	dflt_data$[2,0] = "DISCOUNT_AMT"
-	dflt_data$[2,1] = callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")
-	dflt_data$[3,0] = "TAX_AMOUNT"
-	dflt_data$[3,1] = callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT")
-	dflt_data$[4,0] = "FREIGHT_AMT"
-	dflt_data$[4,1] = callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")
-
-rem --- Set Dev Objects for use in the form
-
-	callpoint!.setDevObject("disc_amt",str(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")))
-	callpoint!.setDevObject("frt_amt",str(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")))
-	callpoint!.setDevObject("taxable_amt",callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
-
-	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:		"OPE_ORDTOTALS", 
-:		stbl("+USER_ID"), 
-:		"", 
-:		"", 
-:		table_chans$[all],
-:		"", 
-:		dflt_data$[all],
-:		user_tpl$,
-:		UserObj!
-
-rem --- Set fields from the Order Totals form and write back
-
-	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-
-	callpoint!.setColumnData("OPE_INVHDR.TOTAL_SALES",  str(ordHelp!.getExtPrice()))
-	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",   str(ordHelp!.getExtCost()))
-	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",  str(ordHelp!.getTaxable()))
-
-	total_amt=num(ordHelp!.getExtPrice())
-	disc_amt=num(callpoint!.getDevObject("disc_amt"))
-	tax_amt=num(callpoint!.getDevObject("tax_amt"))
-	frt_amt=num(callpoint!.getDevObject("frt_amt"))
-	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT", str(disc_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL",str(total_amt - disc_amt))
-	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",   str(tax_amt))
-	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT", str(frt_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES",str((total_amt - disc_amt) + tax_amt + frt_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str((total_amt - disc_amt) + tax_amt + frt_amt))
-	callpoint!.setStatus("REFRESH-SAVE")
-	
-	return
-
-rem ==========================================================================
 get_disk_rec: rem --- Get disk record, update with current form data
               rem     OUT: ordhdr_rec$, updated
               rem          ordhdr_tpl$
@@ -2461,6 +2477,21 @@ rem ==========================================================================
 	readrecord (cashrct_dev, key=firm_id$+ar_type$+cust$+ord$, err=*next)cashrct$
 	if cvs(cashrct.customer_id$,2)<>"" then
 		if cashrct.tendered_amt>=cashrct.invoice_amt then cash_due=0
+	endif
+
+	return
+
+rem ==========================================================================
+able_cash_sale: rem --- Enable/Disable Cash Sale button
+rem ==========================================================================
+
+	idx=form!.getControl(num(stbl("+TAB_CTL"))).getSelectedIndex()
+	if user_tpl.cash_sale$="Y" and idx=2 then
+		rem --- enable Cash Sale button when on Totals tab
+		callpoint!.setOptionEnabled("CASH",1)
+	else
+		rem --- enable Cash Sale button when on Totals tab
+		callpoint!.setOptionEnabled("CASH",0)
 	endif
 
 	return
