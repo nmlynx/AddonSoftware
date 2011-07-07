@@ -664,7 +664,6 @@ rem --- Disable Ship To fields
 
 	callpoint!.setColumnEnabled(column!, status)
 [[OPE_INVHDR.SHIPTO_NO.AVAL]]
-
 rem --- Check Ship-to's
 
 	shipto_no$  = callpoint!.getUserInput()

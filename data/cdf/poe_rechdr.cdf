@@ -209,7 +209,6 @@ rem --- check dtl_posted flag to see if dropship fields should be disabled
 
 gosub enable_dropship_fields 
 [[POE_RECHDR.ADEL]]
-
 rem ---  loop thru gridVect! -- for each row that isn't marked deleted:
 rem --- 1. call atamo to reverse OO qty for each dtl row that isn't from the original PO and isn't a dropship
 rem --- 2. get rid of poe_linked (poe-08) records, if applicable (will only exist on a dropship)

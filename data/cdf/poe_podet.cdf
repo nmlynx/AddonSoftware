@@ -31,7 +31,6 @@ else
 	if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y"then gosub update_iv_oo
 endif
 [[POE_PODET.AWRI]]
-
 rem --- if new row, updt ivm-05 (old poc.ua, now poc_itemvend) 
 
 if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y"
@@ -326,7 +325,6 @@ rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
 gosub update_header_tots
 callpoint!.setDevObject("cost_this_row",num(callpoint!.getUserInput()))
 [[POE_PODET.AUDE]]
-
 gosub update_header_tots
 po_line_code$=callpoint!.getColumnData("POE_PODET.PO_LINE_CODE")
 if cvs(po_line_code$,2)<>"" then  gosub update_line_type_info
@@ -334,7 +332,6 @@ if cvs(po_line_code$,2)<>"" then  gosub update_line_type_info
 curr_qty = num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED")) * num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))
 if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_POHDR.DROPSHIP")<>"Y" then gosub update_iv_oo
 [[POE_PODET.ADEL]]
-
 gosub update_header_tots
 
 [[POE_PODET.ADGE]]
