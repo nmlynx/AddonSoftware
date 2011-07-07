@@ -179,7 +179,9 @@ rem --- Fill Report and Show
     viewerWindow!.show(0)
     declare BBjTopLevelWindow bbjWindow!
     bbjWindow!= viewerWindow!.getViewerWindow()
-    bbjWindow!.setCallback(bbjWindow!.ON_CLOSE,"close_win")
+	cancelled=1
+    bbjWindow!.setCallback(bbjWindow!.ON_CLOSE,"close_win",err=*next); cancelled=0
+	if cancelled then goto close_win
         
 rem --- Event Control
 
