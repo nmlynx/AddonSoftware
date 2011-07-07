@@ -272,4 +272,3 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       table_chans$[all],
 :                       "",
 :                       dflt_data$[all]
-

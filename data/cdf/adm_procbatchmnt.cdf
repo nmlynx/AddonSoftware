@@ -1,5 +1,3 @@
-[[ADM_PROCBATCHMNT.BNEX]]
-
 [[ADM_PROCBATCHMNT.PROCESS_ID.AVAL]]
 rem --- enable orph scan button
 
