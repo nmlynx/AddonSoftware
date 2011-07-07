@@ -87,7 +87,6 @@ if callpoint!.getDevObject("can_delete")="NO"
 	callpoint!.setStatus("ABORT")
 endif
 [[ADM_PROCBATCHMNT.ADIS]]
-
 rem ---  don't allow delete if this batch is referenced in entry files
 
 adm_proctables_dev=fnget_dev("ADM_PROCTABLES")
