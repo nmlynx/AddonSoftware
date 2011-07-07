@@ -10,19 +10,18 @@
 	<parameter name="EST_YIELD" class="java.math.BigDecimal"/>
 	<parameter name="ALL_DATES" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select firm_id, bill_no, material_seq, bmm_billmat.item_id, op_seq, line_type, unit_measure, ext_comments, effect_date, obsolt_date, qty_required, alt_factor, divisor, scrap_factor, ivm_itemmast.item_desc as itemdesc, ivm_itemwhse.unit_cost as unitcost, count(bmm_billmast.firm_id) as b_count from bmm_billmat
+		<![CDATA[select firm_id, bill_no, material_seq, bmm_billmat.item_id, line_type, unit_measure, ext_comments, effect_date, obsolt_date, qty_required, alt_factor, divisor, scrap_factor, ivm_itemmast.item_desc as itemdesc, ivm_itemwhse.unit_cost as unitcost, count(bmm_billmast.firm_id) as b_count from bmm_billmat
 left outer join bmm_billmast
 on bmm_billmast.firm_id = bmm_billmat.firm_id and bmm_billmast.bill_no = bmm_billmat.item_id
 left outer join ivm_itemmast on bmm_billmat.firm_id = ivm_itemmast.firm_id and bmm_billmat.item_id = ivm_itemmast.item_id
 left outer join ivm_itemwhse on bmm_billmat.firm_id = ivm_itemwhse.firm_id and ivm_itemwhse.warehouse_id = $P{WHSE} and ivm_itemwhse.item_id = bmm_billmat.item_id
 where $P{FIRM_ID} = firm_id and $P{BILL_NO} = bill_no
-group by bmm_billmat.firm_id, bmm_billmat.bill_no, bmm_billmat.material_seq, bmm_billmat.item_id, op_seq, line_type, unit_measure, ext_comments, effect_date, obsolt_date, qty_required, alt_factor, divisor, scrap_factor, itemdesc, unitcost]]>
+group by bmm_billmat.firm_id, bmm_billmat.bill_no, bmm_billmat.material_seq, bmm_billmat.item_id, line_type, unit_measure, ext_comments, effect_date, obsolt_date, qty_required, alt_factor, divisor, scrap_factor, itemdesc, unitcost]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String"/>
 	<field name="BILL_NO" class="java.lang.String"/>
 	<field name="MATERIAL_SEQ" class="java.lang.String"/>
 	<field name="ITEM_ID" class="java.lang.String"/>
-	<field name="OP_SEQ" class="java.lang.String"/>
 	<field name="LINE_TYPE" class="java.lang.String"/>
 	<field name="UNIT_MEASURE" class="java.lang.String"/>
 	<field name="EXT_COMMENTS" class="java.lang.String"/>
@@ -158,11 +157,6 @@ $P{ALL_DATES} == "Y")]]></printWhenExpression>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Op Seq:]]></text>
 			</staticText>
-			<textField>
-				<reportElement x="268" y="13" width="26" height="13"/>
-				<textElement/>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{OP_SEQ}]]></textFieldExpression>
-			</textField>
 			<staticText>
 				<reportElement x="307" y="13" width="32" height="13"/>
 				<textElement textAlignment="Right"/>
