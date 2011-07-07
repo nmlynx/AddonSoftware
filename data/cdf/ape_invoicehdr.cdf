@@ -301,7 +301,6 @@ if gl$="Y"
 	endif
 endif
 [[APE_INVOICEHDR.ADIS]]
-
 rem --- get disc % assoc w/ terms in this rec, and disp distributed bal
 	apm10c_dev=fnget_dev("APC_TERMSCODE")
 	dim apm10c$:fnget_tpl$("APC_TERMSCODE")
