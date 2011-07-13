@@ -1,3 +1,11 @@
+[[BMM_BILLMAT.OP_INT_SEQ_REF.AINP]]
+	ops_lines!=SysGUI!.makeVector()
+	ops_items!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+
+	ops_lines!=callpoint!.getDevObject("ops_lines")
+	ops_items!=callpoint!.getDevObject("ops_items")
+	ops_list!=callpoint!.getDevObject("ops_list")
 [[BMM_BILLMAT.OBSOLT_DATE.AVAL]]
 rem --- Check for valid dates
 
@@ -30,10 +38,6 @@ rem --- Display Net Quantity
 	gosub calc_net
 	item$=callpoint!.getColumnData("BMM_BILLMAT.ITEM_ID")
 	gosub check_sub
-[[BMM_BILLMAT.AREC]]
-rem --- Default Line Number to something
-
-rem escape
 [[BMM_BILLMAT.ITEM_ID.AVAL]]
 rem --- Component must not be the same as the Master Bill
 
@@ -154,6 +158,52 @@ rem --- Open files for later use
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTAN[2_]"
 	gosub open_tables
+
+rem --- fill listbox for use with Op Sequence
+
+	bmm03_dev=fnget_dev("BMM_BILLOPER")
+	dim bmm03a$:fnget_tpl$("BMM_BILLOPER")
+	bmm08_dev=fnget_dev("BMC_OPCODES")
+	dim bmm08a$:fnget_tpl$("BMC_OPCODES")
+	bill_no$=callpoint!.getDevObject("master_bill")
+
+	ops_lines!=SysGUI!.makeVector()
+	ops_items!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+rem	ops_lines!.addItem("")
+rem	ops_items!.addItem("")
+rem	ops_list!.addItem("")
+
+	read(bmm03_dev,key=firm_id$+bill_no$,dom=*next)
+	while 1
+		read record (bmm03_dev,end=*break) bmm03a$
+		if pos(firm_id$+bill_no$=bmm03a$)<>1 break
+		if bmm03a.line_type$<>"S" continue
+		dim bmm08a$:fattr(bmm08a$)
+		read record (bmm08_dev,key=firm_id$+bmm03a.op_code$,dom=*next)bmm08a$
+		ops_lines!.addItem(bmm03a.internal_seq_no$)
+		ops_items!.addItem(bmm03a.op_code$)
+		ops_list!.addItem(bmm03a.op_code$+" - "+bmm08a.code_desc$)
+	wend
+
+	if ops_lines!.size()>0
+		ldat$=""
+		for x=0 to ops_lines!.size()-1
+			ldat$=ldat$+ops_items!.getItem(x)+"~"+ops_lines!.getItem(x)+";"
+		next x
+	endif
+
+	callpoint!.setTableColumnAttribute("BMM_BILLMAT.OP_INT_SEQ_REF","LDAT",ldat$)
+	my_grid!=Form!.getControl(5000)
+	ListColumn=5
+	my_control!=my_grid!.getColumnListControl(ListColumn)
+	my_control!.removeAllItems()
+	my_control!.insertItems(0,ops_list!)
+	my_grid!.setColumnListControl(ListColumn,my_control!)
+
+	callpoint!.setDevObject("ops_lines",ops_lines!)
+	callpoint!.setDevObject("ops_items",ops_items!)
+	callpoint!.setDevObject("ops_list",ops_list!)
 [[BMM_BILLMAT.ITEM_ID.AINV]]
 rem --- Check for item synonyms
 
