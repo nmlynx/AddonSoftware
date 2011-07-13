@@ -35,9 +35,9 @@ rem --- Document initializations
 	columns = 4
 	dim columns$[columns,10]
 	columns$[0,0]="Bill No.",columns$[0,1]="C",columns$[0,2]="15"
-	columns$[1,0]="Type",columns$[1,1]="C",columns$[1,2]="20"
+	columns$[1,0]="Type",columns$[1,1]="C",columns$[1,2]="10"
 	columns$[2,0]="Seq",columns$[2,1]="C",columns$[2,2]="20"
-	columns$[3,0]="Op Seq",columns$[3,1]="C",columns$[3,2]="10"
+	columns$[3,0]="Op Seq",columns$[3,1]="C",columns$[3,2]="20"
 	columns$[4,0]="Comments",columns$[4,1]="C",columns$[4,2]="30"
 
 rem --- Background
@@ -64,8 +64,8 @@ l1100: rem --- Read Loop For Materials
 
 rem --- Test for Print
 
-			if cvs(bmm02a.op_seq$,3)="" continue
-			find record (bmm03_dev,key=firm_id$+bmm02a.bill_no$+bmm02a.op_seq,dom=print_mat) bmm03a$
+			if num(bmm02a.op_int_seq_ref$)=0 continue
+			find record (bmm03_dev,key=firm_id$+bmm02a.bill_no$+bmm02a.op_int_seq_ref$,dom=print_mat) bmm03a$
 			if bmm03a.line_type$="M" goto print_mat
 			continue
 
@@ -74,7 +74,7 @@ print_mat: rem --- Print Material Line
 			OutVect!.addItem(bmm02a.bill_no$)
 			OutVect!.addItem("Material")
 			OutVect!.addItem(bmm02a.material_seq$)
-			OutVect!.addItem(bmm02a.op_seq+" - Item: "+bmm02a.item_no$)
+			OutVect!.addItem(bmm02a.op_int_seq_ref$+" - Item: "+bmm02a.item_id$)
 			if bmm03a.line_type$="M" 
 				OutVect!.addItem("Linked to comment")
 			else
