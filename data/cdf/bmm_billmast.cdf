@@ -138,7 +138,7 @@ rem --- Set DevObjects required
 	callpoint!.setDevObject("master_bill","")
 	callpoint!.setDevObject("lotsize",0)
 
-	num_files=6
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="BMM_BILLMAT",open_opts$[1]="OTA"
 	open_tables$[2]="BMM_BILLOPER",open_opts$[2]="OTA"
@@ -146,6 +146,7 @@ rem --- Set DevObjects required
 	open_tables$[4]="BMM_BILLSUB",open_opts$[4]="OTA"
 	open_tables$[5]="IVM_ITEMMAST",open_opts$[5]="OTA"
 	open_tables$[6]="IVS_PARAMS",open_opts$[6]="OTA"
+	open_tables$[7]="BMC_OPCODES",open_opts$[7]="OTA"
 	gosub open_tables
 
 	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
