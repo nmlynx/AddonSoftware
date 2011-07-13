@@ -24,13 +24,14 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-	num_files=5
+	num_files=6
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="BMM_BILLMAST",open_opts$[1]="OTA"
 	open_tables$[2]="BMM_BILLMAT",open_opts$[2]="OTA"
 	open_tables$[3]="BMS_PARAMS",open_opts$[3]="OTA"
 	open_tables$[4]="IVM_ITEMMAST",open_opts$[4]="OTA"
 	open_tables$[5]="IVS_PARAMS",open_opts$[5]="OTA"
+	open_tables$[6]="BMM_BILLOPER",open_opts$[6]="OTA"
 
 	gosub open_tables
 
@@ -39,11 +40,12 @@ rem --- Open/Lock files
 	bms01a_dev=num(open_chans$[3])
 	ivm01_dev=num(open_chans$[4])
 	ivs01a_dev=num(open_chans$[5])
-   
+	bmm03_dev=num(open_chans$[6])
+	
 rem --- Dimension string templates
 
 	dim bmm01a$:open_tpls$[1],bmm02a$:open_tpls$[2],bms01a$:open_tpls$[3]
-	dim ivm01a$:open_tpls$[4],ivs01a$:open_tpls$[5]
+	dim ivm01a$:open_tpls$[4],ivs01a$:open_tpls$[5],bmm03a$:open_tpls$[6]
 
 rem --- Retrieve parameter records
 
@@ -160,10 +162,12 @@ addl_reads: rem --- Additional Reads
 
         find record (ivm01_dev,key=firm_id$+bmm02a.item_id$,dom=*next) ivm01a$
         ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
-
+		dim bmm03a$:fattr(bmm03a$)
+		find record (bmm03_dev,key=firm_id$+bmm02a.bill_no$+bmm02a.op_int_seq_ref$,knum="AO_BILL_OPSEQ",dom=*next)bmm03a$
+		
 rem --- Print Detail
 
-        OutVect!.addItem(bmm02a.op_int_seq_ref$)
+        OutVect!.addItem(bmm03a.op_seq$)
         OutVect!.addItem(bmm02a.item_id$(1,p[0]))
         OutVect!.addItem(bmm02a.unit_measure$)
         OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor):m2$)+$00$+"R")
