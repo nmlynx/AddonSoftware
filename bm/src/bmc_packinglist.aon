@@ -6,52 +6,51 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-        seterr std_error
-        setesc std_error
-        enter action$,printer_dev,bill_no$,page_no,pdate$,OutVect!,status
+	seterr std_error
+	setesc std_error
+	enter action$,printer_dev,bill_no$,page_no,pdate$,OutVect!,status
 
 rem --- Retrieve the program path
 
-        pgmdir$=stbl("+DIR_PGM",err=*next)
+	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-        dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+SYSINFO",err=*next)
-        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-        firm_id$=sysinfo.firm_id$
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+	firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files
 
-        files=5,begfile=1,endfile=files
-        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-        files$[1]="bmm-01",ids$[1]="BMM_BILLMAST"
-        files$[2]="bmm-02",ids$[2]="BMM_BILLMAT"
-        files$[3]="bms_params",ids$[3]="BMS_PARAMS"
-        files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
-        files$[5]="ivs_params",ids$[5]="IVS_PARAMS"
+	num_files=5
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="BMM_BILLMAST",open_opts$[1]="OTA"
+	open_tables$[2]="BMM_BILLMAT",open_opts$[2]="OTA"
+	open_tables$[3]="BMS_PARAMS",open_opts$[3]="OTA"
+	open_tables$[4]="IVM_ITEMMAST",open_opts$[4]="OTA"
+	open_tables$[5]="IVS_PARAMS",open_opts$[5]="OTA"
 
-        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-        if status goto std_exit
-        bmm01_dev=channels[1]
-        bmm02_dev=channels[2]
-        bms01a_dev=channels[3]
-        ivm01_dev=channels[4]
-        ivs01a_dev=channels[5]
+	gosub open_tables
+
+	bmm01_dev=num(open_chans$[1])
+	bmm02_dev=num(open_chans$[2])
+	bms01a_dev=num(open_chans$[3])
+	ivm01_dev=num(open_chans$[4])
+	ivs01a_dev=num(open_chans$[5])
    
 rem --- Dimension string templates
 
-        dim bmm01a$:templates$[1],bmm02a$:templates$[2],bms01a$:templates$[3],
-:           ivm01a$:templates$[4],ivs01a$:templates$[5]
+	dim bmm01a$:open_tpls$[1],bmm02a$:open_tpls$[2],bms01a$:open_tpls$[3]
+	dim ivm01a$:open_tpls$[4],ivs01a$:open_tpls$[5]
 
 rem --- Retrieve parameter records
 
-        bms01a_key$=firm_id$+"BM00"
-        find record (bms01a_dev,key=bms01a_key$,err=std_missing_params) bms01a$
-        ivs01a_key$=firm_id$+"IV00"
-        find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+	bms01a_key$=firm_id$+"BM00"
+	find record (bms01a_dev,key=bms01a_key$,err=std_missing_params) bms01a$
+	ivs01a_key$=firm_id$+"IV00"
+	find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Parameters
 
@@ -138,7 +137,7 @@ rem --- Main Loop Starts
 
         bmm02a_altkey$=key(bmm02_dev,knum="AO_OPSEQ_BILL",end=*break)
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        if first_time$="Y" then let first_time$="N",t0$=bmm02a_altkey.op_seq$
+        if first_time$="Y" then let first_time$="N",t0$=bmm02a_altkey.op_int_seq_ref$
         read record (bmm02_dev,key=bmm02a_altkey$,knum="AO_OPSEQ_BILL") bmm02a$
         if pos(bmm01a.firm_id$+bmm01a.bill_no$=bmm02a.firm_id$+bmm02a.bill_no$+bmm02a.material_seq$)<>1 then break
         if cvs(bmm02a.effect_date$,3)<>"" and bmm02a.effect_date$>pdate$ then continue
@@ -164,7 +163,7 @@ addl_reads: rem --- Additional Reads
 
 rem --- Print Detail
 
-        OutVect!.addItem(bmm02a.op_seq$)
+        OutVect!.addItem(bmm02a.op_int_seq_ref$)
         OutVect!.addItem(bmm02a.item_id$(1,p[0]))
         OutVect!.addItem(bmm02a.unit_measure$)
         OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor):m2$)+$00$+"R")
@@ -209,6 +208,36 @@ rem --- Totals
 rem --- End
     goto std_exit
 
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
+
+    if open_status$<>"" then
+       msg_id$="ENTRY_OPEN_ERROR"
+       dim msg_tokens$[1]
+       msg_tokens$[1]=open_status$
+       gosub disp_message
+       rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+       release
+    endif
+
+    return
+    
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+    return
+	
 rem --- #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -351,10 +380,18 @@ rem --- #endinclude std_missing_params.src
 rem --- #include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
-        for i=1 to files
-            close(channels[i])
-        next i
-        exit
+
+	num_files=5
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="BMM_BILLMAST",open_opts$[1]="C"
+	open_tables$[2]="BMM_BILLMAT",open_opts$[2]="C"
+	open_tables$[3]="BMS_PARAMS",open_opts$[3]="C"
+	open_tables$[4]="IVM_ITEMMAST",open_opts$[4]="C"
+	open_tables$[5]="IVS_PARAMS",open_opts$[5]="C"
+
+	gosub open_tables
+	exit
+	
 rem --- #endinclude std_exit.src
 
-        end
+	end
