@@ -35,14 +35,14 @@ group by bmm_billmat.firm_id, bmm_billmat.bill_no, bmm_billmat.material_seq, bmm
 	<field name="UNITCOST" class="java.math.BigDecimal"/>
 	<field name="B_COUNT" class="java.math.BigDecimal"/>
 	<variable name="TOTAL_COST" class="java.math.BigDecimal">
-		<variableExpression><![CDATA[$F{UNITCOST} * 10000*$F{QTY_REQUIRED}*$F{ALT_FACTOR}/
+		<variableExpression><![CDATA[$F{DIVISOR} == 0 ? 0:$F{UNITCOST} * 10000*$F{QTY_REQUIRED}*$F{ALT_FACTOR}/
     ($F{DIVISOR}*$P{EST_YIELD}*(100-$F{SCRAP_FACTOR}))]]></variableExpression>
 	</variable>
 	<variable name="TOT_MAT_COST" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$V{TOTAL_COST}]]></variableExpression>
 	</variable>
 	<variable name="NET_REQUIRED" class="java.math.BigDecimal">
-		<variableExpression><![CDATA[10000*$F{QTY_REQUIRED}*$F{ALT_FACTOR}/
+		<variableExpression><![CDATA[$F{DIVISOR} == 0 ? 0:10000*$F{QTY_REQUIRED}*$F{ALT_FACTOR}/
     ($F{DIVISOR}*$P{EST_YIELD}*(100-$F{SCRAP_FACTOR}))]]></variableExpression>
 		<initialValueExpression><![CDATA[new BigDecimal(0.000)]]></initialValueExpression>
 	</variable>
