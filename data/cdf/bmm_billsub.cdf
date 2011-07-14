@@ -92,3 +92,45 @@ rem --- Only show form if A/P is installed
 		callpoint!.setMessage("AP_NOT_INST")
 		callpoint!.setStatus("EXIT")
 	endif
+
+rem --- fill listbox for use with Op Sequence
+
+	bmm03_dev=fnget_dev("BMM_BILLOPER")
+	dim bmm03a$:fnget_tpl$("BMM_BILLOPER")
+	bmm08_dev=fnget_dev("BMC_OPCODES")
+	dim bmm08a$:fnget_tpl$("BMC_OPCODES")
+	bill_no$=callpoint!.getDevObject("master_bill")
+
+	ops_lines!=SysGUI!.makeVector()
+	ops_items!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+	ops_lines!.addItem("000000000000")
+	ops_items!.addItem("")
+	ops_list!.addItem("")
+
+	read(bmm03_dev,key=firm_id$+bill_no$,dom=*next)
+	while 1
+		read record (bmm03_dev,end=*break) bmm03a$
+		if pos(firm_id$+bill_no$=bmm03a$)<>1 break
+		if bmm03a.line_type$<>"S" continue
+		dim bmm08a$:fattr(bmm08a$)
+		read record (bmm08_dev,key=firm_id$+bmm03a.op_code$,dom=*next)bmm08a$
+		ops_lines!.addItem(bmm03a.internal_seq_no$)
+		ops_items!.addItem(bmm03a.op_code$)
+		ops_list!.addItem(bmm03a.op_code$+" - "+bmm08a.code_desc$)
+	wend
+
+	if ops_lines!.size()>0
+		ldat$=""
+		for x=0 to ops_lines!.size()-1
+			ldat$=ldat$+ops_items!.getItem(x)+"~"+ops_lines!.getItem(x)+";"
+		next x
+	endif
+
+	callpoint!.setTableColumnAttribute("BMM_BILLSUB.OP_INT_SEQ_REF","LDAT",ldat$)
+	my_grid!=Form!.getControl(5000)
+	ListColumn=12
+	my_control!=my_grid!.getColumnListControl(ListColumn)
+	my_control!.removeAllItems()
+	my_control!.insertItems(0,ops_list!)
+	my_grid!.setColumnListControl(ListColumn,my_control!)
