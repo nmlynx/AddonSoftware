@@ -170,9 +170,9 @@ rem --- fill listbox for use with Op Sequence
 	ops_lines!=SysGUI!.makeVector()
 	ops_items!=SysGUI!.makeVector()
 	ops_list!=SysGUI!.makeVector()
-rem	ops_lines!.addItem("")
-rem	ops_items!.addItem("")
-rem	ops_list!.addItem("")
+	ops_lines!.addItem("000000000000")
+	ops_items!.addItem("")
+	ops_list!.addItem("")
 
 	read(bmm03_dev,key=firm_id$+bill_no$,dom=*next)
 	while 1
@@ -200,10 +200,6 @@ rem	ops_list!.addItem("")
 	my_control!.removeAllItems()
 	my_control!.insertItems(0,ops_list!)
 	my_grid!.setColumnListControl(ListColumn,my_control!)
-
-	callpoint!.setDevObject("ops_lines",ops_lines!)
-	callpoint!.setDevObject("ops_items",ops_items!)
-	callpoint!.setDevObject("ops_list",ops_list!)
 [[BMM_BILLMAT.ITEM_ID.AINV]]
 rem --- Check for item synonyms
 
