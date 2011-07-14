@@ -1,3 +1,5 @@
+[[BMM_BILLMAST.BILL_NO.AINP]]
+rem --- Make sure item exists before allowing user to continue
 [[BMM_BILLMAST.AOPT-PLST]]
 rem --- Go run the Pick List form
 
