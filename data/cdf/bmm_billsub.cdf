@@ -129,7 +129,7 @@ rem --- fill listbox for use with Op Sequence
 
 	callpoint!.setTableColumnAttribute("BMM_BILLSUB.OP_INT_SEQ_REF","LDAT",ldat$)
 	my_grid!=Form!.getControl(5000)
-	ListColumn=12
+	ListColumn=11
 	my_control!=my_grid!.getColumnListControl(ListColumn)
 	my_control!.removeAllItems()
 	my_control!.insertItems(0,ops_list!)
