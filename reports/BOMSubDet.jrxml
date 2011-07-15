@@ -8,7 +8,7 @@
 	<parameter name="PROD_DATE" class="java.lang.String"/>
 	<parameter name="ALL_DATES" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select firm_id, bill_no, subcont_seq, line_type, unit_measure, vendor_id, ext_comments, effect_date, obsolt_date, op_seq, qty_required, alt_factor, unit_cost, divisor, lead_time, apm_vendmast.vendor_name as vendname
+		<![CDATA[select firm_id, bill_no, subcont_seq, line_type, unit_measure, vendor_id, ext_comments, effect_date, obsolt_date, op_int_seq_ref, qty_required, alt_factor, unit_cost, divisor, lead_time, apm_vendmast.vendor_name as vendname
 from bmm_billsub
 left join apm_vendmast on apm_vendmast.firm_id = $P{FIRM_ID} and apm_vendmast.vendor_id = bmm_billsub.vendor_id
 where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
@@ -22,7 +22,7 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 	<field name="EXT_COMMENTS" class="java.lang.String"/>
 	<field name="EFFECT_DATE" class="java.lang.String"/>
 	<field name="OBSOLT_DATE" class="java.lang.String"/>
-	<field name="OP_SEQ" class="java.lang.String"/>
+	<field name="OP_INT_SEQ_REF" class="java.lang.String"/>
 	<field name="QTY_REQUIRED" class="java.math.BigDecimal"/>
 	<field name="ALT_FACTOR" class="java.math.BigDecimal"/>
 	<field name="UNIT_COST" class="java.math.BigDecimal"/>
@@ -181,7 +181,7 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 			<textField>
 				<reportElement x="407" y="13" width="28" height="13"/>
 				<textElement/>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{OP_SEQ}]]></textFieldExpression>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{OP_INT_SEQ_REF}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="450" y="13" width="47" height="13"/>
