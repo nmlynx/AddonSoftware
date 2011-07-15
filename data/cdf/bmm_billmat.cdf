@@ -58,6 +58,7 @@ rem --- Component must not be the same as the Master Bill
 	if item$ = callpoint!.getColumnData("BMM_BILLMAT.BILL_NO")
 		msg_id$="BM_BAD_COMP_ITEM"
 		gosub disp_message
+		callpoint!.setUserInput("")
 		callpoint!.setStatus("ABORT")
 		break
 	endif
