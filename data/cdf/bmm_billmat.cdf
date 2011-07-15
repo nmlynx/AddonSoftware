@@ -1,3 +1,12 @@
+[[BMM_BILLMAT.BWRI]]
+rem --- Divisor and Alt Factor need to be 1 if 0
+
+	if num(callpoint!.getColumnData("BMM_BILLMAT.DIVISOR"))=0
+		callpoint!.setColumnData("BMM_BILLMAT.DIVISOR","1")
+	endif
+	if num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))=0
+		callpoint!.setColumnData("BMM_BILLMAT.ALT_FACTOR","1")
+	endif
 [[BMM_BILLMAT.OP_INT_SEQ_REF.AINP]]
 	ops_lines!=SysGUI!.makeVector()
 	ops_items!=SysGUI!.makeVector()
@@ -11,23 +20,27 @@ rem --- Check for valid dates
 
 	eff_date$=callpoint!.getColumnData("BMM_BILLMAT.EFFECT_DATE")
 	obs_date$=callpoint!.getUserInput()
+	msg_id$="BM_EFF_OBS"
 	gosub check_dates
 [[BMM_BILLMAT.EFFECT_DATE.AVAL]]
 rem --- Check for valid dates
 
 	eff_date$=callpoint!.getUserInput()
 	obs_date$=callpoint!.getColumnData("BMM_BILLMAT.OBSOLT_DATE")
+	msg_id$="BM_OBS_EFF"
 	gosub check_dates
 [[BMM_BILLMAT.AGRE]]
 rem --- Display Net Quantity
 
-	qty_req=num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))
-	alt_fact=num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))
-	divisor=num(callpoint!.getColumnData("BMM_BILLMAT.DIVISOR"))
-	scrap_fact=num(callpoint!.getColumnData("BMM_BILLMAT.SCRAP_FACTOR"))
-	gosub calc_net
-	item$=callpoint!.getColumnData("BMM_BILLMAT.ITEM_ID")
-	gosub check_sub
+	if callpoint!.getColumnData("BMM_BILLMAT.LINE_TYPE")="S"
+		qty_req=num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))
+		alt_fact=num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))
+		divisor=num(callpoint!.getColumnData("BMM_BILLMAT.DIVISOR"))
+		scrap_fact=num(callpoint!.getColumnData("BMM_BILLMAT.SCRAP_FACTOR"))
+		gosub calc_net
+		item$=callpoint!.getColumnData("BMM_BILLMAT.ITEM_ID")
+		gosub check_sub
+	endif
 [[BMM_BILLMAT.BGDR]]
 rem --- Display Net Quantity
 
@@ -91,6 +104,11 @@ rem --- Display Net Quantity
 [[BMM_BILLMAT.QTY_REQUIRED.AVAL]]
 rem --- Display Net Quantity
 
+	if num(callpoint!.getUserInput())=0
+		msg_id$="IV_QTY_GT_ZERO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 	qty_req=num(callpoint!.getUserInput())
 	alt_fact=num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))
 	divisor=num(callpoint!.getColumnData("BMM_BILLMAT.DIVISOR"))
@@ -105,6 +123,7 @@ rem --- divisor:			input
 rem --- scrap_fact:		input
 rem ===================================================================
 
+	if divisor=0 divisor=1
 	yield_pct=callpoint!.getDevObject("yield")
 	net_qty=BmUtils.netQuantityRequired(qty_req,alt_fact,divisor,yield_pct,scrap_fact)
 	callpoint!.setColumnData("<<DISPLAY>>.NET_REQD",str(net_qty))
@@ -135,11 +154,11 @@ rem ===================================================================
 check_dates:
 rem eff_date$	input
 rem obs_date$	input
+rem msg_id$	input
 rem ===================================================================
 
 	if cvs(obs_date$,3)<>""
 		if obs_date$<=eff_date$
-			msg_id$="BM_EFF_OBS"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
 		endif
