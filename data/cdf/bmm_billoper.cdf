@@ -3,12 +3,14 @@ rem --- Check for valid dates
 
 	eff_date$=callpoint!.getUserInput()
 	obs_date$=callpoint!.getColumnData("BMM_BILLOPER.OBSOLT_DATE")
+	msg_id$="BM_OBS_EFF"
 	gosub check_dates
 [[BMM_BILLOPER.OBSOLT_DATE.AVAL]]
 rem --- Check for valid dates
 
 	eff_date$=callpoint!.getColumnData("BMM_BILLOPER.EFFECT_DATE")
 	obs_date$=callpoint!.getUserInput()
+	msg_id$="BM_EFF_OBS"
 	gosub check_dates
 [[BMM_BILLOPER.BGDR]]
 rem --- Display Total Hours
@@ -90,11 +92,11 @@ rem ===================================================================
 check_dates:
 rem eff_date$	input
 rem obs_date$	input
+rem msg_id$	input
 rem ===================================================================
 
 	if cvs(obs_date$,3)<>""
 		if obs_date$<=eff_date$
-			msg_id$="BM_EFF_OBS"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
 		endif
