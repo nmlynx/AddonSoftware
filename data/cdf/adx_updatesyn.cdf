@@ -148,16 +148,6 @@ validate_old_syn: rem --- Validate old syn file
 		return
 	endif
 
-	rem --- Don’t allow current download location
-
-	testLoc$=old_syn$
-	gosub verify_not_download_loc
-	if !loc_ok
-		callpoint!.setFocus("ADX_UPDATESYN.OLD_SYN_FILE")
-		callpoint!.setStatus("ABORT")
-		return
-	endif
-
 	success=1
 
 	return
