@@ -7,6 +7,12 @@ rem --- Divisor and Alt Factor need to be 1 if 0
 	if num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))=0
 		callpoint!.setColumnData("BMM_BILLMAT.ALT_FACTOR","1")
 	endif
+
+	if num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))=0
+		msg_id$="IV_QTY_GT_ZERO"
+		gosub disp_message
+		callpoint!.setFocus(callpoint!.getValidationRow(),"BMM_BILLMAT.QTY_REQUIRED")
+	endif
 [[BMM_BILLMAT.OP_INT_SEQ_REF.AINP]]
 	ops_lines!=SysGUI!.makeVector()
 	ops_items!=SysGUI!.makeVector()
