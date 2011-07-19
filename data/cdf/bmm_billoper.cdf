@@ -1,3 +1,11 @@
+[[BMM_BILLOPER.AGRN]]
+rem --- Set Op Code DevObject
+
+	callpoint!.setDevObject("op_code",callpoint!.getColumnData("BMM_BILLOPER.OP_CODE"))
+[[BMM_BILLOPER.AREC]]
+rem --- Set Op Code DevObject
+
+	callpoint!.setDevObject("op_code","")
 [[BMM_BILLOPER.EFFECT_DATE.AVAL]]
 rem --- Check for valid dates
 
@@ -23,7 +31,8 @@ rem --- Display Total Hours
 [[BMM_BILLOPER.OP_CODE.AVAL]]
 rem --- Setup default data for new S type line
 
-	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y"
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or
+:		callpoint!.getUserInput()<>callpoint!.getDevObject("op_code")
 		bmm08=fnget_dev("BMC_OPCODES")
 		dim bmm08$:fnget_tpl$("BMC_OPCODES")
 		op_code$=callpoint!.getUserInput()
@@ -32,10 +41,13 @@ rem --- Setup default data for new S type line
 		callpoint!.setColumnData("BMM_BILLOPER.PCS_PER_HOUR",bmm08.pcs_per_hour$)
 		callpoint!.setColumnData("BMM_BILLOPER.SETUP_TIME",bmm08.setup_time$)
 		callpoint!.setColumnData("BMM_BILLOPER.HRS_PER_PCE","1")
+		callpoint!.setColumnData("<<DISPLAY>>.QUEUE_TIME",bmm08.queue_time$)
+		callpoint!.setColumnData("BMM_BILLOPER.MOVE_TIME",bmm08.move_time$)
 		hrs_pc=1
 		pc_hr=bmm08.pcs_per_hour
 		setup=bmm08.setup_time
 		gosub calc_hours
+		callpoint!.setDevObject("op_code",op_code$)
 	endif
 [[BMM_BILLOPER.SETUP_TIME.AVAL]]
 rem --- Display Total Hours
