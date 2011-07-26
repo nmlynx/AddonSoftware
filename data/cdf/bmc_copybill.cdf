@@ -56,6 +56,7 @@ rem --- copy Bill Master
 	dim bmm_mast$:fnget_tpl$("BMM_BILLMAST")
 	read record (old_bmm_mast,key=firm_id$+old_bill$) bmm_mast$
 	bmm_mast.bill_no$=new_bill$
+	bmm_mast.create_date$=stbl("+SYSTEM_DATE")
 	bmm_mast$=field(bmm_mast$)
 	write record (new_bmm_mast) bmm_mast$
 	callpoint!.setDevObject("new_bill",new_bill$)

@@ -122,7 +122,7 @@ rem --- Go run the Copy form
 	if callpoint!.getDevObject("new_bill")<>""
 		new_bill$=callpoint!.getDevObject("new_bill")
 		callpoint!.setColumnData("BMM_BILLMAST.BILL_NO",new_bill$)
-		callpoint!.setStatus("REFRESH")
+		callpoint!.setStatus("RECORD:["+firm_id$+new_bill$+"]-REFRESH")
 	endif
 [[BMM_BILLMAST.AREC]]
 rem --- set devobject
