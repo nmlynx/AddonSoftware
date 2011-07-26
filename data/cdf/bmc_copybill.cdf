@@ -58,6 +58,7 @@ rem --- copy Bill Master
 	bmm_mast.bill_no$=new_bill$
 	bmm_mast$=field(bmm_mast$)
 	write record (new_bmm_mast) bmm_mast$
+	callpoint!.setDevObject("new_bill",new_bill$)
 
 rem --- copy Components
 
