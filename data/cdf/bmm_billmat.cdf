@@ -8,10 +8,12 @@ rem --- Divisor and Alt Factor need to be 1 if 0
 		callpoint!.setColumnData("BMM_BILLMAT.ALT_FACTOR","1")
 	endif
 
-	if num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))=0
-		msg_id$="IV_QTY_GT_ZERO"
-		gosub disp_message
-		callpoint!.setFocus(callpoint!.getValidationRow(),"BMM_BILLMAT.QTY_REQUIRED")
+	if callpoint!.getColumnData("BMM_BILLMAT.LINE_TYPE")="S"
+		if num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))=0
+			msg_id$="IV_QTY_GT_ZERO"
+			gosub disp_message
+			callpoint!.setFocus(callpoint!.getValidationRow(),"BMM_BILLMAT.QTY_REQUIRED")
+		endif
 	endif
 [[BMM_BILLMAT.OP_INT_SEQ_REF.AINP]]
 	ops_lines!=SysGUI!.makeVector()
@@ -111,10 +113,12 @@ rem --- Display Net Quantity
 [[BMM_BILLMAT.QTY_REQUIRED.AVAL]]
 rem --- Display Net Quantity
 
-	if num(callpoint!.getUserInput())=0
-		msg_id$="IV_QTY_GT_ZERO"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
+	if callpoint!.getColumnData("BMM_BILLMAT.LINE_TYPE")="S"
+		if num(callpoint!.getUserInput())=0
+			msg_id$="IV_QTY_GT_ZERO"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
 	endif
 	qty_req=num(callpoint!.getUserInput())
 	alt_fact=num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))
