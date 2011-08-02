@@ -1,14 +1,14 @@
 [[BMM_BILLMAT.BWRI]]
 rem --- Divisor and Alt Factor need to be 1 if 0
 
-	if num(callpoint!.getColumnData("BMM_BILLMAT.DIVISOR"))=0
-		callpoint!.setColumnData("BMM_BILLMAT.DIVISOR","1")
-	endif
-	if num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))=0
-		callpoint!.setColumnData("BMM_BILLMAT.ALT_FACTOR","1")
-	endif
-
 	if callpoint!.getColumnData("BMM_BILLMAT.LINE_TYPE")="S"
+		if num(callpoint!.getColumnData("BMM_BILLMAT.DIVISOR"))=0
+			callpoint!.setColumnData("BMM_BILLMAT.DIVISOR","1")
+		endif
+		if num(callpoint!.getColumnData("BMM_BILLMAT.ALT_FACTOR"))=0
+			callpoint!.setColumnData("BMM_BILLMAT.ALT_FACTOR","1")
+		endif
+
 		if num(callpoint!.getColumnData("BMM_BILLMAT.QTY_REQUIRED"))=0
 			msg_id$="IV_QTY_GT_ZERO"
 			gosub disp_message
