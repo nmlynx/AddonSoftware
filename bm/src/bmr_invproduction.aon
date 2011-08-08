@@ -33,6 +33,10 @@ rem --- Retrieve sysinfo data
 	milestone=num(stbl("+MILESTONE",err=*next),err=*next)
 	firm_id$=sysinfo.firm_id$
 
+rem --- Prepare for call to bmc_explodephontoms.aon
+
+	dim template$[16]
+	
 rem --- Open/Lock files
 
 	num_files=11
@@ -69,6 +73,16 @@ rem --- Dimension string templates
 	dim bmm03a$:open_tpls$[4],bmm08a$:open_tpls$[5],bms01a$:open_tpls$[6]
 	dim ivm01a$:open_tpls$[7],ivm02a$:open_tpls$[8],ivm10c$:open_tpls$[9]
 	dim ivs01a$:open_tpls$[10],gls01a$:open_tpls$[11]
+
+	template$[0]=open_tpls$[2]
+	template$[1]=open_tpls$[4]
+	template$[3]=open_tpls$[5]
+	template$[4]=open_tpls$[7]
+	template$[5]=open_tpls$[8]
+	template$[6]=open_tpls$[10]
+	template$[7]=open_tpls$[6]
+	template$[15]=open_tpls$[3]
+	template$[16]=open_tpls$[11]
 
 rem --- Retrieve parameter records
 
@@ -134,12 +148,9 @@ rem --- Init Data
 	dim a[1],s[10],k[11],lx[11],sub[9],b1$(60),c1$(64)
 	headings$[0]=h1$
 	headings$[1]=h2$,errors=0
-	m1$=ivs01a.amount_mask$
-	m2$=ivs01a.unit_mask$
-	m3$=ivs01a.cost_mask$
-	call pgmdir$+"adc_sizemask.aon",m1$,m1,6,15
-	call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
-	call pgmdir$+"adc_sizemask.aon",m3$,m3,5,10
+	call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,m1
+	call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,m2
+	call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,m3
 	dashes$=fill(m1,"-")
 	wip_acct$=bms01a.gl_wip_acct$
 	m0=p[0]
@@ -171,6 +182,7 @@ rem --- Open Additional Files
 		
         bmm05_dev=num(open_chans$[1])
 		dim bmm05a$:open_tpls$[1]
+		template$[2]=open_tpls$[1]
     endif    
     if lf$="Y" then 
 		num_files=3
@@ -185,6 +197,9 @@ rem --- Open Additional Files
 		ivw04_dev=num(open_chans$[2])
 		ivw05_dev=num(open_chans$[3])
         dim ivm04a$:open_tpls$[1],ivw04a$:open_tpls$[2],ivw05a$:open_tpls$[16]
+		template$[12]=open_tpls$[1]
+		template$[13]=open_tpls$[2]
+		template$[14]=open_tpls$[3]
      endif   
 
     gl$="N"
@@ -200,7 +215,8 @@ rem --- Open Additional Files
 		
         glm01_dev=num(open_chans$[1])
 		dim glm01a$:open_tpls$[1]
-    endif    
+		template$[8]=open_tpls$[1]
+	endif
 
 rem --- Options
 
@@ -215,12 +231,11 @@ rem --- Run Report?
         msg_tokens$[1]=x.task_desc$
         gosub disp_message
 
-        if msg_opt$<>"Y" then goto std_exit
+        if msg_opt$<>"Y" then goto std_exit_no_report
     
         call pgmdir$+"adc_progress.aon","N","","","","",0,bme01_dev,1,meter_num,status
 
 rem ---  column heading
-rem ,columns$[4,10]="T"
 
         dim columns$[9,10]
         columns=9
@@ -249,7 +264,7 @@ rem --- Heading Read
 
 rem --- Breaks
 
-        if bme01a.firm_id$<>firm_id$ then goto done; rem " --- Company"
+        if bme01a.firm_id$<>firm_id$ then break; rem " --- Company"
         if bme01a.warehouse_id$<>t0$ then gosub warehouse; rem " --- Warehouse"
         if bme01a.prod_date$<>t1$ then gosub date_sub; rem " --- Production Date"
         if bme01a.bm_reference$<>t2$ then gosub reference; rem " --- Reference Number"
@@ -371,40 +386,6 @@ rem --- Print Total for bme-01 record
         cost=0
     wend
 
-dist_code: rem --- Dist Code
-
-        if ar_dist$<>"N" then 
-            read record (ivm02_dev,key=bme01a.firm_id$+bme01a.warehouse_id$+bme01a.item_id$,dom=*return) ivm02a2$
-            find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=*next) arm10d$
-            u0$=arm10d.gl_inv_acct$
-            ivacct$=u0$
-        endif
-        return
-
-distributions: rem --- Distribution
-
-        if ar_dist$<>"N" then 
-            find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=*next) arm10d$
-            u1$=arm10d.gl_inv_acct$
-        endif
-
-rem --- Update G/L
-
-        if bme01a.update_flag$="N" then u0$=wip_acct$ else u0$=ivacct$
-        gldate$=bme01a.prod_date$
-        account$=u0$
-        amount=unitcost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered
-        memo$="Item "+bme01a.item_id$
-        precision 2
-        amount=amount*1
-        value=value+amount
-        gosub glrecap
-        gldate$=bme01a.prod_date$
-        account$=u1$,amount=(-1)*amount,memo$="Item "+ivm02a.item_id$
-        gosub glrecap
-        precision num(ivs01a.precision$)
-        return
-
 done: rem --- Totals
 
         t9$="E"
@@ -465,6 +446,40 @@ date_heading: rem --- Date Heading
         OutVect!.addItem("Production Date: "+fndate$(t1$))
         xwk=fnblank(19)
         if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,t1$,glstatus,l,errors,status   
+        return
+
+dist_code: rem --- Dist Code
+
+        if ar_dist$<>"N" then 
+            read record (ivm02_dev,key=bme01a.firm_id$+bme01a.warehouse_id$+bme01a.item_id$,dom=*return) ivm02a2$
+            find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=*next) arm10d$
+            u0$=arm10d.gl_inv_acct$
+            ivacct$=u0$
+        endif
+        return
+
+distributions: rem --- Distribution
+
+        if ar_dist$<>"N" then 
+            find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=*next) arm10d$
+            u1$=arm10d.gl_inv_acct$
+        endif
+
+rem --- Update G/L
+
+        if bme01a.update_flag$="N" then u0$=wip_acct$ else u0$=ivacct$
+        gldate$=bme01a.prod_date$
+        account$=u0$
+        amount=unitcost*fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered
+        memo$="Item "+bme01a.item_id$
+        precision 2
+        amount=amount*1
+        value=value+amount
+        gosub glrecap
+        gldate$=bme01a.prod_date$
+        account$=u1$,amount=(-1)*amount,memo$="Item "+ivm02a.item_id$
+        gosub glrecap
+        precision num(ivs01a.precision$)
         return
 
 subcontracts: rem --- Subcontracts
@@ -646,24 +661,25 @@ reference: rem --- Reference Total
 
 explodephantoms: rem --- Explode Phantoms
 
-        dim channel[15],info$[20],info[20]
+        dim channel[16],info$[20],info[20]
         channel[0]=bmm01_dev
         channel[1]=bmm03_dev,channel[2]=bmm05_dev
         channel[3]=bmm08_dev
         channel[4]=ivm01_dev,channel[5]=ivm02_dev
-        channel[6]=7
-        channel[7]=sys01_dev,channel[8]=glm01_dev
+        channel[6]=ivs01a_dev
+        channel[7]=bms01a_dev,channel[8]=glm01_dev
         channel[9]=glw11_dev
         channel[10]=arm10d_dev,channel[11]=glt14_dev
         channel[12]=ivm04_dev,channel[13]=ivw04_dev,channel[14]=ivw05_dev
         channel[15]=bmm02_dev
+		channel[16]=gls01a_dev
         info$[0]=bmm02a.item_id$,info$[1]=ref1$,info$[2]=ref2$,info$[3]=ap$,info$[4]=ar_dist$
         info$[5]=o2$,info$[6]=bme01a.warwhouse_id$,info$[7]=bme01a.prod_date$,info$[8]=bme01a.update_flag$
         info$[9]=gl$,info$[10]=t1$,info$[11]=ivacct$
         info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=l,info[2]=l9,info[3]=headings
         info[4]=short,info[5]=o1,info[6]=0,info[7]=u0,info[8]=u1,info[9]=1
         info[10]=h,info[12]=glstatus,info[13]=bmm01a.est_yield*lbmm08a.setup_time/100,info[14]=value
-        call pgmdir$+"bmc_fa.aon",channel[all],info$[all],info[all],headings$[all],bme01a.item_id$
+        call pgmdir$+"bmc_explodephantoms.aon",channel[all],info$[all],info[all],headings$[all],bme01a.item_id$,template$[all],outVect!
         if info[11]>0 then exitto std_exit
         o2$=info$[5]
         l=info[1],short=info[4],o1=info[5],u0=info[7],u1=info[8],h=info[10],value=info[14]

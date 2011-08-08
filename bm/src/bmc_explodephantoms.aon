@@ -9,8 +9,7 @@ rem --- All Rights Reserved
 
         setesc std_error
         seterr std_error
-        enter channel[all],info$[all],info[all],headings$[all],parent$
-
+        enter channel[all],info$[all],info[all],headings$[all],parent$,template$[all],outVect!
 
 rem --- Retrieve the program path
 
@@ -26,45 +25,23 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-        files=17,begfile=1,endfile=files
-        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-        files$[1]="arc_distcode",ids$[1]="ARC_DISTCODE"
-        files$[2]="bmm-01",ids$[2]="BMM_BILLMAST"
-        files$[3]="bmm-02",ids$[3]="BMM_BILLMAT"
-        files$[4]="bmm-03",ids$[4]="BMM_BILLOPER"
-        files$[5]="bmm-05",ids$[5]="BMM_BILLSUB"
-        files$[6]="bmm-08",ids$[6]="BMC_OPCODES"
-        files$[7]="bms-01a",ids$[7]="BMS_PARAMS"
-        files$[8]="glm-01",ids$[8]="GLM_ACCT"
-        files$[9]="gls_params",ids$[9]="GLS_PARAMS"
-        files$[10]="glt-14",ids$[10]="GLX_DAILYXRF"
-        files$[11]="glw-11",ids$[11]="GLW_DAILYDETAIL"
-        files$[12]="ivm-01",ids$[12]="IVM_ITEMMAST"
-        files$[13]="ivm-02",ids$[13]="IVM_ITEMWHSE"
-        files$[14]="ivm-04",ids$[14]="IVM_ITEMTIER"
-        files$[15]="ivs_params",ids$[15]="IVS_PARAMS"
-        files$[16]="ivw-04",ids$[16]="IVW_LFDET"
-        files$[17]="ivw-05",ids$[17]="IVW_LFCOST"
-        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-        if status goto std_exit
-        arm10_dev=channels[1]
-        bmm01_dev=channels[2]
-        bmm02_dev=channels[3]
-        bmm03_dev=channels[4]
-        bmm05_dev=channels[5]
-        bmm08_dev=channels[6]
-        bms01a_dev=channels[7]
-        glm01_dev=channels[8]
-        gls01a_dev=channels[9]
-        glt14_dev=channels[10]
-        glw11_dev=channels[11]
-        ivm01_dev=channels[12]
-        ivm02_dev=channels[13]
-        ivm04_dev=channels[14]
-        ivs01a_dev=channels[15]
-        ivw04_dev=channels[16]
-        ivw05_dev=channels[17]
+		bmm01_dev=channel[0]
+		bmm03_dev=channel[1]
+		bmm05_dev=channel[2]
+		bmm08_dev=channel[3]
+		ivm01_dev=channel[4]
+		ivm02_dev=channel[5]
+		ivs01a_dev=channels[6]
+		bms01a_dev=channels[7]
+		glm01_dev=channel[8]
+		glw11_dev=channel[9];rem need for template$[all]
+		arm10_dev=channel[10];rem need for template$[all]
+		glt14_dev=channel[11];rem need for template$[all]
+		ivm04_dev=channel[12]
+		ivw04_dev=channel[13]
+		ivw05_dev=channel[14]
+		bmm02_dev=channel[15]
+		gls01a_dev=channels[16]
 
 rem --- Dimension string templates
 
@@ -74,7 +51,6 @@ rem --- Dimension string templates
 :       glt14a$:templates$[10],glw11a$:templates$[11],ivm01a$:templates$[12],
 :       ivm02a$:templates$[13],ivm04a$:templates$[14],ivs01a$:templates$[15],
 :       ivw04a$:templates$[16],ivw05a$:templates$[17]
-
 
 rem --- Retrieve parameter records
 
@@ -382,7 +358,7 @@ explode_sub: rem --- Explode Phantoms
 
         info$[0]=bmm02a.item_id$
         info[0]=quant*bmm02a.qty_required,info[9]=level+1,info[10]=h,info[13]=yield*bmm01a.std_yield/100
-        call pgmdir$+"bmc_fa.bbx",channel[all],info$[all],info[all],headings$[all],parent$
+        call pgmdir$+"bmc_explodephantoms.aon",channel[all],info$[all],info[all],headings$[all],parent$,template$[all],outVect!
         if info[11]>0 then exitto std_exit
         info[9]=level
         h=info[10],info[13]=yield
