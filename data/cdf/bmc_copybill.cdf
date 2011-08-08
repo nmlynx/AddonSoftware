@@ -126,11 +126,11 @@ rem --- Close files
 	open_tables$[3]="BMM_BILLOPER",open_opts$[3]="C[2_]"
 	open_tables$[4]="BMM_BILLCMTS",open_opts$[4]="C[2_]"
 	open_tables$[5]="BMM_BILLSUB",open_opts$[5]="C[2_]"
-	open_tables$[6]="BMM_BILLMAST",open_opts$[1]="C[3_]"
-	open_tables$[7]="BMM_BILLMAT",open_opts$[2]="C[3_]"
-	open_tables$[8]="BMM_BILLOPER",open_opts$[3]="C[3_]"
-	open_tables$[9]="BMM_BILLCMTS",open_opts$[4]="C[3_]"
-	open_tables$[10]="BMM_BILLSUB",open_opts$[5]="C[3_]"
+	open_tables$[6]="BMM_BILLMAST",open_opts$[6]="C[3_]"
+	open_tables$[7]="BMM_BILLMAT",open_opts$[7]="C[3_]"
+	open_tables$[8]="BMM_BILLOPER",open_opts$[8]="C[3_]"
+	open_tables$[9]="BMM_BILLCMTS",open_opts$[9]="C[3_]"
+	open_tables$[10]="BMM_BILLSUB",open_opts$[10]="C[3_]"
 	gosub open_tables
 
 rem --- Display Complete message
