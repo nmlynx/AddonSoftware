@@ -41,17 +41,17 @@ rem --- Open/Lock files
 
 	num_files=11
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_files$[1]="BME_PRODUCT",open_opts$[1]="OTA"
-	open_files$[2]="BMM_BILLMAST",open_opts$[2]="OTA"
-	open_files$[3]="BMM_BILLMAT",open_opts$[3]="OTA"
-	open_files$[4]="BMM_BILLOPER",open_opts$[4]="OTA"
-	open_files$[5]="BMC_OPCODES",open_opts$[5]="OTA"
-	open_files$[6]="BMS_PARAMS",open_opts$[6]="OTA"
-	open_files$[7]="IVM_ITEMMAST",open_opts$[7]="OTA"
-	open_files$[8]="IVM_ITEMWHSE",open_opts$[8]="OTA"
-	open_files$[9]="IVC_WHSECODE",open_opts$[9]="OTA"
-	open_files$[10]="IVS_PARAMS",open_opts$[10]="OTA"
-	open_files$[11]="GLS_PARAMS",open_opts$[11]="OTA"
+	open_tables$[1]="BME_PRODUCT",open_opts$[1]="OTA"
+	open_tables$[2]="BMM_BILLMAST",open_opts$[2]="OTA"
+	open_tables$[3]="BMM_BILLMAT",open_opts$[3]="OTA"
+	open_tables$[4]="BMM_BILLOPER",open_opts$[4]="OTA"
+	open_tables$[5]="BMC_OPCODES",open_opts$[5]="OTA"
+	open_tables$[6]="BMS_PARAMS",open_opts$[6]="OTA"
+	open_tables$[7]="IVM_ITEMMAST",open_opts$[7]="OTA"
+	open_tables$[8]="IVM_ITEMWHSE",open_opts$[8]="OTA"
+	open_tables$[9]="IVC_WHSECODE",open_opts$[9]="OTA"
+	open_tables$[10]="IVS_PARAMS",open_opts$[10]="OTA"
+	open_tables$[11]="GLS_PARAMS",open_opts$[11]="OTA"
 	
 	gosub open_tables
 	
@@ -105,8 +105,8 @@ rem --- Is AR installed? then open files ars-01 and arm-10c
     if info$[20]<>"N" then 
 		num_files=2
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-		open_files$[1]="ARC_DISTCODE",open_opts$[1]="OTA"
-		open_files$[2]="ARS_PARAMS",open_opts$[2]="OTA"
+		open_tables$[1]="ARC_DISTCODE",open_opts$[1]="OTA"
+		open_tables$[2]="ARS_PARAMS",open_opts$[2]="OTA"
 		gosub open_tables
 		arm10d_dev=num(open_chans$[1])
 		ars01a_dev=num(open_chans$[2])
@@ -176,7 +176,7 @@ rem --- Open Additional Files
     if ap$="Y" then
 		num_files=1
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-		open_files$[1]="BMM_BILLSUB",open_opts$[1]="OTA"
+		open_tables$[1]="BMM_BILLSUB",open_opts$[1]="OTA"
 		
 		gosub open_tables
 		
@@ -187,9 +187,9 @@ rem --- Open Additional Files
     if lf$="Y" then 
 		num_files=3
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        files$[1]="IVM_ITEMTIER",open_opts$[1]="OTA"
-        files$[2]="IVW_LFDET",open_opts$[2]="OTA"
-        files$[3]="IVW_LFCOST",open_opts$[3]="OTA"
+        open_tables$[1]="IVM_ITEMTIER",open_opts$[1]="OTA"
+        open_tables$[2]="IVW_LFDET",open_opts$[2]="OTA"
+        open_tables$[3]="IVW_LFCOST",open_opts$[3]="OTA"
 
 		gosub open_tables
         
@@ -209,7 +209,7 @@ rem --- Open Additional Files
     if gl$="Y" then 
 		num_files=1
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        files$[1]="GLM_ACCT",open_opts$[1]="OTA"
+        open_tables$[1]="GLM_ACCT",open_opts$[1]="OTA"
     		
 		gosub open_tables
 		
@@ -239,16 +239,16 @@ rem ---  column heading
 
         dim columns$[9,10]
         columns=9
-        columns$[0,0]="Ref #",           columns$[0,1]="C",columns$[0,2]="20"
-        columns$[1,0]="Main Bill Number",columns$[1,1]="C",columns$[1,2]="25"
-        columns$[2,0]="Cost",            columns$[2,1]="N",columns$[2,2]="8",columns$[2,3]=m3$,columns$[2,10]="T"
-        columns$[3,0]="Qty",             columns$[3,1]="N",columns$[3,2]="8",columns$[3,3]=m2$,columns$[3,10]="T"
-        columns$[4,0]="Total",           columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$,columns$[4,10]="T"
+        columns$[0,0]="Ref #",           columns$[0,1]="C",columns$[0,2]="15"
+        columns$[1,0]="Main Bill Number",columns$[1,1]="C",columns$[1,2]="20"
+        columns$[2,0]="Cost",            columns$[2,1]="N",columns$[2,2]="12",columns$[2,3]=m3$,columns$[2,10]="T"
+        columns$[3,0]="Qty",             columns$[3,1]="N",columns$[3,2]="12",columns$[3,3]=m2$,columns$[3,10]="T"
+        columns$[4,0]="Total",           columns$[4,1]="N",columns$[4,2]="12",columns$[4,3]=m1$,columns$[4,10]="T"
         columns$[5,0]="Update?",         columns$[5,1]="C",columns$[5,2]="8"
-        columns$[6,0]="Available",       columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
-        columns$[7,0]="Required",        columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
-        columns$[8,0]="Shortage",        columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m2$
-        columns$[9,0]="On-Order",        columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m2$
+        columns$[6,0]="Available",       columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m2$
+        columns$[7,0]="Required",        columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m2$
+        columns$[8,0]="Shortage",        columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m2$
+        columns$[9,0]="On-Order",        columns$[9,1]="N",columns$[9,2]="12",columns$[9,3]=m2$
 
 rem --- Initial Read
 

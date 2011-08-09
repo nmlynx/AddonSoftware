@@ -272,7 +272,7 @@ get_cost_info: rem --- Get Cost Info
             channel[6]=ivm04_dev
             channel[7]=ivw04_dev,channel[8]=ivw05_dev
             channel[9]=sys01_dev
-            call pgmdir$+"bmc_ea.aon",parent$,channel[all],bme01a.qty_ordered,bme01a.prod_date$,firm_id$,ap$,
+            call pgmdir$+"bmc_getcost.aon",parent$,bme01a.qty_ordered,bme01a.prod_date$,firm_id$,ap$,
 :                   "N",1,mat_cost,lab_cost,oh_cost,sub_cost,bme01a.qty_ordered,bme01a.qty_ordered,"Y",whse$,ea_status
             tcost=mat_cost+lab_cost+oh_cost+sub_cost
         endif 

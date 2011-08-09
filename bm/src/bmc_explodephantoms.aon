@@ -5,7 +5,7 @@ rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/16/2008 09:41:11)
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
-
+ESCAPE
 
         setesc std_error
         seterr std_error
@@ -132,18 +132,17 @@ rem --- Get Cost Info
 
         i0$=item$
         gosub item_sub
-        if  ivs01a.cost_method$<>"S" then 
-         
-    while more
-            km02$=key(bmm02_dev,end= reading_file); rem "Save ptr
-            break
-            reading_file:
-            read (bmm02_dev,key="",dom=*next); rem "On EOF reset ptr to beg of file
-    wend
-            call pgmdir$+"bmc_ea.bbx",item$,chann[all],1,pdate$,firm_id$,ap$,"Y",1,mat_cost,lab_cost,oh_cost,sub_cost,1,1,"Y",whse$,ea_status
-            read (bmm02_dev,key=km02$); rem "Replace ptr
-
-       endif
+        if  ivs01a.cost_method$<>"S" then
+			while more
+				km02$=key(bmm02_dev,end= reading_file); rem "Save ptr
+				break
+				reading_file:
+				read (bmm02_dev,key="",dom=*next); rem "On EOF reset ptr to beg of file
+			wend
+escape;rem jpb
+			call pgmdir$+"bmc_getcost.bbx",item$,1,pdate$,firm_id$,ap$,"Y",1,mat_cost,lab_cost,oh_cost,sub_cost,1,1,"Y",whse$,ea_status
+			read (bmm02_dev,key=km02$); rem "Replace ptr
+		endif
 
 rem --- Additional Reads
 
