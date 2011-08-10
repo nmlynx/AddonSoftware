@@ -33,6 +33,11 @@ rem --- Retrieve sysinfo data
 	milestone=num(stbl("+MILESTONE",err=*next),err=*next)
 	firm_id$=sysinfo.firm_id$
 
+rem --- see if batching
+
+    batch_no$=stbl("+BATCH_NO")
+    process_id$=stbl("+PROCESS_ID") 
+
 rem --- Prepare for call to bmc_explodephontoms.aon
 
 	dim template$[16]
@@ -207,15 +212,21 @@ rem --- Open Additional Files
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,n2$,glw11$,gl$,status
     if status<>0 then goto std_exit_no_report
     if gl$="Y" then 
-		num_files=1
+		num_files=3
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
         open_tables$[1]="GLM_ACCT",open_opts$[1]="OTA"
+		open_tables$[2]="GLE_DAILYDETAIL",open_opts$[2]="OTA"
+		open_tables$[3]="GLW_DAILYDETAIL",open_opts$[3]="OTA"
     		
 		gosub open_tables
 		
         glm01_dev=num(open_chans$[1])
+		glt04_dev=num(open_chans$[2])
+		glw11_dev=num(open_chans$[3])
 		dim glm01a$:open_tpls$[1]
 		template$[8]=open_tpls$[1]
+		rec_pfx$=firm_id$+process_id$+batch_no$
+		call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
 	endif
 
 rem --- Options
@@ -224,31 +235,31 @@ rem --- Options
 
 rem --- Run Report?
 
-        msg_id$="AON_RUN_QUERY"
-        dim x$:stbl("+SYSINFO_TPL")
-        dim msg_tokens$[1]
-        x$=stbl("+SYSINFO")                                                            
-        msg_tokens$[1]=x.task_desc$
-        gosub disp_message
+	msg_id$="AON_RUN_QUERY"
+	dim x$:stbl("+SYSINFO_TPL")
+	dim msg_tokens$[1]
+	x$=stbl("+SYSINFO")                                                            
+	msg_tokens$[1]=x.task_desc$
+	gosub disp_message
 
-        if msg_opt$<>"Y" then goto std_exit_no_report
-    
-        call pgmdir$+"adc_progress.aon","N","","","","",0,bme01_dev,1,meter_num,status
+	if msg_opt$<>"Y" then goto std_exit_no_report
+
+	call pgmdir$+"adc_progress.aon","N","","","","",0,bme01_dev,1,meter_num,status
 
 rem ---  column heading
 
-        dim columns$[9,10]
-        columns=9
-        columns$[0,0]="Ref #",           columns$[0,1]="C",columns$[0,2]="15"
-        columns$[1,0]="Main Bill Number",columns$[1,1]="C",columns$[1,2]="20"
-        columns$[2,0]="Cost",            columns$[2,1]="N",columns$[2,2]="12",columns$[2,3]=m3$,columns$[2,10]="T"
-        columns$[3,0]="Qty",             columns$[3,1]="N",columns$[3,2]="12",columns$[3,3]=m2$,columns$[3,10]="T"
-        columns$[4,0]="Total",           columns$[4,1]="N",columns$[4,2]="12",columns$[4,3]=m1$,columns$[4,10]="T"
-        columns$[5,0]="Update?",         columns$[5,1]="C",columns$[5,2]="8"
-        columns$[6,0]="Available",       columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m2$
-        columns$[7,0]="Required",        columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m2$
-        columns$[8,0]="Shortage",        columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m2$
-        columns$[9,0]="On-Order",        columns$[9,1]="N",columns$[9,2]="12",columns$[9,3]=m2$
+	dim columns$[9,10]
+	columns=9
+	columns$[0,0]="Ref #",           columns$[0,1]="C",columns$[0,2]="15"
+	columns$[1,0]="Main Bill Number",columns$[1,1]="C",columns$[1,2]="20"
+	columns$[2,0]="Cost",            columns$[2,1]="N",columns$[2,2]="12",columns$[2,3]=m3$,columns$[2,10]="T"
+	columns$[3,0]="Qty",             columns$[3,1]="N",columns$[3,2]="12",columns$[3,3]=m2$,columns$[3,10]="T"
+	columns$[4,0]="Total",           columns$[4,1]="N",columns$[4,2]="12",columns$[4,3]=m1$,columns$[4,10]="T"
+	columns$[5,0]="Update?",         columns$[5,1]="C",columns$[5,2]="8"
+	columns$[6,0]="Available",       columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m2$
+	columns$[7,0]="Required",        columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m2$
+	columns$[8,0]="Shortage",        columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m2$
+	columns$[9,0]="On-Order",        columns$[9,1]="N",columns$[9,2]="12",columns$[9,3]=m2$
 
 rem --- Initial Read
 
@@ -390,26 +401,26 @@ done: rem --- Totals
 
         t9$="E"
         gosub warehouse
-        if o1<>0 and o2$<>"" and div0<>0 then 
+        if o1<>0 or o2$<>"" or div0<>0 then 
             BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-            if o1<>0 then 
+            if o1<>0 then
                 xwk=fnblank(21)
                 OutVect!.addItem("*** Missing Warehouse Records, Can Not Proceed With Update At This Time")
                 xwk=fnblank(8)
             endif
-            if o2$<>"" then 
+            if o2$<>"" then
                 xwk=fnblank(10)
                 OutVect!.addItem(o2$)
                 xwk=fnblank(21)
                 OutVect!.addItem("*** Missing Operation Codes, Can Not Proceed With Update At This Time")
                 xwk=fnblank(8)
             endif
-            if div0<>0 then 
+            if div0<>0 then
                 xwk=fnblank(21)
                 OutVect!.addItem("*** Records With Production Quantity Of 0 Exist. Can Not Proceed With Update At This Time")
                 xwk=fnblank(8)
             endif 
-            goto std_exit
+            goto std_exit_no_update
         endif
 
         if short<>0 then
@@ -421,10 +432,12 @@ done: rem --- Totals
             message$[0]="Amounts In The Shortage Column Will Create Negative On Hand"
             message$[1]="Balances In Inventory (<Enter>=Continue)"
             call pgmdir$+"adc_stdmessage.aon",2,message$[all],1,22,-1,v$,v3
-            if v3=4 then goto std_exit
+            if v3=4 then goto std_exit_no_update
         endif
         channel=bmw01_dev
-        page=h,update$="bmu_invproduction.aon"
+		width=132
+        page=h
+		update$="bmu_invproduction.aon"
         overlay$=update$
         if gl$="Y" then overlay$=pgmdir$+"glr_recap.aon"
         out_action$="PRT-PDF"
