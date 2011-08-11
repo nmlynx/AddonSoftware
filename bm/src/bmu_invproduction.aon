@@ -505,7 +505,7 @@ explode: rem --- Explode Phantom Bills
 	info$[4]=ar_dist$,info$[5]=bme01a.bm_reference$,info$[6]=whse$
 	info$[7]=bme01a.prod_date$,info$[8]=update$,info$[9]=gl$,info$[10]=ivacct$
 	info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=bmm01a1.est_yield*bmm01a2.est_yield/100
-	call pgmdir$+"bmc_ga.aon",channel[all],info$[all],info[all],bme01a.item_id$
+	call pgmdir$+"bmc_explodeupdate.aon",channel[all],info$[all],info[all],bme01a.item_id$
 	value=value+info[2]
 	
 	return

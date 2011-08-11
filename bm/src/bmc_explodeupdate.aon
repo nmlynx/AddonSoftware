@@ -6,24 +6,34 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright (c) 1981-2007 AddonSoftware
 rem --- All Rights Reserved
 
-
-        seterr std_error
-        setesc std_error
-        enter channel[all],info$[all],info[all],parent$
+	seterr std_error
+	setesc std_error
+	enter channel[all],info$[all],info[all],parent$,tpl$[all]
 
 rem --- Retrieve the program path
 
-        pgmdir$=stbl("+DIR_PGM",err=*next)
+	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Retrieve sysinfo data
 
-        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-        dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+SYSINFO",err=*next)
-        milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-        firm_id$=sysinfo.firm_id$
+	sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_template$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+	firm_id$=sysinfo.firm_id$
 
-rem --- Open/Lock files
+rem --- Assign Channel numbers
+
+	bmm01_dev=channel[0],bmm03_dev=channel[1],bmm05_dev=channel[2]
+	bmm08_dev=channel[3],ivm01_dev=channel[4],ivm02_dev=channel[5]
+	ivt04_dev=channel[6],sys01_dev=channel[7],glm01_dev=channel[8]
+	glt04_dev=channel[9],arm10_dev=channel[10],glt05_dev=channel[11]
+	ivm04_dev=channel[12],ivm05_dev=channel[13],ivm07_dev=channel[14]
+	ivm08_dev=channel[15],ivm12_dev=channel[16],ivm17_dev=channel[17]
+	ivt01_dev=channel[18],ivt02_dev=channel[19],ivm03_dev=channel[20]
+	ivt04_dev=channel[21],ivm03_dev=channel[22],bmm02_dev=channel[23]
+	
+rem --- Open/Lock files jpb Don't open these files!
 
         files=25,begfile=1,endfile=files
         dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
@@ -81,63 +91,65 @@ rem --- Open/Lock files
 
 rem --- Dimension string templates
 
-        dim arm10a$:templates$[1],bmm01a$:templates$[2],bmm02a$:templates$[3],
-:       bmm03a$:templates$[4],bmm05a$:templates$[5],bmm08a$:templates$[6],
-:       bms01a$:templates$[7],glm01a$:templates$[8],gls01a$:templates$[9],
-:       glt04a$:templates$[10],ivm01a$:templates$[11],ivm02a$:templates$[12],
-:       ivm03a$:templates$[13],ivm04a$:templates$[14],ivm05a$:templates$[15],
-:       ivm07a$:templates$[16],ivm08a$:templates$[17],ivm12a$:templates$[18],
-:       ivm17a$:templates$[19],ivs01a$:templates$[20],ivt01a$:templates$[21],
-:       ivt02a$:templates$[22],ivt03a$:templates$[23],ivt04a$:templates$[24]  
+	dim arm10a$:tpl$[10],bmm01a$:tpl$[0],bmm02a$:tpl$[23]
+	dim bmm03a$:tpl$[1],bmm05a$:tpl$[2],bmm08a$:tpl$[3]
+	dim bms01a$:templates$[7],glm01a$:tpl$[8],gls01a$:templates$[9]
+	dim glt04a$:tpl$[9],ivm01a$:tpl$[4],ivm02a$:tpl$[5]
+	dim ivm03a$:tpl$[20],ivm04a$:tpl$[12],ivm05a$:tpl$[13]
+	dim ivm07a$:tpl$[14],ivm08a$:tpl$[15],ivm12a$:tpl$[16]
+	dim ivm17a$:tpl$[17],ivs01a$:templates$[20],ivt01a$:tpl$[18]
+	dim ivt02a$:templates$[19],ivt03a$:templates$[23],ivt04a$:tpl$[6]  
 
+	sys01_dev=channel[7]
+	glt05_dev=channel[11]
+	ivt04_dev=channel[21],ivm03_dev=channel[22]
 
 rem --- Retrieve parameter records
 
-        bms01a_key$=firm_id$+"BM00"
-        find record (bms01a_dev,key=bms01a_key$,err=std_missing_params) bms01a$
-        gls01a_key$=firm_id$+"GL00"
-        find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-        ivs01a_key$=firm_id$+"IV00"
-        find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
+	bms01a_key$=firm_id$+"BM00"
+	find record (bms01a_dev,key=bms01a_key$,err=std_missing_params) bms01a$
+	gls01a_key$=firm_id$+"GL00"
+	find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+	ivs01a_key$=firm_id$+"IV00"
+	find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Assign Channel Info
 
 
-        subitem$=info$[0]
-        ref1$=info$[1]
-        ref2$=info$[2]
-        ap$=info$[3]
-        ar_dist$=info$[4]
-        bmref$=info$[5]
-        whse$=info$[6]
-        pdate$=info$[7]
-        update$=info$[8]
-        gl$=info$[9]
-        ivacct$=info$[10]
-        quant=info[0]
-        yield=info[1]
+	subitem$=info$[0]
+	ref1$=info$[1]
+	ref2$=info$[2]
+	ap$=info$[3]
+	ar_dist$=info$[4]
+	bmref$=info$[5]
+	whse$=info$[6]
+	pdate$=info$[7]
+	update$=info$[8]
+	gl$=info$[9]
+	ivacct$=info$[10]
+	quant=info[0]
+	yield=info[1]
 
 rem --- Parameters
 
-        n1$=sysinfo.firm_name$,n2$="IV",n3$=sysinfo.task_desc$
-        find record (ivs01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
-        dim r0$(36)
-        find record (bms01_dev,key=firm_id$+"BM00",dom=std_missing_params) bms01a$
-        find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-        dim p[6],g[4]
+	n1$=sysinfo.firm_name$,n2$="IV",n3$=sysinfo.task_desc$
+	find record (ivs01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) ivs01a$
+	find record (bms01_dev,key=firm_id$+"BM00",dom=std_missing_params) bms01a$
+	find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+	dim p[6],g[4]
 
-        g[0]=num(gls01a.total_pers$)
-        g[1]=num(gls01a.current_per$)
-        g[2]=num(gls01a.current_year$)
-        g[3]=num(gls01a.acct_length$)
-        g[4]=num(gls01a.max_acct_len$)
-        g[2]=num(gls01a.current_year$)
-        p[0]=num(ivs01a.item_nbr_len$)
-        p[1]=num(ivs01a.vend_prd_len$)
-        p[2]=num(ivs01a.precision$)
-        p[3]=num(ivs01a.ls_nbr_len$)
-        p[5]=num(ivs01a.current_per$)
-        p[6]=num(ivs01a.current_year$)
+	g[0]=num(gls01a.total_pers$)
+	g[1]=num(gls01a.current_per$)
+	g[2]=num(gls01a.current_year$)
+	g[3]=num(gls01a.acct_length$)
+	g[4]=num(gls01a.max_acct_len$)
+	g[2]=num(gls01a.current_year$)
+	p[0]=num(ivs01a.item_nbr_len$)
+	p[1]=num(ivs01a.vend_prd_len$)
+	p[2]=num(ivs01a.precision$)
+	p[3]=num(ivs01a.ls_nbr_len$)
+	p[5]=num(ivs01a.current_per$)
+	p[6]=num(ivs01a.current_year$)
 
 rem --- Init Data
 
@@ -145,7 +157,7 @@ rem --- Init Data
         precision p[2]
         value=0
         dim files[44],a0$(50),b0$(22),b1$(60)
-        dim b[12],c[20],d[10],h[11]
+        dim b[12],c[20],d[10]
         files[0]=gls01_dev
         files[1]=ivm01_dev
         files[2]=ivm02_dev
@@ -177,7 +189,7 @@ rem --- ivc_ua.bbx Params
 
 rem --- Read BOM Header
 
-        dim h[11]
+		dim bmm01a$:fattr(bmm01a$)
         read record (bmm01_dev,key=firm_id$+subitem$,dom=get_cost) bmm01a$
         phantom$=bmm01a.phantom_bill$
         if yield=0 then let yield=100
@@ -185,6 +197,7 @@ rem --- Read BOM Header
 rem --- Item Number
 
         dim glacct$(g[4])
+		dim ivm01a$:fattr(ivm01a$)
         find record (ivm01_dev,key=firm_id$+subitem$,dom=Children) ivm01a$
         parentgl$=ivm01a.gl_inv_acct$
         glacct$=parentgl$
@@ -344,7 +357,6 @@ return
 
 subcontracts: rem --- Subcontracts
 
-        dim sub[9]
         read (bmm05_dev,key=firm_id$+subitem$,dom=*next)
 
         while more
@@ -363,7 +375,10 @@ subcontracts: rem --- Subcontracts
             a0=quant*bmm05a.unit_cost*fnsub(bmm05a.qty_required,bmm05a.alt_factor,bmm05a.divisor)
             units=quant*bmm05a.unit_cost
             when$=pdate$
-            account$=parentgl$,amount=a0,value=value+amount,memo$=cvs(parent$,2)+" "+bmm05a.ext_comments$
+            account$=parentgl$
+			amount=a0
+			value=value+amount
+			memo$=cvs(parent$,2)+" "+bmm05a.ext_comments$
             gosub glpost
             account$=bms01a.gl_pur_acct$
             amount=-a0
@@ -384,7 +399,7 @@ rem --- QUANT=New Qty, TCOST=New Cost
         cost_item$[0]=firm_id$
         cost_item$[1]=""
         cost_item$[2]=subitem$
-        call pgmdir$+"ivc_wa.bbx","A",cost_chans[all],cost_item$[all],cost_whse$[all],cost_whse[all],cost_value,status
+        call pgmdir$+"ivc_whseinfo.aon","A",cost_chans[all],cost_item$[all],cost_whse$[all],cost_whse[all],cost_value,status,rd_table_chans[all]
         tonhandqty=cost_whse[0]
 
 rem --- Average Cost Calculation
@@ -404,7 +419,8 @@ rem --- Average Cost Calculation
 
 operation: rem --- Operation
 
-        dim k[11],h[11]
+        dim k[11]
+		dim bmm01a$:fattr(bmm01a$)
         read record (bmm01_dev,key=firm_id$+subitem$,dom=*next) bmm01a$
         read (bmm03_dev,key=firm_id$+subitem$,dom=*next)
 
@@ -460,7 +476,7 @@ explode: rem --- Explode Phantoms
         info[0]=quant*bmm02a.qty_required
         info[1]=yield
         info$[11]=bmm02a.bill_no$
-        call pgmdir$+"bmc_ga.bbx",channel[all],info$[all],info[all],bmm02a.item_id$
+        call pgmdir$+"bmc_explodeupdate.bbx",channel[all],info$[all],info[all],bmm02a.item_id$
         info[0]=quant
         info[1]=yield
         value=value+info[2]
