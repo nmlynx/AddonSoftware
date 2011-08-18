@@ -352,6 +352,9 @@ if ldat$<>""
 else
 	callpoint!.setColumnEnabled(-1,"POE_PODET.SO_INT_SEQ_REF",0)
 endif 
+
+callpoint!.setOptionEnabled("DPRT",0)
+callpoint!.setOptionEnabled("QPRT",0)
 [[POE_PODET.BDGX]]
 rem -- loop thru gridVect; if there are any lines not marked deleted, set the callpoint!.setDevObject("dtl_posted") to Y
 
