@@ -1,0 +1,142 @@
+rem ==========================================================================
+rem --- adx_upgradewiz.aon 
+rem --- Utility to automate Addon ugrade.
+rem --- 
+rem --- AddonSoftware Version 11.11
+rem --- Copyright © 2011, BASIS International, Ltd.
+rem --- All Rights Reserved
+rem ==========================================================================
+
+    use java.util.ArrayList
+    use java.util.HashMap
+
+	declare ArrayList pfxList!
+    declare HashMap stblMap!
+
+    setesc std_error
+    seterr std_error
+
+rem --- Initializations
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Get user inputs
+
+    newAonDir$=Option!.getOptionData("NEW_AON_LOC") + "/aon"
+    oldAonDir$=Option!.getOptionData("OLD_AON_LOC") + "/aon"
+    oldBarDir$=Option!.getOptionData("OLD_BAR_LOC") + "/barista"
+    syncBackupDir$=Option!.getOptionData("SYNC_BACKUP_DIR")
+    stblMap!=cast(HashMap, callpoint!.getDevObject("stblMap"))
+    pfxList!=cast(ArrayList, callpoint!.getDevObject("pfxList"))
+
+	rem --- Flip directory path separators for newAonDir
+	filePath$=newAonDir$
+	gosub fix_path
+	newAonDir$=filePath$
+
+	rem --- Flip directory path separators for oldAonDir
+	filePath$=oldAonDir$
+	gosub fix_path
+	oldAonDir$=filePath$
+
+	rem --- Flip directory path separators for oldBarDir
+	filePath$=oldBarDir$
+	gosub fix_path
+	oldBarDir$=filePath$
+
+	rem --- Flip directory path separators for syncBackupDir
+	filePath$=syncBackupDir$
+	gosub fix_path
+	syncBackupDir$=filePath$
+    
+rem --- Recursively copy oldLocation to newAonDir
+
+	rem --- Set oldLocation to aon directory under the current download directory
+    sep$ = java.io.File.separator
+    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
+    oldLocation$ = bbjHome$ + sep$ + "apps" + sep$ + "aon"
+
+	rem --- Do not copy data or help file
+	copyData%=0
+	help%=0
+	
+    call pgmdir$+"adc_copyaon.aon",oldLocation$,newAonDir$,copyData%,help%,rdForm!,0,status
+    
+rem --- Update new addon.syn file
+
+	rem --- Set newSynFile to addon.syn at the new aon location
+    newSynFile$=newAonDir$+"/config/addon.syn"
+
+	rem --- Setup for upgrade
+    upgrade%=1
+    oldSynFile$=oldAonDir$+"/config/addon.syn"
+
+    call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
+    
+rem --- Update new sync XML files
+
+	rem --- Set newSyncLoc to sync directory at the new aon location
+    newSyncLoc$=newAonDir$+"/data/sync"
+
+	rem --- Setup for upgrade
+    upgrade%=1
+    oldSyncLoc$=oldAonDir$+"/data/sync"
+
+    call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+    
+done: rem --- All done
+
+    goto std_exit
+
+fix_path: rem --- Flip directory path separators
+
+    pos=pos("\"=filePath$)
+    while pos
+        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
+    wend
+	return
+    
+search_replace: rem --- Search record$ for search$, and replace with replace$
+	rem --- Assumes only one occurrence of search$ per line so don't have 
+	rem --- to deal with situation where pos(search$=replace$)>0
+	pos = pos(search$=record$)
+	if(pos) then
+		record$ = record$(1, pos - 1) + replace$ + record$(pos + len(search$))
+	endif
+    return
+    
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
+:                                str(err),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+    
+    end
