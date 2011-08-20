@@ -1,12 +1,7 @@
 [[BMU_COMPREPLACE.OLD_ITEM.AVAL]]
 rem --- Ensure Old and New items are not the same
-escape
-caj1$=callpoint!.getUserInput()
-rem caj2$=callpoint!.getDevObject("new_item")
-CAJ3$=callpoint!.getColumnData("BMU_COMPREPLACE.NEW_ITEM")
-escape
 
-	if callpoint!.getUserInput()=callpoint!.getDevObject("new_item")
+	if callpoint!.getUserInput()=callpoint!.getColumnData("new_item")
 		msg_id$="BM_OLD_NEW_ITEM"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
@@ -14,7 +9,7 @@ escape
 [[BMU_COMPREPLACE.NEW_ITEM.AVAL]]
 rem --- Ensure Old and New items are not the same
 
-	if callpoint!.getUserInput()=callpoint!.getDevObject("old_item")
+	if callpoint!.getUserInput()=callpoint!.getColumnData("old_item")
 		msg_id$="BM_OLD_NEW_ITEM"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
