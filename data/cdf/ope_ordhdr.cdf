@@ -6,7 +6,7 @@ rem --- Recalculate totals
 	gosub calculate_tax
 	gosub disp_totals
 
-	callpoint!.setFocus("OPE_ORDHDR.DISCOUNT_AMT")
+ 	callpoint!.setFocus("OPE_ORDHDR.DISCOUNT_AMT")
 	callpoint!.setDevObject("was_on_tot_tab","Y")
 [[OPE_ORDHDR.DISCOUNT_AMT.AVAL]]
 rem --- Discount Amount cannot exceed Total Sales Amount
@@ -2143,8 +2143,10 @@ rem ==========================================================================
 	net_sales = sub_tot + tax_amt + freight_amt
 
 	callpoint!.setColumnData("OPE_ORDHDR.TOTAL_COST",str(ttl_ext_cost))
+	callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
 	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
+	callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",str(freight_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(net_sales))
 
 	callpoint!.setStatus("REFRESH")
