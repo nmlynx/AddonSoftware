@@ -604,18 +604,6 @@ rem --- Force focus on the Totals tab
 			endif
 		endif
 	endif
-[[OPE_INVHDR.AOPT-MINV]]
-print "Hdr:APOT:MINV"; rem debug
-
-rem --- Make order into an invoice
-
-	gosub make_invoice
-
-	if locked then
-		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("NEWREC")
-		break; rem --- exit callpoint
-	endif
 [[OPE_INVHDR.SLSPSN_CODE.AVAL]]
 rem --- Set Commission Percent
 
@@ -787,7 +775,6 @@ rem --- Enable / Disable buttons
 			callpoint!.setOptionEnabled("CINV",1)
 		endif
 		callpoint!.setOptionEnabled("PRNT",0)
-		callpoint!.setOptionEnabled("MINV",0)
 		callpoint!.setOptionEnabled("UINV",0)
 	else
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
@@ -800,7 +787,6 @@ rem --- Enable / Disable buttons
 			gosub able_cash_sale
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
-				callpoint!.setOptionEnabled("MINV",1)	
 				callpoint!.setOptionEnabled("UINV",0)
 			else
 				callpoint!.setOptionEnabled("UINV",1)
@@ -842,7 +828,6 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("CRAT",0)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
-	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("UINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
@@ -1185,10 +1170,8 @@ rem --- Enable buttons
 	gosub able_cash_sale
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
-		callpoint!.setOptionEnabled("MINV", 0)
 		callpoint!.setOptionEnabled("UINV",1)
 	else
-		callpoint!.setOptionEnabled("MINV", 1)
 		callpoint!.setOptionEnabled("UINV",0)
 	endif
 
@@ -1381,7 +1364,6 @@ rem --- New record, set default
 		user_tpl.pricing_code$ = arm02a.pricing_code$
 		user_tpl.order_date$   = sysinfo.system_date$
 
-		callpoint!.setOptionEnabled("MINV",1)
 		callpoint!.setOptionEnabled("UINV",0)
 
 	endif
@@ -2289,7 +2271,6 @@ rem ==========================================================================
 			user_tpl.price_code$ = "Y"
 			order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 			gosub add_to_batch_print
-			callpoint!.setOptionEnabled("MINV",0)
 			callpoint!.setOptionEnabled("UINV",1)
 			callpoint!.setStatus("SAVE;REFRESH")
 		endif
@@ -2893,7 +2874,6 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
-	callpoint!.setOptionEnabled("MINV",0)
 	callpoint!.setOptionEnabled("UINV",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
