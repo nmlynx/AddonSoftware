@@ -25,47 +25,37 @@ rem --- Retrieve sysinfo data
 	firm_id$=sysinfo.firm_id$
 
 rem --- Open/Lock files  
-escape;rem don't try to run this yet! jpb 8/9/11
-        num_files=13
-		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
-        open_tables$[1]="IVX_ITEMPROD",open_opts$[1]="OTA"
-        open_tables$[2]="IVM_ITEMTIER",open_opts$[2]="OTA"
-        open_tables$[3]="IVM_ITEMVEND",open_opts$[3]="OTA"
-        open_tables$[4]="IVM_LSMASTER",open_opts$[4]="OTA"
-        open_tables$[5]="IVX_LSXREF",open_opts$[5]="OTA"
-        open_tables$[6]="IVM_ITEMACT",open_opts$[6]="OTA"
-        open_tables$[7]="IVM_LSACT",open_opts$[7]="OTA"
-        open_tables$[8]="IVT_LSTRANS",open_opts$[8]="OTA"
-        open_tables$[9]="IVX_LSCUST",open_opts$[9]="OTA"
-        open_tables$[10]="IVX_LSVEND",open_opts$[10]="OTA"
-        open_tables$[11]="IVT_ITEMTRAN",open_opts$[11]="OTA"
-        open_tables$[12]="IVW_LFDET",open_opts$[12]="OTA"
-        open_tables$[13]="IVW_LFCOST",open_opts$[13]="OTA"
+	num_files=9
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
-		gosub open_tables
-		
-        ivm03_dev=num(open_chans$[1])
-        ivm04_dev=num(open_chans$[2])
-        ivm05_dev=num(open_chans$[3])
-        ivm07_dev=num(open_chans$[4])
-        ivm08_dev=num(open_chans$[5])
-        ivm12_dev=num(open_chans$[6])
-        ivm17_dev=num(open_chans$[7])
-        ivt01_dev=num(open_chans$[8])
-        ivt02_dev=num(open_chans$[9])
-        ivt03_dev=num(open_chans$[10])
-        ivt04_dev=num(open_chans$[11])
-        ivw04_dev=num(open_chans$[12])
-        ivw05_dev=num(open_chans$[13])
+	open_tables$[1]="IVM_ITEMTIER",open_opts$[1]="OTA"
+	open_tables$[2]="IVM_ITEMVEND",open_opts$[2]="OTA"
+	open_tables$[3]="IVM_LSMASTER",open_opts$[3]="OTA"
+	open_tables$[4]="IVM_ITEMACT",open_opts$[4]="OTA"
+	open_tables$[5]="IVM_LSACT",open_opts$[5]="OTA"
+	open_tables$[6]="IVT_LSTRANS",open_opts$[6]="OTA"
+	open_tables$[7]="IVT_ITEMTRAN",open_opts$[7]="OTA"
+	open_tables$[8]="IVW_LFDET",open_opts$[8]="OTA"
+	open_tables$[9]="IVW_LFCOST",open_opts$[9]="OTA"
+
+	gosub open_tables
+
+	ivm04_dev=num(open_chans$[1])
+	ivm05_dev=num(open_chans$[2])
+	ivm07_dev=num(open_chans$[3])
+	ivm12_dev=num(open_chans$[4])
+	ivm17_dev=num(open_chans$[5])
+	ivt01_dev=num(open_chans$[6])
+	ivt04_dev=num(open_chans$[7])
+	ivw04_dev=num(open_chans$[8])
+	ivw05_dev=num(open_chans$[9])
 
 rem --- Dimension string templates
 
-	dim ivm03a$:open_tpls$[1],ivm04a$:open_tpls$[2]
-	dim ivm05a$:open_tpls$[3],ivm07a$:open_tpls$[4],ivm08a$:open_tpls$[5]
-	dim ivm12a$:open_tpls$[6],ivm17a$:open_tpls$[7]
-	dim ivt01a$:open_tpls$[8],ivt02a$:open_tpls$[9],ivt03a$:open_tpls$[10]
-	dim ivt04a$:open_tpls$[11],ivw04a$:open_tpls$[12],ivw05a$:open_tpls$[13]
+	dim ivm04a$:open_tpls$[1],ivm05a$:open_tpls$[2],ivm07a$:open_tpls$[3]
+	dim ivm12a$:open_tpls$[4],ivm17a$:open_tpls$[5],ivt01a$:open_tpls$[6]
+	dim ivt04a$:open_tpls$[7],ivw04a$:open_tpls$[8],ivw05a$:open_tpls$[9]
 
 rem --- Retrieve parameter records
 
@@ -121,7 +111,6 @@ label1:
 rem --- Init Data
 
 	precision p[2]
-	dim a[1],b[12],c[16],d[10],h[11],hx[11]
 	ref1$=""
 	ref2$=""
 	ref3$="Prod Entry"
@@ -130,30 +119,6 @@ rem --- Init Data
 	more=1
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLOPER","PRIMARY",bmm03_key_tpl$,rd_table_chans$[all],status$
 
-rem --- ivc_itemupdt.aon Params
-goto no_init
-        dim params[10],params$[10],item$[3],ref$[11],files[44]
-        files[0]=gls01a_dev
-        files[1]=ivm01_dev
-        files[2]=ivm02_dev
-        files[4]=ivm04_dev
-        files[5]=ivm05_dev
-        files[7]=ivm07_dev
-        files[8]=ivm08_dev
-        files[12]=ivm12_dev
-        files[17]=ivm17_dev
-        files[41]=ivt01_dev
-        files[42]=ivt02_dev
-        files[43]=ivt03_dev
-        files[44]=ivt04_dev
-        params[0]=g[0]
-        params$[0]=sysinfo.system_date$
-        params$[1]=sysinfo.user_id$
-        params$[2]=p2$
-        params$[3]=p3$
-        params$[4]=p4$
-        item$[0]=firm_id$
-no_init:
 rem --- Additional File Opens
 
     if ap$="Y" then
@@ -214,7 +179,6 @@ rem --- Main Loop
 
 rem --- Additional Reads
 
-        dim h[11]
         bill$="N"
         read record (bmm01_dev,key=firm_id$+parent$,dom=label2) bmm01a$
         bill$="Y"
@@ -235,8 +199,8 @@ rem --- Item Number
 get_cost_info: rem --- Get Cost Info
 
 		tcost=unitcost
-		if bme01a.qty_ordered>=0 and costmethod$="A"   then
-			call pgmdir$+"bmc_getcost.aon",parent$,bme01a.qty_ordered,bme01a.prod_date$,firm_id$,ap$,
+		if bme01a.qty_ordered>=0 and costmethod$="A"
+			call pgmdir$+"bmc_getcost.aon",parent$,bme01a.qty_ordered,bme01a.prod_date$,ap$,
 :                   "N",1,mat_cost,lab_cost,oh_cost,sub_cost,bme01a.qty_ordered,bme01a.qty_ordered,"Y",whse$,ea_status
 			tcost=mat_cost+lab_cost+oh_cost+sub_cost
 		endif 
@@ -249,7 +213,7 @@ warehose: rem --- Warehouse
 rem --- Dist Code
             if ar_dist$<>"N" then 
                 dim parentgl$(g[4],"0")
-                find record (arm10_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=init_IV_update) arm10d1$
+                find record (arm10d_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=init_IV_update) arm10d1$
                 parentgl$=arm10d.gl_inv_acct$
                 ivacct$=parentgl$
             endif 
@@ -267,7 +231,7 @@ init_detail: rem --- Init Detail
 rem --- Read Detail
                     
             while more
-                dim bmm01a2$:templates$[3]
+                dim bmm01a2$:fattr(bmm01a$)
                 read record (bmm02_dev,end=*break) bmm02a$
                 if cvs(bmm02a.effect_date$,3)<>"" then if bme01a.prod_date$<bmm02a.effect_date$ then continue
                 if cvs(bmm02a.obsolt_date$,3)<>"" then if bme01a.prod_date$>=bmm02a.obsolt_date$ then continue
@@ -386,7 +350,7 @@ done: rem --- End
 
 atamo: rem --- Update IV
 
-	dim ref[3],b6$(g[4])
+	dim ref[3],ref$[11],b6$(g[4])
 	action$="B"+iss_or_rec$
 	item$[1]=whse$
 	item$[2]=item$
@@ -400,12 +364,11 @@ atamo: rem --- Update IV
 
 rem --- Inventory updates
 
-	call pgmdir$+"ivc_itemupdt.aon",action$,files[all],ivs01a$,item$[all],ref$[all],ref[all],status
+	call pgmdir$+"ivc_itemupdt.aon",action$,files[all],ivs01a$,item$[all],ref$[all],ref[all],rd_table_chans$[all],status
 	return
 
 subcontracts: rem --- Subcontracts
 
-	dim sub[9]
 	read (bmm05_dev,key=bme01a.firm_id$+bme01a.item_id$,dom=*next)
 	while more
 		k1$=key(bmm05_dev,end=*break)
@@ -434,8 +397,7 @@ subcontracts: rem --- Subcontracts
 
 operation: rem --- Operation
 
-	dim x1$(50),x[13],k[11],h[11]
-	dim bmm01a1$:templates$[3]
+	dim bmm01a1$:fattr(bmm01a$)
 	dim bmm03_key$:bmm03_key_tpl$ 
 	read record (bmm01_dev,key=bme01a.firm_id$+parent$,dom=*next) bmm01a1$
 	read (bmm03_dev,key=bme01a.firm_id$+parent$,dom=*next)
@@ -493,19 +455,11 @@ rem --- Overhead
 explode: rem --- Explode Phantom Bills
 
 	dim channel[23],info$[11],info[20]
-	channel[0]=bmm01_dev,channel[1]=bmm03_dev,channel[2]=bmm05_dev
-	channel[3]=bmm08_dev,channel[4]=ivm01_dev,channel[5]=ivm02_dev
-	channel[6]=ivt04_dev,channel[7]=sys01_dev,channel[8]=glm01_dev
-	channel[9]=glt04_dev,channel[10]=arm10_dev,channel[11]=glt14_dev
-	channel[12]=ivm04_dev,channel[13]=ivm05_dev,channel[14]=ivm07_dev
-	channel[15]=ivm08_dev,channel[16]=ivm12_dev,channel[17]=ivm17_dev
-	channel[18]=ivt01_dev,channel[19]=ivt02_dev,channel[20]=ivt03_dev
-	channel[21]=ivt04_dev,channel[22]=ivm03_dev,channel[23]=bmm02_dev
 	info$[0]=bmm02a.item_id$,info$[1]=ref1$,info$[2]=ref2$,info$[3]=ap$
 	info$[4]=ar_dist$,info$[5]=bme01a.bm_reference$,info$[6]=whse$
 	info$[7]=bme01a.prod_date$,info$[8]=update$,info$[9]=gl$,info$[10]=ivacct$
 	info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=bmm01a1.est_yield*bmm01a2.est_yield/100
-	call pgmdir$+"bmc_explodeupdate.aon",channel[all],info$[all],info[all],bme01a.item_id$
+	call pgmdir$+"bmc_explodeupdate.aon",channel[all],info$[all],info[all],bme01a.item_id$,table_chans$[all]
 	value=value+info[2]
 	
 	return
@@ -668,6 +622,11 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
 
 	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
