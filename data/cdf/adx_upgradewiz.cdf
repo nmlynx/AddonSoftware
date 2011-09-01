@@ -216,7 +216,6 @@ validate_new_db_name: rem --- Validate new database name
 	db! = rdAdmin!.getDatabase(db_name$,err=dbNotFound)
 
 	rem --- This db already exists, so don't allow it
-rem wgh ... need db already exists message
 	msg_id$="AD_DB_EXISTS"
 	gosub disp_message
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.DB_NAME", db_name$)
@@ -510,7 +509,11 @@ rem ==========================================================================
 				addLine=1
 				for j=0 to vectRows!.size()-1 step numCols
 					if vectRows!.getItem(j+1)<>stbl$ then continue
-					vectRows!.setItem(j+3, oldSynRows!.getItem(i+3))
+					if stbl$="+MDI_TITLE" then
+						vectRows!.setItem(j+3, callpoint!.getColumnData("ADX_UPGRADEWIZ.APP_DESC"))
+					else
+						vectRows!.setItem(j+3, oldSynRows!.getItem(i+3))
+					endif
 					addLine=0
 					break
 				next j
