@@ -30,26 +30,27 @@ rem --- Open/Lock files
 		bmm08_dev=channel[3]
 		ivm01_dev=channel[4]
 		ivm02_dev=channel[5]
-		ivs01a_dev=channels[6]
-		bms01a_dev=channels[7]
+		ivs01a_dev=channel[6]
+		bms01a_dev=channel[7]
 		glm01_dev=channel[8]
-		glw11_dev=channel[9];rem need for template$[all]
-		arm10_dev=channel[10];rem need for template$[all]
-		glt14_dev=channel[11];rem need for template$[all]
+		glw11_dev=channel[9]
+		arm10_dev=channel[10]
 		ivm04_dev=channel[12]
 		ivw04_dev=channel[13]
 		ivw05_dev=channel[14]
 		bmm02_dev=channel[15]
-		gls01a_dev=channels[16]
+		gls01a_dev=channel[16]
 
 rem --- Dimension string templates
 
-        dim arm10a$:templates$[1],bmm01a$:templates$[2],bmm02a$:templates$[3],
-:       bmm03a$:templates$[4],bmm05a$:templates$[5],bmm08a$:templates$[6],
-:       bms01a$:templates$[7],glm01a$:templates$[8],gls01a$:templates$[9],
-:       glt14a$:templates$[10],glw11a$:templates$[11],ivm01a$:templates$[12],
-:       ivm02a$:templates$[13],ivm04a$:templates$[14],ivs01a$:templates$[15],
-:       ivw04a$:templates$[16],ivw05a$:templates$[17]
+		dim bmm01a$:template$[0],bmm03a$:template$[1],bmm05a$:template$[2]
+		dim bmm08a$:template$[3],ivm01a$:template$[4],ivm02a$:template$[5]
+		dim ivs01a$:template$[6],bms01a$:template$[7],glm01a$:template$[8]
+		dim glw11a$:template$[9],arm10d$:template$[10]
+		if ivm04_dev<>0
+			dim ivm04a$:template$[12],ivw04a$:template$[13],ivw05a$:template$[14]
+		endif
+		dim bmm02a$:template$[15],gls01a$:template$[16]
 
 rem --- Retrieve parameter records
 
@@ -60,7 +61,6 @@ rem --- Retrieve parameter records
         ivs01a_key$=firm_id$+"IV00"
         find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
-rem --- Open/Lock Files
 rem --- Assign Channel Info
 
         item$=info$[0]
@@ -74,8 +74,6 @@ rem --- Assign Channel Info
         glstatus=info[12]
         yield=info[13],value=info[14]
 
-rem --- L=INFO(1), L9=INFO(2), SHORT=INFO(4), O1=INFO(5),  U0=INFO(7)
-rem --- U1=INFO(8), STATUS=INFO(11)
 rem --- Parameters
 
         n1$=sysinfo.firm_name$,n2$="IV",n3$=sysinfo.task_desc$
@@ -89,13 +87,11 @@ rem --- Parameters
         g[3]=num(gls01a.acct_length$)
         g[4]=num(gls01a.max_acct_len$)
    
-        g[2]=fnyy_year(gls01a.current_year$)
         desc[1]=num(ivs01a.desc_len_01$)
         desc[2]=num(ivs01a.desc_len_02$)
         desc[3]=num(ivs01a.desc_len_03$) 
         p[0]=ivs01a.item_id_len
         p[1]=ivs01a.vendor_prd_len
-        p[2]=num(p2$(5,2))
         p[3]=ivs01a.ls_no_len
 
 rem --- Init Data
@@ -118,7 +114,8 @@ rem --- Init Data
         m0=p[0]
         units=0
         if m0<6 then let m0=6
-
+		more=1
+		dim spaces$(7)
 rem --- Options
 
         u0$=bms01a.gl_wip_acct$
@@ -138,11 +135,9 @@ rem --- Get Cost Info
 				reading_file:
 				read (bmm02_dev,key="",dom=*next); rem "On EOF reset ptr to beg of file
 			wend
-escape;rem jpb
-			call pgmdir$+"bmc_getcost.bbx",item$,1,pdate$,firm_id$,ap$,"Y",1,mat_cost,lab_cost,oh_cost,sub_cost,1,1,"Y",whse$,ea_status
+			call pgmdir$+"bmc_getcost.aon",item$,1,pdate$,ap$,"Y",1,mat_cost,lab_cost,oh_cost,sub_cost,1,1,"Y",whse$,ea_status
 			read (bmm02_dev,key=km02$); rem "Replace ptr
 		endif
-
 rem --- Additional Reads
 
         
@@ -152,27 +147,41 @@ rem --- Additional Reads
 rem --- Print Phantom
 
         if info[1]+6>info[2] then gosub report_heading
-        print (printer_dev)@(9),dashes$(1,123),'lf',@(9),"Phantom Bill"
+		outVect!.addItem("")
+		outVect!.addItem("Phantom Bill")
+		xvk=fnblank(8)
+rem        print (printer_dev)@(9),dashes$(1,123),'lf',@(9),"Phantom Bill"
         u0$=ivm01a.gl_inv_acct$
-        if level=1 then print (printer_dev)@(9),"*",
-        print (printer_dev)@(11),item$
-        print (printer_dev)@(11),ivm01a.item_desc$(1,30),@(34+m3),quant:m2$
+		outVect!.addItem("")
+		if level=1
+			outVect!.addItem("*"+item$+" "+ivm01a.item_desc$)
+		else
+			outVect!.addItem(item$+" "+ivm01a.item_desc$)
+		endif
+rem        if level=1 then print (printer_dev)@(9),"*",
+rem        print (printer_dev)@(11),item$
+		outVect!.addItem("")
+		outVect!.addItem(str(quant))
+		xvk=fnblank(6)
+rem        print (printer_dev)@(11),ivm01a.item_desc$(1,30),@(34+m3),quant:m2$
         info[1]=info[1]+4
 
 rem --- Component Items
 
         
-        d0$=b0$
+        b0$=firm_id$+ivm01a.item_id$
         if update$="Y" then gosub dist_code_sub
+
         read (bmm02_dev,key=b0$,dom=*next)
     while more
         bmm02a_key$=key(bmm02_dev,end=*break)
-        if bmm02a_key.firm_id$<>firm_id$ then break
-        if bmm02a_key.bill_no$<>ivm01a.item_id$ then break
+		if pos(b0$=bmm02a_key$)<>1 break
+rem        if bmm02a_key.firm_id$<>firm_id$ then break
+rem        if bmm02a_key.bill_no$<>ivm01a.item_id$ then break
         read record (bmm02_dev) bmm02a$
         if bmm02a.line_type$="M" then continue
-        if bmm02a.effect_date$<>"   " then if pdate$<bmm02a.effect_date$ then continue
-        if bmm02a.obsolt_date$<>"   " then if pdate$>=bmm02a.obsolt_date$ then continue
+        if cvs(bmm02a.effect_date$,2)<>"" then if pdate$<bmm02a.effect_date$ then continue
+        if cvs(bmm02a.obsolt_date$,2)<>"" then if pdate$>=bmm02a.obsolt_date$ then continue
         find record (bmm01_dev,key=firm_id$+bmm02a.item_id$,dom=finding_record) bmm01a$
         if bmm01a.phantom_bill$="Y" then 
                 gosub explode_sub
@@ -201,11 +210,28 @@ print_components: rem --- Print Components
 
         if info[1]+2>info[2] then gosub report_heading
         i0$=bmm02a.item_id$; gosub item_sub
-        print (printer_dev)@(14),bmm02a.item_id$," ",o1$
+		outVect!.addItem("")
+		outVect!.addItem(spaces$+bmm02a.item_id$+" "+o1$)
+		xvl=fnblank(8)
+		
+rem     print (printer_dev)@(14),bmm02a.item_id$," ",o1$
         if bmm02a.divisor=0 then let bmm02a.divisor=1
-        print (printer_dev)@(14),ivm01a.item_desc$(1,30),@(132-4*m2),ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant:m2$,
-        if ivm02a.qty_on_hand-ivm02a.qty_commit<fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant then print (printer_dev)@(132-2*m2),abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant):m2$,; let info[4]=info[4]+1
-        print (printer_dev)@(132-m2),ivm02a.qty_on_order:m2$
+		outVect!.addItem("")
+		outVect!.addItem(spaces$+ivm01a.item_desc$(1,30))
+		outVect!.addItem("")
+		outVect!.addItem(str(ivm02a.qty_on_hand-ivm02a.qty_commit))
+		outVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant))
+rem        print (printer_dev)@(14),ivm01a.item_desc$(1,30),@(132-4*m2),ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant:m2$,
+        if ivm02a.qty_on_hand-ivm02a.qty_commit<fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
+			outVect!.addItem(abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant))
+			info[4]=info[4]+1
+		rem			print (printer_dev)@(132-2*m2),abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant):m2$,; let info[4]=info[4]+1
+		else
+			outVect!.addItem("")
+		endif
+		xvk=fnblank(3)
+		outVect!.addItem(str(ivm02a.qty_on_order))
+rem        print (printer_dev)@(132-m2),ivm02a.qty_on_order:m2$
         info[1]=info[1]+2
     wend
         gosub operation_sub
@@ -250,7 +276,7 @@ done: rem --- Totals
         goto std_exit
 
 report_heading: rem --- Report Heading
-
+return
         info[1]=headings
         call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
         if status then let info[11]=status; exitto std_exit
@@ -262,7 +288,7 @@ report_heading: rem --- Report Heading
         return
 
 date_heading: rem --- Date Heading
-
+return
         print (printer_dev)@(0),"Production Date: ",fndate$(t1$)
         if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,t1$,glstatus,l,errors,status
         print (printer_dev)""
@@ -277,8 +303,8 @@ Subcontracts: rem --- Subcontracts
         bmm05a_key$=key(bmm05_dev,end=*break)
         if bmm05a_key.firm_id$+bmm05a_key.bill_no$<>firm_id$+item$ then break
         read record (bmm05_dev) bmm05a$
-        if bmm05a.effect_date$<>"   " then if pdate$<bmm05a.effect_date$ then continue
-        if bmm05a.obsolt_date$<>"   " then if pdate$>=bmm05a.obsolt_date$ then continue
+        if cvs(bmm05a.effect_date$,2)<>"" then if pdate$<bmm05a.effect_date$ then continue
+        if cvs(bmm05a.obsolt_date$,2)<>"" then if pdate$>=bmm05a.obsolt_date$ then continue
         if bmm05a.line_type$<>"S" then continue
         if update$="N" then let u0$=bms01a.gl_wip_acct$ else let u0$=ivacct$
         if bmm05a.divisor=0 then let bmm05a.divisor=1
@@ -312,8 +338,8 @@ operation_sub: rem --- Operation
         bmm03a_key$=key(bmm03_dev,end=*break)
         if bmm03a_key.firm_id$+bmm03a_key.bill_no$<>firm_id$+item$ then break
         read record (bmm03_dev) bmm03a$
-        if bmm03a.effect_date$<>"   " then if pdate$<bmm03a.effect_date$ then continue
-        if bmm03a.obsolt_date$<>"   " then if pdate$>=bmm03a.obsolt_date$ then continue
+        if cvs(bmm03a.effect_date$,2)<>"" then if pdate$<bmm03a.effect_date$ then continue
+        if cvs(bmm03a.obsolt_date$,2)<>"" then if pdate$>=bmm03a.obsolt_date$ then continue
         if bmm03a.line_type$="M" then continue
         find record (bmm08_dev,key=bmm03a_key.firm_id$+bmm03a.op_code$,dom=message) bmm08a$
         goto assignment
@@ -383,7 +409,10 @@ rem --- Functions used to retrieve form values
 rem --- Miscellaneous functions
 
     def fncenter(q$,q)=int((q-len(q$))/2)
-
+	def fnop2(q1,q2,q3,q4,q5,q6)=q1*100*(q2*q3/q4)/q5+sgn(q1)*q6*q3
+	def fnqty(q1,q2,q3,q4,q5)=10000*q1*q2/(q3*q4*(100-q5))
+	def fnsub(q1,q2,q3)=q1*q2/q3
+	
 rem --- Format inventory item description
 
     def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
@@ -439,6 +468,15 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src
+
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
 
 rem #include std_error.src
 

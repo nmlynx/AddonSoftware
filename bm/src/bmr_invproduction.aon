@@ -117,6 +117,7 @@ rem --- Is AR installed? then open files ars-01 and arm-10c
 		ars01a_dev=num(open_chans$[2])
         dim arm10d$:open_tpls$[1]
 		dim ars01a$:open_tpls$[2]
+		template$[10]=open_tpls$[1]
         ar_dist$="N"
         find record (ars01a_dev,key=firm_id$+"AR00",dom=initial) ars01a$
         if ars01a.dist_by_item$="Y" then ar_dist$="Y"
@@ -225,6 +226,7 @@ rem --- Open Additional Files
 		glw11_dev=num(open_chans$[3])
 		dim glm01a$:open_tpls$[1]
 		template$[8]=open_tpls$[1]
+		template$[9]=open_tpls$[2]
 		rec_pfx$=firm_id$+process_id$+batch_no$
 		call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
 	endif
@@ -682,16 +684,16 @@ explodephantoms: rem --- Explode Phantoms
         channel[6]=ivs01a_dev
         channel[7]=bms01a_dev,channel[8]=glm01_dev
         channel[9]=glw11_dev
-        channel[10]=arm10d_dev,channel[11]=glt14_dev
+        channel[10]=arm10d_dev
         channel[12]=ivm04_dev,channel[13]=ivw04_dev,channel[14]=ivw05_dev
         channel[15]=bmm02_dev
 		channel[16]=gls01a_dev
         info$[0]=bmm02a.item_id$,info$[1]=ref1$,info$[2]=ref2$,info$[3]=ap$,info$[4]=ar_dist$
-        info$[5]=o2$,info$[6]=bme01a.warwhouse_id$,info$[7]=bme01a.prod_date$,info$[8]=bme01a.update_flag$
+        info$[5]=o2$,info$[6]=bme01a.warehouse_id$,info$[7]=bme01a.prod_date$,info$[8]=bme01a.update_flag$
         info$[9]=gl$,info$[10]=t1$,info$[11]=ivacct$
         info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=l,info[2]=l9,info[3]=headings
         info[4]=short,info[5]=o1,info[6]=0,info[7]=u0,info[8]=u1,info[9]=1
-        info[10]=h,info[12]=glstatus,info[13]=bmm01a.est_yield*lbmm08a.setup_time/100,info[14]=value
+        info[10]=h,info[12]=glstatus,info[13]=bmm01a.est_yield*bmm08a.setup_time/100,info[14]=value
         call pgmdir$+"bmc_explodephantoms.aon",channel[all],info$[all],info[all],headings$[all],bme01a.item_id$,template$[all],outVect!
         if info[11]>0 then exitto std_exit
         o2$=info$[5]

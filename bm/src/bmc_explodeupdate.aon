@@ -49,13 +49,15 @@ rem --- Assign Channel numbers
 	
 rem --- Dimension string templates
 
+	dim tpl$[23]
+	tpl$[0]=fnget_tpl$("BMM_BILLMAST")
 	tpl$[1]=fnget_tpl$("BMM_BILLOPER")
 	tpl$[2]=fnget_tpl$("BMM_BILLSUB")
 	tpl$[3]=fnget_tpl$("BMC_OPCODES")
 	tpl$[4]=fnget_tpl$("IVM_ITEMMAST")
 	tpl$[5]=fnget_tpl$("IVM_ITEMWHSE")
 	tpl$[6]=fnget_tpl$("IVT_ITEMTRAN")
-	tpl$[7]=fnget_tpl$("")
+	tpl$[7]=fnget_tpl$("BMS_PARAMS")
 	tpl$[8]=fnget_tpl$("GLM_ACCT")
 	tpl$[9]=fnget_tpl$("GLE_DAILYDETAIL")
 	tpl$[10]=fnget_tpl$("")
@@ -77,15 +79,9 @@ rem --- Dimension string templates
 	dim ivt04a$:tpl$[6],bms01a$:tpl$[7],glm01a$:tpl$[8]
 	dim glt04a$:tpl$[9]
 	dim ivm04a$:tpl$[12],ivm05a$:tpl$[13],ivm07a$:tpl$[14]
-	dim ivm08a$:tpl$[15],ivm12a$:tpl$[16],ivm17a$:tpl$[17]
+	dim ivm12a$:tpl$[16],ivm17a$:tpl$[17]
 	dim ivt01a$:tpl$[18]
 	dim bmm02a$:tpl$[23]
-	
-	dim arm10a$:tpl$[10]
-	dim gls01a$:templates$[9]
-	dim ivm03a$:tpl$[20]
-	dim ivs01a$:templates$[20],
-	dim ivt02a$:templates$[19],ivt03a$:templates$[23],
 
 rem --- Assign Channel Info
 
@@ -119,10 +115,10 @@ rem --- Parameters
 	g[2]=num(gls01a.current_year$)
 	g[4]=num(gls01a.max_acct_len$)
 	g[2]=num(gls01a.current_year$)
-	p[0]=num(ivs01a.item_nbr_len$)
-	p[1]=num(ivs01a.vend_prd_len$)
+	p[0]=num(ivs01a.item_id_len$)
+	p[1]=num(ivs01a.vendor_prd_len$)
 	p[2]=num(ivs01a.precision$)
-	p[3]=num(ivs01a.ls_nbr_len$)
+	p[3]=num(ivs01a.ls_no_len$)
 	p[5]=num(ivs01a.current_per$)
 	p[6]=num(ivs01a.current_year$)
 
@@ -301,7 +297,7 @@ rem --- Get GL Acct by Dist Code - Non-Phantoms
 	if ar_dist$="N" then goto std_exit
 	dim parentgl$(g[4],"0")
 	dim arm10d1$:fnget_tpl$("ARC_DISTCODE")
-	find record (arm10_dev,key=firm_id$+"D"+ivm02a.dists_code$,dom=done) arm10d1$
+	find record (arm10_dev,key=firm_id$+"D"+ivm02a.ar_dist_code$,dom=done) arm10d1$
 	parentgl$=arm10d1.gl_inv_acct$
 
 done: rem --- End
@@ -321,7 +317,7 @@ atamo: rem --- Item Number
 
 rem --- Inventory updates
 
-	call pgmdir$+"ivc_itemupdt.aon",action$,files[all],params[all],params$[all],item$[all],ref$[all],ref[all],status
+	call pgmdir$+"ivc_itemupdt.aon",action$,files[all],ivs01a$,item$[all],ref$[all],ref[all],rd_table_chans$[all],status
 	
 	return
 
@@ -370,7 +366,7 @@ rem --- QUANT=New Qty, TCOST=New Cost
 	cost_item$[0]=firm_id$
 	cost_item$[1]=""
 	cost_item$[2]=subitem$
-	call pgmdir$+"ivc_whseinfo.aon","A",cost_chans[all],cost_item$[all],cost_whse$[all],cost_whse[all],cost_value,status,rd_table_chans[all]
+	call pgmdir$+"ivc_whseinfo.aon","A",cost_chans[all],cost_item$[all],cost_whse$[all],cost_whse[all],cost_value,status,rd_table_chans$[all]
 	tonhandqty=cost_whse[0]
 
 rem --- Average Cost Calculation
@@ -403,7 +399,7 @@ operation: rem --- Operation
 		if cvs(bmm03a.obsolt_date$,3)<>"" and pdate$>=bmm03a.obsolt_date$ then continue
 		if bmm03a.line_type$="M" then continue
 		dim bmm08a$:fnget_tpl$("BMC_OPCODES")
-		find record (bmm08_dev,key=bmm03a_key.firm_id$+bmm03a_key.op_code$,dom=*next) bmm08a$
+		find record (bmm08_dev,key=bmm03a_key.firm_id$+bmm03a.op_code$,dom=*next) bmm08a$
 		if bmm01a.std_lot_size=0 then let bmm01a.std_lot_size=1
 		if quant<>0 then
 			directcost=fnop2(quant,bmm03a.hrs_per_pce,bmm08a.direct_rate,bmm03a.pcs_per_hour,yield,bmm03a.setup_time)
@@ -481,6 +477,10 @@ rem --- Miscellaneous functions
 	def fncenter(q$,q)=int((q-len(q$))/2)
 	def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
 	def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+	def fnop2(q1,q2,q3,q4,q5,q6)=q1*100*(q2*q3/q4)/q5+sgn(q1)*q6*q3
+	def fnqty(q1,q2,q3,q4,q5)=10000*q1*q2/(q3*q4*(100-q5))
+	def fnsub(q1,q2,q3)=q1*q2/q3
+	def fnopu(q1,q2,q3,q4,q5)=q1*100*(q2/q3)/q4+SGN(q1)*q5	
 
 rem --- Format inventory item description
 

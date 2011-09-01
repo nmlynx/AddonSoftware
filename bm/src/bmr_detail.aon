@@ -22,6 +22,8 @@ rem --- Retrieve sysinfo data
     proc_date$=date(jul(num(sysinfo.system_date$(1,4)),num(sysinfo.system_date$(5,2)),num(sysinfo.system_date$(7,2))):stbl("+DATE_MASK"))
     firm_id$=sysinfo.firm_id$
     firm_name$=sysinfo.firm_name$
+	
+	rd_dir_syp$="c:\apps\aon\barista\"+stbl("+DIR_SYP")
     
 rem --- Open files
 

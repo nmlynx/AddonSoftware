@@ -149,7 +149,7 @@ rem --- Options
 	x$=stbl("+SYSINFO")                                                            
 	msg_tokens$[1]=x.task_desc$
 	gosub disp_message
-	if msg_opt$<>"Y" then goto std_exit
+	if msg_opt$<>"Y" then goto std_exit_no_update
 	if gl$="Y" then call pgmdir$+"glc_ctlupdate.aon",status
 
 rem --- Clear LIFO/FIFO Work Files
@@ -458,8 +458,8 @@ explode: rem --- Explode Phantom Bills
 	info$[0]=bmm02a.item_id$,info$[1]=ref1$,info$[2]=ref2$,info$[3]=ap$
 	info$[4]=ar_dist$,info$[5]=bme01a.bm_reference$,info$[6]=whse$
 	info$[7]=bme01a.prod_date$,info$[8]=update$,info$[9]=gl$,info$[10]=ivacct$
-	info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=bmm01a1.est_yield*bmm01a2.est_yield/100
-	call pgmdir$+"bmc_explodeupdate.aon",channel[all],info$[all],info[all],bme01a.item_id$,table_chans$[all]
+	info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=bmm01a.est_yield*bmm01a2.est_yield/100
+	call pgmdir$+"bmc_explodeupdate.aon",channel[all],info$[all],info[all],bme01a.item_id$,rd_table_chans$[all]
 	value=value+info[2]
 	
 	return
@@ -627,6 +627,8 @@ std_exit: rem --- Standard program end (01Mar2006)
     dim msg_tokens$[1]
     msg_opt$=""
     gosub disp_message
+
+std_exit_no_update:
 
 	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
