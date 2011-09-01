@@ -22,7 +22,10 @@ rem --- Initializations
 
 rem --- Get user inputs
 
-    newAonDir$=Option!.getOptionData("NEW_AON_LOC") + "/aon"
+    dbName$=Option!.getOptionData("DB_NAME")
+    appDesc$=Option!.getOptionData("APP_DESC")
+    newAonLoc$=Option!.getOptionData("NEW_AON_LOC")
+    newAonDir$=newAonLoc$ + "/aon"
     oldAonDir$=Option!.getOptionData("OLD_AON_LOC") + "/aon"
     oldBarDir$=Option!.getOptionData("OLD_BAR_LOC") + "/barista"
     syncBackupDir$=Option!.getOptionData("SYNC_BACKUP_DIR")
@@ -83,6 +86,20 @@ rem --- Update new sync XML files
     oldSyncLoc$=oldAonDir$+"/data/sync"
 
     call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+
+rem --- Add new application to Barista Installation Manager
+	rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of it's terminating release
+	bar_dir$=dir("")
+	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$+
+:	" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$+
+:	" "+$22$+bar_dir$+"/sys/prog/bai_install_manager.bbj"+$22$
+	user_arg$=" -"+
+:	" -u"+stbl("+USER_ID")+
+:	" -id"+dbName$+
+:	" -desc"+$22$+appDesc$+$22$+
+:	" -loc"+newAonLoc$
+	scall_result=scall(run_arg$+user_arg$,err=*next)
     
 done: rem --- All done
 

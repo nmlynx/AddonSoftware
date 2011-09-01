@@ -1,3 +1,10 @@
+[[ADX_UPGRADEWIZ.DB_NAME.AVAL]]
+rem --- Validate new database name
+
+	db_name$ = callpoint!.getUserInput()
+	gosub validate_new_db_name
+	callpoint!.setUserInput(db_name$)
+	if abort then break
 [[ADX_UPGRADEWIZ.ACUS]]
 rem --- Process custom event
 rem --- Edit STBL target value
@@ -38,7 +45,7 @@ rem --- Add grid to form for updating STBLs and PREFIXs with paths
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 	callpoint!.setDevObject("nxt_ctlID",nxt_ctlID)
 
-	gridStbls!=Form!.addGrid(nxt_ctlID,10,100,850,260); rem --- ID, x, y, width, height
+	gridStbls!=Form!.addGrid(nxt_ctlID,10,140,850,260); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("gridStbls",gridStbls!)
 
 	callpoint!.setDevObject("stbl_grid_id",str(nxt_ctlID))
@@ -197,6 +204,31 @@ rem --- Set defaults for data STBLs
 		endif
 	endif
 [[ADX_UPGRADEWIZ.<CUSTOM>]]
+validate_new_db_name: rem --- Validate new database name
+
+	abort=0
+
+	rem --- Barista uses all upper case db names
+	db_name$=cvs(db_name$,4)
+
+	rem --- Don't allow database if it's already in Enterprise Manager
+	call stbl("+DIR_SYP")+"bac_em_login.bbj",rdSysGUI!,rdWindow!,rdAdmin!,rd_status$
+	db! = rdAdmin!.getDatabase(db_name$,err=dbNotFound)
+
+	rem --- This db already exists, so don't allow it
+rem wgh ... need db already exists message
+	msg_id$="AD_DB_EXISTS"
+	gosub disp_message
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.DB_NAME", db_name$)
+	callpoint!.setFocus("ADX_UPGRADEWIZ.DB_NAME")
+	callpoint!.setStatus("ABORT")
+	abort=1
+
+dbNotFound:
+	rem --- Okay to use this db name, it doesn't already exist
+
+	return
+
 validate_new_aon_loc: rem --- Validate new aon install location
 
 	abort=0
