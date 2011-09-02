@@ -25,8 +25,8 @@ rem --- Get user inputs
     dbName$=Option!.getOptionData("DB_NAME")
     appDesc$=Option!.getOptionData("APP_DESC")
     newAonLoc$=Option!.getOptionData("NEW_AON_LOC")
-    oldAonDir$=Option!.getOptionData("OLD_AON_LOC") + "/aon"
-    oldBarDir$=Option!.getOptionData("OLD_BAR_LOC") + "/barista"
+    oldAonLoc$=Option!.getOptionData("OLD_AON_LOC")
+    oldBarLoc$=Option!.getOptionData("OLD_BAR_LOC")
     syncBackupDir$=Option!.getOptionData("SYNC_BACKUP_DIR")
     stblMap!=cast(HashMap, callpoint!.getDevObject("stblMap"))
     pfxList!=cast(ArrayList, callpoint!.getDevObject("pfxList"))
