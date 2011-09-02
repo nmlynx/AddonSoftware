@@ -189,7 +189,7 @@ rem --- Set defaults for data STBLs
 		rem --- Initialize aon directory from new aon location
 		filePath$=callpoint!.getDevObject("prev_new_aon_loc")
 		gosub fix_path
-		aonDir$=filePath$+"/"
+		aonDir$=filePath$+"/aon/"
 
 		rem --- Use addon.syn file from old aon location
 		synFile$=old_aon_loc$+"/aon/config/addon.syn"
@@ -646,7 +646,7 @@ rem --- Set defaults for data STBLs
 		rem --- Initialize aon directory from new aon location
 		filePath$=new_aon_loc$
 		gosub fix_path
-		aonDir$=filePath$+"/"
+		aonDir$=filePath$+"/aon/"
 
 		rem --- Use addon.syn file from BASIS product download location
 		bbjHome$ = System.getProperty("basis.BBjHome")
