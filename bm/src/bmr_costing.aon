@@ -1,0 +1,460 @@
+rem --- Invoice Printing (Form)
+rem --- Program opc_invoice.aon v8.0.0 12Jun2009 (opr_ca)
+rem --- Created by adx_codeport.bbj v1.1.5 (06/12/2009 12:05:26)
+
+rem --- AddonSoftware Version 8.0.0 - 27Jul2009
+rem --- Copyright (c) 1981-2009 AddonSoftware
+rem --- All Rights Reserved
+
+rem --- Send in a list of customer IDs and order numbers to print.
+
+    use ::bbjasper.bbj::BBJasperReport
+    use ::bbjasper.bbj::BBJasperViewerWindow
+    use ::java.util.HashMap::HashMap
+
+    ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
+    screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
+    screen_height = ScreenSize!.height - 50
+
+    setesc std_error
+    seterr std_error
+
+    rem --- Use statements and Declares
+
+    use ::ado_func.src::func
+    use ::ado_pdf.src::PDFHelper
+    use ::sys/prog/bao_callpoint.bbj::Callpoint
+    use ::sys/prog/bao_option.bbj::Option
+
+    declare Callpoint callpoint!
+    declare Option option!
+    declare BBjVector custIds!
+    declare BBjVector orderNos!
+
+rem --- Retrieve the program path
+
+    pgmdir$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next)
+
+rem --- Set document Directory
+
+    docdir$=""
+    docdir$=stbl("+DOC_DIR_PDF",err=*next)
+
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_tpl$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    user_id$=sysinfo.user_id$
+    proc_date$=date(jul(num(sysinfo.system_date$(1,4)),num(sysinfo.system_date$(5,2)),num(sysinfo.system_date$(7,2))):stbl("+DATE_MASK"))
+    firm_id$=sysinfo.firm_id$
+    firm_name$=sysinfo.firm_name$
+
+rem --- Assign form input values to local variables
+
+	from_bill$=Option!.getOptionData("OPEN")
+	thru_bill$=Option!.getOptionData("QUOTED")
+	eff_date$=Option!.getOptionData("BACKORDERS")
+	comments$=Option!.getOptionData("COMMENTS")
+	whse$=Option!.getOptionData("WAREHOUSE_ID")
+	
+rem --- Open Files    
+
+	num_files=9
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	open_tables$[1]="BMM_BILLMAST",  open_opts$[1] = "OTA"
+	open_tables$[2]="BMM_BILLMAST",  open_opts$[2] = "OTA[_2]"
+	open_tables$[3]="BMM_BILLMAT",   open_opts$[3] = "OTA"
+	open_tables$[4]="BMM_BILLOPER",  open_opts$[4] = "OTA"
+	open_tables$[5]="BMM_BILLSUB",   open_opts$[5] = "OTA"
+	open_tables$[6]="BMC_OPCODES",   open_opts$[6] = "OTA"
+	open_tables$[7]="BMM_BILLCMTS",  open_opts$[7] = "OTA"
+	open_tables$[8]="IVM_ITEMMAST",  open_opts$[8] = "OTA"
+	open_tables$[9]="IVM_ITEMWHSE",  open_opts$[9] = "OTA"
+
+	gosub open_tables
+
+	bmm01_dev      = num(open_chans$[1])
+	bmm01_dev1     = num(open_chans$[2])
+	bmm02_dev      = num(open_chans$[3])
+
+	dim bmm01a$:open_tpls$[1]
+	dim bmm01a1$:open_tpls$[2]
+	dim bmm02a$:open_tpls$[3]
+
+rem --- Init PDF printing Jasperreport
+
+rem --- Set Report Name & Subreport directory
+
+	reportDir$ = stbl("+DIR_REPORTS",err=*next)
+	reportTitle$="Invoice Printing"
+	temp = unt
+	open (temp)reportDir$
+	reportDir$ = fid(temp)(9)+"/"
+	close (temp)
+	reportBaseName$ = "Invoice"
+	filename$ = reportDir$ + reportBaseName$ + ".jasper"
+
+	declare BBJasperReport report!
+
+rem --- Check for user authentication
+
+	dbserver$="localhost"
+	dbsqlport$=":2001"
+	dbtimeout$="&socket_timeout=5000"
+
+	dbserver$=stbl("+DBSERVER",err=*next)
+	dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+	dbssl=num(stbl("+DBSSL",err=*next))
+	dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
+
+	if dbssl
+		dbssl$="&ssl=true"
+	else
+		dbssl$="&ssl=false"
+	endif
+
+	url_user$="&user=guest"
+	if stbl("!DSUDDB",err=*endif)<>"" then
+		url_user$=""
+	endif
+
+    dbname$ = stbl("+DBNAME")
+    dbname_api$ = stbl("+DBNAME_API")
+    if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+        url$ = dbname$
+    else
+        if pos("jdbc:"=cvs(dbname$,8))=1 then			
+            url$=dbname$+url_user$
+        else
+            url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+        endif
+    endif
+
+    report! = new BBJasperReport(filename$,url$,err=CONNECT_ERR)
+
+    rem Set Report Locale
+    locale$ = stbl("!LOCALE")
+    locale$ = stbl("+USER_LOCALE",err=*next)
+
+    report!.setLocale(locale$)
+
+rem --- Make Document Archive Record and Get ID
+
+    rep_date$=date(0:stbl("+DATE_MASK"))
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+    rd_source_alias$=rd_alias_id$
+    rd_source_type$="O"
+    rd_doc_source$="E"
+    rd_doc_ext$="JAS"
+    rd_archive_action$=rd_out_status$
+
+call rd_dir_syp$+"bac_documents.bbj",
+:       rd_doc_id$,
+:       rep_date_stamp$,
+:       rep_time_stamp$,
+:       rd_doc_source$,
+:       rd_doc_ext$,
+:       rd_doc_path$,
+:       rd_source_type$,
+:       rd_source_alias$,
+:       rd_source_id$,
+:       rd_source_ref$,
+:       rd_table_chans$[all],
+:       "DOC_ID-NOREPRINT"
+
+    rem Create params for the report
+    params! = new java.util.HashMap()
+    params!.put("FIRM_ID",firm_id$)
+    params!.put("BILL_NO_1",from_bill$)
+    params!.put("BILL_NO_2",thru_bill$)
+	params!.put("FIRM_NAME",firm_name$)
+	params!.put("DOC_NO",rd_doc_id$)
+	params!.put("DATE_REP",rep_date$+"  "+rep_time$)
+	params!.put("WHSE",whse$)
+	params!.put("PROD_DATE",prod_date$)
+    if params!.get("INCLUDE_COMMENT")="Y"
+        params!.put("COMMENT_YN","Y")
+    else
+        params!.put("COMMENT_YN","N")
+    endif
+	params!.put("ALL_DATES","N")
+
+    report!.putParams(params!)
+
+    rem Fill the report with content
+    report!.fill()
+
+    ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
+    screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
+    screen_height = ScreenSize!.height - 50
+
+        rem View the report
+    declare BBjTopLevelWindow bbjWindow!
+    viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,reportTitle$,$00080093$)
+    viewerWindow!.show(0)
+
+    declare BBjTopLevelWindow bbjWindow!
+    bbjWindow!= viewerWindow!.getViewerWindow()
+	cancelled=1
+    bbjWindow!.setCallback(bbjWindow!.ON_CLOSE,"close_win",err=*next); cancelled=0
+	if cancelled then goto close_win
+
+        rem --- Event Control
+
+    process_events,err=*same
+
+	release
+
+close_win:rem --- Viewer Window Closed
+    viewerWindow!.destroy(err=*next)
+    rem rdForm!.destroy(err=*next)
+  rem   if tcb(13) then exit
+ rem release
+
+
+
+rem --- Updates and final processing
+
+    if type = on_demand then
+        rem gosub open_cash_box
+        gosub order_update
+    endif 
+
+        if type = batch_inv then
+        msg_id$ = "OP_INVOICE_UPDATE"
+        gosub disp_message
+        if msg_opt$<>"Y" then goto std_exit
+
+        call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Updating","",0,0,1,0,status
+        if status = 999 then goto std_exit
+
+        read (ope04_dev,key=firm_id$+"I",dom=*next)
+
+    rem --- Update loop
+
+        start_block = 1
+        
+        while 1
+            read record (ope04_dev, end=*break) ope04a$
+            if ope04a.firm_id$<>firm_id$ or ope04a.ordinv_flag$<>"I" then break
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,status
+            if status = 999 then exitto std_exit
+
+            if start_block then
+                extract record (ope01_dev,key=firm_id$+"  "+ope04a.customer_id$+ope04a.order_no$, dom=*endif) ope01a$
+                if ope01a.print_status$="B" then gosub order_update
+            endif
+        wend
+    endif
+
+        if type = historical then
+        read (ope01_dev, key=firm_id$+"  "+ope01a.customer_id$, dom=*next)
+        read record (arm01_dev,key=firm_id$+ope01a.customer_id$) arm01a1$
+        read record (arm02_dev,key=firm_id$+ope01a.customer_id$+"  ") arm02a$
+    endif    
+
+all_done: rem --- Exit
+
+escape
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    goto std_exit
+
+open_cash_box: rem --- Cash Box Open (not implemented yet)
+
+    if r1$<>"" and cvs(r1$(17,2), 2) <> "" then 
+        cashbox_dev = unt
+        open (cashbox_dev, err=*endif) r1$(17,2)
+
+        for i=1 to pos(" "<>r1$(1,8),-1) step 2
+            if pos(" "<>r1$(i,2))=0 continue
+            if r1$(i,2)="1B" print (cashbox_dev)'es', else print (cashbox_dev)ath(r1$(i,2)),
+        next i
+
+        print (cashbox_dev)
+
+        for i=1 to num(r1$(29,4))
+            print (cashbox_dev)ath(r1$(21,pos(" "<>r1$(21,8),-1)))
+        next i
+
+        for i=1 to pos(" "<>r1$(9,8),-1) step 2
+            if pos(" "<>r1$(8+i,2))=0 continue
+            if r1$(8+i,2)="1B" print (cashbox_dev)'es', else print (cashbox_dev)ath(r1$(8+i,2)),
+        next i
+
+        print (cashbox_dev)
+        close (cashbox_dev,err=*next)
+    endif
+
+    return
+
+order_update: rem --- Update order's status
+
+    ope01a.print_status$ = "Y"
+    ope01a.lock_status$  = "N"
+    ope01a$ = field(ope01a$)
+    write record (ope01_dev) ope01a$
+    if type = on_demand then callpoint!.setStatus("SETORIG")
+
+        return
+
+forms_msg: rem --- New Forms
+
+    dim message$[1]
+    message$[0]="Please Make Sure That The Correct Invoice Forms Are Mounted On Printer "+sysinfo.printer_id$
+    message$[1]="For "+n1$+" (<Enter>=Continue) "
+    call pgmdir$+"adc_stdmessage.aon",2,message$[all],1,-1,-1,v$,v3
+    return
+
+messages: rem --- Print Messages
+
+    gosub build_msg
+
+    if status=0 then
+        mline = 0
+
+        if len(message$)>0
+            for j=1 to len(message$) step 40
+                if mline > 4 then break; rem can't handle more than 10 lines
+
+                            pdf!.setText(0+2, mline*12+bottom_of_detail+2, message$(j,40), smallfont!)
+
+                            if len(message$)>j+200
+                    pdf!.setText(200+2, mline*12+bottom_of_detail+2, message$(j+200,40), smallfont!)
+                endif  
+
+                            mline = mline + 1
+            next j
+        endif
+    endif
+
+    return
+
+
+CONNECT_ERR:
+x = msgbox(errmes(-1),16,"Connection Failed")
+release
+
+paid_info: rem --- Print Paid Info
+
+    paid_text$ = "PAID: " + cvs(arm10c.code_desc$,2) + " "
+
+        if arm10c.trans_type$="P" then 
+        paid_text$ = paid_text$ + "# " + ope41a.payment_id$
+    else
+        if arm10c.trans_type$="C" then 
+            paid_text$ = paid_text$ + "# " + ope41a.ar_check_no$ 
+        endif
+    endif
+
+        paid_text$ = paid_text$ + " NAME: " + ope41a.customer_name$
+    rem if mline >=5 then gosub cont
+    pdf!.setText(0+2, 5*12+bottom_of_detail+2, paid_text$, light_gray!)
+
+        return
+
+build_msg: rem --- message$ is a string of message details, step 40
+
+    status=11
+    start_block = 1
+    message$ = ""
+
+    if start_block then
+        find record (opm04_dev, key=firm_id$+ope01a.message_code$, dom=*endif) opm04a$; rem mh0$
+        status=0
+        read (opm14_dev, key=firm_id$+ope01a.message_code$, dom=*next)
+
+        while 1
+            read record (opm14_dev, end=*break) opm14a$; rem md0$, md1$
+            if opm14a.firm_id$<>firm_id$ or opm14a.message_code$<>ope01a.message_code$ then break
+            message$ = message$ + pad(opm14a.message_text$, 40)
+        wend
+    endif
+
+    return
+
+    open_tables: rem --- Open Tables
+
+	call sypdir$+"bac_open_tables.bbj",		open_beg,		open_end,		open_tables$[all],		open_opts$[all],		open_chans$[all],		open_tpls$[all],		table_chans$[all],		open_batch,		open_status$
+
+	if open_status$<>""
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+		gosub disp_message
+		goto std_exit
+	endif
+
+	return
+
+disp_message: rem --- Display Message Dialog
+
+	call sypdir$+"bac_message.bbj",		msg_id$,		msg_tokens$[all],		msg_opt$,		table_chans$[all]
+
+	return
+
+rem --- Functions
+
+    def fnline2y%(tmp0)=(tmp0*12)+12+top_of_detail+2
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (01Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),       str(err),rd_err_text$,rd_err_act$
+    if pos("EXIT"=rd_err_act$) goto std_error_exit
+    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+std_error_exit: 
+    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_error_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_error_release: 
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),       str(err),rd_err_text$,rd_err_act$
+std_missing_params_exit: 
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release: 
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    exit
+
+
+
+end
