@@ -1,19 +1,3 @@
-[[BMU_COMPREPLACE.OLD_ITEM.AVAL]]
-rem --- Ensure Old and New items are not the same
-
-	if callpoint!.getUserInput()=callpoint!.getColumnData("new_item")
-		msg_id$="BM_OLD_NEW_ITEM"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
-[[BMU_COMPREPLACE.NEW_ITEM.AVAL]]
-rem --- Ensure Old and New items are not the same
-
-	if callpoint!.getUserInput()=callpoint!.getColumnData("old_item")
-		msg_id$="BM_OLD_NEW_ITEM"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
 [[BMU_COMPREPLACE.BILL_CONV_FACT.AVAL]]
 rem --- Ensure Conversion Factor is greater than zero
 
