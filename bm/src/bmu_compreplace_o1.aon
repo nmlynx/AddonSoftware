@@ -62,10 +62,16 @@ rem --- Initializations
 
     precision pre
     more=1
-    error_cnt=0
+	
+	seq_max=999; rem *** Change this if max len of Seq field changes in Datadict
+	seq_fld_len=3; rem *** Change this if max len of Seq field changes in Datadict
 	item_len=20
-	err_seg_len=1+item_len+3; rem ErrNum + ItemLen + SeqNumLen
-
+	
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02_key_tpl$,rd_table_chans$[all],status$	
+	dim bmm02_key$:bmm02_key_tpl$
+	
+	rem bill_line$ is dim'ed to bmm02a$ template in prev o'lay to hold all recs/lines of a bill	
+	
 rem --- Progress meter
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,bmm02_dev,1,meter_num,ignore_status
@@ -78,7 +84,7 @@ rem    Phase One -- Error check
 rem
 rem     For all bills in range
 rem 	- For materials line matching Old item and meeting Date criteria
-rem 		- If New item = the bill num
+rem 		- If New item = the bill num or out of seq nums
 rem 			- record the error
 rem 			- increment error count
 rem     - If there are errors
@@ -86,42 +92,70 @@ rem         - send error vector to DocOut
 rem         - abort processing
 rem ================================================
 
-rem --- Initial Read
-    read (bmm02_dev,key=firm_id$+billfrom$,dom=*next)
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02_key_tpl$,rd_table_chans$[all],status$
-	
-	dim bmm02_key$:bmm02_key_tpl$
-	rem bill_line$ is dim'ed to bmm02a$ template in prev o'lay to hold all recs/lines of a bill
-		
-	while more; rem Look for errors in each bill in range
+rem --- Phase 1: Inits
+	err_seg_len=1+item_len+seq_fld_len; rem Length of each segment of the error$ 
 			
-		bmm02_key$=key(bmm02_dev,end=*break)
-		if pos(firm_id$=bmm02_key$)<>1 then break
-		if billthru$<>"" and bmm02_key.bill_no$>billthru$ then break
-       
-		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+rem --- Phase1: Initial Read
+	error_cnt=0
+
+	read (bmm02_dev,key=firm_id$+billfrom$,dom=*next)
+
+rem --- Phase 1: Loop thru all bills in range	
+	while more; rem Analyze all bills in range for errors
+        rem --- Initialize for each bill
+
+			bill_rec_cnt=0; rem Cnt of lines in a bill plus potentially changed lines can't exceed seq_max
+			curr_bill$=""
+			
+		while more; rem Loop thru ea bill for errors. Tally line count along the way
+			done_flag=1; rem Flag to stop all loops when End of file, range or Firm
+			bmm02_key$=key(bmm02_dev,end=*break)
+			done_flag=0; rem Flag to stop all loops when End of file, range or Firm
+							
+			if pos(firm_id$=bmm02_key$)<>1 then done_flag=1; break
+			if billthru$<>"" and bmm02_key.bill_no$>billthru$ then done_flag=1; break
+
+			if curr_bill$="" then
+				curr_bill$=bmm02_key.bill_no$
+			else
+				if curr_bill$<>bmm02_key.bill_no$ then break
+			endif	
+			
+			call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
 	
-		read record (bmm02_dev,key=bmm02_key$) bmm02a$
-	
-		rem --- If obsolete and effective dates don't meet criteria, next rec
-			if bmm02a.obsolt_date$<>fill(8) then 
-				if bmm02a.obsolt_date$<=effectdate$ then continue; rem Skip if Component obsoleted before Opt Entry Eff Dt
-			endif
-			if bmm02a.effect_date$<>fill(8) then 
-				if bmm02a.effect_date$>effectdate$ then continue; rem Skip if Component not effective until after Opt Entry Eff Dt
-			endif
+			read record (bmm02_dev,key=bmm02_key$) bmm02a$
+			bill_rec_cnt=bill_rec_cnt+1; rem Add one for each existing line of a bill
+			
+			rem --- If obsolete and effective dates don't meet criteria, next rec
+				if bmm02a.obsolt_date$<>fill(8) then 
+					if bmm02a.obsolt_date$<=effectdate$ then continue; rem Skip if Component obsoleted before Opt Entry Eff Dt
+				endif
+				if bmm02a.effect_date$<>fill(8) then 
+					if bmm02a.effect_date$>effectdate$ then continue; rem Skip if Component not effective until after Opt Entry Eff Dt
+				endif
 						
-		rem --- Check for Materials lines matching Old item
-			if bmm02a.item_id$<>olditem$ then continue; rem Skip if wrong item
-        
-		rem --- Store error if the New Item is the same as this Bill Num
-			if bmm02_key.bill_no$=newitem$ then 
-				let error$=error$+"2"+bmm02_key.bill_no$+bmm02_key.material_seq$; rem "'New' item is same as the bill number.
-				error_cnt=error_cnt+1
-				continue
-			endif		
+			rem --- Check for Materials lines matching Old item
+				if bmm02a.item_id$<>olditem$ then continue; rem Skip if wrong item
+				
+			rem --- Found a line that will be changed
+				bill_rec_cnt=bill_rec_cnt+1; rem Add one for the "new" line 
+				
+			rem --- Store error if the New Item is the same as this Bill Num
+				if bmm02_key.bill_no$=newitem$ then 
+					let error$=error$+"2"+bmm02_key.bill_no$+bmm02_key.material_seq$; rem "'New' item is same as the bill number.
+					error_cnt=error_cnt+1
+					continue
+				endif		
 					
-    wend 
+		wend; rem loop for ea bill Phase 1
+		        
+		rem --- Store error if will exceed max sequence numbers on this bill
+			if bill_rec_cnt>seq_max
+				let error$=error$+"1"+bmm02_key.bill_no$+bmm02_key.material_seq$; rem "'New' item is same as the bill number.
+				error_cnt=error_cnt+1
+			endif
+			if done_flag then break
+	wend; rem loop for all bills Phase 1
 
 If error_cnt then 
 	gosub report_errors
@@ -144,21 +178,25 @@ rem 	    - If the bill was changed
 rem 		   - delete mats and memo lines for the bill
 rem 		   - write the vector out to bbm02
 rem ================================================
-    
-rem --- Create an instance of a BBjVector object to store each expanded bill
-    rem --- Obtain the instance of the BBjAPI object
-		declare BBjAPI BBjAPI!
-		LET BBjAPI!=BBjAPI()
 
-	rem --- Create an instance of the BBjVector object
-		LET bill_store_vect!=BBjAPI!.makeVector();  rem Holds one whole bill at a time
+rem -- Phase 2: Inits
 
-	rem --- Initial Read
-		read (bmm02_dev,key=firm_id$+billfrom$,dom=*next)
-		call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02_key_tpl$,rd_table_chans$[all],status$
-	
-		dim bmm02_key$:bmm02_key_tpl$
+	rem --- Create an instance of a BBjVector object to store each expanded bill
+		rem --- Obtain the instance of the BBjAPI object
+			declare BBjAPI BBjAPI!
+			LET BBjAPI!=BBjAPI()
+
+		rem --- Create an instance of the BBjVector object
+			LET bill_store_vect!=BBjAPI!.makeVector();  rem Holds one whole bill at a time
+
+rem --- Phase 2: Initial Read
+	read (bmm02_dev,key=firm_id$+billfrom$,dom=*next)
+
+	dim bmm02_key$:bmm02_key_tpl$
+		
 	rem bill_line$ is dim'ed to bmm02a$ template in prev o'lay to hold all recs/lines of a bill
+
+rem --- Phase 2: Loop thru all bills in range	
 
 	while more; rem Process all bills in range
         rem --- Initialize for each bill
@@ -250,12 +288,12 @@ rem --- Create an instance of a BBjVector object to store each expanded bill
 						bmm02a.obsolt_date$=effectdate$; rem For Memos, leave Effective and set Obsolete
 						gosub mod_vector; rem Update the memo line in the bill_store_vect! with new obsolete date 			
 					wend
-					if done_flag=1 then break
+					if done_flag then break
 					if do_bill_break then break
 		
 		wend; rem Individual bill loop
 		If bill_was_changed gosub write_vector2file; rem Only write modified bills
-		if done_flag=1 then break
+		if done_flag then break
 	wend; rem Main loop (all bills in range)	
 		
 rem --- Done Program
@@ -386,7 +424,7 @@ rem --- Build OutVect! from error$ list
 	
 	for ptr=1 to len(error$) step err_seg_len	
 		bill_no$=error$(ptr+1,item_len)
-		bill_seq$=error$(ptr+item_len+1,3)
+		bill_seq$=error$(ptr+item_len+1,seq_fld_len)
 		
 		x0$=firm_id$+bill_no$
 		gosub find_desc			
@@ -394,10 +432,12 @@ rem --- Build OutVect! from error$ list
 		OutVect!.addItem(bill_no$(1,p[0]))
 		OutVect!.addItem(ivdesc$)
 		OutVect!.addItem(bill_seq$)
-		
-        REM note: currently there is only 1 possible error. The conditional is for future expansion.		
+				
+		if error$(ptr,1)="1" then 
+			OutVect!.addItem("No available sequence numbers in this bill. Manually delete lines.")
+        endif
 		if error$(ptr,1)="2" then 
-			OutVect!.addItem("Cannot replace component since it would be same as bill. No bills were changed.")
+			OutVect!.addItem("Cannot replace component since it would be same as bill.")
 		endif
 	next ptr
 		
@@ -405,7 +445,9 @@ rem --- Build OutVect! from error$ list
        
     xwk=fnblank(5)
     OutVect!.addItem(str(error_cnt)+Translate!.getTranslation("AON__ITEMS_LISTED"))
-    xwk=fnblank(2)
+    xwk=fnblank(3)
+	OutVect!.addItem("No bills were changed."+$00$+"B")
+    xwk=fnblank(2)	
 	goto std_exit
 	
 return
