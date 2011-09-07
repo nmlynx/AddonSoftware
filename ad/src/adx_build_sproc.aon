@@ -269,7 +269,13 @@ createPOCalendar:
 
     gosub create_sproc_def
 
+    sqlprep$="CREATE PROCEDURE BOMCOSTING "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BILL_NO_1 CHAR(20) IN, BILL_NO_2 CHAR(20) IN )"
+    sqlprep$=sqlprep$+"'"+sproc_path$+"BOMCOSTING.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} ' Listing of Costed BOMs'"
 
+    gosub create_sproc_def
 
 done:
 
