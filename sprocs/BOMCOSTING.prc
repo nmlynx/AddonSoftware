@@ -25,12 +25,7 @@ rem --- Get the IN parameters used by the procedure
 	firm_id$ = sp!.getParameter("FIRM_ID")
 	from_bill$ = sp!.getParameter("BILL_NO_1")
 	thru_bill$ = sp!.getParameter("BILL_NO_2")
-
-	barista_wd$=stbl("BARISTA_WD",err=*next)
-
-	if barista_wd$="" then
-		barista_wd$="c:\apps\aon\barista/"
-	endif
+	barista_wd$ = sp!.getParameter("BARISTA_WD")
 
 	sv_wd$=dir("")
 	chdir barista_wd$

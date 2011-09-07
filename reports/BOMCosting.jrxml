@@ -13,8 +13,9 @@
 	<parameter name="PROD_DATE" class="java.lang.String"/>
 	<parameter name="COMMENT_YN" class="java.lang.String"/>
 	<parameter name="ALL_DATES" class="java.lang.String"/>
-	<queryString language="SQL">
-		<![CDATA[call bomcosting($P{FIRM_ID},$P{BILL_NO_1},$P{BILL_NO_2})]]>
+	<parameter name="BARISTA_WD" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[call bomcosting($P{FIRM_ID},$P{BILL_NO_1},$P{BILL_NO_2},$P{BARISTA_WD})]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String"/>
 	<field name="BILL_NO" class="java.lang.String"/>
