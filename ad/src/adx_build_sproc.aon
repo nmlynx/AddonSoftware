@@ -114,7 +114,8 @@ rem --- first drop all std Addon SPROCs
     gosub create_sproc_def
    sqlprep$="DROP PROCEDURE PICKLIST_HEADER "
     gosub create_sproc_def
-
+	sqlprep$="DROP PROCEDURE BOMCOSTING "
+    gosub create_sproc_def
 rem POCALENDAR, SALES_CUSTOMER, SALES_CUST_TYPE, SALES_CUST_TYPE_CUST, and SALES_INVOICE_DETAILS
 rem are the only SPROCs currently in use
 goto createPOCalendar
