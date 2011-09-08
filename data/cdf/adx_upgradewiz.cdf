@@ -229,6 +229,7 @@ validate_new_db_name: rem --- Validate new database name
 
 dbNotFound:
 	rem --- Okay to use this db name, it doesn't already exist
+	callpoint!.setDevObject("rdAdmin", rdAdmin!)
 
 	return
 

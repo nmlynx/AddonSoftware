@@ -30,6 +30,7 @@ rem --- Get user inputs
     syncBackupDir$=Option!.getOptionData("SYNC_BACKUP_DIR")
     stblMap!=cast(HashMap, callpoint!.getDevObject("stblMap"))
     pfxList!=cast(ArrayList, callpoint!.getDevObject("pfxList"))
+    rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
 
 	rem --- Flip directory path separators for newAonLoc
 	filePath$=newAonLoc$
@@ -88,7 +89,7 @@ rem --- Add new application to Barista Installation Manager
 :	+" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
 :	+" "+$22$+bar_dir$+"/sys/prog/bai_install_manager.bbj"+$22$
 	user_arg$=" - "
-:	+" -u"+stbl("+USER_ID")
+:	+" -u"+rdAdmin!.getUser()
 :	+" -id"+dbName$
 :	+" -desc"+$22$+appDesc$+$22$
 :	+" -loc"+$22$+newAonLoc$+$22$
@@ -105,6 +106,22 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
     oldSyncLoc$=oldAonDir$+"/data/sync"
 
     call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+
+rem --- Launch auto-sync in new barista for the new addon.syn
+rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
+	bar_dir$=newBarDir$
+	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
+:	+" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
+:	+" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
+	user_arg$=" - "
+:	+" -u"+rdAdmin!.getUser()
+:	+" -p"+rdAdmin!.getPassword()
+:	+" -t"+"DDM_TABLES"
+:	+" -y"+"A"
+:	+" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+"../aon/config/addon.syn"+" -nui"+$22$
+:	+" -w"
+	scall_result=scall(run_arg$+user_arg$,err=*next)
     
 done: rem --- All done
 
