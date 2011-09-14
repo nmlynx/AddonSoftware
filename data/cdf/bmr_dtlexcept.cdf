@@ -1,16 +1,4 @@
-[[BMR_DETAILLIST.BSHO]]
-rem --- Open tables
-
-	num_files=1
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA"
-	gosub open_tables
-[[BMR_DETAILLIST.AREC]]
-rem --- Set initial values for descriptions
-
-	callpoint!.setColumnData("<<DISPLAY>>.BEG_DESC","First",1)
-	callpoint!.setColumnData("<<DISPLAY>>.END_DESC","Last",1)
-[[BMR_DETAILLIST.BILL_NO.AVAL]]
+[[BMR_DTLEXCEPT.BILL_NO.AVAL]]
 rem --- Set descriptions
 
 	ivm_itemmast=fnget_dev("IVM_ITEMMAST")
@@ -32,8 +20,15 @@ rem --- Set descriptions
 			callpoint!.setColumnData("<<DISPLAY>>.END_DESC","Last",1)
 		endif
 	endif
-[[BMR_DETAILLIST.ASVA]]
-rem --- set DevObjects for the Jasper Report
+[[BMR_DTLEXCEPT.AREC]]
+rem --- Set initial values for descriptions
 
-	callpoint!.setDevObject("bill_from",callpoint!.getColumnData("BMR_DETAILLIST.BILL_NO_1"))
-	callpoint!.setDevObject("bill_thru",callpoint!.getColumnData("BMR_DETAILLIST.BILL_NO_2"))
+	callpoint!.setColumnData("<<DISPLAY>>.BEG_DESC","First",1)
+	callpoint!.setColumnData("<<DISPLAY>>.END_DESC","Last",1)
+[[BMR_DTLEXCEPT.BSHO]]
+rem --- Open tables
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA"
+	gosub open_tables
