@@ -344,6 +344,22 @@ rem --- Open Files
 	pot_rechdr_dev=num(open_chans$[9]),pot_rechdr_tpl$=open_tpls$[9]
 	ivs01_dev=num(open_chans$[15]),ivs01a_tpl$=open_tpls$[15]
 
+rem --- Verify that there are line codes - abort if not.
+
+	poc_linecode_dev=fnget_dev("POC_LINECODE")
+	readrecord(poc_linecode_dev,key=firm_id$,dom=*next)
+	found_one$="N"
+	while 1
+		poc_linecode_key$=key(poc_linecode_dev,end=*break)
+		if pos(firm_id$=poc_linecode_key$)=1 found_one$="Y"
+		break
+	wend
+	if found_one$="N"
+		msg_id$="MISSING_LINECODE"
+		gosub disp_message
+		release
+	endif
+
 rem --- call adc_application to see if OE is installed; if so, open a couple tables for potential use if linking PO to SO for dropship
 
 	dim info$[20]

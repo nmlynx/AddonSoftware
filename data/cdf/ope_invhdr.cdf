@@ -2596,6 +2596,22 @@ rem --- Open needed files
 	
 gosub open_tables
 
+rem --- Verify that there are line codes - abort if not.
+
+	opc_linecode_dev=fnget_dev("OPC_LINECODE")
+	readrecord(opc_linecode_dev,key=firm_id$,dom=*next)
+	found_one$="N"
+	while 1
+		opc_linecode_key$=key(opc_linecode_dev,end=*break)
+		if pos(firm_id$=opc_linecode_key$)=1 found_one$="Y"
+		break
+	wend
+	if found_one$="N"
+		msg_id$="MISSING_LINECODE"
+		gosub disp_message
+		release
+	endif
+
 rem --- Set table_chans$[all] into util object for getDev() and getTmpl()
 
 	declare ArrayObject tableChans!
