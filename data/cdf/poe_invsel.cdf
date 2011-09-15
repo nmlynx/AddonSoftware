@@ -292,6 +292,7 @@ able_invoice_detail_button: rem --- enable/disable Invoice Detail button
 	else
 		callpoint!.setOptionEnabled("INVB",0)
 	endif
+	callpoint!.setOptionEnabled("GDIS",0)
 return
 
 rem #include fndate.src
