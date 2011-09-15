@@ -697,15 +697,17 @@ rem --- Is this item lot/serial?
 		rem --- Updated qty shipped, backordered, extension
 
 			qty_shipped = num(callpoint!.getDevObject("total_shipped"))
-			qty_ordered = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 			unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
+			callpoint!.setColumnData("OPE_ORDDET.EXT_PRICE", str(round(qty_shipped * unit_price, 2)))
 
+			qty_ordered = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 			if qty_ordered > 0 then
-				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(max(qty_ordered - qty_shipped, 0)) )
+				qty_backord=max(qty_ordered - qty_shipped, 0)
 			else
-				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(min(qty_ordered - qty_shipped, 0)) )
+				qty_backord=min(qty_ordered - qty_shipped, 0)
 			endif
+			callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", str(qty_backord))
 
 			rem --- Grid vector must be updated before updating the discount amount
 			declare BBjVector dtlVect!
@@ -716,6 +718,8 @@ rem --- Is this item lot/serial?
 				qty_shipped_changed=0
 			else
 				dtl_rec.qty_shipped=qty_shipped
+				dtl_rec.qty_backord=qty_backord
+				dtl_rec.ext_price=round(qty_shipped * unit_price, 2)
 				qty_shipped_changed=1
 				dtlVect!.setItem(callpoint!.getValidationRow(),dtl_rec$)
 				GridVect!.setItem(0,dtlVect!)
@@ -1136,33 +1140,31 @@ rem ==========================================================================
 
 	gosub calculate_discount
 
-	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
-	discamt! = UserObj!.getItem(num(callpoint!.getDevObject("disc_amt_disp")))
-	discamt!.setValue(disc_amt)
-	sub_tot = num(callpoint!.getHeaderColumnData("<<DISPLAY>>.SUBTOTAL"))
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	sub_tot = ttl_ext_price - disc_amt
 	net_sales = sub_tot + ttl_tax + freight_amt
-	totamt! = UserObj!.getItem(num(callpoint!.getDevObject("total_sales_disp")))
-	totamt!.setValue(ttl_ext_price)
+
+	salesamt! = UserObj!.getItem(num(callpoint!.getDevObject("total_sales_disp")))
+	salesamt!.setValue(ttl_ext_price)
+	discamt! = UserObj!.getItem(num(callpoint!.getDevObject("disc_amt_disp")))
+	discamt!.setValue(disc_amt)
 	subamt! = UserObj!.getItem(num(callpoint!.getDevObject("subtot_disp")))
 	subamt!.setValue(sub_tot)
 	netamt! = UserObj!.getItem(num(callpoint!.getDevObject("net_sales_disp")))
 	netamt!.setValue(net_sales)
-	tamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
-	tamt!.setValue(net_sales)
-
 	taxamt! = UserObj!.getItem(num(callpoint!.getDevObject("tax_amt_disp")))
 	taxamt!.setValue(ttl_tax)
+rem	frghtamt! = UserObj!.getItem(num(callpoint!.getDevObject("freight_amt")))
+rem	frghtamt!.setValue(freight_amt)
+	ordamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
+	ordamt!.setValue(net_sales)
 
-rem --- Only activate the next 2 lines if you have enabled the Total Cost amount on the Totals tab
-rem	costamt! = UserObj!.getItem(num(callpoint!.getDevObject("total_cost")))
-rem	costamt!.setValue(ttl_ext_cost)
-
-	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_COST",str(ttl_ext_cost))
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.TOTAL_SALES", str(ttl_ext_price))
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
 	callpoint!.setHeaderColumnData("OPE_ORDHDR.TAX_AMOUNT", str(ttl_tax))
+	callpoint!.setHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT",str(freight_amt))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(net_sales))
 
 	callpoint!.setStatus("REFRESH")
