@@ -1,7 +1,7 @@
 rem ==========================================================================
 rem --- adc_updatexmlfiles.aon 
 rem --- Call to copy and update sync XML files created via Barista's utility
-rem --- Create Sync File Backup
+rem --- Create Sync File Backup. Also copies barista/settings directory.
 rem --- 
 rem --- AddonSoftware Version 10.0
 rem --- Copyright © 2010, BASIS International, Ltd.
@@ -117,7 +117,10 @@ rem  */
         rem  */
         method public void updateXmlFiles(BBjString newSyncLoc$, BBjString oldSyncLoc$, BBjString syncBackupDir$, BBjInt upgrade%)
             appDir$ = #parseAppPath(newSyncLoc$)
-            if upgrade% then #meter_total_recs = 90
+            if upgrade% then 
+				rem --- count number of settings files
+				#meter_total_recs = 90 + #copyDirectories(new File(#parseSettingsPath(oldSyncLoc$)), null())
+			endif
             #meter! = #createProgressMeter()
             #openLog(newSyncLoc$, oldSyncLoc$, syncBackupDir$, upgrade%)
 
@@ -146,6 +149,10 @@ rem                #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), n
 				rem --- copy old ads_sequences~*.xml files, except ads_sequences~99*.xml files
 				rem --- (starting with v11.00 non-consolidated sync xml files will not be deleted when consolidated files are created)
                 #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), new SequencesFilter())
+				
+				rem --- recursively copy old barista/settings directory
+                #log("")
+				#copyDirectories(new File(#parseSettingsPath(oldSyncLoc$)), new File(#parseSettingsPath(newSyncLoc$)))
             endif
 			
 			rem --- get current version from adm_modules~*.xml in data/sync dir
@@ -406,6 +413,65 @@ rem                #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), n
         methodend
 
         rem /**
+        rem  * Recursively copy a directory.
+        rem  *
+        rem  * Recursively copies a directory from source File to target File. Target can
+		rem  * be null when just need to count the number of files that will be copied.
+        rem  *
+        rem  * @param File source
+        rem  * @param File target
+		rem  * @return int count
+        rem  */
+        method private BBjInt copyDirectories(File source!, File target!)
+			count%=0
+    
+            rem -- recursively process directories and copy files
+            if(source!.isDirectory()) then
+            
+                rem --- create new directory if it doesn't exist
+                FileObject.makeDirs(target!)
+
+                rem --- get list of what is in the source dir, and process it
+				declare File targetFile!
+                declare Vector fileVector!
+                fileVector! = new Vector(java.util.Arrays.asList(source!.list()))
+                if(fileVector!.size()>0) then
+                    for i=0 to fileVector!.size()-1
+						if target!<>null() then
+							targetFile!=new File(target!, cast(BBjString, fileVector!.get(i)))
+						else
+							targetFile!=null()
+						endif
+                        c% = #copyDirectories(new File(source!, cast(BBjString, fileVector!.get(i))), targetFile!)
+						count%=count% + c%
+                    next i
+                endif
+                
+            else
+                
+                rem --- copy file
+				if target!<>null() then
+					#incrementProgressMeter("copying: " + source!.getPath())
+					sourceChan=unt
+					open(sourceChan,isz=-1)source!.getPath()
+					targetChan=unt
+					open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
+					while 1
+						readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
+						writerecord(targetChan)record$
+					wend
+					close(sourceChan)
+					close(targetChan)
+					#log("COPIED: " + source!.getPath())
+				endif
+				count%=count% + 1
+               
+            endif
+
+            methodret count%
+        methodend
+
+        rem /**
         rem  * Parse app directory path from given path.
         rem  *
         rem  * @param BBjString path$
@@ -426,6 +492,20 @@ rem                #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), n
 				appDir$=path$(1, pos("/data/"=path$+"/",-1) - 1)
 			endif
             methodret appDir$
+        methodend
+
+        rem /**
+        rem  * Parse barista/settings directory path from given path.
+        rem  *
+        rem  * @param BBjString path$
+        rem  * @return BBjString settingsPath$
+        rem  */
+        method private BBjString parseSettingsPath(BBjString path$)
+
+            appDir$ = #parseAppPath(path$)
+			settingsDir$ = appDir$(1,pos("/"=appDir$,-1)) + "barista/settings"
+
+            methodret settingsDir$
         methodend
 
         rem /**
