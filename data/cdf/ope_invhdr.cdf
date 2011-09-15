@@ -2397,8 +2397,10 @@ rem ==========================================================================
 	net_sales = sub_tot + tax_amt + freight_amt
 
 	callpoint!.setColumnData("OPE_INVHDR.TOTAL_COST",str(ttl_ext_cost))
+	callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
 	callpoint!.setColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
+	callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",str(freight_amt))
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(net_sales))
 
 	callpoint!.setStatus("REFRESH")
