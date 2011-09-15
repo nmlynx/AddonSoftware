@@ -142,11 +142,11 @@ rem                #copyFiles(new File(syncBackupDir$), new File(appDir$ + "/dat
 rem                #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), new XmlFilter()); rem ... pre-v11
                 #copyFiles(oldBackupDir!, new File(appDir$ + "/data/admin_backup"), new XmlFilter())
 
-				rem --- copy old ads_masks~*.xml files, except ads_masks~99*.xml files
+				rem --- copy old ads_masks~*.xml files, except ads_masks~99*.xml and ads_masks~[*.xml files
 				rem --- (starting with v11.00 non-consolidated sync xml files will not be deleted when consolidated files are created)
                 #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), new MasksFilter())
 
-				rem --- copy old ads_sequences~*.xml files, except ads_sequences~99*.xml files
+				rem --- copy old ads_sequences~*.xml files, except ads_sequences~99*.xml and ads_sequences~[*.xml files
 				rem --- (starting with v11.00 non-consolidated sync xml files will not be deleted when consolidated files are created)
                 #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), new SequencesFilter())
 				
@@ -453,7 +453,7 @@ rem                #copyFiles(oldBackupDir!, new File(appDir$ + "/data/sync"), n
 				if target!<>null() then
 					#incrementProgressMeter("copying: " + source!.getPath())
 					sourceChan=unt
-					open(sourceChan,isz=-1)source!.getPath()
+					open(sourceChan,isz=-1,err=*endif)source!.getPath()
 					targetChan=unt
 					open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
 					while 1
@@ -646,13 +646,13 @@ rem  */
     classend
 
 rem /**
-rem  * FilenameFilter Class to filter ads_masks~*.xml files, excluding ads_masks~99*\.xml files.
+rem  * FilenameFilter Class to filter ads_masks~*.xml files, excluding ads_masks~99*.xml and ads_masks~[*.xml files.
 rem  */
 
     class public MasksFilter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
-			if file!.startsWith("ads_masks~") and !file!.startsWith("ads_masks~99") and file!.endsWith(".xml")
+			if file!.startsWith("ads_masks~") and !file!.startsWith("ads_masks~99") and !file!.startsWith("ads_masks~[") and file!.endsWith(".xml")
 				methodret Boolean.valueOf("true")
 			else
 				methodret Boolean.valueOf("false")
@@ -662,13 +662,13 @@ rem  */
     classend
 
 rem /**
-rem  * FilenameFilter Class to filter ads_sequences~*.xml files, excluding ads_sequences~99*\.xml files.
+rem  * FilenameFilter Class to filter ads_sequences~*.xml files, excluding ads_sequences~99*.xml and ads_sequences~[*.xml files.
 rem  */
 
     class public SequencesFilter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
-			if file!.startsWith("ads_sequences~") and !file!.startsWith("ads_sequences~99") and file!.endsWith(".xml")
+			if file!.startsWith("ads_sequences~") and !file!.startsWith("ads_sequences~99") and !file!.startsWith("ads_sequences~[") and file!.endsWith(".xml")
 				methodret Boolean.valueOf("true")
 			else
 				methodret Boolean.valueOf("false")
