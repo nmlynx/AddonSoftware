@@ -428,5 +428,4 @@ if gl$="N"
 		c!.setColumnEditable(x,0)
 	next x
 endif
-if user_tpl.misc_entry$="N" c!.setColumnEditable(2,0)
-if user_tpl.units_flag$="N" c!.setColumnEditable(4,0)
+if user_tpl.units_flag$="N" c!.setColumnEditable(3,0)
