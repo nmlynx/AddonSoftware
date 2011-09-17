@@ -85,7 +85,9 @@ rem --- Assign form input values to local variables
     dim ttypes$[9]
 
     beg_date$=option!.getOptionData("pick_date_1")
+    beg_date_sql$=beg_date$(1,4)+"-"+beg_date$(5,2)+"-"+beg_date$(7,2); rem SQL engine expects YYYY-MM-DD formatted date data
     end_date$=option!.getOptionData("pick_date_2")
+    end_date_sql$=end_date$(1,4)+"-"+end_date$(5,2)+"-"+end_date$(7,2)
     beg_whse$=option!.getOptionData("warehouse_id_1")
     end_whse$=option!.getOptionData("warehouse_id_2")
     beg_prod$=option!.getOptionData("product_type_1")
@@ -400,7 +402,7 @@ get_beg_bal: rem --- Determine starting beginning balance
     found=0
     sql_prep$="select firm_id, warehouse_id, item_id, trans_date, iv_hist_seq from ivt_itemtran "
     sql_prep$=sql_prep$+"where firm_id = '"+firm_id$+"' and trans_source='BB' and item_id='"+item$+"' and "
-    sql_prep$=sql_prep$+"warehouse_id='"+whse$+"' and trans_date <= '"+beg_date$+"' order by trans_date desc"
+    sql_prep$=sql_prep$+"warehouse_id='"+whse$+"' and trans_date <= '"+beg_date_sql$+"' order by trans_date desc"
     sql_chan=sqlunt
     sqlopen(sql_chan)stbl("+DBNAME")
     sqlprep(sql_chan)sql_prep$
