@@ -1,0 +1,101 @@
+[[SFS_PARAMS.TIME_ENTRY_S.AVAL]]
+rem --- Validate Time Entry table is empty if value changes
+
+[[SFS_PARAMS.TIME_CLK_FLG.BINP]]
+rem --- Set default if Time Sheet Entry set to 
+
+	if pos(callpoint!.getColumnData("SFS_PARAMS.TIME_ENTRY_S")="DE") = 0
+		callpoint!.setColumnData("SFS_PARAMS.TIME_CLK_FLG","N",1)
+	endif
+[[SFS_PARAMS.ARAR]]
+rem --- Set defaults
+
+	gosub set_defaults
+[[SFS_PARAMS.<CUSTOM>]]
+rem ======================================================
+set_defaults:
+rem ======================================================
+
+	if callpoint!.getDevObject("bm")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.BM_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.BM_INTERFACE",-1)
+	endif
+	if callpoint!.getDevObject("ap")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.AR_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.AR_INTERFACE",-1)
+	endif
+	if callpoint!.getDevObject("po")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.PO_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.PO_INTERFACE",-1)
+	endif
+	if callpoint!.getDevObject("pr")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.PR_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.PR_INTERFACE",-1)
+		callpoint!.setColumnData("SFS_PARAMS.PAY_ACTSTD","S",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.PAY_ACTSTD",-1)
+		callpoint!.setColumnData("SFS_PARAMS.OVERHD_TYPE","",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.OVERHD_TYPE",-1)
+	endif
+
+	callpoint!.setColumnData("SFS_PARAMS.MAX_EMPL_NO","9")
+
+	return
+[[SFS_PARAMS.CURRENT_PER.AVAL]]
+rem --- Validate Period is valid
+
+	gl_pers=num(callpoint!.getDevObject("gl_pers"))
+	if num(callpoint!.getUserInput())<1 or num(callpoint!.getUserInput())>gl_pers
+		msg_id$="AR_INVALID_PER"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=str(gl_pers)
+		msg_opt$=""
+		gosub disp_message
+		callpoint!.setUserInput(callpoint!.getColumnUndoData("SFS_PARAMS.CURRENT_PER"))
+		callpoint!.setStatus("REFRESH-ABORT")
+	endif
+[[SFS_PARAMS.AREC]]
+rem --- Set defaults
+
+	gosub set_defaults
+[[SFS_PARAMS.BSHO]]
+rem --- Open files
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+	gosub open_tables
+	gls01_dev=num(open_chans$[1])
+rem --- Dimension string templates
+	dim gls01a$:open_tpls$[1]
+
+rem --- check to see if main GL param rec (firm/GL/00) exists; if not, tell user to set it up first
+	gls01a_key$=firm_id$+"GL00"
+	find record (gls01_dev,key=gls01a_key$,err=*next) gls01a$  
+	if cvs(gls01a.current_per$,2)=""
+		msg_id$="GL_PARAM_ERR"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+		rem - remove process bar
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+		release
+	endif
+
+rem --- Retrieve parameter data
+
+	callpoint!.setDevObject("gl_pers",gls01a.total_pers$)
+	callpoint!.setDevObject("gl_curr_per",gls01a.current_per$)
+	callpoint!.setDevObject("gl_curr_year",gls01a.current_year$)
+
+	dim info$[20]
+	call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
+	callpoint!.setDevObject("bm",info$[20])
+	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
+	callpoint!.setDevObject("ap",info$[20])
+	callpoint!.setDevObject("br",info$[9])
+	call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
+	callpoint!.setDevObject("po",info$[20])
+	call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
+	callpoint!.setDevObject("pr",info$[20])
