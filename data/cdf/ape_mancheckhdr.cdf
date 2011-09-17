@@ -425,6 +425,14 @@ user_tpl.dflt_dist_cd$=aps01a.ap_dist_code$
 user_tpl.ret_flag$=aps01a.ret_flag$
 user_tpl.misc_entry$=aps01a.misc_entry$
 user_tpl.post_closed$=aps01a.post_closed$
+if user_tpl.multi_types$<>"Y"
+	apm10_dev=fnget_dev("APC_TYPECODE")
+	dim apm10a$:fnget_tpl$("APC_TYPECODE")
+	readrecord (apm10_dev,key=firm_id$+"A"+user_tpl.dflt_ap_type$,dom=*next)apm10a$
+	if cvs(apm10a$,2)<>""
+		user_tpl.dflt_dist_cd$=apm10a.ap_dist_code$
+	endif
+endif
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 user_tpl.units_flag$=gls01a.units_flag$

@@ -1,6 +1,6 @@
 [[APE_RECURRINGHDR.BTBL]]
 rem --- Open/Lock files
-files=6,begfile=1,endfile=6
+files=7,begfile=1,endfile=7
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="APT_INVOICEDIST";rem --- "apt-02"
 files$[2]="APM_VENDCMTS";rem --- "apm-09
@@ -8,6 +8,7 @@ files$[3]="APM_VENDMAST";rem --- "apm-01"
 files$[4]="APM_VENDHIST";rem --- "apm-02"
 files$[5]="APS_PARAMS";rem --- "ads-01"
 files$[6]="GLS_PARAMS";rem --- "gls-01"
+files$[7]="APC_TYPECODE";rem --- "apm-10A"
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
@@ -88,10 +89,23 @@ user_tpl.glyr$=gls01a.current_year$
 user_tpl.glper$=gls01a.current_per$
 user_tpl.gl_tot_pers$=gls01a.total_pers$
 
-rem --- disable access to AP Type if not using multi types
+rem --- if not using multi AP types, disable access to AP Type and get default distribution code
 
 if user_tpl.multi_types$<>"Y"
 	callpoint!.setTableColumnAttribute("APE_RECURRINGHDR.AP_TYPE","PVAL",$22$+aps01a.ap_type$+$22$)
+
+	rem --- get default distribution code	
+	apm10_dev=fnget_dev("APC_TYPECODE")
+	dim apm10a$:fnget_tpl$("APC_TYPECODE")
+	readrecord (apm10_dev,key=firm_id$+"A"+user_tpl.dflt_ap_type$,dom=*next)apm10a$
+	if cvs(apm10a$,2)<>""
+		user_tpl.dflt_dist_cd$=apm10a.ap_dist_code$
+	endif
+
+	rem --- if not using multi distribution codes, initialize and disable Distribution Code
+	if user_tpl.multi_dist$<>"Y"
+		callpoint!.setTableColumnAttribute("APE_RECURRINGHDR.AP_DIST_CODE","PVAL",$22$+user_tpl.dflt_dist_cd$+$22$)
+	endif
 endif
 [[APE_RECURRINGHDR.AP_INV_NO.AVAL]]
 ctl_name$="APE_RECURRINGHDR.AP_DIST_CODE"
