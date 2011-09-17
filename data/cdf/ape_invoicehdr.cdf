@@ -544,6 +544,14 @@ if user_tpl.multi_types$="N"
 	ctl_name$="APE_INVOICEHDR.AP_TYPE"
 	ctl_stat$="I"
 	gosub disable_fields
+
+	rem --- get default distribution code	
+	apc_typecode_dev=fnget_dev("APC_TYPECODE")
+	dim apc_typecode$:fnget_tpl$("APC_TYPECODE")
+	find record (apc_typecode_dev,key=firm_id$+"A"+user_tpl.dflt_ap_type$,err=*next)apc_typecode$
+	if cvs(apc_typecode$,2)<>""
+		user_tpl.dflt_dist_cd$=apc_typecode.ap_dist_code$
+	endif
 endif
 if user_tpl.multi_dist$="N" 
 	ctl_name$="APE_INVOICEHDR.AP_DIST_CODE"

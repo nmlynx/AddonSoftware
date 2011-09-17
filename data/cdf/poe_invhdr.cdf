@@ -18,7 +18,7 @@ rem -- setting a delete flag so we know in BREX not to bother checking if out of
 callpoint!.setDevObject("deleted","Y")
 [[POE_INVHDR.BTBL]]
 rem --- Open/Lock files
-files=15,begfile=1,endfile=files
+files=16,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 
 files$[1]="APM_VENDCMTS";rem --- "apm-09
@@ -36,6 +36,7 @@ files$[12]="APT_INVOICEHDR";rem --- "apt-01"
 files$[13]="IVM_ITEMMAST";rem --- "ivm-01"
 files$[14]="POC_LINECODE";rem --- "pom-02"
 files$[15]="APC_TERMSCODE"
+files$[16]="APC_TYPECODE"
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
@@ -138,6 +139,19 @@ callpoint!.setDevObject("poe_invsel_key",poe_invsel_key_tpl$)
 
 if aps01a.multi_types$<>"Y"
 	callpoint!.setTableColumnAttribute("POE_INVHDR.AP_TYPE","PVAL",$22$+aps01a.ap_type$+$22$)
+
+	rem --- get default distribution code	
+	apc_typecode_dev=fnget_dev("APC_TYPECODE")
+	dim apc_typecode$:fnget_tpl$("APC_TYPECODE")
+	find record (apc_typecode_dev,key=firm_id$+"A"+aps01a.ap_type$,err=*next)apc_typecode$
+	if cvs(apc_typecode$,2)<>""
+		callpoint!.setDevObject("dflt_dist_cd", apc_typecode.ap_dist_code$)
+	endif
+
+	rem --- if not using multi distribution codes, initialize and disable Distribution Code
+	if aps01a.multi_dist$<>"Y"
+		callpoint!.setTableColumnAttribute("POE_INVHDR.AP_DIST_CODE","PVAL",$22$+apc_typecode.ap_dist_code$+$22$)
+	endif
 endif
 [[POE_INVHDR.AABO]]
 rem --- user has elected not to save record (we are NOT in immediate write, so save takes care of header and detail at once)
