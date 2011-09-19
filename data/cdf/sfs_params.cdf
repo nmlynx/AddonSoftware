@@ -1,6 +1,26 @@
 [[SFS_PARAMS.TIME_ENTRY_S.AVAL]]
 rem --- Validate Time Entry table is empty if value changes
 
+	old_setting$=callpoint!.getColumnUndoData("SFS_PARAMS.TIME_ENTRY_S")
+	if old_setting$="D"
+		old_chan=fnget_dev("SFE_TIMEDATE")
+	endif
+	if old_setting$="E"
+		old_chan=fnget_dev("SFE_TIMEEMPL")
+	endif
+	if old_setting$="W"
+		old_chan=fnget_dev("SFE_TIMEWO")
+	endif
+
+	read(old_chan,key=firm_id$,dom=*next)
+	while 1
+		k$=key(old_chan,end=*break)
+		if pos(firm_id$=k$)<>1 break
+		msg_id$="SF_BATCH_CHANGE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	wend
 [[SFS_PARAMS.TIME_CLK_FLG.BINP]]
 rem --- Set default if Time Sheet Entry set to 
 
@@ -60,11 +80,15 @@ rem --- Set defaults
 [[SFS_PARAMS.BSHO]]
 rem --- Open files
 
-	num_files=1
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="SFE_TIMEDATE",open_opts$[2]="OTA"
+	open_tables$[3]="SFE_TIMEEMPL",open_opts$[3]="OTA"
+	open_tables$[4]="SFE_TIMEWO",open_opts$[4]="OTA"
 	gosub open_tables
 	gls01_dev=num(open_chans$[1])
+
 rem --- Dimension string templates
 	dim gls01a$:open_tpls$[1]
 
