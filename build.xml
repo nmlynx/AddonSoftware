@@ -232,7 +232,7 @@
     <target name="syncAddon">
         <!-- Run BBj session to sync AddonSoftware -->
         <exec executable="${install.dir}/bin/bbj">
-            <env key="DISPLAY" value=":0.0"/>
+            <env key="DISPLAY" value=":99.0"/>
             <arg value="-q"/>
             <arg value="-WD${barista.bbj.dir}"/>
             <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
@@ -253,6 +253,7 @@
 
         <!-- Use killBBjProcs to shutdown BBj -->
         <exec executable="${install.dir}/bin/bbjservices">
+              <env key="DISPLAY" value=":99.0"/>
         </exec>
 
     </target>
