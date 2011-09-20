@@ -939,12 +939,6 @@ rem --- Warehouse and Item must be correct
 		rem --- using this instead to force focus if item/whse invalid -- i.e., don't let user leave corrupt row
 		callpoint!.setFocus(this_row,"OPE_INVDET.ITEM_ID")
 		break; rem --- exit callpoint
-	else
-
-	rem --- Clear line type
-
-		user_tpl.line_type$ = ""
-
 	endif
 
 rem --- Set taxable amount
@@ -1819,6 +1813,7 @@ rem --- Set enable/disable based on line type
 rem --- Has line code changed?
 
 	if line_code$ <> user_tpl.prev_line_code$ then
+		user_tpl.prev_line_code$=line_code$
 		callpoint!.setColumnData("OPE_INVDET.MAN_PRICE", "N")
 		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", "")
 		callpoint!.setColumnData("OPE_INVDET.WAREHOUSE_ID", user_tpl.def_whse$)
