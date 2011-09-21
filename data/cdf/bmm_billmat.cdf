@@ -138,6 +138,14 @@ rem ===================================================================
 	yield_pct=callpoint!.getDevObject("yield")
 	net_qty=BmUtils.netQuantityRequired(qty_req,alt_fact,divisor,yield_pct,scrap_fact)
 	callpoint!.setColumnData("<<DISPLAY>>.NET_REQD",str(net_qty))
+	whse$=callpoint!.getDevObject("dflt_whse")
+	item$=callpoint!.getColumnData("BMM_BILLMAT.ITEM_ID")
+	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	dim ivm02$:fnget_tpl$("IVM_ITEMWHSE")
+	read record (ivm02_dev,key=firm_id$+whse$+item$,dom=*next) ivm02$
+	callpoint!.setColumnData("<<DISPLAY>>.UNIT_COST",ivm02.unit_cost$)
+	callpoint!.setColumnData("<<DISPLAY>>.TOTAL_COST",str(ivm02.unit_cost*net_qty))
+
 	return
 
 rem ===================================================================
@@ -184,9 +192,10 @@ rem --- Setup java class for Derived Data Element
 
 rem --- Open files for later use
 
-	num_files=1
+	num_files=2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTAN[2_]"
+	open_tables$[2]="IVM_ITEMWHSE",open_opts$[2]="OTA"
 	gosub open_tables
 
 rem --- fill listbox for use with Op Sequence
