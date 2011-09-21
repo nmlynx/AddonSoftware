@@ -172,7 +172,9 @@ rem --- Need to commit?
 
 rem --- Return focus to where we were (Detail line grid)
 
-	util.forceEdit(Form!, return_to_row, return_to_col)
+rem --- per bug 5587 disable forceEdit until Barista bug 5586 is fixed
+rem --- then replace forceEdit with setFocus in AGRN
+rem	util.forceEdit(Form!, return_to_row, return_to_col)
 [[OPE_INVDET.AGDR]]
 rem --- Disable by line type
 
@@ -712,7 +714,9 @@ rem --- Is this item lot/serial?
 
 		rem --- Return focus to where we were (Detail line grid)
 
-			util.forceEdit(Form!, return_to_row, return_to_col)
+rem --- per bug 5587 disable forceEdit until Barista bug 5586 is fixed
+rem --- then replace forceEdit with setFocus in AGRN
+rem			util.forceEdit(Form!, return_to_row, return_to_col)
 		endif
 	endif
 [[OPE_INVDET.BUDE]]
@@ -781,7 +785,8 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 rem --- See if we're coming back from Recalc button
 
 	if callpoint!.getDevObject("rcpr_row") <> ""
-		callpoint!.setFocus(num(callpoint!.getDevObject("rcpr_row")),"OPE_INVDET.UNIT_PRICE")
+rem --- per bug 5587 disable setFocus until Barista bug 5586 is fixed
+rem		callpoint!.setFocus(num(callpoint!.getDevObject("rcpr_row")),"OPE_INVDET.UNIT_PRICE")
 		callpoint!.setDevObject("rcpr_row","")
 		callpoint!.setDevObject("details_changed","Y")
 		break

@@ -754,6 +754,8 @@ rem ==========================================================================
     rem ==========================================================================
 
         method public static void forceEdit(BBjTopLevelWindow Form!, BBjNumber row, BBjNumber col)
+rem --- Don't use unless row is the grid's validation row, because the grid's validation row isn't updated by this method.
+rem --- After Barista bug 5586 is fixed, use callpoint!.setFocus(<row>, <column>) instead.
         
             declare BBjStandardGrid grid!
 
