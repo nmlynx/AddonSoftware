@@ -1,3 +1,11 @@
+[[BMC_OPCODES.PCS_PER_HOUR.AVAL]]
+rem --- Make sure value is greater than 0
+
+	if num(callpoint!.getUserInput())<=0
+		msg_id$="PCS_PER_HR_NOT_ZERO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 [[BMC_OPCODES.BSHO]]
 rem --- Open needed files
 
