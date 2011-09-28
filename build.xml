@@ -186,16 +186,16 @@
     <!-- copy Images -->
     <target name="copyImages">
         <copy preserveLastModified="true"
-              todir="${addon.build.dir}/unix/images">
+              todir="${build.dir}/unix/images">
               <fileset file="${images.dir}/AddonSoftware.xpm"/>
               <fileset file="${images.dir}/Documentation.xpm"/>
         </copy>
         <copy preserveLastModified="true"
-              todir="${addon.build.dir}/${port.MAC}/images">
+              todir="${build.dir}/${port.MAC}/images">
               <fileset file="${images.dir}/AddonSoftware.icns"/>
         </copy>
         <copy preserveLastModified="true"
-              todir="${addon.build.dir}/${port.WIN}/images">
+              todir="${build.dir}/${port.WIN}/images">
               <fileset file="${images.dir}/AddonSoftware.ico"/>
               <fileset file="${images.dir}/Documentation.ico"/>
         </copy>
@@ -210,7 +210,7 @@
     <target name="copyScripts">
         <!-- Generic Unix Scripts -->
         <copy preserveLastModified="true"
-              todir="${addon.build.dir}/unix/bin">
+              todir="${build.dir}/unix/bin">
               <fileset file="${templates.dir}/addon"/>
         </copy>
 
@@ -218,7 +218,7 @@
 
         <!-- Mac Shortcuts -->
         <copy preserveLastModified="true"
-              todir="${addon.build.dir}/${port.MAC}/apps">
+              todir="${build.dir}/${port.MAC}/apps">
               <fileset dir="${templates.dir}/mac"
                        includes="AddonSoftware.app/"/>
         </copy>
