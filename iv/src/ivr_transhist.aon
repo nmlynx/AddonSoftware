@@ -85,9 +85,10 @@ rem --- Assign form input values to local variables
     dim ttypes$[9]
 
     beg_date$=option!.getOptionData("pick_date_1")
-    beg_date_sql$=beg_date$(1,4)+"-"+beg_date$(5,2)+"-"+beg_date$(7,2); rem SQL engine expects YYYY-MM-DD formatted date data
+	if len(beg_date$)<>0
+		beg_date_sql$=beg_date$(1,4)+"-"+beg_date$(5,2)+"-"+beg_date$(7,2); rem SQL engine expects YYYY-MM-DD formatted date data
+	endif
     end_date$=option!.getOptionData("pick_date_2")
-    end_date_sql$=end_date$(1,4)+"-"+end_date$(5,2)+"-"+end_date$(7,2)
     beg_whse$=option!.getOptionData("warehouse_id_1")
     end_whse$=option!.getOptionData("warehouse_id_2")
     beg_prod$=option!.getOptionData("product_type_1")
