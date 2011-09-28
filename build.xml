@@ -110,7 +110,8 @@
                   excludes="build.xml,
                             user.build.properties.default,
                             user.build.properties,
-                            basis.build.properties"/>
+                            basis.build.properties,
+                            InstallResponse.properties"/>
               <fileset file="${src.dir}/${doc.dir}/readme.htm"/>
               <fileset file="${src.dir}/${doc.dir}/relnotes.htm"/>
         </copy>
@@ -289,7 +290,7 @@
             <fileset dir="${install.dir}/apps/examples"
                      includes="*.men,**/*.men,
                                *.syn,**/*.syn"
-                     excludes="config/.../examples.men,
+                     excludes="config/../examples.men,
                                config/examples.syn"/>
             <fileset dir="${install.dir}/apps/aon"
                      includes="*.men,**/*.men,
@@ -344,7 +345,6 @@
     <target name="copySync">
         <copy preserveLastModified="true"
               todir="${addon.build.dir}/callpoints">
-              <fileset file="${install.dir}/apps/aon/callpoints"/>
               <fileset dir="${install.dir}/apps/aon/callpoints"
                        includes="**,*"/>
         </copy>
