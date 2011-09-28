@@ -152,7 +152,7 @@
         </move>
 
         <copy preserveLastModified="true"
-              todir="${addon.bbj.dir}">
+              todir="${addon.bbj.dir}/documentaton">
               <fileset dir="${src.dir}/documentation"
                        includes="readme.htm,
                                  relnotes.htm"/>
@@ -175,7 +175,8 @@
                   excludes="build.xml,
                             user.build.properties.default,
                             user.build.properties,
-                            basis.build.properties"/>
+                            basis.build.properties,
+                            InstallResponse.properties"/>
         </copy>
     </target>
     <!-- End of copyBase -->
@@ -345,39 +346,39 @@
     <target name="copySync">
         <copy preserveLastModified="true"
               todir="${addon.build.dir}/callpoints">
-              <fileset dir="${install.dir}/apps/aon/callpoints"
+              <fileset dir="${addon.bbj.dir}/callpoints"
                        includes="**,*"/>
         </copy>
 
         <copy preserveLastModified="true"
               todir="${addon.build.dir}/data/arc">
-              <fileset dir="${install.dir}/apps/aon/data/arc" includes="**"/>
+              <fileset dir="${addon.bbj.dir}/data/arc" includes="**"/>
         </copy>
 
         <copy preserveLastModified="true"
               todir="${addon.build.dir}/data/def">
-              <fileset dir="${install.dir}/apps/aon/data/def" includes="**"/>
+              <fileset dir="${addon.bbj.dir}/data/def" includes="**"/>
         </copy>
 
         <!-- Built by addon sync -->
         <copy preserveLastModified="true"
               todir="${barista.build.dir}/callpoints">
-              <fileset dir="${install.dir}/barista/callpoints" includes="**,*"/>
+              <fileset dir="${barista.bbj.dir}/callpoints" includes="**,*"/>
         </copy>
 
         <copy preserveLastModified="true"
               todir="${barista.build.dir}/sys/data">
-              <fileset dir="${install.dir}/barista/sys/data" includes="**,*"/>
+              <fileset dir="${barista.bbj.dir}/sys/data" includes="**,*"/>
         </copy>
 
         <copy preserveLastModified="true"
               todir="${barista.build.dir}/bbdict">
-              <fileset dir="${install.dir}/barista/bbdict" includes="**,*"/>
+              <fileset dir="${barista.bbj.dir}/bbdict" includes="**,*"/>
         </copy>
 
         <copy preserveLastModified="true"
               todir="${barista.build.dir}/sys/config">
-              <fileset dir="${install.dir}/barista/sys/config"
+              <fileset dir="${barista.bbj.dir}/sys/config"
                        includes="*/barista.men,
                                  */barista.cfg"/>
         </copy>
@@ -399,7 +400,8 @@
         <!-- Jar it up - package_addon.jar -->
         <jar destfile="${build.dir}/package_addon.jar">
              <fileset dir="${build.dir}"
-                      includes="apps/aon/" />
+                      includes="apps/aon/,
+                                barista/" />
         </jar>
     </target>
     <!-- End of jar Addon -->
