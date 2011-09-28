@@ -19,17 +19,22 @@ rem ===============================================
 write_rec:
 rem ===============================================
 
-rem	6010 LET A0$=N0$+OPCODE$+OLD_DATE$(1,2)+OLD_DATE$(3,2)
-rem	6020 LET A[0]=32
-rem	6030 LET A[0]=A[0]-1
-rem	6040 LET X=JUL(1900+FNYY_YEAR(X9$(1,2)),NUM(X9$(3,2)),A[0],ERR=6030)
-rem	6050 WRITE (WOM04_DEV,KEY=A0$(1,K9))IOL=WOM04A
-rem	6060 DIM A[31]
-rem	6065 FOR X9=1 TO 31
-rem	6066 LET A[X9]=-1
-rem	6067 NEXT X9
-rem	6070 LET OLD_DATE$=first_date$
-rem	gosub get_rec
+	wom04a.firm_id$=firm_id$	
+	wom04a.op_code$=callpoint!.getColumnData("SFM_CAL_CREATE.OP_CODE")
+	wom04a.year$=old_date$(1,4)
+	wom04a.month$=old_date$(5,2)
+	wom04a.days_in_mth=32
+	while 1
+		wom04a.days_in_mth=wom04a.days_in_mth-1
+		X=jul(num(x9$(1,4)),num(x9$(5,2)),wom04a.days_in_mth,err=*continue)
+		break
+	wend
+	write record (wom04_dev) wom04a$
+	for x9=1 to 31
+		field wom04a$,"hrs_per_day_"+str(x9:"00")=-1
+	next x9
+	old_date$=first_date$
+	gosub get_rec
 
 	return
 
@@ -53,25 +58,56 @@ rem ===============================================
 [[SFM_CAL_CREATE.ASVA]]
 rem  --- Write records
 
+	exclude$=""
+	if callpoint!.getColumnData("SFM_CAL_CREATE.SUNDAY")="Y"
+		exclude$=exclude$+"Sun"
+	endif
+	if callpoint!.getColumnData("SFM_CAL_CREATE.MONDAY")="Y"
+		exclude$=exclude$+"Mon"
+	endif
+	if callpoint!.getColumnData("SFM_CAL_CREATE.TUESDAY")="Y"
+		exclude$=exclude$+"Tue"
+	endif
+	if callpoint!.getColumnData("SFM_CAL_CREATE.WEDNESDAY")="Y"
+		exclude$=exclude$+"Wed"
+	endif
+	if callpoint!.getColumnData("SFM_CAL_CREATE.THURSDAY")="Y"
+		exclude$=exclude$+"Thu"
+	endif
+	if callpoint!.getColumnData("SFM_CAL_CREATE.FRIDAY")="Y"
+		exclude$=exclude$+"Fri"
+	endif
+	if callpoint!.getColumnData("SFM_CAL_CREATE.SATURDAY")="Y"
+		exclude$=exclude$+"Sat"
+	endif
+
 	wom04_dev=fnget_dev("SFM_OPCALNDR")
 	dim wom04a$:fnget_tpl$("SFM_OPCALNDR")
 	first_date$=callpoint!.getColumnData("SFM_CAL_CREATE.FIRST_SCHED_DT")
+	hrs_per_day=num(callpoint!.getColumnData("SFM_CAL_CREATE.HRS"))
 	old_date$=first_date$
 	gosub get_rec
-	for week_count=1 to R0
-		for day_count=1 TO 7
-rem			4230 CALL "SYC.CB",first_date$,X0$,X0
-rem			if first_date$(1,6)<>old_date$(1,6) THEN gosub write_rec
-rem			4250 IF POS(X0$=R3$,3)>0 THEN LET A[NUM(first_date$(7,2))]=0; GOTO 4270
-rem			4260 LET A[NUM(first_date$(7,2))]=R1
-rem			4270 LET X9$=first_date$
-rem			4285 LET X0$=""
-rem			4290 CALL "SYC.CA",first_date$,X0$,1
-rem			4295 LET first_date$=X0$
+	num_weeks=num(callpoint!.getColumnData("SFM_CAL_CREATE.NUM_WEEKS"))
+	for week_count=1 to num_weeks
+		for day_count=1 to 7
+			call "adc_dayweek.aon",first_date$,dow$,dow
+			if first_date$(1,6)<>old_date$(1,6) gosub write_rec
+			if pos(dow$=exclude$,3)>0 
+				field wom04a$,"hrs_per_day_"+str(num(first_date$(7,2)):"00")=0
+			else
+				field wom04a$,"hrs_per_day_"+str(num(first_date$(7,2)):"00")=hrs_per_day
+			endif
+			x9$=first_date$
+			dow$=""
+			call "adc_daydates.aon",first_date$,dow$,1
+			first_date$=dow$
 		next day_count
 	next week_count
 
 	gosub write_rec
+
+	msg_id$="UPDATE_COMPLETE"
+	gosub disp_message
 [[SFM_CAL_CREATE.OP_CODE.AVAL]]
 rem --- Calc Last Date Defined for this Op Code
 
