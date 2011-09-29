@@ -1,6 +1,5 @@
 [[SFU_PURGECLSDWO.PURGE_DATE.AVAL]]
 rem --- Purge date cannot be in current or previous period
-escape
 
 rem --- Default year and period
 	gls01_dev=fnget_dev("GLS_PARAMS")
@@ -49,24 +48,16 @@ rem --- check that purge date is before prev SF period
 :						                                    begdate$, 
 :						                                    enddate$, 
 :						                                    status
-escape; cj$=callpoint!.getUserInput(); ?cj$,"."
-	if status=0 and cvs(callpoint!.getUserInput(),2)<>""
-		if callpoint!.getUserInput()>begdate$
+	
+	if status=0 
+		if callpoint!.getUserInput()>=begdate$
 			msg_id$="SF_CANT_PURGE"
 			dim msg_tokens$[1]
 			msg_opt$=""
 			msg_tokens$[1]=fndate$(begdate$)
 			gosub disp_message
-		
-			rem - remove process bar
-			bbjAPI!=bbjAPI()
-			rdFuncSpace!=bbjAPI!.getGroupNamespace()
-			rdFuncSpace!.setValue("+build_task","OFF")
-			REM release
-			callpoint!.setStatus("ABORT")
+			callpoint!.setFocus("SFU_PURGECLSDWO.PURGE_DATE")
 		endif
-	else
-		callpoint!.setStatus("ABORT")
 	endif
 [[SFU_PURGECLSDWO.BSHO]]
 rem --- Open Parameter file
