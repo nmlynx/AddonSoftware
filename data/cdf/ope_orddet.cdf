@@ -1,3 +1,12 @@
+[[OPE_ORDDET.ADGE]]
+rem --- Disable header buttons
+
+	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("CRAT",0)
+	callpoint!.setOptionEnabled("DINV",0)
+	callpoint!.setOptionEnabled("CINV",0)
+	callpoint!.setOptionEnabled("PRNT",0)
+	callpoint!.setOptionEnabled("RPRT",0)
 [[OPE_ORDDET.EXT_PRICE.AVEC]]
 rem --- Extend price now that grid vector has been updated
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
