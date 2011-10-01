@@ -1,3 +1,47 @@
+[[SFS_PARAMS.ADIS]]
+rem --- Save changes made based on Applications installed
+
+	callpoint!.setStatus("SAVE")
+[[SFS_PARAMS.ARAR]]
+rem --- Set defaults
+
+	gosub set_defaults
+[[SFS_PARAMS.ARER]]
+rem --- Set defaults
+
+	gosub set_defaults
+[[SFS_PARAMS.<CUSTOM>]]
+rem ==========================================================
+set_defaults:
+rem ==========================================================
+
+	if callpoint!.getDevObject("bm")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.BM_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.BM_INTERFACE",0)
+	endif
+	if callpoint!.getDevObject("ap")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.AR_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.AR_INTERFACE",0)
+	endif
+	if callpoint!.getDevObject("po")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.PO_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.PO_INTERFACE",0)
+	endif
+
+rem Force Payroll to not be installed until Basis generates a Payroll Application
+	callpoint!.setDevObject("pr","N")
+	if callpoint!.getDevObject("pr")<>"Y"
+		callpoint!.setColumnData("SFS_PARAMS.PR_INTERFACE","N",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.PR_INTERFACE",0)
+		callpoint!.setColumnData("SFS_PARAMS.PAY_ACTSTD","S",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.PAY_ACTSTD",0)
+		callpoint!.setColumnData("SFS_PARAMS.OVERHD_TYPE","",1)
+		callpoint!.setColumnEnabled("SFS_PARAMS.OVERHD_TYPE",0)
+	endif
+
+	callpoint!.setColumnData("SFS_PARAMS.MAX_EMPL_NO","9")
+
+	return
 [[SFS_PARAMS.TIME_ENTRY_S.AVAL]]
 rem --- Validate Time Entry table is empty if value changes
 
@@ -27,39 +71,6 @@ rem --- Set default if Time Sheet Entry set to
 	if pos(callpoint!.getColumnData("SFS_PARAMS.TIME_ENTRY_S")="DE") = 0
 		callpoint!.setColumnData("SFS_PARAMS.TIME_CLK_FLG","N",1)
 	endif
-[[SFS_PARAMS.ARAR]]
-rem --- Set defaults
-
-	gosub set_defaults
-[[SFS_PARAMS.<CUSTOM>]]
-rem ======================================================
-set_defaults:
-rem ======================================================
-
-	if callpoint!.getDevObject("bm")<>"Y"
-		callpoint!.setColumnData("SFS_PARAMS.BM_INTERFACE","N",1)
-		callpoint!.setColumnEnabled("SFS_PARAMS.BM_INTERFACE",-1)
-	endif
-	if callpoint!.getDevObject("ap")<>"Y"
-		callpoint!.setColumnData("SFS_PARAMS.AR_INTERFACE","N",1)
-		callpoint!.setColumnEnabled("SFS_PARAMS.AR_INTERFACE",-1)
-	endif
-	if callpoint!.getDevObject("po")<>"Y"
-		callpoint!.setColumnData("SFS_PARAMS.PO_INTERFACE","N",1)
-		callpoint!.setColumnEnabled("SFS_PARAMS.PO_INTERFACE",-1)
-	endif
-	if callpoint!.getDevObject("pr")<>"Y"
-		callpoint!.setColumnData("SFS_PARAMS.PR_INTERFACE","N",1)
-		callpoint!.setColumnEnabled("SFS_PARAMS.PR_INTERFACE",-1)
-		callpoint!.setColumnData("SFS_PARAMS.PAY_ACTSTD","S",1)
-		callpoint!.setColumnEnabled("SFS_PARAMS.PAY_ACTSTD",-1)
-		callpoint!.setColumnData("SFS_PARAMS.OVERHD_TYPE","",1)
-		callpoint!.setColumnEnabled("SFS_PARAMS.OVERHD_TYPE",-1)
-	endif
-
-	callpoint!.setColumnData("SFS_PARAMS.MAX_EMPL_NO","9")
-
-	return
 [[SFS_PARAMS.CURRENT_PER.AVAL]]
 rem --- Validate Period is valid
 
@@ -73,10 +84,6 @@ rem --- Validate Period is valid
 		callpoint!.setUserInput(callpoint!.getColumnUndoData("SFS_PARAMS.CURRENT_PER"))
 		callpoint!.setStatus("REFRESH-ABORT")
 	endif
-[[SFS_PARAMS.AREC]]
-rem --- Set defaults
-
-	gosub set_defaults
 [[SFS_PARAMS.BSHO]]
 rem --- Open files
 
