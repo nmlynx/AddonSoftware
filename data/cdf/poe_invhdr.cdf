@@ -638,7 +638,7 @@ if cvs(terms_cd$,3)="" then terms_cd$=callpoint!.getDevObject("dflt_terms_cd")
 if cvs(callpoint!.getDevObject("dflt_acct_date"),2)=""
 	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",callpoint!.getUserInput())
 else
-	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",callpoint!.getDevObject("dflt_acct_date"))
+	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",str(callpoint!.getDevObject("dflt_acct_date")))
 endif
 tmp_inv_date$=callpoint!.getUserInput()
 gosub calculate_due_and_discount
