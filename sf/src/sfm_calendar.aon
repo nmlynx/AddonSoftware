@@ -48,7 +48,7 @@ rem --- also get !DATE, which contains date format, short/long month desc, and s
             next curr_elem
         endif
 
-    num_rows=6
+    num_rows=12
 
     dim months$[1:12]
         for curr_elem=1 to 12
@@ -109,6 +109,7 @@ rem --- Open correct Op Code table
 	dim sfs_params$:open_tpls$[4]
 	read record (sfs_params,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
 	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	if sfs_params.bm_interface$<>"Y"
 		open_tables$[1]="SFC_OPRTNCOD"
 	else
@@ -120,17 +121,6 @@ rem --- Open correct Op Code table
 
 	opcode_dev=num(open_chans$[1])
 	dim opcode$:open_tpls$[1]
-	
-rem --- Build listbox of Op Codes
-
-	OpCodeVect!=SysGUI!.makeVector()
-	read (opcode_dev,key=firm_id$,dom=*next)
-	while 1
-		read record (opcode_dev,end=*break) opcode$
-		if pos(firm_id$=opcode$)<>1 break
-		OpCodeVect!.addItem(opcode.op_code$+" - "+opcode.code_desc$)
-		if FirstOpCode$="" FirstOpCode$=opcode.op_code$
-	wend
 	
 rem --- Get SysGUI Object
 
@@ -151,6 +141,17 @@ rem --- Get Attributes
     call dir_syp$+"bam_attr_init.bbj",attr_def_tbl$[all],attr_def_col$[all]
         attr_def_col$=attr_def_col$[0,0]
         attr_def_tbl$=attr_def_tbl$[0,0]
+
+rem --- Build listbox of Op Codes
+
+	OpCodeVect!=SysGUI!.makeVector()
+	read (opcode_dev,key=firm_id$,dom=*next)
+	while 1
+		read record (opcode_dev,end=*break) opcode$
+		if pos(firm_id$=opcode$)<>1 break
+		OpCodeVect!.addItem(opcode.op_code$+" - "+opcode.code_desc$)
+		if FirstOpCode$="" FirstOpCode$=opcode.op_code$
+	wend
 
 rem --- If current month doesn't exist, create an empty current month
 
@@ -195,48 +196,12 @@ event_ctl:rem --- Event Control
     BtnNextMo!.setCallback(BtnNextMo!.ON_TOOL_BUTTON_PUSH,"adjust_date")
     BtnNextYr!.setCallback(BtnNextYr!.ON_TOOL_BUTTON_PUSH,"adjust_date")
     BtnCurrMo!.setCallback(BtnCurrMo!.ON_TOOL_BUTTON_PUSH,"adjust_date")
-    popmenu_stat1!.setCallback(popmenu_stat1!.ON_POPUP_ITEM_SELECT,"adjust_status")
-    popmenu_stat2!.setCallback(popmenu_stat2!.ON_POPUP_ITEM_SELECT,"adjust_status")
-    popmenu_stat3!.setCallback(popmenu_stat3!.ON_POPUP_ITEM_SELECT,"adjust_status")
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
-    gridCal!.setCallback(gridCal!.ON_GRID_KEYPRESS,"keypress")
-    gridCal!.setCallback(gridCal!.ON_GRID_RIGHT_MOUSE_DOWN,"getcell")    
-    GridCal!.setPopupMenu(popmenuStat!)
-
+	gridCal!.setCallback(gridCal!.ON_GRID_DOUBLE_CLICK,"adjust_Status")
 
     SysGUI!.flushEvents()
 
     process_events,err=*same
-
-getcell:
-
-    Event!=SysGUI!.getLastEvent()
-    gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
-    return
-    
-keypress:rem --- Check for C, W, H
-escape;rem "Change to actually enter a number * jpb
-    Event!=SysGUI!.getLastEvent()
-    char_pressed=Event!.getKeyCode()
-    switch char_pressed
-        case 67; rem Closed
-        case 99
-            pop_opt$=Translate!.getTranslation("AON_CLOSED")
-            gosub set_status
-        break
-        case 87; rem Work Day
-        case 119
-            pop_opt$=Translate!.getTranslation("AON_WORKDAY")
-            gosub set_status        
-        break
-        case 72; rem "Holiday
-        case 104
-            pop_opt$=Translate!.getTranslation("AON_HOLIDAY")
-            gosub set_status
-        break
-    swend
-    
-return
 
 adjust_date:rem --- Adjust Date
 
@@ -315,13 +280,19 @@ display_calendar:rem --- Calculate And Display Calendar
 
         DayVect!.addItem(day_text$)
         stringDays$=stringDays$+str(num(day_text$):"00")+"^"
-
+		
+		if mod(curr_day,7)=0 xvk=fnblank(7)
+		
     next curr_day
 
     GridCal!.setCellText(0,0,DayVect!)
-    for x=0 to 5
+    for x=0 to 11
         for y=0 to 6
-            GridCal!.setCellBackColor(x,y,HdrColor!)
+			if mod(x,2)=0
+				GridCal!.setCellBackColor(x,y,HdrColor!)
+			else
+				GridCal!.setCellBackColor(x,y,DayColor!)
+			endif
         next y
     next x
     return
@@ -332,6 +303,7 @@ display_data:rem --- Display Data For Selected Category and Measure
     dim sfm_calendar$:fattr(sfm_calendar$)
 
     read record(sfm_calendar_dev,key=firm_id$+op_code$+str(curr_yr:"0000")+str(curr_mo:"00"),dom=*next)sfm_calendar$
+
     for curr_day=1 to sfm_calendar.days_in_mth
         day_hrs=nfield(sfm_calendar$,"HRS_PER_DAY_"+str(curr_day:"00"))
 		if day_hrs=-1
@@ -352,13 +324,17 @@ set_Color_and_Text:
     if wpos>=0
         grid_row=int(wpos/7)
         grid_col=mod(wpos,7)
-        GridCal!.setCellBackColor(grid_row,grid_col,useColor!)
-        GridCal!.setCellText(grid_row,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
+        GridCal!.setCellBackColor(grid_row+1,grid_col,useColor!)
+        GridCal!.setCellText(grid_row+1,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
     endif
     return
 
 adjust_status:
 escape;rem Change value of number of hours
+
+    Event!=SysGUI!.getLastEvent()
+    gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
+	
     gui_event$=SysGUI!.getLastEventString()
     popCtl!=popmenuStat!.getMenuItem(gui_event.y)
     pop_opt$=popCtl!.getText()
@@ -736,7 +712,7 @@ disp_win:rem --- Display Window
 
 	OpCodes!=Window!.getControl(113)
 	if OpCodeVect!.size()
-		OpCodes!.insertItems(0,OpCodes!)
+		OpCodes!.insertItems(0,OpCodeVect!)
 	else
 		OpCodes!.addItem(Translate!.getTranslation("AON_NONE"))
 	endif
@@ -758,8 +734,15 @@ resize_win:rem --- Resize Window Contents
 
         childGrid!.setSize(Window!.getWidth()-(childGrid!.getX()*2),Window!.getHeight()-childGrid!.getY()-20)
         GridCal!.setSize(childGrid!.getWidth()-(GridCal!.getX()*2),childGrid!.getHeight()-10)
-        GridCal!.setRowHeight((GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/6)
-
+		for rows=0 to 11
+			if mod(rows,2)=0
+				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows-18)
+				GridCal!.setRowEditable(rows, 0)
+			else
+				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows+18)
+				GridCal!.setRowEditable(rows, 1)
+			endif
+		next rows
     return
 
 def_grids:rem --- Define Grid
@@ -782,22 +765,13 @@ def_grids:rem --- Define Grid
     call dir_syp$+"bam_grid_init.bbj",gui_dev,GridCal!,"NOSCROLL-COLH-LINES-CELL-VTOP",num_rows,attr_def_col$[all],attr_col$[0,1],attr_col$[all]
     GridCal!.setFitToGrid(GridCal!.AUTO_RESIZE_LAST_COLUMN)
     GridCal!.setRowHeight(int((childGrid!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows))
-    for x=1 to num_rows         
-        GridCal!.setRowHeaderCellText(x-1,weeks$[x])
-    next x
+rem    for x=1 to num_rows
+rem        GridCal!.setRowHeaderCellText(x-1,weeks$[x])
+rem    next x
     GridCal!.setSelectionMode(GridCal!.GRID_SELECT_CELL)
-    GridCal!.setGridEditable(GridCal!.FALSE)
-    GridCal!.setMultipleSelection(GridCal!.TRUE)
+rem    GridCal!.setGridEditable(GridCal!.FALSE)
+    GridCal!.setMultipleSelection(GridCal!.FALSE)
     GridCal!.setHighlightMethod(GridCal!.GRID_HIGHLIGHT_OUTLINE)
-
-    rem --- Add PopUp Window
-    popmenuStat!=SysGUI!.addPopupMenu()
-    popmenu_stat1! = popmenuStat!.addMenuItem(-201,Translate!.getTranslation("AON_CLOSED"))
-    popmenu_stat1!.setBackColor(ClosedColor!)
-    popmenu_stat2! = popmenuStat!.addMenuItem(-202,Translate!.getTranslation("AON_HOLIDAY"))
-    popmenu_stat2!.setBackColor(HolidayColor!)
-    popmenu_stat3! = popmenuStat!.addMenuItem(-203,Translate!.getTranslation("AON_WORKDAY"))
-    popmenu_stat3!.setBackColor(DayColor!)
 
     return
 
@@ -848,6 +822,15 @@ rem --- format added to this version
         q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next):"%Mz/%Dz/%Yd",err=*next)
         if q1$="" q1$=q$
         return q1$
+    fnend
+
+rem --- fnBlank : Create blank cells in DayVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            DayVect!.addItem("")
+        next q1
+        return q1
     fnend
 
 rem #include std_missing_params.src

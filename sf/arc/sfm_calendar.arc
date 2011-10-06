@@ -96,7 +96,7 @@ BEGIN
         NAME "txtGaps"
     END
 
-	LISTBUTTON 113 "Op Codes", 180, 23, 120, 21
+	LISTBUTTON 113 "Op Codes", 240, 20, 140, 21
 	BEGIN
 		NAME "lstOpCodes"
 		SELECTIONHEIGHT 21
