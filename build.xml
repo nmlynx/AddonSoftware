@@ -409,7 +409,9 @@
         <!-- Jar it up - package_addon.jar -->
         <jar destfile="${build.dir}/package_addon.jar">
              <fileset dir="${build.dir}"
-                      includes="**,*" />
+                      includes="**,*"
+                      excludes="apps/aon/images/AddonSoftware.xpm,
+                                apps/aon/images/Documentation.xpm" />
         </jar>
     </target>
     <!-- End of jar Addon -->
