@@ -480,6 +480,7 @@ bank_rec: rem --- Bank Rec
         glt05a.bnk_chk_date$=apt05a1.check_date$
         glt05a.description$=ape02a.vendor_name$
         glt05a.description$=apm01a.vendor_name$
+        glt05a.check_amount=0
         find record (glt05_dev,key=glt05a.firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=*next) glt05a$
         glt05a.check_amount=glt05a.check_amount+
 :           apt05a1.invoice_amt-
