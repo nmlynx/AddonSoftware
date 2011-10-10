@@ -330,9 +330,16 @@
             </manifest>
         </jar>
 
+        <!-- Move the new install out of ${build.dir} -->
+        <!-- If we don't the installBBj.jar ends up in the install -->
+        <move preserveLastModified="true"
+              file="${build.dir}/installBBj.jar"
+              tofile="${bbj.pkgs.dir}/installBBj.jar">
+        </move>
+
 
         <!-- Run BBj installer -->
-        <java jar="${build.dir}/installBBj.jar" fork="true">
+        <java jar="${bbj.pkgs.dir}/installBBj.jar" fork="true">
             <arg value="-pl"/>
             <arg value="${src.dir}/InstallResponse.properties"/>
         </java>
