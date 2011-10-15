@@ -107,13 +107,9 @@ rem --- Initializations
 	
     width=80
     
-	m1$ = params_rec.amount_mask$
-	m2$ = params_rec.unit_mask$
-	m3$ = params_rec.cost_mask$
-
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,12,15
-    call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
 	
     precision p[1]
 	
