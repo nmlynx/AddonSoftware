@@ -108,9 +108,6 @@ rem --- Init Data
         clock$=""
         dim dashes$(132,"-")
         errors=0
-        call pgmdir$+"adc_sizemask.aon",ivs01a.amount_mask$,m1,6,15
-        call pgmdir$+"adc_sizemask.aon",ivs01a.unit_mask$,m2,10,15
-        call pgmdir$+"adc_sizemask.aon",ivs01a.cost_mask$,m3,5,10
         m0=p[0]
         units=0
         if m0<6 then let m0=6
@@ -146,7 +143,6 @@ rem --- Additional Reads
 
 rem --- Print Phantom
 
-        if info[1]+6>info[2] then gosub report_heading
 		outVect!.addItem("")
 		outVect!.addItem("Phantom Bill")
 		xvk=fnblank(8)
@@ -158,12 +154,9 @@ rem        print (printer_dev)@(9),dashes$(1,123),'lf',@(9),"Phantom Bill"
 		else
 			outVect!.addItem(item$+" "+ivm01a.item_desc$)
 		endif
-rem        if level=1 then print (printer_dev)@(9),"*",
-rem        print (printer_dev)@(11),item$
 		outVect!.addItem("")
 		outVect!.addItem(str(quant))
 		xvk=fnblank(6)
-rem        print (printer_dev)@(11),ivm01a.item_desc$(1,30),@(34+m3),quant:m2$
         info[1]=info[1]+4
 
 rem --- Component Items
@@ -176,8 +169,6 @@ rem --- Component Items
     while more
         bmm02a_key$=key(bmm02_dev,end=*break)
 		if pos(b0$=bmm02a_key$)<>1 break
-rem        if bmm02a_key.firm_id$<>firm_id$ then break
-rem        if bmm02a_key.bill_no$<>ivm01a.item_id$ then break
         read record (bmm02_dev) bmm02a$
         if bmm02a.line_type$="M" then continue
         if cvs(bmm02a.effect_date$,2)<>"" then if pdate$<bmm02a.effect_date$ then continue
@@ -208,7 +199,6 @@ missing_record:
 
 print_components: rem --- Print Components
 
-        if info[1]+2>info[2] then gosub report_heading
         i0$=bmm02a.item_id$; gosub item_sub
 		outVect!.addItem("")
 		outVect!.addItem(spaces$+bmm02a.item_id$+" "+o1$)
@@ -221,17 +211,14 @@ rem     print (printer_dev)@(14),bmm02a.item_id$," ",o1$
 		outVect!.addItem("")
 		outVect!.addItem(str(ivm02a.qty_on_hand-ivm02a.qty_commit))
 		outVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant))
-rem        print (printer_dev)@(14),ivm01a.item_desc$(1,30),@(132-4*m2),ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant:m2$,
         if ivm02a.qty_on_hand-ivm02a.qty_commit<fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
 			outVect!.addItem(abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant))
 			info[4]=info[4]+1
-		rem			print (printer_dev)@(132-2*m2),abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant):m2$,; let info[4]=info[4]+1
 		else
 			outVect!.addItem("")
 		endif
 		xvk=fnblank(3)
 		outVect!.addItem(str(ivm02a.qty_on_order))
-rem        print (printer_dev)@(132-m2),ivm02a.qty_on_order:m2$
         info[1]=info[1]+2
     wend
         gosub operation_sub
@@ -274,18 +261,6 @@ distribution: rem --- Distribution
 done: rem --- Totals
 
         goto std_exit
-
-report_heading: rem --- Report Heading
-return
-        info[1]=headings
-        call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-        if status then let info[11]=status; exitto std_exit
-        if t9$<>"E" then gosub date_heading
-        print (printer_dev)@(0),"Ref #",@(8),"Main Bill Number",@(34+m3-5),"Cost",@(34+m3+m2-4),"Qty",@(34+m3+m2+m1-6),"Total",
-        print (printer_dev)@(132-3*m2-10),"Available",@(132-2*m2-9),"Required",@(132-m2-9),"Shortage",@(132-9),"On-Order",'lf'
-        print (printer_dev)@(0),ref2$,
-        info[1]=info[1]+2
-        return
 
 date_heading: rem --- Date Heading
 return
