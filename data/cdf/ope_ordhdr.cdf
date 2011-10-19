@@ -99,6 +99,7 @@ rem --- Clear availability information
 	gosub clear_avail
 	callpoint!.setDevObject("was_on_tot_tab","N")
 	callpoint!.setDevObject("details_changed","N")
+	callpoint!.setDevObject("new_rec","Y")
 
 	gosub init_msgs
 [[OPE_ORDHDR.ARAR]]
@@ -115,6 +116,8 @@ rem --- Set data
 		callpoint!.setDevObject("was_on_tot_tab","Y")
 	endif
 	callpoint!.setDevObject("details_changed","N")
+
+	callpoint!.setDevObject("new_rec","N")
 
 rem --- Set flags
 
@@ -533,6 +536,26 @@ rem --- Is next record an order and not void?
 	ope01_dev = fnget_dev(file_name$)
 	dim ope01a$:fnget_tpl$(file_name$)
 	start_block = 1
+
+rem --- Position the file at the correct record
+
+	if callpoint!.getDevObject("new_rec")="Y"
+		start_key$=firm_id$+"  "
+		cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		if cvs(cust_id$,2)<>""
+			start_key$=start_key$+cust_id$
+			if cvs(order_no$,2)<>""
+				start_key$=start_key$+order_no$
+			endif
+		endif
+
+		while 1
+			read record (ope01_dev,key=start_key$,dom=*break)
+			extract record (ope01_dev,key=start_key$)
+			break
+		wend
+	endif
 
 	while 1
 		if start_block then
