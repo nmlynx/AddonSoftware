@@ -158,8 +158,8 @@ rem --- If current month doesn't exist, create an empty current month
     while 1
         try_mo=curr_mo
         try_yr=curr_yr  
-        read record(sfm_calendar_dev,key=firm_id$+FirstOpCode$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)sfm_calendar$;break
 		op_code$=FirstOpCode$
+        read record(sfm_calendar_dev,key=firm_id$+FirstOpCode$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)sfm_calendar$;break
         gosub create_new_month
         break
     wend
@@ -183,7 +183,15 @@ rem    gosub find_gaps1;rem "jpb
     gosub display_calendar
     gosub display_data
     gosub resize_win
-
+	
+	today$=date(0)
+	today$=today$(4,2)
+	today=(pos(today$+"^"=stringDays$,3)-1)/3
+	row=int(today/7)
+	col=today-(row*7)
+	row=row+1
+	gridCal!.setSelectedCell(row,col)
+	
     Window!.setVisible(1)
 
 event_ctl:rem --- Event Control
@@ -281,7 +289,10 @@ display_calendar:rem --- Calculate And Display Calendar
         DayVect!.addItem(day_text$)
         stringDays$=stringDays$+str(num(day_text$):"00")+"^"
 		
-		if mod(curr_day,7)=0 xvk=fnblank(7)
+		if mod(curr_day,7)=0 
+			xvk=fnblank(7)
+			stringDays$=stringDays$+"00^00^00^00^00^00^00^"
+		endif
 		
     next curr_day
 
@@ -297,7 +308,7 @@ display_calendar:rem --- Calculate And Display Calendar
     next x
     return
 
-display_data:rem --- Display Data For Selected Category and Measure
+display_data:rem --- Display Data For Selected Op Code
 
     day_count=0
     dim sfm_calendar$:fattr(sfm_calendar$)
@@ -324,8 +335,8 @@ set_Color_and_Text:
     if wpos>=0
         grid_row=int(wpos/7)
         grid_col=mod(wpos,7)
-        GridCal!.setCellBackColor(grid_row+1,grid_col,useColor!)
-        GridCal!.setCellText(grid_row+1,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
+        GridCal!.setCellBackColor(grid_row,grid_col,useColor!)
+        GridCal!.setCellText(grid_row,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
     endif
     return
 
@@ -643,6 +654,9 @@ create_new_month:rem --- add new, blank record for specified Op Code/yr/mo to ca
     
     sfm_calendar.days_in_mth=num(day_str$(curr_mo*2-1,2))
     if mod(curr_yr,4)=0 and curr_mo=2 then sfm_calendar.days_in_mth=29
+	for x=1 to 31
+		field sfm_calendar$,"HRS_PER_DAY_"+str(x:"00")=-1
+	next x
     writerecord(sfm_calendar_dev)sfm_calendar$
 
     return
