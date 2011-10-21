@@ -163,7 +163,11 @@ rem --- If current month doesn't exist, create an empty current month
         gosub create_new_month
         break
     wend
-        
+	curr_yr=num(sfm_calendar.year$)
+	curr_mo=num(sfm_calendar.month$)
+	today$=date(0)
+	curr_day=num(today$(4,2))
+	
 rem --- get application record in order to get form icon
 
     readrecord(adm_modules,key=pad(lic_feature$,11),dom=*next)adm_modules$
@@ -184,6 +188,8 @@ rem    gosub find_gaps1;rem "jpb
     gosub display_data
     gosub resize_win
 	
+rem --- Focus on today's date
+
 	today$=date(0)
 	today$=today$(4,2)
 	today=(pos(today$+"^"=stringDays$,3)-1)/3
@@ -205,12 +211,26 @@ event_ctl:rem --- Event Control
     BtnNextYr!.setCallback(BtnNextYr!.ON_TOOL_BUTTON_PUSH,"adjust_date")
     BtnCurrMo!.setCallback(BtnCurrMo!.ON_TOOL_BUTTON_PUSH,"adjust_date")
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
+	OpCodes!.setCallback(OpCodes!.ON_LIST_SELECT,"change_op_code")
 	gridCal!.setCallback(gridCal!.ON_GRID_DOUBLE_CLICK,"adjust_Status")
 
     SysGUI!.flushEvents()
 
     process_events,err=*same
 
+change_op_code: rem Change Op Code and retrieve record
+
+	op_code$=OpCodes!.getItemAt(num(OpCodes!.getSelectedIndex()))
+	op_code$=op_code$(1,pos(" - "=op_code$)-1)
+	try_yr=curr_yr
+	try_mo=curr_mo
+	gosub validate_date
+	gosub display_date
+	gosub display_calendar
+	gosub display_data
+	
+	return
+	
 adjust_date:rem --- Adjust Date
 
    gui_event$=SysGUI!.getLastEventString()
@@ -220,6 +240,7 @@ adjust_date:rem --- Adjust Date
         case 101;rem --- Prev Year
             try_yr=curr_yr-1
             try_mo=curr_mo
+			curr_day=1
         break
         case 102;rem --- Prev Month
             try_mo=curr_mo-1
@@ -228,6 +249,7 @@ adjust_date:rem --- Adjust Date
                 try_yr=curr_yr-1
                 try_mo=12
             endif
+			curr_day=1
         break
         case 103;rem --- Next Month
             try_mo=curr_mo+1
@@ -236,14 +258,17 @@ adjust_date:rem --- Adjust Date
                 try_yr=curr_yr+1
                 try_mo=1
             endif
+			curr_day=1
         break
         case 104;rem --- Next Year
             try_yr=curr_yr+1
             try_mo=curr_mo
+			curr_day=1
         break
         case 105;rem --- Current Month
             try_mo=default_mo
             try_yr=default_yr
+			curr_day=1
         break
         case default
         break
@@ -335,36 +360,25 @@ set_Color_and_Text:
     if wpos>=0
         grid_row=int(wpos/7)
         grid_col=mod(wpos,7)
-        GridCal!.setCellBackColor(grid_row,grid_col,useColor!)
-        GridCal!.setCellText(grid_row,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
+        GridCal!.setCellBackColor(grid_row+1,grid_col,useColor!)
+rem        GridCal!.setCellText(grid_row,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
+		GridCal!.setCellText(grid_row+1,grid_col,useText$)
     endif
     return
 
 adjust_status:
-escape;rem Change value of number of hours
 
     Event!=SysGUI!.getLastEvent()
     gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
 	
     gui_event$=SysGUI!.getLastEventString()
-    popCtl!=popmenuStat!.getMenuItem(gui_event.y)
-    pop_opt$=popCtl!.getText()
-set_status:
-    if pop_opt$=Translate!.getTranslation("AON_CLOSED")
-        useColor!=ClosedColor!
-        change_stat$="C"
-        useText$=" - "+pop_opt$
-    endif
-    if pop_opt$=Translate!.getTranslation("AON_HOLIDAY")
-        useColor!=HolidayColor!
-        change_stat$="H"
-        useText$=" - "+pop_opt$
-    endif
-    if pop_opt$=Translate!.getTranslation("AON_WORKDAY")
-        useColor!=DayColor!
-        change_stat$="W"
-        useText$=" - "+pop_opt$
-    endif
+
+	row=Event!.getRow()
+	col=Event!.getColumn()
+	curr_day=num(gridCal!.getCellText(row-1,col))
+	gridCal!.setCellEditable(Event!.getRow(),Event!.getColumn(),1)
+	gridCal!.setCellText(row, col, "123")
+rem	inputn col, row, "##0", "##0", $01$, 99, 5
 
     sel_rows!=GridCal!.getSelectedRows()
     sel_cols!=GridCal!.getSelectedColumns()
@@ -372,13 +386,10 @@ set_status:
     if sel_rows!.size()
         for x=0 to sel_rows!.size()-1
             for y=0 to sel_cols!.size()-1
-                change_day$=GridCal!.getCellText(sel_rows!.get(x),sel_cols!.get(y))
-                if pos(" -"=change_day$)
-                    change_day$=change_day$(1,pos(" -"= change_day$)-1)
-                endif
-                if change_day$<>""
+                useText$=gridCal!.getCellText(sel_rows!.get(x),sel_cols!.get(y))
+                if useText$<>""
                     GridCal!.setCellBackColor(sel_rows!.get(x),sel_cols!.get(y),useColor!)
-                    GridCal!.setCellText(sel_rows!.get(x),sel_cols!.get(y),change_day$+useText$)
+                    GridCal!.setCellText(sel_rows!.get(x),sel_cols!.get(y),useText$)
                     gosub update_sfm_calendar
                 endif
             next y
@@ -393,7 +404,7 @@ update_sfm_calendar:
     dim sfm_calendar$:fattr(sfm_calendar$)
 
     extractrecord(sfm_calendar_dev,key=firm_id$+op_code$+str(curr_yr:"0000")+str(curr_mo:"00"))sfm_calendar$
-    field sfm_calendar$,"HRS_PER_DAY_"+str(num(change_day$):"00")=change_hrs
+    field sfm_calendar$,"HRS_PER_DAY_"+str(curr_day:"00")=num(useText$)
     sfm_calendar$=field(sfm_calendar$)
     write record(sfm_calendar_dev)sfm_calendar$
     return
@@ -776,14 +787,14 @@ def_grids:rem --- Define Grid
 
     next curr_column
 
-    call dir_syp$+"bam_grid_init.bbj",gui_dev,GridCal!,"NOSCROLL-COLH-LINES-CELL-VTOP",num_rows,attr_def_col$[all],attr_col$[0,1],attr_col$[all]
+    call dir_syp$+"bam_grid_init.bbj",gui_dev,GridCal!,"NOSCROLL-COLH-LINES-VTOP-EDIT",num_rows,attr_def_col$[all],attr_col$[0,1],attr_col$[all]
     GridCal!.setFitToGrid(GridCal!.AUTO_RESIZE_LAST_COLUMN)
     GridCal!.setRowHeight(int((childGrid!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows))
 rem    for x=1 to num_rows
 rem        GridCal!.setRowHeaderCellText(x-1,weeks$[x])
 rem    next x
     GridCal!.setSelectionMode(GridCal!.GRID_SELECT_CELL)
-rem    GridCal!.setGridEditable(GridCal!.FALSE)
+    GridCal!.setEditable(1)
     GridCal!.setMultipleSelection(GridCal!.FALSE)
     GridCal!.setHighlightMethod(GridCal!.GRID_HIGHLIGHT_OUTLINE)
 

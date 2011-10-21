@@ -14,42 +14,42 @@ BEGIN
     BEGIN
     END
 
-    TOOLBUTTON 101, "BITMAP=sys/images/im_nb_fst_i.png", 19, 19, 20, 20
+    TOOLBUTTON 101, "BITMAP=sys/images/im_nb_fst_i.png", 19, 19, 20, 19
     BEGIN
         IMAGEFILE "sys/images/im_nb_fst_i.png"
         NAME "btn_prev_yr"
         SHORTCUE "Previous year"
     END
 
-    TOOLBUTTON 102, "BITMAP=sys/images/im_nb_prv_i.png", 38, 19, 20, 20
+    TOOLBUTTON 102, "BITMAP=sys/images/im_nb_prv_i.png", 38, 19, 20, 19
     BEGIN
         IMAGEFILE "sys/images/im_nb_prv_i.png"
         NAME "btn_prev_mo"
         SHORTCUE "Previous month"
     END
 
-    TOOLBUTTON 103, "BITMAP=sys/images/im_nb_nxt_i.png", 151, 19, 20, 20
+    TOOLBUTTON 103, "BITMAP=sys/images/im_nb_nxt_i.png", 151, 19, 20, 19
     BEGIN
         IMAGEFILE "sys/images/im_nb_nxt_i.png"
         NAME "btn_next_mo"
         SHORTCUE "Next month"
     END
 
-    TOOLBUTTON 104, "BITMAP=sys/images/im_nb_lst_i.png", 170, 19, 20, 20
+    TOOLBUTTON 104, "BITMAP=sys/images/im_nb_lst_i.png", 170, 19, 20, 19
     BEGIN
         IMAGEFILE "sys/images/im_nb_lst_i.png"
         NAME "btn_next_yr"
         SHORTCUE "Next year"
     END
 
-    TOOLBUTTON 105, "BITMAP=sys/images/im_tb_cal_f.png", 189, 19, 20, 20
+    TOOLBUTTON 105, "BITMAP=sys/images/im_tb_cal_f.png", 189, 19, 20, 19
     BEGIN
         IMAGEFILE "sys/images/im_tb_cal_f.png"
         NAME "btn_curr_mo"
         SHORTCUE "Current month"
     END
 
-    EDIT 106, "", 60, 19, 90, 21
+    EDIT 106, "", 60, 19, 90, 19
     BEGIN
         CLIENTEDGE
         FONT "Tahoma" 8,bold
@@ -58,26 +58,26 @@ BEGIN
         READONLY
     END
 
-    STATICTEXT 107, "Calendar begins", 395, 23, 84, 21
+    STATICTEXT 107, "Calendar begins", 395, 23, 84, 19
     BEGIN
         JUSTIFICATION 32768
         NAME "txtBegins"
     END
 
-    STATICTEXT 108, "Ends", 447, 47, 32, 21
+    STATICTEXT 108, "Ends", 447, 47, 32, 19
     BEGIN
         JUSTIFICATION 32768
         NAME "txtEnds"
     END
 
-    EDIT 109, "", 483, 20, 60, 21
+    EDIT 109, "", 483, 20, 60, 19
     BEGIN
         CLIENTEDGE
         NAME "Edit Control"
         READONLY
     END
 
-    EDIT 110, "", 483, 44, 60, 21
+    EDIT 110, "", 483, 44, 60, 19
     BEGIN
         CLIENTEDGE
         NAME "Edit Control"
@@ -87,19 +87,20 @@ BEGIN
     LISTBUTTON 111, "", 60, 43, 150, 100
     BEGIN
         NAME "lstGaps"
-        SELECTIONHEIGHT 21
+        SELECTIONHEIGHT 19
     END
 
-    STATICTEXT 112, "Gaps", 21, 45, 32, 21
+    STATICTEXT 112, "Gaps", 21, 45, 32, 19
     BEGIN
         JUSTIFICATION 32768
         NAME "txtGaps"
     END
 
-	LISTBUTTON 113 "Op Codes", 240, 20, 140, 21
+	LISTBUTTON 113 "Op Codes", 240, 20, 140, 19
 	BEGIN
 		NAME "lstOpCodes"
-		SELECTIONHEIGHT 21
+		SELECTIONHEIGHT 19
+		CLIENTEDGE
 	END
 END
 
