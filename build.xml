@@ -233,7 +233,7 @@
 
     <!-- ====================================== -->
     <!-- Addon sync -->
-    <target name="syncAddon">
+    <target name="syncAddon" depends="sleep15">
         <!-- Run BBj session to sync AddonSoftware -->
         <exec executable="${install.dir}/bin/bbj">
             <env key="DISPLAY" value=":99.0"/>
@@ -423,6 +423,7 @@
     <!-- sleep15 -->
     <target name="sleep15">
         <!-- Give BLM time to shutdown -->
+        <!-- Give BBjServices time to start -->
         <sleep seconds="15"/>
     </target>
     <!-- End of sleep15 -->
