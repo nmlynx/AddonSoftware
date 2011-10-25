@@ -7,8 +7,10 @@ rem --- Copyright © 2011, BASIS International, Ltd.
 rem --- All Rights Reserved
 rem ==========================================================================
 
+    use java.io.File
     use java.util.ArrayList
     use java.util.HashMap
+    use ::ado_file.src::FileObject
 
 	declare ArrayList pfxList!
     declare HashMap stblMap!
@@ -19,6 +21,8 @@ rem ==========================================================================
 rem --- Initializations
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
+    BLOCKSIZE = 2^20
+
 
 rem --- Get user inputs
 
@@ -31,6 +35,7 @@ rem --- Get user inputs
     stblMap!=cast(HashMap, callpoint!.getDevObject("stblMap"))
     pfxList!=cast(ArrayList, callpoint!.getDevObject("pfxList"))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
+    useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
 
 	rem --- Flip directory path separators for newAonLoc
 	filePath$=newAonLoc$
@@ -56,7 +61,7 @@ rem --- Get user inputs
     newBarDir$=newAonLoc$ + "/barista"
     oldAonDir$=oldAonLoc$ + "/aon"
     oldBarDir$=oldBarLoc$ + "/barista"
-    
+   
 rem --- Recursively copy oldLocation to newAonDir
 
 	rem --- Set oldLocation to aon directory under the current download directory
@@ -106,6 +111,45 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
     oldSyncLoc$=oldAonDir$+"/data/sync"
 
     call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+
+rem --- Use old modified menus instead of new standard menus.
+rem --- Temporary "fix" until Barista enhancement 5658 can be implemented to preserve customizations
+rem --- to standard menus, thus no logging or progress meter.
+   if useOldMenu% then
+        declare File oldMenuFile!
+        declare File newMenuFile!
+        declare File newMenuDir!
+        availableLangs$="deuenuespfraitanldsve"
+        for i=1 to len(availableLangs$)-1 step 3
+            lang$=availableLangs$(i,3)
+            
+            rem --- If oldMenuFile exists, overwrite newMenuFile with it 
+            oldMenuFile! = new File(oldAonDir$+"/config/"+lang$+"/addon.men")
+            if oldMenuFile!.exists()
+            
+                rem --- Create new directories as necessary for newMenuFile
+                newMenuDir! = new File(newAonDir$+"/config/"+lang$)
+                FileObject.makeDirs(newMenuDir!)
+
+                rem --- Rename newMenuFile as a backup before overwriting it
+                newMenuFile! = new File(newMenuDir!.getPath()+"/addon.men")
+                rename newMenuFile!.getPath() to newMenuDir!.getPath()+"/addon.men.bak", err=*next
+                
+                rem --- Copy oldMenuFile to newMenuFile
+                sourceChan=unt
+                open(sourceChan,isz=-1,err=*endif)oldMenuFile!.getPath()
+                targetChan=unt
+                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newMenuFile!.getPath()
+                while 1
+                    readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                    writerecord(targetChan)record$
+                wend
+                close(sourceChan)
+                close(targetChan)
+            endif
+    
+        next i
+    endif
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista

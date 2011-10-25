@@ -45,7 +45,7 @@ rem --- Add grid to form for updating STBLs and PREFIXs with paths
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 	callpoint!.setDevObject("nxt_ctlID",nxt_ctlID)
 
-	gridStbls!=Form!.addGrid(nxt_ctlID,10,140,850,260); rem --- ID, x, y, width, height
+	gridStbls!=Form!.addGrid(nxt_ctlID,10,160,850,260); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("gridStbls",gridStbls!)
 
 	callpoint!.setDevObject("stbl_grid_id",str(nxt_ctlID))
