@@ -80,6 +80,7 @@ rem --- Parameters
     n4$=sysinfo.task_desc$
     dim r7$(4)
     dim p[3]
+	call pgmdir$+"adc_getmask.aon","","PR","A","",m1$,0,m1
     p[0]=num(prs01a.empl_no_len$)
     p[2]=num(prs01a.zip_length$)
     p[1]=num(prs01a.zip_length$)
@@ -208,7 +209,7 @@ rem --- Print
 
         dim pbuf$(pbufwidth)
             pbuf$(5)="Telephone : "+fnmask$(prm01a.work_phone$,m9$)
-            pbuf$(53)="Annual :  "+str(x1:prs01a.amount_mask$)
+            pbuf$(53)="Annual :  "+str(x1:m1$)
             pbuf$(80)="Term Date : "+fndate$(prm01a.term_date$)
         OutVect!.addItem(pbuf$)
 
