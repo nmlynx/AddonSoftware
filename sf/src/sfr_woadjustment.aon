@@ -165,11 +165,12 @@ rem --- Init Data
         h0=132
         h=0,headings$[0]=n1$,headings$[1]=n3$,l9=59,l=l9+1
         clock$=""
-        sfs01a.rate_mask$="",when$=sysinfo.system_date$,headings=1,errors=0,termf0$=f0$
-        if p9$="L" then  sfs01a.rate_mask$="Lot Number: "
-        if p9$="S" then  sfs01a.rate_mask$="Serial Number: "
+        p8$="",when$=sysinfo.system_date$,headings=1,errors=0,termf0$=f0$
+        if p9$="L" then p8$="Lot Number: "
+        if p9$="S" then p8$="Serial Number: "
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,m3
         m0=len(sfs01a.empl_output$)
 		m3=len(sfs01a.rate_mask$)
 		o9=0
