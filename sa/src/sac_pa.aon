@@ -136,9 +136,12 @@ rem --- Initializations
         if x=12 periods$[x]=gls01a.abbr_name_12$
         if x=13 periods$[x]=gls01a.abbr_name_13$        
     next x
-    iv_masks$[1]=ivs01a.unit_mask$
-    iv_masks$[2]=ivs01a.cost_mask$
-    iv_masks$[3]=ivs01a.price_mask$
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m1$,0,m1
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m2$,0,m2
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",m3$,0,m3
+    iv_masks$[1]=m1$
+    iv_masks$[2]=m2$
+    iv_masks$[3]=m3$
     iv_desc[0]=ivs01a.item_id_len
     iv_desc[1]=num(ivs01a.desc_len_01$)
     iv_desc[2]=num(ivs01a.desc_len_02$)
