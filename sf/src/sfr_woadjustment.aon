@@ -168,8 +168,11 @@ rem --- Init Data
         sfs01a.rate_mask$="",when$=sysinfo.system_date$,headings=1,errors=0,termf0$=f0$
         if p9$="L" then  sfs01a.rate_mask$="Lot Number: "
         if p9$="S" then  sfs01a.rate_mask$="Serial Number: "
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
         m0=len(sfs01a.empl_output$)
-        m1=len(sfs01a.amount_mask$),m2=len(sfs01a.unit_mask$),m3=len(sfs01a.rate_mask$),o9=0
+		m3=len(sfs01a.rate_mask$)
+		o9=0
         lm$="Labor Cost Adjustment"
         sm$="Subcontract Cost Adjustment"
         cm$="Closed Cost Adjustment"
@@ -179,11 +182,6 @@ rem --- Init Data
         precision 4
         dim j2$(m1,"-")
         more=1
-
-rem --- retrieve masks 
-
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,m2
 
 rem --- Retrieve key templates
 
