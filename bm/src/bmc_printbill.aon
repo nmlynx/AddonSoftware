@@ -89,7 +89,7 @@ rem --- Initialize Data
         dim j$(80,"-")
         dim z$(80," ")
         precision bms01a.bm_precision
-        p9=len(ivs01a.PRICE_MASK$)
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",p9$,0,p9
         m6$="###.00"
         p4$="###0"
         desc[1]=num(ivs01a.desc_len_01$)
@@ -147,8 +147,8 @@ label_three:
             OutVect!.addItem(str(bmm02a.QTY_REQUIRED:bms01a.HRQTY_MASK$))
             OutVect!.addItem(str(bmm02a.ALT_FACTOR:bms01a.MAT_FAC_MSK$))
             OutVect!.addItem(str(bmm02a.SCRAP_FACTOR:bms01a.MAT_FAC_MSK$))
-            OutVect!.addItem(str(ivm02a.unit_cost:ivs01a.PRICE_MASK$))
-            OutVect!.addItem(str(matcost:ivs01a.PRICE_MASK$))
+            OutVect!.addItem(str(ivm02a.unit_cost:p9$))
+            OutVect!.addItem(str(matcost:p9$))
 
             xwk=fnblank(1)
             OutVect!.addItem(ivm01a.item_desc$(1,30))
@@ -214,9 +214,9 @@ rem --- Print Operation Information
             OutVect!.addItem(bmm08a.CODE_DESC$)
             xwk=fnblank(2)
             OutVect!.addItem(str(bmm08a.DIRECT_RATE:bms01a.HRQTY_MASK$))
-            OutVect!.addItem(str(dir_labcost:ivs01a.PRICE_MASK$))
-            OutVect!.addItem(str(oh_labcost:ivs01a.PRICE_MASK$))
-            OutVect!.addItem(str(dir_labcost+oh_labcost:ivs01a.PRICE_MASK$))
+            OutVect!.addItem(str(dir_labcost:p9$))
+            OutVect!.addItem(str(oh_labcost:p9$))
+            OutVect!.addItem(str(dir_labcost+oh_labcost:p9$))
             
             dir_labtot=dir_labtot+dir_labcost
             oh_labtot=oh_labtot+oh_labcost
@@ -258,8 +258,8 @@ rem --- Print Subcontract Information
             OutVect!.addItem(str(bmm05a.DIVISOR:bms01a.HRQTY_MASK$))
             OutVect!.addItem(str(bmm05a.QTY_REQUIRED:bms01a.HRQTY_MASK$))
             OutVect!.addItem(str(bmm05a.ALT_FACTOR:bms01a.MAT_FAC_MSK$))
-            OutVect!.addItem(str(bmm05a.UNIT_COST:ivs01a.PRICE_MASK$))
-            OutVect!.addItem(str(bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):ivs01a.PRICE_MASK$))
+            OutVect!.addItem(str(bmm05a.UNIT_COST:p9$))
+            OutVect!.addItem(str(bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):p9$))
             xwk=fnblank(1)
 
             xwk=fnblank(1)
@@ -415,19 +415,19 @@ total_information: rem --- Total Information
     OutVect!.addItem(fill(10,"-"))
 
     xwk=fnblank(1)
-    OutVect!.addItem("Material     :  "+str(mattot:ivs01a.PRICE_MASK$))
+    OutVect!.addItem("Material     :  "+str(mattot:p9$))
     xwk=fnblank(6)
 
     xwk=fnblank(1)
-    OutVect!.addItem("Direct Labor :  "+str(dir_labtot:ivs01a.PRICE_MASK$))
+    OutVect!.addItem("Direct Labor :  "+str(dir_labtot:p9$))
     xwk=fnblank(6)
 
     xwk=fnblank(1)
-    OutVect!.addItem("Overhead     :  "+str(oh_labtot:ivs01a.PRICE_MASK$))
+    OutVect!.addItem("Overhead     :  "+str(oh_labtot:p9$))
     xwk=fnblank(6)
 
     xwk=fnblank(1)
-    OutVect!.addItem("Subcontract  :  "+str(sub_cost:ivs01a.PRICE_MASK$))
+    OutVect!.addItem("Subcontract  :  "+str(sub_cost:p9$))
     xwk=fnblank(6)
 
 
@@ -435,7 +435,7 @@ total_information: rem --- Total Information
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     xwk=fnblank(1)
-    OutVect!.addItem("Total        :  "+str(mattot+dir_labtot+oh_labtot+sub_cost:ivs01a.PRICE_MASK$))
+    OutVect!.addItem("Total        :  "+str(mattot+dir_labtot+oh_labtot+sub_cost:p9$))
     xwk=fnblank(6)
 
     return
