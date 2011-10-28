@@ -90,6 +90,7 @@ rem --- Initialize Data
         dim z$(80," ")
         precision bms01a.bm_precision
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",p9$,0,p9
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","BM","M","",mat_msk$,0,mat_msk
         m6$="###.00"
         p4$="###0"
         desc[1]=num(ivs01a.desc_len_01$)
@@ -145,8 +146,8 @@ label_three:
             OutVect!.addItem(bmm02a.ITEM_ID$(1,p[0]))
             OutVect!.addItem(str(bmm02a.DIVISOR:bms01a.HRQTY_MASK$))
             OutVect!.addItem(str(bmm02a.QTY_REQUIRED:bms01a.HRQTY_MASK$))
-            OutVect!.addItem(str(bmm02a.ALT_FACTOR:bms01a.MAT_FAC_MSK$))
-            OutVect!.addItem(str(bmm02a.SCRAP_FACTOR:bms01a.MAT_FAC_MSK$))
+            OutVect!.addItem(str(bmm02a.alt_factor:mat_msk$))
+            OutVect!.addItem(str(bmm02a.scrap_factor:mat_msk$))
             OutVect!.addItem(str(ivm02a.unit_cost:p9$))
             OutVect!.addItem(str(matcost:p9$))
 
@@ -200,11 +201,11 @@ rem --- Print Operation Information
                 else
                     xwk=fnblank(1)
                 endif
-                OutVect!.addItem(str(bmm03a.SETUP_TIME:m6$))
-                OutVect!.addItem(str(bmm03a.HRS_PER_PCE:bms01a.HRQTY_MASK$))
-                OutVect!.addItem(str(bmm03a.PCS_PER_HOUR:bms01a.MAT_FAC_MSK$))
+                OutVect!.addItem(str(bmm03a.setup_time:m6$))
+                OutVect!.addItem(str(bmm03a.hrs_per_pce:bms01a.HRQTY_MASK$))
+                OutVect!.addItem(str(bmm03a.pcs_per_hour:mat_msk$))
                 if wo$="Y" then
-                    OutVect!.addItem(str(bmm03a.MOVE_TIME:m6$))
+                    OutVect!.addItem(str(bmm03a.move_time:m6$))
                 else
                     xwk=fnblank(1)   
                 endif
@@ -257,9 +258,9 @@ rem --- Print Subcontract Information
             OutVect!.addItem(fnmask$(bmm05a.VENDOR_ID$(1,vlen),vmask$)+" "+apm01a.vendor_name$(1,25-len(vmask$)))
             OutVect!.addItem(str(bmm05a.DIVISOR:bms01a.HRQTY_MASK$))
             OutVect!.addItem(str(bmm05a.QTY_REQUIRED:bms01a.HRQTY_MASK$))
-            OutVect!.addItem(str(bmm05a.ALT_FACTOR:bms01a.MAT_FAC_MSK$))
-            OutVect!.addItem(str(bmm05a.UNIT_COST:p9$))
-            OutVect!.addItem(str(bmm05a.UNIT_COST*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):p9$))
+            OutVect!.addItem(str(bmm05a.alt_factor:mat_msk$))
+            OutVect!.addItem(str(bmm05a.unit_cost:p9$))
+            OutVect!.addItem(str(bmm05a.unit_cost*fnsub(bmm05a.QTY_REQUIRED,bmm05a.ALT_FACTOR,bmm05a.DIVISOR):p9$))
             xwk=fnblank(1)
 
             xwk=fnblank(1)
