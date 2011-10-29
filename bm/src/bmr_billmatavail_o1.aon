@@ -42,8 +42,7 @@ rem --- Init Data
         headings$[1]=sysinfo.task_desc$+" - Availability Of Components Inquiry"
         headings$[2]="As Of "+fndate$(pdate$)
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m2$,0,m2
-        p1$=bms01a.hrqty_mask$
-        p1=len(p1$)
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","BM","Q","",p1$,0,p1
 
 rem --- Column Headings
 
